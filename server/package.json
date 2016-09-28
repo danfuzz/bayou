@@ -1,0 +1,37 @@
+{
+  "name": "quillex-server",
+  "version": "0.0.1",
+  "description": "Server code for Quillex",
+  "main": "./main.js",
+  "scripts": {
+    "install": "../scripts/fix-server-modules.sh",
+    "start": "node ./main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://slack-github.com/slack/multnomah.git"
+  },
+  "author": "Dan Bornstein <danfuzz@slack-corp.com>",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "babel-loader": "^6.2.5",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.14.0",
+    "babel-preset-es2015": "^6.14.0",
+    "babel-preset-es2016": "^6.11.3",
+    "babel-preset-es2017": "^6.14.0",
+    "convert-rich-text": "^2.0.2",
+    "express": "^4.14.0",
+    "express-graphql": "^0.5.4",
+    "graphql": "^0.7.0",
+    "html-loader": "^0.4.4",
+    "morgan": "^1.7.0",
+    "sharedb": "^1.0.0-beta.5",
+    "ts-loader": "^0.8.2",
+    "typescript": "^2.0.3",
+    "webpack": "^1.13.2"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.14.0"
+  }
+}

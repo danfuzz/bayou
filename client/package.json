@@ -1,0 +1,18 @@
+{
+  "name": "quillex-client",
+  "version": "0.0.1",
+  "description": "Browser code for Quillex",
+  "main": "js/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://slack-github.com/slack/multnomah.git"
+  },
+  "author": "Dan Bornstein <danfuzz@slack-corp.com>",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "quill": "^1.0.3"
+  }
+}

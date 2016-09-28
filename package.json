@@ -1,0 +1,16 @@
+{
+  "name": "quillex",
+  "version": "0.0.1",
+  "description": "Quill demo application",
+  "scripts": {
+    "clean": "git clean --force -d -X",
+    "preinstall": "./scripts/build-submodules.sh",
+    "start": "cd server; npm start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://slack-github.com/slack/multnomah.git"
+  },
+  "author": "Dan Bornstein <danfuzz@slack-corp.com>",
+  "license": "UNLICENSED"
+}
