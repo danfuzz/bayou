@@ -1,3 +1,7 @@
+// Copyright 2016 the Quillex Authors (Dan Bornstein et alia).
+// Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+// Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+
 /*
  * Request handler which builds and serves the bundled JS. It's set up for the
  * usual live-development style: It builds the bundle once upon startup and then
