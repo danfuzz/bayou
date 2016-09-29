@@ -2,15 +2,19 @@
   "name": "quillex",
   "version": "0.0.1",
   "description": "Quill demo application",
+  "license": "Apache-2.0",
+  "author": "Dan Bornstein <danfuzz@milk.com>",
+  "contributors": [
+    "SEE AUTHORS.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://slack.com/danfuzz/quillex.git"
+  },
+
   "scripts": {
     "clean": "git clean --force -d -X",
     "preinstall": "./scripts/build-submodules.sh",
     "start": "cd server; npm start"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://slack-github.com/slack/multnomah.git"
-  },
-  "author": "Dan Bornstein <danfuzz@slack-corp.com>",
-  "license": "UNLICENSED"
+  }
 }

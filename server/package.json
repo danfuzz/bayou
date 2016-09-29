@@ -2,18 +2,22 @@
   "name": "quillex-server",
   "version": "0.0.1",
   "description": "Server code for Quillex",
+  "license": "Apache-2.0",
+  "author": "Dan Bornstein <danfuzz@milk.com>",
+  "contributors": [
+    "SEE AUTHORS.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://slack.com/danfuzz/quillex.git"
+  },
+
   "main": "./main.js",
   "scripts": {
     "install": "../scripts/fix-server-modules.sh",
     "start": "node ./main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://slack-github.com/slack/multnomah.git"
-  },
-  "author": "Dan Bornstein <danfuzz@slack-corp.com>",
-  "license": "UNLICENSED",
   "dependencies": {
     "babel-loader": "^6.2.5",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.14.0",
