@@ -32,6 +32,11 @@ make it straightforward to customize. Salient details:
 
 ### Build and Run
 
+Quillex uses Node on the server side, and it uses Npm for module managemnet.
+Install these if you haven't already done so. As of this writing, the bulk of
+development and testing have been done using Node version 6.\* and Npm version
+3.\*.
+
 ```
 $ npm install
 $ npm start
