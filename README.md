@@ -30,6 +30,9 @@ make it straightforward to customize. Salient details:
 * [Express](https://expressjs.com/) is used as the HTTP server and associated
   plumbing.
 
+* The server side _only_ exists to serve the assets. As of this writing there is
+  no client-server communication. (This may change in the future.)
+
 ### Build and Run
 
 Quillex uses Node on the server side, and it uses Npm for module managemnet.
