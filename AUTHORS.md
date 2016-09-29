@@ -14,3 +14,6 @@ Quillex Authors
 ### Acknowledgments
 
 Thanks to [Slack Technologies](https://slack.com/) for supporting this work.
+
+Thanks to Jason Chen and the [Quill](https://quilljs.com/) community for
+producing Quill and helping resolve issues.

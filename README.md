@@ -1,8 +1,8 @@
 Quillex
 =======
 
-A little Quill demo web application. The code is set up to make it
-straightforward to customize. Salient details:
+A little [Quill](https://quilljs.com/) demo application. The code is set up to
+make it straightforward to customize. Salient details:
 
 * Quill and its dependencies get built from source, instead of being used in
   the precompiled distro form which Quill provides as a convenience. This makes
@@ -26,6 +26,9 @@ straightforward to customize. Salient details:
   * TypeScript is compiled into conservative JavaScript by the standard
     TS compiler, hooked up to Webpack using
     [`ts-loader`](https://www.npmjs.com/package/ts-loader).
+
+* [Express](https://expressjs.com/) is used as the HTTP server and associated
+  plumbing.
 
 ### Build and Run
 
