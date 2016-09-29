@@ -31,7 +31,7 @@ if grep --quiet -E "${badText}" "${file}"; then
     sed -i '~' -E "s/${badText}/${goodText}/g" "${file}"
     if [[ "$(diff --brief "${file}" "${file}~")" == '' ]]; then
         echo 'Upstream seems to have been fixed! Huzzah!' 1>&2
-        echo 'Now remove this from `fix-things.sh` to get going again.' 1>&2
+        echo 'Now remove this from `fix-server-modules.sh` to get going again.' 1>&2
         exit 1
     fi
 fi
