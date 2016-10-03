@@ -49,6 +49,9 @@ var webpackOptions = {
     filename: 'bundle.js',
     publicPath: '/static/'
   },
+  plugins: [
+    new webpack.ProgressPlugin(progressMessage)
+  ],
   resolve: {
     alias: {
       // The `quill` module as published exports an entry point which references
@@ -124,6 +127,12 @@ var watchOptions = {
  */
 var latestBundle = null;
 
+/**
+ * Timestamp of the most recent progress message. Used to limit frequency of
+ * messages so as not to spew too much.
+ */
+var lastProgressMessageTime = 0;
+
 // Replace `false` with `true` here to add a delay to the first compilation, and
 // thereby make it easier to test startup.
 if (false) {
@@ -172,6 +181,33 @@ function compileAndWatch() {
       log('Bundle not written!');
     }
   });
+}
+
+/**
+ * Handles a progress message. Emits the message along with the percentage, but
+ * only if (a) this is a message for the start or end of a task (0% or 100%),
+ * or (b) the last progress message wasn't too recent.
+ */
+function progressMessage(frac, msg) {
+  var now = Date.now();
+  if ((frac > 0.0001) && (frac < 0.9999)) {
+    // Not the start or end; check the timestamp. If it's within 1 second
+    // (1000 msec), ignore it.
+    if (now < (lastProgressMessageTime + 1000)) {
+      return;
+    }
+  }
+
+  if (msg === '') {
+    if (frac >= 0.9999) {
+      msg = 'done';
+    } else {
+      msg = 'still working';
+    }
+  }
+
+  lastProgressMessageTime = now;
+  log(Math.floor(frac * 100) + '% -- ' + msg);
 }
 
 /**
