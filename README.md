@@ -14,10 +14,10 @@ make it straightforward to customize. Salient details:
   configuration, where changes to source files cause the bundle to be recompiled
   on the fly.
 
-* Custom code can be written in either ES2017 (with a `.js` suffix) or
-  [TypeScript](https://www.typescriptlang.org/) (with a `.ts` suffix). Modern
-  `import` syntax works both for separate modules (e.g.,
-  `import Quill from 'quill'`) and local files (e.g.,
+* Custom client code can be written in either ES2017 (with a `.js` suffix) or
+  [TypeScript](https://www.typescriptlang.org/) (with a `.ts` suffix). Custom
+  server code can be written in ES2017. Modern `import` syntax works both for
+  separate modules (e.g., `import Quill from 'quill'`) and local files (e.g.,
   `import { thing } from './thing'`).
 
   * ES2017 is compiled into conservative JavaScript by
@@ -31,16 +31,20 @@ make it straightforward to customize. Salient details:
   plumbing.
 
 * The server side _only_ exists to serve the assets. As of this writing there is
-  no client-server communication. (This may change in the future.)
+  a demo of using a websocket to communicate between client and server, but it
+  is not used for any real purpose. (This may change in the future.)
 
 ### Build and Run
 
-Quillex uses Node on the server side, and it uses Npm for module management.
-Install these if you haven't already done so. As of this writing, the bulk of
-development and testing have been done using Node version 6 and Npm version
-3.
+Quillex uses [Node](https://nodejs.org) on the server side, and it uses
+[npm](https://npmjs,com) for module management. Install both of these if you
+haven't already done so. As of this writing, the bulk of development and
+testing have been done using `node` version 6 and `npm` version 3.
+
+To build and run, say:
 
 ```
+$ cd quillex
 $ npm start
 ```
 
@@ -63,6 +67,11 @@ $ npm run clean
   application entrypoint is `js/app.js`.
 * `server` &mdash; Server code. The main entrypoint is `main.js`.
 * `out` &mdash; Where the results of doing a build end up.
+
+In addition, Quillex can be configured to build with an overlay source
+directory, allowing one to override individual source files while still keeping
+a "pristine" checkout of the `quillex` repo. See the script
+[`build.sh`](scripts/build.sh) for details.
 
 ### Other information
 
