@@ -41,11 +41,15 @@ development and testing have been done using Node version 6 and Npm version
 3.
 
 ```
-$ npm install
 $ npm start
 ```
 
-and then visit <http://localhost:9001>.
+and then visit <http://localhost:8080>. This will do a build first. If you
+_just_ want to do the build, then you can say:
+
+```
+$ npm install
+```
 
 ### Cleanup
 
@@ -58,6 +62,7 @@ $ npm run clean
 * `client` &mdash; Client code and static assets. The main client-side
   application entrypoint is `js/app.js`.
 * `server` &mdash; Server code. The main entrypoint is `main.js`.
+* `out` &mdash; Where the results of doing a build end up.
 
 ### Other information
 

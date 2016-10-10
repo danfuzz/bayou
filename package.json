@@ -14,7 +14,7 @@
 
   "scripts": {
     "clean": "git clean --force -d -X",
-    "preinstall": "./scripts/build-submodules.sh",
-    "start": "cd server; npm start"
+    "preinstall": "./scripts/build.sh",
+    "start": "./scripts/start.sh --build"
   }
 }
