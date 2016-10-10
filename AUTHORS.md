@@ -8,7 +8,7 @@ Quillex Authors
 
 * Chris DeSalvo
   [Email](mailto:chris@desalvo.org) /
-  [Website](http://desalvo.org/) /
+  [Website](https://desalvo.org/) /
   [GitHub](https://github.com/meantime)
 
 ### Acknowledgments
