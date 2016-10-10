@@ -8,12 +8,12 @@
  * automatically rebuilds whenever any of the files change.
  */
 
-var fs = require('fs');
-var memory_fs = require('memory-fs');
-var path = require('path');
-var webpack = require('webpack');
+import fs from 'fs';
+import memory_fs from 'memory-fs';
+import path from 'path';
+import webpack from 'webpack';
 
-var log = require('./log');
+import log from './log';
 
 /** Base directory of the product. */
 var baseDir = path.resolve(__dirname, '..');
@@ -210,18 +210,20 @@ function progressMessage(frac, msg) {
   log(Math.floor(frac * 100) + '% -- ' + msg);
 }
 
-/**
- * Handles a request for the JS bundle. This is suitable for use as an Express
- * handler function.
- */
-exports.requestHandler = function requestHandler(req, res) {
-  if (latestBundle) {
-    res.type('application/javascript');
-    res.send(latestBundle);
-  } else {
-    // This request came in before a bundle has ever been built. Instead of
-    // trying to get too fancy, we just wait a second and retry (which itself
-    // might end up waiting some more).
-    setTimeout(requestHandler, 1000, req, res);
+export default class ClientBundle {
+  /**
+   * Handles a request for the JS bundle. This is suitable for use as an Express
+   * handler function.
+   */
+  static requestHandler(req, res) {
+    if (latestBundle) {
+      res.type('application/javascript');
+      res.send(latestBundle);
+    } else {
+      // This request came in before a bundle has ever been built. Instead of
+      // trying to get too fancy, we just wait a second and retry (which itself
+      // might end up waiting some more).
+      setTimeout(ClientBundle.requestHandler, 1000, req, res);
+    }
   }
 }

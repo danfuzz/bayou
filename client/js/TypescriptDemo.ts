@@ -3,9 +3,12 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 /*
- * Wrapper for logging. Exposes a simple `log()` function.
+ * Demo of client-side TypeScript, which shows that the TS compiler is working
+ * as expected.
  */
 
-export default function log(obj) {
-  console.log(obj);
+export default class TypescriptDemo {
+  static triple(x: number) {
+    return x * 3;
+  }
 }

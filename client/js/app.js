@@ -9,16 +9,40 @@
  */
 
 import Quill from 'quill';
-import Parchment from 'parchment';
 
-// Demonstrates that Webpack conversion and bundling is working as expected.
-import { triple } from './typescript_demo';
-import { square } from './es2017_demo';
+const toolbarOptions = [
+  ['bold', 'italic', 'underline', 'strike', 'code'],// toggled buttons
+  ['blockquote', 'code-block'],
+
+  [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+  [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
+  [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
+
+  [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+  [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+  [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+  [{ 'font': [] }],
+  [{ 'align': [] }],
+
+  ['clean']                                         // remove formatting button
+];
 
 var quill = new Quill('#editor', {
-  theme: 'snow'
+  theme: 'snow',
+  modules: {
+    toolbar: toolbarOptions
+  }
 });
 
-// See comment on `import` lines above.
-console.log('ES2017: ' + square(20));
-console.log('TypeScript: ' + triple(5));
+// Demonstrates that Webpack conversion and bundling is working as expected.
+import TypescriptDemo from './TypescriptDemo';
+import EcmaDemo from './EcmaDemo';
+console.log('ES2017: ' + EcmaDemo.square(20));
+console.log('TypeScript: ' + TypescriptDemo.triple(5));
+
+// Demo of API access.
+import ApiClient from './ApiClient';
+var api = new ApiClient(document.URL);
+api.test();

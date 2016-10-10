@@ -1,21 +1,34 @@
-// Copyright 2016 the Quillex Authors (Dan Bornstein et alia).
-// Licensed AS IS and WITHOUT WARRANTY under the Apache License,
-// Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+// This `import` patches Node's backtrace handler so as to make it respect
+// source maps (and so produce traces with proper source position info for
+// compiled files). We do this as the very first thing upon running, so that
+// any exceptions thrown during bootstrap have a reasonable chance of getting
+// displayed with an accurate backtrace.
+import 'source-map-support/register';
 
-var PORT = 9001;
+import express from 'express';
+import express_ws from 'express-ws';
+import fs from 'fs';
+import morgan from 'morgan';
+import path from 'path';
+import process from 'process';
 
-var express = require('express');
-var fs = require('fs');
-var morgan = require('morgan');
-var path = require('path');
+import ClientBundle from './ClientBundle';
+import DevMode from './DevMode';
+import log from './log';
 
-var client_bundle = require('./client_bundle');
-var log = require('./log');
+/** What port to listen for connections on. */
+var PORT = 8080;
 
 /** Base dir of the product. */
 var baseDir = path.resolve(__dirname, '..');
 
+// Are we in dev mode? If so, we aim to live-sync the original source.
+if (process.argv[2] === '--dev') {
+  DevMode.start();
+}
+
 var app = express();
+express_ws(app);
 
 // An abbreviated and colorized log to the console.
 app.use(morgan('dev'));
@@ -30,11 +43,32 @@ app.use('/static/quill',
   express.static(path.resolve(baseDir, 'client/node_modules/quill/dist')));
 
 // Use Webpack to serve a JS bundle.
-app.get('/static/bundle.js', client_bundle.requestHandler);
+app.get('/static/bundle.js', ClientBundle.requestHandler);
 
 // Find HTML files and other static assets in `client/assets`. This includes the
 // top-level `index.html` and `favicon`, as well as stuff under `static/`.
 app.use('/', express.static(path.resolve(baseDir, 'client/assets')));
+
+// Demo of Websocket API service.
+app.ws('/api', function (ws, req) {
+  log('Websocket connected.')
+  ws.on('message', function (msg) {
+    log('Websocket message:');
+    msg = JSON.parse(msg);
+    log(msg);
+    msg.ok = true;
+    ws.send(JSON.stringify(msg));
+  });
+  ws.on('close', function (code, msg) {
+    log('Websocket close:');
+    log(code);
+    log(msg);
+  });
+  ws.on('error', function (err) {
+    log('Websocket error:');
+    log(err);
+  });
+})
 
 app.listen(PORT, function () {
   log(`Quillex listening on port ${PORT}.`);

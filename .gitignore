@@ -1,4 +1,9 @@
-access.log
+# Directory where build results / artifacts land
+out/
+
+# We use a trivial top-level `package.json` to hold scripts to run, but this
+# results in a superfluous `node_modules` directory showing up.
 node_modules/
+
+# When aforementioned scripts fail, it leaves behind this file.
 npm-debug.log
-*~
