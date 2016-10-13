@@ -16,6 +16,7 @@ import morgan from 'morgan';
 import path from 'path';
 import process from 'process';
 
+import ApiServer from './ApiServer';
 import ClientBundle from './ClientBundle';
 import DevMode from './DevMode';
 import log from './log';
@@ -53,26 +54,8 @@ app.get('/static/bundle.js', ClientBundle.requestHandler);
 // top-level `index.html` and `favicon`, as well as stuff under `static/`.
 app.use('/', express.static(path.resolve(baseDir, 'client/assets')));
 
-// Demo of Websocket API service.
-app.ws('/api', function (ws, req) {
-  log('Websocket connected.')
-  ws.on('message', function (msg) {
-    log('Websocket message:');
-    msg = JSON.parse(msg);
-    log(msg);
-    msg.ok = true;
-    ws.send(JSON.stringify(msg));
-  });
-  ws.on('close', function (code, msg) {
-    log('Websocket close:');
-    log(code);
-    log(msg);
-  });
-  ws.on('error', function (err) {
-    log('Websocket error:');
-    log(err);
-  });
-})
+// Attach the API server.
+app.ws('/api', (ws, req) => { new ApiServer(ws); });
 
 app.listen(PORT, function () {
   log(`Quillex listening on port ${PORT}.`);
