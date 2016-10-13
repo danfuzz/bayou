@@ -9,6 +9,11 @@
  */
 
 import Quill from 'quill';
+import ApiClient from './ApiClient';
+
+// Initialize the API connection.
+var api = new ApiClient(document.URL);
+api.open();
 
 const toolbarOptions = [
   ['bold', 'italic', 'underline', 'strike', 'code'],// toggled buttons
@@ -36,13 +41,16 @@ var quill = new Quill('#editor', {
   }
 });
 
+// Get Quill to report deltas to the server.
+quill.on('text-change', (delta, oldDelta, source) => {
+  if (source !== 'user') {
+    return;
+  }
+  api.update(delta);
+});
+
 // Demonstrates that Webpack conversion and bundling is working as expected.
 import TypescriptDemo from './TypescriptDemo';
 import EcmaDemo from './EcmaDemo';
 console.log('ES2017: ' + EcmaDemo.square(20));
 console.log('TypeScript: ' + TypescriptDemo.triple(5));
-
-// Demo of API access.
-import ApiClient from './ApiClient';
-var api = new ApiClient(document.URL);
-api.test();
