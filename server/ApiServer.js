@@ -33,8 +33,8 @@ export default class ApiServer {
     msg = JSON.parse(msg);
     log(msg);
 
-    var method = msg.method;
-    var impl;
+    const method = msg.method;
+    let impl;
     if (method === undefined) {
       impl = this.error_missing_method;
     } else if (typeof method !== 'string') {
@@ -47,8 +47,8 @@ export default class ApiServer {
     }
 
     // Function to send a response. Arrow syntax so that `this` is usable.
-    let respond = (result, error) => {
-      var response = { id: msg.id };
+    const respond = (result, error) => {
+      let response = { id: msg.id };
       if (error) {
         response.ok = false;
         response.error = error.message;

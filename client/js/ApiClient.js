@@ -56,11 +56,11 @@ export default class ApiClient {
    * (or error).
    */
   _send(method, args) {
-    let id = this.nextId;
-    let payload = JSON.stringify({ method: method, args: args, id: id });
+    const id = this.nextId;
+    const payload = JSON.stringify({ method: method, args: args, id: id });
 
-    var callback;
-    let result = new Promise((resolve, reject) => {
+    let callback;
+    const result = new Promise((resolve, reject) => {
       callback = { resolve: resolve, reject: reject };
     });
 
@@ -82,7 +82,7 @@ export default class ApiClient {
       }
     }
 
-    console.log('Websocket sent: ' + payload);
+    console.log(`Websocket sent: ${payload}`);
 
     return result;
   }
@@ -106,10 +106,14 @@ export default class ApiClient {
    * `this.callbacks`. That callback is then called in a separate tick.
    */
   _handleMessage(event) {
-    var payload = JSON.parse(event.data);
-    var id = payload.id;
-    var result = payload.result;
-    var error = payload.error;
+    const payload = JSON.parse(event.data);
+    const id = payload.id;
+    let result = payload.result;
+    const error = payload.error;
+
+    if (result === undefined) {
+      result = null;
+    }
 
     if (typeof id !== 'number') {
       if (!id) {
@@ -119,18 +123,14 @@ export default class ApiClient {
       }
     }
 
-    if (result === undefined) {
-      result = null;
-    }
-
-    var callback = this.callbacks[id];
+    const callback = this.callbacks[id];
     if (callback) {
       delete this.callbacks[id];
       if (error) {
-        console.log('Websocket reject ' + id + ': ' + JSON.stringify(error));
+        console.log(`Websocket reject ${id}: ${JSON.stringify(error)}`);
         callback.reject(new Error(error));
       } else {
-        console.log('Websocket resolve ' + id + ': ' + JSON.stringify(result));
+        console.log(`Websocket resolve ${id}: ${JSON.stringify(result)}`);
         callback.resolve(result);
       }
     } else {
@@ -147,7 +147,7 @@ export default class ApiClient {
       throw new Error('Already open');
     }
 
-    var url = this.url;
+    const url = this.url;
     this.ws = new WebSocket(url);
     this.ws.onmessage = this._handleMessage.bind(this);
     this.ws.onopen    = this._handleOpen.bind(this);

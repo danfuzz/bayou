@@ -22,10 +22,10 @@ import log from './log';
  * _without_ a slash. Gets set in `start()`. If there is more than one element,
  * then _earlier_ directories are taken to overlay _later_ ones.
  */
-var copyFrom = [];
+let copyFrom = [];
 
 /** Target directory for client files. */
-var copyTo = path.resolve(__dirname, '../client');
+const copyTo = path.resolve(__dirname, '../client');
 
 
 /**
@@ -34,7 +34,7 @@ var copyTo = path.resolve(__dirname, '../client');
  */
 function findFile(relativePath) {
   for (let candidate of copyFrom) {
-    let fullPath = path.resolve(candidate, relativePath);
+    const fullPath = path.resolve(candidate, relativePath);
     try {
       fs.accessSync(fullPath, fs.constants.R_OK);
       return fullPath;
@@ -51,14 +51,14 @@ function findFile(relativePath) {
  * appropriate, including making any needed new directories.
  */
 function handleUpdate(fromPath) {
-  var basePath = null;
-  var relativePath = null;
+  let basePath = null;
+  let relativePath = null;
 
   // Hack off the `copyFrom` prefix. Because there might be more than one source
   // directory, we have to iterate over all the possibilities until we find a
   // hit.
   for (let candidate of copyFrom) {
-    let clen = candidate.length;
+    const clen = candidate.length;
     if ((fromPath.length > clen)
         && (candidate === fromPath.substring(0, clen))
         && (fromPath[clen] === '/')) {
@@ -69,16 +69,16 @@ function handleUpdate(fromPath) {
   }
 
   if (basePath === null) {
-    log('[dev-mode] Weird path: ' + fromPath);
+    log(`[dev-mode] Weird path: ${fromPath}`);
     return;
   }
 
-  var toPath = path.resolve(copyTo, relativePath);
-  var sourcePath = findFile(relativePath);
+  const toPath = path.resolve(copyTo, relativePath);
+  const sourcePath = findFile(relativePath);
 
   if (sourcePath === null) {
     fs.unlinkSync(toPath);
-    log('[dev-mode] Removed: ' + relativePath);
+    log(`[dev-mode] Removed: ${relativePath}`);
   } else if (sourcePath === fromPath) {
     // We only end up here if the file that changed is the "most overlaid" one.
     // That is, if `foo.js` has an overlay, and we just noticed that the base
@@ -86,7 +86,7 @@ function handleUpdate(fromPath) {
     // it.
     fs_extra.ensureDirSync(path.dirname(toPath));
     fs_extra.copySync(fromPath, toPath, { clobber: true, dereference: false });
-    log('[dev-mode] Updated: ' + relativePath);
+    log(`[dev-mode] Updated: ${relativePath}`);
   }
 }
 
@@ -94,19 +94,19 @@ function handleUpdate(fromPath) {
  * Initializes `copyFrom` based on the build info file.
  */
 function initSources() {
-  var sourceDir = null;
-  var overlayDir = null;
+  let sourceDir = null;
+  let overlayDir = null;
 
-  var infoText =
+  const infoText =
     fs.readFileSync(path.resolve(__dirname, '../build-info.txt'), 'utf8');
   for (let line of infoText.match(/^.*$/mg)) {
     if (line === '') {
       continue;
     }
 
-    var setting = line.match(/^([^=]*)='(.*)'$/);
-    var key = setting[1];
-    var value = setting[2];
+    const setting = line.match(/^([^=]*)='(.*)'$/);
+    const key = setting[1];
+    const value = setting[2];
     switch (key) {
       case 'sourceDir':  { sourceDir  = value; break; }
       case 'overlayDir': { overlayDir = value; break; }
@@ -126,7 +126,7 @@ export default class DevMode {
   static start() {
     initSources();
 
-    var wp = new Watchpack({
+    const wp = new Watchpack({
       aggregateTimeout: 1000, // Wait 1sec (1000msec) after change detection.
     });
 

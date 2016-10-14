@@ -16,19 +16,19 @@ import webpack from 'webpack';
 import log from './log';
 
 /** Base directory of the product. */
-var baseDir = path.resolve(__dirname, '..');
+const baseDir = path.resolve(__dirname, '..');
 
 /** Client code directory. */
-var clientDir = path.resolve(baseDir, 'client');
+const clientDir = path.resolve(baseDir, 'client');
 
 /** Where to find all our non-module JS files. */
-var jsDir = path.resolve(clientDir, 'js');
+const jsDir = path.resolve(clientDir, 'js');
 
 /**
  * The parsed `package.json` for the client. This is used for some of the
  * `webpack` config.
  */
-var clientPackage =
+const clientPackage =
   JSON.parse(fs.readFileSync(path.resolve(clientDir, 'package.json')));
 
 /**
@@ -38,7 +38,7 @@ var clientPackage =
  * extension. As such, any `.js` file will get loaded via our "modern ES"
  * pipeline, and any `.ts` file will get loaded via the TypeScript loader.
  */
-var webpackOptions = {
+const webpackOptions = {
   context: jsDir,
   debug: true,
   devtool: '#inline-source-map',
@@ -83,7 +83,7 @@ var webpackOptions = {
           // <http://stackoverflow.com/questions/34574403/how-to-set-resolve-for-babel-loader-presets/>
           // for details and discussion.
           presets: ['es2015', 'es2016', 'es2017'].map(function (name) {
-            return require.resolve('babel-preset-' + name);
+            return require.resolve(`babel-preset-${name}`);
           }),
         }
       },
@@ -115,7 +115,7 @@ var webpackOptions = {
 };
 
 /** Options passed to `compiler.watch()`. */
-var watchOptions = {
+const watchOptions = {
   // Wait up to this many msec after detecting a changed file. This helps
   // prevent a rebuild from starting while in the middle of a file save.
   aggregateTimeout: 1000
@@ -125,13 +125,13 @@ var watchOptions = {
  * The latest compiled bundle. This gets set by the `watch()` callback, which
  * fires off after each build completes.
  */
-var latestBundle = null;
+let latestBundle = null;
 
 /**
  * Timestamp of the most recent progress message. Used to limit frequency of
  * messages so as not to spew too much.
  */
-var lastProgressMessageTime = 0;
+let lastProgressMessageTime = 0;
 
 // Replace `false` with `true` here to add a delay to the first compilation, and
 // thereby make it easier to test startup.
@@ -148,26 +148,26 @@ if (false) {
  * request before the first compile finishes.
  */
 function compileAndWatch() {
-  var fs = new memory_fs();
-  var compiler = webpack(webpackOptions);
+  const fs = new memory_fs();
+  const compiler = webpack(webpackOptions);
   compiler.outputFileSystem = fs;
 
   compiler.watch(watchOptions, function (err, stats) {
-    var warnings = stats.compilation.warnings;
-    var errors = stats.compilation.errors;
+    const warnings = stats.compilation.warnings;
+    const errors = stats.compilation.errors;
 
     if (warnings && (warnings.length !== 0)) {
       log('Compilation warnings.')
-      for (var i = 0; i < warnings.length; i++) {
-        var w = warnings[i];
+      for (let i = 0; i < warnings.length; i++) {
+        const w = warnings[i];
         log(w);
       }
     }
 
     if (err || (errors && (errors.length !== 0))) {
       log('Trouble compiling JS bundle.')
-      for (var i = 0; i < errors.length; i++) {
-        var e = errors[i];
+      for (let i = 0; i < errors.length; i++) {
+        const e = errors[i];
         log(e.message);
       }
       return;
@@ -189,7 +189,7 @@ function compileAndWatch() {
  * or (b) the last progress message wasn't too recent.
  */
 function progressMessage(frac, msg) {
-  var now = Date.now();
+  const now = Date.now();
   if ((frac > 0.0001) && (frac < 0.9999)) {
     // Not the start or end; check the timestamp. If it's within 1 second
     // (1000 msec), ignore it.
@@ -207,7 +207,7 @@ function progressMessage(frac, msg) {
   }
 
   lastProgressMessageTime = now;
-  log(Math.floor(frac * 100) + '% -- ' + msg);
+  log(`${Math.floor(frac * 100)}% -- ${msg}`);
 }
 
 export default class ClientBundle {
