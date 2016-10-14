@@ -19,6 +19,7 @@ import process from 'process';
 import ApiServer from './ApiServer';
 import ClientBundle from './ClientBundle';
 import DevMode from './DevMode';
+import Document from './Document';
 import log from './log';
 
 /** What port to listen for connections on. */
@@ -31,6 +32,9 @@ var baseDir = path.resolve(__dirname, '..');
 if (process.argv[2] === '--dev') {
   DevMode.start();
 }
+
+/** The single document managed by this instance. */
+var theDoc = new Document();
 
 var app = express();
 express_ws(app);
@@ -55,7 +59,7 @@ app.get('/static/bundle.js', ClientBundle.requestHandler);
 app.use('/', express.static(path.resolve(baseDir, 'client/assets')));
 
 // Attach the API server.
-app.ws('/api', (ws, req) => { new ApiServer(ws); });
+app.ws('/api', (ws, req) => { new ApiServer(ws, theDoc); });
 
 app.listen(PORT, function () {
   log(`Quillex listening on port ${PORT}.`);

@@ -9,19 +9,24 @@ import log from './log';
 export default class ApiServer {
   /**
    * Constructs an instance. Each instance corresponds to a separate client
-   * connection. `ws` is a websocket instance corresponding to that connection.
-   * As a side effect, the contructor attaches the constructed instance to the
-   * websocket.
+   * connection. As a side effect, the contructor attaches the constructed
+   * instance to the websocket.
+   *
+   * @param ws A websocket instance corresponding to that connection.
+   * @param doc The document to interact with.
    */
-  constructor(ws) {
+  constructor(ws, doc) {
     this.ws = ws;
+    this.doc = doc;
     ws.on('message', this._handleMessage.bind(this));
     ws.on('close', this._handleClose.bind(this));
     ws.on('error', this._handleError.bind(this));
   }
 
   /**
-   * Handles a `message` event coming from the underlying websocket.
+   * Handles a `message` event coming from the underlying websocket. For valid
+   * methods, this calls the method implementation and handles both the case
+   * where the result is a simple value or a promise.
    */
   _handleMessage(msg) {
     log('Websocket message:');
@@ -41,20 +46,34 @@ export default class ApiServer {
       }
     }
 
-    var response = { ok: false, id: msg.id };
-    try {
-      let result = impl.call(this, msg.args);
-      if (result !== undefined) {
+    // Function to send a response. Arrow syntax so that `this` is usable.
+    let respond = (result, error) => {
+      var response = { id: msg.id };
+      if (error) {
+        response.ok = false;
+        response.error = error.message;
+      } else {
+        response.ok = true;
         response.result = result;
       }
-      response.ok = true;
-    } catch (e) {
-      response.error = e.message;
+
+      log('Websocket response:');
+      log(response);
+      if (error) {
+        log(error);
+      }
+      this.ws.send(JSON.stringify(response));
     }
 
-    log('Websocket response:');
-    log(response);
-    this.ws.send(JSON.stringify(response));
+    try {
+      // Note: If the method implementation returns a non-promise, then the
+      // `resolve()` call operates promptly.
+      Promise.resolve(impl.call(this, msg.args)).then(
+        (result) => { respond(result, null); },
+        (error) => { respond(null, error); });
+    } catch (error) {
+      respond(null, error);
+    }
   }
 
   /**
@@ -96,10 +115,20 @@ export default class ApiServer {
   }
 
   /**
-   * API method `test`: Responds back with the same arguments as it was passed.
+   * API method `test`: Returns the same arguments as it was passed.
    */
   method_test(args) {
     return args;
+  }
+
+  /**
+   * API method `snapshot`: Returns an instantaneous snapshot of the document
+   * contents.
+   */
+  method_snapshot(args) {
+    // TODO: Something real.
+    log('Snapshot');
+    return this.doc.snapshot();
   }
 
   /**
