@@ -49,6 +49,16 @@ quill.on('text-change', (delta, oldDelta, source) => {
   api.update(delta);
 });
 
+// Get the initial document state from the server.
+api.snapshot().then(
+  (result) => {
+    quill.setContents(result, 'api');
+  },
+  (error) => {
+    throw new Error(error);
+  }
+);
+
 // Demonstrates that Webpack conversion and bundling is working as expected.
 import TypescriptDemo from './TypescriptDemo';
 import EcmaDemo from './EcmaDemo';

@@ -28,6 +28,8 @@
     "fs-extra": "^0.30.0",
     "html-loader": "^0.4.4",
     "morgan": "^1.7.0",
+    "rich-text": "^3.1.0",
+    "sharedb": "^1.0.0-beta.6",
     "source-map-support": "^0.4.2",
     "ts-loader": "^0.8.2",
     "typescript": "^2.0.3",

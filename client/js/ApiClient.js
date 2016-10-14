@@ -37,7 +37,11 @@ export default class ApiClient {
     /** Next message ID to use when sending a message. */
     this.nextId = 0;
 
-    /** Map from message IDs to response callbacks. */
+    /**
+     * Map from message IDs to response callbacks. Each callback is an object
+     * that maps `resolve` and `reject` to functions that obey the usual
+     * promise contract for functions of those names.
+     */
     this.callbacks = {};
 
     /**
@@ -48,12 +52,18 @@ export default class ApiClient {
   }
 
   /**
-   * Sends the given call to the server. Arranges for `callback` to be called
-   * when a response comes back.
+   * Sends the given call to the server. Returns a promise for the result
+   * (or error).
    */
-  _send(method, args, callback) {
-    var id = this.nextId;
-    var payload = JSON.stringify({ method: method, args: args, id: id });
+  _send(method, args) {
+    let id = this.nextId;
+    let payload = JSON.stringify({ method: method, args: args, id: id });
+
+    var callback;
+    let result = new Promise((resolve, reject) => {
+      callback = { resolve: resolve, reject: reject };
+    });
+
     this.callbacks[id] = callback;
     this.nextId++;
 
@@ -71,6 +81,10 @@ export default class ApiClient {
         throw new Error('Websocket is closed or closing.');
       }
     }
+
+    console.log('Websocket sent: ' + payload);
+
+    return result;
   }
 
   /**
@@ -109,23 +123,24 @@ export default class ApiClient {
       result = null;
     }
 
-    if (error === undefined) {
-      error = null;
-    }
-
     var callback = this.callbacks[id];
-    if (!callback) {
-      throw new Error(`Orphan call for ID ${id}.`);
-    } else {
-      // Use `setTimeout()` so that the callback runs in its own tick.
-      setTimeout(callback, 0, payload.result, payload.error);
+    if (callback) {
       delete this.callbacks[id];
+      if (error) {
+        console.log('Websocket reject ' + id + ': ' + JSON.stringify(error));
+        callback.reject(new Error(error));
+      } else {
+        console.log('Websocket resolve ' + id + ': ' + JSON.stringify(result));
+        callback.resolve(result);
+      }
+    } else {
+      throw new Error(`Orphan call for ID ${id}.`);
     }
   }
 
   /**
    * Opens the websocket. Once open, any pending calls will get sent to the
-   * server side.
+   * server side. Doesn't return a value.
    */
   open() {
     if (this.ws !== null) {
@@ -139,18 +154,25 @@ export default class ApiClient {
   }
 
   /**
+   * API call `snapshot`. Requests a document snapshot. Returns a promise for
+   * the result.
+   */
+  snapshot() {
+    return this._send('snapshot', { });
+  }
+
+  /**
    * API call `update`. Sends a document delta to the server.
    */
   update(delta) {
-    var call = { method: 'update', delta: delta };
-    this._send('update', { delta: delta }, (result, error) => {
-      if (!error) {
+    this._send('update', { delta: delta }).then(
+      (result) => {
         console.log('Update good.');
-      } else {
+      },
+      (error) => {
         console.log('Update error:');
         console.log(error);
-      }
-    });
+      });
   }
 
   /**
@@ -160,13 +182,14 @@ export default class ApiClient {
    * received.
    */
   test(value, wantClose) {
-    this._send('test', { value: value }, (result, error) => {
-      console.log('Test received');
-      console.log(result);
-      console.log(error);
-      if (wantClose) {
-        this.ws.close();
-      }
-    });
+    this._send('test', { value: value }).then(
+      (result) => {
+        console.log('Test good.');
+        console.log(result);
+      },
+      (error) => {
+        console.log('Test error.');
+        console.log(error);
+      });
   }
 };
