@@ -23,10 +23,10 @@ import Document from './Document';
 import log from './log';
 
 /** What port to listen for connections on. */
-var PORT = 8080;
+const PORT = 8080;
 
 /** Base dir of the product. */
-var baseDir = path.resolve(__dirname, '..');
+const baseDir = path.resolve(__dirname, '..');
 
 // Are we in dev mode? If so, we aim to live-sync the original source.
 if (process.argv[2] === '--dev') {
@@ -34,16 +34,17 @@ if (process.argv[2] === '--dev') {
 }
 
 /** The single document managed by this instance. */
-var theDoc = new Document();
+const theDoc = new Document();
 
-var app = express();
+const app = express();
 express_ws(app);
 
 // An abbreviated and colorized log to the console.
 app.use(morgan('dev'));
 
 // A fairly complete log written to a file.
-var logStream = fs.createWriteStream(path.resolve(baseDir, 'access.log'), {flags: 'a'});
+const logStream =
+  fs.createWriteStream(path.resolve(baseDir, 'access.log'), {flags: 'a'});
 app.use(morgan('common', {stream: logStream}));
 
 // Map Quill files into `/static/quill`. This is used for CSS files but not for

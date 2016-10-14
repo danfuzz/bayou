@@ -12,7 +12,7 @@ import Quill from 'quill';
 import ApiClient from './ApiClient';
 
 // Initialize the API connection.
-var api = new ApiClient(document.URL);
+const api = new ApiClient(document.URL);
 api.open();
 
 const toolbarOptions = [
@@ -34,7 +34,7 @@ const toolbarOptions = [
   ['clean']                                         // remove formatting button
 ];
 
-var quill = new Quill('#editor', {
+const quill = new Quill('#editor', {
   theme: 'snow',
   modules: {
     toolbar: toolbarOptions
@@ -59,8 +59,6 @@ api.snapshot().then(
   }
 );
 
-// Demonstrates that Webpack conversion and bundling is working as expected.
+// Demonstrates that Typescript conversion is working as expected.
 import TypescriptDemo from './TypescriptDemo';
-import EcmaDemo from './EcmaDemo';
-console.log('ES2017: ' + EcmaDemo.square(20));
-console.log('TypeScript: ' + TypescriptDemo.triple(5));
+console.log(`TypeScript: ${TypescriptDemo.triple(5)}`);
