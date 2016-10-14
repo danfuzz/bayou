@@ -30,9 +30,21 @@ make it straightforward to customize. Salient details:
 * [Express](https://expressjs.com/) is used as the HTTP server and associated
   plumbing.
 
-* The server side _only_ exists to serve the assets. As of this writing there is
-  a demo of using a websocket to communicate between client and server, but it
-  is not used for any real purpose. (This may change in the future.)
+* The product defines and uses a structured (though as yet not particularly
+  well-specified) API for communication between client and server. It uses a
+  websocket for transport, using it to pass JSON-encoded API calls and
+  responses. As of this writing, the server side only _barely_ does anything
+  nontrivial, though it does have an instance of
+  [ShareDB](https://github.com/share/sharedb) hooked into it. The intention is
+  to continue expanding the server-side functionality over time.
+
+* In order to facilitate using this project as a basis &mdash; and specifically
+  because no amount of configuration hooks will ever turn out to be fully
+  adequate &mdash; the build script can be invoked with an argument to indicate
+  an overlay source directory, allowing one to override individual source files
+  while still keeping a "pristine" checkout of the `quillex` repo. See the
+  script [`build.sh`](scripts/build.sh) for details.
+
 
 ### Build and Run
 
@@ -67,11 +79,6 @@ $ npm run clean
   application entrypoint is `js/app.js`.
 * `server` &mdash; Server code. The main entrypoint is `main.js`.
 * `out` &mdash; Where the results of doing a build end up.
-
-In addition, Quillex can be configured to build with an overlay source
-directory, allowing one to override individual source files while still keeping
-a "pristine" checkout of the `quillex` repo. See the script
-[`build.sh`](scripts/build.sh) for details.
 
 ### Other information
 
