@@ -10,10 +10,7 @@
 
 import Quill from 'quill';
 import ApiClient from './ApiClient';
-
-// Initialize the API connection.
-const api = new ApiClient(document.URL);
-api.open();
+import DocumentPlumbing from './DocumentPlumbing';
 
 const toolbarOptions = [
   ['bold', 'italic', 'underline', 'strike', 'code'],// toggled buttons
@@ -41,23 +38,10 @@ const quill = new Quill('#editor', {
   }
 });
 
-// Get Quill to report deltas to the server.
-quill.on('text-change', (delta, oldDelta, source) => {
-  if (source !== 'user') {
-    return;
-  }
-  api.update(delta);
-});
-
-// Get the initial document state from the server.
-api.snapshot().then(
-  (result) => {
-    quill.setContents(result, 'api');
-  },
-  (error) => {
-    throw new Error(error);
-  }
-);
+// Initialize the API connection, and hook it up to the Quill instance.
+const api = new ApiClient(document.URL);
+api.open();
+new DocumentPlumbing(quill, api);
 
 // Demonstrates that Typescript conversion is working as expected.
 import TypescriptDemo from './TypescriptDemo';

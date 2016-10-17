@@ -8,6 +8,16 @@ import ShareDB from 'sharedb';
 import rich_text from 'rich-text';
 
 import default_document from './default_document';
+import log from './log';
+
+/**
+ * Collection ID we use. **Note:** We use ShareDB in a very degenerate way, in
+ * that we only ever use it to manage a single document.
+ */
+const DOC_COLL_ID = 'the-collection-id';
+
+/** Document ID we use. See note on `DOC_COLL_ID`. */
+const DOC_ID = 'the-document-id';
 
 /** Document type we use. */
 const DOC_TYPE = rich_text.type;
@@ -32,7 +42,7 @@ export default class Document {
     this._connection = this._db.connect();
 
     /** The sole document being managed, via the server connection. */
-    this._doc = this._connection.get('the-collection', 'the-doc');
+    this._doc = this._connection.get(DOC_COLL_ID, DOC_ID);
 
     // Used below to resolve `ready`.
     let resolve;
@@ -42,12 +52,11 @@ export default class Document {
 
     // Initialize the document with static content (for now), and resolve
     // `ready` when done.
-    this._doc.fetch((error) => {
+    this._doc.create(default_document, DOC_TYPE.name, (error) => {
       if (error) {
         throw error;
       }
-
-      this._doc.create(default_document, DOC_TYPE.name, () => { resolve(true); });
+      resolve(true);
     });
   }
 
@@ -61,16 +70,19 @@ export default class Document {
 
   /**
    * Returns a promise for an instantaneous snapshot of the full document
-   * contents.
+   * contents. Ultimate result is an object that maps `data` to the snapshot
+   * data and `version` to the version number.
    */
   snapshot() {
+    const doc = this._doc;
+
     return new Promise((resolve, reject) => {
       this._ready.then(() => {
-        this._doc.fetch((error) => {
+        doc.fetch((error) => {
           if (error) {
             reject(error);
           } else {
-            resolve(this._doc.data);
+            resolve({ data: doc.data, version: doc.version });
           }
         });
       });
