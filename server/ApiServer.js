@@ -123,11 +123,10 @@ export default class ApiServer {
 
   /**
    * API method `snapshot`: Returns an instantaneous snapshot of the document
-   * contents.
+   * contents. Result is an object that maps `data` to the snapshot data and
+   * `version` to the version number.
    */
   method_snapshot(args) {
-    // TODO: Something real.
-    log('Snapshot');
     return this.doc.snapshot();
   }
 

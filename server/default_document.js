@@ -11,6 +11,6 @@ export default [
   { insert: 'Now go grab a ' },
   { insert: 'turntable', attributes: { bold: true } },
   { insert: ' and start ' },
-  { insert: 'a-spinnin', attributes: { italic: true } },
+  { insert: 'a-spinnin\'', attributes: { italic: true } },
   { insert: '.\n' }
 ];
