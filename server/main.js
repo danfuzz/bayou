@@ -30,7 +30,7 @@ const baseDir = path.resolve(__dirname, '..');
 
 // Are we in dev mode? If so, we aim to live-sync the original source.
 if (process.argv[2] === '--dev') {
-  DevMode.start();
+  new DevMode().start();
 }
 
 /** The single document managed by this instance. */
@@ -53,7 +53,7 @@ app.use('/static/quill',
   express.static(path.resolve(baseDir, 'client/node_modules/quill/dist')));
 
 // Use Webpack to serve a JS bundle.
-app.get('/static/bundle.js', ClientBundle.requestHandler);
+app.get('/static/bundle.js', new ClientBundle().requestHandler);
 
 // Find HTML files and other static assets in `client/assets`. This includes the
 // top-level `index.html` and `favicon`, as well as stuff under `static/`.

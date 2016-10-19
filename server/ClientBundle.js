@@ -3,9 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 /*
- * Request handler which builds and serves the bundled JS. It's set up for the
- * usual live-development style: It builds the bundle once upon startup and then
- * automatically rebuilds whenever any of the files change.
+ * Wrapper around Webpack.
  */
 
 import fs from 'fs';
@@ -14,6 +12,7 @@ import path from 'path';
 import webpack from 'webpack';
 
 import log from './log';
+import ProgressMessage from './ProgressMessage';
 
 /** Base directory of the product. */
 const baseDir = path.resolve(__dirname, '..');
@@ -50,7 +49,7 @@ const webpackOptions = {
     publicPath: '/static/'
   },
   plugins: [
-    new webpack.ProgressPlugin(progressMessage)
+    new webpack.ProgressPlugin(new ProgressMessage().handler)
   ],
   resolve: {
     alias: {
@@ -122,108 +121,123 @@ const watchOptions = {
 };
 
 /**
- * The latest compiled bundle. This gets set by the `watch()` callback, which
- * fires off after each build completes.
+ * Wrapper around Webpack which can do both one-off builds as well as run
+ * Webpack's "dev mode." Includes a request handler for hookup to Express.
  */
-let latestBundle = null;
+ export default class ClientBundle {
+   /**
+    * Constructs an instance.
+    */
+   constructor() {
+     /** Memory FS used to hold the immediate results of compilation. */
+     this._fs = new memory_fs();
 
-/**
- * Timestamp of the most recent progress message. Used to limit frequency of
- * messages so as not to spew too much.
- */
-let lastProgressMessageTime = 0;
+     /** Latest compiled bundle. */
+     this._latestBundle = null;
 
-// Replace `false` with `true` here to add a delay to the first compilation, and
-// thereby make it easier to test startup.
-if (false) {
-  // Wait ten seconds, and then start the compile-watch loop.
-  setTimeout(compileAndWatch, 10 * 1000);
-} else {
-  compileAndWatch();
-}
+     /** Dev mode running? */
+     this._devModeRunning = false;
+   }
 
-/**
- * Starts up the compile-and-watch loop. This is in a function (and not just
- * called directly) to make it easier to test the startup condition of a
- * request before the first compile finishes.
- */
-function compileAndWatch() {
-  const fs = new memory_fs();
-  const compiler = webpack(webpackOptions);
-  compiler.outputFileSystem = fs;
+   /**
+    * Returns a Webpack compiler instance, appropriately configured.
+    */
+   _newCompiler() {
+     const compiler = webpack(webpackOptions);
 
-  compiler.watch(watchOptions, function (err, stats) {
-    const warnings = stats.compilation.warnings;
-    const errors = stats.compilation.errors;
+     // We use a `memory_fs` to hold the immediate results of compilation, to
+     // make it possible to detect when things go awry before anything gets
+     // stored to the real FS.
+     compiler.outputFileSystem = this._fs;
 
-    if (warnings && (warnings.length !== 0)) {
-      log('Compilation warnings.')
-      for (let i = 0; i < warnings.length; i++) {
-        const w = warnings[i];
-        log(w);
-      }
-    }
+     return compiler;
+   }
 
-    if (err || (errors && (errors.length !== 0))) {
-      log('Trouble compiling JS bundle.')
-      for (let i = 0; i < errors.length; i++) {
-        const e = errors[i];
-        log(e.message);
-      }
-      return;
-    }
+   /**
+    * Handles the results of running a compile. This gets called as a callback
+    * from Webpack.
+    */
+   _handleCompilation(err, stats) {
+     const warnings = stats.compilation.warnings;
+     const errors = stats.compilation.errors;
 
-    log('Compiled new JS bundle.');
-    try {
-      latestBundle = fs.readFileSync('/bundle.js');
-    } catch (e) {
-      // File not found; something went wacky!
-      log('Bundle not written!');
-    }
-  });
-}
+     if (warnings && (warnings.length !== 0)) {
+       log('Compilation warnings.')
+       for (let i = 0; i < warnings.length; i++) {
+         const w = warnings[i];
+         log(w);
+       }
+     }
 
-/**
- * Handles a progress message. Emits the message along with the percentage, but
- * only if (a) this is a message for the start or end of a task (0% or 100%),
- * or (b) the last progress message wasn't too recent.
- */
-function progressMessage(frac, msg) {
-  const now = Date.now();
-  if ((frac > 0.0001) && (frac < 0.9999)) {
-    // Not the start or end; check the timestamp. If it's within 1 second
-    // (1000 msec), ignore it.
-    if (now < (lastProgressMessageTime + 1000)) {
-      return;
-    }
-  }
+     if (err || (errors && (errors.length !== 0))) {
+       log('Trouble compiling JS bundle.')
+       for (let i = 0; i < errors.length; i++) {
+         const e = errors[i];
+         log(e.message);
+       }
+       return;
+     }
 
-  if (msg === '') {
-    if (frac >= 0.9999) {
-      msg = 'done';
-    } else {
-      msg = 'still working';
-    }
-  }
+     log('Compiled new JS bundle.');
 
-  lastProgressMessageTime = now;
-  log(`${Math.floor(frac * 100)}% -- ${msg}`);
-}
+     // Find the written bundle in the memory FS, read it, and then delete it.
+     // See comments in `_newCompiler()`, above, for rationale.
+     try {
+       this._latestBundle = this._fs.readFileSync('/bundle.js');
+       this._fs.unlinkSync('/bundle.js');
+     } catch (e) {
+       // File not found. This will happen when it turns out there were no
+       // changes to the bundle. But it might happen in other cases too.
+       log('Bundle not written! No changes?');
+       return;
+     }
+   }
 
-export default class ClientBundle {
   /**
    * Handles a request for the JS bundle. This is suitable for use as an Express
-   * handler function.
+   * handler function if bound to `this`.
    */
-  static requestHandler(req, res) {
-    if (latestBundle) {
+  _requestHandler(req, res) {
+    if (this._latestBundle) {
       res.type('application/javascript');
-      res.send(latestBundle);
+      res.send(this._latestBundle);
     } else {
       // This request came in before a bundle has ever been built. Instead of
       // trying to get too fancy, we just wait a second and retry (which itself
       // might end up waiting some more).
-      setTimeout(ClientBundle.requestHandler, 1000, req, res);
+      setTimeout(this._requestHandler.bind(this), 1000, req, res);
     }
+  }
+
+  /**
+   * Performs a single build. Returns the built artifact.
+   */
+  build() {
+    const compiler = this._newCompiler();
+    compiler.run(this._handleCompilation.bind(this));
+    return this._latestBundle;
+  }
+
+  /**
+   * Starts up the Webpack dev mode system.
+   */
+  startWatching() {
+    if (this._devModeRunning) {
+      return;
+    }
+
+    const compiler = this._newCompiler();
+    compiler.watch(watchOptions, this._handleCompilation.bind(this));
+    this._devModeRunning = true;
+  }
+
+  /**
+   * The request handler function, suitable for use with Express. Usable as-is
+   * (without `.bind()`). The act of getting this also guarantees that dev mode
+   * has been set up and started.
+   */
+  get requestHandler() {
+    this.startWatching();
+    return this._requestHandler.bind(this);
   }
 }
