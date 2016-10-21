@@ -131,11 +131,25 @@ export default class ApiServer {
   }
 
   /**
-   * API method `update`: Accepts a document update from the client.
+   * API method `applyDelta`: Takes a base version number and delta therefrom,
+   * and applies the delta, including merging of any intermediate versions.
+   * Result is an object consisting of a new version number, and a
+   * delta which can be applied to version `baseVersion` to get the new
+   * document.
    */
-  method_update(args) {
-    // TODO: Something real.
-    log('Delta');
-    log(util.inspect(args.delta));
+  method_applyDelta(args) {
+    return this.doc.applyDelta(args.baseVersion, args.delta);
+  }
+
+  /**
+   * API method `deltaAfter`: Returns a promise for a snapshot of any version
+   * after the given `baseVersion`, and relative to that version. Result is an
+   * object consisting of a new version number, and a delta which can be applied
+   * to version `baseVersion` to get the new document. If called when
+   * `baseVersion` is the current version, this will not fulfill the result
+   * promise until at least one change has been made.
+   */
+  method_deltaAfter(args) {
+    return this.doc.deltaAfter(args.baseVersion);
   }
 }

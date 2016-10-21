@@ -162,17 +162,21 @@ export default class ApiClient {
   }
 
   /**
-   * API call `update`. Sends a document delta to the server.
+   * API call `deltaAfter`. Requests a delta for a newer version with respect
+   * to a given version.
    */
-  update(delta) {
-    this._send('update', { delta: delta }).then(
-      (result) => {
-        console.log('Update good.');
-      },
-      (error) => {
-        console.log('Update error:');
-        console.log(error);
-      });
+  deltaAfter(baseVersion) {
+    return this._send('deltaAfter', { baseVersion: baseVersion });
+  }
+
+  /**
+   * API call `applyDelta`. Sends a change to the server in the form of a
+   * base version number and delta therefrom. Returns a promise for the
+   * result, which is an object consisting of a new version number, and a
+   * delta which can be applied to `<base-version>` to get the new version.
+   */
+  applyDelta(baseVersion, delta) {
+    return this._send('applyDelta', { baseVersion: baseVersion, delta: delta });
   }
 
   /**

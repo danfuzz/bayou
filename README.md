@@ -34,9 +34,8 @@ make it straightforward to customize. Salient details:
   well-specified) API for communication between client and server. It uses a
   websocket for transport, using it to pass JSON-encoded API calls and
   responses. As of this writing, the server side only _barely_ does anything
-  nontrivial, though it does have an instance of
-  [ShareDB](https://github.com/share/sharedb) hooked into it. The intention is
-  to continue expanding the server-side functionality over time.
+  nontrivial. The intention is to continue expanding the server-side
+  functionality over time.
 
 * In order to facilitate using this project as a basis &mdash; and specifically
   because no amount of configuration hooks will ever turn out to be fully
