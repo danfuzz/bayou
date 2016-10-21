@@ -4,26 +4,10 @@
 
 import util from 'util';
 
-import ShareDB from 'sharedb';
-import rich_text from 'rich-text';
+import Delta from 'quill-delta';
 
-import default_document from './default_document';
-import log from './log';
-
-/**
- * Collection ID we use. **Note:** We use ShareDB in a very degenerate way, in
- * that we only ever use it to manage a single document.
- */
-const DOC_COLL_ID = 'the-collection-id';
-
-/** Document ID we use. See note on `DOC_COLL_ID`. */
-const DOC_ID = 'the-document-id';
-
-/** Document type we use. */
-const DOC_TYPE = rich_text.type;
-
-// Tell ShareDB about the doc type.
-ShareDB.types.register(DOC_TYPE);
+import Condition from './Condition';
+import default_document from './default-document';
 
 /**
  * Representation of a persistent document, along with a set of clients.
@@ -35,57 +19,187 @@ export default class Document {
    * Constructs an instance.
    */
   constructor() {
-    /** "DB" instance. */
-    this._db = new ShareDB();
+    /**
+     * List of changes that in aggregate represent the document. Each element
+     * is a Delta. The first element is always a delta-from-empty. Composing
+     * elements `0..N` results in version `N` of the document.
+     */
+    this._changes = [];
 
-    /** Main server-side connection to the db. */
-    this._connection = this._db.connect();
+    /**
+     * Mapping from version numbers to corresponding document snapshots.
+     * Sparse.
+     */
+    this._snapshots = {};
 
-    /** The sole document being managed, via the server connection. */
-    this._doc = this._connection.get(DOC_COLL_ID, DOC_ID);
+    /**
+     * Condition that transitions from `false` to `true` when there is a version
+     * change and there are waiters for same. This remains `true` in the steady
+     * state (when there are no waiters). As soon as the first waiter comes
+     * along, it gets set to `false`.
+     */
+    this._changeCondition = new Condition(true);
 
-    // Used below to resolve `ready`.
-    let resolve;
+    // Initialize the document with static content (for now).
+    const firstVersion = new Delta(default_document);
+    this._changes.push(firstVersion);
+  }
 
-    /** Promise that gets resolved when the document is ready. */
-    this._ready = new Promise((res, rej) => { resolve = res; });
+  /**
+   * The version number corresponding to the current (latest) version of the
+   * document.
+   */
+  get currentVersion() {
+    return this._changes.length - 1;
+  }
 
-    // Initialize the document with static content (for now), and resolve
-    // `ready` when done.
-    this._doc.create(default_document, DOC_TYPE.name, (error) => {
-      if (error) {
-        throw error;
+  /**
+   * Returns a snapshot of the full document contents. Optional `version`
+   * indicates which version to get; defaults to the current version. Result is
+   * an object that maps `data` to the document data and `version` to the
+   * version number.
+   */
+  snapshot(version) {
+    version = this._versionNumber(version, true);
+
+    // Search backward through the full versions for a base for forward
+    // composition.
+    let baseSnapshot = null;
+    for (let i = version; i >= 0; i--) {
+      const v = this._snapshots[i];
+      if (v) {
+        baseSnapshot = v;
+        break;
       }
-      resolve(true);
+    }
+
+    if (baseSnapshot === null) {
+      // We have no snapshots at all, including of even the first version. Set
+      // up version 0.
+      baseSnapshot = this._snapshots[0] = {
+        data: this._changes[0],
+        version: 0
+      };
+    }
+
+    if (baseSnapshot.version === version) {
+      // Found the right version!
+      return baseSnapshot;
+    }
+
+    // We didn't actully find a snapshot of the requested version. Apply deltas
+    // to the base to produce the desired version. Store it, and return it.
+
+    let data = baseSnapshot.data;
+    for (let i = baseSnapshot.version + 1; i <= version; i++) {
+      data = data.compose(this._changes[i]);
+    }
+
+    const result = {
+      data: data,
+      version: version
+    };
+
+    this._snapshots[version] = result;
+    return result;
+  }
+
+  /**
+   * Returns a promise for a snapshot of any version after the given
+   * `baseVersion`, and relative to that version. Result is an object
+   * consisting of a new version number, and a delta which can be applied
+   * to version `baseVersion` to get the new document. If called when
+   * `baseVersion` is the current version, this will not fulfill the result
+   * promise until at least one change has been made.
+   */
+  deltaAfter(baseVersion) {
+    baseVersion = this._versionNumber(baseVersion, false);
+
+    if (baseVersion !== this.currentVersion) {
+      // We can fulfill the result immediately. Compose all the deltas from
+      // the version after the base through the current version.
+      const currentVersion = this.currentVersion;
+      let delta = this._changes[baseVersion + 1];
+      for (let i = baseVersion + 2; i <= currentVersion; i++) {
+        delta = delta.compose(this._changes[i]);
+      }
+
+      // We don't just return a plain value (that is, we still return a promise)
+      // because of the usual hygenic recommendation to always return either
+      // an immediate result or a promise from any given function.
+      return Promise.resolve({ version: currentVersion, delta: delta });
+    }
+
+    // Force the `_changeCondition` to `false` (though it might already be
+    // so set; innocuous if so), and wait for it to become `true`.
+    this._changeCondition.value = false;
+    return this._changeCondition.whenTrue().then((v) => {
+      // Just recurse to do the work. Under normal circumstances it will return
+      // promptly. This arrangement gracefully handles edge cases, though, such
+      // as a triggered change turning out to be due to a no-op.
+      return this.deltaAfter(baseVersion);
     });
   }
 
   /**
-   * Returns a promise that is resolved when the document is ready. This occurs
-   * after any initial setup (e.g. loading from stable storage).
+   * Takes a base version number and delta therefrom, and applies the delta,
+   * including merging of any intermediate versions. Result is an object
+   * consisting of a new version number, and a delta which can be applied to
+   * version `baseVersion` to get the new document.
    */
-  ready() {
-    return this._ready;
+  applyDelta(baseVersion, delta) {
+    baseVersion = this._versionNumber(baseVersion, false);
+
+    if (baseVersion === this.currentVersion) {
+      // The easy case: Apply a delta to the latest version (unless it's empty,
+      // in which case we don't have to make a new version at all).
+      this._appendDelta(delta);
+      return {
+        delta: [], // That is, there was nothing else to merge.
+        version: this.currentVersion
+      }
+    }
+
+    // TODO: Handle merge. This is going to involve calling `Delta.transform()`
+    // with further details TBD.
+    throw new Error('Can\'t deal with merge...yet.');
   }
 
   /**
-   * Returns a promise for an instantaneous snapshot of the full document
-   * contents. Ultimate result is an object that maps `data` to the snapshot
-   * data and `version` to the version number.
+   * Appends a new delta to the document. Also forces `_changeCondition`
+   * `true` to release any waiters.
+   *
+   * **Note:** If the delta is a no-op, then this method does nothing.
    */
-  snapshot() {
-    const doc = this._doc;
+  _appendDelta(delta) {
+    if (delta.length === 0) {
+      return;
+    }
 
-    return new Promise((resolve, reject) => {
-      this._ready.then(() => {
-        doc.fetch((error) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve({ data: doc.data, version: doc.version });
-          }
-        });
-      });
-    });
+    this._changes.push(new Delta(delta));
+    this._changeCondition.value = true;
+  }
+
+  /**
+   * Checks a version number for sanity. Throws an error when insane. Returns
+   * the version number.
+   *
+   * @param version the (alleged) version number to check
+   * @param wantLatest if `true` indicates that `undefined` should be treated as
+   * a request for the latest version. If `false`, `undefined` is an error.
+   */
+  _versionNumber(version, wantLatest) {
+    if (wantLatest && (version === undefined)) {
+      return this.currentVersion;
+    }
+
+    if (   (typeof version !== 'number')
+        || (version !== Math.floor(version))
+        || (version < 0)
+        || (version > this.currentVersion)) {
+      throw new Error(`Bad version number: ${version}`);
+    }
+
+    return version;
   }
 }

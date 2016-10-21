@@ -1,6 +1,6 @@
 {
   "name": "quillex-server",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Server code for Quillex",
   "license": "Apache-2.0",
   "author": "Dan Bornstein <danfuzz@milk.com>",
@@ -28,8 +28,7 @@
     "fs-extra": "^0.30.0",
     "html-loader": "^0.4.4",
     "morgan": "^1.7.0",
-    "rich-text": "^3.1.0",
-    "sharedb": "^1.0.0-beta.6",
+    "quill-delta": "^3.4.0",
     "source-map-support": "^0.4.2",
     "ts-loader": "^0.9.3",
     "typescript": "^2.0.3",
