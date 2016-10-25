@@ -19,4 +19,5 @@ const quill = QuillMaker.make('#editor');
 // Initialize the API connection, and hook it up to the Quill instance.
 const api = new ApiClient(document.URL);
 api.open();
-new DocumentPlumbing(quill, api);
+const plumbing = new DocumentPlumbing(quill, api);
+plumbing.start();
