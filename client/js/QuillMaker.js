@@ -32,7 +32,8 @@ export default class QuillMaker {
   /**
    * Makes an instance of `Quill`.
    *
-   * @param id DOM id of the element to attach to
+   * @param id DOM id of the element to attach to.
+   * @returns instance of `Quill`.
    */
   static make(id) {
     return new Quill(id, {

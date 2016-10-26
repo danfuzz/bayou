@@ -5,6 +5,7 @@
 import Delta from 'quill-delta';
 
 import Delay from './Delay';
+import DeltaUtil from './DeltaUtil';
 
 /**
  * How long to wait (in msec) after receiving a local change (to allow time for
@@ -29,29 +30,6 @@ const QUILL_SOURCE = 'document-plumbing';
  * disambiguate them from events coming from Quill.
  */
 const INTERNAL_SOURCE = 'document-plumbing-internal';
-
-/**
- * Quill `Delta` helper utilities.
- */
-class DeltaUtil {
-  /**
-   * Returns `true` iff the given delta is empty. This accepts raw arrays,
-   * `Delta` objects per se, as well as `null` (which is considered to be
-   * empty, unsurprisingly).
-   *
-   * @param delta (null-ok) The delta
-   * @returns `true` if `delta` is empty or `false` if not
-   */
-  static isEmpty(delta) {
-    if (delta === null) {
-      return true;
-    } else if (delta.ops) {
-      return (delta.ops.length === 0);
-    } else {
-      return delta.length === 0;
-    }
-  }
-}
 
 /**
  * Constructors for the events used by the client synching state machine.
@@ -177,6 +155,27 @@ const IDLE_EVENT_TRANSITION = { state: 'idle', event: Events.wantDeltaAfter() };
  * along with a few other bits of information, and takes action upon receipt of
  * structured events, some of which it produces itself either immediately in
  * response to received events or after an explicit time delay.
+ *
+ * ### Design note
+ *
+ * We drive the process of getting changes from the server purely as a
+ * client-to-server polling "pull." This keeps the model considerably simpler.
+ * In particular, with this arrangement the transport-level concerns about
+ * keeping a held-open connection (such as a websocket) open are more cleanly
+ * separated from the higher-level application logic of synchronizing document
+ * changes. It similarly helps maintain flexibility in choice of transport.
+ * Finally, this makes it so the server, while not totally stateless, does not
+ * have to maintain any intermediate transaction state with regard to a client
+ * connection.
+ *
+ * Despite the polling nature, this arrangement still allows for changes from
+ * the server to make their way to the client promptly, and it does so without
+ * wasting time or network resources polling for changes that haven't happened.
+ * This is because of how the `deltaAfter()` API method is defined.
+ * Specifically, that method does not return a result until at least one change
+ * has been made. This means that the client can make that API call and then
+ * just wait until it comes back with a result, instead of having to set up a
+ * low-duration timeout to repeatedly ask for new changes.
  */
 export default class DocumentPlumbing {
   /**
@@ -302,7 +301,7 @@ export default class DocumentPlumbing {
   _handle_starting_gotSnapshot(event) {
     // Save the result as the latest known version of the document, and tell
     // Quill about it.
-    this._updateDoc(event.version, new Delta(event.data));
+    this._updateDocWithSnapshot(event.version, event.data);
 
     // Once we have initial contents, we can usefully handle changes coming
     // from Quill. So, we attach an event handler and tell Quill to start
@@ -372,20 +371,12 @@ export default class DocumentPlumbing {
     console.log(version);
     console.log(delta);
 
-    // We only take action if the result version is newer than what we
-    // have as the latest. That is, we might have what amounts to a stale
-    // response which should be ignored. In particular, `_doc` can change
-    // because of action related to local changes.
-    if (version > this._doc.version) {
-      // Build the new doc based on the base version and the received delta.
-      // TODO: Quill tends to reset the cursor when you just hand it entirely
-      // new contents. This should instead try to give Quill just the delta from
-      // its current state. The wrinkle here is that we need to be sure we
-      // don't inadvertently write over any user changes. (Given that the JS
-      // runtime is single-threaded, this might not turn out to be very hard to
-      // get right.)
-      const newData = baseDoc.data.compose(delta);
-      this._updateDoc(version, newData);
+    // We only take action if the result's base (what `delta` is with regard to)
+    // is the current `_doc`. If that _isn't_ the case, then what we have here
+    // is a stale response of one sort or another. For example (and most
+    // likely), it might be the delayed result from an earlier iteration.
+    if (this._doc.version === baseDoc.version) {
+      this._updateDocWithDelta(version, delta);
     }
 
     // Fire off the next iteration of requesting server changes. We do this via
@@ -474,7 +465,7 @@ export default class DocumentPlumbing {
    * that the user is making changes after we've sent a batch of user changes
    * to the server and before the server has gotten back to us with a response.
    */
-  _handle_collecting_gotLocalDelta(event) {
+  _handle_merging_gotLocalDelta(event) {
     // Combine the new delta with the previous results of collection. If this
     // is the first during-merge change, initialize the delta.
     const oldDelta = this._collectedDelta;
@@ -483,7 +474,7 @@ export default class DocumentPlumbing {
       ? new Delta(newDelta)
       : oldDelta.compose(newDelta);
 
-    return { state: 'collecting' };
+    return { state: 'merging' };
   }
 
   /**
@@ -514,7 +505,7 @@ export default class DocumentPlumbing {
         // were waiting for the server to get back to us. This is the ideal
         // case, because it means Quill's state exactly matches the document
         // version we just received.
-        this._updateDoc(version, expectedData, false);
+        this._updateDocWithSnapshot(version, expectedData, false);
         return IDLE_EVENT_TRANSITION;
       } else {
         // The local user has been merrily typing while the server has been
@@ -524,7 +515,7 @@ export default class DocumentPlumbing {
         // process. (That is, it is going to be a very short-lived idling.)
         const event =
           Events.gotLocalDelta(collectedDelta, this._doc.data, INTERNAL_SOURCE);
-        this._updateDoc(version, expectedData, false);
+        this._updateDocWithSnapshot(version, expectedData, false);
         return { state: 'idle', event: event };
       }
     } else {
@@ -533,7 +524,7 @@ export default class DocumentPlumbing {
         // Thanfully, the local user hasn't made any other changes while we
         // were waiting for the server to get back to us. We need to tell
         // Quill about the changes, but we don't have to do additional merging.
-        this._updateDoc(version, expectedData.compose(delta));
+        this._updateDocWithDelta(version, delta);
         return IDLE_EVENT_TRANSITION;
       } else {
         // The hard case, a/k/a "Several people are typing." The server got back
@@ -548,18 +539,64 @@ export default class DocumentPlumbing {
   }
 
   /**
-   * Updates `_doc` to have the given version and snapshot data, and tells the
-   * attached Quill instance to update itself accordingly.
+   * Updates `_doc` to have the given version by applying the indicated delta
+   * to the current version, and tells the attached Quill instance to update
+   * itself accordingly. This is only valid to call when the version of the
+   * document that Quill has is the same as what is represented in `_doc`. If
+   * that isn't the case, then this method will throw an error.
    *
    * @param version New version number.
-   * @param data New snapshot data; expected to be a `Delta` object, and _not_
-   * just a regular array.
+   * @param delta Delta from the current `_doc` data; can be a `Delta` object
+   * per se or anything that `DeltaUtil.coerce()` accepts.
    * @param updateQuill (default `true`) whether to inform Quill of this
    * update. This should only ever be passed as `false` when Quill is expected
    * to already have the changes to the document represented in `data`. (It
    * might _also_ have additional changes too.)
    */
-  _updateDoc(version, data, updateQuill = true) {
+  _updateDocWithDelta(version, delta) {
+    if (!DeltaUtil.isEmpty(this._collectedDelta)) {
+      // It is unsafe to apply the delta, because we know that Quill's version
+      // of the document has diverged.
+      //
+      // This assumes that Quill promptly and synchronously emits `text-change`
+      // events on every change to its document (the model, that is), in the
+      // order that those changes were made. If that's the case, then (by our
+      // arrangement in this class) if `_collectedDelta` is empty we know for
+      // sure that our document state matches Quill's document state. (If it
+      // turns out that Quill doesn't make the event emission guarantee, then
+      // there could be a problem. TODO: Determine for sure that what we do here
+      // is safe.)
+      throw new Error('Cannot apply delta due to version skew.');
+    }
+
+    // Update the local document. **Note:** We always construct a whole new
+    // object even when the delta is empty, so that `_doc === x` won't cause
+    // surprising results when `x` is an old version of `_doc`.
+    const oldData = this._doc.data;
+    this._doc = {
+      version: version,
+      data: DeltaUtil.isEmpty(delta) ? oldData : oldData.compose(delta)
+    };
+
+    // Tell Quill.
+    this._quill.updateContents(delta, QUILL_SOURCE);
+  }
+
+  /**
+   * Updates `_doc` to have the given version and snapshot data, and optionally
+   * tells the attached Quill instance to update itself accordingly.
+   *
+   * @param version New version number.
+   * @param data New snapshot data; can be a `Delta` object per se or anything
+   * that `DeltaUtil.coerce()` accepts.
+   * @param updateQuill (default `true`) whether to inform Quill of this
+   * update. This should only ever be passed as `false` when Quill is expected
+   * to already have the changes to the document represented in `data`. (It
+   * might _also_ have additional changes too.)
+   */
+  _updateDocWithSnapshot(version, data, updateQuill = true) {
+    data = DeltaUtil.coerce(data);
+
     this._doc = {
       version: version,
       data: data

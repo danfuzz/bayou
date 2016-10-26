@@ -54,10 +54,12 @@ export default class Document {
   }
 
   /**
-   * Returns a snapshot of the full document contents. Optional `version`
-   * indicates which version to get; defaults to the current version. Result is
-   * an object that maps `data` to the document data and `version` to the
-   * version number.
+   * Returns a snapshot of the full document contents.
+   *
+   * @param version (optional) Indicates which version to get; defaults to the
+   *   current version.
+   * @returns An object that maps `data` to the document data and `version` to
+   *   the version number.
    */
   snapshot(version) {
     version = this._versionNumber(version, true);
@@ -106,11 +108,14 @@ export default class Document {
 
   /**
    * Returns a promise for a snapshot of any version after the given
-   * `baseVersion`, and relative to that version. Result is an object
-   * consisting of a new version number, and a delta which can be applied
-   * to version `baseVersion` to get the new document. If called when
-   * `baseVersion` is the current version, this will not fulfill the result
-   * promise until at least one change has been made.
+   * `baseVersion`, and relative to that version. If called when `baseVersion`
+   * is the current version, this will not resolve the result promise until at
+   * least one change has been made.
+   *
+   * @param baseVersion Version number for the document.
+   * @returns A promise which ultimately resolves to an object that maps
+   *   `version` to the new version and `delta` to a change with respect to
+   *   `baseVersion`.
    */
   deltaAfter(baseVersion) {
     baseVersion = this._versionNumber(baseVersion, false);
@@ -143,9 +148,18 @@ export default class Document {
 
   /**
    * Takes a base version number and delta therefrom, and applies the delta,
-   * including merging of any intermediate versions. Result is an object
-   * consisting of a new version number, and a delta which can be applied to
-   * version `baseVersion` to get the new document.
+   * including merging of any intermediate versions. The return value consists
+   * of a new version number, and a delta to be used to get the new document
+   * state. The delta is with respect to the client's "expected result," that
+   * is to say, what the client would get if the delta were applied with no
+   * intervening changes.
+   *
+   * @param baseVersion Version number which `delta` is with respect to.
+   * @param delta Delta indicating what has changed with respect to
+   *   `baseVersion`.
+   * @returns Object that binds `version` to the new version number and `delta`
+   *   to a delta _with respect to the implied expected result_ which can be
+   *   used to get the new document state.
    */
   applyDelta(baseVersion, delta) {
     baseVersion = this._versionNumber(baseVersion, false);
@@ -170,6 +184,8 @@ export default class Document {
    * `true` to release any waiters.
    *
    * **Note:** If the delta is a no-op, then this method does nothing.
+   *
+   * @param delta The delta to append.
    */
   _appendDelta(delta) {
     if (delta.length === 0) {
@@ -181,12 +197,12 @@ export default class Document {
   }
 
   /**
-   * Checks a version number for sanity. Throws an error when insane. Returns
-   * the version number.
+   * Checks a version number for sanity. Throws an error when insane.
    *
    * @param version the (alleged) version number to check
    * @param wantLatest if `true` indicates that `undefined` should be treated as
    * a request for the latest version. If `false`, `undefined` is an error.
+   * @returns the version number
    */
   _versionNumber(version, wantLatest) {
     if (wantLatest && (version === undefined)) {
