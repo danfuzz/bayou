@@ -15,7 +15,7 @@ export default class Condition {
   /**
    * Constructs an instance.
    *
-   * @param value Initial value; defaults to `false`
+   * @param value Initial value; defaults to `false`.
    */
   constructor(initialValue) {
     initialValue = Condition._ensureBoolean(initialValue, false);
@@ -121,6 +121,7 @@ export default class Condition {
    * @param defaultValue Optional default value. If passed, indicates that
    *   `undefined` should be treated as that value. If not passed, `undefined`
    *   is an error.
+   * @returns `value` or `defaultValue`
    */
   static _ensureBoolean(value, defaultValue) {
     if ((value === undefined) && (defaultValue !== undefined)) {

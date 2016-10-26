@@ -115,13 +115,6 @@ export default class ApiServer {
   }
 
   /**
-   * API method `test`: Returns the same arguments as it was passed.
-   */
-  method_test(args) {
-    return args;
-  }
-
-  /**
    * API method `snapshot`: Returns an instantaneous snapshot of the document
    * contents. Result is an object that maps `data` to the snapshot data and
    * `version` to the version number.

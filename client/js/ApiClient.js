@@ -56,6 +56,20 @@ export default class ApiClient {
    * (or error).
    */
   _send(method, args) {
+    const wsState = this.ws.readyState;
+
+    // Handle the cases where socket shutdown is imminent or has already
+    // happened. We don't just `throw` directly here, so that clients can
+    // consistently handle errors via one of the promise chaining mechanisms.
+    switch (wsState) {
+      case WebSocket.CLOSED: {
+        return Promise.reject(new Error('Websocket is closed.'));
+      }
+      case WebSocket.CLOSING: {
+        return Promise.reject(new Error('Websocket is closing.'));
+      }
+    }
+
     const id = this.nextId;
     const payload = JSON.stringify({ method: method, args: args, id: id });
 
@@ -67,7 +81,7 @@ export default class ApiClient {
     this.callbacks[id] = callback;
     this.nextId++;
 
-    switch (this.ws.readyState) {
+    switch (wsState) {
       case WebSocket.CONNECTING: {
         // Not yet open. Need to queue it up.
         this.pendingCalls.push(payload);
@@ -78,7 +92,9 @@ export default class ApiClient {
         break;
       }
       default: {
-        throw new Error('Websocket is closed or closing.');
+        // Whatever this state is, it's not documented as part of the Websocket
+        // spec!
+        return Promise.reject(new Error(`Websocket in weird state: ${wsState}`));
       }
     }
 
@@ -173,27 +189,10 @@ export default class ApiClient {
    * API call `applyDelta`. Sends a change to the server in the form of a
    * base version number and delta therefrom. Returns a promise for the
    * result, which is an object consisting of a new version number, and a
-   * delta which can be applied to `<base-version>` to get the new version.
+   * delta which can be applied to the version corresponding to `baseVersion`
+   * to get the new version.
    */
   applyDelta(baseVersion, delta) {
     return this._send('applyDelta', { baseVersion: baseVersion, delta: delta });
-  }
-
-  /**
-   * API call `test`. Sends a test message to the server. The server is
-   * expected to respond with the same value. If `wantClose` is passed as
-   * `true`, the client side will close the socket after the response is
-   * received.
-   */
-  test(value, wantClose) {
-    this._send('test', { value: value }).then(
-      (result) => {
-        console.log('Test good.');
-        console.log(result);
-      },
-      (error) => {
-        console.log('Test error.');
-        console.log(error);
-      });
   }
 };
