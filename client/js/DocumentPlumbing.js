@@ -23,13 +23,7 @@ const PULL_DELAY_MSEC = 1000;
 /**
  * Tag used to identify this module as the source of a Quill event or action.
  */
-const QUILL_SOURCE = 'document-plumbing';
-
-/**
- * Tag used specifically for internally-generated `gotLocalDelta` events, to
- * disambiguate them from events coming from Quill.
- */
-const INTERNAL_SOURCE = 'document-plumbing-internal';
+const PLUMBING_SOURCE = 'document-plumbing';
 
 /**
  * Constructors for the events used by the client synching state machine.
@@ -64,7 +58,12 @@ class Events {
    * @returns The constructed event.
    */
   static gotApplyDelta(expectedData, version, delta) {
-    return { name: 'gotApplyDelta', expectedData: expectedData, version: version, delta: delta };
+    return {
+      name:         'gotApplyDelta',
+      expectedData: expectedData,
+      version:      version,
+      delta:        delta
+    };
   }
 
   /**
@@ -84,20 +83,17 @@ class Events {
   }
 
   /**
-   * Constructs a `gotLocalDelta` event. This represents a local change that
-   * was made to the document. Keys are as defined by the definition of the
-   * Quill `text-change` event. In the case where the `source` is
-   * `INTERNAL_SOURCE`, it means that the event was generated from inside the
-   * state machine; this can happen when doing a non-trivial merge of server
-   * and local changes.
+   * Constructs a `gotLocalDelta` event. This indicates that there is at least
+   * one local change that Quill has made to its document which is not yet
+   * reflected in the given base document. Put another way, this indicates that
+   * `_latestTextChange` has a resolved `next`.
    *
-   * @param delta The change that was made locally.
-   * @param oldContents The state of the document before the change.
-   * @param source Identifier for the source of the change.
+   * @param baseDoc The document (version and data) at the time of the original
+   *   request.
    * @returns The constructed event.
    */
-  static gotLocalDelta(delta, oldContents, source) {
-    return { name: 'gotLocalDelta', delta: delta, oldContents: oldContents, source: source };
+  static gotLocalDelta(baseDoc) {
+    return { name: 'gotLocalDelta', baseDoc: baseDoc };
   }
 
   /**
@@ -125,21 +121,23 @@ class Events {
    * Constructs a `wantApplyDelta` event. This indicates that it is time to
    * send collected local changes up to the server.
    *
+   * @param baseDoc The document (version and data) at the time of the original
+   *   request.
    * @returns The constructed event.
    */
-  static wantApplyDelta() {
-    return { name: 'wantApplyDelta' };
+  static wantApplyDelta(baseDoc) {
+    return { name: 'wantApplyDelta', baseDoc: baseDoc };
   }
 
   /**
-   * Constructs a `wantDeltaAfter` event. This indicates that it is time to
+   * Constructs a `wantChanges` event. This indicates that it is time to
    * request a new change from the server, but only if the client isn't in the
    * middle of doing something else.
    *
    * @returns The constructed event.
    */
-  static wantDeltaAfter() {
-    return { name: 'wantDeltaAfter' };
+  static wantChanges() {
+    return { name: 'wantChanges' };
   }
 }
 
@@ -147,7 +145,7 @@ class Events {
  * Event response to use when transitioning into the `idle` state, when there
  * is no other pending work.
  */
-const IDLE_EVENT_TRANSITION = { state: 'idle', event: Events.wantDeltaAfter() };
+const IDLE_EVENT_TRANSITION = { state: 'idle', event: Events.wantChanges() };
 
 /**
  * Plumbing between Quill on the client and the document model on the server.
@@ -204,10 +202,17 @@ export default class DocumentPlumbing {
     this._doc = null;
 
     /**
-     * Collected delta. This represents a change to the document which is
-     * ultimately going to be sent to the server.
+     * Latest local change to the document made by Quill. This is initialized
+     * by getting `Quill.nextTextChange` and is generally updated by
+     * retrieving `.nextNow` from the value (or its replacement, etc.).
      */
-    this._collectedDelta = null;
+    this._latestTextChange = null;
+
+    /**
+     * Is there currently a pending (as-yet unfulfilled) `deltaAfter()` request
+     * to the server?
+     */
+    this._pendingDeltaAfter = false;
 
     // The Quill instance should already be in read-only mode. We explicitly
     // set that here, though, to be safe and resilient.
@@ -299,63 +304,96 @@ export default class DocumentPlumbing {
    * In state `starting`, handles event `gotSnapshot`.
    */
   _handle_starting_gotSnapshot(event) {
+    // Bootstrap the text change chain by grabbing the promise for the next
+    // change. This will get resolved promptly, immediately below, when we
+    // update the doc.
+    this._quill.nextTextChange.then(
+      (value) => {
+        // Once we have initial contents, we can usefully handle changes coming
+        // from Quill. So, we tell Quill to start accepting user input, and set
+        // up `_latestTextChange` to track subsequent changes.
+
+        if (value.source !== PLUMBING_SOURCE) {
+          // We expected the change to be the one we generated from the doc
+          // update (below), but the `source` we got speaks otherwise.
+          throw new Error('Shouldn\'t happen: Bad `source` for initial change.');
+        }
+
+        this._quill.enable();
+        this._latestTextChange = value;
+        this._event(Events.wantChanges());
+      });
+
     // Save the result as the latest known version of the document, and tell
-    // Quill about it.
+    // Quill about it. This resolves the promise above.
     this._updateDocWithSnapshot(event.version, event.data);
 
-    // Once we have initial contents, we can usefully handle changes coming
-    // from Quill. So, we attach an event handler and tell Quill to start
-    // accepting user input. (Before this, Quill shouldn't have been sending
-    // any events anyway, but adding the event handler here is a more
-    // prophylactic arrangement.)
+    // We sit in the `starting` state until the `wantChanges` event from above
+    // arrives.
+    return { state: 'same' };
+  }
 
-    this._quill.on('text-change', (delta, oldContents, source) => {
-      if (source === QUILL_SOURCE) {
-        // This event was generated by Quill because of action taken by this
-        // class. Ignore it, lest we end up in a crazy feedback loop.
-        return;
-      }
-
-      // Translate the Quill event into a state machine event.
-      this._event(Events.gotLocalDelta(delta, oldContents, source));
-    });
-    this._quill.enable();
-
-    // Fire off the first request for changes coming from the server side, via
-    // a chained event.
+  /**
+   * In state `starting`, handles event `wantChanges`. This indicates that
+   * `_latestTextChange` is now properly set up, and it is safe to start
+   * idling while waiting for changes to come in (either locally or from the
+   * server).
+   */
+  _handle_starting_wantChanges(event) {
+    // Fire off the first requests for changes.
     return IDLE_EVENT_TRANSITION;
   }
 
   /**
-   * In state `idle`, handles event `wantDeltaAfter`. This can happen as a
-   * chained event (during startup or at the end of handling the integration of
-   * changes) or due to a delay timeout.
+   * In state `idle`, handles event `wantChanges`. This can happen as a chained
+   * event (during startup or at the end of handling the integration of changes)
+   * or due to a delay timeout. This will make requests both to the server and
+   * to the local Quill instance.
    */
-  _handle_idle_wantDeltaAfter(event) {
+  _handle_idle_wantChanges(event) {
     // We grab the current version of the doc, so we can refer back to it when
-    // the response comes. That is, `_doc` might have changed out from under us
-    // between when this event is handled and when the call to `deltaAfter()`
-    // becomes resolved.
+    // a response comes. That is, `_doc` might have changed out from
+    // under us between when this event is handled and when the promises used
+    // here become resolved.
     const baseDoc = this._doc;
 
-    this._api.deltaAfter(baseDoc.version).then(
+    // Ask Quill for any changes we haven't yet observed, via the text change
+    // promise chain.
+
+    // **Note:** As of this writing, Quill will never reject (report an error
+    // on) a text change promise.
+    this._latestTextChange.next.then(
       (value) => {
-        this._event(Events.gotDeltaAfter(baseDoc, value.version, value.delta));
-      },
-      (error) => {
-        this._event(Events.apiError('deltaAfter', error));
-      });
+        this._event(Events.gotLocalDelta(baseDoc));
+      }
+    );
+
+    // Ask the server for any changes, but only if there isn't already a pending
+    // request for same. (Otherwise, we would flood the server for new change
+    // requests while the local user is updating the doc.)
+    if (!this._pendingDeltaAfter) {
+      this._pendingDeltaAfter = true;
+
+      this._api.deltaAfter(baseDoc.version).then(
+        (value) => {
+          this._pendingDeltaAfter = false;
+          this._event(Events.gotDeltaAfter(baseDoc, value.version, value.delta));
+        },
+        (error) => {
+          this._pendingDeltaAfter = false;
+          this._event(Events.apiError('deltaAfter', error));
+        });
+    }
 
     return { state: 'idle' };
   }
 
   /**
-   * In any state but `idle`, handles event `wantDeltaAfter`. We ignore the
-   * event, because the client is in the middle of doing something else. When
-   * it's done with whatever it may be, it will send a new `wantDeltaAfter`
-   * event.
+   * In any state but `idle`, handles event `wantChanges`. We ignore the event,
+   * because the client is in the middle of doing something else. When it's done
+   * with whatever it may be, it will send a new `wantChanges` event.
    */
-  _handle_default_wantDeltaAfter(event) {
+  _handle_default_wantChanges(event) {
     // Nothing to do. Stay in the same state.
     return { state: 'same' };
   }
@@ -384,7 +422,7 @@ export default class DocumentPlumbing {
     // (2) We want to avoid any potential memory leaks due to promise causality
     // chaining.
     Delay.resolve(PULL_DELAY_MSEC).then((res) => {
-      this._event(Events.wantDeltaAfter());
+      this._event(Events.wantChanges());
     });
 
     return { state: 'idle' };
@@ -396,30 +434,42 @@ export default class DocumentPlumbing {
    * for a short period of time before sending them up to the server.
    */
   _handle_idle_gotLocalDelta(event) {
-    const delta = event.delta;
-    const oldContents = event.oldContents;
-    const source = event.source;
+    const baseDoc = event.baseDoc;
+    const change = this._latestTextChange.nextNow;
 
-    // Initialize the collected delta with the one we just got.
-    this._collectedDelta = delta;
+    if ((this._doc.version !== baseDoc.version) || (change === null)) {
+      // The event was generated with respect to a version of the document which
+      // has since been updated, or we ended up having two events for the same
+      // change (which can happen if the user is particularly chatty) and this
+      // one lost the race. That is, this is from a stale request for changes.
+      // Go back to idling.
+      return IDLE_EVENT_TRANSITION;
+    } else if (change.source === PLUMBING_SOURCE) {
+      // This event was generated by Quill because of action taken by this
+      // class. We don't want to collect it, lest we end up in a crazy feedback
+      // loop. Since we're in state `idle`, there aren't any other pending
+      // changes to worry about, so we just ignore the change (skip it in the
+      // chain) and go back to idling.
+      this._latestTextChange = change;
+      return IDLE_EVENT_TRANSITION;
+    }
 
-    // After the appropriate delay, send a `wantApplyDelta` event, which will
-    // cause all the collected changes to be sent to the server.
+    // After the appropriate delay, send a `wantApplyDelta` event.
     Delay.resolve(PUSH_DELAY_MSEC).then((res) => {
-      this._event(Events.wantApplyDelta());
+      this._event(Events.wantApplyDelta(baseDoc));
     });
 
     return { state: 'collecting' };
   }
 
   /**
-   * In state `collecting`, handles event `gotLocalDelta`.
+   * In most states, handles event `gotLocalDelta`. This will happen when a
+   * local delta comes in after we're already in the middle of handling a
+   * chain of local changes. As such, it is safe to ignore, because whatever
+   * the change was, it will get handled by that pre-existing process.
    */
-  _handle_collecting_gotLocalDelta(event) {
-    // Combine the new delta with the previous results of collection.
-    this._collectedDelta = this._collectedDelta.compose(event.delta);
-
-    return { state: 'collecting' };
+  _handle_default_gotLocalDelta(event) {
+    return { state: 'same' };
   }
 
   /**
@@ -428,14 +478,36 @@ export default class DocumentPlumbing {
    * integration.
    */
   _handle_collecting_wantApplyDelta(event) {
-    const delta = this._collectedDelta;
+    const baseDoc = event.baseDoc;
+
+    if (this._doc.version !== baseDoc.version) {
+      // As with the `gotLocalDelta` event, we ignore this event if the doc has
+      // changed out from under us.
+      return IDLE_EVENT_TRANSITION;
+    }
+
+    // Build up a combined (composed) delta of all of the changes starting just
+    // after the last integrated change (the last change that was sent to the
+    // server) through the latest change.
+    let change = this._latestTextChange.nextNow;
+    let delta = change.delta;
+    while (change.nextNow !== null) {
+      change = change.nextNow;
+      if (change.source === PLUMBING_SOURCE) {
+        // Stop if we find an internally-sourced change. We'll handle it on
+        // the next round.
+        break;
+      }
+      delta = delta.compose(change.delta);
+    }
+
+    // Remember that we consumed all these changes.
+    this._latestTextChange = change;
 
     if (DeltaUtil.isEmpty(delta)) {
-      // There weren't actually any changes. This is unusual, though possible:
-      // * The user might have typed something and then undone it.
-      // * We might be in this call because of the delayed event from the
-      //   `gotLocalDelta` handler for the `idle` state, but an earlier event
-      //   might have precipitated handling of the collected delta.
+      // There weren't actually any net changes. This is unusual, though
+      // possible. In particular, the user probably typed something and then
+      // undid it.
       return IDLE_EVENT_TRANSITION;
     }
 
@@ -444,9 +516,6 @@ export default class DocumentPlumbing {
     // else from the server, but if so it is going to be represented as a delta
     // from what we've built here.
     const expectedData = this._doc.data.compose(delta);
-
-    // Reset the queue, so we can start collecting more changes afresh.
-    this._collectedDelta = null;
 
     // Send the delta, and handle the response.
     this._api.applyDelta(this._doc.version, delta).then(
@@ -461,46 +530,23 @@ export default class DocumentPlumbing {
   }
 
   /**
-   * In state `merging`, handles event `gotLocalDelta`. This generally means
-   * that the user is making changes after we've sent a batch of user changes
-   * to the server and before the server has gotten back to us with a response.
-   */
-  _handle_merging_gotLocalDelta(event) {
-    // Combine the new delta with the previous results of collection. If this
-    // is the first during-merge change, initialize the delta.
-    const oldDelta = this._collectedDelta;
-    const newDelta = event.delta;
-    this._collectedDelta = (oldDelta === null)
-      ? new Delta(newDelta)
-      : oldDelta.compose(newDelta);
-
-    return { state: 'merging' };
-  }
-
-  /**
    * In state `merging`, handles event `gotApplyDelta`. This means that a local
    * change was successfully merged by the server.
    */
   _handle_merging_gotApplyDelta(event) {
+    const expectedData = event.expectedData;
     const version = event.version;
     const delta = event.delta;
-    const expectedData = event.expectedData;
 
     console.log('Received `applyDelta` response.')
     console.log(version);
     console.log(delta);
 
-    // This is any addtional changes that have been made by Quill (presumably
-    // because of user activity) while we were waiting for the server to get
-    // back to us.
-    const collectedDelta = this._collectedDelta;
-    this._collectedDelta = null;
-
     if (DeltaUtil.isEmpty(delta)) {
       // There is no change from what we expected. This means that no other
       // client got in front of us between when we received the current version
       // and when we sent the delta to the server.
-      if (DeltaUtil.isEmpty(collectedDelta)) {
+      if (this._latestTextChange.nextNow === null) {
         // Furthermore, the local user hasn't made any other changes while we
         // were waiting for the server to get back to us. This is the ideal
         // case, because it means Quill's state exactly matches the document
@@ -512,15 +558,17 @@ export default class DocumentPlumbing {
         // processing. We now have to turn that all into another delta to send
         // up to the server. What we do here is go back into the `idle` state
         // but with an immediate event that will kick off the collection
-        // process. (That is, it is going to be a very short-lived idling.)
-        const event =
-          Events.gotLocalDelta(collectedDelta, this._doc.data, INTERNAL_SOURCE);
+        // process once more. (That is, it is going to be a very short-lived
+        // idling.)
         this._updateDocWithSnapshot(version, expectedData, false);
-        return { state: 'idle', event: event };
+        return {
+          state: 'idle',
+          event: Events.gotLocalDelta(this._doc)
+        };
       }
     } else {
       // The server merged in some changes that we didn't expect.
-      if (DeltaUtil.isEmpty(collectedDelta)) {
+      if (this._latestTextChange.nextNow === null) {
         // Thanfully, the local user hasn't made any other changes while we
         // were waiting for the server to get back to us. We need to tell
         // Quill about the changes, but we don't have to do additional merging.
@@ -548,13 +596,9 @@ export default class DocumentPlumbing {
    * @param version New version number.
    * @param delta Delta from the current `_doc` data; can be a `Delta` object
    * per se or anything that `DeltaUtil.coerce()` accepts.
-   * @param updateQuill (default `true`) whether to inform Quill of this
-   * update. This should only ever be passed as `false` when Quill is expected
-   * to already have the changes to the document represented in `data`. (It
-   * might _also_ have additional changes too.)
    */
   _updateDocWithDelta(version, delta) {
-    if (!DeltaUtil.isEmpty(this._collectedDelta)) {
+    if (this._latestTextChange.nextNow !== null) {
       // It is unsafe to apply the delta, because we know that Quill's version
       // of the document has diverged.
       //
@@ -579,7 +623,7 @@ export default class DocumentPlumbing {
     };
 
     // Tell Quill.
-    this._quill.updateContents(delta, QUILL_SOURCE);
+    this._quill.updateContents(delta, PLUMBING_SOURCE);
   }
 
   /**
@@ -603,7 +647,7 @@ export default class DocumentPlumbing {
     }
 
     if (updateQuill) {
-      this._quill.setContents(data, QUILL_SOURCE);
+      this._quill.setContents(data, PLUMBING_SOURCE);
     }
   }
 }

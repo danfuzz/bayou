@@ -121,7 +121,8 @@ function copy-into-out {
     # has well-defined behavior when copying a tree on top of another tree and
     # also knows how to create directories as needed. Note that the trailing
     # slash on the source directory is significant to `rsync` semantics.
-    rsync --archive --delete "${baseDir}/${fromDir}/" "${outDir}/${toDir}/"
+    rsync --archive --delete --exclude='node_modules/' \
+        "${baseDir}/${fromDir}/" "${outDir}/${toDir}/"
 
     if [[ ${overlayDir} != '' ]]; then
         rsync --archive "${overlayDir}/${fromDir}/" "${outDir}/${toDir}/"
@@ -157,9 +158,10 @@ function build-server {
     (cd "${toDir}"; npm install) || return 1
 
     # We are somewhat at the mercy of what's published via npm, and in fact
-    # some modules that we need have bugs in their published versions. This
-    # script patches them in situ.
-    "${progDir}/fix-server-modules.sh" "${toDir}" || return 1
+    # some modules that we use occasionally have bugs in their published
+    # versions. This script patches them in situ.
+    "${progDir}/fix-modules.sh" "${baseDir}/etc/module-overlay" "${toDir}" \
+        || return 1
 
     # Finally, run Babel on all of the local source files, storing them next
     # to the imported and patched modules. We link the output `node_modules`
@@ -177,8 +179,13 @@ function build-server {
 
 # Builds the client code.
 function build-client {
-    cd "${outDir}/client"
-    npm install || return 1
+    local toDir="${outDir}/client"
+
+    (cd "${toDir}"; npm install) || return 1
+
+    # See comment on `fix-modules` call in `build-server`, above.
+    "${progDir}/fix-modules.sh" "${baseDir}/etc/module-overlay" "${toDir}" \
+        || return 1
 }
 
 # Records information about source directories (so dev mode knows where to find
