@@ -601,15 +601,6 @@ export default class DocumentPlumbing {
     if (this._latestTextChange.nextNow !== null) {
       // It is unsafe to apply the delta, because we know that Quill's version
       // of the document has diverged.
-      //
-      // This assumes that Quill promptly and synchronously emits `text-change`
-      // events on every change to its document (the model, that is), in the
-      // order that those changes were made. If that's the case, then (by our
-      // arrangement in this class) if `_collectedDelta` is empty we know for
-      // sure that our document state matches Quill's document state. (If it
-      // turns out that Quill doesn't make the event emission guarantee, then
-      // there could be a problem. TODO: Determine for sure that what we do here
-      // is safe.)
       throw new Error('Cannot apply delta due to version skew.');
     }
 
