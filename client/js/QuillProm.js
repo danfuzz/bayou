@@ -60,7 +60,9 @@ export default class QuillProm extends Quill {
   constructor(...constructArgs) {
     super(...constructArgs);
 
-    // We can't safely `import Emitter`, as it's not an exposed class.
+    // We can't safely `import Emitter`, as it's not an exposed class, so we
+    // instead get at it via the instance of it made in the superclass
+    // constructor.
     const Emitter = this.emitter.constructor;
     const API = Emitter.sources.API;
     const EDITOR_CHANGE = Emitter.events.EDITOR_CHANGE;
