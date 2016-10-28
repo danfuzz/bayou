@@ -1,1 +1,4 @@
-d0f09799463fbc27de4ca7334af942dea6baa4d9  quill/core/quill.js
+# This file lists SHA checksums for all of the files that get overlaid. The
+# overlay mechanism will complain instead of overlaying on top of a file with
+# a non-matching checksum.
+db123db123db123db123db123db123db123db123  example/some-file.txt

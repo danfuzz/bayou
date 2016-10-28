@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import Quill from 'quill';
+import QuillProm from './QuillProm';
 
 /** Configuration for the toolbar. */
 const TOOLBAR_OPTIONS = [
@@ -30,13 +30,15 @@ const TOOLBAR_OPTIONS = [
  */
 export default class QuillMaker {
   /**
-   * Makes an instance of `Quill`.
+   * Makes an instance of `Quill`. More specifically, because we want to use
+   * a promise chain to get at the edit events, this makes an instance of our
+   * custom subclass `QuillProm`.
    *
    * @param id DOM id of the element to attach to.
    * @returns instance of `Quill`.
    */
   static make(id) {
-    return new Quill(id, {
+    return new QuillProm(id, {
       readOnly: true,
       strict: true,
       theme: 'snow',

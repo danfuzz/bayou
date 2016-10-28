@@ -1,0 +1,1 @@
+This is the replacement for `some-file.txt` in the original module.

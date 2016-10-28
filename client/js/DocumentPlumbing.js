@@ -214,6 +214,12 @@ export default class DocumentPlumbing {
      */
     this._pendingDeltaAfter = false;
 
+    /**
+     * Is there currently a pending (as-yet unfulfilled) request for a new
+     * local change via the Quill text change promise chain?
+     */
+    this._pendingLocalTextChange = false;
+
     // The Quill instance should already be in read-only mode. We explicitly
     // set that here, though, to be safe and resilient.
     quill.disable();
@@ -358,15 +364,22 @@ export default class DocumentPlumbing {
     const baseDoc = this._doc;
 
     // Ask Quill for any changes we haven't yet observed, via the text change
-    // promise chain.
+    // promise chain, but only if there isn't already a pending request for
+    // same. (Otherwise, we would unnecessarily build up redundant promise
+    // resolver functions when changes are coming in from the server while the
+    // local user is idle.)
+    if (!this._pendingLocalTextChange) {
+      this._pendingLocalTextChange = true;
 
-    // **Note:** As of this writing, Quill will never reject (report an error
-    // on) a text change promise.
-    this._latestTextChange.next.then(
-      (value) => {
-        this._event(Events.gotLocalDelta(baseDoc));
-      }
-    );
+      // **Note:** As of this writing, Quill will never reject (report an error
+      // on) a text change promise.
+      this._latestTextChange.next.then(
+        (value) => {
+          this._pendingLocalTextChange = false;
+          this._event(Events.gotLocalDelta(baseDoc));
+        }
+      );
+    }
 
     // Ask the server for any changes, but only if there isn't already a pending
     // request for same. (Otherwise, we would flood the server for new change
