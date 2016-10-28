@@ -330,7 +330,7 @@ export default class DocumentPlumbing {
 
     // We sit in the `starting` state until the `wantChanges` event from above
     // arrives.
-    return { state: 'same' };
+    return { state: 'starting' };
   }
 
   /**
