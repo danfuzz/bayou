@@ -60,6 +60,9 @@ const webpackOptions = {
       // Likewise, `parchment`.
       'parchment': path.resolve(clientDir, 'node_modules/parchment/src/parchment.ts'),
     },
+    // We look for `local-modules` (modules whose source lives with this
+    // project) as well as the default `node_modules`.
+    modulesDirectories: ['node_modules', 'local-modules'],
     // All the extensions listed here except `.ts` are in the default list.
     // Webpack doesn't offer a way to simply add to the defaults (alas).
     extensions: ['', '.webpack.js', '.web.js', '.js', '.ts']
