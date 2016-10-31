@@ -6,8 +6,12 @@ import util from 'util';
 
 import Delta from 'quill-delta';
 
-import Condition from './Condition';
+import DeltaUtil from 'delta-util';
+
+import PromCondition from 'prom-condition';
+
 import default_document from './default-document';
+
 
 /**
  * Representation of a persistent document, along with a set of clients.
@@ -38,7 +42,7 @@ export default class Document {
      * state (when there are no waiters). As soon as the first waiter comes
      * along, it gets set to `false`.
      */
-    this._changeCondition = new Condition(true);
+    this._changeCondition = new PromCondition(true);
 
     // Initialize the document with static content (for now).
     const firstVersion = new Delta(default_document);
@@ -166,7 +170,8 @@ export default class Document {
 
     if (baseVersion === this.currentVersion) {
       // The easy case: Apply a delta to the latest version (unless it's empty,
-      // in which case we don't have to make a new version at all).
+      // in which case we don't have to make a new version at all; that's
+      // handled by `_appendDelta()`).
       this._appendDelta(delta);
       return {
         delta: [], // That is, there was nothing else to merge.
@@ -188,7 +193,7 @@ export default class Document {
    * @param delta The delta to append.
    */
   _appendDelta(delta) {
-    if (delta.length === 0) {
+    if (DeltaUtil.isEmpty(delta)) {
       return;
     }
 

@@ -7,7 +7,7 @@
  * This class isn't meant to be instantiable; it just exists to hold static
  * methods.
  */
-export default class Delay {
+export default class PromDelay {
   /**
    * Returns a promise that, after a specified delay, resolves to an indicated
    * value. If that value is _also_ a promise, then the result of this function

@@ -5,7 +5,7 @@
 import Delta from 'quill-delta';
 
 /** Empty `Delta` instance. */
-const EMPTY_DELTA = new Delta();
+const EMPTY_DELTA = Object.freeze(new Delta());
 
 /**
  * Quill `Delta` helper utilities.

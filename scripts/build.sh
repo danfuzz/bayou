@@ -111,6 +111,13 @@ function set-up-out {
     outDir="$(cd ${outDir}; /bin/pwd -P)"
 }
 
+# Gets a list of all the local module names. The output is a series of
+# lines, one per module.
+function local-module-names {
+    find "${baseDir}/local-modules" -type d -mindepth 1 -maxdepth 1 \
+        | sed -e 's!.*\/!!g'
+}
+
 # Copies a directory from the given partial source path to the given partial
 # path under the output directory. Includes both base and overlay files.
 function copy-into-out {
@@ -124,8 +131,20 @@ function copy-into-out {
     rsync --archive --delete --exclude='node_modules/' \
         "${baseDir}/${fromDir}/" "${outDir}/${toDir}/"
 
-    if [[ ${overlayDir} != '' ]]; then
+    if [[ ${overlayDir} != '' && -e "${overlayDir}/${fromDir}" ]]; then
         rsync --archive "${overlayDir}/${fromDir}/" "${outDir}/${toDir}/"
+    fi
+}
+
+# Copies the `local-modules` (Node modules whose sources live entirely locally
+# to this project, as opposed to being published via npm) into the given output
+# directory.
+function copy-local-modules-into-out {
+    local toDir="$1"
+    rsync --archive --delete "${baseDir}/local-modules" "${outDir}/${toDir}/"
+
+    if [[ (${overlayDir} != '') && -e "${overlayDir}/local-modules" ]]; then
+        rsync --archive "${overlayDir}/local-modules" "${outDir}/${toDir}/"
     fi
 }
 
@@ -135,11 +154,13 @@ function copy-sources {
     # The `server` files ultimately go through an additional build step (hence
     # the change in directory name), though some of the files are used as-is.
     copy-into-out 'server' 'server-src' || return 1
+    copy-local-modules-into-out 'server-src' || return 1
 
     # The `client` files are used as-is by the server (because it serves the
     # static assets directly and also knows how to (re)build the JavaScript
     # bundle).
     copy-into-out 'client' 'client' || return 1
+    copy-local-modules-into-out 'client' || return 1
 }
 
 # Builds the server code. This builds from `server-src` into `server`. The
@@ -163,10 +184,10 @@ function build-server {
     "${progDir}/fix-modules.sh" "${baseDir}/etc/module-overlay" "${toDir}" \
         || return 1
 
-    # Finally, run Babel on all of the local source files, storing them next
-    # to the imported and patched modules. We link the output `node_modules`
-    # back to the source directory, because Babel wants to find presets (and
-    # related dependencies) relative to the source.
+    # Run Babel on all of the local source files, storing them next to the
+    # imported and patched modules. We symlink the output `node_modules` back to
+    # the source directory, because Babel wants to find presets (and related
+    # dependencies) relative to the source.
     if [[ ! -e "${fromDir}/node_modules" ]]; then
         ln -s "${toDir}/node_modules" "${fromDir}"
     fi
@@ -175,6 +196,16 @@ function build-server {
         --presets 'es2015,es2016,es2017' --source-maps true \
         --out-dir "${toDir}" "${fromDir}" \
         || return 1
+
+    # Symlink all the local modules back into `node_modules`, so that the
+    # Node module resolver will find them.
+    local m modPath
+    for m in $(local-module-names); do
+        modPath="${toDir}/node_modules/${m}"
+        if [[ ! -e "${modPath}" ]]; then
+            ln -s "../local-modules/${m}" "${modPath}"
+        fi
+    done
 }
 
 # Builds the client code.

@@ -11,14 +11,14 @@ const RESOLVED_TRUE = Promise.resolve(true);
 /**
  * Boolean condition with promise-attached level triggers.
  */
-export default class Condition {
+export default class PromCondition {
   /**
    * Constructs an instance.
    *
    * @param value Initial value; defaults to `false`.
    */
   constructor(initialValue) {
-    initialValue = Condition._ensureBoolean(initialValue, false);
+    initialValue = PromCondition._ensureBoolean(initialValue, false);
 
     /** Current value. */
     this._value = initialValue;
@@ -49,7 +49,7 @@ export default class Condition {
    * value change.
    */
   set value(value) {
-    value = Condition._ensureBoolean(value);
+    value = PromCondition._ensureBoolean(value);
 
     if (value === this._value) {
       // No change.

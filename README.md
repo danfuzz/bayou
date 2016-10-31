@@ -76,6 +76,8 @@ $ npm run clean
 
 * `client` &mdash; Client code and static assets. The main client-side
   application entrypoint is `js/app.js`.
+* `local-modules` &mdash; JavaScript module code (Node modules, essentially)
+  which can be used on both the client and server sides.
 * `server` &mdash; Server code. The main entrypoint is `main.js`.
 * `out` &mdash; Where the results of doing a build end up.
 

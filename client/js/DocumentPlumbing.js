@@ -4,8 +4,9 @@
 
 import Delta from 'quill-delta';
 
-import Delay from './Delay';
-import DeltaUtil from './DeltaUtil';
+import DeltaUtil from 'delta-util';
+import PromDelay from 'prom-delay';
+
 
 /**
  * How long to wait (in msec) after receiving a local change (to allow time for
@@ -431,10 +432,10 @@ export default class DocumentPlumbing {
     }
 
     // Fire off the next iteration of requesting server changes. We do this via
-    // a `Delay` for two reasons: (1) We want to pace requests at least a bit.
-    // (2) We want to avoid any potential memory leaks due to promise causality
-    // chaining.
-    Delay.resolve(PULL_DELAY_MSEC).then((res) => {
+    // a `PromDelay` for two reasons: (1) We want to pace requests at least a
+    // bit. (2) We want to avoid any potential memory leaks due to promise
+    // causality chaining.
+    PromDelay.resolve(PULL_DELAY_MSEC).then((res) => {
       this._event(Events.wantChanges());
     });
 
@@ -468,7 +469,7 @@ export default class DocumentPlumbing {
     }
 
     // After the appropriate delay, send a `wantApplyDelta` event.
-    Delay.resolve(PUSH_DELAY_MSEC).then((res) => {
+    PromDelay.resolve(PUSH_DELAY_MSEC).then((res) => {
       this._event(Events.wantApplyDelta(baseDoc));
     });
 
