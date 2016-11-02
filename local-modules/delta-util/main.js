@@ -11,6 +11,11 @@ const EMPTY_DELTA = Object.freeze(new Delta());
  * Quill `Delta` helper utilities.
  */
 export default class DeltaUtil {
+  /** Handy instance of an empty delta. */
+  static get EMPTY_DELTA() {
+    return EMPTY_DELTA;
+  }
+
   /**
    * Returns `true` iff the given delta is empty. This accepts the same set of
    * values as `coerce()`, see which. Anything else is considered to be an
