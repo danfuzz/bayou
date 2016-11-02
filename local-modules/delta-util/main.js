@@ -4,14 +4,15 @@
 
 import Delta from 'quill-delta';
 
-/** Empty `Delta` instance. */
+/** Immutable empty `Delta` instance. */
 const EMPTY_DELTA = Object.freeze(new Delta());
+Object.freeze(EMPTY_DELTA.ops);
 
 /**
  * Quill `Delta` helper utilities.
  */
 export default class DeltaUtil {
-  /** Handy instance of an empty delta. */
+  /** Immutable empty `Delta` instance. */
   static get EMPTY_DELTA() {
     return EMPTY_DELTA;
   }

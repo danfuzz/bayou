@@ -311,43 +311,30 @@ export default class DocumentPlumbing {
    * In state `starting`, handles event `gotSnapshot`.
    */
   _handle_starting_gotSnapshot(event) {
-    // Bootstrap the text change chain by grabbing the promise for the next
-    // change. This will get resolved promptly, immediately below, when we
-    // update the doc.
-    this._quill.nextTextChange.then(
-      (value) => {
-        // Once we have initial contents, we can usefully handle changes coming
-        // from Quill. So, we tell Quill to start accepting user input, and set
-        // up `_latestTextChange` to track subsequent changes.
-
-        if (value.source !== PLUMBING_SOURCE) {
-          // We expected the change to be the one we generated from the doc
-          // update (below), but the `source` we got speaks otherwise.
-          throw new Error('Shouldn\'t happen: Bad `source` for initial change.');
-        }
-
-        this._quill.enable();
-        this._latestTextChange = value;
-        this._event(Events.wantChanges());
-      });
-
     // Save the result as the latest known version of the document, and tell
-    // Quill about it. This resolves the promise above.
+    // Quill about it.
     this._updateDocWithSnapshot(event.version, event.data);
 
-    // We sit in the `starting` state until the `wantChanges` event from above
-    // arrives.
-    return { state: 'starting' };
-  }
+    // The above action should have caused the Quill instance to make a change
+    // which shows up on its change chain. Grab it, and verify that indeed it's
+    // the change we're expecting.
+    const firstChange = this._quill.latestTextChange;
+    if (firstChange.source !== PLUMBING_SOURCE) {
+      // We expected the change to be the one we generated from the doc
+      // update (above), but the `source` we got speaks otherwise.
+      throw new Error('Shouldn\'t happen: Bad `source` for initial change.');
+    }
 
-  /**
-   * In state `starting`, handles event `wantChanges`. This indicates that
-   * `_latestTextChange` is now properly set up, and it is safe to start
-   * idling while waiting for changes to come in (either locally or from the
-   * server).
-   */
-  _handle_starting_wantChanges(event) {
-    // Fire off the first requests for changes.
+    // With the Quill setup verified, remember the change as our local "head"
+    // as the most recent change we've dealt with.
+    this._latestTextChange = firstChange;
+
+    // And with that, it's now safe to enable Quill so that it will accept user
+    // input.
+    this._quill.enable();
+
+    // Head into our first iteration of idling while waiting for changes coming
+    // in locally (from quill) or from the server.
     return IDLE_EVENT_TRANSITION;
   }
 
@@ -560,117 +547,103 @@ export default class DocumentPlumbing {
     if (DeltaUtil.isEmpty(dCorrection)) {
       // There is no change from what we expected. This means that no other
       // client got in front of us between when we received the current version
-      // and when we sent the delta to the server.
-      if (this._latestTextChange.nextNow === null) {
-        // Furthermore, the local user hasn't made any other changes while we
-        // were waiting for the server to get back to us. This is the ideal
-        // case, because it means Quill's state exactly matches the document
-        // version we just received.
-        this._updateDocWithSnapshot(version, vExpected, false);
-        return IDLE_EVENT_TRANSITION;
-      } else {
-        // The local user has been merrily typing while the server has been
-        // processing. We now have to turn that all into another delta to send
-        // up to the server. What we do here is go back into the `idle` state
-        // but with an immediate event that will kick off the collection
-        // process once more. (That is, it is going to be a very short-lived
-        // idling.)
-        this._updateDocWithSnapshot(version, vExpected, false);
-        return {
-          state: 'idle',
-          event: Events.gotLocalDelta(this._doc)
-        };
-      }
-    } else {
-      // The server merged in some changes that we didn't expect.
-      if (this._latestTextChange.nextNow === null) {
-        // Thanfully, the local user hasn't made any other changes while we
-        // were waiting for the server to get back to us. We need to tell
-        // Quill about the changes, but we don't have to do additional merging.
-        this._updateDocWithDelta(version, dCorrection);
-        return IDLE_EVENT_TRANSITION;
-      } else {
-        // The hard case, a/k/a "Several people are typing." The server got back
-        // to us with a response that included changes we didn't know about,
-        // *and* in the mean time the local user has been busy making changes of
-        // their own. We need to "transform" (in OT terms) or "rebase" (in git
-        // terms) the local changes to be on top of the new base document as
-        // provided by the server.
-        //
-        // Using the same terminology as used on the server side (see
-        // `server/Document.js`), we start with `vExpected` (the document we
-        // would have had if the server hadn't included extra changes) and
-        // `dCorrection` (the delta given back to us from the server which can
-        // be applied to `vExpected` to get the _actual_ next version). From
-        // that, here's what we do:
-        //
-        // 1. Get all of the changes that the user made (that is, that Quill
-        //    recorded) while the server update was in progress. This is
-        //    `dMore`.
-        // 2. Construct a delta which integrates `dCorrection` "underneath"
-        //    `dMore`, yielding `dIntegratedCorrection`. This can be applied to
-        //    Quill's current document state, yielding a document that includes
-        //    the server's current state along with `dMore`. Update both the
-        //    local document model and Quill to include the changes from the
-        //    server. At this point, the local doc still doesn't know about
-        //    `dMore`.
-        // 3. Transform (rebase) `dMore` with regard to (on top of)
-        //    `dCorrection`, yielding `dNewMore` This is the delta which can be
-        //    sent back to the server as a change that captures the new local
-        //    changes. Instead of sending it directly here, construct a
-        //    "synthetic" value for `_latestTextChange.nextNow`, and hook it up
-        //    so that it will get noticed once we go back into the `idle` state.
-
-        // (1)
-        const dMore = this._consumeLocalChanges(true);
-
-        // (2)
-
-        // `false` indicates that `dMore` should be taken to have been applied
-        // second (lost any insert races or similar).
-        const dIntegratedCorrection = dMore.transform(dCorrection, false);
-        this._updateDocWithDelta(version, dCorrection, dIntegratedCorrection);
-
-        // (3)
-
-        // The `true` argument indicates that `dCorrection` should be taken to
-        // have been applied first (won any insert races or similar). **Note:**
-        // `dNewMore` and `dIntegratedCorrection` (above) are approximately
-        // "complements" of each other.
-        const dNewMore = dCorrection.transform(dMore, true);
-
-        // This is the synthetic text change which substitutes for the changes
-        // that we consumed to construct `dMore` above. We use `user` for the
-        // source and not `PLUMBING_SOURCE` because, even though we are in fact
-        // making this change here (per se), the changes notionally came from
-        // the user, and as such we _don't_ want to ignore the change.
-        const nextNow = {
-          delta:   dNewMore,
-          source:  'user',
-          next:    this._latestTextChange.next,
-          nextNow: null
-        };
-
-        // This hooks up `nextNow.nextNow` to become non-null when the original
-        // `_latestTextChange.nextNow` resolves. This maintains the invariant
-        // that we rely on elsewhere (and which is provided under normal
-        // circumstances by `QuillProm`), specifically that `change.nextNow`
-        // becomes non-null as soon as `change.next` resolves to a value.
-        nextNow.next.then((value) => { nextNow.nextNow = value; });
-
-        // Make a new head of the change chain which points at the `nextNow` we
-        // just constructed above.
-        this._latestTextChange = {
-          nextNow: nextNow,
-          next:    Promise.resolve(nextNow)
-        };
-
-        return {
-          state: 'idle',
-          event: Events.gotLocalDelta(this._doc)
-        };
-      }
+      // and when we sent the delta to the server. That means it's safe to set
+      // the current document and go back to idling.
+      //
+      // In particular, if there happened to be any local changes made (coming
+      // from Quill) while the server request was in flight, they will be picked
+      // up promptly due to the handling of the `wantChanges` event which will
+      // get fired off immediately.
+      this._updateDocWithSnapshot(version, vExpected, false);
+      return IDLE_EVENT_TRANSITION;
     }
+
+    // The server merged in some changes that we didn't expect.
+
+    if (this._latestTextChange.nextNow === null) {
+      // Thanfully, the local user hasn't made any other changes while we
+      // were waiting for the server to get back to us. We need to tell
+      // Quill about the changes, but we don't have to do additional merging.
+      this._updateDocWithDelta(version, dCorrection);
+      return IDLE_EVENT_TRANSITION;
+    }
+
+    // The hard case, a/k/a "Several people are typing." The server got back
+    // to us with a response that included changes we didn't know about,
+    // *and* in the mean time the local user has been busy making changes of
+    // their own. We need to "transform" (in OT terms) or "rebase" (in git
+    // terms) the local changes to be on top of the new base document as
+    // provided by the server.
+    //
+    // Using the same terminology as used on the server side (see
+    // `server/Document.js`), we start with `vExpected` (the document we
+    // would have had if the server hadn't included extra changes) and
+    // `dCorrection` (the delta given back to us from the server which can
+    // be applied to `vExpected` to get the _actual_ next version). From
+    // that, here's what we do:
+    //
+    // 1. Get all of the changes that the user made (that is, that Quill
+    //    recorded) while the server update was in progress. This is
+    //    `dMore`.
+    // 2. Construct a delta which integrates `dCorrection` "underneath"
+    //    `dMore`, yielding `dIntegratedCorrection`. This can be applied to
+    //    Quill's current document state, yielding a document that includes
+    //    the server's current state along with `dMore`. Update both the
+    //    local document model and Quill to include the changes from the
+    //    server. At this point, the local doc still doesn't know about
+    //    `dMore`.
+    // 3. Transform (rebase) `dMore` with regard to (on top of)
+    //    `dCorrection`, yielding `dNewMore` This is the delta which can be
+    //    sent back to the server as a change that captures the new local
+    //    changes. Instead of sending it directly here, construct a
+    //    "synthetic" value for `_latestTextChange.nextNow`, and hook it up
+    //    so that it will get noticed once we go back into the `idle` state.
+
+    // (1)
+    const dMore = this._consumeLocalChanges(true);
+
+    // (2)
+
+    // `false` indicates that `dMore` should be taken to have been applied
+    // second (lost any insert races or similar).
+    const dIntegratedCorrection = dMore.transform(dCorrection, false);
+    this._updateDocWithDelta(version, dCorrection, dIntegratedCorrection);
+
+    // (3)
+
+    // The `true` argument indicates that `dCorrection` should be taken to
+    // have been applied first (won any insert races or similar). **Note:**
+    // `dNewMore` and `dIntegratedCorrection` (above) are approximately
+    // "complements" of each other.
+    const dNewMore = dCorrection.transform(dMore, true);
+
+    // This is the synthetic text change which substitutes for the changes
+    // that we consumed to construct `dMore` above. We use `user` for the
+    // source and not `PLUMBING_SOURCE` because, even though we are in fact
+    // making this change here (per se), the changes notionally came from
+    // the user, and as such we _don't_ want to ignore the change.
+    const nextNow = {
+      delta:   dNewMore,
+      source:  'user',
+      next:    this._latestTextChange.next,
+      nextNow: null
+    };
+
+    // This hooks up `nextNow.nextNow` to become non-null when the original
+    // `_latestTextChange.nextNow` resolves. This maintains the invariant
+    // that we rely on elsewhere (and which is provided under normal
+    // circumstances by `QuillProm`), specifically that `change.nextNow`
+    // becomes non-null as soon as `change.next` resolves to a value.
+    nextNow.next.then((value) => { nextNow.nextNow = value; });
+
+    // Make a new head of the change chain which points at the `nextNow` we
+    // just constructed above.
+    this._latestTextChange = {
+      nextNow: nextNow,
+      next:    Promise.resolve(nextNow)
+    };
+
+    return IDLE_EVENT_TRANSITION;
   }
 
   /**
