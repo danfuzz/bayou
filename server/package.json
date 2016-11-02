@@ -1,6 +1,6 @@
 {
   "name": "quillex-server",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Server code for Quillex",
   "license": "Apache-2.0",
   "author": "Dan Bornstein <danfuzz@milk.com>",

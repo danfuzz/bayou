@@ -618,7 +618,7 @@ export default class DocumentPlumbing {
         //    `dCorrection`, yielding `dNewMore` This is the delta which can be
         //    sent back to the server as a change that captures the new local
         //    changes. Instead of sending it directly here, construct a
-        //    "simulated" value for `_latestTextChange.nextNow`, and hook it up
+        //    "synthetic" value for `_latestTextChange.nextNow`, and hook it up
         //    so that it will get noticed once we go back into the `idle` state.
 
         // (1)
@@ -638,10 +638,16 @@ export default class DocumentPlumbing {
         // `dNewMore` and `dIntegratedCorrection` (above) are approximately
         // "complements" of each other.
         const dNewMore = dCorrection.transform(dMore, true);
+
+        // This is the synthetic text change which substitutes for the changes
+        // that we consumed to construct `dMore` above. We use `user` for the
+        // source and not `PLUMBING_SOURCE` because, even though we are in fact
+        // making this change here (per se), the changes notionally came from
+        // the user, and as such we _don't_ want to ignore the change.
         const nextNow = {
           delta:   dNewMore,
           source:  'user',
-          next:    Promise.resolve(this._latestTextChange),
+          next:    this._latestTextChange.next,
           nextNow: null
         };
 
@@ -650,8 +656,10 @@ export default class DocumentPlumbing {
         // that we rely on elsewhere (and which is provided under normal
         // circumstances by `QuillProm`), specifically that `change.nextNow`
         // becomes non-null as soon as `change.next` resolves to a value.
-        this._latestTextChange.next.then((value) => { nextNow.nextNow = value; });
+        nextNow.next.then((value) => { nextNow.nextNow = value; });
 
+        // Make a new head of the change chain which points at the `nextNow` we
+        // just constructed above.
         this._latestTextChange = {
           nextNow: nextNow,
           next:    Promise.resolve(nextNow)
