@@ -1,8 +1,10 @@
 Quillex
 =======
 
-A little [Quill](https://quilljs.com/) demo application. The code is set up to
-make it straightforward to customize. Salient details:
+A little [Quill](https://quilljs.com/) demo application which includes
+synchronization of document state across multiple clients.
+
+The code is set up to make it straightforward to customize. Salient details:
 
 * Quill and its dependencies get built from source, instead of being used in
   the precompiled distro form which Quill provides as a convenience. This makes
@@ -80,6 +82,12 @@ $ npm run clean
   which can be used on both the client and server sides.
 * `server` &mdash; Server code. The main entrypoint is `main.js`.
 * `out` &mdash; Where the results of doing a build end up.
+
+### Theory of operation
+
+See the [client state diagram](https://raw.githubusercontent.com/danfuzz/quillex-docs/master/client-states.png)
+for an overview of how the system operates from the client's perspective. This
+is a straightforward (fairly unsurprising) operational-transform implementation.
 
 ### Other information
 
