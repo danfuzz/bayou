@@ -2,16 +2,19 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import log from './log';
-
 /**
  * Simple plugin to produce progress messages while building Webpack bundles.
  */
 export default class ProgressMessage {
   /**
    * Constructs an instance.
+   *
+   * @param log The logger to use.
    */
-  constructor() {
+  constructor(log) {
+    /** Logger. */
+    this._log = log;
+
     /**
      * Timestamp of the most recent progress message. Used to limit frequency of
      * messages so as not to spew too much.
@@ -43,7 +46,7 @@ export default class ProgressMessage {
     }
 
     this._lastTime = now;
-    log(`${Math.floor(frac * 100)}% -- ${msg}`);
+    this._log.info(`${Math.floor(frac * 100)}% -- ${msg}`);
   }
 
   /**

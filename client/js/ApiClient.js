@@ -2,6 +2,11 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import SeeAll from 'see-all';
+
+/** Logger. */
+const log = new SeeAll('api');
+
 /**
  * Connection with the server, via a websocket.
  */
@@ -98,7 +103,7 @@ export default class ApiClient {
       }
     }
 
-    console.log(`Websocket sent: ${payload}`);
+    log.info(`Websocket sent: ${payload}`);
 
     return result;
   }
@@ -143,10 +148,10 @@ export default class ApiClient {
     if (callback) {
       delete this.callbacks[id];
       if (error) {
-        console.log(`Websocket reject ${id}: ${JSON.stringify(error)}`);
+        log.info(`Websocket reject ${id}: ${JSON.stringify(error)}`);
         callback.reject(new Error(error));
       } else {
-        console.log(`Websocket resolve ${id}: ${JSON.stringify(result)}`);
+        log.info(`Websocket resolve ${id}: ${JSON.stringify(result)}`);
         callback.resolve(result);
       }
     } else {

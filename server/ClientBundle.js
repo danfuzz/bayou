@@ -11,8 +11,12 @@ import memory_fs from 'memory-fs';
 import path from 'path';
 import webpack from 'webpack';
 
-import log from './log';
+import SeeAll from 'see-all';
+
 import ProgressMessage from './ProgressMessage';
+
+/** Logger. */
+const log = new SeeAll('client-bundle');
 
 /** Base directory of the product. */
 const baseDir = path.resolve(__dirname, '..');
@@ -49,7 +53,7 @@ const webpackOptions = {
     publicPath: '/static/'
   },
   plugins: [
-    new webpack.ProgressPlugin(new ProgressMessage().handler)
+    new webpack.ProgressPlugin(new ProgressMessage(log).handler)
   ],
   resolve: {
     alias: {
@@ -165,23 +169,23 @@ const watchOptions = {
      const errors = stats.compilation.errors;
 
      if (warnings && (warnings.length !== 0)) {
-       log('Compilation warnings.')
+       log.warn('Compilation warnings.')
        for (let i = 0; i < warnings.length; i++) {
          const w = warnings[i];
-         log(w);
+         log.warn(w);
        }
      }
 
      if (err || (errors && (errors.length !== 0))) {
-       log('Trouble compiling JS bundle.')
+       log.err('Trouble compiling JS bundle.')
        for (let i = 0; i < errors.length; i++) {
          const e = errors[i];
-         log(e.message);
+         log.err(e.message);
        }
        return;
      }
 
-     log('Compiled new JS bundle.');
+     log.info('Compiled new JS bundle.');
 
      // Find the written bundle in the memory FS, read it, and then delete it.
      // See comments in `_newCompiler()`, above, for rationale.
@@ -191,7 +195,7 @@ const watchOptions = {
      } catch (e) {
        // File not found. This will happen when it turns out there were no
        // changes to the bundle. But it might happen in other cases too.
-       log('Bundle not written! No changes?');
+       log.info('Bundle not written! No changes?');
        return;
      }
    }
