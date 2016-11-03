@@ -4,7 +4,10 @@
 
 import util from 'util';
 
-import log from './log';
+import SeeAll from 'see-all';
+
+/** Logger. */
+const log = new SeeAll('api');
 
 export default class ApiServer {
   /**
@@ -29,9 +32,9 @@ export default class ApiServer {
    * where the result is a simple value or a promise.
    */
   _handleMessage(msg) {
-    log('Websocket message:');
     msg = JSON.parse(msg);
-    log(msg);
+    log.info('Websocket message:');
+    log.info(msg);
 
     const method = msg.method;
     let impl;
@@ -57,10 +60,11 @@ export default class ApiServer {
         response.result = result;
       }
 
-      log('Websocket response:');
-      log(response);
+      log.info('Websocket response:');
+      log.info(response);
       if (error) {
-        log(error);
+        log.info('Error:');
+        log.info(error);
       }
       this.ws.send(JSON.stringify(response));
     }
@@ -80,17 +84,15 @@ export default class ApiServer {
    * Handles a `close` event coming from the underlying websocket.
    */
   _handleClose(code, msg) {
-    log('Websocket close:');
-    log(code);
-    log(msg);
+    log.info(`Websocket close: ${code} ${msg}`);
   }
 
   /**
    * Handles an `error` event coming from the underlying websocket.
    */
   _handleError(err) {
-    log('Websocket error:');
-    log(err);
+    log.info('Websocket error:');
+    log.info(err);
   }
 
   /**

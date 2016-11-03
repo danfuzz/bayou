@@ -7,7 +7,10 @@ import fs_extra from 'fs-extra';
 import path from 'path';
 import Watchpack from 'watchpack';
 
-import log from './log';
+import SeeAll from 'see-all';
+
+/** Logger. */
+const log = new SeeAll('dev-mode');
 
 /**
  * Development mode handler. This expects to be invoked when the product is
@@ -107,7 +110,7 @@ export default class DevMode {
     }
 
     if (basePath === null) {
-      log(`[dev-mode] Weird path: ${fromPath}`);
+      log.err(`[dev-mode] Weird path: ${fromPath}`);
       return;
     }
 
@@ -116,7 +119,7 @@ export default class DevMode {
 
     if (sourcePath === null) {
       fs.unlinkSync(toPath);
-      log(`[dev-mode] Removed: ${relativePath}`);
+      log.info(`[dev-mode] Removed: ${relativePath}`);
     } else if (sourcePath === fromPath) {
       // We only end up here if the file that changed is the "most overlaid" one.
       // That is, if `foo.js` has an overlay, and we just noticed that the base
@@ -124,7 +127,7 @@ export default class DevMode {
       // it.
       fs_extra.ensureDirSync(path.dirname(toPath));
       fs_extra.copySync(fromPath, toPath, { clobber: true, dereference: false });
-      log(`[dev-mode] Updated: ${relativePath}`);
+      log.info(`[dev-mode] Updated: ${relativePath}`);
     }
   }
 

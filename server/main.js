@@ -16,11 +16,15 @@ import morgan from 'morgan';
 import path from 'path';
 import process from 'process';
 
+import SeeAll from 'see-all';
+
 import ApiServer from './ApiServer';
 import ClientBundle from './ClientBundle';
 import DevMode from './DevMode';
 import Document from './Document';
-import log from './log';
+
+/** Logger. */
+const log = new SeeAll('main');
 
 /** What port to listen for connections on. */
 const PORT = 8080;
@@ -63,5 +67,5 @@ app.use('/', express.static(path.resolve(baseDir, 'client/assets')));
 app.ws('/api', (ws, req) => { new ApiServer(ws, theDoc); });
 
 app.listen(PORT, function () {
-  log(`Quillex listening on port ${PORT}.`);
+  log.info(`Quillex listening on port ${PORT}.`);
 });

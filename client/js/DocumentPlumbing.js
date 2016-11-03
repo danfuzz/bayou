@@ -6,7 +6,10 @@ import Delta from 'quill-delta';
 
 import DeltaUtil from 'delta-util';
 import PromDelay from 'prom-delay';
+import SeeAll from 'see-all';
 
+/** Logger. */
+const log = new SeeAll('doc');
 
 /**
  * How long to wait (in msec) after receiving a local change (to allow time for
@@ -406,9 +409,9 @@ export default class DocumentPlumbing {
     const baseDoc = event.baseDoc;
     const version = event.version;
     const delta = event.delta;
-    console.log('Delta from server');
-    console.log(version);
-    console.log(delta);
+
+    log.info(`Delta from server: v${version}`);
+    log.info(delta);
 
     // We only take action if the result's base (what `delta` is with regard to)
     // is the current `_doc`. If that _isn't_ the case, then what we have here
@@ -540,9 +543,8 @@ export default class DocumentPlumbing {
     const dCorrection = DeltaUtil.coerce(event.delta);
     const version = event.version;
 
-    console.log('Received `applyDelta` response.')
-    console.log(version);
-    console.log(dCorrection);
+    log.info(`Correction from server: v${version}`);
+    log.info(dCorrection);
 
     if (DeltaUtil.isEmpty(dCorrection)) {
       // There is no change from what we expected. This means that no other
