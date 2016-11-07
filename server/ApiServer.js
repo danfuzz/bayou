@@ -4,6 +4,7 @@
 
 import util from 'util';
 
+import RandomId from 'random-id';
 import SeeAll from 'see-all';
 
 /** Logger. */
@@ -19,11 +20,23 @@ export default class ApiServer {
    * @param doc The document to interact with.
    */
   constructor(ws, doc) {
-    this.ws = ws;
-    this.doc = doc;
+    /** The Websocket for the client connection. */
+    this._ws = ws;
+
+    /** The document being managed. */
+    this._doc = doc;
+
+    /** Short ID string used to identify this connection in logs. */
+    this._connectionId = RandomId.make('conn');
+
+    /** Count of messages received. Used for liveness logging. */
+    this._messageCount = 0;
+
     ws.on('message', this._handleMessage.bind(this));
     ws.on('close', this._handleClose.bind(this));
     ws.on('error', this._handleError.bind(this));
+
+    log.info(`${this._connectionId} open.`);
   }
 
   /**
@@ -32,9 +45,13 @@ export default class ApiServer {
    * where the result is a simple value or a promise.
    */
   _handleMessage(msg) {
+    this._messageCount++;
+    if ((this._messageCount % 25) === 0) {
+      log.info(`${this._connectionId} handled ${this._messageCount} messages.`);
+    }
+
     msg = JSON.parse(msg);
-    log.info('Websocket message:');
-    log.info(msg);
+    log.detail(`${this._connectionId} message:`, msg);
 
     const method = msg.method;
     let impl;
@@ -60,13 +77,11 @@ export default class ApiServer {
         response.result = result;
       }
 
-      log.info('Websocket response:');
-      log.info(response);
+      log.detail(`${this._connectionId} response:`, response);
       if (error) {
-        log.info('Error:');
-        log.info(error);
+        log.detail(`${this._connectionId} error:`, error);
       }
-      this.ws.send(JSON.stringify(response));
+      this._ws.send(JSON.stringify(response));
     }
 
     try {
@@ -84,15 +99,14 @@ export default class ApiServer {
    * Handles a `close` event coming from the underlying websocket.
    */
   _handleClose(code, msg) {
-    log.info(`Websocket close: ${code} ${msg}`);
+    log.info(`${this._connectionId} close: ${code} ${msg}`);
   }
 
   /**
    * Handles an `error` event coming from the underlying websocket.
    */
   _handleError(err) {
-    log.info('Websocket error:');
-    log.info(err);
+    log.info(`${this._connectionId} error:`, err);
   }
 
   /**
@@ -117,12 +131,21 @@ export default class ApiServer {
   }
 
   /**
+   * API method `connectionId`: Returns the connection ID that the server
+   * assigned to this connection. This is only meant to be used for logging.
+   * For example, it is _not_ guaranteed to be unique.
+   */
+  method_connectionId(args) {
+    return this._connectionId;
+  }
+
+  /**
    * API method `snapshot`: Returns an instantaneous snapshot of the document
    * contents. Result is an object that maps `data` to the snapshot data and
    * `version` to the version number.
    */
   method_snapshot(args) {
-    return this.doc.snapshot();
+    return this._doc.snapshot();
   }
 
   /**
@@ -133,7 +156,7 @@ export default class ApiServer {
    * document.
    */
   method_applyDelta(args) {
-    return this.doc.applyDelta(args.baseVersion, args.delta);
+    return this._doc.applyDelta(args.baseVersion, args.delta);
   }
 
   /**
@@ -145,6 +168,6 @@ export default class ApiServer {
    * promise until at least one change has been made.
    */
   method_deltaAfter(args) {
-    return this.doc.deltaAfter(args.baseVersion);
+    return this._doc.deltaAfter(args.baseVersion);
   }
 }

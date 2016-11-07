@@ -103,7 +103,7 @@ export default class ApiClient {
       }
     }
 
-    log.info(`Websocket sent: ${payload}`);
+    log.detail(`Websocket sent: ${payload}`);
 
     return result;
   }
@@ -148,10 +148,10 @@ export default class ApiClient {
     if (callback) {
       delete this.callbacks[id];
       if (error) {
-        log.info(`Websocket reject ${id}: ${JSON.stringify(error)}`);
+        log.detail(`Websocket reject ${id}: ${JSON.stringify(error)}`);
         callback.reject(new Error(error));
       } else {
-        log.info(`Websocket resolve ${id}: ${JSON.stringify(result)}`);
+        log.detail(`Websocket resolve ${id}: ${JSON.stringify(result)}`);
         callback.resolve(result);
       }
     } else {
@@ -172,6 +172,13 @@ export default class ApiClient {
     this.ws = new WebSocket(url);
     this.ws.onmessage = this._handleMessage.bind(this);
     this.ws.onopen    = this._handleOpen.bind(this);
+  }
+
+  /**
+   * API call `connectionId`. Requests the connection ID to use for logging.
+   */
+  connectionId() {
+    return this._send('connectionId', { });
   }
 
   /**
