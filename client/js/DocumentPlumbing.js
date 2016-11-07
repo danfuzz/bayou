@@ -224,6 +224,9 @@ export default class DocumentPlumbing {
      */
     this._pendingLocalTextChange = false;
 
+    /** Count of events handled. Used for logging. */
+    this._eventCount = 0;
+
     // The Quill instance should already be in read-only mode. We explicitly
     // set that here, though, to be safe and resilient.
     quill.disable();
@@ -243,10 +246,19 @@ export default class DocumentPlumbing {
    * @param event The event that was received.
    */
   _event(event) {
+    log.detail(`In state: ${this._state}`);
+
     // Event handlers optionally return an event to immediately dispatch. The
     // loop here terminates when the handler chooses _not_ to do such an event
     // dispatch chaining.
     do {
+      // Log the event details (if not squelched) and occasional count.
+      log.detail('Event:', event);
+      this._eventCount++;
+      if ((this._eventCount % 25) === 0) {
+        log.info(`Handled ${this._eventCount} events.`);
+      }
+
       // Dispatch the event: Construct the method name to dispatch to based on
       // the current state and event name. Fetch the method. If it isn't
       // defined, look for a default handler for the event. If _that_ isn't
@@ -264,15 +276,20 @@ export default class DocumentPlumbing {
       const result = method.call(this, event);
 
       if (!result || !result.state) {
-        throw new Error(`Bogus result from ${eventName} handler for state ${this._state}.`);
+        // Shouldn't happen. Indicates a bug in this code.
+        log.wtf(`Bogus result from ${eventName} handler for state ${this._state}.`,
+          event, result);
       }
 
-      if (result.state !== 'same') {
+      if ((result.state !== 'same') && (result.state !== this._state)) {
+        log.detail(`New state: ${result.state}`);
         this._state = result.state;
       }
 
       event = result.event;
     } while (event);
+
+    log.detail(`Done.`);
   }
 
   /**
@@ -298,6 +315,13 @@ export default class DocumentPlumbing {
    * This is the kickoff event.
    */
   _handle_detached_start(event) {
+    // Just for logging, note the connection ID used by the server.
+    this._api.connectionId().then(
+      (value) => {
+        log.info(`Connection ID: ${value}`);
+      }
+    )
+
     // TODO: This should probably arrange for a timeout.
     this._api.snapshot().then(
       (value) => {
@@ -410,8 +434,7 @@ export default class DocumentPlumbing {
     const version = event.version;
     const delta = event.delta;
 
-    log.info(`Delta from server: v${version}`);
-    log.info(delta);
+    log.detail(`Delta from server: v${version}`, delta);
 
     // We only take action if the result's base (what `delta` is with regard to)
     // is the current `_doc`. If that _isn't_ the case, then what we have here
@@ -543,8 +566,7 @@ export default class DocumentPlumbing {
     const dCorrection = DeltaUtil.coerce(event.delta);
     const version = event.version;
 
-    log.info(`Correction from server: v${version}`);
-    log.info(dCorrection);
+    log.detail(`Correction from server: v${version}`, dCorrection);
 
     if (DeltaUtil.isEmpty(dCorrection)) {
       // There is no change from what we expected. This means that no other
