@@ -364,13 +364,6 @@ export default class DocumentPlumbing {
    * This is the kickoff event.
    */
   _handle_detached_start(event) {
-    // Just for logging, note the connection ID used by the server.
-    this._api.connectionId().then(
-      (value) => {
-        log.info(`Connection ID: ${value}`);
-      }
-    )
-
     // TODO: This should probably arrange for a timeout.
     this._api.snapshot().then(
       (value) => {

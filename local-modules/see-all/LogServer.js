@@ -4,6 +4,14 @@
 
 import util from 'util';
 
+import chalk from 'chalk';
+
+/**
+ * Number of columns to reserve for log line prefixes. Prefixes under this
+ * length get padded.
+ */
+const PREFIX_COLS = 24;
+
 /**
  * The code that actually does logging in the context of a server. This gets
  * loaded by `main.js` when running in a browser.
@@ -23,7 +31,17 @@ export default class LogServer {
    * @param message Message to log.
    */
   log(level, tag, ...message) {
-    const prefix = `[${tag} ${level}] `;
+    let prefix = `[${tag} ${level}] `;
+    if (prefix.length < PREFIX_COLS) {
+      prefix += ' '.repeat(PREFIX_COLS - prefix.length);
+    }
+
+    // Color the prefix according to level.
+    switch (level) {
+      case 'error': { prefix = chalk.red.bold(prefix);    break; }
+      case 'warn':  { prefix = chalk.yellow.bold(prefix); break; }
+      default:      { prefix = chalk.dim.bold(prefix);    break; }
+    }
 
     // Make a unified string of the entire message.
     let text = '';

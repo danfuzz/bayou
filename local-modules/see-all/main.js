@@ -2,17 +2,15 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-/** Running in a browser? */
-const IS_BROWSER = (typeof window !== 'undefined');
+import LogStream from './LogStream';
 
 /**
- * The actual logger to user. This uses `require` conditionally instead of just
- * `import`ing, to avoid breaking the browser. (That is, it would fail in
- * browser context if we imported the server code.)
+ * The actual logger to user. This gets passed in during initialization, because
+ * we can't just `import` both options, because each on will fail when imported
+ * in the wrong environment (e.g. trying to load the server logger in the
+ * context of a web browser).
  */
-const LOGGER_CLASS =
-  require(IS_BROWSER ? './LogBrowser' : './LogServer').default;
-const THE_LOGGER = new LOGGER_CLASS();
+let theLogger = null;
 
 /**
  * Set of valid severity levels (as a map from names to `true`).
@@ -36,6 +34,17 @@ const LEVELS = {
  * constants for a more complete explanation.
  */
 export default class SeeAll {
+  /**
+   * Initializes the logging system. Needs to be given an actual underlying
+   * logger class
+   *
+   * @param loggerClass The underlying logger class to use. Should be one of
+   * `./LogBrowser` or `./LogServer` as importable from this module.
+   */
+  static init(loggerClass) {
+    theLogger = new loggerClass();
+  }
+
   /**
    * Severity level indicating temporary stuff for debugging. Code that uses
    * this level should not in general get checked into the repo.
@@ -101,9 +110,7 @@ export default class SeeAll {
    *   an exception, this will log the stack trace.
    */
   log(level, ...message) {
-    if (!LEVELS[level]) {
-      throw new Error(`Invalid severity level: ${level}`);
-    }
+    SeeAll._validateLevel(level);
 
     if ((level === 'detail') && !this._enableDetail) {
       // This tag isn't listed as one to log at the `detail` level. (That is,
@@ -111,7 +118,7 @@ export default class SeeAll {
       return;
     }
 
-    THE_LOGGER.log(level, this._tag, ...message);
+    theLogger.log(level, this._tag, ...message);
   }
 
   /**
@@ -171,5 +178,47 @@ export default class SeeAll {
   wtf(...message) {
     this.error('Shouldn\'t happen:', ...message);
     throw new Error('shouldnt_happen');
+  }
+
+  /**
+   * Gets a writable stream which can be used to write logs at the indicated
+   * level. The result only nominally implements the protocol. In particular,
+   * it responds to both `.write()` and `.end()` identically, and it never
+   * emits events.
+   *
+   * @param level Severity level. Must be one of the severity level constants
+   *   defined by this class.
+   * @returns An appropriately-constructed stream.
+   */
+  streamFor(level) {
+    SeeAll._validateLevel(level);
+    return new LogStream(this, level);
+  }
+
+  /** A writable stream for `debug` logs. */
+  get debugStream() { return this.streamFor(SeeAll.DEBUG); }
+
+  /** A writable stream for `error` logs. */
+  get errorStream() { return this.streamFor(SeeAll.ERROR); }
+
+  /** A writable stream for `warn` logs. */
+  get warnStream() { return this.streamFor(SeeAll.WARN); }
+
+  /** A writable stream for `info` logs. */
+  get infoStream() { return this.streamFor(SeeAll.INFO); }
+
+  /** A writable stream for `detail` logs. */
+  get detailStream() { return this.streamFor(SeeAll.DETAIL); }
+
+  /**
+   * Validates a `level` value. Throws an error if invalid.
+   *
+   * @param level Severity level. Must be one of the severity level constants
+   *   defined by this class.
+   */
+  static _validateLevel(level) {
+    if (!LEVELS[level]) {
+      throw new Error(`Invalid severity level: ${level}`);
+    }
   }
 }

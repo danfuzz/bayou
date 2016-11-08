@@ -17,6 +17,7 @@ import path from 'path';
 import process from 'process';
 
 import SeeAll from 'see-all';
+import LogServer from 'see-all/LogServer';
 
 import ApiServer from './ApiServer';
 import ClientBundle from './ClientBundle';
@@ -25,6 +26,7 @@ import Document from './Document';
 
 /** Logger. */
 const log = new SeeAll('main');
+SeeAll.init(LogServer);
 
 /** What port to listen for connections on. */
 const PORT = 8080;
@@ -44,12 +46,12 @@ const app = express();
 express_ws(app);
 
 // An abbreviated and colorized log to the console.
-app.use(morgan('dev'));
+app.use(morgan('dev', { stream: log.infoStream }));
 
 // A fairly complete log written to a file.
 const logStream =
-  fs.createWriteStream(path.resolve(baseDir, 'access.log'), {flags: 'a'});
-app.use(morgan('common', {stream: logStream}));
+  fs.createWriteStream(path.resolve(baseDir, 'access.log'), { flags: 'a' });
+app.use(morgan('common', { stream: logStream }));
 
 // Map Quill files into `/static/quill`. This is used for CSS files but not for
 // the JS code; the JS code is included in the overall JS bundle file.
