@@ -4,8 +4,31 @@
 
 import SeeAll from 'see-all';
 
+import ApiError from './ApiError';
+
 /** Logger. */
-const log = new SeeAll('api');
+const log = new SeeAll('api', true);
+
+/**
+ * Map of close codes to nominally official constant names. See
+ * <https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent>.
+ */
+const CLOSE_CODES = {
+  1000: 'close_normal',
+  1001: 'close_going_away',
+  1002: 'close_protocol_error',
+  1003: 'close_unsupported',
+  1005: 'close_no_status',
+  1006: 'close_abnormal',
+  1007: 'close_unsupported_data',
+  1008: 'close_policy_violation',
+  1009: 'close_too_large',
+  1010: 'close_missing_extension',
+  1011: 'close_internal_error',
+  1012: 'close_service_restart',
+  1013: 'close_try_again_later',
+  1015: 'close_tls_handshake'
+};
 
 /**
  * Connection with the server, via a websocket.
@@ -34,48 +57,70 @@ export default class ApiClient {
     url.hash = '';
 
     /** URL for the websocket server. */
-    this.url = url.href;
+    this._url = url.href;
 
-    /** Actual websocket instance. Set by `open()`. */
-    this.ws = null;
+    /**
+     * Actual websocket instance. Set by `open()`. Reset in
+     * `_resetConnection()`.
+     */
+    this._ws = null;
 
-    /** Next message ID to use when sending a message. */
-    this.nextId = 0;
+    /**
+     * Next message ID to use when sending a message. Initialized and reset in
+     * `_resetConnection()`.
+     */
+    this._nextId = 0;
 
     /**
      * Map from message IDs to response callbacks. Each callback is an object
      * that maps `resolve` and `reject` to functions that obey the usual
-     * promise contract for functions of those names.
+     * promise contract for functions of those names. Initialized and reset in
+     * `_resetConnection()`.
      */
-    this.callbacks = {};
+    this._callbacks = null;
 
     /**
      * List of pending calls. Only used when connection is in the middle of
-     * being established.
+     * being established. Initialized and reset in `_resetConnection()`.
      */
-    this.pendingCalls = [];
+    this._pendingCalls = null;
+
+    // Initialize the active connection fields (described above).
+    this._resetConnection();
+  }
+
+  /**
+   * Init or reset the state having to do with an active connection. See the
+   * constructor for documentation about these fields.
+   */
+  _resetConnection() {
+    this._ws           = null;
+    this._nextId       = 0;
+    this._callbacks    = {};
+    this._pendingCalls = [];
   }
 
   /**
    * Sends the given call to the server. Returns a promise for the result
-   * (or error).
+   * (or error). In the case of an error, the rejection reason will always be an
+   * instance of `ApiError` (see which for details).
    */
   _send(method, args) {
-    const wsState = this.ws.readyState;
+    const wsState = this._ws.readyState;
 
     // Handle the cases where socket shutdown is imminent or has already
     // happened. We don't just `throw` directly here, so that clients can
     // consistently handle errors via one of the promise chaining mechanisms.
     switch (wsState) {
       case WebSocket.CLOSED: {
-        return Promise.reject(new Error('Websocket is closed.'));
+        return Promise.reject(ApiError.connError('closed', 'Websocket is closed.'));
       }
       case WebSocket.CLOSING: {
-        return Promise.reject(new Error('Websocket is closing.'));
+        return Promise.reject(ApiError.connError('closing', 'Websocket is closing.'));
       }
     }
 
-    const id = this.nextId;
+    const id = this._nextId;
     const payload = JSON.stringify({ method: method, args: args, id: id });
 
     let callback;
@@ -83,23 +128,23 @@ export default class ApiClient {
       callback = { resolve: resolve, reject: reject };
     });
 
-    this.callbacks[id] = callback;
-    this.nextId++;
+    this._callbacks[id] = callback;
+    this._nextId++;
 
     switch (wsState) {
       case WebSocket.CONNECTING: {
         // Not yet open. Need to queue it up.
-        this.pendingCalls.push(payload);
+        this._pendingCalls.push(payload);
         break;
       }
       case WebSocket.OPEN: {
-        this.ws.send(payload);
+        this._ws.send(payload);
         break;
       }
       default: {
         // Whatever this state is, it's not documented as part of the Websocket
         // spec!
-        return Promise.reject(new Error(`Websocket in weird state: ${wsState}`));
+        log.wtf(`Websocket in weird state: ${wsState}`);
       }
     }
 
@@ -109,22 +154,69 @@ export default class ApiClient {
   }
 
   /**
-   * Handles the `open` event coming from a websocket. In this case, it sends
+   * Common code to handle both `error` and `close` events.
+   */
+  _handleTermination(event, error) {
+    // Reject the promises of any currently-pending calls.
+    for (let id in this._callbacks) {
+      this._callbacks[id].reject(error);
+    }
+
+    // Clear the state related to the websocket. It is safe to re-open the
+    // connection after this.
+    this._resetConnection();
+  }
+
+  /**
+   * Handles a `close` event coming from a websocket. This logs the closure and
+   * terminates all active calls by rejecting their promises.
+   */
+  _handleClose(event) {
+    log.info('Websocket closed:', event);
+
+    const code = CLOSE_CODES[event.code] ||
+      (event.code ? `close_${event.code}` : 'closed');
+    const reason = event.reason || 'Websocket closed.';
+    const error = ApiError.connError(code, reason);
+
+    this._handleTermination(event, error);
+  }
+
+  /**
+   * Handles an `error` event coming from a websocket. This behaves similarly
+   * to the `close` event.
+   *
+   * **Note:** Because errors in this case are typically due to transient
+   * connection issues (e.g. network went away) and not due to fundamental
+   * system issues, this is logged as `info` and not `error` (or `warn`).
+   */
+  _handleError(event) {
+    log.info('Websocket error:', event);
+
+    // **Note:** The error event does not have any particularly useful extra
+    // info, so -- alas -- there is nothing to get out of it for the `ApiError`
+    // description.
+    const error = ApiError.connError('error', 'Websocket error');
+    this._handleTermination(event, error);
+  }
+
+  /**
+   * Handles an `open` event coming from a websocket. In this case, it sends
    * any pending calls (calls that were made while the socket was still in the
    * process of opening).
    */
   _handleOpen(event) {
-    for (let payload of this.pendingCalls) {
-      this.ws.send(payload);
+    for (let payload of this._pendingCalls) {
+      this._ws.send(payload);
     }
-    this.pendingCalls = [];
+    this._pendingCalls = [];
   }
 
   /**
    * Handles a `message` event coming from a websocket. In this case, messages
    * are expected to be the responses from previous calls, encoded as JSON. The
    * `id` of the response is used to look up the callback function in
-   * `this.callbacks`. That callback is then called in a separate tick.
+   * `this._callbacks`. That callback is then called in a separate tick.
    */
   _handleMessage(event) {
     const payload = JSON.parse(event.data);
@@ -137,41 +229,57 @@ export default class ApiClient {
     }
 
     if (typeof id !== 'number') {
+      // We handle these as a `server_bug` and not, e.g. logging as `wtf()` and
+      // aborting, because this is indicative of a server-side problem and not
+      // an unrecoverable local problem.
       if (!id) {
-        throw new Error('Missing ID on API response.');
+        throw ApiError.connError('server_bug', 'Missing ID on API response.');
       } else {
-        throw new Error(`Strange ID type \`${typeof id}\` on API response.`);
+        throw ApiError.connError('server_bug', `Strange ID type \`${typeof id}\` on API response.`);
       }
     }
 
-    const callback = this.callbacks[id];
+    const callback = this._callbacks[id];
     if (callback) {
-      delete this.callbacks[id];
+      delete this._callbacks[id];
       if (error) {
         log.detail(`Websocket reject ${id}: ${JSON.stringify(error)}`);
-        callback.reject(new Error(error));
+        callback.reject(ApiError.appError('app_error', error));
       } else {
         log.detail(`Websocket resolve ${id}: ${JSON.stringify(result)}`);
         callback.resolve(result);
       }
     } else {
-      throw new Error(`Orphan call for ID ${id}.`);
+      // See above about `server_bug`.
+      throw ApiError.connError('server_bug', `Orphan call for ID ${id}.`);
     }
   }
 
   /**
    * Opens the websocket. Once open, any pending calls will get sent to the
-   * server side. Doesn't return a value.
+   * server side. Returns a promise for the result of opening; this will resolve
+   * as a `true` success or fail with an `ApiError`.
    */
   open() {
-    if (this.ws !== null) {
-      throw new Error('Already open');
+    if (this._ws !== null) {
+      return Promise.reject(ApiError.connError('client_bug', 'Already open'));
     }
 
-    const url = this.url;
-    this.ws = new WebSocket(url);
-    this.ws.onmessage = this._handleMessage.bind(this);
-    this.ws.onopen    = this._handleOpen.bind(this);
+    const url = this._url;
+    this._ws = new WebSocket(url);
+    this._ws.onclose   = this._handleClose.bind(this);
+    this._ws.onerror   = this._handleError.bind(this);
+    this._ws.onmessage = this._handleMessage.bind(this);
+    this._ws.onopen    = this._handleOpen.bind(this);
+
+    return this.ping().then((value) => { return true; });
+  }
+
+  /**
+   * API call `ping`. No-op request that verifies an active connection.
+   */
+  ping() {
+    return this._send('ping', { });
   }
 
   /**

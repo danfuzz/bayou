@@ -164,7 +164,7 @@ const watchOptions = {
     * Handles the results of running a compile. This gets called as a callback
     * from Webpack.
     */
-   _handleCompilation(err, stats) {
+   _handleCompilation(error, stats) {
      const warnings = stats.compilation.warnings;
      const errors = stats.compilation.errors;
 
@@ -176,11 +176,11 @@ const watchOptions = {
        }
      }
 
-     if (err || (errors && (errors.length !== 0))) {
-       log.err('Trouble compiling JS bundle.')
+     if (error || (errors && (errors.length !== 0))) {
+       log.error('Trouble compiling JS bundle.')
        for (let i = 0; i < errors.length; i++) {
          const e = errors[i];
-         log.err(e.message);
+         log.error(e.message);
        }
        return;
      }

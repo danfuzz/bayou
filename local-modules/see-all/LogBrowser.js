@@ -21,7 +21,27 @@ export default class LogBrowser {
    * @param message Message to log.
    */
   log(level, tag, ...message) {
-    const prefix = `[${tag} ${level}]`;
-    console.log(prefix, ...message);
+    const prefix = `%c[${tag} ${level}]`;
+    const style  = 'color: #bbb; font-weight: bold';
+
+    // The browser's `console` methods _mostly_ do the right thing with regard
+    // to providing distinguishing markings and stack traces when appropriate.
+    // We just disagree about `debug`, so in that case we include the message
+    // and a trace in a "group."
+
+    let logMethod;
+    switch (level) {
+      case 'debug': { logMethod = console.group; break; }
+      case 'error': { logMethod = console.error; break; }
+      case 'warn':  { logMethod = console.warn;  break; }
+      default:      { logMethod = console.log;   break; }
+    }
+
+    logMethod.call(console, prefix, style, ...message);
+
+    if (level === 'debug') {
+      console.trace('stack trace');
+      console.groupEnd();
+    }
   }
 }
