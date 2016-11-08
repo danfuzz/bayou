@@ -19,7 +19,7 @@ const THE_LOGGER = new LOGGER_CLASS();
  */
 const LEVELS = {
   'debug':  true,
-  'err':    true,
+  'error':  true,
   'warn':   true,
   'info':   true,
   'detail': true
@@ -27,7 +27,7 @@ const LEVELS = {
 
 /**
  * Logger which associates a tag (typically a subsystem or module name) and a
- * severity level (`info`, `err`, etc.) with all activity. Stack traces are
+ * severity level (`info`, `error`, etc.) with all activity. Stack traces are
  * included for any message logged at a level that indicates any sort of
  * problem.
  *
@@ -48,7 +48,7 @@ export default class SeeAll {
    * innocuous errory thing that normally happens from time to time, such as,
    * for example, a network connection that dropped unexpectedly.
    */
-  static get ERR() { return 'err'; }
+  static get ERROR() { return 'error'; }
 
   /**
    * Severity level indicating a warning. Trouble, but not dire. Logs at this
@@ -120,16 +120,16 @@ export default class SeeAll {
    * @param ...message Message to log. See `log()` for details.
    */
   debug(...message) {
-    this.log(SeeAll.INFO, ...message);
+    this.log(SeeAll.DEBUG, ...message);
   }
 
   /**
-   * Logs a message at the `ERR` level.
+   * Logs a message at the `ERROR` level.
    *
    * @param ...message Message to log. See `log()` for details.
    */
-  err(...message) {
-    this.log(SeeAll.ERR, ...message);
+  error(...message) {
+    this.log(SeeAll.ERROR, ...message);
   }
 
   /**
@@ -160,7 +160,7 @@ export default class SeeAll {
   }
 
   /**
-   * "What a terrible failure!" Logs a message at the `ERR` level, indicating
+   * "What a terrible failure!" Logs a message at the `ERROR` level, indicating
    * a violation of an explicit or implied assertion. That is, this represents
    * a "shouldn't happen" condition that in fact was detected to have happened.
    * After so logging, this throws an exception, which is meant to cause the
@@ -169,7 +169,7 @@ export default class SeeAll {
    * @param ...message Message to log. See `log()` for details.
    */
   wtf(...message) {
-    err('Shouldn\'t happen:', ...message);
+    this.error('Shouldn\'t happen:', ...message);
     throw new Error('shouldnt_happen');
   }
 }

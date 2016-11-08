@@ -110,7 +110,7 @@ export default class DevMode {
     }
 
     if (basePath === null) {
-      log.err(`[dev-mode] Weird path: ${fromPath}`);
+      log.error(`[dev-mode] Weird path: ${fromPath}`);
       return;
     }
 

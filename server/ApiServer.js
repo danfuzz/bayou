@@ -105,8 +105,8 @@ export default class ApiServer {
   /**
    * Handles an `error` event coming from the underlying websocket.
    */
-  _handleError(err) {
-    log.info(`${this._connectionId} error:`, err);
+  _handleError(error) {
+    log.info(`${this._connectionId} error:`, error);
   }
 
   /**
@@ -128,6 +128,14 @@ export default class ApiServer {
    */
   error_unknown_method(args) {
     throw new Error('unknown_method');
+  }
+
+  /**
+   * API method `ping`: No-op method that merely verifies (implicitly) that the
+   * connection is working. Always returns `true`.
+   */
+  method_ping(args) {
+    return true;
   }
 
   /**

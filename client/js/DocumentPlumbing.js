@@ -8,6 +8,8 @@ import DeltaUtil from 'delta-util';
 import PromDelay from 'prom-delay';
 import SeeAll from 'see-all';
 
+import ApiError from './ApiError';
+
 /** Logger. */
 const log = new SeeAll('doc');
 
@@ -23,6 +25,12 @@ const PUSH_DELAY_MSEC = 1000;
  * the server.
  */
 const PULL_DELAY_MSEC = 1000;
+
+/**
+ * How long to wait (in msec) after detecting an error, before attempting to
+ * restart.
+ */
+const RESTART_DELAY_MSEC = 10000;
 
 /**
  * Tag used to identify this module as the source of a Quill event or action.
@@ -41,11 +49,11 @@ class Events {
    * back from an API call.
    *
    * @param method Name of the method that was called.
-   * @param error Error message.
+   * @param reason Error reason.
    * @returns The constructed event.
    */
-  static apiError(method, message) {
-    return { name: 'apiError', method: method, message: message };
+  static apiError(method, reason) {
+    return { name: 'apiError', method: method, reason: reason };
   }
 
   /**
@@ -302,11 +310,52 @@ export default class DocumentPlumbing {
   }
 
   /**
-   * In any state, handles event `apiError`.
+   * In any state, handles event `apiError`. This is a "normal" occurrence if
+   * the error has to do with the network connection (e.g. the network drops),
+   * but is considered unusual (and error-worthy) if it happens for some other
+   * reason.
    */
   _handle_default_apiError(event) {
-    // TODO: Probably something more sensible.
-    throw new Error(`Trouble from API method \`${event.method}\`: ${event.message}`);
+    const method = event.method;
+    const reason = event.reason;
+
+    if (reason.layer === ApiError.CONN) {
+      // It's connection-related and probably no big deal.
+      log.info(`${reason.code}: ${reason.desc}`)
+    } else {
+      // It's something more dire; could be a bug on either side, for example.
+      log.error(`Severe synch issue ${reason.code}: ${reason.desc}`);
+    }
+
+    // Wait an appropriate amount of time and then try starting again. The
+    // start event will be received in the `errorWait` state, and as such will
+    // be handled differently than a clean start from scratch.
+    PromDelay.resolve(RESTART_DELAY_MSEC).then((res) => {
+      this.start();
+    });
+
+    return { state: 'errorWait' };
+  }
+
+  /**
+   * In state `errorWait`, handles event `start`.
+   *
+   * This is the kickoff event.
+   */
+  _handle_errorWait_start(event) {
+    // Reset the document state. TODO: Ultimately this should be able to
+    // pick up the pieces of any changes that were in-flight when the connection
+    // became problematic.
+    this._doc = null;
+    this._latestTextChange = null;
+    this._pendingDeltaAfter = false;
+    this._pendingLocalTextChange = false;
+
+    // Reopen the connection to the server.
+    this._api.open();
+
+    // After this, it's just like starting from the `detached` state.
+    return { state: 'detached', event };
   }
 
   /**
