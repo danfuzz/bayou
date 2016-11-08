@@ -9,6 +9,9 @@ import ApiError from './ApiError';
 /** Logger. */
 const log = new SeeAll('api');
 
+/** Value used for an unknown connection ID. */
+const UNKNOWN_CONNECTION_ID = 'id-unknown';
+
 /**
  * Map of close codes to nominally official constant names. See
  * <https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent>.
@@ -60,6 +63,12 @@ export default class ApiClient {
     this._url = url.href;
 
     /**
+     * Connection ID conveyed to us by the server. Reset in
+     * `_resetConnection()`.
+     */
+    this._connectionId = null;
+
+    /**
      * Actual websocket instance. Set by `open()`. Reset in
      * `_resetConnection()`.
      */
@@ -95,6 +104,7 @@ export default class ApiClient {
    */
   _resetConnection() {
     this._ws           = null;
+    this._connectionId = UNKNOWN_CONNECTION_ID;
     this._nextId       = 0;
     this._callbacks    = {};
     this._pendingCalls = [];
@@ -113,15 +123,18 @@ export default class ApiClient {
     // consistently handle errors via one of the promise chaining mechanisms.
     switch (wsState) {
       case WebSocket.CLOSED: {
-        return Promise.reject(ApiError.connError('closed', 'Websocket is closed.'));
+        return Promise.reject(
+          ApiError.connError('closed', `${this._connectionId}: closed`));
       }
       case WebSocket.CLOSING: {
-        return Promise.reject(ApiError.connError('closing', 'Websocket is closing.'));
+        return Promise.reject(
+          ApiError.connError('closing', `${this._connectionId}: closing`));
       }
     }
 
     const id = this._nextId;
-    const payload = JSON.stringify({ method: method, args: args, id: id });
+    const payloadObj = { method: method, args: args, id: id };
+    const payload = JSON.stringify(payloadObj);
 
     let callback;
     const result = new Promise((resolve, reject) => {
@@ -144,11 +157,11 @@ export default class ApiClient {
       default: {
         // Whatever this state is, it's not documented as part of the Websocket
         // spec!
-        log.wtf(`Websocket in weird state: ${wsState}`);
+        log.wtf(`${this._connectionId} in weird state: ${wsState}`);
       }
     }
 
-    log.detail(`Websocket sent: ${payload}`);
+    log.detail(`${this._connectionId} sent:`, payloadObj);
 
     return result;
   }
@@ -172,7 +185,7 @@ export default class ApiClient {
    * terminates all active calls by rejecting their promises.
    */
   _handleClose(event) {
-    log.info('Websocket closed:', event);
+    log.info(`${this._connectionId} closed:`, event);
 
     const code = CLOSE_CODES[event.code] ||
       (event.code ? `close_${event.code}` : 'closed');
@@ -191,12 +204,12 @@ export default class ApiClient {
    * system issues, this is logged as `info` and not `error` (or `warn`).
    */
   _handleError(event) {
-    log.info('Websocket error:', event);
+    log.info(`${this._connectionId} error:`, event);
 
     // **Note:** The error event does not have any particularly useful extra
     // info, so -- alas -- there is nothing to get out of it for the `ApiError`
     // description.
-    const error = ApiError.connError('error', 'Websocket error');
+    const error = ApiError.connError('error', `${this._connectionId} error`);
     this._handleTermination(event, error);
   }
 
@@ -233,9 +246,11 @@ export default class ApiClient {
       // aborting, because this is indicative of a server-side problem and not
       // an unrecoverable local problem.
       if (!id) {
-        throw ApiError.connError('server_bug', 'Missing ID on API response.');
+        throw ApiError.connError('server_bug',
+          `${this._connectionId}: Missing ID on API response.`);
       } else {
-        throw ApiError.connError('server_bug', `Strange ID type \`${typeof id}\` on API response.`);
+        throw ApiError.connError('server_bug',
+          `${this._connectionId}: Strange ID type \`${typeof id}\` on API response.`);
       }
     }
 
@@ -243,15 +258,15 @@ export default class ApiClient {
     if (callback) {
       delete this._callbacks[id];
       if (error) {
-        log.detail(`Websocket reject ${id}: ${JSON.stringify(error)}`);
+        log.detail(`${this._connectionId} reject ${id}:`, error);
         callback.reject(ApiError.appError('app_error', error));
       } else {
-        log.detail(`Websocket resolve ${id}: ${JSON.stringify(result)}`);
+        log.detail(`${this._connectionId} resolve ${id}:`, result);
         callback.resolve(result);
       }
     } else {
       // See above about `server_bug`.
-      throw ApiError.connError('server_bug', `Orphan call for ID ${id}.`);
+      throw ApiError.connError('server_bug', `${this._connectionId}: Orphan call for ID ${id}.`);
     }
   }
 
@@ -262,7 +277,8 @@ export default class ApiClient {
    */
   open() {
     if (this._ws !== null) {
-      return Promise.reject(ApiError.connError('client_bug', 'Already open'));
+      return Promise.reject(
+        ApiError.connError('client_bug', `${this._connectionId}: Already open`));
     }
 
     const url = this._url;
@@ -272,7 +288,20 @@ export default class ApiClient {
     this._ws.onmessage = this._handleMessage.bind(this);
     this._ws.onopen    = this._handleOpen.bind(this);
 
-    return this.ping().then((value) => { return true; });
+    return this.connectionId().then((value) => {
+      this._connectionId = value;
+      log.info(`${this._connectionId}: open`);
+      return true;
+    });
+  }
+
+  /**
+   * The connection ID if known, or a reasonably suggestive string if not.
+   * This class automatically sets this when connections get made, so that
+   * clients don't generally have to make an API call to get this info.
+   */
+  get id() {
+    return this._connectionId;
   }
 
   /**
