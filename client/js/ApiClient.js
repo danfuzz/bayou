@@ -7,7 +7,7 @@ import SeeAll from 'see-all';
 import ApiError from './ApiError';
 
 /** Logger. */
-const log = new SeeAll('api', true);
+const log = new SeeAll('api');
 
 /**
  * Map of close codes to nominally official constant names. See
