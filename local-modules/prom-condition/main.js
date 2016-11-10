@@ -30,13 +30,13 @@ export default class PromCondition {
      * non-null, the corresponding element of `_trigger` is the resolver for
      * the promise.
      */
-    this._became = [ null, null ];
+    this._became = [null, null];
 
     /**
      * Trigger functions corresponding to `_became`. Elements are only non-null
      * when there is a corresponding waiter.
      */
-    this._trigger = [ null, null ];
+    this._trigger = [null, null];
   }
 
   /** The current value. */

@@ -133,12 +133,12 @@ export default class ApiClient {
     }
 
     const id = this._nextId;
-    const payloadObj = { method: method, args: args, id: id };
+    const payloadObj = {method: method, args: args, id: id};
     const payload = JSON.stringify(payloadObj);
 
     let callback;
     const result = new Promise((resolve, reject) => {
-      callback = { resolve: resolve, reject: reject };
+      callback = {resolve: resolve, reject: reject};
     });
 
     this._callbacks[id] = callback;
@@ -308,14 +308,14 @@ export default class ApiClient {
    * API call `ping`. No-op request that verifies an active connection.
    */
   ping() {
-    return this._send('ping', { });
+    return this._send('ping', {});
   }
 
   /**
    * API call `connectionId`. Requests the connection ID to use for logging.
    */
   connectionId() {
-    return this._send('connectionId', { });
+    return this._send('connectionId', {});
   }
 
   /**
@@ -323,7 +323,7 @@ export default class ApiClient {
    * the result.
    */
   snapshot() {
-    return this._send('snapshot', { });
+    return this._send('snapshot', {});
   }
 
   /**
@@ -331,7 +331,7 @@ export default class ApiClient {
    * to a given version.
    */
   deltaAfter(baseVersion) {
-    return this._send('deltaAfter', { baseVersion: baseVersion });
+    return this._send('deltaAfter', {baseVersion: baseVersion});
   }
 
   /**
@@ -342,6 +342,6 @@ export default class ApiClient {
    * to get the new version.
    */
   applyDelta(baseVersion, delta) {
-    return this._send('applyDelta', { baseVersion: baseVersion, delta: delta });
+    return this._send('applyDelta', {baseVersion: baseVersion, delta: delta});
   }
 };

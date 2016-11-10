@@ -6,11 +6,11 @@
  * Default (initial) contents of documents.
  */
 export default [
-  { insert: 'Welcome to Quillex!' },
-  { insert: '\n', attributes: { header: 1 } },
-  { insert: 'Now go grab a ' },
-  { insert: 'turntable', attributes: { bold: true } },
-  { insert: ' and start ' },
-  { insert: 'a-spinnin\'', attributes: { italic: true } },
-  { insert: '.\n' }
+  {insert: 'Welcome to Quillex!'},
+  {insert: '\n', attributes: {header: 1}},
+  {insert: 'Now go grab a '},
+  {insert: 'turntable', attributes: {bold: true}},
+  {insert: ' and start '},
+  {insert: 'a-spinnin\'', attributes: {italic: true}},
+  {insert: '.\n'}
 ];
