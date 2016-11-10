@@ -68,7 +68,7 @@ export default class ApiServer {
 
     // Function to send a response. Arrow syntax so that `this` is usable.
     const respond = (result, error) => {
-      let response = { id: msg.id };
+      let response = {id: msg.id};
       if (error) {
         response.ok = false;
         response.error = error.message;

@@ -140,7 +140,7 @@ export default class Document {
       // We don't just return a plain value (that is, we still return a promise)
       // because of the usual hygenic recommendation to always return either
       // an immediate result or a promise from any given function.
-      return Promise.resolve({ version: latestVersion, delta: delta });
+      return Promise.resolve({version: latestVersion, delta: delta});
     }
 
     // Force the `_changeCondition` to `false` (though it might already be

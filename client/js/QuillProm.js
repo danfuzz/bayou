@@ -6,7 +6,7 @@ import Delta from 'quill-delta';
 import Quill from 'quill';
 
 /** Shared access key for communication between `TextChange` and `QuillProm`. */
-const ACCESS_KEY = [ 'QuillProm' ];
+const ACCESS_KEY = ['QuillProm'];
 
 /**
  * Representation of a text change.

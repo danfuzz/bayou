@@ -53,7 +53,7 @@ class Events {
    * @returns The constructed event.
    */
   static apiError(method, reason) {
-    return { name: 'apiError', method: method, reason: reason };
+    return {name: 'apiError', method: method, reason: reason};
   }
 
   /**
@@ -91,7 +91,7 @@ class Events {
    * @returns The constructed event.
    */
   static gotDeltaAfter(baseDoc, version, delta) {
-    return { name: 'gotDeltaAfter', baseDoc: baseDoc, version: version, delta: delta };
+    return {name: 'gotDeltaAfter', baseDoc: baseDoc, version: version, delta: delta};
   }
 
   /**
@@ -105,7 +105,7 @@ class Events {
    * @returns The constructed event.
    */
   static gotLocalDelta(baseDoc) {
-    return { name: 'gotLocalDelta', baseDoc: baseDoc };
+    return {name: 'gotLocalDelta', baseDoc: baseDoc};
   }
 
   /**
@@ -117,7 +117,7 @@ class Events {
    * @returns The constructed event.
    */
   static gotSnapshot(version, data) {
-    return { name: 'gotSnapshot', version: version, data: data };
+    return {name: 'gotSnapshot', version: version, data: data};
   }
 
   /**
@@ -126,7 +126,7 @@ class Events {
    * @returns The constructed event.
    */
   static start() {
-    return { name: 'start' };
+    return {name: 'start'};
   }
 
   /**
@@ -138,7 +138,7 @@ class Events {
    * @returns The constructed event.
    */
   static wantApplyDelta(baseDoc) {
-    return { name: 'wantApplyDelta', baseDoc: baseDoc };
+    return {name: 'wantApplyDelta', baseDoc: baseDoc};
   }
 
   /**
@@ -149,7 +149,7 @@ class Events {
    * @returns The constructed event.
    */
   static wantChanges() {
-    return { name: 'wantChanges' };
+    return {name: 'wantChanges'};
   }
 }
 
@@ -157,7 +157,7 @@ class Events {
  * Event response to use when transitioning into the `idle` state, when there
  * is no other pending work.
  */
-const IDLE_EVENT_TRANSITION = { state: 'idle', event: Events.wantChanges() };
+const IDLE_EVENT_TRANSITION = {state: 'idle', event: Events.wantChanges()};
 
 /**
  * Plumbing between Quill on the client and the document model on the server.
@@ -334,7 +334,7 @@ export default class DocumentPlumbing {
       this.start();
     });
 
-    return { state: 'errorWait' };
+    return {state: 'errorWait'};
   }
 
   /**
@@ -355,7 +355,7 @@ export default class DocumentPlumbing {
     this._api.open();
 
     // After this, it's just like starting from the `detached` state.
-    return { state: 'detached', event };
+    return {state: 'detached', event};
   }
 
   /**
@@ -373,7 +373,7 @@ export default class DocumentPlumbing {
         this._event(Events.apiError('snapshot', error));
       });
 
-    return { state: 'starting' };
+    return {state: 'starting'};
   }
 
   /**
@@ -455,7 +455,7 @@ export default class DocumentPlumbing {
         });
     }
 
-    return { state: 'idle' };
+    return {state: 'idle'};
   }
 
   /**
@@ -465,7 +465,7 @@ export default class DocumentPlumbing {
    */
   _handle_default_wantChanges(event) {
     // Nothing to do. Stay in the same state.
-    return { state: 'same' };
+    return {state: 'same'};
   }
 
   /**
@@ -494,7 +494,7 @@ export default class DocumentPlumbing {
       this._event(Events.wantChanges());
     });
 
-    return { state: 'idle' };
+    return {state: 'idle'};
   }
 
   /**
@@ -504,7 +504,7 @@ export default class DocumentPlumbing {
    * the system will fire off a new `deltaAfter()` request.
    */
   _handle_default_gotDeltaAfter(event) {
-    return { state: 'same' };
+    return {state: 'same'};
   }
 
   /**
@@ -538,7 +538,7 @@ export default class DocumentPlumbing {
       this._event(Events.wantApplyDelta(baseDoc));
     });
 
-    return { state: 'collecting' };
+    return {state: 'collecting'};
   }
 
   /**
@@ -548,7 +548,7 @@ export default class DocumentPlumbing {
    * the change was, it will get handled by that pre-existing process.
    */
   _handle_default_gotLocalDelta(event) {
-    return { state: 'same' };
+    return {state: 'same'};
   }
 
   /**
@@ -594,7 +594,7 @@ export default class DocumentPlumbing {
         this._event(Events.apiError('applyDelta', error));
       });
 
-    return { state: 'merging' };
+    return {state: 'merging'};
   }
 
   /**
