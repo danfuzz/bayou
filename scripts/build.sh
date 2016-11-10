@@ -118,49 +118,82 @@ function local-module-names {
         | sed -e 's!.*\/!!g'
 }
 
-# Copies a directory from the given partial source path to the given partial
-# path under the output directory. Includes both base and overlay files.
-function copy-into-out {
+# Adds a new directory mapping to the build info file. This includes handling
+# an overlay if it exists.
+function add-directory-mapping {
     local fromDir="$1"
     local toDir="$2"
+    local dirInfoFile="${outDir}/${toDir}/${sourceMapName}"
 
-    # We use `rsync` (even though this is a totally local operation) because it
-    # has well-defined behavior when copying a tree on top of another tree and
-    # also knows how to create directories as needed. Note that the trailing
-    # slash on the source directory is significant to `rsync` semantics.
-    rsync --archive --delete --exclude='node_modules/' \
-        "${baseDir}/${fromDir}/" "${outDir}/${toDir}/"
+    mkdir -p "$(dirname "${dirInfoFile}")"
 
-    if [[ ${overlayDir} != '' && -e "${overlayDir}/${fromDir}" ]]; then
-        rsync --archive "${overlayDir}/${fromDir}/" "${outDir}/${toDir}/"
-    fi
+    (
+        echo "${baseDir}/${fromDir}"
+        if [[ ${overlayDir} != '' && -e "${overlayDir}/${fromDir}" ]]; then
+            echo "${overlayDir}/${fromDir}"
+        fi
+    ) > "${dirInfoFile}"
 }
 
-# Copies the `local-modules` (Node modules whose sources live entirely locally
-# to this project, as opposed to being published via npm) into the given output
-# directory.
-function copy-local-modules-into-out {
-    local toDir="$1"
-    rsync --archive --delete "${baseDir}/local-modules" "${outDir}/${toDir}/"
-
-    if [[ (${overlayDir} != '') && -e "${overlayDir}/local-modules" ]]; then
-        rsync --archive "${overlayDir}/local-modules" "${outDir}/${toDir}/"
-    fi
-}
-
-# Copies the server and client source directories into `out`, including the
-# overlay contents (if specified).
-function copy-sources {
+# Sets up the directory mappings from the source into the `out` directory.
+function set-up-dir-mapping {
     # The `server` files ultimately go through an additional build step (hence
     # the change in directory name), though some of the files are used as-is.
-    copy-into-out 'server' 'server-src' || return 1
-    copy-local-modules-into-out 'server-src' || return 1
+    add-directory-mapping 'server' 'server-src'
+    add-directory-mapping 'local-modules' 'server-src/local-modules'
 
     # The `client` files are used as-is by the server (because it serves the
     # static assets directly and also knows how to (re)build the JavaScript
     # bundle).
-    copy-into-out 'client' 'client' || return 1
-    copy-local-modules-into-out 'client' || return 1
+    add-directory-mapping 'client' 'client'
+    add-directory-mapping 'local-modules' 'client/local-modules'
+}
+
+# Copies the server and client source directories into `out`, including the
+# overlay contents (if any).
+function copy-sources {
+    local mappings=($(
+        cd "${outDir}"
+        find . -name "${sourceMapName}" | cut -c 3-
+    ))
+
+    # For each mapping file, copy all of the specified source files, but don't
+    # include directories that themselves have separately-specified maps; those
+    # get handled in their own iterations of this loop.
+    local mapFile dir excludes sources s delArg
+    for mapFile in "${mappings[@]}"; do
+        dir="$(dirname "${mapFile}")"
+
+        excludes=($(
+            # Exclude the source map files themselves.
+            echo "--exclude=${sourceMapName}"
+
+            # Exclude `node_modules` because those get created in the output
+            # during the build, and we don't want to trample them.
+            echo '--exclude=node_modules'
+
+            # Exclude subdirectories that have maps.
+            cd "${outDir}/${dir}"
+            find . -mindepth 2 -name "${sourceMapName}" \
+                -exec dirname '{}' ';' \
+                | awk '{ printf("--exclude=/%s\n", substr($1, 3)); }'
+        ))
+
+        # Copy the first mapped directory entirely, including removing deleted
+        # files. Then copy the rest -- the overlays -- without deleting. We use
+        # `rsync` (even though this is a totally local operation) because it has
+        # well-defined behavior when copying a tree on top of another tree and
+        # also knows how to create directories as needed. Note that trailing
+        # slashes on source directory names are significant to `rsync`
+        # semantics.
+        sources=($(cat "${outDir}/${mapFile}"))
+        delArg=(--delete)
+        for s in "${sources[@]}"; do
+            rsync --archive "${delArg[@]}" \
+                "${excludes[@]}" "${s}/" "${outDir}/${dir}"
+            delArg=()
+        done
+    done
 }
 
 # Builds the server code. This builds from `server-src` into `server`. The
@@ -219,25 +252,19 @@ function build-client {
         || return 1
 }
 
-# Records information about source directories (so dev mode knows where to find
-# things). **Note:** This is consumed both by shell and JS code.
-function write-build-info {
-    (
-        printf $'sourceDir=\'%s\'\n' "${baseDir}"
-        printf $'overlayDir=\'%s\'\n' "${overlayDir}"
-    ) > "${outDir}/build-info.txt"
-}
-
 
 #
 # Main script
 #
 
+# The name for source mapping files.
+sourceMapName='source-map.txt'
+
 echo 'Building...'
 
 (
-    set-up-out && copy-sources && build-server && build-client \
-    && write-build-info
+    set-up-out && set-up-dir-mapping && copy-sources \
+        && build-server && build-client
 ) || exit 1
 
 echo 'Done!'
