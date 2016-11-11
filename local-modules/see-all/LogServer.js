@@ -35,6 +35,7 @@ export default class LogServer {
     if (prefix.length < PREFIX_COLS) {
       prefix += ' '.repeat(PREFIX_COLS - prefix.length);
     }
+    const prefixLength = prefix.length; // Don't be fooled by the color codes.
 
     // Color the prefix according to level.
     switch (level) {
@@ -76,11 +77,37 @@ export default class LogServer {
       text += `${atLineStart ? '' : '\n'}${trace}`;
     }
 
-    // Split on newlines, so we can prefix every line.
-    const lines = text.match(/[^\n]*\n|[^\n]+$/g);
-    for (let l of lines) {
-      l = l.match(/[^\n]*/)[0]; // Strip trailing `\n` if any.
-      console.log(`${prefix}${l}`);
+    // Remove the trailing newline, if any, and split on newlines to produce an
+    // array of all lines. The final-newline removal means we won't (typically)
+    // have an empty line at the end of the log.
+    const lines = text.replace(/\n$/, '').match(/^.*$/mg);
+
+    // Measure every line. If all lines are short enough for the current
+    // console, align them to the right of the prefix. If not, put the prefix on
+    // its own line and produce the main content just slightly indented, under
+    // the prefix.
+
+    const consoleWidth = Math.max(process.stdout.getWindowSize()[0] || 80, 80);
+    const maxLineWidth = lines.reduce(
+      (prev, l) => { return Math.max(prev, l.length); },
+      0);
+
+    if (maxLineWidth > (consoleWidth - prefixLength)) {
+      const indent = '  ';
+      console.log(prefix);
+      for (let l of lines) {
+        let indent = '  ';
+        while (l) {
+          const chunk = l.substring(0, consoleWidth - indent.length);
+          l = l.substring(chunk.length);
+          console.log(`${indent}${chunk}`);
+          indent = ' +';
+        }
+      }
+    } else {
+      for (let l of lines) {
+        console.log(`${prefix}${l}`);
+      }
     }
   }
 }
