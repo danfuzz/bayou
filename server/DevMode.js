@@ -5,7 +5,8 @@
 import fs from 'fs';
 import fs_extra from 'fs-extra';
 import path from 'path';
-import Watchpack from 'watchpack';
+
+import chokidar from 'chokidar';
 
 import SeeAll from 'see-all';
 
@@ -198,29 +199,84 @@ export default class DevMode {
    * removals as well.
    */
   start() {
-    const wp = new Watchpack({
-      aggregateTimeout: 1000, // Wait 1sec (1000msec) after change detection.
-    });
-
     // Extract just the `from` directories of the mappings.
     const copyFrom = this._mappings.map((m) => { return m.from; });
 
-    // Start watching. The last argument indicates the time after which files
-    // will be considered changed. We set it to 10 seconds in the past to handle
-    // the fact that we might be delayed a bit between when the build was first
-    // done and when we got fired up here.
-    wp.watch([], copyFrom, Date.now() - (10 * 1000));
+    // Start watching.
+    const watcher = chokidar.watch(copyFrom, {ignoreInitial: true});
 
-    // Monitor file changes and removals.
+    // Monitor file adds, changes, and removals.
 
-    wp.on('change', (path, mtime) => {
+    watcher.on('add', (path) => {
       this._handleUpdate(path);
     });
 
-    wp.on('remove', (path) => {
-      // TODO: This event doesn't seem to get triggered consistently. Not sure
-      // why. Look into it.
+    watcher.on('change', (path) => {
       this._handleUpdate(path);
     });
+
+    watcher.on('unlink', (path) => {
+      this._handleUpdate(path);
+    });
+
+    // At the moment when the watcher tells us it's actually going to send
+    // updates, do an initial scan to find files that were updated _just before_
+    // the watcher was looking. This catches cases where a file got modified as
+    // the system was just starting up.
+    const minTime = Date.now() - (10 * 1000); // Ten seconds in the past.
+    watcher.on('ready', () => {
+      // Only look for changes through the current moment (well, just _after_
+      // the current moment, to catch some otherwise would-be edge cases). Later
+      // changes will get caught by `watcher`.
+      const maxTime = Date.now() + 1000; // One second in the future.
+      this._initialChanges(copyFrom, minTime, maxTime);
+    });
+  }
+
+  /**
+   * Helper for `_start` which does the initial scan for changes.
+   */
+  _initialChanges(copyFrom, minTime, maxTime) {
+    const changes = [];
+    for (let dir of copyFrom) {
+      addChangesForDir(dir);
+    }
+
+    if (changes.length === 0) {
+      // Our intrepid developer isn't in fact typing furiously at the moment.
+      return;
+    }
+
+    log.info('Caught changes from just before starting...');
+
+    // Sort the list of changes, so we can easily squelch duplicates (which will
+    // be adjacent).
+    changes.sort();
+    let prev = null;
+    for (let c of changes) {
+      if (c !== prev) {
+        this._handleUpdate(c);
+        prev = c;
+      }
+    }
+
+    log.info('Now live!');
+
+    // Called above for each scanned directory.
+    function addChangesForDir(dir) {
+      const files = fs.readdirSync(dir);
+      for (let f of files) {
+        const path = `${dir}/${f}`;
+        const stat = fs.statSync(path);
+        if (stat.isDirectory()) {
+          addChangesForDir(path);
+        } else if (stat.isFile()) {
+          const mtime = stat.mtime.getTime(); // Modification time.
+          if ((mtime >= minTime) && (mtime <= maxTime)) {
+            changes.push(path);
+          }
+        }
+      }
+    }
   }
 }
