@@ -114,7 +114,7 @@ function set-up-out {
 # Gets a list of all the local module names. The output is a series of
 # lines, one per module.
 function local-module-names {
-    find "${baseDir}/local-modules" -type d -mindepth 1 -maxdepth 1 \
+    find "${baseDir}/local-modules" -mindepth 1 -maxdepth 1 -type d \
         | sed -e 's!.*\/!!g'
 }
 
@@ -252,6 +252,20 @@ function build-client {
         || return 1
 }
 
+# "Builds" the `bin` directory.
+function build-bin {
+    local toDir="${outDir}/bin"
+
+    mkdir -p "${toDir}" || return 1
+
+    # See comment above about why we use `rsync`.
+    rsync --archive --delete --exclude='README.md' \
+        "${baseDir}/etc/bin-src/" "${toDir}" \
+        || return 1
+
+    chmod a+x "${toDir}"/*
+}
+
 
 #
 # Main script
@@ -264,7 +278,7 @@ echo 'Building...'
 
 (
     set-up-out && set-up-dir-mapping && copy-sources \
-        && build-server && build-client
+        && build-server && build-client && build-bin
 ) || exit 1
 
 echo 'Done!'

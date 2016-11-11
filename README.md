@@ -68,6 +68,13 @@ _just_ want to do the build, then you can say:
 $ npm install
 ```
 
+In production, run using the `run` script placed in the product's `bin`
+directory:
+
+```
+$ ./out/bin/run
+```
+
 ### Cleanup
 
 ```
