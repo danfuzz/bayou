@@ -105,8 +105,13 @@ export default class LogServer {
         }
       }
     } else {
+      let first = true;
       for (let l of lines) {
         console.log(`${prefix}${l}`);
+        if (first) {
+          first = false;
+          prefix = ' '.repeat(prefixLength);
+        }
       }
     }
   }
