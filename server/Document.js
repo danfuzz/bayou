@@ -65,6 +65,21 @@ export default class Document {
   }
 
   /**
+   * Returns a particular change to the document. The document consists of a
+   * sequence of changes, each modifying version N of the document to produce
+   * version N+1.
+   *
+   * @param version The version number of the change. The result is the change
+   *   which produced that version. E.g., `0` is a request for the first change
+   *   (the change from the empty document).
+   * @returns An object representing that change.
+   */
+  change(version) {
+    version = this._versionNumber(version);
+    return this._changes[version];
+  }
+
+  /**
    * Returns a snapshot of the full document contents.
    *
    * @param version (optional) Indicates which version to get; defaults to the

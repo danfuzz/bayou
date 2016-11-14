@@ -2,10 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-/*
- * Wrapper around Webpack.
- */
-
 import fs from 'fs';
 import memory_fs from 'memory-fs';
 import path from 'path';
@@ -240,8 +236,7 @@ const watchOptions = {
 
   /**
    * The request handler function, suitable for use with Express. Usable as-is
-   * (without `.bind()`). The act of getting this also guarantees that dev mode
-   * has been set up and started.
+   * (without `.bind()`).
    */
   get requestHandler() {
     this.startWatching();

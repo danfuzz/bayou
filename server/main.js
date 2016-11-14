@@ -21,6 +21,7 @@ import LogServer from 'see-all/LogServer';
 
 import ApiServer from './ApiServer';
 import ClientBundle from './ClientBundle';
+import DebugTools from './DebugTools';
 import DevMode from './DevMode';
 import Document from './Document';
 
@@ -34,8 +35,11 @@ const PORT = 8080;
 /** Base dir of the product. */
 const baseDir = path.resolve(__dirname, '..');
 
-// Are we in dev mode? If so, we aim to live-sync the original source.
-if (process.argv[2] === '--dev') {
+/** Dev mode? */
+const DEV_MODE = (process.argv[2] === '--dev');
+
+if (DEV_MODE) {
+  // We're in dev mode. This starts the system that live-syncs the client source.
   new DevMode().start();
 }
 
@@ -115,4 +119,9 @@ function addRoutes() {
 
   // Attach the API server.
   app.ws('/api', (ws, req) => { new ApiServer(ws, theDoc); });
+
+  if (DEV_MODE) {
+    // Add a handler for the debug tools.
+    app.use('/debug', new DebugTools(theDoc).requestHandler);
+  }
 }
