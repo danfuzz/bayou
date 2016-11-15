@@ -9,15 +9,14 @@
  * there to be a DOM node tagged with id `editor`.
  */
 
-import LogBrowser from 'see-all/LogBrowser';
-import SeeAll from 'see-all';
+import SeeAllBrowser from 'see-all-browser';
 
 import ApiClient from './ApiClient';
 import DocumentPlumbing from './DocumentPlumbing';
 import QuillMaker from './QuillMaker';
 
 // Init logging.
-SeeAll.init(LogBrowser);
+SeeAllBrowser.init();
 
 // Make the instance.
 const quill = QuillMaker.make('#editor');

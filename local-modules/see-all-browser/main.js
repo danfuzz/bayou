@@ -2,11 +2,21 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import SeeAll from 'see-all';
+
 /**
- * The code that actually does logging in the context of a web browser. This
- * gets loaded by `main.js` when running in a browser.
+ * Implementation of the `SeeAll` logger protocol for use in a web browser
+ * context.
  */
-export default class LogBrowser {
+export default class SeeAllBrowser {
+  /**
+   * Registers an instance of this class as a logger with the main `see-all`
+   * module.
+   */
+  static init() {
+    SeeAll.add(new SeeAllBrowser());
+  }
+
   /**
    * Constructs an instance.
    */
@@ -20,7 +30,7 @@ export default class LogBrowser {
    * @param level Severity level.
    * @param message Message to log.
    */
-  log(level, tag, ...message) {
+  log(nowMsec, level, tag, ...message) {
     const prefix = `%c[${tag} ${level}]`;
     const style  = 'color: #bbb; font-weight: bold';
 
@@ -43,5 +53,20 @@ export default class LogBrowser {
       console.trace('stack trace');
       console.groupEnd();
     }
+  }
+
+  /**
+   * Logs the indicated time value as "punctuation" on the log.
+   *
+   * @param nowMsec The time.
+   */
+  time(nowMsec, utcString, localString) {
+    const date = new Date(nowMsec);
+
+    console.log(`%c[time] %c${utcString} %c/ %c${localString}`,
+      'color: #bbb; font-weight: bold',
+      'color: #66a; font-weight: bold',
+      'color: #bbb; font-weight: bold',
+      'color: #99e; font-weight: bold');
   }
 }
