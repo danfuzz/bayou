@@ -6,6 +6,8 @@ import util from 'util';
 
 import chalk from 'chalk';
 
+import SeeAll from 'see-all';
+
 /**
  * Number of columns to reserve for log line prefixes. Prefixes under this
  * length get padded.
@@ -13,10 +15,17 @@ import chalk from 'chalk';
 const PREFIX_COLS = 24;
 
 /**
- * The code that actually does logging in the context of a server. This gets
- * loaded by `main.js` when running in a browser.
+ * Implementation of the `SeeAll` logger protocol for use in a server context.
  */
-export default class LogServer {
+export default class SeeAllServer {
+  /**
+   * Registers an instance of this class as a logger with the main `see-all`
+   * module.
+   */
+  static init() {
+    SeeAll.add(new SeeAllServer());
+  }
+
   /**
    * Constructs an instance.
    */
@@ -30,19 +39,8 @@ export default class LogServer {
    * @param level Severity level.
    * @param message Message to log.
    */
-  log(level, tag, ...message) {
-    let prefix = `[${tag} ${level}] `;
-    if (prefix.length < PREFIX_COLS) {
-      prefix += ' '.repeat(PREFIX_COLS - prefix.length);
-    }
-    const prefixLength = prefix.length; // Don't be fooled by the color codes.
-
-    // Color the prefix according to level.
-    switch (level) {
-      case 'error': { prefix = chalk.red.bold(prefix);    break; }
-      case 'warn':  { prefix = chalk.yellow.bold(prefix); break; }
-      default:      { prefix = chalk.dim.bold(prefix);    break; }
-    }
+  log(nowMsec, level, tag, ...message) {
+    const prefix = SeeAllServer._makePrefix(tag, level);
 
     // Make a unified string of the entire message.
     let text = '';
@@ -92,9 +90,9 @@ export default class LogServer {
       (prev, l) => { return Math.max(prev, l.length); },
       0);
 
-    if (maxLineWidth > (consoleWidth - prefixLength)) {
+    if (maxLineWidth > (consoleWidth - prefix.length)) {
       const indent = '  ';
-      console.log(prefix);
+      console.log(prefix.text);
       for (let l of lines) {
         let indent = '  ';
         while (l) {
@@ -107,12 +105,56 @@ export default class LogServer {
     } else {
       let first = true;
       for (let l of lines) {
-        console.log(`${prefix}${l}`);
+        console.log(`${prefix.text}${l}`);
         if (first) {
           first = false;
-          prefix = ' '.repeat(prefixLength);
+          prefix.text = ' '.repeat(prefix.length);
         }
       }
     }
+  }
+
+  /**
+   * Logs the indicated time value as "punctuation" on the log.
+   *
+   * @param nowMsec The time.
+   */
+  time(nowMsec, utcString, localString) {
+    utcString = chalk.blue.bold(utcString);
+    localString  = chalk.blue.dim.bold(localString);
+    const prefix = SeeAllServer._makePrefix('time');
+
+    console.log(`${prefix.text}${utcString} / ${localString}`);
+  }
+
+  /**
+   * Constructs a prefix header with the given tag (required) and level
+   * (optional).
+   *
+   * @param tag The tag.
+   * @param level (optional) The level.
+   * @returns a map with the `text` and the `length`. The latter is handy in
+   *   that it doesn't include the count of the characters used in color control
+   *   sequences.
+   */
+  static _makePrefix(tag, level = '') {
+    let text = `[${tag}${level !== '' ? ' ' : ''}${level}]`;
+
+    if (text.length < PREFIX_COLS) {
+      text += ' '.repeat(PREFIX_COLS - text.length);
+    }
+
+    const length = text.length + 1; // `+1` for the space at the end.
+
+    // Color the prefix according to level.
+    switch (level) {
+      case 'error': { text = chalk.red.bold(text);    break; }
+      case 'warn':  { text = chalk.yellow.bold(text); break; }
+      default:      { text = chalk.dim.bold(text);    break; }
+    }
+
+    text += ' ';
+
+    return {text: text, length: length};
   }
 }

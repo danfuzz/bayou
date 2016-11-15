@@ -17,7 +17,7 @@ import path from 'path';
 import process from 'process';
 
 import SeeAll from 'see-all';
-import LogServer from 'see-all/LogServer';
+import SeeAllServer from 'see-all-server';
 
 import ApiServer from './ApiServer';
 import ClientBundle from './ClientBundle';
@@ -27,7 +27,7 @@ import Document from './Document';
 
 /** Logger. */
 const log = new SeeAll('main');
-SeeAll.init(LogServer);
+SeeAllServer.init();
 
 /** What port to listen for connections on. */
 const PORT = 8080;

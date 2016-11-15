@@ -4,6 +4,11 @@
 
 import express from 'express';
 
+import SeeAllRecent from 'see-all-recent';
+
+/** How long a log to maintain, in msec. */
+const LOG_LENGTH_MSEC = 1000 * 60 * 60; // One hour.
+
 /**
  * Introspection to help with debugging. Includes a request handler for hookup
  * to Express.
@@ -17,6 +22,29 @@ import express from 'express';
    constructor(doc) {
      /** The `Document` object. */
      this._doc = doc;
+
+     /** A rolling log for the `/log` endpoint. */
+     this._logger = new SeeAllRecent(LOG_LENGTH_MSEC);
+   }
+
+   /**
+    * Gets the log.
+    */
+   _log(req, res) {
+      let result;
+
+      try {
+        // TODO: Format it nicely.
+        const contents = this._logger.htmlContents;
+        result = `<html><body>${contents}</body></html>`
+      } catch (e) {
+        result = `Error:\n\n${e.stack}`;
+      }
+
+      res
+        .status(200)
+        .type('text/html')
+        .send(result);
    }
 
    /**
@@ -40,8 +68,7 @@ import express from 'express';
      res
        .status(200)
        .type('text/plain')
-       .send(result)
-       .end();
+       .send(result);
    }
 
   /**
@@ -65,8 +92,7 @@ import express from 'express';
     res
       .status(200)
       .type('text/plain')
-      .send(result)
-      .end();
+      .send(result);
   }
 
   /**
@@ -76,6 +102,7 @@ import express from 'express';
   get requestHandler() {
     const router = new express.Router();
     router.get(/^\/change\/[0-9]+$/,      this._change.bind(this));
+    router.get('/log',                    this._log.bind(this));
     router.get(/^\/snapshot(\/[0-9]*)?$/, this._snapshot.bind(this));
     return router;
   }
