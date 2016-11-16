@@ -44,7 +44,7 @@ The code is set up to make it straightforward to customize. Salient details:
   adequate &mdash; the build script can be invoked with an argument to indicate
   an overlay source directory, allowing one to override individual source files
   while still keeping a "pristine" checkout of the `quillex` repo. See the
-  script [`build.sh`](scripts/build.sh) for details.
+  script [`build`](scripts/build) for details.
 
 
 ### Build and Run
@@ -58,14 +58,14 @@ To build and run, say:
 
 ```
 $ cd quillex
-$ npm start
+$ ./scripts/develop
 ```
 
 and then visit <http://localhost:8080>. This will do a build first. If you
 _just_ want to do the build, then you can say:
 
 ```
-$ npm install
+$ ./scripts/build
 ```
 
 In production, run using the `run` script placed in the product's `bin`
@@ -78,7 +78,7 @@ $ ./out/bin/run
 ### Cleanup
 
 ```
-$ npm run clean
+$ ./scripts/clean
 ```
 
 ### Directory structure
