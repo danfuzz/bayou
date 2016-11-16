@@ -36,6 +36,9 @@ showHelp=0
 # Clean build?
 clean=0
 
+# Just clean? (No build?)
+justClean=0
+
 # Overlay source directory, if any.
 overlayDir=''
 
@@ -52,6 +55,9 @@ while (( $# != 0 )); do
     elif [[    ${opt} == '--help'
             || ${opt} == '-h' ]]; then
         showHelp=1
+    elif [[ ${opt} == '--just-clean' ]]; then
+        clean=1
+        justClean=1
     elif [[ ${opt} =~ ^--out=(.*) ]]; then
         outDir="${BASH_REMATCH[1]}"
     elif [[ ${opt} =~ ^--overlay=(.*) ]]; then
@@ -73,6 +79,7 @@ if (( ${showHelp} || ${argError} )); then
     echo "${progName} [--clean] [--out=<dir>] [--overlay=<dir>]"
     echo '  Build the project.'
     echo '  --clean          Start from a clean build.'
+    echo '  --just-clean     Just clean (do not actually build).'
     echo '  --out=<dir>      Place output in directory <dir>.'
     echo '  --overlay=<dir>  Find overlay source in directory <dir>.'
     echo ''
@@ -101,14 +108,15 @@ function set-up-out {
             # Note: Order of this test wrt the last one is intentional: We don't
             # want to blow away a non-directory.
             rm -rf "${outDir}" || return 1
-            mkdir "${outDir}" || return 1
         fi
-    else
-        mkdir -p "${outDir}" || return 1
     fi
 
-    # Make it absolute.
-    outDir="$(cd ${outDir}; /bin/pwd -P)"
+    if (( !${justClean} )); then
+        mkdir -p "${outDir}" || return 1
+
+        # Make it absolute.
+        outDir="$(cd ${outDir}; /bin/pwd -P)"
+    fi
 }
 
 # Gets a list of all the local module names. The output is a series of
@@ -214,7 +222,7 @@ function build-server {
     # We are somewhat at the mercy of what's published via npm, and in fact
     # some modules that we use occasionally have bugs in their published
     # versions. This script patches them in situ.
-    "${progDir}/fix-modules.sh" "${baseDir}/etc/module-overlay" "${toDir}" \
+    "${progDir}/fix-modules" "${baseDir}/etc/module-overlay" "${toDir}" \
         || return 1
 
     # Run Babel on all of the local source files, storing them next to the
@@ -248,7 +256,7 @@ function build-client {
     (cd "${toDir}"; npm install) || return 1
 
     # See comment on `fix-modules` call in `build-server`, above.
-    "${progDir}/fix-modules.sh" "${baseDir}/etc/module-overlay" "${toDir}" \
+    "${progDir}/fix-modules" "${baseDir}/etc/module-overlay" "${toDir}" \
         || return 1
 }
 
@@ -274,11 +282,20 @@ function build-bin {
 # The name for source mapping files.
 sourceMapName='source-map.txt'
 
+set-up-out || exit 1
+
+if (( ${justClean} )); then
+    exit
+fi
+
 echo 'Building...'
 
 (
-    set-up-out && set-up-dir-mapping && copy-sources \
-        && build-server && build-client && build-bin
+    set-up-dir-mapping \
+        && copy-sources \
+        && build-server \
+        && build-client \
+        && build-bin
 ) || exit 1
 
 echo 'Done!'

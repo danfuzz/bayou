@@ -4,8 +4,7 @@
 # Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 # Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 #
-# Starts the product, building it first if sitting in a clean directory. See
-# `--help` for more info.
+# Cleans the built product directory. See `--help` for details.
 #
 
 # Set `progName` to the program name, `progDir` to its directory, and `baseDir`
@@ -34,13 +33,10 @@ argError=0
 # Need help?
 showHelp=0
 
-# Directory for the built output.
-outDir=''
+# Clean build?
+clean=0
 
-# Perform a build?
-doBuild=0
-
-# Options to pass when building.
+# Options to pass to `build`.
 buildOpts=()
 
 while (( $# != 0 )); do
@@ -48,17 +44,10 @@ while (( $# != 0 )); do
     if [[ ${opt} == '--' ]]; then
         shift
         break
-    elif [[ ${opt} == '--build' ]]; then
-        doBuild=1
-    elif [[ ${opt} == '--clean' ]]; then
-        doBuild=1
-        buildOpts+=("${opt}")
     elif [[    ${opt} == '--help'
             || ${opt} == '-h' ]]; then
         showHelp=1
-    elif [[ ${opt} =~ ^--out=(.*) ]]; then
-        outDir="${BASH_REMATCH[1]}"
-    elif [[ ${opt} =~ ^--overlay=(.*) ]]; then
+    elif [[ ${opt} =~ ^--out= ]]; then
         buildOpts+=("${opt}")
     elif [[ ${opt} =~ ^- ]]; then
         echo "Unknown option: ${opt}" 1>&2
@@ -74,12 +63,9 @@ unset opt
 if (( ${showHelp} || ${argError} )); then
     echo 'Usage:'
     echo ''
-    echo "${progName} [--build|--clean] [--out=<dir>] [--overlay=<dir>]"
-    echo '  Run the project, optionally building first.'
-    echo '  --build          Do an incremental build.'
-    echo '  --clean          Do a clean build.'
-    echo '  --out=<dir>      Find (and place) build output in directory <dir>.'
-    echo '  --overlay=<dir>  Find overlay source in directory <dir>.'
+    echo "${progName} [--out=<dir>]"
+    echo '  Clean the project output.'
+    echo '  --out=<dir>      Directory where built output goes.'
     echo ''
     echo "${progName} [--help | -h]"
     echo "  Display this message."
@@ -91,18 +77,4 @@ fi
 # Main script
 #
 
-if [[ ${outDir} == '' ]]; then
-    # Default output directory.
-    outDir="${baseDir}/out"
-fi
-
-if (( ${doBuild} )); then
-    buildOpts+=(--out="${outDir}")
-    "${progDir}/build.sh" "${buildOpts[@]}" \
-    || exit 1
-elif [[ ! -d "${outDir}/server" ]]; then
-    echo 'No build to run!' 1>&2
-    exit 1
-fi
-
-"${outDir}/bin/run" --dev
+"${progDir}/build" --just-clean "${buildOpts[@]}"

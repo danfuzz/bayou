@@ -8,6 +8,7 @@ import path from 'path';
 
 import chokidar from 'chokidar';
 
+import PromDelay from 'prom-delay';
 import SeeAll from 'see-all';
 
 /** Logger. */
@@ -18,10 +19,16 @@ const MAP_FILE_NAME = 'source-map.txt';
 
 /**
  * Development mode handler. This expects to be invoked when the product is
- * running in an `out` directory under a source repo. It synchs the client
- * files from the original source, so that the Webpack "watcher" will find
- * updated code and do its bundling thing. Should the build ever include non-JS
- * assets, these would also get picked up here.
+ * running in an `out` directory under a source repo. This does two thing:
+ *
+ * * It synchs the client (web browser) files from the original source, so that
+ *   the Webpack "watcher" will find updated code and do its bundling thing.
+ *   Should the build ever include non-JS assets, these would also get picked up
+ *   here.
+ *
+ * * It looks for changes to the server source files, and exits the application
+ *   should they change. This is expected to be paired with a wrapper script
+ *   that notices when the process exits and kicks off a rebuild.
  */
 export default class DevMode {
   /**
@@ -32,9 +39,16 @@ export default class DevMode {
     this._outDir = path.resolve(__dirname, '..');
     log.info('Product directory:', this._outDir);
 
-    /** The mappings from source to target directories. */
-    this._mappings =
+    /** The mappings from source to target directories, for the client code. */
+    this._clientMappings =
       DevMode._makeMappings(path.resolve(this._outDir, 'client'));
+
+    /** The mappings from source to target directories, for the server code. */
+    this._serverMappings =
+      DevMode._makeMappings(path.resolve(this._outDir, 'server'));
+
+    /** Are we in the middle of shutting down (due to a server change)? */
+    this._shuttingDown = false;
   }
 
   /**
@@ -105,13 +119,18 @@ export default class DevMode {
   }
 
   /**
-   * Finds the best source mapping (the earliest listed one in `_mappings`) that
-   * covers the given target file with an _existing_ file. Returns the source
-   * file that would / should be copied to `toPath`, if such a file exists, or
-   * `null` if no such file exists.
+   * Finds the best source mapping (the earliest listed one in the given
+   * `mappings`) that covers the given target file with an _existing_ file.
+   * Returns the source file that would / should be copied to `toPath`, if such
+   * a file exists, or `null` if no such file exists.
+   *
+   * @param mappings Which mappings to use. Should be either `_clientMappings`
+   *   or `_serverMappings`.
+   * @param toPath The path to look for.
+   * @returns The corresponding source path, or `null` if none.
    */
-  _getFromPath(toPath) {
-    for (let candidate of this._mappings) {
+  _getFromPath(mappings, toPath) {
+    for (let candidate of mappings) {
       const toDir = `${candidate.to}/`;
       if (toPath.startsWith(toDir)) {
         // The path is covered by this candidate. Get the partial path for it
@@ -134,12 +153,18 @@ export default class DevMode {
   }
 
   /**
-   * Finds the target file path associated with the given source file, if any.
-   * The target file doesn't necessarily have to already exist. Returns `null`
-   * if there is no mapping that covers the source file.
+   * Finds the target file path associated with the given source file, if any,
+   * based on the given `mappings`. The target file doesn't necessarily have to
+   * already exist. Returns `null` if there is no mapping that covers the source
+   * file.
+   *
+   * @param mappings Which mappings to use. Should be either `_clientMappings`
+   *   or `_serverMappings`.
+   * @param fromPath The path to look for.
+   * @returns The corresponding target path, or `null` if none.
    */
-  _getToPath(fromPath) {
-    for (let candidate of this._mappings) {
+  _getToPath(mappings, fromPath) {
+    for (let candidate of mappings) {
       const fromDir = `${candidate.from}/`;
       if (fromPath.startsWith(fromDir)) {
         // The path is covered by this candidate. Get the partial path for it
@@ -154,91 +179,189 @@ export default class DevMode {
   }
 
   /**
-   * Handles the fact of a changed or removed file. Copies or deletes, as
-   * appropriate, including making any needed new directories.
+   * Resolves a changed file with respect to the given `mappings`, if any.
+   * If the file is covered by the mappings, then this returns an object that
+   * maps `fromPath` (the argument, or `null` if the file was deleted) and
+   * `toPath` (where the file lands in the output). If the file isn't covered
+   * by source, then this returns `null`.
+   *
+   * @param mappings Which mappings to use. Should be either `_clientMappings`
+   *   or `_serverMappings`.
+   * @param fromPath The path of the source file that was changed (or removed).
+   * @returns An object indicating its resolution, or `null` if it doesn't
+   *   correspond to a covered file.
    */
-  _handleUpdate(fromPath) {
+  _resolveChange(mappings, fromPath) {
     // Map the given file (the source file that just changed) to a target file
     // path.
-    const toPath = this._getToPath(fromPath);
+    const toPath = this._getToPath(mappings, fromPath);
 
     if (toPath === null) {
       // This file has no mapping into the target directory.
       log.info(`Unmapped: ${fromPath}`)
-      return;
+      return null;
     }
 
     // Map that target back to a source file. This might not be the same as the
     // path we started with: (1) The file that changed might have been overlaid.
     // (2) The file that changed might have been removed.
-    const bestFromPath = this._getFromPath(toPath);
+    const bestFromPath = this._getFromPath(mappings, toPath);
 
     // The nice relative path to use when logging.
     const logPath = this._relativeOutPath(toPath);
 
     if (bestFromPath === null) {
       // The file was deleted.
-      fs.unlinkSync(toPath);
       log.info(`Removed: ${logPath}`);
     } else if (fromPath === bestFromPath) {
       // The file that changed is the "most overlaid" one. That is, if `foo.js`
       // has an overlay, and we just noticed that the base (non-overlay) version
-      // of `foo.js` changed, then we _don't_ try to copy it.
-      fs_extra.ensureDirSync(path.dirname(toPath));
-      fs_extra.copySync(fromPath, toPath, {clobber: true, dereference: false});
+      // of `foo.js` changed, then we _don't_ report it as changed.
       log.info(`Updated: ${logPath}`);
     } else {
       // It's an underlay file.
       log.info(`Ignored: ${logPath}`)
+      return null;
+    }
+
+    return {fromPath: bestFromPath, toPath: toPath};
+  }
+
+  /**
+   * Handles the fact of a changed or removed client file. Copies or deletes, as
+   * appropriate, including making any needed new directories.
+   */
+  _handleClientChange(fromPath) {
+    if (this._shuttingDown) {
+      // Don't bother doing anything if we're about to exit.
+      return;
+    }
+
+    const resolved = this._resolveChange(this._clientMappings, fromPath);
+
+    if (resolved === null) {
+      // Not a salient file.
+      return;
+    }
+
+    const toPath = resolved.toPath;
+    fromPath = resolved.fromPath;
+
+    if (fromPath === null) {
+      // The source file was deleted.
+      fs.unlinkSync(toPath);
+    } else {
+      // The source file changed.
+      fs_extra.ensureDirSync(path.dirname(toPath));
+      fs_extra.copySync(fromPath, toPath, {clobber: true, dereference: false});
     }
   }
 
   /**
-   * Starts up the instance. After this call, it will monitor the client source
-   * directory, copying any changed file into the output, and relaying file
-   * removals as well.
+   * Handles the fact of a changed or removed server file. If the file turns
+   * out to be used, this exits the application.
+   */
+  _handleServerChange(fromPath) {
+    if (this._shuttingDown) {
+      // Don't bother doing anything if we're about to exit.
+      return;
+    }
+
+    const resolved = this._resolveChange(this._serverMappings, fromPath);
+
+    if (resolved === null) {
+      // Not a salient file.
+      return;
+    }
+
+    // Give the system a few seconds to settle (e.g., let the logs get flushed
+    // out reasonably naturally, and give the developer a couple seconds to
+    // make other changes so as not to thrash too much), and then exit.
+
+    this._shuttingDown = true;
+    log.info('Server file changed. About to exit...');
+
+    PromDelay.resolve(5 * 1000).then(() => {
+      process.exit();
+    });
+  }
+
+  /**
+   * Starts up the instance, including both client code synchronization and
+   * server code monitoring.
    */
   start() {
+    const clientReady =
+      this._startWatching(this._clientMappings, this._handleClientChange);
+    const serverReady =
+      this._startWatching(this._serverMappings, this._handleServerChange);
+
+    Promise.all([clientReady, serverReady]).then((values) => {
+      log.info('Now monitoring for changes.');
+    });
+  }
+
+  /**
+   * Helper for `start()` which sets up a watcher for a given set of files and
+   * does an initial scan of the watched files (to catch changes that happen
+   * during application startup).
+   *
+   * @param mappings The mappings to watch. Should be one of `_clientMappings`
+   *   or `_serverMappings`.
+   * @param onChange Method to call when a change is noticed.
+   * @returns A promise that resolves to `true` as soon as monitoring is fully
+   *   set up and active.
+   */
+  _startWatching(mappings, onChange) {
     // Extract just the `from` directories of the mappings.
-    const copyFrom = this._mappings.map((m) => { return m.from; });
+    const watchDirs = mappings.map((m) => { return m.from; });
 
     // Start watching.
-    const watcher = chokidar.watch(copyFrom, {ignoreInitial: true});
+    const watcher = chokidar.watch(watchDirs, {ignoreInitial: true});
 
     // Monitor file adds, changes, and removals.
-
-    watcher.on('add', (path) => {
-      this._handleUpdate(path);
-    });
-
-    watcher.on('change', (path) => {
-      this._handleUpdate(path);
-    });
-
-    watcher.on('unlink', (path) => {
-      this._handleUpdate(path);
-    });
+    const handler = onChange.bind(this);
+    watcher.on('add',   handler);
+    watcher.on('change', handler);
+    watcher.on('unlink', handler);
 
     // At the moment when the watcher tells us it's actually going to send
     // updates, do an initial scan to find files that were updated _just before_
     // the watcher was looking. This catches cases where a file got modified as
     // the system was just starting up.
+
+    let resolveReady;
+    const ready = new Promise((res, rej) => { resolveReady = res; });
     const minTime = Date.now() - (10 * 1000); // Ten seconds in the past.
+
     watcher.on('ready', () => {
       // Only look for changes through the current moment (well, just _after_
       // the current moment, to catch some otherwise would-be edge cases). Later
       // changes will get caught by `watcher`.
       const maxTime = Date.now() + 1000; // One second in the future.
-      this._initialChanges(copyFrom, minTime, maxTime);
+      this._initialChanges(watchDirs, minTime, maxTime, handler);
+
+      // Initial scan is done. Resolve the (outer) return value.
+      resolveReady(true);
     });
+
+    return ready;
   }
 
   /**
-   * Helper for `_start` which does the initial scan for changes.
+   * Helper for `start()` which does an initial scan for changes.
+   *
+   * @param watchDirs Array of directories to watch.
+   * @param minTime Start of time range of interest.
+   * @param maxTime End of time range of interest. The only changes that get
+   *   reported are ones that take place between `minTime` (inclusive) and
+   *   `maxTime` (inclusive).
+   * @param handler Function to call on each detected change, passing it the
+   *   path of the changed file.
    */
-  _initialChanges(copyFrom, minTime, maxTime) {
+  _initialChanges(watchDirs, minTime, maxTime, handler) {
     const changes = [];
-    for (let dir of copyFrom) {
+    for (let dir of watchDirs) {
       addChangesForDir(dir);
     }
 
@@ -255,12 +378,10 @@ export default class DevMode {
     let prev = null;
     for (let c of changes) {
       if (c !== prev) {
-        this._handleUpdate(c);
+        handler(c);
         prev = c;
       }
     }
-
-    log.info('Now live!');
 
     // Called above for each scanned directory.
     function addChangesForDir(dir) {

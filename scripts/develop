@@ -1,0 +1,149 @@
+#!/bin/bash
+#
+# Copyright 2016 the Quillex Authors (Dan Bornstein et alia).
+# Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+# Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+#
+# Builds and runs the product, cleaning first if asked. This runs the product
+# in dev mode, which means that changed source files trigger appropriate
+# actions. Specifically:
+#
+# * If a client source file changes, the system will automatically rebuild the
+#   client code bundle (without restarting the app).
+# * If a server source file changes, the system will quit the app, rebuild it,
+#   and restart.
+#
+# See `--help` for additional details.
+#
+
+# Set `progName` to the program name, `progDir` to its directory, and `baseDir`
+# to `progDir`'s directory. Follows symlinks.
+function init-prog {
+    local newp p="$0"
+
+    while newp="$(readlink "$p")"; do
+    [[ ${newp} =~ ^/ ]] && p="${newp}" || p="$(dirname "$p")/${newp}"
+    done
+
+    progName="${p##*/}"
+    progDir="$(cd "$(dirname "$p")"; /bin/pwd -P)"
+    baseDir="$(cd "${progDir}/.."; /bin/pwd -P)"
+}
+init-prog
+
+
+#
+# Parse options.
+#
+
+# Error during argument processing?
+argError=0
+
+# Need help?
+showHelp=0
+
+# Directory for the built output.
+outDir=''
+
+# Initial clean build?
+doClean=0
+
+# Options to pass when building.
+buildOpts=()
+
+while (( $# != 0 )); do
+    opt="$1"
+    if [[ ${opt} == '--' ]]; then
+        shift
+        break
+    elif [[ ${opt} == '--clean' ]]; then
+        doClean=1
+    elif [[    ${opt} == '--help'
+            || ${opt} == '-h' ]]; then
+        showHelp=1
+    elif [[ ${opt} =~ ^--out=(.*) ]]; then
+        outDir="${BASH_REMATCH[1]}"
+    elif [[ ${opt} =~ ^--overlay=(.*) ]]; then
+        buildOpts+=("${opt}")
+    elif [[ ${opt} =~ ^- ]]; then
+        echo "Unknown option: ${opt}" 1>&2
+        argError=1
+        break
+    else
+        break
+    fi
+    shift
+done
+unset opt
+
+if (( ${showHelp} || ${argError} )); then
+    echo 'Usage:'
+    echo ''
+    echo "${progName} [--clean] [--out=<dir>] [--overlay=<dir>]"
+    echo '  Build and run the project, in a live development manner.'
+    echo '  --clean          Do an initial clean build.'
+    echo '  --out=<dir>      Find (and place) build output in directory <dir>.'
+    echo '  --overlay=<dir>  Find overlay source in directory <dir>.'
+    echo ''
+    echo "${progName} [--help | -h]"
+    echo "  Display this message."
+    exit ${argError}
+fi
+
+
+#
+# Helper functions
+#
+
+# Cleanup function which makes sure all the subprocesses terminate when the main
+# script terminates. This is set up as a handler for the usual termination
+# signals.
+function cleanup {
+    trap - SIGTERM # Avoid recursion.
+    kill -- -$$ >/dev/null 2>&1
+}
+
+
+#
+# Main script
+#
+
+# See comment on `cleanup` above.
+trap cleanup SIGINT SIGTERM EXIT
+
+if [[ ${outDir} == '' ]]; then
+    # Default output directory.
+    outDir="${baseDir}/out"
+fi
+
+buildOpts+=(--out="${outDir}")
+
+while true; do
+    cleanArg=()
+    if (( ${doClean} )); then
+        cleanArg=(--clean)
+        doClean=0
+    fi
+
+    echo ''
+    "${progDir}/build" "${cleanArg[@]}" "${buildOpts[@]}" || exit 1
+    echo ''
+
+    "${outDir}/bin/run" --dev
+    status="$?"
+    if (( ${status} != 0 )); then
+        # Not a clean exit, so better to err on the side of not looping. This
+        # most notably happens when the developer hits ctrl-C on the console.
+
+        # Wait a second for "last licks" console logging.
+        sleep 2
+
+        # We suppress the error message in the ctrl-C case by checking for the
+        # distinctive exit code used in that case.
+        if (( ${status} != 130 )); then
+            echo "Application exited with non-zero status: ${status}"
+        fi
+
+        break
+    fi
+done
