@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import SeeAll from 'see-all';
+import WebsocketCodes from 'websocket-codes';
 
 import ApiError from './ApiError';
 
@@ -11,27 +12,6 @@ const log = new SeeAll('api');
 
 /** Value used for an unknown connection ID. */
 const UNKNOWN_CONNECTION_ID = 'id-unknown';
-
-/**
- * Map of close codes to nominally official constant names. See
- * <https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent>.
- */
-const CLOSE_CODES = {
-  1000: 'close_normal',
-  1001: 'close_going_away',
-  1002: 'close_protocol_error',
-  1003: 'close_unsupported',
-  1005: 'close_no_status',
-  1006: 'close_abnormal',
-  1007: 'close_unsupported_data',
-  1008: 'close_policy_violation',
-  1009: 'close_too_large',
-  1010: 'close_missing_extension',
-  1011: 'close_internal_error',
-  1012: 'close_service_restart',
-  1013: 'close_try_again_later',
-  1015: 'close_tls_handshake'
-};
 
 /**
  * Connection with the server, via a websocket.
@@ -187,8 +167,7 @@ export default class ApiClient {
   _handleClose(event) {
     log.info(`${this._connectionId} closed:`, event);
 
-    const code = CLOSE_CODES[event.code] ||
-      (event.code ? `close_${event.code}` : 'closed');
+    const code = WebsocketCodes.close(event.code);
     const reason = event.reason || 'Websocket closed.';
     const error = ApiError.connError(code, reason);
 
