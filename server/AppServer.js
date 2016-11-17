@@ -1,0 +1,138 @@
+// Copyright 2016 the Quillex Authors (Dan Bornstein et alia).
+// Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+// Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+
+import express from 'express';
+import express_ws from 'express-ws';
+import fs from 'fs';
+import morgan from 'morgan';
+import path from 'path';
+
+import SeeAll from 'see-all';
+
+import ApiServer from './ApiServer';
+import ClientBundle from './ClientBundle';
+import DebugTools from './DebugTools';
+
+/** Logger. */
+const log = new SeeAll('app');
+
+/** What port to listen for connections on. */
+const PORT = 8080;
+
+/** Base dir of the product. */
+const baseDir = path.resolve(__dirname, '..');
+
+/**
+ * Web server for the application. This serves all HTTP(S) requests, including
+ * websocket requests.
+ */
+export default class AppServer {
+  /**
+   * Constructs an instance.
+   *
+   * @param doc The document managed by the instance.
+   * @param devMode Whether or not to run in dev mode. If `true`, this activates
+   *   `/debug/*` endpoints.
+   */
+  constructor(doc, devMode) {
+    /** The document. */
+    this._doc = doc;
+
+    /** The underlying webserver run by this instance. */
+    this._app = express();
+
+    this._addRequestLogging();
+    this._addRoutes();
+
+    if (devMode) {
+      this._addDevModeRoutes();
+    }
+  }
+
+  /**
+   * Starts up the server.
+   */
+  start() {
+    this._app.listen(PORT, () => {
+      log.info(`Now listening on port ${PORT}.`);
+    });
+  }
+
+  /**
+   * Sets up logging for webserver requests.
+   */
+  _addRequestLogging() {
+    const app = this._app;
+
+    // Stream to write to, when logging to a file.
+    const logStream =
+      fs.createWriteStream(path.resolve(baseDir, 'access.log'), {flags: 'a'});
+
+    // These log regular (non-websocket) requests at the time of completion,
+    // including a short colorized form to the console and a longer form to a
+    // file.
+
+    app.use(morgan('dev', {
+      stream: log.infoStream
+    }));
+
+    app.use(morgan('common', {
+      stream: logStream
+    }));
+
+    // These log websocket requests, at the time of request start (not at the
+    // time of completion because these are long-lived requests).
+
+    // Log skip function: Returns `true` for anything other than a websocket
+    // request.
+    function skip(req, res) {
+      return (req.get('upgrade') !== 'websocket');
+    }
+
+    app.use(morgan('WS :url', {
+      stream:    log.infoStream,
+      immediate: true,
+      skip:      skip
+    }));
+
+    app.use(morgan('common', {
+      stream:    logStream,
+      immediate: true,
+      skip:      skip
+    }));
+  }
+
+  /**
+   * Sets up the webserver routes.
+   */
+  _addRoutes() {
+    const app = this._app;
+
+    // Make the webserver able to handle websockets.
+    express_ws(app);
+
+    // Map Quill files into `/static/quill`. This is used for CSS files but not for
+    // the JS code; the JS code is included in the overall JS bundle file.
+    app.use('/static/quill',
+      express.static(path.resolve(baseDir, 'client/node_modules/quill/dist')));
+
+    // Use Webpack to serve a JS bundle.
+    app.get('/static/bundle.js', new ClientBundle().requestHandler);
+
+    // Find HTML files and other static assets in `client/assets`. This includes the
+    // top-level `index.html` and `favicon`, as well as stuff under `static/`.
+    app.use('/', express.static(path.resolve(baseDir, 'client/assets')));
+
+    // Attach the API server.
+    app.ws('/api', (ws, req) => { new ApiServer(ws, this._doc); });
+  }
+
+  /**
+   * Adds the dev mode routes.
+   */
+  _addDevModeRoutes() {
+    const app = this._app;
+    app.use('/debug', new DebugTools(this._doc).requestHandler);
+  }
+}
