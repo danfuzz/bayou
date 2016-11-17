@@ -6,6 +6,7 @@ import util from 'util';
 
 import RandomId from 'random-id';
 import SeeAll from 'see-all';
+import WebsocketCodes from 'websocket-codes';
 
 /** Logger. */
 const log = new SeeAll('api');
@@ -99,7 +100,9 @@ export default class ApiServer {
    * Handles a `close` event coming from the underlying websocket.
    */
   _handleClose(code, msg) {
-    log.info(`${this._connectionId} close: ${code} ${msg}`);
+    const codeStr = WebsocketCodes.close(code);
+    const msgStr = msg ? `: ${msg}` : '';
+    log.info(`${this._connectionId} ${codeStr}${msgStr}`);
   }
 
   /**
