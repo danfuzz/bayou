@@ -8,6 +8,8 @@ import fs from 'fs';
 import morgan from 'morgan';
 import path from 'path';
 
+import chalk from 'chalk';
+
 import SeeAll from 'see-all';
 
 import ApiServer from './ApiServer';
@@ -73,7 +75,40 @@ export default class AppServer {
     // including a short colorized form to the console and a longer form to a
     // file.
 
-    app.use(morgan('dev', {
+    // This is a status-aware logger, roughly based on morgan's built-in `dev`
+    // style.
+    function shortColorLog(tokens, req, res) {
+      const status    = res.statusCode || 0;
+      const statusStr = res.statusCode || '-  ';
+      const colorFn =
+          (status >= 500) ? chalk.red
+        : (status >= 400) ? chalk.yellow
+        : (status >= 300) ? chalk.cyan
+        : (status >= 200) ? chalk.green
+        :                   ((x) => x); // No-op by default.
+
+      let contentLength = res.get('content-length');
+      if (contentLength === undefined) {
+        contentLength = '-';
+      } else if (contentLength > (1024 * 1024)) {
+        contentLength = Math.round(contentLength / 1024 / 1024 * 10) / 10;
+        contentLength += 'M';
+      } else if (contentLength > 1024) {
+        contentLength = Math.round(contentLength / 1024 * 10) / 10;
+        contentLength += 'K';
+      } else {
+        // Coerce it to a string.
+        contentLength = `${contentLength}`;
+      }
+
+      if (contentLength.length < 7) {
+        contentLength += ' '.repeat(7 - contentLength.length);
+      }
+
+      return `${colorFn(statusStr)} ${contentLength} ${req.method} ${req.originalUrl}`;
+    }
+
+    app.use(morgan(shortColorLog, {
       stream: log.infoStream
     }));
 
@@ -90,7 +125,16 @@ export default class AppServer {
       return (req.get('upgrade') !== 'websocket');
     }
 
-    app.use(morgan('WS :url', {
+    // Logger which is meant to match the formatting of `shortColorLog` above.
+    function shortWsLog(tokens, req, res) {
+      // exress-ws appends a pseudo-path `/.websocket` to the end of websocket
+      // requests.
+      const url = req.originalUrl.replace(/\/\.websocket$/, '');
+
+      return `-   -       WS ${url}`;
+    }
+
+    app.use(morgan(shortWsLog, {
       stream:    log.infoStream,
       immediate: true,
       skip:      skip
