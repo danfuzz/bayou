@@ -1,0 +1,156 @@
+#!/bin/bash
+#
+# Copyright 2016 the Quillex Authors (Dan Bornstein et alia).
+# Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+# Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+#
+# Does an `npm install` using the contents of a given `.npmbox` file.
+
+# Set `progName` to the program name, `progDir` to its directory, and `baseDir`
+# to `progDir`'s directory. Follows symlinks.
+function init-prog {
+    local newp p="$0"
+
+    while newp="$(readlink "$p")"; do
+    [[ ${newp} =~ ^/ ]] && p="${newp}" || p="$(dirname "$p")/${newp}"
+    done
+
+    progName="${p##*/}"
+    progDir="$(cd "$(dirname "$p")"; /bin/pwd -P)"
+    baseDir="$(cd "${progDir}/.."; /bin/pwd -P)"
+}
+init-prog
+
+
+#
+# Argument parsing
+#
+
+# Error during argument processing?
+argError=0
+
+# Need help?
+showHelp=0
+
+# Directory to install in.
+dir='.'
+
+while (( $# != 0 )); do
+    opt="$1"
+    if [[ ${opt} == '--' ]]; then
+        shift
+        break
+    elif [[    ${opt} == '--help'
+            || ${opt} == '-h' ]]; then
+        showHelp=1
+    elif [[ ${opt} =~ ^--dir= ]]; then
+        dir="${BASH_REMATCH[1]}"
+    elif [[ ${opt} =~ ^- ]]; then
+        echo "Unknown option: ${opt}" 1>&2
+        argError=1
+        break
+    else
+        break
+    fi
+    shift
+done
+unset opt
+
+if (( $# == 0 )); then
+    echo 'Missing box file argument.' 1>&2
+    argError=1
+elif (( $# == 1)); then
+    boxFile="$1"
+else
+    echo 'Extra argument(s).' 1>&2
+    argError=1
+fi
+
+if (( ${showHelp} || ${argError} )); then
+    echo 'Usage:'
+    echo ''
+    echo "${progName} [--dir=<dir>] <box-file>"
+    echo '  Perform an `npm install`.'
+    echo '  --dir=<dir>  Directory for the install (defaults to the CWD).'
+    echo ''
+    echo "${progName} [--help | -h]"
+    echo "  Display this message."
+    exit ${argError}
+fi
+
+
+#
+# Helper functions
+#
+
+# Clean up the temporary directory. This is set up as a handler for the usual
+# termination signals.
+function cleanup {
+    if [[ -e "${tmpDir}" ]]; then
+        rm -rf "${tmpDir}"
+    fi
+}
+
+# Make a temporary directory. Print its name.
+function make-tmp-dir {
+    # mktemp` takes incompatible arguments on BSD (macOS) vs. GNU (typical Linux
+    # userland). We use `mktemp --version` (works on GNU and exits with an error
+    # on BSD) to figure out which way to call it for realsies.
+
+    if mktemp --version >/dev/null 2>&1; then
+        # GNU
+        mktemp --directory --tmpdir "${progName}.XXXXXX"
+    else
+        # BSD
+        mktemp -d -t "${progName}"
+    fi
+}
+
+
+#
+# Main script
+#
+
+if [[ ! -r "${dir}/package.json" ]]; then
+    echo 'Cannot find `package.json` in directory:' "${dir}" 1>&2
+    exit 1
+fi
+
+if [[ ! -r "${boxFile}" ]]; then
+    echo 'Cannot read box file:' "${boxFile}" 1>&2
+    exit 1
+fi
+
+# Set up temporary directory.
+tmpDir="$(make-tmp-dir)" || exit 1
+
+# Remove the temporary directory on exit.
+trap cleanup SIGINT SIGTERM EXIT
+
+# Extract the box contents into the temporary directory. Rename the extracted
+# directory to `box` (because it's nicer).
+tar -x -z -f "${boxFile}" -C "${tmpDir}" || exit 1
+mv "${tmpDir}/.npmbox.cache" "${tmpDir}/box" || exit 1
+
+# Make the `npm install` call in the requested directory. What we do here is
+# similar to (but not quite exactly) what `npmunbox` does. In particular, we ask
+# `npm` to install a local package using the contents of the `.npmbox` as its
+# cache (and avoiding calling out to the net for anything). `npmunbox`, on the
+# other hand, doesn't let you "root" your install on a local package in this
+# manner.
+#
+# TODO: Make a PR for the `npmbox` project which adds this behavior as an
+# option.
+
+# The `HTTPS_PROXY` definition prevents network connections from being made
+# when there's trouble. (That is, it causes a proper fast failure.)
+export HTTPS_PROXY=http://blort.blort/blort
+
+# `--cache` points at the box. `--cache-min` tells it to consider the cache to
+# be non-stale (900... seconds is about 2800 years). The `--fetch-` arguments
+# keep it from trying in vain to hit the network if something goes wrong.
+npm \
+    --cache="${tmpDir}/box" --cache-min=90000000000 \
+    --fetch-retries=0 --fetch-retry-factor=0 \
+    --fetch-retry-mintimeout=1 --fetch-retry-maxtimeout=2 \
+    install
