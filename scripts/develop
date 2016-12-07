@@ -33,7 +33,7 @@ init-prog
 
 
 #
-# Parse options.
+# Argument parsing
 #
 
 # Error during argument processing?
@@ -58,6 +58,8 @@ while (( $# != 0 )); do
         break
     elif [[ ${opt} == '--clean' ]]; then
         doClean=1
+    elif [[ ${opt} =~ ^--boxes=(.*) ]]; then
+        buildOpts+=("${opt}")
     elif [[    ${opt} == '--help'
             || ${opt} == '-h' ]]; then
         showHelp=1
@@ -81,6 +83,7 @@ if (( ${showHelp} || ${argError} )); then
     echo ''
     echo "${progName} [--clean] [--out=<dir>] [--overlay=<dir>]"
     echo '  Build and run the project, in a live development manner.'
+    echo '  --boxes=<dir>    Find boxed dependencies in directory <dir>.'
     echo '  --clean          Do an initial clean build.'
     echo '  --out=<dir>      Find (and place) build output in directory <dir>.'
     echo '  --overlay=<dir>  Find overlay source in directory <dir>.'

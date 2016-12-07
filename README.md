@@ -75,6 +75,27 @@ directory:
 $ ./out/bin/run
 ```
 
+### Hermetic build
+
+The Quillex build supports using prepackaged dependencies, if desired. These
+can be used (a) to guard against unexpected changes in upstream packages, and
+(b) to perform builds without hitting the network (an ability valued by some
+organizations).
+
+To build the boxed dependencies, say:
+
+```
+$ ./scripts/build-boxes --out=<box-dir>
+```
+
+(Replace `<box-dir>` with the name of a directory to store the boxes in.)
+
+To perform a build with boxes, say:
+
+```
+$ ./scripts/build --boxes=<box-dir>
+```
+
 ### Cleanup
 
 ```
