@@ -20,6 +20,7 @@ fromDir="$1"
 # The project build directory to perform replacement in.
 toDir="$2"
 
+
 #
 # Helper functions
 #
@@ -69,6 +70,7 @@ function do-overlay {
         echo "Overlay: ${name}/${f}"
     done
 }
+
 
 #
 # Main script

@@ -24,7 +24,7 @@ init-prog
 
 
 #
-# Parse options.
+# Argument parsing
 #
 
 # Error during argument processing?
@@ -41,6 +41,9 @@ justClean=0
 
 # Overlay source directory, if any.
 overlayDir=''
+
+# Boxed dependency directory, if any.
+boxDir=''
 
 # Directory for the built output.
 outDir=''
@@ -62,6 +65,8 @@ while (( $# != 0 )); do
         outDir="${BASH_REMATCH[1]}"
     elif [[ ${opt} =~ ^--overlay=(.*) ]]; then
         overlayDir="${BASH_REMATCH[1]}"
+    elif [[ ${opt} =~ ^--boxes=(.*) ]]; then
+        boxDir="${BASH_REMATCH[1]}"
     elif [[ ${opt} =~ ^- ]]; then
         echo "Unknown option: ${opt}" 1>&2
         argError=1
@@ -78,6 +83,7 @@ if (( ${showHelp} || ${argError} )); then
     echo ''
     echo "${progName} [--clean] [--out=<dir>] [--overlay=<dir>]"
     echo '  Build the project.'
+    echo '  --boxes=<dir>    Find boxed dependencies in directory <dir>.'
     echo '  --clean          Start from a clean build.'
     echo '  --just-clean     Just clean (do not actually build).'
     echo '  --out=<dir>      Place output in directory <dir>.'
@@ -87,6 +93,7 @@ if (( ${showHelp} || ${argError} )); then
     echo "  Display this message."
     exit ${argError}
 fi
+
 
 #
 # Helper functions
@@ -204,6 +211,37 @@ function copy-sources {
     done
 }
 
+# Does an `npm install` in the given directory, or the equivalent by using
+# boxed dependencies. After installation, applies local patches to installed
+# modules.
+function do-install {
+    local dir="$1"
+    local toDir="${outDir}/${dir}"
+
+    cd "${toDir}"
+
+    if [[ ${boxDir} == '' ]]; then
+        # No boxed dependencies. Normal install.
+        npm install || return 1
+    else
+        # We were asked to use the boxed dependencies.
+        local boxFile="${boxDir}/${dir}.npmbox"
+
+        if [[ ! -r ${boxFile} ]]; then
+            echo 'Missing box file:' "${boxFile}" 1>&2
+            return 1
+        fi
+
+        "${progDir}/box-install" "${boxDir}/${dir}.npmbox" || return 1
+    fi
+
+    # We are somewhat at the mercy of what's published via npm, and in fact
+    # some modules that we use occasionally have bugs in their published
+    # versions. This script patches them in situ based on the contents of the
+    # directory `etc/module-overlay`
+    "${progDir}/fix-modules" "${baseDir}/etc/module-overlay" "${toDir}"
+}
+
 # Builds the server code. This builds from `server-src` into `server`. The
 # JS files in the former are treated as modern ECMAScript, which are processed
 # by Babel.
@@ -211,19 +249,22 @@ function build-server {
     local fromDir="${outDir}/server-src"
     local toDir="${outDir}/server"
 
-    mkdir -p "${toDir}"
-
     # We get Babel by virtue of its modules being listed as dependencies in the
     # server `package.json`, so the first thing we need to do is copy over that
     # file and get `npm` to fluff it out. See above about `rsync` rationale.
+    mkdir -p "${toDir}"
     rsync --archive "${fromDir}/package.json" "${toDir}"
-    (cd "${toDir}"; npm install) || return 1
+    do-install server || return 1
 
-    # We are somewhat at the mercy of what's published via npm, and in fact
-    # some modules that we use occasionally have bugs in their published
-    # versions. This script patches them in situ.
-    "${progDir}/fix-modules" "${baseDir}/etc/module-overlay" "${toDir}" \
-        || return 1
+    # Find the `babel` script (provided by the `babel-cli` package). It can
+    # appear at the top level _or_ in a sub-module, the latter which can be the
+    # case when installing from boxed dependencies (even though the npm
+    # documentation implies that it shouldn't happen).
+    local babel="$(find "${toDir}/node_modules" -path '*/.bin/babel')"
+    if [[ ${babel} == '' ]]; then
+        echo 'Could not find babel-cli script.' 1>&2
+        return 1
+    fi
 
     # Run Babel on all of the local source files, storing them next to the
     # imported and patched modules. We symlink the output `node_modules` back to
@@ -232,7 +273,7 @@ function build-server {
     if [[ ! -e "${fromDir}/node_modules" ]]; then
         ln -s "${toDir}/node_modules" "${fromDir}"
     fi
-    "${fromDir}/node_modules/.bin/babel" --no-babelrc --copy-files \
+    "${babel}" --no-babelrc --copy-files \
         --ignore 'node_modules' \
         --presets 'es2015,es2016,es2017' --source-maps true \
         --out-dir "${toDir}" "${fromDir}" \
@@ -251,13 +292,7 @@ function build-server {
 
 # Builds the client code.
 function build-client {
-    local toDir="${outDir}/client"
-
-    (cd "${toDir}"; npm install) || return 1
-
-    # See comment on `fix-modules` call in `build-server`, above.
-    "${progDir}/fix-modules" "${baseDir}/etc/module-overlay" "${toDir}" \
-        || return 1
+    do-install client || return 1
 }
 
 # "Builds" the `bin` directory.
@@ -290,11 +325,19 @@ fi
 
 echo 'Building...'
 
+if [[ (${boxDir} != '') && ("$(uname)" == 'Darwin') ]]; then
+    echo ''
+    echo 'NOTE: Building from boxed dependencies on macOS generally results in'
+    echo '  complaints about an inability to build the `fsevents` module. This'
+    echo '  is expected and will not prevent the product from running.'
+    echo ''
+fi
+
 (
     set-up-dir-mapping \
         && copy-sources \
-        && build-server \
         && build-client \
+        && build-server \
         && build-bin
 ) || exit 1
 

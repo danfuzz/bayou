@@ -1,0 +1,216 @@
+#!/bin/bash
+#
+# Copyright 2016 the Quillex Authors (Dan Bornstein et alia).
+# Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+# Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+#
+# Creates `.npmbox` files for the client and server.
+#
+
+# Set `progName` to the program name, `progDir` to its directory, and `baseDir`
+# to `progDir`'s directory. Follows symlinks.
+function init-prog {
+    local newp p="$0"
+
+    while newp="$(readlink "$p")"; do
+    [[ ${newp} =~ ^/ ]] && p="${newp}" || p="$(dirname "$p")/${newp}"
+    done
+
+    progName="${p##*/}"
+    progDir="$(cd "$(dirname "$p")"; /bin/pwd -P)"
+    baseDir="$(cd "${progDir}/.."; /bin/pwd -P)"
+}
+init-prog
+
+
+#
+# Argument parsing
+#
+
+# Error during argument processing?
+argError=0
+
+# Need help?
+showHelp=0
+
+# Overlay source directory, if any.
+overlayDir=''
+
+# Directory for the built output.
+outDir=''
+
+while (( $# != 0 )); do
+    opt="$1"
+    if [[ ${opt} == '--' ]]; then
+        shift
+        break
+    elif [[    ${opt} == '--help'
+            || ${opt} == '-h' ]]; then
+        showHelp=1
+    elif [[ ${opt} == '--just-clean' ]]; then
+        clean=1
+        justClean=1
+    elif [[ ${opt} =~ ^--out=(.*) ]]; then
+        outDir="${BASH_REMATCH[1]}"
+    elif [[ ${opt} =~ ^--overlay=(.*) ]]; then
+        overlayDir="${BASH_REMATCH[1]}"
+    elif [[ ${opt} =~ ^- ]]; then
+        echo "Unknown option: ${opt}" 1>&2
+        argError=1
+        break
+    else
+        break
+    fi
+    shift
+done
+unset opt
+
+if (( ${showHelp} || ${argError} )); then
+    echo 'Usage:'
+    echo ''
+    echo "${progName} [--out=<dir>] [--overlay=<dir>]"
+    echo '  Create boxed dependencies.'
+    echo '  --out=<dir>      Place output in directory <dir>.'
+    echo '  --overlay=<dir>  Find overlay source in directory <dir>.'
+    echo ''
+    echo "${progName} [--help | -h]"
+    echo "  Display this message."
+    exit ${argError}
+fi
+
+#
+# Variable setup
+#
+
+# The name of the version of `npmbox` to use. Until the `npmbox` fix for local
+# packages gets published officially, we use @danfuzz's fork. TODO: When the fix
+# is published, switch to it.
+NPMBOX_VERSION='danfuzz/npmbox#local-package-take-3'
+
+# Trivial `package.json` contents for the above.
+NPMBOX_PJ="$(
+cat <<EOF
+{
+    "name": "just-npmbox",
+    "version": "0.0.1",
+    "description": "NONE",
+    "repository": "NONE",
+    "license": "UNLICENSED",
+    "dependencies": {
+        "npmbox": "${NPMBOX_VERSION}"
+    }
+}
+EOF
+)"
+
+#
+# Helper functions
+#
+
+# Sets up the output directory, including creating it if necessary.
+function set-up-out {
+    if [[ ${outDir} == '' ]]; then
+        # Default output directory.
+        outDir="${baseDir}/out"
+    fi
+
+    if [[ -e ${outDir} ]]; then
+        if [[ ! -d ${outDir} ]]; then
+            echo "Not a directory: ${outDir}" 1>&2
+            return 1
+        fi
+    else
+        mkdir -p "${outDir}" || return 1
+    fi
+
+    # Make it absolute.
+    outDir="$(cd ${outDir}; /bin/pwd -P)"
+}
+
+# Helper for `build-source` which does one of the directories (as named). This
+# does the following:
+#
+# * Merge the original source and overlay (if any).
+# * Remove any file that isn't required for calculating dependencies. As of
+#   this writing, the only file that matters is `package.json`.
+# * Rewrite the package name to have the suffix `-dependencies`. **Note:** It
+#   is necessary to do a package rename because otherwise `npm` can get
+#   confused during the unbox operation by a package that includes "itself" as
+#   a dependency.
+function build-source-for {
+    local dir="$1"
+    local targetDir="${outDir}/work/${dir}"
+
+    mkdir -p "${targetDir}"
+
+    # Copy original source.
+    rsync --archive --delete "${baseDir}/${dir}/" "${targetDir}"
+
+    # Combine in the overlay source (if any).
+    if [[ ${overlayDir} != '' ]]; then
+        rsync --archive "${overlayDir}/${dir}/" "${targetDir}"
+    fi
+
+    cd "${targetDir}"
+    # Remove files we don't care about.
+
+    find . -type f '!' -name 'package.json' -exec rm '{}' ';'
+
+    # Rename the package.
+    jq '.name+="-dependencies"' package.json > package.json.new
+    mv package.json.new package.json
+}
+
+# Builds the source to be used for boxing, for both client and server
+# directories.
+function build-source {
+    build-source-for client
+    build-source-for server
+}
+
+# Gets and installs `npmbox`.
+function get-npmbox {
+    local dir="${outDir}/work/npmbox"
+
+    if [[ ! -e "${dir}" ]]; then
+        (
+            mkdir -p "${dir}"
+            echo "${NPMBOX_PJ}" > "${dir}/package.json"
+        ) || return 1
+    fi
+
+    cd "${dir}"
+    npm install
+}
+
+# Creates a box for the given directory's dependencies.
+function make-box {
+    local dir="$1"
+
+    cd "${outDir}"
+
+    ./work/npmbox/node_modules/.bin/npmbox -t out "file:./work/${dir}" \
+        || return 1
+
+    # Only overwrite the pre-existing file if the boxing was successful.
+    mv "out.npmbox" "${dir}.npmbox"
+}
+
+# Removes the sources used during the build process.
+function rm-source {
+    rm -rf "${outDir}/work"
+}
+
+
+#
+# Main script
+#
+
+(
+    set-up-out \
+        && build-source \
+        && get-npmbox \
+        && make-box client \
+        && make-box server \
+        && rm-source
+) || exit 1

@@ -24,7 +24,7 @@ init-prog
 
 
 #
-# Parse options.
+# Argument parsing
 #
 
 # Error during argument processing?
