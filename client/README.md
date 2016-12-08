@@ -8,4 +8,7 @@ side, at least not due to being referenced here.
 
 You'll find a `tsconfig.json` file here too. This is required to get the
 TypeScript code from the included modules (as of this writing, just `parchment`)
-to be successfully compiled.
+to be successfully compiled. **Note:** This will have to be reworked when
+Quill gets updated to use the newer version of Parchment, as the latter includes
+its own `tsconfig.json` file. At that point, we will have to _overlay_ the
+`tsconfig.json` file to remove the line `"declaration": true`.
