@@ -1,8 +1,8 @@
-Contributing to Quillex
+Contributing to Bayou
 =======================
 
 Bug reports and patches gladly accepted at
-<https://github.com/danfuzz/quillex>.
+<https://github.com/danfuzz/bayou>.
 
 Please be maximally specific with your bug reports. In particular,
 please indicate:
