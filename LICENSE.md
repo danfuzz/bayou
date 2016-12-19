@@ -1,11 +1,11 @@
-License for Quillex
+License for Bayou
 ===================
 
-Quillex was written by the Quillex Authors, including Dan Bornstein
+Bayou was written by the Bayou Authors, including Dan Bornstein
 and possibly others. See the associated file [AUTHORS.md](AUTHORS.md)
 for details.
 
-Quillex is licensed under the Apache License, version 2.0. The full
+Bayou is licensed under the Apache License, version 2.0. The full
 text of the license is reproduced below.
 
 **Note:** Instead of the usual highly-verbose file header recommended
@@ -13,7 +13,7 @@ in the Appendix to the License, this project uses the following briefer
 file header:
 
 ```
-Copyright 2016 the Quillex Authors (Dan Bornstein et alia).
+Copyright 2016 the Bayou Authors (Dan Bornstein et alia).
 Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 ```

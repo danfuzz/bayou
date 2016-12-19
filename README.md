@@ -1,8 +1,9 @@
-Quillex
+Bayou
 =======
 
-A little [Quill](https://quilljs.com/) demo application which includes
-synchronization of document state across multiple clients.
+A collaborative document editor, which uses [Quill](https://quilljs.com/) on
+the front end. It includes synchronization of document state across multiple
+clients. **It is a work in progress.**
 
 The code is set up to make it straightforward to customize. Salient details:
 
@@ -43,13 +44,13 @@ The code is set up to make it straightforward to customize. Salient details:
   because no amount of configuration hooks will ever turn out to be fully
   adequate &mdash; the build script can be invoked with an argument to indicate
   an overlay source directory, allowing one to override individual source files
-  while still keeping a "pristine" checkout of the `quillex` repo. See the
+  while still keeping a "pristine" checkout of the `bayou` repo. See the
   script [`build`](scripts/build) for details.
 
 
 ### Build and Run
 
-Quillex uses [Node](https://nodejs.org) on the server side, and it uses
+Bayou uses [Node](https://nodejs.org) on the server side, and it uses
 [npm](https://npmjs,com) for module management. Install both of these if you
 haven't already done so. As of this writing, the bulk of development and
 testing have been done using `node` version 6 and `npm` version 3.
@@ -57,7 +58,7 @@ testing have been done using `node` version 6 and `npm` version 3.
 To build and run, say:
 
 ```
-$ cd quillex
+$ cd bayou
 $ ./scripts/develop
 ```
 
@@ -77,7 +78,7 @@ $ ./out/bin/run
 
 ### Hermetic build
 
-The Quillex build supports using prepackaged dependencies, if desired. These
+The Bayou build supports using prepackaged dependencies, if desired. These
 can be used (a) to guard against unexpected changes in upstream packages, and
 (b) to perform builds without hitting the network (an ability valued by some
 organizations).
@@ -113,7 +114,7 @@ $ ./scripts/clean
 
 ### Theory of operation
 
-See the [client state diagram](https://raw.githubusercontent.com/danfuzz/quillex-docs/master/client-states.png)
+See the [client state diagram](https://raw.githubusercontent.com/danfuzz/bayou-docs/master/client-states.png)
 for an overview of how the system operates from the client's perspective. This
 is a straightforward (fairly unsurprising) operational-transform implementation.
 
@@ -124,7 +125,7 @@ is a straightforward (fairly unsurprising) operational-transform implementation.
 * [License](LICENSE.md)
 
 ```
-Copyright 2016 the Quillex Authors (Dan Bornstein et alia).
+Copyright 2016 the Bayou Authors (Dan Bornstein et alia).
 Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 ```

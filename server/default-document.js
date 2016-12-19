@@ -1,4 +1,4 @@
-// Copyright 2016 the Quillex Authors (Dan Bornstein et alia).
+// Copyright 2016 the Bayou Authors (Dan Bornstein et alia).
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
@@ -6,11 +6,11 @@
  * Default (initial) contents of documents.
  */
 export default [
-  {insert: 'Welcome to Quillex!'},
+  {insert: 'Welcome to Bayou!'},
   {insert: '\n', attributes: {header: 1}},
   {insert: 'Now go grab a '},
-  {insert: 'turntable', attributes: {bold: true}},
+  {insert: 'boat', attributes: {bold: true}},
   {insert: ' and start '},
-  {insert: 'a-spinnin\'', attributes: {italic: true}},
+  {insert: 'a-rowin\'', attributes: {italic: true}},
   {insert: '.\n'}
 ];
