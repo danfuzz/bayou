@@ -1,5 +1,5 @@
 Contributing to Bayou
-=======================
+=====================
 
 Bug reports and patches gladly accepted at
 <https://github.com/danfuzz/bayou>.
