@@ -1,5 +1,5 @@
 License for Bayou
-===================
+=================
 
 Bayou was written by the Bayou Authors, including Dan Bornstein
 and possibly others. See the associated file [AUTHORS.md](AUTHORS.md)

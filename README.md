@@ -1,5 +1,5 @@
 Bayou
-=======
+=====
 
 A collaborative document editor, which uses [Quill](https://quilljs.com/) on
 the front end. It includes synchronization of document state across multiple
