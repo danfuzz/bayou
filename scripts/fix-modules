@@ -63,6 +63,8 @@ function do-overlay {
         expectSum="$(grep "${f}" "${fromDir}/checksums.txt" | awk '{ print $1 }')"
         if [[ ${expectSum} != ${toSum} ]]; then
             echo "Bad overlay version: ${name}/${f}"
+            echo "  expected: ${expectSum}"
+            echo "  found:    ${toSum}"
             return 1
         fi
 

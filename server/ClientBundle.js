@@ -96,7 +96,10 @@ const webpackOptions = {
           compilerOptions: {
             // A reasonably conservative choice, and also recapitulates what
             // Quill's Webpack config does.
-            target: 'es5'
+            target: 'es5',
+            // Parchment specifies this as `true`, but we need it to be `false`
+            // because we _aren't_ building it as a standalone library.
+            declaration: false
           },
           silent: true, // Avoids the banner spew.
           transpileOnly: true
