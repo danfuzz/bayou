@@ -1,8 +1,9 @@
 Bayou
 =======
 
-A little [Quill](https://quilljs.com/) demo application which includes
-synchronization of document state across multiple clients.
+A collaborative document editor, which uses [Quill](https://quilljs.com/) on
+the front end. It includes synchronization of document state across multiple
+clients. **It is a work in progress.**
 
 The code is set up to make it straightforward to customize. Salient details:
 
