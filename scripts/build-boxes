@@ -82,10 +82,9 @@ fi
 # Variable setup
 #
 
-# The name of the version of `npmbox` to use. Until the `npmbox` fix for local
-# packages gets published officially, we use @danfuzz's fork. TODO: When the fix
-# is published, switch to it.
-NPMBOX_VERSION='danfuzz/npmbox#local-package-take-3'
+# The version of `npmbox` to use. (This can also be changed to a URL or git
+# repo, e.g. `userid/npmbox#tag`, for testing or as otherwise needed.)
+NPMBOX_VERSION='^4.1.0'
 
 # Trivial `package.json` contents for the above.
 NPMBOX_PJ="$(
