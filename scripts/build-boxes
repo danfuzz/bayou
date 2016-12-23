@@ -84,7 +84,7 @@ fi
 
 # The version of `npmbox` to use. (This can also be changed to a URL or git
 # repo, e.g. `userid/npmbox#tag`, for testing or as otherwise needed.)
-NPMBOX_VERSION='^4.1.0'
+NPMBOX_VERSION='^4.2.0'
 
 # Trivial `package.json` contents for the above.
 NPMBOX_PJ="$(
@@ -126,47 +126,6 @@ function set-up-out {
     outDir="$(cd ${outDir}; /bin/pwd -P)"
 }
 
-# Helper for `build-source` which does one of the directories (as named). This
-# does the following:
-#
-# * Merge the original source and overlay (if any).
-# * Remove any file that isn't required for calculating dependencies. As of
-#   this writing, the only file that matters is `package.json`.
-# * Rewrite the package name to have the suffix `-dependencies`. **Note:** It
-#   is necessary to do a package rename because otherwise `npm` can get
-#   confused during the unbox operation by a package that includes "itself" as
-#   a dependency.
-function build-source-for {
-    local dir="$1"
-    local targetDir="${outDir}/work/${dir}"
-
-    mkdir -p "${targetDir}"
-
-    # Copy original source.
-    rsync --archive --delete "${baseDir}/${dir}/" "${targetDir}"
-
-    # Combine in the overlay source (if any).
-    if [[ ${overlayDir} != '' ]]; then
-        rsync --archive "${overlayDir}/${dir}/" "${targetDir}"
-    fi
-
-    cd "${targetDir}"
-    # Remove files we don't care about.
-
-    find . -type f '!' -name 'package.json' -exec rm '{}' ';'
-
-    # Rename the package.
-    jq '.name+="-dependencies"' package.json > package.json.new
-    mv package.json.new package.json
-}
-
-# Builds the source to be used for boxing, for both client and server
-# directories.
-function build-source {
-    build-source-for client
-    build-source-for server
-}
-
 # Gets and installs `npmbox`.
 function get-npmbox {
     local dir="${outDir}/work/npmbox"
@@ -182,13 +141,39 @@ function get-npmbox {
     npm install
 }
 
+# Helper for `make-box` which "builds" the source for one of the directories (as
+# named). This does the following:
+#
+# * Merge the original source and overlay (if any).
+# * Remove any file that isn't required for calculating dependencies. As of
+#   this writing, the only file that matters is `package.json`.
+function build-source-for {
+    local dir="$1"
+    local targetDir="${outDir}/work/${dir}"
+
+    mkdir -p "${targetDir}"
+
+    # Copy original source.
+    rsync --archive --delete "${baseDir}/${dir}/" "${targetDir}"
+
+    # Combine in the overlay source (if any).
+    if [[ ${overlayDir} != '' ]]; then
+        rsync --archive "${overlayDir}/${dir}/" "${targetDir}"
+    fi
+
+    # Remove files we don't care about.
+    cd "${targetDir}"
+    find . -type f '!' -name 'package.json' -exec rm '{}' ';'
+}
+
 # Creates a box for the given directory's dependencies.
 function make-box {
     local dir="$1"
 
-    cd "${outDir}"
+    build-source-for "${dir}"
 
-    ./work/npmbox/node_modules/.bin/npmbox -t out "file:./work/${dir}" \
+    cd "${outDir}"
+    ./work/npmbox/node_modules/.bin/npmbox -t out "./work/${dir}/package.json" \
         || return 1
 
     # Only overwrite the pre-existing file if the boxing was successful.
@@ -207,7 +192,6 @@ function rm-source {
 
 (
     set-up-out \
-        && build-source \
         && get-npmbox \
         && make-box client \
         && make-box server \

@@ -133,24 +133,27 @@ tar -x -z -f "${boxFile}" -C "${tmpDir}" || exit 1
 mv "${tmpDir}/.npmbox.cache" "${tmpDir}/box" || exit 1
 
 # Make the `npm install` call in the requested directory. What we do here is
-# similar to (but not quite exactly) what `npmunbox` does. In particular, we ask
-# `npm` to install a local package using the contents of the `.npmbox` as its
-# cache (and avoiding calling out to the net for anything). `npmunbox`, on the
-# other hand, doesn't let you "root" your install on a local package in this
-# manner.
+# effectively identical to what `npmunbox --install` does.
 #
-# TODO: Make a PR for the `npmbox` project which adds this behavior as an
-# option.
-
-# The `HTTPS_PROXY` definition prevents network connections from being made
-# when there's trouble. (That is, it causes a proper fast failure.)
-export HTTPS_PROXY=http://blort.blort/blort
+# TODO: Consider using `npmunbox` directly, since it supports this behavior
+# using the `--install` option (which was added sometime after this script was
+# created).
 
 # `--cache` points at the box. `--cache-min` tells it to consider the cache to
 # be non-stale (900... seconds is about 2800 years). The `--fetch-` arguments
-# keep it from trying in vain to hit the network if something goes wrong.
+# keep it from trying in vain to hit the network if something goes wrong. The
+# `*proxy` definitions prevent `npm` from actually attempting a real network
+# connection if it decides that there's something missing from a box. (That is,
+# it causes a proper fast failure.)
+#
+# **Note:** Port 37 is associated with the traditional "time" protocol. (a) It
+# is commonly disabled. (b) If enabled, it will not respond like an HTTP(S)
+# proxy. (c) If enabled, it also won't actually do anything dire if we send
+# garbage data to it.
 npm \
     --cache="${tmpDir}/box" --cache-min=90000000000 \
     --fetch-retries=0 --fetch-retry-factor=0 \
     --fetch-retry-mintimeout=1 --fetch-retry-maxtimeout=2 \
+    --proxy=http://127.0.0.1:37/network-is-disabled \
+    --https-proxy=http://127.0.0.1:37/network-is-disabled \
     install
