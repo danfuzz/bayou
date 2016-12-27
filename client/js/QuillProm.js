@@ -5,13 +5,13 @@
 import Delta from 'quill-delta';
 import Quill from 'quill';
 
-/** Shared access key for communication between `TextChange` and `QuillProm`. */
+/** Shared access key for communication between `DocumentChange` and `QuillProm`. */
 const ACCESS_KEY = ['QuillProm'];
 
 /**
  * Representation of a text change.
  */
-class TextChange {
+class DocumentChange {
   constructor(delta, oldContents, source) {
     this.delta = Object.freeze(delta);
     this.oldContents = Object.freeze(oldContents);
@@ -35,7 +35,7 @@ class TextChange {
         throw new Error('Invalid access.');
       }
 
-      nextNow = new TextChange(...args);
+      nextNow = new DocumentChange(...args);
       resolveNext(nextNow);
       return nextNow;
     });
@@ -70,9 +70,9 @@ export default class QuillProm extends Quill {
 
     /**
      * The most recent resolved text change value. It is initialized as defined
-     * by the documentation for `latestTextChange`.
+     * by the documentation for `currentChange`.
      */
-    this._latestTextChange = new TextChange(new Delta(), new Delta(), API);
+    this._currentChange = new DocumentChange(new Delta(), new Delta(), API);
 
     // We attach to the `EDITOR_CHANGE` event. This isn't exposed Quill API,
     // but in the current (as of this writing) implementation, Quill will emit
@@ -88,16 +88,16 @@ export default class QuillProm extends Quill {
     // we're first.
     this.emitter.on(EDITOR_CHANGE, (type, ...rest) => {
       if (type === TEXT_CHANGE) {
-        this._latestTextChange =
-          this._latestTextChange._gotChange(ACCESS_KEY, ...rest);
+        this._currentChange =
+          this._currentChange._gotChange(ACCESS_KEY, ...rest);
       }
     });
   }
 
   /**
-   * The latest text change that has been made to this instance. It is always
-   * a regular value (not a promise), in particular an object with bindings as
-   * follows:
+   * The current (latest / most recent) document change that has been made to
+   * this instance. It is always a regular value (not a promise), in particular
+   * an object with bindings as follows:
    *
    * * `delta` -- Same as with `text-change` events.
    * * `oldContents` -- Same as with `text-change` events.
@@ -106,9 +106,9 @@ export default class QuillProm extends Quill {
    *   to iterate over changes as they continue to happen.
    * * `nextNow` -- The next change after this one as a regular object (not a
    *   promise), but only if it is already available. You can use this to
-   *   synchronously iterate up to the latest change, and know if in fact the
-   *   change you are looking at is the latest (because `nextNow` will be
-   *   `null` until the next change actually happens).
+   *   synchronously iterate up to the current (latest) change, and know if in
+   *   fact the change you are looking at is the current one (because `nextNow`
+   *   will be `null` until the next change actually happens).
    *
    * The value is always read-only to help protect clients from each other (or
    * from inadvertently messing with themselves).
@@ -116,15 +116,7 @@ export default class QuillProm extends Quill {
    * If accessed before any changes have ever been made to this instance,
    * `delta` and `oldContents` are both empty deltas.
    */
-  get latestTextChange() {
-    return this._latestTextChange;
-  }
-
-  /**
-   * Promise for the next text change that gets made to this instance. This
-   * is just a convenient shorthand for `latestTextChange.next`.
-   */
-  get nextTextChange() {
-    return this._latestTextChange.next;
+  get currentChange() {
+    return this._currentChange;
   }
 }

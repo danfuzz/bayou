@@ -138,8 +138,8 @@ const watchOptions = {
      /** Memory FS used to hold the immediate results of compilation. */
      this._fs = new memory_fs();
 
-     /** Latest compiled bundle. */
-     this._latestBundle = null;
+     /** Current (most recently built) compiled bundle. */
+     this._currentBundle = null;
 
      /** Dev mode running? */
      this._devModeRunning = false;
@@ -189,7 +189,7 @@ const watchOptions = {
      // Find the written bundle in the memory FS, read it, and then delete it.
      // See comments in `_newCompiler()`, above, for rationale.
      try {
-       this._latestBundle = this._fs.readFileSync('/bundle.js');
+       this._currentBundle = this._fs.readFileSync('/bundle.js');
        this._fs.unlinkSync('/bundle.js');
      } catch (e) {
        // File not found. This will happen when it turns out there were no
@@ -204,9 +204,9 @@ const watchOptions = {
    * handler function if bound to `this`.
    */
   _requestHandler(req, res) {
-    if (this._latestBundle) {
+    if (this._currentBundle) {
       res.type('application/javascript');
-      res.send(this._latestBundle);
+      res.send(this._currentBundle);
     } else {
       // This request came in before a bundle has ever been built. Instead of
       // trying to get too fancy, we just wait a second and retry (which itself
@@ -221,7 +221,7 @@ const watchOptions = {
   build() {
     const compiler = this._newCompiler();
     compiler.run(this._handleCompilation.bind(this));
-    return this._latestBundle;
+    return this._currentBundle;
   }
 
   /**

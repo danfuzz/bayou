@@ -98,7 +98,7 @@ class Events {
    * Constructs a `gotLocalDelta` event. This indicates that there is at least
    * one local change that Quill has made to its document which is not yet
    * reflected in the given base document. Put another way, this indicates that
-   * `_latestTextChange` has a resolved `next`.
+   * `_currentChange` has a resolved `next`.
    *
    * @param baseDoc The document (version and data) at the time of the original
    *   request.
@@ -207,18 +207,21 @@ export default class DocumentPlumbing {
     this._state = 'detached';
 
     /**
-     * Latest version of the document as received from the server. An object
+     * Current version of the document as received from the server. An object
      * that binds `version` (version number) and `data` (a from-empty `Delta`).
      * Becomes non-null once the first snapshot is received from the server.
      */
     this._doc = null;
 
     /**
-     * Latest local change to the document made by Quill. This is initialized
-     * by getting `Quill.nextTextChange` and is generally updated by
-     * retrieving `.nextNow` from the value (or its replacement, etc.).
+     * Current (most recent) local change to the document made by Quill that
+     * this instance is aware of. That is, `_currentChange.next` (once it
+     * resolves) is the first change that this instance has not yet processed.
+     * This variable is initialized by getting `Quill.currentChange` and is
+     * generally updated by retrieving `.nextNow` from the value (or its
+     * replacement, etc.).
      */
-    this._latestTextChange = null;
+    this._currentChange = null;
 
     /**
      * Is there currently a pending (as-yet unfulfilled) `deltaAfter()` request
@@ -228,9 +231,9 @@ export default class DocumentPlumbing {
 
     /**
      * Is there currently a pending (as-yet unfulfilled) request for a new
-     * local change via the Quill text change promise chain?
+     * local change via the Quill document change promise chain?
      */
-    this._pendingLocalTextChange = false;
+    this._pendingLocalDocumentChange = false;
 
     /** Count of events handled. Used for logging. */
     this._eventCount = 0;
@@ -347,9 +350,9 @@ export default class DocumentPlumbing {
     // pick up the pieces of any changes that were in-flight when the connection
     // became problematic.
     this._doc = null;
-    this._latestTextChange = null;
+    this._currentChange = null;
     this._pendingDeltaAfter = false;
-    this._pendingLocalTextChange = false;
+    this._pendingLocalDocumentChange = false;
 
     // Reopen the connection to the server.
     this._api.open();
@@ -380,14 +383,14 @@ export default class DocumentPlumbing {
    * In state `starting`, handles event `gotSnapshot`.
    */
   _handle_starting_gotSnapshot(event) {
-    // Save the result as the latest known version of the document, and tell
-    // Quill about it.
+    // Save the result as the current (latest known) version of the document,
+    // and tell Quill about it.
     this._updateDocWithSnapshot(event.version, event.data);
 
     // The above action should have caused the Quill instance to make a change
     // which shows up on its change chain. Grab it, and verify that indeed it's
     // the change we're expecting.
-    const firstChange = this._quill.latestTextChange;
+    const firstChange = this._quill.currentChange;
     if (firstChange.source !== PLUMBING_SOURCE) {
       // We expected the change to be the one we generated from the doc
       // update (above), but the `source` we got speaks otherwise.
@@ -396,7 +399,7 @@ export default class DocumentPlumbing {
 
     // With the Quill setup verified, remember the change as our local "head"
     // as the most recent change we've dealt with.
-    this._latestTextChange = firstChange;
+    this._currentChange = firstChange;
 
     // And with that, it's now safe to enable Quill so that it will accept user
     // input.
@@ -420,19 +423,19 @@ export default class DocumentPlumbing {
     // here become resolved.
     const baseDoc = this._doc;
 
-    // Ask Quill for any changes we haven't yet observed, via the text change
-    // promise chain, but only if there isn't already a pending request for
-    // same. (Otherwise, we would unnecessarily build up redundant promise
+    // Ask Quill for any changes we haven't yet observed, via the document
+    // change promise chain, but only if there isn't already a pending request
+    // for same. (Otherwise, we would unnecessarily build up redundant promise
     // resolver functions when changes are coming in from the server while the
     // local user is idle.)
-    if (!this._pendingLocalTextChange) {
-      this._pendingLocalTextChange = true;
+    if (!this._pendingLocalDocumentChange) {
+      this._pendingLocalDocumentChange = true;
 
       // **Note:** As of this writing, Quill will never reject (report an error
-      // on) a text change promise.
-      this._latestTextChange.next.then(
+      // on) a document change promise.
+      this._currentChange.next.then(
         (value) => {
-          this._pendingLocalTextChange = false;
+          this._pendingLocalDocumentChange = false;
           this._event(Events.gotLocalDelta(baseDoc));
         }
       );
@@ -514,7 +517,7 @@ export default class DocumentPlumbing {
    */
   _handle_idle_gotLocalDelta(event) {
     const baseDoc = event.baseDoc;
-    const change = this._latestTextChange.nextNow;
+    const change = this._currentChange.nextNow;
 
     if ((this._doc.version !== baseDoc.version) || (change === null)) {
       // The event was generated with respect to a version of the document which
@@ -529,7 +532,7 @@ export default class DocumentPlumbing {
       // loop. Since we're in state `idle`, there aren't any other pending
       // changes to worry about, so we just ignore the change (skip it in the
       // chain) and go back to idling.
-      this._latestTextChange = change;
+      this._currentChange = change;
       return IDLE_EVENT_TRANSITION;
     }
 
@@ -567,9 +570,9 @@ export default class DocumentPlumbing {
 
     // Build up a combined (composed) delta of all of the changes starting just
     // after the last integrated change (the last change that was sent to the
-    // server) through the latest change. This _excludes_ internally-sourced
-    // changes, because we will handle those on the next iteration (from the
-    // idle state).
+    // server) through the current (latest) change. This _excludes_
+    // internally-sourced changes, because we will handle those on the next
+    // iteration (from the idle state).
     const delta = this._consumeLocalChanges();
 
     if (DeltaUtil.isEmpty(delta)) {
@@ -626,7 +629,7 @@ export default class DocumentPlumbing {
 
     // The server merged in some changes that we didn't expect.
 
-    if (this._latestTextChange.nextNow === null) {
+    if (this._currentChange.nextNow === null) {
       // Thanfully, the local user hasn't made any other changes while we
       // were waiting for the server to get back to us. We need to tell
       // Quill about the changes, but we don't have to do additional merging.
@@ -662,7 +665,7 @@ export default class DocumentPlumbing {
     //    `dCorrection`, yielding `dNewMore` This is the delta which can be
     //    sent back to the server as a change that captures the new local
     //    changes. Instead of sending it directly here, construct a
-    //    "synthetic" value for `_latestTextChange.nextNow`, and hook it up
+    //    "synthetic" value for `_currentChange.nextNow`, and hook it up
     //    so that it will get noticed once we go back into the `idle` state.
 
     // (1)
@@ -683,7 +686,7 @@ export default class DocumentPlumbing {
     // "complements" of each other.
     const dNewMore = dCorrection.transform(dMore, true);
 
-    // This is the synthetic text change which substitutes for the changes
+    // This is the synthetic document change which substitutes for the changes
     // that we consumed to construct `dMore` above. We use `user` for the
     // source and not `PLUMBING_SOURCE` because, even though we are in fact
     // making this change here (per se), the changes notionally came from
@@ -691,12 +694,12 @@ export default class DocumentPlumbing {
     const nextNow = {
       delta:   dNewMore,
       source:  'user',
-      next:    this._latestTextChange.next,
+      next:    this._currentChange.next,
       nextNow: null
     };
 
     // This hooks up `nextNow.nextNow` to become non-null when the original
-    // `_latestTextChange.nextNow` resolves. This maintains the invariant
+    // `_currentChange.nextNow` resolves. This maintains the invariant
     // that we rely on elsewhere (and which is provided under normal
     // circumstances by `QuillProm`), specifically that `change.nextNow`
     // becomes non-null as soon as `change.next` resolves to a value.
@@ -704,7 +707,7 @@ export default class DocumentPlumbing {
 
     // Make a new head of the change chain which points at the `nextNow` we
     // just constructed above.
-    this._latestTextChange = {
+    this._currentChange = {
       nextNow: nextNow,
       next:    Promise.resolve(nextNow)
     };
@@ -713,11 +716,11 @@ export default class DocumentPlumbing {
   }
 
   /**
-   * Gets a combined (composed) delta of all text changes that have been made
-   * to the Quill instance since the last time changes were integrated into
+   * Gets a combined (composed) delta of all document changes that have been
+   * made to the Quill instance since the last time changes were integrated into
    * the server version of the document, optionally stopping at (and not
    * including) changes whose source is `PLUMBING_SOURCE` (that is, this class).
-   * Updates `_latestTextChange` to indicate that all of these changes have in
+   * Updates `_currentChange` to indicate that all of these changes have in
    * fact been consumed.
    *
    * @param includeOurChanges If `true` indicates that changes with source
@@ -729,7 +732,7 @@ export default class DocumentPlumbing {
   _consumeLocalChanges(includeOurChanges = false) {
     let delta = null;
 
-    let change = this._latestTextChange;
+    let change = this._currentChange;
     while (change.nextNow !== null) {
       change = change.nextNow;
       if (!(includeOurChanges || (change.source !== PLUMBING_SOURCE))) {
@@ -740,7 +743,7 @@ export default class DocumentPlumbing {
     }
 
     // Remember that we consumed all these changes.
-    this._latestTextChange = change;
+    this._currentChange = change;
 
     return DeltaUtil.coerce(delta);
   }
@@ -761,7 +764,7 @@ export default class DocumentPlumbing {
    *   ahead of `_doc` due to local activity. This defaults to `delta`.
    */
   _updateDocWithDelta(version, delta, quillDelta = delta) {
-    if (this._latestTextChange.nextNow !== null) {
+    if (this._currentChange.nextNow !== null) {
       // It is unsafe to apply the delta as-is, because we know that Quill's
       // version of the document has diverged.
       throw new Error('Cannot apply delta due to version skew.');

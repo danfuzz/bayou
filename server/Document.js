@@ -52,7 +52,7 @@ export default class Document {
    * The version number corresponding to the current (latest) version of the
    * document.
    */
-  get latestVersion() {
+  get currentVerNum() {
     return this._changes.length - 1;
   }
 
@@ -60,7 +60,7 @@ export default class Document {
    * The version number corresponding to the very next change that will be
    * made to the document.
    */
-  get nextVersion() {
+  get nextVerNum() {
     return this._changes.length;
   }
 
@@ -75,7 +75,7 @@ export default class Document {
    * @returns An object representing that change.
    */
   change(version) {
-    version = this._versionNumber(version);
+    version = this._validateVerNum(version);
     return this._changes[version];
   }
 
@@ -88,7 +88,7 @@ export default class Document {
    *   the version number.
    */
   snapshot(version) {
-    version = this._versionNumber(version, true);
+    version = this._validateVerNum(version, true);
 
     // Search backward through the full versions for a base for forward
     // composition.
@@ -144,10 +144,10 @@ export default class Document {
    *   `baseVersion`.
    */
   deltaAfter(baseVersion) {
-    const latestVersion = this.latestVersion;
-    baseVersion = this._versionNumber(baseVersion, false);
+    const currentVerNum = this.currentVerNum;
+    baseVersion = this._validateVerNum(baseVersion, false);
 
-    if (baseVersion !== latestVersion) {
+    if (baseVersion !== currentVerNum) {
       // We can fulfill the result immediately. Compose all the deltas from
       // the version after the base through the current version.
       const delta = this._composeVersions(baseVersion + 1);
@@ -155,7 +155,7 @@ export default class Document {
       // We don't just return a plain value (that is, we still return a promise)
       // because of the usual hygenic recommendation to always return either
       // an immediate result or a promise from any given function.
-      return Promise.resolve({version: latestVersion, delta: delta});
+      return Promise.resolve({version: currentVerNum, delta: delta});
     }
 
     // Force the `_changeCondition` to `false` (though it might already be
@@ -185,31 +185,31 @@ export default class Document {
    *   used to get the new document state.
    */
   applyDelta(baseVersion, delta) {
-    baseVersion = this._versionNumber(baseVersion, false);
+    baseVersion = this._validateVerNum(baseVersion, false);
 
-    if (baseVersion === this.latestVersion) {
-      // The easy case: Apply a delta to the latest version (unless it's empty,
+    if (baseVersion === this.currentVerNum) {
+      // The easy case: Apply a delta to the current version (unless it's empty,
       // in which case we don't have to make a new version at all; that's
       // handled by `_appendDelta()`).
       this._appendDelta(delta);
       return {
         delta: [], // That is, there was no correction.
-        version: this.latestVersion // `_appendDelta()` updates the version.
+        version: this.currentVerNum // `_appendDelta()` updates the version.
       }
     }
 
     // The hard case: The client has requested an application of a delta
     // (hereafter `dClient`) against a version of the document which is _not_
-    // the latest version (hereafter, `vBase` for the common base and `vLatest`
-    // for the latest version). Here's what we do:
+    // the current version (hereafter, `vBase` for the common base and
+    // `vCurrent` for the current version). Here's what we do:
     //
     // 1. Construct a combined delta for all the server changes made between
-    //    `vBase` and `vLatest`. This is `dServer`.
+    //    `vBase` and `vCurrent`. This is `dServer`.
     // 2. Transform (rebase) `dClient` with regard to (on top of) `dServer`.
     //    This is `dNext`. If `dNext` turns out to be empty, stop here and
     //    report that fact.
-    // 3. Apply `dNext` to `vLatest`, producing `vNext` as the new latest server
-    //    version.
+    // 3. Apply `dNext` to `vCurrent`, producing `vNext` as the new current
+    //    server version.
     // 4. Apply `dClient` to `vBase` to produce `vExpected`, that is, the result
     //    that the client would have expected in the easy case. Construct a
     //    delta from `vExpected` to `vNext` (that is, the diff). This is
@@ -221,7 +221,7 @@ export default class Document {
     const dClient    = delta;
     const vBaseNum   = baseVersion;
     const vBase      = this.snapshot(vBaseNum).data;
-    const vLatestNum = this.latestVersion;
+    const vCurrentNum = this.currentVerNum;
 
     // (1)
     const dServer = this._composeVersions(vBaseNum + 1);
@@ -235,7 +235,7 @@ export default class Document {
     if (DeltaUtil.isEmpty(dNext)) {
       return {
         delta: [], // That is, there was no correction.
-        version: this.latestVersion
+        version: this.currentVerNum
       }
     }
 
@@ -249,7 +249,7 @@ export default class Document {
 
     return {
       delta: dCorrection,
-      version: this.latestVersion
+      version: this.currentVerNum
     }
   }
 
@@ -265,19 +265,19 @@ export default class Document {
    *   result.
    * @param endExclusive (optional) Version number for just after the last delta
    *   to include, or alternatively thought, of the first version to exclude
-   *   from the result. If not passed, defaults to `nextVersion`, that is, the
-   *   version just past the latest version.
+   *   from the result. If not passed, defaults to `nextVerNum`, that is, the
+   *   version just past the current (latest) version.
    * @returns The composed delta consisting of versions `startInclusive`
    *   through but not including `endExclusive`.
    */
-  _composeVersions(startInclusive, endExclusive = this.nextVersion) {
+  _composeVersions(startInclusive, endExclusive = this.nextVerNum) {
     // Validate parameters.
     if (startInclusive < 0) {
       throw new Error('startInclusive < 0');
     } else if (endExclusive < startInclusive) {
       throw new Error('endExclusive < startInclusive');
-    } else if (endExclusive > this._changes.length) {
-      throw new Error('endExclusive > this.nextVersion');
+    } else if (endExclusive > this.nextVerNum) {
+      throw new Error('endExclusive > this.nextVerNum');
     }
 
     if (startInclusive === endExclusive) {
@@ -313,19 +313,19 @@ export default class Document {
    * Checks a version number for sanity. Throws an error when insane.
    *
    * @param version the (alleged) version number to check
-   * @param wantLatest if `true` indicates that `undefined` should be treated as
-   * a request for the latest version. If `false`, `undefined` is an error.
+   * @param wantCurrent if `true` indicates that `undefined` should be treated
+   * as a request for the current version. If `false`, `undefined` is an error.
    * @returns the version number
    */
-  _versionNumber(version, wantLatest) {
-    if (wantLatest && (version === undefined)) {
-      return this.latestVersion;
+  _validateVerNum(version, wantCurrent) {
+    if (wantCurrent && (version === undefined)) {
+      return this.currentVerNum;
     }
 
     if (   (typeof version !== 'number')
         || (version !== Math.floor(version))
         || (version < 0)
-        || (version > this.latestVersion)) {
+        || (version > this.currentVerNum)) {
       throw new Error(`Bad version number: ${version}`);
     }
 
