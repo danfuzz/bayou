@@ -74,7 +74,7 @@ const LOG_LENGTH_MSEC = 1000 * 60 * 60; // One hour.
   /**
    * Gets a snapshot of the current document.
    *
-   * * `/snapshot` -- Gets the latest version.
+   * * `/snapshot` -- Gets the current (latest) version.
    * * `/snapshot/NNN` -- Gets version NNN.
    */
   _snapshot(req, res) {
