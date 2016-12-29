@@ -1,6 +1,6 @@
 {
   "name": "bayou-client",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Browser code for Bayou",
   "license": "Apache-2.0",
   "author": "Dan Bornstein <danfuzz@milk.com>",
@@ -17,6 +17,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "object-inspect": "^1.2.1",
     "quill": "^1.1.7"
   }
 }

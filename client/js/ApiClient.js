@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import JsonUtil from 'json-util';
 import SeeAll from 'see-all';
 import WebsocketCodes from 'websocket-codes';
 
@@ -211,7 +212,7 @@ export default class ApiClient {
    * `this._callbacks`. That callback is then called in a separate tick.
    */
   _handleMessage(event) {
-    const payload = JSON.parse(event.data);
+    const payload = JsonUtil.parseFrozen(event.data);
     const id = payload.id;
     let result = payload.result;
     const error = payload.error;
@@ -309,18 +310,18 @@ export default class ApiClient {
    * API call `deltaAfter`. Requests a delta for a newer version with respect
    * to a given version.
    */
-  deltaAfter(baseVersion) {
-    return this._send('deltaAfter', {baseVersion: baseVersion});
+  deltaAfter(baseVerNum) {
+    return this._send('deltaAfter', {baseVerNum: baseVerNum});
   }
 
   /**
    * API call `applyDelta`. Sends a change to the server in the form of a
    * base version number and delta therefrom. Returns a promise for the
    * result, which is an object consisting of a new version number, and a
-   * delta which can be applied to the version corresponding to `baseVersion`
+   * delta which can be applied to the version corresponding to `baseVerNum`
    * to get the new version.
    */
-  applyDelta(baseVersion, delta) {
-    return this._send('applyDelta', {baseVersion: baseVersion, delta: delta});
+  applyDelta(baseVerNum, delta) {
+    return this._send('applyDelta', {baseVerNum: baseVerNum, delta: delta});
   }
 };

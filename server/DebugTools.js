@@ -55,11 +55,11 @@ const LOG_LENGTH_MSEC = 1000 * 60 * 60; // One hour.
     */
    _change(req, res) {
      const match = req.url.match(/\/([0-9]+)$/);
-     const version = Number.parseInt(match[1]);
+     const verNum = Number.parseInt(match[1]);
      let result;
 
      try {
-       const change = this._doc.change(version);
+       const change = this._doc.change(verNum);
        result = JSON.stringify(change, null, 2);
      } catch (e) {
        result = `Error:\n\n${e.stack}`;
@@ -79,11 +79,11 @@ const LOG_LENGTH_MSEC = 1000 * 60 * 60; // One hour.
    */
   _snapshot(req, res) {
     const match = req.url.match(/\/([0-9]+)$/);
-    const version = match ? [Number.parseInt(match[1])] : [];
+    const verNum = match ? [Number.parseInt(match[1])] : [];
     let result;
 
     try {
-      const snapshot = this._doc.snapshot(...version);
+      const snapshot = this._doc.snapshot(...verNum);
       result = JSON.stringify(snapshot, null, 2);
     } catch (e) {
       result = `Error:\n\n${e.stack}`;

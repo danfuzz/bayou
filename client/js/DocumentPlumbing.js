@@ -2,8 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import Delta from 'quill-delta';
-
 import DeltaUtil from 'delta-util';
 import PromDelay from 'prom-delay';
 import SeeAll from 'see-all';
@@ -65,15 +63,15 @@ class Events {
    * @param expectedData The expected result of the merge. This will be the
    *   actual result if there are no other intervening changes (indicated by the
    *   fact that `delta` is empty).
-   * @param version The version number of the resulting document.
+   * @param verNum The version number of the resulting document.
    * @param delta The delta from `expectedData`.
    * @returns The constructed event.
    */
-  static gotApplyDelta(expectedData, version, delta) {
+  static gotApplyDelta(expectedData, verNum, delta) {
     return {
       name:         'gotApplyDelta',
       expectedData: expectedData,
-      version:      version,
+      verNum:       verNum,
       delta:        delta
     };
   }
@@ -86,12 +84,12 @@ class Events {
    *
    * @param baseDoc The document (version and data) at the time of the original
    *   request.
-   * @param version The version number of the document.
+   * @param verNum The version number of the document.
    * @param delta The delta from `baseDoc`.
    * @returns The constructed event.
    */
-  static gotDeltaAfter(baseDoc, version, delta) {
-    return {name: 'gotDeltaAfter', baseDoc: baseDoc, version: version, delta: delta};
+  static gotDeltaAfter(baseDoc, verNum, delta) {
+    return {name: 'gotDeltaAfter', baseDoc: baseDoc, verNum: verNum, delta: delta};
   }
 
   /**
@@ -112,12 +110,12 @@ class Events {
    * Constructs a `gotSnapshot` event. This represents a successful result from
    * the API call `snapshot()`. Keys are as defined by that API.
    *
-   * @param version The version number of the document.
+   * @param verNum The version number of the document.
    * @param data The document data.
    * @returns The constructed event.
    */
-  static gotSnapshot(version, data) {
-    return {name: 'gotSnapshot', version: version, data: data};
+  static gotSnapshot(verNum, data) {
+    return {name: 'gotSnapshot', verNum: verNum, data: data};
   }
 
   /**
@@ -208,7 +206,7 @@ export default class DocumentPlumbing {
 
     /**
      * Current version of the document as received from the server. An object
-     * that binds `version` (version number) and `data` (a from-empty `Delta`).
+     * that binds `verNum` (version number) and `data` (a from-empty `Delta`).
      * Becomes non-null once the first snapshot is received from the server.
      */
     this._doc = null;
@@ -370,7 +368,7 @@ export default class DocumentPlumbing {
     // TODO: This should probably arrange for a timeout.
     this._api.snapshot().then(
       (value) => {
-        this._event(Events.gotSnapshot(value.version, value.data));
+        this._event(Events.gotSnapshot(value.verNum, value.data));
       },
       (error) => {
         this._event(Events.apiError('snapshot', error));
@@ -385,7 +383,7 @@ export default class DocumentPlumbing {
   _handle_starting_gotSnapshot(event) {
     // Save the result as the current (latest known) version of the document,
     // and tell Quill about it.
-    this._updateDocWithSnapshot(event.version, event.data);
+    this._updateDocWithSnapshot(event.verNum, event.data);
 
     // The above action should have caused the Quill instance to make a change
     // which shows up on its change chain. Grab it, and verify that indeed it's
@@ -447,10 +445,10 @@ export default class DocumentPlumbing {
     if (!this._pendingDeltaAfter) {
       this._pendingDeltaAfter = true;
 
-      this._api.deltaAfter(baseDoc.version).then(
+      this._api.deltaAfter(baseDoc.verNum).then(
         (value) => {
           this._pendingDeltaAfter = false;
-          this._event(Events.gotDeltaAfter(baseDoc, value.version, value.delta));
+          this._event(Events.gotDeltaAfter(baseDoc, value.verNum, value.delta));
         },
         (error) => {
           this._pendingDeltaAfter = false;
@@ -476,17 +474,17 @@ export default class DocumentPlumbing {
    */
   _handle_idle_gotDeltaAfter(event) {
     const baseDoc = event.baseDoc;
-    const version = event.version;
+    const verNum = event.verNum;
     const delta = event.delta;
 
-    log.detail(`Delta from server: v${version}`, delta);
+    log.detail(`Delta from server: v${verNum}`, delta);
 
     // We only take action if the result's base (what `delta` is with regard to)
     // is the current `_doc`. If that _isn't_ the case, then what we have here
     // is a stale response of one sort or another. For example (and most
     // likely), it might be the delayed result from an earlier iteration.
-    if (this._doc.version === baseDoc.version) {
-      this._updateDocWithDelta(version, delta);
+    if (this._doc.verNum === baseDoc.verNum) {
+      this._updateDocWithDelta(verNum, delta);
     }
 
     // Fire off the next iteration of requesting server changes. We do this via
@@ -519,7 +517,7 @@ export default class DocumentPlumbing {
     const baseDoc = event.baseDoc;
     const change = this._currentChange.nextNow;
 
-    if ((this._doc.version !== baseDoc.version) || (change === null)) {
+    if ((this._doc.verNum !== baseDoc.verNum) || (change === null)) {
       // The event was generated with respect to a version of the document which
       // has since been updated, or we ended up having two events for the same
       // change (which can happen if the user is particularly chatty) and this
@@ -562,7 +560,7 @@ export default class DocumentPlumbing {
   _handle_collecting_wantApplyDelta(event) {
     const baseDoc = event.baseDoc;
 
-    if (this._doc.version !== baseDoc.version) {
+    if (this._doc.verNum !== baseDoc.verNum) {
       // As with the `gotLocalDelta` event, we ignore this event if the doc has
       // changed out from under us.
       return IDLE_EVENT_TRANSITION;
@@ -589,9 +587,9 @@ export default class DocumentPlumbing {
     const expectedData = this._doc.data.compose(delta);
 
     // Send the delta, and handle the response.
-    this._api.applyDelta(this._doc.version, delta).then(
+    this._api.applyDelta(this._doc.verNum, delta).then(
       (value) => {
-        this._event(Events.gotApplyDelta(expectedData, value.version, value.delta));
+        this._event(Events.gotApplyDelta(expectedData, value.verNum, value.delta));
       },
       (error) => {
         this._event(Events.apiError('applyDelta', error));
@@ -609,9 +607,9 @@ export default class DocumentPlumbing {
     // side. See `Document.js`.
     const vExpected = event.expectedData;
     const dCorrection = DeltaUtil.coerce(event.delta);
-    const version = event.version;
+    const verNum = event.verNum;
 
-    log.detail(`Correction from server: v${version}`, dCorrection);
+    log.detail(`Correction from server: v${verNum}`, dCorrection);
 
     if (DeltaUtil.isEmpty(dCorrection)) {
       // There is no change from what we expected. This means that no other
@@ -623,7 +621,7 @@ export default class DocumentPlumbing {
       // from Quill) while the server request was in flight, they will be picked
       // up promptly due to the handling of the `wantChanges` event which will
       // get fired off immediately.
-      this._updateDocWithSnapshot(version, vExpected, false);
+      this._updateDocWithSnapshot(verNum, vExpected, false);
       return IDLE_EVENT_TRANSITION;
     }
 
@@ -633,7 +631,7 @@ export default class DocumentPlumbing {
       // Thanfully, the local user hasn't made any other changes while we
       // were waiting for the server to get back to us. We need to tell
       // Quill about the changes, but we don't have to do additional merging.
-      this._updateDocWithDelta(version, dCorrection);
+      this._updateDocWithDelta(verNum, dCorrection);
       return IDLE_EVENT_TRANSITION;
     }
 
@@ -676,7 +674,7 @@ export default class DocumentPlumbing {
     // `false` indicates that `dMore` should be taken to have been applied
     // second (lost any insert races or similar).
     const dIntegratedCorrection = dMore.transform(dCorrection, false);
-    this._updateDocWithDelta(version, dCorrection, dIntegratedCorrection);
+    this._updateDocWithDelta(verNum, dCorrection, dIntegratedCorrection);
 
     // (3)
 
@@ -755,7 +753,7 @@ export default class DocumentPlumbing {
    * document that Quill has is the same as what is represented in `_doc`. If
    * that isn't the case, then this method will throw an error.
    *
-   * @param version New version number.
+   * @param verNum New version number.
    * @param delta Delta from the current `_doc` data; can be a `Delta` object
    *   per se or anything that `DeltaUtil.coerce()` accepts.
    * @param quillDelta (optional) Delta from Quill's current state, which is
@@ -763,7 +761,7 @@ export default class DocumentPlumbing {
    *   in `_doc`. This must be used in cases where Quill's state has progressed
    *   ahead of `_doc` due to local activity. This defaults to `delta`.
    */
-  _updateDocWithDelta(version, delta, quillDelta = delta) {
+  _updateDocWithDelta(verNum, delta, quillDelta = delta) {
     if (this._currentChange.nextNow !== null) {
       // It is unsafe to apply the delta as-is, because we know that Quill's
       // version of the document has diverged.
@@ -775,8 +773,8 @@ export default class DocumentPlumbing {
     // surprising results when `x` is an old version of `_doc`.
     const oldData = this._doc.data;
     this._doc = {
-      version: version,
-      data: DeltaUtil.isEmpty(delta) ? oldData : oldData.compose(delta)
+      verNum: verNum,
+      data:   DeltaUtil.isEmpty(delta) ? oldData : oldData.compose(delta)
     };
 
     // Tell Quill.
@@ -787,7 +785,7 @@ export default class DocumentPlumbing {
    * Updates `_doc` to have the given version and snapshot data, and optionally
    * tells the attached Quill instance to update itself accordingly.
    *
-   * @param version New version number.
+   * @param verNum New version number.
    * @param data New snapshot data; can be a `Delta` object per se or anything
    * that `DeltaUtil.coerce()` accepts.
    * @param updateQuill (default `true`) whether to inform Quill of this
@@ -795,12 +793,12 @@ export default class DocumentPlumbing {
    * to already have the changes to the document represented in `data`. (It
    * might _also_ have additional changes too.)
    */
-  _updateDocWithSnapshot(version, data, updateQuill = true) {
+  _updateDocWithSnapshot(verNum, data, updateQuill = true) {
     data = DeltaUtil.coerce(data);
 
     this._doc = {
-      version: version,
-      data: data
+      verNum: verNum,
+      data:   data
     }
 
     if (updateQuill) {
