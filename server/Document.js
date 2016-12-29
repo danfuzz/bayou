@@ -4,8 +4,6 @@
 
 import util from 'util';
 
-import Delta from 'quill-delta';
-
 import DeltaUtil from 'delta-util';
 import PromCondition from 'prom-condition';
 
@@ -44,7 +42,7 @@ export default class Document {
     this._changeCondition = new PromCondition(true);
 
     // Initialize the document with static content (for now).
-    const firstVersion = new Delta(default_document);
+    const firstVersion = DeltaUtil.coerce(default_document);
     this._changes.push(firstVersion);
   }
 
