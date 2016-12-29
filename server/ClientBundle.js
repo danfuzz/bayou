@@ -7,6 +7,7 @@ import memory_fs from 'memory-fs';
 import path from 'path';
 import webpack from 'webpack';
 
+import JsonUtil from 'json-util';
 import SeeAll from 'see-all';
 
 import ProgressMessage from './ProgressMessage';
@@ -28,7 +29,8 @@ const jsDir = path.resolve(clientDir, 'js');
  * `webpack` config.
  */
 const clientPackage =
-  JSON.parse(fs.readFileSync(path.resolve(clientDir, 'package.json')));
+  JsonUtil.parseFrozen(
+    fs.readFileSync(path.resolve(clientDir, 'package.json')));
 
 /**
  * Options passed to the `webpack` compiler constructor. Of particular note,

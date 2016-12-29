@@ -4,15 +4,16 @@
 
 import Delta from 'quill-delta';
 
-/** Immutable empty `Delta` instance. */
-const EMPTY_DELTA = Object.freeze(new Delta());
-Object.freeze(EMPTY_DELTA.ops);
+import FrozenDelta from './FrozenDelta';
+
+/** Frozen empty `Delta` instance. */
+const EMPTY_DELTA = new FrozenDelta([]);
 
 /**
  * Quill `Delta` helper utilities.
  */
 export default class DeltaUtil {
-  /** Immutable empty `Delta` instance. */
+  /** Frozen (immutable) empty `Delta` instance. */
   static get EMPTY_DELTA() {
     return EMPTY_DELTA;
   }
@@ -40,20 +41,23 @@ export default class DeltaUtil {
   }
 
   /**
-   * Coerces the given value to a `Delta`.
+   * Coerces the given value to a frozen (immutable) `Delta`.
    *
-   * * If `value` is a `Delta`, returns `value`.
-   * * If `value` is an array, constructs a `Delta` with `value` as the list of
-   *   ops.
-   * * If `value` is an object that binds `ops`, constructs a `Delta` with
-   *   `value.ops` as the list of ops.
-   * * If `value` is `null` or `undefined`, returns an empty `Delta`.
+   * * If `value` is a frozen `Delta`, returns `value`.
+   * * If `value` is a `Delta`, constructs a frozen `Delta` with the same list
+   *   of ops.
+   * * If `value` is an array, constructs a frozen `Delta` with `value` as the
+   *   list of ops.
+   * * If `value` is an object that binds `ops`, constructs a frozen `Delta`
+   *   with `value.ops` as the list of ops.
+   * * If `value` is `null` or `undefined`, returns an empty frozen `Delta`.
    * * Throws an error for any other value.
    *
    * Unlike the `Delta` constructor:
    *
    * * This method does not construct a new instance if the given value is in
-   *   fact a `Delta`.
+   *   fact a frozen `Delta`.
+   * * The result is always deeply frozen.
    * * This method will throw an error instead of silently accepting invalid
    *   values.
    *
@@ -61,14 +65,16 @@ export default class DeltaUtil {
    * @returns the corresponding `Delta`.
    */
   static coerce(value) {
-    if (value instanceof Delta) {
+    if (value instanceof FrozenDelta) {
       return value;
+    } else if (value instanceof Delta) {
+      return new FrozenDelta(value.ops);
     } else if (DeltaUtil.isEmpty(value)) {
       return EMPTY_DELTA;
     } else if (Array.isArray(value)) {
-      return new Delta(value);
+      return new FrozenDelta(value);
     } else if (Array.isArray(value.ops)) {
-      return new Delta(value.ops);
+      return new FrozenDelta(value.ops);
     }
 
     throw new Error('Invalid value.');

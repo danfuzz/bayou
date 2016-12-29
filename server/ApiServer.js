@@ -4,6 +4,7 @@
 
 import util from 'util';
 
+import JsonUtil from 'json-util';
 import RandomId from 'random-id';
 import SeeAll from 'see-all';
 import WebsocketCodes from 'websocket-codes';
@@ -51,7 +52,7 @@ export default class ApiServer {
       log.info(`${this._connectionId} handled ${this._messageCount} messages.`);
     }
 
-    msg = JSON.parse(msg);
+    msg = JsonUtil.parseFrozen(msg);
     log.detail(`${this._connectionId} message:`, msg);
 
     const method = msg.method;
