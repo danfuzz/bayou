@@ -154,7 +154,7 @@ export default class ApiServer {
   /**
    * API method `snapshot`: Returns an instantaneous snapshot of the document
    * contents. Result is an object that maps `data` to the snapshot data and
-   * `version` to the version number.
+   * `verNum` to the version number.
    */
   method_snapshot(args) {
     return this._doc.snapshot();
@@ -164,22 +164,22 @@ export default class ApiServer {
    * API method `applyDelta`: Takes a base version number and delta therefrom,
    * and applies the delta, including merging of any intermediate versions.
    * Result is an object consisting of a new version number, and a
-   * delta which can be applied to version `baseVersion` to get the new
+   * delta which can be applied to version `baseVerNum` to get the new
    * document.
    */
   method_applyDelta(args) {
-    return this._doc.applyDelta(args.baseVersion, args.delta);
+    return this._doc.applyDelta(args.baseVerNum, args.delta);
   }
 
   /**
    * API method `deltaAfter`: Returns a promise for a snapshot of any version
-   * after the given `baseVersion`, and relative to that version. Result is an
+   * after the given `baseVerNum`, and relative to that version. Result is an
    * object consisting of a new version number, and a delta which can be applied
-   * to version `baseVersion` to get the new document. If called when
-   * `baseVersion` is the current version, this will not fulfill the result
+   * to version `baseVerNum` to get the new document. If called when
+   * `baseVerNum` is the current version, this will not fulfill the result
    * promise until at least one change has been made.
    */
   method_deltaAfter(args) {
-    return this._doc.deltaAfter(args.baseVersion);
+    return this._doc.deltaAfter(args.baseVerNum);
   }
 }

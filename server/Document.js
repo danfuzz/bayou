@@ -6,6 +6,7 @@ import util from 'util';
 
 import DeltaUtil from 'delta-util';
 import PromCondition from 'prom-condition';
+import Typecheck from 'typecheck';
 
 import default_document from './default-document';
 
@@ -67,31 +68,30 @@ export default class Document {
    * sequence of changes, each modifying version N of the document to produce
    * version N+1.
    *
-   * @param version The version number of the change. The result is the change
-   *   which produced that version. E.g., `0` is a request for the first change
-   *   (the change from the empty document).
+   * @param verNum (default `currentVerNum`) The version number of the change.
+   *   The result is the change which produced that version. E.g., `0` is a
+   *   request for the first change (the change from the empty document).
    * @returns An object representing that change.
    */
-  change(version) {
-    version = this._validateVerNum(version);
-    return this._changes[version];
+  change(verNum) {
+    verNum = this._validateVerNum(verNum, true);
+    return this._changes[verNum];
   }
 
   /**
    * Returns a snapshot of the full document contents.
    *
-   * @param version (optional) Indicates which version to get; defaults to the
-   *   current version.
-   * @returns An object that maps `data` to the document data and `version` to
+   * @param verNum (default `currentVerNum`) Indicates which version to get.
+   * @returns An object that maps `data` to the document data and `verNum` to
    *   the version number.
    */
-  snapshot(version) {
-    version = this._validateVerNum(version, true);
+  snapshot(verNum) {
+    verNum = this._validateVerNum(verNum, true);
 
     // Search backward through the full versions for a base for forward
     // composition.
     let baseSnapshot = null;
-    for (let i = version; i >= 0; i--) {
+    for (let i = verNum; i >= 0; i--) {
       const v = this._snapshots[i];
       if (v) {
         baseSnapshot = v;
@@ -103,12 +103,12 @@ export default class Document {
       // We have no snapshots at all, including of even the first version. Set
       // up version 0.
       baseSnapshot = this._snapshots[0] = {
-        data: this._changes[0],
-        version: 0
+        data:   this._changes[0],
+        verNum: 0
       };
     }
 
-    if (baseSnapshot.version === version) {
+    if (baseSnapshot.verNum === verNum) {
       // Found the right version!
       return baseSnapshot;
     }
@@ -117,43 +117,43 @@ export default class Document {
     // to the base to produce the desired version. Store it, and return it.
 
     let data = baseSnapshot.data;
-    for (let i = baseSnapshot.version + 1; i <= version; i++) {
+    for (let i = baseSnapshot.verNum + 1; i <= verNum; i++) {
       data = data.compose(this._changes[i]);
     }
 
     const result = {
-      data: data,
-      version: version
+      data:   data,
+      verNum: verNum
     };
 
-    this._snapshots[version] = result;
+    this._snapshots[verNum] = result;
     return result;
   }
 
   /**
    * Returns a promise for a snapshot of any version after the given
-   * `baseVersion`, and relative to that version. If called when `baseVersion`
+   * `baseVerNum`, and relative to that version. If called when `baseVerNum`
    * is the current version, this will not resolve the result promise until at
    * least one change has been made.
    *
-   * @param baseVersion Version number for the document.
+   * @param baseVerNum Version number for the document.
    * @returns A promise which ultimately resolves to an object that maps
-   *   `version` to the new version and `delta` to a change with respect to
-   *   `baseVersion`.
+   *   `verNum` to the new version and `delta` to a change with respect to
+   *   `baseVerNum`.
    */
-  deltaAfter(baseVersion) {
+  deltaAfter(baseVerNum) {
     const currentVerNum = this.currentVerNum;
-    baseVersion = this._validateVerNum(baseVersion, false);
+    baseVerNum = this._validateVerNum(baseVerNum, false);
 
-    if (baseVersion !== currentVerNum) {
+    if (baseVerNum !== currentVerNum) {
       // We can fulfill the result immediately. Compose all the deltas from
       // the version after the base through the current version.
-      const delta = this._composeVersions(baseVersion + 1);
+      const delta = this._composeVersions(baseVerNum + 1);
 
       // We don't just return a plain value (that is, we still return a promise)
       // because of the usual hygenic recommendation to always return either
       // an immediate result or a promise from any given function.
-      return Promise.resolve({version: currentVerNum, delta: delta});
+      return Promise.resolve({verNum: currentVerNum, delta: delta});
     }
 
     // Force the `_changeCondition` to `false` (though it might already be
@@ -163,7 +163,7 @@ export default class Document {
       // Just recurse to do the work. Under normal circumstances it will return
       // promptly. This arrangement gracefully handles edge cases, though, such
       // as a triggered change turning out to be due to a no-op.
-      return this.deltaAfter(baseVersion);
+      return this.deltaAfter(baseVerNum);
     });
   }
 
@@ -175,24 +175,25 @@ export default class Document {
    * is to say, what the client would get if the delta were applied with no
    * intervening changes.
    *
-   * @param baseVersion Version number which `delta` is with respect to.
+   * @param baseVerNum Version number which `delta` is with respect to.
    * @param delta Delta indicating what has changed with respect to
-   *   `baseVersion`.
-   * @returns Object that binds `version` to the new version number and `delta`
+   *   `baseVerNum`.
+   * @returns Object that binds `verNum` to the new version number and `delta`
    *   to a delta _with respect to the implied expected result_ which can be
    *   used to get the new document state.
    */
-  applyDelta(baseVersion, delta) {
-    baseVersion = this._validateVerNum(baseVersion, false);
+  applyDelta(baseVerNum, delta) {
+    baseVerNum = this._validateVerNum(baseVerNum, false);
+    delta = Typecheck.frozenDelta(delta, true);
 
-    if (baseVersion === this.currentVerNum) {
+    if (baseVerNum === this.currentVerNum) {
       // The easy case: Apply a delta to the current version (unless it's empty,
       // in which case we don't have to make a new version at all; that's
       // handled by `_appendDelta()`).
       this._appendDelta(delta);
       return {
-        delta: [], // That is, there was no correction.
-        version: this.currentVerNum // `_appendDelta()` updates the version.
+        delta:  [], // That is, there was no correction.
+        verNum: this.currentVerNum // `_appendDelta()` updates the version.
       }
     }
 
@@ -217,7 +218,7 @@ export default class Document {
     // Assign variables from parameter and instance variables that correspond
     // to the description immediately above.
     const dClient    = delta;
-    const vBaseNum   = baseVersion;
+    const vBaseNum   = baseVerNum;
     const vBase      = this.snapshot(vBaseNum).data;
     const vCurrentNum = this.currentVerNum;
 
@@ -232,8 +233,8 @@ export default class Document {
 
     if (DeltaUtil.isEmpty(dNext)) {
       return {
-        delta: [], // That is, there was no correction.
-        version: this.currentVerNum
+        delta:  [], // That is, there was no correction.
+        verNum: this.currentVerNum
       }
     }
 
@@ -246,8 +247,8 @@ export default class Document {
     const dCorrection = vExpected.diff(vNext);
 
     return {
-      delta: dCorrection,
-      version: this.currentVerNum
+      delta:  dCorrection,
+      verNum: this.currentVerNum
     }
   }
 
@@ -270,13 +271,9 @@ export default class Document {
    */
   _composeVersions(startInclusive, endExclusive = this.nextVerNum) {
     // Validate parameters.
-    if (startInclusive < 0) {
-      throw new Error('startInclusive < 0');
-    } else if (endExclusive < startInclusive) {
-      throw new Error('endExclusive < startInclusive');
-    } else if (endExclusive > this.nextVerNum) {
-      throw new Error('endExclusive > this.nextVerNum');
-    }
+    startInclusive = Typecheck.intMin(startInclusive, 0);
+    endExclusive =
+      Typecheck.intRangeInc(endExclusive, startInclusive, this.nextVerNum);
 
     if (startInclusive === endExclusive) {
       return DeltaUtil.EMPTY_DELTA;
@@ -299,34 +296,31 @@ export default class Document {
    * @param delta The delta to append.
    */
   _appendDelta(delta) {
+    delta = Typecheck.frozenDelta(delta, true);
+
     if (DeltaUtil.isEmpty(delta)) {
       return;
     }
 
-    this._changes.push(DeltaUtil.coerce(delta));
+    this._changes.push(delta);
     this._changeCondition.value = true;
   }
 
   /**
    * Checks a version number for sanity. Throws an error when insane.
    *
-   * @param version the (alleged) version number to check
+   * @param verNum the (alleged) version number to check
    * @param wantCurrent if `true` indicates that `undefined` should be treated
    * as a request for the current version. If `false`, `undefined` is an error.
    * @returns the version number
    */
-  _validateVerNum(version, wantCurrent) {
-    if (wantCurrent && (version === undefined)) {
-      return this.currentVerNum;
-    }
+  _validateVerNum(verNum, wantCurrent) {
+    const current = this.currentVerNum;
 
-    if (   (typeof version !== 'number')
-        || (version !== Math.floor(version))
-        || (version < 0)
-        || (version > this.currentVerNum)) {
-      throw new Error(`Bad version number: ${version}`);
+    if (wantCurrent) {
+      return Typecheck.versionNumber(verNum, current, current);
+    } else {
+      return Typecheck.versionNumber(verNum, current);
     }
-
-    return version;
   }
 }

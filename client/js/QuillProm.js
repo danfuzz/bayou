@@ -2,8 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import Delta from 'quill-delta';
 import Quill from 'quill';
+
+import DeltaUtil from 'delta-util';
 
 /** Shared access key for communication between `DocumentChange` and `QuillProm`. */
 const ACCESS_KEY = ['QuillProm'];
@@ -72,7 +73,8 @@ export default class QuillProm extends Quill {
      * The most recent resolved text change value. It is initialized as defined
      * by the documentation for `currentChange`.
      */
-    this._currentChange = new DocumentChange(new Delta(), new Delta(), API);
+    this._currentChange = new DocumentChange(
+      DeltaUtil.EMPTY_DELTA, DeltaUtil.EMPTY_DELTA, API);
 
     // We attach to the `EDITOR_CHANGE` event. This isn't exposed Quill API,
     // but in the current (as of this writing) implementation, Quill will emit
