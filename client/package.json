@@ -17,7 +17,14 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "object-inspect": "^1.2.1",
-    "quill": "^1.1.7"
+    "quill": "^1.1.7",
+
+    "delta-util": "local",
+    "json-util": "local",
+    "prom-delay": "local",
+    "see-all": "local",
+    "see-all-browser": "local",
+    "typecheck": "local",
+    "websocket-codes": "local"
   }
 }
