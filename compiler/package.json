@@ -1,0 +1,26 @@
+{
+  "name": "bayou-compiler",
+  "version": "0.2.1",
+  "description": "Compiler (transpiler) code for Bayou",
+  "license": "Apache-2.0",
+  "author": "Dan Bornstein <danfuzz@milk.com>",
+  "contributors": [
+    "SEE AUTHORS.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danfuzz/bayou.git"
+  },
+
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "babel-core": "^6.21.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.14.0",
+    "babel-preset-es2015": "^6.14.0",
+    "babel-preset-es2016": "^6.11.3",
+    "babel-preset-es2017": "^6.14.0"
+  }
+}
