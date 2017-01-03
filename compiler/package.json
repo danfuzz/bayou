@@ -1,7 +1,7 @@
 {
-  "name": "bayou-client",
+  "name": "bayou-compiler",
   "version": "0.2.1",
-  "description": "Browser code for Bayou",
+  "description": "Compiler (transpiler) code for Bayou",
   "license": "Apache-2.0",
   "author": "Dan Bornstein <danfuzz@milk.com>",
   "contributors": [
@@ -12,19 +12,15 @@
     "url": "https://github.com/danfuzz/bayou.git"
   },
 
-  "main": "js/app.js",
+  "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "quill": "^1.1.7",
-
-    "delta-util": "local",
-    "json-util": "local",
-    "prom-delay": "local",
-    "see-all": "local",
-    "see-all-browser": "local",
-    "typecheck": "local",
-    "websocket-codes": "local"
+    "babel-core": "^6.21.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.14.0",
+    "babel-preset-es2015": "^6.14.0",
+    "babel-preset-es2016": "^6.11.3",
+    "babel-preset-es2017": "^6.14.0"
   }
 }

@@ -150,18 +150,41 @@ function add-directory-mapping {
     ) > "${dirInfoFile}"
 }
 
+# Adds new directory mappings to the build info file for each subdirectory of
+# a source directory. This includes handling of overlays if they exist.
+function add-subdirectory-mapping {
+    local fromDir="$1"
+
+    local names=($(
+        cd "${baseDir}/${fromDir}"
+        find . -mindepth 1 -maxdepth 1 -type d | cut -c 3-
+    ))
+
+    local n
+    for n in "${names[@]}"; do
+        add-directory-mapping "${fromDir}/${n}" "${fromDir}/${n}"
+    done
+}
+
 # Sets up the directory mappings from the source into the `out` directory.
 function set-up-dir-mapping {
+    # This is the sub-module that's holds the compiler (transpiler) used for
+    # processing `server` files.
+    add-directory-mapping 'compiler' 'compiler'
+
     # The `server` files ultimately go through an additional build step (hence
     # the change in directory name), though some of the files are used as-is.
     add-directory-mapping 'server' 'server-src'
-    add-directory-mapping 'local-modules' 'server-src/local-modules'
 
     # The `client` files are used as-is by the server (because it serves the
     # static assets directly and also knows how to (re)build the JavaScript
     # bundle).
     add-directory-mapping 'client' 'client'
-    add-directory-mapping 'local-modules' 'client/local-modules'
+
+    # The `local-modules` get pulled into both `client` and `server` (as
+    # required by dependencies). We make a mapping per subdirectory because it
+    # is the subdirectories (and not the whole) that get pulled in.
+    add-subdirectory-mapping 'local-modules'
 }
 
 # Copies the server and client source directories into `out`, including the
@@ -211,6 +234,30 @@ function copy-sources {
     done
 }
 
+# Fixes the `package.json` files so that local modules are referred to by
+# explicit path.
+function fix-packages {
+    local files=(
+        "${outDir}/client/package.json"
+        "${outDir}/server-src/package.json"
+        $(find "${outDir}/local-modules" -name package.json)
+    )
+
+    local f unfixed
+    for f in "${files[@]}"; do
+        unfixed="$(dirname "${f}")/package-unfixed.json"
+        if [[ -r "${unfixed}" ]]; then
+            continue
+        fi
+
+        # This one hasn't yet been fixed with regard to local dependencies.
+        # Fix it!
+        cp "${f}" "${unfixed}"
+        "${progDir}/fix-dependencies" --out="${f}" "${unfixed}" \
+            || return 1
+    done
+}
+
 # Does an `npm install` in the given directory, or the equivalent by using
 # boxed dependencies. After installation, applies local patches to installed
 # modules.
@@ -249,43 +296,33 @@ function build-server {
     local fromDir="${outDir}/server-src"
     local toDir="${outDir}/server"
 
-    # We get Babel by virtue of its modules being listed as dependencies in the
-    # server `package.json`, so the first thing we need to do is copy over that
-    # file and get `npm` to fluff it out. See above about `rsync` rationale.
-    mkdir -p "${toDir}"
-    rsync --archive "${fromDir}/package.json" "${toDir}"
-    do-install server || return 1
-
-    # Find the `babel` script (provided by the `babel-cli` package). It can
-    # appear at the top level _or_ in a sub-module, the latter which can be the
-    # case when installing from boxed dependencies (even though the npm
-    # documentation implies that it shouldn't happen).
-    local babel="$(find "${toDir}/node_modules" -path '*/.bin/babel')"
-    if [[ ${babel} == '' ]]; then
-        echo 'Could not find babel-cli script.' 1>&2
+    # Find the `babel` script (provided by the `compiler` submodule).
+    local compile="$(find "${outDir}/compiler" -name 'bayou-compile')"
+    if [[ ${compile} == '' ]]; then
+        echo 'Could not find compiler script.' 1>&2
         return 1
     fi
 
-    # Run Babel on all of the local source files, storing them next to the
-    # imported and patched modules. We symlink the output `node_modules` back to
-    # the source directory, because Babel wants to find presets (and related
-    # dependencies) relative to the source.
-    if [[ ! -e "${fromDir}/node_modules" ]]; then
-        ln -s "${toDir}/node_modules" "${fromDir}"
-    fi
-    "${babel}" --no-babelrc --copy-files \
-        --ignore 'node_modules' \
-        --presets 'es2015,es2016,es2017' --source-maps true \
-        --out-dir "${toDir}" "${fromDir}" \
-        || return 1
+    # Do the initial npm(ish) installation.
+    do-install server-src || return 1
 
-    # Symlink all the local modules back into `node_modules`, so that the
-    # Node module resolver will find them.
-    local m modPath
-    for m in $(local-module-names); do
-        modPath="${toDir}/node_modules/${m}"
-        if [[ ! -e "${modPath}" ]]; then
-            ln -s "../local-modules/${m}" "${modPath}"
+    # Copy everything over to the final `server` directory. See above about
+    # why we use `rsync`.
+    rsync --archive --delete "${fromDir}/" "${toDir}"
+
+    # Run Babel on all of the local source files, storing them next to the
+    # imported and patched modules.
+
+    # Process the main `server` directory.
+    "${compile}" "${fromDir}" "${toDir}" || return 1
+
+    # Process each of the local modules that are used by `server`.
+    local name
+    for name in $(local-module-names); do
+        if [[ -d "${fromDir}/node_modules/${name}" ]]; then
+            "${compile}" "${fromDir}/node_modules/${name}" \
+                "${toDir}/node_modules/${name}" \
+                || return 1
         fi
     done
 }
@@ -293,6 +330,11 @@ function build-server {
 # Builds the client code.
 function build-client {
     do-install client || return 1
+}
+
+# Builds the compiler (transpiler) code.
+function build-compiler {
+    do-install compiler || return 1
 }
 
 # "Builds" the `bin` directory.
@@ -336,6 +378,8 @@ fi
 (
     set-up-dir-mapping \
         && copy-sources \
+        && fix-packages \
+        && build-compiler \
         && build-client \
         && build-server \
         && build-bin

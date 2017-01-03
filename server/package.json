@@ -18,8 +18,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "ansi-html": "^0.0.6",
-    "babel-cli": "^6.14.0",
+    "babel-core": "^6.21.0",
     "babel-loader": "^6.2.5",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.14.0",
     "babel-preset-es2015": "^6.14.0",
@@ -31,12 +30,22 @@
     "express-ws": "^2.0.0",
     "fs-extra": "^0.30.0",
     "html-loader": "^0.4.4",
+    "memory-fs": "^0.4.1",
     "morgan": "^1.7.0",
-    "object-inspect": "^1.2.1",
-    "quill-delta": "^3.4.0",
     "source-map-support": "^0.4.2",
     "ts-loader": "^1.3.0",
     "typescript": "^2.1.4",
-    "webpack": "^1.13.2"
+    "webpack": "^1.13.2",
+
+    "delta-util": "local",
+    "json-util": "local",
+    "prom-condition": "local",
+    "prom-delay": "local",
+    "random-id": "local",
+    "see-all": "local",
+    "see-all-recent": "local",
+    "see-all-server": "local",
+    "typecheck": "local",
+    "websocket-codes": "local"
   }
 }

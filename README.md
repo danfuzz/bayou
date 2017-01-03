@@ -107,6 +107,8 @@ $ ./scripts/clean
 
 * `client` &mdash; Client code and static assets. The main client-side
   application entrypoint is `js/app.js`.
+* `compiler` &mdash; Submodule used to build the server-side code, using Babel
+  in an appropriately-configured manner.
 * `local-modules` &mdash; JavaScript module code (Node modules, essentially)
   which can be used on both the client and server sides.
 * `server` &mdash; Server code. The main entrypoint is `main.js`.

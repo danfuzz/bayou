@@ -1,3 +1,9 @@
 {
-  "main": "main.js"
+  "name": "delta-util",
+  "version": "0.0.1",
+  "main": "main.js",
+
+  "dependencies": {
+    "quill-delta": "^3.4.3"
+  }
 }
