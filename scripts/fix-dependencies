@@ -30,6 +30,9 @@ init-prog
 # Output file.
 outFile='/dev/stdout'
 
+# Include local module dependencies?
+includeLocalModules=1
+
 # Error during argument processing?
 argError=0
 
@@ -46,6 +49,8 @@ while (( $# != 0 )); do
         showHelp=1
     elif [[ ${opt} =~ ^--out=(.*) ]]; then
         outFile="${BASH_REMATCH[1]}"
+    elif [[ ${opt} == --no-locals ]]; then
+        includeLocalModules=0
     elif [[ ${opt} =~ ^- ]]; then
         echo "Unknown option: ${opt}" 1>&2
         argError=1
@@ -69,6 +74,9 @@ if (( ${showHelp} || ${argError} )); then
     echo "${progName} [--out=<path>] <path/to/package.json>"
     echo '  Derives local dependencies.'
     echo '  --out=<file>  Where to store the output.'
+    echo '  --no-locals   Do not emit local module dependencies in the output.'
+    echo '                (But do include the regular modules that the local'
+    echo '                modules depend on.)'
     echo ''
     echo "${progName} [--help | -h]"
     echo "  Display this message."
@@ -171,7 +179,11 @@ fi
         nameq='"'"${d}"'"'
         specq='"'"../local-modules/${d}"'"'
 
-        echo "| .dependencies.${nameq} = ${specq}"
+        if (( ${includeLocalModules} )); then
+            echo "| .dependencies.${nameq} = ${specq}"
+        else
+            echo "| del(.dependencies.${nameq})"
+        fi
     done
 
     for d in "${regularDeps[@]}"; do

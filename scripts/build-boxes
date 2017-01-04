@@ -146,7 +146,7 @@ function get-npmbox {
 #
 # * Merge the original source and overlay (if any).
 # * Remove any file that isn't required for calculating dependencies. As of
-#   this writing, the only file that matters is `package.json`.
+#   this writing, the only files that matter are named `package.json`.
 function build-source-for {
     local dir="$1"
     local targetDir="${outDir}/work/${dir}"
@@ -158,7 +158,10 @@ function build-source-for {
 
     # Combine in the overlay source (if any).
     if [[ ${overlayDir} != '' ]]; then
-        rsync --archive "${overlayDir}/${dir}/" "${targetDir}"
+        local overlay="${overlayDir}/${dir}/"
+        if [[ -e ${overlay} ]]; then
+            rsync --archive "${overlayDir}/${dir}/" "${targetDir}"
+        fi
     fi
 
     # Remove files we don't care about.
@@ -169,11 +172,19 @@ function build-source-for {
 # Creates a box for the given directory's dependencies.
 function make-box {
     local dir="$1"
+    local targetDir="${outDir}/work/${dir}"
 
     build-source-for "${dir}"
 
+    # Fix the dependencies (pulling in local module dependencies).
+    cd "${targetDir}"
+    mv package.json package-unfixed.json
+    "${progDir}/fix-dependencies" --no-locals --out=package.json \
+        package-unfixed.json \
+        || return 1
+
     cd "${outDir}"
-    ./work/npmbox/node_modules/.bin/npmbox -t out "./work/${dir}/package.json" \
+    ./work/npmbox/node_modules/.bin/npmbox -t out "${targetDir}/package.json" \
         || return 1
 
     # Only overwrite the pre-existing file if the boxing was successful.
@@ -193,6 +204,8 @@ function rm-source {
 (
     set-up-out \
         && get-npmbox \
+        && build-source-for local-modules \
+        && make-box compiler \
         && make-box client \
         && make-box server \
         && rm-source

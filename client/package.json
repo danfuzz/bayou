@@ -1,6 +1,6 @@
 {
   "name": "bayou-client",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "description": "Browser code for Bayou",
   "license": "Apache-2.0",
   "author": "Dan Bornstein <danfuzz@milk.com>",

@@ -1,6 +1,6 @@
 {
   "name": "see-all-browser",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "main": "main.js",
 
   "dependencies": {

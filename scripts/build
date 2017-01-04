@@ -272,6 +272,11 @@ function do-install {
         npm install || return 1
     else
         # We were asked to use the boxed dependencies.
+        if [[ ${dir} =~ ^(.*)-src$ ]]; then
+            # `server-src` gets built from the box `server.npmbox`.
+            dir="${BASH_REMATCH[1]}"
+        fi
+
         local boxFile="${boxDir}/${dir}.npmbox"
 
         if [[ ! -r ${boxFile} ]]; then
