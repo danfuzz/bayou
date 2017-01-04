@@ -12,11 +12,11 @@ import default_document from './default-document';
 
 
 /**
- * Representation of a persistent document, along with a set of clients.
+ * Server-side representation of a persistent document.
  *
  * TODO: Be persistent.
  */
-export default class Document {
+export default class DocServer {
   /**
    * Constructs an instance.
    */

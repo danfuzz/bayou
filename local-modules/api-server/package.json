@@ -1,0 +1,12 @@
+{
+  "name": "api-server",
+  "version": "1.0.0",
+  "main": "main.js",
+
+  "dependencies": {
+      "json-util": "local",
+      "random-id": "local",
+      "see-all": "local",
+      "websocket-codes": "local"
+  }
+}
