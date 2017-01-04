@@ -1,0 +1,11 @@
+{
+  "name": "api-client",
+  "version": "1.0.0",
+  "main": "main.js",
+
+  "dependencies": {
+    "json-util": "local",
+    "see-all": "local",
+    "websocket-codes": "local"
+  }
+}

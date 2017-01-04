@@ -18,6 +18,11 @@ const UNKNOWN_CONNECTION_ID = 'id-unknown';
  * Connection with the server, via a websocket.
  */
 export default class ApiClient {
+  /** Export of helper class. */
+  static get ApiError() {
+    return ApiError;
+  }
+
   /**
    * Constructs an instance. `url` should represent the origin as an `http` or
    * `https` URL. This instance will connect to a websocket at the same domain

@@ -9,12 +9,12 @@
 // displayed with an accurate backtrace.
 import 'source-map-support/register';
 
+import DocServer from 'doc-server';
 import SeeAllServer from 'see-all-server';
 import ServerUtil from 'server-util';
 
 import AppServer from './AppServer';
 import DevMode from './DevMode';
-import Document from './Document';
 
 // Initialize logging.
 SeeAllServer.init();
@@ -32,7 +32,7 @@ if (devMode) {
 }
 
 /** The single document managed by this instance. */
-const theDoc = new Document();
+const theDoc = new DocServer();
 
 /** The main app server. */
 const theApp = new AppServer(theDoc, devMode);

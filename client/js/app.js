@@ -9,10 +9,10 @@
  * there to be a DOM node tagged with id `editor`.
  */
 
+import ApiClient from 'api-client';
+import DocClient from 'doc-client';
 import SeeAllBrowser from 'see-all-browser';
 
-import ApiClient from './ApiClient';
-import DocumentPlumbing from './DocumentPlumbing';
 import QuillMaker from './QuillMaker';
 
 // Init logging.
@@ -22,7 +22,7 @@ SeeAllBrowser.init();
 const quill = QuillMaker.make('#editor');
 
 // Initialize the API connection, and hook it up to the Quill instance.
-const api = new ApiClient(document.URL);
-api.open();
-const plumbing = new DocumentPlumbing(quill, api);
-plumbing.start();
+const apiClient = new ApiClient(document.URL);
+apiClient.open();
+const docClient = new DocClient(quill, apiClient);
+docClient.start();

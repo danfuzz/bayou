@@ -26,17 +26,13 @@
     "morgan": "^1.7.0",
     "source-map-support": "^0.4.2",
 
+    "api-server": "local",
     "client-bundle": "local",
-    "delta-util": "local",
-    "json-util": "local",
-    "prom-condition": "local",
+    "doc-server": "local",
     "prom-delay": "local",
-    "random-id": "local",
     "see-all": "local",
     "see-all-recent": "local",
     "see-all-server": "local",
-    "server-util": "local",
-    "typecheck": "local",
-    "websocket-codes": "local"
+    "server-util": "local"
   }
 }

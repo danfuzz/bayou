@@ -1,0 +1,11 @@
+{
+  "name": "doc-server",
+  "version": "1.0.0",
+  "main": "main.js",
+
+  "dependencies": {
+    "delta-util": "local",
+    "prom-condition": "local",
+    "typecheck": "local"
+  }
+}

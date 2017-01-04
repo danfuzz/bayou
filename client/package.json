@@ -19,12 +19,9 @@
   "dependencies": {
     "quill": "^1.1.7",
 
+    "api-client": "local",
     "delta-util": "local",
-    "json-util": "local",
-    "prom-delay": "local",
-    "see-all": "local",
-    "see-all-browser": "local",
-    "typecheck": "local",
-    "websocket-codes": "local"
+    "doc-client": "local",
+    "see-all-browser": "local"
   }
 }

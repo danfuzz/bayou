@@ -12,6 +12,11 @@ import WebsocketCodes from 'websocket-codes';
 /** Logger. */
 const log = new SeeAll('api');
 
+/**
+ * Direct handler for API requests. This is responsible for interpreting
+ * and responding to incoming websocket data. It mostly bottoms out by calling
+ * on a document object.
+ */
 export default class ApiServer {
   /**
    * Constructs an instance. Each instance corresponds to a separate client
