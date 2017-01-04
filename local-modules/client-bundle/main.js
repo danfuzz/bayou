@@ -9,20 +9,12 @@ import webpack from 'webpack';
 
 import JsonUtil from 'json-util';
 import SeeAll from 'see-all';
+import ServerUtil from 'server-util';
 
 import ProgressMessage from './ProgressMessage';
 
 /** Logger. */
 const log = new SeeAll('client-bundle');
-
-/** Base directory of the product. */
-const baseDir = path.resolve(__dirname, '..');
-
-/** Client code directory. */
-const clientDir = path.resolve(baseDir, 'client');
-
-/** Where to find all our non-module JS files. */
-const jsDir = path.resolve(clientDir, 'js');
 
 /**
  * The parsed `package.json` for the client. This is used for some of the
@@ -30,7 +22,7 @@ const jsDir = path.resolve(clientDir, 'js');
  */
 const clientPackage =
   JsonUtil.parseFrozen(
-    fs.readFileSync(path.resolve(clientDir, 'package.json')));
+    fs.readFileSync(path.resolve(ServerUtil.CLIENT_DIR, 'package.json')));
 
 /**
  * Options passed to the `webpack` compiler constructor. Of particular note,
@@ -40,10 +32,10 @@ const clientPackage =
  * pipeline, and any `.ts` file will get loaded via the TypeScript loader.
  */
 const webpackOptions = {
-  context: jsDir,
+  context: ServerUtil.CLIENT_CODE_DIR,
   debug: true,
   devtool: '#inline-source-map',
-  entry: path.resolve(clientDir, clientPackage.main),
+  entry: path.resolve(ServerUtil.CLIENT_DIR, clientPackage.main),
   output: {
     // Absolute output path of `/` because we write to a memory filesystem.
     path: '/',
@@ -58,16 +50,18 @@ const webpackOptions = {
       // The `quill` module as published exports an entry point which references
       // a prebuilt bundle. We rewrite it here to refer instead to the unbundled
       // source.
-      'quill': path.resolve(clientDir, 'node_modules/quill/quill.js'),
+      'quill':
+        path.resolve(ServerUtil.CLIENT_DIR, 'node_modules/quill/quill.js'),
       // Likewise, `parchment`.
-      'parchment': path.resolve(clientDir, 'node_modules/parchment/src/parchment.ts'),
+      'parchment':
+        path.resolve(ServerUtil.CLIENT_DIR, 'node_modules/parchment/src/parchment.ts'),
     },
     // All the extensions listed here except `.ts` are in the default list.
     // Webpack doesn't offer a way to simply add to the defaults (alas).
     extensions: ['', '.webpack.js', '.web.js', '.js', '.ts']
   },
   resolveLoader: {
-    root: path.resolve(baseDir, 'server/node_modules')
+    root: path.resolve(ServerUtil.SERVER_DIR, 'node_modules')
   },
   module: {
     loaders: [

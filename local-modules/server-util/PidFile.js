@@ -10,21 +10,22 @@ import SeeAll from 'see-all';
 /** Logger. */
 const log = new SeeAll('pid');
 
-/** Base dir of the product. */
-const baseDir = path.resolve(__dirname, '..');
-
-/** Path for the PID file. */
-const pidPath = path.resolve(baseDir, 'pid.txt');
+/** Path for the PID file. Set in `init()`. */
+let pidPath = null;
 
 /**
- * This writes a PID file when the module is `init`ed, and tries to remove it
- * when the app is shutting down. This clas is _not_ meant to be instantiated.
+ * This writes a PID file when `init()` is called, and tries to remove it when
+ * the app is shutting down. This clas is _not_ meant to be instantiated.
  */
 export default class PidFile {
   /**
    * Write the PID file, and arrange for its timely erasure.
+   *
+   * @param baseDir Base product directory
    */
-  static init() {
+  static init(baseDir) {
+    pidPath = path.resolve(baseDir, 'pid.txt');
+
     // Erase the file on exit.
     process.once('exit',    PidFile._erasePid);
     process.once('SIGINT',  PidFile._handleSignal.bind(null, 'SIGINT'));

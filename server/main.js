@@ -10,17 +10,17 @@
 import 'source-map-support/register';
 
 import SeeAllServer from 'see-all-server';
+import ServerUtil from 'server-util';
 
 import AppServer from './AppServer';
 import DevMode from './DevMode';
 import Document from './Document';
-import PidFile from './PidFile';
 
 // Initialize logging.
 SeeAllServer.init();
 
 // Set up the PID file handler.
-PidFile.init();
+ServerUtil.initPidFile();
 
 /** Dev mode? */
 const devMode = (process.argv[2] === '--dev');

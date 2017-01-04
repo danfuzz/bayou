@@ -10,10 +10,11 @@ import path from 'path';
 
 import chalk from 'chalk';
 
+import ClientBundle from 'client-bundle';
 import SeeAll from 'see-all';
+import ServerUtil from 'server-util';
 
 import ApiServer from './ApiServer';
-import ClientBundle from './ClientBundle';
 import DebugTools from './DebugTools';
 
 /** Logger. */
@@ -21,9 +22,6 @@ const log = new SeeAll('app');
 
 /** What port to listen for connections on. */
 const PORT = 8080;
-
-/** Base dir of the product. */
-const baseDir = path.resolve(__dirname, '..');
 
 /**
  * Web server for the application. This serves all HTTP(S) requests, including
@@ -68,8 +66,9 @@ export default class AppServer {
     const app = this._app;
 
     // Stream to write to, when logging to a file.
-    const logStream =
-      fs.createWriteStream(path.resolve(baseDir, 'access.log'), {flags: 'a'});
+    const logStream = fs.createWriteStream(
+      path.resolve(ServerUtil.BASE_DIR, 'access.log'),
+      {flags: 'a'});
 
     // These log regular (non-websocket) requests at the time of completion,
     // including a short colorized form to the console and a longer form to a
@@ -159,14 +158,14 @@ export default class AppServer {
     // Map Quill files into `/static/quill`. This is used for CSS files but not for
     // the JS code; the JS code is included in the overall JS bundle file.
     app.use('/static/quill',
-      express.static(path.resolve(baseDir, 'client/node_modules/quill/dist')));
+      express.static(path.resolve(ServerUtil.CLIENT_DIR, 'node_modules/quill/dist')));
 
     // Use Webpack to serve a JS bundle.
     app.get('/static/bundle.js', new ClientBundle().requestHandler);
 
     // Find HTML files and other static assets in `client/assets`. This includes the
     // top-level `index.html` and `favicon`, as well as stuff under `static/`.
-    app.use('/', express.static(path.resolve(baseDir, 'client/assets')));
+    app.use('/', express.static(path.resolve(ServerUtil.CLIENT_DIR, 'assets')));
 
     // Attach the API server.
     app.ws('/api', (ws, req) => { new ApiServer(ws, this._doc); });
