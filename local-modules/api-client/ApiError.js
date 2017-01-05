@@ -15,7 +15,7 @@ export default class ApiError {
   /** Constant indicating an application logic error. */
   static get APP() { return 'app'; }
 
-  /** Constant indicating a connection / transport error. */
+  /** Constant indicating a connection / transport error. */
   static get CONN() { return 'conn'; }
 
   /**
@@ -90,4 +90,4 @@ export default class ApiError {
   get desc() {
     return this._desc;
   }
-};
+}
