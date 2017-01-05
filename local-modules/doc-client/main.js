@@ -274,7 +274,6 @@ export default class DocClient {
       // defined, use the error handler method.
 
       const eventName = event.name;
-      const handlerName = `_handle_${this._state}_${eventName}`;
       const method = this[`_handle_${this._state}_${eventName}`]
         || this[`_handle_default_${eventName}`]
         || this._handle_error;
@@ -317,7 +316,7 @@ export default class DocClient {
    * reason.
    */
   _handle_default_apiError(event) {
-    const method = event.method;
+    const method_unused = event.method;
     const reason = event.reason;
 
     if (reason.layer === ApiClient.ApiError.CONN) {
@@ -331,7 +330,7 @@ export default class DocClient {
     // Wait an appropriate amount of time and then try starting again. The
     // start event will be received in the `errorWait` state, and as such will
     // be handled differently than a clean start from scratch.
-    PromDelay.resolve(RESTART_DELAY_MSEC).then((res) => {
+    PromDelay.resolve(RESTART_DELAY_MSEC).then((res_unused) => {
       this.start();
     });
 
@@ -364,7 +363,7 @@ export default class DocClient {
    *
    * This is the kickoff event.
    */
-  _handle_detached_start(event) {
+  _handle_detached_start(event_unused) {
     // TODO: This should probably arrange for a timeout.
     this._api.snapshot().then(
       (value) => {
@@ -414,7 +413,7 @@ export default class DocClient {
    * or due to a delay timeout. This will make requests both to the server and
    * to the local Quill instance.
    */
-  _handle_idle_wantChanges(event) {
+  _handle_idle_wantChanges(event_unused) {
     // We grab the current version of the doc, so we can refer back to it when
     // a response comes. That is, `_doc` might have changed out from
     // under us between when this event is handled and when the promises used
@@ -432,7 +431,7 @@ export default class DocClient {
       // **Note:** As of this writing, Quill will never reject (report an error
       // on) a document change promise.
       this._currentChange.next.then(
-        (value) => {
+        (value_unused) => {
           this._pendingLocalDocumentChange = false;
           this._event(Events.gotLocalDelta(baseDoc));
         }
@@ -464,7 +463,7 @@ export default class DocClient {
    * because the client is in the middle of doing something else. When it's done
    * with whatever it may be, it will send a new `wantChanges` event.
    */
-  _handle_default_wantChanges(event) {
+  _handle_default_wantChanges(event_unused) {
     // Nothing to do. Stay in the same state.
     return {state: 'same'};
   }
@@ -491,7 +490,7 @@ export default class DocClient {
     // a `PromDelay` for two reasons: (1) We want to pace requests at least a
     // bit. (2) We want to avoid any potential memory leaks due to promise
     // causality chaining.
-    PromDelay.resolve(PULL_DELAY_MSEC).then((res) => {
+    PromDelay.resolve(PULL_DELAY_MSEC).then((res_unused) => {
       this._event(Events.wantChanges());
     });
 
@@ -504,7 +503,7 @@ export default class DocClient {
    * such, it is safe to ignore, because after the local change is integrated,
    * the system will fire off a new `deltaAfter()` request.
    */
-  _handle_default_gotDeltaAfter(event) {
+  _handle_default_gotDeltaAfter(event_unused) {
     return {state: 'same'};
   }
 
@@ -535,7 +534,7 @@ export default class DocClient {
     }
 
     // After the appropriate delay, send a `wantApplyDelta` event.
-    PromDelay.resolve(PUSH_DELAY_MSEC).then((res) => {
+    PromDelay.resolve(PUSH_DELAY_MSEC).then((res_unused) => {
       this._event(Events.wantApplyDelta(baseDoc));
     });
 
@@ -548,7 +547,7 @@ export default class DocClient {
    * chain of local changes. As such, it is safe to ignore, because whatever
    * the change was, it will get handled by that pre-existing process.
    */
-  _handle_default_gotLocalDelta(event) {
+  _handle_default_gotLocalDelta(event_unused) {
     return {state: 'same'};
   }
 
