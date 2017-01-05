@@ -30,7 +30,7 @@ const LOG_LENGTH_MSEC = 1000 * 60 * 60; // One hour.
    /**
     * Gets the log.
     */
-   _log(req, res) {
+   _log(req_unused, res) {
       let result;
 
       try {

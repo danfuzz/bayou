@@ -296,7 +296,7 @@ export default class DevMode {
     const serverReady =
       this._startWatching(this._serverMappings, this._handleServerChange);
 
-    Promise.all([clientReady, serverReady]).then((values) => {
+    Promise.all([clientReady, serverReady]).then((values_unused) => {
       log.info('Now monitoring for changes.');
     });
   }
@@ -331,7 +331,7 @@ export default class DevMode {
     // the system was just starting up.
 
     let resolveReady;
-    const ready = new Promise((res, rej) => { resolveReady = res; });
+    const ready = new Promise((res, rej_unused) => { resolveReady = res; });
     const minTime = Date.now() - (10 * 1000); // Ten seconds in the past.
 
     watcher.on('ready', () => {
