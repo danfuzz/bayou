@@ -1,0 +1,11 @@
+{
+  "name": "quill-prom",
+  "version": "1.0.0",
+  "main": "main.js",
+
+  "dependencies": {
+    "quill": "^1.1.7",
+
+    "delta-util": "local"
+  }
+}

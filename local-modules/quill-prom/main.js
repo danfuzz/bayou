@@ -6,52 +6,11 @@ import Quill from 'quill';
 
 import DeltaUtil from 'delta-util';
 
-/** Shared access key for communication between `DocumentChange` and `QuillProm`. */
-const ACCESS_KEY = ['QuillProm'];
-
-/**
- * Representation of a text change.
- */
-class DocumentChange {
-  constructor(delta, oldContents, source) {
-    this.delta = Object.freeze(delta);
-    this.oldContents = Object.freeze(oldContents);
-    this.source = Object.freeze(source);
-
-    // The resolver function for the `next` promise. Used in `_gotChange()`
-    // below.
-    let resolveNext;
-
-    // The resolved value for `next`. Used in `_gotChange` and `nextNow` below.
-    let nextNow = null;
-
-    this.next = Object.freeze(new Promise((res, rej) => { resolveNext = res; }));
-
-    // This method is defined inside the constructor so that we can use the
-    // lexical context for (what amount to) private instance variables.
-    this._gotChange = Object.freeze((key, ...args) => {
-      if (key !== ACCESS_KEY) {
-        // `ACCESS_KEY` is only available within this module. This arrangement
-        // prevents client code from messing with the promise chain.
-        throw new Error('Invalid access.');
-      }
-
-      nextNow = new DocumentChange(...args);
-      resolveNext(nextNow);
-      return nextNow;
-    });
-
-    // Likewise, this is how we can provide a read-only yet changeable `nextNow`
-    // on a frozen object.
-    Object.defineProperty(this, 'nextNow', { get: () => { return nextNow; }});
-
-    Object.freeze(this);
-  }
-}
+import DeltaEvent from './DeltaEvent';
 
 /**
  * Extension of the `Quill` class that provides a promise-based interface to
- * get at text changes.
+ * get at events.
  */
 export default class QuillProm extends Quill {
   /**
@@ -69,12 +28,18 @@ export default class QuillProm extends Quill {
     const EDITOR_CHANGE = Emitter.events.EDITOR_CHANGE;
     const TEXT_CHANGE = Emitter.events.TEXT_CHANGE;
 
+    // Key used to authenticate this instance to the event chain it spawns.
+    // **Not** exposed as an instance variable, as doing so would violate the
+    // security we are trying to establish by the key's existence in the first
+    // place!
+    const accessKey = Object.freeze(['quill-prom-key']);
+
     /**
-     * The most recent resolved text change value. It is initialized as defined
-     * by the documentation for `currentChange`.
+     * The most recent resolved event. It is initialized as defined by the
+     * documentation for `currentChange`.
      */
-    this._currentChange = new DocumentChange(
-      DeltaUtil.EMPTY_DELTA, DeltaUtil.EMPTY_DELTA, API);
+    this._currentChange = new DeltaEvent(
+      accessKey, DeltaUtil.EMPTY_DELTA, DeltaUtil.EMPTY_DELTA, API);
 
     // We attach to the `EDITOR_CHANGE` event. This isn't exposed Quill API,
     // but in the current (as of this writing) implementation, Quill will emit
@@ -87,11 +52,11 @@ export default class QuillProm extends Quill {
     // happen is when client code re-enters Quill to do document changes within
     // event handlers, which causes _subsequent_ handlers to see things out of
     // order. By construction, that can't happen to us here because we know
-    // we're first.
+    // we're the first-added handler.
     this.emitter.on(EDITOR_CHANGE, (type, ...rest) => {
       if (type === TEXT_CHANGE) {
         this._currentChange =
-          this._currentChange._gotChange(ACCESS_KEY, ...rest);
+          this._currentChange._gotChange(accessKey, ...rest);
       }
     });
   }
