@@ -10,7 +10,7 @@ export default class JsonUtil {
    * Like `JSON.parse()`, except the result is always deep-frozen.
    */
   static parseFrozen(text) {
-    return JSON.parse(text, (key, value) => {
+    return JSON.parse(text, (key_unused, value) => {
       return (typeof value === 'object')
         ? Object.freeze(value)
         : value

@@ -15,14 +15,6 @@ import SeeAll from 'see-all';
  */
 export default class SeeAllRecent {
   /**
-   * Registers an instance of this class as a logger with the main `see-all`
-   * module.
-   */
-  static init() {
-    SeeAll.add(new SeeAllServer());
-  }
-
-  /**
    * Constructs an instance. This will cause the instance to be registered with
    * the main `see-all` module.
    *

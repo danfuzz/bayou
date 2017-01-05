@@ -30,7 +30,7 @@ export default class SeeAllBrowser {
    * @param level Severity level.
    * @param message Message to log.
    */
-  log(nowMsec, level, tag, ...message) {
+  log(nowMsec_unused, level, tag, ...message) {
     const prefix = `%c[${tag} ${level}]`;
     const style  = 'color: #bbb; font-weight: bold';
 
@@ -60,9 +60,7 @@ export default class SeeAllBrowser {
    *
    * @param nowMsec The time.
    */
-  time(nowMsec, utcString, localString) {
-    const date = new Date(nowMsec);
-
+  time(nowMsec_unused, utcString, localString) {
     console.log(`%c[time] %c${utcString} %c/ %c${localString}`,
       'color: #bbb; font-weight: bold',
       'color: #66a; font-weight: bold',

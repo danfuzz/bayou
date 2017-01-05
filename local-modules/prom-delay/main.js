@@ -21,7 +21,7 @@ export default class PromDelay {
    * @return a promise
    */
   static resolve(delayMsec, value = true) {
-    return new Promise((res, rej) => {
+    return new Promise((res, rej_unused) => {
       setTimeout(() => { res(value); }, delayMsec);
     });
   }
@@ -37,7 +37,7 @@ export default class PromDelay {
    * @return a promise
    */
   static reject(delayMsec, reason) {
-    return new Promise((res, rej) => {
+    return new Promise((res_unused, rej) => {
       setTimeout(() => { rej(reason); }, delayMsec);
     });
   }

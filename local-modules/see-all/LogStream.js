@@ -37,14 +37,14 @@ export default class LogStream {
 
     if (callback) {
       // Use `then()` to make the callback happen in its own tick/turn.
-      Promise.resolve(true).then((value) => { callback(); });
+      Promise.resolve(true).then((value_unused) => { callback(); });
     }
   }
 
   /**
    * Implementation of standard `stream.Writable` method.
    */
-  end(chunk, encoding, callback) {
+  end(chunk, encoding, callback_unused) {
     // We don't pass the `callback` because this stream never actually gets
     // ended (which is when the `callback` would be called).
     this.write(chunk, encoding);
