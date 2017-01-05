@@ -2,8 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import util from 'util';
-
 import JsonUtil from 'json-util';
 import RandomId from 'random-id';
 import SeeAll from 'see-all';
@@ -121,21 +119,21 @@ export default class ApiServer {
   /**
    * API error: Bad value for `method` in call payload (not a string).
    */
-  error_bad_method(args) {
+  error_bad_method(args_unused) {
     throw new Error('bad_method');
   }
 
   /**
    * API error: Missing `method` in call payload.
    */
-  error_missing_method(args) {
+  error_missing_method(args_unused) {
     throw new Error('missing_method');
   }
 
   /**
    * API error: Unknown (undefined) method.
    */
-  error_unknown_method(args) {
+  error_unknown_method(args_unused) {
     throw new Error('unknown_method');
   }
 
@@ -143,7 +141,7 @@ export default class ApiServer {
    * API method `ping`: No-op method that merely verifies (implicitly) that the
    * connection is working. Always returns `true`.
    */
-  method_ping(args) {
+  method_ping(args_unused) {
     return true;
   }
 
@@ -152,7 +150,7 @@ export default class ApiServer {
    * assigned to this connection. This is only meant to be used for logging.
    * For example, it is _not_ guaranteed to be unique.
    */
-  method_connectionId(args) {
+  method_connectionId(args_unused) {
     return this._connectionId;
   }
 
@@ -161,7 +159,7 @@ export default class ApiServer {
    * contents. Result is an object that maps `data` to the snapshot data and
    * `verNum` to the version number.
    */
-  method_snapshot(args) {
+  method_snapshot(args_unused) {
     return this._doc.snapshot();
   }
 

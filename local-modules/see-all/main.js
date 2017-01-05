@@ -38,12 +38,6 @@ const LEVELS = {
 const theLoggers = [];
 
 /**
- * The most recent timestamp that was logged as such. Used to figure out when to
- * emit `logger.time()` calls.
- */
-let lastTimeLog = 0;
-
-/**
  * The timestamp of the most recently logged line.
  */
 let lastNow = 0;
@@ -273,10 +267,8 @@ export default class SeeAll {
     const now = Date.now();
 
     if (now >= (lastNow + LULL_MSEC)) {
-      // There was a lull between the last log and this one. Note the end of
-      // the last spate of logging as well as the start of this spate.
+      // There was a lull between the last log and this one.
       SeeAll._callTime(now);
-      lastTimeLog = now;
     } else {
       // Figure out where to "punctuate" longer spates of logging, such that the
       // timestamps come out even multiples of the maximum gap.
@@ -284,7 +276,6 @@ export default class SeeAll {
 
       if (now >= nextGapMarker) {
         SeeAll._callTime(nextGapMarker);
-        lastTimeLog = nextGapMarker;
       }
     }
 

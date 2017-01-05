@@ -155,7 +155,7 @@ export default class ApiClient {
   /**
    * Common code to handle both `error` and `close` events.
    */
-  _handleTermination(event, error) {
+  _handleTermination(event_unused, error) {
     // Reject the promises of any currently-pending calls.
     for (let id in this._callbacks) {
       this._callbacks[id].reject(error);
@@ -203,7 +203,7 @@ export default class ApiClient {
    * any pending calls (calls that were made while the socket was still in the
    * process of opening).
    */
-  _handleOpen(event) {
+  _handleOpen(event_unused) {
     for (let payload of this._pendingCalls) {
       this._ws.send(payload);
     }
@@ -329,4 +329,4 @@ export default class ApiClient {
   applyDelta(baseVerNum, delta) {
     return this._send('applyDelta', {baseVerNum: baseVerNum, delta: delta});
   }
-};
+}

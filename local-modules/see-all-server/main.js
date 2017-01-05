@@ -39,7 +39,7 @@ export default class SeeAllServer {
    * @param level Severity level.
    * @param message Message to log.
    */
-  log(nowMsec, level, tag, ...message) {
+  log(nowMsec_unused, level, tag, ...message) {
     const prefix = SeeAllServer._makePrefix(tag, level);
 
     // Make a unified string of the entire message.
@@ -91,7 +91,6 @@ export default class SeeAllServer {
       0);
 
     if (maxLineWidth > (consoleWidth - prefix.length)) {
-      const indent = '  ';
       console.log(prefix.text);
       for (let l of lines) {
         let indent = '  ';
@@ -119,7 +118,7 @@ export default class SeeAllServer {
    *
    * @param nowMsec The time.
    */
-  time(nowMsec, utcString, localString) {
+  time(nowMsec_unused, utcString, localString) {
     utcString = chalk.blue.bold(utcString);
     localString  = chalk.blue.dim.bold(localString);
     const prefix = SeeAllServer._makePrefix('time');

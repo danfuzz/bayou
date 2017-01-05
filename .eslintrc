@@ -1,0 +1,28 @@
+{
+  "extends": "eslint:recommended",
+  "env": {
+    "es6": true,
+    "browser": true,
+    "node": true
+  },
+  "ecmaFeatures": {
+    "modules": true,
+    "spread": true,
+    "restParams": true
+  },
+  "rules" : {
+    "no-unused-vars": [
+      "error",
+      {
+        "vars": "all",
+        "args": "all",
+        "varsIgnorePattern": "[uU]nused",
+        "argsIgnorePattern": "[uU]nused"
+      }
+    ],
+    "no-undef": 2
+  },
+  "parserOptions": {
+    "sourceType": "module"
+  }
+}

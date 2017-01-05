@@ -2,8 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import util from 'util';
-
 import DeltaUtil from 'delta-util';
 import PromCondition from 'prom-condition';
 import Typecheck from 'typecheck';
@@ -159,7 +157,7 @@ export default class DocServer {
     // Force the `_changeCondition` to `false` (though it might already be
     // so set; innocuous if so), and wait for it to become `true`.
     this._changeCondition.value = false;
-    return this._changeCondition.whenTrue().then((v) => {
+    return this._changeCondition.whenTrue().then((value_unused) => {
       // Just recurse to do the work. Under normal circumstances it will return
       // promptly. This arrangement gracefully handles edge cases, though, such
       // as a triggered change turning out to be due to a no-op.
@@ -216,7 +214,7 @@ export default class DocServer {
     //    `vExpected` with `dCorrection` to arrive at `vNext`.
 
     // Assign variables from parameter and instance variables that correspond
-    // to the description immediately above.
+    // to the description immediately above.
     const dClient    = delta;
     const vBaseNum   = baseVerNum;
     const vBase      = this.snapshot(vBaseNum).data;
@@ -232,15 +230,17 @@ export default class DocServer {
     const dNext = dServer.transform(dClient, true);
 
     if (DeltaUtil.isEmpty(dNext)) {
+      // It turns out that nothing changed.
       return {
         delta:  [], // That is, there was no correction.
-        verNum: this.currentVerNum
+        verNum: vCurrentNum
       }
     }
 
     // (3)
     this._appendDelta(dNext);
-    const vNext = this.snapshot().data; // This lets the snapshot get cached.
+    const vNext = this.snapshot().data;  // This lets the snapshot get cached.
+    const vNextNum = this.currentVerNum; // This will be different than `vCurrentNum`.
 
     // (4)
     const vExpected = DeltaUtil.coerce(vBase).compose(dClient);
@@ -248,7 +248,7 @@ export default class DocServer {
 
     return {
       delta:  dCorrection,
-      verNum: this.currentVerNum
+      verNum: vNextNum
     }
   }
 
