@@ -10,14 +10,14 @@ import DeltaUtil from 'delta-util';
  * Throws an error indicating a bad value, including the expected type and
  * representation of the value.
  *
- * @param value The bad value.
- * @param typeName Name of the expected type.
- * @param extra Extra info about the expected value.
+ * @param {*} value The bad value.
+ * @param {string} typeName Name of the expected type.
+ * @param {string|null} [extra = null] Extra info about the expected value.
  */
-function badValue(value, typeName, extra = undefined) {
+function badValue(value, typeName, extra = null) {
   const rep = inspect(value);
 
-  extra = (extra === undefined) ? '' : `, ${extra}`;
+  extra = (extra === null) ? '' : `, ${extra}`;
   throw new Error(`Expected value of type \`${typeName}\`${extra}. Got \`${rep}\`.`);
 }
 
@@ -36,11 +36,33 @@ function badValue(value, typeName, extra = undefined) {
  */
 export default class Typecheck {
   /**
+   * Checks a value of type boolean.
+   *
+   * @param {*} value The (alleged) boolean.
+   * @param {boolean|null} [defaultValue = null] Default value. If passed,
+   *   indicates that `undefined` should be treated as that value. If not
+   *   passed, `undefined` is an error.
+   * @returns {boolean} `value` or `defaultValue`
+   */
+  static boolean(value, defaultValue = null) {
+    if ((value === undefined) && (defaultValue !== null)) {
+      value = defaultValue;
+    }
+
+    if (typeof value !== 'boolean') {
+      return badValue(value, 'boolean');
+    }
+
+    return value;
+  }
+
+  /**
    * Checks a value of type `FrozenDelta`.
    *
-   * @param value Value to check.
-   * @param coerce (default `false`) If `true` and `value` can be coerced to
-   * a frozen delta, then do so instead of throwing an error.
+   * @param {*} value Value to check.
+   * @param {boolean} [coerce = false] If `true` and `value` can be coerced to
+   *   a frozen delta, then do so instead of throwing an error.
+   * @returns {FrozenDelta} `value` or its coercion.
    */
   static frozenDelta(value, coerce = false) {
     // It's more straightforward to always coerce and then check to see if
@@ -66,8 +88,9 @@ export default class Typecheck {
    * Checks a value of type `int`, which must furthermore be at least an
    * indicated value (inclusive).
    *
-   * @param value Value to check.
-   * @param minInc Minimum acceptable value (inclusive).
+   * @param {*} value Value to check.
+   * @param {number} minInc Minimum acceptable value (inclusive).
+   * @returns {number} `value`.
    */
   static intMin(value, minInc) {
     if (   (typeof value !== 'number')
@@ -86,9 +109,10 @@ export default class Typecheck {
    * **Note:** This and `intRangeInc()` are both defined because their
    * respective errors convey different information.
    *
-   * @param value Value to check.
-   * @param minInc Minimum acceptable value (inclusive).
-   * @param maxExc Maximum acceptable value (exclusive).
+   * @param {*} value Value to check.
+   * @param {number} minInc Minimum acceptable value (inclusive).
+   * @param {number} maxExc Maximum acceptable value (exclusive).
+   * @returns {number} `value`.
    */
   static intRange(value, minInc, maxExc) {
     if (   (typeof value !== 'number')
@@ -108,9 +132,10 @@ export default class Typecheck {
    * **Note:** This and `intRange()` are both defined because their respective
    * errors convey different information.
    *
-   * @param value Value to check.
-   * @param minInc Minimum acceptable value (inclusive).
-   * @param maxInc Maximum acceptable value (inclusive).
+   * @param {*} value Value to check.
+   * @param {number} minInc Minimum acceptable value (inclusive).
+   * @param {number} maxInc Maximum acceptable value (inclusive).
+   * @returns {number} `value`.
    */
   static intRangeInc(value, minInc, maxInc) {
     if (   (typeof value !== 'number')
@@ -128,11 +153,11 @@ export default class Typecheck {
    * integers. In addition, in any given context there is generally an upper
    * limit on them.
    *
-   * @param value Value to check.
-   * @param max Maximum acceptable value (inclusive).
-   * @param ifAbsent (optional) Default value. If passed and `value` is
-   * `undefined`, this method will return this value instead of throwing an
-   * error.
+   * @param {*} value Value to check.
+   * @param {number} max Maximum acceptable value (inclusive).
+   * @param {*} [ifAbsent] Default value. If passed and `value` is `undefined`,
+   *   this method will return this value instead of throwing an error.
+   * @returns {number} `value` or `ifAbsent`.
    */
   static versionNumber(value, max, ifAbsent = undefined) {
     if ((value === undefined) && (ifAbsent !== undefined)) {
