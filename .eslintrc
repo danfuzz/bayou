@@ -40,7 +40,14 @@
     "prefer-rest-params": "error",
     "prefer-spread": "error",
     "semi": ["error", "always"],
-    "space-before-function-paren": "error",
+    "space-before-function-paren": [
+      "error",
+      {
+        "anonymous": "always",
+        "named": "never",
+        "asyncArrow": "always"
+      }
+    ],
     "symbol-description": "error",
     "valid-jsdoc": "warn"
   },
