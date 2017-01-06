@@ -13,7 +13,7 @@
   "rules" : {
     "consistent-return": "error",
     "eqeqeq": "error",
-    "indent": ["error", 2],
+    "indent": ["error", 2, {"SwitchCase": 1}],
     "no-alert": "warn",
     "no-empty-function": "error",
     "no-eval": "error",
