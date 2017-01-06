@@ -13,63 +13,63 @@ const LOG_LENGTH_MSEC = 1000 * 60 * 60; // One hour.
  * Introspection to help with debugging. Includes a request handler for hookup
  * to Express.
  */
- export default class DebugTools {
-   /**
-    * Constructs an instance.
-    *
-    * @param doc The `Document` object managed by this process.
-    */
-   constructor(doc) {
-     /** The `Document` object. */
-     this._doc = doc;
+export default class DebugTools {
+  /**
+   * Constructs an instance.
+   *
+   * @param doc The `Document` object managed by this process.
+   */
+  constructor(doc) {
+    /** The `Document` object. */
+    this._doc = doc;
 
-     /** A rolling log for the `/log` endpoint. */
-     this._logger = new SeeAllRecent(LOG_LENGTH_MSEC);
-   }
+    /** A rolling log for the `/log` endpoint. */
+    this._logger = new SeeAllRecent(LOG_LENGTH_MSEC);
+  }
 
-   /**
-    * Gets the log.
-    */
-   _log(req_unused, res) {
-      let result;
+  /**
+   * Gets the log.
+   */
+  _log(req_unused, res) {
+    let result;
 
-      try {
-        // TODO: Format it nicely.
-        const contents = this._logger.htmlContents;
-        result = `<html><body>${contents}</body></html>`
-      } catch (e) {
-        result = `Error:\n\n${e.stack}`;
-      }
+    try {
+      // TODO: Format it nicely.
+      const contents = this._logger.htmlContents;
+      result = `<html><body>${contents}</body></html>`;
+    } catch (e) {
+      result = `Error:\n\n${e.stack}`;
+    }
 
-      res
-        .status(200)
-        .type('text/html')
-        .send(result);
-   }
+    res
+      .status(200)
+      .type('text/html')
+      .send(result);
+  }
 
-   /**
-    * Gets a particular change to the document.
-    *
-    * * `/change/NNN` -- Gets the change that produced version NNN of the
-    *   document.
-    */
-   _change(req, res) {
-     const match = req.url.match(/\/([0-9]+)$/);
-     const verNum = Number.parseInt(match[1]);
-     let result;
+  /**
+   * Gets a particular change to the document.
+   *
+   * * `/change/NNN` -- Gets the change that produced version NNN of the
+   *   document.
+   */
+  _change(req, res) {
+    const match = req.url.match(/\/([0-9]+)$/);
+    const verNum = Number.parseInt(match[1]);
+    let result;
 
-     try {
-       const change = this._doc.change(verNum);
-       result = JSON.stringify(change, null, 2);
-     } catch (e) {
-       result = `Error:\n\n${e.stack}`;
-     }
+    try {
+      const change = this._doc.change(verNum);
+      result = JSON.stringify(change, null, 2);
+    } catch (e) {
+      result = `Error:\n\n${e.stack}`;
+    }
 
-     res
-       .status(200)
-       .type('text/plain')
-       .send(result);
-   }
+    res
+      .status(200)
+      .type('text/plain')
+      .send(result);
+  }
 
   /**
    * Gets a snapshot of the current document.

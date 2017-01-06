@@ -46,7 +46,7 @@ export default class PidFile {
   static _handleSignal(id) {
     log.info(`Received signal: ${id}`);
     PidFile._erasePid();
-    process.kill(process.pid, id)
+    process.kill(process.pid, id);
   }
 
   /**

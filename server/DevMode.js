@@ -56,12 +56,12 @@ export default class DevMode {
    */
   static _makeMappings(copyTo, soFar = [], first = true) {
     const files = fs.readdirSync(copyTo);
-    for (let f of files) {
+    for (const f of files) {
       const p = path.resolve(copyTo, f);
       if (f === MAP_FILE_NAME) {
         // Reads the map file and splits it into lines.
         const dirs = fs.readFileSync(p, 'utf8').match(/.+(?=\n)/g);
-        for (let d of dirs) {
+        for (const d of dirs) {
           // `priority` is used to get the sort to respect overlay order.
           soFar.push({from: d, to: copyTo, priority: soFar.length});
         }
@@ -93,12 +93,12 @@ export default class DevMode {
         } else {
           // Shouldn't happen, because no two items should have the same
           // priority.
-          log.wtf('Unordered mappings.')
+          log.wtf('Unordered mappings.');
         }
       });
 
       // Strip the priorities.
-      for (let m of soFar) {
+      for (const m of soFar) {
         delete m.priority;
       }
     }
@@ -130,7 +130,7 @@ export default class DevMode {
    * @returns The corresponding source path, or `null` if none.
    */
   _getFromPath(mappings, toPath) {
-    for (let candidate of mappings) {
+    for (const candidate of mappings) {
       const toDir = `${candidate.to}/`;
       if (toPath.startsWith(toDir)) {
         // The path is covered by this candidate. Get the partial path for it
@@ -164,7 +164,7 @@ export default class DevMode {
    * @returns The corresponding target path, or `null` if none.
    */
   _getToPath(mappings, fromPath) {
-    for (let candidate of mappings) {
+    for (const candidate of mappings) {
       const fromDir = `${candidate.from}/`;
       if (fromPath.startsWith(fromDir)) {
         // The path is covered by this candidate. Get the partial path for it
@@ -198,7 +198,7 @@ export default class DevMode {
 
     if (toPath === null) {
       // This file has no mapping into the target directory.
-      log.info(`Unmapped: ${fromPath}`)
+      log.info(`Unmapped: ${fromPath}`);
       return null;
     }
 
@@ -220,7 +220,7 @@ export default class DevMode {
       log.info(`Updated: ${logPath}`);
     } else {
       // It's an underlay file.
-      log.info(`Ignored: ${logPath}`)
+      log.info(`Ignored: ${logPath}`);
       return null;
     }
 
@@ -361,7 +361,7 @@ export default class DevMode {
    */
   _initialChanges(watchDirs, minTime, maxTime, handler) {
     const changes = [];
-    for (let dir of watchDirs) {
+    for (const dir of watchDirs) {
       addChangesForDir(dir);
     }
 
@@ -376,7 +376,7 @@ export default class DevMode {
     // be adjacent).
     changes.sort();
     let prev = null;
-    for (let c of changes) {
+    for (const c of changes) {
       if (c !== prev) {
         handler(c);
         prev = c;
@@ -386,7 +386,7 @@ export default class DevMode {
     // Called above for each scanned directory.
     function addChangesForDir(dir) {
       const files = fs.readdirSync(dir);
-      for (let f of files) {
+      for (const f of files) {
         const path = `${dir}/${f}`;
         const stat = fs.statSync(path);
         if (stat.isDirectory()) {

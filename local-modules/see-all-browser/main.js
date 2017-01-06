@@ -41,17 +41,17 @@ export default class SeeAllBrowser {
 
     let logMethod;
     switch (level) {
-      case 'debug': { logMethod = console.group; break; }
-      case 'error': { logMethod = console.error; break; }
-      case 'warn':  { logMethod = console.warn;  break; }
-      default:      { logMethod = console.log;   break; }
+      case 'debug': { logMethod = console.group; break; } // eslint-disable-line no-console
+      case 'error': { logMethod = console.error; break; } // eslint-disable-line no-console
+      case 'warn':  { logMethod = console.warn;  break; } // eslint-disable-line no-console
+      default:      { logMethod = console.log;   break; } // eslint-disable-line no-console
     }
 
     logMethod.call(console, prefix, style, ...message);
 
     if (level === 'debug') {
-      console.trace('stack trace');
-      console.groupEnd();
+      console.trace('stack trace'); // eslint-disable-line no-console
+      console.groupEnd();           // eslint-disable-line no-console
     }
   }
 
@@ -61,6 +61,7 @@ export default class SeeAllBrowser {
    * @param nowMsec The time.
    */
   time(nowMsec_unused, utcString, localString) {
+    // eslint-disable-next-line no-console
     console.log(`%c[time] %c${utcString} %c/ %c${localString}`,
       'color: #bbb; font-weight: bold',
       'color: #66a; font-weight: bold',
