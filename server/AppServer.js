@@ -31,9 +31,9 @@ export default class AppServer {
   /**
    * Constructs an instance.
    *
-   * @param doc The document managed by the instance.
-   * @param devMode Whether or not to run in dev mode. If `true`, this activates
-   *   `/debug/*` endpoints.
+   * @param {DocServer} doc The document managed by the instance.
+   * @param {boolean} devMode Whether or not to run in dev mode. If `true`, this
+   *   activates `/debug/*` endpoints.
    */
   constructor(doc, devMode) {
     /** The document. */

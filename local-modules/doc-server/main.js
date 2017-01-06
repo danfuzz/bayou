@@ -66,10 +66,10 @@ export default class DocServer {
    * sequence of changes, each modifying version N of the document to produce
    * version N+1.
    *
-   * @param verNum (default `currentVerNum`) The version number of the change.
-   *   The result is the change which produced that version. E.g., `0` is a
-   *   request for the first change (the change from the empty document).
-   * @returns An object representing that change.
+   * @param {number} [verNum = this.currentVerNum] The version number of the
+   *   change. The result is the change which produced that version. E.g., `0`
+   *   is a request for the first change (the change from the empty document).
+   * @returns {object} An object representing that change.
    */
   change(verNum) {
     verNum = this._validateVerNum(verNum, true);
@@ -79,9 +79,10 @@ export default class DocServer {
   /**
    * Returns a snapshot of the full document contents.
    *
-   * @param verNum (default `currentVerNum`) Indicates which version to get.
-   * @returns An object that maps `data` to the document data and `verNum` to
-   *   the version number.
+   * @param {number} [verNum = this.currentVerNum] Indicates which version to
+   *   get.
+   * @returns {object} An object that maps `data` to the document data and
+   *   `verNum` to the version number.
    */
   snapshot(verNum) {
     verNum = this._validateVerNum(verNum, true);
@@ -134,9 +135,9 @@ export default class DocServer {
    * is the current version, this will not resolve the result promise until at
    * least one change has been made.
    *
-   * @param baseVerNum Version number for the document.
-   * @returns A promise which ultimately resolves to an object that maps
-   *   `verNum` to the new version and `delta` to a change with respect to
+   * @param {number} baseVerNum Version number for the document.
+   * @returns {Promise} A promise which ultimately resolves to an object that
+   *   maps `verNum` to the new version and `delta` to a change with respect to
    *   `baseVerNum`.
    */
   deltaAfter(baseVerNum) {
@@ -173,12 +174,12 @@ export default class DocServer {
    * is to say, what the client would get if the delta were applied with no
    * intervening changes.
    *
-   * @param baseVerNum Version number which `delta` is with respect to.
-   * @param delta Delta indicating what has changed with respect to
+   * @param {number} baseVerNum Version number which `delta` is with respect to.
+   * @param {object} delta Delta indicating what has changed with respect to
    *   `baseVerNum`.
-   * @returns Object that binds `verNum` to the new version number and `delta`
-   *   to a delta _with respect to the implied expected result_ which can be
-   *   used to get the new document state.
+   * @returns {object} Object that binds `verNum` to the new version number and
+   *   `delta` to a delta _with respect to the implied expected result_ which
+   *   can be used to get the new document state.
    */
   applyDelta(baseVerNum, delta) {
     baseVerNum = this._validateVerNum(baseVerNum, false);
@@ -260,14 +261,13 @@ export default class DocServer {
    * inverted (that is, `end < start`). It is also invalid for the range to
    * include non-existent versions (negative or too large).
    *
-   * @param startInclusive Version number for the first delta to include in the
-   *   result.
-   * @param endExclusive (optional) Version number for just after the last delta
-   *   to include, or alternatively thought, of the first version to exclude
-   *   from the result. If not passed, defaults to `nextVerNum`, that is, the
-   *   version just past the current (latest) version.
-   * @returns The composed delta consisting of versions `startInclusive`
-   *   through but not including `endExclusive`.
+   * @param {number} startInclusive Version number for the first delta to
+   *   include in the result.
+   * @param {number} [endExclusive = this.nextVerNum] Version number for just
+   *   after the last delta to include, or alternatively thought, of the first
+   *   version to exclude from the result.
+   * @returns {object} The composed delta consisting of versions
+   *   `startInclusive` through but not including `endExclusive`.
    */
   _composeVersions(startInclusive, endExclusive = this.nextVerNum) {
     // Validate parameters.
@@ -293,7 +293,7 @@ export default class DocServer {
    *
    * **Note:** If the delta is a no-op, then this method does nothing.
    *
-   * @param delta The delta to append.
+   * @param {object} delta The delta to append.
    */
   _appendDelta(delta) {
     delta = Typecheck.frozenDelta(delta, true);
@@ -309,10 +309,11 @@ export default class DocServer {
   /**
    * Checks a version number for sanity. Throws an error when insane.
    *
-   * @param verNum the (alleged) version number to check
-   * @param wantCurrent if `true` indicates that `undefined` should be treated
-   * as a request for the current version. If `false`, `undefined` is an error.
-   * @returns the version number
+   * @param {*} verNum the (alleged) version number to check.
+   * @param {boolean} wantCurrent If `true` indicates that `undefined` should be
+   *   treated as a request for the current version. If `false`, `undefined` is
+   *   an error.
+   * @returns {number} The version number.
    */
   _validateVerNum(verNum, wantCurrent) {
     const current = this.currentVerNum;

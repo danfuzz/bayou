@@ -10,10 +10,11 @@ export default class DeltaEvent {
   /**
    * Constructs an instance.
    *
-   * @param accessKey Key which protects ability to resolve the next event.
-   * @param delta The change, per se.
-   * @param oldContents The document contents just prior to the change.
-   * @param source The `Quill` instance that emitted this event.
+   * @param {object} accessKey Key which protects ability to resolve the next
+   *   event.
+   * @param {object} delta The change, per se.
+   * @param {object} oldContents The document contents just prior to the change.
+   * @param {Quill} source The `Quill` instance that emitted this event.
    */
   constructor(accessKey, delta, oldContents, source) {
     this.delta = Object.freeze(delta);

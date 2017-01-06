@@ -46,9 +46,9 @@ class Events {
    * Constructs an `apiError` event. This indicates that an error was reported
    * back from an API call.
    *
-   * @param method Name of the method that was called.
-   * @param reason Error reason.
-   * @returns The constructed event.
+   * @param {string} method Name of the method that was called.
+   * @param {string} reason Error reason.
+   * @returns {object} The constructed event.
    */
   static apiError(method, reason) {
     return {name: 'apiError', method: method, reason: reason};
@@ -60,12 +60,12 @@ class Events {
    * the addition of `expectedData` which represents the expected result of
    * merge (which will be the case if there are no other intervening changes).
    *
-   * @param expectedData The expected result of the merge. This will be the
-   *   actual result if there are no other intervening changes (indicated by the
-   *   fact that `delta` is empty).
-   * @param verNum The version number of the resulting document.
-   * @param delta The delta from `expectedData`.
-   * @returns The constructed event.
+   * @param {object} expectedData The expected result of the merge. This will be
+   *   the actual result if there are no other intervening changes (indicated by
+   *   the fact that `delta` is empty).
+   * @param {number} verNum The version number of the resulting document.
+   * @param {object} delta The delta from `expectedData`.
+   * @returns {object} The constructed event.
    */
   static gotApplyDelta(expectedData, verNum, delta) {
     return {
@@ -82,11 +82,11 @@ class Events {
    * the addition of `baseDoc` which represents the document at the time of the
    * request.
    *
-   * @param baseDoc The document (version and data) at the time of the original
-   *   request.
-   * @param verNum The version number of the document.
-   * @param delta The delta from `baseDoc`.
-   * @returns The constructed event.
+   * @param {object} baseDoc The document (version and data) at the time of the
+   *   original request.
+   * @param {number} verNum The version number of the document.
+   * @param {object} delta The delta from `baseDoc`.
+   * @returns {object} The constructed event.
    */
   static gotDeltaAfter(baseDoc, verNum, delta) {
     return {name: 'gotDeltaAfter', baseDoc: baseDoc, verNum: verNum, delta: delta};
@@ -98,9 +98,9 @@ class Events {
    * reflected in the given base document. Put another way, this indicates that
    * `_currentChange` has a resolved `next`.
    *
-   * @param baseDoc The document (version and data) at the time of the original
-   *   request.
-   * @returns The constructed event.
+   * @param {object} baseDoc The document (version and data) at the time of the
+   *   original request.
+   * @returns {object} The constructed event.
    */
   static gotLocalDelta(baseDoc) {
     return {name: 'gotLocalDelta', baseDoc: baseDoc};
@@ -110,9 +110,9 @@ class Events {
    * Constructs a `gotSnapshot` event. This represents a successful result from
    * the API call `snapshot()`. Keys are as defined by that API.
    *
-   * @param verNum The version number of the document.
-   * @param data The document data.
-   * @returns The constructed event.
+   * @param {number} verNum The version number of the document.
+   * @param {object} data The document data.
+   * @returns {object} The constructed event.
    */
   static gotSnapshot(verNum, data) {
     return {name: 'gotSnapshot', verNum: verNum, data: data};
@@ -121,7 +121,7 @@ class Events {
   /**
    * Constructs a `start` event. This is the event that kicks off the client.
    *
-   * @returns The constructed event.
+   * @returns {object} The constructed event.
    */
   static start() {
     return {name: 'start'};
@@ -131,9 +131,9 @@ class Events {
    * Constructs a `wantApplyDelta` event. This indicates that it is time to
    * send collected local changes up to the server.
    *
-   * @param baseDoc The document (version and data) at the time of the original
-   *   request.
-   * @returns The constructed event.
+   * @param {object} baseDoc The document (version and data) at the time of the
+   *   original request.
+   * @returns {object} The constructed event.
    */
   static wantApplyDelta(baseDoc) {
     return {name: 'wantApplyDelta', baseDoc: baseDoc};
@@ -144,7 +144,7 @@ class Events {
    * request a new change from the server, but only if the client isn't in the
    * middle of doing something else.
    *
-   * @returns The constructed event.
+   * @returns {object} The constructed event.
    */
   static wantChanges() {
     return {name: 'wantChanges'};
@@ -191,8 +191,8 @@ export default class DocClient {
    * constructed instance expects to be the primary non-human controller of the
    * Quill instance it manages.
    *
-   * @param `quill` Quill editor instance.
-   * @param `api` `ApiClient` instance.
+   * @param {Quill} quill Quill editor instance.
+   * @param {ApiClient} api API Client instance.
    */
   constructor(quill, api) {
     /** Editor object. */
@@ -252,7 +252,7 @@ export default class DocClient {
   /**
    * Informs this instance that the given event has been received.
    *
-   * @param event The event that was received.
+   * @param {object} event The event that was received.
    */
   _event(event) {
     log.detail(`In state: ${this._state}`);
@@ -303,6 +303,8 @@ export default class DocClient {
   /**
    * Error handler. This is called when an event is received in a state that
    * is not defined to handle that state.
+   *
+   * @param {object} event The event that was received.
    */
   _handle_error(event) {
     // TODO: Probably something more sensible.
@@ -314,6 +316,9 @@ export default class DocClient {
    * the error has to do with the network connection (e.g. the network drops),
    * but is considered unusual (and error-worthy) if it happens for some other
    * reason.
+   *
+   * @param {object} event The event that was received.
+   * @returns {object} Standard event response.
    */
   _handle_default_apiError(event) {
     const method_unused = event.method;
@@ -321,7 +326,7 @@ export default class DocClient {
 
     if (reason.layer === ApiClient.ApiError.CONN) {
       // It's connection-related and probably no big deal.
-      log.info(`${reason.code}: ${reason.desc}`)
+      log.info(`${reason.code}: ${reason.desc}`);
     } else {
       // It's something more dire; could be a bug on either side, for example.
       log.error(`Severe synch issue ${reason.code}: ${reason.desc}`);
@@ -341,6 +346,9 @@ export default class DocClient {
    * In state `errorWait`, handles event `start`.
    *
    * This is the kickoff event.
+   *
+   * @param {object} event The event that was received.
+   * @returns {object} Standard event response.
    */
   _handle_errorWait_start(event) {
     // Reset the document state. TODO: Ultimately this should be able to
@@ -361,7 +369,8 @@ export default class DocClient {
   /**
    * In state `detached`, handles event `start`.
    *
-   * This is the kickoff event.
+   * @param {object} event_unused The event that was received.
+   * @returns {object} Standard event response.
    */
   _handle_detached_start(event_unused) {
     // TODO: This should probably arrange for a timeout.
@@ -378,6 +387,9 @@ export default class DocClient {
 
   /**
    * In state `starting`, handles event `gotSnapshot`.
+   *
+   * @param {object} event The event that was received.
+   * @returns {object} Standard event response.
    */
   _handle_starting_gotSnapshot(event) {
     // Save the result as the current (latest known) version of the document,
@@ -412,6 +424,9 @@ export default class DocClient {
    * event (during startup or at the end of handling the integration of changes)
    * or due to a delay timeout. This will make requests both to the server and
    * to the local Quill instance.
+   *
+   * @param {object} event_unused The event that was received.
+   * @returns {object} Standard event response.
    */
   _handle_idle_wantChanges(event_unused) {
     // We grab the current version of the doc, so we can refer back to it when
@@ -462,6 +477,9 @@ export default class DocClient {
    * In any state but `idle`, handles event `wantChanges`. We ignore the event,
    * because the client is in the middle of doing something else. When it's done
    * with whatever it may be, it will send a new `wantChanges` event.
+   *
+   * @param {object} event_unused The event that was received.
+   * @returns {object} Standard event response.
    */
   _handle_default_wantChanges(event_unused) {
     // Nothing to do. Stay in the same state.
@@ -470,6 +488,9 @@ export default class DocClient {
 
   /**
    * In state `idle`, handles event `gotDeltaAfter`.
+   *
+   * @param {object} event The event that was received.
+   * @returns {object} Standard event response.
    */
   _handle_idle_gotDeltaAfter(event) {
     const baseDoc = event.baseDoc;
@@ -502,6 +523,9 @@ export default class DocClient {
    * server delta comes when we're in the middle of handling a local change. As
    * such, it is safe to ignore, because after the local change is integrated,
    * the system will fire off a new `deltaAfter()` request.
+   *
+   * @param {object} event_unused The event that was received.
+   * @returns {object} Standard event response.
    */
   _handle_default_gotDeltaAfter(event_unused) {
     return {state: 'same'};
@@ -511,6 +535,9 @@ export default class DocClient {
    * In state `idle`, handles event `gotLocalDelta`. This means that the local
    * user has started making some changes. We prepare to collect the changes
    * for a short period of time before sending them up to the server.
+   *
+   * @param {object} event The event that was received.
+   * @returns {object} Standard event response.
    */
   _handle_idle_gotLocalDelta(event) {
     const baseDoc = event.baseDoc;
@@ -546,6 +573,9 @@ export default class DocClient {
    * local delta comes in after we're already in the middle of handling a
    * chain of local changes. As such, it is safe to ignore, because whatever
    * the change was, it will get handled by that pre-existing process.
+   *
+   * @param {object} event_unused The event that was received.
+   * @returns {object} Standard event response.
    */
   _handle_default_gotLocalDelta(event_unused) {
     return {state: 'same'};
@@ -555,6 +585,9 @@ export default class DocClient {
    * In state `collecting`, handles event `wantApplyDelta`. This means that it
    * is time for the collected local changes to be sent up to the server for
    * integration.
+   *
+   * @param {object} event The event that was received.
+   * @returns {object} Standard event response.
    */
   _handle_collecting_wantApplyDelta(event) {
     const baseDoc = event.baseDoc;
@@ -600,6 +633,9 @@ export default class DocClient {
   /**
    * In state `merging`, handles event `gotApplyDelta`. This means that a local
    * change was successfully merged by the server.
+   *
+   * @param {object} event The event that was received.
+   * @returns {object} Standard event response.
    */
   _handle_merging_gotApplyDelta(event) {
     // These variable names correspond to the terminology used on the server
@@ -720,11 +756,11 @@ export default class DocClient {
    * Updates `_currentChange` to indicate that all of these changes have in
    * fact been consumed.
    *
-   * @param includeOurChanges If `true` indicates that changes with source
-   *   `CLIENT_SOURCE` _should_ be included.
-   * @returns A combined delta of all the salient changes. This will be empty
-   *   if there are no such changes (that is, if this class's document model
-   *   is up-to-date with respect to Quill).
+   * @param {boolean} [includeOurChanges = false] If `true` indicates that
+   *   changes with source `CLIENT_SOURCE` _should_ be included.
+   * @returns {FrozenDelta} A combined delta of all the salient changes. This
+   *   will be empty if there are no such changes (that is, if this class's
+   *   document model is up-to-date with respect to Quill).
    */
   _consumeLocalChanges(includeOurChanges = false) {
     let delta = null;
@@ -752,13 +788,13 @@ export default class DocClient {
    * document that Quill has is the same as what is represented in `_doc`. If
    * that isn't the case, then this method will throw an error.
    *
-   * @param verNum New version number.
-   * @param delta Delta from the current `_doc` data; can be a `Delta` object
-   *   per se or anything that `DeltaUtil.coerce()` accepts.
-   * @param quillDelta (optional) Delta from Quill's current state, which is
-   *   expected to preserve any state that Quill has that isn't yet represented
-   *   in `_doc`. This must be used in cases where Quill's state has progressed
-   *   ahead of `_doc` due to local activity. This defaults to `delta`.
+   * @param {number} verNum New version number.
+   * @param {object} delta Delta from the current `_doc` data; can be a `Delta`
+   *   object per se or anything that `DeltaUtil.coerce()` accepts.
+   * @param {object} [quillDelta = delta] Delta from Quill's current state,
+   *   which is expected to preserve any state that Quill has that isn't yet
+   *   represented in `_doc`. This must be used in cases where Quill's state has
+   *   progressed ahead of `_doc` due to local activity.
    */
   _updateDocWithDelta(verNum, delta, quillDelta = delta) {
     if (this._currentChange.nextNow !== null) {
@@ -784,13 +820,13 @@ export default class DocClient {
    * Updates `_doc` to have the given version and snapshot data, and optionally
    * tells the attached Quill instance to update itself accordingly.
    *
-   * @param verNum New version number.
-   * @param data New snapshot data; can be a `Delta` object per se or anything
-   * that `DeltaUtil.coerce()` accepts.
-   * @param updateQuill (default `true`) whether to inform Quill of this
-   * update. This should only ever be passed as `false` when Quill is expected
-   * to already have the changes to the document represented in `data`. (It
-   * might _also_ have additional changes too.)
+   * @param {number} verNum New version number.
+   * @param {object} data New snapshot data; can be a `Delta` object per se or
+   *   anything that `DeltaUtil.coerce()` accepts.
+   * @param {boolean} [updateQuill = true] whether to inform Quill of this
+   *   update. This should only ever be passed as `false` when Quill is expected
+   *   to already have the changes to the document represented in `data`. (It
+   *   might _also_ have additional changes too.)
    */
   _updateDocWithSnapshot(verNum, data, updateQuill = true) {
     data = DeltaUtil.coerce(data);

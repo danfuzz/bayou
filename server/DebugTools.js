@@ -17,7 +17,7 @@ export default class DebugTools {
   /**
    * Constructs an instance.
    *
-   * @param doc The `Document` object managed by this process.
+   * @param {DocServer} doc The `DocServer` object managed by this process.
    */
   constructor(doc) {
     /** The `Document` object. */
@@ -29,6 +29,9 @@ export default class DebugTools {
 
   /**
    * Gets the log.
+   *
+   * @param {object} req_unused HTTP request.
+   * @param {object} res HTTP response handler.
    */
   _log(req_unused, res) {
     let result;
@@ -52,6 +55,9 @@ export default class DebugTools {
    *
    * * `/change/NNN` -- Gets the change that produced version NNN of the
    *   document.
+   *
+   * @param {object} req HTTP request.
+   * @param {object} res HTTP response handler.
    */
   _change(req, res) {
     const match = req.url.match(/\/([0-9]+)$/);
@@ -76,6 +82,9 @@ export default class DebugTools {
    *
    * * `/snapshot` -- Gets the current (latest) version.
    * * `/snapshot/NNN` -- Gets version NNN.
+   *
+   * @param {object} req HTTP request.
+   * @param {object} res HTTP response handler.
    */
   _snapshot(req, res) {
     const match = req.url.match(/\/([0-9]+)$/);
