@@ -34,8 +34,8 @@ export default class QuillMaker {
    * a promise chain to get at the edit events, this makes an instance of our
    * custom subclass `QuillProm`.
    *
-   * @param id DOM id of the element to attach to.
-   * @returns instance of `Quill`.
+   * @param {string} id DOM id of the element to attach to.
+   * @returns {QuillProm} instance of `Quill`.
    */
   static make(id) {
     return new QuillProm(id, {

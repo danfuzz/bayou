@@ -33,9 +33,9 @@ export default class WebsocketCodes {
    * Get a friendly string for the given close reason code. This will always
    * include the number and will also include the name if known.
    *
-   * @param code (default `null`) The code. If `null`, the result indicates
-   *   a close with an unknown cause.
-   * @returns The corresponding friendly string.
+   * @param {number|null} [code = null] The code. If `null`, the result
+   *   indicates a close with an unknown cause.
+   * @returns {string} The corresponding friendly string.
    */
   static close(code = null) {
     if (code === null) {

@@ -21,13 +21,13 @@ export default class ApiError {
   /**
    * Constructs an instance.
    *
-   * @param layer Which layer is the source of the problem. One of `CONN`
-   *   (connection / transport) or `APP` (application, that is, the code on the
-   *   far side of the connection).
-   * @param code Short error code, meant to be human-readable and
+   * @param {string} layer Which layer is the source of the problem. One of
+   *   `CONN` (connection / transport) or `APP` (application, that is, the code
+   *   on the far side of the connection).
+   * @param {string} code Short error code, meant to be human-readable and
    *   machine-friendly. Must consist only of lowercase alphanumerics and the
    *   underscore, and be at least 5 and at most 40 characters total.
-   * @param desc (optional; default 'API Error') Longer-form human-readable
+   * @param {string} [desc = 'API Error'] Longer-form human-readable
    *   error description.
    */
   constructor(layer, code, desc = 'API Error') {
@@ -51,6 +51,9 @@ export default class ApiError {
 
   /**
    * Convenient wrapper for `new ApiError(ApiError.APP, ...)`.
+   *
+   * @param {...string} args Constructor arguments.
+   * @returns {ApiError} The constructed error.
    */
   static appError(...args) {
     return new ApiError(ApiError.APP, ...args);
@@ -58,6 +61,9 @@ export default class ApiError {
 
   /**
    * Convenient wrapper for `new ApiError(ApiError.CONN, ...)`.
+   *
+   * @param {...string} args Constructor arguments.
+   * @returns {ApiError} The constructed error.
    */
   static connError(...args) {
     return new ApiError(ApiError.CONN, ...args);
@@ -65,6 +71,8 @@ export default class ApiError {
 
   /**
    * Gets the unified string form of this instance.
+   *
+   * @returns {string} The string form.
    */
   toString() {
     return `[${this._layer} ${this._code}] ${this._desc}`;

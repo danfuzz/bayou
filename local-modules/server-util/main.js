@@ -14,6 +14,8 @@ const BASE_DIR = findBaseDir();
  * Figure out where the base directory is. This walks up from the directory
  * where this module is stored, looking for a directory that contains a
  * `local-modules` directory.
+ *
+ * @returns {string} The base directory path.
  */
 function findBaseDir() {
   let dir = __dirname;

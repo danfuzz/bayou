@@ -9,7 +9,7 @@ export default class ProgressMessage {
   /**
    * Constructs an instance.
    *
-   * @param log The logger to use.
+   * @param {SeeAll} log The logger to use.
    */
   constructor(log) {
     /** Logger. */
@@ -26,6 +26,11 @@ export default class ProgressMessage {
    * Handles a progress message. Emits the message along with the percentage,
    * but only if (a) this is a message for the start or end of a task (0% or
    * 100%), or (b) the last progress message wasn't too recent.
+   *
+   * @param {number} frac Current estimate (between 0 and 1) of the completion
+   *   of the compilation.
+   * @param {string} msg Short descriptive message about what's currently
+   *   happening.
    */
   _handler(frac, msg) {
     const now = Date.now();

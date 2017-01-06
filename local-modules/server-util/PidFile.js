@@ -21,7 +21,7 @@ export default class PidFile {
   /**
    * Write the PID file, and arrange for its timely erasure.
    *
-   * @param baseDir Base product directory
+   * @param {string} baseDir Base product directory.
    */
   static init(baseDir) {
     pidPath = path.resolve(baseDir, 'pid.txt');
@@ -41,7 +41,7 @@ export default class PidFile {
    * Handles a signal by erasing the PID file (if it exists) and then
    * re-raising the same signal.
    *
-   * @param id Signal ID.
+   * @param {string} id Signal ID.
    */
   static _handleSignal(id) {
     log.info(`Received signal: ${id}`);

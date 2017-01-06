@@ -23,8 +23,8 @@ export default class DeltaUtil {
    * values as `coerce()`, see which. Anything else is considered to be an
    * error.
    *
-   * @param delta (null-ok) The delta or delta-like value.
-   * @returns `true` if `delta` is empty or `false` if not.
+   * @param {*} delta (null-ok) The delta or delta-like value.
+   * @returns {boolean} `true` if `delta` is empty or `false` if not.
    */
   static isEmpty(delta) {
     if (delta instanceof Delta) {
@@ -61,8 +61,8 @@ export default class DeltaUtil {
    * * This method will throw an error instead of silently accepting invalid
    *   values.
    *
-   * @param value (null-ok) The value to coerce to a `Delta`.
-   * @returns the corresponding `Delta`.
+   * @param {*} value (null-ok) The value to coerce to a `Delta`.
+   * @returns {FrozenDelta} The corresponding `Delta`.
    */
   static coerce(value) {
     if (value instanceof FrozenDelta) {
