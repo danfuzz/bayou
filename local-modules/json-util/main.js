@@ -8,6 +8,9 @@
 export default class JsonUtil {
   /**
    * Like `JSON.parse()`, except the result is always deep-frozen.
+   *
+   * @param {string} text JSON source text.
+   * @returns {*} Parsed JSON value.
    */
   static parseFrozen(text) {
     return JSON.parse(text, (key_unused, value) => {

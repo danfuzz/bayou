@@ -21,8 +21,8 @@ export default class ApiServer {
    * connection. As a side effect, the contructor attaches the constructed
    * instance to the websocket.
    *
-   * @param ws A websocket instance corresponding to that connection.
-   * @param doc The document to interact with.
+   * @param {WebSocket} ws A websocket instance corresponding to that connection.
+   * @param {DocServer} doc The document to interact with.
    */
   constructor(ws, doc) {
     /** The Websocket for the client connection. */
@@ -48,6 +48,8 @@ export default class ApiServer {
    * Handles a `message` event coming from the underlying websocket. For valid
    * methods, this calls the method implementation and handles both the case
    * where the result is a simple value or a promise.
+   *
+   * @param {string} msg Incoming message, in JSON string form.
    */
   _handleMessage(msg) {
     this._messageCount++;
@@ -102,6 +104,9 @@ export default class ApiServer {
 
   /**
    * Handles a `close` event coming from the underlying websocket.
+   *
+   * @param {number} code The reason code for why the socket was closed.
+   * @param {string} msg The human-oriented description for the reason.
    */
   _handleClose(code, msg) {
     const codeStr = WebsocketCodes.close(code);
@@ -111,6 +116,8 @@ export default class ApiServer {
 
   /**
    * Handles an `error` event coming from the underlying websocket.
+   *
+   * @param {object} error The error event.
    */
   _handleError(error) {
     log.info(`${this._connectionId} error:`, error);
@@ -118,6 +125,8 @@ export default class ApiServer {
 
   /**
    * API error: Bad value for `method` in call payload (not a string).
+   *
+   * @param {object} args_unused The arguments originally passed to the method.
    */
   error_bad_method(args_unused) {
     throw new Error('bad_method');
@@ -125,6 +134,8 @@ export default class ApiServer {
 
   /**
    * API error: Missing `method` in call payload.
+   *
+   * @param {object} args_unused The arguments originally passed to the method.
    */
   error_missing_method(args_unused) {
     throw new Error('missing_method');
@@ -132,6 +143,8 @@ export default class ApiServer {
 
   /**
    * API error: Unknown (undefined) method.
+   *
+   * @param {object} args_unused The arguments originally passed to the method.
    */
   error_unknown_method(args_unused) {
     throw new Error('unknown_method');
@@ -140,6 +153,9 @@ export default class ApiServer {
   /**
    * API method `ping`: No-op method that merely verifies (implicitly) that the
    * connection is working. Always returns `true`.
+   *
+   * @param {object} args_unused The arguments to the method.
+   * @returns {boolean} `true`, always.
    */
   method_ping(args_unused) {
     return true;
@@ -149,6 +165,9 @@ export default class ApiServer {
    * API method `connectionId`: Returns the connection ID that the server
    * assigned to this connection. This is only meant to be used for logging.
    * For example, it is _not_ guaranteed to be unique.
+   *
+   * @param {object} args_unused The arguments to the method.
+   * @returns {string} The connection ID.
    */
   method_connectionId(args_unused) {
     return this._connectionId;
@@ -158,6 +177,9 @@ export default class ApiServer {
    * API method `snapshot`: Returns an instantaneous snapshot of the document
    * contents. Result is an object that maps `data` to the snapshot data and
    * `verNum` to the version number.
+   *
+   * @param {object} args_unused The arguments to the method.
+   * @returns {object} The snapshot.
    */
   method_snapshot(args_unused) {
     return this._doc.snapshot();
@@ -169,6 +191,11 @@ export default class ApiServer {
    * Result is an object consisting of a new version number, and a
    * delta which can be applied to version `baseVerNum` to get the new
    * document.
+   *
+   * @param {object} args The arguments to the method.
+   * @param {number} args.baseVerNum Base version number.
+   * @param {object} args.delta Delta to apply.
+   * @returns {object} The new version number and "correction" delta.
    */
   method_applyDelta(args) {
     return this._doc.applyDelta(args.baseVerNum, args.delta);
@@ -181,7 +208,12 @@ export default class ApiServer {
    * to version `baseVerNum` to get the new document. If called when
    * `baseVerNum` is the current version, this will not fulfill the result
    * promise until at least one change has been made.
-   */
+   *
+   * @param {object} args The arguments to the method.
+   * @param {number} args.baseVerNum Base version number.
+   * @returns {Promise} Promise for a later version in the form of a delta from
+   *   the given base version, along with the new version number.
+  */
   method_deltaAfter(args) {
     return this._doc.deltaAfter(args.baseVerNum);
   }

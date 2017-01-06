@@ -16,8 +16,8 @@ export default class RandomId {
   /**
    * Constructs a random ID string with the indicated tag prefix.
    *
-   * @param prefix The prefix.
-   * @returns The constructed string.
+   * @param {string} prefix The prefix.
+   * @returns {string} The constructed random ID string.
    */
   static make(prefix) {
     let result = `${prefix}-`;

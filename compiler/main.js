@@ -20,6 +20,9 @@ const babel = require('babel-core');
 
 /**
  * Compiles a single file.
+ *
+ * @param {string} inputFile Path to the input file.
+ * @param {string} outputFile Path to the output file.
  */
 function compileFile(inputFile, outputFile) {
   let inputStat = null;
@@ -57,6 +60,9 @@ function compileFile(inputFile, outputFile) {
 
 /**
  * Compiles a directory.
+ *
+ * @param {string} inputDir Path of the input directory.
+ * @param {string} outputDir Path of the output directory.
  */
 function compileDir(inputDir, outputDir) {
   const files = fs.readdirSync(inputDir);

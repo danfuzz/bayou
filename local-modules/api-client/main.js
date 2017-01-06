@@ -24,12 +24,13 @@ export default class ApiClient {
   }
 
   /**
-   * Constructs an instance. `url` should represent the origin as an `http` or
-   * `https` URL. This instance will connect to a websocket at the same domain
-   * at the path `/api`. Once this constructor returns, it is safe to call any
-   * API methods on the instance; if the socket isn't yet ready for traffic,
-   * the calls will get enqueued and then replayed in order once the socket
-   * becomes ready.
+   * Constructs an instance. This instance will connect to a websocket at the
+   * same domain at the path `/api`. Once this constructor returns, it is safe
+   * to call any API methods on the instance; if the socket isn't yet ready for
+   * traffic, the calls will get enqueued and then replayed in order once the
+   * socket becomes ready.
+   *
+   * @param {string} url The server origin, as an `http` or `https` URL.
    */
   constructor(url) {
     url = new URL(url);
@@ -97,9 +98,13 @@ export default class ApiClient {
   }
 
   /**
-   * Sends the given call to the server. Returns a promise for the result
-   * (or error). In the case of an error, the rejection reason will always be an
-   * instance of `ApiError` (see which for details).
+   * Sends the given call to the server.
+   *
+   * @param {string} method Name of method to call on the server.
+   * @param {object} args JSON-encodable object of arguments.
+   * @returns {Promise} Promise for the result (or error) of the call. In the
+   *   case of an error, the rejection reason will always be an instance of
+   *   `ApiError` (see which for details).
    */
   _send(method, args) {
     const wsState = this._ws.readyState;
@@ -154,10 +159,14 @@ export default class ApiClient {
 
   /**
    * Common code to handle both `error` and `close` events.
+   *
+   * @param {object} event_unused Event that caused this callback.
+   * @param {ApiError} error Reason for termination. "Error" is a bit of a
+   *   misnomer, as in many cases termination is a-okay.
    */
   _handleTermination(event_unused, error) {
     // Reject the promises of any currently-pending calls.
-    for (let id in this._callbacks) {
+    for (const id in this._callbacks) {
       this._callbacks[id].reject(error);
     }
 
@@ -169,6 +178,8 @@ export default class ApiClient {
   /**
    * Handles a `close` event coming from a websocket. This logs the closure and
    * terminates all active calls by rejecting their promises.
+   *
+   * @param {object} event Event that caused this callback.
    */
   _handleClose(event) {
     log.info(`${this._connectionId} closed:`, event);
@@ -187,6 +198,8 @@ export default class ApiClient {
    * **Note:** Because errors in this case are typically due to transient
    * connection issues (e.g. network went away) and not due to fundamental
    * system issues, this is logged as `info` and not `error` (or `warn`).
+   *
+   * @param {object} event Event that caused this callback.
    */
   _handleError(event) {
     log.info(`${this._connectionId} error:`, event);
@@ -202,6 +215,8 @@ export default class ApiClient {
    * Handles an `open` event coming from a websocket. In this case, it sends
    * any pending calls (calls that were made while the socket was still in the
    * process of opening).
+   *
+   * @param {object} event_unused Event that caused this callback.
    */
   _handleOpen(event_unused) {
     for (const payload of this._pendingCalls) {
@@ -215,6 +230,8 @@ export default class ApiClient {
    * are expected to be the responses from previous calls, encoded as JSON. The
    * `id` of the response is used to look up the callback function in
    * `this._callbacks`. That callback is then called in a separate tick.
+   *
+   * @param {object} event Event that caused this callback.
    */
   _handleMessage(event) {
     const payload = JsonUtil.parseFrozen(event.data);
@@ -257,7 +274,9 @@ export default class ApiClient {
 
   /**
    * Opens the websocket. Once open, any pending calls will get sent to the
-   * server side. Returns a promise for the result of opening; this will resolve
+   * server side.
+   *
+   * @returns {Promise} A promise for the result of opening. This will resolve
    * as a `true` success or fail with an `ApiError`.
    */
   open() {
@@ -291,6 +310,8 @@ export default class ApiClient {
 
   /**
    * API call `ping`. No-op request that verifies an active connection.
+   *
+   * @returns {Promise} A promise for the result of the remote call.
    */
   ping() {
     return this._send('ping', {});
@@ -298,6 +319,8 @@ export default class ApiClient {
 
   /**
    * API call `connectionId`. Requests the connection ID to use for logging.
+   *
+   * @returns {Promise} A promise for the result of the remote call.
    */
   connectionId() {
     return this._send('connectionId', {});
@@ -306,6 +329,8 @@ export default class ApiClient {
   /**
    * API call `snapshot`. Requests a document snapshot. Returns a promise for
    * the result.
+   *
+   * @returns {Promise} A promise for the result of the remote call.
    */
   snapshot() {
     return this._send('snapshot', {});
@@ -314,6 +339,10 @@ export default class ApiClient {
   /**
    * API call `deltaAfter`. Requests a delta for a newer version with respect
    * to a given version.
+   *
+   * @param {number} baseVerNum Version number to provide a delta with respect
+   *   to.
+   * @returns {Promise} A promise for the result of the remote call.
    */
   deltaAfter(baseVerNum) {
     return this._send('deltaAfter', {baseVerNum: baseVerNum});
@@ -325,6 +354,11 @@ export default class ApiClient {
    * result, which is an object consisting of a new version number, and a
    * delta which can be applied to the version corresponding to `baseVerNum`
    * to get the new version.
+   *
+   * @param {number} baseVerNum Version number to apply the delta with respect
+   *   to.
+   * @param {object} delta The delta to apply.
+   * @returns {Promise} A promise for the result of the remote call.
    */
   applyDelta(baseVerNum, delta) {
     return this._send('applyDelta', {baseVerNum: baseVerNum, delta: delta});

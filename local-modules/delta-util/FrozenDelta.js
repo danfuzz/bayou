@@ -10,6 +10,9 @@ import Delta from 'quill-delta';
  * JSON; in particular, assumes arrays don't have extra properties, does not
  * expect objects to have "interesting" prototypes, and does not expect to be
  * given functions.
+ *
+ * @param {*} obj Thing to deep freeze.
+ * @returns {*} The deep-frozen version of `obj`.
  */
 function deepFreeze(obj) {
   if (typeof obj !== 'object') {
@@ -56,9 +59,9 @@ export default class FrozenDelta extends Delta {
   /**
    * Constructs an instance.
    *
-   * @param ops The transformation operations of this instance. If not deeply
-   * frozen, the actual stored `ops` will be a deep-frozen clone of the given
-   * value.
+   * @param {Array} ops The transformation operations of this instance. If not
+   *   deeply frozen, the actual stored `ops` will be a deep-frozen clone of the
+   *   given value.
    */
   constructor(ops) {
     if (!Array.isArray(ops)) {

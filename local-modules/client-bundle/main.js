@@ -140,6 +140,8 @@ export default class ClientBundle {
 
   /**
    * Returns a Webpack compiler instance, appropriately configured.
+   *
+   * @returns {webpack} Appropriately-configured instance.
    */
   _newCompiler() {
     const compiler = webpack(webpackOptions);
@@ -155,6 +157,10 @@ export default class ClientBundle {
   /**
    * Handles the results of running a compile. This gets called as a callback
    * from Webpack.
+   *
+   * @param {boolean} error `true` if there were errors running Webpack (which
+   *   is _not_ the same as errors in source files being compiled).
+   * @param {object} stats Detailed information about the compilation.
    */
   _handleCompilation(error, stats) {
     const warnings = stats.compilation.warnings;
@@ -195,6 +201,9 @@ export default class ClientBundle {
   /**
    * Handles a request for the JS bundle. This is suitable for use as an Express
    * handler function if bound to `this`.
+   *
+   * @param {object} req The HTTP request.
+   * @param {object} res The HTTP response handler.
    */
   _requestHandler(req, res) {
     if (this._currentBundle) {
@@ -210,6 +219,8 @@ export default class ClientBundle {
 
   /**
    * Performs a single build. Returns the built artifact.
+   *
+   * @returns {Buffer} The built artifact.
    */
   build() {
     const compiler = this._newCompiler();
