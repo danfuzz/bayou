@@ -11,6 +11,21 @@
     "restParams": true
   },
   "rules" : {
+    "consistent-return": "error",
+    "eqeqeq": "error",
+    "indent": ["error", 2],
+    "no-alert": "warn",
+    "no-empty-function": "error",
+    "no-eval": "error",
+    "no-extend-native": "error",
+    "no-floating-decimal": "error",
+    "no-implied-eval": "error",
+    "no-nested-ternary": "error",
+    "no-regex-spaces": "off",
+    "no-shadow": "error",
+    "no-trailing-spaces": "error",
+    "no-undef": "error",
+    "no-unsafe-negation": "error",
     "no-unused-vars": [
       "error",
       {
@@ -20,7 +35,14 @@
         "argsIgnorePattern": "[uU]nused"
       }
     ],
-    "no-undef": 2
+    "no-var": "error",
+    "prefer-const": "error",
+    "prefer-rest-params": "error",
+    "prefer-spread": "error",
+    "semi": ["error", "always"],
+    "space-before-function-paren": "error",
+    "symbol-description": "error",
+    "valid-jsdoc": "warn"
   },
   "parserOptions": {
     "sourceType": "module"
