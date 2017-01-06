@@ -53,6 +53,12 @@ export default class DevMode {
 
   /**
    * Constructs and returns the source mappings.
+   *
+   * @param {string} copyTo Destination directory.
+   * @param {Array} [soFar = []] Partial result (passed through to recursive
+   *   calls).
+   * @param {boolean} [first = true] Whether this is the top-level call.
+   * @returns {object} The constructed mappings.
    */
   static _makeMappings(copyTo, soFar = [], first = true) {
     const files = fs.readdirSync(copyTo);
@@ -94,6 +100,7 @@ export default class DevMode {
           // Shouldn't happen, because no two items should have the same
           // priority.
           log.wtf('Unordered mappings.');
+          return null; // Appease the linter.
         }
       });
 
@@ -108,13 +115,17 @@ export default class DevMode {
 
   /**
    * Gets the relative portion of the given path, with respect to `_outDir`.
+   *
+   * @param {string} p Filesystem path to process.
+   * @returns {string} The relative portion of `p` with respect to `_outDir`.
    */
-  _relativeOutPath(path) {
+  _relativeOutPath(p) {
     const outWithSlash = `${this._outDir}/`;
-    if (path.startsWith(outWithSlash)) {
-      return path.substring(outWithSlash.length);
+    if (p.startsWith(outWithSlash)) {
+      return p.substring(outWithSlash.length);
     } else {
-      log.wtf('Bad out path:', path);
+      log.wtf('Bad out path:', p);
+      return null; // Appease the linter.
     }
   }
 
@@ -124,10 +135,10 @@ export default class DevMode {
    * Returns the source file that would / should be copied to `toPath`, if such
    * a file exists, or `null` if no such file exists.
    *
-   * @param mappings Which mappings to use. Should be either `_clientMappings`
-   *   or `_serverMappings`.
-   * @param toPath The path to look for.
-   * @returns The corresponding source path, or `null` if none.
+   * @param {object} mappings Which mappings to use. Should be either
+   *   `_clientMappings` or `_serverMappings`.
+   * @param {string} toPath The path to look for.
+   * @returns {string|null} The corresponding source path, or `null` if none.
    */
   _getFromPath(mappings, toPath) {
     for (const candidate of mappings) {
@@ -158,10 +169,10 @@ export default class DevMode {
    * already exist. Returns `null` if there is no mapping that covers the source
    * file.
    *
-   * @param mappings Which mappings to use. Should be either `_clientMappings`
-   *   or `_serverMappings`.
-   * @param fromPath The path to look for.
-   * @returns The corresponding target path, or `null` if none.
+   * @param {object} mappings Which mappings to use. Should be either
+   *   `_clientMappings` or `_serverMappings`.
+   * @param {string} fromPath The path to look for.
+   * @returns {string|null} The corresponding target path, or `null` if none.
    */
   _getToPath(mappings, fromPath) {
     for (const candidate of mappings) {
@@ -185,11 +196,12 @@ export default class DevMode {
    * `toPath` (where the file lands in the output). If the file isn't covered
    * by source, then this returns `null`.
    *
-   * @param mappings Which mappings to use. Should be either `_clientMappings`
-   *   or `_serverMappings`.
-   * @param fromPath The path of the source file that was changed (or removed).
-   * @returns An object indicating its resolution, or `null` if it doesn't
-   *   correspond to a covered file.
+   * @param {object} mappings Which mappings to use. Should be either
+   *   `_clientMappings` or `_serverMappings`.
+   * @param {string} fromPath The path of the source file that was changed (or
+   *   removed).
+   * @returns {object|null} An object indicating its resolution, or `null` if it
+   *   doesn't correspond to a covered file.
    */
   _resolveChange(mappings, fromPath) {
     // Map the given file (the source file that just changed) to a target file
@@ -230,6 +242,9 @@ export default class DevMode {
   /**
    * Handles the fact of a changed or removed client file. Copies or deletes, as
    * appropriate, including making any needed new directories.
+   *
+   * @param {string} fromPath The path of the source file that was changed (or
+   *   removed).
    */
   _handleClientChange(fromPath) {
     if (this._shuttingDown) {
@@ -260,6 +275,9 @@ export default class DevMode {
   /**
    * Handles the fact of a changed or removed server file. If the file turns
    * out to be used, this exits the application.
+   *
+   * @param {string} fromPath The path of the source file that was changed (or
+   *   removed).
    */
   _handleServerChange(fromPath) {
     if (this._shuttingDown) {
@@ -306,11 +324,11 @@ export default class DevMode {
    * does an initial scan of the watched files (to catch changes that happen
    * during application startup).
    *
-   * @param mappings The mappings to watch. Should be one of `_clientMappings`
-   *   or `_serverMappings`.
-   * @param onChange Method to call when a change is noticed.
-   * @returns A promise that resolves to `true` as soon as monitoring is fully
-   *   set up and active.
+   * @param {object} mappings The mappings to watch. Should be one of
+   *   `_clientMappings` or `_serverMappings`.
+   * @param {function} onChange Method to call when a change is noticed.
+   * @returns {Promise<boolean>} A promise that resolves to `true` as soon as
+   *   monitoring is fully set up and active.
    */
   _startWatching(mappings, onChange) {
     // Extract just the `from` directories of the mappings.
@@ -351,13 +369,13 @@ export default class DevMode {
   /**
    * Helper for `start()` which does an initial scan for changes.
    *
-   * @param watchDirs Array of directories to watch.
-   * @param minTime Start of time range of interest.
-   * @param maxTime End of time range of interest. The only changes that get
-   *   reported are ones that take place between `minTime` (inclusive) and
-   *   `maxTime` (inclusive).
-   * @param handler Function to call on each detected change, passing it the
-   *   path of the changed file.
+   * @param {array} watchDirs Array of directories to watch.
+   * @param {number} minTime Start of time range of interest.
+   * @param {number} maxTime End of time range of interest. The only changes
+   *   that get reported are ones that take place between `minTime` (inclusive)
+   *   and `maxTime` (inclusive).
+   * @param {function} handler Function to call on each detected change, passing
+   *   it the path of the changed (or removed) file.
    */
   _initialChanges(watchDirs, minTime, maxTime, handler) {
     const changes = [];
@@ -387,14 +405,14 @@ export default class DevMode {
     function addChangesForDir(dir) {
       const files = fs.readdirSync(dir);
       for (const f of files) {
-        const path = `${dir}/${f}`;
-        const stat = fs.statSync(path);
+        const p = `${dir}/${f}`;
+        const stat = fs.statSync(p);
         if (stat.isDirectory()) {
-          addChangesForDir(path);
+          addChangesForDir(p);
         } else if (stat.isFile()) {
           const mtime = stat.mtime.getTime(); // Modification time.
           if ((mtime >= minTime) && (mtime <= maxTime)) {
-            changes.push(path);
+            changes.push(p);
           }
         }
       }

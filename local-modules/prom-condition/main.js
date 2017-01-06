@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import Typecheck from 'typecheck';
+
 /**
  * Promise that is permanently resolved as `true`. Used as a result from
  * `when*()`.
@@ -15,10 +17,10 @@ export default class PromCondition {
   /**
    * Constructs an instance.
    *
-   * @param value Initial value; defaults to `false`.
+   * @param {boolean} [initialValue = false] Initial value.
    */
   constructor(initialValue) {
-    initialValue = PromCondition._ensureBoolean(initialValue, false);
+    initialValue = Typecheck.boolean(initialValue, false);
 
     /** Current value. */
     this._value = initialValue;
@@ -47,9 +49,11 @@ export default class PromCondition {
   /**
    * Sets the current value. Can cause waiters to stop waiting should the
    * value change.
+   *
+   * @param {boolean} value The new value.
    */
   set value(value) {
-    value = PromCondition._ensureBoolean(value);
+    value = Typecheck.boolean(value);
 
     if (value === this._value) {
       // No change.
@@ -74,6 +78,9 @@ export default class PromCondition {
    * **Note:** Once resolved, the result will never become _un_-resolved should
    * the condition change state again. That is, you can't cache a return value
    * from this method and expect it to work for any later state changes.
+   *
+   * @returns {Promise<boolean>} Promise that resolves to `true` per the above
+   *   description.
    */
   whenTrue() {
     return this._whenX(true);
@@ -87,6 +94,9 @@ export default class PromCondition {
    * **Note:** Once resolved, the result will never become _un_-resolved should
    * the condition change state again. That is, you can't cache a return value
    * from this method and expect it to work for any later state changes.
+   *
+   * @returns {Promise<boolean>} Promise that resolves to `true` per the above
+   *   description.
    */
   whenFalse() {
     return this._whenX(false);
@@ -94,6 +104,10 @@ export default class PromCondition {
 
   /**
    * Common implementation of `whenTrue()` and `whenFalse()`.
+   *
+   * @param {boolean} value Value which should prompt resolution.
+   * @returns {Promise<boolean>} Promise that resolves to `true` on an
+   *   appropriate value change.
    */
   _whenX(value) {
     if (this._value === value) {
@@ -111,27 +125,5 @@ export default class PromCondition {
     }
 
     return this._became[idx];
-  }
-
-  /**
-   * Checks a boolean for sanity. Throws an error when insane. Returns the
-   * value.
-   *
-   * @param value The (alleged) boolean.
-   * @param defaultValue Optional default value. If passed, indicates that
-   *   `undefined` should be treated as that value. If not passed, `undefined`
-   *   is an error.
-   * @returns `value` or `defaultValue`
-   */
-  static _ensureBoolean(value, defaultValue) {
-    if ((value === undefined) && (defaultValue !== undefined)) {
-      value = defaultValue;
-    }
-
-    if (typeof value !== 'boolean') {
-      throw new Error(`Bad boolean: ${value}`);
-    }
-
-    return value;
   }
 }

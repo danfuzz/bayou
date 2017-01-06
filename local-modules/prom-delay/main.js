@@ -13,12 +13,12 @@ export default class PromDelay {
    * value. If that value is _also_ a promise, then the result of this function
    * will (of course) only become resolved once that value is also resolved.
    *
-   * @param delayMsec Minimum amount of time in msec before the result will be
-   *   resolved. This is passed to `setTimeout()`, see which for details about
-   *   acceptable values.
-   * @param value (default `true`) Value to become resolved to. This can itself
-   *    be a promise.
-   * @return a promise
+   * @param {number} delayMsec Minimum amount of time in msec before the result
+   *   will be resolved. This is passed to `setTimeout()`, see which for details
+   *   about acceptable values.
+   * @param {*} [value = true] Value to become resolved to. This can itself be a
+   *    promise.
+   * @returns {Promise} The delayed promise.
    */
   static resolve(delayMsec, value = true) {
     return new Promise((res, rej_unused) => {
@@ -30,11 +30,11 @@ export default class PromDelay {
    * Returns a promise that, after a specified delay, becomes rejected with an
    * indicated reason.
    *
-   * @param delayMsec Minimum amount of time in msec before the result will be
-   *   rejected. This is passed to `setTimeout()`, see which for details about
-   *   acceptable values.
-   * @param reason Reason for rejection.
-   * @return a promise
+   * @param {number} delayMsec Minimum amount of time in msec before the result
+   *   will be rejected. This is passed to `setTimeout()`, see which for details
+   *   about acceptable values.
+   * @param {*} reason Reason for rejection.
+   * @returns {Promise} The delayed promise.
    */
   static reject(delayMsec, reason) {
     return new Promise((res_unused, rej) => {
