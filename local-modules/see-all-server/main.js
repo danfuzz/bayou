@@ -52,7 +52,7 @@ export default class SeeAllServer {
         // on its own lines.
         m = util.inspect(m);
         if (/\n/.test(m)) {
-          text += `${atLineStart ? '' : '\n'}${m}\n`
+          text += `${atLineStart ? '' : '\n'}${m}\n`;
           atLineStart = true;
         } else {
           text += `${atLineStart ? '' : ' '}${m}`;
@@ -91,19 +91,22 @@ export default class SeeAllServer {
       0);
 
     if (maxLineWidth > (consoleWidth - prefix.length)) {
+      // eslint-disable-next-line no-console
       console.log(prefix.text);
       for (let l of lines) {
         let indent = '  ';
         while (l) {
           const chunk = l.substring(0, consoleWidth - indent.length);
           l = l.substring(chunk.length);
+          // eslint-disable-next-line no-console
           console.log(`${indent}${chunk}`);
           indent = ' +';
         }
       }
     } else {
       let first = true;
-      for (let l of lines) {
+      for (const l of lines) {
+        // eslint-disable-next-line no-console
         console.log(`${prefix.text}${l}`);
         if (first) {
           first = false;
@@ -123,6 +126,7 @@ export default class SeeAllServer {
     localString  = chalk.blue.dim.bold(localString);
     const prefix = SeeAllServer._makePrefix('time');
 
+    // eslint-disable-next-line no-console
     console.log(`${prefix.text}${utcString} / ${localString}`);
   }
 

@@ -76,7 +76,7 @@ export default class AppServer {
 
     // This is a status-aware logger, roughly based on morgan's built-in `dev`
     // style.
-    function shortColorLog(tokens, req, res) {
+    function shortColorLog(tokens_unused, req, res) {
       const status    = res.statusCode || 0;
       const statusStr = res.statusCode || '-  ';
       const colorFn =
@@ -120,12 +120,12 @@ export default class AppServer {
 
     // Log skip function: Returns `true` for anything other than a websocket
     // request.
-    function skip(req, res) {
+    function skip(req, res_unused) {
       return (req.get('upgrade') !== 'websocket');
     }
 
     // Logger which is meant to match the formatting of `shortColorLog` above.
-    function shortWsLog(tokens, req, res) {
+    function shortWsLog(tokens_unused, req, res_unused) {
       // exress-ws appends a pseudo-path `/.websocket` to the end of websocket
       // requests.
       const url = req.originalUrl.replace(/\/\.websocket$/, '');
@@ -168,7 +168,7 @@ export default class AppServer {
     app.use('/', express.static(path.resolve(ServerUtil.CLIENT_DIR, 'assets')));
 
     // Attach the API server.
-    app.ws('/api', (ws, req) => { new ApiServer(ws, this._doc); });
+    app.ws('/api', (ws, req_unused) => { new ApiServer(ws, this._doc); });
   }
 
   /**

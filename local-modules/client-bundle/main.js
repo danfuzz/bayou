@@ -123,74 +123,74 @@ const watchOptions = {
  * Wrapper around Webpack which can do both one-off builds as well as run
  * Webpack's "dev mode." Includes a request handler for hookup to Express.
  */
- export default class ClientBundle {
-   /**
-    * Constructs an instance.
-    */
-   constructor() {
-     /** Memory FS used to hold the immediate results of compilation. */
-     this._fs = new memory_fs();
+export default class ClientBundle {
+  /**
+   * Constructs an instance.
+   */
+  constructor() {
+    /** Memory FS used to hold the immediate results of compilation. */
+    this._fs = new memory_fs();
 
-     /** Current (most recently built) compiled bundle. */
-     this._currentBundle = null;
+    /** Current (most recently built) compiled bundle. */
+    this._currentBundle = null;
 
-     /** Dev mode running? */
-     this._devModeRunning = false;
-   }
+    /** Dev mode running? */
+    this._devModeRunning = false;
+  }
 
-   /**
-    * Returns a Webpack compiler instance, appropriately configured.
-    */
-   _newCompiler() {
-     const compiler = webpack(webpackOptions);
+  /**
+   * Returns a Webpack compiler instance, appropriately configured.
+   */
+  _newCompiler() {
+    const compiler = webpack(webpackOptions);
 
-     // We use a `memory_fs` to hold the immediate results of compilation, to
-     // make it possible to detect when things go awry before anything gets
-     // stored to the real FS.
-     compiler.outputFileSystem = this._fs;
+    // We use a `memory_fs` to hold the immediate results of compilation, to
+    // make it possible to detect when things go awry before anything gets
+    // stored to the real FS.
+    compiler.outputFileSystem = this._fs;
 
-     return compiler;
-   }
+    return compiler;
+  }
 
-   /**
-    * Handles the results of running a compile. This gets called as a callback
-    * from Webpack.
-    */
-   _handleCompilation(error, stats) {
-     const warnings = stats.compilation.warnings;
-     const errors = stats.compilation.errors;
+  /**
+   * Handles the results of running a compile. This gets called as a callback
+   * from Webpack.
+   */
+  _handleCompilation(error, stats) {
+    const warnings = stats.compilation.warnings;
+    const errors = stats.compilation.errors;
 
-     if (warnings && (warnings.length !== 0)) {
-       log.warn('Compilation warnings.')
-       for (let i = 0; i < warnings.length; i++) {
-         const w = warnings[i];
-         log.warn(w);
-       }
-     }
+    if (warnings && (warnings.length !== 0)) {
+      log.warn('Compilation warnings.');
+      for (let i = 0; i < warnings.length; i++) {
+        const w = warnings[i];
+        log.warn(w);
+      }
+    }
 
-     if (error || (errors && (errors.length !== 0))) {
-       log.error('Trouble compiling JS bundle.')
-       for (let i = 0; i < errors.length; i++) {
-         const e = errors[i];
-         log.error(e.message);
-       }
-       return;
-     }
+    if (error || (errors && (errors.length !== 0))) {
+      log.error('Trouble compiling JS bundle.');
+      for (let i = 0; i < errors.length; i++) {
+        const e = errors[i];
+        log.error(e.message);
+      }
+      return;
+    }
 
-     log.info('Compiled new JS bundle.');
+    log.info('Compiled new JS bundle.');
 
-     // Find the written bundle in the memory FS, read it, and then delete it.
-     // See comments in `_newCompiler()`, above, for rationale.
-     try {
-       this._currentBundle = this._fs.readFileSync('/bundle.js');
-       this._fs.unlinkSync('/bundle.js');
-     } catch (e) {
-       // File not found. This will happen when it turns out there were no
-       // changes to the bundle. But it might happen in other cases too.
-       log.info('Bundle not written! No changes?');
-       return;
-     }
-   }
+    // Find the written bundle in the memory FS, read it, and then delete it.
+    // See comments in `_newCompiler()`, above, for rationale.
+    try {
+      this._currentBundle = this._fs.readFileSync('/bundle.js');
+      this._fs.unlinkSync('/bundle.js');
+    } catch (e) {
+      // File not found. This will happen when it turns out there were no
+      // changes to the bundle. But it might happen in other cases too.
+      log.info('Bundle not written! No changes?');
+      return;
+    }
+  }
 
   /**
    * Handles a request for the JS bundle. This is suitable for use as an Express

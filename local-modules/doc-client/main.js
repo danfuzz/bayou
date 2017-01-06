@@ -798,7 +798,7 @@ export default class DocClient {
     this._doc = {
       verNum: verNum,
       data:   data
-    }
+    };
 
     if (updateQuill) {
       this._quill.setContents(data, CLIENT_SOURCE);

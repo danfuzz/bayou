@@ -95,7 +95,7 @@ export default class SeeAllRecent {
 
     result.push('<table>');
 
-    for (let l of this._log) {
+    for (const l of this._log) {
       result.push(SeeAllRecent._htmlLine(l));
     }
 

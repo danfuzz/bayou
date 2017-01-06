@@ -1,0 +1,142 @@
+#!/bin/bash
+#
+# Copyright 2016-2017 the Bayou Authors (Dan Bornstein et alia).
+# Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+# Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+#
+# Runs the linter over the entire source base.
+#
+
+# Set `progName` to the program name, `progDir` to its directory, and `baseDir`
+# to `progDir`'s directory. Follows symlinks.
+function init-prog {
+    local newp p="$0"
+
+    while newp="$(readlink "$p")"; do
+        [[ ${newp} =~ ^/ ]] && p="${newp}" || p="$(dirname "$p")/${newp}"
+    done
+
+    progName="${p##*/}"
+    progDir="$(cd "$(dirname "$p")"; /bin/pwd -P)"
+    baseDir="$(cd "${progDir}/.."; /bin/pwd -P)"
+}
+init-prog
+
+
+#
+# Argument parsing
+#
+
+# Error during argument processing?
+argError=0
+
+# Need help?
+showHelp=0
+
+# Directory for the built output.
+outDir=''
+
+while (( $# != 0 )); do
+    opt="$1"
+    if [[ ${opt} == '--' ]]; then
+        shift
+        break
+    elif [[    ${opt} == '--help'
+            || ${opt} == '-h' ]]; then
+        showHelp=1
+    elif [[ ${opt} =~ ^--out=(.*) ]]; then
+        outDir="${BASH_REMATCH[1]}"
+    elif [[ ${opt} =~ ^- ]]; then
+        echo "Unknown option: ${opt}" 1>&2
+        argError=1
+        break
+    else
+        break
+    fi
+    shift
+done
+unset opt
+
+args=("$@")
+if (( ${#args[@]} == 0 )); then
+    args=("${baseDir}")
+fi
+
+if (( ${showHelp} || ${argError} )); then
+    echo 'Usage:'
+    echo ''
+    echo "${progName} [--out=<dir>] [--] [<file-or-dir> ...]"
+    echo '  Run the linter on the indicated files or directories. With nothing'
+    echo '  specified, runs over the entire project.'
+    echo '  --out=<dir>  Place output (built linter tool) in directory <dir>.'
+    echo ''
+    echo "${progName} [--help | -h]"
+    echo "  Display this message."
+    exit ${argError}
+fi
+
+
+#
+# Helper functions
+#
+
+# Sets up the output directory.
+function set-up-out {
+    if [[ ${outDir} == '' ]]; then
+        # Default output directory.
+        outDir="${baseDir}/out"
+    fi
+
+    if [[ -e ${outDir} ]]; then
+        if [[ ! -d ${outDir} ]]; then
+            echo "Not a directory: ${outDir}" 1>&2
+            return 1
+        fi
+    else
+        mkdir -p "${outDir}" || return 1
+    fi
+
+    # Make it absolute.
+    outDir="$(cd ${outDir}; /bin/pwd -P)"
+}
+
+# Builds the linter if necessary.
+function build-lint {
+    if [[ -e "${lintBin}" ]]; then
+        return
+    fi
+
+    rm -rf "${lintDir}"
+    mkdir -p "${lintDir}"
+    cd "${lintDir}"
+
+    cat > package.json <<EOF
+    {
+        "name": "bayou-linter",
+        "version": "1.0.0",
+        "dependencies": {
+            "eslint": "^3.12.2"
+        }
+    }
+EOF
+
+    npm install || return 1
+    ln -s node_modules/.bin/eslint "${lintBin}"
+}
+
+
+#
+# Main script
+#
+
+set-up-out || exit 1
+
+lintDir="${outDir}/lint"
+lintBin="${outDir}/lint/lint"
+
+(build-lint) || exit 1 # Parens to preserve the CWD.
+
+"${lintBin}" \
+    --cache --cache-location "${lintDir}/cache" \
+    --ignore-pattern "/$(basename "${outDir}")/" \
+    -- "${args[@]}"

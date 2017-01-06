@@ -73,7 +73,7 @@ export default class ApiServer {
 
     // Function to send a response. Arrow syntax so that `this` is usable.
     const respond = (result, error) => {
-      let response = {id: msg.id};
+      const response = {id: msg.id};
       if (error) {
         response.ok = false;
         response.error = error.message;
@@ -87,7 +87,7 @@ export default class ApiServer {
         log.detail(`${this._connectionId} error:`, error);
       }
       this._ws.send(JSON.stringify(response));
-    }
+    };
 
     try {
       // Note: If the method implementation returns a non-promise, then the

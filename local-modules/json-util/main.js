@@ -13,7 +13,7 @@ export default class JsonUtil {
     return JSON.parse(text, (key_unused, value) => {
       return (typeof value === 'object')
         ? Object.freeze(value)
-        : value
+        : value;
     });
   }
 }

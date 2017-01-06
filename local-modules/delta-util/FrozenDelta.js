@@ -32,7 +32,7 @@ function deepFreeze(obj) {
       }
     }
   } else {
-    for (let k in obj) {
+    for (const k in obj) {
       const oldValue = obj[k];
       const newValue = deepFreeze(oldValue);
       if (oldValue !== newValue) {
@@ -60,12 +60,12 @@ export default class FrozenDelta extends Delta {
    * frozen, the actual stored `ops` will be a deep-frozen clone of the given
    * value.
    */
-   constructor(ops) {
-     if (!Array.isArray(ops)) {
-       throw new Error('Bad value for `ops`.');
-     }
+  constructor(ops) {
+    if (!Array.isArray(ops)) {
+      throw new Error('Bad value for `ops`.');
+    }
 
-     super(deepFreeze(ops));
-     Object.freeze(this);
-   }
+    super(deepFreeze(ops));
+    Object.freeze(this);
+  }
 }

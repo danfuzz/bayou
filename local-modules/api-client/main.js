@@ -204,7 +204,7 @@ export default class ApiClient {
    * process of opening).
    */
   _handleOpen(event_unused) {
-    for (let payload of this._pendingCalls) {
+    for (const payload of this._pendingCalls) {
       this._ws.send(payload);
     }
     this._pendingCalls = [];

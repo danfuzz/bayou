@@ -35,7 +35,7 @@ export default class WebsocketCodes {
    *
    * @param code (default `null`) The code. If `null`, the result indicates
    *   a close with an unknown cause.
-   * @return The corresponding friendly string.
+   * @returns The corresponding friendly string.
    */
   static close(code = null) {
     if (code === null) {

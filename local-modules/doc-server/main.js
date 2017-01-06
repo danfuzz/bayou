@@ -192,7 +192,7 @@ export default class DocServer {
       return {
         delta:  [], // That is, there was no correction.
         verNum: this.currentVerNum // `_appendDelta()` updates the version.
-      }
+      };
     }
 
     // The hard case: The client has requested an application of a delta
@@ -234,7 +234,7 @@ export default class DocServer {
       return {
         delta:  [], // That is, there was no correction.
         verNum: vCurrentNum
-      }
+      };
     }
 
     // (3)
@@ -249,7 +249,7 @@ export default class DocServer {
     return {
       delta:  dCorrection,
       verNum: vNextNum
-    }
+    };
   }
 
   /**

@@ -12,7 +12,7 @@ function init-prog {
     local newp p="$0"
 
     while newp="$(readlink "$p")"; do
-    [[ ${newp} =~ ^/ ]] && p="${newp}" || p="$(dirname "$p")/${newp}"
+        [[ ${newp} =~ ^/ ]] && p="${newp}" || p="$(dirname "$p")/${newp}"
     done
 
     progName="${p##*/}"
