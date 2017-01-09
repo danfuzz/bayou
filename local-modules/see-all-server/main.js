@@ -36,8 +36,10 @@ export default class SeeAllServer {
   /**
    * Logs a message at the given severity level.
    *
-   * @param level Severity level.
-   * @param message Message to log.
+   * @param {number} nowMsec_unused Timestamp of the message.
+   * @param {string} level Severity level.
+   * @param {string} tag Name of the component associated with the message.
+   * @param {...string} message Message to log.
    */
   log(nowMsec_unused, level, tag, ...message) {
     const prefix = SeeAllServer._makePrefix(tag, level);
@@ -119,7 +121,10 @@ export default class SeeAllServer {
   /**
    * Logs the indicated time value as "punctuation" on the log.
    *
-   * @param nowMsec The time.
+   * @param {number} nowMsec_unused Timestamp to log.
+   * @param {string} utcString String representation of the time, as UTC.
+   * @param {string} localString String representation of the time, in the local
+   *   timezone.
    */
   time(nowMsec_unused, utcString, localString) {
     utcString = chalk.blue.bold(utcString);
@@ -134,11 +139,11 @@ export default class SeeAllServer {
    * Constructs a prefix header with the given tag (required) and level
    * (optional).
    *
-   * @param tag The tag.
-   * @param level (optional) The level.
-   * @returns a map with the `text` and the `length`. The latter is handy in
-   *   that it doesn't include the count of the characters used in color control
-   *   sequences.
+   * @param {string} tag The component tag.
+   * @param {string} [level = ''] The severity level.
+   * @returns {object} an object that maps `text` and `length`. The latter is
+   *   handy in that it _doesn't_ include the count of the characters used in
+   *   color control sequences.
    */
   static _makePrefix(tag, level = '') {
     let text = `[${tag}${level !== '' ? ' ' : ''}${level}]`;

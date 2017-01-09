@@ -79,12 +79,7 @@ export default class AppServer {
     function shortColorLog(tokens_unused, req, res) {
       const status    = res.statusCode || 0;
       const statusStr = res.statusCode || '-  ';
-      const colorFn =
-          (status >= 500) ? chalk.red
-        : (status >= 400) ? chalk.yellow
-        : (status >= 300) ? chalk.cyan
-        : (status >= 200) ? chalk.green
-        :                   ((x) => x); // No-op by default.
+      const colorFn   = AppServer._colorForStatus(status);
 
       let contentLength = res.get('content-length');
       if (contentLength === undefined) {
@@ -177,5 +172,20 @@ export default class AppServer {
   _addDevModeRoutes() {
     const app = this._app;
     app.use('/debug', new DebugTools(this._doc).requestHandler);
+  }
+
+  /**
+   * Given an HTTP status, returns the corresponding `chalk` coloring function,
+   * or a no-op function if the status doesn't demand colorization.
+   *
+   * @param {number} status The HTTP status code.
+   * @returns {function} The corresponding coloring function.
+   */
+  static _colorForStatus(status) {
+    if      (status >= 500) { return chalk.red;    }
+    else if (status >= 400) { return chalk.yellow; }
+    else if (status >= 300) { return chalk.cyan;   }
+    else if (status >= 200) { return chalk.green;  }
+    else                    { return ((x) => x);   } // No-op by default.
   }
 }

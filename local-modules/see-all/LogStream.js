@@ -13,8 +13,8 @@ export default class LogStream {
   /**
    * Constructs an instance.
    *
-   * @param logger Underlying logger to use.
-   * @param level Severity level to log at.
+   * @param {SeeAll} logger Underlying logger to use.
+   * @param {string} level Severity level to log at.
    */
   constructor(logger, level) {
     /** Underlying logger to use. */
@@ -26,8 +26,14 @@ export default class LogStream {
 
   /**
    * Implementation of standard `stream.Writable` method.
+   *
+   * @param {string|Buffer} chunk What to write.
+   * @param {string} [encoding = null] Name of character encoding to use when
+   *   `chunk` is passed as a string.
+   * @param {function} [callback = null] Function to call after writing is
+   *   complete.
    */
-  write(chunk, encoding, callback) {
+  write(chunk, encoding = null, callback = null) {
     if (typeof chunk !== 'string') {
       // Assume it's a buffer, which it's supposed to be if it's not a string.
       chunk = chunk.toString(encoding);
@@ -43,8 +49,15 @@ export default class LogStream {
 
   /**
    * Implementation of standard `stream.Writable` method.
+   *
+   * @param {string|Buffer} chunk What to write.
+   * @param {string} [encoding = null] Name of character encoding to use when
+   *   `chunk` is passed as a string.
+   * @param {function} [callback_unused = null] Function to call after stream
+   *   is closed. This is marked as unused because, as implemented, logger
+   *   streams _never_ actually get closed.
    */
-  end(chunk, encoding, callback_unused) {
+  end(chunk, encoding = null, callback_unused = null) {
     // We don't pass the `callback` because this stream never actually gets
     // ended (which is when the `callback` would be called).
     this.write(chunk, encoding);

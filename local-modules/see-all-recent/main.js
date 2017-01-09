@@ -18,8 +18,8 @@ export default class SeeAllRecent {
    * Constructs an instance. This will cause the instance to be registered with
    * the main `see-all` module.
    *
-   * @param maxAgeMsec The maximum age of logged items before they age out of
-   *   the list.
+   * @param {number} maxAgeMsec The maximum age of logged items before they age
+   *   out of the list.
    */
   constructor(maxAgeMsec) {
     /** Maximum age. */
@@ -34,8 +34,10 @@ export default class SeeAllRecent {
   /**
    * Logs a message at the given severity level.
    *
-   * @param level Severity level.
-   * @param message Message to log.
+   * @param {number} nowMsec Timestamp of the message.
+   * @param {string} level Severity level.
+   * @param {string} tag Name of the component associated with the message.
+   * @param {...string} message Message to log.
    */
   log(nowMsec, level, tag, ...message) {
     const details = {
@@ -52,7 +54,10 @@ export default class SeeAllRecent {
    * Logs the indicated time value as "punctuation" on the log. This class
    * also uses this call to trigger cleanup of old items.
    *
-   * @param nowMsec The time.
+   * @param {number} nowMsec Timestamp to log.
+   * @param {string} utcString String representation of the time, as UTC.
+   * @param {string} localString String representation of the time, in the local
+   *   timezone.
    */
   time(nowMsec, utcString, localString) {
     const details = {
@@ -105,6 +110,9 @@ export default class SeeAllRecent {
 
   /**
    * Converts the given log line to HTML.
+   *
+   * @param {object} log Structured log entry.
+   * @returns {string} HTML string form for the entry.
    */
   static _htmlLine(log) {
     let tag, body;
