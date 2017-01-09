@@ -60,8 +60,7 @@ export default class SeeAll {
    * localString)`. The latter are done as occasional "punctuation" on logs,
    * for loggers that don't want to record the exact timestamp of every message.
    *
-   * @param logger The underlying logger to use. Should be one of
-   * `./LogBrowser` or `./LogServer` as importable from this module.
+   * @param {object} logger The underlying logger to use.
    */
   static add(logger) {
     theLoggers.push(logger);
@@ -108,10 +107,10 @@ export default class SeeAll {
   /**
    * Constructs an instance.
    *
-   * @param tag Tag to associate with messages logged by this instance.
-   * @param enableDetail (optional; default `false`) Whether or not to produce
-   *   logs at the `detail` level.
-   * @returns The constructed logger.
+   * @param {string} tag Component tag to associate with messages logged by this
+   *   instance.
+   * @param {boolean} [enableDetail = false] Whether or not to produce logs at
+   *   the `detail` level.
    */
   constructor(tag, enableDetail = false) {
     /** The module / subsystem tag. */
@@ -124,12 +123,12 @@ export default class SeeAll {
   /**
    * Logs a message at the given severity level.
    *
-   * @param level Severity level. Must be one of the severity level constants
-   *   defined by this class.
-   * @param ...message Message to log. If any of the `message` values is an
-   *   object and we are running in a browser context, this will log the object
-   *   such that the browser console can be used to inspect it. If `message` is
-   *   an exception, this will log the stack trace.
+   * @param {string} level Severity level. Must be one of the severity level
+   *   constants defined by this class.
+   * @param {...string} message Message to log. If any of the `message` values
+   *   is an object and we are running in a browser context, this will log the
+   *   object such that the browser console can be used to inspect it. If
+   *   `message` is an exception, this will log the stack trace.
    */
   log(level, ...message) {
     SeeAll._validateLevel(level);
@@ -160,7 +159,7 @@ export default class SeeAll {
   /**
    * Logs a message at the `DEBUG` level.
    *
-   * @param ...message Message to log. See `log()` for details.
+   * @param {...string} message Message to log. See `log()` for details.
    */
   debug(...message) {
     this.log(SeeAll.DEBUG, ...message);
@@ -169,7 +168,7 @@ export default class SeeAll {
   /**
    * Logs a message at the `ERROR` level.
    *
-   * @param ...message Message to log. See `log()` for details.
+   * @param {...string} message Message to log. See `log()` for details.
    */
   error(...message) {
     this.log(SeeAll.ERROR, ...message);
@@ -178,7 +177,7 @@ export default class SeeAll {
   /**
    * Logs a message at the `WARN` level.
    *
-   * @param ...message Message to log. See `log()` for details.
+   * @param {...string} message Message to log. See `log()` for details.
    */
   warn(...message) {
     this.log(SeeAll.WARN, ...message);
@@ -187,7 +186,7 @@ export default class SeeAll {
   /**
    * Logs a message at the `INFO` level.
    *
-   * @param ...message Message to log. See `log()` for details.
+   * @param {...string} message Message to log. See `log()` for details.
    */
   info(...message) {
     this.log(SeeAll.INFO, ...message);
@@ -196,7 +195,7 @@ export default class SeeAll {
   /**
    * Logs a message at the `DETAIL` level.
    *
-   * @param ...message Message to log. See `log()` for details.
+   * @param {...string} message Message to log. See `log()` for details.
    */
   detail(...message) {
     this.log(SeeAll.DETAIL, ...message);
@@ -209,7 +208,7 @@ export default class SeeAll {
    * After so logging, this throws an exception, which is meant to cause the
    * system to shut down (and potentially restart, if it's set up to self-heal).
    *
-   * @param ...message Message to log. See `log()` for details.
+   * @param {...string} message Message to log. See `log()` for details.
    */
   wtf(...message) {
     this.error('Shouldn\'t happen:', ...message);
@@ -222,9 +221,9 @@ export default class SeeAll {
    * it responds to both `.write()` and `.end()` identically, and it never
    * emits events.
    *
-   * @param level Severity level. Must be one of the severity level constants
-   *   defined by this class.
-   * @returns An appropriately-constructed stream.
+   * @param {string} level Severity level. Must be one of the severity level
+   *   constants defined by this class.
+   * @returns {LogStream} An appropriately-constructed stream.
    */
   streamFor(level) {
     SeeAll._validateLevel(level);
@@ -249,8 +248,8 @@ export default class SeeAll {
   /**
    * Validates a `level` value. Throws an error if invalid.
    *
-   * @param level Severity level. Must be one of the severity level constants
-   *   defined by this class.
+   * @param {string} level Severity level. Must be one of the severity level
+   *   constants defined by this class.
    */
   static _validateLevel(level) {
     if (!LEVELS[level]) {
@@ -259,9 +258,11 @@ export default class SeeAll {
   }
 
   /**
-   * Gets a timestamp representing the current time, suitable for passing to
-   * loggers. This will also generate `logger.time()` calls at appropriate
+   * Gets a msec timestamp representing the current time, suitable for passing
+   * to loggers. This will also generate `logger.time()` calls at appropriate
    * junctures to "punctuate" gaps.
+   *
+   * @returns {number} The timestamp.
    */
   static _now() {
     const now = Date.now();
@@ -286,7 +287,7 @@ export default class SeeAll {
   /**
    * Calls `logger.time()` on all of the loggers.
    *
-   * @param now The time to pass.
+   * @param {number} now The time to pass.
    */
   static _callTime(now) {
     // Note: We don't check to see if there are any loggers here. That check
@@ -304,8 +305,8 @@ export default class SeeAll {
   /**
    * Returns a string representing the given time in UTC.
    *
-   * @param date The time, as a `Date` object.
-   * @return The corresponding UTC time string.
+   * @param {Date} date The time, as a `Date` object.
+   * @returns {string} The corresponding UTC time string.
    */
   static _utcTimeString(date) {
     // We start with the ISO string and tweak it to be a little more
@@ -317,8 +318,8 @@ export default class SeeAll {
   /**
    * Returns a string representing the given time in the local timezone.
    *
-   * @param date The time, as a `Date` object.
-   * @return The corresponding local time string.
+   * @param {Date} date The time, as a `Date` object.
+   * @returns {string} The corresponding local time string.
    */
   static _localTimeString(date) {
     // We start with the local time string and cut off all everything after the

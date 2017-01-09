@@ -27,8 +27,10 @@ export default class SeeAllBrowser {
   /**
    * Logs a message at the given severity level.
    *
-   * @param level Severity level.
-   * @param message Message to log.
+   * @param {number} nowMsec_unused Timestamp of the message.
+   * @param {string} level Severity level.
+   * @param {string} tag Name of the component associated with the message.
+   * @param {...string} message Message to log.
    */
   log(nowMsec_unused, level, tag, ...message) {
     const prefix = `%c[${tag} ${level}]`;
@@ -58,7 +60,10 @@ export default class SeeAllBrowser {
   /**
    * Logs the indicated time value as "punctuation" on the log.
    *
-   * @param nowMsec The time.
+   * @param {number} nowMsec_unused Timestamp to log.
+   * @param {string} utcString String representation of the time, as UTC.
+   * @param {string} localString String representation of the time, in the local
+   *   timezone.
    */
   time(nowMsec_unused, utcString, localString) {
     // eslint-disable-next-line no-console
