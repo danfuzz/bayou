@@ -18,6 +18,9 @@ const path = require('path');
 
 const babel = require('babel-core');
 
+/** How many files reported errors? */
+let errorCount = 0;
+
 /**
  * Compiles a single file.
  *
@@ -43,19 +46,31 @@ function compileFile(inputFile, outputFile) {
     // a-okay. Just fall through to the compiler.
   }
 
-  const output = babel.transformFileSync(inputFile,
-    {
-      filename: inputFile,
-      sourceMaps: 'inline',
+  let output = null;
 
-      // We have to resolve the presets "manually."
-      presets: ['es2015', 'es2016', 'es2017'].map(function (name) {
-        return require.resolve(`babel-preset-${name}`);
-      })
-    });
+  try {
+    output = babel.transformFileSync(inputFile,
+      {
+        filename: inputFile,
+        sourceMaps: 'inline',
 
-  fs.writeFileSync(outputFile, output.code);
-  console.log('Compiled', inputFile);
+        // We have to resolve the presets "manually."
+        presets: ['es2015', 'es2016', 'es2017'].map(function (name) {
+          return require.resolve(`babel-preset-${name}`);
+        })
+      });
+  } catch (e) {
+    console.log(e.message);
+    if (e.codeFrame) {
+      console.log(e.codeFrame);
+    }
+    errorCount++;
+  }
+
+  if (output !== null) {
+    fs.writeFileSync(outputFile, output.code);
+    console.log('Compiled', inputFile);
+  }
 }
 
 /**
@@ -91,4 +106,9 @@ if (stat.isDirectory()) {
   compileDir(input, output);
 } else {
   compileFile(input, output);
+}
+
+if (errorCount !== 0) {
+  console.log(`${errorCount} file${errorCount === 1 ? '' : 's'} with errors.`);
+  process.exit(1);
 }

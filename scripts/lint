@@ -68,10 +68,12 @@ if (( ${showHelp} || ${argError} )); then
     echo "${progName} [--out=<dir>] [--] [<file-or-dir> ...]"
     echo '  Run the linter on the indicated files or directories. With nothing'
     echo '  specified, runs over the entire project.'
-    echo '  --out=<dir>  Place output (built linter tool) in directory <dir>.'
+    echo ''
+    echo '  --out=<dir>'
+    echo '    Place output (built linter tool) in directory <dir>.'
     echo ''
     echo "${progName} [--help | -h]"
-    echo "  Display this message."
+    echo '  Display this message.'
     exit ${argError}
 fi
 
@@ -156,4 +158,5 @@ lintBin="${outDir}/lint/lint"
 "${lintBin}" \
     --cache --cache-location "${lintDir}/cache" \
     --ignore-pattern "/$(basename "${outDir}")/" \
+    --max-warnings 0 \
     -- "${args[@]}"

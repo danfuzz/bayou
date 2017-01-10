@@ -70,11 +70,14 @@ if (( ${showHelp} || ${argError} )); then
     echo ''
     echo "${progName} [--out=<dir>] [--overlay=<dir>]"
     echo '  Create boxed dependencies.'
-    echo '  --out=<dir>      Place output in directory <dir>.'
-    echo '  --overlay=<dir>  Find overlay source in directory <dir>.'
+    echo ''
+    echo '  --out=<dir>'
+    echo '    Place output in directory <dir>.'
+    echo '  --overlay=<dir>'
+    echo '    Find overlay source in directory <dir>.'
     echo ''
     echo "${progName} [--help | -h]"
-    echo "  Display this message."
+    echo '  Display this message.'
     exit ${argError}
 fi
 
