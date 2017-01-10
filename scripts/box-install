@@ -71,10 +71,12 @@ if (( ${showHelp} || ${argError} )); then
     echo ''
     echo "${progName} [--dir=<dir>] <box-file>"
     echo '  Perform an `npm install`.'
-    echo '  --dir=<dir>  Directory for the install (defaults to the CWD).'
+    echo ''
+    echo '  --dir=<dir>'
+    echo '  Directory for the install (defaults to the CWD).'
     echo ''
     echo "${progName} [--help | -h]"
-    echo "  Display this message."
+    echo '  Display this message.'
     exit ${argError}
 fi
 

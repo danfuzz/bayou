@@ -83,14 +83,20 @@ if (( ${showHelp} || ${argError} )); then
     echo ''
     echo "${progName} [--clean] [--out=<dir>] [--overlay=<dir>]"
     echo '  Build the project.'
-    echo '  --boxes=<dir>    Find boxed dependencies in directory <dir>.'
-    echo '  --clean          Start from a clean build.'
-    echo '  --just-clean     Just clean (do not actually build).'
-    echo '  --out=<dir>      Place output in directory <dir>.'
-    echo '  --overlay=<dir>  Find overlay source in directory <dir>.'
+    echo ''
+    echo '  --boxes=<dir>'
+    echo '    Find boxed dependencies in directory <dir>.'
+    echo '  --clean'
+    echo '    Start from a clean build.'
+    echo '  --just-clean'
+    echo '    Just clean (do not actually build).'
+    echo '  --out=<dir>'
+    echo '    Place output in directory <dir>.'
+    echo '  --overlay=<dir>'
+    echo '    Find overlay source in directory <dir>.'
     echo ''
     echo "${progName} [--help | -h]"
-    echo "  Display this message."
+    echo '  Display this message.'
     exit ${argError}
 fi
 

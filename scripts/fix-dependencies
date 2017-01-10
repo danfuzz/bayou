@@ -73,13 +73,15 @@ if (( ${showHelp} || ${argError} )); then
     echo ''
     echo "${progName} [--out=<path>] <path/to/package.json>"
     echo '  Derives local dependencies.'
-    echo '  --out=<file>  Where to store the output.'
-    echo '  --no-locals   Do not emit local module dependencies in the output.'
-    echo '                (But do include the regular modules that the local'
-    echo '                modules depend on.)'
+    echo ''
+    echo '  --out=<file>'
+    echo '    Where to store the output.'
+    echo '  --no-locals'
+    echo '    Do not emit local module dependencies in the output. (But do'
+    echo '    include the regular modules that the local modules depend on.)'
     echo ''
     echo "${progName} [--help | -h]"
-    echo "  Display this message."
+    echo '  Display this message.'
     exit ${argError}
 fi
 

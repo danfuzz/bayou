@@ -65,10 +65,12 @@ if (( ${showHelp} || ${argError} )); then
     echo ''
     echo "${progName} [--out=<dir>]"
     echo '  Clean the project output.'
-    echo '  --out=<dir>      Directory where built output goes.'
+    echo ''
+    echo '  --out=<dir>'
+    echo '    Directory where built output goes.'
     echo ''
     echo "${progName} [--help | -h]"
-    echo "  Display this message."
+    echo '  Display this message.'
     exit ${argError}
 fi
 
