@@ -120,8 +120,25 @@ function build-lint {
     }
 EOF
 
-    npm install || return 1
-    ln -s node_modules/.bin/eslint "${lintBin}"
+    echo 'Building linter...'
+
+    # Capture the output of the `npm install`. Only spew it out if there's a
+    # problem. **Note:** `npm` doesn't seem to use exit codes meaningfully, so
+    # we have to check to see if the binary we expect to be written is actually
+    # there.
+    local npmOutput="$(npm install 2>&1)"
+    local installedBin="node_modules/.bin/eslint"
+
+    if [[ ! -r "${installedBin}" ]]; then
+        # No lint binary. Complain!
+        echo "${npmOutput}"
+        return 1
+    fi
+
+    ln -s "${installedBin}" "${lintBin}" || return 1
+
+    echo 'Building linter...done!'
+    echo ''
 }
 
 
