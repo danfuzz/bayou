@@ -72,12 +72,15 @@ const webpackOptions = {
           // Babel doesn't respect the `resolveLoader.root` value. Because we
           // treat the `client` and `server` as peers (that is, because the
           // server modules aren't in a super-directory of `client`), we have to
-          // "manually" resolve the presets. See
+          // "manually" resolve the plugins and presets. See
           // <https://github.com/babel/babel-loader/issues/149>,
           // <https://github.com/babel/babel-loader/issues/166>, and
           // <http://stackoverflow.com/questions/34574403/how-to-set-resolve-for-babel-loader-presets/>
           // for details and discussion.
-          presets: ['es2015', 'es2016', 'es2017'].map(function (name) {
+          plugins: ['transform-flow-strip-types'].map((name) => {
+            return require.resolve(`babel-plugin-${name}`);
+          }),
+          presets: ['es2015', 'es2016', 'es2017'].map((name) => {
             return require.resolve(`babel-preset-${name}`);
           }),
         }
