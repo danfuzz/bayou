@@ -194,7 +194,6 @@ export default class ClientBundle {
       // File not found. This will happen when it turns out there were no
       // changes to the bundle. But it might happen in other cases too.
       log.info('Bundle not written! No changes?');
-      return;
     }
   }
 
@@ -218,14 +217,24 @@ export default class ClientBundle {
   }
 
   /**
-   * Performs a single build. Returns the built artifact.
+   * Performs a single build. Returns a promise for the built artifact.
    *
-   * @returns {Buffer} The built artifact.
+   * @returns {Promise<Buffer>} The built artifact.
    */
   build() {
-    const compiler = this._newCompiler();
-    compiler.run(this._handleCompilation.bind(this));
-    return this._currentBundle;
+    const result = new Promise((res, rej) => {
+      const compiler = this._newCompiler();
+      compiler.run((error, stats) => {
+        this._handleCompilation(error, stats);
+        if (this._currentBundle) {
+          res(this._currentBundle);
+        } else {
+          rej('Trouble building client bundle.');
+        }
+      });
+    });
+
+    return result;
   }
 
   /**
