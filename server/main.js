@@ -9,6 +9,10 @@
 // displayed with an accurate backtrace.
 import 'source-map-support/register';
 
+import minimist from 'minimist';
+import path from 'path';
+
+import ClientBundle from 'client-bundle';
 import DocServer from 'doc-server';
 import SeeAllServer from 'see-all-server';
 import ServerUtil from 'server-util';
@@ -16,26 +20,107 @@ import ServerUtil from 'server-util';
 import AppServer from './AppServer';
 import DevMode from './DevMode';
 
+/** Error during argument processing? */
+let argError = false;
+
+/**
+ * Parsed command-line options. **Note:** The `slice` gets rid of the `node`
+ * binary name and the name of the initial script (that is, this file).
+ */
+const opts = minimist(process.argv.slice(2), {
+  boolean: ['client-bundle', 'dev', 'help'],
+  string: ['prog-name'],
+  alias: {
+    'h': 'help'
+  },
+  stopEarly: true,
+  unknown: (arg) => {
+    // eslint-disable-next-line no-console
+    console.log(`Unrecognized option: ${arg}`);
+    argError = true;
+    return false;
+  }
+});
+
+/** Client bundle build mode? */
+const clientBundleMode = opts['client-bundle'];
+
+/** Dev mode? */
+const devMode = opts['dev'];
+
+/** Want help? */
+const showHelp = opts['help'];
+
+if (devMode && clientBundleMode) {
+  // eslint-disable-next-line no-console
+  console.log('Cannot specify both `--dev` and `--client-bundle`.');
+  argError = true;
+}
+
+if (showHelp || argError) {
+  const progName = opts['prog-name'] || path.basename(process.argv[1]);
+  [
+    'Usage:',
+    '',
+    `${progName} [--dev | --client-bundle]`,
+    '  Run the project.',
+    '',
+    '  --client-bundle',
+    '    Just build a client bundle, and report any errors encountered.',
+    '  --dev',
+    '    Run in development mode, for interactive development without having',
+    '    to restart.',
+    '',
+    `${progName} [--help | -h]`,
+    '  Display this message.'
+  ].forEach((line) => {
+    // eslint-disable-next-line no-console
+    console.log(line);
+  });
+  process.exit(argError ? 1 : 0);
+}
+
+/**
+ * Runs the system normally or in dev mode.
+ */
+function run() {
+  // Set up the PID file handler.
+  ServerUtil.initPidFile();
+
+  if (devMode) {
+    // We're in dev mode. This starts the system that live-syncs the client
+    // source.
+    new DevMode().start();
+  }
+
+  /** The single document managed by this instance. */
+  const theDoc = new DocServer();
+
+  /** The main app server. */
+  const theApp = new AppServer(theDoc, devMode);
+
+  // Start the app!
+  theApp.start();
+}
+
+/**
+ * Does a client bundling.
+ */
+function clientBundle() {
+  new ClientBundle().build().then((res_unused) => {
+    process.exit(0);
+  }, (rej) => {
+    // eslint-disable-next-line no-console
+    console.log(rej);
+    process.exit(1);
+  });
+}
+
 // Initialize logging.
 SeeAllServer.init();
 
-// Set up the PID file handler.
-ServerUtil.initPidFile();
-
-/** Dev mode? */
-const devMode = (process.argv[2] === '--dev');
-
-if (devMode) {
-  // We're in dev mode. This starts the system that live-syncs the client
-  // source.
-  new DevMode().start();
+if (clientBundleMode) {
+  clientBundle();
+} else {
+  run();
 }
-
-/** The single document managed by this instance. */
-const theDoc = new DocServer();
-
-/** The main app server. */
-const theApp = new AppServer(theDoc, devMode);
-
-// Start the app!
-theApp.start();
