@@ -104,12 +104,10 @@ function set-up-out {
 
 # Builds the linter if necessary.
 function build-lint {
-    if [[ -e "${lintBin}" ]]; then
-        return
+    if [[ ! -e "${lintDir}" ]]; then
+        mkdir -p "${lintDir}"
     fi
 
-    rm -rf "${lintDir}"
-    mkdir -p "${lintDir}"
     cd "${lintDir}"
 
     cat > package.json <<EOF
@@ -117,10 +115,23 @@ function build-lint {
         "name": "bayou-linter",
         "version": "1.0.0",
         "dependencies": {
-            "eslint": "^3.12.2"
+            "babel-eslint": "^7.1.1",
+            "eslint": "^3.12.2",
+            "eslint-plugin-flowtype": "^2.29.2",
+            "flow-bin": "^0.37.4"
         }
     }
 EOF
+
+    if [[ -e package-built.json ]]; then
+        cmp -s package.json package-built.json
+        if (( $? == 0 )); then
+            # Already built this version.
+            return 0
+        fi
+    fi
+
+    rm -rf node_modules "${lintBin}" "${flowBin}"
 
     echo 'Building linter...'
 
@@ -129,15 +140,18 @@ EOF
     # we have to check to see if the binary we expect to be written is actually
     # there.
     local npmOutput="$(npm install 2>&1)"
-    local installedBin="node_modules/.bin/eslint"
+    local installedLint="node_modules/.bin/eslint"
+    local installedFlow="node_modules/.bin/flow"
 
-    if [[ ! -r "${installedBin}" ]]; then
-        # No lint binary. Complain!
+    if [[ ! (-r "${installedLint}" && -r "${installedFlow}") ]]; then
+        # No lint and/or flow binaries. Complain!
         echo "${npmOutput}"
         return 1
     fi
 
-    ln -s "${installedBin}" "${lintBin}" || return 1
+    ln -s "${installedLint}" "${lintBin}" || return 1
+    ln -s "${installedFlow}" "${flowBin}" || return 1
+    cp package.json package-built.json
 
     echo 'Building linter...done!'
     echo ''
@@ -152,11 +166,35 @@ set-up-out || exit 1
 
 lintDir="${outDir}/lint"
 lintBin="${outDir}/lint/lint"
+flowBin="${outDir}/lint/flow"
 
 (build-lint) || exit 1 # Parens to preserve the CWD.
 
+errors=0
+
+echo 'Linting...'
 "${lintBin}" \
     --cache --cache-location "${lintDir}/cache" \
     --ignore-pattern "/$(basename "${outDir}")/" \
+    --ignore-pattern "flow-typed/" \
     --max-warnings 0 \
     -- "${args[@]}"
+if (( $? != 0 )); then
+    errors=1
+fi
+
+for arg in "${args[@]}"; do
+    echo "Flowing... ${arg}"
+    "${flowBin}" check "${arg}"
+    if (( $? != 0 )); then
+        errors=1
+    fi
+done
+
+if (( ${errors} )); then
+    echo ''
+    echo 'One or more lint / type errors reported.'
+    exit 1
+fi
+
+echo 'All good!'
