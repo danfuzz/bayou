@@ -87,7 +87,7 @@ export default class SeeAllServer {
     // its own line and produce the main content just slightly indented, under
     // the prefix.
 
-    const consoleWidth = Math.max(process.stdout.getWindowSize()[0] || 80, 80);
+    const consoleWidth = SeeAllServer._consoleWidth();
     const maxLineWidth = lines.reduce(
       (prev, l) => { return Math.max(prev, l.length); },
       0);
@@ -164,5 +164,19 @@ export default class SeeAllServer {
     text += ' ';
 
     return {text: text, length: length};
+  }
+
+  /**
+   * Figures out the width of the console (if attached) or a reasonable default
+   * if not.
+   *
+   * @returns {number} The console width.
+   */
+  static _consoleWidth() {
+    if (!process.stdout.isTTY) {
+      return 80;
+    }
+
+    return Math.max(process.stdout.getWindowSize()[0] || 80, 80);
   }
 }
