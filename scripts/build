@@ -39,6 +39,9 @@ clean=0
 # Just clean? (No build?)
 justClean=0
 
+# Try building a client bundle?
+clientBundle=0
+
 # Overlay source directory, if any.
 overlayDir=''
 
@@ -55,6 +58,8 @@ while (( $# != 0 )); do
         break
     elif [[ ${opt} == '--clean' ]]; then
         clean=1
+    elif [[ ${opt} == '--client-bundle' ]]; then
+        clientBundle=1
     elif [[    ${opt} == '--help'
             || ${opt} == '-h' ]]; then
         showHelp=1
@@ -88,6 +93,8 @@ if (( ${showHelp} || ${argError} )); then
     echo '    Find boxed dependencies in directory <dir>.'
     echo '  --clean'
     echo '    Start from a clean build.'
+    echo '  --client-bundle'
+    echo '    On successful build, also try building a client bundle.'
     echo '  --just-clean'
     echo '    Just clean (do not actually build).'
     echo '  --out=<dir>'
@@ -395,5 +402,9 @@ fi
         && build-server \
         && build-bin
 ) || exit 1
+
+if (( ${clientBundle} )); then
+    "${outDir}/bin/run" --client-bundle || exit 1
+fi
 
 echo 'Done!'
