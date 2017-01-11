@@ -25,62 +25,8 @@ init-prog
 
 
 #
-# Parse options.
-#
-
-# Error during argument processing?
-argError=0
-
-# Dev mode?
-devMode=0
-
-# Need help?
-showHelp=0
-
-while (( $# != 0 )); do
-    opt="$1"
-    if [[ ${opt} == '--' ]]; then
-        shift
-        break
-    elif [[ ${opt} == '--dev' ]]; then
-        devMode=1
-    elif [[    ${opt} == '--help'
-            || ${opt} == '-h' ]]; then
-        showHelp=1
-    elif [[ ${opt} =~ ^- ]]; then
-        echo "Unknown option: ${opt}" 1>&2
-        argError=1
-        break
-    else
-        break
-    fi
-    shift
-done
-unset opt
-
-if (( ${showHelp} || ${argError} )); then
-    echo 'Usage:'
-    echo ''
-    echo "${progName} [--dev]"
-    echo '  Run the project.'
-    echo '  --dev  Run in development mode, for interactive development without'
-    echo '         having to restart.'
-    echo ''
-    echo "${progName} [--help | -h]"
-    echo "  Display this message."
-    exit ${argError}
-fi
-
-
-#
 # Main script
 #
 
-args=()
-
-if (( ${devMode} )); then
-    args=(-- --dev)
-fi
-
 cd "${baseDir}/server"
-exec npm start "${args[@]}"
+exec node ./main.js --prog-name="${progName}" "$@"
