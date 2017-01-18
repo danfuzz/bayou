@@ -1,5 +1,0 @@
-[ignore]
-<PROJECT_ROOT>/out/.*
-
-[options]
-module.system.node.resolve_dirname=local-modules

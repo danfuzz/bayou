@@ -10,8 +10,6 @@
     "spread": true,
     "restParams": true
   },
-  "parser": "babel-eslint",
-  "plugins": ["flowtype"],
   "rules" : {
     "consistent-return": "error",
     "eqeqeq": "error",
