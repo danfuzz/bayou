@@ -103,14 +103,21 @@ $ ./scripts/build --boxes=<box-dir>
 $ ./scripts/clean
 ```
 
+### Editor setup
+
+You may want to install live linting into your editor. If you use the Atom
+editor, the package `linter-eslint` can do that.
+
 ### Directory structure
 
 * `client` &mdash; Client code and static assets. The main client-side
   application entrypoint is `js/app.js`.
 * `compiler` &mdash; Submodule used to build the server-side code, using Babel
   in an appropriately-configured manner.
+* `etc` &mdash; A dumping ground for miscellaneous files.
 * `local-modules` &mdash; JavaScript module code (Node modules, essentially)
   which can be used on both the client and server sides.
+* `scripts` &mdash; Scripts for use during development (see above).
 * `server` &mdash; Server code. The main entrypoint is `main.js`.
 * `out` &mdash; Where the results of doing a build end up.
 
