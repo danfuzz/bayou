@@ -54,11 +54,8 @@ function compileFile(inputFile, outputFile) {
         filename: inputFile,
         sourceMaps: 'inline',
 
-        // We have to resolve the plugins and presets "manually."
-        plugins: ['transform-flow-strip-types'].map((name) => {
-          return require.resolve(`babel-plugin-${name}`);
-        }),
-        presets: ['es2015', 'es2016', 'es2017'].map((name) => {
+        // We have to resolve the presets "manually."
+        presets: ['es2015', 'es2016', 'es2017'].map(function (name) {
           return require.resolve(`babel-preset-${name}`);
         })
       });

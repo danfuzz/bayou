@@ -103,34 +103,14 @@ $ ./scripts/build --boxes=<box-dir>
 $ ./scripts/clean
 ```
 
-### Editor setup
-
-The project uses (well, is starting to use) the [Flow](https://flowtype.org)
-extensions to JavaScript. You may want to install syntax highlighting for
-it as well as live linting / type checking. To do so:
-
-* Install the `flow` binary. For example, if you use Homebrew:
-
-  ```
-  $ brew install flow
-  ```
-
-* If you use the Atom editor, the package `language-babel` understands Flow
-  syntax, and the package `linter-flow` knows how to do live checking of
-  files.
-
 ### Directory structure
 
 * `client` &mdash; Client code and static assets. The main client-side
   application entrypoint is `js/app.js`.
 * `compiler` &mdash; Submodule used to build the server-side code, using Babel
   in an appropriately-configured manner.
-* `etc` &mdash; A dumping ground for miscellaneous files.
-* `flow-typed` &mdash; Module definitions used by the Flow type checker (run
-  as part of the linting process).
 * `local-modules` &mdash; JavaScript module code (Node modules, essentially)
   which can be used on both the client and server sides.
-* `scripts` &mdash; Scripts for use during development (see above).
 * `server` &mdash; Server code. The main entrypoint is `main.js`.
 * `out` &mdash; Where the results of doing a build end up.
 
