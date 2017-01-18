@@ -104,12 +104,10 @@ function set-up-out {
 
 # Builds the linter if necessary.
 function build-lint {
-    if [[ -e "${lintBin}" ]]; then
-        return
+    if [[ ! -e "${lintDir}" ]]; then
+        mkdir -p "${lintDir}"
     fi
 
-    rm -rf "${lintDir}"
-    mkdir -p "${lintDir}"
     cd "${lintDir}"
 
     cat > package.json <<EOF
@@ -121,6 +119,16 @@ function build-lint {
         }
     }
 EOF
+
+    if [[ -e package-built.json ]]; then
+        cmp -s package.json package-built.json
+        if (( $? == 0 )); then
+            # Already built this version.
+            return 0
+        fi
+    fi
+
+    rm -rf node_modules "${lintBin}"
 
     echo 'Building linter...'
 
@@ -138,6 +146,7 @@ EOF
     fi
 
     ln -s "${installedBin}" "${lintBin}" || return 1
+    cp package.json package-built.json
 
     echo 'Building linter...done!'
     echo ''
