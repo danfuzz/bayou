@@ -6,6 +6,7 @@ import DeltaUtil from 'delta-util';
 import PromCondition from 'prom-condition';
 import Typecheck from 'typecheck';
 
+import DocumentChange from './DocumentChange';
 import default_document from './default-document';
 
 
@@ -21,8 +22,8 @@ export default class DocServer {
   constructor() {
     /**
      * List of changes that in aggregate represent the document. Each element
-     * is a Delta. The first element is always a delta-from-empty. Composing
-     * elements `0..N` results in version `N` of the document.
+     * is a `DocumentChange`. The first element is always a change-from-empty.
+     * Composing elements `0..N` results in version `N` of the document.
      */
     this._changes = [];
 
@@ -41,8 +42,9 @@ export default class DocServer {
     this._changeCondition = new PromCondition(true);
 
     // Initialize the document with static content (for now).
-    const firstVersion = DeltaUtil.coerce(default_document);
-    this._changes.push(firstVersion);
+    const firstChange =
+      new DocumentChange(0, Date.now(), default_document, null);
+    this._changes.push(firstChange);
   }
 
   /**
@@ -69,7 +71,7 @@ export default class DocServer {
    * @param {number} [verNum = this.currentVerNum] The version number of the
    *   change. The result is the change which produced that version. E.g., `0`
    *   is a request for the first change (the change from the empty document).
-   * @returns {object} An object representing that change.
+   * @returns {DocumentChange} An object representing that change.
    */
   change(verNum) {
     verNum = this._validateVerNum(verNum, true);
@@ -102,7 +104,7 @@ export default class DocServer {
       // We have no snapshots at all, including of even the first version. Set
       // up version 0.
       baseSnapshot = this._snapshots[0] = {
-        data:   this._changes[0],
+        data:   this._changes[0].delta,
         verNum: 0
       };
     }
@@ -117,7 +119,7 @@ export default class DocServer {
 
     let data = baseSnapshot.data;
     for (let i = baseSnapshot.verNum + 1; i <= verNum; i++) {
-      data = data.compose(this._changes[i]);
+      data = data.compose(this._changes[i].delta);
     }
 
     const result = {
@@ -279,9 +281,9 @@ export default class DocServer {
       return DeltaUtil.EMPTY_DELTA;
     }
 
-    let result = this._changes[startInclusive];
+    let result = this._changes[startInclusive].delta;
     for (let i = startInclusive + 1; i < endExclusive; i++) {
-      result = result.compose(this._changes[i]);
+      result = result.compose(this._changes[i].delta);
     }
 
     return result;
@@ -302,7 +304,9 @@ export default class DocServer {
       return;
     }
 
-    this._changes.push(delta);
+    // TODO: Assign an author.
+    const change = new DocumentChange(this.nextVerNum, Date.now(), delta, null);
+    this._changes.push(change);
     this._changeCondition.value = true;
   }
 

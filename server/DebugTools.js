@@ -65,8 +65,7 @@ export default class DebugTools {
     let result;
 
     try {
-      const change = this._doc.change(verNum);
-      result = JSON.stringify(change, null, 2);
+      result = this._doc.change(verNum).toWire();
     } catch (e) {
       result = `Error:\n\n${e.stack}`;
     }
