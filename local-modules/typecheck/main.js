@@ -7,6 +7,12 @@ import inspect from 'object-inspect';
 import DeltaUtil from 'delta-util';
 
 /**
+ * Minimum acceptable timestamp. This is a moment in time toward the start of
+ * 2008.
+ */
+const MIN_TIME_MSEC = 1200000000 * 1000;
+
+/**
  * Throws an error indicating a bad value, including the expected type and
  * representation of the value.
  *
@@ -149,17 +155,99 @@ export default class Typecheck {
   }
 
   /**
+   * Checks a value of type `object`, which must have exactly the indicated set
+   * of keys.
+   *
+   * @param {*} value Value to check.
+   * @param {Array<string>} keys Keys that must be present in `value`.
+   * @returns {object} `value`.
+   */
+  static objectWithExactKeys(value, keys) {
+    if (typeof value !== 'object') {
+      return badValue(value, 'object');
+    }
+
+    // Make a copy, check for and delete allowed keys, and see if anything's
+    // left.
+
+    const copy = Object.assign({}, value);
+    for (const k of keys) {
+      if (!Object.hasOwnProperty(copy, k)) {
+        return badValue(value, 'object', `Missing key \`${k}\``);
+      }
+      delete copy[k];
+    }
+
+    const remainingKeys = Object.keys(copy);
+    if (remainingKeys.length !== 0) {
+      let msg = 'Extra keys';
+      for (const k of remainingKeys) {
+        msg += ` \`${k}\``;
+      }
+      return badValue(value, 'object', msg);
+    }
+
+    return value;
+  }
+
+  /**
+   * Checks a value of type `timeMsec`. These are integer counts of milliseconds
+   * since the Unix Epoch, with a minimum value set to be around the start of
+   * 2008.
+   *
+   * @param {*} value Value to check.
+   * @returns {number} `value`.
+   */
+  static timeMsec(value) {
+    try {
+      return Typecheck.intMin(value, MIN_TIME_MSEC);
+    } catch (e) {
+      // More appropriate error.
+      return badValue(value, 'timeMsec');
+    }
+  }
+
+  /**
+   * Checks a value of type string.
+   *
+   * @param {*} value Value to check.
+   * @returns {string} `value`.
+   */
+  static string(value) {
+    if (typeof value !== 'string') {
+      return badValue(value, 'string');
+    }
+
+    return value;
+  }
+
+  /**
+   * Checks a value of type string-or-null.
+   *
+   * @param {*} value Value to check.
+   * @returns {string|null} `value`.
+   */
+  static stringOrNull(value) {
+    if ((value !== null) && (typeof value !== 'string')) {
+      return badValue(value, 'stringOrNull');
+    }
+
+    return value;
+  }
+
+  /**
    * Checks a value of type `versionNumber`. Version numbers are non-negative
    * integers. In addition, in any given context there is generally an upper
    * limit on them.
    *
    * @param {*} value Value to check.
-   * @param {number} max Maximum acceptable value (inclusive).
+   * @param {number} [max] Maximum acceptable value (inclusive). If
+   *   `undefined`, there is no upper limit.
    * @param {*} [ifAbsent] Default value. If passed and `value` is `undefined`,
    *   this method will return this value instead of throwing an error.
    * @returns {number} `value` or `ifAbsent`.
    */
-  static versionNumber(value, max, ifAbsent = undefined) {
+  static versionNumber(value, max = undefined, ifAbsent = undefined) {
     if ((value === undefined) && (ifAbsent !== undefined)) {
       return ifAbsent;
     }
@@ -170,7 +258,7 @@ export default class Typecheck {
       return badValue(value, 'versionNumber');
     }
 
-    if (value > max) {
+    if ((max !== undefined) && (value > max)) {
       return badValue(value, 'versionNumber', `value <= ${max}`);
     }
 
