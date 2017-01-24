@@ -5,10 +5,24 @@
 import JsonUtil from 'json-util';
 import RandomId from 'random-id';
 import SeeAll from 'see-all';
+import Typecheck from 'typecheck';
 import WebsocketCodes from 'websocket-codes';
+
+import MetaHandler from './MetaHandler';
 
 /** Logger. */
 const log = new SeeAll('api');
+
+/**
+ * A map with keys for all the "own properties" defined on the `Object`
+ * prototype. We blacklist these from being found when looking up methods
+ * to dispatch to.
+ */
+const DEFAULT_PROPERTIES =
+  Object.getOwnPropertyNames(Object.prototype).reduce((result, v) => {
+    result[v] = true;
+    return result;
+  }, {});
 
 /**
  * Direct handler for API requests. This is responsible for interpreting
@@ -21,7 +35,7 @@ export default class ApiServer {
    * connection. As a side effect, the contructor attaches the constructed
    * instance to the websocket.
    *
-   * @param {WebSocket} ws A websocket instance corresponding to that connection.
+   * @param {WebSocket} ws A websocket instance corresponding to the connection.
    * @param {DocServer} doc The document to interact with.
    */
   constructor(ws, doc) {
@@ -36,6 +50,9 @@ export default class ApiServer {
 
     /** Count of messages received. Used for liveness logging. */
     this._messageCount = 0;
+
+    /** The object to handle meta-requests. */
+    this._meta = new MetaHandler(this._connectionId);
 
     ws.on('message', this._handleMessage.bind(this));
     ws.on('close', this._handleClose.bind(this));
@@ -60,17 +77,73 @@ export default class ApiServer {
     msg = JsonUtil.parseFrozen(msg);
     log.detail(`${this._connectionId} message:`, msg);
 
-    const method = msg.method;
-    let impl;
-    if (method === undefined) {
-      impl = this.error_missing_method;
-    } else if (typeof method !== 'string') {
-      impl = this.error_bad_method;
-    } else {
-      impl = this[`method_${method}`];
-      if (!impl) {
-        impl = this.error_unknown_method;
+    let target     = this._doc;
+    let methodImpl = null;
+
+    try {
+      Typecheck.objectWithExactKeys(msg, ['id', 'action', 'name', 'args']);
+      Typecheck.intMin(msg.id, 0);
+      Typecheck.string(msg.action);
+      Typecheck.string(msg.name);
+      Typecheck.array(msg.args);
+
+      if (msg.action === 'meta') {
+        // The `meta` action gets treated as a `call` on the meta-handler.
+        target = this._meta;
       }
+    } catch (e) {
+      target = this;
+      methodImpl = this.error_bad_message;
+      // Remake the message such that it can ultimately be dispatched (to
+      // produce the desired error response).
+      msg = {
+        id:     -1,
+        action: 'error',
+        name:   'unknown-name',
+        args:   [msg]
+      };
+    }
+
+    switch (msg.action) {
+      case 'error': {
+        // Nothing extra to do. We'll fall through and dispatch to the error
+        // implementation which was already set up.
+        break;
+      }
+
+      case 'call':
+      case 'meta': {
+        const name = msg.name;
+
+        if (name.match(/^_/)) {
+          // We explicitly disallow `_`-prefix names, thereby respecting the
+          // convention that those are "private."
+          break;
+        }
+
+        // Find a method binding corresponding to the name.
+        methodImpl = target[name];
+        if (   !methodImpl
+            || (typeof methodImpl !== 'function')
+            || DEFAULT_PROPERTIES[name]) {
+          // No binding, not a function (so not a method), or in the list of
+          // default `Object` properties (so blacklisted).
+          methodImpl = null;
+        }
+
+        break;
+      }
+
+      default: {
+        target = this;
+        methodImpl = this.error_bad_action;
+        break;
+      }
+    }
+
+    if (methodImpl === null) {
+      target = this;
+      methodImpl = this.error_unknown_method;
     }
 
     // Function to send a response. Arrow syntax so that `this` is usable.
@@ -94,7 +167,7 @@ export default class ApiServer {
     try {
       // Note: If the method implementation returns a non-promise, then the
       // `resolve()` call operates promptly.
-      Promise.resolve(impl.call(this, msg.args)).then(
+      Promise.resolve(methodImpl.apply(target, msg.args)).then(
         (result) => { respond(result, null); },
         (error) => { respond(null, error); });
     } catch (error) {
@@ -124,97 +197,29 @@ export default class ApiServer {
   }
 
   /**
-   * API error: Bad value for `method` in call payload (not a string).
+   * API error: Bad value for `message` in call payload (invalid shape).
    *
-   * @param {object} args_unused The arguments originally passed to the method.
+   * @param {object} msg_unused The original message.
    */
-  error_bad_method(args_unused) {
-    throw new Error('bad_method');
+  error_bad_message(msg_unused) {
+    throw new Error('bad_message');
   }
 
   /**
-   * API error: Missing `method` in call payload.
+   * API error: Bad value for `action` in call payload (not a recognized value).
    *
-   * @param {object} args_unused The arguments originally passed to the method.
+   * @param {object} msg_unused The original message.
    */
-  error_missing_method(args_unused) {
-    throw new Error('missing_method');
+  error_bad_action(msg_unused) {
+    throw new Error('bad_action');
   }
 
   /**
    * API error: Unknown (undefined) method.
    *
-   * @param {object} args_unused The arguments originally passed to the method.
+   * @param {object} msg_unused The original message.
    */
-  error_unknown_method(args_unused) {
+  error_unknown_method(msg_unused) {
     throw new Error('unknown_method');
-  }
-
-  /**
-   * API method `ping`: No-op method that merely verifies (implicitly) that the
-   * connection is working. Always returns `true`.
-   *
-   * @param {object} args_unused The arguments to the method.
-   * @returns {boolean} `true`, always.
-   */
-  method_ping(args_unused) {
-    return true;
-  }
-
-  /**
-   * API method `connectionId`: Returns the connection ID that the server
-   * assigned to this connection. This is only meant to be used for logging.
-   * For example, it is _not_ guaranteed to be unique.
-   *
-   * @param {object} args_unused The arguments to the method.
-   * @returns {string} The connection ID.
-   */
-  method_connectionId(args_unused) {
-    return this._connectionId;
-  }
-
-  /**
-   * API method `snapshot`: Returns an instantaneous snapshot of the document
-   * contents. Result is an object that maps `data` to the snapshot data and
-   * `verNum` to the version number.
-   *
-   * @param {object} args_unused The arguments to the method.
-   * @returns {object} The snapshot.
-   */
-  method_snapshot(args_unused) {
-    return this._doc.snapshot();
-  }
-
-  /**
-   * API method `applyDelta`: Takes a base version number and delta therefrom,
-   * and applies the delta, including merging of any intermediate versions.
-   * Result is an object consisting of a new version number, and a
-   * delta which can be applied to version `baseVerNum` to get the new
-   * document.
-   *
-   * @param {object} args The arguments to the method.
-   * @param {number} args.baseVerNum Base version number.
-   * @param {object} args.delta Delta to apply.
-   * @returns {object} The new version number and "correction" delta.
-   */
-  method_applyDelta(args) {
-    return this._doc.applyDelta(args.baseVerNum, args.delta);
-  }
-
-  /**
-   * API method `deltaAfter`: Returns a promise for a snapshot of any version
-   * after the given `baseVerNum`, and relative to that version. Result is an
-   * object consisting of a new version number, and a delta which can be applied
-   * to version `baseVerNum` to get the new document. If called when
-   * `baseVerNum` is the current version, this will not fulfill the result
-   * promise until at least one change has been made.
-   *
-   * @param {object} args The arguments to the method.
-   * @param {number} args.baseVerNum Base version number.
-   * @returns {Promise} Promise for a later version in the form of a delta from
-   *   the given base version, along with the new version number.
-  */
-  method_deltaAfter(args) {
-    return this._doc.deltaAfter(args.baseVerNum);
   }
 }

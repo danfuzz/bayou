@@ -7,12 +7,19 @@ import SeeAll from 'see-all';
 import WebsocketCodes from 'websocket-codes';
 
 import ApiError from './ApiError';
+import TargetHandler from './TargetHandler';
 
 /** Logger. */
 const log = new SeeAll('api');
 
 /** Value used for an unknown connection ID. */
 const UNKNOWN_CONNECTION_ID = 'id-unknown';
+
+/** All valid API method names. */
+const METHOD_NAMES = ['applyDelta', 'deltaAfter', 'snapshot'];
+
+/** All valid API meta-method names. */
+const META_NAMES = ['connectionId', 'ping'];
 
 /**
  * Connection with the server, via a websocket.
@@ -26,9 +33,9 @@ export default class ApiClient {
   /**
    * Constructs an instance. This instance will connect to a websocket at the
    * same domain at the path `/api`. Once this constructor returns, it is safe
-   * to call any API methods on the instance; if the socket isn't yet ready for
-   * traffic, the calls will get enqueued and then replayed in order once the
-   * socket becomes ready.
+   * to call any API methods on the instance's associated `target`. If the
+   * socket isn't yet ready for traffic, the calls will get enqueued and then
+   * replayed in order once the socket becomes ready.
    *
    * @param {string} url The server origin, as an `http` or `https` URL.
    */
@@ -81,6 +88,14 @@ export default class ApiClient {
      */
     this._pendingCalls = null;
 
+    /**
+     * Target object upon which API method calls can be made. TODO: This should
+     * be a proxy, not `this`.
+     */
+    this._target = new Proxy(
+      Object.freeze({}),
+      new TargetHandler(this, METHOD_NAMES, META_NAMES));
+
     // Initialize the active connection fields (described above).
     this._resetConnection();
   }
@@ -100,13 +115,14 @@ export default class ApiClient {
   /**
    * Sends the given call to the server.
    *
-   * @param {string} method Name of method to call on the server.
-   * @param {object} args JSON-encodable object of arguments.
+   * @param {string} action Name of action to invoke.
+   * @param {string} name Name of method (or meta-method) to call on the server.
+   * @param {object} [args = []] JSON-encodable object of arguments.
    * @returns {Promise} Promise for the result (or error) of the call. In the
    *   case of an error, the rejection reason will always be an instance of
    *   `ApiError` (see which for details).
    */
-  _send(method, args) {
+  _send(action, name, args = []) {
     const wsState = this._ws.readyState;
 
     // Handle the cases where socket shutdown is imminent or has already
@@ -124,7 +140,7 @@ export default class ApiClient {
     }
 
     const id = this._nextId;
-    const payloadObj = {method: method, args: args, id: id};
+    const payloadObj = {id: id, action: action, name: name, args: args};
     const payload = JSON.stringify(payloadObj);
 
     let callback;
@@ -292,7 +308,7 @@ export default class ApiClient {
     this._ws.onmessage = this._handleMessage.bind(this);
     this._ws.onopen    = this._handleOpen.bind(this);
 
-    return this.connectionId().then((value) => {
+    return this.target.connectionId().then((value) => {
       this._connectionId = value;
       log.info(`${this._connectionId}: open`);
       return true;
@@ -301,7 +317,7 @@ export default class ApiClient {
 
   /**
    * The connection ID if known, or a reasonably suggestive string if not.
-   * This class automatically sets this when connections get made, so that
+   * This class automatically sets the ID when connections get made, so that
    * clients don't generally have to make an API call to get this info.
    */
   get id() {
@@ -309,58 +325,9 @@ export default class ApiClient {
   }
 
   /**
-   * API call `ping`. No-op request that verifies an active connection.
-   *
-   * @returns {Promise} A promise for the result of the remote call.
+   * The object upon which API calls can be made.
    */
-  ping() {
-    return this._send('ping', {});
-  }
-
-  /**
-   * API call `connectionId`. Requests the connection ID to use for logging.
-   *
-   * @returns {Promise} A promise for the result of the remote call.
-   */
-  connectionId() {
-    return this._send('connectionId', {});
-  }
-
-  /**
-   * API call `snapshot`. Requests a document snapshot. Returns a promise for
-   * the result.
-   *
-   * @returns {Promise} A promise for the result of the remote call.
-   */
-  snapshot() {
-    return this._send('snapshot', {});
-  }
-
-  /**
-   * API call `deltaAfter`. Requests a delta for a newer version with respect
-   * to a given version.
-   *
-   * @param {number} baseVerNum Version number to provide a delta with respect
-   *   to.
-   * @returns {Promise} A promise for the result of the remote call.
-   */
-  deltaAfter(baseVerNum) {
-    return this._send('deltaAfter', {baseVerNum: baseVerNum});
-  }
-
-  /**
-   * API call `applyDelta`. Sends a change to the server in the form of a
-   * base version number and delta therefrom. Returns a promise for the
-   * result, which is an object consisting of a new version number, and a
-   * delta which can be applied to the version corresponding to `baseVerNum`
-   * to get the new version.
-   *
-   * @param {number} baseVerNum Version number to apply the delta with respect
-   *   to.
-   * @param {object} delta The delta to apply.
-   * @returns {Promise} A promise for the result of the remote call.
-   */
-  applyDelta(baseVerNum, delta) {
-    return this._send('applyDelta', {baseVerNum: baseVerNum, delta: delta});
+  get target() {
+    return this._target;
   }
 }
