@@ -89,8 +89,7 @@ export default class ApiClient {
     this._pendingCalls = null;
 
     /**
-     * Target object upon which API method calls can be made. TODO: This should
-     * be a proxy, not `this`.
+     * Target object upon which API method calls can be made.
      */
     this._target = new Proxy(
       Object.freeze({}),
