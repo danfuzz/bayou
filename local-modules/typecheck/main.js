@@ -28,6 +28,17 @@ function badValue(value, typeName, extra = null) {
 }
 
 /**
+ * Calls `value.hasOwnProperty()` safely.
+ *
+ * @param {object} value Value to query.
+ * @param {string} name Name of property in question.
+ * @returns {boolean} `true` iff `value` has an own-property with the given name.
+ */
+function hasOwnProperty(value, name) {
+  return Object.prototype.hasOwnProperty.call(value, name);
+}
+
+/**
  * Type checking and validation. This class consists of static methods which
  * take a value and (sometimes) additional options. The methods return a value
  * of a specific type or throw an error:
@@ -42,13 +53,27 @@ function badValue(value, typeName, extra = null) {
  */
 export default class Typecheck {
   /**
+   * Checks a value of type array.
+   *
+   * @param {*} value The (alleged) array.
+   * @returns {array} `value`.
+   */
+  static array(value) {
+    if (!Array.isArray(value)) {
+      return badValue(value, 'array');
+    }
+
+    return value;
+  }
+
+  /**
    * Checks a value of type boolean.
    *
    * @param {*} value The (alleged) boolean.
    * @param {boolean|null} [defaultValue = null] Default value. If passed,
    *   indicates that `undefined` should be treated as that value. If not
    *   passed, `undefined` is an error.
-   * @returns {boolean} `value` or `defaultValue`
+   * @returns {boolean} `value` or `defaultValue`.
    */
   static boolean(value, defaultValue = null) {
     if ((value === undefined) && (defaultValue !== null)) {
@@ -156,7 +181,7 @@ export default class Typecheck {
 
   /**
    * Checks a value of type `object`, which must have exactly the indicated set
-   * of keys.
+   * of keys as "own" properties.
    *
    * @param {*} value Value to check.
    * @param {Array<string>} keys Keys that must be present in `value`.
@@ -172,7 +197,7 @@ export default class Typecheck {
 
     const copy = Object.assign({}, value);
     for (const k of keys) {
-      if (!Object.hasOwnProperty(copy, k)) {
+      if (!hasOwnProperty(copy, k)) {
         return badValue(value, 'object', `Missing key \`${k}\``);
       }
       delete copy[k];
@@ -188,23 +213,6 @@ export default class Typecheck {
     }
 
     return value;
-  }
-
-  /**
-   * Checks a value of type `timeMsec`. These are integer counts of milliseconds
-   * since the Unix Epoch, with a minimum value set to be around the start of
-   * 2008.
-   *
-   * @param {*} value Value to check.
-   * @returns {number} `value`.
-   */
-  static timeMsec(value) {
-    try {
-      return Typecheck.intMin(value, MIN_TIME_MSEC);
-    } catch (e) {
-      // More appropriate error.
-      return badValue(value, 'timeMsec');
-    }
   }
 
   /**
@@ -233,6 +241,23 @@ export default class Typecheck {
     }
 
     return value;
+  }
+
+  /**
+   * Checks a value of type `timeMsec`. These are integer counts of milliseconds
+   * since the Unix Epoch, with a minimum value set to be around the start of
+   * 2008.
+   *
+   * @param {*} value Value to check.
+   * @returns {number} `value`.
+   */
+  static timeMsec(value) {
+    try {
+      return Typecheck.intMin(value, MIN_TIME_MSEC);
+    } catch (e) {
+      // More appropriate error.
+      return badValue(value, 'timeMsec');
+    }
   }
 
   /**
