@@ -374,7 +374,7 @@ export default class DocClient {
    */
   _handle_detached_start(event_unused) {
     // TODO: This should probably arrange for a timeout.
-    this._api.snapshot().then(
+    this._api.target.snapshot().then(
       (value) => {
         this._event(Events.gotSnapshot(value.verNum, value.data));
       },
@@ -459,7 +459,7 @@ export default class DocClient {
     if (!this._pendingDeltaAfter) {
       this._pendingDeltaAfter = true;
 
-      this._api.deltaAfter(baseDoc.verNum).then(
+      this._api.target.deltaAfter(baseDoc.verNum).then(
         (value) => {
           this._pendingDeltaAfter = false;
           this._event(Events.gotDeltaAfter(baseDoc, value.verNum, value.delta));
@@ -619,7 +619,7 @@ export default class DocClient {
     const expectedData = this._doc.data.compose(delta);
 
     // Send the delta, and handle the response.
-    this._api.applyDelta(this._doc.verNum, delta).then(
+    this._api.target.applyDelta(this._doc.verNum, delta).then(
       (value) => {
         this._event(Events.gotApplyDelta(expectedData, value.verNum, value.delta));
       },
