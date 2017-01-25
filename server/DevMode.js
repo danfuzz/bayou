@@ -236,7 +236,7 @@ export default class DevMode {
       return null;
     }
 
-    return {fromPath: bestFromPath, toPath: toPath};
+    return {fromPath: bestFromPath, toPath};
   }
 
   /**
