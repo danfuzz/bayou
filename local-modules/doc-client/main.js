@@ -51,7 +51,7 @@ class Events {
    * @returns {object} The constructed event.
    */
   static apiError(method, reason) {
-    return {name: 'apiError', method: method, reason: reason};
+    return {name: 'apiError', method, reason};
   }
 
   /**
@@ -68,12 +68,7 @@ class Events {
    * @returns {object} The constructed event.
    */
   static gotApplyDelta(expectedData, verNum, delta) {
-    return {
-      name:         'gotApplyDelta',
-      expectedData: expectedData,
-      verNum:       verNum,
-      delta:        delta
-    };
+    return {name: 'gotApplyDelta', expectedData, verNum, delta};
   }
 
   /**
@@ -89,7 +84,7 @@ class Events {
    * @returns {object} The constructed event.
    */
   static gotDeltaAfter(baseDoc, verNum, delta) {
-    return {name: 'gotDeltaAfter', baseDoc: baseDoc, verNum: verNum, delta: delta};
+    return {name: 'gotDeltaAfter', baseDoc, verNum, delta};
   }
 
   /**
@@ -103,7 +98,7 @@ class Events {
    * @returns {object} The constructed event.
    */
   static gotLocalDelta(baseDoc) {
-    return {name: 'gotLocalDelta', baseDoc: baseDoc};
+    return {name: 'gotLocalDelta', baseDoc};
   }
 
   /**
@@ -115,7 +110,7 @@ class Events {
    * @returns {object} The constructed event.
    */
   static gotSnapshot(verNum, data) {
-    return {name: 'gotSnapshot', verNum: verNum, data: data};
+    return {name: 'gotSnapshot', verNum, data};
   }
 
   /**
@@ -136,7 +131,7 @@ class Events {
    * @returns {object} The constructed event.
    */
   static wantApplyDelta(baseDoc) {
-    return {name: 'wantApplyDelta', baseDoc: baseDoc};
+    return {name: 'wantApplyDelta', baseDoc};
   }
 
   /**
@@ -740,10 +735,7 @@ export default class DocClient {
 
     // Make a new head of the change chain which points at the `nextNow` we
     // just constructed above.
-    this._currentChange = {
-      nextNow: nextNow,
-      next:    Promise.resolve(nextNow)
-    };
+    this._currentChange = {nextNow, next: Promise.resolve(nextNow)};
 
     return IDLE_EVENT_TRANSITION;
   }
@@ -808,8 +800,8 @@ export default class DocClient {
     // surprising results when `x` is an old version of `_doc`.
     const oldData = this._doc.data;
     this._doc = {
-      verNum: verNum,
-      data:   DeltaUtil.isEmpty(delta) ? oldData : oldData.compose(delta)
+      verNum,
+      data: DeltaUtil.isEmpty(delta) ? oldData : oldData.compose(delta)
     };
 
     // Tell Quill.
@@ -831,10 +823,7 @@ export default class DocClient {
   _updateDocWithSnapshot(verNum, data, updateQuill = true) {
     data = DeltaUtil.coerce(data);
 
-    this._doc = {
-      verNum: verNum,
-      data:   data
-    };
+    this._doc = {verNum, data};
 
     if (updateQuill) {
       this._quill.setContents(data, CLIENT_SOURCE);
