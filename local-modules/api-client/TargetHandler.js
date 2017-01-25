@@ -7,36 +7,81 @@
  */
 export default class TargetHandler {
   /**
-   * Constructs an instance.
+   * Makes a proxy that is handled by an instance of this class.
    *
    * @param {ApiClient} apiClient The client to forward calls to.
-   * @param {array} methodNames List of all valid method names.
-   * @param {array} metaNames List of all valid meta-method names.
+   * @returns {Proxy} An appropriately-constructed proxy object.
    */
-  constructor(apiClient, methodNames, metaNames) {
+  static makeProxy(apiClient) {
+    return new Proxy(Object.freeze({}), new TargetHandler(apiClient));
+  }
+
+  /**
+   * Constructs an instance. It only becomes usable after a call to `open()`
+   * has completed (asynchronously).
+   *
+   * @param {ApiClient} apiClient The client to forward calls to.
+   */
+  constructor(apiClient) {
     /** The client to forward calls to. */
     this._apiClient = apiClient;
 
-    // Build the mapping of method names to handlers.
-
-    let theMethods = methodNames.reduce((result, name) => {
-      result[name] = (...args) => {
-        return apiClient._send('call', name, args);
-      };
-      return result;
-    }, {});
-
-    theMethods = metaNames.reduce((result, name) => {
-      result[name] = (...args) => {
-        return apiClient._send('meta', name, args);
-      };
-      return result;
-    }, theMethods);
-
     /**
-     * All the valid method call handlers, for both regular and meta-methods.
+     * Cached method call handlers, for both regular and meta-methods. This
+     * gets initialized to just `schema` and `connectionId` (as meta-methods),
+     * and then gets fully populated once the server hands us a schema.
      */
-    this._methods = theMethods;
+    this._methods = {
+      'connectionId': this._makeMethodHandler('meta', 'connectionId'),
+      'schema':       this._makeMethodHandler('meta', 'schema')
+    };
+
+    /** State of readiness, one of `not`, `readying`, or `ready`. */
+    this._readyState = 'not';
+  }
+
+  /**
+   * Makes a method handler for the given action and name.
+   *
+   * @param {string} action The action.
+   * @param {string} name The method name.
+   * @returns {function} An appropriately-constructed handler.
+   */
+  _makeMethodHandler(action, name) {
+    const apiClient = this._apiClient; // Avoid re-(re-)lookup on every call.
+    return (...args) => {
+      return apiClient._send(action, name, args);
+    };
+  }
+
+  /**
+   * Sets up the method handler table. This gets called as a byproduct of the
+   * first method lookup.
+   */
+  _becomeReady() {
+    if (this._readyState !== 'not') {
+      return;
+    }
+
+    this._readyState = 'readying';
+
+    this._apiClient.target.schema().then((schema) => {
+      const methods = this._methods;
+
+      for (const name in schema.meta) {
+        if (!methods[name]) {
+          methods[name] = this._makeMethodHandler('meta', name);
+        }
+      }
+
+      for (const name in schema.methods) {
+        if (!methods[name]) {
+          methods[name] = this._makeMethodHandler('call', name);
+        }
+      }
+
+      this._readyState = 'ready';
+    });
   }
 
   /**
@@ -93,7 +138,21 @@ export default class TargetHandler {
    *   defined.
    */
   get(target_unused, property, receiver_unused) {
-    return this._methods[property];
+    const method = this._methods[property];
+
+    if (this._readyState === 'not') {
+      // We're getting accessed but aren't yet fully set up (and aren't already
+      // in the middle of doing so).
+      this._becomeReady();
+    }
+
+    if (method || this._ready) {
+      return method;
+    } else {
+      // We're still starting up. Assume that this is a non-meta method, but
+      // _don't_ cache it, in case we're wrong.
+      return this._makeMethodHandler('call', property);
+    }
   }
 
   /**
