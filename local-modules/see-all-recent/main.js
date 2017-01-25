@@ -40,13 +40,7 @@ export default class SeeAllRecent {
    * @param {...string} message Message to log.
    */
   log(nowMsec, level, tag, ...message) {
-    const details = {
-      nowMsec: nowMsec,
-      level:   level,
-      tag:     tag,
-      message: message
-    };
-
+    const details = {nowMsec, level, tag, message};
     this._log.push(details);
   }
 
@@ -60,13 +54,8 @@ export default class SeeAllRecent {
    *   timezone.
    */
   time(nowMsec, utcString, localString) {
-    const details = {
-      nowMsec:     nowMsec,
-      tag:         'time',
-      utcString:   utcString,
-      localString: localString
-    };
-
+    const tag = 'time';
+    const details = {nowMsec, tag, utcString, localString};
     this._log.push(details);
 
     // Trim the log.
