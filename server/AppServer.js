@@ -131,13 +131,13 @@ export default class AppServer {
     app.use(morgan(shortWsLog, {
       stream:    log.infoStream,
       immediate: true,
-      skip:      skip
+      skip
     }));
 
     app.use(morgan('common', {
       stream:    logStream,
       immediate: true,
-      skip:      skip
+      skip
     }));
   }
 

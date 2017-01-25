@@ -15,12 +15,6 @@ const log = new SeeAll('api');
 /** Value used for an unknown connection ID. */
 const UNKNOWN_CONNECTION_ID = 'id-unknown';
 
-/** All valid API method names. */
-const METHOD_NAMES = ['applyDelta', 'deltaAfter', 'snapshot'];
-
-/** All valid API meta-method names. */
-const META_NAMES = ['connectionId', 'ping'];
-
 /**
  * Connection with the server, via a websocket.
  */
@@ -91,9 +85,7 @@ export default class ApiClient {
     /**
      * Target object upon which API method calls can be made.
      */
-    this._target = new Proxy(
-      Object.freeze({}),
-      new TargetHandler(this, METHOD_NAMES, META_NAMES));
+    this._target = TargetHandler.makeProxy(this);
 
     // Initialize the active connection fields (described above).
     this._resetConnection();
@@ -139,12 +131,12 @@ export default class ApiClient {
     }
 
     const id = this._nextId;
-    const payloadObj = {id: id, action: action, name: name, args: args};
+    const payloadObj = {id, action, name, args};
     const payload = JSON.stringify(payloadObj);
 
     let callback;
     const result = new Promise((resolve, reject) => {
-      callback = {resolve: resolve, reject: reject};
+      callback = {resolve, reject};
     });
 
     this._callbacks[id] = callback;

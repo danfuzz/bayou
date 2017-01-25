@@ -122,11 +122,7 @@ export default class DocServer {
       data = data.compose(this._changes[i].delta);
     }
 
-    const result = {
-      data:   data,
-      verNum: verNum
-    };
-
+    const result = {verNum, data};
     this._snapshots[verNum] = result;
     return result;
   }
@@ -154,7 +150,7 @@ export default class DocServer {
       // We don't just return a plain value (that is, we still return a promise)
       // because of the usual hygenic recommendation to always return either
       // an immediate result or a promise from any given function.
-      return Promise.resolve({verNum: currentVerNum, delta: delta});
+      return Promise.resolve({verNum: currentVerNum, delta});
     }
 
     // Force the `_changeCondition` to `false` (though it might already be
