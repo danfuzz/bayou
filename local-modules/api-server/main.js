@@ -14,17 +14,6 @@ import MetaHandler from './MetaHandler';
 const log = new SeeAll('api');
 
 /**
- * A map with keys for all the "own properties" defined on the `Object`
- * prototype. We blacklist these from being found when looking up methods
- * to dispatch to.
- */
-const DEFAULT_PROPERTIES =
-  Object.getOwnPropertyNames(Object.prototype).reduce((result, v) => {
-    result[v] = true;
-    return result;
-  }, {});
-
-/**
  * Direct handler for API requests. This is responsible for interpreting
  * and responding to incoming websocket data. It mostly bottoms out by calling
  * on a document object.
@@ -52,7 +41,7 @@ export default class ApiServer {
     this._messageCount = 0;
 
     /** The object to handle meta-requests. */
-    this._meta = new MetaHandler(this._connectionId);
+    this._meta = new MetaHandler(this._doc, this._connectionId);
 
     ws.on('message', this._handleMessage.bind(this));
     ws.on('close', this._handleClose.bind(this));
@@ -78,6 +67,7 @@ export default class ApiServer {
     log.detail(`${this._connectionId} message:`, msg);
 
     let target     = this._doc;
+    let schemaPart = 'methods';
     let methodImpl = null;
 
     try {
@@ -89,7 +79,8 @@ export default class ApiServer {
 
       if (msg.action === 'meta') {
         // The `meta` action gets treated as a `call` on the meta-handler.
-        target = this._meta;
+        target     = this._meta;
+        schemaPart = 'meta';
       }
     } catch (e) {
       target = this;
@@ -114,23 +105,12 @@ export default class ApiServer {
       case 'call':
       case 'meta': {
         const name = msg.name;
-
-        if (name.match(/^_/)) {
-          // We explicitly disallow `_`-prefix names, thereby respecting the
-          // convention that those are "private."
-          break;
+        const allowedMethods = this._meta.schema()[schemaPart];
+        if (allowedMethods[name]) {
+          // Listed in the schema. So it exists, is public, is in fact bound to
+          // a function, etc.
+          methodImpl = target[name];
         }
-
-        // Find a method binding corresponding to the name.
-        methodImpl = target[name];
-        if (   !methodImpl
-            || (typeof methodImpl !== 'function')
-            || DEFAULT_PROPERTIES[name]) {
-          // No binding, not a function (so not a method), or in the list of
-          // default `Object` properties (so blacklisted).
-          methodImpl = null;
-        }
-
         break;
       }
 
