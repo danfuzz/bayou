@@ -7,6 +7,8 @@ import DeltaUtil from 'delta-util';
 import PromDelay from 'prom-delay';
 import SeeAll from 'see-all';
 
+import Events from './Events';
+import Snapshot from './Snapshot';
 
 /** Logger. */
 const log = new SeeAll('doc');
@@ -34,117 +36,6 @@ const RESTART_DELAY_MSEC = 10000;
  * Tag used to identify this module as the source of a Quill event or action.
  */
 const CLIENT_SOURCE = 'doc-client';
-
-/**
- * Constructors for the events used by the client synching state machine.
- *
- * **Note:** This class serves as documentation for each of the kinds of events
- * used by the system.
- */
-class Events {
-  /**
-   * Constructs an `apiError` event. This indicates that an error was reported
-   * back from an API call.
-   *
-   * @param {string} method Name of the method that was called.
-   * @param {string} reason Error reason.
-   * @returns {object} The constructed event.
-   */
-  static apiError(method, reason) {
-    return {name: 'apiError', method, reason};
-  }
-
-  /**
-   * Constructs a `gotApplyDelta` event. This represents a successful result
-   * from the API call `applyDelta()`. Keys are as defined by that API, with
-   * the addition of `expectedData` which represents the expected result of
-   * merge (which will be the case if there are no other intervening changes).
-   *
-   * @param {object} expectedData The expected result of the merge. This will be
-   *   the actual result if there are no other intervening changes (indicated by
-   *   the fact that `delta` is empty).
-   * @param {number} verNum The version number of the resulting document.
-   * @param {object} delta The delta from `expectedData`.
-   * @returns {object} The constructed event.
-   */
-  static gotApplyDelta(expectedData, verNum, delta) {
-    return {name: 'gotApplyDelta', expectedData, verNum, delta};
-  }
-
-  /**
-   * Constructs a `gotDeltaAfter` event. This represents a successful result
-   * from the API call `deltaAfter()`. Keys are as defined by that API, with
-   * the addition of `baseDoc` which represents the document at the time of the
-   * request.
-   *
-   * @param {object} baseDoc The document (version and data) at the time of the
-   *   original request.
-   * @param {number} verNum The version number of the document.
-   * @param {object} delta The delta from `baseDoc`.
-   * @returns {object} The constructed event.
-   */
-  static gotDeltaAfter(baseDoc, verNum, delta) {
-    return {name: 'gotDeltaAfter', baseDoc, verNum, delta};
-  }
-
-  /**
-   * Constructs a `gotLocalDelta` event. This indicates that there is at least
-   * one local change that Quill has made to its document which is not yet
-   * reflected in the given base document. Put another way, this indicates that
-   * `_currentChange` has a resolved `next`.
-   *
-   * @param {object} baseDoc The document (version and data) at the time of the
-   *   original request.
-   * @returns {object} The constructed event.
-   */
-  static gotLocalDelta(baseDoc) {
-    return {name: 'gotLocalDelta', baseDoc};
-  }
-
-  /**
-   * Constructs a `gotSnapshot` event. This represents a successful result from
-   * the API call `snapshot()`. Keys are as defined by that API.
-   *
-   * @param {number} verNum The version number of the document.
-   * @param {object} data The document data.
-   * @returns {object} The constructed event.
-   */
-  static gotSnapshot(verNum, data) {
-    return {name: 'gotSnapshot', verNum, data};
-  }
-
-  /**
-   * Constructs a `start` event. This is the event that kicks off the client.
-   *
-   * @returns {object} The constructed event.
-   */
-  static start() {
-    return {name: 'start'};
-  }
-
-  /**
-   * Constructs a `wantApplyDelta` event. This indicates that it is time to
-   * send collected local changes up to the server.
-   *
-   * @param {object} baseDoc The document (version and data) at the time of the
-   *   original request.
-   * @returns {object} The constructed event.
-   */
-  static wantApplyDelta(baseDoc) {
-    return {name: 'wantApplyDelta', baseDoc};
-  }
-
-  /**
-   * Constructs a `wantChanges` event. This indicates that it is time to
-   * request a new change from the server, but only if the client isn't in the
-   * middle of doing something else.
-   *
-   * @returns {object} The constructed event.
-   */
-  static wantChanges() {
-    return {name: 'wantChanges'};
-  }
-}
 
 /**
  * Event response to use when transitioning into the `idle` state, when there
@@ -200,9 +91,9 @@ export default class DocClient {
     this._state = 'detached';
 
     /**
-     * Current version of the document as received from the server. An object
-     * that binds `verNum` (version number) and `data` (a from-empty `Delta`).
-     * Becomes non-null once the first snapshot is received from the server.
+     * {Snapshot|null} Current version of the document as received from the
+     * server. Becomes non-null once the first snapshot is received from the
+     * server.
      */
     this._doc = null;
 
@@ -371,7 +262,8 @@ export default class DocClient {
     // TODO: This should probably arrange for a timeout.
     this._api.target.snapshot().then(
       (value) => {
-        this._event(Events.gotSnapshot(value.verNum, value.data));
+        const snapshot = new Snapshot(value.verNum, value.contents);
+        this._event(Events.gotSnapshot(snapshot));
       },
       (error) => {
         this._event(Events.apiError('snapshot', error));
@@ -389,7 +281,7 @@ export default class DocClient {
   _handle_starting_gotSnapshot(event) {
     // Save the result as the current (latest known) version of the document,
     // and tell Quill about it.
-    this._updateDocWithSnapshot(event.verNum, event.data);
+    this._updateDocWithSnapshot(event.snapshot);
 
     // The above action should have caused the Quill instance to make a change
     // which shows up on its change chain. Grab it, and verify that indeed it's
@@ -457,7 +349,8 @@ export default class DocClient {
       this._api.target.deltaAfter(baseDoc.verNum).then(
         (value) => {
           this._pendingDeltaAfter = false;
-          this._event(Events.gotDeltaAfter(baseDoc, value.verNum, value.delta));
+          const delta = DeltaUtil.coerce(value.delta);
+          this._event(Events.gotDeltaAfter(baseDoc, value.verNum, delta));
         },
         (error) => {
           this._pendingDeltaAfter = false;
@@ -611,12 +504,12 @@ export default class DocClient {
     // of applying the pending change. In fact, we might end up with something
     // else from the server, but if so it is going to be represented as a delta
     // from what we've built here.
-    const expectedData = this._doc.data.compose(delta);
+    const expectedContents = this._doc.contents.compose(delta);
 
     // Send the delta, and handle the response.
     this._api.target.applyDelta(this._doc.verNum, delta).then(
       (value) => {
-        this._event(Events.gotApplyDelta(expectedData, value.verNum, value.delta));
+        this._event(Events.gotApplyDelta(expectedContents, value.verNum, value.delta));
       },
       (error) => {
         this._event(Events.apiError('applyDelta', error));
@@ -635,7 +528,7 @@ export default class DocClient {
   _handle_merging_gotApplyDelta(event) {
     // These variable names correspond to the terminology used on the server
     // side. See `Document.js`.
-    const vExpected = event.expectedData;
+    const vExpected = event.expectedContents;
     const dCorrection = DeltaUtil.coerce(event.delta);
     const verNum = event.verNum;
 
@@ -651,7 +544,8 @@ export default class DocClient {
       // from Quill) while the server request was in flight, they will be picked
       // up promptly due to the handling of the `wantChanges` event which will
       // get fired off immediately.
-      this._updateDocWithSnapshot(verNum, vExpected, false);
+      const snapshot = new Snapshot(verNum, vExpected);
+      this._updateDocWithSnapshot(snapshot, false);
       return IDLE_EVENT_TRANSITION;
     }
 
@@ -781,12 +675,11 @@ export default class DocClient {
    * that isn't the case, then this method will throw an error.
    *
    * @param {number} verNum New version number.
-   * @param {object} delta Delta from the current `_doc` data; can be a `Delta`
-   *   object per se or anything that `DeltaUtil.coerce()` accepts.
-   * @param {object} [quillDelta = delta] Delta from Quill's current state,
-   *   which is expected to preserve any state that Quill has that isn't yet
-   *   represented in `_doc`. This must be used in cases where Quill's state has
-   *   progressed ahead of `_doc` due to local activity.
+   * @param {Delta} delta Delta from the current `_doc` contents.
+   * @param {Delta|array|object} [quillDelta = delta] Delta from Quill's current
+   *   state, which is expected to preserve any state that Quill has that isn't
+   *   yet represented in `_doc`. This must be used in cases where Quill's state
+   *   has progressed ahead of `_doc` due to local activity.
    */
   _updateDocWithDelta(verNum, delta, quillDelta = delta) {
     if (this._currentChange.nextNow !== null) {
@@ -798,35 +691,29 @@ export default class DocClient {
     // Update the local document. **Note:** We always construct a whole new
     // object even when the delta is empty, so that `_doc === x` won't cause
     // surprising results when `x` is an old version of `_doc`.
-    const oldData = this._doc.data;
-    this._doc = {
-      verNum,
-      data: DeltaUtil.isEmpty(delta) ? oldData : oldData.compose(delta)
-    };
+    const oldContents = this._doc.contents;
+    this._doc = new Snapshot(verNum,
+      DeltaUtil.isEmpty(delta) ? oldContents : oldContents.compose(delta));
 
     // Tell Quill.
     this._quill.updateContents(quillDelta, CLIENT_SOURCE);
   }
 
   /**
-   * Updates `_doc` to have the given version and snapshot data, and optionally
-   * tells the attached Quill instance to update itself accordingly.
+   * Updates `_doc` to be the given snapshot, and optionally tells the attached
+   * Quill instance to update itself accordingly.
    *
-   * @param {number} verNum New version number.
-   * @param {object} data New snapshot data; can be a `Delta` object per se or
-   *   anything that `DeltaUtil.coerce()` accepts.
+   * @param {Snapshot} snapshot New snapshot.
    * @param {boolean} [updateQuill = true] whether to inform Quill of this
    *   update. This should only ever be passed as `false` when Quill is expected
-   *   to already have the changes to the document represented in `data`. (It
-   *   might _also_ have additional changes too.)
+   *   to already have the changes to the document represented in `contents`.
+   *   (It might _also_ have additional changes too.)
    */
-  _updateDocWithSnapshot(verNum, data, updateQuill = true) {
-    data = DeltaUtil.coerce(data);
-
-    this._doc = {verNum, data};
+  _updateDocWithSnapshot(snapshot, updateQuill = true) {
+    this._doc = snapshot;
 
     if (updateQuill) {
-      this._quill.setContents(data, CLIENT_SOURCE);
+      this._quill.setContents(snapshot.contents, CLIENT_SOURCE);
     }
   }
 }

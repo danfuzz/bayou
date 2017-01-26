@@ -7,6 +7,7 @@
     "api-client": "local",
     "delta-util": "local",
     "prom-delay": "local",
-    "see-all": "local"
+    "see-all": "local",
+    "typecheck": "local"
   }
 }
