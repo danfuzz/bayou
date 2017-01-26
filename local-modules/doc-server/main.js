@@ -83,8 +83,8 @@ export default class DocServer {
    *
    * @param {number} [verNum = this.currentVerNum] Indicates which version to
    *   get.
-   * @returns {object} An object that maps `data` to the document data and
-   *   `verNum` to the version number.
+   * @returns {object} An object that maps `contents` to the document contents
+   *   (delta from empty) and `verNum` to the version number.
    */
   snapshot(verNum) {
     verNum = this._validateVerNum(verNum, true);
@@ -104,8 +104,8 @@ export default class DocServer {
       // We have no snapshots at all, including of even the first version. Set
       // up version 0.
       baseSnapshot = this._snapshots[0] = {
-        data:   this._changes[0].delta,
-        verNum: 0
+        contents: this._changes[0].delta,
+        verNum:   0
       };
     }
 
@@ -117,12 +117,12 @@ export default class DocServer {
     // We didn't actully find a snapshot of the requested version. Apply deltas
     // to the base to produce the desired version. Store it, and return it.
 
-    let data = baseSnapshot.data;
+    let contents = baseSnapshot.contents;
     for (let i = baseSnapshot.verNum + 1; i <= verNum; i++) {
-      data = data.compose(this._changes[i].delta);
+      contents = contents.compose(this._changes[i].delta);
     }
 
-    const result = {verNum, data};
+    const result = {verNum, contents};
     this._snapshots[verNum] = result;
     return result;
   }
@@ -216,7 +216,7 @@ export default class DocServer {
     // to the description immediately above.
     const dClient    = delta;
     const vBaseNum   = baseVerNum;
-    const vBase      = this.snapshot(vBaseNum).data;
+    const vBase      = this.snapshot(vBaseNum).contents;
     const vCurrentNum = this.currentVerNum;
 
     // (1)
@@ -238,8 +238,8 @@ export default class DocServer {
 
     // (3)
     this._appendDelta(dNext);
-    const vNext = this.snapshot().data;  // This lets the snapshot get cached.
-    const vNextNum = this.currentVerNum; // This will be different than `vCurrentNum`.
+    const vNext = this.snapshot().contents;  // This lets the snapshot get cached.
+    const vNextNum = this.currentVerNum;     // This will be different than `vCurrentNum`.
 
     // (4)
     const vExpected = DeltaUtil.coerce(vBase).compose(dClient);
