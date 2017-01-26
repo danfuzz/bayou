@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import DeltaUtil from 'delta-util';
+
 /**
  * Event wrapper for a Quill Delta, including reference to the document source,
  * the old contents, and the chain of subsequent events.
@@ -12,14 +14,16 @@ export default class DeltaEvent {
    *
    * @param {object} accessKey Key which protects ability to resolve the next
    *   event.
-   * @param {object} delta The change, per se.
-   * @param {object} oldContents The document contents just prior to the change.
+   * @param {Delta|array|object} delta The change, per se. Can be anything that
+   *   is coerceable to a `FrozenDelta`.
+   * @param {Delta|array|object} oldContents The document contents just prior to
+   *   the change. Can be anything that is coerceable to a `FrozenDelta`.
    * @param {Quill} source The `Quill` instance that emitted this event.
    */
   constructor(accessKey, delta, oldContents, source) {
-    this.delta = Object.freeze(delta);
-    this.oldContents = Object.freeze(oldContents);
-    this.source = Object.freeze(source);
+    this.delta = DeltaUtil.coerce(delta);
+    this.oldContents = DeltaUtil.coerce(oldContents);
+    this.source = source;
 
     // **Note:** `accessKey` is _not_ exposed as a property. Doing so would
     // cause the security problem that its existence is meant to prevent. That
