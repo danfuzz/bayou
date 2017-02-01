@@ -8,6 +8,7 @@
     "delta-util": "local",
     "prom-condition": "local",
     "prom-delay": "local",
+    "property-iter": "local",
     "see-all": "local",
     "typecheck": "local"
   }

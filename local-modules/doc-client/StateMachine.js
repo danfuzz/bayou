@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import PromCondition from 'prom-condition';
+import PropertyIter from 'property-iter';
 import SeeAll from 'see-all';
 import Typecheck from 'typecheck';
 
@@ -138,31 +139,15 @@ export default class StateMachine {
   _makeValidatorMap() {
     const result = {}; // Built-up result.
 
-    let obj = this;
-    while (obj && (obj !== Object.prototype)) {
-      const names = Object.getOwnPropertyNames(obj);
-      for (const name of names) {
-        const match = name.match(/^_check_([a-zA-Z0-9]+)$/);
-        if (!match) {
-          // Not the right name format.
-          continue;
-        }
-
-        // Inspect the property descriptor.
-        const desc = Object.getOwnPropertyDescriptor(obj, name);
-        if (desc.get || desc.set) {
-          // It's a synthetic member, not a method.
-          continue;
-        } else if (typeof desc.value !== 'function') {
-          // Not a function, thus not a method.
-          continue;
-        }
-
-        const eventName = match[1];
-        result[eventName] = desc.value;
+    for (const desc of new PropertyIter(this).onlyMethods()) {
+      const match = desc.name.match(/^_check_([a-zA-Z0-9]+)$/);
+      if (!match) {
+        // Not the right name format.
+        continue;
       }
 
-      obj = Object.getPrototypeOf(obj);
+      const eventName = match[1];
+      result[eventName] = desc.value;
     }
 
     return result;
@@ -180,46 +165,30 @@ export default class StateMachine {
 
     // First pass: Find all methods with the right name form, including those
     // with `any` (wildcard) names.
-    let obj = this;
-    while (obj && (obj !== Object.prototype)) {
-      const names = Object.getOwnPropertyNames(obj);
-      for (const name of names) {
-        const match = name.match(/^_handle_([a-zA-Z0-9]+)_([a-zA-Z0-9]+)$/);
-        if (!match) {
-          // Not the right name format.
-          continue;
-        }
-
-        // Inspect the property descriptor.
-        const desc = Object.getOwnPropertyDescriptor(obj, name);
-        if (desc.get || desc.set) {
-          // It's a synthetic member, not a method.
-          continue;
-        } else if (typeof desc.value !== 'function') {
-          // Not a function, thus not a method.
-          continue;
-        }
-
-        const stateName = match[1];
-        const eventName = match[2];
-
-        if ((eventName !== 'any') && !this._eventValidators[eventName]) {
-          // No associated validator.
-          throw new Error(`Unknown event name in method: ${name}`);
-        }
-
-        if (!result[stateName]) {
-          result[stateName] = {};
-        }
-
-        result[stateName][eventName] = desc.value;
-
-        if (stateName !== 'any') {
-          stateNameMap[stateName] = true;
-        }
+    for (const desc of new PropertyIter(this).onlyMethods()) {
+      const match = desc.name.match(/^_handle_([a-zA-Z0-9]+)_([a-zA-Z0-9]+)$/);
+      if (!match) {
+        // Not the right name format.
+        continue;
       }
 
-      obj = Object.getPrototypeOf(obj);
+      const stateName = match[1];
+      const eventName = match[2];
+
+      if ((eventName !== 'any') && !this._eventValidators[eventName]) {
+        // No associated validator.
+        throw new Error(`Unknown event name in method: ${name}`);
+      }
+
+      if (!result[stateName]) {
+        result[stateName] = {};
+      }
+
+      result[stateName][eventName] = desc.value;
+
+      if (stateName !== 'any') {
+        stateNameMap[stateName] = true;
+      }
     }
 
     // These _don't_ include `any`.
