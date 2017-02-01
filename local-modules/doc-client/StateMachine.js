@@ -21,7 +21,10 @@ import Typecheck from 'typecheck';
  *   event with the given name. It is called with the would-be event arguments,
  *   and it should return regularly if the arguments are valid, or throw an
  *   exception if the arguments are somehow invalid. The set of validators in
- *   effect defines the set of valid event names for the instance.
+ *   effect defines the set of valid event names for the instance. If it returns
+ *   regularly, it is expected to either return `undefined` or an array; in the
+ *   latter case the return value is used as the event arguments instead of the
+ *   ones originally supplied.
  *
  * * A method of the form `_handle_<stateName>_<eventName>` is taken to be the
  *   handler for the named event in the named state. It gets called with the
@@ -103,10 +106,18 @@ export default class StateMachine {
    */
   _addEnqueueMethods() {
     const events = Object.keys(this._eventValidators);
+
     for (const name of events) {
       const validator = this._eventValidators[name];
+
       this[`q_${name}`] = (...args) => {
-        validator.apply(this, args);
+        const validArgs = validator.apply(this, args);
+        args = validArgs || args;
+
+        if ((validArgs !== undefined) && !Array.isArray(validArgs)) {
+          throw new Error(`Invalid validator result (non-array) for \`${name}\`.`);
+        }
+
         this._log.detail('Enqueued:', name, args);
         this._eventQueue.push({name, args});
         this._anyEventPending.value = true;
@@ -306,6 +317,7 @@ export default class StateMachine {
         this._anyEventPending.value = true; // "Wakes up" the servicer.
         return;
       } else {
+        log.detail('Uncaught error:', e);
         this.q_error(e);
       }
     }
