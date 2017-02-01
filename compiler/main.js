@@ -55,7 +55,7 @@ function compileFile(inputFile, outputFile) {
         sourceMaps: 'inline',
 
         // We have to resolve the presets "manually."
-        presets: ['es2015', 'es2016', 'es2017'].map(function (name) {
+        presets: ['es2015', 'es2016', 'es2017', 'stage-0'].map(function (name) {
           return require.resolve(`babel-preset-${name}`);
         })
       });
