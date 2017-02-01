@@ -16,23 +16,24 @@ const log = new SeeAll('api');
 /**
  * Direct handler for API requests. This is responsible for interpreting
  * and responding to incoming websocket data. It mostly bottoms out by calling
- * on a document object.
+ * on a target object, which performs the actual services. That is, this class
+ * is plumbing.
  */
 export default class ApiServer {
   /**
    * Constructs an instance. Each instance corresponds to a separate client
    * connection. As a side effect, the contructor attaches the constructed
-   * instance to the websocket.
+   * instance to the websocket (as an event listener).
    *
    * @param {WebSocket} ws A websocket instance corresponding to the connection.
-   * @param {DocServer} doc The document to interact with.
+   * @param {object} target The target to provide access to.
    */
-  constructor(ws, doc) {
+  constructor(ws, target) {
     /** The Websocket for the client connection. */
     this._ws = ws;
 
-    /** The document being managed. */
-    this._doc = doc;
+    /** The target to provide access to. */
+    this._target = target;
 
     /** Short ID string used to identify this connection in logs. */
     this._connectionId = RandomId.make('conn');
@@ -41,7 +42,7 @@ export default class ApiServer {
     this._messageCount = 0;
 
     /** The object to handle meta-requests. */
-    this._meta = new MetaHandler(this._doc, this._connectionId);
+    this._meta = new MetaHandler(this._target, this._connectionId);
 
     ws.on('message', this._handleMessage.bind(this));
     ws.on('close', this._handleClose.bind(this));
@@ -66,7 +67,7 @@ export default class ApiServer {
     msg = JsonUtil.parseFrozen(msg);
     log.detail(`${this._connectionId} message:`, msg);
 
-    let target     = this._doc;
+    let target     = this._target;
     let schemaPart = 'methods';
     let methodImpl = null;
 
