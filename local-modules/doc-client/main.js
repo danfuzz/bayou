@@ -144,16 +144,22 @@ export default class DocClient extends StateMachine {
    * the addition of `expectedContents` which represents the expected result of
    * merge (which will be the case if there are no other intervening changes).
    *
-   * @param {Delta} expectedContents_unused The expected result of the merge.
-   *   This will be the actual result if there are no other intervening changes
-   *   (indicated by the fact that `delta` is empty).
+   * @param {Delta|array|object} expectedContents The expected result of the
+   *   merge. This will be the actual result if there are no other intervening
+   *   changes (indicated by the fact that `delta` is empty). Must be a value
+   *   which can be coerced to a `FrozenDelta`.
    * @param {number} verNum The version number of the resulting document.
-   * @param {object} delta_unused The delta from `expectedContents`.
+   * @param {Delta|array|object} delta The delta from `expectedContents`. Must
+   *   be a value which can be coerced to a `FrozenDelta`.
+   * @returns {array} Replacement arguments which always have `FrozenDelta`s for
+   *   the delta-ish arguments.
    */
-  _check_gotApplyDelta(expectedContents_unused, verNum, delta_unused) {
-    // TODO: Check `expectedContents`.
-    Typecheck.intMin(verNum, 0);
-    // TODO: Check `delta`.
+  _check_gotApplyDelta(expectedContents, verNum, delta) {
+    return [
+      Typecheck.frozenDelta(expectedContents, true),
+      Typecheck.intMin(verNum, 0),
+      Typecheck.frozenDelta(delta, true)
+    ];
   }
 
   /**
@@ -164,12 +170,17 @@ export default class DocClient extends StateMachine {
    *
    * @param {Snapshot} baseDoc The document at the time of the original request.
    * @param {number} verNum The version number of the document.
-   * @param {Delta} delta_unused The delta from `baseDoc`.
+   * @param {Delta|array|object} delta The delta from `baseDoc`. Must be a value
+   *   which can be coerced to a `FrozenDelta`.
+   * @returns {array} Replacement arguments which always have a `FrozenDelta`s
+   *   for the `delta` argument.
    */
-  _check_gotDeltaAfter(baseDoc, verNum, delta_unused) {
-    Typecheck.instance(baseDoc, Snapshot);
-    Typecheck.intMin(verNum, 0);
-    // TODO: Check `delta`.
+  _check_gotDeltaAfter(baseDoc, verNum, delta) {
+    return [
+      Typecheck.instance(baseDoc, Snapshot),
+      Typecheck.intMin(verNum, 0),
+      Typecheck.frozenDelta(delta, true)
+    ];
   }
 
   /**
@@ -360,8 +371,7 @@ export default class DocClient extends StateMachine {
       this._api.target.deltaAfter(baseDoc.verNum).then(
         (value) => {
           this._pendingDeltaAfter = false;
-          const delta = DeltaUtil.coerce(value.delta);
-          this.q_gotDeltaAfter(baseDoc, value.verNum, delta);
+          this.q_gotDeltaAfter(baseDoc, value.verNum, value.delta);
         },
         (error) => {
           this._pendingDeltaAfter = false;
@@ -386,7 +396,7 @@ export default class DocClient extends StateMachine {
    *
    * @param {Snapshot} baseDoc The document at the time of the original request.
    * @param {number} verNum The version number of the document.
-   * @param {Delta} delta The delta from `baseDoc`.
+   * @param {FrozenDelta} delta The delta from `baseDoc`.
    */
   _handle_idle_gotDeltaAfter(baseDoc, verNum, delta) {
     log.detail(`Delta from server: v${verNum}`, delta);
@@ -418,7 +428,7 @@ export default class DocClient extends StateMachine {
    * @param {Snapshot} baseDoc_unused The document at the time of the original
    *   request.
    * @param {number} verNum_unused The version number of the document.
-   * @param {Delta} delta_unused The delta from `baseDoc`.
+   * @param {FrozenDelta} delta_unused The delta from `baseDoc`.
    */
   _handle_any_gotDeltaAfter(baseDoc_unused, verNum_unused, delta_unused) {
     // Nothing to do. Stay in the same state.
@@ -524,17 +534,17 @@ export default class DocClient extends StateMachine {
    * In state `merging`, handles event `gotApplyDelta`. This means that a local
    * change was successfully merged by the server.
    *
-   * @param {Delta} expectedContents The expected result of the merge. This
+   * @param {FrozenDelta} expectedContents The expected result of the merge. This
    *   will be the actual result if there are no other intervening changes
    *   (indicated by the fact that `delta` is empty).
    * @param {number} verNum The version number of the resulting document.
-   * @param {object} delta The delta from `expectedContents`.
+   * @param {FrozenDelta} delta The delta from `expectedContents`.
    */
   _handle_merging_gotApplyDelta(expectedContents, verNum, delta) {
     // These variable names correspond to the terminology used on the server
     // side. See `Document.js`.
     const vExpected = expectedContents;
-    const dCorrection = DeltaUtil.coerce(delta);
+    const dCorrection = delta;
 
     log.detail(`Correction from server: v${verNum}`, dCorrection);
 
@@ -681,7 +691,7 @@ export default class DocClient extends StateMachine {
    * that isn't the case, then this method will throw an error.
    *
    * @param {number} verNum New version number.
-   * @param {Delta} delta Delta from the current `_doc` contents.
+   * @param {FrozenDelta} delta Delta from the current `_doc` contents.
    * @param {Delta|array|object} [quillDelta = delta] Delta from Quill's current
    *   state, which is expected to preserve any state that Quill has that isn't
    *   yet represented in `_doc`. This must be used in cases where Quill's state
