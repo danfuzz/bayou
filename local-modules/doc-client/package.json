@@ -6,6 +6,7 @@
   "dependencies": {
     "api-client": "local",
     "delta-util": "local",
+    "prom-condition": "local",
     "prom-delay": "local",
     "see-all": "local",
     "typecheck": "local"
