@@ -1,0 +1,116 @@
+// Copyright 2016-2017 the Bayou Authors (Dan Bornstein et alia).
+// Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+// Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+
+/**
+ * Iterable over object properties. Instances walk over all properties of the
+ * objects they are given, whether enumerable or not. The values yielded by
+ * the iterator are the same as defined by `Object.getOwnPropertyDescriptor()`,
+ * with the addition of a binding of `name` to the property name (which can be
+ * either a string or a symbol).
+ */
+export default class PropertyIter {
+  /**
+   * Constructs an instance.
+   *
+   * @param {object} object What to iterate over.
+   * @param {function|null} [filter = null] Filter to select which properties
+   *   are of interest. Gets called with a single argument, namely the
+   *   `name`-augmented property descriptor as described in the class header.
+   *   Expected to return `true` (or truthy) for properties that are to be
+   *   selected.
+   */
+  constructor(object, filter = null) {
+    /** The object to iterate over. */
+    this._object = object;
+
+    /** The filter. */
+    this._filter = filter;
+  }
+
+  /**
+   * Gets an instance that is like this one but with an additional filter, as
+   * specified.
+   *
+   * @param {function} filter The additional filter.
+   * @returns {PropertyIter} The new iterator.
+   */
+  filter(filter) {
+    const origFilter = this._filter;
+    const newFilter = origFilter
+      ? (desc) => { return origFilter(desc) && newFilter(desc); }
+      : filter;
+
+    return new PropertyIter(this._object, newFilter);
+  }
+
+  /**
+   * Gets an instance that is like this one but with an addition filter that
+   * only passes regular non-synthetic properties.
+   *
+   * @returns {PropertyIter} The new iterator.
+   */
+  noSynthetic() {
+    return this.filter((desc) => !(desc.get || desc.set));
+  }
+
+  /**
+   * Gets an instance that is like this one but with an addition filter that
+   * only passes methods (non-synthetic function-valued properties).
+   *
+   * @returns {PropertyIter} The new iterator.
+   */
+  onlyMethods() {
+    return this.filter((desc) => (typeof desc.value === 'function'));
+  }
+
+  /**
+   * Gets an iterator which iterates over this instance's object's properties.
+   *
+   * @returns {object} The iterator.
+   */
+  [Symbol.iterator]() {
+    const filter = this._filter;
+    let   object = this._object;
+
+    // Keeps track of properties already covered, so as not to yield properties
+    // shadowed by a superclass.
+    const covered = {};
+
+    function* propIterate() {
+      while (object) {
+        const names = Object.getOwnPropertyNames(object);
+        for (const name of names) {
+          if (covered[name]) {
+            continue;
+          }
+          covered[name] = true;
+          const desc = Object.getOwnPropertyDescriptor(object, name);
+          desc.name = name;
+          if (filter && !filter(desc)) {
+            continue;
+          }
+          yield desc;
+        }
+
+        const symbols = Object.getOwnPropertySymbols(object);
+        for (const symbol of symbols) {
+          if (covered[symbol]) {
+            continue;
+          }
+          covered[symbol] = true;
+          const desc = Object.getOwnPropertyDescriptor(object, symbol);
+          desc.name = symbol;
+          if (filter && !filter(desc)) {
+            continue;
+          }
+          yield desc;
+        }
+
+        object = Object.getPrototypeOf(object);
+      }
+    }
+
+    return propIterate();
+  }
+}
