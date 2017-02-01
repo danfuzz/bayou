@@ -35,7 +35,10 @@ const webpackOptions = {
   context: ServerUtil.CLIENT_CODE_DIR,
   debug: true,
   devtool: '#inline-source-map',
-  entry: path.resolve(ServerUtil.CLIENT_DIR, clientPackage.main),
+  entry: [
+    require.resolve('babel-polyfill'),
+    path.resolve(ServerUtil.CLIENT_DIR, clientPackage.main)
+  ],
   output: {
     // Absolute output path of `/` because we write to a memory filesystem.
     path: '/',
