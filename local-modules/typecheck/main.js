@@ -116,6 +116,22 @@ export default class Typecheck {
   }
 
   /**
+   * Checks a value of a given class.
+   *
+   * @param {*} value Value to check.
+   * @param {object} clazz Class (constructor) that `value` must be an instance
+   *   of.
+   * @returns {object} `value`.
+   */
+  static instance(value, clazz) {
+    if (!(value instanceof clazz)) {
+      return badValue(value, clazz.name);
+    }
+
+    return value;
+  }
+
+  /**
    * Checks a value of type `int`, which must furthermore be at least an
    * indicated value (inclusive).
    *
@@ -224,6 +240,20 @@ export default class Typecheck {
   static string(value) {
     if (typeof value !== 'string') {
       return badValue(value, 'string');
+    }
+
+    return value;
+  }
+
+  /**
+   * Checks a value of type string, which must furthermore not be empty.
+   *
+   * @param {*} value Value to check.
+   * @returns {string} `value`.
+   */
+  static stringNonempty(value) {
+    if ((typeof value !== 'string') || (value.length === 0)) {
+      return badValue(value, 'stringNonempty');
     }
 
     return value;
