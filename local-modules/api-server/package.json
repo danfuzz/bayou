@@ -5,6 +5,7 @@
 
   "dependencies": {
       "json-util": "local",
+      "property-iter": "local",
       "random-id": "local",
       "see-all": "local",
       "websocket-codes": "local"
