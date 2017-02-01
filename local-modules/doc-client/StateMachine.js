@@ -4,6 +4,7 @@
 
 import PromCondition from 'prom-condition';
 import SeeAll from 'see-all';
+import Typecheck from 'typecheck';
 
 /**
  * Lightweight state machine framework. This allows a subclass to define
@@ -41,6 +42,12 @@ import SeeAll from 'see-all';
  *
  * Similarly, a method is added for each state, `s_<name>`, each of which takes
  * no arguments and causes the machine to switch into the so-named state.
+ *
+ * This class defines a single event type `error(exception)`, which gets
+ * queued up any time a handler throws an otherwise uncaught exception. This
+ * class also defines two handlers: (1) a default handler for (any, any), which
+ * throws an exception. (2) a default handler for (any, error), which logs the
+ * error and aborts the state machine.
  */
 export default class StateMachine {
   /**
@@ -56,12 +63,15 @@ export default class StateMachine {
     /** The current state. Set below. */
     this._state = null;
 
-    /** Queue of events in need of dispatch. */
+    /**
+     * Queue of events in need of dispatch. Becomes `null` when the state
+     * machine is getting aborted.
+     */
     this._eventQueue = [];
 
     /**
      * Condition which is set to `true` whenever the event queue has events in
-     * it.
+     * it or when it is time to abort.
      */
     this._anyEventPending = new PromCondition(false);
 
@@ -256,38 +266,46 @@ export default class StateMachine {
    */
   _serviceEventQueue() {
     this._anyEventPending.whenTrue().then((res_unused) => {
-      this._dispatchAll();
-      this._serviceEventQueue();
+      const stillActive = this._dispatchAll();
+      if (stillActive) {
+        this._serviceEventQueue();
+      }
     });
   }
 
   /**
    * Dispatches all events on the queue, including any new events that get
    * enqueued during dispatch.
+   *
+   * @returns {boolean} `true` iff the instance should still be considered
+   *   active; `false` means it is being shut down.
    */
   _dispatchAll() {
-    while (this._eventQueue.length !== 0) {
-      // Grab the queue locally, and then reset it for further event collection.
+    for (;;) {
+      // Grab the queue locally.
       const queue = this._eventQueue;
+
+      // Check to see if we're done (either idle or shutting down).
+      if (queue === null) {
+        return false;
+      } else if (queue.length === 0) {
+        return true;
+      }
+
+      // Reset the queue for further event collection.
       this._eventQueue = [];
       this._anyEventPending.value = false;
 
       // Dispatch each event that had been queued on entry to this (outer) loop.
+      // Check to see if the machine has been aborted (queue becomes `null` if
+      // so) before each dispatch.
       for (const event of queue) {
+        if (this._eventQueue === null) {
+          return false;
+        }
         this._dispatchEvent(event);
       }
     }
-  }
-
-  /**
-   * Default handler for any event in any state. This may be overridden by
-   * subclasses.
-   *
-   * @param {string} name The event name.
-   * @param {...*} args_unused Arguments to the event.
-   */
-  _handle_any_any(name, ...args_unused) {
-    throw new Error(`Cannot handle event \`${name}\` in state \`${this._state}\`.`);
   }
 
   /**
@@ -306,15 +324,60 @@ export default class StateMachine {
     log.detail(`In state: ${state}`);
     log.detail('Dispatching:', name, args);
 
-    // Dispatch the event.
-    this._handlers[state][name].apply(this, args);
+    // Dispatch the event. In case of exception, enqueue an `error` event.
+    // (The default handler for the event will log an error and stop the queue.)
+    try {
+      this._handlers[state][name].apply(this, args);
+    } catch (e) {
+      if (name === 'error') {
+        // We got an exception in an error event handler. This is the signal to
+        // abandon ship.
+        log.error('Aborting state machine.', e);
+        this._eventQueue = null;
+        this._anyEventPending.value = true; // "Wakes up" the servicer.
+        return;
+      } else {
+        this.q_error(e);
+      }
+    }
 
     // Log the outcome (if not squelched).
-    log.detail(`Done.`);
+    log.detail('Done.');
 
     this._eventCount++;
     if ((this._eventCount % 25) === 0) {
       log.info(`Handled ${this._eventCount} events.`);
     }
+  }
+
+  /**
+   * Validate an `error` event.
+   *
+   * @param {Error} error The error.
+   */
+  _check_error(error) {
+    Typecheck.instance(error, Error);
+  }
+
+  /**
+   * Default handler for any event in any state. This may be overridden by
+   * subclasses.
+   *
+   * @param {string} name The event name.
+   * @param {...*} args_unused Arguments to the event.
+   */
+  _handle_any_any(name, ...args_unused) {
+    throw new Error(`Cannot handle event \`${name}\` in state \`${this._state}\`.`);
+  }
+
+  /**
+   * Default handler for `error` events in any state. This may be overridden by
+   * subclasses.
+   *
+   * @param {Error} error The error.
+   */
+  _handle_any_error(error) {
+    this._log.error('Error in handler', error);
+    throw new Error('Aborting.');
   }
 }

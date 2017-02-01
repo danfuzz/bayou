@@ -196,6 +196,20 @@ export default class Typecheck {
   }
 
   /**
+   * Checks a value of type `object`.
+   *
+   * @param {*} value Value to check.
+   * @returns {object} `value`.
+   */
+  static object(value) {
+    if (typeof value !== 'object') {
+      return badValue(value, 'object');
+    }
+
+    return value;
+  }
+
+  /**
    * Checks a value of type `object`, which must have exactly the indicated set
    * of keys as "own" properties.
    *
