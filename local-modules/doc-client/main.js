@@ -131,11 +131,11 @@ export default class DocClient extends StateMachine {
    * back from an API call.
    *
    * @param {string} method Name of the method that was called.
-   * @param {string} reason Error reason.
+   * @param {object} reason Error reason.
    */
   _check_apiError(method, reason) {
     Typecheck.stringNonempty(method);
-    Typecheck.string(reason);
+    Typecheck.object(reason);
   }
 
   /**
@@ -227,7 +227,7 @@ export default class DocClient extends StateMachine {
    * reason.
    *
    * @param {string} method_unused Name of the method that was called.
-   * @param {string} reason Error reason.
+   * @param {object} reason Error reason.
    */
   _handle_any_apiError(method_unused, reason) {
     if (reason.layer === ApiClient.ApiError.CONN) {
