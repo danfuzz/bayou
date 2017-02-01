@@ -23,8 +23,9 @@ export default class DocumentChange {
    *   this value will be `0`.
    * @param {number} timeMsec The time of the change, as msec since the Unix
    *   Epoch.
-   * @param {Delta|array} delta The document change per se, compared to the
-   *   immediately-previous version.
+   * @param {Delta|array|object} delta The document change per se, compared to
+   *   the immediately-previous version. Must be a value which can be coerced
+   *   to a `FrozenDelta`.
    * @param {string|null} authorId Stable identifier string representing the
    *   author of the change. Allowed to be `null` if the change is authorless.
    */
