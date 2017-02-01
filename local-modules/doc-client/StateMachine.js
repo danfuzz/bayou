@@ -32,7 +32,7 @@ import Typecheck from 'typecheck';
  *   name (or both) in a handler, which causes the method to be used if there is
  *   no more specific handler. In the case of an `any` event name, the event
  *   name itself is prepended to the event arguments. **Note:** If there are
- *   matching handlers for both (state, any-event) and (event, any-state), then
+ *   matching handlers for both (state, any-event) and (any-state, event), then
  *   the former "wins."
  *
  * Constructing an instance will cause the instance to have a method added per

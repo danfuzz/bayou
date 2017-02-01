@@ -250,8 +250,6 @@ export default class DocClient extends StateMachine {
 
   /**
    * In state `errorWait`, handles event `start`.
-   *
-   * This is the kickoff event.
    */
   _handle_errorWait_start() {
     // Reset the document state. TODO: Ultimately this should be able to
@@ -272,6 +270,8 @@ export default class DocClient extends StateMachine {
 
   /**
    * In state `detached`, handles event `start`.
+   *
+   * This is the kickoff event.
    */
   _handle_detached_start() {
     // TODO: This should probably arrange for a timeout.
