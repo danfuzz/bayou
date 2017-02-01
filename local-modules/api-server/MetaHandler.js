@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import PropertyIter from 'property-iter';
+
 /**
  * Class to handle meta-requests.
  */
@@ -77,32 +79,16 @@ export default class MetaHandler {
   static _methodNamesFor(obj) {
     const result = {};
 
-    while (obj && (obj !== Object.prototype)) {
-      const names = Object.getOwnPropertyNames(obj);
-      for (const name of names) {
-        if (result[name]) {
-          // Because eventually we might have richer metainfo, and we won't want
-          // to overwrite the "topmost" method definition.
-          continue;
-        } else if (name.match(/^_/) || (name === 'constructor')) {
-          // Because we don't want properties whose names are prefixed with `_`,
-          // and we don't want to expose the constructor function.
-          continue;
-        }
+    for (const desc of new PropertyIter(obj).onlyMethods()) {
+      const name = desc.name;
 
-        // Inspect the property descriptor.
-        const desc = Object.getOwnPropertyDescriptor(obj, name);
-        if (desc.get || desc.set) {
-          // It's a synthetic member, not a method.
-          continue;
-        } else if (typeof desc.value !== 'function') {
-          // Not a function, thus not a method.
-          continue;
-        }
-        result[name] = 'method';
+      if (name.match(/^_/) || (name === 'constructor')) {
+        // Because we don't want properties whose names are prefixed with `_`,
+        // and we don't want to expose the constructor function.
+        continue;
       }
 
-      obj = Object.getPrototypeOf(obj);
+      result[name] = 'method';
     }
 
     return result;

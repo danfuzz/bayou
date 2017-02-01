@@ -9,6 +9,10 @@
 // displayed with an accurate backtrace.
 import 'source-map-support/register';
 
+// These `import`s complete the setup of the Babel runtime.
+import 'babel-core/register';
+import 'babel-polyfill';
+
 import minimist from 'minimist';
 import path from 'path';
 
