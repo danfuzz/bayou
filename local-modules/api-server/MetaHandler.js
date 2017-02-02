@@ -2,8 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import PropertyIter from 'property-iter';
-
 /**
  * Class to handle meta-requests.
  */
@@ -11,18 +9,11 @@ export default class MetaHandler {
   /**
    * Constructs an instance.
    *
-   * @param {object} target The primary target object of the API.
-   * @param {string} connectionId The connection ID.
+   * @param {ApiServer} server The connection server.
    */
-  constructor(target, connectionId) {
-    /** The connection ID. */
-    this._connectionId = connectionId;
-
-    /** The target object. */
-    this._target = target;
-
-    /** The schema. */
-    this._schema = this._makeSchema();
+  constructor(server) {
+    /** The connection server. */
+    this._server = server;
   }
 
   /**
@@ -33,7 +24,7 @@ export default class MetaHandler {
    * @returns {string} The connection ID.
    */
   connectionId() {
-    return this._connectionId;
+    return this._server.connectionId;
   }
 
   /**
@@ -47,48 +38,18 @@ export default class MetaHandler {
   }
 
   /**
-   * Gets a schema that represents the API served by this instance.
+   * Gets the schema(ta) for the given objects, by name. This returns an object
+   * that maps each given name to its corresponding schema.
    *
-   * @returns {object} The schema.
+   * @param {...string} names Names of the object to inquire about.
+   * @returns {object} An object mapping each of the `names` to its corresponding
+   *   schema.
    */
-  schema() {
-    return this._schema;
-  }
-
-  /**
-   * Constructs the schema.
-   *
-   * @returns {object} The schema.
-   */
-  _makeSchema() {
-    const meta = MetaHandler._methodNamesFor(this);
-    const methods = MetaHandler._methodNamesFor(this._target);
-
-    return {meta, methods};
-  }
-
-  /**
-   * Generates a map of the public methods callable on the given object,
-   * _excluding_ those with an underscore prefix and those defined on the
-   * root `Object` prototype. The result is a map from the names to the value
-   * `'method'`. (In the future, the values might become embiggened.)
-   *
-   * @param {object} obj Object to interrogate.
-   * @returns {object} The method map for `obj`.
-   */
-  static _methodNamesFor(obj) {
+  schemaFor(...names) {
     const result = {};
 
-    for (const desc of new PropertyIter(obj).onlyMethods()) {
-      const name = desc.name;
-
-      if (name.match(/^_/) || (name === 'constructor')) {
-        // Because we don't want properties whose names are prefixed with `_`,
-        // and we don't want to expose the constructor function.
-        continue;
-      }
-
-      result[name] = 'method';
+    for (const name of names) {
+      result[name] = this._server.getSchema(name);
     }
 
     return result;

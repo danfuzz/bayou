@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import JsonUtil from 'json-util';
+import PropertyIter from 'property-iter';
 import RandomId from 'random-id';
 import SeeAll from 'see-all';
 import Typecheck from 'typecheck';
@@ -32,23 +33,51 @@ export default class ApiServer {
     /** The Websocket for the client connection. */
     this._ws = ws;
 
-    /** The target to provide access to. */
-    this._target = target;
-
     /** Short ID string used to identify this connection in logs. */
     this._connectionId = RandomId.make('conn');
 
+    /**
+     * Schemas for each target object (see `_targets`, below), initialized
+     * lazily.
+     */
+    this._schemas = {};
+
+    /**
+     * The targets to provide access to. `main` is the object providing the main
+     * functionality, and `meta` provides meta-information and meta-control.
+     * **Note:** We can only fill in `meta` after this instance variable is
+     * set up, since the `MetaHandler` constructor will end up accessing it.
+     * (Whee!)
+     */
+    this._targets = {main: target};
+    this._targets.meta = new MetaHandler(this);
+
     /** Count of messages received. Used for liveness logging. */
     this._messageCount = 0;
-
-    /** The object to handle meta-requests. */
-    this._meta = new MetaHandler(this._target, this._connectionId);
 
     ws.on('message', this._handleMessage.bind(this));
     ws.on('close', this._handleClose.bind(this));
     ws.on('error', this._handleError.bind(this));
 
-    log.info(`${this._connectionId} open.`);
+    this.logInfo('Open.');
+  }
+
+  /**
+   * Logs a `detail` message, including the connection ID.
+   *
+   * @param {...*} args Whatever should be logged.
+   */
+  logDetail(...args) {
+    log.detail(`[${this._connectionId}]`, ...args);
+  }
+
+  /**
+   * Logs an `info` message, including the connection ID.
+   *
+   * @param {...*} args Whatever should be logged.
+   */
+  logInfo(...args) {
+    log.info(`[${this._connectionId}]`, ...args);
   }
 
   /**
@@ -61,14 +90,14 @@ export default class ApiServer {
   _handleMessage(msg) {
     this._messageCount++;
     if ((this._messageCount % 25) === 0) {
-      log.info(`${this._connectionId} handled ${this._messageCount} messages.`);
+      this.logInfo(`Handled ${this._messageCount} messages.`);
     }
 
     msg = JsonUtil.parseFrozen(msg);
-    log.detail(`${this._connectionId} message:`, msg);
+    this.logDetail('Message:', msg);
 
-    let target     = this._target;
-    let schemaPart = 'methods';
+    let target     = this._targets.main;
+    let targetName = 'main';
     let methodImpl = null;
 
     try {
@@ -80,12 +109,12 @@ export default class ApiServer {
 
       if (msg.action === 'meta') {
         // The `meta` action gets treated as a `call` on the meta-handler.
-        target     = this._meta;
-        schemaPart = 'meta';
+        target     = this._targets.meta;
+        targetName = 'meta';
       }
     } catch (e) {
       target = this;
-      methodImpl = this.error_bad_message;
+      methodImpl = this._error_bad_message;
       // Remake the message such that it can ultimately be dispatched (to
       // produce the desired error response).
       msg = {
@@ -106,10 +135,10 @@ export default class ApiServer {
       case 'call':
       case 'meta': {
         const name = msg.name;
-        const allowedMethods = this._meta.schema()[schemaPart];
-        if (allowedMethods[name]) {
-          // Listed in the schema. So it exists, is public, is in fact bound to
-          // a function, etc.
+        const schema = this.getSchema(targetName);
+        if (schema[name] === 'method') {
+          // Listed in the schema as a method. So it exists, is public, is in
+          // fact bound to a function, etc.
           methodImpl = target[name];
         }
         break;
@@ -117,14 +146,14 @@ export default class ApiServer {
 
       default: {
         target = this;
-        methodImpl = this.error_bad_action;
+        methodImpl = this._error_bad_action;
         break;
       }
     }
 
     if (methodImpl === null) {
       target = this;
-      methodImpl = this.error_unknown_method;
+      methodImpl = this._error_unknown_method;
     }
 
     // Function to send a response. Arrow syntax so that `this` is usable.
@@ -138,9 +167,9 @@ export default class ApiServer {
         response.result = result;
       }
 
-      log.detail(`${this._connectionId} response:`, response);
+      this.logDetail('Response:', response);
       if (error) {
-        log.detail(`${this._connectionId} error:`, error);
+        this.logDetail('Error:', error);
       }
       this._ws.send(JSON.stringify(response));
     };
@@ -165,7 +194,7 @@ export default class ApiServer {
   _handleClose(code, msg) {
     const codeStr = WebsocketCodes.close(code);
     const msgStr = msg ? `: ${msg}` : '';
-    log.info(`${this._connectionId} ${codeStr}${msgStr}`);
+    this.logInfo(`Close: ${codeStr}${msgStr}`);
   }
 
   /**
@@ -174,7 +203,7 @@ export default class ApiServer {
    * @param {object} error The error event.
    */
   _handleError(error) {
-    log.info(`${this._connectionId} error:`, error);
+    this.logInfo('Error:', error);
   }
 
   /**
@@ -182,7 +211,7 @@ export default class ApiServer {
    *
    * @param {object} msg_unused The original message.
    */
-  error_bad_message(msg_unused) {
+  _error_bad_message(msg_unused) {
     throw new Error('bad_message');
   }
 
@@ -191,7 +220,7 @@ export default class ApiServer {
    *
    * @param {object} msg_unused The original message.
    */
-  error_bad_action(msg_unused) {
+  _error_bad_action(msg_unused) {
     throw new Error('bad_action');
   }
 
@@ -200,7 +229,79 @@ export default class ApiServer {
    *
    * @param {object} msg_unused The original message.
    */
-  error_unknown_method(msg_unused) {
+  _error_unknown_method(msg_unused) {
     throw new Error('unknown_method');
+  }
+
+  /**
+   * Generates a schema for the given object. This is a map of the public
+   * methods callable on the given object, _excluding_ those with an underscore
+   * prefix, those named `constructor`, and those defined on the root `Object`
+   * prototype. The result is a map from the names to the value `'method'`. (In
+   * the future, the values might become embiggened.)
+   *
+   * @param {object} obj Object to interrogate.
+   * @returns {object} The method map for `obj`.
+   */
+  static _makeSchemaFor(obj) {
+    const result = {};
+
+    for (const desc of new PropertyIter(obj).skipObject().onlyMethods()) {
+      const name = desc.name;
+
+      if (name.match(/^_/) || (name === 'constructor')) {
+        // Because we don't want properties whose names are prefixed with `_`,
+        // and we don't want to expose the constructor function.
+        continue;
+      }
+
+      result[name] = 'method';
+    }
+
+    return result;
+  }
+
+  /**
+   * The connection ID.
+   */
+  get connectionId() {
+    return this._connectionId;
+  }
+
+  /**
+   * Gets the target associated with the indicated name. This will throw an
+   * error if the named target does not exist.
+   *
+   * @param {string} name The target name.
+   * @returns {object} The so-named target.
+   */
+  getTarget(name) {
+    const result = this._targets[name];
+
+    if (result === undefined) {
+      throw new Error(`No such target: \`${name}\``);
+    }
+
+    return result;
+  }
+
+  /**
+   * Gets the schema associated with the target of the indicated name. This will
+   * throw an error if the named target does not exist.
+   *
+   * @param {string} name The target name.
+   * @returns {object} Schema of the target. This is a (poorly-specified) object
+   *    mapping property names to descriptors.
+   */
+  getSchema(name) {
+    const target = this.getTarget(name); // Will throw if `name` is not bound.
+    let   schema = this._schemas[name];
+
+    if (schema === undefined) {
+      schema = ApiServer._makeSchemaFor(target);
+      this._schemas[name] = schema;
+    }
+
+    return schema;
   }
 }
