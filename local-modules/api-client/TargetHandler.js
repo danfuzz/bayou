@@ -28,12 +28,12 @@ export default class TargetHandler {
 
     /**
      * Cached method call handlers, for both regular and meta-methods. This
-     * gets initialized to just `schema` and `connectionId` (as meta-methods),
-     * and then gets fully populated once the server hands us a schema.
+     * gets initialized to just `connectionId` and `schemaFor` (as meta-methods),
+     * and then gets fully populated once the server hands us schemas.
      */
     this._methods = {
       'connectionId': this._makeMethodHandler('meta', 'connectionId'),
-      'schema':       this._makeMethodHandler('meta', 'schema')
+      'schemaFor':    this._makeMethodHandler('meta', 'schemaFor')
     };
 
     /** State of readiness, one of `not`, `readying`, or `ready`. */
@@ -65,7 +65,7 @@ export default class TargetHandler {
 
     this._readyState = 'readying';
 
-    this._apiClient.target.schema().then((schema) => {
+    this._apiClient.target.schemaFor('main', 'meta').then((schema) => {
       const methods = this._methods;
 
       for (const name in schema.meta) {
@@ -74,7 +74,7 @@ export default class TargetHandler {
         }
       }
 
-      for (const name in schema.methods) {
+      for (const name in schema.main) {
         if (!methods[name]) {
           methods[name] = this._makeMethodHandler('call', name);
         }
