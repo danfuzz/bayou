@@ -33,7 +33,7 @@ export default class SeeAllBrowser {
    * @param {...string} message Message to log.
    */
   log(nowMsec_unused, level, tag, ...message) {
-    const prefix = `%c[${tag} ${level}]`;
+    const prefix = `[${tag} ${level}]`;
     const style  = 'color: #bbb; font-weight: bold';
 
     // The browser's `console` methods _mostly_ do the right thing with regard
@@ -43,13 +43,20 @@ export default class SeeAllBrowser {
 
     let logMethod;
     switch (level) {
-      case 'debug': { logMethod = console.group; break; } // eslint-disable-line no-console
       case 'error': { logMethod = console.error; break; } // eslint-disable-line no-console
       case 'warn':  { logMethod = console.warn;  break; } // eslint-disable-line no-console
       default:      { logMethod = console.log;   break; } // eslint-disable-line no-console
     }
 
-    logMethod.call(console, prefix, style, ...message);
+    if (level === 'debug') {
+      // **Note:** The ES spec indicates that `group()` doesn't take arguments,
+      // but in practice a single argument is accepted and used usefully by most
+      // browsers. In the case of Chrome, this argument is used instead of a
+      // useless default header of literally `console.group`.
+      console.group(prefix);        // eslint-disable-line no-console
+    }
+
+    logMethod.call(console, `%c${prefix}`, style, ...message);
 
     if (level === 'debug') {
       console.trace('stack trace'); // eslint-disable-line no-console
