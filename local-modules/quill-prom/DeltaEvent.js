@@ -37,7 +37,15 @@ export default class DeltaEvent {
     // The resolved value for `next`. Used in `_gotChange` and `nextNow` below.
     let nextNow = null;
 
-    this.next = Object.freeze(
+    // **Note:** Ideally, we would `Object.freeze()` the promise, to avoid a
+    // potential "sneaky" source of state leakage. Unfortunately, the `core-js`
+    // "polyfill" for `Promise` (which is needed when running in Safari as of
+    // this writing) modifies the `Promise` objects it creates, so freezing them
+    // would cause trouble. Instead, we do the next-safest thing, which is
+    // `seal()`ing the promise. This doesn't prevent existing properties from
+    // being changed, but it does prevent properties from being reconfigured
+    // (including disallowing adding and removing properties).
+    this.next = Object.seal(
       new Promise((res, rej_unused) => { resolveNext = res; }));
 
     // This method is defined inside the constructor so that we can use the

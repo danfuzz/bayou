@@ -30,6 +30,15 @@ const clientPackage =
  * via `include` configs), instead _just_ applying them based on filename
  * extension. As such, any `.js` file will get loaded via our "modern ES"
  * pipeline, and any `.ts` file will get loaded via the TypeScript loader.
+ *
+ * **Note** about `require.resolve()` as used below: Babel doesn't respect the
+ * `resolveLoader.root` value. Because we treat the `client` and `server` as
+ * peers (that is, because the server modules aren't in a super-directory of
+ * `client`), we have to "manually" resolve the presets. See
+ * <https://github.com/babel/babel-loader/issues/149>,
+ * <https://github.com/babel/babel-loader/issues/166>, and
+ * <http://stackoverflow.com/questions/34574403/how-to-set-resolve-for-babel-loader-presets/>
+ * for details and discussion.
  */
 const webpackOptions = {
   context: ServerUtil.CLIENT_CODE_DIR,
@@ -72,14 +81,6 @@ const webpackOptions = {
         test: /\.js$/,
         loader: 'babel-loader',
         query: {
-          // Babel doesn't respect the `resolveLoader.root` value. Because we
-          // treat the `client` and `server` as peers (that is, because the
-          // server modules aren't in a super-directory of `client`), we have to
-          // "manually" resolve the presets. See
-          // <https://github.com/babel/babel-loader/issues/149>,
-          // <https://github.com/babel/babel-loader/issues/166>, and
-          // <http://stackoverflow.com/questions/34574403/how-to-set-resolve-for-babel-loader-presets/>
-          // for details and discussion.
           presets: ['es2015', 'es2016', 'es2017'].map(function (name) {
             return require.resolve(`babel-preset-${name}`);
           }),
