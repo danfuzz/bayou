@@ -6,8 +6,9 @@
  * Iterable over object properties. Instances walk over all properties of the
  * objects they are given, whether enumerable or not. The values yielded by
  * the iterator are the same as defined by `Object.getOwnPropertyDescriptor()`,
- * with the addition of a binding of `name` to the property name (which can be
- * either a string or a symbol).
+ * with the addition of a bindings of `name` to the property name (which can be
+ * either a string or a symbol) and `target` to the target object (either the
+ * top-level object or an element in its prototype chain).
  */
 export default class PropertyIter {
   /**
@@ -38,20 +39,10 @@ export default class PropertyIter {
   filter(filter) {
     const origFilter = this._filter;
     const newFilter = origFilter
-      ? (desc) => { return origFilter(desc) && newFilter(desc); }
+      ? ((desc) => origFilter(desc) && filter(desc))
       : filter;
 
     return new PropertyIter(this._object, newFilter);
-  }
-
-  /**
-   * Gets an instance that is like this one but with an addition filter that
-   * only passes regular non-synthetic properties.
-   *
-   * @returns {PropertyIter} The new iterator.
-   */
-  noSynthetic() {
-    return this.filter((desc) => !(desc.get || desc.set));
   }
 
   /**
@@ -61,7 +52,29 @@ export default class PropertyIter {
    * @returns {PropertyIter} The new iterator.
    */
   onlyMethods() {
+    // **Note:** If `value` is defined, the property is guaranteed not to be
+    // synthetic.
     return this.filter((desc) => (typeof desc.value === 'function'));
+  }
+
+  /**
+   * Gets an instance that is like this one but with an addition filter that
+   * skips properties defined on the root `Object` prototype.
+   *
+   * @returns {PropertyIter} The new iterator.
+   */
+  skipObject() {
+    return this.filter((desc) => (desc.target !== Object.prototype));
+  }
+
+  /**
+   * Gets an instance that is like this one but with an addition filter that
+   * only passes regular non-synthetic properties.
+   *
+   * @returns {PropertyIter} The new iterator.
+   */
+  skipSynthetic() {
+    return this.filter((desc) => !(desc.get || desc.set));
   }
 
   /**
@@ -75,18 +88,19 @@ export default class PropertyIter {
 
     // Keeps track of properties already covered, so as not to yield properties
     // shadowed by a superclass.
-    const covered = {};
+    const covered = new Map();
 
     function* propIterate() {
       while (object) {
         const names = Object.getOwnPropertyNames(object);
         for (const name of names) {
-          if (covered[name]) {
+          if (covered.get(name)) {
             continue;
           }
-          covered[name] = true;
+          covered.set(name, true);
           const desc = Object.getOwnPropertyDescriptor(object, name);
-          desc.name = name;
+          desc.name   = name;
+          desc.target = object;
           if (filter && !filter(desc)) {
             continue;
           }
@@ -95,12 +109,13 @@ export default class PropertyIter {
 
         const symbols = Object.getOwnPropertySymbols(object);
         for (const symbol of symbols) {
-          if (covered[symbol]) {
+          if (covered.get(symbol)) {
             continue;
           }
-          covered[symbol] = true;
+          covered.set(symbol, true);
           const desc = Object.getOwnPropertyDescriptor(object, symbol);
-          desc.name = symbol;
+          desc.name   = symbol;
+          desc.target = object;
           if (filter && !filter(desc)) {
             continue;
           }
