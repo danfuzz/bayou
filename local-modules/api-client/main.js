@@ -7,7 +7,7 @@ import SeeAll from 'see-all';
 import WebsocketCodes from 'websocket-codes';
 
 import ApiError from './ApiError';
-import TargetHandler from './TargetHandler';
+import TargetMap from './TargetMap';
 
 /** Logger. */
 const log = new SeeAll('api');
@@ -72,10 +72,8 @@ export default class ApiClient {
      */
     this._pendingCalls = null;
 
-    /**
-     * Target object upon which API method calls can be made.
-     */
-    this._target = TargetHandler.makeProxy(this);
+    /** Map of names to target proxies. */
+    this._targets = new TargetMap(this);
 
     // Initialize the active connection fields (described above).
     this._resetConnection();
@@ -117,6 +115,18 @@ export default class ApiClient {
   }
 
   /**
+   * Constructs an `ApiError` representing a connection error and including
+   * the current connection ID in the description.
+   *
+   * @param {string} code Short error code.
+   * @param {string} desc Longer-form description.
+   * @returns {ApiError} An appropriately-constructed instance.
+   */
+  _connError(code, desc) {
+    return ApiError.connError(code, `[${this._connectionId}] ${desc}`);
+  }
+
+  /**
    * Sends the given call to the server.
    *
    * @param {string} action Name of action to invoke.
@@ -134,12 +144,10 @@ export default class ApiClient {
     // consistently handle errors via one of the promise chaining mechanisms.
     switch (wsState) {
       case WebSocket.CLOSED: {
-        return Promise.reject(
-          ApiError.connError('closed', `${this._connectionId}: closed`));
+        return Promise.reject(this._connError('closed', 'Closed.'));
       }
       case WebSocket.CLOSING: {
-        return Promise.reject(
-          ApiError.connError('closing', `${this._connectionId}: closing`));
+        return Promise.reject(this._connError('closing', 'Closing.'));
       }
     }
 
@@ -227,7 +235,7 @@ export default class ApiClient {
     // **Note:** The error event does not have any particularly useful extra
     // info, so -- alas -- there is nothing to get out of it for the `ApiError`
     // description.
-    const error = ApiError.connError('error', `${this._connectionId} error`);
+    const error = this._connError('error', 'Unknown error.');
     this._handleTermination(event, error);
   }
 
@@ -268,11 +276,10 @@ export default class ApiClient {
       // aborting, because this is indicative of a server-side problem and not
       // an unrecoverable local problem.
       if (!id) {
-        throw ApiError.connError('server_bug',
-          `${this._connectionId}: Missing ID on API response.`);
+        throw this._connError('server_bug', 'Missing ID on API response.');
       } else {
-        throw ApiError.connError('server_bug',
-          `${this._connectionId}: Strange ID type \`${typeof id}\` on API response.`);
+        throw this._connError('server_bug',
+          `Strange ID type \`${typeof id}\` on API response.`);
       }
     }
 
@@ -288,7 +295,7 @@ export default class ApiClient {
       }
     } else {
       // See above about `server_bug`.
-      throw ApiError.connError('server_bug', `${this._connectionId}: Orphan call for ID ${id}.`);
+      throw this._connError('server_bug', `Orphan call for ID ${id}.`);
     }
   }
 
@@ -301,8 +308,7 @@ export default class ApiClient {
    */
   open() {
     if (this._ws !== null) {
-      return Promise.reject(
-        ApiError.connError('client_bug', `${this._connectionId}: Already open`));
+      return Promise.reject(this._connError('client_bug', 'Already open.'));
     }
 
     const url = this._url;
@@ -312,7 +318,7 @@ export default class ApiClient {
     this._ws.onmessage = this._handleMessage.bind(this);
     this._ws.onopen    = this._handleOpen.bind(this);
 
-    return this.target.connectionId().then((value) => {
+    return this.meta.connectionId().then((value) => {
       this._connectionId = value;
       this._log.info('Open.');
       return true;
@@ -329,9 +335,16 @@ export default class ApiClient {
   }
 
   /**
-   * The object upon which API calls can be made.
+   * The main object upon which API calls can be made.
    */
   get target() {
-    return this._target;
+    return this._targets.get('main');
+  }
+
+  /**
+   * The object upon which meta-API calls can be made.
+   */
+  get meta() {
+    return this._targets.get('meta');
   }
 }

@@ -10,45 +10,45 @@ export default class TargetHandler {
    * Makes a proxy that is handled by an instance of this class.
    *
    * @param {ApiClient} apiClient The client to forward calls to.
+   * @param {string} name The name of the target to call on.
    * @returns {Proxy} An appropriately-constructed proxy object.
    */
-  static makeProxy(apiClient) {
-    return new Proxy(Object.freeze({}), new TargetHandler(apiClient));
+  static makeProxy(apiClient, name) {
+    return new Proxy(Object.freeze({}), new TargetHandler(apiClient, name));
   }
 
   /**
-   * Constructs an instance. It only becomes usable after a call to `open()`
-   * has completed (asynchronously).
+   * Constructs an instance.
    *
    * @param {ApiClient} apiClient The client to forward calls to.
+   * @param {string} targetName The name of the target to call on.
    */
-  constructor(apiClient) {
+  constructor(apiClient, targetName) {
     /** The client to forward calls to. */
     this._apiClient = apiClient;
 
-    /**
-     * Cached method call handlers, for both regular and meta-methods. This
-     * gets initialized to just `connectionId` and `schemaFor` (as meta-methods),
-     * and then gets fully populated once the server hands us schemas.
-     */
-    this._methods = {
-      'connectionId': this._makeMethodHandler('meta', 'connectionId'),
-      'schemaFor':    this._makeMethodHandler('meta', 'schemaFor')
-    };
+    /** The name of the target. */
+    this._targetName = targetName;
+
+    /** The action to use when sending messages. */
+    this._action = (targetName === 'meta') ? 'meta' : 'call';
+
+    /** Cached method call handlers, as a map from name to handler. */
+    this._methods = new Map();
 
     /** State of readiness, one of `not`, `readying`, or `ready`. */
     this._readyState = 'not';
   }
 
   /**
-   * Makes a method handler for the given action and name.
+   * Makes a method handler for the given method name.
    *
-   * @param {string} action The action.
    * @param {string} name The method name.
    * @returns {function} An appropriately-constructed handler.
    */
-  _makeMethodHandler(action, name) {
+  _makeMethodHandler(name) {
     const apiClient = this._apiClient; // Avoid re-(re-)lookup on every call.
+    const action    = this._action;    // Likewise.
     return (...args) => {
       return apiClient._send(action, name, args);
     };
@@ -56,7 +56,7 @@ export default class TargetHandler {
 
   /**
    * Sets up the method handler table. This gets called as a byproduct of the
-   * first method lookup.
+   * first property lookup.
    */
   _becomeReady() {
     if (this._readyState !== 'not') {
@@ -65,19 +65,11 @@ export default class TargetHandler {
 
     this._readyState = 'readying';
 
-    this._apiClient.target.schemaFor('main', 'meta').then((schema) => {
+    this._apiClient.meta.schemaFor(this._targetName).then((schema) => {
       const methods = this._methods;
 
-      for (const name in schema.meta) {
-        if (!methods[name]) {
-          methods[name] = this._makeMethodHandler('meta', name);
-        }
-      }
-
-      for (const name in schema.main) {
-        if (!methods[name]) {
-          methods[name] = this._makeMethodHandler('call', name);
-        }
+      for (const name in schema[this._targetName]) {
+        methods.set(name, this._makeMethodHandler(name));
       }
 
       this._readyState = 'ready';
@@ -138,7 +130,7 @@ export default class TargetHandler {
    *   defined.
    */
   get(target_unused, property, receiver_unused) {
-    const method = this._methods[property];
+    const method = this._methods.get(property);
 
     if (this._readyState === 'not') {
       // We're getting accessed but aren't yet fully set up (and aren't already
@@ -149,9 +141,9 @@ export default class TargetHandler {
     if (method || this._ready) {
       return method;
     } else {
-      // We're still starting up. Assume that this is a non-meta method, but
+      // We're still starting up. Assume that this is a valid method, but
       // _don't_ cache it, in case we're wrong.
-      return this._makeMethodHandler('call', property);
+      return this._makeMethodHandler(property);
     }
   }
 

@@ -40,17 +40,18 @@ export default class ApiServer {
      * Schemas for each target object (see `_targets`, below), initialized
      * lazily.
      */
-    this._schemas = {};
+    this._schemas = new Map();
 
     /**
      * The targets to provide access to. `main` is the object providing the main
      * functionality, and `meta` provides meta-information and meta-control.
      * **Note:** We can only fill in `meta` after this instance variable is
-     * set up, since the `MetaHandler` constructor will end up accessing it.
-     * (Whee!)
+     * otherwise fully set up, since the `MetaHandler` constructor will end up
+     * accessing it. (Whee!)
      */
-    this._targets = {main: target};
-    this._targets.meta = new MetaHandler(this);
+    this._targets = new Map();
+    this._targets.set('main', target);
+    this._targets.set('meta', new MetaHandler(this));
 
     /** Count of messages received. Used for liveness logging. */
     this._messageCount = 0;
@@ -63,24 +64,6 @@ export default class ApiServer {
     ws.on('error', this._handleError.bind(this));
 
     this._log.info('Open.');
-  }
-
-  /**
-   * Logs a `detail` message, including the connection ID.
-   *
-   * @param {...*} args Whatever should be logged.
-   */
-  logDetail(...args) {
-    log.detail(`[${this._connectionId}]`, ...args);
-  }
-
-  /**
-   * Logs an `info` message, including the connection ID.
-   *
-   * @param {...*} args Whatever should be logged.
-   */
-  logInfo(...args) {
-    log.info(`[${this._connectionId}]`, ...args);
   }
 
   /**
@@ -99,7 +82,7 @@ export default class ApiServer {
     msg = JsonUtil.parseFrozen(msg);
     this._log.detail('Message:', msg);
 
-    let target     = this._targets.main;
+    let target     = this._targets.get('main');
     let targetName = 'main';
     let methodImpl = null;
 
@@ -112,7 +95,7 @@ export default class ApiServer {
 
       if (msg.action === 'meta') {
         // The `meta` action gets treated as a `call` on the meta-handler.
-        target     = this._targets.meta;
+        target     = this._targets.get('meta');
         targetName = 'meta';
       }
     } catch (e) {
@@ -279,7 +262,7 @@ export default class ApiServer {
    * @returns {object} The so-named target.
    */
   getTarget(name) {
-    const result = this._targets[name];
+    const result = this._targets.get(name);
 
     if (result === undefined) {
       throw new Error(`No such target: \`${name}\``);
@@ -298,11 +281,11 @@ export default class ApiServer {
    */
   getSchema(name) {
     const target = this.getTarget(name); // Will throw if `name` is not bound.
-    let   schema = this._schemas[name];
+    let   schema = this._schemas.get(name);
 
     if (schema === undefined) {
       schema = ApiServer._makeSchemaFor(target);
-      this._schemas[name] = schema;
+      this._schemas.set(name, schema);
     }
 
     return schema;
