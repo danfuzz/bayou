@@ -4,16 +4,8 @@
 
 import LogStream from './LogStream';
 
-/**
- * Set of valid severity levels (as a map from names to `true`).
- */
-const LEVELS = {
-  'debug':  true,
-  'error':  true,
-  'warn':   true,
-  'info':   true,
-  'detail': true
-};
+/** Set of valid severity levels. */
+const LEVELS = new Set(['debug', 'error', 'warn', 'info', 'detail']);
 
 /**
  * Base class for loggers. Subclasses must implement `_logImpl()`.
@@ -179,7 +171,7 @@ export default class BaseLogger {
    *   constants defined by this class.
    */
   static _validateLevel(level) {
-    if (!LEVELS[level]) {
+    if (!LEVELS.has(level)) {
       throw new Error(`Invalid severity level: ${level}`);
     }
   }
