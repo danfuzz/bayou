@@ -55,11 +55,14 @@ export default class ApiServer {
     /** Count of messages received. Used for liveness logging. */
     this._messageCount = 0;
 
+    /** Logger which includes the connection ID as a prefix. */
+    this._log = log.withPrefix(`[${this._connectionId}]`);
+
     ws.on('message', this._handleMessage.bind(this));
     ws.on('close', this._handleClose.bind(this));
     ws.on('error', this._handleError.bind(this));
 
-    this.logInfo('Open.');
+    this._log.info('Open.');
   }
 
   /**
@@ -90,11 +93,11 @@ export default class ApiServer {
   _handleMessage(msg) {
     this._messageCount++;
     if ((this._messageCount % 25) === 0) {
-      this.logInfo(`Handled ${this._messageCount} messages.`);
+      this._log.info(`Handled ${this._messageCount} messages.`);
     }
 
     msg = JsonUtil.parseFrozen(msg);
-    this.logDetail('Message:', msg);
+    this._log.detail('Message:', msg);
 
     let target     = this._targets.main;
     let targetName = 'main';
@@ -167,9 +170,9 @@ export default class ApiServer {
         response.result = result;
       }
 
-      this.logDetail('Response:', response);
+      this._log.detail('Response:', response);
       if (error) {
-        this.logDetail('Error:', error);
+        this._log.detail('Error:', error);
       }
       this._ws.send(JSON.stringify(response));
     };
@@ -194,7 +197,7 @@ export default class ApiServer {
   _handleClose(code, msg) {
     const codeStr = WebsocketCodes.close(code);
     const msgStr = msg ? `: ${msg}` : '';
-    this.logInfo(`Close: ${codeStr}${msgStr}`);
+    this._log.info(`Close: ${codeStr}${msgStr}`);
   }
 
   /**
@@ -203,7 +206,7 @@ export default class ApiServer {
    * @param {object} error The error event.
    */
   _handleError(error) {
-    this.logInfo('Error:', error);
+    this._log.info('Error:', error);
   }
 
   /**

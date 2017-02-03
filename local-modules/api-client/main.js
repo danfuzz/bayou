@@ -34,27 +34,17 @@ export default class ApiClient {
    * @param {string} url The server origin, as an `http` or `https` URL.
    */
   constructor(url) {
-    url = new URL(url);
-
-    // Convert the URL scheme to either `ws` or `wss`, corresponding to `http`
-    // or `https`.
-    url.protocol = url.protocol.replace(/^http/, 'ws');
-
-    // Drop the original path, and replace it with just `/api`.
-    url.pathname = '/api';
-
-    // Clear out any post-path bits.
-    url.search = '';
-    url.hash = '';
-
     /** URL for the websocket server. */
-    this._url = url.href;
+    this._url = ApiClient._getWebsocketUrl(url);
 
     /**
-     * Connection ID conveyed to us by the server. Reset in
+     * Connection ID conveyed to us by the server. Set / reset in
      * `_resetConnection()`.
      */
     this._connectionId = null;
+
+    /** Logger which prefixes everything with the connection ID. */
+    this._log = log.withDynamicPrefix(() => [`[${this._connectionId}]`]);
 
     /**
      * Actual websocket instance. Set by `open()`. Reset in
@@ -89,6 +79,29 @@ export default class ApiClient {
 
     // Initialize the active connection fields (described above).
     this._resetConnection();
+  }
+
+  /**
+   * Gets the websocket URL for the given original (base) URL.
+   *
+   * @param {string} origUrl The original (base) URL.
+   * @returns {string} The corresponding websocket URL.
+   */
+  static _getWebsocketUrl(origUrl) {
+    const url = new URL(origUrl);
+
+    // Convert the URL scheme to either `ws` or `wss`, corresponding to `http`
+    // or `https`.
+    url.protocol = url.protocol.replace(/^http/, 'ws');
+
+    // Drop the original path, and replace it with just `/api`.
+    url.pathname = '/api';
+
+    // Clear out any post-path bits.
+    url.search = '';
+    url.hash = '';
+
+    return url.href;
   }
 
   /**
@@ -155,11 +168,11 @@ export default class ApiClient {
       default: {
         // Whatever this state is, it's not documented as part of the Websocket
         // spec!
-        log.wtf(`${this._connectionId} in weird state: ${wsState}`);
+        this._log.wtf(`Weird state: ${wsState}`);
       }
     }
 
-    log.detail(`${this._connectionId} sent:`, payloadObj);
+    this._log.detail('Sent:', payloadObj);
 
     return result;
   }
@@ -189,7 +202,7 @@ export default class ApiClient {
    * @param {object} event Event that caused this callback.
    */
   _handleClose(event) {
-    log.info(`${this._connectionId} closed:`, event);
+    this._log.info('Closed:', event);
 
     const code = WebsocketCodes.close(event.code);
     const reason = event.reason || 'Websocket closed.';
@@ -209,7 +222,7 @@ export default class ApiClient {
    * @param {object} event Event that caused this callback.
    */
   _handleError(event) {
-    log.info(`${this._connectionId} error:`, event);
+    this._log.info('Error:', event);
 
     // **Note:** The error event does not have any particularly useful extra
     // info, so -- alas -- there is nothing to get out of it for the `ApiError`
@@ -267,10 +280,10 @@ export default class ApiClient {
     if (callback) {
       delete this._callbacks[id];
       if (error) {
-        log.detail(`${this._connectionId} reject ${id}:`, error);
+        this._log.detail(`Reject ${id}:`, error);
         callback.reject(ApiError.appError('app_error', error));
       } else {
-        log.detail(`${this._connectionId} resolve ${id}:`, result);
+        this._log.detail(`Resolve ${id}:`, result);
         callback.resolve(result);
       }
     } else {
@@ -301,7 +314,7 @@ export default class ApiClient {
 
     return this.target.connectionId().then((value) => {
       this._connectionId = value;
-      log.info(`${this._connectionId}: open`);
+      this._log.info('Open.');
       return true;
     });
   }
