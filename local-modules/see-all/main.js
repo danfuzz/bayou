@@ -4,7 +4,7 @@
 
 import util from 'util';
 
-import LogStream from './LogStream';
+import BaseLogger from './BaseLogger';
 
 /**
  * Maximum amount of time, in msec, between successive logs that inidicate an
@@ -22,17 +22,6 @@ const LULL_MSEC = 60 * 1000; // One minute.
 const MAX_GAP_MSEC = 5 * 60 * 1000; // Five minutes.
 
 /**
- * Set of valid severity levels (as a map from names to `true`).
- */
-const LEVELS = {
-  'debug':  true,
-  'error':  true,
-  'warn':   true,
-  'info':   true,
-  'detail': true
-};
-
-/**
  * The actual loggers to user. These get added via `SeeAll.add()`.
  */
 const theLoggers = [];
@@ -46,13 +35,35 @@ let lastNow = 0;
  * Logger which associates a tag (typically a subsystem or module name) and a
  * severity level (`info`, `error`, etc.) with all activity. Stack traces are
  * included for any message logged at a level that indicates any sort of
- * problem.
+ * problem. One severity level, `detail`, is squelchable and is in fact
+ * squelched by default. The rest are not squelchable.
  *
- * One severity level, `detail`, is squelchable and is in fact squelched by
- * default. The rest are not squelchable; see the comments on the level
- * constants for a more complete explanation.
+ * Full rundown of severity levels:
+ *
+ * * `debug` -- Severity level indicating temporary stuff for debugging. Code
+ *   that uses this level should not in general get checked into the repo.
+ *
+ * * `error` -- Severity level indicating a dire error. Logs at this level
+ *   should indicate something that went horribly awry, as opposed to just being
+ *   a more innocuous errory thing that normally happens from time to time, such
+ *   as, for example, a network connection that dropped unexpectedly.
+ *
+ * * `warn` -- Severity level indicating a warning. Trouble, but not dire. Logs
+ *   at this level should indicate something that is out-of-the-ordinary but not
+ *   unrecoverably so.
+ *
+ * * `info` -- Severity level indicating general info. No problem, but maybe you
+ *   care. Logs at this level should come at a reasonably stately pace (maybe a
+ *   couple times a minute or so) and give a general sense of the healthy
+ *   operation of the system.
+ *
+ * * `detail` -- Severity level indicating detailed operation. These might be
+ *   used multiple times per second, to provide a nuanced view into the
+ *   operation of a component. These logs are squelched by default, as they
+ *   typically distract from the big picture of the system. They are meant to be
+ *   turned on selectively during development and debugging.
  */
-export default class SeeAll {
+export default class SeeAll extends BaseLogger {
   /**
    * Adds an underlying logger to the system. May be called more than once.
    * Each logger added via this method gets called as `logger.log(nowMsec,
@@ -67,44 +78,6 @@ export default class SeeAll {
   }
 
   /**
-   * Severity level indicating temporary stuff for debugging. Code that uses
-   * this level should not in general get checked into the repo.
-   */
-  static get DEBUG() { return 'debug'; }
-
-  /**
-   * Severity level indicating a dire error. Logs at this level should indicate
-   * something that went horribly awry, as opposed to just being a more
-   * innocuous errory thing that normally happens from time to time, such as,
-   * for example, a network connection that dropped unexpectedly.
-   */
-  static get ERROR() { return 'error'; }
-
-  /**
-   * Severity level indicating a warning. Trouble, but not dire. Logs at this
-   * level should indicate something that is out-of-the-ordinary but not
-   * unrecoverably so.
-   */
-  static get WARN() { return 'warn'; }
-
-  /**
-   * Severity level indicating general info. No problem, but maybe you care.
-   * Logs at this level should come at a reasonably stately pace (maybe a couple
-   * times a minute or so) and give a general sense of the healthy operation
-   * of the system.
-   */
-  static get INFO() { return 'info'; }
-
-  /**
-   * Severity level indicating detailed operation. These might be used multiple
-   * times per second, to provide a nuanced view into the operation of a
-   * component. These logs are squelched by default, as they typically distract
-   * from the big picture of the system. They are meant to be turned on
-   * selectively during development and debugging.
-   */
-  static get DETAIL() { return 'detail'; }
-
-  /**
    * Constructs an instance.
    *
    * @param {string} tag Component tag to associate with messages logged by this
@@ -113,6 +86,8 @@ export default class SeeAll {
    *   the `detail` level.
    */
   constructor(tag, enableDetail = false) {
+    super();
+
     /** The module / subsystem tag. */
     this._tag = tag;
 
@@ -121,18 +96,12 @@ export default class SeeAll {
   }
 
   /**
-   * Logs a message at the given severity level.
+   * Actual logging implementation, as specified by the superclass.
    *
-   * @param {string} level Severity level. Must be one of the severity level
-   *   constants defined by this class.
-   * @param {...string} message Message to log. If any of the `message` values
-   *   is an object and we are running in a browser context, this will log the
-   *   object such that the browser console can be used to inspect it. If
-   *   `message` is an exception, this will log the stack trace.
+   * @param {string} level Severity level. Guaranteed to be a valid level.
+   * @param {array} message Array of arguments to log.
    */
-  log(level, ...message) {
-    SeeAll._validateLevel(level);
-
+  _logImpl(level, message) {
     if ((level === 'detail') && !this._enableDetail) {
       // This tag isn't listed as one to log at the `detail` level. (That is,
       // it's being squelched.)
@@ -153,107 +122,6 @@ export default class SeeAll {
 
     for (const l of theLoggers) {
       l.log(...logArgs);
-    }
-  }
-
-  /**
-   * Logs a message at the `DEBUG` level.
-   *
-   * @param {...string} message Message to log. See `log()` for details.
-   */
-  debug(...message) {
-    this.log(SeeAll.DEBUG, ...message);
-  }
-
-  /**
-   * Logs a message at the `ERROR` level.
-   *
-   * @param {...string} message Message to log. See `log()` for details.
-   */
-  error(...message) {
-    this.log(SeeAll.ERROR, ...message);
-  }
-
-  /**
-   * Logs a message at the `WARN` level.
-   *
-   * @param {...string} message Message to log. See `log()` for details.
-   */
-  warn(...message) {
-    this.log(SeeAll.WARN, ...message);
-  }
-
-  /**
-   * Logs a message at the `INFO` level.
-   *
-   * @param {...string} message Message to log. See `log()` for details.
-   */
-  info(...message) {
-    this.log(SeeAll.INFO, ...message);
-  }
-
-  /**
-   * Logs a message at the `DETAIL` level.
-   *
-   * @param {...string} message Message to log. See `log()` for details.
-   */
-  detail(...message) {
-    this.log(SeeAll.DETAIL, ...message);
-  }
-
-  /**
-   * "What a terrible failure!" Logs a message at the `ERROR` level, indicating
-   * a violation of an explicit or implied assertion. That is, this represents
-   * a "shouldn't happen" condition that in fact was detected to have happened.
-   * After so logging, this throws an exception, which is meant to cause the
-   * system to shut down (and potentially restart, if it's set up to self-heal).
-   *
-   * @param {...string} message Message to log. See `log()` for details.
-   */
-  wtf(...message) {
-    this.error('Shouldn\'t happen:', ...message);
-    throw new Error('shouldnt_happen');
-  }
-
-  /**
-   * Gets a writable stream which can be used to write logs at the indicated
-   * level. The result only nominally implements the protocol. In particular,
-   * it responds to both `.write()` and `.end()` identically, and it never
-   * emits events.
-   *
-   * @param {string} level Severity level. Must be one of the severity level
-   *   constants defined by this class.
-   * @returns {LogStream} An appropriately-constructed stream.
-   */
-  streamFor(level) {
-    SeeAll._validateLevel(level);
-    return new LogStream(this, level);
-  }
-
-  /** A writable stream for `debug` logs. */
-  get debugStream() { return this.streamFor(SeeAll.DEBUG); }
-
-  /** A writable stream for `error` logs. */
-  get errorStream() { return this.streamFor(SeeAll.ERROR); }
-
-  /** A writable stream for `warn` logs. */
-  get warnStream() { return this.streamFor(SeeAll.WARN); }
-
-  /** A writable stream for `info` logs. */
-  get infoStream() { return this.streamFor(SeeAll.INFO); }
-
-  /** A writable stream for `detail` logs. */
-  get detailStream() { return this.streamFor(SeeAll.DETAIL); }
-
-  /**
-   * Validates a `level` value. Throws an error if invalid.
-   *
-   * @param {string} level Severity level. Must be one of the severity level
-   *   constants defined by this class.
-   */
-  static _validateLevel(level) {
-    if (!LEVELS[level]) {
-      throw new Error(`Invalid severity level: ${level}`);
     }
   }
 
