@@ -129,14 +129,15 @@ export default class ApiClient {
   /**
    * Sends the given call to the server.
    *
-   * @param {string} action Name of action to invoke.
+   * @param {string} target Name of the target object.
+   * @param {string} action Action to invoke.
    * @param {string} name Name of method (or meta-method) to call on the server.
    * @param {object} [args = []] JSON-encodable object of arguments.
    * @returns {Promise} Promise for the result (or error) of the call. In the
    *   case of an error, the rejection reason will always be an instance of
    *   `ApiError` (see which for details).
    */
-  _send(action, name, args = []) {
+  _send(target, action, name, args = []) {
     const wsState = this._ws.readyState;
 
     // Handle the cases where socket shutdown is imminent or has already
@@ -152,7 +153,7 @@ export default class ApiClient {
     }
 
     const id = this._nextId;
-    const payloadObj = {id, action, name, args};
+    const payloadObj = {id, target, action, name, args};
     const payload = JSON.stringify(payloadObj);
 
     let callback;

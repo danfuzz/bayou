@@ -30,9 +30,6 @@ export default class TargetHandler {
     /** The name of the target. */
     this._targetName = targetName;
 
-    /** The action to use when sending messages. */
-    this._action = (targetName === 'meta') ? 'meta' : 'call';
-
     /** Cached method call handlers, as a map from name to handler. */
     this._methods = new Map();
 
@@ -47,10 +44,10 @@ export default class TargetHandler {
    * @returns {function} An appropriately-constructed handler.
    */
   _makeMethodHandler(name) {
-    const apiClient = this._apiClient; // Avoid re-(re-)lookup on every call.
-    const action    = this._action;    // Likewise.
+    const apiClient  = this._apiClient;  // Avoid re-(re-)lookup on every call.
+    const targetName = this._targetName; // Likewise.
     return (...args) => {
-      return apiClient._send(action, name, args);
+      return apiClient._send(targetName, 'call', name, args);
     };
   }
 
