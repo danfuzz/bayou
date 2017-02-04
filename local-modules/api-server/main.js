@@ -82,64 +82,67 @@ export default class ApiServer {
     msg = JsonUtil.parseFrozen(msg);
     this._log.detail('Message:', msg);
 
-    let target     = this._targets.get('main');
-    let targetName = 'main';
+    let targetObj  = null;
     let methodImpl = null;
+    let args       = null;
+    let action     = null;
 
     try {
-      Typecheck.objectWithExactKeys(msg, ['id', 'action', 'name', 'args']);
+      Typecheck.objectWithExactKeys(msg, ['id', 'target', 'action', 'name', 'args']);
       Typecheck.intMin(msg.id, 0);
+      Typecheck.string(msg.target);
       Typecheck.string(msg.action);
       Typecheck.string(msg.name);
       Typecheck.array(msg.args);
-
-      if (msg.action === 'meta') {
-        // The `meta` action gets treated as a `call` on the meta-handler.
-        target     = this._targets.get('meta');
-        targetName = 'meta';
-      }
+      action = msg.action;
     } catch (e) {
-      target = this;
+      targetObj  = this;
       methodImpl = this._error_bad_message;
-      // Remake the message such that it can ultimately be dispatched (to
-      // produce the desired error response).
-      msg = {
-        id:     -1,
-        action: 'error',
-        name:   'unknown-name',
-        args:   [msg]
-      };
+      args       = [e];
+      action     = 'error';
     }
 
-    switch (msg.action) {
-      case 'error': {
-        // Nothing extra to do. We'll fall through and dispatch to the error
-        // implementation which was already set up.
-        break;
+    if (targetObj === null) {
+      const target = msg.target;
+      targetObj = this._targets.get(target);
+      if (!targetObj) {
+        targetObj  = this;
+        methodImpl = this._error_unknown_target;
+        args       = [target];
+        action     = 'error';
       }
+    }
 
-      case 'call':
-      case 'meta': {
-        const name = msg.name;
-        const schema = this.getSchema(targetName);
+    switch (action) {
+      case 'call': {
+        const name   = msg.name;
+        const target = msg.target;
+        const schema = this.getSchema(target);
         if (schema[name] === 'method') {
           // Listed in the schema as a method. So it exists, is public, is in
           // fact bound to a function, etc.
-          methodImpl = target[name];
+          methodImpl = targetObj[name];
+          args       = msg.args;
+        } else {
+          targetObj  = this;
+          methodImpl = this._error_unknown_method;
+          args       = [target, name];
         }
         break;
       }
 
+      // **Note:** Ultimately we might accept `get` and `set`, for example, thus
+      // exposing a bit more of a JavaScript-like interface.
       default: {
-        target = this;
+        if (targetObj === this) {
+          // We landed here because of an error that was already detected.
+          break;
+        }
+        targetObj  = this;
         methodImpl = this._error_bad_action;
+        args       = [action];
         break;
       }
-    }
-
-    if (methodImpl === null) {
-      target = this;
-      methodImpl = this._error_unknown_method;
     }
 
     // Function to send a response. Arrow syntax so that `this` is usable.
@@ -163,7 +166,7 @@ export default class ApiServer {
     try {
       // Note: If the method implementation returns a non-promise, then the
       // `resolve()` call operates promptly.
-      Promise.resolve(methodImpl.apply(target, msg.args)).then(
+      Promise.resolve(methodImpl.apply(targetObj, args)).then(
         (result) => { respond(result, null); },
         (error) => { respond(null, error); });
     } catch (error) {
@@ -195,28 +198,38 @@ export default class ApiServer {
   /**
    * API error: Bad value for `message` in call payload (invalid shape).
    *
-   * @param {object} msg_unused The original message.
+   * @param {object} error The reported error.
    */
-  _error_bad_message(msg_unused) {
-    throw new Error('bad_message');
+  _error_bad_message(error) {
+    throw error;
   }
 
   /**
    * API error: Bad value for `action` in call payload (not a recognized value).
    *
-   * @param {object} msg_unused The original message.
+   * @param {string} action The action.
    */
-  _error_bad_action(msg_unused) {
-    throw new Error('bad_action');
+  _error_bad_action(action) {
+    throw new Error(`Bad action: \`${action}\``);
+  }
+
+  /**
+   * API error: Unknown (undefined) target.
+   *
+   * @param {string} target The name of the target.
+   */
+  _error_unknown_target(target) {
+    throw new Error(`Unknown target: \`${target}\``);
   }
 
   /**
    * API error: Unknown (undefined) method.
    *
-   * @param {object} msg_unused The original message.
+   * @param {string} target The name of the target.
+   * @param {string} method The name of the method.
    */
-  _error_unknown_method(msg_unused) {
-    throw new Error('unknown_method');
+  _error_unknown_method(target, method) {
+    throw new Error(`Unknown mathod: \`${target}.${method}()\``);
   }
 
   /**

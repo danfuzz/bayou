@@ -286,7 +286,7 @@ export default class DocClient extends StateMachine {
    */
   _handle_detached_start() {
     // TODO: This should probably arrange for a timeout.
-    this._api.target.snapshot().then(
+    this._api.main.snapshot().then(
       (value) => {
         const snapshot = new Snapshot(value.verNum, value.contents);
         this.q_gotSnapshot(snapshot);
@@ -368,7 +368,7 @@ export default class DocClient extends StateMachine {
     if (!this._pendingDeltaAfter) {
       this._pendingDeltaAfter = true;
 
-      this._api.target.deltaAfter(baseDoc.verNum).then(
+      this._api.main.deltaAfter(baseDoc.verNum).then(
         (value) => {
           this._pendingDeltaAfter = false;
           this.q_gotDeltaAfter(baseDoc, value.verNum, value.delta);
@@ -519,7 +519,7 @@ export default class DocClient extends StateMachine {
     const expectedContents = this._doc.contents.compose(delta);
 
     // Send the delta, and handle the response.
-    this._api.target.applyDelta(this._doc.verNum, delta).then(
+    this._api.main.applyDelta(this._doc.verNum, delta).then(
       (value) => {
         this.q_gotApplyDelta(expectedContents, value.verNum, value.delta);
       },
