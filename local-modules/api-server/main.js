@@ -149,10 +149,8 @@ export default class ApiServer {
     const respond = (result, error) => {
       const response = {id: msg.id};
       if (error) {
-        response.ok = false;
         response.error = error.message;
       } else {
-        response.ok = true;
         response.result = result;
       }
 
