@@ -98,6 +98,7 @@ export default class Proppy {
    */
   static parseString(source) {
     const tokens = Proppy._tokenize(source);
+    const keys = new Set();
     const result = {};
 
     for (let at = 0; at < tokens.length; at++) {
@@ -116,8 +117,14 @@ export default class Proppy {
           if (   eq    && (eq.type    === 'equals')
               && value && (value.type === 'string')
               && eol   && (eol.type   === 'eol')) {
-            // Valid assignment.
-            result[t.value] = value.value;
+            // Valid assignment form.
+            const key = t.value;
+            if (keys.has(key)) {
+              // Already have this key.
+              throw new Error(`Duplicate key: \`${key}\``);
+            }
+            keys.add(key);
+            result[key] = value.value;
             at += 3;
             break;
           }
