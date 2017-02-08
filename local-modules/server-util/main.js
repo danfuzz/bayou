@@ -5,10 +5,15 @@
 import fs from 'fs';
 import path from 'path';
 
+import Proppy from 'proppy';
+
 import PidFile from './PidFile';
 
 /** Base directory of the product. */
 const BASE_DIR = findBaseDir();
+
+/** Product info object. */
+const PRODUCT_INFO = Proppy.parseFile(path.resolve(BASE_DIR, 'product-info.txt'));
 
 /**
  * Figure out where the base directory is. This walks up from the directory
@@ -39,7 +44,7 @@ function findBaseDir() {
 }
 
 /**
- * Server-side helper utilities.
+ * Miscellaneous server-side utilities.
  */
 export default class ServerUtil {
   /**
@@ -62,6 +67,13 @@ export default class ServerUtil {
    */
   static get CLIENT_CODE_DIR() {
     return path.resolve(BASE_DIR, 'client/js');
+  }
+
+  /**
+   * The product info object, as parsed from `product-info.txt`.
+   */
+  static get PRODUCT_INFO() {
+    return PRODUCT_INFO;
   }
 
   /**

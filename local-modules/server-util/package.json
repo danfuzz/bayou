@@ -4,6 +4,7 @@
   "main": "main.js",
 
   "dependencies": {
+    "proppy": "local",
     "see-all": "local"
   }
 }
