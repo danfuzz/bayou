@@ -369,6 +369,28 @@ function build-bin {
     chmod a+x "${toDir}"/*
 }
 
+# Builds the product info file.
+function build-product-info {
+    local outFile="${outDir}/product-info.txt"
+
+    # The git info, if available.
+    local commitInfo="$(
+        git log -1 --pretty=format:"commit-id = '%H'%ncommit-date = '%ai'" \
+            2>/dev/null \
+        || (
+            echo 'commit-id = unknown'
+            echo 'commit-date = unknown'
+        )
+    )"
+
+    # Combine the static info file from the source with the git info to produce
+    # the final output.
+    (
+        cat "${baseDir}/product-info.txt"
+        echo "${commitInfo}"
+    ) > "${outFile}"
+}
+
 
 #
 # Main script
@@ -400,7 +422,8 @@ fi
         && build-compiler \
         && build-client \
         && build-server \
-        && build-bin
+        && build-bin \
+        && build-product-info
 ) || exit 1
 
 if (( ${clientBundle} )); then

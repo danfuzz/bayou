@@ -18,11 +18,15 @@ import path from 'path';
 
 import ClientBundle from 'client-bundle';
 import DocServer from 'doc-server';
+import SeeAll from 'see-all';
 import SeeAllServer from 'see-all-server';
 import ServerUtil from 'server-util';
 
 import AppServer from './AppServer';
 import DevMode from './DevMode';
+
+/** Logger for this file. */
+const log = new SeeAll('main');
 
 /** Error during argument processing? */
 let argError = false;
@@ -88,6 +92,12 @@ if (showHelp || argError) {
  * Runs the system normally or in dev mode.
  */
 function run() {
+  // A little spew to identify us.
+  const info = ServerUtil.PRODUCT_INFO;
+  for (const k of Object.keys(info)) {
+    log.info(`${k} = ${info[k]}`);
+  }
+
   // Set up the PID file handler.
   ServerUtil.initPidFile();
 
@@ -114,8 +124,7 @@ function clientBundle() {
   new ClientBundle().build().then((res_unused) => {
     process.exit(0);
   }, (rej) => {
-    // eslint-disable-next-line no-console
-    console.log(rej);
+    log.error(rej);
     process.exit(1);
   });
 }

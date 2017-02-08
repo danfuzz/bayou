@@ -18,6 +18,7 @@
     "no-empty-function": "error",
     "no-eval": "error",
     "no-extend-native": "error",
+    "no-fallthrough": ["error", {"commentPattern": "fallthrough"}],
     "no-floating-decimal": "error",
     "no-implied-eval": "error",
     "no-nested-ternary": "error",

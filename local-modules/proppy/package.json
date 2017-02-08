@@ -1,10 +1,9 @@
 {
-  "name": "server-util",
+  "name": "proppy",
   "version": "1.0.0",
   "main": "main.js",
 
   "dependencies": {
-    "proppy": "local",
-    "see-all": "local"
+    "pipette": "^0.9.3"
   }
 }
