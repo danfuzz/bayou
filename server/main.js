@@ -20,6 +20,7 @@ import ClientBundle from 'client-bundle';
 import DocServer from 'doc-server';
 import SeeAll from 'see-all';
 import SeeAllServer from 'see-all-server';
+import ServerHooks from 'server-hooks';
 import ServerUtil from 'server-util';
 
 import AppServer from './AppServer';
@@ -106,6 +107,8 @@ function run() {
     // source.
     new DevMode().start();
   }
+
+  ServerHooks.run();
 
   /** The single document managed by this instance. */
   const theDoc = new DocServer();

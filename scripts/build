@@ -142,8 +142,14 @@ function set-up-out {
 # Gets a list of all the local module names. The output is a series of
 # lines, one per module.
 function local-module-names {
-    find "${baseDir}/local-modules" -mindepth 1 -maxdepth 1 -type d \
-        | sed -e 's!.*\/!!g'
+    (
+        find "${baseDir}/local-modules" -mindepth 1 -maxdepth 1 -type d
+        if [[ ${overlayDir} != '' && -e "${overlayDir}/local-modules" ]]; then
+            find "${overlayDir}/local-modules" -mindepth 1 -maxdepth 1 -type d
+        fi
+    ) \
+        | sed -e 's!.*\/!!g' \
+        | sort -u
 }
 
 # Adds a new directory mapping to the build info file. This includes handling
@@ -156,7 +162,12 @@ function add-directory-mapping {
     mkdir -p "$(dirname "${dirInfoFile}")"
 
     (
-        echo "${baseDir}/${fromDir}"
+        # Note: Some directories _only_ exist in the overlay, so we check for
+        # existence of it before adding it to the mapping.
+        if [[ -e "${baseDir}/${fromDir}" ]]; then
+            echo "${baseDir}/${fromDir}"
+        fi
+
         if [[ ${overlayDir} != '' && -e "${overlayDir}/${fromDir}" ]]; then
             echo "${overlayDir}/${fromDir}"
         fi
@@ -169,8 +180,14 @@ function add-subdirectory-mapping {
     local fromDir="$1"
 
     local names=($(
-        cd "${baseDir}/${fromDir}"
-        find . -mindepth 1 -maxdepth 1 -type d | cut -c 3-
+        (
+            cd "${baseDir}/${fromDir}"
+            find . -mindepth 1 -maxdepth 1 -type d | cut -c 3-
+            if [[ (${overlayDir} != '') && -e "${overlayDir}/${fromDir}" ]]; then
+                cd "${overlayDir}/${fromDir}"
+                find . -mindepth 1 -maxdepth 1 -type d | cut -c 3-
+            fi
+        ) | sort -u
     ))
 
     local n
@@ -266,7 +283,8 @@ function fix-packages {
         # This one hasn't yet been fixed with regard to local dependencies.
         # Fix it!
         cp "${f}" "${unfixed}"
-        "${progDir}/fix-dependencies" --out="${f}" "${unfixed}" \
+        "${progDir}/fix-dependencies" --out="${f}" --overlay="${overlayDir}" \
+            "${unfixed}" \
             || return 1
     done
 }
@@ -371,7 +389,14 @@ function build-bin {
 
 # Builds the product info file.
 function build-product-info {
-    local outFile="${outDir}/product-info.txt"
+    local fileName='product-info.txt'
+    local outFile="${outDir}/${fileName}"
+    local inFile="${baseDir}/${fileName}"
+
+    # Use the overlay file, if it exists.
+    if [[ (${overlayDir} != '') && -e "${overlayDir}/${fileName}" ]]; then
+        inFile="${overlayDir}/${fileName}"
+    fi
 
     # The git info, if available.
     local commitInfo="$(
@@ -386,7 +411,7 @@ function build-product-info {
     # Combine the static info file from the source with the git info to produce
     # the final output.
     (
-        cat "${baseDir}/product-info.txt"
+        cat "${inFile}"
         echo "${commitInfo}"
     ) > "${outFile}"
 }

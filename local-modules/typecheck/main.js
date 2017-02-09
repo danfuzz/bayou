@@ -260,14 +260,30 @@ export default class Typecheck {
   }
 
   /**
+   * Checks a value of type string, which must furthermore have at least a
+   * given number of characters.
+   *
+   * @param {*} value Value to check.
+   * @param {number} minLen Minimum allowed length.
+   * @returns {string} `value`.
+   */
+  static stringMinLen(value, minLen) {
+    if ((typeof value !== 'string') || (value.length < minLen)) {
+      return badValue(value, 'string', `value.length >= ${minLen}`);
+    }
+
+    return value;
+  }
+
+  /**
    * Checks a value of type string, which must furthermore not be empty.
    *
    * @param {*} value Value to check.
    * @returns {string} `value`.
    */
   static stringNonempty(value) {
-    if ((typeof value !== 'string') || (value.length === 0)) {
-      return badValue(value, 'stringNonempty');
+    if ((typeof value !== 'string') || (value === '')) {
+      return badValue(value, 'string', 'value !== \'\'');
     }
 
     return value;

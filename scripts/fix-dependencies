@@ -33,6 +33,9 @@ outFile='/dev/stdout'
 # Include local module dependencies?
 includeLocalModules=1
 
+# Overlay source directory, if any.
+overlayDir=''
+
 # Error during argument processing?
 argError=0
 
@@ -47,10 +50,12 @@ while (( $# != 0 )); do
     elif [[    ${opt} == '--help'
             || ${opt} == '-h' ]]; then
         showHelp=1
-    elif [[ ${opt} =~ ^--out=(.*) ]]; then
-        outFile="${BASH_REMATCH[1]}"
     elif [[ ${opt} == --no-locals ]]; then
         includeLocalModules=0
+    elif [[ ${opt} =~ ^--out=(.*) ]]; then
+        outFile="${BASH_REMATCH[1]}"
+    elif [[ ${opt} =~ ^--overlay=(.*) ]]; then
+        overlayDir="${BASH_REMATCH[1]}"
     elif [[ ${opt} =~ ^- ]]; then
         echo "Unknown option: ${opt}" 1>&2
         argError=1
@@ -71,11 +76,13 @@ fi
 if (( ${showHelp} || ${argError} )); then
     echo 'Usage:'
     echo ''
-    echo "${progName} [--out=<path>] <path/to/package.json>"
+    echo "${progName} [--out=<path>] [--overlay=<dir>] <path/to/package.json>"
     echo '  Derives local dependencies.'
     echo ''
     echo '  --out=<file>'
     echo '    Where to store the output.'
+    echo '  --overlay=<dir>'
+    echo '    Find overlay source in directory <dir>.'
     echo '  --no-locals'
     echo '    Do not emit local module dependencies in the output. (But do'
     echo '    include the regular modules that the local modules depend on.)'
@@ -118,7 +125,12 @@ while (( ${#unprocessed[@]} != 0 )); do
     # Fluff it into a full path if just a simple name. This is the case for all
     # dependencies but the original input file.
     if [[ !(${oneDep} =~ '/') && ! -r ${oneDep} ]]; then
-        oneDep="${baseDir}/local-modules/${oneDep}/package.json"
+        oneDep="local-modules/${oneDep}/package.json"
+        if [[ (${overlayDir} != '') && -r "${overlayDir}/${oneDep}" ]]; then
+            oneDep="${overlayDir}/${oneDep}"
+        else
+            oneDep="${baseDir}/${oneDep}"
+        fi
     fi
 
     if [[ ! -r "${oneDep}" ]]; then
