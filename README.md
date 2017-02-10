@@ -40,12 +40,31 @@ The code is set up to make it straightforward to customize. Salient details:
   nontrivial. The intention is to continue expanding the server-side
   functionality over time.
 
-* In order to facilitate using this project as a basis &mdash; and specifically
-  because no amount of configuration hooks will ever turn out to be fully
-  adequate &mdash; the build script can be invoked with an argument to indicate
-  an overlay source directory, allowing one to override individual source files
-  while still keeping a "pristine" checkout of the `bayou` repo. See the
-  script [`build`](scripts/build) for details.
+* This project is meant to form the core for a more complete product that
+  integrates into a larger system. As such, it intentionally punts on document
+  storage, user authentication, and the like. Instead, the project provides
+  mechanisms to help integrate these things without having to fork the original
+  source code:
+
+  * The `build` script takes an optional `--overlay` option, which specifies
+    a directory to use for additional sources. There are two main things that
+    can be accomplished with overlays. Namely…
+
+  * The project provides a number of predefined hooks, both on the client and
+    server side. By default, the hooks are all no-ops. However, the overlay can
+    contain replacements for these hooks. Hooks are located in the local modules
+    `client-hooks` and `server-hooks`. If the overlay directory contains either
+    `local-modules/client-hooks/main.js` or
+    `local-modules/server-hooks/main.js`, then those files will be used instead
+    of the no-op versions built into the base source.
+
+  * Because no amount of explicit configuration hooks will ever turn out to be
+    fully adequate, any original source file at all can be overridden with a
+    replacement. This probably means a lot of copy-paste code duplication, but
+    it will at least unblock progress while still allowing the upstream source
+    to remain unforked. Should you find yourself in need of this facility,
+    please do not hesitate to file an issue, as this is a good indicator that
+    the project is in need of a new hook to cover the use case in question.
 
 
 ### Build and Run
