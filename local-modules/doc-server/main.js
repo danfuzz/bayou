@@ -122,6 +122,7 @@ export default class DocServer {
       contents = contents.compose(this._changes[i].delta);
     }
 
+    contents = DeltaUtil.coerce(contents);
     const result = {verNum, contents};
     this._snapshots[verNum] = result;
     return result;
@@ -264,7 +265,7 @@ export default class DocServer {
    * @param {number} [endExclusive = this.nextVerNum] Version number for just
    *   after the last delta to include, or alternatively thought, of the first
    *   version to exclude from the result.
-   * @returns {object} The composed delta consisting of versions
+   * @returns {FrozenDelta} The composed delta consisting of versions
    *   `startInclusive` through but not including `endExclusive`.
    */
   _composeVersions(startInclusive, endExclusive = this.nextVerNum) {
@@ -282,7 +283,7 @@ export default class DocServer {
       result = result.compose(this._changes[i].delta);
     }
 
-    return result;
+    return DeltaUtil.coerce(result);
   }
 
   /**
