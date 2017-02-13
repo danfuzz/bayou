@@ -4,7 +4,7 @@
   "main": "main.js",
 
   "dependencies": {
-    "json-util": "local",
+    "api-common": "local",
     "see-all": "local",
     "websocket-codes": "local"
   }

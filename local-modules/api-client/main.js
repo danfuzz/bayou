@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import JsonUtil from 'json-util';
+import ApiCommon from 'api-common';
 import SeeAll from 'see-all';
 import WebsocketCodes from 'websocket-codes';
 
@@ -132,7 +132,7 @@ export default class ApiClient {
    * @param {string} target Name of the target object.
    * @param {string} action Action to invoke.
    * @param {string} name Name of method (or meta-method) to call on the server.
-   * @param {object} [args = []] JSON-encodable object of arguments.
+   * @param {object} [args = []] API-encodable object of arguments.
    * @returns {Promise} Promise for the result (or error) of the call. In the
    *   case of an error, the rejection reason will always be an instance of
    *   `ApiError` (see which for details).
@@ -154,7 +154,8 @@ export default class ApiClient {
 
     const id = this._nextId;
     const payloadObj = {id, target, action, name, args};
-    const payload = JSON.stringify(payloadObj);
+    const payload = ApiCommon.jsonFromValue(payloadObj);
+    this._log.detail('Sending raw payload:', payload);
 
     let callback;
     const result = new Promise((resolve, reject) => {
@@ -263,7 +264,9 @@ export default class ApiClient {
    * @param {object} event Event that caused this callback.
    */
   _handleMessage(event) {
-    const payload = JsonUtil.parseFrozen(event.data);
+    this._log.detail('Received raw payload:', event.data);
+
+    const payload = ApiCommon.valueFromJson(event.data);
     const id = payload.id;
     let result = payload.result;
     const error = payload.error;
