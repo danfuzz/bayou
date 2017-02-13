@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import JsonUtil from 'json-util';
+import ApiCommon from 'api-common';
 import PropertyIter from 'property-iter';
 import RandomId from 'random-id';
 import SeeAll from 'see-all';
@@ -79,7 +79,7 @@ export default class ApiServer {
       this._log.info(`Handled ${this._messageCount} messages.`);
     }
 
-    msg = JsonUtil.parseFrozen(msg);
+    msg = ApiCommon.valueFromJson(msg);
     this._log.detail('Message:', msg);
 
     let targetObj  = null;
@@ -158,7 +158,7 @@ export default class ApiServer {
       if (error) {
         this._log.detail('Error:', error);
       }
-      this._ws.send(JSON.stringify(response));
+      this._ws.send(ApiCommon.jsonFromValue(response));
     };
 
     try {
