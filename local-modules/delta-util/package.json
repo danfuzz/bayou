@@ -4,6 +4,8 @@
   "main": "main.js",
 
   "dependencies": {
-    "quill-delta": "^3.4.3"
+    "quill-delta": "^3.4.3",
+
+    "api-common": "local"
   }
 }

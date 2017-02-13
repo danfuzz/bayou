@@ -71,4 +71,28 @@ export default class FrozenDelta extends Delta {
     super(deepFreeze(ops));
     Object.freeze(this);
   }
+
+  /** Name of this class in the API. */
+  static get API_NAME() {
+    return 'Delta';
+  }
+
+  /**
+   * Converts this instance for API transmission.
+   *
+   * @returns {array} Reconstruction arguments.
+   */
+  toApi() {
+    return [this.ops];
+  }
+
+  /**
+   * Constructs an instance from API arguments.
+   *
+   * @param {array} ops Same as with the regular constructor.
+   * @returns {FrozenDelta} The constructed instance.
+   */
+  static fromApi(ops) {
+    return new FrozenDelta(ops);
+  }
 }
