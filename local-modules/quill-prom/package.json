@@ -6,6 +6,6 @@
   "dependencies": {
     "quill": "^1.1.7",
 
-    "delta-util": "local"
+    "doc-common": "local"
   }
 }

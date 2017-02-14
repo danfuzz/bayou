@@ -2,11 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import DeltaUtil from 'delta-util';
+import { DeltaUtil, DocumentChange, Snapshot } from 'doc-common';
 import PromCondition from 'prom-condition';
 import Typecheck from 'typecheck';
 
-import DocumentChange from './DocumentChange';
 import default_document from './default-document';
 
 
@@ -83,8 +82,7 @@ export default class DocServer {
    *
    * @param {number} [verNum = this.currentVerNum] Indicates which version to
    *   get.
-   * @returns {object} An object that maps `contents` to the document contents
-   *   (delta from empty) and `verNum` to the version number.
+   * @returns {Snapshot} The corresponding snapshot.
    */
   snapshot(verNum) {
     verNum = this._validateVerNum(verNum, true);
@@ -103,10 +101,8 @@ export default class DocServer {
     if (baseSnapshot === null) {
       // We have no snapshots at all, including of even the first version. Set
       // up version 0.
-      baseSnapshot = this._snapshots[0] = {
-        contents: this._changes[0].delta,
-        verNum:   0
-      };
+      baseSnapshot = this._snapshots[0] =
+        new Snapshot(0, this._changes[0].delta);
     }
 
     if (baseSnapshot.verNum === verNum) {
@@ -123,7 +119,7 @@ export default class DocServer {
     }
 
     contents = DeltaUtil.coerce(contents);
-    const result = {verNum, contents};
+    const result = new Snapshot(verNum, contents);
     this._snapshots[verNum] = result;
     return result;
   }

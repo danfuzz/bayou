@@ -2,8 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import DeltaUtil from 'delta-util';
 import Typecheck from 'typecheck';
+
+import DeltaUtil from './DeltaUtil';
 
 /**
  * Snapshot of a document, with other associated information.
@@ -24,6 +25,31 @@ export default class Snapshot {
     this._contents = DeltaUtil.coerce(contents);
 
     Object.freeze(this);
+  }
+
+  /** Name of this class in the API. */
+  static get API_NAME() {
+    return 'Snapshot';
+  }
+
+  /**
+   * Converts this instance for API transmission.
+   *
+   * @returns {array} Reconstruction arguments.
+   */
+  toApi() {
+    return [this._verNum, this._contents];
+  }
+
+  /**
+   * Constructs an instance from API arguments.
+   *
+   * @param {number} verNum Same as regular constructor.
+   * @param {Delta|array|object} contents Same as regular constructor.
+   * @returns {Snapshot} The constructed instance.
+   */
+  static fromApi(verNum, contents) {
+    return new Snapshot(verNum, contents);
   }
 
   /** The version number. */

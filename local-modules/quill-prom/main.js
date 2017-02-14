@@ -4,7 +4,7 @@
 
 import Quill from 'quill';
 
-import DeltaUtil from 'delta-util';
+import { DeltaUtil } from 'doc-common';
 
 import DeltaEvent from './DeltaEvent';
 

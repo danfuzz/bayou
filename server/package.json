@@ -27,6 +27,7 @@
     "morgan": "^1.7.0",
     "source-map-support": "^0.4.2",
 
+    "api-common": "local",
     "api-server": "local",
     "client-bundle": "local",
     "doc-server": "local",
