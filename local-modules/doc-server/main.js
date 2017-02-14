@@ -118,7 +118,6 @@ export default class DocServer {
       contents = contents.compose(this._changes[i].delta);
     }
 
-    contents = DeltaUtil.coerce(contents);
     const result = new Snapshot(verNum, contents);
     this._snapshots[verNum] = result;
     return result;
