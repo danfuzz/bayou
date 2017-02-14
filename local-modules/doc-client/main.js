@@ -3,12 +3,11 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import ApiClient from 'api-client';
-import DeltaUtil from 'delta-util';
+import { DeltaUtil, Snapshot } from 'doc-common';
 import PromDelay from 'prom-delay';
 import SeeAll from 'see-all';
 import Typecheck from 'typecheck';
 
-import Snapshot from './Snapshot';
 import StateMachine from './StateMachine';
 
 /** Logger. */
@@ -288,8 +287,7 @@ export default class DocClient extends StateMachine {
     // TODO: This should probably arrange for a timeout.
     this._api.main.snapshot().then(
       (value) => {
-        const snapshot = new Snapshot(value.verNum, value.contents);
-        this.q_gotSnapshot(snapshot);
+        this.q_gotSnapshot(value);
       },
       (error) => {
         this.q_apiError('snapshot', error);

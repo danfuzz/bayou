@@ -5,7 +5,7 @@
 
   "dependencies": {
     "api-client": "local",
-    "delta-util": "local",
+    "doc-common": "local",
     "prom-condition": "local",
     "prom-delay": "local",
     "property-iter": "local",

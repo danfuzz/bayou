@@ -6,6 +6,6 @@
   "dependencies": {
     "object-inspect": "^1.2.1",
 
-    "delta-util": "local"
+    "doc-common": "local"
   }
 }

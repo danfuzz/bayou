@@ -4,6 +4,7 @@
 
 import express from 'express';
 
+import ApiCommon from 'api-common';
 import SeeAllRecent from 'see-all-recent';
 
 /** How long a log to maintain, in msec. */
@@ -65,7 +66,8 @@ export default class DebugTools {
     let result;
 
     try {
-      result = this._doc.change(verNum).toWire();
+      const change = this._doc.change(verNum);
+      result = JSON.stringify(ApiCommon.apiFromValue(change), null, 2);
     } catch (e) {
       result = `Error:\n\n${e.stack}`;
     }
@@ -92,7 +94,7 @@ export default class DebugTools {
 
     try {
       const snapshot = this._doc.snapshot(...verNum);
-      result = JSON.stringify(snapshot, null, 2);
+      result = JSON.stringify(ApiCommon.apiFromValue(snapshot), null, 2);
     } catch (e) {
       result = `Error:\n\n${e.stack}`;
     }

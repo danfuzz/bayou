@@ -4,15 +4,10 @@
 
 import Delta from 'quill-delta';
 
-import ApiCommon from 'api-common';
-
 import FrozenDelta from './FrozenDelta';
 
 /** Frozen empty `Delta` instance. */
 const EMPTY_DELTA = new FrozenDelta([]);
-
-// Register `FrozenDelta` with the API.
-ApiCommon.registerClass(FrozenDelta);
 
 /**
  * Quill `Delta` helper utilities.

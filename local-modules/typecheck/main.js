@@ -4,7 +4,7 @@
 
 import inspect from 'object-inspect';
 
-import DeltaUtil from 'delta-util';
+import { DeltaUtil } from 'doc-common';
 
 /**
  * Minimum acceptable timestamp. This is a moment in time toward the start of

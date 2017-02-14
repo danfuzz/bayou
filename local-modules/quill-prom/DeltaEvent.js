@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import DeltaUtil from 'delta-util';
+import { DeltaUtil } from 'doc-common';
 
 /**
  * Event wrapper for a Quill Delta, including reference to the document source,

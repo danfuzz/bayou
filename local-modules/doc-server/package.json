@@ -4,7 +4,7 @@
   "main": "main.js",
 
   "dependencies": {
-    "delta-util": "local",
+    "doc-common": "local",
     "prom-condition": "local",
     "typecheck": "local"
   }

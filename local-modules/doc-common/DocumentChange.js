@@ -2,13 +2,13 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import DeltaUtil from 'delta-util';
-import JsonUtil from 'json-util';
+import { DeltaUtil } from 'doc-common';
 import Typecheck from 'typecheck';
 
 /**
- * Representation of a change to a document, including time, authorship, and
- * version information in addition to the actual delta.
+ * Representation of a change to a document from its immediately-previous
+ * version, including time, authorship, and version information in addition to
+ * the actual delta.
  *
  * Instances of this class are immutable, including the deltas. In particular,
  * if a mutable delta is passed to the constructor of this class, it is coerced
@@ -43,34 +43,31 @@ export default class DocumentChange {
     this._authorId = Typecheck.stringOrNull(authorId);
   }
 
-  /**
-   * Constructs an instance from the given network ("wire") representation.
-   *
-   * @param {string} rep The network ("wire") representation.
-   * @returns {DocumentChange} An appropriately-constructed instance.
-   */
-  fromWire(rep) {
-    const wire = JsonUtil.parseFrozen(rep);
-    Typecheck.objectWithExactKeys('verNum', 'timeMsec', 'delta', 'authorId');
-    return new DocumentChange(
-      wire.verNum, wire.timeMsec, wire.delta, wire.authorId);
+  /** Name of this class in the API. */
+  static get API_NAME() {
+    return 'DocumentChange';
   }
 
   /**
-   * Get a string form of this instance, suitable for passing over the
-   * network ("wire" format).
+   * Converts this instance for API transmission.
    *
-   * @returns {string} The string form.
+   * @returns {array} Reconstruction arguments.
    */
-  toWire() {
-    const wire = {
-      verNum: this.verNum,
-      timeMsec: this.timeMsec,
-      delta: this.delta.ops,
-      authorId: this.authorId
-    };
+  toApi() {
+    return [this._verNum, this._timeMsec, this._delta, this.authorId];
+  }
 
-    return JSON.stringify(wire, null, 2);
+  /**
+   * Constructs an instance from API arguments.
+   *
+   * @param {number} verNum Same as with the regular constructor.
+   * @param {number} timeMsec Same as with the regular constructor.
+   * @param {Delta|array|object} delta Same as with the regular constructor.
+   * @param {string|null} authorId Same as with the regular constructor.
+   * @returns {DocumentChange} The constructed instance.
+   */
+  static fromApi(verNum, timeMsec, delta, authorId) {
+    return new DocumentChange(verNum, timeMsec, delta, authorId);
   }
 
   /** The produced version number. */
