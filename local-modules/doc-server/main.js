@@ -296,8 +296,8 @@ export default class DocServer {
       return;
     }
 
-    // TODO: Assign an author.
-    const change = new DocumentChange(this.nextVerNum, Date.now(), delta, null);
+    const author = null; // TODO: Assign an author.
+    const change = new DocumentChange(this.nextVerNum, Date.now(), delta, author);
     this._changes.push(change);
     this._changeCondition.value = true;
   }
