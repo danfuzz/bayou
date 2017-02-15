@@ -84,6 +84,32 @@ export default class ServerUtil {
   }
 
   /**
+   * The "var" (mutable/variable data) directory. This is where local data is
+   * kept.
+   */
+  static get VAR_DIR() {
+    // TODO: In production, this will want to be somewhere other than under the
+    // product deployment base directory. This might reasonably be configured
+    // via an item in `server-hooks`.
+    const result = path.resolve(BASE_DIR, 'var');
+
+    try {
+      const stat = fs.statSync(result);
+      if (stat.isDirectory()) {
+        return result;
+      } else {
+        throw new Error(`Expected a directory: ${result}`);
+      }
+    } catch (e) {
+      // Presumably not found. Ignore the exception, fall through, and attempt
+      // to create it.
+    }
+
+    fs.mkdirSync(result);
+    return result;
+  }
+
+  /**
    * Write the PID (process ID) file for the current running process, and
    * arrange for it to be removed on process exit.
    */
