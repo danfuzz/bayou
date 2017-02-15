@@ -5,7 +5,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import SeeAll from 'see-all';
+import { SeeAll } from 'see-all';
 
 /** Logger. */
 const log = new SeeAll('pid');

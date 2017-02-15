@@ -6,7 +6,7 @@ import fs from 'fs';
 
 import { ApiCommon } from 'api-common';
 import PromDelay from 'prom-delay';
-import SeeAll from 'see-all';
+import { SeeAll } from 'see-all';
 
 import BaseDoc from './BaseDoc';
 

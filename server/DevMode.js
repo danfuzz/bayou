@@ -9,7 +9,7 @@ import path from 'path';
 import chokidar from 'chokidar';
 
 import PromDelay from 'prom-delay';
-import SeeAll from 'see-all';
+import { SeeAll } from 'see-all';
 
 /** Logger. */
 const log = new SeeAll('dev-mode');

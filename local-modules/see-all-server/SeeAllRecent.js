@@ -7,7 +7,7 @@ import util from 'util';
 import ansiHtml from 'ansi-html';
 import chalk from 'chalk';
 
-import SeeAll from 'see-all';
+import { SeeAll } from 'see-all';
 
 /**
  * Implementation of the `SeeAll` logger protocol which collects a rolling
