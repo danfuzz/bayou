@@ -1,0 +1,10 @@
+{
+  "name": "doc-store",
+  "version": "1.0.0",
+  "main": "main.js",
+
+  "dependencies": {
+    "doc-common": "local",
+    "typecheck": "local"
+  }
+}
