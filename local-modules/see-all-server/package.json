@@ -4,6 +4,7 @@
   "main": "main.js",
 
   "dependencies": {
+    "ansi-html": "^0.0.7",
     "chalk": "^1.1.1",
 
     "see-all": "local"
