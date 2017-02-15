@@ -60,16 +60,11 @@ export default class LocalDoc extends BaseDoc {
    * Implementation as required by the superclass.
    *
    * @param {int} verNum The version number for the desired change.
-   * @returns {DocumentChange} The change with `verNum` as indicated.
+   * @returns {DocumentChange|null|undefined} The change with `verNum` as
+   *   indicated or a nullish value if there is no such change.
    */
-  changeRead(verNum) {
-    const result = this._changes[Typecheck.versionNumber(verNum)];
-
-    if (!result) {
-      throw new Error(`No such change: ${verNum}`);
-    }
-
-    return result;
+  _impl_changeRead(verNum) {
+    return this._changes[verNum];
   }
 
   /**
@@ -77,7 +72,7 @@ export default class LocalDoc extends BaseDoc {
    *
    * @param {DocumentChange} change The change to write.
    */
-  changeWrite(change) {
+  _impl_changeWrite(change) {
     this._changes[change.verNum] = change;
   }
 }
