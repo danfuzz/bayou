@@ -4,6 +4,7 @@
 
 import { DeltaUtil, DocumentChange, Snapshot } from 'doc-common';
 import PromCondition from 'prom-condition';
+import ServerHooks from 'server-hooks';
 import Typecheck from 'typecheck';
 
 import default_document from './default-document';
@@ -11,8 +12,6 @@ import default_document from './default-document';
 
 /**
  * Server-side representation of a persistent document.
- *
- * TODO: Be persistent.
  */
 export default class DocServer {
   /**
@@ -20,11 +19,11 @@ export default class DocServer {
    */
   constructor() {
     /**
-     * List of changes that in aggregate represent the document. Each element
-     * is a `DocumentChange`. The first element is always a change-from-empty.
-     * Composing elements `0..N` results in version `N` of the document.
+     * Storage access for the document. TODO: Right now this just bottoms out
+     * as access to a single document. Instead, document IDs need to be plumbed
+     * through and used to differentiate between multiple documents.
      */
-    this._changes = [];
+    this._doc = DocServer._getDocAccessor('some-id');
 
     /**
      * Mapping from version numbers to corresponding document snapshots.
@@ -39,11 +38,6 @@ export default class DocServer {
      * along, it gets set to `false`.
      */
     this._changeCondition = new PromCondition(true);
-
-    // Initialize the document with static content (for now).
-    const firstChange =
-      new DocumentChange(0, Date.now(), default_document, null);
-    this._changes.push(firstChange);
   }
 
   /**
@@ -51,7 +45,7 @@ export default class DocServer {
    * document.
    */
   get currentVerNum() {
-    return this._changes.length - 1;
+    return this._doc.currentVerNum;
   }
 
   /**
@@ -59,7 +53,7 @@ export default class DocServer {
    * made to the document.
    */
   get nextVerNum() {
-    return this._changes.length;
+    return this._doc.currentVerNum + 1;
   }
 
   /**
@@ -74,7 +68,7 @@ export default class DocServer {
    */
   change(verNum) {
     verNum = this._validateVerNum(verNum, true);
-    return this._changes[verNum];
+    return this._doc.changeRead(verNum);
   }
 
   /**
@@ -102,7 +96,7 @@ export default class DocServer {
       // We have no snapshots at all, including of even the first version. Set
       // up version 0.
       baseSnapshot = this._snapshots[0] =
-        new Snapshot(0, this._changes[0].delta);
+        new Snapshot(0, this._doc.changeRead(0).delta);
     }
 
     if (baseSnapshot.verNum === verNum) {
@@ -115,7 +109,7 @@ export default class DocServer {
 
     let contents = baseSnapshot.contents;
     for (let i = baseSnapshot.verNum + 1; i <= verNum; i++) {
-      contents = contents.compose(this._changes[i].delta);
+      contents = contents.compose(this._doc.changeRead(i).delta);
     }
 
     const result = new Snapshot(verNum, contents);
@@ -273,9 +267,9 @@ export default class DocServer {
       return DeltaUtil.EMPTY_DELTA;
     }
 
-    let result = this._changes[startInclusive].delta;
+    let result = this._doc.changeRead(startInclusive).delta;
     for (let i = startInclusive + 1; i < endExclusive; i++) {
-      result = result.compose(this._changes[i].delta);
+      result = result.compose(this._doc.changeRead(i).delta);
     }
 
     return DeltaUtil.coerce(result);
@@ -298,7 +292,7 @@ export default class DocServer {
 
     const author = null; // TODO: Assign an author.
     const change = new DocumentChange(this.nextVerNum, Date.now(), delta, author);
-    this._changes.push(change);
+    this._doc.changeWrite(change);
     this._changeCondition.value = true;
   }
 
@@ -319,5 +313,27 @@ export default class DocServer {
     } else {
       return Typecheck.versionNumber(verNum, current);
     }
+  }
+
+  /**
+   * Gets the document storage access object for the document with the given ID.
+   * If the document doesn't exist, it gets initialized.
+   *
+   * @param {string} docId The document ID.
+   * @returns {BaseDoc} The corresponding document accessor.
+   */
+  static _getDocAccessor(docId) {
+    // TODO: The document store should only ever be initialized once.
+    const store = new ServerHooks.DocStore();
+    const result = store.getDocument(docId);
+
+    if (!result.exists()) {
+      // Initialize the document with static content (for now).
+      const firstChange =
+        new DocumentChange(0, Date.now(), default_document, null);
+      result.changeWrite(firstChange);
+    }
+
+    return result;
   }
 }

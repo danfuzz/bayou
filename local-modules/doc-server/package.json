@@ -6,6 +6,7 @@
   "dependencies": {
     "doc-common": "local",
     "prom-condition": "local",
+    "server-hooks": "local",
     "typecheck": "local"
   }
 }
