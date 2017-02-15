@@ -67,7 +67,7 @@ export default class AppServer {
 
     // Stream to write to, when logging to a file.
     const logStream = fs.createWriteStream(
-      path.resolve(ServerUtil.BASE_DIR, 'access.log'),
+      path.resolve(ServerUtil.VAR_DIR, 'access.log'),
       {flags: 'a'});
 
     // These log regular (non-websocket) requests at the time of completion,
