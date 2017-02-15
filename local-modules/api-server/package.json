@@ -8,6 +8,6 @@
       "property-iter": "local",
       "random-id": "local",
       "see-all": "local",
-      "websocket-codes": "local"
+      "websocket-util": "local"
   }
 }

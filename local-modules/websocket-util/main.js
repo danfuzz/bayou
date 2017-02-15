@@ -2,6 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import ApiServer from './ApiServer';
+import WebsocketCodes from './WebsocketCodes';
 
-export { ApiServer };
+export { WebsocketCodes };

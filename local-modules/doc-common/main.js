@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import ApiCommon from 'api-common';
+import { ApiCommon } from 'api-common';
 
 import DeltaUtil from './DeltaUtil';
 import DocumentChange from './DocumentChange';

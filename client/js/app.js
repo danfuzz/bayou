@@ -9,9 +9,9 @@
  * there to be a DOM node tagged with id `editor`.
  */
 
-import ApiClient from 'api-client';
+import { ApiClient } from 'api-client';
 import ClientHooks from 'client-hooks';
-import DocClient from 'doc-client';
+import { DocClient } from 'doc-client';
 import SeeAllBrowser from 'see-all-browser';
 
 import QuillMaker from './QuillMaker';
