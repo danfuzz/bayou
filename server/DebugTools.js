@@ -4,7 +4,7 @@
 
 import express from 'express';
 
-import ApiCommon from 'api-common';
+import { ApiCommon } from 'api-common';
 import SeeAllRecent from 'see-all-recent';
 
 /** How long a log to maintain, in msec. */

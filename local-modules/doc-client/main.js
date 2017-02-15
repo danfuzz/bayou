@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import ApiClient from 'api-client';
+import { ApiError } from 'api-client';
 import { DeltaUtil, Snapshot } from 'doc-common';
 import PromDelay from 'prom-delay';
 import SeeAll from 'see-all';
@@ -240,7 +240,7 @@ export default class DocClient extends StateMachine {
    * @param {object} reason Error reason.
    */
   _handle_any_apiError(method_unused, reason) {
-    if (reason.layer === ApiClient.ApiError.CONN) {
+    if (reason.layer === ApiError.CONN) {
       // It's connection-related and probably no big deal.
       log.info(`${reason.code}: ${reason.desc}`);
     } else {
