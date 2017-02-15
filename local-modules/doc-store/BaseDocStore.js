@@ -8,23 +8,10 @@ import BaseDoc from './BaseDoc';
 
 /**
  * Base class for document storage access. Subclasses must override several
- * methods defined by this class, as indicated in the documentation.
+ * methods defined by this class, as indicated in the documentation. Methods to
+ * override are all named with the prefix `_impl_`.
  */
 export default class BaseDocStore {
-  /**
-   * Gets the accessor for the document with the given ID. The document need not
-   * exist prior to calling this method.
-   *
-   * @param {string} docId The ID of the document to access. Must be a nonempty
-   *   string.
-   * @returns {BaseDoc} Accessor for the document in question.
-   */
-  getDocument(docId) {
-    Typecheck.stringNonempty(docId);
-    this._impl_checkDocId(docId);
-    return Typecheck.instance(this._impl_getDocument(docId), BaseDoc);
-  }
-
   /**
    * Checks a document ID for validity. Returns regularly (with no value) if
    * all is well, or throws an error if the ID is invalid. Only ever called on
@@ -40,7 +27,22 @@ export default class BaseDocStore {
   }
 
   /**
-   * Helper for `getDocument()`. Only ever called with a known-valid `docId`.
+   * Gets the accessor for the document with the given ID. The document need not
+   * exist prior to calling this method.
+   *
+   * @param {string} docId The ID of the document to access. Must be a nonempty
+   *   string.
+   * @returns {BaseDoc} Accessor for the document in question.
+   */
+  getDocument(docId) {
+    Typecheck.stringNonempty(docId);
+    this._impl_checkDocId(docId);
+    return Typecheck.instance(this._impl_getDocument(docId), BaseDoc);
+  }
+
+  /**
+   * Main implementation of `getDocument()`. Only ever called with a known-valid
+   * `docId`.
    *
    * **Note:** This method must be overridden by subclasses.
    *

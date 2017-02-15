@@ -21,10 +21,10 @@ export default class ServerHooks {
   }
 
   /**
-   * The class which provides access to document storage. This is a subclass of
-   * `BaseDocStore` as defined by the `doc-store` module.
+   * The object which provides access to document storage. This is an instance
+   * of a subclass of `BaseDocStore`, as defined by the `doc-store` module.
    */
-  static get DocStore() {
-    return LocalDocStore;
+  static get docStore() {
+    return LocalDocStore.THE_INSTANCE;
   }
 }

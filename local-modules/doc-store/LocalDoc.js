@@ -2,8 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import Typecheck from 'typecheck';
-
 import BaseDoc from './BaseDoc';
 
 /**
@@ -35,14 +33,14 @@ export default class LocalDoc extends BaseDoc {
    *
    * @returns {boolean} `true` iff this document exists.
    */
-  exists() {
+  _impl_exists() {
     return this._exists;
   }
 
   /**
    * Implementation as required by the superclass.
    */
-  create() {
+  _impl_create() {
     this._exists = true;
     this._changes = [];
   }
@@ -52,7 +50,7 @@ export default class LocalDoc extends BaseDoc {
    *
    * @returns {int} The version number of this document.
    */
-  get currentVerNum() {
+  _impl_currentVerNum() {
     return this._changes.length - 1;
   }
 
@@ -60,16 +58,11 @@ export default class LocalDoc extends BaseDoc {
    * Implementation as required by the superclass.
    *
    * @param {int} verNum The version number for the desired change.
-   * @returns {DocumentChange} The change with `verNum` as indicated.
+   * @returns {DocumentChange|null|undefined} The change with `verNum` as
+   *   indicated or a nullish value if there is no such change.
    */
-  changeRead(verNum) {
-    const result = this._changes[Typecheck.versionNumber(verNum)];
-
-    if (!result) {
-      throw new Error(`No such change: ${verNum}`);
-    }
-
-    return result;
+  _impl_changeRead(verNum) {
+    return this._changes[verNum];
   }
 
   /**
@@ -77,7 +70,7 @@ export default class LocalDoc extends BaseDoc {
    *
    * @param {DocumentChange} change The change to write.
    */
-  changeWrite(change) {
+  _impl_changeWrite(change) {
     this._changes[change.verNum] = change;
   }
 }

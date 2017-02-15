@@ -6,14 +6,33 @@ import BaseDocStore from './BaseDocStore';
 import LocalDoc from './LocalDoc';
 
 /**
+ * {LocalDocStore|null} The unique instance of this class. Initialized in the
+ * `THE_INSTANCE` getter below.
+ */
+let THE_INSTANCE = null;
+
+/**
  * Document storage implementation that keeps everything in memory.
  */
 export default class LocalDocStore extends BaseDocStore {
+  /** {LocalDocStore} The unique instance of this class. */
+  static get THE_INSTANCE() {
+    if (THE_INSTANCE === null) {
+      THE_INSTANCE = new LocalDocStore();
+    }
+
+    return THE_INSTANCE;
+  }
+
   /**
-   * Constructs an instance.
+   * Constructs an instance. This is not meant to be used publicly.
    */
   constructor() {
     super();
+
+    if (THE_INSTANCE !== null) {
+      throw new Error('Attempt to construct a second instance.');
+    }
   }
 
   /**

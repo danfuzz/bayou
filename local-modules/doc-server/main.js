@@ -45,7 +45,7 @@ export default class DocServer {
    * document.
    */
   get currentVerNum() {
-    return this._doc.currentVerNum;
+    return this._doc.currentVerNum();
   }
 
   /**
@@ -53,7 +53,7 @@ export default class DocServer {
    * made to the document.
    */
   get nextVerNum() {
-    return this._doc.currentVerNum + 1;
+    return this._doc.currentVerNum() + 1;
   }
 
   /**
@@ -323,9 +323,7 @@ export default class DocServer {
    * @returns {BaseDoc} The corresponding document accessor.
    */
   static _getDocAccessor(docId) {
-    // TODO: The document store should only ever be initialized once.
-    const store = new ServerHooks.DocStore();
-    const result = store.getDocument(docId);
+    const result = ServerHooks.docStore.getDocument(docId);
 
     if (!result.exists()) {
       // Initialize the document with static content (for now).
