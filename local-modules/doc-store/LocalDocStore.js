@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { SeeAll } from 'see-all';
-import ServerUtil from 'server-env';
+import { Dirs } from 'server-env';
 
 import BaseDocStore from './BaseDocStore';
 import LocalDoc from './LocalDoc';
@@ -48,7 +48,7 @@ export default class LocalDocStore extends BaseDocStore {
     this._docs = new Map();
 
     /** {string} The directory for document storage. */
-    this._dir = path.resolve(ServerUtil.VAR_DIR, 'docs');
+    this._dir = path.resolve(Dirs.VAR_DIR, 'docs');
 
     // Create the document storage directory if it doesn't yet exist.
     if (!fs.existsSync(this._dir)) {

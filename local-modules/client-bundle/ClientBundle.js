@@ -9,7 +9,7 @@ import webpack from 'webpack';
 
 import JsonUtil from 'json-util';
 import { SeeAll } from 'see-all';
-import ServerUtil from 'server-env';
+import { Dirs } from 'server-env';
 
 import ProgressMessage from './ProgressMessage';
 
@@ -22,7 +22,7 @@ const log = new SeeAll('client-bundle');
  */
 const clientPackage =
   JsonUtil.parseFrozen(
-    fs.readFileSync(path.resolve(ServerUtil.CLIENT_DIR, 'package.json')));
+    fs.readFileSync(path.resolve(Dirs.CLIENT_DIR, 'package.json')));
 
 /**
  * Options passed to the `webpack` compiler constructor. Of particular note,
@@ -41,12 +41,12 @@ const clientPackage =
  * for details and discussion.
  */
 const webpackOptions = {
-  context: ServerUtil.CLIENT_CODE_DIR,
+  context: Dirs.CLIENT_CODE_DIR,
   debug: true,
   devtool: '#inline-source-map',
   entry: [
     require.resolve('babel-polyfill'),
-    path.resolve(ServerUtil.CLIENT_DIR, clientPackage.main)
+    path.resolve(Dirs.CLIENT_DIR, clientPackage.main)
   ],
   output: {
     // Absolute output path of `/` because we write to a memory filesystem.
@@ -63,17 +63,17 @@ const webpackOptions = {
       // a prebuilt bundle. We rewrite it here to refer instead to the unbundled
       // source.
       'quill':
-        path.resolve(ServerUtil.CLIENT_DIR, 'node_modules/quill/quill.js'),
+        path.resolve(Dirs.CLIENT_DIR, 'node_modules/quill/quill.js'),
       // Likewise, `parchment`.
       'parchment':
-        path.resolve(ServerUtil.CLIENT_DIR, 'node_modules/parchment/src/parchment.ts'),
+        path.resolve(Dirs.CLIENT_DIR, 'node_modules/parchment/src/parchment.ts'),
     },
     // All the extensions listed here except `.ts` are in the default list.
     // Webpack doesn't offer a way to simply add to the defaults (alas).
     extensions: ['', '.webpack.js', '.web.js', '.js', '.ts']
   },
   resolveLoader: {
-    root: path.resolve(ServerUtil.SERVER_DIR, 'node_modules')
+    root: path.resolve(Dirs.SERVER_DIR, 'node_modules')
   },
   module: {
     loaders: [

@@ -7,6 +7,8 @@ import path from 'path';
 
 import { SeeAll } from 'see-all';
 
+import Dirs from './Dirs';
+
 /** Logger. */
 const log = new SeeAll('pid');
 
@@ -20,11 +22,13 @@ let pidPath = null;
 export default class PidFile {
   /**
    * Write the PID file, and arrange for its timely erasure.
-   *
-   * @param {string} baseDir Base product directory.
    */
-  static init(baseDir) {
-    pidPath = path.resolve(baseDir, 'pid.txt');
+  static init() {
+    if (pidPath !== null) {
+      throw new Error('Already set up.');
+    }
+
+    pidPath = path.resolve(Dirs.VAR_DIR, 'pid.txt');
 
     // Erase the file on exit.
     process.once('exit',    PidFile._erasePid);

@@ -13,7 +13,7 @@ import chalk from 'chalk';
 import { ApiServer } from 'api-server';
 import { ClientBundle } from 'client-bundle';
 import { SeeAll } from 'see-all';
-import ServerUtil from 'server-env';
+import { Dirs } from 'server-env';
 
 import DebugTools from './DebugTools';
 
@@ -67,7 +67,7 @@ export default class AppServer {
 
     // Stream to write to, when logging to a file.
     const logStream = fs.createWriteStream(
-      path.resolve(ServerUtil.VAR_DIR, 'access.log'),
+      path.resolve(Dirs.VAR_DIR, 'access.log'),
       {flags: 'a'});
 
     // These log regular (non-websocket) requests at the time of completion,
@@ -153,14 +153,14 @@ export default class AppServer {
     // Map Quill files into `/static/quill`. This is used for CSS files but not for
     // the JS code; the JS code is included in the overall JS bundle file.
     app.use('/static/quill',
-      express.static(path.resolve(ServerUtil.CLIENT_DIR, 'node_modules/quill/dist')));
+      express.static(path.resolve(Dirs.CLIENT_DIR, 'node_modules/quill/dist')));
 
     // Use Webpack to serve a JS bundle.
     app.get('/static/bundle.js', new ClientBundle().requestHandler);
 
     // Find HTML files and other static assets in `client/assets`. This includes the
     // top-level `index.html` and `favicon`, as well as stuff under `static/`.
-    app.use('/', express.static(path.resolve(ServerUtil.CLIENT_DIR, 'assets')));
+    app.use('/', express.static(path.resolve(Dirs.CLIENT_DIR, 'assets')));
 
     // Attach the API server.
     app.ws('/api', (ws, req_unused) => { new ApiServer(ws, this._doc); });
