@@ -12,20 +12,6 @@ import BaseDoc from './BaseDoc';
  */
 export default class BaseDocStore {
   /**
-   * Gets the accessor for the document with the given ID. The document need not
-   * exist prior to calling this method.
-   *
-   * @param {string} docId The ID of the document to access. Must be a nonempty
-   *   string.
-   * @returns {BaseDoc} Accessor for the document in question.
-   */
-  getDocument(docId) {
-    Typecheck.stringNonempty(docId);
-    this._impl_checkDocId(docId);
-    return Typecheck.instance(this._impl_getDocument(docId), BaseDoc);
-  }
-
-  /**
    * Checks a document ID for validity. Returns regularly (with no value) if
    * all is well, or throws an error if the ID is invalid. Only ever called on
    * a non-empty string.
@@ -37,6 +23,20 @@ export default class BaseDocStore {
    */
   _impl_checkDocId(docId_unused) {
     // This space intentionally left blank.
+  }
+
+  /**
+   * Gets the accessor for the document with the given ID. The document need not
+   * exist prior to calling this method.
+   *
+   * @param {string} docId The ID of the document to access. Must be a nonempty
+   *   string.
+   * @returns {BaseDoc} Accessor for the document in question.
+   */
+  getDocument(docId) {
+    Typecheck.stringNonempty(docId);
+    this._impl_checkDocId(docId);
+    return Typecheck.instance(this._impl_getDocument(docId), BaseDoc);
   }
 
   /**
