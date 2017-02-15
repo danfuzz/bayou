@@ -1,12 +1,10 @@
 {
-  "name": "doc-server",
+  "name": "doc-store",
   "version": "1.0.0",
   "main": "main.js",
 
   "dependencies": {
     "doc-common": "local",
-    "prom-condition": "local",
-    "server-hooks": "local",
     "typecheck": "local"
   }
 }

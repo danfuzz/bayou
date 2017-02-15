@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { LocalDocStore } from 'doc-store';
+
 /**
  * Hooks into various server operations. This is meant to make it easy for
  * complete products to customize Bayou without overlaying the original
@@ -16,5 +18,13 @@ export default class ServerHooks {
    */
   static run() {
     // This space intentionally left blank.
+  }
+
+  /**
+   * The class which provides access to document storage. This is a subclass of
+   * `BaseDocStore` as defined by the `doc-store` module.
+   */
+  static get DocStore() {
+    return LocalDocStore;
   }
 }
