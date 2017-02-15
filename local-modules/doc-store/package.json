@@ -4,7 +4,11 @@
   "main": "main.js",
 
   "dependencies": {
+    "api-common": "local",
     "doc-common": "local",
+    "prom-delay": "local",
+    "see-all": "local",
+    "server-util": "local",
     "typecheck": "local"
   }
 }
