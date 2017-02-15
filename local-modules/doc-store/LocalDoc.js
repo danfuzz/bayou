@@ -35,14 +35,14 @@ export default class LocalDoc extends BaseDoc {
    *
    * @returns {boolean} `true` iff this document exists.
    */
-  exists() {
+  _impl_exists() {
     return this._exists;
   }
 
   /**
    * Implementation as required by the superclass.
    */
-  create() {
+  _impl_create() {
     this._exists = true;
     this._changes = [];
   }
@@ -52,7 +52,7 @@ export default class LocalDoc extends BaseDoc {
    *
    * @returns {int} The version number of this document.
    */
-  get currentVerNum() {
+  _impl_currentVerNum() {
     return this._changes.length - 1;
   }
 

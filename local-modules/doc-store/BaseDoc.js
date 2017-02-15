@@ -7,7 +7,7 @@ import Typecheck from 'typecheck';
 /**
  * Base class representing access to a particular document. Subclasses must
  * override several methods defined by this class, as indicated in the
- * documentation.
+ * documentation. Methods to override are all named with the prefix `_impl_`.
  */
 export default class BaseDoc {
   /**
@@ -28,11 +28,21 @@ export default class BaseDoc {
   /**
    * Indicates whether or not this document exists in the store.
    *
+   * @returns {boolean} `true` iff this document exists.
+   */
+  exists() {
+    const result = this._impl_exists();
+    return Typecheck.boolean(result);
+  }
+
+  /**
+   * Main implementation of `exists()`.
+   *
    * **Note:** This method must be overridden by subclasses.
    *
    * @returns {boolean} `true` iff this document exists.
    */
-  exists() {
+  _impl_exists() {
     return this._mustOverride();
   }
 
@@ -44,6 +54,17 @@ export default class BaseDoc {
    * **Note:** This method must be overridden by subclasses.
    */
   create() {
+    // This is just a pass-through. The point is to maintain the pattern of
+    // `_impl_` as the things that subclasses override.
+    this._impl_create();
+  }
+
+  /**
+   * Main implementation of `create()`.
+   *
+   * **Note:** This method must be overridden by subclasses.
+   */
+  _impl_create() {
     this._mustOverride();
   }
 
@@ -56,6 +77,17 @@ export default class BaseDoc {
    * @returns {int} The version number of this document.
    */
   currentVerNum() {
+    return Typecheck.versionNumber(this._impl_currentVerNum());
+  }
+
+  /**
+   * Main implementation of `currentVerNum()`.
+   *
+   * **Note:** This accessor must be overridden by subclasses.
+   *
+   * @returns {int} The version number of this document.
+   */
+  _impl_currentVerNum() {
     return this._mustOverride();
   }
 

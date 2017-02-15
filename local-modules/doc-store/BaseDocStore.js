@@ -8,7 +8,8 @@ import BaseDoc from './BaseDoc';
 
 /**
  * Base class for document storage access. Subclasses must override several
- * methods defined by this class, as indicated in the documentation.
+ * methods defined by this class, as indicated in the documentation. Methods to
+ * override are all named with the prefix `_impl_`.
  */
 export default class BaseDocStore {
   /**
@@ -40,7 +41,8 @@ export default class BaseDocStore {
   }
 
   /**
-   * Helper for `getDocument()`. Only ever called with a known-valid `docId`.
+   * Main implementation of `getDocument()`. Only ever called with a known-valid
+   * `docId`.
    *
    * **Note:** This method must be overridden by subclasses.
    *
