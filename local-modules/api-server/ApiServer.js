@@ -7,7 +7,7 @@ import PropertyIter from 'property-iter';
 import RandomId from 'random-id';
 import SeeAll from 'see-all';
 import Typecheck from 'typecheck';
-import WebsocketCodes from 'websocket-codes';
+import { WebsocketCodes } from 'websocket-util';
 
 import MetaHandler from './MetaHandler';
 

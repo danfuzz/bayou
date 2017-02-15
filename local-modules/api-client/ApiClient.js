@@ -4,7 +4,7 @@
 
 import { ApiCommon } from 'api-common';
 import SeeAll from 'see-all';
-import WebsocketCodes from 'websocket-codes';
+import { WebsocketCodes } from 'websocket-util';
 
 import ApiError from './ApiError';
 import TargetMap from './TargetMap';
