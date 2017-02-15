@@ -8,7 +8,7 @@
     "doc-common": "local",
     "prom-delay": "local",
     "see-all": "local",
-    "server-util": "local",
+    "server-env": "local",
     "typecheck": "local"
   }
 }

@@ -34,7 +34,7 @@
     "prom-delay": "local",
     "see-all": "local",
     "see-all-server": "local",
-    "server-hooks": "local",
-    "server-util": "local"
+    "server-env": "local",
+    "server-hooks": "local"
   }
 }

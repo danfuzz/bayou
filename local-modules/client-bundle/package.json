@@ -19,6 +19,6 @@
 
     "json-util": "local",
     "see-all": "local",
-    "server-util": "local"
+    "server-env": "local"
   }
 }

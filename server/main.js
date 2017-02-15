@@ -21,7 +21,7 @@ import { DocServer } from 'doc-server';
 import { SeeAll } from 'see-all';
 import { SeeAllServer } from 'see-all-server';
 import ServerHooks from 'server-hooks';
-import ServerUtil from 'server-util';
+import ServerUtil from 'server-env';
 
 import AppServer from './AppServer';
 import DevMode from './DevMode';

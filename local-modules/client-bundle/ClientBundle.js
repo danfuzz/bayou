@@ -9,7 +9,7 @@ import webpack from 'webpack';
 
 import JsonUtil from 'json-util';
 import { SeeAll } from 'see-all';
-import ServerUtil from 'server-util';
+import ServerUtil from 'server-env';
 
 import ProgressMessage from './ProgressMessage';
 

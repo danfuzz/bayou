@@ -13,7 +13,7 @@ import chalk from 'chalk';
 import { ApiServer } from 'api-server';
 import { ClientBundle } from 'client-bundle';
 import { SeeAll } from 'see-all';
-import ServerUtil from 'server-util';
+import ServerUtil from 'server-env';
 
 import DebugTools from './DebugTools';
 
