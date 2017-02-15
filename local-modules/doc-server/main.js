@@ -45,7 +45,7 @@ export default class DocServer {
    * document.
    */
   get currentVerNum() {
-    return this._doc.currentVerNum;
+    return this._doc.currentVerNum();
   }
 
   /**
@@ -53,7 +53,7 @@ export default class DocServer {
    * made to the document.
    */
   get nextVerNum() {
-    return this._doc.currentVerNum + 1;
+    return this._doc.currentVerNum() + 1;
   }
 
   /**

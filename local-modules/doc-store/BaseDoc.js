@@ -55,7 +55,7 @@ export default class BaseDoc {
    *
    * @returns {int} The version number of this document.
    */
-  get currentVerNum() {
+  currentVerNum() {
     return this._mustOverride();
   }
 
