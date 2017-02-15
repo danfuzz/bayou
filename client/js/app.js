@@ -12,7 +12,7 @@
 import { ApiClient } from 'api-client';
 import ClientHooks from 'client-hooks';
 import { DocClient } from 'doc-client';
-import SeeAllBrowser from 'see-all-browser';
+import { SeeAllBrowser } from 'see-all-browser';
 
 import QuillMaker from './QuillMaker';
 

@@ -8,7 +8,7 @@ import path from 'path';
 import webpack from 'webpack';
 
 import JsonUtil from 'json-util';
-import SeeAll from 'see-all';
+import { SeeAll } from 'see-all';
 import ServerUtil from 'server-util';
 
 import ProgressMessage from './ProgressMessage';

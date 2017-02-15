@@ -4,7 +4,7 @@
 
 import PromCondition from 'prom-condition';
 import PropertyIter from 'property-iter';
-import SeeAll from 'see-all';
+import { SeeAll } from 'see-all';
 import Typecheck from 'typecheck';
 
 /**

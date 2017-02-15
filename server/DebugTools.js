@@ -5,7 +5,7 @@
 import express from 'express';
 
 import { ApiCommon } from 'api-common';
-import SeeAllRecent from 'see-all-recent';
+import { SeeAllRecent } from 'see-all-recent';
 
 /** How long a log to maintain, in msec. */
 const LOG_LENGTH_MSEC = 1000 * 60 * 60; // One hour.
