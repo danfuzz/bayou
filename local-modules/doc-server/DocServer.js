@@ -3,11 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { DeltaUtil, DocumentChange, Snapshot } from 'doc-common';
-import { Hooks } from 'hooks-server';
+import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { Typecheck } from 'typecheck';
 import { PromCondition } from 'util-common';
-
-import default_document from './default-document';
 
 
 /**
@@ -328,7 +326,7 @@ export default class DocServer {
     if (!result.exists()) {
       // Initialize the document with static content (for now).
       const firstChange =
-        new DocumentChange(0, Date.now(), default_document, null);
+        new DocumentChange(0, Date.now(), DEFAULT_DOCUMENT, null);
       result.changeWrite(firstChange);
     }
 

@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import DataUtil from './DataUtil';
 import JsonUtil from './JsonUtil';
 import PromCondition from './PromCondition';
 import PromDelay from './PromDelay';
@@ -10,6 +11,7 @@ import RandomId from './RandomId';
 import WebsocketCodes from './WebsocketCodes';
 
 export {
+  DataUtil,
   JsonUtil,
   PromCondition,
   PromDelay,
