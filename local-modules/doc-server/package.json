@@ -5,7 +5,7 @@
 
   "dependencies": {
     "doc-common": "local",
-    "server-hooks": "local",
+    "hooks-server": "local",
     "typecheck": "local",
     "util-common": "local"
   }

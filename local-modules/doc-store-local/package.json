@@ -1,13 +1,13 @@
 {
-  "name": "doc-common",
+  "name": "doc-store-local",
   "version": "1.0.0",
   "main": "main.js",
 
   "dependencies": {
-    "quill-delta": "^3.4.3",
-
     "api-common": "local",
-    "typecheck": "local",
+    "doc-store": "local",
+    "see-all": "local",
+    "server-env": "local",
     "util-common": "local"
   }
 }

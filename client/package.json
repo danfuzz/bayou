@@ -18,8 +18,8 @@
   },
   "dependencies": {
     "api-client": "local",
-    "client-hooks": "local",
     "doc-client": "local",
+    "hooks-client": "local",
     "quill-util": "local",
     "see-all-browser": "local"
   }

@@ -5,10 +5,10 @@
 import fs from 'fs';
 import path from 'path';
 
+import { BaseDocStore } from 'doc-store';
 import { SeeAll } from 'see-all';
 import { Dirs } from 'server-env';
 
-import BaseDocStore from './BaseDocStore';
 import LocalDoc from './LocalDoc';
 
 /** {SeeAll} Logger for this module. */

@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { DocumentChange } from 'doc-common';
-import Typecheck from 'typecheck';
+import { Typecheck } from 'typecheck';
 
 /**
  * Base class representing access to a particular document. Subclasses must

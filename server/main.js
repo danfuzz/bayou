@@ -18,9 +18,9 @@ import path from 'path';
 
 import { ClientBundle } from 'client-bundle';
 import { DocServer } from 'doc-server';
+import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
 import { SeeAllServer } from 'see-all-server';
-import ServerHooks from 'server-hooks';
 import { ProductInfo, ServerEnv } from 'server-env';
 
 import AppServer from './AppServer';
@@ -108,7 +108,7 @@ function run() {
     new DevMode().start();
   }
 
-  ServerHooks.run();
+  Hooks.run();
 
   /** The single document managed by this instance. */
   const theDoc = new DocServer();

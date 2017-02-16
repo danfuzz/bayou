@@ -10,17 +10,16 @@
  */
 
 import { ApiClient } from 'api-client';
-import ClientHooks from 'client-hooks';
 import { DocClient } from 'doc-client';
+import { Hooks } from 'hooks-client';
+import { QuillMaker } from 'quill-util';
 import { SeeAllBrowser } from 'see-all-browser';
-
-import QuillMaker from './QuillMaker';
 
 // Init logging.
 SeeAllBrowser.init();
 
 // Give the overlay a chance to do any initialization.
-ClientHooks.run();
+Hooks.run();
 
 // Make the instance.
 const quill = QuillMaker.make('#editor');

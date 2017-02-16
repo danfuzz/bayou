@@ -1,0 +1,10 @@
+{
+  "name": "hooks-server",
+  "version": "1.0.0",
+  "main": "main.js",
+
+  "dependencies": {
+    "doc-store-local": "local",
+    "util-common": "local"
+  }
+}

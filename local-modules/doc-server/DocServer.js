@@ -3,11 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { DeltaUtil, DocumentChange, Snapshot } from 'doc-common';
-import ServerHooks from 'server-hooks';
-import Typecheck from 'typecheck';
+import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
+import { Typecheck } from 'typecheck';
 import { PromCondition } from 'util-common';
-
-import default_document from './default-document';
 
 
 /**
@@ -171,7 +169,7 @@ export default class DocServer {
    */
   applyDelta(baseVerNum, delta) {
     baseVerNum = this._validateVerNum(baseVerNum, false);
-    delta = Typecheck.frozenDelta(delta, true);
+    delta = DeltaUtil.coerce(delta);
 
     if (baseVerNum === this.currentVerNum) {
       // The easy case: Apply a delta to the current version (unless it's empty,
@@ -284,7 +282,7 @@ export default class DocServer {
    * @param {object} delta The delta to append.
    */
   _appendDelta(delta) {
-    delta = Typecheck.frozenDelta(delta, true);
+    delta = DeltaUtil.coerce(delta);
 
     if (DeltaUtil.isEmpty(delta)) {
       return;
@@ -323,12 +321,12 @@ export default class DocServer {
    * @returns {BaseDoc} The corresponding document accessor.
    */
   static _getDocAccessor(docId) {
-    const result = ServerHooks.docStore.getDocument(docId);
+    const result = Hooks.docStore.getDocument(docId);
 
     if (!result.exists()) {
       // Initialize the document with static content (for now).
       const firstChange =
-        new DocumentChange(0, Date.now(), default_document, null);
+        new DocumentChange(0, Date.now(), DEFAULT_DOCUMENT, null);
       result.changeWrite(firstChange);
     }
 

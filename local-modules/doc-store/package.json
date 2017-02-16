@@ -4,11 +4,7 @@
   "main": "main.js",
 
   "dependencies": {
-    "api-common": "local",
     "doc-common": "local",
-    "see-all": "local",
-    "server-env": "local",
-    "typecheck": "local",
-    "util-common": "local"
+    "typecheck": "local"
   }
 }

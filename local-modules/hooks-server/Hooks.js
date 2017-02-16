@@ -2,14 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { LocalDocStore } from 'doc-store';
+import { LocalDocStore } from 'doc-store-local';
 
 /**
  * Hooks into various server operations. This is meant to make it easy for
  * complete products to customize Bayou without overlaying the original
  * source...except for this file (and other similar ones).
  */
-export default class ServerHooks {
+export default class Hooks {
   /**
    * Called during regular system startup (e.g. and in particular _not_ when
    * just building a client bundle offline). This is called after the very

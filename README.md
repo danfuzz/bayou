@@ -53,9 +53,9 @@ The code is set up to make it straightforward to customize. Salient details:
   * The project provides a number of predefined hooks, both on the client and
     server side. By default, the hooks are all no-ops. However, the overlay can
     contain replacements for these hooks. Hooks are located in the local modules
-    `client-hooks` and `server-hooks`. If the overlay directory contains either
-    `local-modules/client-hooks/main.js` or
-    `local-modules/server-hooks/main.js`, then those files will be used instead
+    `hooks-client` and `hooks-server`. If the overlay directory contains either
+    `local-modules/hooks-client/main.js` or
+    `local-modules/hooks-server/main.js`, then those files will be used instead
     of the no-op versions built into the base source.
 
   * Because no amount of explicit configuration hooks will ever turn out to be
