@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DocumentChange } from 'doc-common';
+import { DocumentChange, VersionNumber } from 'doc-common';
 import { Typecheck } from 'typecheck';
 
 /**
@@ -74,7 +74,7 @@ export default class BaseDoc {
    * @returns {int} The version number of this document.
    */
   currentVerNum() {
-    return Typecheck.versionNumber(this._impl_currentVerNum());
+    return VersionNumber.check(this._impl_currentVerNum());
   }
 
   /**
@@ -96,7 +96,7 @@ export default class BaseDoc {
    * @returns {DocumentChange} The change with `verNum` as indicated.
    */
   changeRead(verNum) {
-    Typecheck.versionNumber(verNum);
+    VersionNumber.check(verNum);
     const result = this._impl_changeRead(verNum);
 
     if (!result) {

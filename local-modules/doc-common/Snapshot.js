@@ -2,9 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Typecheck } from 'typecheck';
-
 import DeltaUtil from './DeltaUtil';
+import VersionNumber from './VersionNumber';
+
 
 /**
  * Snapshot of a document, with other associated information.
@@ -19,7 +19,7 @@ export default class Snapshot {
    */
   constructor(verNum, contents) {
     /** Version number. */
-    this._verNum = Typecheck.versionNumber(verNum);
+    this._verNum = VersionNumber.check(verNum);
 
     /** Document contents. */
     this._contents = DeltaUtil.coerce(contents);

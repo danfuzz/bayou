@@ -274,34 +274,4 @@ export default class Typecheck {
       return TypeError.badValue(value, 'timeMsec');
     }
   }
-
-  /**
-   * Checks a value of type `versionNumber`. Version numbers are non-negative
-   * integers. In addition, in any given context there is generally an upper
-   * limit on them.
-   *
-   * @param {*} value Value to check.
-   * @param {number} [max] Maximum acceptable value (inclusive). If
-   *   `undefined`, there is no upper limit.
-   * @param {*} [ifAbsent] Default value. If passed and `value` is `undefined`,
-   *   this method will return this value instead of throwing an error.
-   * @returns {number} `value` or `ifAbsent`.
-   */
-  static versionNumber(value, max = undefined, ifAbsent = undefined) {
-    if ((value === undefined) && (ifAbsent !== undefined)) {
-      return ifAbsent;
-    }
-
-    if (   (typeof value !== 'number')
-        || !Number.isSafeInteger(value)
-        || (value < 0)) {
-      return TypeError.badValue(value, 'versionNumber');
-    }
-
-    if ((max !== undefined) && (value > max)) {
-      return TypeError.badValue(value, 'versionNumber', `value <= ${max}`);
-    }
-
-    return value;
-  }
 }

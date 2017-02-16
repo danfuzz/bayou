@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DeltaUtil, DocumentChange, Snapshot } from 'doc-common';
+import { DeltaUtil, DocumentChange, Snapshot, VersionNumber } from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { Typecheck } from 'typecheck';
 import { PromCondition } from 'util-common';
@@ -257,7 +257,7 @@ export default class DocServer {
    */
   _composeVersions(startInclusive, endExclusive = this.nextVerNum) {
     // Validate parameters.
-    startInclusive = Typecheck.intMin(startInclusive, 0);
+    startInclusive = VersionNumber.check(startInclusive);
     endExclusive =
       Typecheck.intRangeInc(endExclusive, startInclusive, this.nextVerNum);
 
@@ -307,9 +307,9 @@ export default class DocServer {
     const current = this.currentVerNum;
 
     if (wantCurrent) {
-      return Typecheck.versionNumber(verNum, current, current);
+      return VersionNumber.check(verNum, current, current);
     } else {
-      return Typecheck.versionNumber(verNum, current);
+      return VersionNumber.check(verNum, current);
     }
   }
 

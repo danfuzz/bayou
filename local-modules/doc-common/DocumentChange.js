@@ -5,6 +5,8 @@
 import { DeltaUtil } from 'doc-common';
 import { Typecheck } from 'typecheck';
 
+import VersionNumber from './VersionNumber';
+
 /**
  * Representation of a change to a document from its immediately-previous
  * version, including time, authorship, and version information in addition to
@@ -31,7 +33,7 @@ export default class DocumentChange {
    */
   constructor(verNum, timeMsec, delta, authorId) {
     /** The produced version number. */
-    this._verNum = Typecheck.versionNumber(verNum);
+    this._verNum = VersionNumber.check(verNum);
 
     /** The time of the change. */
     this._timeMsec = Typecheck.timeMsec(timeMsec);

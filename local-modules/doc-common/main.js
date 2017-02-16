@@ -8,10 +8,11 @@ import DeltaUtil from './DeltaUtil';
 import DocumentChange from './DocumentChange';
 import FrozenDelta from './FrozenDelta';
 import Snapshot from './Snapshot';
+import VersionNumber from './VersionNumber';
 
 // Register classes with the API.
 ApiCommon.registerClass(DocumentChange);
 ApiCommon.registerClass(FrozenDelta);
 ApiCommon.registerClass(Snapshot);
 
-export { DeltaUtil, DocumentChange, FrozenDelta, Snapshot };
+export { DeltaUtil, DocumentChange, FrozenDelta, Snapshot, VersionNumber };
