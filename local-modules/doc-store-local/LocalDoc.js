@@ -5,10 +5,10 @@
 import fs from 'fs';
 
 import { ApiCommon } from 'api-common';
+import { BaseDoc } from 'doc-store';
 import { SeeAll } from 'see-all';
 import { PromDelay } from 'util-common';
 
-import BaseDoc from './BaseDoc';
 
 /** {SeeAll} Logger for this module. */
 const log = new SeeAll('local-doc');
