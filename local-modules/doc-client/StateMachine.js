@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { SeeAll } from 'see-all';
-import Typecheck from 'typecheck';
+import { Typecheck } from 'typecheck';
 import { PromCondition, PropertyIter } from 'util-common';
 
 /**

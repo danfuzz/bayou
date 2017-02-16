@@ -4,7 +4,7 @@
 
 import { DeltaUtil, DocumentChange, Snapshot } from 'doc-common';
 import ServerHooks from 'server-hooks';
-import Typecheck from 'typecheck';
+import { Typecheck } from 'typecheck';
 import { PromCondition } from 'util-common';
 
 import default_document from './default-document';

@@ -4,7 +4,7 @@
 
 import { ApiCommon } from 'api-common';
 import { SeeAll } from 'see-all';
-import Typecheck from 'typecheck';
+import { Typecheck } from 'typecheck';
 import { PropertyIter, RandomId, WebsocketCodes } from 'util-common';
 
 import MetaHandler from './MetaHandler';

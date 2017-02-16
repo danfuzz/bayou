@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { DeltaUtil } from 'doc-common';
-import Typecheck from 'typecheck';
+import { Typecheck } from 'typecheck';
 
 /**
  * Representation of a change to a document from its immediately-previous
