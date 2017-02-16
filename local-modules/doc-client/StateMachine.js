@@ -3,9 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import PromCondition from 'prom-condition';
-import PropertyIter from 'property-iter';
 import { SeeAll } from 'see-all';
 import Typecheck from 'typecheck';
+import { PropertyIter } from 'util-common';
 
 /**
  * Lightweight state machine framework. This allows a subclass to define

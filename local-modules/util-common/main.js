@@ -3,5 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import JsonUtil from './JsonUtil';
+import PropertyIter from './PropertyIter';
 
-export { JsonUtil };
+export { JsonUtil, PropertyIter };

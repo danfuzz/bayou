@@ -8,8 +8,8 @@
     "doc-common": "local",
     "prom-condition": "local",
     "prom-delay": "local",
-    "property-iter": "local",
     "see-all": "local",
-    "typecheck": "local"
+    "typecheck": "local",
+    "util-common": "local"
   }
 }
