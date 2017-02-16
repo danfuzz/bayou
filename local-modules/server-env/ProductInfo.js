@@ -4,7 +4,7 @@
 
 import path from 'path';
 
-import Proppy from 'proppy';
+import { Proppy } from 'proppy';
 
 import Dirs from './Dirs';
 
