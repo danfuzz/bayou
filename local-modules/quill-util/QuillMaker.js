@@ -3,7 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import ClientHooks from 'client-hooks';
-import { QuillProm } from 'quill-util';
+
+import QuillProm from './QuillProm';
 
 /** Default toolbar configuration. */
 const DEFAULT_TOOLBAR_CONFIG = [

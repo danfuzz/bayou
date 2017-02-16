@@ -12,9 +12,8 @@
 import { ApiClient } from 'api-client';
 import ClientHooks from 'client-hooks';
 import { DocClient } from 'doc-client';
+import { QuillMaker } from 'quill-util';
 import { SeeAllBrowser } from 'see-all-browser';
-
-import QuillMaker from './QuillMaker';
 
 // Init logging.
 SeeAllBrowser.init();
