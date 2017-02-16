@@ -3,7 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import JsonUtil from './JsonUtil';
+import PromCondition from './PromCondition';
+import PromDelay from './PromDelay';
 import PropertyIter from './PropertyIter';
 import RandomId from './RandomId';
 
-export { JsonUtil, PropertyIter, RandomId };
+export { JsonUtil, PromCondition, PromDelay, PropertyIter, RandomId };

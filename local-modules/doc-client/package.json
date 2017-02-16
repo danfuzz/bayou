@@ -6,8 +6,6 @@
   "dependencies": {
     "api-client": "local",
     "doc-common": "local",
-    "prom-condition": "local",
-    "prom-delay": "local",
     "see-all": "local",
     "typecheck": "local",
     "util-common": "local"

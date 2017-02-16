@@ -3,9 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { DeltaUtil, DocumentChange, Snapshot } from 'doc-common';
-import PromCondition from 'prom-condition';
 import ServerHooks from 'server-hooks';
 import Typecheck from 'typecheck';
+import { PromCondition } from 'util-common';
 
 import default_document from './default-document';
 
