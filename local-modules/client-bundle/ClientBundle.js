@@ -7,9 +7,9 @@ import memory_fs from 'memory-fs';
 import path from 'path';
 import webpack from 'webpack';
 
-import JsonUtil from 'json-util';
 import { SeeAll } from 'see-all';
 import { Dirs } from 'server-env';
+import { JsonUtil } from 'util-common';
 
 import ProgressMessage from './ProgressMessage';
 
