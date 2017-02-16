@@ -4,5 +4,6 @@
 
 import JsonUtil from './JsonUtil';
 import PropertyIter from './PropertyIter';
+import RandomId from './RandomId';
 
-export { JsonUtil, PropertyIter };
+export { JsonUtil, PropertyIter, RandomId };
