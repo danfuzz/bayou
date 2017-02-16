@@ -9,7 +9,7 @@ import { LocalDocStore } from 'doc-store-local';
  * complete products to customize Bayou without overlaying the original
  * source...except for this file (and other similar ones).
  */
-export default class HooksServer {
+export default class Hooks {
   /**
    * Called during regular system startup (e.g. and in particular _not_ when
    * just building a client bundle offline). This is called after the very

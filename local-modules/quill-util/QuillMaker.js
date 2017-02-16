@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { HooksClient } from 'hooks-client';
+import { Hooks } from 'hooks-client';
 
 import QuillProm from './QuillProm';
 
@@ -48,7 +48,7 @@ export default class QuillMaker {
   static make(id) {
     if (toolbarConfig === null) {
       toolbarConfig = Object.freeze(
-        HooksClient.quillToolbarConfig(DEFAULT_TOOLBAR_CONFIG));
+        Hooks.quillToolbarConfig(DEFAULT_TOOLBAR_CONFIG));
     }
 
     const result = new QuillProm(id, {
@@ -61,7 +61,7 @@ export default class QuillMaker {
     });
 
     // Let the overlay do extra initialization.
-    HooksClient.quillInstanceInit(result);
+    Hooks.quillInstanceInit(result);
 
     return result;
   }

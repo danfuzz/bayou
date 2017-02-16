@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { DeltaUtil, DocumentChange, Snapshot } from 'doc-common';
-import { HooksServer } from 'hooks-server';
+import { Hooks } from 'hooks-server';
 import { Typecheck } from 'typecheck';
 import { PromCondition } from 'util-common';
 
@@ -323,7 +323,7 @@ export default class DocServer {
    * @returns {BaseDoc} The corresponding document accessor.
    */
   static _getDocAccessor(docId) {
-    const result = HooksServer.docStore.getDocument(docId);
+    const result = Hooks.docStore.getDocument(docId);
 
     if (!result.exists()) {
       // Initialize the document with static content (for now).

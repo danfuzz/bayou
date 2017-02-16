@@ -7,7 +7,7 @@
  * complete products to customize Bayou without overlaying the original
  * source...except for this file (and other similar ones).
  */
-export default class HooksClient {
+export default class Hooks {
   /**
    * Called during application startup. This is called just after the logging
    * library has been set up and before almost everything else.
