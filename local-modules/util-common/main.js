@@ -7,5 +7,13 @@ import PromCondition from './PromCondition';
 import PromDelay from './PromDelay';
 import PropertyIter from './PropertyIter';
 import RandomId from './RandomId';
+import WebsocketCodes from './WebsocketCodes';
 
-export { JsonUtil, PromCondition, PromDelay, PropertyIter, RandomId };
+export {
+  JsonUtil,
+  PromCondition,
+  PromDelay,
+  PropertyIter,
+  RandomId,
+  WebsocketCodes
+};

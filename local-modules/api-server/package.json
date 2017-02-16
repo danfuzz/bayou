@@ -6,7 +6,6 @@
   "dependencies": {
       "api-common": "local",
       "see-all": "local",
-      "util-common": "local",
-      "websocket-util": "local"
+      "util-common": "local"
   }
 }
