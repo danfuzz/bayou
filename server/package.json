@@ -31,10 +31,10 @@
     "api-server": "local",
     "client-bundle": "local",
     "doc-server": "local",
+    "hooks-server": "local",
     "see-all": "local",
     "see-all-server": "local",
     "server-env": "local",
-    "server-hooks": "local",
     "util-common": "local"
   }
 }

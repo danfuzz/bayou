@@ -63,7 +63,7 @@ export default class Dirs {
   static get VAR_DIR() {
     // TODO: In production, this will want to be somewhere other than under the
     // product deployment base directory. This might reasonably be configured
-    // via an item in `server-hooks`.
+    // via an item in `hooks-server`.
     const result = path.resolve(Dirs.BASE_DIR, 'var');
 
     try {

@@ -20,7 +20,7 @@ import { ClientBundle } from 'client-bundle';
 import { DocServer } from 'doc-server';
 import { SeeAll } from 'see-all';
 import { SeeAllServer } from 'see-all-server';
-import ServerHooks from 'server-hooks';
+import ServerHooks from 'hooks-server';
 import { ProductInfo, ServerEnv } from 'server-env';
 
 import AppServer from './AppServer';
