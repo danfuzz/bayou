@@ -20,7 +20,7 @@
     "api-client": "local",
     "client-hooks": "local",
     "doc-client": "local",
-    "quill-prom": "local",
+    "quill-util": "local",
     "see-all-browser": "local"
   }
 }
