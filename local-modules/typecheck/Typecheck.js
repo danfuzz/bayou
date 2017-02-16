@@ -2,8 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DeltaUtil } from 'doc-common';
-
 import TypeError from './TypeError';
 
 /**
@@ -70,34 +68,6 @@ export default class Typecheck {
     }
 
     return value;
-  }
-
-  /**
-   * Checks a value of type `FrozenDelta`.
-   *
-   * @param {*} value Value to check.
-   * @param {boolean} [coerce = false] If `true` and `value` can be coerced to
-   *   a frozen delta, then do so instead of throwing an error.
-   * @returns {FrozenDelta} `value` or its coercion.
-   */
-  static frozenDelta(value, coerce = false) {
-    // It's more straightforward to always coerce and then check to see if
-    // `result === value` when coercion isn't acceptable. And if you're
-    // thinking, "Hey that's extra work!" well, we're going to be throwing an
-    // error in that case anyway, which will totally dwarf the cost of the
-    // superfluous coercion.
-    let result;
-    try {
-      result = DeltaUtil.coerce(value);
-    } catch (e) {
-      return TypeError.badValue(value, 'FrozenDelta');
-    }
-
-    if (!coerce && (value !== result)) {
-      return TypeError.badValue(value, 'FrozenDelta');
-    }
-
-    return result;
   }
 
   /**

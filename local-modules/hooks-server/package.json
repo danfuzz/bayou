@@ -4,6 +4,7 @@
   "main": "main.js",
 
   "dependencies": {
-    "doc-store-local": "local"
+    "doc-store-local": "local",
+    "util-common": "local"
   }
 }

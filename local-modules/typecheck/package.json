@@ -4,8 +4,6 @@
   "main": "main.js",
 
   "dependencies": {
-    "object-inspect": "^1.2.1",
-
-    "doc-common": "local"
+    "object-inspect": "^1.2.1"
   }
 }

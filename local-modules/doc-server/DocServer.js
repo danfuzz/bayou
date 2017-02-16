@@ -169,7 +169,7 @@ export default class DocServer {
    */
   applyDelta(baseVerNum, delta) {
     baseVerNum = this._validateVerNum(baseVerNum, false);
-    delta = Typecheck.frozenDelta(delta, true);
+    delta = DeltaUtil.coerce(delta);
 
     if (baseVerNum === this.currentVerNum) {
       // The easy case: Apply a delta to the current version (unless it's empty,
@@ -282,7 +282,7 @@ export default class DocServer {
    * @param {object} delta The delta to append.
    */
   _appendDelta(delta) {
-    delta = Typecheck.frozenDelta(delta, true);
+    delta = DeltaUtil.coerce(delta);
 
     if (DeltaUtil.isEmpty(delta)) {
       return;

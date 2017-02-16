@@ -155,9 +155,9 @@ export default class DocClient extends StateMachine {
    */
   _check_gotApplyDelta(expectedContents, verNum, delta) {
     return [
-      Typecheck.frozenDelta(expectedContents, true),
+      DeltaUtil.coerce(expectedContents),
       Typecheck.intMin(verNum, 0),
-      Typecheck.frozenDelta(delta, true)
+      DeltaUtil.coerce(delta)
     ];
   }
 
@@ -178,7 +178,7 @@ export default class DocClient extends StateMachine {
     return [
       Typecheck.instance(baseDoc, Snapshot),
       Typecheck.intMin(verNum, 0),
-      Typecheck.frozenDelta(delta, true)
+      DeltaUtil.coerce(delta)
     ];
   }
 
