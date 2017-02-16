@@ -19,7 +19,7 @@ export default class Snapshot {
    */
   constructor(verNum, contents) {
     /** Version number. */
-    this._verNum = Typecheck.intMin(verNum, 0);
+    this._verNum = Typecheck.versionNumber(verNum);
 
     /** Document contents. */
     this._contents = DeltaUtil.coerce(contents);
