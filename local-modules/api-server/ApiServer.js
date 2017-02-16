@@ -3,11 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ApiCommon } from 'api-common';
-import PropertyIter from 'property-iter';
-import RandomId from 'random-id';
 import { SeeAll } from 'see-all';
 import Typecheck from 'typecheck';
-import { WebsocketCodes } from 'websocket-util';
+import { PropertyIter, RandomId, WebsocketCodes } from 'util-common';
 
 import MetaHandler from './MetaHandler';
 

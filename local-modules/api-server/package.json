@@ -5,9 +5,7 @@
 
   "dependencies": {
       "api-common": "local",
-      "property-iter": "local",
-      "random-id": "local",
       "see-all": "local",
-      "websocket-util": "local"
+      "util-common": "local"
   }
 }

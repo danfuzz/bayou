@@ -8,8 +8,8 @@ import path from 'path';
 
 import chokidar from 'chokidar';
 
-import PromDelay from 'prom-delay';
 import { SeeAll } from 'see-all';
+import { PromDelay } from 'util-common';
 
 /** Logger. */
 const log = new SeeAll('dev-mode');

@@ -5,8 +5,8 @@
 import fs from 'fs';
 
 import { ApiCommon } from 'api-common';
-import PromDelay from 'prom-delay';
 import { SeeAll } from 'see-all';
+import { PromDelay } from 'util-common';
 
 import BaseDoc from './BaseDoc';
 

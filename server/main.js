@@ -21,7 +21,7 @@ import { DocServer } from 'doc-server';
 import { SeeAll } from 'see-all';
 import { SeeAllServer } from 'see-all-server';
 import ServerHooks from 'server-hooks';
-import ServerUtil from 'server-env';
+import { ProductInfo, ServerEnv } from 'server-env';
 
 import AppServer from './AppServer';
 import DevMode from './DevMode';
@@ -93,14 +93,14 @@ if (showHelp || argError) {
  * Runs the system normally or in dev mode.
  */
 function run() {
+  // Set up the server environment bits (including, e.g. the PID file).
+  ServerEnv.init();
+
   // A little spew to identify us.
-  const info = ServerUtil.PRODUCT_INFO;
+  const info = ProductInfo.INFO;
   for (const k of Object.keys(info)) {
     log.info(`${k} = ${info[k]}`);
   }
-
-  // Set up the PID file handler.
-  ServerUtil.initPidFile();
 
   if (devMode) {
     // We're in dev mode. This starts the system that live-syncs the client
