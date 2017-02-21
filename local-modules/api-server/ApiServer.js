@@ -4,7 +4,7 @@
 
 import { ApiCommon } from 'api-common';
 import { SeeAll } from 'see-all';
-import { Typecheck, TObject, TString } from 'typecheck';
+import { Typecheck, TInt, TObject, TString } from 'typecheck';
 import { PropertyIter, RandomId, WebsocketCodes } from 'util-common';
 
 import MetaHandler from './MetaHandler';
@@ -87,7 +87,7 @@ export default class ApiServer {
 
     try {
       TObject.withExactKeys(msg, ['id', 'target', 'action', 'name', 'args']);
-      Typecheck.intMin(msg.id, 0);
+      TInt.min(msg.id, 0);
       TString.nonempty(msg.target);
       TString.nonempty(msg.action);
       TString.nonempty(msg.name);

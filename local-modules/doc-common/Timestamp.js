@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Typecheck, TypeError } from 'typecheck';
+import { TInt, TypeError } from 'typecheck';
 
 /**
  * Minimum acceptable timestamp value.
@@ -43,7 +43,7 @@ export default class Timestamp {
    */
   static check(value) {
     try {
-      return Typecheck.intRangeInc(value, MIN_TIME_MSEC, MAX_TIME_MSEC);
+      return TInt.rangeInc(value, MIN_TIME_MSEC, MAX_TIME_MSEC);
     } catch (e) {
       // More appropriate error.
       return TypeError.badValue(value, 'Timestamp');

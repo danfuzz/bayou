@@ -5,7 +5,7 @@
 import { ApiError } from 'api-client';
 import { DeltaUtil, Snapshot } from 'doc-common';
 import { SeeAll } from 'see-all';
-import { Typecheck, TObject, TString } from 'typecheck';
+import { TInt, TObject, TString } from 'typecheck';
 import { PromDelay } from 'util-common';
 
 import StateMachine from './StateMachine';
@@ -156,7 +156,7 @@ export default class DocClient extends StateMachine {
   _check_gotApplyDelta(expectedContents, verNum, delta) {
     return [
       DeltaUtil.coerce(expectedContents),
-      Typecheck.intMin(verNum, 0),
+      TInt.min(verNum, 0),
       DeltaUtil.coerce(delta)
     ];
   }
@@ -177,7 +177,7 @@ export default class DocClient extends StateMachine {
   _check_gotDeltaAfter(baseDoc, verNum, delta) {
     return [
       TObject.check(baseDoc, Snapshot),
-      Typecheck.intMin(verNum, 0),
+      TInt.min(verNum, 0),
       DeltaUtil.coerce(delta)
     ];
   }

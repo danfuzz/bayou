@@ -4,7 +4,7 @@
 
 import { DeltaUtil, DocumentChange, Snapshot, VersionNumber } from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
-import { Typecheck } from 'typecheck';
+import { TInt } from 'typecheck';
 import { PromCondition } from 'util-common';
 
 
@@ -259,7 +259,7 @@ export default class DocServer {
     // Validate parameters.
     startInclusive = VersionNumber.check(startInclusive);
     endExclusive =
-      Typecheck.intRangeInc(endExclusive, startInclusive, this.nextVerNum);
+      TInt.rangeInc(endExclusive, startInclusive, this.nextVerNum);
 
     if (startInclusive === endExclusive) {
       return DeltaUtil.EMPTY_DELTA;
