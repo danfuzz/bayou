@@ -11,7 +11,7 @@ import TypeError from './TypeError';
  */
 export default class TObject {
   /**
-   * Checks a value of type `object`.
+   * Checks a value of type `Object`.
    *
    * @param {*} value Value to check.
    * @param {object} [clazz = null] Class (constructor) that `value` must be an
@@ -20,16 +20,16 @@ export default class TObject {
    */
   static check(value, clazz = null) {
     if (typeof value !== 'object') {
-      return TypeError.badValue(value, 'object');
+      return TypeError.badValue(value, 'Object');
     } else if ((clazz !== null) && !(value instanceof clazz)) {
-      return TypeError.badValue(value, 'object', `of class ${clazz.name}`);
+      return TypeError.badValue(value, 'Object', `of class ${clazz.name}`);
     }
 
     return value;
   }
 
   /**
-   * Checks a value of type `object`, which must have exactly the indicated set
+   * Checks a value of type `Object`, which must have exactly the indicated set
    * of keys as "own" properties.
    *
    * @param {*} value Value to check.
@@ -38,7 +38,7 @@ export default class TObject {
    */
   static withExactKeys(value, keys) {
     if (typeof value !== 'object') {
-      return TypeError.badValue(value, 'object');
+      return TypeError.badValue(value, 'Object');
     }
 
     // Make a copy, check for and delete allowed keys, and see if anything's
@@ -47,7 +47,7 @@ export default class TObject {
     const copy = Object.assign({}, value);
     for (const k of keys) {
       if (!ObjectUtil.hasOwnProperty(copy, k)) {
-        return TypeError.badValue(value, 'object', `Missing key \`${k}\``);
+        return TypeError.badValue(value, 'Object', `Missing key \`${k}\``);
       }
       delete copy[k];
     }
@@ -58,7 +58,7 @@ export default class TObject {
       for (const k of remainingKeys) {
         msg += ` \`${k}\``;
       }
-      return TypeError.badValue(value, 'object', msg);
+      return TypeError.badValue(value, 'Object', msg);
     }
 
     return value;

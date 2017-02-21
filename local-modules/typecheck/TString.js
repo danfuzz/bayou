@@ -9,21 +9,21 @@ import TypeError from './TypeError';
  */
 export default class TString {
   /**
-   * Checks a value of type string.
+   * Checks a value of type `String`.
    *
    * @param {*} value Value to check.
    * @returns {string} `value`.
    */
   static check(value) {
     if (typeof value !== 'string') {
-      return TypeError.badValue(value, 'string');
+      return TypeError.badValue(value, 'String');
     }
 
     return value;
   }
 
   /**
-   * Checks a value of type string, which must furthermore have at least a
+   * Checks a value of type `String`, which must furthermore have at least a
    * given number of characters.
    *
    * @param {*} value Value to check.
@@ -32,35 +32,36 @@ export default class TString {
    */
   static minLen(value, minLen) {
     if ((typeof value !== 'string') || (value.length < minLen)) {
-      return TypeError.badValue(value, 'string', `value.length >= ${minLen}`);
+      return TypeError.badValue(value, 'String', `value.length >= ${minLen}`);
     }
 
     return value;
   }
 
   /**
-   * Checks a value of type string, which must furthermore not be empty.
+   * Checks a value of type `String`, which must furthermore not be empty.
    *
    * @param {*} value Value to check.
    * @returns {string} `value`.
    */
   static nonempty(value) {
     if ((typeof value !== 'string') || (value === '')) {
-      return TypeError.badValue(value, 'string', 'value !== \'\'');
+      return TypeError.badValue(value, 'String', 'value !== \'\'');
     }
 
     return value;
   }
 
   /**
-   * Checks a value of type string-or-null.
+   * Checks a value which must either be of type `String` or the exact value
+   * `null`.
    *
    * @param {*} value Value to check.
    * @returns {string|null} `value`.
    */
   static orNull(value) {
     if ((value !== null) && (typeof value !== 'string')) {
-      return TypeError.badValue(value, 'stringOrNull');
+      return TypeError.badValue(value, 'String|null');
     }
 
     return value;
