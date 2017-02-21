@@ -4,6 +4,7 @@
 
 import DataUtil from './DataUtil';
 import JsonUtil from './JsonUtil';
+import ObjectUtil from './ObjectUtil';
 import PromCondition from './PromCondition';
 import PromDelay from './PromDelay';
 import PropertyIter from './PropertyIter';
@@ -13,6 +14,7 @@ import WebsocketCodes from './WebsocketCodes';
 export {
   DataUtil,
   JsonUtil,
+  ObjectUtil,
   PromCondition,
   PromDelay,
   PropertyIter,

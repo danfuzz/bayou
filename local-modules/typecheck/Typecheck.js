@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { ObjectUtil } from 'util-common';
+
 import TypeError from './TypeError';
 
 /**
@@ -9,17 +11,6 @@ import TypeError from './TypeError';
  * 2008.
  */
 const MIN_TIME_MSEC = 1200000000 * 1000;
-
-/**
- * Calls `value.hasOwnProperty()` safely.
- *
- * @param {object} value Value to query.
- * @param {string} name Name of property in question.
- * @returns {boolean} `true` iff `value` has an own-property with the given name.
- */
-function hasOwnProperty(value, name) {
-  return Object.prototype.hasOwnProperty.call(value, name);
-}
 
 /**
  * Type checking and validation. This class consists of static methods which
@@ -182,7 +173,7 @@ export default class Typecheck {
 
     const copy = Object.assign({}, value);
     for (const k of keys) {
-      if (!hasOwnProperty(copy, k)) {
+      if (!ObjectUtil.hasOwnProperty(copy, k)) {
         return TypeError.badValue(value, 'object', `Missing key \`${k}\``);
       }
       delete copy[k];
