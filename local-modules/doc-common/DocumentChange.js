@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { DeltaUtil } from 'doc-common';
-import { Typecheck } from 'typecheck';
+import { TString } from 'typecheck';
 
 import Timestamp from './Timestamp';
 import VersionNumber from './VersionNumber';
@@ -43,7 +43,7 @@ export default class DocumentChange {
     this._delta = DeltaUtil.coerce(delta);
 
     /** Author ID string. */
-    this._authorId = Typecheck.stringOrNull(authorId);
+    this._authorId = TString.orNull(authorId);
   }
 
   /** Name of this class in the API. */

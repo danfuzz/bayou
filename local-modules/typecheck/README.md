@@ -1,14 +1,51 @@
-// Copyright 2016-2017 the Bayou Authors (Dan Bornstein et alia).
-// Licensed AS IS and WITHOUT WARRANTY under the Apache License,
-// Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+typecheck
+=========
 
-import { ObjectUtil } from 'util-common';
+This module consists mostly of classes with static methods, each of which is
+dedicated to doing type and content checking for values of particular types.
+In order to disambiguate between these classes and the built-in classes for the
+same types, this module prefixes type checker classes with the letter `T`.
 
-import TypeError from './TypeError';
+The main method of each type checker class is called `check()`, which always
+takes as its first argument the value to check and in some cases accepts
+additional options (as documented). These methods always _either_ return a
+value of the class's type-in-question _or_ throw an error, as follows:
+
+* If the input value if it is already of the type in question, that value is
+  returned.
+
+* If the input value isn't of the type in question but the options allow for
+  conversion or defaulting, then the return value is the converted /
+  defaulted value.
+
+* Otherwise, an error is thrown with a message typically of the form
+  "Expected value of type _type_."
+
+In some cases, type checker classes have additional methods which perform
+variations of the type check. These are defined in cases where it would be
+confusing to overload the semantics of the main `check()` method.
+
+- - - - - - - - - -
+
+```
+Copyright 2016-2017 the Bayou Authors (Dan Bornstein et alia).
+Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+```
+
 
 /**
- * Type checking and validation for various types. This is a catch-all that is
- * in the process of being split apart.
+ * Type checking and validation. This class consists of static methods which
+ * take a value and (sometimes) additional options. The methods return a value
+ * of a specific type or throw an error:
+ *
+ * * If the input value if it is already of the type in question, that value is
+ *   returned.
+ * * If the input value isn't of the type in question but the options allow for
+ *   conversion or defaulting, then the return value is the converted /
+ *   defaulted value.
+ * * Otherwise, an error is thrown with a message typically of the form
+ *   "Expected value of type <type>."
  */
 export default class Typecheck {
   /**
@@ -171,6 +208,64 @@ export default class Typecheck {
         msg += ` \`${k}\``;
       }
       return TypeError.badValue(value, 'object', msg);
+    }
+
+    return value;
+  }
+
+  /**
+   * Checks a value of type string.
+   *
+   * @param {*} value Value to check.
+   * @returns {string} `value`.
+   */
+  static string(value) {
+    if (typeof value !== 'string') {
+      return TypeError.badValue(value, 'string');
+    }
+
+    return value;
+  }
+
+  /**
+   * Checks a value of type string, which must furthermore have at least a
+   * given number of characters.
+   *
+   * @param {*} value Value to check.
+   * @param {number} minLen Minimum allowed length.
+   * @returns {string} `value`.
+   */
+  static stringMinLen(value, minLen) {
+    if ((typeof value !== 'string') || (value.length < minLen)) {
+      return TypeError.badValue(value, 'string', `value.length >= ${minLen}`);
+    }
+
+    return value;
+  }
+
+  /**
+   * Checks a value of type string, which must furthermore not be empty.
+   *
+   * @param {*} value Value to check.
+   * @returns {string} `value`.
+   */
+  static stringNonempty(value) {
+    if ((typeof value !== 'string') || (value === '')) {
+      return TypeError.badValue(value, 'string', 'value !== \'\'');
+    }
+
+    return value;
+  }
+
+  /**
+   * Checks a value of type string-or-null.
+   *
+   * @param {*} value Value to check.
+   * @returns {string|null} `value`.
+   */
+  static stringOrNull(value) {
+    if ((value !== null) && (typeof value !== 'string')) {
+      return TypeError.badValue(value, 'stringOrNull');
     }
 
     return value;

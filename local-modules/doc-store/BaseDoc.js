@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { DocumentChange, VersionNumber } from 'doc-common';
-import { Typecheck } from 'typecheck';
+import { Typecheck, TString } from 'typecheck';
 
 /**
  * Base class representing access to a particular document. Subclasses must
@@ -18,7 +18,7 @@ export default class BaseDoc {
    */
   constructor(docId) {
     /** The ID of the document that this instance represents. */
-    this._id = Typecheck.stringNonempty(docId);
+    this._id = TString.nonempty(docId);
   }
 
   /** The ID of the document that this instance represents. */

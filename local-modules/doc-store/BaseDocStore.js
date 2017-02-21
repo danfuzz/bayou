@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Typecheck } from 'typecheck';
+import { Typecheck, TString } from 'typecheck';
 
 import BaseDoc from './BaseDoc';
 
@@ -35,7 +35,7 @@ export default class BaseDocStore {
    * @returns {BaseDoc} Accessor for the document in question.
    */
   getDocument(docId) {
-    Typecheck.stringNonempty(docId);
+    TString.nonempty(docId);
     this._impl_checkDocId(docId);
     return Typecheck.instance(this._impl_getDocument(docId), BaseDoc);
   }
