@@ -21,6 +21,6 @@ export {
   DocumentChange,
   FrozenDelta,
   Snapshot,
-  VersionNumber,
-  Timestamp
+  Timestamp,
+  VersionNumber
 };
