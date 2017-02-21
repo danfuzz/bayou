@@ -5,6 +5,7 @@
 import { DeltaUtil } from 'doc-common';
 import { Typecheck } from 'typecheck';
 
+import Timestamp from './Timestamp';
 import VersionNumber from './VersionNumber';
 
 /**
@@ -36,7 +37,7 @@ export default class DocumentChange {
     this._verNum = VersionNumber.check(verNum);
 
     /** The time of the change. */
-    this._timeMsec = Typecheck.timeMsec(timeMsec);
+    this._timeMsec = Timestamp.check(timeMsec);
 
     /** The actual change, as a delta. */
     this._delta = DeltaUtil.coerce(delta);

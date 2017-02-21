@@ -7,12 +7,6 @@ import { ObjectUtil } from 'util-common';
 import TypeError from './TypeError';
 
 /**
- * Minimum acceptable timestamp. This is a moment in time toward the start of
- * 2008.
- */
-const MIN_TIME_MSEC = 1200000000 * 1000;
-
-/**
  * Type checking and validation. This class consists of static methods which
  * take a value and (sometimes) additional options. The methods return a value
  * of a specific type or throw an error:
@@ -247,22 +241,5 @@ export default class Typecheck {
     }
 
     return value;
-  }
-
-  /**
-   * Checks a value of type `timeMsec`. These are integer counts of milliseconds
-   * since the Unix Epoch, with a minimum value set to be around the start of
-   * 2008.
-   *
-   * @param {*} value Value to check.
-   * @returns {number} `value`.
-   */
-  static timeMsec(value) {
-    try {
-      return Typecheck.intMin(value, MIN_TIME_MSEC);
-    } catch (e) {
-      // More appropriate error.
-      return TypeError.badValue(value, 'timeMsec');
-    }
   }
 }
