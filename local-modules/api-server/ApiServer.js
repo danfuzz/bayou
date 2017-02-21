@@ -4,7 +4,7 @@
 
 import { ApiCommon } from 'api-common';
 import { SeeAll } from 'see-all';
-import { Typecheck, TInt, TObject, TString } from 'typecheck';
+import { TArray, TInt, TObject, TString } from 'typecheck';
 import { PropertyIter, RandomId, WebsocketCodes } from 'util-common';
 
 import MetaHandler from './MetaHandler';
@@ -91,7 +91,7 @@ export default class ApiServer {
       TString.nonempty(msg.target);
       TString.nonempty(msg.action);
       TString.nonempty(msg.name);
-      Typecheck.array(msg.args);
+      TArray.check(msg.args);
       action = msg.action;
     } catch (e) {
       targetObj  = this;
