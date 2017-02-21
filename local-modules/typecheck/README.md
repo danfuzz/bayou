@@ -11,8 +11,7 @@ takes as its first argument the value to check and in some cases accepts
 additional options (as documented). These methods always _either_ return a
 value of the class's type-in-question _or_ throw an error, as follows:
 
-* If the input value if it is already of the type in question, that value is
-  returned.
+* If the input value is already of the type in question, that value is returned.
 
 * If the input value isn't of the type in question but the options allow for
   conversion or defaulting, then the return value is the converted /
