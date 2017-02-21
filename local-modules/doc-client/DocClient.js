@@ -502,7 +502,7 @@ export default class DocClient extends StateMachine {
     // iteration (from the idle state).
     const delta = this._consumeLocalChanges();
 
-    if (DeltaUtil.isEmpty(delta)) {
+    if (delta.isEmpty()) {
       // There weren't actually any net changes. This is unusual, though
       // possible. In particular, the user probably typed something and then
       // undid it.
@@ -546,7 +546,7 @@ export default class DocClient extends StateMachine {
 
     log.detail(`Correction from server: v${verNum}`, dCorrection);
 
-    if (DeltaUtil.isEmpty(dCorrection)) {
+    if (dCorrection.isEmpty()) {
       // There is no change from what we expected. This means that no other
       // client got in front of us between when we received the current version
       // and when we sent the delta to the server. That means it's safe to set
@@ -707,7 +707,7 @@ export default class DocClient extends StateMachine {
     // surprising results when `x` is an old version of `_doc`.
     const oldContents = this._doc.contents;
     this._doc = new Snapshot(verNum,
-      DeltaUtil.isEmpty(delta) ? oldContents : oldContents.compose(delta));
+      delta.isEmpty() ? oldContents : oldContents.compose(delta));
 
     // Tell Quill.
     this._quill.updateContents(quillDelta, CLIENT_SOURCE);

@@ -26,6 +26,29 @@ export default class FrozenDelta extends Delta {
   }
 
   /**
+   * Returns `true` iff the given delta or delta-like value is empty. This
+   * accepts the same set of values as `coerce()`, see which. Anything else is
+   * considered to be an error. This is a static method exactly because it
+   * accepts things other than instances of `FrozenDelta` per se.
+   *
+   * @param {object|array|null|undefined} delta The delta or delta-like value.
+   * @returns {boolean} `true` if `delta` is empty or `false` if not.
+   */
+  static isEmpty(delta) {
+    if (delta instanceof Delta) {
+      return (delta.ops.length === 0);
+    } else if ((delta === null) || (delta === undefined)) {
+      return true;
+    } else if (Array.isArray(delta)) {
+      return delta.length === 0;
+    } else if ((typeof delta === 'object') && Array.isArray(delta.ops)) {
+      return delta.ops.length === 0;
+    }
+
+    throw new Error('Invalid value.');
+  }
+
+  /**
    * Constructs an instance.
    *
    * @param {Array} ops The transformation operations of this instance. If not
@@ -63,5 +86,15 @@ export default class FrozenDelta extends Delta {
    */
   static fromApi(ops) {
     return new FrozenDelta(ops);
+  }
+
+  /**
+   * Returns `true` iff this instance is empty (that is, it has an empty list
+   * of ops).
+   *
+   * @returns {boolean} `true` if this instance is empty or `false` if not.
+   */
+  isEmpty() {
+    return this.ops.length === 0;
   }
 }

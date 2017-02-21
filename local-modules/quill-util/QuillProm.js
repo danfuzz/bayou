@@ -4,7 +4,7 @@
 
 import Quill from 'quill';
 
-import { DeltaUtil, FrozenDelta } from 'doc-common';
+import { FrozenDelta } from 'doc-common';
 
 import DeltaEvent from './DeltaEvent';
 

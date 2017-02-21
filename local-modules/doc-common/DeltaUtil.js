@@ -61,7 +61,7 @@ export default class DeltaUtil {
       return value;
     } else if (value instanceof Delta) {
       return new FrozenDelta(value.ops);
-    } else if (DeltaUtil.isEmpty(value)) {
+    } else if (FrozenDelta.isEmpty(value)) {
       return FrozenDelta.EMPTY;
     } else if (Array.isArray(value)) {
       return new FrozenDelta(value);

@@ -215,9 +215,9 @@ export default class DocServer {
 
     // The `true` argument indicates that `dServer` should be taken to have been
     // applied first (won any insert races or similar).
-    const dNext = dServer.transform(dClient, true);
+    const dNext = DeltaUtil.coerce(dServer.transform(dClient, true));
 
-    if (DeltaUtil.isEmpty(dNext)) {
+    if (dNext.isEmpty()) {
       // It turns out that nothing changed.
       return {
         delta:  [], // That is, there was no correction.
@@ -285,7 +285,7 @@ export default class DocServer {
   _appendDelta(delta) {
     delta = DeltaUtil.coerce(delta);
 
-    if (DeltaUtil.isEmpty(delta)) {
+    if (delta.isEmpty()) {
       return;
     }
 
