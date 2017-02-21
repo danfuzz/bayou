@@ -7,9 +7,24 @@ import Delta from 'quill-delta';
 import { DataUtil } from 'util-common';
 
 /**
+ * {FrozenDelta|null} Empty `Delta` instance. Initialized in the `EMPTY`
+ * property accessor.
+ */
+let emptyDelta = null;
+
+/**
  * Always-frozen `Delta`.
  */
 export default class FrozenDelta extends Delta {
+  /** Frozen (immutable) empty `Delta` instance. */
+  static get EMPTY() {
+    if (emptyDelta === null) {
+      emptyDelta = new FrozenDelta([]);
+    }
+
+    return emptyDelta;
+  }
+
   /**
    * Constructs an instance.
    *

@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DeltaUtil, DocumentChange, Snapshot, VersionNumber } from 'doc-common';
+import { DeltaUtil, DocumentChange, FrozenDelta, Snapshot, VersionNumber }
+  from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { TInt } from 'typecheck';
 import { PromCondition } from 'util-common';
@@ -262,7 +263,7 @@ export default class DocServer {
       TInt.rangeInc(endExclusive, startInclusive, this.nextVerNum);
 
     if (startInclusive === endExclusive) {
-      return DeltaUtil.EMPTY_DELTA;
+      return FrozenDelta.EMPTY;
     }
 
     let result = this._doc.changeRead(startInclusive).delta;

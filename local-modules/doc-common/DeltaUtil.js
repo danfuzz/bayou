@@ -6,18 +6,10 @@ import Delta from 'quill-delta';
 
 import FrozenDelta from './FrozenDelta';
 
-/** Frozen empty `Delta` instance. */
-const EMPTY_DELTA = new FrozenDelta([]);
-
 /**
  * Quill `Delta` helper utilities.
  */
 export default class DeltaUtil {
-  /** Frozen (immutable) empty `Delta` instance. */
-  static get EMPTY_DELTA() {
-    return EMPTY_DELTA;
-  }
-
   /**
    * Returns `true` iff the given delta is empty. This accepts the same set of
    * values as `coerce()`, see which. Anything else is considered to be an
@@ -70,7 +62,7 @@ export default class DeltaUtil {
     } else if (value instanceof Delta) {
       return new FrozenDelta(value.ops);
     } else if (DeltaUtil.isEmpty(value)) {
-      return EMPTY_DELTA;
+      return FrozenDelta.EMPTY;
     } else if (Array.isArray(value)) {
       return new FrozenDelta(value);
     } else if (Array.isArray(value.ops)) {
