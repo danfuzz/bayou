@@ -5,7 +5,7 @@
 import { ApiError } from 'api-client';
 import { DeltaUtil, Snapshot } from 'doc-common';
 import { SeeAll } from 'see-all';
-import { Typecheck, TString } from 'typecheck';
+import { Typecheck, TObject, TString } from 'typecheck';
 import { PromDelay } from 'util-common';
 
 import StateMachine from './StateMachine';
@@ -134,7 +134,7 @@ export default class DocClient extends StateMachine {
    */
   _check_apiError(method, reason) {
     TString.nonempty(method);
-    Typecheck.object(reason);
+    TObject.check(reason);
   }
 
   /**
