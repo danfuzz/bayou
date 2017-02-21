@@ -14,11 +14,15 @@ export default class TObject {
    * Checks a value of type `object`.
    *
    * @param {*} value Value to check.
+   * @param {object} [clazz = null] Class (constructor) that `value` must be an
+   *   instance of. If `null` then there is no class requirement.
    * @returns {object} `value`.
    */
-  static check(value) {
+  static check(value, clazz = null) {
     if (typeof value !== 'object') {
       return TypeError.badValue(value, 'object');
+    } else if ((clazz !== null) && !(value instanceof clazz)) {
+      return TypeError.badValue(value, 'object', `of class ${clazz.name}`);
     }
 
     return value;

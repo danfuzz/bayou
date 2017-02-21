@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { DocumentChange, VersionNumber } from 'doc-common';
-import { Typecheck, TString } from 'typecheck';
+import { Typecheck, TObject, TString } from 'typecheck';
 
 /**
  * Base class representing access to a particular document. Subclasses must
@@ -103,7 +103,7 @@ export default class BaseDoc {
       throw new Error(`No change ${verNum} on document \`${this.id}\``);
     }
 
-    return Typecheck.instance(result, DocumentChange);
+    return TObject.check(result, DocumentChange);
   }
 
   /**
@@ -128,7 +128,7 @@ export default class BaseDoc {
    * @param {DocumentChange} change The change to write.
    */
   changeWrite(change) {
-    this._impl_changeWrite(Typecheck.instance(change, DocumentChange));
+    this._impl_changeWrite(TObject.check(change, DocumentChange));
   }
 
   /**

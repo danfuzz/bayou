@@ -45,22 +45,6 @@ export default class Typecheck {
   }
 
   /**
-   * Checks a value of a given class.
-   *
-   * @param {*} value Value to check.
-   * @param {object} clazz Class (constructor) that `value` must be an instance
-   *   of.
-   * @returns {object} `value`.
-   */
-  static instance(value, clazz) {
-    if (!(value instanceof clazz)) {
-      return TypeError.badValue(value, clazz.name);
-    }
-
-    return value;
-  }
-
-  /**
    * Checks a value of type `int`, which must furthermore be at least an
    * indicated value (inclusive).
    *

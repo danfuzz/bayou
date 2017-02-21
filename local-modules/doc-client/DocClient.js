@@ -176,7 +176,7 @@ export default class DocClient extends StateMachine {
    */
   _check_gotDeltaAfter(baseDoc, verNum, delta) {
     return [
-      Typecheck.instance(baseDoc, Snapshot),
+      TObject.check(baseDoc, Snapshot),
       Typecheck.intMin(verNum, 0),
       DeltaUtil.coerce(delta)
     ];
@@ -191,7 +191,7 @@ export default class DocClient extends StateMachine {
    * @param {Snapshot} baseDoc The document at the time of the original request.
    */
   _check_gotLocalDelta(baseDoc) {
-    Typecheck.instance(baseDoc, Snapshot);
+    TObject.check(baseDoc, Snapshot);
   }
 
   /**
@@ -201,7 +201,7 @@ export default class DocClient extends StateMachine {
    * @param {Snapshot} snapshot The snapshot.
    */
   _check_gotSnapshot(snapshot) {
-    Typecheck.instance(snapshot, Snapshot);
+    TObject.check(snapshot, Snapshot);
   }
 
   /**
@@ -218,7 +218,7 @@ export default class DocClient extends StateMachine {
    * @param {Snapshot} baseDoc The document at the time of the original request.
    */
   _check_wantApplyDelta(baseDoc) {
-    Typecheck.instance(baseDoc, Snapshot);
+    TObject.check(baseDoc, Snapshot);
   }
 
   /**

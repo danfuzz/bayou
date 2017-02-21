@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { SeeAll } from 'see-all';
-import { Typecheck } from 'typecheck';
+import { TObject } from 'typecheck';
 import { PromCondition, PropertyIter } from 'util-common';
 
 /**
@@ -336,7 +336,7 @@ export default class StateMachine {
    * @param {Error} error The error.
    */
   _check_error(error) {
-    Typecheck.instance(error, Error);
+    TObject.check(error, Error);
   }
 
   /**
