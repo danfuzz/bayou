@@ -5,7 +5,7 @@
 import { ApiError } from 'api-client';
 import { DeltaUtil, Snapshot } from 'doc-common';
 import { SeeAll } from 'see-all';
-import { Typecheck } from 'typecheck';
+import { TInt, TObject, TString } from 'typecheck';
 import { PromDelay } from 'util-common';
 
 import StateMachine from './StateMachine';
@@ -133,8 +133,8 @@ export default class DocClient extends StateMachine {
    * @param {object} reason Error reason.
    */
   _check_apiError(method, reason) {
-    Typecheck.stringNonempty(method);
-    Typecheck.object(reason);
+    TString.nonempty(method);
+    TObject.check(reason);
   }
 
   /**
@@ -156,7 +156,7 @@ export default class DocClient extends StateMachine {
   _check_gotApplyDelta(expectedContents, verNum, delta) {
     return [
       DeltaUtil.coerce(expectedContents),
-      Typecheck.intMin(verNum, 0),
+      TInt.min(verNum, 0),
       DeltaUtil.coerce(delta)
     ];
   }
@@ -176,8 +176,8 @@ export default class DocClient extends StateMachine {
    */
   _check_gotDeltaAfter(baseDoc, verNum, delta) {
     return [
-      Typecheck.instance(baseDoc, Snapshot),
-      Typecheck.intMin(verNum, 0),
+      TObject.check(baseDoc, Snapshot),
+      TInt.min(verNum, 0),
       DeltaUtil.coerce(delta)
     ];
   }
@@ -191,7 +191,7 @@ export default class DocClient extends StateMachine {
    * @param {Snapshot} baseDoc The document at the time of the original request.
    */
   _check_gotLocalDelta(baseDoc) {
-    Typecheck.instance(baseDoc, Snapshot);
+    TObject.check(baseDoc, Snapshot);
   }
 
   /**
@@ -201,7 +201,7 @@ export default class DocClient extends StateMachine {
    * @param {Snapshot} snapshot The snapshot.
    */
   _check_gotSnapshot(snapshot) {
-    Typecheck.instance(snapshot, Snapshot);
+    TObject.check(snapshot, Snapshot);
   }
 
   /**
@@ -218,7 +218,7 @@ export default class DocClient extends StateMachine {
    * @param {Snapshot} baseDoc The document at the time of the original request.
    */
   _check_wantApplyDelta(baseDoc) {
-    Typecheck.instance(baseDoc, Snapshot);
+    TObject.check(baseDoc, Snapshot);
   }
 
   /**

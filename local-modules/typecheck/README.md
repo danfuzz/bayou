@@ -1,25 +1,38 @@
-// Copyright 2016-2017 the Bayou Authors (Dan Bornstein et alia).
-// Licensed AS IS and WITHOUT WARRANTY under the Apache License,
-// Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+typecheck
+=========
 
-import TypeError from './TypeError';
+This module consists mostly of classes with static methods, each of which is
+dedicated to doing type and content checking for values of particular types.
+In order to disambiguate between these classes and the built-in classes for the
+same types, this module prefixes type checker classes with the letter `T`.
 
-/**
- * Minimum acceptable timestamp. This is a moment in time toward the start of
- * 2008.
- */
-const MIN_TIME_MSEC = 1200000000 * 1000;
+The main method of each type checker class is called `check()`, which always
+takes as its first argument the value to check and in some cases accepts
+additional options (as documented). These methods always _either_ return a
+value of the class's type-in-question _or_ throw an error, as follows:
 
-/**
- * Calls `value.hasOwnProperty()` safely.
- *
- * @param {object} value Value to query.
- * @param {string} name Name of property in question.
- * @returns {boolean} `true` iff `value` has an own-property with the given name.
- */
-function hasOwnProperty(value, name) {
-  return Object.prototype.hasOwnProperty.call(value, name);
-}
+* If the input value if it is already of the type in question, that value is
+  returned.
+
+* If the input value isn't of the type in question but the options allow for
+  conversion or defaulting, then the return value is the converted /
+  defaulted value.
+
+* Otherwise, an error is thrown with a message typically of the form
+  "Expected value of type _type_."
+
+In some cases, type checker classes have additional methods which perform
+variations of the type check. These are defined in cases where it would be
+confusing to overload the semantics of the main `check()` method.
+
+- - - - - - - - - -
+
+```
+Copyright 2016-2017 the Bayou Authors (Dan Bornstein et alia).
+Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+```
+
 
 /**
  * Type checking and validation. This class consists of static methods which
@@ -182,7 +195,7 @@ export default class Typecheck {
 
     const copy = Object.assign({}, value);
     for (const k of keys) {
-      if (!hasOwnProperty(copy, k)) {
+      if (!ObjectUtil.hasOwnProperty(copy, k)) {
         return TypeError.badValue(value, 'object', `Missing key \`${k}\``);
       }
       delete copy[k];
@@ -256,22 +269,5 @@ export default class Typecheck {
     }
 
     return value;
-  }
-
-  /**
-   * Checks a value of type `timeMsec`. These are integer counts of milliseconds
-   * since the Unix Epoch, with a minimum value set to be around the start of
-   * 2008.
-   *
-   * @param {*} value Value to check.
-   * @returns {number} `value`.
-   */
-  static timeMsec(value) {
-    try {
-      return Typecheck.intMin(value, MIN_TIME_MSEC);
-    } catch (e) {
-      // More appropriate error.
-      return TypeError.badValue(value, 'timeMsec');
-    }
   }
 }
