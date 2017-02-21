@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Typecheck } from 'typecheck';
+import { TBoolean } from 'typecheck';
 
 /**
  * Promise that is permanently resolved as `true`. Used as a result from
@@ -20,7 +20,7 @@ export default class PromCondition {
    * @param {boolean} [initialValue = false] Initial value.
    */
   constructor(initialValue) {
-    initialValue = Typecheck.boolean(initialValue, false);
+    initialValue = TBoolean.check(initialValue, false);
 
     /** Current value. */
     this._value = initialValue;
@@ -53,7 +53,7 @@ export default class PromCondition {
    * @param {boolean} value The new value.
    */
   set value(value) {
-    value = Typecheck.boolean(value);
+    value = TBoolean.check(value);
 
     if (value === this._value) {
       // No change.

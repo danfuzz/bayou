@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { DocumentChange, VersionNumber } from 'doc-common';
-import { Typecheck, TObject, TString } from 'typecheck';
+import { TBoolean, TObject, TString } from 'typecheck';
 
 /**
  * Base class representing access to a particular document. Subclasses must
@@ -33,7 +33,7 @@ export default class BaseDoc {
    */
   exists() {
     const result = this._impl_exists();
-    return Typecheck.boolean(result);
+    return TBoolean.check(result);
   }
 
   /**
