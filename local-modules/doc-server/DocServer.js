@@ -52,7 +52,7 @@ export default class DocServer {
    * made to the document.
    */
   get nextVerNum() {
-    return this._doc.currentVerNum() + 1;
+    return this._doc.nextVerNum();
   }
 
   /**
