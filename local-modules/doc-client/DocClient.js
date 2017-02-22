@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ApiError } from 'api-client';
-import { DeltaUtil, Snapshot } from 'doc-common';
+import { FrozenDelta, Snapshot } from 'doc-common';
 import { SeeAll } from 'see-all';
 import { TInt, TObject, TString } from 'typecheck';
 import { PromDelay } from 'util-common';
@@ -155,9 +155,9 @@ export default class DocClient extends StateMachine {
    */
   _check_gotApplyDelta(expectedContents, verNum, delta) {
     return [
-      DeltaUtil.coerce(expectedContents),
+      FrozenDelta.coerce(expectedContents),
       TInt.min(verNum, 0),
-      DeltaUtil.coerce(delta)
+      FrozenDelta.coerce(delta)
     ];
   }
 
@@ -178,7 +178,7 @@ export default class DocClient extends StateMachine {
     return [
       TObject.check(baseDoc, Snapshot),
       TInt.min(verNum, 0),
-      DeltaUtil.coerce(delta)
+      FrozenDelta.coerce(delta)
     ];
   }
 
@@ -678,7 +678,7 @@ export default class DocClient extends StateMachine {
     // Remember that we consumed all these changes.
     this._currentChange = change;
 
-    return DeltaUtil.coerce(delta);
+    return FrozenDelta.coerce(delta);
   }
 
   /**

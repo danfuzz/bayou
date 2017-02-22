@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DeltaUtil, DocumentChange, FrozenDelta, Snapshot, VersionNumber }
+import { DocumentChange, FrozenDelta, Snapshot, VersionNumber }
   from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { TInt } from 'typecheck';
@@ -170,7 +170,7 @@ export default class DocServer {
    */
   applyDelta(baseVerNum, delta) {
     baseVerNum = this._validateVerNum(baseVerNum, false);
-    delta = DeltaUtil.coerce(delta);
+    delta = FrozenDelta.coerce(delta);
 
     if (baseVerNum === this.currentVerNum) {
       // The easy case: Apply a delta to the current version (unless it's empty,
@@ -215,7 +215,7 @@ export default class DocServer {
 
     // The `true` argument indicates that `dServer` should be taken to have been
     // applied first (won any insert races or similar).
-    const dNext = DeltaUtil.coerce(dServer.transform(dClient, true));
+    const dNext = FrozenDelta.coerce(dServer.transform(dClient, true));
 
     if (dNext.isEmpty()) {
       // It turns out that nothing changed.
@@ -231,7 +231,7 @@ export default class DocServer {
     const vNextNum = this.currentVerNum;     // This will be different than `vCurrentNum`.
 
     // (4)
-    const vExpected = DeltaUtil.coerce(vBase).compose(dClient);
+    const vExpected = FrozenDelta.coerce(vBase).compose(dClient);
     const dCorrection = vExpected.diff(vNext);
 
     return {
@@ -271,7 +271,7 @@ export default class DocServer {
       result = result.compose(this._doc.changeRead(i).delta);
     }
 
-    return DeltaUtil.coerce(result);
+    return FrozenDelta.coerce(result);
   }
 
   /**
@@ -283,7 +283,7 @@ export default class DocServer {
    * @param {object} delta The delta to append.
    */
   _appendDelta(delta) {
-    delta = DeltaUtil.coerce(delta);
+    delta = FrozenDelta.coerce(delta);
 
     if (delta.isEmpty()) {
       return;

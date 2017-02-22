@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DeltaUtil } from 'doc-common';
+import { FrozenDelta } from 'doc-common';
 
 /**
  * Event wrapper for a Quill Delta, including reference to the document source,
@@ -21,8 +21,8 @@ export default class DeltaEvent {
    * @param {Quill} source The `Quill` instance that emitted this event.
    */
   constructor(accessKey, delta, oldContents, source) {
-    this.delta = DeltaUtil.coerce(delta);
-    this.oldContents = DeltaUtil.coerce(oldContents);
+    this.delta = FrozenDelta.coerce(delta);
+    this.oldContents = FrozenDelta.coerce(oldContents);
     this.source = source;
 
     // **Note:** `accessKey` is _not_ exposed as a property. Doing so would
