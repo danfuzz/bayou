@@ -34,7 +34,7 @@ export default class DocumentChange {
    * @param {number} verNum The version number of the document produced by this
    *   change. If this instance represents the first change to a document, then
    *   this value will be `0`.
-   * @param {number} timeMsec The time of the change, as msec since the Unix
+   * @param {number} timestamp The time of the change, as msec since the Unix
    *   Epoch.
    * @param {Delta|array|object} delta The document change per se, compared to
    *   the immediately-previous version. Must be a value which can be coerced
@@ -42,12 +42,12 @@ export default class DocumentChange {
    * @param {string|null} authorId Stable identifier string representing the
    *   author of the change. Allowed to be `null` if the change is authorless.
    */
-  constructor(verNum, timeMsec, delta, authorId) {
+  constructor(verNum, timestamp, delta, authorId) {
     /** The produced version number. */
     this._verNum = VersionNumber.check(verNum);
 
     /** The time of the change. */
-    this._timeMsec = Timestamp.check(timeMsec);
+    this._timestamp = Timestamp.check(timestamp);
 
     /** The actual change, as a delta. */
     this._delta = FrozenDelta.coerce(delta);
@@ -67,20 +67,20 @@ export default class DocumentChange {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._verNum, this._timeMsec, this._delta, this.authorId];
+    return [this._verNum, this._timestamp, this._delta, this.authorId];
   }
 
   /**
    * Constructs an instance from API arguments.
    *
    * @param {number} verNum Same as with the regular constructor.
-   * @param {number} timeMsec Same as with the regular constructor.
+   * @param {number} timestamp Same as with the regular constructor.
    * @param {Delta|array|object} delta Same as with the regular constructor.
    * @param {string|null} authorId Same as with the regular constructor.
    * @returns {DocumentChange} The constructed instance.
    */
-  static fromApi(verNum, timeMsec, delta, authorId) {
-    return new DocumentChange(verNum, timeMsec, delta, authorId);
+  static fromApi(verNum, timestamp, delta, authorId) {
+    return new DocumentChange(verNum, timestamp, delta, authorId);
   }
 
   /** The produced version number. */
@@ -89,8 +89,8 @@ export default class DocumentChange {
   }
 
   /** The time of the change. */
-  get timeMsec() {
-    return this._timeMsec;
+  get timestamp() {
+    return this._timestamp;
   }
 
   /** The actual change, as a delta. */
