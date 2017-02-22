@@ -154,7 +154,10 @@ export default class ApiServer {
 
       this._log.detail('Response:', response);
       if (error) {
-        this._log.detail('Error:', error);
+        // TODO: Ultimately _some_ errors coming back from API calls shouldn't
+        // be considered log-worthy server errors. We will need to differentiate
+        // them at some point.
+        this._log.error('Error:', error);
       }
       this._ws.send(ApiCommon.jsonFromValue(response));
     };
