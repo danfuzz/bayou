@@ -52,7 +52,7 @@ export default class DocServer {
    * made to the document.
    */
   get nextVerNum() {
-    return this._doc.currentVerNum() + 1;
+    return this._doc.nextVerNum();
   }
 
   /**
@@ -291,7 +291,7 @@ export default class DocServer {
 
     const author = null; // TODO: Assign an author.
     const change = new DocumentChange(this.nextVerNum, Date.now(), delta, author);
-    this._doc.changeWrite(change);
+    this._doc.changeAppend(change);
     this._changeCondition.value = true;
   }
 
@@ -328,7 +328,7 @@ export default class DocServer {
       // Initialize the document with static content (for now).
       const firstChange =
         new DocumentChange(0, Date.now(), DEFAULT_DOCUMENT, null);
-      result.changeWrite(firstChange);
+      result.changeAppend(firstChange);
     }
 
     return result;

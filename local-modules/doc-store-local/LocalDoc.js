@@ -28,13 +28,17 @@ export default class LocalDoc extends BaseDoc {
   /**
    * Constructs an instance.
    *
+   * @param {string} formatVersion The format version to expect and use.
    * @param {string} docId The ID of the document this instance represents.
    * @param {string} docPath The filesystem path for document storage.
    */
-  constructor(docId, docPath) {
+  constructor(formatVersion, docId, docPath) {
     super(docId);
 
-    /** Path to the storage for this document. */
+    /** {string} The format version to expect and use. */
+    this._formatVersion = formatVersion;
+
+    /** {string} Path to the storage for this document. */
     this._path = docPath;
 
     /**
@@ -101,7 +105,7 @@ export default class LocalDoc extends BaseDoc {
    *
    * @param {DocumentChange} change The change to write.
    */
-  _impl_changeWrite(change) {
+  _impl_changeAppend(change) {
     this._readIfNecessary();
     this._changes[change.verNum] = change;
     this._needsWrite();

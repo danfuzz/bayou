@@ -9,8 +9,22 @@ import { TBoolean, TObject, TString } from 'typecheck';
  * Base class representing access to a particular document. Subclasses must
  * override several methods defined by this class, as indicated in the
  * documentation. Methods to override are all named with the prefix `_impl_`.
+ *
+ * The model that this class embodies is that a document is an append-only log
+ * of changes, with each change having a version number that _must_ form a
+ * zero-based integer sequence. Changes are random-access.
  */
 export default class BaseDoc {
+  /**
+   * Checks that a value is an instance of this class. Throws an error if not.
+   *
+   * @param {*} value Value to check.
+   * @returns {BaseDoc} `value`.
+   */
+  static check(value) {
+    return TObject.check(value, BaseDoc);
+  }
+
   /**
    * Constructs an instance.
    *
@@ -69,12 +83,14 @@ export default class BaseDoc {
 
   /**
    * The version number of this document. This is the largest value `n` for
-   * which `this.changeRead(n)` is valid.
+   * which `this.changeRead(n)` is valid. If the document has no changes at all,
+   * this method returns `null`.
    *
-   * @returns {int} The version number of this document.
+   * @returns {int|null} The version number of this document or `null` if the
+   *   document is empty.
    */
   currentVerNum() {
-    return VersionNumber.check(this._impl_currentVerNum());
+    return VersionNumber.orNull(this._impl_currentVerNum());
   }
 
   /**
@@ -86,6 +102,16 @@ export default class BaseDoc {
    */
   _impl_currentVerNum() {
     return this._mustOverride();
+  }
+
+  /**
+   * The version number of the next change to be appended to this document.
+   *
+   * @returns {int} The version number of the next change.
+   */
+  nextVerNum() {
+    const current = this.currentVerNum();
+    return (current === null) ? 0 : (current + 1);
   }
 
   /**
@@ -103,7 +129,7 @@ export default class BaseDoc {
       throw new Error(`No change ${verNum} on document \`${this.id}\``);
     }
 
-    return TObject.check(result, DocumentChange);
+    return DocumentChange.check(result);
   }
 
   /**
@@ -122,24 +148,32 @@ export default class BaseDoc {
   }
 
   /**
-   * Writes a change. This uses the change's `verNum` to determine the change
-   * number. If the indicated change already exists, this method overwrites it.
+   * Appends a change. This uses the change's `verNum` to determine the change
+   * number. This _must_ be the `nextVerNum()`, otherwise this method will throw
+   * an error.
    *
-   * @param {DocumentChange} change The change to write.
+   * @param {DocumentChange} change The change to append.
    */
-  changeWrite(change) {
-    this._impl_changeWrite(TObject.check(change, DocumentChange));
+  changeAppend(change) {
+    DocumentChange.check(change);
+    const verGot = change.verNum;
+    const verExpect = this.nextVerNum();
+    if (verGot !== verExpect) {
+      throw new Error(
+        `Incorrect \`verNum\` for change. Got ${verGot}, expected ${verExpect}`);
+    }
+    this._impl_changeAppend(change);
   }
 
   /**
-   * Main implementation of `changeRead()`. Guaranteed to be called with a
-   * valid change instance.
+   * Main implementation of `changeAppend()`. Guaranteed to be called with a
+   * valid change instance, including that it has the correct `verNum`.
    *
    * **Note:** This method must be overridden by subclasses.
    *
    * @param {DocumentChange} change The change to write.
    */
-  _impl_changeWrite(change) {
+  _impl_changeAppend(change) {
     this._mustOverride(change);
   }
 
