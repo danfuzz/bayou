@@ -176,7 +176,7 @@ export default class DocClient extends StateMachine {
    */
   _check_gotDeltaAfter(baseDoc, verNum, delta) {
     return [
-      TObject.check(baseDoc, Snapshot),
+      Snapshot.check(baseDoc),
       TInt.min(verNum, 0),
       FrozenDelta.coerce(delta)
     ];
@@ -191,7 +191,7 @@ export default class DocClient extends StateMachine {
    * @param {Snapshot} baseDoc The document at the time of the original request.
    */
   _check_gotLocalDelta(baseDoc) {
-    TObject.check(baseDoc, Snapshot);
+    Snapshot.check(baseDoc);
   }
 
   /**
@@ -201,7 +201,7 @@ export default class DocClient extends StateMachine {
    * @param {Snapshot} snapshot The snapshot.
    */
   _check_gotSnapshot(snapshot) {
-    TObject.check(snapshot, Snapshot);
+    Snapshot.check(snapshot);
   }
 
   /**
@@ -218,7 +218,7 @@ export default class DocClient extends StateMachine {
    * @param {Snapshot} baseDoc The document at the time of the original request.
    */
   _check_wantApplyDelta(baseDoc) {
-    TObject.check(baseDoc, Snapshot);
+    Snapshot.check(baseDoc);
   }
 
   /**
