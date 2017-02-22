@@ -80,6 +80,21 @@ export default class DocServer {
   snapshot(verNum) {
     verNum = this._validateVerNum(verNum, true);
 
+    if (verNum === null) {
+      // This is an entirely empty document (probably because we're running in
+      // a development environment and we found that the persistent data
+      // wasn't in the latest format), and we got here because `verNum` wasn't
+      // passed (that is, the client is asking for the latest version). We set
+      // up a first version here and change `verNum` to `0`, which will
+      // propagate through the rest of the code and end up making everything all
+      // work out.
+      const firstChange = new DocumentChange(0, Date.now(),
+        [{insert: '(Recreated document due to format version skew.)\n'}],
+        null);
+      this._doc.changeAppend(firstChange);
+      verNum = 0;
+    }
+
     // Search backward through the full versions for a base for forward
     // composition.
     let baseSnapshot = null;
@@ -93,7 +108,7 @@ export default class DocServer {
 
     if (baseSnapshot === null) {
       // We have no snapshots at all, including of even the first version. Set
-      // up version 0.
+      // up a version 0 snapshot.
       baseSnapshot = this._snapshots[0] =
         new Snapshot(0, this._doc.changeRead(0).delta);
     }

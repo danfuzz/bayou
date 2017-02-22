@@ -7,6 +7,7 @@ import fs from 'fs';
 import { ApiCommon } from 'api-common';
 import { BaseDoc } from 'doc-store';
 import { SeeAll } from 'see-all';
+import { TObject } from 'typecheck';
 import { PromDelay } from 'util-common';
 
 
@@ -85,7 +86,8 @@ export default class LocalDoc extends BaseDoc {
    */
   _impl_currentVerNum() {
     this._readIfNecessary();
-    return this._changes.length - 1;
+    const len = this._changes.length;
+    return (len === 0) ? null : (len - 1);
   }
 
   /**
@@ -129,7 +131,8 @@ export default class LocalDoc extends BaseDoc {
     PromDelay.resolve(DIRTY_DELAY_MSEC).then(() => {
       this._log.detail('Writing to disk...');
 
-      const encoded = ApiCommon.jsonFromValue(this._changes);
+      const contents = {version: this._formatVersion, changes: this._changes};
+      const encoded = ApiCommon.jsonFromValue(contents);
       fs.writeFileSync(this._path, encoded, {encoding: 'utf8'});
       this._dirty = false;
       this._log.info('Written to disk.');
@@ -149,12 +152,31 @@ export default class LocalDoc extends BaseDoc {
       this._log.detail('Reading from disk...');
 
       const encoded = fs.readFileSync(this._path);
+      let contents = null;
 
-      // `slice(0)` makes a mutable clone. Ideally, we'd just use immutable
-      // data structures all the way through, but (TODO) this is reasonable for
-      // now.
-      this._changes = ApiCommon.valueFromJson(encoded).slice(0);
-      this._log.info('Read from disk.');
+      try {
+        contents = ApiCommon.valueFromJson(encoded);
+        TObject.withExactKeys(contents, ['version', 'changes']);
+      } catch (e) {
+        this._log.warn('Ignoring malformed data (bad JSON or unversioned).');
+        contents = null;
+      }
+
+      if (contents.version !== this._formatVersion) {
+        this._log.warn('Ignoring data with a mismatched format version. ' +
+            `Got ${contents.version}, expected ${this._formatVersion}`);
+      }
+
+      if (contents === null) {
+        this._changes = [];
+        this._log.info('New document (because existing data is old or bad).');
+      } else {
+        // `slice(0)` makes a mutable clone. Ideally, we'd just use immutable
+        // data structures all the way through, but (TODO) this is reasonable
+        // for now.
+        this._changes = contents.changes.slice(0);
+        this._log.info('Read from disk.');
+      }
     } else {
       // File doesn't actually exist. Just initialize an empty change list.
       this._changes = [];
