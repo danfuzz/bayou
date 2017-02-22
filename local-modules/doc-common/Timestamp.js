@@ -25,12 +25,13 @@ const MIN_TIME_MSEC = 1010000000 * 1000;
 const MAX_TIME_MSEC = 2530000000 * 1000;
 
 /**
- * Type representation of timestamps. The values themselves are always
- * just non-negative integers. This is just where the type checker code lives.
+ * Microsecond-granularity timestamp. Timestamps are represented with two
+ * components, a standard Unix-ish count of seconds since the "Unix Epoch" and
+ * a whole number of microseconds.
  *
- * More specifically, a timestamp is an integer count of milliseconds since the
- * Unix Epoch, with a minimum value defined to be around the start of 2002 and a
- * maximum value defined to be around the start of 2050.
+ * In addition, in order to help prevent bugs, the seconds component is
+ * restricted to fall within a range of dates with a minimum around the start
+ * of the year 2002 and a maximum around the start of the year 2050.
  */
 export default class Timestamp {
   /**

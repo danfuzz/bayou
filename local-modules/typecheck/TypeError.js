@@ -8,7 +8,7 @@ import inspect from 'object-inspect';
  * Error subclass for problems reported by this module, meant also to be used
  * by other modules providing similar functionality.
  */
-export class TypeError extends Error {
+export default class TypeError extends Error {
   /**
    * Constructs an instance.
    *
