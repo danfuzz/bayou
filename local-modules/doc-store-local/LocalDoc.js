@@ -162,6 +162,11 @@ export default class LocalDoc extends BaseDoc {
         contents = null;
       }
 
+      if (contents.version !== this._formatVersion) {
+        this._log.warn('Ignoring data with a mismatched format version. ' +
+            `Got ${contents.version}, expected ${this._formatVersion}`);
+      }
+
       if (contents === null) {
         this._changes = [];
         this._log.info('New document (because existing data is old or bad).');
