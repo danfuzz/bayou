@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { FrozenDelta } from 'doc-common';
-import { TString } from 'typecheck';
+import { TObject, TString } from 'typecheck';
 
 import Timestamp from './Timestamp';
 import VersionNumber from './VersionNumber';
@@ -18,6 +18,16 @@ import VersionNumber from './VersionNumber';
  * into immutable form.
  */
 export default class DocumentChange {
+  /**
+   * Checks that a value is an instance of this class. Throws an error if not.
+   *
+   * @param {*} value Value to check.
+   * @returns {Snapshot} `value`.
+   */
+  static check(value) {
+    return TObject.check(value, DocumentChange);
+  }
+
   /**
    * Constructs an instance.
    *

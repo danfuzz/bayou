@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { DocumentChange, VersionNumber } from 'doc-common';
-import { TBoolean, TObject, TString } from 'typecheck';
+import { TBoolean, TString } from 'typecheck';
 
 /**
  * Base class representing access to a particular document. Subclasses must
@@ -119,7 +119,7 @@ export default class BaseDoc {
       throw new Error(`No change ${verNum} on document \`${this.id}\``);
     }
 
-    return TObject.check(result, DocumentChange);
+    return DocumentChange.check(result);
   }
 
   /**
@@ -145,7 +145,7 @@ export default class BaseDoc {
    * @param {DocumentChange} change The change to append.
    */
   changeAppend(change) {
-    TObject.check(change, DocumentChange);
+    DocumentChange.check(change);
     const verGot = change.verNum;
     const verExpect = this.nextVerNum();
     if (verGot !== verExpect) {
