@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DeltaUtil, DocumentChange, Snapshot, VersionNumber } from 'doc-common';
+import { DocumentChange, FrozenDelta, Snapshot, VersionNumber }
+  from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { TInt } from 'typecheck';
 import { PromCondition } from 'util-common';
@@ -169,7 +170,7 @@ export default class DocServer {
    */
   applyDelta(baseVerNum, delta) {
     baseVerNum = this._validateVerNum(baseVerNum, false);
-    delta = DeltaUtil.coerce(delta);
+    delta = FrozenDelta.coerce(delta);
 
     if (baseVerNum === this.currentVerNum) {
       // The easy case: Apply a delta to the current version (unless it's empty,
@@ -214,9 +215,9 @@ export default class DocServer {
 
     // The `true` argument indicates that `dServer` should be taken to have been
     // applied first (won any insert races or similar).
-    const dNext = dServer.transform(dClient, true);
+    const dNext = FrozenDelta.coerce(dServer.transform(dClient, true));
 
-    if (DeltaUtil.isEmpty(dNext)) {
+    if (dNext.isEmpty()) {
       // It turns out that nothing changed.
       return {
         delta:  [], // That is, there was no correction.
@@ -230,7 +231,7 @@ export default class DocServer {
     const vNextNum = this.currentVerNum;     // This will be different than `vCurrentNum`.
 
     // (4)
-    const vExpected = DeltaUtil.coerce(vBase).compose(dClient);
+    const vExpected = FrozenDelta.coerce(vBase).compose(dClient);
     const dCorrection = vExpected.diff(vNext);
 
     return {
@@ -262,7 +263,7 @@ export default class DocServer {
       TInt.rangeInc(endExclusive, startInclusive, this.nextVerNum);
 
     if (startInclusive === endExclusive) {
-      return DeltaUtil.EMPTY_DELTA;
+      return FrozenDelta.EMPTY;
     }
 
     let result = this._doc.changeRead(startInclusive).delta;
@@ -270,7 +271,7 @@ export default class DocServer {
       result = result.compose(this._doc.changeRead(i).delta);
     }
 
-    return DeltaUtil.coerce(result);
+    return FrozenDelta.coerce(result);
   }
 
   /**
@@ -282,9 +283,9 @@ export default class DocServer {
    * @param {object} delta The delta to append.
    */
   _appendDelta(delta) {
-    delta = DeltaUtil.coerce(delta);
+    delta = FrozenDelta.coerce(delta);
 
-    if (DeltaUtil.isEmpty(delta)) {
+    if (delta.isEmpty()) {
       return;
     }
 

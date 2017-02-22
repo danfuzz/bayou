@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DeltaUtil } from 'doc-common';
+import { FrozenDelta } from 'doc-common';
 import { TString } from 'typecheck';
 
 import Timestamp from './Timestamp';
@@ -40,7 +40,7 @@ export default class DocumentChange {
     this._timeMsec = Timestamp.check(timeMsec);
 
     /** The actual change, as a delta. */
-    this._delta = DeltaUtil.coerce(delta);
+    this._delta = FrozenDelta.coerce(delta);
 
     /** Author ID string. */
     this._authorId = TString.orNull(authorId);

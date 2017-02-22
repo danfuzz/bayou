@@ -4,7 +4,6 @@
 
 import { ApiCommon } from 'api-common';
 
-import DeltaUtil from './DeltaUtil';
 import DocumentChange from './DocumentChange';
 import FrozenDelta from './FrozenDelta';
 import Snapshot from './Snapshot';
@@ -17,7 +16,6 @@ ApiCommon.registerClass(FrozenDelta);
 ApiCommon.registerClass(Snapshot);
 
 export {
-  DeltaUtil,
   DocumentChange,
   FrozenDelta,
   Snapshot,

@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import DeltaUtil from './DeltaUtil';
+import FrozenDelta from './FrozenDelta';
 import VersionNumber from './VersionNumber';
 
 
@@ -22,7 +22,7 @@ export default class Snapshot {
     this._verNum = VersionNumber.check(verNum);
 
     /** Document contents. */
-    this._contents = DeltaUtil.coerce(contents);
+    this._contents = FrozenDelta.coerce(contents);
 
     Object.freeze(this);
   }

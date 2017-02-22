@@ -4,7 +4,7 @@
 
 import Quill from 'quill';
 
-import { DeltaUtil } from 'doc-common';
+import { FrozenDelta } from 'doc-common';
 
 import DeltaEvent from './DeltaEvent';
 
@@ -39,7 +39,7 @@ export default class QuillProm extends Quill {
      * documentation for `currentChange`.
      */
     this._currentChange = new DeltaEvent(
-      accessKey, DeltaUtil.EMPTY_DELTA, DeltaUtil.EMPTY_DELTA, API);
+      accessKey, FrozenDelta.EMPTY, FrozenDelta.EMPTY, API);
 
     // We attach to the `EDITOR_CHANGE` event. This isn't exposed Quill API,
     // but in the current (as of this writing) implementation, Quill will emit

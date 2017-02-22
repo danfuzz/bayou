@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ApiError } from 'api-client';
-import { DeltaUtil, Snapshot } from 'doc-common';
+import { FrozenDelta, Snapshot } from 'doc-common';
 import { SeeAll } from 'see-all';
 import { TInt, TObject, TString } from 'typecheck';
 import { PromDelay } from 'util-common';
@@ -155,9 +155,9 @@ export default class DocClient extends StateMachine {
    */
   _check_gotApplyDelta(expectedContents, verNum, delta) {
     return [
-      DeltaUtil.coerce(expectedContents),
+      FrozenDelta.coerce(expectedContents),
       TInt.min(verNum, 0),
-      DeltaUtil.coerce(delta)
+      FrozenDelta.coerce(delta)
     ];
   }
 
@@ -178,7 +178,7 @@ export default class DocClient extends StateMachine {
     return [
       TObject.check(baseDoc, Snapshot),
       TInt.min(verNum, 0),
-      DeltaUtil.coerce(delta)
+      FrozenDelta.coerce(delta)
     ];
   }
 
@@ -502,7 +502,7 @@ export default class DocClient extends StateMachine {
     // iteration (from the idle state).
     const delta = this._consumeLocalChanges();
 
-    if (DeltaUtil.isEmpty(delta)) {
+    if (delta.isEmpty()) {
       // There weren't actually any net changes. This is unusual, though
       // possible. In particular, the user probably typed something and then
       // undid it.
@@ -546,7 +546,7 @@ export default class DocClient extends StateMachine {
 
     log.detail(`Correction from server: v${verNum}`, dCorrection);
 
-    if (DeltaUtil.isEmpty(dCorrection)) {
+    if (dCorrection.isEmpty()) {
       // There is no change from what we expected. This means that no other
       // client got in front of us between when we received the current version
       // and when we sent the delta to the server. That means it's safe to set
@@ -678,7 +678,7 @@ export default class DocClient extends StateMachine {
     // Remember that we consumed all these changes.
     this._currentChange = change;
 
-    return DeltaUtil.coerce(delta);
+    return FrozenDelta.coerce(delta);
   }
 
   /**
@@ -707,7 +707,7 @@ export default class DocClient extends StateMachine {
     // surprising results when `x` is an old version of `_doc`.
     const oldContents = this._doc.contents;
     this._doc = new Snapshot(verNum,
-      DeltaUtil.isEmpty(delta) ? oldContents : oldContents.compose(delta));
+      delta.isEmpty() ? oldContents : oldContents.compose(delta));
 
     // Tell Quill.
     this._quill.updateContents(quillDelta, CLIENT_SOURCE);
