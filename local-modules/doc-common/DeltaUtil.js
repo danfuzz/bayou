@@ -11,28 +11,6 @@ import FrozenDelta from './FrozenDelta';
  */
 export default class DeltaUtil {
   /**
-   * Returns `true` iff the given delta is empty. This accepts the same set of
-   * values as `coerce()`, see which. Anything else is considered to be an
-   * error.
-   *
-   * @param {*} delta The delta or delta-like value.
-   * @returns {boolean} `true` if `delta` is empty or `false` if not.
-   */
-  static isEmpty(delta) {
-    if (delta instanceof Delta) {
-      return (delta.ops.length === 0);
-    } else if ((delta === null) || (delta === undefined)) {
-      return true;
-    } else if (Array.isArray(delta)) {
-      return delta.length === 0;
-    } else if ((typeof delta === 'object') && Array.isArray(delta.ops)) {
-      return delta.ops.length === 0;
-    }
-
-    throw new Error('Invalid value.');
-  }
-
-  /**
    * Coerces the given value to a frozen (immutable) `Delta`.
    *
    * * If `value` is a frozen `Delta`, returns `value`.
