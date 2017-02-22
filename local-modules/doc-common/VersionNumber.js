@@ -4,8 +4,6 @@
 
 import { TypeError } from 'typecheck';
 
-console.log('===== xxxx', TypeError);
-
 /**
  * Type representation of version numbers. The values themselves are always
  * just non-negative integers. This is just where the type checker code lives.
