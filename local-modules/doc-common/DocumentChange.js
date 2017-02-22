@@ -22,7 +22,7 @@ export default class DocumentChange {
    * Checks that a value is an instance of this class. Throws an error if not.
    *
    * @param {*} value Value to check.
-   * @returns {Snapshot} `value`.
+   * @returns {DocumentChange} `value`.
    */
   static check(value) {
     return TObject.check(value, DocumentChange);

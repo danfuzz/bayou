@@ -4,7 +4,7 @@
 
 import Delta from 'quill-delta';
 
-import { TypeError } from 'typecheck';
+import { TObject, TypeError } from 'typecheck';
 import { DataUtil } from 'util-common';
 
 /**
@@ -47,6 +47,16 @@ export default class FrozenDelta extends Delta {
     }
 
     return TypeError.badValue(delta, 'FrozenDelta');
+  }
+
+  /**
+   * Checks that a value is an instance of this class. Throws an error if not.
+   *
+   * @param {*} value Value to check.
+   * @returns {FrozenDelta} `value`.
+   */
+  static check(value) {
+    return TObject.check(value, FrozenDelta);
   }
 
   /**
