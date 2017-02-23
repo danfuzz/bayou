@@ -51,7 +51,7 @@ export default class Decoder {
       // Pass through as-is.
       return value;
     } else if (Object.getPrototypeOf(value) === Object.prototype) {
-      return Decoder._simpleObjectFromApi(value);
+      return Decoder._decodeSimpleObject(value);
     } else if (!Array.isArray(value)) {
       throw new Error(`API cannot receive object of class \`${value.constructor.name}\`.`);
     }
@@ -66,13 +66,13 @@ export default class Decoder {
     const payload = value.slice(1);
 
     if (tag === Registry.ARRAY_TAG) {
-      return Decoder._arrayFromApi(payload);
+      return Decoder._decodeArray(payload);
     } else if (typeof tag !== 'string') {
       throw new Error('API cannot receive arrays without an initial string tag.');
     } else {
       // It had better be a registered tag, but if not, then this call will
       // throw.
-      return Decoder._instanceFromApi(tag, payload);
+      return Decoder._decodeInstance(tag, payload);
     }
   }
 
@@ -82,7 +82,7 @@ export default class Decoder {
    * @param {object} value Value to convert.
    * @returns {object} The converted value.
    */
-  static _simpleObjectFromApi(value) {
+  static _decodeSimpleObject(value) {
     const result = {};
 
     for (const k in value) {
@@ -99,7 +99,7 @@ export default class Decoder {
    * @param {array} payload Value to convert.
    * @returns {array} The converted value.
    */
-  static _arrayFromApi(payload) {
+  static _decodeArray(payload) {
     const result = payload.map(Decoder.decode);
     return Object.freeze(result);
   }
@@ -112,9 +112,9 @@ export default class Decoder {
    * @param {array} payload Construction arguments.
    * @returns {object} The converted value.
    */
-  static _instanceFromApi(tag, payload) {
+  static _decodeInstance(tag, payload) {
     const clazz = Registry.find(tag);
-    const args = Decoder._arrayFromApi(payload);
+    const args = Decoder._decodeArray(payload);
 
     if (!clazz) {
       throw new Error(`API cannot receive object of class \`${tag}\`.`);

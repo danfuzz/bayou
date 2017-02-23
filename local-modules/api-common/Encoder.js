@@ -67,13 +67,13 @@ export default class Encoder {
           // Pass through as-is.
           return value;
         } else if (Object.getPrototypeOf(value) === Object.prototype) {
-          return Encoder._apiFromSimpleObject(value);
+          return Encoder._encodeSimpleObject(value);
         } else if (Array.isArray(value)) {
-          return Encoder._apiFromArray(value);
+          return Encoder._encodeArray(value);
         } else {
           // It had better define the API metainfo properties, but if not, then
           // this call will throw.
-          return Encoder._apiFromInstance(value);
+          return Encoder._encodeInstance(value);
         }
       }
 
@@ -89,7 +89,7 @@ export default class Encoder {
    * @param {object} value Value to convert.
    * @returns {object} The converted value.
    */
-  static _apiFromSimpleObject(value) {
+  static _encodeSimpleObject(value) {
     const result = {};
 
     for (const k in value) {
@@ -106,7 +106,7 @@ export default class Encoder {
    * @param {string} [tag = Registry.ARRAY_TAG] "Header" tag for the result.
    * @returns {array} The converted value.
    */
-  static _apiFromArray(value, tag = Registry.ARRAY_TAG) {
+  static _encodeArray(value, tag = Registry.ARRAY_TAG) {
     // Convert elements and keep a count of how many elements we encounter.
     let count = 0;
     const result = value.map((elem) => {
@@ -136,7 +136,7 @@ export default class Encoder {
    * @param {object} value Value to convert.
    * @returns {object} The converted value.
    */
-  static _apiFromInstance(value) {
+  static _encodeInstance(value) {
     const apiName = value.constructor && value.constructor.API_NAME;
     const toApi = value.toApi;
 
@@ -149,6 +149,6 @@ export default class Encoder {
       throw new Error(`Non-array result from \`toApi()\` on class \`${value.constructor.name}\`.`);
     }
 
-    return Encoder._apiFromArray(payload, apiName);
+    return Encoder._encodeArray(payload, apiName);
   }
 }
