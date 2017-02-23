@@ -5,23 +5,24 @@
 import Registry from './Registry';
 
 /**
- * Common functionality for both client and server sides of the API subsystem.
+ * Decoding of values that had been transpored over the API (or were read in
+ * from disk or databases).
  */
-export default class ApiCommon {
+export default class Decoder {
   /**
-   * Converts JSON-encoded text to a usable value. See `valueFromApi()` for
+   * Converts JSON-encoded text to a usable value. See `decode()` for
    * details.
    *
    * @param {string} json Text to convert.
    * @returns {*} The converted value.
    */
-  static valueFromJson(json) {
-    return ApiCommon.valueFromApi(JSON.parse(json));
+  static decodeJson(json) {
+    return Decoder.decode(JSON.parse(json));
   }
 
   /**
-   * Converts a value that was previously converted with `valueToApi()` (or the
-   * equivalent) back into fully useful objects. Specifically:
+   * Converts a value that was previously converted with `Encoder.encode()` (or
+   * the equivalent) back into fully useful objects. Specifically:
    *
    * * Non-object values are passed through as-is.
    * * `null` is passed through as-is.
@@ -45,12 +46,12 @@ export default class ApiCommon {
    * @param {*} value Value to convert.
    * @returns {*} The converted value.
    */
-  static valueFromApi(value) {
+  static decode(value) {
     if ((typeof value !== 'object') || (value === null)) {
       // Pass through as-is.
       return value;
     } else if (Object.getPrototypeOf(value) === Object.prototype) {
-      return ApiCommon._simpleObjectFromApi(value);
+      return Decoder._simpleObjectFromApi(value);
     } else if (!Array.isArray(value)) {
       throw new Error(`API cannot receive object of class \`${value.constructor.name}\`.`);
     }
@@ -65,18 +66,18 @@ export default class ApiCommon {
     const payload = value.slice(1);
 
     if (tag === Registry.ARRAY_TAG) {
-      return ApiCommon._arrayFromApi(payload);
+      return Decoder._arrayFromApi(payload);
     } else if (typeof tag !== 'string') {
       throw new Error('API cannot receive arrays without an initial string tag.');
     } else {
       // It had better be a registered tag, but if not, then this call will
       // throw.
-      return ApiCommon._instanceFromApi(tag, payload);
+      return Decoder._instanceFromApi(tag, payload);
     }
   }
 
   /**
-   * Helper for `valueFromApi()` which validates and converts a simple object.
+   * Helper for `decode()` which validates and converts a simple object.
    *
    * @param {object} value Value to convert.
    * @returns {object} The converted value.
@@ -85,26 +86,26 @@ export default class ApiCommon {
     const result = {};
 
     for (const k in value) {
-      result[k] = ApiCommon.valueFromApi(value[k]);
+      result[k] = Decoder.decode(value[k]);
     }
 
     return Object.freeze(result);
   }
 
   /**
-   * Helper for `valueFromApi()` which validates and converts a regular array
+   * Helper for `decode()` which validates and converts a regular array
    * (which was originally tagged with `array`).
    *
    * @param {array} payload Value to convert.
    * @returns {array} The converted value.
    */
   static _arrayFromApi(payload) {
-    const result = payload.map(ApiCommon.valueFromApi);
+    const result = payload.map(Decoder.decode);
     return Object.freeze(result);
   }
 
   /**
-   * Helper for `valueFromApi()` which validates and converts a tagged
+   * Helper for `decode()` which validates and converts a tagged
    * constructor array.
    *
    * @param {string} tag Name tag.
@@ -113,7 +114,7 @@ export default class ApiCommon {
    */
   static _instanceFromApi(tag, payload) {
     const clazz = Registry.find(tag);
-    const args = ApiCommon._arrayFromApi(payload);
+    const args = Decoder._arrayFromApi(payload);
 
     if (!clazz) {
       throw new Error(`API cannot receive object of class \`${tag}\`.`);

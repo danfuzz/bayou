@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import ApiCommon from './ApiCommon';
+import Decoder from './Decoder';
 import Encoder from './Encoder';
 import Registry from './Registry';
 
-export { ApiCommon, Encoder, Registry };
+export { Decoder, Encoder, Registry };

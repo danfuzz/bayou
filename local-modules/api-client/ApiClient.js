@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ApiCommon, Encoder } from 'api-common';
+import { Decoder, Encoder } from 'api-common';
 import { SeeAll } from 'see-all';
 import { WebsocketCodes } from 'util-common';
 
@@ -261,7 +261,7 @@ export default class ApiClient {
   _handleMessage(event) {
     this._log.detail('Received raw payload:', event.data);
 
-    const payload = ApiCommon.valueFromJson(event.data);
+    const payload = Decoder.decodeJson(event.data);
     const id = payload.id;
     let result = payload.result;
     const error = payload.error;

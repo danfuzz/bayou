@@ -4,7 +4,7 @@
 
 import fs from 'fs';
 
-import { ApiCommon, Encoder } from 'api-common';
+import { Decoder, Encoder } from 'api-common';
 import { BaseDoc } from 'doc-store';
 import { SeeAll } from 'see-all';
 import { TObject } from 'typecheck';
@@ -155,7 +155,7 @@ export default class LocalDoc extends BaseDoc {
       let contents = null;
 
       try {
-        contents = ApiCommon.valueFromJson(encoded);
+        contents = Decoder.decodeJson(encoded);
         TObject.withExactKeys(contents, ['version', 'changes']);
         if (contents.version !== this._formatVersion) {
           this._log.warn('Ignoring data with a mismatched format version. ' +
