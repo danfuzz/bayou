@@ -2,39 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-/**
- * Map of registered class names to their respective classes. **Note:** The
- * constructor argument prevents the `array` tag from getting improperly
- * registered (by client code).
- */
-const THE_CLASSES = new Map([['array', null]]);
+import Registry from './Registry';
 
 /**
  * Common functionality for both client and server sides of the API subsystem.
  */
 export default class ApiCommon {
-  /**
-   * Registers a class to be accepted for API transmission and receipt. The
-   * class must define a property `API_NAME` and a static method `fromApi()`,
-   * which are used as described elsewhere in this class.
-   *
-   * @param {object} clazz The class to register.
-   */
-  static registerClass(clazz) {
-    const apiName = clazz.API_NAME;
-    const fromApi = clazz.fromApi;
-
-    if (typeof apiName !== 'string') {
-      throw new Error(`Missing \`API_NAME\` property on class \`${clazz.name}\`.`);
-    } else if (typeof fromApi !== 'function') {
-      throw new Error(`Missing \`fromApi\` method on class \`${clazz.name}\`.`);
-    } else if (THE_CLASSES.get(apiName)) {
-      throw new Error(`Cannot re-register name \`${apiName}\`.`);
-    }
-
-    THE_CLASSES.set(apiName, clazz);
-  }
-
   /**
    * Converts an arbitrary value to JSON-encoded text. See `apiFromValue()` for
    * details.
@@ -75,7 +48,7 @@ export default class ApiCommon {
    * * Arrays with non-numeric properties are rejected.
    * * Other arrays are allowed, with their values processed recursively using
    *   (the equivalent of) this method. The encoded form is also an array but
-   *   with an additional first element of the literal string `'array'`.
+   *   with an additional first element of the value `Registry.ARRAY_TAG`.
    * * Objects which bind a method `toApi()` and whose constructor binds a
    *   property `API_NAME` are allowed. Such objects will have `toApi()` called
    *   on them, which is expected to result in an array which is suitable for
@@ -140,10 +113,10 @@ export default class ApiCommon {
    * Helper for `apiFromValue()` which validates and converts an array.
    *
    * @param {array} value Value to convert.
-   * @param {string} [tag = 'array'] "Header" tag for the result.
+   * @param {string} [tag = Registry.ARRAY_TAG] "Header" tag for the result.
    * @returns {array} The converted value.
    */
-  static _apiFromArray(value, tag = 'array') {
+  static _apiFromArray(value, tag = Registry.ARRAY_TAG) {
     // Convert elements and keep a count of how many elements we encounter.
     let count = 0;
     const result = value.map((elem) => {
@@ -201,11 +174,12 @@ export default class ApiCommon {
    * * Arrays whose first element is not a string (including empty arrays) are
    *   rejected.
    * * Other arrays are processed recursively using (the equivalent of) this
-   *   method, without the first element. If the first element is the literal
-   *   string `'array'` then the processed form is used as-is. Otherwise, the
-   *   first element is used to look up a class that has been registered under
-   *   that name. Its `fromApi()` method is called, passing the converted array
-   *   as arguments. The result of that call becomes the result of conversion.
+   *   method, without the first element. If the first element is the value
+   *   `Registry.ARRAY_TAG` then the processed form is used as-is. Otherwise,
+   *   the first element is used to look up a class that has been registered
+   *   under that name. Its `fromApi()` method is called, passing the converted
+   *   array as arguments. The result of that call becomes the result of
+   *   conversion.
    * * All other objects are rejected.
    *
    * In addition, if the result is an object (including an array), it is
@@ -233,7 +207,7 @@ export default class ApiCommon {
     const tag = value[0];
     const payload = value.slice(1);
 
-    if (tag === 'array') {
+    if (tag === Registry.ARRAY_TAG) {
       return ApiCommon._arrayFromApi(payload);
     } else if (typeof tag !== 'string') {
       throw new Error('API cannot receive arrays without an initial string tag.');
@@ -281,7 +255,7 @@ export default class ApiCommon {
    * @returns {object} The converted value.
    */
   static _instanceFromApi(tag, payload) {
-    const clazz = THE_CLASSES.get(tag);
+    const clazz = Registry.find(tag);
     const args = ApiCommon._arrayFromApi(payload);
 
     if (!clazz) {
