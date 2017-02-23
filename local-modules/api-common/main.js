@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import ApiCommon from './ApiCommon';
+import Encoder from './Encoder';
 import Registry from './Registry';
 
-export { ApiCommon, Registry };
+export { ApiCommon, Encoder, Registry };

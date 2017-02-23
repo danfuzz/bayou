@@ -4,7 +4,7 @@
 
 import fs from 'fs';
 
-import { ApiCommon } from 'api-common';
+import { ApiCommon, Encoder } from 'api-common';
 import { BaseDoc } from 'doc-store';
 import { SeeAll } from 'see-all';
 import { TObject } from 'typecheck';
@@ -132,7 +132,7 @@ export default class LocalDoc extends BaseDoc {
       this._log.detail('Writing to disk...');
 
       const contents = {version: this._formatVersion, changes: this._changes};
-      const encoded = ApiCommon.jsonFromValue(contents);
+      const encoded = Encoder.encodeJson(contents);
       fs.writeFileSync(this._path, encoded, {encoding: 'utf8'});
       this._dirty = false;
       this._log.info('Written to disk.');
