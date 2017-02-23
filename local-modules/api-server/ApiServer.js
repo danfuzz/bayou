@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ApiCommon } from 'api-common';
+import { Decoder, Encoder } from 'api-common';
 import { SeeAll } from 'see-all';
 import { TArray, TInt, TObject, TString } from 'typecheck';
 import { PropertyIter, RandomId, WebsocketCodes } from 'util-common';
@@ -77,7 +77,7 @@ export default class ApiServer {
       this._log.info(`Handled ${this._messageCount} messages.`);
     }
 
-    msg = ApiCommon.valueFromJson(msg);
+    msg = Decoder.decodeJson(msg);
     this._log.detail('Message:', msg);
 
     let targetObj  = null;
@@ -159,7 +159,7 @@ export default class ApiServer {
         // them at some point.
         this._log.error('Error:', error);
       }
-      this._ws.send(ApiCommon.jsonFromValue(response));
+      this._ws.send(Encoder.encodeJson(response));
     };
 
     try {
