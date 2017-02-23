@@ -34,7 +34,7 @@ export default class DocumentChange {
    * @param {number} verNum The version number of the document produced by this
    *   change. If this instance represents the first change to a document, then
    *   this value will be `0`.
-   * @param {number} timestamp The time of the change, as msec since the Unix
+   * @param {Timestamp} timestamp The time of the change, as msec since the Unix
    *   Epoch.
    * @param {Delta|array|object} delta The document change per se, compared to
    *   the immediately-previous version. Must be a value which can be coerced
@@ -74,7 +74,7 @@ export default class DocumentChange {
    * Constructs an instance from API arguments.
    *
    * @param {number} verNum Same as with the regular constructor.
-   * @param {number} timestamp Same as with the regular constructor.
+   * @param {Timestamp} timestamp Same as with the regular constructor.
    * @param {Delta|array|object} delta Same as with the regular constructor.
    * @param {string|null} authorId Same as with the regular constructor.
    * @returns {DocumentChange} The constructed instance.

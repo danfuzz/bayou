@@ -14,6 +14,7 @@ import VersionNumber from './VersionNumber';
 ApiCommon.registerClass(DocumentChange);
 ApiCommon.registerClass(FrozenDelta);
 ApiCommon.registerClass(Snapshot);
+ApiCommon.registerClass(Timestamp);
 
 export {
   DocumentChange,

@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DocumentChange, FrozenDelta, Snapshot, VersionNumber }
+import { DocumentChange, FrozenDelta, Snapshot, Timestamp, VersionNumber }
   from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { TInt } from 'typecheck';
@@ -88,7 +88,7 @@ export default class DocServer {
       // up a first version here and change `verNum` to `0`, which will
       // propagate through the rest of the code and end up making everything all
       // work out.
-      const firstChange = new DocumentChange(0, Date.now(),
+      const firstChange = new DocumentChange(0, Timestamp.now(),
         [{insert: '(Recreated document due to format version skew.)\n'}],
         null);
       this._doc.changeAppend(firstChange);
@@ -305,7 +305,7 @@ export default class DocServer {
     }
 
     const author = null; // TODO: Assign an author.
-    const change = new DocumentChange(this.nextVerNum, Date.now(), delta, author);
+    const change = new DocumentChange(this.nextVerNum, Timestamp.now(), delta, author);
     this._doc.changeAppend(change);
     this._changeCondition.value = true;
   }
@@ -342,7 +342,7 @@ export default class DocServer {
     if (!result.exists()) {
       // Initialize the document with static content (for now).
       const firstChange =
-        new DocumentChange(0, Date.now(), DEFAULT_DOCUMENT, null);
+        new DocumentChange(0, Timestamp.now(), DEFAULT_DOCUMENT, null);
       result.changeAppend(firstChange);
     }
 
