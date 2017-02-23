@@ -14,10 +14,12 @@ export default class Encoder {
    * details.
    *
    * @param {*} value Value to convert.
+   * @param {boolean} [pretty = false] Whether to "pretty-print" (indent and
+   *   space for human consumption) the result.
    * @returns {string} The converted value.
    */
-  static encodeJson(value) {
-    return JSON.stringify(Encoder.encode(value));
+  static encodeJson(value, pretty = false) {
+    return JSON.stringify(Encoder.encode(value), null, pretty ? 2 : 0);
   }
 
   /**

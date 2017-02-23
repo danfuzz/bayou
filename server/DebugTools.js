@@ -67,7 +67,7 @@ export default class DebugTools {
 
     try {
       const change = this._doc.change(verNum);
-      result = JSON.stringify(Encoder.encode(change), null, 2);
+      result = Encoder.encodeJson(change, 2);
     } catch (e) {
       result = `Error:\n\n${e.stack}`;
     }
@@ -94,7 +94,7 @@ export default class DebugTools {
 
     try {
       const snapshot = this._doc.snapshot(...verNum);
-      result = JSON.stringify(Encoder.encode(snapshot), null, 2);
+      result = Encoder.encodeJson(snapshot, true);
     } catch (e) {
       result = `Error:\n\n${e.stack}`;
     }
