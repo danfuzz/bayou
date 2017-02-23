@@ -157,14 +157,14 @@ export default class LocalDoc extends BaseDoc {
       try {
         contents = ApiCommon.valueFromJson(encoded);
         TObject.withExactKeys(contents, ['version', 'changes']);
+        if (contents.version !== this._formatVersion) {
+          this._log.warn('Ignoring data with a mismatched format version. ' +
+              `Got ${contents.version}, expected ${this._formatVersion}`);
+          contents = null;
+        }
       } catch (e) {
-        this._log.warn('Ignoring malformed data (bad JSON or unversioned).');
+        this._log.warn('Ignoring malformed data (bad JSON or unversioned).', e);
         contents = null;
-      }
-
-      if (contents.version !== this._formatVersion) {
-        this._log.warn('Ignoring data with a mismatched format version. ' +
-            `Got ${contents.version}, expected ${this._formatVersion}`);
       }
 
       if (contents === null) {
