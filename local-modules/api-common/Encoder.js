@@ -68,9 +68,18 @@ export default class Encoder {
         if (value === null) {
           // Pass through as-is.
           return value;
-        } else if (Object.getPrototypeOf(value) === Object.prototype) {
+        }
+
+        const proto = Object.getPrototypeOf(value);
+
+        if (proto === Object.prototype) {
           return Encoder._encodeSimpleObject(value);
-        } else if (Array.isArray(value)) {
+        } else if (proto === Array.prototype) {
+          // Note: We don't use `Array.isArray()` because that will return
+          // `true` for subclasses of Array. We want to instead treat Array
+          // subclass instances as regular object instances (in the next
+          // clause), so as not to miss out on their API metadata (or so as to
+          // fail to encode them if they aren't in fact API-ready).
           return Encoder._encodeArray(value);
         } else {
           // It had better define the API metainfo properties, but if not, then
