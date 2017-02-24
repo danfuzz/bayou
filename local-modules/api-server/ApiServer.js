@@ -124,26 +124,36 @@ export default class ApiServer {
       return;
     }
 
+    try {
+      this._actOnMessage(msg, respond);
+    } catch (e) {
+      respond(null, e);
+    }
+  }
+
+  /**
+   * Helper for `_handleMessage()` which actually performs (well, queues up)
+   * the action requested by the given message.
+   *
+   * @param {object} msg Parsed message.
+   * @param {function} respond The responder function.
+   */
+  _actOnMessage(msg, respond) {
     const target = this._targets.get(msg.target);
     const action = msg.action;
     const name   = msg.name;
     const args   = msg.args;
 
     if (!target) {
-      respond(null, new Error(`Unknown target: \`${msg.target}\``));
-      return;
+      throw new Error(`Unknown target: \`${msg.target}\``);
     }
 
     switch (action) {
       case 'call': {
-        try {
-          target.call(name, args).then(
-            (result) => { respond(result, null); },
-            (error)  => { respond(null, error);  }
-          );
-        } catch (error) {
-          respond(null, error);
-        }
+        target.call(name, args).then(
+          (result) => { respond(result, null); },
+          (error)  => { respond(null, error);  }
+        );
         break;
       }
 
@@ -151,8 +161,7 @@ export default class ApiServer {
       // exposing a bit more of a JavaScript-like interface.
 
       default: {
-        respond(null, new Error(`Bad action: \`${action}\``));
-        return;
+        throw new Error(`Bad action: \`${action}\``);
       }
     }
   }
