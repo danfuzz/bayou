@@ -118,7 +118,7 @@ export default class ApiServer {
         if (schema.getDescriptor(name) === 'method') {
           // Listed in the schema as a method. So it exists, is public, is in
           // fact bound to a function, etc.
-          targetObj  = targetObj.target;
+          targetObj  = targetObj.target; // Kinda messy, yeah. TODO: Make nicer.
           methodImpl = targetObj[name];
           args       = msg.args;
         } else {
