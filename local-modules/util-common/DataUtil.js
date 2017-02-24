@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import ObjectUtil from './ObjectUtil';
+
 /**
  * "Data value" helper utilities. A "data value" is defined as any JavaScript
  * value or object which has no behavior. This includes anything that can be
@@ -50,8 +52,15 @@ export default class DataUtil {
         let newObj = value;
         let any = false; // Becomes `true` the first time a change is made.
 
-        for (const k in value) {
-          const oldValue = value[k];
+        for (const k of Object.getOwnPropertyNames(value)) {
+          const prop = Object.getOwnPropertyDescriptor(value, k);
+          const oldValue = prop.value;
+          if (   (oldValue === undefined)
+              && !ObjectUtil.hasOwnProperty(prop, 'value')) {
+            // **Note:** The `undefined` check just prevents us from having to
+            // call `hasOwnProperty()` in the usual case.
+            throw new Error(`Cannot deep-freeze object with synthetic property: ${value}`);
+          }
           const newValue = DataUtil.deepFreeze(oldValue);
           if (oldValue !== newValue) {
             if (!any) {
