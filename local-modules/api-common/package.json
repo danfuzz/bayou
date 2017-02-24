@@ -1,5 +1,10 @@
 {
   "name": "api-common",
   "version": "1.0.0",
-  "main": "main.js"
+  "main": "main.js",
+
+  "dependencies": {
+    "typecheck": "local",
+    "util-common": "local"
+  }
 }
