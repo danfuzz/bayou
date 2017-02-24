@@ -49,7 +49,7 @@ export default class MetaHandler {
     const result = {};
 
     for (const name of names) {
-      result[name] = this._server.getSchema(name).propertiesObject;
+      result[name] = this._server.getTarget(name).schema.propertiesObject;
     }
 
     return result;

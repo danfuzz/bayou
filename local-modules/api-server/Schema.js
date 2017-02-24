@@ -21,8 +21,10 @@ import { PropertyIter } from 'util-common';
  */
 export default class Schema {
   /**
-   * Constructs an instance based on the given object. **Note:** The resulting
-   * instance doesn't remember (keep a reference to) the target object.
+   * Constructs an instance based on the given object.
+   *
+   * **Note:** The resulting instance doesn't remember (keep a reference to) the
+   * target object. (The `Target` class does that.)
    *
    * @param {object} target Object from which to derive the schema.
    */
@@ -34,6 +36,8 @@ export default class Schema {
      * string.
      */
     this._properties = Schema._makeSchemaFor(target);
+
+    Object.freeze(this);
   }
 
   /**

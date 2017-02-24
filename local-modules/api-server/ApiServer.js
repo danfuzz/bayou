@@ -8,7 +8,7 @@ import { TArray, TInt, TObject, TString } from 'typecheck';
 import { RandomId, WebsocketCodes } from 'util-common';
 
 import MetaHandler from './MetaHandler';
-import Schema from './Schema';
+import Target from './Target';
 
 /** Logger. */
 const log = new SeeAll('api');
@@ -49,8 +49,8 @@ export default class ApiServer {
      * accessing it. (Whee!)
      */
     this._targets = new Map();
-    this._targets.set('main', target);
-    this._targets.set('meta', new MetaHandler(this));
+    this._targets.set('main', new Target(target));
+    this._targets.set('meta', new Target(new MetaHandler(this)));
 
     /** Count of messages received. Used for liveness logging. */
     this._messageCount = 0;
@@ -102,12 +102,11 @@ export default class ApiServer {
     }
 
     if (targetObj === null) {
-      const target = msg.target;
-      targetObj = this._targets.get(target);
+      targetObj = this._targets.get(msg.target);
       if (!targetObj) {
         targetObj  = this;
         methodImpl = this._error_unknown_target;
-        args       = [target];
+        args       = [msg.target];
         action     = 'error';
       }
     }
@@ -115,17 +114,17 @@ export default class ApiServer {
     switch (action) {
       case 'call': {
         const name   = msg.name;
-        const target = msg.target;
-        const schema = this.getSchema(target);
+        const schema = targetObj.schema;
         if (schema.getDescriptor(name) === 'method') {
           // Listed in the schema as a method. So it exists, is public, is in
           // fact bound to a function, etc.
+          targetObj  = targetObj.target;
           methodImpl = targetObj[name];
           args       = msg.args;
         } else {
           targetObj  = this;
           methodImpl = this._error_unknown_method;
-          args       = [target, name];
+          args       = [msg.target, name];
         }
         break;
       }
@@ -254,25 +253,5 @@ export default class ApiServer {
     }
 
     return result;
-  }
-
-  /**
-   * Gets the schema associated with the target of the indicated name. This will
-   * throw an error if the named target does not exist.
-   *
-   * @param {string} name The target name.
-   * @returns {object} Schema of the target. This is a (poorly-specified) object
-   *    mapping property names to descriptors.
-   */
-  getSchema(name) {
-    const target = this.getTarget(name); // Will throw if `name` is not bound.
-    let   schema = this._schemas.get(name);
-
-    if (schema === undefined) {
-      schema = new Schema(target);
-      this._schemas.set(name, schema);
-    }
-
-    return schema;
   }
 }
