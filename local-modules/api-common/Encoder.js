@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { ObjectUtil } from 'util-common';
+
 import Registry from './Registry';
 
 /**
@@ -103,8 +105,22 @@ export default class Encoder {
   static _encodeSimpleObject(value) {
     const result = {};
 
-    for (const k in value) {
-      result[k] = Encoder.encode(value[k]);
+    for (const k of Object.getOwnPropertyNames(value)) {
+      const prop = Object.getOwnPropertyDescriptor(value, k);
+      const origValue = prop.value;
+
+      if (origValue === undefined) {
+        // `undefined` isn't encodable, but also this is what we'll see if
+        // `k` names a synthetic property. The following differentiates the two
+        // cases, for a maximum-fidelity error message.
+        if (!ObjectUtil.hasOwnProperty(prop, 'value')) {
+          throw new Error('API cannot transmit plain object with synthetic property.');
+        } else {
+          throw new Error('API cannot transmit `undefined`.');
+        }
+      }
+
+      result[k] = Encoder.encode(origValue);
     }
 
     return Object.freeze(result);

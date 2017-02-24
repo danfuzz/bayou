@@ -49,8 +49,8 @@ export default class ApiServer {
      * accessing it. (Whee!)
      */
     this._targets = new Map();
-    this._targets.set('main', new Target(target));
-    this._targets.set('meta', new Target(new MetaHandler(this)));
+    this._addTarget(new Target('main', target));
+    this._addTarget(new Target('meta', new MetaHandler(this)));
 
     /** Count of messages received. Used for liveness logging. */
     this._messageCount = 0;
@@ -66,6 +66,15 @@ export default class ApiServer {
   }
 
   /**
+   * Adds a target to the set thereof.
+   *
+   * @param {Target} target Target to add.
+   */
+  _addTarget(target) {
+    this._targets.set(target.name, target);
+  }
+
+  /**
    * Handles a `message` event coming from the underlying websocket. For valid
    * methods, this calls the method implementation and handles both the case
    * where the result is a simple value or a promise.
@@ -78,70 +87,7 @@ export default class ApiServer {
       this._log.info(`Handled ${this._messageCount} messages.`);
     }
 
-    msg = Decoder.decodeJson(msg);
-    this._log.detail('Message:', msg);
-
-    let targetObj  = null;
-    let methodImpl = null;
-    let args       = null;
-    let action     = null;
-
-    try {
-      TObject.withExactKeys(msg, ['id', 'target', 'action', 'name', 'args']);
-      TInt.min(msg.id, 0);
-      TString.nonempty(msg.target);
-      TString.nonempty(msg.action);
-      TString.nonempty(msg.name);
-      TArray.check(msg.args);
-      action = msg.action;
-    } catch (e) {
-      targetObj  = this;
-      methodImpl = this._error_bad_message;
-      args       = [e];
-      action     = 'error';
-    }
-
-    if (targetObj === null) {
-      targetObj = this._targets.get(msg.target);
-      if (!targetObj) {
-        targetObj  = this;
-        methodImpl = this._error_unknown_target;
-        args       = [msg.target];
-        action     = 'error';
-      }
-    }
-
-    switch (action) {
-      case 'call': {
-        const name   = msg.name;
-        const schema = targetObj.schema;
-        if (schema.getDescriptor(name) === 'method') {
-          // Listed in the schema as a method. So it exists, is public, is in
-          // fact bound to a function, etc.
-          targetObj  = targetObj.target; // Kinda messy, yeah. TODO: Make nicer.
-          methodImpl = targetObj[name];
-          args       = msg.args;
-        } else {
-          targetObj  = this;
-          methodImpl = this._error_unknown_method;
-          args       = [msg.target, name];
-        }
-        break;
-      }
-
-      // **Note:** Ultimately we might accept `get` and `set`, for example, thus
-      // exposing a bit more of a JavaScript-like interface.
-      default: {
-        if (targetObj === this) {
-          // We landed here because of an error that was already detected.
-          break;
-        }
-        targetObj  = this;
-        methodImpl = this._error_bad_action;
-        args       = [action];
-        break;
-      }
-    }
+    msg = this._decodeMessage(msg); // Not supposed to ever throw.
 
     // Function to send a response. Arrow syntax so that `this` is usable.
     const respond = (result, error) => {
@@ -162,14 +108,85 @@ export default class ApiServer {
       this._ws.send(Encoder.encodeJson(response));
     };
 
+    if (msg.error) {
+      respond(null, msg.error);
+    } else {
+      try {
+        this._actOnMessage(msg, respond);
+      } catch (e) {
+        respond(null, e);
+      }
+    }
+  }
+
+  /**
+   * Helper for `_handleMessage()` which parses the original incoming message.
+   * In case of error, this will return an object that binds `error` to an
+   * appropriate exception; and in this case, `id` will be defined to be either
+   * the successfully parsed message ID or `-1` if parsing couldn't even make it
+   * that far. In particular, this method aims to _never_ throw an exception
+   * to its caller.
+   *
+   * @param {string} msg Incoming message, in JSON-encoded form.
+   * @returns {object} The parsed message.
+   */
+  _decodeMessage(msg) {
+    let id = -1; // Will get set if the message can be parsed enough to find it.
+
     try {
-      // Note: If the method implementation returns a non-promise, then the
-      // `resolve()` call operates promptly.
-      Promise.resolve(methodImpl.apply(targetObj, args)).then(
-        (result) => { respond(result, null); },
-        (error) => { respond(null, error); });
+      msg = Decoder.decodeJson(msg);
+      this._log.detail('Message:', msg);
+
+      // Set `id` as early as possible, so that subsequent errors can be sent
+      // with it.
+      TObject.check(msg);
+      id = TInt.min(msg.id, 0);
+
+      // Having done that, validate the remainder of the message shape.
+      TObject.withExactKeys(msg, ['id', 'target', 'action', 'name', 'args']);
+      TString.nonempty(msg.target);
+      TString.nonempty(msg.action);
+      TString.nonempty(msg.name);
+      TArray.check(msg.args);
     } catch (error) {
-      respond(null, error);
+      return {error, id};
+    }
+
+    return msg;
+  }
+
+  /**
+   * Helper for `_handleMessage()` which actually performs (well, queues up)
+   * the action requested by the given message.
+   *
+   * @param {object} msg Parsed message.
+   * @param {function} respond The responder function.
+   */
+  _actOnMessage(msg, respond) {
+    const target = this._targets.get(msg.target);
+    const action = msg.action;
+    const name   = msg.name;
+    const args   = msg.args;
+
+    if (!target) {
+      throw new Error(`Unknown target: \`${msg.target}\``);
+    }
+
+    switch (action) {
+      case 'call': {
+        target.call(name, args).then(
+          (result) => { respond(result, null); },
+          (error)  => { respond(null, error);  }
+        );
+        break;
+      }
+
+      // **Note:** Ultimately we might accept `get` and `set`, for example, thus
+      // exposing a bit more of a JavaScript-like interface.
+
+      default: {
+        throw new Error(`Bad action: \`${action}\``);
+      }
     }
   }
 
@@ -192,43 +209,6 @@ export default class ApiServer {
    */
   _handleError(error) {
     this._log.info('Error:', error);
-  }
-
-  /**
-   * API error: Bad value for `message` in call payload (invalid shape).
-   *
-   * @param {object} error The reported error.
-   */
-  _error_bad_message(error) {
-    throw error;
-  }
-
-  /**
-   * API error: Bad value for `action` in call payload (not a recognized value).
-   *
-   * @param {string} action The action.
-   */
-  _error_bad_action(action) {
-    throw new Error(`Bad action: \`${action}\``);
-  }
-
-  /**
-   * API error: Unknown (undefined) target.
-   *
-   * @param {string} target The name of the target.
-   */
-  _error_unknown_target(target) {
-    throw new Error(`Unknown target: \`${target}\``);
-  }
-
-  /**
-   * API error: Unknown (undefined) method.
-   *
-   * @param {string} target The name of the target.
-   * @param {string} method The name of the method.
-   */
-  _error_unknown_method(target, method) {
-    throw new Error(`Unknown mathod: \`${target}.${method}()\``);
   }
 
   /**
