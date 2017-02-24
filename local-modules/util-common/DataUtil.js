@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { TArray, TInt, TString } from 'typecheck';
+
 import ObjectUtil from './ObjectUtil';
 
 /**
@@ -79,5 +81,34 @@ export default class DataUtil {
         throw new Error(`Cannot deep-freeze non-data value: ${value}`);
       }
     }
+  }
+
+  /**
+   * Parses an even-length string of hex digits (lower case), producing an array
+   * of unsigned integers in the range `0..255`.
+   *
+   * @param {string} hex String of hex digits.
+   * @returns {Array<int>} Array of parsed bytes, always frozen.
+   */
+  static bytesFromHex(hex) {
+    TString.check(hex, /^([0-9a-f]{2})+$/);
+
+    const result = [];
+    for (let i = 0; i < hex.length; i += 2) {
+      result.push(parseInt(hex.slice(i, i + 2), 16));
+    }
+
+    return Object.freeze(result);
+  }
+
+  /**
+   * Converts an array of byte values to a hex string.
+   *
+   * @param {Array<int>} bytes Byte values.
+   * @returns {string} Equivalent hex string.
+   */
+  static hexFromBytes(bytes) {
+    TArray.check(bytes, TInt.check); // TODO: Should validate range too.
+    return bytes.map((v) => v.toString(16)).join('');
   }
 }
