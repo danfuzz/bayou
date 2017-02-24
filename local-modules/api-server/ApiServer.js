@@ -78,11 +78,11 @@ export default class ApiServer {
       this._log.info(`Handled ${this._messageCount} messages.`);
     }
 
-    let id = -1; // Will get set if the message can be parsed enough to find it.
+    msg = this._decodeMessage(msg); // Not supposed to ever throw.
 
     // Function to send a response. Arrow syntax so that `this` is usable.
     const respond = (result, error) => {
-      const response = {id};
+      const response = {id: msg.id};
       if (error) {
         response.error = error.message;
       } else {
@@ -99,15 +99,35 @@ export default class ApiServer {
       this._ws.send(Encoder.encodeJson(response));
     };
 
+    if (msg.error) {
+      respond(null, msg.error);
+    } else {
+      try {
+        this._actOnMessage(msg, respond);
+      } catch (e) {
+        respond(null, e);
+      }
+    }
+  }
+
+  /**
+   * Helper for `_handleMessage()` which parses the original incoming message.
+   * In case of error, this will return an object that binds `error` to an
+   * appropriate exception; and in this case, `id` will be defined to be either
+   * the successfully parsed message ID or `-1` if parsing couldn't even make it
+   * that far. In particular, this method aims to _never_ throw an exception
+   * to its caller.
+   *
+   * @param {string} msg Incoming message, in JSON-encoded form.
+   * @returns {object} The parsed message.
+   */
+  _decodeMessage(msg) {
+    let id = -1; // Will get set if the message can be parsed enough to find it.
+
     try {
       msg = Decoder.decodeJson(msg);
       this._log.detail('Message:', msg);
-    } catch (e) {
-      respond(null, e);
-      return;
-    }
 
-    try {
       // Set `id` as early as possible, so that subsequent errors can be sent
       // with it.
       TObject.check(msg);
@@ -119,16 +139,11 @@ export default class ApiServer {
       TString.nonempty(msg.action);
       TString.nonempty(msg.name);
       TArray.check(msg.args);
-    } catch (e) {
-      respond(null, e);
-      return;
+    } catch (error) {
+      return {error, id};
     }
 
-    try {
-      this._actOnMessage(msg, respond);
-    } catch (e) {
-      respond(null, e);
-    }
+    return msg;
   }
 
   /**
