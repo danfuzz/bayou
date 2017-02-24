@@ -9,14 +9,22 @@ import TypeError from './TypeError';
  */
 export default class TString {
   /**
-   * Checks a value of type `String`.
+   * Checks a value of type `String`. Optionally validates contents against
+   * a regex.
    *
    * @param {*} value Value to check.
+   * @param {RegExp} [regex = null] Regular expression to match against or
+   *   `null` if no matching is required. **Note:** If you want to match the
+   *   entire `value`, this must be anchored at both ends (`/^...$/`).
    * @returns {string} `value`.
    */
-  static check(value) {
+  static check(value, regex = null) {
     if (typeof value !== 'string') {
       return TypeError.badValue(value, 'String');
+    }
+
+    if ((regex !== null) && !regex.test(value)) {
+      return TypeError.badValue(value, 'String', `!${regex}.test()`);
     }
 
     return value;
