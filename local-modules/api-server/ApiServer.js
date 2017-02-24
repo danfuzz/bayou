@@ -49,8 +49,8 @@ export default class ApiServer {
      * accessing it. (Whee!)
      */
     this._targets = new Map();
-    this._targets.set('main', new Target('main', target));
-    this._targets.set('meta', new Target('meta', new MetaHandler(this)));
+    this._addTarget(new Target('main', target));
+    this._addTarget(new Target('meta', new MetaHandler(this)));
 
     /** Count of messages received. Used for liveness logging. */
     this._messageCount = 0;
@@ -63,6 +63,15 @@ export default class ApiServer {
     ws.on('error', this._handleError.bind(this));
 
     this._log.info('Open.');
+  }
+
+  /**
+   * Adds a target to the set thereof.
+   *
+   * @param {Target} target Target to add.
+   */
+  _addTarget(target) {
+    this._targets.set(target.name, target);
   }
 
   /**
