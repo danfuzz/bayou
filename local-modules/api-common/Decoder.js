@@ -53,13 +53,13 @@ export default class Decoder {
     } else if (Object.getPrototypeOf(value) === Object.prototype) {
       return Decoder._decodeSimpleObject(value);
     } else if (!Array.isArray(value)) {
-      throw new Error(`API cannot receive object of class \`${value.constructor.name}\`.`);
+      throw new Error(`API cannot decode object of class \`${value.constructor.name}\`.`);
     }
 
     // We know it's an array.
 
     if (value.length === 0) {
-      throw new Error('API cannot receive empty arrays.');
+      throw new Error('API cannot decode empty arrays.');
     }
 
     const tag = value[0];
@@ -68,7 +68,7 @@ export default class Decoder {
     if (tag === Registry.ARRAY_TAG) {
       return Decoder._decodeArray(payload);
     } else if (typeof tag !== 'string') {
-      throw new Error('API cannot receive arrays without an initial string tag.');
+      throw new Error('API cannot decode arrays without an initial string tag.');
     } else {
       // It had better be a registered tag, but if not, then this call will
       // throw.
@@ -117,7 +117,7 @@ export default class Decoder {
     const args = Decoder._decodeArray(payload);
 
     if (!clazz) {
-      throw new Error(`API cannot receive object of class \`${tag}\`.`);
+      throw new Error(`API cannot decode object of class \`${tag}\`.`);
     }
 
     return clazz.fromApi(...args);

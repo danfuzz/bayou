@@ -91,7 +91,7 @@ export default class Encoder {
       }
 
       default: {
-        throw new Error(`API cannot transmit type \`${typeof value}\`.`);
+        throw new Error(`API cannot encode type \`${typeof value}\`.`);
       }
     }
   }
@@ -114,9 +114,9 @@ export default class Encoder {
         // `k` names a synthetic property. The following differentiates the two
         // cases, for a maximum-fidelity error message.
         if (ObjectUtil.hasOwnProperty(prop, 'value')) {
-          throw new Error('API cannot transmit `undefined`.');
+          throw new Error('API cannot encode `undefined`.');
         } else {
-          throw new Error('API cannot transmit plain object with synthetic property.');
+          throw new Error('API cannot encode plain object with synthetic property.');
         }
       }
 
@@ -144,12 +144,12 @@ export default class Encoder {
     if (value.length !== count) {
       // `Array.map()` skips holes, so a `length` / `count` mismatch
       // occurs iff there is a hole.
-      throw new Error('API cannot transmit arrays with holes.');
+      throw new Error('API cannot encode arrays with holes.');
     } else if (value.length !== Object.keys(value).length) {
       // Since we know there are no holes (per above), the only way we
       // could have a different number of keys than the array `length` is
       // if there are additional named properties.
-      throw new Error('API cannot transmit arrays with named properties.');
+      throw new Error('API cannot encode arrays with named properties.');
     }
 
     result.unshift(tag); // The specified "header" tag value.
@@ -168,7 +168,7 @@ export default class Encoder {
     const toApi = value.toApi;
 
     if ((typeof apiName !== 'string') || (typeof toApi !== 'function')) {
-      throw new Error(`API cannot transmit object of class \`${value.constructor.name}\`.`);
+      throw new Error(`API cannot encode object of class \`${value.constructor.name}\`.`);
     }
 
     const payload = value.toApi();
