@@ -5,9 +5,10 @@
 import { Decoder, Encoder } from 'api-common';
 import { SeeAll } from 'see-all';
 import { TArray, TInt, TObject, TString } from 'typecheck';
-import { PropertyIter, RandomId, WebsocketCodes } from 'util-common';
+import { RandomId, WebsocketCodes } from 'util-common';
 
 import MetaHandler from './MetaHandler';
+import Schema from './Schema';
 
 /** Logger. */
 const log = new SeeAll('api');
@@ -35,8 +36,8 @@ export default class ApiServer {
     this._connectionId = RandomId.make('conn');
 
     /**
-     * Schemas for each target object (see `_targets`, below), initialized
-     * lazily.
+     * {Map<string,Schema} Schemas for each target object (see `_targets`,
+     * below), initialized lazily.
      */
     this._schemas = new Map();
 
@@ -116,7 +117,7 @@ export default class ApiServer {
         const name   = msg.name;
         const target = msg.target;
         const schema = this.getSchema(target);
-        if (schema[name] === 'method') {
+        if (schema.getDescriptor(name) === 'method') {
           // Listed in the schema as a method. So it exists, is public, is in
           // fact bound to a function, etc.
           methodImpl = targetObj[name];
@@ -232,34 +233,6 @@ export default class ApiServer {
   }
 
   /**
-   * Generates a schema for the given object. This is a map of the public
-   * methods callable on the given object, _excluding_ those with an underscore
-   * prefix, those named `constructor`, and those defined on the root `Object`
-   * prototype. The result is a map from the names to the value `'method'`. (In
-   * the future, the values might become embiggened.)
-   *
-   * @param {object} obj Object to interrogate.
-   * @returns {object} The method map for `obj`.
-   */
-  static _makeSchemaFor(obj) {
-    const result = {};
-
-    for (const desc of new PropertyIter(obj).skipObject().onlyMethods()) {
-      const name = desc.name;
-
-      if (name.match(/^_/) || (name === 'constructor')) {
-        // Because we don't want properties whose names are prefixed with `_`,
-        // and we don't want to expose the constructor function.
-        continue;
-      }
-
-      result[name] = 'method';
-    }
-
-    return result;
-  }
-
-  /**
    * The connection ID.
    */
   get connectionId() {
@@ -296,7 +269,7 @@ export default class ApiServer {
     let   schema = this._schemas.get(name);
 
     if (schema === undefined) {
-      schema = ApiServer._makeSchemaFor(target);
+      schema = new Schema(target);
       this._schemas.set(name, schema);
     }
 
