@@ -36,7 +36,7 @@ export default class ApiServer {
     this._connectionId = RandomId.make('conn');
 
     /**
-     * {Map<string,Schema} Schemas for each target object (see `_targets`,
+     * {Map<string,Schema>} Schemas for each target object (see `_targets`,
      * below), initialized lazily.
      */
     this._schemas = new Map();
