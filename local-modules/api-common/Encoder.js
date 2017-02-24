@@ -113,10 +113,10 @@ export default class Encoder {
         // `undefined` isn't encodable, but also this is what we'll see if
         // `k` names a synthetic property. The following differentiates the two
         // cases, for a maximum-fidelity error message.
-        if (!ObjectUtil.hasOwnProperty(prop, 'value')) {
-          throw new Error('API cannot transmit plain object with synthetic property.');
-        } else {
+        if (ObjectUtil.hasOwnProperty(prop, 'value')) {
           throw new Error('API cannot transmit `undefined`.');
+        } else {
+          throw new Error('API cannot transmit plain object with synthetic property.');
         }
       }
 
