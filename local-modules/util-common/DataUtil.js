@@ -3,8 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TArray, TInt, TString } from 'typecheck';
-
-import ObjectUtil from './ObjectUtil';
+import { ObjectUtil } from 'util-base';
 
 /**
  * "Data value" helper utilities. A "data value" is defined as any JavaScript

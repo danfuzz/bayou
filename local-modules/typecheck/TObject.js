@@ -2,21 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import TypeError from './TypeError';
+import { ObjectUtil } from 'util-base';
 
-/**
- * Calls `value.hasOwnProperty()` safely.
- *
- * **Note:** This is a duplicate of the same code in `ObjectUtil` so as to
- * avoid a circular module dependency.
- *
- * @param {object} value Value to query.
- * @param {string} name Name of property in question.
- * @returns {boolean} `true` iff `value` has an own-property with the given name.
- */
-function hasOwnProperty(value, name) {
-  return Object.prototype.hasOwnProperty.call(value, name);
-}
+import TypeError from './TypeError';
 
 /**
  * Type checker for type `Object`.
@@ -58,7 +46,7 @@ export default class TObject {
 
     const copy = Object.assign({}, value);
     for (const k of keys) {
-      if (!hasOwnProperty(copy, k)) {
+      if (!ObjectUtil.hasOwnProperty(copy, k)) {
         return TypeError.badValue(value, 'Object', `Missing key \`${k}\``);
       }
       delete copy[k];
