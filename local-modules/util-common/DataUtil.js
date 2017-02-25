@@ -91,7 +91,7 @@ export default class DataUtil {
    * @returns {Array<int>} Array of parsed bytes, always frozen.
    */
   static bytesFromHex(hex) {
-    TString.check(hex, /^([0-9a-f]{2})+$/);
+    TString.hexBytes(hex);
 
     const result = [];
     for (let i = 0; i < hex.length; i += 2) {
