@@ -4,6 +4,8 @@
   "main": "main.js",
 
   "dependencies": {
+    "js-sha256": "^0.5.0",
+
     "typecheck": "local",
     "util-common": "local"
   }

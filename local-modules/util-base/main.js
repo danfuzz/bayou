@@ -2,9 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import AccessKey from './AccessKey';
-import Decoder from './Decoder';
-import Encoder from './Encoder';
-import Registry from './Registry';
+import ObjectUtil from './ObjectUtil';
 
-export { AccessKey, Decoder, Encoder, Registry };
+export { ObjectUtil };

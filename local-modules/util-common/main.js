@@ -2,9 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { ObjectUtil } from 'util-base';
+
 import DataUtil from './DataUtil';
 import JsonUtil from './JsonUtil';
-import ObjectUtil from './ObjectUtil';
 import PromCondition from './PromCondition';
 import PromDelay from './PromDelay';
 import PropertyIter from './PropertyIter';

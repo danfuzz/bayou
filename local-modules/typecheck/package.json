@@ -6,6 +6,6 @@
   "dependencies": {
     "object-inspect": "^1.2.1",
 
-    "util-common": "local"
+    "util-base": "local"
   }
 }
