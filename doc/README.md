@@ -3,6 +3,9 @@ doc
 
 Various bits of documentation.
 
+* [Customization](customization.md)
+* [Development Guide](development.md)
+
 - - - - - - - - - -
 
 ```
