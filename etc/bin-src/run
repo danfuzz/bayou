@@ -25,8 +25,49 @@ init-prog
 
 
 #
+# Helper functions
+#
+
+# Helper for `check-environment-dependencies` which validates one dependency.
+function check-dependency {
+    local name="$1"
+    local versionCmd="$2"
+    local match="$3"
+
+    # Extract just the command name, and verify that it exists at all.
+
+    local cmdName=''
+    if [[ ${versionCmd} =~ ^([^ ]+) ]]; then
+        cmdName="${BASH_REMATCH[1]}"
+    else
+        # **Note:* This indicates a bug in this script, not a problem with the
+        # environment.
+        echo "Could not determine commmand name for ${name}." 1>&2
+        exit 1
+    fi
+
+    if ! which "${cmdName}" >/dev/null 2>&1; then
+        echo "Missing required command for ${name}: ${cmdName}" 1>&2
+        exit 1
+    fi
+
+    local version="$(${versionCmd} 2>&1)"
+    if ! grep -q -e "${match}" <<< "${version}"; then
+        echo "Unsupported version of ${name}: ${version}" 1>&2
+        exit 1
+    fi
+}
+
+# Checks the versions of our various expected-installed dependencies.
+function check-environment-dependencies {
+    check-dependency 'Node' 'node --version' '^v[67]\.'
+}
+
+
+#
 # Main script
 #
 
+check-environment-dependencies
 cd "${baseDir}/server"
 exec node ./main.js --prog-name="${progName}" "$@"
