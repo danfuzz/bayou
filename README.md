@@ -1,9 +1,17 @@
 Bayou
 =====
 
-A collaborative document editor, which uses [Quill](https://quilljs.com/) on
-the front end. It includes synchronization of document state across multiple
+Bayou is a collaborative document editor, which uses [Quill](https://quilljs.com/)
+on the front end. It includes synchronization of document state across multiple
 clients. **It is a work in progress.**
+
+### Theory of operation
+
+See the [client state diagram](https://raw.githubusercontent.com/danfuzz/bayou-docs/master/client-states.png)
+for an overview of how the system operates from the client's perspective. This
+is a straightforward (fairly unsurprising) operational-transform implementation.
+
+### Customization
 
 The code is set up to make it straightforward to customize. Salient details:
 
@@ -67,87 +75,9 @@ The code is set up to make it straightforward to customize. Salient details:
     the project is in need of a new hook to cover the use case in question.
 
 
-### Build and Run
-
-Bayou uses [Node](https://nodejs.org) on the server side, and it uses
-[npm](https://npmjs,com) for module management. Install both of these if you
-haven't already done so. As of this writing, the bulk of development and
-testing have been done using `node` versions 6 and 7, and `npm` versions 3 and
-4.
-
-To build and run, say:
-
-```
-$ cd bayou
-$ ./scripts/develop
-```
-
-and then visit <http://localhost:8080>. This will do a build first. If you
-_just_ want to do the build, then you can say:
-
-```
-$ ./scripts/build
-```
-
-In production, run using the `run` script placed in the product's `bin`
-directory:
-
-```
-$ ./out/bin/run
-```
-
-### Hermetic build
-
-The Bayou build supports using prepackaged dependencies, if desired. These
-can be used (a) to guard against unexpected changes in upstream packages, and
-(b) to perform builds without hitting the network (an ability valued by some
-organizations).
-
-To build the boxed dependencies, say:
-
-```
-$ ./scripts/build-boxes --out=<box-dir>
-```
-
-(Replace `<box-dir>` with the name of a directory to store the boxes in.)
-
-To perform a build with boxes, say:
-
-```
-$ ./scripts/build --boxes=<box-dir>
-```
-
-### Cleanup
-
-```
-$ ./scripts/clean
-```
-
-### Editor setup
-
-You may want to install live linting into your editor. If you use the Atom
-editor, the package `linter-eslint` can do that.
-
-### Directory structure
-
-* `client` &mdash; Client code and static assets. The main client-side
-  application entrypoint is `js/app.js`.
-* `compiler` &mdash; Submodule used to build the server-side code, using Babel
-  in an appropriately-configured manner.
-* `etc` &mdash; A dumping ground for miscellaneous files.
-* `local-modules` &mdash; JavaScript module code (Node modules, essentially)
-  which can be used on both the client and server sides.
-* `scripts` &mdash; Scripts for use during development (see above).
-* `server` &mdash; Server code. The main entrypoint is `main.js`.
-* `out` &mdash; Where the results of doing a build end up.
-
-### Theory of operation
-
-See the [client state diagram](https://raw.githubusercontent.com/danfuzz/bayou-docs/master/client-states.png)
-for an overview of how the system operates from the client's perspective. This
-is a straightforward (fairly unsurprising) operational-transform implementation.
-
 ### Other information
+
+* [Documentation directory](doc/)
 
 * [Authors](AUTHORS.md) (and acknowledgments)
 * [Contributing](CONTRIBUTING.md)

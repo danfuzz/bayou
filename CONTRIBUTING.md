@@ -23,6 +23,10 @@ $ cd bayou
 $ ./scripts/lint
 ```
 
+### Need some orientation?
+
+See the [Development Guide](doc/development.md) to help get you started.
+
 - - - - - - - - - -
 
 ```
