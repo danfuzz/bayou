@@ -72,7 +72,8 @@ The code is set up to make it straightforward to customize. Salient details:
 Bayou uses [Node](https://nodejs.org) on the server side, and it uses
 [npm](https://npmjs,com) for module management. Install both of these if you
 haven't already done so. As of this writing, the bulk of development and
-testing have been done using `node` version 6 and `npm` version 3.
+testing have been done using `node` versions 6 and 7, and `npm` versions 3 and
+4.
 
 To build and run, say:
 
