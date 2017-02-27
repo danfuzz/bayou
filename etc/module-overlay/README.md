@@ -8,8 +8,7 @@ upstream maintainers (who aren't always the most responsive folks, so it goes).
 The file `checksums.txt` is used to ensure we are only patching over the
 versions of files that we're expecting.
 
-Why don't you just publish a forked module, instead of having this wacky mechanism?
------------------------------------------------------------------------------------
+## Why don't you just publish a forked module, instead of having this wacky mechanism?
 
 Because sometimes the problematic module isn't one we use directly, but is
 instead used by Module Z, which is used by Module Y, which is used by Module
@@ -20,3 +19,11 @@ In a word, ugh!
 
 What we do here allows for isolated and tactical tweaks, which are easy to
 maintain.
+
+- - - - - - - - - -
+
+```
+Copyright 2016-2017 the Bayou Authors (Dan Bornstein et alia).
+Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+```

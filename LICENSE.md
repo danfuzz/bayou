@@ -10,7 +10,7 @@ text of the license is reproduced below.
 
 **Note:** Instead of the usual highly-verbose file header recommended
 in the Appendix to the License, this project uses the following briefer
-file header:
+file header (or footer in documentation):
 
 ```
 Copyright 2016-2017 the Bayou Authors (Dan Bornstein et alia).

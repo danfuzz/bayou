@@ -13,3 +13,11 @@ regular JavaScript is accomplished by `ClientBundle.js` on the server side.
 Note in particular that the TypeScript configuration there has to be compatible
 with how `parchment` wants to be built. That is, be wary of changes to
 `parchment` which require reconfiguration of the build process.
+
+- - - - - - - - - -
+
+```
+Copyright 2016-2017 the Bayou Authors (Dan Bornstein et alia).
+Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+```

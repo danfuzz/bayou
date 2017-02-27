@@ -152,6 +152,8 @@ is a straightforward (fairly unsurprising) operational-transform implementation.
 * [Contributing](CONTRIBUTING.md)
 * [License](LICENSE.md)
 
+- - - - - - - - - -
+
 ```
 Copyright 2016-2017 the Bayou Authors (Dan Bornstein et alia).
 Licensed AS IS and WITHOUT WARRANTY under the Apache License,
