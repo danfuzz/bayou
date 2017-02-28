@@ -2,8 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import PostConnection from './PostConnection';
 import Target from './Target';
 import TargetMap from './TargetMap';
 import WsConnection from './WsConnection';
 
-export { Target, TargetMap, WsConnection };
+export { PostConnection, Target, TargetMap, WsConnection };

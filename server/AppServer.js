@@ -10,7 +10,7 @@ import path from 'path';
 
 import chalk from 'chalk';
 
-import { TargetMap, WsConnection } from 'api-server';
+import { PostConnection, TargetMap, WsConnection } from 'api-server';
 import { ClientBundle } from 'client-bundle';
 import { SeeAll } from 'see-all';
 import { Dirs } from 'server-env';
@@ -169,7 +169,10 @@ export default class AppServer {
     // top-level `index.html` and `favicon`, as well as stuff under `static/`.
     app.use('/', express.static(path.resolve(Dirs.CLIENT_DIR, 'assets')));
 
-    // Use the `api-server` module to handle websocket requests at `/api`.
+    // Use the `api-server` module to handle POST and websocket requests at
+    // `/api`.
+    app.post('/api',
+      (req, res) => { new PostConnection(req, res, this._targets); });
     app.ws('/api',
       (ws, req_unused) => { new WsConnection(ws, this._targets); });
   }
