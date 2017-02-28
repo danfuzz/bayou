@@ -4,7 +4,6 @@
 
 import { Decoder, Encoder } from 'api-common';
 import { SeeAll } from 'see-all';
-import { TArray, TInt, TObject, TString } from 'typecheck';
 import { RandomId, WebsocketCodes } from 'util-common';
 
 import MetaHandler from './MetaHandler';
@@ -131,27 +130,19 @@ export default class ApiServer {
    * @returns {object} The parsed message.
    */
   _decodeMessage(msg) {
-    let id = -1; // Will get set if the message can be parsed enough to find it.
-
     try {
       msg = Decoder.decodeJson(msg);
-      this._log.detail('Message:', msg);
-
-      // Set `id` as early as possible, so that subsequent errors can be sent
-      // with it.
-      TObject.check(msg);
-      id = TInt.min(msg.id, 0);
-
-      // Having done that, validate the remainder of the message shape.
-      TObject.withExactKeys(msg, ['id', 'target', 'action', 'name', 'args']);
-      TString.nonempty(msg.target);
-      TString.nonempty(msg.action);
-      TString.nonempty(msg.name);
-      TArray.check(msg.args);
     } catch (error) {
+      // Hail-mary attempt to determine a reasonable `id`.
+      let id = -1;
+      if (Array.isArray(msg) && Number.isSafeInteger(msg[1])) {
+        id = msg[1];
+      }
+
       return {error, id};
     }
 
+    this._log.detail('Message:', msg);
     return msg;
   }
 

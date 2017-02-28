@@ -5,6 +5,10 @@
 import AccessKey from './AccessKey';
 import Decoder from './Decoder';
 import Encoder from './Encoder';
+import Message from './Message';
 import Registry from './Registry';
 
-export { AccessKey, Decoder, Encoder, Registry };
+// Register classes with the API.
+Registry.register(Message);
+
+export { AccessKey, Decoder, Encoder, Message, Registry };
