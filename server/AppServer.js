@@ -10,7 +10,7 @@ import path from 'path';
 
 import chalk from 'chalk';
 
-import { ApiServer } from 'api-server';
+import { PostConnection, TargetMap, WsConnection } from 'api-server';
 import { ClientBundle } from 'client-bundle';
 import { SeeAll } from 'see-all';
 import { Dirs } from 'server-env';
@@ -36,8 +36,15 @@ export default class AppServer {
    *   activates `/debug/*` endpoints.
    */
   constructor(doc, devMode) {
-    /** The document. */
+    /** {DocServer} The document. */
     this._doc = doc;
+
+    /**
+     * {TargetMap} All of the objects we provide access to via the API.
+     *
+     * **TODO:** This will eventually grow beyond a single target.
+     */
+    this._targets = TargetMap.singleTarget(doc);
 
     /** The underlying webserver run by this instance. */
     this._app = express();
@@ -162,8 +169,12 @@ export default class AppServer {
     // top-level `index.html` and `favicon`, as well as stuff under `static/`.
     app.use('/', express.static(path.resolve(Dirs.CLIENT_DIR, 'assets')));
 
-    // Attach the API server.
-    app.ws('/api', (ws, req_unused) => { new ApiServer(ws, this._doc); });
+    // Use the `api-server` module to handle POST and websocket requests at
+    // `/api`.
+    app.post('/api',
+      (req, res) => { new PostConnection(req, res, this._targets); });
+    app.ws('/api',
+      (ws, req_unused) => { new WsConnection(ws, this._targets); });
   }
 
   /**

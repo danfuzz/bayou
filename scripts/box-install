@@ -95,9 +95,9 @@ function cleanup {
 
 # Make a temporary directory. Print its name.
 function make-tmp-dir {
-    # mktemp` takes incompatible arguments on BSD (macOS) vs. GNU (typical Linux
-    # userland). We use `mktemp --version` (works on GNU and exits with an error
-    # on BSD) to figure out which way to call it for realsies.
+    # `mktemp` takes incompatible arguments on BSD (macOS) vs. GNU (typical
+    # Linux userland). We use `mktemp --version` (works on GNU and exits with an
+    # error on BSD) to figure out which way to call it for realsies.
 
     if mktemp --version >/dev/null 2>&1; then
         # GNU

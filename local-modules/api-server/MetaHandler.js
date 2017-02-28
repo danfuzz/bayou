@@ -9,22 +9,22 @@ export default class MetaHandler {
   /**
    * Constructs an instance.
    *
-   * @param {ApiServer} server The connection server.
+   * @param {Connection} connection The connection.
    */
-  constructor(server) {
-    /** The connection server. */
-    this._server = server;
+  constructor(connection) {
+    /** The connection. */
+    this._connection = connection;
   }
 
   /**
-   * API meta-method `connectionId`: Returns the connection ID that the server
-   * assigned to this connection. This is only meant to be used for logging.
-   * For example, it is _not_ guaranteed to be unique.
+   * API meta-method `connectionId`: Returns the connection ID that is assigned
+   * to this connection. This is only meant to be used for logging. For example,
+   * it is _not_ guaranteed to be unique.
    *
    * @returns {string} The connection ID.
    */
   connectionId() {
-    return this._server.connectionId;
+    return this._connection.connectionId;
   }
 
   /**
@@ -49,7 +49,7 @@ export default class MetaHandler {
     const result = {};
 
     for (const name of names) {
-      result[name] = this._server.getTarget(name).schema.propertiesObject;
+      result[name] = this._connection.getTarget(name).schema.propertiesObject;
     }
 
     return result;

@@ -40,6 +40,8 @@ export default class Message {
     if (action !== 'call') {
       throw new Error(`Invalid value for \`action\`: \`${action}\``);
     }
+
+    Object.freeze(this);
   }
 
   /** Name of this class in the API. */
