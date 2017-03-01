@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Decoder, Encoder } from 'api-common';
+import { Decoder, Encoder, Message } from 'api-common';
 import { SeeAll } from 'see-all';
 import { RandomId } from 'util-common';
 
@@ -130,7 +130,9 @@ export default class Connection {
       return {error, id};
     }
 
-    return msg;
+    return (msg instanceof Message)
+      ? msg
+      : {id: -1, error: new Error('Did not receive `Message` object.')};
   }
 
   /**
