@@ -2,11 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import chokidar from 'chokidar';
 import fs from 'fs';
 import fs_extra from 'fs-extra';
 import path from 'path';
-
-import chokidar from 'chokidar';
 
 import { SeeAll } from 'see-all';
 import { Dirs } from 'server-env';

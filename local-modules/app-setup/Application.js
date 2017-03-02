@@ -2,13 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import chalk from 'chalk';
 import express from 'express';
 import express_ws from 'express-ws';
 import fs from 'fs';
 import morgan from 'morgan';
 import path from 'path';
-
-import chalk from 'chalk';
 
 import { PostConnection, TargetMap, WsConnection } from 'api-server';
 import { ClientBundle } from 'client-bundle';
@@ -27,7 +26,7 @@ const PORT = 8080;
  * Web server for the application. This serves all HTTP(S) requests, including
  * websocket requests.
  */
-export default class AppServer {
+export default class Application {
   /**
    * Constructs an instance.
    *
@@ -86,7 +85,7 @@ export default class AppServer {
     function shortColorLog(tokens_unused, req, res) {
       const status    = res.statusCode || 0;
       const statusStr = res.statusCode || '-  ';
-      const colorFn   = AppServer._colorForStatus(status);
+      const colorFn   = Application._colorForStatus(status);
 
       let contentLength = res.get('content-length');
       if (contentLength === undefined) {

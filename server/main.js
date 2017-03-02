@@ -13,9 +13,11 @@ import 'source-map-support/register';
 import 'babel-core/register';
 import 'babel-polyfill';
 
-import minimist from 'minimist';
 import path from 'path';
 
+import minimist from 'minimist';
+
+import { Application } from 'app-setup';
 import { ClientBundle } from 'client-bundle';
 import { DevMode } from 'dev-mode';
 import { DocServer } from 'doc-server';
@@ -24,7 +26,6 @@ import { SeeAll } from 'see-all';
 import { SeeAllServer } from 'see-all-server';
 import { ProductInfo, ServerEnv } from 'server-env';
 
-import AppServer from './AppServer';
 
 /** Logger for this file. */
 const log = new SeeAll('main');
@@ -114,7 +115,7 @@ function run() {
   const theDoc = new DocServer();
 
   /** The main app server. */
-  const theApp = new AppServer(theDoc, devMode);
+  const theApp = new Application(theDoc, devMode);
 
   // Start the app!
   theApp.start();

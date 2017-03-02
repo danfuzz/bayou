@@ -1,0 +1,19 @@
+{
+  "name": "app-setup",
+  "version": "1.0.0",
+  "main": "main.js",
+
+  "dependencies": {
+    "chalk": "^1.1.1",
+    "express": "^4.14.0",
+    "express-ws": "^2.0.0",
+    "morgan": "^1.7.0",
+
+    "api-common": "local",
+    "api-server": "local",
+    "client-bundle": "local",
+    "see-all": "local",
+    "see-all-server": "local",
+    "server-env": "local"
+  }
+}
