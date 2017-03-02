@@ -11,9 +11,9 @@ Development Guide
 * `etc` &mdash; A dumping ground for miscellaneous files.
 * `local-modules` &mdash; JavaScript module code (Node modules, essentially)
   which can be used on both the client and server sides.
+* `out` &mdash; Where the results of doing a build end up (by default).
 * `scripts` &mdash; Scripts for use during development (see above).
 * `server` &mdash; Server code. The main entrypoint is `main.js`.
-* `out` &mdash; Where the results of doing a build end up.
 
 ### Build and Run
 
