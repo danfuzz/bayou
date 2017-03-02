@@ -17,6 +17,7 @@ import minimist from 'minimist';
 import path from 'path';
 
 import { ClientBundle } from 'client-bundle';
+import { DevMode } from 'dev-mode';
 import { DocServer } from 'doc-server';
 import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
@@ -24,7 +25,6 @@ import { SeeAllServer } from 'see-all-server';
 import { ProductInfo, ServerEnv } from 'server-env';
 
 import AppServer from './AppServer';
-import DevMode from './DevMode';
 
 /** Logger for this file. */
 const log = new SeeAll('main');

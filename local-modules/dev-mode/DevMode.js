@@ -9,6 +9,7 @@ import path from 'path';
 import chokidar from 'chokidar';
 
 import { SeeAll } from 'see-all';
+import { Dirs } from 'server-env';
 import { PromDelay } from 'util-common';
 
 /** Logger. */
@@ -36,7 +37,7 @@ export default class DevMode {
    */
   constructor() {
     /** Base product output directory. */
-    this._outDir = path.resolve(__dirname, '..');
+    this._outDir = Dirs.BASE_DIR;
     log.info('Product directory:', this._outDir);
 
     /** The mappings from source to target directories, for the client code. */

@@ -19,10 +19,8 @@
   },
   "dependencies": {
     "chalk": "^1.1.1",
-    "chokidar": "^1.6.1",
     "express": "^4.14.0",
     "express-ws": "^2.0.0",
-    "fs-extra": "^0.30.0",
     "minimist": "^1.2.0",
     "morgan": "^1.7.0",
     "source-map-support": "^0.4.2",
@@ -30,6 +28,7 @@
     "api-common": "local",
     "api-server": "local",
     "client-bundle": "local",
+    "dev-mode": "local",
     "doc-server": "local",
     "hooks-server": "local",
     "see-all": "local",
