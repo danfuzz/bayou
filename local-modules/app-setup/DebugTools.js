@@ -34,12 +34,31 @@ export default class DebugTools {
   }
 
   /**
+   * The request handler function, suitable for use with Express. Usable as-is
+   * (without `.bind()`).
+   */
+  get requestHandler() {
+    const router = new express.Router();
+
+    router.param('verNum', this._check_verNum.bind(this));
+
+    router.get('/change/:verNum',   this._handle_change.bind(this));
+    router.get('/log',              this._handle_log.bind(this));
+    router.get('/snapshot',         this._handle_snapshotLatest.bind(this));
+    router.get('/snapshot/:verNum', this._handle_snapshot.bind(this));
+
+    router.use(this._error.bind(this));
+
+    return router;
+  }
+
+  /**
    * Gets the log.
    *
    * @param {object} req_unused HTTP request.
    * @param {object} res HTTP response handler.
    */
-  _log(req_unused, res) {
+  _handle_log(req_unused, res) {
     // TODO: Format it nicely.
     const contents = this._logger.htmlContents;
     const result = `<html><body>${contents}</body></html>`;
@@ -56,7 +75,7 @@ export default class DebugTools {
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
    */
-  _change(req, res) {
+  _handle_change(req, res) {
     const verNum = Number.parseInt(req.params.verNum);
     const change = this._doc.change(verNum);
     const result = Encoder.encodeJson(change, 2);
@@ -73,7 +92,7 @@ export default class DebugTools {
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
    */
-  _snapshot(req, res) {
+  _handle_snapshot(req, res) {
     const verNum = Number.parseInt(req.params.verNum);
     const snapshot = this._doc.snapshot(verNum);
     const result = Encoder.encodeJson(snapshot, true);
@@ -90,7 +109,7 @@ export default class DebugTools {
    * @param {object} req_unused HTTP request.
    * @param {object} res HTTP response handler.
    */
-  _snapshot_latest(req_unused, res) {
+  _handle_snapshotLatest(req_unused, res) {
     const snapshot = this._doc.snapshot();
     const result = Encoder.encodeJson(snapshot, true);
 
@@ -152,24 +171,5 @@ export default class DebugTools {
       .status(500)
       .type('text/plain')
       .send(text);
-  }
-
-  /**
-   * The request handler function, suitable for use with Express. Usable as-is
-   * (without `.bind()`).
-   */
-  get requestHandler() {
-    const router = new express.Router();
-
-    router.param('verNum', this._check_verNum.bind(this));
-
-    router.get('/change/:verNum',   this._change.bind(this));
-    router.get('/log',              this._log.bind(this));
-    router.get('/snapshot',         this._snapshot_latest.bind(this));
-    router.get('/snapshot/:verNum', this._snapshot.bind(this));
-
-    router.use(this._error.bind(this));
-
-    return router;
   }
 }
