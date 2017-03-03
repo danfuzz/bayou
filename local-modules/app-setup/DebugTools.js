@@ -126,6 +126,38 @@ export default class DebugTools {
   }
 
   /**
+   * Error handler.
+   *
+   * @param {Error} error Error that got thrown during request handling.
+   * @param {object} req_unused HTTP request.
+   * @param {object} res HTTP response.
+   * @param {Function} next_unused Next handler to call.
+   */
+  _error(error, req_unused, res, next_unused) {
+    let text = 'Error while handling debug URL:\n\n';
+
+    if (error.debugMsg) {
+      // We added our own message. Use that instead of just dumping a stack
+      // trace.
+      text += `    ${error.debugMsg}\n`;
+    } else {
+      // If there was no error message, then this isn't just (something like)
+      // a user input error, so report the whole stack trace back.
+      //
+      // **Note:** It is reasonably safe to spew a stack trace back over the
+      // connection because we should only be running code in this file at all
+      // if the product is running in a dev (not production) configuration.
+      log.error(error);
+      text += util.inspect(error);
+    }
+
+    res
+      .status(500)
+      .type('text/plain')
+      .send(text);
+  }
+
+  /**
    * The request handler function, suitable for use with Express. Usable as-is
    * (without `.bind()`).
    */
@@ -142,27 +174,7 @@ export default class DebugTools {
     // Error handler. Express "knows" this is an error handler _explicitly_
     // because it is defined to take four arguments. (Yeah, kinda precarious.)
     router.use((err, req_unused, res, next_unused) => {
-      let text = 'Error while handling debug URL:\n\n';
-
-      if (err.debugMsg) {
-        // We added our own message. Use that instead of just dumping a
-        // stack trace.
-        text += `    ${err.debugMsg}\n`;
-      } else {
-        // If there was no error message, then this isn't just (something like)
-        // a user input error, so report the whole stack trace back.
-        //
-        // **Note:** It is reasonably safe to spew a stack trace back over the
-        // connection because we should only be running code in this file at all
-        // if the product is running in a dev (not production) configuration.
-        log.error(err);
-        text += util.inspect(err);
-      }
-
-      res
-        .status(500)
-        .type('text/plain')
-        .send(text);
+      this._error(err, req_unused, res, next_unused);
     });
 
     return router;
