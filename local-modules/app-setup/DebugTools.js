@@ -122,6 +122,9 @@ export default class DebugTools {
   /**
    * Error handler.
    *
+   * **Note:** Express "knows" this is an error handler _explicitly_ because it
+   * is defined to take four arguments. (Yeah, kinda precarious.)
+   *
    * @param {Error} error Error that got thrown during request handling.
    * @param {object} req_unused HTTP request.
    * @param {object} res HTTP response.
@@ -158,18 +161,14 @@ export default class DebugTools {
   get requestHandler() {
     const router = new express.Router();
 
+    router.param('verNum', this._check_verNum.bind(this));
+
     router.get('/change/:verNum',   this._change.bind(this));
     router.get('/log',              this._log.bind(this));
     router.get('/snapshot',         this._snapshot_latest.bind(this));
     router.get('/snapshot/:verNum', this._snapshot.bind(this));
 
-    router.param('verNum', this._check_verNum.bind(this));
-
-    // Error handler. Express "knows" this is an error handler _explicitly_
-    // because it is defined to take four arguments. (Yeah, kinda precarious.)
-    router.use((err, req_unused, res, next_unused) => {
-      this._error(err, req_unused, res, next_unused);
-    });
+    router.use(this._error.bind(this));
 
     return router;
   }
