@@ -47,8 +47,13 @@ export default class SeeAllServer {
     // Make a unified string of the entire message.
     let text = '';
     let atLineStart = true;
+    let gotError = false;
     for (let m of message) {
       if (typeof m === 'object') {
+        if (m instanceof Error) {
+          gotError = true; // Used after the `for` loop, below.
+        }
+
         // Convert the object to a string. If it's a single line, just add it
         // to the text inline. If it's multiple lines, make sure it all ends up
         // on its own lines.
@@ -66,11 +71,11 @@ export default class SeeAllServer {
       }
     }
 
-    if ((level !== 'detail') && (level !== 'info')) {
-      // It's at a level that warrants a stack trace. Append it. We drop the
-      // first couple lines, because those are (a) the exception header which is
-      // info-free in this case, and (b) lines corresponding to the logging
-      // code itself.
+    if (!gotError && (level !== 'detail') && (level !== 'info')) {
+      // It's at a level that warrants a stack trace, and none of the arguments
+      // is an `Error`. So, append one. We drop the first couple lines, because
+      // those are (a) the `Error` header, which is info-free in this case; and
+      // (b) lines corresponding to the logging code itself.
       let trace = util.inspect(new Error());
       trace = trace.replace(/^[\s\S]*\n    at SeeAll[^\n]+\n/, '');
       trace = trace.replace(/^    at /mg, '  at '); // Partially outdent.
