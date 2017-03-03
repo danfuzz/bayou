@@ -1,0 +1,14 @@
+{
+  "name": "dev-mode",
+  "version": "1.0.0",
+  "main": "main.js",
+
+  "dependencies": {
+    "chokidar": "^1.6.1",
+    "fs-extra": "^0.30.0",
+
+    "see-all": "local",
+    "server-env": "local",
+    "util-common": "local"
+  }
+}
