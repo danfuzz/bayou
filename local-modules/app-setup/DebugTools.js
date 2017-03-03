@@ -68,14 +68,8 @@ export default class DebugTools {
   _change(req, res) {
     const match = req.url.match(/\/([0-9]+)$/);
     const verNum = Number.parseInt(match[1]);
-    let result;
-
-    try {
-      const change = this._doc.change(verNum);
-      result = Encoder.encodeJson(change, 2);
-    } catch (e) {
-      result = `Error:\n\n${e.stack}`;
-    }
+    const change = this._doc.change(verNum);
+    const result = Encoder.encodeJson(change, 2);
 
     res
       .status(200)
@@ -95,14 +89,8 @@ export default class DebugTools {
   _snapshot(req, res) {
     const match = req.url.match(/\/([0-9]+)$/);
     const verNum = match ? [Number.parseInt(match[1])] : [];
-    let result;
-
-    try {
-      const snapshot = this._doc.snapshot(...verNum);
-      result = Encoder.encodeJson(snapshot, true);
-    } catch (e) {
-      result = `Error:\n\n${e.stack}`;
-    }
+    const snapshot = this._doc.snapshot(...verNum);
+    const result = Encoder.encodeJson(snapshot, true);
 
     res
       .status(200)
