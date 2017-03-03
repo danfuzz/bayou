@@ -26,10 +26,10 @@ export default class DebugTools {
    * @param {DocServer} doc The `DocServer` object managed by this process.
    */
   constructor(doc) {
-    /** The `Document` object. */
+    /** {DocServer} The document object. */
     this._doc = doc;
 
-    /** A rolling log for the `/log` endpoint. */
+    /** {SeeAll} A rolling log for the `/log` endpoint. */
     this._logger = new SeeAllRecent(LOG_LENGTH_MSEC);
   }
 
@@ -40,15 +40,9 @@ export default class DebugTools {
    * @param {object} res HTTP response handler.
    */
   _log(req_unused, res) {
-    let result;
-
-    try {
-      // TODO: Format it nicely.
-      const contents = this._logger.htmlContents;
-      result = `<html><body>${contents}</body></html>`;
-    } catch (e) {
-      result = `Error:\n\n${e.stack}`;
-    }
+    // TODO: Format it nicely.
+    const contents = this._logger.htmlContents;
+    const result = `<html><body>${contents}</body></html>`;
 
     res
       .status(200)
