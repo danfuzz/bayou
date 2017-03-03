@@ -60,13 +60,9 @@ export default class DebugTools {
    */
   _handle_log(req_unused, res) {
     // TODO: Format it nicely.
-    const contents = this._logger.htmlContents;
-    const result = `<html><body>${contents}</body></html>`;
+    const result = this._logger.htmlContents;
 
-    res
-      .status(200)
-      .type('text/html')
-      .send(result);
+    this._htmlResponse(res, result);
   }
 
   /**
@@ -80,10 +76,7 @@ export default class DebugTools {
     const change = this._doc.change(verNum);
     const result = Encoder.encodeJson(change, 2);
 
-    res
-      .status(200)
-      .type('text/plain')
-      .send(result);
+    this._textResponse(res, result);
   }
 
   /**
@@ -97,10 +90,7 @@ export default class DebugTools {
     const snapshot = this._doc.snapshot(verNum);
     const result = Encoder.encodeJson(snapshot, true);
 
-    res
-      .status(200)
-      .type('text/plain')
-      .send(result);
+    this._textResponse(res, result);
   }
 
   /**
@@ -113,10 +103,7 @@ export default class DebugTools {
     const snapshot = this._doc.snapshot();
     const result = Encoder.encodeJson(snapshot, true);
 
-    res
-      .status(200)
-      .type('text/plain')
-      .send(result);
+    this._textResponse(res, result);
   }
 
   /**
@@ -171,5 +158,34 @@ export default class DebugTools {
       .status(500)
       .type('text/plain')
       .send(text);
+  }
+
+  /**
+   * Responds with a `text/plain` result.
+   *
+   * @param {object} res HTTP response.
+   * @param {string} text Text to respond with.
+   */
+  _textResponse(res, text) {
+    res
+      .status(200)
+      .type('text/plain')
+      .send(text);
+  }
+
+  /**
+   * Responds with a `text/html` result. The given string is used as the
+   * HTML body.
+   *
+   * @param {object} res HTTP response.
+   * @param {string} body HTML body text.
+   */
+  _htmlResponse(res, body) {
+    const html = `<!doctype html>\n<html><body>\n${body}\n</body></html>\n`;
+
+    res
+      .status(200)
+      .type('text/html')
+      .send(html);
   }
 }
