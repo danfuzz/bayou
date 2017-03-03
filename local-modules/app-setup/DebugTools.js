@@ -59,15 +59,11 @@ export default class DebugTools {
   /**
    * Gets a particular change to the document.
    *
-   * * `/change/NNN` -- Gets the change that produced version NNN of the
-   *   document.
-   *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
    */
   _change(req, res) {
-    const match = req.url.match(/\/([0-9]+)$/);
-    const verNum = Number.parseInt(match[1]);
+    const verNum = Number.parseInt(req.params.verNum);
     const change = this._doc.change(verNum);
     const result = Encoder.encodeJson(change, 2);
 
@@ -78,18 +74,30 @@ export default class DebugTools {
   }
 
   /**
-   * Gets a snapshot of the current document.
-   *
-   * * `/snapshot` -- Gets the current (latest) version.
-   * * `/snapshot/NNN` -- Gets version NNN.
+   * Gets a particular snapshot of the document.
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
    */
   _snapshot(req, res) {
-    const match = req.url.match(/\/([0-9]+)$/);
-    const verNum = match ? [Number.parseInt(match[1])] : [];
-    const snapshot = this._doc.snapshot(...verNum);
+    const verNum = Number.parseInt(req.params.verNum);
+    const snapshot = this._doc.snapshot(verNum);
+    const result = Encoder.encodeJson(snapshot, true);
+
+    res
+      .status(200)
+      .type('text/plain')
+      .send(result);
+  }
+
+  /**
+   * Gets the latest snapshot of the document.
+   *
+   * @param {object} req_unused HTTP request.
+   * @param {object} res HTTP response handler.
+   */
+  _snapshot_latest(req_unused, res) {
+    const snapshot = this._doc.snapshot();
     const result = Encoder.encodeJson(snapshot, true);
 
     res
@@ -101,8 +109,8 @@ export default class DebugTools {
   /**
    * Validates a version number as a request parameter.
    *
-   * @param {object} req_unused Express request.
-   * @param {object} res_unused Express response.
+   * @param {object} req_unused HTTP request.
+   * @param {object} res_unused HTTP response.
    * @param {Function} next Next handler to call.
    * @param {string} value Request parameter value.
    * @param {string} name_unused Request parameter name.
@@ -126,7 +134,7 @@ export default class DebugTools {
 
     router.get('/change/:verNum',   this._change.bind(this));
     router.get('/log',              this._log.bind(this));
-    router.get('/snapshot',         this._snapshot.bind(this));
+    router.get('/snapshot',         this._snapshot_latest.bind(this));
     router.get('/snapshot/:verNum', this._snapshot.bind(this));
 
     router.param('verNum', this._check_verNum.bind(this));
