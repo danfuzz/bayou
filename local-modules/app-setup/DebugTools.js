@@ -53,6 +53,29 @@ export default class DebugTools {
   }
 
   /**
+   * Validates a version number as a request parameter. If valid, replaces the
+   * parameter in the request object with the parsed form.
+   *
+   * @param {object} req HTTP request.
+   * @param {object} res_unused HTTP response.
+   * @param {Function} next Next handler to call.
+   * @param {string} value Request parameter value.
+   * @param {string} name_unused Request parameter name.
+   */
+  _check_verNum(req, res_unused, next, value, name_unused) {
+    if (!value.match(/^[0-9]+$/)) {
+      const error = new Error();
+      error.debugMsg = 'Bad value for `verNum`.';
+      throw error;
+    }
+
+    // Replace the string parameter with the actual parsed value.
+    req.params.verNum = Number.parseInt(value);
+
+    next();
+  }
+
+  /**
    * Gets the log.
    *
    * @param {object} req_unused HTTP request.
@@ -102,29 +125,6 @@ export default class DebugTools {
     const result = Encoder.encodeJson(snapshot, true);
 
     this._textResponse(res, result);
-  }
-
-  /**
-   * Validates a version number as a request parameter. If valid, replaces the
-   * parameter in the request object with the parsed form.
-   *
-   * @param {object} req HTTP request.
-   * @param {object} res_unused HTTP response.
-   * @param {Function} next Next handler to call.
-   * @param {string} value Request parameter value.
-   * @param {string} name_unused Request parameter name.
-   */
-  _check_verNum(req, res_unused, next, value, name_unused) {
-    if (!value.match(/^[0-9]+$/)) {
-      const error = new Error();
-      error.debugMsg = 'Bad value for `verNum`.';
-      throw error;
-    }
-
-    // Replace the string parameter with the actual parsed value.
-    req.params.verNum = Number.parseInt(value);
-
-    next();
   }
 
   /**
