@@ -95,9 +95,12 @@ export default class AccessKey {
    */
   challengeResponseFor(challenge) {
     TString.hexBytes(challenge, 8, 8);
+
     const hash = sha256.create();
+
     hash.update(DataUtil.bytesFromHex(challenge));
     hash.update(DataUtil.bytesFromHex(this._secret));
+
     return hash.hex();
   }
 
@@ -113,7 +116,6 @@ export default class AccessKey {
     const id        = this._id;
     const challenge = DataUtil.hexFromBytes(bytes);
     const response  = this.challengeResponseFor(challenge);
-
     return {id, challenge, response};
   }
 
