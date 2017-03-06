@@ -46,6 +46,31 @@ export default class AccessKey {
     Object.freeze(this);
   }
 
+  /** Name of this class in the API. */
+  static get API_NAME() {
+    return 'AccessKey';
+  }
+
+  /**
+   * Converts this instance for API transmission.
+   *
+   * @returns {array} Reconstruction arguments.
+   */
+  toApi() {
+    return [this._id, this._secret];
+  }
+
+  /**
+   * Constructs an instance from API arguments.
+   *
+   * @param {string} id Same as with the regular constructor.
+   * @param {string} secret Same as with the regular constructor.
+   * @returns {AccessKey} The constructed instance.
+   */
+  static fromApi(id, secret) {
+    return new AccessKey(id, secret);
+  }
+
   /** {string} Key / resource identifier. */
   get id() {
     return this._id;

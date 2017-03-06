@@ -19,7 +19,7 @@ import Authorizer from './Authorizer';
 import DebugTools from './DebugTools';
 
 /** Logger. */
-const log = new SeeAll('app', true);
+const log = new SeeAll('app');
 
 /** What port to listen for connections on. */
 const PORT = 8080;

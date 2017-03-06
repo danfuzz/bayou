@@ -6,7 +6,7 @@ import { AccessKey } from 'api-common';
 import { DocServer } from 'doc-server';
 import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
-import { TObject, TString } from 'typecheck';
+import { TString } from 'typecheck';
 
 /** Logger. */
 const log = new SeeAll('app-auth');
@@ -40,7 +40,7 @@ export default class Authorizer {
    * one author. If the document doesn't exist, this will cause it to be
    * created.
    *
-   * @param {object} rootCredential Credential (commonly but not necessarily a
+   * @param {*} rootCredential Credential (commonly but not necessarily a
    *   bearer token) which provides "root" access to this server. This method
    *   will throw an error if this value does not correspond to a credential
    *   known to the server.
@@ -52,7 +52,6 @@ export default class Authorizer {
    *   access.
    */
   makeAccessKey(rootCredential, authorId, docId) {
-    TObject.check(rootCredential);
     TString.nonempty(authorId);
     TString.nonempty(docId);
 
@@ -70,7 +69,7 @@ export default class Authorizer {
 
     let key = null;
     for (;;) {
-      key = AccessKey.makeRandomKey();
+      key = AccessKey.randomInstance();
       if (this._accessors.get(key.id) === undefined) {
         break;
       }

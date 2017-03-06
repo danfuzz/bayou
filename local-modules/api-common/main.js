@@ -9,6 +9,7 @@ import Message from './Message';
 import Registry from './Registry';
 
 // Register classes with the API.
+Registry.register(AccessKey);
 Registry.register(Message);
 
 export { AccessKey, Decoder, Encoder, Message, Registry };
