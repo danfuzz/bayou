@@ -27,4 +27,16 @@ export default class Hooks {
   static get docStore() {
     return LocalDocStore.THE_INSTANCE;
   }
+
+  /**
+   * The object which validates root credentials. These are credentials which
+   * provide "root" access to the server.
+   */
+  static get rootValidator() {
+    // By default, we provide a no-op implementation. TODO: Should probably
+    // provide a non-no-op default.
+    return {
+      checkCredential: ((cred_unused) => { return true; })
+    };
+  }
 }
