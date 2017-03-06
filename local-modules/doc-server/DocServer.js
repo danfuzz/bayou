@@ -5,7 +5,7 @@
 import { DocumentChange, FrozenDelta, Snapshot, Timestamp, VersionNumber }
   from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
-import { TInt } from 'typecheck';
+import { TInt, TString } from 'typecheck';
 import { PromCondition } from 'util-common';
 
 
@@ -15,14 +15,20 @@ import { PromCondition } from 'util-common';
 export default class DocServer {
   /**
    * Constructs an instance.
+   *
+   * @param {string} [docId = 'some-doc-id'] The document ID. TODO: It shouldn't
+   *   have a default value.
    */
-  constructor() {
+  constructor(docId = 'some-id') {
+    /** {string} Document ID. */
+    this._docId = TString.nonempty(docId);
+
     /**
      * Storage access for the document. TODO: Right now this just bottoms out
      * as access to a single document. Instead, document IDs need to be plumbed
      * through and used to differentiate between multiple documents.
      */
-    this._doc = DocServer._getDocAccessor('some-id');
+    this._doc = DocServer._getDocAccessor(docId);
 
     /**
      * Mapping from version numbers to corresponding document snapshots.
