@@ -7,7 +7,6 @@ import { SeeAll } from 'see-all';
 import { RandomId } from 'util-common';
 
 import MetaHandler from './MetaHandler';
-import Target from './Target';
 import TargetMap from './TargetMap';
 
 /** Logger. */
@@ -36,7 +35,7 @@ export default class Connection {
 
     // We add a `meta` binding to the initial set of targets, which is specific
     // to this instance/connection.
-    this._targets.add(new Target('meta', new MetaHandler(this)));
+    this._targets.add('meta', new MetaHandler(this));
 
     /** {RandomId} Short ID string used to identify this connection in logs. */
     this._connectionId = RandomId.make('conn');

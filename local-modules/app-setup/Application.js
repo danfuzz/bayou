@@ -15,10 +15,11 @@ import { DocServer } from 'doc-server';
 import { SeeAll } from 'see-all';
 import { Dirs } from 'server-env';
 
+import Authorizer from './Authorizer';
 import DebugTools from './DebugTools';
 
 /** Logger. */
-const log = new SeeAll('app');
+const log = new SeeAll('app', true);
 
 /** What port to listen for connections on. */
 const PORT = 8080;
@@ -41,12 +42,10 @@ export default class Application {
      */
     this._doc = new DocServer('some-id');
 
-    /**
-     * {TargetMap} All of the objects we provide access to via the API.
-     *
-     * **TODO:** This will eventually grow beyond a single target.
-     */
-    this._targets = TargetMap.singleTarget(this._doc);
+    /** {TargetMap} All of the objects we provide access to via the API. */
+    const targets = this._targets = new TargetMap();
+    targets.add('auth', new Authorizer());
+    targets.add('main', this._doc);
 
     /** The underlying webserver run by this instance. */
     this._app = express();
