@@ -11,6 +11,7 @@ import path from 'path';
 
 import { PostConnection, TargetMap, WsConnection } from 'api-server';
 import { ClientBundle } from 'client-bundle';
+import { DocServer } from 'doc-server';
 import { SeeAll } from 'see-all';
 import { Dirs } from 'server-env';
 
@@ -30,20 +31,22 @@ export default class Application {
   /**
    * Constructs an instance.
    *
-   * @param {DocServer} doc The document managed by the instance.
    * @param {boolean} devMode Whether or not to run in dev mode. If `true`, this
    *   activates `/debug/*` endpoints.
    */
-  constructor(doc, devMode) {
-    /** {DocServer} The document. */
-    this._doc = doc;
+  constructor(devMode) {
+    /**
+     * {DocServer} The one document we manage. **TODO:** Needs to be more than
+     * one!
+     */
+    this._doc = new DocServer();
 
     /**
      * {TargetMap} All of the objects we provide access to via the API.
      *
      * **TODO:** This will eventually grow beyond a single target.
      */
-    this._targets = TargetMap.singleTarget(doc);
+    this._targets = TargetMap.singleTarget(this._doc);
 
     /** The underlying webserver run by this instance. */
     this._app = express();
