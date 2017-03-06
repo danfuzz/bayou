@@ -15,6 +15,10 @@ import { DataUtil } from 'util-common';
  * general, a given instance of this class represents access to a particular
  * resource, but that same resource might also be available via different
  * instances of the class too. (That is, it can be a many-to-one relationship.)
+ *
+ * **TODO:** An `AccessKey` should also contain the URL at which the resource
+ * is located. That is, it should contain _all_ the info needed to access a
+ * resource.
  */
 export default class AccessKey {
   /**
