@@ -46,13 +46,13 @@ export default class TString {
       TString.check(value, /^([0-9a-f]{2})*$/);
     } catch (e) {
       // More on-point error.
-      return TypeError.badValue(value, 'String', 'not hex bytes');
+      return TypeError.badValue(value, 'String', 'even number of hex digits');
     }
 
     if (value.length < (minBytes * 2)) {
-      return TypeError.badValue(value, 'String', `byteCount < ${minBytes}`);
+      return TypeError.badValue(value, 'String', `byteCount >= ${minBytes}`);
     } else if ((maxBytes !== null) && (value.length > (maxBytes * 2))) {
-      return TypeError.badValue(value, 'String', `byteCount > ${maxBytes}`);
+      return TypeError.badValue(value, 'String', `byteCount <= ${maxBytes}`);
     }
 
     return value;
