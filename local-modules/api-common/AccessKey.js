@@ -4,18 +4,30 @@
 
 import sha256 from 'js-sha256';
 
-import { TString } from 'typecheck';
+import { TInt, TString } from 'typecheck';
 import { DataUtil } from 'util-common';
 
 /**
- * A key consisting of two parts, an ID (which is safe to share across the wire)
- * and a shared secret (which is not). Instances of this class are used to
- * effect authentication over API connections. In general a given instance of
- * this class represents access to a particular resource, but that same resource
- * might also be available via different instances of the class too. (That is,
- * it can be a many-to-one relationship.)
+ * A key consisting of two parts, an ID (which is safe to share across the wire
+ * without encryption) and a shared secret (which is not safe for unencrypted
+ * transport and should even be treated gingerly when encrypted). Instances of
+ * this class are used to effect authentication over API connections. In
+ * general, a given instance of this class represents access to a particular
+ * resource, but that same resource might also be available via different
+ * instances of the class too. (That is, it can be a many-to-one relationship.)
  */
 export default class AccessKey {
+  /**
+   * Constructs an instance with random parts.
+   *
+   * @returns {AccessKey} The constructed instance.
+   */
+  static randomInstance() {
+    const id = DataUtil.hexFromBytes(AccessKey._randomByteArray(8));
+    const secret = DataUtil.hexFromBytes(AccessKey._randomByteArray(16));
+    return new AccessKey(id, secret);
+  }
+
   /**
    * Constructs an instance with the indicated parts.
    *
@@ -34,6 +46,31 @@ export default class AccessKey {
     Object.freeze(this);
   }
 
+  /** Name of this class in the API. */
+  static get API_NAME() {
+    return 'AccessKey';
+  }
+
+  /**
+   * Converts this instance for API transmission.
+   *
+   * @returns {array} Reconstruction arguments.
+   */
+  toApi() {
+    return [this._id, this._secret];
+  }
+
+  /**
+   * Constructs an instance from API arguments.
+   *
+   * @param {string} id Same as with the regular constructor.
+   * @param {string} secret Same as with the regular constructor.
+   * @returns {AccessKey} The constructed instance.
+   */
+  static fromApi(id, secret) {
+    return new AccessKey(id, secret);
+  }
+
   /** {string} Key / resource identifier. */
   get id() {
     return this._id;
@@ -41,7 +78,7 @@ export default class AccessKey {
 
   /**
    * {string} Shared secret. **Note:** It is important to _never_ reveal this
-   * value across an API boundary or to log it.
+   * value across an unencrypted API boundary or to log it.
    */
   get secret() {
     return this._secret;
@@ -71,15 +108,30 @@ export default class AccessKey {
    *   the challenge string and `response` to the expected response.
    */
   randomChallenge() {
-    const bytes = [];
-    for (let i = 0; i < 8; i++) {
-      bytes.push(Math.floor(Math.random() * 256));
-    }
+    const bytes = AccessKey._randomByteArray(8);
 
     const id        = this._id;
     const challenge = DataUtil.hexFromBytes(bytes);
     const response  = this.challengeResponseFor(challenge);
 
     return {id, challenge, response};
+  }
+
+  /**
+   * Returns an array of random bytes, of a given length.
+   *
+   * @param {Int} length Desired length.
+   * @returns {Array<Int>} Array of `length` random bytes.
+   */
+  static _randomByteArray(length) {
+    TInt.min(length, 0);
+
+    const result = [];
+
+    for (let i = 0; i < length; i++) {
+      result.push(Math.floor(Math.random() * 256));
+    }
+
+    return result;
   }
 }

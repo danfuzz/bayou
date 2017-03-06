@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TObject } from 'typecheck';
+import { TString, TObject } from 'typecheck';
 
 import Target from './Target';
 
@@ -24,18 +24,6 @@ export default class TargetMap {
   }
 
   /**
-   * Constructs an instance which initially has a single target bound to `main`.
-   *
-   * @param {object} target The target.
-   * @returns {TargetMap} An appropriately-constructed instance.
-   */
-  static singleTarget(target) {
-    const result = new TargetMap();
-    result.add(new Target('main', target));
-    return result;
-  }
-
-  /**
    * Constructs an instance which is initially empty.
    */
   constructor() {
@@ -46,12 +34,13 @@ export default class TargetMap {
   }
 
   /**
-   * Adds a new entry to the map. This will throw an error if there is already
-   * another target with the same name.
+   * Adds an already-constructed `Target` to the map. This will throw an error
+   * if there is already another target with the same name.
    *
    * @param {Target} target Target to add.
    */
-  add(target) {
+  addTarget(target) {
+    TObject.check(target, Target);
     const name = target.name;
 
     if (this._map.get(name) !== undefined) {
@@ -59,6 +48,20 @@ export default class TargetMap {
     }
 
     this._map.set(name, target);
+  }
+
+  /**
+   * Adds a new entry to the map. This will throw an error if there is already
+   * another target with the same name. This is a convenience for calling
+   * `map.addTarget(new Target(name, obj))`.
+   *
+   * @param {string} name Target name.
+   * @param {object} obj Object to ultimately call on.
+   */
+  add(name, obj) {
+    TString.nonempty(name);
+    TObject.check(obj);
+    this.addTarget(new Target(name, obj));
   }
 
   /**
@@ -88,7 +91,7 @@ export default class TargetMap {
     const result = new TargetMap();
 
     for (const t of this._map.values()) {
-      result.add(t);
+      result.addTarget(t);
     }
 
     return result;

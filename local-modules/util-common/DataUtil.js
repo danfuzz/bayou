@@ -108,6 +108,12 @@ export default class DataUtil {
    */
   static hexFromBytes(bytes) {
     TArray.check(bytes, TInt.check); // TODO: Should validate range too.
-    return bytes.map((v) => v.toString(16)).join('');
+
+    function byteString(byte) {
+      const result = byte.toString(16);
+      return (byte < 16) ? `0${result}` : result;
+    }
+
+    return bytes.map(byteString).join('');
   }
 }
