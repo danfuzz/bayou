@@ -16,10 +16,9 @@ export default class DocServer {
   /**
    * Constructs an instance.
    *
-   * @param {string} [docId = 'some-doc-id'] The document ID. TODO: It shouldn't
-   *   have a default value.
+   * @param {string} [docId] The document ID.
    */
-  constructor(docId = 'some-id') {
+  constructor(docId) {
     /** {string} Document ID. */
     this._docId = TString.nonempty(docId);
 

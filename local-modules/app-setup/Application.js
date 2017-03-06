@@ -39,7 +39,7 @@ export default class Application {
      * {DocServer} The one document we manage. **TODO:** Needs to be more than
      * one!
      */
-    this._doc = new DocServer();
+    this._doc = new DocServer('some-id');
 
     /**
      * {TargetMap} All of the objects we provide access to via the API.
