@@ -15,8 +15,12 @@ import DataUtil from './DataUtil';
 const ID_CHARS = 'abcdefghjkmnpqrstvwxyz0123456789';
 
 /**
- * Constructor of random ID strings. These are _not_ meant to be _guaranteed_
- * unique, just _typically_ unique for the specific purpose of logging.
+ * Random number utilities. All values are generated using a cryptographically
+ * secure random number generator.
+ *
+ * **Note:** This class uses the `secure-random` module as its interface to the
+ * platform's RNG. That module works both in client and server environments,
+ * using appropriate underlying facilities in each.
  */
 export default class Random {
   /**
@@ -52,7 +56,8 @@ export default class Random {
 
   /**
    * Constructs a short label string with the indicated tag prefix. These are
-   * _typically_ but not _guaranteed_ to be unique.
+   * _typically_ but not _guaranteed_ to be unique and are intended to aid in
+   * disambiguating logs (and not for anything deeper).
    *
    * @param {string} prefix The prefix.
    * @returns {string} The constructed random ID string.
