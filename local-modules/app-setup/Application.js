@@ -131,9 +131,9 @@ export default class Application {
     function shortWsLog(tokens_unused, req, res_unused) {
       // exress-ws appends a pseudo-path `/.websocket` to the end of websocket
       // requests.
-      const url = req.originalUrl.replace(/\/\.websocket$/, '');
+      const simpleUrl = req.originalUrl.replace(/\/\.websocket$/, '');
 
-      return `-   -       WS ${url}`;
+      return `-   -       WS ${simpleUrl}`;
     }
 
     app.use(morgan(shortWsLog, {
