@@ -21,6 +21,14 @@ export default class Hooks {
   }
 
   /**
+   * {string} The base URL for accessing this server. The default value is
+   * is `http://localhost:8080`.
+   */
+  static get baseUrl() {
+    return 'http://localhost:8080';
+  }
+
+  /**
    * The object which provides access to document storage. This is an instance
    * of a subclass of `BaseDocStore`, as defined by the `doc-store` module.
    */
