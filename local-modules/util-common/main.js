@@ -9,7 +9,7 @@ import JsonUtil from './JsonUtil';
 import PromCondition from './PromCondition';
 import PromDelay from './PromDelay';
 import PropertyIter from './PropertyIter';
-import RandomId from './RandomId';
+import Random from './Random';
 import WebsocketCodes from './WebsocketCodes';
 
 export {
@@ -19,6 +19,6 @@ export {
   PromCondition,
   PromDelay,
   PropertyIter,
-  RandomId,
+  Random,
   WebsocketCodes
 };

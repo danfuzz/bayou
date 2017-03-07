@@ -14,23 +14,7 @@ const ID_CHARS = 'abcdefghjkmnpqrstvwxyz0123456789';
  * Constructor of random ID strings. These are _not_ meant to be _guaranteed_
  * unique, just _typically_ unique for the specific purpose of logging.
  */
-export default class RandomId {
-  /**
-   * Constructs a random ID string with the indicated tag prefix.
-   *
-   * @param {string} prefix The prefix.
-   * @returns {string} The constructed random ID string.
-   */
-  static make(prefix) {
-    let result = `${prefix}-`;
-
-    for (let i = 0; i < 8; i++) {
-      result += ID_CHARS[Math.floor(RandomId.byte() % ID_CHARS.length)];
-    }
-
-    return result;
-  }
-
+export default class Random {
   /**
    * Gets a random byte value (range `0` to `255` inclusive).
    *
@@ -38,5 +22,22 @@ export default class RandomId {
    */
   static byte() {
     return secureRandom(1)[0];
+  }
+
+  /**
+   * Constructs a short label string with the indicated tag prefix. These are
+   * _typically_ but not _guaranteed_ to be unique.
+   *
+   * @param {string} prefix The prefix.
+   * @returns {string} The constructed random ID string.
+   */
+  static shortLabel(prefix) {
+    let result = `${prefix}-`;
+
+    for (let i = 0; i < 8; i++) {
+      result += ID_CHARS[Math.floor(Random.byte() % ID_CHARS.length)];
+    }
+
+    return result;
   }
 }
