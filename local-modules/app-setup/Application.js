@@ -81,73 +81,90 @@ export default class Application {
     // including a short colorized form to the console and a longer form to a
     // file.
 
-    // This is a status-aware logger, roughly based on morgan's built-in `dev`
-    // style.
-    function shortColorLog(tokens_unused, req, res) {
-      const status    = res.statusCode || 0;
-      const statusStr = res.statusCode || '-  ';
-      const colorFn   = Application._colorForStatus(status);
+    // Returns whether (`true`) or not (`false`) the given request is a
+    // websocket request.
+    function isWebsocketRequest(req) {
+      // Case doesn't matter, hence the regex test instead of just `===`.
+      const upgrade = req.get('upgrade');
+      return (upgrade !== undefined) && upgrade.match(/^websocket$/i);
+    }
 
-      let contentLength = res.get('content-length');
+    // Opposite of `isWebsocketRequest()`, used for log skipping.
+    function notWebsocketRequest(req) {
+      return !isWebsocketRequest(req);
+    }
+
+    // This is a status-aware logger, roughly based on morgan's built-in `dev`
+    // style. If `res` is passed as `null`, this indicates that the logging is
+    // being done at the start of the request, so (e.g.) things like content
+    // length won't be available.
+    function shortColorLog(req, res) {
+      const status      = (res === null) ? 0 : (res.statusCode || 0);
+      const statusStr   = `${status || '-'}  `.slice(0, 3);
+      const colorFn     = Application._colorForStatus(status);
+      const isWebsocket = isWebsocketRequest(req);
+      const method      = `${isWebsocket ? 'WS' : req.method}   `.slice(0,4);
+
+      console.log('===== a');
+      // `express-ws` appends a pseudo-path `/.websocket` to the end of
+      // websocket requests. We chop that off here.
+      const url = isWebsocket
+        ? req.originalUrl.replace(/\/\.websocket$/, '')
+        : req.originalUrl;
+
+      let contentLength = (res === null) ? undefined : res.get('content-length');
       if (contentLength === undefined) {
         contentLength = '-';
       } else if (contentLength > (1024 * 1024)) {
-        contentLength = Math.round(contentLength / 1024 / 1024 * 10) / 10;
-        contentLength += 'M';
+        contentLength = `${Math.round(contentLength / 1024 / 1024 * 10) / 10}M`;
       } else if (contentLength > 1024) {
-        contentLength = Math.round(contentLength / 1024 * 10) / 10;
-        contentLength += 'K';
+        contentLength = `${Math.round(contentLength / 1024 * 10) / 10}K`;
       } else {
-        // Coerce it to a string.
-        contentLength = `${contentLength}`;
+        contentLength = `${contentLength}B`;
       }
 
       if (contentLength.length < 7) {
         contentLength += ' '.repeat(7 - contentLength.length);
       }
 
-      return `${colorFn(statusStr)} ${contentLength} ${req.method} ${req.originalUrl}`;
+      console.log('===== z');
+      return `${colorFn(statusStr)} ${contentLength} ${method} ${url}`;
     }
 
-    app.use(morgan(shortColorLog, {
-      stream: log.infoStream
-    }));
+    app.use(morgan(
+      (tokens_unused, req, res) => { return shortColorLog(req, res); },
+      {
+        stream: log.infoStream
+      }
+    ));
 
-    app.use(morgan('common', {
-      stream: logStream
-    }));
+    app.use(morgan(
+      'common',
+      {
+        stream: logStream
+      }
+    ));
 
     // These log websocket requests, at the time of request start (not at the
     // time of completion because these are long-lived requests).
 
-    // Log skip function: Returns `true` for anything other than a websocket
-    // request.
-    function isWebsocketRequest(req, res_unused) {
-      // Case doesn't matter, hence the regex test instead of just `===`.
-      const upgrade = req.get('upgrade');
-      return (upgrade === undefined) || !upgrade.match(/^websocket$/i);
-    }
+    app.use(morgan(
+      (tokens_unused, req, res_unused) => { return shortColorLog(req, null); },
+      {
+        stream:    log.infoStream,
+        immediate: true,
+        skip:      notWebsocketRequest
+      }
+    ));
 
-    // Logger which is meant to match the formatting of `shortColorLog` above.
-    function shortWsLog(tokens_unused, req, res_unused) {
-      // exress-ws appends a pseudo-path `/.websocket` to the end of websocket
-      // requests.
-      const simpleUrl = req.originalUrl.replace(/\/\.websocket$/, '');
-
-      return `-   -       WS ${simpleUrl}`;
-    }
-
-    app.use(morgan(shortWsLog, {
-      stream:    log.infoStream,
-      immediate: true,
-      skip:      isWebsocketRequest
-    }));
-
-    app.use(morgan('common', {
-      stream:    logStream,
-      immediate: true,
-      skip:      isWebsocketRequest
-    }));
+    app.use(morgan(
+      'common',
+      {
+        stream:    logStream,
+        immediate: true,
+        skip:      notWebsocketRequest
+      }
+    ));
   }
 
   /**
