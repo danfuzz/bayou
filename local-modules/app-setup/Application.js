@@ -122,8 +122,10 @@ export default class Application {
 
     // Log skip function: Returns `true` for anything other than a websocket
     // request.
-    function skip(req, res_unused) {
-      return (req.get('upgrade') !== 'websocket');
+    function isWebsocketRequest(req, res_unused) {
+      // Case doesn't matter, hence the regex test instead of just `===`.
+      const upgrade = req.get('upgrade');
+      return (upgrade === undefined) || !upgrade.match(/^websocket$/i);
     }
 
     // Logger which is meant to match the formatting of `shortColorLog` above.
@@ -138,13 +140,13 @@ export default class Application {
     app.use(morgan(shortWsLog, {
       stream:    log.infoStream,
       immediate: true,
-      skip
+      skip:      isWebsocketRequest
     }));
 
     app.use(morgan('common', {
       stream:    logStream,
       immediate: true,
-      skip
+      skip:      isWebsocketRequest
     }));
   }
 
