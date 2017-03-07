@@ -4,7 +4,7 @@
 
 import { Decoder, Encoder, Message } from 'api-common';
 import { SeeAll } from 'see-all';
-import { RandomId } from 'util-common';
+import { Random } from 'util-common';
 
 import MetaHandler from './MetaHandler';
 import TargetMap from './TargetMap';
@@ -37,8 +37,11 @@ export default class Connection {
     // to this instance/connection.
     this._targets.add('meta', new MetaHandler(this));
 
-    /** {RandomId} Short ID string used to identify this connection in logs. */
-    this._connectionId = RandomId.make('conn');
+    /**
+     * {string} Short label string used to identify this connection in logs.
+     * _Probably_ but not _guaranteed_ to be unique.
+     */
+    this._connectionId = Random.shortLabel('conn');
 
     /** {Int} Count of messages received. Used for liveness logging. */
     this._messageCount = 0;
