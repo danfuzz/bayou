@@ -66,7 +66,7 @@ export default class Random {
     let result = `${prefix}-`;
 
     for (let i = 0; i < 8; i++) {
-      result += ID_CHARS[Math.floor(Random.byte() % ID_CHARS.length)];
+      result += ID_CHARS[Random.byte() % ID_CHARS.length];
     }
 
     return result;
