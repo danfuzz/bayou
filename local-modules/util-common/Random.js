@@ -12,7 +12,7 @@ import DataUtil from './DataUtil';
  * Character set used for ID strings. This is intended to be the set of 32 most
  * visually and audibly unambiguous alphanumerics.
  */
-const ID_CHARS = 'abcdefghjkmnpqrstvwxyz0123456789';
+const ID_CHARS = 'abcdefghjkmnpqrstuwxyz0123456789';
 
 /**
  * Random number utilities. All values are generated using a cryptographically
