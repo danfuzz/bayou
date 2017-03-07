@@ -4,8 +4,8 @@
 
 import sha256 from 'js-sha256';
 
-import { TInt, TString } from 'typecheck';
-import { DataUtil } from 'util-common';
+import { TString } from 'typecheck';
+import { DataUtil, Random } from 'util-common';
 
 /**
  * Information for accessing a network-accessible resource, along with
@@ -33,8 +33,8 @@ export default class AccessKey {
    * @returns {AccessKey} The constructed instance.
    */
   static randomInstance(url) {
-    const id = DataUtil.hexFromBytes(AccessKey._randomByteArray(8));
-    const secret = DataUtil.hexFromBytes(AccessKey._randomByteArray(16));
+    const id = Random.hexByteString(8);
+    const secret = Random.hexByteString(16);
     return new AccessKey(url, id, secret);
   }
 
@@ -132,29 +132,9 @@ export default class AccessKey {
    *   the challenge string and `response` to the expected response.
    */
   randomChallenge() {
-    const bytes = AccessKey._randomByteArray(8);
-
     const id        = this._id;
-    const challenge = DataUtil.hexFromBytes(bytes);
+    const challenge = Random.hexByteString(8);
     const response  = this.challengeResponseFor(challenge);
     return {id, challenge, response};
-  }
-
-  /**
-   * Returns an array of random bytes, of a given length.
-   *
-   * @param {Int} length Desired length.
-   * @returns {Array<Int>} Array of `length` random bytes.
-   */
-  static _randomByteArray(length) {
-    TInt.min(length, 0);
-
-    const result = [];
-
-    for (let i = 0; i < length; i++) {
-      result.push(Math.floor(Math.random() * 256));
-    }
-
-    return result;
   }
 }
