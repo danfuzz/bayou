@@ -37,6 +37,16 @@ export default class Hooks {
   }
 
   /**
+   * {Int} The local port to listen for connections on. The default value is
+   * `8080`. In general, this often but does not necessarily match the value
+   * in `baseUrl`. It won't match in cases where this server runs behind a
+   * reverse proxy, for example.
+   */
+  static get listenPort() {
+    return 8080;
+  }
+
+  /**
    * The object which validates root credentials. These are credentials which
    * provide "root" access to the server.
    */
