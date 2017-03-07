@@ -8,39 +8,50 @@ import { TInt, TString } from 'typecheck';
 import { DataUtil } from 'util-common';
 
 /**
- * A key consisting of two parts, an ID (which is safe to share across the wire
- * without encryption) and a shared secret (which is not safe for unencrypted
- * transport and should even be treated gingerly when encrypted). Instances of
- * this class are used to effect authentication over API connections. In
- * general, a given instance of this class represents access to a particular
- * resource, but that same resource might also be available via different
- * instances of the class too. (That is, it can be a many-to-one relationship.)
+ * Information for accessing a network-accessible resource, along with
+ * functionality for performing authentication. In general, a given instance of
+ * this class represents access to a particular resource, but that same resource
+ * might also be available via different instances of the class too, and even
+ * using different IDs. (That is, it can be a many-to-one relationship.)
  *
- * **TODO:** An `AccessKey` should also contain the URL at which the resource
- * is located. That is, it should contain _all_ the info needed to access a
- * resource.
+ * There are three pieces of information held by instances of this class:
+ *
+ * * A URL at which the resource is available.
+ * * The ID of the resource.
+ * * A secret key which protects access to the resource.
+ *
+ * Of the three pieces of info, the first two are safe to pass over an
+ * unencrypted connection as well as log, while the last is _not_ safe to pass
+ * unencrypted nor to log.
  */
 export default class AccessKey {
   /**
-   * Constructs an instance with random parts.
+   * Constructs an instance with random ID and secret.
    *
+   * @param {string} url URL at which the resource may be accessed. This is
+   *   expected to be an API endpoint.
    * @returns {AccessKey} The constructed instance.
    */
-  static randomInstance() {
+  static randomInstance(url) {
     const id = DataUtil.hexFromBytes(AccessKey._randomByteArray(8));
     const secret = DataUtil.hexFromBytes(AccessKey._randomByteArray(16));
-    return new AccessKey(id, secret);
+    return new AccessKey(url, id, secret);
   }
 
   /**
    * Constructs an instance with the indicated parts.
    *
+   * @param {string} url URL at which the resource may be accessed. This is
+   *   expected to be an API endpoint.
    * @param {string} id Key / resource identifier. This must be a string of 16
    *   hex digits (lower case).
    * @param {string} secret Shared secret. This must be a string of 32 hex
    *   digits (lower case).
    */
-  constructor(id, secret) {
+  constructor(url, id, secret) {
+    /** {string} URL at which the resource may be accessed. */
+    this._url = TString.urlAbsolute(url);
+
     /** {string} Key / resource identifier. */
     this._id = TString.hexBytes(id, 8, 8);
 
@@ -61,18 +72,24 @@ export default class AccessKey {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._id, this._secret];
+    return [this._url, this._id, this._secret];
   }
 
   /**
    * Constructs an instance from API arguments.
    *
+   * @param {string} url Same as with the regular constructor.
    * @param {string} id Same as with the regular constructor.
    * @param {string} secret Same as with the regular constructor.
    * @returns {AccessKey} The constructed instance.
    */
-  static fromApi(id, secret) {
-    return new AccessKey(id, secret);
+  static fromApi(url, id, secret) {
+    return new AccessKey(url, id, secret);
+  }
+
+  /** {string} URL at which the resource may be accessed. */
+  get url() {
+    return this._url;
   }
 
   /** {string} Key / resource identifier. */

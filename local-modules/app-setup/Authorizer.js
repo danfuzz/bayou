@@ -69,7 +69,7 @@ export default class Authorizer {
 
     let key = null;
     for (;;) {
-      key = AccessKey.randomInstance();
+      key = AccessKey.randomInstance('https://TODO'); // TODO: Fill this in.
       if (this._accessors.get(key.id) === undefined) {
         break;
       }

@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import url from 'url';
+
 import TypeError from './TypeError';
 
 /**
@@ -98,6 +100,25 @@ export default class TString {
   static orNull(value) {
     if ((value !== null) && (typeof value !== 'string')) {
       return TypeError.badValue(value, 'String|null');
+    }
+
+    return value;
+  }
+
+  /**
+   * Checks a value which must be a syntactically valid absolute URL.
+   *
+   * @param {*} value Value to check.
+   * @returns {string} `value`.
+   */
+  static urlAbsolute(value) {
+    TString.nonempty(value);
+
+    // `url.parse()` is fairly lenient. TODO: Might want to be less lenient.
+    const parsed = url.parse(value);
+
+    if (!(parsed.protocol && parsed.slashes && parsed.host)) {
+      return TypeError.badValue(value, 'String', 'absolute URL syntax');
     }
 
     return value;
