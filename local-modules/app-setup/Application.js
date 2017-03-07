@@ -12,6 +12,7 @@ import path from 'path';
 import { PostConnection, TargetMap, WsConnection } from 'api-server';
 import { ClientBundle } from 'client-bundle';
 import { DocServer } from 'doc-server';
+import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
 import { Dirs } from 'server-env';
 
@@ -20,9 +21,6 @@ import DebugTools from './DebugTools';
 
 /** Logger. */
 const log = new SeeAll('app');
-
-/** What port to listen for connections on. */
-const PORT = 8080;
 
 /**
  * Web server for the application. This serves all HTTP(S) requests, including
@@ -62,8 +60,9 @@ export default class Application {
    * Starts up the server.
    */
   start() {
-    this._app.listen(PORT, () => {
-      log.info(`Now listening on port ${PORT}.`);
+    const port = Hooks.listenPort;
+    this._app.listen(port, () => {
+      log.info(`Now listening on port ${port}.`);
     });
   }
 
@@ -131,9 +130,9 @@ export default class Application {
     function shortWsLog(tokens_unused, req, res_unused) {
       // exress-ws appends a pseudo-path `/.websocket` to the end of websocket
       // requests.
-      const url = req.originalUrl.replace(/\/\.websocket$/, '');
+      const simpleUrl = req.originalUrl.replace(/\/\.websocket$/, '');
 
-      return `-   -       WS ${url}`;
+      return `-   -       WS ${simpleUrl}`;
     }
 
     app.use(morgan(shortWsLog, {
