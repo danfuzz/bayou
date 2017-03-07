@@ -2,11 +2,13 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import secureRandom from 'secure-random';
+
 /**
- * Character set used for ID strings. This is the set of visually (and mostly
- * audibly) unambiguous alphanumerics.
+ * Character set used for ID strings. This is intended to be the set of 32 most
+ * visually and audibly unambiguous alphanumerics.
  */
-const ID_CHARS = 'abcdefghjkmnpqrstvwxyz23456789';
+const ID_CHARS = 'abcdefghjkmnpqrstvwxyz0123456789';
 
 /**
  * Constructor of random ID strings. These are _not_ meant to be _guaranteed_
@@ -23,9 +25,18 @@ export default class RandomId {
     let result = `${prefix}-`;
 
     for (let i = 0; i < 8; i++) {
-      result += ID_CHARS[Math.floor(Math.random() * ID_CHARS.length)];
+      result += ID_CHARS[Math.floor(RandomId.byte() % ID_CHARS.length)];
     }
 
     return result;
+  }
+
+  /**
+   * Gets a random byte value (range `0` to `255` inclusive).
+   *
+   * @returns {Int} The byte.
+   */
+  static byte() {
+    return secureRandom(1)[0];
   }
 }

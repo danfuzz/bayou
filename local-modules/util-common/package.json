@@ -4,6 +4,8 @@
   "main": "main.js",
 
   "dependencies": {
-    "typecheck": "local"
+    "typecheck": "local",
+
+    "secure-random": "^1.1.1"
   }
 }
