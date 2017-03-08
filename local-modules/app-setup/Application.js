@@ -9,7 +9,7 @@ import path from 'path';
 
 import { Context, PostConnection, WsConnection } from 'api-server';
 import { ClientBundle } from 'client-bundle';
-import { DocControl } from 'doc-server';
+import { DocControl, DocForAuthor } from 'doc-server';
 import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
 import { Dirs } from 'server-env';
@@ -34,10 +34,10 @@ export default class Application {
    */
   constructor(devMode) {
     /**
-     * {DocControl} The one document we manage. **TODO:** Needs to be more than
-     * one!
+     * {DocForAuthor} The one document we manage. **TODO:** Needs to be more
+     * than one!
      */
-    this._doc = new DocControl('some-id');
+    this._doc = new DocForAuthor(new DocControl('some-id'), 'some-author');
 
     /** {Context} All of the objects we provide access to via the API. */
     const context = this._context = new Context();

@@ -196,12 +196,13 @@ export default class DocControl {
    * @param {number} baseVerNum Version number which `delta` is with respect to.
    * @param {object} delta Delta indicating what has changed with respect to
    *   `baseVerNum`.
-   * @param {string|null} [authorId = null] Author of `delta`.
+   * @param {string|null} authorId Author of `delta`, or `null` if the change
+   *   is to be considered authorless.
    * @returns {object} Object that binds `verNum` to the new version number and
    *   `delta` to a delta _with respect to the implied expected result_ which
    *   can be used to get the new document state.
    */
-  applyDelta(baseVerNum, delta, authorId = null) {
+  applyDelta(baseVerNum, delta, authorId) {
     baseVerNum = this._validateVerNum(baseVerNum, false);
     delta = FrozenDelta.coerce(delta);
     authorId = TString.orNull(authorId);
