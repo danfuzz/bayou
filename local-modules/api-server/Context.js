@@ -7,12 +7,14 @@ import { TString, TObject } from 'typecheck';
 import Target from './Target';
 
 /**
- * Map of names to `Target` instances.
+ * Binding context for an API server or session therein. This is pretty much
+ * just a map from IDs to `Target` instances, along with reasonably
+ * straightforward accessor and update methods.
  *
- * As a convention, `main` is the object providing the main functionality, and
- * `meta` provides meta-information and meta-control.
+ * As a convention, `main` is the ID of the object providing the main
+ * functionality, and `meta` provides meta-information and meta-control.
  */
-export default class TargetMap {
+export default class Context {
   /**
    * Checks that a value is an instance of this class. Throws an error if not.
    *
@@ -20,7 +22,7 @@ export default class TargetMap {
    * @returns {DocumentChange} `value`.
    */
   static check(value) {
-    return TObject.check(value, TargetMap);
+    return TObject.check(value, Context);
   }
 
   /**
@@ -35,47 +37,47 @@ export default class TargetMap {
 
   /**
    * Adds an already-constructed `Target` to the map. This will throw an error
-   * if there is already another target with the same name.
+   * if there is already another target with the same ID.
    *
    * @param {Target} target Target to add.
    */
   addTarget(target) {
     TObject.check(target, Target);
-    const name = target.name;
+    const id = target.id;
 
-    if (this._map.get(name) !== undefined) {
-      throw new Error(`Duplicate target: \`${name}\``);
+    if (this._map.get(id) !== undefined) {
+      throw new Error(`Duplicate target: \`${id}\``);
     }
 
-    this._map.set(name, target);
+    this._map.set(id, target);
   }
 
   /**
-   * Adds a new entry to the map. This will throw an error if there is already
-   * another target with the same name. This is a convenience for calling
-   * `map.addTarget(new Target(name, obj))`.
+   * Adds a new target to the instance. This will throw an error if there is
+   * already another target with the same ID. This is a convenience for calling
+   * `map.addTarget(new Target(id, obj))`.
    *
-   * @param {string} name Target name.
+   * @param {string} id Target ID.
    * @param {object} obj Object to ultimately call on.
    */
-  add(name, obj) {
-    TString.nonempty(name);
+  add(id, obj) {
+    TString.nonempty(id);
     TObject.check(obj);
-    this.addTarget(new Target(name, obj));
+    this.addTarget(new Target(id, obj));
   }
 
   /**
-   * Gets the target associated with the indicated name. This will throw an
-   * error if the named target does not exist.
+   * Gets the target associated with the indicated ID. This will throw an
+   * error if the so-identified target does not exist.
    *
-   * @param {string} name The target name.
-   * @returns {object} The so-named target.
+   * @param {string} id The target ID.
+   * @returns {object} The so-identified target.
    */
-  get(name) {
-    const result = this._map.get(name);
+  get(id) {
+    const result = this._map.get(id);
 
     if (result === undefined) {
-      throw new Error(`No such target: \`${name}\``);
+      throw new Error(`No such target: \`${id}\``);
     }
 
     return result;
@@ -85,10 +87,10 @@ export default class TargetMap {
    * Clones this instance. The resulting clone has a separate underlying map.
    * That is, adding targets to the clone does not affect its progenitor.
    *
-   * @returns {TargetMap} The newly-cloned instance.
+   * @returns {Context} The newly-cloned instance.
    */
   clone() {
-    const result = new TargetMap();
+    const result = new Context();
 
     for (const t of this._map.values()) {
       result.addTarget(t);

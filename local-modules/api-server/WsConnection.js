@@ -15,10 +15,10 @@ export default class WsConnection extends Connection {
    * constructed instance to the websocket (as an event listener).
    *
    * @param {WebSocket} ws A websocket instance corresponding to the connection.
-   * @param {TargetMap} targets The targets to provide access to.
+   * @param {Context} context The binding context to provide access to.
    */
-  constructor(ws, targets) {
-    super(targets);
+  constructor(ws, context) {
+    super(context);
 
     /** {WebSocket} The Websocket for the client connection. */
     this._ws = ws;

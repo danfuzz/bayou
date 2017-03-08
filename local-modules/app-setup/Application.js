@@ -7,9 +7,9 @@ import express_ws from 'express-ws';
 import fs from 'fs';
 import path from 'path';
 
-import { PostConnection, TargetMap, WsConnection } from 'api-server';
+import { Context, PostConnection, WsConnection } from 'api-server';
 import { ClientBundle } from 'client-bundle';
-import { DocServer } from 'doc-server';
+import { DocControl, DocForAuthor } from 'doc-server';
 import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
 import { Dirs } from 'server-env';
@@ -34,15 +34,15 @@ export default class Application {
    */
   constructor(devMode) {
     /**
-     * {DocServer} The one document we manage. **TODO:** Needs to be more than
-     * one!
+     * {DocForAuthor} The one document we manage. **TODO:** Needs to be more
+     * than one!
      */
-    this._doc = new DocServer('some-id');
+    this._doc = new DocForAuthor(new DocControl('some-id'), 'some-author');
 
-    /** {TargetMap} All of the objects we provide access to via the API. */
-    const targets = this._targets = new TargetMap();
-    targets.add('auth', new Authorizer());
-    targets.add('main', this._doc);
+    /** {Context} All of the objects we provide access to via the API. */
+    const context = this._context = new Context();
+    context.add('auth', new Authorizer());
+    context.add('main', this._doc);
 
     /** The underlying webserver run by this instance. */
     this._app = express();
@@ -101,9 +101,9 @@ export default class Application {
     // Use the `api-server` module to handle POST and websocket requests at
     // `/api`.
     app.post('/api',
-      (req, res) => { new PostConnection(req, res, this._targets); });
+      (req, res) => { new PostConnection(req, res, this._context); });
     app.ws('/api',
-      (ws, req_unused) => { new WsConnection(ws, this._targets); });
+      (ws, req_unused) => { new WsConnection(ws, this._context); });
   }
 
   /**

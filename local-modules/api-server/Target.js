@@ -2,36 +2,61 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { AccessKey } from 'api-common';
 import { TArray, TObject, TString } from 'typecheck';
 
 import Schema from './Schema';
 
 /**
- * Wrapper for an object which is callable through the API.
+ * Wrapper for an object which is callable through the API. A target can be
+ * either "controlled" by a key (that is, have access restricted by a key) or be
+ * "uncontrolled" (that is, be generally available without additional permission
+ * checks).
  */
 export default class Target {
   /**
    * Constructs an instance which wraps the given object.
    *
-   * @param {string} name Name of the target. Used for error messages.
-   * @param {object} target Object from which to derive the schema.
+   * @param {string|AccessKey} nameOrKey Either the name of the target (if
+   *   uncontrolled) _or_ the key which controls access to the target. In the
+   *   former case, the target's `id` is taken to be the given name. In the
+   *   latter case, the target's `id` is considered to be the same as the key's
+   *   `id`.
+   * @param {object} target Object to provide access to.
+   * @param {Schema|null} schema `target`'s schema, if already known.
    */
-  constructor(name, target) {
-    /** {string} The target name. */
-    this._name = TString.check(name);
+  constructor(nameOrKey, target, schema = null) {
+    /**
+     * {AccessKey|null} The access key, or `null` if this is an uncontrolled
+     * target.
+     */
+    this._key = (nameOrKey instanceof AccessKey) ? nameOrKey : null;
+
+    /** {string} The target ID. */
+    this._id = (this._key === null)
+      ? TString.check(nameOrKey)
+      : this._key.id;
 
     /** {object} The target object. */
     this._target = TObject.check(target);
 
     /** {Schema} Schema for the target. */
-    this._schema = new Schema(target);
+    this._schema = schema || new Schema(target);
 
     Object.freeze(this);
   }
 
-  /** {string} The target name. */
-  get name() {
-    return this._name;
+  /**
+   * {AccessKey|null} The access control key or `null` if this is an
+   * uncontrolled target.
+   */
+  get key() {
+    return this._key;
+  }
+
+  /** {string} The target ID. */
+  get id() {
+    return this._id;
   }
 
   /** {object} The underlying target object. */
@@ -42,6 +67,16 @@ export default class Target {
   /** {Schema} The target's schema. */
   get schema() {
     return this._schema;
+  }
+
+  /**
+   * Returns an instance just like this one, except without the `key`. This
+   * method is used during resource authorization.
+   *
+   * @returns {Target} An "uncontrolled" version of this instance.
+   */
+  withoutKey() {
+    return new Target(this._id, this._target, this._schema);
   }
 
   /**

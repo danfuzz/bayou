@@ -7,7 +7,7 @@ import { SeeAll } from 'see-all';
 import { Random } from 'util-common';
 
 import MetaHandler from './MetaHandler';
-import TargetMap from './TargetMap';
+import Context from './Context';
 
 /** Logger. */
 const log = new SeeAll('api');
@@ -27,15 +27,15 @@ export default class Connection {
    * Constructs an instance. Each instance corresponds to a separate client
    * connection.
    *
-   * @param {TargetMap} targets The targets to provide access to.
+   * @param {Context} context The binding context to provide access to.
    */
-  constructor(targets) {
-    /** {TargetMap} The targets to provide access to. */
-    this._targets = TargetMap.check(targets).clone();
+  constructor(context) {
+    /** {Context} The binding context to provide access to. */
+    this._context = Context.check(context).clone();
 
     // We add a `meta` binding to the initial set of targets, which is specific
     // to this instance/connection.
-    this._targets.add('meta', new MetaHandler(this));
+    this._context.add('meta', new MetaHandler(this));
 
     /**
      * {string} Short label string used to identify this connection in logs.
@@ -55,6 +55,10 @@ export default class Connection {
   /**
    * Handles an incoming message, which is expected to be in JSON string form.
    * Returns a promise for the response, which is also in JSON string form.
+   *
+   * Notably, messages only succeed when addressed to _uncontrolled_ targets.
+   * In order to act on a controlled target, it first needs to be authorized
+   * via the meta-control system.
    *
    * **Note:** Subclasses are expected to call this.
    *
@@ -145,13 +149,15 @@ export default class Connection {
    * @returns {Promise} Promise for the result (or error).
    */
   _actOnMessage(msg) {
-    const target = this._targets.get(msg.target);
+    const target = this._context.get(msg.target);
     const action = msg.action;
     const name   = msg.name;
     const args   = msg.args;
 
     if (!target) {
       throw new Error(`Unknown target: \`${msg.target}\``);
+    } else if (target.key !== null) {
+      throw new Error(`Unauthorized target: \`${msg.target}\``);
     }
 
     switch (action) {
@@ -176,14 +182,14 @@ export default class Connection {
   }
 
   /**
-   * Gets the target associated with the indicated name. This will throw an
-   * error if the named target does not exist.
+   * Gets the target associated with the indicated ID. This will throw an error
+   * if the so-identified target does not exist.
    *
-   * @param {string} name The target name.
+   * @param {string} id The target ID.
    * @returns {object} The so-named target.
    */
-  getTarget(name) {
-    const result = this._targets.get(name);
+  getTarget(id) {
+    const result = this._context.get(id);
 
     if (result === undefined) {
       throw new Error(`No such target: \`${name}\``);

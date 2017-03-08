@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import DocServer from './DocServer';
+import DocControl from './DocControl';
+import DocForAuthor from './DocForAuthor';
 
-export { DocServer };
+export { DocControl, DocForAuthor };

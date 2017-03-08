@@ -5,18 +5,30 @@
 import { DocumentChange, FrozenDelta, Snapshot, Timestamp, VersionNumber }
   from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
-import { TInt, TString } from 'typecheck';
+import { TInt, TObject, TString } from 'typecheck';
 import { PromCondition } from 'util-common';
 
 
 /**
- * Server-side representation of a persistent document.
+ * Controller for a given document. There is only ever exactly one instance of
+ * this class per document, no matter how many active editors there are on that
+ * document.
  */
-export default class DocServer {
+export default class DocControl {
+  /**
+   * Checks that a value is an instance of this class. Throws an error if not.
+   *
+   * @param {*} value Value to check.
+   * @returns {DocControl} `value`.
+   */
+  static check(value) {
+    return TObject.check(value, DocControl);
+  }
+
   /**
    * Constructs an instance.
    *
-   * @param {string} [docId] The document ID.
+   * @param {string} docId The document ID.
    */
   constructor(docId) {
     /** {string} Document ID. */
@@ -27,7 +39,7 @@ export default class DocServer {
      * as access to a single document. Instead, document IDs need to be plumbed
      * through and used to differentiate between multiple documents.
      */
-    this._doc = DocServer._getDocAccessor(docId);
+    this._doc = DocControl._getDocAccessor(docId);
 
     /**
      * Mapping from version numbers to corresponding document snapshots.
@@ -184,19 +196,22 @@ export default class DocServer {
    * @param {number} baseVerNum Version number which `delta` is with respect to.
    * @param {object} delta Delta indicating what has changed with respect to
    *   `baseVerNum`.
+   * @param {string|null} authorId Author of `delta`, or `null` if the change
+   *   is to be considered authorless.
    * @returns {object} Object that binds `verNum` to the new version number and
    *   `delta` to a delta _with respect to the implied expected result_ which
    *   can be used to get the new document state.
    */
-  applyDelta(baseVerNum, delta) {
+  applyDelta(baseVerNum, delta, authorId) {
     baseVerNum = this._validateVerNum(baseVerNum, false);
     delta = FrozenDelta.coerce(delta);
+    authorId = TString.orNull(authorId);
 
     if (baseVerNum === this.currentVerNum) {
       // The easy case: Apply a delta to the current version (unless it's empty,
       // in which case we don't have to make a new version at all; that's
       // handled by `_appendDelta()`).
-      this._appendDelta(delta, null); // TODO: Pass a real authorId.
+      this._appendDelta(delta, authorId);
       return {
         delta:  [], // That is, there was no correction.
         verNum: this.currentVerNum // `_appendDelta()` updates the version.
@@ -246,7 +261,7 @@ export default class DocServer {
     }
 
     // (3)
-    this._appendDelta(dNext, null);          // TODO: Pass a real authorId.
+    this._appendDelta(dNext, authorId);
     const vNext = this.snapshot().contents;  // This lets the snapshot get cached.
     const vNextNum = this.currentVerNum;     // This will be different than `vCurrentNum`.
 

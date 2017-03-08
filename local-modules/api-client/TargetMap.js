@@ -15,7 +15,7 @@ export default class TargetMap {
    */
   constructor(apiClient) {
     /**
-     * The targets being provided, as a map from name to proxy. **Note:** In a
+     * The targets being provided, as a map from ID to proxy. **Note:** In a
      * future incarnation, this map may contain more items and might even grow
      * dynamically.
      */
@@ -25,16 +25,16 @@ export default class TargetMap {
   }
 
   /**
-   * Gets the proxy for the target with the given name.
+   * Gets the proxy for the target with the given ID.
    *
-   * @param {string} name The target name.
+   * @param {string} id The target ID.
    * @returns {object} The corresponding proxy.
    */
-  get(name) {
-    const result = this._targets.get(name);
+  get(id) {
+    const result = this._targets.get(id);
 
     if (!result) {
-      throw new Error(`No such target: ${name}`);
+      throw new Error(`No such target: ${id}`);
     }
 
     return result;
