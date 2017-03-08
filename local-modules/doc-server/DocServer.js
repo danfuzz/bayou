@@ -196,7 +196,7 @@ export default class DocServer {
       // The easy case: Apply a delta to the current version (unless it's empty,
       // in which case we don't have to make a new version at all; that's
       // handled by `_appendDelta()`).
-      this._appendDelta(delta);
+      this._appendDelta(delta, null); // TODO: Pass a real authorId.
       return {
         delta:  [], // That is, there was no correction.
         verNum: this.currentVerNum // `_appendDelta()` updates the version.
@@ -246,7 +246,7 @@ export default class DocServer {
     }
 
     // (3)
-    this._appendDelta(dNext);
+    this._appendDelta(dNext, null);          // TODO: Pass a real authorId.
     const vNext = this.snapshot().contents;  // This lets the snapshot get cached.
     const vNextNum = this.currentVerNum;     // This will be different than `vCurrentNum`.
 
@@ -301,16 +301,18 @@ export default class DocServer {
    * **Note:** If the delta is a no-op, then this method does nothing.
    *
    * @param {object} delta The delta to append.
+   * @param {string|null} authorId The author of the delta.
    */
-  _appendDelta(delta) {
+  _appendDelta(delta, authorId) {
+    authorId = TString.orNull(authorId);
     delta = FrozenDelta.coerce(delta);
 
     if (delta.isEmpty()) {
       return;
     }
 
-    const author = null; // TODO: Assign an author.
-    const change = new DocumentChange(this.nextVerNum, Timestamp.now(), delta, author);
+    const change =
+      new DocumentChange(this.nextVerNum, Timestamp.now(), delta, authorId);
     this._doc.changeAppend(change);
     this._changeCondition.value = true;
   }
