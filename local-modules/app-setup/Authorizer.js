@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { AccessKey } from 'api-common';
-import { DocControl } from 'doc-server';
+import { DocControl, DocForAuthor } from 'doc-server';
 import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
 import { TString } from 'typecheck';
@@ -27,8 +27,9 @@ export default class Authorizer {
     this._docs = new Map();
 
     /**
-     * {Map<string, {key, authorID, doc}>} The set of active access keys and
-     * associated info, as a map from key ID to access info.
+     * {Map<string, {key, doc}>} The set of active access keys and associated
+     * info, as a map from key ID to access info. `doc` is a `DocForAuthor`
+     * instance.
      *
      * **TODO:** Values of the map should have better structure.
      */
@@ -63,11 +64,13 @@ export default class Authorizer {
       throw new Error('Not authorized.');
     }
 
-    let doc = this._docs.get(docId);
-    if (doc === undefined) {
-      doc = new DocControl(docId);
-      this._docs.set(docId, doc);
+    let docControl = this._docs.get(docId);
+    if (docControl === undefined) {
+      docControl = new DocControl(docId);
+      this._docs.set(docId, docControl);
     }
+
+    const doc = new DocForAuthor(docControl, authorId);
 
     let key = null;
     for (;;) {
@@ -80,7 +83,7 @@ export default class Authorizer {
       // just iterate and try again.
     }
 
-    this._accessors.set(key.id, {key, doc, authorId});
+    this._accessors.set(key.id, {key, doc});
 
     log.info(`Newly-authorized access.`);
     log.info(`  author: ${authorId}`);
