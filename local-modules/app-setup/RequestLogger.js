@@ -44,8 +44,7 @@ export default class RequestLogger {
       RequestLogger._makeConsoleLogStart,
       {
         stream:    consoleStream,
-        immediate: true,
-        skip:      RequestLogger._notWebsocketRequest
+        immediate: true
       }
     ));
 
@@ -53,8 +52,7 @@ export default class RequestLogger {
       'common',
       {
         stream:    accessStream,
-        immediate: true,
-        skip:      RequestLogger._notWebsocketRequest
+        immediate: true
       }
     ));
   }
@@ -78,11 +76,17 @@ export default class RequestLogger {
    * @returns {string} String to log.
    */
   static _makeConsoleLog(req, res) {
-    const status      = (res === null) ? 0 : (res.statusCode || 0);
-    const statusStr   = `${status || '-'}  `.slice(0, 3);
-    const colorFn     = RequestLogger._colorForStatus(status);
     const isWebsocket = RequestLogger._isWebsocketRequest(req);
-    const method      = `${isWebsocket ? 'WS' : req.method}   `.slice(0,4);
+
+    if ((res === null) && !isWebsocket) {
+      // We skip start-of-request logging for everything but websockets.
+      return null;
+    }
+
+    const status    = (res === null) ? 0 : (res.statusCode || 0);
+    const statusStr = `${status || '-'}  `.slice(0, 3);
+    const colorFn   = RequestLogger._colorForStatus(status);
+    const method    = `${isWebsocket ? 'WS' : req.method}   `.slice(0,4);
 
     // `express-ws` appends a pseudo-path `/.websocket` to the end of
     // websocket requests. We chop that off here.
@@ -133,16 +137,5 @@ export default class RequestLogger {
     // Case doesn't matter, hence the regex test instead of just `===`.
     const upgrade = req.get('upgrade');
     return (upgrade !== undefined) && upgrade.match(/^websocket$/i);
-  }
-
-  /**
-   * Opposite of `_isWebsocketRequest()`, used for log skipping.
-   *
-   * @param {object} req Request object.
-   * @returns {boolean} `true` iff the given request is _not_ a websocket
-   *   request.
-   */
-  static _notWebsocketRequest(req) {
-    return !RequestLogger._isWebsocketRequest(req);
   }
 }
