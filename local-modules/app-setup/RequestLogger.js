@@ -76,9 +76,9 @@ export default class RequestLogger {
    * @returns {string} String to log.
    */
   static _makeConsoleLog(req, res) {
-    const isWebsocket = RequestLogger._isWebsocketRequest(req);
+    const isWs = RequestLogger._isWsRequest(req);
 
-    if ((res === null) && !isWebsocket) {
+    if ((res === null) && !isWs) {
       // We skip start-of-request logging for everything but websockets.
       return null;
     }
@@ -86,11 +86,11 @@ export default class RequestLogger {
     const status    = (res === null) ? 0 : (res.statusCode || 0);
     const statusStr = `${status || '-'}  `.slice(0, 3);
     const colorFn   = RequestLogger._colorForStatus(status);
-    const method    = `${isWebsocket ? 'WS' : req.method}   `.slice(0,4);
+    const method    = `${isWs ? 'WS' : req.method}   `.slice(0,4);
 
     // `express-ws` appends a pseudo-path `/.websocket` to the end of
     // websocket requests. We chop that off here.
-    const url = isWebsocket
+    const url = isWs
       ? req.originalUrl.replace(/\/\.websocket$/, '')
       : req.originalUrl;
 
@@ -133,7 +133,7 @@ export default class RequestLogger {
    * @param {object} req Request object.
    * @returns {boolean} `true` iff the given request is a websocket request.
    */
-  static _isWebsocketRequest(req) {
+  static _isWsRequest(req) {
     // Case doesn't matter, hence the regex test instead of just `===`.
     const upgrade = req.get('upgrade');
     return (upgrade !== undefined) && upgrade.match(/^websocket$/i);
