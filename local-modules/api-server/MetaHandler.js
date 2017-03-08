@@ -39,7 +39,7 @@ export default class MetaHandler {
 
   /**
    * Gets the schema(ta) for the given objects, by ID. This returns an object
-   * that maps each given name to its corresponding schema.
+   * that maps each given ID to its corresponding schema.
    *
    * @param {...string} ids IDs of the object to inquire about.
    * @returns {object} An object mapping each of the `names` to its corresponding

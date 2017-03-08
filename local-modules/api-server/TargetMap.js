@@ -35,7 +35,7 @@ export default class TargetMap {
 
   /**
    * Adds an already-constructed `Target` to the map. This will throw an error
-   * if there is already another target with the same name.
+   * if there is already another target with the same ID.
    *
    * @param {Target} target Target to add.
    */

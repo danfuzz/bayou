@@ -10,27 +10,30 @@ export default class TargetHandler {
    * Makes a proxy that is handled by an instance of this class.
    *
    * @param {ApiClient} apiClient The client to forward calls to.
-   * @param {string} name The name of the target to call on.
+   * @param {string} targetId The ID of the target to call on.
    * @returns {Proxy} An appropriately-constructed proxy object.
    */
-  static makeProxy(apiClient, name) {
-    return new Proxy(Object.freeze({}), new TargetHandler(apiClient, name));
+  static makeProxy(apiClient, targetId) {
+    return new Proxy(Object.freeze({}), new TargetHandler(apiClient, targetId));
   }
 
   /**
    * Constructs an instance.
    *
    * @param {ApiClient} apiClient The client to forward calls to.
-   * @param {string} targetName The name of the target to call on.
+   * @param {string} targetId The ID of the target to call on.
    */
-  constructor(apiClient, targetName) {
+  constructor(apiClient, targetId) {
     /** The client to forward calls to. */
     this._apiClient = apiClient;
 
-    /** The name of the target. */
-    this._targetName = targetName;
+    /** {string} The ID of the target. */
+    this._targetId = targetId;
 
-    /** Cached method call handlers, as a map from name to handler. */
+    /**
+     * {Map<string,function>} Cached method call handlers, as a map from name to
+     * handler.
+     */
     this._methods = new Map();
 
     /** State of readiness, one of `not`, `readying`, or `ready`. */
@@ -45,9 +48,9 @@ export default class TargetHandler {
    */
   _makeMethodHandler(name) {
     const apiClient  = this._apiClient;  // Avoid re-(re-)lookup on every call.
-    const targetName = this._targetName; // Likewise.
+    const targetId = this._targetId; // Likewise.
     return (...args) => {
-      return apiClient._send(targetName, 'call', name, args);
+      return apiClient._send(targetId, 'call', name, args);
     };
   }
 
@@ -62,10 +65,10 @@ export default class TargetHandler {
 
     this._readyState = 'readying';
 
-    this._apiClient.meta.schemaFor(this._targetName).then((schema) => {
+    this._apiClient.meta.schemaFor(this._targetId).then((schema) => {
       const methods = this._methods;
 
-      for (const name in schema[this._targetName]) {
+      for (const name in schema[this._targetId]) {
         methods.set(name, this._makeMethodHandler(name));
       }
 
