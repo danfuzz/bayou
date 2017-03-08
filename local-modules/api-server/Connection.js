@@ -56,6 +56,10 @@ export default class Connection {
    * Handles an incoming message, which is expected to be in JSON string form.
    * Returns a promise for the response, which is also in JSON string form.
    *
+   * Notably, messages only succeed when addressed to _uncontrolled_ targets.
+   * In order to act on a controlled target, it first needs to be authorized
+   * via the meta-control system.
+   *
    * **Note:** Subclasses are expected to call this.
    *
    * @param {string} msg Incoming message, in JSON string form.
@@ -152,6 +156,8 @@ export default class Connection {
 
     if (!target) {
       throw new Error(`Unknown target: \`${msg.target}\``);
+    } else if (target.key !== null) {
+      throw new Error(`Unauthorized target: \`${msg.target}\``);
     }
 
     switch (action) {
