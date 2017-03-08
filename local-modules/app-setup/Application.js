@@ -40,9 +40,9 @@ export default class Application {
     this._doc = new DocServer('some-id');
 
     /** {Context} All of the objects we provide access to via the API. */
-    const targets = this._targets = new Context();
-    targets.add('auth', new Authorizer());
-    targets.add('main', this._doc);
+    const context = this._context = new Context();
+    context.add('auth', new Authorizer());
+    context.add('main', this._doc);
 
     /** The underlying webserver run by this instance. */
     this._app = express();
@@ -101,9 +101,9 @@ export default class Application {
     // Use the `api-server` module to handle POST and websocket requests at
     // `/api`.
     app.post('/api',
-      (req, res) => { new PostConnection(req, res, this._targets); });
+      (req, res) => { new PostConnection(req, res, this._context); });
     app.ws('/api',
-      (ws, req_unused) => { new WsConnection(ws, this._targets); });
+      (ws, req_unused) => { new WsConnection(ws, this._context); });
   }
 
   /**

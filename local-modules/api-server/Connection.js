@@ -27,15 +27,15 @@ export default class Connection {
    * Constructs an instance. Each instance corresponds to a separate client
    * connection.
    *
-   * @param {Context} targets The targets to provide access to.
+   * @param {Context} context The binding context to provide access to.
    */
-  constructor(targets) {
-    /** {Context} The targets to provide access to. */
-    this._targets = Context.check(targets).clone();
+  constructor(context) {
+    /** {Context} The binding context to provide access to. */
+    this._context = Context.check(context).clone();
 
     // We add a `meta` binding to the initial set of targets, which is specific
     // to this instance/connection.
-    this._targets.add('meta', new MetaHandler(this));
+    this._context.add('meta', new MetaHandler(this));
 
     /**
      * {string} Short label string used to identify this connection in logs.
@@ -145,7 +145,7 @@ export default class Connection {
    * @returns {Promise} Promise for the result (or error).
    */
   _actOnMessage(msg) {
-    const target = this._targets.get(msg.target);
+    const target = this._context.get(msg.target);
     const action = msg.action;
     const name   = msg.name;
     const args   = msg.args;
@@ -183,7 +183,7 @@ export default class Connection {
    * @returns {object} The so-named target.
    */
   getTarget(id) {
-    const result = this._targets.get(id);
+    const result = this._context.get(id);
 
     if (result === undefined) {
       throw new Error(`No such target: \`${name}\``);

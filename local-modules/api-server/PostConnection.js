@@ -17,10 +17,10 @@ export default class PostConnection extends Connection {
    *
    * @param {object} req The HTTP request.
    * @param {object} res The HTTP response handler.
-   * @param {Context} targets The targets to provide access to.
+   * @param {Context} context The binding context to provide access to.
    */
-  constructor(req, res, targets) {
-    super(targets);
+  constructor(req, res, context) {
+    super(context);
 
     /** {object} The HTTP request. */
     this._req = req;
