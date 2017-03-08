@@ -23,10 +23,10 @@ export default class DebugTools {
   /**
    * Constructs an instance.
    *
-   * @param {DocServer} doc The `DocServer` object managed by this process.
+   * @param {DocControl} doc The `DocControl` object managed by this process.
    */
   constructor(doc) {
-    /** {DocServer} The document object. */
+    /** {DocControl} The document object. */
     this._doc = doc;
 
     /** {SeeAll} A rolling log for the `/log` endpoint. */

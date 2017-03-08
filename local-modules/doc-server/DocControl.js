@@ -10,9 +10,11 @@ import { PromCondition } from 'util-common';
 
 
 /**
- * Server-side representation of a persistent document.
+ * Controller for a given document. There is only ever exactly one instance of
+ * this class per document, no matter how many active editors there are on that
+ * document.
  */
-export default class DocServer {
+export default class DocControl {
   /**
    * Constructs an instance.
    *
@@ -27,7 +29,7 @@ export default class DocServer {
      * as access to a single document. Instead, document IDs need to be plumbed
      * through and used to differentiate between multiple documents.
      */
-    this._doc = DocServer._getDocAccessor(docId);
+    this._doc = DocControl._getDocAccessor(docId);
 
     /**
      * Mapping from version numbers to corresponding document snapshots.

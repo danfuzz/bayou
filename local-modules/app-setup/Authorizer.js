@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { AccessKey } from 'api-common';
-import { DocServer } from 'doc-server';
+import { DocControl } from 'doc-server';
 import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
 import { TString } from 'typecheck';
@@ -21,7 +21,7 @@ export default class Authorizer {
    */
   constructor() {
     /**
-     * {Map<string, DocServer>} The set of active documents, as a map from ID
+     * {Map<string, DocControl>} The set of active documents, as a map from ID
      * to document object.
      */
     this._docs = new Map();
@@ -65,7 +65,7 @@ export default class Authorizer {
 
     let doc = this._docs.get(docId);
     if (doc === undefined) {
-      doc = new DocServer(docId);
+      doc = new DocControl(docId);
       this._docs.set(docId, doc);
     }
 
