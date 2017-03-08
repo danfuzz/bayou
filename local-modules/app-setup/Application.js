@@ -2,11 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import chalk from 'chalk';
 import express from 'express';
 import express_ws from 'express-ws';
 import fs from 'fs';
-import morgan from 'morgan';
 import path from 'path';
 
 import { PostConnection, TargetMap, WsConnection } from 'api-server';
@@ -18,6 +16,7 @@ import { Dirs } from 'server-env';
 
 import Authorizer from './Authorizer';
 import DebugTools from './DebugTools';
+import RequestLogger from './RequestLogger';
 
 /** Logger. */
 const log = new SeeAll('app');
@@ -70,82 +69,12 @@ export default class Application {
    * Sets up logging for webserver requests.
    */
   _addRequestLogging() {
-    const app = this._app;
-
     // Stream to write to, when logging to a file.
-    const logStream = fs.createWriteStream(
+    const accessStream = fs.createWriteStream(
       path.resolve(Dirs.VAR_DIR, 'access.log'),
       {flags: 'a'});
 
-    // These log regular (non-websocket) requests at the time of completion,
-    // including a short colorized form to the console and a longer form to a
-    // file.
-
-    // This is a status-aware logger, roughly based on morgan's built-in `dev`
-    // style.
-    function shortColorLog(tokens_unused, req, res) {
-      const status    = res.statusCode || 0;
-      const statusStr = res.statusCode || '-  ';
-      const colorFn   = Application._colorForStatus(status);
-
-      let contentLength = res.get('content-length');
-      if (contentLength === undefined) {
-        contentLength = '-';
-      } else if (contentLength > (1024 * 1024)) {
-        contentLength = Math.round(contentLength / 1024 / 1024 * 10) / 10;
-        contentLength += 'M';
-      } else if (contentLength > 1024) {
-        contentLength = Math.round(contentLength / 1024 * 10) / 10;
-        contentLength += 'K';
-      } else {
-        // Coerce it to a string.
-        contentLength = `${contentLength}`;
-      }
-
-      if (contentLength.length < 7) {
-        contentLength += ' '.repeat(7 - contentLength.length);
-      }
-
-      return `${colorFn(statusStr)} ${contentLength} ${req.method} ${req.originalUrl}`;
-    }
-
-    app.use(morgan(shortColorLog, {
-      stream: log.infoStream
-    }));
-
-    app.use(morgan('common', {
-      stream: logStream
-    }));
-
-    // These log websocket requests, at the time of request start (not at the
-    // time of completion because these are long-lived requests).
-
-    // Log skip function: Returns `true` for anything other than a websocket
-    // request.
-    function skip(req, res_unused) {
-      return (req.get('upgrade') !== 'websocket');
-    }
-
-    // Logger which is meant to match the formatting of `shortColorLog` above.
-    function shortWsLog(tokens_unused, req, res_unused) {
-      // exress-ws appends a pseudo-path `/.websocket` to the end of websocket
-      // requests.
-      const simpleUrl = req.originalUrl.replace(/\/\.websocket$/, '');
-
-      return `-   -       WS ${simpleUrl}`;
-    }
-
-    app.use(morgan(shortWsLog, {
-      stream:    log.infoStream,
-      immediate: true,
-      skip
-    }));
-
-    app.use(morgan('common', {
-      stream:    logStream,
-      immediate: true,
-      skip
-    }));
+    RequestLogger.addLoggers(this._app, log.infoStream, accessStream);
   }
 
   /**
@@ -183,20 +112,5 @@ export default class Application {
   _addDevModeRoutes() {
     const app = this._app;
     app.use('/debug', new DebugTools(this._doc).requestHandler);
-  }
-
-  /**
-   * Given an HTTP status, returns the corresponding `chalk` coloring function,
-   * or a no-op function if the status doesn't demand colorization.
-   *
-   * @param {number} status The HTTP status code.
-   * @returns {function} The corresponding coloring function.
-   */
-  static _colorForStatus(status) {
-    if      (status >= 500) { return chalk.red;    }
-    else if (status >= 400) { return chalk.yellow; }
-    else if (status >= 300) { return chalk.cyan;   }
-    else if (status >= 200) { return chalk.green;  }
-    else                    { return ((x) => x);   } // No-op by default.
   }
 }
