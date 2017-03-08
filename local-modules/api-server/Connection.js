@@ -7,7 +7,7 @@ import { SeeAll } from 'see-all';
 import { Random } from 'util-common';
 
 import MetaHandler from './MetaHandler';
-import TargetMap from './TargetMap';
+import Context from './Context';
 
 /** Logger. */
 const log = new SeeAll('api');
@@ -27,11 +27,11 @@ export default class Connection {
    * Constructs an instance. Each instance corresponds to a separate client
    * connection.
    *
-   * @param {TargetMap} targets The targets to provide access to.
+   * @param {Context} targets The targets to provide access to.
    */
   constructor(targets) {
-    /** {TargetMap} The targets to provide access to. */
-    this._targets = TargetMap.check(targets).clone();
+    /** {Context} The targets to provide access to. */
+    this._targets = Context.check(targets).clone();
 
     // We add a `meta` binding to the initial set of targets, which is specific
     // to this instance/connection.

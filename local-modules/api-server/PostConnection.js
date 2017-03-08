@@ -17,7 +17,7 @@ export default class PostConnection extends Connection {
    *
    * @param {object} req The HTTP request.
    * @param {object} res The HTTP response handler.
-   * @param {TargetMap} targets The targets to provide access to.
+   * @param {Context} targets The targets to provide access to.
    */
   constructor(req, res, targets) {
     super(targets);

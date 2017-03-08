@@ -7,12 +7,14 @@ import { TString, TObject } from 'typecheck';
 import Target from './Target';
 
 /**
- * Map of IDs to `Target` instances.
+ * Binding context for an API server or session therein. This is pretty much
+ * just a map from IDs to `Target` instances, along with reasonably
+ * straightforward accessor and update methods.
  *
- * As a convention, `main` is the object providing the main functionality, and
- * `meta` provides meta-information and meta-control.
+ * As a convention, `main` is the ID of the object providing the main
+ * functionality, and `meta` provides meta-information and meta-control.
  */
-export default class TargetMap {
+export default class Context {
   /**
    * Checks that a value is an instance of this class. Throws an error if not.
    *
@@ -20,7 +22,7 @@ export default class TargetMap {
    * @returns {DocumentChange} `value`.
    */
   static check(value) {
-    return TObject.check(value, TargetMap);
+    return TObject.check(value, Context);
   }
 
   /**
@@ -51,8 +53,8 @@ export default class TargetMap {
   }
 
   /**
-   * Adds a new entry to the map. This will throw an error if there is already
-   * another target with the same ID. This is a convenience for calling
+   * Adds a new target to the instance. This will throw an error if there is
+   * already another target with the same ID. This is a convenience for calling
    * `map.addTarget(new Target(id, obj))`.
    *
    * @param {string} id Target ID.
@@ -85,10 +87,10 @@ export default class TargetMap {
    * Clones this instance. The resulting clone has a separate underlying map.
    * That is, adding targets to the clone does not affect its progenitor.
    *
-   * @returns {TargetMap} The newly-cloned instance.
+   * @returns {Context} The newly-cloned instance.
    */
   clone() {
-    const result = new TargetMap();
+    const result = new Context();
 
     for (const t of this._map.values()) {
       result.addTarget(t);

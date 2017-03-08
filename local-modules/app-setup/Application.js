@@ -7,7 +7,7 @@ import express_ws from 'express-ws';
 import fs from 'fs';
 import path from 'path';
 
-import { PostConnection, TargetMap, WsConnection } from 'api-server';
+import { Context, PostConnection, WsConnection } from 'api-server';
 import { ClientBundle } from 'client-bundle';
 import { DocServer } from 'doc-server';
 import { Hooks } from 'hooks-server';
@@ -39,8 +39,8 @@ export default class Application {
      */
     this._doc = new DocServer('some-id');
 
-    /** {TargetMap} All of the objects we provide access to via the API. */
-    const targets = this._targets = new TargetMap();
+    /** {Context} All of the objects we provide access to via the API. */
+    const targets = this._targets = new Context();
     targets.add('auth', new Authorizer());
     targets.add('main', this._doc);
 
