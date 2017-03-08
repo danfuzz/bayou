@@ -106,6 +106,15 @@ export default class AccessKey {
   }
 
   /**
+   * Gets the redacted form of this instance.
+   *
+   * @returns {string} The redacted form.
+   */
+  toString() {
+    return `{${AccessKey.API_NAME} ${this._url} ${this._id}}`;
+  }
+
+  /**
    * Gets a challenge response. This is used as a tactic for two sides of a
    * connection to authenticate each other without ever having to provide a
    * shared secret directly over a connection.

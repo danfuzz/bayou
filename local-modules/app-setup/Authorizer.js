@@ -55,11 +55,13 @@ export default class Authorizer {
     TString.nonempty(authorId);
     TString.nonempty(docId);
 
-    if (!Hooks.rootValidator.checkCredential(rootCredential)) {
+    const validator = Hooks.rootValidator;
+
+    if (!validator.isCredential(rootCredential)) {
+      throw new Error('Invalid credential syntax.');
+    } else if (!validator.checkCredential(rootCredential)) {
       throw new Error('Not authorized.');
     }
-
-    log.info(`Authorized access for \`${authorId}\` to \`${docId}\`.`);
 
     let doc = this._docs.get(docId);
     if (doc === undefined) {
@@ -79,6 +81,12 @@ export default class Authorizer {
     }
 
     this._accessors.set(key.id, {key, doc, authorId});
+
+    log.info(`Newly-authorized access.`);
+    log.info(`  author: ${authorId}`);
+    log.info(`  doc:    ${docId}`);
+    log.info(`  key id: ${key.id}`); // The ID is safe to log.
+
     return key;
   }
 }
