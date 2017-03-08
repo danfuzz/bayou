@@ -22,9 +22,10 @@ export default class Target {
    *   former case, the target's `id` is taken to be the given name. In the
    *   latter case, the target's `id` is considered to be the same as the key's
    *   `id`.
-   * @param {object} target Object from which to derive the schema.
+   * @param {object} target Object to provide access to.
+   * @param {Schema|null} schema `target`'s schema, if already known.
    */
-  constructor(nameOrKey, target) {
+  constructor(nameOrKey, target, schema = null) {
     /**
      * {AccessKey|null} The access key, or `null` if this is an uncontrolled
      * target.
@@ -40,7 +41,7 @@ export default class Target {
     this._target = TObject.check(target);
 
     /** {Schema} Schema for the target. */
-    this._schema = new Schema(target);
+    this._schema = schema || new Schema(target);
 
     Object.freeze(this);
   }
@@ -66,6 +67,16 @@ export default class Target {
   /** {Schema} The target's schema. */
   get schema() {
     return this._schema;
+  }
+
+  /**
+   * Returns an instance just like this one, except without the `key`. This
+   * method is used during resource authorization.
+   *
+   * @returns {Target} An "uncontrolled" version of this instance.
+   */
+  withoutKey() {
+    return new Target(this._id, this._target, this._schema);
   }
 
   /**
