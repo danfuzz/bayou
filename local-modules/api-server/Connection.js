@@ -176,14 +176,14 @@ export default class Connection {
   }
 
   /**
-   * Gets the target associated with the indicated name. This will throw an
-   * error if the named target does not exist.
+   * Gets the target associated with the indicated ID. This will throw an error
+   * if the so-identified target does not exist.
    *
-   * @param {string} name The target name.
+   * @param {string} id The target ID.
    * @returns {object} The so-named target.
    */
-  getTarget(name) {
-    const result = this._targets.get(name);
+  getTarget(id) {
+    const result = this._targets.get(id);
 
     if (result === undefined) {
       throw new Error(`No such target: \`${name}\``);

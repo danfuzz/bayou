@@ -14,7 +14,7 @@ export default class Message {
    *
    * @param {Int} id Message ID, used to match requests and responses. Must be
    *   a non-negative integer.
-   * @param {string} target Name of the target object to send to.
+   * @param {string} target ID of the target object to send to.
    * @param {string} action Kind of action to take. Currently, the only valid
    *   value is `call`.
    * @param {string} name Method (or property) name to access.
@@ -24,7 +24,7 @@ export default class Message {
     /** {Int} Message ID. */
     this._id = TInt.min(id, 0);
 
-    /** {string} Name of the target object. */
+    /** {string} ID of the target object. */
     this._target = TString.nonempty(target);
 
     /** {string} Action to take / being taken. */
@@ -77,7 +77,7 @@ export default class Message {
     return this._id;
   }
 
-  /** {string} Name of the target object. */
+  /** {string} ID of the target object. */
   get target() {
     return this._target;
   }

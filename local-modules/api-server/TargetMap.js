@@ -7,7 +7,7 @@ import { TString, TObject } from 'typecheck';
 import Target from './Target';
 
 /**
- * Map of names to `Target` instances.
+ * Map of IDs to `Target` instances.
  *
  * As a convention, `main` is the object providing the main functionality, and
  * `meta` provides meta-information and meta-control.
@@ -41,41 +41,41 @@ export default class TargetMap {
    */
   addTarget(target) {
     TObject.check(target, Target);
-    const name = target.name;
+    const id = target.id;
 
-    if (this._map.get(name) !== undefined) {
-      throw new Error(`Duplicate target: \`${name}\``);
+    if (this._map.get(id) !== undefined) {
+      throw new Error(`Duplicate target: \`${id}\``);
     }
 
-    this._map.set(name, target);
+    this._map.set(id, target);
   }
 
   /**
    * Adds a new entry to the map. This will throw an error if there is already
-   * another target with the same name. This is a convenience for calling
-   * `map.addTarget(new Target(name, obj))`.
+   * another target with the same ID. This is a convenience for calling
+   * `map.addTarget(new Target(id, obj))`.
    *
-   * @param {string} name Target name.
+   * @param {string} id Target ID.
    * @param {object} obj Object to ultimately call on.
    */
-  add(name, obj) {
-    TString.nonempty(name);
+  add(id, obj) {
+    TString.nonempty(id);
     TObject.check(obj);
-    this.addTarget(new Target(name, obj));
+    this.addTarget(new Target(id, obj));
   }
 
   /**
-   * Gets the target associated with the indicated name. This will throw an
-   * error if the named target does not exist.
+   * Gets the target associated with the indicated ID. This will throw an
+   * error if the so-identified target does not exist.
    *
-   * @param {string} name The target name.
-   * @returns {object} The so-named target.
+   * @param {string} id The target ID.
+   * @returns {object} The so-identified target.
    */
-  get(name) {
-    const result = this._map.get(name);
+  get(id) {
+    const result = this._map.get(id);
 
     if (result === undefined) {
-      throw new Error(`No such target: \`${name}\``);
+      throw new Error(`No such target: \`${id}\``);
     }
 
     return result;

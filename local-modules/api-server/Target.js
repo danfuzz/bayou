@@ -32,7 +32,7 @@ export default class Target {
     this._key = (nameOrKey instanceof AccessKey) ? nameOrKey : null;
 
     /** {string} The target ID. */
-    this._name = (this._key === null)
+    this._id = (this._key === null)
       ? TString.check(nameOrKey)
       : this._key.id;
 
@@ -53,9 +53,9 @@ export default class Target {
     return this._key;
   }
 
-  /** {string} The target name. */
-  get name() {
-    return this._name;
+  /** {string} The target ID. */
+  get id() {
+    return this._id;
   }
 
   /** {object} The underlying target object. */
