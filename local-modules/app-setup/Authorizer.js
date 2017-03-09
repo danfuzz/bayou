@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { AccessKey } from 'api-common';
+import { Context } from 'api-server';
 import { DocForAuthor, DocServer } from 'doc-server';
 import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
@@ -18,16 +19,13 @@ const log = new SeeAll('app-auth');
 export default class Authorizer {
   /**
    * Constructs an instance.
+   *
+   * @param {Context} context The API context that is managed by this instance,
+   *   that is, where auth-controlled resources end up getting bound.
    */
-  constructor() {
-    /**
-     * {Map<string, {key, doc}>} The set of active access keys and associated
-     * info, as a map from key ID to access info. `doc` is a `DocForAuthor`
-     * instance.
-     *
-     * **TODO:** Values of the map should have better structure.
-     */
-    this._accessors = new Map();
+  constructor(context) {
+    /** {Context} The API context to use. */
+    this._context = Context.check(context);
   }
 
   /**
@@ -64,7 +62,7 @@ export default class Authorizer {
     let key = null;
     for (;;) {
       key = AccessKey.randomInstance(`${Hooks.baseUrl}/api`);
-      if (this._accessors.get(key.id) === undefined) {
+      if (!this._context.hasId(key.id)) {
         break;
       }
 
@@ -72,7 +70,7 @@ export default class Authorizer {
       // just iterate and try again.
     }
 
-    this._accessors.set(key.id, {key, doc});
+    this._context.add(key, doc);
 
     log.info(`Newly-authorized access.`);
     log.info(`  author: ${authorId}`);

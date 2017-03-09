@@ -42,7 +42,7 @@ export default class Application {
 
     /** {Context} All of the objects we provide access to via the API. */
     const context = this._context = new Context();
-    context.add('auth', new Authorizer());
+    context.add('auth', new Authorizer(context));
     context.add('main', this._doc);
 
     /** The underlying webserver run by this instance. */
