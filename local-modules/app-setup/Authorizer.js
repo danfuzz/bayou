@@ -21,12 +21,6 @@ export default class Authorizer {
    */
   constructor() {
     /**
-     * {Map<string, DocControl>} The set of active documents, as a map from ID
-     * to document object.
-     */
-    this._docs = new Map();
-
-    /**
      * {Map<string, {key, doc}>} The set of active access keys and associated
      * info, as a map from key ID to access info. `doc` is a `DocForAuthor`
      * instance.
@@ -64,12 +58,7 @@ export default class Authorizer {
       throw new Error('Not authorized.');
     }
 
-    let docControl = this._docs.get(docId);
-    if (docControl === undefined) {
-      docControl = DocServer.THE_INSTANCE.getDoc(docId);
-      this._docs.set(docId, docControl);
-    }
-
+    const docControl = DocServer.THE_INSTANCE.getDoc(docId);
     const doc = new DocForAuthor(docControl, authorId);
 
     let key = null;
