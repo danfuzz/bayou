@@ -149,7 +149,7 @@ export default class Connection {
    * @returns {Promise} Promise for the result (or error).
    */
   _actOnMessage(msg) {
-    const target = this.getUncontrolledTarget(msg.target);
+    const target = this._context.getUncontrolled(msg.target);
     const action = msg.action;
     const name   = msg.name;
     const args   = msg.args;
@@ -174,33 +174,13 @@ export default class Connection {
     }
   }
 
-  /**
-   * The connection ID.
-   */
+  /** {string} The connection ID. */
   get connectionId() {
     return this._connectionId;
   }
 
-  /**
-   * Gets the target associated with the indicated ID. This will throw an error
-   * if the so-identified target does not exist.
-   *
-   * @param {string} id The target ID.
-   * @returns {object} The so-named target.
-   */
-  getTarget(id) {
-    return this._context.get(id);
-  }
-
-  /**
-   * Gets the target associated with the indicated ID, but only if it is an
-   * uncontrolled object (that is, no auth required). This will throw an error
-   * if the so-identified target does not exist.
-   *
-   * @param {string} id The target ID.
-   * @returns {object} The so-named target.
-   */
-  getUncontrolledTarget(id) {
-    return this._context.getUncontrolled(id);
+  /** {Context} The resource-binding context. */
+  get context() {
+    return this._context;
   }
 }

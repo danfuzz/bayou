@@ -50,7 +50,7 @@ export default class MetaHandler {
     const result = {};
 
     for (const id of ids) {
-      const target = this._connection.getUncontrolledTarget(id);
+      const target = this._connection.context.getUncontrolled(id);
       result[id] = target.schema.propertiesObject;
     }
 
