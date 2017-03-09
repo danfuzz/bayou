@@ -78,7 +78,7 @@ export default class Context {
     const result = this.getOrNull(id);
 
     if (!result) {
-      throw new Error(`No such target: \`${id}\``);
+      throw new Error(`Unknown target: \`${id}\``);
     }
 
     return result;
@@ -94,6 +94,24 @@ export default class Context {
   getOrNull(id) {
     const result = this._map.get(id);
     return (result !== undefined) ? result : null;
+  }
+
+  /**
+   * Gets the target associated with the indicated ID, but only if it is
+   * uncontrolled (that is, no auth required). This will throw an error if the
+   * so-identified target does not exist.
+   *
+   * @param {string} id The target ID.
+   * @returns {object} The so-identified target.
+   */
+  getUncontrolled(id) {
+    const result = this.get(id);
+
+    if (result.key !== null) {
+      throw new Error(`Unauthorized target: \`${id}\``);
+    }
+
+    return result;
   }
 
   /**
