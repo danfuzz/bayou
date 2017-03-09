@@ -154,12 +154,6 @@ export default class Connection {
     const name   = msg.name;
     const args   = msg.args;
 
-    if (!target) {
-      throw new Error(`Unknown target: \`${msg.target}\``);
-    } else if (target.key !== null) {
-      throw new Error(`Unauthorized target: \`${msg.target}\``);
-    }
-
     switch (action) {
       case 'call': {
         return target.call(name, args);
