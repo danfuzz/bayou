@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { AccessKey } from 'api-common';
-import { DocControl, DocForAuthor } from 'doc-server';
+import { DocForAuthor, DocServer } from 'doc-server';
 import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
 import { TString } from 'typecheck';
@@ -66,7 +66,7 @@ export default class Authorizer {
 
     let docControl = this._docs.get(docId);
     if (docControl === undefined) {
-      docControl = new DocControl(docId);
+      docControl = DocServer.THE_INSTANCE.getDoc(docId);
       this._docs.set(docId, docControl);
     }
 

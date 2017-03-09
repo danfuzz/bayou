@@ -9,7 +9,7 @@ import path from 'path';
 
 import { Context, PostConnection, WsConnection } from 'api-server';
 import { ClientBundle } from 'client-bundle';
-import { DocControl, DocForAuthor } from 'doc-server';
+import { DocForAuthor, DocServer } from 'doc-server';
 import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
 import { Dirs } from 'server-env';
@@ -37,7 +37,8 @@ export default class Application {
      * {DocForAuthor} The one document we manage. **TODO:** Needs to be more
      * than one!
      */
-    this._doc = new DocForAuthor(new DocControl('some-id'), 'some-author');
+    this._doc = new DocForAuthor(
+      DocServer.THE_INSTANCE.getDoc('some-id'), 'some-author');
 
     /** {Context} All of the objects we provide access to via the API. */
     const context = this._context = new Context();
