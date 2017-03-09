@@ -86,7 +86,7 @@ export default class Context {
 
   /**
    * Gets the target associated with the indicated ID, or `null` if the
-   * so-identified target does not exits.
+   * so-identified target does not exist.
    *
    * @param {string} id The target ID.
    * @returns {object|null} The so-identified target.
