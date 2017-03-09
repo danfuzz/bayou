@@ -4,5 +4,6 @@
 
 import DocControl from './DocControl';
 import DocForAuthor from './DocForAuthor';
+import DocServer from './DocServer';
 
-export { DocControl, DocForAuthor };
+export { DocControl, DocForAuthor, DocServer };

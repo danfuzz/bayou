@@ -3,7 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { AccessKey } from 'api-common';
-import { DocControl, DocForAuthor } from 'doc-server';
+import { Context } from 'api-server';
+import { DocForAuthor, DocServer } from 'doc-server';
 import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
 import { TString } from 'typecheck';
@@ -18,22 +19,13 @@ const log = new SeeAll('app-auth');
 export default class Authorizer {
   /**
    * Constructs an instance.
+   *
+   * @param {Context} context The API context that is managed by this instance,
+   *   that is, where auth-controlled resources end up getting bound.
    */
-  constructor() {
-    /**
-     * {Map<string, DocControl>} The set of active documents, as a map from ID
-     * to document object.
-     */
-    this._docs = new Map();
-
-    /**
-     * {Map<string, {key, doc}>} The set of active access keys and associated
-     * info, as a map from key ID to access info. `doc` is a `DocForAuthor`
-     * instance.
-     *
-     * **TODO:** Values of the map should have better structure.
-     */
-    this._accessors = new Map();
+  constructor(context) {
+    /** {Context} The API context to use. */
+    this._context = Context.check(context);
   }
 
   /**
@@ -64,18 +56,13 @@ export default class Authorizer {
       throw new Error('Not authorized.');
     }
 
-    let docControl = this._docs.get(docId);
-    if (docControl === undefined) {
-      docControl = new DocControl(docId);
-      this._docs.set(docId, docControl);
-    }
-
+    const docControl = DocServer.THE_INSTANCE.getDoc(docId);
     const doc = new DocForAuthor(docControl, authorId);
 
     let key = null;
     for (;;) {
       key = AccessKey.randomInstance(`${Hooks.baseUrl}/api`);
-      if (this._accessors.get(key.id) === undefined) {
+      if (!this._context.hasId(key.id)) {
         break;
       }
 
@@ -83,7 +70,7 @@ export default class Authorizer {
       // just iterate and try again.
     }
 
-    this._accessors.set(key.id, {key, doc});
+    this._context.add(key, doc);
 
     log.info(`Newly-authorized access.`);
     log.info(`  author: ${authorId}`);

@@ -4,7 +4,7 @@
 
 import { DocumentChange, FrozenDelta, Snapshot, Timestamp, VersionNumber }
   from 'doc-common';
-import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
+import { BaseDoc } from 'doc-store';
 import { TInt, TObject, TString } from 'typecheck';
 import { PromCondition } from 'util-common';
 
@@ -28,18 +28,11 @@ export default class DocControl {
   /**
    * Constructs an instance.
    *
-   * @param {string} docId The document ID.
+   * @param {BaseDoc} docStorage The underlying document storage.
    */
-  constructor(docId) {
-    /** {string} Document ID. */
-    this._docId = TString.nonempty(docId);
-
-    /**
-     * Storage access for the document. TODO: Right now this just bottoms out
-     * as access to a single document. Instead, document IDs need to be plumbed
-     * through and used to differentiate between multiple documents.
-     */
-    this._doc = DocControl._getDocAccessor(docId);
+  constructor(docStorage) {
+    /** {BaseDoc} Storage access for the document. */
+    this._doc = BaseDoc.check(docStorage);
 
     /**
      * Mapping from version numbers to corresponding document snapshots.
@@ -349,25 +342,5 @@ export default class DocControl {
     } else {
       return VersionNumber.check(verNum, current);
     }
-  }
-
-  /**
-   * Gets the document storage access object for the document with the given ID.
-   * If the document doesn't exist, it gets initialized.
-   *
-   * @param {string} docId The document ID.
-   * @returns {BaseDoc} The corresponding document accessor.
-   */
-  static _getDocAccessor(docId) {
-    const result = Hooks.docStore.getDocument(docId);
-
-    if (!result.exists()) {
-      // Initialize the document with static content (for now).
-      const firstChange =
-        new DocumentChange(0, Timestamp.now(), DEFAULT_DOCUMENT, null);
-      result.changeAppend(firstChange);
-    }
-
-    return result;
   }
 }

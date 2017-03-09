@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TString, TObject } from 'typecheck';
+import { TObject } from 'typecheck';
 
 import Target from './Target';
 
@@ -57,13 +57,14 @@ export default class Context {
    * already another target with the same ID. This is a convenience for calling
    * `map.addTarget(new Target(id, obj))`.
    *
-   * @param {string} id Target ID.
+   * @param {string} nameOrKey Either the name of the target (if
+   *   uncontrolled) _or_ the key which controls access to the target. See the
+   *   docs for `Target.add()` for more details.
    * @param {object} obj Object to ultimately call on.
    */
-  add(id, obj) {
-    TString.nonempty(id);
+  add(nameOrKey, obj) {
     TObject.check(obj);
-    this.addTarget(new Target(id, obj));
+    this.addTarget(new Target(nameOrKey, obj));
   }
 
   /**
@@ -74,13 +75,36 @@ export default class Context {
    * @returns {object} The so-identified target.
    */
   get(id) {
-    const result = this._map.get(id);
+    const result = this.getOrNull(id);
 
-    if (result === undefined) {
+    if (!result) {
       throw new Error(`No such target: \`${id}\``);
     }
 
     return result;
+  }
+
+  /**
+   * Gets the target associated with the indicated ID, or `null` if the
+   * so-identified target does not exits.
+   *
+   * @param {string} id The target ID.
+   * @returns {object|null} The so-identified target.
+   */
+  getOrNull(id) {
+    const result = this._map.get(id);
+    return (result !== undefined) ? result : null;
+  }
+
+  /**
+   * Returns an indication of whether or not this instance has a binding for
+   * the given ID.
+   *
+   * @param {string} id The target ID.
+   * @returns {boolean} `true` iff `id` is bound.
+   */
+  hasId(id) {
+    return this.getOrNull(id) !== null;
   }
 
   /**
