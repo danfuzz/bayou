@@ -34,9 +34,6 @@ export default class DocControl {
     /** {BaseDoc} Storage access for the document. */
     this._doc = BaseDoc.check(docStorage);
 
-    /** {string} Document ID. */
-    this._docId = docStorage.id;
-
     /**
      * Mapping from version numbers to corresponding document snapshots.
      * Sparse.
