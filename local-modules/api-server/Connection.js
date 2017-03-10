@@ -14,6 +14,13 @@ import Context from './Context';
 const log = new SeeAll('api');
 
 /**
+ * {Connection|null} Connection associated with the current turn of execution
+ * or `null` if no connection is currently active. This is set and reset within
+ * `_actOnMessage()`.
+ */
+let activeNow = null;
+
+/**
  * Base class for connections. Each `Connection` represents a single connection
  * over some mode of transport. Subclasses define the specifics of any given
  * mode of transport.
@@ -24,6 +31,18 @@ const log = new SeeAll('api');
  * by calling on target objects, which perform the actual application services.
  */
 export default class Connection {
+  /**
+   * {Connection|null} The instance of this class that is currently active, or
+   * `null` if no connection is active _within this turn of execution_. This is
+   * _only_ non-null during an immediate synchronous call on a target object.
+   * This variable exists so that targets can effect connection-specific
+   * behavior, such as (notably) returning URLs that are sensible for a given
+   * connection.
+   */
+  static get activeNow() {
+    return activeNow;
+  }
+
   /**
    * Checks that a value is an instance of this class. Throws an error if not.
    *
@@ -172,11 +191,13 @@ export default class Connection {
     switch (action) {
       case 'call': {
         return new Promise((res, rej) => {
+          activeNow = this;
           try {
             res(target.call(name, args));
           } catch (e) {
             rej(e);
           }
+          activeNow = null;
         });
       }
 
@@ -187,6 +208,11 @@ export default class Connection {
         throw new Error(`Bad action: \`${action}\``);
       }
     }
+  }
+
+  /** {string} The base URL. */
+  get baseUrl() {
+    return this._baseUrl;
   }
 
   /** {string} The connection ID. */
