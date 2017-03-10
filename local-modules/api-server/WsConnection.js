@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Hooks } from 'hooks-server';
 import { WebsocketCodes } from 'util-common';
 
 import Connection from './Connection';
@@ -15,10 +16,11 @@ export default class WsConnection extends Connection {
    * constructed instance to the websocket (as an event listener).
    *
    * @param {WebSocket} ws A websocket instance corresponding to the connection.
+   * @param {object} req The HTTP request.
    * @param {Context} context The binding context to provide access to.
    */
-  constructor(ws, context) {
-    super(context);
+  constructor(ws, req, context) {
+    super(context, Hooks.baseUrlFromRequest(req));
 
     /** {WebSocket} The Websocket for the client connection. */
     this._ws = ws;

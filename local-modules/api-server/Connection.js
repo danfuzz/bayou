@@ -4,6 +4,7 @@
 
 import { Decoder, Encoder, Message } from 'api-common';
 import { SeeAll } from 'see-all';
+import { TString } from 'typecheck';
 import { Random } from 'util-common';
 
 import MetaHandler from './MetaHandler';
@@ -28,10 +29,14 @@ export default class Connection {
    * connection.
    *
    * @param {Context} context The binding context to provide access to.
+   * @param {string} baseUrl The public-facing base URL for this connection.
    */
-  constructor(context) {
+  constructor(context, baseUrl) {
     /** {Context} The binding context to provide access to. */
     this._context = Context.check(context).clone();
+
+    /** {string} The public-facing base URL for this connection. */
+    this._baseUrl = TString.nonempty(baseUrl);
 
     // We add a `meta` binding to the initial set of targets, which is specific
     // to this instance/connection.
@@ -49,7 +54,7 @@ export default class Connection {
     /** {SeeAll} Logger which includes the connection ID as a prefix. */
     this._log = log.withPrefix(`[${this._connectionId}]`);
 
-    this._log.info('Open.');
+    this._log.info(`Open from <${this._baseUrl}>.`);
   }
 
   /**

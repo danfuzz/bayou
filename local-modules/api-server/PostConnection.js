@@ -4,6 +4,8 @@
 
 import contentType from 'content-type';
 
+import { Hooks } from 'hooks-server';
+
 import Connection from './Connection';
 
 /**
@@ -20,7 +22,7 @@ export default class PostConnection extends Connection {
    * @param {Context} context The binding context to provide access to.
    */
   constructor(req, res, context) {
-    super(context);
+    super(context, Hooks.baseUrlFromRequest(req));
 
     /** {object} The HTTP request. */
     this._req = req;
