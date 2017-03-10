@@ -21,14 +21,6 @@ export default class Hooks {
   }
 
   /**
-   * {string} The base URL for accessing this server. The default value is
-   * is `http://localhost:8080`.
-   */
-  static get baseUrl() {
-    return 'http://localhost:8080';
-  }
-
-  /**
    * Given an HTTP request, returns the "public" base URL of that request.
    * By default this is just the `host` as indicated in the headers, prefixed
    * by `http://`. However, when deployed behind a reverse proxy, the

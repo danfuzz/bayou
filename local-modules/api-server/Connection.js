@@ -83,7 +83,7 @@ export default class Connection {
     /** {SeeAll} Logger which includes the connection ID as a prefix. */
     this._log = log.withPrefix(`[${this._connectionId}]`);
 
-    this._log.info(`Open from <${this._baseUrl}>.`);
+    this._log.info(`Open via <${this._baseUrl}>.`);
   }
 
   /**
@@ -176,8 +176,8 @@ export default class Connection {
   }
 
   /**
-   * Helper for `handleJsonMessage()` which actually performs (well, queues up)
-   * the action requested by the given message.
+   * Helper for `handleJsonMessage()` which actually performs the action
+   * requested by the given message.
    *
    * @param {object} msg Parsed message.
    * @returns {Promise} Promise for the result (or error).
