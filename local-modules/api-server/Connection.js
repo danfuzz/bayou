@@ -4,7 +4,7 @@
 
 import { Decoder, Encoder, Message } from 'api-common';
 import { SeeAll } from 'see-all';
-import { TString } from 'typecheck';
+import { TString, TObject } from 'typecheck';
 import { Random } from 'util-common';
 
 import MetaHandler from './MetaHandler';
@@ -24,6 +24,16 @@ const log = new SeeAll('api');
  * by calling on target objects, which perform the actual application services.
  */
 export default class Connection {
+  /**
+   * Checks that a value is an instance of this class. Throws an error if not.
+   *
+   * @param {*} value Value to check.
+   * @returns {Connection} `value`.
+   */
+  static check(value) {
+    return TObject.check(value, Connection);
+  }
+
   /**
    * Constructs an instance. Each instance corresponds to a separate client
    * connection.
@@ -161,7 +171,13 @@ export default class Connection {
 
     switch (action) {
       case 'call': {
-        return target.call(name, args);
+        return new Promise((res, rej) => {
+          try {
+            res(target.call(name, args));
+          } catch (e) {
+            rej(e);
+          }
+        });
       }
 
       // **Note:** Ultimately we might accept `get` and `set`, for example, thus
