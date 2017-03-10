@@ -100,24 +100,8 @@ fi
 
 
 #
-# Helper functions
-#
-
-# Cleanup function which makes sure all the subprocesses terminate when the main
-# script terminates. This is set up as a handler for the usual termination
-# signals.
-function cleanup {
-    trap - SIGTERM # Avoid recursion.
-    kill -- -$$ >/dev/null 2>&1
-}
-
-
-#
 # Main script
 #
-
-# See comment on `cleanup` above.
-trap cleanup SIGINT SIGTERM EXIT
 
 if [[ ${outDir} == '' ]]; then
     # Default output directory.
