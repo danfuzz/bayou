@@ -80,11 +80,8 @@ export default class Target {
   }
 
   /**
-   * Queues up an instance method call on the target object, for execution in a
-   * later turn. Returns a promise for the result. This will throw an error
-   * promptly (that is, _not_ return a promise) if the arguments passed to this
-   * method are invalid _including_ if `name` doesn't correspond to an instance
-   * method of the target.
+   * Synchronously performs a method call on the target object, returning the
+   * result or (directly) throwing an error.
    *
    * @param {string} name The method name.
    * @param {Array} args Arguments to the method.
@@ -106,13 +103,6 @@ export default class Target {
 
     const target = this._target;
     const impl = target[name];
-
-    return new Promise((res, rej) => {
-      try {
-        res(impl.apply(target, args));
-      } catch (e) {
-        rej(e);
-      }
-    });
+    return impl.apply(target, args);
   }
 }

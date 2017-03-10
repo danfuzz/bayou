@@ -29,6 +29,24 @@ export default class Hooks {
   }
 
   /**
+   * Given an HTTP request, returns the "public" base URL of that request.
+   * By default this is just the `host` as indicated in the headers, prefixed
+   * by `http://`. However, when deployed behind a reverse proxy, the
+   * public-facing base URL could turn out to be different, hence this hook.
+   *
+   * @param {object} req HTTP request object.
+   * @returns {string} The base URL.
+   */
+  static baseUrlFromRequest(req) {
+    const host = req.headers.host;
+    if (host) {
+      return `http://${host}`;
+    }
+
+    throw new Error('Missing `host` header on request.');
+  }
+
+  /**
    * The object which provides access to document storage. This is an instance
    * of a subclass of `BaseDocStore`, as defined by the `doc-store` module.
    */

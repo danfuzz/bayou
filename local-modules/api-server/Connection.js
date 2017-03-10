@@ -4,6 +4,7 @@
 
 import { Decoder, Encoder, Message } from 'api-common';
 import { SeeAll } from 'see-all';
+import { TString, TObject } from 'typecheck';
 import { Random } from 'util-common';
 
 import MetaHandler from './MetaHandler';
@@ -11,6 +12,13 @@ import Context from './Context';
 
 /** Logger. */
 const log = new SeeAll('api');
+
+/**
+ * {Connection|null} Connection associated with the current turn of execution
+ * or `null` if no connection is currently active. This is set and reset within
+ * `_actOnMessage()`.
+ */
+let activeNow = null;
 
 /**
  * Base class for connections. Each `Connection` represents a single connection
@@ -24,14 +32,40 @@ const log = new SeeAll('api');
  */
 export default class Connection {
   /**
+   * {Connection|null} The instance of this class that is currently active, or
+   * `null` if no connection is active _within this turn of execution_. This is
+   * _only_ non-null during an immediate synchronous call on a target object.
+   * This variable exists so that targets can effect connection-specific
+   * behavior, such as (notably) returning URLs that are sensible for a given
+   * connection.
+   */
+  static get activeNow() {
+    return activeNow;
+  }
+
+  /**
+   * Checks that a value is an instance of this class. Throws an error if not.
+   *
+   * @param {*} value Value to check.
+   * @returns {Connection} `value`.
+   */
+  static check(value) {
+    return TObject.check(value, Connection);
+  }
+
+  /**
    * Constructs an instance. Each instance corresponds to a separate client
    * connection.
    *
    * @param {Context} context The binding context to provide access to.
+   * @param {string} baseUrl The public-facing base URL for this connection.
    */
-  constructor(context) {
+  constructor(context, baseUrl) {
     /** {Context} The binding context to provide access to. */
     this._context = Context.check(context).clone();
+
+    /** {string} The public-facing base URL for this connection. */
+    this._baseUrl = TString.nonempty(baseUrl);
 
     // We add a `meta` binding to the initial set of targets, which is specific
     // to this instance/connection.
@@ -49,7 +83,7 @@ export default class Connection {
     /** {SeeAll} Logger which includes the connection ID as a prefix. */
     this._log = log.withPrefix(`[${this._connectionId}]`);
 
-    this._log.info('Open.');
+    this._log.info(`Open from <${this._baseUrl}>.`);
   }
 
   /**
@@ -156,7 +190,15 @@ export default class Connection {
 
     switch (action) {
       case 'call': {
-        return target.call(name, args);
+        return new Promise((res, rej) => {
+          activeNow = this;
+          try {
+            res(target.call(name, args));
+          } catch (e) {
+            rej(e);
+          }
+          activeNow = null;
+        });
       }
 
       // **Note:** Ultimately we might accept `get` and `set`, for example, thus
@@ -166,6 +208,11 @@ export default class Connection {
         throw new Error(`Bad action: \`${action}\``);
       }
     }
+  }
+
+  /** {string} The base URL. */
+  get baseUrl() {
+    return this._baseUrl;
   }
 
   /** {string} The connection ID. */

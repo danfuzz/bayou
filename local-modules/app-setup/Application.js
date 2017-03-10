@@ -102,9 +102,13 @@ export default class Application {
     // Use the `api-server` module to handle POST and websocket requests at
     // `/api`.
     app.post('/api',
-      (req, res) => { new PostConnection(req, res, this._context); });
+      (req, res) => {
+        new PostConnection(req, res, this._context);
+      });
     app.ws('/api',
-      (ws, req_unused) => { new WsConnection(ws, this._context); });
+      (ws, req) => {
+        new WsConnection(ws, req, this._context);
+      });
   }
 
   /**

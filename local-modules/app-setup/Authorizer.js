@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { AccessKey } from 'api-common';
-import { Context } from 'api-server';
+import { Connection, Context } from 'api-server';
 import { DocForAuthor, DocServer } from 'doc-server';
 import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
@@ -58,10 +58,11 @@ export default class Authorizer {
 
     const docControl = DocServer.THE_INSTANCE.getDoc(docId);
     const doc = new DocForAuthor(docControl, authorId);
+    const baseUrl = Connection.activeNow.baseUrl;
 
     let key = null;
     for (;;) {
-      key = AccessKey.randomInstance(`${Hooks.baseUrl}/api`);
+      key = AccessKey.randomInstance(`${baseUrl}/api`);
       if (!this._context.hasId(key.id)) {
         break;
       }
