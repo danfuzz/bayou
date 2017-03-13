@@ -21,8 +21,10 @@ SeeAllBrowser.init();
 // Give the overlay a chance to do any initialization.
 Hooks.run();
 
-// Make the instance.
-const quill = QuillMaker.make('#editor');
+// Make the instance. We use the `BAYOU_NODE` specified by the enclosing HTML,
+// if passed, or default to `#editor`. TODO: Should probably just insist on
+// `BAYOU_NODE` being defined.
+const quill = QuillMaker.make(window.BAYOU_NODE || '#editor');
 
 // Initialize the API connection, and hook it up to the Quill instance.
 const apiClient = new ApiClient(document.URL);
