@@ -23,7 +23,8 @@ Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
     // polluting the global namespace.
     (function () {
       var url = window.location.origin + '/api';
-      BAYOU_KEY = JSON.stringify(["SplitKey", url, "some-id", "some-secret"]);
+      BAYOU_KEY = JSON.stringify(
+        ["SplitKey", url, "0000000000000000", "00000000000000000000000000000000"]);
       BAYOU_NODE = '#the-bayou-editor';
     }());
   </script>

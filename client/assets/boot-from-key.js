@@ -40,7 +40,4 @@
   elem = document.createElement('script');
   elem.src = baseUrl + '/static/bundle.js';
   document.head.appendChild(elem);
-
-  console.log('======= selector', BAYOU_NODE);
-  console.log('======= node', document.querySelector(BAYOU_NODE));
 }());
