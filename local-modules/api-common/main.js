@@ -2,14 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import AccessKey from './AccessKey';
 import Decoder from './Decoder';
 import Encoder from './Encoder';
 import Message from './Message';
 import Registry from './Registry';
+import SplitKey from './SplitKey';
 
 // Register classes with the API.
-Registry.register(AccessKey);
 Registry.register(Message);
+Registry.register(SplitKey);
 
-export { AccessKey, Decoder, Encoder, Message, Registry };
+export { Decoder, Encoder, Message, Registry, SplitKey };

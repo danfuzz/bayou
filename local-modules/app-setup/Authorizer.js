@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { AccessKey } from 'api-common';
+import { SplitKey } from 'api-common';
 import { Connection, Context } from 'api-server';
 import { DocForAuthor, DocServer } from 'doc-server';
 import { Hooks } from 'hooks-server';
@@ -41,7 +41,7 @@ export default class Authorizer {
    *   are made using the resulting authorization.
    * @param {string} docId ID of the document which the resulting authorization
    *   allows access to.
-   * @returns {AccessKey} Split token (ID + secret) which provides the requested
+   * @returns {SplitKey} Split token (ID + secret) which provides the requested
    *   access.
    */
   makeAccessKey(rootCredential, authorId, docId) {
@@ -62,7 +62,7 @@ export default class Authorizer {
 
     let key = null;
     for (;;) {
-      key = AccessKey.randomInstance(`${baseUrl}/api`);
+      key = SplitKey.randomInstance(`${baseUrl}/api`);
       if (!this._context.hasId(key.id)) {
         break;
       }

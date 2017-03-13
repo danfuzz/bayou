@@ -7,35 +7,27 @@ import sha256 from 'js-sha256';
 import { TString } from 'typecheck';
 import { DataUtil, Random } from 'util-common';
 
+import BaseKey from './BaseKey';
+
 /**
- * Information for accessing a network-accessible resource, along with
- * functionality for performing authentication. In general, a given instance of
- * this class represents access to a particular resource, but that same resource
- * might also be available via different instances of the class too, and even
- * using different IDs. (That is, it can be a many-to-one relationship.)
- *
- * There are three pieces of information held by instances of this class:
- *
- * * A URL at which the resource is available.
- * * The ID of the resource.
- * * A secret key which protects access to the resource.
- *
- * Of the three pieces of info, the first two are safe to pass over an
- * unencrypted connection as well as log, while the last is _not_ safe to pass
- * unencrypted nor to log.
+ * "Split" key which contains an explicit key ID and separate secret. In
+ * addition to the `BaseKey` data, instances of this class also contain a
+ * `secret`. This secret is meant to _only_ ever be passed over a secure
+ * (encrypted) connection, and even that is to be avoided when feasible. In
+ * addition, secrets are _never_ supposed to be logged.
  */
-export default class AccessKey {
+export default class SplitKey extends BaseKey {
   /**
    * Constructs an instance with random ID and secret.
    *
    * @param {string} url URL at which the resource may be accessed. This is
    *   expected to be an API endpoint.
-   * @returns {AccessKey} The constructed instance.
+   * @returns {SplitKey} The constructed instance.
    */
   static randomInstance(url) {
     const id = Random.hexByteString(8);
     const secret = Random.hexByteString(16);
-    return new AccessKey(url, id, secret);
+    return new SplitKey(url, id, secret);
   }
 
   /**
@@ -49,11 +41,7 @@ export default class AccessKey {
    *   digits (lower case).
    */
   constructor(url, id, secret) {
-    /** {string} URL at which the resource may be accessed. */
-    this._url = TString.urlAbsolute(url);
-
-    /** {string} Key / resource identifier. */
-    this._id = TString.hexBytes(id, 8, 8);
+    super(url, id);
 
     /** {string} Shared secret. */
     this._secret = TString.hexBytes(secret, 16, 16);
@@ -63,7 +51,7 @@ export default class AccessKey {
 
   /** Name of this class in the API. */
   static get API_NAME() {
-    return 'AccessKey';
+    return 'SplitKey';
   }
 
   /**
@@ -81,20 +69,10 @@ export default class AccessKey {
    * @param {string} url Same as with the regular constructor.
    * @param {string} id Same as with the regular constructor.
    * @param {string} secret Same as with the regular constructor.
-   * @returns {AccessKey} The constructed instance.
+   * @returns {SplitKey} The constructed instance.
    */
   static fromApi(url, id, secret) {
-    return new AccessKey(url, id, secret);
-  }
-
-  /** {string} URL at which the resource may be accessed. */
-  get url() {
-    return this._url;
-  }
-
-  /** {string} Key / resource identifier. */
-  get id() {
-    return this._id;
+    return new SplitKey(url, id, secret);
   }
 
   /**
@@ -103,15 +81,6 @@ export default class AccessKey {
    */
   get secret() {
     return this._secret;
-  }
-
-  /**
-   * Gets the redacted form of this instance.
-   *
-   * @returns {string} The redacted form.
-   */
-  toString() {
-    return `{${AccessKey.API_NAME} ${this._url} ${this._id}}`;
   }
 
   /**
