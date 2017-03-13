@@ -25,7 +25,7 @@
   // Grab the base URL out of the encoded key. This is kinda gross, but when
   // we're here we haven't yet loaded the API code, and in order to load that
   // code we need to know the base URL, whee! So we just do the minimal bit of
-  // parsing needed to get the URL and then head on our merry way. Whee!
+  // parsing needed to get the URL and then head on our merry way.
   var key = JSON.parse(window.BAYOU_KEY);
   var url = key[1]; // See `SplitKey.js`, the encoded form in particular.
   var baseUrl = url.match(/^https?:\/\/[^\/]+/)[0];
