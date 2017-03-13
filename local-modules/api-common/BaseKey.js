@@ -27,19 +27,25 @@ export default class BaseKey {
    * Constructs an instance with the indicated parts.
    *
    * @param {string} url URL at which the resource may be accessed. This is
-   *   expected to be an API endpoint.
+   *   expected to be an API endpoint. Alternatively, if this instance will only
+   *   ever be used in a context where the URL is implied or superfluous, this
+   *   can be passed as `*` (a literal asterisk).
    * @param {string} id Key / resource identifier. This must be a string of 16
    *   hex digits (lower case).
    */
   constructor(url, id) {
-    /** {string} URL at which the resource may be accessed. */
-    this._url = TString.urlAbsolute(url);
+    if (url !== '*') {
+      TString.urlAbsolute(url);
+    }
+
+    /** {string} URL at which the resource may be accessed, or `*`. */
+    this._url = url;
 
     /** {string} Key / resource identifier. */
     this._id = TString.hexBytes(id, 8, 8);
   }
 
-  /** {string} URL at which the resource may be accessed. */
+  /** {string} URL at which the resource may be accessed, or `*`. */
   get url() {
     return this._url;
   }

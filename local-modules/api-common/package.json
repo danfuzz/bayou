@@ -6,6 +6,7 @@
   "dependencies": {
     "js-sha256": "^0.5.0",
 
+    "hooks-server": "local",
     "typecheck": "local",
     "util-common": "local"
   }
