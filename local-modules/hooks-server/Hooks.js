@@ -39,6 +39,30 @@ export default class Hooks {
   }
 
   /**
+   * {object} The object which validates bearer tokens. See
+   * `api-client.BearerToken` for details. This object must implement two
+   * methods:
+   *
+   * * `isToken(token)` -- Returns `true` if the `token` is _syntactically_
+   *   valid (whether or not it actually grants any access).
+   * * `tokenId(token)` -- Returns the portion of `token` which should be
+   *   considered its "ID" for the purposes of lookup, logging, etc.
+   */
+  static get bearerTokenValidator() {
+    // By default, bearer tokens merely have to be at least 32 characters long,
+    // with the first 16 being treated as the ID.
+
+    return {
+      isToken: ((token) => {
+        return ((typeof token) === 'string') && (token.length >= 32);
+      }),
+      tokenId: ((token) => {
+        return token.slice(0, 16);
+      })
+    };
+  }
+
+  /**
    * The object which provides access to document storage. This is an instance
    * of a subclass of `BaseDocStore`, as defined by the `doc-store` module.
    */

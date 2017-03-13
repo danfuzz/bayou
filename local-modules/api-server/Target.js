@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { AccessKey } from 'api-common';
+import { SplitKey } from 'api-common';
 import { TArray, TObject, TString } from 'typecheck';
 
 import Schema from './Schema';
@@ -17,7 +17,7 @@ export default class Target {
   /**
    * Constructs an instance which wraps the given object.
    *
-   * @param {string|AccessKey} nameOrKey Either the name of the target (if
+   * @param {string|SplitKey} nameOrKey Either the name of the target (if
    *   uncontrolled) _or_ the key which controls access to the target. In the
    *   former case, the target's `id` is taken to be the given name. In the
    *   latter case, the target's `id` is considered to be the same as the key's
@@ -27,10 +27,10 @@ export default class Target {
    */
   constructor(nameOrKey, target, schema = null) {
     /**
-     * {AccessKey|null} The access key, or `null` if this is an uncontrolled
+     * {SplitKey|null} The access key, or `null` if this is an uncontrolled
      * target.
      */
-    this._key = (nameOrKey instanceof AccessKey) ? nameOrKey : null;
+    this._key = (nameOrKey instanceof SplitKey) ? nameOrKey : null;
 
     /** {string} The target ID. */
     this._id = (this._key === null)
@@ -47,7 +47,7 @@ export default class Target {
   }
 
   /**
-   * {AccessKey|null} The access control key or `null` if this is an
+   * {SplitKey|null} The access control key or `null` if this is an
    * uncontrolled target.
    */
   get key() {
