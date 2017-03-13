@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import BaseKey from './BaseKey';
-import BearerToken from './BearerToken';
+//import BearerToken from './BearerToken'; TODO: Uncommenting this breaks things. Why?
 import Decoder from './Decoder';
 import Encoder from './Encoder';
 import Message from './Message';
@@ -14,4 +14,4 @@ import SplitKey from './SplitKey';
 Registry.register(Message);
 Registry.register(SplitKey);
 
-export { BaseKey, BearerToken, Decoder, Encoder, Message, Registry, SplitKey };
+export { BaseKey, /*BearerToken,*/ Decoder, Encoder, Message, Registry, SplitKey };
