@@ -13,8 +13,4 @@ import SplitKey from './SplitKey';
 Registry.register(Message);
 Registry.register(SplitKey);
 
-// TODO: Export `BearerToken`. Right now, doing so causes a dependency loop
-// between this module and `hooks-server`, which will need to get untangled
-// first.
-
-export { BaseKey, /*BearerToken,*/ Decoder, Encoder, Message, Registry, SplitKey };
+export { BaseKey, Decoder, Encoder, Message, Registry, SplitKey };

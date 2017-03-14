@@ -8,4 +8,6 @@ import PostConnection from './PostConnection';
 import Target from './Target';
 import WsConnection from './WsConnection';
 
-export { Connection, Context, PostConnection, Target, WsConnection };
+// TODO: Export `BearerToken` once circular dependency issues have been
+// resolved.
+export { /*BearerToken,*/ Connection, Context, PostConnection, Target, WsConnection };

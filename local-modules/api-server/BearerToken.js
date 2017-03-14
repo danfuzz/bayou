@@ -2,10 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { BaseKey } from 'api-common';
 import { Hooks } from 'hooks-server';
 import { TObject } from 'typecheck';
-
-import BaseKey from './BaseKey';
 
 /**
  * Bearer token, which is a kind of key which conflates ID and secret.
