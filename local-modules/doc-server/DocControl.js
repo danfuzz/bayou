@@ -99,7 +99,7 @@ export default class DocControl {
       // propagate through the rest of the code and end up making everything all
       // work out.
       const firstChange = new DocumentChange(0, Timestamp.now(),
-        [{insert: '(Recreated document due to format version skew.)\n'}],
+        [{ insert: '(Recreated document due to format version skew.)\n' }],
         null);
       this._doc.changeAppend(firstChange);
       verNum = 0;
@@ -164,7 +164,7 @@ export default class DocControl {
       // We don't just return a plain value (that is, we still return a promise)
       // because of the usual hygenic recommendation to always return either
       // an immediate result or a promise from any given function.
-      return Promise.resolve({verNum: currentVerNum, delta});
+      return Promise.resolve({ verNum: currentVerNum, delta });
     }
 
     // Force the `_changeCondition` to `false` (though it might already be

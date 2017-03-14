@@ -43,6 +43,7 @@
       }
     ],
     "no-var": "error",
+    "object-curly-spacing": ["error", "always"],
     "object-shorthand": ["error", "always"],
     "prefer-const": "error",
     "prefer-rest-params": "error",

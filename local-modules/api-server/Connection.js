@@ -108,7 +108,7 @@ export default class Connection {
 
       // Function to send a response. Arrow syntax so that `this` is usable.
       const respond = (result, error) => {
-        const response = {id: msg.id};
+        const response = { id: msg.id };
         if (error) {
           response.error = error.message;
         } else {
@@ -167,12 +167,12 @@ export default class Connection {
         id = msg[1];
       }
 
-      return {error, id};
+      return { error, id };
     }
 
     return (msg instanceof Message)
       ? msg
-      : {id: -1, error: new Error('Did not receive `Message` object.')};
+      : { id: -1, error: new Error('Did not receive `Message` object.') };
   }
 
   /**

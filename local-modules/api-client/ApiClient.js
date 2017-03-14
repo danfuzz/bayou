@@ -154,7 +154,7 @@ export default class ApiClient {
 
     let callback;
     const result = new Promise((resolve, reject) => {
-      callback = {resolve, reject};
+      callback = { resolve, reject };
     });
 
     this._callbacks[id] = callback;

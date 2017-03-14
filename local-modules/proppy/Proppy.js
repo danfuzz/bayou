@@ -86,7 +86,7 @@ export default class Proppy {
    * @returns {object} Object as described in the class header.
    */
   static parseFile(path) {
-    const contents = fs.readFileSync(path, {encoding: 'utf8'});
+    const contents = fs.readFileSync(path, { encoding: 'utf8' });
     return Proppy.parseString(contents);
   }
 
@@ -171,19 +171,19 @@ export default class Proppy {
 
       match = /^\n/.exec(source);
       if (match) {
-        result.push({type: 'eol'});
+        result.push({ type: 'eol' });
         continue;
       }
 
       match = /^=/.exec(source);
       if (match) {
-        result.push({type: 'equals'});
+        result.push({ type: 'equals' });
         continue;
       }
 
       match = /^[-_.\/a-zA-Z0-9]+/.exec(source);
       if (match) {
-        result.push({type: 'string', value: match[0]});
+        result.push({ type: 'string', value: match[0] });
         continue;
       }
 
@@ -194,7 +194,7 @@ export default class Proppy {
       if (match) {
         // Quoted string: Trim the quotes, and parse characters.
         const contents = Proppy._parseQuotedString(match[0].slice(1, -1));
-        result.push({type: 'string', value: contents});
+        result.push({ type: 'string', value: contents });
         continue;
       }
 
@@ -205,7 +205,7 @@ export default class Proppy {
     }
 
     // We treat the string as always ending with a newline.
-    result.push({type: 'eol'});
+    result.push({ type: 'eol' });
 
     return result;
   }

@@ -11,11 +11,11 @@ const DEFAULT_TOOLBAR_CONFIG = [
   ['bold', 'italic', 'underline', 'strike', 'code'], // toggled buttons
   ['blockquote', 'code-block'],
 
-  [{list: 'ordered'}, {list: 'bullet'}],
+  [{ list: 'ordered' }, { list: 'bullet' }],
 
-  [{header: [1, 2, 3, 4, false]}],
+  [{ header: [1, 2, 3, 4, false] }],
 
-  [{align: []}],
+  [{ align: [] }],
 
   ['clean']                                      // remove formatting button
 ];
