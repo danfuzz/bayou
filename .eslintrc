@@ -11,9 +11,12 @@
     "restParams": true
   },
   "rules" : {
+    "array-bracket-spacing": "error",
     "consistent-return": "error",
+    "eol-last": "error",
     "eqeqeq": "error",
     "indent": ["error", 2, {"SwitchCase": 1}],
+    "keyword-spacing": "error",
     "no-alert": "warn",
     "no-array-constructor": "error",
     "no-empty-function": "error",
