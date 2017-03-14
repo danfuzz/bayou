@@ -643,7 +643,7 @@ export default class DocClient extends StateMachine {
 
     // Make a new head of the change chain which points at the `nextNow` we
     // just constructed above.
-    this._currentChange = {nextNow, next: Promise.resolve(nextNow)};
+    this._currentChange = { nextNow, next: Promise.resolve(nextNow) };
 
     this._becomeIdle();
   }

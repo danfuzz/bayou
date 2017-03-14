@@ -69,7 +69,7 @@ export default class DevMode {
         const dirs = fs.readFileSync(p, 'utf8').match(/.+(?=\n)/g);
         for (const d of dirs) {
           // `priority` is used to get the sort to respect overlay order.
-          soFar.push({from: d, to: copyTo, priority: soFar.length});
+          soFar.push({ from: d, to: copyTo, priority: soFar.length });
         }
       } else if (fs.statSync(p).isDirectory()) {
         DevMode._makeMappings(p, soFar, false);
@@ -236,7 +236,7 @@ export default class DevMode {
       return null;
     }
 
-    return {fromPath: bestFromPath, toPath};
+    return { fromPath: bestFromPath, toPath };
   }
 
   /**
@@ -268,7 +268,7 @@ export default class DevMode {
     } else {
       // The source file changed.
       fs_extra.ensureDirSync(path.dirname(toPath));
-      fs_extra.copySync(fromPath, toPath, {clobber: true, dereference: false});
+      fs_extra.copySync(fromPath, toPath, { clobber: true, dereference: false });
     }
   }
 
@@ -335,7 +335,7 @@ export default class DevMode {
     const watchDirs = mappings.map((m) => { return m.from; });
 
     // Start watching.
-    const watcher = chokidar.watch(watchDirs, {ignoreInitial: true});
+    const watcher = chokidar.watch(watchDirs, { ignoreInitial: true });
 
     // Monitor file adds, changes, and removals.
     const handler = onChange.bind(this);

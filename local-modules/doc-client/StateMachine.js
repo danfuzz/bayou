@@ -118,7 +118,7 @@ export default class StateMachine {
         }
 
         this._log.detail('Enqueued:', name, args);
-        this._eventQueue.push({name, args});
+        this._eventQueue.push({ name, args });
         this._anyEventPending.value = true;
       };
     }
@@ -293,7 +293,7 @@ export default class StateMachine {
    * @param {object} event The event.
    */
   _dispatchEvent(event) {
-    const {name, args} = event;
+    const { name, args } = event;
     const state = this._state;
     const log = this._log;
 

@@ -113,6 +113,6 @@ export default class SplitKey extends BaseKey {
     const id        = this._id;
     const challenge = Random.hexByteString(8);
     const response  = this.challengeResponseFor(challenge);
-    return {id, challenge, response};
+    return { id, challenge, response };
   }
 }

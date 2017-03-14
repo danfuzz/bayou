@@ -131,9 +131,9 @@ export default class LocalDoc extends BaseDoc {
     PromDelay.resolve(DIRTY_DELAY_MSEC).then(() => {
       this._log.detail('Writing to disk...');
 
-      const contents = {version: this._formatVersion, changes: this._changes};
+      const contents = { version: this._formatVersion, changes: this._changes };
       const encoded = Encoder.encodeJson(contents, true);
-      fs.writeFileSync(this._path, encoded, {encoding: 'utf8'});
+      fs.writeFileSync(this._path, encoded, { encoding: 'utf8' });
       this._dirty = false;
       this._log.info('Written to disk.');
     });

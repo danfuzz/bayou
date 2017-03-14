@@ -63,7 +63,7 @@ export default class DeltaEvent {
 
     // Likewise, this is how we can provide a read-only yet changeable `nextNow`
     // on a frozen object.
-    Object.defineProperty(this, 'nextNow', { get: () => { return nextNow; }});
+    Object.defineProperty(this, 'nextNow', { get: () => { return nextNow; } });
 
     Object.freeze(this);
   }

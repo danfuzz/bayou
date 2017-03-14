@@ -168,7 +168,7 @@ export default class SeeAllServer {
 
     text += ' ';
 
-    return {text, length};
+    return { text, length };
   }
 
   /**

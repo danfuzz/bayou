@@ -121,7 +121,7 @@ export default class PostConnection extends Connection {
    * @param {string} error Message to report.
    */
   _respond400(error) {
-    const payload = JSON.stringify({id: -1, error});
+    const payload = JSON.stringify({ id: -1, error });
 
     // Not logged as `.error()` because it's not an application error (at least
     // not on this side).
