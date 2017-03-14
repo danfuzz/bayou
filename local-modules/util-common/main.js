@@ -5,6 +5,7 @@
 import { ObjectUtil } from 'util-base';
 
 import DataUtil from './DataUtil';
+import DeferredLoader from './DeferredLoader';
 import JsonUtil from './JsonUtil';
 import PromCondition from './PromCondition';
 import PromDelay from './PromDelay';
@@ -14,6 +15,7 @@ import WebsocketCodes from './WebsocketCodes';
 
 export {
   DataUtil,
+  DeferredLoader,
   JsonUtil,
   ObjectUtil,
   PromCondition,
