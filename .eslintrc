@@ -15,6 +15,7 @@
     "eqeqeq": "error",
     "indent": ["error", 2, {"SwitchCase": 1}],
     "no-alert": "warn",
+    "no-array-constructor": "error",
     "no-empty-function": "error",
     "no-eval": "error",
     "no-extend-native": "error",
@@ -22,6 +23,8 @@
     "no-floating-decimal": "error",
     "no-implied-eval": "error",
     "no-nested-ternary": "error",
+    "no-new-func": "error",
+    "no-new-object": "error",
     "no-regex-spaces": "off",
     "no-shadow": "error",
     "no-trailing-spaces": "error",
@@ -37,6 +40,7 @@
       }
     ],
     "no-var": "error",
+    "object-shorthand": ["error", "always"],
     "prefer-const": "error",
     "prefer-rest-params": "error",
     "prefer-spread": "error",
@@ -49,6 +53,7 @@
       }
     ],
     "semi": ["error", "always"],
+    "space-before-blocks": ["error", "always"],
     "space-before-function-paren": [
       "error",
       {
