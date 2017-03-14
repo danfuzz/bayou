@@ -3,6 +3,7 @@ doc
 
 Various bits of documentation.
 
+* [Coding Conventions](coding-conventions.md)
 * [Customization](customization.md)
 * [Development Guide](development.md)
 
