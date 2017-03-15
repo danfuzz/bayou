@@ -43,23 +43,24 @@ export default class Hooks {
    * `api-client.BearerToken` for details. This object must implement two
    * methods:
    *
-   * * `isToken(token)` -- Returns `true` if the `token` is _syntactically_
-   *   valid (whether or not it actually grants any access). This will only ever
-   *   get called on strings (per se) of at least 32 characters, so it is safe
-   *   to assume those facts. The default implementation just returns `true`.
-   * * `tokenId(token)` -- Returns the portion of (the string) `token` which
+   * * `isToken(tokenString)` -- Returns `true` if the `tokenString` is
+   *   _syntactically_ valid as a bearer token (whether or not it actually
+   *   grants any access). This will only ever get called on strings (per se) of
+   *   at least 32 characters, so it is safe to assume those facts. The default
+   *   implementation just returns `true`.
+   * * `tokenId(tokenString)` -- Returns the portion of `tokenString` which
    *   should be considered its "ID" for the purposes of lookup, logging, etc.
    *   The default implementation just returns the first 16 characters of the
-   *   token.
+   *   string.
    */
   static get bearerTokenValidator() {
     return {
-      isToken(token_unused) {
+      isToken(tokenString_unused) {
         return true;
       },
 
-      tokenId(token) {
-        return token.slice(0, 16);
+      tokenId(tokenString) {
+        return tokenString.slice(0, 16);
       }
     };
   }
