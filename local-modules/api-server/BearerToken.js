@@ -4,7 +4,7 @@
 
 import { BaseKey } from 'api-common';
 import { Hooks } from 'hooks-server';
-import { TObject } from 'typecheck';
+import { TObject, TString } from 'typecheck';
 
 /**
  * Bearer token, which is a kind of key which conflates ID and secret.
@@ -44,6 +44,8 @@ export default class BearerToken extends BaseKey {
    *   least 32 characters.
    */
   constructor(secretToken) {
+    TString.minLen(secretToken, 32);
+
     if (!Hooks.bearerTokenValidator.isToken(secretToken)) {
       // We don't include any real detail in the error message, as that might
       // inadvertently leak a secret into the logs.

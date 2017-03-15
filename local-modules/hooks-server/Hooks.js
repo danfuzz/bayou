@@ -44,17 +44,17 @@ export default class Hooks {
    * methods:
    *
    * * `isToken(token)` -- Returns `true` if the `token` is _syntactically_
-   *   valid (whether or not it actually grants any access).
+   *   valid (whether or not it actually grants any access). This will only ever
+   *   get called on strings (per se) of at least 32 characters, so it is safe
+   *   to assume those facts. The default implementation just returns `true`.
    * * `tokenId(token)` -- Returns the portion of `token` which should be
-   *   considered its "ID" for the purposes of lookup, logging, etc.
+   *   considered its "ID" for the purposes of lookup, logging, etc. The default
+   *   implementation just returns the first 16 characters of the token.
    */
   static get bearerTokenValidator() {
-    // By default, bearer tokens merely have to be at least 32 characters long,
-    // with the first 16 being treated as the ID.
-
     return {
-      isToken: ((token) => {
-        return ((typeof token) === 'string') && (token.length >= 32);
+      isToken: ((token_unused) => {
+        return true;
       }),
       tokenId: ((token) => {
         return token.slice(0, 16);
