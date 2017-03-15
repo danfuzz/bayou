@@ -39,26 +39,37 @@ export default class Hooks {
   }
 
   /**
-   * {object} The object which validates bearer tokens. See
-   * `api-client.BearerToken` for details. This object must implement two
+   * {object} The object which validates and authorizes bearer tokens. See
+   * `api-client.BearerToken` for details. This object must implement these
    * methods:
    *
-   * * `isToken(token)` -- Returns `true` if the `token` is _syntactically_
-   *   valid (whether or not it actually grants any access).
-   * * `tokenId(token)` -- Returns the portion of `token` which should be
-   *   considered its "ID" for the purposes of lookup, logging, etc.
+   * * `grantsRoot(token)` -- Returns `true` iff `token` (a `BearerToken` per
+   *   se) grants root access to the system. The (obviously insecure) default is
+   *   to treat a bearer token of 32 zeroes as granting access.
+   * * `isToken(tokenString)` -- Returns `true` iff the `tokenString` is
+   *   _syntactically_ valid as a bearer token (whether or not it actually
+   *   grants any access). This will only ever get called on strings (per se) of
+   *   at least 32 characters, so it is safe to assume those facts. The default
+   *   implementation just returns `true`.
+   * * `tokenId(tokenString)` -- Returns the portion of `tokenString` which
+   *   should be considered its "ID" for the purposes of lookup, logging, etc.
+   *   The default implementation just returns the first 16 characters of the
+   *   string.
    */
   static get bearerTokenValidator() {
-    // By default, bearer tokens merely have to be at least 32 characters long,
-    // with the first 16 being treated as the ID.
-
     return {
-      isToken: ((token) => {
-        return ((typeof token) === 'string') && (token.length >= 32);
-      }),
-      tokenId: ((token) => {
-        return token.slice(0, 16);
-      })
+      grantsRoot(token) {
+        // TODO: We should probably provide a less trivial default.
+        return token.secretToken === '0'.repeat(32);
+      },
+
+      isToken(tokenString_unused) {
+        return true;
+      },
+
+      tokenId(tokenString) {
+        return tokenString.slice(0, 16);
+      }
     };
   }
 
@@ -78,26 +89,5 @@ export default class Hooks {
    */
   static get listenPort() {
     return 8080;
-  }
-
-  /**
-   * {object} The object which validates root credentials. These are credentials
-   * which provide "root" access to the server. This object must implement two
-   * methods:
-   *
-   * * `checkCredential(cred)` -- Returns `true` if the `cred` is valid and
-   *    grants root access, or `false` if not.
-   * * `isCredential(cred)` -- Returns `true` if the `cred` is _syntactically_
-   *   valid (whether or not it actually grants root access).
-   */
-  static get rootValidator() {
-    // By default, we provide a very simple and obviously insecure default,
-    // which just checks to see if the given credential is the literal string
-    // `root`. TODO: Should probably provide a less trivial default.
-
-    return {
-      isCredential:    ((cred) => { return (typeof cred) === 'string'; }),
-      checkCredential: ((cred) => { return cred === 'root'; })
-    };
   }
 }

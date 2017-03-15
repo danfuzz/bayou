@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { SplitKey } from 'api-common';
-import { Connection, Context } from 'api-server';
+import { BearerToken, Connection, Context } from 'api-server';
 import { DocForAuthor, DocServer } from 'doc-server';
 import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
@@ -33,10 +33,10 @@ export default class Authorizer {
    * one author. If the document doesn't exist, this will cause it to be
    * created.
    *
-   * @param {*} rootCredential Credential (commonly but not necessarily a
-   *   bearer token) which provides "root" access to this server. This method
-   *   will throw an error if this value does not correspond to a credential
-   *   known to the server.
+   * @param {BearerToken|string} rootCredential Credential (either a
+   *   `BearerToken` or a string that can be coerced to same) which provides
+   *   "root" access to this server. This method will throw an error if this
+   *   value does not correspond to a credential known to the server.
    * @param {string} authorId ID which corresponds to the author of changes that
    *   are made using the resulting authorization.
    * @param {string} docId ID of the document which the resulting authorization
@@ -45,14 +45,11 @@ export default class Authorizer {
    *   access.
    */
   makeAccessKey(rootCredential, authorId, docId) {
+    rootCredential = BearerToken.coerce(rootCredential);
     TString.nonempty(authorId);
     TString.nonempty(docId);
 
-    const validator = Hooks.rootValidator;
-
-    if (!validator.isCredential(rootCredential)) {
-      throw new Error('Invalid credential syntax.');
-    } else if (!validator.checkCredential(rootCredential)) {
+    if (!Hooks.bearerTokenValidator.grantsRoot(rootCredential)) {
       throw new Error('Not authorized.');
     }
 

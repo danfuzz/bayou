@@ -24,14 +24,15 @@ import { TString } from 'typecheck';
  */
 export default class BaseKey {
   /**
-   * Constructs an instance with the indicated parts.
+   * Constructs an instance with the indicated parts. Subclasses should override
+   * methods as described in the documentation.
    *
    * @param {string} url URL at which the resource may be accessed. This is
    *   expected to be an API endpoint. Alternatively, if this instance will only
    *   ever be used in a context where the URL is implied or superfluous, this
    *   can be passed as `*` (a literal asterisk).
-   * @param {string} id Key / resource identifier. This must be a string of 16
-   *   hex digits (lower case).
+   * @param {string} id Key / resource identifier. This must be a string of at
+   *   least 8 characters.
    */
   constructor(url, id) {
     if (url !== '*') {
@@ -42,7 +43,7 @@ export default class BaseKey {
     this._url = url;
 
     /** {string} Key / resource identifier. */
-    this._id = TString.hexBytes(id, 8, 8);
+    this._id = TString.minLen(id, 8);
   }
 
   /** {string} URL at which the resource may be accessed, or `*`. */
@@ -56,11 +57,34 @@ export default class BaseKey {
   }
 
   /**
+   * Gets the printable form of the ID. This defaults to the same as `.id`,
+   * but subclasses can override this if they want to produce something
+   * different.
+   *
+   * @returns {string} The printable form of the ID.
+   */
+  _impl_printableId() {
+    return this.id;
+  }
+
+  /**
    * Gets the redacted form of this instance.
    *
    * @returns {string} The redacted form.
    */
   toString() {
-    return `{${this.constructor.API_NAME} ${this._url} ${this._id}}`;
+    const name = this.constructor.API_NAME || this.constructor.name;
+    return `{${name} ${this._url} ${this._impl_printableId()}}`;
+  }
+
+  /**
+   * Helper function which always throws. Using this both documents the intent
+   * in code and keeps the linter from complaining about the documentation
+   * (`@param`, `@returns`, etc.).
+   *
+   * @param {...*} args_unused Anything you want, to keep the linter happy.
+   */
+  _mustOverride(...args_unused) {
+    throw new Error('Must override.');
   }
 }

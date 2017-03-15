@@ -4,7 +4,7 @@
 
 import { BaseKey } from 'api-common';
 import { Hooks } from 'hooks-server';
-import { TObject } from 'typecheck';
+import { TObject, TString } from 'typecheck';
 
 /**
  * Bearer token, which is a kind of key which conflates ID and secret.
@@ -44,18 +44,30 @@ export default class BearerToken extends BaseKey {
    *   least 32 characters.
    */
   constructor(secretToken) {
-    if (!Hooks.isBearerToken(secretToken)) {
+    TString.minLen(secretToken, 32);
+
+    if (!Hooks.bearerTokenValidator.isToken(secretToken)) {
       // We don't include any real detail in the error message, as that might
       // inadvertently leak a secret into the logs.
       throw new Error('Invalid `secretToken` string.');
     }
 
-    super('*', Hooks.bearerTokenId(secretToken));
+    super('*', Hooks.bearerTokenValidator.tokenId(secretToken));
 
     /** {string} Secret token. */
     this._secretToken = secretToken;
 
     Object.freeze(this);
+  }
+
+  /**
+   * Gets the printable form of the ID. This class adds an "ASCII ellipsis" to
+   * the ID, to make it clear that the ID is a redaction of the full token.
+   *
+   * @returns {string} The printable form of the ID.
+   */
+  _impl_printableId() {
+    return `${this.id}...`;
   }
 
   /**
