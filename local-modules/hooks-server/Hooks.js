@@ -47,9 +47,10 @@ export default class Hooks {
    *   valid (whether or not it actually grants any access). This will only ever
    *   get called on strings (per se) of at least 32 characters, so it is safe
    *   to assume those facts. The default implementation just returns `true`.
-   * * `tokenId(token)` -- Returns the portion of `token` which should be
-   *   considered its "ID" for the purposes of lookup, logging, etc. The default
-   *   implementation just returns the first 16 characters of the token.
+   * * `tokenId(token)` -- Returns the portion of (the string) `token` which
+   *   should be considered its "ID" for the purposes of lookup, logging, etc.
+   *   The default implementation just returns the first 16 characters of the
+   *   token.
    */
   static get bearerTokenValidator() {
     return {
