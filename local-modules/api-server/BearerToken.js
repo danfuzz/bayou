@@ -91,6 +91,6 @@ export default class BearerToken extends BaseKey {
     }
 
     BearerToken.check(other);
-    return this._token === other._token;
+    return this._secretToken === other._secretToken;
   }
 }
