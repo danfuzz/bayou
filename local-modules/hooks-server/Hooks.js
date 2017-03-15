@@ -90,30 +90,4 @@ export default class Hooks {
   static get listenPort() {
     return 8080;
   }
-
-  /**
-   * {object} The object which validates root credentials. These are credentials
-   * which provide "root" access to the server. This object must implement two
-   * methods:
-   *
-   * * `checkCredential(cred)` -- Returns `true` if the `cred` is valid and
-   *    grants root access, or `false` if not.
-   * * `isCredential(cred)` -- Returns `true` if the `cred` is _syntactically_
-   *   valid (whether or not it actually grants root access).
-   */
-  static get rootValidator() {
-    // By default, we provide a very simple and obviously insecure default,
-    // which just checks to see if the given credential is the literal string
-    // `root`. TODO: Should probably provide a less trivial default.
-
-    return {
-      checkCredential(cred) {
-        return cred === 'root';
-      },
-
-      isCredential(cred) {
-        return (typeof cred) === 'string';
-      }
-    };
-  }
 }
