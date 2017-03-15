@@ -39,11 +39,14 @@ export default class Hooks {
   }
 
   /**
-   * {object} The object which validates bearer tokens. See
-   * `api-client.BearerToken` for details. This object must implement two
+   * {object} The object which validates and authorizes bearer tokens. See
+   * `api-client.BearerToken` for details. This object must implement these
    * methods:
    *
-   * * `isToken(tokenString)` -- Returns `true` if the `tokenString` is
+   * * `grantsRoot(token)` -- Returns `true` iff `token` (a `BearerToken` per
+   *   se) grants root access to the system. The (obviously insecure) default is
+   *   to treat a bearer token of 32 zeroes as granting access.
+   * * `isToken(tokenString)` -- Returns `true` iff the `tokenString` is
    *   _syntactically_ valid as a bearer token (whether or not it actually
    *   grants any access). This will only ever get called on strings (per se) of
    *   at least 32 characters, so it is safe to assume those facts. The default
@@ -55,6 +58,11 @@ export default class Hooks {
    */
   static get bearerTokenValidator() {
     return {
+      grantsRoot(token) {
+        // TODO: We should probably provide a less trivial default.
+        return token.secretToken === '0'.repeat(32);
+      },
+
       isToken(tokenString_unused) {
         return true;
       },
