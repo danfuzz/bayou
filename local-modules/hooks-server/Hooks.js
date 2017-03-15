@@ -56,7 +56,7 @@ export default class Hooks {
    *   The default implementation just returns the first 16 characters of the
    *   string.
    */
-  static get bearerTokenValidator() {
+  static get bearerTokens() {
     return {
       grantsRoot(token) {
         // TODO: We should probably provide a less trivial default.
