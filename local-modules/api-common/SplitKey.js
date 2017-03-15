@@ -41,7 +41,7 @@ export default class SplitKey extends BaseKey {
    *   digits (lower case).
    */
   constructor(url, id, secret) {
-    super(url, id);
+    super(url, TString.hexBytes(id, 8, 8));
 
     /** {string} Shared secret. */
     this._secret = TString.hexBytes(secret, 16, 16);
