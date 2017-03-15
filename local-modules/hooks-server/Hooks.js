@@ -4,6 +4,8 @@
 
 import { LocalDocStore } from 'doc-store-local';
 
+import BearerTokens from './BearerTokens';
+
 /**
  * Hooks into various server operations. This is meant to make it easy for
  * complete products to customize Bayou without overlaying the original
@@ -39,38 +41,11 @@ export default class Hooks {
   }
 
   /**
-   * {object} The object which validates and authorizes bearer tokens. See
-   * `api-client.BearerToken` for details. This object must implement these
-   * methods:
-   *
-   * * `grantsRoot(token)` -- Returns `true` iff `token` (a `BearerToken` per
-   *   se) grants root access to the system. The (obviously insecure) default is
-   *   to treat a bearer token of 32 zeroes as granting access.
-   * * `isToken(tokenString)` -- Returns `true` iff the `tokenString` is
-   *   _syntactically_ valid as a bearer token (whether or not it actually
-   *   grants any access). This will only ever get called on strings (per se) of
-   *   at least 32 characters, so it is safe to assume those facts. The default
-   *   implementation just returns `true`.
-   * * `tokenId(tokenString)` -- Returns the portion of `tokenString` which
-   *   should be considered its "ID" for the purposes of lookup, logging, etc.
-   *   The default implementation just returns the first 16 characters of the
-   *   string.
+   * {BearerTokens} The object which validates and authorizes bearer tokens.
+   * See that (base / default) class for details.
    */
-  static get bearerTokenValidator() {
-    return {
-      grantsRoot(token) {
-        // TODO: We should probably provide a less trivial default.
-        return token.secretToken === '0'.repeat(32);
-      },
-
-      isToken(tokenString_unused) {
-        return true;
-      },
-
-      tokenId(tokenString) {
-        return tokenString.slice(0, 16);
-      }
-    };
+  static get bearerTokens() {
+    return BearerTokens.THE_INSTANCE;
   }
 
   /**

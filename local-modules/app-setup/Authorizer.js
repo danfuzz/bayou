@@ -49,7 +49,7 @@ export default class Authorizer {
     TString.nonempty(authorId);
     TString.nonempty(docId);
 
-    if (!Hooks.bearerTokenValidator.grantsRoot(rootCredential)) {
+    if (!Hooks.bearerTokens.grantsRoot(rootCredential)) {
       throw new Error('Not authorized.');
     }
 

@@ -25,6 +25,7 @@
 
 import { DataUtil, DeferredLoader } from 'util-common';
 
+import BearerTokens from './BearerTokens';
 import default_document from './default-document';
 
 const Hooks = DeferredLoader.makeProxy(
@@ -35,4 +36,4 @@ const Hooks = DeferredLoader.makeProxy(
 
 const DEFAULT_DOCUMENT = DataUtil.deepFreeze(default_document);
 
-export { DEFAULT_DOCUMENT, Hooks };
+export { DEFAULT_DOCUMENT, BearerTokens, Hooks };

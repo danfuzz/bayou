@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TObject } from 'typecheck';
+import { TObject, TString } from 'typecheck';
 
 import Target from './Target';
 
@@ -57,7 +57,7 @@ export default class Context {
    * already another target with the same ID. This is a convenience for calling
    * `map.addTarget(new Target(id, obj))`.
    *
-   * @param {string} nameOrKey Either the name of the target (if
+   * @param {string|BaseKey} nameOrKey Either the name of the target (if
    *   uncontrolled) _or_ the key which controls access to the target. See the
    *   docs for `Target.add()` for more details.
    * @param {object} obj Object to ultimately call on.
@@ -92,6 +92,7 @@ export default class Context {
    * @returns {object|null} The so-identified target.
    */
   getOrNull(id) {
+    TString.check(id);
     const result = this._map.get(id);
     return (result !== undefined) ? result : null;
   }
@@ -122,7 +123,19 @@ export default class Context {
    * @returns {boolean} `true` iff `id` is bound.
    */
   hasId(id) {
+    TString.check(id);
     return this.getOrNull(id) !== null;
+  }
+
+  /**
+   * Removes the target binding for the given ID. It is an error to try to
+   * remove a nonexistent binding.
+   *
+   * @param {string} id The ID of the binding to remove.
+   */
+  deleteId(id) {
+    this.get(id); // This will throw if `id` isn't bound.
+    this._map.delete(id);
   }
 
   /**

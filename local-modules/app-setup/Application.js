@@ -87,16 +87,17 @@ export default class Application {
     // Make the webserver able to handle websockets.
     express_ws(app);
 
-    // Map Quill files into `/static/quill`. This is used for CSS files but not for
-    // the JS code; the JS code is included in the overall JS bundle file.
+    // Map Quill files into `/static/quill`. This is used for CSS files but not
+    // for the JS code; the JS code is included in the overall JS bundle file.
     app.use('/static/quill',
       express.static(path.resolve(Dirs.CLIENT_DIR, 'node_modules/quill/dist')));
 
     // Use Webpack to serve a JS bundle.
     app.get('/static/bundle.js', new ClientBundle().requestHandler);
 
-    // Find HTML files and other static assets in `client/assets`. This includes the
-    // top-level `index.html` and `favicon`, as well as stuff under `static/`.
+    // Find HTML files and other static assets in `client/assets`. This includes
+    // the top-level `index.html` and `favicon`, as well as stuff under
+    // `static/`.
     app.use('/', express.static(path.resolve(Dirs.CLIENT_DIR, 'assets')));
 
     // Use the `api-server` module to handle POST and websocket requests at
