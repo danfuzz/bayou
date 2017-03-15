@@ -54,12 +54,13 @@ export default class Hooks {
    */
   static get bearerTokenValidator() {
     return {
-      isToken: ((token_unused) => {
+      isToken(token_unused) {
         return true;
-      }),
-      tokenId: ((token) => {
+      },
+
+      tokenId(token) {
         return token.slice(0, 16);
-      })
+      }
     };
   }
 
@@ -97,8 +98,13 @@ export default class Hooks {
     // `root`. TODO: Should probably provide a less trivial default.
 
     return {
-      isCredential:    ((cred) => { return (typeof cred) === 'string'; }),
-      checkCredential: ((cred) => { return cred === 'root'; })
+      checkCredential(cred) {
+        return cred === 'root';
+      },
+
+      isCredential(cred) {
+        return (typeof cred) === 'string';
+      }
     };
   }
 }
