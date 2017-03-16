@@ -136,7 +136,6 @@ export default class Context {
    * @returns {boolean} `true` iff `id` is bound.
    */
   hasId(id) {
-    TString.check(id);
     return this.getOrNull(id) !== null;
   }
 

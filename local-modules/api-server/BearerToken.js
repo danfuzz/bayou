@@ -100,7 +100,7 @@ export default class BearerToken extends BaseKey {
   /**
    * Compares this instance to another.
    *
-   * @param {BearerToken|undefined|null} other Instance to compare to.
+   * @param {BaseKey|undefined|null} other Instance to compare to.
    * @returns {boolean} `true` iff the two instances are both of this class and
    *   contain the same full secret token value.
    */
@@ -109,7 +109,7 @@ export default class BearerToken extends BaseKey {
       return false;
     }
 
-    BearerToken.check(other);
+    BaseKey.check(other);
     return this._secretToken === other._secretToken;
   }
 
