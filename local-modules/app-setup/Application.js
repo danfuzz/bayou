@@ -47,15 +47,11 @@ export default class Application {
      * protected by the root bearer token(s) returned via the related
      * `hooks-server` hooks.
      */
-    const rootAccess = this._rootAccess = new RootAccess(context);
+    this._rootAccess = new RootAccess(context);
 
     // Bind `rootAccess` into the `context` using the root token(s), and arrange
     // for their update should the token(s) change.
     this._bindRoot();
-
-    // Legacy binding. TODO: Project-external code should stop using this.
-    context.add('auth', rootAccess.legacyAuth);
-
 
     /**
      * {DocForAuthor} The one document we manage. **TODO:** Needs to be more
