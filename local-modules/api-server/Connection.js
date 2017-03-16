@@ -246,11 +246,13 @@ export default class Connection {
     const token = BearerToken.coerceOrNull(idOrToken);
     if (token !== null) {
       target = context.getOrNull(token.id);
-      if (target !== null) {
+      if ((target !== null) && token.sameToken(target.key)) {
         return target;
       }
     }
 
-    throw new Error(`Bad target: \`${idOrToken}\``);
+    // We _don't_ include the passed argument, as that might end up revealing
+    // secret info.
+    throw new Error('Bad target');
   }
 }

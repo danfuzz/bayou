@@ -100,12 +100,14 @@ export default class BearerToken extends BaseKey {
   /**
    * Compares this instance to another.
    *
-   * @param {BearerToken|undefined|null} other Instance to compare to.
+   * @param {BaseKey|undefined|null} other Instance to compare to.
    * @returns {boolean} `true` iff the two instances are both of this class and
    *   contain the same full secret token value.
    */
   sameToken(other) {
-    if ((other === null) || (other === undefined)) {
+    if (   (other === null)
+        || (other === undefined)
+        || !(other instanceof BaseKey)) {
       return false;
     }
 
