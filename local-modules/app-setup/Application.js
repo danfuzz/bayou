@@ -14,9 +14,9 @@ import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
 import { Dirs } from 'server-env';
 
-import Authorizer from './Authorizer';
 import DebugTools from './DebugTools';
 import RequestLogger from './RequestLogger';
+import RootAccess from './RootAccess';
 
 /** Logger. */
 const log = new SeeAll('app');
@@ -33,16 +33,23 @@ export default class Application {
    *   activates `/debug/*` endpoints.
    */
   constructor(devMode) {
+    /** {Context} All of the objects we provide access to via the API. */
+    const context = this._context = new Context();
+
+    /**
+     * {RootAccess} The "root access" object. This is the object which is
+     * protected by the root bearer token(s) returned via the related
+     * `hooks-server` hooks.
+     */
+    const rootAccess = this._rootAccess = new RootAccess(context);
+    context.add('auth', rootAccess.legacyAuth);
+
     /**
      * {DocForAuthor} The one document we manage. **TODO:** Needs to be more
      * than one!
      */
     this._doc = new DocForAuthor(
       DocServer.THE_INSTANCE.getDoc('some-id'), 'some-author');
-
-    /** {Context} All of the objects we provide access to via the API. */
-    const context = this._context = new Context();
-    context.add('auth', new Authorizer(context));
     context.add('main', this._doc);
 
     /** The underlying webserver run by this instance. */
