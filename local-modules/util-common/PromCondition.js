@@ -19,11 +19,9 @@ export default class PromCondition {
    *
    * @param {boolean} [initialValue = false] Initial value.
    */
-  constructor(initialValue) {
-    initialValue = TBoolean.check(initialValue, false);
-
+  constructor(initialValue = false) {
     /** Current value. */
-    this._value = initialValue;
+    this._value = TBoolean.check(initialValue);
 
     /**
      * Promises which get resolved when `_value` is `false` (index `0`) or
