@@ -72,7 +72,7 @@ export default class Context {
    * error if the so-identified target does not exist.
    *
    * @param {string} id The target ID.
-   * @returns {object} The so-identified target.
+   * @returns {Target} The so-identified target.
    */
   get(id) {
     const result = this.getOrNull(id);
@@ -89,7 +89,7 @@ export default class Context {
    * so-identified target does not exist.
    *
    * @param {string} id The target ID.
-   * @returns {object|null} The so-identified target.
+   * @returns {Target|null} The so-identified target, or `null` if unbound.
    */
   getOrNull(id) {
     TString.check(id);
@@ -103,7 +103,7 @@ export default class Context {
    * so-identified target does not exist.
    *
    * @param {string} id The target ID.
-   * @returns {object} The so-identified target.
+   * @returns {Target} The so-identified target.
    */
   getUncontrolled(id) {
     const result = this.get(id);

@@ -27,19 +27,6 @@ export default class BearerTokens {
   }
 
   /**
-   * Returns `true` iff `token` (a `BearerToken` per se) grants root access to
-   * the system. The (obviously insecure) default is to treat a bearer token of
-   * 32 zeroes as granting access.
-   *
-   * @param {BearerToken} token Token to check.
-   * @returns {boolean} `true` iff `token` grants root access.
-   */
-  grantsRoot(token) {
-    // TODO: We should probably provide a less trivial default.
-    return token.secretToken === '0'.repeat(32);
-  }
-
-  /**
    * Returns `true` iff the `tokenString` is _syntactically_ valid as a bearer
    * token (whether or not it actually grants any access). This will only ever
    * get called on strings (per se) of at least 32 characters, so it is safe to

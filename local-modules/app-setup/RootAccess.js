@@ -5,7 +5,6 @@
 import { SplitKey } from 'api-common';
 import { BearerToken, Connection, Context } from 'api-server';
 import { DocForAuthor, DocServer } from 'doc-server';
-import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
 import { TString } from 'typecheck';
 
@@ -99,9 +98,12 @@ export default class RootAccess {
    */
   _legacyMakeAccessKey(rootCredential, authorId, docId) {
     rootCredential = BearerToken.coerce(rootCredential);
+    const target = this._context.getOrNull(rootCredential.id);
 
-    if (!Hooks.bearerTokens.grantsRoot(rootCredential)) {
+    if (target === null) {
       throw new Error('Not authorized.');
+    } if (target.target !== this) {
+      throw new Error('Not authorized (wrong target).');
     }
 
     return this.makeAccessKey(authorId, docId);
