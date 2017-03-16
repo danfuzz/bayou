@@ -116,6 +116,19 @@ export default class Context {
   }
 
   /**
+   * Gets the target associated with the indicated ID, but only if it is
+   * uncontrolled (that is, no auth required).
+   *
+   * @param {string} id The target ID.
+   * @returns {Target|null} The so-identified target if it is in fact bound and
+   *   uncontrolled, or `null` if it is either unbound or access-controlled.
+   */
+  getUncontrolledOrNull(id) {
+    const result = this.getOrNull(id);
+    return ((result !== null) && (result.key === null)) ? result : null;
+  }
+
+  /**
    * Returns an indication of whether or not this instance has a binding for
    * the given ID.
    *

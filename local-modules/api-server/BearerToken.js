@@ -27,14 +27,33 @@ export default class BearerToken extends BaseKey {
   /**
    * Coerces the given value into an instance of this class, if possible. If
    * given an instance of this class, returns that instance. If given a string,
-   * attempts to construct an instance from that string; this will fail if the
-   * string isn't in an acceptable form.
+   * attempts to construct an instance from that string. This will throw an
+   * error if the string isn't in an acceptable form.
    *
    * @param {*} value Value to coerce.
    * @returns {BearerToken} `value` or its coercion to a `BearerToken`.
    */
   static coerce(value) {
     return (value instanceof BearerToken) ? value : new BearerToken(value);
+  }
+
+  /**
+   * Coerces the given value into an instance of this class, if possible. If
+   * given an instance of this class, returns that instance. If given a string,
+   * attempts to construct an instance from that string. This will return `null`
+   * if the string isn't in an acceptable form.
+   *
+   * @param {*} value Value to coerce.
+   * @returns {BearerToken|null} `value` or its coercion to a `BearerToken`, or
+   *   `null` if `value` can't be coerced.
+   */
+  static coerceOrNull(value) {
+    try {
+      return BearerToken.coerce(value);
+    } catch (e) {
+      // Convert error to a `null` return.
+      return null;
+    }
   }
 
   /**
