@@ -105,13 +105,11 @@ export default class BearerToken extends BaseKey {
    *   contain the same full secret token value.
    */
   sameToken(other) {
-    if (   (other === null)
-        || (other === undefined)
-        || !(other instanceof BaseKey)) {
+    if ((other === null) || (other === undefined)) {
       return false;
     }
 
-    BearerToken.check(other);
+    BaseKey.check(other);
     return this._secretToken === other._secretToken;
   }
 
