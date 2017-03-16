@@ -86,6 +86,21 @@ export default class Connection {
     this._log.info(`Open via <${this._baseUrl}>.`);
   }
 
+  /** {string} The base URL. */
+  get baseUrl() {
+    return this._baseUrl;
+  }
+
+  /** {string} The connection ID. */
+  get connectionId() {
+    return this._connectionId;
+  }
+
+  /** {Context} The resource-binding context. */
+  get context() {
+    return this._context;
+  }
+
   /**
    * Handles an incoming message, which is expected to be in JSON string form.
    * Returns a promise for the response, which is also in JSON string form.
@@ -208,20 +223,5 @@ export default class Connection {
         throw new Error(`Bad action: \`${action}\``);
       }
     }
-  }
-
-  /** {string} The base URL. */
-  get baseUrl() {
-    return this._baseUrl;
-  }
-
-  /** {string} The connection ID. */
-  get connectionId() {
-    return this._connectionId;
-  }
-
-  /** {Context} The resource-binding context. */
-  get context() {
-    return this._context;
   }
 }
