@@ -19,11 +19,9 @@ export default class PromCondition {
    *
    * @param {boolean} [initialValue = false] Initial value.
    */
-  constructor(initialValue) {
-    initialValue = TBoolean.check(initialValue, false);
-
+  constructor(initialValue = false) {
     /** Current value. */
-    this._value = initialValue;
+    this._value = TBoolean.check(initialValue);
 
     /**
      * Promises which get resolved when `_value` is `false` (index `0`) or
@@ -68,6 +66,16 @@ export default class PromCondition {
       this._trigger[idx] = null;
       this._became[idx] = null;
     }
+  }
+
+  /**
+   * Instantaneously switches the condition to `true` and then immediately
+   * back to `false`. This will cause all promises to resolve, no matter which
+   * state they were waiting for.
+   */
+  onOff() {
+    this.value = true;
+    this.value = false;
   }
 
   /**

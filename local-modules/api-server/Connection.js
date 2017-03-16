@@ -7,6 +7,7 @@ import { SeeAll } from 'see-all';
 import { TString, TObject } from 'typecheck';
 import { Random } from 'util-common';
 
+import BearerToken from './BearerToken';
 import MetaHandler from './MetaHandler';
 import Context from './Context';
 
@@ -84,6 +85,21 @@ export default class Connection {
     this._log = log.withPrefix(`[${this._connectionId}]`);
 
     this._log.info(`Open via <${this._baseUrl}>.`);
+  }
+
+  /** {string} The base URL. */
+  get baseUrl() {
+    return this._baseUrl;
+  }
+
+  /** {string} The connection ID. */
+  get connectionId() {
+    return this._connectionId;
+  }
+
+  /** {Context} The resource-binding context. */
+  get context() {
+    return this._context;
   }
 
   /**
@@ -183,7 +199,7 @@ export default class Connection {
    * @returns {Promise} Promise for the result (or error).
    */
   _actOnMessage(msg) {
-    const target = this._context.getUncontrolled(msg.target);
+    const target = this.getTarget(msg.target);
     const action = msg.action;
     const name   = msg.name;
     const args   = msg.args;
@@ -210,18 +226,31 @@ export default class Connection {
     }
   }
 
-  /** {string} The base URL. */
-  get baseUrl() {
-    return this._baseUrl;
-  }
+  /**
+   * Gets the target of the given message. This uses the message's `target` and
+   * either finds it as an ID directly, or if that is a no-go, tries it as the
+   * string form of a bearer token. If neither succeeds, this will throw an
+   * error.
+   *
+   * @param {string} idOrToken A target ID or bearer token in string form.
+   * @returns {Target} The target object that is associated with `idOrToken`.
+   */
+  getTarget(idOrToken) {
+    const context = this._context;
+    let target = context.getUncontrolledOrNull(idOrToken);
 
-  /** {string} The connection ID. */
-  get connectionId() {
-    return this._connectionId;
-  }
+    if (target !== null) {
+      return target;
+    }
 
-  /** {Context} The resource-binding context. */
-  get context() {
-    return this._context;
+    const token = BearerToken.coerceOrNull(idOrToken);
+    if (token !== null) {
+      target = context.getOrNull(token.id);
+      if (target !== null) {
+        return target;
+      }
+    }
+
+    throw new Error(`Bad target: \`${idOrToken}\``);
   }
 }

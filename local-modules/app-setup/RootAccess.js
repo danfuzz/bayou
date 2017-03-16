@@ -5,18 +5,17 @@
 import { SplitKey } from 'api-common';
 import { BearerToken, Connection, Context } from 'api-server';
 import { DocForAuthor, DocServer } from 'doc-server';
-import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
 import { TString } from 'typecheck';
 
 /** Logger. */
-const log = new SeeAll('app-auth');
+const log = new SeeAll('root-access');
 
 /**
- * Handler for authorization. This is what answers `auth` requests that come in
- * via the API.
+ * "Root access" object. This is the object which is protected by the root
+ * bearer token(s) returned via the related `hooks-server` hooks.
  */
-export default class Authorizer {
+export default class RootAccess {
   /**
    * Constructs an instance.
    *
@@ -33,10 +32,6 @@ export default class Authorizer {
    * one author. If the document doesn't exist, this will cause it to be
    * created.
    *
-   * @param {BearerToken|string} rootCredential Credential (either a
-   *   `BearerToken` or a string that can be coerced to same) which provides
-   *   "root" access to this server. This method will throw an error if this
-   *   value does not correspond to a credential known to the server.
    * @param {string} authorId ID which corresponds to the author of changes that
    *   are made using the resulting authorization.
    * @param {string} docId ID of the document which the resulting authorization
@@ -44,14 +39,9 @@ export default class Authorizer {
    * @returns {SplitKey} Split token (ID + secret) which provides the requested
    *   access.
    */
-  makeAccessKey(rootCredential, authorId, docId) {
-    rootCredential = BearerToken.coerce(rootCredential);
+  makeAccessKey(authorId, docId) {
     TString.nonempty(authorId);
     TString.nonempty(docId);
-
-    if (!Hooks.bearerTokens.grantsRoot(rootCredential)) {
-      throw new Error('Not authorized.');
-    }
 
     const docControl = DocServer.THE_INSTANCE.getDoc(docId);
     const doc = new DocForAuthor(docControl, authorId);
@@ -76,5 +66,46 @@ export default class Authorizer {
     log.info(`  key id: ${key.id}`); // The ID is safe to log.
 
     return key;
+  }
+
+  /**
+   * An object which should be bound to the `auth` API endpoint. This is the
+   * old way to do root access. (Yeah, not actually _that_ old.)
+   *
+   * TODO: Remove this and `_legacyMakeAccessKey()` once `auth` is no longer
+   * used (that is, when we consistently use a bearer token in the API message
+   * `target` position to perform root auth).
+   *
+   * @returns {object} Object suitable for binding to `auth`.
+   */
+  get legacyAuth() {
+    return { makeAccessKey: this._legacyMakeAccessKey.bind(this) };
+  }
+
+  /**
+   * Old version of `makeAccessKey()` which takes an explicit token argument.
+   *
+   * @param {BearerToken|string} rootCredential Credential (either a
+   *   `BearerToken` or a string that can be coerced to same) which provides
+   *   "root" access to this server. This method will throw an error if this
+   *   value does not correspond to a credential known to the server.
+   * @param {string} authorId ID which corresponds to the author of changes that
+   *   are made using the resulting authorization.
+   * @param {string} docId ID of the document which the resulting authorization
+   *   allows access to.
+   * @returns {SplitKey} Split token (ID + secret) which provides the requested
+   *   access.
+   */
+  _legacyMakeAccessKey(rootCredential, authorId, docId) {
+    rootCredential = BearerToken.coerce(rootCredential);
+    const target = this._context.getOrNull(rootCredential.id);
+
+    if (target === null) {
+      throw new Error('Not authorized.');
+    } if (target.target !== this) {
+      throw new Error('Not authorized (wrong target).');
+    }
+
+    return this.makeAccessKey(authorId, docId);
   }
 }
