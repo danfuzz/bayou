@@ -93,4 +93,27 @@ export default class BearerToken extends BaseKey {
     BearerToken.check(other);
     return this._secretToken === other._secretToken;
   }
+
+  /**
+   * Compares two arrays of `BearerToken`s for equality.
+   *
+   * @param {array<BearerToken>} array1 One array.
+   * @param {array<BearerToken>} array2 The other array.
+   * @returns {boolean} `true` iff the two arrays contain the same elements in
+   *   the same order.
+   */
+  static sameArrays(array1, array2) {
+    if (array1.length !== array2.length) {
+      return false;
+    }
+
+    for (let i = 0; i < array1.length; i++) {
+      const token1 = BearerToken.check(array1[i]);
+      if (!token1.sameToken(array2[i])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 }
