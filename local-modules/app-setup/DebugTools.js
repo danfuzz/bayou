@@ -190,18 +190,10 @@ export default class DebugTools {
    * @param {object} res HTTP response handler.
    */
   _handle_snapshot(req, res) {
-    const documentId = req.params.documentId;
     const verNum = req.params.verNum;
-
-    const doc = DocServer.THE_INSTANCE.getDocOrNull(documentId);
-
-    if (doc === null) {
-      this._textResponse(res, `No such document: ${documentId}`);
-      return;
-    }
-
+    const doc = this._getExistingDoc(req);
     const args = (verNum === undefined) ? [] : [verNum];
-    const snapshot = this._doc.snapshot(...args);
+    const snapshot = doc.snapshot(...args);
     const result = Encoder.encodeJson(snapshot, true);
 
     this._textResponse(res, result);
@@ -240,6 +232,25 @@ export default class DebugTools {
       .status(500)
       .type('text/plain')
       .send(text);
+  }
+
+  /**
+   * Gets an existing document based on the usual debugging request argument, or
+   * throws an error if the document doesn't exist.
+   *
+   * @param {object} req HTTP request.
+   * @returns {DocControl} The requested document.
+   */
+  _getExistingDoc(req) {
+    const documentId = req.params.documentId;
+    const doc = DocServer.THE_INSTANCE.getDocOrNull(documentId);
+
+    if (doc === null) {
+      const error = new Error();
+      error.debugMsg = `No such document: ${documentId}`;
+    }
+
+    return doc;
   }
 
   /**
