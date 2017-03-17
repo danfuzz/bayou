@@ -6,6 +6,7 @@ import express from 'express';
 import util from 'util';
 
 import { Encoder } from 'api-common';
+import { AuthorId, DocumentId } from 'doc-common';
 import { SeeAll } from 'see-all';
 import { SeeAllRecent } from 'see-all-server';
 
@@ -40,7 +41,9 @@ export default class DebugTools {
   get requestHandler() {
     const router = new express.Router();
 
-    router.param('verNum', this._check_verNum.bind(this));
+    router.param('authorId',   this._check_authorId.bind(this));
+    router.param('documentId', this._check_documentId.bind(this));
+    router.param('verNum',     this._check_verNum.bind(this));
 
     router.get('/change/:verNum',   this._handle_change.bind(this));
     router.get('/log',              this._handle_log.bind(this));
@@ -50,6 +53,48 @@ export default class DebugTools {
     router.use(this._error.bind(this));
 
     return router;
+  }
+
+  /**
+   * Validates an author ID as a request parameter.
+   *
+   * @param {object} req_unused HTTP request.
+   * @param {object} res_unused HTTP response.
+   * @param {Function} next Next handler to call.
+   * @param {string} value Request parameter value.
+   * @param {string} name_unused Request parameter name.
+   */
+  _check_authorId(req_unused, res_unused, next, value, name_unused) {
+    try {
+      AuthorId.check(value);
+    } catch (error) {
+      // Augment error and rethrow.
+      error.debugMsg = 'Bad value for `authorId`.';
+      throw error;
+    }
+
+    next();
+  }
+
+  /**
+   * Validates a document ID as a request parameter.
+   *
+   * @param {object} req_unused HTTP request.
+   * @param {object} res_unused HTTP response.
+   * @param {Function} next Next handler to call.
+   * @param {string} value Request parameter value.
+   * @param {string} name_unused Request parameter name.
+   */
+  _check_documentId(req_unused, res_unused, next, value, name_unused) {
+    try {
+      DocumentId.check(value);
+    } catch (error) {
+      // Augment error and rethrow.
+      error.debugMsg = 'Bad value for `documentId`.';
+      throw error;
+    }
+
+    next();
   }
 
   /**
