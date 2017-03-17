@@ -6,6 +6,7 @@ import express from 'express';
 import util from 'util';
 
 import { Encoder } from 'api-common';
+import { AuthorId, DocumentId } from 'doc-common';
 import { SeeAll } from 'see-all';
 import { SeeAllRecent } from 'see-all-server';
 
@@ -23,9 +24,13 @@ export default class DebugTools {
   /**
    * Constructs an instance.
    *
+   * @param {RootAccess} rootAccess The root access manager.
    * @param {DocControl} doc The `DocControl` object managed by this process.
    */
-  constructor(doc) {
+  constructor(rootAccess, doc) {
+    /** {RootAccess} The root access manager. */
+    this._rootAccess = rootAccess;
+
     /** {DocControl} The document object. */
     this._doc = doc;
 
@@ -40,16 +45,62 @@ export default class DebugTools {
   get requestHandler() {
     const router = new express.Router();
 
-    router.param('verNum', this._check_verNum.bind(this));
+    router.param('authorId',   this._check_authorId.bind(this));
+    router.param('documentId', this._check_documentId.bind(this));
+    router.param('verNum',     this._check_verNum.bind(this));
 
-    router.get('/change/:verNum',   this._handle_change.bind(this));
-    router.get('/log',              this._handle_log.bind(this));
-    router.get('/snapshot',         this._handle_snapshotLatest.bind(this));
-    router.get('/snapshot/:verNum', this._handle_snapshot.bind(this));
+    router.get('/change/:verNum',             this._handle_change.bind(this));
+    router.get('/edit/:documentId',           this._handle_edit.bind(this));
+    router.get('/edit/:documentId/:authorId', this._handle_edit.bind(this));
+    router.get('/log',                        this._handle_log.bind(this));
+    router.get('/snapshot',                   this._handle_snapshotLatest.bind(this));
+    router.get('/snapshot/:verNum',           this._handle_snapshot.bind(this));
 
     router.use(this._error.bind(this));
 
     return router;
+  }
+
+  /**
+   * Validates an author ID as a request parameter.
+   *
+   * @param {object} req_unused HTTP request.
+   * @param {object} res_unused HTTP response.
+   * @param {Function} next Next handler to call.
+   * @param {string} value Request parameter value.
+   * @param {string} name_unused Request parameter name.
+   */
+  _check_authorId(req_unused, res_unused, next, value, name_unused) {
+    try {
+      AuthorId.check(value);
+    } catch (error) {
+      // Augment error and rethrow.
+      error.debugMsg = 'Bad value for `authorId`.';
+      throw error;
+    }
+
+    next();
+  }
+
+  /**
+   * Validates a document ID as a request parameter.
+   *
+   * @param {object} req_unused HTTP request.
+   * @param {object} res_unused HTTP response.
+   * @param {Function} next Next handler to call.
+   * @param {string} value Request parameter value.
+   * @param {string} name_unused Request parameter name.
+   */
+  _check_documentId(req_unused, res_unused, next, value, name_unused) {
+    try {
+      DocumentId.check(value);
+    } catch (error) {
+      // Augment error and rethrow.
+      error.debugMsg = 'Bad value for `documentId`.';
+      throw error;
+    }
+
+    next();
   }
 
   /**
@@ -76,19 +127,6 @@ export default class DebugTools {
   }
 
   /**
-   * Gets the log.
-   *
-   * @param {object} req_unused HTTP request.
-   * @param {object} res HTTP response handler.
-   */
-  _handle_log(req_unused, res) {
-    // TODO: Format it nicely.
-    const result = this._logger.htmlContents;
-
-    this._htmlResponse(res, result);
-  }
-
-  /**
    * Gets a particular change to the document.
    *
    * @param {object} req HTTP request.
@@ -99,6 +137,49 @@ export default class DebugTools {
     const result = Encoder.encodeJson(change, true);
 
     this._textResponse(res, result);
+  }
+
+  /**
+   * Produces an auth for editing a document, and responds with HTML which uses
+   * it. The result is an HTML page that includes the editor.
+   *
+   * @param {object} req HTTP request.
+   * @param {object} res HTTP response handler.
+   */
+  _handle_edit(req, res) {
+    const authorId = req.params.authorId || 'some-author';
+    const documentId = req.params.documentId;
+    const key = this._rootAccess.makeAccessKey(authorId, documentId);
+
+    // The key gets encoded as a string, and then we JSON-encode _that_ string,
+    // so as to make it proper JS source within the <script> block below.
+    const quotedKey = JSON.stringify(Encoder.encodeJson(key));
+
+    // TODO: Probably want to use a real template.
+    const head = '<title>Editor</title>\n';
+    const body =
+      '<h1>Editor</h1>\n' +
+      '<div id="editor"><p>Loading&hellip;</p></div>\n' +
+      '<script>\n' +
+      '  BAYOU_KEY  = ' + quotedKey + ';\n' +
+      '  BAYOU_NODE = "#editor";\n' +
+      '</script>\n' +
+      '<script src="/boot-from-key.js"></script>\n';
+
+    this._htmlResponse(res, head, body);
+  }
+
+  /**
+   * Gets the log.
+   *
+   * @param {object} req_unused HTTP request.
+   * @param {object} res HTTP response handler.
+   */
+  _handle_log(req_unused, res) {
+    // TODO: Format it nicely.
+    const result = this._logger.htmlContents;
+
+    this._htmlResponse(res, null, result);
   }
 
   /**
@@ -180,10 +261,16 @@ export default class DebugTools {
    * HTML body.
    *
    * @param {object} res HTTP response.
+   * @param {string|null} head HTML head text, if any.
    * @param {string} body HTML body text.
    */
-  _htmlResponse(res, body) {
-    const html = `<!doctype html>\n<html><body>\n${body}\n</body></html>\n`;
+  _htmlResponse(res, head, body) {
+    head = (head === null)
+      ? ''
+      : `<head>\n\n${head}\n</head>\n\n`;
+    body = `<body>\n\n${body}\n</body>\n`;
+
+    const html = `<!doctype html>\n<html>\n${head}${body}</html>\n`;
 
     res
       .status(200)

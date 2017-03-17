@@ -28,7 +28,9 @@
   // parsing needed to get the URL and then head on our merry way.
   var key = JSON.parse(window.BAYOU_KEY);
   var url = key[1]; // See `SplitKey.js`, the encoded form in particular.
-  var baseUrl = url.match(/^https?:\/\/[^\/]+/)[0];
+  var baseUrl = (url === '*')
+    ? window.location.origin
+    : url.match(/^https?:\/\/[^\/]+/)[0];
 
   var elem;
 

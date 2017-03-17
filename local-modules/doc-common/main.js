@@ -4,7 +4,9 @@
 
 import { Registry } from 'api-common';
 
+import AuthorId from './AuthorId';
 import DocumentChange from './DocumentChange';
+import DocumentId from './DocumentId';
 import FrozenDelta from './FrozenDelta';
 import Snapshot from './Snapshot';
 import Timestamp from './Timestamp';
@@ -17,7 +19,9 @@ Registry.register(Snapshot);
 Registry.register(Timestamp);
 
 export {
+  AuthorId,
   DocumentChange,
+  DocumentId,
   FrozenDelta,
   Snapshot,
   Timestamp,
