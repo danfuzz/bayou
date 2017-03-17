@@ -26,14 +26,10 @@ export default class DebugTools {
    * Constructs an instance.
    *
    * @param {RootAccess} rootAccess The root access manager.
-   * @param {DocControl} doc The `DocControl` object managed by this process.
    */
-  constructor(rootAccess, doc) {
+  constructor(rootAccess) {
     /** {RootAccess} The root access manager. */
     this._rootAccess = rootAccess;
-
-    /** {DocControl} The document object. */
-    this._doc = doc;
 
     /** {SeeAll} A rolling log for the `/log` endpoint. */
     this._logger = new SeeAllRecent(LOG_LENGTH_MSEC);
@@ -128,7 +124,7 @@ export default class DebugTools {
   }
 
   /**
-   * Gets a particular change to the document.
+   * Gets a particular change to a document.
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.

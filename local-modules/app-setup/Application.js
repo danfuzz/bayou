@@ -133,7 +133,7 @@ export default class Application {
    */
   _addDevModeRoutes() {
     const app = this._app;
-    const debugTools = new DebugTools(this._rootAccess, this._doc);
+    const debugTools = new DebugTools(this._rootAccess);
     app.use('/debug', debugTools.requestHandler);
   }
 
