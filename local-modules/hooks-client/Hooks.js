@@ -10,9 +10,14 @@
 export default class Hooks {
   /**
    * Called during application startup. This is called just after the logging
-   * library has been set up and before almost everything else.
+   * library has been set up and before almost everything else. It is called
+   * in the context of setting up an editor within a web page.
+   *
+   * @param {object} window_unused Window which contains the application being
+   *   set up.
+   * @param {string} baseUrl_unused Base URL that points to this server.
    */
-  static run() {
+  static run(window_unused, baseUrl_unused) {
     // This space intentionally left blank.
   }
 
