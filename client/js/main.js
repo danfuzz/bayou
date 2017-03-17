@@ -40,10 +40,14 @@ const quill = QuillMaker.make(editorNode);
 // soon-to-be legacy case. TODO: Should probably insist on `BAYOU_KEY` being
 // defined.
 
+// Under normal circumstances, the key we receive comes with a real URL.
+// However, when using the debugging routes, it's possible that we end up with
+// the catchall "URL" `*`. If so, we detect that here and fall back to using the
+// document's URL.
 const key = window.BAYOU_KEY
   ? Decoder.decodeJson(window.BAYOU_KEY)
   : null;
-const url = key ? key.url : document.URL;
+const url = (key && (key.url !== '*')) ? key.url : document.URL;
 
 const apiClient = new ApiClient(url);
 apiClient.open();
