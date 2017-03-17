@@ -19,28 +19,29 @@ import { SeeAllBrowser } from 'see-all-browser';
 // Init logging.
 SeeAllBrowser.init();
 
+if (!(window.BAYOU_KEY && window.BAYOU_NODE)) {
+  throw new Error('Missing configuration.');
+}
+
 // Figure out what node we're attaching the editor to. We use the `BAYOU_NODE`
-// global specified by the enclosing HTML, if passed, or default to `#editor`.
-// TODO: Should probably just insist on `BAYOU_NODE` being defined.
-const editorNode = window.BAYOU_NODE || '#editor';
+// global specified by the enclosing HTML
+const editorNode = window.BAYOU_NODE;
 if (document.querySelector(editorNode) === null) {
   const extra = (editorNode[0] === '#') ? '' : ' (maybe need a `#` prefix?)';
   throw new Error(`No such selector${extra}: \`${editorNode}\``);
 }
 
 // Figure out the URL of our server. We use the `BAYOU_KEY` global specified by
-// the enclosing HTML, if passed, or default to using the document's URL. We
-// don't just _always_ use the document's URL because it is possible to embed
-// an editor on a page that has a different origin than the server.
+// the enclosing HTML. We don't just _always_ use the document's URL because it
+// is possible (and common even) to embed an editor on a page that has a
+// different origin than the server.
 //
 // **Note:** Under normal circumstances, the key we receive comes with a real
 // URL. However, when using the debugging routes, it's possible that we end up
 // with the catchall "URL" `*`. If so, we detect that here and fall back to
 // using the document's URL.
-const key = window.BAYOU_KEY
-  ? Decoder.decodeJson(window.BAYOU_KEY)
-  : null;
-const url = (key && (key.url !== '*')) ? key.url : document.URL;
+const key = Decoder.decodeJson(window.BAYOU_KEY);
+const url = (key.url !== '*') ? key.url : document.URL;
 
 // Cut off after the host name. Putting the main expression in a `?` group
 // guarantees that the regex will match at least the empty string, which makes
