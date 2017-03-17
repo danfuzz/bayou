@@ -26,7 +26,13 @@ Hooks.run();
 // if passed, or default to `#editor`. TODO: Should probably just insist on
 // `BAYOU_NODE` being defined.
 
-const quill = QuillMaker.make(window.BAYOU_NODE || '#editor');
+const editorNode = window.BAYOU_NODE || '#editor';
+if (document.querySelector(editorNode) === null) {
+  const extra = (editorNode[0] === '#') ? '' : ' (maybe need a `#` prefix?)';
+  throw new Error(`No such selector${extra}: \`${editorNode}\``);
+}
+
+const quill = QuillMaker.make(editorNode);
 
 // Initialize the API connection, and hook it up to the Quill instance. Similar
 // to the node identification (immediately above), we use the URL inside the

@@ -45,11 +45,17 @@ export default class RootAccess {
 
     const docControl = DocServer.THE_INSTANCE.getDoc(docId);
     const doc = new DocForAuthor(docControl, authorId);
-    const baseUrl = Connection.activeNow.baseUrl;
+
+    // Under normal circumstances, this method is called in the context of an
+    // active API connection, but it can also be called when debugging, and in
+    // that case we just fall back on the catchall `*` for the associated URL.
+    const url = Connection.activeNow
+      ? `${Connection.activeNow.baseUrl}/api`
+      : '*';
 
     let key = null;
     for (;;) {
-      key = SplitKey.randomInstance(`${baseUrl}/api`);
+      key = SplitKey.randomInstance(url);
       if (!this._context.hasId(key.id)) {
         break;
       }

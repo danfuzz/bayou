@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 /**
- * Hooks for common cleint and server needs. This is meant to make it easy for
+ * Hooks for common client and server needs. This is meant to make it easy for
  * complete products to customize Bayou without overlaying the original
  * source...except for this file (and other similar ones).
  */
@@ -19,8 +19,8 @@ export default class Hooks {
    * @param {string} id The (alleged) author ID to check.
    * @returns {boolen} `true` iff `id` is syntactically valid.
    */
-  isAuthorId(id) {
-    return id.match(/^[-_a-zA-Z0-9]{1,32}$/);
+  static isAuthorId(id) {
+    return /^[-_a-zA-Z0-9]{1,32}$/.test(id);
   }
 
   /**
@@ -34,7 +34,7 @@ export default class Hooks {
    * @param {string} id The (alleged) author ID to check.
    * @returns {boolen} `true` iff `id` is syntactically valid.
    */
-  isDocumentId(id) {
-    return id.match(/^[-_a-zA-Z0-9]{1,32}$/);
+  static isDocumentId(id) {
+    return /^[-_a-zA-Z0-9]{1,32}$/.test(id);
   }
 }
