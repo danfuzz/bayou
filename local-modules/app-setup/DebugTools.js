@@ -7,6 +7,7 @@ import util from 'util';
 
 import { Encoder } from 'api-common';
 import { AuthorId, DocumentId } from 'doc-common';
+import { DocServer } from 'doc-server';
 import { SeeAll } from 'see-all';
 import { SeeAllRecent } from 'see-all-server';
 
@@ -49,12 +50,12 @@ export default class DebugTools {
     router.param('documentId', this._check_documentId.bind(this));
     router.param('verNum',     this._check_verNum.bind(this));
 
-    router.get('/change/:verNum',             this._handle_change.bind(this));
-    router.get('/edit/:documentId',           this._handle_edit.bind(this));
-    router.get('/edit/:documentId/:authorId', this._handle_edit.bind(this));
-    router.get('/log',                        this._handle_log.bind(this));
-    router.get('/snapshot',                   this._handle_snapshot.bind(this));
-    router.get('/snapshot/:verNum',           this._handle_snapshot.bind(this));
+    router.get('/change/:verNum',               this._handle_change.bind(this));
+    router.get('/edit/:documentId',             this._handle_edit.bind(this));
+    router.get('/edit/:documentId/:authorId',   this._handle_edit.bind(this));
+    router.get('/log',                          this._handle_log.bind(this));
+    router.get('/snapshot/:documentId',         this._handle_snapshot.bind(this));
+    router.get('/snapshot/:documentId/:verNum', this._handle_snapshot.bind(this));
 
     router.use(this._error.bind(this));
 
@@ -189,7 +190,16 @@ export default class DebugTools {
    * @param {object} res HTTP response handler.
    */
   _handle_snapshot(req, res) {
+    const documentId = req.params.documentId;
     const verNum = req.params.verNum;
+
+    const doc = DocServer.THE_INSTANCE.getDocOrNull(documentId);
+
+    if (doc === null) {
+      this._textResponse(res, `No such document: ${documentId}`);
+      return;
+    }
+
     const args = (verNum === undefined) ? [] : [verNum];
     const snapshot = this._doc.snapshot(...args);
     const result = Encoder.encodeJson(snapshot, true);
