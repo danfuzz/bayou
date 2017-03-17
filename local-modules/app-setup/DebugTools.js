@@ -7,6 +7,7 @@ import util from 'util';
 
 import { Encoder } from 'api-common';
 import { AuthorId, DocumentId } from 'doc-common';
+import { DocServer } from 'doc-server';
 import { SeeAll } from 'see-all';
 import { SeeAllRecent } from 'see-all-server';
 
@@ -25,14 +26,10 @@ export default class DebugTools {
    * Constructs an instance.
    *
    * @param {RootAccess} rootAccess The root access manager.
-   * @param {DocControl} doc The `DocControl` object managed by this process.
    */
-  constructor(rootAccess, doc) {
+  constructor(rootAccess) {
     /** {RootAccess} The root access manager. */
     this._rootAccess = rootAccess;
-
-    /** {DocControl} The document object. */
-    this._doc = doc;
 
     /** {SeeAll} A rolling log for the `/log` endpoint. */
     this._logger = new SeeAllRecent(LOG_LENGTH_MSEC);
@@ -49,12 +46,12 @@ export default class DebugTools {
     router.param('documentId', this._check_documentId.bind(this));
     router.param('verNum',     this._check_verNum.bind(this));
 
-    router.get('/change/:verNum',             this._handle_change.bind(this));
-    router.get('/edit/:documentId',           this._handle_edit.bind(this));
-    router.get('/edit/:documentId/:authorId', this._handle_edit.bind(this));
-    router.get('/log',                        this._handle_log.bind(this));
-    router.get('/snapshot',                   this._handle_snapshotLatest.bind(this));
-    router.get('/snapshot/:verNum',           this._handle_snapshot.bind(this));
+    router.get('/change/:documentId/:verNum',   this._handle_change.bind(this));
+    router.get('/edit/:documentId',             this._handle_edit.bind(this));
+    router.get('/edit/:documentId/:authorId',   this._handle_edit.bind(this));
+    router.get('/log',                          this._handle_log.bind(this));
+    router.get('/snapshot/:documentId',         this._handle_snapshot.bind(this));
+    router.get('/snapshot/:documentId/:verNum', this._handle_snapshot.bind(this));
 
     router.use(this._error.bind(this));
 
@@ -127,13 +124,15 @@ export default class DebugTools {
   }
 
   /**
-   * Gets a particular change to the document.
+   * Gets a particular change to a document.
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
    */
   _handle_change(req, res) {
-    const change = this._doc.change(req.params.verNum);
+    const verNum = req.params.verNum;
+    const doc = this._getExistingDoc(req);
+    const change = doc.change(verNum);
     const result = Encoder.encodeJson(change, true);
 
     this._textResponse(res, result);
@@ -183,26 +182,16 @@ export default class DebugTools {
   }
 
   /**
-   * Gets a particular snapshot of the document.
+   * Gets a particular (or the latest) snapshot of a document.
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
    */
   _handle_snapshot(req, res) {
-    const snapshot = this._doc.snapshot(req.params.verNum);
-    const result = Encoder.encodeJson(snapshot, true);
-
-    this._textResponse(res, result);
-  }
-
-  /**
-   * Gets the latest snapshot of the document.
-   *
-   * @param {object} req_unused HTTP request.
-   * @param {object} res HTTP response handler.
-   */
-  _handle_snapshotLatest(req_unused, res) {
-    const snapshot = this._doc.snapshot();
+    const verNum = req.params.verNum;
+    const doc = this._getExistingDoc(req);
+    const args = (verNum === undefined) ? [] : [verNum];
+    const snapshot = doc.snapshot(...args);
     const result = Encoder.encodeJson(snapshot, true);
 
     this._textResponse(res, result);
@@ -241,6 +230,25 @@ export default class DebugTools {
       .status(500)
       .type('text/plain')
       .send(text);
+  }
+
+  /**
+   * Gets an existing document based on the usual debugging request argument, or
+   * throws an error if the document doesn't exist.
+   *
+   * @param {object} req HTTP request.
+   * @returns {DocControl} The requested document.
+   */
+  _getExistingDoc(req) {
+    const documentId = req.params.documentId;
+    const doc = DocServer.THE_INSTANCE.getDocOrNull(documentId);
+
+    if (doc === null) {
+      const error = new Error();
+      error.debugMsg = `No such document: ${documentId}`;
+    }
+
+    return doc;
   }
 
   /**

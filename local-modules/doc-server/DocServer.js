@@ -4,7 +4,7 @@
 
 import { DocumentChange, Timestamp } from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
-import { TString } from 'typecheck';
+import { TBoolean, TString } from 'typecheck';
 
 import DocControl from './DocControl';
 
@@ -52,7 +52,34 @@ export default class DocServer {
    * @returns {DocControl} The corresponding document accessor.
    */
   getDoc(docId) {
+    return this._getDoc(docId, true);
+  }
+
+  /**
+   * Gets the document controller for the document with the given ID. If the
+   * document doesn't exist, this returns `null`.
+   *
+   * @param {string} docId The document ID.
+   * @returns {DocControl|null} The corresponding document accessor, or `null`
+   *   if there is no such document.
+   */
+  getDocOrNull(docId) {
+    return this._getDoc(docId, false);
+  }
+
+  /**
+   * Common code for both `getDoc*()` methods.
+   *
+   * @param {string} docId The document ID.
+   * @param {boolean} initIfMissing If `true`, initializes a nonexistent doc
+   *   instead of returning `null`.
+   * @returns {DocControl|null} The corresponding document accessor, or `null`
+   *   if there is no such document _and_ we were not asked to fill in missing
+   *   docs.
+   */
+  _getDoc(docId, initIfMissing) {
     TString.nonempty(docId);
+    TBoolean.check(initIfMissing);
 
     const already = this._controls.get(docId);
     if (already) {
@@ -62,6 +89,10 @@ export default class DocServer {
     const docStorage = Hooks.docStore.getDocument(docId);
 
     if (!docStorage.exists()) {
+      if (!initIfMissing) {
+        return null;
+      }
+
       // Initialize the document with static content (for now).
       const firstChange =
         new DocumentChange(0, Timestamp.now(), DEFAULT_DOCUMENT, null);
