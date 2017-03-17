@@ -50,7 +50,7 @@ export default class DebugTools {
     router.param('documentId', this._check_documentId.bind(this));
     router.param('verNum',     this._check_verNum.bind(this));
 
-    router.get('/change/:verNum',               this._handle_change.bind(this));
+    router.get('/change/:documentId/:verNum',   this._handle_change.bind(this));
     router.get('/edit/:documentId',             this._handle_edit.bind(this));
     router.get('/edit/:documentId/:authorId',   this._handle_edit.bind(this));
     router.get('/log',                          this._handle_log.bind(this));
@@ -134,7 +134,9 @@ export default class DebugTools {
    * @param {object} res HTTP response handler.
    */
   _handle_change(req, res) {
-    const change = this._doc.change(req.params.verNum);
+    const verNum = req.params.verNum;
+    const doc = this._getExistingDoc(req);
+    const change = doc.change(verNum);
     const result = Encoder.encodeJson(change, true);
 
     this._textResponse(res, result);
