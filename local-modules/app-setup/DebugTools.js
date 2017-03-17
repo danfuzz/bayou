@@ -53,7 +53,7 @@ export default class DebugTools {
     router.get('/edit/:documentId',           this._handle_edit.bind(this));
     router.get('/edit/:documentId/:authorId', this._handle_edit.bind(this));
     router.get('/log',                        this._handle_log.bind(this));
-    router.get('/snapshot',                   this._handle_snapshotLatest.bind(this));
+    router.get('/snapshot',                   this._handle_snapshot.bind(this));
     router.get('/snapshot/:verNum',           this._handle_snapshot.bind(this));
 
     router.use(this._error.bind(this));
@@ -183,26 +183,15 @@ export default class DebugTools {
   }
 
   /**
-   * Gets a particular snapshot of the document.
+   * Gets a particular (or the latest) snapshot of a document.
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
    */
   _handle_snapshot(req, res) {
-    const snapshot = this._doc.snapshot(req.params.verNum);
-    const result = Encoder.encodeJson(snapshot, true);
-
-    this._textResponse(res, result);
-  }
-
-  /**
-   * Gets the latest snapshot of the document.
-   *
-   * @param {object} req_unused HTTP request.
-   * @param {object} res HTTP response handler.
-   */
-  _handle_snapshotLatest(req_unused, res) {
-    const snapshot = this._doc.snapshot();
+    const verNum = req.params.verNum;
+    const args = (verNum === undefined) ? [] : [verNum];
+    const snapshot = this._doc.snapshot(...args);
     const result = Encoder.encodeJson(snapshot, true);
 
     this._textResponse(res, result);
