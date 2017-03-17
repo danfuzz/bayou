@@ -15,7 +15,7 @@ export default class Hooks {
    *
    * @param {object} window_unused Window which contains the application being
    *   set up.
-   * @param {string} baseUrl_unused Base URL that points to this server.
+   * @param {string} baseUrl_unused Base URL that points to the server to use.
    */
   static run(window_unused, baseUrl_unused) {
     // This space intentionally left blank.
