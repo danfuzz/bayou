@@ -16,20 +16,19 @@ import { Hooks } from 'hooks-client';
 import { QuillMaker } from 'quill-util';
 import { SeeAllBrowser } from 'see-all-browser';
 
-// Init logging.
-SeeAllBrowser.init();
+// Pull the incoming parameters from `window.` globals into locals, to prevent
+// them from getting trampled by other init code. Validate that they're present
+// before doing anything further.
 
-if (!(window.BAYOU_KEY && window.BAYOU_NODE)) {
+const BAYOU_KEY = window.BAYOU_KEY;
+const BAYOU_NODE = window.BAYOU_NODE;
+
+if (!(BAYOU_KEY && BAYOU_NODE)) {
   throw new Error('Missing configuration.');
 }
 
-// Figure out what node we're attaching the editor to. We use the `BAYOU_NODE`
-// global specified by the enclosing HTML
-const editorNode = window.BAYOU_NODE;
-if (document.querySelector(editorNode) === null) {
-  const extra = (editorNode[0] === '#') ? '' : ' (maybe need a `#` prefix?)';
-  throw new Error(`No such selector${extra}: \`${editorNode}\``);
-}
+// Init logging.
+SeeAllBrowser.init();
 
 // Figure out the URL of our server. We use the `BAYOU_KEY` global specified by
 // the enclosing HTML. We don't just _always_ use the document's URL because it
@@ -40,7 +39,7 @@ if (document.querySelector(editorNode) === null) {
 // URL. However, when using the debugging routes, it's possible that we end up
 // with the catchall "URL" `*`. If so, we detect that here and fall back to
 // using the document's URL.
-const key = Decoder.decodeJson(window.BAYOU_KEY);
+const key = Decoder.decodeJson(BAYOU_KEY);
 const url = (key.url !== '*') ? key.url : document.URL;
 
 // Cut off after the host name. Putting the main expression in a `?` group
@@ -54,8 +53,15 @@ if (baseUrl.length === 0) {
 // Give the overlay a chance to do any initialization.
 Hooks.run(window, baseUrl);
 
+// Figure out what node we're attaching the editor to. We use the `BAYOU_NODE`
+// global specified by the enclosing HTML.
+if (document.querySelector(BAYOU_NODE) === null) {
+  const extra = (BAYOU_NODE[0] === '#') ? '' : ' (maybe need a `#` prefix?)';
+  throw new Error(`No such selector${extra}: \`${BAYOU_NODE}\``);
+}
+
 // Make the editor instance.
-const quill = QuillMaker.make(editorNode);
+const quill = QuillMaker.make(BAYOU_NODE);
 
 // Initialize the API connection, and hook it up to the Quill instance. Similar
 // to the node identification (immediately above), we use the URL inside the
