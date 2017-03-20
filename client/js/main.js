@@ -31,6 +31,7 @@ if (!(BAYOU_KEY && BAYOU_NODE)) {
 // Init logging.
 SeeAllBrowser.init();
 const log = new SeeAll('page-init');
+log.detail('Starting...');
 
 // Figure out the URL of our server. We use the `BAYOU_KEY` global specified by
 // the enclosing HTML. We don't just _always_ use the document's URL because it
@@ -52,10 +53,19 @@ if (baseUrl.length === 0) {
   throw new Error(`Could not determine base URL of: ${url}`);
 }
 
+// Initialize the API connection. We do this in parallel with the rest of the
+// page loading, so as to minimize time-to-interactive.
+
+log.detail('Opening API client...');
+const apiClient = new ApiClient(baseUrl);
+apiClient.open().then(() => {
+  log.detail('API client open.');
+});
+
 // Arrange for the rest of initialization to happen once the initial page
 // contents are fully loaded.
 window.addEventListener('load', (event_unused) => {
-  log.info('Initial page load complete.');
+  log.detail('Initial page load complete.');
 
   // Figure out what node we're attaching the editor to. We use the `BAYOU_NODE`
   // global specified by the enclosing HTML.
@@ -68,25 +78,14 @@ window.addEventListener('load', (event_unused) => {
   }
 
   // Give the overlay a chance to do any initialization.
-  log.detail('Running `run()` hook...');
   Hooks.run(window, baseUrl);
+  log.detail('Ran `run()` hook.');
 
   // Make the editor instance.
-  log.detail('Making editor instance...');
   const quill = QuillMaker.make(BAYOU_NODE);
+  log.detail('Made editor instance.');
 
-  // Initialize the API connection, and hook it up to the Quill instance. Similar
-  // to the node identification (immediately above), we use the URL inside the
-  // `BAYOU_KEY`, if that's passed, falling back on the document URL for the
-  // soon-to-be legacy case. TODO: Should probably insist on `BAYOU_KEY` being
-  // defined.
-
-  log.detail('Opening API client...');
-  const apiClient = new ApiClient(baseUrl);
-  apiClient.open().then(() => {
-    log.detail('API client open.');
-  });
-
+  // Hook the API up to the editor instance.
   log.detail('Hooking up document client...');
   const docClient = new DocClient(quill, apiClient);
   docClient.start();
