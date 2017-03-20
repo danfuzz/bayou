@@ -246,6 +246,7 @@ export default class DebugTools {
     if (doc === null) {
       const error = new Error();
       error.debugMsg = `No such document: ${documentId}`;
+      throw error;
     }
 
     return doc;
