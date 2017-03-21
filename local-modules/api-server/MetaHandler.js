@@ -17,6 +17,25 @@ export default class MetaHandler {
   }
 
   /**
+   * Generates and returns a challenge for the key that controls the target with
+   * the given ID. It is an error to request a challenge for a nonexistent or
+   * uncontrolled target.
+   *
+   * @param {string} id Target whose key is to be challenged.
+   * @returns {string} A challenge string that can subsequently be answered so
+   *   as to remove key control for the target, in the context of the current
+   *   session.
+   */
+  makeChallenge(id) {
+    const target = this._connection.context.getControlled(id);
+    const challengePair = target.key.makeChallengePair();
+
+    // TODO: Remember the challenge, so we can validate it when the response
+    // comes in.
+    return challengePair.challenge;
+  }
+
+  /**
    * API meta-method `connectionId`: Returns the connection ID that is assigned
    * to this connection. This is only meant to be used for logging. For example,
    * it is _not_ guaranteed to be unique.

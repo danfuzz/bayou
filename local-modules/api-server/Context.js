@@ -85,6 +85,24 @@ export default class Context {
   }
 
   /**
+   * Gets the target associated with the indicated ID, but only if it is
+   * controlled (that is, it requires auth). This will throw an error if the
+   * so-identified target does not exist.
+   *
+   * @param {string} id The target ID.
+   * @returns {Target} The so-identified target.
+   */
+  getControlled(id) {
+    const result = this.get(id);
+
+    if (result.key === null) {
+      throw new Error(`Not a controlled target: \`${id}\``);
+    }
+
+    return result;
+  }
+
+  /**
    * Gets the target associated with the indicated ID, or `null` if the
    * so-identified target does not exist.
    *
