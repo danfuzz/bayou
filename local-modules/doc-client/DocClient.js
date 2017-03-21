@@ -310,6 +310,7 @@ export default class DocClient extends StateMachine {
     this._api.open();
 
     // Perform a challenge-response to authorize access to the document.
+    // TODO: This should be moved into the `ApiClient` code.
     this._api.meta.makeChallenge(this._docId).then((challenge) => {
       log.info(`Got challenge: ${challenge}`);
       const response = this._docKey.challengeResponseFor(challenge);

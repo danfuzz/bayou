@@ -2,8 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Decoder, Encoder, Message } from 'api-common';
+import { BaseKey, Decoder, Encoder, Message } from 'api-common';
 import { SeeAll } from 'see-all';
+import { TString } from 'typecheck';
 import { WebsocketCodes } from 'util-common';
 
 import ApiError from './ApiError';
@@ -330,6 +331,22 @@ export default class ApiClient {
       this._log.info('Open.');
       return true;
     });
+  }
+
+  /**
+   * Gets a proxy for the target with the given ID or which is controlled by the
+   * given key (or which was so controlled prior to authorizing it away).
+   *
+   * @param {string|BaseKey} idOrKey ID or key for the target.
+   * @returns {Proxy} Proxy which locally represents the so-identified
+   *   server-side target.
+   */
+  getTarget(idOrKey) {
+    const id = (idOrKey instanceof BaseKey)
+      ? idOrKey.id
+      : TString.check(idOrKey);
+
+    return this._targets.createOrGet(id);
   }
 
   /**
