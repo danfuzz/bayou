@@ -42,8 +42,8 @@ log.detail('Starting...');
 // URL. However, when using the debugging routes, it's possible that we end up
 // with the catchall "URL" `*`. If so, we detect that here and fall back to
 // using the document's URL.
-const key = Decoder.decodeJson(BAYOU_KEY);
-const url = (key.url !== '*') ? key.url : document.URL;
+const documentKey = Decoder.decodeJson(BAYOU_KEY);
+const url = (documentKey.url !== '*') ? documentKey.url : document.URL;
 
 // Cut off after the host name. Putting the main expression in a `?` group
 // guarantees that the regex will match at least the empty string, which makes
@@ -68,7 +68,7 @@ apiClient.open().then(() => {
 
 // Ask for a challenge on the key we have. When we get it, provide the challenge
 // response so as to strip auth off of the so-guarded document.
-apiClient.meta.makeChallenge(key.id).then((challenge) => {
+apiClient.meta.makeChallenge(documentKey.id).then((challenge) => {
   // TODO: Respond.
   log.info('Got challenge:', challenge);
 });
@@ -97,7 +97,7 @@ window.addEventListener('load', (event_unused) => {
   log.detail('Made editor instance.');
 
   // Hook the API up to the editor instance.
-  const docClient = new DocClient(quill, apiClient);
+  const docClient = new DocClient(quill, apiClient, documentKey);
   docClient.start();
   docClient.when_idle().then(() => {
     log.detail('Document client hooked up.');

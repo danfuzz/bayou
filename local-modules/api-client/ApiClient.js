@@ -300,14 +300,19 @@ export default class ApiClient {
 
   /**
    * Opens the websocket. Once open, any pending calls will get sent to the
-   * server side.
+   * server side. If the socket is already open (or in the process of opening),
+   * this does not re-open (that is, the existing open is allowed to continue).
    *
    * @returns {Promise} A promise for the result of opening. This will resolve
    * as a `true` success or fail with an `ApiError`.
    */
   open() {
+    // If `_ws` is `null` that means that the connection is not already open or
+    // in the process of opening.
+
     if (this._ws !== null) {
-      return Promise.reject(this._connError('client_bug', 'Already open.'));
+      // Already open(ing). Just return an appropriately-behaved promise.
+      return this.meta.ping();
     }
 
     const url = this._url;

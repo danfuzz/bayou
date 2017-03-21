@@ -85,7 +85,9 @@ export default class Target {
    *
    * @param {string} name The method name.
    * @param {Array} args Arguments to the method.
-   * @returns {Promise} A promise for the result.
+   * @returns {*} The result of calling. Because `undefined` isn't used across
+   *   the API, this method returns `null` if the original method returned
+   *   `undefined`.
    */
   call(name, args) {
     TString.nonempty(name);
@@ -103,6 +105,8 @@ export default class Target {
 
     const target = this._target;
     const impl = target[name];
-    return impl.apply(target, args);
+    const result = impl.apply(target, args);
+
+    return (result === undefined) ? null : result;
   }
 }

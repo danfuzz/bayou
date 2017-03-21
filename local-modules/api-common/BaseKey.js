@@ -74,11 +74,13 @@ export default class BaseKey {
    * @param {string} challenge The challenge. This must be a string which was
    *   previously returned as the `challenge` binding from a call to
    *   `makeChallenge()` (either in this process or any other).
-   * @returns {string} The challenge response.
+   * @returns {string} The challenge response. It is guaranteed to be at least
+   *   16 characters long.
    */
   challengeResponseFor(challenge) {
     TString.minLen(challenge, 16);
-    return this._impl_challengeResponseFor(challenge);
+    const response = this._impl_challengeResponseFor(challenge);
+    return TString.minLen(response, 16);
   }
 
   /**

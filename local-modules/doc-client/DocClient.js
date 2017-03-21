@@ -73,15 +73,20 @@ export default class DocClient extends StateMachine {
    *
    * @param {Quill} quill Quill editor instance.
    * @param {ApiClient} api API Client instance.
+   * @param {BaseKey} documentKey Key that identifies and controls access to the
+   *   document on the server.
    */
-  constructor(quill, api) {
+  constructor(quill, api, documentKey) {
     super('detached', log);
 
-    /** Editor object. */
+    /** {Quill} Editor object. */
     this._quill = quill;
 
-    /** API interface. */
+    /** {ApiClient} API interface. */
     this._api = api;
+
+    /** {BaseKey} Key that identifies and controls access to the document. */
+    this._documentKey = documentKey;
 
     /**
      * {Snapshot|null} Current version of the document as received from the
@@ -270,9 +275,6 @@ export default class DocClient extends StateMachine {
     this._pendingDeltaAfter = false;
     this._pendingLocalDocumentChange = false;
 
-    // Reopen the connection to the server.
-    this._api.open();
-
     // After this, it's just like starting from the `detached` state.
     this.s_detached();
     this.q_start();
@@ -284,6 +286,9 @@ export default class DocClient extends StateMachine {
    * This is the kickoff event.
    */
   _handle_detached_start() {
+    // Open (or reopen) the connection to the server.
+    this._api.open();
+
     // TODO: This should probably arrange for a timeout.
     this._api.main.snapshot().then(
       (value) => {
