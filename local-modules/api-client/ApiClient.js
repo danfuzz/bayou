@@ -312,6 +312,7 @@ export default class ApiClient {
 
     if (this._ws !== null) {
       // Already open(ing). Just return an appropriately-behaved promise.
+      this._log.detail('open() called while already opening.');
       return this.meta.ping();
     }
 
@@ -321,6 +322,8 @@ export default class ApiClient {
     this._ws.onerror   = this._handleError.bind(this);
     this._ws.onmessage = this._handleMessage.bind(this);
     this._ws.onopen    = this._handleOpen.bind(this);
+
+    this._log.detail('Opening connection...');
 
     return this.meta.connectionId().then((value) => {
       this._connectionId = value;
