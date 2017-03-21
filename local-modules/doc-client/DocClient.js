@@ -127,7 +127,8 @@ export default class DocClient extends StateMachine {
 
   /**
    * Requests that this instance start interacting with its associated editor
-   * and API handler.
+   * and API handler. This method does nothing if the client is already in an
+   * active state (including being in the middle of starting).
    */
   start() {
     this.q_start();
@@ -284,6 +285,19 @@ export default class DocClient extends StateMachine {
   }
 
   /**
+   * In state `errorWait`, handles most events.
+   *
+   * @param {string} name The event name.
+   * @param {...*} args The event arguments.
+   */
+  _handle_errorWait_any(name, ...args) {
+    // This space intentionally left blank (except for logging): We might get
+    // "zombie" events from a connection that's shuffling towards doom. But even
+    // if so, we will already have set up a timer to reset the connection.
+    log.info('While error-waiting:', name, args);
+  }
+
+  /**
    * In state `detached`, handles event `start`.
    *
    * This is the kickoff event.
@@ -296,26 +310,18 @@ export default class DocClient extends StateMachine {
     this._api.open();
 
     // Perform a challenge-response to authorize access to the document.
-    this._api.meta.makeChallenge(this._docId).then(
-      (challenge) => {
-        log.info(`Got challenge: ${challenge}`);
-        const response = this._docKey.challengeResponseFor(challenge);
-        return this._api.meta.authWithChallengeResponse(challenge, response);
-      },
-      (error) => {
-        this.q_apiError('makeChallenge', error);
-      }
-    ).then(
-      () => {
-        // Successful auth.
-        log.info(`Authed ${this._docId}`);
+    this._api.meta.makeChallenge(this._docId).then((challenge) => {
+      log.info(`Got challenge: ${challenge}`);
+      const response = this._docKey.challengeResponseFor(challenge);
+      return this._api.meta.authWithChallengeResponse(challenge, response);
+    }).then(() => {
+      // Successful auth.
+      log.info(`Authed ${this._docId}`);
 
-        // TODO: Use the docId.
-      },
-      (error) => {
-        this.q_apiError('challengeResponseFor', error);
-      }
-    );
+      // TODO: Use the docId.
+    }).catch((error) => {
+      this.q_apiError('makeChallenge / authWithChallengeResponse', error);
+    });
 
     // TODO: This should probably arrange for a timeout.
     this._api.main.snapshot().then(
@@ -327,6 +333,14 @@ export default class DocClient extends StateMachine {
       });
 
     this.s_starting();
+  }
+
+  /**
+   * In most states, handles event `start`.
+   */
+  _handle_any_start() {
+    // This space intentionally left blank: We are already active or in the
+    // middle of starting, so there's nothing more to do.
   }
 
   /**
