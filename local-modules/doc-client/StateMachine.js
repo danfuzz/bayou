@@ -46,6 +46,10 @@ import { PromCondition, PropertyIter } from 'util-common';
  * Similarly, a method is added for each state, `s_<name>`, each of which takes
  * no arguments and causes the machine to switch into the so-named state.
  *
+ * Lastly (and also similarly), a method is added for each state, `when_<name>`,
+ * each of which takes no arguments and returns a promise which becomes resolved
+ * the moment the machine switches into the so-named state.
+ *
  * This class defines a single event type `error(exception)`, which gets
  * queued up any time a handler throws an otherwise uncaught exception. This
  * class also defines two handlers: (1) a default handler for (any, any), which
@@ -60,23 +64,30 @@ export default class StateMachine {
    * @param {SeeAll} [logger = null] Logger to use.
    */
   constructor(initialState, logger = null) {
-    /** Logger to use. */
+    /** {SeeAll} Logger to use. */
     this._log = logger || new SeeAll('state-machine');
 
-    /** The current state. Set below. */
+    /** {string} The current state. Set below. */
     this._state = null;
 
     /**
-     * Queue of events in need of dispatch. Becomes `null` when the state
-     * machine is getting aborted.
+     * {array<{name, args}>} Queue of events in need of dispatch. Becomes `null`
+     * when the state machine is getting aborted.
      */
     this._eventQueue = [];
 
     /**
-     * Condition which is set to `true` whenever the event queue has events in
-     * it or when it is time to abort.
+     * {PromCondition} Condition which is set to `true` whenever the event queue
+     * has events in it or when it is time to abort.
      */
     this._anyEventPending = new PromCondition(false);
+
+    /**
+     * {Map<string,PromCondition>} Map from state names to conditions which
+     * become momentarily `true` when transitioning into those states. Populated
+     * only as needed.
+     */
+    this._stateConditions = new Map();
 
     /** Count of events handled. Used for logging. */
     this._eventCount = 0;
@@ -125,17 +136,26 @@ export default class StateMachine {
   }
 
   /**
-   * Adds to this instance one method per state name, named `s_<name>`, as
-   * described in the class header docs.
+   * Adds to this instance two methods per state name, named `s_<name>` and
+   * `when_<name>`, as described in the class header docs.
    */
   _addStateMethods() {
     const states = Object.keys(this._handlers);
     for (const name of states) {
       this[`s_${name}`] = () => {
         if (this._state !== name) {
-          this._log.detail('New state:', name);
+          this._log.detail(`New state: ${name}`);
           this._state = name;
         }
+      };
+      this[`when_${name}`] = () => {
+        this._log.detail(`Awaiter added for state: ${name}`);
+        let condition = this._stateConditions.get(name);
+        if (!condition) {
+          condition = new PromCondition();
+          this._stateConditions.set(name, condition);
+        }
+        return condition.whenTrue();
       };
     }
   }
@@ -318,6 +338,21 @@ export default class StateMachine {
       } else {
         log.detail('Uncaught error:', e);
         this.q_error(e);
+      }
+    }
+
+    // If we transitioned into a new state, and that new state has an associated
+    // condition object, trigger it.
+    const newState = this._state;
+    if (newState !== state) {
+      const condition = this._stateConditions.get(newState);
+      if (condition) {
+        condition.onOff();
+        this._log.detail(`Triggered awaiter for state: ${newState}`);
+
+        // Remove the condition, because in general, these kinds of state
+        // awaiters are used only ephemerally.
+        this._stateConditions.delete(newState);
       }
     }
 
