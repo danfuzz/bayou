@@ -86,7 +86,6 @@ window.addEventListener('load', (event_unused) => {
   log.detail('Made editor instance.');
 
   // Hook the API up to the editor instance.
-  log.detail('Hooking up document client...');
   const docClient = new DocClient(quill, apiClient);
   docClient.start();
   docClient.when_idle().then(() => {
