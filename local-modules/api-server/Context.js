@@ -176,7 +176,7 @@ export default class Context {
    *
    * @param {string} id The ID of the target whose key is to be removed.
    */
-  removeKey(id) {
+  removeControl(id) {
     const target = this.getControlled(id);
     this._map.set(id, target.withoutKey());
   }
