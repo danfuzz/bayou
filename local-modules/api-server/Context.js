@@ -169,6 +169,19 @@ export default class Context {
   }
 
   /**
+   * Removes the key that controls the target with the given ID. It is an error
+   * to try to operate on a nonexistent or uncontrolled target. This replaces
+   * the `target` with a newly-constructed one that has no auth control; it
+   * does _not_ modify the original `target` object (which is immutable).
+   *
+   * @param {string} id The ID of the target whose key is to be removed.
+   */
+  removeKey(id) {
+    const target = this.getControlled(id);
+    this._map.set(id, target.withoutKey());
+  }
+
+  /**
    * Clones this instance. The resulting clone has a separate underlying map.
    * That is, adding targets to the clone does not affect its progenitor.
    *
