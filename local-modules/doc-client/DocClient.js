@@ -73,10 +73,10 @@ export default class DocClient extends StateMachine {
    *
    * @param {Quill} quill Quill editor instance.
    * @param {ApiClient} api API Client instance.
-   * @param {BaseKey} documentKey Key that identifies and controls access to the
+   * @param {BaseKey} docKey Key that identifies and controls access to the
    *   document on the server.
    */
-  constructor(quill, api, documentKey) {
+  constructor(quill, api, docKey) {
     super('detached', log);
 
     /** {Quill} Editor object. */
@@ -86,7 +86,10 @@ export default class DocClient extends StateMachine {
     this._api = api;
 
     /** {BaseKey} Key that identifies and controls access to the document. */
-    this._documentKey = documentKey;
+    this._docKey = docKey;
+
+    /** {string} ID of the document. Just shorthand for `_docKey.id`. */
+    this._docId = docKey.id;
 
     /**
      * {Snapshot|null} Current version of the document as received from the
@@ -286,8 +289,33 @@ export default class DocClient extends StateMachine {
    * This is the kickoff event.
    */
   _handle_detached_start() {
-    // Open (or reopen) the connection to the server.
+    // Open (or reopen) the connection to the server. Even though the connection
+    // won't become open synchronously, the API client code allows us to start
+    // sending messages over it immediately. (They'll just get queued up as
+    // necessary.)
     this._api.open();
+
+    // Perform a challenge-response to authorize access to the document.
+    this._api.meta.makeChallenge(this._docId).then(
+      (challenge) => {
+        log.info(`Got challenge: ${challenge}`);
+        const response = this._docKey.challengeResponseFor(challenge);
+        return this._api.meta.authWithChallengeResponse(challenge, response);
+      },
+      (error) => {
+        this.q_apiError('makeChallenge', error);
+      }
+    ).then(
+      () => {
+        // Successful auth.
+        log.info(`Authed ${this._docId}`);
+
+        // TODO: Use the docId.
+      },
+      (error) => {
+        this.q_apiError('challengeResponseFor', error);
+      }
+    );
 
     // TODO: This should probably arrange for a timeout.
     this._api.main.snapshot().then(

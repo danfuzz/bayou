@@ -42,8 +42,8 @@ log.detail('Starting...');
 // URL. However, when using the debugging routes, it's possible that we end up
 // with the catchall "URL" `*`. If so, we detect that here and fall back to
 // using the document's URL.
-const documentKey = Decoder.decodeJson(BAYOU_KEY);
-const url = (documentKey.url !== '*') ? documentKey.url : document.URL;
+const docKey = Decoder.decodeJson(BAYOU_KEY);
+const url = (docKey.url !== '*') ? docKey.url : document.URL;
 
 // Cut off after the host name. Putting the main expression in a `?` group
 // guarantees that the regex will match at least the empty string, which makes
@@ -59,18 +59,10 @@ if (baseUrl.length === 0) {
 log.detail('Opening API client...');
 const apiClient = new ApiClient(baseUrl);
 
-// Start opening the connection. Even though the connection won't become open
-// synchronously, the API client code allows us to start sending messages over
-// it immediately. (They'll just get queued up.)
+// Start opening the connection, to maybe save a bit of time (that is, the
+// document can finish loading in parallel with the API connection opening up).
 apiClient.open().then(() => {
   log.detail('API client open.');
-});
-
-// Ask for a challenge on the key we have. When we get it, provide the challenge
-// response so as to strip auth off of the so-guarded document.
-apiClient.meta.makeChallenge(documentKey.id).then((challenge) => {
-  // TODO: Respond.
-  log.info('Got challenge:', challenge);
 });
 
 // Arrange for the rest of initialization to happen once the initial page
@@ -97,7 +89,7 @@ window.addEventListener('load', (event_unused) => {
   log.detail('Made editor instance.');
 
   // Hook the API up to the editor instance.
-  const docClient = new DocClient(quill, apiClient, documentKey);
+  const docClient = new DocClient(quill, apiClient, docKey);
   docClient.start();
   docClient.when_idle().then(() => {
     log.detail('Document client hooked up.');
