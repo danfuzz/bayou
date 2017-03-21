@@ -89,6 +89,10 @@ window.addEventListener('load', (event_unused) => {
   log.detail('Hooking up document client...');
   const docClient = new DocClient(quill, apiClient);
   docClient.start();
+  docClient.when_idle().then(() => {
+    log.detail('Document client hooked up.');
+    log.info('Initialization complete!');
+  });
 
-  log.detail('Done(ish). Async operations now in progress...');
+  log.detail('Async operations now in progress...');
 });
