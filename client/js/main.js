@@ -58,8 +58,19 @@ if (baseUrl.length === 0) {
 
 log.detail('Opening API client...');
 const apiClient = new ApiClient(baseUrl);
+
+// Start opening the connection. Even though the connection won't become open
+// synchronously, the API client code allows us to start sending messages over
+// it immediately. (They'll just get queued up.)
 apiClient.open().then(() => {
   log.detail('API client open.');
+});
+
+// Ask for a challenge on the key we have. When we get it, provide the challenge
+// response so as to strip auth off of the so-guarded document.
+apiClient.meta.makeChallenge(key.id).then((challenge) => {
+  // TODO: Respond.
+  log.info('Got challenge:', challenge);
 });
 
 // Arrange for the rest of initialization to happen once the initial page
