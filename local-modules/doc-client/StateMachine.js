@@ -109,6 +109,11 @@ export default class StateMachine {
     this._serviceEventQueue(); // Set up the queue servicer; it self-perpetuates.
   }
 
+  /** {string} The current state. */
+  get state() {
+    return this._state;
+  }
+
   /**
    * Adds to this instance one method per event name, named `q_<name>`, each of
    * which takes any number of arguments and enqueues an event with the
@@ -126,6 +131,10 @@ export default class StateMachine {
 
         if ((validArgs !== undefined) && !Array.isArray(validArgs)) {
           throw new Error(`Invalid validator result (non-array) for \`${name}\`.`);
+        }
+
+        if (this._eventQueue === null) {
+          throw new Error('Cannot queue events on aborted instance.');
         }
 
         this._log.detail('Enqueued:', name, args);
