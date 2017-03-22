@@ -393,12 +393,10 @@ export default class DocClient extends StateMachine {
 
       // **Note:** As of this writing, Quill will never reject (report an error
       // on) a document change promise.
-      this._currentChange.next.then(
-        (value_unused) => {
-          this._pendingLocalDocumentChange = false;
-          this.q_gotLocalDelta(baseDoc);
-        }
-      );
+      this._currentChange.next.then((value_unused) => {
+        this._pendingLocalDocumentChange = false;
+        this.q_gotLocalDelta(baseDoc);
+      });
     }
 
     // Ask the server for any changes, but only if there isn't already a pending
