@@ -11,7 +11,7 @@ import BearerToken from './BearerToken';
 import MetaHandler from './MetaHandler';
 import Context from './Context';
 
-/** Logger. */
+/** {SeeAll} Logger. */
 const log = new SeeAll('api');
 
 /**
@@ -58,7 +58,9 @@ export default class Connection {
    * Constructs an instance. Each instance corresponds to a separate client
    * connection.
    *
-   * @param {Context} context The binding context to provide access to.
+   * @param {Context} context The binding context to provide access to. This
+   *   value gets cloned, so that changes to the `this.context` do not affect
+   *   the originally passed value.
    * @param {string} baseUrl The public-facing base URL for this connection.
    */
   constructor(context, baseUrl) {
@@ -67,10 +69,6 @@ export default class Connection {
 
     /** {string} The public-facing base URL for this connection. */
     this._baseUrl = TString.nonempty(baseUrl);
-
-    // We add a `meta` binding to the initial set of targets, which is specific
-    // to this instance/connection.
-    this._context.add('meta', new MetaHandler(this));
 
     /**
      * {string} Short label string used to identify this connection in logs.
@@ -83,6 +81,10 @@ export default class Connection {
 
     /** {SeeAll} Logger which includes the connection ID as a prefix. */
     this._log = log.withPrefix(`[${this._connectionId}]`);
+
+    // We add a `meta` binding to the initial set of targets, which is specific
+    // to this instance/connection.
+    this._context.add('meta', new MetaHandler(this));
 
     this._log.info(`Open via <${this._baseUrl}>.`);
   }
@@ -100,6 +102,11 @@ export default class Connection {
   /** {Context} The resource-binding context. */
   get context() {
     return this._context;
+  }
+
+  /** {SeeAll} Connection-specific logger. */
+  get log() {
+    return this._log;
   }
 
   /**

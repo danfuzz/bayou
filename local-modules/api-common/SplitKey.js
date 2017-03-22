@@ -84,15 +84,13 @@ export default class SplitKey extends BaseKey {
   }
 
   /**
-   * Gets a challenge response. This is used as a tactic for two sides of a
-   * connection to authenticate each other without ever having to provide a
-   * shared secret directly over a connection.
+   * Main implementation of `challengeResponseFor()`, as defined by the
+   * superclass.
    *
-   * @param {string} challenge Challenge. This must be a string of 16 hex digits
-   *   (lower case).
+   * @param {string} challenge The challenge.
    * @returns {string} The challenge response.
    */
-  challengeResponseFor(challenge) {
+  _impl_challengeResponseFor(challenge) {
     TString.hexBytes(challenge, 8, 8);
 
     const hash = sha256.create();
@@ -104,15 +102,13 @@ export default class SplitKey extends BaseKey {
   }
 
   /**
-   * Creates a random challenge, to be used for authenticating a peer.
+   * Creates and returns a random challenge string, as defined by the
+   * superclass. In this case, the result is always an eight byte long hex
+   * string (lower case).
    *
-   * @returns {object} An object which maps `id` to the key ID, `challenge` to
-   *   the challenge string and `response` to the expected response.
+   * @returns {string} A random challenge string.
    */
-  randomChallenge() {
-    const id        = this._id;
-    const challenge = Random.hexByteString(8);
-    const response  = this.challengeResponseFor(challenge);
-    return { id, challenge, response };
+  _impl_randomChallengeString() {
+    return Random.hexByteString(8);
   }
 }

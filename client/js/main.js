@@ -42,8 +42,8 @@ log.detail('Starting...');
 // URL. However, when using the debugging routes, it's possible that we end up
 // with the catchall "URL" `*`. If so, we detect that here and fall back to
 // using the document's URL.
-const key = Decoder.decodeJson(BAYOU_KEY);
-const url = (key.url !== '*') ? key.url : document.URL;
+const docKey = Decoder.decodeJson(BAYOU_KEY);
+const url = (docKey.url !== '*') ? docKey.url : document.URL;
 
 // Cut off after the host name. Putting the main expression in a `?` group
 // guarantees that the regex will match at least the empty string, which makes
@@ -58,6 +58,9 @@ if (baseUrl.length === 0) {
 
 log.detail('Opening API client...');
 const apiClient = new ApiClient(baseUrl);
+
+// Start opening the connection, to maybe save a bit of time (that is, the
+// document can finish loading in parallel with the API connection opening up).
 apiClient.open().then(() => {
   log.detail('API client open.');
 });
@@ -86,7 +89,7 @@ window.addEventListener('load', (event_unused) => {
   log.detail('Made editor instance.');
 
   // Hook the API up to the editor instance.
-  const docClient = new DocClient(quill, apiClient);
+  const docClient = new DocClient(quill, apiClient, docKey);
   docClient.start();
   docClient.when_idle().then(() => {
     log.detail('Document client hooked up.');

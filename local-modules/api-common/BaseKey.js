@@ -67,6 +67,63 @@ export default class BaseKey {
   }
 
   /**
+   * Gets a challenge response. This is used as a tactic for two sides of a
+   * connection to authenticate each other without ever having to provide a
+   * shared secret directly over a connection.
+   *
+   * @param {string} challenge The challenge. This must be a string which was
+   *   previously returned as the `challenge` binding from a call to
+   *   `makeChallenge()` (either in this process or any other).
+   * @returns {string} The challenge response. It is guaranteed to be at least
+   *   16 characters long.
+   */
+  challengeResponseFor(challenge) {
+    TString.minLen(challenge, 16);
+    const response = this._impl_challengeResponseFor(challenge);
+    return TString.minLen(response, 16);
+  }
+
+  /**
+   * Main implementation of `challengeResponseFor()`. By default this throws
+   * an error ("not implemented"). Subclasses wishing to support challenges
+   * must override this to do something else.
+   *
+   * @param {string} challenge The challenge. It is guaranteed to be a string of
+   *   at least 16 characters.
+   * @returns {string} The challenge response.
+   */
+  _impl_challengeResponseFor(challenge) {
+    return this._mustOverride(challenge);
+  }
+
+  /**
+   * Creates a random challenge, to be used for authenticating a peer, and
+   * provides both it and the expected response.
+   *
+   * @returns {object} An object which maps `challenge` to a random challenge
+   *   string and `response` to the expected response.
+   */
+  makeChallengePair() {
+    const challenge = this._impl_randomChallengeString();
+    const response  = this.challengeResponseFor(challenge);
+
+    TString.minLen(challenge, 16);
+    return { challenge, response };
+  }
+
+  /**
+   * Creates and returns a random challenge string. The returned string must be
+   * at least 16 characters long but may be longer. By default this throws an
+   * error ("not implemented"). Subclasses wishing to support challenges must
+   * override this to do something else.
+   *
+   * @returns {string} A random challenge string.
+   */
+  _impl_randomChallengeString() {
+    return this._mustOverride();
+  }
+
+  /**
    * Gets the printable form of the ID. This defaults to the same as `.id`,
    * but subclasses can override this if they want to produce something
    * different.

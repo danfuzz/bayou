@@ -73,15 +73,23 @@ export default class DocClient extends StateMachine {
    *
    * @param {Quill} quill Quill editor instance.
    * @param {ApiClient} api API Client instance.
+   * @param {BaseKey} docKey Key that identifies and controls access to the
+   *   document on the server.
    */
-  constructor(quill, api) {
+  constructor(quill, api, docKey) {
     super('detached', log);
 
-    /** Editor object. */
+    /** {Quill} Editor object. */
     this._quill = quill;
 
-    /** API interface. */
+    /** {ApiClient} API interface. */
     this._api = api;
+
+    /** {BaseKey} Key that identifies and controls access to the document. */
+    this._docKey = docKey;
+
+    /** {Proxy} Local proxy for accessing the document. */
+    this._docProxy = api.getTarget(docKey);
 
     /**
      * {Snapshot|null} Current version of the document as received from the
@@ -119,7 +127,8 @@ export default class DocClient extends StateMachine {
 
   /**
    * Requests that this instance start interacting with its associated editor
-   * and API handler.
+   * and API handler. This method does nothing if the client is already in an
+   * active state (including being in the middle of starting).
    */
   start() {
     this.q_start();
@@ -236,16 +245,20 @@ export default class DocClient extends StateMachine {
    * but is considered unusual (and error-worthy) if it happens for some other
    * reason.
    *
-   * @param {string} method_unused Name of the method that was called.
+   * @param {string} method Name of the method that was called.
    * @param {object} reason Error reason.
    */
-  _handle_any_apiError(method_unused, reason) {
+  _handle_any_apiError(method, reason) {
     if (reason.layer === ApiError.CONN) {
       // It's connection-related and probably no big deal.
-      log.info(`${reason.code}: ${reason.desc}`);
+      log.info(`${reason.code}, ${reason.desc}`);
     } else {
       // It's something more dire; could be a bug on either side, for example.
-      log.error(`Severe synch issue ${reason.code}: ${reason.desc}`);
+      if (reason instanceof Error) {
+        log.error(`Severe synch issue in \`${method}\``, reason);
+      } else {
+        log.error(`Severe synch issue in \`${method}\`: ${reason.code}, ${reason.desc}`);
+      }
     }
 
     // Wait an appropriate amount of time and then try starting again. The
@@ -270,12 +283,22 @@ export default class DocClient extends StateMachine {
     this._pendingDeltaAfter = false;
     this._pendingLocalDocumentChange = false;
 
-    // Reopen the connection to the server.
-    this._api.open();
-
     // After this, it's just like starting from the `detached` state.
     this.s_detached();
     this.q_start();
+  }
+
+  /**
+   * In state `errorWait`, handles most events.
+   *
+   * @param {string} name The event name.
+   * @param {...*} args The event arguments.
+   */
+  _handle_errorWait_any(name, ...args) {
+    // This space intentionally left blank (except for logging): We might get
+    // "zombie" events from a connection that's shuffling towards doom. But even
+    // if so, we will already have set up a timer to reset the connection.
+    log.info('While error-waiting:', name, args);
   }
 
   /**
@@ -284,16 +307,34 @@ export default class DocClient extends StateMachine {
    * This is the kickoff event.
    */
   _handle_detached_start() {
-    // TODO: This should probably arrange for a timeout.
-    this._api.main.snapshot().then(
-      (value) => {
+    // Open (or reopen) the connection to the server. Even though the connection
+    // won't become open synchronously, the API client code allows us to start
+    // sending messages over it immediately. (They'll just get queued up as
+    // necessary.)
+    this._api.open();
+
+    // Perform a challenge-response to authorize access to the document.
+    // TODO: This whole flow should probably be protected by a timeout.
+    this._api.authorizeTarget(this._docKey).then(() => {
+      // TODO: Use the docProxy.
+      return this._api.main.snapshot().then((value) => {
         this.q_gotSnapshot(value);
-      },
-      (error) => {
+      }).catch((error) => {
         this.q_apiError('snapshot', error);
       });
+    }).catch((error) => {
+      this.q_apiError('authorizeTarget', error);
+    });
 
     this.s_starting();
+  }
+
+  /**
+   * In most states, handles event `start`.
+   */
+  _handle_any_start() {
+    // This space intentionally left blank: We are already active or in the
+    // middle of starting, so there's nothing more to do.
   }
 
   /**

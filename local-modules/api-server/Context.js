@@ -85,6 +85,24 @@ export default class Context {
   }
 
   /**
+   * Gets the target associated with the indicated ID, but only if it is
+   * controlled (that is, it requires auth). This will throw an error if the
+   * so-identified target does not exist.
+   *
+   * @param {string} id The target ID.
+   * @returns {Target} The so-identified target.
+   */
+  getControlled(id) {
+    const result = this.get(id);
+
+    if (result.key === null) {
+      throw new Error(`Not a controlled target: \`${id}\``);
+    }
+
+    return result;
+  }
+
+  /**
    * Gets the target associated with the indicated ID, or `null` if the
    * so-identified target does not exist.
    *
@@ -148,6 +166,19 @@ export default class Context {
   deleteId(id) {
     this.get(id); // This will throw if `id` isn't bound.
     this._map.delete(id);
+  }
+
+  /**
+   * Removes the key that controls the target with the given ID. It is an error
+   * to try to operate on a nonexistent or uncontrolled target. This replaces
+   * the `target` with a newly-constructed one that has no auth control; it
+   * does _not_ modify the original `target` object (which is immutable).
+   *
+   * @param {string} id The ID of the target whose key is to be removed.
+   */
+  removeControl(id) {
+    const target = this.getControlled(id);
+    this._map.set(id, target.withoutKey());
   }
 
   /**

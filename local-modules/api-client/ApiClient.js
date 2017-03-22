@@ -2,8 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Decoder, Encoder, Message } from 'api-common';
+import { BaseKey, Decoder, Encoder, Message } from 'api-common';
 import { SeeAll } from 'see-all';
+import { TString } from 'typecheck';
 import { WebsocketCodes } from 'util-common';
 
 import ApiError from './ApiError';
@@ -107,6 +108,7 @@ export default class ApiClient {
     this._nextId       = 0;
     this._callbacks    = {};
     this._pendingCalls = [];
+    this._targets.reset();
   }
 
   /**
@@ -300,14 +302,20 @@ export default class ApiClient {
 
   /**
    * Opens the websocket. Once open, any pending calls will get sent to the
-   * server side.
+   * server side. If the socket is already open (or in the process of opening),
+   * this does not re-open (that is, the existing open is allowed to continue).
    *
    * @returns {Promise} A promise for the result of opening. This will resolve
    * as a `true` success or fail with an `ApiError`.
    */
   open() {
+    // If `_ws` is `null` that means that the connection is not already open or
+    // in the process of opening.
+
     if (this._ws !== null) {
-      return Promise.reject(this._connError('client_bug', 'Already open.'));
+      // Already open(ing). Just return an appropriately-behaved promise.
+      this._log.detail('open() called while already opening.');
+      return this.meta.ping();
     }
 
     const url = this._url;
@@ -317,10 +325,53 @@ export default class ApiClient {
     this._ws.onmessage = this._handleMessage.bind(this);
     this._ws.onopen    = this._handleOpen.bind(this);
 
+    this._log.detail('Opening connection...');
+
     return this.meta.connectionId().then((value) => {
       this._connectionId = value;
       this._log.info('Open.');
       return true;
+    });
+  }
+
+  /**
+   * Gets a proxy for the target with the given ID or which is controlled by the
+   * given key (or which was so controlled prior to authorizing it away).
+   *
+   * @param {string|BaseKey} idOrKey ID or key for the target.
+   * @returns {Proxy} Proxy which locally represents the so-identified
+   *   server-side target.
+   */
+  getTarget(idOrKey) {
+    const id = (idOrKey instanceof BaseKey)
+      ? idOrKey.id
+      : TString.check(idOrKey);
+
+    return this._targets.createOrGet(id);
+  }
+
+  /**
+   * Performs a challenge-response authorization for a given key. When the
+   * returned promise resolves successfully, that means that the corresponding
+   * target (that is, `this.getTarget(key)`) can be accessed without further
+   * authorization.
+   *
+   * @param {BaseKey} key Key to authorize with.
+   * @returns {Promise<Proxy>} Promise which resolves to the proxy that
+   *   represents the foreign target which is controlled by `key`, once
+   *   authorization is complete.
+   */
+  authorizeTarget(key) {
+    const id = key.id;
+
+    return this.meta.makeChallenge(id).then((challenge) => {
+      this._log.info(`Got challenge: ${challenge}`);
+      const response = key.challengeResponseFor(challenge);
+      return this.meta.authWithChallengeResponse(challenge, response);
+    }).then(() => {
+      // Successful auth.
+      this._log.info(`Authed ${id}`);
+      return this.getTarget(id);
     });
   }
 
