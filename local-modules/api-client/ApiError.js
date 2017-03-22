@@ -2,16 +2,19 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { TString } from 'typecheck';
+
 /**
  * Error class for reporting errors coming from `ApiClient`. Differentiates
  * between connection/transport errors and application logic errors.
  *
- * **Note:** This is _not_ a subclass of `Error` because all that would provide
- * is a stack trace, and in fact the stack trace isn't useful by the time you
- * have an instance of this class (because you will have gotten it from a
- * promise via `then()` or similar).
+ * **Note:** This class is defined to be a subclass of `Error` because instances
+ * are most typically used as the rejection "reason" for promises, and rejection
+ * reasons are generally expected to be instances of `Error`. That said, the
+ * stack trace associated with these instances will almost never be useful, as
+ * they will almost always get thrown most directly from API handler code.
  */
-export default class ApiError {
+export default class ApiError extends Error {
   /** Constant indicating an application logic error. */
   static get APP() { return 'app'; }
 
@@ -31,6 +34,10 @@ export default class ApiError {
    *   error description.
    */
   constructor(layer, code, desc = 'API Error') {
+    TString.check(layer);
+    TString.check(code);
+    TString.check(desc);
+
     if ((layer !== ApiError.APP) && (layer !== ApiError.CONN)) {
       throw new Error('Invalid value for `layer`.');
     }
@@ -38,6 +45,8 @@ export default class ApiError {
     if (!/[a-z0-9_]{5,40}/.test(code)) {
       throw new Error('Invalid value for `code`.');
     }
+
+    super(ApiError._fullMessage(layer, code, desc));
 
     /** The error layer. */
     this._layer = layer;
@@ -70,15 +79,6 @@ export default class ApiError {
   }
 
   /**
-   * Gets the unified string form of this instance.
-   *
-   * @returns {string} The string form.
-   */
-  toString() {
-    return `[${this._layer} ${this._code}] ${this._desc}`;
-  }
-
-  /**
    * The error layer. One of `ApiError.APP` or `ApiError.CONN`.
    */
   get layer() {
@@ -97,5 +97,17 @@ export default class ApiError {
    */
   get desc() {
     return this._desc;
+  }
+
+  /**
+   * Makes a full message string from the given parts.
+   *
+   * @param {string} layer String as defined by the constructor.
+   * @param {string} code String as defined by the constructor.
+   * @param {string} desc String as defined by the constructor.
+   * @returns {string} Full message.
+   */
+  static _fullMessage(layer, code, desc) {
+    return `[${layer} ${code}] ${desc}`;
   }
 }
