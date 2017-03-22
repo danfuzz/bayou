@@ -77,6 +77,101 @@ export default class ApiClient {
   }
 
   /**
+   * Performs a challenge-response authorization for a given key. When the
+   * returned promise resolves successfully, that means that the corresponding
+   * target (that is, `this.getTarget(key)`) can be accessed without further
+   * authorization.
+   *
+   * If `key.id` is already mapped by this instance, the corresponding target
+   * is returned directly without further authorization. (That is, this method
+   * is idempotent.)
+   *
+   * @param {BaseKey} key Key to authorize with.
+   * @returns {Promise<Proxy>} Promise which resolves to the proxy that
+   *   represents the foreign target which is controlled by `key`, once
+   *   authorization is complete.
+   */
+  authorizeTarget(key) {
+    // Just pass through to the target map.
+    return this._targets.authorizeTarget(key);
+  }
+
+  /**
+   * {string} The connection ID if known, or a reasonably suggestive string if
+   * not. This class automatically sets the ID when connections get made, so
+   * that clients don't generally have to make an API call to get this info.
+   */
+  get connectionId() {
+    return this._connectionId;
+  }
+
+  /**
+   * Gets a proxy for the target with the given ID or which is controlled by the
+   * given key (or which was so controlled prior to authorizing it away). The
+   * target must already have been authorized for this method to work (otherwise
+   * it is an error); use `authorizeTarget()` to perform authorization.
+   *
+   * @param {string|BaseKey} idOrKey ID or key for the target.
+   * @returns {Proxy} Proxy which locally represents the so-identified
+   *   server-side target.
+   */
+  getTarget(idOrKey) {
+    const id = (idOrKey instanceof BaseKey)
+      ? idOrKey.id
+      : TString.check(idOrKey);
+
+    return this._targets.get(id);
+  }
+
+  /**
+   * {SeeAll} The client-specific logger.
+   */
+  get log() {
+    return this._log;
+  }
+
+  /**
+   * {Proxy} The object upon which meta-API calls can be made.
+   */
+  get meta() {
+    return this._targets.get('meta');
+  }
+
+  /**
+   * Opens the websocket. Once open, any pending messages will get sent to the
+   * server side. If the socket is already open (or in the process of opening),
+   * this does not re-open (that is, the existing open is allowed to continue).
+   *
+   * @returns {Promise} A promise for the result of opening. This will resolve
+   * as a `true` success or fail with an `ApiError`.
+   */
+  open() {
+    // If `_ws` is `null` that means that the connection is not already open or
+    // in the process of opening.
+
+    if (this._ws !== null) {
+      // Already open(ing). Just return an appropriately-behaved promise.
+      this._log.detail('open() called while already opening.');
+      return this.meta.ping();
+    }
+
+    const url = this._url;
+    this._ws = new WebSocket(url);
+    this._ws.onclose   = this._handleClose.bind(this);
+    this._ws.onerror   = this._handleError.bind(this);
+    this._ws.onmessage = this._handleMessage.bind(this);
+    this._ws.onopen    = this._handleOpen.bind(this);
+
+    this._log.detail('Opening connection...');
+
+    return this.meta.connectionId().then((value) => {
+      this._connectionId = value;
+      this._log.info('Open.');
+      return true;
+    });
+  }
+
+  /**
    * Gets the websocket URL for the given original (base) URL.
    *
    * @param {string} origUrl The original (base) URL.
@@ -296,100 +391,5 @@ export default class ApiClient {
       // See above about `server_bug`.
       throw this._connError('server_bug', `Orphan call for ID ${id}.`);
     }
-  }
-
-  /**
-   * Opens the websocket. Once open, any pending messages will get sent to the
-   * server side. If the socket is already open (or in the process of opening),
-   * this does not re-open (that is, the existing open is allowed to continue).
-   *
-   * @returns {Promise} A promise for the result of opening. This will resolve
-   * as a `true` success or fail with an `ApiError`.
-   */
-  open() {
-    // If `_ws` is `null` that means that the connection is not already open or
-    // in the process of opening.
-
-    if (this._ws !== null) {
-      // Already open(ing). Just return an appropriately-behaved promise.
-      this._log.detail('open() called while already opening.');
-      return this.meta.ping();
-    }
-
-    const url = this._url;
-    this._ws = new WebSocket(url);
-    this._ws.onclose   = this._handleClose.bind(this);
-    this._ws.onerror   = this._handleError.bind(this);
-    this._ws.onmessage = this._handleMessage.bind(this);
-    this._ws.onopen    = this._handleOpen.bind(this);
-
-    this._log.detail('Opening connection...');
-
-    return this.meta.connectionId().then((value) => {
-      this._connectionId = value;
-      this._log.info('Open.');
-      return true;
-    });
-  }
-
-  /**
-   * Gets a proxy for the target with the given ID or which is controlled by the
-   * given key (or which was so controlled prior to authorizing it away). The
-   * target must already have been authorized for this method to work (otherwise
-   * it is an error); use `authorizeTarget()` to perform authorization.
-   *
-   * @param {string|BaseKey} idOrKey ID or key for the target.
-   * @returns {Proxy} Proxy which locally represents the so-identified
-   *   server-side target.
-   */
-  getTarget(idOrKey) {
-    const id = (idOrKey instanceof BaseKey)
-      ? idOrKey.id
-      : TString.check(idOrKey);
-
-    return this._targets.get(id);
-  }
-
-  /**
-   * Performs a challenge-response authorization for a given key. When the
-   * returned promise resolves successfully, that means that the corresponding
-   * target (that is, `this.getTarget(key)`) can be accessed without further
-   * authorization.
-   *
-   * If `key.id` is already mapped by this instance, the corresponding target
-   * is returned directly without further authorization. (That is, this method
-   * is idempotent.)
-   *
-   * @param {BaseKey} key Key to authorize with.
-   * @returns {Promise<Proxy>} Promise which resolves to the proxy that
-   *   represents the foreign target which is controlled by `key`, once
-   *   authorization is complete.
-   */
-  authorizeTarget(key) {
-    // Just pass through to the target map.
-    return this._targets.authorizeTarget(key);
-  }
-
-  /**
-   * {string} The connection ID if known, or a reasonably suggestive string if
-   * not. This class automatically sets the ID when connections get made, so
-   * that clients don't generally have to make an API call to get this info.
-   */
-  get connectionId() {
-    return this._connectionId;
-  }
-
-  /**
-   * {SeeAll} The client-specific logger.
-   */
-  get log() {
-    return this._log;
-  }
-
-  /**
-   * {Proxy} The object upon which meta-API calls can be made.
-   */
-  get meta() {
-    return this._targets.get('meta');
   }
 }
