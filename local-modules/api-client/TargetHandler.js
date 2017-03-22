@@ -2,6 +2,18 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+/** {Set<string>} Set of methods which never get proxied. */
+const VERBOTEN_METHODS = new Set([
+  // Standard constructor method name.
+  'constructor',
+
+  // Promise interface. If proxied, this confuses the promise system, as it
+  // just looks for these methods to figure out if it's working with a
+  // "promise."
+  'then',
+  'catch'
+]);
+
 /**
  * `Proxy` handler which redirects method calls to an indicated client.
  */
@@ -69,7 +81,9 @@ export default class TargetHandler {
       const methods = this._methods;
 
       for (const name in schema[this._targetId]) {
-        methods.set(name, this._makeMethodHandler(name));
+        if (!VERBOTEN_METHODS.has(name)) {
+          methods.set(name, this._makeMethodHandler(name));
+        }
       }
 
       this._readyState = 'ready';
@@ -141,9 +155,12 @@ export default class TargetHandler {
     if (method || this._ready) {
       return method;
     } else {
-      // We're still starting up. Assume that this is a valid method, but
-      // _don't_ cache it, in case we're wrong.
-      return this._makeMethodHandler(property);
+      // We're still starting up. As long as it's not explicitly verboten,
+      // assume that this is a valid method, but _don't_ cache it, in case we're
+      // wrong.
+      return VERBOTEN_METHODS.has(property)
+        ? undefined
+        : this._makeMethodHandler(property);
     }
   }
 
