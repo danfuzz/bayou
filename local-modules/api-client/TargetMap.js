@@ -7,7 +7,10 @@ import { TString } from 'typecheck';
 import TargetHandler from './TargetHandler';
 
 /**
- * Map of the various targets being provided by a connection.
+ * Map of the various targets being provided by a connection. Items present in
+ * this map are assumed to be _uncontrolled_ targets, that is, without an
+ * auth requirements (or, to the extent that auth requirements were ever
+ * present, that they have already been fulfilled).
  */
 export default class TargetMap {
   /**
@@ -63,6 +66,18 @@ export default class TargetMap {
     }
 
     return result;
+  }
+
+  /**
+   * Gets the proxy for the target with the given ID, or `null` if there is no
+   * such target.
+   *
+   * @param {string} id The target ID.
+   * @returns {Proxy|null} The corresponding proxy, or `null` if `id` isn't
+   *   bound to a target.
+   */
+  getOrNull(id) {
+    return this._targets.get(id) || null;
   }
 
   /**
