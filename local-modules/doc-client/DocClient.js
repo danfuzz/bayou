@@ -88,8 +88,8 @@ export default class DocClient extends StateMachine {
     /** {BaseKey} Key that identifies and controls access to the document. */
     this._docKey = docKey;
 
-    /** {string} ID of the document. Just shorthand for `_docKey.id`. */
-    this._docId = docKey.id;
+    /** {Proxy} Local proxy for accessing the document. */
+    this._docProxy = api.getTarget(docKey);
 
     /**
      * {Snapshot|null} Current version of the document as received from the
@@ -245,16 +245,20 @@ export default class DocClient extends StateMachine {
    * but is considered unusual (and error-worthy) if it happens for some other
    * reason.
    *
-   * @param {string} method_unused Name of the method that was called.
+   * @param {string} method Name of the method that was called.
    * @param {object} reason Error reason.
    */
-  _handle_any_apiError(method_unused, reason) {
+  _handle_any_apiError(method, reason) {
     if (reason.layer === ApiError.CONN) {
       // It's connection-related and probably no big deal.
-      log.info(`${reason.code}: ${reason.desc}`);
+      log.info(`${reason.code}, ${reason.desc}`);
     } else {
       // It's something more dire; could be a bug on either side, for example.
-      log.error(`Severe synch issue ${reason.code}: ${reason.desc}`);
+      if (reason instanceof Error) {
+        log.error(`Severe synch issue in \`${method}\``, reason);
+      } else {
+        log.error(`Severe synch issue in \`${method}\`: ${reason.code}, ${reason.desc}`);
+      }
     }
 
     // Wait an appropriate amount of time and then try starting again. The
@@ -310,28 +314,17 @@ export default class DocClient extends StateMachine {
     this._api.open();
 
     // Perform a challenge-response to authorize access to the document.
-    // TODO: This should be moved into the `ApiClient` code.
-    this._api.meta.makeChallenge(this._docId).then((challenge) => {
-      log.info(`Got challenge: ${challenge}`);
-      const response = this._docKey.challengeResponseFor(challenge);
-      return this._api.meta.authWithChallengeResponse(challenge, response);
-    }).then(() => {
-      // Successful auth.
-      log.info(`Authed ${this._docId}`);
-
-      // TODO: Use the docId.
-    }).catch((error) => {
-      this.q_apiError('makeChallenge / authWithChallengeResponse', error);
-    });
-
-    // TODO: This should probably arrange for a timeout.
-    this._api.main.snapshot().then(
-      (value) => {
+    // TODO: This whole flow should probably be protected by a timeout.
+    this._api.authorizeTarget(this._docKey).then(() => {
+      // TODO: Use the docProxy.
+      return this._api.main.snapshot().then((value) => {
         this.q_gotSnapshot(value);
-      },
-      (error) => {
+      }).catch((error) => {
         this.q_apiError('snapshot', error);
       });
+    }).catch((error) => {
+      this.q_apiError('authorizeTarget', error);
+    });
 
     this.s_starting();
   }
