@@ -93,13 +93,12 @@ export default class PostConnection extends Connection {
     this._log.info('Close.');
 
     const msg = Buffer.concat(this._chunks).toString('utf8');
-    this.handleJsonMessage(msg).then(
-      (response) => {
-        this._res
-          .status(200)
-          .type('application/json')
-          .send(response);
-      });
+    this.handleJsonMessage(msg).then((response) => {
+      this._res
+        .status(200)
+        .type('application/json')
+        .send(response);
+    });
   }
 
   /**
