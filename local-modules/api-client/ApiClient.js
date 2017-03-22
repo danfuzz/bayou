@@ -356,23 +356,18 @@ export default class ApiClient {
    * target (that is, `this.getTarget(key)`) can be accessed without further
    * authorization.
    *
+   * If `key.id` is already mapped by this instance, the corresponding target
+   * is returned directly without further authorization. (That is, this method
+   * is idempotent.)
+   *
    * @param {BaseKey} key Key to authorize with.
    * @returns {Promise<Proxy>} Promise which resolves to the proxy that
    *   represents the foreign target which is controlled by `key`, once
    *   authorization is complete.
    */
   authorizeTarget(key) {
-    const id = key.id;
-
-    return this.meta.makeChallenge(id).then((challenge) => {
-      this._log.info(`Got challenge: ${id} ${challenge}`);
-      const response = key.challengeResponseFor(challenge);
-      return this.meta.authWithChallengeResponse(challenge, response);
-    }).then(() => {
-      // Successful auth.
-      this._log.info(`Authed: ${id}`);
-      return this.getTarget(id);
-    });
+    // Just pass through to the target map.
+    return this._targets.authorizeTarget(key);
   }
 
   /**
@@ -382,6 +377,13 @@ export default class ApiClient {
    */
   get connectionId() {
     return this._connectionId;
+  }
+
+  /**
+   * {SeeAll} The client-specific logger.
+   */
+  get log() {
+    return this._log;
   }
 
   /**

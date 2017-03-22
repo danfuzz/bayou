@@ -32,6 +32,37 @@ export default class TargetMap {
   }
 
   /**
+   * Performs a challenge-response authorization for a given key. When the
+   * returned promise resolves successfully, that means that the corresponding
+   * target (that is, the target with id `key.id`) can be accessed without
+   * further authorization and is in fact mapped by this instance.
+   *
+   * If `key.id` is already mapped by this instance, the corresponding target
+   * is returned directly without further authorization. (That is, this method
+   * is idempotent.)
+   *
+   * @param {BaseKey} key Key to authorize with.
+   * @returns {Promise<Proxy>} Promise which resolves to the proxy that
+   *   represents the foreign target which is controlled by `key`, once
+   *   authorization is complete.
+   */
+  authorizeTarget(key) {
+    const id = key.id;
+    const api = this._apiClient;
+    const meta = api.meta;
+
+    return meta.makeChallenge(id).then((challenge) => {
+      api.log.info(`Got challenge: ${id} ${challenge}`);
+      const response = key.challengeResponseFor(challenge);
+      return meta.authWithChallengeResponse(challenge, response);
+    }).then(() => {
+      // Successful auth.
+      api.log.info(`Authed: ${id}`);
+      return this.getOrCreate(id);
+    });
+  }
+
+  /**
    * Gets the proxy for the target with the given ID.
    *
    * @param {string} id The target ID.
