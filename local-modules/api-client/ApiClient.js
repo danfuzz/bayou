@@ -150,25 +150,20 @@ export default class ApiClient {
     }
 
     const id = this._nextId;
+    this._nextId++;
+
     const payloadObj = new Message(id, target, action, name, args);
     const payload = Encoder.encodeJson(payloadObj);
-    this._log.detail('Sending raw payload:', payload);
-
-    let callback;
-    const result = new Promise((resolve, reject) => {
-      callback = { resolve, reject };
-    });
-
-    this._callbacks[id] = callback;
-    this._nextId++;
 
     switch (wsState) {
       case WebSocket.CONNECTING: {
         // Not yet open. Need to queue it up.
+        this._log.detail('Queued:', payloadObj);
         this._pendingCalls.push(payload);
         break;
       }
       case WebSocket.OPEN: {
+        this._log.detail('Sent:', payloadObj);
         this._ws.send(payload);
         break;
       }
@@ -179,9 +174,9 @@ export default class ApiClient {
       }
     }
 
-    this._log.detail('Sent:', payloadObj);
-
-    return result;
+    return new Promise((resolve, reject) => {
+      this._callbacks[id] = { resolve, reject };
+    });
   }
 
   /**
@@ -247,6 +242,7 @@ export default class ApiClient {
    */
   _handleOpen(event_unused) {
     for (const payload of this._pendingCalls) {
+      this._log.detail('Sent from queue:', payload);
       this._ws.send(payload);
     }
     this._pendingCalls = [];
