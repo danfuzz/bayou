@@ -29,6 +29,7 @@ taking into account recent additions to the language.
 ### Other conventions in this codebase
 
 * Websockets &mdash; JavaScript has a `WebSocket` class, but when talking about
-  them in prose, we use "websocket" (one word, all lower case). `ws` is a good
-  choice for the name of a variable that contains an instance of one (or
-  something related).
+  them in prose or in our own variable or class names, we use "websocket" (one
+  word, all lower case, though capitalized as appropriate for prose or
+  `camelCasing`). In addition, `ws` is a good choice for a shorthand name of a
+  variable that contains an instance of one (or something related).
