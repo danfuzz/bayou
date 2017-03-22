@@ -32,27 +32,6 @@ export default class TargetMap {
   }
 
   /**
-   * Gets the proxy for the target with the given ID. If this ID isn't actually
-   * known to this instance, it creates it first, adding it to the map.
-   *
-   * @param {string} id The target ID.
-   * @returns {Proxy} The corresponding proxy.
-   */
-  createOrGet(id) {
-    TString.check(id);
-
-    const already = this._targets.get(id);
-
-    if (already) {
-      return already;
-    }
-
-    const result = TargetHandler.makeProxy(this._apiClient, id);
-    this._targets.set(id, result);
-    return result;
-  }
-
-  /**
    * Gets the proxy for the target with the given ID.
    *
    * @param {string} id The target ID.
@@ -65,6 +44,27 @@ export default class TargetMap {
       throw new Error(`No such target: ${id}`);
     }
 
+    return result;
+  }
+
+  /**
+   * Gets the proxy for the target with the given ID. If this ID isn't actually
+   * known to this instance, it creates it first, adding it to the map.
+   *
+   * @param {string} id The target ID.
+   * @returns {Proxy} The corresponding proxy.
+   */
+  getOrCreate(id) {
+    TString.check(id);
+
+    const already = this._targets.get(id);
+
+    if (already) {
+      return already;
+    }
+
+    const result = TargetHandler.makeProxy(this._apiClient, id);
+    this._targets.set(id, result);
     return result;
   }
 
@@ -88,7 +88,7 @@ export default class TargetMap {
     this._targets = new Map();
 
     // Set up the standard initial map contents.
-    this.createOrGet('main');
-    this.createOrGet('meta');
+    this.getOrCreate('main');
+    this.getOrCreate('meta');
   }
 }

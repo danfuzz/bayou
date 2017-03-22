@@ -347,7 +347,7 @@ export default class ApiClient {
       ? idOrKey.id
       : TString.check(idOrKey);
 
-    return this._targets.createOrGet(id);
+    return this._targets.getOrCreate(id);
   }
 
   /**
