@@ -336,7 +336,9 @@ export default class ApiClient {
 
   /**
    * Gets a proxy for the target with the given ID or which is controlled by the
-   * given key (or which was so controlled prior to authorizing it away).
+   * given key (or which was so controlled prior to authorizing it away). The
+   * target must already have been authorized for this method to work (otherwise
+   * it is an error); use `authorizeTarget()` to perform authorization.
    *
    * @param {string|BaseKey} idOrKey ID or key for the target.
    * @returns {Proxy} Proxy which locally represents the so-identified
@@ -347,7 +349,7 @@ export default class ApiClient {
       ? idOrKey.id
       : TString.check(idOrKey);
 
-    return this._targets.getOrCreate(id);
+    return this._targets.get(id);
   }
 
   /**

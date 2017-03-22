@@ -89,7 +89,7 @@ export default class TargetMap {
       // Successful auth.
       log.info(`Authed: ${id}`);
       this._pendingAuths.delete(id); // It's no longer pending.
-      return this.getOrCreate(id);
+      return this._addTarget(id);
     }).catch((error) => {
       // Trouble along the way. Clean out the pending auth, and propagate the
       // error.
@@ -109,33 +109,12 @@ export default class TargetMap {
    * @returns {Proxy} The corresponding proxy.
    */
   get(id) {
-    const result = this._targets.get(id);
+    const result = this.getOrNull(id);
 
     if (!result) {
       throw new Error(`No such target: ${id}`);
     }
 
-    return result;
-  }
-
-  /**
-   * Gets the proxy for the target with the given ID. If this ID isn't actually
-   * known to this instance, it creates it first, adding it to the map.
-   *
-   * @param {string} id The target ID.
-   * @returns {Proxy} The corresponding proxy.
-   */
-  getOrCreate(id) {
-    TString.check(id);
-
-    const already = this._targets.get(id);
-
-    if (already) {
-      return already;
-    }
-
-    const result = TargetHandler.makeProxy(this._apiClient, id);
-    this._targets.set(id, result);
     return result;
   }
 
@@ -148,6 +127,7 @@ export default class TargetMap {
    *   bound to a target.
    */
   getOrNull(id) {
+    TString.check(id);
     return this._targets.get(id) || null;
   }
 
@@ -160,7 +140,24 @@ export default class TargetMap {
     this._pendingAuths = new Map();
 
     // Set up the standard initial map contents.
-    this.getOrCreate('main');
-    this.getOrCreate('meta');
+    this._addTarget('main');
+    this._addTarget('meta');
+  }
+
+  /**
+   * Creates and binds a proxy for the target with the given ID. Returns the
+   * so-created proxy.
+   *
+   * @param {string} id Target ID.
+   * @returns {Proxy} The newly-bound proxy.
+   */
+  _addTarget(id) {
+    if (this.getOrNull(id) !== null) {
+      throw new Error(`Already bound: ${id}`);
+    }
+
+    const result = TargetHandler.makeProxy(this._apiClient, id);
+    this._targets.set(id, result);
+    return result;
   }
 }
