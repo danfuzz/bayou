@@ -108,6 +108,7 @@ export default class ApiClient {
     this._nextId       = 0;
     this._callbacks    = {};
     this._pendingCalls = [];
+    this._targets.reset();
   }
 
   /**
@@ -347,6 +348,31 @@ export default class ApiClient {
       : TString.check(idOrKey);
 
     return this._targets.createOrGet(id);
+  }
+
+  /**
+   * Performs a challenge-response authorization for a given key. When the
+   * returned promise resolves successfully, that means that the corresponding
+   * target (that is, `this.getTarget(key)`) can be accessed without further
+   * authorization.
+   *
+   * @param {BaseKey} key Key to authorize with.
+   * @returns {Promise<Proxy>} Promise which resolves to the proxy that
+   *   represents the foreign target which is controlled by `key`, once
+   *   authorization is complete.
+   */
+  authorizeTarget(key) {
+    const id = key.id;
+
+    return this.meta.makeChallenge(id).then((challenge) => {
+      this._log.info(`Got challenge: ${challenge}`);
+      const response = key.challengeResponseFor(challenge);
+      return this.meta.authWithChallengeResponse(challenge, response);
+    }).then(() => {
+      // Successful auth.
+      this._log.info(`Authed ${id}`);
+      return this.getTarget(id);
+    });
   }
 
   /**
