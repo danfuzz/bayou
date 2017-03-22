@@ -365,12 +365,12 @@ export default class ApiClient {
     const id = key.id;
 
     return this.meta.makeChallenge(id).then((challenge) => {
-      this._log.info(`Got challenge: ${challenge}`);
+      this._log.info(`Got challenge: ${id} ${challenge}`);
       const response = key.challengeResponseFor(challenge);
       return this.meta.authWithChallengeResponse(challenge, response);
     }).then(() => {
       // Successful auth.
-      this._log.info(`Authed ${id}`);
+      this._log.info(`Authed: ${id}`);
       return this.getTarget(id);
     });
   }
