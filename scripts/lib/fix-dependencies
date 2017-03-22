@@ -22,6 +22,9 @@ function init-prog {
 }
 init-prog
 
+# Move `baseDir` up one layer (not done above because the above is boilerplate).
+baseDir="$(cd "${baseDir}/.."; /bin/pwd -P)"
+
 
 #
 # Argument parsing

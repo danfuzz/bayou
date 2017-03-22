@@ -182,7 +182,7 @@ function make-box {
     # Fix the dependencies (pulling in local module dependencies).
     cd "${targetDir}"
     mv package.json package-unfixed.json
-    "${progDir}/fix-dependencies" --no-locals --out=package.json \
+    "${progDir}/lib/fix-dependencies" --no-locals --out=package.json \
         package-unfixed.json \
         || return 1
 

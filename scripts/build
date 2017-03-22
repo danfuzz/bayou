@@ -322,8 +322,8 @@ function fix-packages {
         # This one hasn't yet been fixed with regard to local dependencies.
         # Fix it!
         cp "${f}" "${unfixed}"
-        "${progDir}/fix-dependencies" --out="${f}" --overlay="${overlayDir}" \
-            "${unfixed}" \
+        "${progDir}/lib/fix-dependencies" --out="${f}" \
+            --overlay="${overlayDir}" "${unfixed}" \
             || return 1
     done
 }
@@ -354,14 +354,14 @@ function do-install {
             return 1
         fi
 
-        "${progDir}/box-install" "${boxDir}/${dir}.npmbox" || return 1
+        "${progDir}/lib/box-install" "${boxDir}/${dir}.npmbox" || return 1
     fi
 
     # We are somewhat at the mercy of what's published via npm, and in fact
     # some modules that we use occasionally have bugs in their published
     # versions. This script patches them in situ based on the contents of the
     # directory `etc/module-overlay`
-    "${progDir}/fix-modules" "${baseDir}/etc/module-overlay" "${toDir}"
+    "${progDir}/lib/fix-modules" "${baseDir}/etc/module-overlay" "${toDir}"
 }
 
 # Builds the server code. This builds from `server-src` into `server`. The
