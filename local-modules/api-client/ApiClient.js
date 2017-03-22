@@ -376,23 +376,23 @@ export default class ApiClient {
   }
 
   /**
-   * The connection ID if known, or a reasonably suggestive string if not.
-   * This class automatically sets the ID when connections get made, so that
-   * clients don't generally have to make an API call to get this info.
+   * {string} The connection ID if known, or a reasonably suggestive string if
+   * not. This class automatically sets the ID when connections get made, so
+   * that clients don't generally have to make an API call to get this info.
    */
   get connectionId() {
     return this._connectionId;
   }
 
   /**
-   * The main object upon which API calls can be made.
+   * {Proxy} The main object upon which API calls can be made.
    */
   get main() {
     return this._targets.get('main');
   }
 
   /**
-   * The object upon which meta-API calls can be made.
+   * {Proxy} The object upon which meta-API calls can be made.
    */
   get meta() {
     return this._targets.get('meta');
