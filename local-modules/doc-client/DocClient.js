@@ -88,8 +88,11 @@ export default class DocClient extends StateMachine {
     /** {BaseKey} Key that identifies and controls access to the document. */
     this._docKey = docKey;
 
-    /** {Proxy} Local proxy for accessing the document. */
-    this._docProxy = api.getTarget(docKey);
+    /**
+     * {Proxy} Local proxy for accessing the document. Becomes non-null during
+     * the handling of the `start` event.
+     */
+    this._docProxy = null;
 
     /**
      * {Snapshot|null} Current version of the document as received from the
@@ -272,13 +275,15 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * In state `errorWait`, handles event `start`.
+   * In state `errorWait`, handles event `start`. This resets the internal
+   * state and then issues a `start` event as if from the `detached` state.
+   *
+   * **TODO:** Ultimately this should be able to pick up the pieces of any
+   * changes that were in-flight when the connection became problematic.
    */
   _handle_errorWait_start() {
-    // Reset the document state. TODO: Ultimately this should be able to
-    // pick up the pieces of any changes that were in-flight when the connection
-    // became problematic.
     this._doc = null;
+    this._docProxy = null;
     this._currentChange = null;
     this._pendingDeltaAfter = false;
     this._pendingLocalDocumentChange = false;
@@ -315,7 +320,8 @@ export default class DocClient extends StateMachine {
 
     // Perform a challenge-response to authorize access to the document.
     // TODO: This whole flow should probably be protected by a timeout.
-    this._api.authorizeTarget(this._docKey).then(() => {
+    this._api.authorizeTarget(this._docKey).then((docProxy) => {
+      this._docProxy = docProxy;
       // TODO: Use the docProxy.
       return this._api.main.snapshot().then((value) => {
         this.q_gotSnapshot(value);

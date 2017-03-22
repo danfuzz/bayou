@@ -28,6 +28,13 @@ export default class TargetMap {
      */
     this._targets = null;
 
+    /**
+     * {Map<string, Promise<Proxy>>} Map from target IDs to promises of their
+     * proxy, for each ID currently in the middle of being authorized. Used to
+     * avoid re-issuing authorization requests.
+     */
+    this._pendingAuths = new Map();
+
     this.reset();
   }
 
@@ -49,17 +56,50 @@ export default class TargetMap {
   authorizeTarget(key) {
     const id = key.id;
     const api = this._apiClient;
+    const log = api.log;
     const meta = api.meta;
+    let result;
 
-    return meta.makeChallenge(id).then((challenge) => {
-      api.log.info(`Got challenge: ${id} ${challenge}`);
+    result = this._targets.get(id);
+    if (result) {
+      // The target is already authorized. Return an immediately-resolved
+      // promise for it. (We don't just return it directly, as that would
+      // violate the method contract. And the method contract is written as such
+      // because it's generally considered a Zalgo-summoning type situation if
+      // you sometimes return promises and sometimes don't.)
+      return Promise.resolve(result);
+    }
+
+    result = this._pendingAuths.get(id);
+    if (result) {
+      // We have already initiated authorization on this target. Return the
+      // promise from the original initiation.
+      log.info(`Already authing: ${id}`);
+      return result;
+    }
+
+    // It's not already authorized (or uncontrolled), and authorization isn't
+    // yet in progress.
+
+    result = meta.makeChallenge(id).then((challenge) => {
+      log.info(`Got challenge: ${id} ${challenge}`);
       const response = key.challengeResponseFor(challenge);
       return meta.authWithChallengeResponse(challenge, response);
     }).then(() => {
       // Successful auth.
-      api.log.info(`Authed: ${id}`);
+      log.info(`Authed: ${id}`);
+      this._pendingAuths.delete(id); // It's no longer pending.
       return this.getOrCreate(id);
+    }).catch((error) => {
+      // Trouble along the way. Clean out the pending auth, and propagate the
+      // error.
+      log.error(`Auth failed: ${id}`);
+      this._pendingAuths.delete(id);
+      throw error;
     });
+
+    this._pendingAuths.set(id, result); // It's now pending.
+    return result;
   }
 
   /**
@@ -117,6 +157,7 @@ export default class TargetMap {
    */
   reset() {
     this._targets = new Map();
+    this._pendingAuths = new Map();
 
     // Set up the standard initial map contents.
     this.getOrCreate('main');
