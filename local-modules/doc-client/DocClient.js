@@ -405,15 +405,13 @@ export default class DocClient extends StateMachine {
     if (!this._pendingDeltaAfter) {
       this._pendingDeltaAfter = true;
 
-      this._api.main.deltaAfter(baseDoc.verNum).then(
-        (value) => {
-          this._pendingDeltaAfter = false;
-          this.q_gotDeltaAfter(baseDoc, value.verNum, value.delta);
-        },
-        (error) => {
-          this._pendingDeltaAfter = false;
-          this.q_apiError('deltaAfter', error);
-        });
+      this._api.main.deltaAfter(baseDoc.verNum).then((value) => {
+        this._pendingDeltaAfter = false;
+        this.q_gotDeltaAfter(baseDoc, value.verNum, value.delta);
+      }).catch((error) => {
+        this._pendingDeltaAfter = false;
+        this.q_apiError('deltaAfter', error);
+      });
     }
 
     this.s_idle();
@@ -556,13 +554,11 @@ export default class DocClient extends StateMachine {
     const expectedContents = this._doc.contents.compose(delta);
 
     // Send the delta, and handle the response.
-    this._api.main.applyDelta(this._doc.verNum, delta).then(
-      (value) => {
-        this.q_gotApplyDelta(expectedContents, value.verNum, value.delta);
-      },
-      (error) => {
-        this.q_apiError('applyDelta', error);
-      });
+    this._api.main.applyDelta(this._doc.verNum, delta).then((value) => {
+      this.q_gotApplyDelta(expectedContents, value.verNum, value.delta);
+    }).catch((error) => {
+      this.q_apiError('applyDelta', error);
+    });
 
     this.s_merging();
   }

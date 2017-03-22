@@ -158,10 +158,9 @@ export default class Connection {
         respond(null, msg.error);
       } else {
         try {
-          this._actOnMessage(msg).then(
-            (result) => { respond(result, null); },
-            (error)  => { respond(null, error);  }
-          );
+          this._actOnMessage(msg)
+            .then((result) => { respond(result, null); })
+            .catch((error) => { respond(null, error);  });
         } catch (e) {
           respond(null, e);
         }
