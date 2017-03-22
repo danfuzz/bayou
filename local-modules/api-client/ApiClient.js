@@ -24,7 +24,7 @@ export default class ApiClient {
    * Constructs an instance. This instance will connect to a websocket at the
    * same domain at the path `/api`. Once this constructor returns, it is safe
    * to call any API methods on the instance's associated `target`. If the
-   * socket isn't yet ready for traffic, the calls will get enqueued and then
+   * socket isn't yet ready for traffic, the messages will get enqueued and then
    * replayed in order once the socket becomes ready.
    *
    * @param {string} url The server origin, as an `http` or `https` URL.
@@ -63,16 +63,112 @@ export default class ApiClient {
     this._callbacks = null;
 
     /**
-     * List of pending calls. Only used when connection is in the middle of
-     * being established. Initialized and reset in `_resetConnection()`.
+     * List of pending payloads (to be sent to the far side of the connection).
+     * Only used when connection is in the middle of being established.
+     * Initialized and reset in `_resetConnection()`.
      */
-    this._pendingCalls = null;
+    this._pendingPayloads = null;
 
     /** Map of names to target proxies. */
     this._targets = new TargetMap(this);
 
     // Initialize the active connection fields (described above).
     this._resetConnection();
+  }
+
+  /**
+   * Performs a challenge-response authorization for a given key. When the
+   * returned promise resolves successfully, that means that the corresponding
+   * target (that is, `this.getTarget(key)`) can be accessed without further
+   * authorization.
+   *
+   * If `key.id` is already mapped by this instance, the corresponding target
+   * is returned directly without further authorization. (That is, this method
+   * is idempotent.)
+   *
+   * @param {BaseKey} key Key to authorize with.
+   * @returns {Promise<Proxy>} Promise which resolves to the proxy that
+   *   represents the foreign target which is controlled by `key`, once
+   *   authorization is complete.
+   */
+  authorizeTarget(key) {
+    // Just pass through to the target map.
+    return this._targets.authorizeTarget(key);
+  }
+
+  /**
+   * {string} The connection ID if known, or a reasonably suggestive string if
+   * not. This class automatically sets the ID when connections get made, so
+   * that clients don't generally have to make an API call to get this info.
+   */
+  get connectionId() {
+    return this._connectionId;
+  }
+
+  /**
+   * Gets a proxy for the target with the given ID or which is controlled by the
+   * given key (or which was so controlled prior to authorizing it away). The
+   * target must already have been authorized for this method to work (otherwise
+   * it is an error); use `authorizeTarget()` to perform authorization.
+   *
+   * @param {string|BaseKey} idOrKey ID or key for the target.
+   * @returns {Proxy} Proxy which locally represents the so-identified
+   *   server-side target.
+   */
+  getTarget(idOrKey) {
+    const id = (idOrKey instanceof BaseKey)
+      ? idOrKey.id
+      : TString.check(idOrKey);
+
+    return this._targets.get(id);
+  }
+
+  /**
+   * {SeeAll} The client-specific logger.
+   */
+  get log() {
+    return this._log;
+  }
+
+  /**
+   * {Proxy} The object upon which meta-API calls can be made.
+   */
+  get meta() {
+    return this._targets.get('meta');
+  }
+
+  /**
+   * Opens the websocket. Once open, any pending messages will get sent to the
+   * server side. If the socket is already open (or in the process of opening),
+   * this does not re-open (that is, the existing open is allowed to continue).
+   *
+   * @returns {Promise} A promise for the result of opening. This will resolve
+   * as a `true` success or fail with an `ApiError`.
+   */
+  open() {
+    // If `_ws` is `null` that means that the connection is not already open or
+    // in the process of opening.
+
+    if (this._ws !== null) {
+      // Already open(ing). Just return an appropriately-behaved promise.
+      this._log.detail('open() called while already opening.');
+      return this.meta.ping();
+    }
+
+    const url = this._url;
+    this._ws = new WebSocket(url);
+    this._ws.onclose   = this._handleClose.bind(this);
+    this._ws.onerror   = this._handleError.bind(this);
+    this._ws.onmessage = this._handleMessage.bind(this);
+    this._ws.onopen    = this._handleOpen.bind(this);
+
+    this._log.detail('Opening connection...');
+
+    return this.meta.connectionId().then((value) => {
+      this._connectionId = value;
+      this._log.info('Open.');
+      return true;
+    });
   }
 
   /**
@@ -103,11 +199,11 @@ export default class ApiClient {
    * constructor for documentation about these fields.
    */
   _resetConnection() {
-    this._ws           = null;
-    this._connectionId = UNKNOWN_CONNECTION_ID;
-    this._nextId       = 0;
-    this._callbacks    = {};
-    this._pendingCalls = [];
+    this._ws              = null;
+    this._connectionId    = UNKNOWN_CONNECTION_ID;
+    this._nextId          = 0;
+    this._callbacks       = {};
+    this._pendingPayloads = [];
     this._targets.reset();
   }
 
@@ -150,25 +246,20 @@ export default class ApiClient {
     }
 
     const id = this._nextId;
+    this._nextId++;
+
     const payloadObj = new Message(id, target, action, name, args);
     const payload = Encoder.encodeJson(payloadObj);
-    this._log.detail('Sending raw payload:', payload);
-
-    let callback;
-    const result = new Promise((resolve, reject) => {
-      callback = { resolve, reject };
-    });
-
-    this._callbacks[id] = callback;
-    this._nextId++;
 
     switch (wsState) {
       case WebSocket.CONNECTING: {
         // Not yet open. Need to queue it up.
-        this._pendingCalls.push(payload);
+        this._log.detail('Queued:', payloadObj);
+        this._pendingPayloads.push(payload);
         break;
       }
       case WebSocket.OPEN: {
+        this._log.detail('Sent:', payloadObj);
         this._ws.send(payload);
         break;
       }
@@ -179,9 +270,9 @@ export default class ApiClient {
       }
     }
 
-    this._log.detail('Sent:', payloadObj);
-
-    return result;
+    return new Promise((resolve, reject) => {
+      this._callbacks[id] = { resolve, reject };
+    });
   }
 
   /**
@@ -192,7 +283,7 @@ export default class ApiClient {
    *   misnomer, as in many cases termination is a-okay.
    */
   _handleTermination(event_unused, error) {
-    // Reject the promises of any currently-pending calls.
+    // Reject the promises of any currently-pending messages.
     for (const id in this._callbacks) {
       this._callbacks[id].reject(error);
     }
@@ -204,7 +295,7 @@ export default class ApiClient {
 
   /**
    * Handles a `close` event coming from a websocket. This logs the closure and
-   * terminates all active calls by rejecting their promises.
+   * terminates all active messages by rejecting their promises.
    *
    * @param {object} event Event that caused this callback.
    */
@@ -240,23 +331,25 @@ export default class ApiClient {
 
   /**
    * Handles an `open` event coming from a websocket. In this case, it sends
-   * any pending calls (calls that were made while the socket was still in the
-   * process of opening).
+   * any pending payloads (messages that were enqueued while the socket was
+   * still in the process of opening).
    *
    * @param {object} event_unused Event that caused this callback.
    */
   _handleOpen(event_unused) {
-    for (const payload of this._pendingCalls) {
+    for (const payload of this._pendingPayloads) {
+      this._log.detail('Sent from queue:', payload);
       this._ws.send(payload);
     }
-    this._pendingCalls = [];
+    this._pendingPayloads = [];
   }
 
   /**
    * Handles a `message` event coming from a websocket. In this case, messages
-   * are expected to be the responses from previous calls, encoded as JSON. The
-   * `id` of the response is used to look up the callback function in
-   * `this._callbacks`. That callback is then called in a separate tick.
+   * are expected to be the responses from previously-sent messages (e.g.
+   * method calls), encoded as JSON. The `id` of the response is used to look up
+   * the callback function in `this._callbacks`. That callback is then called in
+   * a separate turn.
    *
    * @param {object} event Event that caused this callback.
    */
@@ -298,103 +391,5 @@ export default class ApiClient {
       // See above about `server_bug`.
       throw this._connError('server_bug', `Orphan call for ID ${id}.`);
     }
-  }
-
-  /**
-   * Opens the websocket. Once open, any pending calls will get sent to the
-   * server side. If the socket is already open (or in the process of opening),
-   * this does not re-open (that is, the existing open is allowed to continue).
-   *
-   * @returns {Promise} A promise for the result of opening. This will resolve
-   * as a `true` success or fail with an `ApiError`.
-   */
-  open() {
-    // If `_ws` is `null` that means that the connection is not already open or
-    // in the process of opening.
-
-    if (this._ws !== null) {
-      // Already open(ing). Just return an appropriately-behaved promise.
-      this._log.detail('open() called while already opening.');
-      return this.meta.ping();
-    }
-
-    const url = this._url;
-    this._ws = new WebSocket(url);
-    this._ws.onclose   = this._handleClose.bind(this);
-    this._ws.onerror   = this._handleError.bind(this);
-    this._ws.onmessage = this._handleMessage.bind(this);
-    this._ws.onopen    = this._handleOpen.bind(this);
-
-    this._log.detail('Opening connection...');
-
-    return this.meta.connectionId().then((value) => {
-      this._connectionId = value;
-      this._log.info('Open.');
-      return true;
-    });
-  }
-
-  /**
-   * Gets a proxy for the target with the given ID or which is controlled by the
-   * given key (or which was so controlled prior to authorizing it away).
-   *
-   * @param {string|BaseKey} idOrKey ID or key for the target.
-   * @returns {Proxy} Proxy which locally represents the so-identified
-   *   server-side target.
-   */
-  getTarget(idOrKey) {
-    const id = (idOrKey instanceof BaseKey)
-      ? idOrKey.id
-      : TString.check(idOrKey);
-
-    return this._targets.getOrCreate(id);
-  }
-
-  /**
-   * Performs a challenge-response authorization for a given key. When the
-   * returned promise resolves successfully, that means that the corresponding
-   * target (that is, `this.getTarget(key)`) can be accessed without further
-   * authorization.
-   *
-   * @param {BaseKey} key Key to authorize with.
-   * @returns {Promise<Proxy>} Promise which resolves to the proxy that
-   *   represents the foreign target which is controlled by `key`, once
-   *   authorization is complete.
-   */
-  authorizeTarget(key) {
-    const id = key.id;
-
-    return this.meta.makeChallenge(id).then((challenge) => {
-      this._log.info(`Got challenge: ${id} ${challenge}`);
-      const response = key.challengeResponseFor(challenge);
-      return this.meta.authWithChallengeResponse(challenge, response);
-    }).then(() => {
-      // Successful auth.
-      this._log.info(`Authed: ${id}`);
-      return this.getTarget(id);
-    });
-  }
-
-  /**
-   * {string} The connection ID if known, or a reasonably suggestive string if
-   * not. This class automatically sets the ID when connections get made, so
-   * that clients don't generally have to make an API call to get this info.
-   */
-  get connectionId() {
-    return this._connectionId;
-  }
-
-  /**
-   * {Proxy} The main object upon which API calls can be made.
-   */
-  get main() {
-    return this._targets.get('main');
-  }
-
-  /**
-   * {Proxy} The object upon which meta-API calls can be made.
-   */
-  get meta() {
-    return this._targets.get('meta');
   }
 }

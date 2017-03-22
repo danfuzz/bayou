@@ -53,14 +53,6 @@ export default class Application {
     // for their update should the token(s) change.
     this._bindRoot();
 
-    /**
-     * {DocForAuthor} The one document we manage. **TODO:** Needs to be more
-     * than one!
-     */
-    this._doc = new DocForAuthor(
-      DocServer.THE_INSTANCE.getDoc('some-id'), 'some-author');
-    context.add('main', this._doc);
-
     /** The underlying webserver run by this instance. */
     this._app = express();
 

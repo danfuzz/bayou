@@ -4,6 +4,7 @@
 
 import { DocumentChange, VersionNumber } from 'doc-common';
 import { TBoolean, TObject, TString } from 'typecheck';
+import { BaseClass } from 'util-common';
 
 /**
  * Base class representing access to a particular document. Subclasses must
@@ -14,7 +15,7 @@ import { TBoolean, TObject, TString } from 'typecheck';
  * of changes, with each change having a version number that _must_ form a
  * zero-based integer sequence. Changes are random-access.
  */
-export default class BaseDoc {
+export default class BaseDoc extends BaseClass {
   /**
    * Checks that a value is an instance of this class. Throws an error if not.
    *
@@ -31,6 +32,8 @@ export default class BaseDoc {
    * @param {string} docId The ID of the document this instance represents.
    */
   constructor(docId) {
+    super();
+
     /** The ID of the document that this instance represents. */
     this._id = TString.nonempty(docId);
   }
@@ -175,16 +178,5 @@ export default class BaseDoc {
    */
   _impl_changeAppend(change) {
     this._mustOverride(change);
-  }
-
-  /**
-   * Helper function which always throws. Using this both documents the intent
-   * in code and keeps the linter from complaining about the documentation
-   * (`@param`, `@returns`, etc.).
-   *
-   * @param {...*} args_unused Anything you want, to keep the linter happy.
-   */
-  _mustOverride(...args_unused) {
-    throw new Error('Must override.');
   }
 }

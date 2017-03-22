@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TObject, TString } from 'typecheck';
+import { BaseClass } from 'util-common';
 
 /**
  * Base class for access keys. An access key consists of information for
@@ -22,7 +23,7 @@ import { TObject, TString } from 'typecheck';
  * **Note:** The resource ID is _not_ meant to require secrecy in order for
  * the system to be secure. That is, IDs are not required to be unguessable.
  */
-export default class BaseKey {
+export default class BaseKey extends BaseClass {
   /**
    * Checks that a value is an instance of this class. Throws an error if not.
    *
@@ -45,6 +46,8 @@ export default class BaseKey {
    *   least 8 characters.
    */
   constructor(url, id) {
+    super();
+
     if (url !== '*') {
       TString.urlAbsolute(url);
     }
@@ -142,16 +145,5 @@ export default class BaseKey {
   toString() {
     const name = this.constructor.API_NAME || this.constructor.name;
     return `{${name} ${this._url} ${this._impl_printableId()}}`;
-  }
-
-  /**
-   * Helper function which always throws. Using this both documents the intent
-   * in code and keeps the linter from complaining about the documentation
-   * (`@param`, `@returns`, etc.).
-   *
-   * @param {...*} args_unused Anything you want, to keep the linter happy.
-   */
-  _mustOverride(...args_unused) {
-    throw new Error('Must override.');
   }
 }
