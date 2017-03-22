@@ -389,13 +389,6 @@ export default class ApiClient {
   }
 
   /**
-   * {Proxy} The main object upon which API calls can be made.
-   */
-  get main() {
-    return this._targets.get('main');
-  }
-
-  /**
    * {Proxy} The object upon which meta-API calls can be made.
    */
   get meta() {

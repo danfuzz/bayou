@@ -322,8 +322,7 @@ export default class DocClient extends StateMachine {
     // TODO: This whole flow should probably be protected by a timeout.
     this._api.authorizeTarget(this._docKey).then((docProxy) => {
       this._docProxy = docProxy;
-      // TODO: Use the docProxy.
-      return this._api.main.snapshot().then((value) => {
+      return docProxy.snapshot().then((value) => {
         this.q_gotSnapshot(value);
       }).catch((error) => {
         this.q_apiError('snapshot', error);
@@ -411,7 +410,7 @@ export default class DocClient extends StateMachine {
     if (!this._pendingDeltaAfter) {
       this._pendingDeltaAfter = true;
 
-      this._api.main.deltaAfter(baseDoc.verNum).then((value) => {
+      this._docProxy.deltaAfter(baseDoc.verNum).then((value) => {
         this._pendingDeltaAfter = false;
         this.q_gotDeltaAfter(baseDoc, value.verNum, value.delta);
       }).catch((error) => {
@@ -560,7 +559,7 @@ export default class DocClient extends StateMachine {
     const expectedContents = this._doc.contents.compose(delta);
 
     // Send the delta, and handle the response.
-    this._api.main.applyDelta(this._doc.verNum, delta).then((value) => {
+    this._docProxy.applyDelta(this._doc.verNum, delta).then((value) => {
       this.q_gotApplyDelta(expectedContents, value.verNum, value.delta);
     }).catch((error) => {
       this.q_apiError('applyDelta', error);

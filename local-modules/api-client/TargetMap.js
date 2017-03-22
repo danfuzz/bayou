@@ -140,7 +140,6 @@ export default class TargetMap {
     this._pendingAuths = new Map();
 
     // Set up the standard initial map contents.
-    this._addTarget('main');
     this._addTarget('meta');
   }
 

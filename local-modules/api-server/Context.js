@@ -11,8 +11,9 @@ import Target from './Target';
  * just a map from IDs to `Target` instances, along with reasonably
  * straightforward accessor and update methods.
  *
- * As a convention, `main` is the ID of the object providing the main
- * functionality, and `meta` provides meta-information and meta-control.
+ * When initially set up, a context only has one binding. Specifically,
+ * `meta` is bound to an object which provides meta-information and
+ * meta-control.
  */
 export default class Context {
   /**
