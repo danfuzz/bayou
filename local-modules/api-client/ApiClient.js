@@ -173,7 +173,7 @@ export default class ApiClient {
         break;
       }
       default: {
-        // Whatever this state is, it's not documented as part of the Websocket
+        // Whatever this state is, it's not documented as part of the websocket
         // spec!
         this._log.wtf(`Weird state: ${wsState}`);
       }

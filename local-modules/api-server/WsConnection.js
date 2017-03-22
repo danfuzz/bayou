@@ -22,7 +22,7 @@ export default class WsConnection extends Connection {
   constructor(ws, req, context) {
     super(context, Hooks.baseUrlFromRequest(req));
 
-    /** {WebSocket} The Websocket for the client connection. */
+    /** {WebSocket} The websocket for the client connection. */
     this._ws = ws;
 
     ws.on('message', this._handleMessage.bind(this));

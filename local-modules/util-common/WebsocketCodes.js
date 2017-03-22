@@ -24,7 +24,7 @@ const CLOSE_CODES = {
 };
 
 /**
- * Translator of Websocket status codes to human-oriented strings.
+ * Translator of websocket status codes to human-oriented strings.
  *
  * **Note:** This class is not intended to be instantiated.
  */
