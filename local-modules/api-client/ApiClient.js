@@ -24,7 +24,7 @@ export default class ApiClient {
    * Constructs an instance. This instance will connect to a websocket at the
    * same domain at the path `/api`. Once this constructor returns, it is safe
    * to call any API methods on the instance's associated `target`. If the
-   * socket isn't yet ready for traffic, the calls will get enqueued and then
+   * socket isn't yet ready for traffic, the messages will get enqueued and then
    * replayed in order once the socket becomes ready.
    *
    * @param {string} url The server origin, as an `http` or `https` URL.
@@ -63,10 +63,11 @@ export default class ApiClient {
     this._callbacks = null;
 
     /**
-     * List of pending calls. Only used when connection is in the middle of
-     * being established. Initialized and reset in `_resetConnection()`.
+     * List of pending payloads (to be sent to the far side of the connection).
+     * Only used when connection is in the middle of being established.
+     * Initialized and reset in `_resetConnection()`.
      */
-    this._pendingCalls = null;
+    this._pendingPayloads = null;
 
     /** Map of names to target proxies. */
     this._targets = new TargetMap(this);
@@ -103,11 +104,11 @@ export default class ApiClient {
    * constructor for documentation about these fields.
    */
   _resetConnection() {
-    this._ws           = null;
-    this._connectionId = UNKNOWN_CONNECTION_ID;
-    this._nextId       = 0;
-    this._callbacks    = {};
-    this._pendingCalls = [];
+    this._ws              = null;
+    this._connectionId    = UNKNOWN_CONNECTION_ID;
+    this._nextId          = 0;
+    this._callbacks       = {};
+    this._pendingPayloads = [];
     this._targets.reset();
   }
 
@@ -159,7 +160,7 @@ export default class ApiClient {
       case WebSocket.CONNECTING: {
         // Not yet open. Need to queue it up.
         this._log.detail('Queued:', payloadObj);
-        this._pendingCalls.push(payload);
+        this._pendingPayloads.push(payload);
         break;
       }
       case WebSocket.OPEN: {
@@ -187,7 +188,7 @@ export default class ApiClient {
    *   misnomer, as in many cases termination is a-okay.
    */
   _handleTermination(event_unused, error) {
-    // Reject the promises of any currently-pending calls.
+    // Reject the promises of any currently-pending messages.
     for (const id in this._callbacks) {
       this._callbacks[id].reject(error);
     }
@@ -199,7 +200,7 @@ export default class ApiClient {
 
   /**
    * Handles a `close` event coming from a websocket. This logs the closure and
-   * terminates all active calls by rejecting their promises.
+   * terminates all active messages by rejecting their promises.
    *
    * @param {object} event Event that caused this callback.
    */
@@ -235,24 +236,25 @@ export default class ApiClient {
 
   /**
    * Handles an `open` event coming from a websocket. In this case, it sends
-   * any pending calls (calls that were made while the socket was still in the
-   * process of opening).
+   * any pending payloads (messages that were enqueued while the socket was
+   * still in the process of opening).
    *
    * @param {object} event_unused Event that caused this callback.
    */
   _handleOpen(event_unused) {
-    for (const payload of this._pendingCalls) {
+    for (const payload of this._pendingPayloads) {
       this._log.detail('Sent from queue:', payload);
       this._ws.send(payload);
     }
-    this._pendingCalls = [];
+    this._pendingPayloads = [];
   }
 
   /**
    * Handles a `message` event coming from a websocket. In this case, messages
-   * are expected to be the responses from previous calls, encoded as JSON. The
-   * `id` of the response is used to look up the callback function in
-   * `this._callbacks`. That callback is then called in a separate tick.
+   * are expected to be the responses from previously-sent messages (e.g.
+   * method calls), encoded as JSON. The `id` of the response is used to look up
+   * the callback function in `this._callbacks`. That callback is then called in
+   * a separate turn.
    *
    * @param {object} event Event that caused this callback.
    */
@@ -297,7 +299,7 @@ export default class ApiClient {
   }
 
   /**
-   * Opens the websocket. Once open, any pending calls will get sent to the
+   * Opens the websocket. Once open, any pending messages will get sent to the
    * server side. If the socket is already open (or in the process of opening),
    * this does not re-open (that is, the existing open is allowed to continue).
    *
