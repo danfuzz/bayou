@@ -21,13 +21,11 @@ export default class TargetMap {
 
     /**
      * {Map<string, TargetHandler>} The targets being provided, as a map from ID
-     * to proxy.
+     * to proxy. Initialized in `reset()`.
      */
-    this._targets = new Map();
+    this._targets = null;
 
-    // Set up the standard initial map contents.
-    this.createOrGet('main');
-    this.createOrGet('meta');
+    this.reset();
   }
 
   /**
@@ -65,5 +63,17 @@ export default class TargetMap {
     }
 
     return result;
+  }
+
+  /**
+   * Resets the targets of this instance. This is used during instance init
+   * as well as when a connection gets reset.
+   */
+  reset() {
+    this._targets = new Map();
+
+    // Set up the standard initial map contents.
+    this.createOrGet('main');
+    this.createOrGet('meta');
   }
 }
