@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TObject, TString } from 'typecheck';
+import { BaseClass } from 'util-common';
 
 import BaseDoc from './BaseDoc';
 
@@ -11,7 +12,7 @@ import BaseDoc from './BaseDoc';
  * methods defined by this class, as indicated in the documentation. Methods to
  * override are all named with the prefix `_impl_`.
  */
-export default class BaseDocStore {
+export default class BaseDocStore extends BaseClass {
   /**
    * Checks that a value is an instance of this class. Throws an error if not.
    *
@@ -61,16 +62,5 @@ export default class BaseDocStore {
    */
   _impl_getDocument(docId) {
     return this._mustOverride(docId);
-  }
-
-  /**
-   * Helper function which always throws. Using this both documents the intent
-   * in code and keeps the linter from complaining about the documentation
-   * (`@param`, `@returns`, etc.).
-   *
-   * @param {...*} args_unused Anything you want, to keep the linter happy.
-   */
-  _mustOverride(...args_unused) {
-    throw new Error('Must override.');
   }
 }

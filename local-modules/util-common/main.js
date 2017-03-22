@@ -4,6 +4,7 @@
 
 import { ObjectUtil } from 'util-base';
 
+import BaseClass from './BaseClass';
 import DataUtil from './DataUtil';
 import DeferredLoader from './DeferredLoader';
 import JsonUtil from './JsonUtil';
@@ -14,6 +15,7 @@ import Random from './Random';
 import WebsocketCodes from './WebsocketCodes';
 
 export {
+  BaseClass,
   DataUtil,
   DeferredLoader,
   JsonUtil,
