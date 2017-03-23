@@ -10,6 +10,25 @@ import { TObject } from 'typecheck';
  */
 export default class CommonBase {
   /**
+   * Adds the instance and static methods defined on this class to another
+   * class, that is, treat this class as a "mixin" and apply it to the given
+   * class.
+   *
+   * @param {class} clazz Class to mix into.
+   */
+  static mixInto(clazz) {
+    clazz.check         = this.check;
+    clazz.coerce        = this.coerce;
+    clazz.coerceOrNull  = this.coerceOrNull;
+    clazz._mustOverride = this.mustOverride;
+
+    const thisProto  = this.prototype;
+    const clazzProto = clazz.prototype;
+
+    clazzProto._mustOverride = thisProto._mustOverride;
+  }
+
+  /**
    * Checks that a value is an instance of this class. Throws an error if not.
    *
    * This method works for any subclass of this class, e.g., if `Foo` is a
@@ -47,10 +66,10 @@ export default class CommonBase {
     // that was called upon.
 
     if (value instanceof this) {
-      return this;
+      return value;
     } else {
       const result = this._impl_coerce(value);
-      if (!(value instanceof this)) {
+      if (!(result instanceof this)) {
         // There is a bug in the subclass, as it should never return any other
         // kind of value.
         throw new Error('Invalid `_impl_coerce()` implementation.');
@@ -95,7 +114,7 @@ export default class CommonBase {
     // that was called upon.
 
     if (value instanceof this) {
-      return this;
+      return value;
     } else {
       const result = this._impl_coerceOrNull(value);
       if (!(result instanceof this)) {
