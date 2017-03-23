@@ -43,6 +43,5 @@ export default class Singleton extends CommonBase {
     }
 
     this.constructor._theOne = this;
-    console.log('====== boop!', this.constructor.name);
   }
 }
