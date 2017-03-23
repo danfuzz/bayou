@@ -10,6 +10,18 @@ import { PromDelay } from 'util-common';
 
 import StateMachine from './StateMachine';
 
+/**
+ * {Int} Amount of time in msec over which errors are counted, in order to
+ * determine that an instance is in an "unrecoverable" error state.
+ */
+const ERROR_WINDOW_MSEC = 3 * 60 * 1000; // Three minutes.
+
+/**
+ * {number} Error rate, expressed in errors per minute, above which constitutes
+ * sufficient evidence that the instance is in an "unrecoverable" error state.
+ */
+const ERROR_MAX_PER_MINUTE = 2.25;
+
 /** Logger. */
 const log = new SeeAll('doc');
 
@@ -125,6 +137,13 @@ export default class DocClient extends StateMachine {
      * new local change via the Quill document change promise chain?
      */
     this._pendingLocalDocumentChange = false;
+
+    /**
+     * {array<Int>} Timestamps of every transition into the `errorWait` state
+     * over the last `ERROR_WINDOW_MSEC` msec. This is used to determine if
+     * the instance should be considered "unrecoverably" errored.
+     */
+    this._errorStamps = [];
 
     // The Quill instance should already be in read-only mode. We explicitly
     // set that here, though, to be safe and resilient.
@@ -267,9 +286,20 @@ export default class DocClient extends StateMachine {
       }
     }
 
+    // Note the time of the error, and determine if we've hit the point of
+    // unrecoverability. If so, transition into the `unrecoverableError` state.
+    // When this happens, higher-level logic can notice and take further action.
+    this._addErrorStamp();
+    if (this._isUnrecoverablyErrored()) {
+      log.info('Too many errors!');
+      this.s_unrecoverableError();
+      return;
+    }
+
     // Wait an appropriate amount of time and then try starting again. The
     // start event will be received in the `errorWait` state, and as such will
     // be handled differently than a clean start from scratch.
+
     PromDelay.resolve(RESTART_DELAY_MSEC).then((res_unused) => {
       this.start();
     });
@@ -314,7 +344,6 @@ export default class DocClient extends StateMachine {
    * nothing, and no further events can be expected. Client code of this class
    * can use the transition into this state to perform higher-level error
    * recovery.
-   *
    *
    * @param {string} name The event name.
    * @param {...*} args The event arguments.
@@ -794,5 +823,34 @@ export default class DocClient extends StateMachine {
   _becomeIdle() {
     this.s_idle();
     this.q_wantChanges();
+  }
+
+  /**
+   * Trim the error timestamp list of any errors that have "aged out," and add
+   * a new one for the current moment in time.
+   */
+  _addErrorStamp() {
+    const now = Date.now();
+    const agedOut = now - ERROR_WINDOW_MSEC;
+
+    this._errorStamps = this._errorStamps.filter((value) => value >= agedOut);
+    this._errorStamps.push(now);
+  }
+
+  /**
+   * Determine whether the current set of error timestamps means that the
+   * instance is unrecoverably errored.
+   *
+   * @returns {boolean} `true` iff the instance is unrecoverably errored.
+   */
+  _isUnrecoverablyErrored() {
+    const errorCount      = this._errorStamps.length;
+    const errorsPerMinute = (errorCount / ERROR_WINDOW_MSEC) * 60 * 1000;
+
+    log.info(
+      `Error window: ${errorCount} total; ` +
+      `${Math.round(errorsPerMinute * 100) / 100} per minute`);
+
+    return errorsPerMinute >= ERROR_MAX_PER_MINUTE;
   }
 }
