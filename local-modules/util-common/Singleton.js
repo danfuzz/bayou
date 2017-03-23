@@ -25,7 +25,7 @@ export default class Singleton extends CommonBase {
    * has not yet been constructed, accessing this property causes construction
    * to take place.
    */
-  static get THE_INSTANCE() {
+  static get theOne() {
     // **Note:** In the context of static methods, `this` refers to the class
     // that was called upon.
     return this._theOne || new this();
