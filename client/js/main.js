@@ -101,6 +101,9 @@ window.addEventListener('load', (event_unused) => {
     log.detail('Document client hooked up.');
     log.info('Initialization complete!');
   });
+  docClient.when_unrecoverableError().then(() => {
+    log.error('Unrecoverable error! Giving up!');
+  });
 
   log.detail('Async operations now in progress...');
 });

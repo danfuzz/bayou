@@ -102,24 +102,27 @@ export default class DocClient extends StateMachine {
     this._doc = null;
 
     /**
-     * Current (most recent) local change to the document made by Quill that
-     * this instance is aware of. That is, `_currentChange.next` (once it
-     * resolves) is the first change that this instance has not yet processed.
-     * This variable is initialized by getting `Quill.currentChange` and is
-     * generally updated by retrieving `.nextNow` from the value (or its
-     * replacement, etc.).
+     * {DeltaEvent|object} Current (most recent) local change to the document
+     * made by Quill that this instance is aware of. That is,
+     * `_currentChange.next` (once it resolves) is the first change that this
+     * instance has not yet processed. This variable is initialized by getting
+     * `_quill.currentChange` and is generally updated by waiting on `.next` or
+     * retrieving `.nextNow` from the value. In a couple cases, though, instead
+     * of being a `DeltaEvent` per se, it is a "manually" constructed object
+     * with the general shape of a `DeltaEvent`; these are used very transiently
+     * to handle multi-way change merging.
      */
     this._currentChange = null;
 
     /**
-     * Is there currently a pending (as-yet unfulfilled) `deltaAfter()` request
-     * to the server?
+     * {boolean} Is there currently a pending (as-yet unfulfilled) `deltaAfter()`
+     * request to the server?
      */
     this._pendingDeltaAfter = false;
 
     /**
-     * Is there currently a pending (as-yet unfulfilled) request for a new
-     * local change via the Quill document change promise chain?
+     * {boolean} Is there currently a pending (as-yet unfulfilled) request for a
+     * new local change via the Quill document change promise chain?
      */
     this._pendingLocalDocumentChange = false;
 
@@ -303,7 +306,21 @@ export default class DocClient extends StateMachine {
     // This space intentionally left blank (except for logging): We might get
     // "zombie" events from a connection that's shuffling towards doom. But even
     // if so, we will already have set up a timer to reset the connection.
-    log.info('While error-waiting:', name, args);
+    log.info('While in state `errorWait`:', name, args);
+  }
+
+  /**
+   * In state `unrecoverableError`, handles all events. Specifically, this does
+   * nothing, and no further events can be expected. Client code of this class
+   * can use the transition into this state to perform higher-level error
+   * recovery.
+   *
+   *
+   * @param {string} name The event name.
+   * @param {...*} args The event arguments.
+   */
+  _handle_unrecoverableError_any(name, ...args) {
+    log.info('While in state `unrecoverableError`:', name, args);
   }
 
   /**
