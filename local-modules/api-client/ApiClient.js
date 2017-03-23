@@ -34,42 +34,42 @@ export default class ApiClient {
     this._url = ApiClient._getWebsocketUrl(url);
 
     /**
-     * Connection ID conveyed to us by the server. Set / reset in
+     * {string|null} Connection ID conveyed to us by the server. Set / reset in
      * `_resetConnection()`.
      */
     this._connectionId = null;
 
-    /** Logger which prefixes everything with the connection ID. */
+    /** {SeeAll} Logger which prefixes everything with the connection ID. */
     this._log = log.withDynamicPrefix(() => [`[${this._connectionId}]`]);
 
     /**
-     * Actual websocket instance. Set by `open()`. Reset in
+     * {WebSocket} Actual websocket instance. Set by `open()`. Reset in
      * `_resetConnection()`.
      */
     this._ws = null;
 
     /**
-     * Next message ID to use when sending a message. Initialized and reset in
-     * `_resetConnection()`.
+     * {Int} Next message ID to use when sending a message. Initialized and
+     * reset in `_resetConnection()`.
      */
     this._nextId = 0;
 
     /**
-     * Map from message IDs to response callbacks. Each callback is an object
-     * that maps `resolve` and `reject` to functions that obey the usual
-     * promise contract for functions of those names. Initialized and reset in
-     * `_resetConnection()`.
+     * {object<Int,{resolve, reject}>} Map from message IDs to response
+     * callbacks. Each callback is an object that maps `resolve` and `reject` to
+     * functions that obey the usual promise contract for functions of those
+     * names. Initialized and reset in `_resetConnection()`.
      */
     this._callbacks = null;
 
     /**
-     * List of pending payloads (to be sent to the far side of the connection).
-     * Only used when connection is in the middle of being established.
-     * Initialized and reset in `_resetConnection()`.
+     * {array<string>} List of pending payloads (to be sent to the far side of
+     * the connection). Only used when connection is in the middle of being
+     * established. Initialized and reset in `_resetConnection()`.
      */
     this._pendingPayloads = null;
 
-    /** Map of names to target proxies. */
+    /** {TargetMap} Map of names to target proxies. */
     this._targets = new TargetMap(this);
 
     // Initialize the active connection fields (described above).
