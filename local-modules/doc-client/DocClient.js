@@ -97,6 +97,9 @@ export default class DocClient extends StateMachine {
     /** {ApiClient} API interface. */
     this._api = api;
 
+    /** {SeeAll} Logger specific to this document's ID. */
+    this._log = log.withPrefix(`[${docKey.id}]`);
+
     /** {BaseKey} Key that identifies and controls access to the document. */
     this._docKey = docKey;
 
@@ -276,13 +279,13 @@ export default class DocClient extends StateMachine {
   _handle_any_apiError(method, reason) {
     if (reason.layer === ApiError.CONN) {
       // It's connection-related and probably no big deal.
-      log.info(`${reason.code}, ${reason.desc}`);
+      this._log.info(`${reason.code}, ${reason.desc}`);
     } else {
       // It's something more dire; could be a bug on either side, for example.
       if (reason instanceof Error) {
-        log.error(`Severe synch issue in \`${method}\``, reason);
+        this._log.error(`Severe synch issue in \`${method}\``, reason);
       } else {
-        log.error(`Severe synch issue in \`${method}\`: ${reason.code}, ${reason.desc}`);
+        this._log.error(`Severe synch issue in \`${method}\`: ${reason.code}, ${reason.desc}`);
       }
     }
 
@@ -291,7 +294,7 @@ export default class DocClient extends StateMachine {
     // When this happens, higher-level logic can notice and take further action.
     this._addErrorStamp();
     if (this._isUnrecoverablyErrored()) {
-      log.info('Too many errors!');
+      this._log.info('Too many errors!');
       this.s_unrecoverableError();
       return;
     }
@@ -336,7 +339,7 @@ export default class DocClient extends StateMachine {
     // This space intentionally left blank (except for logging): We might get
     // "zombie" events from a connection that's shuffling towards doom. But even
     // if so, we will already have set up a timer to reset the connection.
-    log.info('While in state `errorWait`:', name, args);
+    this._log.info('While in state `errorWait`:', name, args);
   }
 
   /**
@@ -349,7 +352,7 @@ export default class DocClient extends StateMachine {
    * @param {...*} args The event arguments.
    */
   _handle_unrecoverableError_any(name, ...args) {
-    log.info('While in state `unrecoverableError`:', name, args);
+    this._log.info('While in state `unrecoverableError`:', name, args);
   }
 
   /**
@@ -485,7 +488,7 @@ export default class DocClient extends StateMachine {
    * @param {FrozenDelta} delta The delta from `baseDoc`.
    */
   _handle_idle_gotDeltaAfter(baseDoc, verNum, delta) {
-    log.detail(`Delta from server: v${verNum}`, delta);
+    this._log.detail(`Delta from server: v${verNum}`, delta);
 
     // We only take action if the result's base (what `delta` is with regard to)
     // is the current `_doc`. If that _isn't_ the case, then what we have here
@@ -630,7 +633,7 @@ export default class DocClient extends StateMachine {
     const vExpected = expectedContents;
     const dCorrection = delta;
 
-    log.detail(`Correction from server: v${verNum}`, dCorrection);
+    this._log.detail(`Correction from server: v${verNum}`, dCorrection);
 
     if (dCorrection.isEmpty()) {
       // There is no change from what we expected. This means that no other
@@ -847,7 +850,7 @@ export default class DocClient extends StateMachine {
     const errorCount      = this._errorStamps.length;
     const errorsPerMinute = (errorCount / ERROR_WINDOW_MSEC) * 60 * 1000;
 
-    log.info(
+    this._log.info(
       `Error window: ${errorCount} total; ` +
       `${Math.round(errorsPerMinute * 100) / 100} per minute`);
 
