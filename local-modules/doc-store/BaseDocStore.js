@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TObject, TString } from 'typecheck';
-import { BaseClass } from 'util-common';
+import { TString } from 'typecheck';
+import { CommonBase } from 'util-common';
 
 import BaseDoc from './BaseDoc';
 
@@ -12,17 +12,7 @@ import BaseDoc from './BaseDoc';
  * methods defined by this class, as indicated in the documentation. Methods to
  * override are all named with the prefix `_impl_`.
  */
-export default class BaseDocStore extends BaseClass {
-  /**
-   * Checks that a value is an instance of this class. Throws an error if not.
-   *
-   * @param {*} value Value to check.
-   * @returns {BaseDocStore} `value`.
-   */
-  static check(value) {
-    return TObject.check(value, BaseDocStore);
-  }
-
+export default class BaseDocStore extends CommonBase {
   /**
    * Checks a document ID for validity. Returns regularly (with no value) if
    * all is well, or throws an error if the ID is invalid. Only ever called on

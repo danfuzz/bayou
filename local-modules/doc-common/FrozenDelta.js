@@ -4,8 +4,8 @@
 
 import Delta from 'quill-delta';
 
-import { TObject, TypeError } from 'typecheck';
-import { DataUtil } from 'util-common';
+import { TArray, TypeError } from 'typecheck';
+import { CommonBase, DataUtil } from 'util-common';
 
 /**
  * {FrozenDelta|null} Empty `Delta` instance. Initialized in the `EMPTY`
@@ -14,7 +14,8 @@ import { DataUtil } from 'util-common';
 let emptyDelta = null;
 
 /**
- * Always-frozen `Delta`.
+ * Always-frozen `Delta`. This is a subclass of `Delta` and mixes in
+ * `CommonBase` (the latter for `check()` and `coerce()` functionality).
  */
 export default class FrozenDelta extends Delta {
   /** Frozen (immutable) empty `Delta` instance. */
@@ -50,19 +51,9 @@ export default class FrozenDelta extends Delta {
   }
 
   /**
-   * Checks that a value is an instance of this class. Throws an error if not.
+   * Main coercion implementation, per the superclass documentation. In this
+   * case, the following is how it proceeds:
    *
-   * @param {*} value Value to check.
-   * @returns {FrozenDelta} `value`.
-   */
-  static check(value) {
-    return TObject.check(value, FrozenDelta);
-  }
-
-  /**
-   * Coerces the given value to an instance of this class, as follows:
-   *
-   * * If `value` is already an instance of this class, returns `value`.
    * * If `value` is a `Delta`, returns an instance with the same list of
    *   ops.
    * * If `value` is an array, returns an instance with `value` as the list
@@ -86,10 +77,10 @@ export default class FrozenDelta extends Delta {
    * @param {object|array|null|undefined} value The value to coerce.
    * @returns {FrozenDelta} The corresponding instance.
    */
-  static coerce(value) {
-    if (value instanceof FrozenDelta) {
-      return value;
-    } else if (FrozenDelta.isEmpty(value)) {
+  static _impl_coerce(value) {
+    // Note: The base class implementation guarantees that we won't get called
+    // on an instance of this class.
+    if (FrozenDelta.isEmpty(value)) {
       return FrozenDelta.EMPTY;
     } else if (value instanceof Delta) {
       return new FrozenDelta(value.ops);
@@ -110,9 +101,7 @@ export default class FrozenDelta extends Delta {
    *   given value.
    */
   constructor(ops) {
-    if (!Array.isArray(ops)) {
-      throw new Error('Bad value for `ops`.');
-    }
+    TArray.check(ops);
 
     super(DataUtil.deepFreeze(ops));
     Object.freeze(this);
@@ -152,3 +141,7 @@ export default class FrozenDelta extends Delta {
     return this.ops.length === 0;
   }
 }
+
+// Add `CommonBase` as a mixin, because the main inheritence is the `Delta`
+// class.
+CommonBase.mixInto(FrozenDelta);

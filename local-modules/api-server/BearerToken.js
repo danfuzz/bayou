@@ -4,7 +4,7 @@
 
 import { BaseKey } from 'api-common';
 import { Hooks } from 'hooks-server';
-import { TObject, TString } from 'typecheck';
+import { TString } from 'typecheck';
 
 /**
  * Bearer token, which is a kind of key which conflates ID and secret.
@@ -15,45 +15,15 @@ import { TObject, TString } from 'typecheck';
  */
 export default class BearerToken extends BaseKey {
   /**
-   * Checks that a value is an instance of this class. Throws an error if not.
-   *
-   * @param {*} value Value to check.
-   * @returns {BearerToken} `value`.
-   */
-  static check(value) {
-    return TObject.check(value, BearerToken);
-  }
-
-  /**
-   * Coerces the given value into an instance of this class, if possible. If
-   * given an instance of this class, returns that instance. If given a string,
-   * attempts to construct an instance from that string. This will throw an
-   * error if the string isn't in an acceptable form.
+   * Main coercion implementation, per the superclass documentation. In this
+   * case, `value` must be a string that follows the proper syntax for bearer
+   * tokens. If not, this will throw an error.
    *
    * @param {*} value Value to coerce.
-   * @returns {BearerToken} `value` or its coercion to a `BearerToken`.
+   * @returns {BearerToken} `value` as coerced to a `BearerToken`.
    */
-  static coerce(value) {
-    return (value instanceof BearerToken) ? value : new BearerToken(value);
-  }
-
-  /**
-   * Coerces the given value into an instance of this class, if possible. If
-   * given an instance of this class, returns that instance. If given a string,
-   * attempts to construct an instance from that string. This will return `null`
-   * if the string isn't in an acceptable form.
-   *
-   * @param {*} value Value to coerce.
-   * @returns {BearerToken|null} `value` or its coercion to a `BearerToken`, or
-   *   `null` if `value` can't be coerced.
-   */
-  static coerceOrNull(value) {
-    try {
-      return BearerToken.coerce(value);
-    } catch (e) {
-      // Convert error to a `null` return.
-      return null;
-    }
+  static _impl_coerce(value) {
+    return new BearerToken(value);
   }
 
   /**
@@ -109,7 +79,13 @@ export default class BearerToken extends BaseKey {
       return false;
     }
 
+    // It's an error if `other` is not a key, but it's merely a `false` return
+    // if `other` isn't an instance of this class.
     BaseKey.check(other);
+    if (!(other instanceof BearerToken)) {
+      return false;
+    }
+
     return this._secretToken === other._secretToken;
   }
 

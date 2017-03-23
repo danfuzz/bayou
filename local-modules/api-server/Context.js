@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TObject, TString } from 'typecheck';
+import { CommonBase } from 'util-common';
 
 import Target from './Target';
 
@@ -15,21 +16,13 @@ import Target from './Target';
  * `meta` is bound to an object which provides meta-information and
  * meta-control.
  */
-export default class Context {
-  /**
-   * Checks that a value is an instance of this class. Throws an error if not.
-   *
-   * @param {*} value Value to check.
-   * @returns {DocumentChange} `value`.
-   */
-  static check(value) {
-    return TObject.check(value, Context);
-  }
-
+export default class Context extends CommonBase {
   /**
    * Constructs an instance which is initially empty.
    */
   constructor() {
+    super();
+
     /** {Map<string,Target>} The underlying map. */
     this._map = new Map();
 

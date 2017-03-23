@@ -3,7 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { FrozenDelta } from 'doc-common';
-import { TObject, TString } from 'typecheck';
+import { TString } from 'typecheck';
+import { CommonBase } from 'util-common';
 
 import Timestamp from './Timestamp';
 import VersionNumber from './VersionNumber';
@@ -17,17 +18,7 @@ import VersionNumber from './VersionNumber';
  * if a mutable delta is passed to the constructor of this class, it is coerced
  * into immutable form.
  */
-export default class DocumentChange {
-  /**
-   * Checks that a value is an instance of this class. Throws an error if not.
-   *
-   * @param {*} value Value to check.
-   * @returns {DocumentChange} `value`.
-   */
-  static check(value) {
-    return TObject.check(value, DocumentChange);
-  }
-
+export default class DocumentChange extends CommonBase {
   /**
    * Constructs an instance.
    *
@@ -43,6 +34,8 @@ export default class DocumentChange {
    *   author of the change. Allowed to be `null` if the change is authorless.
    */
   constructor(verNum, timestamp, delta, authorId) {
+    super();
+
     /** The produced version number. */
     this._verNum = VersionNumber.check(verNum);
 
