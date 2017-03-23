@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TObject, TString } from 'typecheck';
-import { BaseClass } from 'util-common';
+import { CommonBase } from 'util-common';
 
 /**
  * Base class for access keys. An access key consists of information for
@@ -23,7 +23,7 @@ import { BaseClass } from 'util-common';
  * **Note:** The resource ID is _not_ meant to require secrecy in order for
  * the system to be secure. That is, IDs are not required to be unguessable.
  */
-export default class BaseKey extends BaseClass {
+export default class BaseKey extends CommonBase {
   /**
    * Checks that a value is an instance of this class. Throws an error if not.
    *

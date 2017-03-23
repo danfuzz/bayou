@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TObject, TString } from 'typecheck';
-import { BaseClass } from 'util-common';
+import { CommonBase } from 'util-common';
 
 import BaseDoc from './BaseDoc';
 
@@ -12,7 +12,7 @@ import BaseDoc from './BaseDoc';
  * methods defined by this class, as indicated in the documentation. Methods to
  * override are all named with the prefix `_impl_`.
  */
-export default class BaseDocStore extends BaseClass {
+export default class BaseDocStore extends CommonBase {
   /**
    * Checks that a value is an instance of this class. Throws an error if not.
    *

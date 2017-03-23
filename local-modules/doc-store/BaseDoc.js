@@ -4,7 +4,7 @@
 
 import { DocumentChange, VersionNumber } from 'doc-common';
 import { TBoolean, TObject, TString } from 'typecheck';
-import { BaseClass } from 'util-common';
+import { CommonBase } from 'util-common';
 
 /**
  * Base class representing access to a particular document. Subclasses must
@@ -15,7 +15,7 @@ import { BaseClass } from 'util-common';
  * of changes, with each change having a version number that _must_ form a
  * zero-based integer sequence. Changes are random-access.
  */
-export default class BaseDoc extends BaseClass {
+export default class BaseDoc extends CommonBase {
   /**
    * Checks that a value is an instance of this class. Throws an error if not.
    *

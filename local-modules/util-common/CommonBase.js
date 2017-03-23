@@ -6,7 +6,7 @@
  * Base class which provides a couple conveniences beyond what baseline
  * JavaScript has.
  */
-export default class BaseClass {
+export default class CommonBase {
   /**
    * Helper function which always throws an error with the message `Must
    * override.`. Using this both documents the intent in code and keeps the
