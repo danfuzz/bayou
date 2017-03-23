@@ -80,6 +80,12 @@ window.addEventListener('load', (event_unused) => {
     return;
   }
 
+  // Do our basic page setup. Specifically, we add the CSS we need to the page.
+  const elem = document.createElement('link');
+  elem.href = `${baseUrl}/static/quill/quill.bubble.css`;
+  elem.rel = 'stylesheet';
+  document.head.appendChild(elem);
+
   // Give the overlay a chance to do any initialization.
   Hooks.run(window, baseUrl);
   log.detail('Ran `run()` hook.');
@@ -94,6 +100,9 @@ window.addEventListener('load', (event_unused) => {
   docClient.when_idle().then(() => {
     log.detail('Document client hooked up.');
     log.info('Initialization complete!');
+  });
+  docClient.when_unrecoverableError().then(() => {
+    log.error('Unrecoverable error! Giving up!');
   });
 
   log.detail('Async operations now in progress...');

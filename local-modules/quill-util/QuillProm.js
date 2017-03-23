@@ -35,8 +35,8 @@ export default class QuillProm extends Quill {
     const accessKey = Object.freeze(['quill-prom-key']);
 
     /**
-     * The most recent resolved event. It is initialized as defined by the
-     * documentation for `currentChange`.
+     * {DeltaEvent} The most recent resolved event. It is initialized as defined
+     * by the documentation for `currentChange`.
      */
     this._currentChange = new DeltaEvent(
       accessKey, FrozenDelta.EMPTY, FrozenDelta.EMPTY, API);
@@ -62,26 +62,11 @@ export default class QuillProm extends Quill {
   }
 
   /**
-   * The current (latest / most recent) document change that has been made to
-   * this instance. It is always a regular value (not a promise), in particular
-   * an object with bindings as follows:
+   * {DeltaEvent} The current (latest / most recent) document change that has
+   * been made to this instance. It is always a regular value (not a promise).
    *
-   * * `delta` -- Same as with `text-change` events.
-   * * `oldContents` -- Same as with `text-change` events.
-   * * `source`  -- Same as with `text-change` events.
-   * * `next` -- A promise for the very next change (in order). You can use this
-   *   to iterate over changes as they continue to happen.
-   * * `nextNow` -- The next change after this one as a regular object (not a
-   *   promise), but only if it is already available. You can use this to
-   *   synchronously iterate up to the current (latest) change, and know if in
-   *   fact the change you are looking at is the current one (because `nextNow`
-   *   will be `null` until the next change actually happens).
-   *
-   * The value is always read-only to help protect clients from each other (or
-   * from inadvertently messing with themselves).
-   *
-   * If accessed before any changes have ever been made to this instance,
-   * `delta` and `oldContents` are both empty deltas.
+   * **Note:** If accessed before any changes have ever been made to this
+   * instance, `delta` and `oldContents` are both empty deltas.
    */
   get currentChange() {
     return this._currentChange;

@@ -10,6 +10,18 @@ import { PromDelay } from 'util-common';
 
 import StateMachine from './StateMachine';
 
+/**
+ * {Int} Amount of time in msec over which errors are counted, in order to
+ * determine that an instance is in an "unrecoverable" error state.
+ */
+const ERROR_WINDOW_MSEC = 3 * 60 * 1000; // Three minutes.
+
+/**
+ * {number} Error rate, expressed in errors per minute, above which constitutes
+ * sufficient evidence that the instance is in an "unrecoverable" error state.
+ */
+const ERROR_MAX_PER_MINUTE = 2.25;
+
 /** Logger. */
 const log = new SeeAll('doc');
 
@@ -85,6 +97,9 @@ export default class DocClient extends StateMachine {
     /** {ApiClient} API interface. */
     this._api = api;
 
+    /** {SeeAll} Logger specific to this document's ID. */
+    this._log = log.withPrefix(`[${docKey.id}]`);
+
     /** {BaseKey} Key that identifies and controls access to the document. */
     this._docKey = docKey;
 
@@ -102,26 +117,36 @@ export default class DocClient extends StateMachine {
     this._doc = null;
 
     /**
-     * Current (most recent) local change to the document made by Quill that
-     * this instance is aware of. That is, `_currentChange.next` (once it
-     * resolves) is the first change that this instance has not yet processed.
-     * This variable is initialized by getting `Quill.currentChange` and is
-     * generally updated by retrieving `.nextNow` from the value (or its
-     * replacement, etc.).
+     * {DeltaEvent|object} Current (most recent) local change to the document
+     * made by Quill that this instance is aware of. That is,
+     * `_currentChange.next` (once it resolves) is the first change that this
+     * instance has not yet processed. This variable is initialized by getting
+     * `_quill.currentChange` and is generally updated by waiting on `.next` or
+     * retrieving `.nextNow` from the value. In a couple cases, though, instead
+     * of being a `DeltaEvent` per se, it is a "manually" constructed object
+     * with the general shape of a `DeltaEvent`; these are used very transiently
+     * to handle multi-way change merging.
      */
     this._currentChange = null;
 
     /**
-     * Is there currently a pending (as-yet unfulfilled) `deltaAfter()` request
-     * to the server?
+     * {boolean} Is there currently a pending (as-yet unfulfilled) `deltaAfter()`
+     * request to the server?
      */
     this._pendingDeltaAfter = false;
 
     /**
-     * Is there currently a pending (as-yet unfulfilled) request for a new
-     * local change via the Quill document change promise chain?
+     * {boolean} Is there currently a pending (as-yet unfulfilled) request for a
+     * new local change via the Quill document change promise chain?
      */
     this._pendingLocalDocumentChange = false;
+
+    /**
+     * {array<Int>} Timestamps of every transition into the `errorWait` state
+     * over the last `ERROR_WINDOW_MSEC` msec. This is used to determine if
+     * the instance should be considered "unrecoverably" errored.
+     */
+    this._errorStamps = [];
 
     // The Quill instance should already be in read-only mode. We explicitly
     // set that here, though, to be safe and resilient.
@@ -254,19 +279,30 @@ export default class DocClient extends StateMachine {
   _handle_any_apiError(method, reason) {
     if (reason.layer === ApiError.CONN) {
       // It's connection-related and probably no big deal.
-      log.info(`${reason.code}, ${reason.desc}`);
+      this._log.info(`${reason.code}, ${reason.desc}`);
     } else {
       // It's something more dire; could be a bug on either side, for example.
       if (reason instanceof Error) {
-        log.error(`Severe synch issue in \`${method}\``, reason);
+        this._log.error(`Severe synch issue in \`${method}\``, reason);
       } else {
-        log.error(`Severe synch issue in \`${method}\`: ${reason.code}, ${reason.desc}`);
+        this._log.error(`Severe synch issue in \`${method}\`: ${reason.code}, ${reason.desc}`);
       }
+    }
+
+    // Note the time of the error, and determine if we've hit the point of
+    // unrecoverability. If so, transition into the `unrecoverableError` state.
+    // When this happens, higher-level logic can notice and take further action.
+    this._addErrorStamp();
+    if (this._isUnrecoverablyErrored()) {
+      this._log.info('Too many errors!');
+      this.s_unrecoverableError();
+      return;
     }
 
     // Wait an appropriate amount of time and then try starting again. The
     // start event will be received in the `errorWait` state, and as such will
     // be handled differently than a clean start from scratch.
+
     PromDelay.resolve(RESTART_DELAY_MSEC).then((res_unused) => {
       this.start();
     });
@@ -303,7 +339,20 @@ export default class DocClient extends StateMachine {
     // This space intentionally left blank (except for logging): We might get
     // "zombie" events from a connection that's shuffling towards doom. But even
     // if so, we will already have set up a timer to reset the connection.
-    log.info('While error-waiting:', name, args);
+    this._log.info('While in state `errorWait`:', name, args);
+  }
+
+  /**
+   * In state `unrecoverableError`, handles all events. Specifically, this does
+   * nothing, and no further events can be expected. Client code of this class
+   * can use the transition into this state to perform higher-level error
+   * recovery.
+   *
+   * @param {string} name The event name.
+   * @param {...*} args The event arguments.
+   */
+  _handle_unrecoverableError_any(name, ...args) {
+    this._log.info('While in state `unrecoverableError`:', name, args);
   }
 
   /**
@@ -439,7 +488,7 @@ export default class DocClient extends StateMachine {
    * @param {FrozenDelta} delta The delta from `baseDoc`.
    */
   _handle_idle_gotDeltaAfter(baseDoc, verNum, delta) {
-    log.detail(`Delta from server: v${verNum}`, delta);
+    this._log.detail(`Delta from server: v${verNum}`, delta);
 
     // We only take action if the result's base (what `delta` is with regard to)
     // is the current `_doc`. If that _isn't_ the case, then what we have here
@@ -584,7 +633,7 @@ export default class DocClient extends StateMachine {
     const vExpected = expectedContents;
     const dCorrection = delta;
 
-    log.detail(`Correction from server: v${verNum}`, dCorrection);
+    this._log.detail(`Correction from server: v${verNum}`, dCorrection);
 
     if (dCorrection.isEmpty()) {
       // There is no change from what we expected. This means that no other
@@ -777,5 +826,34 @@ export default class DocClient extends StateMachine {
   _becomeIdle() {
     this.s_idle();
     this.q_wantChanges();
+  }
+
+  /**
+   * Trim the error timestamp list of any errors that have "aged out," and add
+   * a new one for the current moment in time.
+   */
+  _addErrorStamp() {
+    const now = Date.now();
+    const agedOut = now - ERROR_WINDOW_MSEC;
+
+    this._errorStamps = this._errorStamps.filter((value) => value >= agedOut);
+    this._errorStamps.push(now);
+  }
+
+  /**
+   * Determine whether the current set of error timestamps means that the
+   * instance is unrecoverably errored.
+   *
+   * @returns {boolean} `true` iff the instance is unrecoverably errored.
+   */
+  _isUnrecoverablyErrored() {
+    const errorCount      = this._errorStamps.length;
+    const errorsPerMinute = (errorCount / ERROR_WINDOW_MSEC) * 60 * 1000;
+
+    this._log.info(
+      `Error window: ${errorCount} total; ` +
+      `${Math.round(errorsPerMinute * 100) / 100} per minute`);
+
+    return errorsPerMinute >= ERROR_MAX_PER_MINUTE;
   }
 }
