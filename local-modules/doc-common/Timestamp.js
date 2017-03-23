@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TInt, TObject } from 'typecheck';
+import { TInt } from 'typecheck';
+import { CommonBase } from 'util-common';
 
 /**
  * Minimum (inclusive) acceptable timestamp `secs` value.
@@ -36,17 +37,7 @@ const USECS_PER_SEC = 1000000;
  * restricted to fall within a range of dates with a minimum around the start
  * of the year 2002 and a maximum around the start of the year 2050.
  */
-export default class Timestamp {
-  /**
-   * Checks that a value is an instance of this class. Throws an error if not.
-   *
-   * @param {*} value Value to check.
-   * @returns {Timestamp} `value`.
-   */
-  static check(value) {
-    return TObject.check(value, Timestamp);
-  }
-
+export default class Timestamp extends CommonBase {
   /**
    * Constructs an instance from a millisecond-granularity time value, such as
    * might have been returned from `Date.now()`.
@@ -79,6 +70,8 @@ export default class Timestamp {
    *   than 1000000.
    */
   constructor(secs, usecs) {
+    super();
+
     /** Seconds since the Unix epoch. */
     this._secs = TInt.range(secs, MIN_SECS, MAX_SECS);
 

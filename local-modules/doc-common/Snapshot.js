@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TObject } from 'typecheck';
+import { CommonBase } from 'util-common';
 
 import FrozenDelta from './FrozenDelta';
 import VersionNumber from './VersionNumber';
@@ -11,17 +11,7 @@ import VersionNumber from './VersionNumber';
 /**
  * Snapshot of a document, with other associated information.
  */
-export default class Snapshot {
-  /**
-   * Checks that a value is an instance of this class. Throws an error if not.
-   *
-   * @param {*} value Value to check.
-   * @returns {Snapshot} `value`.
-   */
-  static check(value) {
-    return TObject.check(value, Snapshot);
-  }
-
+export default class Snapshot extends CommonBase {
   /**
    * Constructs an instance.
    *
@@ -30,6 +20,8 @@ export default class Snapshot {
    *   anything that can be coerced into a `FrozenDelta`.
    */
   constructor(verNum, contents) {
+    super();
+
     /** Version number. */
     this._verNum = VersionNumber.check(verNum);
 

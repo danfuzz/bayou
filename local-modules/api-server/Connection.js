@@ -4,8 +4,8 @@
 
 import { Decoder, Encoder, Message } from 'api-common';
 import { SeeAll } from 'see-all';
-import { TString, TObject } from 'typecheck';
-import { Random } from 'util-common';
+import { TString } from 'typecheck';
+import { CommonBase, Random } from 'util-common';
 
 import BearerToken from './BearerToken';
 import MetaHandler from './MetaHandler';
@@ -31,7 +31,7 @@ let activeNow = null;
  * lower-level connection (or the like). This class in turn mostly bottoms out
  * by calling on target objects, which perform the actual application services.
  */
-export default class Connection {
+export default class Connection extends CommonBase {
   /**
    * {Connection|null} The instance of this class that is currently active, or
    * `null` if no connection is active _within this turn of execution_. This is
@@ -45,16 +45,6 @@ export default class Connection {
   }
 
   /**
-   * Checks that a value is an instance of this class. Throws an error if not.
-   *
-   * @param {*} value Value to check.
-   * @returns {Connection} `value`.
-   */
-  static check(value) {
-    return TObject.check(value, Connection);
-  }
-
-  /**
    * Constructs an instance. Each instance corresponds to a separate client
    * connection.
    *
@@ -64,6 +54,8 @@ export default class Connection {
    * @param {string} baseUrl The public-facing base URL for this connection.
    */
   constructor(context, baseUrl) {
+    super();
+
     /** {Context} The binding context to provide access to. */
     this._context = Context.check(context).clone();
 
