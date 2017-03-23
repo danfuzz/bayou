@@ -4,7 +4,7 @@
 
 import { BaseKey } from 'api-common';
 import { Hooks } from 'hooks-server';
-import { TObject, TString } from 'typecheck';
+import { TString } from 'typecheck';
 
 /**
  * Bearer token, which is a kind of key which conflates ID and secret.
