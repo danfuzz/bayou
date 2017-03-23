@@ -32,16 +32,9 @@
     ? window.location.origin
     : url.match(/^https?:\/\/[^\/]+/)[0];
 
-  var elem;
-
-  elem = document.createElement('link');
-  elem.href = baseUrl + '/static/quill/quill.bubble.css';
-  elem.rel = 'stylesheet';
-  document.head.appendChild(elem);
-
   // Add the main JavaScript bundle to the page. Once loaded, this continues
   // the boot process. You can find its main entrypoint in `client/js/main.js`.
-  elem = document.createElement('script');
+  var elem = document.createElement('script');
   elem.src = baseUrl + '/static/bundle.js';
   document.head.appendChild(elem);
 }());
