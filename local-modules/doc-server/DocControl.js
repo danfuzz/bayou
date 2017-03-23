@@ -5,8 +5,8 @@
 import { DocumentChange, FrozenDelta, Snapshot, Timestamp, VersionNumber }
   from 'doc-common';
 import { BaseDoc } from 'doc-store';
-import { TInt, TObject, TString } from 'typecheck';
-import { PromCondition } from 'util-common';
+import { TInt, TString } from 'typecheck';
+import { CommonBase, PromCondition } from 'util-common';
 
 
 /**
@@ -14,23 +14,15 @@ import { PromCondition } from 'util-common';
  * this class per document, no matter how many active editors there are on that
  * document.
  */
-export default class DocControl {
-  /**
-   * Checks that a value is an instance of this class. Throws an error if not.
-   *
-   * @param {*} value Value to check.
-   * @returns {DocControl} `value`.
-   */
-  static check(value) {
-    return TObject.check(value, DocControl);
-  }
-
+export default class DocControl extends CommonBase {
   /**
    * Constructs an instance.
    *
    * @param {BaseDoc} docStorage The underlying document storage.
    */
   constructor(docStorage) {
+    super();
+
     /** {BaseDoc} Storage access for the document. */
     this._doc = BaseDoc.check(docStorage);
 

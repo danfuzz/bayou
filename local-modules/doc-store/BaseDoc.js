@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { DocumentChange, VersionNumber } from 'doc-common';
-import { TBoolean, TObject, TString } from 'typecheck';
+import { TBoolean, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 /**
@@ -16,16 +16,6 @@ import { CommonBase } from 'util-common';
  * zero-based integer sequence. Changes are random-access.
  */
 export default class BaseDoc extends CommonBase {
-  /**
-   * Checks that a value is an instance of this class. Throws an error if not.
-   *
-   * @param {*} value Value to check.
-   * @returns {BaseDoc} `value`.
-   */
-  static check(value) {
-    return TObject.check(value, BaseDoc);
-  }
-
   /**
    * Constructs an instance.
    *
