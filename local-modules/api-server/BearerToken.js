@@ -15,16 +15,6 @@ import { TObject, TString } from 'typecheck';
  */
 export default class BearerToken extends BaseKey {
   /**
-   * Checks that a value is an instance of this class. Throws an error if not.
-   *
-   * @param {*} value Value to check.
-   * @returns {BearerToken} `value`.
-   */
-  static check(value) {
-    return TObject.check(value, BearerToken);
-  }
-
-  /**
    * Coerces the given value into an instance of this class, if possible. If
    * given an instance of this class, returns that instance. If given a string,
    * attempts to construct an instance from that string. This will throw an
@@ -109,7 +99,13 @@ export default class BearerToken extends BaseKey {
       return false;
     }
 
+    // It's an error if `other` is not a key, but it's merely a `false` return
+    // if `other` isn't an instance of this class.
     BaseKey.check(other);
+    if (!(other instanceof BearerToken)) {
+      return false;
+    }
+
     return this._secretToken === other._secretToken;
   }
 

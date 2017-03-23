@@ -25,16 +25,6 @@ import { CommonBase } from 'util-common';
  */
 export default class BaseKey extends CommonBase {
   /**
-   * Checks that a value is an instance of this class. Throws an error if not.
-   *
-   * @param {*} value Value to check.
-   * @returns {BearerToken} `value`.
-   */
-  static check(value) {
-    return TObject.check(value, BaseKey);
-  }
-
-  /**
    * Constructs an instance with the indicated parts. Subclasses should override
    * methods as described in the documentation.
    *
