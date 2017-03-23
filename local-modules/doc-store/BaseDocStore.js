@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { Singleton } from 'util-common';
 
 import BaseDoc from './BaseDoc';
 
@@ -11,8 +11,14 @@ import BaseDoc from './BaseDoc';
  * Base class for document storage access. Subclasses must override several
  * methods defined by this class, as indicated in the documentation. Methods to
  * override are all named with the prefix `_impl_`.
+ *
+ * **Note:** This is a subclass of `Singleton`, that is, the system is set up
+ * to only ever expect there to be one document store instance. (Technically,
+ * this inheritence relationship allows for the possibility of having singleton
+ * instances of several subclasses of this class, but in practice that's not
+ * what happens.)
  */
-export default class BaseDocStore extends CommonBase {
+export default class BaseDocStore extends Singleton {
   /**
    * Checks a document ID for validity. Returns regularly (with no value) if
    * all is well, or throws an error if the ID is invalid. Only ever called on

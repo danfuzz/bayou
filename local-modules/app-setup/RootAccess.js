@@ -43,7 +43,7 @@ export default class RootAccess {
     TString.nonempty(authorId);
     TString.nonempty(docId);
 
-    const docControl = DocServer.THE_INSTANCE.getDoc(docId);
+    const docControl = DocServer.theOne.getDoc(docId);
     const doc = new DocForAuthor(docControl, authorId);
 
     // Under normal circumstances, this method is called in the context of an

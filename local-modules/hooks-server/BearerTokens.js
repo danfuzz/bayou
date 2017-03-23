@@ -3,29 +3,14 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BearerToken } from 'api-server';
-import { PromDelay } from 'util-common';
-
-/**
- * {BearerTokens|null} The unique instance of this class. Initialized in the
- * `THE_INSTANCE` getter below.
- */
-let THE_INSTANCE = null;
+import { PromDelay, Singleton } from 'util-common';
 
 /**
  * Base class for and default implementation of `Hooks.bearerTokens`, which
  * notably serves as documentation for the required methods. See
  * `api-server.BearerToken` for more details.
  */
-export default class BearerTokens {
-  /** {BearerTokens} The unique instance of this class. */
-  static get THE_INSTANCE() {
-    if (THE_INSTANCE === null) {
-      THE_INSTANCE = new BearerTokens();
-    }
-
-    return THE_INSTANCE;
-  }
-
+export default class BearerTokens extends Singleton {
   /**
    * Returns `true` iff the `tokenString` is _syntactically_ valid as a bearer
    * token (whether or not it actually grants any access). This will only ever

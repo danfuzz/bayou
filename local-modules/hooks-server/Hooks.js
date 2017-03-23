@@ -45,7 +45,7 @@ export default class Hooks {
    * See that (base / default) class for details.
    */
   static get bearerTokens() {
-    return BearerTokens.THE_INSTANCE;
+    return BearerTokens.theOne;
   }
 
   /**
@@ -53,7 +53,7 @@ export default class Hooks {
    * of a subclass of `BaseDocStore`, as defined by the `doc-store` module.
    */
   static get docStore() {
-    return LocalDocStore.THE_INSTANCE;
+    return LocalDocStore.theOne;
   }
 
   /**

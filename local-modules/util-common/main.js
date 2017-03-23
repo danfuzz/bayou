@@ -12,6 +12,7 @@ import PromCondition from './PromCondition';
 import PromDelay from './PromDelay';
 import PropertyIter from './PropertyIter';
 import Random from './Random';
+import Singleton from './Singleton';
 import WebsocketCodes from './WebsocketCodes';
 
 export {
@@ -24,5 +25,6 @@ export {
   PromDelay,
   PropertyIter,
   Random,
+  Singleton,
   WebsocketCodes
 };

@@ -5,37 +5,21 @@
 import { DocumentChange, Timestamp } from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { TBoolean, TString } from 'typecheck';
+import { Singleton } from 'util-common';
 
 import DocControl from './DocControl';
-
-/**
- * {DocServer|null} The unique instance of this class. Initialized in the
- * `THE_INSTANCE` getter below.
- */
-let THE_INSTANCE = null;
 
 /**
  * Interface between this module and the storage layer. This class is
  * responsible for instantiating and tracking `DocControl` instances, such that
  * only one instance is created per actual document.
  */
-export default class DocServer {
-  /** {DocServer} The unique instance of this class. */
-  static get THE_INSTANCE() {
-    if (THE_INSTANCE === null) {
-      THE_INSTANCE = new DocServer();
-    }
-
-    return THE_INSTANCE;
-  }
-
+export default class DocServer extends Singleton {
   /**
    * Constructs an instance. This is not meant to be used publicly.
    */
   constructor() {
-    if (THE_INSTANCE !== null) {
-      throw new Error('Attempt to construct a second instance.');
-    }
+    super();
 
     /**
      * {Map<string,DocControl>} Map from document IDs to their corresponding

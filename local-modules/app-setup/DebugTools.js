@@ -241,7 +241,7 @@ export default class DebugTools {
    */
   _getExistingDoc(req) {
     const documentId = req.params.documentId;
-    const doc = DocServer.THE_INSTANCE.getDocOrNull(documentId);
+    const doc = DocServer.theOne.getDocOrNull(documentId);
 
     if (doc === null) {
       const error = new Error();

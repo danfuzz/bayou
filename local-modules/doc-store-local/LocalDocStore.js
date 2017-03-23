@@ -15,34 +15,15 @@ import LocalDoc from './LocalDoc';
 const log = new SeeAll('local-doc');
 
 /**
- * {LocalDocStore|null} The unique instance of this class. Initialized in the
- * `THE_INSTANCE` getter below.
- */
-let THE_INSTANCE = null;
-
-/**
  * Document storage implementation that stores everything in the
  * locally-accessible filesystem.
  */
 export default class LocalDocStore extends BaseDocStore {
-  /** {LocalDocStore} The unique instance of this class. */
-  static get THE_INSTANCE() {
-    if (THE_INSTANCE === null) {
-      THE_INSTANCE = new LocalDocStore();
-    }
-
-    return THE_INSTANCE;
-  }
-
   /**
    * Constructs an instance. This is not meant to be used publicly.
    */
   constructor() {
     super();
-
-    if (THE_INSTANCE !== null) {
-      throw new Error('Attempt to construct a second instance.');
-    }
 
     /** {Map<string, LocalDoc>} Map from document IDs to document instances. */
     this._docs = new Map();
