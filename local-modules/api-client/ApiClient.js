@@ -30,8 +30,8 @@ export default class ApiClient {
    * @param {string} url The server origin, as an `http` or `https` URL.
    */
   constructor(url) {
-    /** URL for the websocket server. */
-    this._url = ApiClient._getWebsocketUrl(url);
+    /** {string} Base URL for the server. */
+    this._baseUrl = ApiClient._getBaseUrl(url);
 
     /**
      * {string|null} Connection ID conveyed to us by the server. Set / reset in
@@ -74,6 +74,11 @@ export default class ApiClient {
 
     // Initialize the active connection fields (described above).
     this._resetConnection();
+  }
+
+  /** {string} Base URL for the remote endpoint this client gets attached to. */
+  get baseUrl() {
+    return this._baseUrl;
   }
 
   /**
@@ -155,8 +160,7 @@ export default class ApiClient {
       return this.meta.ping();
     }
 
-    const url = this._url;
-    this._ws = new WebSocket(url);
+    this._ws = new WebSocket(this._websocketUrl);
     this._ws.onclose   = this._handleClose.bind(this);
     this._ws.onerror   = this._handleError.bind(this);
     this._ws.onmessage = this._handleMessage.bind(this);
@@ -172,13 +176,18 @@ export default class ApiClient {
   }
 
   /**
-   * Gets the websocket URL for the given original (base) URL.
+   * Gets the base URL for the given original URL.
    *
-   * @param {string} origUrl The original (base) URL.
-   * @returns {string} The corresponding websocket URL.
+   * @param {string} origUrl The original URL.
+   * @returns {string} The corresponding base URL.
    */
-  static _getWebsocketUrl(origUrl) {
-    const url = new URL(origUrl);
+  static _getBaseUrl(origUrl) {
+    return new URL(origUrl).origin;
+  }
+
+  /** {string} The websocket URL for this instance. */
+  get _websocketUrl() {
+    const url = new URL(this._baseUrl);
 
     // Convert the URL scheme to either `ws` or `wss`, corresponding to `http`
     // or `https`.
@@ -186,10 +195,6 @@ export default class ApiClient {
 
     // Drop the original path, and replace it with just `/api`.
     url.pathname = '/api';
-
-    // Clear out any post-path bits.
-    url.search = '';
-    url.hash = '';
 
     return url.href;
   }
