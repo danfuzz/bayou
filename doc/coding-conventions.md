@@ -28,6 +28,9 @@ taking into account recent additions to the language.
 
 ### Other conventions in this codebase
 
+* There are specific conventions of how local module exports are set up. Find
+  that info in the [`local-modules/` README file](../local-modules/README.md).
+
 * Websockets &mdash; JavaScript has a `WebSocket` class, but when talking about
   them in prose or in our own variable or class names, we use "websocket" (one
   word, all lower case, though capitalized as appropriate for prose or
