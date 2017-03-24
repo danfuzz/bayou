@@ -55,21 +55,6 @@ export default class TopControl {
     this._recover =
       TFunction.check(window.BAYOU_RECOVER || (() => { /* empty */ }));
 
-    /**
-     * {string} The URL of our server. We use the info from the key if
-     * available but default to the document URL if not.
-     *
-     * **Note:** We don't just _always_ use the document's URL because it is
-     * possible (and common even) to embed an editor on a page that has a
-     * different origin than the server.
-     *
-     * **Note:** Under normal circumstances, the key we receive comes with a
-     * real URL. However, when using the debugging routes, it's possible that we
-     * end up with the catchall "URL" `*`. If so, that's when we fall back to
-     * using the document's URL.
-     */
-    this._url = (this._key.url !== '*') ? this._key.url : document.URL;
-
     /** {QuillProm|null} Editor instance. Becomes non-null in `start()`. */
     this._quill = null;
 
@@ -88,7 +73,7 @@ export default class TopControl {
     // page loading, so as to minimize time-to-interactive.
 
     log.detail('Opening API client...');
-    const apiClient = new ApiClient(this._url);
+    const apiClient = new ApiClient(this._getUrl());
 
     // Start opening the connection, to maybe save a bit of time (that is, the
     // document can finish loading in parallel with the API connection opening up).
@@ -135,6 +120,27 @@ export default class TopControl {
 
       log.detail('Async operations now in progress...');
     });
+  }
+
+  /**
+   * Gets the URL to use when attaching to a server. We use the info from the
+   * `_key` if but default to the document URL if not.
+   *
+   * **Note:** We don't just _always_ use the document's URL because it is
+   * possible (and common even) to embed an editor on a page that has a
+   * different origin than the server.
+   *
+   * **Note:** Under normal circumstances, the key we receive comes with a
+   * real URL. However, when using the debugging routes, it's possible that we
+   * end up with the catchall "URL" `*`. If so, that's when we fall back to
+   * using the document's URL. client.
+   *
+   * @returns {string} The server URL.
+   */
+  _getUrl() {
+    return (this._key.url !== '*')
+      ? this._key.url
+      : this._window.document.URL;
   }
 
   /**
