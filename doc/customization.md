@@ -47,12 +47,11 @@ Bayou is set up to make it straightforward to customize. Salient details:
     can be accomplished with overlays. Namely…
 
   * The project provides a number of predefined hooks, both on the client and
-    server side. By default, the hooks are all no-ops. However, the overlay can
-    contain replacements for these hooks. Hooks are located in the local modules
-    `hooks-client` and `hooks-server`. If the overlay directory contains either
-    `local-modules/hooks-client/main.js` or
-    `local-modules/hooks-server/main.js`, then those files will be used instead
-    of the no-op versions built into the base source.
+    server side. By default, the hooks are all no-ops or have very simple
+    default behavior. However, the overlay can contain replacements for these
+    hooks. Hooks are located in the local modules `hooks-common`,
+    `hooks-client`, and `hooks-server`. Customization is a matter of selectively
+    copying files from those modules into the overlay and editing to suit.
 
   * Because no amount of explicit configuration hooks will ever turn out to be
     fully adequate, any original source file at all can be overridden with a
