@@ -49,6 +49,11 @@ export default class DocControl extends CommonBase {
     return this._doc.currentVerNum();
   }
 
+  /** {string} The ID of the document that this instance represents. */
+  get id() {
+    return this._doc.id;
+  }
+
   /**
    * The version number corresponding to the very next change that will be
    * made to the document.

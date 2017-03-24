@@ -28,7 +28,7 @@ export default class BaseDoc extends CommonBase {
     this._id = TString.nonempty(docId);
   }
 
-  /** The ID of the document that this instance represents. */
+  /** {string} The ID of the document that this instance represents. */
   get id() {
     return this._id;
   }

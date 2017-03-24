@@ -55,6 +55,17 @@ export default class DocForAuthor {
   }
 
   /**
+   * Returns a bit of identifying info about this instance, for the purposes of
+   * logging. Specifically, the client side will call this method and log the
+   * results during session initiation.
+   *
+   * @returns {string} A succinct identification string
+   */
+  getLogInfo() {
+    return `doc ${this._doc.id}; author ${this._authorId}`;
+  }
+
+  /**
    * Returns a snapshot of the full document contents. See the equivalent
    * `DocControl` method for details.
    *
