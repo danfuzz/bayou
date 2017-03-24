@@ -49,6 +49,8 @@ export default class DebugTools {
     router.get('/change/:documentId/:verNum',   this._handle_change.bind(this));
     router.get('/edit/:documentId',             this._handle_edit.bind(this));
     router.get('/edit/:documentId/:authorId',   this._handle_edit.bind(this));
+    router.get('/key/:documentId',              this._handle_key.bind(this));
+    router.get('/key/:documentId/:authorId',    this._handle_key.bind(this));
     router.get('/log',                          this._handle_log.bind(this));
     router.get('/snapshot/:documentId',         this._handle_snapshot.bind(this));
     router.get('/snapshot/:documentId/:verNum', this._handle_snapshot.bind(this));
@@ -139,20 +141,20 @@ export default class DebugTools {
   }
 
   /**
-   * Produces an auth for editing a document, and responds with HTML which uses
-   * it. The result is an HTML page that includes the editor.
+   * Produces an authorization key for editing a document, and responds with
+   * HTML which uses it. The result is an HTML page that includes the editor.
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
    */
   _handle_edit(req, res) {
-    const authorId = req.params.authorId || 'some-author';
-    const documentId = req.params.documentId;
-    const key = this._rootAccess.makeAccessKey(authorId, documentId);
+    const key =
+      this._makeEncodedKey(req.params.documentId, req.params.authorId);
 
-    // The key gets encoded as a string, and then we JSON-encode _that_ string,
-    // so as to make it proper JS source within the <script> block below.
-    const quotedKey = JSON.stringify(Encoder.encodeJson(key));
+    // `key` is already a JSON string, but we still have to JSON-encode _that_
+    // string, so as to make it proper JS source within the <script> block
+    // below.
+    const quotedKey = JSON.stringify(key);
 
     // TODO: Probably want to use a real template.
     const head = '<title>Editor</title>\n';
@@ -167,6 +169,20 @@ export default class DebugTools {
       '<script src="/boot-from-key.js"></script>\n';
 
     this._htmlResponse(res, head, body);
+  }
+
+  /**
+   * Produces an authorization key for editing a document, and returns it
+   * directly, as JSON.
+   *
+   * @param {object} req HTTP request.
+   * @param {object} res HTTP response handler.
+   */
+  _handle_key(req, res) {
+    const key =
+      this._makeEncodedKey(req.params.documentId, req.params.authorId);
+
+    this._jsonResponse(res, key);
   }
 
   /**
@@ -254,16 +270,18 @@ export default class DebugTools {
   }
 
   /**
-   * Responds with a `text/plain` result.
+   * Makes and returns a new authorization key for the given document / author
+   * combo.
    *
-   * @param {object} res HTTP response.
-   * @param {string} text Text to respond with.
+   * @param {string} documentId The document ID.
+   * @param {string|null|undefined} [authorId = null] The author ID. If passed
+   *   as nullish, a non-empty default is used instead.
+   * @returns {string} A new `SplitKey` encoded as JSON.
    */
-  _textResponse(res, text) {
-    res
-      .status(200)
-      .type('text/plain')
-      .send(text);
+  _makeEncodedKey(documentId, authorId = null) {
+    authorId = authorId || 'some-author';
+    return Encoder.encodeJson(
+      this._rootAccess.makeAccessKey(authorId, documentId));
   }
 
   /**
@@ -286,5 +304,31 @@ export default class DebugTools {
       .status(200)
       .type('text/html')
       .send(html);
+  }
+
+  /**
+   * Responds with an `application/json` result.
+   *
+   * @param {object} res HTTP response.
+   * @param {string} json JSON text to respond with.
+   */
+  _jsonResponse(res, json) {
+    res
+      .status(200)
+      .type('application/json; charset=utf-8')
+      .send(json);
+  }
+
+  /**
+   * Responds with a `text/plain` result.
+   *
+   * @param {object} res HTTP response.
+   * @param {string} text Text to respond with.
+   */
+  _textResponse(res, text) {
+    res
+      .status(200)
+      .type('text/plain')
+      .send(text);
   }
 }
