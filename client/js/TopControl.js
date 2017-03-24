@@ -55,11 +55,8 @@ export default class TopControl {
     this._recover =
       TFunction.check(window.BAYOU_RECOVER || (() => { /* empty */ }));
 
-    // For calculating the `baseUrl`, below (see which).
-    const fullUrl = (this._key.url !== '*') ? this._key.url : document.URL;
-
     /**
-     * {string} The base URL of our server. We use the info from the key if
+     * {string} The URL of our server. We use the info from the key if
      * available but default to the document URL if not.
      *
      * **Note:** We don't just _always_ use the document's URL because it is
@@ -71,14 +68,7 @@ export default class TopControl {
      * end up with the catchall "URL" `*`. If so, that's when we fall back to
      * using the document's URL.
      */
-    this._baseUrl = fullUrl.match(/^([a-z]+:\/\/[^\/]+)?/)[0];
-
-    // **Note:** It's always safe to take the `.length`, because we put the main
-    // expression in a `?` group, guaranteeing that the regex will have matched
-    // at least the empty string.
-    if (this._baseUrl.length === 0) {
-      throw new Error(`Could not determine base URL of: ${fullUrl}`);
-    }
+    this._url = (this._key.url !== '*') ? this._key.url : document.URL;
 
     /** {QuillProm|null} Editor instance. Becomes non-null in `start()`. */
     this._quill = null;
@@ -98,7 +88,7 @@ export default class TopControl {
     // page loading, so as to minimize time-to-interactive.
 
     log.detail('Opening API client...');
-    const apiClient = new ApiClient(this._baseUrl);
+    const apiClient = new ApiClient(this._url);
 
     // Start opening the connection, to maybe save a bit of time (that is, the
     // document can finish loading in parallel with the API connection opening up).
@@ -113,7 +103,7 @@ export default class TopControl {
 
       // Do our basic page setup. Specifically, we add the CSS we need to the page.
       const elem = document.createElement('link');
-      elem.href = `${this._baseUrl}/static/quill/quill.bubble.css`;
+      elem.href = `${apiClient.baseUrl}/static/quill/quill.bubble.css`;
       elem.rel = 'stylesheet';
       document.head.appendChild(elem);
 
@@ -126,7 +116,7 @@ export default class TopControl {
       }
 
       // Give the overlay a chance to do any initialization.
-      Hooks.run(this._window, this._baseUrl);
+      Hooks.run(this._window, apiClient.baseUrl);
       log.detail('Ran `run()` hook.');
 
       // Make the editor instance.
