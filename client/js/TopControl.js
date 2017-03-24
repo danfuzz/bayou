@@ -168,15 +168,15 @@ export default class TopControl {
   _recoverIfPossible() {
     log.error('Editor gave up!');
 
-    const newKeyJson = this._recover();
-    if (typeof newKeyJson !== 'string') {
+    const newKey = this._recover();
+    if (typeof newKey !== 'string') {
       log.info('Nothing more to do. :\'(');
       return;
     }
 
-    //const newKey = Decoder.decodeJson(newKeyJson);
-    log.info('Giving up!');
-
-    // TODO: Something useful.
+    log.info('Attempting recovery with new key...');
+    this._key = SplitKey.check(Decoder.decodeJson(newKey));
+    this._makeApiClient();
+    this._makeDocClient();
   }
 }
