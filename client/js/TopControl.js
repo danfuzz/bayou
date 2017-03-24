@@ -31,8 +31,9 @@ export default class TopControl {
     // variables. Validate that they're present before doing anything further.
 
     /**
-     * {string} Key that authorizes access and update to a particular document as
-     * a specific author. This is expected to be a `SplitKey` in JSON-encoded form.
+     * {string} Key that authorizes access and update to a particular document
+     * as a specific author. This is expected to be a `SplitKey` in JSON-encoded
+     * form.
      */
     this._key = SplitKey.check(Decoder.decodeJson(window.BAYOU_KEY));
 
@@ -43,10 +44,11 @@ export default class TopControl {
     this._node = TString.nonempty(window.BAYOU_NODE);
 
     /**
-     * {function} Function to call when the editor finds itself in an unrecoverable
-     * (to it) situation. If it returns at all, it is expected to return a new key
-     * to use (instead of `BAYOU_KEY`); if it does not return a string that can
-     * be decoded into a `SplitKey`, the system will simply halt.
+     * {function} Function to call when the editor finds itself in an
+     * unrecoverable (to it) situation. If it returns at all, it is expected to
+     * return a new key to use (instead of `BAYOU_KEY`); if it does not return a
+     * string that can be decoded into a `SplitKey`, the system will simply
+     * halt.
      *
      * If not supplied, this variable defaults to a no-op function.
     */
@@ -84,7 +86,8 @@ export default class TopControl {
 
       const baseUrl = this._apiClient.baseUrl;
 
-      // Do our basic page setup. Specifically, we add the CSS we need to the page.
+      // Do our basic page setup. Specifically, we add the CSS we need to the
+      // page.
       const elem = document.createElement('link');
       elem.href = `${baseUrl}/static/quill/quill.bubble.css`;
       elem.rel = 'stylesheet';
