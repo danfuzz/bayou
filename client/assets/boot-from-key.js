@@ -28,9 +28,7 @@
   // parsing needed to get the URL and then head on our merry way.
   var key = JSON.parse(window.BAYOU_KEY);
   var url = key[1]; // See `SplitKey.js`, the encoded form in particular.
-  var baseUrl = (url === '*')
-    ? window.location.origin
-    : url.match(/^https?:\/\/[^\/]+/)[0];
+  var baseUrl = ((url === '*') ? window.location : new URL(url)).origin;
 
   // Add the main JavaScript bundle to the page. Once loaded, this continues
   // the boot process. You can find its main entrypoint in `client/js/main.js`.
