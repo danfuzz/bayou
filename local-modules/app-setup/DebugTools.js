@@ -160,8 +160,9 @@ export default class DebugTools {
       '<h1>Editor</h1>\n' +
       '<div id="editor"><p>Loading&hellip;</p></div>\n' +
       '<script>\n' +
-      '  BAYOU_KEY  = ' + quotedKey + ';\n' +
-      '  BAYOU_NODE = "#editor";\n' +
+      `  BAYOU_KEY     = ${quotedKey};\n` +
+      '  BAYOU_NODE    = "#editor";\n' +
+      '  BAYOU_RECOVER = () => { window.location.reload(true); };\n' +
       '</script>\n' +
       '<script src="/boot-from-key.js"></script>\n';
 

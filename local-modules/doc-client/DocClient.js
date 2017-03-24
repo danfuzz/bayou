@@ -277,6 +277,9 @@ export default class DocClient extends StateMachine {
    * @param {object} reason Error reason.
    */
   _handle_any_apiError(method, reason) {
+    // Stop the user from trying to do more edits, as they'd get lost.
+    this._quill.disable();
+
     if (reason.layer === ApiError.CONN) {
       // It's connection-related and probably no big deal.
       this._log.info(`${reason.code}, ${reason.desc}`);
