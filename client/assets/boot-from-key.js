@@ -10,6 +10,8 @@
 //   used to authenticate access to a particular documemt.
 // * `BAYOU_NODE` -- The selector for the DOM node into which the editor should
 //   be embedded.
+// * `BAYOU_RECOVER` (optional) -- Function to use when attempting to recover
+//   from connection trouble.
 
 // Disable Eslint, because this file is delivered as-is and has to be fairly
 // conservative.
