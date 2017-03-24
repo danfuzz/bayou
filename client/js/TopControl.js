@@ -24,8 +24,6 @@ export default class TopControl {
    * @param {Window} window The browser window in which we are operating.
    */
   constructor(window) {
-    const document = window.document;
-
     /** {Window} The browser window in which we are operating. */
     this._window = window;
 
@@ -69,14 +67,13 @@ export default class TopControl {
    * Start things up.
    */
   start() {
-    // Initialize the API connection. We do this in parallel with the rest of the
-    // page loading, so as to minimize time-to-interactive.
+    // Initialize the API connection. We do this in parallel with the rest of
+    // the page loading, so as to minimize time-to-interactive.
 
     log.detail('Opening API client...');
+
     const apiClient = new ApiClient(this._getUrl());
 
-    // Start opening the connection, to maybe save a bit of time (that is, the
-    // document can finish loading in parallel with the API connection opening up).
     apiClient.open().then(() => {
       log.detail('API client open.');
     });
@@ -109,14 +106,7 @@ export default class TopControl {
       log.detail('Made editor instance.');
 
       // Hook the API up to the editor instance.
-      this._docClient = new DocClient(this._quill, apiClient, this._key);
-      this._docClient.start();
-      this._docClient.when_idle().then(() => {
-        log.detail('Document client hooked up.');
-        log.info('Initialization complete!');
-      });
-      this._docClient.when_unrecoverableError().then(
-        this._recoverIfPossible.bind(this));
+      this._makeDocClient(apiClient);
 
       log.detail('Async operations now in progress...');
     });
@@ -141,6 +131,22 @@ export default class TopControl {
     return (this._key.url !== '*')
       ? this._key.url
       : this._window.document.URL;
+  }
+
+  /**
+   * Constructs and hooks up a `DocClient` instance.
+   *
+   * @param {ApiClient} apiClient API client instance to use.
+   */
+  _makeDocClient(apiClient) {
+    this._docClient = new DocClient(this._quill, apiClient, this._key);
+    this._docClient.start();
+    this._docClient.when_idle().then(() => {
+      log.detail('Document client hooked up.');
+      log.info('Initialization complete!');
+    });
+    this._docClient.when_unrecoverableError().then(
+      this._recoverIfPossible.bind(this));
   }
 
   /**
