@@ -57,8 +57,14 @@ export default class TopControl {
     this._quill = null;
 
     /**
+     * {ApiClient|null} API client instance (client-to-server hookup). Becomes
+     * non-null in `_makeApiClient()`.
+     */
+    this._apiClient = null;
+
+    /**
      * {DocClient|null} Client instance (API-to-editor hookup). Becomes non-null
-     * in `start()`.
+     * in `_makeDocClient()`.
      */
     this._docClient = null;
   }
@@ -69,23 +75,18 @@ export default class TopControl {
   start() {
     // Initialize the API connection. We do this in parallel with the rest of
     // the page loading, so as to minimize time-to-interactive.
-
-    log.detail('Opening API client...');
-
-    const apiClient = new ApiClient(this._getUrl());
-
-    apiClient.open().then(() => {
-      log.detail('API client open.');
-    });
+    this._makeApiClient();
 
     // Arrange for the rest of initialization to happen once the initial page
     // contents are fully loaded.
     this._window.addEventListener('load', (event_unused) => {
       log.detail('Initial page load complete.');
 
+      const baseUrl = this._apiClient.baseUrl;
+
       // Do our basic page setup. Specifically, we add the CSS we need to the page.
       const elem = document.createElement('link');
-      elem.href = `${apiClient.baseUrl}/static/quill/quill.bubble.css`;
+      elem.href = `${baseUrl}/static/quill/quill.bubble.css`;
       elem.rel = 'stylesheet';
       document.head.appendChild(elem);
 
@@ -98,7 +99,7 @@ export default class TopControl {
       }
 
       // Give the overlay a chance to do any initialization.
-      Hooks.run(this._window, apiClient.baseUrl);
+      Hooks.run(this._window, baseUrl);
       log.detail('Ran `run()` hook.');
 
       // Make the editor instance.
@@ -106,7 +107,7 @@ export default class TopControl {
       log.detail('Made editor instance.');
 
       // Hook the API up to the editor instance.
-      this._makeDocClient(apiClient);
+      this._makeDocClient(this._apiClient);
 
       log.detail('Async operations now in progress...');
     });
@@ -134,12 +135,22 @@ export default class TopControl {
   }
 
   /**
-   * Constructs and hooks up a `DocClient` instance.
-   *
-   * @param {ApiClient} apiClient API client instance to use.
+   * Constructs and connects an `ApiClient` instance.
    */
-  _makeDocClient(apiClient) {
-    this._docClient = new DocClient(this._quill, apiClient, this._key);
+  _makeApiClient() {
+    log.detail('Opening API client...');
+
+    this._apiClient = new ApiClient(this._getUrl());
+    this._apiClient.open().then(() => {
+      log.detail('API client open.');
+    });
+  }
+
+  /**
+   * Constructs and hooks up a `DocClient` instance.
+   */
+  _makeDocClient() {
+    this._docClient = new DocClient(this._quill, this._apiClient, this._key);
     this._docClient.start();
     this._docClient.when_idle().then(() => {
       log.detail('Document client hooked up.');
