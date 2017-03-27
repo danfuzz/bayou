@@ -17,8 +17,6 @@
  * If that's successful, we report it back up through the layers.
  */
 function BAYOU_RECOVER(key) {
-  //window.location.reload(true);
-
   var docId = DEBUG_DOCUMENT_ID;
   var authorId = DEBUG_AUTHOR_ID;
   var url = `${new URL(key.url).origin}/debug/key/${docId}/${authorId}`;
