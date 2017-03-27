@@ -302,7 +302,7 @@ export default class DebugTools {
 
     res
       .status(200)
-      .type('text/html')
+      .type('text/html; charset=utf-8')
       .send(html);
   }
 
@@ -328,7 +328,7 @@ export default class DebugTools {
   _textResponse(res, text) {
     res
       .status(200)
-      .type('text/plain')
+      .type('text/plain; charset=utf-8')
       .send(text);
   }
 }
