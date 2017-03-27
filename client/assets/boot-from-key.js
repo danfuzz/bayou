@@ -12,6 +12,8 @@
 //   be embedded.
 // * `BAYOU_RECOVER` (optional) -- Function to use when attempting to recover
 //   from connection trouble.
+//
+// See `TopControl` for more details about these parameters.
 
 // Disable Eslint, because this file is delivered as-is and has to be fairly
 // conservative.

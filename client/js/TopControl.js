@@ -31,9 +31,9 @@ export default class TopControl {
     // variables. Validate that they're present before doing anything further.
 
     /**
-     * {string} Key that authorizes access and update to a particular document
-     * as a specific author. This is expected to be a `SplitKey` in JSON-encoded
-     * form.
+     * {SplitKey} Key that authorizes access and update to a particular document
+     * as a specific author. The `BAYOU_KEY` incoming parameter is is expected
+     * to be a `SplitKey` in JSON-encoded form.
      */
     this._key = SplitKey.check(Decoder.decodeJson(window.BAYOU_KEY));
 
@@ -45,13 +45,14 @@ export default class TopControl {
 
     /**
      * {function} Function to call when the editor finds itself in an
-     * unrecoverable (to it) situation. If it returns at all, it is expected to
-     * return a new key to use (instead of `BAYOU_KEY`); if it does not return a
-     * string that can be decoded into a `SplitKey`, the system will simply
-     * halt.
+     * unrecoverable (to it) situation. It gets called with the current key as
+     * its sole argument. If it returns at all, it is expected to return a new
+     * key to use (instead of `BAYOU_KEY`), or a promise for same; if it does
+     * not return a string (or promise which resolves to a string) that can be
+     * decoded into a `SplitKey`, the system will simply halt.
      *
      * If not supplied, this variable defaults to a no-op function.
-    */
+     */
     this._recover =
       TFunction.check(window.BAYOU_RECOVER || (() => { /* empty */ }));
 
@@ -69,6 +70,10 @@ export default class TopControl {
      * in `_makeDocClient()`.
      */
     this._docClient = null;
+
+    // Store this instance as a window global, mostly for ease of debugging.
+    // TODO: Consider removing this.
+    window.BAYOU_CONTROL = this;
   }
 
   /**
@@ -117,24 +122,22 @@ export default class TopControl {
   }
 
   /**
-   * Gets the URL to use when attaching to a server. We use the info from the
-   * `_key` if but default to the document URL if not.
-   *
-   * **Note:** We don't just _always_ use the document's URL because it is
-   * possible (and common even) to embed an editor on a page that has a
-   * different origin than the server.
+   * Fixes the instance's `_key`, if necessary, so that it has a real URL (and
+   * not just a catchall). Replaces the instance variable if any fixing was
+   * required.
    *
    * **Note:** Under normal circumstances, the key we receive comes with a
    * real URL. However, when using the debugging routes, it's possible that we
    * end up with the catchall "URL" `*`. If so, that's when we fall back to
    * using the document's URL. client.
-   *
-   * @returns {string} The server URL.
    */
-  _getUrl() {
-    return (this._key.url !== '*')
-      ? this._key.url
-      : this._window.document.URL;
+  _fixKeyIfNecessary() {
+    const key = this._key;
+
+    if (key.url === '*') {
+      const url = new URL(this._window.document.URL);
+      this._key = key.withUrl(`${url.origin}/api`);
+    }
   }
 
   /**
@@ -143,7 +146,10 @@ export default class TopControl {
   _makeApiClient() {
     log.detail('Opening API client...');
 
-    this._apiClient = new ApiClient(this._getUrl());
+    // Fix the key first if necessary (to have a proper URL).
+    this._fixKeyIfNecessary();
+
+    this._apiClient = new ApiClient(this._key.url);
     this._apiClient.open().then(() => {
       log.detail('API client open.');
     });
@@ -171,15 +177,16 @@ export default class TopControl {
   _recoverIfPossible() {
     log.error('Editor gave up!');
 
-    const newKey = this._recover();
-    if (typeof newKey !== 'string') {
-      log.info('Nothing more to do. :\'(');
-      return;
-    }
+    Promise.resolve(this._recover(this._key)).then((newKey) => {
+      if (typeof newKey !== 'string') {
+        log.info('Nothing more to do. :\'(');
+        return;
+      }
 
-    log.info('Attempting recovery with new key...');
-    this._key = SplitKey.check(Decoder.decodeJson(newKey));
-    this._makeApiClient();
-    this._makeDocClient();
+      log.info('Attempting recovery with new key...');
+      this._key = SplitKey.check(Decoder.decodeJson(newKey));
+      this._makeApiClient();
+      this._makeDocClient();
+    });
   }
 }
