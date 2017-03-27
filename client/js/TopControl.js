@@ -32,8 +32,8 @@ export default class TopControl {
 
     /**
      * {SplitKey} Key that authorizes access and update to a particular document
-     * as a specific author. The `BAYOU_KEY` incoming parameter is is expected
-     * to be a `SplitKey` in JSON-encoded form.
+     * as a specific author. The `BAYOU_KEY` incoming parameter is expected to
+     * be a `SplitKey` in JSON-encoded form.
      */
     this._key = SplitKey.check(Decoder.decodeJson(window.BAYOU_KEY));
 
