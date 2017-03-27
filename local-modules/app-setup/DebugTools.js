@@ -148,20 +148,25 @@ export default class DebugTools {
    * @param {object} res HTTP response handler.
    */
   _handle_edit(req, res) {
-    const key =
-      this._makeEncodedKey(req.params.documentId, req.params.authorId);
+    const documentId = req.params.documentId;
+    const authorId   = this._getAuthorIdParam(req);
+    const key        = this._makeEncodedKey(documentId, authorId);
 
-    // `key` is already a JSON string, but we still have to JSON-encode _that_
-    // string, so as to make it proper JS source within the <script> block
-    // below.
-    const quotedKey = JSON.stringify(key);
+    // These are already strings (JSON-encoded even, in the case of `key`), but
+    // we still have to JSON-encode _those_ strings, so as to make them proper
+    // JS source within the <script> block below.
+    const quotedKey        = JSON.stringify(key);
+    const quotedDocumentId = JSON.stringify(documentId);
+    const quotedAuthorId   = JSON.stringify(authorId);
 
     // TODO: Probably want to use a real template.
     const head =
       '<title>Editor</title>\n' +
       '<script>\n' +
-      `  BAYOU_KEY     = ${quotedKey};\n` +
-      '  BAYOU_NODE    = "#editor";\n' +
+      `  BAYOU_KEY         = ${quotedKey};\n` +
+      '  BAYOU_NODE        = "#editor";\n' +
+      `  DEBUG_AUTHOR_ID   = ${quotedAuthorId};\n` +
+      `  DEBUG_DOCUMENT_ID = ${quotedDocumentId};\n` +
       '</script>\n' +
       '<script src="/boot-for-debug.js"></script>\n';
     const body =
@@ -179,8 +184,9 @@ export default class DebugTools {
    * @param {object} res HTTP response handler.
    */
   _handle_key(req, res) {
-    const key =
-      this._makeEncodedKey(req.params.documentId, req.params.authorId);
+    const documentId = req.params.documentId;
+    const authorId   = this._getAuthorIdParam(req);
+    const key        = this._makeEncodedKey(documentId, authorId);
 
     this._jsonResponse(res, key);
   }
@@ -270,16 +276,25 @@ export default class DebugTools {
   }
 
   /**
+   * Gets the author ID parameter of the given request, or the default value if
+   * it wasn't supplied.
+   *
+   * @param {object} req The HTTP request.
+   * @returns {string} The author ID.
+   */
+  _getAuthorIdParam(req) {
+    return req.params.authorId || 'some-author';
+  }
+
+  /**
    * Makes and returns a new authorization key for the given document / author
    * combo.
    *
    * @param {string} documentId The document ID.
-   * @param {string|null|undefined} [authorId = null] The author ID. If passed
-   *   as nullish, a non-empty default is used instead.
+   * @param {string} authorId The author ID.
    * @returns {string} A new `SplitKey` encoded as JSON.
    */
-  _makeEncodedKey(documentId, authorId = null) {
-    authorId = authorId || 'some-author';
+  _makeEncodedKey(documentId, authorId) {
     return Encoder.encodeJson(
       this._rootAccess.makeAccessKey(authorId, documentId));
   }
