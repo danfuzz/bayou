@@ -35,7 +35,9 @@ export default class TopControl {
      * as a specific author. This is expected to be a `SplitKey` in JSON-encoded
      * form.
      */
-    this._key = SplitKey.check(Decoder.decodeJson(window.BAYOU_KEY));
+    this._key = TopControl._fixKey(
+      window,
+      SplitKey.check(Decoder.decodeJson(window.BAYOU_KEY)));
 
     /**
      * {string} DOM Selector string that indicates which node in the DOM should
@@ -45,13 +47,13 @@ export default class TopControl {
 
     /**
      * {function} Function to call when the editor finds itself in an
-     * unrecoverable (to it) situation. If it returns at all, it is expected to
-     * return a new key to use (instead of `BAYOU_KEY`); if it does not return a
-     * string that can be decoded into a `SplitKey`, the system will simply
-     * halt.
+     * unrecoverable (to it) situation. It gets called with the current key as
+     * its sole argument. If it returns at all, it is expected to return a new
+     * key to use (instead of `BAYOU_KEY`); if it does not return a string that
+     * can be decoded into a `SplitKey`, the system will simply halt.
      *
      * If not supplied, this variable defaults to a no-op function.
-    */
+     */
     this._recover =
       TFunction.check(window.BAYOU_RECOVER || (() => { /* empty */ }));
 
@@ -69,6 +71,10 @@ export default class TopControl {
      * in `_makeDocClient()`.
      */
     this._docClient = null;
+
+    // Store this instance as a window global, mostly for ease of debugging.
+    // TODO: Consider removing this.
+    window.BAYOU_CONTROL = this;
   }
 
   /**
@@ -117,24 +123,26 @@ export default class TopControl {
   }
 
   /**
-   * Gets the URL to use when attaching to a server. We use the info from the
-   * `_key` if but default to the document URL if not.
-   *
-   * **Note:** We don't just _always_ use the document's URL because it is
-   * possible (and common even) to embed an editor on a page that has a
-   * different origin than the server.
+   * Fixes the given key, if necessary, so that it has a real URL (and not just
+   * a catchall). Returns the fixed key if fixed, or the original if no fixing
+   * was required.
    *
    * **Note:** Under normal circumstances, the key we receive comes with a
    * real URL. However, when using the debugging routes, it's possible that we
    * end up with the catchall "URL" `*`. If so, that's when we fall back to
    * using the document's URL. client.
    *
-   * @returns {string} The server URL.
+   * @param {Window} window The controlling window.
+   * @param {SplitKey} key The original key.
+   * @returns {SplitKey} Either the original or fixed key, as described above.
    */
-  _getUrl() {
-    return (this._key.url !== '*')
-      ? this._key.url
-      : this._window.document.URL;
+  static _fixKey(window, key) {
+    if (key.url === '*') {
+      const url = new URL(window.document.URL);
+      return key.withUrl(`${url.origin}/api`);
+    }
+
+    return key;
   }
 
   /**
@@ -143,7 +151,7 @@ export default class TopControl {
   _makeApiClient() {
     log.detail('Opening API client...');
 
-    this._apiClient = new ApiClient(this._getUrl());
+    this._apiClient = new ApiClient(this._key.url);
     this._apiClient.open().then(() => {
       log.detail('API client open.');
     });
@@ -171,7 +179,7 @@ export default class TopControl {
   _recoverIfPossible() {
     log.error('Editor gave up!');
 
-    const newKey = this._recover();
+    const newKey = this._recover(this._key);
     if (typeof newKey !== 'string') {
       log.info('Nothing more to do. :\'(');
       return;

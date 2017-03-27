@@ -60,7 +60,7 @@ export default class SplitKey extends BaseKey {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._url, this._id, this._secret];
+    return [this.url, this.id, this._secret];
   }
 
   /**
@@ -81,6 +81,17 @@ export default class SplitKey extends BaseKey {
    */
   get secret() {
     return this._secret;
+  }
+
+  /**
+   * Returns a clone of this instance, except with the given URL instead of
+   * whatever this instance came with.
+   *
+   * @param {string} url Replacement URL.
+   * @returns {SplitKey} New instance, as described.
+   */
+  withUrl(url) {
+    return new SplitKey(url, this.id, this._secret);
   }
 
   /**
