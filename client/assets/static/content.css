@@ -1,0 +1,33 @@
+/*
+ * Copyright 2016-2017 the Bayou Authors (Dan Bornstein et alia).
+ * Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+ * Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+ */
+
+/**
+ * Definitions for the editor content area.
+ */
+
+/* Top-level editor container. */
+div.bayou-top {
+  margin: 0;
+
+  padding-top: 0.5em;
+  padding-left: 0.1em;
+  padding-right: 0.1em;
+  padding-bottom: 5em;
+
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: black;
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  border-bottom-color: black;
+
+  font-size: 18px;
+}
+
+/* Colorful markup for code. */
+.bayou-top code, .bayou-top pre {
+  color: #c25;
+}

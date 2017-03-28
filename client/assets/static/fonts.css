@@ -1,0 +1,29 @@
+/*
+ * Copyright 2016-2017 the Bayou Authors (Dan Bornstein et alia).
+ * Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+ * Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+ */
+
+/**
+ * Font definitions. This includes imports of fonts as well as setting of
+ * default fonts for the usual font-ish tags.
+ */
+
+ @import url('https://fonts.googleapis.com/css?family=Lato:400,400i,700,700i');
+ @import url('https://fonts.googleapis.com/css?family=Roboto+Mono:500,500i,700,700i');
+ @import url('https://fonts.googleapis.com/css?family=Raleway:400,400i,600,600i,800,800i');
+
+/* Regular text. */
+body, div, p, td {
+  font-family: Lato, sans-serif;
+}
+
+/* Monospaced text. */
+code, pre, tt {
+  font-family: Roboto Mono, monospace;
+}
+
+/* Headers */
+h1, h2, h3, h4, h5, h6 {
+  font-family: Raleway, sans-serif;
+}
