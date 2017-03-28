@@ -119,6 +119,7 @@ export default class TopControl {
         // Hook the API up to the editor instance.
         this._makeDocClient(this._apiClient);
       });
+
       log.detail('Async operations now in progress...');
     });
   }
