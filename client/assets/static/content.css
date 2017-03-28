@@ -23,8 +23,28 @@ div.bayou-top {
   border-bottom-style: solid;
   border-bottom-width: 1px;
   border-bottom-color: black;
+}
 
+/* Basic text font characteristics. */
+div.bayou-top .ql-editor {
   font-size: 18px;
+  line-height: 1.7rem;
+}
+
+/* Bigger header spacing. */
+div.bayou-top .ql-editor h1,
+div.bayou-top .ql-editor h2,
+div.bayou-top .ql-editor h3 {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+}
+
+/* Smaller header spacing. */
+div.bayou-top .ql-editor h4,
+div.bayou-top .ql-editor h5,
+div.bayou-top .ql-editor h6 {
+  padding-top: 0.25em;
+  padding-bottom: 0.25em;
 }
 
 /* Colorful markup for code. */
