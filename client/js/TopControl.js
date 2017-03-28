@@ -9,6 +9,7 @@ import { Hooks } from 'hooks-client';
 import { QuillMaker } from 'quill-util';
 import { SeeAll } from 'see-all';
 import { TFunction, TString } from 'typecheck';
+import { DomUtil } from 'util-client';
 
 /** {SeeAll} Logger for this module. */
 const log = new SeeAll('top');
@@ -89,14 +90,13 @@ export default class TopControl {
     this._window.addEventListener('load', (event_unused) => {
       log.detail('Initial page load complete.');
 
+      const document = this._window.document;
       const baseUrl = this._apiClient.baseUrl;
 
       // Do our basic page setup. Specifically, we add the CSS we need to the
       // page.
-      const elem = document.createElement('link');
-      elem.href = `${baseUrl}/static/quill/quill.bubble.css`;
-      elem.rel = 'stylesheet';
-      document.head.appendChild(elem);
+      const styleDone = DomUtil.addStylesheet(
+        document, `${baseUrl}/static/quill/quill.bubble.css`);
 
       // Validate `_node`.
       if (document.querySelector(this._node) === null) {
@@ -107,16 +107,18 @@ export default class TopControl {
       }
 
       // Give the overlay a chance to do any initialization.
-      Hooks.run(this._window, baseUrl);
+      const hookDone = Hooks.run(this._window, baseUrl);
       log.detail('Ran `run()` hook.');
 
-      // Make the editor instance.
-      this._quill = QuillMaker.make(this._node);
-      log.detail('Made editor instance.');
+      // Make the editor instance, after style addition and hook action are
+      // complete.
+      Promise.all([styleDone, hookDone]).then((res_unused) => {
+        this._quill = QuillMaker.make(this._node);
+        log.detail('Made editor instance.');
 
-      // Hook the API up to the editor instance.
-      this._makeDocClient(this._apiClient);
-
+        // Hook the API up to the editor instance.
+        this._makeDocClient(this._apiClient);
+      });
       log.detail('Async operations now in progress...');
     });
   }
