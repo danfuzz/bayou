@@ -20,7 +20,8 @@ export default class Hooks {
    *   of hook activity, or `undefined` if there is nothing to wait for.
    */
   static run(window_unused, baseUrl_unused) {
-    // This space intentionally left blank.
+    // This space intentionally left (nearly) blank.
+    return undefined;
   }
 
   /**
