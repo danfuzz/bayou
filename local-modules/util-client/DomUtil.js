@@ -2,8 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { PromDelay } from 'util-common';
-
 /**
  * DOM helper utilities.
  */
@@ -18,27 +16,16 @@ export default class DomUtil {
    *   been loaded.
    */
   static addStylesheet(document, url) {
-    const elem = document.createElement('link');
-    elem.href = url;
-    elem.rel = 'stylesheet';
-    document.head.appendChild(elem);
-
     return new Promise((res, rej_unused) => {
-      function check() {
-        for (const s of document.styleSheets) {
-          if ((s.href === url) && s.rules && (s.rules.length !== 0)) {
-            // The stylesheet appears to be loaded.
-            res(true);
-            return;
-          }
-        }
+      const elem = document.createElement('link');
+      elem.href = url;
+      elem.rel = 'stylesheet';
+      elem.onload = () => { res(true); };
 
-        // Not yet loaded. Wait a moment and try again. TODO: Consider rejecting
-        // the promise after a (longer) timeout.
-        PromDelay.resolve(100).then(check);
-      }
+      document.head.appendChild(elem);
 
-      PromDelay.resolve(10).then(check);
+      // TODO: Consider rejecting the promise after a timeout if loading was
+      // apparently unsuccessful.
     });
   }
 }
