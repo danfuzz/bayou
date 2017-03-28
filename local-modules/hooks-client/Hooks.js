@@ -16,6 +16,8 @@ export default class Hooks {
    * @param {object} window_unused Window which contains the application being
    *   set up.
    * @param {string} baseUrl_unused Base URL that points to the server to use.
+   * @returns {Promise|undefined} A promise whose resolution indicates the end
+   *   of hook activity, or `undefined` if there is nothing to wait for.
    */
   static run(window_unused, baseUrl_unused) {
     // This space intentionally left blank.
