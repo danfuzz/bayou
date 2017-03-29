@@ -6,6 +6,7 @@ import express from 'express';
 import util from 'util';
 
 import { Encoder } from 'api-common';
+import { BayouMocha } from 'bayou-mocha';
 import { AuthorId, DocumentId } from 'doc-common';
 import { DocServer } from 'doc-server';
 import { SeeAll } from 'see-all';
@@ -54,6 +55,7 @@ export default class DebugTools {
     router.get('/log',                          this._handle_log.bind(this));
     router.get('/snapshot/:documentId',         this._handle_snapshot.bind(this));
     router.get('/snapshot/:documentId/:verNum', this._handle_snapshot.bind(this));
+    router.get('/test',                         this._handle_test.bind(this));
 
     router.use(this._error.bind(this));
 
@@ -218,6 +220,18 @@ export default class DebugTools {
     const result = Encoder.encodeJson(snapshot, true);
 
     this._textResponse(res, result);
+  }
+
+  /**
+   * Runs unit tests
+   *
+   * @param {object} req_unused HTTP request.
+   * @param {object} res HTTP response handler.
+   */
+  _handle_test(req_unused, res) {
+    BayouMocha.runAllTests();
+
+    this._textResponse(res, 'Unit tests are running. See server console output for results.');
   }
 
   /**

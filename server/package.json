@@ -22,6 +22,7 @@
     "source-map-support": "^0.4.2",
 
     "app-setup": "local",
+    "bayou-mocha": "local",
     "client-bundle": "local",
     "dev-mode": "local",
     "hooks-server": "local",
