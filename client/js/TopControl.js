@@ -106,10 +106,16 @@ export default class TopControl {
       }
 
       // Do our basic page setup. Specifically, we add the CSS we need to the
-      // page and set the expected class on the editor node.
+      // page and set the expected classes on the `html` and editor nodes.
 
       const styleDone =
         DomUtil.addStylesheet(document, `${baseUrl}/static/index.css`);
+
+      const htmlNode = document.getElementsByTagName('html')[0];
+      if (!htmlNode) {
+        throw new Error('Shouldn\'t happen: No `html` node?!');
+      }
+      htmlNode.classList.add('bayou-page');
 
       editorNode.classList.add('bayou-top');
 

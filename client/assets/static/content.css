@@ -8,6 +8,19 @@
  * Definitions for the editor content area.
  */
 
+/*
+ * Basic font size. We do this so as to establish a `rem` unit that corresponds
+ * to the main body text size. **Note:** If a Bayou editor is being embedded in
+ * another page, it is possible that this rule will end up interacting with the
+ * enclosing CSS in undesired ways.
+ *
+ * TODO: Make this particular bit configurable via a hook, should it turn out to
+ * be useful.
+ */
+html.bayou-page {
+  font-size: 18px;
+}
+
 /* Top-level editor container. */
 div.bayou-top {
   margin: 0;
@@ -25,25 +38,39 @@ div.bayou-top {
   border-bottom-color: black;
 }
 
-/* Basic text font characteristics. */
+/* Basic font and layout characteristics. */
 div.bayou-top .ql-editor {
-  font-size: 18px;
   line-height: 1.7rem;
+  font-size: 1rem; /* This thwacks it back from Quill's smaller default. */
+
+  /*
+   * This arranges for a maximum line width that won't force the reader's eyes
+   * to glaze over.
+   */
+  max-width: 60rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* Bigger header spacing. */
+/*
+ * Bigger header spacing. The spacing above is based on the baseline font size
+ * (hence `rem` units) and the spacing below is based on the actual header font
+ * size (hence `em` units).
+ */
 div.bayou-top .ql-editor h1,
 div.bayou-top .ql-editor h2,
 div.bayou-top .ql-editor h3 {
-  padding-top: 0.5em;
+  padding-top: 2rem;
   padding-bottom: 0.5em;
 }
 
-/* Smaller header spacing. */
+/*
+ * Smaller header spacing. Similar above/below setup as for the bigger headers.
+ */
 div.bayou-top .ql-editor h4,
 div.bayou-top .ql-editor h5,
 div.bayou-top .ql-editor h6 {
-  padding-top: 0.25em;
+  padding-top: 1rem;
   padding-bottom: 0.25em;
 }
 
