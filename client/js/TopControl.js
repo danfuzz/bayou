@@ -92,19 +92,26 @@ export default class TopControl {
 
       const document = this._window.document;
       const baseUrl = this._apiClient.baseUrl;
+      const editorNode = document.querySelector(this._node);
 
-      // Do our basic page setup. Specifically, we add the CSS we need to the
-      // page.
-      const styleDone = DomUtil.addStylesheet(
-        document, `${baseUrl}/static/quill/quill.bubble.css`);
-
-      // Validate `_node`.
-      if (document.querySelector(this._node) === null) {
-        // If we land here, no further init can possibly be done, so we just
+      if (editorNode === null) {
+        // The indicated node (incoming `BAYOU_NODE` value) does not exist. If
+        // we land here, no further init can possibly be done, so we just
         // `throw` out of it.
         const extra = (this._node[0] === '#') ? '' : ' (maybe need a `#` prefix?)';
         throw new Error(`No such selector${extra}: \`${this._node}\``);
+      } else if (editorNode.nodeName !== 'DIV') {
+        // Similar to above.
+        throw new Error(`Expected selector \`${this._node}\` to refer to a \`div\`.`);
       }
+
+      // Do our basic page setup. Specifically, we add the CSS we need to the
+      // page and set the expected class on the editor node.
+
+      const styleDone =
+        DomUtil.addStylesheet(document, `${baseUrl}/static/index.css`);
+
+      editorNode.classList.add('bayou-top');
 
       // Give the overlay a chance to do any initialization.
       const hookDone = Hooks.run(this._window, baseUrl);
