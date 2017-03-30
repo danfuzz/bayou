@@ -37,71 +37,71 @@ describe('typecheck.TString', () => {
 
       assert.throws(() => TString.check(value, /^([a-f0-9]{2})+$/));
     });
+  });
 
-    describe('#hexBytes(value)', () => {
-      it('should return the provided value if it is a string of hex bytes', () => {
-        const value = 'deadbeef7584930215cafe';
+  describe('#hexBytes(value)', () => {
+    it('should return the provided value if it is a string of hex bytes', () => {
+      const value = 'deadbeef7584930215cafe';
 
-        assert.equal(TString.hexBytes(value), value);
-      });
-
-      it('should throw an Error when anything other than a string of hex bytes is provided', () => {
-        const value = 'this better not work!';
-
-        assert.throws(() => TString.hexBytes(value));
-      });
+      assert.equal(TString.hexBytes(value), value);
     });
 
-    describe('#hexBytes(value, minBytes)', () => {
-      it('should return the provided value if it is a string of hex bytes of the required minimum length', () => {
-        const value = 'deadbeef7584930215cafe';
+    it('should throw an Error when anything other than a string of hex bytes is provided', () => {
+      const value = 'this better not work!';
 
-        assert.equal(TString.hexBytes(value, 11), value);
-      });
+      assert.throws(() => TString.hexBytes(value));
+    });
+  });
 
-      it('should return the provided value if it is a string of hex bytes greater than the required minimum length', () => {
-        const value = 'deadbeef7584930215cafe';
+  describe('#hexBytes(value, minBytes)', () => {
+    it('should return the provided value if it is a string of hex bytes of the required minimum length', () => {
+      const value = 'deadbeef7584930215cafe';
 
-        assert.equal(TString.hexBytes(value, 3), value);
-      });
-
-      it('should throw an Error if the number of bytes is less than the minimum', () => {
-        const value = 'deadbeef7584930215cafe';
-
-        assert.throws(() => TString.hexBytes(value, 128));
-      });
+      assert.equal(TString.hexBytes(value, 11), value);
     });
 
-    describe('#hexBytes(value, inclusiveMinBytes, inclusiveMaxBytes)', () => {
-      it('should return the provided value if it is a string of hex bytes of the required minimum length', () => {
-        const value = 'deadbeef7584930215cafe';
+    it('should return the provided value if it is a string of hex bytes greater than the required minimum length', () => {
+      const value = 'deadbeef7584930215cafe';
 
-        assert.equal(TString.hexBytes(value, 11, 128), value);
-      });
+      assert.equal(TString.hexBytes(value, 3), value);
+    });
 
-      it('should return the provided value if it is a string of hex bytes within the required length range', () => {
-        const value = 'deadbeef7584930215cafe';
+    it('should throw an Error if the number of bytes is less than the minimum', () => {
+      const value = 'deadbeef7584930215cafe';
 
-        assert.equal(TString.hexBytes(value, 3, 128), value);
-      });
+      assert.throws(() => TString.hexBytes(value, 128));
+    });
+  });
 
-      it('should return the provided value if it is a string of hex bytes equal to the maximum length', () => {
-        const value = 'deadbeef7584930215cafe';
+  describe('#hexBytes(value, inclusiveMinBytes, inclusiveMaxBytes)', () => {
+    it('should return the provided value if it is a string of hex bytes of the required minimum length', () => {
+      const value = 'deadbeef7584930215cafe';
 
-        assert.equal(TString.hexBytes(value, 3, 11), value);
-      });
+      assert.equal(TString.hexBytes(value, 11, 128), value);
+    });
 
-      it('should throw an Error if the number of bytes is less than the minimum', () => {
-        const value = 'deadbeef7584930215cafe';
+    it('should return the provided value if it is a string of hex bytes within the required length range', () => {
+      const value = 'deadbeef7584930215cafe';
 
-        assert.throws(() => TString.hexBytes(value, 32, 64));
-      });
+      assert.equal(TString.hexBytes(value, 3, 128), value);
+    });
 
-      it('should throw an Error if the number of bytes is greater than the minimum', () => {
-        const value = 'deadbeef7584930215cafe';
+    it('should return the provided value if it is a string of hex bytes equal to the maximum length', () => {
+      const value = 'deadbeef7584930215cafe';
 
-        assert.throws(() => TString.hexBytes(value, 4, 8));
-      });
+      assert.equal(TString.hexBytes(value, 3, 11), value);
+    });
+
+    it('should throw an Error if the number of bytes is less than the minimum', () => {
+      const value = 'deadbeef7584930215cafe';
+
+      assert.throws(() => TString.hexBytes(value, 32, 64));
+    });
+
+    it('should throw an Error if the number of bytes is greater than the minimum', () => {
+      const value = 'deadbeef7584930215cafe';
+
+      assert.throws(() => TString.hexBytes(value, 4, 8));
     });
   });
 
