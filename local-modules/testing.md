@@ -1,18 +1,18 @@
 
-Arugula Server-side Unit Tests
+Arugula Module Unit Tests
 ==============================
 
-The `test` directory holds the Arugula server-side unit tests. Arugula uses the Mocha
-test runner framework. At present test results are dumped to the server console
-output.
+Tests for Bayou modules are held in a `tests` directory within the module.
+Arugula uses the Mocha test runner framework. At present test results are dumped
+to the server console output.
 
 Chai is the assert package. It supports `should`, `expect`, and
 `assert` styles of test definition.
 
 Chai as Promised is used for wrapping test checks around promise results.
 
-Any files in the `test` directory that end with `.js` will be added to the
-test runner. See `test/test_test.js` for a sample test.
+Any files in the `tests` directory that end with `.js` will be added to the
+test runner.
 
 ### Other docs
 
