@@ -1,0 +1,129 @@
+#!/bin/bash
+#
+# Copyright 2016-2017 the Bayou Authors (Dan Bornstein et alia).
+# Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+# Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+#
+# Set up the build output directory for a build, including cleaning it and
+# creating it. Prints out the absolute path of the directory on `stdout` upon
+# success, except if `--just-clean` was specified in which case nothing is
+# printed. If there is trouble, prints an error to `stderr` and prints nothing
+# to `stdout`.
+#
+
+# Set `progName` to the program name, `progDir` to its directory, and `baseDir`
+# to `progDir`'s directory. Follows symlinks.
+function init-prog {
+    local newp p="$0"
+
+    while newp="$(readlink "$p")"; do
+        [[ ${newp} =~ ^/ ]] && p="${newp}" || p="$(dirname "$p")/${newp}"
+    done
+
+    progName="${p##*/}"
+    progDir="$(cd "$(dirname "$p")"; /bin/pwd -P)"
+    baseDir="$(cd "${progDir}/.."; /bin/pwd -P)"
+}
+init-prog
+
+# Move `baseDir` up one layer (not done above because the above is boilerplate).
+baseDir="$(cd "${baseDir}/.."; /bin/pwd -P)"
+
+
+#
+# Argument parsing
+#
+
+# Error during argument processing?
+argError=0
+
+# Need help?
+showHelp=0
+
+# Clean build?
+clean=0
+
+# Just clean? (Don't create directory.)
+justClean=0
+
+# Directory for the built output.
+outDir=''
+
+while (( $# != 0 )); do
+    opt="$1"
+    if [[ ${opt} == '--' ]]; then
+        shift
+        break
+    elif [[ ${opt} == '--clean' ]]; then
+        clean=1
+    elif [[    ${opt} == '--help'
+            || ${opt} == '-h' ]]; then
+        showHelp=1
+    elif [[ ${opt} == '--just-clean' ]]; then
+        clean=1
+        justClean=1
+    elif [[ ${opt} =~ ^--out=(.*) ]]; then
+        outDir="${BASH_REMATCH[1]}"
+    elif [[ ${opt} =~ ^- ]]; then
+        echo "Unknown option: ${opt}" 1>&2
+        argError=1
+        break
+    else
+        break
+    fi
+    shift
+done
+unset opt
+
+if (( ${showHelp} || ${argError} )); then
+    echo 'Usage:'
+    echo ''
+    echo "${progName} [--clean] [--out=<dir>] [--overlay=<dir>]"
+    echo '  Sets up and/or cleans the built output directory. Prints the'
+    echo '  directory name.'
+    echo ''
+    echo '  --clean'
+    echo '    Start from a clean build.'
+    echo '  --just-clean'
+    echo '    Just clean (and do not recreate out directory).'
+    echo '  --out=<dir>'
+    echo '    Place output in directory <dir>.'
+    echo ''
+    echo "${progName} [--help | -h]"
+    echo '  Display this message.'
+    exit ${argError}
+fi
+
+
+#
+# Helper functions
+#
+
+
+#
+# Main script
+#
+
+if [[ ${outDir} == '' ]]; then
+    # Default output directory.
+    outDir="${baseDir}/out"
+fi
+
+if [[ -e ${outDir} ]]; then
+    if [[ ! -d ${outDir} ]]; then
+        echo "Not a directory: ${outDir}" 1>&2
+        exit 1
+    elif (( ${clean} )); then
+        # Note: Order of this test wrt the last one is intentional: We don't
+        # want to blow away a non-directory.
+        rm -rf "${outDir}" || exit 1
+    fi
+fi
+
+if (( !${justClean} )); then
+    mkdir -p "${outDir}" || exit 1
+
+    # Print it out as an absolute path.
+    cd ${outDir}
+    /bin/pwd -P
+fi
