@@ -60,8 +60,8 @@ export default class CommonBase {
    *
    * @param {*} value Value to coerce.
    * @returns {this} `value` or its coercion to the class that this was
-   *   called on. Will always be an instance of the same as the class that this
-   *   method was called on.
+   *   called on. Will always be an instance of the same class that this method
+   *   was called on.
    */
   static coerce(value) {
     // **Note:** In the context of static methods, `this` refers to the class
@@ -111,8 +111,7 @@ export default class CommonBase {
    * @param {*} value Value to coerce.
    * @returns {this|null} `value` or its coercion to the class that this was
    *   called on, or `null` if `value` can't be coerced. If non-null, will
-   *   always be an instance of the same as the class that this method was
-   *   called on.
+   *   always be an instance of the same class that this method was called on.
    */
   static coerceOrNull(value) {
     // **Note:** In the context of static methods, `this` refers to the class
@@ -139,8 +138,7 @@ export default class CommonBase {
    *   instance of this class.
    * @returns {this|null} `value` or its coercion to the class that this was
    *   called on, or `null` if `value` can't be coerced. If non-null, will
-   *   always be an instance of the same as the class that this method was
-   *   called on.
+   *   always be an instance of the same class that this method was called on.
    */
   static _impl_coerceOrNull(value) {
     try {
