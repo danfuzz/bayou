@@ -74,4 +74,17 @@ describe('typecheck.TInt', () => {
       assert.throws(() => TInt.rangeInc(37, 3, 27));
     });
   });
+
+  describe('#unsignedByte(value)', () => {
+    it('should allow integer values from [0..255]', () => {
+      assert.doesNotThrow(() => TInt.unsignedByte(0));
+      assert.doesNotThrow(() => TInt.unsignedByte(128));
+      assert.doesNotThrow(() => TInt.unsignedByte(255));
+    });
+
+    it('should throw an error when value is outside [0..255]', () => {
+      assert.throws(() => TInt.unsgignedByte(-1));
+      assert.throws(() => TInt.unsgignedByte(256));
+    });
+  });
 });

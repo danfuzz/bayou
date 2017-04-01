@@ -84,4 +84,14 @@ export default class TInt {
 
     return value;
   }
+
+  /**
+   * Checks a value of type `Int`, which must furthermore be within the range [0..255].
+   *
+   * @param {number} value The integer value to check.
+   * @returns {number} `value`.
+   */
+  static unsignedByte(value) {
+    return TInt.rangeInc(value, 0, 255);
+  }
 }

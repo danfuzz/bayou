@@ -107,7 +107,7 @@ export default class DataUtil {
    * @returns {string} Equivalent hex string.
    */
   static hexFromBytes(bytes) {
-    TArray.check(bytes, TInt.check); // TODO: Should validate range too.
+    TArray.check(bytes, TInt.unsignedByte);
 
     function byteString(byte) {
       const result = byte.toString(16);
