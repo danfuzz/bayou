@@ -9,9 +9,6 @@ import _ from 'lodash';
 import { TString } from 'typecheck';
 import { Random } from 'util-common';
 
-/**
- * A basic test just to ensure that the test harness is functional.
- */
 describe('util-common.Random', () => {
   describe('#byteArray(length)', () => {
     it('should return an array of the requested length', () => {
@@ -36,6 +33,19 @@ describe('util-common.Random', () => {
       const string = Random.hexByteString(length);
 
       assert.doesNotThrow(() => TString.hexBytes(string, length));
+    });
+  });
+
+  describe('#shortLabel(prefix)', () => {
+    it('should return a probably-random string of the form "[prefix]-[8 * base32ish random character]"', () => {
+      const label1A = Random.shortLabel('A');
+      const label2A = Random.shortLabel('A');
+
+      assert.notEqual(label1A, label2A);
+      assert.isTrue(label1A.indexOf('A-') === 0);
+      assert.isTrue(label2A.indexOf('A-') === 0);
+      assert.lengthOf(label1A, 10);
+      assert.lengthOf(label2A, 10);
     });
   });
 });

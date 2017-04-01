@@ -10,7 +10,7 @@ import { ObjectUtil } from 'util-base';
 describe('util-base.ObjectUtil', () => {
   describe('#hasOwnProperty(value, name)', () => {
     it('should return true when asked about an object\'s own propery', () => {
-      const value = { };
+      const value = {};
 
       value.uniqueProperty = 'super neat!';
 
@@ -18,7 +18,7 @@ describe('util-base.ObjectUtil', () => {
     });
 
     it('should return false when asked about a property in a parent', () => {
-      const value = { };
+      const value = {};
 
       assert.isFalse(ObjectUtil.hasOwnProperty(value, 'toString'));
     });
