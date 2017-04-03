@@ -33,12 +33,6 @@ argError=0
 # Need help?
 showHelp=0
 
-# Clean build?
-clean=0
-
-# Just clean? (No build?)
-justClean=0
-
 # Try building a client bundle?
 clientBundle=0
 
@@ -48,8 +42,8 @@ overlayDir=''
 # Boxed dependency directory, if any.
 boxDir=''
 
-# Directory for the built output.
-outDir=''
+# Options to pass to `out-dir-setup`.
+outOpts=()
 
 while (( $# != 0 )); do
     opt="$1"
@@ -57,17 +51,16 @@ while (( $# != 0 )); do
         shift
         break
     elif [[ ${opt} == '--clean' ]]; then
-        clean=1
+        outOpts+=("${opt}")
     elif [[ ${opt} == '--client-bundle' ]]; then
         clientBundle=1
     elif [[    ${opt} == '--help'
             || ${opt} == '-h' ]]; then
         showHelp=1
     elif [[ ${opt} == '--just-clean' ]]; then
-        clean=1
-        justClean=1
+        outOpts+=("${opt}")
     elif [[ ${opt} =~ ^--out=(.*) ]]; then
-        outDir="${BASH_REMATCH[1]}"
+        outOpts+=("${opt}")
     elif [[ ${opt} =~ ^--overlay=(.*) ]]; then
         overlayDir="${BASH_REMATCH[1]}"
     elif [[ ${opt} =~ ^--boxes=(.*) ]]; then
@@ -154,27 +147,9 @@ function check-environment-dependencies {
 # Sets up the output directory, including cleaning it out or creating it, as
 # necessary.
 function set-up-out {
-    if [[ ${outDir} == '' ]]; then
-        # Default output directory.
-        outDir="${baseDir}/out"
-    fi
-
-    if [[ -e ${outDir} ]]; then
-        if [[ ! -d ${outDir} ]]; then
-            echo "Not a directory: ${outDir}" 1>&2
-            return 1
-        elif (( ${clean} )); then
-            # Note: Order of this test wrt the last one is intentional: We don't
-            # want to blow away a non-directory.
-            rm -rf "${outDir}" || return 1
-        fi
-    fi
-
-    if (( !${justClean} )); then
-        mkdir -p "${outDir}" || return 1
-
-        # Make it absolute.
-        outDir="$(cd ${outDir}; /bin/pwd -P)"
+    outDir="$(${progDir}/lib/out-dir-setup "${outOpts[@]}")"
+    if [[ $? != 0 ]]; then
+        return 1
     fi
 }
 
@@ -465,7 +440,8 @@ sourceMapName='source-map.txt'
 
 set-up-out || exit 1
 
-if (( ${justClean} )); then
+if [[ ${outDir} == '' ]]; then
+    # Got the `--just-clean` option.
     exit
 fi
 

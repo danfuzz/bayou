@@ -1,0 +1,138 @@
+#!/bin/bash
+#
+# Copyright 2016-2017 the Bayou Authors (Dan Bornstein et alia).
+# Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+# Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+#
+# Logger for the build process. Name this command in front of a build (or
+# build-like) command (similar to how `time` works), and it will run the
+# command, teeing the output to both stdout and an appropriately-named file in
+# the output directory.
+#
+
+# Set `progName` to the program name, `progDir` to its directory, and `baseDir`
+# to `progDir`'s directory. Follows symlinks.
+function init-prog {
+    local newp p="$0"
+
+    while newp="$(readlink "$p")"; do
+        [[ ${newp} =~ ^/ ]] && p="${newp}" || p="$(dirname "$p")/${newp}"
+    done
+
+    progName="${p##*/}"
+    progDir="$(cd "$(dirname "$p")"; /bin/pwd -P)"
+    baseDir="$(cd "${progDir}/.."; /bin/pwd -P)"
+}
+init-prog
+
+
+#
+# Argument parsing
+#
+
+# Error during argument processing?
+argError=0
+
+# Need help?
+showHelp=0
+
+# Options to pass to `out-dir-setup`.
+outOpts=()
+
+# Extra options passed to the command.
+extraOpts=()
+
+while (( $# != 0 )); do
+    opt="$1"
+    if [[ ${opt} == '--' ]]; then
+        shift
+        break
+    elif [[ ${opt} == '--clean' ]]; then
+        outOpts+=("${opt}")
+    elif [[    ${opt} == '--help'
+            || ${opt} == '-h' ]]; then
+        showHelp=1
+    elif [[ ${opt} =~ ^--out=(.*) ]]; then
+        outOpts+=("${opt}")
+        extraOpts+=("${opt}")
+    elif [[ ${opt} =~ ^- ]]; then
+        echo "Unknown option: ${opt}" 1>&2
+        argError=1
+        break
+    else
+        break
+    fi
+    shift
+done
+unset opt
+
+# The remainder of the arguments are the command to run and its arguments. We
+# split the command itself from its arguments, so that we can easily insert
+# options.
+cmd="$1"
+shift
+cmdArgs=("$@")
+
+if [[ ${cmd} == '' ]]; then
+    echo 'Missing build command.' 1>&2
+    argError=1
+fi
+
+if (( ${showHelp} || ${argError} )); then
+    echo 'Usage:'
+    echo ''
+    echo "${progName} [--clean] [--out=<dir>] <build-command> [<arg> ...]"
+    echo '  Run a build (or build-like) command, and tee its output to a log'
+    echo '  file under the built output directory.'
+    echo ''
+    echo '  --clean'
+    echo '    Start from a clean build.'
+    echo '  --out=<dir>'
+    echo '    Place output in directory <dir>. This option will also get passed'
+    echo '    to the build command.'
+    echo ''
+    echo "${progName} [--help | -h]"
+    echo '  Display this message.'
+    exit ${argError}
+fi
+
+
+#
+# Helper functions
+#
+
+
+#
+# Main script
+#
+
+outDir="$("${progDir}/out-dir-setup" "${outOpts[@]}")"
+if [[ ${outDir} == '' ]]; then
+    exit 1
+fi
+
+logFile="${outDir}/var/log/$(date '+build-%Y-%m-%d.log')"
+mkdir -p "$(dirname "${logFile}")" || exit 1
+
+fullArgs=("${extraOpts[@]}" "${cmdArgs[@]}")
+
+(
+    echo ''
+    echo '----------------------------------------'
+    echo ''
+    echo 'Running command:'
+    echo ''
+    printf '%q' "${cmd}"; printf ' %q' "${fullArgs[@]}"; echo ''
+    echo ''
+) >> "${logFile}"
+
+# We use a wacky form of redirection so we can capture the exit status of the
+# command and not the tee. What we're doing is redirecting `stdout` using
+# "process substitution." (Look it up in the `bash` manual for more info.)
+"${cmd}" "${fullArgs[@]}" > >(tee -a "${logFile}") 2>&1
+status="$?"
+
+(
+    echo ''
+    echo "Command exit status: ${status}"
+) >> "${logFile}"
