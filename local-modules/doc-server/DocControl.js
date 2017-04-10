@@ -203,7 +203,7 @@ export default class DocControl extends CommonBase {
       // handled by `_appendDelta()`).
       this._appendDelta(delta, authorId);
       return {
-        delta:  [], // That is, there was no correction.
+        delta:  FrozenDelta.EMPTY, // That is, there was no correction.
         verNum: this.currentVerNum // `_appendDelta()` updates the version.
       };
     }
@@ -245,7 +245,7 @@ export default class DocControl extends CommonBase {
     if (dNext.isEmpty()) {
       // It turns out that nothing changed.
       return {
-        delta:  [], // That is, there was no correction.
+        delta:  FrozenDelta.EMPTY, // That is, there was no correction.
         verNum: vCurrentNum
       };
     }
@@ -257,7 +257,7 @@ export default class DocControl extends CommonBase {
 
     // (4)
     const vExpected = FrozenDelta.coerce(vBase).compose(dClient);
-    const dCorrection = vExpected.diff(vNext);
+    const dCorrection = FrozenDelta.coerce(vExpected.diff(vNext));
 
     return {
       delta:  dCorrection,
