@@ -47,9 +47,6 @@ while (( $# != 0 )); do
     elif [[    ${opt} == '--help'
             || ${opt} == '-h' ]]; then
         showHelp=1
-    elif [[ ${opt} == '--just-clean' ]]; then
-        clean=1
-        justClean=1
     elif [[ ${opt} =~ ^--out=(.*) ]]; then
         outDir="${BASH_REMATCH[1]}"
     elif [[ ${opt} =~ ^--overlay=(.*) ]]; then
