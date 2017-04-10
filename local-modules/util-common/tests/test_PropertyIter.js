@@ -52,7 +52,7 @@ describe('util-common.PropertyIter', () => {
   });
 
   describe('iterating solely over non-synthetic properties', () => {
-    /*  TODO  */
+    it('should iterate solely over non-synthetic properties');
   });
 });
 

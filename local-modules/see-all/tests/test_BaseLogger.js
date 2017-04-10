@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import BayouMocha from './BayouMocha';
-import Mocks from './Mocks';
+import { describe, it } from 'mocha';
 
-export { BayouMocha, Mocks };
+describe('see-all.BaseLogger', () => {
+  it('needs a way to be tested');
+});

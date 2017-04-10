@@ -28,6 +28,5 @@ describe('util-base.ObjectUtil', () => {
 
       assert.isFalse(ObjectUtil.hasOwnProperty(value, 'floopty'));
     });
-
   });
 });

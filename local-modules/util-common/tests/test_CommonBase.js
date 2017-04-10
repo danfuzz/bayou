@@ -49,5 +49,7 @@ describe('util-common.CommonBase', () => {
     });
   });
 
-  /* TODO: Not sure how to test the coerce functions. Need help there. */
+  describe('#coerce(value)', () => {
+    it('needs a way to be tested');
+  });
 });
