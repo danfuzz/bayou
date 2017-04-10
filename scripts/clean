@@ -33,22 +33,24 @@ argError=0
 # Need help?
 showHelp=0
 
-# Clean build?
-clean=0
+# Create directory?
+create=0
 
-# Options to pass to `build`.
-buildOpts=()
+# Output directory.
+outDir=''
 
 while (( $# != 0 )); do
     opt="$1"
     if [[ ${opt} == '--' ]]; then
         shift
         break
+    elif [[ ${opt} == '--create' ]]; then
+        create=1
     elif [[    ${opt} == '--help'
             || ${opt} == '-h' ]]; then
         showHelp=1
-    elif [[ ${opt} =~ ^--out= ]]; then
-        buildOpts+=("${opt}")
+    elif [[ ${opt} =~ ^--out=(.*) ]]; then
+        outDir="${BASH_REMATCH[1]}"
     elif [[ ${opt} =~ ^- ]]; then
         echo "Unknown option: ${opt}" 1>&2
         argError=1
@@ -66,6 +68,9 @@ if (( ${showHelp} || ${argError} )); then
     echo "${progName} [--out=<dir>]"
     echo '  Clean the project output.'
     echo ''
+    echo '  --create'
+    echo '    Create the directory (leaving it empty). Without this option,'
+    echo '    this script just removes the directory if it exists.'
     echo '  --out=<dir>'
     echo '    Directory where built output goes.'
     echo ''
@@ -79,4 +84,15 @@ fi
 # Main script
 #
 
-"${progDir}/build" --just-clean "${buildOpts[@]}"
+# Options to pass to `out-dir-setup`
+setupOpts=()
+
+if [[ ${outDir} != '' ]]; then
+    setupOpts+=("--out=${outDir}")
+fi
+
+if (( !${create} )); then
+    setupOpts+=('--just-clean')
+fi
+
+"${progDir}/lib/out-dir-setup" "${setupOpts[@]}"
