@@ -193,34 +193,37 @@ export default class DebugTools {
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
+   * @returns {Promise} Promise whose rejection indicates an error to be
+   *   reported back to the user.
    */
   _handle_edit(req, res) {
     const documentId = req.params.documentId;
     const authorId   = this._getAuthorIdParam(req);
-    const key        = this._makeEncodedKey(documentId, authorId);
 
-    // These are already strings (JSON-encoded even, in the case of `key`), but
-    // we still have to JSON-encode _those_ strings, so as to make them proper
-    // JS source within the <script> block below.
-    const quotedKey        = JSON.stringify(key);
-    const quotedDocumentId = JSON.stringify(documentId);
-    const quotedAuthorId   = JSON.stringify(authorId);
+    return this._makeEncodedKey(documentId, authorId).then((key) => {
+      // These are already strings (JSON-encoded even, in the case of `key`),
+      // but we still have to JSON-encode _those_ strings, so as to make them
+      // proper JS source within the <script> block below.
+      const quotedKey        = JSON.stringify(key);
+      const quotedDocumentId = JSON.stringify(documentId);
+      const quotedAuthorId   = JSON.stringify(authorId);
 
-    // TODO: Probably want to use a real template.
-    const head =
-      '<title>Editor</title>\n' +
-      '<script>\n' +
-      `  BAYOU_KEY         = ${quotedKey};\n` +
-      '  BAYOU_NODE        = "#editor";\n' +
-      `  DEBUG_AUTHOR_ID   = ${quotedAuthorId};\n` +
-      `  DEBUG_DOCUMENT_ID = ${quotedDocumentId};\n` +
-      '</script>\n' +
-      '<script src="/boot-for-debug.js"></script>\n';
-    const body =
-      '<h1>Editor</h1>\n' +
-      '<div id="editor"><p>Loading&hellip;</p></div>\n';
+      // TODO: Probably want to use a real template.
+      const head =
+        '<title>Editor</title>\n' +
+        '<script>\n' +
+        `  BAYOU_KEY         = ${quotedKey};\n` +
+        '  BAYOU_NODE        = "#editor";\n' +
+        `  DEBUG_AUTHOR_ID   = ${quotedAuthorId};\n` +
+        `  DEBUG_DOCUMENT_ID = ${quotedDocumentId};\n` +
+        '</script>\n' +
+        '<script src="/boot-for-debug.js"></script>\n';
+      const body =
+        '<h1>Editor</h1>\n' +
+        '<div id="editor"><p>Loading&hellip;</p></div>\n';
 
-    this._htmlResponse(res, head, body);
+      this._htmlResponse(res, head, body);
+    });
   }
 
   /**
@@ -229,13 +232,16 @@ export default class DebugTools {
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
+   * @returns {Promise} Promise whose rejection indicates an error to be
+   *   reported back to the user.
    */
   _handle_key(req, res) {
     const documentId = req.params.documentId;
     const authorId   = this._getAuthorIdParam(req);
-    const key        = this._makeEncodedKey(documentId, authorId);
 
-    this._jsonResponse(res, key);
+    return this._makeEncodedKey(documentId, authorId).then((key) => {
+      this._jsonResponse(res, key);
+    });
   }
 
   /**
@@ -353,16 +359,17 @@ export default class DebugTools {
   }
 
   /**
-   * Makes and returns a new authorization key for the given document / author
-   * combo.
+   * Makes and returns a promise for a new authorization key for the given
+   * document / author combo.
    *
    * @param {string} documentId The document ID.
    * @param {string} authorId The author ID.
-   * @returns {string} A new `SplitKey` encoded as JSON.
+   * @returns {Promise<string>} Promise for a new `SplitKey` encoded as JSON.
    */
   _makeEncodedKey(documentId, authorId) {
-    return Encoder.encodeJson(
-      this._rootAccess.makeAccessKey(authorId, documentId));
+    return this._rootAccess.makeAccessKey(authorId, documentId).then((key) => {
+      return Encoder.encodeJson(key);
+    });
   }
 
   /**

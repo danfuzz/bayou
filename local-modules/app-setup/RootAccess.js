@@ -43,34 +43,35 @@ export default class RootAccess {
     TString.nonempty(authorId);
     TString.nonempty(docId);
 
-    const docControl = DocServer.theOne.getDoc(docId);
-    const doc = new DocForAuthor(docControl, authorId);
+    return DocServer.theOne.getDoc(docId).then((docControl) => {
+      const doc = new DocForAuthor(docControl, authorId);
 
-    // Under normal circumstances, this method is called in the context of an
-    // active API connection, but it can also be called when debugging, and in
-    // that case we just fall back on the catchall `*` for the associated URL.
-    const url = Connection.activeNow
-      ? `${Connection.activeNow.baseUrl}/api`
-      : '*';
+      // Under normal circumstances, this method is called in the context of an
+      // active API connection, but it can also be called when debugging, and in
+      // that case we just fall back on the catchall `*` for the associated URL.
+      const url = Connection.activeNow
+        ? `${Connection.activeNow.baseUrl}/api`
+        : '*';
 
-    let key = null;
-    for (;;) {
-      key = SplitKey.randomInstance(url);
-      if (!this._context.hasId(key.id)) {
-        break;
+      let key = null;
+      for (;;) {
+        key = SplitKey.randomInstance(url);
+        if (!this._context.hasId(key.id)) {
+          break;
+        }
+
+        // We managed to get an ID collision. Unlikely, but it can happen. So,
+        // just iterate and try again.
       }
 
-      // We managed to get an ID collision. Unlikely, but it can happen. So,
-      // just iterate and try again.
-    }
+      this._context.add(key, doc);
 
-    this._context.add(key, doc);
+      log.info(`Newly-authorized access.`);
+      log.info(`  author: ${authorId}`);
+      log.info(`  doc:    ${docId}`);
+      log.info(`  key id: ${key.id}`); // The ID is safe to log.
 
-    log.info(`Newly-authorized access.`);
-    log.info(`  author: ${authorId}`);
-    log.info(`  doc:    ${docId}`);
-    log.info(`  key id: ${key.id}`); // The ID is safe to log.
-
-    return key;
+      return key;
+    });
   }
 }

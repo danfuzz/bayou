@@ -36,7 +36,9 @@ export default class DocServer extends Singleton {
    * @returns {DocControl} The corresponding document accessor.
    */
   getDoc(docId) {
-    return this._getDoc(docId, true);
+    // TODO: Remove the `Promise.resolve()` cladding once `_getDoc()` actually
+    // has asynchronous behavior.
+    return Promise.resolve(this._getDoc(docId, true));
   }
 
   /**
