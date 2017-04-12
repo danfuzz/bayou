@@ -241,7 +241,7 @@ export default class Proppy {
         let replacement = null;
         switch (ch) {
           case 'n':  { replacement = '\n'; break; }
-          case 't':  { replacement = '\n'; break; }
+          case 't':  { replacement = '\t'; break; }
           case '\\': { replacement = '\\'; break; }
           case '\'': { replacement = '\''; break; }
           case '"':  { replacement = '"';  break; }
