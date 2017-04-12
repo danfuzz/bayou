@@ -174,14 +174,17 @@ export default class DebugTools {
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
+   * @returns {Promise} Promise whose rejection indicates an error to be
+   *   reported back to the user.
    */
   _handle_change(req, res) {
     const verNum = req.params.verNum;
-    const doc = this._getExistingDoc(req);
-    const change = doc.change(verNum);
-    const result = Encoder.encodeJson(change, true);
 
-    this._textResponse(res, result);
+    return this._getExistingDoc(req).then((doc) => {
+      const change = doc.change(verNum);
+      const result = Encoder.encodeJson(change, true);
+      this._textResponse(res, result);
+    });
   }
 
   /**
@@ -253,15 +256,19 @@ export default class DebugTools {
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
+   * @returns {Promise} Promise whose rejection indicates an error to be
+   *   reported back to the user.
    */
   _handle_snapshot(req, res) {
     const verNum = req.params.verNum;
-    const doc = this._getExistingDoc(req);
-    const args = (verNum === undefined) ? [] : [verNum];
-    const snapshot = doc.snapshot(...args);
-    const result = Encoder.encodeJson(snapshot, true);
 
-    this._textResponse(res, result);
+    return this._getExistingDoc(req).then((doc) => {
+      const args = (verNum === undefined) ? [] : [verNum];
+      const snapshot = doc.snapshot(...args);
+      const result = Encoder.encodeJson(snapshot, true);
+
+      this._textResponse(res, result);
+    });
   }
 
   /**
@@ -312,23 +319,29 @@ export default class DebugTools {
   }
 
   /**
-   * Gets an existing document based on the usual debugging request argument, or
-   * throws an error if the document doesn't exist.
+   * Returns a promise for an existing document based on the usual debugging
+   * request argument. If the document doesn't exist, the promise will get
+   * rejected with a reasonably-descriptive message.
    *
    * @param {object} req HTTP request.
-   * @returns {DocControl} The requested document.
+   * @returns {Promise<DocControl>} Promise for the requested document.
    */
   _getExistingDoc(req) {
     const documentId = req.params.documentId;
-    const doc = DocServer.theOne.getDocOrNull(documentId);
 
-    if (doc === null) {
-      const error = new Error();
-      error.debugMsg = `No such document: ${documentId}`;
-      throw error;
-    }
+    // TODO: Remove the `Promise.resolve(...)` cladding once `DocServer`
+    // actually starts behaving asynchronously.
+    const docPromise = Promise.resolve(DocServer.theOne.getDocOrNull(documentId));
 
-    return doc;
+    return docPromise.then((doc) => {
+      if (doc === null) {
+        const error = new Error();
+        error.debugMsg = `No such document: ${documentId}`;
+        throw error;
+      }
+
+      return doc;
+    });
   }
 
   /**
