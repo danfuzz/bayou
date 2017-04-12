@@ -100,13 +100,23 @@ export default class DebugTools {
    *   `null` if there are no parameters. These become the remainder of the
    *   bound path.
    */
-  _bindHandler(name, paramPath) {
+  _bindHandler(name, paramPath = null) {
     const fullPath = (paramPath === null)
       ? `/${name}`
       : `/${name}/${paramPath}`;
     const handlerMethod = this[`_handle_${name}`].bind(this);
 
-    this._router.get(fullPath, handlerMethod);
+    function handleRequest(req, res, next) {
+      try {
+        Promise.resolve(handlerMethod(req, res)).catch((error) => {
+          next(error);
+        });
+      } catch (error) {
+        next(error);
+      }
+    }
+
+    this._router.get(fullPath, handleRequest);
   }
 
   /**
