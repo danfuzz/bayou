@@ -38,7 +38,15 @@ describe('api-common.Encoder', () => {
       assert.equal(Encoder.encode(37), 37);
       assert.equal(Encoder.encode(true), true);
       assert.equal(Encoder.encode(false), false);
+      assert.equal(Encoder.encode('blort'), 'blort');
       assert.equal(Encoder.encode(null), null);
+    });
+
+    it('should pass through simple objects whose values are non-objects as-is', () => {
+      assert.deepEqual(Encoder.encode({}), {});
+      assert.deepEqual(Encoder.encode({ a: 10 }), { a: 10 });
+      assert.deepEqual(Encoder.encode({ b: false }), { b: false });
+      assert.deepEqual(Encoder.encode({ c: 'yay', d: {} }), { c: 'yay', d: {} });
     });
 
     it('should reject arrays with index holes', () => {
