@@ -58,15 +58,15 @@ export default class DebugTools {
     this._bindParam('documentId');
     this._bindParam('verNum');
 
-    router.get('/change/:documentId/:verNum',   this._handle_change.bind(this));
-    router.get('/edit/:documentId',             this._handle_edit.bind(this));
-    router.get('/edit/:documentId/:authorId',   this._handle_edit.bind(this));
-    router.get('/key/:documentId',              this._handle_key.bind(this));
-    router.get('/key/:documentId/:authorId',    this._handle_key.bind(this));
-    router.get('/log',                          this._handle_log.bind(this));
-    router.get('/snapshot/:documentId',         this._handle_snapshot.bind(this));
-    router.get('/snapshot/:documentId/:verNum', this._handle_snapshot.bind(this));
-    router.get('/test',                         this._handle_test.bind(this));
+    this._bindHandler('change',   ':documentId/:verNum');
+    this._bindHandler('edit',     ':documentId');
+    this._bindHandler('edit',     ':documentId/:authorId');
+    this._bindHandler('key',      ':documentId');
+    this._bindHandler('key',      ':documentId/:authorId');
+    this._bindHandler('log');
+    this._bindHandler('snapshot', ':documentId');
+    this._bindHandler('snapshot', ':documentId/:verNum');
+    this._bindHandler('test');
 
     router.use(this._error.bind(this));
   }
@@ -89,6 +89,24 @@ export default class DebugTools {
     }
 
     this._router.param(name, checkParam);
+  }
+
+  /**
+   * Binds a GET handler to the router for this instance.
+   *
+   * @param {string} name The name of the handler. This is also the first
+   *   component of the bound path.
+   * @param {string|null} [paramPath = null] The parameter path to accept, or
+   *   `null` if there are no parameters. These become the remainder of the
+   *   bound path.
+   */
+  _bindHandler(name, paramPath) {
+    const fullPath = (paramPath === null)
+      ? `/${name}`
+      : `/${name}/${paramPath}`;
+    const handlerMethod = this[`_handle_${name}`].bind(this);
+
+    this._router.get(fullPath, handlerMethod);
   }
 
   /**
