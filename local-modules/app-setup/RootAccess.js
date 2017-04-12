@@ -36,8 +36,8 @@ export default class RootAccess {
    *   are made using the resulting authorization.
    * @param {string} docId ID of the document which the resulting authorization
    *   allows access to.
-   * @returns {SplitKey} Split token (ID + secret) which provides the requested
-   *   access.
+   * @returns {Promise<SplitKey>} Promise for a split token (ID + secret) which
+   *   provides the requested access.
    */
   makeAccessKey(authorId, docId) {
     TString.nonempty(authorId);
