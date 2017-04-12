@@ -34,6 +34,10 @@ export default class DebugTools {
 
     /** {SeeAll} A rolling log for the `/log` endpoint. */
     this._logger = new SeeAllRecent(LOG_LENGTH_MSEC);
+
+    /** {Router} The router (request handler) for this instance. */
+    this._router = new express.Router();
+    this._addRoutes();
   }
 
   /**
@@ -41,11 +45,18 @@ export default class DebugTools {
    * (without `.bind()`).
    */
   get requestHandler() {
-    const router = new express.Router();
+    return this._router;
+  }
 
-    this._bindParam(router, 'authorId');
-    this._bindParam(router, 'documentId');
-    this._bindParam(router, 'verNum');
+  /**
+   * Adds all the routes needed for this instance.
+   */
+  _addRoutes() {
+    const router = this._router;
+
+    this._bindParam('authorId');
+    this._bindParam('documentId');
+    this._bindParam('verNum');
 
     router.get('/change/:documentId/:verNum',   this._handle_change.bind(this));
     router.get('/edit/:documentId',             this._handle_edit.bind(this));
@@ -58,11 +69,14 @@ export default class DebugTools {
     router.get('/test',                         this._handle_test.bind(this));
 
     router.use(this._error.bind(this));
-
-    return router;
   }
 
-  _bindParam(router, name) {
+  /**
+   * Binds a parameter checker to the router for this instance.
+   *
+   * @param {string} name The name of the parameter.
+   */
+  _bindParam(name) {
     const checkerMethod = this[`_check_${name}`].bind(this);
 
     function checkParam(req, res, next, value, name_unused) {
@@ -74,7 +88,7 @@ export default class DebugTools {
       }
     }
 
-    router.param(name, checkParam);
+    this._router.param(name, checkParam);
   }
 
   /**
