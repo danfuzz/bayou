@@ -24,7 +24,7 @@ export default class Decoder {
    * Converts a value that was previously converted with `Encoder.encode()` (or
    * the equivalent) back into fully useful objects. Specifically:
    *
-   * * Non-object values are passed through as-is.
+   * * Non-object / non-function values are passed through as-is.
    * * `null` is passed through as-is.
    * * Direct instances of `Object` (`x` such that `Object.getPrototypeOf(x) ===
    *   Object.prototype`) are allowed, with their values processed recursively
@@ -38,7 +38,7 @@ export default class Decoder {
    *   under that name. Its `fromApi()` method is called, passing the converted
    *   array as arguments. The result of that call becomes the result of
    *   conversion.
-   * * All other objects are rejected.
+   * * All other objects (including functions) are rejected.
    *
    * In addition, if the result is an object (including an array), it is
    * guaranteed to be recursively frozen.
@@ -47,7 +47,11 @@ export default class Decoder {
    * @returns {*} The converted value.
    */
   static decode(value) {
-    if ((typeof value !== 'object') || (value === null)) {
+    const type = typeof value;
+
+    if (type === 'function') {
+      throw new Error(`API cannot decode functions.`);
+    } else if ((type !== 'object') || (value === null)) {
       // Pass through as-is.
       return value;
     } else if (Object.getPrototypeOf(value) === Object.prototype) {
