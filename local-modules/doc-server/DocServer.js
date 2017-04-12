@@ -36,7 +36,9 @@ export default class DocServer extends Singleton {
    * @returns {DocControl} The corresponding document accessor.
    */
   getDoc(docId) {
-    return this._getDoc(docId, true);
+    // TODO: Remove the `Promise.resolve()` cladding once `_getDoc()` actually
+    // has asynchronous behavior.
+    return Promise.resolve(this._getDoc(docId, true));
   }
 
   /**
@@ -44,11 +46,13 @@ export default class DocServer extends Singleton {
    * document doesn't exist, this returns `null`.
    *
    * @param {string} docId The document ID.
-   * @returns {DocControl|null} The corresponding document accessor, or `null`
-   *   if there is no such document.
+   * @returns {Promise<DocControl|null>} Promise for the corresponding document
+   *   accessor, or `null` if there is no such document.
    */
   getDocOrNull(docId) {
-    return this._getDoc(docId, false);
+    // TODO: Remove the `Promise.resolve()` cladding once `_getDoc()` actually
+    // has asynchronous behavior.
+    return Promise.resolve(this._getDoc(docId, false));
   }
 
   /**

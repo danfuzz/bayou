@@ -11,6 +11,7 @@
 
     "api-common": "local",
     "api-server": "local",
+    "bayou-mocha": "local",
     "client-bundle": "local",
     "doc-common": "local",
     "doc-server": "local",

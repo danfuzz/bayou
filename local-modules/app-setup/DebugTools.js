@@ -34,6 +34,10 @@ export default class DebugTools {
 
     /** {SeeAll} A rolling log for the `/log` endpoint. */
     this._logger = new SeeAllRecent(LOG_LENGTH_MSEC);
+
+    /** {Router} The router (request handler) for this instance. */
+    this._router = new express.Router();
+    this._addRoutes();
   }
 
   /**
@@ -41,37 +45,87 @@ export default class DebugTools {
    * (without `.bind()`).
    */
   get requestHandler() {
-    const router = new express.Router();
+    return this._router;
+  }
 
-    router.param('authorId',   this._check_authorId.bind(this));
-    router.param('documentId', this._check_documentId.bind(this));
-    router.param('verNum',     this._check_verNum.bind(this));
+  /**
+   * Adds all the routes needed for this instance.
+   */
+  _addRoutes() {
+    const router = this._router;
 
-    router.get('/change/:documentId/:verNum',   this._handle_change.bind(this));
-    router.get('/edit/:documentId',             this._handle_edit.bind(this));
-    router.get('/edit/:documentId/:authorId',   this._handle_edit.bind(this));
-    router.get('/key/:documentId',              this._handle_key.bind(this));
-    router.get('/key/:documentId/:authorId',    this._handle_key.bind(this));
-    router.get('/log',                          this._handle_log.bind(this));
-    router.get('/snapshot/:documentId',         this._handle_snapshot.bind(this));
-    router.get('/snapshot/:documentId/:verNum', this._handle_snapshot.bind(this));
-    router.get('/test',                         this._handle_test.bind(this));
+    this._bindParam('authorId');
+    this._bindParam('documentId');
+    this._bindParam('verNum');
+
+    this._bindHandler('change',   ':documentId/:verNum');
+    this._bindHandler('edit',     ':documentId');
+    this._bindHandler('edit',     ':documentId/:authorId');
+    this._bindHandler('key',      ':documentId');
+    this._bindHandler('key',      ':documentId/:authorId');
+    this._bindHandler('log');
+    this._bindHandler('snapshot', ':documentId');
+    this._bindHandler('snapshot', ':documentId/:verNum');
+    this._bindHandler('test');
 
     router.use(this._error.bind(this));
+  }
 
-    return router;
+  /**
+   * Binds a parameter checker to the router for this instance.
+   *
+   * @param {string} name The name of the parameter.
+   */
+  _bindParam(name) {
+    const checkerMethod = this[`_check_${name}`].bind(this);
+
+    function checkParam(req, res_unused, next, value, name_unused) {
+      try {
+        checkerMethod(req, value);
+        next();
+      } catch (error) {
+        next(error);
+      }
+    }
+
+    this._router.param(name, checkParam);
+  }
+
+  /**
+   * Binds a GET handler to the router for this instance.
+   *
+   * @param {string} name The name of the handler. This is also the first
+   *   component of the bound path.
+   * @param {string|null} [paramPath = null] The parameter path to accept, or
+   *   `null` if there are no parameters. These become the remainder of the
+   *   bound path.
+   */
+  _bindHandler(name, paramPath = null) {
+    const fullPath = (paramPath === null)
+      ? `/${name}`
+      : `/${name}/${paramPath}`;
+    const handlerMethod = this[`_handle_${name}`].bind(this);
+
+    function handleRequest(req, res, next) {
+      try {
+        Promise.resolve(handlerMethod(req, res)).catch((error) => {
+          next(error);
+        });
+      } catch (error) {
+        next(error);
+      }
+    }
+
+    this._router.get(fullPath, handleRequest);
   }
 
   /**
    * Validates an author ID as a request parameter.
    *
    * @param {object} req_unused HTTP request.
-   * @param {object} res_unused HTTP response.
-   * @param {Function} next Next handler to call.
    * @param {string} value Request parameter value.
-   * @param {string} name_unused Request parameter name.
    */
-  _check_authorId(req_unused, res_unused, next, value, name_unused) {
+  _check_authorId(req_unused, value) {
     try {
       AuthorId.check(value);
     } catch (error) {
@@ -79,20 +133,15 @@ export default class DebugTools {
       error.debugMsg = 'Bad value for `authorId`.';
       throw error;
     }
-
-    next();
   }
 
   /**
    * Validates a document ID as a request parameter.
    *
    * @param {object} req_unused HTTP request.
-   * @param {object} res_unused HTTP response.
-   * @param {Function} next Next handler to call.
    * @param {string} value Request parameter value.
-   * @param {string} name_unused Request parameter name.
    */
-  _check_documentId(req_unused, res_unused, next, value, name_unused) {
+  _check_documentId(req_unused, value) {
     try {
       DocumentId.check(value);
     } catch (error) {
@@ -100,8 +149,6 @@ export default class DebugTools {
       error.debugMsg = 'Bad value for `documentId`.';
       throw error;
     }
-
-    next();
   }
 
   /**
@@ -109,12 +156,9 @@ export default class DebugTools {
    * parameter in the request object with the parsed form.
    *
    * @param {object} req HTTP request.
-   * @param {object} res_unused HTTP response.
-   * @param {Function} next Next handler to call.
    * @param {string} value Request parameter value.
-   * @param {string} name_unused Request parameter name.
    */
-  _check_verNum(req, res_unused, next, value, name_unused) {
+  _check_verNum(req, value) {
     if (!value.match(/^[0-9]+$/)) {
       const error = new Error();
       error.debugMsg = 'Bad value for `verNum`.';
@@ -123,8 +167,6 @@ export default class DebugTools {
 
     // Replace the string parameter with the actual parsed value.
     req.params.verNum = Number.parseInt(value);
-
-    next();
   }
 
   /**
@@ -132,14 +174,17 @@ export default class DebugTools {
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
+   * @returns {Promise} Promise whose rejection indicates an error to be
+   *   reported back to the user.
    */
   _handle_change(req, res) {
     const verNum = req.params.verNum;
-    const doc = this._getExistingDoc(req);
-    const change = doc.change(verNum);
-    const result = Encoder.encodeJson(change, true);
 
-    this._textResponse(res, result);
+    return this._getExistingDoc(req).then((doc) => {
+      const change = doc.change(verNum);
+      const result = Encoder.encodeJson(change, true);
+      this._textResponse(res, result);
+    });
   }
 
   /**
@@ -148,34 +193,37 @@ export default class DebugTools {
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
+   * @returns {Promise} Promise whose rejection indicates an error to be
+   *   reported back to the user.
    */
   _handle_edit(req, res) {
     const documentId = req.params.documentId;
     const authorId   = this._getAuthorIdParam(req);
-    const key        = this._makeEncodedKey(documentId, authorId);
 
-    // These are already strings (JSON-encoded even, in the case of `key`), but
-    // we still have to JSON-encode _those_ strings, so as to make them proper
-    // JS source within the <script> block below.
-    const quotedKey        = JSON.stringify(key);
-    const quotedDocumentId = JSON.stringify(documentId);
-    const quotedAuthorId   = JSON.stringify(authorId);
+    return this._makeEncodedKey(documentId, authorId).then((key) => {
+      // These are already strings (JSON-encoded even, in the case of `key`),
+      // but we still have to JSON-encode _those_ strings, so as to make them
+      // proper JS source within the <script> block below.
+      const quotedKey        = JSON.stringify(key);
+      const quotedDocumentId = JSON.stringify(documentId);
+      const quotedAuthorId   = JSON.stringify(authorId);
 
-    // TODO: Probably want to use a real template.
-    const head =
-      '<title>Editor</title>\n' +
-      '<script>\n' +
-      `  BAYOU_KEY         = ${quotedKey};\n` +
-      '  BAYOU_NODE        = "#editor";\n' +
-      `  DEBUG_AUTHOR_ID   = ${quotedAuthorId};\n` +
-      `  DEBUG_DOCUMENT_ID = ${quotedDocumentId};\n` +
-      '</script>\n' +
-      '<script src="/boot-for-debug.js"></script>\n';
-    const body =
-      '<h1>Editor</h1>\n' +
-      '<div id="editor"><p>Loading&hellip;</p></div>\n';
+      // TODO: Probably want to use a real template.
+      const head =
+        '<title>Editor</title>\n' +
+        '<script>\n' +
+        `  BAYOU_KEY         = ${quotedKey};\n` +
+        '  BAYOU_NODE        = "#editor";\n' +
+        `  DEBUG_AUTHOR_ID   = ${quotedAuthorId};\n` +
+        `  DEBUG_DOCUMENT_ID = ${quotedDocumentId};\n` +
+        '</script>\n' +
+        '<script src="/boot-for-debug.js"></script>\n';
+      const body =
+        '<h1>Editor</h1>\n' +
+        '<div id="editor"><p>Loading&hellip;</p></div>\n';
 
-    this._htmlResponse(res, head, body);
+      this._htmlResponse(res, head, body);
+    });
   }
 
   /**
@@ -184,13 +232,16 @@ export default class DebugTools {
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
+   * @returns {Promise} Promise whose rejection indicates an error to be
+   *   reported back to the user.
    */
   _handle_key(req, res) {
     const documentId = req.params.documentId;
     const authorId   = this._getAuthorIdParam(req);
-    const key        = this._makeEncodedKey(documentId, authorId);
 
-    this._jsonResponse(res, key);
+    return this._makeEncodedKey(documentId, authorId).then((key) => {
+      this._jsonResponse(res, key);
+    });
   }
 
   /**
@@ -211,15 +262,19 @@ export default class DebugTools {
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
+   * @returns {Promise} Promise whose rejection indicates an error to be
+   *   reported back to the user.
    */
   _handle_snapshot(req, res) {
     const verNum = req.params.verNum;
-    const doc = this._getExistingDoc(req);
-    const args = (verNum === undefined) ? [] : [verNum];
-    const snapshot = doc.snapshot(...args);
-    const result = Encoder.encodeJson(snapshot, true);
 
-    this._textResponse(res, result);
+    return this._getExistingDoc(req).then((doc) => {
+      const args = (verNum === undefined) ? [] : [verNum];
+      const snapshot = doc.snapshot(...args);
+      const result = Encoder.encodeJson(snapshot, true);
+
+      this._textResponse(res, result);
+    });
   }
 
   /**
@@ -270,23 +325,26 @@ export default class DebugTools {
   }
 
   /**
-   * Gets an existing document based on the usual debugging request argument, or
-   * throws an error if the document doesn't exist.
+   * Returns a promise for an existing document based on the usual debugging
+   * request argument. If the document doesn't exist, the promise will get
+   * rejected with a reasonably-descriptive message.
    *
    * @param {object} req HTTP request.
-   * @returns {DocControl} The requested document.
+   * @returns {Promise<DocControl>} Promise for the requested document.
    */
   _getExistingDoc(req) {
     const documentId = req.params.documentId;
-    const doc = DocServer.theOne.getDocOrNull(documentId);
+    const docPromise = DocServer.theOne.getDocOrNull(documentId);
 
-    if (doc === null) {
-      const error = new Error();
-      error.debugMsg = `No such document: ${documentId}`;
-      throw error;
-    }
+    return docPromise.then((doc) => {
+      if (doc === null) {
+        const error = new Error();
+        error.debugMsg = `No such document: ${documentId}`;
+        throw error;
+      }
 
-    return doc;
+      return doc;
+    });
   }
 
   /**
@@ -301,16 +359,17 @@ export default class DebugTools {
   }
 
   /**
-   * Makes and returns a new authorization key for the given document / author
-   * combo.
+   * Makes and returns a promise for a new authorization key for the given
+   * document / author combo.
    *
    * @param {string} documentId The document ID.
    * @param {string} authorId The author ID.
-   * @returns {string} A new `SplitKey` encoded as JSON.
+   * @returns {Promise<string>} Promise for a new `SplitKey` encoded as JSON.
    */
   _makeEncodedKey(documentId, authorId) {
-    return Encoder.encodeJson(
-      this._rootAccess.makeAccessKey(authorId, documentId));
+    return this._rootAccess.makeAccessKey(authorId, documentId).then((key) => {
+      return Encoder.encodeJson(key);
+    });
   }
 
   /**
