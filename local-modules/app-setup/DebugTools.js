@@ -79,9 +79,9 @@ export default class DebugTools {
   _bindParam(name) {
     const checkerMethod = this[`_check_${name}`].bind(this);
 
-    function checkParam(req, res, next, value, name_unused) {
+    function checkParam(req, res_unused, next, value, name_unused) {
       try {
-        checkerMethod(req, res, value);
+        checkerMethod(req, value);
         next();
       } catch (error) {
         next(error);
@@ -123,10 +123,9 @@ export default class DebugTools {
    * Validates an author ID as a request parameter.
    *
    * @param {object} req_unused HTTP request.
-   * @param {object} res_unused HTTP response.
    * @param {string} value Request parameter value.
    */
-  _check_authorId(req_unused, res_unused, value) {
+  _check_authorId(req_unused, value) {
     try {
       AuthorId.check(value);
     } catch (error) {
@@ -140,10 +139,9 @@ export default class DebugTools {
    * Validates a document ID as a request parameter.
    *
    * @param {object} req_unused HTTP request.
-   * @param {object} res_unused HTTP response.
    * @param {string} value Request parameter value.
    */
-  _check_documentId(req_unused, res_unused, value) {
+  _check_documentId(req_unused, value) {
     try {
       DocumentId.check(value);
     } catch (error) {
@@ -158,10 +156,9 @@ export default class DebugTools {
    * parameter in the request object with the parsed form.
    *
    * @param {object} req HTTP request.
-   * @param {object} res_unused HTTP response.
    * @param {string} value Request parameter value.
    */
-  _check_verNum(req, res_unused, value) {
+  _check_verNum(req, value) {
     if (!value.match(/^[0-9]+$/)) {
       const error = new Error();
       error.debugMsg = 'Bad value for `verNum`.';
