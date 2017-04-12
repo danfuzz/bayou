@@ -328,10 +328,7 @@ export default class DebugTools {
    */
   _getExistingDoc(req) {
     const documentId = req.params.documentId;
-
-    // TODO: Remove the `Promise.resolve(...)` cladding once `DocServer`
-    // actually starts behaving asynchronously.
-    const docPromise = Promise.resolve(DocServer.theOne.getDocOrNull(documentId));
+    const docPromise = DocServer.theOne.getDocOrNull(documentId);
 
     return docPromise.then((doc) => {
       if (doc === null) {
