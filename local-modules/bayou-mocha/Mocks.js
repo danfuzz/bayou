@@ -2,6 +2,24 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+class FakeApiObject {
+  constructor() {
+    this.initialized = true;
+  }
+
+  static get API_NAME() {
+    return 'FakeApiObject';
+  }
+
+  toApi() {
+    return ['fake argument', 0, 1, 2];
+  }
+
+  static fromApi(arguments_unused) {
+    return new FakeApiObject();
+  }
+}
+
 /**
  * A collection of methods for creating mock objects needed for Bayou unit testing.
  */
@@ -13,5 +31,9 @@ export default class Mocks {
                      followRedirects = true,
                      maxRedirects = 10) {
     return { uri, method, headers, timeout, followRedirects, maxRedirects };
+  }
+
+  static apiObject() {
+    return new FakeApiObject();
   }
 }
