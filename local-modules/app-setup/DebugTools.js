@@ -43,9 +43,9 @@ export default class DebugTools {
   get requestHandler() {
     const router = new express.Router();
 
-    router.param('authorId',   this._check_authorId.bind(this));
-    router.param('documentId', this._check_documentId.bind(this));
-    router.param('verNum',     this._check_verNum.bind(this));
+    this._bindParam(router, 'authorId');
+    this._bindParam(router, 'documentId');
+    this._bindParam(router, 'verNum');
 
     router.get('/change/:documentId/:verNum',   this._handle_change.bind(this));
     router.get('/edit/:documentId',             this._handle_edit.bind(this));
@@ -62,16 +62,29 @@ export default class DebugTools {
     return router;
   }
 
+  _bindParam(router, name) {
+    const checkerMethod = this[`_check_${name}`].bind(this);
+
+    function checkParam(req, res, next, value, name_unused) {
+      try {
+        checkerMethod(req, res, value);
+        next();
+      } catch (error) {
+        next(error);
+      }
+    }
+
+    router.param(name, checkParam);
+  }
+
   /**
    * Validates an author ID as a request parameter.
    *
    * @param {object} req_unused HTTP request.
    * @param {object} res_unused HTTP response.
-   * @param {Function} next Next handler to call.
    * @param {string} value Request parameter value.
-   * @param {string} name_unused Request parameter name.
    */
-  _check_authorId(req_unused, res_unused, next, value, name_unused) {
+  _check_authorId(req_unused, res_unused, value) {
     try {
       AuthorId.check(value);
     } catch (error) {
@@ -79,8 +92,6 @@ export default class DebugTools {
       error.debugMsg = 'Bad value for `authorId`.';
       throw error;
     }
-
-    next();
   }
 
   /**
@@ -88,11 +99,9 @@ export default class DebugTools {
    *
    * @param {object} req_unused HTTP request.
    * @param {object} res_unused HTTP response.
-   * @param {Function} next Next handler to call.
    * @param {string} value Request parameter value.
-   * @param {string} name_unused Request parameter name.
    */
-  _check_documentId(req_unused, res_unused, next, value, name_unused) {
+  _check_documentId(req_unused, res_unused, value) {
     try {
       DocumentId.check(value);
     } catch (error) {
@@ -100,8 +109,6 @@ export default class DebugTools {
       error.debugMsg = 'Bad value for `documentId`.';
       throw error;
     }
-
-    next();
   }
 
   /**
@@ -110,11 +117,9 @@ export default class DebugTools {
    *
    * @param {object} req HTTP request.
    * @param {object} res_unused HTTP response.
-   * @param {Function} next Next handler to call.
    * @param {string} value Request parameter value.
-   * @param {string} name_unused Request parameter name.
    */
-  _check_verNum(req, res_unused, next, value, name_unused) {
+  _check_verNum(req, res_unused, value) {
     if (!value.match(/^[0-9]+$/)) {
       const error = new Error();
       error.debugMsg = 'Bad value for `verNum`.';
@@ -123,8 +128,6 @@ export default class DebugTools {
 
     // Replace the string parameter with the actual parsed value.
     req.params.verNum = Number.parseInt(value);
-
-    next();
   }
 
   /**
