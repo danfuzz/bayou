@@ -42,7 +42,7 @@ describe('api-common.Encoder', () => {
       assert.equal(Encoder.encode(null), null);
     });
 
-    it('should pass through simple objects whose values are non-objects as-is', () => {
+    it('should pass through simple objects whose values are self-encoding as-is', () => {
       assert.deepEqual(Encoder.encode({}), {});
       assert.deepEqual(Encoder.encode({ a: 10 }), { a: 10 });
       assert.deepEqual(Encoder.encode({ b: false }), { b: false });

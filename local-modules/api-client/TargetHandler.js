@@ -177,11 +177,25 @@ export default class TargetHandler {
   /**
    * Standard `Proxy` handler method.
    *
-   * @param {object} target_unused The proxy target.
+   * @param {object} target The proxy target.
    * @returns {void} `null`, always.
    */
-  getPrototypeOf(target_unused) {
-    return null;
+  getPrototypeOf(target) {
+    // **Note:** In the original version of this class, this method was
+    // implemented as simply `return null`. However, the Babel polyfill code for
+    // `Proxy` complained thusly:
+    //
+    //   Proxy's 'getPrototypeOf' trap for a non-extensible target should return
+    //   the same value as the target's prototype
+    //
+    // The Mozilla docs for `Proxy` agree with this assessment, stating:
+    //
+    //   If `target` is not extensible, `Object.getPrototypeOf(proxy)` method
+    //   must return the same value as `Object.getPrototypeOf(target).`
+    //
+    // Hence this revised version.
+
+    return Object.getPrototypeOf(target);
   }
 
   /**

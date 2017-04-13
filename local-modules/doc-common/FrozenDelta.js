@@ -5,7 +5,7 @@
 import Delta from 'quill-delta';
 
 import { TArray, TypeError } from 'typecheck';
-import { CommonBase, DataUtil } from 'util-common';
+import { CommonBase, DataUtil, ObjectUtil } from 'util-common';
 
 /**
  * {FrozenDelta|null} Empty `Delta` instance. Initialized in the `EMPTY`
@@ -15,7 +15,9 @@ let emptyDelta = null;
 
 /**
  * Always-frozen `Delta`. This is a subclass of `Delta` and mixes in
- * `CommonBase` (the latter for `check()` and `coerce()` functionality).
+ * `CommonBase` (the latter for `check()` and `coerce()` functionality). In
+ * addition, it contains extra utility functionality beyond what the base
+ * `Delta` provides.
  */
 export default class FrozenDelta extends Delta {
   /** Frozen (immutable) empty `Delta` instance. */
@@ -129,6 +131,22 @@ export default class FrozenDelta extends Delta {
    */
   static fromApi(ops) {
     return new FrozenDelta(ops);
+  }
+
+  /**
+   * Returns `true` iff this instance has the form of a "document." In Quill
+   * terms, a "document" is a delta that consists _only_ of `insert` operations.
+   *
+   * @returns {boolean} `true` if this instance is a document or `false` if not.
+   */
+  isDocument() {
+    for (const op of this.ops) {
+      if (!ObjectUtil.hasOwnProperty(op, 'insert')) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**
