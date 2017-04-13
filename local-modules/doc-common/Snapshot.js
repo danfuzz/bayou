@@ -15,7 +15,7 @@ export default class Snapshot extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {number} verNum Version number of the document.
+   * @param {VersionNumber} verNum Version number of the document.
    * @param {Delta|array|object} contents Document contents. Can be given
    *   anything that can be coerced into a `FrozenDelta`. Must be a "document"
    *   (that is, a delta consisting only of `insert` operations).
@@ -23,10 +23,10 @@ export default class Snapshot extends CommonBase {
   constructor(verNum, contents) {
     super();
 
-    /** Version number. */
+    /** {Int} Version number. */
     this._verNum = VersionNumber.check(verNum);
 
-    /** Document contents. */
+    /** {FrozenDelta} Document contents. */
     this._contents = FrozenDelta.coerce(contents);
 
     // Explicitly check that the `contents` delta has the form of a "document,"
@@ -42,7 +42,7 @@ export default class Snapshot extends CommonBase {
     Object.freeze(this);
   }
 
-  /** Name of this class in the API. */
+  /** {string} Name of this class in the API. */
   static get API_NAME() {
     return 'Snapshot';
   }
@@ -67,12 +67,12 @@ export default class Snapshot extends CommonBase {
     return new Snapshot(verNum, contents);
   }
 
-  /** The version number. */
+  /** {VersionNumber} The version number. */
   get verNum() {
     return this._verNum;
   }
 
-  /** The document contents. */
+  /** {FrozenDelta} The document contents. */
   get contents() {
     return this._contents;
   }
