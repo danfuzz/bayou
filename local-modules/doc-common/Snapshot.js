@@ -17,7 +17,8 @@ export default class Snapshot extends CommonBase {
    *
    * @param {number} verNum Version number of the document.
    * @param {Delta|array|object} contents Document contents. Can be given
-   *   anything that can be coerced into a `FrozenDelta`.
+   *   anything that can be coerced into a `FrozenDelta`. Must be a "document"
+   *   (that is, a delta consisting only of `insert` operations).
    */
   constructor(verNum, contents) {
     super();
@@ -27,6 +28,16 @@ export default class Snapshot extends CommonBase {
 
     /** Document contents. */
     this._contents = FrozenDelta.coerce(contents);
+
+    // Explicitly check that the `contents` delta has the form of a "document,"
+    // that is, the only operations are `insert`s. For very large documents,
+    // this might turn out to be a prohibitively slow operation, so... TODO:
+    // Evaluate how expensive this is in practice, and figure out a better
+    // tactic if need be.
+    if (!this._contents.isDocument()) {
+      throw new Error(
+        'Expected `contents` to be a "document" (insert-only delta).');
+    }
 
     Object.freeze(this);
   }
