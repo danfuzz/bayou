@@ -1,9 +1,9 @@
 
-Arugula Module Unit Tests
-==============================
+Bayou Module Unit Tests
+=======================
 
 Tests for Bayou modules are held in a `tests` directory within the module.
-Arugula uses the Mocha test runner framework. At present test results are dumped
+We use the Mocha test runner framework. At present test results are dumped
 to the server console output.
 
 Chai is the assert package. It supports `should`, `expect`, and
