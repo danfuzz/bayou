@@ -22,8 +22,8 @@ import { ClientBundle } from 'client-bundle';
 import { DevMode } from 'dev-mode';
 import { Hooks } from 'hooks-server';
 import { SeeAll } from 'see-all';
-import { SeeAllServer } from 'see-all-server';
-import { ProductInfo, ServerEnv } from 'server-env';
+import { FileLogger, SeeAllServer } from 'see-all-server';
+import { Dirs, ProductInfo, ServerEnv } from 'server-env';
 
 
 /** Logger for this file. */
@@ -131,6 +131,7 @@ function clientBundle() {
 
 // Initialize logging.
 SeeAllServer.init();
+new FileLogger(path.resolve(Dirs.VAR_DIR, 'general.log'));
 
 if (clientBundleMode) {
   clientBundle();

@@ -13,7 +13,7 @@ import { SeeAll } from 'see-all';
  * Implementation of the `SeeAll` logger protocol which collects a rolling
  * compendium of recently logged items.
  */
-export default class SeeAllRecent {
+export default class RecentLogger {
   /**
    * Constructs an instance. This will cause the instance to be registered with
    * the main `see-all` module.
@@ -90,7 +90,7 @@ export default class SeeAllRecent {
     result.push('<table>');
 
     for (const l of this._log) {
-      result.push(SeeAllRecent._htmlLine(l));
+      result.push(RecentLogger._htmlLine(l));
     }
 
     result.push('</table>');
