@@ -10,7 +10,7 @@ import { BayouMocha } from 'bayou-mocha';
 import { AuthorId, DocumentId } from 'doc-common';
 import { DocServer } from 'doc-server';
 import { SeeAll } from 'see-all';
-import { SeeAllRecent } from 'see-all-server';
+import { RecentLogger } from 'see-all-server';
 
 /** Logger for this module. */
 const log = new SeeAll('app-debug');
@@ -33,7 +33,7 @@ export default class DebugTools {
     this._rootAccess = rootAccess;
 
     /** {SeeAll} A rolling log for the `/log` endpoint. */
-    this._logger = new SeeAllRecent(LOG_LENGTH_MSEC);
+    this._logger = new RecentLogger(LOG_LENGTH_MSEC);
 
     /** {Router} The router (request handler) for this instance. */
     this._router = new express.Router();

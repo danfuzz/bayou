@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { beforeEach, describe, it } from 'mocha';
 
-import { SeeAllRecent } from 'see-all-server';
+import { RecentLogger } from 'see-all-server';
 
 let log = null;
 const LOG_LEVEL = 'debug';
@@ -14,7 +14,7 @@ const LOG_PREFIX = 'this is log line ';
 const NUM_LINES = 4;
 
 beforeEach(() => {
-  log = new SeeAllRecent(30 * 1000);
+  log = new RecentLogger(30 * 1000);
 
   const now = new Date();
 
@@ -23,7 +23,7 @@ beforeEach(() => {
   }
 });
 
-describe('see-all-server.SeeAllRecent', () => {
+describe('see-all-server.RecentLogger', () => {
   describe('#time(nowMsec, utcString, localString', () => {
     it('needs a way to be tested');
   });

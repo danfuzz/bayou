@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import FileLogger from './FileLogger';
-import SeeAllRecent from './SeeAllRecent';
+import RecentLogger from './RecentLogger';
 import SeeAllServer from './SeeAllServer';
 
-export { FileLogger, SeeAllRecent, SeeAllServer };
+export { FileLogger, RecentLogger, SeeAllServer };

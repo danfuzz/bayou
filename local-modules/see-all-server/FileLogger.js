@@ -44,7 +44,7 @@ export default class FileLogger {
   }
 
   /**
-   * Logs the indicated time value as "punctuation" on the log.
+   * Logs the indicated time value.
    *
    * @param {number} nowMsec Timestamp to log.
    * @param {string} utcString String representation of the time, as UTC.
