@@ -2,10 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { assert } from 'chai';
 import { describe, it } from 'mocha';
-
-import { DocStoreLocal } from 'doc-store-local';
 
 describe('doc-store-local/DocStoreLocal', () => {
   it('needs a way to be tested');
