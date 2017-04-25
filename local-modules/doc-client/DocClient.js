@@ -6,9 +6,8 @@ import { ApiError } from 'api-client';
 import { FrozenDelta, Snapshot } from 'doc-common';
 import { SeeAll } from 'see-all';
 import { TInt, TObject, TString } from 'typecheck';
+import { StateMachine } from 'statemachine';
 import { PromDelay } from 'util-common';
-
-import StateMachine from './StateMachine';
 
 /**
  * {Int} Amount of time in msec over which errors are counted, in order to

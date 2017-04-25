@@ -1,13 +1,10 @@
 {
-  "name": "doc-client",
+  "name": "statemachine",
   "version": "1.0.0",
   "main": "main.js",
 
   "dependencies": {
-    "api-client": "local",
-    "doc-common": "local",
     "see-all": "local",
-    "statemachine": "local",
     "typecheck": "local",
     "util-common": "local"
   }
