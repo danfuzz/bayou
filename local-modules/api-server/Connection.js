@@ -107,6 +107,21 @@ export default class Connection extends CommonBase {
   }
 
   /**
+   * Prevents this instance from handling further messages, and enables
+   * garbage collection of dependent resources, e.g. and specifically anything
+   * referenced by the `context`.
+   *
+   * **Note:** This method is used to explicitly manage the lifecycle of a
+   * connection. This is a useful thing to do in that the outer application
+   * server doesn't necessarily make strong guarantees about promptly cleaning
+   * up its connection-related state.
+   */
+  close() {
+    this._log.info('Closed.');
+    this._context = null;
+  }
+
+  /**
    * Handles an incoming message, which is expected to be in JSON string form.
    * Returns a promise for the response, which is also in JSON string form.
    *
@@ -240,6 +255,11 @@ export default class Connection extends CommonBase {
    */
   getTarget(idOrToken) {
     const context = this._context;
+
+    if (context === null) {
+      throw new Error('Closed.');
+    }
+
     let target = context.getUncontrolledOrNull(idOrToken);
 
     if (target !== null) {
@@ -256,6 +276,6 @@ export default class Connection extends CommonBase {
 
     // We _don't_ include the passed argument, as that might end up revealing
     // secret info.
-    throw new Error('Bad target');
+    throw new Error('Bad target.');
   }
 }

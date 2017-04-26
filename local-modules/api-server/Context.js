@@ -11,6 +11,7 @@ import Target from './Target';
  * {Int} The amount of time in msec a target must be idle and unaccessed before
  * it is considered idle and therefore subject to automated cleanup.
  */
+//const IDLE_TIME_MSEC = 5 * 60 * 1000; // Five minutes.
 const IDLE_TIME_MSEC = 10 * 1000;
 
 /**
