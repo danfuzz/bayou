@@ -6,10 +6,14 @@ import weak from 'weak';
 
 import { DocumentChange, Timestamp } from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
+import { SeeAll } from 'see-all';
 import { TBoolean, TString } from 'typecheck';
 import { Singleton } from 'util-common';
 
 import DocControl from './DocControl';
+
+/** {SeeAll} Logger for this module. */
+const log = new SeeAll('doc-server');
 
 /**
  * Interface between this module and the storage layer. This class is
@@ -77,16 +81,21 @@ export default class DocServer extends Singleton {
 
     const already = this._controls.get(docId);
     if (already && !weak.isDead(already)) {
-      console.log(`===== already ${docId}`);
+      log.info(`Already have: ${docId}`);
       return weak.get(already);
     }
 
     const docStorage = Hooks.docStore.getDocument(docId);
 
-    if (!docStorage.exists()) {
+    if (docStorage.exists()) {
+      log.info(`Retrieving document: ${docId}`);
+    } else {
       if (!initIfMissing) {
+        log.info(`No document: ${docId}`);
         return null;
       }
+
+      log.info(`New document: ${docId}`);
 
       // Initialize the document with static content (for now).
       const firstChange =
@@ -95,11 +104,19 @@ export default class DocServer extends Singleton {
     }
 
     const result = new DocControl(docStorage);
-    this._controls.set(docId, weak(result, this.zzz_callback));
+    const resultRef = weak(result, this._reapDocument.bind(this, docId));
+    this._controls.set(docId, resultRef);
     return result;
   }
 
-  zzz_callback(...args) {
-    console.log(`==== ???? ${args.length}`);
+  /**
+   * Weak reference callback that removes a collected document object from the
+   * document map.
+   *
+   * @param {string} docId ID of the document to remove.
+   */
+  _reapDocument(docId) {
+    this._controls.delete(docId);
+    log.info(`Reaped idle document: ${docId}`);
   }
 }

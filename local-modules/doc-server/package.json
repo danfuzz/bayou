@@ -9,6 +9,7 @@
     "doc-common": "local",
     "doc-store": "local",
     "hooks-server": "local",
+    "see-all": "local",
     "typecheck": "local",
     "util-common": "local"
   }
