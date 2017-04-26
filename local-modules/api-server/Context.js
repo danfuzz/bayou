@@ -8,13 +8,15 @@ import { CommonBase } from 'util-common';
 import Target from './Target';
 
 /**
+ * {Int} The amount of time in msec a target must be idle and unaccessed before
+ * it is considered idle and therefore subject to automated cleanup.
+ */
+const IDLE_TIME_MSEC = 10 * 1000;
+
+/**
  * Binding context for an API server or session therein. This is pretty much
  * just a map from IDs to `Target` instances, along with reasonably
  * straightforward accessor and update methods.
- *
- * When initially set up, a context only has one binding. Specifically,
- * `meta` is bound to an object which provides meta-information and
- * meta-control.
  */
 export default class Context extends CommonBase {
   /**
@@ -47,7 +49,7 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Adds a new target to the instance. This will throw an error if there is
+   * Adds a new target to this instance. This will throw an error if there is
    * already another target with the same ID. This is a convenience for calling
    * `map.addTarget(new Target(id, obj))`.
    *
@@ -57,8 +59,53 @@ export default class Context extends CommonBase {
    * @param {object} obj Object to ultimately call on.
    */
   add(nameOrKey, obj) {
-    TObject.check(obj);
     this.addTarget(new Target(nameOrKey, obj));
+  }
+
+  /**
+   * Adds a new target to this instance, marking it as "evergreen" (immortal /
+   * never idle). Other than evergreen marking, this is identical to
+   * `this.add()`.
+   *
+   * @param {string|BaseKey} nameOrKey Either the name of the target (if
+   *   uncontrolled) _or_ the key which controls access to the target.
+   * @param {object} obj Object to ultimately call on.
+   */
+  addEvergreen(nameOrKey, obj) {
+    const target = new Target(nameOrKey, obj);
+    target.setEvergreen();
+    this.addTarget(target);
+  }
+
+  /**
+   * Cleans up (removes) bindings for targets that have become idle.
+   */
+  idleCleanup() {
+    const idleLimit = Date.now() - IDLE_TIME_MSEC;
+    const map = this._map;
+
+    console.log('====== cleanup', idleLimit);
+
+    // Note: The ECMAScript spec guarantees that it is safe to delete keys from
+    // a map while iterating over it. See
+    // <https://tc39.github.io/ecma262/#sec-runtime-semantics-forin-div-ofheadevaluation-tdznames-expr-iterationkind>.
+    for (const [key, value] of map) {
+      if (value.wasIdleAsOf(idleLimit)) {
+        console.log('====== boop!', key);
+        map.delete(key);
+      }
+    }
+  }
+
+  /**
+   * Starts automatically cleaning up idle targets on this instance. This
+   * initiates a periodic task which iterates over all targets, removing ones
+   * that have become idle.
+   */
+  startAutomaticIdleCleanup() {
+    // We run the callback at a fraction of the overall idle timeout so as to
+    // be a bit more prompt with the cleanup.
+    setInterval(() => { this.idleCleanup(); }, IDLE_TIME_MSEC / 10);
   }
 
   /**

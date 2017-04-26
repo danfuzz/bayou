@@ -30,6 +30,11 @@ let activeNow = null;
  * incoming message data, but without the actual transport of bytes over a
  * lower-level connection (or the like). This class in turn mostly bottoms out
  * by calling on target objects, which perform the actual application services.
+ *
+ * **Note:** The `context` used for the connection is set up as a separate
+ * instance (effectively cloned) from the one passed into the constructor and
+ * always has an extra binding of `meta` to a meta-control object that is
+ * specific to the connection.
  */
 export default class Connection extends CommonBase {
   /**
@@ -76,7 +81,7 @@ export default class Connection extends CommonBase {
 
     // We add a `meta` binding to the initial set of targets, which is specific
     // to this instance/connection.
-    this._context.add('meta', new MetaHandler(this));
+    this._context.addEvergreen('meta', new MetaHandler(this));
 
     this._log.info(`Open via <${this._baseUrl}>.`);
   }
