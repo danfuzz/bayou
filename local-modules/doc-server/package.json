@@ -4,6 +4,8 @@
   "main": "main.js",
 
   "dependencies": {
+    "weak": "^1.0.1",
+
     "doc-common": "local",
     "doc-store": "local",
     "hooks-server": "local",

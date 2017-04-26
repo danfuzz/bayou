@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import weak from 'weak';
+
 import { DocumentChange, Timestamp } from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { TBoolean, TString } from 'typecheck';
@@ -13,6 +15,10 @@ import DocControl from './DocControl';
  * Interface between this module and the storage layer. This class is
  * responsible for instantiating and tracking `DocControl` instances, such that
  * only one instance is created per actual document.
+ *
+ * This class is notably responsible for the lifecycle management of
+ * document-related objects, in particular making sure that such objects have
+ * an opportunity to get GC'ed once they're no longer in active use.
  */
 export default class DocServer extends Singleton {
   /**
@@ -22,8 +28,8 @@ export default class DocServer extends Singleton {
     super();
 
     /**
-     * {Map<string,DocControl>} Map from document IDs to their corresponding
-     * document controllers.
+     * {Map<string,Weak<DocControl>>} Map from document IDs to a
+     * weak-reference-wrapped document controller for the so-IDed document.
      */
     this._controls = new Map();
   }
@@ -70,8 +76,9 @@ export default class DocServer extends Singleton {
     TBoolean.check(initIfMissing);
 
     const already = this._controls.get(docId);
-    if (already) {
-      return already;
+    if (already && !weak.isDead(already)) {
+      console.log(`===== already ${docId}`);
+      return weak.get(already);
     }
 
     const docStorage = Hooks.docStore.getDocument(docId);
@@ -88,7 +95,11 @@ export default class DocServer extends Singleton {
     }
 
     const result = new DocControl(docStorage);
-    this._controls.set(docId, result);
+    this._controls.set(docId, weak(result, this.zzz_callback));
     return result;
+  }
+
+  zzz_callback(...args) {
+    console.log(`==== ???? ${args.length}`);
   }
 }
