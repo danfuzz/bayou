@@ -6,13 +6,13 @@ import fs from 'fs';
 import path from 'path';
 
 import { BaseDocStore } from 'doc-store';
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 import { Dirs, ProductInfo } from 'server-env';
 
 import LocalDoc from './LocalDoc';
 
-/** {SeeAll} Logger for this module. */
-const log = new SeeAll('local-doc');
+/** {Logger} Logger for this module. */
+const log = new Logger('local-doc');
 
 /**
  * Document storage implementation that stores everything in the

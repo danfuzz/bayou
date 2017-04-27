@@ -21,7 +21,7 @@ export default class MetaHandler {
     /** {Connection} The connection. */
     this._connection = connection;
 
-    /** {SeeAll} The connection-specific logger. */
+    /** {Logger} The connection-specific logger. */
     this._log = connection.log;
 
     /**

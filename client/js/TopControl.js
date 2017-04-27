@@ -7,12 +7,12 @@ import { Decoder, SplitKey } from 'api-common';
 import { DocClient } from 'doc-client';
 import { Hooks } from 'hooks-client';
 import { QuillMaker } from 'quill-util';
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 import { TFunction, TString } from 'typecheck';
 import { DomUtil } from 'util-client';
 
-/** {SeeAll} Logger for this module. */
-const log = new SeeAll('top');
+/** {Logger} Logger for this module. */
+const log = new Logger('top');
 
 /**
  * Top-level control for an editor. This is responsible for setting up the

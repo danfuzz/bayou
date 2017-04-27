@@ -9,7 +9,7 @@ export default class ProgressMessage {
   /**
    * Constructs an instance.
    *
-   * @param {SeeAll} log The logger to use.
+   * @param {Logger} log The logger to use.
    */
   constructor(log) {
     /** Logger. */

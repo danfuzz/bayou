@@ -2,10 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 
 /**
- * Implementation of the `SeeAll` logger protocol for use in a web browser
+ * Implementation of the `Logger` logger protocol for use in a web browser
  * context.
  */
 export default class SeeAllBrowser {
@@ -14,7 +14,7 @@ export default class SeeAllBrowser {
    * module.
    */
   static init() {
-    SeeAll.add(new SeeAllBrowser());
+    Logger.add(new SeeAllBrowser());
   }
 
   /**

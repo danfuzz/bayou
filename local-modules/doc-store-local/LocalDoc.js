@@ -6,13 +6,13 @@ import fs from 'fs';
 
 import { Decoder, Encoder } from 'api-common';
 import { BaseDoc } from 'doc-store';
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
 import { PromDelay } from 'util-common';
 
 
-/** {SeeAll} Logger for this module. */
-const log = new SeeAll('local-doc');
+/** {Logger} Logger for this module. */
+const log = new Logger('local-doc');
 
 /**
  * {int} How long to wait (in msec) after a document becomes dirty and before it
@@ -55,7 +55,7 @@ export default class LocalDoc extends BaseDoc {
      */
     this._dirty = false;
 
-    /** {SeeAll} Logger specific to this document's ID. */
+    /** {Logger} Logger specific to this document's ID. */
     this._log = log.withPrefix(`[${docId}]`);
 
     this._log.info('Constructed.');

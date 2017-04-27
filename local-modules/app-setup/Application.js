@@ -10,7 +10,7 @@ import path from 'path';
 import { BearerToken, Context, PostConnection, WsConnection } from 'api-server';
 import { ClientBundle } from 'client-bundle';
 import { Hooks } from 'hooks-server';
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 import { Dirs } from 'server-env';
 
 import DebugTools from './DebugTools';
@@ -18,7 +18,7 @@ import RequestLogger from './RequestLogger';
 import RootAccess from './RootAccess';
 
 /** Logger. */
-const log = new SeeAll('app');
+const log = new Logger('app');
 
 /**
  * Web server for the application. This serves all HTTP(S) requests, including

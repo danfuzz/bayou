@@ -5,10 +5,10 @@
 import fs from 'fs';
 import util from 'util';
 
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 
 /**
- * Implementation of the `SeeAll` logger protocol which stores logged items to
+ * Implementation of the `Logger` logger protocol which stores logged items to
  * a file.
  */
 export default class FileLogger {
@@ -22,7 +22,7 @@ export default class FileLogger {
     /** {string} Path of the file to log to. */
     this._path = path;
 
-    SeeAll.add(this);
+    Logger.add(this);
   }
 
   /**

@@ -22,7 +22,7 @@ const LULL_MSEC = 60 * 1000; // One minute.
 const MAX_GAP_MSEC = 5 * 60 * 1000; // Five minutes.
 
 /**
- * The actual loggers to user. These get added via `SeeAll.add()`.
+ * The actual loggers to user. These get added via `Logger.add()`.
  */
 const theLoggers = [];
 
@@ -63,7 +63,7 @@ let lastNow = 0;
  *   typically distract from the big picture of the system. They are meant to be
  *   turned on selectively during development and debugging.
  */
-export default class SeeAll extends BaseLogger {
+export default class Logger extends BaseLogger {
   /**
    * Adds an underlying logger to the system. May be called more than once.
    * Each logger added via this method gets called as `logger.log(nowMsec,
@@ -108,7 +108,7 @@ export default class SeeAll extends BaseLogger {
       return;
     }
 
-    const logArgs = [SeeAll._now(), level, this._tag, ...message];
+    const logArgs = [Logger._now(), level, this._tag, ...message];
 
     if (theLoggers.length === 0) {
       // Bad news! No underlying loggers have been added. Indicates trouble
@@ -137,14 +137,14 @@ export default class SeeAll extends BaseLogger {
 
     if (now >= (lastNow + LULL_MSEC)) {
       // There was a lull between the last log and this one.
-      SeeAll._callTime(now);
+      Logger._callTime(now);
     } else {
       // Figure out where to "punctuate" longer spates of logging, such that the
       // timestamps come out even multiples of the maximum gap.
       const nextGapMarker = lastNow - (lastNow % MAX_GAP_MSEC) + MAX_GAP_MSEC;
 
       if (now >= nextGapMarker) {
-        SeeAll._callTime(nextGapMarker);
+        Logger._callTime(nextGapMarker);
       }
     }
 
@@ -162,8 +162,8 @@ export default class SeeAll extends BaseLogger {
     // gets done more productively in `log()`, above.
 
     const date = new Date(now);
-    const utcString = SeeAll._utcTimeString(date);
-    const localString = SeeAll._localTimeString(date);
+    const utcString = Logger._utcTimeString(date);
+    const localString = Logger._localTimeString(date);
 
     for (const l of theLoggers) {
       l.time(now, utcString, localString);

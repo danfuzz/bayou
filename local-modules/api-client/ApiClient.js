@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseKey, Decoder, Encoder, Message } from 'api-common';
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { WebsocketCodes } from 'util-common';
 
@@ -11,7 +11,7 @@ import ApiError from './ApiError';
 import TargetMap from './TargetMap';
 
 /** Logger. */
-const log = new SeeAll('api');
+const log = new Logger('api');
 
 /** Value used for an unknown connection ID. */
 const UNKNOWN_CONNECTION_ID = 'id-unknown';
@@ -39,7 +39,7 @@ export default class ApiClient {
      */
     this._connectionId = null;
 
-    /** {SeeAll} Logger which prefixes everything with the connection ID. */
+    /** {Logger} Logger which prefixes everything with the connection ID. */
     this._log = log.withDynamicPrefix(() => [`[${this._connectionId}]`]);
 
     /**
@@ -129,7 +129,7 @@ export default class ApiClient {
   }
 
   /**
-   * {SeeAll} The client-specific logger.
+   * {Logger} The client-specific logger.
    */
   get log() {
     return this._log;

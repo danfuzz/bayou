@@ -6,14 +6,14 @@ import weak from 'weak';
 
 import { DocumentChange, Timestamp } from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 import { TBoolean, TString } from 'typecheck';
 import { Singleton } from 'util-common';
 
 import DocControl from './DocControl';
 
-/** {SeeAll} Logger for this module. */
-const log = new SeeAll('doc-server');
+/** {Logger} Logger for this module. */
+const log = new Logger('doc-server');
 
 /**
  * Interface between this module and the storage layer. This class is

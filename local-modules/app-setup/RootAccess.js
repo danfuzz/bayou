@@ -5,11 +5,11 @@
 import { SplitKey } from 'api-common';
 import { Connection, Context } from 'api-server';
 import { DocForAuthor, DocServer } from 'doc-server';
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 
 /** Logger. */
-const log = new SeeAll('root-access');
+const log = new Logger('root-access');
 
 /**
  * "Root access" object. This is the object which is protected by the root

@@ -9,11 +9,11 @@ import { Encoder } from 'api-common';
 import { BayouMocha } from 'bayou-mocha';
 import { AuthorId, DocumentId } from 'doc-common';
 import { DocServer } from 'doc-server';
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 import { RecentLogger } from 'see-all-server';
 
 /** Logger for this module. */
-const log = new SeeAll('app-debug');
+const log = new Logger('app-debug');
 
 /** How long a log to maintain, in msec. */
 const LOG_LENGTH_MSEC = 1000 * 60 * 60; // One hour.
@@ -32,7 +32,7 @@ export default class DebugTools {
     /** {RootAccess} The root access manager. */
     this._rootAccess = rootAccess;
 
-    /** {SeeAll} A rolling log for the `/log` endpoint. */
+    /** {Logger} A rolling log for the `/log` endpoint. */
     this._logger = new RecentLogger(LOG_LENGTH_MSEC);
 
     /** {Router} The router (request handler) for this instance. */

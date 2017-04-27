@@ -5,10 +5,10 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 import { CommonBase } from 'util-common';
 
-const logger = new SeeAll('test-common-base');
+const logger = new Logger('test-common-base');
 
 class NearlyEmptyClass {
   fiat() {

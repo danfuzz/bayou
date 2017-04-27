@@ -6,7 +6,7 @@ import util from 'util';
 
 import chalk from 'chalk';
 
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 
 /**
  * Number of columns to reserve for log line prefixes. Prefixes under this
@@ -15,7 +15,7 @@ import { SeeAll } from 'see-all';
 const PREFIX_COLS = 24;
 
 /**
- * Implementation of the `SeeAll` logger protocol for use in a server context.
+ * Implementation of the `Logger` logger protocol for use in a server context.
  */
 export default class SeeAllServer {
   /**
@@ -23,7 +23,7 @@ export default class SeeAllServer {
    * module.
    */
   static init() {
-    SeeAll.add(new SeeAllServer());
+    Logger.add(new SeeAllServer());
   }
 
   /**
@@ -77,7 +77,7 @@ export default class SeeAllServer {
       // those are (a) the `Error` header, which is info-free in this case; and
       // (b) lines corresponding to the logging code itself.
       let trace = util.inspect(new Error());
-      trace = trace.replace(/^[\s\S]*\n    at SeeAll[^\n]+\n/, '');
+      trace = trace.replace(/^[\s\S]*\n    at Logger[^\n]+\n/, '');
       trace = trace.replace(/^    at /mg, '  at '); // Partially outdent.
       text += `${atLineStart ? '' : '\n'}${trace}`;
     }

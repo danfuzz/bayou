@@ -4,6 +4,6 @@
 
 import { describe, it } from 'mocha';
 
-describe('see-all.SeeAll', () => {
+describe('see-all.Logger', () => {
   it('needs a way to be tested');
 });

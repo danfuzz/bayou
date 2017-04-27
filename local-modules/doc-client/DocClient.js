@@ -4,7 +4,7 @@
 
 import { ApiError } from 'api-client';
 import { FrozenDelta, Snapshot } from 'doc-common';
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 import { TInt, TObject, TString } from 'typecheck';
 import { StateMachine } from 'statemachine';
 import { PromDelay } from 'util-common';
@@ -22,7 +22,7 @@ const ERROR_WINDOW_MSEC = 3 * 60 * 1000; // Three minutes.
 const ERROR_MAX_PER_MINUTE = 2.25;
 
 /** Logger. */
-const log = new SeeAll('doc');
+const log = new Logger('doc');
 
 /**
  * How long to wait (in msec) after receiving a local change (to allow time for
@@ -96,7 +96,7 @@ export default class DocClient extends StateMachine {
     /** {ApiClient} API interface. */
     this._api = api;
 
-    /** {SeeAll} Logger specific to this document's ID. */
+    /** {Logger} Logger specific to this document's ID. */
     this._log = log.withPrefix(`[${docKey.id}]`);
 
     /** {BaseKey} Key that identifies and controls access to the document. */
