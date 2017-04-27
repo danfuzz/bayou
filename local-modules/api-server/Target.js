@@ -8,6 +8,12 @@ import { TArray, TObject, TString } from 'typecheck';
 import Schema from './Schema';
 
 /**
+ * {string} Constant that indicates an "evergreen" (never idle / immortal)
+ * instance.
+ */
+const EVERGREEN = 'evergreen';
+
+/**
  * Wrapper for an object which is callable through the API. A target can be
  * either "controlled" by a key (that is, have access restricted by a key) or be
  * "uncontrolled" (that is, be generally available without additional permission
@@ -43,7 +49,15 @@ export default class Target {
     /** {Schema} Schema for the target. */
     this._schema = schema || new Schema(target);
 
-    Object.freeze(this);
+    /**
+     * {Int|'evergreen'} Timestamp (msec) when the `target` was last accessed or
+     * called, or the string constant `evergreen` to indicate a target that
+     * should never be considered idle. This is used to drive automated cleanup
+     * of idle targets in binding contexts.
+     */
+    this._lastAccess = Date.now();
+
+    Object.seal(this);
   }
 
   /**
@@ -61,12 +75,50 @@ export default class Target {
 
   /** {object} The underlying target object. */
   get target() {
+    this.refresh();
     return this._target;
   }
 
   /** {Schema} The target's schema. */
   get schema() {
     return this._schema;
+  }
+
+  /**
+   * Takes a timestamp (standard Unix-ish msec) and indicates whether this
+   * instance was considered idle as of that time.
+   *
+   * @param {Int} whenMsec Timestamp which the questions is with respect to.
+   * @returns {boolean} `true` iff this instance has been idle since `whenMsec`
+   *   or earlier.
+   */
+  wasIdleAsOf(whenMsec) {
+    const lastAccess = this._lastAccess;
+
+    if (lastAccess === EVERGREEN) {
+      return false;
+    } else {
+      return (lastAccess <= whenMsec);
+    }
+  }
+
+  /**
+   * "Refreshes" this instance in terms of access time. This is no different
+   * than just saying `this.target` and merely exists so as to provide a solid
+   * way to convey intent in client code.
+   */
+  refresh() {
+    if (this._lastAccess !== EVERGREEN) {
+      this._lastAccess = Date.now();
+    }
+  }
+
+  /**
+   * Sets this instance to be "evergreen," that is, to never be considered
+   * idle.
+   */
+  setEvergreen() {
+    this._lastAccess = EVERGREEN;
   }
 
   /**
@@ -102,6 +154,8 @@ export default class Target {
 
     // Listed in the schema as a method. So it exists, is public, is in
     // fact bound to a function, etc.
+
+    this.refresh();
 
     const target = this._target;
     const impl = target[name];

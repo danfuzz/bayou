@@ -90,7 +90,7 @@ export default class PostConnection extends Connection {
    * Handles an `end` event coming from the request input stream.
    */
   _handleEnd() {
-    this._log.info('Close.');
+    this._log.info('Received message.');
 
     const msg = Buffer.concat(this._chunks).toString('utf8');
     this.handleJsonMessage(msg).then((response) => {
@@ -98,6 +98,7 @@ export default class PostConnection extends Connection {
         .status(200)
         .type('application/json')
         .send(response);
+      this.close();
     });
   }
 
@@ -111,6 +112,7 @@ export default class PostConnection extends Connection {
     // not on this side).
     this._log.info('Error event:', error);
     this._respond400('Trouble receiving POST payload.');
+    this.close();
   }
 
   /**

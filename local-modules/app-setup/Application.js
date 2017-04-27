@@ -33,7 +33,8 @@ export default class Application {
    */
   constructor(devMode) {
     /** {Context} All of the objects we provide access to via the API. */
-    const context = this._context = new Context();
+    this._context = new Context();
+    this._context.startAutomaticIdleCleanup();
 
     /**
      * {array<BearerToken>} List of `BearerToken`s that are currently bound in
@@ -46,7 +47,7 @@ export default class Application {
      * protected by the root bearer token(s) returned via the related
      * `hooks-server` hooks.
      */
-    this._rootAccess = new RootAccess(context);
+    this._rootAccess = new RootAccess(this._context);
 
     // Bind `rootAccess` into the `context` using the root token(s), and arrange
     // for their update should the token(s) change.
@@ -147,7 +148,7 @@ export default class Application {
         context.deleteId(t.id);
       }
       for (const t of rootTokens) {
-        context.add(t, this._rootAccess);
+        context.addEvergreen(t, this._rootAccess);
         log.info(`Accept root: ${t}`);
       }
       this._rootTokens = rootTokens;

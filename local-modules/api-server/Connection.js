@@ -30,6 +30,11 @@ let activeNow = null;
  * incoming message data, but without the actual transport of bytes over a
  * lower-level connection (or the like). This class in turn mostly bottoms out
  * by calling on target objects, which perform the actual application services.
+ *
+ * **Note:** The `context` used for the connection is set up as a separate
+ * instance (effectively cloned) from the one passed into the constructor and
+ * always has an extra binding of `meta` to a meta-control object that is
+ * specific to the connection.
  */
 export default class Connection extends CommonBase {
   /**
@@ -76,7 +81,7 @@ export default class Connection extends CommonBase {
 
     // We add a `meta` binding to the initial set of targets, which is specific
     // to this instance/connection.
-    this._context.add('meta', new MetaHandler(this));
+    this._context.addEvergreen('meta', new MetaHandler(this));
 
     this._log.info(`Open via <${this._baseUrl}>.`);
   }
@@ -99,6 +104,21 @@ export default class Connection extends CommonBase {
   /** {SeeAll} Connection-specific logger. */
   get log() {
     return this._log;
+  }
+
+  /**
+   * Prevents this instance from handling further messages, and enables
+   * garbage collection of dependent resources, e.g. and specifically anything
+   * referenced by the `context`.
+   *
+   * **Note:** This method is used to explicitly manage the lifecycle of a
+   * connection. This is a useful thing to do in that the outer application
+   * server doesn't necessarily make strong guarantees about promptly cleaning
+   * up its connection-related state.
+   */
+  close() {
+    this._log.info('Closed.');
+    this._context = null;
   }
 
   /**
@@ -235,6 +255,11 @@ export default class Connection extends CommonBase {
    */
   getTarget(idOrToken) {
     const context = this._context;
+
+    if (context === null) {
+      throw new Error('Closed.');
+    }
+
     let target = context.getUncontrolledOrNull(idOrToken);
 
     if (target !== null) {
@@ -251,6 +276,6 @@ export default class Connection extends CommonBase {
 
     // We _don't_ include the passed argument, as that might end up revealing
     // secret info.
-    throw new Error('Bad target');
+    throw new Error('Bad target.');
   }
 }
