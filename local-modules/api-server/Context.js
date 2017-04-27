@@ -2,17 +2,20 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { SeeAll } from 'see-all';
 import { TObject, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import Target from './Target';
 
+/** {SeeAll} Logger. */
+const log = new SeeAll('api');
+
 /**
  * {Int} The amount of time in msec a target must be idle and unaccessed before
  * it is considered idle and therefore subject to automated cleanup.
  */
-//const IDLE_TIME_MSEC = 5 * 60 * 1000; // Five minutes.
-const IDLE_TIME_MSEC = 10 * 1000;
+const IDLE_TIME_MSEC = 10 * 60 * 1000; // Ten minutes.
 
 /**
  * Binding context for an API server or session therein. This is pretty much
@@ -85,17 +88,19 @@ export default class Context extends CommonBase {
     const idleLimit = Date.now() - IDLE_TIME_MSEC;
     const map = this._map;
 
-    console.log('====== cleanup', idleLimit);
+    log.info('Cleaning up idle targets...');
 
     // Note: The ECMAScript spec guarantees that it is safe to delete keys from
     // a map while iterating over it. See
     // <https://tc39.github.io/ecma262/#sec-runtime-semantics-forin-div-ofheadevaluation-tdznames-expr-iterationkind>.
     for (const [key, value] of map) {
       if (value.wasIdleAsOf(idleLimit)) {
-        console.log('====== boop!', key);
+        log.info(`Removed: ${key}`);
         map.delete(key);
       }
     }
+
+    log.info('Cleaning up idle targets... done!');
   }
 
   /**
