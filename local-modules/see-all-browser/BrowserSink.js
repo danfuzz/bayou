@@ -8,13 +8,13 @@ import { SeeAll } from 'see-all';
  * Implementation of the `Logger` logger protocol for use in a web browser
  * context.
  */
-export default class SeeAllBrowser {
+export default class BrowserSink {
   /**
    * Registers an instance of this class as a logging sink with the main
    * `see-all` module.
    */
   static init() {
-    SeeAll.add(new SeeAllBrowser());
+    SeeAll.add(new BrowserSink());
   }
 
   /**

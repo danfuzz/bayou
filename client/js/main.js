@@ -10,12 +10,12 @@
  */
 
 import { Logger } from 'see-all';
-import { SeeAllBrowser } from 'see-all-browser';
+import { BrowserSink } from 'see-all-browser';
 
 import TopControl from './TopControl';
 
 // Init logging.
-SeeAllBrowser.init();
+BrowserSink.init();
 const log = new Logger('page-init');
 log.detail('Starting...');
 
