@@ -5,7 +5,7 @@
 import fs from 'fs';
 import util from 'util';
 
-import { Logger } from 'see-all';
+import { SeeAll } from 'see-all';
 
 /**
  * Implementation of the `Logger` logger protocol which stores logged items to
@@ -22,7 +22,7 @@ export default class FileLogger {
     /** {string} Path of the file to log to. */
     this._path = path;
 
-    Logger.add(this);
+    SeeAll.add(this);
   }
 
   /**

@@ -7,7 +7,7 @@ import util from 'util';
 import ansiHtml from 'ansi-html';
 import chalk from 'chalk';
 
-import { Logger } from 'see-all';
+import { SeeAll } from 'see-all';
 
 /**
  * Implementation of the `Logger` logger protocol which collects a rolling
@@ -28,7 +28,7 @@ export default class RecentLogger {
     /** The log contents. */
     this._log = [];
 
-    Logger.add(this);
+    SeeAll.add(this);
   }
 
   /**

@@ -39,20 +39,6 @@ import AllSinks from './AllSinks';
  */
 export default class Logger extends BaseLogger {
   /**
-   * Adds an underlying logger to the system. May be called more than once.
-   * Each logger added via this method gets called as `logger.log(nowMsec,
-   * level, tag, ...message)` and `logger.time(nowMsec, utcString,
-   * localString)`. The latter are done as occasional "punctuation" on logs,
-   * for loggers that don't want to record the exact timestamp of every message.
-   *
-   * @param {object} logger The underlying logger to use.
-   */
-  static add(logger) {
-    // TODO: Remove this when call sites are fixed.
-    AllSinks.theOne.add(logger);
-  }
-
-  /**
    * Constructs an instance.
    *
    * @param {string} tag Component tag to associate with messages logged by this

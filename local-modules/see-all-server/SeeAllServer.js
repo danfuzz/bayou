@@ -6,7 +6,7 @@ import util from 'util';
 
 import chalk from 'chalk';
 
-import { Logger } from 'see-all';
+import { SeeAll } from 'see-all';
 
 /**
  * Number of columns to reserve for log line prefixes. Prefixes under this
@@ -19,11 +19,11 @@ const PREFIX_COLS = 24;
  */
 export default class SeeAllServer {
   /**
-   * Registers an instance of this class as a logger with the main `see-all`
-   * module.
+   * Registers an instance of this class as a logging sink with the main
+   * `see-all` module.
    */
   static init() {
-    Logger.add(new SeeAllServer());
+    SeeAll.add(new SeeAllServer());
   }
 
   /**
