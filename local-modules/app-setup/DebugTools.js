@@ -10,7 +10,7 @@ import { BayouMocha } from 'bayou-mocha';
 import { AuthorId, DocumentId } from 'doc-common';
 import { DocServer } from 'doc-server';
 import { Logger } from 'see-all';
-import { RecentLogger } from 'see-all-server';
+import { RecentSink } from 'see-all-server';
 
 /** Logger for this module. */
 const log = new Logger('app-debug');
@@ -32,8 +32,8 @@ export default class DebugTools {
     /** {RootAccess} The root access manager. */
     this._rootAccess = rootAccess;
 
-    /** {Logger} A rolling log for the `/log` endpoint. */
-    this._logger = new RecentLogger(LOG_LENGTH_MSEC);
+    /** {RecentSink} A rolling log for the `/log` endpoint. */
+    this._sink = new RecentSink(LOG_LENGTH_MSEC);
 
     /** {Router} The router (request handler) for this instance. */
     this._router = new express.Router();
@@ -252,7 +252,7 @@ export default class DebugTools {
    */
   _handle_log(req_unused, res) {
     // TODO: Format it nicely.
-    const result = this._logger.htmlContents;
+    const result = this._sink.htmlContents;
 
     this._htmlResponse(res, null, result);
   }

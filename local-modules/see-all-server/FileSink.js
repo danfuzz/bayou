@@ -11,7 +11,7 @@ import { SeeAll } from 'see-all';
  * Implementation of the `see-all` logging sink protocol which stores logged
  * items to a file.
  */
-export default class FileLogger {
+export default class FileSink {
   /**
    * Constructs an instance. This will cause the instance to be registered with
    * the main `see-all` module.
