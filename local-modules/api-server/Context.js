@@ -13,9 +13,9 @@ const log = new SeeAll('api');
 
 /**
  * {Int} The amount of time in msec a target must be idle and unaccessed before
- * it is considered idle and therefore subject to automated cleanup.
+ * it is considered sufficiently idle to warrant automated cleanup.
  */
-const IDLE_TIME_MSEC = 10 * 60 * 1000; // Ten minutes.
+const IDLE_TIME_MSEC = 20 * 60 * 1000; // Twenty minutes.
 
 /**
  * Binding context for an API server or session therein. This is pretty much
@@ -111,7 +111,7 @@ export default class Context extends CommonBase {
   startAutomaticIdleCleanup() {
     // We run the callback at a fraction of the overall idle timeout so as to
     // be a bit more prompt with the cleanup.
-    setInterval(() => { this.idleCleanup(); }, IDLE_TIME_MSEC / 10);
+    setInterval(() => { this.idleCleanup(); }, IDLE_TIME_MSEC / 4);
   }
 
   /**
