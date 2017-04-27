@@ -22,7 +22,7 @@ import { ClientBundle } from 'client-bundle';
 import { DevMode } from 'dev-mode';
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
-import { FileLogger, SeeAllServer } from 'see-all-server';
+import { FileLogger, ServerSink } from 'see-all-server';
 import { Dirs, ProductInfo, ServerEnv } from 'server-env';
 
 
@@ -130,7 +130,7 @@ function clientBundle() {
 }
 
 // Initialize logging.
-SeeAllServer.init();
+ServerSink.init();
 new FileLogger(path.resolve(Dirs.VAR_DIR, 'general.log'));
 
 if (clientBundleMode) {

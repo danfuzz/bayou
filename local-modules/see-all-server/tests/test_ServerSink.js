@@ -4,6 +4,6 @@
 
 import { describe, it } from 'mocha';
 
-describe('see-all-server.SeeAllServer', () => {
+describe('see-all-server.ServerSink', () => {
   it('needs a way to be tested');
 });

@@ -17,13 +17,13 @@ const PREFIX_COLS = 24;
 /**
  * Implementation of the `Logger` logger protocol for use in a server context.
  */
-export default class SeeAllServer {
+export default class ServerSink {
   /**
    * Registers an instance of this class as a logging sink with the main
    * `see-all` module.
    */
   static init() {
-    SeeAll.add(new SeeAllServer());
+    SeeAll.add(new ServerSink());
   }
 
   /**
@@ -42,7 +42,7 @@ export default class SeeAllServer {
    * @param {...string} message Message to log.
    */
   log(nowMsec_unused, level, tag, ...message) {
-    const prefix = SeeAllServer._makePrefix(tag, level);
+    const prefix = ServerSink._makePrefix(tag, level);
 
     // Make a unified string of the entire message.
     let text = '';
@@ -92,7 +92,7 @@ export default class SeeAllServer {
     // its own line and produce the main content just slightly indented, under
     // the prefix.
 
-    const consoleWidth = SeeAllServer._consoleWidth();
+    const consoleWidth = ServerSink._consoleWidth();
     const maxLineWidth = lines.reduce(
       (prev, l) => { return Math.max(prev, l.length); },
       0);
@@ -134,7 +134,7 @@ export default class SeeAllServer {
   time(nowMsec_unused, utcString, localString) {
     utcString = chalk.blue.bold(utcString);
     localString  = chalk.blue.dim.bold(localString);
-    const prefix = SeeAllServer._makePrefix('time');
+    const prefix = ServerSink._makePrefix('time');
 
     // eslint-disable-next-line no-console
     console.log(`${prefix.text}${utcString} / ${localString}`);

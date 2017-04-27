@@ -4,6 +4,6 @@
 
 import FileLogger from './FileLogger';
 import RecentLogger from './RecentLogger';
-import SeeAllServer from './SeeAllServer';
+import ServerSink from './ServerSink';
 
-export { FileLogger, RecentLogger, SeeAllServer };
+export { FileLogger, RecentLogger, ServerSink };
