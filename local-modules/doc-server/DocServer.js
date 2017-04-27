@@ -43,7 +43,7 @@ export default class DocServer extends Singleton {
    * document doesn't exist, it gets initialized.
    *
    * @param {string} docId The document ID.
-   * @returns {DocControl} The corresponding document accessor.
+   * @returns {Promise<DocControl>} The corresponding document accessor.
    */
   getDoc(docId) {
     // TODO: Remove the `Promise.resolve()` cladding once `_getDoc()` actually
