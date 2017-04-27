@@ -8,8 +8,8 @@ import util from 'util';
 import { SeeAll } from 'see-all';
 
 /**
- * Implementation of the `Logger` logger protocol which stores logged items to
- * a file.
+ * Implementation of the `see-all` logging sink protocol which stores logged
+ * items to a file.
  */
 export default class FileLogger {
   /**

@@ -15,7 +15,8 @@ import { SeeAll } from 'see-all';
 const PREFIX_COLS = 24;
 
 /**
- * Implementation of the `Logger` logger protocol for use in a server context.
+ * Implementation of the `see-all` logging sink protocol for use in a server
+ * context. It logs everything to the console.
  */
 export default class ServerSink {
   /**

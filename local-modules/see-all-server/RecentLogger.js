@@ -10,8 +10,8 @@ import chalk from 'chalk';
 import { SeeAll } from 'see-all';
 
 /**
- * Implementation of the `Logger` logger protocol which collects a rolling
- * compendium of recently logged items.
+ * Implementation of the `see-all` logging sink protocol which collects a
+ * rolling compendium of recently logged items.
  */
 export default class RecentLogger {
   /**
