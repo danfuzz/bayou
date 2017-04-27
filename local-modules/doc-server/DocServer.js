@@ -43,12 +43,11 @@ export default class DocServer extends Singleton {
    * document doesn't exist, it gets initialized.
    *
    * @param {string} docId The document ID.
-   * @returns {Promise<DocControl>} The corresponding document accessor.
+   * @returns {Promise<DocControl>} Promise for the corresponding document
+   *   accessor.
    */
   getDoc(docId) {
-    // TODO: Remove the `Promise.resolve()` cladding once `_getDoc()` actually
-    // has asynchronous behavior.
-    return Promise.resolve(this._getDoc(docId, true));
+    return this._getDoc(docId, true);
   }
 
   /**
@@ -57,12 +56,10 @@ export default class DocServer extends Singleton {
    *
    * @param {string} docId The document ID.
    * @returns {Promise<DocControl|null>} Promise for the corresponding document
-   *   accessor, or `null` if there is no such document.
+   *   accessor, or for `null` if there is no such document.
    */
   getDocOrNull(docId) {
-    // TODO: Remove the `Promise.resolve()` cladding once `_getDoc()` actually
-    // has asynchronous behavior.
-    return Promise.resolve(this._getDoc(docId, false));
+    return this._getDoc(docId, false);
   }
 
   /**
@@ -71,9 +68,9 @@ export default class DocServer extends Singleton {
    * @param {string} docId The document ID.
    * @param {boolean} initIfMissing If `true`, initializes a nonexistent doc
    *   instead of returning `null`.
-   * @returns {DocControl|null} The corresponding document accessor, or `null`
-   *   if there is no such document _and_ we were not asked to fill in missing
-   *   docs.
+   * @returns {Promise<DocControl|null>} A promise for the corresponding
+   *   document accessor, or `null` if there is no such document _and_ we were
+   *   not asked to fill in missing docs.
    */
   _getDoc(docId, initIfMissing) {
     TString.nonempty(docId);
@@ -82,7 +79,7 @@ export default class DocServer extends Singleton {
     const already = this._controls.get(docId);
     if (already && !weak.isDead(already)) {
       log.info(`Already have: ${docId}`);
-      return weak.get(already);
+      return Promise.resolve(weak.get(already));
     }
 
     const docStorage = Hooks.docStore.getDocument(docId);
@@ -92,7 +89,7 @@ export default class DocServer extends Singleton {
     } else {
       if (!initIfMissing) {
         log.info(`No document: ${docId}`);
-        return null;
+        return Promise.resolve(null);
       }
 
       log.info(`New document: ${docId}`);
@@ -106,7 +103,7 @@ export default class DocServer extends Singleton {
     const result = new DocControl(docStorage);
     const resultRef = weak(result, this._reapDocument.bind(this, docId));
     this._controls.set(docId, resultRef);
-    return result;
+    return Promise.resolve(result);
   }
 
   /**
