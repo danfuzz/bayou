@@ -18,6 +18,7 @@ import path from 'path';
 import minimist from 'minimist';
 
 import { Application } from 'app-setup';
+import { BayouMocha } from 'bayou-mocha';
 import { ClientBundle } from 'client-bundle';
 import { DevMode } from 'dev-mode';
 import { Hooks } from 'hooks-server';
@@ -37,7 +38,7 @@ let argError = false;
  * binary name and the name of the initial script (that is, this file).
  */
 const opts = minimist(process.argv.slice(2), {
-  boolean: ['client-bundle', 'dev', 'help'],
+  boolean: ['client-bundle', 'dev', 'help', 'server-test'],
   string: ['prog-name'],
   alias: {
     'h': 'help'
@@ -57,12 +58,15 @@ const clientBundleMode = opts['client-bundle'];
 /** Dev mode? */
 const devMode = opts['dev'];
 
+/** Server test mode? */
+const serverTestMode = opts['server-test'];
+
 /** Want help? */
 const showHelp = opts['help'];
 
-if (devMode && clientBundleMode) {
+if ((clientBundleMode + devMode + serverTestMode) > 1) {
   // eslint-disable-next-line no-console
-  console.log('Cannot specify both `--dev` and `--client-bundle`.');
+  console.log('Cannot specify multiple mode options.');
   argError = true;
 }
 
@@ -71,7 +75,7 @@ if (showHelp || argError) {
   [
     'Usage:',
     '',
-    `${progName} [--dev | --client-bundle]`,
+    `${progName} [--dev | --client-bundle | --server-test ]`,
     '  Run the project.',
     '',
     '  --client-bundle',
@@ -79,6 +83,8 @@ if (showHelp || argError) {
     '  --dev',
     '    Run in development mode, for interactive development without having',
     '    to restart.',
+    '  --server-test',
+    '    Just run the server tests, and report any errors encountered.',
     '',
     `${progName} [--help | -h]`,
     '  Display this message.'
@@ -129,12 +135,34 @@ function clientBundle() {
   });
 }
 
+/**
+ * Does a server testing run.
+ */
+function serverTest() {
+  // TODO: Arguably this call shouldn't be necessary. (That is, the test code
+  // that cares about server env stuff should arrange for its appropriate
+  // initialization and perhaps even teardown.)
+  ServerEnv.init();
+
+  BayouMocha.runAllTests((failures) => {
+    const anyFailed = (failures !== 0);
+    const msg = anyFailed
+      ? `Failed: ${failures}`
+      : 'All good! Yay!';
+
+    console.log(msg); // eslint-disable-line no-console
+    process.exit(anyFailed ? 1 : 0);
+  });
+}
+
 // Initialize logging.
 ServerSink.init();
 new FileSink(path.resolve(Dirs.VAR_DIR, 'general.log'));
 
 if (clientBundleMode) {
   clientBundle();
+} else if (serverTestMode) {
+  serverTest();
 } else {
   run();
 }

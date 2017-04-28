@@ -9,11 +9,18 @@ import path from 'path';
 const mocha = new Mocha();
 
 /**
- * Builds a list of all bayou-local tests, adds them to a test runner,
- * and then executes the tests.
+ * Driver for the Mocha test framework.
  */
 export default class BayouMocha {
-  static runAllTests() {
+  /**
+   * Builds a list of all bayou-local tests, adds them to a test runner,
+   * and then executes the tests.
+   *
+   * @param {function|null} [callback = null] Callback which is called when
+   *   testing is complete. Gets passed a `failures` value. Ignored if passed
+   *   as `null`.
+   */
+  static runAllTests(callback = null) {
     const bayouModules = BayouMocha.bayouModules();
     const testPaths = BayouMocha.testPathsForModules(bayouModules);
 
@@ -26,8 +33,10 @@ export default class BayouMocha {
       });
     });
 
-    mocha.run(failures_unused => {
-      // process.on('exit', () => process.exit(failures));
+    mocha.run((failures) => {
+      if (callback !== null) {
+        callback(failures);
+      }
     });
   }
 
