@@ -33,14 +33,17 @@ argError=0
 # Need help?
 showHelp=0
 
+# Boxed dependency directory, if any.
+boxDir=''
+
 # Try building a client bundle?
 clientBundle=0
 
 # Overlay source directory, if any.
 overlayDir=''
 
-# Boxed dependency directory, if any.
-boxDir=''
+# Run server tests?
+serverTest=0
 
 # Options to pass to `out-dir-setup`.
 outOpts=()
@@ -50,6 +53,8 @@ while (( $# != 0 )); do
     if [[ ${opt} == '--' ]]; then
         shift
         break
+    elif [[ ${opt} =~ ^--boxes=(.*) ]]; then
+        boxDir="${BASH_REMATCH[1]}"
     elif [[ ${opt} == '--clean' ]]; then
         outOpts+=("${opt}")
     elif [[ ${opt} == '--client-bundle' ]]; then
@@ -61,8 +66,8 @@ while (( $# != 0 )); do
         outOpts+=("${opt}")
     elif [[ ${opt} =~ ^--overlay=(.*) ]]; then
         overlayDir="${BASH_REMATCH[1]}"
-    elif [[ ${opt} =~ ^--boxes=(.*) ]]; then
-        boxDir="${BASH_REMATCH[1]}"
+    elif [[ ${opt} == '--server-test' ]]; then
+        serverTest=1
     elif [[ ${opt} =~ ^- ]]; then
         echo "Unknown option: ${opt}" 1>&2
         argError=1
@@ -90,6 +95,8 @@ if (( ${showHelp} || ${argError} )); then
     echo '    Place output in directory <dir>.'
     echo '  --overlay=<dir>'
     echo '    Find overlay source in directory <dir>.'
+    echo '  --server-test'
+    echo '    On successful build, also try running the server tests.'
     echo ''
     echo "${progName} [--help | -h]"
     echo '  Display this message.'
@@ -460,6 +467,10 @@ fi
 
 if (( ${clientBundle} )); then
     "${outDir}/bin/run" --client-bundle || exit 1
+fi
+
+if (( ${serverTest} )); then
+    "${outDir}/bin/run" --server-test || exit 1
 fi
 
 echo 'Done!'
