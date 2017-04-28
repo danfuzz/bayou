@@ -19,7 +19,7 @@ describe('hooks-server/Hooks', () => {
     });
   });
 
-  describe('bearerTokens', () => {
+  describe('.bearerTokens', () => {
     it('should return an array of BearerToken', () => {
       const tokens = Hooks.bearerTokens;
 
@@ -27,7 +27,7 @@ describe('hooks-server/Hooks', () => {
     });
   });
 
-  describe('docStore', () => {
+  describe('.docStore', () => {
     it('should return an instance of BaseDocStore', () => {
       const store = Hooks.docStore;
 
@@ -35,7 +35,7 @@ describe('hooks-server/Hooks', () => {
     });
   });
 
-  describe('listenPort', () => {
+  describe('.listenPort', () => {
     it('should return the default TCP listen port number', () => {
       const port = Hooks.listenPort;
 

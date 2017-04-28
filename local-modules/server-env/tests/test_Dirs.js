@@ -11,7 +11,7 @@ import path from 'path';
 import { Dirs } from 'server-env';
 
 describe('server-env/Dirs', () => {
-  describe('BASE_DIR', () => {
+  describe('.BASE_DIR', () => {
     it('should return a directory path that exists', () => {
       const baseDir = Dirs.BASE_DIR;
 
@@ -19,7 +19,7 @@ describe('server-env/Dirs', () => {
     });
   });
 
-  describe('CLIENT_DIR', () => {
+  describe('.CLIENT_DIR', () => {
     it('should return a known subdirectory off of BASE_DIR', () => {
       const baseDir = Dirs.BASE_DIR;
       const clientDir = path.join(baseDir, 'client');
@@ -29,7 +29,7 @@ describe('server-env/Dirs', () => {
     });
   });
 
-  describe('CLIENT_CODE_DIR', () => {
+  describe('.CLIENT_CODE_DIR', () => {
     it('should return a known subdirectory off of CLIENT_DIR', () => {
       const clientDir = Dirs.CLIENT_DIR;
       const codeDir = path.join(clientDir, 'js');
@@ -39,7 +39,7 @@ describe('server-env/Dirs', () => {
     });
   });
 
-  describe('SERVER_DIR', () => {
+  describe('.SERVER_DIR', () => {
     it('should return a known subdirectory off of BASE_DIR', () => {
       const baseDir = Dirs.BASE_DIR;
       const serverDir = path.join(baseDir, 'server');
@@ -49,7 +49,7 @@ describe('server-env/Dirs', () => {
     });
   });
 
-  describe('VAR_DIR', () => {
+  describe('.VAR_DIR', () => {
     it('should return a known subdirectory off of BASE_DIR', () => {
       const baseDir = Dirs.BASE_DIR;
       const varDir = path.join(baseDir, 'var');
