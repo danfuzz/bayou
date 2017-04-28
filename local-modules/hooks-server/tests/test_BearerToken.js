@@ -8,18 +8,18 @@ import { describe, it } from 'mocha';
 import { BearerToken } from 'api-server';
 import { BearerTokens } from 'hooks-server';
 
-const BEARER_TOKEN = BearerTokens.theOne;
+const BEARER_TOKENS = BearerTokens.theOne;
 
 describe('hooks-server/BearerTokens', () => {
   describe('isToken(tokenString)', () => {
     it('should accept any value', () => {
-      assert.isTrue(BEARER_TOKEN.isToken('abc123'));
+      assert.isTrue(BEARER_TOKENS.isToken('abc123'));
     });
   });
 
   describe('.rootTokens', () => {
     it('should return an array of BearerToken', () => {
-      const tokens = BEARER_TOKEN.rootTokens;
+      const tokens = BEARER_TOKENS.rootTokens;
 
       assert.isArray(tokens);
 
@@ -32,7 +32,7 @@ describe('hooks-server/BearerTokens', () => {
   describe('tokenId(tokenString)', () => {
     it('should return the first 16 characters of the string passed to it', () => {
       const fakeTokenString = 'abcdefghijklmnopqrstuvwxyz';
-      const tokenId = BEARER_TOKEN.tokenId(fakeTokenString);
+      const tokenId = BEARER_TOKENS.tokenId(fakeTokenString);
 
       assert.strictEqual(tokenId, fakeTokenString.slice(0, 16));
     });
@@ -40,7 +40,7 @@ describe('hooks-server/BearerTokens', () => {
 
   describe('whenRootTokensChange()', () => {
     it('should return a promise', () => {
-      const changePromise = BEARER_TOKEN.whenRootTokensChange();
+      const changePromise = BEARER_TOKENS.whenRootTokensChange();
 
       assert.property(changePromise, 'then');
       assert.isFunction(changePromise.then);

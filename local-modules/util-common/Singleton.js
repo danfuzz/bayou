@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { ObjectUtil } from 'util-base';
+
 import CommonBase from './CommonBase';
 
 /**
@@ -27,8 +29,13 @@ export default class Singleton extends CommonBase {
    */
   static get theOne() {
     // **Note:** In the context of static methods, `this` refers to the class
-    // that was called upon.
-    return this._theOne || new this();
+    // that was called upon. We use `hasOwnProperty()` because it's possible to
+    // subclass a singleton class, and we don't want to return a superclass
+    // instance here.
+
+    return ObjectUtil.hasOwnProperty(this, '_theOne')
+      ? this._theOne
+      : new this();
   }
 
   /**
@@ -38,7 +45,8 @@ export default class Singleton extends CommonBase {
   constructor() {
     super();
 
-    if (this.constructor._theOne) {
+    // See the note in `theOne` above in re `hasOwnProperty`.
+    if (ObjectUtil.hasOwnProperty(this.constructor, '_theOne')) {
       throw new Error('Cannot re-instantiate singleton class.');
     }
 
