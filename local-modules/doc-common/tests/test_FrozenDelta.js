@@ -25,6 +25,10 @@ describe('doc-common/FrozenDelta', () => {
       assert.equal(empty.ops.length, 0);
     });
 
+    it('should have a frozen `ops`', () => {
+      assert.isFrozen(empty.ops);
+    });
+
     it('should be `FrozenDelta.isEmpty()`', () => {
       assert.isTrue(FrozenDelta.isEmpty(empty));
     });
@@ -100,18 +104,34 @@ describe('doc-common/FrozenDelta', () => {
   });
 
   describe('isDocument(doc)', () => {
-    it('should return true if all ops are insert', () => {
-      const insertOps = [{ insert: 'line 1' }, { insert: '\n' }, { insert: 'line 2' }];
-      const document = FrozenDelta.coerce(insertOps);
+    describe('`true` cases', () => {
+      const values = [
+        [],
+        [{ insert: 'line 1' }],
+        [{ insert: 'line 1' }, { insert: '\n' }],
+        [{ insert: 'line 1' }, { insert: '\n' }, { insert: 'line 2' }]
+      ];
 
-      assert.isTrue(document.isDocument());
+      for (const v of values) {
+        it(`should return \`true\` for: ${util.inspect(v)}`, () => {
+          assert.isTrue(FrozenDelta.coerce(v).isDocument());
+        });
+      }
     });
 
-    it('should return false if any ops are not insert', () => {
-      const insertOps = [{ retain: 5 }, { insert: '\n' }, { insert: 'line 2' }];
-      const document = FrozenDelta.coerce(insertOps);
+    describe('`false` cases', () => {
+      const values = [
+        [{ retain: 37 }],
+        [{ insert: 'line 1' }, { retain: 9 }],
+        [{ insert: 'line 1' }, { retain: 14 }, { insert: '\n' }],
+        [{ insert: 'line 1' }, { insert: '\n' }, { retain: 23 }, { insert: 'line 2' }]
+      ];
 
-      assert.isFalse(document.isDocument());
+      for (const v of values) {
+        it(`should return \`false\` for: ${util.inspect(v)}`, () => {
+          assert.isFalse(FrozenDelta.coerce(v).isDocument());
+        });
+      }
     });
   });
 });
