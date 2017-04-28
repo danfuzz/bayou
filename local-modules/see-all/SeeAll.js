@@ -16,7 +16,7 @@ export default class SeeAll {
    * are done as occasional "punctuation" on logs, for loggers that don't want
    * to record the exact timestamp of every message.
    *
-   * @param {object} logger The underlying logger to use.
+   * @param {object} sink The underlying logger to use.
    */
   static add(sink) {
     AllSinks.theOne.add(sink);
