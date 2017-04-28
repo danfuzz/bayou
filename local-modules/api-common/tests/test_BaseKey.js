@@ -41,7 +41,7 @@ describe('api-common.BaseKey', () => {
     it('should return the URL passed to the constructor', () => {
       const url = key.url;
 
-      assert.equal(url, URL);
+      assert.strictEqual(url, URL);
     });
   });
 
@@ -49,7 +49,7 @@ describe('api-common.BaseKey', () => {
     it('should return the ID passed to the constructor', () => {
       const id = key.id;
 
-      assert.equal(id, ID);
+      assert.strictEqual(id, ID);
     });
   });
 

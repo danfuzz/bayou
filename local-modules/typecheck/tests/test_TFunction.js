@@ -12,7 +12,7 @@ describe('typecheck.TFunction', () => {
     it('should return the provided value when passed a function', () => {
       const sampleFunction = function () { let a = false; if (a) a ^= 1; };
 
-      assert.equal(TFunction.check(sampleFunction), sampleFunction);
+      assert.strictEqual(TFunction.check(sampleFunction), sampleFunction);
     });
 
     it('should throw an Error when passed anything other than a function', () => {

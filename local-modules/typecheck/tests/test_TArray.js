@@ -15,7 +15,7 @@ describe('typecheck.TArray', () => {
       const value = [1, 2, 3];
 
       assert.doesNotThrow(() => TArray.check(value));
-      assert.equal(TArray.check(value), value);
+      assert.strictEqual(TArray.check(value), value);
     });
 
     it('should throw an Error when passed anything other than an array', () => {

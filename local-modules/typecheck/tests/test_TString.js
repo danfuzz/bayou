@@ -12,7 +12,7 @@ describe('typecheck.TString', () => {
     it('should return the provided value when passed a string', () => {
       const value = 'this better work!';
 
-      assert.equal(TString.check(value), value);
+      assert.strictEqual(TString.check(value), value);
     });
 
     it('should throw an Error when passed anything other than a string', () => {
@@ -43,7 +43,7 @@ describe('typecheck.TString', () => {
     it('should return the provided value if it is a string of hex bytes', () => {
       const value = 'deadbeef7584930215cafe';
 
-      assert.equal(TString.hexBytes(value), value);
+      assert.strictEqual(TString.hexBytes(value), value);
     });
 
     it('should throw an Error when anything other than a string of hex bytes is provided', () => {
@@ -57,13 +57,13 @@ describe('typecheck.TString', () => {
     it('should return the provided value if it is a string of hex bytes of the required minimum length', () => {
       const value = 'deadbeef7584930215cafe';
 
-      assert.equal(TString.hexBytes(value, 11), value);
+      assert.strictEqual(TString.hexBytes(value, 11), value);
     });
 
     it('should return the provided value if it is a string of hex bytes greater than the required minimum length', () => {
       const value = 'deadbeef7584930215cafe';
 
-      assert.equal(TString.hexBytes(value, 3), value);
+      assert.strictEqual(TString.hexBytes(value, 3), value);
     });
 
     it('should throw an Error if the number of bytes is less than the minimum', () => {
@@ -77,19 +77,19 @@ describe('typecheck.TString', () => {
     it('should return the provided value if it is a string of hex bytes of the required minimum length', () => {
       const value = 'deadbeef7584930215cafe';
 
-      assert.equal(TString.hexBytes(value, 11, 128), value);
+      assert.strictEqual(TString.hexBytes(value, 11, 128), value);
     });
 
     it('should return the provided value if it is a string of hex bytes within the required length range', () => {
       const value = 'deadbeef7584930215cafe';
 
-      assert.equal(TString.hexBytes(value, 3, 128), value);
+      assert.strictEqual(TString.hexBytes(value, 3, 128), value);
     });
 
     it('should return the provided value if it is a string of hex bytes equal to the maximum length', () => {
       const value = 'deadbeef7584930215cafe';
 
-      assert.equal(TString.hexBytes(value, 3, 11), value);
+      assert.strictEqual(TString.hexBytes(value, 3, 11), value);
     });
 
     it('should throw an Error if the number of bytes is less than the minimum', () => {
@@ -109,7 +109,7 @@ describe('typecheck.TString', () => {
     it('should return the provided value if it is a string with length >= 1', () => {
       const value = 'This better work!';
 
-      assert.equal(TString.nonempty(value), value);
+      assert.strictEqual(TString.nonempty(value), value);
     });
 
     it('should throw an Error if value is a string of length 0', () => {
@@ -123,13 +123,13 @@ describe('typecheck.TString', () => {
     it('should return the provided value if it is a string', () => {
       const value = 'This better work!';
 
-      assert.equal(TString.orNull(value), value);
+      assert.strictEqual(TString.orNull(value), value);
     });
 
     it('should return the provided value if it is null', () => {
       const value = null;
 
-      assert.equal(TString.orNull(value), value);
+      assert.strictEqual(TString.orNull(value), value);
     });
 
     it('should throw an Error if value is not a string and is not null', () => {
@@ -145,7 +145,7 @@ describe('typecheck.TString', () => {
     it('should return the provided value if it is an absolute url string', () => {
       const value = 'https://www.example.com';
 
-      assert.equal(TString.urlAbsolute(value), value);
+      assert.strictEqual(TString.urlAbsolute(value), value);
     });
 
     it('should throw an Error if value is not an absolute url', () => {

@@ -15,7 +15,7 @@ describe('util-common.Random', () => {
       const length = 17;
       const randomBytes = Random.byteArray(length);
 
-      assert.equal(length, randomBytes.length);
+      assert.strictEqual(length, randomBytes.length);
     });
 
     it('should return different results every time', () => {

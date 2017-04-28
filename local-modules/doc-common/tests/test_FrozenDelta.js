@@ -22,7 +22,7 @@ describe('doc-common/FrozenDelta', () => {
     });
 
     it('should have an empty `ops`', () => {
-      assert.equal(empty.ops.length, 0);
+      assert.strictEqual(empty.ops.length, 0);
     });
 
     it('should have a frozen `ops`', () => {

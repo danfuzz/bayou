@@ -31,17 +31,17 @@ describe('doc-store-local/LocalDoc', () => {
       const doc = new LocalDoc('0', '0', _documentPath());
       const oldVersion = doc.currentVerNum();
 
-      //  Docs start off with a null version number
+      // Docs start off with a null version number
       assert.isNull(oldVersion);
       _addChangeToDocument(doc);
 
       let newVersion = doc.currentVerNum();
 
-      assert.equal(newVersion, 0);
+      assert.strictEqual(newVersion, 0);
 
       _addChangeToDocument(doc);
       newVersion = doc.currentVerNum();
-      assert.equal(newVersion, 1);
+      assert.strictEqual(newVersion, 1);
     });
 
     // Need a good way to test this with a delay. Documents don't resolve a Promise
@@ -72,7 +72,7 @@ describe('doc-store-local/LocalDoc', () => {
 
       const postCreateVersion = doc.currentVerNum();
 
-      assert.equal(preCreateVersion, postCreateVersion);
+      assert.strictEqual(preCreateVersion, postCreateVersion);
     });
   });
 });

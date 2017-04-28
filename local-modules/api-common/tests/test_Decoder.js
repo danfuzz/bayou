@@ -20,10 +20,10 @@ before(() => {
 describe('api-common.Decoder', () => {
   describe('#decode(value)', () => {
     it('should pass non-object values through as-is', () => {
-      assert.equal(Decoder.decode(37), 37);
-      assert.equal(Decoder.decode(true), true);
-      assert.equal(Decoder.decode(false), false);
-      assert.equal(Decoder.decode('Happy string'), 'Happy string');
+      assert.strictEqual(Decoder.decode(37), 37);
+      assert.strictEqual(Decoder.decode(true), true);
+      assert.strictEqual(Decoder.decode(false), false);
+      assert.strictEqual(Decoder.decode('Happy string'), 'Happy string');
       assert.isNull(Decoder.decode(null));
     });
 

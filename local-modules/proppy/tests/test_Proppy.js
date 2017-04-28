@@ -148,9 +148,9 @@ function _testStringParsing(input, expectedObject) {
 
   const keys = Object.keys(expectedObject);
 
-  assert.equal(TObject.withExactKeys(output, keys), output);
+  assert.strictEqual(TObject.withExactKeys(output, keys), output);
 
   for (const key of keys) {
-    assert.equal(output[key], expectedObject[key]);
+    assert.strictEqual(output[key], expectedObject[key]);
   }
 }

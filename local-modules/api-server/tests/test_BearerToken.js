@@ -27,7 +27,7 @@ describe('api-server.BearerToken', () => {
     it('should return the token provided to the constructor', () => {
       const token = new BearerToken(SECRET_TOKEN);
 
-      assert.equal(token.secretToken, SECRET_TOKEN);
+      assert.strictEqual(token.secretToken, SECRET_TOKEN);
     });
   });
 

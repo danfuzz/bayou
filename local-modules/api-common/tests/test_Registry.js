@@ -77,7 +77,7 @@ class NoFromApi {
 describe('api-common.Registry', () => {
   describe('.ARRAY_TAG', () => {
     it("should return 'array'", () => {
-      assert.equal(Registry.ARRAY_TAG, 'array');
+      assert.strictEqual(Registry.ARRAY_TAG, 'array');
     });
   });
 

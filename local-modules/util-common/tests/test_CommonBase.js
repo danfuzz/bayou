@@ -38,8 +38,8 @@ describe('util-common.CommonBase', () => {
       const base = new CommonBase();
       const subclass = new CommonBaseSubclass();
 
-      assert.equal(CommonBase.check(base), base);
-      assert.equal(CommonBaseSubclass.check(subclass), subclass);
+      assert.strictEqual(CommonBase.check(base), base);
+      assert.strictEqual(CommonBaseSubclass.check(subclass), subclass);
     });
 
     it('should throw an Error if the supplied value is not a child instance', () => {

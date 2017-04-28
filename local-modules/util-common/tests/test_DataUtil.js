@@ -12,11 +12,11 @@ describe('util-common.DataUtil', () => {
     it('should return the provided value if it is a primitive', () => {
       const symbol = Symbol('foo');
 
-      assert.equal(DataUtil.deepFreeze(true), true);
-      assert.equal(DataUtil.deepFreeze(37), 37);
-      assert.equal(DataUtil.deepFreeze('a string'), 'a string');
-      assert.equal(DataUtil.deepFreeze(symbol), symbol);
-      assert.equal(DataUtil.deepFreeze(undefined), undefined);
+      assert.strictEqual(DataUtil.deepFreeze(true), true);
+      assert.strictEqual(DataUtil.deepFreeze(37), 37);
+      assert.strictEqual(DataUtil.deepFreeze('a string'), 'a string');
+      assert.strictEqual(DataUtil.deepFreeze(symbol), symbol);
+      assert.strictEqual(DataUtil.deepFreeze(undefined), undefined);
     });
 
     it('should return null if provided a null object', () => {
@@ -56,10 +56,10 @@ describe('util-common.DataUtil', () => {
         assert.isTrue(Number.isSafeInteger(value));
       }
 
-      assert.equal(bytesArray[0], 0xde);
-      assert.equal(bytesArray[1], 0xad);
-      assert.equal(bytesArray[2], 0xbe);
-      assert.equal(bytesArray[3], 0xef);
+      assert.strictEqual(bytesArray[0], 0xde);
+      assert.strictEqual(bytesArray[1], 0xad);
+      assert.strictEqual(bytesArray[2], 0xbe);
+      assert.strictEqual(bytesArray[3], 0xef);
     });
   });
 
@@ -77,7 +77,7 @@ describe('util-common.DataUtil', () => {
     it('should return a hex string if passed an array of byte values', () => {
       const bytesArray = [0xde, 0xad, 0xbe, 0xef];
 
-      assert.equal(DataUtil.hexFromBytes(bytesArray), 'deadbeef');
+      assert.strictEqual(DataUtil.hexFromBytes(bytesArray), 'deadbeef');
     });
   });
 });

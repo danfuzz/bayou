@@ -24,7 +24,7 @@ describe('server-env.Dirs', () => {
       const baseDir = Dirs.BASE_DIR;
       const clientDir = path.join(baseDir, 'client');
 
-      assert.equal(clientDir, Dirs.CLIENT_DIR);
+      assert.strictEqual(clientDir, Dirs.CLIENT_DIR);
       assert.isTrue(fs.existsSync(clientDir));
     });
   });
@@ -34,7 +34,7 @@ describe('server-env.Dirs', () => {
       const clientDir = Dirs.CLIENT_DIR;
       const codeDir = path.join(clientDir, 'js');
 
-      assert.equal(codeDir, Dirs.CLIENT_CODE_DIR);
+      assert.strictEqual(codeDir, Dirs.CLIENT_CODE_DIR);
       assert.isTrue(fs.existsSync(codeDir));
     });
   });
@@ -44,7 +44,7 @@ describe('server-env.Dirs', () => {
       const baseDir = Dirs.BASE_DIR;
       const serverDir = path.join(baseDir, 'server');
 
-      assert.equal(serverDir, Dirs.SERVER_DIR);
+      assert.strictEqual(serverDir, Dirs.SERVER_DIR);
       assert.isTrue(fs.existsSync(serverDir));
     });
   });
@@ -54,7 +54,7 @@ describe('server-env.Dirs', () => {
       const baseDir = Dirs.BASE_DIR;
       const varDir = path.join(baseDir, 'var');
 
-      assert.equal(varDir, Dirs.VAR_DIR);
+      assert.strictEqual(varDir, Dirs.VAR_DIR);
       assert.isTrue(fs.existsSync(varDir));
     });
   });

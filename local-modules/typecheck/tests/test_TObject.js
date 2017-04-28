@@ -12,7 +12,7 @@ describe('typecheck.TObject', () => {
     it('should return the provided value when passed an object', () => {
       const value = { a: 1, b: 2 };
 
-      assert.equal(TObject.check(value), value);
+      assert.strictEqual(TObject.check(value), value);
     });
 
     it('should throw an Error when passed anything other than an object', () => {

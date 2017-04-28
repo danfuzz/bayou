@@ -34,7 +34,7 @@ describe('hooks-server.BearerTokens', () => {
       const fakeTokenString = 'abcdefghijklmnopqrstuvwxyz';
       const tokenId = BEARER_TOKEN.tokenId(fakeTokenString);
 
-      assert.equal(tokenId, fakeTokenString.slice(0, 16));
+      assert.strictEqual(tokenId, fakeTokenString.slice(0, 16));
     });
   });
 

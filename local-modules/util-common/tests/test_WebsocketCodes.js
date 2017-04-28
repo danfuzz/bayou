@@ -12,7 +12,7 @@ describe('util-common.WebsocketCodes', () => {
     it('should return a questioning string if given no close code', () => {
       const readable = WebsocketCodes.close();
 
-      assert.equal(readable, 'close_?');
+      assert.strictEqual(readable, 'close_?');
     });
   });
 
@@ -20,13 +20,13 @@ describe('util-common.WebsocketCodes', () => {
     it('should return a fixed format string if passed a known code', () => {
       const output = WebsocketCodes.close(1000);
 
-      assert.equal(output, 'close_normal (1000)');
+      assert.strictEqual(output, 'close_normal (1000)');
     });
 
     it('should return a fixed format string if passed an unknown code', () => {
       const output = WebsocketCodes.close(298374893247);
 
-      assert.equal(output, 'close_298374893247');
+      assert.strictEqual(output, 'close_298374893247');
     });
   });
 });

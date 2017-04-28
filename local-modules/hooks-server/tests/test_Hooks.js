@@ -15,7 +15,7 @@ describe('hooks-server.Hooks', () => {
       const request = Mocks.nodeRequest();
       const uri = Hooks.baseUrlFromRequest(request);
 
-      assert.equal(uri, 'http://example.com');
+      assert.strictEqual(uri, 'http://example.com');
     });
   });
 
@@ -40,7 +40,7 @@ describe('hooks-server.Hooks', () => {
       const port = Hooks.listenPort;
 
       assert.isNumber(port);
-      assert.equal(port, 8080);
+      assert.strictEqual(port, 8080);
     });
   });
 });

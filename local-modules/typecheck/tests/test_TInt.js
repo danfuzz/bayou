@@ -13,7 +13,7 @@ describe('typecheck.TInt', () => {
       const value = 9823674;
 
       assert.doesNotThrow(() => TInt.check(value));
-      assert.equal(TInt.check(value), value, 'returns same value it was passed when valid');
+      assert.strictEqual(TInt.check(value), value, 'returns same value it was passed when valid');
     });
 
     it('should throw an Error when passed an unsafe integer', () => {
