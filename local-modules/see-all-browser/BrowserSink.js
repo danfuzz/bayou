@@ -5,16 +5,16 @@
 import { SeeAll } from 'see-all';
 
 /**
- * Implementation of the `SeeAll` logger protocol for use in a web browser
- * context.
+ * Implementation of the `see-all` logging sink protocol for use in a web
+ * browser context. It logs everything to the browser window console.
  */
-export default class SeeAllBrowser {
+export default class BrowserSink {
   /**
-   * Registers an instance of this class as a logger with the main `see-all`
-   * module.
+   * Registers an instance of this class as a logging sink with the main
+   * `see-all` module.
    */
   static init() {
-    SeeAll.add(new SeeAllBrowser());
+    SeeAll.add(new BrowserSink());
   }
 
   /**

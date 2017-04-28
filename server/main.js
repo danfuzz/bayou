@@ -21,13 +21,13 @@ import { Application } from 'app-setup';
 import { ClientBundle } from 'client-bundle';
 import { DevMode } from 'dev-mode';
 import { Hooks } from 'hooks-server';
-import { SeeAll } from 'see-all';
-import { FileLogger, SeeAllServer } from 'see-all-server';
+import { Logger } from 'see-all';
+import { FileSink, ServerSink } from 'see-all-server';
 import { Dirs, ProductInfo, ServerEnv } from 'server-env';
 
 
 /** Logger for this file. */
-const log = new SeeAll('main');
+const log = new Logger('main');
 
 /** Error during argument processing? */
 let argError = false;
@@ -130,8 +130,8 @@ function clientBundle() {
 }
 
 // Initialize logging.
-SeeAllServer.init();
-new FileLogger(path.resolve(Dirs.VAR_DIR, 'general.log'));
+ServerSink.init();
+new FileSink(path.resolve(Dirs.VAR_DIR, 'general.log'));
 
 if (clientBundleMode) {
   clientBundle();

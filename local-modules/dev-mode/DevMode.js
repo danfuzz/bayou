@@ -7,12 +7,12 @@ import fs from 'fs';
 import fs_extra from 'fs-extra';
 import path from 'path';
 
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 import { Dirs } from 'server-env';
 import { PromDelay } from 'util-common';
 
 /** Logger. */
-const log = new SeeAll('dev-mode');
+const log = new Logger('dev-mode');
 
 /** File name for source directory maps. */
 const MAP_FILE_NAME = 'source-map.txt';

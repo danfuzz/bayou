@@ -5,12 +5,12 @@
 import fs from 'fs';
 import path from 'path';
 
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 
 import Dirs from './Dirs';
 
 /** Logger. */
-const log = new SeeAll('pid');
+const log = new Logger('pid');
 
 /** Path for the PID file. Set in `init()`. */
 let pidPath = null;

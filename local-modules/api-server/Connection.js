@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Decoder, Encoder, Message } from 'api-common';
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase, Random } from 'util-common';
 
@@ -11,8 +11,8 @@ import BearerToken from './BearerToken';
 import MetaHandler from './MetaHandler';
 import Context from './Context';
 
-/** {SeeAll} Logger. */
-const log = new SeeAll('api');
+/** {Logger} Logger. */
+const log = new Logger('api');
 
 /**
  * {Connection|null} Connection associated with the current turn of execution
@@ -76,7 +76,7 @@ export default class Connection extends CommonBase {
     /** {Int} Count of messages received. Used for liveness logging. */
     this._messageCount = 0;
 
-    /** {SeeAll} Logger which includes the connection ID as a prefix. */
+    /** {Logger} Logger which includes the connection ID as a prefix. */
     this._log = log.withPrefix(`[${this._connectionId}]`);
 
     // We add a `meta` binding to the initial set of targets, which is specific
@@ -101,7 +101,7 @@ export default class Connection extends CommonBase {
     return this._context;
   }
 
-  /** {SeeAll} Connection-specific logger. */
+  /** {Logger} Connection-specific logger. */
   get log() {
     return this._log;
   }

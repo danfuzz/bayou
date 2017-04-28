@@ -10,10 +10,10 @@ import chalk from 'chalk';
 import { SeeAll } from 'see-all';
 
 /**
- * Implementation of the `SeeAll` logger protocol which collects a rolling
- * compendium of recently logged items.
+ * Implementation of the `see-all` logging sink protocol which collects a
+ * rolling compendium of recently logged items.
  */
-export default class RecentLogger {
+export default class RecentSink {
   /**
    * Constructs an instance. This will cause the instance to be registered with
    * the main `see-all` module.
@@ -90,7 +90,7 @@ export default class RecentLogger {
     result.push('<table>');
 
     for (const l of this._log) {
-      result.push(RecentLogger._htmlLine(l));
+      result.push(RecentSink._htmlLine(l));
     }
 
     result.push('</table>');

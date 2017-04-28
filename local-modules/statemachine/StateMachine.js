@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
 import { PromCondition, PropertyIter } from 'util-common';
 
@@ -61,11 +61,11 @@ export default class StateMachine {
    * Constructs an instance.
    *
    * @param {string} initialState The initial state.
-   * @param {SeeAll} [logger = null] Logger to use.
+   * @param {Logger} [logger = null] Logger to use.
    */
   constructor(initialState, logger = null) {
-    /** {SeeAll} Logger to use. */
-    this._log = logger || new SeeAll('state-machine');
+    /** {Logger} Logger to use. */
+    this._log = logger || new Logger('state-machine');
 
     /** {string} The current state. Set below. */
     this._state = null;

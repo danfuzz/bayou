@@ -7,14 +7,14 @@ import memory_fs from 'memory-fs';
 import path from 'path';
 import webpack from 'webpack';
 
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 import { Dirs } from 'server-env';
 import { JsonUtil } from 'util-common';
 
 import ProgressMessage from './ProgressMessage';
 
 /** Logger. */
-const log = new SeeAll('client-bundle');
+const log = new Logger('client-bundle');
 
 /**
  * The parsed `package.json` for the client. This is used for some of the

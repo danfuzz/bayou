@@ -13,7 +13,7 @@ export default class LogStream {
   /**
    * Constructs an instance.
    *
-   * @param {SeeAll} logger Underlying logger to use.
+   * @param {Logger} logger Underlying logger to use.
    * @param {string} level Severity level to log at.
    */
   constructor(logger, level) {

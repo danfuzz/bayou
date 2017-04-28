@@ -15,15 +15,16 @@ import { SeeAll } from 'see-all';
 const PREFIX_COLS = 24;
 
 /**
- * Implementation of the `SeeAll` logger protocol for use in a server context.
+ * Implementation of the `see-all` logging sink protocol for use in a server
+ * context. It logs everything to the console.
  */
-export default class SeeAllServer {
+export default class ServerSink {
   /**
-   * Registers an instance of this class as a logger with the main `see-all`
-   * module.
+   * Registers an instance of this class as a logging sink with the main
+   * `see-all` module.
    */
   static init() {
-    SeeAll.add(new SeeAllServer());
+    SeeAll.add(new ServerSink());
   }
 
   /**
@@ -42,7 +43,7 @@ export default class SeeAllServer {
    * @param {...string} message Message to log.
    */
   log(nowMsec_unused, level, tag, ...message) {
-    const prefix = SeeAllServer._makePrefix(tag, level);
+    const prefix = ServerSink._makePrefix(tag, level);
 
     // Make a unified string of the entire message.
     let text = '';
@@ -77,7 +78,7 @@ export default class SeeAllServer {
       // those are (a) the `Error` header, which is info-free in this case; and
       // (b) lines corresponding to the logging code itself.
       let trace = util.inspect(new Error());
-      trace = trace.replace(/^[\s\S]*\n    at SeeAll[^\n]+\n/, '');
+      trace = trace.replace(/^[\s\S]*\n    at Logger[^\n]+\n/, '');
       trace = trace.replace(/^    at /mg, '  at '); // Partially outdent.
       text += `${atLineStart ? '' : '\n'}${trace}`;
     }
@@ -92,7 +93,7 @@ export default class SeeAllServer {
     // its own line and produce the main content just slightly indented, under
     // the prefix.
 
-    const consoleWidth = SeeAllServer._consoleWidth();
+    const consoleWidth = ServerSink._consoleWidth();
     const maxLineWidth = lines.reduce(
       (prev, l) => { return Math.max(prev, l.length); },
       0);
@@ -134,7 +135,7 @@ export default class SeeAllServer {
   time(nowMsec_unused, utcString, localString) {
     utcString = chalk.blue.bold(utcString);
     localString  = chalk.blue.dim.bold(localString);
-    const prefix = SeeAllServer._makePrefix('time');
+    const prefix = ServerSink._makePrefix('time');
 
     // eslint-disable-next-line no-console
     console.log(`${prefix.text}${utcString} / ${localString}`);

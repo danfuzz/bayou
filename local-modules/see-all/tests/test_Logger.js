@@ -4,6 +4,6 @@
 
 import { describe, it } from 'mocha';
 
-describe('see-all-server.FileLogger', () => {
+describe('see-all.Logger', () => {
   it('needs a way to be tested');
 });

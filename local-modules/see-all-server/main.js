@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import FileLogger from './FileLogger';
-import RecentLogger from './RecentLogger';
-import SeeAllServer from './SeeAllServer';
+import FileSink from './FileSink';
+import RecentSink from './RecentSink';
+import ServerSink from './ServerSink';
 
-export { FileLogger, RecentLogger, SeeAllServer };
+export { FileSink, RecentSink, ServerSink };

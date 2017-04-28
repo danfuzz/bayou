@@ -9,14 +9,14 @@
  * there to be a DOM node tagged with id `editor`.
  */
 
-import { SeeAll } from 'see-all';
-import { SeeAllBrowser } from 'see-all-browser';
+import { Logger } from 'see-all';
+import { BrowserSink } from 'see-all-browser';
 
 import TopControl from './TopControl';
 
 // Init logging.
-SeeAllBrowser.init();
-const log = new SeeAll('page-init');
+BrowserSink.init();
+const log = new Logger('page-init');
 log.detail('Starting...');
 
 const control = new TopControl(window);

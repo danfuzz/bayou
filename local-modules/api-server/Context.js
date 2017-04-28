@@ -2,14 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { SeeAll } from 'see-all';
+import { Logger } from 'see-all';
 import { TObject, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import Target from './Target';
 
-/** {SeeAll} Logger. */
-const log = new SeeAll('api');
+/** {Logger} Logger. */
+const log = new Logger('api');
 
 /**
  * {Int} The amount of time in msec a target must be idle and unaccessed before
