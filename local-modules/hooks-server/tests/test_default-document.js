@@ -15,7 +15,7 @@ describe('hooks-server/default-document', () => {
       for (const command of document) {
         assert.isObject(command);
         assert.property(command, 'insert');
-        assert.isString(command['insert']);
+        assert.isString(command.insert);
       }
     });
   });
