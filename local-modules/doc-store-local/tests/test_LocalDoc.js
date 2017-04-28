@@ -58,21 +58,14 @@ describe('doc-store-local/LocalDoc', () => {
   });
 
   describe('#create()', () => {
-    it('should not affect the document if called multiple times', () => {
+    it('should erase the document if called on a non-empty document', () => {
       const doc = new LocalDoc('0', '0', _documentPath());
 
       _addChangeToDocument(doc);
-      _addChangeToDocument(doc);
-      _addChangeToDocument(doc);
-      _addChangeToDocument(doc);
-
-      const preCreateVersion = doc.currentVerNum();
+      assert.strictEqual(doc.currentVerNum(), 0); // Baseline assumption.
 
       doc.create();
-
-      const postCreateVersion = doc.currentVerNum();
-
-      assert.strictEqual(preCreateVersion, postCreateVersion);
+      assert.isNull(doc.currentVerNum()); // The real test.
     });
   });
 });
