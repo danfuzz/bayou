@@ -20,27 +20,20 @@ describe('hooks-server/Hooks', () => {
   });
 
   describe('.bearerTokens', () => {
-    it('should return an array of BearerToken', () => {
-      const tokens = Hooks.bearerTokens;
-
-      assert.instanceOf(tokens, BearerTokens);
+    it('should return an instance of `BearerTokens`', () => {
+      assert.instanceOf(Hooks.bearerTokens, BearerTokens);
     });
   });
 
   describe('.docStore', () => {
     it('should return an instance of BaseDocStore', () => {
-      const store = Hooks.docStore;
-
-      assert.instanceOf(store, BaseDocStore);
+      assert.instanceOf(Hooks.docStore, BaseDocStore);
     });
   });
 
   describe('.listenPort', () => {
-    it('should return the default TCP listen port number', () => {
-      const port = Hooks.listenPort;
-
-      assert.isNumber(port);
-      assert.strictEqual(port, 8080);
+    it('should return the documented value', () => {
+      assert.strictEqual(Hooks.listenPort, 8080);
     });
   });
 });
