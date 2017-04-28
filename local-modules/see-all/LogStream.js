@@ -28,15 +28,21 @@ export default class LogStream {
    * Implementation of standard `stream.Writable` method.
    *
    * @param {string|Buffer} chunk What to write.
-   * @param {string} [encoding = null] Name of character encoding to use when
-   *   `chunk` is passed as a string.
+   * @param {string} [encoding_unused = null] Name of character encoding to use
+   *   when `chunk` is passed as a string. Ignored in this case because this
+   *   class operates on strings and so never has a reason to convert a string
+   *   into a `Buffer`.
    * @param {function} [callback = null] Function to call after writing is
    *   complete.
    */
-  write(chunk, encoding = null, callback = null) {
+  write(chunk, encoding_unused = null, callback = null) {
     if (typeof chunk !== 'string') {
       // Assume it's a buffer, which it's supposed to be if it's not a string.
-      chunk = chunk.toString(encoding);
+      // We assume that it's been encoded as UTF-8, because (a) that's usual,
+      // and (b) we have no affordance to be told otherwise. (Notably, the
+      // `encoding` parameter is for how to convert a string into bytes, not the
+      // other way around.)
+      chunk = chunk.toString();
     }
 
     this._logger.log(this._level, chunk);
