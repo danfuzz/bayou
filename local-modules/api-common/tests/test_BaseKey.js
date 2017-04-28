@@ -36,12 +36,12 @@ beforeEach(() => {
   key = new FakeKey(URL, ID);
 });
 
-describe('api-common.BaseKey', () => {
+describe('api-common/BaseKey', () => {
   describe('.url', () => {
     it('should return the URL passed to the constructor', () => {
       const url = key.url;
 
-      assert.equal(url, URL);
+      assert.strictEqual(url, URL);
     });
   });
 
@@ -49,11 +49,11 @@ describe('api-common.BaseKey', () => {
     it('should return the ID passed to the constructor', () => {
       const id = key.id;
 
-      assert.equal(id, ID);
+      assert.strictEqual(id, ID);
     });
   });
 
-  describe('#toString()', () => {
+  describe('toString()', () => {
     it('returns a redacted (log-safe) representation of the key', () => {
       const s = key.toString();
 
@@ -61,7 +61,7 @@ describe('api-common.BaseKey', () => {
     });
   });
 
-  describe('#makeChallengePair()', () => {
+  describe('makeChallengePair()', () => {
     it('returns a challenge/response pair in an object', () => {
       const pair = key.makeChallengePair();
 

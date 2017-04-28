@@ -10,8 +10,8 @@ import path from 'path';
 
 import { Dirs } from 'server-env';
 
-describe('server-env.Dirs', () => {
-  describe('BASE_DIR', () => {
+describe('server-env/Dirs', () => {
+  describe('.BASE_DIR', () => {
     it('should return a directory path that exists', () => {
       const baseDir = Dirs.BASE_DIR;
 
@@ -19,42 +19,42 @@ describe('server-env.Dirs', () => {
     });
   });
 
-  describe('CLIENT_DIR', () => {
+  describe('.CLIENT_DIR', () => {
     it('should return a known subdirectory off of BASE_DIR', () => {
       const baseDir = Dirs.BASE_DIR;
       const clientDir = path.join(baseDir, 'client');
 
-      assert.equal(clientDir, Dirs.CLIENT_DIR);
+      assert.strictEqual(clientDir, Dirs.CLIENT_DIR);
       assert.isTrue(fs.existsSync(clientDir));
     });
   });
 
-  describe('CLIENT_CODE_DIR', () => {
+  describe('.CLIENT_CODE_DIR', () => {
     it('should return a known subdirectory off of CLIENT_DIR', () => {
       const clientDir = Dirs.CLIENT_DIR;
       const codeDir = path.join(clientDir, 'js');
 
-      assert.equal(codeDir, Dirs.CLIENT_CODE_DIR);
+      assert.strictEqual(codeDir, Dirs.CLIENT_CODE_DIR);
       assert.isTrue(fs.existsSync(codeDir));
     });
   });
 
-  describe('SERVER_DIR', () => {
+  describe('.SERVER_DIR', () => {
     it('should return a known subdirectory off of BASE_DIR', () => {
       const baseDir = Dirs.BASE_DIR;
       const serverDir = path.join(baseDir, 'server');
 
-      assert.equal(serverDir, Dirs.SERVER_DIR);
+      assert.strictEqual(serverDir, Dirs.SERVER_DIR);
       assert.isTrue(fs.existsSync(serverDir));
     });
   });
 
-  describe('VAR_DIR', () => {
+  describe('.VAR_DIR', () => {
     it('should return a known subdirectory off of BASE_DIR', () => {
       const baseDir = Dirs.BASE_DIR;
       const varDir = path.join(baseDir, 'var');
 
-      assert.equal(varDir, Dirs.VAR_DIR);
+      assert.strictEqual(varDir, Dirs.VAR_DIR);
       assert.isTrue(fs.existsSync(varDir));
     });
   });

@@ -17,8 +17,8 @@ before(() => {
   }
 });
 
-describe('api-common.Message', () => {
-  describe('#constructor(id, target, action, name, args)', () => {
+describe('api-common/Message', () => {
+  describe('constructor(id, target, action, name, args)', () => {
     it('should require integer ids >= 0', () => {
       assert.throws(() => new Message('this better not work!', 'foo', 'call', 'bar', []));
       assert.throws(() => new Message(3.7, 'target', 'call', 'method', []));

@@ -4,6 +4,6 @@
 
 import { describe, it } from 'mocha';
 
-describe('see-all-server.FileSink', () => {
+describe('see-all-server/FileSink', () => {
   it('needs a way to be tested');
 });

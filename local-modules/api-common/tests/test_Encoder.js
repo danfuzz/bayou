@@ -20,8 +20,8 @@ class NoToApi {
   }
 }
 
-describe('api-common.Encoder', () => {
-  describe('#encode(value)', () => {
+describe('api-common/Encoder', () => {
+  describe('encode(value)', () => {
     it('should reject function values', () => {
       assert.throws(() => Encoder.encode(function () { true; }));
     });
@@ -35,11 +35,11 @@ describe('api-common.Encoder', () => {
     });
 
     it('should pass through non-object values and null as-is', () => {
-      assert.equal(Encoder.encode(37), 37);
-      assert.equal(Encoder.encode(true), true);
-      assert.equal(Encoder.encode(false), false);
-      assert.equal(Encoder.encode('blort'), 'blort');
-      assert.equal(Encoder.encode(null), null);
+      assert.strictEqual(Encoder.encode(37), 37);
+      assert.strictEqual(Encoder.encode(true), true);
+      assert.strictEqual(Encoder.encode(false), false);
+      assert.strictEqual(Encoder.encode('blort'), 'blort');
+      assert.strictEqual(Encoder.encode(null), null);
     });
 
     it('should pass through simple objects whose values are self-encoding as-is', () => {

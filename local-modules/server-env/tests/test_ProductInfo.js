@@ -11,7 +11,7 @@ import { TObject } from 'typecheck';
 // see comment below for why this is commented out
 //import { PidFile } from 'server-env';
 
-describe('server-env.ProductInfo', () => {
+describe('server-env/ProductInfo', () => {
   describe('.INFO', () => {
     it('should return an object full of product info', () => {
       const info = ProductInfo.INFO;

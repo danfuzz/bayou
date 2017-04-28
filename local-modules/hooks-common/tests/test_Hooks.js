@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { Hooks } from 'hooks-common';
 
-describe('hooks-common.Hooks', () => {
+describe('hooks-common/Hooks', () => {
   describe('isAuthorId(id)', () => {
     it('should accept 32-character alphanum ASCII strings', () => {
       assert.isTrue(Hooks.isAuthorId('123abc7890ABC456789012'));

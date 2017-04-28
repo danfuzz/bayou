@@ -7,26 +7,34 @@ import { describe, it } from 'mocha';
 
 import { WebsocketCodes } from 'util-common';
 
-describe('util-common.WebsocketCodes', () => {
-  describe('#close()', () => {
-    it('should return a questioning string if given no close code', () => {
+describe('util-common/WebsocketCodes', () => {
+  describe('close()', () => {
+    it('should return a questioning string', () => {
       const readable = WebsocketCodes.close();
 
-      assert.equal(readable, 'close_?');
+      assert.strictEqual(readable, 'close_?');
     });
   });
 
-  describe('#close(code)', () => {
+  describe('close(null)', () => {
+    it('should return a questioning string', () => {
+      const readable = WebsocketCodes.close(null);
+
+      assert.strictEqual(readable, 'close_?');
+    });
+  });
+
+  describe('close(code)', () => {
     it('should return a fixed format string if passed a known code', () => {
       const output = WebsocketCodes.close(1000);
 
-      assert.equal(output, 'close_normal (1000)');
+      assert.strictEqual(output, 'close_normal (1000)');
     });
 
     it('should return a fixed format string if passed an unknown code', () => {
       const output = WebsocketCodes.close(298374893247);
 
-      assert.equal(output, 'close_298374893247');
+      assert.strictEqual(output, 'close_298374893247');
     });
   });
 });

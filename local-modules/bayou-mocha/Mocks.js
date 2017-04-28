@@ -21,12 +21,13 @@ class FakeApiObject {
 }
 
 /**
- * A collection of methods for creating mock objects needed for Bayou unit testing.
+ * A collection of methods for creating mock objects needed for Bayou unit
+ * testing.
  */
 export default class Mocks {
   static nodeRequest(uri = 'http://www.example.com',
                      method = 'GET',
-                     headers = { host: 'example.com', 'x-forwarded-host': 'example.com' },
+                     headers = { host: 'example.com' },
                      timeout = 10 * 1000,
                      followRedirects = true,
                      maxRedirects = 10) {

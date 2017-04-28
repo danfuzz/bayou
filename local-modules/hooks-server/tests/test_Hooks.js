@@ -9,38 +9,31 @@ import { Mocks } from 'bayou-mocha';
 import { BaseDocStore } from 'doc-store';
 import { BearerTokens, Hooks } from 'hooks-server';
 
-describe('hooks-server.Hooks', () => {
-  describe('#baseUrlFromRequest(request)', () => {
+describe('hooks-server/Hooks', () => {
+  describe('baseUrlFromRequest(request)', () => {
     it('should return a new URL referencing just the host with no path, query args, or anchors', () => {
       const request = Mocks.nodeRequest();
       const uri = Hooks.baseUrlFromRequest(request);
 
-      assert.equal(uri, 'http://example.com');
+      assert.strictEqual(uri, 'http://example.com');
     });
   });
 
-  describe('bearerTokens', () => {
-    it('should return an array of BearerToken', () => {
-      const tokens = Hooks.bearerTokens;
-
-      assert.instanceOf(tokens, BearerTokens);
+  describe('.bearerTokens', () => {
+    it('should return an instance of `BearerTokens`', () => {
+      assert.instanceOf(Hooks.bearerTokens, BearerTokens);
     });
   });
 
-  describe('docStore', () => {
+  describe('.docStore', () => {
     it('should return an instance of BaseDocStore', () => {
-      const store = Hooks.docStore;
-
-      assert.instanceOf(store, BaseDocStore);
+      assert.instanceOf(Hooks.docStore, BaseDocStore);
     });
   });
 
-  describe('listenPort', () => {
-    it('should return the default TCP listen port number', () => {
-      const port = Hooks.listenPort;
-
-      assert.isNumber(port);
-      assert.equal(port, 8080);
+  describe('.listenPort', () => {
+    it('should return the documented value', () => {
+      assert.strictEqual(Hooks.listenPort, 8080);
     });
   });
 });

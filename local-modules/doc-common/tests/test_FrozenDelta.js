@@ -5,86 +5,133 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import Delta from 'quill-delta';
+import util from 'util';
 
 import { FrozenDelta } from 'doc-common';
 
 describe('doc-common/FrozenDelta', () => {
   describe('.EMPTY', () => {
-    it('should return an empty, frozen Delta', () => {
-      const empty = FrozenDelta.EMPTY;
+    const empty = FrozenDelta.EMPTY;
 
+    it('should be an instance of `FrozenDelta`', () => {
       assert.instanceOf(empty, FrozenDelta);
+    });
+
+    it('should be a frozen object', () => {
       assert.isFrozen(empty);
-      assert.equal(empty['ops'].length, 0);
+    });
+
+    it('should have an empty `ops`', () => {
+      assert.strictEqual(empty.ops.length, 0);
+    });
+
+    it('should have a frozen `ops`', () => {
+      assert.isFrozen(empty.ops);
+    });
+
+    it('should be `FrozenDelta.isEmpty()`', () => {
       assert.isTrue(FrozenDelta.isEmpty(empty));
     });
   });
 
-  describe('#isEmpty', () => {
-    it('should return true for an empty Delta or subclass', () => {
-      const emptyDelta = new Delta();
+  describe('isEmpty()', () => {
+    describe('valid empty values', () => {
+      const values = [
+        new Delta([]),
+        new FrozenDelta([]),
+        FrozenDelta.EMPTY,
+        null,
+        undefined,
+        [],
+        { ops: [] }
+      ];
 
-      assert.isTrue(FrozenDelta.isEmpty(emptyDelta));
+      for (const v of values) {
+        it(`should return \`true\` for: ${util.inspect(v)}`, () => {
+          assert.isTrue(FrozenDelta.isEmpty(v));
+        });
+      }
     });
 
-    it('should return true for null and undefined', () => {
-      assert.isTrue(FrozenDelta.isEmpty(null));
-      assert.isTrue(FrozenDelta.isEmpty(undefined));
+    describe('valid non-empty values', () => {
+      const ops1 = [{ insert: 'x' }];
+      const ops2 = [{ insert: 'line 1' }, { insert: '\n' }, { insert: 'line 2' }];
+
+      // This one is not a valid `ops` array, but per docs, `isEmpty()` doesn't
+      // inspect the contents of `ops` arrays and so using this value should
+      // succeed.
+      const invalidNonEmptyOps = [null, undefined, /blort/, 1, 2, 3];
+
+      const values = [
+        ops1,
+        { ops: ops1 },
+        new Delta(ops1),
+        new FrozenDelta(ops1),
+        ops2,
+        { ops: ops2 },
+        new Delta(ops2),
+        new FrozenDelta(ops2),
+        invalidNonEmptyOps,
+        { ops: invalidNonEmptyOps }
+      ];
+
+      for (const v of values) {
+        it(`should return \`false\` for: ${util.inspect(v)}`, () => {
+          assert.isFalse(FrozenDelta.isEmpty(v));
+        });
+      }
     });
 
-    it('should return true for empty Delta-like objects', () => {
-      const emptyObject = { ops: [] };
+    describe('non-delta-like values', () => {
+      const values = [
+        37,
+        true,
+        false,
+        '',
+        'this better not work!',
+        {},
+        () => true,
+        /blort/,
+        Symbol.for('foo')
+      ];
 
-      assert.isTrue(FrozenDelta.isEmpty(emptyObject));
-    });
-
-    it('should return true for empty Delta-like objects', () => {
-      const emptyObject = { ops: [] };
-
-      assert.isTrue(FrozenDelta.isEmpty(emptyObject));
-    });
-
-    it('should return true for arrays', () => {
-      assert.isTrue(FrozenDelta.isEmpty([]));
-    });
-
-    it('should throw an Error for any other value', () => {
-      assert.throws(() => FrozenDelta.isEmpty(37));
-      assert.throws(() => FrozenDelta.isEmpty(true));
-      assert.throws(() => FrozenDelta.isEmpty(''));
-      assert.throws(() => FrozenDelta.isEmpty('this better not work!'));
-      assert.throws(() => FrozenDelta.isEmpty({}));
-      assert.throws(() => FrozenDelta.isEmpty({ ops: [1, 2, 3] }));
-      assert.throws(() => FrozenDelta.isEmpty(function foo() { /* */ }));
+      for (const v of values) {
+        it(`should throw for: ${util.inspect(v)}`, () => {
+          assert.throws(() => { FrozenDelta.isEmpty(v); });
+        });
+      }
     });
   });
 
-  describe('#isDocument(doc)', () => {
-    it('should return true if all ops are insert', () => {
-      const insertOps = [{ insert: 'line 1' }, { insert: '\n' }, { insert: 'line 2' }];
-      const document = FrozenDelta.coerce(insertOps);
+  describe('isDocument(doc)', () => {
+    describe('`true` cases', () => {
+      const values = [
+        [],
+        [{ insert: 'line 1' }],
+        [{ insert: 'line 1' }, { insert: '\n' }],
+        [{ insert: 'line 1' }, { insert: '\n' }, { insert: 'line 2' }]
+      ];
 
-      assert.isTrue(document.isDocument());
+      for (const v of values) {
+        it(`should return \`true\` for: ${util.inspect(v)}`, () => {
+          assert.isTrue(FrozenDelta.coerce(v).isDocument());
+        });
+      }
     });
 
-    it('should return false if any ops are not insert', () => {
-      const insertOps = [{ retain: 5 }, { insert: '\n' }, { insert: 'line 2' }];
-      const document = FrozenDelta.coerce(insertOps);
+    describe('`false` cases', () => {
+      const values = [
+        [{ retain: 37 }],
+        [{ insert: 'line 1' }, { retain: 9 }],
+        [{ insert: 'line 1' }, { retain: 14 }, { insert: '\n' }],
+        [{ insert: 'line 1' }, { insert: '\n' }, { retain: 23 }, { insert: 'line 2' }]
+      ];
 
-      assert.isFalse(document.isDocument());
-    });
-  });
-
-  describe('#isEmpty()', () => {
-    it('should return true if the Delta has no ops', () => {
-      assert.isTrue(FrozenDelta.EMPTY.isEmpty());
-    });
-
-    it('should return false if the Delta has any ops', () => {
-      const insertOps = [{ insert: 'line 1' }, { insert: '\n' }, { insert: 'line 2' }];
-      const document = FrozenDelta.coerce(insertOps);
-
-      assert.isFalse(document.isEmpty());
+      for (const v of values) {
+        it(`should return \`false\` for: ${util.inspect(v)}`, () => {
+          assert.isFalse(FrozenDelta.coerce(v).isDocument());
+        });
+      }
     });
   });
 });

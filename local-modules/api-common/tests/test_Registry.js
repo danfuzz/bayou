@@ -74,14 +74,14 @@ class NoFromApi {
   }
 }
 
-describe('api-common.Registry', () => {
+describe('api-common/Registry', () => {
   describe('.ARRAY_TAG', () => {
     it("should return 'array'", () => {
-      assert.equal(Registry.ARRAY_TAG, 'array');
+      assert.strictEqual(Registry.ARRAY_TAG, 'array');
     });
   });
 
-  describe('#register(class)', () => {
+  describe('register(class)', () => {
     it('should require classes with an APP_NAME property, fromName() class method, and toApi() instance method', () => {
       assert.throws(() => Registry.register(true));
       assert.throws(() => Registry.register(37));
@@ -98,7 +98,7 @@ describe('api-common.Registry', () => {
     });
   });
 
-  describe('#find(className)', () => {
+  describe('find(className)', () => {
     it('should throw an error if an unregistered class is requested', () => {
       const randomName = Random.hexByteString(32);
       assert.throws(() => Registry.find(randomName));

@@ -7,11 +7,11 @@ import { describe, it } from 'mocha';
 
 import { TBoolean } from 'typecheck';
 
-describe('typecheck.TBoolean', () => {
-  describe('#check(value)', () => {
+describe('typecheck/TBoolean', () => {
+  describe('check(value)', () => {
     it('should return the provided value when passed a boolean', () => {
-      assert.equal(TBoolean.check(true), true);
-      assert.equal(TBoolean.check(false), false);
+      assert.strictEqual(TBoolean.check(true), true);
+      assert.strictEqual(TBoolean.check(false), false);
     });
 
     it('should throw an Error when passed undefined', () => {
@@ -27,13 +27,13 @@ describe('typecheck.TBoolean', () => {
 
   });
 
-  describe('#check(value, defaultValue)', () => {
+  describe('check(value, defaultValue)', () => {
     it('should return defaultValue if passed undefined', () => {
-      assert.equal(TBoolean.check(undefined, true), true);
+      assert.strictEqual(TBoolean.check(undefined, true), true);
     });
 
     it('should return value if passed anything but undefined', () => {
-      assert.equal(TBoolean.check(false, true), false);
+      assert.strictEqual(TBoolean.check(false, true), false);
     });
   });
 });

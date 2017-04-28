@@ -23,8 +23,8 @@ beforeEach(() => {
   }
 });
 
-describe('see-all-server.RecentSink', () => {
-  describe('#time(nowMsec, utcString, localString', () => {
+describe('see-all-server/RecentSink', () => {
+  describe('time(nowMsec, utcString, localString', () => {
     it('needs a way to be tested');
   });
 
@@ -35,9 +35,9 @@ describe('see-all-server.RecentSink', () => {
       for (let i = 0; i < NUM_LINES; i++) {
         const line = logContents[i];
 
-        assert.equal(line['level'], LOG_LEVEL);
-        assert.equal(line['tag'], LOG_TAG);
-        assert.equal(line['message'][0], LOG_PREFIX + i);
+        assert.strictEqual(line['level'], LOG_LEVEL);
+        assert.strictEqual(line['tag'], LOG_TAG);
+        assert.strictEqual(line['message'][0], LOG_PREFIX + i);
         assert.isTrue(Number.isSafeInteger(line['nowMsec']));
       }
     });
@@ -50,7 +50,7 @@ describe('see-all-server.RecentSink', () => {
 
       // One line for each log entry, plus one more each for the <table> and </table>
       // This is kind of a weak test but it's better than nothing.
-      assert.equal(lines.length, 1 + NUM_LINES + 1);
+      assert.strictEqual(lines.length, 1 + NUM_LINES + 1);
     });
   });
 });

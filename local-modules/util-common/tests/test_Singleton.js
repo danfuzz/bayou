@@ -11,8 +11,8 @@ class TestClass extends Singleton {
   /* nothing new here */
 }
 
-describe('util-common.Singleton', () => {
-  describe('#theOne()', () => {
+describe('util-common/Singleton', () => {
+  describe('theOne()', () => {
     it('should return the same object every time it is called', () => {
       const test1 = TestClass.theOne;
       const test2 = TestClass.theOne;

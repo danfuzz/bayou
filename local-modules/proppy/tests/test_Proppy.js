@@ -8,16 +8,16 @@ import { describe, it } from 'mocha';
 import { Proppy } from 'proppy';
 import { TObject } from 'typecheck';
 
-describe('proppy.Proppy', () => {
-  describe('#parseStream(value)', () => {
+describe('proppy/Proppy', () => {
+  describe('parseStream(value)', () => {
     it('needs testing');
   });
 
-  describe('#parseFile(value)', () => {
+  describe('parseFile(value)', () => {
     it('needs testing');
   });
 
-  describe('#parseString(value)', () => {
+  describe('parseString(value)', () => {
     it('should ignore comments and blank lines', () => {
       const input = '# this is comment line one\n' +
                     '# this is comment line two\n' +
@@ -148,9 +148,9 @@ function _testStringParsing(input, expectedObject) {
 
   const keys = Object.keys(expectedObject);
 
-  assert.equal(TObject.withExactKeys(output, keys), output);
+  assert.strictEqual(TObject.withExactKeys(output, keys), output);
 
   for (const key of keys) {
-    assert.equal(output[key], expectedObject[key]);
+    assert.strictEqual(output[key], expectedObject[key]);
   }
 }

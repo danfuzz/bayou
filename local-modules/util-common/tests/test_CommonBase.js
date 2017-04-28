@@ -22,8 +22,8 @@ class CommonBaseSubclass extends CommonBase {
   }
 }
 
-describe('util-common.CommonBase', () => {
-  describe('#mixInto(class)', () => {
+describe('util-common/CommonBase', () => {
+  describe('mixInto(class)', () => {
     it('should add its properties to the supplied class', () => {
       assert.notProperty(NearlyEmptyClass, 'coerce');
 
@@ -33,13 +33,13 @@ describe('util-common.CommonBase', () => {
     });
   });
 
-  describe('#check(object)', () => {
+  describe('check(object)', () => {
     it('should return the supplied value if it is an instance or subclass of CommonBase', () => {
       const base = new CommonBase();
       const subclass = new CommonBaseSubclass();
 
-      assert.equal(CommonBase.check(base), base);
-      assert.equal(CommonBaseSubclass.check(subclass), subclass);
+      assert.strictEqual(CommonBase.check(base), base);
+      assert.strictEqual(CommonBaseSubclass.check(subclass), subclass);
     });
 
     it('should throw an Error if the supplied value is not a child instance', () => {
@@ -49,7 +49,7 @@ describe('util-common.CommonBase', () => {
     });
   });
 
-  describe('#coerce(value)', () => {
+  describe('coerce(value)', () => {
     it('needs a way to be tested');
   });
 });

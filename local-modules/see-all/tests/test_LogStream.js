@@ -4,6 +4,6 @@
 
 import { describe, it } from 'mocha';
 
-describe('see-all.LogStream', () => {
+describe('see-all/LogStream', () => {
   it('needs a way to be tested');
 });

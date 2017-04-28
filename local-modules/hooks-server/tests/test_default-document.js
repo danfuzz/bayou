@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import document from '../default-document';
 
-describe('hooks-server.default-document', () => {
+describe('hooks-server/default-document', () => {
   describe('default document', () => {
     it('should return be an array of Parchment insert objects', () => {
       assert.isArray(document);
@@ -15,7 +15,7 @@ describe('hooks-server.default-document', () => {
       for (const command of document) {
         assert.isObject(command);
         assert.property(command, 'insert');
-        assert.isString(command['insert']);
+        assert.isString(command.insert);
       }
     });
   });

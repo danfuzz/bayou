@@ -26,22 +26,22 @@ describe('doc-store-local/LocalDoc', () => {
     });
   });
 
-  describe('#changeAppend(change)', () => {
+  describe('changeAppend(change)', () => {
     it('should increment the version after a change is applied', () => {
       const doc = new LocalDoc('0', '0', _documentPath());
       const oldVersion = doc.currentVerNum();
 
-      //  Docs start off with a null version number
+      // Docs start off with a null version number
       assert.isNull(oldVersion);
       _addChangeToDocument(doc);
 
       let newVersion = doc.currentVerNum();
 
-      assert.equal(newVersion, 0);
+      assert.strictEqual(newVersion, 0);
 
       _addChangeToDocument(doc);
       newVersion = doc.currentVerNum();
-      assert.equal(newVersion, 1);
+      assert.strictEqual(newVersion, 1);
     });
 
     // Need a good way to test this with a delay. Documents don't resolve a Promise
@@ -57,22 +57,15 @@ describe('doc-store-local/LocalDoc', () => {
     // });
   });
 
-  describe('#create()', () => {
-    it('should not affect the document if called multiple times', () => {
+  describe('create()', () => {
+    it('should erase the document if called on a non-empty document', () => {
       const doc = new LocalDoc('0', '0', _documentPath());
 
       _addChangeToDocument(doc);
-      _addChangeToDocument(doc);
-      _addChangeToDocument(doc);
-      _addChangeToDocument(doc);
-
-      const preCreateVersion = doc.currentVerNum();
+      assert.strictEqual(doc.currentVerNum(), 0); // Baseline assumption.
 
       doc.create();
-
-      const postCreateVersion = doc.currentVerNum();
-
-      assert.equal(preCreateVersion, postCreateVersion);
+      assert.isNull(doc.currentVerNum()); // The real test.
     });
   });
 });
