@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { TString } from 'typecheck';
 
-describe('typecheck.TString', () => {
+describe('typecheck/TString', () => {
   describe('#check(value)', () => {
     it('should return the provided value when passed a string', () => {
       const value = 'this better work!';

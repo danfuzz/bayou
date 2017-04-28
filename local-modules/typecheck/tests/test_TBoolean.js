@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { TBoolean } from 'typecheck';
 
-describe('typecheck.TBoolean', () => {
+describe('typecheck/TBoolean', () => {
   describe('#check(value)', () => {
     it('should return the provided value when passed a boolean', () => {
       assert.strictEqual(TBoolean.check(true), true);

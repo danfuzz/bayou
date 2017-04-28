@@ -9,7 +9,7 @@ import _ from 'lodash';
 import { TString } from 'typecheck';
 import { Random } from 'util-common';
 
-describe('util-common.Random', () => {
+describe('util-common/Random', () => {
   describe('#byteArray(length)', () => {
     it('should return an array of the requested length', () => {
       const length = 17;

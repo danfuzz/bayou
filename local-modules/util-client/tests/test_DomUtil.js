@@ -4,6 +4,6 @@
 
 import { describe, it } from 'mocha';
 
-describe('util-client.DomUtil', () => {
+describe('util-client/DomUtil', () => {
   it('needs a way to be tested');
 });

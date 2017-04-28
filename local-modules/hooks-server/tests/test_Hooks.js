@@ -9,7 +9,7 @@ import { Mocks } from 'bayou-mocha';
 import { BaseDocStore } from 'doc-store';
 import { BearerTokens, Hooks } from 'hooks-server';
 
-describe('hooks-server.Hooks', () => {
+describe('hooks-server/Hooks', () => {
   describe('#baseUrlFromRequest(request)', () => {
     it('should return a new URL referencing just the host with no path, query args, or anchors', () => {
       const request = Mocks.nodeRequest();

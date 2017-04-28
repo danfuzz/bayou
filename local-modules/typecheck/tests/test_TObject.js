@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { TObject } from 'typecheck';
 
-describe('typecheck.TObject', () => {
+describe('typecheck/TObject', () => {
   describe('#check(value)', () => {
     it('should return the provided value when passed an object', () => {
       const value = { a: 1, b: 2 };

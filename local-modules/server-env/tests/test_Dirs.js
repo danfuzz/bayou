@@ -10,7 +10,7 @@ import path from 'path';
 
 import { Dirs } from 'server-env';
 
-describe('server-env.Dirs', () => {
+describe('server-env/Dirs', () => {
   describe('BASE_DIR', () => {
     it('should return a directory path that exists', () => {
       const baseDir = Dirs.BASE_DIR;

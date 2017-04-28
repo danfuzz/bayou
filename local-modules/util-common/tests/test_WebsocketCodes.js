@@ -7,10 +7,18 @@ import { describe, it } from 'mocha';
 
 import { WebsocketCodes } from 'util-common';
 
-describe('util-common.WebsocketCodes', () => {
+describe('util-common/WebsocketCodes', () => {
   describe('#close()', () => {
-    it('should return a questioning string if given no close code', () => {
+    it('should return a questioning string', () => {
       const readable = WebsocketCodes.close();
+
+      assert.strictEqual(readable, 'close_?');
+    });
+  });
+
+  describe('#close(null)', () => {
+    it('should return a questioning string', () => {
+      const readable = WebsocketCodes.close(null);
 
       assert.strictEqual(readable, 'close_?');
     });

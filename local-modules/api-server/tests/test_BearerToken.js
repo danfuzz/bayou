@@ -9,7 +9,7 @@ import { BearerToken } from 'api-server';
 
 const SECRET_TOKEN = 'Setec Astronomy Setec Astronomy ';
 
-describe('api-server.BearerToken', () => {
+describe('api-server/BearerToken', () => {
   describe('#constructor(secret)', () => {
     it('should reject secrets with length < 32', () => {
       assert.throws(() => new BearerToken('Setec Astronomy'));

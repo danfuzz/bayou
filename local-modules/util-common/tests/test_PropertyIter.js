@@ -16,7 +16,7 @@ const TEST_OBJECT = {
   objectItem: {}
 };
 
-describe('util-common.PropertyIter', () => {
+describe('util-common/PropertyIter', () => {
   describe('iterating over all properties', () => {
     it('should return all properties of the object', () => {
       const iter = new PropertyIter(TEST_OBJECT);

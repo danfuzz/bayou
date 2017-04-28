@@ -13,7 +13,7 @@ import { Dirs } from 'server-env';
 // see comment below for why this is commented out
 //import { PidFile } from 'server-env';
 
-describe('server-env.PidFile', () => {
+describe('server-env/PidFile', () => {
   describe('#init(basePath)', () => {
     it('should create a pid.txt file at a known position off of baseDir', () => {
       /*

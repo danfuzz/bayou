@@ -10,7 +10,7 @@ import { BearerTokens } from 'hooks-server';
 
 const BEARER_TOKEN = BearerTokens.theOne;
 
-describe('hooks-server.BearerTokens', () => {
+describe('hooks-server/BearerTokens', () => {
   describe('#isToken(tokenString)', () => {
     it('should accept any value', () => {
       assert.isTrue(BEARER_TOKEN.isToken('abc123'));

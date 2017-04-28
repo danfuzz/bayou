@@ -10,7 +10,7 @@ import { SplitKey } from 'api-common';
 const FAKE_KEY = '0011223344556677';
 const FAKE_SECRET = '00112233445566778899aabbccddeeff';
 
-describe('api-common.SplitKey', () => {
+describe('api-common/SplitKey', () => {
   describe('#constructor(url, id, secret)', () => {
     it('should reject non-string urls', () => {
       assert.throws(() => new SplitKey(37, FAKE_KEY, FAKE_SECRET));

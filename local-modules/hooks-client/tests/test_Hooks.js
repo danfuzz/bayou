@@ -6,6 +6,6 @@ import { describe, it } from 'mocha';
 
 // import { Hooks } from 'hooks-client';
 
-describe('hooks-client.Hooks', () => {
+describe('hooks-client/Hooks', () => {
   it('has nothing worth testing yet');
 });

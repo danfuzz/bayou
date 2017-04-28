@@ -20,7 +20,7 @@ class NoToApi {
   }
 }
 
-describe('api-common.Encoder', () => {
+describe('api-common/Encoder', () => {
   describe('#encode(value)', () => {
     it('should reject function values', () => {
       assert.throws(() => Encoder.encode(function () { true; }));

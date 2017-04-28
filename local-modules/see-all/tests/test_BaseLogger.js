@@ -4,6 +4,6 @@
 
 import { describe, it } from 'mocha';
 
-describe('see-all.BaseLogger', () => {
+describe('see-all/BaseLogger', () => {
   it('needs a way to be tested');
 });

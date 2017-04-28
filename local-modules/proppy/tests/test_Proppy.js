@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { Proppy } from 'proppy';
 import { TObject } from 'typecheck';
 
-describe('proppy.Proppy', () => {
+describe('proppy/Proppy', () => {
   describe('#parseStream(value)', () => {
     it('needs testing');
   });

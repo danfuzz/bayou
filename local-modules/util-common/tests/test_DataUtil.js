@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { DataUtil } from 'util-common';
 
-describe('util-common.DataUtil', () => {
+describe('util-common/DataUtil', () => {
   describe('#deepFreeze(value)', () => {
     it('should return the provided value if it is a primitive', () => {
       const symbol = Symbol('foo');

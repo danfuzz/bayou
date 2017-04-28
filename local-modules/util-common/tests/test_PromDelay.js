@@ -11,7 +11,7 @@ import { PromDelay } from 'util-common';
 Chai.use(ChaiAsPromised);
 import { assert } from 'chai';
 
-describe('util-common.PromDelay', () => {
+describe('util-common/PromDelay', () => {
   describe('#delay(delayMSec)', () => {
     it('should eventually resolve to true', () => {
       assert.isFulfilled(PromDelay.resolve(10));

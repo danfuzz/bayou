@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { TInt } from 'typecheck';
 
-describe('typecheck.TInt', () => {
+describe('typecheck/TInt', () => {
   describe('#check(value)', () => {
     it('should return the provided value when passed a safe integer', () => {
       const value = 9823674;

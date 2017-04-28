@@ -23,7 +23,7 @@ beforeEach(() => {
   }
 });
 
-describe('see-all-server.RecentSink', () => {
+describe('see-all-server/RecentSink', () => {
   describe('#time(nowMsec, utcString, localString', () => {
     it('needs a way to be tested');
   });

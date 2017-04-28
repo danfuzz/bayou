@@ -17,7 +17,7 @@ before(() => {
   }
 });
 
-describe('api-common.Decoder', () => {
+describe('api-common/Decoder', () => {
   describe('#decode(value)', () => {
     it('should pass non-object values through as-is', () => {
       assert.strictEqual(Decoder.decode(37), 37);

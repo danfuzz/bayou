@@ -36,7 +36,7 @@ beforeEach(() => {
   key = new FakeKey(URL, ID);
 });
 
-describe('api-common.BaseKey', () => {
+describe('api-common/BaseKey', () => {
   describe('.url', () => {
     it('should return the URL passed to the constructor', () => {
       const url = key.url;
