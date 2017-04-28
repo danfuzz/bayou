@@ -9,7 +9,7 @@ import { TObject } from 'typecheck';
 import { JsonUtil } from 'util-common';
 
 describe('util-common/JsonUtil', () => {
-  describe('#parseFrozen(jsonString)', () => {
+  describe('parseFrozen(jsonString)', () => {
     it('should throw an error if handed anything other than a string', () => {
       assert.throws(() => JsonUtil.parseFrozen([]));
       assert.throws(() => JsonUtil.parseFrozen({}));

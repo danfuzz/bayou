@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { DocumentId } from 'doc-common';
 
 describe('doc-common/DocumentId', () => {
-  describe('#check', () => {
+  describe('check', () => {
     it('should reject null values', () => {
       assert.throws(() => DocumentId.check(null));
     });

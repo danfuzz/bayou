@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { WebsocketCodes } from 'util-common';
 
 describe('util-common/WebsocketCodes', () => {
-  describe('#close()', () => {
+  describe('close()', () => {
     it('should return a questioning string', () => {
       const readable = WebsocketCodes.close();
 
@@ -16,7 +16,7 @@ describe('util-common/WebsocketCodes', () => {
     });
   });
 
-  describe('#close(null)', () => {
+  describe('close(null)', () => {
     it('should return a questioning string', () => {
       const readable = WebsocketCodes.close(null);
 
@@ -24,7 +24,7 @@ describe('util-common/WebsocketCodes', () => {
     });
   });
 
-  describe('#close(code)', () => {
+  describe('close(code)', () => {
     it('should return a fixed format string if passed a known code', () => {
       const output = WebsocketCodes.close(1000);
 

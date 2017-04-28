@@ -10,7 +10,7 @@ import { TInt } from 'typecheck';
 import { TString } from 'typecheck';
 
 describe('typecheck/TArray', () => {
-  describe('#check(value)', () => {
+  describe('check(value)', () => {
     it('should return the provided value when passed an array', () => {
       const value = [1, 2, 3];
 
@@ -25,7 +25,7 @@ describe('typecheck/TArray', () => {
     });
   });
 
-  describe('#check(value, elementChecker)', () => {
+  describe('check(value, elementChecker)', () => {
     it('should validate array elements with an element checker', () => {
       const value = [1, 2, 3];
 

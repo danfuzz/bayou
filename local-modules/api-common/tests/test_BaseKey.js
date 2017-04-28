@@ -53,7 +53,7 @@ describe('api-common/BaseKey', () => {
     });
   });
 
-  describe('#toString()', () => {
+  describe('toString()', () => {
     it('returns a redacted (log-safe) representation of the key', () => {
       const s = key.toString();
 
@@ -61,7 +61,7 @@ describe('api-common/BaseKey', () => {
     });
   });
 
-  describe('#makeChallengePair()', () => {
+  describe('makeChallengePair()', () => {
     it('returns a challenge/response pair in an object', () => {
       const pair = key.makeChallengePair();
 

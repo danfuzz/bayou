@@ -14,7 +14,7 @@ import { Dirs } from 'server-env';
 //import { PidFile } from 'server-env';
 
 describe('server-env/PidFile', () => {
-  describe('#init(basePath)', () => {
+  describe('init(basePath)', () => {
     it('should create a pid.txt file at a known position off of baseDir', () => {
       /*
        * TODO: We have a small problem here in that the test runner is launched by

@@ -12,7 +12,7 @@ class TestClass extends Singleton {
 }
 
 describe('util-common/Singleton', () => {
-  describe('#theOne()', () => {
+  describe('theOne()', () => {
     it('should return the same object every time it is called', () => {
       const test1 = TestClass.theOne;
       const test2 = TestClass.theOne;

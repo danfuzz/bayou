@@ -24,7 +24,7 @@ beforeEach(() => {
 });
 
 describe('see-all-server/RecentSink', () => {
-  describe('#time(nowMsec, utcString, localString', () => {
+  describe('time(nowMsec, utcString, localString', () => {
     it('needs a way to be tested');
   });
 

@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { TObject } from 'typecheck';
 
 describe('typecheck/TObject', () => {
-  describe('#check(value)', () => {
+  describe('check(value)', () => {
     it('should return the provided value when passed an object', () => {
       const value = { a: 1, b: 2 };
 
@@ -24,7 +24,7 @@ describe('typecheck/TObject', () => {
     });
   });
 
-  describe('#withExactKeys(value, keys)', () => {
+  describe('withExactKeys(value, keys)', () => {
     it('should allow an object with exactly the provided keys', () => {
       const value = { 'a': 1, 'b': 2, 'c': 3 };
 

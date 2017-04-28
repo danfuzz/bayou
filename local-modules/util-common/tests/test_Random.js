@@ -10,7 +10,7 @@ import { TString } from 'typecheck';
 import { Random } from 'util-common';
 
 describe('util-common/Random', () => {
-  describe('#byteArray(length)', () => {
+  describe('byteArray(length)', () => {
     it('should return an array of the requested length', () => {
       const length = 17;
       const randomBytes = Random.byteArray(length);
@@ -27,7 +27,7 @@ describe('util-common/Random', () => {
     });
   });
 
-  describe('#hexByteString(length)', () => {
+  describe('hexByteString(length)', () => {
     it('should return a string of hex digits of the requested length', () => {
       const length = 13;
       const string = Random.hexByteString(length);
@@ -36,7 +36,7 @@ describe('util-common/Random', () => {
     });
   });
 
-  describe('#shortLabel(prefix)', () => {
+  describe('shortLabel(prefix)', () => {
     it('should return a probably-random string of the form "[prefix]-[8 * base32ish random character]"', () => {
       const label1A = Random.shortLabel('A');
       const label2A = Random.shortLabel('A');

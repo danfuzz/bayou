@@ -9,15 +9,15 @@ import { Proppy } from 'proppy';
 import { TObject } from 'typecheck';
 
 describe('proppy/Proppy', () => {
-  describe('#parseStream(value)', () => {
+  describe('parseStream(value)', () => {
     it('needs testing');
   });
 
-  describe('#parseFile(value)', () => {
+  describe('parseFile(value)', () => {
     it('needs testing');
   });
 
-  describe('#parseString(value)', () => {
+  describe('parseString(value)', () => {
     it('should ignore comments and blank lines', () => {
       const input = '# this is comment line one\n' +
                     '# this is comment line two\n' +

@@ -12,21 +12,21 @@ Chai.use(ChaiAsPromised);
 import { assert } from 'chai';
 
 describe('util-common/PromDelay', () => {
-  describe('#delay(delayMSec)', () => {
+  describe('delay(delayMSec)', () => {
     it('should eventually resolve to true', () => {
       assert.isFulfilled(PromDelay.resolve(10));
       assert.becomes(PromDelay.resolve(10), true);
     });
   });
 
-  describe('#delay(delayMSec, value)', () => {
+  describe('delay(delayMSec, value)', () => {
     it('should eventually resolve to the supplied value', () => {
       assert.isFulfilled(PromDelay.resolve(10, 'floopty'));
       assert.becomes(PromDelay.resolve(10, 'floopty'), 'floopty');
     });
   });
 
-  describe('#reject(delayMSec, reason)', () => {
+  describe('reject(delayMSec, reason)', () => {
     it('should eventually be rejected with the specified reason', () => {
       assert.isRejected(PromDelay.reject(10, 'you smell'));
       assert.isRejected(PromDelay.reject(10, 'you smell'), /^you smell$/);

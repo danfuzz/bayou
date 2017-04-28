@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { ObjectUtil } from 'util-base';
 
 describe('util-base/ObjectUtil', () => {
-  describe('#hasOwnProperty(value, name)', () => {
+  describe('hasOwnProperty(value, name)', () => {
     it('should return true when asked about an object\'s own propery', () => {
       const value = {};
 

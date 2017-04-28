@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { DataUtil } from 'util-common';
 
 describe('util-common/DataUtil', () => {
-  describe('#deepFreeze(value)', () => {
+  describe('deepFreeze(value)', () => {
     it('should return the provided value if it is a primitive', () => {
       const symbol = Symbol('foo');
 
@@ -38,7 +38,7 @@ describe('util-common/DataUtil', () => {
     });
   });
 
-  describe('#bytesFromHex(value)', () => {
+  describe('bytesFromHex(value)', () => {
     it('should throw an Error if passed an odd-lengthed string', () => {
       assert.throws(() => DataUtil.bytesFromHex('aabbc'));
     });
@@ -63,7 +63,7 @@ describe('util-common/DataUtil', () => {
     });
   });
 
-  describe('#hexFromBytes(value)', () => {
+  describe('hexFromBytes(value)', () => {
     it('should throw an Error if passed anything but an array of byte values', () => {
       assert.throws(() => DataUtil.hexFromBytes('this better not work!'));
       assert.throws(() => DataUtil.hexFromBytes(37));

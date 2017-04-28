@@ -11,7 +11,7 @@ import { BearerTokens } from 'hooks-server';
 const BEARER_TOKEN = BearerTokens.theOne;
 
 describe('hooks-server/BearerTokens', () => {
-  describe('#isToken(tokenString)', () => {
+  describe('isToken(tokenString)', () => {
     it('should accept any value', () => {
       assert.isTrue(BEARER_TOKEN.isToken('abc123'));
     });
@@ -29,7 +29,7 @@ describe('hooks-server/BearerTokens', () => {
     });
   });
 
-  describe('#tokenId(tokenString)', () => {
+  describe('tokenId(tokenString)', () => {
     it('should return the first 16 characters of the string passed to it', () => {
       const fakeTokenString = 'abcdefghijklmnopqrstuvwxyz';
       const tokenId = BEARER_TOKEN.tokenId(fakeTokenString);
@@ -38,7 +38,7 @@ describe('hooks-server/BearerTokens', () => {
     });
   });
 
-  describe('#whenRootTokensChange()', () => {
+  describe('whenRootTokensChange()', () => {
     it('should return a promise', () => {
       const changePromise = BEARER_TOKEN.whenRootTokensChange();
 

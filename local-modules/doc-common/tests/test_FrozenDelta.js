@@ -10,7 +10,7 @@ import util from 'util';
 import { FrozenDelta } from 'doc-common';
 
 describe('doc-common/FrozenDelta', () => {
-  describe('EMPTY', () => {
+  describe('.EMPTY', () => {
     const empty = FrozenDelta.EMPTY;
 
     it('should be an instance of `FrozenDelta`', () => {
@@ -34,7 +34,7 @@ describe('doc-common/FrozenDelta', () => {
     });
   });
 
-  describe('isEmpty', () => {
+  describe('isEmpty()', () => {
     describe('valid empty values', () => {
       const values = [
         new Delta([]),

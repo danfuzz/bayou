@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { TString } from 'typecheck';
 
 describe('typecheck/TString', () => {
-  describe('#check(value)', () => {
+  describe('check(value)', () => {
     it('should return the provided value when passed a string', () => {
       const value = 'this better work!';
 
@@ -25,7 +25,7 @@ describe('typecheck/TString', () => {
     });
   });
 
-  describe('#check(value, regex)', () => {
+  describe('check(value, regex)', () => {
     it('should allow a string when it matches the provided regex', () => {
       const value = 'deadbeef7584930215cafe';
 
@@ -39,7 +39,7 @@ describe('typecheck/TString', () => {
     });
   });
 
-  describe('#hexBytes(value)', () => {
+  describe('hexBytes(value)', () => {
     it('should return the provided value if it is a string of hex bytes', () => {
       const value = 'deadbeef7584930215cafe';
 
@@ -53,7 +53,7 @@ describe('typecheck/TString', () => {
     });
   });
 
-  describe('#hexBytes(value, minBytes)', () => {
+  describe('hexBytes(value, minBytes)', () => {
     it('should return the provided value if it is a string of hex bytes of the required minimum length', () => {
       const value = 'deadbeef7584930215cafe';
 
@@ -73,7 +73,7 @@ describe('typecheck/TString', () => {
     });
   });
 
-  describe('#hexBytes(value, inclusiveMinBytes, inclusiveMaxBytes)', () => {
+  describe('hexBytes(value, inclusiveMinBytes, inclusiveMaxBytes)', () => {
     it('should return the provided value if it is a string of hex bytes of the required minimum length', () => {
       const value = 'deadbeef7584930215cafe';
 
@@ -105,7 +105,7 @@ describe('typecheck/TString', () => {
     });
   });
 
-  describe('#nonempty(value)', () => {
+  describe('nonempty(value)', () => {
     it('should return the provided value if it is a string with length >= 1', () => {
       const value = 'This better work!';
 
@@ -119,7 +119,7 @@ describe('typecheck/TString', () => {
     });
   });
 
-  describe('#orNull(value)', () => {
+  describe('orNull(value)', () => {
     it('should return the provided value if it is a string', () => {
       const value = 'This better work!';
 
@@ -141,7 +141,7 @@ describe('typecheck/TString', () => {
     });
   });
 
-  describe('#urlAbsolute(value)', () => {
+  describe('urlAbsolute(value)', () => {
     it('should return the provided value if it is an absolute url string', () => {
       const value = 'https://www.example.com';
 

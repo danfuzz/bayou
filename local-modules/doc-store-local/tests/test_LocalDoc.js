@@ -26,7 +26,7 @@ describe('doc-store-local/LocalDoc', () => {
     });
   });
 
-  describe('#changeAppend(change)', () => {
+  describe('changeAppend(change)', () => {
     it('should increment the version after a change is applied', () => {
       const doc = new LocalDoc('0', '0', _documentPath());
       const oldVersion = doc.currentVerNum();
@@ -57,7 +57,7 @@ describe('doc-store-local/LocalDoc', () => {
     // });
   });
 
-  describe('#create()', () => {
+  describe('create()', () => {
     it('should erase the document if called on a non-empty document', () => {
       const doc = new LocalDoc('0', '0', _documentPath());
 
