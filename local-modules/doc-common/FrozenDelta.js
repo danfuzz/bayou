@@ -20,7 +20,7 @@ let emptyDelta = null;
  * `Delta` provides.
  */
 export default class FrozenDelta extends Delta {
-  /** Frozen (immutable) empty `Delta` instance. */
+  /** {FrozenDelta} Empty instance of this class. */
   static get EMPTY() {
     if (emptyDelta === null) {
       emptyDelta = new FrozenDelta([]);
@@ -32,8 +32,11 @@ export default class FrozenDelta extends Delta {
   /**
    * Returns `true` iff the given delta or delta-like value is empty. This
    * accepts the same set of values as `coerce()`, see which. Anything else is
-   * considered to be an error. This is a static method exactly because it
-   * accepts things other than instances of `FrozenDelta` per se.
+   * considered to be an error, except that when not given a `Delta` per se the
+   * array contents (if any) are not inspected for validity.
+   *
+   * **Note:** This is a static method exactly because it accepts things other
+   * than instances of `FrozenDelta` per se.
    *
    * @param {object|array|null|undefined} delta The delta or delta-like value.
    * @returns {boolean} `true` if `delta` is empty or `false` if not.
@@ -103,6 +106,7 @@ export default class FrozenDelta extends Delta {
    *   given value.
    */
   constructor(ops) {
+    // TODO: Should consider validating the contents of `ops`.
     TArray.check(ops);
 
     super(DataUtil.deepFreeze(ops));
