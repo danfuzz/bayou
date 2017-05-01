@@ -80,7 +80,7 @@ export default class Application {
   _addRequestLogging() {
     // Stream to write to, when logging to a file.
     const accessStream = fs.createWriteStream(
-      path.resolve(Dirs.VAR_DIR, 'access.log'),
+      path.resolve(Dirs.LOG_DIR, 'access.log'),
       { flags: 'a' });
 
     RequestLogger.addLoggers(this._app, log.infoStream, accessStream);
