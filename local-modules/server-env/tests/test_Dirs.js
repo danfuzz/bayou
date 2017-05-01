@@ -20,7 +20,7 @@ describe('server-env/Dirs', () => {
   });
 
   describe('.CLIENT_DIR', () => {
-    it('should return a known subdirectory off of BASE_DIR', () => {
+    it('should return a known subdirectory off of `BASE_DIR`', () => {
       const baseDir = Dirs.BASE_DIR;
       const clientDir = path.join(baseDir, 'client');
 
@@ -30,12 +30,22 @@ describe('server-env/Dirs', () => {
   });
 
   describe('.CLIENT_CODE_DIR', () => {
-    it('should return a known subdirectory off of CLIENT_DIR', () => {
+    it('should return a known subdirectory off of `CLIENT_DIR`', () => {
       const clientDir = Dirs.CLIENT_DIR;
       const codeDir = path.join(clientDir, 'js');
 
       assert.strictEqual(codeDir, Dirs.CLIENT_CODE_DIR);
       assert.isTrue(fs.existsSync(codeDir));
+    });
+  });
+
+  describe('.LOG_DIR', () => {
+    it('should return a known subdirectory off of `VAR_DIR`', () => {
+      const varDir = Dirs.VAR_DIR;
+      const logDir = path.join(varDir, 'log');
+
+      assert.strictEqual(logDir, Dirs.LOG_DIR);
+      assert.isTrue(fs.existsSync(logDir));
     });
   });
 

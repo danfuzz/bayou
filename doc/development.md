@@ -72,6 +72,10 @@ There are a couple options on the `build` script that cause tests to be run.
 * `--client-bundle` &mdash; Build the client code bundle, reporting any errors.
 * `--server-test` &mdash; Run the tests for the server code.
 
+In addition, if you have already made a build, you can provide either of these
+options to the built script `out/bin/run`, to run the tests in question with
+respect to the built product.
+
 ### Cleanup
 
 ```
