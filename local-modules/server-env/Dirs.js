@@ -50,7 +50,14 @@ export default class Dirs {
   }
 
   /**
-   * The server directory. This contains just code.
+   * The directory to write log files to.
+   */
+  static get LOG_DIR() {
+    return path.resolve(Dirs.VAR_DIR, 'log');
+  }
+
+  /**
+   * The server directory. This contains the server code.
    */
   static get SERVER_DIR() {
     return path.resolve(Dirs.BASE_DIR, 'server');

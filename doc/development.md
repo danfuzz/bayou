@@ -65,6 +65,13 @@ To perform a build with boxes, say:
 $ ./scripts/build --boxes=<box-dir>
 ```
 
+### Testing
+
+There are a couple options on the `build` script that cause tests to be run.
+
+* `--client-bundle` &mdash; Build the client code bundle, reporting any errors.
+* `--server-test` &mdash; Run the tests for the server code.
+
 ### Cleanup
 
 ```
