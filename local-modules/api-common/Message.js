@@ -59,6 +59,21 @@ export default class Message {
   }
 
   /**
+   * Converts this instance to a form suitable for logging.
+   *
+   * @returns {object} Log-appropriate form.
+   */
+  toLog() {
+    return {
+      id:     this._id,
+      target: this._target,
+      action: this._action,
+      name:   this._name,
+      args:   this._args
+    };
+  }
+
+  /**
    * Constructs an instance from API arguments.
    *
    * @param {Int} id Same as with the regular constructor.

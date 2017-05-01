@@ -7,6 +7,7 @@ import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase, Random } from 'util-common';
 
+import ApiLog from './ApiLog';
 import BearerToken from './BearerToken';
 import MetaHandler from './MetaHandler';
 import Context from './Context';
@@ -76,6 +77,9 @@ export default class Connection extends CommonBase {
     /** {Int} Count of messages received. Used for liveness logging. */
     this._messageCount = 0;
 
+    /** {ApiLog} The standard API logging handler. */
+    this._apiLog = ApiLog.theOne;
+
     /** {Logger} Logger which includes the connection ID as a prefix. */
     this._log = log.withPrefix(`[${this._connectionId}]`);
 
@@ -139,7 +143,7 @@ export default class Connection extends CommonBase {
   handleJsonMessage(msg) {
     return new Promise((res, rej_unused) => {
       msg = this._decodeMessage(msg); // Not supposed to ever throw.
-      this._log.detail('Message:', msg);
+      const startTime = this._apiLog.incomingMessage(this._connectionId, msg);
 
       // Function to send a response. Arrow syntax so that `this` is usable.
       const respond = (result, error) => {
@@ -150,20 +154,13 @@ export default class Connection extends CommonBase {
           response.result = result;
         }
 
-        if (error) {
-          // TODO: Ultimately _some_ errors coming back from API calls shouldn't
-          // be considered log-worthy server errors. We will need to
-          // differentiate them at some point.
-          this._log.error('Error:', error);
-        }
-
-        this._log.detail('Response:', response);
-
         // We resolve the promise successfully, whether or not the actual
         // handling of the message resulted in an error. That is, at this layer,
         // we can succeed in transporting a value which indicates a higher-level
         // error.
         res(Encoder.encodeJson(response));
+
+        this._apiLog.fullCall(this._connectionId, startTime, msg, response);
       };
 
       if (msg.error) {
