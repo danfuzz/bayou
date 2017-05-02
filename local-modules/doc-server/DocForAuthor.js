@@ -37,11 +37,13 @@ export default class DocForAuthor {
   }
 
   /**
-   * The version number corresponding to the very next change that will be
+   * Gets the version number corresponding to the very next change that will be
    * made to the document.
+   *
+   * @returns {int} The version number.
    */
-  get nextVerNum() {
-    return this._doc.nextVerNum;
+  nextVerNum() {
+    return this._doc.nextVerNum();
   }
 
   /**

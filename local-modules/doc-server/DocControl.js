@@ -57,10 +57,12 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * The version number corresponding to the very next change that will be
+   * Gets the version number corresponding to the very next change that will be
    * made to the document.
+   *
+   * @returns {int} The version number.
    */
-  get nextVerNum() {
+  nextVerNum() {
     return this._doc.nextVerNum();
   }
 
@@ -253,7 +255,7 @@ export default class DocControl extends CommonBase {
     }
 
     // (3)
-    this._appendDelta(dNext, authorId);
+    this._appendDelta(dNext, authorId);      // This updates the version number.
     const vNext = this.snapshot().contents;  // This lets the snapshot get cached.
     const vNextNum = this.currentVerNum();   // This will be different than `vCurrentNum`.
 
@@ -277,17 +279,20 @@ export default class DocControl extends CommonBase {
    *
    * @param {number} startInclusive Version number for the first delta to
    *   include in the result.
-   * @param {number} [endExclusive = this.nextVerNum] Version number for just
+   * @param {number} [endExclusive = this.nextVerNum()] Version number for just
    *   after the last delta to include, or alternatively thought, of the first
    *   version to exclude from the result.
    * @returns {FrozenDelta} The composed delta consisting of versions
    *   `startInclusive` through but not including `endExclusive`.
    */
-  _composeVersions(startInclusive, endExclusive = this.nextVerNum) {
+  _composeVersions(startInclusive, endExclusive = this.nextVerNum()) {
+    // TODO: The `endExclusive` default above will have to be altered once
+    // `nextVerNum()` starts returning a promise.
+
     // Validate parameters.
     startInclusive = VersionNumber.check(startInclusive);
     endExclusive =
-      TInt.rangeInc(endExclusive, startInclusive, this.nextVerNum);
+      TInt.rangeInc(endExclusive, startInclusive, this.nextVerNum());
 
     if (startInclusive === endExclusive) {
       return FrozenDelta.EMPTY;
@@ -319,7 +324,7 @@ export default class DocControl extends CommonBase {
     }
 
     const change =
-      new DocumentChange(this.nextVerNum, Timestamp.now(), delta, authorId);
+      new DocumentChange(this.nextVerNum(), Timestamp.now(), delta, authorId);
     this._doc.changeAppend(change);
     this._changeCondition.value = true;
   }
