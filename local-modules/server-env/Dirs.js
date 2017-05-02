@@ -50,7 +50,19 @@ export default class Dirs {
   }
 
   /**
-   * The server directory. This contains just code.
+   * The directory to write log files to. Accessing this value guarantees the
+   * existence of the directory (that is, it will create the directory if
+   * necessary).
+   */
+  static get LOG_DIR() {
+    const result = path.resolve(Dirs.VAR_DIR, 'log');
+
+    Dirs._ensureDir(result);
+    return result;
+  }
+
+  /**
+   * The server directory. This contains the server code.
    */
   static get SERVER_DIR() {
     return path.resolve(Dirs.BASE_DIR, 'server');
@@ -58,7 +70,8 @@ export default class Dirs {
 
   /**
    * The "var" (mutable/variable data) directory. This is where local data is
-   * kept.
+   * kept. Accessing this value guarantees the existence of the directory (that
+   * is, it will create the directory if necessary).
    */
   static get VAR_DIR() {
     // TODO: In production, this will want to be somewhere other than under the
@@ -66,19 +79,7 @@ export default class Dirs {
     // via an item in `hooks-server`.
     const result = path.resolve(Dirs.BASE_DIR, 'var');
 
-    try {
-      const stat = fs.statSync(result);
-      if (stat.isDirectory()) {
-        return result;
-      } else {
-        throw new Error(`Expected a directory: ${result}`);
-      }
-    } catch (e) {
-      // Presumably not found. Ignore the exception, fall through, and attempt
-      // to create it.
-    }
-
-    fs.mkdirSync(result);
+    Dirs._ensureDir(result);
     return result;
   }
 
@@ -108,5 +109,27 @@ export default class Dirs {
 
       dir = path.dirname(dir);
     }
+  }
+
+  /**
+   * Guarantees that a directory exists. Creates it if it doesn't exist. If the
+   * path exists but isn't a directory, throws an error.
+   *
+   * @param {string} dirPath Path to the (alleged or to-be-created) directory.
+   */
+  static _ensureDir(dirPath) {
+    try {
+      const stat = fs.statSync(dirPath);
+      if (stat.isDirectory()) {
+        return;
+      } else {
+        throw new Error(`Expected a directory: ${dirPath}`);
+      }
+    } catch (e) {
+      // Presumably not found. Ignore the exception, fall through, and attempt
+      // to create it.
+    }
+
+    fs.mkdirSync(dirPath);
   }
 }

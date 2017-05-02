@@ -157,7 +157,7 @@ function serverTest() {
 
 // Initialize logging.
 ServerSink.init();
-new FileSink(path.resolve(Dirs.VAR_DIR, 'general.log'));
+new FileSink(path.resolve(Dirs.LOG_DIR, 'general.log'));
 
 if (clientBundleMode) {
   clientBundle();
