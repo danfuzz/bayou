@@ -42,10 +42,12 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * The version number corresponding to the current (latest) version of the
-   * document.
+   * Gets the version number corresponding to the current (latest) version of
+   * the document.
+   *
+   * @returns {int} The version number.
    */
-  get currentVerNum() {
+  currentVerNum() {
     return this._doc.currentVerNum();
   }
 
@@ -67,7 +69,7 @@ export default class DocControl extends CommonBase {
    * sequence of changes, each modifying version N of the document to produce
    * version N+1.
    *
-   * @param {number} [verNum = this.currentVerNum] The version number of the
+   * @param {number} [verNum = this.currentVerNum()] The version number of the
    *   change. The result is the change which produced that version. E.g., `0`
    *   is a request for the first change (the change from the empty document).
    * @returns {DocumentChange} An object representing that change.
@@ -80,7 +82,7 @@ export default class DocControl extends CommonBase {
   /**
    * Returns a snapshot of the full document contents.
    *
-   * @param {number} [verNum = this.currentVerNum] Indicates which version to
+   * @param {number} [verNum = this.currentVerNum()] Indicates which version to
    *   get.
    * @returns {Snapshot} The corresponding snapshot.
    */
@@ -150,7 +152,7 @@ export default class DocControl extends CommonBase {
    *   `baseVerNum`.
    */
   deltaAfter(baseVerNum) {
-    const currentVerNum = this.currentVerNum;
+    const currentVerNum = this.currentVerNum();
     baseVerNum = this._validateVerNum(baseVerNum, false);
 
     if (baseVerNum !== currentVerNum) {
@@ -197,14 +199,14 @@ export default class DocControl extends CommonBase {
     delta = FrozenDelta.coerce(delta);
     authorId = TString.orNull(authorId);
 
-    if (baseVerNum === this.currentVerNum) {
+    if (baseVerNum === this.currentVerNum()) {
       // The easy case: Apply a delta to the current version (unless it's empty,
       // in which case we don't have to make a new version at all; that's
       // handled by `_appendDelta()`).
       this._appendDelta(delta, authorId);
       return {
-        delta:  FrozenDelta.EMPTY, // That is, there was no correction.
-        verNum: this.currentVerNum // `_appendDelta()` updates the version.
+        delta:  FrozenDelta.EMPTY,   // That is, there was no correction.
+        verNum: this.currentVerNum() // `_appendDelta()` updates the version.
       };
     }
 
@@ -231,7 +233,7 @@ export default class DocControl extends CommonBase {
     const dClient    = delta;
     const vBaseNum   = baseVerNum;
     const vBase      = this.snapshot(vBaseNum).contents;
-    const vCurrentNum = this.currentVerNum;
+    const vCurrentNum = this.currentVerNum();
 
     // (1)
     const dServer = this._composeVersions(vBaseNum + 1);
@@ -253,7 +255,7 @@ export default class DocControl extends CommonBase {
     // (3)
     this._appendDelta(dNext, authorId);
     const vNext = this.snapshot().contents;  // This lets the snapshot get cached.
-    const vNextNum = this.currentVerNum;     // This will be different than `vCurrentNum`.
+    const vNextNum = this.currentVerNum();   // This will be different than `vCurrentNum`.
 
     // (4)
     const vExpected = FrozenDelta.coerce(vBase).compose(dClient);
@@ -332,7 +334,7 @@ export default class DocControl extends CommonBase {
    * @returns {number} The version number.
    */
   _validateVerNum(verNum, wantCurrent) {
-    const current = this.currentVerNum;
+    const current = this.currentVerNum();
 
     if (wantCurrent) {
       return VersionNumber.check(verNum, current, current);

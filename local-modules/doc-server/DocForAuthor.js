@@ -27,11 +27,13 @@ export default class DocForAuthor {
   }
 
   /**
-   * The version number corresponding to the current (latest) version of the
-   * document.
+   * Gets the version number corresponding to the current (latest) version of
+   * the document.
+   *
+   * @returns {int} The version number.
    */
-  get currentVerNum() {
-    return this._doc.currentVerNum;
+  currentVerNum() {
+    return this._doc.currentVerNum();
   }
 
   /**
@@ -46,7 +48,7 @@ export default class DocForAuthor {
    * Returns a particular change to the document. See the equivalent
    * `DocControl` method for details.
    *
-   * @param {number} [verNum = this.currentVerNum] The version number of the
+   * @param {number} [verNum = this.currentVerNum()] The version number of the
    *   change.
    * @returns {DocumentChange} An object representing that change.
    */
@@ -69,7 +71,7 @@ export default class DocForAuthor {
    * Returns a snapshot of the full document contents. See the equivalent
    * `DocControl` method for details.
    *
-   * @param {number} [verNum = this.currentVerNum] Which version to get.
+   * @param {number} [verNum = this.currentVerNum()] Which version to get.
    * @returns {Snapshot} The corresponding snapshot.
    */
   snapshot(verNum) {
