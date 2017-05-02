@@ -67,9 +67,10 @@ export default class RootAccess {
       this._context.add(key, doc);
 
       log.info(`Newly-authorized access.`);
-      log.info(`  author: ${authorId}`);
-      log.info(`  doc:    ${docId}`);
-      log.info(`  key id: ${key.id}`); // The ID is safe to log.
+      log.info(`  author:  ${authorId}`);
+      log.info(`  doc:     ${docId}`);
+      log.info(`  key id:  ${key.id}`); // The ID is safe to log (not security-sensitive).
+      log.info(`  key url: ${key.url}`);
 
       return key;
     });
