@@ -317,7 +317,7 @@ function do-install {
 
     if [[ ${boxDir} == '' ]]; then
         # No boxed dependencies. Normal install.
-        npm install || return 1
+        npm install --cache="${outDir}/npm-cache" || return 1
     else
         # We were asked to use the boxed dependencies.
         if [[ ${dir} =~ ^(.*)-src$ ]]; then
