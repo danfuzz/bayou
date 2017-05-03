@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import BayouMocha from './BayouMocha';
+import ClientTests from './ClientTests';
 import Mocks from './Mocks';
+import ServerTests from './ServerTests';
 
-export { BayouMocha, Mocks };
+export { ClientTests, Mocks, ServerTests };

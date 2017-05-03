@@ -7,7 +7,7 @@
     "api-client": "local",
     "doc-common": "local",
     "see-all": "local",
-    "statemachine": "local",
+    "state-machine": "local",
     "typecheck": "local",
     "util-common": "local"
   }

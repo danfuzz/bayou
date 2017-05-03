@@ -124,7 +124,7 @@ export default class RequestLogger {
     else if (status >= 400) { return chalk.yellow; }
     else if (status >= 300) { return chalk.cyan;   }
     else if (status >= 200) { return chalk.green;  }
-    else                    { return ((x) => x);   } // No-op by default.
+    else                    { return (x => x);     } // No-op by default.
   }
 
   /**

@@ -12,6 +12,7 @@
   },
   "rules" : {
     "array-bracket-spacing": "error",
+    "arrow-parens": ["error", "as-needed", { "requireForBlockBody": true }],
     "consistent-return": "error",
     "eol-last": "error",
     "eqeqeq": "error",

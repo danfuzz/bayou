@@ -18,7 +18,7 @@ import path from 'path';
 import minimist from 'minimist';
 
 import { Application } from 'app-setup';
-import { BayouMocha } from 'bayou-mocha';
+import { ServerTests } from 'bayou-mocha';
 import { ClientBundle } from 'client-bundle';
 import { DevMode } from 'dev-mode';
 import { Hooks } from 'hooks-server';
@@ -144,7 +144,7 @@ function serverTest() {
   // initialization and perhaps even teardown.)
   ServerEnv.init();
 
-  BayouMocha.runAllTests((failures) => {
+  ServerTests.runAll((failures) => {
     const anyFailed = (failures !== 0);
     const msg = anyFailed
       ? `Failed: ${failures}`

@@ -6,12 +6,14 @@ import Mocha from 'mocha';
 import fs from 'fs';
 import path from 'path';
 
-const mocha = new Mocha();
+import { Dirs } from 'server-env';
+
+import Utils from './Utils';
 
 /**
- * Driver for the Mocha test framework.
+ * Driver for the Mocha framework, for server tests.
  */
-export default class BayouMocha {
+export default class ServerTests {
   /**
    * Builds a list of all bayou-local tests, adds them to a test runner,
    * and then executes the tests.
@@ -20,15 +22,16 @@ export default class BayouMocha {
    *   testing is complete. Gets passed a `failures` value. Ignored if passed
    *   as `null`.
    */
-  static runAllTests(callback = null) {
-    const bayouModules = BayouMocha.bayouModules();
-    const testPaths = BayouMocha.testPathsForModules(bayouModules);
+  static runAll(callback = null) {
+    const bayouModules = Utils.localModulesIn(Dirs.SERVER_DIR);
+    const testPaths = ServerTests._testPathsForModules(bayouModules);
+    const mocha = new Mocha();
 
-    testPaths.forEach(testPath => {
+    testPaths.forEach((testPath) => {
       const allFiles = fs.readdirSync(testPath);
       const jsFiles = allFiles.filter(file => file.substr(-3) === '.js');
 
-      jsFiles.forEach(file => {
+      jsFiles.forEach((file) => {
         mocha.addFile(path.join(testPath, file));
       });
     });
@@ -41,36 +44,20 @@ export default class BayouMocha {
   }
 
   /**
-   * Returns a list of bayou-local node modules.
-   *
-   * @returns {Array.<string>} The bayou-local module names.
-   */
-  static bayouModules() {
-    const packageData = fs.readFileSync('package.json');
-    const packageParsed = JSON.parse(packageData);
-    const dependencies = packageParsed['dependencies'];
-    const modules = Object.keys(dependencies);
-
-    return modules.filter(module => {
-      return dependencies[module].indexOf('local-modules/') >= 0;
-    });
-  }
-
-  /**
    * Returns a list of filesystem paths for modules that
    * have a `tests` directory.
    *
-   * @param {Array.<string>} moduleList A list of module names to scan for tests.
-   * @returns {Array.<string>} The bayou-local module names
+   * @param {array<string>} moduleList A list of module names to scan for tests.
+   * @returns {array<string>} The bayou-local module names
    */
-  static testPathsForModules(moduleList) {
-    const potentialTestPaths = moduleList.map(module => {
+  static _testPathsForModules(moduleList) {
+    const potentialTestPaths = moduleList.map((module) => {
       const modulePath = path.dirname(require.resolve(module));
 
       return path.join(modulePath, 'tests');
     });
 
-    return potentialTestPaths.filter(potentialTestPath => {
+    return potentialTestPaths.filter((potentialTestPath) => {
       return fs.existsSync(potentialTestPath);
     });
   }

@@ -6,7 +6,7 @@ import { ApiError } from 'api-client';
 import { FrozenDelta, Snapshot } from 'doc-common';
 import { Logger } from 'see-all';
 import { TInt, TObject, TString } from 'typecheck';
-import { StateMachine } from 'statemachine';
+import { StateMachine } from 'state-machine';
 import { PromDelay } from 'util-common';
 
 /**
@@ -849,7 +849,7 @@ export default class DocClient extends StateMachine {
     const now = Date.now();
     const agedOut = now - ERROR_WINDOW_MSEC;
 
-    this._errorStamps = this._errorStamps.filter((value) => value >= agedOut);
+    this._errorStamps = this._errorStamps.filter(value => (value >= agedOut));
     this._errorStamps.push(now);
   }
 
