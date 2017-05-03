@@ -23,11 +23,11 @@ export default class ServerTests {
     const testPaths = ServerTests._testPathsForModules(bayouModules);
     const mocha = new Mocha();
 
-    testPaths.forEach(testPath => {
+    testPaths.forEach((testPath) => {
       const allFiles = fs.readdirSync(testPath);
-      const jsFiles = allFiles.filter((file) => file.substr(-3) === '.js');
+      const jsFiles = allFiles.filter(file => file.substr(-3) === '.js');
 
-      jsFiles.forEach(file => {
+      jsFiles.forEach((file) => {
         mocha.addFile(path.join(testPath, file));
       });
     });

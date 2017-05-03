@@ -39,7 +39,7 @@ export default class PropertyIter {
   filter(filter) {
     const origFilter = this._filter;
     const newFilter = origFilter
-      ? ((desc) => origFilter(desc) && filter(desc))
+      ? (desc => (origFilter(desc) && filter(desc)))
       : filter;
 
     return new PropertyIter(this._object, newFilter);
@@ -54,7 +54,7 @@ export default class PropertyIter {
   onlyMethods() {
     // **Note:** If `value` is defined, the property is guaranteed not to be
     // synthetic.
-    return this.filter((desc) => (typeof desc.value === 'function'));
+    return this.filter(desc => (typeof desc.value === 'function'));
   }
 
   /**
@@ -64,7 +64,7 @@ export default class PropertyIter {
    * @returns {PropertyIter} The new iterator.
    */
   skipObject() {
-    return this.filter((desc) => (desc.target !== Object.prototype));
+    return this.filter(desc => (desc.target !== Object.prototype));
   }
 
   /**
@@ -74,7 +74,7 @@ export default class PropertyIter {
    * @returns {PropertyIter} The new iterator.
    */
   skipSynthetic() {
-    return this.filter((desc) => !(desc.get || desc.set));
+    return this.filter(desc => !(desc.get || desc.set));
   }
 
   /**

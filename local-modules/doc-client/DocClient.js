@@ -849,7 +849,7 @@ export default class DocClient extends StateMachine {
     const now = Date.now();
     const agedOut = now - ERROR_WINDOW_MSEC;
 
-    this._errorStamps = this._errorStamps.filter((value) => value >= agedOut);
+    this._errorStamps = this._errorStamps.filter(value => (value >= agedOut));
     this._errorStamps.push(now);
   }
 
