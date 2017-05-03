@@ -8,6 +8,8 @@ import path from 'path';
 
 import { Dirs } from 'server-env';
 
+import Utils from './Utils';
+
 /**
  * Driver for the Mocha framework, for server tests.
  */
@@ -21,7 +23,7 @@ export default class ServerTests {
    *   as `null`.
    */
   static runAll(callback = null) {
-    const bayouModules = ServerTests._bayouModules();
+    const bayouModules = Utils.localModulesIn(Dirs.SERVER_DIR);
     const testPaths = ServerTests._testPathsForModules(bayouModules);
     const mocha = new Mocha();
 
@@ -38,22 +40,6 @@ export default class ServerTests {
       if (callback !== null) {
         callback(failures);
       }
-    });
-  }
-
-  /**
-   * Returns a list of bayou-local node modules.
-   *
-   * @returns {array<string>} The bayou-local module names.
-   */
-  static _bayouModules() {
-    const packageData = fs.readFileSync(path.resolve(Dirs.SERVER_DIR, 'package.json'));
-    const packageParsed = JSON.parse(packageData);
-    const dependencies = packageParsed['dependencies'];
-    const modules = Object.keys(dependencies);
-
-    return modules.filter((module) => {
-      return dependencies[module].indexOf('local-modules/') >= 0;
     });
   }
 
