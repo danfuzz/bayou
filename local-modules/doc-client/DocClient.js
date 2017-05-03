@@ -6,7 +6,7 @@ import { ApiError } from 'api-client';
 import { FrozenDelta, Snapshot } from 'doc-common';
 import { Logger } from 'see-all';
 import { TInt, TObject, TString } from 'typecheck';
-import { StateMachine } from 'statemachine';
+import { StateMachine } from 'state-machine';
 import { PromDelay } from 'util-common';
 
 /**
