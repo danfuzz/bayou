@@ -6,6 +6,8 @@ import Mocha from 'mocha';
 import fs from 'fs';
 import path from 'path';
 
+import { Dirs } from 'server-env';
+
 /**
  * Driver for the Mocha framework, for server tests.
  */
@@ -45,7 +47,7 @@ export default class ServerTests {
    * @returns {array<string>} The bayou-local module names.
    */
   static _bayouModules() {
-    const packageData = fs.readFileSync('package.json');
+    const packageData = fs.readFileSync(path.resolve(Dirs.SERVER_DIR, 'package.json'));
     const packageParsed = JSON.parse(packageData);
     const dependencies = packageParsed['dependencies'];
     const modules = Object.keys(dependencies);

@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import ClientTests from './ClientTests';
 import Mocks from './Mocks';
 import ServerTests from './ServerTests';
 
-export { Mocks, ServerTests };
+export { ClientTests, Mocks, ServerTests };
