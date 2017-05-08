@@ -192,10 +192,10 @@ export default class DebugTools {
    * Runs the client tests. This operates by emitting a page that runs the
    * tests.
    *
-   * @param {object} req HTTP request.
+   * @param {object} req_unused HTTP request.
    * @param {object} res HTTP response handler.
    */
-  _handle_clientTest(req, res) {
+  _handle_clientTest(req_unused, res) {
     // TODO: Something real.
     const mods = ClientTests.moduleNames();
     const result = `Modules: ${JSON.stringify(mods, null, 2)}\n`;
