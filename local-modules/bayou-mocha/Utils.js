@@ -20,10 +20,10 @@ export default class Utils {
     const packageData = fs.readFileSync(path.resolve(dir, 'package.json'));
     const packageParsed = JSON.parse(packageData);
     const dependencies = packageParsed['dependencies'];
-    const modules = Object.keys(dependencies);
-
-    return modules.filter((module) => {
+    const modules = Object.keys(dependencies).filter((module) => {
       return /\/local-modules\//.test(dependencies[module]);
     });
+
+    return modules.sort();
   }
 }
