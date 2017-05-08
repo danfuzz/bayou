@@ -11,13 +11,17 @@ import Utils from './Utils';
  */
 export default class ClientTests {
   /**
-   * Returns a list of the client modules that are used by the product. This
-   * includes modules that have no tests, explicitly so that those can be
-   * called out in reports as needing tests.
+   * Returns a list of the test files for client modules that are used by the
+   * product.
    *
    * @returns {array<string>} Array of module names.
    */
-  static moduleNames() {
-    return Utils.localModulesIn(Dirs.CLIENT_DIR);
+  static allTestFiles() {
+    // TODO: Complain about modules that have no tests at all.
+
+    const moduleNames = Utils.localModulesIn(Dirs.SERVER_DIR);
+    const testFiles = Utils.allTestFiles(Dirs.SERVER_DIR, moduleNames);
+
+    return testFiles;
   }
 }

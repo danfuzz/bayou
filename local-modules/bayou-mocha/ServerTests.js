@@ -3,8 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import Mocha from 'mocha';
-import fs from 'fs';
-import path from 'path';
 
 import { Dirs } from 'server-env';
 
@@ -23,42 +21,20 @@ export default class ServerTests {
    *   as `null`.
    */
   static runAll(callback = null) {
-    const bayouModules = Utils.localModulesIn(Dirs.SERVER_DIR);
-    const testPaths = ServerTests._testPathsForModules(bayouModules);
+    // TODO: Complain about modules that have no tests at all.
+
+    const moduleNames = Utils.localModulesIn(Dirs.SERVER_DIR);
+    const testFiles = Utils.allTestFiles(Dirs.SERVER_DIR, moduleNames);
     const mocha = new Mocha();
 
-    testPaths.forEach((testPath) => {
-      const allFiles = fs.readdirSync(testPath);
-      const jsFiles = allFiles.filter(file => file.substr(-3) === '.js');
-
-      jsFiles.forEach((file) => {
-        mocha.addFile(path.join(testPath, file));
-      });
-    });
+    for (const f of testFiles) {
+      mocha.addFile(f);
+    }
 
     mocha.run((failures) => {
       if (callback !== null) {
         callback(failures);
       }
-    });
-  }
-
-  /**
-   * Returns a list of filesystem paths for modules that
-   * have a `tests` directory.
-   *
-   * @param {array<string>} moduleList A list of module names to scan for tests.
-   * @returns {array<string>} The bayou-local module names
-   */
-  static _testPathsForModules(moduleList) {
-    const potentialTestPaths = moduleList.map((module) => {
-      const modulePath = path.dirname(require.resolve(module));
-
-      return path.join(modulePath, 'tests');
-    });
-
-    return potentialTestPaths.filter((potentialTestPath) => {
-      return fs.existsSync(potentialTestPath);
     });
   }
 }

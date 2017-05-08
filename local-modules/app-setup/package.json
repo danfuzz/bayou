@@ -4,6 +4,7 @@
   "main": "main.js",
 
   "dependencies": {
+    "camel-case": "^3.0.0",
     "chalk": "^1.1.1",
     "express": "^4.14.0",
     "express-ws": "^2.0.0",
@@ -11,6 +12,7 @@
 
     "api-common": "local",
     "api-server": "local",
+    "bayou-mocha": "local",
     "client-bundle": "local",
     "doc-common": "local",
     "doc-server": "local",
