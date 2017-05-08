@@ -2,9 +2,11 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import camelCase from 'camel-case';
 import express from 'express';
 import util from 'util';
 
+import { ClientTests } from 'bayou-mocha';
 import { Encoder } from 'api-common';
 import { AuthorId, DocumentId } from 'doc-common';
 import { DocServer } from 'doc-server';
@@ -57,14 +59,15 @@ export default class DebugTools {
     this._bindParam('documentId');
     this._bindParam('verNum');
 
-    this._bindHandler('change',   ':documentId/:verNum');
-    this._bindHandler('edit',     ':documentId');
-    this._bindHandler('edit',     ':documentId/:authorId');
-    this._bindHandler('key',      ':documentId');
-    this._bindHandler('key',      ':documentId/:authorId');
+    this._bindHandler('change',      ':documentId/:verNum');
+    this._bindHandler('client-test');
+    this._bindHandler('edit',        ':documentId');
+    this._bindHandler('edit',        ':documentId/:authorId');
+    this._bindHandler('key',         ':documentId');
+    this._bindHandler('key',         ':documentId/:authorId');
     this._bindHandler('log');
-    this._bindHandler('snapshot', ':documentId');
-    this._bindHandler('snapshot', ':documentId/:verNum');
+    this._bindHandler('snapshot',    ':documentId');
+    this._bindHandler('snapshot',    ':documentId/:verNum');
 
     router.use(this._error.bind(this));
   }
@@ -102,7 +105,7 @@ export default class DebugTools {
     const fullPath = (paramPath === null)
       ? `/${name}`
       : `/${name}/${paramPath}`;
-    const handlerMethod = this[`_handle_${name}`].bind(this);
+    const handlerMethod = this[`_handle_${camelCase(name)}`].bind(this);
 
     function handleRequest(req, res, next) {
       try {
@@ -183,6 +186,21 @@ export default class DebugTools {
       const result = Encoder.encodeJson(change, true);
       this._textResponse(res, result);
     });
+  }
+
+  /**
+   * Runs the client tests. This operates by emitting a page that runs the
+   * tests.
+   *
+   * @param {object} req HTTP request.
+   * @param {object} res HTTP response handler.
+   */
+  _handle_clientTest(req, res) {
+    // TODO: Something real.
+    const mods = ClientTests.moduleNames();
+    const result = `Modules: ${JSON.stringify(mods, null, 2)}\n`;
+
+    this._textResponse(res, result);
   }
 
   /**
