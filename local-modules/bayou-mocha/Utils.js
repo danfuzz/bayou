@@ -23,7 +23,7 @@ export default class Utils {
     const modules = Object.keys(dependencies);
 
     return modules.filter((module) => {
-      return dependencies[module].indexOf('local-modules/') >= 0;
+      return /\/local-modules\//.test(dependencies[module]);
     });
   }
 }

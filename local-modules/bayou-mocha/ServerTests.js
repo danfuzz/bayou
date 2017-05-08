@@ -29,7 +29,7 @@ export default class ServerTests {
 
     testPaths.forEach((testPath) => {
       const allFiles = fs.readdirSync(testPath);
-      const jsFiles = allFiles.filter(file => file.substr(-3) === '.js');
+      const jsFiles = allFiles.filter(file => /\.js$/.test(file));
 
       jsFiles.forEach((file) => {
         mocha.addFile(path.join(testPath, file));
