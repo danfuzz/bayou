@@ -28,10 +28,10 @@ export default class Utils {
   }
 
   /**
-   * Gets a list of filesystem paths to test source files in the indicated
-   * modules under the given subproduct base directory. The results are all
-   * `.js` files that live in a `tests` directory directly under the main module
-   * directory.
+   * Gets a list of filesystem paths for all the test source files in the
+   * indicated modules under the given subproduct base directory. The results
+   * are all `.js` files that live in a `tests` directory directly under the
+   * main module directory.
    *
    * @param {string} dir Path to the subproduct directory.
    * @param {array<string>} moduleList A list of module names to scan for tests,
