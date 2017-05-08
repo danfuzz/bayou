@@ -197,8 +197,8 @@ export default class DebugTools {
    */
   _handle_clientTest(req_unused, res) {
     // TODO: Something real.
-    const mods = ClientTests.moduleNames();
-    const result = `Modules: ${JSON.stringify(mods, null, 2)}\n`;
+    const tests = ClientTests.allTestFiles();
+    const result = `Tests: ${JSON.stringify(tests, null, 2)}\n`;
 
     this._textResponse(res, result);
   }

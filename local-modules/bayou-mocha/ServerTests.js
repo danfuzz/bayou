@@ -21,8 +21,10 @@ export default class ServerTests {
    *   as `null`.
    */
   static runAll(callback = null) {
-    const bayouModules = Utils.localModulesIn(Dirs.SERVER_DIR);
-    const testFiles = Utils.allTestFiles(Dirs.SERVER_DIR, bayouModules);
+    // TODO: Complain about modules that have no tests at all.
+
+    const moduleNames = Utils.localModulesIn(Dirs.SERVER_DIR);
+    const testFiles = Utils.allTestFiles(Dirs.SERVER_DIR, moduleNames);
     const mocha = new Mocha();
 
     for (const f of testFiles) {
