@@ -42,7 +42,6 @@ const clientPackage =
  */
 const webpackOptions = {
   context: Dirs.CLIENT_CODE_DIR,
-  debug: true,
   devtool: '#inline-source-map',
   entry: {
     main: [
@@ -64,7 +63,12 @@ const webpackOptions = {
     publicPath: '/static/'
   },
   plugins: [
-    new webpack.ProgressPlugin(new ProgressMessage(log).handler)
+    new webpack.ProgressPlugin(new ProgressMessage(log).handler),
+    // This is a shim for turning on debug in loaders, added in Webpack 2 to
+    // simulate the behavior of the now-removed top-level `debug` option.
+    // TODO: Remove this when loaders can be more directly optioned into having
+    // debugging turned on.
+    new webpack.LoaderOptionsPlugin({ debug: true })
   ],
   resolve: {
     alias: {
@@ -79,47 +83,53 @@ const webpackOptions = {
     },
     // All the extensions listed here except `.ts` are in the default list.
     // Webpack doesn't offer a way to simply add to the defaults (alas).
-    extensions: ['', '.webpack.js', '.web.js', '.js', '.ts']
+    extensions: ['.webpack.js', '.web.js', '.js', '.ts']
   },
   resolveLoader: {
-    root: path.resolve(Dirs.SERVER_DIR, 'node_modules')
+    modules: [path.resolve(Dirs.SERVER_DIR, 'node_modules')]
   },
   module: {
-    loaders: [
+    rules: [
       {
         test: /\.js$/,
-        loader: 'babel-loader',
-        query: {
-          presets: ['es2015', 'es2016', 'es2017'].map(function (name) {
-            return require.resolve(`babel-preset-${name}`);
-          }),
-        }
+        use: [{
+          loader: 'babel-loader',
+          options: {
+            presets: ['es2015', 'es2016', 'es2017'].map(function (name) {
+              return require.resolve(`babel-preset-${name}`);
+            }),
+          }
+        }]
       },
       {
         test: /\.ts$/,
-        loader: 'ts-loader',
-        query: {
-          compilerOptions: {
-            // A reasonably conservative choice, and also recapitulates what
-            // Quill's Webpack config does.
-            target: 'es5',
-            // Parchment specifies this as `true`, but we need it to be `false`
-            // because we _aren't_ building it as a standalone library.
-            declaration: false
-          },
-          silent: true, // Avoids the banner spew.
-          transpileOnly: true
-        }
+        use: [{
+          loader: 'ts-loader',
+          options: {
+            compilerOptions: {
+              // A reasonably conservative choice, and also recapitulates what
+              // Quill's Webpack config does.
+              target: 'es5',
+              // Parchment specifies this as `true`, but we need it to be `false`
+              // because we _aren't_ building it as a standalone library.
+              declaration: false
+            },
+            silent: true, // Avoids the banner spew.
+            transpileOnly: true
+          }
+        }]
       },
       // Quill uses `require()` to access `.svg` assets. The configuration here
       // recapitulates how Quill is set up to process those assets. See
       // <https://github.com/quilljs/quill/blob/develop/_develop/webpack.config.js>.
       {
         test: /\.svg$/,
-        loader: 'html-loader',
-        query: {
-          minimize: true
-        }
+        use: [{
+          loader: 'html-loader',
+          options: {
+            minimize: true
+          }
+        }]
       }
     ]
   }
