@@ -42,7 +42,6 @@ const clientPackage =
  */
 const webpackOptions = {
   context: Dirs.CLIENT_CODE_DIR,
-  debug: true,
   devtool: '#inline-source-map',
   entry: {
     main: [
@@ -61,7 +60,7 @@ const webpackOptions = {
     // `_handleCompilation()` for more details.
     path: '/',
     filename: '[name]',
-    publicPath: '/static/'
+    publicPath: '/static/js/'
   },
   plugins: [
     new webpack.ProgressPlugin(new ProgressMessage(log).handler)
@@ -79,47 +78,53 @@ const webpackOptions = {
     },
     // All the extensions listed here except `.ts` are in the default list.
     // Webpack doesn't offer a way to simply add to the defaults (alas).
-    extensions: ['', '.webpack.js', '.web.js', '.js', '.ts']
+    extensions: ['.webpack.js', '.web.js', '.js', '.ts']
   },
   resolveLoader: {
-    root: path.resolve(Dirs.SERVER_DIR, 'node_modules')
+    modules: [path.resolve(Dirs.SERVER_DIR, 'node_modules')]
   },
   module: {
-    loaders: [
+    rules: [
       {
         test: /\.js$/,
-        loader: 'babel-loader',
-        query: {
-          presets: ['es2015', 'es2016', 'es2017'].map(function (name) {
-            return require.resolve(`babel-preset-${name}`);
-          }),
-        }
+        use: [{
+          loader: 'babel-loader',
+          options: {
+            presets: ['es2015', 'es2016', 'es2017'].map((name) => {
+              return require.resolve(`babel-preset-${name}`);
+            }),
+          }
+        }]
       },
       {
         test: /\.ts$/,
-        loader: 'ts-loader',
-        query: {
-          compilerOptions: {
-            // A reasonably conservative choice, and also recapitulates what
-            // Quill's Webpack config does.
-            target: 'es5',
-            // Parchment specifies this as `true`, but we need it to be `false`
-            // because we _aren't_ building it as a standalone library.
-            declaration: false
-          },
-          silent: true, // Avoids the banner spew.
-          transpileOnly: true
-        }
+        use: [{
+          loader: 'ts-loader',
+          options: {
+            compilerOptions: {
+              // A reasonably conservative choice, and also recapitulates what
+              // Parchment's `tsconfig.json` specifies.
+              target: 'es5',
+              // Parchment specifies this as `true`, but we need it to be `false`
+              // because we _aren't_ building it as a standalone library.
+              declaration: false
+            },
+            silent: true, // Avoids the banner spew.
+            transpileOnly: true
+          }
+        }]
       },
       // Quill uses `require()` to access `.svg` assets. The configuration here
       // recapitulates how Quill is set up to process those assets. See
       // <https://github.com/quilljs/quill/blob/develop/_develop/webpack.config.js>.
       {
         test: /\.svg$/,
-        loader: 'html-loader',
-        query: {
-          minimize: true
-        }
+        use: [{
+          loader: 'html-loader',
+          options: {
+            minimize: true
+          }
+        }]
       }
     ]
   }
@@ -239,7 +244,7 @@ export default class ClientBundle {
       // This request came in before bundles have ever been built. Instead of
       // trying to get too fancy, we just wait a second and retry (which itself
       // might end up waiting some more).
-      setTimeout(() => { this._requestHandler.bind(req, res, next); }, 1000);
+      setTimeout(() => { this._requestHandler(req, res, next); }, 1000);
       return;
     }
 
