@@ -229,17 +229,31 @@ export default class ClientBundle {
    *
    * @param {object} req The HTTP request.
    * @param {object} res The HTTP response handler.
+   * @param {function} next Function to call to execute the next handler in the
+   *   chain.
    */
-  _requestHandler(req, res) {
-    const bundle = this._currentBundles.get('main');
+  _requestHandler(req, res, next) {
+    const bundles = this._currentBundles;
+
+    if (bundles.size === 0) {
+      // This request came in before bundles have ever been built. Instead of
+      // trying to get too fancy, we just wait a second and retry (which itself
+      // might end up waiting some more).
+      setTimeout(() => { this._requestHandler.bind(req, res, next); }, 1000);
+      return;
+    }
+
+    const name = req.params.name;
+    const bundle = bundles.get(name);
+
     if (bundle) {
       res.type('application/javascript');
       res.send(bundle);
     } else {
-      // This request came in before a bundle has ever been built. Instead of
-      // trying to get too fancy, we just wait a second and retry (which itself
-      // might end up waiting some more).
-      setTimeout(this._requestHandler.bind(this), 1000, req, res);
+      // No such bundle (as opposed to merely not having been built yet, which
+      // would have been caught above). We use the `next()` handler, which
+      // should bottom out in an HTTP(S) failure.
+      next();
     }
   }
 
