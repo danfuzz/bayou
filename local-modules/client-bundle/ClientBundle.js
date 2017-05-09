@@ -63,9 +63,7 @@ const webpackOptions = {
     publicPath: '/static/'
   },
   plugins: [
-    new webpack.ProgressPlugin(new ProgressMessage(log).handler),
-    // This is a shim for turning on debug in loaders, added in Webpack 2 to
-    // simulate the behavior of the now-removed top-level `debug` option.
+    new webpack.ProgressPlugin(new ProgressMessage(log).handler)
   ],
   resolve: {
     alias: {
