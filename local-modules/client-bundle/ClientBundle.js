@@ -239,7 +239,7 @@ export default class ClientBundle {
       // This request came in before bundles have ever been built. Instead of
       // trying to get too fancy, we just wait a second and retry (which itself
       // might end up waiting some more).
-      setTimeout(() => { this._requestHandler.bind(req, res, next); }, 1000);
+      setTimeout(() => { this._requestHandler(req, res, next); }, 1000);
       return;
     }
 
