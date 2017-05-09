@@ -48,6 +48,10 @@ const webpackOptions = {
     main: [
       require.resolve('babel-polyfill'),
       path.resolve(Dirs.CLIENT_DIR, clientPackage.main)
+    ],
+    test: [
+      require.resolve('babel-polyfill'),
+      path.resolve(Dirs.CLIENT_DIR, clientPackage.testMain)
     ]
   },
   output: {
@@ -134,13 +138,15 @@ export default class ClientBundle {
    * Constructs an instance.
    */
   constructor() {
-    /** Memory FS used to hold the immediate results of compilation. */
+    /**
+     * {memory_fs} Memory FS used to hold the immediate results of compilation.
+     */
     this._fs = new memory_fs();
 
-    /** Current (most recently built) compiled bundle. */
-    this._currentBundle = null;
+    /** {Map<string,Buffer>} Current (most recently built) compiled bundles. */
+    this._currentBundles = new Map();
 
-    /** Dev mode running? */
+    /** {boolean} Dev mode running? */
     this._devModeRunning = false;
   }
 
@@ -154,7 +160,9 @@ export default class ClientBundle {
 
     // We use a `memory_fs` to hold the immediate results of compilation, to
     // make it possible to detect when things go awry before anything gets
-    // stored to the real FS.
+    // cached or (heaven forfend) sent out over the network. Once a compilation
+    // is successful, we grab the result into `_currentBundles` and erase it
+    // from the memory FS.
     compiler.outputFileSystem = this._fs;
 
     return compiler;
@@ -189,12 +197,12 @@ export default class ClientBundle {
       return;
     }
 
-    log.info('Compiled new JS bundle.');
+    log.info('Compiled new JS bundles.');
 
     // Find the written bundle in the memory FS, read it, and then delete it.
     // See comments in `_newCompiler()`, above, for rationale.
     try {
-      this._currentBundle = this._fs.readFileSync('/main.bundle.js');
+      this._currentBundles.set('main', this._fs.readFileSync('/main.bundle.js'));
       this._fs.unlinkSync('/main.bundle.js');
     } catch (e) {
       // File not found. This will happen when it turns out there were no
@@ -211,9 +219,10 @@ export default class ClientBundle {
    * @param {object} res The HTTP response handler.
    */
   _requestHandler(req, res) {
-    if (this._currentBundle) {
+    const bundle = this._currentBundles.get('main');
+    if (bundle) {
       res.type('application/javascript');
-      res.send(this._currentBundle);
+      res.send(bundle);
     } else {
       // This request came in before a bundle has ever been built. Instead of
       // trying to get too fancy, we just wait a second and retry (which itself
@@ -223,19 +232,19 @@ export default class ClientBundle {
   }
 
   /**
-   * Performs a single build. Returns a promise for the built artifact.
+   * Performs a single build. Returns a promise for the built artifacts.
    *
-   * @returns {Promise<Buffer>} The built artifact.
+   * @returns {Promise<Map<string,Buffer>>} The built artifact.
    */
   build() {
     const result = new Promise((res, rej) => {
       const compiler = this._newCompiler();
       compiler.run((error, stats) => {
         this._handleCompilation(error, stats);
-        if (this._currentBundle) {
-          res(this._currentBundle);
+        if (this._currentBundles) {
+          res(this._currentBundles);
         } else {
-          rej('Trouble building client bundle.');
+          rej('Trouble building client bundles.');
         }
       });
     });
