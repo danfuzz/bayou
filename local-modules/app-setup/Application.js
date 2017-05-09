@@ -100,8 +100,8 @@ export default class Application {
     app.use('/static/quill',
       express.static(path.resolve(Dirs.CLIENT_DIR, 'node_modules/quill/dist')));
 
-    // Use Webpack to serve a JS bundle.
-    app.get('/static/main.bundle.js', new ClientBundle().requestHandler);
+    // Use the client bundler (which uses Webpack) to serve JS bundles.
+    app.get('/static/js/main.bundle.js', new ClientBundle().requestHandler);
 
     // Find HTML files and other static assets in `client/assets`. This includes
     // the top-level `index.html` and `favicon`, as well as stuff under
