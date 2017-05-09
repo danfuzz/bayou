@@ -198,9 +198,16 @@ export default class DebugTools {
   _handle_clientTest(req_unused, res) {
     // TODO: Something real.
     const tests = ClientTests.allTestFiles();
-    const result = `Tests: ${JSON.stringify(tests, null, 2)}\n`;
 
-    this._textResponse(res, result);
+    // TODO: Probably want to use a real template.
+    const head =
+      '<title>Client Tests</title>\n' +
+      '<script src="/boot-for-test.js"></script>\n';
+    const body =
+      '<h1>Client Tests</h1>\n' +
+      `<pre>Tests: ${JSON.stringify(tests, null, 2)}</pre>\n`;
+
+    this._htmlResponse(res, head, body);
   }
 
   /**

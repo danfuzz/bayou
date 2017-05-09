@@ -44,14 +44,23 @@ const webpackOptions = {
   context: Dirs.CLIENT_CODE_DIR,
   debug: true,
   devtool: '#inline-source-map',
-  entry: [
-    require.resolve('babel-polyfill'),
-    path.resolve(Dirs.CLIENT_DIR, clientPackage.main)
-  ],
+  entry: {
+    main: [
+      require.resolve('babel-polyfill'),
+      path.resolve(Dirs.CLIENT_DIR, clientPackage.main)
+    ],
+    test: [
+      require.resolve('babel-polyfill'),
+      path.resolve(Dirs.CLIENT_DIR, clientPackage.testMain)
+    ]
+  },
   output: {
     // Absolute output path of `/` because we write to a memory filesystem.
+    // And no `.js` suffix, because the memory filesystem contents aren't
+    // served out directly but just serve as an intermediate waystation. See
+    // `_handleCompilation()` for more details.
     path: '/',
-    filename: 'bundle.js',
+    filename: '[name]',
     publicPath: '/static/'
   },
   plugins: [
@@ -132,13 +141,15 @@ export default class ClientBundle {
    * Constructs an instance.
    */
   constructor() {
-    /** Memory FS used to hold the immediate results of compilation. */
+    /**
+     * {memory_fs} Memory FS used to hold the immediate results of compilation.
+     */
     this._fs = new memory_fs();
 
-    /** Current (most recently built) compiled bundle. */
-    this._currentBundle = null;
+    /** {Map<string,Buffer>} Current (most recently built) compiled bundles. */
+    this._currentBundles = new Map();
 
-    /** Dev mode running? */
+    /** {boolean} Dev mode running? */
     this._devModeRunning = false;
   }
 
@@ -152,7 +163,9 @@ export default class ClientBundle {
 
     // We use a `memory_fs` to hold the immediate results of compilation, to
     // make it possible to detect when things go awry before anything gets
-    // stored to the real FS.
+    // cached or (heaven forfend) sent out over the network. Once a compilation
+    // is successful, we grab the result into `_currentBundles` and erase it
+    // from the memory FS.
     compiler.outputFileSystem = this._fs;
 
     return compiler;
@@ -187,17 +200,26 @@ export default class ClientBundle {
       return;
     }
 
-    log.info('Compiled new JS bundle.');
-
-    // Find the written bundle in the memory FS, read it, and then delete it.
+    // Find the written bundles in the memory FS, reading and deleting each.
     // See comments in `_newCompiler()`, above, for rationale.
-    try {
-      this._currentBundle = this._fs.readFileSync('/bundle.js');
-      this._fs.unlinkSync('/bundle.js');
-    } catch (e) {
-      // File not found. This will happen when it turns out there were no
-      // changes to the bundle. But it might happen in other cases too.
-      log.info('Bundle not written! No changes?');
+    const allFiles = this._fs.readdirSync('/');
+    let any = false;
+    for (const name of allFiles) {
+      // The `test()` skips `.` and `..`.
+      if (/^[a-z]/.test(name)) {
+        const fullPath = `/${name}`;
+        log.info(`Bundle updated: ${name}`);
+        this._currentBundles.set(name, this._fs.readFileSync(fullPath));
+        this._fs.unlinkSync(fullPath);
+        any = true;
+      }
+    }
+
+    if (!any) {
+      // No bundles found. This will happen when it turns out there were no
+      // code changes _or_ when there was a bona fide error. In the latter
+      // case, though, we would have caught and reported it before we got here.
+      log.info('No bundles updated (code was unchanged).');
     }
   }
 
@@ -207,33 +229,48 @@ export default class ClientBundle {
    *
    * @param {object} req The HTTP request.
    * @param {object} res The HTTP response handler.
+   * @param {function} next Function to call to execute the next handler in the
+   *   chain.
    */
-  _requestHandler(req, res) {
-    if (this._currentBundle) {
-      res.type('application/javascript');
-      res.send(this._currentBundle);
-    } else {
-      // This request came in before a bundle has ever been built. Instead of
+  _requestHandler(req, res, next) {
+    const bundles = this._currentBundles;
+
+    if (bundles.size === 0) {
+      // This request came in before bundles have ever been built. Instead of
       // trying to get too fancy, we just wait a second and retry (which itself
       // might end up waiting some more).
-      setTimeout(this._requestHandler.bind(this), 1000, req, res);
+      setTimeout(() => { this._requestHandler.bind(req, res, next); }, 1000);
+      return;
+    }
+
+    const name = req.params.name;
+    const bundle = bundles.get(name);
+
+    if (bundle) {
+      res.type('application/javascript');
+      res.send(bundle);
+    } else {
+      // No such bundle (as opposed to merely not having been built yet, which
+      // would have been caught above). We use the `next()` handler, which
+      // should bottom out in an HTTP(S) failure.
+      next();
     }
   }
 
   /**
-   * Performs a single build. Returns a promise for the built artifact.
+   * Performs a single build. Returns a promise for the built artifacts.
    *
-   * @returns {Promise<Buffer>} The built artifact.
+   * @returns {Promise<Map<string,Buffer>>} The built artifact.
    */
   build() {
     const result = new Promise((res, rej) => {
       const compiler = this._newCompiler();
       compiler.run((error, stats) => {
         this._handleCompilation(error, stats);
-        if (this._currentBundle) {
-          res(this._currentBundle);
+        if (this._currentBundles) {
+          res(this._currentBundles);
         } else {
-          rej('Trouble building client bundle.');
+          rej('Trouble building client bundles.');
         }
       });
     });
