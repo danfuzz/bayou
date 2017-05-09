@@ -15,4 +15,4 @@ const log = new Logger('page-init');
 log.detail('Starting...');
 
 // TODO: Something real.
-log.detail('TODO');
+log.info('TODO');
