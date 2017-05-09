@@ -66,9 +66,6 @@ const webpackOptions = {
     new webpack.ProgressPlugin(new ProgressMessage(log).handler),
     // This is a shim for turning on debug in loaders, added in Webpack 2 to
     // simulate the behavior of the now-removed top-level `debug` option.
-    // TODO: Remove this when loaders can be more directly optioned into having
-    // debugging turned on.
-    new webpack.LoaderOptionsPlugin({ debug: true })
   ],
   resolve: {
     alias: {
@@ -108,7 +105,7 @@ const webpackOptions = {
           options: {
             compilerOptions: {
               // A reasonably conservative choice, and also recapitulates what
-              // Quill's Webpack config does.
+              // Parchment's `tsconfig.json` specifies.
               target: 'es5',
               // Parchment specifies this as `true`, but we need it to be `false`
               // because we _aren't_ building it as a standalone library.
