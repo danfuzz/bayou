@@ -265,7 +265,7 @@ export default class ClientBundle {
   /**
    * Performs a single build. Returns a promise for the built artifacts.
    *
-   * @returns {Promise<Map<string,Buffer>>} The built artifact.
+   * @returns {Promise<Map<string,Buffer>>} The built artifacts.
    */
   build() {
     const result = new Promise((res, rej) => {
