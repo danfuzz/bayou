@@ -85,7 +85,7 @@ const webpackOptions = {
     root: path.resolve(Dirs.SERVER_DIR, 'node_modules')
   },
   module: {
-    loaders: [
+    use: [
       {
         test: /\.js$/,
         loader: 'babel-loader',
