@@ -56,8 +56,11 @@ const webpackOptions = {
   },
   output: {
     // Absolute output path of `/` because we write to a memory filesystem.
+    // And no `.js` suffix, because the memory filesystem contents aren't
+    // served out directly but just serve as an intermediate waystation. See
+    // `_handleCompilation()` for more details.
     path: '/',
-    filename: '[name].bundle.js',
+    filename: '[name]',
     publicPath: '/static/'
   },
   plugins: [
@@ -197,17 +200,26 @@ export default class ClientBundle {
       return;
     }
 
-    log.info('Compiled new JS bundles.');
-
-    // Find the written bundle in the memory FS, read it, and then delete it.
+    // Find the written bundles in the memory FS, reading and deleting each.
     // See comments in `_newCompiler()`, above, for rationale.
-    try {
-      this._currentBundles.set('main', this._fs.readFileSync('/main.bundle.js'));
-      this._fs.unlinkSync('/main.bundle.js');
-    } catch (e) {
-      // File not found. This will happen when it turns out there were no
-      // changes to the bundle. But it might happen in other cases too.
-      log.info('Bundle not written! No changes?');
+    const allFiles = this._fs.readdirSync('/');
+    let any = false;
+    for (const name of allFiles) {
+      // The `test()` skips `.` and `..`.
+      if (/^[a-z]/.test(name)) {
+        const fullPath = `/${name}`;
+        log.info(`Bundle updated: ${name}`);
+        this._currentBundles.set(name, this._fs.readFileSync(fullPath));
+        this._fs.unlinkSync(fullPath);
+        any = true;
+      }
+    }
+
+    if (!any) {
+      // No bundles found. This will happen when it turns out there were no
+      // code changes _or_ when there was a bona fide error. In the latter
+      // case, though, we would have caught and reported it before we got here.
+      log.info('No bundles updated (code was unchanged).');
     }
   }
 
