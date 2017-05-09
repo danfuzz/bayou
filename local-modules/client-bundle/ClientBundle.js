@@ -44,14 +44,16 @@ const webpackOptions = {
   context: Dirs.CLIENT_CODE_DIR,
   debug: true,
   devtool: '#inline-source-map',
-  entry: [
-    require.resolve('babel-polyfill'),
-    path.resolve(Dirs.CLIENT_DIR, clientPackage.main)
-  ],
+  entry: {
+    main: [
+      require.resolve('babel-polyfill'),
+      path.resolve(Dirs.CLIENT_DIR, clientPackage.main)
+    ]
+  },
   output: {
     // Absolute output path of `/` because we write to a memory filesystem.
     path: '/',
-    filename: 'bundle.js',
+    filename: '[name].bundle.js',
     publicPath: '/static/'
   },
   plugins: [
@@ -192,8 +194,8 @@ export default class ClientBundle {
     // Find the written bundle in the memory FS, read it, and then delete it.
     // See comments in `_newCompiler()`, above, for rationale.
     try {
-      this._currentBundle = this._fs.readFileSync('/bundle.js');
-      this._fs.unlinkSync('/bundle.js');
+      this._currentBundle = this._fs.readFileSync('/main.bundle.js');
+      this._fs.unlinkSync('/main.bundle.js');
     } catch (e) {
       // File not found. This will happen when it turns out there were no
       // changes to the bundle. But it might happen in other cases too.
