@@ -32,7 +32,7 @@ const clientPackage =
  * pipeline, and any `.ts` file will get loaded via the TypeScript loader.
  *
  * **Note** about `require.resolve()` as used below: Babel doesn't respect the
- * `resolveLoader.root` value. Because we treat the `client` and `server` as
+ * Webpack `context` option. Because we treat the `client` and `server` as
  * peers (that is, because the server modules aren't in a super-directory of
  * `client`), we have to "manually" resolve the presets. See
  * <https://github.com/babel/babel-loader/issues/149>,
@@ -41,15 +41,15 @@ const clientPackage =
  * for details and discussion.
  */
 const webpackOptions = {
-  context: Dirs.CLIENT_CODE_DIR,
+  context: Dirs.SERVER_DIR, // Used for resolving loaders and the like.
   devtool: '#inline-source-map',
   entry: {
     main: [
-      require.resolve('babel-polyfill'),
+      'babel-polyfill',
       path.resolve(Dirs.CLIENT_DIR, clientPackage.main)
     ],
     test: [
-      require.resolve('babel-polyfill'),
+      'babel-polyfill',
       path.resolve(Dirs.CLIENT_DIR, clientPackage.testMain)
     ]
   },
@@ -80,9 +80,6 @@ const webpackOptions = {
     // Webpack doesn't offer a way to simply add to the defaults (alas).
     extensions: ['.webpack.js', '.web.js', '.js', '.ts']
   },
-  resolveLoader: {
-    modules: [path.resolve(Dirs.SERVER_DIR, 'node_modules')]
-  },
   module: {
     rules: [
       {
@@ -92,7 +89,7 @@ const webpackOptions = {
           options: {
             presets: ['es2015', 'es2016', 'es2017'].map((name) => {
               return require.resolve(`babel-preset-${name}`);
-            }),
+            })
           }
         }]
       },
@@ -105,8 +102,9 @@ const webpackOptions = {
               // A reasonably conservative choice, and also recapitulates what
               // Parchment's `tsconfig.json` specifies.
               target: 'es5',
-              // Parchment specifies this as `true`, but we need it to be `false`
-              // because we _aren't_ building it as a standalone library.
+              // Parchment specifies this as `true`, but we need it to be
+              // `false` because we _aren't_ building it as a standalone
+              // library.
               declaration: false
             },
             silent: true, // Avoids the banner spew.
