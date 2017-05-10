@@ -9,6 +9,8 @@
 import { Logger } from 'see-all';
 import { BrowserSink } from 'see-all-browser';
 
+import ClientTests from './client-tests';
+
 // Init logging.
 BrowserSink.init();
 const log = new Logger('page-init');
@@ -16,3 +18,5 @@ log.detail('Starting...');
 
 // TODO: Something real.
 log.info('TODO');
+log.info('tests', ClientTests);
+ClientTests.run();

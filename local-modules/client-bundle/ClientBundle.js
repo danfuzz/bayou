@@ -83,6 +83,7 @@ const webpackOptions = {
   module: {
     rules: [
       {
+        // The bulk of this project's code is written in modern JavaScript.
         test: /\.js$/,
         use: [{
           loader: 'babel-loader',
@@ -94,6 +95,7 @@ const webpackOptions = {
         }]
       },
       {
+        // Parchment (a dependency of Quill) is written in TypeScript.
         test: /\.ts$/,
         use: [{
           loader: 'ts-loader',
@@ -112,10 +114,10 @@ const webpackOptions = {
           }
         }]
       },
-      // Quill uses `require()` to access `.svg` assets. The configuration here
-      // recapitulates how Quill is set up to process those assets. See
-      // <https://github.com/quilljs/quill/blob/develop/_develop/webpack.config.js>.
       {
+        // Quill uses `require()` to access `.svg` assets. The configuration here
+        // recapitulates how Quill is set up to process those assets. See
+        // <https://github.com/quilljs/quill/blob/develop/_develop/webpack.config.js>.
         test: /\.svg$/,
         use: [{
           loader: 'html-loader',
@@ -123,7 +125,15 @@ const webpackOptions = {
             minimize: true
           }
         }]
-      }
+      },
+      {
+        // This handles dynamic construction of the main test-collector file.
+        test: /\/client-tests$/,
+        use: [{
+          loader: 'client-tests-loader'
+        }]
+      },
+
     ]
   }
 };

@@ -17,6 +17,7 @@
     "typescript": "^2.1.4",
     "webpack": "^2.5.1",
 
+    "client-tests-loader": "local",
     "see-all": "local",
     "server-env": "local",
     "util-common": "local"
