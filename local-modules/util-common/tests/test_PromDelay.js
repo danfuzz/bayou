@@ -2,14 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import ChaiAsPromised from 'chai-as-promised';
-import Chai from 'chai';
+import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { PromDelay } from 'util-common';
-
-Chai.use(ChaiAsPromised);
-import { assert } from 'chai';
 
 describe('util-common/PromDelay', () => {
   describe('delay(delayMSec)', () => {
