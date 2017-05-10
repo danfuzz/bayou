@@ -22,7 +22,7 @@
     "doc-client": "local",
     "hooks-client": "local",
     "quill-util": "local",
-    "see-all-browser": "local",
+    "see-all-client": "local",
     "util-client": "local"
   }
 }

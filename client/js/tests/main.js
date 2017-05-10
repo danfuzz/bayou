@@ -7,7 +7,7 @@
  */
 
 import { Logger } from 'see-all';
-import { BrowserSink } from 'see-all-browser';
+import { BrowserSink } from 'see-all-client';
 
 import ClientTests from './client-tests';
 
