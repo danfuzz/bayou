@@ -10,15 +10,9 @@ import { Logger } from 'see-all';
 import { ClientSink } from 'see-all-client';
 import { Tests } from 'testing-client';
 
-import ClientTests from './client-tests';
-
 // Init logging.
 ClientSink.init();
 const log = new Logger('page-init');
 log.detail('Starting...');
 
-// TODO: Something real.
-log.info('TODO');
-log.info('tests', ClientTests);
-ClientTests.run();
 Tests.runAll();

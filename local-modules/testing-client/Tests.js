@@ -7,6 +7,9 @@ import chaiAsPromised from 'chai-as-promised';
 
 import { Logger } from 'see-all';
 
+// This is a dynamically-generated file. See comments in it for more detail.
+import ClientTests from './client-tests';
+
 /** {Logger} Logger for this module. */
 const log = new Logger('testing-client');
 
@@ -22,5 +25,6 @@ export default class Tests {
    */
   static runAll() {
     log.info('TODO');
+    ClientTests.run();
   }
 }
