@@ -15,4 +15,10 @@ ClientSink.init();
 const log = new Logger('page-init');
 log.detail('Starting...');
 
-Tests.runAll();
+const elem = document.createElement('p');
+elem.innerHTML = 'Running&hellip;';
+document.body.appendChild(elem);
+
+Tests.runAll().then((result) => {
+  elem.innerHTML = result;
+});
