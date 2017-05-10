@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import BrowserSink from './BrowserSink';
+import { describe, it } from 'mocha';
 
-export { BrowserSink };
+describe('see-all-server/ClientSink', () => {
+  it('needs a way to be tested');
+});

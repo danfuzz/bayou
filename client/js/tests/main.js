@@ -7,12 +7,12 @@
  */
 
 import { Logger } from 'see-all';
-import { BrowserSink } from 'see-all-browser';
+import { ClientSink } from 'see-all-client';
 
 import ClientTests from './client-tests';
 
 // Init logging.
-BrowserSink.init();
+ClientSink.init();
 const log = new Logger('page-init');
 log.detail('Starting...');
 

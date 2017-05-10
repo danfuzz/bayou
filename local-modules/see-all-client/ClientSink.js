@@ -8,13 +8,13 @@ import { SeeAll } from 'see-all';
  * Implementation of the `see-all` logging sink protocol for use in a web
  * browser context. It logs everything to the browser window console.
  */
-export default class BrowserSink {
+export default class ClientSink {
   /**
    * Registers an instance of this class as a logging sink with the main
    * `see-all` module.
    */
   static init() {
-    SeeAll.add(new BrowserSink());
+    SeeAll.add(new ClientSink());
   }
 
   /**
