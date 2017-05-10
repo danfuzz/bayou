@@ -4,6 +4,6 @@
   "main": "main.js",
 
   "dependencies": {
-    "bayou-mocha": "local"
+    "testing-server": "local"
   }
 }

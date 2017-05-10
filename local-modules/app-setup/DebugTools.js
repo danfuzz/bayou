@@ -6,12 +6,12 @@ import camelCase from 'camel-case';
 import express from 'express';
 import util from 'util';
 
-import { ClientTests } from 'bayou-mocha';
 import { Encoder } from 'api-common';
 import { AuthorId, DocumentId } from 'doc-common';
 import { DocServer } from 'doc-server';
 import { Logger } from 'see-all';
 import { RecentSink } from 'see-all-server';
+import { ClientTests } from 'testing-server';
 
 /** Logger for this module. */
 const log = new Logger('app-debug');

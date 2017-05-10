@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { before, describe, it } from 'mocha';
 
 import { Decoder, Encoder, Registry } from 'api-common';
-import { Mocks } from 'bayou-mocha';
+import { Mocks } from 'testing-server';
 
 before(() => {
   try {

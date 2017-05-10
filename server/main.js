@@ -18,13 +18,13 @@ import path from 'path';
 import minimist from 'minimist';
 
 import { Application } from 'app-setup';
-import { ServerTests } from 'bayou-mocha';
 import { ClientBundle } from 'client-bundle';
 import { DevMode } from 'dev-mode';
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
 import { FileSink, ServerSink } from 'see-all-server';
 import { Dirs, ProductInfo, ServerEnv } from 'server-env';
+import { ServerTests } from 'testing-server';
 
 
 /** Logger for this file. */

@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { Encoder } from 'api-common';
-import { Mocks } from 'bayou-mocha';
+import { Mocks } from 'testing-server';
 
 class NoApiName {
   toApi() {

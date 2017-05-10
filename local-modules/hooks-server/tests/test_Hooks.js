@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Mocks } from 'bayou-mocha';
 import { BaseDocStore } from 'doc-store';
 import { BearerTokens, Hooks } from 'hooks-server';
+import { Mocks } from 'testing-server';
 
 describe('hooks-server/Hooks', () => {
   describe('baseUrlFromRequest(request)', () => {
