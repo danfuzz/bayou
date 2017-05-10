@@ -1,0 +1,9 @@
+{
+  "name": "client-tests-loader",
+  "version": "1.0.0",
+  "main": "main.js",
+
+  "dependencies": {
+    "bayou-mocha": "local"
+  }
+}
