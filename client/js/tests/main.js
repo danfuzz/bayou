@@ -8,15 +8,17 @@
 
 import { Logger } from 'see-all';
 import { ClientSink } from 'see-all-client';
-
-import ClientTests from './client-tests';
+import { Tests } from 'testing-client';
 
 // Init logging.
 ClientSink.init();
 const log = new Logger('page-init');
 log.detail('Starting...');
 
-// TODO: Something real.
-log.info('TODO');
-log.info('tests', ClientTests);
-ClientTests.run();
+const elem = document.createElement('p');
+elem.innerHTML = 'Running&hellip;';
+document.body.appendChild(elem);
+
+Tests.runAll().then((result) => {
+  elem.innerHTML = result;
+});

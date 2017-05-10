@@ -2,11 +2,16 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import Mocha from 'mocha';
 
 import { Dirs } from 'server-env';
 
 import Utils from './Utils';
+
+// One-time setup to hook `chai-as-promised` into the main `chai` module.
+chai.use(chaiAsPromised);
 
 /**
  * Driver for the Mocha framework, for server tests.

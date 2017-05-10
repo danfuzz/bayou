@@ -6,7 +6,6 @@ import camelCase from 'camel-case';
 import express from 'express';
 import util from 'util';
 
-import { ClientTests } from 'bayou-mocha';
 import { Encoder } from 'api-common';
 import { AuthorId, DocumentId } from 'doc-common';
 import { DocServer } from 'doc-server';
@@ -196,16 +195,12 @@ export default class DebugTools {
    * @param {object} res HTTP response handler.
    */
   _handle_clientTest(req_unused, res) {
-    // TODO: Something real.
-    const tests = ClientTests.allTestFiles();
-
     // TODO: Probably want to use a real template.
     const head =
       '<title>Client Tests</title>\n' +
       '<script src="/boot-for-test.js"></script>\n';
     const body =
-      '<h1>Client Tests</h1>\n' +
-      `<pre>Tests: ${JSON.stringify(tests, null, 2)}</pre>\n`;
+      '<h1>Client Tests</h1>\n';
 
     this._htmlResponse(res, head, body);
   }
