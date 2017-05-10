@@ -5,7 +5,7 @@
 import { ClientTests } from 'bayou-mocha';
 
 /**
- * Webback loader for the client test files.
+ * Webpack loader for the client test files.
  */
 export default class ClientTestsLoader {
   /**
