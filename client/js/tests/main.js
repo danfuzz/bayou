@@ -8,6 +8,7 @@
 
 import { Logger } from 'see-all';
 import { ClientSink } from 'see-all-client';
+import { Tests } from 'testing-client';
 
 import ClientTests from './client-tests';
 
@@ -20,3 +21,4 @@ log.detail('Starting...');
 log.info('TODO');
 log.info('tests', ClientTests);
 ClientTests.run();
+Tests.runAll();

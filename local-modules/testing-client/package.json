@@ -1,0 +1,12 @@
+{
+  "name": "testing-client",
+  "version": "1.0.0",
+  "main": "main.js",
+
+  "dependencies": {
+    "chai": "^3.5.0",
+    "chai-as-promised": "^6.0.0",
+
+    "see-all": "local"
+  }
+}

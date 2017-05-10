@@ -23,6 +23,7 @@
     "hooks-client": "local",
     "quill-util": "local",
     "see-all-client": "local",
+    "testing-client": "local",
     "util-client": "local"
   }
 }
