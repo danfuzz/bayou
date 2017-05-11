@@ -72,9 +72,18 @@ const webpackOptions = {
       // source.
       'quill':
         path.resolve(Dirs.CLIENT_DIR, 'node_modules/quill/quill.js'),
+
       // Likewise, `parchment`.
       'parchment':
-        path.resolve(Dirs.CLIENT_DIR, 'node_modules/parchment/src/parchment.ts'),
+        path.resolve(Dirs.CLIENT_DIR, 'node_modules/parchment/src/parchment.ts')
+
+      // Mocha's default entrypoint is for Node environments. This points it
+      // at the browser-based entrypoint.
+      // **TODO:** It is unclear if this will ultimately lead to a working
+      // system given the rest of the way we're put together. Leaving this here
+      // (but commented out) as a reminder of the possibility.
+      //'mocha':
+      //  path.resolve(Dirs.CLIENT_DIR, 'node_modules/mocha/mocha.js'),
     },
     // All the extensions listed here except `.ts` are in the default list.
     // Webpack doesn't offer a way to simply add to the defaults (alas).
