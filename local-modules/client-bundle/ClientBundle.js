@@ -98,7 +98,9 @@ const webpackOptions = {
         // `chai` uses the arguably-deprecated `arguments.callee` construct, so
         // it would fail if we ran it through this conversion. We exclude it
         // here, which means that its code gets passed through (basically)
-        // as-is.
+        // as-is. **TODO:** Chai has addressed this in v4.0, which as of this
+        // writing is in alpha (or maybe beta). Once it's done for real, we can
+        // update the dependency and remove this `exclude` clause.
         //
         // **Note:** At some point, we might want to reverse the polarity and
         // say that we only use this conversion on (a) our own modules, and (b)
