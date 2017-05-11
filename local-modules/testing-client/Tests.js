@@ -4,6 +4,7 @@
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+import { assert } from 'chai';
 
 import { Logger } from 'see-all';
 import { PromDelay } from 'util-common';
@@ -29,6 +30,15 @@ export default class Tests {
   static runAll() {
     log.info('TODO');
     ClientTests.run();
+
+    // Demonstrate that Chai works.
+    assert.isNull(null);
+    try {
+      assert.isNull(1);
+    } catch (e) {
+      log.info('Caught expected exception', e);
+    }
+
     return PromDelay.resolve(5000, 'All succeeded! ;-)');
   }
 }
