@@ -9,6 +9,13 @@ import { assert } from 'chai';
 import { Logger } from 'see-all';
 import { PromDelay } from 'util-common';
 
+// If we tweak the Webpack config to point the module `mocha` at the browser-ish
+// build, then the following `import` will cause `window.mocha` to be defined.
+// It is unclear whether this is really how we want to get this hooked up, which
+// is why it remains commented out.
+// import 'mocha';
+// const mocha = window.mocha;
+
 // This is a dynamically-generated file. See comments in it for more detail.
 import ClientTests from './client-tests';
 
