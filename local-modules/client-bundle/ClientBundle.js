@@ -72,9 +72,18 @@ const webpackOptions = {
       // source.
       'quill':
         path.resolve(Dirs.CLIENT_DIR, 'node_modules/quill/quill.js'),
+
       // Likewise, `parchment`.
       'parchment':
-        path.resolve(Dirs.CLIENT_DIR, 'node_modules/parchment/src/parchment.ts'),
+        path.resolve(Dirs.CLIENT_DIR, 'node_modules/parchment/src/parchment.ts')
+
+      // Mocha's default entrypoint is for Node environments. This points it
+      // at the browser-based entrypoint.
+      // **TODO:** It is unclear if this will ultimately lead to a working
+      // system given the rest of the way we're put together. Leaving this here
+      // (but commented out) as a reminder of the possibility.
+      //'mocha':
+      //  path.resolve(Dirs.CLIENT_DIR, 'node_modules/mocha/mocha.js'),
     },
     // All the extensions listed here except `.ts` are in the default list.
     // Webpack doesn't offer a way to simply add to the defaults (alas).
@@ -85,6 +94,20 @@ const webpackOptions = {
       {
         // The bulk of this project's code is written in modern JavaScript.
         test: /\.js$/,
+
+        // `chai` uses the arguably-deprecated `arguments.callee` construct, so
+        // it would fail if we ran it through this conversion. We exclude it
+        // here, which means that its code gets passed through (basically)
+        // as-is. **TODO:** Chai has addressed this in v4.0, which as of this
+        // writing is in alpha (or maybe beta). Once it's done for real, we can
+        // update the dependency and remove this `exclude` clause.
+        //
+        // **Note:** At some point, we might want to reverse the polarity and
+        // say that we only use this conversion on (a) our own modules, and (b)
+        // Quill (which definitely requires it as it's written using modern
+        // syntax).
+        exclude: /\/node_modules\/chai\//,
+
         use: [{
           loader: 'babel-loader',
           options: {
