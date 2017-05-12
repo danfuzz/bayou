@@ -13,18 +13,18 @@ const LOG_TAG = 'test';
 const LOG_PREFIX = 'this is log line ';
 const NUM_LINES = 4;
 
-beforeEach(() => {
-  log = new RecentSink(30 * 1000);
-
-  const now = new Date();
-
-  for (let i = 0; i < NUM_LINES; i++) {
-    log.log(now.getTime(), LOG_LEVEL, LOG_TAG, LOG_PREFIX + i);
-  }
-});
-
 describe('see-all-server/RecentSink', () => {
-  describe('time(nowMsec, utcString, localString', () => {
+  beforeEach(() => {
+    log = new RecentSink(30 * 1000);
+
+    const now = new Date();
+
+    for (let i = 0; i < NUM_LINES; i++) {
+      log.log(now.getTime(), LOG_LEVEL, LOG_TAG, LOG_PREFIX + i);
+    }
+  });
+
+  describe('time(nowMsec, utcString, localString)', () => {
     it('needs a way to be tested');
   });
 

@@ -32,11 +32,11 @@ class FakeKey extends BaseKey {
   }
 }
 
-beforeEach(() => {
-  key = new FakeKey(URL, ID);
-});
-
 describe('api-common/BaseKey', () => {
+  beforeEach(() => {
+    key = new FakeKey(URL, ID);
+  });
+
   describe('.url', () => {
     it('should return the URL passed to the constructor', () => {
       const url = key.url;
