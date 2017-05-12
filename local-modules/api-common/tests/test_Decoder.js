@@ -9,16 +9,16 @@ import { Decoder, Encoder, Registry } from 'api-common';
 
 import MockApiObject from './MockApiObject';
 
-before(() => {
-  try {
-    Registry.register(MockApiObject);
-  } catch (e) {
-    // nothing to do here, the try/catch is just in case some other test
-    // file has already registered the mock API object.
-  }
-});
-
 describe('api-common/Decoder', () => {
+  before(() => {
+    try {
+      Registry.register(MockApiObject);
+    } catch (e) {
+      // nothing to do here, the try/catch is just in case some other test
+      // file has already registered the mock API object.
+    }
+  });
+
   describe('decode(value)', () => {
     it('should pass non-object values through as-is', () => {
       assert.strictEqual(Decoder.decode(37), 37);
