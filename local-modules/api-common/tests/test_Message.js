@@ -3,19 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { assert } from 'chai';
-import { before, describe, it } from 'mocha';
+import { describe, it } from 'mocha';
 
-import { Message, Registry } from 'api-common';
-import { Mocks } from 'testing-server';
-
-before(() => {
-  try {
-    Registry.register(Mocks.apiObject().constructor);
-  } catch (e) {
-    // nothing to do here, the try/catch is just in case some other test
-    // file has already registered the mock API object.
-  }
-});
+import { Message } from 'api-common';
 
 describe('api-common/Message', () => {
   describe('constructor(id, target, action, name, args)', () => {
