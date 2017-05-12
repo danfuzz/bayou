@@ -19,8 +19,8 @@ export default class ClientTests {
   static allTestFiles() {
     // TODO: Complain about modules that have no tests at all.
 
-    const moduleNames = Utils.localModulesIn(Dirs.SERVER_DIR);
-    const testFiles = Utils.allTestFiles(Dirs.SERVER_DIR, moduleNames);
+    const moduleNames = Utils.localModulesIn(Dirs.CLIENT_DIR);
+    const testFiles = Utils.allTestFiles(Dirs.CLIENT_DIR, moduleNames);
 
     return testFiles;
   }

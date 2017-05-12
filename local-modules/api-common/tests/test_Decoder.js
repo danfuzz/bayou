@@ -6,11 +6,12 @@ import { assert } from 'chai';
 import { before, describe, it } from 'mocha';
 
 import { Decoder, Encoder, Registry } from 'api-common';
-import { Mocks } from 'testing-server';
+
+import MockApiObject from './MockApiObject';
 
 before(() => {
   try {
-    Registry.register(Mocks.apiObject().constructor);
+    Registry.register(MockApiObject);
   } catch (e) {
     // nothing to do here, the try/catch is just in case some other test
     // file has already registered the mock API object.
@@ -54,7 +55,7 @@ describe('api-common/Decoder', () => {
     });
 
     it('should convert propertly formatted values to an API object', () => {
-      const apiObject = Mocks.apiObject();
+      const apiObject = new MockApiObject();
       const encoding = Encoder.encode(apiObject);
       let decodedObject = null;
 

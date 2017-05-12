@@ -8,6 +8,7 @@
     "chai-as-promised": "^6.0.0",
 
     "see-all": "local",
+    "test-all": "local",
     "util-common": "local"
   }
 }

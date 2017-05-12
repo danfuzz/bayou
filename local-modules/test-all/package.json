@@ -1,0 +1,9 @@
+{
+  "name": "test-all",
+  "version": "1.0.0",
+  "main": "main.js",
+
+  "dependencies": {
+    "see-all": "local"
+  }
+}

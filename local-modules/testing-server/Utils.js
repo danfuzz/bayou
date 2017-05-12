@@ -50,7 +50,7 @@ export default class Utils {
       }
 
       const allFiles = fs.readdirSync(testsDir);
-      const jsFiles = allFiles.filter(file => /\.js$/.test(file)).sort();
+      const jsFiles = allFiles.filter(file => /^test_.*\.js$/.test(file)).sort();
       for (const f of jsFiles) {
         result.push(path.resolve(testsDir, f));
       }

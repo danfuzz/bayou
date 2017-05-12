@@ -4,7 +4,6 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
-import _ from 'lodash';
 
 import { TString } from 'typecheck';
 import { Random } from 'util-common';
@@ -23,7 +22,7 @@ describe('util-common/Random', () => {
       const bytesA = Random.byteArray(length);
       const bytesB = Random.byteArray(length);
 
-      assert(!_.isEqual(bytesA, bytesB));
+      assert.notDeepEqual(bytesA, bytesB);
     });
   });
 

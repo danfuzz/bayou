@@ -75,15 +75,13 @@ const webpackOptions = {
 
       // Likewise, `parchment`.
       'parchment':
-        path.resolve(Dirs.CLIENT_DIR, 'node_modules/parchment/src/parchment.ts')
+        path.resolve(Dirs.CLIENT_DIR, 'node_modules/parchment/src/parchment.ts'),
 
-      // Mocha's default entrypoint is for Node environments. This points it
-      // at the browser-based entrypoint.
-      // **TODO:** It is unclear if this will ultimately lead to a working
-      // system given the rest of the way we're put together. Leaving this here
-      // (but commented out) as a reminder of the possibility.
-      //'mocha':
-      //  path.resolve(Dirs.CLIENT_DIR, 'node_modules/mocha/mocha.js'),
+      // On the client side, we use a built-in module called `test-all` as a
+      // substitute for `mocha`. This alias makes it so that testing code can
+      // still write `import ... from 'mocha';`.
+      'mocha':
+        path.resolve(Dirs.CLIENT_DIR, 'node_modules/test-all')
     },
     // All the extensions listed here except `.ts` are in the default list.
     // Webpack doesn't offer a way to simply add to the defaults (alas).
@@ -103,10 +101,11 @@ const webpackOptions = {
         // update the dependency and remove this `exclude` clause.
         //
         // **Note:** At some point, we might want to reverse the polarity and
-        // say that we only use this conversion on (a) our own modules, and (b)
-        // Quill (which definitely requires it as it's written using modern
-        // syntax).
-        exclude: /\/node_modules\/chai\//,
+        // say that we only use Babel on (a) our own modules, and (b) Quill
+        // (which definitely requires it as it's written using modern syntax).
+        exclude: [
+          /\/node_modules\/chai\//
+        ],
 
         use: [{
           loader: 'babel-loader',
@@ -155,8 +154,7 @@ const webpackOptions = {
         use: [{
           loader: 'client-tests-loader'
         }]
-      },
-
+      }
     ]
   }
 };

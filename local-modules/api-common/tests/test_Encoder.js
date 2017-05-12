@@ -6,7 +6,8 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { Encoder } from 'api-common';
-import { Mocks } from 'testing-server';
+
+import MockApiObject from './MockApiObject';
 
 class NoApiName {
   toApi() {
@@ -80,7 +81,7 @@ describe('api-common/Encoder', () => {
     });
 
     it('should accept objects with an API_NAME property and toApi() method', () => {
-      const fakeObject = Mocks.apiObject();
+      const fakeObject = new MockApiObject();
 
       assert.doesNotThrow(() => Encoder.encode(fakeObject));
     });
