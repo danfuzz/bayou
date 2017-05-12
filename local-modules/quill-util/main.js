@@ -5,5 +5,6 @@
 import DeltaEvent from './DeltaEvent';
 import QuillMaker from './QuillMaker';
 import QuillProm from './QuillProm';
+import QuillUtil from './QuillUtil';
 
-export { DeltaEvent, QuillMaker, QuillProm };
+export { DeltaEvent, QuillMaker, QuillProm, QuillUtil };
