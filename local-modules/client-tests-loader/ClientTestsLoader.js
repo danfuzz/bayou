@@ -15,20 +15,27 @@ export default class ClientTestsLoader {
    * @returns {string} Result of loading.
    */
   static load(sourceText_unused) {
-    const allFiles = ClientTests.allTestFiles();
+    const result = [];
 
-    // Double stringified because we're emitting quoted source code.
-    // TODO: This should do something real with the set of test files.
-    const quoteQuoted = JSON.stringify(JSON.stringify(allFiles, null, 2));
+    // The `map()` removes the path prefix just leaving the module name and
+    // subdirectory path underneath it along with the file name _without_ the
+    // `.js` suffix.
+    const allFiles = ClientTests.allTestFiles().map((file) => {
+      return file.replace(/^.*\/node_modules\/(.*)\.js$/,
+        (match_unused, group1) => { return group1; });
+    });
 
-    return "import { Logger } from 'see-all';\n" +
-      // TODO: The following line breaks because tests require modules `chai`
-      // and `mocha`, and adding those to the client dependencies will currently
-      // result in a client bundle failure.
-      // "import test_AuthorId from 'doc-common/tests/test_AuthorId';\n" +
-      "const log = new Logger('client-tests');\n" +
-      'export default class ClientTests {\n' +
-      `  static run() { log.info(${quoteQuoted}); }\n` +
-      '}\n';
+    result.push('function registerTests() {\n');
+
+    for (const file of allFiles) {
+      result.push('  require(');
+      result.push(JSON.stringify(file));
+      result.push(');\n');
+    }
+
+    result.push('}\n');
+    result.push('export { registerTests };\n');
+
+    return result.join('');
   }
 }

@@ -16,8 +16,9 @@ import { PromDelay } from 'util-common';
 // import 'mocha';
 // const mocha = window.mocha;
 
-// This is a dynamically-generated file. See comments in it for more detail.
-import ClientTests from './client-tests';
+// This file is dynamically-generated when loadad. See comments in it for more
+// detail.
+import { registerTests } from './client-tests';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('testing-client');
@@ -36,7 +37,7 @@ export default class Tests {
    */
   static runAll() {
     log.info('TODO');
-    ClientTests.run();
+    registerTests();
 
     // Demonstrate that Chai works.
     assert.isNull(null);
