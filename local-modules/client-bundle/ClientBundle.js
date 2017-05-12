@@ -81,7 +81,7 @@ const webpackOptions = {
       // substitute for `mocha`. This alias makes it so that testing code can
       // still write `import ... from 'mocha';`.
       'mocha':
-        path.resolve(Dirs.CLIENT_DIR, 'node_modules/test-all/main.js')
+        path.resolve(Dirs.CLIENT_DIR, 'node_modules/test-all')
     },
     // All the extensions listed here except `.ts` are in the default list.
     // Webpack doesn't offer a way to simply add to the defaults (alas).
