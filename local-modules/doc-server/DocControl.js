@@ -293,7 +293,7 @@ export default class DocControl extends CommonBase {
     // Validate parameters.
     startInclusive = VersionNumber.check(startInclusive);
     endExclusive =
-      TInt.rangeInc(endExclusive, startInclusive, this._nextVerNum());
+      TInt.rangeInc(endExclusive, startInclusive, this._doc.nextVerNum());
 
     if (startInclusive === endExclusive) {
       return FrozenDelta.EMPTY;
@@ -326,16 +326,6 @@ export default class DocControl extends CommonBase {
 
     this._doc.changeAppend(Timestamp.now(), delta, authorId);
     this._changeCondition.value = true;
-  }
-
-  /**
-   * Gets the version number corresponding to the very next change that will be
-   * made to the document.
-   *
-   * @returns {Int} The version number.
-   */
-  _nextVerNum() {
-    return this._doc.nextVerNum();
   }
 
   /**

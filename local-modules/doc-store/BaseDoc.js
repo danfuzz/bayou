@@ -100,6 +100,9 @@ export default class BaseDoc extends CommonBase {
   /**
    * The version number of the next change to be appended to this document.
    *
+   * **Note:** This is different than just `currentVerNum() + 1` in that
+   * `currentVerNum()` is `null` (not `-1`) on an empty document.
+   *
    * @returns {int} The version number of the next change.
    */
   nextVerNum() {
