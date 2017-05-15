@@ -8,21 +8,24 @@ import { CommonBase } from 'util-common';
 import VersionNumber from './VersionNumber';
 
 /**
- * Representation of a corrected result of applying a delta. Instances of this
- * class are returned from `applyDelta()` as defined by the various `doc-server`
- * classes. See those for more details.
+ * Delta-bearing result of an API call, which also comes with a version number.
+ * Instances of this class are returned from calls to `applyDelta()` and
+ * `deltaAfter()` as defined by the various `doc-server` classes. See those for
+ * more details.
+ *
+ * Note that the meaning of the `delta` value is different depending on which
+ * method the result came from. In particular, there is an implied "expected"
+ * result from `applyDelta()` which this instance's `delta` is with respect to.
  *
  * Instances of this class are immutable.
  */
-export default class CorrectedChange extends CommonBase {
+export default class DeltaResult extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {Int} verNum The version number of the document produced by the
-   *   `applyDelta()` operation.
-   * @param {FrozenDelta} delta The delta from the _expected_ change result to
-   *   the _actual_ change result. The expectation is what was implied by the
-   *   original arguments to `applyDelta()`.
+   * @param {Int} verNum Version number of the document.
+   * @param {FrozenDelta} delta Delta which can be applied in context to
+   *   produce the document with the indicated version number.
    */
   constructor(verNum, delta) {
     super();
@@ -36,7 +39,7 @@ export default class CorrectedChange extends CommonBase {
 
   /** Name of this class in the API. */
   static get API_NAME() {
-    return 'CorrectedChange';
+    return 'DeltaResult';
   }
 
   /**
@@ -53,10 +56,10 @@ export default class CorrectedChange extends CommonBase {
    *
    * @param {Int} verNum Same as with the regular constructor.
    * @param {FrozenDelta} delta Same as with the regular constructor.
-   * @returns {CorrectedChange} The constructed instance.
+   * @returns {DeltaResult} The constructed instance.
    */
   static fromApi(verNum, delta) {
-    return new CorrectedChange(verNum, delta);
+    return new DeltaResult(verNum, delta);
   }
 
   /** {Int} The produced version number. */
@@ -64,7 +67,10 @@ export default class CorrectedChange extends CommonBase {
     return this._verNum;
   }
 
-  /** {FrozenDelta} The actual change, as a delta. */
+  /**
+   * {FrozenDelta} Delta used to produce the document with version number
+   * `verNum`.
+   */
   get delta() {
     return this._delta;
   }

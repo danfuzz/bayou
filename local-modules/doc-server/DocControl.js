@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CorrectedChange, FrozenDelta, Snapshot, Timestamp, VersionNumber }
+import { DeltaResult, FrozenDelta, Snapshot, Timestamp, VersionNumber }
   from 'doc-common';
 import { BaseDoc } from 'doc-store';
 import { TBoolean, TInt, TString } from 'typecheck';
@@ -174,7 +174,7 @@ export default class DocControl extends CommonBase {
    *   to `baseVerNum`.
    * @param {string|null} authorId Author of `delta`, or `null` if the change
    *   is to be considered authorless.
-   * @returns {Promise<CorrectedChange>} Promise for the correction to the
+   * @returns {Promise<DeltaResult>} Promise for the correction to the
    *   implied expected result of this operation. The `delta` of this result can
    *   be applied to the expected result to get the actual result. The promise
    *   resolves sometime after the delta has been applied to the document.
@@ -197,7 +197,7 @@ export default class DocControl extends CommonBase {
    * @param {Int} baseVerNum Same as for `applyDelta()`.
    * @param {FrozenDelta} delta Same as for `applyDelta()`.
    * @param {string|null} authorId Same as for `applyDelta()`.
-   * @returns {CorrectedChange} Same as for `applyDelta()`, except not a
+   * @returns {DeltaResult} Same as for `applyDelta()`, except not a
    *   promise.
    */
   _applyDelta(baseVerNum, delta, authorId) {
@@ -206,7 +206,7 @@ export default class DocControl extends CommonBase {
       // in which case we don't have to make a new version at all; that's
       // handled by `_appendDelta()`).
       this._appendDelta(delta, authorId);
-      return new CorrectedChange(
+      return new DeltaResult(
         this._currentVerNum(),  // `_appendDelta()` updates the version.
         FrozenDelta.EMPTY);
     }
@@ -247,7 +247,7 @@ export default class DocControl extends CommonBase {
 
     if (dNext.isEmpty()) {
       // It turns out that nothing changed.
-      return new CorrectedChange(vCurrentNum, FrozenDelta.EMPTY);
+      return new DeltaResult(vCurrentNum, FrozenDelta.EMPTY);
     }
 
     // (3)
@@ -260,7 +260,7 @@ export default class DocControl extends CommonBase {
     const dCorrection = FrozenDelta.coerce(vExpected.diff(vNext));
     const vResultNum  = vNextNum;
 
-    return new CorrectedChange(vResultNum, dCorrection);
+    return new DeltaResult(vResultNum, dCorrection);
   }
 
   /**

@@ -88,7 +88,7 @@ export default class DocForAuthor {
    * @param {number} baseVerNum Version number which `delta` is with respect to.
    * @param {FrozenDelta} delta Delta indicating what has changed with respect
    *   to `baseVerNum`.
-   * @returns {Promise<CorrectedChange>} Promise for the correction from the
+   * @returns {Promise<DeltaResult>} Promise for the correction from the
    *   implied expected result to get the actual result.
    */
   applyDelta(baseVerNum, delta) {

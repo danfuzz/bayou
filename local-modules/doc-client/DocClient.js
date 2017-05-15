@@ -181,7 +181,7 @@ export default class DocClient extends StateMachine {
    *   merge. This will be the actual result if there are no other intervening
    *   changes (indicated by the fact that `delta` is empty). Must be a value
    *   which can be coerced to a `FrozenDelta`.
-   * @param {CorrectedChange} correctedChange The correction to the expected
+   * @param {DeltaResult} correctedChange The correction to the expected
    *   result as returned from `applyDelta()`.
    * @returns {array} Replacement arguments which always have `FrozenDelta`s for
    *   the delta-ish arguments.
@@ -633,7 +633,7 @@ export default class DocClient extends StateMachine {
    * @param {FrozenDelta} expectedContents The expected result of the merge. This
    *   will be the actual result if there are no other intervening changes
    *   (indicated by the fact that `delta` is empty).
-   * @param {CorrectedChange} correctedChange The correction to the expected
+   * @param {DeltaResult} correctedChange The correction to the expected
    *   result as returned from `applyDelta()`.
    */
   _handle_merging_gotApplyDelta(expectedContents, correctedChange) {
