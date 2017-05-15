@@ -5,7 +5,7 @@
 import { DeltaResult, FrozenDelta, Snapshot, Timestamp, VersionNumber }
   from 'doc-common';
 import { BaseDoc } from 'doc-store';
-import { TBoolean, TInt, TString } from 'typecheck';
+import { TBoolean, TString } from 'typecheck';
 import { CommonBase, PromCondition } from 'util-common';
 
 
@@ -141,8 +141,7 @@ export default class DocControl extends CommonBase {
     if (baseVerNum !== currentVerNum) {
       // We can fulfill the result immediately. Compose all the deltas from
       // the version after the base through the current version.
-      const delta =
-        this._composeVersions(baseVerNum + 1, this._doc.nextVerNum());
+      const delta = this._composeVersionsFrom(baseVerNum + 1);
 
       // We don't just return a plain value (that is, we still return a promise)
       // because of the usual hygenic recommendation to always return either
@@ -237,7 +236,7 @@ export default class DocControl extends CommonBase {
     const vCurrentNum = this._currentVerNum();
 
     // (1)
-    const dServer = this._composeVersions(vBaseNum + 1);
+    const dServer = this._composeVersionsFrom(vBaseNum + 1);
 
     // (2)
 
@@ -265,32 +264,26 @@ export default class DocControl extends CommonBase {
 
   /**
    * Constructs a delta consisting of the composition of the deltas from the
-   * given initial version (inclusive) through the given final version
-   * (exclusive). It is valid for the range to be empty, in which case this
-   * returns an empty delta. It is invalid for the start and end to be
-   * inverted (that is, `end < start`). It is also invalid for the range to
-   * include non-existent versions (negative or too large).
+   * given initial version through and including the current latest delta.
+   * It is valid to pass `nextVerNum`, in which case this method returns an
+   * empty delta. It is invalid to specify a non-existent version _other_ than
+   * `nextVerNum`.
    *
    * @param {Int} startInclusive Version number for the first delta to include
    *   in the result.
-   * @param {Int} endExclusive Version number for just after the last delta to
-   *   include, or alternatively thought, of the first version to exclude from
-   *   the result. Must be no greater than one after the current version number.
    * @returns {FrozenDelta} The composed delta consisting of versions
-   *   `startInclusive` through but not including `endExclusive`.
+   *   `startInclusive` through and including the current latest delta.
    */
-  _composeVersions(startInclusive, endExclusive) {
-    // Validate parameters.
-    startInclusive = VersionNumber.check(startInclusive);
-    endExclusive =
-      TInt.rangeInc(endExclusive, startInclusive, this._doc.nextVerNum());
+  _composeVersionsFrom(startInclusive) {
+    const nextVerNum = this._doc.nextVerNum;
+    startInclusive = VersionNumber.check(startInclusive, nextVerNum);
 
-    if (startInclusive === endExclusive) {
+    if (startInclusive === nextVerNum) {
       return FrozenDelta.EMPTY;
     }
 
     let result = this._doc.changeRead(startInclusive).delta;
-    for (let i = startInclusive + 1; i < endExclusive; i++) {
+    for (let i = startInclusive + 1; i < nextVerNum; i++) {
       result = result.compose(this._doc.changeRead(i).delta);
     }
 
