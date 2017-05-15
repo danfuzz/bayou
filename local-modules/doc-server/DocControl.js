@@ -129,9 +129,9 @@ export default class DocControl extends CommonBase {
    * least one change has been made.
    *
    * @param {Int} baseVerNum Version number for the document.
-   * @returns {Promise} A promise which ultimately resolves to an object that
-   *   maps `verNum` to the new version and `delta` to a change with respect to
-   *   `baseVerNum`.
+   * @returns {Promise<DeltaResult>} Promise for a delta and associated version
+   *   number. The result's `delta` can be applied to version `baseVerNum` to
+   *   produce version `verNum` of the document.
    */
   deltaAfter(baseVerNum) {
     baseVerNum = this._validateVerNum(baseVerNum, false);
@@ -147,7 +147,7 @@ export default class DocControl extends CommonBase {
       // We don't just return a plain value (that is, we still return a promise)
       // because of the usual hygenic recommendation to always return either
       // an immediate result or a promise from any given function.
-      return Promise.resolve({ verNum: currentVerNum, delta });
+      return Promise.resolve(new DeltaResult(currentVerNum, delta));
     }
 
     // Force the `_changeCondition` to `false` (though it might already be

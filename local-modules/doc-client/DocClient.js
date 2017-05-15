@@ -3,9 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ApiError } from 'api-client';
-import { FrozenDelta, Snapshot } from 'doc-common';
+import { DeltaResult, FrozenDelta, Snapshot } from 'doc-common';
 import { Logger } from 'see-all';
-import { TInt, TObject, TString } from 'typecheck';
+import { TObject, TString } from 'typecheck';
 import { StateMachine } from 'state-machine';
 import { PromDelay } from 'util-common';
 
@@ -189,29 +189,21 @@ export default class DocClient extends StateMachine {
   _check_gotApplyDelta(expectedContents, correctedChange) {
     return [
       FrozenDelta.coerce(expectedContents),
-      correctedChange
+      DeltaResult.check(correctedChange)
     ];
   }
 
   /**
    * Validates a `gotDeltaAfter` event. This represents a successful result
-   * from the API call `deltaAfter()`. Keys are as defined by that API, with
-   * the addition of `baseDoc` which represents the document at the time of the
-   * request.
+   * from the API call `deltaAfter()`.
    *
    * @param {Snapshot} baseDoc The document at the time of the original request.
-   * @param {number} verNum The version number of the document.
-   * @param {Delta|array|object} delta The delta from `baseDoc`. Must be a value
-   *   which can be coerced to a `FrozenDelta`.
-   * @returns {array} Replacement arguments which always have a `FrozenDelta`s
-   *   for the `delta` argument.
+   * @param {DeltaResult} result How to transform `baseDoc` to get a later
+   *   document version.
    */
-  _check_gotDeltaAfter(baseDoc, verNum, delta) {
-    return [
-      Snapshot.check(baseDoc),
-      TInt.min(verNum, 0),
-      FrozenDelta.coerce(delta)
-    ];
+  _check_gotDeltaAfter(baseDoc, result) {
+    Snapshot.check(baseDoc);
+    DeltaResult.check(result);
   }
 
   /**
@@ -470,7 +462,7 @@ export default class DocClient extends StateMachine {
 
       this._docProxy.deltaAfter(baseDoc.verNum).then((value) => {
         this._pendingDeltaAfter = false;
-        this.q_gotDeltaAfter(baseDoc, value.verNum, value.delta);
+        this.q_gotDeltaAfter(baseDoc, value);
       }).catch((error) => {
         this._pendingDeltaAfter = false;
         this.q_apiError('deltaAfter', error);
@@ -493,10 +485,12 @@ export default class DocClient extends StateMachine {
    * In state `idle`, handles event `gotDeltaAfter`.
    *
    * @param {Snapshot} baseDoc The document at the time of the original request.
-   * @param {number} verNum The version number of the document.
-   * @param {FrozenDelta} delta The delta from `baseDoc`.
+   * @param {DeltaResult} result How to transform `baseDoc` to get a later
+   *   document version.
    */
-  _handle_idle_gotDeltaAfter(baseDoc, verNum, delta) {
+  _handle_idle_gotDeltaAfter(baseDoc, result) {
+    const verNum = result.verNum;
+    const delta = result.delta;
     this._log.detail(`Delta from server: v${verNum}`, delta);
 
     // We only take action if the result's base (what `delta` is with regard to)
@@ -525,10 +519,10 @@ export default class DocClient extends StateMachine {
    *
    * @param {Snapshot} baseDoc_unused The document at the time of the original
    *   request.
-   * @param {number} verNum_unused The version number of the document.
-   * @param {FrozenDelta} delta_unused The delta from `baseDoc`.
+   * @param {DeltaResult} result_unused How to transform `baseDoc` to get a later
+   *   document version.
    */
-  _handle_any_gotDeltaAfter(baseDoc_unused, verNum_unused, delta_unused) {
+  _handle_any_gotDeltaAfter(baseDoc_unused, result_unused) {
     // Nothing to do. Stay in the same state.
   }
 

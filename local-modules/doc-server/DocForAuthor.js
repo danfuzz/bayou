@@ -74,7 +74,9 @@ export default class DocForAuthor {
    * `baseVerNum`. See the equivalent `DocControl` method for details.
    *
    * @param {Int} baseVerNum Version number for the document.
-   * @returns {Promise} A promise for a new version.
+   * @returns {Promise<DeltaResult>} Promise for a delta and associated version
+   *   number. The result's `delta` can be applied to version `baseVerNum` to
+   *   produce version `verNum` of the document.
    */
   deltaAfter(baseVerNum) {
     return this._doc.deltaAfter(baseVerNum);
