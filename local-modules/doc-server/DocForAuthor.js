@@ -50,8 +50,7 @@ export default class DocForAuthor {
    * Returns a particular change to the document. See the equivalent
    * `DocControl` method for details.
    *
-   * @param {number} [verNum = this.currentVerNum()] The version number of the
-   *   change.
+   * @param {Int} verNum The version number of the change.
    * @returns {DocumentChange} An object representing that change.
    */
   change(verNum) {

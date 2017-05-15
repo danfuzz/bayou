@@ -5,7 +5,7 @@
 import { DocumentChange, FrozenDelta, Snapshot, Timestamp, VersionNumber }
   from 'doc-common';
 import { BaseDoc } from 'doc-store';
-import { TInt, TString } from 'typecheck';
+import { TBoolean, TInt, TString } from 'typecheck';
 import { CommonBase, PromCondition } from 'util-common';
 
 
@@ -71,13 +71,13 @@ export default class DocControl extends CommonBase {
    * sequence of changes, each modifying version N of the document to produce
    * version N+1.
    *
-   * @param {number} [verNum = this.currentVerNum()] The version number of the
-   *   change. The result is the change which produced that version. E.g., `0`
-   *   is a request for the first change (the change from the empty document).
+   * @param {Int} verNum The version number of the change. The result is the
+   *   change which produced that version. E.g., `0` is a request for the first
+   *   change (the change from the empty document).
    * @returns {DocumentChange} An object representing that change.
    */
   change(verNum) {
-    verNum = this._validateVerNum(verNum, true);
+    verNum = this._validateVerNum(verNum, false);
     return this._doc.changeRead(verNum);
   }
 
@@ -339,6 +339,8 @@ export default class DocControl extends CommonBase {
    * @returns {number} The version number.
    */
   _validateVerNum(verNum, wantCurrent) {
+    TBoolean.check(wantCurrent);
+
     const current = this.currentVerNum();
 
     if (wantCurrent) {
