@@ -248,10 +248,11 @@ export default class DocControl extends CommonBase {
     const vNextNum = this.currentVerNum();   // This will be different than `vCurrentNum`.
 
     // (4)
-    const vExpected = FrozenDelta.coerce(vBase).compose(dClient);
+    const vExpected   = FrozenDelta.coerce(vBase).compose(dClient);
     const dCorrection = FrozenDelta.coerce(vExpected.diff(vNext));
+    const vResultNum  = vNextNum;
 
-    return new CorrectedChange(vNextNum, dCorrection);
+    return new CorrectedChange(vResultNum, dCorrection);
   }
 
   /**
