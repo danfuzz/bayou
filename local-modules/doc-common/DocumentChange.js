@@ -22,9 +22,9 @@ export default class DocumentChange extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {number} verNum The version number of the document produced by this
-   *   change. If this instance represents the first change to a document, then
-   *   this value will be `0`.
+   * @param {Int} verNum The version number of the document produced by this
+   *   change. If this instance represents the first change to a document,
+   *   then this value will be `0`.
    * @param {Timestamp} timestamp The time of the change, as msec since the Unix
    *   Epoch.
    * @param {Delta|array|object} delta The document change per se, compared to
