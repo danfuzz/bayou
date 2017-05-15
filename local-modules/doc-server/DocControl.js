@@ -134,15 +134,15 @@ export default class DocControl extends CommonBase {
    *   `baseVerNum`.
    */
   deltaAfter(baseVerNum) {
-    const currentVerNum = this._currentVerNum();
-    const nextVerNum    = currentVerNum + 1;
-
     baseVerNum = this._validateVerNum(baseVerNum, false);
+
+    const currentVerNum = this._currentVerNum();
 
     if (baseVerNum !== currentVerNum) {
       // We can fulfill the result immediately. Compose all the deltas from
       // the version after the base through the current version.
-      const delta = this._composeVersions(baseVerNum + 1, nextVerNum);
+      const delta =
+        this._composeVersions(baseVerNum + 1, this._doc.nextVerNum());
 
       // We don't just return a plain value (that is, we still return a promise)
       // because of the usual hygenic recommendation to always return either
