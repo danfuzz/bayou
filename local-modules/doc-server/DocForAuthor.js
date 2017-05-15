@@ -88,7 +88,7 @@ export default class DocForAuthor {
    * @param {number} baseVerNum Version number which `delta` is with respect to.
    * @param {object} delta Delta indicating what has changed with respect to
    *   `baseVerNum`.
-   * @returns {object} Object indicating the new latest version.
+   * @returns {CorrectedChange} Correction from the implied expected result.
    */
   applyDelta(baseVerNum, delta) {
     return this._doc.applyDelta(baseVerNum, delta, this._authorId);
