@@ -66,7 +66,7 @@ export default class DocumentChange extends CommonBase {
   /**
    * Constructs an instance from API arguments.
    *
-   * @param {number} verNum Same as with the regular constructor.
+   * @param {Int} verNum Same as with the regular constructor.
    * @param {Timestamp} timestamp Same as with the regular constructor.
    * @param {Delta|array|object} delta Same as with the regular constructor.
    * @param {string|null} authorId Same as with the regular constructor.
@@ -76,22 +76,22 @@ export default class DocumentChange extends CommonBase {
     return new DocumentChange(verNum, timestamp, delta, authorId);
   }
 
-  /** The produced version number. */
+  /** {Int} The produced version number. */
   get verNum() {
     return this._verNum;
   }
 
-  /** The time of the change. */
+  /** {Timestamp} The time of the change. */
   get timestamp() {
     return this._timestamp;
   }
 
-  /** The actual change, as a delta. */
+  /** {FrozenDelta} The actual change, as a delta. */
   get delta() {
     return this._delta;
   }
 
-  /** The author ID string. */
+  /** {string|null} The author ID string. */
   get authorId() {
     return this._authorId;
   }
