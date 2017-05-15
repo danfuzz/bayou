@@ -237,7 +237,7 @@ export default class DocControl extends CommonBase {
     const vCurrentNum = this._currentVerNum();
 
     // (1)
-    const dServer = this._composeVersions(vBaseNum + 1);
+    const dServer = this._composeVersions(vBaseNum + 1, this._doc.nextVerNum());
 
     // (2)
 
