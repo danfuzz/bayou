@@ -7,7 +7,7 @@ import fs from 'fs';
 import { after, before, describe, it } from 'mocha';
 import path from 'path';
 
-import { DocumentChange, Timestamp } from 'doc-common';
+import { Timestamp } from 'doc-common';
 import { LocalDoc } from 'doc-store-local';
 
 const STORE_PREFIX = 'arugula-test-';
