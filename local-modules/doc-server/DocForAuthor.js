@@ -37,21 +37,10 @@ export default class DocForAuthor {
   }
 
   /**
-   * Gets the version number corresponding to the very next change that will be
-   * made to the document.
-   *
-   * @returns {int} The version number.
-   */
-  nextVerNum() {
-    return this._doc.nextVerNum();
-  }
-
-  /**
    * Returns a particular change to the document. See the equivalent
    * `DocControl` method for details.
    *
-   * @param {number} [verNum = this.currentVerNum()] The version number of the
-   *   change.
+   * @param {Int} verNum The version number of the change.
    * @returns {DocumentChange} An object representing that change.
    */
   change(verNum) {
@@ -73,7 +62,7 @@ export default class DocForAuthor {
    * Returns a snapshot of the full document contents. See the equivalent
    * `DocControl` method for details.
    *
-   * @param {number} [verNum = this.currentVerNum()] Which version to get.
+   * @param {Int} [verNum = this.currentVerNum()] Which version to get.
    * @returns {Snapshot} The corresponding snapshot.
    */
   snapshot(verNum) {
@@ -84,8 +73,10 @@ export default class DocForAuthor {
    * Returns a promise for a snapshot of any version after the given
    * `baseVerNum`. See the equivalent `DocControl` method for details.
    *
-   * @param {number} baseVerNum Version number for the document.
-   * @returns {Promise} A promise for a new version.
+   * @param {Int} baseVerNum Version number for the document.
+   * @returns {Promise<DeltaResult>} Promise for a delta and associated version
+   *   number. The result's `delta` can be applied to version `baseVerNum` to
+   *   produce version `verNum` of the document.
    */
   deltaAfter(baseVerNum) {
     return this._doc.deltaAfter(baseVerNum);
@@ -97,9 +88,10 @@ export default class DocForAuthor {
    * details.
    *
    * @param {number} baseVerNum Version number which `delta` is with respect to.
-   * @param {object} delta Delta indicating what has changed with respect to
-   *   `baseVerNum`.
-   * @returns {object} Object indicating the new latest version.
+   * @param {FrozenDelta} delta Delta indicating what has changed with respect
+   *   to `baseVerNum`.
+   * @returns {Promise<DeltaResult>} Promise for the correction from the
+   *   implied expected result to get the actual result.
    */
   applyDelta(baseVerNum, delta) {
     return this._doc.applyDelta(baseVerNum, delta, this._authorId);

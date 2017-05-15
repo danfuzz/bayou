@@ -5,6 +5,7 @@
 import { Registry } from 'api-common';
 
 import AuthorId from './AuthorId';
+import DeltaResult from './DeltaResult';
 import DocumentChange from './DocumentChange';
 import DocumentId from './DocumentId';
 import FrozenDelta from './FrozenDelta';
@@ -13,6 +14,7 @@ import Timestamp from './Timestamp';
 import VersionNumber from './VersionNumber';
 
 // Register classes with the API.
+Registry.register(DeltaResult);
 Registry.register(DocumentChange);
 Registry.register(FrozenDelta);
 Registry.register(Snapshot);
@@ -20,6 +22,7 @@ Registry.register(Timestamp);
 
 export {
   AuthorId,
+  DeltaResult,
   DocumentChange,
   DocumentId,
   FrozenDelta,

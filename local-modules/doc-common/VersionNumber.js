@@ -13,8 +13,8 @@ export default class VersionNumber {
    * Checks a value of type `VersionNumber`.
    *
    * @param {*} value Value to check.
-   * @param {number} [max] Maximum acceptable value (inclusive). If
-   *   `undefined`, there is no upper limit.
+   * @param {Int} [max] Maximum acceptable value (inclusive). If `undefined`,
+   *   there is no upper limit.
    * @param {*} [ifAbsent] Default value. If passed and `value` is `undefined`,
    *   this method will return this value instead of throwing an error.
    * @returns {Int} `value` or `ifAbsent`.

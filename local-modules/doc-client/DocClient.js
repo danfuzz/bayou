@@ -3,9 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ApiError } from 'api-client';
-import { FrozenDelta, Snapshot } from 'doc-common';
+import { DeltaResult, FrozenDelta, Snapshot } from 'doc-common';
 import { Logger } from 'see-all';
-import { TInt, TObject, TString } from 'typecheck';
+import { TObject, TString } from 'typecheck';
 import { StateMachine } from 'state-machine';
 import { PromDelay } from 'util-common';
 
@@ -175,47 +175,35 @@ export default class DocClient extends StateMachine {
 
   /**
    * Validates a `gotApplyDelta` event. This represents a successful result
-   * from the API call `applyDelta()`. Keys are as defined by that API, with
-   * the addition of `expectedContents` which represents the expected result of
-   * merge (which will be the case if there are no other intervening changes).
+   * from the API call `applyDelta()`.
    *
    * @param {Delta|array|object} expectedContents The expected result of the
    *   merge. This will be the actual result if there are no other intervening
    *   changes (indicated by the fact that `delta` is empty). Must be a value
    *   which can be coerced to a `FrozenDelta`.
-   * @param {number} verNum The version number of the resulting document.
-   * @param {Delta|array|object} delta The delta from `expectedContents`. Must
-   *   be a value which can be coerced to a `FrozenDelta`.
+   * @param {DeltaResult} correctedChange The correction to the expected
+   *   result as returned from `applyDelta()`.
    * @returns {array} Replacement arguments which always have `FrozenDelta`s for
    *   the delta-ish arguments.
    */
-  _check_gotApplyDelta(expectedContents, verNum, delta) {
+  _check_gotApplyDelta(expectedContents, correctedChange) {
     return [
       FrozenDelta.coerce(expectedContents),
-      TInt.min(verNum, 0),
-      FrozenDelta.coerce(delta)
+      DeltaResult.check(correctedChange)
     ];
   }
 
   /**
    * Validates a `gotDeltaAfter` event. This represents a successful result
-   * from the API call `deltaAfter()`. Keys are as defined by that API, with
-   * the addition of `baseDoc` which represents the document at the time of the
-   * request.
+   * from the API call `deltaAfter()`.
    *
    * @param {Snapshot} baseDoc The document at the time of the original request.
-   * @param {number} verNum The version number of the document.
-   * @param {Delta|array|object} delta The delta from `baseDoc`. Must be a value
-   *   which can be coerced to a `FrozenDelta`.
-   * @returns {array} Replacement arguments which always have a `FrozenDelta`s
-   *   for the `delta` argument.
+   * @param {DeltaResult} result How to transform `baseDoc` to get a later
+   *   document version.
    */
-  _check_gotDeltaAfter(baseDoc, verNum, delta) {
-    return [
-      Snapshot.check(baseDoc),
-      TInt.min(verNum, 0),
-      FrozenDelta.coerce(delta)
-    ];
+  _check_gotDeltaAfter(baseDoc, result) {
+    Snapshot.check(baseDoc);
+    DeltaResult.check(result);
   }
 
   /**
@@ -474,7 +462,7 @@ export default class DocClient extends StateMachine {
 
       this._docProxy.deltaAfter(baseDoc.verNum).then((value) => {
         this._pendingDeltaAfter = false;
-        this.q_gotDeltaAfter(baseDoc, value.verNum, value.delta);
+        this.q_gotDeltaAfter(baseDoc, value);
       }).catch((error) => {
         this._pendingDeltaAfter = false;
         this.q_apiError('deltaAfter', error);
@@ -497,10 +485,12 @@ export default class DocClient extends StateMachine {
    * In state `idle`, handles event `gotDeltaAfter`.
    *
    * @param {Snapshot} baseDoc The document at the time of the original request.
-   * @param {number} verNum The version number of the document.
-   * @param {FrozenDelta} delta The delta from `baseDoc`.
+   * @param {DeltaResult} result How to transform `baseDoc` to get a later
+   *   document version.
    */
-  _handle_idle_gotDeltaAfter(baseDoc, verNum, delta) {
+  _handle_idle_gotDeltaAfter(baseDoc, result) {
+    const verNum = result.verNum;
+    const delta = result.delta;
     this._log.detail(`Delta from server: v${verNum}`, delta);
 
     // We only take action if the result's base (what `delta` is with regard to)
@@ -529,10 +519,10 @@ export default class DocClient extends StateMachine {
    *
    * @param {Snapshot} baseDoc_unused The document at the time of the original
    *   request.
-   * @param {number} verNum_unused The version number of the document.
-   * @param {FrozenDelta} delta_unused The delta from `baseDoc`.
+   * @param {DeltaResult} result_unused How to transform `baseDoc` to get a later
+   *   document version.
    */
-  _handle_any_gotDeltaAfter(baseDoc_unused, verNum_unused, delta_unused) {
+  _handle_any_gotDeltaAfter(baseDoc_unused, result_unused) {
     // Nothing to do. Stay in the same state.
   }
 
@@ -622,7 +612,7 @@ export default class DocClient extends StateMachine {
 
     // Send the delta, and handle the response.
     this._docProxy.applyDelta(this._doc.verNum, delta).then((value) => {
-      this.q_gotApplyDelta(expectedContents, value.verNum, value.delta);
+      this.q_gotApplyDelta(expectedContents, value);
     }).catch((error) => {
       this.q_apiError('applyDelta', error);
     });
@@ -637,16 +627,16 @@ export default class DocClient extends StateMachine {
    * @param {FrozenDelta} expectedContents The expected result of the merge. This
    *   will be the actual result if there are no other intervening changes
    *   (indicated by the fact that `delta` is empty).
-   * @param {number} verNum The version number of the resulting document.
-   * @param {FrozenDelta} delta The delta from `expectedContents`.
+   * @param {DeltaResult} correctedChange The correction to the expected
+   *   result as returned from `applyDelta()`.
    */
-  _handle_merging_gotApplyDelta(expectedContents, verNum, delta) {
-    // These variable names correspond to the terminology used on the server
-    // side. See `Document.js`.
-    const vExpected = expectedContents;
-    const dCorrection = delta;
+  _handle_merging_gotApplyDelta(expectedContents, correctedChange) {
+    // These are the same variable names as used on the server side. See below
+    // for more detail.
+    const dCorrection = correctedChange.delta;
+    const vResultNum  = correctedChange.verNum;
 
-    this._log.detail(`Correction from server: v${verNum}`, dCorrection);
+    this._log.detail(`Correction from server: v${vResultNum}`, dCorrection);
 
     if (dCorrection.isEmpty()) {
       // There is no change from what we expected. This means that no other
@@ -658,7 +648,7 @@ export default class DocClient extends StateMachine {
       // from Quill) while the server request was in flight, they will be picked
       // up promptly due to the handling of the `wantChanges` event which will
       // get fired off immediately.
-      const snapshot = new Snapshot(verNum, vExpected);
+      const snapshot = new Snapshot(vResultNum, expectedContents);
       this._updateDocWithSnapshot(snapshot, false);
       this._becomeIdle();
       return;
@@ -670,7 +660,7 @@ export default class DocClient extends StateMachine {
       // Thanfully, the local user hasn't made any other changes while we
       // were waiting for the server to get back to us. We need to tell
       // Quill about the changes, but we don't have to do additional merging.
-      this._updateDocWithDelta(verNum, dCorrection);
+      this._updateDocWithDelta(vResultNum, dCorrection);
       this._becomeIdle();
       return;
     }
@@ -683,11 +673,11 @@ export default class DocClient extends StateMachine {
     // provided by the server.
     //
     // Using the same terminology as used on the server side (see
-    // `server/Document.js`), we start with `vExpected` (the document we
-    // would have had if the server hadn't included extra changes) and
-    // `dCorrection` (the delta given back to us from the server which can
-    // be applied to `vExpected` to get the _actual_ next version). From
-    // that, here's what we do:
+    // `DocControl.js`), we start with `vExpected` (the document we would have
+    // had if the server hadn't included extra changes) and `dCorrection` (the
+    // delta given back to us from the server which can be applied to
+    // `vExpected` to get the _actual_ next version). From that, here's what we
+    // do:
     //
     // 1. Get all of the changes that the user made (that is, that Quill
     //    recorded) while the server update was in progress. This is
@@ -714,7 +704,7 @@ export default class DocClient extends StateMachine {
     // `false` indicates that `dMore` should be taken to have been applied
     // second (lost any insert races or similar).
     const dIntegratedCorrection = dMore.transform(dCorrection, false);
-    this._updateDocWithDelta(verNum, dCorrection, dIntegratedCorrection);
+    this._updateDocWithDelta(vResultNum, dCorrection, dIntegratedCorrection);
 
     // (3)
 

@@ -4,7 +4,7 @@
 
 import weak from 'weak';
 
-import { DocumentChange, Timestamp } from 'doc-common';
+import { Timestamp } from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
 import { TBoolean, TString } from 'typecheck';
@@ -95,9 +95,7 @@ export default class DocServer extends Singleton {
       log.info(`New document: ${docId}`);
 
       // Initialize the document with static content (for now).
-      const firstChange =
-        new DocumentChange(0, Timestamp.now(), DEFAULT_DOCUMENT, null);
-      docStorage.changeAppend(firstChange);
+      docStorage.changeAppend(Timestamp.now(), DEFAULT_DOCUMENT, null);
     }
 
     const result = new DocControl(docStorage);

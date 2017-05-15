@@ -100,6 +100,9 @@ export default class BaseDoc extends CommonBase {
   /**
    * The version number of the next change to be appended to this document.
    *
+   * **Note:** This is different than just `currentVerNum() + 1` in that
+   * `currentVerNum()` is `null` (not `-1`) on an empty document.
+   *
    * @returns {int} The version number of the next change.
    */
   nextVerNum() {
@@ -141,20 +144,15 @@ export default class BaseDoc extends CommonBase {
   }
 
   /**
-   * Appends a change. This uses the change's `verNum` to determine the change
-   * number. This _must_ be the `nextVerNum()`, otherwise this method will throw
-   * an error.
+   * Appends a change. The arguments to this method are ultimately passed in
+   * order to the constructor for `DocumentChange`, with an appropriate version
+   * number prepended as the first argument.
    *
-   * @param {DocumentChange} change The change to append.
+   * @param {...*} changeArgs Constructor arguments to `DocumentChange`, except
+   *   without the version number.
    */
-  changeAppend(change) {
-    DocumentChange.check(change);
-    const verGot = change.verNum;
-    const verExpect = this.nextVerNum();
-    if (verGot !== verExpect) {
-      throw new Error(
-        `Incorrect \`verNum\` for change. Got ${verGot}, expected ${verExpect}`);
-    }
+  changeAppend(...changeArgs) {
+    const change = new DocumentChange(this.nextVerNum(), ...changeArgs);
     this._impl_changeAppend(change);
   }
 
