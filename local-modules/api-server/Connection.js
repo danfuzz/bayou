@@ -160,6 +160,40 @@ export default class Connection extends CommonBase {
         // error.
         res(Encoder.encodeJson(response));
 
+        if (error) {
+          // Augment the logged response with the error's stack trace. This
+          // clause cleans it up so that it is an array of separate lines and
+          // so that we omit the uninteresting parts of the file paths.
+          response.errorStack = error.stack.match(/^ +at .*$/mg).map((line) => {
+            // Lines that name functions are expected to be of the form:
+            // * `    at func.name (/path/to/file:NN:NN)`
+            // where `func.name` might actually be `new func.name` or
+            // `func.name [as other.name]` (or both).
+            let match = line.match(/^ +at ([^()]+) \(([^()]+)\)$/);
+            let funcName;
+            let filePath;
+
+            if (match) {
+              funcName = match[1];
+              filePath = match[2];
+            } else {
+              // Anonymous functions (including top-level code) have the form:
+              // * `    at /path/to/file:NN:NN`
+              match = line.match(/^ +at ([^()]*)$/);
+              funcName = '(anon)';
+              filePath = match[1];
+            }
+
+            const fileSplit = filePath.match(/\/?[^/]+/g) || ['?'];
+            const splitLen  = fileSplit.length;
+            const fileName  = (splitLen < 2)
+              ? fileSplit[0]
+              : `...${fileSplit[splitLen - 2]}${fileSplit[splitLen - 1]}`;
+
+            return `${funcName} (${fileName})`;
+          });
+        }
+
         this._apiLog.fullCall(this._connectionId, startTime, msg, response);
       };
 
