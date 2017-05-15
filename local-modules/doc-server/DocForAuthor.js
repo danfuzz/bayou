@@ -88,7 +88,8 @@ export default class DocForAuthor {
    * @param {number} baseVerNum Version number which `delta` is with respect to.
    * @param {FrozenDelta} delta Delta indicating what has changed with respect
    *   to `baseVerNum`.
-   * @returns {CorrectedChange} Correction from the implied expected result.
+   * @returns {Promise<CorrectedChange>} Promise for the correction from the
+   *   implied expected result to get the actual result.
    */
   applyDelta(baseVerNum, delta) {
     return this._doc.applyDelta(baseVerNum, delta, this._authorId);

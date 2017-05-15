@@ -184,15 +184,33 @@ export default class DocControl extends CommonBase {
    *   to `baseVerNum`.
    * @param {string|null} authorId Author of `delta`, or `null` if the change
    *   is to be considered authorless.
-   * @returns {CorrectedChange} Correction to the implied expected result of
-   *   this operation. The `delta` of this result can be applied to the expected
-   *   result to get the actual result.
+   * @returns {Promise<CorrectedChange>} Promise for the correction to the
+   *   implied expected result of this operation. The `delta` of this result can
+   *   be applied to the expected result to get the actual result. The promise
+   *   resolves sometime after the delta has been applied to the document.
    */
   applyDelta(baseVerNum, delta, authorId) {
     baseVerNum = this._validateVerNum(baseVerNum, false);
     delta = FrozenDelta.check(delta);
     authorId = TString.orNull(authorId);
 
+    // TODO: This `Promise.resolve()` cladding suffices to provide the
+    // documented asynchronous API; however, the innards of this method should
+    // actually be more async in their nature.
+    return Promise.resolve(this._applyDelta(baseVerNum, delta, authorId));
+  }
+
+  /**
+   * Main implementation of `applyDelta()`, see which for details. This method
+   * is fully synchronous.
+   *
+   * @param {Int} baseVerNum Same as for `applyDelta()`.
+   * @param {FrozenDelta} delta Same as for `applyDelta()`.
+   * @param {string|null} authorId Same as for `applyDelta()`.
+   * @returns {CorrectedChange} Same as for `applyDelta()`, except not a
+   *   promise.
+   */
+  _applyDelta(baseVerNum, delta, authorId) {
     if (baseVerNum === this.currentVerNum()) {
       // The easy case: Apply a delta to the current version (unless it's empty,
       // in which case we don't have to make a new version at all; that's
