@@ -86,8 +86,8 @@ export default class DocForAuthor {
    * details.
    *
    * @param {number} baseVerNum Version number which `delta` is with respect to.
-   * @param {object} delta Delta indicating what has changed with respect to
-   *   `baseVerNum`.
+   * @param {FrozenDelta} delta Delta indicating what has changed with respect
+   *   to `baseVerNum`.
    * @returns {CorrectedChange} Correction from the implied expected result.
    */
   applyDelta(baseVerNum, delta) {

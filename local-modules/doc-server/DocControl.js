@@ -180,8 +180,8 @@ export default class DocControl extends CommonBase {
    * intervening changes.
    *
    * @param {Int} baseVerNum Version number which `delta` is with respect to.
-   * @param {object} delta Delta indicating what has changed with respect to
-   *   `baseVerNum`.
+   * @param {FrozenDelta} delta Delta indicating what has changed with respect
+   *   to `baseVerNum`.
    * @param {string|null} authorId Author of `delta`, or `null` if the change
    *   is to be considered authorless.
    * @returns {CorrectedChange} Correction to the implied expected result of
@@ -190,7 +190,7 @@ export default class DocControl extends CommonBase {
    */
   applyDelta(baseVerNum, delta, authorId) {
     baseVerNum = this._validateVerNum(baseVerNum, false);
-    delta = FrozenDelta.coerce(delta);
+    delta = FrozenDelta.check(delta);
     authorId = TString.orNull(authorId);
 
     if (baseVerNum === this.currentVerNum()) {
