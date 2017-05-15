@@ -37,16 +37,6 @@ export default class DocForAuthor {
   }
 
   /**
-   * Gets the version number corresponding to the very next change that will be
-   * made to the document.
-   *
-   * @returns {int} The version number.
-   */
-  nextVerNum() {
-    return this._doc.nextVerNum();
-  }
-
-  /**
    * Returns a particular change to the document. See the equivalent
    * `DocControl` method for details.
    *

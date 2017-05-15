@@ -57,16 +57,6 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Gets the version number corresponding to the very next change that will be
-   * made to the document.
-   *
-   * @returns {int} The version number.
-   */
-  nextVerNum() {
-    return this._doc.nextVerNum();
-  }
-
-  /**
    * Returns a particular change to the document. The document consists of a
    * sequence of changes, each modifying version N of the document to produce
    * version N+1.
@@ -155,12 +145,14 @@ export default class DocControl extends CommonBase {
    */
   deltaAfter(baseVerNum) {
     const currentVerNum = this.currentVerNum();
+    const nextVerNum    = currentVerNum + 1;
+
     baseVerNum = this._validateVerNum(baseVerNum, false);
 
     if (baseVerNum !== currentVerNum) {
       // We can fulfill the result immediately. Compose all the deltas from
       // the version after the base through the current version.
-      const delta = this._composeVersions(baseVerNum + 1);
+      const delta = this._composeVersions(baseVerNum + 1, nextVerNum);
 
       // We don't just return a plain value (that is, we still return a promise)
       // because of the usual hygenic recommendation to always return either
@@ -277,22 +269,19 @@ export default class DocControl extends CommonBase {
    * inverted (that is, `end < start`). It is also invalid for the range to
    * include non-existent versions (negative or too large).
    *
-   * @param {number} startInclusive Version number for the first delta to
-   *   include in the result.
-   * @param {number} [endExclusive = this.nextVerNum()] Version number for just
-   *   after the last delta to include, or alternatively thought, of the first
-   *   version to exclude from the result.
+   * @param {Int} startInclusive Version number for the first delta to include
+   *   in the result.
+   * @param {Int} endExclusive Version number for just after the last delta to
+   *   include, or alternatively thought, of the first version to exclude from
+   *   the result. Must be no greater than one after the current version number.
    * @returns {FrozenDelta} The composed delta consisting of versions
    *   `startInclusive` through but not including `endExclusive`.
    */
-  _composeVersions(startInclusive, endExclusive = this.nextVerNum()) {
-    // TODO: The `endExclusive` default above will have to be altered once
-    // `nextVerNum()` starts returning a promise.
-
+  _composeVersions(startInclusive, endExclusive) {
     // Validate parameters.
     startInclusive = VersionNumber.check(startInclusive);
     endExclusive =
-      TInt.rangeInc(endExclusive, startInclusive, this.nextVerNum());
+      TInt.rangeInc(endExclusive, startInclusive, this._nextVerNum());
 
     if (startInclusive === endExclusive) {
       return FrozenDelta.EMPTY;
@@ -324,9 +313,19 @@ export default class DocControl extends CommonBase {
     }
 
     const change =
-      new DocumentChange(this.nextVerNum(), Timestamp.now(), delta, authorId);
+      new DocumentChange(this._nextVerNum(), Timestamp.now(), delta, authorId);
     this._doc.changeAppend(change);
     this._changeCondition.value = true;
+  }
+
+  /**
+   * Gets the version number corresponding to the very next change that will be
+   * made to the document.
+   *
+   * @returns {Int} The version number.
+   */
+  _nextVerNum() {
+    return this._doc.nextVerNum();
   }
 
   /**
