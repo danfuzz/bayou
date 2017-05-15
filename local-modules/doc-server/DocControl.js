@@ -2,8 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DocumentChange, FrozenDelta, Snapshot, Timestamp, VersionNumber }
-  from 'doc-common';
+import { FrozenDelta, Snapshot, Timestamp, VersionNumber } from 'doc-common';
 import { BaseDoc } from 'doc-store';
 import { TBoolean, TInt, TString } from 'typecheck';
 import { CommonBase, PromCondition } from 'util-common';
@@ -74,7 +73,7 @@ export default class DocControl extends CommonBase {
   /**
    * Returns a snapshot of the full document contents.
    *
-   * @param {number} [verNum = this.currentVerNum()] Indicates which version to
+   * @param {Int} [verNum = this.currentVerNum()] Indicates which version to
    *   get.
    * @returns {Snapshot} The corresponding snapshot.
    */
@@ -89,10 +88,10 @@ export default class DocControl extends CommonBase {
       // up a first version here and change `verNum` to `0`, which will
       // propagate through the rest of the code and end up making everything all
       // work out.
-      const firstChange = new DocumentChange(0, Timestamp.now(),
+      this._doc.changeAppend(
+        Timestamp.now(),
         [{ insert: '(Recreated document due to format version skew.)\n' }],
         null);
-      this._doc.changeAppend(firstChange);
       verNum = 0;
     }
 
@@ -138,7 +137,7 @@ export default class DocControl extends CommonBase {
    * is the current version, this will not resolve the result promise until at
    * least one change has been made.
    *
-   * @param {number} baseVerNum Version number for the document.
+   * @param {Int} baseVerNum Version number for the document.
    * @returns {Promise} A promise which ultimately resolves to an object that
    *   maps `verNum` to the new version and `delta` to a change with respect to
    *   `baseVerNum`.
@@ -179,7 +178,7 @@ export default class DocControl extends CommonBase {
    * is to say, what the client would get if the delta were applied with no
    * intervening changes.
    *
-   * @param {number} baseVerNum Version number which `delta` is with respect to.
+   * @param {Int} baseVerNum Version number which `delta` is with respect to.
    * @param {object} delta Delta indicating what has changed with respect to
    *   `baseVerNum`.
    * @param {string|null} authorId Author of `delta`, or `null` if the change
@@ -312,9 +311,7 @@ export default class DocControl extends CommonBase {
       return;
     }
 
-    const change =
-      new DocumentChange(this._nextVerNum(), Timestamp.now(), delta, authorId);
-    this._doc.changeAppend(change);
+    this._doc.changeAppend(Timestamp.now(), delta, authorId);
     this._changeCondition.value = true;
   }
 

@@ -62,7 +62,7 @@ export default class DocForAuthor {
    * Returns a snapshot of the full document contents. See the equivalent
    * `DocControl` method for details.
    *
-   * @param {number} [verNum = this.currentVerNum()] Which version to get.
+   * @param {Int} [verNum = this.currentVerNum()] Which version to get.
    * @returns {Snapshot} The corresponding snapshot.
    */
   snapshot(verNum) {
@@ -73,7 +73,7 @@ export default class DocForAuthor {
    * Returns a promise for a snapshot of any version after the given
    * `baseVerNum`. See the equivalent `DocControl` method for details.
    *
-   * @param {number} baseVerNum Version number for the document.
+   * @param {Int} baseVerNum Version number for the document.
    * @returns {Promise} A promise for a new version.
    */
   deltaAfter(baseVerNum) {
