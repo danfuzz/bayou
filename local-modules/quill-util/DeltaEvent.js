@@ -33,7 +33,7 @@ export default class DeltaEvent {
    *   is coerceable to a `FrozenDelta`.
    * @param {Delta|array|object} oldContents The document contents just prior to
    *   the change. Can be anything that is coerceable to a `FrozenDelta`.
-   * @param {string} source The name of the effective "source" of the event.
+   * @param {string} source The name of the notional "source" of the event.
    *   (Typical values are `api` and `user`.)
    */
   constructor(accessKey, delta, oldContents, source) {
