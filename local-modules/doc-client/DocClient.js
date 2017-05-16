@@ -645,21 +645,28 @@ export default class DocClient extends StateMachine {
 
     // The server merged in some changes that we didn't expect.
 
+    // This "corrected delta" consists of the original combined delta that we
+    // got from Quill (that is, representing a delta from the client's current
+    // state to Quill's current state) composed with the correction to that
+    // delta which when applied brings the client's state into alignment with
+    // the server's state.
+    const correctedDelta = FrozenDelta.coerce(delta.compose(dCorrection));
+
     if (this._currentChange.nextNow === null) {
       // Thanfully, the local user hasn't made any other changes while we
-      // were waiting for the server to get back to us. We need to tell
-      // Quill about the changes, but we don't have to do additional merging.
-      this._updateDocWithDelta(vResultNum, dCorrection);
+      // were waiting for the server to get back to us, which means we can
+      // cleanly apply the correction on top of Quill's current state.
+      this._updateDocWithDelta(vResultNum, correctedDelta, dCorrection);
       this._becomeIdle();
       return;
     }
 
     // The hard case, a/k/a "Several people are typing." The server got back
-    // to us with a response that included changes we didn't know about,
-    // *and* in the mean time the local user has been busy making changes of
-    // their own. We need to "transform" (in OT terms) or "rebase" (in git
-    // terms) the local changes to be on top of the new base document as
-    // provided by the server.
+    // to us with a response that included changes we didn't know about, *and*
+    // in the mean time the local user has been busy making changes of their
+    // own. We need to "transform" (in OT terms) or "rebase" (in git terms) the
+    // the local changes to be on top of the new base document as provided by
+    // the server.
     //
     // Using the same terminology as used on the server side (see
     // `DocControl.js`), we start with `vExpected` (the document we would have
@@ -694,7 +701,7 @@ export default class DocClient extends StateMachine {
     // second (lost any insert races or similar).
     const dIntegratedCorrection =
       FrozenDelta.coerce(dMore.transform(dCorrection, false));
-    this._updateDocWithDelta(vResultNum, dCorrection, dIntegratedCorrection);
+    this._updateDocWithDelta(vResultNum, correctedDelta, dIntegratedCorrection);
 
     // (3)
 
