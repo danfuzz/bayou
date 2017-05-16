@@ -177,20 +177,13 @@ export default class DocClient extends StateMachine {
    * Validates a `gotApplyDelta` event. This represents a successful result
    * from the API call `applyDelta()`.
    *
-   * @param {Delta|array|object} expectedContents The expected result of the
-   *   merge. This will be the actual result if there are no other intervening
-   *   changes (indicated by the fact that `delta` is empty). Must be a value
-   *   which can be coerced to a `FrozenDelta`.
+   * @param {FrozenDelta} delta The delta that was originally applied.
    * @param {DeltaResult} correctedChange The correction to the expected
    *   result as returned from `applyDelta()`.
-   * @returns {array} Replacement arguments which always have `FrozenDelta`s for
-   *   the delta-ish arguments.
    */
-  _check_gotApplyDelta(expectedContents, correctedChange) {
-    return [
-      FrozenDelta.coerce(expectedContents),
-      DeltaResult.check(correctedChange)
-    ];
+  _check_gotApplyDelta(delta, correctedChange) {
+    FrozenDelta.check(delta);
+    DeltaResult.check(correctedChange);
   }
 
   /**
@@ -605,15 +598,9 @@ export default class DocClient extends StateMachine {
       return;
     }
 
-    // Construct the document (from-empty Delta) that we expect to be the result
-    // of applying the pending change. In fact, we might end up with something
-    // else from the server, but if so it is going to be represented as a delta
-    // from what we've built here.
-    const expectedContents = this._doc.contents.compose(delta);
-
     // Send the delta, and handle the response.
     this._docProxy.applyDelta(this._doc.verNum, delta).then((value) => {
-      this.q_gotApplyDelta(expectedContents, value);
+      this.q_gotApplyDelta(delta, value);
     }).catch((error) => {
       this.q_apiError('applyDelta', error);
     });
@@ -625,19 +612,24 @@ export default class DocClient extends StateMachine {
    * In state `merging`, handles event `gotApplyDelta`. This means that a local
    * change was successfully merged by the server.
    *
-   * @param {FrozenDelta} expectedContents The expected result of the merge. This
-   *   will be the actual result if there are no other intervening changes
-   *   (indicated by the fact that `delta` is empty).
+   * @param {FrozenDelta} delta The delta that was originally applied.
    * @param {DeltaResult} correctedChange The correction to the expected
    *   result as returned from `applyDelta()`.
    */
-  _handle_merging_gotApplyDelta(expectedContents, correctedChange) {
+  _handle_merging_gotApplyDelta(delta, correctedChange) {
     // These are the same variable names as used on the server side. See below
     // for more detail.
     const dCorrection = correctedChange.delta;
     const vResultNum  = correctedChange.verNum;
 
     this._log.detail(`Correction from server: v${vResultNum}`, dCorrection);
+
+    // Construct the document (from-empty Delta) that we expected to be the
+    // result of applying the pending change. If there's no correction from the
+    // server, then this is indeed the result. If there _is_ a correction, then
+    // that correction is a delta from this expectation.
+    const expectedContents =
+      FrozenDelta.coerce(this._doc.contents.compose(delta));
 
     if (dCorrection.isEmpty()) {
       // There is no change from what we expected. This means that no other
@@ -705,7 +697,8 @@ export default class DocClient extends StateMachine {
     // `false` indicates that `dMore` should be taken to have been applied
     // second (lost any insert races or similar).
     const dIntegratedCorrection = dMore.transform(dCorrection, false);
-    this._updateDocWithDelta(vResultNum, dCorrection, dIntegratedCorrection);
+    this._updateDocWithDelta(
+      vResultNum, expectedPlusCorrection, dIntegratedCorrection);
 
     // (3)
 
