@@ -23,7 +23,8 @@ export default class QuillProm extends Quill {
     // We can't safely `import Emitter`, as it's not an exposed class, so we
     // instead get at it via the instance of it made in the superclass
     // constructor.
-    const Emitter = this.emitter.constructor;
+    const origEmitter = this.emitter;
+    const Emitter = origEmitter.constructor;
     const API = Emitter.sources.API;
     const EDITOR_CHANGE = Emitter.events.EDITOR_CHANGE;
     const TEXT_CHANGE = Emitter.events.TEXT_CHANGE;
@@ -41,24 +42,47 @@ export default class QuillProm extends Quill {
     this._currentChange = new DeltaEvent(
       accessKey, FrozenDelta.EMPTY, FrozenDelta.EMPTY, API);
 
-    // We attach to the `EDITOR_CHANGE` event. This isn't exposed Quill API,
-    // but in the current (as of this writing) implementation, Quill will emit
-    // an `EDITOR_CHANGE` event synchronously _before_ emitting a `TEXT_CHANGE`
-    // event. Quill also attaches a handler to this event, and importantly it
-    // _does not_ ever alter the document content in response to the event.
+    // We override `emitter.emit()` to _synchronously_ add an event to the
+    // promise chain. We do it this way instead of relying on an event callback
+    // to avoid the possibility of Quill's document state advancing between the
+    // time that an event callback is queued and when it is fired. That is,
+    // when an event callback is running, it is not safe for it to assume that
+    // Quill's synchronously accessible state is consistent with the world
+    // portrayed to the callback by the event; that is, it might already be
+    // out-of-date. There are two main ways this inconsistency can happen: (1)
+    // The user happens to be actively (and perhaps furiously) editing the
+    // document. (2) Some event handler that gets run earlier for the same
+    // change performs edits on the document.
     //
-    // The upshot is that when we receive the event here, we can know for sure
-    // that it is in order, because the only way out-of-order text change events
-    // happen is when client code re-enters Quill to do document changes within
-    // event handlers, which causes _subsequent_ handlers to see things out of
-    // order. By construction, that can't happen to us here because we know
-    // we're the first-added handler.
-    this.emitter.on(EDITOR_CHANGE, (type, ...rest) => {
-      if (type === TEXT_CHANGE) {
+    // Neither of these cases has an impact here, specifically because this
+    // method gets to run synchronously with the queueing of each event. That
+    // is, by construction, as of the end of the call to `emit()` the event
+    // promise chain will always fully and accurately represent the synchronous
+    // document state.
+    //
+    // Why is this a good thing? Because when an event chain consumer gets
+    // activated for an earlier event, it will be able to synchronously "walk"
+    // its way to the latest state and so never be in a position of acting
+    // synchronously on stale information.
+    const origEmit = origEmitter.emit;
+    origEmitter.emit = (type, arg0, ...rest) => {
+      if ((type === EDITOR_CHANGE) && (arg0 === TEXT_CHANGE)) {
+        // We attach to the `EDITOR_CHANGE` event when the subtype is
+        // `TEXT_CHANGE`. This isn't exposed Quill API, but in the current
+        // implementation (as of this writing) implementation, Quill
+        // consistently emits an `EDITOR_CHANGE(TEXT_CHANGE, ...)` event for
+        // each text change, even when it doesn't emit a `TEXT_CHANGE` event
+        // (e.g., when the change marked as "silent"). We, on the other hand,
+        // truly need the full set of all changes in order, since otherwise
+        // the document state as known to the server would get out of synch with
+        // what is portrayed to the user.
         this._currentChange =
           this._currentChange._gotChange(accessKey, ...rest);
       }
-    });
+
+      // This is the moral equivalent of `super.emit(...)`.
+      origEmit.call(origEmitter, type, arg0, ...rest);
+    };
   }
 
   /**
