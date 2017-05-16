@@ -393,7 +393,7 @@ export default class DocClient extends StateMachine {
   _handle_starting_gotSnapshot(snapshot) {
     // Save the result as the current (latest known) version of the document,
     // and tell Quill about it.
-    this._updateDocWithSnapshot(snapshot, true);
+    this._updateDocWithSnapshot(snapshot);
 
     // The above action should have caused the Quill instance to make a change
     // which shows up on its change chain. Grab it, and verify that indeed it's
@@ -624,25 +624,21 @@ export default class DocClient extends StateMachine {
 
     this._log.detail(`Correction from server: v${vResultNum}`, dCorrection);
 
-    // Construct the document (from-empty Delta) that we expected to be the
-    // result of applying the pending change. If there's no correction from the
-    // server, then this is indeed the result. If there _is_ a correction, then
-    // that correction is a delta from this expectation.
-    const expectedContents =
-      FrozenDelta.coerce(this._doc.contents.compose(delta));
-
     if (dCorrection.isEmpty()) {
       // There is no change from what we expected. This means that no other
       // client got in front of us between when we received the current version
-      // and when we sent the delta to the server. That means it's safe to set
-      // the current document and go back to idling.
+      // and when we sent the delta to the server. And _that_ means it's safe to
+      // update the client's version of current document and go back to idling.
       //
       // In particular, if there happened to be any local changes made (coming
       // from Quill) while the server request was in flight, they will be picked
       // up promptly due to the handling of the `wantChanges` event which will
       // get fired off immediately.
-      const snapshot = new Snapshot(vResultNum, expectedContents);
-      this._updateDocWithSnapshot(snapshot, false);
+      //
+      // And note that Quill doesn't need to be updated here (that is, its delta
+      // is empty) because what we are integrating into the client document is
+      // exactly what Quill handed to us.
+      this._updateDocWithDelta(vResultNum, delta, FrozenDelta.EMPTY);
       this._becomeIdle();
       return;
     }
@@ -696,9 +692,9 @@ export default class DocClient extends StateMachine {
 
     // `false` indicates that `dMore` should be taken to have been applied
     // second (lost any insert races or similar).
-    const dIntegratedCorrection = dMore.transform(dCorrection, false);
-    this._updateDocWithDelta(
-      vResultNum, expectedPlusCorrection, dIntegratedCorrection);
+    const dIntegratedCorrection =
+      FrozenDelta.coerce(dMore.transform(dCorrection, false));
+    this._updateDocWithDelta(vResultNum, dCorrection, dIntegratedCorrection);
 
     // (3)
 
@@ -776,10 +772,10 @@ export default class DocClient extends StateMachine {
    *
    * @param {number} verNum New version number.
    * @param {FrozenDelta} delta Delta from the current `_doc` contents.
-   * @param {Delta|array|object} [quillDelta = delta] Delta from Quill's current
-   *   state, which is expected to preserve any state that Quill has that isn't
-   *   yet represented in `_doc`. This must be used in cases where Quill's state
-   *   has progressed ahead of `_doc` due to local activity.
+   * @param {FrozenDelta} [quillDelta = delta] Delta from Quill's current state,
+   *   which is expected to preserve any state that Quill has that isn't yet
+   *   represented in `_doc`. This must be used in cases where Quill's state has
+   *   progressed ahead of `_doc` due to local activity.
    */
   _updateDocWithDelta(verNum, delta, quillDelta = delta) {
     if (this._currentChange.nextNow !== null) {
@@ -796,25 +792,20 @@ export default class DocClient extends StateMachine {
       delta.isEmpty() ? oldContents : oldContents.compose(delta));
 
     // Tell Quill.
-    this._quill.updateContents(quillDelta, CLIENT_SOURCE);
+    if (!quillDelta.isEmpty()) {
+      this._quill.updateContents(quillDelta, CLIENT_SOURCE);
+    }
   }
 
   /**
-   * Updates `_doc` to be the given snapshot, and optionally tells the attached
-   * Quill instance to update itself accordingly.
+   * Updates `_doc` to be the given snapshot, and tells the attached Quill
+   * instance to update itself accordingly.
    *
    * @param {Snapshot} snapshot New snapshot.
-   * @param {boolean} updateQuill Whether to inform Quill of this update. This
-   *   should only ever be passed as `false` when Quill is expected to already
-   *   have the changes to the document represented in `contents`. (It might
-   *  _also_ have additional changes too.)
    */
-  _updateDocWithSnapshot(snapshot, updateQuill) {
+  _updateDocWithSnapshot(snapshot) {
     this._doc = snapshot;
-
-    if (updateQuill) {
-      this._quill.setContents(snapshot.contents, CLIENT_SOURCE);
-    }
+    this._quill.setContents(snapshot.contents, CLIENT_SOURCE);
   }
 
   /**
