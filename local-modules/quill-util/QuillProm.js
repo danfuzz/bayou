@@ -69,13 +69,13 @@ export default class QuillProm extends Quill {
       if ((type === EDITOR_CHANGE) && (arg0 === TEXT_CHANGE)) {
         // We attach to the `EDITOR_CHANGE` event when the subtype is
         // `TEXT_CHANGE`. This isn't exposed Quill API, but in the current
-        // implementation (as of this writing) implementation, Quill
-        // consistently emits an `EDITOR_CHANGE(TEXT_CHANGE, ...)` event for
-        // each text change, even when it doesn't emit a `TEXT_CHANGE` event
-        // (e.g., when the change marked as "silent"). We, on the other hand,
-        // truly need the full set of all changes in order, since otherwise
-        // the document state as known to the server would get out of synch with
-        // what is portrayed to the user.
+        // implementation (as of this writing), Quill consistently emits an
+        // `EDITOR_CHANGE(TEXT_CHANGE, ...)` event for each text change, even
+        // when it doesn't emit a `TEXT_CHANGE` event (e.g., when the change
+        // marked as "silent"). We, on the other hand, truly need the full set
+        // of all changes in order, since otherwise the document state as known
+        // to the server would get out of synch with what is portrayed to the
+        // user.
         this._currentChange =
           this._currentChange._gotChange(accessKey, ...rest);
       }
