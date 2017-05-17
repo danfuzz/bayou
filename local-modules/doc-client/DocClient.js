@@ -494,9 +494,9 @@ export default class DocClient extends StateMachine {
       this._updateDocWithDelta(verNum, delta);
     }
 
-    // Fire off the next iteration of requesting server changes. We do this via
-    // a `PromDelay` for two reasons because we want to pace requests at least a
-    // bit.
+    // Fire off the next iteration of requesting server changes, after a short
+    // delay. The delay is just to keep network traffic at a stately pace
+    // despite any particularly active editing by other clients.
     PromDelay.resolve(PULL_DELAY_MSEC).then((res_unused) => {
       this.q_wantChanges();
     });
