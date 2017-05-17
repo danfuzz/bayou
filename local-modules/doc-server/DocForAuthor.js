@@ -41,7 +41,7 @@ export default class DocForAuthor {
    * `DocControl` method for details.
    *
    * @param {Int} verNum The version number of the change.
-   * @returns {DocumentChange} An object representing that change.
+   * @returns {Promise<DocumentChange>} Promise for the requested change.
    */
   change(verNum) {
     return this._doc.change(verNum);
@@ -62,10 +62,11 @@ export default class DocForAuthor {
    * Returns a snapshot of the full document contents. See the equivalent
    * `DocControl` method for details.
    *
-   * @param {Int} [verNum = this.currentVerNum()] Which version to get.
-   * @returns {Snapshot} The corresponding snapshot.
+   * @param {Int|null} [verNum = null] Which version to get. If passed as
+   *   `null`, indicates the latest (most recent) version.
+   * @returns {Promise<Snapshot>} Promise for the requested snapshot.
    */
-  snapshot(verNum) {
+  snapshot(verNum = null) {
     return this._doc.snapshot(verNum);
   }
 

@@ -181,7 +181,8 @@ export default class DebugTools {
     const verNum = req.params.verNum;
 
     return this._getExistingDoc(req).then((doc) => {
-      const change = doc.change(verNum);
+      return doc.change(verNum);
+    }).then((change) => {
       const result = Encoder.encodeJson(change, true);
       this._textResponse(res, result);
     });
@@ -288,9 +289,9 @@ export default class DebugTools {
 
     return this._getExistingDoc(req).then((doc) => {
       const args = (verNum === undefined) ? [] : [verNum];
-      const snapshot = doc.snapshot(...args);
+      return doc.snapshot(...args);
+    }).then((snapshot) => {
       const result = Encoder.encodeJson(snapshot, true);
-
       this._textResponse(res, result);
     });
   }
