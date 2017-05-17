@@ -41,7 +41,7 @@ export default class DocForAuthor {
    * `DocControl` method for details.
    *
    * @param {Int} verNum The version number of the change.
-   * @returns {DocumentChange} An object representing that change.
+   * @returns {Promise<DocumentChange>} Promise for the requested change.
    */
   change(verNum) {
     return this._doc.change(verNum);

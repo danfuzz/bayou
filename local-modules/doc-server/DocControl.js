@@ -54,11 +54,15 @@ export default class DocControl extends CommonBase {
    * @param {Int} verNum The version number of the change. The result is the
    *   change which produced that version. E.g., `0` is a request for the first
    *   change (the change from the empty document).
-   * @returns {DocumentChange} An object representing that change.
+   * @returns {Promise<DocumentChange>} Promise for the requested change.
    */
   change(verNum) {
     verNum = this._validateVerNum(verNum, false);
-    return this._doc.changeRead(verNum);
+
+    // TODO: This `Promise.resolve()` cladding suffices to provide the
+    // documented asynchronous API; however, the innards of this method should
+    // actually be more async in their nature.
+    return Promise.resolve(this._doc.changeRead(verNum));
   }
 
   /**

@@ -181,7 +181,8 @@ export default class DebugTools {
     const verNum = req.params.verNum;
 
     return this._getExistingDoc(req).then((doc) => {
-      const change = doc.change(verNum);
+      return doc.change(verNum);
+    }).then((change) => {
       const result = Encoder.encodeJson(change, true);
       this._textResponse(res, result);
     });
