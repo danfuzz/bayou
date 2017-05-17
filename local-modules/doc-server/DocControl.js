@@ -47,7 +47,7 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Returns a particular change to the document. The document consists of a
+   * Gets a particular change to the document. The document consists of a
    * sequence of changes, each modifying version N of the document to produce
    * version N+1.
    *
@@ -66,64 +66,17 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Returns a snapshot of the full document contents.
+   * Gets a snapshot of the full document contents.
    *
-   * @param {Int} [verNum] Indicates which version to get. If not passed,
-   *   defaults to the latest (most recent) version.
-   * @returns {Snapshot} The corresponding snapshot.
+   * @param {Int|null} [verNum = null] Which version to get. If passed as
+   *   `null`, indicates the latest (most recent) version.
+   * @returns {Promise<Snapshot>} Promise for the requested snapshot.
    */
-  snapshot(verNum) {
-    verNum = this._validateVerNum(verNum, true);
-
-    if (verNum === null) {
-      // This is an entirely empty document (probably because we're running in
-      // a development environment and we found that the persistent data
-      // wasn't in the latest format), and we got here because `verNum` wasn't
-      // passed (that is, the client is asking for the latest version). We set
-      // up a first version here and change `verNum` to `0`, which will
-      // propagate through the rest of the code and end up making everything all
-      // work out.
-      this._doc.changeAppend(
-        Timestamp.now(),
-        [{ insert: '(Recreated document due to format version skew.)\n' }],
-        null);
-      verNum = 0;
-    }
-
-    // Search backward through the full versions for a base for forward
-    // composition.
-    let baseSnapshot = null;
-    for (let i = verNum; i >= 0; i--) {
-      const v = this._snapshots[i];
-      if (v) {
-        baseSnapshot = v;
-        break;
-      }
-    }
-
-    if (baseSnapshot === null) {
-      // We have no snapshots at all, including of even the first version. Set
-      // up a version 0 snapshot.
-      baseSnapshot = this._snapshots[0] =
-        new Snapshot(0, this._doc.changeRead(0).delta);
-    }
-
-    if (baseSnapshot.verNum === verNum) {
-      // Found the right version!
-      return baseSnapshot;
-    }
-
-    // We didn't actully find a snapshot of the requested version. Apply deltas
-    // to the base to produce the desired version. Store it, and return it.
-
-    let contents = baseSnapshot.contents;
-    for (let i = baseSnapshot.verNum + 1; i <= verNum; i++) {
-      contents = contents.compose(this._doc.changeRead(i).delta);
-    }
-
-    const result = new Snapshot(verNum, contents);
-    this._snapshots[verNum] = result;
-    return result;
+  snapshot(verNum = null) {
+    // TODO: This `Promise.resolve()` cladding suffices to provide the
+    // documented asynchronous API; however, the innards of this method should
+    // actually be more async in their nature.
+    return Promise.resolve(this._snapshotSync(verNum));
   }
 
   /**
@@ -236,7 +189,7 @@ export default class DocControl extends CommonBase {
     // to the description immediately above.
     const dClient    = delta;
     const vBaseNum   = baseVerNum;
-    const vBase      = this.snapshot(vBaseNum).contents;
+    const vBase      = this._snapshotSync(vBaseNum).contents;
     const vCurrentNum = this._currentVerNum();
 
     // (1)
@@ -254,9 +207,9 @@ export default class DocControl extends CommonBase {
     }
 
     // (3)
-    this._appendDelta(dNext, authorId);      // This updates the version number.
-    const vNext = this.snapshot().contents;  // This lets the snapshot get cached.
-    const vNextNum = this._currentVerNum();  // This will be different than `vCurrentNum`.
+    this._appendDelta(dNext, authorId);          // This updates the version number.
+    const vNext = this._snapshotSync().contents; // This lets the snapshot get cached.
+    const vNextNum = this._currentVerNum();      // This will be different than `vCurrentNum`.
 
     // (4)
     const vExpected   = FrozenDelta.coerce(vBase).compose(dClient);
@@ -326,10 +279,71 @@ export default class DocControl extends CommonBase {
   }
 
   /**
+   * Synchronously gets a snapshot of the full document contents.
+   *
+   * @param {Int|null} verNum Which version to get. If passed as `null`,
+   *   indicates the latest (most recent) version.
+   * @returns {Snapshot} The corresponding snapshot.
+   */
+  _snapshotSync(verNum) {
+    verNum = this._validateVerNum(verNum, true);
+
+    if (verNum === null) {
+      // This is an entirely empty document (probably because we're running in
+      // a development environment and we found that the persistent data
+      // wasn't in the latest format), and we got here because `verNum` wasn't
+      // passed (that is, the client is asking for the latest version). We set
+      // up a first version here and change `verNum` to `0`, which will
+      // propagate through the rest of the code and end up making everything all
+      // work out.
+      this._doc.changeAppend(
+        Timestamp.now(),
+        [{ insert: '(Recreated document due to format version skew.)\n' }],
+        null);
+      verNum = 0;
+    }
+
+    // Search backward through the full versions for a base for forward
+    // composition.
+    let baseSnapshot = null;
+    for (let i = verNum; i >= 0; i--) {
+      const v = this._snapshots[i];
+      if (v) {
+        baseSnapshot = v;
+        break;
+      }
+    }
+
+    if (baseSnapshot === null) {
+      // We have no snapshots at all, including of even the first version. Set
+      // up a version 0 snapshot.
+      baseSnapshot = this._snapshots[0] =
+        new Snapshot(0, this._doc.changeRead(0).delta);
+    }
+
+    if (baseSnapshot.verNum === verNum) {
+      // Found the right version!
+      return baseSnapshot;
+    }
+
+    // We didn't actully find a snapshot of the requested version. Apply deltas
+    // to the base to produce the desired version. Store it, and return it.
+
+    let contents = baseSnapshot.contents;
+    for (let i = baseSnapshot.verNum + 1; i <= verNum; i++) {
+      contents = contents.compose(this._doc.changeRead(i).delta);
+    }
+
+    const result = new Snapshot(verNum, contents);
+    this._snapshots[verNum] = result;
+    return result;
+  }
+
+  /**
    * Checks a version number for sanity. Throws an error when insane.
    *
    * @param {*} verNum the (alleged) version number to check.
-   * @param {boolean} wantCurrent If `true` indicates that `undefined` should be
+   * @param {boolean} wantCurrent If `true` indicates that `null` should be
    *   treated as a request for the current version. If `false`, `undefined` is
    *   an error.
    * @returns {number} The version number.

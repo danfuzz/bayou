@@ -62,10 +62,11 @@ export default class DocForAuthor {
    * Returns a snapshot of the full document contents. See the equivalent
    * `DocControl` method for details.
    *
-   * @param {Int} [verNum = this.currentVerNum()] Which version to get.
-   * @returns {Snapshot} The corresponding snapshot.
+   * @param {Int|null} [verNum = null] Which version to get. If passed as
+   *   `null`, indicates the latest (most recent) version.
+   * @returns {Promise<Snapshot>} Promise for the requested snapshot.
    */
-  snapshot(verNum) {
+  snapshot(verNum = null) {
     return this._doc.snapshot(verNum);
   }
 

@@ -15,12 +15,14 @@ export default class VersionNumber {
    * @param {*} value Value to check.
    * @param {Int} [max] Maximum acceptable value (inclusive). If `undefined`,
    *   there is no upper limit.
-   * @param {*} [ifAbsent] Default value. If passed and `value` is `undefined`,
-   *   this method will return this value instead of throwing an error.
+   * @param {*} [ifAbsent] Default value. If passed and `value` is `undefined`
+   *   or `null`, this method will return this value instead of throwing an
+   *   error.
    * @returns {Int} `value` or `ifAbsent`.
    */
   static check(value, max = undefined, ifAbsent = undefined) {
-    if ((value === undefined) && (ifAbsent !== undefined)) {
+    if (   ((value === undefined) || (value === null))
+        && (ifAbsent !== undefined)) {
       return ifAbsent;
     }
 

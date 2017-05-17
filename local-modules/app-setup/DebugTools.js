@@ -289,9 +289,9 @@ export default class DebugTools {
 
     return this._getExistingDoc(req).then((doc) => {
       const args = (verNum === undefined) ? [] : [verNum];
-      const snapshot = doc.snapshot(...args);
+      return doc.snapshot(...args);
+    }).then((snapshot) => {
       const result = Encoder.encodeJson(snapshot, true);
-
       this._textResponse(res, result);
     });
   }
