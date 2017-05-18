@@ -10,6 +10,10 @@
     "spread": true,
     "restParams": true
   },
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaVersion": "2017"
+  },
   "rules" : {
     "array-bracket-spacing": "error",
     "arrow-parens": ["error", "as-needed", { "requireForBlockBody": true }],
@@ -79,8 +83,5 @@
         "requireReturn": false
       }
     ]
-  },
-  "parserOptions": {
-    "sourceType": "module"
   }
 }

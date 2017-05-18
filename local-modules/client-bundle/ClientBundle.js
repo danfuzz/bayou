@@ -110,9 +110,24 @@ const webpackOptions = {
         use: [{
           loader: 'babel-loader',
           options: {
-            presets: ['es2015', 'es2016', 'es2017'].map((name) => {
-              return require.resolve(`babel-preset-${name}`);
-            })
+            presets: [
+              [
+                require.resolve('babel-preset-env'),
+                {
+                  targets: {
+                    browsers: [
+                      // See <https://github.com/ai/browserslist> for syntax.
+                      'Chrome >= 55',
+                      'ChromeAndroid >= 55',
+                      'Electron >= 1',
+                      'Firefox >= 50',
+                      'iOS > 9',
+                      'Safari >= 9'
+                    ]
+                  }
+                }
+              ]
+            ]
           }
         }]
       },

@@ -21,6 +21,18 @@ const babel = require('babel-core');
 /** How many files reported errors? */
 let errorCount = 0;
 
+/** Babel configuration, _except_ for the file name. */
+const BABEL_CONFIG = Object.freeze({
+  sourceMaps: 'inline',
+
+  presets: [
+    [
+      'env',
+      { targets: { node: 6 } }
+    ]
+  ]
+});
+
 /**
  * Compiles a single file.
  *
@@ -49,16 +61,8 @@ function compileFile(inputFile, outputFile) {
   let output = null;
 
   try {
-    output = babel.transformFileSync(inputFile,
-      {
-        filename: inputFile,
-        sourceMaps: 'inline',
-
-        // We have to resolve the presets "manually."
-        presets: ['es2015', 'es2016', 'es2017'].map(function (name) {
-          return require.resolve(`babel-preset-${name}`);
-        })
-      });
+    const config = Object.assign({ filename: inputFile }, BABEL_CONFIG);
+    output = babel.transformFileSync(inputFile, config);
   } catch (e) {
     console.log(e.message);
     if (e.codeFrame) {

@@ -174,18 +174,14 @@ export default class DebugTools {
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
-   * @returns {Promise} Promise whose rejection indicates an error to be
-   *   reported back to the user.
    */
-  _handle_change(req, res) {
+  async _handle_change(req, res) {
     const verNum = req.params.verNum;
+    const doc = this._getExistingDoc(req);
+    const change = (await doc).change(verNum);
+    const result = Encoder.encodeJson(await change, true);
 
-    return this._getExistingDoc(req).then((doc) => {
-      return doc.change(verNum);
-    }).then((change) => {
-      const result = Encoder.encodeJson(change, true);
-      this._textResponse(res, result);
-    });
+    this._textResponse(res, result);
   }
 
   /**
@@ -281,19 +277,15 @@ export default class DebugTools {
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
-   * @returns {Promise} Promise whose rejection indicates an error to be
-   *   reported back to the user.
    */
-  _handle_snapshot(req, res) {
+  async _handle_snapshot(req, res) {
     const verNum = req.params.verNum;
+    const doc = this._getExistingDoc(req);
+    const args = (verNum === undefined) ? [] : [verNum];
+    const snapshot = (await doc).snapshot(...args);
+    const result = Encoder.encodeJson(await snapshot, true);
 
-    return this._getExistingDoc(req).then((doc) => {
-      const args = (verNum === undefined) ? [] : [verNum];
-      return doc.snapshot(...args);
-    }).then((snapshot) => {
-      const result = Encoder.encodeJson(snapshot, true);
-      this._textResponse(res, result);
-    });
+    this._textResponse(res, result);
   }
 
   /**
