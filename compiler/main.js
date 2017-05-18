@@ -54,10 +54,15 @@ function compileFile(inputFile, outputFile) {
         filename: inputFile,
         sourceMaps: 'inline',
 
-        // We have to resolve the presets "manually."
-        presets: ['es2015', 'es2016', 'es2017'].map(function (name) {
-          return require.resolve(`babel-preset-${name}`);
-        })
+        // We have to resolve presets "manually," because Babel would otherwise
+        // try to find its preset on the path to the source to transform instead
+        // of here in the compiler.
+        presets: [
+          [
+            require.resolve('babel-preset-env'),
+            { targets: { node: 7 } }
+          ]
+        ]
       });
   } catch (e) {
     console.log(e.message);
