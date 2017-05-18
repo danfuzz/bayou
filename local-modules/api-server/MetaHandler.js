@@ -89,7 +89,7 @@ export default class MetaHandler {
     let challengePair;
     for (;;) {
       challengePair = target.key.makeChallengePair();
-      if (!this._activeChallenges.get(challenge)) {
+      if (!this._activeChallenges.get(challengePair.challenge)) {
         break;
       }
 
