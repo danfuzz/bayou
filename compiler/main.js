@@ -21,6 +21,18 @@ const babel = require('babel-core');
 /** How many files reported errors? */
 let errorCount = 0;
 
+/** Babel configuration, _except_ for the file name. */
+const BABEL_CONFIG = Object.freeze({
+  sourceMaps: 'inline',
+
+  presets: [
+    [
+      'env',
+      { targets: { node: 7 } }
+    ]
+  ]
+});
+
 /**
  * Compiles a single file.
  *
@@ -49,21 +61,8 @@ function compileFile(inputFile, outputFile) {
   let output = null;
 
   try {
-    output = babel.transformFileSync(inputFile,
-      {
-        filename: inputFile,
-        sourceMaps: 'inline',
-
-        // We have to resolve presets "manually," because Babel would otherwise
-        // try to find its preset on the path to the source to transform instead
-        // of here in the compiler.
-        presets: [
-          [
-            require.resolve('babel-preset-env'),
-            { targets: { node: 7 } }
-          ]
-        ]
-      });
+    const config = Object.assign({ filename: inputFile }, BABEL_CONFIG);
+    output = babel.transformFileSync(inputFile, config);
   } catch (e) {
     console.log(e.message);
     if (e.codeFrame) {
