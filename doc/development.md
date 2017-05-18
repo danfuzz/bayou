@@ -22,7 +22,7 @@ Bayou uses [Node](https://nodejs.org) on the server side, and it uses
 haven't already done so. As of this writing, the bulk of development and
 testing have been done using `node` version 7, and `npm` versions 3 and 4.
 Notably, the server code is _not_ expected to run on `node` versions earlier
-than 7.
+than 6, and soon (probably some time in 2017) it will require version 7 or 8.
 
 To build and run, say:
 
