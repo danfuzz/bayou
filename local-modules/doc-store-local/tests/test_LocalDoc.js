@@ -35,7 +35,7 @@ describe('doc-store-local/LocalDoc', () => {
 
   describe('constructor(formatVersion, docId, docPath)', () => {
     it('should create a local dir for storing files at the specified path', () => {
-      const doc = new LocalDoc('0', '0', _documentPath());
+      const doc = new LocalDoc('0', '0', documentPath());
 
       assert.isNotNull(doc);
     });
@@ -43,18 +43,18 @@ describe('doc-store-local/LocalDoc', () => {
 
   describe('changeAppend(change)', () => {
     it('should increment the version after a change is applied', () => {
-      const doc = new LocalDoc('0', '0', _documentPath());
+      const doc = new LocalDoc('0', '0', documentPath());
       const oldVersion = doc.currentVerNum();
 
       // Docs start off with a null version number
       assert.isNull(oldVersion);
-      _addChangeToDocument(doc);
+      addChangeToDocument(doc);
 
       let newVersion = doc.currentVerNum();
 
       assert.strictEqual(newVersion, 0);
 
-      _addChangeToDocument(doc);
+      addChangeToDocument(doc);
       newVersion = doc.currentVerNum();
       assert.strictEqual(newVersion, 1);
     });
@@ -64,9 +64,9 @@ describe('doc-store-local/LocalDoc', () => {
     // when to check.
     //
     // it('should exist on disk after a write', () => {
-    //   const doc = new LocalDoc('0', '0', _documentPath());
+    //   const doc = new LocalDoc('0', '0', documentPath());
     //
-    //   _addChangeToDocument(doc);
+    //   addChangeToDocument(doc);
     //
     //   assert.isTrue(doc.exists());
     // });
@@ -74,9 +74,9 @@ describe('doc-store-local/LocalDoc', () => {
 
   describe('create()', () => {
     it('should erase the document if called on a non-empty document', () => {
-      const doc = new LocalDoc('0', '0', _documentPath());
+      const doc = new LocalDoc('0', '0', documentPath());
 
-      _addChangeToDocument(doc);
+      addChangeToDocument(doc);
       assert.strictEqual(doc.currentVerNum(), 0); // Baseline assumption.
 
       doc.create();
@@ -85,11 +85,11 @@ describe('doc-store-local/LocalDoc', () => {
   });
 });
 
-function _documentPath() {
+function documentPath() {
   return storeDir + path.sep + 'test_file';
 }
 
-function _addChangeToDocument(doc) {
+function addChangeToDocument(doc) {
   const ts = Timestamp.now();
   const changes = [{ 'insert': 'hold on to your butts!' }];
 
