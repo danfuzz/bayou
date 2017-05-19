@@ -232,7 +232,7 @@ export default class DocControl extends CommonBase {
    *   `startInclusive` through and including the current latest delta.
    */
   _composeVersionsFrom(startInclusive) {
-    const nextVerNum = this._doc.nextVerNum;
+    const nextVerNum = this._doc.nextVerNum();
     startInclusive = VersionNumber.check(startInclusive, nextVerNum);
 
     if (startInclusive === nextVerNum) {
