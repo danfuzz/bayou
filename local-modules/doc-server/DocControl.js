@@ -186,10 +186,8 @@ export default class DocControl extends CommonBase {
       // The easy case: Apply a delta to the current version (unless it's empty,
       // in which case we don't have to make a new version at all; that's
       // handled by `_appendDelta()`).
-      this._appendDelta(delta, authorId);
-      return new DeltaResult(
-        this._currentVerNum(),  // `_appendDelta()` updates the version.
-        FrozenDelta.EMPTY);
+      const verNum = await this._appendDelta(delta, authorId);
+      return new DeltaResult(verNum, FrozenDelta.EMPTY);
     }
 
     // The hard case: The client has requested an application of a delta
@@ -214,7 +212,7 @@ export default class DocControl extends CommonBase {
     // to the description immediately above.
     const dClient    = delta;
     const vBaseNum   = baseVerNum;
-    const vBase      = await this.snapshot(vBaseNum).contents;
+    const vBase      = (await this.snapshot(vBaseNum)).contents;
     const vCurrentNum = this._currentVerNum();
 
     // (1)
@@ -232,9 +230,9 @@ export default class DocControl extends CommonBase {
     }
 
     // (3)
-    this._appendDelta(dNext, authorId);      // This updates the version number.
-    const vNext = await this.snapshot().contents;
-    const vNextNum = this._currentVerNum();  // This will be different than `vCurrentNum`.
+    const vNextNum = await this._appendDelta(dNext, authorId);
+    const vNextSnapshot = await this.snapshot();
+    const vNext = vNextSnapshot.contents;
 
     // (4)
     const vExpected   = FrozenDelta.coerce(vBase).compose(dClient);
@@ -280,17 +278,18 @@ export default class DocControl extends CommonBase {
    *
    * @param {object} delta The delta to append.
    * @param {string|null} authorId The author of the delta.
+   * @returns {Int} The version number after appending `delta`.
    */
-  _appendDelta(delta, authorId) {
+  async _appendDelta(delta, authorId) {
     authorId = TString.orNull(authorId);
     delta = FrozenDelta.coerce(delta);
 
-    if (delta.isEmpty()) {
-      return;
+    if (!delta.isEmpty()) {
+      this._doc.changeAppend(Timestamp.now(), delta, authorId);
+      this._changeCondition.value = true;
     }
 
-    this._doc.changeAppend(Timestamp.now(), delta, authorId);
-    this._changeCondition.value = true;
+    return this._currentVerNum();
   }
 
   /**
