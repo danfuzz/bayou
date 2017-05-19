@@ -45,7 +45,7 @@ export default class BaseDocStore extends Singleton {
   async getDocument(docId) {
     TString.nonempty(docId);
     await this._impl_checkDocId(docId);
-    return BaseDoc.check(this._impl_getDocument(docId));
+    return BaseDoc.check(await this._impl_getDocument(docId));
   }
 
   /**
@@ -57,7 +57,7 @@ export default class BaseDocStore extends Singleton {
    * @param {string} docId The ID of the document to access.
    * @returns {BaseDoc} Accessor for the document in question.
    */
-  _impl_getDocument(docId) {
+  async _impl_getDocument(docId) {
     return this._mustOverride(docId);
   }
 }

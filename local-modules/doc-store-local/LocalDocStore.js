@@ -56,7 +56,7 @@ export default class LocalDocStore extends BaseDocStore {
    * @param {string} docId The ID of the document to access.
    * @returns {BaseDoc} Accessor for the document in question.
    */
-  _impl_getDocument(docId) {
+  async _impl_getDocument(docId) {
     const already = this._docs.get(docId);
 
     if (already) {
