@@ -129,8 +129,9 @@ export default class TopControl {
         this._quill = QuillMaker.make(this._node);
         log.detail('Made editor instance.');
 
-        // Hook the API up to the editor instance.
-        this._makeDocClient(this._apiClient);
+        // Hook up the `DocClient` (which intermediates between the server and
+        // the local Quill instance).
+        this._makeDocClient();
       });
 
       log.detail('Async operations now in progress...');
