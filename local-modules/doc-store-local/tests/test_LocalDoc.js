@@ -46,7 +46,7 @@ describe('doc-store-local/LocalDoc', () => {
       const doc = new LocalDoc('0', '0', documentPath());
       const oldVersion = doc.currentVerNum();
 
-      // Docs start off with a null version number
+      // Docs start off with a null version number.
       assert.isNull(oldVersion);
       addChangeToDocument(doc);
 
