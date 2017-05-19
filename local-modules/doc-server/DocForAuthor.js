@@ -27,16 +27,6 @@ export default class DocForAuthor {
   }
 
   /**
-   * Gets the version number corresponding to the current (latest) version of
-   * the document.
-   *
-   * @returns {int} The version number.
-   */
-  currentVerNum() {
-    return this._doc.currentVerNum();
-  }
-
-  /**
    * Returns a particular change to the document. See the equivalent
    * `DocControl` method for details.
    *
