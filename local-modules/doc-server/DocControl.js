@@ -90,9 +90,11 @@ export default class DocControl extends CommonBase {
     const currentVerNum = this._currentVerNum();
 
     if (baseVerNum !== currentVerNum) {
-      // We can fulfill the result immediately. Compose all the deltas from
-      // the version after the base through the current version.
-      const delta = this._composeVersionsFrom(baseVerNum + 1);
+      // We can fulfill the result based on existing document history. (That is,
+      // we don't have to wait for a new change to be added to the document).
+      // Compose all the deltas from the version after the base through the
+      // current version.
+      const delta = await this._composeVersionsFrom(baseVerNum + 1);
       return new DeltaResult(currentVerNum, delta);
     }
 
@@ -166,7 +168,7 @@ export default class DocControl extends CommonBase {
     const vCurrentNum = this._currentVerNum();
 
     // (1)
-    const dServer = this._composeVersionsFrom(vBaseNum + 1);
+    const dServer = await this._composeVersionsFrom(vBaseNum + 1);
 
     // (2)
 
@@ -204,7 +206,7 @@ export default class DocControl extends CommonBase {
    * @returns {FrozenDelta} The composed delta consisting of versions
    *   `startInclusive` through and including the current latest delta.
    */
-  _composeVersionsFrom(startInclusive) {
+  async _composeVersionsFrom(startInclusive) {
     const nextVerNum = this._doc.nextVerNum();
     startInclusive = VersionNumber.check(startInclusive, nextVerNum);
 
