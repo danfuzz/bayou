@@ -43,10 +43,9 @@ export default class DocServer extends Singleton {
    * document doesn't exist, it gets initialized.
    *
    * @param {string} docId The document ID.
-   * @returns {Promise<DocControl>} Promise for the corresponding document
-   *   accessor.
+   * @returns {DocControl} The corresponding document accessor.
    */
-  getDoc(docId) {
+  async getDoc(docId) {
     return this._getDoc(docId, true);
   }
 
@@ -55,10 +54,10 @@ export default class DocServer extends Singleton {
    * document doesn't exist, this returns `null`.
    *
    * @param {string} docId The document ID.
-   * @returns {Promise<DocControl|null>} Promise for the corresponding document
-   *   accessor, or for `null` if there is no such document.
+   * @returns {DocControl|null} The corresponding document accessor, or `null`
+   *   if there is no such document.
    */
-  getDocOrNull(docId) {
+  async getDocOrNull(docId) {
     return this._getDoc(docId, false);
   }
 
@@ -68,11 +67,11 @@ export default class DocServer extends Singleton {
    * @param {string} docId The document ID.
    * @param {boolean} initIfMissing If `true`, initializes a nonexistent doc
    *   instead of returning `null`.
-   * @returns {Promise<DocControl|null>} A promise for the corresponding
-   *   document accessor, or `null` if there is no such document _and_ we were
-   *   not asked to fill in missing docs.
+   * @returns {DocControl|null} The corresponding document accessor, or `null`
+   *   if there is no such document _and_ we were not asked to fill in missing
+   *   docs.
    */
-  _getDoc(docId, initIfMissing) {
+  async _getDoc(docId, initIfMissing) {
     TString.nonempty(docId);
     TBoolean.check(initIfMissing);
 
@@ -82,7 +81,7 @@ export default class DocServer extends Singleton {
       return Promise.resolve(weak.get(already));
     }
 
-    const docStorage = Hooks.docStore.getDocument(docId);
+    const docStorage = await Hooks.docStore.getDocument(docId);
 
     if (docStorage.exists()) {
       log.info(`Retrieving document: ${docId}`);
@@ -101,7 +100,7 @@ export default class DocServer extends Singleton {
     const result = new DocControl(docStorage);
     const resultRef = weak(result, this._reapDocument.bind(this, docId));
     this._controls.set(docId, resultRef);
-    return Promise.resolve(result);
+    return result;
   }
 
   /**

@@ -28,6 +28,7 @@ export default class BaseDocStore extends Singleton {
    * there is more syntax and/or semantics to their document IDs.
    *
    * @param {string} docId_unused The document ID to validate.
+   * @throws {Error} Arbitrary error indicating an invalid document ID.
    */
   _impl_checkDocId(docId_unused) {
     // This space intentionally left blank.
@@ -37,11 +38,11 @@ export default class BaseDocStore extends Singleton {
    * Gets the accessor for the document with the given ID. The document need not
    * exist prior to calling this method.
    *
-   * @param {string} docId The ID of the document to access. Must be a nonempty
-   *   string.
+   * @param {string} docId The ID of the document to access. Must be a valid
+   *   document ID as defined by the concrete subclass.
    * @returns {BaseDoc} Accessor for the document in question.
    */
-  getDocument(docId) {
+  async getDocument(docId) {
     TString.nonempty(docId);
     this._impl_checkDocId(docId);
     return BaseDoc.check(this._impl_getDocument(docId));
