@@ -773,9 +773,13 @@ export default class DocClient extends StateMachine {
   /**
    * Updates `_doc` to have the given version by applying the indicated delta
    * to the current version, and tells the attached Quill instance to update
-   * itself accordingly. This is only valid to call when the version of the
-   * document that Quill has is the same as what is represented in `_doc`. If
-   * that isn't the case, then this method will throw an error.
+   * itself accordingly.
+   *
+   * This is only valid to call when the version of the document that Quill has
+   * is the same as what is represented in `_doc` _or_ if `quillDelta` is passed
+   * as an empty delta. That is, this is only valid when Quill's version of the
+   * document doesn't need to be updated. If that isn't the case, then this
+   * method will throw an error.
    *
    * @param {number} verNum New version number.
    * @param {FrozenDelta} delta Delta from the current `_doc` contents.
@@ -785,7 +789,9 @@ export default class DocClient extends StateMachine {
    *   progressed ahead of `_doc` due to local activity.
    */
   _updateDocWithDelta(verNum, delta, quillDelta = delta) {
-    if (this._currentChange.nextNow !== null) {
+    const needQuillUpdate = !quillDelta.isEmpty();
+
+    if ((this._currentChange.nextNow !== null) && needQuillUpdate) {
       // It is unsafe to apply the delta as-is, because we know that Quill's
       // version of the document has diverged.
       throw new Error('Cannot apply delta due to version skew.');
@@ -798,8 +804,8 @@ export default class DocClient extends StateMachine {
     this._doc = new Snapshot(verNum,
       delta.isEmpty() ? oldContents : oldContents.compose(delta));
 
-    // Tell Quill.
-    if (!quillDelta.isEmpty()) {
+    // Tell Quill if necessary.
+    if (needQuillUpdate) {
       this._quill.updateContents(quillDelta, CLIENT_SOURCE);
     }
   }
