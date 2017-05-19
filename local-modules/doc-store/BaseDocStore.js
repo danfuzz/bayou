@@ -30,7 +30,7 @@ export default class BaseDocStore extends Singleton {
    * @param {string} docId_unused The document ID to validate.
    * @throws {Error} Arbitrary error indicating an invalid document ID.
    */
-  _impl_checkDocId(docId_unused) {
+  async _impl_checkDocId(docId_unused) {
     // This space intentionally left blank.
   }
 
@@ -44,7 +44,7 @@ export default class BaseDocStore extends Singleton {
    */
   async getDocument(docId) {
     TString.nonempty(docId);
-    this._impl_checkDocId(docId);
+    await this._impl_checkDocId(docId);
     return BaseDoc.check(this._impl_getDocument(docId));
   }
 
