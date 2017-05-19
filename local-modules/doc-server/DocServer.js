@@ -78,17 +78,17 @@ export default class DocServer extends Singleton {
     const already = this._controls.get(docId);
     if (already && !weak.isDead(already)) {
       log.info(`Already have: ${docId}`);
-      return Promise.resolve(weak.get(already));
+      return weak.get(already);
     }
 
     const docStorage = await Hooks.docStore.getDocument(docId);
 
-    if (docStorage.exists()) {
+    if (await docStorage.exists()) {
       log.info(`Retrieving document: ${docId}`);
     } else {
       if (!initIfMissing) {
         log.info(`No document: ${docId}`);
-        return Promise.resolve(null);
+        return null;
       }
 
       log.info(`New document: ${docId}`);

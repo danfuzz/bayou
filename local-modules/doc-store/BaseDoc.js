@@ -38,9 +38,9 @@ export default class BaseDoc extends CommonBase {
    *
    * @returns {boolean} `true` iff this document exists.
    */
-  exists() {
+  async exists() {
     const result = this._impl_exists();
-    return TBoolean.check(result);
+    return TBoolean.check(await result);
   }
 
   /**
@@ -50,7 +50,7 @@ export default class BaseDoc extends CommonBase {
    *
    * @returns {boolean} `true` iff this document exists.
    */
-  _impl_exists() {
+  async _impl_exists() {
     return this._mustOverride();
   }
 

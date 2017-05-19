@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import afs from 'async-file';
 import fs from 'fs';
 
 import { Decoder, Encoder } from 'api-common';
@@ -67,8 +68,8 @@ export default class LocalDoc extends BaseDoc {
    *
    * @returns {boolean} `true` iff this document exists.
    */
-  _impl_exists() {
-    return fs.existsSync(this._path);
+  async _impl_exists() {
+    return afs.exists(this._path);
   }
 
   /**
@@ -148,7 +149,7 @@ export default class LocalDoc extends BaseDoc {
       return;
     }
 
-    if (this._impl_exists()) {
+    if (this._existsSync()) {
       this._log.detail('Reading from disk...');
 
       const encoded = fs.readFileSync(this._path);
@@ -182,5 +183,15 @@ export default class LocalDoc extends BaseDoc {
       this._changes = [];
       this._log.info('New document.');
     }
+  }
+
+  /**
+   * Synchronous version of `.exists()`. TODO: Remove this once the class is
+   * fully `async`.
+   *
+   * @returns {boolean} `true` iff this document exists.
+   */
+  _existsSync() {
+    return fs.existsSync(this._path);
   }
 }
