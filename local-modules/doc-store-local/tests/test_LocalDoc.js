@@ -86,7 +86,7 @@ describe('doc-store-local/LocalDoc', () => {
 });
 
 function documentPath() {
-  return storeDir + path.sep + 'test_file';
+  return path.join(storeDir, 'test_file');
 }
 
 function addChangeToDocument(doc) {
