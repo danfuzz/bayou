@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TypeError } from 'typecheck';
+import { TInt, TypeError } from 'typecheck';
 
 /**
  * Type representation of version numbers. The values themselves are always
@@ -32,7 +32,7 @@ export default class VersionNumber {
       return TypeError.badValue(value, 'VersionNumber');
     }
 
-    if ((max !== undefined) && (value > max)) {
+    if ((max !== undefined) && TInt.check(max) && (value > max)) {
       return TypeError.badValue(value, 'VersionNumber', `value <= ${max}`);
     }
 

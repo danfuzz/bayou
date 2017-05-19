@@ -54,238 +54,22 @@ export default class DocControl extends CommonBase {
    * @param {Int} verNum The version number of the change. The result is the
    *   change which produced that version. E.g., `0` is a request for the first
    *   change (the change from the empty document).
-   * @returns {Promise<DocumentChange>} Promise for the requested change.
+   * @returns {DocumentChange} The requested change.
    */
-  change(verNum) {
+  async change(verNum) {
     verNum = this._validateVerNum(verNum, false);
 
-    // TODO: This `Promise.resolve()` cladding suffices to provide the
-    // documented asynchronous API; however, the innards of this method should
-    // actually be more async in their nature.
-    return Promise.resolve(this._doc.changeRead(verNum));
+    return this._doc.changeRead(verNum);
   }
 
   /**
    * Gets a snapshot of the full document contents.
    *
-   * @param {Int|null} [verNum = null] Which version to get. If passed as
-   *   `null`, indicates the latest (most recent) version.
-   * @returns {Promise<Snapshot>} Promise for the requested snapshot.
-   */
-  snapshot(verNum = null) {
-    // TODO: This `Promise.resolve()` cladding suffices to provide the
-    // documented asynchronous API; however, the innards of this method should
-    // actually be more async in their nature.
-    return Promise.resolve(this._snapshotSync(verNum));
-  }
-
-  /**
-   * Returns a promise for a snapshot of any version after the given
-   * `baseVerNum`, and relative to that version. If called when `baseVerNum`
-   * is the current version, this will not resolve the result promise until at
-   * least one change has been made.
-   *
-   * @param {Int} baseVerNum Version number for the document.
-   * @returns {Promise<DeltaResult>} Promise for a delta and associated version
-   *   number. The result's `delta` can be applied to version `baseVerNum` to
-   *   produce version `verNum` of the document.
-   */
-  deltaAfter(baseVerNum) {
-    baseVerNum = this._validateVerNum(baseVerNum, false);
-
-    const currentVerNum = this._currentVerNum();
-
-    if (baseVerNum !== currentVerNum) {
-      // We can fulfill the result immediately. Compose all the deltas from
-      // the version after the base through the current version.
-      const delta = this._composeVersionsFrom(baseVerNum + 1);
-
-      // We don't just return a plain value (that is, we still return a promise)
-      // because of the usual hygenic recommendation to always return either
-      // an immediate result or a promise from any given function.
-      return Promise.resolve(new DeltaResult(currentVerNum, delta));
-    }
-
-    // Force the `_changeCondition` to `false` (though it might already be
-    // so set; innocuous if so), and wait for it to become `true`.
-    this._changeCondition.value = false;
-    return this._changeCondition.whenTrue().then((value_unused) => {
-      // Just recurse to do the work. Under normal circumstances it will return
-      // promptly. This arrangement gracefully handles edge cases, though, such
-      // as a triggered change turning out to be due to a no-op.
-      return this.deltaAfter(baseVerNum);
-    });
-  }
-
-  /**
-   * Takes a base version number and delta therefrom, and applies the delta,
-   * including merging of any intermediate versions. The return value consists
-   * of a new version number, and a delta to be used to get the new document
-   * state. The delta is with respect to the client's "expected result," that
-   * is to say, what the client would get if the delta were applied with no
-   * intervening changes.
-   *
-   * @param {Int} baseVerNum Version number which `delta` is with respect to.
-   * @param {FrozenDelta} delta Delta indicating what has changed with respect
-   *   to `baseVerNum`.
-   * @param {string|null} authorId Author of `delta`, or `null` if the change
-   *   is to be considered authorless.
-   * @returns {Promise<DeltaResult>} Promise for the correction to the
-   *   implied expected result of this operation. The `delta` of this result can
-   *   be applied to the expected result to get the actual result. The promise
-   *   resolves sometime after the delta has been applied to the document.
-   */
-  applyDelta(baseVerNum, delta, authorId) {
-    baseVerNum = this._validateVerNum(baseVerNum, false);
-    delta = FrozenDelta.check(delta);
-    authorId = TString.orNull(authorId);
-
-    // TODO: This `Promise.resolve()` cladding suffices to provide the
-    // documented asynchronous API; however, the innards of this method should
-    // actually be more async in their nature.
-    return Promise.resolve(this._applyDelta(baseVerNum, delta, authorId));
-  }
-
-  /**
-   * Main implementation of `applyDelta()`, see which for details. This method
-   * is fully synchronous.
-   *
-   * @param {Int} baseVerNum Same as for `applyDelta()`.
-   * @param {FrozenDelta} delta Same as for `applyDelta()`.
-   * @param {string|null} authorId Same as for `applyDelta()`.
-   * @returns {DeltaResult} Same as for `applyDelta()`, except not a
-   *   promise.
-   */
-  _applyDelta(baseVerNum, delta, authorId) {
-    if (baseVerNum === this._currentVerNum()) {
-      // The easy case: Apply a delta to the current version (unless it's empty,
-      // in which case we don't have to make a new version at all; that's
-      // handled by `_appendDelta()`).
-      this._appendDelta(delta, authorId);
-      return new DeltaResult(
-        this._currentVerNum(),  // `_appendDelta()` updates the version.
-        FrozenDelta.EMPTY);
-    }
-
-    // The hard case: The client has requested an application of a delta
-    // (hereafter `dClient`) against a version of the document which is _not_
-    // the current version (hereafter, `vBase` for the common base and
-    // `vCurrent` for the current version). Here's what we do:
-    //
-    // 1. Construct a combined delta for all the server changes made between
-    //    `vBase` and `vCurrent`. This is `dServer`.
-    // 2. Transform (rebase) `dClient` with regard to (on top of) `dServer`.
-    //    This is `dNext`. If `dNext` turns out to be empty, stop here and
-    //    report that fact.
-    // 3. Apply `dNext` to `vCurrent`, producing `vNext` as the new current
-    //    server version.
-    // 4. Apply `dClient` to `vBase` to produce `vExpected`, that is, the result
-    //    that the client would have expected in the easy case. Construct a
-    //    delta from `vExpected` to `vNext` (that is, the diff). This is
-    //    `dCorrection`. This is what we return to the client; they will compose
-    //    `vExpected` with `dCorrection` to arrive at `vNext`.
-
-    // Assign variables from parameter and instance variables that correspond
-    // to the description immediately above.
-    const dClient    = delta;
-    const vBaseNum   = baseVerNum;
-    const vBase      = this._snapshotSync(vBaseNum).contents;
-    const vCurrentNum = this._currentVerNum();
-
-    // (1)
-    const dServer = this._composeVersionsFrom(vBaseNum + 1);
-
-    // (2)
-
-    // The `true` argument indicates that `dServer` should be taken to have been
-    // applied first (won any insert races or similar).
-    const dNext = FrozenDelta.coerce(dServer.transform(dClient, true));
-
-    if (dNext.isEmpty()) {
-      // It turns out that nothing changed.
-      return new DeltaResult(vCurrentNum, FrozenDelta.EMPTY);
-    }
-
-    // (3)
-    this._appendDelta(dNext, authorId);          // This updates the version number.
-    const vNext = this._snapshotSync().contents; // This lets the snapshot get cached.
-    const vNextNum = this._currentVerNum();      // This will be different than `vCurrentNum`.
-
-    // (4)
-    const vExpected   = FrozenDelta.coerce(vBase).compose(dClient);
-    const dCorrection = FrozenDelta.coerce(vExpected.diff(vNext));
-    const vResultNum  = vNextNum;
-
-    return new DeltaResult(vResultNum, dCorrection);
-  }
-
-  /**
-   * Constructs a delta consisting of the composition of the deltas from the
-   * given initial version through and including the current latest delta.
-   * It is valid to pass `nextVerNum`, in which case this method returns an
-   * empty delta. It is invalid to specify a non-existent version _other_ than
-   * `nextVerNum`.
-   *
-   * @param {Int} startInclusive Version number for the first delta to include
-   *   in the result.
-   * @returns {FrozenDelta} The composed delta consisting of versions
-   *   `startInclusive` through and including the current latest delta.
-   */
-  _composeVersionsFrom(startInclusive) {
-    const nextVerNum = this._doc.nextVerNum;
-    startInclusive = VersionNumber.check(startInclusive, nextVerNum);
-
-    if (startInclusive === nextVerNum) {
-      return FrozenDelta.EMPTY;
-    }
-
-    let result = this._doc.changeRead(startInclusive).delta;
-    for (let i = startInclusive + 1; i < nextVerNum; i++) {
-      result = result.compose(this._doc.changeRead(i).delta);
-    }
-
-    return FrozenDelta.coerce(result);
-  }
-
-  /**
-   * Appends a new delta to the document. Also forces `_changeCondition`
-   * `true` to release any waiters.
-   *
-   * **Note:** If the delta is a no-op, then this method does nothing.
-   *
-   * @param {object} delta The delta to append.
-   * @param {string|null} authorId The author of the delta.
-   */
-  _appendDelta(delta, authorId) {
-    authorId = TString.orNull(authorId);
-    delta = FrozenDelta.coerce(delta);
-
-    if (delta.isEmpty()) {
-      return;
-    }
-
-    this._doc.changeAppend(Timestamp.now(), delta, authorId);
-    this._changeCondition.value = true;
-  }
-
-  /**
-   * Gets the version number corresponding to the current (latest) version of
-   * the document.
-   *
-   * @returns {Int|null} The version number.
-   */
-  _currentVerNum() {
-    return this._doc.currentVerNum();
-  }
-
-  /**
-   * Synchronously gets a snapshot of the full document contents.
-   *
    * @param {Int|null} verNum Which version to get. If passed as `null`,
    *   indicates the latest (most recent) version.
    * @returns {Snapshot} The corresponding snapshot.
    */
-  _snapshotSync(verNum) {
+  async snapshot(verNum = null) {
     verNum = this._validateVerNum(verNum, true);
 
     if (verNum === null) {
@@ -337,6 +121,185 @@ export default class DocControl extends CommonBase {
     const result = new Snapshot(verNum, contents);
     this._snapshots[verNum] = result;
     return result;
+  }
+
+  /**
+   * Returns a promise for a snapshot of any version after the given
+   * `baseVerNum`, and relative to that version. If called when `baseVerNum`
+   * is the current version, this will not resolve the result promise until at
+   * least one change has been made.
+   *
+   * @param {Int} baseVerNum Version number for the document.
+   * @returns {DeltaResult} Delta and associated version number. The result's
+   *  `delta` can be applied to version `baseVerNum` to produce version `verNum`
+   *  of the document.
+   */
+  async deltaAfter(baseVerNum) {
+    baseVerNum = this._validateVerNum(baseVerNum, false);
+
+    const currentVerNum = this._currentVerNum();
+
+    if (baseVerNum !== currentVerNum) {
+      // We can fulfill the result based on existing document history. (That is,
+      // we don't have to wait for a new change to be added to the document).
+      // Compose all the deltas from the version after the base through the
+      // current version.
+      const delta = await this._composeVersionsFrom(baseVerNum + 1);
+      return new DeltaResult(currentVerNum, delta);
+    }
+
+    // Force the `_changeCondition` to `false` (though it might already be
+    // so set; innocuous if so), and wait for it to become `true`.
+    this._changeCondition.value = false;
+    return this._changeCondition.whenTrue().then((value_unused) => {
+      // Just recurse to do the work. Under normal circumstances it will return
+      // promptly. This arrangement gracefully handles edge cases, though, such
+      // as a triggered change turning out to be due to a no-op.
+      return this.deltaAfter(baseVerNum);
+    });
+  }
+
+  /**
+   * Takes a base version number and delta therefrom, and applies the delta,
+   * including merging of any intermediate versions. The return value consists
+   * of a new version number, and a delta to be used to get the new document
+   * state. The delta is with respect to the client's "expected result," that
+   * is to say, what the client would get if the delta were applied with no
+   * intervening changes.
+   *
+   * @param {Int} baseVerNum Version number which `delta` is with respect to.
+   * @param {FrozenDelta} delta Delta indicating what has changed with respect
+   *   to `baseVerNum`.
+   * @param {string|null} authorId Author of `delta`, or `null` if the change
+   *   is to be considered authorless.
+   * @returns {DeltaResult} The correction to the implied expected result of
+   *   this operation. The `delta` of this result can be applied to the expected
+   *   result to get the actual result. The promise resolves sometime after the
+   *   delta has been applied to the document.
+   */
+  async applyDelta(baseVerNum, delta, authorId) {
+    baseVerNum = this._validateVerNum(baseVerNum, false);
+    delta = FrozenDelta.check(delta);
+    authorId = TString.orNull(authorId);
+
+    if (baseVerNum === this._currentVerNum()) {
+      // The easy case: Apply a delta to the current version (unless it's empty,
+      // in which case we don't have to make a new version at all; that's
+      // handled by `_appendDelta()`).
+      const verNum = await this._appendDelta(delta, authorId);
+      return new DeltaResult(verNum, FrozenDelta.EMPTY);
+    }
+
+    // The hard case: The client has requested an application of a delta
+    // (hereafter `dClient`) against a version of the document which is _not_
+    // the current version (hereafter, `vBase` for the common base and
+    // `vCurrent` for the current version). Here's what we do:
+    //
+    // 1. Construct a combined delta for all the server changes made between
+    //    `vBase` and `vCurrent`. This is `dServer`.
+    // 2. Transform (rebase) `dClient` with regard to (on top of) `dServer`.
+    //    This is `dNext`. If `dNext` turns out to be empty, stop here and
+    //    report that fact.
+    // 3. Apply `dNext` to `vCurrent`, producing `vNext` as the new current
+    //    server version.
+    // 4. Apply `dClient` to `vBase` to produce `vExpected`, that is, the result
+    //    that the client would have expected in the easy case. Construct a
+    //    delta from `vExpected` to `vNext` (that is, the diff). This is
+    //    `dCorrection`. This is what we return to the client; they will compose
+    //    `vExpected` with `dCorrection` to arrive at `vNext`.
+
+    // Assign variables from parameter and instance variables that correspond
+    // to the description immediately above.
+    const dClient    = delta;
+    const vBaseNum   = baseVerNum;
+    const vBase      = (await this.snapshot(vBaseNum)).contents;
+    const vCurrentNum = this._currentVerNum();
+
+    // (1)
+    const dServer = await this._composeVersionsFrom(vBaseNum + 1);
+
+    // (2)
+
+    // The `true` argument indicates that `dServer` should be taken to have been
+    // applied first (won any insert races or similar).
+    const dNext = FrozenDelta.coerce(dServer.transform(dClient, true));
+
+    if (dNext.isEmpty()) {
+      // It turns out that nothing changed.
+      return new DeltaResult(vCurrentNum, FrozenDelta.EMPTY);
+    }
+
+    // (3)
+    const vNextNum = await this._appendDelta(dNext, authorId);
+    const vNextSnapshot = await this.snapshot();
+    const vNext = vNextSnapshot.contents;
+
+    // (4)
+    const vExpected   = FrozenDelta.coerce(vBase).compose(dClient);
+    const dCorrection = FrozenDelta.coerce(vExpected.diff(vNext));
+    const vResultNum  = vNextNum;
+
+    return new DeltaResult(vResultNum, dCorrection);
+  }
+
+  /**
+   * Constructs a delta consisting of the composition of the deltas from the
+   * given initial version through and including the current latest delta.
+   * It is valid to pass `nextVerNum`, in which case this method returns an
+   * empty delta. It is invalid to specify a non-existent version _other_ than
+   * `nextVerNum`.
+   *
+   * @param {Int} startInclusive Version number for the first delta to include
+   *   in the result.
+   * @returns {FrozenDelta} The composed delta consisting of versions
+   *   `startInclusive` through and including the current latest delta.
+   */
+  async _composeVersionsFrom(startInclusive) {
+    const nextVerNum = this._doc.nextVerNum();
+    startInclusive = VersionNumber.check(startInclusive, nextVerNum);
+
+    if (startInclusive === nextVerNum) {
+      return FrozenDelta.EMPTY;
+    }
+
+    let result = this._doc.changeRead(startInclusive).delta;
+    for (let i = startInclusive + 1; i < nextVerNum; i++) {
+      result = result.compose(this._doc.changeRead(i).delta);
+    }
+
+    return FrozenDelta.coerce(result);
+  }
+
+  /**
+   * Appends a new delta to the document. Also forces `_changeCondition`
+   * `true` to release any waiters.
+   *
+   * **Note:** If the delta is a no-op, then this method does nothing.
+   *
+   * @param {object} delta The delta to append.
+   * @param {string|null} authorId The author of the delta.
+   * @returns {Int} The version number after appending `delta`.
+   */
+  async _appendDelta(delta, authorId) {
+    authorId = TString.orNull(authorId);
+    delta = FrozenDelta.coerce(delta);
+
+    if (!delta.isEmpty()) {
+      this._doc.changeAppend(Timestamp.now(), delta, authorId);
+      this._changeCondition.value = true;
+    }
+
+    return this._currentVerNum();
+  }
+
+  /**
+   * Gets the version number corresponding to the current (latest) version of
+   * the document.
+   *
+   * @returns {Int|null} The version number.
+   */
+  _currentVerNum() {
+    return this._doc.currentVerNum();
   }
 
   /**

@@ -73,13 +73,13 @@ describe('doc-store-local/LocalDoc', () => {
   });
 
   describe('create()', () => {
-    it('should erase the document if called on a non-empty document', () => {
+    it('should erase the document if called on a non-empty document', async () => {
       const doc = new LocalDoc('0', '0', documentPath());
 
       addChangeToDocument(doc);
       assert.strictEqual(doc.currentVerNum(), 0); // Baseline assumption.
 
-      doc.create();
+      await doc.create();
       assert.isNull(doc.currentVerNum()); // The real test.
     });
   });

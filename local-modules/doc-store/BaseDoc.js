@@ -38,9 +38,9 @@ export default class BaseDoc extends CommonBase {
    *
    * @returns {boolean} `true` iff this document exists.
    */
-  exists() {
+  async exists() {
     const result = this._impl_exists();
-    return TBoolean.check(result);
+    return TBoolean.check(await result);
   }
 
   /**
@@ -50,7 +50,7 @@ export default class BaseDoc extends CommonBase {
    *
    * @returns {boolean} `true` iff this document exists.
    */
-  _impl_exists() {
+  async _impl_exists() {
     return this._mustOverride();
   }
 
@@ -59,7 +59,7 @@ export default class BaseDoc extends CommonBase {
    * does already exist. After this call, the document both exists and is
    * empty.
    */
-  create() {
+  async create() {
     // This is just a pass-through. The point is to maintain the pattern of
     // `_impl_` as the things that subclasses override.
     this._impl_create();
@@ -70,7 +70,7 @@ export default class BaseDoc extends CommonBase {
    *
    * **Note:** This method must be overridden by subclasses.
    */
-  _impl_create() {
+  async _impl_create() {
     this._mustOverride();
   }
 
@@ -158,7 +158,15 @@ export default class BaseDoc extends CommonBase {
 
   /**
    * Main implementation of `changeAppend()`. Guaranteed to be called with a
-   * valid change instance, including that it has the correct `verNum`.
+   * structurally valid change instance, except that the `verNum` does have to
+   * be validated.
+   *
+   * On that last point, `change` will have been constructed with a valid
+   * `verNum` at the time of construction, but due to the asynchronous nature of
+   * the system, it is possible for other changes to have been appended between
+   * change construction and the synchronous call to this method. Therefore, it
+   * is imperative to synchronously validate the version number just before
+   * accepting the change.
    *
    * **Note:** This method must be overridden by subclasses.
    *
