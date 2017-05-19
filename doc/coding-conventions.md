@@ -36,3 +36,32 @@ taking into account recent additions to the language.
   word, all lower case, though capitalized as appropriate for prose or
   `camelCasing`). In addition, `ws` is a good choice for a shorthand name of a
   variable that contains an instance of one (or something related).
+
+* When documenting functions marked `async`, the implicit promise returned by
+  the function should _not_ be represented in its prose or `@returns`
+  documentation. For example:
+
+  ```javascript
+  /**
+   * Returns the frobnicator string.
+   *
+   * @returns {string} The frobnicator.
+   */
+  async function frob() {
+    return 'frobnicator';
+  }
+  ```
+
+  As a counterexample:
+
+  ```javascript
+  // DO NOT DO THIS!
+  /**
+   * Eventually returns the frobnicator string.
+   *
+   * @returns {Promise<string>} Promise for the frobnicator.
+   */
+  async function frob() {
+    return 'frobnicator';
+  }
+  ```

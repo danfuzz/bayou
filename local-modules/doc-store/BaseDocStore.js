@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { DocumentId } from 'doc-common';
 import { TString } from 'typecheck';
 import { Singleton } from 'util-common';
 
@@ -25,11 +26,14 @@ export default class BaseDocStore extends Singleton {
    * a non-empty string.
    *
    * This implementation is a no-op. Subclasses may choose to override this if
-   * there is more syntax to their document IDs.
+   * there is any validation required beyond the syntactic validation of
+   * `DocumentId.check()`.
    *
-   * @param {string} docId_unused The document ID to validate.
+   * @param {string} docId_unused The document ID to validate. Only ever passed
+   *   as a value that has been validated by `DocumentId.check()`.
+   * @throws {Error} Arbitrary error indicating an invalid document ID.
    */
-  _impl_checkDocId(docId_unused) {
+  async _impl_checkDocId(docId_unused) {
     // This space intentionally left blank.
   }
 
@@ -37,14 +41,14 @@ export default class BaseDocStore extends Singleton {
    * Gets the accessor for the document with the given ID. The document need not
    * exist prior to calling this method.
    *
-   * @param {string} docId The ID of the document to access. Must be a nonempty
-   *   string.
+   * @param {string} docId The ID of the document to access. Must be a valid
+   *   document ID as defined by the concrete subclass.
    * @returns {BaseDoc} Accessor for the document in question.
    */
-  getDocument(docId) {
+  async getDocument(docId) {
     TString.nonempty(docId);
-    this._impl_checkDocId(docId);
-    return BaseDoc.check(this._impl_getDocument(docId));
+    await this._impl_checkDocId(DocumentId.check(docId));
+    return BaseDoc.check(await this._impl_getDocument(docId));
   }
 
   /**
@@ -56,7 +60,7 @@ export default class BaseDocStore extends Singleton {
    * @param {string} docId The ID of the document to access.
    * @returns {BaseDoc} Accessor for the document in question.
    */
-  _impl_getDocument(docId) {
+  async _impl_getDocument(docId) {
     return this._mustOverride(docId);
   }
 }
