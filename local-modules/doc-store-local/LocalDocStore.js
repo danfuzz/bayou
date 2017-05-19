@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import fs from 'fs';
+import afs from 'async-file';
 import path from 'path';
 
 import { BaseDocStore } from 'doc-store';
@@ -42,10 +42,11 @@ export default class LocalDocStore extends BaseDocStore {
      */
     this._formatVersion = ProductInfo.INFO.version;
 
-    // Create the document storage directory if it doesn't yet exist.
-    if (!fs.existsSync(this._dir)) {
-      fs.mkdirSync(this._dir);
-    }
+    /**
+     * {boolean} `true` iff the document directory is known to exist. Set to
+     * `true` in `_ensureDocDirectory()`.
+     */
+    this._ensuredDir = false;
 
     log.info(`Document directory: ${this._dir}`);
   }
@@ -63,6 +64,8 @@ export default class LocalDocStore extends BaseDocStore {
       return already;
     }
 
+    await this._ensureDocDirectory();
+
     const result =
       new LocalDoc(this._formatVersion, docId, this._documentPath(docId));
     this._docs.set(docId, result);
@@ -77,5 +80,26 @@ export default class LocalDocStore extends BaseDocStore {
    */
   _documentPath(docId) {
     return path.resolve(this._dir, `${docId}.json`);
+  }
+
+  /**
+   * Ensures the document storage directory exists. This will only ever check
+   * once (on first document construction attempt), which notably means that
+   * things will break if something removes the document directory without
+   * restarting the server.
+   */
+  async _ensureDocDirectory() {
+    if (this._ensuredDir) {
+      return;
+    }
+
+    if (await afs.exists(this._dir)) {
+      log.detail('Document directory already exists.');
+    } else {
+      await afs.mkdir(this._dir);
+      log.info('Created document directory.');
+    }
+
+    this._ensuredDir = true;
   }
 }
