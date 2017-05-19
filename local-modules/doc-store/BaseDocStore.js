@@ -25,7 +25,7 @@ export default class BaseDocStore extends Singleton {
    * a non-empty string.
    *
    * This implementation is a no-op. Subclasses may choose to override this if
-   * there is more syntax to their document IDs.
+   * there is more syntax and/or semantics to their document IDs.
    *
    * @param {string} docId_unused The document ID to validate.
    */
