@@ -75,7 +75,7 @@ export default class LocalDoc extends BaseDoc {
   /**
    * Implementation as required by the superclass.
    */
-  _impl_create() {
+  async _impl_create() {
     this._changes = [];
     this._needsWrite();
   }

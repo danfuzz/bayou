@@ -59,7 +59,7 @@ export default class BaseDoc extends CommonBase {
    * does already exist. After this call, the document both exists and is
    * empty.
    */
-  create() {
+  async create() {
     // This is just a pass-through. The point is to maintain the pattern of
     // `_impl_` as the things that subclasses override.
     this._impl_create();
@@ -70,7 +70,7 @@ export default class BaseDoc extends CommonBase {
    *
    * **Note:** This method must be overridden by subclasses.
    */
-  _impl_create() {
+  async _impl_create() {
     this._mustOverride();
   }
 
