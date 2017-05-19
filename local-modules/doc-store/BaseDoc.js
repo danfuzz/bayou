@@ -158,7 +158,15 @@ export default class BaseDoc extends CommonBase {
 
   /**
    * Main implementation of `changeAppend()`. Guaranteed to be called with a
-   * valid change instance, including that it has the correct `verNum`.
+   * structurally valid change instance, except that the `verNum` does have to
+   * be validated.
+   *
+   * On that last point, `change` will have been constructed with a valid
+   * `verNum` at the time of construction, but due to the asynchronous nature of
+   * the system, it is possible for other changes to have been appended between
+   * change construction and the synchronous call to this method. Therefore, it
+   * is imperative to synchronously validate the version number just before
+   * accepting the change.
    *
    * **Note:** This method must be overridden by subclasses.
    *

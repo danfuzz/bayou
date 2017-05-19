@@ -110,6 +110,11 @@ export default class LocalDoc extends BaseDoc {
    */
   _impl_changeAppend(change) {
     this._readIfNecessary();
+
+    if (change.verNum !== this._changes.length) {
+      throw new Error(`Invalid version number: ${change.verNum}.`);
+    }
+
     this._changes[change.verNum] = change;
     this._needsWrite();
   }
