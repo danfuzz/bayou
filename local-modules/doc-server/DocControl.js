@@ -54,15 +54,12 @@ export default class DocControl extends CommonBase {
    * @param {Int} verNum The version number of the change. The result is the
    *   change which produced that version. E.g., `0` is a request for the first
    *   change (the change from the empty document).
-   * @returns {Promise<DocumentChange>} Promise for the requested change.
+   * @returns {DocumentChange} The requested change.
    */
-  change(verNum) {
+  async change(verNum) {
     verNum = this._validateVerNum(verNum, false);
 
-    // TODO: This `Promise.resolve()` cladding suffices to provide the
-    // documented asynchronous API; however, the innards of this method should
-    // actually be more async in their nature.
-    return Promise.resolve(this._doc.changeRead(verNum));
+    return this._doc.changeRead(verNum);
   }
 
   /**
@@ -70,13 +67,10 @@ export default class DocControl extends CommonBase {
    *
    * @param {Int|null} [verNum = null] Which version to get. If passed as
    *   `null`, indicates the latest (most recent) version.
-   * @returns {Promise<Snapshot>} Promise for the requested snapshot.
+   * @returns {Snapshot} The requested snapshot.
    */
-  snapshot(verNum = null) {
-    // TODO: This `Promise.resolve()` cladding suffices to provide the
-    // documented asynchronous API; however, the innards of this method should
-    // actually be more async in their nature.
-    return Promise.resolve(this._snapshotSync(verNum));
+  async snapshot(verNum = null) {
+    return this._snapshotSync(verNum);
   }
 
   /**
@@ -86,11 +80,11 @@ export default class DocControl extends CommonBase {
    * least one change has been made.
    *
    * @param {Int} baseVerNum Version number for the document.
-   * @returns {Promise<DeltaResult>} Promise for a delta and associated version
-   *   number. The result's `delta` can be applied to version `baseVerNum` to
-   *   produce version `verNum` of the document.
+   * @returns {DeltaResult} Delta and associated version number. The result's
+   *  `delta` can be applied to version `baseVerNum` to produce version `verNum`
+   *  of the document.
    */
-  deltaAfter(baseVerNum) {
+  async deltaAfter(baseVerNum) {
     baseVerNum = this._validateVerNum(baseVerNum, false);
 
     const currentVerNum = this._currentVerNum();
@@ -99,11 +93,7 @@ export default class DocControl extends CommonBase {
       // We can fulfill the result immediately. Compose all the deltas from
       // the version after the base through the current version.
       const delta = this._composeVersionsFrom(baseVerNum + 1);
-
-      // We don't just return a plain value (that is, we still return a promise)
-      // because of the usual hygenic recommendation to always return either
-      // an immediate result or a promise from any given function.
-      return Promise.resolve(new DeltaResult(currentVerNum, delta));
+      return new DeltaResult(currentVerNum, delta);
     }
 
     // Force the `_changeCondition` to `false` (though it might already be
@@ -130,33 +120,16 @@ export default class DocControl extends CommonBase {
    *   to `baseVerNum`.
    * @param {string|null} authorId Author of `delta`, or `null` if the change
    *   is to be considered authorless.
-   * @returns {Promise<DeltaResult>} Promise for the correction to the
-   *   implied expected result of this operation. The `delta` of this result can
-   *   be applied to the expected result to get the actual result. The promise
-   *   resolves sometime after the delta has been applied to the document.
+   * @returns {DeltaResult} The correction to the implied expected result of
+   *   this operation. The `delta` of this result can be applied to the expected
+   *   result to get the actual result. The promise resolves sometime after the
+   *   delta has been applied to the document.
    */
-  applyDelta(baseVerNum, delta, authorId) {
+  async applyDelta(baseVerNum, delta, authorId) {
     baseVerNum = this._validateVerNum(baseVerNum, false);
     delta = FrozenDelta.check(delta);
     authorId = TString.orNull(authorId);
 
-    // TODO: This `Promise.resolve()` cladding suffices to provide the
-    // documented asynchronous API; however, the innards of this method should
-    // actually be more async in their nature.
-    return Promise.resolve(this._applyDelta(baseVerNum, delta, authorId));
-  }
-
-  /**
-   * Main implementation of `applyDelta()`, see which for details. This method
-   * is fully synchronous.
-   *
-   * @param {Int} baseVerNum Same as for `applyDelta()`.
-   * @param {FrozenDelta} delta Same as for `applyDelta()`.
-   * @param {string|null} authorId Same as for `applyDelta()`.
-   * @returns {DeltaResult} Same as for `applyDelta()`, except not a
-   *   promise.
-   */
-  _applyDelta(baseVerNum, delta, authorId) {
     if (baseVerNum === this._currentVerNum()) {
       // The easy case: Apply a delta to the current version (unless it's empty,
       // in which case we don't have to make a new version at all; that's
