@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { DocumentId } from 'doc-common';
 import { TString } from 'typecheck';
 import { Singleton } from 'util-common';
 
@@ -25,9 +26,11 @@ export default class BaseDocStore extends Singleton {
    * a non-empty string.
    *
    * This implementation is a no-op. Subclasses may choose to override this if
-   * there is more syntax and/or semantics to their document IDs.
+   * there is any validation required beyond the syntactic validation of
+   * `DocumentId.check()`.
    *
-   * @param {string} docId_unused The document ID to validate.
+   * @param {string} docId_unused The document ID to validate. Only ever passed
+   *   as a value that has been validated by `DocumentId.check()`.
    * @throws {Error} Arbitrary error indicating an invalid document ID.
    */
   async _impl_checkDocId(docId_unused) {
@@ -44,7 +47,7 @@ export default class BaseDocStore extends Singleton {
    */
   async getDocument(docId) {
     TString.nonempty(docId);
-    await this._impl_checkDocId(docId);
+    await this._impl_checkDocId(DocumentId.check(docId));
     return BaseDoc.check(await this._impl_getDocument(docId));
   }
 
