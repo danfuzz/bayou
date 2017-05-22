@@ -6,6 +6,7 @@ import afs from 'async-file';
 import fs from 'fs';
 
 import { Decoder, Encoder } from 'api-common';
+import { VersionNumber } from 'doc-common';
 import { BaseDoc } from 'doc-store';
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
@@ -94,12 +95,13 @@ export default class LocalDoc extends BaseDoc {
   /**
    * Implementation as required by the superclass.
    *
-   * @param {int} verNum The version number for the desired change.
-   * @returns {DocumentChange|null|undefined} The change with `verNum` as
-   *   indicated or a nullish value if there is no such change.
+   * @param {Int} verNum The version number for the desired change.
+   * @returns {DocumentChange} The change with `verNum` as indicated.
    */
-  _impl_changeRead(verNum) {
+  async _impl_changeRead(verNum) {
     this._readIfNecessary();
+
+    VersionNumber.maxExc(verNum, this._changes.length);
     return this._changes[verNum];
   }
 

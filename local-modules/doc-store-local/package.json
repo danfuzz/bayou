@@ -5,6 +5,7 @@
 
   "dependencies": {
     "api-common": "local",
+    "doc-common": "local",
     "doc-store": "local",
     "see-all": "local",
     "server-env": "local",

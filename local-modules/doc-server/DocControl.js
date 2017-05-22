@@ -57,8 +57,6 @@ export default class DocControl extends CommonBase {
    * @returns {DocumentChange} The requested change.
    */
   async change(verNum) {
-    verNum = this._validateVerNum(verNum);
-
     return this._doc.changeRead(verNum);
   }
 
@@ -104,8 +102,8 @@ export default class DocControl extends CommonBase {
     if (baseSnapshot === null) {
       // We have no snapshots at all, including of even the first version. Set
       // up a version 0 snapshot.
-      baseSnapshot = this._snapshots[0] =
-        new Snapshot(0, this._doc.changeRead(0).delta);
+      const firstChange = await this._doc.changeRead(0);
+      baseSnapshot = this._snapshots[0] = new Snapshot(0, firstChange.delta);
     }
 
     if (baseSnapshot.verNum === verNum) {
@@ -118,7 +116,8 @@ export default class DocControl extends CommonBase {
 
     let contents = baseSnapshot.contents;
     for (let i = baseSnapshot.verNum + 1; i <= verNum; i++) {
-      contents = contents.compose(this._doc.changeRead(i).delta);
+      const change = await this._doc.changeRead(i);
+      contents = contents.compose(change.delta);
     }
 
     const result = new Snapshot(verNum, contents);
@@ -269,13 +268,10 @@ export default class DocControl extends CommonBase {
     endExclusive =
       VersionNumber.rangeInc(endExclusive, startInclusive, nextVerNum);
 
-    if (startInclusive === endExclusive) {
-      return FrozenDelta.EMPTY;
-    }
-
-    let result = this._doc.changeRead(startInclusive).delta;
-    for (let i = startInclusive + 1; i < endExclusive; i++) {
-      result = result.compose(this._doc.changeRead(i).delta);
+    let result = FrozenDelta.EMPTY;
+    for (let i = startInclusive; i < endExclusive; i++) {
+      const change = await this._doc.changeRead(i);
+      result = result.compose(change.delta);
     }
 
     return FrozenDelta.coerce(result);
