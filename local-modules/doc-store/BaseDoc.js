@@ -46,8 +46,7 @@ export default class BaseDoc extends CommonBase {
   /**
    * Main implementation of `exists()`.
    *
-   * **Note:** This method must be overridden by subclasses.
-   *
+   * @abstract
    * @returns {boolean} `true` iff this document exists.
    */
   async _impl_exists() {
@@ -68,7 +67,7 @@ export default class BaseDoc extends CommonBase {
   /**
    * Main implementation of `create()`.
    *
-   * **Note:** This method must be overridden by subclasses.
+   * @abstract
    */
   async _impl_create() {
     this._mustOverride();
@@ -89,8 +88,7 @@ export default class BaseDoc extends CommonBase {
   /**
    * Main implementation of `currentVerNum()`.
    *
-   * **Note:** This accessor must be overridden by subclasses.
-   *
+   * @abstract
    * @returns {Int|null} The version number of this document or `null` if the
    *   document is empty.
    */
@@ -121,8 +119,7 @@ export default class BaseDoc extends CommonBase {
    * valid version number (in that it is a non-negative integer), but which
    * might be out of range or represent a "hole" in the set of changes.
    *
-   * **Note:** This method must be overridden by subclasses.
-   *
+   * @abstract
    * @param {Int} verNum The version number for the desired change.
    * @returns {DocumentChange|null|undefined} The change with `verNum` as
    *   indicated or a nullish value if there is no such change.
@@ -165,8 +162,7 @@ export default class BaseDoc extends CommonBase {
    * is imperative to synchronously validate the version number just before
    * accepting the change.
    *
-   * **Note:** This method must be overridden by subclasses.
-   *
+   * @abstract
    * @param {DocumentChange} change The change to write.
    */
   _impl_changeAppend(change) {

@@ -154,8 +154,9 @@ export default class BaseLogger {
   }
 
   /**
-   * Actual logging implementation. Subclasses must override this.
+   * Actual logging implementation.
    *
+   * @abstract
    * @param {string} level_unused Severity level. Guaranteed to be a valid
    *   level.
    * @param {array} message_unused Array of arguments to log.
