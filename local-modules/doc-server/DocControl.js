@@ -145,7 +145,8 @@ export default class DocControl extends CommonBase {
       // we don't have to wait for a new change to be added to the document).
       // Compose all the deltas from the version after the base through the
       // current version.
-      const delta = await this._composeVersionsFrom(baseVerNum + 1);
+      const delta = await this._composeVersions(
+        baseVerNum + 1, VersionNumber.after(currentVerNum));
       return new DeltaResult(currentVerNum, delta);
     }
 
@@ -217,7 +218,8 @@ export default class DocControl extends CommonBase {
     const vCurrentNum = this._currentVerNum();
 
     // (1)
-    const dServer = await this._composeVersionsFrom(vBaseNum + 1);
+    const dServer = await this._composeVersions(
+      vBaseNum + 1, VersionNumber.after(vCurrentNum));
 
     // (2)
 
@@ -246,26 +248,31 @@ export default class DocControl extends CommonBase {
   /**
    * Constructs a delta consisting of the composition of the deltas from the
    * given initial version through and including the current latest delta.
-   * It is valid to pass one version beyond the current version number (that is,
-   * `VersionNumber.after(this._currentVerNum())`, in which case this method
-   * returns an empty delta. It is invalid to specify a non-existent version
-   * _other_ than one beyond the current version.
+   * It is valid to pass as either parameter one version beyond the current
+   * version number (that is, `VersionNumber.after(this._currentVerNum())`. It
+   * is invalid to specify a non-existent version _other_ than one beyond the
+   * current version. If `startInclusive === endExclusive`, then this method
+   * returns an empty result.
    *
    * @param {Int} startInclusive Version number for the first delta to include
    *   in the result.
+   * @param {Int} endExclusive Version number just beyond the last delta to
+   *   include in the result.
    * @returns {FrozenDelta} The composed delta consisting of versions
    *   `startInclusive` through and including the current latest delta.
    */
-  async _composeVersionsFrom(startInclusive) {
+  async _composeVersions(startInclusive, endExclusive) {
     const nextVerNum = VersionNumber.after(this._currentVerNum());
-    startInclusive = VersionNumber.check(startInclusive, nextVerNum);
+    startInclusive = VersionNumber.rangeInc(startInclusive, 0, nextVerNum);
+    endExclusive =
+      VersionNumber.rangeInc(endExclusive, startInclusive, nextVerNum);
 
-    if (startInclusive === nextVerNum) {
+    if (startInclusive === endExclusive) {
       return FrozenDelta.EMPTY;
     }
 
     let result = this._doc.changeRead(startInclusive).delta;
-    for (let i = startInclusive + 1; i < nextVerNum; i++) {
+    for (let i = startInclusive + 1; i < endExclusive; i++) {
       result = result.compose(this._doc.changeRead(i).delta);
     }
 
