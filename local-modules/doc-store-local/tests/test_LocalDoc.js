@@ -42,19 +42,19 @@ describe('doc-store-local/LocalDoc', () => {
   });
 
   describe('changeAppend(change)', () => {
-    it('should increment the version after a change is applied', () => {
+    it('should increment the version after a change is applied', async () => {
       const doc = new LocalDoc('0', '0', documentPath());
       const oldVersion = doc.currentVerNum();
 
       // Docs start off with a null version number.
       assert.isNull(oldVersion);
-      addChangeToDocument(doc);
+      await addChangeToDocument(doc);
 
       let newVersion = doc.currentVerNum();
 
       assert.strictEqual(newVersion, 0);
 
-      addChangeToDocument(doc);
+      await addChangeToDocument(doc);
       newVersion = doc.currentVerNum();
       assert.strictEqual(newVersion, 1);
     });
@@ -63,10 +63,10 @@ describe('doc-store-local/LocalDoc', () => {
     // or send an event when written so there's no way for the test code to know
     // when to check.
     //
-    // it('should exist on disk after a write', () => {
+    // it('should exist on disk after a write', async () => {
     //   const doc = new LocalDoc('0', '0', documentPath());
     //
-    //   addChangeToDocument(doc);
+    //   await addChangeToDocument(doc);
     //
     //   assert.isTrue(doc.exists());
     // });
@@ -76,7 +76,7 @@ describe('doc-store-local/LocalDoc', () => {
     it('should erase the document if called on a non-empty document', async () => {
       const doc = new LocalDoc('0', '0', documentPath());
 
-      addChangeToDocument(doc);
+      await addChangeToDocument(doc);
       assert.strictEqual(doc.currentVerNum(), 0); // Baseline assumption.
 
       await doc.create();
@@ -89,9 +89,9 @@ function documentPath() {
   return path.join(storeDir, 'test_file');
 }
 
-function addChangeToDocument(doc) {
+async function addChangeToDocument(doc) {
   const ts = Timestamp.now();
   const changes = [{ 'insert': 'hold on to your butts!' }];
 
-  doc.changeAppend(VersionNumber.after(doc.currentVerNum()), ts, changes, null);
+  await doc.changeAppend(VersionNumber.after(doc.currentVerNum()), ts, changes, null);
 }
