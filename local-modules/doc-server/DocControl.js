@@ -5,7 +5,7 @@
 import { DeltaResult, FrozenDelta, Snapshot, Timestamp, VersionNumber }
   from 'doc-common';
 import { BaseDoc } from 'doc-store';
-import { TBoolean, TString } from 'typecheck';
+import { TString } from 'typecheck';
 import { CommonBase, PromCondition } from 'util-common';
 
 
@@ -57,7 +57,7 @@ export default class DocControl extends CommonBase {
    * @returns {DocumentChange} The requested change.
    */
   async change(verNum) {
-    verNum = this._validateVerNum(verNum, false);
+    verNum = this._validateVerNum(verNum);
 
     return this._doc.changeRead(verNum);
   }
@@ -70,7 +70,9 @@ export default class DocControl extends CommonBase {
    * @returns {Snapshot} The corresponding snapshot.
    */
   async snapshot(verNum = null) {
-    verNum = this._validateVerNum(verNum, true);
+    verNum = (verNum === null)
+      ? this._currentVerNum()
+      : this._validateVerNum(verNum);
 
     if (verNum === null) {
       // This is an entirely empty document (probably because we're running in
@@ -136,7 +138,7 @@ export default class DocControl extends CommonBase {
    *  of the document.
    */
   async deltaAfter(baseVerNum) {
-    baseVerNum = this._validateVerNum(baseVerNum, false);
+    baseVerNum = this._validateVerNum(baseVerNum);
 
     const currentVerNum = this._currentVerNum();
 
@@ -180,7 +182,7 @@ export default class DocControl extends CommonBase {
    *   delta has been applied to the document.
    */
   async applyDelta(baseVerNum, delta, authorId) {
-    baseVerNum = this._validateVerNum(baseVerNum, false);
+    baseVerNum = this._validateVerNum(baseVerNum);
     delta = FrozenDelta.check(delta);
     authorId = TString.orNull(authorId);
 
@@ -316,23 +318,15 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Checks a version number for sanity. Throws an error when insane.
+   * Checks a version number for sanity. Throws an error if the given value
+   * either isn't a version number at all (not an int, etc.) or does not refer
+   * to an existing version number of this document.
    *
    * @param {*} verNum the (alleged) version number to check.
-   * @param {boolean} wantCurrent If `true` indicates that `null` should be
-   *   treated as a request for the current version. If `false`, `undefined` is
-   *   an error.
-   * @returns {number} The version number.
+   * @returns {Int} `verNum`.
    */
-  _validateVerNum(verNum, wantCurrent) {
-    TBoolean.check(wantCurrent);
-
+  _validateVerNum(verNum) {
     const current = this._currentVerNum();
-
-    if (wantCurrent) {
-      return VersionNumber.check(verNum, current, current);
-    } else {
-      return VersionNumber.check(verNum, current);
-    }
+    return VersionNumber.check(verNum, current);
   }
 }
