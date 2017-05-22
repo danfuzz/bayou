@@ -24,6 +24,22 @@ export default class VersionNumber {
   }
 
   /**
+   * Checks a value of type `VersionNumber`, which must furthermore be less
+   * than an indicated value.
+   *
+   * @param {*} value Value to check.
+   * @param {Int} maxExc Maximum acceptable value (exclusive).
+   * @returns {Int} `value`.
+   */
+  static maxExc(value, maxExc) {
+    try {
+      return TInt.range(value, 0, maxExc);
+    } catch (e) {
+      return TypeError.badValue(value, 'VersionNumber', `value < ${maxExc}`);
+    }
+  }
+
+  /**
    * Checks a value of type `VersionNumber`, which must furthermore be no more
    * than an indicated value (inclusive).
    *
