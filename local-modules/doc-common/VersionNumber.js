@@ -55,4 +55,16 @@ export default class VersionNumber {
       return TypeError.badValue(value, 'VersionNumber|null');
     }
   }
+
+  /**
+   * Returns the version number after the given one. This is the same as
+   * `verNum + 1` _except_ that `null` (the version "number" for an empty
+   * document) is a valid input for which `0` is the return value.
+   *
+   * @param {Int|null} verNum Starting version number.
+   * @returns {Int} The version number immediately after `verNum`
+   */
+  static after(verNum) {
+    return (verNum === null) ? 0 : (VersionNumber.check(verNum) + 1);
+  }
 }

@@ -145,14 +145,23 @@ export default class BaseDoc extends CommonBase {
 
   /**
    * Appends a change. The arguments to this method are ultimately passed in
-   * order to the constructor for `DocumentChange`, with an appropriate version
-   * number prepended as the first argument.
+   * order to the constructor for `DocumentChange`. This will throw an exception
+   * if the given `verNum` (first argument) turns out not to be the actual
+   * appropriate next version.
    *
-   * @param {...*} changeArgs Constructor arguments to `DocumentChange`, except
-   *   without the version number.
+   * **Note:** The reason `verNum` is passed explicitly instead of just
+   * assumed to be correct is that, due to the asynchronous nature of the
+   * execution of this method, the calling code cannot know for sure whether or
+   * not _its_ concept of the appropriate `verNum` is actually the right value
+   * by the time the change is being appended. If `verNum` were simply assumed,
+   * what you might see is a `delta` that was intended to apply to (say)
+   * `verNum - 1` but which got recorded as being applied to `verNum` and would
+   * hence be incorrect.
+   *
+   * @param {...*} changeArgs Constructor arguments to `DocumentChange`.
    */
   changeAppend(...changeArgs) {
-    const change = new DocumentChange(this.nextVerNum(), ...changeArgs);
+    const change = new DocumentChange(...changeArgs);
     this._impl_changeAppend(change);
   }
 

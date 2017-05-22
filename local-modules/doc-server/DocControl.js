@@ -81,6 +81,7 @@ export default class DocControl extends CommonBase {
       // propagate through the rest of the code and end up making everything all
       // work out.
       this._doc.changeAppend(
+        0,
         Timestamp.now(),
         [{ insert: '(Recreated document due to format version skew.)\n' }],
         null);
@@ -186,7 +187,7 @@ export default class DocControl extends CommonBase {
       // The easy case: Apply a delta to the current version (unless it's empty,
       // in which case we don't have to make a new version at all; that's
       // handled by `_appendDelta()`).
-      const verNum = await this._appendDelta(delta, authorId);
+      const verNum = await this._appendDelta(baseVerNum, delta, authorId);
       return new DeltaResult(verNum, FrozenDelta.EMPTY);
     }
 
@@ -230,7 +231,7 @@ export default class DocControl extends CommonBase {
     }
 
     // (3)
-    const vNextNum = await this._appendDelta(dNext, authorId);
+    const vNextNum = await this._appendDelta(vBaseNum, dNext, authorId);
     const vNextSnapshot = await this.snapshot();
     const vNext = vNextSnapshot.contents;
 
@@ -276,16 +277,20 @@ export default class DocControl extends CommonBase {
    *
    * **Note:** If the delta is a no-op, then this method does nothing.
    *
+   * @param {Int|null} baseVerNum Version number which this is to apply to. It
+   *   must be the current document version number at the moment the change is
+   *   ultimately applied. See `BaseDoc.changeAppend()` for further discussion.
    * @param {object} delta The delta to append.
    * @param {string|null} authorId The author of the delta.
    * @returns {Int} The version number after appending `delta`.
    */
-  async _appendDelta(delta, authorId) {
+  async _appendDelta(baseVerNum, delta, authorId) {
     authorId = TString.orNull(authorId);
     delta = FrozenDelta.coerce(delta);
 
     if (!delta.isEmpty()) {
-      this._doc.changeAppend(Timestamp.now(), delta, authorId);
+      this._doc.changeAppend(
+        VersionNumber.after(baseVerNum), Timestamp.now(), delta, authorId);
       this._changeCondition.value = true;
     }
 

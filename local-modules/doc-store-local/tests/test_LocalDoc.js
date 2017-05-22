@@ -93,5 +93,5 @@ function addChangeToDocument(doc) {
   const ts = Timestamp.now();
   const changes = [{ 'insert': 'hold on to your butts!' }];
 
-  doc.changeAppend(ts, changes, null);
+  doc.changeAppend(doc.nextVerNum(), ts, changes, null);
 }
