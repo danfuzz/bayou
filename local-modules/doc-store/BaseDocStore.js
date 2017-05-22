@@ -55,8 +55,7 @@ export default class BaseDocStore extends Singleton {
    * Main implementation of `getDocument()`. Only ever called with a known-valid
    * `docId`.
    *
-   * **Note:** This method must be overridden by subclasses.
-   *
+   * @abstract
    * @param {string} docId The ID of the document to access.
    * @returns {BaseDoc} Accessor for the document in question.
    */

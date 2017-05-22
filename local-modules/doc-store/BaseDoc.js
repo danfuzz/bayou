@@ -46,8 +46,7 @@ export default class BaseDoc extends CommonBase {
   /**
    * Main implementation of `exists()`.
    *
-   * **Note:** This method must be overridden by subclasses.
-   *
+   * @abstract
    * @returns {boolean} `true` iff this document exists.
    */
   async _impl_exists() {
@@ -68,7 +67,7 @@ export default class BaseDoc extends CommonBase {
   /**
    * Main implementation of `create()`.
    *
-   * **Note:** This method must be overridden by subclasses.
+   * @abstract
    */
   async _impl_create() {
     this._mustOverride();
@@ -79,7 +78,7 @@ export default class BaseDoc extends CommonBase {
    * which `this.changeRead(n)` is valid. If the document has no changes at all,
    * this method returns `null`.
    *
-   * @returns {int|null} The version number of this document or `null` if the
+   * @returns {Int|null} The version number of this document or `null` if the
    *   document is empty.
    */
   currentVerNum() {
@@ -89,32 +88,19 @@ export default class BaseDoc extends CommonBase {
   /**
    * Main implementation of `currentVerNum()`.
    *
-   * **Note:** This accessor must be overridden by subclasses.
-   *
-   * @returns {int} The version number of this document.
+   * @abstract
+   * @returns {Int|null} The version number of this document or `null` if the
+   *   document is empty.
    */
   _impl_currentVerNum() {
     return this._mustOverride();
   }
 
   /**
-   * The version number of the next change to be appended to this document.
-   *
-   * **Note:** This is different than just `currentVerNum() + 1` in that
-   * `currentVerNum()` is `null` (not `-1`) on an empty document.
-   *
-   * @returns {int} The version number of the next change.
-   */
-  nextVerNum() {
-    const current = this.currentVerNum();
-    return (current === null) ? 0 : (current + 1);
-  }
-
-  /**
    * Reads a change, by version number. It is an error to request a change that
    * does not exist on the document.
    *
-   * @param {int} verNum The version number for the desired change.
+   * @param {Int} verNum The version number for the desired change.
    * @returns {DocumentChange} The change with `verNum` as indicated.
    */
   changeRead(verNum) {
@@ -133,9 +119,8 @@ export default class BaseDoc extends CommonBase {
    * valid version number (in that it is a non-negative integer), but which
    * might be out of range or represent a "hole" in the set of changes.
    *
-   * **Note:** This method must be overridden by subclasses.
-   *
-   * @param {int} verNum The version number for the desired change.
+   * @abstract
+   * @param {Int} verNum The version number for the desired change.
    * @returns {DocumentChange|null|undefined} The change with `verNum` as
    *   indicated or a nullish value if there is no such change.
    */
@@ -145,14 +130,23 @@ export default class BaseDoc extends CommonBase {
 
   /**
    * Appends a change. The arguments to this method are ultimately passed in
-   * order to the constructor for `DocumentChange`, with an appropriate version
-   * number prepended as the first argument.
+   * order to the constructor for `DocumentChange`. This will throw an exception
+   * if the given `verNum` (first argument) turns out not to be the actual
+   * appropriate next version.
    *
-   * @param {...*} changeArgs Constructor arguments to `DocumentChange`, except
-   *   without the version number.
+   * **Note:** The reason `verNum` is passed explicitly instead of just
+   * assumed to be correct is that, due to the asynchronous nature of the
+   * execution of this method, the calling code cannot know for sure whether or
+   * not _its_ concept of the appropriate `verNum` is actually the right value
+   * by the time the change is being appended. If `verNum` were simply assumed,
+   * what you might see is a `delta` that was intended to apply to (say)
+   * `verNum - 1` but which got recorded as being applied to `verNum` and would
+   * hence be incorrect.
+   *
+   * @param {...*} changeArgs Constructor arguments to `DocumentChange`.
    */
   changeAppend(...changeArgs) {
-    const change = new DocumentChange(this.nextVerNum(), ...changeArgs);
+    const change = new DocumentChange(...changeArgs);
     this._impl_changeAppend(change);
   }
 
@@ -168,8 +162,7 @@ export default class BaseDoc extends CommonBase {
    * is imperative to synchronously validate the version number just before
    * accepting the change.
    *
-   * **Note:** This method must be overridden by subclasses.
-   *
+   * @abstract
    * @param {DocumentChange} change The change to write.
    */
   _impl_changeAppend(change) {

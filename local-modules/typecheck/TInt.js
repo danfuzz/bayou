@@ -16,7 +16,7 @@ export default class TInt {
    * Checks a value of type `Int`.
    *
    * @param {*} value Value to check.
-   * @returns {number} `value`.
+   * @returns {Int} `value`.
    */
   static check(value) {
     if ((typeof value !== 'number') || !Number.isSafeInteger(value)) {
@@ -27,15 +27,34 @@ export default class TInt {
   }
 
   /**
+   * Checks a value of type `Int`, which must furthermore be no more than an
+   * indicated value (inclusive).
+   *
+   * @param {*} value Value to check.
+   * @param {Int} maxInc Maximum acceptable value (inclusive).
+   * @returns {Int} `value`.
+   */
+  static maxInc(value, maxInc) {
+    TInt.check(value);
+    TInt.check(maxInc);
+    if (value > maxInc) {
+      return TypeError.badValue(value, 'Int', `value <= ${maxInc}`);
+    }
+
+    return value;
+  }
+
+  /**
    * Checks a value of type `Int`, which must furthermore be at least an
    * indicated value (inclusive).
    *
    * @param {*} value Value to check.
-   * @param {number} minInc Minimum acceptable value (inclusive).
-   * @returns {number} `value`.
+   * @param {Int} minInc Minimum acceptable value (inclusive).
+   * @returns {Int} `value`.
    */
   static min(value, minInc) {
     TInt.check(value);
+    TInt.check(minInc);
     if (value < minInc) {
       return TypeError.badValue(value, 'Int', `value >= ${minInc}`);
     }
@@ -51,12 +70,14 @@ export default class TInt {
    * respective errors convey different information.
    *
    * @param {*} value Value to check.
-   * @param {number} minInc Minimum acceptable value (inclusive).
-   * @param {number} maxExc Maximum acceptable value (exclusive).
-   * @returns {number} `value`.
+   * @param {Int} minInc Minimum acceptable value (inclusive).
+   * @param {Int} maxExc Maximum acceptable value (exclusive).
+   * @returns {Int} `value`.
    */
   static range(value, minInc, maxExc) {
     TInt.check(value);
+    TInt.check(minInc);
+    TInt.check(maxExc);
     if ((value < minInc) || (value >= maxExc)) {
       return TypeError.badValue(value, 'Int', `${minInc} <= value < ${maxExc}`);
     }
@@ -72,12 +93,14 @@ export default class TInt {
    * errors convey different information.
    *
    * @param {*} value Value to check.
-   * @param {number} minInc Minimum acceptable value (inclusive).
-   * @param {number} maxInc Maximum acceptable value (inclusive).
-   * @returns {number} `value`.
+   * @param {Int} minInc Minimum acceptable value (inclusive).
+   * @param {Int} maxInc Maximum acceptable value (inclusive).
+   * @returns {Int} `value`.
    */
   static rangeInc(value, minInc, maxInc) {
     TInt.check(value);
+    TInt.check(minInc);
+    TInt.check(maxInc);
     if ((value < minInc) || (value > maxInc)) {
       return TypeError.badValue(value, 'Int', `${minInc} <= value <= ${maxInc}`);
     }
@@ -86,10 +109,11 @@ export default class TInt {
   }
 
   /**
-   * Checks a value of type `Int`, which must furthermore be within the range [0..255].
+   * Checks a value of type `Int`, which must furthermore be within the
+   * inclusive range `0..255`.
    *
-   * @param {number} value The integer value to check.
-   * @returns {number} `value`.
+   * @param {*} value Value to check.
+   * @returns {Int} `value`.
    */
   static unsignedByte(value) {
     return TInt.rangeInc(value, 0, 255);

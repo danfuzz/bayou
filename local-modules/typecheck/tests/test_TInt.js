@@ -25,6 +25,17 @@ describe('typecheck/TInt', () => {
     });
   });
 
+  describe('maxInc(value, maxInc)', () => {
+    it('should allow value <= maxInc', () => {
+      assert.doesNotThrow(() => TInt.maxInc(4, 4));
+      assert.doesNotThrow(() => TInt.maxInc(4, 5));
+    });
+
+    it('should throw an error when value > maxInc', () => {
+      assert.throws(() => TInt.maxInc(4, 3));
+    });
+  });
+
   describe('min(value, inclusiveMinimum)', () => {
     it('should allow value >= inclusiveMinimum', () => {
       assert.doesNotThrow(() => TInt.min(11, 3));

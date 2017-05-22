@@ -7,7 +7,7 @@ import fs from 'fs';
 import { after, before, describe, it } from 'mocha';
 import path from 'path';
 
-import { Timestamp } from 'doc-common';
+import { Timestamp, VersionNumber } from 'doc-common';
 import { LocalDoc } from 'doc-store-local';
 
 const STORE_PREFIX = 'arugula-test-';
@@ -93,5 +93,5 @@ function addChangeToDocument(doc) {
   const ts = Timestamp.now();
   const changes = [{ 'insert': 'hold on to your butts!' }];
 
-  doc.changeAppend(ts, changes, null);
+  doc.changeAppend(VersionNumber.after(doc.currentVerNum()), ts, changes, null);
 }

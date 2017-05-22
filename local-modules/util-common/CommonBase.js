@@ -7,6 +7,8 @@ import { TObject } from 'typecheck';
 /**
  * Base class which provides a couple conveniences beyond what baseline
  * JavaScript has.
+ *
+ * @abstract
  */
 export default class CommonBase {
   /**
@@ -84,6 +86,7 @@ export default class CommonBase {
    * Subclass-specifc implementation of `coerce()`. Subclasses can override this
    * as needed.
    *
+   * @abstract
    * @param {*} value Value to coerce. This is guaranteed _not_ to be an
    *   instance of this class.
    * @returns {this} `value` or its coercion to the class that this was
