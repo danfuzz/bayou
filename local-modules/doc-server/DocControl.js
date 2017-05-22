@@ -327,6 +327,6 @@ export default class DocControl extends CommonBase {
    */
   _validateVerNum(verNum) {
     const current = this._currentVerNum();
-    return VersionNumber.check(verNum, current);
+    return VersionNumber.maxInc(verNum, current);
   }
 }

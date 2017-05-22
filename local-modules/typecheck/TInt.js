@@ -27,6 +27,23 @@ export default class TInt {
   }
 
   /**
+   * Checks a value of type `Int`, which must furthermore be no more than an
+   * indicated value (inclusive).
+   *
+   * @param {*} value Value to check.
+   * @param {number} maxInc Maximum acceptable value (inclusive).
+   * @returns {number} `value`.
+   */
+  static maxInc(value, maxInc) {
+    TInt.check(value);
+    if (value > maxInc) {
+      return TypeError.badValue(value, 'Int', `value <= ${maxInc}`);
+    }
+
+    return value;
+  }
+
+  /**
    * Checks a value of type `Int`, which must furthermore be at least an
    * indicated value (inclusive).
    *
