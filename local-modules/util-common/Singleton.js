@@ -20,6 +20,8 @@ import CommonBase from './CommonBase';
  * the system is running. (That is, it is often either incorrect or at least
  * inappropriate to initialize an effective-singleton at the time the class is
  * being `import`ed.)
+ *
+ * @abstract
  */
 export default class Singleton extends CommonBase {
   /**
