@@ -57,8 +57,6 @@ export default class DocControl extends CommonBase {
    * @returns {DocumentChange} The requested change.
    */
   async change(verNum) {
-    verNum = this._validateVerNum(verNum);
-
     return this._doc.changeRead(verNum);
   }
 
@@ -92,36 +90,28 @@ export default class DocControl extends CommonBase {
 
     // Search backward through the full versions for a base for forward
     // composition.
-    let baseSnapshot = null;
+    let base = null;
     for (let i = verNum; i >= 0; i--) {
       const v = this._snapshots[i];
       if (v) {
-        baseSnapshot = v;
+        base = v;
         break;
       }
     }
 
-    if (baseSnapshot === null) {
-      // We have no snapshots at all, including of even the first version. Set
-      // up a version 0 snapshot.
-      baseSnapshot = this._snapshots[0] =
-        new Snapshot(0, this._doc.changeRead(0).delta);
-    }
-
-    if (baseSnapshot.verNum === verNum) {
+    if (base && (base.verNum === verNum)) {
       // Found the right version!
-      return baseSnapshot;
+      return base;
     }
 
     // We didn't actully find a snapshot of the requested version. Apply deltas
     // to the base to produce the desired version. Store it, and return it.
 
-    let contents = baseSnapshot.contents;
-    for (let i = baseSnapshot.verNum + 1; i <= verNum; i++) {
-      contents = contents.compose(this._doc.changeRead(i).delta);
-    }
+    const contents = (base === null)
+      ? this._composeVersions(FrozenDelta.EMPTY, 0,               verNum + 1)
+      : this._composeVersions(base.contents,     base.verNum + 1, verNum + 1);
+    const result = new Snapshot(verNum, await contents);
 
-    const result = new Snapshot(verNum, contents);
     this._snapshots[verNum] = result;
     return result;
   }
@@ -148,7 +138,7 @@ export default class DocControl extends CommonBase {
       // Compose all the deltas from the version after the base through the
       // current version.
       const delta = await this._composeVersions(
-        baseVerNum + 1, VersionNumber.after(currentVerNum));
+        FrozenDelta.EMPTY, baseVerNum + 1, VersionNumber.after(currentVerNum));
       return new DeltaResult(currentVerNum, delta);
     }
 
@@ -221,7 +211,7 @@ export default class DocControl extends CommonBase {
 
     // (1)
     const dServer = await this._composeVersions(
-      vBaseNum + 1, VersionNumber.after(vCurrentNum));
+      FrozenDelta.EMPTY, vBaseNum + 1, VersionNumber.after(vCurrentNum));
 
     // (2)
 
@@ -249,34 +239,47 @@ export default class DocControl extends CommonBase {
 
   /**
    * Constructs a delta consisting of the composition of the deltas from the
-   * given initial version through and including the current latest delta.
-   * It is valid to pass as either parameter one version beyond the current
-   * version number (that is, `VersionNumber.after(this._currentVerNum())`. It
-   * is invalid to specify a non-existent version _other_ than one beyond the
-   * current version. If `startInclusive === endExclusive`, then this method
-   * returns an empty result.
+   * given initial version through and including the current latest delta,
+   * composed from a given base. It is valid to pass as either version number
+   * parameter one version beyond the current version number (that is,
+   * `VersionNumber.after(this._currentVerNum())`. It is invalid to specify a
+   * non-existent version _other_ than one beyond the current version. If
+   * `startInclusive === endExclusive`, then this method returns `baseDelta`.
    *
+   * @param {FrozenDelta} baseDelta Base delta onto which the indicated deltas
+   *   get composed.
    * @param {Int} startInclusive Version number for the first delta to include
    *   in the result.
    * @param {Int} endExclusive Version number just beyond the last delta to
    *   include in the result.
-   * @returns {FrozenDelta} The composed delta consisting of versions
-   *   `startInclusive` through and including the current latest delta.
+   * @returns {FrozenDelta} The composed delta consisting of `baseDelta`
+   *   composed with versions `startInclusive` through but not including
+   *   `endExclusive`.
    */
-  async _composeVersions(startInclusive, endExclusive) {
+  async _composeVersions(baseDelta, startInclusive, endExclusive) {
     const nextVerNum = VersionNumber.after(this._currentVerNum());
     startInclusive = VersionNumber.rangeInc(startInclusive, 0, nextVerNum);
     endExclusive =
       VersionNumber.rangeInc(endExclusive, startInclusive, nextVerNum);
 
     if (startInclusive === endExclusive) {
-      return FrozenDelta.EMPTY;
+      // Trivial case: Nothing to compose.
+      return baseDelta;
     }
 
-    let result = this._doc.changeRead(startInclusive).delta;
-    for (let i = startInclusive + 1; i < endExclusive; i++) {
-      result = result.compose(this._doc.changeRead(i).delta);
+    // First, request all the changes, and then compose them, in separate loops.
+    // This arrangement means that it's possible for all of the change requests
+    // to be serviced in parallel.
+
+    const changePromises = [];
+    for (let i = startInclusive; i < endExclusive; i++) {
+      changePromises.push(this._doc.changeRead(i));
     }
+
+    const changes = await Promise.all(changePromises);
+    const result = changes.reduce(
+      (acc, change) => { return acc.compose(change.delta); },
+      baseDelta);
 
     return FrozenDelta.coerce(result);
   }

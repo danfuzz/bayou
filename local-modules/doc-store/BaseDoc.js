@@ -103,28 +103,24 @@ export default class BaseDoc extends CommonBase {
    * @param {Int} verNum The version number for the desired change.
    * @returns {DocumentChange} The change with `verNum` as indicated.
    */
-  changeRead(verNum) {
+  async changeRead(verNum) {
     VersionNumber.check(verNum);
-    const result = this._impl_changeRead(verNum);
 
-    if (!result) {
-      throw new Error(`No change ${verNum} on document \`${this.id}\``);
-    }
-
+    const result = await this._impl_changeRead(verNum);
     return DocumentChange.check(result);
   }
 
   /**
    * Main implementation of `changeRead()`. Guaranteed to be called with a
    * valid version number (in that it is a non-negative integer), but which
-   * might be out of range or represent a "hole" in the set of changes.
+   * might be out of range. This method should throw an exception if `verNum`
+   * turns out not to refer to an existing change.
    *
    * @abstract
    * @param {Int} verNum The version number for the desired change.
-   * @returns {DocumentChange|null|undefined} The change with `verNum` as
-   *   indicated or a nullish value if there is no such change.
+   * @returns {DocumentChange} The change with `verNum` as indicated.
    */
-  _impl_changeRead(verNum) {
+  async _impl_changeRead(verNum) {
     return this._mustOverride(verNum);
   }
 
