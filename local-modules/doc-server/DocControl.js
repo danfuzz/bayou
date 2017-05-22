@@ -246,9 +246,10 @@ export default class DocControl extends CommonBase {
   /**
    * Constructs a delta consisting of the composition of the deltas from the
    * given initial version through and including the current latest delta.
-   * It is valid to pass `nextVerNum`, in which case this method returns an
-   * empty delta. It is invalid to specify a non-existent version _other_ than
-   * `nextVerNum`.
+   * It is valid to pass one version beyond the current version number (that is,
+   * `VersionNumber.after(this._currentVerNum())`, in which case this method
+   * returns an empty delta. It is invalid to specify a non-existent version
+   * _other_ than one beyond the current version.
    *
    * @param {Int} startInclusive Version number for the first delta to include
    *   in the result.
@@ -256,7 +257,7 @@ export default class DocControl extends CommonBase {
    *   `startInclusive` through and including the current latest delta.
    */
   async _composeVersionsFrom(startInclusive) {
-    const nextVerNum = this._doc.nextVerNum();
+    const nextVerNum = VersionNumber.after(this._currentVerNum());
     startInclusive = VersionNumber.check(startInclusive, nextVerNum);
 
     if (startInclusive === nextVerNum) {

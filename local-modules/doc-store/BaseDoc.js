@@ -79,7 +79,7 @@ export default class BaseDoc extends CommonBase {
    * which `this.changeRead(n)` is valid. If the document has no changes at all,
    * this method returns `null`.
    *
-   * @returns {int|null} The version number of this document or `null` if the
+   * @returns {Int|null} The version number of this document or `null` if the
    *   document is empty.
    */
   currentVerNum() {
@@ -91,30 +91,18 @@ export default class BaseDoc extends CommonBase {
    *
    * **Note:** This accessor must be overridden by subclasses.
    *
-   * @returns {int} The version number of this document.
+   * @returns {Int|null} The version number of this document or `null` if the
+   *   document is empty.
    */
   _impl_currentVerNum() {
     return this._mustOverride();
   }
 
   /**
-   * The version number of the next change to be appended to this document.
-   *
-   * **Note:** This is different than just `currentVerNum() + 1` in that
-   * `currentVerNum()` is `null` (not `-1`) on an empty document.
-   *
-   * @returns {int} The version number of the next change.
-   */
-  nextVerNum() {
-    const current = this.currentVerNum();
-    return (current === null) ? 0 : (current + 1);
-  }
-
-  /**
    * Reads a change, by version number. It is an error to request a change that
    * does not exist on the document.
    *
-   * @param {int} verNum The version number for the desired change.
+   * @param {Int} verNum The version number for the desired change.
    * @returns {DocumentChange} The change with `verNum` as indicated.
    */
   changeRead(verNum) {
@@ -135,7 +123,7 @@ export default class BaseDoc extends CommonBase {
    *
    * **Note:** This method must be overridden by subclasses.
    *
-   * @param {int} verNum The version number for the desired change.
+   * @param {Int} verNum The version number for the desired change.
    * @returns {DocumentChange|null|undefined} The change with `verNum` as
    *   indicated or a nullish value if there is no such change.
    */
