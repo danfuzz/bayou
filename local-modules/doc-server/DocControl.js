@@ -262,11 +262,24 @@ export default class DocControl extends CommonBase {
     endExclusive =
       VersionNumber.rangeInc(endExclusive, startInclusive, nextVerNum);
 
-    let result = baseDelta;
-    for (let i = startInclusive; i < endExclusive; i++) {
-      const change = await this._doc.changeRead(i);
-      result = result.compose(change.delta);
+    if (startInclusive === endExclusive) {
+      // Trivial case: Nothing to compose.
+      return baseDelta;
     }
+
+    // First, request all the changes, and then compose them, in separate loops.
+    // This arrangement means that it's possible for all of the change requests
+    // to be serviced in parallel.
+
+    const changePromises = [];
+    for (let i = startInclusive; i < endExclusive; i++) {
+      changePromises.push(this._doc.changeRead(i));
+    }
+
+    const changes = await Promise.all(changePromises);
+    const result = changes.reduce(
+      (acc, change) => { return acc.compose(change.delta); },
+      baseDelta);
 
     return FrozenDelta.coerce(result);
   }
