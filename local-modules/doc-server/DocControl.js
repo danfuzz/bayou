@@ -90,37 +90,28 @@ export default class DocControl extends CommonBase {
 
     // Search backward through the full versions for a base for forward
     // composition.
-    let baseSnapshot = null;
+    let base = null;
     for (let i = verNum; i >= 0; i--) {
       const v = this._snapshots[i];
       if (v) {
-        baseSnapshot = v;
+        base = v;
         break;
       }
     }
 
-    if (baseSnapshot === null) {
-      // We have no snapshots at all, including of even the first version. Set
-      // up a version 0 snapshot.
-      const firstChange = await this._doc.changeRead(0);
-      baseSnapshot = this._snapshots[0] = new Snapshot(0, firstChange.delta);
-    }
-
-    if (baseSnapshot.verNum === verNum) {
+    if (base && (base.verNum === verNum)) {
       // Found the right version!
-      return baseSnapshot;
+      return base;
     }
 
     // We didn't actully find a snapshot of the requested version. Apply deltas
     // to the base to produce the desired version. Store it, and return it.
 
-    let contents = baseSnapshot.contents;
-    for (let i = baseSnapshot.verNum + 1; i <= verNum; i++) {
-      const change = await this._doc.changeRead(i);
-      contents = contents.compose(change.delta);
-    }
+    const contents = (base === null)
+      ? this._composeVersions(FrozenDelta.EMPTY, 0,               verNum + 1)
+      : this._composeVersions(base.contents,     base.verNum + 1, verNum + 1);
+    const result = new Snapshot(verNum, await contents);
 
-    const result = new Snapshot(verNum, contents);
     this._snapshots[verNum] = result;
     return result;
   }
