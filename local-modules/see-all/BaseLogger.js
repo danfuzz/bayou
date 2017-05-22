@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { CommonBase } from 'util-common';
+
 import LogStream from './LogStream';
 
 /** Set of valid severity levels. */
@@ -10,7 +12,7 @@ const LEVELS = new Set(['debug', 'error', 'warn', 'info', 'detail']);
 /**
  * Base class for loggers. Subclasses must implement `_logImpl()`.
  */
-export default class BaseLogger {
+export default class BaseLogger extends CommonBase {
   /**
    * Logs a message at the given severity level.
    *
@@ -157,12 +159,11 @@ export default class BaseLogger {
    * Actual logging implementation.
    *
    * @abstract
-   * @param {string} level_unused Severity level. Guaranteed to be a valid
-   *   level.
-   * @param {array} message_unused Array of arguments to log.
+   * @param {string} level Severity level. Guaranteed to be a valid level.
+   * @param {array} message Array of arguments to log.
    */
-  _logImpl(level_unused, message_unused) {
-    throw new Error('Subclass must override `_logImpl()`.');
+  _logImpl(level, message) {
+    this._mustOverride(level, message);
   }
 
   /**
