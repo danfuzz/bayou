@@ -148,7 +148,7 @@ export default class BaseDoc extends CommonBase {
    */
   async changeAppend(...changeArgs) {
     const change = new DocumentChange(...changeArgs);
-    this._impl_changeAppend(change);
+    await this._impl_changeAppend(change);
   }
 
   /**
@@ -166,7 +166,7 @@ export default class BaseDoc extends CommonBase {
    * @abstract
    * @param {DocumentChange} change The change to write.
    */
-  _impl_changeAppend(change) {
+  async _impl_changeAppend(change) {
     this._mustOverride(change);
   }
 }

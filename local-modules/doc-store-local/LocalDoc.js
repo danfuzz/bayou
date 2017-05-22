@@ -110,7 +110,7 @@ export default class LocalDoc extends BaseDoc {
    *
    * @param {DocumentChange} change The change to write.
    */
-  _impl_changeAppend(change) {
+  async _impl_changeAppend(change) {
     this._readIfNecessary();
 
     if (change.verNum !== this._changes.length) {
