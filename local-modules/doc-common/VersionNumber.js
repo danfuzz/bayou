@@ -57,6 +57,24 @@ export default class VersionNumber {
   }
 
   /**
+   * Checks a value of type `VersionNumber`, which must furthermore be within an
+   * indicated inclusive-inclusive range.
+   *
+   * @param {*} value Value to check.
+   * @param {Int} minInc Minimum acceptable value (inclusive).
+   * @param {Int} maxInc Maximum acceptable value (inclusive).
+   * @returns {Int} `value`.
+   */
+  static rangeInc(value, minInc, maxInc) {
+    try {
+      return VersionNumber.check(TInt.rangeInc(value, minInc, maxInc));
+    } catch (e) {
+      // More appropriate error.
+      return TypeError.badValue(value, 'VersionNumber', `${minInc} <= value <= ${maxInc}`);
+    }
+  }
+
+  /**
    * Returns the version number after the given one. This is the same as
    * `verNum + 1` _except_ that `null` (the version "number" for an empty
    * document) is a valid input for which `0` is the return value.
