@@ -13,22 +13,14 @@ export default class VersionNumber {
    * Checks a value of type `VersionNumber`.
    *
    * @param {*} value Value to check.
-   * @param {Int} [max] Maximum acceptable value (inclusive). If `undefined`,
-   *   there is no upper limit.
    * @returns {Int} `value`.
    */
-  static check(value, max = undefined) {
-    if (   (typeof value !== 'number')
-        || !Number.isSafeInteger(value)
-        || (value < 0)) {
+  static check(value) {
+    try {
+      return TInt.min(value, 0);
+    } catch (e) {
       return TypeError.badValue(value, 'VersionNumber');
     }
-
-    if ((max !== undefined) && TInt.check(max) && (value > max)) {
-      return TypeError.badValue(value, 'VersionNumber', `value <= ${max}`);
-    }
-
-    return value;
   }
 
   /**
