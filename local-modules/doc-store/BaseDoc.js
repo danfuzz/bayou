@@ -130,6 +130,11 @@ export default class BaseDoc extends CommonBase {
    * if the given `verNum` (first argument) turns out not to be the actual
    * appropriate next version.
    *
+   * **Note:** The (implicit) return value from this method is a promise that
+   * resolves once the append operation is complete, or becomes rejected with
+   * a reason describing the problem such as, notably, the `verNum` being
+   * invalid.
+   *
    * **Note:** The reason `verNum` is passed explicitly instead of just
    * assumed to be correct is that, due to the asynchronous nature of the
    * execution of this method, the calling code cannot know for sure whether or
@@ -141,7 +146,7 @@ export default class BaseDoc extends CommonBase {
    *
    * @param {...*} changeArgs Constructor arguments to `DocumentChange`.
    */
-  changeAppend(...changeArgs) {
+  async changeAppend(...changeArgs) {
     const change = new DocumentChange(...changeArgs);
     this._impl_changeAppend(change);
   }

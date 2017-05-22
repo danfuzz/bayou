@@ -94,7 +94,7 @@ export default class DocServer extends Singleton {
       log.info(`New document: ${docId}`);
 
       // Initialize the document with static content (for now).
-      docStorage.changeAppend(0, Timestamp.now(), DEFAULT_DOCUMENT, null);
+      await docStorage.changeAppend(0, Timestamp.now(), DEFAULT_DOCUMENT, null);
     }
 
     const result = new DocControl(docStorage);

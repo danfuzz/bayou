@@ -80,7 +80,7 @@ export default class DocControl extends CommonBase {
       // up a first version here and change `verNum` to `0`, which will
       // propagate through the rest of the code and end up making everything all
       // work out.
-      this._doc.changeAppend(
+      await this._doc.changeAppend(
         0,
         Timestamp.now(),
         [{ insert: '(Recreated document due to format version skew.)\n' }],
@@ -298,16 +298,16 @@ export default class DocControl extends CommonBase {
    * @returns {Int} The version number after appending `delta`.
    */
   async _appendDelta(baseVerNum, delta, authorId) {
+    const verNum = VersionNumber.after(baseVerNum);
     authorId = TString.orNull(authorId);
     delta = FrozenDelta.coerce(delta);
 
     if (!delta.isEmpty()) {
-      this._doc.changeAppend(
-        VersionNumber.after(baseVerNum), Timestamp.now(), delta, authorId);
+      await this._doc.changeAppend(verNum, Timestamp.now(), delta, authorId);
       this._changeCondition.value = true;
     }
 
-    return this._currentVerNum();
+    return verNum;
   }
 
   /**
