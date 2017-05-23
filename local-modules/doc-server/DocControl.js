@@ -68,7 +68,7 @@ export default class DocControl extends CommonBase {
    * @returns {Snapshot} The corresponding snapshot.
    */
   async snapshot(verNum = null) {
-    const currentVerNum = this._doc.currentVerNum();
+    const currentVerNum = await this._doc.currentVerNum();
     verNum = (verNum === null)
       ? currentVerNum
       : VersionNumber.maxInc(verNum, currentVerNum);
@@ -129,7 +129,7 @@ export default class DocControl extends CommonBase {
    *  of the document.
    */
   async deltaAfter(baseVerNum) {
-    const currentVerNum = this._doc.currentVerNum();
+    const currentVerNum = await this._doc.currentVerNum();
     VersionNumber.maxInc(baseVerNum, currentVerNum);
 
     if (baseVerNum !== currentVerNum) {
@@ -172,7 +172,7 @@ export default class DocControl extends CommonBase {
    *   delta has been applied to the document.
    */
   async applyDelta(baseVerNum, delta, authorId) {
-    const currentVerNum = this._doc.currentVerNum();
+    const currentVerNum = await this._doc.currentVerNum();
     VersionNumber.maxInc(baseVerNum, currentVerNum);
 
     delta = FrozenDelta.check(delta);
@@ -211,7 +211,7 @@ export default class DocControl extends CommonBase {
     // (because of the `await`).
     const dClient     = delta;
     const vBaseNum    = baseVerNum;
-    const vCurrentNum = this._doc.currentVerNum();
+    const vCurrentNum = await this._doc.currentVerNum();
 
     // (1)
     const dServer = await this._composeVersions(
@@ -247,9 +247,9 @@ export default class DocControl extends CommonBase {
    * given initial version through and including the current latest delta,
    * composed from a given base. It is valid to pass as either version number
    * parameter one version beyond the current version number (that is,
-   * `VersionNumber.after(this._doc.currentVerNum())`. It is invalid to specify
-   * a non-existent version _other_ than one beyond the current version. If
-   * `startInclusive === endExclusive`, then this method returns `baseDelta`.
+   * `VersionNumber.after(await this._doc.currentVerNum())`. It is invalid to
+   * specify a non-existent version _other_ than one beyond the current version.
+   * If `startInclusive === endExclusive`, then this method returns `baseDelta`.
    *
    * @param {FrozenDelta} baseDelta Base delta onto which the indicated deltas
    *   get composed.
@@ -262,7 +262,7 @@ export default class DocControl extends CommonBase {
    *   `endExclusive`.
    */
   async _composeVersions(baseDelta, startInclusive, endExclusive) {
-    const nextVerNum = VersionNumber.after(this._doc.currentVerNum());
+    const nextVerNum = VersionNumber.after(await this._doc.currentVerNum());
     startInclusive = VersionNumber.rangeInc(startInclusive, 0, nextVerNum);
     endExclusive =
       VersionNumber.rangeInc(endExclusive, startInclusive, nextVerNum);

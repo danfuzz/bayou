@@ -90,7 +90,7 @@ export default class BaseDoc extends CommonBase {
    * @returns {Int|null} The version number of this document or `null` if the
    *   document is empty.
    */
-  currentVerNum() {
+  async currentVerNum() {
     return VersionNumber.orNull(this._impl_currentVerNum());
   }
 
