@@ -201,51 +201,43 @@ export default class LocalDoc extends BaseDoc {
    * @returns {array<DocumentChange>} The document contents.
    */
   async _readDocument() {
-    if (this._existsSync()) {
-      this._log.detail('Reading from disk...');
-
-      const encoded = fs.readFileSync(this._path);
-      let contents = null;
-
-      try {
-        contents = Decoder.decodeJson(encoded);
-        TObject.withExactKeys(contents, ['version', 'changes']);
-        if (contents.version !== this._formatVersion) {
-          this._log.warn('Ignoring data with a mismatched format version. ' +
-              `Got ${contents.version}, expected ${this._formatVersion}`);
-          contents = null;
-        }
-      } catch (e) {
-        this._log.warn('Ignoring malformed data (bad JSON or unversioned).', e);
-        contents = null;
-      }
-
-      if (contents === null) {
-        this._changes = [];
-        this._log.info('New document (because existing data is old or bad).');
-      } else {
-        // `slice(0)` makes a mutable clone. Ideally, we'd just use immutable
-        // data structures all the way through, but (TODO) this is reasonable
-        // for now.
-        this._changes = contents.changes.slice(0);
-        this._log.info('Read from disk.');
-      }
-    } else {
+    if (!await afs.exists(this._path)) {
       // File doesn't actually exist. Just initialize an empty change list.
       this._changes = [];
       this._log.info('New document.');
+      return this._changes;
+    }
+
+    // The file exists. Read it and attempt to parse it.
+    this._log.detail('Reading from disk...');
+
+    const encoded = await fs.readFile(this._path);
+    let contents = null;
+
+    try {
+      contents = Decoder.decodeJson(encoded);
+      TObject.withExactKeys(contents, ['version', 'changes']);
+      if (contents.version !== this._formatVersion) {
+        this._log.warn('Ignoring data with a mismatched format version. ' +
+            `Got ${contents.version}, expected ${this._formatVersion}`);
+        contents = null;
+      }
+    } catch (e) {
+      this._log.warn('Ignoring malformed data (bad JSON or unversioned).', e);
+      contents = null;
+    }
+
+    if (contents === null) {
+      this._changes = [];
+      this._log.info('New document (because existing data is old or bad).');
+    } else {
+      // `slice(0)` makes a mutable clone. Ideally, we'd just use immutable
+      // data structures all the way through, but (TODO) this is reasonable
+      // for now.
+      this._changes = contents.changes.slice(0);
+      this._log.info('Read from disk.');
     }
 
     return this._changes;
-  }
-
-  /**
-   * Synchronous version of `.exists()`. TODO: Remove this once the class is
-   * fully `async`.
-   *
-   * @returns {boolean} `true` iff this document exists.
-   */
-  _existsSync() {
-    return fs.existsSync(this._path);
   }
 }
