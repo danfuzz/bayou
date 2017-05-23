@@ -161,12 +161,11 @@ export default class BaseDoc extends CommonBase {
   }
 
   /**
-   * Appends a change. The arguments to this method are ultimately passed in
-   * order to the constructor for `DocumentChange`. This will throw an exception
-   * if the given `verNum` (first argument) turns out not to be the actual
-   * appropriate next version. It is an error to call this method on a
-   * non-existent document; `create()` must be called (and must be successful)
-   * before attempting to call this method.
+   * Appends a change. This will throw an exception if the given `verNum` (first
+   * argument) turns out not to be the actual appropriate next version. In
+   * addition, it is an error to call this method on a non-existent document;
+   * `create()` must be called (and must be successful) before attempting to
+   * call this method.
    *
    * **Note:** The (implicit) return value from this method is a promise that
    * resolves once the append operation is complete, or becomes rejected with
@@ -182,22 +181,21 @@ export default class BaseDoc extends CommonBase {
    * `verNum - 1` but which got recorded as being applied to `verNum` and would
    * hence be incorrect.
    *
-   * @param {...*} changeArgs Constructor arguments to `DocumentChange`.
+   * @param {DocumentChange} change The change to write.
    */
-  async changeAppend(...changeArgs) {
+  async changeAppend(change) {
     // It is invalid to ever use this method to append a change with
     // `verNum === 0`, because that would be the first change to the document,
     // and the _only_ way to get a first change into a document is via a call to
     // `create()` (which passes the change through to the subclass via
     // `_impl_create()`). We check this up-front here instead of blithely
-    // passing it down to the subclass, because doing so would force the
-    // subclass to have to have trickier code to avoid inadvertently creating
-    // the document in cases where it didn't already exist.
-    if (changeArgs[0] === 0) {
+    // passing it down to the subclass, because doing the latter would force the
+    // subclass to need trickier code to avoid inadvertently creating the
+    // document in cases where it didn't already exist.
+    if (change.verNum === 0) {
       throw new Error('Cannot ever append the very first version.');
     }
 
-    const change = new DocumentChange(...changeArgs);
     await this._impl_changeAppend(change);
   }
 

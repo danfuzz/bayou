@@ -4,7 +4,7 @@
 
 import weak from 'weak';
 
-import { FrozenDelta, Timestamp } from 'doc-common';
+import { DocumentChange, FrozenDelta, Timestamp } from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
 import { TBoolean, TString } from 'typecheck';
@@ -95,7 +95,8 @@ export default class DocServer extends Singleton {
         // recreate the document and note what's going on in the contents.
         log.info('Needs migration. (But just noting that fact for now.)');
         await docStorage.create();
-        await docStorage.changeAppend(1, Timestamp.now(), MIGRATION_NOTE, null);
+        await docStorage.changeAppend(
+          new DocumentChange(1, Timestamp.now(), MIGRATION_NOTE, null));
       }
     } else {
       if (!initIfMissing) {
@@ -107,7 +108,8 @@ export default class DocServer extends Singleton {
 
       // Initialize the document with static content (for now).
       await docStorage.create();
-      await docStorage.changeAppend(1, Timestamp.now(), DEFAULT_DOCUMENT, null);
+      await docStorage.changeAppend(
+        new DocumentChange(1, Timestamp.now(), DEFAULT_DOCUMENT, null));
     }
 
     const result = new DocControl(docStorage);

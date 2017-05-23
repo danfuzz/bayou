@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DeltaResult, FrozenDelta, Snapshot, Timestamp, VersionNumber }
+import { DeltaResult, DocumentChange, FrozenDelta, Snapshot, Timestamp, VersionNumber }
   from 'doc-common';
 import { BaseDoc } from 'doc-store';
 import { TString } from 'typecheck';
@@ -281,8 +281,8 @@ export default class DocControl extends CommonBase {
    *
    * **Note:** If the delta is a no-op, then this method does nothing.
    *
-   * @param {Int|null} baseVerNum Version number which this is to apply to. It
-   *   must be the current document version number at the moment the change is
+   * @param {Int} baseVerNum Version number which this is to apply to. It must
+   *   be the current document version number at the moment the change is
    *   ultimately applied. See `BaseDoc.changeAppend()` for further discussion.
    * @param {object} delta The delta to append.
    * @param {string|null} authorId The author of the delta.
@@ -294,7 +294,8 @@ export default class DocControl extends CommonBase {
     delta = FrozenDelta.coerce(delta);
 
     if (!delta.isEmpty()) {
-      await this._doc.changeAppend(verNum, Timestamp.now(), delta, authorId);
+      await this._doc.changeAppend(
+        new DocumentChange(verNum, Timestamp.now(), delta, authorId));
       this._changeCondition.value = true;
     }
 
