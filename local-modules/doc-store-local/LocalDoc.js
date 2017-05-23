@@ -181,7 +181,7 @@ export default class LocalDoc extends BaseDoc {
    */
   async _readIfNecessary() {
     if (this._changes !== null) {
-      // Alread in memory; no need to read.
+      // Already in memory; no need to read.
       return;
     }
 
