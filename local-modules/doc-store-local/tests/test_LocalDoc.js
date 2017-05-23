@@ -44,19 +44,18 @@ describe('doc-store-local/LocalDoc', () => {
   describe('changeAppend(change)', () => {
     it('should increment the version after a change is applied', async () => {
       const doc = new LocalDoc('0', '0', documentPath());
-      const oldVersion = await doc.currentVerNum();
 
-      // Docs start off with a null version number.
-      assert.isNull(oldVersion);
+      // Docs start off with version number `0`.
+      await doc.create();
+      assert.strictEqual(await doc.currentVerNum(), 0);
+
       await addChangeToDocument(doc);
-
       let newVersion = await doc.currentVerNum();
-
-      assert.strictEqual(newVersion, 0);
+      assert.strictEqual(newVersion, 1);
 
       await addChangeToDocument(doc);
       newVersion = await doc.currentVerNum();
-      assert.strictEqual(newVersion, 1);
+      assert.strictEqual(newVersion, 2);
     });
 
     // Need a good way to test this with a delay. Documents don't resolve a Promise
@@ -76,11 +75,12 @@ describe('doc-store-local/LocalDoc', () => {
     it('should erase the document if called on a non-empty document', async () => {
       const doc = new LocalDoc('0', '0', documentPath());
 
+      await doc.create();
       await addChangeToDocument(doc);
-      assert.strictEqual(await doc.currentVerNum(), 0); // Baseline assumption.
+      assert.strictEqual(await doc.currentVerNum(), 1); // Baseline assumption.
 
       await doc.create();
-      assert.isNull(await doc.currentVerNum()); // The real test.
+      assert.strictEqual(await doc.currentVerNum(), 0); // The real test.
     });
   });
 });
