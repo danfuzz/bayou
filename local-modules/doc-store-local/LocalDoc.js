@@ -52,6 +52,13 @@ export default class LocalDoc extends BaseDoc {
     this._changes = null;
 
     /**
+     * {Promise<array<DocumentChange>>|null} Promise for the value of
+     * `_changes`. Becomes non-`null` during the first call to
+     * `_readIfNecessary()` and is used to prevent superfluous re-reading.
+     */
+    this._changesPromise = null;
+
+    /**
      * Does the document need to be written to disk? This is set to `true` on
      * updates and back to `false` once the write has been done.
      */
@@ -87,7 +94,7 @@ export default class LocalDoc extends BaseDoc {
    * @returns {Int|null} The version number of this document.
    */
   async _impl_currentVerNum() {
-    this._readIfNecessary();
+    await this._readIfNecessary();
     const len = this._changes.length;
     return (len === 0) ? null : (len - 1);
   }
@@ -99,7 +106,7 @@ export default class LocalDoc extends BaseDoc {
    * @returns {DocumentChange} The change with `verNum` as indicated.
    */
   async _impl_changeRead(verNum) {
-    this._readIfNecessary();
+    await this._readIfNecessary();
 
     VersionNumber.maxExc(verNum, this._changes.length);
     return this._changes[verNum];
@@ -111,7 +118,7 @@ export default class LocalDoc extends BaseDoc {
    * @param {DocumentChange} change The change to write.
    */
   async _impl_changeAppend(change) {
-    this._readIfNecessary();
+    await this._readIfNecessary();
 
     if (change.verNum !== this._changes.length) {
       throw new Error(`Invalid version number: ${change.verNum}.`);
@@ -150,12 +157,28 @@ export default class LocalDoc extends BaseDoc {
   /**
    * Reads the document if it is not yet loaded.
    */
-  _readIfNecessary() {
+  async _readIfNecessary() {
     if (this._changes !== null) {
-      // No need.
+      // Alread in memory; no need to read.
       return;
     }
 
+    if (this._changesPromise === null) {
+      // This is the first time we've needed the changes. Initiate a read.
+      this._changesPromise = this._readDocument();
+    }
+
+    // Wait for the pending read to complete.
+    await this._changesPromise;
+  }
+
+  /**
+   * Reads the document file, returning the document contents (an array of
+   * changes).
+   *
+   * @returns {array<DocumentChange>} The document contents.
+   */
+  async _readDocument() {
     if (this._existsSync()) {
       this._log.detail('Reading from disk...');
 
@@ -190,6 +213,8 @@ export default class LocalDoc extends BaseDoc {
       this._changes = [];
       this._log.info('New document.');
     }
+
+    return this._changes;
   }
 
   /**
