@@ -68,9 +68,10 @@ export default class DocControl extends CommonBase {
    * @returns {Snapshot} The corresponding snapshot.
    */
   async snapshot(verNum = null) {
+    const currentVerNum = this._currentVerNum();
     verNum = (verNum === null)
-      ? this._currentVerNum()
-      : this._validateVerNum(verNum);
+      ? currentVerNum
+      : VersionNumber.maxInc(verNum, currentVerNum);
 
     if (verNum === null) {
       // This is an entirely empty document (probably because we're running in
@@ -128,9 +129,8 @@ export default class DocControl extends CommonBase {
    *  of the document.
    */
   async deltaAfter(baseVerNum) {
-    baseVerNum = this._validateVerNum(baseVerNum);
-
     const currentVerNum = this._currentVerNum();
+    VersionNumber.maxInc(baseVerNum, currentVerNum);
 
     if (baseVerNum !== currentVerNum) {
       // We can fulfill the result based on existing document history. (That is,
@@ -172,11 +172,13 @@ export default class DocControl extends CommonBase {
    *   delta has been applied to the document.
    */
   async applyDelta(baseVerNum, delta, authorId) {
-    baseVerNum = this._validateVerNum(baseVerNum);
+    const currentVerNum = this._currentVerNum();
+    VersionNumber.maxInc(baseVerNum, currentVerNum);
+
     delta = FrozenDelta.check(delta);
     authorId = TString.orNull(authorId);
 
-    if (baseVerNum === this._currentVerNum()) {
+    if (baseVerNum === currentVerNum) {
       // The easy case: Apply a delta to the current version (unless it's empty,
       // in which case we don't have to make a new version at all; that's
       // handled by `_appendDelta()`).
@@ -203,10 +205,13 @@ export default class DocControl extends CommonBase {
     //    `vExpected` with `dCorrection` to arrive at `vNext`.
 
     // Assign variables from parameter and instance variables that correspond
-    // to the description immediately above.
-    const dClient    = delta;
-    const vBaseNum   = baseVerNum;
-    const vBase      = (await this.snapshot(vBaseNum)).contents;
+    // to the description immediately above. **Note:** We re-fetch the current
+    // version number here instead of just using `currentVerNum` above, because
+    // it is possible for the document to have been updated in the mean time
+    // (because of the `await`).
+    const dClient     = delta;
+    const vBaseNum    = baseVerNum;
+    const vBase       = (await this.snapshot(vBaseNum)).contents;
     const vCurrentNum = this._currentVerNum();
 
     // (1)
@@ -318,18 +323,5 @@ export default class DocControl extends CommonBase {
    */
   _currentVerNum() {
     return this._doc.currentVerNum();
-  }
-
-  /**
-   * Checks a version number for sanity. Throws an error if the given value
-   * either isn't a version number at all (not an int, etc.) or does not refer
-   * to an existing version number of this document.
-   *
-   * @param {*} verNum the (alleged) version number to check.
-   * @returns {Int} `verNum`.
-   */
-  _validateVerNum(verNum) {
-    const current = this._currentVerNum();
-    return VersionNumber.maxInc(verNum, current);
   }
 }
