@@ -91,7 +91,7 @@ export default class BaseDoc extends CommonBase {
    *   document is empty.
    */
   async currentVerNum() {
-    return VersionNumber.orNull(this._impl_currentVerNum());
+    return VersionNumber.orNull(await this._impl_currentVerNum());
   }
 
   /**
@@ -101,7 +101,7 @@ export default class BaseDoc extends CommonBase {
    * @returns {Int|null} The version number of this document or `null` if the
    *   document is empty.
    */
-  _impl_currentVerNum() {
+  async _impl_currentVerNum() {
     return this._mustOverride();
   }
 

@@ -84,9 +84,9 @@ export default class LocalDoc extends BaseDoc {
   /**
    * Implementation as required by the superclass.
    *
-   * @returns {int} The version number of this document.
+   * @returns {Int|null} The version number of this document.
    */
-  _impl_currentVerNum() {
+  async _impl_currentVerNum() {
     this._readIfNecessary();
     const len = this._changes.length;
     return (len === 0) ? null : (len - 1);
