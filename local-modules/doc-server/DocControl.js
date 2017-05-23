@@ -75,13 +75,6 @@ export default class DocControl extends CommonBase {
       ? currentVerNum
       : VersionNumber.maxInc(verNum, currentVerNum);
 
-    if (verNum === null) {
-      // This is an entirely empty document, which per the `doc-store` interface
-      // should never happen. (Documents always come into existence with at
-      // least one change.)
-      throw new Error('Cannot snapshot empty document.');
-    }
-
     // Search backward through the full versions for a base for forward
     // composition.
     let base = null;

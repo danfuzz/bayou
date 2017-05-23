@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DocumentChange, VersionNumber } from 'doc-common';
+import { DocumentChange, FrozenDelta, Timestamp, VersionNumber }
+  from 'doc-common';
 import { TBoolean, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
@@ -16,6 +17,16 @@ import { CommonBase } from 'util-common';
  * zero-based integer sequence. Changes are random-access.
  */
 export default class BaseDoc extends CommonBase {
+  /**
+   * Gets the appropriate first change to a document (empty delta) for the
+   * current moment in time.
+   *
+   * @returns {FrozenDelta} An appropriate initial change.
+   */
+  static _firstChange() {
+    return new DocumentChange(0, Timestamp.now(), FrozenDelta.EMPTY, null);
+  }
+
   /**
    * Constructs an instance.
    *
@@ -37,6 +48,8 @@ export default class BaseDoc extends CommonBase {
    * Indicates whether or not this document exists in the store. Calling this
    * method will _not_ cause a non-existent document to come into existence.
    *
+   * **Note:** Documents that exist always contain at least one change.
+   *
    * @returns {boolean} `true` iff this document exists.
    */
   async exists() {
@@ -57,27 +70,30 @@ export default class BaseDoc extends CommonBase {
   /**
    * Creates this document if it does not already exist, or re-creates it if it
    * does already exist. After this call, the document both exists and is
-   * empty.
+   * empty. "Empty" in this case means that it contains exactly one change,
+   * which represents the null operation on the document. (That is, its delta
+   * is empty.)
    */
   async create() {
-    // This is just a pass-through. The point is to maintain the pattern of
-    // `_impl_` as the things that subclasses override.
-    this._impl_create();
+    this._impl_create(BaseDoc._firstChange());
   }
 
   /**
-   * Main implementation of `create()`.
+   * Main implementation of `create()`, which takes an additional argument
+   * of the first change to include in the document.
    *
    * @abstract
+   * @param {DocumentChange} firstChange The first change to include in the
+   *   document.
    */
-  async _impl_create() {
-    this._mustOverride();
+  async _impl_create(firstChange) {
+    this._mustOverride(firstChange);
   }
 
   /**
    * Gets the current version number of this document. This is the largest value
-   * `n` for which `this.changeRead(n)` is definitely valid. If the document has
-   * no changes at all, this method returns `null`.
+   * `n` for which `this.changeRead(n)` is definitely valid. It is only valid
+   * to call this method on a document that exists and has valid data.
    *
    * With regard to "definitely" above, at the moment a call to this method is
    * complete, it is possible for there to _already_ be document changes in
@@ -88,19 +104,28 @@ export default class BaseDoc extends CommonBase {
    * for code to _not_ assume a stable version number when any asynchrony is
    * possible.
    *
-   * @returns {Int|null} The version number of this document or `null` if the
-   *   document is empty.
+   * @returns {Int} The current version number of this document.
    */
   async currentVerNum() {
-    return VersionNumber.orNull(await this._impl_currentVerNum());
+    const result = VersionNumber.orNull(await this._impl_currentVerNum());
+
+    if (result === null) {
+      throw new Error('Document is empty, invalid, or in need of migration.');
+    }
+
+    return result;
   }
 
   /**
-   * Main implementation of `currentVerNum()`.
+   * Main implementation of `currentVerNum()`. This method can be called without
+   * error whether or not the document exists (as opposed to `currentVerNum()`);
+   * for a non-existent document, this method returns `null`. In addition, this
+   * method returns `null` if the document exists but is not in a recognized
+   * format (e.g. if `needsMigration()` would return `true`).
    *
    * @abstract
    * @returns {Int|null} The version number of this document or `null` if the
-   *   document is empty.
+   *   document is empty, invalid, or in need of migration.
    */
   async _impl_currentVerNum() {
     return this._mustOverride();
@@ -108,7 +133,8 @@ export default class BaseDoc extends CommonBase {
 
   /**
    * Reads a change, by version number. It is an error to request a change that
-   * does not exist on the document.
+   * does not exist on the document. If called on a non-existent document, this
+   * method does _not_ cause that document to be created.
    *
    * @param {Int} verNum The version number for the desired change.
    * @returns {DocumentChange} The change with `verNum` as indicated.
@@ -138,7 +164,9 @@ export default class BaseDoc extends CommonBase {
    * Appends a change. The arguments to this method are ultimately passed in
    * order to the constructor for `DocumentChange`. This will throw an exception
    * if the given `verNum` (first argument) turns out not to be the actual
-   * appropriate next version.
+   * appropriate next version. It is an error to call this method on a
+   * non-existent document; `create()` must be called (and must be successful)
+   * before attempting to call this method.
    *
    * **Note:** The (implicit) return value from this method is a promise that
    * resolves once the append operation is complete, or becomes rejected with
@@ -157,14 +185,26 @@ export default class BaseDoc extends CommonBase {
    * @param {...*} changeArgs Constructor arguments to `DocumentChange`.
    */
   async changeAppend(...changeArgs) {
+    // It is invalid to ever use this method to append a change with
+    // `verNum === 0`, because that would be the first change to the document,
+    // and the _only_ way to get a first change into a document is via a call to
+    // `create()` (which passes the change through to the subclass via
+    // `_impl_create()`). We check this up-front here instead of blithely
+    // passing it down to the subclass, because doing so would force the
+    // subclass to have to have trickier code to avoid inadvertently creating
+    // the document in cases where it didn't already exist.
+    if (changeArgs[0] === 0) {
+      throw new Error('Cannot ever append the very first version.');
+    }
+
     const change = new DocumentChange(...changeArgs);
     await this._impl_changeAppend(change);
   }
 
   /**
    * Main implementation of `changeAppend()`. Guaranteed to be called with a
-   * structurally valid change instance, except that the `verNum` does have to
-   * be validated.
+   * structurally valid change instance with a `verNum` of at least `1`. Beyond
+   * the minimum limit, `verNum` still has to be validated.
    *
    * On that last point, `change` will have been constructed with a valid
    * `verNum` at the time of construction, but due to the asynchronous nature of

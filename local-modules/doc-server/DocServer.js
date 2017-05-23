@@ -95,7 +95,7 @@ export default class DocServer extends Singleton {
         // recreate the document and note what's going on in the contents.
         log.info('Needs migration. (But just noting that fact for now.)');
         await docStorage.create();
-        await docStorage.changeAppend(0, Timestamp.now(), MIGRATION_NOTE, null);
+        await docStorage.changeAppend(1, Timestamp.now(), MIGRATION_NOTE, null);
       }
     } else {
       if (!initIfMissing) {
@@ -106,7 +106,8 @@ export default class DocServer extends Singleton {
       log.info(`New document: ${docId}`);
 
       // Initialize the document with static content (for now).
-      await docStorage.changeAppend(0, Timestamp.now(), DEFAULT_DOCUMENT, null);
+      await docStorage.create();
+      await docStorage.changeAppend(1, Timestamp.now(), DEFAULT_DOCUMENT, null);
     }
 
     const result = new DocControl(docStorage);
