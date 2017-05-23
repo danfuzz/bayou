@@ -52,6 +52,13 @@ export default class LocalDoc extends BaseDoc {
     this._changes = null;
 
     /**
+     * {Promise<array<DocumentChange>>|null} Promise for the value of
+     * `_changes`. Becomes non-`null` during the first call to
+     * `_readIfNecessary()` and is used to prevent superfluous re-reading.
+     */
+    this._changesPromise = null;
+
+    /**
      * Does the document need to be written to disk? This is set to `true` on
      * updates and back to `false` once the write has been done.
      */
@@ -70,7 +77,29 @@ export default class LocalDoc extends BaseDoc {
    * @returns {boolean} `true` iff this document exists.
    */
   async _impl_exists() {
-    return afs.exists(this._path);
+    // Start by checking the existence of the file. We do this first, so that
+    // the subsequent logic can be synchronous.
+    const fileExists = await afs.exists(this._path);
+
+    if (this._changes !== null) {
+      // Whether or not the file exists, the document is considered to exist
+      // because it has a non-empty in-memory model. (For example, it might have
+      // been `create()`d but not yet stored to disk.)
+      return true;
+    } else if (!fileExists) {
+      // The file doesn't exist, and (per above) there's no in-memory model.
+      return false;
+    } else {
+      // The file exists, but we don't know if it's valid. Let the document
+      // reader code make that determination. An error in reading indicates that
+      // the document doesn't effectively exist.
+      try {
+        await this._readIfNecessary();
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
   }
 
   /**
@@ -84,10 +113,10 @@ export default class LocalDoc extends BaseDoc {
   /**
    * Implementation as required by the superclass.
    *
-   * @returns {int} The version number of this document.
+   * @returns {Int|null} The version number of this document.
    */
-  _impl_currentVerNum() {
-    this._readIfNecessary();
+  async _impl_currentVerNum() {
+    await this._readIfNecessary();
     const len = this._changes.length;
     return (len === 0) ? null : (len - 1);
   }
@@ -99,7 +128,7 @@ export default class LocalDoc extends BaseDoc {
    * @returns {DocumentChange} The change with `verNum` as indicated.
    */
   async _impl_changeRead(verNum) {
-    this._readIfNecessary();
+    await this._readIfNecessary();
 
     VersionNumber.maxExc(verNum, this._changes.length);
     return this._changes[verNum];
@@ -111,7 +140,7 @@ export default class LocalDoc extends BaseDoc {
    * @param {DocumentChange} change The change to write.
    */
   async _impl_changeAppend(change) {
-    this._readIfNecessary();
+    await this._readIfNecessary();
 
     if (change.verNum !== this._changes.length) {
       throw new Error(`Invalid version number: ${change.verNum}.`);
@@ -150,55 +179,65 @@ export default class LocalDoc extends BaseDoc {
   /**
    * Reads the document if it is not yet loaded.
    */
-  _readIfNecessary() {
+  async _readIfNecessary() {
     if (this._changes !== null) {
-      // No need.
+      // Alread in memory; no need to read.
       return;
     }
 
-    if (this._existsSync()) {
-      this._log.detail('Reading from disk...');
-
-      const encoded = fs.readFileSync(this._path);
-      let contents = null;
-
-      try {
-        contents = Decoder.decodeJson(encoded);
-        TObject.withExactKeys(contents, ['version', 'changes']);
-        if (contents.version !== this._formatVersion) {
-          this._log.warn('Ignoring data with a mismatched format version. ' +
-              `Got ${contents.version}, expected ${this._formatVersion}`);
-          contents = null;
-        }
-      } catch (e) {
-        this._log.warn('Ignoring malformed data (bad JSON or unversioned).', e);
-        contents = null;
-      }
-
-      if (contents === null) {
-        this._changes = [];
-        this._log.info('New document (because existing data is old or bad).');
-      } else {
-        // `slice(0)` makes a mutable clone. Ideally, we'd just use immutable
-        // data structures all the way through, but (TODO) this is reasonable
-        // for now.
-        this._changes = contents.changes.slice(0);
-        this._log.info('Read from disk.');
-      }
-    } else {
-      // File doesn't actually exist. Just initialize an empty change list.
-      this._changes = [];
-      this._log.info('New document.');
+    if (this._changesPromise === null) {
+      // This is the first time we've needed the changes. Initiate a read.
+      this._changesPromise = this._readDocument();
     }
+
+    // Wait for the pending read to complete.
+    await this._changesPromise;
   }
 
   /**
-   * Synchronous version of `.exists()`. TODO: Remove this once the class is
-   * fully `async`.
+   * Reads the document file, returning the document contents (an array of
+   * changes).
    *
-   * @returns {boolean} `true` iff this document exists.
+   * @returns {array<DocumentChange>} The document contents.
    */
-  _existsSync() {
-    return fs.existsSync(this._path);
+  async _readDocument() {
+    if (!await afs.exists(this._path)) {
+      // File doesn't actually exist. Just initialize an empty change list.
+      this._changes = [];
+      this._log.info('New document.');
+      return this._changes;
+    }
+
+    // The file exists. Read it and attempt to parse it.
+    this._log.detail('Reading from disk...');
+
+    const encoded = await fs.readFile(this._path);
+    let contents = null;
+
+    try {
+      contents = Decoder.decodeJson(encoded);
+      TObject.withExactKeys(contents, ['version', 'changes']);
+      if (contents.version !== this._formatVersion) {
+        this._log.warn('Ignoring data with a mismatched format version. ' +
+            `Got ${contents.version}, expected ${this._formatVersion}`);
+        contents = null;
+      }
+    } catch (e) {
+      this._log.warn('Ignoring malformed data (bad JSON or unversioned).', e);
+      contents = null;
+    }
+
+    if (contents === null) {
+      this._changes = [];
+      this._log.info('New document (because existing data is old or bad).');
+    } else {
+      // `slice(0)` makes a mutable clone. Ideally, we'd just use immutable
+      // data structures all the way through, but (TODO) this is reasonable
+      // for now.
+      this._changes = contents.changes.slice(0);
+      this._log.info('Read from disk.');
+    }
+
+    return this._changes;
   }
 }

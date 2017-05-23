@@ -34,7 +34,8 @@ export default class BaseDoc extends CommonBase {
   }
 
   /**
-   * Indicates whether or not this document exists in the store.
+   * Indicates whether or not this document exists in the store. Calling this
+   * method will _not_ cause a non-existent document to come into existence.
    *
    * @returns {boolean} `true` iff this document exists.
    */
@@ -74,15 +75,24 @@ export default class BaseDoc extends CommonBase {
   }
 
   /**
-   * The version number of this document. This is the largest value `n` for
-   * which `this.changeRead(n)` is valid. If the document has no changes at all,
-   * this method returns `null`.
+   * Gets the current version number of this document. This is the largest value
+   * `n` for which `this.changeRead(n)` is definitely valid. If the document has
+   * no changes at all, this method returns `null`.
+   *
+   * With regard to "definitely" above, at the moment a call to this method is
+   * complete, it is possible for there to _already_ be document changes in
+   * flight, which will be serviced asynchronously. This notably means that,
+   * should the result of a call to this method be subsequently used as part of
+   * an _asynchronous_ call, by the time that _that_ call is executed, the
+   * current version number may no longer be the same. Hence, it is imperative
+   * for code to _not_ assume a stable version number when any asynchrony is
+   * possible.
    *
    * @returns {Int|null} The version number of this document or `null` if the
    *   document is empty.
    */
-  currentVerNum() {
-    return VersionNumber.orNull(this._impl_currentVerNum());
+  async currentVerNum() {
+    return VersionNumber.orNull(await this._impl_currentVerNum());
   }
 
   /**
@@ -92,7 +102,7 @@ export default class BaseDoc extends CommonBase {
    * @returns {Int|null} The version number of this document or `null` if the
    *   document is empty.
    */
-  _impl_currentVerNum() {
+  async _impl_currentVerNum() {
     return this._mustOverride();
   }
 

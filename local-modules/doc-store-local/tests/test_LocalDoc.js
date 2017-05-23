@@ -44,18 +44,18 @@ describe('doc-store-local/LocalDoc', () => {
   describe('changeAppend(change)', () => {
     it('should increment the version after a change is applied', async () => {
       const doc = new LocalDoc('0', '0', documentPath());
-      const oldVersion = doc.currentVerNum();
+      const oldVersion = await doc.currentVerNum();
 
       // Docs start off with a null version number.
       assert.isNull(oldVersion);
       await addChangeToDocument(doc);
 
-      let newVersion = doc.currentVerNum();
+      let newVersion = await doc.currentVerNum();
 
       assert.strictEqual(newVersion, 0);
 
       await addChangeToDocument(doc);
-      newVersion = doc.currentVerNum();
+      newVersion = await doc.currentVerNum();
       assert.strictEqual(newVersion, 1);
     });
 
@@ -77,10 +77,10 @@ describe('doc-store-local/LocalDoc', () => {
       const doc = new LocalDoc('0', '0', documentPath());
 
       await addChangeToDocument(doc);
-      assert.strictEqual(doc.currentVerNum(), 0); // Baseline assumption.
+      assert.strictEqual(await doc.currentVerNum(), 0); // Baseline assumption.
 
       await doc.create();
-      assert.isNull(doc.currentVerNum()); // The real test.
+      assert.isNull(await doc.currentVerNum()); // The real test.
     });
   });
 });
@@ -93,5 +93,6 @@ async function addChangeToDocument(doc) {
   const ts = Timestamp.now();
   const changes = [{ 'insert': 'hold on to your butts!' }];
 
-  await doc.changeAppend(VersionNumber.after(doc.currentVerNum()), ts, changes, null);
+  await doc.changeAppend(
+    VersionNumber.after(await doc.currentVerNum()), ts, changes, null);
 }
