@@ -77,7 +77,29 @@ export default class LocalDoc extends BaseDoc {
    * @returns {boolean} `true` iff this document exists.
    */
   async _impl_exists() {
-    return afs.exists(this._path);
+    // Start by checking the existence of the file. We do this first, so that
+    // the subsequent logic can be synchronous.
+    const fileExists = await afs.exists(this._path);
+
+    if (this._changes !== null) {
+      // Whether or not the file exists, the document is considered to exist
+      // because it has a non-empty in-memory model. (For example, it might have
+      // been `create()`d but not yet stored to disk.)
+      return true;
+    } else if (!fileExists) {
+      // The file doesn't exist, and (per above) there's no in-memory model.
+      return false;
+    } else {
+      // The file exists, but we don't know if it's valid. Let the document
+      // reader code make that determination. An error in reading indicates that
+      // the document doesn't effectively exist.
+      try {
+        await this._readIfNecessary();
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
   }
 
   /**

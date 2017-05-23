@@ -34,7 +34,8 @@ export default class BaseDoc extends CommonBase {
   }
 
   /**
-   * Indicates whether or not this document exists in the store.
+   * Indicates whether or not this document exists in the store. Calling this
+   * method will _not_ cause a non-existent document to come into existence.
    *
    * @returns {boolean} `true` iff this document exists.
    */
