@@ -4,13 +4,17 @@
 
 import weak from 'weak';
 
-import { Timestamp } from 'doc-common';
+import { FrozenDelta, Timestamp } from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
 import { TBoolean, TString } from 'typecheck';
 import { Singleton } from 'util-common';
 
 import DocControl from './DocControl';
+
+/** {FrozenDelta} Message used as document instead of migrating old versions. */
+const MIGRATION_NOTE = FrozenDelta.coerce(
+  [{ insert: '(Recreated document due to format version skew.)\n' }]);
 
 /** {Logger} Logger for this module. */
 const log = new Logger('doc-server');
@@ -85,6 +89,14 @@ export default class DocServer extends Singleton {
 
     if (await docStorage.exists()) {
       log.info(`Retrieving document: ${docId}`);
+      if (await docStorage.needsMigration()) {
+        // **TODO:** Ultimately, this code path will evolve into forward
+        // migration of documents found to be in older formats. For now, we just
+        // recreate the document and note what's going on in the contents.
+        log.info('Needs migration. (But just noting that fact for now.)');
+        await docStorage.create();
+        await docStorage.changeAppend(0, Timestamp.now(), MIGRATION_NOTE, null);
+      }
     } else {
       if (!initIfMissing) {
         log.info(`No document: ${docId}`);

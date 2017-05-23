@@ -64,6 +64,13 @@ export default class LocalDoc extends BaseDoc {
      */
     this._dirty = false;
 
+    /**
+     * Does the document need to be "migrated?" In this case, `true` indicates
+     * that the document file exists but could not actually be read and parsed
+     * successfully. This variable is set in `_readDocument()`.
+     */
+    this._needsMigration = null;
+
     /** {Logger} Logger specific to this document's ID. */
     this._log = log.withPrefix(`[${docId}]`);
 
@@ -151,6 +158,16 @@ export default class LocalDoc extends BaseDoc {
   }
 
   /**
+   * Implementation as required by the superclass.
+   *
+   * @returns {boolean} `true` iff the document needs migration.
+   */
+  async _impl_needsMigration() {
+    await this._readIfNecessary();
+    return this._needsMigration;
+  }
+
+  /**
    * Indicates that the document is "dirty" and needs to be written.
    */
   _needsWrite() {
@@ -204,6 +221,7 @@ export default class LocalDoc extends BaseDoc {
     if (!await afs.exists(this._path)) {
       // File doesn't actually exist. Just initialize an empty change list.
       this._changes = [];
+      this._needsMigration = false;
       this._log.info('New document.');
       return this._changes;
     }
@@ -211,8 +229,9 @@ export default class LocalDoc extends BaseDoc {
     // The file exists. Read it and attempt to parse it.
     this._log.detail('Reading from disk...');
 
-    const encoded = await fs.readFile(this._path);
+    const encoded = await afs.readFile(this._path);
     let contents = null;
+    let needsMigration = true;
 
     try {
       contents = Decoder.decodeJson(encoded);
@@ -235,9 +254,11 @@ export default class LocalDoc extends BaseDoc {
       // data structures all the way through, but (TODO) this is reasonable
       // for now.
       this._changes = contents.changes.slice(0);
+      needsMigration = false;
       this._log.info('Read from disk.');
     }
 
+    this._needsMigration = needsMigration;
     return this._changes;
   }
 }

@@ -179,4 +179,27 @@ export default class BaseDoc extends CommonBase {
   async _impl_changeAppend(change) {
     this._mustOverride(change);
   }
+
+  /**
+   * Indicates whether this document needs migration. That is, this returns
+   * `true` if the document is in a format that is not directly recognized by
+   * this class.
+   *
+   * @returns {boolean} `true` iff the document needs migration.
+   */
+  async needsMigration() {
+    // This is just a pass-through. The point is to maintain the pattern of
+    // `_impl_` as the things that subclasses override.
+    return this._impl_needsMigration();
+  }
+
+  /**
+   * Main implementation of `needsMigration()`.
+   *
+   * @abstract
+   * @returns {boolean} `true` iff the document needs migration.
+   */
+  async _impl_needsMigration() {
+    return this._mustOverride();
+  }
 }

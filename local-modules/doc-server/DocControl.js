@@ -18,7 +18,9 @@ export default class DocControl extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {BaseDoc} docStorage The underlying document storage.
+   * @param {BaseDoc} docStorage The underlying document storage. The document
+   *   must exist (that is `docStorage().exists()` returns `true`) prior to
+   *   calling this constructor.
    */
   constructor(docStorage) {
     super();
@@ -74,19 +76,10 @@ export default class DocControl extends CommonBase {
       : VersionNumber.maxInc(verNum, currentVerNum);
 
     if (verNum === null) {
-      // This is an entirely empty document (probably because we're running in
-      // a development environment and we found that the persistent data
-      // wasn't in the latest format), and we got here because `verNum` wasn't
-      // passed (that is, the client is asking for the latest version). We set
-      // up a first version here and change `verNum` to `0`, which will
-      // propagate through the rest of the code and end up making everything all
-      // work out.
-      await this._doc.changeAppend(
-        0,
-        Timestamp.now(),
-        [{ insert: '(Recreated document due to format version skew.)\n' }],
-        null);
-      verNum = 0;
+      // This is an entirely empty document, which per the `doc-store` interface
+      // should never happen. (Documents always come into existence with at
+      // least one change.)
+      throw new Error('Cannot snapshot empty document.');
     }
 
     // Search backward through the full versions for a base for forward
