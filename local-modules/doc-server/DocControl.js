@@ -211,7 +211,6 @@ export default class DocControl extends CommonBase {
     // (because of the `await`).
     const dClient     = delta;
     const vBaseNum    = baseVerNum;
-    const vBase       = (await this.snapshot(vBaseNum)).contents;
     const vCurrentNum = this._doc.currentVerNum();
 
     // (1)
@@ -235,7 +234,8 @@ export default class DocControl extends CommonBase {
     const vNext = vNextSnapshot.contents;
 
     // (4)
-    const vExpected   = FrozenDelta.coerce(vBase).compose(dClient);
+    const vBase       = (await this.snapshot(vBaseNum)).contents;
+    const vExpected   = vBase.compose(dClient);
     const dCorrection = FrozenDelta.coerce(vExpected.diff(vNext));
     const vResultNum  = vNextNum;
 
