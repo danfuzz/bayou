@@ -3,7 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import afs from 'async-file';
-import fs from 'fs';
 
 import { Decoder, Encoder } from 'api-common';
 import { VersionNumber } from 'doc-common';
@@ -105,6 +104,9 @@ export default class LocalDoc extends BaseDoc {
    */
   async _impl_create(firstChange) {
     this._changes = [firstChange];
+
+    // **Note:** This call _synchronously_ (and promptly) indicates that writing
+    // needs to happen, but the actual writing takes place asynchronously.
     this._needsWrite();
   }
 
@@ -145,6 +147,9 @@ export default class LocalDoc extends BaseDoc {
     }
 
     this._changes[change.verNum] = change;
+
+    // **Note:** This call _synchronously_ (and promptly) indicates that writing
+    // needs to happen, but the actual writing takes place asynchronously.
     this._needsWrite();
   }
 
@@ -159,11 +164,14 @@ export default class LocalDoc extends BaseDoc {
   }
 
   /**
-   * Indicates that the document is "dirty" and needs to be written.
+   * Indicates that the document is "dirty" and needs to be written. This
+   * method acts (and returns) promptly. It will kick off a timed callback
+   * to actually perform the writing operation if one isn't already pending.
    */
   _needsWrite() {
     if (this._dirty) {
-      // Already marked dirty. Nothing more to do.
+      // Already marked dirty, which means there's nothing more to do. When
+      // the already-scheduled timer fires, it will pick up the current change.
       this._log.detail('Already marked dirty.');
       return;
     }
@@ -171,17 +179,59 @@ export default class LocalDoc extends BaseDoc {
     // Mark the document dirty, and queue up the writer.
 
     this._dirty = true;
-    this._log.detail('Marked dirty.');
+    this._log.info(`Marked dirty at version ${this._changes.length}.`);
+    this._waitThenWrite();
+  }
 
-    PromDelay.resolve(DIRTY_DELAY_MSEC).then(() => {
-      this._log.detail('Writing to disk...');
+  /**
+   * Waits for a moment, and then writes the then-current version of the
+   * document. The return value becomes resolved once writing is complete.
+   *
+   * **Note:** As of this writing, the return value isn't used, but ultimately
+   * we will probably want to notice if it throws an exception instead of
+   * letting problems just vaporize via unhandled promises.
+   *
+   * @returns {true} `true`, upon successful writing.
+   */
+  async _waitThenWrite() {
+    // Wait for the prescribed amount of time.
+    await PromDelay.resolve(DIRTY_DELAY_MSEC);
 
-      const contents = { version: this._formatVersion, changes: this._changes };
-      const encoded = Encoder.encodeJson(contents, true);
-      fs.writeFileSync(this._path, encoded, { encoding: 'utf8' });
-      this._dirty = false;
-      this._log.info('Written to disk.');
-    });
+    // Perform the file write.
+
+    const changes     = this._changes;
+    const version     = this._formatVersion;
+    const encoded     = Encoder.encodeJson({ version, changes }, true);
+
+    // These are for dirty/clean verification. See big comment below.
+    const changeCount = changes.length;
+    const firstChange = changes[0];
+
+    this._log.detail('Writing to disk...');
+    await afs.writeFile(this._path, encoded, { encoding: 'utf8' });
+    this._log.info(`Wrote version ${changes.length}.`);
+
+    // The tricky bit: We need to check to see if the document got modified
+    // during the file write operation, because if we don't and just reset the
+    // dirty flag, we will fail to write the new version until the _next_ time
+    // the document changes. We check two things to make the determination:
+    //
+    // * The version number (length of changes array). Different lengths mean
+    //   we are still dirty.
+    //
+    // * The first change as stored in the instance. If this isn't the same as
+    //   what we wrote, it means that the document was re-created.
+
+    if ((changeCount !== changes.length) || (firstChange !== changes[0])) {
+      // The document was modified while writing was underway. We just recurse
+      // to guarantee that the new version isn't lost.
+      this._log.info('Document modified during write operation.');
+      return this._waitThenWrite();
+    }
+
+    // The usual case: Everything is fine.
+    this._dirty = false;
+    return true;
   }
 
   /**
