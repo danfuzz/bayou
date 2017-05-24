@@ -137,13 +137,17 @@ export default class LocalDoc extends BaseDoc {
   /**
    * Implementation as required by the superclass.
    *
-   * @param {DocumentChange} change The change to write.
+   * @param {DocumentChange} change The change to append.
+   * @returns {boolean} `true` if the append was successful, or `false` if it
+   *   was not due to `change` having an incorrect `verNum`.
    */
   async _impl_changeAppend(change) {
     await this._readIfNecessary();
 
     if (change.verNum !== this._changes.length) {
-      throw new Error(`Invalid version number: ${change.verNum}.`);
+      // Not the right `verNum`. This is typically because there was an append
+      // race, and this is the losing side.
+      return false;
     }
 
     this._changes[change.verNum] = change;
@@ -151,6 +155,8 @@ export default class LocalDoc extends BaseDoc {
     // **Note:** This call _synchronously_ (and promptly) indicates that writing
     // needs to happen, but the actual writing takes place asynchronously.
     this._needsWrite();
+
+    return true;
   }
 
   /**

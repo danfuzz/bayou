@@ -289,16 +289,20 @@ export default class DocControl extends CommonBase {
    * @returns {Int} The version number after appending `delta`.
    */
   async _appendDelta(baseVerNum, delta, authorId) {
-    const verNum = VersionNumber.after(baseVerNum);
-    authorId = TString.orNull(authorId);
-    delta = FrozenDelta.coerce(delta);
-
-    if (!delta.isEmpty()) {
-      await this._doc.changeAppend(
-        new DocumentChange(verNum, Timestamp.now(), delta, authorId));
-      this._changeCondition.value = true;
+    if (delta.isEmpty()) {
+      return baseVerNum;
     }
 
+    const verNum = VersionNumber.after(baseVerNum);
+    const appendResult = await this._doc.changeAppend(
+      new DocumentChange(verNum, Timestamp.now(), delta, authorId));
+
+    if (!appendResult) {
+      // We lost an append race.
+      throw new Error('Incorrect version number for delta.');
+    }
+
+    this._changeCondition.value = true;
     return verNum;
   }
 }
