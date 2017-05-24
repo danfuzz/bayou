@@ -212,15 +212,15 @@ export default class LocalDoc extends BaseDoc {
 
     this._log.detail('Writing to disk...');
     await afs.writeFile(this._path, encoded, { encoding: 'utf8' });
-    this._log.info(`Wrote version ${changes.length}.`);
+    this._log.info(`Wrote version ${changeCount - 1}.`);
 
     // The tricky bit: We need to check to see if the document got modified
     // during the file write operation, because if we don't and just reset the
     // dirty flag, we will fail to write the new version until the _next_ time
     // the document changes. We check two things to make the determination:
     //
-    // * The version number (length of changes array). Different lengths mean
-    //   we are still dirty.
+    // * The length of the changes array. Different lengths mean we are still
+    //   dirty.
     //
     // * The first change as stored in the instance. If this isn't the same as
     //   what we wrote, it means that the document was re-created.
