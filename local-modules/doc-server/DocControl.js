@@ -215,8 +215,8 @@ export default class DocControl extends CommonBase {
     }
 
     // (3)
-    const vNextNum = await this._appendDelta(vBaseNum, dNext, authorId);
-    const vNextSnapshot = await this.snapshot();
+    const vNextNum = await this._appendDelta(vCurrentNum, dNext, authorId);
+    const vNextSnapshot = await this.snapshot(vNextNum);
     const vNext = vNextSnapshot.contents;
 
     // (4)
