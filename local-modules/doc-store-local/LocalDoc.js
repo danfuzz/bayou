@@ -180,6 +180,9 @@ export default class LocalDoc extends BaseDoc {
 
     this._dirty = true;
     this._log.info(`Marked dirty at version ${this._changes.length}.`);
+
+    // **TODO:** If we want to catch write errors (e.g. filesystem full), here
+    // is where we need to do it.
     this._waitThenWrite();
   }
 
