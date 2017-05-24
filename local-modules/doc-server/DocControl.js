@@ -5,14 +5,29 @@
 import { DeltaResult, DocumentChange, FrozenDelta, Snapshot, Timestamp, VersionNumber }
   from 'doc-common';
 import { BaseDoc } from 'doc-store';
+import { Logger } from 'see-all';
 import { TString } from 'typecheck';
-import { CommonBase, PromCondition } from 'util-common';
+import { CommonBase, PromCondition, PromDelay } from 'util-common';
 
+/** {Logger} Logger for this module. */
+const log = new Logger('doc-control');
+
+/** {number} Initial amount of time (in msec) between append retries. */
+const INITIAL_APPEND_RETRY_MSEC = 50;
+
+/** {number} Growth factor for append retry delays. */
+const APPEND_RETRY_GROWTH_FACTOR = 5;
+
+/**
+ * {number} Maximum amount of time to spend (in msec) retrying append
+ * operations.
+ */
+const MAX_APPEND_TIME_MSEC = 20 * 1000; // 20 seconds.
 
 /**
  * Controller for a given document. There is only ever exactly one instance of
  * this class per document, no matter how many active editors there are on that
- * document.
+ * document. (This guarantee is provided by `DocServer`.)
  */
 export default class DocControl extends CommonBase {
   /**
@@ -41,6 +56,11 @@ export default class DocControl extends CommonBase {
      * along, it gets set to `false`.
      */
     this._changeCondition = new PromCondition(true);
+
+    /** {Logger} Logger specific to this document's ID. */
+    this._log = log.withPrefix(`[${this._doc.id}]`);
+
+    this._log.detail('Constructed.');
   }
 
   /** {string} The ID of the document that this instance represents. */
@@ -99,20 +119,24 @@ export default class DocControl extends CommonBase {
       : this._composeVersions(base.contents,     base.verNum + 1, verNum + 1);
     const result = new Snapshot(verNum, await contents);
 
+    this._log.detail(`Made snapshot for version ${verNum}.`);
+
     this._snapshots[verNum] = result;
     return result;
   }
 
   /**
-   * Returns a promise for a snapshot of any version after the given
-   * `baseVerNum`, and relative to that version. If called when `baseVerNum`
-   * is the current version, this will not resolve the result promise until at
-   * least one change has been made.
+   * Returns a promise for a version &mdash; any version &mdash; of the document
+   * after the given `baseVerNum`, with the return result represented as a delta
+   * relative to that given version. If called when `baseVerNum` is the current
+   * version, this will not resolve the result promise until at least one change
+   * has been made.
    *
    * @param {Int} baseVerNum Version number for the document.
    * @returns {DeltaResult} Delta and associated version number. The result's
-   *  `delta` can be applied to version `baseVerNum` to produce version `verNum`
-   *  of the document.
+   *   `verNum` is guaranteed to be at least one more than `baseVerNum` (and
+   *   could possibly be even larger.) The result's `delta` can be applied to
+   *   version `baseVerNum` to produce version `verNum` of the document.
    */
   async deltaAfter(baseVerNum) {
     const currentVerNum = await this._doc.currentVerNum();
@@ -158,17 +182,83 @@ export default class DocControl extends CommonBase {
    *   delta has been applied to the document.
    */
   async applyDelta(baseVerNum, delta, authorId) {
-    const currentVerNum = await this._doc.currentVerNum();
-    VersionNumber.maxInc(baseVerNum, currentVerNum);
+    // Very basic argument validation. Once in the guts of the thing, we will
+    // discover (and properly complain) if there are deeper problems with them.
+    VersionNumber.check(baseVerNum);
+    FrozenDelta.check(delta);
+    TString.orNull(authorId);
 
-    delta = FrozenDelta.check(delta);
-    authorId = TString.orNull(authorId);
+    // We try performing the apply, and then we iterate if it failed _and_ the
+    // reason is simply that there were any changes that got made while we were
+    // in the middle of the attempt. Any other problems are transparently thrown
+    // to the caller.
+    let retryDelayMsec = INITIAL_APPEND_RETRY_MSEC;
+    let retryTotalMsec = 0;
+    let attemptCount = 0;
+    for (;;) {
+      attemptCount++;
+      if (attemptCount !== 1) {
+        this._log.info(`Append attempt #${attemptCount}.`);
+      }
 
-    if (baseVerNum === currentVerNum) {
+      const snapshotProm = this.snapshot();
+      const result = await this._applyDeltaTo(
+        baseVerNum, delta, authorId, snapshotProm);
+
+      if (result !== null) {
+        return result;
+      }
+
+      // A `null` result from the call means that we lost an append race (that
+      // is, there was version skew between the snapshot and the latest reality
+      // at the moment of attempted appending), so we delay briefly and iterate.
+
+      if (retryTotalMsec >= MAX_APPEND_TIME_MSEC) {
+        // ...except if these attempts have taken wayyyy too long. If we land
+        // here, it's probably due to a bug (but not a total given).
+        throw new Error('Too many failed attempts in `applyDelta()`.');
+      }
+
+      this._log.info(`Sleeping ${retryDelayMsec} msec.`);
+      await PromDelay.resolve(retryDelayMsec);
+      retryTotalMsec += retryDelayMsec;
+      retryDelayMsec *= APPEND_RETRY_GROWTH_FACTOR;
+    }
+  }
+
+  /**
+   * Main implementation of `applyDelta()`, which takes as an additional
+   * argument a promise for a snapshot which represents the latest version at
+   * the moment it resolves. This method attempts to perform change application
+   * relative to that snapshot. If it succeeds (that is, if the snapshot still
+   * is the latest at the moment of attempted application), then this method
+   * returns a proper result of `applyDelta()`. If it fails due to the snapshot
+   * being out-of-date, then this method returns `null`. All other problems are
+   * reported by throwing an exception.
+   *
+   * @param {Int} baseVerNum Same as for `applyDelta()`.
+   * @param {FrozenDelta} delta Same as for `applyDelta()`.
+   * @param {string|null} authorId Same as for `applyDelta()`.
+   * @param {Promise<Snapshot>} snapshotProm Promise for the latest snapshot.
+   * @returns {DeltaResult|null} Result for the outer call to `applyDelta()`,
+   *   or `null` if the application failed due to an out-of-date `snapshot`.
+   */
+  async _applyDeltaTo(baseVerNum, delta, authorId, snapshotProm) {
+    const snapshot = await snapshotProm;
+    VersionNumber.maxInc(baseVerNum, snapshot.verNum);
+
+    if (baseVerNum === snapshot.verNum) {
       // The easy case: Apply a delta to the current version (unless it's empty,
       // in which case we don't have to make a new version at all; that's
       // handled by `_appendDelta()`).
+
       const verNum = await this._appendDelta(baseVerNum, delta, authorId);
+
+      if (verNum === null) {
+        // Turns out we lost an append race.
+        return null;
+      }
+
       return new DeltaResult(verNum, FrozenDelta.EMPTY);
     }
 
@@ -191,13 +281,10 @@ export default class DocControl extends CommonBase {
     //    `vExpected` with `dCorrection` to arrive at `vNext`.
 
     // Assign variables from parameter and instance variables that correspond
-    // to the description immediately above. **Note:** We re-fetch the current
-    // version number here instead of just using `currentVerNum` above, because
-    // it is possible for the document to have been updated in the mean time
-    // (because of the `await`).
+    // to the description immediately above.
     const dClient     = delta;
     const vBaseNum    = baseVerNum;
-    const vCurrentNum = await this._doc.currentVerNum();
+    const vCurrentNum = snapshot.verNum;
 
     // (1)
     const dServer = await this._composeVersions(
@@ -215,9 +302,14 @@ export default class DocControl extends CommonBase {
     }
 
     // (3)
-    const vNextNum = await this._appendDelta(vBaseNum, dNext, authorId);
-    const vNextSnapshot = await this.snapshot();
-    const vNext = vNextSnapshot.contents;
+    const vNextNum = await this._appendDelta(vCurrentNum, dNext, authorId);
+
+    if (vNextNum === null) {
+      // Turns out we lost an append race.
+      return null;
+    }
+
+    const vNext = (await this.snapshot(vNextNum)).contents;
 
     // (4)
     const vBase       = (await this.snapshot(vBaseNum)).contents;
@@ -277,28 +369,37 @@ export default class DocControl extends CommonBase {
 
   /**
    * Appends a new delta to the document. Also forces `_changeCondition`
-   * `true` to release any waiters.
+   * `true` to release any waiters. On success, this returns the version number
+   * of the document after the append. On a failure due to `baseVerNum` not
+   * being current at the moment of application, this returns `null`. All other
+   * errors are reported via thrown errors. See `_applyDeltaTo()` above and
+   * `BaseDoc.changeAppend()` for further discussion.
    *
    * **Note:** If the delta is a no-op, then this method does nothing.
    *
-   * @param {Int} baseVerNum Version number which this is to apply to. It must
-   *   be the current document version number at the moment the change is
-   *   ultimately applied. See `BaseDoc.changeAppend()` for further discussion.
-   * @param {object} delta The delta to append.
+   * @param {Int} baseVerNum Version number which this is to apply to.
+   * @param {FrozenDelta} delta The delta to append.
    * @param {string|null} authorId The author of the delta.
-   * @returns {Int} The version number after appending `delta`.
+   * @returns {Int|null} The version number after appending `delta`, or `null`
+   *   if `baseVerNum` is out-of-date at the moment of attempted application
+   *   _and_ the `delta` is non-empty.
    */
   async _appendDelta(baseVerNum, delta, authorId) {
-    const verNum = VersionNumber.after(baseVerNum);
-    authorId = TString.orNull(authorId);
-    delta = FrozenDelta.coerce(delta);
-
-    if (!delta.isEmpty()) {
-      await this._doc.changeAppend(
-        new DocumentChange(verNum, Timestamp.now(), delta, authorId));
-      this._changeCondition.value = true;
+    if (delta.isEmpty()) {
+      return baseVerNum;
     }
 
+    const verNum = VersionNumber.after(baseVerNum);
+    const appendResult = await this._doc.changeAppend(
+      new DocumentChange(verNum, Timestamp.now(), delta, authorId));
+
+    if (!appendResult) {
+      // We lost an append race.
+      this._log.info(`Lost append race for version ${verNum}.`);
+      return null;
+    }
+
+    this._changeCondition.value = true;
     return verNum;
   }
 }

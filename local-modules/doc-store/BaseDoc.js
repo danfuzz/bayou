@@ -161,16 +161,10 @@ export default class BaseDoc extends CommonBase {
   }
 
   /**
-   * Appends a change. This will throw an exception if the given `verNum` (first
-   * argument) turns out not to be the actual appropriate next version. In
-   * addition, it is an error to call this method on a non-existent document;
-   * `create()` must be called (and must be successful) before attempting to
-   * call this method.
-   *
-   * **Note:** The (implicit) return value from this method is a promise that
-   * resolves once the append operation is complete, or becomes rejected with
-   * a reason describing the problem such as, notably, the `verNum` being
-   * invalid.
+   * Appends a change, if it is valid. On success, this returns `true`. On
+   * failure because the version number of the change is incorrect (presumably
+   * because this attempt represents the losing side of an append race), this
+   * returns `false`. All other problems are reported as thrown errors.
    *
    * **Note:** The reason `verNum` is passed explicitly instead of just
    * assumed to be correct is that, due to the asynchronous nature of the
@@ -181,7 +175,9 @@ export default class BaseDoc extends CommonBase {
    * `verNum - 1` but which got recorded as being applied to `verNum` and would
    * hence be incorrect.
    *
-   * @param {DocumentChange} change The change to write.
+   * @param {DocumentChange} change The change to append.
+   * @returns {boolean} `true` if the append was successful, or `false` if it
+   *   was not due to `change` having an incorrect `verNum`.
    */
   async changeAppend(change) {
     // It is invalid to ever use this method to append a change with
@@ -196,7 +192,7 @@ export default class BaseDoc extends CommonBase {
       throw new Error('Cannot ever append the very first version.');
     }
 
-    await this._impl_changeAppend(change);
+    return this._impl_changeAppend(change);
   }
 
   /**
@@ -204,18 +200,20 @@ export default class BaseDoc extends CommonBase {
    * structurally valid change instance with a `verNum` of at least `1`. Beyond
    * the minimum limit, `verNum` still has to be validated.
    *
-   * On that last point, `change` will have been constructed with a valid
-   * `verNum` at the time of construction, but due to the asynchronous nature of
-   * the system, it is possible for other changes to have been appended between
-   * change construction and the synchronous call to this method. Therefore, it
-   * is imperative to synchronously validate the version number just before
-   * accepting the change.
+   * On that last point, `change` will typically have been constructed with a
+   * valid `verNum` at the time of construction, but due to the asynchronous
+   * nature of the system, it is possible for other changes to have been
+   * appended between change construction and the synchronous call to this
+   * method. Therefore, it is imperative to synchronously validate the version
+   * number just before accepting the change.
    *
    * @abstract
-   * @param {DocumentChange} change The change to write.
+   * @param {DocumentChange} change The change to append.
+   * @returns {boolean} `true` if the append was successful, or `false` if it
+   *   was not due to `change` having an incorrect `verNum`.
    */
   async _impl_changeAppend(change) {
-    this._mustOverride(change);
+    return this._mustOverride(change);
   }
 
   /**
