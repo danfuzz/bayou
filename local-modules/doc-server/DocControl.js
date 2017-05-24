@@ -115,15 +115,17 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Returns a promise for a snapshot of any version after the given
-   * `baseVerNum`, and relative to that version. If called when `baseVerNum`
-   * is the current version, this will not resolve the result promise until at
-   * least one change has been made.
+   * Returns a promise for a version &mdash; any version &mdash; of the document
+   * after the given `baseVerNum`, with the return result represented as a delta
+   * relative to that given version. If called when `baseVerNum` is the current
+   * version, this will not resolve the result promise until at least one change
+   * has been made.
    *
    * @param {Int} baseVerNum Version number for the document.
    * @returns {DeltaResult} Delta and associated version number. The result's
-   *  `delta` can be applied to version `baseVerNum` to produce version `verNum`
-   *  of the document.
+   *   `verNum` is guaranteed to be at least one more than `baseVerNum` (and
+   *   could possibly be even larger.) The result's `delta` can be applied to
+   *   version `baseVerNum` to produce version `verNum` of the document.
    */
   async deltaAfter(baseVerNum) {
     const currentVerNum = await this._doc.currentVerNum();
