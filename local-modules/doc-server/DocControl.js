@@ -5,8 +5,12 @@
 import { DeltaResult, DocumentChange, FrozenDelta, Snapshot, Timestamp, VersionNumber }
   from 'doc-common';
 import { BaseDoc } from 'doc-store';
+import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase, PromCondition, PromDelay } from 'util-common';
+
+/** {Logger} Logger for this module. */
+const log = new Logger('doc-control');
 
 /** {number} Initial amount of time (in msec) between append retries. */
 const INITIAL_APPEND_RETRY_MSEC = 50;
@@ -52,6 +56,11 @@ export default class DocControl extends CommonBase {
      * along, it gets set to `false`.
      */
     this._changeCondition = new PromCondition(true);
+
+    /** {Logger} Logger specific to this document's ID. */
+    this._log = log.withPrefix(`[${this._doc.id}]`);
+
+    this._log.detail('Constructed.');
   }
 
   /** {string} The ID of the document that this instance represents. */
@@ -109,6 +118,8 @@ export default class DocControl extends CommonBase {
       ? this._composeVersions(FrozenDelta.EMPTY, 0,               verNum + 1)
       : this._composeVersions(base.contents,     base.verNum + 1, verNum + 1);
     const result = new Snapshot(verNum, await contents);
+
+    this._log.detail(`Made snapshot for version ${verNum}.`);
 
     this._snapshots[verNum] = result;
     return result;
@@ -183,7 +194,13 @@ export default class DocControl extends CommonBase {
     // to the caller.
     let retryDelayMsec = INITIAL_APPEND_RETRY_MSEC;
     let retryTotalMsec = 0;
+    let attemptCount = 0;
     for (;;) {
+      attemptCount++;
+      if (attemptCount !== 1) {
+        this._log.info(`Append attempt #${attemptCount}.`);
+      }
+
       const snapshotProm = this.snapshot();
       const result = await this._applyDeltaTo(
         baseVerNum, delta, authorId, snapshotProm);
@@ -202,6 +219,7 @@ export default class DocControl extends CommonBase {
         throw new Error('Too many failed attempts in `applyDelta()`.');
       }
 
+      this._log.info(`Sleeping ${retryDelayMsec} msec.`);
       await PromDelay.resolve(retryDelayMsec);
       retryTotalMsec += retryDelayMsec;
       retryDelayMsec *= APPEND_RETRY_GROWTH_FACTOR;
@@ -377,6 +395,7 @@ export default class DocControl extends CommonBase {
 
     if (!appendResult) {
       // We lost an append race.
+      this._log.info(`Lost append race for version ${verNum}.`);
       return null;
     }
 
