@@ -209,9 +209,9 @@ export default class DocControl extends CommonBase {
         this._log.info(`Append attempt #${attemptCount}.`);
       }
 
-      const currentProm = this.snapshot();
+      const current = await this.snapshot();
       const result =
-        await this._applyDeltaTo(base, delta, authorId, currentProm, expected);
+        await this._applyDeltaTo(base, delta, authorId, current, expected);
 
       if (result !== null) {
         return result;
@@ -249,20 +249,20 @@ export default class DocControl extends CommonBase {
    *   `applyDelta()`.
    * @param {FrozenDelta} delta Same as for `applyDelta()`.
    * @param {string|null} authorId Same as for `applyDelta()`.
-   * @param {Promise<Snapshot>} currentProm Promise for the current (latest)
-   *   snapshot.
+   * @param {Snapshot} current Snapshot of the current (latest) version of the
+   *   document.
    * @param {Snapshot} expected The implied expected result as defined by
    *   `applyDelta()`.
    * @returns {DeltaResult|null} Result for the outer call to `applyDelta()`,
    *   or `null` if the application failed due to an out-of-date `snapshot`.
    */
-  async _applyDeltaTo(base, delta, authorId, currentProm, expected) {
-    const current = await currentProm;
-
+  async _applyDeltaTo(base, delta, authorId, current, expected) {
     if (base.verNum === current.verNum) {
-      // The easy case: Apply a delta to the current version (unless it's empty,
-      // in which case we don't have to make a new version at all; that's
-      // handled by `_appendDelta()`).
+      // The easy case, because the base version is in fact the current version
+      // of the document, so we don't have to transform the incoming delta:
+      // Apply a delta to the current version (unless it's empty, in which case
+      // we don't even have to make a new version at all; that's handled by
+      // `_appendDelta()`).
 
       const verNum = await this._appendDelta(base.verNum, delta, authorId);
 
@@ -284,7 +284,7 @@ export default class DocControl extends CommonBase {
     //    * `vBase` -- Base version to apply the delta to.
     //    * `vCurrent` -- Current (latest) version of the document.
     //    * `vExpected` -- The implied expected result of application. This is
-    //      `vBase.compose(dClient)`.
+    //      `vBase.compose(dClient)` as version number `vBase.verNum + 1`.
     // 1. Construct a combined delta for all the server changes made between
     //    `vBase` and `vCurrent`. This is `dServer`.
     // 2. Transform (rebase) `dClient` with regard to (on top of) `dServer`.
