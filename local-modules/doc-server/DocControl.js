@@ -171,6 +171,12 @@ export default class DocControl extends CommonBase {
    * is to say, what the client would get if the delta were applied with no
    * intervening changes.
    *
+   * As a special case, as long as `baseVerNum` is valid, if `delta` is empty,
+   * this method returns a result of the same version number along with an
+   * empty "correction" delta. That is, the return value from passing an empty
+   * delta doesn't provide any information about subsequent versions of the
+   * document.
+   *
    * @param {Int} baseVerNum Version number which `delta` is with respect to.
    * @param {FrozenDelta} delta Delta indicating what has changed with respect
    *   to `baseVerNum`.
@@ -189,6 +195,12 @@ export default class DocControl extends CommonBase {
 
     // Snapshot of the base version. This call validates `baseVerNum`.
     const base = await this.snapshot(baseVerNum);
+
+    // Check for an empty `delta`. If it is, we don't bother trying to apply it.
+    // See method header comment for more info.
+    if (delta.isEmpty()) {
+      return new DeltaResult(baseVerNum, FrozenDelta.EMPTY);
+    }
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
@@ -259,10 +271,9 @@ export default class DocControl extends CommonBase {
   async _applyDeltaTo(base, delta, authorId, current, expected) {
     if (base.verNum === current.verNum) {
       // The easy case, because the base version is in fact the current version
-      // of the document, so we don't have to transform the incoming delta:
-      // Apply a delta to the current version (unless it's empty, in which case
-      // we don't even have to make a new version at all; that's handled by
-      // `_appendDelta()`).
+      // of the document, so we don't have to transform the incoming delta.
+      // We merely have to apply the given `delta` to the current version. If
+      // it succeeds, then we won the append race (if any).
 
       const verNum = await this._appendDelta(base.verNum, delta, authorId);
 
@@ -393,7 +404,9 @@ export default class DocControl extends CommonBase {
    * errors are reported via thrown errors. See `_applyDeltaTo()` above and
    * `BaseDoc.changeAppend()` for further discussion.
    *
-   * **Note:** If the delta is a no-op, then this method does nothing.
+   * **Note:** If the delta is a no-op, then this method throws an error,
+   * because the calling code should have handled that case without calling this
+   * method.
    *
    * @param {Int} baseVerNum Version number which this is to apply to.
    * @param {FrozenDelta} delta The delta to append.
@@ -404,7 +417,7 @@ export default class DocControl extends CommonBase {
    */
   async _appendDelta(baseVerNum, delta, authorId) {
     if (delta.isEmpty()) {
-      return baseVerNum;
+      throw new Error('Should not have been called with an empty delta.');
     }
 
     const verNum = VersionNumber.after(baseVerNum);
