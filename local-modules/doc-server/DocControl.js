@@ -309,8 +309,8 @@ export default class DocControl extends CommonBase {
     // 5. Return the version number of `vNext` along with the delta
     //    `dCorrection`.
 
-    // (0) Assign variables from parameter and instance variables that
-    // correspond to the description immediately above.
+    // (0) Assign incoming arguments to variables that correspond to the
+    //     description immediately above.
     const dClient   = delta;
     const vBase     = base;
     const vExpected = expected;
@@ -327,7 +327,9 @@ export default class DocControl extends CommonBase {
     const dNext = FrozenDelta.coerce(dServer.transform(dClient, true));
 
     if (dNext.isEmpty()) {
-      // It turns out that nothing changed.
+      // It turns out that nothing changed. **Note:** It is unclear whether this
+      // can actually happen in practice, given that we already return early
+      // (in `applyDelta()`) if we are asked to apply an empty delta.
       return new DeltaResult(vCurrent.verNum, FrozenDelta.EMPTY);
     }
 
