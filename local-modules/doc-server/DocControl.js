@@ -184,9 +184,11 @@ export default class DocControl extends CommonBase {
   async applyDelta(baseVerNum, delta, authorId) {
     // Very basic argument validation. Once in the guts of the thing, we will
     // discover (and properly complain) if there are deeper problems with them.
-    VersionNumber.check(baseVerNum);
     FrozenDelta.check(delta);
     TString.orNull(authorId);
+
+    // Snapshot of the base version. This call validates `baseVerNum`.
+    const base = await this.snapshot(baseVerNum);
 
     // We try performing the apply, and then we iterate if it failed _and_ the
     // reason is simply that there were any changes that got made while we were
@@ -202,8 +204,8 @@ export default class DocControl extends CommonBase {
       }
 
       const currentProm = this.snapshot();
-      const result = await this._applyDeltaTo(
-        baseVerNum, delta, authorId, currentProm);
+      const result =
+        await this._applyDeltaTo(base, delta, authorId, currentProm);
 
       if (result !== null) {
         return result;
@@ -236,7 +238,9 @@ export default class DocControl extends CommonBase {
    * the snapshot being out-of-date, then this method returns `null`. All other
    * problems are reported by throwing an exception.
    *
-   * @param {Int} baseVerNum Same as for `applyDelta()`.
+   * @param {Int} base Snapshot of the base from which the delta is defined.
+   *   That is, this is the snapshot of `baseVerNum` as provided to
+   *   `applyDelta()`.
    * @param {FrozenDelta} delta Same as for `applyDelta()`.
    * @param {string|null} authorId Same as for `applyDelta()`.
    * @param {Promise<Snapshot>} currentProm Promise for the current (latest)
@@ -244,16 +248,15 @@ export default class DocControl extends CommonBase {
    * @returns {DeltaResult|null} Result for the outer call to `applyDelta()`,
    *   or `null` if the application failed due to an out-of-date `snapshot`.
    */
-  async _applyDeltaTo(baseVerNum, delta, authorId, currentProm) {
+  async _applyDeltaTo(base, delta, authorId, currentProm) {
     const current = await currentProm;
-    VersionNumber.maxInc(baseVerNum, current.verNum);
 
-    if (baseVerNum === current.verNum) {
+    if (base.verNum === current.verNum) {
       // The easy case: Apply a delta to the current version (unless it's empty,
       // in which case we don't have to make a new version at all; that's
       // handled by `_appendDelta()`).
 
-      const verNum = await this._appendDelta(baseVerNum, delta, authorId);
+      const verNum = await this._appendDelta(base.verNum, delta, authorId);
 
       if (verNum === null) {
         // Turns out we lost an append race.
@@ -284,12 +287,12 @@ export default class DocControl extends CommonBase {
     // Assign variables from parameter and instance variables that correspond
     // to the description immediately above.
     const dClient     = delta;
-    const vBaseNum    = baseVerNum;
+    const vBase       = base;
     const vCurrentNum = current.verNum;
 
     // (1)
     const dServer = await this._composeVersions(
-      FrozenDelta.EMPTY, vBaseNum + 1, VersionNumber.after(vCurrentNum));
+      FrozenDelta.EMPTY, vBase.verNum + 1, VersionNumber.after(vCurrentNum));
 
     // (2)
 
@@ -313,8 +316,7 @@ export default class DocControl extends CommonBase {
     const vNext = (await this.snapshot(vNextNum)).contents;
 
     // (4)
-    const vBase       = (await this.snapshot(vBaseNum)).contents;
-    const vExpected   = vBase.compose(dClient);
+    const vExpected   = vBase.contents.compose(dClient);
     const dCorrection = FrozenDelta.coerce(vExpected.diff(vNext));
     const vResultNum  = vNextNum;
 
