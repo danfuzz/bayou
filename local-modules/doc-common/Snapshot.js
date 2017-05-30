@@ -31,9 +31,14 @@ export default class Snapshot extends CommonBase {
 
     // Explicitly check that the `contents` delta has the form of a "document,"
     // that is, the only operations are `insert`s. For very large documents,
-    // this might turn out to be a prohibitively slow operation, so... TODO:
-    // Evaluate how expensive this is in practice, and figure out a better
-    // tactic if need be.
+    // this might turn out to be a prohibitively slow operation, so...
+    //
+    // **TODO:** Evaluate how expensive this is in practice, and figure out a
+    // better tactic if need be.
+    //
+    // **TODO:** There is more to being valid than just being `isDocument()`,
+    // i.e. the ops themselves have to be valid in the contents of this project.
+    // That validity should also be enforced.
     if (!this._contents.isDocument()) {
       throw new Error(
         'Expected `contents` to be a "document" (insert-only delta).');

@@ -190,6 +190,12 @@ export default class DocControl extends CommonBase {
     // Snapshot of the base version. This call validates `baseVerNum`.
     const base = await this.snapshot(baseVerNum);
 
+    // Compose the implied expected result. This has the effect of validating
+    // the contents of `delta`.
+    const expected = new Snapshot(
+      VersionNumber.after(baseVerNum),
+      base.contents.compose(delta));
+
     // We try performing the apply, and then we iterate if it failed _and_ the
     // reason is simply that there were any changes that got made while we were
     // in the middle of the attempt. Any other problems are transparently thrown
@@ -205,7 +211,7 @@ export default class DocControl extends CommonBase {
 
       const currentProm = this.snapshot();
       const result =
-        await this._applyDeltaTo(base, delta, authorId, currentProm);
+        await this._applyDeltaTo(base, delta, authorId, currentProm, expected);
 
       if (result !== null) {
         return result;
@@ -238,17 +244,19 @@ export default class DocControl extends CommonBase {
    * the snapshot being out-of-date, then this method returns `null`. All other
    * problems are reported by throwing an exception.
    *
-   * @param {Int} base Snapshot of the base from which the delta is defined.
-   *   That is, this is the snapshot of `baseVerNum` as provided to
+   * @param {Snapshot} base Snapshot of the base from which the delta is
+   *   defined. That is, this is the snapshot of `baseVerNum` as provided to
    *   `applyDelta()`.
    * @param {FrozenDelta} delta Same as for `applyDelta()`.
    * @param {string|null} authorId Same as for `applyDelta()`.
    * @param {Promise<Snapshot>} currentProm Promise for the current (latest)
    *   snapshot.
+   * @param {Snapshot} expected The implied expected result as defined by
+   *   `applyDelta()`.
    * @returns {DeltaResult|null} Result for the outer call to `applyDelta()`,
    *   or `null` if the application failed due to an out-of-date `snapshot`.
    */
-  async _applyDeltaTo(base, delta, authorId, currentProm) {
+  async _applyDeltaTo(base, delta, authorId, currentProm, expected) {
     const current = await currentProm;
 
     if (base.verNum === current.verNum) {
@@ -271,6 +279,12 @@ export default class DocControl extends CommonBase {
     // the current version (hereafter, `vBase` for the common base and
     // `vCurrent` for the current version). Here's what we do:
     //
+    // 0. Definitions of input:
+    //    * `dClient` -- Delta to apply, as requested by the client.
+    //    * `vBase` -- Base version to apply the delta to.
+    //    * `vCurrent` -- Current (latest) version of the document.
+    //    * `vExpected` -- The implied expected result of application. This is
+    //      `vBase.compose(dClient)`.
     // 1. Construct a combined delta for all the server changes made between
     //    `vBase` and `vCurrent`. This is `dServer`.
     // 2. Transform (rebase) `dClient` with regard to (on top of) `dServer`.
@@ -278,19 +292,18 @@ export default class DocControl extends CommonBase {
     //    report that fact.
     // 3. Apply `dNext` to `vCurrent`, producing `vNext` as the new current
     //    server version.
-    // 4. Apply `dClient` to `vBase` to produce `vExpected`, that is, the result
-    //    that the client would have expected in the easy case. Construct a
-    //    delta from `vExpected` to `vNext` (that is, the diff). This is
-    //    `dCorrection`. This is what we return to the client; they will compose
-    //    `vExpected` with `dCorrection` to arrive at `vNext`.
+    // 4. Construct a delta from `vExpected` to `vNext` (that is, the diff).
+    //    This is `dCorrection`. This is what we return to the client; they will
+    //    compose `vExpected` with `dCorrection` to arrive at `vNext`.
     // 5. Return the version number of `vNext` along with the delta
     //    `dCorrection`.
 
-    // Assign variables from parameter and instance variables that correspond
-    // to the description immediately above.
-    const dClient  = delta;
-    const vBase    = base;
-    const vCurrent = current;
+    // (0) Assign variables from parameter and instance variables that
+    // correspond to the description immediately above.
+    const dClient   = delta;
+    const vBase     = base;
+    const vExpected = expected;
+    const vCurrent  = current;
 
     // (1)
     const dServer = await this._composeVersions(
@@ -318,8 +331,8 @@ export default class DocControl extends CommonBase {
     const vNext = await this.snapshot(vNextNum);
 
     // (4)
-    const vExpected   = vBase.contents.compose(dClient);
-    const dCorrection = FrozenDelta.coerce(vExpected.diff(vNext.contents));
+    const dCorrection =
+      FrozenDelta.coerce(vExpected.contents.diff(vNext.contents));
 
     // (5)
     return new DeltaResult(vNextNum, dCorrection);
