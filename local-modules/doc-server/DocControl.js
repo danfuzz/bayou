@@ -171,6 +171,12 @@ export default class DocControl extends CommonBase {
    * is to say, what the client would get if the delta were applied with no
    * intervening changes.
    *
+   * As a special case, as long as `baseVerNum` is valid, if `delta` is empty,
+   * this method returns a result of the same version number along with an
+   * empty "correction" delta. That is, the return value from passing an empty
+   * delta doesn't provide any information about subsequent versions of the
+   * document.
+   *
    * @param {Int} baseVerNum Version number which `delta` is with respect to.
    * @param {FrozenDelta} delta Delta indicating what has changed with respect
    *   to `baseVerNum`.
@@ -184,9 +190,23 @@ export default class DocControl extends CommonBase {
   async applyDelta(baseVerNum, delta, authorId) {
     // Very basic argument validation. Once in the guts of the thing, we will
     // discover (and properly complain) if there are deeper problems with them.
-    VersionNumber.check(baseVerNum);
     FrozenDelta.check(delta);
     TString.orNull(authorId);
+
+    // Snapshot of the base version. This call validates `baseVerNum`.
+    const base = await this.snapshot(baseVerNum);
+
+    // Check for an empty `delta`. If it is, we don't bother trying to apply it.
+    // See method header comment for more info.
+    if (delta.isEmpty()) {
+      return new DeltaResult(baseVerNum, FrozenDelta.EMPTY);
+    }
+
+    // Compose the implied expected result. This has the effect of validating
+    // the contents of `delta`.
+    const expected = new Snapshot(
+      VersionNumber.after(baseVerNum),
+      base.contents.compose(delta));
 
     // We try performing the apply, and then we iterate if it failed _and_ the
     // reason is simply that there were any changes that got made while we were
@@ -201,9 +221,9 @@ export default class DocControl extends CommonBase {
         this._log.info(`Append attempt #${attemptCount}.`);
       }
 
-      const snapshotProm = this.snapshot();
-      const result = await this._applyDeltaTo(
-        baseVerNum, delta, authorId, snapshotProm);
+      const current = await this.snapshot();
+      const result =
+        await this._applyDeltaTo(base, delta, authorId, current, expected);
 
       if (result !== null) {
         return result;
@@ -228,31 +248,34 @@ export default class DocControl extends CommonBase {
 
   /**
    * Main implementation of `applyDelta()`, which takes as an additional
-   * argument a promise for a snapshot which represents the latest version at
-   * the moment it resolves. This method attempts to perform change application
-   * relative to that snapshot. If it succeeds (that is, if the snapshot still
-   * is the latest at the moment of attempted application), then this method
-   * returns a proper result of `applyDelta()`. If it fails due to the snapshot
-   * being out-of-date, then this method returns `null`. All other problems are
-   * reported by throwing an exception.
+   * argument a promise for a snapshot which represents the current (latest)
+   * version at the moment it resolves. This method attempts to perform change
+   * application relative to that snapshot. If it succeeds (that is, if the
+   * snapshot is still current at the moment of attempted application), then
+   * this method returns a proper result of `applyDelta()`. If it fails due to
+   * the snapshot being out-of-date, then this method returns `null`. All other
+   * problems are reported by throwing an exception.
    *
-   * @param {Int} baseVerNum Same as for `applyDelta()`.
+   * @param {Snapshot} base Snapshot of the base from which the delta is
+   *   defined. That is, this is the snapshot of `baseVerNum` as provided to
+   *   `applyDelta()`.
    * @param {FrozenDelta} delta Same as for `applyDelta()`.
    * @param {string|null} authorId Same as for `applyDelta()`.
-   * @param {Promise<Snapshot>} snapshotProm Promise for the latest snapshot.
+   * @param {Snapshot} current Snapshot of the current (latest) version of the
+   *   document.
+   * @param {Snapshot} expected The implied expected result as defined by
+   *   `applyDelta()`.
    * @returns {DeltaResult|null} Result for the outer call to `applyDelta()`,
    *   or `null` if the application failed due to an out-of-date `snapshot`.
    */
-  async _applyDeltaTo(baseVerNum, delta, authorId, snapshotProm) {
-    const snapshot = await snapshotProm;
-    VersionNumber.maxInc(baseVerNum, snapshot.verNum);
+  async _applyDeltaTo(base, delta, authorId, current, expected) {
+    if (base.verNum === current.verNum) {
+      // The easy case, because the base version is in fact the current version
+      // of the document, so we don't have to transform the incoming delta.
+      // We merely have to apply the given `delta` to the current version. If
+      // it succeeds, then we won the append race (if any).
 
-    if (baseVerNum === snapshot.verNum) {
-      // The easy case: Apply a delta to the current version (unless it's empty,
-      // in which case we don't have to make a new version at all; that's
-      // handled by `_appendDelta()`).
-
-      const verNum = await this._appendDelta(baseVerNum, delta, authorId);
+      const verNum = await this._appendDelta(base.verNum, delta, authorId);
 
       if (verNum === null) {
         // Turns out we lost an append race.
@@ -267,6 +290,12 @@ export default class DocControl extends CommonBase {
     // the current version (hereafter, `vBase` for the common base and
     // `vCurrent` for the current version). Here's what we do:
     //
+    // 0. Definitions of input:
+    //    * `dClient` -- Delta to apply, as requested by the client.
+    //    * `vBase` -- Base version to apply the delta to.
+    //    * `vCurrent` -- Current (latest) version of the document.
+    //    * `vExpected` -- The implied expected result of application. This is
+    //      `vBase.compose(dClient)` as version number `vBase.verNum + 1`.
     // 1. Construct a combined delta for all the server changes made between
     //    `vBase` and `vCurrent`. This is `dServer`.
     // 2. Transform (rebase) `dClient` with regard to (on top of) `dServer`.
@@ -274,21 +303,22 @@ export default class DocControl extends CommonBase {
     //    report that fact.
     // 3. Apply `dNext` to `vCurrent`, producing `vNext` as the new current
     //    server version.
-    // 4. Apply `dClient` to `vBase` to produce `vExpected`, that is, the result
-    //    that the client would have expected in the easy case. Construct a
-    //    delta from `vExpected` to `vNext` (that is, the diff). This is
-    //    `dCorrection`. This is what we return to the client; they will compose
-    //    `vExpected` with `dCorrection` to arrive at `vNext`.
+    // 4. Construct a delta from `vExpected` to `vNext` (that is, the diff).
+    //    This is `dCorrection`. This is what we return to the client; they will
+    //    compose `vExpected` with `dCorrection` to arrive at `vNext`.
+    // 5. Return the version number of `vNext` along with the delta
+    //    `dCorrection`.
 
-    // Assign variables from parameter and instance variables that correspond
-    // to the description immediately above.
-    const dClient     = delta;
-    const vBaseNum    = baseVerNum;
-    const vCurrentNum = snapshot.verNum;
+    // (0) Assign incoming arguments to variables that correspond to the
+    //     description immediately above.
+    const dClient   = delta;
+    const vBase     = base;
+    const vExpected = expected;
+    const vCurrent  = current;
 
     // (1)
     const dServer = await this._composeVersions(
-      FrozenDelta.EMPTY, vBaseNum + 1, VersionNumber.after(vCurrentNum));
+      FrozenDelta.EMPTY, vBase.verNum + 1, VersionNumber.after(vCurrent.verNum));
 
     // (2)
 
@@ -297,27 +327,28 @@ export default class DocControl extends CommonBase {
     const dNext = FrozenDelta.coerce(dServer.transform(dClient, true));
 
     if (dNext.isEmpty()) {
-      // It turns out that nothing changed.
-      return new DeltaResult(vCurrentNum, FrozenDelta.EMPTY);
+      // It turns out that nothing changed. **Note:** It is unclear whether this
+      // can actually happen in practice, given that we already return early
+      // (in `applyDelta()`) if we are asked to apply an empty delta.
+      return new DeltaResult(vCurrent.verNum, FrozenDelta.EMPTY);
     }
 
     // (3)
-    const vNextNum = await this._appendDelta(vCurrentNum, dNext, authorId);
+    const vNextNum = await this._appendDelta(vCurrent.verNum, dNext, authorId);
 
     if (vNextNum === null) {
       // Turns out we lost an append race.
       return null;
     }
 
-    const vNext = (await this.snapshot(vNextNum)).contents;
+    const vNext = await this.snapshot(vNextNum);
 
     // (4)
-    const vBase       = (await this.snapshot(vBaseNum)).contents;
-    const vExpected   = vBase.compose(dClient);
-    const dCorrection = FrozenDelta.coerce(vExpected.diff(vNext));
-    const vResultNum  = vNextNum;
+    const dCorrection =
+      FrozenDelta.coerce(vExpected.contents.diff(vNext.contents));
 
-    return new DeltaResult(vResultNum, dCorrection);
+    // (5)
+    return new DeltaResult(vNextNum, dCorrection);
   }
 
   /**
@@ -375,7 +406,9 @@ export default class DocControl extends CommonBase {
    * errors are reported via thrown errors. See `_applyDeltaTo()` above and
    * `BaseDoc.changeAppend()` for further discussion.
    *
-   * **Note:** If the delta is a no-op, then this method does nothing.
+   * **Note:** If the delta is a no-op, then this method throws an error,
+   * because the calling code should have handled that case without calling this
+   * method.
    *
    * @param {Int} baseVerNum Version number which this is to apply to.
    * @param {FrozenDelta} delta The delta to append.
@@ -386,7 +419,7 @@ export default class DocControl extends CommonBase {
    */
   async _appendDelta(baseVerNum, delta, authorId) {
     if (delta.isEmpty()) {
-      return baseVerNum;
+      throw new Error('Should not have been called with an empty delta.');
     }
 
     const verNum = VersionNumber.after(baseVerNum);
