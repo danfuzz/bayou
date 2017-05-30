@@ -283,16 +283,18 @@ export default class DocControl extends CommonBase {
     //    delta from `vExpected` to `vNext` (that is, the diff). This is
     //    `dCorrection`. This is what we return to the client; they will compose
     //    `vExpected` with `dCorrection` to arrive at `vNext`.
+    // 5. Return the version number of `vNext` along with the delta
+    //    `dCorrection`.
 
     // Assign variables from parameter and instance variables that correspond
     // to the description immediately above.
-    const dClient     = delta;
-    const vBase       = base;
-    const vCurrentNum = current.verNum;
+    const dClient  = delta;
+    const vBase    = base;
+    const vCurrent = current;
 
     // (1)
     const dServer = await this._composeVersions(
-      FrozenDelta.EMPTY, vBase.verNum + 1, VersionNumber.after(vCurrentNum));
+      FrozenDelta.EMPTY, vBase.verNum + 1, VersionNumber.after(vCurrent.verNum));
 
     // (2)
 
@@ -302,25 +304,25 @@ export default class DocControl extends CommonBase {
 
     if (dNext.isEmpty()) {
       // It turns out that nothing changed.
-      return new DeltaResult(vCurrentNum, FrozenDelta.EMPTY);
+      return new DeltaResult(vCurrent.verNum, FrozenDelta.EMPTY);
     }
 
     // (3)
-    const vNextNum = await this._appendDelta(vCurrentNum, dNext, authorId);
+    const vNextNum = await this._appendDelta(vCurrent.verNum, dNext, authorId);
 
     if (vNextNum === null) {
       // Turns out we lost an append race.
       return null;
     }
 
-    const vNext = (await this.snapshot(vNextNum)).contents;
+    const vNext = await this.snapshot(vNextNum);
 
     // (4)
     const vExpected   = vBase.contents.compose(dClient);
-    const dCorrection = FrozenDelta.coerce(vExpected.diff(vNext));
-    const vResultNum  = vNextNum;
+    const dCorrection = FrozenDelta.coerce(vExpected.diff(vNext.contents));
 
-    return new DeltaResult(vResultNum, dCorrection);
+    // (5)
+    return new DeltaResult(vNextNum, dCorrection);
   }
 
   /**
