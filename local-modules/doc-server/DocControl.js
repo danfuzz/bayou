@@ -201,9 +201,9 @@ export default class DocControl extends CommonBase {
         this._log.info(`Append attempt #${attemptCount}.`);
       }
 
-      const snapshotProm = this.snapshot();
+      const currentProm = this.snapshot();
       const result = await this._applyDeltaTo(
-        baseVerNum, delta, authorId, snapshotProm);
+        baseVerNum, delta, authorId, currentProm);
 
       if (result !== null) {
         return result;
@@ -228,26 +228,27 @@ export default class DocControl extends CommonBase {
 
   /**
    * Main implementation of `applyDelta()`, which takes as an additional
-   * argument a promise for a snapshot which represents the latest version at
-   * the moment it resolves. This method attempts to perform change application
-   * relative to that snapshot. If it succeeds (that is, if the snapshot still
-   * is the latest at the moment of attempted application), then this method
-   * returns a proper result of `applyDelta()`. If it fails due to the snapshot
-   * being out-of-date, then this method returns `null`. All other problems are
-   * reported by throwing an exception.
+   * argument a promise for a snapshot which represents the current (latest)
+   * version at the moment it resolves. This method attempts to perform change
+   * application relative to that snapshot. If it succeeds (that is, if the
+   * snapshot is still current at the moment of attempted application), then
+   * this method returns a proper result of `applyDelta()`. If it fails due to
+   * the snapshot being out-of-date, then this method returns `null`. All other
+   * problems are reported by throwing an exception.
    *
    * @param {Int} baseVerNum Same as for `applyDelta()`.
    * @param {FrozenDelta} delta Same as for `applyDelta()`.
    * @param {string|null} authorId Same as for `applyDelta()`.
-   * @param {Promise<Snapshot>} snapshotProm Promise for the latest snapshot.
+   * @param {Promise<Snapshot>} currentProm Promise for the current (latest)
+   *   snapshot.
    * @returns {DeltaResult|null} Result for the outer call to `applyDelta()`,
    *   or `null` if the application failed due to an out-of-date `snapshot`.
    */
-  async _applyDeltaTo(baseVerNum, delta, authorId, snapshotProm) {
-    const snapshot = await snapshotProm;
-    VersionNumber.maxInc(baseVerNum, snapshot.verNum);
+  async _applyDeltaTo(baseVerNum, delta, authorId, currentProm) {
+    const current = await currentProm;
+    VersionNumber.maxInc(baseVerNum, current.verNum);
 
-    if (baseVerNum === snapshot.verNum) {
+    if (baseVerNum === current.verNum) {
       // The easy case: Apply a delta to the current version (unless it's empty,
       // in which case we don't have to make a new version at all; that's
       // handled by `_appendDelta()`).
@@ -284,7 +285,7 @@ export default class DocControl extends CommonBase {
     // to the description immediately above.
     const dClient     = delta;
     const vBaseNum    = baseVerNum;
-    const vCurrentNum = snapshot.verNum;
+    const vCurrentNum = current.verNum;
 
     // (1)
     const dServer = await this._composeVersions(
