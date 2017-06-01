@@ -133,4 +133,17 @@ export default class FrozenBuffer extends CommonBase {
     const buf = this._ensureBuffer();
     return buf.copy(target, targetStart, sourceStart, sourceEnd);
   }
+
+  /**
+   * Ensures that `_buffer` has been set.
+   *
+   * @returns {Buffer} The value of `_buffer`.
+   */
+  _ensureBuffer() {
+    if (this._buffer === null) {
+      this._buffer = Buffer.from(this._string, 'utf8');
+    }
+
+    return this._buffer;
+  }
 }
