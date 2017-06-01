@@ -56,14 +56,23 @@ export default class FrozenBuffer extends CommonBase {
     this._buffer = isBuffer ? Buffer.from(value) : value;
 
     /**
-     * {string|null} Hash code of the data, or `null` if not yet calculated.
+     * {string|null} Hashcode of the data, or `null` if not yet calculated.
      */
     this._hash = null;
 
     Object.seal(this);
   }
 
-  /** {string} The hash of the data. */
+  /** {string} Name of the hashing algorithm used by this instance. */
+  get hashName() {
+    return HASH_NAME;
+  }
+
+  /**
+   * {string} Hashcode of the data. This is a string of the form
+   * `<algorithm>-<hex>`, where the former names the hashing algorithm used and
+   * the latter is the lowercase-hex value of the hashcode per se.
+   */
   get hash() {
     if (this._hash === null) {
       const hash = crypto.createHash(HASH_NAME);
