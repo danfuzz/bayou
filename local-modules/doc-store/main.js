@@ -4,5 +4,6 @@
 
 import BaseDoc from './BaseDoc';
 import BaseDocStore from './BaseDocStore';
+import StoragePath from './StoragePath';
 
-export { BaseDoc, BaseDocStore };
+export { BaseDoc, BaseDocStore, StoragePath };
