@@ -6,6 +6,9 @@ import { DocumentChange, FrozenDelta, Timestamp, VersionNumber }
   from 'doc-common';
 import { TBoolean, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
+import { FrozenBuffer } from 'util-server';
+
+import StoragePath from './StoragePath';
 
 /**
  * Base class representing access to a particular document. Subclasses must
@@ -237,5 +240,37 @@ export default class BaseDoc extends CommonBase {
    */
   async _impl_needsMigration() {
     return this._mustOverride();
+  }
+
+  /**
+   * Writes a value at the indicated path, failing if there is already any
+   * value at the path other than the given one. In case of value-mismatch
+   * failure, this method returns `false`. All other problems are indicated by
+   * throwing errors.
+   *
+   * @param {string} path Path to write to.
+   * @param {FrozenBuffer} value Value to write.
+   * @returns {boolean} `true` if the write is successful, or `false` if it
+   *   failed due to the existence of a value mismatch.
+   */
+  async writeNew(path, value) {
+    StoragePath.check(path);
+    FrozenBuffer.check(value);
+
+    return this._impl_writeNew(path, value);
+  }
+
+  /**
+   * Main implementation of `writeNew()`. Arguments are guaranteed by the
+   * superclass to be valid.
+   *
+   * @abstract
+   * @param {string} path Path to write to.
+   * @param {FrozenBuffer} value Value to write.
+   * @returns {boolean} `true` if the write is successful, or `false` if it
+   *   failed due to the existence of a value mismatch.
+   */
+  async _impl_writeNew(path, value) {
+    return this._mustOverride(path, value);
   }
 }

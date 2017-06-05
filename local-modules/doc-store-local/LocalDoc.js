@@ -170,6 +170,25 @@ export default class LocalDoc extends BaseDoc {
   }
 
   /**
+   * Implementation as required by the superclass.
+   *
+   * @param {string} path Path to write to.
+   * @param {FrozenBuffer} value Value to write.
+   * @returns {boolean} `true` if the write is successful, or `false` if it
+   *   failed due to the existence of a value mismatch.
+   */
+  async _impl_writeNew(path, value) {
+    // TODO: Implement this!
+
+    // This keeps the linter happy.
+    if ((path === value) || false) {
+      return false;
+    }
+
+    throw new Error('TODO');
+  }
+
+  /**
    * Indicates that the document is "dirty" and needs to be written. This
    * method acts (and returns) promptly. It will kick off a timed callback
    * to actually perform the writing operation if one isn't already pending.
