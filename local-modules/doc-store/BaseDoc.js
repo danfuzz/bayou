@@ -254,7 +254,7 @@ export default class BaseDoc extends CommonBase {
    * @returns {boolean} `true` if the delete is successful, or `false` if it
    *   failed due to `path` having an unexpected value.
    */
-  async writeDelete(path, oldValue) {
+  async opDelete(path, oldValue) {
     StoragePath.check(path);
     FrozenBuffer.check(oldValue);
 
@@ -271,7 +271,7 @@ export default class BaseDoc extends CommonBase {
    * @returns {boolean} `true` if the write is successful, or `false` if it
    *   failed due to `path` already having a value.
    */
-  async writeNew(path, newValue) {
+  async opNew(path, newValue) {
     StoragePath.check(path);
     FrozenBuffer.check(newValue);
 
@@ -291,7 +291,7 @@ export default class BaseDoc extends CommonBase {
    * @returns {boolean} `true` if the write is successful, or `false` if it
    *   failed due to value mismatch.
    */
-  async writeReplace(path, oldValue, newValue) {
+  async opReplace(path, oldValue, newValue) {
     StoragePath.check(path);
     FrozenBuffer.check(oldValue);
     FrozenBuffer.check(newValue);
@@ -300,10 +300,11 @@ export default class BaseDoc extends CommonBase {
   }
 
   /**
-   * Main implementation of `writeDelete()`, `writeNew()`, and `writeReplace()`.
-   * Arguments are guaranteed by the superclass to be valid. `null` for
-   * `oldValue` corresponds to a `writeNew()` operation. `null` for `newValue`
-   * corresponds to a `writeDelete()` operation.
+   * Performs an operation on the document. This is the main implementation of
+   * `opDelete()`, `opNew()`, and `opReplace()`. Arguments are guaranteed by the
+   * superclass to be valid. Passing `null` for `oldValue` corresponds to the
+   * `opNew()` operation. Passing `null` for `newValue` corresponds to the
+   * `opDelete()` operation.
    *
    * @abstract
    * @param {string} path Path to write to.
@@ -315,7 +316,7 @@ export default class BaseDoc extends CommonBase {
    * @returns {boolean} `true` if the write is successful, or `false` if it
    *   failed due to value mismatch.
    */
-  async _impl_write(path, oldValue, newValue) {
+  async _impl_op(path, oldValue, newValue) {
     return this._mustOverride(path, oldValue, newValue);
   }
 

@@ -180,7 +180,7 @@ export default class LocalDoc extends BaseDoc {
    * @returns {boolean} `true` if the write is successful, or `false` if it
    *   failed due to value mismatch.
    */
-  async _impl_write(path, oldValue, newValue) {
+  async _impl_op(path, oldValue, newValue) {
     // TODO: Implement this!
 
     // This keeps the linter happy.
