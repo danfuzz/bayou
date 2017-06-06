@@ -7,10 +7,15 @@ import weak from 'weak';
 import { DocumentChange, FrozenDelta, Timestamp } from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
+import { ProductInfo } from 'server-env';
 import { TBoolean, TString } from 'typecheck';
 import { Singleton } from 'util-common';
+import { FrozenBuffer } from 'util-server';
 
 import DocControl from './DocControl';
+
+/** {string} `StoragePath` string for where the document format version goes. */
+const PATH_FOR_FORMAT = '/format_version';
 
 /** {FrozenDelta} Message used as document instead of migrating old versions. */
 const MIGRATION_NOTE = FrozenDelta.coerce(
@@ -40,6 +45,12 @@ export default class DocServer extends Singleton {
      * weak-reference-wrapped document controller for the so-IDed document.
      */
     this._controls = new Map();
+
+    /**
+     * {FrozenBuffer} The document format version to use for new documents and
+     * to expect in existing documents.
+     */
+    this._formatVersion = FrozenBuffer.coerce(ProductInfo.INFO.version);
   }
 
   /**
@@ -89,7 +100,18 @@ export default class DocServer extends Singleton {
 
     if (await docStorage.exists()) {
       log.info(`Retrieving document: ${docId}`);
-      if (await docStorage.needsMigration()) {
+      let docIsValid = false;
+      try {
+        const formatVersion = await docStorage.pathRead(PATH_FOR_FORMAT);
+        if (formatVersion.equals(this._formatVersion)) {
+          docIsValid = true;
+        }
+      } catch (e) {
+        // The `readPath()` threw because the format version was unset.
+        log.info('Corrupt document: Missing format version.');
+      }
+
+      if (!docIsValid) {
         // **TODO:** Ultimately, this code path will evolve into forward
         // migration of documents found to be in older formats. For now, we just
         // recreate the document and note what's going on in the contents.
@@ -97,6 +119,7 @@ export default class DocServer extends Singleton {
         await docStorage.create();
         await docStorage.changeAppend(
           new DocumentChange(1, Timestamp.now(), MIGRATION_NOTE, null));
+        await docStorage.opNew(PATH_FOR_FORMAT, this._formatVersion);
       }
     } else {
       if (!initIfMissing) {
