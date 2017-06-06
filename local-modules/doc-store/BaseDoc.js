@@ -248,17 +248,17 @@ export default class BaseDoc extends CommonBase {
    * method returns `false`. All other problems are indicated by throwing
    * errors.
    *
-   * @param {string} path Path to write to.
+   * @param {string} storagePath Path to write to.
    * @param {FrozenBuffer} oldValue Value expected to be stored at `path` at the
    *   moment of deletion.
    * @returns {boolean} `true` if the delete is successful, or `false` if it
    *   failed due to `path` having an unexpected value.
    */
-  async opDelete(path, oldValue) {
-    StoragePath.check(path);
+  async opDelete(storagePath, oldValue) {
+    StoragePath.check(storagePath);
     FrozenBuffer.check(oldValue);
 
-    return this._impl_write(path, oldValue, null);
+    return this._impl_write(storagePath, oldValue, null);
   }
 
   /**
@@ -266,16 +266,16 @@ export default class BaseDoc extends CommonBase {
    * value stored at the path. If there is already a value, this method returns
    * `false`. All other problems are indicated by throwing errors.
    *
-   * @param {string} path Path to write to.
+   * @param {string} storagePath Path to write to.
    * @param {FrozenBuffer} newValue Value to write.
    * @returns {boolean} `true` if the write is successful, or `false` if it
    *   failed due to `path` already having a value.
    */
-  async opNew(path, newValue) {
-    StoragePath.check(path);
+  async opNew(storagePath, newValue) {
+    StoragePath.check(storagePath);
     FrozenBuffer.check(newValue);
 
-    return this._impl_write(path, null, newValue);
+    return this._impl_write(storagePath, null, newValue);
   }
 
   /**
@@ -284,19 +284,19 @@ export default class BaseDoc extends CommonBase {
    * failure, this method returns `false`. All other problems are indicated by
    * throwing errors.
    *
-   * @param {string} path Path to write to.
+   * @param {string} storagePath Path to write to.
    * @param {FrozenBuffer} oldValue Value expected to be stored at `path` at the
    *   moment of writing.
    * @param {FrozenBuffer} newValue Value to write.
    * @returns {boolean} `true` if the write is successful, or `false` if it
    *   failed due to value mismatch.
    */
-  async opReplace(path, oldValue, newValue) {
-    StoragePath.check(path);
+  async opReplace(storagePath, oldValue, newValue) {
+    StoragePath.check(storagePath);
     FrozenBuffer.check(oldValue);
     FrozenBuffer.check(newValue);
 
-    return this._impl_write(path, oldValue, newValue);
+    return this._impl_write(storagePath, oldValue, newValue);
   }
 
   /**
@@ -307,7 +307,7 @@ export default class BaseDoc extends CommonBase {
    * `opDelete()` operation.
    *
    * @abstract
-   * @param {string} path Path to write to.
+   * @param {string} storagePath Path to write to.
    * @param {FrozenBuffer|null} oldValue Value expected to be stored at `path`
    *   at the moment of writing, or `null` if `path` is expected to have nothing
    *   stored at it.
@@ -316,7 +316,7 @@ export default class BaseDoc extends CommonBase {
    * @returns {boolean} `true` if the write is successful, or `false` if it
    *   failed due to value mismatch.
    */
-  async _impl_op(path, oldValue, newValue) {
-    return this._mustOverride(path, oldValue, newValue);
+  async _impl_op(storagePath, oldValue, newValue) {
+    return this._mustOverride(storagePath, oldValue, newValue);
   }
 }
