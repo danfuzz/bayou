@@ -258,7 +258,7 @@ export default class BaseDoc extends CommonBase {
     StoragePath.check(storagePath);
     FrozenBuffer.check(oldValue);
 
-    return this._impl_write(storagePath, oldValue, null);
+    return this._impl_op(storagePath, oldValue, null);
   }
 
   /**
@@ -275,7 +275,7 @@ export default class BaseDoc extends CommonBase {
     StoragePath.check(storagePath);
     FrozenBuffer.check(newValue);
 
-    return this._impl_write(storagePath, null, newValue);
+    return this._impl_op(storagePath, null, newValue);
   }
 
   /**
@@ -296,7 +296,7 @@ export default class BaseDoc extends CommonBase {
     FrozenBuffer.check(oldValue);
     FrozenBuffer.check(newValue);
 
-    return this._impl_write(storagePath, oldValue, newValue);
+    return this._impl_op(storagePath, oldValue, newValue);
   }
 
   /**
