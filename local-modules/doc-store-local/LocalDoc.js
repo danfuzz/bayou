@@ -257,6 +257,18 @@ export default class LocalDoc extends BaseDoc {
   }
 
   /**
+   * Implementation as required by the superclass.
+   *
+   * @param {string} storagePath Path to read from.
+   * @returns {FrozenBuffer|null} Value stored at the indicated path, or `null`
+   *   if there is none.
+   */
+  async _impl_pathReadOrNull(storagePath) {
+    await this._readStorageIfNecessary();
+    return this._storage[storagePath] || null;
+  }
+
+  /**
    * Indicates that the document is "dirty" and needs to be written. This
    * method acts (and returns) promptly. It will kick off a timed callback
    * to actually perform the writing operation if one isn't already pending.

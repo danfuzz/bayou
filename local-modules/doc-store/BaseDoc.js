@@ -300,11 +300,11 @@ export default class BaseDoc extends CommonBase {
   }
 
   /**
-   * Performs an operation on the document. This is the main implementation of
-   * `opDelete()`, `opNew()`, and `opReplace()`. Arguments are guaranteed by the
-   * superclass to be valid. Passing `null` for `oldValue` corresponds to the
-   * `opNew()` operation. Passing `null` for `newValue` corresponds to the
-   * `opDelete()` operation.
+   * Performs a modification operation on the document. This is the main
+   * implementation of `opDelete()`, `opNew()`, and `opReplace()`. Arguments are
+   * guaranteed by the superclass to be valid. Passing `null` for `oldValue`
+   * corresponds to the `opNew()` operation. Passing `null` for `newValue`
+   * corresponds to the `opDelete()` operation.
    *
    * @abstract
    * @param {string} storagePath Path to write to.
@@ -318,5 +318,51 @@ export default class BaseDoc extends CommonBase {
    */
   async _impl_op(storagePath, oldValue, newValue) {
     return this._mustOverride(storagePath, oldValue, newValue);
+  }
+
+  /**
+   * Reads the value stored at the given path. This throws an error if there is
+   * no value stored at the given path.
+   *
+   * @param {string} storagePath Path to read from.
+   * @returns {FrozenBuffer} Value stored at the indicated path.
+   */
+  async pathRead(storagePath) {
+    const result = this.pathReadOrNull(storagePath);
+    if (result === null) {
+      throw new Error(`No value at path: ${storagePath}`);
+    }
+
+    return result;
+  }
+
+  /**
+   * Reads the value stored at the given path. This returns `null` if there is
+   * no value stored at the given path.
+   *
+   * @param {string} storagePath Path to read from.
+   * @returns {FrozenBuffer|null} Value stored at the indicated path, or `null`
+   *   if there is none.
+   */
+  async pathReadOrNull(storagePath) {
+    StoragePath.check(storagePath);
+
+    const result = this._impl_pathReadOrNull(storagePath);
+
+    return (result === null) ? result : FrozenBuffer.check(result);
+  }
+
+  /**
+   * Reads the value stored at the given path. This method is guaranteed to be
+   * called with a valid value for `storagePath`. This is the main
+   * implementation for the methods `pathRead()` and `pathReadOrNull()`.
+   *
+   * @abstract
+   * @param {string} storagePath Path to read from.
+   * @returns {FrozenBuffer|null} Value stored at the indicated path, or `null`
+   *   if there is none.
+   */
+  async _impl_pathReadOrNull(storagePath) {
+    return this._mustOverride(storagePath);
   }
 }
