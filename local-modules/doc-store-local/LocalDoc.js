@@ -173,15 +173,18 @@ export default class LocalDoc extends BaseDoc {
    * Implementation as required by the superclass.
    *
    * @param {string} path Path to write to.
-   * @param {FrozenBuffer} value Value to write.
+   * @param {FrozenBuffer|null} oldValue Value expected to be stored at `path`
+   *   at the moment of writing, or `null` if `path` is expected to have nothing
+   *   stored at it.
+   * @param {FrozenBuffer} newValue Value to write.
    * @returns {boolean} `true` if the write is successful, or `false` if it
-   *   failed due to the existence of a value mismatch.
+   *   failed due to value mismatch.
    */
-  async _impl_writeNew(path, value) {
+  async _impl_write(path, oldValue, newValue) {
     // TODO: Implement this!
 
     // This keeps the linter happy.
-    if ((path === value) || false) {
+    if ((path + oldValue + newValue) === null) {
       return false;
     }
 
