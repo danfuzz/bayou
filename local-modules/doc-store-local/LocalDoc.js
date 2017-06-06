@@ -31,15 +31,11 @@ export default class LocalDoc extends BaseDoc {
   /**
    * Constructs an instance.
    *
-   * @param {string} formatVersion The format version to expect and use.
    * @param {string} docId The ID of the document this instance represents.
    * @param {string} docPath The filesystem path for document storage.
    */
-  constructor(formatVersion, docId, docPath) {
+  constructor(docId, docPath) {
     super(docId);
-
-    /** {string} The format version to expect and use. */
-    this._formatVersion = formatVersion;
 
     /** {string} Path to the change storage for this document. */
     this._path = `${docPath}.json`;
@@ -307,9 +303,8 @@ export default class LocalDoc extends BaseDoc {
 
     // Perform the file write.
 
-    const changes     = this._changes;
-    const version     = this._formatVersion;
-    const encoded     = Encoder.encodeJson({ version, changes }, true);
+    const changes = this._changes;
+    const encoded = Encoder.encodeJson({ changes }, true);
 
     // These are for dirty/clean verification. See big comment below.
     const changeCount = changes.length;
@@ -387,14 +382,9 @@ export default class LocalDoc extends BaseDoc {
 
     try {
       contents = Decoder.decodeJson(encoded);
-      TObject.withExactKeys(contents, ['version', 'changes']);
-      if (contents.version !== this._formatVersion) {
-        this._log.warn('Ignoring data with a mismatched format version. ' +
-            `Got ${contents.version}, expected ${this._formatVersion}`);
-        contents = null;
-      }
+      TObject.withExactKeys(contents, ['changes']);
     } catch (e) {
-      this._log.warn('Ignoring malformed data (bad JSON or unversioned).', e);
+      this._log.warn('Ignoring malformed data (bad JSON).', e);
       contents = null;
     }
 
