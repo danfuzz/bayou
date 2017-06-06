@@ -53,7 +53,7 @@ export default class LocalDoc extends BaseDoc {
     /**
      * {Promise<array<DocumentChange>>|null} Promise for the value of
      * `_changes`. Becomes non-`null` during the first call to
-     * `_readIfNecessary()` and is used to prevent superfluous re-reading.
+     * `_readChangesIfNecessary()` and is used to prevent superfluous re-reading.
      */
     this._changesPromise = null;
 
@@ -66,7 +66,7 @@ export default class LocalDoc extends BaseDoc {
     /**
      * Does the document need to be "migrated?" In this case, `true` indicates
      * that the document file exists but could not actually be read and parsed
-     * successfully. This variable is set in `_readDocument()`.
+     * successfully. This variable is set in `_readChanges()`.
      */
     this._needsMigration = null;
 
@@ -116,7 +116,7 @@ export default class LocalDoc extends BaseDoc {
    * @returns {Int|null} The version number of this document.
    */
   async _impl_currentVerNum() {
-    await this._readIfNecessary();
+    await this._readChangesIfNecessary();
     const len = this._changes.length;
     return (len === 0) ? null : (len - 1);
   }
@@ -128,7 +128,7 @@ export default class LocalDoc extends BaseDoc {
    * @returns {DocumentChange} The change with `verNum` as indicated.
    */
   async _impl_changeRead(verNum) {
-    await this._readIfNecessary();
+    await this._readChangesIfNecessary();
 
     VersionNumber.maxExc(verNum, this._changes.length);
     return this._changes[verNum];
@@ -142,7 +142,7 @@ export default class LocalDoc extends BaseDoc {
    *   was not due to `change` having an incorrect `verNum`.
    */
   async _impl_changeAppend(change) {
-    await this._readIfNecessary();
+    await this._readChangesIfNecessary();
 
     if (change.verNum !== this._changes.length) {
       // Not the right `verNum`. This is typically because there was an append
@@ -165,7 +165,7 @@ export default class LocalDoc extends BaseDoc {
    * @returns {boolean} `true` iff the document needs migration.
    */
   async _impl_needsMigration() {
-    await this._readIfNecessary();
+    await this._readChangesIfNecessary();
     return this._needsMigration;
   }
 
@@ -266,9 +266,9 @@ export default class LocalDoc extends BaseDoc {
   }
 
   /**
-   * Reads the document if it is not yet loaded.
+   * Reads the document change list if it is not yet loaded.
    */
-  async _readIfNecessary() {
+  async _readChangesIfNecessary() {
     if (this._changes !== null) {
       // Already in memory; no need to read.
       return;
@@ -276,7 +276,7 @@ export default class LocalDoc extends BaseDoc {
 
     if (this._changesPromise === null) {
       // This is the first time we've needed the changes. Initiate a read.
-      this._changesPromise = this._readDocument();
+      this._changesPromise = this._readChanges();
     }
 
     // Wait for the pending read to complete.
@@ -292,7 +292,7 @@ export default class LocalDoc extends BaseDoc {
    *
    * @returns {array<DocumentChange>} The document contents.
    */
-  async _readDocument() {
+  async _readChanges() {
     if (!await afs.exists(this._path)) {
       // File doesn't actually exist. Just initialize an empty change list.
       this._changes = [];
