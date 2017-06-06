@@ -319,5 +319,4 @@ export default class BaseDoc extends CommonBase {
   async _impl_op(path, oldValue, newValue) {
     return this._mustOverride(path, oldValue, newValue);
   }
-
 }
