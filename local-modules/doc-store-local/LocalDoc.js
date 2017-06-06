@@ -58,10 +58,10 @@ export default class LocalDoc extends BaseDoc {
     this._changesPromise = null;
 
     /**
-     * Does the document need to be written to disk? This is set to `true` on
-     * updates and back to `false` once the write has been done.
+     * Does the change array need to be written to disk? This is set to `true`
+     * on updates and back to `false` once the write has been done.
      */
-    this._dirty = false;
+    this._changesDirty = false;
 
     /**
      * Does the document need to be "migrated?" In this case, `true` indicates
@@ -197,7 +197,7 @@ export default class LocalDoc extends BaseDoc {
    * to actually perform the writing operation if one isn't already pending.
    */
   _changesNeedWrite() {
-    if (this._dirty) {
+    if (this._changesDirty) {
       // Already marked dirty, which means there's nothing more to do. When
       // the already-scheduled timer fires, it will pick up the current change.
       this._log.detail('Already marked dirty.');
@@ -206,7 +206,7 @@ export default class LocalDoc extends BaseDoc {
 
     // Mark the document dirty, and queue up the writer.
 
-    this._dirty = true;
+    this._changesDirty = true;
     this._log.detail(`Marked dirty at version ${this._changes.length}.`);
 
     // **TODO:** If we want to catch write errors (e.g. filesystem full), here
@@ -261,7 +261,7 @@ export default class LocalDoc extends BaseDoc {
     }
 
     // The usual case: Everything is fine.
-    this._dirty = false;
+    this._changesDirty = false;
     return true;
   }
 
