@@ -62,7 +62,7 @@ export default class LocalDoc extends BaseDoc {
      * corresponding stored data, for document contents that have not yet been
      * written to disk.
      */
-    this._dirtyValues = new Map();
+    this._storageToWrite = new Map();
 
     /**
      * {boolean} Whether or not the storage directory should be totally erased
@@ -157,7 +157,7 @@ export default class LocalDoc extends BaseDoc {
     }
 
     this._storage             = new Map();
-    this._dirtyValues         = new Map();
+    this._storageToWrite      = new Map();
     this._storageNeedsErasing = true;
     this._storageReadyPromise = Promise.resolve(true);
 
@@ -437,7 +437,7 @@ export default class LocalDoc extends BaseDoc {
 
     // Only set the instance variables after all the reading is done.
     this._storage             = storage;
-    this._dirtyValues         = new Map();
+    this._storageToWrite      = new Map();
     this._storageNeedsErasing = false;
     this._storageIsDirty      = false;
 
@@ -465,7 +465,7 @@ export default class LocalDoc extends BaseDoc {
     if (this._storageNeedsErasing) {
       this._log.info(`Storage will be erased.`);
     }
-    this._log.info(`Value(s) to write: ${this._dirtyValues.size}`);
+    this._log.info(`Value(s) to write: ${this._storageToWrite.size}`);
 
     // **TODO:** If we want to catch write errors (e.g. filesystem full), here
     // is where we need to do it.
@@ -491,11 +491,11 @@ export default class LocalDoc extends BaseDoc {
     // if the dirty flag got flipped back on, and if so iterate.
 
     const storageNeedsErasing = this._storageNeedsErasing;
-    const dirtyValues         = this._dirtyValues;
+    const dirtyValues         = this._storageToWrite;
 
     this._storageIsDirty      = false;
     this._storageNeedsErasing = false;
-    this._dirtyValues         = new Map();
+    this._storageToWrite      = new Map();
 
     // Erase and/or create the storage directory as needed.
 
