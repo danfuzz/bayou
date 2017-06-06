@@ -135,6 +135,15 @@ export default class FrozenBuffer extends CommonBase {
   }
 
   /**
+   * Gets a fresh `Buffer` with the contents of this instance.
+   *
+   * @returns {Buffer} A buffer whose contents match this instance's.
+   */
+  toBuffer() {
+    return Buffer.from(this._ensureBuffer());
+  }
+
+  /**
    * Ensures that `_buffer` has been set.
    *
    * @returns {Buffer} The value of `_buffer`.

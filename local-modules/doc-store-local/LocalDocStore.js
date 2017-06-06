@@ -79,7 +79,7 @@ export default class LocalDocStore extends BaseDocStore {
    * @returns {string} The corresponding filesystem path.
    */
   _documentPath(docId) {
-    return path.resolve(this._dir, `${docId}.json`);
+    return path.resolve(this._dir, docId);
   }
 
   /**

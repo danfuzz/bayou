@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import afs from 'async-file';
+import path from 'path';
 
 import { Decoder, Encoder } from 'api-common';
 import { VersionNumber } from 'doc-common';
@@ -40,8 +41,41 @@ export default class LocalDoc extends BaseDoc {
     /** {string} The format version to expect and use. */
     this._formatVersion = formatVersion;
 
-    /** {string} Path to the storage for this document. */
-    this._path = docPath;
+    /** {string} Path to the change storage for this document. */
+    this._path = `${docPath}.json`;
+
+    /**
+     * {string} Path to the directory containing stored values for this
+     * document.
+     */
+    this._storageDir = docPath;
+
+    /**
+     * {Map<string,FrozenBuffer>|null} Map from `StoragePath` strings to
+     * corresponding stored data, for the entire document. `null` indicates that
+     * the map is not yet initialized.
+     */
+    this._storedValues = null;
+
+    /**
+     * {Map<string,FrozenBuffer>|null} Map from `StoragePath` strings to
+     * corresponding stored data, for document contents that have not yet been
+     * written to disk.
+     */
+    this._dirtyValues = new Map();
+
+    /**
+     * {boolean} Whether or not the storage directory should be totally erased
+     * and recreated before proceeding with any writing of dirty values.
+     */
+    this._storageNeedsErasing = false;
+
+    /**
+     * {boolean} Whether or not there is any current need to write stored values
+     * to disk. This is set to `true` when updates are made and back to `false`
+     * once the writing has been done.
+     */
+    this._storageDirty = false;
 
     /**
      * {array<DocumentChange>|null} Array of changes. Index `n` contains the
@@ -104,10 +138,14 @@ export default class LocalDoc extends BaseDoc {
    */
   async _impl_create(firstChange) {
     this._changes = [firstChange];
+    this._storedValues = new Map();
+    this._dirtyValues = new Map();
+    this._storageNeedsErasing = true;
 
     // **Note:** This call _synchronously_ (and promptly) indicates that writing
     // needs to happen, but the actual writing takes place asynchronously.
     this._changesNeedWrite();
+    this._storageNeedsWrite();
   }
 
   /**
@@ -172,7 +210,7 @@ export default class LocalDoc extends BaseDoc {
   /**
    * Implementation as required by the superclass.
    *
-   * @param {string} path Path to write to.
+   * @param {string} storagePath Path to write to.
    * @param {FrozenBuffer|null} oldValue Value expected to be stored at `path`
    *   at the moment of writing, or `null` if `path` is expected to have nothing
    *   stored at it.
@@ -180,11 +218,11 @@ export default class LocalDoc extends BaseDoc {
    * @returns {boolean} `true` if the write is successful, or `false` if it
    *   failed due to value mismatch.
    */
-  async _impl_op(path, oldValue, newValue) {
+  async _impl_op(storagePath, oldValue, newValue) {
     // TODO: Implement this!
 
     // This keeps the linter happy.
-    if ((path + oldValue + newValue) === null) {
+    if ((storagePath + oldValue + newValue) === null) {
       return false;
     }
 
@@ -335,5 +373,110 @@ export default class LocalDoc extends BaseDoc {
 
     this._needsMigration = needsMigration;
     return this._changes;
+  }
+
+  /**
+   * Indicates that there are elements of `_storedValues` that need to be
+   * written to disk. This method acts (and returns) promptly. It will kick off
+   * a timed callback to actually perform the writing operation(s) if one isn't
+   * already pending.
+   */
+  _storageNeedsWrite() {
+    if (this._storageDirty) {
+      // Already marked dirty, which means there's nothing more to do. When
+      // the already-scheduled timer fires, it will pick up the current change.
+      this._log.detail('Storage already marked dirty.');
+      return;
+    }
+
+    // Mark the storage dirty, and queue up the writer.
+
+    this._storageDirty = true;
+
+    if (this._storageNeedsErasing) {
+      this._log.detail(`Storage will be erased.`);
+    }
+    this._log.detail(`Value(s) to write: ${this._storageDirty.size}`);
+
+    // **TODO:** If we want to catch write errors (e.g. filesystem full), here
+    // is where we need to do it.
+    this._waitThenWriteStorage();
+  }
+
+  /**
+   * Waits for a moment, and then writes the then-current dirty storage.
+   * The return value becomes resolved once writing is complete.
+   *
+   * **Note:** As of this writing, the return value isn't used, but ultimately
+   * we will probably want to notice if it throws an exception instead of
+   * letting problems just vaporize via unhandled promises.
+   *
+   * @returns {true} `true`, upon successful writing.
+   */
+  async _waitThenWriteStorage() {
+    // Wait for the prescribed amount of time.
+    await PromDelay.resolve(DIRTY_DELAY_MSEC);
+
+    // Grab the instance variables that indicate what needs to be done, and then
+    // reset them and the dirty flag. At the end of this method, we check to see
+    // if the dirty flag got flipped back on, and if so iterate.
+
+    const storageNeedsErasing = this._storageNeedsErasing;
+    const dirtyValues         = this._dirtyValues;
+
+    this._storageDirty        = false;
+    this._storageNeedsErasing = false;
+    this._dirtyValues         = new Map();
+
+    // Erase the storage directory if needed.
+
+    if (storageNeedsErasing) {
+      try {
+        // This is a "deep delete" a la `rm -rf`.
+        await afs.delete(this._storageDir);
+        this._log.info('Erased storage.');
+      } catch (e) {
+        // Ignore it: This is most likely because the directory didn't exist in
+        // the first place. But if not, the directory creation immediately
+        // below will fail with an error that _isn't_ caught here.
+      }
+
+      await afs.mkdir(this._storageDir);
+    }
+
+    // Perform the writes.
+
+    for (const [storagePath, data] of dirtyValues) {
+      const fsPath = this._fsPathForStorage(storagePath);
+      await afs.writeFile(fsPath, data.toBuffer());
+      this._log.info(`Wrote: ${storagePath}`);
+    }
+
+    // Check to see if more updates happened while the writing was being done.
+    // If so, recurse to iterate.
+
+    if (this._storageDirty) {
+      return this._waitThenWriteStorage();
+    }
+
+    // The usual case: Everything is fine.
+
+    return true;
+  }
+
+  /**
+   * Converts a `StoragePath` string to the name of the file at which to find
+   * the data for that path. In particular, we don't want the hiererarchical
+   * structure of the path to turn into nested directories, so slashes (`/`) get
+   * converted to periods (`.`), the latter which is not a valid character for
+   * a storage path component.
+   *
+   * @param {string} storagePath The storage path.
+   * @returns {string} The file name to use when accessing `path`.
+   */
+  _fsPathForStorage(storagePath) {
+    // `slice(1)` trims off the initial slash.
+    const fileName = storagePath.slice(1).replace(/\//g, '.');
+    return path.resolve(this._storageDir, fileName);
   }
 }
