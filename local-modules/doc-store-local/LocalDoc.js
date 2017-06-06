@@ -78,6 +78,14 @@ export default class LocalDoc extends BaseDoc {
     this._storageDirty = false;
 
     /**
+     * {Promise<true>|null} Promise which resolves to `true` if `_storedValues`
+     * is to be treated as`_changes`. Becomes non-`null` during the first call
+     * to `_readStorageIfNecessary()` and in `_impl_create()`. It is used to
+     * prevent superfluous re-reading of the storage directory.
+     */
+    this._storageReadyPromise = null;
+
+    /**
      * {array<DocumentChange>|null} Array of changes. Index `n` contains the
      * change that produces version number `n`. `null` indicates that the array
      * is not yet initialized.
@@ -138,9 +146,19 @@ export default class LocalDoc extends BaseDoc {
    */
   async _impl_create(firstChange) {
     this._changes = [firstChange];
-    this._storedValues = new Map();
-    this._dirtyValues = new Map();
+
+    if (this._storageReadyPromise !== null) {
+      // The storage could conceivably be in the middle of being read. Make sure
+      // it's no longer in-process before proceeding. If it were in-process,
+      // then when it was done it would mess up the instance variables being
+      // set here.
+      await this._storageReadyPromise;
+    }
+
+    this._storedValues        = new Map();
+    this._dirtyValues         = new Map();
     this._storageNeedsErasing = true;
+    this._storageReadyPromise = Promise.resolve(true);
 
     // **Note:** This call _synchronously_ (and promptly) indicates that writing
     // needs to happen, but the actual writing takes place asynchronously.
@@ -376,6 +394,56 @@ export default class LocalDoc extends BaseDoc {
   }
 
   /**
+   * Reads the document storage if it has not yet been loaded.
+   */
+  async _readStorageIfNecessary() {
+    if (this._storageReadyPromise === null) {
+      // This is the first time the storage has been requested. Initiate a read.
+      this._storageReadyPromise = this._readStorage();
+    }
+
+    // Wait for the pending read to complete.
+    await this._storageReadyPromise;
+  }
+
+  /**
+   * Reads the storage directory, initializing `_storedValues`. If the directory
+   * doesn't exist, this will initialize the in-memory model with empty contents
+   * but does _not_ mark the storage as dirty.
+   *
+   * @returns {Promise<true>} Promise that resolves once the storage has been
+   *   successfully read into memory.
+   */
+  async _readStorage() {
+    if (!await afs.exists(this._storageDir)) {
+      // Directory doesn't actually exist. Just initialize empty storage.
+      this._storedValues = new Map();
+      this._log.info('New storage.');
+      return true;
+    }
+
+    // The directory exists. Read its contents.
+    this._log.detail('Reading from disk...');
+
+    const files = await afs.readdir(this._storageDir);
+    const storage = new Map();
+    for (const f of files) {
+      const buf = await afs.readFile(path.resolve(this._storageDir, f));
+      const storagePath = LocalDoc._storagePathForFsName(f);
+      storage.set(storagePath, buf);
+      this._log.detail(`Read: ${storagePath}`);
+    }
+
+    // Only set the instance variables after all the reading is done.
+    this._storedValues        = storage;
+    this._dirtyValues         = new Map();
+    this._storageNeedsErasing = false;
+    this._storageDirty        = false;
+
+    return true;
+  }
+
+  /**
    * Indicates that there are elements of `_storedValues` that need to be
    * written to disk. This method acts (and returns) promptly. It will kick off
    * a timed callback to actually perform the writing operation(s) if one isn't
@@ -394,9 +462,9 @@ export default class LocalDoc extends BaseDoc {
     this._storageDirty = true;
 
     if (this._storageNeedsErasing) {
-      this._log.detail(`Storage will be erased.`);
+      this._log.info(`Storage will be erased.`);
     }
-    this._log.detail(`Value(s) to write: ${this._storageDirty.size}`);
+    this._log.info(`Value(s) to write: ${this._dirtyValues.size}`);
 
     // **TODO:** If we want to catch write errors (e.g. filesystem full), here
     // is where we need to do it.
@@ -428,9 +496,17 @@ export default class LocalDoc extends BaseDoc {
     this._storageNeedsErasing = false;
     this._dirtyValues         = new Map();
 
-    // Erase the storage directory if needed.
+    // Erase and/or create the storage directory as needed.
 
-    if (storageNeedsErasing) {
+    let needDirCreate = false;
+
+    try {
+      await afs.access(this._storageDir, afs.constants.F_OK);
+    } catch (e) {
+      needDirCreate = true;
+    }
+
+    if (storageNeedsErasing && !needDirCreate) {
       try {
         // This is a "deep delete" a la `rm -rf`.
         await afs.delete(this._storageDir);
@@ -441,7 +517,12 @@ export default class LocalDoc extends BaseDoc {
         // below will fail with an error that _isn't_ caught here.
       }
 
+      needDirCreate = true;
+    }
+
+    if (needDirCreate) {
       await afs.mkdir(this._storageDir);
+      this._log.info('Created storage directory.');
     }
 
     // Perform the writes.
@@ -461,6 +542,7 @@ export default class LocalDoc extends BaseDoc {
 
     // The usual case: Everything is fine.
 
+    this._log.info('Finished writing storage.');
     return true;
   }
 
@@ -478,5 +560,18 @@ export default class LocalDoc extends BaseDoc {
     // `slice(1)` trims off the initial slash.
     const fileName = storagePath.slice(1).replace(/\//g, '.');
     return path.resolve(this._storageDir, fileName);
+  }
+
+  /**
+   * Converts a filesystem file name for a stored value into a `StoragePath`
+   * string identifying same. This is approximately the inverse of
+   * `_fsPathForStorage()` (only approximate because this one expects a simple
+   * name, not a fully-qualified filesystem path).
+   *
+   * @param {string} fsName The file name for a stored value.
+   * @returns {string} The `StoragePath` string corresponding to `fsName`.
+   */
+  static _storagePathForFsName(fsName) {
+    return `/${fsName.replace(/\./g, '/')}`;
   }
 }
