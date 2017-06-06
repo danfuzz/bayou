@@ -55,7 +55,7 @@ export default class LocalDoc extends BaseDoc {
      * corresponding stored data, for the entire document. `null` indicates that
      * the map is not yet initialized.
      */
-    this._storedValues = null;
+    this._storage = null;
 
     /**
      * {Map<string,FrozenBuffer>|null} Map from `StoragePath` strings to
@@ -78,10 +78,11 @@ export default class LocalDoc extends BaseDoc {
     this._storageDirty = false;
 
     /**
-     * {Promise<true>|null} Promise which resolves to `true` if `_storedValues`
-     * is to be treated as`_changes`. Becomes non-`null` during the first call
-     * to `_readStorageIfNecessary()` and in `_impl_create()`. It is used to
-     * prevent superfluous re-reading of the storage directory.
+     * {Promise<true>|null} Promise which resolves to `true` if `_storage` is
+     * fully initialized with respect to the stored state. Becomes non-`null`
+     * during the first call to `_readStorageIfNecessary()` and in
+     * `_impl_create()`. It is used to prevent superfluous re-reading of the
+     * storage directory.
      */
     this._storageReadyPromise = null;
 
@@ -155,7 +156,7 @@ export default class LocalDoc extends BaseDoc {
       await this._storageReadyPromise;
     }
 
-    this._storedValues        = new Map();
+    this._storage             = new Map();
     this._dirtyValues         = new Map();
     this._storageNeedsErasing = true;
     this._storageReadyPromise = Promise.resolve(true);
@@ -407,7 +408,7 @@ export default class LocalDoc extends BaseDoc {
   }
 
   /**
-   * Reads the storage directory, initializing `_storedValues`. If the directory
+   * Reads the storage directory, initializing `_storage`. If the directory
    * doesn't exist, this will initialize the in-memory model with empty contents
    * but does _not_ mark the storage as dirty.
    *
@@ -417,7 +418,7 @@ export default class LocalDoc extends BaseDoc {
   async _readStorage() {
     if (!await afs.exists(this._storageDir)) {
       // Directory doesn't actually exist. Just initialize empty storage.
-      this._storedValues = new Map();
+      this._storage = new Map();
       this._log.info('New storage.');
       return true;
     }
@@ -435,7 +436,7 @@ export default class LocalDoc extends BaseDoc {
     }
 
     // Only set the instance variables after all the reading is done.
-    this._storedValues        = storage;
+    this._storage             = storage;
     this._dirtyValues         = new Map();
     this._storageNeedsErasing = false;
     this._storageDirty        = false;
@@ -444,10 +445,10 @@ export default class LocalDoc extends BaseDoc {
   }
 
   /**
-   * Indicates that there are elements of `_storedValues` that need to be
-   * written to disk. This method acts (and returns) promptly. It will kick off
-   * a timed callback to actually perform the writing operation(s) if one isn't
-   * already pending.
+   * Indicates that there are elements of `_storage` that need to be written to
+   * disk. This method acts (and returns) promptly. It will kick off a timed
+   * callback to actually perform the writing operation(s) if one isn't already
+   * pending.
    */
   _storageNeedsWrite() {
     if (this._storageDirty) {
