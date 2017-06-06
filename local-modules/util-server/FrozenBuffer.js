@@ -135,6 +135,20 @@ export default class FrozenBuffer extends CommonBase {
   }
 
   /**
+   * Tests whether this and another instance have the same contents.
+   *
+   * @param {FrozenBuffer} other Buffer to compare to.
+   * @returns {boolean} `true` iff `this` and `other` have the same contents.
+   */
+  equals(other) {
+    FrozenBuffer.check(other);
+
+    const thisBuf = this._ensureBuffer();
+    const otherBuf = other._ensureBuffer();
+    return thisBuf.equals(otherBuf);
+  }
+
+  /**
    * Gets a fresh `Buffer` with the contents of this instance.
    *
    * @returns {Buffer} A buffer whose contents match this instance's.

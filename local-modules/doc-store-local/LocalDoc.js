@@ -117,7 +117,7 @@ export default class LocalDoc extends BaseDoc {
     this._log = log.withPrefix(`[${docId}]`);
 
     this._log.info('Constructed.');
-    this._log.detail(`Path: ${this._path}`);
+    this._log.detail(`Path: ${this._docPath}`);
   }
 
   /**
@@ -238,14 +238,22 @@ export default class LocalDoc extends BaseDoc {
    *   failed due to value mismatch.
    */
   async _impl_op(storagePath, oldValue, newValue) {
-    // TODO: Implement this!
+    await this._readStorageIfNecessary();
 
-    // This keeps the linter happy.
-    if ((storagePath + oldValue + newValue) === null) {
-      return false;
+    const existingValue = this._storage[storagePath] || null;
+
+    if (oldValue !== existingValue) {
+      if (   (oldValue === null)
+          || (existingValue === null)
+          || !oldValue.equals(existingValue)) {
+        // Mismatch between expected and actual pre-existing value.
+        return false;
+      }
     }
 
-    throw new Error('TODO');
+    this._storageToWrite.set(storagePath, newValue);
+    this._storageNeedsWrite();
+    return true;
   }
 
   /**
@@ -530,8 +538,13 @@ export default class LocalDoc extends BaseDoc {
 
     for (const [storagePath, data] of dirtyValues) {
       const fsPath = this._fsPathForStorage(storagePath);
-      await afs.writeFile(fsPath, data.toBuffer());
-      this._log.info(`Wrote: ${storagePath}`);
+      if (data === null) {
+        await afs.unlink(fsPath);
+        this._log.info(`Deleted: ${storagePath}`);
+      } else {
+        await afs.writeFile(fsPath, data.toBuffer());
+        this._log.info(`Wrote: ${storagePath}`);
+      }
     }
 
     // Check to see if more updates happened while the writing was being done.
