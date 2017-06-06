@@ -6,6 +6,9 @@ import { DocumentChange, FrozenDelta, Timestamp, VersionNumber }
   from 'doc-common';
 import { TBoolean, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
+import { FrozenBuffer } from 'util-server';
+
+import StoragePath from './StoragePath';
 
 /**
  * Base class representing access to a particular document. Subclasses must
@@ -237,5 +240,83 @@ export default class BaseDoc extends CommonBase {
    */
   async _impl_needsMigration() {
     return this._mustOverride();
+  }
+
+  /**
+   * Deletes the value at the indicated path, failing if it is not the indicated
+   * value at the time of deletion. If the expected value doesn't match, this
+   * method returns `false`. All other problems are indicated by throwing
+   * errors.
+   *
+   * @param {string} path Path to write to.
+   * @param {FrozenBuffer} oldValue Value expected to be stored at `path` at the
+   *   moment of deletion.
+   * @returns {boolean} `true` if the delete is successful, or `false` if it
+   *   failed due to `path` having an unexpected value.
+   */
+  async opDelete(path, oldValue) {
+    StoragePath.check(path);
+    FrozenBuffer.check(oldValue);
+
+    return this._impl_write(path, oldValue, null);
+  }
+
+  /**
+   * Writes a value at the indicated path, failing if there is already any
+   * value stored at the path. If there is already a value, this method returns
+   * `false`. All other problems are indicated by throwing errors.
+   *
+   * @param {string} path Path to write to.
+   * @param {FrozenBuffer} newValue Value to write.
+   * @returns {boolean} `true` if the write is successful, or `false` if it
+   *   failed due to `path` already having a value.
+   */
+  async opNew(path, newValue) {
+    StoragePath.check(path);
+    FrozenBuffer.check(newValue);
+
+    return this._impl_write(path, null, newValue);
+  }
+
+  /**
+   * Writes a value at the indicated path, failing if there is already any
+   * value at the path other than the given one. In case of value-mismatch
+   * failure, this method returns `false`. All other problems are indicated by
+   * throwing errors.
+   *
+   * @param {string} path Path to write to.
+   * @param {FrozenBuffer} oldValue Value expected to be stored at `path` at the
+   *   moment of writing.
+   * @param {FrozenBuffer} newValue Value to write.
+   * @returns {boolean} `true` if the write is successful, or `false` if it
+   *   failed due to value mismatch.
+   */
+  async opReplace(path, oldValue, newValue) {
+    StoragePath.check(path);
+    FrozenBuffer.check(oldValue);
+    FrozenBuffer.check(newValue);
+
+    return this._impl_write(path, oldValue, newValue);
+  }
+
+  /**
+   * Performs an operation on the document. This is the main implementation of
+   * `opDelete()`, `opNew()`, and `opReplace()`. Arguments are guaranteed by the
+   * superclass to be valid. Passing `null` for `oldValue` corresponds to the
+   * `opNew()` operation. Passing `null` for `newValue` corresponds to the
+   * `opDelete()` operation.
+   *
+   * @abstract
+   * @param {string} path Path to write to.
+   * @param {FrozenBuffer|null} oldValue Value expected to be stored at `path`
+   *   at the moment of writing, or `null` if `path` is expected to have nothing
+   *   stored at it.
+   * @param {FrozenBuffer|null} newValue Value to write, or `null` if the value
+   *   at `path` is to be deleted.
+   * @returns {boolean} `true` if the write is successful, or `false` if it
+   *   failed due to value mismatch.
+   */
+  async _impl_op(path, oldValue, newValue) {
+    return this._mustOverride(path, oldValue, newValue);
   }
 }

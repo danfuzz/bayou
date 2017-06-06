@@ -6,6 +6,7 @@
   "dependencies": {
     "doc-common": "local",
     "typecheck": "local",
-    "util-common": "local"
+    "util-common": "local",
+    "util-server": "local"
   }
 }

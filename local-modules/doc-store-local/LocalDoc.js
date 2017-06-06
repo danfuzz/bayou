@@ -53,20 +53,20 @@ export default class LocalDoc extends BaseDoc {
     /**
      * {Promise<array<DocumentChange>>|null} Promise for the value of
      * `_changes`. Becomes non-`null` during the first call to
-     * `_readIfNecessary()` and is used to prevent superfluous re-reading.
+     * `_readChangesIfNecessary()` and is used to prevent superfluous re-reading.
      */
     this._changesPromise = null;
 
     /**
-     * Does the document need to be written to disk? This is set to `true` on
-     * updates and back to `false` once the write has been done.
+     * Does the change array need to be written to disk? This is set to `true`
+     * on updates and back to `false` once the write has been done.
      */
-    this._dirty = false;
+    this._changesDirty = false;
 
     /**
      * Does the document need to be "migrated?" In this case, `true` indicates
      * that the document file exists but could not actually be read and parsed
-     * successfully. This variable is set in `_readDocument()`.
+     * successfully. This variable is set in `_readChanges()`.
      */
     this._needsMigration = null;
 
@@ -107,7 +107,7 @@ export default class LocalDoc extends BaseDoc {
 
     // **Note:** This call _synchronously_ (and promptly) indicates that writing
     // needs to happen, but the actual writing takes place asynchronously.
-    this._needsWrite();
+    this._changesNeedWrite();
   }
 
   /**
@@ -116,7 +116,7 @@ export default class LocalDoc extends BaseDoc {
    * @returns {Int|null} The version number of this document.
    */
   async _impl_currentVerNum() {
-    await this._readIfNecessary();
+    await this._readChangesIfNecessary();
     const len = this._changes.length;
     return (len === 0) ? null : (len - 1);
   }
@@ -128,7 +128,7 @@ export default class LocalDoc extends BaseDoc {
    * @returns {DocumentChange} The change with `verNum` as indicated.
    */
   async _impl_changeRead(verNum) {
-    await this._readIfNecessary();
+    await this._readChangesIfNecessary();
 
     VersionNumber.maxExc(verNum, this._changes.length);
     return this._changes[verNum];
@@ -142,7 +142,7 @@ export default class LocalDoc extends BaseDoc {
    *   was not due to `change` having an incorrect `verNum`.
    */
   async _impl_changeAppend(change) {
-    await this._readIfNecessary();
+    await this._readChangesIfNecessary();
 
     if (change.verNum !== this._changes.length) {
       // Not the right `verNum`. This is typically because there was an append
@@ -154,7 +154,7 @@ export default class LocalDoc extends BaseDoc {
 
     // **Note:** This call _synchronously_ (and promptly) indicates that writing
     // needs to happen, but the actual writing takes place asynchronously.
-    this._needsWrite();
+    this._changesNeedWrite();
 
     return true;
   }
@@ -165,8 +165,30 @@ export default class LocalDoc extends BaseDoc {
    * @returns {boolean} `true` iff the document needs migration.
    */
   async _impl_needsMigration() {
-    await this._readIfNecessary();
+    await this._readChangesIfNecessary();
     return this._needsMigration;
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @param {string} path Path to write to.
+   * @param {FrozenBuffer|null} oldValue Value expected to be stored at `path`
+   *   at the moment of writing, or `null` if `path` is expected to have nothing
+   *   stored at it.
+   * @param {FrozenBuffer} newValue Value to write.
+   * @returns {boolean} `true` if the write is successful, or `false` if it
+   *   failed due to value mismatch.
+   */
+  async _impl_op(path, oldValue, newValue) {
+    // TODO: Implement this!
+
+    // This keeps the linter happy.
+    if ((path + oldValue + newValue) === null) {
+      return false;
+    }
+
+    throw new Error('TODO');
   }
 
   /**
@@ -174,8 +196,8 @@ export default class LocalDoc extends BaseDoc {
    * method acts (and returns) promptly. It will kick off a timed callback
    * to actually perform the writing operation if one isn't already pending.
    */
-  _needsWrite() {
-    if (this._dirty) {
+  _changesNeedWrite() {
+    if (this._changesDirty) {
       // Already marked dirty, which means there's nothing more to do. When
       // the already-scheduled timer fires, it will pick up the current change.
       this._log.detail('Already marked dirty.');
@@ -184,12 +206,12 @@ export default class LocalDoc extends BaseDoc {
 
     // Mark the document dirty, and queue up the writer.
 
-    this._dirty = true;
+    this._changesDirty = true;
     this._log.detail(`Marked dirty at version ${this._changes.length}.`);
 
     // **TODO:** If we want to catch write errors (e.g. filesystem full), here
     // is where we need to do it.
-    this._waitThenWrite();
+    this._waitThenWriteChanges();
   }
 
   /**
@@ -202,7 +224,7 @@ export default class LocalDoc extends BaseDoc {
    *
    * @returns {true} `true`, upon successful writing.
    */
-  async _waitThenWrite() {
+  async _waitThenWriteChanges() {
     // Wait for the prescribed amount of time.
     await PromDelay.resolve(DIRTY_DELAY_MSEC);
 
@@ -235,18 +257,18 @@ export default class LocalDoc extends BaseDoc {
       // The document was modified while writing was underway. We just recurse
       // to guarantee that the new version isn't lost.
       this._log.info('Document modified during write operation.');
-      return this._waitThenWrite();
+      return this._waitThenWriteChanges();
     }
 
     // The usual case: Everything is fine.
-    this._dirty = false;
+    this._changesDirty = false;
     return true;
   }
 
   /**
-   * Reads the document if it is not yet loaded.
+   * Reads the document change list if it is not yet loaded.
    */
-  async _readIfNecessary() {
+  async _readChangesIfNecessary() {
     if (this._changes !== null) {
       // Already in memory; no need to read.
       return;
@@ -254,7 +276,7 @@ export default class LocalDoc extends BaseDoc {
 
     if (this._changesPromise === null) {
       // This is the first time we've needed the changes. Initiate a read.
-      this._changesPromise = this._readDocument();
+      this._changesPromise = this._readChanges();
     }
 
     // Wait for the pending read to complete.
@@ -270,7 +292,7 @@ export default class LocalDoc extends BaseDoc {
    *
    * @returns {array<DocumentChange>} The document contents.
    */
-  async _readDocument() {
+  async _readChanges() {
     if (!await afs.exists(this._path)) {
       // File doesn't actually exist. Just initialize an empty change list.
       this._changes = [];
