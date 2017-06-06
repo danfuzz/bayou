@@ -75,7 +75,7 @@ export default class LocalDoc extends BaseDoc {
      * to disk. This is set to `true` when updates are made and back to `false`
      * once the writing has been done.
      */
-    this._storageDirty = false;
+    this._storageIsDirty = false;
 
     /**
      * {Promise<true>|null} Promise which resolves to `true` if `_storage` is
@@ -439,7 +439,7 @@ export default class LocalDoc extends BaseDoc {
     this._storage             = storage;
     this._dirtyValues         = new Map();
     this._storageNeedsErasing = false;
-    this._storageDirty        = false;
+    this._storageIsDirty      = false;
 
     return true;
   }
@@ -451,7 +451,7 @@ export default class LocalDoc extends BaseDoc {
    * pending.
    */
   _storageNeedsWrite() {
-    if (this._storageDirty) {
+    if (this._storageIsDirty) {
       // Already marked dirty, which means there's nothing more to do. When
       // the already-scheduled timer fires, it will pick up the current change.
       this._log.detail('Storage already marked dirty.');
@@ -460,7 +460,7 @@ export default class LocalDoc extends BaseDoc {
 
     // Mark the storage dirty, and queue up the writer.
 
-    this._storageDirty = true;
+    this._storageIsDirty = true;
 
     if (this._storageNeedsErasing) {
       this._log.info(`Storage will be erased.`);
@@ -493,7 +493,7 @@ export default class LocalDoc extends BaseDoc {
     const storageNeedsErasing = this._storageNeedsErasing;
     const dirtyValues         = this._dirtyValues;
 
-    this._storageDirty        = false;
+    this._storageIsDirty      = false;
     this._storageNeedsErasing = false;
     this._dirtyValues         = new Map();
 
@@ -537,7 +537,7 @@ export default class LocalDoc extends BaseDoc {
     // Check to see if more updates happened while the writing was being done.
     // If so, recurse to iterate.
 
-    if (this._storageDirty) {
+    if (this._storageIsDirty) {
       return this._waitThenWriteStorage();
     }
 
