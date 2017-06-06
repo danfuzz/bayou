@@ -107,7 +107,7 @@ export default class LocalDoc extends BaseDoc {
 
     // **Note:** This call _synchronously_ (and promptly) indicates that writing
     // needs to happen, but the actual writing takes place asynchronously.
-    this._needsWrite();
+    this._changesNeedWrite();
   }
 
   /**
@@ -154,7 +154,7 @@ export default class LocalDoc extends BaseDoc {
 
     // **Note:** This call _synchronously_ (and promptly) indicates that writing
     // needs to happen, but the actual writing takes place asynchronously.
-    this._needsWrite();
+    this._changesNeedWrite();
 
     return true;
   }
@@ -196,7 +196,7 @@ export default class LocalDoc extends BaseDoc {
    * method acts (and returns) promptly. It will kick off a timed callback
    * to actually perform the writing operation if one isn't already pending.
    */
-  _needsWrite() {
+  _changesNeedWrite() {
     if (this._dirty) {
       // Already marked dirty, which means there's nothing more to do. When
       // the already-scheduled timer fires, it will pick up the current change.
@@ -211,7 +211,7 @@ export default class LocalDoc extends BaseDoc {
 
     // **TODO:** If we want to catch write errors (e.g. filesystem full), here
     // is where we need to do it.
-    this._waitThenWrite();
+    this._waitThenWriteChanges();
   }
 
   /**
@@ -224,7 +224,7 @@ export default class LocalDoc extends BaseDoc {
    *
    * @returns {true} `true`, upon successful writing.
    */
-  async _waitThenWrite() {
+  async _waitThenWriteChanges() {
     // Wait for the prescribed amount of time.
     await PromDelay.resolve(DIRTY_DELAY_MSEC);
 
@@ -257,7 +257,7 @@ export default class LocalDoc extends BaseDoc {
       // The document was modified while writing was underway. We just recurse
       // to guarantee that the new version isn't lost.
       this._log.info('Document modified during write operation.');
-      return this._waitThenWrite();
+      return this._waitThenWriteChanges();
     }
 
     // The usual case: Everything is fine.
