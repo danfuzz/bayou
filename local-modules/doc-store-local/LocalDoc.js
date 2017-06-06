@@ -551,6 +551,7 @@ export default class LocalDoc extends BaseDoc {
     // If so, recurse to iterate.
 
     if (this._storageIsDirty) {
+      this._log.info('Storage modified during write operation.');
       return this._waitThenWriteStorage();
     }
 
