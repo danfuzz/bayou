@@ -426,7 +426,7 @@ export default class LocalDoc extends BaseDoc {
     }
 
     // The directory exists. Read its contents.
-    this._log.info('Reading from disk...');
+    this._log.info('Reading storage from disk...');
 
     const files = await afs.readdir(this._storageDir);
     const storage = new Map();
@@ -436,6 +436,8 @@ export default class LocalDoc extends BaseDoc {
       storage.set(storagePath, buf);
       this._log.info(`Read: ${storagePath}`);
     }
+
+    this._log.info('Done reading storage.');
 
     // Only set the instance variables after all the reading is done.
     this._storage             = storage;
