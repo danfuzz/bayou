@@ -15,7 +15,7 @@ import { FrozenBuffer } from 'util-server';
 import DocControl from './DocControl';
 
 /** {string} `StoragePath` string for where the document format version goes. */
-const PATH_FOR_FORMAT = '/format_version';
+const FORMAT_PATH = '/format_version';
 
 /** {FrozenDelta} Message used as document instead of migrating old versions. */
 const MIGRATION_NOTE = FrozenDelta.coerce(
@@ -106,7 +106,7 @@ export default class DocServer extends Singleton {
     if (docExists) {
       docLog.info('Retrieving from storage.');
 
-      const formatVersion = await docStorage.pathReadOrNull(PATH_FOR_FORMAT);
+      const formatVersion = await docStorage.pathReadOrNull(FORMAT_PATH);
       let docIsValid = false;
 
       if (formatVersion === null) {
@@ -139,7 +139,7 @@ export default class DocServer extends Singleton {
 
       // Initialize the document.
       await docStorage.create();
-      await docStorage.opNew(PATH_FOR_FORMAT, this._formatVersion);
+      await docStorage.opNew(FORMAT_PATH, this._formatVersion);
 
       // Static content for the first change (for now).
       const delta = docNeedsMigrate ? MIGRATION_NOTE : DEFAULT_DOCUMENT;
