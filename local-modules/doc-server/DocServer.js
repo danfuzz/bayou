@@ -4,6 +4,7 @@
 
 import weak from 'weak';
 
+import { Encoder } from 'api-common';
 import { DocumentChange, FrozenDelta, Timestamp } from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
@@ -106,6 +107,8 @@ export default class DocServer extends Singleton {
 
       const formatVersion =
         await docStorage.pathReadOrNull(Paths.FORMAT_VERSION);
+      const verNum =
+        await docStorage.pathReadOrNull(Paths.VERSION_NUMBER);
       let docIsValid = false;
 
       if (formatVersion === null) {
@@ -114,6 +117,8 @@ export default class DocServer extends Singleton {
         const got = formatVersion.string;
         const expected = this._formatVersion.string;
         docLog.info(`Mismatched format version: got ${got}; expected ${expected}`);
+      } else if (verNum === null) {
+        docLog.info('Corrupt document: Missing version number.');
       } else {
         docIsValid = true;
       }
@@ -142,8 +147,15 @@ export default class DocServer extends Singleton {
 
       // Static content for the first change (for now).
       const delta = docNeedsMigrate ? MIGRATION_NOTE : DEFAULT_DOCUMENT;
-      await docStorage.changeAppend(
-        new DocumentChange(1, Timestamp.now(), delta, null));
+      const change = new DocumentChange(1, Timestamp.now(), delta, null);
+      const encodedChange = FrozenBuffer.coerce(Encoder.encodeJson(change));
+      await docStorage.opNew(Paths.VERSION_NUMBER, FrozenBuffer.coerce('0'));
+      await docStorage.opNew(Paths.forVerNum(0), encodedChange);
+
+      // Write it using the old low-level storage form, which is still what
+      // is getting read back, as of this writing. **TODO:** Stop needing to do
+      // this.
+      await docStorage.changeAppend(change);
     }
 
     const result = new DocControl(docStorage);
