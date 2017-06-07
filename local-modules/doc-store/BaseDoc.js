@@ -122,9 +122,7 @@ export default class BaseDoc extends CommonBase {
   /**
    * Main implementation of `currentVerNum()`. This method can be called without
    * error whether or not the document exists (as opposed to `currentVerNum()`);
-   * for a non-existent document, this method returns `null`. In addition, this
-   * method returns `null` if the document exists but is not in a recognized
-   * format (e.g. if `needsMigration()` would return `true`).
+   * for a non-existent or empty document, this method returns `null`.
    *
    * @abstract
    * @returns {Int|null} The version number of this document or `null` if the
@@ -217,29 +215,6 @@ export default class BaseDoc extends CommonBase {
    */
   async _impl_changeAppend(change) {
     return this._mustOverride(change);
-  }
-
-  /**
-   * Indicates whether this document needs migration. That is, this returns
-   * `true` if the document is in a format that is not directly recognized by
-   * this class.
-   *
-   * @returns {boolean} `true` iff the document needs migration.
-   */
-  async needsMigration() {
-    // This is just a pass-through. The point is to maintain the pattern of
-    // `_impl_` as the things that subclasses override.
-    return this._impl_needsMigration();
-  }
-
-  /**
-   * Main implementation of `needsMigration()`.
-   *
-   * @abstract
-   * @returns {boolean} `true` iff the document needs migration.
-   */
-  async _impl_needsMigration() {
-    return this._mustOverride();
   }
 
   /**

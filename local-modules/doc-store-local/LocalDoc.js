@@ -215,16 +215,6 @@ export default class LocalDoc extends BaseDoc {
   /**
    * Implementation as required by the superclass.
    *
-   * @returns {boolean} `true` iff the document needs migration.
-   */
-  async _impl_needsMigration() {
-    await this._readChangesIfNecessary();
-    return this._needsMigration;
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
    * @param {string} storagePath Path to write to.
    * @param {FrozenBuffer|null} oldValue Value expected to be stored at `path`
    *   at the moment of writing, or `null` if `path` is expected to have nothing
@@ -368,7 +358,6 @@ export default class LocalDoc extends BaseDoc {
     if (!await afs.exists(this._path)) {
       // File doesn't actually exist. Just initialize an empty change list.
       this._changes = [];
-      this._needsMigration = false;
       this._log.info('New document.');
       return this._changes;
     }
@@ -378,12 +367,17 @@ export default class LocalDoc extends BaseDoc {
 
     const encoded = await afs.readFile(this._path);
     let contents = null;
-    let needsMigration = true;
 
     try {
       contents = Decoder.decodeJson(encoded);
       TObject.withExactKeys(contents, ['changes']);
     } catch (e) {
+      // **Note:** In an earlier version of the code, this is where format
+      // version skew was detected. That code has moved to the higher layer of
+      // document handling. In addition, the change-list-specific code in this
+      // file (such as this method) is in the process of getting decommissioned
+      // in general, and as such it doesn't make sense to try to get too fancy
+      // with the error recovery here.
       this._log.warn('Ignoring malformed data (bad JSON).', e);
       contents = null;
     }
@@ -396,11 +390,9 @@ export default class LocalDoc extends BaseDoc {
       // data structures all the way through, but (TODO) this is reasonable
       // for now.
       this._changes = contents.changes.slice(0);
-      needsMigration = false;
       this._log.info('Read from disk.');
     }
 
-    this._needsMigration = needsMigration;
     return this._changes;
   }
 
