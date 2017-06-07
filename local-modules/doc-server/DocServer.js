@@ -100,11 +100,15 @@ export default class DocServer extends Singleton {
     }
 
     const docStorage = await Hooks.docStore.getDocument(docId);
+    const docExists = await docStorage.exists();
+    let docNeedsMigrate = false;
 
-    if (await docStorage.exists()) {
+    if (docExists) {
       docLog.info('Retrieving from storage.');
-      let docIsValid = false;
+
       const formatVersion = await docStorage.pathReadOrNull(PATH_FOR_FORMAT);
+      let docIsValid = false;
+
       if (formatVersion === null) {
         docLog.info('Corrupt document: Missing format version.');
       } else if (!formatVersion.equals(this._formatVersion)) {
@@ -118,28 +122,29 @@ export default class DocServer extends Singleton {
       if (!docIsValid) {
         // **TODO:** Ultimately, this code path will evolve into forward
         // migration of documents found to be in older formats. For now, we just
-        // recreate the document and note what's going on in the contents.
+        // fall through to the document creation logic below, which will leave
+        // a note what's going on in the document contents.
         docLog.info('Needs migration. (But just noting that fact for now.)');
-        await docStorage.create();
-        await docStorage.opNew(PATH_FOR_FORMAT, this._formatVersion);
-        await docStorage.changeAppend(
-          new DocumentChange(1, Timestamp.now(), MIGRATION_NOTE, null));
+        docNeedsMigrate = true;
       }
-    } else {
-      if (!initIfMissing) {
-        docLog.info('No such document.');
-        return null;
-      }
+    }
 
-      docLog.info('Making new document.');
+    if (!docExists && !initIfMissing) {
+      docLog.info('No such document.');
+      return null;
+    }
+
+    if (!docExists || docNeedsMigrate) {
+      docLog.info('Creating document.');
 
       // Initialize the document.
       await docStorage.create();
       await docStorage.opNew(PATH_FOR_FORMAT, this._formatVersion);
 
       // Static content for the first change (for now).
+      const delta = docNeedsMigrate ? MIGRATION_NOTE : DEFAULT_DOCUMENT;
       await docStorage.changeAppend(
-        new DocumentChange(1, Timestamp.now(), DEFAULT_DOCUMENT, null));
+        new DocumentChange(1, Timestamp.now(), delta, null));
     }
 
     const result = new DocControl(docStorage);
