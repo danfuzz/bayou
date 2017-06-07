@@ -119,9 +119,9 @@ export default class DocServer extends Singleton {
         // recreate the document and note what's going on in the contents.
         docLog.info('Needs migration. (But just noting that fact for now.)');
         await docStorage.create();
+        await docStorage.opNew(PATH_FOR_FORMAT, this._formatVersion);
         await docStorage.changeAppend(
           new DocumentChange(1, Timestamp.now(), MIGRATION_NOTE, null));
-        await docStorage.opNew(PATH_FOR_FORMAT, this._formatVersion);
       }
     } else {
       if (!initIfMissing) {
@@ -131,8 +131,11 @@ export default class DocServer extends Singleton {
 
       docLog.info('Making new document.');
 
-      // Initialize the document with static content (for now).
+      // Initialize the document.
       await docStorage.create();
+      await docStorage.opNew(PATH_FOR_FORMAT, this._formatVersion);
+
+      // Static content for the first change (for now).
       await docStorage.changeAppend(
         new DocumentChange(1, Timestamp.now(), DEFAULT_DOCUMENT, null));
     }
