@@ -303,12 +303,14 @@ export default class BaseDoc extends CommonBase {
    * @returns {FrozenBuffer} Value stored at the indicated path.
    */
   async pathRead(storagePath) {
-    const result = this.pathReadOrNull(storagePath);
+    const result =
+      await this._impl_pathReadOrNull(StoragePath.check(storagePath));
+
     if (result === null) {
       throw new Error(`No value at path: ${storagePath}`);
     }
 
-    return result;
+    return FrozenBuffer.check(result);
   }
 
   /**
@@ -320,9 +322,8 @@ export default class BaseDoc extends CommonBase {
    *   if there is none.
    */
   async pathReadOrNull(storagePath) {
-    StoragePath.check(storagePath);
-
-    const result = this._impl_pathReadOrNull(storagePath);
+    const result =
+      await this._impl_pathReadOrNull(StoragePath.check(storagePath));
 
     return (result === null) ? result : FrozenBuffer.check(result);
   }
