@@ -7,10 +7,10 @@ import fs from 'fs';
 import { after, before, describe, it } from 'mocha';
 import path from 'path';
 
-import { DocumentChange, Timestamp, VersionNumber } from 'doc-common';
 import { LocalDoc } from 'doc-store-local';
+import { FrozenBuffer } from 'util-server';
 
-const STORE_PREFIX = 'arugula-test-';
+const STORE_PREFIX = 'bayou-test-';
 let storeDir = null;
 
 describe('doc-store-local/LocalDoc', () => {
@@ -41,59 +41,24 @@ describe('doc-store-local/LocalDoc', () => {
     });
   });
 
-  describe('changeAppend(change)', () => {
-    it('should increment the version after a change is applied', async () => {
-      const doc = new LocalDoc('0', documentPath());
-
-      // Docs start off with version number `0`.
-      await doc.create();
-      assert.strictEqual(await doc.currentVerNum(), 0);
-
-      await addChangeToDocument(doc);
-      let newVersion = await doc.currentVerNum();
-      assert.strictEqual(newVersion, 1);
-
-      await addChangeToDocument(doc);
-      newVersion = await doc.currentVerNum();
-      assert.strictEqual(newVersion, 2);
-    });
-
-    // Need a good way to test this with a delay. Documents don't resolve a Promise
-    // or send an event when written so there's no way for the test code to know
-    // when to check.
-    //
-    // it('should exist on disk after a write', async () => {
-    //   const doc = new LocalDoc('0', documentPath());
-    //
-    //   await addChangeToDocument(doc);
-    //
-    //   assert.isTrue(doc.exists());
-    // });
-  });
-
   describe('create()', () => {
     it('should erase the document if called on a non-empty document', async () => {
       const doc = new LocalDoc('0', documentPath());
+      const storagePath = '/abc';
+      const value = FrozenBuffer.coerce('x');
 
+      // Baseline assumption.
       await doc.create();
-      await addChangeToDocument(doc);
-      assert.strictEqual(await doc.currentVerNum(), 1); // Baseline assumption.
+      await doc.opForceWrite(storagePath, value);
+      assert.strictEqual(await doc.pathReadOrNull(storagePath), value);
 
+      // The real test.
       await doc.create();
-      assert.strictEqual(await doc.currentVerNum(), 0); // The real test.
+      assert.strictEqual(await doc.pathReadOrNull(storagePath), null);
     });
   });
 });
 
 function documentPath() {
   return path.join(storeDir, 'test_file');
-}
-
-async function addChangeToDocument(doc) {
-  const ts = Timestamp.now();
-  const changes = [{ 'insert': 'hold on to your butts!' }];
-
-  await doc.changeAppend(
-    new DocumentChange(
-      VersionNumber.after(await doc.currentVerNum()), ts, changes, null));
 }
