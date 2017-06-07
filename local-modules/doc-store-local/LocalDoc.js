@@ -11,6 +11,7 @@ import { BaseDoc } from 'doc-store';
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
 import { PromDelay } from 'util-common';
+import { FrozenBuffer } from 'util-server';
 
 
 /** {Logger} Logger for this module. */
@@ -31,15 +32,11 @@ export default class LocalDoc extends BaseDoc {
   /**
    * Constructs an instance.
    *
-   * @param {string} formatVersion The format version to expect and use.
    * @param {string} docId The ID of the document this instance represents.
    * @param {string} docPath The filesystem path for document storage.
    */
-  constructor(formatVersion, docId, docPath) {
+  constructor(docId, docPath) {
     super(docId);
-
-    /** {string} The format version to expect and use. */
-    this._formatVersion = formatVersion;
 
     /** {string} Path to the change storage for this document. */
     this._path = `${docPath}.json`;
@@ -126,7 +123,7 @@ export default class LocalDoc extends BaseDoc {
    * @returns {boolean} `true` iff this document exists.
    */
   async _impl_exists() {
-    if (this._changes !== null) {
+    if (this._storage !== null) {
       // Whether or not the file exists, the document is considered to exist
       // because it has a non-empty in-memory model. (For example, it might have
       // been `create()`d but not yet stored to disk.)
@@ -135,7 +132,7 @@ export default class LocalDoc extends BaseDoc {
       // If the file exists, then the document exists. It might turn out to be
       // the case that the file contents are invalid; however, by definition
       // that is taken to be an _existing_ but _empty_ file.
-      return afs.exists(this._path);
+      return afs.exists(this._storageDir);
     }
   }
 
@@ -219,16 +216,6 @@ export default class LocalDoc extends BaseDoc {
   /**
    * Implementation as required by the superclass.
    *
-   * @returns {boolean} `true` iff the document needs migration.
-   */
-  async _impl_needsMigration() {
-    await this._readChangesIfNecessary();
-    return this._needsMigration;
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
    * @param {string} storagePath Path to write to.
    * @param {FrozenBuffer|null} oldValue Value expected to be stored at `path`
    *   at the moment of writing, or `null` if `path` is expected to have nothing
@@ -240,7 +227,7 @@ export default class LocalDoc extends BaseDoc {
   async _impl_op(storagePath, oldValue, newValue) {
     await this._readStorageIfNecessary();
 
-    const existingValue = this._storage[storagePath] || null;
+    const existingValue = this._storage.get(storagePath) || null;
 
     if (oldValue !== existingValue) {
       if (   (oldValue === null)
@@ -251,9 +238,22 @@ export default class LocalDoc extends BaseDoc {
       }
     }
 
+    this._storage.set(storagePath, newValue);
     this._storageToWrite.set(storagePath, newValue);
     this._storageNeedsWrite();
     return true;
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @param {string} storagePath Path to read from.
+   * @returns {FrozenBuffer|null} Value stored at the indicated path, or `null`
+   *   if there is none.
+   */
+  async _impl_pathReadOrNull(storagePath) {
+    await this._readStorageIfNecessary();
+    return this._storage.get(storagePath) || null;
   }
 
   /**
@@ -295,9 +295,8 @@ export default class LocalDoc extends BaseDoc {
 
     // Perform the file write.
 
-    const changes     = this._changes;
-    const version     = this._formatVersion;
-    const encoded     = Encoder.encodeJson({ version, changes }, true);
+    const changes = this._changes;
+    const encoded = Encoder.encodeJson({ changes }, true);
 
     // These are for dirty/clean verification. See big comment below.
     const changeCount = changes.length;
@@ -361,7 +360,6 @@ export default class LocalDoc extends BaseDoc {
     if (!await afs.exists(this._path)) {
       // File doesn't actually exist. Just initialize an empty change list.
       this._changes = [];
-      this._needsMigration = false;
       this._log.info('New document.');
       return this._changes;
     }
@@ -371,18 +369,18 @@ export default class LocalDoc extends BaseDoc {
 
     const encoded = await afs.readFile(this._path);
     let contents = null;
-    let needsMigration = true;
 
     try {
       contents = Decoder.decodeJson(encoded);
-      TObject.withExactKeys(contents, ['version', 'changes']);
-      if (contents.version !== this._formatVersion) {
-        this._log.warn('Ignoring data with a mismatched format version. ' +
-            `Got ${contents.version}, expected ${this._formatVersion}`);
-        contents = null;
-      }
+      TObject.withExactKeys(contents, ['changes']);
     } catch (e) {
-      this._log.warn('Ignoring malformed data (bad JSON or unversioned).', e);
+      // **Note:** In an earlier version of the code, this is where format
+      // version skew was detected. That code has moved to the higher layer of
+      // document handling. In addition, the change-list-specific code in this
+      // file (such as this method) is in the process of getting decommissioned
+      // in general, and as such it doesn't make sense to try to get too fancy
+      // with the error recovery here.
+      this._log.warn('Ignoring malformed data (bad JSON).', e);
       contents = null;
     }
 
@@ -394,11 +392,9 @@ export default class LocalDoc extends BaseDoc {
       // data structures all the way through, but (TODO) this is reasonable
       // for now.
       this._changes = contents.changes.slice(0);
-      needsMigration = false;
       this._log.info('Read from disk.');
     }
 
-    this._needsMigration = needsMigration;
     return this._changes;
   }
 
@@ -432,16 +428,18 @@ export default class LocalDoc extends BaseDoc {
     }
 
     // The directory exists. Read its contents.
-    this._log.detail('Reading from disk...');
+    this._log.info('Reading storage from disk...');
 
     const files = await afs.readdir(this._storageDir);
     const storage = new Map();
     for (const f of files) {
       const buf = await afs.readFile(path.resolve(this._storageDir, f));
       const storagePath = LocalDoc._storagePathForFsName(f);
-      storage.set(storagePath, buf);
-      this._log.detail(`Read: ${storagePath}`);
+      storage.set(storagePath, FrozenBuffer.coerce(buf));
+      this._log.info(`Read: ${storagePath}`);
     }
+
+    this._log.info('Done reading storage.');
 
     // Only set the instance variables after all the reading is done.
     this._storage             = storage;
@@ -551,6 +549,7 @@ export default class LocalDoc extends BaseDoc {
     // If so, recurse to iterate.
 
     if (this._storageIsDirty) {
+      this._log.info('Storage modified during write operation.');
       return this._waitThenWriteStorage();
     }
 

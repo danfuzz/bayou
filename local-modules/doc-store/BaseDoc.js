@@ -38,7 +38,7 @@ export default class BaseDoc extends CommonBase {
   constructor(docId) {
     super();
 
-    /** The ID of the document that this instance represents. */
+    /** {string} The ID of the document that this instance represents. */
     this._id = TString.nonempty(docId);
   }
 
@@ -122,9 +122,7 @@ export default class BaseDoc extends CommonBase {
   /**
    * Main implementation of `currentVerNum()`. This method can be called without
    * error whether or not the document exists (as opposed to `currentVerNum()`);
-   * for a non-existent document, this method returns `null`. In addition, this
-   * method returns `null` if the document exists but is not in a recognized
-   * format (e.g. if `needsMigration()` would return `true`).
+   * for a non-existent or empty document, this method returns `null`.
    *
    * @abstract
    * @returns {Int|null} The version number of this document or `null` if the
@@ -220,29 +218,6 @@ export default class BaseDoc extends CommonBase {
   }
 
   /**
-   * Indicates whether this document needs migration. That is, this returns
-   * `true` if the document is in a format that is not directly recognized by
-   * this class.
-   *
-   * @returns {boolean} `true` iff the document needs migration.
-   */
-  async needsMigration() {
-    // This is just a pass-through. The point is to maintain the pattern of
-    // `_impl_` as the things that subclasses override.
-    return this._impl_needsMigration();
-  }
-
-  /**
-   * Main implementation of `needsMigration()`.
-   *
-   * @abstract
-   * @returns {boolean} `true` iff the document needs migration.
-   */
-  async _impl_needsMigration() {
-    return this._mustOverride();
-  }
-
-  /**
    * Deletes the value at the indicated path, failing if it is not the indicated
    * value at the time of deletion. If the expected value doesn't match, this
    * method returns `false`. All other problems are indicated by throwing
@@ -258,7 +233,7 @@ export default class BaseDoc extends CommonBase {
     StoragePath.check(storagePath);
     FrozenBuffer.check(oldValue);
 
-    return this._impl_write(storagePath, oldValue, null);
+    return this._impl_op(storagePath, oldValue, null);
   }
 
   /**
@@ -275,7 +250,7 @@ export default class BaseDoc extends CommonBase {
     StoragePath.check(storagePath);
     FrozenBuffer.check(newValue);
 
-    return this._impl_write(storagePath, null, newValue);
+    return this._impl_op(storagePath, null, newValue);
   }
 
   /**
@@ -296,15 +271,15 @@ export default class BaseDoc extends CommonBase {
     FrozenBuffer.check(oldValue);
     FrozenBuffer.check(newValue);
 
-    return this._impl_write(storagePath, oldValue, newValue);
+    return this._impl_op(storagePath, oldValue, newValue);
   }
 
   /**
-   * Performs an operation on the document. This is the main implementation of
-   * `opDelete()`, `opNew()`, and `opReplace()`. Arguments are guaranteed by the
-   * superclass to be valid. Passing `null` for `oldValue` corresponds to the
-   * `opNew()` operation. Passing `null` for `newValue` corresponds to the
-   * `opDelete()` operation.
+   * Performs a modification operation on the document. This is the main
+   * implementation of `opDelete()`, `opNew()`, and `opReplace()`. Arguments are
+   * guaranteed by the superclass to be valid. Passing `null` for `oldValue`
+   * corresponds to the `opNew()` operation. Passing `null` for `newValue`
+   * corresponds to the `opDelete()` operation.
    *
    * @abstract
    * @param {string} storagePath Path to write to.
@@ -318,5 +293,52 @@ export default class BaseDoc extends CommonBase {
    */
   async _impl_op(storagePath, oldValue, newValue) {
     return this._mustOverride(storagePath, oldValue, newValue);
+  }
+
+  /**
+   * Reads the value stored at the given path. This throws an error if there is
+   * no value stored at the given path.
+   *
+   * @param {string} storagePath Path to read from.
+   * @returns {FrozenBuffer} Value stored at the indicated path.
+   */
+  async pathRead(storagePath) {
+    const result =
+      await this._impl_pathReadOrNull(StoragePath.check(storagePath));
+
+    if (result === null) {
+      throw new Error(`No value at path: ${storagePath}`);
+    }
+
+    return FrozenBuffer.check(result);
+  }
+
+  /**
+   * Reads the value stored at the given path. This returns `null` if there is
+   * no value stored at the given path.
+   *
+   * @param {string} storagePath Path to read from.
+   * @returns {FrozenBuffer|null} Value stored at the indicated path, or `null`
+   *   if there is none.
+   */
+  async pathReadOrNull(storagePath) {
+    const result =
+      await this._impl_pathReadOrNull(StoragePath.check(storagePath));
+
+    return (result === null) ? result : FrozenBuffer.check(result);
+  }
+
+  /**
+   * Reads the value stored at the given path. This method is guaranteed to be
+   * called with a valid value for `storagePath`. This is the main
+   * implementation for the methods `pathRead()` and `pathReadOrNull()`.
+   *
+   * @abstract
+   * @param {string} storagePath Path to read from.
+   * @returns {FrozenBuffer|null} Value stored at the indicated path, or `null`
+   *   if there is none.
+   */
+  async _impl_pathReadOrNull(storagePath) {
+    return this._mustOverride(storagePath);
   }
 }

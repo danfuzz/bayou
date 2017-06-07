@@ -10,6 +10,7 @@
     "see-all": "local",
     "server-env": "local",
     "util-common": "local",
+    "util-server": "local",
 
     "async-file": "^2.0.2"
   }

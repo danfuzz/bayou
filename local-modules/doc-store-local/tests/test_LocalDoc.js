@@ -33,9 +33,9 @@ describe('doc-store-local/LocalDoc', () => {
     // }, 2000);
   });
 
-  describe('constructor(formatVersion, docId, docPath)', () => {
+  describe('constructor(docId, docPath)', () => {
     it('should create a local dir for storing files at the specified path', () => {
-      const doc = new LocalDoc('0', '0', documentPath());
+      const doc = new LocalDoc('0', documentPath());
 
       assert.isNotNull(doc);
     });
@@ -43,7 +43,7 @@ describe('doc-store-local/LocalDoc', () => {
 
   describe('changeAppend(change)', () => {
     it('should increment the version after a change is applied', async () => {
-      const doc = new LocalDoc('0', '0', documentPath());
+      const doc = new LocalDoc('0', documentPath());
 
       // Docs start off with version number `0`.
       await doc.create();
@@ -63,7 +63,7 @@ describe('doc-store-local/LocalDoc', () => {
     // when to check.
     //
     // it('should exist on disk after a write', async () => {
-    //   const doc = new LocalDoc('0', '0', documentPath());
+    //   const doc = new LocalDoc('0', documentPath());
     //
     //   await addChangeToDocument(doc);
     //
@@ -73,7 +73,7 @@ describe('doc-store-local/LocalDoc', () => {
 
   describe('create()', () => {
     it('should erase the document if called on a non-empty document', async () => {
-      const doc = new LocalDoc('0', '0', documentPath());
+      const doc = new LocalDoc('0', documentPath());
 
       await doc.create();
       await addChangeToDocument(doc);

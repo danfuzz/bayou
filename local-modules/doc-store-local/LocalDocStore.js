@@ -7,7 +7,7 @@ import path from 'path';
 
 import { BaseDocStore } from 'doc-store';
 import { Logger } from 'see-all';
-import { Dirs, ProductInfo } from 'server-env';
+import { Dirs } from 'server-env';
 
 import LocalDoc from './LocalDoc';
 
@@ -30,17 +30,6 @@ export default class LocalDocStore extends BaseDocStore {
 
     /** {string} The directory for document storage. */
     this._dir = path.resolve(Dirs.VAR_DIR, 'docs');
-
-    /**
-     * {string} The document format version to use. This is always set to be
-     * the same as the product version, to be maximally conservative about what
-     * to accept. _Other_ implementations of the document store interface will
-     * rightly have a looser correspondence between product version and document
-     * format; but _this_ implementation is more geared toward active
-     * development, and as such we want to make it easy to cleanly ignore old
-     * formats.
-     */
-    this._formatVersion = ProductInfo.INFO.version;
 
     /**
      * {boolean} `true` iff the document directory is known to exist. Set to
@@ -66,8 +55,7 @@ export default class LocalDocStore extends BaseDocStore {
 
     await this._ensureDocDirectory();
 
-    const result =
-      new LocalDoc(this._formatVersion, docId, this._documentPath(docId));
+    const result = new LocalDoc(docId, this._documentPath(docId));
     this._docs.set(docId, result);
     return result;
   }

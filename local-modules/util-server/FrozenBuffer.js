@@ -53,7 +53,7 @@ export default class FrozenBuffer extends CommonBase {
      * this class. In particular, if the constructor was given a buffer for
      * `value`, we clone it here to guarantee safe use.
      */
-    this._buffer = isBuffer ? Buffer.from(value) : value;
+    this._buffer = isBuffer ? value : Buffer.from(value);
 
     /**
      * {string|null} Hashcode of the data, or `null` if not yet calculated.

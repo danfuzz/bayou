@@ -7,10 +7,15 @@ import weak from 'weak';
 import { DocumentChange, FrozenDelta, Timestamp } from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
+import { ProductInfo } from 'server-env';
 import { TBoolean, TString } from 'typecheck';
 import { Singleton } from 'util-common';
+import { FrozenBuffer } from 'util-server';
 
 import DocControl from './DocControl';
+
+/** {string} `StoragePath` string for where the document format version goes. */
+const FORMAT_PATH = '/format_version';
 
 /** {FrozenDelta} Message used as document instead of migrating old versions. */
 const MIGRATION_NOTE = FrozenDelta.coerce(
@@ -40,6 +45,12 @@ export default class DocServer extends Singleton {
      * weak-reference-wrapped document controller for the so-IDed document.
      */
     this._controls = new Map();
+
+    /**
+     * {FrozenBuffer} The document format version to use for new documents and
+     * to expect in existing documents.
+     */
+    this._formatVersion = FrozenBuffer.coerce(ProductInfo.INFO.version);
   }
 
   /**
@@ -79,37 +90,61 @@ export default class DocServer extends Singleton {
     TString.nonempty(docId);
     TBoolean.check(initIfMissing);
 
+    // Make a temporary logger specific to this doc.
+    const docLog = log.withPrefix(`[${docId}]`);
+
     const already = this._controls.get(docId);
     if (already && !weak.isDead(already)) {
-      log.info(`Already have: ${docId}`);
+      docLog.info('Retrieved from in-memory cache.');
       return weak.get(already);
     }
 
     const docStorage = await Hooks.docStore.getDocument(docId);
+    const docExists = await docStorage.exists();
+    let docNeedsMigrate = false;
 
-    if (await docStorage.exists()) {
-      log.info(`Retrieving document: ${docId}`);
-      if (await docStorage.needsMigration()) {
+    if (docExists) {
+      docLog.info('Retrieving from storage.');
+
+      const formatVersion = await docStorage.pathReadOrNull(FORMAT_PATH);
+      let docIsValid = false;
+
+      if (formatVersion === null) {
+        docLog.info('Corrupt document: Missing format version.');
+      } else if (!formatVersion.equals(this._formatVersion)) {
+        const got = formatVersion.string;
+        const expected = this._formatVersion.string;
+        docLog.info(`Mismatched format version: got ${got}; expected ${expected}`);
+      } else {
+        docIsValid = true;
+      }
+
+      if (!docIsValid) {
         // **TODO:** Ultimately, this code path will evolve into forward
         // migration of documents found to be in older formats. For now, we just
-        // recreate the document and note what's going on in the contents.
-        log.info('Needs migration. (But just noting that fact for now.)');
-        await docStorage.create();
-        await docStorage.changeAppend(
-          new DocumentChange(1, Timestamp.now(), MIGRATION_NOTE, null));
+        // fall through to the document creation logic below, which will leave
+        // a note what's going on in the document contents.
+        docLog.info('Needs migration. (But just noting that fact for now.)');
+        docNeedsMigrate = true;
       }
-    } else {
-      if (!initIfMissing) {
-        log.info(`No document: ${docId}`);
-        return null;
-      }
+    }
 
-      log.info(`New document: ${docId}`);
+    if (!docExists && !initIfMissing) {
+      docLog.info('No such document.');
+      return null;
+    }
 
-      // Initialize the document with static content (for now).
+    if (!docExists || docNeedsMigrate) {
+      docLog.info('Creating document.');
+
+      // Initialize the document.
       await docStorage.create();
+      await docStorage.opNew(FORMAT_PATH, this._formatVersion);
+
+      // Static content for the first change (for now).
+      const delta = docNeedsMigrate ? MIGRATION_NOTE : DEFAULT_DOCUMENT;
       await docStorage.changeAppend(
-        new DocumentChange(1, Timestamp.now(), DEFAULT_DOCUMENT, null));
+        new DocumentChange(1, Timestamp.now(), delta, null));
     }
 
     const result = new DocControl(docStorage);
