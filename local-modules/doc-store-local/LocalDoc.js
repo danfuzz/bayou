@@ -11,6 +11,7 @@ import { BaseDoc } from 'doc-store';
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
 import { PromDelay } from 'util-common';
+import { FrozenBuffer } from 'util-server';
 
 
 /** {Logger} Logger for this module. */
@@ -226,7 +227,7 @@ export default class LocalDoc extends BaseDoc {
   async _impl_op(storagePath, oldValue, newValue) {
     await this._readStorageIfNecessary();
 
-    const existingValue = this._storage[storagePath] || null;
+    const existingValue = this._storage.get(storagePath) || null;
 
     if (oldValue !== existingValue) {
       if (   (oldValue === null)
@@ -237,6 +238,7 @@ export default class LocalDoc extends BaseDoc {
       }
     }
 
+    this._storage.set(storagePath, newValue);
     this._storageToWrite.set(storagePath, newValue);
     this._storageNeedsWrite();
     return true;
@@ -251,7 +253,7 @@ export default class LocalDoc extends BaseDoc {
    */
   async _impl_pathReadOrNull(storagePath) {
     await this._readStorageIfNecessary();
-    return this._storage[storagePath] || null;
+    return this._storage.get(storagePath) || null;
   }
 
   /**
@@ -433,7 +435,7 @@ export default class LocalDoc extends BaseDoc {
     for (const f of files) {
       const buf = await afs.readFile(path.resolve(this._storageDir, f));
       const storagePath = LocalDoc._storagePathForFsName(f);
-      storage.set(storagePath, buf);
+      storage.set(storagePath, FrozenBuffer.coerce(buf));
       this._log.info(`Read: ${storagePath}`);
     }
 
