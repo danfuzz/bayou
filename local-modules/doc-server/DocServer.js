@@ -107,8 +107,10 @@ export default class DocServer extends Singleton {
       const formatVersion = await docStorage.pathReadOrNull(PATH_FOR_FORMAT);
       if (formatVersion === null) {
         docLog.info('Corrupt document: Missing format version.');
-      } else if (formatVersion.equals(this._formatVersion)) {
-        docLog.info('Mismatched format version.');
+      } else if (!formatVersion.equals(this._formatVersion)) {
+        const got = formatVersion.string;
+        const expected = this._formatVersion.string;
+        docLog.info(`Mismatched format version: got ${got}; expected ${expected}`);
       } else {
         docIsValid = true;
       }
