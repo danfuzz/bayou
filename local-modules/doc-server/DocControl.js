@@ -95,7 +95,7 @@ export default class DocControl extends CommonBase {
    * @returns {Snapshot} The corresponding snapshot.
    */
   async snapshot(verNum = null) {
-    const currentVerNum = await this._doc.currentVerNum();
+    const currentVerNum = await this._currentVerNum();
     verNum = (verNum === null)
       ? currentVerNum
       : VersionNumber.maxInc(verNum, currentVerNum);
@@ -144,7 +144,7 @@ export default class DocControl extends CommonBase {
    *   version `baseVerNum` to produce version `verNum` of the document.
    */
   async deltaAfter(baseVerNum) {
-    const currentVerNum = await this._doc.currentVerNum();
+    const currentVerNum = await this._currentVerNum();
     VersionNumber.maxInc(baseVerNum, currentVerNum);
 
     if (baseVerNum !== currentVerNum) {
@@ -361,7 +361,7 @@ export default class DocControl extends CommonBase {
    * given initial version through and including the current latest delta,
    * composed from a given base. It is valid to pass as either version number
    * parameter one version beyond the current version number (that is,
-   * `VersionNumber.after(await this._doc.currentVerNum())`. It is invalid to
+   * `VersionNumber.after(await this._currentVerNum())`. It is invalid to
    * specify a non-existent version _other_ than one beyond the current version.
    * If `startInclusive === endExclusive`, then this method returns `baseDelta`.
    *
@@ -376,7 +376,7 @@ export default class DocControl extends CommonBase {
    *   `endExclusive`.
    */
   async _composeVersions(baseDelta, startInclusive, endExclusive) {
-    const nextVerNum = VersionNumber.after(await this._doc.currentVerNum());
+    const nextVerNum = VersionNumber.after(await this._currentVerNum());
     startInclusive = VersionNumber.rangeInc(startInclusive, 0, nextVerNum);
     endExclusive =
       VersionNumber.rangeInc(endExclusive, startInclusive, nextVerNum);
@@ -448,12 +448,12 @@ export default class DocControl extends CommonBase {
   /**
    * Gets the current document version number.
    *
-   * @returns {VersionNumber} The version number.
+   * @returns {VersionNumber|null} The version number, or `null` if it is not
+   *   set.
    */
   async _currentVerNum() {
-    const encoded = await this._doc.pathRead(VERSION_PATH);
-
-    return Decoder.decodeJson(encoded.string);
+    const encoded = await this._doc.pathReadOrNull(VERSION_PATH);
+    return (encoded === null) ? null : Decoder.decodeJson(encoded.string);
   }
 
   /**
