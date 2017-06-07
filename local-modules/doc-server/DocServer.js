@@ -4,14 +4,13 @@
 
 import weak from 'weak';
 
-import { Encoder } from 'api-common';
 import { DocumentChange, FrozenDelta, Timestamp } from 'doc-common';
+import { Coder } from 'doc-store';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
 import { ProductInfo } from 'server-env';
 import { TBoolean, TString } from 'typecheck';
 import { Singleton } from 'util-common';
-import { FrozenBuffer } from 'util-server';
 
 import DocControl from './DocControl';
 import Paths from './Paths';
@@ -49,7 +48,7 @@ export default class DocServer extends Singleton {
      * {FrozenBuffer} The document format version to use for new documents and
      * to expect in existing documents.
      */
-    this._formatVersion = FrozenBuffer.coerce(ProductInfo.INFO.version);
+    this._formatVersion = Coder.encode(ProductInfo.INFO.version);
   }
 
   /**
@@ -148,9 +147,9 @@ export default class DocServer extends Singleton {
       // Static content for the first change (for now).
       const delta = docNeedsMigrate ? MIGRATION_NOTE : DEFAULT_DOCUMENT;
       const change = new DocumentChange(1, Timestamp.now(), delta, null);
-      const encodedChange = FrozenBuffer.coerce(Encoder.encodeJson(change));
-      await docStorage.opNew(Paths.VERSION_NUMBER, FrozenBuffer.coerce('0'));
-      await docStorage.opNew(Paths.forVerNum(0), encodedChange);
+      await docStorage.opNew(Paths.forVerNum(0), Coder.encode(DocumentChange.firstChange()));
+      await docStorage.opNew(Paths.forVerNum(1), Coder.encode(change));
+      await docStorage.opNew(Paths.VERSION_NUMBER, Coder.encode(1));
 
       // Write it using the old low-level storage form, which is still what
       // is getting read back, as of this writing. **TODO:** Stop needing to do
