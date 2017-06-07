@@ -2,14 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Decoder, Encoder } from 'api-common';
 import { DeltaResult, DocumentChange, FrozenDelta, Snapshot, Timestamp, VersionNumber }
   from 'doc-common';
-import { BaseDoc } from 'doc-store';
+import { BaseDoc, Coder } from 'doc-store';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase, PromCondition, PromDelay } from 'util-common';
-import { FrozenBuffer } from 'util-server';
 
 import Paths from './Paths';
 
@@ -442,10 +440,9 @@ export default class DocControl extends CommonBase {
     // (See TODO above.) **Note:** The `await` is to get errors to be thrown
     // via this method instead of being dropped on the floor. The
     // `Promise.all()` cladding means that the methods can be run in parallel.
-    const encoded = FrozenBuffer.coerce(Encoder.encodeJson(change));
     await Promise.all([
       this._writeVerNum(verNum),
-      this._doc.opNew(Paths.forVerNum(verNum), encoded)
+      this._doc.opNew(Paths.forVerNum(verNum), Coder.encode(change))
     ]);
 
     this._changeCondition.value = true;
@@ -460,7 +457,7 @@ export default class DocControl extends CommonBase {
    */
   async _currentVerNum() {
     const encoded = await this._doc.pathReadOrNull(Paths.VERSION_NUMBER);
-    return (encoded === null) ? null : Decoder.decodeJson(encoded.string);
+    return (encoded === null) ? null : Coder.decode(encoded);
   }
 
   /**
@@ -472,9 +469,7 @@ export default class DocControl extends CommonBase {
   async _writeVerNum(verNum) {
     VersionNumber.check(verNum);
 
-    const encoded = FrozenBuffer.coerce(Encoder.encodeJson(verNum));
-
-    await this._doc.opForceWrite(Paths.VERSION_NUMBER, encoded);
+    await this._doc.opForceWrite(Paths.VERSION_NUMBER, Coder.encode(verNum));
     return true;
   }
 }

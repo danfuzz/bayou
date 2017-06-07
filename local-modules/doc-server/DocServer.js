@@ -144,7 +144,8 @@ export default class DocServer extends Singleton {
       await docStorage.create();
       await docStorage.opNew(Paths.FORMAT_VERSION, this._formatVersion);
 
-      // Static content for the first change (for now).
+      // Empty first change (per documented interface) and static content for
+      // the first contentful change (for now).
       const delta = docNeedsMigrate ? MIGRATION_NOTE : DEFAULT_DOCUMENT;
       const change = new DocumentChange(1, Timestamp.now(), delta, null);
       await docStorage.opNew(Paths.forVerNum(0), Coder.encode(DocumentChange.firstChange()));
