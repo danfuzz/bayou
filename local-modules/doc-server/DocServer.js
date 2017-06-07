@@ -90,32 +90,34 @@ export default class DocServer extends Singleton {
     TString.nonempty(docId);
     TBoolean.check(initIfMissing);
 
+    // Make a temporary logger specific to this doc.
+    const docLog = log.withPrefix(`[${docId}]`);
+
     const already = this._controls.get(docId);
     if (already && !weak.isDead(already)) {
-      log.info(`Already have: ${docId}`);
+      docLog.info('Retrieved from in-memory cache.');
       return weak.get(already);
     }
 
     const docStorage = await Hooks.docStore.getDocument(docId);
 
     if (await docStorage.exists()) {
-      log.info(`Retrieving document: ${docId}`);
+      docLog.info('Retrieving from storage.');
       let docIsValid = false;
-      try {
-        const formatVersion = await docStorage.pathRead(PATH_FOR_FORMAT);
-        if (formatVersion.equals(this._formatVersion)) {
-          docIsValid = true;
-        }
-      } catch (e) {
-        // The `readPath()` threw because the format version was unset.
-        log.info('Corrupt document: Missing format version.');
+      const formatVersion = await docStorage.pathReadOrNull(PATH_FOR_FORMAT);
+      if (formatVersion === null) {
+        docLog.info('Corrupt document: Missing format version.');
+      } else if (formatVersion.equals(this._formatVersion)) {
+        docLog.info('Mismatched format version.');
+      } else {
+        docIsValid = true;
       }
 
       if (!docIsValid) {
         // **TODO:** Ultimately, this code path will evolve into forward
         // migration of documents found to be in older formats. For now, we just
         // recreate the document and note what's going on in the contents.
-        log.info('Needs migration. (But just noting that fact for now.)');
+        docLog.info('Needs migration. (But just noting that fact for now.)');
         await docStorage.create();
         await docStorage.changeAppend(
           new DocumentChange(1, Timestamp.now(), MIGRATION_NOTE, null));
@@ -123,11 +125,11 @@ export default class DocServer extends Singleton {
       }
     } else {
       if (!initIfMissing) {
-        log.info(`No document: ${docId}`);
+        docLog.info('No such document.');
         return null;
       }
 
-      log.info(`New document: ${docId}`);
+      docLog.info('Making new document.');
 
       // Initialize the document with static content (for now).
       await docStorage.create();
