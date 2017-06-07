@@ -48,10 +48,10 @@ export default class DocControl extends CommonBase {
     this._doc = BaseDoc.check(docStorage);
 
     /**
-     * Mapping from version numbers to corresponding document snapshots.
-     * Sparse.
+     * {Map<VersionNumber,Snapshot>} Mapping from version numbers to
+     * corresponding document snapshots. Sparse.
      */
-    this._snapshots = {};
+    this._snapshots = new Map();
 
     /**
      * Condition that transitions from `false` to `true` when there is a version
@@ -103,7 +103,7 @@ export default class DocControl extends CommonBase {
     // composition.
     let base = null;
     for (let i = verNum; i >= 0; i--) {
-      const v = this._snapshots[i];
+      const v = this._snapshots.get(i);
       if (v) {
         base = v;
         break;
@@ -125,7 +125,7 @@ export default class DocControl extends CommonBase {
 
     this._log.detail(`Made snapshot for version ${verNum}.`);
 
-    this._snapshots[verNum] = result;
+    this._snapshots.set(verNum, result);
     return result;
   }
 
