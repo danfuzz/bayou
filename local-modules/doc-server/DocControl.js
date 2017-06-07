@@ -11,11 +11,10 @@ import { TString } from 'typecheck';
 import { CommonBase, PromCondition, PromDelay } from 'util-common';
 import { FrozenBuffer } from 'util-server';
 
+import Paths from './Paths';
+
 /** {Logger} Logger for this module. */
 const log = new Logger('doc-control');
-
-/** {string} `StoragePath` string for where the document version number goes. */
-const VERSION_PATH = '/version_number';
 
 /** {number} Initial amount of time (in msec) between append retries. */
 const INITIAL_APPEND_RETRY_MSEC = 50;
@@ -452,7 +451,7 @@ export default class DocControl extends CommonBase {
    *   set.
    */
   async _currentVerNum() {
-    const encoded = await this._doc.pathReadOrNull(VERSION_PATH);
+    const encoded = await this._doc.pathReadOrNull(Paths.VERSION_NUMBER);
     return (encoded === null) ? null : Decoder.decodeJson(encoded.string);
   }
 
@@ -467,7 +466,7 @@ export default class DocControl extends CommonBase {
 
     const encoded = FrozenBuffer.coerce(Encoder.encodeJson(verNum));
 
-    await this._doc.opForceWrite(VERSION_PATH, encoded);
+    await this._doc.opForceWrite(Paths.VERSION_NUMBER, encoded);
     return true;
   }
 }
