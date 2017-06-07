@@ -122,7 +122,7 @@ export default class LocalDoc extends BaseDoc {
    * @returns {boolean} `true` iff this document exists.
    */
   async _impl_exists() {
-    if (this._changes !== null) {
+    if (this._storage !== null) {
       // Whether or not the file exists, the document is considered to exist
       // because it has a non-empty in-memory model. (For example, it might have
       // been `create()`d but not yet stored to disk.)
