@@ -426,9 +426,10 @@ export default class DocControl extends CommonBase {
       throw new Error('Should not have been called with an empty delta.');
     }
 
+    // **TODO:** Stop using the old low-level storage interface.
     const verNum = VersionNumber.after(baseVerNum);
-    const appendResult = await this._doc.changeAppend(
-      new DocumentChange(verNum, Timestamp.now(), delta, authorId));
+    const change = new DocumentChange(verNum, Timestamp.now(), delta, authorId);
+    const appendResult = await this._doc.changeAppend(change);
 
     if (!appendResult) {
       // We lost an append race.
@@ -436,9 +437,16 @@ export default class DocControl extends CommonBase {
       return null;
     }
 
-    // The `await` is to get errors to be thrown via this method instead of
-    // being dropped on the floor.
-    await this._writeVerNum(verNum);
+    // Write the delta out using the new low-level facility. This is duplicative
+    // for now, but will eventually be the main way that changes are recorded.
+    // (See TODO above.) **Note:** The `await` is to get errors to be thrown
+    // via this method instead of being dropped on the floor. The
+    // `Promise.all()` cladding means that the methods can be run in parallel.
+    const encoded = FrozenBuffer.coerce(Encoder.encodeJson(change));
+    await Promise.all([
+      this._writeVerNum(verNum),
+      this._doc.opNew(Paths.forVerNum(verNum), encoded)
+    ]);
 
     this._changeCondition.value = true;
     return verNum;
