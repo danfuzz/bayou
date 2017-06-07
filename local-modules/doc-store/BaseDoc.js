@@ -2,8 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DocumentChange, FrozenDelta, Timestamp, VersionNumber }
-  from 'doc-common';
+import { DocumentChange, VersionNumber } from 'doc-common';
 import { TBoolean, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 import { FrozenBuffer } from 'util-server';
@@ -20,16 +19,6 @@ import StoragePath from './StoragePath';
  * zero-based integer sequence. Changes are random-access.
  */
 export default class BaseDoc extends CommonBase {
-  /**
-   * Gets the appropriate first change to a document (empty delta) for the
-   * current moment in time.
-   *
-   * @returns {FrozenDelta} An appropriate initial change.
-   */
-  static _firstChange() {
-    return new DocumentChange(0, Timestamp.now(), FrozenDelta.EMPTY, null);
-  }
-
   /**
    * Constructs an instance.
    *
@@ -78,7 +67,7 @@ export default class BaseDoc extends CommonBase {
    * is empty.)
    */
   async create() {
-    this._impl_create(BaseDoc._firstChange());
+    this._impl_create(DocumentChange.firstChange());
   }
 
   /**
