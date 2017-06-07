@@ -218,6 +218,49 @@ export default class BaseDoc extends CommonBase {
   }
 
   /**
+   * Deletes the value at the indicated path, if any, and without regard to
+   * what value it might have stored.
+   *
+   * @param {string} storagePath Path to write to.
+   * @returns {boolean} `true` once the operation is complete.
+   */
+  async opForceDelete(storagePath) {
+    StoragePath.check(storagePath);
+
+    return this._impl_forceOp(storagePath, null);
+  }
+
+  /**
+   * Writes a value at the indicated path, without regard to whether there was
+   * a value already at the path, nor what value was already stored if any.
+   *
+   * @param {string} storagePath Path to write to.
+   * @param {FrozenBuffer} newValue Value to write.
+   * @returns {boolean} `true` once the operation is complete.
+   */
+  async opForceWrite(storagePath, newValue) {
+    StoragePath.check(storagePath);
+
+    return this._impl_forceOp(storagePath, newValue);
+  }
+
+  /**
+   * Performs a forced-modification operation on the document. This is the main
+   * implementation of `opForceDelete()` and `opForceWrite()`. Arguments are
+   * guaranteed by the superclass to be valid. Passing `null` for `newValue`
+   * corresponds to the `opForceDelete()` operation.
+   *
+   * @abstract
+   * @param {string} storagePath Path to write to.
+   * @param {FrozenBuffer|null} newValue Value to write, or `null` if the value
+   *   at `path` is to be deleted.
+   * @returns {boolean} `true` once the write operation is complete.
+   */
+  async _impl_forceOp(storagePath, newValue) {
+    return this._mustOverride(storagePath, newValue);
+  }
+
+  /**
    * Deletes the value at the indicated path, failing if it is not the indicated
    * value at the time of deletion. If the expected value doesn't match, this
    * method returns `false`. All other problems are indicated by throwing
