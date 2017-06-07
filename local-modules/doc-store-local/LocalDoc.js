@@ -131,7 +131,7 @@ export default class LocalDoc extends BaseDoc {
       // If the file exists, then the document exists. It might turn out to be
       // the case that the file contents are invalid; however, by definition
       // that is taken to be an _existing_ but _empty_ file.
-      return afs.exists(this._path);
+      return afs.exists(this._storageDir);
     }
   }
 
