@@ -2,15 +2,20 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Decoder, Encoder } from 'api-common';
 import { DeltaResult, DocumentChange, FrozenDelta, Snapshot, Timestamp, VersionNumber }
   from 'doc-common';
 import { BaseDoc } from 'doc-store';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase, PromCondition, PromDelay } from 'util-common';
+import { FrozenBuffer } from 'util-server';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('doc-control');
+
+/** {string} `StoragePath` string for where the document version number goes. */
+const VERSION_PATH = '/version_number';
 
 /** {number} Initial amount of time (in msec) between append retries. */
 const INITIAL_APPEND_RETRY_MSEC = 50;
@@ -432,7 +437,37 @@ export default class DocControl extends CommonBase {
       return null;
     }
 
+    // The `await` is to get errors to be thrown via this method instead of
+    // being dropped on the floor.
+    await this._writeVerNum(verNum);
+
     this._changeCondition.value = true;
     return verNum;
+  }
+
+  /**
+   * Gets the current document version number.
+   *
+   * @returns {VersionNumber} The version number.
+   */
+  async _currentVerNum() {
+    const encoded = await this._doc.pathRead(VERSION_PATH);
+
+    return Decoder.decodeJson(encoded.string);
+  }
+
+  /**
+   * Writes the given value as the current document version number.
+   *
+   * @param {VersionNumber} verNum The version number.
+   * @returns {boolean} `true` once the write is complete.
+   */
+  async _writeVerNum(verNum) {
+    VersionNumber.check(verNum);
+
+    const encoded = FrozenBuffer.coerce(Encoder.encodeJson(verNum));
+
+    await this._doc.opForceWrite(VERSION_PATH, encoded);
+    return true;
   }
 }
