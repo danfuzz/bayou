@@ -27,7 +27,7 @@ export default class Paths {
    * @param {RevisionNumber} revNum The version number.
    * @returns {string} The corresponding `StoragePath` string.
    */
-  static forVerNum(revNum) {
+  static forRevNum(revNum) {
     RevisionNumber.check(revNum);
     return `/change/${revNum}`;
   }
