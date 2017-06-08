@@ -391,6 +391,6 @@ export default class LocalDoc extends BaseDoc {
    * @returns {string} The `StoragePath` string corresponding to `fsName`.
    */
   static _storagePathForFsName(fsName) {
-    return `/${fsName.replace(/~/g, '/').replace(/\.*$/, '')}`;
+    return `/${fsName.replace(/~/g, '/').replace(/\..*$/, '')}`;
   }
 }
