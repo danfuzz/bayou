@@ -48,8 +48,8 @@ describe('see-all-server/RecentSink', () => {
       const logContents = log.htmlContents;
       const lines = logContents.match(/[^\r\n]+/g);
 
-      // One line for each log entry, plus one more each for the <table> and </table>
-      // This is kind of a weak test but it's better than nothing.
+      // One line for each log entry, plus one more each for the <table> and
+      // </table>. This is kind of a weak test but it's better than nothing.
       assert.strictEqual(lines.length, 1 + NUM_LINES + 1);
     });
   });

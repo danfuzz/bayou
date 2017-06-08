@@ -389,10 +389,10 @@ export default class DocControl extends CommonBase {
    */
   async _applyDeltaTo(base, delta, authorId, current, expected) {
     if (base.revNum === current.revNum) {
-      // The easy case, because the base revision is in fact the current revision
-      // of the document, so we don't have to transform the incoming delta.
-      // We merely have to apply the given `delta` to the current revision. If
-      // it succeeds, then we won the append race (if any).
+      // The easy case, because the base revision is in fact the current
+      // revision of the document, so we don't have to transform the incoming
+      // delta. We merely have to apply the given `delta` to the current
+      // revision. If it succeeds, then we won the append race (if any).
 
       const revNum = await this._appendDelta(base.revNum, delta, authorId);
 

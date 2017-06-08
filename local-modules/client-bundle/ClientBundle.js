@@ -152,8 +152,8 @@ const webpackOptions = {
         }]
       },
       {
-        // Quill uses `require()` to access `.svg` assets. The configuration here
-        // recapitulates how Quill is set up to process those assets. See
+        // Quill uses `require()` to access `.svg` assets. The configuration
+        // here recapitulates how Quill is set up to process those assets. See
         // <https://github.com/quilljs/quill/blob/develop/_develop/webpack.config.js>.
         test: /\.svg$/,
         use: [{
