@@ -32,18 +32,40 @@ const MAX_APPEND_TIME_MSEC = 20 * 1000; // 20 seconds.
  * document. (This guarantee is provided by `DocServer`.)
  */
 export default class DocControl extends CommonBase {
+  /** {string} Return value from `validationStatus()`, see which for details. */
+  static get STATUS_ERROR() {
+    return 'status_error';
+  }
+
+  /** {string} Return value from `validationStatus()`, see which for details. */
+  static get STATUS_MIGRATE() {
+    return 'status_migrate';
+  }
+
+  /** {string} Return value from `validationStatus()`, see which for details. */
+  static get STATUS_NOT_FOUND() {
+    return 'status_not_found';
+  }
+
+  /** {string} Return value from `validationStatus()`, see which for details. */
+  static get STATUS_OK() {
+    return 'status_ok';
+  }
+
   /**
    * Constructs an instance.
    *
-   * @param {BaseDoc} docStorage The underlying document storage. The document
-   *   must exist (that is `docStorage().exists()` returns `true`) prior to
-   *   calling this constructor.
+   * @param {BaseDoc} docStorage The underlying document storage.
+   * @param {FrozenBuffer} formatVersion Format version to expect and use.
    */
-  constructor(docStorage) {
+  constructor(docStorage, formatVersion) {
     super();
 
     /** {BaseDoc} Storage access for the document. */
     this._doc = BaseDoc.check(docStorage);
+
+    /** {FrozenBuffer} The document format version to expect and use. */
+    this._formatVersion = formatVersion;
 
     /**
      * {Map<VersionNumber,Snapshot>} Mapping from version numbers to
@@ -125,6 +147,67 @@ export default class DocControl extends CommonBase {
 
     this._snapshots.set(verNum, result);
     return result;
+  }
+
+  /**
+   * Evaluates the condition of the document, reporting a "validation status."
+   * The return value is one of the `STATUS_*` constants defined by this class:
+   *
+   * * `STATUS_OK` &mdash; No problems.
+   * * `STATUS_MIGRATE` &mdash; Document is in a format that is not understood.
+   * * `STATUS_NOT_FOUND` &mdash; The document doesn't exist.
+   * * `STATUS_ERROR` &mdash; Document is in an unrecoverably-bad state.
+   *
+   * This method will also emit information to the log about problems.
+   *
+   * @returns {string} The validation status.
+   */
+  async validationStatus() {
+    if (!(await this._doc.exists())) {
+      return DocControl.STATUS_NOT_FOUND;
+    }
+
+    const formatVersion =
+      await this._doc.pathReadOrNull(Paths.FORMAT_VERSION);
+
+    if (formatVersion === null) {
+      this._log.info('Corrupt document: Missing format version.');
+      return DocControl.STATUS_ERROR;
+    }
+
+    if (!formatVersion.equals(this._formatVersion)) {
+      const got = formatVersion.string;
+      const expected = this._formatVersion.string;
+      this._log.info(`Mismatched format version: got ${got}; expected ${expected}`);
+      return DocControl.STATUS_MIGRATE;
+    }
+
+    const verNumEncoded =
+      await this._doc.pathReadOrNull(Paths.VERSION_NUMBER);
+
+    if (verNumEncoded === null) {
+      this._log.info('Corrupt document: Missing version number.');
+      return DocControl.STATUS_ERROR;
+    }
+
+    let verNum;
+    try {
+      verNum = Coder.decode(verNumEncoded);
+    } catch (e) {
+      this._log.info('Corrupt document: Bogus version number.');
+      return DocControl.STATUS_ERROR;
+    }
+
+    for (let i = 0; i <= verNum; i++) {
+      try {
+        this._changeRead(i);
+      } catch (e) {
+        this._log.info(`Corrupt document: Bogus change #${i}.`);
+        return DocControl.STATUS_ERROR;
+      }
+    }
+
+    return DocControl.STATUS_OK;
   }
 
   /**
