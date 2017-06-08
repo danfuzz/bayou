@@ -165,44 +165,6 @@ export default class LocalDoc extends BaseDoc {
   }
 
   /**
-   * Implementation as required by the superclass.
-   *
-   * @param {Int} verNum The version number for the desired change.
-   * @returns {DocumentChange} The change with `verNum` as indicated.
-   */
-  async _impl_changeRead(verNum) {
-    await this._readChangesIfNecessary();
-
-    VersionNumber.maxExc(verNum, this._changes.length);
-    return this._changes[verNum];
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
-   * @param {DocumentChange} change The change to append.
-   * @returns {boolean} `true` if the append was successful, or `false` if it
-   *   was not due to `change` having an incorrect `verNum`.
-   */
-  async _impl_changeAppend(change) {
-    await this._readChangesIfNecessary();
-
-    if (change.verNum !== this._changes.length) {
-      // Not the right `verNum`. This is typically because there was an append
-      // race, and this is the losing side.
-      return false;
-    }
-
-    this._changes[change.verNum] = change;
-
-    // **Note:** This call _synchronously_ (and promptly) indicates that writing
-    // needs to happen, but the actual writing takes place asynchronously.
-    this._changesNeedWrite();
-
-    return true;
-  }
-
-  /**
   * Implementation as required by the superclass.
    *
    * @param {string} storagePath Path to write to.
