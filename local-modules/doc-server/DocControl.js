@@ -406,38 +406,38 @@ export default class DocControl extends CommonBase {
 
     // The hard case: The client has requested an application of a delta
     // (hereafter `dClient`) against a revision of the document which is _not_
-    // the current revision (hereafter, `vBase` for the common base and
-    // `vCurrent` for the current revision). Here's what we do:
+    // the current revision (hereafter, `rBase` for the common base and
+    // `rCurrent` for the current revision). Here's what we do:
     //
     // 0. Definitions of input:
     //    * `dClient` -- Delta to apply, as requested by the client.
-    //    * `vBase` -- Base revision to apply the delta to.
-    //    * `vCurrent` -- Current (latest) revision of the document.
-    //    * `vExpected` -- The implied expected result of application. This is
-    //      `vBase.compose(dClient)` as revision number `vBase.revNum + 1`.
+    //    * `rBase` -- Base revision to apply the delta to.
+    //    * `rCurrent` -- Current (latest) revision of the document.
+    //    * `rExpected` -- The implied expected result of application. This is
+    //      `rBase.compose(dClient)` as revision number `rBase.revNum + 1`.
     // 1. Construct a combined delta for all the server changes made between
-    //    `vBase` and `vCurrent`. This is `dServer`.
+    //    `rBase` and `rCurrent`. This is `dServer`.
     // 2. Transform (rebase) `dClient` with regard to (on top of) `dServer`.
     //    This is `dNext`. If `dNext` turns out to be empty, stop here and
     //    report that fact.
-    // 3. Apply `dNext` to `vCurrent`, producing `vNext` as the new current
+    // 3. Apply `dNext` to `rCurrent`, producing `rNext` as the new current
     //    server revision.
-    // 4. Construct a delta from `vExpected` to `vNext` (that is, the diff).
+    // 4. Construct a delta from `rExpected` to `rNext` (that is, the diff).
     //    This is `dCorrection`. This is what we return to the client; they will
-    //    compose `vExpected` with `dCorrection` to arrive at `vNext`.
-    // 5. Return the revision number of `vNext` along with the delta
+    //    compose `rExpected` with `dCorrection` to arrive at `rNext`.
+    // 5. Return the revision number of `rNext` along with the delta
     //    `dCorrection`.
 
     // (0) Assign incoming arguments to variables that correspond to the
     //     description immediately above.
     const dClient   = delta;
-    const vBase     = base;
-    const vExpected = expected;
-    const vCurrent  = current;
+    const rBase     = base;
+    const rExpected = expected;
+    const rCurrent  = current;
 
     // (1)
     const dServer = await this._composeVersions(
-      FrozenDelta.EMPTY, vBase.revNum + 1, RevisionNumber.after(vCurrent.revNum));
+      FrozenDelta.EMPTY, rBase.revNum + 1, RevisionNumber.after(rCurrent.revNum));
 
     // (2)
 
@@ -449,22 +449,22 @@ export default class DocControl extends CommonBase {
       // It turns out that nothing changed. **Note:** It is unclear whether this
       // can actually happen in practice, given that we already return early
       // (in `applyDelta()`) if we are asked to apply an empty delta.
-      return new DeltaResult(vCurrent.revNum, FrozenDelta.EMPTY);
+      return new DeltaResult(rCurrent.revNum, FrozenDelta.EMPTY);
     }
 
     // (3)
-    const vNextNum = await this._appendDelta(vCurrent.revNum, dNext, authorId);
+    const vNextNum = await this._appendDelta(rCurrent.revNum, dNext, authorId);
 
     if (vNextNum === null) {
       // Turns out we lost an append race.
       return null;
     }
 
-    const vNext = await this.snapshot(vNextNum);
+    const rNext = await this.snapshot(vNextNum);
 
     // (4)
     const dCorrection =
-      FrozenDelta.coerce(vExpected.contents.diff(vNext.contents));
+      FrozenDelta.coerce(rExpected.contents.diff(rNext.contents));
 
     // (5)
     return new DeltaResult(vNextNum, dCorrection);
