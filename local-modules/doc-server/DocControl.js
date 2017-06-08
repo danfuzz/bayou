@@ -93,6 +93,37 @@ export default class DocControl extends CommonBase {
   }
 
   /**
+   * Creates or re-creates the document. If passed, the given `delta` becomes
+   * the initial content of the document (which will be in the second change,
+   * because by definition the first change of a document is empty).
+   *
+   * @param {FrozenDelta|null} [contents = null] Initial document contents, or
+   *   `null` if the document should be completely empty.
+   */
+  async create(contents = null) {
+    if (contents !== null) {
+      FrozenDelta.check(contents);
+    }
+
+    this._log.info('Creating document.');
+
+    await this._doc.create();
+    await this._doc.opNew(Paths.FORMAT_VERSION, this._formatVersion);
+
+    // Empty first change (per documented interface).
+    await this._doc.opNew(Paths.forVerNum(0), Coder.encode(DocumentChange.firstChange()));
+
+    // The indicated `contents`, if any.
+    if (contents !== null) {
+      const change = new DocumentChange(1, Timestamp.now(), contents, null);
+      await this._doc.opNew(Paths.forVerNum(1), Coder.encode(change));
+    }
+
+    const verNum = (contents === null) ? 0 : 1;
+    await this._doc.opNew(Paths.VERSION_NUMBER, Coder.encode(verNum));
+  }
+
+  /**
    * Gets a particular change to the document. The document consists of a
    * sequence of changes, each modifying version N of the document to produce
    * version N+1.

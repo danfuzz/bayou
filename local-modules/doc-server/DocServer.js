@@ -4,7 +4,7 @@
 
 import weak from 'weak';
 
-import { DocumentChange, FrozenDelta, Timestamp } from 'doc-common';
+import { FrozenDelta } from 'doc-common';
 import { Coder } from 'doc-store';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
@@ -13,7 +13,6 @@ import { TBoolean, TString } from 'typecheck';
 import { Singleton } from 'util-common';
 
 import DocControl from './DocControl';
-import Paths from './Paths';
 
 /**
  * {FrozenDelta} Message used as document to indicate a major validation error.
@@ -132,18 +131,7 @@ export default class DocServer extends Singleton {
     }
 
     if (docNeedsInit) {
-      docLog.info('Creating document.');
-
-      // Initialize the document.
-      await docStorage.create();
-      await docStorage.opNew(Paths.FORMAT_VERSION, this._formatVersion);
-
-      // Empty first change (per documented interface) and static content for
-      // the first contentful change (for now).
-      const change = new DocumentChange(1, Timestamp.now(), firstText, null);
-      await docStorage.opNew(Paths.forVerNum(0), Coder.encode(DocumentChange.firstChange()));
-      await docStorage.opNew(Paths.forVerNum(1), Coder.encode(change));
-      await docStorage.opNew(Paths.VERSION_NUMBER, Coder.encode(1));
+      await result.create(firstText);
     }
 
     const resultRef = weak(result, this._reapDocument.bind(this, docId));
