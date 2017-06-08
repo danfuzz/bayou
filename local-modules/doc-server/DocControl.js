@@ -74,10 +74,10 @@ export default class DocControl extends CommonBase {
     this._snapshots = new Map();
 
     /**
-     * Condition that transitions from `false` to `true` when there is a revision
-     * change and there are waiters for same. This remains `true` in the steady
-     * state (when there are no waiters). As soon as the first waiter comes
-     * along, it gets set to `false`.
+     * Condition that transitions from `false` to `true` when there is a
+     * revision change and there are waiters for same. This remains `true` in
+     * the steady state (when there are no waiters). As soon as the first waiter
+     * comes along, it gets set to `false`.
      */
     this._changeCondition = new PromCondition(true);
 
@@ -245,11 +245,11 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Returns a promise for a revision &mdash; any revision &mdash; of the document
-   * after the given `baseRevNum`, with the return result represented as a delta
-   * relative to that given revision. If called when `baseRevNum` is the current
-   * revision, this will not resolve the result promise until at least one change
-   * has been made.
+   * Returns a promise for a revision &mdash; any revision &mdash; of the
+   * document after the given `baseRevNum`, with the return result represented
+   * as a delta relative to that given revision. If called when `baseRevNum` is
+   * the current revision, this will not resolve the result promise until at
+   * least one change has been made.
    *
    * @param {Int} baseRevNum Revision number for the document.
    * @returns {DeltaResult} Delta and associated revision number. The result's
@@ -476,8 +476,9 @@ export default class DocControl extends CommonBase {
    * composed from a given base. It is valid to pass as either revision number
    * parameter one revision beyond the current revision number (that is,
    * `RevisionNumber.after(await this._currentRevNum())`. It is invalid to
-   * specify a non-existent revision _other_ than one beyond the current revision.
-   * If `startInclusive === endExclusive`, then this method returns `baseDelta`.
+   * specify a non-existent revision _other_ than one beyond the current
+   * revision. If `startInclusive === endExclusive`, then this method returns
+   * `baseDelta`.
    *
    * @param {FrozenDelta} baseDelta Base delta onto which the indicated deltas
    *   get composed.

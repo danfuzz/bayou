@@ -13,13 +13,14 @@ const POSITION_NOT_FOUND = Object.freeze({
 });
 
 /**
- * Miscellaneous helpers for interacting with Quill that didn't fit anywhere else.
+ * Miscellaneous helpers for interacting with Quill that didn't fit anywhere
+ * else.
  */
 export default class QuillUtil {
   /**
-   * Return value for `.quillContextForPixelPosition` for cases where the pixel is not in
-   * the Quill context. All properties are nulled/zeroed except for
-   * `range: [-1, 0]`.
+   * Return value for `.quillContextForPixelPosition()` for cases where the
+   * pixel is not in the Quill context. All properties are nulled/zeroed except
+   * for `range: [-1, 0]`.
    */
   static get POSITION_NOT_FOUND() {
     return POSITION_NOT_FOUND;

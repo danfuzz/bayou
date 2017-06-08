@@ -73,8 +73,8 @@ export default class RevisionNumber {
   }
 
   /**
-   * Checks a value of type `RevisionNumber`, which must furthermore be within an
-   * indicated inclusive-inclusive range.
+   * Checks a value of type `RevisionNumber`, which must furthermore be within
+   * an indicated inclusive-inclusive range.
    *
    * @param {*} value Value to check.
    * @param {Int} minInc Minimum acceptable value (inclusive).

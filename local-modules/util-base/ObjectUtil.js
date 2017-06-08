@@ -11,7 +11,8 @@ export default class ObjectUtil {
    *
    * @param {object} value Value to query.
    * @param {string} name Name of property in question.
-   * @returns {boolean} `true` iff `value` has an own-property with the given name.
+   * @returns {boolean} `true` iff `value` has an own-property with the given
+   *   name.
    */
   static hasOwnProperty(value, name) {
     return Object.prototype.hasOwnProperty.call(value, name);

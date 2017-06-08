@@ -57,18 +57,19 @@ describe('util-common/PropertyIter', () => {
 });
 
 /**
- * Completes one full iteration cycle and gathers info about the results returned
- * by the provided iterator. It then checks to make sure that at least the
- * expected properties were reported, and that any unexpected properties were not.
- * There may be additional properties set in the results beyond what was
- * specifically checked.
+ * Completes one full iteration cycle and gathers info about the results
+ * returned by the provided iterator. It then checks to make sure that at least
+ * the expected properties were reported, and that any unexpected properties
+ * were not. There may be additional properties set in the results beyond what
+ * was specifically checked.
  *
  * @param {PropertyIter} iter The iterator we are testing.
- * @param {Array.<string>|null} [expectedProperties=[]] A list of property names. The
- *          iterator must return *at least* all of the properties in this list.
- * @param {Array.<string>|null} [unexpectedProperties=[]] A list of property names. The
- *          iterator must not return any of the properties in this list.
- * @returns {Array.<string>} An array of property names returned by the iterator.
+ * @param {Array<string>|null} [expectedProperties=[]] A list of property
+ *   names. The iterator must return _at least_ all of the properties in this
+ *   list.
+ * @param {Array<string>|null} [unexpectedProperties=[]] A list of property
+ *   names. The iterator must not return any of the properties in this list.
+ * @returns {Array<string>} An array of property names returned by the iterator.
  */
 function _testIterator(iter, expectedProperties = [], unexpectedProperties = []) {
   const result = {};

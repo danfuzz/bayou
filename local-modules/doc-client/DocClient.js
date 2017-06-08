@@ -129,8 +129,8 @@ export default class DocClient extends StateMachine {
     this._currentChange = null;
 
     /**
-     * {boolean} Is there currently a pending (as-yet unfulfilled) `deltaAfter()`
-     * request to the server?
+     * {boolean} Is there currently a pending (as-yet unfulfilled)
+     * `deltaAfter()` request to the server?
      */
     this._pendingDeltaAfter = false;
 
@@ -512,8 +512,8 @@ export default class DocClient extends StateMachine {
    *
    * @param {Snapshot} baseDoc_unused The document at the time of the original
    *   request.
-   * @param {DeltaResult} result_unused How to transform `baseDoc` to get a later
-   *   document revision.
+   * @param {DeltaResult} result_unused How to transform `baseDoc` to get a
+   *   later document revision.
    */
   _handle_any_gotDeltaAfter(baseDoc_unused, result_unused) {
     // Nothing to do. Stay in the same state.
