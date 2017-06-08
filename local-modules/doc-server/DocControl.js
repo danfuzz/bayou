@@ -153,7 +153,7 @@ export default class DocControl extends CommonBase {
       ? currentRevNum
       : RevisionNumber.maxInc(revNum, currentRevNum);
 
-    // Search backward through the full versions for a base for forward
+    // Search backward through the full revisions for a base for forward
     // composition.
     let base = null;
     for (let i = revNum; i >= 0; i--) {
@@ -284,7 +284,7 @@ export default class DocControl extends CommonBase {
 
   /**
    * Takes a base revision number and delta therefrom, and applies the delta,
-   * including merging of any intermediate versions. The return value consists
+   * including merging of any intermediate revisions. The return value consists
    * of a new revision number, and a delta to be used to get the new document
    * state. The delta is with respect to the client's "expected result," that
    * is to say, what the client would get if the delta were applied with no
@@ -293,7 +293,7 @@ export default class DocControl extends CommonBase {
    * As a special case, as long as `baseRevNum` is valid, if `delta` is empty,
    * this method returns a result of the same revision number along with an
    * empty "correction" delta. That is, the return value from passing an empty
-   * delta doesn't provide any information about subsequent versions of the
+   * delta doesn't provide any information about subsequent revisions of the
    * document.
    *
    * @param {Int} baseRevNum Version number which `delta` is with respect to.
@@ -486,7 +486,7 @@ export default class DocControl extends CommonBase {
    * @param {Int} endExclusive Version number just beyond the last delta to
    *   include in the result.
    * @returns {FrozenDelta} The composed delta consisting of `baseDelta`
-   *   composed with versions `startInclusive` through but not including
+   *   composed with revisions `startInclusive` through but not including
    *   `endExclusive`.
    */
   async _composeVersions(baseDelta, startInclusive, endExclusive) {
