@@ -120,7 +120,7 @@ export default class DocControl extends CommonBase {
     }
 
     const revNum = (contents === null) ? 0 : 1;
-    await this._doc.opNew(Paths.VERSION_NUMBER, Coder.encode(revNum));
+    await this._doc.opNew(Paths.REVISION_NUMBER, Coder.encode(revNum));
 
     // Any cached snapshots are no longer valid.
     this._snapshots = new Map();
@@ -217,7 +217,7 @@ export default class DocControl extends CommonBase {
     }
 
     const revNumEncoded =
-      await this._doc.pathReadOrNull(Paths.VERSION_NUMBER);
+      await this._doc.pathReadOrNull(Paths.REVISION_NUMBER);
 
     if (revNumEncoded === null) {
       this._log.info('Corrupt document: Missing revision number.');
@@ -581,7 +581,7 @@ export default class DocControl extends CommonBase {
    *   set.
    */
   async _currentRevNum() {
-    const encoded = await this._doc.pathReadOrNull(Paths.VERSION_NUMBER);
+    const encoded = await this._doc.pathReadOrNull(Paths.REVISION_NUMBER);
     return (encoded === null) ? null : Coder.decode(encoded);
   }
 
@@ -594,7 +594,7 @@ export default class DocControl extends CommonBase {
   async _writeRevNum(revNum) {
     RevisionNumber.check(revNum);
 
-    await this._doc.opForceWrite(Paths.VERSION_NUMBER, Coder.encode(revNum));
+    await this._doc.opForceWrite(Paths.REVISION_NUMBER, Coder.encode(revNum));
     return true;
   }
 }
