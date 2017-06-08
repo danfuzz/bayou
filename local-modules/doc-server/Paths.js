@@ -20,9 +20,9 @@ export default class Paths {
   }
 
   /**
-   * Gets the `StoragePath` string corresponding to the indicated version
+   * Gets the `StoragePath` string corresponding to the indicated revision
    * number, specifically to store the document change that results in that
-   * version.
+   * revision.
    *
    * @param {RevisionNumber} revNum The revision number.
    * @returns {string} The corresponding `StoragePath` string.

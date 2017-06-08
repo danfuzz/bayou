@@ -92,7 +92,7 @@ export default class RevisionNumber {
 
   /**
    * Returns the revision number after the given one. This is the same as
-   * `revNum + 1` _except_ that `null` (the version "number" for an empty
+   * `revNum + 1` _except_ that `null` (the revision "number" for an empty
    * document) is a valid input for which `0` is the return value.
    *
    * **Note:** Unlike the rest of the methods in this class, this one isn't a

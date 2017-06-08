@@ -52,8 +52,8 @@ export default class DocForAuthor {
    * Returns a snapshot of the full document contents. See the equivalent
    * `DocControl` method for details.
    *
-   * @param {Int|null} [revNum = null] Which version to get. If passed as
-   *   `null`, indicates the latest (most recent) version.
+   * @param {Int|null} [revNum = null] Which revision to get. If passed as
+   *   `null`, indicates the latest (most recent) revision.
    * @returns {Promise<Snapshot>} Promise for the requested snapshot.
    */
   snapshot(revNum = null) {
@@ -61,13 +61,13 @@ export default class DocForAuthor {
   }
 
   /**
-   * Returns a promise for a snapshot of any version after the given
+   * Returns a promise for a snapshot of any revision after the given
    * `baseRevNum`. See the equivalent `DocControl` method for details.
    *
    * @param {Int} baseRevNum Revision number for the document.
-   * @returns {Promise<DeltaResult>} Promise for a delta and associated version
-   *   number. The result's `delta` can be applied to version `baseRevNum` to
-   *   produce version `revNum` of the document.
+   * @returns {Promise<DeltaResult>} Promise for a delta and associated revision
+   *   number. The result's `delta` can be applied to revision `baseRevNum` to
+   *   produce revision `revNum` of the document.
    */
   deltaAfter(baseRevNum) {
     return this._doc.deltaAfter(baseRevNum);

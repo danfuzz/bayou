@@ -74,7 +74,7 @@ export default class DocControl extends CommonBase {
     this._snapshots = new Map();
 
     /**
-     * Condition that transitions from `false` to `true` when there is a version
+     * Condition that transitions from `false` to `true` when there is a revision
      * change and there are waiters for same. This remains `true` in the steady
      * state (when there are no waiters). As soon as the first waiter comes
      * along, it gets set to `false`.
@@ -128,11 +128,11 @@ export default class DocControl extends CommonBase {
 
   /**
    * Gets a particular change to the document. The document consists of a
-   * sequence of changes, each modifying version N of the document to produce
-   * version N+1.
+   * sequence of changes, each modifying revision N of the document to produce
+   * revision N+1.
    *
    * @param {Int} revNum The revision number of the change. The result is the
-   *   change which produced that version. E.g., `0` is a request for the first
+   *   change which produced that revision. E.g., `0` is a request for the first
    *   change (the change from the empty document).
    * @returns {DocumentChange} The requested change.
    */
@@ -143,8 +143,8 @@ export default class DocControl extends CommonBase {
   /**
    * Gets a snapshot of the full document contents.
    *
-   * @param {Int|null} revNum Which version to get. If passed as `null`,
-   *   indicates the latest (most recent) version.
+   * @param {Int|null} revNum Which revision to get. If passed as `null`,
+   *   indicates the latest (most recent) revision.
    * @returns {Snapshot} The corresponding snapshot.
    */
   async snapshot(revNum = null) {
@@ -165,19 +165,19 @@ export default class DocControl extends CommonBase {
     }
 
     if (base && (base.revNum === revNum)) {
-      // Found the right version!
+      // Found the right revision!
       return base;
     }
 
-    // We didn't actully find a snapshot of the requested version. Apply deltas
-    // to the base to produce the desired version. Store it, and return it.
+    // We didn't actully find a snapshot of the requested revision. Apply deltas
+    // to the base to produce the desired revision. Store it, and return it.
 
     const contents = (base === null)
       ? this._composeVersions(FrozenDelta.EMPTY, 0,               revNum + 1)
       : this._composeVersions(base.contents,     base.revNum + 1, revNum + 1);
     const result = new Snapshot(revNum, await contents);
 
-    this._log.detail(`Made snapshot for version ${revNum}.`);
+    this._log.detail(`Made snapshot for revision ${revNum}.`);
 
     this._snapshots.set(revNum, result);
     return result;
@@ -245,17 +245,17 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Returns a promise for a version &mdash; any version &mdash; of the document
+   * Returns a promise for a revision &mdash; any revision &mdash; of the document
    * after the given `baseRevNum`, with the return result represented as a delta
-   * relative to that given version. If called when `baseRevNum` is the current
-   * version, this will not resolve the result promise until at least one change
+   * relative to that given revision. If called when `baseRevNum` is the current
+   * revision, this will not resolve the result promise until at least one change
    * has been made.
    *
    * @param {Int} baseRevNum Revision number for the document.
    * @returns {DeltaResult} Delta and associated revision number. The result's
    *   `revNum` is guaranteed to be at least one more than `baseRevNum` (and
    *   could possibly be even larger.) The result's `delta` can be applied to
-   *   version `baseRevNum` to produce version `revNum` of the document.
+   *   revision `baseRevNum` to produce revision `revNum` of the document.
    */
   async deltaAfter(baseRevNum) {
     const currentRevNum = await this._currentRevNum();
@@ -264,8 +264,8 @@ export default class DocControl extends CommonBase {
     if (baseRevNum !== currentRevNum) {
       // We can fulfill the result based on existing document history. (That is,
       // we don't have to wait for a new change to be added to the document).
-      // Compose all the deltas from the version after the base through the
-      // current version.
+      // Compose all the deltas from the revision after the base through the
+      // current revision.
       const delta = await this._composeVersions(
         FrozenDelta.EMPTY, baseRevNum + 1, RevisionNumber.after(currentRevNum));
       return new DeltaResult(currentRevNum, delta);
@@ -312,7 +312,7 @@ export default class DocControl extends CommonBase {
     FrozenDelta.check(delta);
     TString.orNull(authorId);
 
-    // Snapshot of the base version. This call validates `baseRevNum`.
+    // Snapshot of the base revision. This call validates `baseRevNum`.
     const base = await this.snapshot(baseRevNum);
 
     // Check for an empty `delta`. If it is, we don't bother trying to apply it.
@@ -349,7 +349,7 @@ export default class DocControl extends CommonBase {
       }
 
       // A `null` result from the call means that we lost an append race (that
-      // is, there was version skew between the snapshot and the latest reality
+      // is, there was revision skew between the snapshot and the latest reality
       // at the moment of attempted appending), so we delay briefly and iterate.
 
       if (retryTotalMsec >= MAX_APPEND_TIME_MSEC) {
@@ -368,7 +368,7 @@ export default class DocControl extends CommonBase {
   /**
    * Main implementation of `applyDelta()`, which takes as an additional
    * argument a promise for a snapshot which represents the current (latest)
-   * version at the moment it resolves. This method attempts to perform change
+   * revision at the moment it resolves. This method attempts to perform change
    * application relative to that snapshot. If it succeeds (that is, if the
    * snapshot is still current at the moment of attempted application), then
    * this method returns a proper result of `applyDelta()`. If it fails due to
@@ -380,7 +380,7 @@ export default class DocControl extends CommonBase {
    *   `applyDelta()`.
    * @param {FrozenDelta} delta Same as for `applyDelta()`.
    * @param {string|null} authorId Same as for `applyDelta()`.
-   * @param {Snapshot} current Snapshot of the current (latest) version of the
+   * @param {Snapshot} current Snapshot of the current (latest) revision of the
    *   document.
    * @param {Snapshot} expected The implied expected result as defined by
    *   `applyDelta()`.
@@ -389,9 +389,9 @@ export default class DocControl extends CommonBase {
    */
   async _applyDeltaTo(base, delta, authorId, current, expected) {
     if (base.revNum === current.revNum) {
-      // The easy case, because the base version is in fact the current version
+      // The easy case, because the base revision is in fact the current revision
       // of the document, so we don't have to transform the incoming delta.
-      // We merely have to apply the given `delta` to the current version. If
+      // We merely have to apply the given `delta` to the current revision. If
       // it succeeds, then we won the append race (if any).
 
       const revNum = await this._appendDelta(base.revNum, delta, authorId);
@@ -405,14 +405,14 @@ export default class DocControl extends CommonBase {
     }
 
     // The hard case: The client has requested an application of a delta
-    // (hereafter `dClient`) against a version of the document which is _not_
-    // the current version (hereafter, `vBase` for the common base and
-    // `vCurrent` for the current version). Here's what we do:
+    // (hereafter `dClient`) against a revision of the document which is _not_
+    // the current revision (hereafter, `vBase` for the common base and
+    // `vCurrent` for the current revision). Here's what we do:
     //
     // 0. Definitions of input:
     //    * `dClient` -- Delta to apply, as requested by the client.
-    //    * `vBase` -- Base version to apply the delta to.
-    //    * `vCurrent` -- Current (latest) version of the document.
+    //    * `vBase` -- Base revision to apply the delta to.
+    //    * `vCurrent` -- Current (latest) revision of the document.
     //    * `vExpected` -- The implied expected result of application. This is
     //      `vBase.compose(dClient)` as revision number `vBase.revNum + 1`.
     // 1. Construct a combined delta for all the server changes made between
@@ -421,7 +421,7 @@ export default class DocControl extends CommonBase {
     //    This is `dNext`. If `dNext` turns out to be empty, stop here and
     //    report that fact.
     // 3. Apply `dNext` to `vCurrent`, producing `vNext` as the new current
-    //    server version.
+    //    server revision.
     // 4. Construct a delta from `vExpected` to `vNext` (that is, the diff).
     //    This is `dCorrection`. This is what we return to the client; they will
     //    compose `vExpected` with `dCorrection` to arrive at `vNext`.
@@ -472,11 +472,11 @@ export default class DocControl extends CommonBase {
 
   /**
    * Constructs a delta consisting of the composition of the deltas from the
-   * given initial version through and including the current latest delta,
+   * given initial revision through and including the current latest delta,
    * composed from a given base. It is valid to pass as either revision number
-   * parameter one version beyond the current revision number (that is,
+   * parameter one revision beyond the current revision number (that is,
    * `RevisionNumber.after(await this._currentRevNum())`. It is invalid to
-   * specify a non-existent version _other_ than one beyond the current version.
+   * specify a non-existent revision _other_ than one beyond the current revision.
    * If `startInclusive === endExclusive`, then this method returns `baseDelta`.
    *
    * @param {FrozenDelta} baseDelta Base delta onto which the indicated deltas
@@ -548,7 +548,7 @@ export default class DocControl extends CommonBase {
 
     if (!writeResult) {
       // We lost an append race.
-      this._log.info(`Lost append race for version ${revNum}.`);
+      this._log.info(`Lost append race for revision ${revNum}.`);
       return null;
     }
 
@@ -565,7 +565,7 @@ export default class DocControl extends CommonBase {
    * request a change that doesn't exist.
    *
    * @param {RevisionNumber} revNum Revision number of the change. This
-   *   indicates the change that produced that document version.
+   *   indicates the change that produced that document revision.
    * @returns {DocumentChange} The corresponding change.
    */
   async _changeRead(revNum) {

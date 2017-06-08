@@ -109,7 +109,7 @@ export default class DocClient extends StateMachine {
     this._docProxy = null;
 
     /**
-     * {Snapshot|null} Current version of the document as received from the
+     * {Snapshot|null} Current revision of the document as received from the
      * server. Becomes non-null once the first snapshot is received from the
      * server.
      */
@@ -192,7 +192,7 @@ export default class DocClient extends StateMachine {
    *
    * @param {Snapshot} baseDoc The document at the time of the original request.
    * @param {DeltaResult} result How to transform `baseDoc` to get a later
-   *   document version.
+   *   document revision.
    */
   _check_gotDeltaAfter(baseDoc, result) {
     Snapshot.check(baseDoc);
@@ -391,7 +391,7 @@ export default class DocClient extends StateMachine {
    * @param {Snapshot} snapshot The snapshot.
    */
   _handle_starting_gotSnapshot(snapshot) {
-    // Save the result as the current (latest known) version of the document,
+    // Save the result as the current (latest known) revision of the document,
     // and tell Quill about it.
     this._updateDocWithSnapshot(snapshot);
 
@@ -425,7 +425,7 @@ export default class DocClient extends StateMachine {
    * to the local Quill instance.
    */
   _handle_idle_wantChanges() {
-    // We grab the current version of the doc, so we can refer back to it when
+    // We grab the current revision of the doc, so we can refer back to it when
     // a response comes. That is, `_doc` might have changed out from
     // under us between when this event is handled and when the promises used
     // here become resolved.
@@ -479,7 +479,7 @@ export default class DocClient extends StateMachine {
    *
    * @param {Snapshot} baseDoc The document at the time of the original request.
    * @param {DeltaResult} result How to transform `baseDoc` to get a later
-   *   document version.
+   *   document revision.
    */
   _handle_idle_gotDeltaAfter(baseDoc, result) {
     const revNum = result.revNum;
@@ -513,7 +513,7 @@ export default class DocClient extends StateMachine {
    * @param {Snapshot} baseDoc_unused The document at the time of the original
    *   request.
    * @param {DeltaResult} result_unused How to transform `baseDoc` to get a later
-   *   document version.
+   *   document revision.
    */
   _handle_any_gotDeltaAfter(baseDoc_unused, result_unused) {
     // Nothing to do. Stay in the same state.
@@ -530,7 +530,7 @@ export default class DocClient extends StateMachine {
     const change = this._currentChange.nextNow;
 
     if ((this._doc.revNum !== baseDoc.revNum) || (change === null)) {
-      // The event was generated with respect to a version of the document which
+      // The event was generated with respect to a revision of the document which
       // has since been updated, or we ended up having two events for the same
       // change (which can happen if the user is particularly chatty) and this
       // one lost the race. That is, this is from a stale request for changes.
@@ -626,9 +626,10 @@ export default class DocClient extends StateMachine {
 
     if (dCorrection.isEmpty()) {
       // There is no change from what we expected. This means that no other
-      // client got in front of us between when we received the current version
+      // client got in front of us between when we received the current revision
       // and when we sent the delta to the server. And _that_ means it's safe to
-      // update the client's version of current document and go back to idling.
+      // update the client's revision of the current document and go back to
+      // idling.
       //
       // In particular, if there happened to be any local changes made (coming
       // from Quill) while the server request was in flight, they will be picked
@@ -672,7 +673,7 @@ export default class DocClient extends StateMachine {
     // `DocControl.js`), we start with `vExpected` (the document we would have
     // had if the server hadn't included extra changes) and `dCorrection` (the
     // delta given back to us from the server which can be applied to
-    // `vExpected` to get the _actual_ next version). From that, here's what we
+    // `vExpected` to get the _actual_ next revision). From that, here's what we
     // do:
     //
     // 1. Get all of the changes that the user made (that is, that Quill
@@ -740,7 +741,7 @@ export default class DocClient extends StateMachine {
   /**
    * Gets a combined (composed) delta of all document changes that have been
    * made to the Quill instance since the last time changes were integrated into
-   * the server version of the document, optionally stopping at (and not
+   * the server revision of the document, optionally stopping at (and not
    * including) changes whose source is `CLIENT_SOURCE` (that is, this class).
    * Updates `_currentChange` to indicate that all of these changes have in
    * fact been consumed.
@@ -771,13 +772,13 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * Updates `_doc` to have the given version by applying the indicated delta
-   * to the current version, and tells the attached Quill instance to update
+   * Updates `_doc` to be the given revision by applying the indicated delta
+   * to the current revision, and tells the attached Quill instance to update
    * itself accordingly.
    *
-   * This is only valid to call when the version of the document that Quill has
+   * This is only valid to call when the revision of the document that Quill has
    * is the same as what is represented in `_doc` _or_ if `quillDelta` is passed
-   * as an empty delta. That is, this is only valid when Quill's version of the
+   * as an empty delta. That is, this is only valid when Quill's revision of the
    * document doesn't need to be updated. If that isn't the case, then this
    * method will throw an error.
    *
@@ -793,13 +794,13 @@ export default class DocClient extends StateMachine {
 
     if ((this._currentChange.nextNow !== null) && needQuillUpdate) {
       // It is unsafe to apply the delta as-is, because we know that Quill's
-      // version of the document has diverged.
-      throw new Error('Cannot apply delta due to version skew.');
+      // revision of the document has diverged.
+      throw new Error('Cannot apply delta due to revision skew.');
     }
 
     // Update the local document. **Note:** We always construct a whole new
     // object even when the delta is empty, so that `_doc === x` won't cause
-    // surprising results when `x` is an old version of `_doc`.
+    // surprising results when `x` is an old revision of `_doc`.
     const oldContents = this._doc.contents;
     this._doc = new Snapshot(revNum,
       delta.isEmpty() ? oldContents : oldContents.compose(delta));

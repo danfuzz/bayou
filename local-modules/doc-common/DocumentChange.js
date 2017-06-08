@@ -11,7 +11,7 @@ import RevisionNumber from './RevisionNumber';
 
 /**
  * Representation of a change to a document from its immediately-previous
- * version, including time, authorship, and version information in addition to
+ * revision, including time, authorship, and revision information in addition to
  * the actual delta.
  *
  * Instances of this class are immutable, including the deltas. In particular,
@@ -38,7 +38,7 @@ export default class DocumentChange extends CommonBase {
    * @param {Timestamp} timestamp The time of the change, as msec since the Unix
    *   Epoch.
    * @param {Delta|array|object} delta The document change per se, compared to
-   *   the immediately-previous version. Must be a value which can be coerced
+   *   the immediately-previous revision. Must be a value which can be coerced
    *   to a `FrozenDelta`.
    * @param {string|null} authorId Stable identifier string representing the
    *   author of the change. Allowed to be `null` if the change is authorless.
