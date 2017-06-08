@@ -81,7 +81,7 @@ export default class DocControl extends CommonBase {
    * @returns {DocumentChange} The requested change.
    */
   async change(verNum) {
-    return this._doc.changeRead(verNum);
+    return this._changeRead(verNum);
   }
 
   /**
@@ -389,7 +389,7 @@ export default class DocControl extends CommonBase {
 
     const changePromises = [];
     for (let i = startInclusive; i < endExclusive; i++) {
-      changePromises.push(this._doc.changeRead(i));
+      changePromises.push(this._changeRead(i));
     }
 
     const changes = await Promise.all(changePromises);
@@ -447,6 +447,19 @@ export default class DocControl extends CommonBase {
 
     this._changeCondition.value = true;
     return verNum;
+  }
+
+  /**
+   * Reads the change for the indicated version number. It is an error to
+   * request a change that doesn't exist.
+   *
+   * @param {VersionNumber} verNum Version number of the change. This indicates
+   *   the change that produced that document version.
+   * @returns {DocumentChange} The corresponding change.
+   */
+  async _changeRead(verNum) {
+    const encoded = await this._doc.pathRead(Paths.forVerNum(verNum));
+    return DocumentChange.check(Coder.decode(encoded));
   }
 
   /**
