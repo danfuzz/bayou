@@ -30,11 +30,11 @@ export default class DocForAuthor {
    * Returns a particular change to the document. See the equivalent
    * `DocControl` method for details.
    *
-   * @param {Int} verNum The version number of the change.
+   * @param {Int} revNum The revision number of the change.
    * @returns {Promise<DocumentChange>} Promise for the requested change.
    */
-  change(verNum) {
-    return this._doc.change(verNum);
+  change(revNum) {
+    return this._doc.change(revNum);
   }
 
   /**
@@ -52,25 +52,25 @@ export default class DocForAuthor {
    * Returns a snapshot of the full document contents. See the equivalent
    * `DocControl` method for details.
    *
-   * @param {Int|null} [verNum = null] Which version to get. If passed as
-   *   `null`, indicates the latest (most recent) version.
+   * @param {Int|null} [revNum = null] Which revision to get. If passed as
+   *   `null`, indicates the latest (most recent) revision.
    * @returns {Promise<Snapshot>} Promise for the requested snapshot.
    */
-  snapshot(verNum = null) {
-    return this._doc.snapshot(verNum);
+  snapshot(revNum = null) {
+    return this._doc.snapshot(revNum);
   }
 
   /**
-   * Returns a promise for a snapshot of any version after the given
-   * `baseVerNum`. See the equivalent `DocControl` method for details.
+   * Returns a promise for a snapshot of any revision after the given
+   * `baseRevNum`. See the equivalent `DocControl` method for details.
    *
-   * @param {Int} baseVerNum Version number for the document.
-   * @returns {Promise<DeltaResult>} Promise for a delta and associated version
-   *   number. The result's `delta` can be applied to version `baseVerNum` to
-   *   produce version `verNum` of the document.
+   * @param {Int} baseRevNum Revision number for the document.
+   * @returns {Promise<DeltaResult>} Promise for a delta and associated revision
+   *   number. The result's `delta` can be applied to revision `baseRevNum` to
+   *   produce revision `revNum` of the document.
    */
-  deltaAfter(baseVerNum) {
-    return this._doc.deltaAfter(baseVerNum);
+  deltaAfter(baseRevNum) {
+    return this._doc.deltaAfter(baseRevNum);
   }
 
   /**
@@ -78,13 +78,14 @@ export default class DocForAuthor {
    * represented by this instance. See the equivalent `DocControl` method for
    * details.
    *
-   * @param {number} baseVerNum Version number which `delta` is with respect to.
+   * @param {number} baseRevNum Revision number which `delta` is with respect
+   *   to.
    * @param {FrozenDelta} delta Delta indicating what has changed with respect
-   *   to `baseVerNum`.
+   *   to `baseRevNum`.
    * @returns {Promise<DeltaResult>} Promise for the correction from the
    *   implied expected result to get the actual result.
    */
-  applyDelta(baseVerNum, delta) {
-    return this._doc.applyDelta(baseVerNum, delta, this._authorId);
+  applyDelta(baseRevNum, delta) {
+    return this._doc.applyDelta(baseRevNum, delta, this._authorId);
   }
 }

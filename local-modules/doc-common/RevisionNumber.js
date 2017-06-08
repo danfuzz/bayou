@@ -5,12 +5,12 @@
 import { TInt, TypeError } from 'typecheck';
 
 /**
- * Type representation of version numbers. The values themselves are always
+ * Type representation of revision numbers. The values themselves are always
  * just non-negative integers. This is just where the type checker code lives.
  */
-export default class VersionNumber {
+export default class RevisionNumber {
   /**
-   * Checks a value of type `VersionNumber`.
+   * Checks a value of type `RevisionNumber`.
    *
    * @param {*} value Value to check.
    * @returns {Int} `value`.
@@ -19,12 +19,12 @@ export default class VersionNumber {
     try {
       return TInt.min(value, 0);
     } catch (e) {
-      return TypeError.badValue(value, 'VersionNumber');
+      return TypeError.badValue(value, 'RevisionNumber');
     }
   }
 
   /**
-   * Checks a value of type `VersionNumber`, which must furthermore be less
+   * Checks a value of type `RevisionNumber`, which must furthermore be less
    * than an indicated value.
    *
    * @param {*} value Value to check.
@@ -35,12 +35,12 @@ export default class VersionNumber {
     try {
       return TInt.range(value, 0, maxExc);
     } catch (e) {
-      return TypeError.badValue(value, 'VersionNumber', `value < ${maxExc}`);
+      return TypeError.badValue(value, 'RevisionNumber', `value < ${maxExc}`);
     }
   }
 
   /**
-   * Checks a value of type `VersionNumber`, which must furthermore be no more
+   * Checks a value of type `RevisionNumber`, which must furthermore be no more
    * than an indicated value (inclusive).
    *
    * @param {*} value Value to check.
@@ -51,12 +51,12 @@ export default class VersionNumber {
     try {
       return TInt.rangeInc(value, 0, maxInc);
     } catch (e) {
-      return TypeError.badValue(value, 'VersionNumber', `value <= ${maxInc}`);
+      return TypeError.badValue(value, 'RevisionNumber', `value <= ${maxInc}`);
     }
   }
 
   /**
-   * Checks a value of type `VersionNumber`, which is allowed to be `null`.
+   * Checks a value of type `RevisionNumber`, which is allowed to be `null`.
    *
    * @param {*} value Value to check.
    * @returns {Int|null} `value` or `null`.
@@ -65,16 +65,16 @@ export default class VersionNumber {
     try {
       return (value === null)
         ? null
-        : VersionNumber.check(value);
+        : RevisionNumber.check(value);
     } catch (e) {
       // More appropriate error.
-      return TypeError.badValue(value, 'VersionNumber|null');
+      return TypeError.badValue(value, 'RevisionNumber|null');
     }
   }
 
   /**
-   * Checks a value of type `VersionNumber`, which must furthermore be within an
-   * indicated inclusive-inclusive range.
+   * Checks a value of type `RevisionNumber`, which must furthermore be within
+   * an indicated inclusive-inclusive range.
    *
    * @param {*} value Value to check.
    * @param {Int} minInc Minimum acceptable value (inclusive).
@@ -83,26 +83,26 @@ export default class VersionNumber {
    */
   static rangeInc(value, minInc, maxInc) {
     try {
-      return VersionNumber.check(TInt.rangeInc(value, minInc, maxInc));
+      return RevisionNumber.check(TInt.rangeInc(value, minInc, maxInc));
     } catch (e) {
       // More appropriate error.
-      return TypeError.badValue(value, 'VersionNumber', `${minInc} <= value <= ${maxInc}`);
+      return TypeError.badValue(value, 'RevisionNumber', `${minInc} <= value <= ${maxInc}`);
     }
   }
 
   /**
-   * Returns the version number after the given one. This is the same as
-   * `verNum + 1` _except_ that `null` (the version "number" for an empty
+   * Returns the revision number after the given one. This is the same as
+   * `revNum + 1` _except_ that `null` (the revision "number" for an empty
    * document) is a valid input for which `0` is the return value.
    *
    * **Note:** Unlike the rest of the methods in this class, this one isn't a
    * simple data validator. (TODO: This arrangement is error prone and should
    * be reconsidered.)
    *
-   * @param {Int|null} verNum Starting version number.
-   * @returns {Int} The version number immediately after `verNum`
+   * @param {Int|null} revNum Starting revision number.
+   * @returns {Int} The revision number immediately after `revNum`
    */
-  static after(verNum) {
-    return (verNum === null) ? 0 : (VersionNumber.check(verNum) + 1);
+  static after(revNum) {
+    return (revNum === null) ? 0 : (RevisionNumber.check(revNum) + 1);
   }
 }

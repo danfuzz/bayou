@@ -16,10 +16,10 @@ describe('server-env/ProductInfo', () => {
     it('should return an object full of product info', () => {
       const info = ProductInfo.INFO;
 
-      // TODO: this list of keys is currently an amalgam of those from bayou/script/build
-      // and bayou-overlay/product-info.txt. Ugh. Not good. This should probably be
-      // broken out into two separate tests so that each environment's expected contributions
-      // can be tested independently.
+      // TODO: This list of keys is currently an amalgam of those from Bayou
+      // and those from a privately-used overlay. Ugh. Not good. This should
+      // probably be broken out into two separate tests so that each
+      // environment's expected contributions can be tested independently.
       const productKeys = ['name', 'version', 'commit-id', 'commit-date'];
 
       assert.doesNotThrow(() => TObject.withExactKeys(info, productKeys));

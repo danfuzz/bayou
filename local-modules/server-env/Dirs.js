@@ -104,7 +104,8 @@ export default class Dirs {
           return dir;
         }
       } catch (e) {
-        // Presumably not found. Ignore the exception, fall through, and iterate.
+        // Presumably not found. Ignore the exception, fall through, and
+        // iterate.
       }
 
       dir = path.dirname(dir);

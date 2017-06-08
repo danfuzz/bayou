@@ -7,11 +7,11 @@ import { TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import Timestamp from './Timestamp';
-import VersionNumber from './VersionNumber';
+import RevisionNumber from './RevisionNumber';
 
 /**
  * Representation of a change to a document from its immediately-previous
- * version, including time, authorship, and version information in addition to
+ * revision, including time, authorship, and revision information in addition to
  * the actual delta.
  *
  * Instances of this class are immutable, including the deltas. In particular,
@@ -32,22 +32,22 @@ export default class DocumentChange extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {Int} verNum The version number of the document produced by this
+   * @param {Int} revNum The revision number of the document produced by this
    *   change. If this instance represents the first change to a document,
    *   then this value will be `0`.
    * @param {Timestamp} timestamp The time of the change, as msec since the Unix
    *   Epoch.
    * @param {Delta|array|object} delta The document change per se, compared to
-   *   the immediately-previous version. Must be a value which can be coerced
+   *   the immediately-previous revision. Must be a value which can be coerced
    *   to a `FrozenDelta`.
    * @param {string|null} authorId Stable identifier string representing the
    *   author of the change. Allowed to be `null` if the change is authorless.
    */
-  constructor(verNum, timestamp, delta, authorId) {
+  constructor(revNum, timestamp, delta, authorId) {
     super();
 
-    /** The produced version number. */
-    this._verNum = VersionNumber.check(verNum);
+    /** The produced revision number. */
+    this._revNum = RevisionNumber.check(revNum);
 
     /** The time of the change. */
     this._timestamp = Timestamp.check(timestamp);
@@ -70,25 +70,25 @@ export default class DocumentChange extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._verNum, this._timestamp, this._delta, this.authorId];
+    return [this._revNum, this._timestamp, this._delta, this.authorId];
   }
 
   /**
    * Constructs an instance from API arguments.
    *
-   * @param {Int} verNum Same as with the regular constructor.
+   * @param {Int} revNum Same as with the regular constructor.
    * @param {Timestamp} timestamp Same as with the regular constructor.
    * @param {Delta|array|object} delta Same as with the regular constructor.
    * @param {string|null} authorId Same as with the regular constructor.
    * @returns {DocumentChange} The constructed instance.
    */
-  static fromApi(verNum, timestamp, delta, authorId) {
-    return new DocumentChange(verNum, timestamp, delta, authorId);
+  static fromApi(revNum, timestamp, delta, authorId) {
+    return new DocumentChange(revNum, timestamp, delta, authorId);
   }
 
-  /** {Int} The produced version number. */
-  get verNum() {
-    return this._verNum;
+  /** {Int} The produced revision number. */
+  get revNum() {
+    return this._revNum;
   }
 
   /** {Timestamp} The time of the change. */

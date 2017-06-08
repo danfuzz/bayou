@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DeltaResult, DocumentChange, FrozenDelta, Snapshot, Timestamp, VersionNumber }
+import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Timestamp }
   from 'doc-common';
 import { BaseDoc, Coder } from 'doc-store';
 import { Logger } from 'see-all';
@@ -68,16 +68,16 @@ export default class DocControl extends CommonBase {
     this._formatVersion = formatVersion;
 
     /**
-     * {Map<VersionNumber,Snapshot>} Mapping from version numbers to
+     * {Map<RevisionNumber,Snapshot>} Mapping from revision numbers to
      * corresponding document snapshots. Sparse.
      */
     this._snapshots = new Map();
 
     /**
-     * Condition that transitions from `false` to `true` when there is a version
-     * change and there are waiters for same. This remains `true` in the steady
-     * state (when there are no waiters). As soon as the first waiter comes
-     * along, it gets set to `false`.
+     * Condition that transitions from `false` to `true` when there is a
+     * revision change and there are waiters for same. This remains `true` in
+     * the steady state (when there are no waiters). As soon as the first waiter
+     * comes along, it gets set to `false`.
      */
     this._changeCondition = new PromCondition(true);
 
@@ -111,16 +111,16 @@ export default class DocControl extends CommonBase {
     await this._doc.opNew(Paths.FORMAT_VERSION, this._formatVersion);
 
     // Empty first change (per documented interface).
-    await this._doc.opNew(Paths.forVerNum(0), Coder.encode(DocumentChange.firstChange()));
+    await this._doc.opNew(Paths.forRevNum(0), Coder.encode(DocumentChange.firstChange()));
 
     // The indicated `contents`, if any.
     if (contents !== null) {
       const change = new DocumentChange(1, Timestamp.now(), contents, null);
-      await this._doc.opNew(Paths.forVerNum(1), Coder.encode(change));
+      await this._doc.opNew(Paths.forRevNum(1), Coder.encode(change));
     }
 
-    const verNum = (contents === null) ? 0 : 1;
-    await this._doc.opNew(Paths.VERSION_NUMBER, Coder.encode(verNum));
+    const revNum = (contents === null) ? 0 : 1;
+    await this._doc.opNew(Paths.VERSION_NUMBER, Coder.encode(revNum));
 
     // Any cached snapshots are no longer valid.
     this._snapshots = new Map();
@@ -128,35 +128,35 @@ export default class DocControl extends CommonBase {
 
   /**
    * Gets a particular change to the document. The document consists of a
-   * sequence of changes, each modifying version N of the document to produce
-   * version N+1.
+   * sequence of changes, each modifying revision N of the document to produce
+   * revision N+1.
    *
-   * @param {Int} verNum The version number of the change. The result is the
-   *   change which produced that version. E.g., `0` is a request for the first
+   * @param {Int} revNum The revision number of the change. The result is the
+   *   change which produced that revision. E.g., `0` is a request for the first
    *   change (the change from the empty document).
    * @returns {DocumentChange} The requested change.
    */
-  async change(verNum) {
-    return this._changeRead(verNum);
+  async change(revNum) {
+    return this._changeRead(revNum);
   }
 
   /**
    * Gets a snapshot of the full document contents.
    *
-   * @param {Int|null} verNum Which version to get. If passed as `null`,
-   *   indicates the latest (most recent) version.
+   * @param {Int|null} revNum Which revision to get. If passed as `null`,
+   *   indicates the latest (most recent) revision.
    * @returns {Snapshot} The corresponding snapshot.
    */
-  async snapshot(verNum = null) {
-    const currentVerNum = await this._currentVerNum();
-    verNum = (verNum === null)
-      ? currentVerNum
-      : VersionNumber.maxInc(verNum, currentVerNum);
+  async snapshot(revNum = null) {
+    const currentRevNum = await this._currentRevNum();
+    revNum = (revNum === null)
+      ? currentRevNum
+      : RevisionNumber.maxInc(revNum, currentRevNum);
 
-    // Search backward through the full versions for a base for forward
+    // Search backward through the full revisions for a base for forward
     // composition.
     let base = null;
-    for (let i = verNum; i >= 0; i--) {
+    for (let i = revNum; i >= 0; i--) {
       const v = this._snapshots.get(i);
       if (v) {
         base = v;
@@ -164,22 +164,22 @@ export default class DocControl extends CommonBase {
       }
     }
 
-    if (base && (base.verNum === verNum)) {
-      // Found the right version!
+    if (base && (base.revNum === revNum)) {
+      // Found the right revision!
       return base;
     }
 
-    // We didn't actully find a snapshot of the requested version. Apply deltas
-    // to the base to produce the desired version. Store it, and return it.
+    // We didn't actully find a snapshot of the requested revision. Apply deltas
+    // to the base to produce the desired revision. Store it, and return it.
 
     const contents = (base === null)
-      ? this._composeVersions(FrozenDelta.EMPTY, 0,               verNum + 1)
-      : this._composeVersions(base.contents,     base.verNum + 1, verNum + 1);
-    const result = new Snapshot(verNum, await contents);
+      ? this._composeVersions(FrozenDelta.EMPTY, 0,               revNum + 1)
+      : this._composeVersions(base.contents,     base.revNum + 1, revNum + 1);
+    const result = new Snapshot(revNum, await contents);
 
-    this._log.detail(`Made snapshot for version ${verNum}.`);
+    this._log.detail(`Made snapshot for revision ${revNum}.`);
 
-    this._snapshots.set(verNum, result);
+    this._snapshots.set(revNum, result);
     return result;
   }
 
@@ -216,23 +216,23 @@ export default class DocControl extends CommonBase {
       return DocControl.STATUS_MIGRATE;
     }
 
-    const verNumEncoded =
+    const revNumEncoded =
       await this._doc.pathReadOrNull(Paths.VERSION_NUMBER);
 
-    if (verNumEncoded === null) {
-      this._log.info('Corrupt document: Missing version number.');
+    if (revNumEncoded === null) {
+      this._log.info('Corrupt document: Missing revision number.');
       return DocControl.STATUS_ERROR;
     }
 
-    let verNum;
+    let revNum;
     try {
-      verNum = Coder.decode(verNumEncoded);
+      revNum = Coder.decode(revNumEncoded);
     } catch (e) {
-      this._log.info('Corrupt document: Bogus version number.');
+      this._log.info('Corrupt document: Bogus revision number.');
       return DocControl.STATUS_ERROR;
     }
 
-    for (let i = 0; i <= verNum; i++) {
+    for (let i = 0; i <= revNum; i++) {
       try {
         this._changeRead(i);
       } catch (e) {
@@ -245,30 +245,30 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Returns a promise for a version &mdash; any version &mdash; of the document
-   * after the given `baseVerNum`, with the return result represented as a delta
-   * relative to that given version. If called when `baseVerNum` is the current
-   * version, this will not resolve the result promise until at least one change
-   * has been made.
+   * Returns a promise for a revision &mdash; any revision &mdash; of the
+   * document after the given `baseRevNum`, with the return result represented
+   * as a delta relative to that given revision. If called when `baseRevNum` is
+   * the current revision, this will not resolve the result promise until at
+   * least one change has been made.
    *
-   * @param {Int} baseVerNum Version number for the document.
-   * @returns {DeltaResult} Delta and associated version number. The result's
-   *   `verNum` is guaranteed to be at least one more than `baseVerNum` (and
+   * @param {Int} baseRevNum Revision number for the document.
+   * @returns {DeltaResult} Delta and associated revision number. The result's
+   *   `revNum` is guaranteed to be at least one more than `baseRevNum` (and
    *   could possibly be even larger.) The result's `delta` can be applied to
-   *   version `baseVerNum` to produce version `verNum` of the document.
+   *   revision `baseRevNum` to produce revision `revNum` of the document.
    */
-  async deltaAfter(baseVerNum) {
-    const currentVerNum = await this._currentVerNum();
-    VersionNumber.maxInc(baseVerNum, currentVerNum);
+  async deltaAfter(baseRevNum) {
+    const currentRevNum = await this._currentRevNum();
+    RevisionNumber.maxInc(baseRevNum, currentRevNum);
 
-    if (baseVerNum !== currentVerNum) {
+    if (baseRevNum !== currentRevNum) {
       // We can fulfill the result based on existing document history. (That is,
       // we don't have to wait for a new change to be added to the document).
-      // Compose all the deltas from the version after the base through the
-      // current version.
+      // Compose all the deltas from the revision after the base through the
+      // current revision.
       const delta = await this._composeVersions(
-        FrozenDelta.EMPTY, baseVerNum + 1, VersionNumber.after(currentVerNum));
-      return new DeltaResult(currentVerNum, delta);
+        FrozenDelta.EMPTY, baseRevNum + 1, RevisionNumber.after(currentRevNum));
+      return new DeltaResult(currentRevNum, delta);
     }
 
     // Force the `_changeCondition` to `false` (though it might already be
@@ -278,27 +278,27 @@ export default class DocControl extends CommonBase {
       // Just recurse to do the work. Under normal circumstances it will return
       // promptly. This arrangement gracefully handles edge cases, though, such
       // as a triggered change turning out to be due to a no-op.
-      return this.deltaAfter(baseVerNum);
+      return this.deltaAfter(baseRevNum);
     });
   }
 
   /**
-   * Takes a base version number and delta therefrom, and applies the delta,
-   * including merging of any intermediate versions. The return value consists
-   * of a new version number, and a delta to be used to get the new document
+   * Takes a base revision number and delta therefrom, and applies the delta,
+   * including merging of any intermediate revisions. The return value consists
+   * of a new revision number, and a delta to be used to get the new document
    * state. The delta is with respect to the client's "expected result," that
    * is to say, what the client would get if the delta were applied with no
    * intervening changes.
    *
-   * As a special case, as long as `baseVerNum` is valid, if `delta` is empty,
-   * this method returns a result of the same version number along with an
+   * As a special case, as long as `baseRevNum` is valid, if `delta` is empty,
+   * this method returns a result of the same revision number along with an
    * empty "correction" delta. That is, the return value from passing an empty
-   * delta doesn't provide any information about subsequent versions of the
+   * delta doesn't provide any information about subsequent revisions of the
    * document.
    *
-   * @param {Int} baseVerNum Version number which `delta` is with respect to.
+   * @param {Int} baseRevNum Revision number which `delta` is with respect to.
    * @param {FrozenDelta} delta Delta indicating what has changed with respect
-   *   to `baseVerNum`.
+   *   to `baseRevNum`.
    * @param {string|null} authorId Author of `delta`, or `null` if the change
    *   is to be considered authorless.
    * @returns {DeltaResult} The correction to the implied expected result of
@@ -306,25 +306,25 @@ export default class DocControl extends CommonBase {
    *   result to get the actual result. The promise resolves sometime after the
    *   delta has been applied to the document.
    */
-  async applyDelta(baseVerNum, delta, authorId) {
+  async applyDelta(baseRevNum, delta, authorId) {
     // Very basic argument validation. Once in the guts of the thing, we will
     // discover (and properly complain) if there are deeper problems with them.
     FrozenDelta.check(delta);
     TString.orNull(authorId);
 
-    // Snapshot of the base version. This call validates `baseVerNum`.
-    const base = await this.snapshot(baseVerNum);
+    // Snapshot of the base revision. This call validates `baseRevNum`.
+    const base = await this.snapshot(baseRevNum);
 
     // Check for an empty `delta`. If it is, we don't bother trying to apply it.
     // See method header comment for more info.
     if (delta.isEmpty()) {
-      return new DeltaResult(baseVerNum, FrozenDelta.EMPTY);
+      return new DeltaResult(baseRevNum, FrozenDelta.EMPTY);
     }
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
     const expected = new Snapshot(
-      VersionNumber.after(baseVerNum),
+      RevisionNumber.after(baseRevNum),
       base.contents.compose(delta));
 
     // We try performing the apply, and then we iterate if it failed _and_ the
@@ -349,7 +349,7 @@ export default class DocControl extends CommonBase {
       }
 
       // A `null` result from the call means that we lost an append race (that
-      // is, there was version skew between the snapshot and the latest reality
+      // is, there was revision skew between the snapshot and the latest reality
       // at the moment of attempted appending), so we delay briefly and iterate.
 
       if (retryTotalMsec >= MAX_APPEND_TIME_MSEC) {
@@ -368,7 +368,7 @@ export default class DocControl extends CommonBase {
   /**
    * Main implementation of `applyDelta()`, which takes as an additional
    * argument a promise for a snapshot which represents the current (latest)
-   * version at the moment it resolves. This method attempts to perform change
+   * revision at the moment it resolves. This method attempts to perform change
    * application relative to that snapshot. If it succeeds (that is, if the
    * snapshot is still current at the moment of attempted application), then
    * this method returns a proper result of `applyDelta()`. If it fails due to
@@ -376,11 +376,11 @@ export default class DocControl extends CommonBase {
    * problems are reported by throwing an exception.
    *
    * @param {Snapshot} base Snapshot of the base from which the delta is
-   *   defined. That is, this is the snapshot of `baseVerNum` as provided to
+   *   defined. That is, this is the snapshot of `baseRevNum` as provided to
    *   `applyDelta()`.
    * @param {FrozenDelta} delta Same as for `applyDelta()`.
    * @param {string|null} authorId Same as for `applyDelta()`.
-   * @param {Snapshot} current Snapshot of the current (latest) version of the
+   * @param {Snapshot} current Snapshot of the current (latest) revision of the
    *   document.
    * @param {Snapshot} expected The implied expected result as defined by
    *   `applyDelta()`.
@@ -388,56 +388,56 @@ export default class DocControl extends CommonBase {
    *   or `null` if the application failed due to an out-of-date `snapshot`.
    */
   async _applyDeltaTo(base, delta, authorId, current, expected) {
-    if (base.verNum === current.verNum) {
-      // The easy case, because the base version is in fact the current version
-      // of the document, so we don't have to transform the incoming delta.
-      // We merely have to apply the given `delta` to the current version. If
-      // it succeeds, then we won the append race (if any).
+    if (base.revNum === current.revNum) {
+      // The easy case, because the base revision is in fact the current
+      // revision of the document, so we don't have to transform the incoming
+      // delta. We merely have to apply the given `delta` to the current
+      // revision. If it succeeds, then we won the append race (if any).
 
-      const verNum = await this._appendDelta(base.verNum, delta, authorId);
+      const revNum = await this._appendDelta(base.revNum, delta, authorId);
 
-      if (verNum === null) {
+      if (revNum === null) {
         // Turns out we lost an append race.
         return null;
       }
 
-      return new DeltaResult(verNum, FrozenDelta.EMPTY);
+      return new DeltaResult(revNum, FrozenDelta.EMPTY);
     }
 
     // The hard case: The client has requested an application of a delta
-    // (hereafter `dClient`) against a version of the document which is _not_
-    // the current version (hereafter, `vBase` for the common base and
-    // `vCurrent` for the current version). Here's what we do:
+    // (hereafter `dClient`) against a revision of the document which is _not_
+    // the current revision (hereafter, `rBase` for the common base and
+    // `rCurrent` for the current revision). Here's what we do:
     //
     // 0. Definitions of input:
     //    * `dClient` -- Delta to apply, as requested by the client.
-    //    * `vBase` -- Base version to apply the delta to.
-    //    * `vCurrent` -- Current (latest) version of the document.
-    //    * `vExpected` -- The implied expected result of application. This is
-    //      `vBase.compose(dClient)` as version number `vBase.verNum + 1`.
+    //    * `rBase` -- Base revision to apply the delta to.
+    //    * `rCurrent` -- Current (latest) revision of the document.
+    //    * `rExpected` -- The implied expected result of application. This is
+    //      `rBase.compose(dClient)` as revision number `rBase.revNum + 1`.
     // 1. Construct a combined delta for all the server changes made between
-    //    `vBase` and `vCurrent`. This is `dServer`.
+    //    `rBase` and `rCurrent`. This is `dServer`.
     // 2. Transform (rebase) `dClient` with regard to (on top of) `dServer`.
     //    This is `dNext`. If `dNext` turns out to be empty, stop here and
     //    report that fact.
-    // 3. Apply `dNext` to `vCurrent`, producing `vNext` as the new current
-    //    server version.
-    // 4. Construct a delta from `vExpected` to `vNext` (that is, the diff).
+    // 3. Apply `dNext` to `rCurrent`, producing `rNext` as the new current
+    //    server revision.
+    // 4. Construct a delta from `rExpected` to `rNext` (that is, the diff).
     //    This is `dCorrection`. This is what we return to the client; they will
-    //    compose `vExpected` with `dCorrection` to arrive at `vNext`.
-    // 5. Return the version number of `vNext` along with the delta
+    //    compose `rExpected` with `dCorrection` to arrive at `rNext`.
+    // 5. Return the revision number of `rNext` along with the delta
     //    `dCorrection`.
 
     // (0) Assign incoming arguments to variables that correspond to the
     //     description immediately above.
     const dClient   = delta;
-    const vBase     = base;
-    const vExpected = expected;
-    const vCurrent  = current;
+    const rBase     = base;
+    const rExpected = expected;
+    const rCurrent  = current;
 
     // (1)
     const dServer = await this._composeVersions(
-      FrozenDelta.EMPTY, vBase.verNum + 1, VersionNumber.after(vCurrent.verNum));
+      FrozenDelta.EMPTY, rBase.revNum + 1, RevisionNumber.after(rCurrent.revNum));
 
     // (2)
 
@@ -449,22 +449,22 @@ export default class DocControl extends CommonBase {
       // It turns out that nothing changed. **Note:** It is unclear whether this
       // can actually happen in practice, given that we already return early
       // (in `applyDelta()`) if we are asked to apply an empty delta.
-      return new DeltaResult(vCurrent.verNum, FrozenDelta.EMPTY);
+      return new DeltaResult(rCurrent.revNum, FrozenDelta.EMPTY);
     }
 
     // (3)
-    const vNextNum = await this._appendDelta(vCurrent.verNum, dNext, authorId);
+    const vNextNum = await this._appendDelta(rCurrent.revNum, dNext, authorId);
 
     if (vNextNum === null) {
       // Turns out we lost an append race.
       return null;
     }
 
-    const vNext = await this.snapshot(vNextNum);
+    const rNext = await this.snapshot(vNextNum);
 
     // (4)
     const dCorrection =
-      FrozenDelta.coerce(vExpected.contents.diff(vNext.contents));
+      FrozenDelta.coerce(rExpected.contents.diff(rNext.contents));
 
     // (5)
     return new DeltaResult(vNextNum, dCorrection);
@@ -472,28 +472,29 @@ export default class DocControl extends CommonBase {
 
   /**
    * Constructs a delta consisting of the composition of the deltas from the
-   * given initial version through and including the current latest delta,
-   * composed from a given base. It is valid to pass as either version number
-   * parameter one version beyond the current version number (that is,
-   * `VersionNumber.after(await this._currentVerNum())`. It is invalid to
-   * specify a non-existent version _other_ than one beyond the current version.
-   * If `startInclusive === endExclusive`, then this method returns `baseDelta`.
+   * given initial revision through and including the current latest delta,
+   * composed from a given base. It is valid to pass as either revision number
+   * parameter one revision beyond the current revision number (that is,
+   * `RevisionNumber.after(await this._currentRevNum())`. It is invalid to
+   * specify a non-existent revision _other_ than one beyond the current
+   * revision. If `startInclusive === endExclusive`, then this method returns
+   * `baseDelta`.
    *
    * @param {FrozenDelta} baseDelta Base delta onto which the indicated deltas
    *   get composed.
-   * @param {Int} startInclusive Version number for the first delta to include
+   * @param {Int} startInclusive Revision number for the first delta to include
    *   in the result.
-   * @param {Int} endExclusive Version number just beyond the last delta to
+   * @param {Int} endExclusive Revision number just beyond the last delta to
    *   include in the result.
    * @returns {FrozenDelta} The composed delta consisting of `baseDelta`
-   *   composed with versions `startInclusive` through but not including
+   *   composed with revisions `startInclusive` through but not including
    *   `endExclusive`.
    */
   async _composeVersions(baseDelta, startInclusive, endExclusive) {
-    const nextVerNum = VersionNumber.after(await this._currentVerNum());
-    startInclusive = VersionNumber.rangeInc(startInclusive, 0, nextVerNum);
+    const nextRevNum = RevisionNumber.after(await this._currentRevNum());
+    startInclusive = RevisionNumber.rangeInc(startInclusive, 0, nextRevNum);
     endExclusive =
-      VersionNumber.rangeInc(endExclusive, startInclusive, nextVerNum);
+      RevisionNumber.rangeInc(endExclusive, startInclusive, nextRevNum);
 
     if (startInclusive === endExclusive) {
       // Trivial case: Nothing to compose.
@@ -519,8 +520,8 @@ export default class DocControl extends CommonBase {
 
   /**
    * Appends a new delta to the document. Also forces `_changeCondition`
-   * `true` to release any waiters. On success, this returns the version number
-   * of the document after the append. On a failure due to `baseVerNum` not
+   * `true` to release any waiters. On success, this returns the revision number
+   * of the document after the append. On a failure due to `baseRevNum` not
    * being current at the moment of application, this returns `null`. All other
    * errors are reported via thrown errors. See `_applyDeltaTo()` above for
    * further discussion.
@@ -529,71 +530,71 @@ export default class DocControl extends CommonBase {
    * because the calling code should have handled that case without calling this
    * method.
    *
-   * @param {Int} baseVerNum Version number which this is to apply to.
+   * @param {Int} baseRevNum Revision number which this is to apply to.
    * @param {FrozenDelta} delta The delta to append.
    * @param {string|null} authorId The author of the delta.
-   * @returns {Int|null} The version number after appending `delta`, or `null`
-   *   if `baseVerNum` is out-of-date at the moment of attempted application
+   * @returns {Int|null} The revision number after appending `delta`, or `null`
+   *   if `baseRevNum` is out-of-date at the moment of attempted application
    *   _and_ the `delta` is non-empty.
    */
-  async _appendDelta(baseVerNum, delta, authorId) {
+  async _appendDelta(baseRevNum, delta, authorId) {
     if (delta.isEmpty()) {
       throw new Error('Should not have been called with an empty delta.');
     }
 
-    const verNum = VersionNumber.after(baseVerNum);
-    const change = new DocumentChange(verNum, Timestamp.now(), delta, authorId);
+    const revNum = RevisionNumber.after(baseRevNum);
+    const change = new DocumentChange(revNum, Timestamp.now(), delta, authorId);
     const writeResult =
-      await this._doc.opNew(Paths.forVerNum(verNum), Coder.encode(change));
+      await this._doc.opNew(Paths.forRevNum(revNum), Coder.encode(change));
 
     if (!writeResult) {
       // We lost an append race.
-      this._log.info(`Lost append race for version ${verNum}.`);
+      this._log.info(`Lost append race for revision ${revNum}.`);
       return null;
     }
 
-    // Update the version number. **Note:** The `await` is to get errors to be
+    // Update the revision number. **Note:** The `await` is to get errors to be
     // thrown via this method instead of being dropped on the floor.
-    await this._writeVerNum(verNum);
+    await this._writeRevNum(revNum);
 
     this._changeCondition.value = true;
-    return verNum;
+    return revNum;
   }
 
   /**
-   * Reads the change for the indicated version number. It is an error to
+   * Reads the change for the indicated revision number. It is an error to
    * request a change that doesn't exist.
    *
-   * @param {VersionNumber} verNum Version number of the change. This indicates
-   *   the change that produced that document version.
+   * @param {RevisionNumber} revNum Revision number of the change. This
+   *   indicates the change that produced that document revision.
    * @returns {DocumentChange} The corresponding change.
    */
-  async _changeRead(verNum) {
-    const encoded = await this._doc.pathRead(Paths.forVerNum(verNum));
+  async _changeRead(revNum) {
+    const encoded = await this._doc.pathRead(Paths.forRevNum(revNum));
     return DocumentChange.check(Coder.decode(encoded));
   }
 
   /**
-   * Gets the current document version number.
+   * Gets the current document revision number.
    *
-   * @returns {VersionNumber|null} The version number, or `null` if it is not
+   * @returns {RevisionNumber|null} The revision number, or `null` if it is not
    *   set.
    */
-  async _currentVerNum() {
+  async _currentRevNum() {
     const encoded = await this._doc.pathReadOrNull(Paths.VERSION_NUMBER);
     return (encoded === null) ? null : Coder.decode(encoded);
   }
 
   /**
-   * Writes the given value as the current document version number.
+   * Writes the given value as the current document revision number.
    *
-   * @param {VersionNumber} verNum The version number.
+   * @param {RevisionNumber} revNum The revision number.
    * @returns {boolean} `true` once the write is complete.
    */
-  async _writeVerNum(verNum) {
-    VersionNumber.check(verNum);
+  async _writeRevNum(revNum) {
+    RevisionNumber.check(revNum);
 
-    await this._doc.opForceWrite(Paths.VERSION_NUMBER, Coder.encode(verNum));
+    await this._doc.opForceWrite(Paths.VERSION_NUMBER, Coder.encode(revNum));
     return true;
   }
 }

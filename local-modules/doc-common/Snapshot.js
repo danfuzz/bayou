@@ -5,7 +5,7 @@
 import { CommonBase } from 'util-common';
 
 import FrozenDelta from './FrozenDelta';
-import VersionNumber from './VersionNumber';
+import RevisionNumber from './RevisionNumber';
 
 
 /**
@@ -15,16 +15,16 @@ export default class Snapshot extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {VersionNumber} verNum Version number of the document.
+   * @param {RevisionNumber} revNum Revision number of the document.
    * @param {Delta|array|object} contents Document contents. Can be given
    *   anything that can be coerced into a `FrozenDelta`. Must be a "document"
    *   (that is, a delta consisting only of `insert` operations).
    */
-  constructor(verNum, contents) {
+  constructor(revNum, contents) {
     super();
 
-    /** {Int} Version number. */
-    this._verNum = VersionNumber.check(verNum);
+    /** {Int} Revision number. */
+    this._revNum = RevisionNumber.check(revNum);
 
     /** {FrozenDelta} Document contents. */
     this._contents = FrozenDelta.coerce(contents);
@@ -58,23 +58,23 @@ export default class Snapshot extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._verNum, this._contents];
+    return [this._revNum, this._contents];
   }
 
   /**
    * Constructs an instance from API arguments.
    *
-   * @param {number} verNum Same as regular constructor.
+   * @param {number} revNum Same as regular constructor.
    * @param {Delta|array|object} contents Same as regular constructor.
    * @returns {Snapshot} The constructed instance.
    */
-  static fromApi(verNum, contents) {
-    return new Snapshot(verNum, contents);
+  static fromApi(revNum, contents) {
+    return new Snapshot(revNum, contents);
   }
 
-  /** {VersionNumber} The version number. */
-  get verNum() {
-    return this._verNum;
+  /** {RevisionNumber} The revision number. */
+  get revNum() {
+    return this._revNum;
   }
 
   /** {FrozenDelta} The document contents. */

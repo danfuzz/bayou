@@ -20,7 +20,9 @@ import DocControl from './DocControl';
 const ERROR_NOTE = FrozenDelta.coerce(
   [{ insert: '(Recreated document due to validation error(s).)\n' }]);
 
-/** {FrozenDelta} Message used as document instead of migrating old versions. */
+/**
+ * {FrozenDelta} Message used as document instead of migrating documents from
+ * old format versions. */
 const MIGRATION_NOTE = FrozenDelta.coerce(
   [{ insert: '(Recreated document due to format version skew.)\n' }]);
 
