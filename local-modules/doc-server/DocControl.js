@@ -405,8 +405,8 @@ export default class DocControl extends CommonBase {
    * `true` to release any waiters. On success, this returns the version number
    * of the document after the append. On a failure due to `baseVerNum` not
    * being current at the moment of application, this returns `null`. All other
-   * errors are reported via thrown errors. See `_applyDeltaTo()` above and
-   * `BaseDoc.changeAppend()` for further discussion.
+   * errors are reported via thrown errors. See `_applyDeltaTo()` above for
+   * further discussion.
    *
    * **Note:** If the delta is a no-op, then this method throws an error,
    * because the calling code should have handled that case without calling this
@@ -424,26 +424,20 @@ export default class DocControl extends CommonBase {
       throw new Error('Should not have been called with an empty delta.');
     }
 
-    // **TODO:** Stop using the old low-level storage interface.
     const verNum = VersionNumber.after(baseVerNum);
     const change = new DocumentChange(verNum, Timestamp.now(), delta, authorId);
-    const appendResult = await this._doc.changeAppend(change);
+    const writeResult =
+      await this._doc.opNew(Paths.forVerNum(verNum), Coder.encode(change));
 
-    if (!appendResult) {
+    if (!writeResult) {
       // We lost an append race.
       this._log.info(`Lost append race for version ${verNum}.`);
       return null;
     }
 
-    // Write the delta out using the new low-level facility. This is duplicative
-    // for now, but will eventually be the main way that changes are recorded.
-    // (See TODO above.) **Note:** The `await` is to get errors to be thrown
-    // via this method instead of being dropped on the floor. The
-    // `Promise.all()` cladding means that the methods can be run in parallel.
-    await Promise.all([
-      this._writeVerNum(verNum),
-      this._doc.opNew(Paths.forVerNum(verNum), Coder.encode(change))
-    ]);
+    // Update the version number. **Note:** The `await` is to get errors to be
+    // thrown via this method instead of being dropped on the floor.
+    await this._writeVerNum(verNum);
 
     this._changeCondition.value = true;
     return verNum;

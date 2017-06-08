@@ -151,11 +151,6 @@ export default class DocServer extends Singleton {
       await docStorage.opNew(Paths.forVerNum(0), Coder.encode(DocumentChange.firstChange()));
       await docStorage.opNew(Paths.forVerNum(1), Coder.encode(change));
       await docStorage.opNew(Paths.VERSION_NUMBER, Coder.encode(1));
-
-      // Write it using the old low-level storage form, which is still what
-      // is getting read back, as of this writing. **TODO:** Stop needing to do
-      // this.
-      await docStorage.changeAppend(change);
     }
 
     const result = new DocControl(docStorage);
