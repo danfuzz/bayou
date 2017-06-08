@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DocumentChange, VersionNumber } from 'doc-common';
 import { TBoolean, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 import { FrozenBuffer } from 'util-server';
@@ -14,9 +13,9 @@ import StoragePath from './StoragePath';
  * override several methods defined by this class, as indicated in the
  * documentation. Methods to override are all named with the prefix `_impl_`.
  *
- * The model that this class embodies is that a document is an append-only log
- * of changes, with each change having a version number that _must_ form a
- * zero-based integer sequence. Changes are random-access.
+ * The model that this class embodies is that a document is a random-access
+ * key-value store with keys having a path-like structure and values being
+ * arbitrary binary data.
  */
 export default class BaseDoc extends CommonBase {
   /**
@@ -62,109 +61,23 @@ export default class BaseDoc extends CommonBase {
   /**
    * Creates this document if it does not already exist, or re-creates it if it
    * does already exist. After this call, the document both exists and is
-   * empty. "Empty" in this case means that it contains exactly one change,
-   * which represents the null operation on the document. (That is, its delta
-   * is empty.)
+   * empty (that is, has no stored values).
    */
   async create() {
-    this._impl_create(DocumentChange.firstChange());
+    // This is just a simple pass-through. The point is to maintain the
+    // convention of normal-named methods being the exposed public interface
+    // and `_impl_*` methods being the ones that subclasses are supposed to
+    // override.
+    this._impl_create();
   }
 
   /**
-   * Main implementation of `create()`, which takes an additional argument
-   * of the first change to include in the document.
+   * Main implementation of `create()`.
    *
    * @abstract
-   * @param {DocumentChange} firstChange The first change to include in the
-   *   document.
    */
-  async _impl_create(firstChange) {
-    this._mustOverride(firstChange);
-  }
-
-  /**
-   * Reads a change, by version number. It is an error to request a change that
-   * does not exist on the document. If called on a non-existent document, this
-   * method does _not_ cause that document to be created.
-   *
-   * @param {Int} verNum The version number for the desired change.
-   * @returns {DocumentChange} The change with `verNum` as indicated.
-   */
-  async changeRead(verNum) {
-    VersionNumber.check(verNum);
-
-    const result = await this._impl_changeRead(verNum);
-    return DocumentChange.check(result);
-  }
-
-  /**
-   * Main implementation of `changeRead()`. Guaranteed to be called with a
-   * valid version number (in that it is a non-negative integer), but which
-   * might be out of range. This method should throw an exception if `verNum`
-   * turns out not to refer to an existing change.
-   *
-   * @abstract
-   * @param {Int} verNum The version number for the desired change.
-   * @returns {DocumentChange} The change with `verNum` as indicated.
-   */
-  async _impl_changeRead(verNum) {
-    return this._mustOverride(verNum);
-  }
-
-  /**
-   * Appends a change, if it is valid. On success, this returns `true`. On
-   * failure because the version number of the change is incorrect (presumably
-   * because this attempt represents the losing side of an append race), this
-   * returns `false`. All other problems are reported as thrown errors.
-   *
-   * **Note:** The reason `verNum` is passed explicitly instead of just
-   * assumed to be correct is that, due to the asynchronous nature of the
-   * execution of this method, the calling code cannot know for sure whether or
-   * not _its_ concept of the appropriate `verNum` is actually the right value
-   * by the time the change is being appended. If `verNum` were simply assumed,
-   * what you might see is a `delta` that was intended to apply to (say)
-   * `verNum - 1` but which got recorded as being applied to `verNum` and would
-   * hence be incorrect.
-   *
-   * @param {DocumentChange} change The change to append.
-   * @returns {boolean} `true` if the append was successful, or `false` if it
-   *   was not due to `change` having an incorrect `verNum`.
-   */
-  async changeAppend(change) {
-    // It is invalid to ever use this method to append a change with
-    // `verNum === 0`, because that would be the first change to the document,
-    // and the _only_ way to get a first change into a document is via a call to
-    // `create()` (which passes the change through to the subclass via
-    // `_impl_create()`). We check this up-front here instead of blithely
-    // passing it down to the subclass, because doing the latter would force the
-    // subclass to need trickier code to avoid inadvertently creating the
-    // document in cases where it didn't already exist.
-    if (change.verNum === 0) {
-      throw new Error('Cannot ever append the very first version.');
-    }
-
-    return this._impl_changeAppend(change);
-  }
-
-  /**
-   * Main implementation of `changeAppend()`. Guaranteed to be called with a
-   * structurally valid change instance with a `verNum` of at least `1`. Beyond
-   * the minimum limit, `verNum` still has to be validated.
-   *
-   * On that last point, `change` will typically have been constructed with a
-   * valid `verNum` at the time of construction, but due to the asynchronous
-   * nature of the system, it is possible for other changes to have been
-   * appended between change construction and the synchronous call to this
-   * method. Therefore, it is imperative to synchronously validate the version
-   * number just before accepting the change.
-   *
-   * @abstract
-   * @param {DocumentChange} change The change to append.
-   * @returns {boolean} `true` if the append was successful, or `false` if it
-   *   was not due to `change` having an incorrect `verNum`.
-   */
-  async _impl_changeAppend(change) {
-    return this._mustOverride(change);
+  async _impl_create() {
+    this._mustOverride();
   }
 
   /**

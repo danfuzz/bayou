@@ -5,11 +5,8 @@
 import afs from 'async-file';
 import path from 'path';
 
-import { Decoder, Encoder } from 'api-common';
-import { VersionNumber } from 'doc-common';
 import { BaseDoc } from 'doc-store';
 import { Logger } from 'see-all';
-import { TObject } from 'typecheck';
 import { PromDelay } from 'util-common';
 import { FrozenBuffer } from 'util-server';
 
@@ -83,33 +80,6 @@ export default class LocalDoc extends BaseDoc {
      */
     this._storageReadyPromise = null;
 
-    /**
-     * {array<DocumentChange>|null} Array of changes. Index `n` contains the
-     * change that produces version number `n`. `null` indicates that the array
-     * is not yet initialized.
-     */
-    this._changes = null;
-
-    /**
-     * {Promise<array<DocumentChange>>|null} Promise for the value of
-     * `_changes`. Becomes non-`null` during the first call to
-     * `_readChangesIfNecessary()` and is used to prevent superfluous re-reading.
-     */
-    this._changesPromise = null;
-
-    /**
-     * Does the change array need to be written to disk? This is set to `true`
-     * on updates and back to `false` once the write has been done.
-     */
-    this._changesDirty = false;
-
-    /**
-     * Does the document need to be "migrated?" In this case, `true` indicates
-     * that the document file exists but could not actually be read and parsed
-     * successfully. This variable is set in `_readChanges()`.
-     */
-    this._needsMigration = null;
-
     /** {Logger} Logger specific to this document's ID. */
     this._log = log.withPrefix(`[${docId}]`);
 
@@ -138,13 +108,8 @@ export default class LocalDoc extends BaseDoc {
 
   /**
    * Implementation as required by the superclass.
-   *
-   * @param {DocumentChange} firstChange The first change to include in the
-   *   document.
    */
-  async _impl_create(firstChange) {
-    this._changes = [firstChange];
-
+  async _impl_create() {
     if (this._storageReadyPromise !== null) {
       // The storage could conceivably be in the middle of being read. Make sure
       // it's no longer in-process before proceeding. If it were in-process,
@@ -160,46 +125,7 @@ export default class LocalDoc extends BaseDoc {
 
     // **Note:** This call _synchronously_ (and promptly) indicates that writing
     // needs to happen, but the actual writing takes place asynchronously.
-    this._changesNeedWrite();
     this._storageNeedsWrite();
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
-   * @param {Int} verNum The version number for the desired change.
-   * @returns {DocumentChange} The change with `verNum` as indicated.
-   */
-  async _impl_changeRead(verNum) {
-    await this._readChangesIfNecessary();
-
-    VersionNumber.maxExc(verNum, this._changes.length);
-    return this._changes[verNum];
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
-   * @param {DocumentChange} change The change to append.
-   * @returns {boolean} `true` if the append was successful, or `false` if it
-   *   was not due to `change` having an incorrect `verNum`.
-   */
-  async _impl_changeAppend(change) {
-    await this._readChangesIfNecessary();
-
-    if (change.verNum !== this._changes.length) {
-      // Not the right `verNum`. This is typically because there was an append
-      // race, and this is the losing side.
-      return false;
-    }
-
-    this._changes[change.verNum] = change;
-
-    // **Note:** This call _synchronously_ (and promptly) indicates that writing
-    // needs to happen, but the actual writing takes place asynchronously.
-    this._changesNeedWrite();
-
-    return true;
   }
 
   /**
@@ -275,148 +201,6 @@ export default class LocalDoc extends BaseDoc {
   async _impl_pathReadOrNull(storagePath) {
     await this._readStorageIfNecessary();
     return this._storage.get(storagePath) || null;
-  }
-
-  /**
-   * Indicates that the document is "dirty" and needs to be written. This
-   * method acts (and returns) promptly. It will kick off a timed callback
-   * to actually perform the writing operation if one isn't already pending.
-   */
-  _changesNeedWrite() {
-    if (this._changesDirty) {
-      // Already marked dirty, which means there's nothing more to do. When
-      // the already-scheduled timer fires, it will pick up the current change.
-      this._log.detail('Already marked dirty.');
-      return;
-    }
-
-    // Mark the document dirty, and queue up the writer.
-
-    this._changesDirty = true;
-    this._log.detail(`Marked dirty at version ${this._changes.length}.`);
-
-    // **TODO:** If we want to catch write errors (e.g. filesystem full), here
-    // is where we need to do it.
-    this._waitThenWriteChanges();
-  }
-
-  /**
-   * Waits for a moment, and then writes the then-current version of the
-   * document. The return value becomes resolved once writing is complete.
-   *
-   * **Note:** As of this writing, the return value isn't used, but ultimately
-   * we will probably want to notice if it throws an exception instead of
-   * letting problems just vaporize via unhandled promises.
-   *
-   * @returns {true} `true`, upon successful writing.
-   */
-  async _waitThenWriteChanges() {
-    // Wait for the prescribed amount of time.
-    await PromDelay.resolve(DIRTY_DELAY_MSEC);
-
-    // Perform the file write.
-
-    const changes = this._changes;
-    const encoded = Encoder.encodeJson({ changes }, true);
-
-    // These are for dirty/clean verification. See big comment below.
-    const changeCount = changes.length;
-    const firstChange = changes[0];
-
-    this._log.detail('Writing to disk...');
-    await afs.writeFile(this._path, encoded, { encoding: 'utf8' });
-    this._log.info(`Wrote version ${changeCount - 1}.`);
-
-    // The tricky bit: We need to check to see if the document got modified
-    // during the file write operation, because if we don't and just reset the
-    // dirty flag, we will fail to write the new version until the _next_ time
-    // the document changes. We check two things to make the determination:
-    //
-    // * The length of the changes array. Different lengths mean we are still
-    //   dirty.
-    //
-    // * The first change as stored in the instance. If this isn't the same as
-    //   what we wrote, it means that the document was re-created.
-
-    if ((changeCount !== changes.length) || (firstChange !== changes[0])) {
-      // The document was modified while writing was underway. We just recurse
-      // to guarantee that the new version isn't lost.
-      this._log.info('Document modified during write operation.');
-      return this._waitThenWriteChanges();
-    }
-
-    // The usual case: Everything is fine.
-    this._changesDirty = false;
-    return true;
-  }
-
-  /**
-   * Reads the document change list if it is not yet loaded.
-   */
-  async _readChangesIfNecessary() {
-    if (this._changes !== null) {
-      // Already in memory; no need to read.
-      return;
-    }
-
-    if (this._changesPromise === null) {
-      // This is the first time we've needed the changes. Initiate a read.
-      this._changesPromise = this._readChanges();
-    }
-
-    // Wait for the pending read to complete.
-    await this._changesPromise;
-  }
-
-  /**
-   * Reads the document file, returning the document contents (an array of
-   * changes). If the document file doesn't exist, this will initialize the
-   * in-memory model with an empty document but does _not_ mark the document
-   * as needing to be written to disk. If the file exists but contains invalid
-   * contents, it is treated as if it exists but is empty.
-   *
-   * @returns {array<DocumentChange>} The document contents.
-   */
-  async _readChanges() {
-    if (!await afs.exists(this._path)) {
-      // File doesn't actually exist. Just initialize an empty change list.
-      this._changes = [];
-      this._log.info('New document.');
-      return this._changes;
-    }
-
-    // The file exists. Read it and attempt to parse it.
-    this._log.detail('Reading from disk...');
-
-    const encoded = await afs.readFile(this._path);
-    let contents = null;
-
-    try {
-      contents = Decoder.decodeJson(encoded);
-      TObject.withExactKeys(contents, ['changes']);
-    } catch (e) {
-      // **Note:** In an earlier version of the code, this is where format
-      // version skew was detected. That code has moved to the higher layer of
-      // document handling. In addition, the change-list-specific code in this
-      // file (such as this method) is in the process of getting decommissioned
-      // in general, and as such it doesn't make sense to try to get too fancy
-      // with the error recovery here.
-      this._log.warn('Ignoring malformed data (bad JSON).', e);
-      contents = null;
-    }
-
-    if (contents === null) {
-      this._changes = [];
-      this._log.info('New document (because existing data is old or bad).');
-    } else {
-      // `slice(0)` makes a mutable clone. Ideally, we'd just use immutable
-      // data structures all the way through, but (TODO) this is reasonable
-      // for now.
-      this._changes = contents.changes.slice(0);
-      this._log.info('Read from disk.');
-    }
-
-    return this._changes;
   }
 
   /**
