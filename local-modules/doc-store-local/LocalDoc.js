@@ -35,9 +35,6 @@ export default class LocalDoc extends BaseDoc {
   constructor(docId, docPath) {
     super(docId);
 
-    /** {string} Path to the change storage for this document. */
-    this._path = `${docPath}.json`;
-
     /**
      * {string} Path to the directory containing stored values for this
      * document.
