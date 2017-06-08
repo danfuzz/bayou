@@ -23,15 +23,15 @@ export default class DeltaResult extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {Int} verNum Version number of the document.
+   * @param {Int} revNum Version number of the document.
    * @param {FrozenDelta} delta Delta which can be applied in context to
    *   produce the document with the indicated version number.
    */
-  constructor(verNum, delta) {
+  constructor(revNum, delta) {
     super();
 
     /** The produced version number. */
-    this._verNum = RevisionNumber.check(verNum);
+    this._revNum = RevisionNumber.check(revNum);
 
     /** The actual change, as a delta. */
     this._delta = FrozenDelta.check(delta);
@@ -48,28 +48,28 @@ export default class DeltaResult extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._verNum, this._delta];
+    return [this._revNum, this._delta];
   }
 
   /**
    * Constructs an instance from API arguments.
    *
-   * @param {Int} verNum Same as with the regular constructor.
+   * @param {Int} revNum Same as with the regular constructor.
    * @param {FrozenDelta} delta Same as with the regular constructor.
    * @returns {DeltaResult} The constructed instance.
    */
-  static fromApi(verNum, delta) {
-    return new DeltaResult(verNum, delta);
+  static fromApi(revNum, delta) {
+    return new DeltaResult(revNum, delta);
   }
 
   /** {Int} The produced version number. */
-  get verNum() {
-    return this._verNum;
+  get revNum() {
+    return this._revNum;
   }
 
   /**
    * {FrozenDelta} Delta used to produce the document with version number
-   * `verNum`.
+   * `revNum`.
    */
   get delta() {
     return this._delta;

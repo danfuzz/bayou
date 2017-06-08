@@ -24,11 +24,11 @@ export default class Paths {
    * number, specifically to store the document change that results in that
    * version.
    *
-   * @param {RevisionNumber} verNum The version number.
+   * @param {RevisionNumber} revNum The version number.
    * @returns {string} The corresponding `StoragePath` string.
    */
-  static forVerNum(verNum) {
-    RevisionNumber.check(verNum);
-    return `/change/${verNum}`;
+  static forVerNum(revNum) {
+    RevisionNumber.check(revNum);
+    return `/change/${revNum}`;
   }
 }

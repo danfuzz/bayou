@@ -56,9 +56,9 @@ export default class DebugTools {
 
     this._bindParam('authorId');
     this._bindParam('documentId');
-    this._bindParam('verNum');
+    this._bindParam('revNum');
 
-    this._bindHandler('change',      ':documentId/:verNum');
+    this._bindHandler('change',      ':documentId/:revNum');
     this._bindHandler('client-test');
     this._bindHandler('edit',        ':documentId');
     this._bindHandler('edit',        ':documentId/:authorId');
@@ -66,7 +66,7 @@ export default class DebugTools {
     this._bindHandler('key',         ':documentId/:authorId');
     this._bindHandler('log');
     this._bindHandler('snapshot',    ':documentId');
-    this._bindHandler('snapshot',    ':documentId/:verNum');
+    this._bindHandler('snapshot',    ':documentId/:revNum');
 
     router.use(this._error.bind(this));
   }
@@ -158,15 +158,15 @@ export default class DebugTools {
    * @param {object} req HTTP request.
    * @param {string} value Request parameter value.
    */
-  _check_verNum(req, value) {
+  _check_revNum(req, value) {
     if (!value.match(/^[0-9]+$/)) {
       const error = new Error();
-      error.debugMsg = 'Bad value for `verNum`.';
+      error.debugMsg = 'Bad value for `revNum`.';
       throw error;
     }
 
     // Replace the string parameter with the actual parsed value.
-    req.params.verNum = Number.parseInt(value);
+    req.params.revNum = Number.parseInt(value);
   }
 
   /**
@@ -176,9 +176,9 @@ export default class DebugTools {
    * @param {object} res HTTP response handler.
    */
   async _handle_change(req, res) {
-    const verNum = req.params.verNum;
+    const revNum = req.params.revNum;
     const doc = this._getExistingDoc(req);
-    const change = (await doc).change(verNum);
+    const change = (await doc).change(revNum);
     const result = Encoder.encodeJson(await change, true);
 
     this._textResponse(res, result);
@@ -279,9 +279,9 @@ export default class DebugTools {
    * @param {object} res HTTP response handler.
    */
   async _handle_snapshot(req, res) {
-    const verNum = req.params.verNum;
+    const revNum = req.params.revNum;
     const doc = this._getExistingDoc(req);
-    const args = (verNum === undefined) ? [] : [verNum];
+    const args = (revNum === undefined) ? [] : [revNum];
     const snapshot = (await doc).snapshot(...args);
     const result = Encoder.encodeJson(await snapshot, true);
 

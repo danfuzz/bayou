@@ -30,11 +30,11 @@ export default class DocForAuthor {
    * Returns a particular change to the document. See the equivalent
    * `DocControl` method for details.
    *
-   * @param {Int} verNum The version number of the change.
+   * @param {Int} revNum The version number of the change.
    * @returns {Promise<DocumentChange>} Promise for the requested change.
    */
-  change(verNum) {
-    return this._doc.change(verNum);
+  change(revNum) {
+    return this._doc.change(revNum);
   }
 
   /**
@@ -52,12 +52,12 @@ export default class DocForAuthor {
    * Returns a snapshot of the full document contents. See the equivalent
    * `DocControl` method for details.
    *
-   * @param {Int|null} [verNum = null] Which version to get. If passed as
+   * @param {Int|null} [revNum = null] Which version to get. If passed as
    *   `null`, indicates the latest (most recent) version.
    * @returns {Promise<Snapshot>} Promise for the requested snapshot.
    */
-  snapshot(verNum = null) {
-    return this._doc.snapshot(verNum);
+  snapshot(revNum = null) {
+    return this._doc.snapshot(revNum);
   }
 
   /**
@@ -67,7 +67,7 @@ export default class DocForAuthor {
    * @param {Int} baseVerNum Version number for the document.
    * @returns {Promise<DeltaResult>} Promise for a delta and associated version
    *   number. The result's `delta` can be applied to version `baseVerNum` to
-   *   produce version `verNum` of the document.
+   *   produce version `revNum` of the document.
    */
   deltaAfter(baseVerNum) {
     return this._doc.deltaAfter(baseVerNum);

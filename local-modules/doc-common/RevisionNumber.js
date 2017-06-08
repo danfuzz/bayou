@@ -92,17 +92,17 @@ export default class RevisionNumber {
 
   /**
    * Returns the version number after the given one. This is the same as
-   * `verNum + 1` _except_ that `null` (the version "number" for an empty
+   * `revNum + 1` _except_ that `null` (the version "number" for an empty
    * document) is a valid input for which `0` is the return value.
    *
    * **Note:** Unlike the rest of the methods in this class, this one isn't a
    * simple data validator. (TODO: This arrangement is error prone and should
    * be reconsidered.)
    *
-   * @param {Int|null} verNum Starting version number.
-   * @returns {Int} The version number immediately after `verNum`
+   * @param {Int|null} revNum Starting version number.
+   * @returns {Int} The version number immediately after `revNum`
    */
-  static after(verNum) {
-    return (verNum === null) ? 0 : (RevisionNumber.check(verNum) + 1);
+  static after(revNum) {
+    return (revNum === null) ? 0 : (RevisionNumber.check(revNum) + 1);
   }
 }
