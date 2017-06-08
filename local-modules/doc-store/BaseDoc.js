@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DocumentChange } from 'doc-common';
 import { TBoolean, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 import { FrozenBuffer } from 'util-server';
@@ -14,9 +13,9 @@ import StoragePath from './StoragePath';
  * override several methods defined by this class, as indicated in the
  * documentation. Methods to override are all named with the prefix `_impl_`.
  *
- * The model that this class embodies is that a document is an append-only log
- * of changes, with each change having a version number that _must_ form a
- * zero-based integer sequence. Changes are random-access.
+ * The model that this class embodies is that a document is a random-access
+ * key-value store with keys having a path-like structure and values being
+ * arbitrary binary data.
  */
 export default class BaseDoc extends CommonBase {
   /**
@@ -62,24 +61,23 @@ export default class BaseDoc extends CommonBase {
   /**
    * Creates this document if it does not already exist, or re-creates it if it
    * does already exist. After this call, the document both exists and is
-   * empty. "Empty" in this case means that it contains exactly one change,
-   * which represents the null operation on the document. (That is, its delta
-   * is empty.)
+   * empty (that is, has no stored values).
    */
   async create() {
-    this._impl_create(DocumentChange.firstChange());
+    // This is just a simple pass-through. The point is to maintain the
+    // convention of normal-named methods being the exposed public interface
+    // and `_impl_*` methods being the ones that subclasses are supposed to
+    // override.
+    this._impl_create();
   }
 
   /**
-   * Main implementation of `create()`, which takes an additional argument
-   * of the first change to include in the document.
+   * Main implementation of `create()`.
    *
    * @abstract
-   * @param {DocumentChange} firstChange The first change to include in the
-   *   document.
    */
-  async _impl_create(firstChange) {
-    this._mustOverride(firstChange);
+  async _impl_create() {
+    this._mustOverride();
   }
 
   /**

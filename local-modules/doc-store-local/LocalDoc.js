@@ -108,11 +108,8 @@ export default class LocalDoc extends BaseDoc {
 
   /**
    * Implementation as required by the superclass.
-   *
-   * @param {DocumentChange} firstChange_unused The first change to include in the
-   *   document.
    */
-  async _impl_create(firstChange_unused) {
+  async _impl_create() {
     if (this._storageReadyPromise !== null) {
       // The storage could conceivably be in the middle of being read. Make sure
       // it's no longer in-process before proceeding. If it were in-process,
