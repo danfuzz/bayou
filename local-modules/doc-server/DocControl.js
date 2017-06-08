@@ -4,10 +4,12 @@
 
 import { DeltaResult, DocumentChange, FrozenDelta, Snapshot, Timestamp, VersionNumber }
   from 'doc-common';
-import { BaseDoc } from 'doc-store';
+import { BaseDoc, Coder } from 'doc-store';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase, PromCondition, PromDelay } from 'util-common';
+
+import Paths from './Paths';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('doc-control');
@@ -44,10 +46,10 @@ export default class DocControl extends CommonBase {
     this._doc = BaseDoc.check(docStorage);
 
     /**
-     * Mapping from version numbers to corresponding document snapshots.
-     * Sparse.
+     * {Map<VersionNumber,Snapshot>} Mapping from version numbers to
+     * corresponding document snapshots. Sparse.
      */
-    this._snapshots = {};
+    this._snapshots = new Map();
 
     /**
      * Condition that transitions from `false` to `true` when there is a version
@@ -90,7 +92,7 @@ export default class DocControl extends CommonBase {
    * @returns {Snapshot} The corresponding snapshot.
    */
   async snapshot(verNum = null) {
-    const currentVerNum = await this._doc.currentVerNum();
+    const currentVerNum = await this._currentVerNum();
     verNum = (verNum === null)
       ? currentVerNum
       : VersionNumber.maxInc(verNum, currentVerNum);
@@ -99,7 +101,7 @@ export default class DocControl extends CommonBase {
     // composition.
     let base = null;
     for (let i = verNum; i >= 0; i--) {
-      const v = this._snapshots[i];
+      const v = this._snapshots.get(i);
       if (v) {
         base = v;
         break;
@@ -121,7 +123,7 @@ export default class DocControl extends CommonBase {
 
     this._log.detail(`Made snapshot for version ${verNum}.`);
 
-    this._snapshots[verNum] = result;
+    this._snapshots.set(verNum, result);
     return result;
   }
 
@@ -139,7 +141,7 @@ export default class DocControl extends CommonBase {
    *   version `baseVerNum` to produce version `verNum` of the document.
    */
   async deltaAfter(baseVerNum) {
-    const currentVerNum = await this._doc.currentVerNum();
+    const currentVerNum = await this._currentVerNum();
     VersionNumber.maxInc(baseVerNum, currentVerNum);
 
     if (baseVerNum !== currentVerNum) {
@@ -356,7 +358,7 @@ export default class DocControl extends CommonBase {
    * given initial version through and including the current latest delta,
    * composed from a given base. It is valid to pass as either version number
    * parameter one version beyond the current version number (that is,
-   * `VersionNumber.after(await this._doc.currentVerNum())`. It is invalid to
+   * `VersionNumber.after(await this._currentVerNum())`. It is invalid to
    * specify a non-existent version _other_ than one beyond the current version.
    * If `startInclusive === endExclusive`, then this method returns `baseDelta`.
    *
@@ -371,7 +373,7 @@ export default class DocControl extends CommonBase {
    *   `endExclusive`.
    */
   async _composeVersions(baseDelta, startInclusive, endExclusive) {
-    const nextVerNum = VersionNumber.after(await this._doc.currentVerNum());
+    const nextVerNum = VersionNumber.after(await this._currentVerNum());
     startInclusive = VersionNumber.rangeInc(startInclusive, 0, nextVerNum);
     endExclusive =
       VersionNumber.rangeInc(endExclusive, startInclusive, nextVerNum);
@@ -422,9 +424,10 @@ export default class DocControl extends CommonBase {
       throw new Error('Should not have been called with an empty delta.');
     }
 
+    // **TODO:** Stop using the old low-level storage interface.
     const verNum = VersionNumber.after(baseVerNum);
-    const appendResult = await this._doc.changeAppend(
-      new DocumentChange(verNum, Timestamp.now(), delta, authorId));
+    const change = new DocumentChange(verNum, Timestamp.now(), delta, authorId);
+    const appendResult = await this._doc.changeAppend(change);
 
     if (!appendResult) {
       // We lost an append race.
@@ -432,7 +435,41 @@ export default class DocControl extends CommonBase {
       return null;
     }
 
+    // Write the delta out using the new low-level facility. This is duplicative
+    // for now, but will eventually be the main way that changes are recorded.
+    // (See TODO above.) **Note:** The `await` is to get errors to be thrown
+    // via this method instead of being dropped on the floor. The
+    // `Promise.all()` cladding means that the methods can be run in parallel.
+    await Promise.all([
+      this._writeVerNum(verNum),
+      this._doc.opNew(Paths.forVerNum(verNum), Coder.encode(change))
+    ]);
+
     this._changeCondition.value = true;
     return verNum;
+  }
+
+  /**
+   * Gets the current document version number.
+   *
+   * @returns {VersionNumber|null} The version number, or `null` if it is not
+   *   set.
+   */
+  async _currentVerNum() {
+    const encoded = await this._doc.pathReadOrNull(Paths.VERSION_NUMBER);
+    return (encoded === null) ? null : Coder.decode(encoded);
+  }
+
+  /**
+   * Writes the given value as the current document version number.
+   *
+   * @param {VersionNumber} verNum The version number.
+   * @returns {boolean} `true` once the write is complete.
+   */
+  async _writeVerNum(verNum) {
+    VersionNumber.check(verNum);
+
+    await this._doc.opForceWrite(Paths.VERSION_NUMBER, Coder.encode(verNum));
+    return true;
   }
 }

@@ -2,8 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DocumentChange, FrozenDelta, Timestamp, VersionNumber }
-  from 'doc-common';
+import { DocumentChange, VersionNumber } from 'doc-common';
 import { TBoolean, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 import { FrozenBuffer } from 'util-server';
@@ -20,16 +19,6 @@ import StoragePath from './StoragePath';
  * zero-based integer sequence. Changes are random-access.
  */
 export default class BaseDoc extends CommonBase {
-  /**
-   * Gets the appropriate first change to a document (empty delta) for the
-   * current moment in time.
-   *
-   * @returns {FrozenDelta} An appropriate initial change.
-   */
-  static _firstChange() {
-    return new DocumentChange(0, Timestamp.now(), FrozenDelta.EMPTY, null);
-  }
-
   /**
    * Constructs an instance.
    *
@@ -78,7 +67,7 @@ export default class BaseDoc extends CommonBase {
    * is empty.)
    */
   async create() {
-    this._impl_create(BaseDoc._firstChange());
+    this._impl_create(DocumentChange.firstChange());
   }
 
   /**
@@ -91,45 +80,6 @@ export default class BaseDoc extends CommonBase {
    */
   async _impl_create(firstChange) {
     this._mustOverride(firstChange);
-  }
-
-  /**
-   * Gets the current version number of this document. This is the largest value
-   * `n` for which `this.changeRead(n)` is definitely valid. It is only valid
-   * to call this method on a document that exists and has valid data.
-   *
-   * With regard to "definitely" above, at the moment a call to this method is
-   * complete, it is possible for there to _already_ be document changes in
-   * flight, which will be serviced asynchronously. This notably means that,
-   * should the result of a call to this method be subsequently used as part of
-   * an _asynchronous_ call, by the time that _that_ call is executed, the
-   * current version number may no longer be the same. Hence, it is imperative
-   * for code to _not_ assume a stable version number when any asynchrony is
-   * possible.
-   *
-   * @returns {Int} The current version number of this document.
-   */
-  async currentVerNum() {
-    const result = VersionNumber.orNull(await this._impl_currentVerNum());
-
-    if (result === null) {
-      throw new Error('Document is empty, invalid, or in need of migration.');
-    }
-
-    return result;
-  }
-
-  /**
-   * Main implementation of `currentVerNum()`. This method can be called without
-   * error whether or not the document exists (as opposed to `currentVerNum()`);
-   * for a non-existent or empty document, this method returns `null`.
-   *
-   * @abstract
-   * @returns {Int|null} The version number of this document or `null` if the
-   *   document is empty, invalid, or in need of migration.
-   */
-  async _impl_currentVerNum() {
-    return this._mustOverride();
   }
 
   /**
@@ -215,6 +165,49 @@ export default class BaseDoc extends CommonBase {
    */
   async _impl_changeAppend(change) {
     return this._mustOverride(change);
+  }
+
+  /**
+   * Deletes the value at the indicated path, if any, and without regard to
+   * what value it might have stored.
+   *
+   * @param {string} storagePath Path to write to.
+   * @returns {boolean} `true` once the operation is complete.
+   */
+  async opForceDelete(storagePath) {
+    StoragePath.check(storagePath);
+
+    return this._impl_forceOp(storagePath, null);
+  }
+
+  /**
+   * Writes a value at the indicated path, without regard to whether there was
+   * a value already at the path, nor what value was already stored if any.
+   *
+   * @param {string} storagePath Path to write to.
+   * @param {FrozenBuffer} newValue Value to write.
+   * @returns {boolean} `true` once the operation is complete.
+   */
+  async opForceWrite(storagePath, newValue) {
+    StoragePath.check(storagePath);
+
+    return this._impl_forceOp(storagePath, newValue);
+  }
+
+  /**
+   * Performs a forced-modification operation on the document. This is the main
+   * implementation of `opForceDelete()` and `opForceWrite()`. Arguments are
+   * guaranteed by the superclass to be valid. Passing `null` for `newValue`
+   * corresponds to the `opForceDelete()` operation.
+   *
+   * @abstract
+   * @param {string} storagePath Path to write to.
+   * @param {FrozenBuffer|null} newValue Value to write, or `null` if the value
+   *   at `path` is to be deleted.
+   * @returns {boolean} `true` once the write operation is complete.
+   */
+  async _impl_forceOp(storagePath, newValue) {
+    return this._mustOverride(storagePath, newValue);
   }
 
   /**

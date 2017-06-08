@@ -167,17 +167,6 @@ export default class LocalDoc extends BaseDoc {
   /**
    * Implementation as required by the superclass.
    *
-   * @returns {Int|null} The version number of this document.
-   */
-  async _impl_currentVerNum() {
-    await this._readChangesIfNecessary();
-    const len = this._changes.length;
-    return (len === 0) ? null : (len - 1);
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
    * @param {Int} verNum The version number for the desired change.
    * @returns {DocumentChange} The change with `verNum` as indicated.
    */
@@ -214,13 +203,29 @@ export default class LocalDoc extends BaseDoc {
   }
 
   /**
+  * Implementation as required by the superclass.
+   *
+   * @param {string} storagePath Path to write to.
+   * @param {FrozenBuffer|null} newValue Value to write, or `null` if the value
+   *   at `path` is to be deleted.
+   * @returns {boolean} `true` once the write operation is complete.
+   */
+  async _impl_forceOp(storagePath, newValue) {
+    await this._readStorageIfNecessary();
+
+    this._storeOrDeleteValue(storagePath, newValue);
+    return true;
+  }
+
+  /**
    * Implementation as required by the superclass.
    *
    * @param {string} storagePath Path to write to.
    * @param {FrozenBuffer|null} oldValue Value expected to be stored at `path`
    *   at the moment of writing, or `null` if `path` is expected to have nothing
    *   stored at it.
-   * @param {FrozenBuffer} newValue Value to write.
+   * @param {FrozenBuffer|null} newValue Value to write, or `null` if the value
+   *   at `path` is to be deleted.
    * @returns {boolean} `true` if the write is successful, or `false` if it
    *   failed due to value mismatch.
    */
@@ -238,10 +243,26 @@ export default class LocalDoc extends BaseDoc {
       }
     }
 
-    this._storage.set(storagePath, newValue);
+    this._storeOrDeleteValue(storagePath, newValue);
+    return true;
+  }
+
+  /**
+   * Helper for the update methods, which performs the actual updating.
+   *
+   * @param {string} storagePath Path to write to.
+   * @param {FrozenBuffer|null} newValue Value to write, or `null` if the value
+   *   at `path` is to be deleted.
+   */
+  _storeOrDeleteValue(storagePath, newValue) {
+    if (newValue === null) {
+      this._storage.delete(storagePath);
+    } else {
+      this._storage.set(storagePath, newValue);
+    }
+
     this._storageToWrite.set(storagePath, newValue);
     this._storageNeedsWrite();
-    return true;
   }
 
   /**

@@ -20,6 +20,16 @@ import VersionNumber from './VersionNumber';
  */
 export default class DocumentChange extends CommonBase {
   /**
+   * Gets the appropriate first change to a document (empty delta, no author)
+   * for the current moment in time.
+   *
+   * @returns {FrozenDelta} An appropriate initial change.
+   */
+  static firstChange() {
+    return new DocumentChange(0, Timestamp.now(), FrozenDelta.EMPTY, null);
+  }
+
+  /**
    * Constructs an instance.
    *
    * @param {Int} verNum The version number of the document produced by this

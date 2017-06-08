@@ -5,17 +5,15 @@
 import weak from 'weak';
 
 import { DocumentChange, FrozenDelta, Timestamp } from 'doc-common';
+import { Coder } from 'doc-store';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
 import { ProductInfo } from 'server-env';
 import { TBoolean, TString } from 'typecheck';
 import { Singleton } from 'util-common';
-import { FrozenBuffer } from 'util-server';
 
 import DocControl from './DocControl';
-
-/** {string} `StoragePath` string for where the document format version goes. */
-const FORMAT_PATH = '/format_version';
+import Paths from './Paths';
 
 /** {FrozenDelta} Message used as document instead of migrating old versions. */
 const MIGRATION_NOTE = FrozenDelta.coerce(
@@ -50,7 +48,7 @@ export default class DocServer extends Singleton {
      * {FrozenBuffer} The document format version to use for new documents and
      * to expect in existing documents.
      */
-    this._formatVersion = FrozenBuffer.coerce(ProductInfo.INFO.version);
+    this._formatVersion = Coder.encode(ProductInfo.INFO.version);
   }
 
   /**
@@ -106,7 +104,10 @@ export default class DocServer extends Singleton {
     if (docExists) {
       docLog.info('Retrieving from storage.');
 
-      const formatVersion = await docStorage.pathReadOrNull(FORMAT_PATH);
+      const formatVersion =
+        await docStorage.pathReadOrNull(Paths.FORMAT_VERSION);
+      const verNum =
+        await docStorage.pathReadOrNull(Paths.VERSION_NUMBER);
       let docIsValid = false;
 
       if (formatVersion === null) {
@@ -115,6 +116,8 @@ export default class DocServer extends Singleton {
         const got = formatVersion.string;
         const expected = this._formatVersion.string;
         docLog.info(`Mismatched format version: got ${got}; expected ${expected}`);
+      } else if (verNum === null) {
+        docLog.info('Corrupt document: Missing version number.');
       } else {
         docIsValid = true;
       }
@@ -139,12 +142,20 @@ export default class DocServer extends Singleton {
 
       // Initialize the document.
       await docStorage.create();
-      await docStorage.opNew(FORMAT_PATH, this._formatVersion);
+      await docStorage.opNew(Paths.FORMAT_VERSION, this._formatVersion);
 
-      // Static content for the first change (for now).
+      // Empty first change (per documented interface) and static content for
+      // the first contentful change (for now).
       const delta = docNeedsMigrate ? MIGRATION_NOTE : DEFAULT_DOCUMENT;
-      await docStorage.changeAppend(
-        new DocumentChange(1, Timestamp.now(), delta, null));
+      const change = new DocumentChange(1, Timestamp.now(), delta, null);
+      await docStorage.opNew(Paths.forVerNum(0), Coder.encode(DocumentChange.firstChange()));
+      await docStorage.opNew(Paths.forVerNum(1), Coder.encode(change));
+      await docStorage.opNew(Paths.VERSION_NUMBER, Coder.encode(1));
+
+      // Write it using the old low-level storage form, which is still what
+      // is getting read back, as of this writing. **TODO:** Stop needing to do
+      // this.
+      await docStorage.changeAppend(change);
     }
 
     const result = new DocControl(docStorage);
