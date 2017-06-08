@@ -14,7 +14,7 @@ export default class Paths {
     return '/format_version';
   }
 
-  /** {string} `StoragePath` string for the document version number. */
+  /** {string} `StoragePath` string for the document revision number. */
   static get VERSION_NUMBER() {
     return '/version_number';
   }
@@ -24,7 +24,7 @@ export default class Paths {
    * number, specifically to store the document change that results in that
    * version.
    *
-   * @param {RevisionNumber} revNum The version number.
+   * @param {RevisionNumber} revNum The revision number.
    * @returns {string} The corresponding `StoragePath` string.
    */
   static forRevNum(revNum) {

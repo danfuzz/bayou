@@ -30,7 +30,7 @@ export default class DocForAuthor {
    * Returns a particular change to the document. See the equivalent
    * `DocControl` method for details.
    *
-   * @param {Int} revNum The version number of the change.
+   * @param {Int} revNum The revision number of the change.
    * @returns {Promise<DocumentChange>} Promise for the requested change.
    */
   change(revNum) {

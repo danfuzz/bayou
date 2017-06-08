@@ -72,7 +72,7 @@ export default class Snapshot extends CommonBase {
     return new Snapshot(revNum, contents);
   }
 
-  /** {RevisionNumber} The version number. */
+  /** {RevisionNumber} The revision number. */
   get revNum() {
     return this._revNum;
   }

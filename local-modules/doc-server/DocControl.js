@@ -68,7 +68,7 @@ export default class DocControl extends CommonBase {
     this._formatVersion = formatVersion;
 
     /**
-     * {Map<RevisionNumber,Snapshot>} Mapping from version numbers to
+     * {Map<RevisionNumber,Snapshot>} Mapping from revision numbers to
      * corresponding document snapshots. Sparse.
      */
     this._snapshots = new Map();
@@ -131,7 +131,7 @@ export default class DocControl extends CommonBase {
    * sequence of changes, each modifying version N of the document to produce
    * version N+1.
    *
-   * @param {Int} revNum The version number of the change. The result is the
+   * @param {Int} revNum The revision number of the change. The result is the
    *   change which produced that version. E.g., `0` is a request for the first
    *   change (the change from the empty document).
    * @returns {DocumentChange} The requested change.
@@ -220,7 +220,7 @@ export default class DocControl extends CommonBase {
       await this._doc.pathReadOrNull(Paths.VERSION_NUMBER);
 
     if (revNumEncoded === null) {
-      this._log.info('Corrupt document: Missing version number.');
+      this._log.info('Corrupt document: Missing revision number.');
       return DocControl.STATUS_ERROR;
     }
 
@@ -228,7 +228,7 @@ export default class DocControl extends CommonBase {
     try {
       revNum = Coder.decode(revNumEncoded);
     } catch (e) {
-      this._log.info('Corrupt document: Bogus version number.');
+      this._log.info('Corrupt document: Bogus revision number.');
       return DocControl.STATUS_ERROR;
     }
 
@@ -252,7 +252,7 @@ export default class DocControl extends CommonBase {
    * has been made.
    *
    * @param {Int} baseRevNum Version number for the document.
-   * @returns {DeltaResult} Delta and associated version number. The result's
+   * @returns {DeltaResult} Delta and associated revision number. The result's
    *   `revNum` is guaranteed to be at least one more than `baseRevNum` (and
    *   could possibly be even larger.) The result's `delta` can be applied to
    *   version `baseRevNum` to produce version `revNum` of the document.
@@ -283,15 +283,15 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Takes a base version number and delta therefrom, and applies the delta,
+   * Takes a base revision number and delta therefrom, and applies the delta,
    * including merging of any intermediate versions. The return value consists
-   * of a new version number, and a delta to be used to get the new document
+   * of a new revision number, and a delta to be used to get the new document
    * state. The delta is with respect to the client's "expected result," that
    * is to say, what the client would get if the delta were applied with no
    * intervening changes.
    *
    * As a special case, as long as `baseRevNum` is valid, if `delta` is empty,
-   * this method returns a result of the same version number along with an
+   * this method returns a result of the same revision number along with an
    * empty "correction" delta. That is, the return value from passing an empty
    * delta doesn't provide any information about subsequent versions of the
    * document.
@@ -414,7 +414,7 @@ export default class DocControl extends CommonBase {
     //    * `vBase` -- Base version to apply the delta to.
     //    * `vCurrent` -- Current (latest) version of the document.
     //    * `vExpected` -- The implied expected result of application. This is
-    //      `vBase.compose(dClient)` as version number `vBase.revNum + 1`.
+    //      `vBase.compose(dClient)` as revision number `vBase.revNum + 1`.
     // 1. Construct a combined delta for all the server changes made between
     //    `vBase` and `vCurrent`. This is `dServer`.
     // 2. Transform (rebase) `dClient` with regard to (on top of) `dServer`.
@@ -425,7 +425,7 @@ export default class DocControl extends CommonBase {
     // 4. Construct a delta from `vExpected` to `vNext` (that is, the diff).
     //    This is `dCorrection`. This is what we return to the client; they will
     //    compose `vExpected` with `dCorrection` to arrive at `vNext`.
-    // 5. Return the version number of `vNext` along with the delta
+    // 5. Return the revision number of `vNext` along with the delta
     //    `dCorrection`.
 
     // (0) Assign incoming arguments to variables that correspond to the
@@ -473,8 +473,8 @@ export default class DocControl extends CommonBase {
   /**
    * Constructs a delta consisting of the composition of the deltas from the
    * given initial version through and including the current latest delta,
-   * composed from a given base. It is valid to pass as either version number
-   * parameter one version beyond the current version number (that is,
+   * composed from a given base. It is valid to pass as either revision number
+   * parameter one version beyond the current revision number (that is,
    * `RevisionNumber.after(await this._currentRevNum())`. It is invalid to
    * specify a non-existent version _other_ than one beyond the current version.
    * If `startInclusive === endExclusive`, then this method returns `baseDelta`.
@@ -519,7 +519,7 @@ export default class DocControl extends CommonBase {
 
   /**
    * Appends a new delta to the document. Also forces `_changeCondition`
-   * `true` to release any waiters. On success, this returns the version number
+   * `true` to release any waiters. On success, this returns the revision number
    * of the document after the append. On a failure due to `baseRevNum` not
    * being current at the moment of application, this returns `null`. All other
    * errors are reported via thrown errors. See `_applyDeltaTo()` above for
@@ -532,7 +532,7 @@ export default class DocControl extends CommonBase {
    * @param {Int} baseRevNum Version number which this is to apply to.
    * @param {FrozenDelta} delta The delta to append.
    * @param {string|null} authorId The author of the delta.
-   * @returns {Int|null} The version number after appending `delta`, or `null`
+   * @returns {Int|null} The revision number after appending `delta`, or `null`
    *   if `baseRevNum` is out-of-date at the moment of attempted application
    *   _and_ the `delta` is non-empty.
    */
@@ -552,7 +552,7 @@ export default class DocControl extends CommonBase {
       return null;
     }
 
-    // Update the version number. **Note:** The `await` is to get errors to be
+    // Update the revision number. **Note:** The `await` is to get errors to be
     // thrown via this method instead of being dropped on the floor.
     await this._writeRevNum(revNum);
 
@@ -561,7 +561,7 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Reads the change for the indicated version number. It is an error to
+   * Reads the change for the indicated revision number. It is an error to
    * request a change that doesn't exist.
    *
    * @param {RevisionNumber} revNum Version number of the change. This indicates
@@ -574,9 +574,9 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Gets the current document version number.
+   * Gets the current document revision number.
    *
-   * @returns {RevisionNumber|null} The version number, or `null` if it is not
+   * @returns {RevisionNumber|null} The revision number, or `null` if it is not
    *   set.
    */
   async _currentRevNum() {
@@ -585,9 +585,9 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Writes the given value as the current document version number.
+   * Writes the given value as the current document revision number.
    *
-   * @param {RevisionNumber} revNum The version number.
+   * @param {RevisionNumber} revNum The revision number.
    * @returns {boolean} `true` once the write is complete.
    */
   async _writeRevNum(revNum) {

@@ -152,7 +152,7 @@ export default class DebugTools {
   }
 
   /**
-   * Validates a version number as a request parameter. If valid, replaces the
+   * Validates a revision number as a request parameter. If valid, replaces the
    * parameter in the request object with the parsed form.
    *
    * @param {object} req HTTP request.

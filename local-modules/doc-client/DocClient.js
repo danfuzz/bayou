@@ -781,7 +781,7 @@ export default class DocClient extends StateMachine {
    * document doesn't need to be updated. If that isn't the case, then this
    * method will throw an error.
    *
-   * @param {number} revNum New version number.
+   * @param {number} revNum New revision number.
    * @param {FrozenDelta} delta Delta from the current `_doc` contents.
    * @param {FrozenDelta} [quillDelta = delta] Delta from Quill's current state,
    *   which is expected to preserve any state that Quill has that isn't yet

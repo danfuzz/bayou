@@ -8,7 +8,7 @@ import { CommonBase } from 'util-common';
 import RevisionNumber from './RevisionNumber';
 
 /**
- * Delta-bearing result of an API call, which also comes with a version number.
+ * Delta-bearing result of an API call, which also comes with a revision number.
  * Instances of this class are returned from calls to `applyDelta()` and
  * `deltaAfter()` as defined by the various `doc-server` classes. See those for
  * more details.
@@ -25,12 +25,12 @@ export default class DeltaResult extends CommonBase {
    *
    * @param {Int} revNum Version number of the document.
    * @param {FrozenDelta} delta Delta which can be applied in context to
-   *   produce the document with the indicated version number.
+   *   produce the document with the indicated revision number.
    */
   constructor(revNum, delta) {
     super();
 
-    /** The produced version number. */
+    /** The produced revision number. */
     this._revNum = RevisionNumber.check(revNum);
 
     /** The actual change, as a delta. */
@@ -62,13 +62,13 @@ export default class DeltaResult extends CommonBase {
     return new DeltaResult(revNum, delta);
   }
 
-  /** {Int} The produced version number. */
+  /** {Int} The produced revision number. */
   get revNum() {
     return this._revNum;
   }
 
   /**
-   * {FrozenDelta} Delta used to produce the document with version number
+   * {FrozenDelta} Delta used to produce the document with revision number
    * `revNum`.
    */
   get delta() {

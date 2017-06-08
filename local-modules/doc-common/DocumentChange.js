@@ -32,7 +32,7 @@ export default class DocumentChange extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {Int} revNum The version number of the document produced by this
+   * @param {Int} revNum The revision number of the document produced by this
    *   change. If this instance represents the first change to a document,
    *   then this value will be `0`.
    * @param {Timestamp} timestamp The time of the change, as msec since the Unix
@@ -46,7 +46,7 @@ export default class DocumentChange extends CommonBase {
   constructor(revNum, timestamp, delta, authorId) {
     super();
 
-    /** The produced version number. */
+    /** The produced revision number. */
     this._revNum = RevisionNumber.check(revNum);
 
     /** The time of the change. */
@@ -86,7 +86,7 @@ export default class DocumentChange extends CommonBase {
     return new DocumentChange(revNum, timestamp, delta, authorId);
   }
 
-  /** {Int} The produced version number. */
+  /** {Int} The produced revision number. */
   get revNum() {
     return this._revNum;
   }
