@@ -5,7 +5,7 @@
 import { CommonBase } from 'util-common';
 
 import FrozenDelta from './FrozenDelta';
-import VersionNumber from './VersionNumber';
+import RevisionNumber from './RevisionNumber';
 
 
 /**
@@ -15,7 +15,7 @@ export default class Snapshot extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {VersionNumber} verNum Version number of the document.
+   * @param {RevisionNumber} verNum Version number of the document.
    * @param {Delta|array|object} contents Document contents. Can be given
    *   anything that can be coerced into a `FrozenDelta`. Must be a "document"
    *   (that is, a delta consisting only of `insert` operations).
@@ -24,7 +24,7 @@ export default class Snapshot extends CommonBase {
     super();
 
     /** {Int} Version number. */
-    this._verNum = VersionNumber.check(verNum);
+    this._verNum = RevisionNumber.check(verNum);
 
     /** {FrozenDelta} Document contents. */
     this._contents = FrozenDelta.coerce(contents);
@@ -72,7 +72,7 @@ export default class Snapshot extends CommonBase {
     return new Snapshot(verNum, contents);
   }
 
-  /** {VersionNumber} The version number. */
+  /** {RevisionNumber} The version number. */
   get verNum() {
     return this._verNum;
   }

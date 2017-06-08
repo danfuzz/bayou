@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { VersionNumber } from 'doc-common';
+import { RevisionNumber } from 'doc-common';
 
 /**
  * Utility class that just provides the common `StoragePath` strings used
@@ -24,11 +24,11 @@ export default class Paths {
    * number, specifically to store the document change that results in that
    * version.
    *
-   * @param {VersionNumber} verNum The version number.
+   * @param {RevisionNumber} verNum The version number.
    * @returns {string} The corresponding `StoragePath` string.
    */
   static forVerNum(verNum) {
-    VersionNumber.check(verNum);
+    RevisionNumber.check(verNum);
     return `/change/${verNum}`;
   }
 }

@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DeltaResult, DocumentChange, FrozenDelta, Snapshot, Timestamp, VersionNumber }
+import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Timestamp }
   from 'doc-common';
 import { BaseDoc, Coder } from 'doc-store';
 import { Logger } from 'see-all';
@@ -68,7 +68,7 @@ export default class DocControl extends CommonBase {
     this._formatVersion = formatVersion;
 
     /**
-     * {Map<VersionNumber,Snapshot>} Mapping from version numbers to
+     * {Map<RevisionNumber,Snapshot>} Mapping from version numbers to
      * corresponding document snapshots. Sparse.
      */
     this._snapshots = new Map();
@@ -151,7 +151,7 @@ export default class DocControl extends CommonBase {
     const currentVerNum = await this._currentVerNum();
     verNum = (verNum === null)
       ? currentVerNum
-      : VersionNumber.maxInc(verNum, currentVerNum);
+      : RevisionNumber.maxInc(verNum, currentVerNum);
 
     // Search backward through the full versions for a base for forward
     // composition.
@@ -259,7 +259,7 @@ export default class DocControl extends CommonBase {
    */
   async deltaAfter(baseVerNum) {
     const currentVerNum = await this._currentVerNum();
-    VersionNumber.maxInc(baseVerNum, currentVerNum);
+    RevisionNumber.maxInc(baseVerNum, currentVerNum);
 
     if (baseVerNum !== currentVerNum) {
       // We can fulfill the result based on existing document history. (That is,
@@ -267,7 +267,7 @@ export default class DocControl extends CommonBase {
       // Compose all the deltas from the version after the base through the
       // current version.
       const delta = await this._composeVersions(
-        FrozenDelta.EMPTY, baseVerNum + 1, VersionNumber.after(currentVerNum));
+        FrozenDelta.EMPTY, baseVerNum + 1, RevisionNumber.after(currentVerNum));
       return new DeltaResult(currentVerNum, delta);
     }
 
@@ -324,7 +324,7 @@ export default class DocControl extends CommonBase {
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
     const expected = new Snapshot(
-      VersionNumber.after(baseVerNum),
+      RevisionNumber.after(baseVerNum),
       base.contents.compose(delta));
 
     // We try performing the apply, and then we iterate if it failed _and_ the
@@ -437,7 +437,7 @@ export default class DocControl extends CommonBase {
 
     // (1)
     const dServer = await this._composeVersions(
-      FrozenDelta.EMPTY, vBase.verNum + 1, VersionNumber.after(vCurrent.verNum));
+      FrozenDelta.EMPTY, vBase.verNum + 1, RevisionNumber.after(vCurrent.verNum));
 
     // (2)
 
@@ -475,7 +475,7 @@ export default class DocControl extends CommonBase {
    * given initial version through and including the current latest delta,
    * composed from a given base. It is valid to pass as either version number
    * parameter one version beyond the current version number (that is,
-   * `VersionNumber.after(await this._currentVerNum())`. It is invalid to
+   * `RevisionNumber.after(await this._currentVerNum())`. It is invalid to
    * specify a non-existent version _other_ than one beyond the current version.
    * If `startInclusive === endExclusive`, then this method returns `baseDelta`.
    *
@@ -490,10 +490,10 @@ export default class DocControl extends CommonBase {
    *   `endExclusive`.
    */
   async _composeVersions(baseDelta, startInclusive, endExclusive) {
-    const nextVerNum = VersionNumber.after(await this._currentVerNum());
-    startInclusive = VersionNumber.rangeInc(startInclusive, 0, nextVerNum);
+    const nextVerNum = RevisionNumber.after(await this._currentVerNum());
+    startInclusive = RevisionNumber.rangeInc(startInclusive, 0, nextVerNum);
     endExclusive =
-      VersionNumber.rangeInc(endExclusive, startInclusive, nextVerNum);
+      RevisionNumber.rangeInc(endExclusive, startInclusive, nextVerNum);
 
     if (startInclusive === endExclusive) {
       // Trivial case: Nothing to compose.
@@ -541,7 +541,7 @@ export default class DocControl extends CommonBase {
       throw new Error('Should not have been called with an empty delta.');
     }
 
-    const verNum = VersionNumber.after(baseVerNum);
+    const verNum = RevisionNumber.after(baseVerNum);
     const change = new DocumentChange(verNum, Timestamp.now(), delta, authorId);
     const writeResult =
       await this._doc.opNew(Paths.forVerNum(verNum), Coder.encode(change));
@@ -564,7 +564,7 @@ export default class DocControl extends CommonBase {
    * Reads the change for the indicated version number. It is an error to
    * request a change that doesn't exist.
    *
-   * @param {VersionNumber} verNum Version number of the change. This indicates
+   * @param {RevisionNumber} verNum Version number of the change. This indicates
    *   the change that produced that document version.
    * @returns {DocumentChange} The corresponding change.
    */
@@ -576,7 +576,7 @@ export default class DocControl extends CommonBase {
   /**
    * Gets the current document version number.
    *
-   * @returns {VersionNumber|null} The version number, or `null` if it is not
+   * @returns {RevisionNumber|null} The version number, or `null` if it is not
    *   set.
    */
   async _currentVerNum() {
@@ -587,11 +587,11 @@ export default class DocControl extends CommonBase {
   /**
    * Writes the given value as the current document version number.
    *
-   * @param {VersionNumber} verNum The version number.
+   * @param {RevisionNumber} verNum The version number.
    * @returns {boolean} `true` once the write is complete.
    */
   async _writeVerNum(verNum) {
-    VersionNumber.check(verNum);
+    RevisionNumber.check(verNum);
 
     await this._doc.opForceWrite(Paths.VERSION_NUMBER, Coder.encode(verNum));
     return true;

@@ -8,9 +8,9 @@ import { TInt, TypeError } from 'typecheck';
  * Type representation of version numbers. The values themselves are always
  * just non-negative integers. This is just where the type checker code lives.
  */
-export default class VersionNumber {
+export default class RevisionNumber {
   /**
-   * Checks a value of type `VersionNumber`.
+   * Checks a value of type `RevisionNumber`.
    *
    * @param {*} value Value to check.
    * @returns {Int} `value`.
@@ -19,12 +19,12 @@ export default class VersionNumber {
     try {
       return TInt.min(value, 0);
     } catch (e) {
-      return TypeError.badValue(value, 'VersionNumber');
+      return TypeError.badValue(value, 'RevisionNumber');
     }
   }
 
   /**
-   * Checks a value of type `VersionNumber`, which must furthermore be less
+   * Checks a value of type `RevisionNumber`, which must furthermore be less
    * than an indicated value.
    *
    * @param {*} value Value to check.
@@ -35,12 +35,12 @@ export default class VersionNumber {
     try {
       return TInt.range(value, 0, maxExc);
     } catch (e) {
-      return TypeError.badValue(value, 'VersionNumber', `value < ${maxExc}`);
+      return TypeError.badValue(value, 'RevisionNumber', `value < ${maxExc}`);
     }
   }
 
   /**
-   * Checks a value of type `VersionNumber`, which must furthermore be no more
+   * Checks a value of type `RevisionNumber`, which must furthermore be no more
    * than an indicated value (inclusive).
    *
    * @param {*} value Value to check.
@@ -51,12 +51,12 @@ export default class VersionNumber {
     try {
       return TInt.rangeInc(value, 0, maxInc);
     } catch (e) {
-      return TypeError.badValue(value, 'VersionNumber', `value <= ${maxInc}`);
+      return TypeError.badValue(value, 'RevisionNumber', `value <= ${maxInc}`);
     }
   }
 
   /**
-   * Checks a value of type `VersionNumber`, which is allowed to be `null`.
+   * Checks a value of type `RevisionNumber`, which is allowed to be `null`.
    *
    * @param {*} value Value to check.
    * @returns {Int|null} `value` or `null`.
@@ -65,15 +65,15 @@ export default class VersionNumber {
     try {
       return (value === null)
         ? null
-        : VersionNumber.check(value);
+        : RevisionNumber.check(value);
     } catch (e) {
       // More appropriate error.
-      return TypeError.badValue(value, 'VersionNumber|null');
+      return TypeError.badValue(value, 'RevisionNumber|null');
     }
   }
 
   /**
-   * Checks a value of type `VersionNumber`, which must furthermore be within an
+   * Checks a value of type `RevisionNumber`, which must furthermore be within an
    * indicated inclusive-inclusive range.
    *
    * @param {*} value Value to check.
@@ -83,10 +83,10 @@ export default class VersionNumber {
    */
   static rangeInc(value, minInc, maxInc) {
     try {
-      return VersionNumber.check(TInt.rangeInc(value, minInc, maxInc));
+      return RevisionNumber.check(TInt.rangeInc(value, minInc, maxInc));
     } catch (e) {
       // More appropriate error.
-      return TypeError.badValue(value, 'VersionNumber', `${minInc} <= value <= ${maxInc}`);
+      return TypeError.badValue(value, 'RevisionNumber', `${minInc} <= value <= ${maxInc}`);
     }
   }
 
@@ -103,6 +103,6 @@ export default class VersionNumber {
    * @returns {Int} The version number immediately after `verNum`
    */
   static after(verNum) {
-    return (verNum === null) ? 0 : (VersionNumber.check(verNum) + 1);
+    return (verNum === null) ? 0 : (RevisionNumber.check(verNum) + 1);
   }
 }

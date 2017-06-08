@@ -7,7 +7,7 @@ import { TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import Timestamp from './Timestamp';
-import VersionNumber from './VersionNumber';
+import RevisionNumber from './RevisionNumber';
 
 /**
  * Representation of a change to a document from its immediately-previous
@@ -47,7 +47,7 @@ export default class DocumentChange extends CommonBase {
     super();
 
     /** The produced version number. */
-    this._verNum = VersionNumber.check(verNum);
+    this._verNum = RevisionNumber.check(verNum);
 
     /** The time of the change. */
     this._timestamp = Timestamp.check(timestamp);

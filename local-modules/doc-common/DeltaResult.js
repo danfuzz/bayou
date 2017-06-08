@@ -5,7 +5,7 @@
 import { FrozenDelta } from 'doc-common';
 import { CommonBase } from 'util-common';
 
-import VersionNumber from './VersionNumber';
+import RevisionNumber from './RevisionNumber';
 
 /**
  * Delta-bearing result of an API call, which also comes with a version number.
@@ -31,7 +31,7 @@ export default class DeltaResult extends CommonBase {
     super();
 
     /** The produced version number. */
-    this._verNum = VersionNumber.check(verNum);
+    this._verNum = RevisionNumber.check(verNum);
 
     /** The actual change, as a delta. */
     this._delta = FrozenDelta.check(delta);

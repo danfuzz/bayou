@@ -11,7 +11,7 @@ import DocumentId from './DocumentId';
 import FrozenDelta from './FrozenDelta';
 import Snapshot from './Snapshot';
 import Timestamp from './Timestamp';
-import VersionNumber from './VersionNumber';
+import RevisionNumber from './RevisionNumber';
 
 // Register classes with the API.
 Registry.register(DeltaResult);
@@ -28,5 +28,5 @@ export {
   FrozenDelta,
   Snapshot,
   Timestamp,
-  VersionNumber
+  RevisionNumber
 };
