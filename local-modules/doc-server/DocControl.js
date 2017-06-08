@@ -121,6 +121,9 @@ export default class DocControl extends CommonBase {
 
     const verNum = (contents === null) ? 0 : 1;
     await this._doc.opNew(Paths.VERSION_NUMBER, Coder.encode(verNum));
+
+    // Any cached snapshots are no longer valid.
+    this._snapshots = new Map();
   }
 
   /**
