@@ -64,7 +64,7 @@ export default class DocForAuthor {
    * Returns a promise for a snapshot of any version after the given
    * `baseRevNum`. See the equivalent `DocControl` method for details.
    *
-   * @param {Int} baseRevNum Version number for the document.
+   * @param {Int} baseRevNum Revision number for the document.
    * @returns {Promise<DeltaResult>} Promise for a delta and associated version
    *   number. The result's `delta` can be applied to version `baseRevNum` to
    *   produce version `revNum` of the document.
@@ -78,7 +78,8 @@ export default class DocForAuthor {
    * represented by this instance. See the equivalent `DocControl` method for
    * details.
    *
-   * @param {number} baseRevNum Version number which `delta` is with respect to.
+   * @param {number} baseRevNum Revision number which `delta` is with respect
+   *   to.
    * @param {FrozenDelta} delta Delta indicating what has changed with respect
    *   to `baseRevNum`.
    * @returns {Promise<DeltaResult>} Promise for the correction from the

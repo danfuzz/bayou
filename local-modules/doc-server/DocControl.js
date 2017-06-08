@@ -251,7 +251,7 @@ export default class DocControl extends CommonBase {
    * version, this will not resolve the result promise until at least one change
    * has been made.
    *
-   * @param {Int} baseRevNum Version number for the document.
+   * @param {Int} baseRevNum Revision number for the document.
    * @returns {DeltaResult} Delta and associated revision number. The result's
    *   `revNum` is guaranteed to be at least one more than `baseRevNum` (and
    *   could possibly be even larger.) The result's `delta` can be applied to
@@ -296,7 +296,7 @@ export default class DocControl extends CommonBase {
    * delta doesn't provide any information about subsequent revisions of the
    * document.
    *
-   * @param {Int} baseRevNum Version number which `delta` is with respect to.
+   * @param {Int} baseRevNum Revision number which `delta` is with respect to.
    * @param {FrozenDelta} delta Delta indicating what has changed with respect
    *   to `baseRevNum`.
    * @param {string|null} authorId Author of `delta`, or `null` if the change
@@ -481,9 +481,9 @@ export default class DocControl extends CommonBase {
    *
    * @param {FrozenDelta} baseDelta Base delta onto which the indicated deltas
    *   get composed.
-   * @param {Int} startInclusive Version number for the first delta to include
+   * @param {Int} startInclusive Revision number for the first delta to include
    *   in the result.
-   * @param {Int} endExclusive Version number just beyond the last delta to
+   * @param {Int} endExclusive Revision number just beyond the last delta to
    *   include in the result.
    * @returns {FrozenDelta} The composed delta consisting of `baseDelta`
    *   composed with revisions `startInclusive` through but not including
@@ -529,7 +529,7 @@ export default class DocControl extends CommonBase {
    * because the calling code should have handled that case without calling this
    * method.
    *
-   * @param {Int} baseRevNum Version number which this is to apply to.
+   * @param {Int} baseRevNum Revision number which this is to apply to.
    * @param {FrozenDelta} delta The delta to append.
    * @param {string|null} authorId The author of the delta.
    * @returns {Int|null} The revision number after appending `delta`, or `null`
@@ -564,8 +564,8 @@ export default class DocControl extends CommonBase {
    * Reads the change for the indicated revision number. It is an error to
    * request a change that doesn't exist.
    *
-   * @param {RevisionNumber} revNum Version number of the change. This indicates
-   *   the change that produced that document version.
+   * @param {RevisionNumber} revNum Revision number of the change. This
+   *   indicates the change that produced that document version.
    * @returns {DocumentChange} The corresponding change.
    */
   async _changeRead(revNum) {

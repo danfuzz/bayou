@@ -15,7 +15,7 @@ export default class Snapshot extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {RevisionNumber} revNum Version number of the document.
+   * @param {RevisionNumber} revNum Revision number of the document.
    * @param {Delta|array|object} contents Document contents. Can be given
    *   anything that can be coerced into a `FrozenDelta`. Must be a "document"
    *   (that is, a delta consisting only of `insert` operations).
@@ -23,7 +23,7 @@ export default class Snapshot extends CommonBase {
   constructor(revNum, contents) {
     super();
 
-    /** {Int} Version number. */
+    /** {Int} Revision number. */
     this._revNum = RevisionNumber.check(revNum);
 
     /** {FrozenDelta} Document contents. */

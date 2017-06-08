@@ -23,7 +23,7 @@ export default class DeltaResult extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {Int} revNum Version number of the document.
+   * @param {Int} revNum Revision number of the document.
    * @param {FrozenDelta} delta Delta which can be applied in context to
    *   produce the document with the indicated revision number.
    */
