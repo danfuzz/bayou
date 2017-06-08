@@ -4,7 +4,7 @@
 
 import weak from 'weak';
 
-import { DocumentChange, FrozenDelta, Timestamp } from 'doc-common';
+import { FrozenDelta } from 'doc-common';
 import { Coder } from 'doc-store';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
@@ -13,7 +13,12 @@ import { TBoolean, TString } from 'typecheck';
 import { Singleton } from 'util-common';
 
 import DocControl from './DocControl';
-import Paths from './Paths';
+
+/**
+ * {FrozenDelta} Message used as document to indicate a major validation error.
+ */
+const ERROR_NOTE = FrozenDelta.coerce(
+  [{ insert: '(Recreated document due to validation error(s).)\n' }]);
 
 /** {FrozenDelta} Message used as document instead of migrating old versions. */
 const MIGRATION_NOTE = FrozenDelta.coerce(
@@ -97,63 +102,38 @@ export default class DocServer extends Singleton {
       return weak.get(already);
     }
 
-    const docStorage = await Hooks.docStore.getDocument(docId);
-    const docExists = await docStorage.exists();
-    let docNeedsMigrate = false;
+    const docStorage   = await Hooks.docStore.getDocument(docId);
+    const result       = new DocControl(docStorage, this._formatVersion);
+    const docStatus    = await result.validationStatus();
+    const docNeedsInit = (docStatus !== DocControl.STATUS_OK);
+    let   firstText    = DEFAULT_DOCUMENT;
 
-    if (docExists) {
-      docLog.info('Retrieving from storage.');
+    if (docStatus === DocControl.STATUS_MIGRATE) {
+      // **TODO:** Ultimately, this code path will evolve into forward
+      // migration of documents found to be in older formats. For now, we just
+      // fall through to the document creation logic below, which will leave
+      // a note what's going on in the document contents.
+      docLog.info('Needs migration. (But just noting that fact for now.)');
+      firstText = MIGRATION_NOTE;
+    } else if (docStatus === DocControl.STATUS_ERROR) {
+      // **TODO:** Ultimately, it should be a Really Big Deal if we find
+      // ourselves here. We might want to implement some form of "hail mary"
+      // attempt to recover _something_ of use from the document storage.
+      docLog.info('Major problem with stored data!');
+      firstText = ERROR_NOTE;
+    }
 
-      const formatVersion =
-        await docStorage.pathReadOrNull(Paths.FORMAT_VERSION);
-      const verNum =
-        await docStorage.pathReadOrNull(Paths.VERSION_NUMBER);
-      let docIsValid = false;
-
-      if (formatVersion === null) {
-        docLog.info('Corrupt document: Missing format version.');
-      } else if (!formatVersion.equals(this._formatVersion)) {
-        const got = formatVersion.string;
-        const expected = this._formatVersion.string;
-        docLog.info(`Mismatched format version: got ${got}; expected ${expected}`);
-      } else if (verNum === null) {
-        docLog.info('Corrupt document: Missing version number.');
-      } else {
-        docIsValid = true;
-      }
-
-      if (!docIsValid) {
-        // **TODO:** Ultimately, this code path will evolve into forward
-        // migration of documents found to be in older formats. For now, we just
-        // fall through to the document creation logic below, which will leave
-        // a note what's going on in the document contents.
-        docLog.info('Needs migration. (But just noting that fact for now.)');
-        docNeedsMigrate = true;
+    if (!initIfMissing) {
+      if (docStatus === DocControl.STATUS_NOT_FOUND) {
+        docLog.info('No such document.');
+        return null;
       }
     }
 
-    if (!docExists && !initIfMissing) {
-      docLog.info('No such document.');
-      return null;
+    if (docNeedsInit) {
+      await result.create(firstText);
     }
 
-    if (!docExists || docNeedsMigrate) {
-      docLog.info('Creating document.');
-
-      // Initialize the document.
-      await docStorage.create();
-      await docStorage.opNew(Paths.FORMAT_VERSION, this._formatVersion);
-
-      // Empty first change (per documented interface) and static content for
-      // the first contentful change (for now).
-      const delta = docNeedsMigrate ? MIGRATION_NOTE : DEFAULT_DOCUMENT;
-      const change = new DocumentChange(1, Timestamp.now(), delta, null);
-      await docStorage.opNew(Paths.forVerNum(0), Coder.encode(DocumentChange.firstChange()));
-      await docStorage.opNew(Paths.forVerNum(1), Coder.encode(change));
-      await docStorage.opNew(Paths.VERSION_NUMBER, Coder.encode(1));
-    }
-
-    const result = new DocControl(docStorage);
     const resultRef = weak(result, this._reapDocument.bind(this, docId));
     this._controls.set(docId, resultRef);
     return result;
