@@ -5,7 +5,7 @@
 import afs from 'async-file';
 import path from 'path';
 
-import { BaseDocStore } from 'content-store';
+import { BaseContentStore } from 'content-store';
 import { Logger } from 'see-all';
 import { Dirs } from 'server-env';
 
@@ -18,7 +18,7 @@ const log = new Logger('local-doc');
  * Document storage implementation that stores everything in the
  * locally-accessible filesystem.
  */
-export default class LocalDocStore extends BaseDocStore {
+export default class LocalContentStore extends BaseContentStore {
   /**
    * Constructs an instance. This is not meant to be used publicly.
    */

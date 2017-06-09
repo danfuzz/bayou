@@ -3,6 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import LocalDoc from './LocalDoc';
-import LocalDocStore from './LocalDocStore';
+import LocalContentStore from './LocalContentStore';
 
-export { LocalDoc, LocalDocStore };
+export { LocalContentStore, LocalDoc };

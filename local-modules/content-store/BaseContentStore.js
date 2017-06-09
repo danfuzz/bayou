@@ -19,7 +19,7 @@ import BaseDoc from './BaseDoc';
  * instances of several subclasses of this class, but in practice that's not
  * what happens.)
  */
-export default class BaseDocStore extends Singleton {
+export default class BaseContentStore extends Singleton {
   /**
    * Checks a document ID for validity. Returns regularly (with no value) if
    * all is well, or throws an error if the ID is invalid. Only ever called on

@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { LocalDocStore } from 'content-store-local';
+import { LocalContentStore } from 'content-store-local';
 
 import BearerTokens from './BearerTokens';
 
@@ -50,10 +50,10 @@ export default class Hooks {
 
   /**
    * The object which provides access to document storage. This is an instance
-   * of a subclass of `BaseDocStore`, as defined by the `content-store` module.
+   * of a subclass of `BaseContentStore`, as defined by the `content-store` module.
    */
   static get docStore() {
-    return LocalDocStore.theOne;
+    return LocalContentStore.theOne;
   }
 
   /**
