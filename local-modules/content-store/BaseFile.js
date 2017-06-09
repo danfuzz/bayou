@@ -17,7 +17,7 @@ import StoragePath from './StoragePath';
  * key-value store with keys having a path-like structure and values being
  * arbitrary binary data.
  */
-export default class BaseDoc extends CommonBase {
+export default class BaseFile extends CommonBase {
   /**
    * Constructs an instance.
    *

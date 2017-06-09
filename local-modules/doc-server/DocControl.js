@@ -4,7 +4,7 @@
 
 import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Timestamp }
   from 'doc-common';
-import { BaseDoc, Coder } from 'doc-store';
+import { BaseFile, Coder } from 'content-store';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase, PromCondition, PromDelay } from 'util-common';
@@ -55,14 +55,14 @@ export default class DocControl extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {BaseDoc} docStorage The underlying document storage.
+   * @param {BaseFile} docStorage The underlying document storage.
    * @param {FrozenBuffer} formatVersion Format version to expect and use.
    */
   constructor(docStorage, formatVersion) {
     super();
 
-    /** {BaseDoc} Storage access for the document. */
-    this._doc = BaseDoc.check(docStorage);
+    /** {BaseFile} Storage access for the document. */
+    this._doc = BaseFile.check(docStorage);
 
     /** {FrozenBuffer} The document format version to expect and use. */
     this._formatVersion = formatVersion;

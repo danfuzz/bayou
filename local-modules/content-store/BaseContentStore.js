@@ -6,7 +6,7 @@ import { DocumentId } from 'doc-common';
 import { TString } from 'typecheck';
 import { Singleton } from 'util-common';
 
-import BaseDoc from './BaseDoc';
+import BaseFile from './BaseFile';
 
 /**
  * Base class for document storage access. Subclasses must override several
@@ -19,7 +19,7 @@ import BaseDoc from './BaseDoc';
  * instances of several subclasses of this class, but in practice that's not
  * what happens.)
  */
-export default class BaseDocStore extends Singleton {
+export default class BaseContentStore extends Singleton {
   /**
    * Checks a document ID for validity. Returns regularly (with no value) if
    * all is well, or throws an error if the ID is invalid. Only ever called on
@@ -43,12 +43,12 @@ export default class BaseDocStore extends Singleton {
    *
    * @param {string} docId The ID of the document to access. Must be a valid
    *   document ID as defined by the concrete subclass.
-   * @returns {BaseDoc} Accessor for the document in question.
+   * @returns {BaseFile} Accessor for the document in question.
    */
   async getDocument(docId) {
     TString.nonempty(docId);
     await this._impl_checkDocId(DocumentId.check(docId));
-    return BaseDoc.check(await this._impl_getDocument(docId));
+    return BaseFile.check(await this._impl_getDocument(docId));
   }
 
   /**
@@ -57,7 +57,7 @@ export default class BaseDocStore extends Singleton {
    *
    * @abstract
    * @param {string} docId The ID of the document to access.
-   * @returns {BaseDoc} Accessor for the document in question.
+   * @returns {BaseFile} Accessor for the document in question.
    */
   async _impl_getDocument(docId) {
     return this._mustOverride(docId);

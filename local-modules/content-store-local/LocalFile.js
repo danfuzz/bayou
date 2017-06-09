@@ -5,7 +5,7 @@
 import afs from 'async-file';
 import path from 'path';
 
-import { BaseDoc } from 'doc-store';
+import { BaseFile } from 'content-store';
 import { Logger } from 'see-all';
 import { PromDelay } from 'util-common';
 import { FrozenBuffer } from 'util-server';
@@ -25,7 +25,7 @@ const DIRTY_DELAY_MSEC = 5 * 1000; // 5 seconds.
  * Document implementation that stores everything in the
  * locally-accessible filesystem.
  */
-export default class LocalDoc extends BaseDoc {
+export default class LocalFile extends BaseFile {
   /**
    * Constructs an instance.
    *
@@ -236,7 +236,7 @@ export default class LocalDoc extends BaseDoc {
     const storage = new Map();
     for (const f of files) {
       const buf = await afs.readFile(path.resolve(this._storageDir, f));
-      const storagePath = LocalDoc._storagePathForFsName(f);
+      const storagePath = LocalFile._storagePathForFsName(f);
       storage.set(storagePath, FrozenBuffer.coerce(buf));
       this._log.info(`Read: ${storagePath}`);
     }

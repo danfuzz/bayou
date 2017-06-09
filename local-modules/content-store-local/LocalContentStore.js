@@ -5,11 +5,11 @@
 import afs from 'async-file';
 import path from 'path';
 
-import { BaseDocStore } from 'doc-store';
+import { BaseContentStore } from 'content-store';
 import { Logger } from 'see-all';
 import { Dirs } from 'server-env';
 
-import LocalDoc from './LocalDoc';
+import LocalFile from './LocalFile';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('local-doc');
@@ -18,14 +18,14 @@ const log = new Logger('local-doc');
  * Document storage implementation that stores everything in the
  * locally-accessible filesystem.
  */
-export default class LocalDocStore extends BaseDocStore {
+export default class LocalContentStore extends BaseContentStore {
   /**
    * Constructs an instance. This is not meant to be used publicly.
    */
   constructor() {
     super();
 
-    /** {Map<string, LocalDoc>} Map from document IDs to document instances. */
+    /** {Map<string, LocalFile>} Map from document IDs to document instances. */
     this._docs = new Map();
 
     /** {string} The directory for document storage. */
@@ -44,7 +44,7 @@ export default class LocalDocStore extends BaseDocStore {
    * Implementation as required by the superclass.
    *
    * @param {string} docId The ID of the document to access.
-   * @returns {BaseDoc} Accessor for the document in question.
+   * @returns {BaseFile} Accessor for the document in question.
    */
   async _impl_getDocument(docId) {
     const already = this._docs.get(docId);
@@ -55,7 +55,7 @@ export default class LocalDocStore extends BaseDocStore {
 
     await this._ensureDocDirectory();
 
-    const result = new LocalDoc(docId, this._documentPath(docId));
+    const result = new LocalFile(docId, this._documentPath(docId));
     this._docs.set(docId, result);
     return result;
   }

@@ -1,10 +1,10 @@
 {
-  "name": "doc-store-local",
+  "name": "content-store-local",
   "version": "1.0.0",
   "main": "main.js",
 
   "dependencies": {
-    "doc-store": "local",
+    "content-store": "local",
     "see-all": "local",
     "util-common": "local",
     "util-server": "local",

@@ -2,9 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import BaseDoc from './BaseDoc';
-import BaseDocStore from './BaseDocStore';
-import Coder from './Coder';
-import StoragePath from './StoragePath';
+import LocalFile from './LocalFile';
+import LocalContentStore from './LocalContentStore';
 
-export { BaseDoc, BaseDocStore, Coder, StoragePath };
+export { LocalContentStore, LocalFile };
