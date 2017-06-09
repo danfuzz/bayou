@@ -14,6 +14,9 @@ import { Singleton } from 'util-common';
 
 import DocControl from './DocControl';
 
+/** {FrozenDelta} Default contents when creating a new document. */
+const DEFAULT_TEXT = FrozenDelta.coerce(DEFAULT_DOCUMENT);
+
 /**
  * {FrozenDelta} Message used as document to indicate a major validation error.
  */
@@ -175,7 +178,7 @@ export default class DocServer extends Singleton {
     const result       = new DocControl(docStorage, this._formatVersion);
     const docStatus    = await result.validationStatus();
     const docNeedsInit = (docStatus !== DocControl.STATUS_OK);
-    let   firstText    = DEFAULT_DOCUMENT;
+    let   firstText    = DEFAULT_TEXT;
 
     if (docStatus === DocControl.STATUS_MIGRATE) {
       // **TODO:** Ultimately, this code path will evolve into forward
