@@ -4,8 +4,8 @@
 
 import weak from 'weak';
 
+import { Coder } from 'content-store';
 import { FrozenDelta } from 'doc-common';
-import { Coder } from 'doc-store';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
 import { ProductInfo } from 'server-env';

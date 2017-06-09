@@ -5,7 +5,7 @@
 import afs from 'async-file';
 import path from 'path';
 
-import { BaseDoc } from 'doc-store';
+import { BaseDoc } from 'content-store';
 import { Logger } from 'see-all';
 import { PromDelay } from 'util-common';
 import { FrozenBuffer } from 'util-server';

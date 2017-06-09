@@ -5,7 +5,7 @@
 
   "dependencies": {
     "api-server": "local",
-    "doc-store-local": "local",
+    "content-store-local": "local",
     "util-common": "local"
   }
 }

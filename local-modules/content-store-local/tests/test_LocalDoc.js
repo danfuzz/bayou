@@ -7,13 +7,13 @@ import fs from 'fs';
 import { after, before, describe, it } from 'mocha';
 import path from 'path';
 
-import { LocalDoc } from 'doc-store-local';
+import { LocalDoc } from 'content-store-local';
 import { FrozenBuffer } from 'util-server';
 
 const STORE_PREFIX = 'bayou-test-';
 let storeDir = null;
 
-describe('doc-store-local/LocalDoc', () => {
+describe('content-store-local/LocalDoc', () => {
   before(() => {
     storeDir = fs.mkdtempSync(STORE_PREFIX);
   });

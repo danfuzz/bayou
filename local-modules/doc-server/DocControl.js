@@ -4,7 +4,7 @@
 
 import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Timestamp }
   from 'doc-common';
-import { BaseDoc, Coder } from 'doc-store';
+import { BaseDoc, Coder } from 'content-store';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase, PromCondition, PromDelay } from 'util-common';

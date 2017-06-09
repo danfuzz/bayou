@@ -5,7 +5,7 @@
 import afs from 'async-file';
 import path from 'path';
 
-import { BaseDocStore } from 'doc-store';
+import { BaseDocStore } from 'content-store';
 import { Logger } from 'see-all';
 import { Dirs } from 'server-env';
 
