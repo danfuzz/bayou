@@ -7,20 +7,20 @@ import fs from 'fs';
 import { after, before, describe, it } from 'mocha';
 import path from 'path';
 
-import { LocalDoc } from 'content-store-local';
+import { LocalFile } from 'content-store-local';
 import { FrozenBuffer } from 'util-server';
 
 const STORE_PREFIX = 'bayou-test-';
 let storeDir = null;
 
-describe('content-store-local/LocalDoc', () => {
+describe('content-store-local/LocalFile', () => {
   before(() => {
     storeDir = fs.mkdtempSync(STORE_PREFIX);
   });
 
   // The expectation was that this would run after all tests were finish and
   // clean up the directory into which we are writing test files. However, since
-  // it takes as much as 5 seconds for any `LocalDoc` files to be written to
+  // it takes as much as 5 seconds for any `LocalFile` files to be written to
   // disk, it's not safe to `rmdir` the directory. Mocha has an internal rule
   // that you can't take more than 2 seconds to finish your work in the
   // `after()` hook and call the `done()` callback.
@@ -35,7 +35,7 @@ describe('content-store-local/LocalDoc', () => {
 
   describe('constructor(docId, docPath)', () => {
     it('should create a local dir for storing files at the specified path', () => {
-      const doc = new LocalDoc('0', documentPath());
+      const doc = new LocalFile('0', documentPath());
 
       assert.isNotNull(doc);
     });
@@ -43,7 +43,7 @@ describe('content-store-local/LocalDoc', () => {
 
   describe('create()', () => {
     it('should erase the document if called on a non-empty document', async () => {
-      const doc = new LocalDoc('0', documentPath());
+      const doc = new LocalFile('0', documentPath());
       const storagePath = '/abc';
       const value = FrozenBuffer.coerce('x');
 
