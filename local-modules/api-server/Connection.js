@@ -197,8 +197,8 @@ export default class Connection extends CommonBase {
         this._apiLog.fullCall(this._connectionId, startTime, msg, response);
       };
 
-      if (msg.error) {
-        respond(null, msg.error);
+      if (msg.isError()) {
+        respond(null, new Error(msg.errorMessage));
       } else {
         try {
           this._actOnMessage(msg)
@@ -232,12 +232,12 @@ export default class Connection extends CommonBase {
         id = msg[1];
       }
 
-      return { error, id };
+      return Message.error(id, error.message);
     }
 
-    return (msg instanceof Message)
+    return ((msg instanceof Message) && !msg.isError())
       ? msg
-      : { id: -1, error: new Error('Did not receive `Message` object.') };
+      : Message.error(-1, 'Did not receive `Message` object.');
   }
 
   /**
