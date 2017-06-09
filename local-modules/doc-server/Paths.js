@@ -15,8 +15,8 @@ export default class Paths {
   }
 
   /** {string} `StoragePath` string for the document revision number. */
-  static get VERSION_NUMBER() {
-    return '/version_number';
+  static get REVISION_NUMBER() {
+    return '/revision_number';
   }
 
   /**

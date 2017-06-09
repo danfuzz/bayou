@@ -52,6 +52,14 @@ export default class DocServer extends Singleton {
     this._controls = new Map();
 
     /**
+     * {Map<string,Promise<DocControl|null>>} Map from document IDs to a
+     * promise for a document controller for the so-IDed document. A promise
+     * can resolve to `null` if the pending request turned out to _not_ request
+     * initialization of a missing document.
+     */
+    this._pending = new Map();
+
+    /**
      * {FrozenBuffer} The document format version to use for new documents and
      * to expect in existing documents.
      */
@@ -82,7 +90,8 @@ export default class DocServer extends Singleton {
   }
 
   /**
-   * Common code for both `getDoc*()` methods.
+   * Common code for both `getDoc*()` methods, which performs "traffic control"
+   * on the requests.
    *
    * @param {string} docId The document ID.
    * @param {boolean} initIfMissing If `true`, initializes a nonexistent doc
@@ -103,6 +112,64 @@ export default class DocServer extends Singleton {
       docLog.info('Retrieved from in-memory cache.');
       return weak.get(already);
     }
+
+    const pending = this._pending.get(docId);
+    if (pending) {
+      // There is already a request for this document in flight. Use its result.
+      docLog.info('Awaiting result from parallel request.');
+      const result = await pending;
+      if ((result === null) && initIfMissing) {
+        // This request wants a missing doc to be initialized, but the formerly
+        // pending one didn't. So, we try again. (We will eventually win the
+        // race, if any.)
+        docLog.info('Retrying parallel request.');
+        return this._getDoc(docId, true);
+      }
+      docLog.info('Satisfied parallel request.');
+      return result;
+    }
+
+    // The controller is not already cached, and its construction is not
+    // currently pending. Start constructing it, and register it as pending, so
+    // as to let other requesters find it (per above).
+
+    docLog.info('Contructing controller.');
+    const resultPromise = this._makeController(docId, initIfMissing);
+    this._pending.set(docId, resultPromise);
+
+    // Get the construction result.
+    const result = await resultPromise;
+
+    // The construction action is no longer pending.
+    this._pending.delete(docId);
+
+    if (result === null) {
+      docLog.info('No such document.');
+    } else {
+      // Set up the weak reference so the controller won't hang around once it's
+      // no longer being used, and store that ref in the main `_controls` map.
+      const resultRef = weak(result, this._reapDocument.bind(this, docId));
+      this._controls.set(docId, resultRef);
+      docLog.info('Controller constructed.');
+    }
+
+    return result;
+  }
+
+  /**
+   * Constructs and returns a `DocControl` for a specific document, initializing
+   * it if requested (or alternatively returning `null` if nonexistent).
+   *
+   * @param {string} docId The document ID.
+   * @param {boolean} initIfMissing If `true`, initializes a nonexistent doc
+   *   instead of returning `null`.
+   * @returns {DocControl|null} The corresponding document accessor, or `null`
+   *   if there is no such document _and_ we were not asked to fill in missing
+   *   docs.
+   */
+  async _makeController(docId, initIfMissing) {
+    // Make a temporary logger specific to this doc.
+    const docLog = log.withPrefix(`[${docId}]`);
 
     const docStorage   = await Hooks.docStore.getDocument(docId);
     const result       = new DocControl(docStorage, this._formatVersion);
@@ -127,7 +194,6 @@ export default class DocServer extends Singleton {
 
     if (!initIfMissing) {
       if (docStatus === DocControl.STATUS_NOT_FOUND) {
-        docLog.info('No such document.');
         return null;
       }
     }
@@ -136,8 +202,6 @@ export default class DocServer extends Singleton {
       await result.create(firstText);
     }
 
-    const resultRef = weak(result, this._reapDocument.bind(this, docId));
-    this._controls.set(docId, resultRef);
     return result;
   }
 

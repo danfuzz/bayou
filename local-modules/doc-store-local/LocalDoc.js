@@ -35,9 +35,6 @@ export default class LocalDoc extends BaseDoc {
   constructor(docId, docPath) {
     super(docId);
 
-    /** {string} Path to the change storage for this document. */
-    this._path = `${docPath}.json`;
-
     /**
      * {string} Path to the directory containing stored values for this
      * document.
@@ -368,15 +365,16 @@ export default class LocalDoc extends BaseDoc {
    * Converts a `StoragePath` string to the name of the file at which to find
    * the data for that path. In particular, we don't want the hiererarchical
    * structure of the path to turn into nested directories, so slashes (`/`) get
-   * converted to periods (`.`), the latter which is not a valid character for
-   * a storage path component.
+   * converted to tildes (`~`), the latter which is not a valid character for
+   * a storage path component. This also appends the filetype suffix `.blob`.
    *
    * @param {string} storagePath The storage path.
-   * @returns {string} The file name to use when accessing `path`.
+   * @returns {string} The fully-qualified file name to use when accessing
+   *   `path`.
    */
   _fsPathForStorage(storagePath) {
     // `slice(1)` trims off the initial slash.
-    const fileName = storagePath.slice(1).replace(/\//g, '.');
+    const fileName = `${storagePath.slice(1).replace(/\//g, '~')}.blob`;
     return path.resolve(this._storageDir, fileName);
   }
 
@@ -390,6 +388,6 @@ export default class LocalDoc extends BaseDoc {
    * @returns {string} The `StoragePath` string corresponding to `fsName`.
    */
   static _storagePathForFsName(fsName) {
-    return `/${fsName.replace(/\./g, '/')}`;
+    return `/${fsName.replace(/~/g, '/').replace(/\..*$/, '')}`;
   }
 }
