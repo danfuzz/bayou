@@ -50,7 +50,8 @@ export default class Hooks {
 
   /**
    * The object which provides access to document storage. This is an instance
-   * of a subclass of `BaseContentStore`, as defined by the `content-store` module.
+   * of a subclass of `BaseContentStore`, as defined by the `content-store`
+   * module.
    */
   static get docStore() {
     return LocalContentStore.theOne;
