@@ -9,10 +9,6 @@ import { Proppy } from 'proppy';
 import { TObject } from 'typecheck';
 
 describe('proppy/Proppy', () => {
-  describe('parseStream(value)', () => {
-    it('needs testing');
-  });
-
   describe('parseFile(value)', () => {
     it('needs testing');
   });

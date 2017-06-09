@@ -3,7 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import fs from 'fs';
-import pipette from 'pipette';
 
 /**
  * Property file reader. This accepts a syntax which is similar to traditional
@@ -36,38 +35,6 @@ import pipette from 'pipette';
  * `<key>` to `<value>` for each such pair defined in the file.
  */
 export default class Proppy {
-  /**
-   * Reads a property file from the given stream input. Because streams are
-   * asynchronous in nature, this method returns a promise for the result
-   * instead of directly returning the parsed object.
-   *
-   * @param {ReadStream} input The stream to read from.
-   * @returns {Promise<object>} Promise for an object as described in the class
-   *   header.
-   */
-  static parseStream(input) {
-    return new Promise((res, rej) => {
-      // Collect the entire input into a single string.
-      const sink = new pipette.Sink(input);
-      sink.on('close', () => {
-        let err = sink.gotError() ? sink.getError() : null;
-
-        if (!err) {
-          try {
-            res(Proppy.parseBuffer(sink.getData()));
-            return;
-          } catch (e) {
-            err = e;
-          }
-        }
-
-        // Reject the promise with either the stream error or parse error, as
-        // appropriate.
-        rej(err);
-      });
-    });
-  }
-
   /**
    * Reads a property file from the given buffer.
    *
