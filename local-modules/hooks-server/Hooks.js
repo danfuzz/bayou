@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { LocalContentStore } from 'content-store-local';
+import { Hooks as HooksCommon } from 'hooks-common';
 
 import BearerTokens from './BearerTokens';
 
@@ -49,12 +50,26 @@ export default class Hooks {
   }
 
   /**
-   * The object which provides access to document storage. This is an instance
+   * The object which provides access to content storage. This is an instance
    * of a subclass of `BaseContentStore`, as defined by the `content-store`
    * module.
    */
-  static get docStore() {
+  static get contentStore() {
     return LocalContentStore.theOne;
+  }
+
+  /**
+   * Checks whether the given value is syntactically valid as a file ID.
+   * This method is only ever called with a non-empty string.
+   *
+   * The default implementation of this method is to defer to the hook
+   * `hooks-common.Hooks.isDocumentId()`.
+   *
+   * @param {string} id The (alleged) file ID to check.
+   * @returns {boolen} `true` iff `id` is syntactically valid.
+   */
+  static isFileId(id) {
+    return HooksCommon.isDocumentId(id);
   }
 
   /**

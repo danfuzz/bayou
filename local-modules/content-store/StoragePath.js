@@ -17,7 +17,7 @@ const PATH_REGEX = /^(\/[a-zA-Z0-9_]+)+$/;
 /**
  * Utility class for handling storage paths. A storage path is a
  * hierarchical-filesystem-like path which provides a stable name for a chunk of
- * data within a document. A valid path is a string consisting of one or more
+ * data within a file. A valid path is a string consisting of one or more
  * components, where each component is a slash (`/`) followed by a sequence of
  * one or more characters in the usual "identifier" set (`[a-zA-Z0-9_]`).
  *

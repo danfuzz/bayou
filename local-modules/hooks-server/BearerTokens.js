@@ -56,7 +56,7 @@ export default class BearerTokens extends Singleton {
    * the list of `rootTokens` changes, or (on the margin) could conceivably have
    * changed.
    *
-   * The default implementation is for the promise to become resolved every
+   * The default implementation is for the promise to become resolved after
    * ten minutes even though by default the root tokens never get updated, just
    * so that the update logic gets excercised in the default configuration.
    *

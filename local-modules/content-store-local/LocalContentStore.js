@@ -15,7 +15,7 @@ import LocalFile from './LocalFile';
 const log = new Logger('local-doc');
 
 /**
- * Document storage implementation that stores everything in the
+ * Content storage implementation that stores everything in the
  * locally-accessible filesystem.
  */
 export default class LocalContentStore extends BaseContentStore {
@@ -25,29 +25,29 @@ export default class LocalContentStore extends BaseContentStore {
   constructor() {
     super();
 
-    /** {Map<string, LocalFile>} Map from document IDs to document instances. */
+    /** {Map<string, LocalFile>} Map from file IDs to file instances. */
     this._docs = new Map();
 
-    /** {string} The directory for document storage. */
+    /** {string} The directory for file storage. */
     this._dir = path.resolve(Dirs.VAR_DIR, 'docs');
 
     /**
-     * {boolean} `true` iff the document directory is known to exist. Set to
+     * {boolean} `true` iff the file storage directory is known to exist. Set to
      * `true` in `_ensureDocDirectory()`.
      */
     this._ensuredDir = false;
 
-    log.info(`Document directory: ${this._dir}`);
+    log.info(`Content storage directory: ${this._dir}`);
   }
 
   /**
    * Implementation as required by the superclass.
    *
-   * @param {string} docId The ID of the document to access.
-   * @returns {BaseFile} Accessor for the document in question.
+   * @param {string} fileId The ID of the file to access.
+   * @returns {BaseFile} Accessor for the file in question.
    */
-  async _impl_getDocument(docId) {
-    const already = this._docs.get(docId);
+  async _impl_getFile(fileId) {
+    const already = this._docs.get(fileId);
 
     if (already) {
       return already;
@@ -55,26 +55,28 @@ export default class LocalContentStore extends BaseContentStore {
 
     await this._ensureDocDirectory();
 
-    const result = new LocalFile(docId, this._documentPath(docId));
-    this._docs.set(docId, result);
+    const result = new LocalFile(fileId, this._filePath(fileId));
+    this._docs.set(fileId, result);
     return result;
   }
 
   /**
-   * Gets the filesystem path for the document with the given ID.
+   * Gets the filesystem path for the file with the given ID.
    *
-   * @param {string} docId The document ID.
+   * @param {string} fileId The file ID.
    * @returns {string} The corresponding filesystem path.
    */
-  _documentPath(docId) {
-    return path.resolve(this._dir, docId);
+  _filePath(fileId) {
+    // The URI encoding helps keep this code resilient with respect to possible
+    // variance in the allowed syntax for `fileId`s.
+    return path.resolve(this._dir, encodeURIComponent(fileId));
   }
 
   /**
-   * Ensures the document storage directory exists. This will only ever check
-   * once (on first document construction attempt), which notably means that
-   * things will break if something removes the document directory without
-   * restarting the server.
+   * Ensures the file storage directory exists. This will only ever check once
+   * (on first file construction attempt), which notably means that things will
+   * break if something removes the file storage directory without restarting
+   * the server.
    */
   async _ensureDocDirectory() {
     if (this._ensuredDir) {
@@ -82,10 +84,10 @@ export default class LocalContentStore extends BaseContentStore {
     }
 
     if (await afs.exists(this._dir)) {
-      log.detail('Document directory already exists.');
+      log.detail('File storage directory already exists.');
     } else {
       await afs.mkdir(this._dir);
-      log.info('Created document directory.');
+      log.info('Created file storage directory.');
     }
 
     this._ensuredDir = true;

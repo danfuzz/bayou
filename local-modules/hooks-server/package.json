@@ -6,6 +6,7 @@
   "dependencies": {
     "api-server": "local",
     "content-store-local": "local",
+    "hooks-common": "local",
     "util-common": "local"
   }
 }
