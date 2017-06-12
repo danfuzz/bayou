@@ -15,8 +15,8 @@ import LocalFile from './LocalFile';
 const log = new Logger('local-doc');
 
 /**
- * File storage implementation that stores everything in the locally-accessible
- * filesystem.
+ * Content storage implementation that stores everything in the
+ * locally-accessible filesystem.
  */
 export default class LocalContentStore extends BaseContentStore {
   /**
@@ -37,7 +37,7 @@ export default class LocalContentStore extends BaseContentStore {
      */
     this._ensuredDir = false;
 
-    log.info(`File storage directory: ${this._dir}`);
+    log.info(`Content storage directory: ${this._dir}`);
   }
 
   /**
