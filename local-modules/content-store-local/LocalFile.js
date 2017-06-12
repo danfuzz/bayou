@@ -12,7 +12,7 @@ import { FrozenBuffer } from 'util-server';
 
 
 /** {Logger} Logger for this module. */
-const log = new Logger('local-doc');
+const log = new Logger('local-file');
 
 /**
  * {int} How long to wait (in msec) after a file becomes dirty and before it

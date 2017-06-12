@@ -12,7 +12,7 @@ import { Dirs } from 'server-env';
 import LocalFile from './LocalFile';
 
 /** {Logger} Logger for this module. */
-const log = new Logger('local-doc');
+const log = new Logger('local-content');
 
 /**
  * Content storage implementation that stores everything in the
