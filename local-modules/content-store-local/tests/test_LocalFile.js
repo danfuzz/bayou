@@ -33,17 +33,17 @@ describe('content-store-local/LocalFile', () => {
     // }, 2000);
   });
 
-  describe('constructor(docId, docPath)', () => {
+  describe('constructor(fileId, docPath)', () => {
     it('should create a local dir for storing files at the specified path', () => {
-      const doc = new LocalFile('0', documentPath());
+      const doc = new LocalFile('0', filePath());
 
       assert.isNotNull(doc);
     });
   });
 
   describe('create()', () => {
-    it('should erase the document if called on a non-empty document', async () => {
-      const doc = new LocalFile('0', documentPath());
+    it('should erase the file if called on a non-empty file', async () => {
+      const doc = new LocalFile('0', filePath());
       const storagePath = '/abc';
       const value = FrozenBuffer.coerce('x');
 
@@ -59,6 +59,6 @@ describe('content-store-local/LocalFile', () => {
   });
 });
 
-function documentPath() {
+function filePath() {
   return path.join(storeDir, 'test_file');
 }

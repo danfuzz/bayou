@@ -15,42 +15,41 @@ import { FrozenBuffer } from 'util-server';
 const log = new Logger('local-doc');
 
 /**
- * {int} How long to wait (in msec) after a document becomes dirty and before it
+ * {int} How long to wait (in msec) after a file becomes dirty and before it
  * gets written to disk. This keeps the system from thrashing the disk while
- * a document is being actively updated.
+ * a file is being actively updated.
  */
 const DIRTY_DELAY_MSEC = 5 * 1000; // 5 seconds.
 
 /**
- * Document implementation that stores everything in the
- * locally-accessible filesystem.
+ * File implementation that stores everything in the locally-accessible
+ * filesystem.
  */
 export default class LocalFile extends BaseFile {
   /**
    * Constructs an instance.
    *
-   * @param {string} docId The ID of the document this instance represents.
-   * @param {string} docPath The filesystem path for document storage.
+   * @param {string} fileId The ID of the file this instance represents.
+   * @param {string} docPath The filesystem path for file storage.
    */
-  constructor(docId, docPath) {
-    super(docId);
+  constructor(fileId, docPath) {
+    super(fileId);
 
     /**
-     * {string} Path to the directory containing stored values for this
-     * document.
+     * {string} Path to the directory containing stored values for this file.
      */
     this._storageDir = docPath;
 
     /**
      * {Map<string,FrozenBuffer>|null} Map from `StoragePath` strings to
-     * corresponding stored data, for the entire document. `null` indicates that
+     * corresponding stored data, for the entire file. `null` indicates that
      * the map is not yet initialized.
      */
     this._storage = null;
 
     /**
      * {Map<string,FrozenBuffer>|null} Map from `StoragePath` strings to
-     * corresponding stored data, for document contents that have not yet been
+     * corresponding stored data, for file contents that have not yet been
      * written to disk.
      */
     this._storageToWrite = new Map();
@@ -77,8 +76,8 @@ export default class LocalFile extends BaseFile {
      */
     this._storageReadyPromise = null;
 
-    /** {Logger} Logger specific to this document's ID. */
-    this._log = log.withPrefix(`[${docId}]`);
+    /** {Logger} Logger specific to this file's ID. */
+    this._log = log.withPrefix(`[${fileId}]`);
 
     this._log.info('Constructed.');
     this._log.detail(`Path: ${this._docPath}`);
@@ -87,18 +86,18 @@ export default class LocalFile extends BaseFile {
   /**
    * Implementation as required by the superclass.
    *
-   * @returns {boolean} `true` iff this document exists.
+   * @returns {boolean} `true` iff this file exists.
    */
   async _impl_exists() {
     if (this._storage !== null) {
-      // Whether or not the file exists, the document is considered to exist
-      // because it has a non-empty in-memory model. (For example, it might have
-      // been `create()`d but not yet stored to disk.)
+      // Whether or not the file exists, the file is considered to exist because
+      // it has a non-empty in-memory model. (For example, it might have been
+      // `create()`d but not yet stored to disk.)
       return true;
     } else {
-      // If the file exists, then the document exists. It might turn out to be
-      // the case that the file contents are invalid; however, by definition
-      // that is taken to be an _existing_ but _empty_ file.
+      // If the file exists, then the file exists. It might turn out to be the
+      // case that the file contents are invalid; however, by definition that is
+      // taken to be an _existing_ but _empty_ file.
       return afs.exists(this._storageDir);
     }
   }
@@ -201,7 +200,7 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * Reads the document storage if it has not yet been loaded.
+   * Reads the file storage if it has not yet been loaded.
    */
   async _readStorageIfNecessary() {
     if (this._storageReadyPromise === null) {

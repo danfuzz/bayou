@@ -9,11 +9,11 @@ import { FrozenBuffer } from 'util-server';
 import StoragePath from './StoragePath';
 
 /**
- * Base class representing access to a particular document. Subclasses must
- * override several methods defined by this class, as indicated in the
- * documentation. Methods to override are all named with the prefix `_impl_`.
+ * Base class representing access to a particular file. Subclasses must override
+ * several methods defined by this class, as indicated in the documentation.
+ * Methods to override are all named with the prefix `_impl_`.
  *
- * The model that this class embodies is that a document is a random-access
+ * The model that this class embodies is that a file is a random-access
  * key-value store with keys having a path-like structure and values being
  * arbitrary binary data.
  */
@@ -21,27 +21,25 @@ export default class BaseFile extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {string} docId The ID of the document this instance represents.
+   * @param {string} fileId The ID of the file this instance represents.
    */
-  constructor(docId) {
+  constructor(fileId) {
     super();
 
-    /** {string} The ID of the document that this instance represents. */
-    this._id = TString.nonempty(docId);
+    /** {string} The ID of the file that this instance represents. */
+    this._id = TString.nonempty(fileId);
   }
 
-  /** {string} The ID of the document that this instance represents. */
+  /** {string} The ID of the file that this instance represents. */
   get id() {
     return this._id;
   }
 
   /**
-   * Indicates whether or not this document exists in the store. Calling this
-   * method will _not_ cause a non-existent document to come into existence.
+   * Indicates whether or not this file exists in the store. Calling this method
+   * will _not_ cause a non-existent file to come into existence.
    *
-   * **Note:** Documents that exist always contain at least one change.
-   *
-   * @returns {boolean} `true` iff this document exists.
+   * @returns {boolean} `true` iff this file exists.
    */
   async exists() {
     const result = this._impl_exists();
@@ -52,16 +50,16 @@ export default class BaseFile extends CommonBase {
    * Main implementation of `exists()`.
    *
    * @abstract
-   * @returns {boolean} `true` iff this document exists.
+   * @returns {boolean} `true` iff this file exists.
    */
   async _impl_exists() {
     return this._mustOverride();
   }
 
   /**
-   * Creates this document if it does not already exist, or re-creates it if it
-   * does already exist. After this call, the document both exists and is
-   * empty (that is, has no stored values).
+   * Creates this file if it does not already exist, or re-creates it if it does
+   * already exist. After this call, the file both exists and is empty (that is,
+   * has no stored values).
    */
   async create() {
     // This is just a simple pass-through. The point is to maintain the
@@ -108,7 +106,7 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Performs a forced-modification operation on the document. This is the main
+   * Performs a forced-modification operation on the file. This is the main
    * implementation of `opForceDelete()` and `opForceWrite()`. Arguments are
    * guaranteed by the superclass to be valid. Passing `null` for `newValue`
    * corresponds to the `opForceDelete()` operation.
@@ -181,7 +179,7 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Performs a modification operation on the document. This is the main
+   * Performs a modification operation on the file. This is the main
    * implementation of `opDelete()`, `opNew()`, and `opReplace()`. Arguments are
    * guaranteed by the superclass to be valid. Passing `null` for `oldValue`
    * corresponds to the `opNew()` operation. Passing `null` for `newValue`
