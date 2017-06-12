@@ -67,7 +67,9 @@ export default class LocalContentStore extends BaseContentStore {
    * @returns {string} The corresponding filesystem path.
    */
   _filePath(fileId) {
-    return path.resolve(this._dir, fileId);
+    // The URI encoding helps keep this code resilient with respect to possible
+    // variance in the allowed syntax for `fileId`s.
+    return path.resolve(this._dir, encodeURIComponent(fileId));
   }
 
   /**
