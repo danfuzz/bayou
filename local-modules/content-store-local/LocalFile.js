@@ -30,15 +30,15 @@ export default class LocalFile extends BaseFile {
    * Constructs an instance.
    *
    * @param {string} fileId The ID of the file this instance represents.
-   * @param {string} docPath The filesystem path for file storage.
+   * @param {string} filePath The filesystem path for file storage.
    */
-  constructor(fileId, docPath) {
+  constructor(fileId, filePath) {
     super(fileId);
 
     /**
      * {string} Path to the directory containing stored values for this file.
      */
-    this._storageDir = docPath;
+    this._storageDir = filePath;
 
     /**
      * {Map<string,FrozenBuffer>|null} Map from `StoragePath` strings to
