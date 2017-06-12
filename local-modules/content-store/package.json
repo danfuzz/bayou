@@ -5,7 +5,6 @@
 
   "dependencies": {
     "api-common": "local",
-    "doc-common": "local",
     "hooks-server": "local",
     "typecheck": "local",
     "util-common": "local",

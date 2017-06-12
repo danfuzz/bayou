@@ -2,11 +2,11 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DocumentId } from 'doc-common';
 import { TString } from 'typecheck';
 import { Singleton } from 'util-common';
 
 import BaseFile from './BaseFile';
+import FileId from './FileId';
 
 /**
  * Base class for file storage access. Subclasses must override several methods
@@ -47,7 +47,7 @@ export default class BaseContentStore extends Singleton {
    */
   async getFile(fileId) {
     TString.nonempty(fileId);
-    await this._impl_checkFileId(DocumentId.check(fileId));
+    await this._impl_checkFileId(FileId.check(fileId));
     return BaseFile.check(await this._impl_getFile(fileId));
   }
 
