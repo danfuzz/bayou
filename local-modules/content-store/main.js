@@ -5,6 +5,7 @@
 import BaseContentStore from './BaseContentStore';
 import BaseFile from './BaseFile';
 import Coder from './Coder';
+import FileId from './FileId';
 import StoragePath from './StoragePath';
 
-export { BaseContentStore, BaseFile, Coder, StoragePath };
+export { BaseContentStore, BaseFile, Coder, FileId, StoragePath };

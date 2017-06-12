@@ -31,7 +31,7 @@ export default class Hooks {
    * no more than 32 characters and only use ASCII alphanumerics plus dash (`-`)
    * and underscore (`_`).
    *
-   * @param {string} id The (alleged) author ID to check.
+   * @param {string} id The (alleged) document ID to check.
    * @returns {boolen} `true` iff `id` is syntactically valid.
    */
   static isDocumentId(id) {

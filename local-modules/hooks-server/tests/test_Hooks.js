@@ -31,6 +31,24 @@ describe('hooks-server/Hooks', () => {
     });
   });
 
+  describe('isFileId(id)', () => {
+    it('should accept 32-character alphanum ASCII strings', () => {
+      assert.isTrue(Hooks.isFileId('123abc7890ABC456789012'));
+    });
+
+    it('should allow underscores and hyphens', () => {
+      assert.isTrue(Hooks.isFileId('123456789_123456789-12'));
+    });
+
+    it('should not allow non-ASCII characters', () => {
+      assert.isFalse(Hooks.isFileId('123456789•123456789•12'));
+    });
+
+    it('should not allow non-alphanum characters', () => {
+      assert.isFalse(Hooks.isFileId('123456789\t123456789+12'));
+    });
+  });
+
   describe('.listenPort', () => {
     it('should return the documented value', () => {
       assert.strictEqual(Hooks.listenPort, 8080);
