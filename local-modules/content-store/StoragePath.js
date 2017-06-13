@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TArray, TString, TypeError } from 'typecheck';
+import { UtilityClass } from 'util-common';
 
 /**
  * {RegEx} Regular expression which passes for all valid path component strings.
@@ -24,7 +25,7 @@ const PATH_REGEX = /^(\/[a-zA-Z0-9_]+)+$/;
  * * Example path: `/foo_1/bar/baz/23`
  * * Example component: `puffin_biscuit_7`
  */
-export default class StoragePath {
+export default class StoragePath extends UtilityClass {
   /**
    * Validates that the given value is a valid storage path string. Throws an
    * error if not.

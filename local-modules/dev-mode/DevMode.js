@@ -9,7 +9,7 @@ import path from 'path';
 
 import { Logger } from 'see-all';
 import { Dirs } from 'server-env';
-import { PromDelay } from 'util-common';
+import { PromDelay, Singleton } from 'util-common';
 
 /** Logger. */
 const log = new Logger('dev-mode');
@@ -30,13 +30,15 @@ const MAP_FILE_NAME = 'source-map.txt';
  *   should they change. This is expected to be paired with a wrapper script
  *   that notices when the process exits and kicks off a rebuild.
  */
-export default class DevMode {
+export default class DevMode extends Singleton {
   /**
-   * Constructs an instance. Use `start()` to run it.
+   * Constructs the instance. Use `start()` to run it.
    */
   constructor() {
+    super();
+
     /** Base product output directory. */
-    this._outDir = Dirs.BASE_DIR;
+    this._outDir = Dirs.theOne.BASE_DIR;
     log.info('Product directory:', this._outDir);
 
     /** The mappings from source to target directories, for the client code. */

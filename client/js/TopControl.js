@@ -126,7 +126,7 @@ export default class TopControl {
       // Make the editor instance, after style addition and hook action are
       // complete.
       Promise.all([styleDone, hookDone]).then((res_unused) => {
-        this._quill = QuillMaker.make(this._node);
+        this._quill = QuillMaker.theOne.make(this._node);
         log.detail('Made editor instance.');
 
         // Hook up the `DocClient` (which intermediates between the server and

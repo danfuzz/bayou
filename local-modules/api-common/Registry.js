@@ -3,16 +3,10 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TFunction, TString } from 'typecheck';
+import { Singleton } from 'util-common';
 
-/** The "class" tag used for regular arrays. */
+/** {string} The "class" tag used for regular arrays. */
 const ARRAY_TAG = 'array';
-
-/**
- * Map of registered class names to their respective classes. **Note:** The
- * constructor argument prevents the `array` tag from getting improperly
- * registered (by client code).
- */
-const THE_CLASSES = new Map([[ARRAY_TAG, null]]);
 
 /**
  * Methods for registering and looking up classes by name. The names are what
@@ -24,11 +18,30 @@ const THE_CLASSES = new Map([[ARRAY_TAG, null]]);
  * `API_NAME` and a static method `fromApi()`. In addition, instances to be
  * encoded must define a method `toApi()`. These are all used as described
  * elsewhere in this module.
+ *
+ * **TODO:** This class should probably _not_ be a singleton, in that there are
+ * legitimately multiple different API coding contexts which ultimately might
+ * want to have different sets of classes (or different name bindings even if
+ * the classes overlap).
  */
-export default class Regsitry {
+export default class Regsitry extends Singleton {
   /** The "class" tag used for regular arrays. */
   static get ARRAY_TAG() {
     return ARRAY_TAG;
+  }
+
+  /**
+   * Constructs the instance.
+   */
+  constructor() {
+    super();
+
+    /**
+     * Map of registered class names to their respective classes. **Note:** The
+     * constructor argument prevents the `array` tag from getting improperly
+     * registered (by client code).
+     */
+    this._registry = new Map([[ARRAY_TAG, null]]);
   }
 
   /**
@@ -36,16 +49,16 @@ export default class Regsitry {
    *
    * @param {object} clazz The class to register.
    */
-  static register(clazz) {
+  register(clazz) {
     const apiName = TString.check(clazz.API_NAME);
     TFunction.check(clazz.fromApi);
     TFunction.check(clazz.prototype.toApi);
 
-    if (THE_CLASSES.get(apiName)) {
+    if (this._registry.get(apiName)) {
       throw new Error(`Cannot re-register class name \`${apiName}\`.`);
     }
 
-    THE_CLASSES.set(apiName, clazz);
+    this._registry.set(apiName, clazz);
   }
 
   /**
@@ -55,8 +68,8 @@ export default class Regsitry {
    * @param {string} name The class name.
    * @returns {class} The class that was registered under the given name.
    */
-  static find(name) {
-    const result = THE_CLASSES.get(name);
+  find(name) {
+    const result = this._registry.get(name);
 
     if (!result) {
       throw new Error(`No class registered with name \`${name}\`.`);

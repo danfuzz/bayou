@@ -2,12 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { UtilityClass } from 'util-common-base';
+
 import TypeError from './TypeError';
 
 /**
  * Type checker for type `Boolean`.
  */
-export default class TBoolean {
+export default class TBoolean extends UtilityClass {
   /**
    * Checks a value of type `Boolean`.
    *

@@ -2,13 +2,19 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { UtilityClass } from 'util-common';
+
 import Registry from './Registry';
 
 /**
  * Decoding of values that had been transpored over the API (or were read in
  * from disk or databases).
+ *
+ * **TODO:** If and when `Registry` stops being a singleton, this class should
+ * correspondingly stop being a utility class, since it will no longer be the
+ * case that there is a unique registry to query.
  */
-export default class Decoder {
+export default class Decoder extends UtilityClass {
   /**
    * Converts JSON-encoded text to a usable value. See `decode()` for
    * details.
@@ -117,7 +123,7 @@ export default class Decoder {
    * @returns {object} The converted value.
    */
   static _decodeInstance(tag, payload) {
-    const clazz = Registry.find(tag);
+    const clazz = Registry.theOne.find(tag);
     const args = Decoder._decodeArray(payload);
 
     if (!clazz) {

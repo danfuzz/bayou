@@ -11,12 +11,12 @@ import ProductInfo from './ProductInfo';
  */
 export default class ServerEnv {
   /**
-   * Initializes this module. This sets up the info for the `Dirs` class,
-   * sets up the PID file, and gathers the product metainfo.
+   * Initializes this module. This sets up the info for the `Dirs` class, sets
+   * up the PID file, and gathers the product metainfo.
    */
   static init() {
-    Dirs.init();
-    PidFile.init(Dirs.BASE_DIR);
-    ProductInfo.init();
+    Dirs.theOne;
+    PidFile.theOne;
+    ProductInfo.theOne;
   }
 }

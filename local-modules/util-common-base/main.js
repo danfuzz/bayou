@@ -3,5 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import ObjectUtil from './ObjectUtil';
+import UtilityClass from './UtilityClass';
 
-export { ObjectUtil };
+export { ObjectUtil, UtilityClass };

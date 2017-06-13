@@ -3,11 +3,12 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TypeError } from 'typecheck';
+import { UtilityClass } from 'util-common';
 
 /**
  * Type checker for type `Buffer`.
  */
-export default class TBuffer {
+export default class TBuffer extends UtilityClass {
   /**
    * Checks a value of type `Buffer`.
    *

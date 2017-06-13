@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { UtilityClass } from 'util-common-base';
+
 /**
  * Map of close codes to nominally official constant names. See
  * <https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent>.
@@ -25,10 +27,8 @@ const CLOSE_CODES = {
 
 /**
  * Translator of websocket status codes to human-oriented strings.
- *
- * **Note:** This class is not intended to be instantiated.
  */
-export default class WebsocketCodes {
+export default class WebsocketCodes extends UtilityClass {
   /**
    * Get a friendly string for the given close reason code. This will always
    * include the number and will also include the name if known.

@@ -7,7 +7,7 @@ import chaiAsPromised from 'chai-as-promised';
 import { assert } from 'chai';
 
 import { Logger } from 'see-all';
-import { PromDelay } from 'util-common';
+import { PromDelay, UtilityClass } from 'util-common';
 
 // If we tweak the Webpack config to point the module `mocha` at the browser-ish
 // build, then the following `import` will cause `window.mocha` to be defined.
@@ -29,7 +29,7 @@ chai.use(chaiAsPromised);
 /**
  * Client-side helper for setting up and running test code.
  */
-export default class Tests {
+export default class Tests extends UtilityClass {
   /**
    * Runs all of the tests.
    *

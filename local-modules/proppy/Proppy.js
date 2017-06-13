@@ -4,6 +4,8 @@
 
 import fs from 'fs';
 
+import { UtilityClass } from 'util-common';
+
 /**
  * Property file reader. This accepts a syntax which is similar to traditional
  * Java `.properties` files, except considerably simpler, more
@@ -34,7 +36,7 @@ import fs from 'fs';
  * The result of parsing a property file is always a frozen object which maps
  * `<key>` to `<value>` for each such pair defined in the file.
  */
-export default class Proppy {
+export default class Proppy extends UtilityClass {
   /**
    * Reads a property file from the given buffer.
    *

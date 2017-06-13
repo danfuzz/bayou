@@ -4,6 +4,7 @@
 
 import { Hooks } from 'hooks-server';
 import { TypeError } from 'typecheck';
+import { UtilityClass } from 'util-common';
 
 /**
  * Type representation of file IDs. The values themselves are always just
@@ -20,7 +21,7 @@ import { TypeError } from 'typecheck';
  * * It is possible (though not as of this writing done) for there to be files
  *   in the system that do _not_ correspond to exposed documents.
  */
-export default class FileId {
+export default class FileId extends UtilityClass {
   /**
    * Checks a value of type `FileId`.
    *

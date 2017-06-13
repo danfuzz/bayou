@@ -8,13 +8,10 @@ import { describe, it } from 'mocha';
 import { ProductInfo } from 'server-env';
 import { TObject } from 'typecheck';
 
-// see comment below for why this is commented out
-//import { PidFile } from 'server-env';
-
 describe('server-env/ProductInfo', () => {
   describe('.INFO', () => {
     it('should return an object full of product info', () => {
-      const info = ProductInfo.INFO;
+      const info = ProductInfo.theOne.INFO;
 
       // TODO: This list of keys is currently an amalgam of those from Bayou
       // and those from a privately-used overlay. Ugh. Not good. This should

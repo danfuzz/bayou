@@ -3,12 +3,13 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { RevisionNumber } from 'doc-common';
+import { UtilityClass } from 'util-common';
 
 /**
  * Utility class that just provides the common `StoragePath` strings used
  * by the document storage format.
  */
-export default class Paths {
+export default class Paths extends UtilityClass {
   /** {string} `StoragePath` string for the document format version. */
   static get FORMAT_VERSION() {
     return '/format_version';

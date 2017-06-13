@@ -29,7 +29,7 @@ export default class LocalContentStore extends BaseContentStore {
     this._files = new Map();
 
     /** {string} The directory for content storage. */
-    this._dir = path.resolve(Dirs.VAR_DIR, 'content');
+    this._dir = path.resolve(Dirs.theOne.VAR_DIR, 'content');
 
     /**
      * {boolean} `true` iff the content storage directory is known to exist. Set

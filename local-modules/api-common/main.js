@@ -10,7 +10,7 @@ import Registry from './Registry';
 import SplitKey from './SplitKey';
 
 // Register classes with the API.
-Registry.register(Message);
-Registry.register(SplitKey);
+Registry.theOne.register(Message);
+Registry.theOne.register(SplitKey);
 
 export { BaseKey, Decoder, Encoder, Message, Registry, SplitKey };

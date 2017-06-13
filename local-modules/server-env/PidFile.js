@@ -6,37 +6,34 @@ import fs from 'fs';
 import path from 'path';
 
 import { Logger } from 'see-all';
+import { Singleton } from 'util-common';
 
 import Dirs from './Dirs';
 
 /** Logger. */
 const log = new Logger('pid');
 
-/** Path for the PID file. Set in `init()`. */
-let pidPath = null;
-
 /**
  * This writes a PID file when `init()` is called, and tries to remove it when
  * the app is shutting down. This clas is _not_ meant to be instantiated.
  */
-export default class PidFile {
+export default class PidFile extends Singleton {
   /**
    * Write the PID file, and arrange for its timely erasure.
    */
-  static init() {
-    if (pidPath !== null) {
-      throw new Error('Already set up.');
-    }
+  constructor() {
+    super();
 
-    pidPath = path.resolve(Dirs.VAR_DIR, 'pid.txt');
+    /** {string} Path for the PID file. */
+    this._pidPath = path.resolve(Dirs.theOne.VAR_DIR, 'pid.txt');
 
     // Erase the file on exit.
-    process.once('exit',    PidFile._erasePid);
-    process.once('SIGINT',  PidFile._handleSignal.bind(null, 'SIGINT'));
-    process.once('SIGTERM', PidFile._handleSignal.bind(null, 'SIGTERM'));
+    process.once('exit',    this._erasePid.bind(this));
+    process.once('SIGINT',  this._handleSignal.bind(this, 'SIGINT'));
+    process.once('SIGTERM', this._handleSignal.bind(this, 'SIGTERM'));
 
     // Write the PID file.
-    fs.writeFileSync(pidPath, `${process.pid}\n`);
+    fs.writeFileSync(this._pidPath, `${process.pid}\n`);
 
     log.info(`PID: ${process.pid}`);
   }
@@ -47,18 +44,18 @@ export default class PidFile {
    *
    * @param {string} id Signal ID.
    */
-  static _handleSignal(id) {
+  _handleSignal(id) {
     log.info(`Received signal: ${id}`);
-    PidFile._erasePid();
+    this._erasePid();
     process.kill(process.pid, id);
   }
 
   /**
    * Erases the PID file if it exists.
    */
-  static _erasePid() {
+  _erasePid() {
     try {
-      fs.unlinkSync(pidPath);
+      fs.unlinkSync(this._pidPath);
       log.info(`Removed PID file.`);
     } catch (e) {
       // Ignore errors. We're about to exit anyway.

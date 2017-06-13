@@ -4,6 +4,7 @@
   "main": "main.js",
 
   "dependencies": {
-    "typecheck": "local"
+    "typecheck": "local",
+    "util-common": "local"
   }
 }

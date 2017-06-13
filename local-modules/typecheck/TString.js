@@ -4,12 +4,14 @@
 
 import url from 'url';
 
+import { UtilityClass } from 'util-common-base';
+
 import TypeError from './TypeError';
 
 /**
  * Type checker for type `String`.
  */
-export default class TString {
+export default class TString extends UtilityClass {
   /**
    * Checks a value of type `String`. Optionally validates contents against
    * a regex.

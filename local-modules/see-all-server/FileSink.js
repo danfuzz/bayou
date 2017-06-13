@@ -22,7 +22,7 @@ export default class FileSink {
     /** {string} Path of the file to log to. */
     this._path = path;
 
-    SeeAll.add(this);
+    SeeAll.theOne.add(this);
   }
 
   /**

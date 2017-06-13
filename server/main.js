@@ -103,7 +103,7 @@ function run() {
   ServerEnv.init();
 
   // A little spew to identify us.
-  const info = ProductInfo.INFO;
+  const info = ProductInfo.theOne.INFO;
   for (const k of Object.keys(info)) {
     log.info(`${k} = ${info[k]}`);
   }
@@ -111,7 +111,7 @@ function run() {
   if (devMode) {
     // We're in dev mode. This starts the system that live-syncs the client
     // source.
-    new DevMode().start();
+    DevMode.theOne.start();
   }
 
   Hooks.theOne.run();
@@ -157,7 +157,7 @@ function serverTest() {
 
 // Initialize logging.
 ServerSink.init();
-new FileSink(path.resolve(Dirs.LOG_DIR, 'general.log'));
+new FileSink(path.resolve(Dirs.theOne.LOG_DIR, 'general.log'));
 
 if (clientBundleMode) {
   clientBundle();

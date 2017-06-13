@@ -5,6 +5,7 @@
 import secureRandom from 'secure-random';
 
 import { TInt } from 'typecheck';
+import { UtilityClass } from 'util-common-base';
 
 import DataUtil from './DataUtil';
 
@@ -22,7 +23,7 @@ const ID_CHARS = 'abcdefghjkmnpqrstuwxyz0123456789';
  * platform's RNG. That module works both in client and server environments,
  * using appropriate underlying facilities in each.
  */
-export default class Random {
+export default class Random extends UtilityClass {
   /**
    * Gets a random byte value (range `0` to `255` inclusive).
    *

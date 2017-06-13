@@ -2,12 +2,13 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { UtilityClass } from 'util-common-base';
+
 /**
- * Construction of promises which become resolved after a specified delay.
- * This class isn't meant to be instantiable; it just exists to hold static
- * methods.
+ * Utility that constructs of promises which become resolved after a specified
+ * delay.
  */
-export default class PromDelay {
+export default class PromDelay extends UtilityClass {
   /**
    * Returns a promise that, after a specified delay, resolves to an indicated
    * value. If that value is _also_ a promise, then the result of this function

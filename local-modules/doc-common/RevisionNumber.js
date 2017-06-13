@@ -3,12 +3,13 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt, TypeError } from 'typecheck';
+import { UtilityClass } from 'util-common';
 
 /**
  * Type representation of revision numbers. The values themselves are always
  * just non-negative integers. This is just where the type checker code lives.
  */
-export default class RevisionNumber {
+export default class RevisionNumber extends UtilityClass {
   /**
    * Checks a value of type `RevisionNumber`.
    *

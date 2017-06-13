@@ -4,12 +4,13 @@
 
 import { Decoder, Encoder } from 'api-common';
 import { FrozenBuffer } from 'util-server';
+import { UtilityClass } from 'util-common';
 
 /**
  * Utility class for converting between arbitrary values and their stored
  * form as `FrozenBuffer`s.
  */
-export default class Coder {
+export default class Coder extends UtilityClass {
   /**
    * Encodes an arbitrary value using API coding, and converts it to a
    * `FrozenBuffer`.

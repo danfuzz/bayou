@@ -3,13 +3,14 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Dirs } from 'server-env';
+import { UtilityClass } from 'util-common';
 
 import Utils from './Utils';
 
 /**
  * Driver for the Mocha framework, for client tests.
  */
-export default class ClientTests {
+export default class ClientTests extends UtilityClass {
   /**
    * Returns a list of the test files for client modules that are used by the
    * product.
@@ -19,8 +20,8 @@ export default class ClientTests {
   static allTestFiles() {
     // TODO: Complain about modules that have no tests at all.
 
-    const moduleNames = Utils.localModulesIn(Dirs.CLIENT_DIR);
-    const testFiles = Utils.allTestFiles(Dirs.CLIENT_DIR, moduleNames);
+    const moduleNames = Utils.localModulesIn(Dirs.theOne.CLIENT_DIR);
+    const testFiles = Utils.allTestFiles(Dirs.theOne.CLIENT_DIR, moduleNames);
 
     return testFiles;
   }
