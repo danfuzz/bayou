@@ -27,10 +27,10 @@ export default class BaseContentStore extends Singleton {
    *
    * This implementation is a no-op. Subclasses may choose to override this if
    * there is any validation required beyond the syntactic validation of
-   * `DocumentId.check()`.
+   * `FileId.check()`.
    *
    * @param {string} fileId_unused The file ID to validate. Only ever passed
-   *   as a value that has been validated by `DocumentId.check()`.
+   *   as a value that has been validated by `FileId.check()`.
    * @throws {Error} Arbitrary error indicating an invalid file ID.
    */
   async _impl_checkFileId(fileId_unused) {

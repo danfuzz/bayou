@@ -80,7 +80,7 @@ export default class LocalFile extends BaseFile {
     this._log = log.withPrefix(`[${fileId}]`);
 
     this._log.info('Constructed.');
-    this._log.detail(`Path: ${this._docPath}`);
+    this._log.detail(`Path: ${this._storageDir}`);
   }
 
   /**

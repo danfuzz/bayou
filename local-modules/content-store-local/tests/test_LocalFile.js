@@ -33,28 +33,28 @@ describe('content-store-local/LocalFile', () => {
     // }, 2000);
   });
 
-  describe('constructor(fileId, docPath)', () => {
+  describe('constructor(fileId, filePath)', () => {
     it('should create a local dir for storing files at the specified path', () => {
-      const doc = new LocalFile('0', filePath());
+      const file = new LocalFile('0', filePath());
 
-      assert.isNotNull(doc);
+      assert.isNotNull(file);
     });
   });
 
   describe('create()', () => {
     it('should erase the file if called on a non-empty file', async () => {
-      const doc = new LocalFile('0', filePath());
+      const file = new LocalFile('0', filePath());
       const storagePath = '/abc';
       const value = FrozenBuffer.coerce('x');
 
       // Baseline assumption.
-      await doc.create();
-      await doc.opForceWrite(storagePath, value);
-      assert.strictEqual(await doc.pathReadOrNull(storagePath), value);
+      await file.create();
+      await file.opForceWrite(storagePath, value);
+      assert.strictEqual(await file.pathReadOrNull(storagePath), value);
 
       // The real test.
-      await doc.create();
-      assert.strictEqual(await doc.pathReadOrNull(storagePath), null);
+      await file.create();
+      assert.strictEqual(await file.pathReadOrNull(storagePath), null);
     });
   });
 });
