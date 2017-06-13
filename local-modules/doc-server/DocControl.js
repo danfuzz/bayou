@@ -55,14 +55,14 @@ export default class DocControl extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {BaseFile} docStorage The underlying document storage.
+   * @param {BaseFile} file The underlying document storage.
    * @param {FrozenBuffer} formatVersion Format version to expect and use.
    */
-  constructor(docStorage, formatVersion) {
+  constructor(file, formatVersion) {
     super();
 
     /** {BaseFile} Storage access for the document. */
-    this._doc = BaseFile.check(docStorage);
+    this._doc = BaseFile.check(file);
 
     /** {FrozenBuffer} The document format version to expect and use. */
     this._formatVersion = formatVersion;
