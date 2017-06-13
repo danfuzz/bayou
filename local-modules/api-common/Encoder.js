@@ -2,15 +2,19 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ObjectUtil } from 'util-common';
+import { ObjectUtil, UtilityClass } from 'util-common';
 
 import Registry from './Registry';
 
 /**
  * Encoding of values for transport over the API (or for storage on disk or in
  * databases).
+ *
+ * **TODO:** If and when `Registry` stops being a singleton, this class should
+ * correspondingly stop being a utility class, since it will no longer be the
+ * case that there is a unique registry to query.
  */
-export default class Encoder {
+export default class Encoder extends UtilityClass {
   /**
    * Converts an arbitrary value to JSON-encoded text. See `encode()` for
    * details.
