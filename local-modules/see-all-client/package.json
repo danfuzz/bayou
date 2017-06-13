@@ -4,6 +4,7 @@
   "main": "main.js",
 
   "dependencies": {
-    "see-all": "local"
+    "see-all": "local",
+    "util-common": "local"
   }
 }

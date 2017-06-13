@@ -28,7 +28,7 @@ export default class RecentSink {
     /** The log contents. */
     this._log = [];
 
-    SeeAll.add(this);
+    SeeAll.theOne.add(this);
   }
 
   /**
