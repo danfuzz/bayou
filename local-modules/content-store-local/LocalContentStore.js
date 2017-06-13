@@ -28,7 +28,7 @@ export default class LocalContentStore extends BaseContentStore {
     /** {Map<string, LocalFile>} Map from file IDs to file instances. */
     this._files = new Map();
 
-    /** {string} The directory for file storage. */
+    /** {string} The directory for content storage. */
     this._dir = path.resolve(Dirs.VAR_DIR, 'content');
 
     /**
