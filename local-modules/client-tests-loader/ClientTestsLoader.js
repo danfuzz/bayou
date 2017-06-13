@@ -3,11 +3,12 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ClientTests } from 'testing-server';
+import { UtilityClass } from 'util-common';
 
 /**
  * Webpack loader for the client test files.
  */
-export default class ClientTestsLoader {
+export default class ClientTestsLoader extends UtilityClass {
   /**
    * Load the synthesized client test file.
    *

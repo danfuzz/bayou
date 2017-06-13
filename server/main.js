@@ -111,7 +111,7 @@ function run() {
   if (devMode) {
     // We're in dev mode. This starts the system that live-syncs the client
     // source.
-    new DevMode().start();
+    DevMode.theOne.start();
   }
 
   Hooks.theOne.run();
