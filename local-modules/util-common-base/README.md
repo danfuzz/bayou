@@ -1,4 +1,4 @@
-util-base
+util-common-base
 =========
 
 Super-base utility functionality. This module only exists so as to avoid

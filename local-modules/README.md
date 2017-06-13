@@ -8,6 +8,9 @@ contexts.
 
 ### Module naming conventions
 
+* `<name>-base` &mdash; A module that is akin to a "base class," that is, a
+  module expected to be used primarily by defining another module which expands
+  on its behavior in some fashion.
 * `<name>-common` &mdash; A module that contains code that is meant to be
   equally useful on both client and server sides.
 * `<name>-client` &mdash; A module that is only meant to be used on the client.
