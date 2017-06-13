@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Hooks } from 'hooks-client';
+import { Singleton } from 'util-common';
 
 import QuillProm from './QuillProm';
 
@@ -30,7 +31,7 @@ let toolbarConfig = null;
  * Bottleneck for constructing Quill instances. This class exists merely to make
  * it easy to configure this behavior via an overlay.
  */
-export default class QuillMaker {
+export default class QuillMaker extends Singleton {
   /**
    * Makes an instance of `Quill`. More specifically, because we want to use
    * a promise chain to get at the edit events, this makes an instance of our
@@ -39,7 +40,7 @@ export default class QuillMaker {
    * @param {string} id DOM id of the element to attach to.
    * @returns {QuillProm} instance of `Quill`.
    */
-  static make(id) {
+  make(id) {
     if (toolbarConfig === null) {
       toolbarConfig = Object.freeze(
         Hooks.theOne.quillToolbarConfig(DEFAULT_TOOLBAR_CONFIG));
