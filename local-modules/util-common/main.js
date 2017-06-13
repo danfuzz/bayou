@@ -2,8 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ObjectUtil } from 'util-common-base';
-
 import CommonBase from './CommonBase';
 import DataUtil from './DataUtil';
 import DeferredLoader from './DeferredLoader';
@@ -20,7 +18,6 @@ export {
   DataUtil,
   DeferredLoader,
   JsonUtil,
-  ObjectUtil,
   PromCondition,
   PromDelay,
   PropertyIter,
@@ -28,3 +25,7 @@ export {
   Singleton,
   WebsocketCodes
 };
+
+// Client code is expected to get at the definitions from `util-common-base` via
+// this module. See README in `util-common-base` for details.
+export * from 'util-common-base';
