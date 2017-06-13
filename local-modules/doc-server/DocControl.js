@@ -61,8 +61,8 @@ export default class DocControl extends CommonBase {
   constructor(file, formatVersion) {
     super();
 
-    /** {BaseFile} Storage access for the document. */
-    this._doc = BaseFile.check(file);
+    /** {BaseFile} The underlying document storage. */
+    this._file = BaseFile.check(file);
 
     /** {FrozenBuffer} The document format version to expect and use. */
     this._formatVersion = formatVersion;
@@ -82,14 +82,14 @@ export default class DocControl extends CommonBase {
     this._changeCondition = new PromCondition(true);
 
     /** {Logger} Logger specific to this document's ID. */
-    this._log = log.withPrefix(`[${this._doc.id}]`);
+    this._log = log.withPrefix(`[${this._file.id}]`);
 
     this._log.detail('Constructed.');
   }
 
   /** {string} The ID of the document that this instance represents. */
   get id() {
-    return this._doc.id;
+    return this._file.id;
   }
 
   /**
@@ -107,20 +107,20 @@ export default class DocControl extends CommonBase {
 
     this._log.info('Creating document.');
 
-    await this._doc.create();
-    await this._doc.opNew(Paths.FORMAT_VERSION, this._formatVersion);
+    await this._file.create();
+    await this._file.opNew(Paths.FORMAT_VERSION, this._formatVersion);
 
     // Empty first change (per documented interface).
-    await this._doc.opNew(Paths.forRevNum(0), Coder.encode(DocumentChange.firstChange()));
+    await this._file.opNew(Paths.forRevNum(0), Coder.encode(DocumentChange.firstChange()));
 
     // The indicated `contents`, if any.
     if (contents !== null) {
       const change = new DocumentChange(1, Timestamp.now(), contents, null);
-      await this._doc.opNew(Paths.forRevNum(1), Coder.encode(change));
+      await this._file.opNew(Paths.forRevNum(1), Coder.encode(change));
     }
 
     const revNum = (contents === null) ? 0 : 1;
-    await this._doc.opNew(Paths.REVISION_NUMBER, Coder.encode(revNum));
+    await this._file.opNew(Paths.REVISION_NUMBER, Coder.encode(revNum));
 
     // Any cached snapshots are no longer valid.
     this._snapshots = new Map();
@@ -197,12 +197,12 @@ export default class DocControl extends CommonBase {
    * @returns {string} The validation status.
    */
   async validationStatus() {
-    if (!(await this._doc.exists())) {
+    if (!(await this._file.exists())) {
       return DocControl.STATUS_NOT_FOUND;
     }
 
     const formatVersion =
-      await this._doc.pathReadOrNull(Paths.FORMAT_VERSION);
+      await this._file.pathReadOrNull(Paths.FORMAT_VERSION);
 
     if (formatVersion === null) {
       this._log.info('Corrupt document: Missing format version.');
@@ -217,7 +217,7 @@ export default class DocControl extends CommonBase {
     }
 
     const revNumEncoded =
-      await this._doc.pathReadOrNull(Paths.REVISION_NUMBER);
+      await this._file.pathReadOrNull(Paths.REVISION_NUMBER);
 
     if (revNumEncoded === null) {
       this._log.info('Corrupt document: Missing revision number.');
@@ -545,7 +545,7 @@ export default class DocControl extends CommonBase {
     const revNum = RevisionNumber.after(baseRevNum);
     const change = new DocumentChange(revNum, Timestamp.now(), delta, authorId);
     const writeResult =
-      await this._doc.opNew(Paths.forRevNum(revNum), Coder.encode(change));
+      await this._file.opNew(Paths.forRevNum(revNum), Coder.encode(change));
 
     if (!writeResult) {
       // We lost an append race.
@@ -570,7 +570,7 @@ export default class DocControl extends CommonBase {
    * @returns {DocumentChange} The corresponding change.
    */
   async _changeRead(revNum) {
-    const encoded = await this._doc.pathRead(Paths.forRevNum(revNum));
+    const encoded = await this._file.pathRead(Paths.forRevNum(revNum));
     return DocumentChange.check(Coder.decode(encoded));
   }
 
@@ -581,7 +581,7 @@ export default class DocControl extends CommonBase {
    *   set.
    */
   async _currentRevNum() {
-    const encoded = await this._doc.pathReadOrNull(Paths.REVISION_NUMBER);
+    const encoded = await this._file.pathReadOrNull(Paths.REVISION_NUMBER);
     return (encoded === null) ? null : Coder.decode(encoded);
   }
 
@@ -594,7 +594,7 @@ export default class DocControl extends CommonBase {
   async _writeRevNum(revNum) {
     RevisionNumber.check(revNum);
 
-    await this._doc.opForceWrite(Paths.REVISION_NUMBER, Coder.encode(revNum));
+    await this._file.opForceWrite(Paths.REVISION_NUMBER, Coder.encode(revNum));
     return true;
   }
 }
