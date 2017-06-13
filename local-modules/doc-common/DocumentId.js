@@ -22,7 +22,7 @@ export default class DocumentId {
   static check(value) {
     if (   (typeof value !== 'string')
         || (value.length === 0)
-        || !Hooks.isDocumentId(value)) {
+        || !Hooks.theOne.isDocumentId(value)) {
       return TypeError.badValue(value, 'DocumentId');
     }
 

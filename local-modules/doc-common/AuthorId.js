@@ -29,7 +29,7 @@ export default class AuthorId {
 
     if (   (typeof value !== 'string')
         || (value.length === 0)
-        || !Hooks.isAuthorId(value)) {
+        || !Hooks.theOne.isAuthorId(value)) {
       return TypeError.badValue(value, 'AuthorId');
     }
 

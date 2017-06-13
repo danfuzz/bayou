@@ -63,13 +63,13 @@ export default class Hooks {
    * This method is only ever called with a non-empty string.
    *
    * The default implementation of this method is to defer to the hook
-   * `hooks-common.Hooks.isDocumentId()`.
+   * `hooks-common.Hooks.theOne.isDocumentId()`.
    *
    * @param {string} id The (alleged) file ID to check.
    * @returns {boolen} `true` iff `id` is syntactically valid.
    */
   static isFileId(id) {
-    return HooksCommon.isDocumentId(id);
+    return HooksCommon.theOne.isDocumentId(id);
   }
 
   /**

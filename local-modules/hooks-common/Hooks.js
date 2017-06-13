@@ -2,12 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Singleton } from 'util-common';
+
 /**
  * Hooks for common client and server needs. This is meant to make it easy for
  * complete products to customize Bayou without overlaying the original
  * source...except for this file (and other similar ones).
  */
-export default class Hooks {
+export default class Hooks extends Singleton {
   /**
    * Checks whether the given value is syntactically valid as an author ID.
    * This method is only ever called with a non-empty string.
@@ -19,7 +21,7 @@ export default class Hooks {
    * @param {string} id The (alleged) author ID to check.
    * @returns {boolen} `true` iff `id` is syntactically valid.
    */
-  static isAuthorId(id) {
+  isAuthorId(id) {
     return /^[-_a-zA-Z0-9]{1,32}$/.test(id);
   }
 
@@ -34,7 +36,7 @@ export default class Hooks {
    * @param {string} id The (alleged) document ID to check.
    * @returns {boolen} `true` iff `id` is syntactically valid.
    */
-  static isDocumentId(id) {
+  isDocumentId(id) {
     return /^[-_a-zA-Z0-9]{1,32}$/.test(id);
   }
 }
