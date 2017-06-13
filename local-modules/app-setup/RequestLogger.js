@@ -5,6 +5,8 @@
 import chalk from 'chalk';
 import morgan from 'morgan';
 
+import { UtilityClass } from 'util-common';
+
 /**
  * HTTP request logging functions. This includes logging to an HTTP `access.log`
  * type file in a reasonably-usual format as well as logging to a developer
@@ -12,7 +14,7 @@ import morgan from 'morgan';
  * built-in `dev` style, intended to produce concise logs for display on a
  * developer's console.
  */
-export default class RequestLogger {
+export default class RequestLogger extends UtilityClass {
   /**
    * Add all the loggers for the given application.
    *

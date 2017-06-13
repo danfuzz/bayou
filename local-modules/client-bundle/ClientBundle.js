@@ -9,7 +9,7 @@ import webpack from 'webpack';
 
 import { Logger } from 'see-all';
 import { Dirs } from 'server-env';
-import { JsonUtil } from 'util-common';
+import { JsonUtil, Singleton } from 'util-common';
 
 import ProgressMessage from './ProgressMessage';
 
@@ -185,11 +185,13 @@ const watchOptions = {
  * Wrapper around Webpack which can do both one-off builds as well as run
  * Webpack's "dev mode." Includes a request handler for hookup to Express.
  */
-export default class ClientBundle {
+export default class ClientBundle extends Singleton {
   /**
-   * Constructs an instance.
+   * Constructs the instance.
    */
   constructor() {
+    super();
+
     /**
      * {memory_fs} Memory FS used to hold the immediate results of compilation.
      */
