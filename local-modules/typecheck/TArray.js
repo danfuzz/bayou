@@ -2,12 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { UtilityClass } from 'util-common-base';
+
 import TypeError from './TypeError';
 
 /**
  * Type checker for type `Array`.
  */
-export default class TArray {
+export default class TArray extends UtilityClass {
   /**
    * Checks a value of type `Array`. Optionally checks the type of each element.
    *

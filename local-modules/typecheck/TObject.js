@@ -2,14 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ObjectUtil } from 'util-common-base';
+import { ObjectUtil, UtilityClass } from 'util-common-base';
 
 import TypeError from './TypeError';
 
 /**
  * Type checker for type `Object`.
  */
-export default class TObject {
+export default class TObject extends UtilityClass {
   /**
    * Checks a value of type `Object`.
    *

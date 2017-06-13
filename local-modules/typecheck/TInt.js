@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { UtilityClass } from 'util-common-base';
+
 import TypeError from './TypeError';
 
 /**
@@ -11,7 +13,7 @@ import TypeError from './TypeError';
  * class follows the module's convention of using a `T` name prefix, so as to
  * keep things more straightforward.
  */
-export default class TInt {
+export default class TInt extends UtilityClass {
   /**
    * Checks a value of type `Int`.
    *
