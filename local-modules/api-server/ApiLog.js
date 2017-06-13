@@ -23,7 +23,7 @@ export default class ApiLog extends Singleton {
     this._console = new Logger('api');
 
     /** {string} Path of API log file. */
-    this._path = path.resolve(Dirs.LOG_DIR, 'api.log');
+    this._path = path.resolve(Dirs.theOne.LOG_DIR, 'api.log');
 
     Object.freeze(this);
   }

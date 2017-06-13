@@ -27,7 +27,7 @@ export default class ProductInfo {
     }
 
     productInfo = Proppy.parseFile(
-      path.resolve(Dirs.BASE_DIR, 'product-info.txt'));
+      path.resolve(Dirs.theOne.BASE_DIR, 'product-info.txt'));
   }
 
   /**

@@ -5,6 +5,7 @@
 
   "dependencies": {
     "proppy": "local",
-    "see-all": "local"
+    "see-all": "local",
+    "util-common": "local"
   }
 }

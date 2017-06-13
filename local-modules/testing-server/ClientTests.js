@@ -20,8 +20,8 @@ export default class ClientTests extends UtilityClass {
   static allTestFiles() {
     // TODO: Complain about modules that have no tests at all.
 
-    const moduleNames = Utils.localModulesIn(Dirs.CLIENT_DIR);
-    const testFiles = Utils.allTestFiles(Dirs.CLIENT_DIR, moduleNames);
+    const moduleNames = Utils.localModulesIn(Dirs.theOne.CLIENT_DIR);
+    const testFiles = Utils.allTestFiles(Dirs.theOne.CLIENT_DIR, moduleNames);
 
     return testFiles;
   }

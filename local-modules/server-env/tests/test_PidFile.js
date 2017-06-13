@@ -21,9 +21,9 @@ describe('server-env/PidFile', () => {
       // and that call can't be made more than once. So we are doing kind of a
       // bad testing thing and using intimate knowledge of how `PidFile` works
       // rather than relying on documented API behavior.
-      //PidFile.init(Dirs.BASE_DIR);
+      //PidFile.init(Dirs.theOne.BASE_DIR);
 
-      const varDir = Dirs.VAR_DIR;
+      const varDir = Dirs.theOne.VAR_DIR;
       const pidFilePath = path.join(varDir, 'pid.txt');
 
       assert.isTrue(fs.existsSync(pidFilePath));

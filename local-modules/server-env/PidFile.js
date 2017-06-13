@@ -28,7 +28,7 @@ export default class PidFile {
       throw new Error('Already set up.');
     }
 
-    pidPath = path.resolve(Dirs.VAR_DIR, 'pid.txt');
+    pidPath = path.resolve(Dirs.theOne.VAR_DIR, 'pid.txt');
 
     // Erase the file on exit.
     process.once('exit',    PidFile._erasePid);

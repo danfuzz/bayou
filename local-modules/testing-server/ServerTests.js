@@ -29,8 +29,8 @@ export default class ServerTests extends UtilityClass {
   static runAll(callback = null) {
     // TODO: Complain about modules that have no tests at all.
 
-    const moduleNames = Utils.localModulesIn(Dirs.SERVER_DIR);
-    const testFiles = Utils.allTestFiles(Dirs.SERVER_DIR, moduleNames);
+    const moduleNames = Utils.localModulesIn(Dirs.theOne.SERVER_DIR);
+    const testFiles = Utils.allTestFiles(Dirs.theOne.SERVER_DIR, moduleNames);
     const mocha = new Mocha();
 
     for (const f of testFiles) {

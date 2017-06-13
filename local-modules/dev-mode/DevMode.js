@@ -36,7 +36,7 @@ export default class DevMode {
    */
   constructor() {
     /** Base product output directory. */
-    this._outDir = Dirs.BASE_DIR;
+    this._outDir = Dirs.theOne.BASE_DIR;
     log.info('Product directory:', this._outDir);
 
     /** The mappings from source to target directories, for the client code. */

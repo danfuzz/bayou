@@ -22,7 +22,7 @@ const log = new Logger('client-bundle');
  */
 const clientPackage =
   JsonUtil.parseFrozen(
-    fs.readFileSync(path.resolve(Dirs.CLIENT_DIR, 'package.json')));
+    fs.readFileSync(path.resolve(Dirs.theOne.CLIENT_DIR, 'package.json')));
 
 /**
  * Options passed to the `webpack` compiler constructor. Of particular note,
@@ -41,16 +41,16 @@ const clientPackage =
  * for details and discussion.
  */
 const webpackOptions = {
-  context: Dirs.SERVER_DIR, // Used for resolving loaders and the like.
+  context: Dirs.theOne.SERVER_DIR, // Used for resolving loaders and the like.
   devtool: '#inline-source-map',
   entry: {
     main: [
       'babel-polyfill',
-      path.resolve(Dirs.CLIENT_DIR, clientPackage.main)
+      path.resolve(Dirs.theOne.CLIENT_DIR, clientPackage.main)
     ],
     test: [
       'babel-polyfill',
-      path.resolve(Dirs.CLIENT_DIR, clientPackage.testMain)
+      path.resolve(Dirs.theOne.CLIENT_DIR, clientPackage.testMain)
     ]
   },
   output: {
@@ -71,17 +71,17 @@ const webpackOptions = {
       // a prebuilt bundle. We rewrite it here to refer instead to the unbundled
       // source.
       'quill':
-        path.resolve(Dirs.CLIENT_DIR, 'node_modules/quill/quill.js'),
+        path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/quill/quill.js'),
 
       // Likewise, `parchment`.
       'parchment':
-        path.resolve(Dirs.CLIENT_DIR, 'node_modules/parchment/src/parchment.ts'),
+        path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/parchment/src/parchment.ts'),
 
       // On the client side, we use a built-in module called `test-all` as a
       // substitute for `mocha`. This alias makes it so that testing code can
       // still write `import ... from 'mocha';`.
       'mocha':
-        path.resolve(Dirs.CLIENT_DIR, 'node_modules/test-all')
+        path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/test-all')
     },
     // All the extensions listed here except `.ts` are in the default list.
     // Webpack doesn't offer a way to simply add to the defaults (alas).

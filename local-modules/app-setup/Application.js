@@ -80,7 +80,7 @@ export default class Application {
   _addRequestLogging() {
     // Stream to write to, when logging to a file.
     const accessStream = fs.createWriteStream(
-      path.resolve(Dirs.LOG_DIR, 'access.log'),
+      path.resolve(Dirs.theOne.LOG_DIR, 'access.log'),
       { flags: 'a' });
 
     RequestLogger.addLoggers(this._app, log.infoStream, accessStream);
@@ -98,7 +98,7 @@ export default class Application {
     // Map Quill files into `/static/quill`. This is used for CSS files but not
     // for the JS code; the JS code is included in the overall JS bundle file.
     app.use('/static/quill',
-      express.static(path.resolve(Dirs.CLIENT_DIR, 'node_modules/quill/dist')));
+      express.static(path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/quill/dist')));
 
     // Use the client bundler (which uses Webpack) to serve JS bundles. The
     // `:name` parameter gets interpreted by the client bundler to select which
@@ -108,7 +108,7 @@ export default class Application {
     // Find HTML files and other static assets in `client/assets`. This includes
     // the top-level `index.html` and `favicon`, as well as stuff under
     // `static/`.
-    app.use('/', express.static(path.resolve(Dirs.CLIENT_DIR, 'assets')));
+    app.use('/', express.static(path.resolve(Dirs.theOne.CLIENT_DIR, 'assets')));
 
     // Use the `api-server` module to handle POST and websocket requests at
     // `/api`.

@@ -15,8 +15,7 @@ export default class ServerEnv {
    * sets up the PID file, and gathers the product metainfo.
    */
   static init() {
-    Dirs.init();
-    PidFile.init(Dirs.BASE_DIR);
+    PidFile.init(Dirs.theOne.BASE_DIR);
     ProductInfo.init();
   }
 }
