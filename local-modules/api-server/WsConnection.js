@@ -20,7 +20,7 @@ export default class WsConnection extends Connection {
    * @param {Context} context The binding context to provide access to.
    */
   constructor(ws, req, context) {
-    super(context, Hooks.baseUrlFromRequest(req));
+    super(context, Hooks.theOne.baseUrlFromRequest(req));
 
     /** {WebSocket} The websocket for the client connection. */
     this._ws = ws;

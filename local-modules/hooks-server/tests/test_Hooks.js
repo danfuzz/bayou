@@ -13,7 +13,7 @@ describe('hooks-server/Hooks', () => {
   describe('baseUrlFromRequest(request)', () => {
     it('should return a new URL referencing just the host with no path, query args, or anchors', () => {
       const request = Mocks.nodeRequest();
-      const uri = Hooks.baseUrlFromRequest(request);
+      const uri = Hooks.theOne.baseUrlFromRequest(request);
 
       assert.strictEqual(uri, 'http://example.com');
     });
@@ -21,37 +21,37 @@ describe('hooks-server/Hooks', () => {
 
   describe('.bearerTokens', () => {
     it('should return an instance of `BearerTokens`', () => {
-      assert.instanceOf(Hooks.bearerTokens, BearerTokens);
+      assert.instanceOf(Hooks.theOne.bearerTokens, BearerTokens);
     });
   });
 
   describe('.contentStore', () => {
     it('should return an instance of BaseContentStore', () => {
-      assert.instanceOf(Hooks.contentStore, BaseContentStore);
+      assert.instanceOf(Hooks.theOne.contentStore, BaseContentStore);
     });
   });
 
   describe('isFileId(id)', () => {
     it('should accept 32-character alphanum ASCII strings', () => {
-      assert.isTrue(Hooks.isFileId('123abc7890ABC456789012'));
+      assert.isTrue(Hooks.theOne.isFileId('123abc7890ABC456789012'));
     });
 
     it('should allow underscores and hyphens', () => {
-      assert.isTrue(Hooks.isFileId('123456789_123456789-12'));
+      assert.isTrue(Hooks.theOne.isFileId('123456789_123456789-12'));
     });
 
     it('should not allow non-ASCII characters', () => {
-      assert.isFalse(Hooks.isFileId('123456789•123456789•12'));
+      assert.isFalse(Hooks.theOne.isFileId('123456789•123456789•12'));
     });
 
     it('should not allow non-alphanum characters', () => {
-      assert.isFalse(Hooks.isFileId('123456789\t123456789+12'));
+      assert.isFalse(Hooks.theOne.isFileId('123456789\t123456789+12'));
     });
   });
 
   describe('.listenPort', () => {
     it('should return the documented value', () => {
-      assert.strictEqual(Hooks.listenPort, 8080);
+      assert.strictEqual(Hooks.theOne.listenPort, 8080);
     });
   });
 });
