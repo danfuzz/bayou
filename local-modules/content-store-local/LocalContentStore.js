@@ -12,7 +12,7 @@ import { Dirs } from 'server-env';
 import LocalFile from './LocalFile';
 
 /** {Logger} Logger for this module. */
-const log = new Logger('local-doc');
+const log = new Logger('local-content');
 
 /**
  * Content storage implementation that stores everything in the
@@ -26,18 +26,18 @@ export default class LocalContentStore extends BaseContentStore {
     super();
 
     /** {Map<string, LocalFile>} Map from file IDs to file instances. */
-    this._docs = new Map();
+    this._files = new Map();
 
-    /** {string} The directory for file storage. */
-    this._dir = path.resolve(Dirs.VAR_DIR, 'docs');
+    /** {string} The directory for content storage. */
+    this._dir = path.resolve(Dirs.VAR_DIR, 'content');
 
     /**
-     * {boolean} `true` iff the file storage directory is known to exist. Set to
-     * `true` in `_ensureDocDirectory()`.
+     * {boolean} `true` iff the content storage directory is known to exist. Set
+     * to `true` in `_ensureContentDirectory()`.
      */
     this._ensuredDir = false;
 
-    log.info(`Content storage directory: ${this._dir}`);
+    log.info(`Content directory: ${this._dir}`);
   }
 
   /**
@@ -47,16 +47,16 @@ export default class LocalContentStore extends BaseContentStore {
    * @returns {BaseFile} Accessor for the file in question.
    */
   async _impl_getFile(fileId) {
-    const already = this._docs.get(fileId);
+    const already = this._files.get(fileId);
 
     if (already) {
       return already;
     }
 
-    await this._ensureDocDirectory();
+    await this._ensureContentDirectory();
 
     const result = new LocalFile(fileId, this._filePath(fileId));
-    this._docs.set(fileId, result);
+    this._files.set(fileId, result);
     return result;
   }
 
@@ -78,16 +78,16 @@ export default class LocalContentStore extends BaseContentStore {
    * break if something removes the file storage directory without restarting
    * the server.
    */
-  async _ensureDocDirectory() {
+  async _ensureContentDirectory() {
     if (this._ensuredDir) {
       return;
     }
 
     if (await afs.exists(this._dir)) {
-      log.detail('File storage directory already exists.');
+      log.detail('Content directory already exists.');
     } else {
       await afs.mkdir(this._dir);
-      log.info('Created file storage directory.');
+      log.info('Created content directory.');
     }
 
     this._ensuredDir = true;

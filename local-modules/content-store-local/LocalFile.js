@@ -12,7 +12,7 @@ import { FrozenBuffer } from 'util-server';
 
 
 /** {Logger} Logger for this module. */
-const log = new Logger('local-doc');
+const log = new Logger('local-file');
 
 /**
  * {int} How long to wait (in msec) after a file becomes dirty and before it
@@ -30,15 +30,15 @@ export default class LocalFile extends BaseFile {
    * Constructs an instance.
    *
    * @param {string} fileId The ID of the file this instance represents.
-   * @param {string} docPath The filesystem path for file storage.
+   * @param {string} filePath The filesystem path for file storage.
    */
-  constructor(fileId, docPath) {
+  constructor(fileId, filePath) {
     super(fileId);
 
     /**
      * {string} Path to the directory containing stored values for this file.
      */
-    this._storageDir = docPath;
+    this._storageDir = filePath;
 
     /**
      * {Map<string,FrozenBuffer>|null} Map from `StoragePath` strings to
@@ -79,8 +79,7 @@ export default class LocalFile extends BaseFile {
     /** {Logger} Logger specific to this file's ID. */
     this._log = log.withPrefix(`[${fileId}]`);
 
-    this._log.info('Constructed.');
-    this._log.detail(`Path: ${this._docPath}`);
+    this._log.info(`Path: ${this._storageDir}`);
   }
 
   /**
