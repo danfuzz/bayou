@@ -12,7 +12,7 @@ import MockApiObject from './MockApiObject';
 describe('api-common/Decoder', () => {
   before(() => {
     try {
-      Registry.register(MockApiObject);
+      Registry.theOne.register(MockApiObject);
     } catch (e) {
       // nothing to do here, the try/catch is just in case some other test
       // file has already registered the mock API object.

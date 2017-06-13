@@ -83,31 +83,31 @@ describe('api-common/Registry', () => {
 
   describe('register(class)', () => {
     it('should require classes with an APP_NAME property, fromName() class method, and toApi() instance method', () => {
-      assert.throws(() => Registry.register(true));
-      assert.throws(() => Registry.register(37));
-      assert.throws(() => Registry.register('this better not work!'));
-      assert.throws(() => Registry.register({ }));
-      assert.throws(() => Registry.register([]));
-      assert.throws(() => Registry.register(null));
-      assert.throws(() => Registry.register(undefined));
-      assert.throws(() => Registry.register(NoApiName));
-      assert.throws(() => Registry.register(NoToApi));
-      assert.throws(() => Registry.register(NoFromApi));
+      assert.throws(() => Registry.theOne.register(true));
+      assert.throws(() => Registry.theOne.register(37));
+      assert.throws(() => Registry.theOne.register('this better not work!'));
+      assert.throws(() => Registry.theOne.register({ }));
+      assert.throws(() => Registry.theOne.register([]));
+      assert.throws(() => Registry.theOne.register(null));
+      assert.throws(() => Registry.theOne.register(undefined));
+      assert.throws(() => Registry.theOne.register(NoApiName));
+      assert.throws(() => Registry.theOne.register(NoToApi));
+      assert.throws(() => Registry.theOne.register(NoFromApi));
 
-      assert.doesNotThrow(() => Registry.register(RegistryTestApiObject));
+      assert.doesNotThrow(() => Registry.theOne.register(RegistryTestApiObject));
     });
   });
 
   describe('find(className)', () => {
     it('should throw an error if an unregistered class is requested', () => {
       const randomName = Random.hexByteString(32);
-      assert.throws(() => Registry.find(randomName));
+      assert.throws(() => Registry.theOne.find(randomName));
     });
 
     it('should return the named class if it is registered', () => {
-      Registry.register(FindTestApiObject);
+      Registry.theOne.register(FindTestApiObject);
 
-      const testClass = Registry.find(FindTestApiObject.API_NAME);
+      const testClass = Registry.theOne.find(FindTestApiObject.API_NAME);
       const testObject = new testClass();
 
       assert.instanceOf(testObject, FindTestApiObject);

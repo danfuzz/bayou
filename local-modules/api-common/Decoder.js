@@ -117,7 +117,7 @@ export default class Decoder {
    * @returns {object} The converted value.
    */
   static _decodeInstance(tag, payload) {
-    const clazz = Registry.find(tag);
+    const clazz = Registry.theOne.find(tag);
     const args = Decoder._decodeArray(payload);
 
     if (!clazz) {
