@@ -8,6 +8,7 @@
     "chai-as-promised": "^6.0.0",
     "mocha": "^3.3.0",
 
-    "server-env": "local"
+    "server-env": "local",
+    "util-common": "local"
   }
 }

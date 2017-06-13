@@ -7,6 +7,7 @@ import chaiAsPromised from 'chai-as-promised';
 import Mocha from 'mocha';
 
 import { Dirs } from 'server-env';
+import { UtilityClass } from 'util-common';
 
 import Utils from './Utils';
 
@@ -16,7 +17,7 @@ chai.use(chaiAsPromised);
 /**
  * Driver for the Mocha framework, for server tests.
  */
-export default class ServerTests {
+export default class ServerTests extends UtilityClass {
   /**
    * Builds a list of all bayou-local tests, adds them to a test runner,
    * and then executes the tests.

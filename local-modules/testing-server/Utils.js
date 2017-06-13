@@ -5,10 +5,12 @@
 import fs from 'fs';
 import path from 'path';
 
+import { UtilityClass } from 'util-common';
+
 /**
  * Utilities for this module.
  */
-export default class Utils {
+export default class Utils extends UtilityClass {
   /**
    * Gets a list of the names of Bayou local modules under the given subproduct
    * base directory.
