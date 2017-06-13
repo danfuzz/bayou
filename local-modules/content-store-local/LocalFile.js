@@ -79,8 +79,7 @@ export default class LocalFile extends BaseFile {
     /** {Logger} Logger specific to this file's ID. */
     this._log = log.withPrefix(`[${fileId}]`);
 
-    this._log.info('Constructed.');
-    this._log.detail(`Path: ${this._storageDir}`);
+    this._log.info(`Path: ${this._storageDir}`);
   }
 
   /**
