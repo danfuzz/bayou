@@ -4,6 +4,7 @@
 
 import { Hooks } from 'hooks-common';
 import { TypeError } from 'typecheck';
+import { UtilityClass } from 'util-common';
 
 /**
  * Type representation of document IDs. The values themselves are always just
@@ -12,7 +13,7 @@ import { TypeError } from 'typecheck';
  * At a minimum a document ID has to be a non-empty string. Beyond that, the
  * required syntax is determined via `hooks-common`.
  */
-export default class DocumentId {
+export default class DocumentId extends UtilityClass {
   /**
    * Checks a value of type `DocumentId`.
    *

@@ -4,6 +4,7 @@
 
 import { Hooks } from 'hooks-common';
 import { TypeError } from 'typecheck';
+import { UtilityClass } from 'util-common';
 
 /**
  * Type representation of author IDs. The values themselves are always just
@@ -13,7 +14,7 @@ import { TypeError } from 'typecheck';
  * At a minimum a non-null author ID has to be a non-empty string. Beyond that,
  * the required syntax is determined via `hooks-common`.
  */
-export default class AuthorId {
+export default class AuthorId extends UtilityClass {
   /**
    * Checks a value of type `AuthorId`.
    *
