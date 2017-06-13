@@ -2,12 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Singleton } from 'util-common';
+
 /**
  * Hooks into various client-side operations. This is meant to make it easy for
  * complete products to customize Bayou without overlaying the original
  * source...except for this file (and other similar ones).
  */
-export default class Hooks {
+export default class Hooks extends Singleton {
   /**
    * Called during application startup. This is called just after the logging
    * library has been set up and before almost everything else. It is called
@@ -19,7 +21,7 @@ export default class Hooks {
    * @returns {Promise|undefined} A promise whose resolution indicates the end
    *   of hook activity, or `undefined` if there is nothing to wait for.
    */
-  static run(window_unused, baseUrl_unused) {
+  run(window_unused, baseUrl_unused) {
     // This space intentionally left (nearly) blank.
     return undefined;
   }
@@ -31,7 +33,7 @@ export default class Hooks {
    * @param {Quill} quill_unused The initialized instance (except for whatever
    *   needs to be done here).
    */
-  static quillInstanceInit(quill_unused) {
+  quillInstanceInit(quill_unused) {
     // This space intentionally left blank.
   }
 
@@ -43,7 +45,7 @@ export default class Hooks {
    * @param {object} defaultConfig The default toolbar configuration.
    * @returns {object} The desired toolbar configuration.
    */
-  static quillToolbarConfig(defaultConfig) {
+  quillToolbarConfig(defaultConfig) {
     return defaultConfig;
   }
 }

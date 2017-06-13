@@ -4,6 +4,7 @@
 
 import { LocalContentStore } from 'content-store-local';
 import { Hooks as HooksCommon } from 'hooks-common';
+import { Singleton } from 'util-common';
 
 import BearerTokens from './BearerTokens';
 
@@ -12,14 +13,14 @@ import BearerTokens from './BearerTokens';
  * complete products to customize Bayou without overlaying the original
  * source...except for this file (and other similar ones).
  */
-export default class Hooks {
+export default class Hooks extends Singleton {
   /**
    * Called during regular system startup (e.g. and in particular _not_ when
    * just building a client bundle offline). This is called after the very
    * basic initialization but before any document-handling code has been
    * initialized or run.
    */
-  static run() {
+  run() {
     // This space intentionally left blank.
   }
 
@@ -32,7 +33,7 @@ export default class Hooks {
    * @param {object} req HTTP request object.
    * @returns {string} The base URL.
    */
-  static baseUrlFromRequest(req) {
+  baseUrlFromRequest(req) {
     const host = req.headers.host;
     if (host) {
       return `http://${host}`;
@@ -45,7 +46,7 @@ export default class Hooks {
    * {BearerTokens} The object which validates and authorizes bearer tokens.
    * See that (base / default) class for details.
    */
-  static get bearerTokens() {
+  get bearerTokens() {
     return BearerTokens.theOne;
   }
 
@@ -54,7 +55,7 @@ export default class Hooks {
    * of a subclass of `BaseContentStore`, as defined by the `content-store`
    * module.
    */
-  static get contentStore() {
+  get contentStore() {
     return LocalContentStore.theOne;
   }
 
@@ -63,13 +64,13 @@ export default class Hooks {
    * This method is only ever called with a non-empty string.
    *
    * The default implementation of this method is to defer to the hook
-   * `hooks-common.Hooks.isDocumentId()`.
+   * `hooks-common.Hooks.theOne.isDocumentId()`.
    *
    * @param {string} id The (alleged) file ID to check.
    * @returns {boolen} `true` iff `id` is syntactically valid.
    */
-  static isFileId(id) {
-    return HooksCommon.isDocumentId(id);
+  isFileId(id) {
+    return HooksCommon.theOne.isDocumentId(id);
   }
 
   /**
@@ -78,7 +79,7 @@ export default class Hooks {
    * in `baseUrl`. It won't match in cases where this server runs behind a
    * reverse proxy, for example.
    */
-  static get listenPort() {
+  get listenPort() {
     return 8080;
   }
 }

@@ -9,7 +9,7 @@ import { TString } from 'typecheck';
 /**
  * Bearer token, which is a kind of key which conflates ID and secret.
  * Conflation notwithstanding, some part of a bearer token is always considered
- * to be its "ID." the `hooks-server` value `Hooks.bearerTokens` can
+ * to be its "ID." the `hooks-server` value `Hooks.theOne.bearerTokens` can
  * be used to control ID derivation (and general validation) of bearer token
  * strings.
  */
@@ -35,13 +35,13 @@ export default class BearerToken extends BaseKey {
   constructor(secretToken) {
     TString.minLen(secretToken, 32);
 
-    if (!Hooks.bearerTokens.isToken(secretToken)) {
+    if (!Hooks.theOne.bearerTokens.isToken(secretToken)) {
       // We don't include any real detail in the error message, as that might
       // inadvertently leak a secret into the logs.
       throw new Error('Invalid `secretToken` string.');
     }
 
-    super('*', Hooks.bearerTokens.tokenId(secretToken));
+    super('*', Hooks.theOne.bearerTokens.tokenId(secretToken));
 
     /** {string} Secret token. */
     this._secretToken = secretToken;

@@ -42,7 +42,7 @@ export default class QuillMaker {
   static make(id) {
     if (toolbarConfig === null) {
       toolbarConfig = Object.freeze(
-        Hooks.quillToolbarConfig(DEFAULT_TOOLBAR_CONFIG));
+        Hooks.theOne.quillToolbarConfig(DEFAULT_TOOLBAR_CONFIG));
     }
 
     const result = new QuillProm(id, {
@@ -55,7 +55,7 @@ export default class QuillMaker {
     });
 
     // Let the overlay do extra initialization.
-    Hooks.quillInstanceInit(result);
+    Hooks.theOne.quillInstanceInit(result);
 
     return result;
   }

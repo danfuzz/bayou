@@ -22,7 +22,7 @@ export default class PostConnection extends Connection {
    * @param {Context} context The binding context to provide access to.
    */
   constructor(req, res, context) {
-    super(context, Hooks.baseUrlFromRequest(req));
+    super(context, Hooks.theOne.baseUrlFromRequest(req));
 
     /** {object} The HTTP request. */
     this._req = req;

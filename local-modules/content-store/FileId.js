@@ -30,7 +30,7 @@ export default class FileId {
   static check(value) {
     if (   (typeof value !== 'string')
         || (value.length === 0)
-        || !Hooks.isFileId(value)) {
+        || !Hooks.theOne.isFileId(value)) {
       return TypeError.badValue(value, 'FileId');
     }
 

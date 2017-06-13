@@ -68,7 +68,7 @@ export default class Application {
    * Starts up the server.
    */
   start() {
-    const port = Hooks.listenPort;
+    const port = Hooks.theOne.listenPort;
     this._app.listen(port, () => {
       log.info(`Now listening on port ${port}.`);
     });
@@ -138,7 +138,7 @@ export default class Application {
    */
   _bindRoot() {
     const context = this._context;
-    const rootTokens = Hooks.bearerTokens.rootTokens;
+    const rootTokens = Hooks.theOne.bearerTokens.rootTokens;
 
     if (BearerToken.sameArrays(rootTokens, this._rootTokens)) {
       // No actual change. Note the fact.
@@ -157,7 +157,7 @@ export default class Application {
     }
 
     // Wait for the token(s) to change, and then call this method recursively.
-    Hooks.bearerTokens.whenRootTokensChange().then(() => {
+    Hooks.theOne.bearerTokens.whenRootTokensChange().then(() => {
       log.info('Root tokens updated.');
       this._bindRoot();
     });

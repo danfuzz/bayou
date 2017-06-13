@@ -174,8 +174,8 @@ export default class DocServer extends Singleton {
     // Make a temporary logger specific to this doc.
     const docLog = log.withPrefix(`[${docId}]`);
 
-    const docStorage   = await Hooks.contentStore.getFile(docId);
-    const result       = new DocControl(docStorage, this._formatVersion);
+    const file         = await Hooks.theOne.contentStore.getFile(docId);
+    const result       = new DocControl(file, this._formatVersion);
     const docStatus    = await result.validationStatus();
     const docNeedsInit = (docStatus !== DocControl.STATUS_OK);
     let   firstText    = DEFAULT_TEXT;

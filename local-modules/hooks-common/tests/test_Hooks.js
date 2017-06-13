@@ -10,37 +10,37 @@ import { Hooks } from 'hooks-common';
 describe('hooks-common/Hooks', () => {
   describe('isAuthorId(id)', () => {
     it('should accept 32-character alphanum ASCII strings', () => {
-      assert.isTrue(Hooks.isAuthorId('123abc7890ABC456789012'));
+      assert.isTrue(Hooks.theOne.isAuthorId('123abc7890ABC456789012'));
     });
 
     it('should allow underscores and hyphens', () => {
-      assert.isTrue(Hooks.isAuthorId('123456789_123456789-12'));
+      assert.isTrue(Hooks.theOne.isAuthorId('123456789_123456789-12'));
     });
 
     it('should not allow non-ASCII characters', () => {
-      assert.isFalse(Hooks.isAuthorId('123456789•123456789•12'));
+      assert.isFalse(Hooks.theOne.isAuthorId('123456789•123456789•12'));
     });
 
     it('should not allow non-alphanum characters', () => {
-      assert.isFalse(Hooks.isAuthorId('123456789\t123456789+12'));
+      assert.isFalse(Hooks.theOne.isAuthorId('123456789\t123456789+12'));
     });
   });
 
   describe('isDocumentId(id)', () => {
     it('should accept 32-character alphanum ASCII strings', () => {
-      assert.isTrue(Hooks.isDocumentId('123abc7890ABC456789012'));
+      assert.isTrue(Hooks.theOne.isDocumentId('123abc7890ABC456789012'));
     });
 
     it('should allow underscores and hyphens', () => {
-      assert.isTrue(Hooks.isDocumentId('123456789_123456789-12'));
+      assert.isTrue(Hooks.theOne.isDocumentId('123456789_123456789-12'));
     });
 
     it('should not allow non-ASCII characters', () => {
-      assert.isFalse(Hooks.isDocumentId('123456789•123456789•12'));
+      assert.isFalse(Hooks.theOne.isDocumentId('123456789•123456789•12'));
     });
 
     it('should not allow non-alphanum characters', () => {
-      assert.isFalse(Hooks.isDocumentId('123456789\t123456789+12'));
+      assert.isFalse(Hooks.theOne.isDocumentId('123456789\t123456789+12'));
     });
   });
 });

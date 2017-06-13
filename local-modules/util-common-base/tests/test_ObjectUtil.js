@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { ObjectUtil } from 'util-base';
+import { ObjectUtil } from 'util-common-base';
 
-describe('util-base/ObjectUtil', () => {
+describe('util-common-base/ObjectUtil', () => {
   describe('hasOwnProperty(value, name)', () => {
     it('should return true when asked about an object\'s own propery', () => {
       const value = {};

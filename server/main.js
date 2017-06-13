@@ -114,7 +114,7 @@ function run() {
     new DevMode().start();
   }
 
-  Hooks.run();
+  Hooks.theOne.run();
 
   /** The main app server. */
   const theApp = new Application(devMode);
