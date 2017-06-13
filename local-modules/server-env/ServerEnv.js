@@ -17,6 +17,6 @@ export default class ServerEnv {
   static init() {
     Dirs.theOne;
     PidFile.theOne;
-    ProductInfo.init();
+    ProductInfo.theOne;
   }
 }

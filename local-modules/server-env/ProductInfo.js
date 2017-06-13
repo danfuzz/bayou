@@ -5,35 +5,30 @@
 import path from 'path';
 
 import { Proppy } from 'proppy';
+import { Singleton } from 'util-common';
 
 import Dirs from './Dirs';
-
-/** {object|null} Product info object. Set up by `init()`. */
-let productInfo = null;
 
 
 /**
  * Product metainformation.
  */
-export default class ProductInfo {
+export default class ProductInfo extends Singleton {
   /**
-   * Initializes this class. This is not meant to be called publicly (though it
-   * is innocuous if done so).
+   * Constructs the instance.
    */
-  static init() {
-    if (productInfo !== null) {
-      // Already initialized.
-      return;
-    }
+  constructor() {
+    super();
 
-    productInfo = Proppy.parseFile(
+    /** {object} Product info object. */
+    this._productInfo = Proppy.parseFile(
       path.resolve(Dirs.theOne.BASE_DIR, 'product-info.txt'));
   }
 
   /**
    * The product info object, as parsed from `product-info.txt`.
    */
-  static get INFO() {
-    return productInfo;
+  get INFO() {
+    return this._productInfo;
   }
 }

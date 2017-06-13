@@ -103,7 +103,7 @@ function run() {
   ServerEnv.init();
 
   // A little spew to identify us.
-  const info = ProductInfo.INFO;
+  const info = ProductInfo.theOne.INFO;
   for (const k of Object.keys(info)) {
     log.info(`${k} = ${info[k]}`);
   }

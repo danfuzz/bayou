@@ -66,7 +66,7 @@ export default class DocServer extends Singleton {
      * {FrozenBuffer} The document format version to use for new documents and
      * to expect in existing documents.
      */
-    this._formatVersion = Coder.encode(ProductInfo.INFO.version);
+    this._formatVersion = Coder.encode(ProductInfo.theOne.INFO.version);
   }
 
   /**
