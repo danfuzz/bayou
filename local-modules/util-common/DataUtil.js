@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TArray, TInt, TString } from 'typecheck';
-import { ObjectUtil } from 'util-common-base';
+import { ObjectUtil, UtilityClass } from 'util-common-base';
 
 /**
  * "Data value" helper utilities. A "data value" is defined as any JavaScript
@@ -14,7 +14,7 @@ import { ObjectUtil } from 'util-common-base';
  * properties, or objects with a prototype other than `Object.prototype` or
  * `Array.prototype`.
  */
-export default class DataUtil {
+export default class DataUtil extends UtilityClass {
   /**
    * Makes a deep-frozen clone of the given data value, or return the value
    * itself if it is already deep-frozen.
