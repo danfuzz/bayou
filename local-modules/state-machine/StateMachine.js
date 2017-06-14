@@ -106,7 +106,8 @@ export default class StateMachine {
     // squelched).
     this[`s_${initialState}`]();
 
-    this._serviceEventQueue(); // Set up the queue servicer; it self-perpetuates.
+    // Start servicing the event queue.
+    this._serviceEventQueue();
   }
 
   /** {string} The current state. */
@@ -270,15 +271,18 @@ export default class StateMachine {
 
   /**
    * Services the event queue. This waits for the queue to be non-empty (via a
-   * promise), dispatches all events, and then recursively iterates.
+   * promise), dispatches all events, and then iterates. It stops only when
+   * the instance has gotten halted (most likely due to an external error).
    */
-  _serviceEventQueue() {
-    this._anyEventPending.whenTrue().then((res_unused) => {
+  async _serviceEventQueue() {
+    for (;;) {
       const stillActive = this._dispatchAll();
-      if (stillActive) {
-        this._serviceEventQueue();
+      if (!stillActive) {
+        break;
       }
-    });
+
+      await this._anyEventPending.whenTrue();
+    }
   }
 
   /**
@@ -295,9 +299,9 @@ export default class StateMachine {
 
       // Check to see if we're done (either idle or shutting down).
       if (queue === null) {
-        return false;
+        return false; // Shutting down.
       } else if (queue.length === 0) {
-        return true;
+        return true;  // Idle.
       }
 
       // Reset the queue for further event collection.
