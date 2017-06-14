@@ -7,8 +7,7 @@ import { Singleton } from 'util-common';
 import AllSinks from './AllSinks';
 
 /**
- * Registry for loggers. This is an uninstantiable class with just static
- * methods.
+ * Registry for loggers.
  */
 export default class SeeAll extends Singleton {
   /**
