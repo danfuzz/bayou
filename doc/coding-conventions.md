@@ -81,3 +81,41 @@ taking into account recent additions to the language.
   `extends Singleton` both to document the intent and to provide enforced
   guarantees. Additionally, instead of explicitly constructing singletons,
   the convention is to use the static property `theOne` on the so-defined class.
+
+* Immediate-async blocks &mdash; When programming in the `async`/`await` style,
+  sometimes it's useful to to "spawn" an independent thread of control which
+  doesn't block the main execution of a method. Were JavaScript more mature,
+  this would probably be represented by syntax along the lines of:
+
+  ```javascript
+  // DO NOT DO THIS! _NOT_ ACTUAL JAVASCRIPT SYNTAX.
+  function blort() {
+    const x = async {
+      // These don't block the outer function from running. `x` is a promise
+      // that resolves to `thing3` once the asynchronous operations are
+      // complete.
+      await thing1;
+      await thing2;
+      return thing3;
+    }
+    ...
+  }
+  ```
+
+  Though a bit more verbose and less obvious, the same result can be achieved
+  with an immediately-invoked anonymous function. This pattern is used
+  throughout the project:
+
+  ```javascript
+  function blort() {
+    const x = (async () => {
+      // These don't block the outer function from running. `x` is a promise
+      // that resolves to `thing3` once the asynchronous operations are
+      // complete.
+      await thing1;
+      await thing2;
+      return thing3;
+    })();
+    ...
+  }
+  ```

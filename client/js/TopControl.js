@@ -174,9 +174,11 @@ export default class TopControl {
     this._fixKeyIfNecessary();
 
     this._apiClient = new ApiClient(this._key.url);
-    this._apiClient.open().then(() => {
+
+    (async () => {
+      await this._apiClient.open();
       log.detail('API client open.');
-    });
+    })();
   }
 
   /**
@@ -185,12 +187,18 @@ export default class TopControl {
   _makeDocClient() {
     this._docClient = new DocClient(this._quill, this._apiClient, this._key);
     this._docClient.start();
-    this._docClient.when_idle().then(() => {
-      log.detail('Document client hooked up.');
+
+    // Log a note once everything is all set up.
+    (async () => {
+      await this._docClient.when_idle();
       log.info('Initialization complete!');
-    });
-    this._docClient.when_unrecoverableError().then(
-      this._recoverIfPossible.bind(this));
+    })();
+
+    // Handle doc client failure if and when it ever happens.
+    (async () => {
+      await this._docClient.when_unrecoverableError();
+      this._recoverIfPossible();
+    })();
   }
 
   /**
@@ -198,19 +206,19 @@ export default class TopControl {
    * the `_recover` function returns something useful, this attempts to restart
    * the client.
    */
-  _recoverIfPossible() {
+  async _recoverIfPossible() {
     log.error('Editor gave up!');
 
-    Promise.resolve(this._recover(this._key)).then((newKey) => {
-      if (typeof newKey !== 'string') {
-        log.info('Nothing more to do. :\'(');
-        return;
-      }
+    const newKey = await this._recover(this._key);
 
-      log.info('Attempting recovery with new key...');
-      this._key = SplitKey.check(Decoder.decodeJson(newKey));
-      this._makeApiClient();
-      this._makeDocClient();
-    });
+    if (typeof newKey !== 'string') {
+      log.info('Nothing more to do. :\'(');
+      return;
+    }
+
+    log.info('Attempting recovery with new key...');
+    this._key = SplitKey.check(Decoder.decodeJson(newKey));
+    this._makeApiClient();
+    this._makeDocClient();
   }
 }
