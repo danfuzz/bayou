@@ -147,17 +147,23 @@ export default class ApiClient {
    * server side. If the socket is already open (or in the process of opening),
    * this does not re-open (that is, the existing open is allowed to continue).
    *
-   * @returns {Promise} A promise for the result of opening. This will resolve
-   * as a `true` success or fail with an `ApiError`.
+   * @returns {boolean} `true` once the connection is open.
+   * @throws {ApiError} Indication of why the connection attempt failed.
    */
-  open() {
+  async open() {
     // If `_ws` is `null` that means that the connection is not already open or
     // in the process of opening.
 
-    if (this._ws !== null) {
-      // Already open(ing). Just return an appropriately-behaved promise.
-      this._log.detail('open() called while already opening.');
-      return this.meta.ping();
+    if (this._connectionId !== UNKNOWN_CONNECTION_ID) {
+      // Already open.
+      return true;
+    } else if (this._ws !== null) {
+      // In the middle of getting opened. Arguably this should do something a
+      // bit more efficient (instead of issuing a separate API call), but also
+      // this shouldn't ever happen, so it's not that big a deal.
+      this._log.info('open() called while in the middle of opening.');
+      await this.meta.ping();
+      return true;
     }
 
     this._ws = new WebSocket(this._websocketUrl);
@@ -168,11 +174,12 @@ export default class ApiClient {
 
     this._log.detail('Opening connection...');
 
-    return this.meta.connectionId().then((value) => {
-      this._connectionId = value;
-      this._log.info('Open.');
-      return true;
-    });
+    const id = await this.meta.connectionId();
+
+    this._connectionId = id;
+    this._log.info('Open.');
+
+    return true;
   }
 
   /**
