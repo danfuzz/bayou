@@ -318,26 +318,24 @@ export default class DebugTools {
   }
 
   /**
-   * Returns a promise for an existing document based on the usual debugging
-   * request argument. If the document doesn't exist, the promise will get
-   * rejected with a reasonably-descriptive message.
+   * Returns an existing document based on the usual debugging request argument.
+   * If the document doesn't exist, this method throws a reasonably-descriptive
+   * message.
    *
    * @param {object} req HTTP request.
    * @returns {Promise<DocControl>} Promise for the requested document.
    */
-  _getExistingDoc(req) {
+  async _getExistingDoc(req) {
     const documentId = req.params.documentId;
-    const docPromise = DocServer.theOne.getDocOrNull(documentId);
+    const doc        = await DocServer.theOne.getDocOrNull(documentId);
 
-    return docPromise.then((doc) => {
-      if (doc === null) {
-        const error = new Error();
-        error.debugMsg = `No such document: ${documentId}`;
-        throw error;
-      }
+    if (doc === null) {
+      const error = new Error();
+      error.debugMsg = `No such document: ${documentId}`;
+      throw error;
+    }
 
-      return doc;
-    });
+    return doc;
   }
 
   /**
@@ -352,17 +350,16 @@ export default class DebugTools {
   }
 
   /**
-   * Makes and returns a promise for a new authorization key for the given
-   * document / author combo.
+   * Makes and returns a new authorization key for the given document / author
+   * combo, as a JSON-encoded string.
    *
    * @param {string} documentId The document ID.
    * @param {string} authorId The author ID.
-   * @returns {Promise<string>} Promise for a new `SplitKey` encoded as JSON.
+   * @returns {string} A new `SplitKey` encoded as JSON.
    */
-  _makeEncodedKey(documentId, authorId) {
-    return this._rootAccess.makeAccessKey(authorId, documentId).then((key) => {
-      return Encoder.encodeJson(key);
-    });
+  async _makeEncodedKey(documentId, authorId) {
+    const key = await this._rootAccess.makeAccessKey(authorId, documentId);
+    return Encoder.encodeJson(key);
   }
 
   /**
