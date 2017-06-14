@@ -159,10 +159,9 @@ export default class Connection extends CommonBase {
       }
     }
 
-    return this._makeResponse(msg, startTime, result, error);
-  }
+    // Set up the response contents, and encode it as the ultimate result of
+    // this call.
 
-  _makeResponse(msg, startTime, result, error) {
     const response = { id: msg.id };
     if (error) {
       response.error = error.message;
@@ -170,15 +169,14 @@ export default class Connection extends CommonBase {
       response.result = result;
     }
 
-    // We resolve the promise successfully, whether or not the actual
-    // handling of the message resulted in an error. That is, at this layer,
-    // we can succeed in transporting a value which indicates a higher-level
-    // error.
-    const responseJson = Encoder.encodeJson(response);
+    const encodedResponse = Encoder.encodeJson(response);
+
+    // Log the response. In the case of an error, we include the error's stack
+    // trace. We intentionally _don't_ expose the stack trace as part of the
+    // API result, as that arguably leaks sensitive info.
 
     if (error) {
-      // Augment the logged response with the error's stack trace. This
-      // clause cleans it up so that it is an array of separate lines and
+      // This clause cleans it up so that it is an array of separate lines and
       // so that we omit the uninteresting parts of the file paths.
       response.errorStack = error.stack.match(/^ +at .*$/mg).map((line) => {
         // Lines that name functions are expected to be of the form:
@@ -211,7 +209,7 @@ export default class Connection extends CommonBase {
     }
 
     this._apiLog.fullCall(this._connectionId, startTime, msg, response);
-    return responseJson;
+    return encodedResponse;
   }
 
   /**
