@@ -126,13 +126,14 @@ function run() {
 /**
  * Does a client bundling.
  */
-function clientBundle() {
-  new ClientBundle().build().then((res_unused) => {
+async function clientBundle() {
+  try {
+    await new ClientBundle().build();
     process.exit(0);
-  }, (rej) => {
-    log.error(rej);
+  } catch (e) {
+    log.error(e);
     process.exit(1);
-  });
+  }
 }
 
 /**
