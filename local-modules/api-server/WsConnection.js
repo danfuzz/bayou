@@ -36,10 +36,10 @@ export default class WsConnection extends Connection {
    *
    * @param {string} msg Incoming message, in JSON string form.
    */
-  _handleMessage(msg) {
-    this.handleJsonMessage(msg).then((response) => {
-      this._ws.send(response);
-    });
+  async _handleMessage(msg) {
+    const response = await this.handleJsonMessage(msg);
+
+    this._ws.send(response);
   }
 
   /**
