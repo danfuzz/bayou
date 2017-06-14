@@ -455,13 +455,16 @@ export default class DocClient extends StateMachine {
     if (!this._pendingDeltaAfter) {
       this._pendingDeltaAfter = true;
 
-      this._docProxy.deltaAfter(baseDoc.revNum).then((value) => {
-        this._pendingDeltaAfter = false;
-        this.q_gotDeltaAfter(baseDoc, value);
-      }).catch((error) => {
-        this._pendingDeltaAfter = false;
-        this.q_apiError('deltaAfter', error);
-      });
+      (async () => {
+        try {
+          const value = await this._docProxy.deltaAfter(baseDoc.revNum);
+          this._pendingDeltaAfter = false;
+          this.q_gotDeltaAfter(baseDoc, value);
+        } catch (e) {
+          this._pendingDeltaAfter = false;
+          this.q_apiError('deltaAfter', e);
+        }
+      })();
     }
 
     this.s_idle();
@@ -603,11 +606,14 @@ export default class DocClient extends StateMachine {
     }
 
     // Send the delta, and handle the response.
-    this._docProxy.applyDelta(this._doc.revNum, delta).then((value) => {
-      this.q_gotApplyDelta(delta, value);
-    }).catch((error) => {
-      this.q_apiError('applyDelta', error);
-    });
+    (async () => {
+      try {
+        const value = await this._docProxy.applyDelta(this._doc.revNum, delta);
+        this.q_gotApplyDelta(delta, value);
+      } catch (e) {
+        this.q_apiError('applyDelta', e);
+      }
+    })();
 
     this.s_merging();
   }
@@ -733,7 +739,10 @@ export default class DocClient extends StateMachine {
     // that we rely on elsewhere (and which is provided under normal
     // circumstances by `QuillProm`), specifically that `change.nextNow`
     // becomes non-null as soon as `change.next` resolves to a value.
-    nextNow.next.then((value) => { nextNow.nextNow = value; });
+    (async () => {
+      const value = await nextNow.next;
+      nextNow.nextNow = value;
+    })();
 
     // Make a new head of the change chain which points at the `nextNow` we
     // just constructed above.
