@@ -36,10 +36,10 @@ export default class RootAccess {
    *   are made using the resulting authorization.
    * @param {string} docId ID of the document which the resulting authorization
    *   allows access to.
-   * @returns {Promise<SplitKey>} Promise for a split token (ID + secret) which
-   *   provides the requested access.
+   * @returns {SplitKey} A split token (ID + secret) which provides the
+   *   requested access.
    */
-  makeAccessKey(authorId, docId) {
+  async makeAccessKey(authorId, docId) {
     TString.nonempty(authorId);
     TString.nonempty(docId);
 
@@ -54,29 +54,28 @@ export default class RootAccess {
       ? `${Connection.activeNow.baseUrl}/api`
       : '*';
 
-    return DocServer.theOne.getDoc(docId).then((docControl) => {
-      const doc = new DocForAuthor(docControl, authorId);
+    const docControl = await DocServer.theOne.getDoc(docId);
+    const doc        = new DocForAuthor(docControl, authorId);
 
-      let key = null;
-      for (;;) {
-        key = SplitKey.randomInstance(url);
-        if (!this._context.hasId(key.id)) {
-          break;
-        }
-
-        // We managed to get an ID collision. Unlikely, but it can happen. So,
-        // just iterate and try again.
+    let key = null;
+    for (;;) {
+      key = SplitKey.randomInstance(url);
+      if (!this._context.hasId(key.id)) {
+        break;
       }
 
-      this._context.add(key, doc);
+      // We managed to get an ID collision. Unlikely, but it can happen. So,
+      // just iterate and try again.
+    }
 
-      log.info(`Newly-authorized access.`);
-      log.info(`  author:  ${authorId}`);
-      log.info(`  doc:     ${docId}`);
-      log.info(`  key id:  ${key.id}`); // The ID is safe to log (not security-sensitive).
-      log.info(`  key url: ${key.url}`);
+    this._context.add(key, doc);
 
-      return key;
-    });
+    log.info(`Newly-authorized access.`);
+    log.info(`  author:  ${authorId}`);
+    log.info(`  doc:     ${docId}`);
+    log.info(`  key id:  ${key.id}`); // The ID is safe to log (not security-sensitive).
+    log.info(`  key url: ${key.url}`);
+
+    return key;
   }
 }
