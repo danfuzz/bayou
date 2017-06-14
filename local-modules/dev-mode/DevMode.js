@@ -281,7 +281,7 @@ export default class DevMode extends Singleton {
    * @param {string} fromPath The path of the source file that was changed (or
    *   removed).
    */
-  _handleServerChange(fromPath) {
+  async _handleServerChange(fromPath) {
     if (this._shuttingDown) {
       // Don't bother doing anything if we're about to exit.
       return;
@@ -301,9 +301,8 @@ export default class DevMode extends Singleton {
     this._shuttingDown = true;
     log.info('Server file changed. About to exit...');
 
-    PromDelay.resolve(5 * 1000).then(() => {
-      process.exit();
-    });
+    await PromDelay.resolve(5 * 1000);
+    process.exit();
   }
 
   /**
@@ -316,9 +315,13 @@ export default class DevMode extends Singleton {
     const serverReady =
       this._startWatching(this._serverMappings, this._handleServerChange);
 
-    Promise.all([clientReady, serverReady]).then((values_unused) => {
+    // Log a note after everything is ready (while still returning promptly
+    // from this method).
+    (async () => {
+      await clientReady;
+      await serverReady;
       log.info('Now monitoring for changes.');
-    });
+    })();
   }
 
   /**
@@ -341,7 +344,7 @@ export default class DevMode extends Singleton {
 
     // Monitor file adds, changes, and removals.
     const handler = onChange.bind(this);
-    watcher.on('add',   handler);
+    watcher.on('add',    handler);
     watcher.on('change', handler);
     watcher.on('unlink', handler);
 
