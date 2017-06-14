@@ -22,11 +22,10 @@ export default class ServerTests extends UtilityClass {
    * Builds a list of all bayou-local tests, adds them to a test runner,
    * and then executes the tests.
    *
-   * @param {function|null} [callback = null] Callback which is called when
-   *   testing is complete. Gets passed a `failures` value. Ignored if passed
-   *   as `null`.
+   * @returns {number} Count of test failures, which resolves after testing is
+   *   complete.
    */
-  static runAll(callback = null) {
+  static async runAll() {
     // TODO: Complain about modules that have no tests at all.
 
     const moduleNames = Utils.localModulesIn(Dirs.theOne.SERVER_DIR);
@@ -37,10 +36,8 @@ export default class ServerTests extends UtilityClass {
       mocha.addFile(f);
     }
 
-    mocha.run((failures) => {
-      if (callback !== null) {
-        callback(failures);
-      }
+    return new Promise((res, rej_unused) => {
+      mocha.run((failures) => { res(failures); });
     });
   }
 }
