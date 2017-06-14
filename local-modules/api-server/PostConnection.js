@@ -89,17 +89,17 @@ export default class PostConnection extends Connection {
   /**
    * Handles an `end` event coming from the request input stream.
    */
-  _handleEnd() {
+  async _handleEnd() {
     this._log.info('Received message.');
 
     const msg = Buffer.concat(this._chunks).toString('utf8');
-    this.handleJsonMessage(msg).then((response) => {
-      this._res
-        .status(200)
-        .type('application/json')
-        .send(response);
-      this.close();
-    });
+    const response = await this.handleJsonMessage(msg);
+
+    this._res
+      .status(200)
+      .type('application/json')
+      .send(response);
+    this.close();
   }
 
   /**

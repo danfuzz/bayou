@@ -78,7 +78,7 @@ export default class TopControl {
   }
 
   /**
-   * Start things up.
+   * Starts things up.
    */
   start() {
     // Initialize the API connection. We do this in parallel with the rest of
@@ -89,53 +89,60 @@ export default class TopControl {
     // contents are fully loaded.
     this._window.addEventListener('load', (event_unused) => {
       log.detail('Initial page load complete.');
-
-      const document = this._window.document;
-      const baseUrl = this._apiClient.baseUrl;
-      const editorNode = document.querySelector(this._node);
-
-      if (editorNode === null) {
-        // The indicated node (incoming `BAYOU_NODE` value) does not exist. If
-        // we land here, no further init can possibly be done, so we just
-        // `throw` out of it.
-        const extra = (this._node[0] === '#') ? '' : ' (maybe need a `#` prefix?)';
-        throw new Error(`No such selector${extra}: \`${this._node}\``);
-      } else if (editorNode.nodeName !== 'DIV') {
-        // Similar to above.
-        throw new Error(`Expected selector \`${this._node}\` to refer to a \`div\`.`);
-      }
-
-      // Do our basic page setup. Specifically, we add the CSS we need to the
-      // page and set the expected classes on the `html` and editor nodes.
-
-      const styleDone =
-        DomUtil.addStylesheet(document, `${baseUrl}/static/index.css`);
-
-      const htmlNode = document.getElementsByTagName('html')[0];
-      if (!htmlNode) {
-        throw new Error('Shouldn\'t happen: No `html` node?!');
-      }
-      htmlNode.classList.add('bayou-page');
-
-      editorNode.classList.add('bayou-top');
-
-      // Give the overlay a chance to do any initialization.
-      const hookDone = Hooks.theOne.run(this._window, baseUrl);
-      log.detail('Ran `run()` hook.');
-
-      // Make the editor instance, after style addition and hook action are
-      // complete.
-      Promise.all([styleDone, hookDone]).then((res_unused) => {
-        this._quill = QuillMaker.theOne.make(this._node);
-        log.detail('Made editor instance.');
-
-        // Hook up the `DocClient` (which intermediates between the server and
-        // the local Quill instance).
-        this._makeDocClient();
-      });
-
-      log.detail('Async operations now in progress...');
+      this._onLoad();
     });
+  }
+
+  /**
+   * Callback for page load. This is set up in `start()`.
+   */
+  async _onLoad() {
+    const document = this._window.document;
+    const baseUrl = this._apiClient.baseUrl;
+    const editorNode = document.querySelector(this._node);
+
+    if (editorNode === null) {
+      // The indicated node (incoming `BAYOU_NODE` value) does not exist. If
+      // we land here, no further init can possibly be done, so we just
+      // `throw` out of it.
+      const extra = (this._node[0] === '#') ? '' : ' (maybe need a `#` prefix?)';
+      throw new Error(`No such selector${extra}: \`${this._node}\``);
+    } else if (editorNode.nodeName !== 'DIV') {
+      // Similar to above.
+      throw new Error(`Expected selector \`${this._node}\` to refer to a \`div\`.`);
+    }
+
+    // Do our basic page setup. Specifically, we add the CSS we need to the
+    // page and set the expected classes on the `html` and editor nodes.
+
+    const styleDone =
+      DomUtil.addStylesheet(document, `${baseUrl}/static/index.css`);
+
+    const htmlNode = document.getElementsByTagName('html')[0];
+    if (!htmlNode) {
+      throw new Error('Shouldn\'t happen: No `html` node?!');
+    }
+    htmlNode.classList.add('bayou-page');
+
+    editorNode.classList.add('bayou-top');
+
+    // Give the overlay a chance to do any initialization.
+    const hookDone = Hooks.theOne.run(this._window, baseUrl);
+
+    log.detail('Async operations now in progress...');
+
+    // Make the editor instance, after style addition and hook action are
+    // complete.
+
+    await styleDone;
+    await hookDone;
+
+    this._quill = QuillMaker.theOne.make(this._node);
+    log.detail('Made editor instance.');
+
+    // Hook up the `DocClient` (which intermediates between the server and
+    // the local Quill instance).
+    this._makeDocClient();
   }
 
   /**
@@ -167,9 +174,11 @@ export default class TopControl {
     this._fixKeyIfNecessary();
 
     this._apiClient = new ApiClient(this._key.url);
-    this._apiClient.open().then(() => {
+
+    (async () => {
+      await this._apiClient.open();
       log.detail('API client open.');
-    });
+    })();
   }
 
   /**
@@ -178,12 +187,18 @@ export default class TopControl {
   _makeDocClient() {
     this._docClient = new DocClient(this._quill, this._apiClient, this._key);
     this._docClient.start();
-    this._docClient.when_idle().then(() => {
-      log.detail('Document client hooked up.');
+
+    // Log a note once everything is all set up.
+    (async () => {
+      await this._docClient.when_idle();
       log.info('Initialization complete!');
-    });
-    this._docClient.when_unrecoverableError().then(
-      this._recoverIfPossible.bind(this));
+    })();
+
+    // Handle doc client failure if and when it ever happens.
+    (async () => {
+      await this._docClient.when_unrecoverableError();
+      this._recoverIfPossible();
+    })();
   }
 
   /**
@@ -191,19 +206,19 @@ export default class TopControl {
    * the `_recover` function returns something useful, this attempts to restart
    * the client.
    */
-  _recoverIfPossible() {
+  async _recoverIfPossible() {
     log.error('Editor gave up!');
 
-    Promise.resolve(this._recover(this._key)).then((newKey) => {
-      if (typeof newKey !== 'string') {
-        log.info('Nothing more to do. :\'(');
-        return;
-      }
+    const newKey = await this._recover(this._key);
 
-      log.info('Attempting recovery with new key...');
-      this._key = SplitKey.check(Decoder.decodeJson(newKey));
-      this._makeApiClient();
-      this._makeDocClient();
-    });
+    if (typeof newKey !== 'string') {
+      log.info('Nothing more to do. :\'(');
+      return;
+    }
+
+    log.info('Attempting recovery with new key...');
+    this._key = SplitKey.check(Decoder.decodeJson(newKey));
+    this._makeApiClient();
+    this._makeDocClient();
   }
 }

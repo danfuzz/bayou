@@ -48,8 +48,11 @@ export default class LogStream {
     this._logger.log(this._level, chunk);
 
     if (callback) {
-      // Use `then()` to make the callback happen in its own tick/turn.
-      Promise.resolve(true).then((value_unused) => { callback(); });
+      // Make the callback happen in its own tick/turn.
+      (async () => {
+        await Promise.resolve(true);
+        callback();
+      })();
     }
   }
 

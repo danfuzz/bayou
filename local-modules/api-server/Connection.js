@@ -136,79 +136,80 @@ export default class Connection extends CommonBase {
    * **Note:** Subclasses are expected to call this.
    *
    * @param {string} msg Incoming message, in JSON string form.
-   * @returns {Promise} Promise for the response. If there is an error, the
-   *   promise will _resolve_ to the error response (as opposed to being
-   *   rejected).
+   * @returns {string} Response to the message, in JSON string form. This
+   *   resolves after the message has been handled. If there was an error in
+   *   handling the message, this will be an error response (as opposed to the
+   *   method throwing an error). The intent is that this method _never_ throws
+   *   errors.
    */
-  handleJsonMessage(msg) {
-    return new Promise((res, rej_unused) => {
-      msg = this._decodeMessage(msg); // Not supposed to ever throw.
-      const startTime = this._apiLog.incomingMessage(this._connectionId, msg);
+  async handleJsonMessage(msg) {
+    msg = this._decodeMessage(msg); // Not supposed to ever throw.
 
-      // Function to send a response. Arrow syntax so that `this` is usable.
-      const respond = (result, error) => {
-        const response = { id: msg.id };
-        if (error) {
-          response.error = error.message;
-        } else {
-          response.result = result;
-        }
+    const startTime = this._apiLog.incomingMessage(this._connectionId, msg);
+    let result = null;
+    let error = null;
 
-        // We resolve the promise successfully, whether or not the actual
-        // handling of the message resulted in an error. That is, at this layer,
-        // we can succeed in transporting a value which indicates a higher-level
-        // error.
-        res(Encoder.encodeJson(response));
-
-        if (error) {
-          // Augment the logged response with the error's stack trace. This
-          // clause cleans it up so that it is an array of separate lines and
-          // so that we omit the uninteresting parts of the file paths.
-          response.errorStack = error.stack.match(/^ +at .*$/mg).map((line) => {
-            // Lines that name functions are expected to be of the form:
-            // * `    at func.name (/path/to/file:NN:NN)`
-            // where `func.name` might actually be `new func.name` or
-            // `func.name [as other.name]` (or both).
-            let match = line.match(/^ +at ([^()]+) \(([^()]+)\)$/);
-            let funcName;
-            let filePath;
-
-            if (match) {
-              funcName = match[1];
-              filePath = match[2];
-            } else {
-              // Anonymous functions (including top-level code) have the form:
-              // * `    at /path/to/file:NN:NN`
-              match = line.match(/^ +at ([^()]*)$/);
-              funcName = '(anon)';
-              filePath = match[1];
-            }
-
-            const fileSplit = filePath.match(/\/?[^/]+/g) || ['?'];
-            const splitLen  = fileSplit.length;
-            const fileName  = (splitLen < 2)
-              ? fileSplit[0]
-              : `...${fileSplit[splitLen - 2]}${fileSplit[splitLen - 1]}`;
-
-            return `${funcName} (${fileName})`;
-          });
-        }
-
-        this._apiLog.fullCall(this._connectionId, startTime, msg, response);
-      };
-
-      if (msg.isError()) {
-        respond(null, new Error(msg.errorMessage));
-      } else {
-        try {
-          this._actOnMessage(msg)
-            .then((result) => { respond(result, null); })
-            .catch((error) => { respond(null, error);  });
-        } catch (e) {
-          respond(null, e);
-        }
+    if (msg.isError()) {
+      error = new Error(msg.errorMessage);
+    } else {
+      try {
+        result = await this._actOnMessage(msg);
+      } catch (e) {
+        error = e;
       }
-    });
+    }
+
+    // Set up the response contents, and encode it as the ultimate result of
+    // this call.
+
+    const response = { id: msg.id };
+    if (error) {
+      response.error = error.message;
+    } else {
+      response.result = result;
+    }
+
+    const encodedResponse = Encoder.encodeJson(response);
+
+    // Log the response. In the case of an error, we include the error's stack
+    // trace. We intentionally _don't_ expose the stack trace as part of the
+    // API result, as that arguably leaks sensitive info.
+
+    if (error) {
+      // This clause cleans it up so that it is an array of separate lines and
+      // so that we omit the uninteresting parts of the file paths.
+      response.errorStack = error.stack.match(/^ +at .*$/mg).map((line) => {
+        // Lines that name functions are expected to be of the form:
+        // * `    at func.name (/path/to/file:NN:NN)`
+        // where `func.name` might actually be `new func.name` or
+        // `func.name [as other.name]` (or both).
+        let match = line.match(/^ +at ([^()]+) \(([^()]+)\)$/);
+        let funcName;
+        let filePath;
+
+        if (match) {
+          funcName = match[1];
+          filePath = match[2];
+        } else {
+          // Anonymous functions (including top-level code) have the form:
+          // * `    at /path/to/file:NN:NN`
+          match = line.match(/^ +at ([^()]*)$/);
+          funcName = '(anon)';
+          filePath = match[1];
+        }
+
+        const fileSplit = filePath.match(/\/?[^/]+/g) || ['?'];
+        const splitLen  = fileSplit.length;
+        const fileName  = (splitLen < 2)
+          ? fileSplit[0]
+          : `...${fileSplit[splitLen - 2]}${fileSplit[splitLen - 1]}`;
+
+        return `${funcName} (${fileName})`;
+      });
+    }
+
+    this._apiLog.fullCall(this._connectionId, startTime, msg, response);
+    return encodedResponse;
   }
 
   /**

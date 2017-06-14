@@ -66,6 +66,44 @@ taking into account recent additions to the language.
   }
   ```
 
+* Immediate-async blocks &mdash; When programming in the `async`/`await` style,
+  sometimes it's useful to to "spawn" an independent thread of control which
+  doesn't block the main execution of a method. Were JavaScript more mature,
+  this would probably be represented by syntax along the lines of:
+
+  ```javascript
+  // DO NOT DO THIS! _NOT_ ACTUAL JAVASCRIPT SYNTAX.
+  function blort() {
+    const x = async {
+      // These don't block the outer function from running. `x` is a promise
+      // that resolves to `thing3` once the asynchronous operations are
+      // complete.
+      await thing1;
+      await thing2;
+      return thing3;
+    }
+    ...
+  }
+  ```
+
+  Though a bit more verbose and less obvious, the same result can be achieved
+  with an immediately-invoked anonymous function. This pattern is used
+  throughout the project:
+
+  ```javascript
+  function blort() {
+    const x = (async () => {
+      // These don't block the outer function from running. `x` is a promise
+      // that resolves to `thing3` once the asynchronous operations are
+      // complete.
+      await thing1;
+      await thing2;
+      return thing3;
+    })();
+    ...
+  }
+  ```
+
 * Utility classes &mdash; Utility classes are classes which only serve as a
   collection of functionality exposed as static methods (and sometimes static
   properties). Utility classes should be defined as `extends UtilityClass` both

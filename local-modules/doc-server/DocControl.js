@@ -274,12 +274,12 @@ export default class DocControl extends CommonBase {
     // Force the `_changeCondition` to `false` (though it might already be
     // so set; innocuous if so), and wait for it to become `true`.
     this._changeCondition.value = false;
-    return this._changeCondition.whenTrue().then((value_unused) => {
-      // Just recurse to do the work. Under normal circumstances it will return
-      // promptly. This arrangement gracefully handles edge cases, though, such
-      // as a triggered change turning out to be due to a no-op.
-      return this.deltaAfter(baseRevNum);
-    });
+    await this._changeCondition.whenTrue();
+
+    // Just recurse to do the work. Under normal circumstances it will return
+    // promptly. This arrangement gracefully handles edge cases, though, such
+    // as a triggered change turning out to be due to a no-op.
+    return this.deltaAfter(baseRevNum);
   }
 
   /**

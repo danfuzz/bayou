@@ -19,6 +19,7 @@ const elem = document.createElement('p');
 elem.innerHTML = 'Running&hellip;';
 document.body.appendChild(elem);
 
-Tests.runAll().then((result) => {
+(async () => {
+  const result = await Tests.runAll();
   elem.innerHTML = result;
-});
+})();

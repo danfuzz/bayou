@@ -126,33 +126,33 @@ function run() {
 /**
  * Does a client bundling.
  */
-function clientBundle() {
-  new ClientBundle().build().then((res_unused) => {
+async function clientBundle() {
+  try {
+    await new ClientBundle().build();
     process.exit(0);
-  }, (rej) => {
-    log.error(rej);
+  } catch (e) {
+    log.error(e);
     process.exit(1);
-  });
+  }
 }
 
 /**
  * Does a server testing run.
  */
-function serverTest() {
+async function serverTest() {
   // TODO: Arguably this call shouldn't be necessary. (That is, the test code
   // that cares about server env stuff should arrange for its appropriate
   // initialization and perhaps even teardown.)
   ServerEnv.init();
 
-  ServerTests.runAll((failures) => {
-    const anyFailed = (failures !== 0);
-    const msg = anyFailed
-      ? `Failed: ${failures}`
-      : 'All good! Yay!';
+  const failures = await ServerTests.runAll();
+  const anyFailed = (failures !== 0);
+  const msg = anyFailed
+    ? `Failed: ${failures}`
+    : 'All good! Yay!';
 
-    console.log(msg); // eslint-disable-line no-console
-    process.exit(anyFailed ? 1 : 0);
-  });
+  console.log(msg); // eslint-disable-line no-console
+  process.exit(anyFailed ? 1 : 0);
 }
 
 // Initialize logging.
