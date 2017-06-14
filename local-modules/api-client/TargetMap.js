@@ -49,11 +49,11 @@ export default class TargetMap {
    * is idempotent.)
    *
    * @param {BaseKey} key Key to authorize with.
-   * @returns {Promise<Proxy>} Promise which resolves to the proxy that
-   *   represents the foreign target which is controlled by `key`, once
-   *   authorization is complete.
+   * @returns {Proxy} Proxy that represents the foreign target which is
+   *   controlled by `key`. This becomes resolved once authorization is
+   *   complete.
    */
-  authorizeTarget(key) {
+  async authorizeTarget(key) {
     const id = key.id;
     const api = this._apiClient;
     const log = api.log;
@@ -62,12 +62,8 @@ export default class TargetMap {
 
     result = this._targets.get(id);
     if (result) {
-      // The target is already authorized. Return an immediately-resolved
-      // promise for it. (We don't just return it directly, as that would
-      // violate the method contract. And the method contract is written as such
-      // because it's generally considered a Zalgo-summoning type situation if
-      // you sometimes return promises and sometimes don't.)
-      return Promise.resolve(result);
+      // The target is already authorized. Return it.
+      return result;
     }
 
     result = this._pendingAuths.get(id);
@@ -81,22 +77,26 @@ export default class TargetMap {
     // It's not already authorized (or uncontrolled), and authorization isn't
     // yet in progress.
 
-    result = meta.makeChallenge(id).then((challenge) => {
-      log.info(`Got challenge: ${id} ${challenge}`);
-      const response = key.challengeResponseFor(challenge);
-      return meta.authWithChallengeResponse(challenge, response);
-    }).then(() => {
-      // Successful auth.
-      log.info(`Authed: ${id}`);
-      this._pendingAuths.delete(id); // It's no longer pending.
-      return this._addTarget(id);
-    }).catch((error) => {
-      // Trouble along the way. Clean out the pending auth, and propagate the
-      // error.
-      log.error(`Auth failed: ${id}`);
-      this._pendingAuths.delete(id);
-      throw error;
-    });
+    result = (async () => {
+      try {
+        const challenge = await meta.makeChallenge(id);
+        const response = key.challengeResponseFor(challenge);
+
+        log.info(`Got challenge: ${id} ${challenge}`);
+        await meta.authWithChallengeResponse(challenge, response);
+
+        // Successful auth.
+        log.info(`Authed: ${id}`);
+        this._pendingAuths.delete(id); // It's no longer pending.
+        return this._addTarget(id);
+      } catch (error) {
+        // Trouble along the way. Clean out the pending auth, and propagate the
+        // error.
+        log.error(`Auth failed: ${id}`);
+        this._pendingAuths.delete(id);
+        throw error;
+      }
+    })();
 
     this._pendingAuths.set(id, result); // It's now pending.
     return result;
