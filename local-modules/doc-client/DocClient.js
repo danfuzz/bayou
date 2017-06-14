@@ -286,9 +286,10 @@ export default class DocClient extends StateMachine {
     // start event will be received in the `errorWait` state, and as such will
     // be handled differently than a clean start from scratch.
 
-    PromDelay.resolve(RESTART_DELAY_MSEC).then((res_unused) => {
+    (async () => {
+      await PromDelay.resolve(RESTART_DELAY_MSEC);
       this.start();
-    });
+    })();
 
     this.s_errorWait();
   }
@@ -441,10 +442,11 @@ export default class DocClient extends StateMachine {
 
       // **Note:** As of this writing, Quill will never reject (report an error
       // on) a document change promise.
-      this._currentChange.next.then((value_unused) => {
+      (async () => {
+        await this._currentChange.next;
         this._pendingLocalDocumentChange = false;
         this.q_gotLocalDelta(baseDoc);
-      });
+      })();
     }
 
     // Ask the server for any changes, but only if there isn't already a pending
@@ -497,9 +499,10 @@ export default class DocClient extends StateMachine {
     // Fire off the next iteration of requesting server changes, after a short
     // delay. The delay is just to keep network traffic at a stately pace
     // despite any particularly active editing by other clients.
-    PromDelay.resolve(PULL_DELAY_MSEC).then((res_unused) => {
+    (async () => {
+      await PromDelay.resolve(PULL_DELAY_MSEC);
       this.q_wantChanges();
-    });
+    })();
 
     this.s_idle();
   }
@@ -547,9 +550,10 @@ export default class DocClient extends StateMachine {
       this._becomeIdle();
     } else {
       // After the appropriate delay, send a `wantApplyDelta` event.
-      PromDelay.resolve(PUSH_DELAY_MSEC).then((res_unused) => {
+      (async () => {
+        await PromDelay.resolve(PUSH_DELAY_MSEC);
         this.q_wantApplyDelta(baseDoc);
-      });
+      })();
 
       this.s_collecting();
     }
