@@ -102,13 +102,15 @@ export default class MetaHandler {
     // Store the challenge, and arrange for its expiry.
 
     this._activeChallenges.set(challenge, { id, response });
-    PromDelay.resolve(CHALLENGE_TIMEOUT_MSEC).then(() => {
+
+    (async () => {
+      await PromDelay.resolve(CHALLENGE_TIMEOUT_MSEC);
       if (this._activeChallenges.delete(challenge)) {
         // `delete` returns `true` to indicate that the value was found. In this
         // case, it means that it expired.
         this._log.info(`Challenge expired: ${id} ${challenge}`);
       }
-    });
+    })();
 
     // **Note:** It's probably okay to log the expected response, but may be
     // worth thinking a bit more about. (Attention: Security professionals!)

@@ -70,24 +70,23 @@ export default class TargetHandler {
    * Sets up the method handler table. This gets called as a byproduct of the
    * first property lookup.
    */
-  _becomeReady() {
+  async _becomeReady() {
     if (this._readyState !== 'not') {
       return;
     }
 
     this._readyState = 'readying';
 
-    this._apiClient.meta.schemaFor(this._targetId).then((schema) => {
-      const methods = this._methods;
+    const schema = await this._apiClient.meta.schemaFor(this._targetId);
+    const methods = this._methods;
 
-      for (const name in schema[this._targetId]) {
-        if (!VERBOTEN_METHODS.has(name)) {
-          methods.set(name, this._makeMethodHandler(name));
-        }
+    for (const name in schema[this._targetId]) {
+      if (!VERBOTEN_METHODS.has(name)) {
+        methods.set(name, this._makeMethodHandler(name));
       }
+    }
 
-      this._readyState = 'ready';
-    });
+    this._readyState = 'ready';
   }
 
   /**
