@@ -15,7 +15,7 @@ const log = new Logger('pid');
 
 /**
  * This writes a PID file when `init()` is called, and tries to remove it when
- * the app is shutting down. This clas is _not_ meant to be instantiated.
+ * the app is shutting down.
  */
 export default class PidFile extends Singleton {
   /**
