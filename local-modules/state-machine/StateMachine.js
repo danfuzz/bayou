@@ -10,8 +10,13 @@ import { PromCondition, PropertyIter } from 'util-common';
  * Lightweight state machine framework. This allows a subclass to define
  * handlers for any number of (state, event) pairs, along with default handlers
  * for wildcards on either event or state (or both). Events can be queued up
- * at will and get dispatched asynchronously (in a separate turn) with respect
- * to the act of enqueueing, in the same order they were enqueued.
+ * at will and get dispatched asynchronously (each in a separate turn) with
+ * respect to the act of enqueueing, in the same order they were enqueued.
+ *
+ * Event handlers are allowed to be `async` functions, in which case they are
+ * serialized such that there is only ever one handler running at a time,
+ * including pauses due to handler-internal `await`s. That is, each invoked
+ * handler runs to completion before another handler is invoked.
  *
  * The state machine is defined by a set of instance methods defined by
  * subclasses, with particular schematic names:
@@ -276,7 +281,7 @@ export default class StateMachine {
    */
   async _serviceEventQueue() {
     for (;;) {
-      const stillActive = this._dispatchAll();
+      const stillActive = await this._dispatchAll();
       if (!stillActive) {
         break;
       }
@@ -292,7 +297,7 @@ export default class StateMachine {
    * @returns {boolean} `true` iff the instance should still be considered
    *   active; `false` means it is being shut down.
    */
-  _dispatchAll() {
+  async _dispatchAll() {
     for (;;) {
       // Grab the queue locally.
       const queue = this._eventQueue;
@@ -315,7 +320,7 @@ export default class StateMachine {
         if (this._eventQueue === null) {
           return false;
         }
-        this._dispatchEvent(event);
+        await this._dispatchEvent(event);
       }
     }
   }
@@ -325,7 +330,7 @@ export default class StateMachine {
    *
    * @param {object} event The event.
    */
-  _dispatchEvent(event) {
+  async _dispatchEvent(event) {
     const { name, args } = event;
     const state = this._state;
     const log = this._log;
@@ -339,7 +344,7 @@ export default class StateMachine {
     // Dispatch the event. In case of exception, enqueue an `error` event.
     // (The default handler for the event will log an error and stop the queue.)
     try {
-      this._handlers[state][name].apply(this, args);
+      await this._handlers[state][name].apply(this, args);
     } catch (e) {
       if (name === 'error') {
         // We got an exception in an error event handler. This is the signal to
