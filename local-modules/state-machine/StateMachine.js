@@ -158,11 +158,25 @@ export default class StateMachine {
     const states = Object.keys(this._handlers);
     for (const name of states) {
       this[`s_${name}`] = () => {
-        if (this._state !== name) {
-          this._log.detail(`New state: ${name}`);
-          this._state = name;
+        if (this._state === name) {
+          return;
+        }
+
+        this._log.detail(`New state: ${name}`);
+        this._state = name;
+
+        // Trigger the awaiter for the state, if any.
+        const condition = this._stateConditions.get(name);
+        if (condition) {
+          condition.onOff();
+          this._log.detail(`Triggered awaiter for state: ${name}`);
+
+          // Remove the condition, because in general, these kinds of state
+          // awaiters are used only ephemerally.
+          this._stateConditions.delete(name);
         }
       };
+
       this[`when_${name}`] = () => {
         this._log.detail(`Awaiter added for state: ${name}`);
         let condition = this._stateConditions.get(name);
@@ -359,23 +373,7 @@ export default class StateMachine {
       }
     }
 
-    // If we transitioned into a new state, and that new state has an associated
-    // condition object, trigger it.
-    const newState = this._state;
-    if (newState !== state) {
-      const condition = this._stateConditions.get(newState);
-      if (condition) {
-        condition.onOff();
-        this._log.detail(`Triggered awaiter for state: ${newState}`);
-
-        // Remove the condition, because in general, these kinds of state
-        // awaiters are used only ephemerally.
-        this._stateConditions.delete(newState);
-      }
-    }
-
-    // Log the outcome (if not squelched).
-    log.detail('Done.');
+    log.detail('Done dispatching:', name, args);
 
     this._eventCount++;
     if ((this._eventCount % 25) === 0) {
