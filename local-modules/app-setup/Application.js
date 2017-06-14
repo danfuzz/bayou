@@ -52,6 +52,13 @@ export default class Application {
     // Bind `rootAccess` into the `context` using the root token(s), and arrange
     // for their update should the token(s) change.
     this._bindRoot();
+    (async () => {
+      for (;;) {
+        await Hooks.theOne.bearerTokens.whenRootTokensChange();
+        log.info('Root tokens updated.');
+        this._bindRoot();
+      }
+    })();
 
     /** The underlying webserver run by this instance. */
     this._app = express();
@@ -155,11 +162,5 @@ export default class Application {
       }
       this._rootTokens = rootTokens;
     }
-
-    // Wait for the token(s) to change, and then call this method recursively.
-    Hooks.theOne.bearerTokens.whenRootTokensChange().then(() => {
-      log.info('Root tokens updated.');
-      this._bindRoot();
-    });
   }
 }
