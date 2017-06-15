@@ -212,16 +212,6 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * Validates a `gotSnapshot` event. This represents a successful result from
-   * the API call `snapshot()`. Keys are as defined by that API.
-   *
-   * @param {Snapshot} snapshot The snapshot.
-   */
-  _check_gotSnapshot(snapshot) {
-    Snapshot.check(snapshot);
-  }
-
-  /**
    * Validates a `start` event. This is the event that kicks off the client.
    */
   _check_start() {
@@ -365,47 +355,30 @@ export default class DocClient extends StateMachine {
     // side), and get the first snapshot. We issue the calls in parallel and
     // then handle the results.
 
-    const docProxy = this._docProxy;
-    const logInfo  = docProxy.getLogInfo();
-    const snapshot = docProxy.snapshot();
+    const docProxy        = this._docProxy;
+    const infoPromise     = docProxy.getLogInfo();
+    const snapshotPromise = docProxy.snapshot();
 
     try {
-      const info = await logInfo;
+      const info = await infoPromise;
       this._log.info(`Session info: ${info}`);
     } catch (e) {
       this.q_apiError('getLogInfo', e);
       return;
     }
 
+    let snapshot;
     try {
-      this.q_gotSnapshot(await snapshot);
+      snapshot = await snapshotPromise;
     } catch (e) {
       this.q_apiError('snapshot', e);
       return;
     }
 
-    // By the time we make it to here, we will have already issued the
-    // `gotSnapshot` event, which means we will effectively just fall through
-    // to the handler for that event in state `starting`. **TODO:** Consider
-    // removing the `starting` state and just moving the salient handler code
-    // here.
-    this.s_starting();
-  }
+    // **Note:** Everything after this point is represented in the client state
+    // diagram as being the handler for a `gotSnapshot` event in state
+    // `starting`.
 
-  /**
-   * In most states, handles event `start`.
-   */
-  _handle_any_start() {
-    // This space intentionally left blank: We are already active or in the
-    // middle of starting, so there's nothing more to do.
-  }
-
-  /**
-   * In state `starting`, handles event `gotSnapshot`.
-   *
-   * @param {Snapshot} snapshot The snapshot.
-   */
-  _handle_starting_gotSnapshot(snapshot) {
     // Save the result as the current (latest known) revision of the document,
     // and tell Quill about it.
     this._updateDocWithSnapshot(snapshot);
@@ -431,6 +404,14 @@ export default class DocClient extends StateMachine {
     // Head into our first iteration of idling while waiting for changes coming
     // in locally (from quill) or from the server.
     this._becomeIdle();
+  }
+
+  /**
+   * In most states, handles event `start`.
+   */
+  _handle_any_start() {
+    // This space intentionally left blank: We are already active or in the
+    // middle of starting, so there's nothing more to do.
   }
 
   /**
