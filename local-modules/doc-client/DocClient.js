@@ -353,27 +353,38 @@ export default class DocClient extends StateMachine {
 
     // Perform a challenge-response to authorize access to the document.
     // TODO: This whole flow should probably be protected by a timeout.
-    this._api.authorizeTarget(this._docKey).then((docProxy) => {
-      this._docProxy = docProxy;
+    (async () => {
+      try {
+        this._docProxy = await this._api.authorizeTarget(this._docKey);
+      } catch (e) {
+        this.q_apiError('authorizeTarget', e);
+        return;
+      }
+
+      const docProxy = this._docProxy;
 
       // A little bit of logging to help associate this editing session with
       // what's happening on the server.
-      docProxy.getLogInfo().then((value) => {
-        this._log.info(`Session info: ${value}`);
-      }).catch((error) => {
-        this.q_apiError('getLogInfo', error);
-      });
+      (async () => {
+        try {
+          const info = await docProxy.getLogInfo();
+          this._log.info(`Session info: ${info}`);
+        } catch (e) {
+          this.q_apiError('getLogInfo', e);
+        }
+      })();
 
       // Get a snapshot, which when received will populate the editor and allow
       // the user to actually start editing.
-      return docProxy.snapshot().then((value) => {
-        this.q_gotSnapshot(value);
-      }).catch((error) => {
-        this.q_apiError('snapshot', error);
-      });
-    }).catch((error) => {
-      this.q_apiError('authorizeTarget', error);
-    });
+      (async () => {
+        try {
+          const snapshot = await docProxy.snapshot();
+          this.q_gotSnapshot(snapshot);
+        } catch (e) {
+          this.q_apiError('snapshot', e);
+        }
+      })();
+    })();
 
     this.s_starting();
   }
