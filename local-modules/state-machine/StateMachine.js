@@ -10,8 +10,13 @@ import { PromCondition, PropertyIter } from 'util-common';
  * Lightweight state machine framework. This allows a subclass to define
  * handlers for any number of (state, event) pairs, along with default handlers
  * for wildcards on either event or state (or both). Events can be queued up
- * at will and get dispatched asynchronously (in a separate turn) with respect
- * to the act of enqueueing, in the same order they were enqueued.
+ * at will and get dispatched asynchronously (each in a separate turn) with
+ * respect to the act of enqueueing, in the same order they were enqueued.
+ *
+ * Event handlers are allowed to be `async` functions, in which case they are
+ * serialized such that there is only ever one handler running at a time,
+ * including pauses due to handler-internal `await`s. That is, each invoked
+ * handler runs to completion before another handler is invoked.
  *
  * The state machine is defined by a set of instance methods defined by
  * subclasses, with particular schematic names:
@@ -153,11 +158,25 @@ export default class StateMachine {
     const states = Object.keys(this._handlers);
     for (const name of states) {
       this[`s_${name}`] = () => {
-        if (this._state !== name) {
-          this._log.detail(`New state: ${name}`);
-          this._state = name;
+        if (this._state === name) {
+          return;
+        }
+
+        this._log.detail(`New state: ${name}`);
+        this._state = name;
+
+        // Trigger the awaiter for the state, if any.
+        const condition = this._stateConditions.get(name);
+        if (condition) {
+          condition.onOff();
+          this._log.detail(`Triggered awaiter for state: ${name}`);
+
+          // Remove the condition, because in general, these kinds of state
+          // awaiters are used only ephemerally.
+          this._stateConditions.delete(name);
         }
       };
+
       this[`when_${name}`] = () => {
         this._log.detail(`Awaiter added for state: ${name}`);
         let condition = this._stateConditions.get(name);
@@ -276,7 +295,7 @@ export default class StateMachine {
    */
   async _serviceEventQueue() {
     for (;;) {
-      const stillActive = this._dispatchAll();
+      const stillActive = await this._dispatchAll();
       if (!stillActive) {
         break;
       }
@@ -292,7 +311,7 @@ export default class StateMachine {
    * @returns {boolean} `true` iff the instance should still be considered
    *   active; `false` means it is being shut down.
    */
-  _dispatchAll() {
+  async _dispatchAll() {
     for (;;) {
       // Grab the queue locally.
       const queue = this._eventQueue;
@@ -315,7 +334,7 @@ export default class StateMachine {
         if (this._eventQueue === null) {
           return false;
         }
-        this._dispatchEvent(event);
+        await this._dispatchEvent(event);
       }
     }
   }
@@ -325,7 +344,7 @@ export default class StateMachine {
    *
    * @param {object} event The event.
    */
-  _dispatchEvent(event) {
+  async _dispatchEvent(event) {
     const { name, args } = event;
     const state = this._state;
     const log = this._log;
@@ -339,7 +358,7 @@ export default class StateMachine {
     // Dispatch the event. In case of exception, enqueue an `error` event.
     // (The default handler for the event will log an error and stop the queue.)
     try {
-      this._handlers[state][name].apply(this, args);
+      await this._handlers[state][name].apply(this, args);
     } catch (e) {
       if (name === 'error') {
         // We got an exception in an error event handler. This is the signal to
@@ -354,23 +373,7 @@ export default class StateMachine {
       }
     }
 
-    // If we transitioned into a new state, and that new state has an associated
-    // condition object, trigger it.
-    const newState = this._state;
-    if (newState !== state) {
-      const condition = this._stateConditions.get(newState);
-      if (condition) {
-        condition.onOff();
-        this._log.detail(`Triggered awaiter for state: ${newState}`);
-
-        // Remove the condition, because in general, these kinds of state
-        // awaiters are used only ephemerally.
-        this._stateConditions.delete(newState);
-      }
-    }
-
-    // Log the outcome (if not squelched).
-    log.detail('Done.');
+    log.detail('Done dispatching:', name, args);
 
     this._eventCount++;
     if ((this._eventCount % 25) === 0) {

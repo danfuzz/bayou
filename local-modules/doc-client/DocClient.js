@@ -212,16 +212,6 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * Validates a `gotSnapshot` event. This represents a successful result from
-   * the API call `snapshot()`. Keys are as defined by that API.
-   *
-   * @param {Snapshot} snapshot The snapshot.
-   */
-  _check_gotSnapshot(snapshot) {
-    Snapshot.check(snapshot);
-  }
-
-  /**
    * Validates a `start` event. This is the event that kicks off the client.
    */
   _check_start() {
@@ -286,9 +276,10 @@ export default class DocClient extends StateMachine {
     // start event will be received in the `errorWait` state, and as such will
     // be handled differently than a clean start from scratch.
 
-    PromDelay.resolve(RESTART_DELAY_MSEC).then((res_unused) => {
+    (async () => {
+      await PromDelay.resolve(RESTART_DELAY_MSEC);
       this.start();
-    });
+    })();
 
     this.s_errorWait();
   }
@@ -343,7 +334,9 @@ export default class DocClient extends StateMachine {
    *
    * This is the kickoff event.
    */
-  _handle_detached_start() {
+  async _handle_detached_start() {
+    // **TODO:** This whole flow should probably be protected by a timeout.
+
     // Open (or reopen) the connection to the server. Even though the connection
     // won't become open synchronously, the API client code allows us to start
     // sending messages over it immediately. (They'll just get queued up as
@@ -351,46 +344,37 @@ export default class DocClient extends StateMachine {
     this._api.open();
 
     // Perform a challenge-response to authorize access to the document.
-    // TODO: This whole flow should probably be protected by a timeout.
-    this._api.authorizeTarget(this._docKey).then((docProxy) => {
-      this._docProxy = docProxy;
+    try {
+      this._docProxy = await this._api.authorizeTarget(this._docKey);
+    } catch (e) {
+      this.q_apiError('authorizeTarget', e);
+      return;
+    }
 
-      // A little bit of logging to help associate this editing session with
-      // what's happening on the server.
-      docProxy.getLogInfo().then((value) => {
-        this._log.info(`Session info: ${value}`);
-      }).catch((error) => {
-        this.q_apiError('getLogInfo', error);
-      });
+    // Get log metainfo for the session (so we can log it here on the client
+    // side), and get the first snapshot. We issue the calls in parallel and
+    // then handle the results.
 
-      // Get a snapshot, which when received will populate the editor and allow
-      // the user to actually start editing.
-      return docProxy.snapshot().then((value) => {
-        this.q_gotSnapshot(value);
-      }).catch((error) => {
-        this.q_apiError('snapshot', error);
-      });
-    }).catch((error) => {
-      this.q_apiError('authorizeTarget', error);
-    });
+    const docProxy        = this._docProxy;
+    const infoPromise     = docProxy.getLogInfo();
+    const snapshotPromise = docProxy.snapshot();
 
-    this.s_starting();
-  }
+    try {
+      const info = await infoPromise;
+      this._log.info(`Session info: ${info}`);
+    } catch (e) {
+      this.q_apiError('getLogInfo', e);
+      return;
+    }
 
-  /**
-   * In most states, handles event `start`.
-   */
-  _handle_any_start() {
-    // This space intentionally left blank: We are already active or in the
-    // middle of starting, so there's nothing more to do.
-  }
+    let snapshot;
+    try {
+      snapshot = await snapshotPromise;
+    } catch (e) {
+      this.q_apiError('snapshot', e);
+      return;
+    }
 
-  /**
-   * In state `starting`, handles event `gotSnapshot`.
-   *
-   * @param {Snapshot} snapshot The snapshot.
-   */
-  _handle_starting_gotSnapshot(snapshot) {
     // Save the result as the current (latest known) revision of the document,
     // and tell Quill about it.
     this._updateDocWithSnapshot(snapshot);
@@ -419,6 +403,14 @@ export default class DocClient extends StateMachine {
   }
 
   /**
+   * In most states, handles event `start`.
+   */
+  _handle_any_start() {
+    // This space intentionally left blank: We are already active or in the
+    // middle of starting, so there's nothing more to do.
+  }
+
+  /**
    * In state `idle`, handles event `wantChanges`. This can happen as a chained
    * event (during startup or at the end of handling the integration of changes)
    * or due to a delay timeout. This will make requests both to the server and
@@ -441,10 +433,11 @@ export default class DocClient extends StateMachine {
 
       // **Note:** As of this writing, Quill will never reject (report an error
       // on) a document change promise.
-      this._currentChange.next.then((value_unused) => {
+      (async () => {
+        await this._currentChange.next;
         this._pendingLocalDocumentChange = false;
         this.q_gotLocalDelta(baseDoc);
-      });
+      })();
     }
 
     // Ask the server for any changes, but only if there isn't already a pending
@@ -453,13 +446,16 @@ export default class DocClient extends StateMachine {
     if (!this._pendingDeltaAfter) {
       this._pendingDeltaAfter = true;
 
-      this._docProxy.deltaAfter(baseDoc.revNum).then((value) => {
-        this._pendingDeltaAfter = false;
-        this.q_gotDeltaAfter(baseDoc, value);
-      }).catch((error) => {
-        this._pendingDeltaAfter = false;
-        this.q_apiError('deltaAfter', error);
-      });
+      (async () => {
+        try {
+          const value = await this._docProxy.deltaAfter(baseDoc.revNum);
+          this._pendingDeltaAfter = false;
+          this.q_gotDeltaAfter(baseDoc, value);
+        } catch (e) {
+          this._pendingDeltaAfter = false;
+          this.q_apiError('deltaAfter', e);
+        }
+      })();
     }
 
     this.s_idle();
@@ -497,9 +493,10 @@ export default class DocClient extends StateMachine {
     // Fire off the next iteration of requesting server changes, after a short
     // delay. The delay is just to keep network traffic at a stately pace
     // despite any particularly active editing by other clients.
-    PromDelay.resolve(PULL_DELAY_MSEC).then((res_unused) => {
+    (async () => {
+      await PromDelay.resolve(PULL_DELAY_MSEC);
       this.q_wantChanges();
-    });
+    })();
 
     this.s_idle();
   }
@@ -547,9 +544,10 @@ export default class DocClient extends StateMachine {
       this._becomeIdle();
     } else {
       // After the appropriate delay, send a `wantApplyDelta` event.
-      PromDelay.resolve(PUSH_DELAY_MSEC).then((res_unused) => {
+      (async () => {
+        await PromDelay.resolve(PUSH_DELAY_MSEC);
         this.q_wantApplyDelta(baseDoc);
-      });
+      })();
 
       this.s_collecting();
     }
@@ -599,11 +597,14 @@ export default class DocClient extends StateMachine {
     }
 
     // Send the delta, and handle the response.
-    this._docProxy.applyDelta(this._doc.revNum, delta).then((value) => {
-      this.q_gotApplyDelta(delta, value);
-    }).catch((error) => {
-      this.q_apiError('applyDelta', error);
-    });
+    (async () => {
+      try {
+        const value = await this._docProxy.applyDelta(this._doc.revNum, delta);
+        this.q_gotApplyDelta(delta, value);
+      } catch (e) {
+        this.q_apiError('applyDelta', e);
+      }
+    })();
 
     this.s_merging();
   }
@@ -729,7 +730,10 @@ export default class DocClient extends StateMachine {
     // that we rely on elsewhere (and which is provided under normal
     // circumstances by `QuillProm`), specifically that `change.nextNow`
     // becomes non-null as soon as `change.next` resolves to a value.
-    nextNow.next.then((value) => { nextNow.nextNow = value; });
+    (async () => {
+      const value = await nextNow.next;
+      nextNow.nextNow = value;
+    })();
 
     // Make a new head of the change chain which points at the `nextNow` we
     // just constructed above.
