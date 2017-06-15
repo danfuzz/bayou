@@ -344,7 +344,9 @@ export default class DocClient extends StateMachine {
    *
    * This is the kickoff event.
    */
-  _handle_detached_start() {
+  async _handle_detached_start() {
+    // **TODO:** This whole flow should probably be protected by a timeout.
+
     // Open (or reopen) the connection to the server. Even though the connection
     // won't become open synchronously, the API client code allows us to start
     // sending messages over it immediately. (They'll just get queued up as
@@ -352,40 +354,41 @@ export default class DocClient extends StateMachine {
     this._api.open();
 
     // Perform a challenge-response to authorize access to the document.
-    // TODO: This whole flow should probably be protected by a timeout.
-    (async () => {
-      try {
-        this._docProxy = await this._api.authorizeTarget(this._docKey);
-      } catch (e) {
-        this.q_apiError('authorizeTarget', e);
-        return;
-      }
+    try {
+      this._docProxy = await this._api.authorizeTarget(this._docKey);
+    } catch (e) {
+      this.q_apiError('authorizeTarget', e);
+      return;
+    }
 
-      const docProxy = this._docProxy;
+    // Get log metainfo for the session (so we can log it here on the client
+    // side), and get the first snapshot. We issue the calls in parallel and
+    // then handle the results.
 
-      // A little bit of logging to help associate this editing session with
-      // what's happening on the server.
-      (async () => {
-        try {
-          const info = await docProxy.getLogInfo();
-          this._log.info(`Session info: ${info}`);
-        } catch (e) {
-          this.q_apiError('getLogInfo', e);
-        }
-      })();
+    const docProxy = this._docProxy;
+    const logInfo  = docProxy.getLogInfo();
+    const snapshot = docProxy.snapshot();
 
-      // Get a snapshot, which when received will populate the editor and allow
-      // the user to actually start editing.
-      (async () => {
-        try {
-          const snapshot = await docProxy.snapshot();
-          this.q_gotSnapshot(snapshot);
-        } catch (e) {
-          this.q_apiError('snapshot', e);
-        }
-      })();
-    })();
+    try {
+      const info = await logInfo;
+      this._log.info(`Session info: ${info}`);
+    } catch (e) {
+      this.q_apiError('getLogInfo', e);
+      return;
+    }
 
+    try {
+      this.q_gotSnapshot(await snapshot);
+    } catch (e) {
+      this.q_apiError('snapshot', e);
+      return;
+    }
+
+    // By the time we make it to here, we will have already issued the
+    // `gotSnapshot` event, which means we will effectively just fall through
+    // to the handler for that event in state `starting`. **TODO:** Consider
+    // removing the `starting` state and just moving the salient handler code
+    // here.
     this.s_starting();
   }
 
