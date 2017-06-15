@@ -375,10 +375,6 @@ export default class DocClient extends StateMachine {
       return;
     }
 
-    // **Note:** Everything after this point is represented in the client state
-    // diagram as being the handler for a `gotSnapshot` event in state
-    // `starting`.
-
     // Save the result as the current (latest known) revision of the document,
     // and tell Quill about it.
     this._updateDocWithSnapshot(snapshot);
