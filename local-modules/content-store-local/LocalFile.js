@@ -22,6 +22,17 @@ const log = new Logger('local-file');
 const DIRTY_DELAY_MSEC = 5 * 1000; // 5 seconds.
 
 /**
+ * {string} Special storage path to use to record the file revision number. The
+ * `@` prefix on the path guarantees that it won't conflict with higher-layer
+ * uses, as that isn't a valid `StoragePath` character.
+ *
+ * **Note:** Higher layers of the system (that use this module) can (and do)
+ * define their own separate concept of revision numbering. These are
+ * intentionally not the same thing.
+ */
+const REVISION_NUMBER_PATH = '/@local_file_revision_number';
+
+/**
  * File implementation that stores everything in the locally-accessible
  * filesystem.
  */
@@ -39,6 +50,11 @@ export default class LocalFile extends BaseFile {
      * {string} Path to the directory containing stored values for this file.
      */
     this._storageDir = filePath;
+
+    /**
+     * {Int|null} Current file revision number or `null` if not yet initialized.
+     */
+    this._revNum = null;
 
     /**
      * {Map<string,FrozenBuffer>|null} Map from `StoragePath` strings to
@@ -113,6 +129,7 @@ export default class LocalFile extends BaseFile {
       await this._storageReadyPromise;
     }
 
+    this._revNum              = 0;
     this._storage             = new Map();
     this._storageToWrite      = new Map();
     this._storageNeedsErasing = true;
@@ -124,7 +141,7 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-  * Implementation as required by the superclass.
+   * Implementation as required by the superclass.
    *
    * @param {string} storagePath Path to write to.
    * @param {FrozenBuffer|null} newValue Value to write, or `null` if the value
@@ -169,6 +186,16 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
+   * Implementation as required by the superclass.
+   *
+   * @returns {Int} The instantaneously current revision number of the file.
+   */
+  async _impl_revNum() {
+    await this._readStorageIfNecessary();
+    return this._revNum;
+  }
+
+  /**
    * Helper for the update methods, which performs the actual updating.
    *
    * @param {string} storagePath Path to write to.
@@ -182,6 +209,7 @@ export default class LocalFile extends BaseFile {
       this._storage.set(storagePath, newValue);
     }
 
+    this._revNum++;
     this._storageToWrite.set(storagePath, newValue);
     this._storageNeedsWrite();
   }
@@ -222,6 +250,7 @@ export default class LocalFile extends BaseFile {
   async _readStorage() {
     if (!await afs.exists(this._storageDir)) {
       // Directory doesn't actually exist. Just initialize empty storage.
+      this._revNum  = 0;
       this._storage = new Map();
       this._log.info('New storage.');
       return true;
@@ -247,6 +276,22 @@ export default class LocalFile extends BaseFile {
     this._storageNeedsErasing = false;
     this._storageIsDirty      = false;
 
+    // Parse the file revision number out of its special-named blob, and handle
+    // things reasonably gracefully if it's missing or corrupt.
+    try {
+      const revNumBuffer = this._storage.get(REVISION_NUMBER_PATH);
+      this._revNum = JSON.parse(revNumBuffer.string);
+      this._log.info(`Starting revision number: ${this._revNum}`);
+    } catch (e) {
+      // In case of failure, use the size of the storage map as a good enough
+      // value for `revNum`. This case probably won't happen in practice except
+      // when dealing with corrupt FS contents, but even if it does, this should
+      // be fine in that the primary required guarantee is monotonic increase
+      // within any given process (and not really across processes).
+      this._revNum = this._storage.size;
+      this._log.info(`Starting with "fake" revision number: ${this._revNum}`);
+    }
+
     return true;
   }
 
@@ -269,9 +314,11 @@ export default class LocalFile extends BaseFile {
     this._storageIsDirty = true;
 
     if (this._storageNeedsErasing) {
-      this._log.info(`Storage will be erased.`);
+      this._log.info('Storage will be erased.');
     }
-    this._log.info(`Value(s) to write: ${this._storageToWrite.size}`);
+
+    this._log.info('About to write. ' +
+      `${this._storageToWrite.size} value(s); revision number: ${this._revNum}`);
 
     // **TODO:** If we want to catch write errors (e.g. filesystem full), here
     // is where we need to do it.
@@ -298,10 +345,16 @@ export default class LocalFile extends BaseFile {
 
     const storageNeedsErasing = this._storageNeedsErasing;
     const dirtyValues         = this._storageToWrite;
+    const revNum              = this._revNum;
 
     this._storageIsDirty      = false;
     this._storageNeedsErasing = false;
     this._storageToWrite      = new Map();
+
+    // Put the file revision number in the `dirtyValues` map. This way, it gets
+    // written out without further special casing.
+    dirtyValues.set(REVISION_NUMBER_PATH,
+      FrozenBuffer.coerce(JSON.stringify(revNum)));
 
     // Erase and/or create the storage directory as needed.
 
@@ -355,7 +408,7 @@ export default class LocalFile extends BaseFile {
 
     // The usual case: Everything is fine.
 
-    this._log.info('Finished writing storage.');
+    this._log.info(`Finished writing storage. Revision number: ${revNum}`);
     return true;
   }
 
