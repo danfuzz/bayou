@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TBoolean, TString } from 'typecheck';
+import { TBoolean, TInt, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 import { FrozenBuffer } from 'util-server';
 
@@ -28,6 +28,13 @@ export default class BaseFile extends CommonBase {
 
     /** {string} The ID of the file that this instance represents. */
     this._id = TString.nonempty(fileId);
+
+    /**
+     * {Int} Last instantaneous revision number reported by the subclass, or
+     * `0` if none ever reported. Reset to `0` in `create()`. This is used to
+     * validate the behavior of the subclass.
+     */
+    this._lastRevNum = -1;
   }
 
   /** {string} The ID of the file that this instance represents. */
@@ -53,20 +60,17 @@ export default class BaseFile extends CommonBase {
    * @returns {boolean} `true` iff this file exists.
    */
   async _impl_exists() {
-    return this._mustOverride();
+    this._mustOverride();
   }
 
   /**
    * Creates this file if it does not already exist, or re-creates it if it does
    * already exist. After this call, the file both exists and is empty (that is,
-   * has no stored values).
+   * has no stored values). In addition, the revision number of the file is `0`.
    */
   async create() {
-    // This is just a simple pass-through. The point is to maintain the
-    // convention of normal-named methods being the exposed public interface
-    // and `_impl_*` methods being the ones that subclasses are supposed to
-    // override.
-    this._impl_create();
+    await this._impl_create();
+    this._lastRevNum = 0;
   }
 
   /**
@@ -118,7 +122,7 @@ export default class BaseFile extends CommonBase {
    * @returns {boolean} `true` once the write operation is complete.
    */
   async _impl_forceOp(storagePath, newValue) {
-    return this._mustOverride(storagePath, newValue);
+    this._mustOverride(storagePath, newValue);
   }
 
   /**
@@ -196,7 +200,7 @@ export default class BaseFile extends CommonBase {
    *   failed due to value mismatch.
    */
   async _impl_op(storagePath, oldValue, newValue) {
-    return this._mustOverride(storagePath, oldValue, newValue);
+    this._mustOverride(storagePath, oldValue, newValue);
   }
 
   /**
@@ -243,6 +247,34 @@ export default class BaseFile extends CommonBase {
    *   if there is none.
    */
   async _impl_pathReadOrNull(storagePath) {
-    return this._mustOverride(storagePath);
+    this._mustOverride(storagePath);
+  }
+
+  /**
+   * Gets the instantaneously current revision number of the file. The revision
+   * number starts at `0` for a newly-created file and increases monotonically
+   * as changes are made to it.
+   *
+   * **Note:** Due to the asynchronous nature of the system, it is possible
+   * (common even) for the revision number to have increased by the time this
+   * method returns to a caller.
+   *
+   * @returns {Int} The instantaneously current revision number of the file.
+   */
+  async revNum() {
+    const result = TInt.min(this._impl_revNum(), this._lastRevNum);
+
+    this._lastRevNum = result;
+    return result;
+  }
+
+  /**
+   * Main implementation of `revNum()`.
+   *
+   * @abstract
+   * @returns {Int} The instantaneously current revision number of the file.
+   */
+  async _impl_revNum() {
+    this._mustOverride();
   }
 }
