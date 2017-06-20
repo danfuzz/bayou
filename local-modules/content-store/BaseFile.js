@@ -262,7 +262,7 @@ export default class BaseFile extends CommonBase {
    * @returns {Int} The instantaneously current revision number of the file.
    */
   async revNum() {
-    const result = TInt.min(this._impl_revNum(), this._lastRevNum);
+    const result = TInt.min(await this._impl_revNum(), this._lastRevNum);
 
     this._lastRevNum = result;
     return result;
