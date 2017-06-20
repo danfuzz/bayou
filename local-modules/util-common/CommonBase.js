@@ -94,7 +94,7 @@ export default class CommonBase {
    *   method was called on.
    */
   static _impl_coerce(value) {
-    return this._mustOverride(value);
+    this._mustOverride(value);
   }
 
   /**

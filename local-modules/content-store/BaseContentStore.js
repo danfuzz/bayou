@@ -60,6 +60,6 @@ export default class BaseContentStore extends Singleton {
    * @returns {BaseFile} Accessor for the file in question.
    */
   async _impl_getFile(fileId) {
-    return this._mustOverride(fileId);
+    this._mustOverride(fileId);
   }
 }

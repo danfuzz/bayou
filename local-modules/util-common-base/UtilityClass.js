@@ -7,6 +7,8 @@
  * meant to be instantiated, but rather is merely a collection of `static`
  * methods. This (base) class enforces non-instantiability and also helps
  * serve as documentation for the intent of how a class is defined.
+ *
+ * @abstract
  */
 export default class UtilityClass {
   /**
