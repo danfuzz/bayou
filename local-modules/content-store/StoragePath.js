@@ -75,6 +75,26 @@ export default class StoragePath extends UtilityClass {
   }
 
   /**
+   * Validates that the given value is either a valid storage path string or
+   * `null`. Throws an error if not.
+   *
+   * @param {*} value Value to check.
+   * @returns {string} `value` if it is in fact a valid storage path string.
+   */
+  static orNull(value) {
+    if (value === null) {
+      return value;
+    }
+
+    try {
+      return StoragePath.check(value);
+    } catch (e) {
+      // More specific error.
+      return TypeError.badValue(value, 'StoragePath|null');
+    }
+  }
+
+  /**
    * Splits a storage path into individual components. Resulting components are
    * just the names and do not contain any slash separators. This operation is
    * the inverse of `join()`.
