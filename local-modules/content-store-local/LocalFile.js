@@ -312,6 +312,7 @@ export default class LocalFile extends BaseFile {
     }
 
     this._revNum++;
+    this._storageRevNums.set(storagePath, this._revNum);
     this._storageToWrite.set(storagePath, newValue);
     this._storageNeedsWrite();
   }
