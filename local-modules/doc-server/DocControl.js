@@ -254,7 +254,7 @@ export default class DocControl extends CommonBase {
       // It's essential to get the file revision number before asking for the
       // document revision number: Due to the asynch nature of the system, it's
       // possible for the document revision to be taken with regard to a later
-      // file revision, and this ordering guarantees that the `awaitChange()` we
+      // file revision, and this ordering guarantees that the `whenChange()` we
       // do will properly return promptly when that situation occurs.
       const fileRevNum = await this._file.revNum();
       const docRevNum  = await this._currentRevNum();
@@ -276,7 +276,7 @@ export default class DocControl extends CommonBase {
       // Wait for the file to change (or for the storage layer to timeout), and
       // then iterate to see if in fact the change updated the document revision
       // number.
-      await this._file.awaitChange(-1, fileRevNum, Paths.REVISION_NUMBER);
+      await this._file.whenChange(-1, fileRevNum, Paths.REVISION_NUMBER);
     }
   }
 

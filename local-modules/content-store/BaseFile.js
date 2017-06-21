@@ -44,7 +44,7 @@ export default class BaseFile extends CommonBase {
 
   /**
    * {Int} The maximum value allowed (inclusive) as the `timeoutMsec` argument
-   * to calls to `awaitChange()` on this instance.
+   * to calls to `whenChange()` on this instance.
    *
    * @abstract
    */
@@ -53,9 +53,9 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Awaits for a change to be made to a file, either in general or on a
-   * specific path. The return value becomes resolved soon after a change is
-   * made or the specified timeout elapses.
+   * Waits for a change to be made to a file, either in general or on a specific
+   * path. The return value becomes resolved soon after a change is made or the
+   * specified timeout elapses.
    *
    * When watching a path, any change to that path counts, including all of:
    * storing a value at a path not previously stored at; deleting the value at
@@ -76,7 +76,7 @@ export default class BaseFile extends CommonBase {
    *   which the change was made); or `null` if the call is returning due to
    *   timeout.
    */
-  async awaitChange(timeoutMsec, baseRevNum, storagePath = null) {
+  async whenChange(timeoutMsec, baseRevNum, storagePath = null) {
     const maxMsec = this.maxAwaitTimeoutMsec;
 
     if (timeoutMsec === -1) {
@@ -89,7 +89,7 @@ export default class BaseFile extends CommonBase {
     StoragePath.orNull(storagePath);
 
     const result =
-      await this._impl_awaitChange(timeoutMsec, baseRevNum, storagePath);
+      await this._impl_whenChange(timeoutMsec, baseRevNum, storagePath);
 
     if (result === null) {
       return null;
@@ -105,17 +105,17 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Main implementation of `awaitChange()`. It is guaranteed to be called
+   * Main implementation of `whenChange()`. It is guaranteed to be called
    * with valid arguments, _except_ that `baseRevNum` is not guaranteed to
    * refer to an existing revision.
    *
    * @abstract
-   * @param {Int} timeoutMsec Same as with `awaitChange()`.
-   * @param {Int} baseRevNum Same as with `awaitChange()`.
-   * @param {string|null} storagePath Same as with `awaitChange()`.
-   * @returns {Int|null} Same as with `awaitChange()`.
+   * @param {Int} timeoutMsec Same as with `whenChange()`.
+   * @param {Int} baseRevNum Same as with `whenChange()`.
+   * @param {string|null} storagePath Same as with `whenChange()`.
+   * @returns {Int|null} Same as with `whenChange()`.
    */
-  async _impl_awaitChange(timeoutMsec, baseRevNum, storagePath) {
+  async _impl_whenChange(timeoutMsec, baseRevNum, storagePath) {
     this._mustOverride(timeoutMsec, baseRevNum, storagePath);
   }
 

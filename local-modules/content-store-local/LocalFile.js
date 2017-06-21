@@ -128,12 +128,12 @@ export default class LocalFile extends BaseFile {
   /**
    * Implementation as required by the superclass.
    *
-   * @param {Int} timeoutMsec Same as with `awaitChange()`.
-   * @param {Int} baseRevNum Same as with `awaitChange()`.
-   * @param {string|null} storagePath Same as with `awaitChange()`.
-   * @returns {Int|null} Same as with `awaitChange()`.
+   * @param {Int} timeoutMsec Same as with `whenChange()`.
+   * @param {Int} baseRevNum Same as with `whenChange()`.
+   * @param {string|null} storagePath Same as with `whenChange()`.
+   * @returns {Int|null} Same as with `whenChange()`.
    */
-  async _impl_awaitChange(timeoutMsec, baseRevNum, storagePath) {
+  async _impl_whenChange(timeoutMsec, baseRevNum, storagePath) {
     // Arrange for timeout. **Note:** Needs to be done _before_ reading
     // storage, as that storage read can take significant time.
     let timeout = false; // Gets set to `true` when the timeout expires.
