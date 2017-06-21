@@ -121,7 +121,7 @@ export default class LocalFile extends BaseFile {
    * (Keep in mind that this module is oriented toward development time, not
    * production.)
    */
-  get maxAwaitTimeoutMsec() {
+  get maxTimeoutMsec() {
     return 1 * 60 * 1000; // One minute.
   }
 

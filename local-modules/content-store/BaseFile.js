@@ -48,7 +48,7 @@ export default class BaseFile extends CommonBase {
    *
    * @abstract
    */
-  get maxAwaitTimeoutMsec() {
+  get maxTimeoutMsec() {
     this._mustOverride();
   }
 
@@ -305,9 +305,9 @@ export default class BaseFile extends CommonBase {
    * @param {Int} timeoutMsec The maximum amount of time (in msec) to wait for
    *   a change. If the requested change does not occur within this time, then
    *   this method returns `null` instead of a revision number. This value
-   *   must be no greater than `maxAwaitTimeoutMsec` as defined on the instance
-   *   being called. As a convenience, passing this value as `-1` is equivalent
-   *   to passing `maxAwaitTimeoutMsec`.
+   *   must be no greater than `maxTimeoutMsec` as defined on the instance being
+   *   called. As a convenience, passing this value as `-1` is equivalent to
+   *   passing `maxTimeoutMsec`.
    * @param {Int} baseRevNum The revision number which is the base for the
    *   request. The request is to detect a change with respect to this revision.
    * @param {string|null} [storagePath = null] The specific path to watch for
@@ -318,7 +318,7 @@ export default class BaseFile extends CommonBase {
    *   timeout.
    */
   async whenChange(timeoutMsec, baseRevNum, storagePath = null) {
-    const maxMsec = this.maxAwaitTimeoutMsec;
+    const maxMsec = this.maxTimeoutMsec;
 
     if (timeoutMsec === -1) {
       timeoutMsec = maxMsec;
