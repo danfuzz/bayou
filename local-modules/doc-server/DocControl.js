@@ -7,7 +7,7 @@ import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Tim
 import { BaseFile, Coder } from 'content-store';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
-import { CommonBase, PromCondition, PromDelay } from 'util-common';
+import { CommonBase, PromDelay } from 'util-common';
 
 import Paths from './Paths';
 
@@ -72,14 +72,6 @@ export default class DocControl extends CommonBase {
      * corresponding document snapshots. Sparse.
      */
     this._snapshots = new Map();
-
-    /**
-     * Condition that transitions from `false` to `true` when there is a
-     * revision change and there are waiters for same. This remains `true` in
-     * the steady state (when there are no waiters). As soon as the first waiter
-     * comes along, it gets set to `false`.
-     */
-    this._changeCondition = new PromCondition(true);
 
     /** {Logger} Logger specific to this document's ID. */
     this._log = log.withPrefix(`[${this._file.id}]`);
@@ -525,12 +517,11 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Appends a new delta to the document. Also forces `_changeCondition`
-   * `true` to release any waiters. On success, this returns the revision number
-   * of the document after the append. On a failure due to `baseRevNum` not
-   * being current at the moment of application, this returns `null`. All other
-   * errors are reported via thrown errors. See `_applyDeltaTo()` above for
-   * further discussion.
+   * Appends a new delta to the document. On success, this returns the revision
+   * number of the document after the append. On a failure due to `baseRevNum`
+   * not being current at the moment of application, this returns `null`. All
+   * other errors are reported via thrown errors. See `_applyDeltaTo()` above
+   * for further discussion.
    *
    * **Note:** If the delta is a no-op, then this method throws an error,
    * because the calling code should have handled that case without calling this
@@ -563,7 +554,6 @@ export default class DocControl extends CommonBase {
     // thrown via this method instead of being dropped on the floor.
     await this._writeRevNum(revNum);
 
-    this._changeCondition.value = true;
     return revNum;
   }
 
