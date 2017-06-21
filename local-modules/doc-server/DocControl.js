@@ -7,7 +7,7 @@ import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Tim
 import { BaseFile, Coder } from 'content-store';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
-import { CommonBase, PromCondition, PromDelay } from 'util-common';
+import { CommonBase, PromDelay } from 'util-common';
 
 import Paths from './Paths';
 
@@ -72,14 +72,6 @@ export default class DocControl extends CommonBase {
      * corresponding document snapshots. Sparse.
      */
     this._snapshots = new Map();
-
-    /**
-     * Condition that transitions from `false` to `true` when there is a
-     * revision change and there are waiters for same. This remains `true` in
-     * the steady state (when there are no waiters). As soon as the first waiter
-     * comes along, it gets set to `false`.
-     */
-    this._changeCondition = new PromCondition(true);
 
     /** {Logger} Logger specific to this document's ID. */
     this._log = log.withPrefix(`[${this._file.id}]`);
@@ -258,28 +250,34 @@ export default class DocControl extends CommonBase {
    *   revision `baseRevNum` to produce revision `revNum` of the document.
    */
   async deltaAfter(baseRevNum) {
-    const currentRevNum = await this._currentRevNum();
-    RevisionNumber.maxInc(baseRevNum, currentRevNum);
+    for (;;) {
+      // It's essential to get the file revision number before asking for the
+      // document revision number: Due to the asynch nature of the system, it's
+      // possible for the document revision to be taken with regard to a later
+      // file revision, and this ordering guarantees that the `whenChange()` we
+      // do will properly return promptly when that situation occurs.
+      const fileRevNum = await this._file.revNum();
+      const docRevNum  = await this._currentRevNum();
 
-    if (baseRevNum !== currentRevNum) {
-      // We can fulfill the result based on existing document history. (That is,
-      // we don't have to wait for a new change to be added to the document).
-      // Compose all the deltas from the revision after the base through the
-      // current revision.
-      const delta = await this._composeVersions(
-        FrozenDelta.EMPTY, baseRevNum + 1, RevisionNumber.after(currentRevNum));
-      return new DeltaResult(currentRevNum, delta);
+      // We can only validate `baseRevNum` after we have resolved the document
+      // revision number. If we end up iterating we'll do redundant checks, but
+      // that's a very minor inefficiency.
+      RevisionNumber.maxInc(baseRevNum, docRevNum);
+
+      if (baseRevNum < docRevNum) {
+        // The document's revision is in fact newer than the base, so we can now
+        // form and return a result. Compose all the deltas from the revision
+        // after the base through and including the current revision.
+        const delta = await this._composeVersions(
+          FrozenDelta.EMPTY, baseRevNum + 1, RevisionNumber.after(docRevNum));
+        return new DeltaResult(docRevNum, delta);
+      }
+
+      // Wait for the file to change (or for the storage layer to timeout), and
+      // then iterate to see if in fact the change updated the document revision
+      // number.
+      await this._file.whenChange(-1, fileRevNum, Paths.REVISION_NUMBER);
     }
-
-    // Force the `_changeCondition` to `false` (though it might already be
-    // so set; innocuous if so), and wait for it to become `true`.
-    this._changeCondition.value = false;
-    await this._changeCondition.whenTrue();
-
-    // Just recurse to do the work. Under normal circumstances it will return
-    // promptly. This arrangement gracefully handles edge cases, though, such
-    // as a triggered change turning out to be due to a no-op.
-    return this.deltaAfter(baseRevNum);
   }
 
   /**
@@ -519,12 +517,11 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Appends a new delta to the document. Also forces `_changeCondition`
-   * `true` to release any waiters. On success, this returns the revision number
-   * of the document after the append. On a failure due to `baseRevNum` not
-   * being current at the moment of application, this returns `null`. All other
-   * errors are reported via thrown errors. See `_applyDeltaTo()` above for
-   * further discussion.
+   * Appends a new delta to the document. On success, this returns the revision
+   * number of the document after the append. On a failure due to `baseRevNum`
+   * not being current at the moment of application, this returns `null`. All
+   * other errors are reported via thrown errors. See `_applyDeltaTo()` above
+   * for further discussion.
    *
    * **Note:** If the delta is a no-op, then this method throws an error,
    * because the calling code should have handled that case without calling this
@@ -557,7 +554,6 @@ export default class DocControl extends CommonBase {
     // thrown via this method instead of being dropped on the floor.
     await this._writeRevNum(revNum);
 
-    this._changeCondition.value = true;
     return revNum;
   }
 

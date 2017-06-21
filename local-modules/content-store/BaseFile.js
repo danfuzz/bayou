@@ -43,6 +43,28 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
+   * {Int} The maximum value allowed (inclusive) as the `timeoutMsec` argument
+   * to calls to `whenChange()` on this instance. Out-of-range values are
+   * clamped to this limit.
+   *
+   * @abstract
+   */
+  get maxTimeoutMsec() {
+    this._mustOverride();
+  }
+
+  /**
+   * {Int} The minimum value allowed (inclusive) as the `timeoutMsec` argument
+   * to calls to `whenChange()` on this instance. Out-of-range values are
+   * clamped to this limit.
+   *
+   * @abstract
+   */
+  get minTimeoutMsec() {
+    this._mustOverride();
+  }
+
+  /**
    * Indicates whether or not this file exists in the store. Calling this method
    * will _not_ cause a non-existent file to come into existence.
    *
@@ -276,5 +298,81 @@ export default class BaseFile extends CommonBase {
    */
   async _impl_revNum() {
     this._mustOverride();
+  }
+
+  /**
+   * Waits for a change to be made to a file, either in general or on a specific
+   * path. The return value becomes resolved soon after a change is made or the
+   * specified timeout elapses.
+   *
+   * When watching a path, any change to that path counts, including all of:
+   * storing a value at a path not previously stored at; deleting the value at
+   * a path; or storing a new value at an already-used path.
+   *
+   * **Note:** Subclasses are allowed to silently increase the given
+   * `timeoutMsec` if they have a _minimum_ timeout. In such cases, it is
+   * expected that the minimum is relatively small in terms of human-visible
+   * time (e.g. under a second).
+   *
+   * @param {Int} timeoutMsec The maximum amount of time (in msec) to wait for
+   *   a change. If the requested change does not occur within this time, then
+   *   this method returns `null` instead of a revision number. This value is
+   *   silently clamped to the range `minTimeoutMsec..maxTimeoutMsec`
+   *   (inclusive) where those values are defined on the instance being called.
+   *   As a convenience, passing this value as `-1` is equivalent to passing
+   *   `maxTimeoutMsec`. Other than `-1` specifically, it is an error to pass a
+   *   negative number for this argument.
+   * @param {Int} baseRevNum The revision number which is the base for the
+   *   request. The request is to detect a change with respect to this revision.
+   * @param {string|null} [storagePath = null] The specific path to watch for
+   *   changes to, or `null` if any file change will suffice.
+   * @returns {Int|null} If a change was detected, the revision number at which
+   *   it was detected (which might be larger than the actual revision number at
+   *   which the change was made); or `null` if the call is returning due to
+   *   timeout.
+   */
+  async whenChange(timeoutMsec, baseRevNum, storagePath = null) {
+    if (timeoutMsec === -1) {
+      timeoutMsec = this.maxTimeoutMsec;
+    } else {
+      TInt.min(timeoutMsec, 0);
+      timeoutMsec = Math.max(timeoutMsec, this.minTimeoutMsec);
+      timeoutMsec = Math.min(timeoutMsec, this.maxTimeoutMsec);
+    }
+
+    TInt.min(baseRevNum, 0);
+    StoragePath.orNull(storagePath);
+
+    const result =
+      await this._impl_whenChange(timeoutMsec, baseRevNum, storagePath);
+
+    if (result === null) {
+      return null;
+    }
+
+    // For a non-`null` result, validate it and update `_lastRevNum`.
+    TInt.min(result, baseRevNum + 1);
+    if (result > this._lastRevNum) {
+      this._lastRevNum = result;
+    }
+
+    return result;
+  }
+
+  /**
+   * Main implementation of `whenChange()`. It is guaranteed to be called
+   * with valid arguments (including having the timeout clamped as specified by
+   * the subclass), _except_ that `baseRevNum` is not guaranteed to refer to an
+   * existing revision. (That guarantee can't actually be made at this layer due
+   * to the asynchronous nature of the system.)
+   *
+   * @abstract
+   * @param {Int} timeoutMsec Same as with `whenChange()`.
+   * @param {Int} baseRevNum Same as with `whenChange()`.
+   * @param {string|null} storagePath Same as with `whenChange()`.
+   * @returns {Int|null} Same as with `whenChange()`.
+   */
+  async _impl_whenChange(timeoutMsec, baseRevNum, storagePath) {
+    this._mustOverride(timeoutMsec, baseRevNum, storagePath);
   }
 }

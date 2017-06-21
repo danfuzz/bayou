@@ -59,8 +59,8 @@ export default class TargetHandler {
    * @returns {function} An appropriately-constructed handler.
    */
   _makeMethodHandler(name) {
-    const apiClient  = this._apiClient;  // Avoid re-(re-)lookup on every call.
-    const targetId = this._targetId; // Likewise.
+    const apiClient = this._apiClient;  // Avoid re-(re-)lookup on every call.
+    const targetId  = this._targetId;   // Likewise.
     return (...args) => {
       return apiClient._send(targetId, 'call', name, args);
     };

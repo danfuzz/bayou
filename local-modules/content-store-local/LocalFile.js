@@ -7,7 +7,7 @@ import path from 'path';
 
 import { BaseFile } from 'content-store';
 import { Logger } from 'see-all';
-import { PromDelay } from 'util-common';
+import { PromCondition, PromDelay } from 'util-common';
 import { FrozenBuffer } from 'util-server';
 
 
@@ -64,6 +64,14 @@ export default class LocalFile extends BaseFile {
     this._storage = null;
 
     /**
+     * {Map<string,Int>|null} Map from `StoragePath` strings to the most recent
+     * revision number that affected the corresponding path. This includes
+     * entries for paths that have been deleted. `null` indicates that the map
+     * is not yet initialized.
+     */
+    this._storageRevNums = null;
+
+    /**
      * {Map<string,FrozenBuffer>|null} Map from `StoragePath` strings to
      * corresponding stored data, for file contents that have not yet been
      * written to disk.
@@ -92,10 +100,37 @@ export default class LocalFile extends BaseFile {
      */
     this._storageReadyPromise = null;
 
+    /**
+     * Condition that transitions from `false` to `true` when there is a
+     * revision change and there are waiters for same. This remains `true` in
+     * the steady state (when there are no waiters). As soon as the first waiter
+     * comes along, it gets set to `false`.
+     */
+    this._changeCondition = new PromCondition(true);
+
     /** {Logger} Logger specific to this file's ID. */
     this._log = log.withPrefix(`[${fileId}]`);
 
     this._log.info(`Path: ${this._storageDir}`);
+  }
+
+  /**
+   * {Int} Value as required by the superclass. It is defined to be one minute
+   * here not because of any inherent time limit in the implementation, but
+   * just to make the limit small enough to be easily observable when testing.
+   * (Keep in mind that this module is oriented toward development time, not
+   * production.)
+   */
+  get maxTimeoutMsec() {
+    return 1 * 60 * 1000; // One minute.
+  }
+
+  /**
+   * {Int} Value as required by the superclass. It is defined to be 100msec
+   * here, for reasons similar to as described in `maxTimeoutMsec` above.
+   */
+  get minTimeoutMsec() {
+    return 100;
   }
 
   /**
@@ -131,6 +166,7 @@ export default class LocalFile extends BaseFile {
 
     this._revNum              = 0;
     this._storage             = new Map();
+    this._storageRevNums      = new Map();
     this._storageToWrite      = new Map();
     this._storageNeedsErasing = true;
     this._storageReadyPromise = Promise.resolve(true);
@@ -196,6 +232,80 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
+   * Implementation as required by the superclass.
+   *
+   * @param {Int} timeoutMsec Same as with `whenChange()`.
+   * @param {Int} baseRevNum Same as with `whenChange()`.
+   * @param {string|null} storagePath Same as with `whenChange()`.
+   * @returns {Int|null} Same as with `whenChange()`.
+   */
+  async _impl_whenChange(timeoutMsec, baseRevNum, storagePath) {
+    // Arrange for timeout. **Note:** Needs to be done _before_ reading
+    // storage, as that storage read can take significant time.
+    let timeout = false; // Gets set to `true` when the timeout expires.
+    const timeoutProm = PromDelay.resolve(timeoutMsec);
+    (async () => {
+      await timeoutProm;
+      timeout = true;
+    })();
+
+    await this._readStorageIfNecessary();
+
+    if (baseRevNum > this._revNum) {
+      // Per the superclass docs (and due to the asynch nature of the system),
+      // we don't know that `baseRevNum` was passed in as an in-range value.
+      throw new Error(`Nonexistent \`revNum\`: ${baseRevNum}`);
+    }
+
+    if (storagePath === null) {
+      this._log.detail(`Want change after \`revNum\` ${baseRevNum}.`);
+    } else {
+      this._log.detail(`Want change after \`revNum\` ${baseRevNum}: ${storagePath}`);
+    }
+
+    // Check for the change condition, and iterate until either it's found or
+    // the timeout expires.
+    while (!timeout) {
+      // If `storagePath` is `null`, we are looking for any revision after the
+      // file's overall current revision number. If `path` is non-`null`, we are
+      // looking for a revision since the last one for that specific path.
+      let foundRevNum;
+      if (storagePath === null) {
+        // `storagePath` is `null`. We are looking for any revision after the
+        // file's overall current revision number.
+        foundRevNum = this._revNum;
+      } else {
+        // `storagePath` is non-`null`. We are looking for a revision
+        // specifically on that path.
+        foundRevNum = this._storageRevNums.get(storagePath);
+        if (foundRevNum === undefined) {
+          // A non-existent and never-existed path is effectively unmodified, for
+          // the subsequent logic.
+          foundRevNum = baseRevNum;
+        }
+      }
+
+      if (foundRevNum > baseRevNum) {
+        // Found!
+        this._log.detail(`Noticed change at \`revNum\` ${foundRevNum}.`);
+        return foundRevNum;
+      }
+
+      this._log.detail('Waiting for file to change.');
+
+      // Force the `_changeCondition` to `false` (though it might already be
+      // so set; innocuous if so), and wait either for it to become `true` (that
+      // is, wait for _any_ change to the file) or for the timeout to pass.
+      this._changeCondition.value = false;
+      await Promise.race([this._changeCondition.whenTrue(), timeoutProm]);
+    }
+
+    // The timeout expired.
+    this._log.detail('Timed out.');
+    return null;
+  }
+
+  /**
    * Helper for the update methods, which performs the actual updating.
    *
    * @param {string} storagePath Path to write to.
@@ -210,6 +320,7 @@ export default class LocalFile extends BaseFile {
     }
 
     this._revNum++;
+    this._storageRevNums.set(storagePath, this._revNum);
     this._storageToWrite.set(storagePath, newValue);
     this._storageNeedsWrite();
   }
@@ -250,8 +361,9 @@ export default class LocalFile extends BaseFile {
   async _readStorage() {
     if (!await afs.exists(this._storageDir)) {
       // Directory doesn't actually exist. Just initialize empty storage.
-      this._revNum  = 0;
-      this._storage = new Map();
+      this._revNum         = 0;
+      this._storage        = new Map();
+      this._storageRevNums = new Map();
       this._log.info('New storage.');
       return true;
     }
@@ -259,8 +371,11 @@ export default class LocalFile extends BaseFile {
     // The directory exists. Read its contents.
     this._log.info('Reading storage from disk...');
 
-    const files = await afs.readdir(this._storageDir);
-    const storage = new Map();
+    const files          = await afs.readdir(this._storageDir);
+    const storage        = new Map();
+    const storageRevNums = new Map();
+    let   revNum;
+
     for (const f of files) {
       const buf = await afs.readFile(path.resolve(this._storageDir, f));
       const storagePath = LocalFile._storagePathForFsName(f);
@@ -270,27 +385,37 @@ export default class LocalFile extends BaseFile {
 
     this._log.info('Done reading storage.');
 
-    // Only set the instance variables after all the reading is done.
-    this._storage             = storage;
-    this._storageToWrite      = new Map();
-    this._storageNeedsErasing = false;
-    this._storageIsDirty      = false;
-
     // Parse the file revision number out of its special-named blob, and handle
     // things reasonably gracefully if it's missing or corrupt.
     try {
-      const revNumBuffer = this._storage.get(REVISION_NUMBER_PATH);
-      this._revNum = JSON.parse(revNumBuffer.string);
-      this._log.info(`Starting revision number: ${this._revNum}`);
+      const revNumBuffer = storage.get(REVISION_NUMBER_PATH);
+      revNum = JSON.parse(revNumBuffer.string);
+      this._log.info(`Starting revision number: ${revNum}`);
     } catch (e) {
       // In case of failure, use the size of the storage map as a good enough
       // value for `revNum`. This case probably won't happen in practice except
       // when dealing with corrupt FS contents, but even if it does, this should
       // be fine in that the primary required guarantee is monotonic increase
       // within any given process (and not really across processes).
-      this._revNum = this._storage.size;
-      this._log.info(`Starting with "fake" revision number: ${this._revNum}`);
+      revNum = storage.size;
+      this._log.info(`Starting with "fake" revision number: ${revNum}`);
     }
+
+    // Note the revision number of all paths. Since we don't record this info
+    // to the FS, the best we can do is peg them all at the current revision
+    // number.
+    for (const k of storage.keys()) {
+      storageRevNums.set(k, revNum);
+    }
+
+    // Only set the instance variables after all the reading is done and the
+    // current revision number is known.
+    this._revNum              = revNum;
+    this._storage             = storage;
+    this._storageRevNums      = storageRevNums;
+    this._storageToWrite      = new Map();
+    this._storageNeedsErasing = false;
+    this._storageIsDirty      = false;
 
     return true;
   }
@@ -299,9 +424,13 @@ export default class LocalFile extends BaseFile {
    * Indicates that there are elements of `_storage` that need to be written to
    * disk. This method acts (and returns) promptly. It will kick off a timed
    * callback to actually perform the writing operation(s) if one isn't already
-   * pending.
+   * pending. In addition, it flips `_changeCondition` to `true` (if not
+   * already set as such), which unblocks code that was awaiting any changes.
    */
   _storageNeedsWrite() {
+    // Release anything awaiting a change.
+    this._changeCondition.value = true;
+
     if (this._storageIsDirty) {
       // Already marked dirty, which means there's nothing more to do. When
       // the already-scheduled timer fires, it will pick up the current change.
