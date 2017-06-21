@@ -297,6 +297,11 @@ export default class BaseFile extends CommonBase {
    * storing a value at a path not previously stored at; deleting the value at
    * a path; or storing a new value at an already-used path.
    *
+   * **Note:** Subclasses are allowed to silently increase the given
+   * `timeoutMsec` if they have a _minimum_ timeout. In such cases, it is
+   * expected that the minimum is relatively small in terms of human-visible
+   * time (e.g. under a second).
+   *
    * @param {Int} timeoutMsec The maximum amount of time (in msec) to wait for
    *   a change. If the requested change does not occur within this time, then
    *   this method returns `null` instead of a revision number. This value
