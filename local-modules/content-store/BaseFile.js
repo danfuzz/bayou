@@ -43,6 +43,75 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
+   * {Int} The maximum value allowed (inclusive) as the `timeoutMsec` argument
+   * to calls to `awaitChange()` on this instance.
+   *
+   * @abstract
+   */
+  get maxAwaitTimeoutMsec() {
+    this._mustOverride();
+  }
+
+  /**
+   * Awaits for a change to be made to a file, either in general or on a
+   * specific path. The return value becomes resolved soon after a change is
+   * made or the specified timeout elapses.
+   *
+   * When watching a path, any change to that path counts, including all of:
+   * storing a value at a path not previously stored at; deleting the value at
+   * a path; or storing a new value at an already-used path.
+   *
+   * @param {Int} timeoutMsec The maximum amount of time (in msec) to wait for
+   *   a change. If the requested change does not occur within this time, then
+   *   this method returns `null` instead of a revision number. This value
+   *   must be no greater than `maxAwaitTimeoutMsec` as defined on the instance
+   *   being called.
+   * @param {Int} baseRevNum The revision number which is the base for the
+   *   request. The request is to detect a change with respect to this revision.
+   * @param {string|null} [storagePath = null] The specific path to watch for
+   *   changes to, or `null` if any file change will suffice.
+   * @returns {Int|null} If a change was detected, the revision number at which
+   *   it was detected (which might be larger than the actual revision number at
+   *   which the change was made); or `null` if the call is returning due to
+   *   timeout.
+   */
+  async awaitChange(timeoutMsec, baseRevNum, storagePath = null) {
+    TInt.rangeInc(timeoutMsec, 0, this.maxAwaitTimeoutMsec);
+    TInt.min(baseRevNum, 0);
+    StoragePath.orNull(storagePath);
+
+    const result =
+      await this._impl_awaitChange(timeoutMsec, baseRevNum, storagePath);
+
+    if (result === null) {
+      return null;
+    }
+
+    // For a non-`null` result, validate it and update `_lastRevNum`.
+    TInt.min(result, baseRevNum + 1);
+    if (result > this._lastRevNum) {
+      this._lastRevNum = result;
+    }
+
+    return result;
+  }
+
+  /**
+   * Main implementation of `awaitChange()`. It is guaranteed to be called
+   * with valid arguments, _except_ that `baseRevNum` is not guaranteed to
+   * refer to an existing revision.
+   *
+   * @abstract
+   * @param {Int} timeoutMsec Same as with `awaitChange()`.
+   * @param {Int} baseRevNum Same as with `awaitChange()`.
+   * @param {string|null} storagePath Same as with `awaitChange()`.
+   * @returns {Int|null} Same as with `awaitChange()`.
+   */
+  async _impl_awaitChange(timeoutMsec, baseRevNum, storagePath) {
+    this._mustOverride(timeoutMsec, baseRevNum, storagePath);
+  }
+
+  /**
    * Indicates whether or not this file exists in the store. Calling this method
    * will _not_ cause a non-existent file to come into existence.
    *
