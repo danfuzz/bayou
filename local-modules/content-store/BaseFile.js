@@ -44,11 +44,23 @@ export default class BaseFile extends CommonBase {
 
   /**
    * {Int} The maximum value allowed (inclusive) as the `timeoutMsec` argument
-   * to calls to `whenChange()` on this instance.
+   * to calls to `whenChange()` on this instance. Out-of-range values are
+   * clamped to this limit.
    *
    * @abstract
    */
   get maxTimeoutMsec() {
+    this._mustOverride();
+  }
+
+  /**
+   * {Int} The minimum value allowed (inclusive) as the `timeoutMsec` argument
+   * to calls to `whenChange()` on this instance. Out-of-range values are
+   * clamped to this limit.
+   *
+   * @abstract
+   */
+  get minTimeoutMsec() {
     this._mustOverride();
   }
 
@@ -304,10 +316,12 @@ export default class BaseFile extends CommonBase {
    *
    * @param {Int} timeoutMsec The maximum amount of time (in msec) to wait for
    *   a change. If the requested change does not occur within this time, then
-   *   this method returns `null` instead of a revision number. This value
-   *   must be no greater than `maxTimeoutMsec` as defined on the instance being
-   *   called. As a convenience, passing this value as `-1` is equivalent to
-   *   passing `maxTimeoutMsec`.
+   *   this method returns `null` instead of a revision number. This value is
+   *   silently clamped to the range `minTimeoutMsec..maxTimeoutMsec`
+   *   (inclusive) where those values are defined on the instance being called.
+   *   As a convenience, passing this value as `-1` is equivalent to passing
+   *   `maxTimeoutMsec`. Other than `-1` specifically, it is an error to pass a
+   *   negative number for this argument.
    * @param {Int} baseRevNum The revision number which is the base for the
    *   request. The request is to detect a change with respect to this revision.
    * @param {string|null} [storagePath = null] The specific path to watch for
@@ -318,12 +332,12 @@ export default class BaseFile extends CommonBase {
    *   timeout.
    */
   async whenChange(timeoutMsec, baseRevNum, storagePath = null) {
-    const maxMsec = this.maxTimeoutMsec;
-
     if (timeoutMsec === -1) {
-      timeoutMsec = maxMsec;
+      timeoutMsec = this.maxTimeoutMsec;
     } else {
-      TInt.rangeInc(timeoutMsec, 0, maxMsec);
+      TInt.min(timeoutMsec, 0);
+      timeoutMsec = Math.max(timeoutMsec, this.minTimeoutMsec);
+      timeoutMsec = Math.min(timeoutMsec, this.maxTimeoutMsec);
     }
 
     TInt.min(baseRevNum, 0);
@@ -347,8 +361,10 @@ export default class BaseFile extends CommonBase {
 
   /**
    * Main implementation of `whenChange()`. It is guaranteed to be called
-   * with valid arguments, _except_ that `baseRevNum` is not guaranteed to
-   * refer to an existing revision.
+   * with valid arguments (including having the timeout clamped as specified by
+   * the subclass), _except_ that `baseRevNum` is not guaranteed to refer to an
+   * existing revision. (That guarantee can't actually be made at this layer due
+   * to the asynchronous nature of the system.)
    *
    * @abstract
    * @param {Int} timeoutMsec Same as with `whenChange()`.

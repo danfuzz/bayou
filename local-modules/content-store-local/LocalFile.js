@@ -126,6 +126,14 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
+   * {Int} Value as required by the superclass. It is defined to be 100msec
+   * here, for reasons similar to as described in `maxTimeoutMsec` above.
+   */
+  get minTimeoutMsec() {
+    return 100;
+  }
+
+  /**
    * Implementation as required by the superclass.
    *
    * @returns {boolean} `true` iff this file exists.
