@@ -128,80 +128,6 @@ export default class LocalFile extends BaseFile {
   /**
    * Implementation as required by the superclass.
    *
-   * @param {Int} timeoutMsec Same as with `whenChange()`.
-   * @param {Int} baseRevNum Same as with `whenChange()`.
-   * @param {string|null} storagePath Same as with `whenChange()`.
-   * @returns {Int|null} Same as with `whenChange()`.
-   */
-  async _impl_whenChange(timeoutMsec, baseRevNum, storagePath) {
-    // Arrange for timeout. **Note:** Needs to be done _before_ reading
-    // storage, as that storage read can take significant time.
-    let timeout = false; // Gets set to `true` when the timeout expires.
-    const timeoutProm = PromDelay.resolve(timeoutMsec);
-    (async () => {
-      await timeoutProm;
-      timeout = true;
-    })();
-
-    await this._readStorageIfNecessary();
-
-    if (baseRevNum > this._revNum) {
-      // Per the superclass docs (and due to the asynch nature of the system),
-      // we don't know that `baseRevNum` was passed in as an in-range value.
-      throw new Error(`Nonexistent \`revNum\`: ${baseRevNum}`);
-    }
-
-    if (storagePath === null) {
-      this._log.detail(`Want change after \`revNum\` ${baseRevNum}.`);
-    } else {
-      this._log.detail(`Want change after \`revNum\` ${baseRevNum}: ${storagePath}`);
-    }
-
-    // Check for the change condition, and iterate until either it's found or
-    // the timeout expires.
-    while (!timeout) {
-      // If `storagePath` is `null`, we are looking for any revision after the
-      // file's overall current revision number. If `path` is non-`null`, we are
-      // looking for a revision since the last one for that specific path.
-      let foundRevNum;
-      if (storagePath === null) {
-        // `storagePath` is `null`. We are looking for any revision after the
-        // file's overall current revision number.
-        foundRevNum = this._revNum;
-      } else {
-        // `storagePath` is non-`null`. We are looking for a revision
-        // specifically on that path.
-        foundRevNum = this._storageRevNums.get(storagePath);
-        if (foundRevNum === undefined) {
-          // A non-existent and never-existed path is effectively unmodified, for
-          // the subsequent logic.
-          foundRevNum = baseRevNum;
-        }
-      }
-
-      if (foundRevNum > baseRevNum) {
-        // Found!
-        this._log.detail(`Noticed change at \`revNum\` ${foundRevNum}.`);
-        return foundRevNum;
-      }
-
-      this._log.detail('Waiting for file to change.');
-
-      // Force the `_changeCondition` to `false` (though it might already be
-      // so set; innocuous if so), and wait either for it to become `true` (that
-      // is, wait for _any_ change to the file) or for the timeout to pass.
-      this._changeCondition.value = false;
-      await Promise.race([this._changeCondition.whenTrue(), timeoutProm]);
-    }
-
-    // The timeout expired.
-    this._log.detail('Timed out.');
-    return null;
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
    * @returns {boolean} `true` iff this file exists.
    */
   async _impl_exists() {
@@ -295,6 +221,80 @@ export default class LocalFile extends BaseFile {
   async _impl_revNum() {
     await this._readStorageIfNecessary();
     return this._revNum;
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @param {Int} timeoutMsec Same as with `whenChange()`.
+   * @param {Int} baseRevNum Same as with `whenChange()`.
+   * @param {string|null} storagePath Same as with `whenChange()`.
+   * @returns {Int|null} Same as with `whenChange()`.
+   */
+  async _impl_whenChange(timeoutMsec, baseRevNum, storagePath) {
+    // Arrange for timeout. **Note:** Needs to be done _before_ reading
+    // storage, as that storage read can take significant time.
+    let timeout = false; // Gets set to `true` when the timeout expires.
+    const timeoutProm = PromDelay.resolve(timeoutMsec);
+    (async () => {
+      await timeoutProm;
+      timeout = true;
+    })();
+
+    await this._readStorageIfNecessary();
+
+    if (baseRevNum > this._revNum) {
+      // Per the superclass docs (and due to the asynch nature of the system),
+      // we don't know that `baseRevNum` was passed in as an in-range value.
+      throw new Error(`Nonexistent \`revNum\`: ${baseRevNum}`);
+    }
+
+    if (storagePath === null) {
+      this._log.detail(`Want change after \`revNum\` ${baseRevNum}.`);
+    } else {
+      this._log.detail(`Want change after \`revNum\` ${baseRevNum}: ${storagePath}`);
+    }
+
+    // Check for the change condition, and iterate until either it's found or
+    // the timeout expires.
+    while (!timeout) {
+      // If `storagePath` is `null`, we are looking for any revision after the
+      // file's overall current revision number. If `path` is non-`null`, we are
+      // looking for a revision since the last one for that specific path.
+      let foundRevNum;
+      if (storagePath === null) {
+        // `storagePath` is `null`. We are looking for any revision after the
+        // file's overall current revision number.
+        foundRevNum = this._revNum;
+      } else {
+        // `storagePath` is non-`null`. We are looking for a revision
+        // specifically on that path.
+        foundRevNum = this._storageRevNums.get(storagePath);
+        if (foundRevNum === undefined) {
+          // A non-existent and never-existed path is effectively unmodified, for
+          // the subsequent logic.
+          foundRevNum = baseRevNum;
+        }
+      }
+
+      if (foundRevNum > baseRevNum) {
+        // Found!
+        this._log.detail(`Noticed change at \`revNum\` ${foundRevNum}.`);
+        return foundRevNum;
+      }
+
+      this._log.detail('Waiting for file to change.');
+
+      // Force the `_changeCondition` to `false` (though it might already be
+      // so set; innocuous if so), and wait either for it to become `true` (that
+      // is, wait for _any_ change to the file) or for the timeout to pass.
+      this._changeCondition.value = false;
+      await Promise.race([this._changeCondition.whenTrue(), timeoutProm]);
+    }
+
+    // The timeout expired.
+    this._log.detail('Timed out.');
+    return null;
   }
 
   /**
