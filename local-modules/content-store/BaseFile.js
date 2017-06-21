@@ -65,7 +65,8 @@ export default class BaseFile extends CommonBase {
    *   a change. If the requested change does not occur within this time, then
    *   this method returns `null` instead of a revision number. This value
    *   must be no greater than `maxAwaitTimeoutMsec` as defined on the instance
-   *   being called.
+   *   being called. As a convenience, passing this value as `-1` is equivalent
+   *   to passing `maxAwaitTimeoutMsec`.
    * @param {Int} baseRevNum The revision number which is the base for the
    *   request. The request is to detect a change with respect to this revision.
    * @param {string|null} [storagePath = null] The specific path to watch for
@@ -76,7 +77,14 @@ export default class BaseFile extends CommonBase {
    *   timeout.
    */
   async awaitChange(timeoutMsec, baseRevNum, storagePath = null) {
-    TInt.rangeInc(timeoutMsec, 0, this.maxAwaitTimeoutMsec);
+    const maxMsec = this.maxAwaitTimeoutMsec;
+
+    if (timeoutMsec === -1) {
+      timeoutMsec = maxMsec;
+    } else {
+      TInt.rangeInc(timeoutMsec, 0, maxMsec);
+    }
+
     TInt.min(baseRevNum, 0);
     StoragePath.orNull(storagePath);
 
