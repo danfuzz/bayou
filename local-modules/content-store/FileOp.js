@@ -230,6 +230,8 @@ export default class FileOp extends CommonBase {
 
     /** {Map<string,*>} Arguments to the operation. */
     this._args = new Map(args);
+
+    Object.freeze(this);
   }
 
   /** {string} The operation category. */
