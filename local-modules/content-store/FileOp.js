@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt, TString } from 'typecheck';
-import { CommonBase, DataUtil } from 'util-common';
+import { CommonBase } from 'util-common';
 import { FrozenBuffer } from 'util-server';
 
 import StoragePath from './StoragePath';
@@ -47,9 +47,6 @@ const CAT_WRITE = 'write';
  * There is a static method on this class to construct each named operation.
  * See documentation on those methods for details about the meaning and
  * arguments of these.
- *
- * When accessing instance arguments via `args`, the arguments for any given
- * operation are in the same order as used in the corresponding constructor.
  */
 export default class FileOp extends CommonBase {
   /** {string} Operation category for prerequisites. */
@@ -82,7 +79,8 @@ export default class FileOp extends CommonBase {
    */
   static checkPathEmpty(storagePath) {
     StoragePath.check(storagePath);
-    return new FileOp(KEY, CAT_PREREQUISITE, 'checkPathEmpty', storagePath);
+    return new FileOp(KEY, CAT_PREREQUISITE, 'checkPathEmpty',
+      [['storagePath', storagePath]]);
   }
 
   /**
@@ -96,7 +94,8 @@ export default class FileOp extends CommonBase {
    */
   static checkPathExists(storagePath) {
     StoragePath.check(storagePath);
-    return new FileOp(KEY, CAT_PREREQUISITE, 'checkPathExists', storagePath);
+    return new FileOp(KEY, CAT_PREREQUISITE, 'checkPathExists',
+      [['storagePath', storagePath]]);
   }
 
   /**
@@ -111,7 +110,8 @@ export default class FileOp extends CommonBase {
   static checkPathHash(storagePath, hash) {
     StoragePath.check(storagePath);
     TString.nonempty(hash); // TODO: Better hash validation.
-    return new FileOp(KEY, CAT_PREREQUISITE, 'checkPathHash', storagePath, hash);
+    return new FileOp(KEY, CAT_PREREQUISITE, 'checkPathHash',
+      [['storagePath', storagePath], ['hash', hash]]);
   }
 
   /**
@@ -124,7 +124,8 @@ export default class FileOp extends CommonBase {
    */
   static deletePath(storagePath) {
     StoragePath.check(storagePath);
-    return new FileOp(KEY, CAT_WRITE, 'deletePath', storagePath);
+    return new FileOp(KEY, CAT_WRITE, 'deletePath',
+      [['storagePath', storagePath]]);
   }
 
   /**
@@ -153,7 +154,8 @@ export default class FileOp extends CommonBase {
    */
   static maxRevNum(revNum) {
     TInt.min(revNum, 1);
-    return new FileOp(KEY, CAT_REVISION, 'maxRevNum', revNum);
+    return new FileOp(KEY, CAT_REVISION, 'maxRevNum',
+      [['revNum', revNum]]);
   }
 
   /**
@@ -167,7 +169,8 @@ export default class FileOp extends CommonBase {
    */
   static minRevNum(revNum) {
     TInt.min(revNum, 0);
-    return new FileOp(KEY, CAT_REVISION, 'minRevNum', revNum);
+    return new FileOp(KEY, CAT_REVISION, 'minRevNum',
+      [['revNum', revNum]]);
   }
 
   /**
@@ -181,7 +184,8 @@ export default class FileOp extends CommonBase {
    */
   static readPath(storagePath) {
     StoragePath.check(storagePath);
-    return new FileOp(KEY, CAT_READ, 'readPath', storagePath);
+    return new FileOp(KEY, CAT_READ, 'readPath',
+      [['storagePath', storagePath]]);
   }
 
   /**
@@ -196,7 +200,8 @@ export default class FileOp extends CommonBase {
   static writePath(storagePath, value) {
     StoragePath.check(storagePath);
     FrozenBuffer.check(value);
-    return new FileOp(KEY, CAT_WRITE, 'writePath', storagePath, value);
+    return new FileOp(KEY, CAT_WRITE, 'writePath',
+      [['storagePath', storagePath], ['value', value]]);
   }
 
   /**
@@ -207,9 +212,10 @@ export default class FileOp extends CommonBase {
    *   enforces the exhortation in the method documentation above.
    * @param {string} category The operation category.
    * @param {string} name The operation name.
-   * @param {...*} args Arguments to the operation, if any.
+   * @param {array<array<*>>} args Arguments to the operation, in the form
+   *   expected by the `Map` constructor.
    */
-  constructor(constructorKey, category, name, ...args) {
+  constructor(constructorKey, category, name, args) {
     if (constructorKey !== KEY) {
       throw new Error('Constructor is private.');
     }
@@ -222,8 +228,8 @@ export default class FileOp extends CommonBase {
     /** {string} The operation name. */
     this._name = TString.nonempty(name);
 
-    /** {array<*>} The operation arguments. */
-    this._args = DataUtil.deepFreeze(args);
+    /** {Map<string,*>} Arguments to the operation. */
+    this._args = new Map(args);
   }
 
   /** {string} The operation category. */
@@ -236,8 +242,21 @@ export default class FileOp extends CommonBase {
     return this._name;
   }
 
-  /** {array<*>} The operation arguments. This is a deeply frozen value. */
-  get args() {
-    return this._args;
+  /**
+   * Gets the operation argument with the given name. It is an error to
+   * request an argument that is not bound. Return values are guaranteed to be
+   * deep frozen.
+   *
+   * @param {string} name The argument name.
+   * @returns {*} Corresponding argument value.
+   */
+  arg(name) {
+    const result = this._args.get(name);
+
+    if (result === undefined) {
+      throw new Error(`No such argument: ${name}`);
+    }
+
+    return result;
   }
 }
