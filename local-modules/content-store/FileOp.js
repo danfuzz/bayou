@@ -70,6 +70,26 @@ export default class FileOp extends CommonBase {
   }
 
   /**
+   * Validates a category string. Throws an error given an invalid category.
+   *
+   * @param {*} category The (alleged) category string.
+   * @returns {string} `category` but only if valid.
+   */
+  static validateCategory(category) {
+    switch (category) {
+      case CAT_PREREQUISITE:
+      case CAT_READ:
+      case CAT_REVISION:
+      case CAT_WRITE: {
+        return category;
+      }
+      default: {
+        throw new Error(`Invalid category: ${category}`);
+      }
+    }
+  }
+
+  /**
    * Constructs a `checkPathEmpty` operation. This is a prerequisite operation
    * that verifies that a given storage path is not bound to any value. This is
    * the opposite of the `checkPathExists` operation.
@@ -223,7 +243,7 @@ export default class FileOp extends CommonBase {
     super();
 
     /** {string} The operation category. */
-    this._category = TString.nonempty(category);
+    this._category = FileOp.validateCategory(category);
 
     /** {string} The operation name. */
     this._name = TString.nonempty(name);

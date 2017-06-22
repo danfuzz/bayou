@@ -8,5 +8,14 @@ import Coder from './Coder';
 import FileId from './FileId';
 import FileOp from './FileOp';
 import StoragePath from './StoragePath';
+import TransactionSpec from './TransactionSpec';
 
-export { BaseContentStore, BaseFile, Coder, FileId, FileOp, StoragePath };
+export {
+  BaseContentStore,
+  BaseFile,
+  Coder,
+  FileId,
+  FileOp,
+  StoragePath,
+  TransactionSpec
+};
