@@ -31,7 +31,7 @@ export default class TransactionSpec extends CommonBase {
       FileOp.check(op);
 
       let catSet = catSets.get(op.category);
-      if (catSet === null) {
+      if (catSet === undefined) {
         catSet = new Set();
         catSets.set(op.category, catSet);
       }
