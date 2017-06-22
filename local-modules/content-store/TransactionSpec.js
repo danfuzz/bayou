@@ -43,6 +43,11 @@ export default class TransactionSpec extends CommonBase {
   /**
    * Gets an iterator for the operations of the indicated category.
    *
+   * **Note:** We return an iterator and not (say) a `Set` because the latter
+   * can't be made immutable, and so returning them would force us to make a
+   * duplicate. Iterators, on the other hand, by their nature do not expose any
+   * ability to mutate the underlying collection.
+   *
    * @param {string} category The category to get.
    * @returns {Iterator<FileOp>} Iterator over all of the operations of the
    *   given category.
@@ -51,6 +56,6 @@ export default class TransactionSpec extends CommonBase {
     FileOp.validateCategory(category);
 
     const catSet = this._categorySets.get(category);
-    return ((catSet === undefined) ? [] : catSet).values();
+    return (catSet || []).values();
   }
 }
