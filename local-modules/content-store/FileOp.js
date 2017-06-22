@@ -9,13 +9,13 @@ import { FrozenBuffer } from 'util-server';
 import StoragePath from './StoragePath';
 
 /**
- * {object} Private key used to protect the main constructor. This is used so
+ * {Symbol} Private key used to protect the main constructor. This is used so
  * that only the static constructor methods can use it. This makes it less
  * likely that a bogus instance will get constructed (and pretty obvious if
  * someone writes code to try to sneak around the restriction, which ought to
  * be a red flag).
  */
-const KEY = Object.freeze(['FileOp constructor key']);
+const KEY = Symbol('FileOp constructor key');
 
 /** {string} Operation category for prerequisites. */
 const CAT_PREREQUISITE = 'prerequisite';
@@ -36,7 +36,7 @@ const CAT_WRITE = 'write';
  * arguments. Instances of this class are immutable. Operations can be
  * categorized as follows:
  *
- * * Revision restrictions &mdash; A revision restriction limits a transation
+ * * Revision restrictions &mdash; A revision restriction limits a transaction
  *   to being based only on certain revisions of the file.
  * * Prerequisite checks &mdash; A prerequisite check must pass in order for
  *   the remainder of a transaction to apply.
