@@ -33,7 +33,7 @@ export default class QuillProm extends Quill {
     // **Not** exposed as an instance variable, as doing so would violate the
     // security we are trying to establish by the key's existence in the first
     // place!
-    const accessKey = Object.freeze(['quill-prom-key']);
+    const accessKey = Symbol('quill-prom-key');
 
     /**
      * {DeltaEvent} The most recent resolved event. It is initialized as defined
