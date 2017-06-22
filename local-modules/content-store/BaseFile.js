@@ -65,6 +65,25 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
+   * Creates this file if it does not already exist, or re-creates it if it does
+   * already exist. After this call, the file both exists and is empty (that is,
+   * has no stored values). In addition, the revision number of the file is `0`.
+   */
+  async create() {
+    await this._impl_create();
+    this._lastRevNum = 0;
+  }
+
+  /**
+   * Main implementation of `create()`.
+   *
+   * @abstract
+   */
+  async _impl_create() {
+    this._mustOverride();
+  }
+
+  /**
    * Indicates whether or not this file exists in the store. Calling this method
    * will _not_ cause a non-existent file to come into existence.
    *
@@ -82,25 +101,6 @@ export default class BaseFile extends CommonBase {
    * @returns {boolean} `true` iff this file exists.
    */
   async _impl_exists() {
-    this._mustOverride();
-  }
-
-  /**
-   * Creates this file if it does not already exist, or re-creates it if it does
-   * already exist. After this call, the file both exists and is empty (that is,
-   * has no stored values). In addition, the revision number of the file is `0`.
-   */
-  async create() {
-    await this._impl_create();
-    this._lastRevNum = 0;
-  }
-
-  /**
-   * Main implementation of `create()`.
-   *
-   * @abstract
-   */
-  async _impl_create() {
     this._mustOverride();
   }
 

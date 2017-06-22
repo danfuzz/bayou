@@ -8,8 +8,14 @@ import { TInt, TypeError } from 'typecheck';
 import { TBuffer } from 'typecheck-server';
 import { CommonBase } from 'util-common';
 
-/** {string} Name of the hashing algorithm to use. */
-const HASH_NAME = 'sha256';
+/** {string} Node's name for the hashing algorithm to use. */
+const NODE_HASH_NAME = 'sha256';
+
+/** {string} Public (exposed) name for the hashing algorithm. */
+const PUBLIC_HASH_NAME = 'sha3';
+
+/** {Int} Length of hashes used, in bits. */
+const HASH_BIT_LENGTH = 256;
 
 /**
  * Immutable buffer of data.
@@ -63,27 +69,37 @@ export default class FrozenBuffer extends CommonBase {
     Object.seal(this);
   }
 
+  /** {Int} Length of hash used by this instance, in bits. */
+  get hashLength() {
+    return HASH_BIT_LENGTH;
+  }
+
   /** {string} Name of the hashing algorithm used by this instance. */
   get hashName() {
-    return HASH_NAME;
+    return PUBLIC_HASH_NAME;
   }
 
   /**
    * {string} Hashcode of the data. This is a string of the form
-   * `<algorithm>-<hex>`, where the former names the hashing algorithm used and
-   * the latter is the lowercase-hex value of the hashcode per se.
+   * `<algorithm>-<length>-<hash>`, where the first part names the hashing
+   * algorithm used, the second indicates the data length, and the last is the
+   * hash value per se. The length and hash are represented in lowercase
+   * hexadecimal. The length is _not_ zero-padded, and the hash contains
+   * exactly enough characters to indicate its length (and so may have an
+   * arbitrary number of leading zeroes).
    */
   get hash() {
     if (this._hash === null) {
-      const hash = crypto.createHash(HASH_NAME);
+      const buf  = this._ensureBuffer();
+      const hash = crypto.createHash(NODE_HASH_NAME);
 
-      if (this._buffer !== null) {
-        hash.update(this._buffer);
-      } else {
-        hash.update(this._string, 'utf8');
-      }
+      hash.update(buf);
 
-      this._hash = `${HASH_NAME}-${hash.digest('hex')}`;
+      const name   = PUBLIC_HASH_NAME;
+      const length = Number(buf.length).toString(16);
+      const digest = hash.digest('hex');
+
+      this._hash = `${name}-${length}-${digest}`;
     }
 
     return this._hash;
