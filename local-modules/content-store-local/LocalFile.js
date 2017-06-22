@@ -135,25 +135,6 @@ export default class LocalFile extends BaseFile {
 
   /**
    * Implementation as required by the superclass.
-   *
-   * @returns {boolean} `true` iff this file exists.
-   */
-  async _impl_exists() {
-    if (this._storage !== null) {
-      // Whether or not the file exists, the file is considered to exist because
-      // it has a non-empty in-memory model. (For example, it might have been
-      // `create()`d but not yet stored to disk.)
-      return true;
-    } else {
-      // If the file exists, then the file exists. It might turn out to be the
-      // case that the file contents are invalid; however, by definition that is
-      // taken to be an _existing_ but _empty_ file.
-      return afs.exists(this._storageDir);
-    }
-  }
-
-  /**
-   * Implementation as required by the superclass.
    */
   async _impl_create() {
     if (this._storageReadyPromise !== null) {
@@ -174,6 +155,25 @@ export default class LocalFile extends BaseFile {
     // **Note:** This call _synchronously_ (and promptly) indicates that writing
     // needs to happen, but the actual writing takes place asynchronously.
     this._storageNeedsWrite();
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @returns {boolean} `true` iff this file exists.
+   */
+  async _impl_exists() {
+    if (this._storage !== null) {
+      // Whether or not the file exists, the file is considered to exist because
+      // it has a non-empty in-memory model. (For example, it might have been
+      // `create()`d but not yet stored to disk.)
+      return true;
+    } else {
+      // If the file exists, then the file exists. It might turn out to be the
+      // case that the file contents are invalid; however, by definition that is
+      // taken to be an _existing_ but _empty_ file.
+      return afs.exists(this._storageDir);
+    }
   }
 
   /**
