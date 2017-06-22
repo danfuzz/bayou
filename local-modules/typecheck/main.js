@@ -6,8 +6,9 @@ import TArray from './TArray';
 import TBoolean from './TBoolean';
 import TFunction from './TFunction';
 import TInt from './TInt';
+import TMap from './TMap';
 import TObject from './TObject';
 import TString from './TString';
 import TypeError from './TypeError';
 
-export { TArray, TBoolean, TFunction, TInt, TObject, TString, TypeError };
+export { TArray, TBoolean, TFunction, TInt, TMap, TObject, TString, TypeError };
