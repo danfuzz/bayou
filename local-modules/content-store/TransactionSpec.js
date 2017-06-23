@@ -24,6 +24,11 @@ export default class TransactionSpec extends CommonBase {
 
     /** {array<FileOp>} Category-sorted array of operations. */
     this._ops = FileOp.sortByCategory(ops);
+
+    // Validate the restriction on timeouts.
+    if (this.opsWithName('timeout').length > 1) {
+      throw new Error('Too many `timeout` operations.');
+    }
   }
 
   /**
@@ -36,6 +41,15 @@ export default class TransactionSpec extends CommonBase {
    */
   get ops() {
     return this._ops[Symbol.iterator];
+  }
+
+  /**
+   * {Int|null} The timeout duration in milliseconds, or `null` if this
+   * transaction specifies no timeout.
+   */
+  get timeoutMsec() {
+    const result = this.opsWithName('timeout')[0];
+    return (result === undefined) ? null : result;
   }
 
   /**
