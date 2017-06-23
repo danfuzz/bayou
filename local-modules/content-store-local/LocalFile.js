@@ -260,17 +260,39 @@ export default class LocalFile extends BaseFile {
     // Construct the "file friend" object. This exposes just enough private
     // state of this instance to the transactor (constructed immediately
     // hereafter) such that the latter can do its job.
+
+    const revNum = this._revNum;
     const fileFriend = {
       /** {Logger} Pass-through of this instance's logger. */
       log: this._log,
 
       /** {Int} Current revision number of the file. */
-      revNum: this._revNum
+      revNum
     };
 
-    const transactor = new Transactor(spec, fileFriend);
+    // Run the transaction, gather the results, and queue up the writes.
 
-    return transactor.run();
+    const { data, updatedStorage } = new Transactor(spec, fileFriend).run();
+    let newRevNum = null;
+
+    if (updatedStorage.size !== 0) {
+      this._revNum = newRevNum = revNum + 1;
+
+      for (const [storagePath, value] of updatedStorage) {
+        if (value === null) {
+          this._storage.delete(storagePath);
+        } else {
+          this._storage.set(storagePath, value);
+        }
+
+        this._storageRevNums.set(storagePath, newRevNum);
+        this._storageToWrite.set(storagePath, value);
+      }
+
+      this._storageNeedsWrite();
+    }
+
+    return { revNum, newRevNum, data };
   }
 
   /**

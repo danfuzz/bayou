@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { FileOp } from 'content-store';
 import { CommonBase } from 'util-common';
 
 /**
@@ -36,6 +37,21 @@ export default class Transactor extends CommonBase {
      */
     this._fileFriend = fileFriend;
 
+    /**
+     * {Map<string,FrozenBuffer|null>|null} Map from paths retrieved while
+     * running the transaction to the retrieved contents, or `null` if the
+     * transaction has no data read operations.
+     */
+    this._data = (spec.opsWithCategory(FileOp.CAT_READ).size === 0)
+      ? null
+      : new Map();
+
+    /**
+     * {Map<string,FrozenBuffer|null>} Map from paths updated while running the
+     * transaction to the updated data or `null` for deleted paths.
+     */
+    this._updatedStorage = new Map();
+
     /** {Logger} Logger to use. */
     this._log = fileFriend.log;
 
@@ -45,26 +61,30 @@ export default class Transactor extends CommonBase {
   /**
    * Runs the transaction.
    *
-   * @returns {object} `_impl_transact()` result as defined by `BaseFile`.
+   * @returns {object} Object that binds `data` to a
+   *   `{Map<string,FrozenBuffer|null>}` of retrieved data and `updatedStorage`
+   *   to a `{Map<string,FrozenBuffer|null>}` of updated storage (paths to be
+   *   written or deleted).
    */
   run() {
     this._log.detail('Transactor running.');
 
-    // Handle the operation categories in the prescribed order.
-
-    const spec      = this._spec;
-    const revNum    = this._fileFriend.revNum;
-    const newRevNum = null;
-    const data      = null;
-
-    for (const op of spec.ops) {
+    for (const op of this._spec.ops) {
       this._log.detail('Op:', op);
-      // TODO: Should actually do stuff.
-      throw new Error('TODO');
+
+      const handler = this[`_op_${op.name}`];
+      if (!handler) {
+        throw new Error(`Missing handler for op: ${op.name}`);
+      }
+
+      handler.call(this, op);
     }
 
-    this._log.detail('Transactor complete.');
-    return { revNum, newRevNum, data };
+    this._log.detail('Transactor done.');
+    return {
+      data:           this._data,
+      updatedStorage: this._updatedStorage
+    };
   }
 
   /**
@@ -103,8 +123,7 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_deletePath(op) {
-    this._log.info('TODO', op);
-    throw new Error('TODO');
+    this._updatedStorage.set(op.arg('storagPath'), null);
   }
 
   /**
@@ -153,7 +172,6 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_writePath(op) {
-    this._log.info('TODO', op);
-    throw new Error('TODO');
+    this._updatedStorage.set(op.arg('storagPath'), op.arg('value'));
   }
 }
