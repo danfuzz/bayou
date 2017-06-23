@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import FileOp from './FileOp';
@@ -23,6 +24,11 @@ export default class TransactionSpec extends CommonBase {
 
     /** {array<FileOp>} Category-sorted array of operations. */
     this._ops = FileOp.sortByCategory(ops);
+
+    // Validate the restriction on timeouts.
+    if (this.opsWithName('timeout').length > 1) {
+      throw new Error('Too many `timeout` operations.');
+    }
   }
 
   /**
@@ -35,5 +41,36 @@ export default class TransactionSpec extends CommonBase {
    */
   get ops() {
     return this._ops[Symbol.iterator];
+  }
+
+  /**
+   * {Int|'never'} The timeout duration in milliseconds, or the string `'never'`
+   * if this transaction specifies no timeout.
+   */
+  get timeoutMsec() {
+    const result = this.opsWithName('timeout')[0];
+    return (result === undefined) ? 'never' : result;
+  }
+
+  /**
+   * Gets all of the operations with the given category.
+   *
+   * @param {string} category Category of the operations.
+   * @returns {array<FileOp>} Array of all such operations.
+   */
+  opsWithCategory(category) {
+    FileOp.validateCategory(category);
+    return this._ops.filter(op => (op.category === category));
+  }
+
+  /**
+   * Gets all of the operations with the given Name.
+   *
+   * @param {string} name Name of the operations.
+   * @returns {array<FileOp>} Array of all such operations.
+   */
+  opsWithName(name) {
+    TString.nonempty(name);
+    return this._ops.filter(op => (op.name === name));
   }
 }
