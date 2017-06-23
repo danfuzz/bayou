@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TInt, TString } from 'typecheck';
+import { TArray, TInt, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 import { FrozenBuffer } from 'util-server';
 
@@ -17,6 +17,9 @@ import StoragePath from './StoragePath';
  */
 const KEY = Symbol('FileOp constructor key');
 
+/** {string} Operation category for environment ops. */
+const CAT_ENVIRONMENT = 'environment';
+
 /** {string} Operation category for prerequisites. */
 const CAT_PREREQUISITE = 'prerequisite';
 
@@ -29,6 +32,11 @@ const CAT_REVISION = 'revision';
 /** {string} Operation category for data writes. */
 const CAT_WRITE = 'write';
 
+/** {array<string>} List of categories in defined execution order. */
+const CATEGORY_EXECUTION_ORDER = [
+  CAT_ENVIRONMENT, CAT_REVISION, CAT_PREREQUISITE, CAT_READ, CAT_WRITE
+];
+
 /**
  * Operation to perform on a file as part of a transaction. In terms of overall
  * structure, an operation consists of a string name and arbitrary additional
@@ -36,19 +44,31 @@ const CAT_WRITE = 'write';
  * arguments. Instances of this class are immutable. Operations can be
  * categorized as follows:
  *
+ * * Environment ops &mdash; An environment operation performs some action or
+ *   checks some aspect of the execution environment of the transaction.
  * * Revision restrictions &mdash; A revision restriction limits a transaction
  *   to being based only on certain revisions of the file.
  * * Prerequisite checks &mdash; A prerequisite check must pass in order for
  *   the remainder of a transaction to apply.
- * * Data reads &mdsah; A data read gets the value of a blob within a file.
+ * * Data reads &mdash; A data read gets the value of a blob within a file.
  * * Data writes &mdash; A data write stores new data in a file or erases
  *   previously-existing data within a file.
  *
- * There is a static method on this class to construct each named operation.
+ * When executed, the operations of a transaction are effectively performed in
+ * order by category; but within a category there is no effective ordering.
+ * Specifically, the category ordering is as listed above.
+ *
+ * There are static methods on this class to construct each named operation,
+ * named `op_<name>`, as well as some convenience methods to construct variants.
  * See documentation on those methods for details about the meaning and
- * arguments of these.
+ * arguments of each of these.
  */
 export default class FileOp extends CommonBase {
+  /** {string} Operation category for environment ops. */
+  static get CAT_ENVIRONMENT() {
+    return CAT_ENVIRONMENT;
+  }
+
   /** {string} Operation category for prerequisites. */
   static get CAT_PREREQUISITE() {
     return CAT_PREREQUISITE;
@@ -70,6 +90,31 @@ export default class FileOp extends CommonBase {
   }
 
   /**
+   * Sorts an `Iterable` (e.g. an array) of `FileOp`s by category, in the
+   * prescribed order of execution. Within a category, the result's ordering is
+   * arbitrary; that is, the sort is not guaranteed to be stable. The return
+   * value is a newly-constructed array; the original input is left unmodified.
+   *
+   * @param {Iterable<FileOp>} orig `Iterable` collection of `FileOp`s to sort.
+   * @returns {array<FileOp>} Array in the defined category-sorted order.
+   */
+  static sortByCategory(orig) {
+    TArray.check(orig, FileOp);
+
+    const result = [];
+
+    for (const cat of CATEGORY_EXECUTION_ORDER) {
+      for (const op of orig) {
+        if (op.category === cat) {
+          result.push(op);
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /**
    * Validates a category string. Throws an error given an invalid category.
    *
    * @param {*} category The (alleged) category string.
@@ -77,6 +122,7 @@ export default class FileOp extends CommonBase {
    */
   static validateCategory(category) {
     switch (category) {
+      case CAT_ENVIRONMENT:
       case CAT_PREREQUISITE:
       case CAT_READ:
       case CAT_REVISION:
@@ -97,7 +143,7 @@ export default class FileOp extends CommonBase {
    * @param {string} storagePath The storage path to check.
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static checkPathEmpty(storagePath) {
+  static op_checkPathEmpty(storagePath) {
     StoragePath.check(storagePath);
     return new FileOp(KEY, CAT_PREREQUISITE, 'checkPathEmpty',
       [['storagePath', storagePath]]);
@@ -112,7 +158,7 @@ export default class FileOp extends CommonBase {
    * @param {string} storagePath The storage path to check.
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static checkPathExists(storagePath) {
+  static op_checkPathExists(storagePath) {
     StoragePath.check(storagePath);
     return new FileOp(KEY, CAT_PREREQUISITE, 'checkPathExists',
       [['storagePath', storagePath]]);
@@ -127,7 +173,7 @@ export default class FileOp extends CommonBase {
    * @param {string} hash The expected hash.
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static checkPathHash(storagePath, hash) {
+  static op_checkPathHash(storagePath, hash) {
     StoragePath.check(storagePath);
     TString.nonempty(hash); // TODO: Better hash validation.
     return new FileOp(KEY, CAT_PREREQUISITE, 'checkPathHash',
@@ -142,22 +188,10 @@ export default class FileOp extends CommonBase {
    * @param {string} storagePath The storage path to delete.
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static deletePath(storagePath) {
+  static op_deletePath(storagePath) {
     StoragePath.check(storagePath);
     return new FileOp(KEY, CAT_WRITE, 'deletePath',
       [['storagePath', storagePath]]);
-  }
-
-  /**
-   * Constructs an inclusive `maxRevNum` operation. This is a convenience
-   * method that is equivalent to calling `maxRevNum(revNum + 1)`.
-   *
-   * @param {Int} revNum Maximum revision number (inclusive).
-   * @returns {FileOp} An appropriately-constructed instance.
-   */
-  static maxRevNumInc(revNum) {
-    TInt.min(revNum, 0);
-    return FileOp.maxRevNum(revNum + 1);
   }
 
   /**
@@ -172,10 +206,22 @@ export default class FileOp extends CommonBase {
    * @param {Int} revNum Maximum revision number (exclusive).
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static maxRevNum(revNum) {
+  static op_maxRevNum(revNum) {
     TInt.min(revNum, 1);
     return new FileOp(KEY, CAT_REVISION, 'maxRevNum',
       [['revNum', revNum]]);
+  }
+
+  /**
+   * Constructs an inclusive `maxRevNum` operation. This is a convenience
+   * method that is equivalent to calling `maxRevNum(revNum + 1)`.
+   *
+   * @param {Int} revNum Maximum revision number (inclusive).
+   * @returns {FileOp} An appropriately-constructed instance.
+   */
+  static op_maxRevNumInc(revNum) {
+    TInt.min(revNum, 0);
+    return FileOp.maxRevNum(revNum + 1);
   }
 
   /**
@@ -187,7 +233,7 @@ export default class FileOp extends CommonBase {
    * @param {Int} revNum Minimum revision number (inclusive).
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static minRevNum(revNum) {
+  static op_minRevNum(revNum) {
     TInt.min(revNum, 0);
     return new FileOp(KEY, CAT_REVISION, 'minRevNum',
       [['revNum', revNum]]);
@@ -202,10 +248,25 @@ export default class FileOp extends CommonBase {
    * @param {string} storagePath The storage path to read from.
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static readPath(storagePath) {
+  static op_readPath(storagePath) {
     StoragePath.check(storagePath);
     return new FileOp(KEY, CAT_READ, 'readPath',
       [['storagePath', storagePath]]);
+  }
+
+  /**
+   * Constructs a `timeout` operation. This is an environment operation which
+   * limits a transaction to take no more than the indicated amount of time
+   * before it is aborted. Timeouts are performed on a "best effort" basis as
+   * well as silently clamped to implementation-specific limits (if any).
+   *
+   * @param {Int} durMsec Duration of the timeout, in milliseconds.
+   * @returns {FileOp} An appropriately-constructed instance.
+   */
+  static op_timeout(durMsec) {
+    TInt.min(durMsec, 0);
+    return new FileOp(KEY, CAT_ENVIRONMENT, 'timeout',
+      [['durMsec', durMsec]]);
   }
 
   /**
@@ -217,7 +278,7 @@ export default class FileOp extends CommonBase {
    * @param {FrozenBuffer} value The value to store and bind to `storagePath`.
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static writePath(storagePath, value) {
+  static op_writePath(storagePath, value) {
     StoragePath.check(storagePath);
     FrozenBuffer.check(value);
     return new FileOp(KEY, CAT_WRITE, 'writePath',
