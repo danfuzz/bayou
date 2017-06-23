@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TInt, TString } from 'typecheck';
+import { TArray, TInt, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 import { FrozenBuffer } from 'util-server';
 
@@ -32,6 +32,11 @@ const CAT_REVISION = 'revision';
 /** {string} Operation category for data writes. */
 const CAT_WRITE = 'write';
 
+/** {array<string>} List of categories in defined execution order. */
+const CATEGORY_EXECUTION_ORDER = [
+  CAT_ENVIRONMENT, CAT_REVISION, CAT_PREREQUISITE, CAT_READ, CAT_WRITE
+];
+
 /**
  * Operation to perform on a file as part of a transaction. In terms of overall
  * structure, an operation consists of a string name and arbitrary additional
@@ -45,7 +50,7 @@ const CAT_WRITE = 'write';
  *   to being based only on certain revisions of the file.
  * * Prerequisite checks &mdash; A prerequisite check must pass in order for
  *   the remainder of a transaction to apply.
- * * Data reads &mdsah; A data read gets the value of a blob within a file.
+ * * Data reads &mdash; A data read gets the value of a blob within a file.
  * * Data writes &mdash; A data write stores new data in a file or erases
  *   previously-existing data within a file.
  *
@@ -82,6 +87,31 @@ export default class FileOp extends CommonBase {
   /** {string} Operation category for data writes. */
   static get CAT_WRITE() {
     return CAT_WRITE;
+  }
+
+  /**
+   * Sorts an `Iterable` (e.g. an array) of `FileOp`s by category, in the
+   * prescribed order of execution. Within a category, the result's ordering is
+   * arbitrary; that is, the sort is not guaranteed to be stable. The return
+   * value is a newly-constructed array; the original input is left unmodified.
+   *
+   * @param {Iterable<FileOp>} orig `Iterable` collection of `FileOp`s to sort.
+   * @returns {array<FileOp>} Array in the defined category-sorted order.
+   */
+  static sortByCategory(orig) {
+    TArray.check(orig, FileOp);
+
+    const result = [];
+
+    for (const cat of CATEGORY_EXECUTION_ORDER) {
+      for (const op of orig) {
+        if (op.category === cat) {
+          result.push(op);
+        }
+      }
+    }
+
+    return result;
   }
 
   /**

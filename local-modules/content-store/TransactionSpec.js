@@ -21,38 +21,19 @@ export default class TransactionSpec extends CommonBase {
   constructor(...ops) {
     super();
 
-    /** {Map<string,Set<FileOp>>} Per-category sets of operations. */
-    const catSets = this._categorySets = new Map();
-
-    for (const op of ops) {
-      FileOp.check(op);
-
-      let catSet = catSets.get(op.category);
-      if (catSet === undefined) {
-        catSet = new Set();
-        catSets.set(op.category, catSet);
-      }
-
-      catSet.add(op);
-    }
+    /** {array<FileOp>} Category-sorted array of operations. */
+    this._ops = FileOp.sortByCategory(ops);
   }
 
   /**
-   * Gets an iterator for the operations of the indicated category.
+   * {Iterator<FileOp>} An iterator for the operations to perform. The
+   * operations are yielded by the iterator in category-sorted order, as
+   * documented by `FileOp`.
    *
-   * **Note:** We return an iterator and not (say) a `Set` because the latter
-   * can't be made immutable, and so returning them would force us to make a
-   * duplicate. Iterators, on the other hand, by their nature do not expose any
-   * ability to mutate the underlying collection.
-   *
-   * @param {string} category The category to get.
-   * @returns {Iterator<FileOp>} Iterator over all of the operations of the
-   *   given category.
+   * **Note:** This is an iterator and not (say) an array so as to make it
+   * obvious that the contents are immutable.
    */
-  opsFor(category) {
-    FileOp.validateCategory(category);
-
-    const catSet = this._categorySets.get(category);
-    return (catSet || []).values();
+  get ops() {
+    return this._ops[Symbol.iterator];
   }
 }

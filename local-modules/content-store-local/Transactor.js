@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { FileOp } from 'content-store';
 import { CommonBase } from 'util-common';
 
 /**
@@ -58,31 +57,7 @@ export default class Transactor extends CommonBase {
     const newRevNum = null;
     const data      = null;
 
-    for (const op of spec.opsFor(FileOp.CAT_ENVIRONMENT)) {
-      this._log.detail('Op:', op);
-      // TODO: Should actually do stuff.
-      throw new Error('TODO');
-    }
-
-    for (const op of spec.opsFor(FileOp.CAT_REVISION)) {
-      this._log.detail('Op:', op);
-      // TODO: Should actually do stuff.
-      throw new Error('TODO');
-    }
-
-    for (const op of spec.opsFor(FileOp.CAT_PREREQUISITE)) {
-      this._log.detail('Op:', op);
-      // TODO: Should actually do stuff.
-      throw new Error('TODO');
-    }
-
-    for (const op of spec.opsFor(FileOp.CAT_READ)) {
-      this._log.detail('Op:', op);
-      // TODO: Should actually do stuff.
-      throw new Error('TODO');
-    }
-
-    for (const op of spec.opsFor(FileOp.CAT_WRITE)) {
+    for (const op of spec.ops) {
       this._log.detail('Op:', op);
       // TODO: Should actually do stuff.
       throw new Error('TODO');
