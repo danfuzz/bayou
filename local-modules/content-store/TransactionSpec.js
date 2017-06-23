@@ -9,11 +9,8 @@ import FileOp from './FileOp';
 /**
  * Transaction specification. This is a set of operations (each an instance of
  * `FileOp`) which are to be executed with regard to a file, as an atomic unit.
- *
- * When executed, the operations of a transaction are effectively performed in
- * order by category; but within a category there is no effective ordering.
- * Specifically, the category ordering is: revision restrictions, prerequisites,
- * reads, and finally writes.
+ * See `FileOp` for more information about the possible operations and how they
+ * get executed.
  */
 export default class TransactionSpec extends CommonBase {
   /**

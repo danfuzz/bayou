@@ -17,6 +17,9 @@ import StoragePath from './StoragePath';
  */
 const KEY = Symbol('FileOp constructor key');
 
+/** {string} Operation category for environment ops. */
+const CAT_ENVIRONMENT = 'environment';
+
 /** {string} Operation category for prerequisites. */
 const CAT_PREREQUISITE = 'prerequisite';
 
@@ -36,6 +39,8 @@ const CAT_WRITE = 'write';
  * arguments. Instances of this class are immutable. Operations can be
  * categorized as follows:
  *
+ * * Environment ops &mdash; An environment operation performs some action or
+ *   checks some aspect of the execution environment of the transaction.
  * * Revision restrictions &mdash; A revision restriction limits a transaction
  *   to being based only on certain revisions of the file.
  * * Prerequisite checks &mdash; A prerequisite check must pass in order for
@@ -44,11 +49,20 @@ const CAT_WRITE = 'write';
  * * Data writes &mdash; A data write stores new data in a file or erases
  *   previously-existing data within a file.
  *
+ * When executed, the operations of a transaction are effectively performed in
+ * order by category; but within a category there is no effective ordering.
+ * Specifically, the category ordering is as listed above.
+ *
  * There is a static method on this class to construct each named operation.
  * See documentation on those methods for details about the meaning and
  * arguments of these.
  */
 export default class FileOp extends CommonBase {
+  /** {string} Operation category for environment ops. */
+  static get CAT_ENVIRONMENT() {
+    return CAT_ENVIRONMENT;
+  }
+
   /** {string} Operation category for prerequisites. */
   static get CAT_PREREQUISITE() {
     return CAT_PREREQUISITE;
@@ -77,6 +91,7 @@ export default class FileOp extends CommonBase {
    */
   static validateCategory(category) {
     switch (category) {
+      case CAT_ENVIRONMENT:
       case CAT_PREREQUISITE:
       case CAT_READ:
       case CAT_REVISION:
@@ -206,6 +221,21 @@ export default class FileOp extends CommonBase {
     StoragePath.check(storagePath);
     return new FileOp(KEY, CAT_READ, 'readPath',
       [['storagePath', storagePath]]);
+  }
+
+  /**
+   * Constructs a `timeout` operation. This is an environment operation which
+   * limits a transaction to take no more than the indicated amount of time
+   * before it is aborted. Timeouts are performed on a "best effort" basis as
+   * well as silently clamped to implementation-specific limits (if any).
+   *
+   * @param {Int} durMsec Duration of the timeout, in milliseconds.
+   * @returns {FileOp} An appropriately-constructed instance.
+   */
+  static timeout(durMsec) {
+    TInt.min(durMsec, 0);
+    return new FileOp(KEY, CAT_ENVIRONMENT, 'timeout',
+      [['durMsec', durMsec]]);
   }
 
   /**

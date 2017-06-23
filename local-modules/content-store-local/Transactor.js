@@ -58,6 +58,12 @@ export default class Transactor extends CommonBase {
     const newRevNum = null;
     const data      = null;
 
+    for (const op of spec.opsFor(FileOp.CAT_ENVIRONMENT)) {
+      this._log.detail('Op:', op);
+      // TODO: Should actually do stuff.
+      throw new Error('TODO');
+    }
+
     for (const op of spec.opsFor(FileOp.CAT_REVISION)) {
       this._log.detail('Op:', op);
       // TODO: Should actually do stuff.
@@ -152,6 +158,16 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_readPath(op) {
+    this._log.info('TODO', op);
+    throw new Error('TODO');
+  }
+
+  /**
+   * Handler for `timeout` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_timeout(op) {
     this._log.info('TODO', op);
     throw new Error('TODO');
   }
