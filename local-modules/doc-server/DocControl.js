@@ -276,7 +276,7 @@ export default class DocControl extends CommonBase {
       // Wait for the file to change (or for the storage layer to timeout), and
       // then iterate to see if in fact the change updated the document revision
       // number.
-      await this._file.whenChange(-1, fileRevNum, Paths.REVISION_NUMBER);
+      await this._file.whenChange('never', fileRevNum, Paths.REVISION_NUMBER);
     }
   }
 

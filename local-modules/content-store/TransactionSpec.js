@@ -44,12 +44,12 @@ export default class TransactionSpec extends CommonBase {
   }
 
   /**
-   * {Int|null} The timeout duration in milliseconds, or `null` if this
-   * transaction specifies no timeout.
+   * {Int|'never'} The timeout duration in milliseconds, or the string `'never'`
+   * if this transaction specifies no timeout.
    */
   get timeoutMsec() {
     const result = this.opsWithName('timeout')[0];
-    return (result === undefined) ? null : result;
+    return (result === undefined) ? 'never' : result;
   }
 
   /**

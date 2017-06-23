@@ -44,9 +44,9 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * {Int} The maximum value allowed (inclusive) as the `timeoutMsec` argument
-   * to calls to `whenChange()` on this instance. Out-of-range values are
-   * clamped to this limit.
+   * {Int|null} The maximum value allowed (inclusive) as the `timeoutMsec`
+   * argument to calls to `whenChange()` on this instance, or `null` if there is
+   * no limit. Out-of-range values are clamped to this limit.
    *
    * @abstract
    */
@@ -55,14 +55,48 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * {Int} The minimum value allowed (inclusive) as the `timeoutMsec` argument
-   * to calls to `whenChange()` on this instance. Out-of-range values are
-   * clamped to this limit.
+   * {Int|null} The minimum value allowed (inclusive) as the `timeoutMsec`
+   * argument to calls to `whenChange()` on this instance, or `null` if there is
+   * no limit. Out-of-range values are clamped to this limit.
    *
    * @abstract
    */
   get minTimeoutMsec() {
     this._mustOverride();
+  }
+
+  /**
+   * Clamps a given timeout value (in msec) to be within the range specified
+   * by `minTimeoutMsec..maxTimeoutMsec` as defined by this class. As a special
+   * case, the string value `'never'` is interpreted the same as
+   * `maxTimeoutMsec`. As a double-special case, the value `'never'` is treated
+   * as a period of one day if `maxTimeoutMsec` is `null`. It is an error to
+   * pass a value less than `0`.
+   *
+   * @param {Int|'never'} value The millisecond timeout value to clamp.
+   * @returns {Int} The clamped value.
+   */
+  clampTimeoutMsec(value) {
+    if (value === 'never') {
+      value = this.maxTimeoutMsec;
+      return (value === null)
+        ? 24 * 60 * 60 * 1000 // One day in msec.
+        : value;
+    }
+
+    TInt.min(value, 0);
+
+    const minTimeoutMsec = this.minTimeoutMsec;
+    if (minTimeoutMsec !== null) {
+      value = Math.max(value, minTimeoutMsec);
+    }
+
+    const maxTimeoutMsec = this.maxTimeoutMsec;
+    if (maxTimeoutMsec !== null) {
+      value = Math.min(value, maxTimeoutMsec);
+    }
+
+    return value;
   }
 
   /**
@@ -382,14 +416,10 @@ export default class BaseFile extends CommonBase {
    * expected that the minimum is relatively small in terms of human-visible
    * time (e.g. under a second).
    *
-   * @param {Int} timeoutMsec The maximum amount of time (in msec) to wait for
-   *   a change. If the requested change does not occur within this time, then
-   *   this method returns `null` instead of a revision number. This value is
-   *   silently clamped to the range `minTimeoutMsec..maxTimeoutMsec`
-   *   (inclusive) where those values are defined on the instance being called.
-   *   As a convenience, passing this value as `-1` is equivalent to passing
-   *   `maxTimeoutMsec`. Other than `-1` specifically, it is an error to pass a
-   *   negative number for this argument.
+   * @param {Int|'never'} timeoutMsec The maximum amount of time (in msec) to
+   *   wait for a change. If the requested change does not occur within this
+   *   time, then this method returns `null` instead of a revision number. This
+   *   value is clamped as if by `clampTimeoutMsec()`, see which.
    * @param {Int} baseRevNum The revision number which is the base for the
    *   request. The request is to detect a change with respect to this revision.
    * @param {string|null} [storagePath = null] The specific path to watch for
@@ -400,14 +430,7 @@ export default class BaseFile extends CommonBase {
    *   timeout.
    */
   async whenChange(timeoutMsec, baseRevNum, storagePath = null) {
-    if (timeoutMsec === -1) {
-      timeoutMsec = this.maxTimeoutMsec;
-    } else {
-      TInt.min(timeoutMsec, 0);
-      timeoutMsec = Math.max(timeoutMsec, this.minTimeoutMsec);
-      timeoutMsec = Math.min(timeoutMsec, this.maxTimeoutMsec);
-    }
-
+    timeoutMsec = this.clampTimeoutMsec(timeoutMsec);
     TInt.min(baseRevNum, 0);
     StoragePath.orNull(storagePath);
 
