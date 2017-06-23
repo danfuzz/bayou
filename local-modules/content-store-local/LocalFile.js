@@ -240,9 +240,22 @@ export default class LocalFile extends BaseFile {
    *   missing properties.
    */
   async _impl_transact(spec) {
-    await this._readStorageIfNecessary();
-
     this._log.info('Transaction:', spec);
+
+    // Arrange for timeout. **Note:** Needs to be done _before_ reading
+    // storage, as that storage read can take significant time.
+    const timeoutMsec = this.clampTimeoutMsec(spec.timeoutMsec);
+    let timeout = false; // Gets set to `true` when the timeout expires.
+    const timeoutProm = PromDelay.resolve(timeoutMsec);
+    (async () => {
+      await timeoutProm;
+      timeout = true;
+    })();
+
+    await Promise.race([this._readStorageIfNecessary(), timeoutProm]);
+    if (timeout) {
+      throw new Error('Transaction timed out.');
+    }
 
     // Construct the "file friend" object. This exposes just enough private
     // state of this instance to the transactor (constructed immediately
@@ -278,7 +291,11 @@ export default class LocalFile extends BaseFile {
       timeout = true;
     })();
 
-    await this._readStorageIfNecessary();
+    await Promise.race([this._readStorageIfNecessary(), timeoutProm]);
+    if (timeout) {
+      this._log.detail('Timed out.');
+      return null;
+    }
 
     if (baseRevNum > this._revNum) {
       // Per the superclass docs (and due to the asynch nature of the system),
