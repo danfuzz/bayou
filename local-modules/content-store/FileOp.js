@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TArray, TInt, TString } from 'typecheck';
+import { TInt, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 import { FrozenBuffer } from 'util-server';
 
@@ -99,7 +99,9 @@ export default class FileOp extends CommonBase {
    * @returns {array<FileOp>} Array in the defined category-sorted order.
    */
   static sortByCategory(orig) {
-    TArray.check(orig, FileOp.check);
+    for (const op of orig) {
+      FileOp.check(op);
+    }
 
     const result = [];
 

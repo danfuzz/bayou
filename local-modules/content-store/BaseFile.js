@@ -148,9 +148,9 @@ export default class BaseFile extends CommonBase {
    * @returns {boolean} `true` once the operation is complete.
    */
   async opForceDelete(storagePath) {
-    const spec = new TransactionSpec([
+    const spec = new TransactionSpec(
       FileOp.op_deletePath(storagePath)
-    ]);
+    );
 
     await this.transact(spec);
     return true;
@@ -165,9 +165,9 @@ export default class BaseFile extends CommonBase {
    * @returns {boolean} `true` once the operation is complete.
    */
   async opForceWrite(storagePath, newValue) {
-    const spec = new TransactionSpec([
+    const spec = new TransactionSpec(
       FileOp.op_writePath(storagePath, newValue)
-    ]);
+    );
 
     await this.transact(spec);
     return true;
