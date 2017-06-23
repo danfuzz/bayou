@@ -260,6 +260,9 @@ export default class FileOp extends CommonBase {
    * before it is aborted. Timeouts are performed on a "best effort" basis as
    * well as silently clamped to implementation-specific limits (if any).
    *
+   * **Note:** It is an error for a transaction to contain more than one
+   * `timeout` operation.
+   *
    * @param {Int} durMsec Duration of the timeout, in milliseconds.
    * @returns {FileOp} An appropriately-constructed instance.
    */
