@@ -225,7 +225,7 @@ export default class LocalFile extends BaseFile {
    *   missing properties.
    */
   async _impl_transact(spec) {
-    this._log.info('Transaction:', spec);
+    this._log.detail('Transaction:', spec);
 
     // Arrange for timeout. **Note:** Needs to be done _before_ reading
     // storage, as that storage read can take significant time.
@@ -265,8 +265,10 @@ export default class LocalFile extends BaseFile {
 
       for (const [storagePath, value] of updatedStorage) {
         if (value === null) {
+          this._log.detail(`Transaction deleted path: ${storagePath}`);
           this._storage.delete(storagePath);
         } else {
+          this._log.detail(`Transaction wrote path: ${storagePath}`);
           this._storage.set(storagePath, value);
         }
 
@@ -277,6 +279,7 @@ export default class LocalFile extends BaseFile {
       this._storageNeedsWrite();
     }
 
+    this._log.detail('Transaction complete.');
     return { revNum, newRevNum, data };
   }
 
