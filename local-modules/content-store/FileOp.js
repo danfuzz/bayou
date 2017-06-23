@@ -99,7 +99,7 @@ export default class FileOp extends CommonBase {
    * @returns {array<FileOp>} Array in the defined category-sorted order.
    */
   static sortByCategory(orig) {
-    TArray.check(orig, FileOp);
+    TArray.check(orig, FileOp.check);
 
     const result = [];
 
