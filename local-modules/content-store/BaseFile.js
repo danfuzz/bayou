@@ -379,7 +379,7 @@ export default class BaseFile extends CommonBase {
     if (result.data === null) {
       delete result.data;
     } else {
-      TMap.check(result.data, TString, FrozenBuffer);
+      TMap.check(result.data, TString.check, FrozenBuffer.check);
     }
 
     return result;
