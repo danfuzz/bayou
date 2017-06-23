@@ -6,6 +6,7 @@ import { TBoolean, TInt, TMap, TObject, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 import { FrozenBuffer } from 'util-server';
 
+import FileOp from './FileOp';
 import StoragePath from './StoragePath';
 import TransactionSpec from './TransactionSpec';
 
@@ -147,9 +148,12 @@ export default class BaseFile extends CommonBase {
    * @returns {boolean} `true` once the operation is complete.
    */
   async opForceDelete(storagePath) {
-    StoragePath.check(storagePath);
+    const spec = new TransactionSpec([
+      FileOp.op_deletePath(storagePath)
+    ]);
 
-    return this._impl_forceOp(storagePath, null);
+    await this.transact(spec);
+    return true;
   }
 
   /**
@@ -161,25 +165,12 @@ export default class BaseFile extends CommonBase {
    * @returns {boolean} `true` once the operation is complete.
    */
   async opForceWrite(storagePath, newValue) {
-    StoragePath.check(storagePath);
+    const spec = new TransactionSpec([
+      FileOp.op_writePath(storagePath, newValue)
+    ]);
 
-    return this._impl_forceOp(storagePath, newValue);
-  }
-
-  /**
-   * Performs a forced-modification operation on the file. This is the main
-   * implementation of `opForceDelete()` and `opForceWrite()`. Arguments are
-   * guaranteed by the superclass to be valid. Passing `null` for `newValue`
-   * corresponds to the `opForceDelete()` operation.
-   *
-   * @abstract
-   * @param {string} storagePath Path to write to.
-   * @param {FrozenBuffer|null} newValue Value to write, or `null` if the value
-   *   at `path` is to be deleted.
-   * @returns {boolean} `true` once the write operation is complete.
-   */
-  async _impl_forceOp(storagePath, newValue) {
-    this._mustOverride(storagePath, newValue);
+    await this.transact(spec);
+    return true;
   }
 
   /**
