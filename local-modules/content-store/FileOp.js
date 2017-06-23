@@ -53,9 +53,10 @@ const CAT_WRITE = 'write';
  * order by category; but within a category there is no effective ordering.
  * Specifically, the category ordering is as listed above.
  *
- * There is a static method on this class to construct each named operation.
+ * There are static methods on this class to construct each named operation,
+ * named `op_<name>`, as well as some convenience methods to construct variants.
  * See documentation on those methods for details about the meaning and
- * arguments of these.
+ * arguments of each of these.
  */
 export default class FileOp extends CommonBase {
   /** {string} Operation category for environment ops. */
@@ -112,7 +113,7 @@ export default class FileOp extends CommonBase {
    * @param {string} storagePath The storage path to check.
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static checkPathEmpty(storagePath) {
+  static op_checkPathEmpty(storagePath) {
     StoragePath.check(storagePath);
     return new FileOp(KEY, CAT_PREREQUISITE, 'checkPathEmpty',
       [['storagePath', storagePath]]);
@@ -127,7 +128,7 @@ export default class FileOp extends CommonBase {
    * @param {string} storagePath The storage path to check.
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static checkPathExists(storagePath) {
+  static op_checkPathExists(storagePath) {
     StoragePath.check(storagePath);
     return new FileOp(KEY, CAT_PREREQUISITE, 'checkPathExists',
       [['storagePath', storagePath]]);
@@ -142,7 +143,7 @@ export default class FileOp extends CommonBase {
    * @param {string} hash The expected hash.
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static checkPathHash(storagePath, hash) {
+  static op_checkPathHash(storagePath, hash) {
     StoragePath.check(storagePath);
     TString.nonempty(hash); // TODO: Better hash validation.
     return new FileOp(KEY, CAT_PREREQUISITE, 'checkPathHash',
@@ -157,7 +158,7 @@ export default class FileOp extends CommonBase {
    * @param {string} storagePath The storage path to delete.
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static deletePath(storagePath) {
+  static op_deletePath(storagePath) {
     StoragePath.check(storagePath);
     return new FileOp(KEY, CAT_WRITE, 'deletePath',
       [['storagePath', storagePath]]);
@@ -175,7 +176,7 @@ export default class FileOp extends CommonBase {
    * @param {Int} revNum Maximum revision number (exclusive).
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static maxRevNum(revNum) {
+  static op_maxRevNum(revNum) {
     TInt.min(revNum, 1);
     return new FileOp(KEY, CAT_REVISION, 'maxRevNum',
       [['revNum', revNum]]);
@@ -188,7 +189,7 @@ export default class FileOp extends CommonBase {
    * @param {Int} revNum Maximum revision number (inclusive).
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static maxRevNumInc(revNum) {
+  static op_maxRevNumInc(revNum) {
     TInt.min(revNum, 0);
     return FileOp.maxRevNum(revNum + 1);
   }
@@ -202,7 +203,7 @@ export default class FileOp extends CommonBase {
    * @param {Int} revNum Minimum revision number (inclusive).
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static minRevNum(revNum) {
+  static op_minRevNum(revNum) {
     TInt.min(revNum, 0);
     return new FileOp(KEY, CAT_REVISION, 'minRevNum',
       [['revNum', revNum]]);
@@ -217,7 +218,7 @@ export default class FileOp extends CommonBase {
    * @param {string} storagePath The storage path to read from.
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static readPath(storagePath) {
+  static op_readPath(storagePath) {
     StoragePath.check(storagePath);
     return new FileOp(KEY, CAT_READ, 'readPath',
       [['storagePath', storagePath]]);
@@ -232,7 +233,7 @@ export default class FileOp extends CommonBase {
    * @param {Int} durMsec Duration of the timeout, in milliseconds.
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static timeout(durMsec) {
+  static op_timeout(durMsec) {
     TInt.min(durMsec, 0);
     return new FileOp(KEY, CAT_ENVIRONMENT, 'timeout',
       [['durMsec', durMsec]]);
@@ -247,7 +248,7 @@ export default class FileOp extends CommonBase {
    * @param {FrozenBuffer} value The value to store and bind to `storagePath`.
    * @returns {FileOp} An appropriately-constructed instance.
    */
-  static writePath(storagePath, value) {
+  static op_writePath(storagePath, value) {
     StoragePath.check(storagePath);
     FrozenBuffer.check(value);
     return new FileOp(KEY, CAT_WRITE, 'writePath',
