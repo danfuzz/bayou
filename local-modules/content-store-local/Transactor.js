@@ -9,6 +9,10 @@ import { CommonBase } from 'util-common';
  * Handler for `LocalFile.transact()`. An instance of this class is constructed
  * for each call to that method. Its `run()` method is what does most of the
  * work of performing the transaction.
+ *
+ * The class defines a method named `_op_<name>` for each of the named `FileOp`s
+ * that this class knows how to handle (which is hopefully all of them, but
+ * perhaps at times there will be something missing...or extra).
  */
 export default class Transactor extends CommonBase {
   /**
@@ -80,5 +84,85 @@ export default class Transactor extends CommonBase {
 
     this._log.detail('Transactor complete.');
     return { revNum, newRevNum, data };
+  }
+
+  /**
+   * Handler for `checkPathEmpty` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_checkPathEmpty(op) {
+    this._log.info('TODO', op);
+    throw new Error('TODO');
+  }
+
+  /**
+   * Handler for `checkPathExists` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_checkPathExists(op) {
+    this._log.info('TODO', op);
+    throw new Error('TODO');
+  }
+
+  /**
+   * Handler for `checkPathHash` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_checkPathHash(op) {
+    this._log.info('TODO', op);
+    throw new Error('TODO');
+  }
+
+  /**
+   * Handler for `deletePath` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_deletePath(op) {
+    this._log.info('TODO', op);
+    throw new Error('TODO');
+  }
+
+  /**
+   * Handler for `maxRevNum` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_maxRevNum(op) {
+    this._log.info('TODO', op);
+    throw new Error('TODO');
+  }
+
+  /**
+   * Handler for `minRevNum` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_minRevNum(op) {
+    this._log.info('TODO', op);
+    throw new Error('TODO');
+  }
+
+  /**
+   * Handler for `readPath` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_readPath(op) {
+    this._log.info('TODO', op);
+    throw new Error('TODO');
+  }
+
+  /**
+   * Handler for `writePath` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_writePath(op) {
+    this._log.info('TODO', op);
+    throw new Error('TODO');
   }
 }

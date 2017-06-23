@@ -149,18 +149,6 @@ export default class FileOp extends CommonBase {
   }
 
   /**
-   * Constructs an inclusive `maxRevNum` operation. This is a convenience
-   * method that is equivalent to calling `maxRevNum(revNum + 1)`.
-   *
-   * @param {Int} revNum Maximum revision number (inclusive).
-   * @returns {FileOp} An appropriately-constructed instance.
-   */
-  static maxRevNumInc(revNum) {
-    TInt.min(revNum, 0);
-    return FileOp.maxRevNum(revNum + 1);
-  }
-
-  /**
    * Constructs a `maxRevNum` operation. This is a revision restriction that
    * limits a transaction to only be performed with respect to an earlier
    * revision number of the file than the indicated revision. That is, it
@@ -176,6 +164,18 @@ export default class FileOp extends CommonBase {
     TInt.min(revNum, 1);
     return new FileOp(KEY, CAT_REVISION, 'maxRevNum',
       [['revNum', revNum]]);
+  }
+
+  /**
+   * Constructs an inclusive `maxRevNum` operation. This is a convenience
+   * method that is equivalent to calling `maxRevNum(revNum + 1)`.
+   *
+   * @param {Int} revNum Maximum revision number (inclusive).
+   * @returns {FileOp} An appropriately-constructed instance.
+   */
+  static maxRevNumInc(revNum) {
+    TInt.min(revNum, 0);
+    return FileOp.maxRevNum(revNum + 1);
   }
 
   /**
