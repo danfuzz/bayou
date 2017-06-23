@@ -10,6 +10,7 @@ import { Logger } from 'see-all';
 import { PromCondition, PromDelay } from 'util-common';
 import { FrozenBuffer } from 'util-server';
 
+import Transactor from './Transactor';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('local-file');
@@ -229,6 +230,34 @@ export default class LocalFile extends BaseFile {
   async _impl_revNum() {
     await this._readStorageIfNecessary();
     return this._revNum;
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @param {TransactionSpec} spec Same as with `transact()`.
+   * @returns {object} Same as with `transact()`, except with `null`s instead of
+   *   missing properties.
+   */
+  async _impl_transact(spec) {
+    await this._readStorageIfNecessary();
+
+    this._log.info('Transaction:', spec);
+
+    // Construct the "file friend" object. This exposes just enough private
+    // state of this instance to the transactor (constructed immediately
+    // hereafter) such that the latter can do its job.
+    const fileFriend = {
+      /** {Logger} Pass-through of this instance's logger. */
+      log: this._log,
+
+      /** {Int} Current revision number of the file. */
+      revNum: this._revNum
+    };
+
+    const transactor = new Transactor(spec, fileFriend);
+
+    return transactor.run();
   }
 
   /**

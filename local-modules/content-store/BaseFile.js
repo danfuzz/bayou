@@ -2,11 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TBoolean, TInt, TString } from 'typecheck';
+import { TBoolean, TInt, TMap, TObject, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 import { FrozenBuffer } from 'util-server';
 
 import StoragePath from './StoragePath';
+import TransactionSpec from './TransactionSpec';
 
 /**
  * Base class representing access to a particular file. Subclasses must override
@@ -298,6 +299,73 @@ export default class BaseFile extends CommonBase {
    */
   async _impl_revNum() {
     this._mustOverride();
+  }
+
+  /**
+   * Performs a transaction, which consists of a set of operations to be
+   * executed with respect to a file as an atomic unit. See `FileOp` for
+   * details about the possible operations and how they are ordered. This
+   * method will throw an error if it was not possible to perform the
+   * transaction for any reason.
+   *
+   * The return value from a successful call is an object with the following
+   * bindings:
+   *
+   * * `revNum` &mdash; The revision number of the file which was used to
+   *   satisfy the request.
+   * * `newRevNum` &mdash; If the transaction spec included any write
+   *   operations, the revision number of the file that resulted from those
+   *   writes.
+   * * `data` &mdash; If the transaction spec included any read operations, a
+   *   `Map<string,FrozenBuffer>` from storage paths to the data which was read.
+   *   **Note:** Even if there was no data to read (e.g., all read operations
+   *   were for non-bound paths) as long as the spec included read operations,
+   *   this property will still be present.
+   *
+   * @param {TransactionSpec} spec Specification for the transaction, that is,
+   *   the set of operations to perform.
+   * @returns {object} Object with mappings as described above.
+   */
+  async transact(spec) {
+    TransactionSpec.check(spec);
+
+    const result = await this._impl_transact(spec);
+    TObject.withExactKeys(result, ['revNum', 'newRevNum', 'data']);
+
+    // Validate and convert the result to be as documented.
+
+    TInt.min(result.revNum, 0);
+
+    if (result.newRevNum === null) {
+      delete result.newRevNum;
+    } else {
+      TInt.min(result.newRevNum, result.revNum + 1);
+    }
+
+    if (result.data === null) {
+      delete result.data;
+    } else {
+      TMap.check(result.data, TString, FrozenBuffer);
+    }
+
+    return result;
+  }
+
+  /**
+   * Main implementation of `transact()`. It is guaranteed to be called with a
+   * valid `TransactionSpec`, though the spec may not be sensible in term of the
+   * actual requested operations. The return value should contain all of the
+   * return properties specified by `transact()`; if a given property is to be
+   * absent in the final result, at this layer it should be represented as
+   * `null`.
+   *
+   * @abstract
+   * @param {TransactionSpec} spec Same as with `transact()`.
+   * @returns {object} Same as with `transact()`, except with `null`s instead of
+   *   missing properties.
+   */
+  async _impl_transact(spec) {
+    this._mustOverride(spec);
   }
 
   /**
