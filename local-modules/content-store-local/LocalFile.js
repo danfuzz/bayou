@@ -181,21 +181,6 @@ export default class LocalFile extends BaseFile {
    * Implementation as required by the superclass.
    *
    * @param {string} storagePath Path to write to.
-   * @param {FrozenBuffer|null} newValue Value to write, or `null` if the value
-   *   at `path` is to be deleted.
-   * @returns {boolean} `true` once the write operation is complete.
-   */
-  async _impl_forceOp(storagePath, newValue) {
-    await this._readStorageIfNecessary();
-
-    this._storeOrDeleteValue(storagePath, newValue);
-    return true;
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
-   * @param {string} storagePath Path to write to.
    * @param {FrozenBuffer|null} oldValue Value expected to be stored at `path`
    *   at the moment of writing, or `null` if `path` is expected to have nothing
    *   stored at it.
