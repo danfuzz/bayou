@@ -123,7 +123,7 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_deletePath(op) {
-    this._updatedStorage.set(op.arg('storagPath'), null);
+    this._updatedStorage.set(op.arg('storagePath'), null);
   }
 
   /**
@@ -172,6 +172,6 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_writePath(op) {
-    this._updatedStorage.set(op.arg('storagPath'), op.arg('value'));
+    this._updatedStorage.set(op.arg('storagePath'), op.arg('value'));
   }
 }
