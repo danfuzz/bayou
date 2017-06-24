@@ -226,7 +226,7 @@ export default class DocControl extends CommonBase {
 
     for (let i = 0; i <= revNum; i++) {
       try {
-        this._changeRead(i);
+        await this._changeRead(i);
       } catch (e) {
         this._log.info(`Corrupt document: Bogus change #${i}.`);
         return DocControl.STATUS_ERROR;
@@ -237,7 +237,8 @@ export default class DocControl extends CommonBase {
     // they're empty.
     for (let i = revNum + 1; i <= (revNum + 10); i++) {
       try {
-        if (this._changeReadOrNull(i) !== null) {
+        const change = await this._changeReadOrNull(i);
+        if (change !== null) {
           this._log.info(`Corrupt document: Extra change #${i}`);
           return DocControl.STATUS_ERROR;
         }

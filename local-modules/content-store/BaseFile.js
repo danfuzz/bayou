@@ -265,7 +265,7 @@ export default class BaseFile extends CommonBase {
     const result =
       await this._impl_pathReadOrNull(StoragePath.check(storagePath));
 
-    return (result === null) ? result : FrozenBuffer.check(result);
+    return (result === null) ? null : FrozenBuffer.check(result);
   }
 
   /**
