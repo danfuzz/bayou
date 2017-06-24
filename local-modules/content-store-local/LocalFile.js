@@ -181,21 +181,6 @@ export default class LocalFile extends BaseFile {
    * Implementation as required by the superclass.
    *
    * @param {string} storagePath Path to write to.
-   * @param {FrozenBuffer|null} newValue Value to write, or `null` if the value
-   *   at `path` is to be deleted.
-   * @returns {boolean} `true` once the write operation is complete.
-   */
-  async _impl_forceOp(storagePath, newValue) {
-    await this._readStorageIfNecessary();
-
-    this._storeOrDeleteValue(storagePath, newValue);
-    return true;
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
-   * @param {string} storagePath Path to write to.
    * @param {FrozenBuffer|null} oldValue Value expected to be stored at `path`
    *   at the moment of writing, or `null` if `path` is expected to have nothing
    *   stored at it.
@@ -240,7 +225,7 @@ export default class LocalFile extends BaseFile {
    *   missing properties.
    */
   async _impl_transact(spec) {
-    this._log.info('Transaction:', spec);
+    this._log.detail('Transaction:', spec);
 
     // Arrange for timeout. **Note:** Needs to be done _before_ reading
     // storage, as that storage read can take significant time.
@@ -260,17 +245,42 @@ export default class LocalFile extends BaseFile {
     // Construct the "file friend" object. This exposes just enough private
     // state of this instance to the transactor (constructed immediately
     // hereafter) such that the latter can do its job.
+
+    const revNum = this._revNum;
     const fileFriend = {
       /** {Logger} Pass-through of this instance's logger. */
       log: this._log,
 
       /** {Int} Current revision number of the file. */
-      revNum: this._revNum
+      revNum
     };
 
-    const transactor = new Transactor(spec, fileFriend);
+    // Run the transaction, gather the results, and queue up the writes.
 
-    return transactor.run();
+    const { data, updatedStorage } = new Transactor(spec, fileFriend).run();
+    let newRevNum = null;
+
+    if (updatedStorage.size !== 0) {
+      this._revNum = newRevNum = revNum + 1;
+
+      for (const [storagePath, value] of updatedStorage) {
+        if (value === null) {
+          this._log.detail(`Transaction deleted path: ${storagePath}`);
+          this._storage.delete(storagePath);
+        } else {
+          this._log.detail(`Transaction wrote path: ${storagePath}`);
+          this._storage.set(storagePath, value);
+        }
+
+        this._storageRevNums.set(storagePath, newRevNum);
+        this._storageToWrite.set(storagePath, value);
+      }
+
+      this._storageNeedsWrite();
+    }
+
+    this._log.detail('Transaction complete.');
+    return { revNum, newRevNum, data };
   }
 
   /**

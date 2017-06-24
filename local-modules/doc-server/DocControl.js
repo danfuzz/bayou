@@ -233,6 +233,20 @@ export default class DocControl extends CommonBase {
       }
     }
 
+    // Look for a few changes past the stored revision number to make sure
+    // they're empty.
+    for (let i = revNum + 1; i <= (revNum + 10); i++) {
+      try {
+        if (this._changeReadOrNull(i) !== null) {
+          this._log.info(`Corrupt document: Extra change #${i}`);
+          return DocControl.STATUS_ERROR;
+        }
+      } catch (e) {
+        this._log.info(`Corrupt document: Bogus extra change #${i}.`);
+        return DocControl.STATUS_ERROR;
+      }
+    }
+
     return DocControl.STATUS_OK;
   }
 
@@ -555,6 +569,23 @@ export default class DocControl extends CommonBase {
     await this._writeRevNum(revNum);
 
     return revNum;
+  }
+
+  /**
+   * Reads the change for the indicated revision number. This will return `null`
+   * given a request for a change that doesn't exist.
+   *
+   * @param {RevisionNumber} revNum Revision number of the change. This
+   *   indicates the change that produced that document revision.
+   * @returns {DocumentChange|null} The corresponding change, or `null` if it
+   *   doesn't exist.
+   */
+  async _changeReadOrNull(revNum) {
+    const encoded = await this._file.pathReadOrNull(Paths.forRevNum(revNum));
+
+    return (encoded === null)
+      ? null
+      : DocumentChange.check(Coder.decode(encoded));
   }
 
   /**
