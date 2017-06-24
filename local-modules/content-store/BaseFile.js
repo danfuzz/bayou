@@ -141,22 +141,6 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Deletes the value at the indicated path, if any, and without regard to
-   * what value it might have stored.
-   *
-   * @param {string} storagePath Path to write to.
-   * @returns {boolean} `true` once the operation is complete.
-   */
-  async opForceDelete(storagePath) {
-    const spec = new TransactionSpec(
-      FileOp.op_deletePath(storagePath)
-    );
-
-    await this.transact(spec);
-    return true;
-  }
-
-  /**
    * Writes a value at the indicated path, without regard to whether there was
    * a value already at the path, nor what value was already stored if any.
    *
