@@ -263,7 +263,10 @@ export default class BaseFile extends CommonBase {
    * bindings:
    *
    * * `revNum` &mdash; The revision number of the file which was used to
-   *   satisfy the request.
+   *   satisfy the request. This is always the most recent revision possible
+   *   given the restrictions defined in the transaction spec (if any). If there
+   *   are no restrictions, then this is always the most recent revision at the
+   *   instant the transaction was run.
    * * `newRevNum` &mdash; If the transaction spec included any write
    *   operations, the revision number of the file that resulted from those
    *   writes.
