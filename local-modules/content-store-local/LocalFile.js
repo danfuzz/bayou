@@ -334,18 +334,6 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * Implementation as required by the superclass.
-   *
-   * @param {string} storagePath Path to read from.
-   * @returns {FrozenBuffer|null} Value stored at the indicated path, or `null`
-   *   if there is none.
-   */
-  async _impl_pathReadOrNull(storagePath) {
-    await this._readStorageIfNecessary();
-    return this._storage.get(storagePath) || null;
-  }
-
-  /**
    * Reads the file storage if it has not yet been loaded.
    */
   async _readStorageIfNecessary() {

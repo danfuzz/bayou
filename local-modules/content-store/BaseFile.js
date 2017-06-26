@@ -193,14 +193,13 @@ export default class BaseFile extends CommonBase {
    * @returns {FrozenBuffer} Value stored at the indicated path.
    */
   async pathRead(storagePath) {
-    const result =
-      await this._impl_pathReadOrNull(StoragePath.check(storagePath));
+    const spec = new TransactionSpec(
+      FileOp.op_checkPathExists(storagePath),
+      FileOp.op_readPath(storagePath)
+    );
 
-    if (result === null) {
-      throw new Error(`No value at path: ${storagePath}`);
-    }
-
-    return FrozenBuffer.check(result);
+    const transactionResult = await this.transact(spec);
+    return transactionResult.data.get(storagePath);
   }
 
   /**
@@ -212,24 +211,14 @@ export default class BaseFile extends CommonBase {
    *   if there is none.
    */
   async pathReadOrNull(storagePath) {
-    const result =
-      await this._impl_pathReadOrNull(StoragePath.check(storagePath));
+    const spec = new TransactionSpec(
+      FileOp.op_readPath(storagePath)
+    );
 
-    return (result === null) ? null : FrozenBuffer.check(result);
-  }
+    const transactionResult = await this.transact(spec);
+    const data              = transactionResult.data.get(storagePath);
 
-  /**
-   * Reads the value stored at the given path. This method is guaranteed to be
-   * called with a valid value for `storagePath`. This is the main
-   * implementation for the methods `pathRead()` and `pathReadOrNull()`.
-   *
-   * @abstract
-   * @param {string} storagePath Path to read from.
-   * @returns {FrozenBuffer|null} Value stored at the indicated path, or `null`
-   *   if there is none.
-   */
-  async _impl_pathReadOrNull(storagePath) {
-    this._mustOverride(storagePath);
+    return (data === undefined) ? null : data;
   }
 
   /**
