@@ -7,7 +7,7 @@ import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Tim
 import { BaseFile, Coder, FileOp, TransactionSpec } from 'content-store';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
-import { CommonBase, PromDelay } from 'util-common';
+import { CommonBase, InfoError, PromDelay } from 'util-common';
 
 import Paths from './Paths';
 
@@ -555,22 +555,27 @@ export default class DocControl extends CommonBase {
     }
 
     const revNum = RevisionNumber.after(baseRevNum);
+    const changePath = Paths.forRevNum(revNum);
     const change = new DocumentChange(revNum, Timestamp.now(), delta, authorId);
-    const writeResult =
-      await this._file.opNew(Paths.forRevNum(revNum), Coder.encode(change));
-
-    if (!writeResult) {
-      // We lost an append race.
-      this._log.info(`Lost append race for revision ${revNum}.`);
-      return null;
-    }
-
-    // Update the revision number. **Note:** The `await` is to get errors to be
-    // thrown via this method instead of being dropped on the floor.
     const spec = new TransactionSpec(
+      FileOp.op_checkPathEmpty(changePath),
+      FileOp.op_writePath(changePath, Coder.encode(change)),
       FileOp.op_writePath(Paths.REVISION_NUMBER, Coder.encode(revNum))
     );
-    await this._file.transact(spec);
+
+    try {
+      await this._file.transact(spec);
+    } catch (e) {
+      if ((e instanceof InfoError) && (e.name === 'path_not_empty')) {
+        // This happens if and when we lose an append race, which will regularly
+        // occur if there are simultaneous editors.
+        this._log.info(`Lost append race for revision ${revNum}.`);
+        return null;
+      } else {
+        // No other errors are expected, so just rethrow.
+        throw e;
+      }
+    }
 
     return revNum;
   }
