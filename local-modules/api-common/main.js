@@ -5,11 +5,10 @@
 import BaseKey from './BaseKey';
 import Codec from './Codec';
 import Message from './Message';
-import Registry from './Registry';
 import SplitKey from './SplitKey';
 
 // Register classes with the API.
 Codec.theOne.registerClass(Message);
 Codec.theOne.registerClass(SplitKey);
 
-export { BaseKey, Codec, Message, Registry, SplitKey };
+export { BaseKey, Codec, Message, SplitKey };

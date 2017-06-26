@@ -4,9 +4,11 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
-
-import { Registry } from 'api-common';
 import { Random } from 'util-common';
+
+// The class being tested here isn't exported from the module, so we import it
+// by path.
+import Registry from 'api-common/Registry';
 
 class RegistryTestApiObject {
   constructor() {
