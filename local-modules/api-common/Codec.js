@@ -6,6 +6,7 @@ import { Singleton } from 'util-common';
 
 import Decoder from './Decoder';
 import Encoder from './Encoder';
+import Registry from './Registry';
 
 /**
  * Encoder and decoder of values for transport over the API (or for storage on
@@ -43,7 +44,7 @@ export default class Codec extends Singleton {
    * @returns {*} The converted value.
    */
   decode(value) {
-    return Decoder.decode(value);
+    return new Decoder(Registry.theOne).decode(value);
   }
 
   /**
