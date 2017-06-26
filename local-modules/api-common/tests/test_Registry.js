@@ -101,13 +101,13 @@ describe('api-common/Registry', () => {
   describe('find(className)', () => {
     it('should throw an error if an unregistered class is requested', () => {
       const randomName = Random.hexByteString(32);
-      assert.throws(() => Registry.theOne.find(randomName));
+      assert.throws(() => Registry.theOne.classForName(randomName));
     });
 
     it('should return the named class if it is registered', () => {
       Registry.theOne.register(FindTestApiObject);
 
-      const testClass = Registry.theOne.find(FindTestApiObject.API_NAME);
+      const testClass = Registry.theOne.classForName(FindTestApiObject.API_NAME);
       const testObject = new testClass();
 
       assert.instanceOf(testObject, FindTestApiObject);

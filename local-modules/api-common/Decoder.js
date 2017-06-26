@@ -91,7 +91,7 @@ export default class Decoder extends UtilityClass {
    * @returns {object} The converted value.
    */
   static _decodeInstance(tag, payload) {
-    const clazz = Registry.theOne.find(tag);
+    const clazz = Registry.theOne.classForName(tag);
     const args = Decoder._decodeArray(payload);
 
     if (!clazz) {

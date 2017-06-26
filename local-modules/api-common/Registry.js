@@ -68,7 +68,7 @@ export default class Regsitry extends Singleton {
    * @param {string} name The class name.
    * @returns {class} The class that was registered under the given name.
    */
-  find(name) {
+  classForName(name) {
     const result = this._registry.get(name);
 
     if (!result) {
