@@ -30,7 +30,7 @@ export default class Codec extends Singleton {
    *   rejected.
    * * Other arrays are processed recursively using (the equivalent of) this
    *   method, without the first element. If the first element is the value
-   *   `Registry.ARRAY_TAG` then the processed form is used as-is. Otherwise,
+   *   `Registry.arrayTag` then the processed form is used as-is. Otherwise,
    *   the first element is used to look up a class that has been registered
    *   under that name. Its `fromApi()` method is called, passing the converted
    *   array as arguments. The result of that call becomes the result of
@@ -76,7 +76,7 @@ export default class Codec extends Singleton {
    * * Arrays with non-numeric properties are rejected.
    * * Other arrays are allowed, with their values processed recursively using
    *   (the equivalent of) this method. The encoded form is also an array but
-   *   with an additional first element of the value `Registry.ARRAY_TAG`.
+   *   with an additional first element of the value `Registry.arrayTag`.
    * * Objects which bind a method `toApi()` and whose constructor binds a
    *   property `API_NAME` are allowed. Such objects will have `toApi()` called
    *   on them, which is expected to result in an array which is suitable for

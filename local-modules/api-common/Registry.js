@@ -25,11 +25,6 @@ const ARRAY_TAG = 'array';
  * the classes overlap).
  */
 export default class Regsitry extends Singleton {
-  /** The "class" tag used for regular arrays. */
-  static get ARRAY_TAG() {
-    return ARRAY_TAG;
-  }
-
   /**
    * Constructs the instance.
    */
@@ -42,6 +37,11 @@ export default class Regsitry extends Singleton {
      * registered (by client code).
      */
     this._registry = new Map([[ARRAY_TAG, null]]);
+  }
+
+  /** {string} The "class" tag used for regular arrays. */
+  get arrayTag() {
+    return ARRAY_TAG;
   }
 
   /**

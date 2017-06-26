@@ -4,8 +4,6 @@
 
 import { CommonBase, ObjectUtil } from 'util-common';
 
-import Registry from './Registry';
-
 /**
  * Main implementation of `Codec.encode()`.
  */
@@ -20,6 +18,9 @@ export default class Encoder extends CommonBase {
 
     /** {Registry} Registry instance to use. */
     this._reg = reg;
+
+    /** {static} Conveniently cached value of `reg.arrayTag`. */
+    this._arrayTag = reg.arrayTag;
   }
 
   /**
@@ -101,10 +102,10 @@ export default class Encoder extends CommonBase {
    * Helper for `encode()` which validates and converts an array.
    *
    * @param {array} value Value to convert.
-   * @param {string} [tag = Registry.ARRAY_TAG] "Header" tag for the result.
+   * @param {string} [tag = Registry.arrayTag] "Header" tag for the result.
    * @returns {array} The converted value.
    */
-  _encodeArray(value, tag = Registry.ARRAY_TAG) {
+  _encodeArray(value, tag = this._arrayTag) {
     // Convert elements and keep a count of how many elements we encounter.
     let count = 0;
     const result = value.map((elem) => {

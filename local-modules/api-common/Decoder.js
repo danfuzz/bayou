@@ -4,8 +4,6 @@
 
 import { CommonBase } from 'util-common';
 
-import Registry from './Registry';
-
 /**
  * Main implementation of `Codec.decode()`.
  */
@@ -20,6 +18,9 @@ export default class Decoder extends CommonBase {
 
     /** {Registry} Registry instance to use. */
     this._reg = reg;
+
+    /** {static} Conveniently cached value of `reg.arrayTag`. */
+    this._arrayTag = reg.arrayTag;
   }
 
   /**
@@ -51,7 +52,7 @@ export default class Decoder extends CommonBase {
     const tag = value[0];
     const payload = value.slice(1);
 
-    if (tag === Registry.ARRAY_TAG) {
+    if (tag === this._arrayTag) {
       return this._decodeArray(payload);
     } else if (typeof tag !== 'string') {
       throw new Error('API cannot decode arrays without an initial string tag.');
