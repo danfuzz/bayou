@@ -138,23 +138,35 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `maxRevNum` operations.
+   * Handler for `maxRevNum` operations. In this implementation, we only ever
+   * have a single revision available, and we reject the transaction should it
+   * not be covered by the requested restriction.
    *
    * @param {FileOp} op The operation.
    */
   _op_maxRevNum(op) {
-    this._log.info('TODO', op);
-    throw new Error('TODO');
+    const revNum = op.arg('revNum');
+
+    // **Note:** `>=` because the op is for an exclusive (not inclusive)
+    // maximum.
+    if (this._fileFriend.revNum >= revNum) {
+      throw new InfoError('revision_not_available', 'max', revNum);
+    }
   }
 
   /**
-   * Handler for `minRevNum` operations.
+   * Handler for `minRevNum` operations. In this implementation, we only ever
+   * have a single revision available, and we reject the transaction should it
+   * not be covered by the requested restriction.
    *
    * @param {FileOp} op The operation.
    */
   _op_minRevNum(op) {
-    this._log.info('TODO', op);
-    throw new Error('TODO');
+    const revNum = op.arg('revNum');
+
+    if (this._fileFriend.revNum < revNum) {
+      throw new InfoError('revision_not_available', 'min', revNum);
+    }
   }
 
   /**
