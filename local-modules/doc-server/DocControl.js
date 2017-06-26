@@ -99,20 +99,43 @@ export default class DocControl extends CommonBase {
 
     this._log.info('Creating document.');
 
-    await this._file.create();
-    await this._file.opNew(Paths.FORMAT_VERSION, this._formatVersion);
+    // Per spec, a document starts with an empty change #0.
+    const change0 = DocumentChange.firstChange();
 
-    // Empty first change (per documented interface).
-    await this._file.opNew(Paths.forRevNum(0), Coder.encode(DocumentChange.firstChange()));
-
-    // The indicated `contents`, if any.
+    // If we get passed `contents`, that goes into change #1. We make an array
+    // here (in either case) so that we can just use the `...` operator when
+    // constructing the transaction spec.
+    const maybeChange1 = [];
     if (contents !== null) {
       const change = new DocumentChange(1, Timestamp.now(), contents, null);
-      await this._file.opNew(Paths.forRevNum(1), Coder.encode(change));
+      const op     = FileOp.op_writePath(Paths.forRevNum(1), Coder.encode(change));
+      maybeChange1.push(op);
     }
 
+    // Initial document revision number.
     const revNum = (contents === null) ? 0 : 1;
-    await this._file.opNew(Paths.REVISION_NUMBER, Coder.encode(revNum));
+
+    const spec = new TransactionSpec(
+      // These make the transaction fail if we lose a race to (re)create the
+      // file.
+      FileOp.op_checkPathEmpty(Paths.FORMAT_VERSION),
+      FileOp.op_checkPathEmpty(Paths.REVISION_NUMBER),
+
+      // Version for the file format.
+      FileOp.op_writePath(Paths.FORMAT_VERSION, this._formatVersion),
+
+      // Initial revision number.
+      FileOp.op_writePath(Paths.REVISION_NUMBER, Coder.encode(revNum)),
+
+      // Empty change #0 (per documented interface).
+      FileOp.op_writePath(Paths.forRevNum(0), Coder.encode(change0)),
+
+      // The given `content` (if any) for change #1.
+      ...maybeChange1
+    );
+
+    await this._file.create();
+    await this._file.transact(spec);
 
     // Any cached snapshots are no longer valid.
     this._snapshots = new Map();
