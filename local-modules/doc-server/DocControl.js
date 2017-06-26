@@ -4,7 +4,7 @@
 
 import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Timestamp }
   from 'doc-common';
-import { BaseFile, Coder } from 'content-store';
+import { BaseFile, Coder, FileOp, TransactionSpec } from 'content-store';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase, PromDelay } from 'util-common';
@@ -622,7 +622,11 @@ export default class DocControl extends CommonBase {
   async _writeRevNum(revNum) {
     RevisionNumber.check(revNum);
 
-    await this._file.opForceWrite(Paths.REVISION_NUMBER, Coder.encode(revNum));
+    const spec = new TransactionSpec(
+      FileOp.op_writePath(Paths.REVISION_NUMBER, Coder.encode(revNum))
+    );
+
+    await this._file.transact(spec);
     return true;
   }
 }

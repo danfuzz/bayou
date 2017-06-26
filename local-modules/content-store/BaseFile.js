@@ -141,23 +141,6 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Writes a value at the indicated path, without regard to whether there was
-   * a value already at the path, nor what value was already stored if any.
-   *
-   * @param {string} storagePath Path to write to.
-   * @param {FrozenBuffer} newValue Value to write.
-   * @returns {boolean} `true` once the operation is complete.
-   */
-  async opForceWrite(storagePath, newValue) {
-    const spec = new TransactionSpec(
-      FileOp.op_writePath(storagePath, newValue)
-    );
-
-    await this.transact(spec);
-    return true;
-  }
-
-  /**
    * Writes a value at the indicated path, failing if there is already any
    * value stored at the path. If there is already a value, this method returns
    * `false`. All other problems are indicated by throwing errors.
