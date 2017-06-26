@@ -4,10 +4,10 @@
 
 import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Timestamp }
   from 'doc-common';
-import { BaseFile, Coder } from 'content-store';
+import { BaseFile, Coder, FileOp, TransactionSpec } from 'content-store';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
-import { CommonBase, PromDelay } from 'util-common';
+import { CommonBase, InfoError, PromDelay } from 'util-common';
 
 import Paths from './Paths';
 
@@ -99,20 +99,43 @@ export default class DocControl extends CommonBase {
 
     this._log.info('Creating document.');
 
-    await this._file.create();
-    await this._file.opNew(Paths.FORMAT_VERSION, this._formatVersion);
+    // Per spec, a document starts with an empty change #0.
+    const change0 = DocumentChange.firstChange();
 
-    // Empty first change (per documented interface).
-    await this._file.opNew(Paths.forRevNum(0), Coder.encode(DocumentChange.firstChange()));
-
-    // The indicated `contents`, if any.
+    // If we get passed `contents`, that goes into change #1. We make an array
+    // here (in either case) so that we can just use the `...` operator when
+    // constructing the transaction spec.
+    const maybeChange1 = [];
     if (contents !== null) {
       const change = new DocumentChange(1, Timestamp.now(), contents, null);
-      await this._file.opNew(Paths.forRevNum(1), Coder.encode(change));
+      const op     = FileOp.op_writePath(Paths.forRevNum(1), Coder.encode(change));
+      maybeChange1.push(op);
     }
 
+    // Initial document revision number.
     const revNum = (contents === null) ? 0 : 1;
-    await this._file.opNew(Paths.REVISION_NUMBER, Coder.encode(revNum));
+
+    const spec = new TransactionSpec(
+      // These make the transaction fail if we lose a race to (re)create the
+      // file.
+      FileOp.op_checkPathEmpty(Paths.FORMAT_VERSION),
+      FileOp.op_checkPathEmpty(Paths.REVISION_NUMBER),
+
+      // Version for the file format.
+      FileOp.op_writePath(Paths.FORMAT_VERSION, this._formatVersion),
+
+      // Initial revision number.
+      FileOp.op_writePath(Paths.REVISION_NUMBER, Coder.encode(revNum)),
+
+      // Empty change #0 (per documented interface).
+      FileOp.op_writePath(Paths.forRevNum(0), Coder.encode(change0)),
+
+      // The given `content` (if any) for change #1.
+      ...maybeChange1
+    );
+
+    await this._file.create();
+    await this._file.transact(spec);
 
     // Any cached snapshots are no longer valid.
     this._snapshots = new Map();
@@ -555,19 +578,27 @@ export default class DocControl extends CommonBase {
     }
 
     const revNum = RevisionNumber.after(baseRevNum);
+    const changePath = Paths.forRevNum(revNum);
     const change = new DocumentChange(revNum, Timestamp.now(), delta, authorId);
-    const writeResult =
-      await this._file.opNew(Paths.forRevNum(revNum), Coder.encode(change));
+    const spec = new TransactionSpec(
+      FileOp.op_checkPathEmpty(changePath),
+      FileOp.op_writePath(changePath, Coder.encode(change)),
+      FileOp.op_writePath(Paths.REVISION_NUMBER, Coder.encode(revNum))
+    );
 
-    if (!writeResult) {
-      // We lost an append race.
-      this._log.info(`Lost append race for revision ${revNum}.`);
-      return null;
+    try {
+      await this._file.transact(spec);
+    } catch (e) {
+      if ((e instanceof InfoError) && (e.name === 'path_not_empty')) {
+        // This happens if and when we lose an append race, which will regularly
+        // occur if there are simultaneous editors.
+        this._log.info(`Lost append race for revision ${revNum}.`);
+        return null;
+      } else {
+        // No other errors are expected, so just rethrow.
+        throw e;
+      }
     }
-
-    // Update the revision number. **Note:** The `await` is to get errors to be
-    // thrown via this method instead of being dropped on the floor.
-    await this._writeRevNum(revNum);
 
     return revNum;
   }
@@ -611,18 +642,5 @@ export default class DocControl extends CommonBase {
   async _currentRevNum() {
     const encoded = await this._file.pathReadOrNull(Paths.REVISION_NUMBER);
     return (encoded === null) ? null : Coder.decode(encoded);
-  }
-
-  /**
-   * Writes the given value as the current document revision number.
-   *
-   * @param {RevisionNumber} revNum The revision number.
-   * @returns {boolean} `true` once the write is complete.
-   */
-  async _writeRevNum(revNum) {
-    RevisionNumber.check(revNum);
-
-    await this._file.opForceWrite(Paths.REVISION_NUMBER, Coder.encode(revNum));
-    return true;
   }
 }

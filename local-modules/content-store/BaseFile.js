@@ -4,7 +4,7 @@
 
 import { TBoolean, TInt, TMap, TObject, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
-import { FrozenBuffer, InfoError } from 'util-server';
+import { FrozenBuffer } from 'util-server';
 
 import FileOp from './FileOp';
 import StoragePath from './StoragePath';
@@ -138,51 +138,6 @@ export default class BaseFile extends CommonBase {
    */
   async _impl_exists() {
     this._mustOverride();
-  }
-
-  /**
-   * Writes a value at the indicated path, without regard to whether there was
-   * a value already at the path, nor what value was already stored if any.
-   *
-   * @param {string} storagePath Path to write to.
-   * @param {FrozenBuffer} newValue Value to write.
-   * @returns {boolean} `true` once the operation is complete.
-   */
-  async opForceWrite(storagePath, newValue) {
-    const spec = new TransactionSpec(
-      FileOp.op_writePath(storagePath, newValue)
-    );
-
-    await this.transact(spec);
-    return true;
-  }
-
-  /**
-   * Writes a value at the indicated path, failing if there is already any
-   * value stored at the path. If there is already a value, this method returns
-   * `false`. All other problems are indicated by throwing errors.
-   *
-   * @param {string} storagePath Path to write to.
-   * @param {FrozenBuffer} newValue Value to write.
-   * @returns {boolean} `true` if the write is successful, or `false` if it
-   *   failed due to `path` already having a value.
-   */
-  async opNew(storagePath, newValue) {
-    const spec = new TransactionSpec(
-      FileOp.op_checkPathEmpty(storagePath),
-      FileOp.op_writePath(storagePath, newValue)
-    );
-
-    try {
-      await this.transact(spec);
-      return true;
-    } catch (e) {
-      if ((e instanceof InfoError) && (e.name === 'path_not_empty')) {
-        return false;
-      } else {
-        throw e;
-      }
-    }
   }
 
   /**

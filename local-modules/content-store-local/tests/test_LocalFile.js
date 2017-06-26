@@ -7,6 +7,7 @@ import fs from 'fs';
 import { after, before, describe, it } from 'mocha';
 import path from 'path';
 
+import { FileOp, TransactionSpec } from 'content-store';
 import { LocalFile } from 'content-store-local';
 import { FrozenBuffer } from 'util-server';
 
@@ -49,7 +50,11 @@ describe('content-store-local/LocalFile', () => {
 
       // Baseline assumption.
       await file.create();
-      await file.opForceWrite(storagePath, value);
+      const spec = new TransactionSpec(
+        FileOp.op_writePath(storagePath, value)
+      );
+      await file.transact(spec);
+
       assert.strictEqual(await file.pathReadOrNull(storagePath), value);
 
       // The real test.
