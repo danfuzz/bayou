@@ -2,25 +2,33 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ObjectUtil, UtilityClass } from 'util-common';
+import { CommonBase, ObjectUtil } from 'util-common';
 
 import Registry from './Registry';
 
 /**
-* Main implementation of `Codec.decode()`.
- *
- * **TODO:** If and when `Registry` stops being a singleton, this class should
- * correspondingly stop being a utility class, since it will no longer be the
- * case that there is a unique registry to query.
+ * Main implementation of `Codec.encode()`.
  */
-export default class Encoder extends UtilityClass {
+export default class Encoder extends CommonBase {
+  /**
+   * Construct an instance.
+   *
+   * @param {Registry} reg Registry instance to use.
+   */
+  constructor(reg) {
+    super();
+
+    /** {Registry} Registry instance to use. */
+    this._reg = reg;
+  }
+
   /**
    * Main implementation of `Codec.encode()`, see which for details.
    *
    * @param {*} value Value to convert.
    * @returns {*} The converted value.
    */
-  static encode(value) {
+  encode(value) {
     switch (typeof value) {
       case 'boolean':
       case 'number':
@@ -38,18 +46,18 @@ export default class Encoder extends UtilityClass {
         const proto = Object.getPrototypeOf(value);
 
         if (proto === Object.prototype) {
-          return Encoder._encodeSimpleObject(value);
+          return this._encodeSimpleObject(value);
         } else if (proto === Array.prototype) {
           // Note: We don't use `Array.isArray()` because that will return
           // `true` for subclasses of Array. We want to instead treat Array
           // subclass instances as regular object instances (in the next
           // clause), so as not to miss out on their API metadata (or so as to
           // fail to encode them if they aren't in fact API-ready).
-          return Encoder._encodeArray(value);
+          return this._encodeArray(value);
         } else {
           // It had better define the API metainfo properties, but if not, then
           // this call will throw.
-          return Encoder._encodeInstance(value);
+          return this._encodeInstance(value);
         }
       }
 
@@ -65,7 +73,7 @@ export default class Encoder extends UtilityClass {
    * @param {object} value Value to convert.
    * @returns {object} The converted value.
    */
-  static _encodeSimpleObject(value) {
+  _encodeSimpleObject(value) {
     const result = {};
 
     for (const k of Object.getOwnPropertyNames(value)) {
@@ -83,7 +91,7 @@ export default class Encoder extends UtilityClass {
         }
       }
 
-      result[k] = Encoder.encode(origValue);
+      result[k] = this.encode(origValue);
     }
 
     return Object.freeze(result);
@@ -96,12 +104,12 @@ export default class Encoder extends UtilityClass {
    * @param {string} [tag = Registry.ARRAY_TAG] "Header" tag for the result.
    * @returns {array} The converted value.
    */
-  static _encodeArray(value, tag = Registry.ARRAY_TAG) {
+  _encodeArray(value, tag = Registry.ARRAY_TAG) {
     // Convert elements and keep a count of how many elements we encounter.
     let count = 0;
     const result = value.map((elem) => {
       count++;
-      return Encoder.encode(elem);
+      return this.encode(elem);
     });
 
     if (value.length !== count) {
@@ -126,7 +134,7 @@ export default class Encoder extends UtilityClass {
    * @param {object} value Value to convert.
    * @returns {object} The converted value.
    */
-  static _encodeInstance(value) {
+  _encodeInstance(value) {
     const apiName = value.constructor && value.constructor.API_NAME;
     const toApi = value.toApi;
 
@@ -139,6 +147,6 @@ export default class Encoder extends UtilityClass {
       throw new Error(`Non-array result from \`toApi()\` on class \`${value.constructor.name}\`.`);
     }
 
-    return Encoder._encodeArray(payload, apiName);
+    return this._encodeArray(payload, apiName);
   }
 }

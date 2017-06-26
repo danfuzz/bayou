@@ -92,7 +92,7 @@ export default class Codec extends Singleton {
    * @returns {*} The converted value.
    */
   encode(value) {
-    return Encoder.encode(value);
+    return new Encoder(Registry.theOne).encode(value);
   }
 
   /**
