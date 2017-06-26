@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { before, describe, it } from 'mocha';
 
-import { Codec, Registry } from 'api-common';
+import { Codec } from 'api-common';
 
 import MockApiObject from './MockApiObject';
 
@@ -17,7 +17,7 @@ describe('api-common/Decoder', () => {
 
   before(() => {
     try {
-      Registry.theOne.registerClass(MockApiObject);
+      Codec.theOne.registerClass(MockApiObject);
     } catch (e) {
       // nothing to do here, the try/catch is just in case some other test
       // file has already registered the mock API object.

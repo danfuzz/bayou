@@ -120,4 +120,14 @@ export default class Codec extends Singleton {
   encodeJson(value, pretty = false) {
     return JSON.stringify(this.encode(value), null, pretty ? 2 : 0);
   }
+
+  /**
+   * Registers a class to be accepted for API use. This is a pass-through to
+   * the method of the same name on the instance's `Registry`.
+   *
+   * @param {object} clazz The class to register.
+   */
+  registerClass(clazz) {
+    this._reg.registerClass(clazz);
+  }
 }
