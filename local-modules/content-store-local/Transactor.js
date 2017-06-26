@@ -180,13 +180,14 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `timeout` operations.
+   * Handler for `timeout` operations. In this case, there's nothing to do
+   * because the code in `LocalFile` that calls into here already takes care
+   * of timeouts.
    *
-   * @param {FileOp} op The operation.
+   * @param {FileOp} op_unused The operation.
    */
-  _op_timeout(op) {
-    this._log.info('TODO', op);
-    throw new Error('TODO');
+  _op_timeout(op_unused) {
+    // This space intentionally left blank.
   }
 
   /**
