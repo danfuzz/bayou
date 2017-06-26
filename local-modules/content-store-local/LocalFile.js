@@ -180,36 +180,6 @@ export default class LocalFile extends BaseFile {
   /**
    * Implementation as required by the superclass.
    *
-   * @param {string} storagePath Path to write to.
-   * @param {FrozenBuffer|null} oldValue Value expected to be stored at `path`
-   *   at the moment of writing, or `null` if `path` is expected to have nothing
-   *   stored at it.
-   * @param {FrozenBuffer|null} newValue Value to write, or `null` if the value
-   *   at `path` is to be deleted.
-   * @returns {boolean} `true` if the write is successful, or `false` if it
-   *   failed due to value mismatch.
-   */
-  async _impl_op(storagePath, oldValue, newValue) {
-    await this._readStorageIfNecessary();
-
-    const existingValue = this._storage.get(storagePath) || null;
-
-    if (oldValue !== existingValue) {
-      if (   (oldValue === null)
-          || (existingValue === null)
-          || !oldValue.equals(existingValue)) {
-        // Mismatch between expected and actual pre-existing value.
-        return false;
-      }
-    }
-
-    this._storeOrDeleteValue(storagePath, newValue);
-    return true;
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
    * @returns {Int} The instantaneously current revision number of the file.
    */
   async _impl_revNum() {
@@ -371,26 +341,6 @@ export default class LocalFile extends BaseFile {
     // The timeout expired.
     this._log.detail('Timed out.');
     return null;
-  }
-
-  /**
-   * Helper for the update methods, which performs the actual updating.
-   *
-   * @param {string} storagePath Path to write to.
-   * @param {FrozenBuffer|null} newValue Value to write, or `null` if the value
-   *   at `path` is to be deleted.
-   */
-  _storeOrDeleteValue(storagePath, newValue) {
-    if (newValue === null) {
-      this._storage.delete(storagePath);
-    } else {
-      this._storage.set(storagePath, newValue);
-    }
-
-    this._revNum++;
-    this._storageRevNums.set(storagePath, this._revNum);
-    this._storageToWrite.set(storagePath, newValue);
-    this._storageNeedsWrite();
   }
 
   /**

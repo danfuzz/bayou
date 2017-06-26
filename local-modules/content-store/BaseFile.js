@@ -158,25 +158,6 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Deletes the value at the indicated path, failing if it is not the indicated
-   * value at the time of deletion. If the expected value doesn't match, this
-   * method returns `false`. All other problems are indicated by throwing
-   * errors.
-   *
-   * @param {string} storagePath Path to write to.
-   * @param {FrozenBuffer} oldValue Value expected to be stored at `path` at the
-   *   moment of deletion.
-   * @returns {boolean} `true` if the delete is successful, or `false` if it
-   *   failed due to `path` having an unexpected value.
-   */
-  async opDelete(storagePath, oldValue) {
-    StoragePath.check(storagePath);
-    FrozenBuffer.check(oldValue);
-
-    return this._impl_op(storagePath, oldValue, null);
-  }
-
-  /**
    * Writes a value at the indicated path, failing if there is already any
    * value stored at the path. If there is already a value, this method returns
    * `false`. All other problems are indicated by throwing errors.
@@ -187,52 +168,13 @@ export default class BaseFile extends CommonBase {
    *   failed due to `path` already having a value.
    */
   async opNew(storagePath, newValue) {
-    StoragePath.check(storagePath);
-    FrozenBuffer.check(newValue);
+    const spec = new TransactionSpec(
+      FileOp.op_checkPathEmpty(storagePath),
+      FileOp.op_writePath(storagePath, newValue)
+    );
 
-    return this._impl_op(storagePath, null, newValue);
-  }
-
-  /**
-   * Writes a value at the indicated path, failing if there is already any
-   * value at the path other than the given one. In case of value-mismatch
-   * failure, this method returns `false`. All other problems are indicated by
-   * throwing errors.
-   *
-   * @param {string} storagePath Path to write to.
-   * @param {FrozenBuffer} oldValue Value expected to be stored at `path` at the
-   *   moment of writing.
-   * @param {FrozenBuffer} newValue Value to write.
-   * @returns {boolean} `true` if the write is successful, or `false` if it
-   *   failed due to value mismatch.
-   */
-  async opReplace(storagePath, oldValue, newValue) {
-    StoragePath.check(storagePath);
-    FrozenBuffer.check(oldValue);
-    FrozenBuffer.check(newValue);
-
-    return this._impl_op(storagePath, oldValue, newValue);
-  }
-
-  /**
-   * Performs a modification operation on the file. This is the main
-   * implementation of `opDelete()`, `opNew()`, and `opReplace()`. Arguments are
-   * guaranteed by the superclass to be valid. Passing `null` for `oldValue`
-   * corresponds to the `opNew()` operation. Passing `null` for `newValue`
-   * corresponds to the `opDelete()` operation.
-   *
-   * @abstract
-   * @param {string} storagePath Path to write to.
-   * @param {FrozenBuffer|null} oldValue Value expected to be stored at `path`
-   *   at the moment of writing, or `null` if `path` is expected to have nothing
-   *   stored at it.
-   * @param {FrozenBuffer|null} newValue Value to write, or `null` if the value
-   *   at `path` is to be deleted.
-   * @returns {boolean} `true` if the write is successful, or `false` if it
-   *   failed due to value mismatch.
-   */
-  async _impl_op(storagePath, oldValue, newValue) {
-    this._mustOverride(storagePath, oldValue, newValue);
+    await this.transact(spec);
+    return true;
   }
 
   /**
