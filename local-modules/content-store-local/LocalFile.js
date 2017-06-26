@@ -246,13 +246,25 @@ export default class LocalFile extends BaseFile {
     // state of this instance to the transactor (constructed immediately
     // hereafter) such that the latter can do its job.
 
-    const revNum = this._revNum;
+    const revNum     = this._revNum;
+    const storage    = this._storage;
     const fileFriend = {
       /** {Logger} Pass-through of this instance's logger. */
       log: this._log,
 
       /** {Int} Current revision number of the file. */
-      revNum
+      revNum,
+
+      /**
+       * Gets the value stored at the given path, if any.
+       *
+       * @param {string} storagePath The path.
+       * @returns {FrozenBuffer|null} The corresponding stored value, or `null`
+       *   if there is none.
+       */
+      readPathOrNull(storagePath) {
+        return storage.get(storagePath) || null;
+      }
     };
 
     // Run the transaction, gather the results, and queue up the writes.
