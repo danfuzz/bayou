@@ -567,7 +567,10 @@ export default class DocControl extends CommonBase {
 
     // Update the revision number. **Note:** The `await` is to get errors to be
     // thrown via this method instead of being dropped on the floor.
-    await this._writeRevNum(revNum);
+    const spec = new TransactionSpec(
+      FileOp.op_writePath(Paths.REVISION_NUMBER, Coder.encode(revNum))
+    );
+    await this._file.transact(spec);
 
     return revNum;
   }
@@ -611,22 +614,5 @@ export default class DocControl extends CommonBase {
   async _currentRevNum() {
     const encoded = await this._file.pathReadOrNull(Paths.REVISION_NUMBER);
     return (encoded === null) ? null : Coder.decode(encoded);
-  }
-
-  /**
-   * Writes the given value as the current document revision number.
-   *
-   * @param {RevisionNumber} revNum The revision number.
-   * @returns {boolean} `true` once the write is complete.
-   */
-  async _writeRevNum(revNum) {
-    RevisionNumber.check(revNum);
-
-    const spec = new TransactionSpec(
-      FileOp.op_writePath(Paths.REVISION_NUMBER, Coder.encode(revNum))
-    );
-
-    await this._file.transact(spec);
-    return true;
   }
 }
