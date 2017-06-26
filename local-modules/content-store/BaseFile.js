@@ -4,7 +4,7 @@
 
 import { TBoolean, TInt, TMap, TObject, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
-import { FrozenBuffer } from 'util-server';
+import { FrozenBuffer, InfoError } from 'util-server';
 
 import FileOp from './FileOp';
 import StoragePath from './StoragePath';
@@ -173,8 +173,16 @@ export default class BaseFile extends CommonBase {
       FileOp.op_writePath(storagePath, newValue)
     );
 
-    await this.transact(spec);
-    return true;
+    try {
+      await this.transact(spec);
+      return true;
+    } catch (e) {
+      if ((e instanceof InfoError) && (e.name === 'path_not_empty')) {
+        return false;
+      } else {
+        throw e;
+      }
+    }
   }
 
   /**
