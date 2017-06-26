@@ -35,7 +35,7 @@ export default class TString extends UtilityClass {
   }
 
   /**
-   * Checks a value of type `String`, which must further more be a valid string
+   * Checks a value of type `String`, which must furthermore be a valid string
    * of hexadecimal bytes (lower case). Optionally checks for a minimum and/or
    * maximum length.
    *
@@ -60,6 +60,24 @@ export default class TString extends UtilityClass {
     }
 
     return value;
+  }
+
+  /**
+   * Checks a value of type `String`, which must furthermore be a valid
+   * programming language identifier per the usual rules for same. That is, it
+   * must be a non-empty string consisting of characters from the set
+   * `[a-zA-Z_0-9]` and with a non-numeric first character.
+   *
+   * @param {*} value Value to check.
+   * @returns {string} `value`.
+   */
+  static identifier(value) {
+    try {
+      return TString.check(value, /^[a-zA-Z_][a-zA-Z_0-9]*$/);
+    } catch (e) {
+      // More on-point error.
+      return TypeError.badValue(value, 'String', 'identifier');
+    }
   }
 
   /**

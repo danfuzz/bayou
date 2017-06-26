@@ -5,6 +5,7 @@
 import CommonBase from './CommonBase';
 import DataUtil from './DataUtil';
 import DeferredLoader from './DeferredLoader';
+import InfoError from './InfoError';
 import JsonUtil from './JsonUtil';
 import PromCondition from './PromCondition';
 import PromDelay from './PromDelay';
@@ -17,6 +18,7 @@ export {
   CommonBase,
   DataUtil,
   DeferredLoader,
+  InfoError,
   JsonUtil,
   PromCondition,
   PromDelay,
