@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { FileOp } from 'content-store';
-import { CommonBase } from 'util-common';
+import { CommonBase, InfoError } from 'util-common';
 
 /**
  * Handler for `LocalFile.transact()`. An instance of this class is constructed
@@ -93,8 +93,10 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_checkPathEmpty(op) {
-    this._log.info('TODO', op);
-    throw new Error('TODO');
+    const storagePath = op.arg('storagePath');
+    if (this._fileFriend.readPathOrNull(storagePath) !== null) {
+      throw new InfoError('path_not_empty', storagePath);
+    }
   }
 
   /**
@@ -103,8 +105,10 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_checkPathExists(op) {
-    this._log.info('TODO', op);
-    throw new Error('TODO');
+    const storagePath = op.arg('storagePath');
+    if (this._fileFriend.readPathOrNull(storagePath) === null) {
+      throw new InfoError('path_not_found', storagePath);
+    }
   }
 
   /**
@@ -113,8 +117,15 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_checkPathHash(op) {
-    this._log.info('TODO', op);
-    throw new Error('TODO');
+    const storagePath  = op.arg('storagePath');
+    const expectedHash = op.arg('hash');
+    const data         = this._fileFriend.readPathOrNull(storagePath);
+
+    if (data === null) {
+      throw new InfoError('path_not_found', storagePath);
+    } else if (data.hash !== expectedHash) {
+      throw new InfoError('path_hash_mismatch', storagePath, expectedHash);
+    }
   }
 
   /**

@@ -334,6 +334,8 @@ export default class BaseFile extends CommonBase {
    * @param {TransactionSpec} spec Specification for the transaction, that is,
    *   the set of operations to perform.
    * @returns {object} Object with mappings as described above.
+   * @throws {InfoError} Thrown if the transaction failed. Errors so thrown
+   *   contain details sufficient for programmatic understanding of the issue.
    */
   async transact(spec) {
     TransactionSpec.check(spec);
