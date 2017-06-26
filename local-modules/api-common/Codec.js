@@ -18,6 +18,19 @@ import Registry from './Registry';
  */
 export default class Codec extends Singleton {
   /**
+   * Constructs an instance.
+   */
+  constructor() {
+    super();
+
+    /**
+     * {Registry} The registry instance to use. **Note:** If and when this class
+     * stops being a singleton, this will get set from a constructor argument.
+     */
+    this._reg = Registry.theOne;
+  }
+
+  /**
    * Converts a value that was previously converted with `encode()` (or the
    * equivalent) back into fully useful objects. Specifically:
    *
@@ -44,7 +57,7 @@ export default class Codec extends Singleton {
    * @returns {*} The converted value.
    */
   decode(value) {
-    return new Decoder(Registry.theOne).decode(value);
+    return new Decoder(this._reg).decode(value);
   }
 
   /**
@@ -92,7 +105,7 @@ export default class Codec extends Singleton {
    * @returns {*} The converted value.
    */
   encode(value) {
-    return new Encoder(Registry.theOne).encode(value);
+    return new Encoder(this._reg).encode(value);
   }
 
   /**
