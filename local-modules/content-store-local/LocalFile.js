@@ -180,46 +180,6 @@ export default class LocalFile extends BaseFile {
   /**
    * Implementation as required by the superclass.
    *
-   * @param {string} storagePath Path to write to.
-   * @param {FrozenBuffer|null} oldValue Value expected to be stored at `path`
-   *   at the moment of writing, or `null` if `path` is expected to have nothing
-   *   stored at it.
-   * @param {FrozenBuffer|null} newValue Value to write, or `null` if the value
-   *   at `path` is to be deleted.
-   * @returns {boolean} `true` if the write is successful, or `false` if it
-   *   failed due to value mismatch.
-   */
-  async _impl_op(storagePath, oldValue, newValue) {
-    await this._readStorageIfNecessary();
-
-    const existingValue = this._storage.get(storagePath) || null;
-
-    if (oldValue !== existingValue) {
-      if (   (oldValue === null)
-          || (existingValue === null)
-          || !oldValue.equals(existingValue)) {
-        // Mismatch between expected and actual pre-existing value.
-        return false;
-      }
-    }
-
-    this._storeOrDeleteValue(storagePath, newValue);
-    return true;
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
-   * @returns {Int} The instantaneously current revision number of the file.
-   */
-  async _impl_revNum() {
-    await this._readStorageIfNecessary();
-    return this._revNum;
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
    * @param {TransactionSpec} spec Same as with `transact()`.
    * @returns {object} Same as with `transact()`, except with `null`s instead of
    *   missing properties.
@@ -246,13 +206,25 @@ export default class LocalFile extends BaseFile {
     // state of this instance to the transactor (constructed immediately
     // hereafter) such that the latter can do its job.
 
-    const revNum = this._revNum;
+    const revNum     = this._revNum;
+    const storage    = this._storage;
     const fileFriend = {
       /** {Logger} Pass-through of this instance's logger. */
       log: this._log,
 
       /** {Int} Current revision number of the file. */
-      revNum
+      revNum,
+
+      /**
+       * Gets the value stored at the given path, if any.
+       *
+       * @param {string} storagePath The path.
+       * @returns {FrozenBuffer|null} The corresponding stored value, or `null`
+       *   if there is none.
+       */
+      readPathOrNull(storagePath) {
+        return storage.get(storagePath) || null;
+      }
     };
 
     // Run the transaction, gather the results, and queue up the writes.
@@ -359,38 +331,6 @@ export default class LocalFile extends BaseFile {
     // The timeout expired.
     this._log.detail('Timed out.');
     return null;
-  }
-
-  /**
-   * Helper for the update methods, which performs the actual updating.
-   *
-   * @param {string} storagePath Path to write to.
-   * @param {FrozenBuffer|null} newValue Value to write, or `null` if the value
-   *   at `path` is to be deleted.
-   */
-  _storeOrDeleteValue(storagePath, newValue) {
-    if (newValue === null) {
-      this._storage.delete(storagePath);
-    } else {
-      this._storage.set(storagePath, newValue);
-    }
-
-    this._revNum++;
-    this._storageRevNums.set(storagePath, this._revNum);
-    this._storageToWrite.set(storagePath, newValue);
-    this._storageNeedsWrite();
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
-   * @param {string} storagePath Path to read from.
-   * @returns {FrozenBuffer|null} Value stored at the indicated path, or `null`
-   *   if there is none.
-   */
-  async _impl_pathReadOrNull(storagePath) {
-    await this._readStorageIfNecessary();
-    return this._storage.get(storagePath) || null;
   }
 
   /**

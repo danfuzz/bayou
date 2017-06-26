@@ -4,7 +4,7 @@
 
 import { TBoolean, TInt, TMap, TObject, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
-import { FrozenBuffer } from 'util-server';
+import { FrozenBuffer, InfoError } from 'util-server';
 
 import FileOp from './FileOp';
 import StoragePath from './StoragePath';
@@ -158,25 +158,6 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Deletes the value at the indicated path, failing if it is not the indicated
-   * value at the time of deletion. If the expected value doesn't match, this
-   * method returns `false`. All other problems are indicated by throwing
-   * errors.
-   *
-   * @param {string} storagePath Path to write to.
-   * @param {FrozenBuffer} oldValue Value expected to be stored at `path` at the
-   *   moment of deletion.
-   * @returns {boolean} `true` if the delete is successful, or `false` if it
-   *   failed due to `path` having an unexpected value.
-   */
-  async opDelete(storagePath, oldValue) {
-    StoragePath.check(storagePath);
-    FrozenBuffer.check(oldValue);
-
-    return this._impl_op(storagePath, oldValue, null);
-  }
-
-  /**
    * Writes a value at the indicated path, failing if there is already any
    * value stored at the path. If there is already a value, this method returns
    * `false`. All other problems are indicated by throwing errors.
@@ -187,52 +168,21 @@ export default class BaseFile extends CommonBase {
    *   failed due to `path` already having a value.
    */
   async opNew(storagePath, newValue) {
-    StoragePath.check(storagePath);
-    FrozenBuffer.check(newValue);
+    const spec = new TransactionSpec(
+      FileOp.op_checkPathEmpty(storagePath),
+      FileOp.op_writePath(storagePath, newValue)
+    );
 
-    return this._impl_op(storagePath, null, newValue);
-  }
-
-  /**
-   * Writes a value at the indicated path, failing if there is already any
-   * value at the path other than the given one. In case of value-mismatch
-   * failure, this method returns `false`. All other problems are indicated by
-   * throwing errors.
-   *
-   * @param {string} storagePath Path to write to.
-   * @param {FrozenBuffer} oldValue Value expected to be stored at `path` at the
-   *   moment of writing.
-   * @param {FrozenBuffer} newValue Value to write.
-   * @returns {boolean} `true` if the write is successful, or `false` if it
-   *   failed due to value mismatch.
-   */
-  async opReplace(storagePath, oldValue, newValue) {
-    StoragePath.check(storagePath);
-    FrozenBuffer.check(oldValue);
-    FrozenBuffer.check(newValue);
-
-    return this._impl_op(storagePath, oldValue, newValue);
-  }
-
-  /**
-   * Performs a modification operation on the file. This is the main
-   * implementation of `opDelete()`, `opNew()`, and `opReplace()`. Arguments are
-   * guaranteed by the superclass to be valid. Passing `null` for `oldValue`
-   * corresponds to the `opNew()` operation. Passing `null` for `newValue`
-   * corresponds to the `opDelete()` operation.
-   *
-   * @abstract
-   * @param {string} storagePath Path to write to.
-   * @param {FrozenBuffer|null} oldValue Value expected to be stored at `path`
-   *   at the moment of writing, or `null` if `path` is expected to have nothing
-   *   stored at it.
-   * @param {FrozenBuffer|null} newValue Value to write, or `null` if the value
-   *   at `path` is to be deleted.
-   * @returns {boolean} `true` if the write is successful, or `false` if it
-   *   failed due to value mismatch.
-   */
-  async _impl_op(storagePath, oldValue, newValue) {
-    this._mustOverride(storagePath, oldValue, newValue);
+    try {
+      await this.transact(spec);
+      return true;
+    } catch (e) {
+      if ((e instanceof InfoError) && (e.name === 'path_not_empty')) {
+        return false;
+      } else {
+        throw e;
+      }
+    }
   }
 
   /**
@@ -243,14 +193,13 @@ export default class BaseFile extends CommonBase {
    * @returns {FrozenBuffer} Value stored at the indicated path.
    */
   async pathRead(storagePath) {
-    const result =
-      await this._impl_pathReadOrNull(StoragePath.check(storagePath));
+    const spec = new TransactionSpec(
+      FileOp.op_checkPathExists(storagePath),
+      FileOp.op_readPath(storagePath)
+    );
 
-    if (result === null) {
-      throw new Error(`No value at path: ${storagePath}`);
-    }
-
-    return FrozenBuffer.check(result);
+    const transactionResult = await this.transact(spec);
+    return transactionResult.data.get(storagePath);
   }
 
   /**
@@ -262,24 +211,14 @@ export default class BaseFile extends CommonBase {
    *   if there is none.
    */
   async pathReadOrNull(storagePath) {
-    const result =
-      await this._impl_pathReadOrNull(StoragePath.check(storagePath));
+    const spec = new TransactionSpec(
+      FileOp.op_readPath(storagePath)
+    );
 
-    return (result === null) ? null : FrozenBuffer.check(result);
-  }
+    const transactionResult = await this.transact(spec);
+    const data              = transactionResult.data.get(storagePath);
 
-  /**
-   * Reads the value stored at the given path. This method is guaranteed to be
-   * called with a valid value for `storagePath`. This is the main
-   * implementation for the methods `pathRead()` and `pathReadOrNull()`.
-   *
-   * @abstract
-   * @param {string} storagePath Path to read from.
-   * @returns {FrozenBuffer|null} Value stored at the indicated path, or `null`
-   *   if there is none.
-   */
-  async _impl_pathReadOrNull(storagePath) {
-    this._mustOverride(storagePath);
+    return (data === undefined) ? null : data;
   }
 
   /**
@@ -294,20 +233,18 @@ export default class BaseFile extends CommonBase {
    * @returns {Int} The instantaneously current revision number of the file.
    */
   async revNum() {
-    const result = TInt.min(await this._impl_revNum(), this._lastRevNum);
+    // By definition executing an empty transaction spec will have a result that
+    // binds `revNum` to the instantaneously current revision number.
+    const spec = new TransactionSpec();
+    const transactionResult = await this.transact(spec);
+    const revNum = transactionResult.revNum;
 
-    this._lastRevNum = result;
-    return result;
-  }
+    // Validate that the subclass doesn't move the number in the wrong
+    // direction.
+    TInt.min(revNum, this._lastRevNum);
 
-  /**
-   * Main implementation of `revNum()`.
-   *
-   * @abstract
-   * @returns {Int} The instantaneously current revision number of the file.
-   */
-  async _impl_revNum() {
-    this._mustOverride();
+    this._lastRevNum = revNum;
+    return revNum;
   }
 
   /**
@@ -321,7 +258,10 @@ export default class BaseFile extends CommonBase {
    * bindings:
    *
    * * `revNum` &mdash; The revision number of the file which was used to
-   *   satisfy the request.
+   *   satisfy the request. This is always the most recent revision possible
+   *   given the restrictions defined in the transaction spec (if any). If there
+   *   are no restrictions, then this is always the most recent revision at the
+   *   instant the transaction was run.
    * * `newRevNum` &mdash; If the transaction spec included any write
    *   operations, the revision number of the file that resulted from those
    *   writes.
@@ -334,6 +274,8 @@ export default class BaseFile extends CommonBase {
    * @param {TransactionSpec} spec Specification for the transaction, that is,
    *   the set of operations to perform.
    * @returns {object} Object with mappings as described above.
+   * @throws {InfoError} Thrown if the transaction failed. Errors so thrown
+   *   contain details sufficient for programmatic understanding of the issue.
    */
   async transact(spec) {
     TransactionSpec.check(spec);
