@@ -175,8 +175,14 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_readPath(op) {
-    this._log.info('TODO', op);
-    throw new Error('TODO');
+    const storagePath = op.arg('storagePath');
+    const data        = this._fileFriend.readPathOrNull(storagePath);
+
+    if (data !== null) {
+      // Per the `FileOp` documentation, we are _not_ supposed to bind result
+      // data if the path isn't found.
+      this._data.set(storagePath, data);
+    }
   }
 
   /**
