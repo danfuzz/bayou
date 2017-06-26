@@ -7,8 +7,7 @@ import { UtilityClass } from 'util-common';
 import Registry from './Registry';
 
 /**
- * Decoding of values that had been transpored over the API (or were read in
- * from disk or databases).
+ * Main implementation of `Codec.decode()`.
  *
  * **TODO:** If and when `Registry` stops being a singleton, this class should
  * correspondingly stop being a utility class, since it will no longer be the
@@ -16,38 +15,7 @@ import Registry from './Registry';
  */
 export default class Decoder extends UtilityClass {
   /**
-   * Converts JSON-encoded text to a usable value. See `decode()` for
-   * details.
-   *
-   * @param {string} json Text to convert.
-   * @returns {*} The converted value.
-   */
-  static decodeJson(json) {
-    return Decoder.decode(JSON.parse(json));
-  }
-
-  /**
-   * Converts a value that was previously converted with `Encoder.encode()` (or
-   * the equivalent) back into fully useful objects. Specifically:
-   *
-   * * Non-object / non-function values are passed through as-is.
-   * * `null` is passed through as-is.
-   * * Direct instances of `Object` (`x` such that `Object.getPrototypeOf(x) ===
-   *   Object.prototype`) are allowed, with their values processed recursively
-   *   using (the equivalent of) this method.
-   * * Arrays whose first element is not a string (including empty arrays) are
-   *   rejected.
-   * * Other arrays are processed recursively using (the equivalent of) this
-   *   method, without the first element. If the first element is the value
-   *   `Registry.ARRAY_TAG` then the processed form is used as-is. Otherwise,
-   *   the first element is used to look up a class that has been registered
-   *   under that name. Its `fromApi()` method is called, passing the converted
-   *   array as arguments. The result of that call becomes the result of
-   *   conversion.
-   * * All other objects (including functions) are rejected.
-   *
-   * In addition, if the result is an object (including an array), it is
-   * guaranteed to be recursively frozen.
+   * Main implementation of `Codec.decode()`, see which for details.
    *
    * @param {*} value Value to convert.
    * @returns {*} The converted value.

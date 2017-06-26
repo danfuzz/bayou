@@ -7,8 +7,7 @@ import { ObjectUtil, UtilityClass } from 'util-common';
 import Registry from './Registry';
 
 /**
- * Encoding of values for transport over the API (or for storage on disk or in
- * databases).
+* Main implementation of `Codec.decode()`.
  *
  * **TODO:** If and when `Registry` stops being a singleton, this class should
  * correspondingly stop being a utility class, since it will no longer be the
@@ -16,47 +15,7 @@ import Registry from './Registry';
  */
 export default class Encoder extends UtilityClass {
   /**
-   * Converts an arbitrary value to JSON-encoded text. See `encode()` for
-   * details.
-   *
-   * @param {*} value Value to convert.
-   * @param {boolean} [pretty = false] Whether to "pretty-print" (indent and
-   *   space for human consumption) the result.
-   * @returns {string} The converted value.
-   */
-  static encodeJson(value, pretty = false) {
-    return JSON.stringify(Encoder.encode(value), null, pretty ? 2 : 0);
-  }
-
-  /**
-   * Converts an arbitrary value to a form suitable for JSON-encoding and
-   * subsequent transfer over the API. In some cases, it rejects values.
-   * Specifically:
-   *
-   * * Functions are rejected.
-   * * Symbols are rejected.
-   * * `undefined` is rejected.
-   * * Other non-object values are passed through as-is.
-   * * `null` is passed through as-is.
-   * * Direct instances of `Object` (`x` such that `Object.getPrototypeOf(x) ===
-   *   Object.prototype`) are allowed, with their values processed recursively
-   *   using (the equivalent of) this method.
-   * * Arrays with holes (unset value of `x[n]` for `n < x.length`) are
-   *   rejected.
-   * * Arrays with non-numeric properties are rejected.
-   * * Other arrays are allowed, with their values processed recursively using
-   *   (the equivalent of) this method. The encoded form is also an array but
-   *   with an additional first element of the value `Registry.ARRAY_TAG`.
-   * * Objects which bind a method `toApi()` and whose constructor binds a
-   *   property `API_NAME` are allowed. Such objects will have `toApi()` called
-   *   on them, which is expected to result in an array which is suitable for
-   *   processing using (the equivalent of) this method. The encoded form is an
-   *   array with the first element the value of `API_NAME` and the rest of the
-   *   elements whatever was returned by `toApi()`.
-   * * All other objects are rejected.
-   *
-   * In addition, if the result is an object (including an array), it is
-   * guaranteed to be recursively frozen.
+   * Main implementation of `Codec.encode()`, see which for details.
    *
    * @param {*} value Value to convert.
    * @returns {*} The converted value.
