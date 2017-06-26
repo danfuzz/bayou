@@ -14,11 +14,11 @@ import Timestamp from './Timestamp';
 import RevisionNumber from './RevisionNumber';
 
 // Register classes with the API.
-Registry.theOne.register(DeltaResult);
-Registry.theOne.register(DocumentChange);
-Registry.theOne.register(FrozenDelta);
-Registry.theOne.register(Snapshot);
-Registry.theOne.register(Timestamp);
+Registry.theOne.registerClass(DeltaResult);
+Registry.theOne.registerClass(DocumentChange);
+Registry.theOne.registerClass(FrozenDelta);
+Registry.theOne.registerClass(Snapshot);
+Registry.theOne.registerClass(Timestamp);
 
 export {
   AuthorId,

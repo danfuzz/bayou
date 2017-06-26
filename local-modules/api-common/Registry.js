@@ -49,7 +49,7 @@ export default class Regsitry extends Singleton {
    *
    * @param {object} clazz The class to register.
    */
-  register(clazz) {
+  registerClass(clazz) {
     const apiName = TString.check(clazz.API_NAME);
     TFunction.check(clazz.fromApi);
     TFunction.check(clazz.prototype.toApi);

@@ -17,7 +17,7 @@ describe('api-common/Decoder', () => {
 
   before(() => {
     try {
-      Registry.theOne.register(MockApiObject);
+      Registry.theOne.registerClass(MockApiObject);
     } catch (e) {
       // nothing to do here, the try/catch is just in case some other test
       // file has already registered the mock API object.

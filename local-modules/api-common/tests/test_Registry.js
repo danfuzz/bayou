@@ -83,18 +83,18 @@ describe('api-common/Registry', () => {
 
   describe('register(class)', () => {
     it('should require classes with an APP_NAME property, fromName() class method, and toApi() instance method', () => {
-      assert.throws(() => Registry.theOne.register(true));
-      assert.throws(() => Registry.theOne.register(37));
-      assert.throws(() => Registry.theOne.register('this better not work!'));
-      assert.throws(() => Registry.theOne.register({ }));
-      assert.throws(() => Registry.theOne.register([]));
-      assert.throws(() => Registry.theOne.register(null));
-      assert.throws(() => Registry.theOne.register(undefined));
-      assert.throws(() => Registry.theOne.register(NoApiName));
-      assert.throws(() => Registry.theOne.register(NoToApi));
-      assert.throws(() => Registry.theOne.register(NoFromApi));
+      assert.throws(() => Registry.theOne.registerClass(true));
+      assert.throws(() => Registry.theOne.registerClass(37));
+      assert.throws(() => Registry.theOne.registerClass('this better not work!'));
+      assert.throws(() => Registry.theOne.registerClass({ }));
+      assert.throws(() => Registry.theOne.registerClass([]));
+      assert.throws(() => Registry.theOne.registerClass(null));
+      assert.throws(() => Registry.theOne.registerClass(undefined));
+      assert.throws(() => Registry.theOne.registerClass(NoApiName));
+      assert.throws(() => Registry.theOne.registerClass(NoToApi));
+      assert.throws(() => Registry.theOne.registerClass(NoFromApi));
 
-      assert.doesNotThrow(() => Registry.theOne.register(RegistryTestApiObject));
+      assert.doesNotThrow(() => Registry.theOne.registerClass(RegistryTestApiObject));
     });
   });
 
@@ -105,7 +105,7 @@ describe('api-common/Registry', () => {
     });
 
     it('should return the named class if it is registered', () => {
-      Registry.theOne.register(FindTestApiObject);
+      Registry.theOne.registerClass(FindTestApiObject);
 
       const testClass = Registry.theOne.classForName(FindTestApiObject.API_NAME);
       const testObject = new testClass();
