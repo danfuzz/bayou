@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ApiClient } from 'api-client';
-import { Decoder, SplitKey } from 'api-common';
+import { Codec, SplitKey } from 'api-common';
 import { DocClient } from 'doc-client';
 import { Hooks } from 'hooks-client';
 import { QuillMaker } from 'quill-util';
@@ -36,7 +36,7 @@ export default class TopControl {
      * as a specific author. The `BAYOU_KEY` incoming parameter is expected to
      * be a `SplitKey` in JSON-encoded form.
      */
-    this._key = SplitKey.check(Decoder.decodeJson(window.BAYOU_KEY));
+    this._key = SplitKey.check(Codec.theOne.decodeJson(window.BAYOU_KEY));
 
     /**
      * {string} DOM Selector string that indicates which node in the DOM should
@@ -217,7 +217,7 @@ export default class TopControl {
     }
 
     log.info('Attempting recovery with new key...');
-    this._key = SplitKey.check(Decoder.decodeJson(newKey));
+    this._key = SplitKey.check(Codec.theOne.decodeJson(newKey));
     this._makeApiClient();
     this._makeDocClient();
   }

@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Decoder, Encoder } from 'api-common';
+import { Codec } from 'api-common';
 import { FrozenBuffer } from 'util-server';
 import { UtilityClass } from 'util-common';
 
@@ -19,7 +19,7 @@ export default class Coder extends UtilityClass {
    * @returns {FrozenBuffer} Encoded and bufferized value.
    */
   static encode(value) {
-    return FrozenBuffer.coerce(Encoder.encodeJson(value));
+    return FrozenBuffer.coerce(Codec.theOne.encodeJson(value));
   }
 
   /**
@@ -30,6 +30,6 @@ export default class Coder extends UtilityClass {
    */
   static decode(encoded) {
     FrozenBuffer.check(encoded);
-    return Decoder.decodeJson(encoded.string);
+    return Codec.theOne.decodeJson(encoded.string);
   }
 }

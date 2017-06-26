@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Decoder, Encoder, Message } from 'api-common';
+import { Codec, Message } from 'api-common';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase, Random } from 'util-common';
@@ -169,7 +169,7 @@ export default class Connection extends CommonBase {
       response.result = result;
     }
 
-    const encodedResponse = Encoder.encodeJson(response);
+    const encodedResponse = Codec.theOne.encodeJson(response);
 
     // Log the response. In the case of an error, we include the error's stack
     // trace. We intentionally _don't_ expose the stack trace as part of the
@@ -225,7 +225,7 @@ export default class Connection extends CommonBase {
    */
   _decodeMessage(msg) {
     try {
-      msg = Decoder.decodeJson(msg);
+      msg = Codec.theOne.decodeJson(msg);
     } catch (error) {
       // Hail-mary attempt to determine a reasonable `id`.
       let id = -1;
