@@ -244,20 +244,18 @@ export default class BaseFile extends CommonBase {
    * @returns {Int} The instantaneously current revision number of the file.
    */
   async revNum() {
-    const result = TInt.min(await this._impl_revNum(), this._lastRevNum);
+    // By definition executing an empty transaction spec will have a result that
+    // binds `revNum` to the instantaneously current revision number.
+    const spec = new TransactionSpec();
+    const transactionResult = await this.transact(spec);
+    const revNum = transactionResult.revNum;
 
-    this._lastRevNum = result;
-    return result;
-  }
+    // Validate that the subclass doesn't move the number in the wrong
+    // direction.
+    TInt.min(revNum, this._lastRevNum);
 
-  /**
-   * Main implementation of `revNum()`.
-   *
-   * @abstract
-   * @returns {Int} The instantaneously current revision number of the file.
-   */
-  async _impl_revNum() {
-    this._mustOverride();
+    this._lastRevNum = revNum;
+    return revNum;
   }
 
   /**

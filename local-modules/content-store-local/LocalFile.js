@@ -180,16 +180,6 @@ export default class LocalFile extends BaseFile {
   /**
    * Implementation as required by the superclass.
    *
-   * @returns {Int} The instantaneously current revision number of the file.
-   */
-  async _impl_revNum() {
-    await this._readStorageIfNecessary();
-    return this._revNum;
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
    * @param {TransactionSpec} spec Same as with `transact()`.
    * @returns {object} Same as with `transact()`, except with `null`s instead of
    *   missing properties.
