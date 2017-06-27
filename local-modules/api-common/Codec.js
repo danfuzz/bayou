@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Singleton } from 'util-common';
+import { FrozenBuffer, Singleton } from 'util-common';
 
 import Decoder from './Decoder';
 import Encoder from './Encoder';
@@ -73,6 +73,18 @@ export default class Codec extends Singleton {
   }
 
   /**
+   * Converts JSON-encoded text in a `FrozenBuffer` to a usable value. See
+   * `decode()` for details.
+   *
+   * @param {FrozenBuffer} encoded Value to decode.
+   * @returns {*} Decoded value.
+   */
+  decodeJsonBuffer(encoded) {
+    FrozenBuffer.check(encoded);
+    return this.decodeJson(encoded.string);
+  }
+
+  /**
    * Converts an arbitrary value to a form suitable for JSON-encoding and
    * subsequent transfer over the API. In some cases, it rejects values.
    * Specifically:
@@ -120,6 +132,17 @@ export default class Codec extends Singleton {
    */
   encodeJson(value, pretty = false) {
     return JSON.stringify(this.encode(value), null, pretty ? 2 : 0);
+  }
+
+  /**
+   * Converts an arbitrary value to JSON-encoded text, which is furthermore
+   * converted to a `FrozenBuffer`. See `encode()` for details.
+   *
+   * @param {*} value Value to encode.
+   * @returns {FrozenBuffer} Encoded and bufferized value.
+   */
+  encodeJsonBuffer(value) {
+    return FrozenBuffer.coerce(this.encodeJson(value));
   }
 
   /**
