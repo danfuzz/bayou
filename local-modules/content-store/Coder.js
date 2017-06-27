@@ -3,8 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Codec } from 'api-common';
-import { FrozenBuffer } from 'util-server';
-import { UtilityClass } from 'util-common';
+import { FrozenBuffer, UtilityClass } from 'util-common';
 
 /**
  * Utility class for converting between arbitrary values and their stored

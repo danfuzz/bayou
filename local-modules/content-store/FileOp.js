@@ -3,8 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt, TString } from 'typecheck';
-import { CommonBase } from 'util-common';
-import { FrozenBuffer } from 'util-server';
+import { CommonBase, FrozenBuffer } from 'util-common';
 
 import StoragePath from './StoragePath';
 

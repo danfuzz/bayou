@@ -7,8 +7,7 @@ import path from 'path';
 
 import { BaseFile } from 'content-store';
 import { Logger } from 'see-all';
-import { PromCondition, PromDelay } from 'util-common';
-import { FrozenBuffer } from 'util-server';
+import { FrozenBuffer, PromCondition, PromDelay } from 'util-common';
 
 import Transactor from './Transactor';
 

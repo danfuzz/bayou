@@ -5,6 +5,7 @@
 import CommonBase from './CommonBase';
 import DataUtil from './DataUtil';
 import DeferredLoader from './DeferredLoader';
+import FrozenBuffer from './FrozenBuffer';
 import InfoError from './InfoError';
 import JsonUtil from './JsonUtil';
 import PromCondition from './PromCondition';
@@ -18,6 +19,7 @@ export {
   CommonBase,
   DataUtil,
   DeferredLoader,
+  FrozenBuffer,
   InfoError,
   JsonUtil,
   PromCondition,
