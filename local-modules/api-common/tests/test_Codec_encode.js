@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Encoder } from 'api-common';
+import { Codec } from 'api-common';
 
 import MockApiObject from './MockApiObject';
 
@@ -22,32 +22,36 @@ class NoToApi {
 }
 
 describe('api-common/Encoder', () => {
+  // Convenient bindings for `decode()` and `encode()` to avoid a lot of
+  // boilerplate.
+  const encode = (value) => { return Codec.theOne.encode(value); };
+
   describe('encode(value)', () => {
     it('should reject function values', () => {
-      assert.throws(() => Encoder.encode(function () { true; }));
+      assert.throws(() => encode(function () { true; }));
     });
 
     it('should reject Symbols', () => {
-      assert.throws(() => Encoder.encode(Symbol('this better not work!')));
+      assert.throws(() => encode(Symbol('this better not work!')));
     });
 
     it('should reject undefined', () => {
-      assert.throws(() => Encoder.encode(undefined));
+      assert.throws(() => encode(undefined));
     });
 
     it('should pass through non-object values and null as-is', () => {
-      assert.strictEqual(Encoder.encode(37), 37);
-      assert.strictEqual(Encoder.encode(true), true);
-      assert.strictEqual(Encoder.encode(false), false);
-      assert.strictEqual(Encoder.encode('blort'), 'blort');
-      assert.strictEqual(Encoder.encode(null), null);
+      assert.strictEqual(encode(37), 37);
+      assert.strictEqual(encode(true), true);
+      assert.strictEqual(encode(false), false);
+      assert.strictEqual(encode('blort'), 'blort');
+      assert.strictEqual(encode(null), null);
     });
 
     it('should pass through simple objects whose values are self-encoding as-is', () => {
-      assert.deepEqual(Encoder.encode({}), {});
-      assert.deepEqual(Encoder.encode({ a: 10 }), { a: 10 });
-      assert.deepEqual(Encoder.encode({ b: false }), { b: false });
-      assert.deepEqual(Encoder.encode({ c: 'yay', d: {} }), { c: 'yay', d: {} });
+      assert.deepEqual(encode({}), {});
+      assert.deepEqual(encode({ a: 10 }), { a: 10 });
+      assert.deepEqual(encode({ b: false }), { b: false });
+      assert.deepEqual(encode({ c: 'yay', d: {} }), { c: 'yay', d: {} });
     });
 
     it('should reject arrays with index holes', () => {
@@ -56,7 +60,7 @@ describe('api-common/Encoder', () => {
       value[1] = true;
       value[37] = true;
 
-      assert.throws(() => Encoder.encode(value));
+      assert.throws(() => encode(value));
     });
 
     it('should reject arrays with non-numeric properties', () => {
@@ -65,25 +69,25 @@ describe('api-common/Encoder', () => {
       value['foo'] = 'bar';
       value['baz'] = 'floopty';
 
-      assert.throws(() => Encoder.encode(value));
+      assert.throws(() => encode(value));
     });
 
     it('should reject API objects with no API_NAME property', () => {
       const noApiName = new NoApiName();
 
-      assert.throws(() => Encoder.encode(noApiName));
+      assert.throws(() => encode(noApiName));
     });
 
     it('should reject API objects with no toApi() method', () => {
       const noToApi = new NoToApi();
 
-      assert.throws(() => Encoder.encode(noToApi));
+      assert.throws(() => encode(noToApi));
     });
 
     it('should accept objects with an API_NAME property and toApi() method', () => {
       const fakeObject = new MockApiObject();
 
-      assert.doesNotThrow(() => Encoder.encode(fakeObject));
+      assert.doesNotThrow(() => encode(fakeObject));
     });
   });
 });

@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TFunction, TString } from 'typecheck';
-import { Singleton } from 'util-common';
+import { CommonBase } from 'util-common';
 
 /** {string} The "class" tag used for regular arrays. */
 const ARRAY_TAG = 'array';
@@ -18,18 +18,8 @@ const ARRAY_TAG = 'array';
  * `API_NAME` and a static method `fromApi()`. In addition, instances to be
  * encoded must define a method `toApi()`. These are all used as described
  * elsewhere in this module.
- *
- * **TODO:** This class should probably _not_ be a singleton, in that there are
- * legitimately multiple different API coding contexts which ultimately might
- * want to have different sets of classes (or different name bindings even if
- * the classes overlap).
  */
-export default class Regsitry extends Singleton {
-  /** The "class" tag used for regular arrays. */
-  static get ARRAY_TAG() {
-    return ARRAY_TAG;
-  }
-
+export default class Regsitry extends CommonBase {
   /**
    * Constructs the instance.
    */
@@ -44,12 +34,17 @@ export default class Regsitry extends Singleton {
     this._registry = new Map([[ARRAY_TAG, null]]);
   }
 
+  /** {string} The "class" tag used for regular arrays. */
+  get arrayTag() {
+    return ARRAY_TAG;
+  }
+
   /**
    * Registers a class to be accepted for API use.
    *
    * @param {object} clazz The class to register.
    */
-  register(clazz) {
+  registerClass(clazz) {
     const apiName = TString.check(clazz.API_NAME);
     TFunction.check(clazz.fromApi);
     TFunction.check(clazz.prototype.toApi);
@@ -68,7 +63,7 @@ export default class Regsitry extends Singleton {
    * @param {string} name The class name.
    * @returns {class} The class that was registered under the given name.
    */
-  find(name) {
+  classForName(name) {
     const result = this._registry.get(name);
 
     if (!result) {

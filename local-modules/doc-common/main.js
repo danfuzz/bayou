@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Registry } from 'api-common';
+import { Codec } from 'api-common';
 
 import AuthorId from './AuthorId';
 import DeltaResult from './DeltaResult';
@@ -14,11 +14,11 @@ import Timestamp from './Timestamp';
 import RevisionNumber from './RevisionNumber';
 
 // Register classes with the API.
-Registry.theOne.register(DeltaResult);
-Registry.theOne.register(DocumentChange);
-Registry.theOne.register(FrozenDelta);
-Registry.theOne.register(Snapshot);
-Registry.theOne.register(Timestamp);
+Codec.theOne.registerClass(DeltaResult);
+Codec.theOne.registerClass(DocumentChange);
+Codec.theOne.registerClass(FrozenDelta);
+Codec.theOne.registerClass(Snapshot);
+Codec.theOne.registerClass(Timestamp);
 
 export {
   AuthorId,

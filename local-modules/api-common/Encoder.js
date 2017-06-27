@@ -2,66 +2,34 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ObjectUtil, UtilityClass } from 'util-common';
-
-import Registry from './Registry';
+import { CommonBase, ObjectUtil } from 'util-common';
 
 /**
- * Encoding of values for transport over the API (or for storage on disk or in
- * databases).
- *
- * **TODO:** If and when `Registry` stops being a singleton, this class should
- * correspondingly stop being a utility class, since it will no longer be the
- * case that there is a unique registry to query.
+ * Main implementation of `Codec.encode()`.
  */
-export default class Encoder extends UtilityClass {
+export default class Encoder extends CommonBase {
   /**
-   * Converts an arbitrary value to JSON-encoded text. See `encode()` for
-   * details.
+   * Construct an instance.
    *
-   * @param {*} value Value to convert.
-   * @param {boolean} [pretty = false] Whether to "pretty-print" (indent and
-   *   space for human consumption) the result.
-   * @returns {string} The converted value.
+   * @param {Registry} reg Registry instance to use.
    */
-  static encodeJson(value, pretty = false) {
-    return JSON.stringify(Encoder.encode(value), null, pretty ? 2 : 0);
+  constructor(reg) {
+    super();
+
+    /** {Registry} Registry instance to use. */
+    this._reg = reg;
+
+    /** {static} Conveniently cached value of `reg.arrayTag`. */
+    this._arrayTag = reg.arrayTag;
   }
 
   /**
-   * Converts an arbitrary value to a form suitable for JSON-encoding and
-   * subsequent transfer over the API. In some cases, it rejects values.
-   * Specifically:
-   *
-   * * Functions are rejected.
-   * * Symbols are rejected.
-   * * `undefined` is rejected.
-   * * Other non-object values are passed through as-is.
-   * * `null` is passed through as-is.
-   * * Direct instances of `Object` (`x` such that `Object.getPrototypeOf(x) ===
-   *   Object.prototype`) are allowed, with their values processed recursively
-   *   using (the equivalent of) this method.
-   * * Arrays with holes (unset value of `x[n]` for `n < x.length`) are
-   *   rejected.
-   * * Arrays with non-numeric properties are rejected.
-   * * Other arrays are allowed, with their values processed recursively using
-   *   (the equivalent of) this method. The encoded form is also an array but
-   *   with an additional first element of the value `Registry.ARRAY_TAG`.
-   * * Objects which bind a method `toApi()` and whose constructor binds a
-   *   property `API_NAME` are allowed. Such objects will have `toApi()` called
-   *   on them, which is expected to result in an array which is suitable for
-   *   processing using (the equivalent of) this method. The encoded form is an
-   *   array with the first element the value of `API_NAME` and the rest of the
-   *   elements whatever was returned by `toApi()`.
-   * * All other objects are rejected.
-   *
-   * In addition, if the result is an object (including an array), it is
-   * guaranteed to be recursively frozen.
+   * Main implementation of `Codec.encode()`, see which for details.
    *
    * @param {*} value Value to convert.
    * @returns {*} The converted value.
    */
-  static encode(value) {
+  encode(value) {
     switch (typeof value) {
       case 'boolean':
       case 'number':
@@ -79,18 +47,18 @@ export default class Encoder extends UtilityClass {
         const proto = Object.getPrototypeOf(value);
 
         if (proto === Object.prototype) {
-          return Encoder._encodeSimpleObject(value);
+          return this._encodeSimpleObject(value);
         } else if (proto === Array.prototype) {
           // Note: We don't use `Array.isArray()` because that will return
           // `true` for subclasses of Array. We want to instead treat Array
           // subclass instances as regular object instances (in the next
           // clause), so as not to miss out on their API metadata (or so as to
           // fail to encode them if they aren't in fact API-ready).
-          return Encoder._encodeArray(value);
+          return this._encodeArray(value);
         } else {
           // It had better define the API metainfo properties, but if not, then
           // this call will throw.
-          return Encoder._encodeInstance(value);
+          return this._encodeInstance(value);
         }
       }
 
@@ -106,7 +74,7 @@ export default class Encoder extends UtilityClass {
    * @param {object} value Value to convert.
    * @returns {object} The converted value.
    */
-  static _encodeSimpleObject(value) {
+  _encodeSimpleObject(value) {
     const result = {};
 
     for (const k of Object.getOwnPropertyNames(value)) {
@@ -124,7 +92,7 @@ export default class Encoder extends UtilityClass {
         }
       }
 
-      result[k] = Encoder.encode(origValue);
+      result[k] = this.encode(origValue);
     }
 
     return Object.freeze(result);
@@ -134,15 +102,15 @@ export default class Encoder extends UtilityClass {
    * Helper for `encode()` which validates and converts an array.
    *
    * @param {array} value Value to convert.
-   * @param {string} [tag = Registry.ARRAY_TAG] "Header" tag for the result.
+   * @param {string} [tag = Registry.arrayTag] "Header" tag for the result.
    * @returns {array} The converted value.
    */
-  static _encodeArray(value, tag = Registry.ARRAY_TAG) {
+  _encodeArray(value, tag = this._arrayTag) {
     // Convert elements and keep a count of how many elements we encounter.
     let count = 0;
     const result = value.map((elem) => {
       count++;
-      return Encoder.encode(elem);
+      return this.encode(elem);
     });
 
     if (value.length !== count) {
@@ -167,7 +135,7 @@ export default class Encoder extends UtilityClass {
    * @param {object} value Value to convert.
    * @returns {object} The converted value.
    */
-  static _encodeInstance(value) {
+  _encodeInstance(value) {
     const apiName = value.constructor && value.constructor.API_NAME;
     const toApi = value.toApi;
 
@@ -180,6 +148,6 @@ export default class Encoder extends UtilityClass {
       throw new Error(`Non-array result from \`toApi()\` on class \`${value.constructor.name}\`.`);
     }
 
-    return Encoder._encodeArray(payload, apiName);
+    return this._encodeArray(payload, apiName);
   }
 }

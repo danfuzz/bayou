@@ -3,14 +3,12 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import BaseKey from './BaseKey';
-import Decoder from './Decoder';
-import Encoder from './Encoder';
+import Codec from './Codec';
 import Message from './Message';
-import Registry from './Registry';
 import SplitKey from './SplitKey';
 
 // Register classes with the API.
-Registry.theOne.register(Message);
-Registry.theOne.register(SplitKey);
+Codec.theOne.registerClass(Message);
+Codec.theOne.registerClass(SplitKey);
 
-export { BaseKey, Decoder, Encoder, Message, Registry, SplitKey };
+export { BaseKey, Codec, Message, SplitKey };

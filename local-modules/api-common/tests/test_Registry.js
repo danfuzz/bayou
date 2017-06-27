@@ -4,9 +4,11 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
-
-import { Registry } from 'api-common';
 import { Random } from 'util-common';
+
+// The class being tested here isn't exported from the module, so we import it
+// by path.
+import Registry from 'api-common/Registry';
 
 class RegistryTestApiObject {
   constructor() {
@@ -75,39 +77,43 @@ class NoFromApi {
 }
 
 describe('api-common/Registry', () => {
-  describe('.ARRAY_TAG', () => {
+  describe('.arrayTag', () => {
     it("should return 'array'", () => {
-      assert.strictEqual(Registry.ARRAY_TAG, 'array');
+      const reg = new Registry();
+      assert.strictEqual(reg.arrayTag, 'array');
     });
   });
 
   describe('register(class)', () => {
     it('should require classes with an APP_NAME property, fromName() class method, and toApi() instance method', () => {
-      assert.throws(() => Registry.theOne.register(true));
-      assert.throws(() => Registry.theOne.register(37));
-      assert.throws(() => Registry.theOne.register('this better not work!'));
-      assert.throws(() => Registry.theOne.register({ }));
-      assert.throws(() => Registry.theOne.register([]));
-      assert.throws(() => Registry.theOne.register(null));
-      assert.throws(() => Registry.theOne.register(undefined));
-      assert.throws(() => Registry.theOne.register(NoApiName));
-      assert.throws(() => Registry.theOne.register(NoToApi));
-      assert.throws(() => Registry.theOne.register(NoFromApi));
+      const reg = new Registry();
+      assert.throws(() => reg.registerClass(true));
+      assert.throws(() => reg.registerClass(37));
+      assert.throws(() => reg.registerClass('this better not work!'));
+      assert.throws(() => reg.registerClass({}));
+      assert.throws(() => reg.registerClass([]));
+      assert.throws(() => reg.registerClass(null));
+      assert.throws(() => reg.registerClass(undefined));
+      assert.throws(() => reg.registerClass(NoApiName));
+      assert.throws(() => reg.registerClass(NoToApi));
+      assert.throws(() => reg.registerClass(NoFromApi));
 
-      assert.doesNotThrow(() => Registry.theOne.register(RegistryTestApiObject));
+      assert.doesNotThrow(() => reg.registerClass(RegistryTestApiObject));
     });
   });
 
   describe('find(className)', () => {
     it('should throw an error if an unregistered class is requested', () => {
+      const reg = new Registry();
       const randomName = Random.hexByteString(32);
-      assert.throws(() => Registry.theOne.find(randomName));
+      assert.throws(() => reg.classForName(randomName));
     });
 
     it('should return the named class if it is registered', () => {
-      Registry.theOne.register(FindTestApiObject);
+      const reg = new Registry();
+      reg.registerClass(FindTestApiObject);
 
-      const testClass = Registry.theOne.find(FindTestApiObject.API_NAME);
+      const testClass = reg.classForName(FindTestApiObject.API_NAME);
       const testObject = new testClass();
 
       assert.instanceOf(testObject, FindTestApiObject);

@@ -6,7 +6,7 @@ import camelCase from 'camel-case';
 import express from 'express';
 import util from 'util';
 
-import { Encoder } from 'api-common';
+import { Codec } from 'api-common';
 import { AuthorId, DocumentId } from 'doc-common';
 import { DocServer } from 'doc-server';
 import { Logger } from 'see-all';
@@ -179,7 +179,7 @@ export default class DebugTools {
     const revNum = req.params.revNum;
     const doc = this._getExistingDoc(req);
     const change = (await doc).change(revNum);
-    const result = Encoder.encodeJson(await change, true);
+    const result = Codec.theOne.encodeJson(await change, true);
 
     this._textResponse(res, result);
   }
@@ -277,7 +277,7 @@ export default class DebugTools {
     const doc = this._getExistingDoc(req);
     const args = (revNum === undefined) ? [] : [revNum];
     const snapshot = (await doc).snapshot(...args);
-    const result = Encoder.encodeJson(await snapshot, true);
+    const result = Codec.theOne.encodeJson(await snapshot, true);
 
     this._textResponse(res, result);
   }
@@ -359,7 +359,7 @@ export default class DebugTools {
    */
   async _makeEncodedKey(documentId, authorId) {
     const key = await this._rootAccess.makeAccessKey(authorId, documentId);
-    return Encoder.encodeJson(key);
+    return Codec.theOne.encodeJson(key);
   }
 
   /**

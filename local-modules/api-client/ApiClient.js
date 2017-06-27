@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseKey, Decoder, Encoder, Message } from 'api-common';
+import { BaseKey, Codec, Message } from 'api-common';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { WebsocketCodes } from 'util-common';
@@ -261,7 +261,7 @@ export default class ApiClient {
     this._nextId++;
 
     const payloadObj = new Message(id, target, action, name, args);
-    const payload = Encoder.encodeJson(payloadObj);
+    const payload = Codec.theOne.encodeJson(payloadObj);
 
     switch (wsState) {
       case WebSocket.CONNECTING: {
@@ -368,7 +368,7 @@ export default class ApiClient {
   _handleMessage(event) {
     this._log.detail('Received raw payload:', event.data);
 
-    const payload = Decoder.decodeJson(event.data);
+    const payload = Codec.theOne.decodeJson(event.data);
     const id = payload.id;
     let result = payload.result;
     const error = payload.error;

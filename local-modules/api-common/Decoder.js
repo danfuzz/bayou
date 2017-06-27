@@ -2,57 +2,34 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { UtilityClass } from 'util-common';
-
-import Registry from './Registry';
+import { CommonBase } from 'util-common';
 
 /**
- * Decoding of values that had been transpored over the API (or were read in
- * from disk or databases).
- *
- * **TODO:** If and when `Registry` stops being a singleton, this class should
- * correspondingly stop being a utility class, since it will no longer be the
- * case that there is a unique registry to query.
+ * Main implementation of `Codec.decode()`.
  */
-export default class Decoder extends UtilityClass {
+export default class Decoder extends CommonBase {
   /**
-   * Converts JSON-encoded text to a usable value. See `decode()` for
-   * details.
+   * Construct an instance.
    *
-   * @param {string} json Text to convert.
-   * @returns {*} The converted value.
+   * @param {Registry} reg Registry instance to use.
    */
-  static decodeJson(json) {
-    return Decoder.decode(JSON.parse(json));
+  constructor(reg) {
+    super();
+
+    /** {Registry} Registry instance to use. */
+    this._reg = reg;
+
+    /** {static} Conveniently cached value of `reg.arrayTag`. */
+    this._arrayTag = reg.arrayTag;
   }
 
   /**
-   * Converts a value that was previously converted with `Encoder.encode()` (or
-   * the equivalent) back into fully useful objects. Specifically:
-   *
-   * * Non-object / non-function values are passed through as-is.
-   * * `null` is passed through as-is.
-   * * Direct instances of `Object` (`x` such that `Object.getPrototypeOf(x) ===
-   *   Object.prototype`) are allowed, with their values processed recursively
-   *   using (the equivalent of) this method.
-   * * Arrays whose first element is not a string (including empty arrays) are
-   *   rejected.
-   * * Other arrays are processed recursively using (the equivalent of) this
-   *   method, without the first element. If the first element is the value
-   *   `Registry.ARRAY_TAG` then the processed form is used as-is. Otherwise,
-   *   the first element is used to look up a class that has been registered
-   *   under that name. Its `fromApi()` method is called, passing the converted
-   *   array as arguments. The result of that call becomes the result of
-   *   conversion.
-   * * All other objects (including functions) are rejected.
-   *
-   * In addition, if the result is an object (including an array), it is
-   * guaranteed to be recursively frozen.
+   * Main implementation of `Codec.decode()`, see which for details.
    *
    * @param {*} value Value to convert.
    * @returns {*} The converted value.
    */
-  static decode(value) {
+  decode(value) {
     const type = typeof value;
 
     if (type === 'function') {
@@ -61,7 +38,7 @@ export default class Decoder extends UtilityClass {
       // Pass through as-is.
       return value;
     } else if (Object.getPrototypeOf(value) === Object.prototype) {
-      return Decoder._decodeSimpleObject(value);
+      return this._decodeSimpleObject(value);
     } else if (!Array.isArray(value)) {
       throw new Error(`API cannot decode object of class \`${value.constructor.name}\`.`);
     }
@@ -75,14 +52,14 @@ export default class Decoder extends UtilityClass {
     const tag = value[0];
     const payload = value.slice(1);
 
-    if (tag === Registry.ARRAY_TAG) {
-      return Decoder._decodeArray(payload);
+    if (tag === this._arrayTag) {
+      return this._decodeArray(payload);
     } else if (typeof tag !== 'string') {
       throw new Error('API cannot decode arrays without an initial string tag.');
     } else {
       // It had better be a registered tag, but if not, then this call will
       // throw.
-      return Decoder._decodeInstance(tag, payload);
+      return this._decodeInstance(tag, payload);
     }
   }
 
@@ -92,11 +69,11 @@ export default class Decoder extends UtilityClass {
    * @param {object} value Value to convert.
    * @returns {object} The converted value.
    */
-  static _decodeSimpleObject(value) {
+  _decodeSimpleObject(value) {
     const result = {};
 
     for (const k in value) {
-      result[k] = Decoder.decode(value[k]);
+      result[k] = this.decode(value[k]);
     }
 
     return Object.freeze(result);
@@ -109,8 +86,8 @@ export default class Decoder extends UtilityClass {
    * @param {array} payload Value to convert.
    * @returns {array} The converted value.
    */
-  static _decodeArray(payload) {
-    const result = payload.map(Decoder.decode);
+  _decodeArray(payload) {
+    const result = payload.map(this.decode.bind(this));
     return Object.freeze(result);
   }
 
@@ -122,9 +99,9 @@ export default class Decoder extends UtilityClass {
    * @param {array} payload Construction arguments.
    * @returns {object} The converted value.
    */
-  static _decodeInstance(tag, payload) {
-    const clazz = Registry.theOne.find(tag);
-    const args = Decoder._decodeArray(payload);
+  _decodeInstance(tag, payload) {
+    const clazz = this._reg.classForName(tag);
+    const args = this._decodeArray(payload);
 
     if (!clazz) {
       throw new Error(`API cannot decode object of class \`${tag}\`.`);
