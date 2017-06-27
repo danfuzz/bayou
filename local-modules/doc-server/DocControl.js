@@ -56,17 +56,15 @@ export default class DocControl extends CommonBase {
   /**
    * Constructs an instance.
    *
+   * @param {Codec} codec Codec instance to use.
    * @param {BaseFile} file The underlying document storage.
    * @param {FrozenBuffer} formatVersion Format version to expect and use.
    */
-  constructor(file, formatVersion) {
+  constructor(codec, file, formatVersion) {
     super();
 
-    /**
-     * {Codec} Codec instance to use. **Note:** As of this writing, `Codec` is a
-     * singleton, but the intention is for it to stop being so.
-     */
-    this._codec = Codec.theOne;
+    /** {Codec} Codec instance to use. */
+    this._codec = codec;
 
     /** {BaseFile} The underlying document storage. */
     this._file = BaseFile.check(file);

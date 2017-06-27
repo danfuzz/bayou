@@ -49,6 +49,12 @@ export default class DocServer extends Singleton {
     super();
 
     /**
+     * {Codec} Codec instance to use. **Note:** As of this writing, `Codec` is a
+     * singleton, but the intention is for it to stop being so.
+     */
+    this._codec = Codec.theOne;
+
+    /**
      * {Map<string,Weak<DocControl>>} Map from document IDs to a
      * weak-reference-wrapped document controller for the so-IDed document.
      */
@@ -67,7 +73,7 @@ export default class DocServer extends Singleton {
      * to expect in existing documents.
      */
     this._formatVersion =
-      Codec.theOne.encodeJsonBuffer(ProductInfo.theOne.INFO.version);
+      this._codec.encodeJsonBuffer(ProductInfo.theOne.INFO.version);
   }
 
   /**
@@ -176,7 +182,7 @@ export default class DocServer extends Singleton {
     const docLog = log.withPrefix(`[${docId}]`);
 
     const file         = await Hooks.theOne.contentStore.getFile(docId);
-    const result       = new DocControl(file, this._formatVersion);
+    const result       = new DocControl(this._codec, file, this._formatVersion);
     const docStatus    = await result.validationStatus();
     const docNeedsInit = (docStatus !== DocControl.STATUS_OK);
     let   firstText    = DEFAULT_TEXT;
