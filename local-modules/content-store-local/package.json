@@ -7,7 +7,6 @@
     "content-store": "local",
     "see-all": "local",
     "util-common": "local",
-    "util-server": "local",
     "server-env": "local",
 
     "async-file": "^2.0.2"

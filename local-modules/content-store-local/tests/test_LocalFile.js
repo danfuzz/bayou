@@ -9,7 +9,7 @@ import path from 'path';
 
 import { FileOp, TransactionSpec } from 'content-store';
 import { LocalFile } from 'content-store-local';
-import { FrozenBuffer } from 'util-server';
+import { FrozenBuffer } from 'util-common';
 
 const STORE_PREFIX = 'bayou-test-';
 let storeDir = null;

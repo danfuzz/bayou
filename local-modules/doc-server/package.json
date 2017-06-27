@@ -13,7 +13,6 @@
     "see-all": "local",
     "server-env": "local",
     "typecheck": "local",
-    "util-common": "local",
-    "util-server": "local"
+    "util-common": "local"
   }
 }

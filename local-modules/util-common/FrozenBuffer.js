@@ -2,11 +2,13 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+// **Note:** Babel's browser polyfill includes a Node-compatible `crypto`
+// module, which is why this is possible to import regardless of environment.
 import crypto from 'crypto';
 
-import { TInt, TypeError } from 'typecheck';
-import { TBuffer } from 'typecheck-server';
-import { CommonBase } from 'util-common';
+import { TBuffer, TInt, TypeError } from 'typecheck';
+
+import CommonBase from './CommonBase';
 
 /** {string} Node's name for the hashing algorithm to use. */
 const NODE_HASH_NAME = 'sha256';

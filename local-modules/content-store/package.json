@@ -7,7 +7,6 @@
     "api-common": "local",
     "hooks-server": "local",
     "typecheck": "local",
-    "util-common": "local",
-    "util-server": "local"
+    "util-common": "local"
   }
 }
