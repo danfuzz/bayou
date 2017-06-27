@@ -5,7 +5,6 @@
 
   "dependencies": {
     "typecheck": "local",
-    "typecheck-server": "local",
     "util-common": "local"
   }
 }

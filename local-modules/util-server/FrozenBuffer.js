@@ -4,8 +4,7 @@
 
 import crypto from 'crypto';
 
-import { TInt, TypeError } from 'typecheck';
-import { TBuffer } from 'typecheck-server';
+import { TBuffer, TInt, TypeError } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 /** {string} Node's name for the hashing algorithm to use. */
