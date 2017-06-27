@@ -4,6 +4,7 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
+import { FrozenBuffer } from 'util-common';
 
 import { Codec } from 'api-common';
 
@@ -22,11 +23,13 @@ class NoToApi {
 }
 
 describe('api-common/Encoder', () => {
-  // Convenient bindings for `decode()` and `encode()` to avoid a lot of
-  // boilerplate.
-  const encode = (value) => { return Codec.theOne.encode(value); };
+  // Convenient bindings for `encode()*` to avoid a lot of boilerplate.
+  const codec            = Codec.theOne;
+  const encode           = (value) => { return codec.encode(value);           };
+  const encodeJson       = (value) => { return codec.encodeJson(value);       };
+  const encodeJsonBuffer = (value) => { return codec.encodeJsonBuffer(value); };
 
-  describe('encode(value)', () => {
+  describe('encode', () => {
     it('should reject function values', () => {
       assert.throws(() => encode(function () { true; }));
     });
@@ -88,6 +91,34 @@ describe('api-common/Encoder', () => {
       const fakeObject = new MockApiObject();
 
       assert.doesNotThrow(() => encode(fakeObject));
+    });
+  });
+
+  describe('encodeJson', () => {
+    it('should produce a string', () => {
+      assert.isString(encodeJson(null));
+      assert.isString(encodeJson(914));
+      assert.isString(encodeJson([1, 2, 3]));
+    });
+
+    it('should encode as expected', () => {
+      assert.strictEqual(encodeJson(null), 'null');
+      assert.strictEqual(encodeJson(914), '914');
+      assert.strictEqual(encodeJson({ a: 10, b: 20 }), '{"a":10,"b":20}');
+    });
+  });
+
+  describe('encodeJsonBuffer', () => {
+    it('should produce a `FrozenBuffer`', () => {
+      assert.instanceOf(encodeJsonBuffer(null), FrozenBuffer);
+      assert.instanceOf(encodeJsonBuffer(914), FrozenBuffer);
+      assert.instanceOf(encodeJsonBuffer([1, 2, 3]), FrozenBuffer);
+    });
+
+    it('should encode as expected', () => {
+      assert.strictEqual(encodeJsonBuffer(null).string, 'null');
+      assert.strictEqual(encodeJsonBuffer(914).string, '914');
+      assert.strictEqual(encodeJsonBuffer({ a: 10, b: 20 }).string, '{"a":10,"b":20}');
     });
   });
 });

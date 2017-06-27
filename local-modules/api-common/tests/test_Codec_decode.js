@@ -4,16 +4,20 @@
 
 import { assert } from 'chai';
 import { before, describe, it } from 'mocha';
+import { FrozenBuffer } from 'util-common';
 
 import { Codec } from 'api-common';
 
 import MockApiObject from './MockApiObject';
 
 describe('api-common/Decoder', () => {
-  // Convenient bindings for `decode()` and `encode()` to avoid a lot of
+  // Convenient bindings for `decode*()` and `encode()` to avoid a lot of
   // boilerplate.
-  const decode = (value) => { return Codec.theOne.decode(value); };
-  const encode = (value) => { return Codec.theOne.encode(value); };
+  const codec            = Codec.theOne;
+  const decode           = (value) => { return codec.decode(value);           };
+  const decodeJson       = (value) => { return codec.decodeJson(value);       };
+  const decodeJsonBuffer = (value) => { return codec.decodeJsonBuffer(value); };
+  const encode           = (value) => { return codec.encode(value);           };
 
   before(() => {
     try {
@@ -24,7 +28,7 @@ describe('api-common/Decoder', () => {
     }
   });
 
-  describe('decode(value)', () => {
+  describe('decode', () => {
     it('should pass non-object values through as-is', () => {
       assert.strictEqual(decode(37), 37);
       assert.strictEqual(decode(true), true);
@@ -69,6 +73,26 @@ describe('api-common/Decoder', () => {
       });
 
       assert.instanceOf(decodedObject, apiObject.constructor);
+    });
+  });
+
+  describe('decodeJson', () => {
+    it('should decode as expected', () => {
+      assert.strictEqual(decodeJson('null'), null);
+      assert.strictEqual(decodeJson('914'), 914);
+      assert.deepEqual(decodeJson('{"a":10,"b":20}'), { a: 10, b: 20 });
+    });
+  });
+
+  describe('decodeJsonBuffer', () => {
+    it('should decode as expected', () => {
+      function bufAndDecode(s) {
+        return decodeJsonBuffer(FrozenBuffer.coerce(s));
+      }
+
+      assert.strictEqual(bufAndDecode('null'), null);
+      assert.strictEqual(bufAndDecode('914'), 914);
+      assert.deepEqual(bufAndDecode('{"a":10,"b":20}'), { a: 10, b: 20 });
     });
   });
 });
