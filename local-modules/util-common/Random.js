@@ -9,7 +9,6 @@ import crypto from 'crypto';
 import { TInt } from 'typecheck';
 import { UtilityClass } from 'util-common-base';
 
-import BufferUtil from './BufferUtil';
 import DataUtil from './DataUtil';
 
 /**
@@ -40,7 +39,7 @@ export default class Random extends UtilityClass {
    */
   static byteArray(length) {
     const buffer = crypto.randomBytes(TInt.min(length, 0));
-    return BufferUtil.toArray(buffer);
+    return Array.from(buffer);
   }
 
   /**
