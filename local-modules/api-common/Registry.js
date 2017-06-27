@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TFunction, TString } from 'typecheck';
-import { Singleton } from 'util-common';
+import { CommonBase } from 'util-common';
 
 /** {string} The "class" tag used for regular arrays. */
 const ARRAY_TAG = 'array';
@@ -18,13 +18,8 @@ const ARRAY_TAG = 'array';
  * `API_NAME` and a static method `fromApi()`. In addition, instances to be
  * encoded must define a method `toApi()`. These are all used as described
  * elsewhere in this module.
- *
- * **TODO:** This class should probably _not_ be a singleton, in that there are
- * legitimately multiple different API coding contexts which ultimately might
- * want to have different sets of classes (or different name bindings even if
- * the classes overlap).
  */
-export default class Regsitry extends Singleton {
+export default class Regsitry extends CommonBase {
   /**
    * Constructs the instance.
    */

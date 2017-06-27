@@ -10,11 +10,12 @@ import Registry from './Registry';
 
 /**
  * Encoder and decoder of values for transport over the API (or for storage on
- * disk or in databases).
+ * disk or in databases), with binding to a name-to-class registry.
  *
- * **TODO:** If and when `Registry` stops being a singleton, this class should
- * correspondingly stop being one too, since it will no longer be the case that
- * there is a unique registry to query.
+ * **TODO:** This class should probably _not_ be a singleton, in that there are
+ * legitimately multiple different API coding contexts which ultimately might
+ * want to have different sets of classes (or different name bindings even if
+ * the classes overlap).
  */
 export default class Codec extends Singleton {
   /**
@@ -27,7 +28,7 @@ export default class Codec extends Singleton {
      * {Registry} The registry instance to use. **Note:** If and when this class
      * stops being a singleton, this will get set from a constructor argument.
      */
-    this._reg = Registry.theOne;
+    this._reg = new Registry();
   }
 
   /**
