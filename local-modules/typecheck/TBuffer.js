@@ -7,6 +7,9 @@ import { UtilityClass } from 'util-common';
 
 /**
  * Type checker for type `Buffer`.
+ *
+ * **Note:** Babel's browser polyfill includes a Node-compatible `Buffer`
+ * implementation, which is why this class worksregardless of environment.
  */
 export default class TBuffer extends UtilityClass {
   /**
