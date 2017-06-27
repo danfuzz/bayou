@@ -2,11 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import secureRandom from 'secure-random';
+// **Note:** Babel's browser polyfill includes a Node-compatible `crypto`
+// module, which is why this is possible to import regardless of environment.
+import crypto from 'crypto';
 
 import { TInt } from 'typecheck';
 import { UtilityClass } from 'util-common-base';
 
+import BufferUtil from './BufferUtil';
 import DataUtil from './DataUtil';
 
 /**
@@ -18,10 +21,6 @@ const ID_CHARS = 'abcdefghjkmnpqrstuwxyz0123456789';
 /**
  * Random number utilities. All values are generated using a cryptographically
  * secure random number generator.
- *
- * **Note:** This class uses the `secure-random` module as its interface to the
- * platform's RNG. That module works both in client and server environments,
- * using appropriate underlying facilities in each.
  */
 export default class Random extends UtilityClass {
   /**
@@ -30,7 +29,7 @@ export default class Random extends UtilityClass {
    * @returns {Int} The byte.
    */
   static byte() {
-    return secureRandom(1)[0];
+    return crypto.randomBytes(1)[0];
   }
 
   /**
@@ -40,7 +39,8 @@ export default class Random extends UtilityClass {
    * @returns {Array<Int>} Array of `length` random bytes.
    */
   static byteArray(length) {
-    return secureRandom(TInt.min(length, 0));
+    const buffer = crypto.randomBytes(TInt.min(length, 0));
+    return BufferUtil.toArray(buffer);
   }
 
   /**
