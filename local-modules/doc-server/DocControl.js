@@ -4,7 +4,7 @@
 
 import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Timestamp }
   from 'doc-common';
-import { BaseFile, Coder, FileOp, TransactionSpec } from 'content-store';
+import { BaseFile, FileOp, TransactionSpec } from 'content-store';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase, InfoError, PromDelay } from 'util-common';
@@ -55,11 +55,15 @@ export default class DocControl extends CommonBase {
   /**
    * Constructs an instance.
    *
+   * @param {Codec} codec Codec instance to use.
    * @param {BaseFile} file The underlying document storage.
    * @param {FrozenBuffer} formatVersion Format version to expect and use.
    */
-  constructor(file, formatVersion) {
+  constructor(codec, file, formatVersion) {
     super();
+
+    /** {Codec} Codec instance to use. */
+    this._codec = codec;
 
     /** {BaseFile} The underlying document storage. */
     this._file = BaseFile.check(file);
@@ -108,7 +112,7 @@ export default class DocControl extends CommonBase {
     const maybeChange1 = [];
     if (contents !== null) {
       const change = new DocumentChange(1, Timestamp.now(), contents, null);
-      const op     = FileOp.op_writePath(Paths.forRevNum(1), Coder.encode(change));
+      const op     = FileOp.op_writePath(Paths.forRevNum(1), this._encode(change));
       maybeChange1.push(op);
     }
 
@@ -125,10 +129,10 @@ export default class DocControl extends CommonBase {
       FileOp.op_writePath(Paths.FORMAT_VERSION, this._formatVersion),
 
       // Initial revision number.
-      FileOp.op_writePath(Paths.REVISION_NUMBER, Coder.encode(revNum)),
+      FileOp.op_writePath(Paths.REVISION_NUMBER, this._encode(revNum)),
 
       // Empty change #0 (per documented interface).
-      FileOp.op_writePath(Paths.forRevNum(0), Coder.encode(change0)),
+      FileOp.op_writePath(Paths.forRevNum(0), this._encode(change0)),
 
       // The given `content` (if any) for change #1.
       ...maybeChange1
@@ -241,7 +245,7 @@ export default class DocControl extends CommonBase {
 
     let revNum;
     try {
-      revNum = Coder.decode(revNumEncoded);
+      revNum = this._decode(revNumEncoded);
     } catch (e) {
       this._log.info('Corrupt document: Bogus revision number.');
       return DocControl.STATUS_ERROR;
@@ -582,8 +586,8 @@ export default class DocControl extends CommonBase {
     const change = new DocumentChange(revNum, Timestamp.now(), delta, authorId);
     const spec = new TransactionSpec(
       FileOp.op_checkPathEmpty(changePath),
-      FileOp.op_writePath(changePath, Coder.encode(change)),
-      FileOp.op_writePath(Paths.REVISION_NUMBER, Coder.encode(revNum))
+      FileOp.op_writePath(changePath, this._encode(change)),
+      FileOp.op_writePath(Paths.REVISION_NUMBER, this._encode(revNum))
     );
 
     try {
@@ -617,7 +621,7 @@ export default class DocControl extends CommonBase {
 
     return (encoded === null)
       ? null
-      : DocumentChange.check(Coder.decode(encoded));
+      : DocumentChange.check(this._decode(encoded));
   }
 
   /**
@@ -630,7 +634,7 @@ export default class DocControl extends CommonBase {
    */
   async _changeRead(revNum) {
     const encoded = await this._file.pathRead(Paths.forRevNum(revNum));
-    return DocumentChange.check(Coder.decode(encoded));
+    return DocumentChange.check(this._decode(encoded));
   }
 
   /**
@@ -641,6 +645,26 @@ export default class DocControl extends CommonBase {
    */
   async _currentRevNum() {
     const encoded = await this._file.pathReadOrNull(Paths.REVISION_NUMBER);
-    return (encoded === null) ? null : Coder.decode(encoded);
+    return (encoded === null) ? null : this._decode(encoded);
+  }
+
+  /**
+   * Convenient pass-through to `_codec.decodeJsonBuffer()`.
+   *
+   * @param {FrozenBuffer} encoded Value to decode.
+   * @returns {*} The decoded version.
+   */
+  _decode(encoded) {
+    return this._codec.decodeJsonBuffer(encoded);
+  }
+
+  /**
+   * Convenient pass-through to `_codec.encodeJsonBuffer()`.
+   *
+   * @param {*} value Value to encode.
+   * @returns {FrozenBuffer} The encoded version.
+   */
+  _encode(value) {
+    return this._codec.encodeJsonBuffer(value);
   }
 }

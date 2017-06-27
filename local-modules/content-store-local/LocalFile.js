@@ -5,6 +5,7 @@
 import afs from 'async-file';
 import path from 'path';
 
+import { Codec } from 'api-common';
 import { BaseFile } from 'content-store';
 import { Logger } from 'see-all';
 import { FrozenBuffer, PromCondition, PromDelay } from 'util-common';
@@ -384,7 +385,7 @@ export default class LocalFile extends BaseFile {
     // things reasonably gracefully if it's missing or corrupt.
     try {
       const revNumBuffer = storage.get(REVISION_NUMBER_PATH);
-      revNum = JSON.parse(revNumBuffer.string);
+      revNum = Codec.theOne.decodeJsonBuffer(revNumBuffer);
       this._log.info(`Starting revision number: ${revNum}`);
     } catch (e) {
       // In case of failure, use the size of the storage map as a good enough
@@ -478,7 +479,7 @@ export default class LocalFile extends BaseFile {
     // Put the file revision number in the `dirtyValues` map. This way, it gets
     // written out without further special casing.
     dirtyValues.set(REVISION_NUMBER_PATH,
-      FrozenBuffer.coerce(JSON.stringify(revNum)));
+      Codec.theOne.encodeJsonBuffer(revNum));
 
     // Erase and/or create the storage directory as needed.
 
