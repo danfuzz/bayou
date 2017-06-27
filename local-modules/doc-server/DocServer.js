@@ -4,7 +4,7 @@
 
 import weak from 'weak';
 
-import { Coder } from 'content-store';
+import { Codec } from 'api-common';
 import { FrozenDelta } from 'doc-common';
 import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
@@ -66,7 +66,8 @@ export default class DocServer extends Singleton {
      * {FrozenBuffer} The document format version to use for new documents and
      * to expect in existing documents.
      */
-    this._formatVersion = Coder.encode(ProductInfo.theOne.INFO.version);
+    this._formatVersion =
+      Codec.theOne.encodeJsonBuffer(ProductInfo.theOne.INFO.version);
   }
 
   /**

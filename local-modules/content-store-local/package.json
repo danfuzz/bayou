@@ -4,6 +4,7 @@
   "main": "main.js",
 
   "dependencies": {
+    "api-common": "local",
     "content-store": "local",
     "see-all": "local",
     "util-common": "local",
