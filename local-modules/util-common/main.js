@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import BufferUtil from './BufferUtil';
 import CommonBase from './CommonBase';
 import DataUtil from './DataUtil';
 import DeferredLoader from './DeferredLoader';
@@ -16,6 +17,7 @@ import Singleton from './Singleton';
 import WebsocketCodes from './WebsocketCodes';
 
 export {
+  BufferUtil,
   CommonBase,
   DataUtil,
   DeferredLoader,
