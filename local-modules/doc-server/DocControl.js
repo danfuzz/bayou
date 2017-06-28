@@ -226,6 +226,8 @@ export default class DocControl extends CommonBase {
 
     let transactionResult;
 
+    // Check the required metainfo paths.
+
     try {
       const spec = new TransactionSpec(
         FileOp.op_readPath(Paths.FORMAT_VERSION),
@@ -264,6 +266,8 @@ export default class DocControl extends CommonBase {
       this._log.info('Corrupt document: Bogus revision number.');
       return DocControl.STATUS_ERROR;
     }
+
+    // Make sure all the changes can be read and decoded.
 
     for (let i = 0; i <= revNum; i++) {
       try {
