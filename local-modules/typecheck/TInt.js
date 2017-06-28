@@ -29,6 +29,24 @@ export default class TInt extends UtilityClass {
   }
 
   /**
+   * Checks a value of type `Int`, which must furthermore be less than an
+   * indicated value.
+   *
+   * @param {*} value Value to check.
+   * @param {Int} maxExc Maximum acceptable value (exclusive).
+   * @returns {Int} `value`.
+   */
+  static maxExc(value, maxExc) {
+    TInt.check(value);
+    TInt.check(maxExc);
+    if (value >= maxExc) {
+      return TypeError.badValue(value, 'Int', `value < ${maxExc}`);
+    }
+
+    return value;
+  }
+
+  /**
    * Checks a value of type `Int`, which must furthermore be no more than an
    * indicated value (inclusive).
    *
