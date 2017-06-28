@@ -140,23 +140,6 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Reads the value stored at the given path. This throws an error if there is
-   * no value stored at the given path.
-   *
-   * @param {string} storagePath Path to read from.
-   * @returns {FrozenBuffer} Value stored at the indicated path.
-   */
-  async pathRead(storagePath) {
-    const spec = new TransactionSpec(
-      FileOp.op_checkPathExists(storagePath),
-      FileOp.op_readPath(storagePath)
-    );
-
-    const transactionResult = await this.transact(spec);
-    return transactionResult.data.get(storagePath);
-  }
-
-  /**
    * Reads the value stored at the given path. This returns `null` if there is
    * no value stored at the given path.
    *

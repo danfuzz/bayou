@@ -633,7 +633,14 @@ export default class DocControl extends CommonBase {
    * @returns {DocumentChange} The corresponding change.
    */
   async _changeRead(revNum) {
-    const encoded = await this._file.pathRead(Paths.forRevNum(revNum));
+    const storagePath = Paths.forRevNum(revNum);
+    const spec = new TransactionSpec(
+      FileOp.op_checkPathExists(storagePath),
+      FileOp.op_readPath(storagePath)
+    );
+
+    const transactionResult = await this._file.transact(spec);
+    const encoded = transactionResult.data.get(storagePath);
     return DocumentChange.check(this._decode(encoded));
   }
 
