@@ -167,7 +167,10 @@ export default class DocControl extends CommonBase {
    * @returns {DocumentChange} The requested change.
    */
   async change(revNum) {
-    return this._changeRead(revNum);
+    RevisionNumber.check(revNum);
+
+    const changes = await this._readChangeRange(revNum, revNum + 1);
+    return changes[0];
   }
 
   /**
@@ -697,26 +700,6 @@ export default class DocControl extends CommonBase {
     }
 
     return revNum;
-  }
-
-  /**
-   * Reads the change for the indicated revision number. It is an error to
-   * request a change that doesn't exist.
-   *
-   * @param {RevisionNumber} revNum Revision number of the change. This
-   *   indicates the change that produced that document revision.
-   * @returns {DocumentChange} The corresponding change.
-   */
-  async _changeRead(revNum) {
-    const storagePath = Paths.forRevNum(revNum);
-    const spec = new TransactionSpec(
-      FileOp.op_checkPathExists(storagePath),
-      FileOp.op_readPath(storagePath)
-    );
-
-    const transactionResult = await this._fileCodec.transact(spec);
-    const result = transactionResult.data.get(storagePath);
-    return DocumentChange.check(result);
   }
 
   /**
