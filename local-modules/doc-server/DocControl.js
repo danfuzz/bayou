@@ -3,9 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Codec } from 'api-common';
+import { BaseFile, FileCodec, FileOp, TransactionSpec } from 'content-store';
 import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Timestamp }
   from 'doc-common';
-import { BaseFile, FileCodec, FileOp, TransactionSpec } from 'content-store';
 import { Logger } from 'see-all';
 import { TInt, TString } from 'typecheck';
 import { CommonBase, InfoError, PromDelay } from 'util-common';
@@ -203,8 +203,8 @@ export default class DocControl extends CommonBase {
     // to the base to produce the desired revision. Store it, and return it.
 
     const contents = (base === null)
-      ? this._composeVersions(FrozenDelta.EMPTY, 0,               revNum + 1)
-      : this._composeVersions(base.contents,     base.revNum + 1, revNum + 1);
+      ? this._composeRevisions(FrozenDelta.EMPTY, 0,               revNum + 1)
+      : this._composeRevisions(base.contents,     base.revNum + 1, revNum + 1);
     const result = new Snapshot(revNum, await contents);
 
     this._log.detail(`Made snapshot for revision ${revNum}.`);
@@ -355,7 +355,7 @@ export default class DocControl extends CommonBase {
         // The document's revision is in fact newer than the base, so we can now
         // form and return a result. Compose all the deltas from the revision
         // after the base through and including the current revision.
-        const delta = await this._composeVersions(
+        const delta = await this._composeRevisions(
           FrozenDelta.EMPTY, baseRevNum + 1, RevisionNumber.after(docRevNum));
         return new DeltaResult(docRevNum, delta);
       }
@@ -521,7 +521,7 @@ export default class DocControl extends CommonBase {
     const rCurrent  = current;
 
     // (1)
-    const dServer = await this._composeVersions(
+    const dServer = await this._composeRevisions(
       FrozenDelta.EMPTY, rBase.revNum + 1, RevisionNumber.after(rCurrent.revNum));
 
     // (2)
@@ -557,13 +557,13 @@ export default class DocControl extends CommonBase {
 
   /**
    * Constructs a delta consisting of the composition of the deltas from the
-   * given initial revision through and including the current latest delta,
-   * composed from a given base. It is valid to pass as either revision number
-   * parameter one revision beyond the current revision number (that is,
-   * `RevisionNumber.after(await this._currentRevNum())`. It is invalid to
-   * specify a non-existent revision _other_ than one beyond the current
-   * revision. If `startInclusive === endExclusive`, then this method returns
-   * `baseDelta`.
+   * given initial revision through but not including the indicated end
+   * revision, and composed from a given base. It is valid to pass as either
+   * revision number parameter one revision beyond the current revision number
+   * (that is, `RevisionNumber.after(await this._currentRevNum())`. It is
+   * invalid to specify a non-existent revision _other_ than one beyond the
+   * current revision. If `startInclusive === endExclusive`, then this method
+   * returns `baseDelta`.
    *
    * @param {FrozenDelta} baseDelta Base delta onto which the indicated deltas
    *   get composed.
@@ -575,7 +575,7 @@ export default class DocControl extends CommonBase {
    *   composed with revisions `startInclusive` through but not including
    *   `endExclusive`.
    */
-  async _composeVersions(baseDelta, startInclusive, endExclusive) {
+  async _composeRevisions(baseDelta, startInclusive, endExclusive) {
     const nextRevNum = RevisionNumber.after(await this._currentRevNum());
     startInclusive = RevisionNumber.rangeInc(startInclusive, 0, nextRevNum);
     endExclusive =
