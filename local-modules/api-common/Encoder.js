@@ -5,7 +5,7 @@
 import { CommonBase, ObjectUtil } from 'util-common';
 
 /**
- * Main implementation of `Codec.encode()`.
+ * Main implementation of `Codec.encodeData()`.
  */
 export default class Encoder extends CommonBase {
   /**
@@ -24,12 +24,12 @@ export default class Encoder extends CommonBase {
   }
 
   /**
-   * Main implementation of `Codec.encode()`, see which for details.
+   * Main implementation of `Codec.encodeData()`, see which for details.
    *
    * @param {*} value Value to convert.
    * @returns {*} The converted value.
    */
-  encode(value) {
+  encodeData(value) {
     switch (typeof value) {
       case 'boolean':
       case 'number':
@@ -69,7 +69,7 @@ export default class Encoder extends CommonBase {
   }
 
   /**
-   * Helper for `encode()` which validates and converts a simple object.
+   * Helper for `encodeData()` which validates and converts a simple object.
    *
    * @param {object} value Value to convert.
    * @returns {object} The converted value.
@@ -92,14 +92,14 @@ export default class Encoder extends CommonBase {
         }
       }
 
-      result[k] = this.encode(origValue);
+      result[k] = this.encodeData(origValue);
     }
 
     return Object.freeze(result);
   }
 
   /**
-   * Helper for `encode()` which validates and converts an array.
+   * Helper for `encodeData()` which validates and converts an array.
    *
    * @param {array} value Value to convert.
    * @param {string} [tag = Registry.arrayTag] "Header" tag for the result.
@@ -110,7 +110,7 @@ export default class Encoder extends CommonBase {
     let count = 0;
     const result = value.map((elem) => {
       count++;
-      return this.encode(elem);
+      return this.encodeData(elem);
     });
 
     if (value.length !== count) {
@@ -129,7 +129,7 @@ export default class Encoder extends CommonBase {
   }
 
   /**
-   * Helper for `encode()` which validates and converts an object which is
+   * Helper for `encodeData()` which validates and converts an object which is
    * expected (and verified) to have API metainfo properties.
    *
    * @param {object} value Value to convert.

@@ -32,8 +32,9 @@ export default class Codec extends Singleton {
   }
 
   /**
-   * Converts a value that was previously converted with `encode()` (or the
-   * equivalent) back into fully useful objects. Specifically:
+   * Converts a "pure data" value that was previously converted with
+   * `encodeData()` (or the equivalent) back into fully useful objects.
+   * Specifically:
    *
    * * Non-object / non-function values are passed through as-is.
    * * `null` is passed through as-is.
@@ -85,9 +86,9 @@ export default class Codec extends Singleton {
   }
 
   /**
-   * Converts an arbitrary value to a form suitable for JSON-encoding and
-   * subsequent transfer over the API. In some cases, it rejects values.
-   * Specifically:
+   * Converts an arbitrary value to a "pure data" form suitable for
+   * JSON-encoding and/or transfer over an API boundary. In some cases, it
+   * rejects values. Specifically:
    *
    * * Functions are rejected.
    * * Symbols are rejected.
@@ -117,12 +118,12 @@ export default class Codec extends Singleton {
    * @param {*} value Value to convert.
    * @returns {*} The converted value.
    */
-  encode(value) {
-    return new Encoder(this._reg).encode(value);
+  encodeData(value) {
+    return new Encoder(this._reg).encodeData(value);
   }
 
   /**
-   * Converts an arbitrary value to JSON-encoded text. See `encode()` for
+   * Converts an arbitrary value to JSON-encoded text. See `encodeData()` for
    * details.
    *
    * @param {*} value Value to convert.
@@ -131,12 +132,12 @@ export default class Codec extends Singleton {
    * @returns {string} The converted value.
    */
   encodeJson(value, pretty = false) {
-    return JSON.stringify(this.encode(value), null, pretty ? 2 : 0);
+    return JSON.stringify(this.encodeData(value), null, pretty ? 2 : 0);
   }
 
   /**
    * Converts an arbitrary value to JSON-encoded text, which is furthermore
-   * converted to a `FrozenBuffer`. See `encode()` for details.
+   * converted to a `FrozenBuffer`. See `encodeData()` for details.
    *
    * @param {*} value Value to encode.
    * @returns {FrozenBuffer} Encoded and bufferized value.

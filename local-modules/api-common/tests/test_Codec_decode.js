@@ -11,13 +11,13 @@ import { Codec } from 'api-common';
 import MockApiObject from './MockApiObject';
 
 describe('api-common/Decoder', () => {
-  // Convenient bindings for `decode*()` and `encode()` to avoid a lot of
+  // Convenient bindings for `decode*()` and `encodeData()` to avoid a lot of
   // boilerplate.
   const codec            = Codec.theOne;
   const decode           = (value) => { return codec.decode(value);           };
   const decodeJson       = (value) => { return codec.decodeJson(value);       };
   const decodeJsonBuffer = (value) => { return codec.decodeJsonBuffer(value); };
-  const encode           = (value) => { return codec.encode(value);           };
+  const encodeData       = (value) => { return codec.encodeData(value);       };
 
   before(() => {
     try {
@@ -59,13 +59,13 @@ describe('api-common/Decoder', () => {
 
     it('should decode an encoded array back to the original array', () => {
       const orig = [1, 2, 'buckle my shoe'];
-      const encoded = encode(orig);
+      const encoded = encodeData(orig);
       assert.deepEqual(decode(encoded), orig);
     });
 
     it('should convert propertly formatted values to an API object', () => {
       const apiObject = new MockApiObject();
-      const encoding = encode(apiObject);
+      const encoding = encodeData(apiObject);
       let decodedObject = null;
 
       assert.doesNotThrow(function () {
