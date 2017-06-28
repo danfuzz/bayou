@@ -656,8 +656,15 @@ export default class DocControl extends CommonBase {
    *   set.
    */
   async _currentRevNum() {
-    const encoded = await this._file.pathReadOrNull(Paths.REVISION_NUMBER);
-    return (encoded === null) ? null : this._decode(encoded);
+    const storagePath = Paths.REVISION_NUMBER;
+    const spec = new TransactionSpec(
+      FileOp.op_readPath(storagePath)
+    );
+
+    const transactionResult = await this._fileCodec.transact(spec);
+    const result = transactionResult.data.get(storagePath);
+
+    return (result === undefined) ? null : TInt.min(result, 0);
   }
 
   /**
