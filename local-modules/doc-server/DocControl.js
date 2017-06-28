@@ -566,29 +566,27 @@ export default class DocControl extends CommonBase {
    *   `endExclusive`.
    */
   async _composeRevisions(baseDelta, startInclusive, endExclusive) {
-    const nextRevNum = RevisionNumber.after(await this._currentRevNum());
-    startInclusive = RevisionNumber.rangeInc(startInclusive, 0, nextRevNum);
-    endExclusive =
-      RevisionNumber.rangeInc(endExclusive, startInclusive, nextRevNum);
+    FrozenDelta.check(baseDelta);
 
     if (startInclusive === endExclusive) {
-      // Trivial case: Nothing to compose.
+      // Trivial case: Nothing to compose. If we were to have made it to the
+      // loop below, `_readChangeRange()` would have taken care of the error
+      // checking on the range arguments. But because we're short-circuiting out
+      // of it here, we need to explicitly make a call to confirm argument
+      // validity.
+      await this._readChangeRange(startInclusive, startInclusive);
       return baseDelta;
     }
 
-    // First, request all the changes, and then compose them, in separate loops.
-    // This arrangement means that it's possible for all of the change requests
-    // to be serviced in parallel.
-
-    const changePromises = [];
-    for (let i = startInclusive; i < endExclusive; i++) {
-      changePromises.push(this._changeRead(i));
+    let result = baseDelta;
+    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
+    for (let i = startInclusive; i < endExclusive; i += MAX) {
+      const end = Math.min(i + MAX, endExclusive);
+      const changes = await this._readChangeRange(i, end);
+      for (const c of changes) {
+        result = result.compose(c.delta);
+      }
     }
-
-    const changes = await Promise.all(changePromises);
-    const result = changes.reduce(
-      (acc, change) => { return acc.compose(change.delta); },
-      baseDelta);
 
     return FrozenDelta.coerce(result);
   }
