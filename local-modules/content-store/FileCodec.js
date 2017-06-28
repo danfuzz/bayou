@@ -36,7 +36,8 @@ export default class FileCodec extends CommonBase {
 
   /**
    * Runs the specified transaction, automatically decoding any values returned
-   * in the `data`.
+   * in the `data`. This method passes through any errors thrown due to failure
+   * to decode a buffer.
    *
    * @param {TransactionSpec} spec Specification for the transaction, that is,
    *   the set of operations to perform.

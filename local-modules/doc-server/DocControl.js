@@ -220,11 +220,22 @@ export default class DocControl extends CommonBase {
       return DocControl.STATUS_NOT_FOUND;
     }
 
-    const formatVersion =
-      await this._file.pathReadOrNull(Paths.FORMAT_VERSION);
+    const spec = new TransactionSpec(
+      FileOp.op_readPath(Paths.FORMAT_VERSION),
+      FileOp.op_readPath(Paths.REVISION_NUMBER)
+    );
+    const transactionResult = await this._file.transact(spec);
+    const data              = transactionResult.data;
+    const formatVersion     = data.get(Paths.FORMAT_VERSION);
+    const revNumEncoded     = data.get(Paths.REVISION_NUMBER);
 
-    if (formatVersion === null) {
+    if (!formatVersion) {
       this._log.info('Corrupt document: Missing format version.');
+      return DocControl.STATUS_ERROR;
+    }
+
+    if (!revNumEncoded) {
+      this._log.info('Corrupt document: Missing revision number.');
       return DocControl.STATUS_ERROR;
     }
 
@@ -233,14 +244,6 @@ export default class DocControl extends CommonBase {
       const expected = this._formatVersion.string;
       this._log.info(`Mismatched format version: got ${got}; expected ${expected}`);
       return DocControl.STATUS_MIGRATE;
-    }
-
-    const revNumEncoded =
-      await this._file.pathReadOrNull(Paths.REVISION_NUMBER);
-
-    if (revNumEncoded === null) {
-      this._log.info('Corrupt document: Missing revision number.');
-      return DocControl.STATUS_ERROR;
     }
 
     let revNum;
