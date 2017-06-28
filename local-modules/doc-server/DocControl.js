@@ -276,18 +276,26 @@ export default class DocControl extends CommonBase {
 
     // Look for a few changes past the stored revision number to make sure
     // they're empty.
-    for (let i = revNum + 1; i <= (revNum + 10); i++) {
-      try {
-        const change = await this._changeReadOrNull(i);
-        if (change !== null) {
-          this._log.info(`Corrupt document: Extra change #${i}`);
-          return DocControl.STATUS_ERROR;
-        }
-      } catch (e) {
-        this._log.info(`Corrupt document: Bogus extra change #${i}.`);
-        return DocControl.STATUS_ERROR;
+
+    try {
+      const ops = [];
+      for (let i = revNum + 1; i <= (revNum + 10); i++) {
+        ops.push(FileOp.op_readPath(Paths.forRevNum(i)));
       }
+      const spec = new TransactionSpec(...ops);
+      transactionResult = await this._fileCodec.transact(spec);
+    } catch (e) {
+      this._log.info('Corrupt document: Weird empty-change read failure.');
+      return DocControl.STATUS_ERROR;
     }
+
+    // In a valid doc, the loop body won't end up executing at all.
+    for (const storagePath of transactionResult.data.keys()) {
+      this._log.info(`Corrupt document: Extra change at path: ${storagePath}`);
+      return DocControl.STATUS_ERROR;
+    }
+
+    // All's well!
 
     return DocControl.STATUS_OK;
   }
@@ -619,23 +627,6 @@ export default class DocControl extends CommonBase {
     }
 
     return revNum;
-  }
-
-  /**
-   * Reads the change for the indicated revision number. This will return `null`
-   * given a request for a change that doesn't exist.
-   *
-   * @param {RevisionNumber} revNum Revision number of the change. This
-   *   indicates the change that produced that document revision.
-   * @returns {DocumentChange|null} The corresponding change, or `null` if it
-   *   doesn't exist.
-   */
-  async _changeReadOrNull(revNum) {
-    const encoded = await this._file.pathReadOrNull(Paths.forRevNum(revNum));
-
-    return (encoded === null)
-      ? null
-      : DocumentChange.check(this._decode(encoded));
   }
 
   /**
