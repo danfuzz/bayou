@@ -28,6 +28,13 @@ const APPEND_RETRY_GROWTH_FACTOR = 5;
 const MAX_APPEND_TIME_MSEC = 20 * 1000; // 20 seconds.
 
 /**
+ * {nubmer} Maximum number of document changes to request in a single
+ * transaction. (The idea is to avoid making a request that would result in
+ * running into an upper limit on transaction data size.)
+ */
+const MAX_CHANGE_READS_PER_TRANSACTION = 20;
+
+/**
  * Controller for a given document. There is only ever exactly one instance of
  * this class per document, no matter how many active editors there are on that
  * document. (This guarantee is provided by `DocServer`.)
@@ -267,13 +274,25 @@ export default class DocControl extends CommonBase {
       return DocControl.STATUS_ERROR;
     }
 
-    // Make sure all the changes can be read and decoded.
+    // Make sure all the changes can be read and decoded. What we're doing here
+    // is reading in chunks of up to N changes at a time, instead of reading
+    // them all at once (which might get us a transaction failure because of too
+    // much data).
 
-    for (let i = 0; i <= revNum; i++) {
+    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
+    for (let i = 0; i <= revNum; /*i*/) {
+      const firstI = i;
+      const ops = [];
+      for (let j = 0; (i <= revNum) && (j < MAX); j++, i++) {
+        ops.push(FileOp.op_readPath(Paths.forRevNum(i)));
+      }
+
       try {
-        await this._changeRead(i);
+        const spec = new TransactionSpec(...ops);
+        transactionResult = await this._fileCodec.transact(spec);
       } catch (e) {
-        this._log.info(`Corrupt document: Bogus change #${i}.`);
+        const lastI = i - 1;
+        this._log.info(`Corrupt document: Bogus change in range #${firstI}..${lastI}.`);
         return DocControl.STATUS_ERROR;
       }
     }
