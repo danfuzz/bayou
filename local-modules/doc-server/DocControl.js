@@ -644,21 +644,22 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Gets the current document revision number.
+   * Gets the current document revision number. It is an error to call this on
+   * an empty or uninitialized document.
    *
-   * @returns {RevisionNumber|null} The revision number, or `null` if it is not
-   *   set.
+   * @returns {RevisionNumber} The revision number.
    */
   async _currentRevNum() {
     const storagePath = Paths.REVISION_NUMBER;
     const spec = new TransactionSpec(
+      FileOp.op_checkPathExists(storagePath),
       FileOp.op_readPath(storagePath)
     );
 
     const transactionResult = await this._fileCodec.transact(spec);
     const result = transactionResult.data.get(storagePath);
 
-    return (result === undefined) ? null : TInt.min(result, 0);
+    return RevisionNumber.check(result);
   }
 
   /**
