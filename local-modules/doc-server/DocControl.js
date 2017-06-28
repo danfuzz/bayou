@@ -644,9 +644,9 @@ export default class DocControl extends CommonBase {
       FileOp.op_readPath(storagePath)
     );
 
-    const transactionResult = await this._file.transact(spec);
-    const encoded = transactionResult.data.get(storagePath);
-    return DocumentChange.check(this._decode(encoded));
+    const transactionResult = await this._fileCodec.transact(spec);
+    const result = transactionResult.data.get(storagePath);
+    return DocumentChange.check(result);
   }
 
   /**
@@ -665,16 +665,6 @@ export default class DocControl extends CommonBase {
     const result = transactionResult.data.get(storagePath);
 
     return (result === undefined) ? null : TInt.min(result, 0);
-  }
-
-  /**
-   * Convenient pass-through to `_codec.decodeJsonBuffer()`.
-   *
-   * @param {FrozenBuffer} encoded Value to decode.
-   * @returns {*} The decoded version.
-   */
-  _decode(encoded) {
-    return this._codec.decodeJsonBuffer(encoded);
   }
 
   /**
