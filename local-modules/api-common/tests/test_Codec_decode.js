@@ -11,13 +11,13 @@ import { Codec } from 'api-common';
 import MockApiObject from './MockApiObject';
 
 describe('api-common/Decoder', () => {
-  // Convenient bindings for `decode*()` and `encode()` to avoid a lot of
+  // Convenient bindings for `decode*()` and `encodeData()` to avoid a lot of
   // boilerplate.
   const codec            = Codec.theOne;
-  const decode           = (value) => { return codec.decode(value);           };
+  const decodeData       = (value) => { return codec.decodeData(value);       };
   const decodeJson       = (value) => { return codec.decodeJson(value);       };
   const decodeJsonBuffer = (value) => { return codec.decodeJsonBuffer(value); };
-  const encode           = (value) => { return codec.encode(value);           };
+  const encodeData       = (value) => { return codec.encodeData(value);       };
 
   before(() => {
     try {
@@ -28,48 +28,48 @@ describe('api-common/Decoder', () => {
     }
   });
 
-  describe('decode', () => {
+  describe('decodeData', () => {
     it('should pass non-object values through as-is', () => {
-      assert.strictEqual(decode(37), 37);
-      assert.strictEqual(decode(true), true);
-      assert.strictEqual(decode(false), false);
-      assert.strictEqual(decode('Happy string'), 'Happy string');
-      assert.isNull(decode(null));
+      assert.strictEqual(decodeData(37), 37);
+      assert.strictEqual(decodeData(true), true);
+      assert.strictEqual(decodeData(false), false);
+      assert.strictEqual(decodeData('Happy string'), 'Happy string');
+      assert.isNull(decodeData(null));
     });
 
     it('should accept simple objects', () => {
       // The tests here are of objects whose values all decode to themselves.
-      assert.deepEqual(decode({}), {});
-      assert.deepEqual(decode({ a: true, b: 'yo' }), { a: true, b: 'yo' });
+      assert.deepEqual(decodeData({}), {});
+      assert.deepEqual(decodeData({ a: true, b: 'yo' }), { a: true, b: 'yo' });
     });
 
     it('should reject arrays whose first value is not a string', () => {
-      assert.throws(() => decode([]));
-      assert.throws(() => decode([1, 2, 3, '4 5 6']));
-      assert.throws(() => decode([true, 2, 3, '4 5 6']));
-      assert.throws(() => decode([null, 2, 3, '4 5 6']));
-      assert.throws(() => decode([[], 2, 3, '4 5 6']));
-      assert.throws(() => decode([() => true, 2, 3, '4 5 6']));
+      assert.throws(() => decodeData([]));
+      assert.throws(() => decodeData([1, 2, 3, '4 5 6']));
+      assert.throws(() => decodeData([true, 2, 3, '4 5 6']));
+      assert.throws(() => decodeData([null, 2, 3, '4 5 6']));
+      assert.throws(() => decodeData([[], 2, 3, '4 5 6']));
+      assert.throws(() => decodeData([() => true, 2, 3, '4 5 6']));
     });
 
     it('should reject functions', () => {
-      assert.throws(() => decode(function () { return true; }));
-      assert.throws(() => decode(() => 123));
+      assert.throws(() => decodeData(function () { return true; }));
+      assert.throws(() => decodeData(() => 123));
     });
 
     it('should decode an encoded array back to the original array', () => {
       const orig = [1, 2, 'buckle my shoe'];
-      const encoded = encode(orig);
-      assert.deepEqual(decode(encoded), orig);
+      const encoded = encodeData(orig);
+      assert.deepEqual(decodeData(encoded), orig);
     });
 
     it('should convert propertly formatted values to an API object', () => {
       const apiObject = new MockApiObject();
-      const encoding = encode(apiObject);
+      const encoding = encodeData(apiObject);
       let decodedObject = null;
 
-      assert.doesNotThrow(function () {
-        decodedObject = decode(encoding);
+      assert.doesNotThrow(() => {
+        decodedObject = decodeData(encoding);
       });
 
       assert.instanceOf(decodedObject, apiObject.constructor);

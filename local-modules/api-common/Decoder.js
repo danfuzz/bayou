@@ -5,7 +5,7 @@
 import { CommonBase } from 'util-common';
 
 /**
- * Main implementation of `Codec.decode()`.
+ * Main implementation of `Codec.decodeData()`.
  */
 export default class Decoder extends CommonBase {
   /**
@@ -24,12 +24,12 @@ export default class Decoder extends CommonBase {
   }
 
   /**
-   * Main implementation of `Codec.decode()`, see which for details.
+   * Main implementation of `Codec.decodeData()`, see which for details.
    *
    * @param {*} value Value to convert.
    * @returns {*} The converted value.
    */
-  decode(value) {
+  decodeData(value) {
     const type = typeof value;
 
     if (type === 'function') {
@@ -64,7 +64,7 @@ export default class Decoder extends CommonBase {
   }
 
   /**
-   * Helper for `decode()` which validates and converts a simple object.
+   * Helper for `decodeData()` which validates and converts a simple object.
    *
    * @param {object} value Value to convert.
    * @returns {object} The converted value.
@@ -73,26 +73,26 @@ export default class Decoder extends CommonBase {
     const result = {};
 
     for (const k in value) {
-      result[k] = this.decode(value[k]);
+      result[k] = this.decodeData(value[k]);
     }
 
     return Object.freeze(result);
   }
 
   /**
-   * Helper for `decode()` which validates and converts a regular array
+   * Helper for `decodeData()` which validates and converts a regular array
    * (which was originally tagged with `array`).
    *
    * @param {array} payload Value to convert.
    * @returns {array} The converted value.
    */
   _decodeArray(payload) {
-    const result = payload.map(this.decode.bind(this));
+    const result = payload.map(this.decodeData.bind(this));
     return Object.freeze(result);
   }
 
   /**
-   * Helper for `decode()` which validates and converts a tagged
+   * Helper for `decodeData()` which validates and converts a tagged
    * constructor array.
    *
    * @param {string} tag Name tag.
