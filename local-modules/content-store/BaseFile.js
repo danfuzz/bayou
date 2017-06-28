@@ -5,7 +5,6 @@
 import { TBoolean, TInt, TMap, TObject, TString } from 'typecheck';
 import { CommonBase, FrozenBuffer } from 'util-common';
 
-import FileOp from './FileOp';
 import StoragePath from './StoragePath';
 import TransactionSpec from './TransactionSpec';
 
