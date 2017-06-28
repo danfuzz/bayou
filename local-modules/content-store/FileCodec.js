@@ -14,6 +14,8 @@ import BaseFile from './BaseFile';
  *
  * **Note:** This class is _intentionally_ not a full wrapper over `BaseFile`.
  * It _just_ provides operations that benefit from the application of a `Codec`.
+ *
+ * **TODO:** Provide the above-promised help in building transactions.
  */
 export default class FileCodec extends CommonBase {
   /**
