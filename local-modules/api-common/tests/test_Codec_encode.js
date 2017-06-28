@@ -31,7 +31,7 @@ describe('api-common/Encoder', () => {
 
   describe('encodeData', () => {
     it('should reject function values', () => {
-      assert.throws(() => encodeData(function () { true; }));
+      assert.throws(() => encodeData(() => 1));
     });
 
     it('should reject Symbols', () => {

@@ -58,24 +58,24 @@ export default class Codec extends Singleton {
    * @param {*} value Value to convert.
    * @returns {*} The converted value.
    */
-  decode(value) {
-    return new Decoder(this._reg).decode(value);
+  decodeData(value) {
+    return new Decoder(this._reg).decodeData(value);
   }
 
   /**
-   * Converts JSON-encoded text to a usable value. See `decode()` for
+   * Converts JSON-encoded text to a usable value. See `decodeData()` for
    * details.
    *
    * @param {string} json Text to convert.
    * @returns {*} The converted value.
    */
   decodeJson(json) {
-    return this.decode(JSON.parse(json));
+    return this.decodeData(JSON.parse(json));
   }
 
   /**
    * Converts JSON-encoded text in a `FrozenBuffer` to a usable value. See
-   * `decode()` for details.
+   * `decodeData()` for details.
    *
    * @param {FrozenBuffer} encoded Value to decode.
    * @returns {*} Decoded value.
