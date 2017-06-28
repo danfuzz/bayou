@@ -2,11 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Codec } from 'api-common';
 import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Timestamp }
   from 'doc-common';
-import { BaseFile, FileOp, TransactionSpec } from 'content-store';
+import { BaseFile, FileCodec, FileOp, TransactionSpec } from 'content-store';
 import { Logger } from 'see-all';
-import { TString } from 'typecheck';
+import { TInt, TString } from 'typecheck';
 import { CommonBase, InfoError, PromDelay } from 'util-common';
 
 import Paths from './Paths';
@@ -25,6 +26,13 @@ const APPEND_RETRY_GROWTH_FACTOR = 5;
  * operations.
  */
 const MAX_APPEND_TIME_MSEC = 20 * 1000; // 20 seconds.
+
+/**
+ * {nubmer} Maximum number of document changes to request in a single
+ * transaction. (The idea is to avoid making a request that would result in
+ * running into an upper limit on transaction data size.)
+ */
+const MAX_CHANGE_READS_PER_TRANSACTION = 20;
 
 /**
  * Controller for a given document. There is only ever exactly one instance of
@@ -57,19 +65,22 @@ export default class DocControl extends CommonBase {
    *
    * @param {Codec} codec Codec instance to use.
    * @param {BaseFile} file The underlying document storage.
-   * @param {FrozenBuffer} formatVersion Format version to expect and use.
+   * @param {string} formatVersion Format version to expect and use.
    */
   constructor(codec, file, formatVersion) {
     super();
 
     /** {Codec} Codec instance to use. */
-    this._codec = codec;
+    this._codec = Codec.check(codec);
 
     /** {BaseFile} The underlying document storage. */
     this._file = BaseFile.check(file);
 
-    /** {FrozenBuffer} The document format version to expect and use. */
-    this._formatVersion = formatVersion;
+    /** {FileCodec} File-codec wrapper to use. */
+    this._fileCodec = new FileCodec(this._file, this._codec);
+
+    /** {string} The document format version to expect and use. */
+    this._formatVersion = TString.nonempty(formatVersion);
 
     /**
      * {Map<RevisionNumber,Snapshot>} Mapping from revision numbers to
@@ -126,7 +137,7 @@ export default class DocControl extends CommonBase {
       FileOp.op_checkPathEmpty(Paths.REVISION_NUMBER),
 
       // Version for the file format.
-      FileOp.op_writePath(Paths.FORMAT_VERSION, this._formatVersion),
+      FileOp.op_writePath(Paths.FORMAT_VERSION, this._encode(this._formatVersion)),
 
       // Initial revision number.
       FileOp.op_writePath(Paths.REVISION_NUMBER, this._encode(revNum)),
@@ -220,60 +231,94 @@ export default class DocControl extends CommonBase {
       return DocControl.STATUS_NOT_FOUND;
     }
 
-    const formatVersion =
-      await this._file.pathReadOrNull(Paths.FORMAT_VERSION);
+    let transactionResult;
 
-    if (formatVersion === null) {
+    // Check the required metainfo paths.
+
+    try {
+      const spec = new TransactionSpec(
+        FileOp.op_readPath(Paths.FORMAT_VERSION),
+        FileOp.op_readPath(Paths.REVISION_NUMBER)
+      );
+      transactionResult = await this._fileCodec.transact(spec);
+    } catch (e) {
+      this._log.info('Corrupt document: Failed to read/decode basic data.');
+      return DocControl.STATUS_ERROR;
+    }
+
+    const data          = transactionResult.data;
+    const formatVersion = data.get(Paths.FORMAT_VERSION);
+    const revNum        = data.get(Paths.REVISION_NUMBER);
+
+    if (!formatVersion) {
       this._log.info('Corrupt document: Missing format version.');
       return DocControl.STATUS_ERROR;
     }
 
-    if (!formatVersion.equals(this._formatVersion)) {
-      const got = formatVersion.string;
-      const expected = this._formatVersion.string;
-      this._log.info(`Mismatched format version: got ${got}; expected ${expected}`);
-      return DocControl.STATUS_MIGRATE;
-    }
-
-    const revNumEncoded =
-      await this._file.pathReadOrNull(Paths.REVISION_NUMBER);
-
-    if (revNumEncoded === null) {
+    if (!revNum) {
       this._log.info('Corrupt document: Missing revision number.');
       return DocControl.STATUS_ERROR;
     }
 
-    let revNum;
+    if (formatVersion !== this._formatVersion) {
+      const got = formatVersion;
+      const expected = this._formatVersion;
+      this._log.info(`Mismatched format version: got ${got}; expected ${expected}`);
+      return DocControl.STATUS_MIGRATE;
+    }
+
     try {
-      revNum = this._decode(revNumEncoded);
+      TInt.min(revNum, 0);
     } catch (e) {
       this._log.info('Corrupt document: Bogus revision number.');
       return DocControl.STATUS_ERROR;
     }
 
-    for (let i = 0; i <= revNum; i++) {
+    // Make sure all the changes can be read and decoded. What we're doing here
+    // is reading in chunks of up to N changes at a time, instead of reading
+    // them all at once (which might get us a transaction failure because of too
+    // much data).
+
+    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
+    for (let i = 0; i <= revNum; /*i*/) {
+      const firstI = i;
+      const ops = [];
+      for (let j = 0; (i <= revNum) && (j < MAX); j++, i++) {
+        ops.push(FileOp.op_readPath(Paths.forRevNum(i)));
+      }
+
       try {
-        await this._changeRead(i);
+        const spec = new TransactionSpec(...ops);
+        transactionResult = await this._fileCodec.transact(spec);
       } catch (e) {
-        this._log.info(`Corrupt document: Bogus change #${i}.`);
+        const lastI = i - 1;
+        this._log.info(`Corrupt document: Bogus change in range #${firstI}..${lastI}.`);
         return DocControl.STATUS_ERROR;
       }
     }
 
     // Look for a few changes past the stored revision number to make sure
     // they're empty.
-    for (let i = revNum + 1; i <= (revNum + 10); i++) {
-      try {
-        const change = await this._changeReadOrNull(i);
-        if (change !== null) {
-          this._log.info(`Corrupt document: Extra change #${i}`);
-          return DocControl.STATUS_ERROR;
-        }
-      } catch (e) {
-        this._log.info(`Corrupt document: Bogus extra change #${i}.`);
-        return DocControl.STATUS_ERROR;
+
+    try {
+      const ops = [];
+      for (let i = revNum + 1; i <= (revNum + 10); i++) {
+        ops.push(FileOp.op_readPath(Paths.forRevNum(i)));
       }
+      const spec = new TransactionSpec(...ops);
+      transactionResult = await this._fileCodec.transact(spec);
+    } catch (e) {
+      this._log.info('Corrupt document: Weird empty-change read failure.');
+      return DocControl.STATUS_ERROR;
     }
+
+    // In a valid doc, the loop body won't end up executing at all.
+    for (const storagePath of transactionResult.data.keys()) {
+      this._log.info(`Corrupt document: Extra change at path: ${storagePath}`);
+      return DocControl.STATUS_ERROR;
+    }
+
+    // All's well!
 
     return DocControl.STATUS_OK;
   }
@@ -608,23 +653,6 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Reads the change for the indicated revision number. This will return `null`
-   * given a request for a change that doesn't exist.
-   *
-   * @param {RevisionNumber} revNum Revision number of the change. This
-   *   indicates the change that produced that document revision.
-   * @returns {DocumentChange|null} The corresponding change, or `null` if it
-   *   doesn't exist.
-   */
-  async _changeReadOrNull(revNum) {
-    const encoded = await this._file.pathReadOrNull(Paths.forRevNum(revNum));
-
-    return (encoded === null)
-      ? null
-      : DocumentChange.check(this._decode(encoded));
-  }
-
-  /**
    * Reads the change for the indicated revision number. It is an error to
    * request a change that doesn't exist.
    *
@@ -633,8 +661,15 @@ export default class DocControl extends CommonBase {
    * @returns {DocumentChange} The corresponding change.
    */
   async _changeRead(revNum) {
-    const encoded = await this._file.pathRead(Paths.forRevNum(revNum));
-    return DocumentChange.check(this._decode(encoded));
+    const storagePath = Paths.forRevNum(revNum);
+    const spec = new TransactionSpec(
+      FileOp.op_checkPathExists(storagePath),
+      FileOp.op_readPath(storagePath)
+    );
+
+    const transactionResult = await this._fileCodec.transact(spec);
+    const result = transactionResult.data.get(storagePath);
+    return DocumentChange.check(result);
   }
 
   /**
@@ -644,18 +679,15 @@ export default class DocControl extends CommonBase {
    *   set.
    */
   async _currentRevNum() {
-    const encoded = await this._file.pathReadOrNull(Paths.REVISION_NUMBER);
-    return (encoded === null) ? null : this._decode(encoded);
-  }
+    const storagePath = Paths.REVISION_NUMBER;
+    const spec = new TransactionSpec(
+      FileOp.op_readPath(storagePath)
+    );
 
-  /**
-   * Convenient pass-through to `_codec.decodeJsonBuffer()`.
-   *
-   * @param {FrozenBuffer} encoded Value to decode.
-   * @returns {*} The decoded version.
-   */
-  _decode(encoded) {
-    return this._codec.decodeJsonBuffer(encoded);
+    const transactionResult = await this._fileCodec.transact(spec);
+    const result = transactionResult.data.get(storagePath);
+
+    return (result === undefined) ? null : TInt.min(result, 0);
   }
 
   /**

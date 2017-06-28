@@ -49,17 +49,28 @@ describe('content-store-local/LocalFile', () => {
       const value = FrozenBuffer.coerce('x');
 
       // Baseline assumption.
-      await file.create();
-      const spec = new TransactionSpec(
+
+      let spec = new TransactionSpec(
         FileOp.op_writePath(storagePath, value)
       );
+
+      await file.create();
       await file.transact(spec);
 
-      assert.strictEqual(await file.pathReadOrNull(storagePath), value);
+      spec = new TransactionSpec(
+        FileOp.op_readPath(storagePath)
+      );
+
+      let result = (await file.transact(spec)).data.get(storagePath);
+      assert.strictEqual(result.string, value.string);
 
       // The real test.
+
       await file.create();
-      assert.strictEqual(await file.pathReadOrNull(storagePath), null);
+
+      // Same transaction as above.
+      result = (await file.transact(spec)).data.get(storagePath);
+      assert.strictEqual(result, undefined);
     });
   });
 });

@@ -69,11 +69,10 @@ export default class DocServer extends Singleton {
     this._pending = new Map();
 
     /**
-     * {FrozenBuffer} The document format version to use for new documents and
+     * {string} The document format version to use for new documents and
      * to expect in existing documents.
      */
-    this._formatVersion =
-      this._codec.encodeJsonBuffer(ProductInfo.theOne.INFO.version);
+    this._formatVersion = TString.nonempty(ProductInfo.theOne.INFO.version);
   }
 
   /**

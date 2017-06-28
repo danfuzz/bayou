@@ -182,6 +182,19 @@ export default class FileOp extends CommonBase {
   }
 
   /**
+   * Constructs a `checkPathHash` operation based on a given buffer's data. This
+   * is a convenient shorthand for `op_checkPathHash(storagePath, buffer.hash)`.
+   *
+   * @param {string} storagePath The storage path to check.
+   * @param {FrozenBuffer} value Buffer whose hash should be taken.
+   * @returns {FileOp} An appropriately-constructed instance.
+   */
+  static op_checkPathBufferHash(storagePath, value) {
+    FrozenBuffer.check(value);
+    return FileOp.op_checkPathHash(storagePath, value.hash);
+  }
+
+  /**
    * Constructs a `deletePath` operation. This is a write operation that
    * deletes the binding for the given path, if any. If the path wasn't bound,
    * then this operation does nothing.
