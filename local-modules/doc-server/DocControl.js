@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Codec } from 'api-common';
 import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Timestamp }
   from 'doc-common';
 import { BaseFile, FileOp, TransactionSpec } from 'content-store';
@@ -63,7 +64,7 @@ export default class DocControl extends CommonBase {
     super();
 
     /** {Codec} Codec instance to use. */
-    this._codec = codec;
+    this._codec = Codec.check(codec);
 
     /** {BaseFile} The underlying document storage. */
     this._file = BaseFile.check(file);
