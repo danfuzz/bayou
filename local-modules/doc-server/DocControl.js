@@ -5,9 +5,9 @@
 import { Codec } from 'api-common';
 import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Timestamp }
   from 'doc-common';
-import { BaseFile, FileOp, TransactionSpec } from 'content-store';
+import { BaseFile, FileCodec, FileOp, TransactionSpec } from 'content-store';
 import { Logger } from 'see-all';
-import { TString } from 'typecheck';
+import { TInt, TString } from 'typecheck';
 import { CommonBase, InfoError, PromDelay } from 'util-common';
 
 import Paths from './Paths';
@@ -58,7 +58,7 @@ export default class DocControl extends CommonBase {
    *
    * @param {Codec} codec Codec instance to use.
    * @param {BaseFile} file The underlying document storage.
-   * @param {FrozenBuffer} formatVersion Format version to expect and use.
+   * @param {string} formatVersion Format version to expect and use.
    */
   constructor(codec, file, formatVersion) {
     super();
@@ -69,8 +69,11 @@ export default class DocControl extends CommonBase {
     /** {BaseFile} The underlying document storage. */
     this._file = BaseFile.check(file);
 
-    /** {FrozenBuffer} The document format version to expect and use. */
-    this._formatVersion = formatVersion;
+    /** {FileCodec} File-codec wrapper to use. */
+    this._fileCodec = new FileCodec(this._file, this._codec);
+
+    /** {string} The document format version to expect and use. */
+    this._formatVersion = TString.nonempty(formatVersion);
 
     /**
      * {Map<RevisionNumber,Snapshot>} Mapping from revision numbers to
@@ -127,7 +130,7 @@ export default class DocControl extends CommonBase {
       FileOp.op_checkPathEmpty(Paths.REVISION_NUMBER),
 
       // Version for the file format.
-      FileOp.op_writePath(Paths.FORMAT_VERSION, this._formatVersion),
+      FileOp.op_writePath(Paths.FORMAT_VERSION, this._encode(this._formatVersion)),
 
       // Initial revision number.
       FileOp.op_writePath(Paths.REVISION_NUMBER, this._encode(revNum)),
@@ -221,35 +224,42 @@ export default class DocControl extends CommonBase {
       return DocControl.STATUS_NOT_FOUND;
     }
 
-    const spec = new TransactionSpec(
-      FileOp.op_readPath(Paths.FORMAT_VERSION),
-      FileOp.op_readPath(Paths.REVISION_NUMBER)
-    );
-    const transactionResult = await this._file.transact(spec);
-    const data              = transactionResult.data;
-    const formatVersion     = data.get(Paths.FORMAT_VERSION);
-    const revNumEncoded     = data.get(Paths.REVISION_NUMBER);
+    let transactionResult;
+
+    try {
+      const spec = new TransactionSpec(
+        FileOp.op_readPath(Paths.FORMAT_VERSION),
+        FileOp.op_readPath(Paths.REVISION_NUMBER)
+      );
+      transactionResult = await this._fileCodec.transact(spec);
+    } catch (e) {
+      this._log.info('Corrupt document: Failed to read/decode basic data.');
+      return DocControl.STATUS_ERROR;
+    }
+
+    const data          = transactionResult.data;
+    const formatVersion = data.get(Paths.FORMAT_VERSION);
+    const revNum        = data.get(Paths.REVISION_NUMBER);
 
     if (!formatVersion) {
       this._log.info('Corrupt document: Missing format version.');
       return DocControl.STATUS_ERROR;
     }
 
-    if (!revNumEncoded) {
+    if (!revNum) {
       this._log.info('Corrupt document: Missing revision number.');
       return DocControl.STATUS_ERROR;
     }
 
-    if (!formatVersion.equals(this._formatVersion)) {
-      const got = formatVersion.string;
-      const expected = this._formatVersion.string;
+    if (formatVersion !== this._formatVersion) {
+      const got = formatVersion;
+      const expected = this._formatVersion;
       this._log.info(`Mismatched format version: got ${got}; expected ${expected}`);
       return DocControl.STATUS_MIGRATE;
     }
 
-    let revNum;
     try {
-      revNum = this._decode(revNumEncoded);
+      TInt.min(revNum, 0);
     } catch (e) {
       this._log.info('Corrupt document: Bogus revision number.');
       return DocControl.STATUS_ERROR;
