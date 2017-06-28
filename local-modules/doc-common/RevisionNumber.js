@@ -20,6 +20,7 @@ export default class RevisionNumber extends UtilityClass {
     try {
       return TInt.min(value, 0);
     } catch (e) {
+      // More appropriate error.
       return TypeError.badValue(value, 'RevisionNumber');
     }
   }
@@ -34,8 +35,9 @@ export default class RevisionNumber extends UtilityClass {
    */
   static maxExc(value, maxExc) {
     try {
-      return TInt.range(value, 0, maxExc);
+      return TInt.maxExc(value, maxExc);
     } catch (e) {
+      // More appropriate error.
       return TypeError.badValue(value, 'RevisionNumber', `value < ${maxExc}`);
     }
   }
@@ -50,9 +52,27 @@ export default class RevisionNumber extends UtilityClass {
    */
   static maxInc(value, maxInc) {
     try {
-      return TInt.rangeInc(value, 0, maxInc);
+      return TInt.maxInc(value, maxInc);
     } catch (e) {
+      // More appropriate error.
       return TypeError.badValue(value, 'RevisionNumber', `value <= ${maxInc}`);
+    }
+  }
+
+  /**
+   * Checks a value of type `RevisionNumber`, which must furthermore be at least
+   * an indicated value (inclusive).
+   *
+   * @param {*} value Value to check.
+   * @param {Int} minInc Minimum acceptable value (inclusive).
+   * @returns {Int} `value`.
+   */
+  static min(value, minInc) {
+    try {
+      return TInt.min(value, minInc);
+    } catch (e) {
+      // More appropriate error.
+      return TypeError.badValue(value, 'RevisionNumber', `value >= ${minInc}`);
     }
   }
 
