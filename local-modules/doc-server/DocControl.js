@@ -549,52 +549,6 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Constructs a delta consisting of the composition of the deltas from the
-   * given initial revision through but not including the indicated end
-   * revision, and composed from a given base. It is valid to pass as either
-   * revision number parameter one revision beyond the current revision number
-   * (that is, `RevisionNumber.after(await this._currentRevNum())`. It is
-   * invalid to specify a non-existent revision _other_ than one beyond the
-   * current revision. If `startInclusive === endExclusive`, then this method
-   * returns `baseDelta`.
-   *
-   * @param {FrozenDelta} baseDelta Base delta onto which the indicated deltas
-   *   get composed.
-   * @param {Int} startInclusive Revision number for the first delta to include
-   *   in the result.
-   * @param {Int} endExclusive Revision number just beyond the last delta to
-   *   include in the result.
-   * @returns {FrozenDelta} The composed delta consisting of `baseDelta`
-   *   composed with revisions `startInclusive` through but not including
-   *   `endExclusive`.
-   */
-  async _composeRevisions(baseDelta, startInclusive, endExclusive) {
-    FrozenDelta.check(baseDelta);
-
-    if (startInclusive === endExclusive) {
-      // Trivial case: Nothing to compose. If we were to have made it to the
-      // loop below, `_readChangeRange()` would have taken care of the error
-      // checking on the range arguments. But because we're short-circuiting out
-      // of it here, we need to explicitly make a call to confirm argument
-      // validity.
-      await this._readChangeRange(startInclusive, startInclusive);
-      return baseDelta;
-    }
-
-    let result = baseDelta;
-    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
-    for (let i = startInclusive; i < endExclusive; i += MAX) {
-      const end = Math.min(i + MAX, endExclusive);
-      const changes = await this._readChangeRange(i, end);
-      for (const c of changes) {
-        result = result.compose(c.delta);
-      }
-    }
-
-    return FrozenDelta.coerce(result);
-  }
-
-  /**
    * Appends a new delta to the document. On success, this returns the revision
    * number of the document after the append. On a failure due to `baseRevNum`
    * not being current at the moment of application, this returns `null`. All
@@ -641,6 +595,52 @@ export default class DocControl extends CommonBase {
     }
 
     return revNum;
+  }
+
+  /**
+   * Constructs a delta consisting of the composition of the deltas from the
+   * given initial revision through but not including the indicated end
+   * revision, and composed from a given base. It is valid to pass as either
+   * revision number parameter one revision beyond the current revision number
+   * (that is, `RevisionNumber.after(await this._currentRevNum())`. It is
+   * invalid to specify a non-existent revision _other_ than one beyond the
+   * current revision. If `startInclusive === endExclusive`, then this method
+   * returns `baseDelta`.
+   *
+   * @param {FrozenDelta} baseDelta Base delta onto which the indicated deltas
+   *   get composed.
+   * @param {Int} startInclusive Revision number for the first delta to include
+   *   in the result.
+   * @param {Int} endExclusive Revision number just beyond the last delta to
+   *   include in the result.
+   * @returns {FrozenDelta} The composed delta consisting of `baseDelta`
+   *   composed with revisions `startInclusive` through but not including
+   *   `endExclusive`.
+   */
+  async _composeRevisions(baseDelta, startInclusive, endExclusive) {
+    FrozenDelta.check(baseDelta);
+
+    if (startInclusive === endExclusive) {
+      // Trivial case: Nothing to compose. If we were to have made it to the
+      // loop below, `_readChangeRange()` would have taken care of the error
+      // checking on the range arguments. But because we're short-circuiting out
+      // of it here, we need to explicitly make a call to confirm argument
+      // validity.
+      await this._readChangeRange(startInclusive, startInclusive);
+      return baseDelta;
+    }
+
+    let result = baseDelta;
+    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
+    for (let i = startInclusive; i < endExclusive; i += MAX) {
+      const end = Math.min(i + MAX, endExclusive);
+      const changes = await this._readChangeRange(i, end);
+      for (const c of changes) {
+        result = result.compose(c.delta);
+      }
+    }
+
+    return FrozenDelta.coerce(result);
   }
 
   /**
