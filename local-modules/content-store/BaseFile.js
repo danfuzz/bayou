@@ -140,25 +140,6 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Reads the value stored at the given path. This returns `null` if there is
-   * no value stored at the given path.
-   *
-   * @param {string} storagePath Path to read from.
-   * @returns {FrozenBuffer|null} Value stored at the indicated path, or `null`
-   *   if there is none.
-   */
-  async pathReadOrNull(storagePath) {
-    const spec = new TransactionSpec(
-      FileOp.op_readPath(storagePath)
-    );
-
-    const transactionResult = await this.transact(spec);
-    const data              = transactionResult.data.get(storagePath);
-
-    return (data === undefined) ? null : data;
-  }
-
-  /**
    * Gets the instantaneously current revision number of the file. The revision
    * number starts at `0` for a newly-created file and increases monotonically
    * as changes are made to it.
