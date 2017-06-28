@@ -349,7 +349,7 @@ export default class DocControl extends CommonBase {
         // form and return a result. Compose all the deltas from the revision
         // after the base through and including the current revision.
         const delta = await this._composeRevisions(
-          FrozenDelta.EMPTY, baseRevNum + 1, RevisionNumber.after(docRevNum));
+          FrozenDelta.EMPTY, baseRevNum + 1, docRevNum + 1);
         return new DeltaResult(docRevNum, delta);
       }
 
@@ -401,9 +401,7 @@ export default class DocControl extends CommonBase {
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
-    const expected = new Snapshot(
-      RevisionNumber.after(baseRevNum),
-      base.contents.compose(delta));
+    const expected = new Snapshot(baseRevNum + 1, base.contents.compose(delta));
 
     // We try performing the apply, and then we iterate if it failed _and_ the
     // reason is simply that there were any changes that got made while we were
@@ -515,7 +513,7 @@ export default class DocControl extends CommonBase {
 
     // (1)
     const dServer = await this._composeRevisions(
-      FrozenDelta.EMPTY, rBase.revNum + 1, RevisionNumber.after(rCurrent.revNum));
+      FrozenDelta.EMPTY, rBase.revNum + 1, rCurrent.revNum + 1);
 
     // (2)
 
@@ -571,7 +569,7 @@ export default class DocControl extends CommonBase {
       throw new Error('Should not have been called with an empty delta.');
     }
 
-    const revNum = RevisionNumber.after(baseRevNum);
+    const revNum = baseRevNum + 1;
     const changePath = Paths.forRevNum(revNum);
     const change = new DocumentChange(revNum, Timestamp.now(), delta, authorId);
     const spec = new TransactionSpec(
@@ -602,10 +600,9 @@ export default class DocControl extends CommonBase {
    * given initial revision through but not including the indicated end
    * revision, and composed from a given base. It is valid to pass as either
    * revision number parameter one revision beyond the current revision number
-   * (that is, `RevisionNumber.after(await this._currentRevNum())`. It is
-   * invalid to specify a non-existent revision _other_ than one beyond the
-   * current revision. If `startInclusive === endExclusive`, then this method
-   * returns `baseDelta`.
+   * (that is, `(await this._currentRevNum() + 1`. It is invalid to specify a
+   * non-existent revision _other_ than one beyond the current revision. If
+   * `startInclusive === endExclusive`, then this method returns `baseDelta`.
    *
    * @param {FrozenDelta} baseDelta Base delta onto which the indicated deltas
    *   get composed.

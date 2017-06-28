@@ -110,20 +110,4 @@ export default class RevisionNumber extends UtilityClass {
       return TypeError.badValue(value, 'RevisionNumber', `${minInc} <= value <= ${maxInc}`);
     }
   }
-
-  /**
-   * Returns the revision number after the given one. This is the same as
-   * `revNum + 1` _except_ that `null` (the revision "number" for an empty
-   * document) is a valid input for which `0` is the return value.
-   *
-   * **Note:** Unlike the rest of the methods in this class, this one isn't a
-   * simple data validator. (TODO: This arrangement is error prone and should
-   * be reconsidered.)
-   *
-   * @param {Int|null} revNum Starting revision number.
-   * @returns {Int} The revision number immediately after `revNum`
-   */
-  static after(revNum) {
-    return (revNum === null) ? 0 : (RevisionNumber.check(revNum) + 1);
-  }
 }
