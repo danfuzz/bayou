@@ -595,65 +595,6 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Reads a sequential set of changes. It is an error to request a change that
-   * does not exist. It is valid for either `start` or `endExc` to indicate a
-   * change that does not exist _only_ if it is one past the last existing
-   * change. If `start === endExc`, then this verifies that the arguments are in
-   * range and returns an empty array. It is an error if `(endExc - start) >
-   * MAX_CHANGE_READS_PER_TRANSACTION`.
-   *
-   * **Note:** The point of the max count limit is that we want to avoid
-   * creating a transaction which could run afoul of a limit on the amount of
-   * data returned by any one transaction.
-   *
-   * @param {Int} start Start change number (inclusive) of changes to read.
-   * @param {Int} endExc End change number (exclusive) of changes to read.
-   * @returns {Array<DocumentChange>} Array of changes, in order by change
-   *   number.
-   */
-  async _readChangeRange(start, endExc) {
-    RevisionNumber.check(start);
-    RevisionNumber.min(endExc, start);
-
-    if ((endExc - start) > MAX_CHANGE_READS_PER_TRANSACTION) {
-      throw new Error('Too many changes requested at once.');
-    }
-
-    if (start === endExc) {
-      // Per docs, just need to verify that the arguments don't name an invalid
-      // change. `0` is always valid, so we don't actually need to check that.
-      if (start !== 0) {
-        const revNum = await this._currentRevNum();
-        RevisionNumber.maxInc(start, revNum + 1);
-      }
-      return [];
-    }
-
-    const paths = [];
-    for (let i = start; i < endExc; i++) {
-      paths.push(Paths.forRevNum(i));
-    }
-
-    const ops = [];
-    for (const p of paths) {
-      ops.push(FileOp.op_checkPathExists(p));
-      ops.push(FileOp.op_readPath(p));
-    }
-
-    const spec              = new TransactionSpec(...ops);
-    const transactionResult = await this._fileCodec.transact(spec);
-    const data              = transactionResult.data;
-
-    const result = [];
-    for (const p of paths) {
-      const change = DocumentChange.check(data.get(p));
-      result.push(change);
-    }
-
-    return result;
-  }
-
-  /**
    * Appends a new delta to the document. On success, this returns the revision
    * number of the document after the append. On a failure due to `baseRevNum`
    * not being current at the moment of application, this returns `null`. All
@@ -728,5 +669,64 @@ export default class DocControl extends CommonBase {
    */
   _encode(value) {
     return this._codec.encodeJsonBuffer(value);
+  }
+
+  /**
+   * Reads a sequential set of changes. It is an error to request a change that
+   * does not exist. It is valid for either `start` or `endExc` to indicate a
+   * change that does not exist _only_ if it is one past the last existing
+   * change. If `start === endExc`, then this verifies that the arguments are in
+   * range and returns an empty array. It is an error if `(endExc - start) >
+   * MAX_CHANGE_READS_PER_TRANSACTION`.
+   *
+   * **Note:** The point of the max count limit is that we want to avoid
+   * creating a transaction which could run afoul of a limit on the amount of
+   * data returned by any one transaction.
+   *
+   * @param {Int} start Start change number (inclusive) of changes to read.
+   * @param {Int} endExc End change number (exclusive) of changes to read.
+   * @returns {Array<DocumentChange>} Array of changes, in order by change
+   *   number.
+   */
+  async _readChangeRange(start, endExc) {
+    RevisionNumber.check(start);
+    RevisionNumber.min(endExc, start);
+
+    if ((endExc - start) > MAX_CHANGE_READS_PER_TRANSACTION) {
+      throw new Error('Too many changes requested at once.');
+    }
+
+    if (start === endExc) {
+      // Per docs, just need to verify that the arguments don't name an invalid
+      // change. `0` is always valid, so we don't actually need to check that.
+      if (start !== 0) {
+        const revNum = await this._currentRevNum();
+        RevisionNumber.maxInc(start, revNum + 1);
+      }
+      return [];
+    }
+
+    const paths = [];
+    for (let i = start; i < endExc; i++) {
+      paths.push(Paths.forRevNum(i));
+    }
+
+    const ops = [];
+    for (const p of paths) {
+      ops.push(FileOp.op_checkPathExists(p));
+      ops.push(FileOp.op_readPath(p));
+    }
+
+    const spec              = new TransactionSpec(...ops);
+    const transactionResult = await this._fileCodec.transact(spec);
+    const data              = transactionResult.data;
+
+    const result = [];
+    for (const p of paths) {
+      const change = DocumentChange.check(data.get(p));
+      result.push(change);
+    }
+
+    return result;
   }
 }
