@@ -108,6 +108,12 @@ fi
 # Helper functions
 #
 
+# The name for source mapping files.
+sourceMapName='source-map.txt'
+
+# List of all mapping files.
+mappingFiles=()
+
 # Helper for `check-environment-dependencies` which validates one dependency.
 function check-dependency {
     local name="$1"
@@ -189,6 +195,8 @@ function add-directory-mapping {
             echo "${overlayDir}/${fromDir}"
         fi
     ) > "${dirInfoFile}"
+
+    mappingFiles+=("${dirInfoFile}")
 }
 
 # Adds new directory mappings to the build info file for each subdirectory of
@@ -237,16 +245,11 @@ function set-up-dir-mapping {
 # Copies the server and client source directories into `out`, including the
 # overlay contents (if any).
 function copy-sources {
-    local mappings=($(
-        cd "${outDir}"
-        find . -name "${sourceMapName}" | cut -c 3-
-    ))
-
     # For each mapping file, copy all of the specified source files, but don't
     # include directories that themselves have separately-specified maps; those
     # get handled in their own iterations of this loop.
     local mapFile dir excludes sources s delArg
-    for mapFile in "${mappings[@]}"; do
+    for mapFile in "${mappingFiles[@]}"; do
         dir="$(dirname "${mapFile}")"
 
         excludes=($(
@@ -257,9 +260,13 @@ function copy-sources {
             # during the build, and we don't want to trample them.
             echo '--exclude=node_modules'
 
-            # Exclude subdirectories that have maps.
-            cd "${outDir}/${dir}"
-            find . -mindepth 2 -name "${sourceMapName}" \
+            # Exclude subdirectories that have maps. We don't have to bother
+            # mentioning `node_modules` subdirectories here because of the
+            # earlier blanket exclusion.
+            cd "${dir}"
+            find . -mindepth 2 \
+                '(' '!' -path '*/node_modules/*' ')' \
+                -name "${sourceMapName}" \
                 -exec dirname '{}' ';' \
                 | awk '{ printf("--exclude=/%s\n", substr($1, 3)); }'
         ))
@@ -271,11 +278,10 @@ function copy-sources {
         # also knows how to create directories as needed. Note that trailing
         # slashes on source directory names are significant to `rsync`
         # semantics.
-        sources=($(cat "${outDir}/${mapFile}"))
+        sources=($(cat "${mapFile}"))
         delArg=(--delete)
         for s in "${sources[@]}"; do
-            rsync --archive "${delArg[@]}" \
-                "${excludes[@]}" "${s}/" "${outDir}/${dir}"
+            rsync --archive "${delArg[@]}" "${excludes[@]}" "${s}/" "${dir}"
             delArg=()
         done
     done
@@ -356,12 +362,17 @@ function build-server {
         return 1
     fi
 
-    # Do the initial npm(ish) installation.
-    do-install server-src || return 1
+    # Do the initial npm(ish) installation. We have to remove any pre-existing
+    # versions of the local modules first, because otherwise `npm` won't notice
+    # when they get updated.
 
-    # Copy everything over to the final `server` directory. See above about
-    # why we use `rsync`.
-    rsync --archive --delete "${fromDir}/" "${toDir}"
+    # We determine what's a "local module" by the presence of a source map file.
+    local f
+    for f in $(find "${fromDir}/node_modules" -name "${sourceMapName}"); do
+        rm -rf "$(dirname "${f}")"
+    done
+
+    do-install server-src || return 1
 
     # Run Babel on all of the local source files, storing them next to the
     # imported and patched modules.
@@ -378,6 +389,12 @@ function build-server {
                 || return 1
         fi
     done
+
+    # Copy everything else over to the final `server` directory as-is. See above
+    # about why we use `rsync` in general; in addition, in this case we also get
+    # to use the `--update` option to avoid clobbering those Babel-compiled
+    # files we just went through all the trouble to make.
+    rsync --archive --delete --update "${fromDir}/" "${toDir}" || return 1
 }
 
 # Builds the client code.
@@ -437,9 +454,6 @@ function build-product-info {
 #
 # Main script
 #
-
-# The name for source mapping files.
-sourceMapName='source-map.txt'
 
 set-up-out || exit 1
 

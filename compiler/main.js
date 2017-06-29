@@ -14,6 +14,7 @@
 'use strict';
 
 const fs = require('fs');
+const fs_extra = require('fs-extra');
 const path = require('path');
 
 const babel = require('babel-core');
@@ -46,8 +47,11 @@ function compileFile(inputFile, outputFile) {
   try {
     inputStat = fs.statSync(inputFile);
     outputStat = fs.statSync(outputFile);
-    if (inputStat.mtime > outputStat.mtime) {
+    // **TODO:** Newer versions of Node have a numeric `mtimeMs` field on stats
+    // objects. Would be great to use it instead of `valueOf()`.
+    if (inputStat.mtime.valueOf() <= outputStat.mtime.valueOf()) {
       console.log('Unchanged', inputFile);
+      return;
     }
   } catch (e) {
     if (inputStat === null) {
@@ -72,6 +76,7 @@ function compileFile(inputFile, outputFile) {
   }
 
   if (output !== null) {
+    fs_extra.ensureDirSync(path.dirname(outputFile));
     fs.writeFileSync(outputFile, output.code);
     console.log('Compiled', inputFile);
   }
