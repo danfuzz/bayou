@@ -14,6 +14,7 @@
 'use strict';
 
 const fs = require('fs');
+const fs_extra = require('fs-extra');
 const path = require('path');
 
 const babel = require('babel-core');
@@ -72,6 +73,7 @@ function compileFile(inputFile, outputFile) {
   }
 
   if (output !== null) {
+    fs_extra.ensureDirSync(path.dirname(outputFile));
     fs.writeFileSync(outputFile, output.code);
     console.log('Compiled', inputFile);
   }
