@@ -33,6 +33,9 @@ const DIRTY_DELAY_MSEC = 5 * 1000; // 5 seconds.
  */
 const REVISION_NUMBER_PATH = '/@local_file_revision_number';
 
+/** {number} Maximum number of simultaneous FS calls to issue in parallel. */
+const MAX_PARALLEL_FS_CALLS = 20;
+
 /**
  * File implementation that stores everything in the locally-accessible
  * filesystem.
@@ -510,17 +513,29 @@ export default class LocalFile extends BaseFile {
       this._log.info('Created storage directory.');
     }
 
-    // Perform the writes.
+    // Perform the writes / deletes.
 
+    let afsResults = [];
     for (const [storagePath, data] of dirtyValues) {
       const fsPath = this._fsPathForStorage(storagePath);
       if (data === null) {
-        await afs.unlink(fsPath);
+        afsResults.push(afs.unlink(fsPath));
         this._log.info(`Deleted: ${storagePath}`);
       } else {
-        await afs.writeFile(fsPath, data.toBuffer());
+        afsResults.push(afs.writeFile(fsPath, data.toBuffer()));
         this._log.info(`Wrote: ${storagePath}`);
       }
+
+      if (afsResults.length >= MAX_PARALLEL_FS_CALLS) {
+        await Promise.all(afsResults);
+        this._log.detail('Completed FS ops.');
+        afsResults = [];
+      }
+    }
+
+    if (afsResults.length !== 0) {
+      await Promise.all(afsResults);
+      this._log.detail('Completed FS ops.');
     }
 
     // Check to see if more updates happened while the writing was being done.
