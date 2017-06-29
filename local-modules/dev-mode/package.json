@@ -5,7 +5,7 @@
 
   "dependencies": {
     "chokidar": "^1.6.1",
-    "fs-extra": "^0.30.0",
+    "fs-extra": "^3.0.1",
 
     "see-all": "local",
     "server-env": "local",
