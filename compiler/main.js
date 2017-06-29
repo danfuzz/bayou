@@ -47,8 +47,11 @@ function compileFile(inputFile, outputFile) {
   try {
     inputStat = fs.statSync(inputFile);
     outputStat = fs.statSync(outputFile);
-    if (inputStat.mtime > outputStat.mtime) {
+    // **TODO:** Newer versions of Node have a numeric `mtimeMs` field on stats
+    // objects. Would be great to use it instead of `valueOf()`.
+    if (inputStat.mtime.valueOf() <= outputStat.mtime.valueOf()) {
       console.log('Unchanged', inputFile);
+      return;
     }
   } catch (e) {
     if (inputStat === null) {
