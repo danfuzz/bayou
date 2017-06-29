@@ -75,39 +75,4 @@ export default class RevisionNumber extends UtilityClass {
       return TypeError.badValue(value, 'RevisionNumber', `value >= ${minInc}`);
     }
   }
-
-  /**
-   * Checks a value of type `RevisionNumber`, which is allowed to be `null`.
-   *
-   * @param {*} value Value to check.
-   * @returns {Int|null} `value` or `null`.
-   */
-  static orNull(value) {
-    try {
-      return (value === null)
-        ? null
-        : RevisionNumber.check(value);
-    } catch (e) {
-      // More appropriate error.
-      return TypeError.badValue(value, 'RevisionNumber|null');
-    }
-  }
-
-  /**
-   * Checks a value of type `RevisionNumber`, which must furthermore be within
-   * an indicated inclusive-inclusive range.
-   *
-   * @param {*} value Value to check.
-   * @param {Int} minInc Minimum acceptable value (inclusive).
-   * @param {Int} maxInc Maximum acceptable value (inclusive).
-   * @returns {Int} `value`.
-   */
-  static rangeInc(value, minInc, maxInc) {
-    try {
-      return RevisionNumber.check(TInt.rangeInc(value, minInc, maxInc));
-    } catch (e) {
-      // More appropriate error.
-      return TypeError.badValue(value, 'RevisionNumber', `${minInc} <= value <= ${maxInc}`);
-    }
-  }
 }

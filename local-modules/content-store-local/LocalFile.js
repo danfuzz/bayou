@@ -33,6 +33,9 @@ const DIRTY_DELAY_MSEC = 5 * 1000; // 5 seconds.
  */
 const REVISION_NUMBER_PATH = '/@local_file_revision_number';
 
+/** {number} Maximum number of simultaneous FS calls to issue in parallel. */
+const MAX_PARALLEL_FS_CALLS = 20;
+
 /**
  * File implementation that stores everything in the locally-accessible
  * filesystem.
@@ -372,11 +375,36 @@ export default class LocalFile extends BaseFile {
     const storageRevNums = new Map();
     let   revNum;
 
+    // This gets called to await on a chunk of FS ops at a time, storing them
+    // into `storage`. It's called from the main loop immediately below.
+    let paths    = [];
+    let bufProms = [];
+    const storeBufs = async () => {
+      const bufs = await Promise.all(bufProms);
+      this._log.detail('Completed FS ops.');
+      for (let i = 0; i < paths.length; i++) {
+        const storagePath = paths[i];
+        storage.set(storagePath, FrozenBuffer.coerce(bufs[i]));
+        this._log.info(`Read: ${storagePath}`);
+      }
+
+      paths    = [];
+      bufProms = [];
+    };
+
+    // Loop over all the files, requesting their contents, and waiting for
+    // a chunk of them at a time.
     for (const f of files) {
-      const buf = await afs.readFile(path.resolve(this._storageDir, f));
-      const storagePath = LocalFile._storagePathForFsName(f);
-      storage.set(storagePath, FrozenBuffer.coerce(buf));
-      this._log.info(`Read: ${storagePath}`);
+      paths.push(LocalFile._storagePathForFsName(f));
+      bufProms.push(afs.readFile(path.resolve(this._storageDir, f)));
+      if (paths.length >= MAX_PARALLEL_FS_CALLS) {
+        await storeBufs();
+      }
+    }
+
+    // Get the remaining partial chunks' worth of bufs, if any.
+    if (paths.length !== 0) {
+      await storeBufs();
     }
 
     this._log.info('Done reading storage.');
@@ -510,17 +538,29 @@ export default class LocalFile extends BaseFile {
       this._log.info('Created storage directory.');
     }
 
-    // Perform the writes.
+    // Perform the writes / deletes.
 
+    let afsResults = [];
     for (const [storagePath, data] of dirtyValues) {
       const fsPath = this._fsPathForStorage(storagePath);
       if (data === null) {
-        await afs.unlink(fsPath);
+        afsResults.push(afs.unlink(fsPath));
         this._log.info(`Deleted: ${storagePath}`);
       } else {
-        await afs.writeFile(fsPath, data.toBuffer());
+        afsResults.push(afs.writeFile(fsPath, data.toBuffer()));
         this._log.info(`Wrote: ${storagePath}`);
       }
+
+      if (afsResults.length >= MAX_PARALLEL_FS_CALLS) {
+        await Promise.all(afsResults);
+        this._log.detail('Completed FS ops.');
+        afsResults = [];
+      }
+    }
+
+    if (afsResults.length !== 0) {
+      await Promise.all(afsResults);
+      this._log.detail('Completed FS ops.');
     }
 
     // Check to see if more updates happened while the writing was being done.
