@@ -53,6 +53,15 @@ taking into account recent additions to the language.
   import SpecialBlort from './SpecialBlort';
   ```
 
+* Private fields and methods &mdash; This project is coded as if JavaScript
+  will grow the ability to have private fields and methods on classes. As such,
+  the an underscore (`_`) prefix is used on names that are supposed to be
+  treated as private. If and when the facility is added to the language, it will
+  be a Small Matter Of Coding to programmatically replace the underscored
+  declarations and use sites with the real syntax.
+
+  **Note:** This is an intentional deviation from Airbnb style.
+
 * Websockets &mdash; JavaScript has a `WebSocket` class, but when talking about
   them in prose or in our own variable or class names, we use "websocket" (one
   word, all lower case, though capitalized as appropriate for prose or
