@@ -31,6 +31,37 @@ taking into account recent additions to the language.
 * There are specific conventions of how local module exports are set up. Find
   that info in the [`local-modules/` README file](../local-modules/README.md).
 
+* `import` order &mdash; Separate imports into three sections, in the following
+  order and separated with a single blank line:
+
+  * Built-in Node modules and modules imported from the public registry.
+  * Local modules defined in this product.
+  * Module-private files defined as a peer to the file doing the importing.
+
+  Within each section, sort lines alphabetically by name of file or module (not
+  name within same). Within a multi-name `import` _line_, sort names
+  alphabetically. Complete example:
+
+  ```javascript
+  import express from 'express';
+  import fs from 'fs';
+
+  import { BaseFile, FileOp } from 'content-store';
+  import { DataUtil, InfoError, Singleton } from 'util-common';
+
+  import RegularBlort from './RegularBlort';
+  import SpecialBlort from './SpecialBlort';
+  ```
+
+* Private fields and methods &mdash; This project is coded as if JavaScript
+  will grow the ability to have private fields and methods on classes. As such,
+  an underscore (`_`) prefix is used on names that are supposed to be treated as
+  private. If and when the facility is added to the language, it will be a Small
+  Matter Of Coding to programmatically replace the underscored declarations and
+  use sites with the real syntax.
+
+  **Note:** This is an intentional deviation from Airbnb style.
+
 * Websockets &mdash; JavaScript has a `WebSocket` class, but when talking about
   them in prose or in our own variable or class names, we use "websocket" (one
   word, all lower case, though capitalized as appropriate for prose or
