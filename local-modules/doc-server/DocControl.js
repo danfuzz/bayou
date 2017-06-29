@@ -3,9 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Codec } from 'api-common';
+import { BaseFile, FileCodec, FileOp, TransactionSpec } from 'content-store';
 import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Timestamp }
   from 'doc-common';
-import { BaseFile, FileCodec, FileOp, TransactionSpec } from 'content-store';
 import { Logger } from 'see-all';
 import { TInt, TString } from 'typecheck';
 import { CommonBase, InfoError, PromDelay } from 'util-common';
@@ -167,7 +167,10 @@ export default class DocControl extends CommonBase {
    * @returns {DocumentChange} The requested change.
    */
   async change(revNum) {
-    return this._changeRead(revNum);
+    RevisionNumber.check(revNum);
+
+    const changes = await this._readChangeRange(revNum, revNum + 1);
+    return changes[0];
   }
 
   /**
@@ -203,8 +206,8 @@ export default class DocControl extends CommonBase {
     // to the base to produce the desired revision. Store it, and return it.
 
     const contents = (base === null)
-      ? this._composeVersions(FrozenDelta.EMPTY, 0,               revNum + 1)
-      : this._composeVersions(base.contents,     base.revNum + 1, revNum + 1);
+      ? this._composeRevisions(FrozenDelta.EMPTY, 0,               revNum + 1)
+      : this._composeRevisions(base.contents,     base.revNum + 1, revNum + 1);
     const result = new Snapshot(revNum, await contents);
 
     this._log.detail(`Made snapshot for revision ${revNum}.`);
@@ -274,25 +277,15 @@ export default class DocControl extends CommonBase {
       return DocControl.STATUS_ERROR;
     }
 
-    // Make sure all the changes can be read and decoded. What we're doing here
-    // is reading in chunks of up to N changes at a time, instead of reading
-    // them all at once (which might get us a transaction failure because of too
-    // much data).
+    // Make sure all the changes can be read and decoded.
 
     const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
-    for (let i = 0; i <= revNum; /*i*/) {
-      const firstI = i;
-      const ops = [];
-      for (let j = 0; (i <= revNum) && (j < MAX); j++, i++) {
-        ops.push(FileOp.op_readPath(Paths.forRevNum(i)));
-      }
-
+    for (let i = 0; i <= revNum; i += MAX) {
+      const lastI = Math.min(i + MAX - 1, revNum);
       try {
-        const spec = new TransactionSpec(...ops);
-        transactionResult = await this._fileCodec.transact(spec);
+        await this._readChangeRange(i, lastI + 1);
       } catch (e) {
-        const lastI = i - 1;
-        this._log.info(`Corrupt document: Bogus change in range #${firstI}..${lastI}.`);
+        this._log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
         return DocControl.STATUS_ERROR;
       }
     }
@@ -355,8 +348,8 @@ export default class DocControl extends CommonBase {
         // The document's revision is in fact newer than the base, so we can now
         // form and return a result. Compose all the deltas from the revision
         // after the base through and including the current revision.
-        const delta = await this._composeVersions(
-          FrozenDelta.EMPTY, baseRevNum + 1, RevisionNumber.after(docRevNum));
+        const delta = await this._composeRevisions(
+          FrozenDelta.EMPTY, baseRevNum + 1, docRevNum + 1);
         return new DeltaResult(docRevNum, delta);
       }
 
@@ -408,9 +401,7 @@ export default class DocControl extends CommonBase {
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
-    const expected = new Snapshot(
-      RevisionNumber.after(baseRevNum),
-      base.contents.compose(delta));
+    const expected = new Snapshot(baseRevNum + 1, base.contents.compose(delta));
 
     // We try performing the apply, and then we iterate if it failed _and_ the
     // reason is simply that there were any changes that got made while we were
@@ -521,8 +512,8 @@ export default class DocControl extends CommonBase {
     const rCurrent  = current;
 
     // (1)
-    const dServer = await this._composeVersions(
-      FrozenDelta.EMPTY, rBase.revNum + 1, RevisionNumber.after(rCurrent.revNum));
+    const dServer = await this._composeRevisions(
+      FrozenDelta.EMPTY, rBase.revNum + 1, rCurrent.revNum + 1);
 
     // (2)
 
@@ -556,54 +547,6 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Constructs a delta consisting of the composition of the deltas from the
-   * given initial revision through and including the current latest delta,
-   * composed from a given base. It is valid to pass as either revision number
-   * parameter one revision beyond the current revision number (that is,
-   * `RevisionNumber.after(await this._currentRevNum())`. It is invalid to
-   * specify a non-existent revision _other_ than one beyond the current
-   * revision. If `startInclusive === endExclusive`, then this method returns
-   * `baseDelta`.
-   *
-   * @param {FrozenDelta} baseDelta Base delta onto which the indicated deltas
-   *   get composed.
-   * @param {Int} startInclusive Revision number for the first delta to include
-   *   in the result.
-   * @param {Int} endExclusive Revision number just beyond the last delta to
-   *   include in the result.
-   * @returns {FrozenDelta} The composed delta consisting of `baseDelta`
-   *   composed with revisions `startInclusive` through but not including
-   *   `endExclusive`.
-   */
-  async _composeVersions(baseDelta, startInclusive, endExclusive) {
-    const nextRevNum = RevisionNumber.after(await this._currentRevNum());
-    startInclusive = RevisionNumber.rangeInc(startInclusive, 0, nextRevNum);
-    endExclusive =
-      RevisionNumber.rangeInc(endExclusive, startInclusive, nextRevNum);
-
-    if (startInclusive === endExclusive) {
-      // Trivial case: Nothing to compose.
-      return baseDelta;
-    }
-
-    // First, request all the changes, and then compose them, in separate loops.
-    // This arrangement means that it's possible for all of the change requests
-    // to be serviced in parallel.
-
-    const changePromises = [];
-    for (let i = startInclusive; i < endExclusive; i++) {
-      changePromises.push(this._changeRead(i));
-    }
-
-    const changes = await Promise.all(changePromises);
-    const result = changes.reduce(
-      (acc, change) => { return acc.compose(change.delta); },
-      baseDelta);
-
-    return FrozenDelta.coerce(result);
-  }
-
-  /**
    * Appends a new delta to the document. On success, this returns the revision
    * number of the document after the append. On a failure due to `baseRevNum`
    * not being current at the moment of application, this returns `null`. All
@@ -626,7 +569,7 @@ export default class DocControl extends CommonBase {
       throw new Error('Should not have been called with an empty delta.');
     }
 
-    const revNum = RevisionNumber.after(baseRevNum);
+    const revNum = baseRevNum + 1;
     const changePath = Paths.forRevNum(revNum);
     const change = new DocumentChange(revNum, Timestamp.now(), delta, authorId);
     const spec = new TransactionSpec(
@@ -653,15 +596,58 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Reads the change for the indicated revision number. It is an error to
-   * request a change that doesn't exist.
+   * Constructs a delta consisting of the composition of the deltas from the
+   * given initial revision through but not including the indicated end
+   * revision, and composed from a given base. It is valid to pass as either
+   * revision number parameter one revision beyond the current revision number
+   * (that is, `(await this._currentRevNum() + 1`. It is invalid to specify a
+   * non-existent revision _other_ than one beyond the current revision. If
+   * `startInclusive === endExclusive`, then this method returns `baseDelta`.
    *
-   * @param {RevisionNumber} revNum Revision number of the change. This
-   *   indicates the change that produced that document revision.
-   * @returns {DocumentChange} The corresponding change.
+   * @param {FrozenDelta} baseDelta Base delta onto which the indicated deltas
+   *   get composed.
+   * @param {Int} startInclusive Revision number for the first delta to include
+   *   in the result.
+   * @param {Int} endExclusive Revision number just beyond the last delta to
+   *   include in the result.
+   * @returns {FrozenDelta} The composed delta consisting of `baseDelta`
+   *   composed with revisions `startInclusive` through but not including
+   *   `endExclusive`.
    */
-  async _changeRead(revNum) {
-    const storagePath = Paths.forRevNum(revNum);
+  async _composeRevisions(baseDelta, startInclusive, endExclusive) {
+    FrozenDelta.check(baseDelta);
+
+    if (startInclusive === endExclusive) {
+      // Trivial case: Nothing to compose. If we were to have made it to the
+      // loop below, `_readChangeRange()` would have taken care of the error
+      // checking on the range arguments. But because we're short-circuiting out
+      // of it here, we need to explicitly make a call to confirm argument
+      // validity.
+      await this._readChangeRange(startInclusive, startInclusive);
+      return baseDelta;
+    }
+
+    let result = baseDelta;
+    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
+    for (let i = startInclusive; i < endExclusive; i += MAX) {
+      const end = Math.min(i + MAX, endExclusive);
+      const changes = await this._readChangeRange(i, end);
+      for (const c of changes) {
+        result = result.compose(c.delta);
+      }
+    }
+
+    return FrozenDelta.coerce(result);
+  }
+
+  /**
+   * Gets the current document revision number. It is an error to call this on
+   * an empty or uninitialized document.
+   *
+   * @returns {RevisionNumber} The revision number.
+   */
+  async _currentRevNum() {
+    const storagePath = Paths.REVISION_NUMBER;
     const spec = new TransactionSpec(
       FileOp.op_checkPathExists(storagePath),
       FileOp.op_readPath(storagePath)
@@ -669,25 +655,8 @@ export default class DocControl extends CommonBase {
 
     const transactionResult = await this._fileCodec.transact(spec);
     const result = transactionResult.data.get(storagePath);
-    return DocumentChange.check(result);
-  }
 
-  /**
-   * Gets the current document revision number.
-   *
-   * @returns {RevisionNumber|null} The revision number, or `null` if it is not
-   *   set.
-   */
-  async _currentRevNum() {
-    const storagePath = Paths.REVISION_NUMBER;
-    const spec = new TransactionSpec(
-      FileOp.op_readPath(storagePath)
-    );
-
-    const transactionResult = await this._fileCodec.transact(spec);
-    const result = transactionResult.data.get(storagePath);
-
-    return (result === undefined) ? null : TInt.min(result, 0);
+    return RevisionNumber.check(result);
   }
 
   /**
@@ -698,5 +667,64 @@ export default class DocControl extends CommonBase {
    */
   _encode(value) {
     return this._codec.encodeJsonBuffer(value);
+  }
+
+  /**
+   * Reads a sequential set of changes. It is an error to request a change that
+   * does not exist. It is valid for either `start` or `endExc` to indicate a
+   * change that does not exist _only_ if it is one past the last existing
+   * change. If `start === endExc`, then this verifies that the arguments are in
+   * range and returns an empty array. It is an error if `(endExc - start) >
+   * MAX_CHANGE_READS_PER_TRANSACTION`.
+   *
+   * **Note:** The point of the max count limit is that we want to avoid
+   * creating a transaction which could run afoul of a limit on the amount of
+   * data returned by any one transaction.
+   *
+   * @param {Int} start Start change number (inclusive) of changes to read.
+   * @param {Int} endExc End change number (exclusive) of changes to read.
+   * @returns {Array<DocumentChange>} Array of changes, in order by change
+   *   number.
+   */
+  async _readChangeRange(start, endExc) {
+    RevisionNumber.check(start);
+    RevisionNumber.min(endExc, start);
+
+    if ((endExc - start) > MAX_CHANGE_READS_PER_TRANSACTION) {
+      throw new Error('Too many changes requested at once.');
+    }
+
+    if (start === endExc) {
+      // Per docs, just need to verify that the arguments don't name an invalid
+      // change. `0` is always valid, so we don't actually need to check that.
+      if (start !== 0) {
+        const revNum = await this._currentRevNum();
+        RevisionNumber.maxInc(start, revNum + 1);
+      }
+      return [];
+    }
+
+    const paths = [];
+    for (let i = start; i < endExc; i++) {
+      paths.push(Paths.forRevNum(i));
+    }
+
+    const ops = [];
+    for (const p of paths) {
+      ops.push(FileOp.op_checkPathExists(p));
+      ops.push(FileOp.op_readPath(p));
+    }
+
+    const spec              = new TransactionSpec(...ops);
+    const transactionResult = await this._fileCodec.transact(spec);
+    const data              = transactionResult.data;
+
+    const result = [];
+    for (const p of paths) {
+      const change = DocumentChange.check(data.get(p));
+      result.push(change);
+    }
+
+    return result;
   }
 }
