@@ -108,6 +108,9 @@ fi
 # Helper functions
 #
 
+# The name for source mapping files.
+sourceMapName='source-map.txt'
+
 # Helper for `check-environment-dependencies` which validates one dependency.
 function check-dependency {
     local name="$1"
@@ -437,9 +440,6 @@ function build-product-info {
 #
 # Main script
 #
-
-# The name for source mapping files.
-sourceMapName='source-map.txt'
 
 set-up-out || exit 1
 
