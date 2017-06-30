@@ -8,7 +8,7 @@ import path from 'path';
 import { Codec } from 'api-common';
 import { BaseFile } from 'content-store';
 import { Logger } from 'see-all';
-import { FrozenBuffer, PromCondition, PromDelay } from 'util-common';
+import { FrozenBuffer, PromCondition, PromDelay, PromMutex } from 'util-common';
 
 import Transactor from './Transactor';
 
@@ -103,6 +103,12 @@ export default class LocalFile extends BaseFile {
      * storage directory.
      */
     this._storageReadyPromise = null;
+
+    /**
+     * {PromMutex} Mutex that guards file writing operations, so that we only
+     * ever have one set of writes in flight at any given time.
+     */
+    this._writeMutex = new PromMutex();
 
     /**
      * Condition that transitions from `false` to `true` when there is a
@@ -470,18 +476,7 @@ export default class LocalFile extends BaseFile {
     }
 
     // Mark the storage dirty, and queue up the writer.
-
     this._storageIsDirty = true;
-
-    if (this._storageNeedsErasing) {
-      this._log.info('Storage will be erased.');
-    }
-
-    this._log.info('About to write. ' +
-      `${this._storageToWrite.size} value(s); revision number: ${this._revNum}`);
-
-    // **TODO:** If we want to catch write errors (e.g. filesystem full), here
-    // is where we need to do it.
     this._waitThenWriteStorage();
   }
 
@@ -489,19 +484,39 @@ export default class LocalFile extends BaseFile {
    * Waits for a moment, and then writes the then-current dirty storage.
    * The return value becomes resolved once writing is complete.
    *
-   * **Note:** As of this writing, the return value isn't used, but ultimately
-   * we will probably want to notice if it throws an exception instead of
-   * letting problems just vaporize via unhandled promises.
-   *
    * @returns {true} `true`, upon successful writing.
    */
   async _waitThenWriteStorage() {
+    this._log.info('Storage modified. Waiting a moment for further changes.');
+
     // Wait for the prescribed amount of time.
     await PromDelay.resolve(DIRTY_DELAY_MSEC);
 
+    // The `try..finally` here guarantees that we release the mutex in the face
+    // of errors.
+    const unlock = await this._writeMutex.lock();
+    try {
+      // **TODO:** If we want to catch write errors (e.g. filesystem full), here
+      // is where we need to do it.
+      await this._writeStorage();
+    } finally {
+      unlock();
+    }
+
+    return true;
+  }
+
+  /**
+   * Main guts of `_waitThenWriteStorage()`, which does all the actual
+   * filesystem stuff.
+   *
+   * @returns {true} `true`, upon successful writing.
+   */
+  async _writeStorage() {
     // Grab the instance variables that indicate what needs to be done, and then
-    // reset them and the dirty flag. At the end of this method, we check to see
-    // if the dirty flag got flipped back on, and if so iterate.
+    // reset them and the dirty flag. If additional writes are made while this
+    // method is running, the dirty flag will end up getting flipped back on
+    // and a separate call to `_waitThenWriteStorage()` will be made.
 
     const storageNeedsErasing = this._storageNeedsErasing;
     const dirtyValues         = this._storageToWrite;
@@ -514,6 +529,8 @@ export default class LocalFile extends BaseFile {
     // Put the file revision number in the `dirtyValues` map. This way, it gets
     // written out without further special casing.
     dirtyValues.set(REVISION_NUMBER_PATH, this._codec.encodeJsonBuffer(revNum));
+
+    this._log.info(`About to write ${dirtyValues.size} value(s).`);
 
     // Erase and/or create the storage directory as needed.
 
@@ -568,16 +585,6 @@ export default class LocalFile extends BaseFile {
       await Promise.all(afsResults);
       this._log.detail('Completed FS ops.');
     }
-
-    // Check to see if more updates happened while the writing was being done.
-    // If so, recurse to iterate.
-
-    if (this._storageIsDirty) {
-      this._log.info('Storage modified during write operation.');
-      return this._waitThenWriteStorage();
-    }
-
-    // The usual case: Everything is fine.
 
     this._log.info(`Finished writing storage. Revision number: ${revNum}`);
     return true;
