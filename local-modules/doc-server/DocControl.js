@@ -639,7 +639,8 @@ export default class DocControl extends CommonBase {
 
   /**
    * Gets the instantaneously current document and file revision numbers. It is
-   * an error to call this on an empty or uninitialized document.
+   * an error to call this on an uninitialized document (that is, if the
+   * underlying file is empty).
    *
    * @returns {object} Object that maps `docRevNum` to the document revision
    *   number and `fileRevNum` to the file revision number.
