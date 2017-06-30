@@ -181,7 +181,7 @@ export default class DocControl extends CommonBase {
    * @returns {Snapshot} The corresponding snapshot.
    */
   async snapshot(revNum = null) {
-    const currentRevNum = await this._currentRevNum();
+    const currentRevNum = (await this._currentRevNums()).docRevNum;
     revNum = (revNum === null)
       ? currentRevNum
       : RevisionNumber.maxInc(revNum, currentRevNum);
@@ -330,18 +330,14 @@ export default class DocControl extends CommonBase {
    *   revision `baseRevNum` to produce revision `revNum` of the document.
    */
   async deltaAfter(baseRevNum) {
-    for (;;) {
-      // It's essential to get the file revision number before asking for the
-      // document revision number: Due to the asynch nature of the system, it's
-      // possible for the document revision to be taken with regard to a later
-      // file revision, and this ordering guarantees that the `whenChange()` we
-      // do will properly return promptly when that situation occurs.
-      const fileRevNum = await this._file.revNum();
-      const docRevNum  = await this._currentRevNum();
+    RevisionNumber.check(baseRevNum);
 
-      // We can only validate `baseRevNum` after we have resolved the document
-      // revision number. If we end up iterating we'll do redundant checks, but
-      // that's a very minor inefficiency.
+    for (;;) {
+      const { docRevNum, fileRevNum } = await this._currentRevNums();
+
+      // We can only validate the upper limit of `baseRevNum` after we have
+      // determined the document revision number. If we end up iterating we'll
+      // do redundant checks, but that's a very minor inefficiency.
       RevisionNumber.maxInc(baseRevNum, docRevNum);
 
       if (baseRevNum < docRevNum) {
@@ -353,9 +349,9 @@ export default class DocControl extends CommonBase {
         return new DeltaResult(docRevNum, delta);
       }
 
-      // Wait for the file to change (or for the storage layer to timeout), and
-      // then iterate to see if in fact the change updated the document revision
-      // number.
+      // Wait for the file to change (or for the storage layer to reach its
+      // timeout), and then iterate to see if in fact the change updated the
+      // document revision number.
       await this._file.whenChange('never', fileRevNum, Paths.REVISION_NUMBER);
     }
   }
@@ -599,10 +595,11 @@ export default class DocControl extends CommonBase {
    * Constructs a delta consisting of the composition of the deltas from the
    * given initial revision through but not including the indicated end
    * revision, and composed from a given base. It is valid to pass as either
-   * revision number parameter one revision beyond the current revision number
-   * (that is, `(await this._currentRevNum() + 1`. It is invalid to specify a
-   * non-existent revision _other_ than one beyond the current revision. If
-   * `startInclusive === endExclusive`, then this method returns `baseDelta`.
+   * revision number parameter one revision beyond the current document revision
+   * number (that is, `(await this._currentRevNums()).docRevNum + 1`. It is
+   * invalid to specify a non-existent revision _other_ than one beyond the
+   * current revision. If `startInclusive === endExclusive`, then this method
+   * returns `baseDelta`.
    *
    * @param {FrozenDelta} baseDelta Base delta onto which the indicated deltas
    *   get composed.
@@ -641,12 +638,14 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Gets the current document revision number. It is an error to call this on
-   * an empty or uninitialized document.
+   * Gets the instantaneously current document and file revision numbers. It is
+   * an error to call this on an uninitialized document (that is, if the
+   * underlying file is empty).
    *
-   * @returns {RevisionNumber} The revision number.
+   * @returns {object} Object that maps `docRevNum` to the document revision
+   *   number and `fileRevNum` to the file revision number.
    */
-  async _currentRevNum() {
+  async _currentRevNums() {
     const storagePath = Paths.REVISION_NUMBER;
     const spec = new TransactionSpec(
       FileOp.op_checkPathExists(storagePath),
@@ -654,9 +653,10 @@ export default class DocControl extends CommonBase {
     );
 
     const transactionResult = await this._fileCodec.transact(spec);
-    const result = transactionResult.data.get(storagePath);
+    const docRevNum = transactionResult.data.get(storagePath);
+    const fileRevNum = transactionResult.revNum;
 
-    return RevisionNumber.check(result);
+    return { docRevNum, fileRevNum };
   }
 
   /**
@@ -698,7 +698,7 @@ export default class DocControl extends CommonBase {
       // Per docs, just need to verify that the arguments don't name an invalid
       // change. `0` is always valid, so we don't actually need to check that.
       if (start !== 0) {
-        const revNum = await this._currentRevNum();
+        const revNum = (await this._currentRevNums()).docRevNum;
         RevisionNumber.maxInc(start, revNum + 1);
       }
       return [];
