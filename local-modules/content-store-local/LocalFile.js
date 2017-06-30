@@ -112,6 +112,13 @@ export default class LocalFile extends BaseFile {
      */
     this._changeCondition = new PromCondition(true);
 
+    /**
+     * {Codec} Codec to use for internal use. This is specifically used _just_
+     * to encode and decode the file revision number. Coding for file content is
+     * handled by the superclass.
+     */
+    this._codec = Codec.theOne;
+
     /** {Logger} Logger specific to this file's ID. */
     this._log = log.withPrefix(`[${fileId}]`);
 
@@ -413,7 +420,7 @@ export default class LocalFile extends BaseFile {
     // things reasonably gracefully if it's missing or corrupt.
     try {
       const revNumBuffer = storage.get(REVISION_NUMBER_PATH);
-      revNum = Codec.theOne.decodeJsonBuffer(revNumBuffer);
+      revNum = this._codec.decodeJsonBuffer(revNumBuffer);
       this._log.info(`Starting revision number: ${revNum}`);
     } catch (e) {
       // In case of failure, use the size of the storage map as a good enough
@@ -506,8 +513,7 @@ export default class LocalFile extends BaseFile {
 
     // Put the file revision number in the `dirtyValues` map. This way, it gets
     // written out without further special casing.
-    dirtyValues.set(REVISION_NUMBER_PATH,
-      Codec.theOne.encodeJsonBuffer(revNum));
+    dirtyValues.set(REVISION_NUMBER_PATH, this._codec.encodeJsonBuffer(revNum));
 
     // Erase and/or create the storage directory as needed.
 
