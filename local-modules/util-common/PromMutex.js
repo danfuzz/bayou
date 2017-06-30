@@ -18,7 +18,9 @@ export default class PromMutex extends CommonBase {
 
     /**
      * {Symbol|null} Unique symbol representing the current lock holder, or
-     * `null` if the lock is not currently held.
+     * `null` if the lock is not currently held. This symbol serves as the "key"
+     * for unlocking, such that only the current lock holder can unlock the
+     * instance.
      */
     this._lockedBy = null;
 
