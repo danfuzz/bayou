@@ -3,8 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import DeltaEvent from './DeltaEvent';
+import QuillGeometry from './QuillGeometry';
 import QuillMaker from './QuillMaker';
 import QuillProm from './QuillProm';
 import QuillUtil from './QuillUtil';
 
-export { DeltaEvent, QuillMaker, QuillProm, QuillUtil };
+export { DeltaEvent, QuillGeometry, QuillMaker, QuillProm, QuillUtil };
