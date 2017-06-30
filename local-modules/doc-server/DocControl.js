@@ -349,9 +349,9 @@ export default class DocControl extends CommonBase {
         return new DeltaResult(docRevNum, delta);
       }
 
-      // Wait for the file to change (or for the storage layer to timeout), and
-      // then iterate to see if in fact the change updated the document revision
-      // number.
+      // Wait for the file to change (or for the storage layer to reach its
+      // timeout), and then iterate to see if in fact the change updated the
+      // document revision number.
       await this._file.whenChange('never', fileRevNum, Paths.REVISION_NUMBER);
     }
   }
