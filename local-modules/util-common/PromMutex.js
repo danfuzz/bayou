@@ -30,7 +30,7 @@ export default class PromMutex extends CommonBase {
      */
     this._waiters = [];
 
-    Object.freeze(this);
+    Object.seal(this);
   }
 
   /**
