@@ -56,7 +56,7 @@ export default class PromMutex extends CommonBase {
       });
 
       await released;
-      this._waiters = this._waiters.shift();
+      this._waiters.shift();
     }
 
     this._lockedBy = key;
