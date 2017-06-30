@@ -4,6 +4,7 @@
 
 import Quill from 'quill';
 
+import { AuthorOverlay } from 'remote-authors';
 import { FrozenDelta } from 'doc-common';
 
 import DeltaEvent from './DeltaEvent';
@@ -28,7 +29,7 @@ export default class QuillProm extends Quill {
     const API = Emitter.sources.API;
     const EDITOR_CHANGE = Emitter.events.EDITOR_CHANGE;
     const TEXT_CHANGE = Emitter.events.TEXT_CHANGE;
-
+    const SELECTION_CHANGE = Emitter.events.SELECTION_CHANGE;
     // Key used to authenticate this instance to the event chain it spawns.
     // **Not** exposed as an instance variable, as doing so would violate the
     // security we are trying to establish by the key's existence in the first
@@ -41,6 +42,8 @@ export default class QuillProm extends Quill {
      */
     this._currentChange = new DeltaEvent(
       accessKey, FrozenDelta.EMPTY, FrozenDelta.EMPTY, API);
+
+    this._authorOverlay = new AuthorOverlay(this, 'author-overlay');
 
     // We override `emitter.emit()` to _synchronously_ add an event to the
     // promise chain. We do it this way instead of relying on an event callback
@@ -78,6 +81,14 @@ export default class QuillProm extends Quill {
         // user.
         this._currentChange =
           this._currentChange._gotChange(accessKey, ...rest);
+      } else if ((type === EDITOR_CHANGE) && (arg0 === SELECTION_CHANGE)) {
+        // TODO: Do something with the local author's selection range. Somehow this needs to
+        // go to the server and other clients.
+        // const selectionRange = this.getSelection();
+
+        // This line is handy for debugging. It will use the remote author highlight
+        // system to highlight the local author's selection.
+        // this._authorOverlay.setAuthorSelection('local-author', selectionRange);
       }
 
       // This is the moral equivalent of `super.emit(...)`.

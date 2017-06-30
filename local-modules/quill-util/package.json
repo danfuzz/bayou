@@ -8,6 +8,7 @@
 
     "doc-common": "local",
     "hooks-client": "local",
+    "remote-authors": "local",
     "util-common": "local"
   }
 }
