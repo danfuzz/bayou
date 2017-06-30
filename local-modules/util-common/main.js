@@ -10,6 +10,7 @@ import InfoError from './InfoError';
 import JsonUtil from './JsonUtil';
 import PromCondition from './PromCondition';
 import PromDelay from './PromDelay';
+import PromMutex from './PromMutex';
 import PropertyIter from './PropertyIter';
 import Random from './Random';
 import Singleton from './Singleton';
@@ -24,6 +25,7 @@ export {
   JsonUtil,
   PromCondition,
   PromDelay,
+  PromMutex,
   PropertyIter,
   Random,
   Singleton,
