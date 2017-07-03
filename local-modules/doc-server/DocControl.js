@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Codec } from 'api-common';
-import { BaseFile, FileCodec, FileOp, TransactionSpec } from 'content-store';
+import { BaseFile, FileCodec, TransactionSpec } from 'content-store';
 import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Timestamp }
   from 'doc-common';
 import { Logger } from 'see-all';
@@ -114,6 +114,8 @@ export default class DocControl extends CommonBase {
 
     this._log.info('Creating document.');
 
+    const fc = this._fileCodec; // Avoids boilerplate immediately below.
+
     // Per spec, a document starts with an empty change #0.
     const change0 = DocumentChange.firstChange();
 
@@ -123,7 +125,7 @@ export default class DocControl extends CommonBase {
     const maybeChange1 = [];
     if (contents !== null) {
       const change = new DocumentChange(1, Timestamp.now(), contents, null);
-      const op     = FileOp.op_writePath(Paths.forRevNum(1), this._encode(change));
+      const op     = fc.op_writePath(Paths.forRevNum(1), change);
       maybeChange1.push(op);
     }
 
@@ -133,17 +135,17 @@ export default class DocControl extends CommonBase {
     const spec = new TransactionSpec(
       // These make the transaction fail if we lose a race to (re)create the
       // file.
-      FileOp.op_checkPathEmpty(Paths.FORMAT_VERSION),
-      FileOp.op_checkPathEmpty(Paths.REVISION_NUMBER),
+      fc.op_checkPathEmpty(Paths.FORMAT_VERSION),
+      fc.op_checkPathEmpty(Paths.REVISION_NUMBER),
 
       // Version for the file format.
-      FileOp.op_writePath(Paths.FORMAT_VERSION, this._encode(this._formatVersion)),
+      fc.op_writePath(Paths.FORMAT_VERSION, this._formatVersion),
 
       // Initial revision number.
-      FileOp.op_writePath(Paths.REVISION_NUMBER, this._encode(revNum)),
+      fc.op_writePath(Paths.REVISION_NUMBER, revNum),
 
       // Empty change #0 (per documented interface).
-      FileOp.op_writePath(Paths.forRevNum(0), this._encode(change0)),
+      fc.op_writePath(Paths.forRevNum(0), change0),
 
       // The given `content` (if any) for change #1.
       ...maybeChange1
@@ -239,11 +241,12 @@ export default class DocControl extends CommonBase {
     // Check the required metainfo paths.
 
     try {
+      const fc = this._fileCodec;
       const spec = new TransactionSpec(
-        FileOp.op_readPath(Paths.FORMAT_VERSION),
-        FileOp.op_readPath(Paths.REVISION_NUMBER)
+        fc.op_readPath(Paths.FORMAT_VERSION),
+        fc.op_readPath(Paths.REVISION_NUMBER)
       );
-      transactionResult = await this._fileCodec.transact(spec);
+      transactionResult = await fc.transact(spec);
     } catch (e) {
       this._log.info('Corrupt document: Failed to read/decode basic data.');
       return DocControl.STATUS_ERROR;
@@ -294,12 +297,13 @@ export default class DocControl extends CommonBase {
     // they're empty.
 
     try {
+      const fc = this._fileCodec;
       const ops = [];
       for (let i = revNum + 1; i <= (revNum + 10); i++) {
-        ops.push(FileOp.op_readPath(Paths.forRevNum(i)));
+        ops.push(fc.op_readPath(Paths.forRevNum(i)));
       }
       const spec = new TransactionSpec(...ops);
-      transactionResult = await this._fileCodec.transact(spec);
+      transactionResult = await fc.transact(spec);
     } catch (e) {
       this._log.info('Corrupt document: Weird empty-change read failure.');
       return DocControl.STATUS_ERROR;
@@ -565,17 +569,19 @@ export default class DocControl extends CommonBase {
       throw new Error('Should not have been called with an empty delta.');
     }
 
+    const fc = this._fileCodec; // Avoids boilerplate immediately below.
     const revNum = baseRevNum + 1;
     const changePath = Paths.forRevNum(revNum);
     const change = new DocumentChange(revNum, Timestamp.now(), delta, authorId);
     const spec = new TransactionSpec(
-      FileOp.op_checkPathEmpty(changePath),
-      FileOp.op_writePath(changePath, this._encode(change)),
-      FileOp.op_writePath(Paths.REVISION_NUMBER, this._encode(revNum))
+      fc.op_checkPathEmpty(changePath),
+      fc.op_checkPathBufferHash(Paths.REVISION_NUMBER, baseRevNum),
+      fc.op_writePath(changePath, change),
+      fc.op_writePath(Paths.REVISION_NUMBER, revNum)
     );
 
     try {
-      await this._file.transact(spec);
+      await fc.transact(spec);
     } catch (e) {
       if ((e instanceof InfoError) && (e.name === 'path_not_empty')) {
         // This happens if and when we lose an append race, which will regularly
@@ -646,27 +652,18 @@ export default class DocControl extends CommonBase {
    *   number and `fileRevNum` to the file revision number.
    */
   async _currentRevNums() {
+    const fc = this._fileCodec;
     const storagePath = Paths.REVISION_NUMBER;
     const spec = new TransactionSpec(
-      FileOp.op_checkPathExists(storagePath),
-      FileOp.op_readPath(storagePath)
+      fc.op_checkPathExists(storagePath),
+      fc.op_readPath(storagePath)
     );
 
-    const transactionResult = await this._fileCodec.transact(spec);
+    const transactionResult = await fc.transact(spec);
     const docRevNum = transactionResult.data.get(storagePath);
     const fileRevNum = transactionResult.revNum;
 
     return { docRevNum, fileRevNum };
-  }
-
-  /**
-   * Convenient pass-through to `_codec.encodeJsonBuffer()`.
-   *
-   * @param {*} value Value to encode.
-   * @returns {FrozenBuffer} The encoded version.
-   */
-  _encode(value) {
-    return this._codec.encodeJsonBuffer(value);
   }
 
   /**
@@ -709,14 +706,15 @@ export default class DocControl extends CommonBase {
       paths.push(Paths.forRevNum(i));
     }
 
+    const fc = this._fileCodec;
     const ops = [];
     for (const p of paths) {
-      ops.push(FileOp.op_checkPathExists(p));
-      ops.push(FileOp.op_readPath(p));
+      ops.push(fc.op_checkPathExists(p));
+      ops.push(fc.op_readPath(p));
     }
 
     const spec              = new TransactionSpec(...ops);
-    const transactionResult = await this._fileCodec.transact(spec);
+    const transactionResult = await fc.transact(spec);
     const data              = transactionResult.data;
 
     const result = [];
