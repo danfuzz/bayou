@@ -21,7 +21,7 @@ html.bayou-page {
   font-size: 18px;
 }
 
-#content-wrapper {
+.bayou-content-wrapper {
   /*
    * When not given any offset, specifying `position: relative` is equivalent to
    * not saying `position` at all, with one exception: Enclosed nodes that have
