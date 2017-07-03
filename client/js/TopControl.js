@@ -125,7 +125,7 @@ export default class TopControl {
     }
     htmlNode.classList.add('bayou-page');
 
-    editorNode.classList.add('bayou-top');
+    editorNode.classList.add('bayou-editor');
 
     // Give the overlay a chance to do any initialization.
     const hookDone = Hooks.theOne.run(this._window, baseUrl);

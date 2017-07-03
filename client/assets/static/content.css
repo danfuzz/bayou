@@ -34,7 +34,7 @@ html.bayou-page {
 }
 
 /* Top-level editor container. */
-div.bayou-top {
+div.bayou-editor {
   margin: 0;
 
   padding-top: 0.5em;
@@ -51,7 +51,7 @@ div.bayou-top {
 }
 
 /* Basic font and layout characteristics. */
-div.bayou-top .ql-editor {
+div.bayou-editor .ql-editor {
   line-height: 1.7rem;
   font-size: 1rem; /* This thwacks it back from Quill's smaller default. */
 
@@ -90,9 +90,9 @@ div.bayou-top .ql-editor {
  * (hence `rem` units) and the spacing below is based on the actual header font
  * size (hence `em` units).
  */
-div.bayou-top .ql-editor h1,
-div.bayou-top .ql-editor h2,
-div.bayou-top .ql-editor h3 {
+div.bayou-editor .ql-editor h1,
+div.bayou-editor .ql-editor h2,
+div.bayou-editor .ql-editor h3 {
   padding-top: 2rem;
   padding-bottom: 0.5em;
 }
@@ -100,14 +100,14 @@ div.bayou-top .ql-editor h3 {
 /*
  * Smaller header spacing. Similar above/below setup as for the bigger headers.
  */
-div.bayou-top .ql-editor h4,
-div.bayou-top .ql-editor h5,
-div.bayou-top .ql-editor h6 {
+div.bayou-editor .ql-editor h4,
+div.bayou-editor .ql-editor h5,
+div.bayou-editor .ql-editor h6 {
   padding-top: 1rem;
   padding-bottom: 0.25em;
 }
 
 /* Colorful markup for code. */
-.bayou-top code, .bayou-top pre {
+.bayou-editor code, .bayou-editor pre {
   color: #c25;
 }
