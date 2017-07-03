@@ -37,16 +37,16 @@ export default class QuillMaker extends Singleton {
    * a promise chain to get at the edit events, this makes an instance of our
    * custom subclass `QuillProm`.
    *
-   * @param {string} id DOM id of the element to attach to.
+   * @param {Element} node DOM element to attach to.
    * @returns {QuillProm} instance of `Quill`.
    */
-  make(id) {
+  make(node) {
     if (toolbarConfig === null) {
       toolbarConfig = Object.freeze(
         Hooks.theOne.quillToolbarConfig(DEFAULT_TOOLBAR_CONFIG));
     }
 
-    const result = new QuillProm(id, {
+    const result = new QuillProm(node, {
       readOnly: true,
       strict: true,
       theme: 'bubble',

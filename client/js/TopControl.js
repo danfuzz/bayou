@@ -100,6 +100,7 @@ export default class TopControl {
     const document = this._window.document;
     const baseUrl = this._apiClient.baseUrl;
     const editorNode = document.querySelector(this._node);
+    const quillNode = editorNode; // TEMP!!! FIXME! REMOVE BEFORE PR!
 
     if (editorNode === null) {
       // The indicated node (incoming `BAYOU_NODE` value) does not exist. If
@@ -137,7 +138,7 @@ export default class TopControl {
     await styleDone;
     await hookDone;
 
-    this._quill = QuillMaker.theOne.make(this._node);
+    this._quill = QuillMaker.theOne.make(quillNode);
     log.detail('Made editor instance.');
 
     // Hook up the `DocClient` (which intermediates between the server and
