@@ -43,7 +43,7 @@ export default class QuillProm extends Quill {
     this._currentChange = new DeltaEvent(
       accessKey, FrozenDelta.EMPTY, FrozenDelta.EMPTY, API);
 
-    this._authorOverlay = new AuthorOverlay(this, '#author-overlay');
+    this._authorOverlay = new AuthorOverlay(this, '.bayou-author-overlay');
 
     // We override `emitter.emit()` to _synchronously_ add an event to the
     // promise chain. We do it this way instead of relying on an event callback

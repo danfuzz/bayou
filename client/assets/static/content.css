@@ -68,7 +68,7 @@ div.bayou-top .ql-editor {
  * The <svg> layer on top of the Quill editor that is used to show things
  * like remote author highlights.
  */
-#author-overlay {
+.bayou-author-overlay {
   /*
    * This positions the author overlay with respect to the outer node being
    * managed here, sizing it to exactly match it, which means (by construction)
