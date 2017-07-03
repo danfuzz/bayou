@@ -233,7 +233,7 @@ export default class DebugTools {
       '<script src="/boot-for-debug.js"></script>\n';
     const body =
       '<h1>Editor</h1>\n' +
-      '<div class="bayou-content-wrapper">\n' +
+      '<div class="bayou-top">\n' +
         '<svg class="bayou-author-overlay"></svg>' +
         '<div id="editor"><p>Loading&hellip;</p></div>\n' +
       '</div>';

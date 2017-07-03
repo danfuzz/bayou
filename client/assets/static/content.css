@@ -21,7 +21,8 @@ html.bayou-page {
   font-size: 18px;
 }
 
-.bayou-content-wrapper {
+/* Top-level container for all the nodes for a single editor "complex." */
+.bayou-top {
   /*
    * When not given any offset, specifying `position: relative` is equivalent to
    * not saying `position` at all, with one exception: Enclosed nodes that have
@@ -33,7 +34,7 @@ html.bayou-page {
   position: relative;
 }
 
-/* Top-level editor container. */
+/* Container for the Quill editor. */
 div.bayou-editor {
   margin: 0;
 
