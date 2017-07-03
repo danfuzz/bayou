@@ -22,9 +22,15 @@ html.bayou-page {
 }
 
 #content-wrapper {
-  position: absolute;
-  height: 100%;
-  width: 100%;
+  /*
+   * When not given any offset, specifying `position: relative` is equivalent to
+   * not saying `position` at all, with one exception: Enclosed nodes that have
+   * `position: absolute` are defined to actually mean "relative with respect to
+   * the closest enclosing explicitly positioned node." So, by doing this, we
+   * are arranging for the enclosed author overlay to find this node and not
+   * walk all the way up to the root node.
+   */
+  position: relative;
 }
 
 /* Top-level editor container. */
@@ -45,13 +51,7 @@ div.bayou-top {
 }
 
 /* Basic font and layout characteristics. */
-/* TODO: Need to do some work on the position: field here and in
-         #author-overlay below so that things don't individually scroll. */
 div.bayou-top .ql-editor {
-  position: absolute;
-  left: 0px;
-  top: 0px;
-
   line-height: 1.7rem;
   font-size: 1rem; /* This thwacks it back from Quill's smaller default. */
 
@@ -68,15 +68,21 @@ div.bayou-top .ql-editor {
  * The <svg> layer on top of the Quill editor that is used to show things
  * like remote author highlights.
  */
-#content-wrapper #author-overlay {
+#author-overlay {
+  /*
+   * This positions the author overlay with respect to the outer node being
+   * managed here, sizing it to exactly match it, which means (by construction)
+   * that it exactly overlays the actual editor.
+   */
+  position: absolute;
   width: 100%;
   height: 100%;
-  position: absolute;
   left: 0px;
   top: 0px;
   z-index: 2;
+
+  /* The editor, not this node, is what listens to pointer events. */
   pointer-events: none;
-  overflow: hidden;
 }
 
 /*
