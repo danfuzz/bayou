@@ -20,7 +20,7 @@ const REFRESH_DELAY_MSEC = 2000;
  * into an SVG element that overlays the Quill editor.
  */
 export default class AuthorOverlay {
-  constructor(quillInstance, svgElementId) {
+  constructor(quillInstance, svgElementSelector) {
     /**
      * {Map<AuthorId, Map<string, object>>} _Ad hoc_ storage for arbitrary data
      * associated with remote authors (highlights, color, avatar, etc).
@@ -35,7 +35,7 @@ export default class AuthorOverlay {
      * The SVG should be the same dimensions as `this._quillInstance.scrollingContainer`
      * and on top of it in z-index order (closer to the viewer).
      */
-    this._authorOverlay = document.getElementById(svgElementId);
+    this._authorOverlay = document.querySelector(svgElementSelector);
 
     this._quill.scrollingContainer.addEventListener('scroll', function () {
       this._updateScrollPosition();
