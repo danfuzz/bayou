@@ -163,7 +163,7 @@ export default class AuthorOverlay {
     }
 
     this._authorOverlay.innerHTML = paths.join('\n');
-    this.updateScrollPosition();
+    this._updateScrollPosition();
   }
 
   /**
