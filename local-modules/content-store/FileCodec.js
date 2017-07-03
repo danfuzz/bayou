@@ -6,16 +6,24 @@ import { Codec } from 'api-common';
 import { CommonBase } from 'util-common';
 
 import BaseFile from './BaseFile';
+import FileOp from './FileOp';
 
 /**
  * Combination of a `BaseFile` with a `Codec`, with operations to make it easy
  * to build transactions and interpret their results with respect to API-coded
  * values.
  *
+ * In addition to instance methods that mirror `BaseFile`, this class also
+ * defines a set of instance methods for constructing transaction operations,
+ * that is, instances of `FileOp`, with the same method names as the static
+ * constructor methods defined by `FileOp`. In the case of the methods defined
+ * here, instead of accepting `FrozenBuffer` arguments where `FileOp` so defines
+ * them, this class accepts any objects at all, so long as they can successfully
+ * be encoded by the codec with which the instance of this class was
+ * instantiated.
+ *
  * **Note:** This class is _intentionally_ not a full wrapper over `BaseFile`.
  * It _just_ provides operations that benefit from the application of a `Codec`.
- *
- * **TODO:** Provide the above-promised help in building transactions.
  */
 export default class FileCodec extends CommonBase {
   /**
@@ -65,4 +73,45 @@ export default class FileCodec extends CommonBase {
     result.data = cookedData;
     return result;
   }
+
+  /**
+   * Adds `FileOp` constructor methods to this class. These are _instance_
+   * methods that are aware of the codec being used. (Look at the bottome of
+   * this file for the call.)
+   */
+  static _addFileOpConstructorMethods() {
+    const proto = FileCodec.prototype;
+    for (const [category_unused, opName, ...argInfo] of FileOp.OPERATIONS) {
+      const methodName = `op_${opName}`;
+      const originalMethod = FileOp[methodName].bind(FileOp);
+
+      // Figure out if which arguments are buffers, if any.
+      const bufferAt = [];
+      for (let i = 0; i < argInfo.length; i++) {
+        const [name_unused, type] = argInfo[i];
+        if (type === FileOp.TYPE_BUFFER) {
+          bufferAt.push(i);
+        }
+      }
+
+      if (bufferAt.length !== 0) {
+        // There's at least one buffer argument, so create a wrapper constructor
+        // that uses the codec to encode those arguments. **Note:** We use
+        // `function` here because this is getting bound as an instance method,
+        // and we want it to receive the instance's `this`.
+        proto[methodName] = function (...args) {
+          for (const argNum of bufferAt) {
+            args[argNum] = this._codec.encodeJsonBuffer(args[argNum]);
+          }
+          return originalMethod(...args);
+        };
+      } else {
+        // No buffer argument(s), so just bind the original directly.
+        proto[methodName] = originalMethod;
+      }
+    }
+  }
 }
+
+// Build and bind all the `FileOp` constructor methods.
+FileCodec._addFileOpConstructorMethods();
