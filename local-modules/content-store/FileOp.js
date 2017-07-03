@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt, TString } from 'typecheck';
-import { CommonBase, FrozenBuffer } from 'util-common';
+import { CommonBase, DataUtil, FrozenBuffer } from 'util-common';
 
 import StoragePath from './StoragePath';
 
@@ -16,25 +16,154 @@ import StoragePath from './StoragePath';
  */
 const KEY = Symbol('FileOp constructor key');
 
-/** {string} Operation category for environment ops. */
-const CAT_ENVIRONMENT = 'environment';
-
-/** {string} Operation category for prerequisites. */
+// Operation category constants. See docs on the static properties for details.
+const CAT_CONVENIENCE  = 'convenience';
+const CAT_ENVIRONMENT  = 'environment';
 const CAT_PREREQUISITE = 'prerequisite';
-
-/** {string} Operation category for data reads. */
-const CAT_READ = 'read';
-
-/** {string} Operation category for revision restrictions. */
-const CAT_REVISION = 'revision';
-
-/** {string} Operation category for data writes. */
-const CAT_WRITE = 'write';
+const CAT_READ         = 'read';
+const CAT_REVISION     = 'revision';
+const CAT_WRITE        = 'write';
 
 /** {array<string>} List of categories in defined execution order. */
 const CATEGORY_EXECUTION_ORDER = [
   CAT_ENVIRONMENT, CAT_REVISION, CAT_PREREQUISITE, CAT_READ, CAT_WRITE
 ];
+
+// Schema argument type constants. See docs on the static properties for
+// details.
+const TYPE_BUFFER    = 'Buffer';
+const TYPE_DUR_MSEC  = 'DurMsec';
+const TYPE_PATH      = 'Path';
+const TYPE_HASH      = 'Hath';
+const TYPE_REV_NUM   = 'RevNum';
+const TYPE_REV_NUM_1 = 'RevNum1';
+
+// Operation schemata. See the doc for the equivalent static property for
+// details.
+//
+// **Note:** The comments below aren't "real" JSDoc comments, because JSDoc
+// has no way of understanding that the elements cause methods to be generated.
+// So it goes.
+const OPERATIONS = DataUtil.deepFreeze([
+  /*
+   * A `checkPathEmpty` operation. This is a prerequisite operation that
+   * verifies that a given storage path is not bound to any value. This is the
+   * opposite of `checkPathExists`.
+   *
+   * @param {string} storagePath The storage path to check.
+   */
+  [CAT_PREREQUISITE, 'checkPathEmpty', ['storagePath', TYPE_PATH]],
+
+  /*
+   * A `checkPathExists` operation. This is a prerequisite operation that
+   * verifies that a given storage path is bound to a value (any value,
+   * including one of zero length). This is the opposite of the `checkPathEmpty`
+   * operation.
+   *
+   * @param {string} storagePath The storage path to check.
+   */
+  [CAT_PREREQUISITE, 'checkPathExists', ['storagePath', TYPE_PATH]],
+
+  /*
+   * Convenience wrapper for `checkPathHash` operation, which uses a given
+   * buffer's data. This is equivalent to `checkPathHash(storagePath,
+   * buffer.hash)`.
+   *
+   * @param {string} storagePath The storage path to check.
+   * @param {FrozenBuffer} value Buffer whose hash should be taken.
+   */
+  [
+    CAT_CONVENIENCE, 'checkPathBufferHash',
+    ['storagePath', TYPE_PATH], ['value', TYPE_BUFFER]
+  ],
+
+  /*
+   * A `checkPathHash` operation. This is a prerequisite operation that
+   * verifies that a given storage path is bound to a value whose hash is as
+   * given.
+   *
+   * @param {string} storagePath The storage path to check.
+   * @param {string} hash The expected hash.
+   */
+  [
+    CAT_PREREQUISITE, 'checkPathHash',
+    ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]
+  ],
+
+  /*
+   * A `deletePath` operation. This is a write operation that deletes the
+   * binding for the given path, if any. If the path wasn't bound, then this
+   * operation does nothing.
+   *
+   * @param {string} storagePath The storage path to delete.
+   */
+  [CAT_WRITE, 'deletePath', ['storagePath', TYPE_PATH]],
+
+  /*
+   * A `maxRevNum` operation. This is a revision restriction that limits a
+   * transaction to only be performed with respect to an earlier revision number
+   * of the file than the indicated revision. That is, it specifies an
+   * _exclusive_ maximum.
+   *
+   * @param {Int} revNum Maximum revision number (exclusive).
+   */
+  [CAT_REVISION, 'maxRevNum', ['revNum', TYPE_REV_NUM_1]],
+
+  /*
+   * Convenience wrapper for inclusive `maxRevNum` operations. This is
+   * equivalent to the operation `maxRevNum(revNum + 1)`.
+   *
+   * @param {Int} revNum Maximum revision number (inclusive).
+   */
+  [CAT_CONVENIENCE, 'maxRevNumInc', ['revNum', TYPE_REV_NUM]],
+
+  /*
+   * A `minRevNum` operation. This is a revision restriction that limits a
+   * transaction to only be performed with respect to the indicated revision
+   * number of the file or later. That is, it specifies an _inclusive_ minimum.
+   *
+   * @param {Int} revNum Minimum revision number (inclusive).
+   */
+  [CAT_REVISION, 'minRevNum', ['revNum', TYPE_REV_NUM]],
+
+  /*
+   * A `readPath` operation. This is a read operation that retrieves the value
+   * bound to the indicated path in the file, if any. If the given path is not
+   * bound, then that path is _not_ represented in the result of the transaction
+   * at all (specifically, it is _not_ bound to `null` or similar).
+   *
+   * **Rationale for not-found behavior:** Higher layers of the system can
+   * produce interpreted transaction results, where a `null` value can represent
+   * successfully finding `null`. By consistently _not_ binding non-found
+   * results, we provide disambiguation in such cases.
+   *
+   * @param {string} storagePath The storage path to read from.
+   */
+  [CAT_READ, 'readPath', ['storagePath', TYPE_PATH]],
+
+  /*
+   * A `timeout` operation. This is an environment operation which limits a
+   * transaction to take no more than the indicated amount of time before it is
+   * aborted. Timeouts are performed on a "best effort" basis as well as
+   * silently clamped to implementation-specific limits (if any).
+   *
+   * **Note:** It is an error for a transaction to contain more than one
+   * `timeout` operation.
+   *
+   * @param {Int} durMsec Duration of the timeout, in milliseconds.
+   */
+  [CAT_ENVIRONMENT, 'timeout', ['durMsec', TYPE_DUR_MSEC]],
+
+  /*
+   * A a `writePath` operation. This is a write operation that stores the
+   * indicated value in the file, binding it to the given path. If the path was
+   * already bound to that value, then this operation does nothing.
+   *
+   * @param {string} storagePath The storage path to bind to.
+   * @param {FrozenBuffer} value The value to store and bind to `storagePath`.
+   */
+  [CAT_WRITE, 'writePath', ['storagePath', TYPE_PATH], ['value', TYPE_BUFFER]]
+]);
 
 /**
  * Operation to perform on a file as part of a transaction. In terms of overall
@@ -63,6 +192,14 @@ const CATEGORY_EXECUTION_ORDER = [
  * arguments of each of these.
  */
 export default class FileOp extends CommonBase {
+  /**
+   * {string} Operation category for convenience wrapper ops. This category only
+   * shows up in `OPERATIONS`, not in actual operation instances.
+   */
+  static get CAT_CONVENIENCE() {
+    return CAT_CONVENIENCE;
+  }
+
   /** {string} Operation category for environment ops. */
   static get CAT_ENVIRONMENT() {
     return CAT_ENVIRONMENT;
@@ -86,6 +223,54 @@ export default class FileOp extends CommonBase {
   /** {string} Operation category for data writes. */
   static get CAT_WRITE() {
     return CAT_WRITE;
+  }
+
+  /**
+   * {array<array>} List of operation schemata. These are used to programatically
+   * define static methods on `FileOp` for constructing instances. Each element
+   * consists of three parts, as follows:
+   *
+   * * `category` &mdash; The category of the operation.
+   * * `name` &mdsah; The name of the operation.
+   * * `argInfo` &mdash; One or more elements indicating the names and types of
+   *   the arguments to the operation. Each argument is represented as a two-
+   *   element array `[<name>, <type>]`, where `<type>` is one of the type
+   *   constants defined by this class.
+   *
+   * This value is deep frozen. Attempts to mutate it will fail.
+   */
+  static get OPERATIONS() {
+    return OPERATIONS;
+  }
+
+  /** {string} Type name for a `FrozenBuffer`. */
+  static get TYPE_BUFFER() {
+    return TYPE_BUFFER;
+  }
+
+  /** {string} Type name for a millisecond-accuracy duration. */
+  static get TYPE_DUR_MSEC() {
+    return TYPE_DUR_MSEC;
+  }
+
+  /** {string} Type name for storage paths. */
+  static get TYPE_PATH() {
+    return TYPE_PATH;
+  }
+
+  /** {string} Type name for hash values. */
+  static get TYPE_HASH() {
+    return TYPE_HASH;
+  }
+
+  /** {string} Type name for revision numbers. */
+  static get TYPE_REV_NUM() {
+    return TYPE_REV_NUM;
+  }
+
+  /** {string} Type name for revision numbers that must be `1` or greater. */
+  static get TYPE_REV_NUM_1() {
+    return TYPE_REV_NUM_1;
   }
 
   /**
@@ -137,172 +322,6 @@ export default class FileOp extends CommonBase {
   }
 
   /**
-   * Constructs a `checkPathEmpty` operation. This is a prerequisite operation
-   * that verifies that a given storage path is not bound to any value. This is
-   * the opposite of the `checkPathExists` operation.
-   *
-   * @param {string} storagePath The storage path to check.
-   * @returns {FileOp} An appropriately-constructed instance.
-   */
-  static op_checkPathEmpty(storagePath) {
-    StoragePath.check(storagePath);
-    return new FileOp(KEY, CAT_PREREQUISITE, 'checkPathEmpty',
-      [['storagePath', storagePath]]);
-  }
-
-  /**
-   * Constructs a `checkPathExists` operation. This is a prerequisite operation
-   * that verifies that a given storage path is bound to a value (any value,
-   * including one of zero length). This is the opposite of the `checkPathEmpty`
-   * operation.
-   *
-   * @param {string} storagePath The storage path to check.
-   * @returns {FileOp} An appropriately-constructed instance.
-   */
-  static op_checkPathExists(storagePath) {
-    StoragePath.check(storagePath);
-    return new FileOp(KEY, CAT_PREREQUISITE, 'checkPathExists',
-      [['storagePath', storagePath]]);
-  }
-
-  /**
-   * Constructs a `checkPathHash` operation. This is a prerequisite operation
-   * that verifies that a given storage path is bound to a value whose hash is
-   * as given.
-   *
-   * @param {string} storagePath The storage path to check.
-   * @param {string} hash The expected hash.
-   * @returns {FileOp} An appropriately-constructed instance.
-   */
-  static op_checkPathHash(storagePath, hash) {
-    StoragePath.check(storagePath);
-    TString.nonempty(hash); // TODO: Better hash validation.
-    return new FileOp(KEY, CAT_PREREQUISITE, 'checkPathHash',
-      [['storagePath', storagePath], ['hash', hash]]);
-  }
-
-  /**
-   * Constructs a `checkPathHash` operation based on a given buffer's data. This
-   * is a convenient shorthand for `op_checkPathHash(storagePath, buffer.hash)`.
-   *
-   * @param {string} storagePath The storage path to check.
-   * @param {FrozenBuffer} value Buffer whose hash should be taken.
-   * @returns {FileOp} An appropriately-constructed instance.
-   */
-  static op_checkPathBufferHash(storagePath, value) {
-    FrozenBuffer.check(value);
-    return FileOp.op_checkPathHash(storagePath, value.hash);
-  }
-
-  /**
-   * Constructs a `deletePath` operation. This is a write operation that
-   * deletes the binding for the given path, if any. If the path wasn't bound,
-   * then this operation does nothing.
-   *
-   * @param {string} storagePath The storage path to delete.
-   * @returns {FileOp} An appropriately-constructed instance.
-   */
-  static op_deletePath(storagePath) {
-    StoragePath.check(storagePath);
-    return new FileOp(KEY, CAT_WRITE, 'deletePath',
-      [['storagePath', storagePath]]);
-  }
-
-  /**
-   * Constructs a `maxRevNum` operation. This is a revision restriction that
-   * limits a transaction to only be performed with respect to an earlier
-   * revision number of the file than the indicated revision. That is, it
-   * specifies an _exclusive_ maximum.
-   *
-    This is a convenience
-   * method that is equivalent to calling `maxRevNum(revNum - 1)`.
-   *
-   * @param {Int} revNum Maximum revision number (exclusive).
-   * @returns {FileOp} An appropriately-constructed instance.
-   */
-  static op_maxRevNum(revNum) {
-    TInt.min(revNum, 1);
-    return new FileOp(KEY, CAT_REVISION, 'maxRevNum',
-      [['revNum', revNum]]);
-  }
-
-  /**
-   * Constructs an inclusive `maxRevNum` operation. This is a convenience
-   * method that is equivalent to calling `maxRevNum(revNum + 1)`.
-   *
-   * @param {Int} revNum Maximum revision number (inclusive).
-   * @returns {FileOp} An appropriately-constructed instance.
-   */
-  static op_maxRevNumInc(revNum) {
-    TInt.min(revNum, 0);
-    return FileOp.maxRevNum(revNum + 1);
-  }
-
-  /**
-   * Constructs a `minRevNum` operation. This is a revision restriction that
-   * limits a transaction to only be performed with respect to the indicated
-   * revision number of the file or later. That is, it specifies an inclusive
-   * minimum.
-   *
-   * @param {Int} revNum Minimum revision number (inclusive).
-   * @returns {FileOp} An appropriately-constructed instance.
-   */
-  static op_minRevNum(revNum) {
-    TInt.min(revNum, 0);
-    return new FileOp(KEY, CAT_REVISION, 'minRevNum',
-      [['revNum', revNum]]);
-  }
-
-  /**
-   * Constructs a `readPath` operation. This is a read operation that retrieves
-   * the value bound to the indicated path in the file, if any. If the given
-   * path is not bound, then that path is _not_ represented in the result of the
-   * transaction at all (specifically, it is _not_ bound to `null` or similar).
-   *
-   * @param {string} storagePath The storage path to read from.
-   * @returns {FileOp} An appropriately-constructed instance.
-   */
-  static op_readPath(storagePath) {
-    StoragePath.check(storagePath);
-    return new FileOp(KEY, CAT_READ, 'readPath',
-      [['storagePath', storagePath]]);
-  }
-
-  /**
-   * Constructs a `timeout` operation. This is an environment operation which
-   * limits a transaction to take no more than the indicated amount of time
-   * before it is aborted. Timeouts are performed on a "best effort" basis as
-   * well as silently clamped to implementation-specific limits (if any).
-   *
-   * **Note:** It is an error for a transaction to contain more than one
-   * `timeout` operation.
-   *
-   * @param {Int} durMsec Duration of the timeout, in milliseconds.
-   * @returns {FileOp} An appropriately-constructed instance.
-   */
-  static op_timeout(durMsec) {
-    TInt.min(durMsec, 0);
-    return new FileOp(KEY, CAT_ENVIRONMENT, 'timeout',
-      [['durMsec', durMsec]]);
-  }
-
-  /**
-   * Constructs a `writePath` operation. This is a write operation that stores
-   * the indicated value in the file, binding it to the given path. If the path
-   * was already bound to that value, then this operation does nothing.
-   *
-   * @param {string} storagePath The storage path to bind to.
-   * @param {FrozenBuffer} value The value to store and bind to `storagePath`.
-   * @returns {FileOp} An appropriately-constructed instance.
-   */
-  static op_writePath(storagePath, value) {
-    StoragePath.check(storagePath);
-    FrozenBuffer.check(value);
-    return new FileOp(KEY, CAT_WRITE, 'writePath',
-      [['storagePath', storagePath], ['value', value]]);
-  }
-
-  /**
    * Constructs an instance. This should not be used directly. Instead use the
    * static constructor methods defined by this class.
    *
@@ -310,8 +329,7 @@ export default class FileOp extends CommonBase {
    *   enforces the exhortation in the method documentation above.
    * @param {string} category The operation category.
    * @param {string} name The operation name.
-   * @param {array<array<*>>} args Arguments to the operation, in the form
-   *   expected by the `Map` constructor.
+   * @param {Map<string,*>} args Arguments to the operation.
    */
   constructor(constructorKey, category, name, args) {
     if (constructorKey !== KEY) {
@@ -327,7 +345,7 @@ export default class FileOp extends CommonBase {
     this._name = TString.nonempty(name);
 
     /** {Map<string,*>} Arguments to the operation. */
-    this._args = new Map(args);
+    this._args = args;
 
     Object.freeze(this);
   }
@@ -359,4 +377,94 @@ export default class FileOp extends CommonBase {
 
     return result;
   }
+
+  /**
+   * Based on the operation `OPERATIONS`, add `static` constructor methods to
+   * this class. This method is called during class initialization. (Look at
+   * the bottome of this file for the call.)
+   */
+  static _addConstructorMethods() {
+    for (const [category, opName, ...argInfo] of OPERATIONS) {
+      const isConvenience = (category === CAT_CONVENIENCE);
+      const constructorMethod = (...args) => {
+        if (args.length !== argInfo.length) {
+          throw new Error(`Wrong argument count for op constructor. Expected ${argInfo.length}.`);
+        }
+
+        const argMap = isConvenience ? null : new Map();
+        for (let i = 0; i < argInfo.length; i++) {
+          const [name, type] = argInfo[i];
+          const arg  = args[i];
+          switch (type) {
+            case TYPE_BUFFER: {
+              FrozenBuffer.check(arg);
+              break;
+            }
+            case TYPE_DUR_MSEC: {
+              TInt.min(arg, 0);
+              break;
+            }
+            case TYPE_HASH: {
+              // **TODO:** Better validation of hashes.
+              TString.nonempty(arg);
+              break;
+            }
+            case TYPE_PATH: {
+              StoragePath.check(arg);
+              break;
+            }
+            case TYPE_REV_NUM: {
+              TInt.min(arg, 0);
+              break;
+            }
+            case TYPE_REV_NUM_1: {
+              TInt.min(arg, 1);
+              break;
+            }
+            default: {
+              // Indicates a bug in this class.
+              throw new Error(`Weird \`type\` constant: ${type}`);
+            }
+          }
+
+          if (argMap) {
+            argMap.set(name, arg);
+          }
+        }
+
+        if (isConvenience) {
+          const [newOpName, ...newArgs] = FileOp[`_xform_${opName}`](...args);
+          return FileOp[`op_${newOpName}`](...newArgs);
+        } else {
+          return new FileOp(KEY, category, opName, argMap);
+        }
+      };
+
+      FileOp[`op_${opName}`] = constructorMethod;
+    }
+  }
+
+  /**
+   * Transformer for the convenience op `checkPathBufferHash`.
+   *
+   * @param {string} storagePath The storage path.
+   * @param {FrozenBuffer} value The value.
+   * @returns {array<*>} Replacement constructor info.
+   */
+  static _xform_checkPathBufferHash(storagePath, value) {
+    return ['checkPathHash', storagePath, value.hash];
+  }
+
+  /**
+   * Transformer for the convenience op `maxRevNumInc`.
+   *
+   * @param {Int} revNum Maximum revision number (inclusive).
+   * @returns {array<*>} Replacement constructor info.
+   */
+  static _xform_maxRevNumInc(revNum) {
+    return ['maxRevNum', revNum + 1];
+  }
 }
+
+// Build and bind all the static constructor methods.
+FileOp._addConstructorMethods();
