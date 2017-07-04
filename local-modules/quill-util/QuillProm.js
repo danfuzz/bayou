@@ -86,11 +86,11 @@ export default class QuillProm extends Quill {
       } else if ((type === EDITOR_CHANGE) && (arg0 === SELECTION_CHANGE)) {
         // TODO: Do something with the local author's selection range. Somehow this needs to
         // go to the server and other clients.
-        const selectionRange = this.getSelection();
+        // const selectionRange = this.getSelection();
 
         // This line is handy for debugging. It will use the remote author highlight
         // system to highlight the local author's selection.
-        this._authorOverlay.setAuthorSelection('local-author', selectionRange);
+        // this._authorOverlay.setAuthorSelection('local-author', selectionRange);
       }
 
       // This is the moral equivalent of `super.emit(...)`.
