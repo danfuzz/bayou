@@ -234,7 +234,6 @@ export default class DebugTools {
     const body =
       '<h1>Editor</h1>\n' +
       '<div id="editor" class="bayou-top">\n' +
-        '<svg></svg>' +
         '<div><p>Loading&hellip;</p></div>\n' +
       '</div>';
 

@@ -124,13 +124,17 @@ export default class TopControl {
     }
     htmlNode.classList.add('bayou-page');
 
-    // Expect the editor node to have two children, namely the author overlay
-    // and the inner editor containor.
+    // Expect the editor node to have one child, namely the inner editor
+    // container.
     const editorChildren = editorNode.children;
-    const authorOverlayNode = editorChildren[0];
-    const quillNode = editorChildren[1];
-    authorOverlayNode.classList.add('bayou-author-overlay');
+    const quillNode = editorChildren[0];
     quillNode.classList.add('bayou-editor');
+
+    // Make the author overlay node. **Note:** The wacky namespace URL is
+    // required. Without it, the "SVG" element is actually left uninterpreted.
+    const authorOverlayNode = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    authorOverlayNode.classList.add('bayou-author-overlay');
+    editorNode.insertBefore(authorOverlayNode, quillNode);
 
     // Give the overlay a chance to do any initialization.
     const hookDone = Hooks.theOne.run(this._window, baseUrl);
