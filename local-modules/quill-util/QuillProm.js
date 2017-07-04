@@ -43,6 +43,8 @@ export default class QuillProm extends Quill {
     this._currentChange = new DeltaEvent(
       accessKey, FrozenDelta.EMPTY, FrozenDelta.EMPTY, API);
 
+    // **TODO:** The constructor should accept the node to use directly and not
+    // assume that there's a unique node for the selector.
     this._authorOverlay = new AuthorOverlay(this, '.bayou-author-overlay');
 
     // We override `emitter.emit()` to _synchronously_ add an event to the
