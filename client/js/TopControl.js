@@ -113,7 +113,8 @@ export default class TopControl {
     }
 
     // Do our basic page setup. Specifically, we add the CSS we need to the
-    // page and set the expected classes on the `html` and editor nodes.
+    // page, set the expected classes on the `html` and editor nodes, and build
+    // the required node structure within the editor node.
 
     const styleDone =
       DomUtil.addStylesheet(document, `${baseUrl}/static/index.css`);
@@ -124,11 +125,24 @@ export default class TopControl {
     }
     htmlNode.classList.add('bayou-page');
 
-    // Expect the editor node to have one child, namely the inner editor
-    // container.
-    const editorChildren = editorNode.children;
-    const quillNode = editorChildren[0];
+    editorNode.classList.add('bayou-top');
+
+    // The "editor" node that gets passed in actually ends up being a container
+    // for both the editor per se as well as other bits. The node we make here
+    // is the one that actually ends up getting controlled by Quill. The loop
+    // re-parents all the default content under the original editor to instead
+    // be under the Quill node.
+    const quillNode = document.createElement('div');
     quillNode.classList.add('bayou-editor');
+    for (;;) {
+      const node = editorNode.firstChild;
+      if (!node) {
+        break;
+      }
+      editorNode.removeChild(node);
+      quillNode.appendChild(node);
+    }
+    editorNode.appendChild(quillNode);
 
     // Make the author overlay node. **Note:** The wacky namespace URL is
     // required. Without it, the "SVG" element is actually left uninterpreted.
