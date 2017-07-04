@@ -100,7 +100,6 @@ export default class TopControl {
     const document = this._window.document;
     const baseUrl = this._apiClient.baseUrl;
     const editorNode = document.querySelector(this._node);
-    const quillNode = editorNode; // TEMP!!! FIXME! REMOVE BEFORE PR!
 
     if (editorNode === null) {
       // The indicated node (incoming `BAYOU_NODE` value) does not exist. If
@@ -125,7 +124,13 @@ export default class TopControl {
     }
     htmlNode.classList.add('bayou-page');
 
-    editorNode.classList.add('bayou-editor');
+    // Expect the editor node to have two children, namely the author overlay
+    // and the inner editor containor.
+    const editorChildren = editorNode.children;
+    const authorOverlayNode = editorChildren[0];
+    const quillNode = editorChildren[1];
+    authorOverlayNode.classList.add('bayou-author-overlay');
+    quillNode.classList.add('bayou-editor');
 
     // Give the overlay a chance to do any initialization.
     const hookDone = Hooks.theOne.run(this._window, baseUrl);
