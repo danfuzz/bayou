@@ -233,10 +233,7 @@ export default class DebugTools {
       '<script src="/boot-for-debug.js"></script>\n';
     const body =
       '<h1>Editor</h1>\n' +
-      '<div id="content-wrapper">\n' +
-        '<svg id="author-overlay"></svg>' +
-        '<div id="editor"><p>Loading&hellip;</p></div>\n' +
-      '</div>';
+      '<div id="editor"><p>Loading&hellip;</p></div>\n';
 
     this._htmlResponse(res, head, body);
   }

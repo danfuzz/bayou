@@ -113,7 +113,8 @@ export default class TopControl {
     }
 
     // Do our basic page setup. Specifically, we add the CSS we need to the
-    // page and set the expected classes on the `html` and editor nodes.
+    // page, set the expected classes on the `html` and editor nodes, and build
+    // the required node structure within the editor node.
 
     const styleDone =
       DomUtil.addStylesheet(document, `${baseUrl}/static/index.css`);
@@ -126,6 +127,29 @@ export default class TopControl {
 
     editorNode.classList.add('bayou-top');
 
+    // The "editor" node that gets passed in actually ends up being a container
+    // for both the editor per se as well as other bits. The node we make here
+    // is the one that actually ends up getting controlled by Quill. The loop
+    // re-parents all the default content under the original editor to instead
+    // be under the Quill node.
+    const quillNode = document.createElement('div');
+    quillNode.classList.add('bayou-editor');
+    for (;;) {
+      const node = editorNode.firstChild;
+      if (!node) {
+        break;
+      }
+      editorNode.removeChild(node);
+      quillNode.appendChild(node);
+    }
+    editorNode.appendChild(quillNode);
+
+    // Make the author overlay node. **Note:** The wacky namespace URL is
+    // required. Without it, the "SVG" element is actually left uninterpreted.
+    const authorOverlayNode = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    authorOverlayNode.classList.add('bayou-author-overlay');
+    editorNode.appendChild(authorOverlayNode);
+
     // Give the overlay a chance to do any initialization.
     const hookDone = Hooks.theOne.run(this._window, baseUrl);
 
@@ -137,7 +161,7 @@ export default class TopControl {
     await styleDone;
     await hookDone;
 
-    this._quill = QuillMaker.theOne.make(this._node);
+    this._quill = QuillMaker.theOne.make(quillNode);
     log.detail('Made editor instance.');
 
     // Hook up the `DocClient` (which intermediates between the server and

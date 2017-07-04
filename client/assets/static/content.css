@@ -21,14 +21,21 @@ html.bayou-page {
   font-size: 18px;
 }
 
-#content-wrapper {
-  position: absolute;
-  height: 100%;
-  width: 100%;
+/* Top-level container for all the nodes for a single editor "complex." */
+.bayou-top {
+  /*
+   * When not given any offset, specifying `position: relative` is equivalent to
+   * not saying `position` at all, with one exception: Enclosed nodes that have
+   * `position: absolute` are defined to actually mean "relative with respect to
+   * the closest enclosing explicitly positioned node." So, by doing this, we
+   * are arranging for the enclosed author overlay to find this node and not
+   * walk all the way up to the root node.
+   */
+  position: relative;
 }
 
-/* Top-level editor container. */
-div.bayou-top {
+/* Container for the Quill editor. */
+div.bayou-editor {
   margin: 0;
 
   padding-top: 0.5em;
@@ -45,13 +52,7 @@ div.bayou-top {
 }
 
 /* Basic font and layout characteristics. */
-/* TODO: Need to do some work on the position: field here and in
-         #author-overlay below so that things don't individually scroll. */
-div.bayou-top .ql-editor {
-  position: absolute;
-  left: 0px;
-  top: 0px;
-
+div.bayou-editor .ql-editor {
   line-height: 1.7rem;
   font-size: 1rem; /* This thwacks it back from Quill's smaller default. */
 
@@ -68,15 +69,21 @@ div.bayou-top .ql-editor {
  * The <svg> layer on top of the Quill editor that is used to show things
  * like remote author highlights.
  */
-#content-wrapper #author-overlay {
+.bayou-author-overlay {
+  /*
+   * This positions the author overlay with respect to the outer node being
+   * managed here, sizing it to exactly match it, which means (by construction)
+   * that it exactly overlays the actual editor.
+   */
+  position: absolute;
   width: 100%;
   height: 100%;
-  position: absolute;
   left: 0px;
   top: 0px;
   z-index: 2;
+
+  /* The editor, not this node, is what listens to pointer events. */
   pointer-events: none;
-  overflow: hidden;
 }
 
 /*
@@ -84,9 +91,9 @@ div.bayou-top .ql-editor {
  * (hence `rem` units) and the spacing below is based on the actual header font
  * size (hence `em` units).
  */
-div.bayou-top .ql-editor h1,
-div.bayou-top .ql-editor h2,
-div.bayou-top .ql-editor h3 {
+div.bayou-editor .ql-editor h1,
+div.bayou-editor .ql-editor h2,
+div.bayou-editor .ql-editor h3 {
   padding-top: 2rem;
   padding-bottom: 0.5em;
 }
@@ -94,14 +101,14 @@ div.bayou-top .ql-editor h3 {
 /*
  * Smaller header spacing. Similar above/below setup as for the bigger headers.
  */
-div.bayou-top .ql-editor h4,
-div.bayou-top .ql-editor h5,
-div.bayou-top .ql-editor h6 {
+div.bayou-editor .ql-editor h4,
+div.bayou-editor .ql-editor h5,
+div.bayou-editor .ql-editor h6 {
   padding-top: 1rem;
   padding-bottom: 0.25em;
 }
 
 /* Colorful markup for code. */
-.bayou-top code, .bayou-top pre {
+.bayou-editor code, .bayou-editor pre {
   color: #c25;
 }

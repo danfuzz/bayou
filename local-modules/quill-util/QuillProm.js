@@ -43,7 +43,9 @@ export default class QuillProm extends Quill {
     this._currentChange = new DeltaEvent(
       accessKey, FrozenDelta.EMPTY, FrozenDelta.EMPTY, API);
 
-    this._authorOverlay = new AuthorOverlay(this, 'author-overlay');
+    // **TODO:** The constructor should accept the node to use directly and not
+    // assume that there's a unique node for the selector.
+    this._authorOverlay = new AuthorOverlay(this, '.bayou-author-overlay');
 
     // We override `emitter.emit()` to _synchronously_ add an event to the
     // promise chain. We do it this way instead of relying on an event callback
@@ -84,11 +86,11 @@ export default class QuillProm extends Quill {
       } else if ((type === EDITOR_CHANGE) && (arg0 === SELECTION_CHANGE)) {
         // TODO: Do something with the local author's selection range. Somehow this needs to
         // go to the server and other clients.
-        // const selectionRange = this.getSelection();
+        const selectionRange = this.getSelection();
 
         // This line is handy for debugging. It will use the remote author highlight
         // system to highlight the local author's selection.
-        // this._authorOverlay.setAuthorSelection('local-author', selectionRange);
+        this._authorOverlay.setAuthorSelection('local-author', selectionRange);
       }
 
       // This is the moral equivalent of `super.emit(...)`.
