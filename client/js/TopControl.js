@@ -148,7 +148,7 @@ export default class TopControl {
     // required. Without it, the "SVG" element is actually left uninterpreted.
     const authorOverlayNode = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     authorOverlayNode.classList.add('bayou-author-overlay');
-    editorNode.insertBefore(authorOverlayNode, quillNode);
+    editorNode.appendChild(authorOverlayNode);
 
     // Give the overlay a chance to do any initialization.
     const hookDone = Hooks.theOne.run(this._window, baseUrl);
