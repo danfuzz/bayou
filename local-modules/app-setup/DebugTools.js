@@ -226,14 +226,13 @@ export default class DebugTools {
       '<title>Editor</title>\n' +
       '<script>\n' +
       `  BAYOU_KEY         = ${quotedKey};\n` +
-      '  BAYOU_NODE        = "#editor";\n' +
       `  DEBUG_AUTHOR_ID   = ${quotedAuthorId};\n` +
       `  DEBUG_DOCUMENT_ID = ${quotedDocumentId};\n` +
       '</script>\n' +
       '<script src="/boot-for-debug.js"></script>\n';
     const body =
       '<h1>Editor</h1>\n' +
-      '<div id="editor"><p>Loading&hellip;</p></div>\n';
+      '<div id="debugEditor"><p>Loading&hellip;</p></div>\n';
 
     this._htmlResponse(res, head, body);
   }
