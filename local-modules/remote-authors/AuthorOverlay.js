@@ -31,7 +31,7 @@ export default class AuthorOverlay {
     this._quill = quillInstance;
 
     /**
-     * {DOMElement} The SVG element in which we'll render the selections.
+     * {Element} The SVG element in which we'll render the selections.
      * The SVG should be the same dimensions as `this._quillInstance.scrollingContainer`
      * and on top of it in z-index order (closer to the viewer).
      */

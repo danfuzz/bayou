@@ -6,9 +6,9 @@ import { ApiClient } from 'api-client';
 import { Codec, SplitKey } from 'api-common';
 import { DocClient } from 'doc-client';
 import { Hooks } from 'hooks-client';
-import { QuillMaker } from 'quill-util';
+import { EditorComplex } from 'quill-util';
 import { Logger } from 'see-all';
-import { TFunction, TString } from 'typecheck';
+import { TFunction, TObject } from 'typecheck';
 import { DomUtil } from 'util-client';
 
 /** {Logger} Logger for this module. */
@@ -38,11 +38,13 @@ export default class TopControl {
      */
     this._key = SplitKey.check(Codec.theOne.decodeJson(window.BAYOU_KEY));
 
-    /**
-     * {string} DOM Selector string that indicates which node in the DOM should
-     * become the editor.
-     */
-    this._node = TString.nonempty(window.BAYOU_NODE);
+    /** {Element} DOM node to use for the editor. */
+    this._editorNode = TObject.check(window.BAYOU_NODE, Element);
+
+    // Validate it.
+    if (this._editorNode.nodeName !== 'DIV') {
+      throw new Error('Expected `BAYOU_NODE` to refer to a `div`.');
+    }
 
     /**
      * {function} Function to call when the editor finds itself in an
@@ -57,8 +59,11 @@ export default class TopControl {
     this._recover =
       TFunction.check(window.BAYOU_RECOVER || (() => { /* empty */ }));
 
-    /** {QuillProm|null} Editor instance. Becomes non-null in `start()`. */
-    this._quill = null;
+    /**
+     * {EditorComplex|null} Editor "complex" instance, for all of the
+     * DOM-related state and control. Becomes non-null in `start()`.
+     */
+    this._editorComplex = null;
 
     /**
      * {ApiClient|null} API client instance (client-to-server hookup). Becomes
@@ -86,31 +91,31 @@ export default class TopControl {
     this._makeApiClient();
 
     // Arrange for the rest of initialization to happen once the initial page
-    // contents are fully loaded.
-    this._window.addEventListener('load', (event_unused) => {
-      log.detail('Initial page load complete.');
-      this._onLoad();
-    });
+    // contents are ready (from the browser's perspective).
+    const document = this._window.document;
+    if (document.readyState === 'complete') {
+      log.detail('Page already ready. No waiting needed!');
+      this._onReady();
+    } else {
+      log.detail('Waiting for page to be ready.');
+      const listener = (event_unused) => {
+        if (document.readyState === 'complete') {
+          log.detail('Page now ready.');
+          this._onReady();
+          document.removeEventListener('readystatechange', listener);
+        }
+      };
+      document.addEventListener('readystatechange', listener);
+    }
   }
 
   /**
-   * Callback for page load. This is set up in `start()`.
+   * Callback for page content readiness. This is set up in `start()`.
    */
-  async _onLoad() {
-    const document = this._window.document;
-    const baseUrl = this._apiClient.baseUrl;
-    const editorNode = document.querySelector(this._node);
-
-    if (editorNode === null) {
-      // The indicated node (incoming `BAYOU_NODE` value) does not exist. If
-      // we land here, no further init can possibly be done, so we just
-      // `throw` out of it.
-      const extra = (this._node[0] === '#') ? '' : ' (maybe need a `#` prefix?)';
-      throw new Error(`No such selector${extra}: \`${this._node}\``);
-    } else if (editorNode.nodeName !== 'DIV') {
-      // Similar to above.
-      throw new Error(`Expected selector \`${this._node}\` to refer to a \`div\`.`);
-    }
+  async _onReady() {
+    const document   = this._window.document;
+    const baseUrl    = this._apiClient.baseUrl;
+    const editorNode = this._editorNode;
 
     // Do our basic page setup. Specifically, we add the CSS we need to the
     // page, set the expected classes on the `html` and editor nodes, and build
@@ -161,7 +166,7 @@ export default class TopControl {
     await styleDone;
     await hookDone;
 
-    this._quill = QuillMaker.theOne.make(quillNode);
+    this._editorComplex = new EditorComplex(quillNode);
     log.detail('Made editor instance.');
 
     // Hook up the `DocClient` (which intermediates between the server and
@@ -209,7 +214,9 @@ export default class TopControl {
    * Constructs and hooks up a `DocClient` instance.
    */
   _makeDocClient() {
-    this._docClient = new DocClient(this._quill, this._apiClient, this._key);
+    const quill = this._editorComplex.quill;
+
+    this._docClient = new DocClient(quill, this._apiClient, this._key);
     this._docClient.start();
 
     // Log a note once everything is all set up.
