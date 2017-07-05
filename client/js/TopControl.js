@@ -43,7 +43,7 @@ export default class TopControl {
 
     // Validate it.
     if (this._editorNode.nodeName !== 'DIV') {
-      throw new Error('Expected `BAYOU_NODE` to refer to a \`div\`.');
+      throw new Error('Expected `BAYOU_NODE` to refer to a `div`.');
     }
 
     /**
