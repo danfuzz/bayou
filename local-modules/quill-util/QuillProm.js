@@ -4,7 +4,6 @@
 
 import Quill from 'quill';
 
-import { AuthorOverlay } from 'remote-authors';
 import { FrozenDelta } from 'doc-common';
 
 import DeltaEvent from './DeltaEvent';
@@ -42,10 +41,6 @@ export default class QuillProm extends Quill {
      */
     this._currentChange = new DeltaEvent(
       accessKey, FrozenDelta.EMPTY, FrozenDelta.EMPTY, API);
-
-    // **TODO:** The constructor should accept the node to use directly and not
-    // assume that there's a unique node for the selector.
-    this._authorOverlay = new AuthorOverlay(this, '.bayou-author-overlay');
 
     // We override `emitter.emit()` to _synchronously_ add an event to the
     // promise chain. We do it this way instead of relying on an event callback

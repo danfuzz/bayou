@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Hooks } from 'hooks-client';
+import { AuthorOverlay } from 'remote-authors';
 import { TObject } from 'typecheck';
 import { CommonBase } from 'util-common';
 
@@ -63,10 +64,19 @@ export default class EditorComplex extends CommonBase {
       }
     });
 
+    /** {AuthorOverlay} The author overlay controller. */
+    this._authorOverlay =
+      new AuthorOverlay(this._quill, this._authorOverlayNode);
+
     // Let the overlay do extra initialization.
     Hooks.theOne.quillInstanceInit(this._quill);
 
     Object.freeze(this);
+  }
+
+  /** {AuthorOverlay} The author overlay controller. */
+  get authorOverlay() {
+    return this._authorOverlay;
   }
 
   /** {Element} The DOM node that the author overlay manages. */

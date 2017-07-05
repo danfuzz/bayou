@@ -4,6 +4,7 @@
 
 import { AuthorId } from 'doc-common';
 import { QuillGeometry } from 'quill-util';
+import { TObject } from 'typecheck';
 import { ColorSelector, PromDelay } from 'util-common';
 
 /**
@@ -20,22 +21,22 @@ const REFRESH_DELAY_MSEC = 2000;
  * into an SVG element that overlays the Quill editor.
  */
 export default class AuthorOverlay {
-  constructor(quillInstance, svgElementSelector) {
+  constructor(quill, svgElement) {
     /**
      * {Map<AuthorId, Map<string, object>>} _Ad hoc_ storage for arbitrary data
      * associated with remote authors (highlights, color, avatar, etc).
      */
     this._authors = new Map();
 
-    /** {Quill} The Quill instance hosting the document we're editing. */
-    this._quill = quillInstance;
+    /** {QuillProm} The Quill instance hosting the document we're editing. */
+    this._quill = quill;
 
     /**
      * {Element} The SVG element in which we'll render the selections.
      * The SVG should be the same dimensions as `this._quillInstance.scrollingContainer`
      * and on top of it in z-index order (closer to the viewer).
      */
-    this._authorOverlay = document.querySelector(svgElementSelector);
+    this._authorOverlay = TObject.check(svgElement, Element);
 
     this._quill.scrollingContainer.addEventListener('scroll', function () {
       this._updateScrollPosition();
