@@ -41,11 +41,6 @@ export default class TopControl {
     /** {Element} DOM node to use for the editor. */
     this._editorNode = TObject.check(window.BAYOU_NODE, Element);
 
-    // Validate it.
-    if (this._editorNode.nodeName !== 'DIV') {
-      throw new Error('Expected `BAYOU_NODE` to refer to a `div`.');
-    }
-
     /**
      * {function} Function to call when the editor finds itself in an
      * unrecoverable (to it) situation. It gets called with the current key as
@@ -130,44 +125,19 @@ export default class TopControl {
     }
     htmlNode.classList.add('bayou-page');
 
-    editorNode.classList.add('bayou-top');
-
-    // The "editor" node that gets passed in actually ends up being a container
-    // for both the editor per se as well as other bits. The node we make here
-    // is the one that actually ends up getting controlled by Quill. The loop
-    // re-parents all the default content under the original editor to instead
-    // be under the Quill node.
-    const quillNode = document.createElement('div');
-    quillNode.classList.add('bayou-editor');
-    for (;;) {
-      const node = editorNode.firstChild;
-      if (!node) {
-        break;
-      }
-      editorNode.removeChild(node);
-      quillNode.appendChild(node);
-    }
-    editorNode.appendChild(quillNode);
-
-    // Make the author overlay node. **Note:** The wacky namespace URL is
-    // required. Without it, the "SVG" element is actually left uninterpreted.
-    const authorOverlayNode = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    authorOverlayNode.classList.add('bayou-author-overlay');
-    editorNode.appendChild(authorOverlayNode);
-
     // Give the overlay a chance to do any initialization.
     const hookDone = Hooks.theOne.run(this._window, baseUrl);
 
+    // Let all that activity finish before proceeding.
     log.detail('Async operations now in progress...');
-
-    // Make the editor instance, after style addition and hook action are
-    // complete.
-
     await styleDone;
     await hookDone;
+    log.detail('Done with async operations.');
 
-    this._editorComplex = new EditorComplex(quillNode);
-    log.detail('Made editor instance.');
+    // Make the editor "complex." This "fluffs" out the DOM and makes the
+    // salient controller objects.
+    this._editorComplex = new EditorComplex(editorNode);
+    log.detail('Made editor complex.');
 
     // Hook up the `DocClient` (which intermediates between the server and
     // the local Quill instance).

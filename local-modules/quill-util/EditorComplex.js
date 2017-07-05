@@ -30,16 +30,31 @@ export default class EditorComplex extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {Element} quillNode DOM element to attach Quill to.
+   * @param {Element} topNode DOM element to attach the complex to.
    */
-  constructor(quillNode) {
+  constructor(topNode) {
     super();
 
+    /** {Element} DOM element the complex is attached to. */
+    this._topNode = TObject.check(topNode, Element);
+
+    // Validate the top node.
+    if (topNode.nodeName !== 'DIV') {
+      throw new Error('Expected `topNode` to be a `div`.');
+    }
+
+    // Do all of the DOM setup for the instance.
+    const [quillNode, authorOverlayNode] =
+      EditorComplex._doSetupForNode(topNode);
+
     /** {Element} The DOM node which Quill manages. */
-    this._quillNode = TObject.check(quillNode, Element);
+    this._quillNode = quillNode;
+
+    /** {Element} The DOM node which is used for author overlay. */
+    this._authorOverlayNode = authorOverlayNode;
 
     /** {QuillProm} The Quill editor object. */
-    this._quill = new QuillProm(this._quillNode, {
+    this._quill = new QuillProm(quillNode, {
       readOnly: true,
       strict: true,
       theme: 'bubble',
@@ -54,9 +69,57 @@ export default class EditorComplex extends CommonBase {
     Object.freeze(this);
   }
 
+  /** {Element} The DOM node that the author overlay manages. */
+  get authorOverlayNode() {
+    return this._authorOverlayNode;
+  }
+
   /** {QuillProm} The Quill editor object. */
   get quill() {
     return this._quill;
+  }
+
+  /** {Element} The DOM node that Quill manages. */
+  get quillNode() {
+    return this._quillNode;
+  }
+
+  /**
+   * Does all of the DOM setup needed to make the indicated "top" node be
+   * ready to have Quill and the author overlay attached to it.
+   *
+   * @param {Element} topNode The top DOM node for the complex.
+   * @returns {array<Element>} Array of `[quillNode, authorOverlayNode]`, for
+   *   immediate consumption by the constructor.
+   */
+  static _doSetupForNode(topNode) {
+    topNode.classList.add('bayou-top');
+
+    // The "top" node that gets passed in actually ends up being a container
+    // for both the editor per se as well as other bits. The node we make here
+    // is the one that actually ends up getting controlled by Quill. The loop
+    // re-parents all the default content under the original editor to instead
+    // be under the Quill node.
+    const quillNode = document.createElement('div');
+    quillNode.classList.add('bayou-editor');
+    for (;;) {
+      const node = topNode.firstChild;
+      if (!node) {
+        break;
+      }
+      topNode.removeChild(node);
+      quillNode.appendChild(node);
+    }
+    topNode.appendChild(quillNode);
+
+    // Make the author overlay node. **Note:** The wacky namespace URL is
+    // required. Without it, the "SVG" element is actually left uninterpreted.
+    const authorOverlayNode =
+      document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    authorOverlayNode.classList.add('bayou-author-overlay');
+    topNode.appendChild(authorOverlayNode);
+
+    return [quillNode, authorOverlayNode];
   }
 
   /**
