@@ -48,11 +48,21 @@ function BAYOU_RECOVER(key) {
   })
 }
 
-// We wrap everything else in an immediately-executed function so as to avoid
-// polluting the global namespace.
-(function () {
+// Once the rest of the page is loaded, find the `#editor` node and arrange for
+// the main boot script to load and run.
+window.addEventListener('load', () => {
+  // This is the node that is IDed specifically in `DebugTools._handle_edit`.
+  var editorNode = document.querySelector('#debugEditor');
+  if (!editorNode) {
+    // Indicates a bug either here or in `DebugTools`.
+    throw new Error('Could not find editor node!');
+  }
+
+  // This gets used by `boot-from-key`.
+  window.BAYOU_NODE = editorNode;
+
   // Add the standard bootstrap code to the page.
   var elem = document.createElement('script');
   elem.src = '/boot-from-key.js';
   document.head.appendChild(elem);
-}());
+})

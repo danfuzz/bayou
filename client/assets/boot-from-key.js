@@ -8,8 +8,7 @@
 //
 // * `BAYOU_KEY` -- The JSON-encoded form of an instance of `SplitKey`, to be
 //   used to authenticate access to a particular documemt.
-// * `BAYOU_NODE` -- The selector for the DOM node into which the editor should
-//   be embedded.
+// * `BAYOU_NODE` -- The DOM node into which the editor should be embedded.
 // * `BAYOU_RECOVER` (optional) -- Function to use when attempting to recover
 //   from connection trouble.
 //
