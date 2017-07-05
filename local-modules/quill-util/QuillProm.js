@@ -6,7 +6,7 @@ import Quill from 'quill';
 
 import { FrozenDelta } from 'doc-common';
 
-import DeltaEvent from './DeltaEvent';
+import QuillEvent from './QuillEvent';
 
 /**
  * Extension of the `Quill` class that provides a promise-based interface to
@@ -36,10 +36,10 @@ export default class QuillProm extends Quill {
     const accessKey = Symbol('quill-prom-key');
 
     /**
-     * {DeltaEvent} The most recent resolved event. It is initialized as defined
+     * {QuillEvent} The most recent resolved event. It is initialized as defined
      * by the documentation for `currentChange`.
      */
-    this._currentChange = new DeltaEvent(
+    this._currentChange = new QuillEvent(
       accessKey, FrozenDelta.EMPTY, FrozenDelta.EMPTY, API);
 
     // We override `emitter.emit()` to _synchronously_ add an event to the
@@ -94,7 +94,7 @@ export default class QuillProm extends Quill {
   }
 
   /**
-   * {DeltaEvent} The current (latest / most recent) document change that has
+   * {QuillEvent} The current (latest / most recent) document change that has
    * been made to this instance. It is always a regular value (not a promise).
    *
    * **Note:** If accessed before any changes have ever been made to this

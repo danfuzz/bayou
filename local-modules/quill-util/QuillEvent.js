@@ -23,7 +23,7 @@ import { FrozenDelta } from 'doc-common';
  * Instances of this class are always frozen (read-only) to help protect clients
  * from each other (or from inadvertently messing with themselves).
  */
-export default class DeltaEvent {
+export default class QuillEvent {
   /**
    * Constructs an instance.
    *
@@ -72,7 +72,7 @@ export default class DeltaEvent {
         throw new Error('Invalid access.');
       }
 
-      nextNow = new DeltaEvent(key, ...args);
+      nextNow = new QuillEvent(key, ...args);
       resolveNext(nextNow);
       return nextNow;
     });

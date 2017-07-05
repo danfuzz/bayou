@@ -116,14 +116,14 @@ export default class DocClient extends StateMachine {
     this._doc = null;
 
     /**
-     * {DeltaEvent|object} Current (most recent) local change to the document
+     * {QuillEvent|object} Current (most recent) local change to the document
      * made by Quill that this instance is aware of. That is,
      * `_currentChange.next` (once it resolves) is the first change that this
      * instance has not yet processed. This variable is initialized by getting
      * `_quill.currentChange` and is generally updated by waiting on `.next` or
      * retrieving `.nextNow` from the value. In a couple cases, though, instead
-     * of being a `DeltaEvent` per se, it is a "manually" constructed object
-     * with the general shape of a `DeltaEvent`; these are used very transiently
+     * of being a `QuillEvent` per se, it is a "manually" constructed object
+     * with the general shape of a `QuillEvent`; these are used very transiently
      * to handle multi-way change merging.
      */
     this._currentChange = null;
