@@ -50,10 +50,7 @@ export default class QuillEvent extends BaseEvent {
    *   above).
    */
   constructor(accessKey, eventName, ...eventArgs) {
-    super();
-
-    /** {String} The event name (its type, really). */
-    this.eventName = TString.check(eventName);
+    super(eventName);
 
     switch (eventName) {
       case QuillEvent.TEXT_CHANGE: {

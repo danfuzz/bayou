@@ -719,8 +719,7 @@ export default class DocClient extends StateMachine {
     // source and not `CLIENT_SOURCE` because, even though we are in fact
     // making this change here (per se), the changes notionally came from
     // the user, and as such we _don't_ want to ignore the change.
-    const nextNow = this._currentEvent.withNewPayload({
-      eventName: QuillEvent.TEXT_CHANGE,
+    const nextNow = this._currentEvent.withNewPayload(QuillEvent.TEXT_CHANGE, {
       delta:     dNewMore,
       source:    'user'
     });

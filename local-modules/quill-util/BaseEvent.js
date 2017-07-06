@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TObject } from 'typecheck';
+import { TObject, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 /**
@@ -14,16 +14,26 @@ import { CommonBase } from 'util-common';
  * once an appropriate event has been emitted.
  *
  * This base class merely provides a couple of abstract methods to define the
- * basic interface, and a couple of helper methods to walk the chain. Subclasses
- * are responsible for providing event payloads and arranging for the chain to
- * become constructed.
+ * basic interface, and a couple of helper methods to walk the chain, and it
+ * only requires events have a name. Subclasses are responsible for providing
+ * event payloads and arranging for the chain to become constructed.
  */
 export default class BaseEvent extends CommonBase {
   /**
    * Constructs an instance.
+   *
+   * @param {string} eventName Name of the event (its type, really).
    */
-  constructor() {
+  constructor(eventName) {
     super();
+
+    /** {string} Name of the event (its type, really). */
+    this._eventName = TString.nonempty(eventName);
+  }
+
+  /** {string} Name of the event. */
+  get eventName() {
+    return this._eventName;
   }
 
   /**
@@ -107,9 +117,10 @@ export default class BaseEvent extends CommonBase {
   /**
    * Constructs a new event which set up to be at the head of an event chain
    * which continues with _this_ instance's next event, but with a different
-   * event payload. Put another way, this constructs a replacement event for
-   * this instance, but with the same chaining.
+   * event name and payload. Put another way, this constructs a replacement
+   * event for this instance, but with the same chaining.
    *
+   * @param {string} [eventName = 'none'] Event name.
    * @param {object} [payload = {}] Event payload properties. These become
    *   accessible as-is on the resulting event. If not passed, the resulting
    *   event has no payload properties.
@@ -117,10 +128,11 @@ export default class BaseEvent extends CommonBase {
    *   whose `next` and `nextNow` behave the same as this instance's properties
    *   of the same names.
    */
-  withNewPayload(payload = {}) {
+  withNewPayload(eventName = 'none', payload = {}) {
     TObject.check(payload);
 
-    const result = Object.create(BaseEvent.prototype, {
+    const result = new BaseEvent(eventName);
+    Object.defineProperties(result, {
       next:    { get: () => { return this.next;    } },
       nextNow: { get: () => { return this.nextNow; } }
     });
@@ -136,16 +148,18 @@ export default class BaseEvent extends CommonBase {
    * instance. That is, the constructed event's `next` and `nextNow` immediately
    * point at this instance.
    *
+   * @param {string} [eventName = 'none'] Event name.
    * @param {object} [payload = {}] Event payload properties. These become
    *   accessible as-is on the resulting event. If not passed, the resulting
    *   event has no payload properties.
    * @returns {BaseEvent} New event instance with `payload` properties, and
    *   whose `next` and `nextNow` refer to this instance.
    */
-  withPushedHead(payload = {}) {
+  withPushedHead(eventName = 'none', payload = {}) {
     TObject.check(payload);
 
-    const result = Object.create(BaseEvent.prototype, {
+    const result = new BaseEvent(eventName);
+    Object.defineProperties(result, {
       next:    { get: () => { return Promise.resolve(this); } },
       nextNow: { get: () => { return this;                  } }
     });
