@@ -5,6 +5,8 @@
 import { FrozenDelta } from 'doc-common';
 import { TInt, TObject, TString } from 'typecheck';
 
+import BaseEvent from './BaseEvent';
+
 /**
  * Event wrapper for a Quill Delta, including reference to the document source,
  * the old contents, and the chain of subsequent events. It defines the
@@ -24,7 +26,7 @@ import { TInt, TObject, TString } from 'typecheck';
  * Instances of this class are always frozen (read-only) to help protect clients
  * from each other (or from inadvertently messing with themselves).
  */
-export default class QuillEvent {
+export default class QuillEvent extends BaseEvent {
   /** {String} Event source for the API. */
   static get API() {
     return 'api';
@@ -60,6 +62,8 @@ export default class QuillEvent {
    *   above).
    */
   constructor(accessKey, source, eventName, ...eventArgs) {
+    super();
+
     /** {String} The event source. */
     this.source = TString.check(source);
 
@@ -116,8 +120,8 @@ export default class QuillEvent {
     // `seal()`ing the promise. This doesn't prevent existing properties from
     // being changed, but it does prevent properties from being reconfigured
     // (including disallowing adding and removing properties).
-    this.next = Object.seal(
-      new Promise((res, rej_unused) => { resolveNext = res; }));
+    const next =
+      Object.seal(new Promise((res, rej_unused) => { resolveNext = res; }));
 
     // This method is defined inside the constructor so that we can use the
     // lexical context for (what amount to) private instance variables.
@@ -133,75 +137,11 @@ export default class QuillEvent {
       return nextNow;
     });
 
-    // Likewise, this is how we can provide a read-only yet changeable `nextNow`
-    // on a frozen object.
+    // Define the two properties that are required by the superclass.
+    Object.defineProperty(this, 'next',    { get: () => { return next;    } });
     Object.defineProperty(this, 'nextNow', { get: () => { return nextNow; } });
 
     Object.freeze(this);
-  }
-
-  /**
-   * Gets the earliest event of the indicated name in the event chain, starting
-   * at (and possibly including) this instance. This method only returns once a
-   * matching event is available.
-   *
-   * @param {string} eventName Event name of interest.
-   * @returns {QuillEvent} The earliest event with the indidated name, starting
-   *   at this instance.
-   */
-  async earliestOf(eventName) {
-    for (let e = this; e !== null; e = await e.next) {
-      if (e.eventName === eventName) {
-        return e;
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Gets the earliest immediately-available event of the indicated name in the
-   * event chain, starting at (and possibly including) this instance. If no
-   * matching event is immediately available, this method returns `null`.
-   *
-   * @param {string} eventName Event name of interest.
-   * @returns {QuillEvent|null} The earliest immediately-available event with
-   *   the indidated name, starting at this instance; or `null` if there is no
-   * such event.
-   */
-  earliestOfNow(eventName) {
-    for (let e = this; e !== null; e = e.nextNow) {
-      if (e.eventName === eventName) {
-        return e;
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Gets the next event of the indicated name after this instance, whenever it
-   * becomes resolved.
-   *
-   * @param {string} eventName Event name of interest.
-   * @returns {QuillEvent} The next event with the indidated name, once it has
-   *   become resolved.
-   */
-  async nextOf(eventName) {
-    return (await this.next).earliestOf(eventName);
-  }
-
-  /**
-   * Gets the next event of the indicated name after this instance, if it is
-   * immediately available.
-   *
-   * @param {string} eventName Event name of interest.
-   * @returns {QuillEvent|null} The next event with the indidated name that has
-   *   already been resolved, or `null` if there is no such event.
-   */
-  nextOfNow(eventName) {
-    const nextNow = this.nextNow;
-    return (nextNow === null) ? null : nextNow.earliestOfNow(eventName);
   }
 
   /**
