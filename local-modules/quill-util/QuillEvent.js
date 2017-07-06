@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { FrozenDelta } from 'doc-common';
+import { TObject, TString } from 'typecheck';
 
 /**
  * Event wrapper for a Quill Delta, including reference to the document source,
@@ -24,22 +25,84 @@ import { FrozenDelta } from 'doc-common';
  * from each other (or from inadvertently messing with themselves).
  */
 export default class QuillEvent {
+  /** {String} Event source for the API. */
+  static get API() {
+    return 'api';
+  }
+
+  /** {String} Event name for editor change events. */
+  static get EDITOR_CHANGE() {
+    return 'editor-change';
+  }
+
+  /** {String} Event name for selection change events. */
+  static get SELECTION_CHANGE() {
+    return 'selection-change';
+  }
+
+  /** {String} Event name for text change events. */
+  static get TEXT_CHANGE() {
+    return 'text-change';
+  }
+
   /**
    * Constructs an instance.
    *
    * @param {object} accessKey Key which protects ability to resolve the next
    *   event.
-   * @param {Delta|array|object} delta The change, per se. Can be anything that
-   *   is coerceable to a `FrozenDelta`.
-   * @param {Delta|array|object} oldContents The document contents just prior to
-   *   the change. Can be anything that is coerceable to a `FrozenDelta`.
    * @param {string} source The name of the notional "source" of the event.
    *   (Typical values are `api` and `user`.)
+   * @param {string} eventName Name of event (its type, really). Indicates how
+   *   the rest of the arguments are interpreted.
+   * @param {...*} eventArgs Additional event arguments, depending on the event
+   *   name. Arguments are all as documented by Quill, except that `source`
+   *   isn't present in these because it was already separately passed (see
+   *   above).
    */
-  constructor(accessKey, delta, oldContents, source) {
-    this.delta = FrozenDelta.coerce(delta);
-    this.oldContents = FrozenDelta.coerce(oldContents);
-    this.source = source;
+  constructor(accessKey, source, eventName, ...eventArgs) {
+    /** {String} The event source. */
+    this.source = TString.check(source);
+
+    /** {String} The event name (its type, really). */
+    this.eventName = TString.check(eventName);
+
+    switch (eventName) {
+      case QuillEvent.TEXT_CHANGE: {
+        const [delta, oldContents] = eventArgs;
+
+        /** {FrozenDelta} The change to the text, per se. */
+        this.delta = FrozenDelta.coerce(delta);
+
+        /** {FrozenDelta} The text as of just before the change. */
+        this.oldContents = FrozenDelta.coerce(oldContents);
+
+        break;
+      }
+
+      case QuillEvent.SELECTION_CHANGE: {
+        let [range, oldRange] = eventArgs;
+
+        // Validate the ranges, and freeze them if they're objects.
+        if (range !== null) {
+          range = Object.freeze(TObject.withExactKeys(range, ['index', 'length']));
+        }
+        if (oldRange !== null) {
+          oldRange = Object.freeze(TObject.withExactKeys(range, ['index', 'length']));
+        }
+
+        /** {object|null} The new selection range. */
+        this.range = range;
+
+        /** {object|null} The immediately-prior selection range. */
+        this.oldRange = oldRange;
+
+        break;
+      }
+
+      default: {
+        throw new Error(`Unrecognized event name: ${eventName}`);
+      }
+    }
 
     // **Note:** `accessKey` is _not_ exposed as a property. Doing so would
     // cause the security problem that its existence is meant to prevent. That
@@ -73,6 +136,7 @@ export default class QuillEvent {
       }
 
       nextNow = new QuillEvent(key, ...args);
+
       resolveNext(nextNow);
       return nextNow;
     });

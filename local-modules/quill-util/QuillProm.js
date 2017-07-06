@@ -24,11 +24,7 @@ export default class QuillProm extends Quill {
     // instead get at it via the instance of it made in the superclass
     // constructor.
     const origEmitter = this.emitter;
-    const Emitter = origEmitter.constructor;
-    const API = Emitter.sources.API;
-    const EDITOR_CHANGE = Emitter.events.EDITOR_CHANGE;
-    const TEXT_CHANGE = Emitter.events.TEXT_CHANGE;
-    const SELECTION_CHANGE = Emitter.events.SELECTION_CHANGE;
+
     // Key used to authenticate this instance to the event chain it spawns.
     // **Not** exposed as an instance variable, as doing so would violate the
     // security we are trying to establish by the key's existence in the first
@@ -40,7 +36,8 @@ export default class QuillProm extends Quill {
      * by the documentation for `currentChange`.
      */
     this._currentChange = new QuillEvent(
-      accessKey, FrozenDelta.EMPTY, FrozenDelta.EMPTY, API);
+      accessKey, QuillEvent.API, QuillEvent.TEXT_CHANGE,
+      FrozenDelta.EMPTY, FrozenDelta.EMPTY);
 
     // We override `emitter.emit()` to _synchronously_ add an event to the
     // promise chain. We do it this way instead of relying on an event callback
@@ -65,31 +62,28 @@ export default class QuillProm extends Quill {
     // its way to the latest state and so never be in a position of acting
     // synchronously on stale information.
     const origEmit = origEmitter.emit;
-    origEmitter.emit = (type, arg0, ...rest) => {
-      if ((type === EDITOR_CHANGE) && (arg0 === TEXT_CHANGE)) {
-        // We attach to the `EDITOR_CHANGE` event when the subtype is
-        // `TEXT_CHANGE`. This isn't exposed Quill API, but in the current
-        // implementation (as of this writing), Quill consistently emits an
-        // `EDITOR_CHANGE(TEXT_CHANGE, ...)` event for each text change, even
-        // when it doesn't emit a `TEXT_CHANGE` event (e.g., when the change
-        // marked as "silent"). We, on the other hand, truly need the full set
-        // of all changes in order, since otherwise the document state as known
-        // to the server would get out of synch with what is portrayed to the
-        // user.
-        this._currentChange =
-          this._currentChange._gotChange(accessKey, ...rest);
-      } else if ((type === EDITOR_CHANGE) && (arg0 === SELECTION_CHANGE)) {
-        // TODO: Do something with the local author's selection range. Somehow this needs to
-        // go to the server and other clients.
-        // const selectionRange = this.getSelection();
+    origEmitter.emit = (type, ...rest) => {
+      if (type === QuillEvent.EDITOR_CHANGE) {
+        // We attach to the `editor-change` event so that we see all changes in
+        // their original order, even when changes were made with the "silent"
+        // flag (because if we miss events, then the local and server state will
+        // tragically diverge).
 
-        // This line is handy for debugging. It will use the remote author highlight
-        // system to highlight the local author's selection.
-        // this._authorOverlay.setAuthorSelection('local-author', selectionRange);
+        // Extract the common event arguments.
+        const eventName = rest.shift();
+        const source = rest.pop();
+
+        // TEMPORARY!! FIXME!! REMOVE BEFORE PR!! Ignore selection change events.
+        if (eventName === QuillEvent.SELECTION_CHANGE) {
+          return;
+        }
+
+        this._currentChange =
+          this._currentChange._gotChange(accessKey, source, eventName, ...rest);
       }
 
       // This is the moral equivalent of `super.emit(...)`.
-      origEmit.call(origEmitter, type, arg0, ...rest);
+      origEmit.call(origEmitter, type, ...rest);
     };
   }
 
