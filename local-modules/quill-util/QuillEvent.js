@@ -147,4 +147,38 @@ export default class QuillEvent {
 
     Object.freeze(this);
   }
+
+  /**
+   * Gets the next event of the indicated name, whenever it becomes resolved.
+   *
+   * @param {string} eventName Event name of interest.
+   * @returns {QuillEvent} The next event with the indidated name, once it has
+   *   become resolved.
+   */
+  async nextOf(eventName) {
+    for (let e = await this.next; e !== null; e = await e.next) {
+      if (e.eventName === eventName) {
+        return e;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Gets the next event of the indicated name, if it is immediately available.
+   *
+   * @param {string} eventName Event name of interest.
+   * @returns {QuillEvent|null} The next event with the indidated name that has
+   *   already been resolved, or `null` if there is no such event.
+   */
+  nextNowOf(eventName) {
+    for (let e = this.nextNow; e !== null; e = e.nextNow) {
+      if (e.eventName === eventName) {
+        return e;
+      }
+    }
+
+    return null;
+  }
 }
