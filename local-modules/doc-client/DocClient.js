@@ -718,22 +718,10 @@ export default class DocClient extends StateMachine {
     // source and not `CLIENT_SOURCE` because, even though we are in fact
     // making this change here (per se), the changes notionally came from
     // the user, and as such we _don't_ want to ignore the change.
-    const nextNow = {
+    const nextNow = this._currentEvent.withNewPayload({
       delta:   dNewMore,
-      source:  'user',
-      next:    this._currentEvent.next,
-      nextNow: null
-    };
-
-    // This hooks up `nextNow.nextNow` to become non-null when the original
-    // `_currentEvent.nextNow` resolves. This maintains the invariant
-    // that we rely on elsewhere (and which is provided under normal
-    // circumstances by `QuillProm`), specifically that `change.nextNow`
-    // becomes non-null as soon as `change.next` resolves to a value.
-    (async () => {
-      const value = await nextNow.next;
-      nextNow.nextNow = value;
-    })();
+      source:  'user'
+    });
 
     // Make a new head of the change chain which points at the `nextNow` we
     // just constructed above.

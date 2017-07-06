@@ -108,17 +108,17 @@ export default class BaseEvent extends CommonBase {
 
   /**
    * Constructs a new event which set up to be at the head of an event chain
-   * which continues with _this_ instance's next event. Put another way, this
-   * constructs a replacement event for this instance, but with the same
-   * subsequent chaining.
+   * which continues with _this_ instance's next event, but with a different
+   * event payload. Put another way, this constructs a replacement event for
+   * this instance, but with the same chaining.
    *
    * @param {object} payload Event payload properties. These become accessible
    *   as-is on the resulting event.
    * @returns {BaseEvent} New event instance with `payload` properties, and
    *   whose `next` and `nextNow` behave the same as this instance's properties
-   *   of the same name.
+   *   of the same names.
    */
-  withNewHead(payload) {
+  withNewPayload(payload) {
     TObject.check(payload);
 
     const result = Object.create(BaseEvent.prototype, {
