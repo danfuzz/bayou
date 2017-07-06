@@ -52,13 +52,11 @@ export default class BaseEvent extends CommonBase {
    *   at this instance.
    */
   async earliestOf(eventName) {
-    for (let e = this; e !== null; e = await e.next) {
+    for (let e = this; /*e*/; e = await e.next) {
       if (e.eventName === eventName) {
         return e;
       }
     }
-
-    return null;
   }
 
   /**
