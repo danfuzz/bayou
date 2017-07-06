@@ -724,8 +724,9 @@ export default class DocClient extends StateMachine {
     });
 
     // Make a new head of the change chain which points at the `nextNow` we
-    // just constructed above.
-    this._currentEvent = { nextNow, next: Promise.resolve(nextNow) };
+    // just constructed above. We don't include any payload since this class
+    // never actually looks at the payload of `_currentEvent`.
+    this._currentEvent = nextNow.withPushedHead();
 
     this._becomeIdle();
   }

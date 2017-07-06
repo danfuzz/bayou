@@ -112,18 +112,44 @@ export default class BaseEvent extends CommonBase {
    * event payload. Put another way, this constructs a replacement event for
    * this instance, but with the same chaining.
    *
-   * @param {object} payload Event payload properties. These become accessible
-   *   as-is on the resulting event.
+   * @param {object} [payload = {}] Event payload properties. These become
+   *   accessible as-is on the resulting event. If not passed, the resulting
+   *   event has no payload properties.
    * @returns {BaseEvent} New event instance with `payload` properties, and
    *   whose `next` and `nextNow` behave the same as this instance's properties
    *   of the same names.
    */
-  withNewPayload(payload) {
+  withNewPayload(payload = {}) {
     TObject.check(payload);
 
     const result = Object.create(BaseEvent.prototype, {
       next:    { get: () => { return this.next;    } },
       nextNow: { get: () => { return this.nextNow; } }
+    });
+
+    Object.assign(result, payload);
+    Object.freeze(result);
+    return result;
+  }
+
+  /**
+   * Constructs a new event which &mdash; from its perspective &mdash; is
+   * "pushed" onto the head of the event chain that continues with this
+   * instance. That is, the constructed event's `next` and `nextNow` immediately
+   * point at this instance.
+   *
+   * @param {object} [payload = {}] Event payload properties. These become
+   *   accessible as-is on the resulting event. If not passed, the resulting
+   *   event has no payload properties.
+   * @returns {BaseEvent} New event instance with `payload` properties, and
+   *   whose `next` and `nextNow` refer to this instance.
+   */
+  withPushedHead(payload = {}) {
+    TObject.check(payload);
+
+    const result = Object.create(BaseEvent.prototype, {
+      next:    { get: () => { return Promise.resolve(this); } },
+      nextNow: { get: () => { return this;                  } }
     });
 
     Object.assign(result, payload);
