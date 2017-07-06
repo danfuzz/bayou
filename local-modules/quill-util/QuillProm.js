@@ -35,7 +35,7 @@ export default class QuillProm extends Quill {
      * {QuillEvent} The most recent resolved event. It is initialized as defined
      * by the documentation for `currentChange`.
      */
-    this._currentChange = new QuillEvent(
+    this._currentEvent = new QuillEvent(
       accessKey, QuillEvent.API, QuillEvent.TEXT_CHANGE,
       FrozenDelta.EMPTY, FrozenDelta.EMPTY);
 
@@ -78,8 +78,8 @@ export default class QuillProm extends Quill {
           return;
         }
 
-        this._currentChange =
-          this._currentChange._gotChange(accessKey, source, eventName, ...rest);
+        this._currentEvent =
+          this._currentEvent._gotChange(accessKey, source, eventName, ...rest);
       }
 
       // This is the moral equivalent of `super.emit(...)`.
@@ -88,13 +88,14 @@ export default class QuillProm extends Quill {
   }
 
   /**
-   * {QuillEvent} The current (latest / most recent) document change that has
-   * been made to this instance. It is always a regular value (not a promise).
+   * {QuillEvent} The current (latest / most recent) event that has been
+   * emitted from this instance. It is always a regular value (not a promise).
    *
-   * **Note:** If accessed before any changes have ever been made to this
-   * instance, `delta` and `oldContents` are both empty deltas.
+   * **Note:** If accessed before any events have ever been emitted from this
+   * instance, this is what amounts to an empty `text-change` event with `api`
+   * source.
    */
   get currentChange() {
-    return this._currentChange;
+    return this._currentEvent;
   }
 }
