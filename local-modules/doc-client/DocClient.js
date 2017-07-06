@@ -751,8 +751,13 @@ export default class DocClient extends StateMachine {
     let delta = null;
 
     let change = this._currentEvent;
-    while (change.nextNow !== null) {
-      change = change.nextNow;
+    for (;;) {
+      const nextNow = change.nextOfNow(QuillEvent.TEXT_CHANGE);
+      if (nextNow === null) {
+        break;
+      }
+
+      change = nextNow;
       if (!(includeOurChanges || (change.source !== CLIENT_SOURCE))) {
         break;
       }
