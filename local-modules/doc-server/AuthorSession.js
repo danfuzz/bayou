@@ -2,9 +2,13 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 
 import DocControl from './DocControl';
+
+/** Logger. */
+const log = new Logger('author-session');
 
 /**
  * Server side representative for a session for a specific author and document.
@@ -105,5 +109,21 @@ export default class AuthorSession {
    */
   snapshot(revNum = null) {
     return this._doc.snapshot(revNum);
+  }
+
+  /**
+   * Informs the system of the client's current caret or text selection extent.
+   * This should be called by clients when they notice user activity that
+   * changes the selection. More specifically, Quill's `SELECTION_CHANGED`
+   * events are expected to drive calls to this method. Arguments to this method
+   * have the semantics of offset and length within a Quill `Delta`.
+   *
+   * @param {Int} index Caret position (if no selection per se) or starting
+   *   caret position of the selection.
+   * @param {Int|null} [length = null] If non-`null`, length of the selection.
+   */
+  updateCaret(index, length = null) {
+    // **TODO:** Something interesting should go here.
+    log.info(`Got caret update for ${this._sessionId}: ${index}, ${length}`);
   }
 }
