@@ -42,8 +42,6 @@ export default class QuillEvent extends BaseEvent {
    *
    * @param {object} accessKey Key which protects ability to resolve the next
    *   event.
-   * @param {string} source The name of the notional "source" of the event.
-   *   (Typical values are `api` and `user`.)
    * @param {string} eventName Name of event (its type, really). Indicates how
    *   the rest of the arguments are interpreted.
    * @param {...*} eventArgs Additional event arguments, depending on the event
@@ -51,18 +49,15 @@ export default class QuillEvent extends BaseEvent {
    *   isn't present in these because it was already separately passed (see
    *   above).
    */
-  constructor(accessKey, source, eventName, ...eventArgs) {
+  constructor(accessKey, eventName, ...eventArgs) {
     super();
-
-    /** {String} The event source. */
-    this.source = TString.check(source);
 
     /** {String} The event name (its type, really). */
     this.eventName = TString.check(eventName);
 
     switch (eventName) {
       case QuillEvent.TEXT_CHANGE: {
-        const [delta, oldContents] = eventArgs;
+        const [delta, oldContents, source] = eventArgs;
 
         /** {FrozenDelta} The change to the text, per se. */
         this.delta = FrozenDelta.coerce(delta);
@@ -70,17 +65,23 @@ export default class QuillEvent extends BaseEvent {
         /** {FrozenDelta} The text as of just before the change. */
         this.oldContents = FrozenDelta.coerce(oldContents);
 
+        /** {String} The event source. */
+        this.source = TString.check(source);
+
         break;
       }
 
       case QuillEvent.SELECTION_CHANGE: {
-        const [range, oldRange] = eventArgs;
+        const [range, oldRange, source] = eventArgs;
 
         /** {object|null} The new selection range. */
         this.range = QuillEvent._checkAndFreezeRange(range);
 
         /** {object|null} The immediately-prior selection range. */
         this.oldRange = QuillEvent._checkAndFreezeRange(oldRange);
+
+        /** {String} The event source. */
+        this.source = TString.check(source);
 
         break;
       }

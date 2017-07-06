@@ -36,8 +36,8 @@ export default class QuillProm extends Quill {
      * by the documentation for `currentChange`.
      */
     this._currentEvent = new QuillEvent(
-      accessKey, QuillEvent.API, QuillEvent.TEXT_CHANGE,
-      FrozenDelta.EMPTY, FrozenDelta.EMPTY);
+      accessKey, QuillEvent.TEXT_CHANGE,
+      FrozenDelta.EMPTY, FrozenDelta.EMPTY, QuillEvent.API);
 
     // We override `emitter.emit()` to _synchronously_ add an event to the
     // promise chain. We do it this way instead of relying on an event callback
@@ -69,17 +69,11 @@ export default class QuillProm extends Quill {
         // flag (because if we miss events, then the local and server state will
         // tragically diverge).
 
-        // Extract the common event arguments.
-        const eventName = rest.shift();
-        const source = rest.pop();
-
         // TEMPORARY!! FIXME!! REMOVE BEFORE PR!! Ignore selection change events.
-        if (eventName === QuillEvent.SELECTION_CHANGE) {
-          return;
+        const eventName = rest[0];
+        if (eventName !== QuillEvent.SELECTION_CHANGE) {
+          this._currentEvent = this._currentEvent._gotEvent(accessKey, ...rest);
         }
-
-        this._currentEvent =
-          this._currentEvent._gotEvent(accessKey, source, eventName, ...rest);
       }
 
       // This is the moral equivalent of `super.emit(...)`.
