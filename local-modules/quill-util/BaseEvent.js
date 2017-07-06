@@ -115,7 +115,7 @@ export default class BaseEvent extends CommonBase {
   }
 
   /**
-   * Constructs a new event which set up to be at the head of an event chain
+   * Constructs a new event which is set up to be at the head of an event chain
    * which continues with _this_ instance's next event, but with a different
    * event name and payload. Put another way, this constructs a replacement
    * event for this instance, but with the same chaining.
