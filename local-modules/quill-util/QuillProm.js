@@ -69,11 +69,7 @@ export default class QuillProm extends Quill {
         // flag (because if we miss events, then the local and server state will
         // tragically diverge).
 
-        // TEMPORARY!! FIXME!! REMOVE BEFORE PR!! Ignore selection change events.
-        const eventName = rest[0];
-        if (eventName !== QuillEvent.SELECTION_CHANGE) {
-          this._currentEvent = this._currentEvent._gotEvent(accessKey, ...rest);
-        }
+        this._currentEvent = this._currentEvent._gotEvent(accessKey, ...rest);
       }
 
       // This is the moral equivalent of `super.emit(...)`.
