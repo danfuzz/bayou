@@ -83,10 +83,10 @@ export default class QuillEvent {
         const [range, oldRange] = eventArgs;
 
         /** {object|null} The new selection range. */
-        this.range = QuillEvent.checkAndFreezeRange(range);
+        this.range = QuillEvent._checkAndFreezeRange(range);
 
         /** {object|null} The immediately-prior selection range. */
-        this.oldRange = QuillEvent.checkAndFreezeRange(oldRange);
+        this.oldRange = QuillEvent._checkAndFreezeRange(oldRange);
 
         break;
       }
@@ -210,7 +210,7 @@ export default class QuillEvent {
    *
    * @param {*} range The (alleged) range.
    */
-  static checkAndFreezeRange(range) {
+  static _checkAndFreezeRange(range) {
     if (range !== null) {
       TObject.withExactKeys(range, ['index', 'length']);
       TInt.min(range.index, 0);
