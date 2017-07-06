@@ -95,7 +95,7 @@ export default class DocClient extends StateMachine {
     this._quill = quill;
 
     /** {ApiClient} API interface. */
-    this._api = api;
+    this._apiClient = api;
 
     /** {Logger} Logger specific to this document's ID. */
     this._log = log.withPrefix(`[${docKey.id}]`);
@@ -342,11 +342,11 @@ export default class DocClient extends StateMachine {
     // won't become open synchronously, the API client code allows us to start
     // sending messages over it immediately. (They'll just get queued up as
     // necessary.)
-    this._api.open();
+    this._apiClient.open();
 
     // Perform a challenge-response to authorize access to the document.
     try {
-      this._docProxy = await this._api.authorizeTarget(this._docKey);
+      this._docProxy = await this._apiClient.authorizeTarget(this._docKey);
     } catch (e) {
       this.q_apiError('authorizeTarget', e);
       return;
