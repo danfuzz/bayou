@@ -121,7 +121,7 @@ export default class DocClient extends StateMachine {
      * made by Quill that this instance is aware of. That is,
      * `_currentEvent.nextOf(TEXT_CHANGE)` (once it resolves) is the first
      * change that this instance has not yet processed. This variable is
-     * initialized by getting `_quill.currentChange` and is generally updated by
+     * initialized by getting `_quill.currentEvent` and is generally updated by
      * getting the next `TEXT_CHANGE` on it. In a couple cases, though, instead
      * of being a `QuillEvent` per se, it is a "manually" constructed object
      * with a payload compatible for use within this class; these are used very
@@ -383,7 +383,7 @@ export default class DocClient extends StateMachine {
     // The above action should have caused the Quill instance to make a change
     // which shows up on its change chain. Grab it, and verify that indeed it's
     // the change we're expecting.
-    const firstChange = this._quill.currentChange;
+    const firstChange = this._quill.currentEvent;
     if (firstChange.source !== CLIENT_SOURCE) {
       // We expected the change to be the one we generated from the doc
       // update (above), but the `source` we got speaks otherwise.

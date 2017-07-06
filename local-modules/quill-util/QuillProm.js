@@ -33,7 +33,7 @@ export default class QuillProm extends Quill {
 
     /**
      * {QuillEvent} The most recent resolved event. It is initialized as defined
-     * by the documentation for `currentChange`.
+     * by the documentation for `currentEvent`.
      */
     this._currentEvent = new QuillEvent(
       accessKey, QuillEvent.TEXT_CHANGE,
@@ -89,7 +89,7 @@ export default class QuillProm extends Quill {
    * instance, this is what amounts to an empty `text-change` event with `api`
    * source.
    */
-  get currentChange() {
+  get currentEvent() {
     return this._currentEvent;
   }
 }
