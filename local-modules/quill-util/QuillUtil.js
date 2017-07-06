@@ -45,10 +45,10 @@ export default class QuillUtil extends UtilityClass {
    * If the pixel is not found in the Quill context then `POSITION_NOT_FOUND`
    * will be returned.
    *
-   * @param {Quill} quillInstance The Quill context in which to search for the
-   *   pixel position
-   * @param {number} x The horizontal pixel offset in local (DOM context) space
-   * @param {number} y The vertical pixel offset in local (DOM context) space
+   * @param {QuillProm} quillInstance The Quill context in which to search for
+   *   the pixel position.
+   * @param {number} x The horizontal pixel offset in local (DOM context) space.
+   * @param {number} y The vertical pixel offset in local (DOM context) space.
    * @returns {object} The Quill context where the pixel is located.
    */
   static quillContextForPixelPosition(quillInstance, x, y) {
@@ -56,6 +56,7 @@ export default class QuillUtil extends UtilityClass {
       return POSITION_NOT_FOUND;
     }
 
+    const document = quillInstance.domNode.ownerDocument;
     const domElement = document.elementFromPoint(x, y);
 
     if (domElement === null) {
