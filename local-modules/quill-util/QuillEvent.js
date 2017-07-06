@@ -139,6 +139,7 @@ export default class QuillEvent extends BaseEvent {
    * a valid value. If the range is valid and non-`null`, freezes it.
    *
    * @param {*} range The (alleged) range.
+   * @returns {object} The validated range.
    */
   static _checkAndFreezeRange(range) {
     if (range !== null) {
@@ -147,5 +148,7 @@ export default class QuillEvent extends BaseEvent {
       TInt.min(range.length, 0);
       Object.freeze(range);
     }
+
+    return range;
   }
 }

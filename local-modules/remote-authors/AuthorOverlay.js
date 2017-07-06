@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { AuthorId } from 'doc-common';
-import { QuillGeometry } from 'quill-util';
+import { QuillEvent, QuillGeometry } from 'quill-util';
 import { TObject } from 'typecheck';
 import { ColorSelector, PromDelay } from 'util-common';
 
@@ -41,6 +41,8 @@ export default class AuthorOverlay {
     this._quill.scrollingContainer.addEventListener('scroll', function () {
       this._updateScrollPosition();
     }.bind(this));
+
+    this._watchSelection();
 
     /**
      * {boolean} Whether or not there is any current need to update the
@@ -115,6 +117,24 @@ export default class AuthorOverlay {
     //    }
     //  }
     this._displayNeedsRedraw();
+  }
+
+  /**
+   * Watches this instance's associated Quill object for selection-related
+   * activity.
+   */
+  async _watchSelection() {
+    let currentEvent = this._quill.currentEvent;
+
+    for (;;) {
+      const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
+
+      // **TODO:** Uncomment this to see the local user's selection get
+      // highlighted. Handy during development!
+      // this.setAuthorSelection('local-author', selEvent.range);
+
+      currentEvent = selEvent;
+    }
   }
 
   /**
