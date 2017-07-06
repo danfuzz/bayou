@@ -5,6 +5,7 @@
 import Quill from 'quill';
 
 import { FrozenDelta } from 'doc-common';
+import { TObject } from 'typecheck';
 
 import QuillEvent from './QuillEvent';
 
@@ -16,9 +17,15 @@ export default class QuillProm extends Quill {
   /**
    * Constructs an instance. Parameters are identical to the normal `Quill`
    * constructor (see which).
+   *
+   * @param {Element} domNode The DOM node that the instance gets attached to.
+   * @param {...*} constructArgs The rest of the Quill constructor arguments.
    */
-  constructor(...constructArgs) {
-    super(...constructArgs);
+  constructor(domNode, ...constructArgs) {
+    super(domNode, ...constructArgs);
+
+    /** {Element} The DOM node that this instance is attached to. */
+    this._domNode = TObject.check(domNode, Element);
 
     // We can't safely `import Emitter`, as it's not an exposed class, so we
     // instead get at it via the instance of it made in the superclass
@@ -75,6 +82,11 @@ export default class QuillProm extends Quill {
       // This is the moral equivalent of `super.emit(...)`.
       origEmit.call(origEmitter, type, ...rest);
     };
+  }
+
+  /** {Element} The DOM node that this instance is attached to. */
+  get domNode() {
+    return this._domNode;
   }
 
   /**
