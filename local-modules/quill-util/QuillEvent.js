@@ -109,11 +109,11 @@ export default class QuillEvent {
     // is, this arrangement means that we know client code won't be able to
     // mess with the promise chain.
 
-    // The resolver function for the `next` promise. Used in `_gotChange()`
+    // The resolver function for the `next` promise. Used in `_gotEvent()`
     // below.
     let resolveNext;
 
-    // The resolved value for `next`. Used in `_gotChange` and `nextNow` below.
+    // The resolved value for `next`. Used in `_gotEvent` and `nextNow` below.
     let nextNow = null;
 
     // **Note:** Ideally, we would `Object.freeze()` the promise, to avoid a
@@ -129,7 +129,7 @@ export default class QuillEvent {
 
     // This method is defined inside the constructor so that we can use the
     // lexical context for (what amount to) private instance variables.
-    this._gotChange = Object.freeze((key, ...args) => {
+    this._gotEvent = Object.freeze((key, ...args) => {
       if (key !== accessKey) {
         // See note toward the top of this function.
         throw new Error('Invalid access.');

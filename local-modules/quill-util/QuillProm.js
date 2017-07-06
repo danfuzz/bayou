@@ -79,7 +79,7 @@ export default class QuillProm extends Quill {
         }
 
         this._currentEvent =
-          this._currentEvent._gotChange(accessKey, source, eventName, ...rest);
+          this._currentEvent._gotEvent(accessKey, source, eventName, ...rest);
       }
 
       // This is the moral equivalent of `super.emit(...)`.
