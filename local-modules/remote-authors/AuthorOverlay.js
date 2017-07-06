@@ -5,7 +5,7 @@
 import { AuthorId } from 'doc-common';
 import { QuillEvent, QuillGeometry } from 'quill-util';
 import { TObject } from 'typecheck';
-import { ColorSelector, PromDelay } from 'util-common';
+import { PromDelay } from 'util-common';
 
 /**
  * Time span to wait between refreshes of remote author annotations.
