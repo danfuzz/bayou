@@ -6,7 +6,7 @@ import { ApiClient } from 'api-client';
 import { Codec, SplitKey } from 'api-common';
 import { DocClient } from 'doc-client';
 import { Hooks } from 'hooks-client';
-import { EditorComplex } from 'quill-util';
+import { EditorComplex, QuillEvent } from 'quill-util';
 import { Logger } from 'see-all';
 import { TFunction, TObject } from 'typecheck';
 import { DomUtil } from 'util-client';
@@ -142,6 +142,29 @@ export default class TopControl {
     // Hook up the `DocClient` (which intermediates between the server and
     // the local Quill instance).
     this._makeDocClient();
+
+    // Shuttle caret / selection changes from Quill up to the API client.
+    // **TODO:** This code should almost certainly live elsewhere.
+    this._watchSelection();
+  }
+
+  /**
+   * Skeletal code for updating the caret / selection.
+   *
+   * **TODO:** This code should almost certainly live elsewhere.
+   */
+  async _watchSelection() {
+    const sessionProxy = await this._apiClient.authorizeTarget(this._key);
+
+    let currentEvent = this._editorComplex.quill.currentEvent;
+
+    for (;;) {
+      const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
+      const range    = selEvent.range;
+
+      sessionProxy.updateCaret(range.index, range.length);
+      currentEvent = selEvent;
+    }
   }
 
   /**

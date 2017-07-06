@@ -4,7 +4,7 @@
 
 import { SplitKey } from 'api-common';
 import { Connection, Context } from 'api-server';
-import { DocForAuthor, DocServer } from 'doc-server';
+import { AuthorSession, DocServer } from 'doc-server';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 
@@ -43,6 +43,8 @@ export default class RootAccess {
     TString.nonempty(authorId);
     TString.nonempty(docId);
 
+    const docControl = await DocServer.theOne.getDoc(docId);
+
     // Under normal circumstances, this method is called in the context of an
     // active API connection, but it can also be called when debugging, and in
     // that case we just fall back on the catchall `*` for the associated URL.
@@ -54,9 +56,9 @@ export default class RootAccess {
       ? `${Connection.activeNow.baseUrl}/api`
       : '*';
 
-    const docControl = await DocServer.theOne.getDoc(docId);
-    const doc        = new DocForAuthor(docControl, authorId);
-
+    // Make a new random key, with a guaranteed unique ID. **Note:** There
+    // cannot be any `await`s between here and when the resulting key gets added
+    // to the context, as otherwise we could end up generating a duplicate key.
     let key = null;
     for (;;) {
       key = SplitKey.randomInstance(url);
@@ -68,6 +70,7 @@ export default class RootAccess {
       // just iterate and try again.
     }
 
+    const doc = new AuthorSession(key.id, docControl, authorId);
     this._context.add(key, doc);
 
     log.info(`Newly-authorized access.`);

@@ -5,7 +5,7 @@
 import { AuthorId } from 'doc-common';
 import { QuillEvent, QuillGeometry } from 'quill-util';
 import { TObject } from 'typecheck';
-import { ColorSelector, PromDelay } from 'util-common';
+import { PromDelay } from 'util-common';
 
 /**
  * Time span to wait between refreshes of remote author annotations.
@@ -44,9 +44,6 @@ export default class AuthorOverlay {
      * made and back to `false` once the display has been updated.
      */
     this._displayIsDirty = false;
-
-    /** {ColorSelector} Used to select the highlight color for each author as they're added. */
-    this._colorSelector = new ColorSelector();
 
     this._watchSelection();
   }
