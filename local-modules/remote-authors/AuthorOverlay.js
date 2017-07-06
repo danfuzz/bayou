@@ -45,9 +45,6 @@ export default class AuthorOverlay {
      */
     this._displayIsDirty = false;
 
-    /** {ColorSelector} Used to select the highlight color for each author as they're added. */
-    this._colorSelector = new ColorSelector();
-
     this._watchSelection();
   }
 
