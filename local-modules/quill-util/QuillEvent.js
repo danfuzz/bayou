@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { FrozenDelta } from 'doc-common';
-import { TObject, TString } from 'typecheck';
+import { TInt, TObject, TString } from 'typecheck';
 
 /**
  * Event wrapper for a Quill Delta, including reference to the document source,
@@ -80,21 +80,13 @@ export default class QuillEvent {
       }
 
       case QuillEvent.SELECTION_CHANGE: {
-        let [range, oldRange] = eventArgs;
-
-        // Validate the ranges, and freeze them if they're objects.
-        if (range !== null) {
-          range = Object.freeze(TObject.withExactKeys(range, ['index', 'length']));
-        }
-        if (oldRange !== null) {
-          oldRange = Object.freeze(TObject.withExactKeys(range, ['index', 'length']));
-        }
+        const [range, oldRange] = eventArgs;
 
         /** {object|null} The new selection range. */
-        this.range = range;
+        this.range = QuillEvent.checkAndFreezeRange(range);
 
         /** {object|null} The immediately-prior selection range. */
-        this.oldRange = oldRange;
+        this.oldRange = QuillEvent.checkAndFreezeRange(oldRange);
 
         break;
       }
@@ -180,5 +172,20 @@ export default class QuillEvent {
     }
 
     return null;
+  }
+
+  /**
+   * Validates a "range" object as provided by Quill. This accepts `null` as
+   * a valid value. If the range is valid and non-`null`, freezes it.
+   *
+   * @param {*} range The (alleged) range.
+   */
+  static checkAndFreezeRange(range) {
+    if (range !== null) {
+      TObject.withExactKeys(range, ['index', 'length']);
+      TInt.min(range.index, 0);
+      TInt.min(range.length, 0);
+      Object.freeze(range);
+    }
   }
 }
