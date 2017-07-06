@@ -4,6 +4,7 @@
 
 import { ApiError } from 'api-client';
 import { DeltaResult, FrozenDelta, Snapshot } from 'doc-common';
+import { QuillEvent } from 'quill-util';
 import { Logger } from 'see-all';
 import { TObject, TString } from 'typecheck';
 import { StateMachine } from 'state-machine';
@@ -82,7 +83,7 @@ export default class DocClient extends StateMachine {
    * constructed instance expects to be the primary non-human controller of the
    * Quill instance it manages.
    *
-   * @param {Quill} quill Quill editor instance.
+   * @param {QuillProm} quill Quill editor instance.
    * @param {ApiClient} api API Client instance.
    * @param {BaseKey} docKey Key that identifies and controls access to the
    *   document on the server.
@@ -118,13 +119,13 @@ export default class DocClient extends StateMachine {
     /**
      * {QuillEvent|object} Current (most recent) local change to the document
      * made by Quill that this instance is aware of. That is,
-     * `_currentEvent.next` (once it resolves) is the first change that this
-     * instance has not yet processed. This variable is initialized by getting
-     * `_quill.currentChange` and is generally updated by waiting on `.next` or
-     * retrieving `.nextNow` from the value. In a couple cases, though, instead
+     * `_currentEvent.nextOf(TEXT_CHANGE)` (once it resolves) is the first
+     * change that this instance has not yet processed. This variable is
+     * initialized by getting `_quill.currentChange` and is generally updated by
+     * getting the next `TEXT_CHANGE` on it. In a couple cases, though, instead
      * of being a `QuillEvent` per se, it is a "manually" constructed object
-     * with the general shape of a `QuillEvent`; these are used very transiently
-     * to handle multi-way change merging.
+     * with a payload compatible for use within this class; these are used very
+     * transiently to handle multi-way change merging.
      */
     this._currentEvent = null;
 
@@ -434,7 +435,7 @@ export default class DocClient extends StateMachine {
       // **Note:** As of this writing, Quill will never reject (report an error
       // on) a document change promise.
       (async () => {
-        await this._currentEvent.next;
+        await this._currentEvent.nextOf(QuillEvent.TEXT_CHANGE);
         this._pendingLocalDocumentChange = false;
         this.q_gotLocalDelta(baseDoc);
       })();
@@ -524,7 +525,7 @@ export default class DocClient extends StateMachine {
    * @param {Snapshot} baseDoc The document at the time of the original request.
    */
   _handle_idle_gotLocalDelta(baseDoc) {
-    const change = this._currentEvent.nextNow;
+    const change = this._currentEvent.nextOfNow(QuillEvent.TEXT_CHANGE);
 
     if ((this._doc.revNum !== baseDoc.revNum) || (change === null)) {
       // The event was generated with respect to a revision of the document
@@ -654,7 +655,7 @@ export default class DocClient extends StateMachine {
     // the server's state.
     const correctedDelta = FrozenDelta.coerce(delta.compose(dCorrection));
 
-    if (this._currentEvent.nextNow === null) {
+    if (this._currentEvent.nextOfNow(QuillEvent.TEXT_CHANGE) === null) {
       // Thanfully, the local user hasn't made any other changes while we
       // were waiting for the server to get back to us, which means we can
       // cleanly apply the correction on top of Quill's current state.
@@ -719,8 +720,9 @@ export default class DocClient extends StateMachine {
     // making this change here (per se), the changes notionally came from
     // the user, and as such we _don't_ want to ignore the change.
     const nextNow = this._currentEvent.withNewPayload({
-      delta:   dNewMore,
-      source:  'user'
+      eventName: QuillEvent.TEXT_CHANGE,
+      delta:     dNewMore,
+      source:    'user'
     });
 
     // Make a new head of the change chain which points at the `nextNow` we
@@ -785,7 +787,8 @@ export default class DocClient extends StateMachine {
   _updateDocWithDelta(revNum, delta, quillDelta = delta) {
     const needQuillUpdate = !quillDelta.isEmpty();
 
-    if ((this._currentEvent.nextNow !== null) && needQuillUpdate) {
+    if (   (this._currentEvent.nextOfNow(QuillEvent.TEXT_CHANGE) !== null)
+        && needQuillUpdate) {
       // It is unsafe to apply the delta as-is, because we know that Quill's
       // revision of the document has diverged.
       throw new Error('Cannot apply delta due to revision skew.');
