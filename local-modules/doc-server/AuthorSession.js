@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Logger } from 'see-all';
-import { TString } from 'typecheck';
+import { TInt, TString } from 'typecheck';
 
 import DocControl from './DocControl';
 
@@ -120,9 +120,12 @@ export default class AuthorSession {
    *
    * @param {Int} index Caret position (if no selection per se) or starting
    *   caret position of the selection.
-   * @param {Int|null} [length = null] If non-`null`, length of the selection.
+   * @param {Int} [length = 0] If non-zero, length of the selection.
    */
-  updateCaret(index, length = null) {
+  updateCaret(index, length = 0) {
+    TInt.min(index, 0);
+    TInt.min(length, 0);
+
     // **TODO:** Something interesting should go here.
     log.info(`Got caret update for ${this._sessionId}: ${index}, ${length}`);
   }
