@@ -141,14 +141,16 @@ export default class QuillEvent {
   }
 
   /**
-   * Gets the next event of the indicated name, whenever it becomes resolved.
+   * Gets the earliest event of the indicated name in the event chain, starting
+   * at (and possibly including) this instance. This method only returns once a
+   * matching event is available.
    *
    * @param {string} eventName Event name of interest.
-   * @returns {QuillEvent} The next event with the indidated name, once it has
-   *   become resolved.
+   * @returns {QuillEvent} The earliest event with the indidated name, starting
+   *   at this instance.
    */
-  async nextOf(eventName) {
-    for (let e = await this.next; e !== null; e = await e.next) {
+  async earliestOf(eventName) {
+    for (let e = this; e !== null; e = await e.next) {
       if (e.eventName === eventName) {
         return e;
       }
@@ -158,20 +160,48 @@ export default class QuillEvent {
   }
 
   /**
-   * Gets the next event of the indicated name, if it is immediately available.
+   * Gets the earliest immediately-available event of the indicated name in the
+   * event chain, starting at (and possibly including) this instance. If no
+   * matching event is immediately available, this method returns `null`.
    *
    * @param {string} eventName Event name of interest.
-   * @returns {QuillEvent|null} The next event with the indidated name that has
-   *   already been resolved, or `null` if there is no such event.
+   * @returns {QuillEvent|null} The earliest immediately-available event with
+   *   the indidated name, starting at this instance; or `null` if there is no
+   * such event.
    */
-  nextNowOf(eventName) {
-    for (let e = this.nextNow; e !== null; e = e.nextNow) {
+  earliestOfNow(eventName) {
+    for (let e = this; e !== null; e = e.nextNow) {
       if (e.eventName === eventName) {
         return e;
       }
     }
 
     return null;
+  }
+
+  /**
+   * Gets the next event of the indicated name after this instance, whenever it
+   * becomes resolved.
+   *
+   * @param {string} eventName Event name of interest.
+   * @returns {QuillEvent} The next event with the indidated name, once it has
+   *   become resolved.
+   */
+  async nextOf(eventName) {
+    return (await this.next).earliestOf(eventName);
+  }
+
+  /**
+   * Gets the next event of the indicated name after this instance, if it is
+   * immediately available.
+   *
+   * @param {string} eventName Event name of interest.
+   * @returns {QuillEvent|null} The next event with the indidated name that has
+   *   already been resolved, or `null` if there is no such event.
+   */
+  nextOfNow(eventName) {
+    const nextNow = this.nextNow;
+    return (nextNow === null) ? null : nextNow.earliestOfNow(eventName);
   }
 
   /**
