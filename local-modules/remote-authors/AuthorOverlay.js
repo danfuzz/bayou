@@ -38,12 +38,6 @@ export default class AuthorOverlay {
      */
     this._authorOverlay = TObject.check(svgElement, Element);
 
-    this._quill.scrollingContainer.addEventListener('scroll', function () {
-      this._updateScrollPosition();
-    }.bind(this));
-
-    this._watchSelection();
-
     /**
      * {boolean} Whether or not there is any current need to update the
      * visual selection display. This is set to `true` when updates are
@@ -53,6 +47,8 @@ export default class AuthorOverlay {
 
     /** {ColorSelector} Used to select the highlight color for each author as they're added. */
     this._colorSelector = new ColorSelector();
+
+    this._watchSelection();
   }
 
   /**
