@@ -8,6 +8,8 @@ import DocControl from './DocControl';
 
 /**
  * Server side representative for a session for a specific author and document.
+ * Instances of this class are exposed across the API boundary, and as such
+ * all public methods are available for client use.
  *
  * For document access methods, this passes non-mutating methods through to the
  * underlying `DocControl` while implicitly adding an author argument to methods
@@ -17,10 +19,15 @@ export default class AuthorSession {
   /**
    * Constructs an instance.
    *
+   * @param {string} sessionId Session ID for this instance, which is expected
+   *   to be guaranteed unique by whatever service it is that generates it.
    * @param {DocControl} doc The underlying document controller.
    * @param {string} authorId The author this instance acts on behalf of.
    */
-  constructor(doc, authorId) {
+  constructor(sessionId, doc, authorId) {
+    /** {string} Author ID. */
+    this._sessionId = TString.nonempty(sessionId);
+
     /** {DocControl} The underlying document controller. */
     this._doc = DocControl.check(doc);
 
@@ -47,7 +54,16 @@ export default class AuthorSession {
    * @returns {string} A succinct identification string
    */
   getLogInfo() {
-    return `doc ${this._doc.id}; author ${this._authorId}`;
+    return `session ${this._sessionId}; doc ${this._doc.id}; author ${this._authorId}`;
+  }
+
+  /**
+   * Returns the session ID of this instance.
+   *
+   * @returns {string} The session ID.
+   */
+  getSessionId() {
+    return this._sessionId;
   }
 
   /**
