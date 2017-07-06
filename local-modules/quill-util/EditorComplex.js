@@ -104,6 +104,7 @@ export default class EditorComplex extends CommonBase {
    */
   static _doSetupForNode(topNode) {
     topNode.classList.add('bayou-top');
+    const document = topNode.ownerDocument;
 
     // The "top" node that gets passed in actually ends up being a container
     // for both the editor per se as well as other bits. The node we make here

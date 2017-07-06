@@ -236,7 +236,7 @@ export default class StateMachine {
 
       if ((eventName !== 'any') && !this._eventValidators[eventName]) {
         // No associated validator.
-        throw new Error(`Unknown event name in method: ${name}`);
+        throw new Error(`Unknown event name in method: ${eventName}`);
       }
 
       if (!result[stateName]) {
