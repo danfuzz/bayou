@@ -129,8 +129,10 @@ export default class QuillEvent extends BaseEvent {
     });
 
     // Define the two properties that are required by the superclass.
-    Object.defineProperty(this, 'next',    { get: () => { return next;    } });
-    Object.defineProperty(this, 'nextNow', { get: () => { return nextNow; } });
+    Object.defineProperties(this, {
+      next:    { get: () => { return next;    } },
+      nextNow: { get: () => { return nextNow; } }
+    });
 
     Object.freeze(this);
   }

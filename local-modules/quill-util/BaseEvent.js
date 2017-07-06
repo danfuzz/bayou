@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { TObject } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 /**
@@ -103,5 +104,30 @@ export default class BaseEvent extends CommonBase {
   nextOfNow(eventName) {
     const nextNow = this.nextNow;
     return (nextNow === null) ? null : nextNow.earliestOfNow(eventName);
+  }
+
+  /**
+   * Constructs a new event which set up to be at the head of an event chain
+   * which continues with _this_ instance's next event. Put another way, this
+   * constructs a replacement event for this instance, but with the same
+   * subsequent chaining.
+   *
+   * @param {object} payload Event payload properties. These become accessible
+   *   as-is on the resulting event.
+   * @returns {BaseEvent} New event instance with `payload` properties, and
+   *   whose `next` and `nextNow` behave the same as this instance's properties
+   *   of the same name.
+   */
+  withNewHead(payload) {
+    TObject.check(payload);
+
+    const result = Object.create(BaseEvent.prototype, {
+      next:    { get: () => { return this.next;    } },
+      nextNow: { get: () => { return this.nextNow; } }
+    });
+
+    Object.assign(result, payload);
+    Object.freeze(result);
+    return result;
   }
 }
