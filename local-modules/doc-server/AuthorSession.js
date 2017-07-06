@@ -7,11 +7,13 @@ import { TString } from 'typecheck';
 import DocControl from './DocControl';
 
 /**
- * Controller for a given document, which acts on behalf of one specific author.
- * This passes non-mutating methods through to the underlying `DocControl` while
- * implicitly adding an author argument to methods that modify the document.
+ * Server side representative for a session for a specific author and document.
+ *
+ * For document access methods, this passes non-mutating methods through to the
+ * underlying `DocControl` while implicitly adding an author argument to methods
+ * that modify the document.
  */
-export default class DocForAuthor {
+export default class AuthorSession {
   /**
    * Constructs an instance.
    *

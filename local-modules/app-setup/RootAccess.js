@@ -4,7 +4,7 @@
 
 import { SplitKey } from 'api-common';
 import { Connection, Context } from 'api-server';
-import { DocForAuthor, DocServer } from 'doc-server';
+import { AuthorSession, DocServer } from 'doc-server';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 
@@ -55,7 +55,7 @@ export default class RootAccess {
       : '*';
 
     const docControl = await DocServer.theOne.getDoc(docId);
-    const doc        = new DocForAuthor(docControl, authorId);
+    const doc        = new AuthorSession(docControl, authorId);
 
     let key = null;
     for (;;) {
