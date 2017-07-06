@@ -9,19 +9,9 @@ import BaseEvent from './BaseEvent';
 
 /**
  * Event wrapper for a Quill Delta, including reference to the document source,
- * the old contents, and the chain of subsequent events. It defines the
- * following properties:
- *
- * * `delta` -- Same as with `text-change` events.
- * * `oldContents` -- Same as with `text-change` events.
- * * `source`  -- Same as with `text-change` events.
- * * `next` -- A promise for the very next change (in order). You can use this
- *   to iterate over changes as they continue to happen.
- * * `nextNow` -- The next change after this one as a regular object (not a
- *   promise), but only if it is already available. You can use this to
- *   synchronously iterate up to the current (latest) change, and know if in
- *   fact the change you are looking at is the current one (because `nextNow`
- *   will be `null` until the next change actually happens).
+ * the old contents, and the chain of subsequent events. In addition to the
+ * event chain properties, each instance has properties as defined by Quill,
+ * with the same names as Quill indicates.
  *
  * Instances of this class are always frozen (read-only) to help protect clients
  * from each other (or from inadvertently messing with themselves).
