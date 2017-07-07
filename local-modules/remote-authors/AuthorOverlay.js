@@ -2,9 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { AuthorId } from 'doc-common';
 import { QuillEvent, QuillGeometry } from 'quill-util';
-import { TObject } from 'typecheck';
+import { TObject, TInt, TString } from 'typecheck';
 import { PromDelay } from 'util-common';
 
 /**
@@ -23,13 +22,16 @@ const REFRESH_DELAY_MSEC = 2000;
 export default class AuthorOverlay {
   constructor(quill, svgElement) {
     /**
-     * {Map<AuthorId, Map<string, object>>} _Ad hoc_ storage for arbitrary data
+     * {Map<string, Map<string, object>>} _Ad hoc_ storage for arbitrary data
      * associated with remote authors (highlights, color, avatar, etc).
      */
     this._authors = new Map();
 
     /** {QuillProm} The Quill instance hosting the document we're editing. */
     this._quill = quill;
+
+    /** {Document} The HTML document hosting our annotations. */
+    this._document = TObject.check(svgElement.ownerDocument, Document);
 
     /**
      * {Element} The SVG element in which we'll render the selections.
@@ -51,43 +53,49 @@ export default class AuthorOverlay {
   /**
    * Begin tracking a new author's selections.
    *
-   * @param {AuthorId} authorId The author to track.
+   * @param {string} authorSessionId The author to track.
    */
-  addAuthor(authorId) {
-    AuthorId.check(authorId);
+  addAuthor(authorSessionId) {
+    TString.check(authorSessionId);
 
-    this._authors.set(authorId, new Map());
+    this._authors.set(authorSessionId, new Map());
   }
 
   /**
    * Stop tracking a new author's selections.
    *
-   * @param {AuthorId} authorId The author to stop tracking.
+   * @param {string} authorSessionId The author to stop tracking.
    */
-  removeAuthor(authorId) {
-    AuthorId.check(authorId);
+  removeAuthor(authorSessionId) {
+    TString.check(authorSessionId);
 
-    this._authors.delete(authorId);
+    this._authors.delete(authorSessionId);
     this._displayNeedsRedraw();
   }
 
   /**
    * Updates annotation for a remote author's selection, and updates the display.
    *
-   * @param {AuthorId} authorId The author whose state we're updating.
-   * @param {object} selection A Quill selection object of the form
-   * `{ index: Number, length: Number }`.
+   * @param {string} authorSessionId The author whose state we're updating.
+   * @param {Int} index The position of the remote author caret or start of teh selection.
+   * @param {Int} length The extend of the remote author selection, or 0 for just the caret.
+   * @param {string} color The color to use for the background of the remote author selection.
+   *    It should be in hex format (e.g. `#ffb8b8`).
    */
-  setAuthorSelection(authorId, selection = null) {
-    AuthorId.check(authorId);
+  setAuthorSelection(authorSessionId, index, length, color) {
+    TString.check(authorSessionId);
+    TInt.min(index, 0);
+    TInt.min(length, 0);
+    TString.check(color);
 
-    if (!this._authors.has(authorId)) {
-      this.addAuthor(authorId);
+    if (!this._authors.has(authorSessionId)) {
+      this.addAuthor(authorSessionId);
     }
 
-    const authorInfo = this._authors.get(authorId);
+    const authorInfo = this._authors.get(authorSessionId);
 
-    authorInfo.set('selection', selection);
+    authorInfo.set('selection', { index, length });
+    authorInfo.set('color', color);
 
     this._displayNeedsRedraw();
   }
@@ -124,7 +132,7 @@ export default class AuthorOverlay {
 
       // **TODO:** Uncomment this to see the local user's selection get
       // highlighted. Handy during development!
-      // this.setAuthorSelection('local-author', selEvent.range);
+      //this.setAuthorSelection('local-author', selEvent.range.index, selEvent.range.length, '#ffb8b8');
 
       currentEvent = selEvent;
     }
@@ -151,41 +159,32 @@ export default class AuthorOverlay {
 
     this._displayIsDirty = false;
 
-    const paths = [];
+    // Remove extant annotations
+    while (this._authorOverlay.firstChild) {
+      this._authorOverlay.removeChild(this._authorOverlay.firstChild);
+    }
 
-    // TODO: For now this is just generating exlicit SVG markup strings and injecting
-    //       them via innerHTML in the `<svg>` element on screen. This needs to be
-    //       reworked so that we are using `document.createElement()` and working with
-    //       the DOM directly.
-    for (const [authorId_unused, authorInfo] of this._authors) {
+    // For each author…
+    for (const [authorSessionId_unused, authorInfo] of this._authors) {
+      // Generate a list of rectangles representing their selection…
       let rects = QuillGeometry.boundsForLinesInRange(this._quill, authorInfo.get('selection'));
 
       rects = rects.map(QuillGeometry.snapRectToPixels);
 
+      // Convert each rect to an SVG path and add it to the `<svg>` overlay element.
       for (const rect of rects) {
         const pathCommands = QuillGeometry.svgPathCommandsForRect(rect);
+        const path = this._document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-        paths.push(`<path ` +
-                  `d="${pathCommands}" ` +
-                  `fill=rgb(255,0,0) ` +
-                  `fill-opacity="0.25" ` +
-                  `stroke-width="1.0" ` +
-                  `stroke=rgb(255,0,0) ` +
-                  `stroke-opacity="0.75" />`
-        );
+        path.setAttribute('d', pathCommands);
+        path.setAttribute('fill', authorInfo.get('color'));
+        path.setAttribute('fill-opacity', '0.25');
+        path.setAttribute('stroke-width', '1.0');
+        path.setAttribute('stroke', authorInfo.get('color'));
+        path.setAttribute('stroke-opacity', '0.75');
+
+        this._authorOverlay.appendChild(path);
       }
     }
-
-    this._authorOverlay.innerHTML = paths.join('\n');
-    this._updateScrollPosition();
-  }
-
-  /**
-   * Scrolls the `<svg>` viewBox to match the scroll position of its associated Quill editor.
-   */
-  _updateScrollPosition() {
-    const yOffset = this._quill.scrollingContainer.scrollTop;
-
-    this._authorOverlay.setAttribute('viewBox', `0 ${yOffset} ${this._authorOverlay.clientWidth} ${this._authorOverlay.clientHeight}`);
   }
 }
