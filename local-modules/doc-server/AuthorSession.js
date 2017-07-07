@@ -49,7 +49,7 @@ export default class AuthorSession {
    *   to.
    * @param {FrozenDelta} delta Delta indicating what has changed with respect
    *   to `baseRevNum`.
-   * @returns {Promise<DeltaResult>} Promise for the correction from the
+   * @returns {Promise<DocumentDelta>} Promise for the correction from the
    *   implied expected result to get the actual result.
    */
   applyDelta(baseRevNum, delta) {
@@ -72,9 +72,9 @@ export default class AuthorSession {
    * `baseRevNum`. See the equivalent `DocControl` method for details.
    *
    * @param {Int} baseRevNum Revision number for the document.
-   * @returns {Promise<DeltaResult>} Promise for a delta and associated revision
-   *   number. The result's `delta` can be applied to revision `baseRevNum` to
-   *   produce revision `revNum` of the document.
+   * @returns {Promise<DocumentDelta>} Promise for a delta and associated
+   *   revision number. The result's `delta` can be applied to revision
+   *   `baseRevNum` to produce revision `revNum` of the document.
    */
   deltaAfter(baseRevNum) {
     return this._doc.deltaAfter(baseRevNum);

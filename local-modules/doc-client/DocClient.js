@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ApiError } from 'api-client';
-import { DeltaResult, DocumentSnapshot, FrozenDelta } from 'doc-common';
+import { DocumentDelta, DocumentSnapshot, FrozenDelta } from 'doc-common';
 import { QuillEvent } from 'quill-util';
 import { Logger } from 'see-all';
 import { TObject, TString } from 'typecheck';
@@ -180,12 +180,12 @@ export default class DocClient extends StateMachine {
    * from the API call `applyDelta()`.
    *
    * @param {FrozenDelta} delta The delta that was originally applied.
-   * @param {DeltaResult} correctedChange The correction to the expected
+   * @param {DocumentDelta} correctedChange The correction to the expected
    *   result as returned from `applyDelta()`.
    */
   _check_gotApplyDelta(delta, correctedChange) {
     FrozenDelta.check(delta);
-    DeltaResult.check(correctedChange);
+    DocumentDelta.check(correctedChange);
   }
 
   /**
@@ -194,12 +194,12 @@ export default class DocClient extends StateMachine {
    *
    * @param {DocumentSnapshot} baseDoc The document at the time of the original
    *   request.
-   * @param {DeltaResult} result How to transform `baseDoc` to get a later
+   * @param {DocumentDelta} result How to transform `baseDoc` to get a later
    *   document revision.
    */
   _check_gotDeltaAfter(baseDoc, result) {
     DocumentSnapshot.check(baseDoc);
-    DeltaResult.check(result);
+    DocumentDelta.check(result);
   }
 
   /**
@@ -481,7 +481,7 @@ export default class DocClient extends StateMachine {
    *
    * @param {DocumentSnapshot} baseDoc The document at the time of the original
    *   request.
-   * @param {DeltaResult} result How to transform `baseDoc` to get a later
+   * @param {DocumentDelta} result How to transform `baseDoc` to get a later
    *   document revision.
    */
   _handle_idle_gotDeltaAfter(baseDoc, result) {
@@ -516,7 +516,7 @@ export default class DocClient extends StateMachine {
    *
    * @param {DocumentSnapshot} baseDoc_unused The document at the time of the
    *   original request.
-   * @param {DeltaResult} result_unused How to transform `baseDoc` to get a
+   * @param {DocumentDelta} result_unused How to transform `baseDoc` to get a
    *   later document revision.
    */
   _handle_any_gotDeltaAfter(baseDoc_unused, result_unused) {
@@ -624,7 +624,7 @@ export default class DocClient extends StateMachine {
    * change was successfully merged by the server.
    *
    * @param {FrozenDelta} delta The delta that was originally applied.
-   * @param {DeltaResult} correctedChange The correction to the expected
+   * @param {DocumentDelta} correctedChange The correction to the expected
    *   result as returned from `applyDelta()`.
    */
   _handle_merging_gotApplyDelta(delta, correctedChange) {

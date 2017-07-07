@@ -8,7 +8,7 @@ import AuthorId from './AuthorId';
 import Caret from './Caret';
 import CaretDelta from './CaretDelta';
 import CaretSnapshot from './CaretSnapshot';
-import DeltaResult from './DeltaResult';
+import DocumentDelta from './DocumentDelta';
 import DocumentChange from './DocumentChange';
 import DocumentId from './DocumentId';
 import DocumentSnapshot from './DocumentSnapshot';
@@ -20,7 +20,7 @@ import RevisionNumber from './RevisionNumber';
 Codec.theOne.registerClass(Caret);
 Codec.theOne.registerClass(CaretDelta);
 Codec.theOne.registerClass(CaretSnapshot);
-Codec.theOne.registerClass(DeltaResult);
+Codec.theOne.registerClass(DocumentDelta);
 Codec.theOne.registerClass(DocumentChange);
 Codec.theOne.registerClass(DocumentSnapshot);
 Codec.theOne.registerClass(FrozenDelta);
@@ -31,7 +31,7 @@ export {
   Caret,
   CaretDelta,
   CaretSnapshot,
-  DeltaResult,
+  DocumentDelta,
   DocumentChange,
   DocumentId,
   DocumentSnapshot,
