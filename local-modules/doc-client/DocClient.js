@@ -104,10 +104,10 @@ export default class DocClient extends StateMachine {
     this._docKey = docKey;
 
     /**
-     * {Proxy} Local proxy for accessing the document. Becomes non-null during
-     * the handling of the `start` event.
+     * {Proxy} Local proxy for accessing the server session. Becomes non-null
+     * during the handling of the `start` event.
      */
-    this._docProxy = null;
+    this._sessionProxy = null;
 
     /**
      * {Snapshot|null} Current revision of the document as received from the
@@ -293,10 +293,10 @@ export default class DocClient extends StateMachine {
    * changes that were in-flight when the connection became problematic.
    */
   _handle_errorWait_start() {
-    this._doc = null;
-    this._docProxy = null;
-    this._currentEvent = null;
-    this._pendingDeltaAfter = false;
+    this._doc                        = null;
+    this._sessionProxy               = null;
+    this._currentEvent               = null;
+    this._pendingDeltaAfter          = false;
     this._pendingLocalDocumentChange = false;
 
     // After this, it's just like starting from the `detached` state.
@@ -346,7 +346,7 @@ export default class DocClient extends StateMachine {
 
     // Perform a challenge-response to authorize access to the document.
     try {
-      this._docProxy = await this._apiClient.authorizeTarget(this._docKey);
+      this._sessionProxy = await this._apiClient.authorizeTarget(this._docKey);
     } catch (e) {
       this.q_apiError('authorizeTarget', e);
       return;
@@ -356,9 +356,9 @@ export default class DocClient extends StateMachine {
     // side), and get the first snapshot. We issue the calls in parallel and
     // then handle the results.
 
-    const docProxy        = this._docProxy;
-    const infoPromise     = docProxy.getLogInfo();
-    const snapshotPromise = docProxy.snapshot();
+    const sessionProxy    = this._sessionProxy;
+    const infoPromise     = sessionProxy.getLogInfo();
+    const snapshotPromise = sessionProxy.snapshot();
 
     try {
       const info = await infoPromise;
@@ -449,7 +449,7 @@ export default class DocClient extends StateMachine {
 
       (async () => {
         try {
-          const value = await this._docProxy.deltaAfter(baseDoc.revNum);
+          const value = await this._sessionProxy.deltaAfter(baseDoc.revNum);
           this._pendingDeltaAfter = false;
           this.q_gotDeltaAfter(baseDoc, value);
         } catch (e) {
@@ -600,7 +600,8 @@ export default class DocClient extends StateMachine {
     // Send the delta, and handle the response.
     (async () => {
       try {
-        const value = await this._docProxy.applyDelta(this._doc.revNum, delta);
+        const value =
+          await this._sessionProxy.applyDelta(this._doc.revNum, delta);
         this.q_gotApplyDelta(delta, value);
       } catch (e) {
         this.q_apiError('applyDelta', e);
