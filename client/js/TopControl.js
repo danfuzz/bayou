@@ -155,7 +155,8 @@ export default class TopControl {
   /**
    * Skeletal code for updating the caret / selection.
    *
-   * **TODO:** This code should almost certainly live elsewhere.
+   * **TODO:** This code should almost certainly live elsewhere. Also, it needs
+   * to actually do something more useful.
    */
   async _watchSelection() {
     const sessionProxy =
