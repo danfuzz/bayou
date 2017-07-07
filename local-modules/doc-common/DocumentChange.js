@@ -46,20 +46,24 @@ export default class DocumentChange extends CommonBase {
   constructor(revNum, timestamp, delta, authorId) {
     super();
 
-    /** The produced revision number. */
+    /** {Int} The produced revision number. */
     this._revNum = RevisionNumber.check(revNum);
 
-    /** The time of the change. */
+    /** {Timestamp} The time of the change. */
     this._timestamp = Timestamp.check(timestamp);
 
-    /** The actual change, as a delta. */
+    /** {FrozenDelta} The actual change, as a delta. */
     this._delta = FrozenDelta.coerce(delta);
 
-    /** Author ID string. */
+    /**
+     * {string|null} Author ID string, or `null` if the change is authorless.
+     */
     this._authorId = TString.orNull(authorId);
+
+    Object.freeze(this);
   }
 
-  /** Name of this class in the API. */
+  /** {string} Name of this class in the API. */
   static get API_NAME() {
     return 'DocumentChange';
   }
@@ -101,7 +105,9 @@ export default class DocumentChange extends CommonBase {
     return this._delta;
   }
 
-  /** {string|null} The author ID string. */
+  /**
+   * {string|null} The author ID string, or `null` if the change is authorless.
+   */
   get authorId() {
     return this._authorId;
   }

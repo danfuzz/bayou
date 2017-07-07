@@ -10,6 +10,7 @@ import { EditorComplex, QuillEvent } from 'quill-util';
 import { Logger } from 'see-all';
 import { TFunction, TObject } from 'typecheck';
 import { DomUtil } from 'util-client';
+import { PromDelay } from 'util-common';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('top');
@@ -154,7 +155,8 @@ export default class TopControl {
   /**
    * Skeletal code for updating the caret / selection.
    *
-   * **TODO:** This code should almost certainly live elsewhere.
+   * **TODO:** This code should almost certainly live elsewhere. Also, it needs
+   * to actually do something more useful.
    */
   async _watchSelection() {
     const sessionProxy =
@@ -166,8 +168,12 @@ export default class TopControl {
       const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
       const range    = selEvent.range;
 
-      sessionProxy.updateCaret(range.index, range.length);
-      currentEvent = selEvent;
+      sessionProxy.caretUpdate(range.index, range.length);
+
+      // Avoid spamming the server with tons of updates. To see every event,
+      // this should just be `currentEvent = selEvent`.
+      currentEvent = this._editorComplex.quill.currentEvent;
+      await PromDelay.resolve(5000);
     }
   }
 
