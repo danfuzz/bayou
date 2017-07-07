@@ -106,7 +106,7 @@ export default class AuthorSession {
    *
    * @param {Int|null} [revNum = null] Which revision to get. If passed as
    *   `null`, indicates the latest (most recent) revision.
-   * @returns {Promise<Snapshot>} Promise for the requested snapshot.
+   * @returns {Promise<DocumentSnapshot>} Promise for the requested snapshot.
    */
   snapshot(revNum = null) {
     return this._doc.snapshot(revNum);

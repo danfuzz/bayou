@@ -4,8 +4,7 @@
 
 import { Codec } from 'api-common';
 import { BaseFile, FileCodec, TransactionSpec } from 'content-store';
-import { DeltaResult, DocumentChange, FrozenDelta, RevisionNumber, Snapshot, Timestamp }
-  from 'doc-common';
+import { DeltaResult, DocumentChange, DocumentSnapshot, FrozenDelta, RevisionNumber, Timestamp } from 'doc-common';
 import { Logger } from 'see-all';
 import { TInt, TString } from 'typecheck';
 import { CommonBase, InfoError, PromDelay } from 'util-common';
@@ -83,7 +82,7 @@ export default class DocControl extends CommonBase {
     this._formatVersion = TString.nonempty(formatVersion);
 
     /**
-     * {Map<RevisionNumber,Snapshot>} Mapping from revision numbers to
+     * {Map<RevisionNumber,DocumentSnapshot>} Mapping from revision numbers to
      * corresponding document snapshots. Sparse.
      */
     this._snapshots = new Map();
@@ -180,7 +179,7 @@ export default class DocControl extends CommonBase {
    *
    * @param {Int|null} revNum Which revision to get. If passed as `null`,
    *   indicates the latest (most recent) revision.
-   * @returns {Snapshot} The corresponding snapshot.
+   * @returns {DocumentSnapshot} The corresponding snapshot.
    */
   async snapshot(revNum = null) {
     const currentRevNum = (await this._currentRevNums()).docRevNum;
@@ -210,7 +209,7 @@ export default class DocControl extends CommonBase {
     const contents = (base === null)
       ? this._composeRevisions(FrozenDelta.EMPTY, 0,               revNum + 1)
       : this._composeRevisions(base.contents,     base.revNum + 1, revNum + 1);
-    const result = new Snapshot(revNum, await contents);
+    const result = new DocumentSnapshot(revNum, await contents);
 
     this._log.detail(`Made snapshot for revision ${revNum}.`);
 
@@ -401,7 +400,8 @@ export default class DocControl extends CommonBase {
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
-    const expected = new Snapshot(baseRevNum + 1, base.contents.compose(delta));
+    const expected =
+      new DocumentSnapshot(baseRevNum + 1, base.contents.compose(delta));
 
     // We try performing the apply, and then we iterate if it failed _and_ the
     // reason is simply that there were any changes that got made while we were
@@ -451,15 +451,15 @@ export default class DocControl extends CommonBase {
    * the snapshot being out-of-date, then this method returns `null`. All other
    * problems are reported by throwing an exception.
    *
-   * @param {Snapshot} base Snapshot of the base from which the delta is
+   * @param {DocumentSnapshot} base Snapshot of the base from which the delta is
    *   defined. That is, this is the snapshot of `baseRevNum` as provided to
    *   `applyDelta()`.
    * @param {FrozenDelta} delta Same as for `applyDelta()`.
    * @param {string|null} authorId Same as for `applyDelta()`.
-   * @param {Snapshot} current Snapshot of the current (latest) revision of the
-   *   document.
-   * @param {Snapshot} expected The implied expected result as defined by
-   *   `applyDelta()`.
+   * @param {DocumentSnapshot} current Snapshot of the current (latest) revision
+   *   of the document.
+   * @param {DocumentSnapshot} expected The implied expected result as defined
+   *   by `applyDelta()`.
    * @returns {DeltaResult|null} Result for the outer call to `applyDelta()`,
    *   or `null` if the application failed due to an out-of-date `snapshot`.
    */

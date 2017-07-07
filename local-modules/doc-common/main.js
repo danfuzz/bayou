@@ -11,8 +11,8 @@ import CaretSnapshot from './CaretSnapshot';
 import DeltaResult from './DeltaResult';
 import DocumentChange from './DocumentChange';
 import DocumentId from './DocumentId';
+import DocumentSnapshot from './DocumentSnapshot';
 import FrozenDelta from './FrozenDelta';
-import Snapshot from './Snapshot';
 import Timestamp from './Timestamp';
 import RevisionNumber from './RevisionNumber';
 
@@ -22,8 +22,8 @@ Codec.theOne.registerClass(CaretDelta);
 Codec.theOne.registerClass(CaretSnapshot);
 Codec.theOne.registerClass(DeltaResult);
 Codec.theOne.registerClass(DocumentChange);
+Codec.theOne.registerClass(DocumentSnapshot);
 Codec.theOne.registerClass(FrozenDelta);
-Codec.theOne.registerClass(Snapshot);
 Codec.theOne.registerClass(Timestamp);
 
 export {
@@ -34,8 +34,8 @@ export {
   DeltaResult,
   DocumentChange,
   DocumentId,
+  DocumentSnapshot,
   FrozenDelta,
-  Snapshot,
   Timestamp,
   RevisionNumber
 };
