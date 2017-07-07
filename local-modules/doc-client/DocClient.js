@@ -85,10 +85,11 @@ export default class DocClient extends StateMachine {
    *
    * @param {QuillProm} quill Quill editor instance.
    * @param {ApiClient} api API Client instance.
-   * @param {BaseKey} docKey Key that identifies and controls access to the
-   *   document on the server.
+   * @param {BaseKey} sessionKey Key that identifies the session and grants
+   *   access to it. **Note:** A session is specifically tied to a single
+   *   author and a single document.
    */
-  constructor(quill, api, docKey) {
+  constructor(quill, api, sessionKey) {
     super('detached', log);
 
     /** {Quill} Editor object. */
@@ -98,10 +99,10 @@ export default class DocClient extends StateMachine {
     this._apiClient = api;
 
     /** {Logger} Logger specific to this document's ID. */
-    this._log = log.withPrefix(`[${docKey.id}]`);
+    this._log = log.withPrefix(`[${sessionKey.id}]`);
 
-    /** {BaseKey} Key that identifies and controls access to the document. */
-    this._docKey = docKey;
+    /** {BaseKey} Key that identifies the session and grants access to it. */
+    this._sessionKey = sessionKey;
 
     /**
      * {Proxy} Local proxy for accessing the server session. Becomes non-null
@@ -346,7 +347,8 @@ export default class DocClient extends StateMachine {
 
     // Perform a challenge-response to authorize access to the document.
     try {
-      this._sessionProxy = await this._apiClient.authorizeTarget(this._docKey);
+      this._sessionProxy =
+        await this._apiClient.authorizeTarget(this._sessionKey);
     } catch (e) {
       this.q_apiError('authorizeTarget', e);
       return;
