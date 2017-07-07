@@ -30,14 +30,16 @@ export default class DeltaResult extends CommonBase {
   constructor(revNum, delta) {
     super();
 
-    /** The produced revision number. */
+    /** {Int} The produced revision number. */
     this._revNum = RevisionNumber.check(revNum);
 
-    /** The actual change, as a delta. */
+    /** {FrozenDelta} The actual change, as a delta. */
     this._delta = FrozenDelta.check(delta);
+
+    Object.freeze(this);
   }
 
-  /** Name of this class in the API. */
+  /** {string} Name of this class in the API. */
   static get API_NAME() {
     return 'DeltaResult';
   }

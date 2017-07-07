@@ -35,7 +35,7 @@ export default class CaretDelta extends CommonBase {
     this._ops = Object.freeze(TArray.check(ops));
   }
 
-  /** Name of this class in the API. */
+  /** {string} Name of this class in the API. */
   static get API_NAME() {
     return 'CaretDelta';
   }

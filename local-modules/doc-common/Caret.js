@@ -23,7 +23,7 @@ export default class Caret extends CommonBase {
     Object.freeze(this);
   }
 
-  /** Name of this class in the API. */
+  /** {string} Name of this class in the API. */
   static get API_NAME() {
     return 'Caret';
   }
