@@ -122,7 +122,7 @@ export default class AuthorSession {
    *   caret position of the selection.
    * @param {Int} [length = 0] If non-zero, length of the selection.
    */
-  updateCaret(index, length = 0) {
+  caretUpdate(index, length = 0) {
     TInt.min(index, 0);
     TInt.min(length, 0);
 

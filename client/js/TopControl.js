@@ -166,7 +166,7 @@ export default class TopControl {
       const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
       const range    = selEvent.range;
 
-      sessionProxy.updateCaret(range.index, range.length);
+      sessionProxy.caretUpdate(range.index, range.length);
       currentEvent = selEvent;
     }
   }
