@@ -16,15 +16,19 @@ export default class CaretSnapshot extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {Int} revNum Revision number of the document for which this snapshot
-   *   is valid.
+   * @param {Int} revNum Revision number of the caret information.
+   * @param {Int} docRevNum Revision number of the document to which the caret
+   *   information applies.
    * @param {array<Caret>} carets Array of all the active carets.
    */
-  constructor(revNum, carets) {
+  constructor(revNum, docRevNum, carets) {
     super();
 
-    /** {Int} The associated revision number. */
+    /** {Int} The associated caret information revision number. */
     this._revNum = RevisionNumber.check(revNum);
+
+    /** {Int} The associated document information revision number. */
+    this._docRevNum = RevisionNumber.check(docRevNum);
 
     /** {array<Caret>} Array of all the active carets. */
     this._carets = Object.freeze(TArray.check(carets, Caret.check));
@@ -43,21 +47,29 @@ export default class CaretSnapshot extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._revNum, this._carets];
+    return [this._revNum, this._docRevNum, this._carets];
   }
 
   /**
    * Constructs an instance from API arguments.
    *
    * @param {Int} revNum Same as with the regular constructor.
+   * @param {Int} docRevNum Same as with the regular constructor.
    * @param {array<Caret>} carets Same as with the regular constructor.
    * @returns {CaretSnapshot} The constructed instance.
    */
-  static fromApi(revNum, carets) {
-    return new CaretSnapshot(revNum, carets);
+  static fromApi(revNum, docRevNum, carets) {
+    return new CaretSnapshot(revNum, docRevNum, carets);
   }
 
-  /** {Int} The produced revision number. */
+  /**
+   * {Int} The document revision number to which the caret information applies.
+   */
+  get docRevNum() {
+    return this._docRevNum;
+  }
+
+  /** {Int} The caret information revision number. */
   get revNum() {
     return this._revNum;
   }

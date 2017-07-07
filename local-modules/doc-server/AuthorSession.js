@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CaretSnapshot } from 'doc-common';
+import { CaretDelta, CaretSnapshot } from 'doc-common';
 import { Logger } from 'see-all';
 import { TInt, TString } from 'typecheck';
 
@@ -113,21 +113,53 @@ export default class AuthorSession {
   }
 
   /**
+   * Gets a delta of caret information from the indicated base caret revision.
+   * This will throw an error if the indicated revision doesn't have caret
+   * information available, in which case the client will likely want to use
+   * `caretSnapshot()` to get back in synch.
+   *
+   * **Note:** Caret information and the main document have _separate_ revision
+   * numbers. `CaretSnapshot` instances have information about both revision
+   * numbers.
+   *
+   * **Note:** Caret information is only maintained ephemerally, so it is
+   * common for it not to be available for other than just a few recent
+   * revisions.
+   *
+   * @param {Int} baseRevNum Revision number for the caret information which
+   *   will form the basis for the result. If `baseRevNum` is the current
+   *   revision number, this method will block until a new revision is
+   *   available.
+   * @returns {Promise<CaretDelta>} Promise for a delta from the base caret
+   *   revision to a newer one. Applying this result to a `CaretSnapshot` for
+   *   `baseRevNum` will produce an up-to-date snapshot.
+   */
+  caretDeltaAfter(baseRevNum) {
+    // TODO: Something more interesting.
+    const docRevNum = 0;
+    return new CaretDelta(baseRevNum, baseRevNum + 1, docRevNum, []);
+  }
+
+  /**
    * Gets a snapshot of all active session caret information. This will throw
-   * an error if the indicated revision doesn't have caret information
+   * an error if the indicated caret revision doesn't have caret information
    * available.
    *
    * **Note:** Caret information is only maintained ephemerally, so it is
-   * common for it not to be available for revisions other than the most
-   * recent one.
+   * common for it not to be available for other than just a few recent
+   * revisions.
    *
-   * @param {Int|null} [revNum = null] Which revision to get. If passed as
+   * @param {Int|null} [revNum = null] Which caret revision to get. If passed as
    *   `null`, indicates the latest (most recent) revision.
    * @returns {CaretSnapshot} Snapshot of all the active carets.
    */
   caretSnapshot(revNum = null) {
     // TODO: Something more interesting.
-    return new CaretSnapshot(revNum, []);
+    if (revNum === null) {
+      revNum = 0;
+    }
+    const docRevNum = 0;
+    return new CaretSnapshot(revNum, docRevNum, []);
   }
 
   /**
