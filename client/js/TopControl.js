@@ -32,11 +32,14 @@ export default class TopControl {
     // variables. Validate that they're present before doing anything further.
 
     /**
-     * {SplitKey} Key that authorizes access and update to a particular document
-     * as a specific author. The `BAYOU_KEY` incoming parameter is expected to
-     * be a `SplitKey` in JSON-encoded form.
+     * {SplitKey} Key that authorizes access to a session. A session is tied to
+     * a specific document and a specific author, allowing general read access
+     * to the document and allowing modification to the document as the one
+     * specific author. The incoming parameter `BAYOU_KEY` (transmitted via a
+     * `window` global) is expected to be a `SplitKey` in JSON-encoded form.
      */
-    this._key = SplitKey.check(Codec.theOne.decodeJson(window.BAYOU_KEY));
+    this._sessionKey =
+      SplitKey.check(Codec.theOne.decodeJson(window.BAYOU_KEY));
 
     /** {Element} DOM node to use for the editor. */
     this._editorNode = TObject.check(window.BAYOU_NODE, Element);
@@ -154,7 +157,8 @@ export default class TopControl {
    * **TODO:** This code should almost certainly live elsewhere.
    */
   async _watchSelection() {
-    const sessionProxy = await this._apiClient.authorizeTarget(this._key);
+    const sessionProxy =
+      await this._apiClient.authorizeTarget(this._sessionKey);
 
     let currentEvent = this._editorComplex.quill.currentEvent;
 
@@ -168,9 +172,9 @@ export default class TopControl {
   }
 
   /**
-   * Fixes the instance's `_key`, if necessary, so that it has a real URL (and
-   * not just a catchall). Replaces the instance variable if any fixing was
-   * required.
+   * Fixes the instance's `_sessionKey`, if necessary, so that it has a real URL
+   * (and not just a catch-all). Replaces the instance variable if any fixing
+   * was required.
    *
    * **Note:** Under normal circumstances, the key we receive comes with a
    * real URL. However, when using the debugging routes, it's possible that we
@@ -178,11 +182,11 @@ export default class TopControl {
    * using the document's URL. client.
    */
   _fixKeyIfNecessary() {
-    const key = this._key;
+    const key = this._sessionKey;
 
     if (key.url === '*') {
       const url = new URL(this._window.document.URL);
-      this._key = key.withUrl(`${url.origin}/api`);
+      this._sessionKey = key.withUrl(`${url.origin}/api`);
     }
   }
 
@@ -195,7 +199,7 @@ export default class TopControl {
     // Fix the key first if necessary (to have a proper URL).
     this._fixKeyIfNecessary();
 
-    this._apiClient = new ApiClient(this._key.url);
+    this._apiClient = new ApiClient(this._sessionKey.url);
 
     (async () => {
       await this._apiClient.open();
@@ -209,7 +213,7 @@ export default class TopControl {
   _makeDocClient() {
     const quill = this._editorComplex.quill;
 
-    this._docClient = new DocClient(quill, this._apiClient, this._key);
+    this._docClient = new DocClient(quill, this._apiClient, this._sessionKey);
     this._docClient.start();
 
     // Log a note once everything is all set up.
@@ -233,7 +237,7 @@ export default class TopControl {
   async _recoverIfPossible() {
     log.error('Editor gave up!');
 
-    const newKey = await this._recover(this._key);
+    const newKey = await this._recover(this._sessionKey);
 
     if (typeof newKey !== 'string') {
       log.info('Nothing more to do. :\'(');
@@ -241,7 +245,7 @@ export default class TopControl {
     }
 
     log.info('Attempting recovery with new key...');
-    this._key = SplitKey.check(Codec.theOne.decodeJson(newKey));
+    this._sessionKey = SplitKey.check(Codec.theOne.decodeJson(newKey));
     this._makeApiClient();
     this._makeDocClient();
   }
