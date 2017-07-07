@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { CaretSnapshot } from 'doc-common';
 import { Logger } from 'see-all';
 import { TInt, TString } from 'typecheck';
 
@@ -109,6 +110,24 @@ export default class AuthorSession {
    */
   snapshot(revNum = null) {
     return this._doc.snapshot(revNum);
+  }
+
+  /**
+   * Gets a snapshot of all active session caret information. This will throw
+   * an error if the indicated revision doesn't have caret information
+   * available.
+   *
+   * **Note:** Caret information is only maintained ephemerally, so it is
+   * common for it not to be available for revisions other than the most
+   * recent one.
+   *
+   * @param {Int|null} [revNum = null] Which revision to get. If passed as
+   *   `null`, indicates the latest (most recent) revision.
+   * @returns {CaretSnapshot} Snapshot of all the active carets.
+   */
+  caretSnapshot(revNum = null) {
+    // TODO: Something more interesting.
+    return new CaretSnapshot(revNum, []);
   }
 
   /**
