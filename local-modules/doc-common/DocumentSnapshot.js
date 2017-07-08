@@ -9,9 +9,9 @@ import RevisionNumber from './RevisionNumber';
 
 
 /**
- * Snapshot of a document, with other associated information.
+ * Snapshot of document contents, with other associated information.
  */
-export default class Snapshot extends CommonBase {
+export default class DocumentSnapshot extends CommonBase {
   /**
    * Constructs an instance.
    *
@@ -49,7 +49,7 @@ export default class Snapshot extends CommonBase {
 
   /** {string} Name of this class in the API. */
   static get API_NAME() {
-    return 'Snapshot';
+    return 'DocumentSnapshot';
   }
 
   /**
@@ -66,10 +66,10 @@ export default class Snapshot extends CommonBase {
    *
    * @param {number} revNum Same as regular constructor.
    * @param {Delta|array|object} contents Same as regular constructor.
-   * @returns {Snapshot} The constructed instance.
+   * @returns {DocumentSnapshot} The constructed instance.
    */
   static fromApi(revNum, contents) {
-    return new Snapshot(revNum, contents);
+    return new DocumentSnapshot(revNum, contents);
   }
 
   /** {RevisionNumber} The revision number. */

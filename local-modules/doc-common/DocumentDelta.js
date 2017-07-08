@@ -8,18 +8,19 @@ import { CommonBase } from 'util-common';
 import RevisionNumber from './RevisionNumber';
 
 /**
- * Delta-bearing result of an API call, which also comes with a revision number.
+ * Delta which can be applied to a `DocumentSnapshot`, along with associated
+ * information, to produce an updated snapshot.
+ *
  * Instances of this class are returned from calls to `applyDelta()` and
  * `deltaAfter()` as defined by the various `doc-server` classes. See those for
- * more details.
- *
- * Note that the meaning of the `delta` value is different depending on which
- * method the result came from. In particular, there is an implied "expected"
- * result from `applyDelta()` which this instance's `delta` is with respect to.
+ * more details. Note that the meaning of the `delta` value is different
+ * depending on which method the result came from. In particular, there is an
+ * implied "expected" result from `applyDelta()` which this instance's `delta`
+ * is with respect to.
  *
  * Instances of this class are immutable.
  */
-export default class DeltaResult extends CommonBase {
+export default class DocumentDelta extends CommonBase {
   /**
    * Constructs an instance.
    *
@@ -41,7 +42,7 @@ export default class DeltaResult extends CommonBase {
 
   /** {string} Name of this class in the API. */
   static get API_NAME() {
-    return 'DeltaResult';
+    return 'DocumentDelta';
   }
 
   /**
@@ -58,10 +59,10 @@ export default class DeltaResult extends CommonBase {
    *
    * @param {Int} revNum Same as with the regular constructor.
    * @param {FrozenDelta} delta Same as with the regular constructor.
-   * @returns {DeltaResult} The constructed instance.
+   * @returns {DocumentDelta} The constructed instance.
    */
   static fromApi(revNum, delta) {
-    return new DeltaResult(revNum, delta);
+    return new DocumentDelta(revNum, delta);
   }
 
   /** {Int} The produced revision number. */

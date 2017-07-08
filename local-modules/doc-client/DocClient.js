@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ApiError } from 'api-client';
-import { DeltaResult, FrozenDelta, Snapshot } from 'doc-common';
+import { DocumentDelta, DocumentSnapshot, FrozenDelta } from 'doc-common';
 import { QuillEvent } from 'quill-util';
 import { Logger } from 'see-all';
 import { TObject, TString } from 'typecheck';
@@ -111,8 +111,8 @@ export default class DocClient extends StateMachine {
     this._sessionProxy = null;
 
     /**
-     * {Snapshot|null} Current revision of the document as received from the
-     * server. Becomes non-null once the first snapshot is received from the
+     * {DocumentSnapshot|null} Current revision of the document as received from
+     * the server. Becomes non-null once the first snapshot is received from the
      * server.
      */
     this._doc = null;
@@ -180,25 +180,26 @@ export default class DocClient extends StateMachine {
    * from the API call `applyDelta()`.
    *
    * @param {FrozenDelta} delta The delta that was originally applied.
-   * @param {DeltaResult} correctedChange The correction to the expected
+   * @param {DocumentDelta} correctedChange The correction to the expected
    *   result as returned from `applyDelta()`.
    */
   _check_gotApplyDelta(delta, correctedChange) {
     FrozenDelta.check(delta);
-    DeltaResult.check(correctedChange);
+    DocumentDelta.check(correctedChange);
   }
 
   /**
    * Validates a `gotDeltaAfter` event. This represents a successful result
    * from the API call `deltaAfter()`.
    *
-   * @param {Snapshot} baseDoc The document at the time of the original request.
-   * @param {DeltaResult} result How to transform `baseDoc` to get a later
+   * @param {DocumentSnapshot} baseDoc The document at the time of the original
+   *   request.
+   * @param {DocumentDelta} result How to transform `baseDoc` to get a later
    *   document revision.
    */
   _check_gotDeltaAfter(baseDoc, result) {
-    Snapshot.check(baseDoc);
-    DeltaResult.check(result);
+    DocumentSnapshot.check(baseDoc);
+    DocumentDelta.check(result);
   }
 
   /**
@@ -207,10 +208,11 @@ export default class DocClient extends StateMachine {
    * reflected in the given base document. Put another way, this indicates that
    * `_currentEvent` has a resolved `next`.
    *
-   * @param {Snapshot} baseDoc The document at the time of the original request.
+   * @param {DocumentSnapshot} baseDoc The document at the time of the original
+   *   request.
    */
   _check_gotLocalDelta(baseDoc) {
-    Snapshot.check(baseDoc);
+    DocumentSnapshot.check(baseDoc);
   }
 
   /**
@@ -224,10 +226,11 @@ export default class DocClient extends StateMachine {
    * Validates a `wantApplyDelta` event. This indicates that it is time to
    * send collected local changes up to the server.
    *
-   * @param {Snapshot} baseDoc The document at the time of the original request.
+   * @param {DocumentSnapshot} baseDoc The document at the time of the original
+   *   request.
    */
   _check_wantApplyDelta(baseDoc) {
-    Snapshot.check(baseDoc);
+    DocumentSnapshot.check(baseDoc);
   }
 
   /**
@@ -476,8 +479,9 @@ export default class DocClient extends StateMachine {
   /**
    * In state `idle`, handles event `gotDeltaAfter`.
    *
-   * @param {Snapshot} baseDoc The document at the time of the original request.
-   * @param {DeltaResult} result How to transform `baseDoc` to get a later
+   * @param {DocumentSnapshot} baseDoc The document at the time of the original
+   *   request.
+   * @param {DocumentDelta} result How to transform `baseDoc` to get a later
    *   document revision.
    */
   _handle_idle_gotDeltaAfter(baseDoc, result) {
@@ -510,9 +514,9 @@ export default class DocClient extends StateMachine {
    * such, it is safe to ignore, because after the local change is integrated,
    * the system will fire off a new `deltaAfter()` request.
    *
-   * @param {Snapshot} baseDoc_unused The document at the time of the original
-   *   request.
-   * @param {DeltaResult} result_unused How to transform `baseDoc` to get a
+   * @param {DocumentSnapshot} baseDoc_unused The document at the time of the
+   *   original request.
+   * @param {DocumentDelta} result_unused How to transform `baseDoc` to get a
    *   later document revision.
    */
   _handle_any_gotDeltaAfter(baseDoc_unused, result_unused) {
@@ -524,7 +528,8 @@ export default class DocClient extends StateMachine {
    * user has started making some changes. We prepare to collect the changes
    * for a short period of time before sending them up to the server.
    *
-   * @param {Snapshot} baseDoc The document at the time of the original request.
+   * @param {DocumentSnapshot} baseDoc The document at the time of the original
+   *   request.
    */
   _handle_idle_gotLocalDelta(baseDoc) {
     const change = this._currentEvent.nextOfNow(QuillEvent.TEXT_CHANGE);
@@ -562,8 +567,8 @@ export default class DocClient extends StateMachine {
    * chain of local changes. As such, it is safe to ignore, because whatever
    * the change was, it will get handled by that pre-existing process.
    *
-   * @param {Snapshot} baseDoc_unused The document at the time of the original
-   *   request.
+   * @param {DocumentSnapshot} baseDoc_unused The document at the time of the
+   *   original request.
    */
   _handle_any_gotLocalDelta(baseDoc_unused) {
     // Nothing to do. Stay in the same state.
@@ -574,7 +579,8 @@ export default class DocClient extends StateMachine {
    * is time for the collected local changes to be sent up to the server for
    * integration.
    *
-   * @param {Snapshot} baseDoc The document at the time of the original request.
+   * @param {DocumentSnapshot} baseDoc The document at the time of the original
+   *   request.
    */
   _handle_collecting_wantApplyDelta(baseDoc) {
     if (this._doc.revNum !== baseDoc.revNum) {
@@ -618,7 +624,7 @@ export default class DocClient extends StateMachine {
    * change was successfully merged by the server.
    *
    * @param {FrozenDelta} delta The delta that was originally applied.
-   * @param {DeltaResult} correctedChange The correction to the expected
+   * @param {DocumentDelta} correctedChange The correction to the expected
    *   result as returned from `applyDelta()`.
    */
   _handle_merging_gotApplyDelta(delta, correctedChange) {
@@ -805,7 +811,7 @@ export default class DocClient extends StateMachine {
     // object even when the delta is empty, so that `_doc === x` won't cause
     // surprising results when `x` is an old revision of `_doc`.
     const oldContents = this._doc.contents;
-    this._doc = new Snapshot(revNum,
+    this._doc = new DocumentSnapshot(revNum,
       delta.isEmpty() ? oldContents : oldContents.compose(delta));
 
     // Tell Quill if necessary.
@@ -818,7 +824,7 @@ export default class DocClient extends StateMachine {
    * Updates `_doc` to be the given snapshot, and tells the attached Quill
    * instance to update itself accordingly.
    *
-   * @param {Snapshot} snapshot New snapshot.
+   * @param {DocumentSnapshot} snapshot New snapshot.
    */
   _updateDocWithSnapshot(snapshot) {
     this._doc = snapshot;
