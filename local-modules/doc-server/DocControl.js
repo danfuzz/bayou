@@ -498,19 +498,19 @@ export default class DocControl extends CommonBase {
     // 3. Apply `dNext` to `rCurrent`, producing `rNext` as the new current
     //    server revision.
     // 4. Construct a delta from `rExpected` to `rNext` (that is, the diff).
-    //    This is `dCorrection`. This is what we return to the client; they will
-    //    compose `rExpected` with `dCorrection` to arrive at `rNext`.
-    // 5. Return the revision number of `rNext` along with the delta
-    //    `dCorrection`.
+    //    This is `dCorrection`. Return this to the client; they will compose
+    //    `rExpected` with `dCorrection` to arrive at `rNext`.
 
     // (0) Assign incoming arguments to variables that correspond to the
     //     description immediately above.
+
     const dClient   = delta;
     const rBase     = base;
     const rExpected = expected;
     const rCurrent  = current;
 
     // (1)
+
     const dServer = await this._composeRevisions(
       FrozenDelta.EMPTY, rBase.revNum + 1, rCurrent.revNum + 1);
 
@@ -528,6 +528,7 @@ export default class DocControl extends CommonBase {
     }
 
     // (3)
+
     const vNextNum = await this._appendDelta(rCurrent.revNum, dNext, authorId);
 
     if (vNextNum === null) {
@@ -538,11 +539,11 @@ export default class DocControl extends CommonBase {
     const rNext = await this.snapshot(vNextNum);
 
     // (4)
-    const dCorrection =
-      FrozenDelta.coerce(rExpected.contents.diff(rNext.contents));
 
-    // (5)
-    return new DocumentDelta(vNextNum, dCorrection);
+    // **Note:** The result's revision number is the same as `rNext`'s, which
+    // is exactly what we want.
+    const dCorrection = rExpected.diff(rNext);
+    return dCorrection;
   }
 
   /**

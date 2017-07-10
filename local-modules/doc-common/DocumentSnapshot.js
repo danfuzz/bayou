@@ -158,7 +158,10 @@ export default class DocumentSnapshot extends CommonBase {
   diff(newerSnapshot) {
     DocumentSnapshot.check(newerSnapshot);
 
-    const delta = FrozenDelta.coerce(this._contents.diff(newerSnapshot));
+    const oldContents = this.contents;
+    const newContents = newerSnapshot.contents;
+    const delta       = FrozenDelta.coerce(oldContents.diff(newContents));
+
     return new DocumentDelta(newerSnapshot.revNum, delta);
   }
 }
