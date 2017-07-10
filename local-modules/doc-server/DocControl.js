@@ -400,8 +400,7 @@ export default class DocControl extends CommonBase {
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
-    const expected =
-      new DocumentSnapshot(baseRevNum + 1, base.contents.compose(delta));
+    const expected = base.compose(new DocumentDelta(baseRevNum + 1, delta));
 
     // We try performing the apply, and then we iterate if it failed _and_ the
     // reason is simply that there were any changes that got made while we were

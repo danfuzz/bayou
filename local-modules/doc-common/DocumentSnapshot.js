@@ -4,7 +4,7 @@
 
 import { CommonBase } from 'util-common';
 
-import DocumentDelta from './FrozenDelta';
+import DocumentDelta from './DocumentDelta';
 import FrozenDelta from './FrozenDelta';
 import RevisionNumber from './RevisionNumber';
 
