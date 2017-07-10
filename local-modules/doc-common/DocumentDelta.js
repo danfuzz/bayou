@@ -24,7 +24,8 @@ export default class DocumentDelta extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {Int} revNum Revision number of the document.
+   * @param {Int} revNum Revision number of the document which is produced by
+   *   this instance.
    * @param {FrozenDelta} delta Delta which can be applied in context to
    *   produce the document with the indicated revision number.
    */

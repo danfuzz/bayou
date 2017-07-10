@@ -93,12 +93,8 @@ export default class DocumentSnapshot extends CommonBase {
   compose(delta) {
     DocumentDelta.check(delta);
 
-    // **TODO:** Implement this!
-    if (delta === delta) {
-      throw new Error('TODO');
-    }
-
-    return null;
+    const contents = FrozenDelta.coerce(this._contents.compose(delta.delta));
+    return new DocumentSnapshot(delta.revNum, contents);
   }
 
   /**
@@ -115,11 +111,7 @@ export default class DocumentSnapshot extends CommonBase {
   diff(newerSnapshot) {
     DocumentSnapshot.check(newerSnapshot);
 
-    // **TODO:** Implement this!
-    if (newerSnapshot === newerSnapshot) {
-      throw new Error('TODO');
-    }
-
-    return null;
+    const delta = FrozenDelta.coerce(this._contents.diff(newerSnapshot));
+    return new DocumentDelta(newerSnapshot.revNum, delta);
   }
 }
