@@ -107,8 +107,9 @@ export default class DocumentSnapshot extends CommonBase {
    * snapshot passed in here as an argument. That is, `newerSnapshot ==
    * this.compose(this.diff(newerSnapshot))`.
    *
-   * @param {CaretSnapshot} newerSnapshot Snapshot to take the difference from.
-   * @returns {CaretDelta} Delta which represents the difference between
+   * @param {DocumentSnapshot} newerSnapshot Snapshot to take the difference
+   *   from.
+   * @returns {DocumentDelta} Delta which represents the difference between
    *   `newerSnapshot` and this instance.
    */
   diff(newerSnapshot) {
