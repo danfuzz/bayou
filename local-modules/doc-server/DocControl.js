@@ -123,7 +123,7 @@ export default class DocControl extends CommonBase {
     // constructing the transaction spec.
     const maybeChange1 = [];
     if (contents !== null) {
-      const change = new DocumentChange(1, Timestamp.now(), contents, null);
+      const change = new DocumentChange(1, contents, Timestamp.now(), null);
       const op     = fc.op_writePath(Paths.forRevNum(1), change);
       maybeChange1.push(op);
     }
@@ -572,7 +572,7 @@ export default class DocControl extends CommonBase {
     const fc = this._fileCodec; // Avoids boilerplate immediately below.
     const revNum = baseRevNum + 1;
     const changePath = Paths.forRevNum(revNum);
-    const change = new DocumentChange(revNum, Timestamp.now(), delta, authorId);
+    const change = new DocumentChange(revNum, delta, Timestamp.now(), authorId);
     const spec = new TransactionSpec(
       fc.op_checkPathEmpty(changePath),
       fc.op_checkPathBufferHash(Paths.REVISION_NUMBER, baseRevNum),

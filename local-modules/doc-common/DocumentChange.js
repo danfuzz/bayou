@@ -31,7 +31,7 @@ export default class DocumentChange extends DocumentDelta {
    * @returns {FrozenDelta} An appropriate initial change.
    */
   static firstChange() {
-    return new DocumentChange(0, Timestamp.now(), FrozenDelta.EMPTY, null);
+    return new DocumentChange(0, FrozenDelta.EMPTY, Timestamp.now(), null);
   }
 
   /**
@@ -40,15 +40,15 @@ export default class DocumentChange extends DocumentDelta {
    * @param {Int} revNum The revision number of the document produced by this
    *   change. If this instance represents the first change to a document,
    *   then this value will be `0`.
-   * @param {Timestamp} timestamp The time of the change, as msec since the Unix
-   *   Epoch.
    * @param {Delta|array|object} delta The document change per se, compared to
    *   the immediately-previous revision. Must be a value which can be coerced
    *   to a `FrozenDelta`.
+   * @param {Timestamp} timestamp The time of the change, as msec since the Unix
+   *   Epoch.
    * @param {string|null} authorId Stable identifier string representing the
    *   author of the change. Allowed to be `null` if the change is authorless.
    */
-  constructor(revNum, timestamp, delta, authorId) {
+  constructor(revNum, delta, timestamp, authorId) {
     super(revNum, FrozenDelta.coerce(delta),
       function init() {
         /** {Timestamp} The time of the change. */
@@ -73,20 +73,20 @@ export default class DocumentChange extends DocumentDelta {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._revNum, this._timestamp, this._delta, this.authorId];
+    return [this._revNum, this._delta, this._timestamp, this.authorId];
   }
 
   /**
    * Constructs an instance from API arguments.
    *
    * @param {Int} revNum Same as with the regular constructor.
-   * @param {Timestamp} timestamp Same as with the regular constructor.
    * @param {Delta|array|object} delta Same as with the regular constructor.
+   * @param {Timestamp} timestamp Same as with the regular constructor.
    * @param {string|null} authorId Same as with the regular constructor.
    * @returns {DocumentChange} The constructed instance.
    */
-  static fromApi(revNum, timestamp, delta, authorId) {
-    return new DocumentChange(revNum, timestamp, delta, authorId);
+  static fromApi(revNum, delta, timestamp, authorId) {
+    return new DocumentChange(revNum, delta, timestamp, authorId);
   }
 
   /**
