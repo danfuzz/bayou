@@ -4,21 +4,26 @@
 
 import { FrozenDelta } from 'doc-common';
 import { TString } from 'typecheck';
-import { CommonBase } from 'util-common';
 
+import DocumentDelta from './DocumentDelta';
 import Timestamp from './Timestamp';
-import RevisionNumber from './RevisionNumber';
 
 /**
  * Representation of a change to a document from its immediately-previous
  * revision, including time, authorship, and revision information in addition to
- * the actual delta.
+ * the actual delta. This class is a `DocumentDelta` plus additional metadata,
+ * and it in fact derives from `DocumentDelta` per se.
+ *
+ * **Note:** The meaning of the `delta` in an instance of this class is more
+ * specific than that of `DocumentDelta` in general, exactly because instances
+ * of this class always represent changes from the immediately-previous
+ * revision.
  *
  * Instances of this class are immutable, including the deltas. In particular,
  * if a mutable delta is passed to the constructor of this class, it is coerced
  * into immutable form.
  */
-export default class DocumentChange extends CommonBase {
+export default class DocumentChange extends DocumentDelta {
   /**
    * Gets the appropriate first change to a document (empty delta, no author)
    * for the current moment in time.
@@ -44,23 +49,17 @@ export default class DocumentChange extends CommonBase {
    *   author of the change. Allowed to be `null` if the change is authorless.
    */
   constructor(revNum, timestamp, delta, authorId) {
-    super();
+    super(revNum, FrozenDelta.coerce(delta),
+      function init() {
+        /** {Timestamp} The time of the change. */
+        this._timestamp = Timestamp.check(timestamp);
 
-    /** {Int} The produced revision number. */
-    this._revNum = RevisionNumber.check(revNum);
-
-    /** {Timestamp} The time of the change. */
-    this._timestamp = Timestamp.check(timestamp);
-
-    /** {FrozenDelta} The actual change, as a delta. */
-    this._delta = FrozenDelta.coerce(delta);
-
-    /**
-     * {string|null} Author ID string, or `null` if the change is authorless.
-     */
-    this._authorId = TString.orNull(authorId);
-
-    Object.freeze(this);
+        /**
+         * {string|null} Author ID string, or `null` if the change is
+         * authorless.
+         */
+        this._authorId = TString.orNull(authorId);
+      });
   }
 
   /** {string} Name of this class in the API. */
@@ -90,25 +89,15 @@ export default class DocumentChange extends CommonBase {
     return new DocumentChange(revNum, timestamp, delta, authorId);
   }
 
-  /** {Int} The produced revision number. */
-  get revNum() {
-    return this._revNum;
-  }
-
-  /** {Timestamp} The time of the change. */
-  get timestamp() {
-    return this._timestamp;
-  }
-
-  /** {FrozenDelta} The actual change, as a delta. */
-  get delta() {
-    return this._delta;
-  }
-
   /**
    * {string|null} The author ID string, or `null` if the change is authorless.
    */
   get authorId() {
     return this._authorId;
+  }
+
+  /** {Timestamp} The time of the change. */
+  get timestamp() {
+    return this._timestamp;
   }
 }
