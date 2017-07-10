@@ -168,7 +168,11 @@ export default class TopControl {
       const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
       const range    = selEvent.range;
 
-      sessionProxy.caretUpdate(range.index, range.length);
+      // Only update when given a non-`null` range. `null` gets sent when the
+      // editor UI loses focus.
+      if (range !== null) {
+        sessionProxy.caretUpdate(range.index, range.length);
+      }
 
       // Avoid spamming the server with tons of updates. To see every event,
       // this should just be `currentEvent = selEvent`.
