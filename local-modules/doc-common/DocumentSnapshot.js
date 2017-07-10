@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { TArray } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import DocumentDelta from './DocumentDelta';
@@ -10,9 +11,27 @@ import RevisionNumber from './RevisionNumber';
 
 
 /**
+ * {DocumentSnapshot|null} Empty instance. Initialized in the `EMPTY` property
+ * accessor.
+ */
+let emptyInstance = null;
+
+/**
  * Snapshot of document contents, with other associated information.
  */
 export default class DocumentSnapshot extends CommonBase {
+  /**
+   * {DocumentSnapshot} Empty instance of this class. It has an empty delta and
+   * revision number `0`.
+   */
+  static get EMPTY() {
+    if (emptyInstance === null) {
+      emptyInstance = new DocumentSnapshot(0, FrozenDelta.EMPTY);
+    }
+
+    return emptyInstance;
+  }
+
   /**
    * Constructs an instance.
    *
@@ -93,8 +112,36 @@ export default class DocumentSnapshot extends CommonBase {
   compose(delta) {
     DocumentDelta.check(delta);
 
-    const contents = FrozenDelta.coerce(this._contents.compose(delta.delta));
+    const contents = delta.delta.isEmpty()
+      ? this._contents
+      : FrozenDelta.coerce(this._contents.compose(delta.delta));
+
     return new DocumentSnapshot(delta.revNum, contents);
+  }
+
+  /**
+   * Composes a sequence of deltas on top of this instance, in order, to produce
+   * a new instance.
+   *
+   * @param {array<DocumentDelta>} deltas Deltas to compose on top of this
+   *   instance.
+   * @returns {DocumentSnapshot} New instance consisting of the composition of
+   *   this instance with all of the `deltas`.
+   */
+  composeAll(deltas) {
+    TArray.check(deltas, DocumentDelta);
+
+    if (deltas.length === 0) {
+      return this;
+    }
+
+    let contents = this._contents;
+    for (const d of deltas) {
+      contents = contents.compose(d.delta);
+    }
+
+    const lastDelta = deltas[deltas.length - 1];
+    return new DocumentSnapshot(lastDelta.revNum, contents);
   }
 
   /**

@@ -8,10 +8,10 @@ import { TArray, TypeError } from 'typecheck';
 import { CommonBase, DataUtil, ObjectUtil } from 'util-common';
 
 /**
- * {FrozenDelta|null} Empty `Delta` instance. Initialized in the `EMPTY`
- * property accessor.
+ * {FrozenDelta|null} Empty instance. Initialized in the `EMPTY` property
+ * accessor.
  */
-let emptyDelta = null;
+let emptyInstance = null;
 
 /**
  * Always-frozen `Delta`. This is a subclass of `Delta` and mixes in
@@ -22,11 +22,11 @@ let emptyDelta = null;
 export default class FrozenDelta extends Delta {
   /** {FrozenDelta} Empty instance of this class. */
   static get EMPTY() {
-    if (emptyDelta === null) {
-      emptyDelta = new FrozenDelta([]);
+    if (emptyInstance === null) {
+      emptyInstance = new FrozenDelta([]);
     }
 
-    return emptyDelta;
+    return emptyInstance;
   }
 
   /**
