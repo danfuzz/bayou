@@ -129,7 +129,7 @@ export default class DocumentSnapshot extends CommonBase {
    *   this instance with all of the `deltas`.
    */
   composeAll(deltas) {
-    TArray.check(deltas, DocumentDelta);
+    TArray.check(deltas, DocumentDelta.check);
 
     if (deltas.length === 0) {
       return this;
