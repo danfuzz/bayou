@@ -6,6 +6,7 @@ import { TArray } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import Caret from './Caret';
+import CaretDelta from './CaretDelta';
 import RevisionNumber from './RevisionNumber';
 
 /**
@@ -80,5 +81,44 @@ export default class CaretSnapshot extends CommonBase {
    */
   get carets() {
     return this._carets;
+  }
+
+  /**
+   * Composes a delta on top of this instance, to produce a new instance.
+   *
+   * @param {CaretDelta} delta Delta to compose on top of this instance.
+   * @returns {CaretSnapshot} New instance consisting of the composition of
+   *   this instance with `delta`.
+   */
+  compose(delta) {
+    CaretDelta.check(delta);
+
+    // **TODO:** Implement this!
+    if (delta === delta) {
+      throw new Error('TODO');
+    }
+
+    return null;
+  }
+
+  /**
+   * Calculates the difference from a given snapshot to this one. The return
+   * value is a delta which can be composed with this instance to produce the
+   * snapshot passed in here as an argument. That is, `newerSnapshot ==
+   * this.compose(this.diff(newerSnapshot))`.
+   *
+   * @param {CaretSnapshot} newerSnapshot Snapshot to take the difference from.
+   * @returns {CaretDelta} Delta which represents the difference between
+   *   `newerSnapshot` and this instance.
+   */
+  diff(newerSnapshot) {
+    CaretSnapshot.check(newerSnapshot);
+
+    // **TODO:** Implement this!
+    if (newerSnapshot === newerSnapshot) {
+      throw new Error('TODO');
+    }
+
+    return null;
   }
 }
