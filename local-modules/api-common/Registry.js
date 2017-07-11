@@ -94,23 +94,6 @@ export default class Regsitry extends CommonBase {
   }
 
   /**
-   * Finds a previously-registered class by tag (name). This throws an error if
-   * there is no registered class with the given tag.
-   *
-   * @param {string} tag The item codec tag (name).
-   * @returns {class} The class that was registered under the given name.
-   */
-  classForName(tag) {
-    const result = this.codecForTag(tag);
-
-    if (!(result.clazz && !result.predicate)) {
-      throw new Error(`No class registered with tag \`${tag}\`.`);
-    }
-
-    return result.clazz;
-  }
-
-  /**
    * Finds a previously-registered item codec which is suitable for encoding the
    * given value. This throws an error if there is no suitable codec or if there
    * is more than one suitable codec.

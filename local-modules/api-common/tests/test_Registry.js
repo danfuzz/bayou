@@ -4,7 +4,8 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
-import { Random } from 'util-common';
+
+import { ItemCodec } from 'api-common';
 
 // The class being tested here isn't exported from the module, so we import it
 // by path.
@@ -25,24 +26,6 @@ class RegistryTestApiObject {
 
   static fromApi(arguments_unused) {
     return new RegistryTestApiObject();
-  }
-}
-
-class FindTestApiObject {
-  constructor() {
-    this.initialized = true;
-  }
-
-  static get API_NAME() {
-    return 'FindTestApiObject';
-  }
-
-  toApi() {
-    return ['fake argument', 0, 1, 2];
-  }
-
-  static fromApi(arguments_unused) {
-    return new FindTestApiObject();
   }
 }
 
@@ -102,21 +85,20 @@ describe('api-common/Registry', () => {
     });
   });
 
-  describe('find(className)', () => {
-    it('should throw an error if an unregistered class is requested', () => {
+  describe('codecForTag(tag)', () => {
+    it('should throw an error if an unregistered tag is requested', () => {
       const reg = new Registry();
-      const randomName = Random.hexByteString(32);
-      assert.throws(() => reg.classForName(randomName));
+      assert.throws(() => reg.codecForTag('florp'));
     });
 
-    it('should return the named class if it is registered', () => {
+    it('should return the named codec if it is registered', () => {
       const reg = new Registry();
-      reg.registerClass(FindTestApiObject);
+      const itemCodec = new ItemCodec('florp', Boolean, null, () => 0, () => 0);
 
-      const testClass = reg.classForName(FindTestApiObject.API_NAME);
-      const testObject = new testClass();
+      reg.registerCodec(itemCodec);
 
-      assert.instanceOf(testObject, FindTestApiObject);
+      const testCodec = reg.codecForTag('florp');
+      assert.strictEqual(testCodec, itemCodec);
     });
   });
 });
