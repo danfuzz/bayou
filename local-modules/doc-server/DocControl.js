@@ -123,7 +123,7 @@ export default class DocControl extends CommonBase {
     // constructing the transaction spec.
     const maybeChange1 = [];
     if (contents !== null) {
-      const change = new DocumentChange(1, Timestamp.now(), contents, null);
+      const change = new DocumentChange(1, contents, Timestamp.now(), null);
       const op     = fc.op_writePath(Paths.forRevNum(1), change);
       maybeChange1.push(op);
     }
@@ -400,8 +400,7 @@ export default class DocControl extends CommonBase {
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
-    const expected =
-      new DocumentSnapshot(baseRevNum + 1, base.contents.compose(delta));
+    const expected = base.compose(new DocumentDelta(baseRevNum + 1, delta));
 
     // We try performing the apply, and then we iterate if it failed _and_ the
     // reason is simply that there were any changes that got made while we were
@@ -499,19 +498,19 @@ export default class DocControl extends CommonBase {
     // 3. Apply `dNext` to `rCurrent`, producing `rNext` as the new current
     //    server revision.
     // 4. Construct a delta from `rExpected` to `rNext` (that is, the diff).
-    //    This is `dCorrection`. This is what we return to the client; they will
-    //    compose `rExpected` with `dCorrection` to arrive at `rNext`.
-    // 5. Return the revision number of `rNext` along with the delta
-    //    `dCorrection`.
+    //    This is `dCorrection`. Return this to the client; they will compose
+    //    `rExpected` with `dCorrection` to arrive at `rNext`.
 
     // (0) Assign incoming arguments to variables that correspond to the
     //     description immediately above.
+
     const dClient   = delta;
     const rBase     = base;
     const rExpected = expected;
     const rCurrent  = current;
 
     // (1)
+
     const dServer = await this._composeRevisions(
       FrozenDelta.EMPTY, rBase.revNum + 1, rCurrent.revNum + 1);
 
@@ -529,6 +528,7 @@ export default class DocControl extends CommonBase {
     }
 
     // (3)
+
     const vNextNum = await this._appendDelta(rCurrent.revNum, dNext, authorId);
 
     if (vNextNum === null) {
@@ -539,11 +539,11 @@ export default class DocControl extends CommonBase {
     const rNext = await this.snapshot(vNextNum);
 
     // (4)
-    const dCorrection =
-      FrozenDelta.coerce(rExpected.contents.diff(rNext.contents));
 
-    // (5)
-    return new DocumentDelta(vNextNum, dCorrection);
+    // **Note:** The result's revision number is the same as `rNext`'s, which
+    // is exactly what we want.
+    const dCorrection = rExpected.diff(rNext);
+    return dCorrection;
   }
 
   /**
@@ -572,7 +572,7 @@ export default class DocControl extends CommonBase {
     const fc = this._fileCodec; // Avoids boilerplate immediately below.
     const revNum = baseRevNum + 1;
     const changePath = Paths.forRevNum(revNum);
-    const change = new DocumentChange(revNum, Timestamp.now(), delta, authorId);
+    const change = new DocumentChange(revNum, delta, Timestamp.now(), authorId);
     const spec = new TransactionSpec(
       fc.op_checkPathEmpty(changePath),
       fc.op_checkPathBufferHash(Paths.REVISION_NUMBER, baseRevNum),

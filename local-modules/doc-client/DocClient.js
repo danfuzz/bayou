@@ -485,16 +485,14 @@ export default class DocClient extends StateMachine {
    *   document revision.
    */
   _handle_idle_gotDeltaAfter(baseDoc, result) {
-    const revNum = result.revNum;
-    const delta = result.delta;
-    this._log.detail(`Delta from server: r${revNum}`, delta);
+    this._log.detail(`Delta from server: ${result.revNum}`);
 
     // We only take action if the result's base (what `delta` is with regard to)
     // is the current `_doc`. If that _isn't_ the case, then what we have here
     // is a stale response of one sort or another. For example (and most
     // likely), it might be the delayed result from an earlier iteration.
     if (this._doc.revNum === baseDoc.revNum) {
-      this._updateDocWithDelta(revNum, delta);
+      this._updateDocWithDelta(result);
     }
 
     // Fire off the next iteration of requesting server changes, after a short
@@ -650,7 +648,8 @@ export default class DocClient extends StateMachine {
       // And note that Quill doesn't need to be updated here (that is, its delta
       // is empty) because what we are integrating into the client document is
       // exactly what Quill handed to us.
-      this._updateDocWithDelta(vResultNum, delta, FrozenDelta.EMPTY);
+      this._updateDocWithDelta(
+        new DocumentDelta(vResultNum, delta), FrozenDelta.EMPTY);
       this._becomeIdle();
       return;
     }
@@ -668,7 +667,8 @@ export default class DocClient extends StateMachine {
       // Thanfully, the local user hasn't made any other changes while we
       // were waiting for the server to get back to us, which means we can
       // cleanly apply the correction on top of Quill's current state.
-      this._updateDocWithDelta(vResultNum, correctedDelta, dCorrection);
+      this._updateDocWithDelta(
+        new DocumentDelta(vResultNum, correctedDelta), dCorrection);
       this._becomeIdle();
       return;
     }
@@ -713,7 +713,8 @@ export default class DocClient extends StateMachine {
     // second (lost any insert races or similar).
     const dIntegratedCorrection =
       FrozenDelta.coerce(dMore.transform(dCorrection, false));
-    this._updateDocWithDelta(vResultNum, correctedDelta, dIntegratedCorrection);
+    this._updateDocWithDelta(
+      new DocumentDelta(vResultNum, correctedDelta), dIntegratedCorrection);
 
     // (3)
 
@@ -790,14 +791,13 @@ export default class DocClient extends StateMachine {
    * document doesn't need to be updated. If that isn't the case, then this
    * method will throw an error.
    *
-   * @param {number} revNum New revision number.
-   * @param {FrozenDelta} delta Delta from the current `_doc` contents.
+   * @param {DocumentDelta} delta Delta from the current `_doc` contents.
    * @param {FrozenDelta} [quillDelta = delta] Delta from Quill's current state,
    *   which is expected to preserve any state that Quill has that isn't yet
    *   represented in `_doc`. This must be used in cases where Quill's state has
    *   progressed ahead of `_doc` due to local activity.
    */
-  _updateDocWithDelta(revNum, delta, quillDelta = delta) {
+  _updateDocWithDelta(delta, quillDelta = delta.delta) {
     const needQuillUpdate = !quillDelta.isEmpty();
 
     if (   (this._currentEvent.nextOfNow(QuillEvent.TEXT_CHANGE) !== null)
@@ -807,12 +807,8 @@ export default class DocClient extends StateMachine {
       throw new Error('Cannot apply delta due to revision skew.');
     }
 
-    // Update the local document. **Note:** We always construct a whole new
-    // object even when the delta is empty, so that `_doc === x` won't cause
-    // surprising results when `x` is an old revision of `_doc`.
-    const oldContents = this._doc.contents;
-    this._doc = new DocumentSnapshot(revNum,
-      delta.isEmpty() ? oldContents : oldContents.compose(delta));
+    // Update the local document.
+    this._doc = this._doc.compose(delta);
 
     // Tell Quill if necessary.
     if (needQuillUpdate) {

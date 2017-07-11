@@ -2,16 +2,36 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { TArray } from 'typecheck';
 import { CommonBase } from 'util-common';
 
+import DocumentDelta from './DocumentDelta';
 import FrozenDelta from './FrozenDelta';
 import RevisionNumber from './RevisionNumber';
 
 
 /**
+ * {DocumentSnapshot|null} Empty instance. Initialized in the `EMPTY` property
+ * accessor.
+ */
+let emptyInstance = null;
+
+/**
  * Snapshot of document contents, with other associated information.
  */
 export default class DocumentSnapshot extends CommonBase {
+  /**
+   * {DocumentSnapshot} Empty instance of this class. It has an empty delta and
+   * revision number `0`.
+   */
+  static get EMPTY() {
+    if (emptyInstance === null) {
+      emptyInstance = new DocumentSnapshot(0, FrozenDelta.EMPTY);
+    }
+
+    return emptyInstance;
+  }
+
   /**
    * Constructs an instance.
    *
@@ -80,5 +100,68 @@ export default class DocumentSnapshot extends CommonBase {
   /** {FrozenDelta} The document contents. */
   get contents() {
     return this._contents;
+  }
+
+  /**
+   * Composes a delta on top of this instance, to produce a new instance.
+   *
+   * @param {DocumentDelta} delta Delta to compose on top of this instance.
+   * @returns {DocumentSnapshot} New instance consisting of the composition of
+   *   this instance with `delta`.
+   */
+  compose(delta) {
+    DocumentDelta.check(delta);
+
+    const contents = delta.delta.isEmpty()
+      ? this._contents
+      : FrozenDelta.coerce(this._contents.compose(delta.delta));
+
+    return new DocumentSnapshot(delta.revNum, contents);
+  }
+
+  /**
+   * Composes a sequence of deltas on top of this instance, in order, to produce
+   * a new instance.
+   *
+   * @param {array<DocumentDelta>} deltas Deltas to compose on top of this
+   *   instance.
+   * @returns {DocumentSnapshot} New instance consisting of the composition of
+   *   this instance with all of the `deltas`.
+   */
+  composeAll(deltas) {
+    TArray.check(deltas, DocumentDelta.check);
+
+    if (deltas.length === 0) {
+      return this;
+    }
+
+    let contents = this._contents;
+    for (const d of deltas) {
+      contents = contents.compose(d.delta);
+    }
+
+    const lastDelta = deltas[deltas.length - 1];
+    return new DocumentSnapshot(lastDelta.revNum, contents);
+  }
+
+  /**
+   * Calculates the difference from a given snapshot to this one. The return
+   * value is a delta which can be composed with this instance to produce the
+   * snapshot passed in here as an argument. That is, `newerSnapshot ==
+   * this.compose(this.diff(newerSnapshot))`.
+   *
+   * @param {DocumentSnapshot} newerSnapshot Snapshot to take the difference
+   *   from.
+   * @returns {DocumentDelta} Delta which represents the difference between
+   *   `newerSnapshot` and this instance.
+   */
+  diff(newerSnapshot) {
+    DocumentSnapshot.check(newerSnapshot);
+
+    const oldContents = this.contents;
+    const newContents = newerSnapshot.contents;
+    const delta       = FrozenDelta.coerce(oldContents.diff(newContents));
+
+    return new DocumentDelta(newerSnapshot.revNum, delta);
   }
 }

@@ -24,11 +24,18 @@ export default class DocumentDelta extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {Int} revNum Revision number of the document.
+   * @param {Int} revNum The revision number of the document produced by this
+   *   instance. If this instance represents the first change to a document,
+   *   then this value will be `0`.
    * @param {FrozenDelta} delta Delta which can be applied in context to
    *   produce the document with the indicated revision number.
+   * @param {function} [subclassInit = null] Optional function to call (bound as
+   *   method) in order to complete instance initialization. (This arrangement
+   *   is a hack which compensates for JavaScript's lack of expressiveness
+   *   around construction within a class hierarchy where every level aims to
+   *   create frozen instances.)
    */
-  constructor(revNum, delta) {
+  constructor(revNum, delta, subclassInit = null) {
     super();
 
     /** {Int} The produced revision number. */
@@ -36,6 +43,10 @@ export default class DocumentDelta extends CommonBase {
 
     /** {FrozenDelta} The actual change, as a delta. */
     this._delta = FrozenDelta.check(delta);
+
+    if (subclassInit !== null) {
+      subclassInit.call(this);
+    }
 
     Object.freeze(this);
   }
