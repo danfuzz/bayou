@@ -7,18 +7,33 @@ import { UtilityClass } from 'util-common-base';
 import TypeError from './TypeError';
 
 /**
- * Type checker for type `Function`.
+ * Type checker for type `function`.
  */
 export default class TFunction extends UtilityClass {
   /**
    * Checks a value of type `Function`.
    *
    * @param {*} value The (alleged) function.
-   * @returns {Function} `value`.
+   * @returns {function} `value`.
    */
   static check(value) {
     if (typeof value !== 'function') {
-      return TypeError.badValue(value, 'Function');
+      return TypeError.badValue(value, 'function');
+    }
+
+    return value;
+  }
+
+  /**
+   * Checks a value which must either be of type `Function` or the exact value
+   * `null`.
+   *
+   * @param {*} value Value to check.
+   * @returns {function|null} `value`.
+   */
+  static orNull(value) {
+    if ((value !== null) && (typeof value !== 'function')) {
+      return TypeError.badValue(value, 'function|null');
     }
 
     return value;
