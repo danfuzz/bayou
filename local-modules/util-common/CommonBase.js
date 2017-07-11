@@ -124,7 +124,7 @@ export default class CommonBase {
       return value;
     } else {
       const result = this._impl_coerceOrNull(value);
-      if (!(result instanceof this)) {
+      if ((result !== null) && !(result instanceof this)) {
         // There is a bug in the subclass, as it should never return any other
         // kind of value.
         throw new Error('Invalid `_impl_coerceOrNull()` implementation.');
@@ -135,7 +135,9 @@ export default class CommonBase {
 
   /**
    * Subclass-specific implementation of `coerceOrNull()`. Subclasses can
-   * override this as needed.
+   * override this as needed. The default implementation here simply calls
+   * through to `_impl_coerce()` and converts any thrown exception into a `null`
+   * return value.
    *
    * @param {*} value Value to coerce. This is guaranteed _not_ to be an
    *   instance of this class.

@@ -13,11 +13,11 @@
 
 'use strict';
 
-const fs = require('fs');
-const fs_extra = require('fs-extra');
-const path = require('path');
-
 const babel = require('babel-core');
+const chalk    = require('chalk');
+const fs       = require('fs');
+const fs_extra = require('fs-extra');
+const path     = require('path');
 
 /** How many files reported errors? */
 let errorCount = 0;
@@ -35,6 +35,31 @@ const BABEL_CONFIG = Object.freeze({
 });
 
 /**
+ * Gets a short log-friendly version of the given file path.
+ *
+ * @param {string} file Path to the file.
+ * @returns {string} Log-friendly version.
+ */
+function pathForLogging(file) {
+  // Trim up to and including `node_modules/`.
+  if (/\/node_modules\//.test(file)) {
+    return file.replace(/^.*\/node_modules\//, '.../');
+  }
+
+  // Not under `node_modules`. Just trim off initial path components to produce
+  // a shorter string.
+  while (file.length > 30) {
+    const newFile = file.replace(/^\/?([^/]+\/){2}/, '.../');
+    if (newFile === file) {
+      break;
+    }
+    file = newFile;
+  }
+
+  return file;
+}
+
+/**
  * Compiles a single file.
  *
  * @param {string} inputFile Path to the input file.
@@ -43,6 +68,7 @@ const BABEL_CONFIG = Object.freeze({
 function compileFile(inputFile, outputFile) {
   let inputStat = null;
   let outputStat = null;
+  const pathToLog = pathForLogging(inputFile);
 
   try {
     inputStat = fs.statSync(inputFile);
@@ -50,7 +76,7 @@ function compileFile(inputFile, outputFile) {
     // **TODO:** Newer versions of Node have a numeric `mtimeMs` field on stats
     // objects. Would be great to use it instead of `valueOf()`.
     if (inputStat.mtime.valueOf() <= outputStat.mtime.valueOf()) {
-      console.log('Unchanged', inputFile);
+      console.log(chalk.gray.bold('Unchanged:'), chalk.gray(pathToLog));
       return;
     }
   } catch (e) {
@@ -78,7 +104,7 @@ function compileFile(inputFile, outputFile) {
   if (output !== null) {
     fs_extra.ensureDirSync(path.dirname(outputFile));
     fs.writeFileSync(outputFile, output.code);
-    console.log('Compiled', inputFile);
+    console.log(chalk.green.bold('Compiled: '), pathToLog);
   }
 }
 
