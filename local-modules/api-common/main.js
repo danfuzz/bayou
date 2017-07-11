@@ -4,6 +4,7 @@
 
 import BaseKey from './BaseKey';
 import Codec from './Codec';
+import ItemCodec from './ItemCodec';
 import Message from './Message';
 import SplitKey from './SplitKey';
 
@@ -11,4 +12,4 @@ import SplitKey from './SplitKey';
 Codec.theOne.registerClass(Message);
 Codec.theOne.registerClass(SplitKey);
 
-export { BaseKey, Codec, Message, SplitKey };
+export { BaseKey, Codec, ItemCodec, Message, SplitKey };
