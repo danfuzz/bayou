@@ -469,7 +469,9 @@ export default class DocControl extends CommonBase {
       // delta. We merely have to apply the given `delta` to the current
       // revision. If it succeeds, then we won the append race (if any).
 
-      const revNum = await this._appendDelta(base.revNum, delta, authorId);
+      const change =
+        new DocumentChange(base.revNum + 1, delta, Timestamp.now(), authorId);
+      const revNum = await this._appendChange(change);
 
       if (revNum === null) {
         // Turns out we lost an append race.
@@ -529,14 +531,17 @@ export default class DocControl extends CommonBase {
 
     // (3)
 
-    const vNextNum = await this._appendDelta(rCurrent.revNum, dNext, authorId);
+    const rNextNum = rCurrent.revNum + 1;
+    const change =
+      new DocumentChange(rNextNum, dNext, Timestamp.now(), authorId);
+    const appendResult = await this._appendChange(change);
 
-    if (vNextNum === null) {
+    if (appendResult === null) {
       // Turns out we lost an append race.
       return null;
     }
 
-    const rNext = await this.snapshot(vNextNum);
+    const rNext = await this.snapshot(rNextNum);
 
     // (4)
 
@@ -557,22 +562,24 @@ export default class DocControl extends CommonBase {
    * because the calling code should have handled that case without calling this
    * method.
    *
-   * @param {Int} baseRevNum Revision number which this is to apply to.
-   * @param {FrozenDelta} delta The delta to append.
-   * @param {string|null} authorId The author of the delta.
-   * @returns {Int|null} The revision number after appending `delta`, or `null`
-   *   if `baseRevNum` is out-of-date at the moment of attempted application
-   *   _and_ the `delta` is non-empty.
+   * @param {DocumentChange} change Change to append.
+   * @returns {Int|null} The revision number after appending `change`, or `null`
+   *   if `change.revNum` is out-of-date (that is, isn't the immediately-next
+   *   revision number) at the moment of attempted application.
+   * @throws {Error} If `change.delta.isEmpty()`.
    */
-  async _appendDelta(baseRevNum, delta, authorId) {
-    if (delta.isEmpty()) {
+  async _appendChange(change) {
+    DocumentChange.check(change);
+
+    if (change.delta.isEmpty()) {
       throw new Error('Should not have been called with an empty delta.');
     }
 
-    const fc = this._fileCodec; // Avoids boilerplate immediately below.
-    const revNum = baseRevNum + 1;
+    const revNum     = change.revNum;
+    const baseRevNum = revNum - 1;
     const changePath = Paths.forRevNum(revNum);
-    const change = new DocumentChange(revNum, delta, Timestamp.now(), authorId);
+
+    const fc   = this._fileCodec; // Avoids boilerplate immediately below.
     const spec = new TransactionSpec(
       fc.op_checkPathEmpty(changePath),
       fc.op_checkPathBufferHash(Paths.REVISION_NUMBER, baseRevNum),
