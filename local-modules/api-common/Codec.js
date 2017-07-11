@@ -156,4 +156,14 @@ export default class Codec extends Singleton {
   registerClass(clazz) {
     this._reg.registerClass(clazz);
   }
+
+  /**
+   * Registers an item codec to be accepted for API use. This is a pass-through
+   * to the method of the same name on the instance's `Registry`.
+   *
+   * @param {ItemCodec} codec The codec to register.
+   */
+  registerCodec(codec) {
+    this._reg.registerCodec(codec);
+  }
 }
