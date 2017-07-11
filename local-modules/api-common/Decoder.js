@@ -100,13 +100,9 @@ export default class Decoder extends CommonBase {
    * @returns {object} The converted value.
    */
   _decodeInstance(tag, payload) {
-    const clazz = this._reg.classForName(tag);
+    const itemCodec = this._reg.codecForTag(tag);
     const args = this._decodeArray(payload);
 
-    if (!clazz) {
-      throw new Error(`API cannot decode object of class \`${tag}\`.`);
-    }
-
-    return clazz.fromApi(...args);
+    return itemCodec.decode(...args);
   }
 }
