@@ -68,7 +68,23 @@ describe('api-common/Registry', () => {
   });
 
   describe('register(class)', () => {
-    it('should require classes with an APP_NAME property, fromName() class method, and toApi() instance method', () => {
+    it('should accept a class with all salient properties', () => {
+      const reg = new Registry();
+      assert.doesNotThrow(() => reg.registerClass(RegistryTestApiObject));
+    });
+
+    it('should allow classes without `API_NAME` or `fromApi()`', () => {
+      const reg = new Registry();
+      assert.doesNotThrow(() => reg.registerClass(NoApiName));
+      assert.doesNotThrow(() => reg.registerClass(NoFromApi));
+    });
+
+    it('should reject a class without `toApi()`', () => {
+      const reg = new Registry();
+      assert.throws(() => reg.registerClass(NoToApi));
+    });
+
+    it('should reject non-classes', () => {
       const reg = new Registry();
       assert.throws(() => reg.registerClass(true));
       assert.throws(() => reg.registerClass(37));
@@ -77,11 +93,6 @@ describe('api-common/Registry', () => {
       assert.throws(() => reg.registerClass([]));
       assert.throws(() => reg.registerClass(null));
       assert.throws(() => reg.registerClass(undefined));
-      assert.throws(() => reg.registerClass(NoApiName));
-      assert.throws(() => reg.registerClass(NoToApi));
-      assert.throws(() => reg.registerClass(NoFromApi));
-
-      assert.doesNotThrow(() => reg.registerClass(RegistryTestApiObject));
     });
   });
 
