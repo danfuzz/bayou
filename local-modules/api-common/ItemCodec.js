@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TArray, TClass, TFunction, TString } from 'typecheck';
+import { CommonBase } from 'util-common';
 
 /**
  * Handler for API-codable items of a particular class, type, or (in general)
@@ -11,7 +12,7 @@ import { TArray, TClass, TFunction, TString } from 'typecheck';
  * constructing instances of them from (presumably) previously-derived
  * parameters.
  */
-export default class ItemCodec {
+export default class ItemCodec extends CommonBase {
   /**
    * Constructs an instance from a class that has the standard API-coding
    * methods.
@@ -53,6 +54,8 @@ export default class ItemCodec {
    *   equivalent to one that got encoded to produce the arguments it received.
    */
   constructor(tag, clazzOrType, predicate, encode, decode) {
+    super();
+
     /** {string} Tag (name) for the item's type. */
     this._tag = TString.nonempty(tag);
 

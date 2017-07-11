@@ -26,14 +26,22 @@ export default class Regsitry extends CommonBase {
     super();
 
     /**
-     * {Map<string,ItemCodec>} Map of registered names to their respective
+     * {Map<string,ItemCodec>} Map of registered item tags to their respective
      * item codecs.
-     *
-     * **Note:** The constructor argument here initializes the registry with the
-     * handler for arrays, which both enables its usage and prevents it from
-     * getting improperly registered by client code.
      */
-    this._registry = new Map([[ARRAY_CODEC.name, ARRAY_CODEC]]);
+    this._registry = new Map();
+
+    /**
+     * {Map<class,array<ItemCodec>>} Map of classes that have `ItemCodec`s
+     * registered to the set of such codecs. The reason there can be more than
+     * one is that some classes can be encoded multiple ways, with the multiple
+     * `ItemCodec`'s `predicate`s determining which one applies.
+     */
+    this._classes = new Map();
+
+    // Register the array codec, which both enables its usage and prevents it
+    // from getting improperly registered by client code.
+    this.registerCodec(ARRAY_CODEC);
   }
 
   /** {string} The item tag used for regular arrays. */
@@ -52,14 +60,37 @@ export default class Regsitry extends CommonBase {
    * @param {object} clazz The class to register.
    */
   registerClass(clazz) {
-    const itemCodec = ItemCodec.fromClass(clazz);
-    const tag       = itemCodec.tag;
+    this.registerCodec(ItemCodec.fromClass(clazz));
+  }
 
-    if (this._registry.get(tag)) {
+  /**
+   * Registers an item codec.
+   *
+   * @param {ItemCodec} codec The codec to register.
+   */
+  registerCodec(codec) {
+    ItemCodec.check(codec);
+
+    const tag   = codec.tag;
+    const clazz = codec.clazz;
+
+    if (!clazz) {
+      // For now, we only allow registration of class/instance codecs.
+      // **TODO:** Allow other types.
+      throw new Error(`Cannot register non-object type \`${codec.type}\`.`);
+    } else if (this._registry.get(tag)) {
       throw new Error(`Cannot re-register tag \`${tag}\`.`);
     }
 
-    this._registry.set(tag, itemCodec);
+    this._registry.set(codec.tag, codec);
+
+    let forClass = this._classes.get(clazz);
+    if (!forClass) {
+      forClass = [];
+      this._classes.set(clazz, forClass);
+    }
+
+    forClass.push(codec);
   }
 
   /**
@@ -77,6 +108,44 @@ export default class Regsitry extends CommonBase {
     }
 
     return result.clazz;
+  }
+
+  /**
+   * Finds a previously-registered item codec which is suitable for encoding the
+   * given value. This throws an error if there is no suitable codec or if there
+   * is more than one suitable codec.
+   *
+   * @param {*} value The value in question.
+   * @returns {ItemCodec} A codec suitable for encoding `value`.
+   */
+  codecForValue(value) {
+    const valueType = typeof value;
+
+    if (valueType !== 'object') {
+      // For now, we only allow lookup of class/instance codecs. **TODO:** Allow
+      // other types.
+      throw new Error(`No codec registered for type \`${valueType}\`.`);
+    }
+
+    const clazz = value.constructor;
+    const codecs = this._classes.get(clazz);
+
+    if (!codecs) {
+      throw new Error(`No codec registered for class \`${clazz.name}\`.`);
+    }
+
+    const applicable = codecs.filter(c => c.canEncode(value));
+    switch (applicable.length) {
+      case 0: {
+        throw new Error(`No applicable codec for value of class \`${clazz.name}\`.`);
+      }
+      case 1: {
+        return applicable[0];
+      }
+      default: {
+        throw new Error(`Multiple applicable codecs for value of class \`${clazz.name}\`.`);
+      }
+    }
   }
 
   /**
