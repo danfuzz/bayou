@@ -6,7 +6,13 @@ import { CommonBase } from 'util-common';
 
 import ItemCodec from './ItemCodec';
 
-/** {ItemCodec} Item codec for arrays. */
+/**
+ * {ItemCodec} Item codec for arrays.
+ *
+ * **TODO:** This is not yet complete, but it is also not hooked up for actual
+ * usage yet (because both `Encoder` and `Decoder` have an explicit special
+ * case for arrays). Both of these facts should be rectified.
+ */
 const ARRAY_CODEC = new ItemCodec('array', Array, null,
   (value => value),
   ((...args) => args)
