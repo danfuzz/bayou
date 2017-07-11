@@ -169,6 +169,12 @@ export default class ItemCodec extends CommonBase {
     }
 
     const result = this._encode(value);
-    return TArray.check(result);
+
+    try {
+      return TArray.check(result);
+    } catch (e) {
+      // Throw a higher-fidelity error.
+      throw new Error('Invalid encoding result (not an array).');
+    }
   }
 }

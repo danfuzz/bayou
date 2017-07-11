@@ -136,18 +136,9 @@ export default class Encoder extends CommonBase {
    * @returns {object} The converted value.
    */
   _encodeInstance(value) {
-    const apiName = value.constructor && value.constructor.API_NAME;
-    const toApi = value.toApi;
+    const itemCodec = this._reg.codecForValue(value);
+    const encoded = itemCodec.encode(value);
 
-    if ((typeof apiName !== 'string') || (typeof toApi !== 'function')) {
-      throw new Error(`API cannot encode object of class \`${value.constructor.name}\`.`);
-    }
-
-    const payload = value.toApi();
-    if (!Array.isArray(payload)) {
-      throw new Error(`Non-array result from \`toApi()\` on class \`${value.constructor.name}\`.`);
-    }
-
-    return this._encodeArray(payload, apiName);
+    return this._encodeArray(encoded, itemCodec.tag);
   }
 }
