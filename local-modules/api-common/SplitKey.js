@@ -64,18 +64,6 @@ export default class SplitKey extends BaseKey {
   }
 
   /**
-   * Constructs an instance from API arguments.
-   *
-   * @param {string} url Same as with the regular constructor.
-   * @param {string} id Same as with the regular constructor.
-   * @param {string} secret Same as with the regular constructor.
-   * @returns {SplitKey} The constructed instance.
-   */
-  static fromApi(url, id, secret) {
-    return new SplitKey(url, id, secret);
-  }
-
-  /**
    * {string} Shared secret. **Note:** It is important to _never_ reveal this
    * value across an unencrypted API boundary or to log it.
    */

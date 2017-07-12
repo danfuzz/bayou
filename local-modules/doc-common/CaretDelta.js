@@ -49,17 +49,6 @@ export default class CaretDelta extends CommonBase {
     return [this._revNum, this._ops];
   }
 
-  /**
-   * Constructs an instance from API arguments.
-   *
-   * @param {Int} revNum Same as with the regular constructor.
-   * @param {array<object>} ops Same as with the regular constructor.
-   * @returns {CaretDelta} The constructed instance.
-   */
-  static fromApi(revNum, ops) {
-    return new CaretDelta(revNum, ops);
-  }
-
   /** {Int} The produced revision number. */
   get revNum() {
     return this._revNum;

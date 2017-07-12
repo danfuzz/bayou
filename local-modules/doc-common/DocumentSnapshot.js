@@ -81,17 +81,6 @@ export default class DocumentSnapshot extends CommonBase {
     return [this._revNum, this._contents];
   }
 
-  /**
-   * Constructs an instance from API arguments.
-   *
-   * @param {number} revNum Same as regular constructor.
-   * @param {Delta|array|object} contents Same as regular constructor.
-   * @returns {DocumentSnapshot} The constructed instance.
-   */
-  static fromApi(revNum, contents) {
-    return new DocumentSnapshot(revNum, contents);
-  }
-
   /** {RevisionNumber} The revision number. */
   get revNum() {
     return this._revNum;

@@ -65,17 +65,6 @@ export default class DocumentDelta extends CommonBase {
     return [this._revNum, this._delta];
   }
 
-  /**
-   * Constructs an instance from API arguments.
-   *
-   * @param {Int} revNum Same as with the regular constructor.
-   * @param {FrozenDelta} delta Same as with the regular constructor.
-   * @returns {DocumentDelta} The constructed instance.
-   */
-  static fromApi(revNum, delta) {
-    return new DocumentDelta(revNum, delta);
-  }
-
   /** {Int} The produced revision number. */
   get revNum() {
     return this._revNum;

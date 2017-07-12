@@ -101,9 +101,9 @@ export default class FrozenDelta extends Delta {
   /**
    * Constructs an instance.
    *
-   * @param {Array} ops The transformation operations of this instance. If not
-   *   deeply frozen, the actual stored `ops` will be a deep-frozen clone of the
-   *   given value.
+   * @param {array<object>} ops The transformation operations of this instance.
+   *   If not deeply frozen, the actual stored `ops` will be a deep-frozen clone
+   *   of the given value.
    */
   constructor(ops) {
     // TODO: Should consider validating the contents of `ops`.
@@ -125,16 +125,6 @@ export default class FrozenDelta extends Delta {
    */
   toApi() {
     return [this.ops];
-  }
-
-  /**
-   * Constructs an instance from API arguments.
-   *
-   * @param {array} ops Same as with the regular constructor.
-   * @returns {FrozenDelta} The constructed instance.
-   */
-  static fromApi(ops) {
-    return new FrozenDelta(ops);
   }
 
   /**

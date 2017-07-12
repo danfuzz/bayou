@@ -52,18 +52,6 @@ export default class CaretSnapshot extends CommonBase {
   }
 
   /**
-   * Constructs an instance from API arguments.
-   *
-   * @param {Int} revNum Same as with the regular constructor.
-   * @param {Int} docRevNum Same as with the regular constructor.
-   * @param {array<Caret>} carets Same as with the regular constructor.
-   * @returns {CaretSnapshot} The constructed instance.
-   */
-  static fromApi(revNum, docRevNum, carets) {
-    return new CaretSnapshot(revNum, docRevNum, carets);
-  }
-
-  /**
    * {Int} The document revision number to which the caret information applies.
    */
   get docRevNum() {

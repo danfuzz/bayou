@@ -36,13 +36,4 @@ export default class Caret extends CommonBase {
   toApi() {
     return [];
   }
-
-  /**
-   * Constructs an instance from API arguments.
-   *
-   * @returns {Caret} The constructed instance.
-   */
-  static fromApi() {
-    return new Caret();
-  }
 }

@@ -102,20 +102,6 @@ export default class Message {
   }
 
   /**
-   * Constructs an instance from API arguments.
-   *
-   * @param {Int} id Same as with the regular constructor.
-   * @param {string} target Same as with the regular constructor.
-   * @param {string} action Same as with the regular constructor.
-   * @param {string} name Same as with the regular constructor.
-   * @param {Array<*>} args Same as with the regular constructor.
-   * @returns {Message} The constructed instance.
-   */
-  static fromApi(id, target, action, name, args) {
-    return new Message(id, target, action, name, args);
-  }
-
-  /**
    * Indicates whether this instance represents an error.
    *
    * @returns {boolean} `true` iff this is an error instance.

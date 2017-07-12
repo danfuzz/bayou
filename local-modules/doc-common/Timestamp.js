@@ -95,17 +95,6 @@ export default class Timestamp extends CommonBase {
     return [this._secs, this._usecs];
   }
 
-  /**
-   * Constructs an instance from API arguments.
-   *
-   * @param {Int} secs Same as regular constructor.
-   * @param {Int} usecs Same as regular constructor.
-   * @returns {Timestamp} The constructed instance.
-   */
-  static fromApi(secs, usecs) {
-    return new Timestamp(secs, usecs);
-  }
-
   /** The number of seconds since the Unix Epoch. */
   get secs() {
     return this._secs;

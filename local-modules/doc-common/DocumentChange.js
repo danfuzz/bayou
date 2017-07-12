@@ -77,19 +77,6 @@ export default class DocumentChange extends DocumentDelta {
   }
 
   /**
-   * Constructs an instance from API arguments.
-   *
-   * @param {Int} revNum Same as with the regular constructor.
-   * @param {Delta|array|object} delta Same as with the regular constructor.
-   * @param {Timestamp} timestamp Same as with the regular constructor.
-   * @param {string|null} authorId Same as with the regular constructor.
-   * @returns {DocumentChange} The constructed instance.
-   */
-  static fromApi(revNum, delta, timestamp, authorId) {
-    return new DocumentChange(revNum, delta, timestamp, authorId);
-  }
-
-  /**
    * {string|null} The author ID string, or `null` if the change is authorless.
    */
   get authorId() {
