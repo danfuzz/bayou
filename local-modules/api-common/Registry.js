@@ -24,7 +24,7 @@ const ARRAY_CODEC = new ItemCodec('array', Array, null,
  * the wire (for API transmission and receipt, and for storage to disk or in
  * a database).
  */
-export default class Regsitry extends CommonBase {
+export default class Registry extends CommonBase {
   /**
    * Constructs the instance.
    */
