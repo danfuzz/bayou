@@ -71,8 +71,8 @@ export default class Decoder extends CommonBase {
    * @returns {object} The decoded value.
    */
   _decodeInstance(encoded) {
-    const tag       = encoded[0];
-    const payload   = encoded.slice(1);
+    const tag     = encoded[0];
+    const payload = encoded.slice(1);
 
     // It's an error if the array doesn't start with a string tag (even for
     // a value that decodes to an array per se), so check for that.
