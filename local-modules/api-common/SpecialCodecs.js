@@ -13,8 +13,8 @@ import ItemCodec from './ItemCodec';
 export default class SpecialCodecs extends UtilityClass {
   /** {ItemCodec} Codec used for coding arrays. */
   static get ARRAY() {
-    return new ItemCodec('array', Array, this.arrayPredicate,
-      this.arrayEncode, this.arrayDecode);
+    return new ItemCodec('array', Array, this._arrayPredicate,
+      this._arrayEncode, this._arrayDecode);
   }
 
   /**
@@ -24,7 +24,7 @@ export default class SpecialCodecs extends UtilityClass {
    *   `arrayEncode()`.
    * @returns {array<*>} Decoded array.
    */
-  static arrayDecode(payload) {
+  static _arrayDecode(payload) {
     // The array payload is self-representative. Easy!
     return payload;
   }
@@ -35,7 +35,7 @@ export default class SpecialCodecs extends UtilityClass {
    * @param {array<*>} value Array to encode.
    * @returns {array<*>} Encoded form.
    */
-  static arrayEncode(value) {
+  static _arrayEncode(value) {
     // Because of how the calling code operates, we know that by the time we get
     // here, `value` has passed `arrayPredicate()`. This means that all we have
     // to do is return the `value` itself. The one twist is that the coding
@@ -50,7 +50,7 @@ export default class SpecialCodecs extends UtilityClass {
    * @param {array<*>} value Array to encode.
    * @returns {boolean} `true` iff `value` can be encoded.
    */
-  static arrayPredicate(value) {
+  static _arrayPredicate(value) {
     // Check for `undefined` in the indexed properties. If we find one, then
     // either it's an explicit `undefined` or it's a hole; in either case, the
     // array is not encodable.
