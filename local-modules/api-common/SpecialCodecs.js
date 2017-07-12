@@ -51,12 +51,15 @@ export default class SpecialCodecs extends UtilityClass {
    * @returns {boolean} `true` iff `value` can be encoded.
    */
   static _arrayPredicate(value) {
-    // Check for holes in the indexed properties. An array with holes is not
-    // encodable. `Array.reduce()` skips holes, which is what makes the test
-    // below work.
-    const count = value.reduce((x => x + 1), 0);
-    if (count !== value.length) {
-      return false;
+    // Check for holes in the indexed properties as well as synthetic
+    // properties. An array with either of these is not encodable.
+    for (let i = 0; i < value.length; i++) {
+      const desc = Object.getOwnPropertyDescriptor(value, i);
+      if (   (desc === undefined)
+          || (desc.get !== undefined)
+          || (desc.set !== undefined)) {
+        return false;
+      }
     }
 
     // Since we know there are no holes (per above), the only way we could have
