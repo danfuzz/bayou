@@ -37,11 +37,6 @@ export default class CaretSnapshot extends CommonBase {
     Object.freeze(this);
   }
 
-  /** {string} Name of this class in the API. */
-  static get API_NAME() {
-    return 'CaretSnapshot';
-  }
-
   /**
    * Converts this instance for API transmission.
    *
@@ -49,18 +44,6 @@ export default class CaretSnapshot extends CommonBase {
    */
   toApi() {
     return [this._revNum, this._docRevNum, this._carets];
-  }
-
-  /**
-   * Constructs an instance from API arguments.
-   *
-   * @param {Int} revNum Same as with the regular constructor.
-   * @param {Int} docRevNum Same as with the regular constructor.
-   * @param {array<Caret>} carets Same as with the regular constructor.
-   * @returns {CaretSnapshot} The constructed instance.
-   */
-  static fromApi(revNum, docRevNum, carets) {
-    return new CaretSnapshot(revNum, docRevNum, carets);
   }
 
   /**

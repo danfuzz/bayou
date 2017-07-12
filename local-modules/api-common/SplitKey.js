@@ -49,11 +49,6 @@ export default class SplitKey extends BaseKey {
     Object.freeze(this);
   }
 
-  /** Name of this class in the API. */
-  static get API_NAME() {
-    return 'SplitKey';
-  }
-
   /**
    * Converts this instance for API transmission.
    *
@@ -61,18 +56,6 @@ export default class SplitKey extends BaseKey {
    */
   toApi() {
     return [this.url, this.id, this._secret];
-  }
-
-  /**
-   * Constructs an instance from API arguments.
-   *
-   * @param {string} url Same as with the regular constructor.
-   * @param {string} id Same as with the regular constructor.
-   * @param {string} secret Same as with the regular constructor.
-   * @returns {SplitKey} The constructed instance.
-   */
-  static fromApi(url, id, secret) {
-    return new SplitKey(url, id, secret);
   }
 
   /**

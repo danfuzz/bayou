@@ -10,15 +10,15 @@ import { Codec } from 'api-common';
 
 import MockApiObject from './MockApiObject';
 
-class NoApiName {
+class NoApiTag {
   toApi() {
-    return 'NoApiName!';
+    return 'NoApiTag!';
   }
 }
 
 class NoToApi {
   constructor() {
-    this.API_NAME = 'NoToApi';
+    this.API_TAG = 'NoToApi';
   }
 }
 
@@ -75,10 +75,10 @@ describe('api-common/Encoder', () => {
       assert.throws(() => encodeData(value));
     });
 
-    it('should reject API objects with no API_NAME property', () => {
-      const noApiName = new NoApiName();
+    it('should reject API objects with no API_TAG property', () => {
+      const noApiTag = new NoApiTag();
 
-      assert.throws(() => encodeData(noApiName));
+      assert.throws(() => encodeData(noApiTag));
     });
 
     it('should reject API objects with no toApi() method', () => {
@@ -87,7 +87,7 @@ describe('api-common/Encoder', () => {
       assert.throws(() => encodeData(noToApi));
     });
 
-    it('should accept objects with an API_NAME property and toApi() method', () => {
+    it('should accept objects with an API_TAG property and toApi() method', () => {
       const fakeObject = new MockApiObject();
 
       assert.doesNotThrow(() => encodeData(fakeObject));

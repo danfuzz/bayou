@@ -133,7 +133,7 @@ export default class BaseKey extends CommonBase {
    * @returns {string} The redacted form.
    */
   toString() {
-    const name = this.constructor.API_NAME || this.constructor.name;
-    return `{${name} ${this._url} ${this._impl_printableId()}}`;
+    const tag = this.constructor.API_TAG || this.constructor.name;
+    return `{${tag} ${this._url} ${this._impl_printableId()}}`;
   }
 }

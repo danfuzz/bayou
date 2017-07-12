@@ -29,7 +29,7 @@ export default class ItemCodec extends CommonBase {
       TFunction.check(clazz.fromApi);
     }
 
-    const tag = clazz.API_NAME || clazz.name;
+    const tag = clazz.API_TAG || clazz.name;
     const encode = (value) => { return value.toApi(); };
     const decode = clazz.fromApi
       ? (payload) => { return clazz.fromApi(...payload); }

@@ -51,11 +51,6 @@ export default class DocumentDelta extends CommonBase {
     Object.freeze(this);
   }
 
-  /** {string} Name of this class in the API. */
-  static get API_NAME() {
-    return 'DocumentDelta';
-  }
-
   /**
    * Converts this instance for API transmission.
    *
@@ -63,17 +58,6 @@ export default class DocumentDelta extends CommonBase {
    */
   toApi() {
     return [this._revNum, this._delta];
-  }
-
-  /**
-   * Constructs an instance from API arguments.
-   *
-   * @param {Int} revNum Same as with the regular constructor.
-   * @param {FrozenDelta} delta Same as with the regular constructor.
-   * @returns {DocumentDelta} The constructed instance.
-   */
-  static fromApi(revNum, delta) {
-    return new DocumentDelta(revNum, delta);
   }
 
   /** {Int} The produced revision number. */

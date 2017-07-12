@@ -81,11 +81,6 @@ export default class Timestamp extends CommonBase {
     Object.freeze(this);
   }
 
-  /** Name of this class in the API. */
-  static get API_NAME() {
-    return 'Timestamp';
-  }
-
   /**
    * Converts this instance for API transmission.
    *
@@ -93,17 +88,6 @@ export default class Timestamp extends CommonBase {
    */
   toApi() {
     return [this._secs, this._usecs];
-  }
-
-  /**
-   * Constructs an instance from API arguments.
-   *
-   * @param {Int} secs Same as regular constructor.
-   * @param {Int} usecs Same as regular constructor.
-   * @returns {Timestamp} The constructed instance.
-   */
-  static fromApi(secs, usecs) {
-    return new Timestamp(secs, usecs);
   }
 
   /** The number of seconds since the Unix Epoch. */

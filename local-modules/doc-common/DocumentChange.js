@@ -62,11 +62,6 @@ export default class DocumentChange extends DocumentDelta {
       });
   }
 
-  /** {string} Name of this class in the API. */
-  static get API_NAME() {
-    return 'DocumentChange';
-  }
-
   /**
    * Converts this instance for API transmission.
    *
@@ -74,19 +69,6 @@ export default class DocumentChange extends DocumentDelta {
    */
   toApi() {
     return [this._revNum, this._delta, this._timestamp, this.authorId];
-  }
-
-  /**
-   * Constructs an instance from API arguments.
-   *
-   * @param {Int} revNum Same as with the regular constructor.
-   * @param {Delta|array|object} delta Same as with the regular constructor.
-   * @param {Timestamp} timestamp Same as with the regular constructor.
-   * @param {string|null} authorId Same as with the regular constructor.
-   * @returns {DocumentChange} The constructed instance.
-   */
-  static fromApi(revNum, delta, timestamp, authorId) {
-    return new DocumentChange(revNum, delta, timestamp, authorId);
   }
 
   /**

@@ -23,11 +23,6 @@ export default class Caret extends CommonBase {
     Object.freeze(this);
   }
 
-  /** {string} Name of this class in the API. */
-  static get API_NAME() {
-    return 'Caret';
-  }
-
   /**
    * Converts this instance for API transmission.
    *
@@ -35,14 +30,5 @@ export default class Caret extends CommonBase {
    */
   toApi() {
     return [];
-  }
-
-  /**
-   * Constructs an instance from API arguments.
-   *
-   * @returns {Caret} The constructed instance.
-   */
-  static fromApi() {
-    return new Caret();
   }
 }

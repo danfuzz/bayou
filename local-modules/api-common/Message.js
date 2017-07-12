@@ -72,11 +72,6 @@ export default class Message {
     Object.freeze(this);
   }
 
-  /** Name of this class in the API. */
-  static get API_NAME() {
-    return 'Message';
-  }
-
   /**
    * Converts this instance for API transmission.
    *
@@ -99,20 +94,6 @@ export default class Message {
       name:   this._name,
       args:   this._args
     };
-  }
-
-  /**
-   * Constructs an instance from API arguments.
-   *
-   * @param {Int} id Same as with the regular constructor.
-   * @param {string} target Same as with the regular constructor.
-   * @param {string} action Same as with the regular constructor.
-   * @param {string} name Same as with the regular constructor.
-   * @param {Array<*>} args Same as with the regular constructor.
-   * @returns {Message} The constructed instance.
-   */
-  static fromApi(id, target, action, name, args) {
-    return new Message(id, target, action, name, args);
   }
 
   /**

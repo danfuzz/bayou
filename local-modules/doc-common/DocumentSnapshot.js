@@ -67,11 +67,6 @@ export default class DocumentSnapshot extends CommonBase {
     Object.freeze(this);
   }
 
-  /** {string} Name of this class in the API. */
-  static get API_NAME() {
-    return 'DocumentSnapshot';
-  }
-
   /**
    * Converts this instance for API transmission.
    *
@@ -79,17 +74,6 @@ export default class DocumentSnapshot extends CommonBase {
    */
   toApi() {
     return [this._revNum, this._contents];
-  }
-
-  /**
-   * Constructs an instance from API arguments.
-   *
-   * @param {number} revNum Same as regular constructor.
-   * @param {Delta|array|object} contents Same as regular constructor.
-   * @returns {DocumentSnapshot} The constructed instance.
-   */
-  static fromApi(revNum, contents) {
-    return new DocumentSnapshot(revNum, contents);
   }
 
   /** {RevisionNumber} The revision number. */
