@@ -20,12 +20,13 @@ export default class SpecialCodecs extends UtilityClass {
   /**
    * Decodes an array.
    *
-   * @param {array<*>} args Arguments as previously produced by `arrayEncode()`.
+   * @param {array<*>} payload Construction payload as previously produced by
+   *   `arrayEncode()`.
    * @returns {array<*>} Decoded array.
    */
-  static arrayDecode(args) {
+  static arrayDecode(payload) {
     // The array payload is self-representative. Easy!
-    return args;
+    return payload;
   }
 
   /**

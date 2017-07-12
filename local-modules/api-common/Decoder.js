@@ -101,8 +101,9 @@ export default class Decoder extends CommonBase {
    */
   _decodeInstance(tag, payload) {
     const itemCodec = this._reg.codecForTag(tag);
-    const args = this._decodeArray(payload);
 
-    return itemCodec.decode(...args);
+    payload = this._decodeArray(payload);
+
+    return itemCodec.decode(payload);
   }
 }

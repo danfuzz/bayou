@@ -25,11 +25,15 @@ export default class ItemCodec extends CommonBase {
     TClass.check(clazz);
     TFunction.check(clazz.prototype.toApi);
 
+    if (clazz.fromApi) {
+      TFunction.check(clazz.fromApi);
+    }
+
     const tag = clazz.API_NAME || clazz.name;
     const encode = (value) => { return value.toApi(); };
     const decode = clazz.fromApi
-      ? TFunction.check(clazz.fromApi).bind(clazz)
-      : (...args) => { return new clazz(...args); };
+      ? (payload) => { return clazz.fromApi(...payload); }
+      : (payload) => { return new clazz(...payload); };
 
     return new ItemCodec(tag, clazz, null, encode, decode);
   }
@@ -49,9 +53,10 @@ export default class ItemCodec extends CommonBase {
    * @param {function} encode Encoder function, which accepts a single argument,
    *   `value`, of a value to encode as this item type. It must return an array
    *   of values which represent the construction parameters for the value.
-   * @param {function} decode Decoder function, which accepts the same arguments
-   *   that the `encode` function returned. It must return a value that is
-   *   equivalent to one that got encoded to produce the arguments it received.
+   * @param {function} decode Decoder function, which accepts the same kinds of
+   *   value that the `encode` function returns (that is, an array of
+   *   construction parameters) . It must return a value that is equivalent to
+   *   one that got encoded to produce the payload it received.
    */
   constructor(tag, clazzOrType, predicate, encode, decode) {
     super();
@@ -139,13 +144,13 @@ export default class ItemCodec extends CommonBase {
    * Decodes the given arguments into a value which is equivalent to one that
    * was previously encoded into those arguments using this instance.
    *
-   * @param {...*} args Arguments which resulted from an earlier call to
+   * @param {array<*>} payload Arguments which resulted from an earlier call to
    *   `encode()` on this instance, or the equivalent thereto.
    * @returns {*} A value for which `canEncode()` on this instance would return
    *   `true`.
    */
-  decode(...args) {
-    const result = this._decode(...args);
+  decode(payload) {
+    const result = this._decode(payload);
 
     if (!this.canEncode(result)) {
       throw new Error('Invalid result from decoder.');
