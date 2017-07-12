@@ -49,11 +49,6 @@ export default class SplitKey extends BaseKey {
     Object.freeze(this);
   }
 
-  /** Name of this class in the API. */
-  static get API_NAME() {
-    return 'SplitKey';
-  }
-
   /**
    * Converts this instance for API transmission.
    *

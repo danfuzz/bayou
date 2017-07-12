@@ -81,11 +81,6 @@ export default class Timestamp extends CommonBase {
     Object.freeze(this);
   }
 
-  /** Name of this class in the API. */
-  static get API_NAME() {
-    return 'Timestamp';
-  }
-
   /**
    * Converts this instance for API transmission.
    *

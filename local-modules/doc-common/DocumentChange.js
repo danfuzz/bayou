@@ -62,11 +62,6 @@ export default class DocumentChange extends DocumentDelta {
       });
   }
 
-  /** {string} Name of this class in the API. */
-  static get API_NAME() {
-    return 'DocumentChange';
-  }
-
   /**
    * Converts this instance for API transmission.
    *

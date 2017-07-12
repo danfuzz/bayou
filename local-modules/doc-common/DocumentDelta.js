@@ -51,11 +51,6 @@ export default class DocumentDelta extends CommonBase {
     Object.freeze(this);
   }
 
-  /** {string} Name of this class in the API. */
-  static get API_NAME() {
-    return 'DocumentDelta';
-  }
-
   /**
    * Converts this instance for API transmission.
    *

@@ -72,11 +72,6 @@ export default class Message {
     Object.freeze(this);
   }
 
-  /** Name of this class in the API. */
-  static get API_NAME() {
-    return 'Message';
-  }
-
   /**
    * Converts this instance for API transmission.
    *

@@ -37,11 +37,6 @@ export default class CaretSnapshot extends CommonBase {
     Object.freeze(this);
   }
 
-  /** {string} Name of this class in the API. */
-  static get API_NAME() {
-    return 'CaretSnapshot';
-  }
-
   /**
    * Converts this instance for API transmission.
    *
