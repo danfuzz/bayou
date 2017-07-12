@@ -5,18 +5,7 @@
 import { CommonBase } from 'util-common';
 
 import ItemCodec from './ItemCodec';
-
-/**
- * {ItemCodec} Item codec for arrays.
- *
- * **TODO:** This is not yet complete, but it is also not hooked up for actual
- * usage yet (because both `Encoder` and `Decoder` have an explicit special
- * case for arrays). Both of these facts should be rectified.
- */
-const ARRAY_CODEC = new ItemCodec('array', Array, null,
-  (value => value),
-  ((...args) => args)
-);
+import SpecialCodecs from './SpecialCodecs';
 
 /**
  * Methods for registering and looking up item codecs by name. The names are
@@ -46,13 +35,14 @@ export default class Registry extends CommonBase {
     this._classes = new Map();
 
     // Register the array codec, which both enables its usage and prevents it
-    // from getting improperly registered by client code.
-    this.registerCodec(ARRAY_CODEC);
+    // from getting improperly registered by client code. **TODO:** It is not
+    // actually used for encoding and decoding yet, and it should be.
+    this.registerCodec(SpecialCodecs.ARRAY);
   }
 
   /** {string} The item tag used for regular arrays. */
   get arrayTag() {
-    return ARRAY_CODEC.tag;
+    return SpecialCodecs.ARRAY.tag;
   }
 
   /**
