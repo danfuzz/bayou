@@ -44,12 +44,12 @@ export default class Codec extends Singleton {
    * * Arrays whose first element is not a string (including empty arrays) are
    *   rejected.
    * * Other arrays are processed recursively using (the equivalent of) this
-   *   method, without the first element. If the first element is the value
-   *   `Registry.arrayTag` then the processed form is used as-is. Otherwise,
-   *   the first element is used to look up a class that has been registered
-   *   under that name. Its `fromApi()` method is called, passing the converted
+   *   method, without the first element. The first element is taken to be a
+   *   string tag and is used to look up an item codec that was registered
+   *   under that tag. Its `decode()` method is called, passing the converted
    *   array as arguments. The result of that call becomes the result of
-   *   conversion.
+   *   conversion. **Note:** Decoding to an array result per se is a special
+   *   case of this, using the item codec `SpecialCodecs.ARRAY`.
    * * All other objects (including functions) are rejected.
    *
    * In addition, if the result is an object (including an array), it is
@@ -103,13 +103,14 @@ export default class Codec extends Singleton {
    * * Arrays with non-numeric properties are rejected.
    * * Other arrays are allowed, with their values processed recursively using
    *   (the equivalent of) this method. The encoded form is also an array but
-   *   with an additional first element of the value `Registry.arrayTag`.
-   * * Objects which bind a method `toApi()` and whose constructor binds a
-   *   property `API_NAME` are allowed. Such objects will have `toApi()` called
-   *   on them, which is expected to result in an array which is suitable for
-   *   processing using (the equivalent of) this method. The encoded form is an
-   *   array with the first element the value of `API_NAME` and the rest of the
-   *   elements whatever was returned by `toApi()`.
+   *   with an additional first element of the value `SpecialCodec.ARRAY.tag`.
+   * * Objects that are instances of classes (that is, have constructor
+   *   functions) are allowed, as long as they at least bind a method `toApi()`.
+   *   In addition, if they have a static `API_NAME` property and/or a static
+   *   `fromApi()` method, those are used. See `ItemCodec` for how these are all
+   *   used to effect encoding and decoding. The encoded form is an array with
+   *   the first element being the value tag (typically the class name) and the
+   *   rest of the elements whatever was returned by `toApi()`.
    * * All other objects are rejected.
    *
    * In addition, if the result is an object (including an array), it is
@@ -154,5 +155,15 @@ export default class Codec extends Singleton {
    */
   registerClass(clazz) {
     this._reg.registerClass(clazz);
+  }
+
+  /**
+   * Registers an item codec to be accepted for API use. This is a pass-through
+   * to the method of the same name on the instance's `Registry`.
+   *
+   * @param {ItemCodec} codec The codec to register.
+   */
+  registerCodec(codec) {
+    this._reg.registerCodec(codec);
   }
 }
