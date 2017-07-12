@@ -34,8 +34,8 @@ export default class Registry extends CommonBase {
      */
     this._classToCodecs = new Map();
 
-    // Register the array codec, which both enables its usage and prevents it
-    // from getting improperly registered by client code.
+    // Register the array codec, which both enables its usage and prevents its
+    // tag from getting improperly re-registered by client code.
     this.registerCodec(SpecialCodecs.ARRAY);
   }
 
