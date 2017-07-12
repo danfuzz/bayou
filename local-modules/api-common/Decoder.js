@@ -46,14 +46,14 @@ export default class Decoder extends CommonBase {
   /**
    * Helper for `decodeData()` which validates and converts a simple object.
    *
-   * @param {object} value Value to convert.
-   * @returns {object} The converted value.
+   * @param {object} encoded The encoded value.
+   * @returns {object} The decoded value.
    */
-  _decodeSimpleObject(value) {
+  _decodeSimpleObject(encoded) {
     const result = {};
 
-    for (const k in value) {
-      result[k] = this.decodeData(value[k]);
+    for (const k in encoded) {
+      result[k] = this.decodeData(encoded[k]);
     }
 
     return Object.freeze(result);
