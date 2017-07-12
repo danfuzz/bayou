@@ -29,13 +29,13 @@ class RegistryTestApiObject {
   }
 }
 
-class NoApiName {
+class NoApiTag {
   toApi() {
-    return 'NoApiName!';
+    return 'NoApiTag!';
   }
 
   static fromApi() {
-    return new NoApiName();
+    return new NoApiTag();
   }
 }
 
@@ -68,7 +68,7 @@ describe('api-common/Registry', () => {
 
     it('should allow classes without `API_TAG` or `fromApi()`', () => {
       const reg = new Registry();
-      assert.doesNotThrow(() => reg.registerClass(NoApiName));
+      assert.doesNotThrow(() => reg.registerClass(NoApiTag));
       assert.doesNotThrow(() => reg.registerClass(NoFromApi));
     });
 

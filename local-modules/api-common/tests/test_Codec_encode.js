@@ -10,9 +10,9 @@ import { Codec } from 'api-common';
 
 import MockApiObject from './MockApiObject';
 
-class NoApiName {
+class NoApiTag {
   toApi() {
-    return 'NoApiName!';
+    return 'NoApiTag!';
   }
 }
 
@@ -76,9 +76,9 @@ describe('api-common/Encoder', () => {
     });
 
     it('should reject API objects with no API_TAG property', () => {
-      const noApiName = new NoApiName();
+      const NoApiTag = new NoApiTag();
 
-      assert.throws(() => encodeData(noApiName));
+      assert.throws(() => encodeData(NoApiTag));
     });
 
     it('should reject API objects with no toApi() method', () => {
