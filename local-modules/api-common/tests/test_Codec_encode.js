@@ -76,9 +76,9 @@ describe('api-common/Encoder', () => {
     });
 
     it('should reject API objects with no API_TAG property', () => {
-      const NoApiTag = new NoApiTag();
+      const noApiTag = new NoApiTag();
 
-      assert.throws(() => encodeData(NoApiTag));
+      assert.throws(() => encodeData(noApiTag));
     });
 
     it('should reject API objects with no toApi() method', () => {
