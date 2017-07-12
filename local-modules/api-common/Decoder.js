@@ -48,8 +48,8 @@ export default class Decoder extends CommonBase {
     const tag = value[0];
     const payload = value.slice(1);
 
-    // ...except that it's an error if the array doesn't start with a string
-    // tag, so check for that.
+    // It's an error if the array doesn't start with a string tag (even for
+    // a value that decodes to an array per se), so check for that.
     if (typeof tag !== 'string') {
       if (value.length === 0) {
         throw new Error('API cannot decode empty arrays.');
