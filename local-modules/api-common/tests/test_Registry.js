@@ -60,13 +60,6 @@ class NoFromApi {
 }
 
 describe('api-common/Registry', () => {
-  describe('.arrayTag', () => {
-    it("should return 'array'", () => {
-      const reg = new Registry();
-      assert.strictEqual(reg.arrayTag, 'array');
-    });
-  });
-
   describe('register(class)', () => {
     it('should accept a class with all salient properties', () => {
       const reg = new Registry();

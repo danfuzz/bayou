@@ -18,9 +18,6 @@ export default class Decoder extends CommonBase {
 
     /** {Registry} Registry instance to use. */
     this._reg = reg;
-
-    /** {static} Conveniently cached value of `reg.arrayTag`. */
-    this._arrayTag = reg.arrayTag;
   }
 
   /**
