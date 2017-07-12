@@ -24,7 +24,7 @@ export default class Registry extends CommonBase {
      * {Map<string,ItemCodec>} Map of registered item tags to their respective
      * item codecs.
      */
-    this._registry = new Map();
+    this._tagToCodec = new Map();
 
     /**
      * {Map<class,array<ItemCodec>>} Map of classes that have `ItemCodec`s
@@ -32,7 +32,7 @@ export default class Registry extends CommonBase {
      * one is that some classes can be encoded multiple ways, with the multiple
      * `ItemCodec`'s `predicate`s determining which one applies.
      */
-    this._classes = new Map();
+    this._classToCodecs = new Map();
 
     // Register the array codec, which both enables its usage and prevents it
     // from getting improperly registered by client code.
@@ -68,19 +68,19 @@ export default class Registry extends CommonBase {
       // For now, we only allow registration of class/instance codecs.
       // **TODO:** Allow other types.
       throw new Error(`Cannot register non-object type \`${codec.type}\`.`);
-    } else if (this._registry.get(tag)) {
+    } else if (this._tagToCodec.get(tag)) {
       throw new Error(`Cannot re-register tag \`${tag}\`.`);
     }
 
-    this._registry.set(codec.tag, codec);
+    this._tagToCodec.set(codec.tag, codec);
 
-    let forClass = this._classes.get(clazz);
-    if (!forClass) {
-      forClass = [];
-      this._classes.set(clazz, forClass);
+    let codecs = this._classToCodecs.get(clazz);
+    if (!codecs) {
+      codecs = [];
+      this._classToCodecs.set(clazz, codecs);
     }
 
-    forClass.push(codec);
+    codecs.push(codec);
   }
 
   /**
@@ -101,7 +101,7 @@ export default class Registry extends CommonBase {
     }
 
     const clazz = value.constructor;
-    const codecs = this._classes.get(clazz);
+    const codecs = this._classToCodecs.get(clazz);
 
     if (!codecs) {
       throw new Error(`No codec registered for class \`${clazz.name}\`.`);
@@ -129,7 +129,7 @@ export default class Registry extends CommonBase {
    * @returns {ItemCodec} The codec that was registered under the given name.
    */
   codecForTag(tag) {
-    const result = this._registry.get(tag);
+    const result = this._tagToCodec.get(tag);
 
     if (!result) {
       throw new Error(`No codec registered with tag \`${tag}\`.`);
