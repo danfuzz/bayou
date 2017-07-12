@@ -114,7 +114,7 @@ export default class FrozenDelta extends Delta {
   }
 
   /** Name of this class in the API. */
-  static get API_NAME() {
+  static get API_TAG() {
     return 'Delta';
   }
 

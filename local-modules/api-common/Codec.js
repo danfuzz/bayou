@@ -106,7 +106,7 @@ export default class Codec extends Singleton {
    *   with an additional first element of the value `SpecialCodec.ARRAY.tag`.
    * * Objects that are instances of classes (that is, have constructor
    *   functions) are allowed, as long as they at least bind a method `toApi()`.
-   *   In addition, if they have a static `API_NAME` property and/or a static
+   *   In addition, if they have a static `API_TAG` property and/or a static
    *   `fromApi()` method, those are used. See `ItemCodec` for how these are all
    *   used to effect encoding and decoding. The encoded form is an array with
    *   the first element being the value tag (typically the class name) and the

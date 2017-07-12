@@ -10,7 +10,7 @@ export default class MockApiObject {
     this.initialized = true;
   }
 
-  static get API_NAME() {
+  static get API_TAG() {
     return 'MockApiObject';
   }
 

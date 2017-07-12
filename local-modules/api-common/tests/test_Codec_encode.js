@@ -18,7 +18,7 @@ class NoApiName {
 
 class NoToApi {
   constructor() {
-    this.API_NAME = 'NoToApi';
+    this.API_TAG = 'NoToApi';
   }
 }
 
@@ -75,7 +75,7 @@ describe('api-common/Encoder', () => {
       assert.throws(() => encodeData(value));
     });
 
-    it('should reject API objects with no API_NAME property', () => {
+    it('should reject API objects with no API_TAG property', () => {
       const noApiName = new NoApiName();
 
       assert.throws(() => encodeData(noApiName));
@@ -87,7 +87,7 @@ describe('api-common/Encoder', () => {
       assert.throws(() => encodeData(noToApi));
     });
 
-    it('should accept objects with an API_NAME property and toApi() method', () => {
+    it('should accept objects with an API_TAG property and toApi() method', () => {
       const fakeObject = new MockApiObject();
 
       assert.doesNotThrow(() => encodeData(fakeObject));
