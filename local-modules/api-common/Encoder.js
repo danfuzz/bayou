@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CommonBase, ObjectUtil } from 'util-common';
+import { CommonBase } from 'util-common';
 
 /**
  * Main implementation of `Codec.encodeData()`.
@@ -67,22 +67,16 @@ export default class Encoder extends CommonBase {
   _encodeSimpleObject(value) {
     const result = {};
 
+    // Iterate over all the properties in `value`, encoding the values and
+    // noticing (and rejecting the value) if there are any synthetic properties.
     for (const k of Object.getOwnPropertyNames(value)) {
       const prop = Object.getOwnPropertyDescriptor(value, k);
-      const origValue = prop.value;
 
-      if (origValue === undefined) {
-        // `undefined` isn't encodable, but also this is what we'll see if
-        // `k` names a synthetic property. The following differentiates the two
-        // cases, for a maximum-fidelity error message.
-        if (ObjectUtil.hasOwnProperty(prop, 'value')) {
-          throw new Error('API cannot encode `undefined`.');
-        } else {
-          throw new Error('API cannot encode plain object with synthetic property.');
-        }
+      if ((prop.get !== undefined) || (prop.set !== undefined)) {
+        throw new Error('API cannot encode plain object with synthetic property.');
       }
 
-      result[k] = this.encodeData(origValue);
+      result[k] = this.encodeData(prop.value);
     }
 
     return Object.freeze(result);
