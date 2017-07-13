@@ -40,36 +40,17 @@ export default class Encoder extends CommonBase {
 
       case 'object': {
         // Pass `null` through as-is, and attempt to encode anything else.
-        return (value === null) ? null : this._encodeInstance(value);
+        if (value === null) {
+          return null;
+        } else {
+          const itemCodec = this._reg.codecForValue(value);
+          return itemCodec.encode(value, this._encodeData);
+        }
       }
 
       default: {
         throw new Error(`API cannot encode type \`${typeof value}\`.`);
       }
     }
-  }
-
-  /**
-   * Helper for `encodeData()` which validates and converts an object which is
-   * expected (and verified) to be API-encodable.
-   *
-   * @param {object} value Value to convert.
-   * @returns {object} The converted value.
-   */
-  _encodeInstance(value) {
-    const itemCodec = this._reg.codecForValue(value);
-    const payload   = itemCodec.encode(value, this._encodeData);
-
-    if (Array.isArray(payload)) {
-      // "Unshift" the item tag onto the encoded payload; that is, push on the
-      // front.
-      payload.unshift(itemCodec.tag);
-    }
-
-    // **Note:** If `payload` isn't an array, that means that its not in
-    // "construction arguments" form. In that case its "tag" is implicit in the
-    // type of the value.
-
-    return Object.freeze(payload);
   }
 }

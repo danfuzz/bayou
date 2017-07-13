@@ -47,6 +47,24 @@ import { CommonBase } from 'util-common';
  */
 export default class ItemCodec extends CommonBase {
   /**
+   * Gets the tag string (either explicit or implicit) of the given payload.
+   * This returns `null` if the payload can't possibly be valid; this is the
+   * case for empty arrays and arrays whose first element is not a string.
+   *
+   * @param {*} payload The payload in question.
+   * @returns {string|null} The tag of the payload, or `null` if it is not a
+   *   valid payload.
+   */
+  static tagFromPayload(payload) {
+    if (Array.isArray(payload)) {
+      const tag = payload[0];
+      return ((typeof tag) === 'string') ? tag : null;
+    } else {
+      return ItemCodec.tagFromType(typeof payload);
+    }
+  }
+
+  /**
    * Gets the tag string to use when the encoded form is a value of a particular
    * type (and not the usual "construction arguments" form).
    *
@@ -198,6 +216,20 @@ export default class ItemCodec extends CommonBase {
   }
 
   /**
+   * Determines whether or not this instance is applicable to the given payload,
+   * by checking the payload's tag, which is either explicit (first element of
+   * an array payload) or implicit (derived from the value type of the payload,
+   * for all other payloads).
+   *
+   * @param {*} payload Payload to check.
+   * @returns {boolean} `true` if this instance can be used to decode `payload`,
+   *   or `false` if not.
+   */
+  canDecode(payload) {
+    return ItemCodec.tagFromPayload(payload) === this._tag;
+  }
+
+  /**
    * Determines whether or not this instance is applicable to the given value,
    * that is, whether the value qualifies as being of this item's type/kind and
    * so can be encoded by this instance.
@@ -233,6 +265,15 @@ export default class ItemCodec extends CommonBase {
    *   `true`.
    */
   decode(payload, subDecode) {
+    if (!this.canDecode(payload)) {
+      throw new Error('Attempt to decode invalid payload.');
+    }
+
+    if (Array.isArray(payload)) {
+      // Strip off the tag before passing to `decode()`.
+      payload = payload.slice(1);
+    }
+
     const result = this._decode(payload, subDecode);
 
     if (!this.canEncode(result)) {
@@ -261,19 +302,22 @@ export default class ItemCodec extends CommonBase {
     const encodedType = this._encodedType;
     const result      = this._encode(value, subEncode);
 
-    // Validate the result.
+    // Validate the result, and in the case of normal "construction arguments"
+    // arrays, add the tag as the first element of the payload.
     if (encodedType === null) {
       try {
-        return TArray.check(result);
+        TArray.check(result);
       } catch (e) {
         // Throw a higher-fidelity error.
         throw new Error('Invalid encoding result (not an array).');
       }
+
+      result.unshift(this._tag);
     } else if ((typeof result) !== encodedType) {
       throw new Error('Invalid encoding result: ' +
         `got type ${typeof result}; expected type ${encodedType}`);
     }
 
-    return result;
+    return Object.freeze(result);
   }
 }

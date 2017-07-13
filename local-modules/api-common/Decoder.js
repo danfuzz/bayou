@@ -4,8 +4,6 @@
 
 import { CommonBase } from 'util-common';
 
-import ItemCodec from './ItemCodec';
-
 /**
  * Main implementation of `Codec.decodeData()`.
  */
@@ -28,64 +26,20 @@ export default class Decoder extends CommonBase {
   /**
    * Main implementation of `Codec.decodeData()`, see which for details.
    *
-   * @param {*} value Value to convert.
-   * @returns {*} The converted value.
+   * @param {*} payload Payload to decode.
+   * @returns {*} The decoded value.
    */
-  decodeData(value) {
-    const type = typeof value;
+  decodeData(payload) {
+    const type = typeof payload;
 
     if (type === 'function') {
       throw new Error(`API cannot decode functions.`);
-    } else if ((type !== 'object') || (value === null)) {
+    } else if ((type !== 'object') || (payload === null)) {
       // Pass through as-is.
-      return value;
-    } else if (Array.isArray(value)) {
-      return this._decodeInstance(value);
+      return payload;
     } else {
-      return this._decodeNonInstance(value);
+      const itemCodec = this._reg.codecForPayload(payload);
+      return itemCodec.decode(payload, this._decodeData);
     }
-  }
-
-  /**
-   * Helper for `decodeData()` which validates and converts a simple object.
-   *
-   * @param {object} encoded The encoded value.
-   * @returns {object} The decoded value.
-   */
-  _decodeNonInstance(encoded) {
-    const itemCodec =
-      this._reg.codecForTag(ItemCodec.tagFromType(typeof encoded));
-
-    return itemCodec.decode(encoded, this._decodeData);
-  }
-
-  /**
-   * Helper for `decodeData()` which validates and converts a tagged
-   * constructor array. These are used as the encoded form of both arrays per se
-   * and arbitrary class instances.
-   *
-   * **Note:** Array results are handled by virtue of the fact that
-   * `SpecialCodecs.ARRAY` will have been registered as an item codec.
-   *
-   * @param {array<*>} encoded The encoded value.
-   * @returns {object} The decoded value.
-   */
-  _decodeInstance(encoded) {
-    const tag     = encoded[0];
-    const payload = encoded.slice(1);
-
-    // It's an error if the array doesn't start with a string tag (even for
-    // a value that decodes to an array per se), so check for that.
-    if (typeof tag !== 'string') {
-      if (encoded.length === 0) {
-        throw new Error('API cannot decode empty arrays.');
-      } else {
-        throw new Error('API cannot decode arrays without an initial string tag.');
-      }
-    }
-
-    const itemCodec = this._reg.codecForTag(tag);
-
-    return itemCodec.decode(payload, this._decodeData);
   }
 }
