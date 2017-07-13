@@ -13,20 +13,21 @@ import { CommonBase } from 'util-common';
  * parameters.
  *
  * The `decode` and `encode` arguments to the constructor are the "workhorses"
- * of any instance. Each of these takes two parameters, the second of which is
- * a function to recursively code any sub-components of the value in question:
+ * of an instance of this class. Each of these takes two parameters, the second
+ * of which is a function to recursively code any sub-components of the value in
+ * question:
  *
  * * `decode(payload, subDecode)` &mdash; `payload` is the payload to decode
  *   into a value, and `subDecode(subPayload)` is a function to call on any
  *   sub-components of the payload; it returns the decoded form of `subPayload`.
- *   The overall return value from `decode` is a value that is (or is equivalent
- *   to) one that was encoded via `encode` on this instance to produce the
- *   received `payload`.
+ *   The overall return value from `decode()` is a value that is (or is
+ *   equivalent to) one that was encoded via `encode()` on this instance to
+ *   produce the received `payload`.
  *
  * * `encode(value, subEncode)` &mdash; `value` is the value to encode, and
  *   `subEncode(subValue)` is a function to call on any sub-components of the
  *   value; it returns the encoded form of `subValue`. The overall return value
- *   from `encode` is a payload which is suitable for passing into `decode()`
+ *   from `encode()` is a payload which is suitable for passing into `decode()`
  *   on the same (or equivalent) item codec.
  */
 export default class ItemCodec extends CommonBase {
