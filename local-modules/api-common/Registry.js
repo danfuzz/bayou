@@ -34,8 +34,13 @@ export default class Registry extends CommonBase {
      */
     this._classToCodecs = new Map();
 
-    // Register the array codec, which both enables its usage and prevents its
-    // tag from getting improperly re-registered by client code.
+    /**
+     * {Map<string,array<ItemCodec>} Map of non-class types that have
+     * `ItemCodec`s registered to the set of such codecs.
+     */
+    this._typeToCodecs = new Map();
+
+    // Register all the special codecs.
     this.registerCodec(SpecialCodecs.ARRAY);
   }
 
@@ -64,20 +69,22 @@ export default class Registry extends CommonBase {
     const tag   = codec.tag;
     const clazz = codec.clazz;
 
-    if (!clazz) {
-      // For now, we only allow registration of class/instance codecs.
-      // **TODO:** Allow other types.
-      throw new Error(`Cannot register non-object type \`${codec.type}\`.`);
-    } else if (this._tagToCodec.get(tag)) {
+    if (this._tagToCodec.get(tag)) {
       throw new Error(`Cannot re-register tag \`${tag}\`.`);
     }
 
     this._tagToCodec.set(codec.tag, codec);
 
-    let codecs = this._classToCodecs.get(clazz);
+    // Add the codec to the appropriate reverse map.
+
+    const [reverseMap, key] = (clazz === null)
+      ? [this._typeToCodecs,  codec.encodedType]
+      : [this._classToCodecs, clazz];
+    let codecs = reverseMap.get(key);
+
     if (!codecs) {
       codecs = [];
-      this._classToCodecs.set(clazz, codecs);
+      reverseMap.set(key, codecs);
     }
 
     codecs.push(codec);
@@ -93,30 +100,39 @@ export default class Registry extends CommonBase {
    */
   codecForValue(value) {
     const valueType = typeof value;
+    let clazz;
+    let codecs;
 
-    if (valueType !== 'object') {
-      // For now, we only allow lookup of class/instance codecs. **TODO:** Allow
-      // other types.
-      throw new Error(`No codec registered for type \`${valueType}\`.`);
+    if (   (valueType === 'object')
+        && (value !== null)
+        && (Object.getPrototypeOf(value) !== Object.prototype)) {
+      // The value is an instance of a class.
+      clazz = value.constructor;
+      codecs = this._classToCodecs.get(clazz);
+    } else {
+      // The value is a non-class-instance, including possibly being a simple
+      // object (e.g., `{florps: 10}`).
+      clazz = null;
+      codecs = this._typeToCodecs.get(valueType);
     }
 
-    const clazz = value.constructor;
-    const codecs = this._classToCodecs.get(clazz);
-
     if (!codecs) {
-      throw new Error(`No codec registered for class \`${clazz.name}\`.`);
+      const name = Registry._nameForError(clazz, valueType);
+      throw new Error(`No codec registered for ${name}.`);
     }
 
     const applicable = codecs.filter(c => c.canEncode(value));
     switch (applicable.length) {
       case 0: {
-        throw new Error(`No applicable codec for value of class \`${clazz.name}\`.`);
+        const name = Registry._nameForError(clazz, valueType);
+        throw new Error(`No applicable codec for value of ${name}.`);
       }
       case 1: {
         return applicable[0];
       }
       default: {
-        throw new Error(`Multiple applicable codecs for value of class \`${clazz.name}\`.`);
+        const name = Registry._nameForError(clazz, valueType);
+        throw new Error(`Multiple applicable codecs for value of ${name}.`);
       }
     }
   }
@@ -136,5 +152,18 @@ export default class Registry extends CommonBase {
     }
 
     return result;
+  }
+
+  /**
+   * Helper for `codecForValue()` which builds an appropriate "name" string for
+   * use in error messages.
+   *
+   * @param {function|null} clazz The salient class, or `null` if there is none.
+   * @param {string} valueType The salient value type name.
+   * @returns {string} A human-oriented "name" string, for use in error
+   *   messages.
+   */
+  static _nameForError(clazz, valueType) {
+    return clazz ? `class \`${clazz.name}\`` : `type \`${valueType}\``;
   }
 }

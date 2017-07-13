@@ -169,6 +169,15 @@ export default class ItemCodec extends CommonBase {
   }
 
   /**
+   * {string|null} Name of the type of encoded values, if they are _not_
+   * encoded in "construction arguments" form. This is `null` for a
+   * "construction arguments" form.
+   */
+  get encodedType() {
+    return this._encodedType;
+  }
+
+  /**
    * {function|null} Additional predicate that must be `true` of values for them
    * to qualify, if any.
    */
@@ -181,7 +190,9 @@ export default class ItemCodec extends CommonBase {
     return this._tag;
   }
 
-  /** {string} Name of the type which identifies qualified values. */
+  /**
+   * {string} Name of the type which identifies qualified values for encoding.
+   */
   get type() {
     return this._type;
   }
