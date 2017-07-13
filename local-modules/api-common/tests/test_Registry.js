@@ -89,10 +89,13 @@ describe('api-common/Registry', () => {
     });
   });
 
-  describe('codecForTag(tag)', () => {
+  describe('codecForPayload(payload)', () => {
     it('should throw an error if an unregistered tag is requested', () => {
       const reg = new Registry();
-      assert.throws(() => reg.codecForTag('florp'));
+      assert.throws(() => reg.codecForPayload(['florp']));
+
+      // Throws because `Symbol` wasn't a registered type.
+      assert.throws(() => reg.codecForPayload(Symbol('foo')));
     });
 
     it('should return the named codec if it is registered', () => {
@@ -101,7 +104,7 @@ describe('api-common/Registry', () => {
 
       reg.registerCodec(itemCodec);
 
-      const testCodec = reg.codecForTag('florp');
+      const testCodec = reg.codecForPayload(['florp']);
       assert.strictEqual(testCodec, itemCodec);
     });
   });

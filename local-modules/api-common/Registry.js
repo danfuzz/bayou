@@ -166,23 +166,6 @@ export default class Registry extends CommonBase {
   }
 
   /**
-   * Finds a previously-registered item codec by tag (name). This throws an
-   * error if there is no codec registered with the given tag.
-   *
-   * @param {string} tag The item codec tag (name).
-   * @returns {ItemCodec} The codec that was registered under the given name.
-   */
-  codecForTag(tag) {
-    const result = this._tagToCodec.get(tag);
-
-    if (!result) {
-      throw new Error(`No codec registered with tag \`${tag}\`.`);
-    }
-
-    return result;
-  }
-
-  /**
    * Helper for `codecForValue()` which builds an appropriate "name" string for
    * use in error messages.
    *
