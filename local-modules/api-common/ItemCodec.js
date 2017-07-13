@@ -226,12 +226,7 @@ export default class ItemCodec extends CommonBase {
    *   or `false` if not.
    */
   canDecode(payload) {
-    if (Array.isArray(payload)) {
-      const tag = payload[0];
-      return tag === this._tag;
-    } else {
-      return (typeof payload) === this._encodedType;
-    }
+    return ItemCodec.tagFromPayload(payload) === this._tag;
   }
 
   /**
