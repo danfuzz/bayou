@@ -36,7 +36,9 @@ export default class Registry extends CommonBase {
 
     /**
      * {Map<string,array<ItemCodec>} Map of non-class types that have
-     * `ItemCodec`s registered to the set of such codecs.
+     * `ItemCodec`s registered to the set of such codecs. There can be more
+     * than one codec per type for the same reason as `_classToCodecs` can (see
+     * which).
      */
     this._typeToCodecs = new Map();
 

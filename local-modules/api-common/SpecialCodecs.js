@@ -76,7 +76,7 @@ export default class SpecialCodecs extends UtilityClass {
 
   /** {ItemCodec} Codec used for coding simple objects. */
   static get SIMPLE_OBJECT() {
-    return new ItemCodec(ItemCodec.tagFromType('object'), Object,
+    return new ItemCodec(ItemCodec.tagFromType('object'), 'object',
       this._objectPredicate, this._objectEncode, this._objectDecode);
   }
 
