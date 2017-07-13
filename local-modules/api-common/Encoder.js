@@ -18,6 +18,9 @@ export default class Encoder extends CommonBase {
 
     /** {Registry} Registry instance to use. */
     this._reg = reg;
+
+    /** {function} Handy pre-bound version of `encodeData()`. */
+    this._encodeData = this.encodeData.bind(this);
   }
 
   /**
@@ -90,14 +93,13 @@ export default class Encoder extends CommonBase {
    * @returns {object} The converted value.
    */
   _encodeInstance(value) {
-    const itemCodec      = this._reg.codecForValue(value);
-    const payload        = itemCodec.encode(value);
-    const encodedPayload = payload.map(this.encodeData.bind(this));
+    const itemCodec = this._reg.codecForValue(value);
+    const payload   = itemCodec.encode(value, this._encodeData);
 
     // "Unshift" the item tag onto the encoded payload; that is, push on the
     // front.
-    encodedPayload.unshift(itemCodec.tag);
+    payload.unshift(itemCodec.tag);
 
-    return Object.freeze(encodedPayload);
+    return Object.freeze(payload);
   }
 }

@@ -25,15 +25,24 @@ export default class ItemCodec extends CommonBase {
     TClass.check(clazz);
     TFunction.check(clazz.prototype.toApi);
 
+    const tag = clazz.API_TAG || clazz.name;
+
+    let fromApi;
     if (clazz.fromApi) {
-      TFunction.check(clazz.fromApi);
+      fromApi = TFunction.check(clazz.fromApi);
+    } else {
+      fromApi = (...args) => new clazz(...args);
     }
 
-    const tag = clazz.API_TAG || clazz.name;
-    const encode = (value) => { return value.toApi(); };
-    const decode = clazz.fromApi
-      ? (payload) => { return clazz.fromApi(...payload); }
-      : (payload) => { return new clazz(...payload); };
+    const encode = (value, subEncode) => {
+      const payload = TArray.check(value.toApi());
+      return payload.map(subEncode);
+    };
+
+    const decode = (payload, subDecode) => {
+      payload = payload.map(subDecode);
+      return fromApi(...payload);
+    };
 
     return new ItemCodec(tag, clazz, null, encode, decode);
   }
@@ -146,11 +155,13 @@ export default class ItemCodec extends CommonBase {
    *
    * @param {array<*>} payload Arguments which resulted from an earlier call to
    *   `encode()` on this instance, or the equivalent thereto.
+   * @param {function} subDecode Function to call to decode component values
+   *   inside `payload`, as needed.
    * @returns {*} A value for which `canEncode()` on this instance would return
    *   `true`.
    */
-  decode(payload) {
-    const result = this._decode(payload);
+  decode(payload, subDecode) {
+    const result = this._decode(payload, subDecode);
 
     if (!this.canEncode(result)) {
       throw new Error('Invalid result from decoder.');
@@ -165,15 +176,17 @@ export default class ItemCodec extends CommonBase {
    *
    * @param {*} value Value to encode. It is only valid to pass a value for
    *   which `canEncode()` would have returned `true`.
+   * @param {function} subEncode Function to call to encode component values
+   *   inside `value`, as needed.
    * @returns {array<*>} Array of arguments suitable for passing to `decode()`
    *   on this instance.
    */
-  encode(value) {
+  encode(value, subEncode) {
     if (!this.canEncode(value)) {
       throw new Error('Attempt to encode invalid value.');
     }
 
-    const result = this._encode(value);
+    const result = this._encode(value, subEncode);
 
     try {
       return TArray.check(result);

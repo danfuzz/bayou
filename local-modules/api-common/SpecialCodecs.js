@@ -22,26 +22,27 @@ export default class SpecialCodecs extends UtilityClass {
    *
    * @param {array<*>} payload Construction payload as previously produced by
    *   `arrayEncode()`.
+   * @param {function} subDecode Function to call to decode component values
+   *   inside `payload`, as needed.
    * @returns {array<*>} Decoded array.
    */
-  static _arrayDecode(payload) {
-    // The array payload is self-representative. Easy!
-    return payload;
+  static _arrayDecode(payload, subDecode) {
+    return payload.map(subDecode);
   }
 
   /**
    * Encodes an array.
    *
    * @param {array<*>} value Array to encode.
+   * @param {function} subEncode Function to call to encode component values
+   *   inside `value`, as needed.
    * @returns {array<*>} Encoded form.
    */
-  static _arrayEncode(value) {
+  static _arrayEncode(value, subEncode) {
     // Because of how the calling code operates, we know that by the time we get
     // here, `value` has passed `arrayPredicate()`. This means that all we have
-    // to do is return the `value` itself. The one twist is that the coding
-    // logic may want to alter the return value, so we can't return the same
-    // exact object; but we _can_ just return a simple shallow copy.
-    return value.slice();
+    // to do is encode all the elements.
+    return value.map(subEncode);
   }
 
   /**

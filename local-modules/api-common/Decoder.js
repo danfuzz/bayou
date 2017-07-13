@@ -18,6 +18,9 @@ export default class Decoder extends CommonBase {
 
     /** {Registry} Registry instance to use. */
     this._reg = reg;
+
+    /** {function} Handy pre-bound version of `decodeData()`. */
+    this._decodeData = this.decodeData.bind(this);
   }
 
   /**
@@ -85,9 +88,7 @@ export default class Decoder extends CommonBase {
     }
 
     const itemCodec = this._reg.codecForTag(tag);
-    const decodedPayload =
-      Object.freeze(payload.map(this.decodeData.bind(this)));
 
-    return itemCodec.decode(decodedPayload);
+    return itemCodec.decode(payload, this._decodeData);
   }
 }
