@@ -11,6 +11,23 @@ import { CommonBase } from 'util-common';
  * them, deriving construction parameters from instances of them, and
  * constructing instances of them from (presumably) previously-derived
  * parameters.
+ *
+ * The `decode` and `encode` arguments to the constructor are the "workhorses"
+ * of any instance. Each of these takes two parameters, the second of which is
+ * a function to recursively code any sub-components of the value in question:
+ *
+ * * `decode(payload, subDecode)` &mdash; `payload` is the payload to decode
+ *   into a value, and `subDecode(subPayload)` is a function to call on any
+ *   sub-components of the payload; it returns the decoded form of `subPayload`.
+ *   The overall return value from `decode` is a value that is (or is equivalent
+ *   to) one that was encoded via `encode` on this instance to produce the
+ *   received `payload`.
+ *
+ * * `encode(value, subEncode)` &mdash; `value` is the value to encode, and
+ *   `subEncode(subValue)` is a function to call on any sub-components of the
+ *   value; it returns the encoded form of `subValue`. The overall return value
+ *   from `encode` is a payload which is suitable for passing into `decode()`
+ *   on the same (or equivalent) item codec.
  */
 export default class ItemCodec extends CommonBase {
   /**
@@ -59,13 +76,10 @@ export default class ItemCodec extends CommonBase {
    * @param {function|null} predicate Additional predicate that values must
    *   satisfy in order to match this instance, or `null` if there are no
    *   additional qualifications.
-   * @param {function} encode Encoder function, which accepts a single argument,
-   *   `value`, of a value to encode as this item type. It must return an array
-   *   of values which represent the construction parameters for the value.
-   * @param {function} decode Decoder function, which accepts the same kinds of
-   *   value that the `encode` function returns (that is, an array of
-   *   construction parameters) . It must return a value that is equivalent to
-   *   one that got encoded to produce the payload it received.
+   * @param {function} encode Encoder function, as described in this class's
+   *   header.
+   * @param {function} decode Decoder function, as described in this class's
+   *   header.
    */
   constructor(tag, clazzOrType, predicate, encode, decode) {
     super();
