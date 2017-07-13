@@ -94,6 +94,31 @@ export default class Registry extends CommonBase {
   }
 
   /**
+   * Finds a previously-registered item codec which is suitable for decoding the
+   * given payload. This throws an error if there is no codec registered for
+   * the payload's tag (either explicit or implicit tag) or if the payload is
+   * invalid.
+   *
+   * @param {payload} payload The payload to (potentially) decode.
+   * @returns {ItemCodec} The codec that was registered for the payload's tag.
+   */
+  codecForPayload(payload) {
+    const tag = ItemCodec.tagFromPayload(payload);
+
+    if (tag === null) {
+      throw new Error('Invalid payload (no tag).');
+    }
+
+    const result = this._tagToCodec.get(tag);
+
+    if (!result) {
+      throw new Error(`No codec registered with tag \`${tag}\`.`);
+    }
+
+    return result;
+  }
+
+  /**
    * Finds a previously-registered item codec which is suitable for encoding the
    * given value. This throws an error if there is no suitable codec or if there
    * is more than one suitable codec.

@@ -47,6 +47,24 @@ import { CommonBase } from 'util-common';
  */
 export default class ItemCodec extends CommonBase {
   /**
+   * Gets the tag string (either explicit or implicit) of the given payload.
+   * This returns `null` if the payload can't possibly be valid; this is the
+   * case for empty arrays and arrays whose first element is not a string.
+   *
+   * @param {*} payload The payload in question.
+   * @returns {string|null} The tag of the payload, or `null` if it is not a
+   *   valid payload.
+   */
+  static tagFromPayload(payload) {
+    if (Array.isArray(payload)) {
+      const tag = payload[0];
+      return ((typeof tag) === 'string') ? tag : null;
+    } else {
+      return ItemCodec.tagFromType(typeof payload);
+    }
+  }
+
+  /**
    * Gets the tag string to use when the encoded form is a value of a particular
    * type (and not the usual "construction arguments" form).
    *
@@ -198,6 +216,25 @@ export default class ItemCodec extends CommonBase {
   }
 
   /**
+   * Determines whether or not this instance is applicable to the given payload,
+   * by checking the payload's tag, which is either explicit (first element of
+   * an array payload) or implicit (derived from the value type of the payload,
+   * for all other payloads).
+   *
+   * @param {*} payload Payload to check.
+   * @returns {boolean} `true` if this instance can be used to decode `payload`,
+   *   or `false` if not.
+   */
+  canDecode(payload) {
+    if (Array.isArray(payload)) {
+      const tag = payload[0];
+      return tag === this._tag;
+    } else {
+      return (typeof payload) === this._encodedType;
+    }
+  }
+
+  /**
    * Determines whether or not this instance is applicable to the given value,
    * that is, whether the value qualifies as being of this item's type/kind and
    * so can be encoded by this instance.
@@ -233,6 +270,15 @@ export default class ItemCodec extends CommonBase {
    *   `true`.
    */
   decode(payload, subDecode) {
+    if (!this.canDecode(payload)) {
+      throw new Error('Attempt to decode invalid payload.');
+    }
+
+    if (Array.isArray(payload)) {
+      // Strip off the tag before passing to `decode()`.
+      payload = payload.slice(1);
+    }
+
     const result = this._decode(payload, subDecode);
 
     if (!this.canEncode(result)) {
