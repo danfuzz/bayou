@@ -307,19 +307,22 @@ export default class ItemCodec extends CommonBase {
     const encodedType = this._encodedType;
     const result      = this._encode(value, subEncode);
 
-    // Validate the result.
+    // Validate the result, and in the case of normal "construction arguments"
+    // arrays, add the tag as the first element of the payload.
     if (encodedType === null) {
       try {
-        return TArray.check(result);
+        TArray.check(result);
       } catch (e) {
         // Throw a higher-fidelity error.
         throw new Error('Invalid encoding result (not an array).');
       }
+
+      result.unshift(this._tag);
     } else if ((typeof result) !== encodedType) {
       throw new Error('Invalid encoding result: ' +
         `got type ${typeof result}; expected type ${encodedType}`);
     }
 
-    return result;
+    return Object.freeze(result);
   }
 }

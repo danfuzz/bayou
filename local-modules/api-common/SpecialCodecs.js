@@ -114,7 +114,7 @@ export default class SpecialCodecs extends UtilityClass {
       result[k] = subEncode(v);
     }
 
-    return Object.freeze(result);
+    return result;
   }
 
   /**
