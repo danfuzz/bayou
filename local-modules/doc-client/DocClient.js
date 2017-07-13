@@ -383,12 +383,13 @@ export default class DocClient extends StateMachine {
 
     // Save the result as the current (latest known) revision of the document,
     // and tell Quill about it.
+    const firstEvent = this._quill.currentEvent;
     this._updateDocWithSnapshot(snapshot);
 
     // The above action should have caused the Quill instance to make a change
-    // which shows up on its change chain. Grab it, and verify that indeed it's
+    // which shows up on its event chain. Grab it, and verify that indeed it's
     // the change we're expecting.
-    const firstChange = this._quill.currentEvent;
+    const firstChange = firstEvent.nextOfNow(QuillEvent.TEXT_CHANGE);
     if (firstChange.source !== CLIENT_SOURCE) {
       // We expected the change to be the one we generated from the doc
       // update (above), but the `source` we got speaks otherwise.
