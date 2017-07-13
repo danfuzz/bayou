@@ -29,8 +29,46 @@ import { CommonBase } from 'util-common';
  *   value; it returns the encoded form of `subValue`. The overall return value
  *   from `encode()` is a payload which is suitable for passing into `decode()`
  *   on the same (or equivalent) item codec.
+ *
+ * In most cases, the encoded payload returned by `encode()` and taken by
+ * `decode()` is an array. This is the classic "reconstruction arguments" style
+ * of object coding, and is what is done by instances produced by the
+ * `fromClass()` static method. However, this system also supports two other
+ * possibilities:
+ *
+ * * The encoded form is allowed to be a plain JavaScript object, that is, a
+ *   simple mapping of string keys to arbitrary values.
+ *
+ * * The encoded form is allowed to be a non-object value, such as a number or
+ *   string.
+ *
+ * In these cases, the codec instance needs to be tagged with the type of the
+ * value and not a class-name-like string.
  */
 export default class ItemCodec extends CommonBase {
+  /**
+   * Gets the tag string to use when the encoded form is a value of a particular
+   * type (and not the usual "construction arguments" form).
+   *
+   * @param {string} type The name of the type.
+   * @returns {string} The corresponding tag to use.
+   */
+  static tagFromType(type) {
+    return `type:${type}`;
+  }
+
+  /**
+   * Performs the reverse of `tagFromType()`, see which. This returns `null` if
+   * the given tag isn't of the right form to be a type name.
+   *
+   * @param {string} tag The tag.
+   * @returns {string|null} The corresponding type name, or `null` if `tag`
+   *   doesn't represent a type name.
+   */
+  static typeFromTag(tag) {
+    return /^type:/.test(tag) ? tag.slice(5) : null;
+  }
+
   /**
    * Constructs an instance from a class that has the standard API-coding
    * methods.
@@ -68,8 +106,10 @@ export default class ItemCodec extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {string} tag Tag (name) for the item's type. This must be unique
-   *   amongst all `ItemCodec`s using a given registry.
+   * @param {string} tag Tag (name) for the item's type in encoded form,
+   *   or, if not encoded in "construction arguments" form, the name of its type
+   *   in encoded form. For the latter case, the `tag` should be produced by
+   *   a call to the static method `tagForType()`.
    * @param {function|string} clazzOrType Either the class (constructor
    *   function) which values must be exact instances of (not subclasses), or
    *   the (string) name of the type (as in `typeof value`) which values must
@@ -87,6 +127,12 @@ export default class ItemCodec extends CommonBase {
 
     /** {string} Tag (name) for the item's type. */
     this._tag = TString.nonempty(tag);
+
+    /**
+     * {string|null} Type name for the encoded form, or `null` if this instance
+     * encodes into "construction arguments" form.
+     */
+    this._encodedType = ItemCodec.typeFromTag(tag);
 
     /**
      * {function|null} The class (constructor function) which identifies
@@ -201,13 +247,22 @@ export default class ItemCodec extends CommonBase {
       throw new Error('Attempt to encode invalid value.');
     }
 
-    const result = this._encode(value, subEncode);
+    const encodedType = this._encodedType;
+    const result      = this._encode(value, subEncode);
 
-    try {
-      return TArray.check(result);
-    } catch (e) {
-      // Throw a higher-fidelity error.
-      throw new Error('Invalid encoding result (not an array).');
+    // Validate the result.
+    if (encodedType === null) {
+      try {
+        return TArray.check(result);
+      } catch (e) {
+        // Throw a higher-fidelity error.
+        throw new Error('Invalid encoding result (not an array).');
+      }
+    } else if ((typeof result) !== encodedType) {
+      throw new Error('Invalid encoding result: ' +
+        `got type ${typeof result}; expected type ${encodedType}`);
     }
+
+    return result;
   }
 }
