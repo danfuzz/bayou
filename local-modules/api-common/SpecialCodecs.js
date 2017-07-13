@@ -51,11 +51,13 @@ export default class SpecialCodecs extends UtilityClass {
    * @returns {boolean} `true` iff `value` can be encoded.
    */
   static _arrayPredicate(value) {
-    // Check for `undefined` in the indexed properties. If we find one, then
-    // either it's an explicit `undefined` or it's a hole; in either case, the
-    // array is not encodable.
-    for (const e of value) {
-      if (e === undefined) {
+    // Check for holes in the indexed properties as well as synthetic
+    // properties. An array with either of these is not encodable.
+    for (let i = 0; i < value.length; i++) {
+      const desc = Object.getOwnPropertyDescriptor(value, i);
+      if (   (desc === undefined)
+          || (desc.get !== undefined)
+          || (desc.set !== undefined)) {
         return false;
       }
     }

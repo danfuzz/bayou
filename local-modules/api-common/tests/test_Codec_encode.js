@@ -4,9 +4,9 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
-import { FrozenBuffer } from 'util-common';
 
 import { Codec } from 'api-common';
+import { FrozenBuffer } from 'util-common';
 
 import MockApiObject from './MockApiObject';
 
@@ -22,7 +22,7 @@ class NoToApi {
   }
 }
 
-describe('api-common/Encoder', () => {
+describe('api-common/Codec.encode*()r', () => {
   // Convenient bindings for `encode*()` to avoid a lot of boilerplate.
   const codec            = Codec.theOne;
   const encodeData       = (value) => { return codec.encodeData(value);       };

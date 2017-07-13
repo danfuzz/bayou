@@ -4,13 +4,13 @@
 
 import { assert } from 'chai';
 import { before, describe, it } from 'mocha';
-import { FrozenBuffer } from 'util-common';
 
 import { Codec } from 'api-common';
+import { FrozenBuffer } from 'util-common';
 
 import MockApiObject from './MockApiObject';
 
-describe('api-common/Decoder', () => {
+describe('api-common/Codec.decode*()', () => {
   // Convenient bindings for `decode*()` and `encodeData()` to avoid a lot of
   // boilerplate.
   const codec            = Codec.theOne;
