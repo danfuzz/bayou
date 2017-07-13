@@ -18,6 +18,9 @@ export default class Encoder extends CommonBase {
 
     /** {Registry} Registry instance to use. */
     this._reg = reg;
+
+    /** {function} Handy pre-bound version of `encodeData()`. */
+    this._encodeData = this.encodeData.bind(this);
   }
 
   /**
@@ -36,50 +39,14 @@ export default class Encoder extends CommonBase {
       }
 
       case 'object': {
-        if (value === null) {
-          // Pass through as-is.
-          return value;
-        }
-
-        const proto = Object.getPrototypeOf(value);
-
-        if (proto === Object.prototype) {
-          return this._encodeSimpleObject(value);
-        } else {
-          // It had better be a value whose class/type is registered, but if
-          // not, then this call will throw.
-          return this._encodeInstance(value);
-        }
+        // Pass `null` through as-is, and attempt to encode anything else.
+        return (value === null) ? null : this._encodeInstance(value);
       }
 
       default: {
         throw new Error(`API cannot encode type \`${typeof value}\`.`);
       }
     }
-  }
-
-  /**
-   * Helper for `encodeData()` which validates and converts a simple object.
-   *
-   * @param {object} value Value to convert.
-   * @returns {object} The converted value.
-   */
-  _encodeSimpleObject(value) {
-    const result = {};
-
-    // Iterate over all the properties in `value`, encoding the values and
-    // noticing (and rejecting the value) if there are any synthetic properties.
-    for (const k of Object.getOwnPropertyNames(value)) {
-      const prop = Object.getOwnPropertyDescriptor(value, k);
-
-      if ((prop.get !== undefined) || (prop.set !== undefined)) {
-        throw new Error('API cannot encode plain object with synthetic property.');
-      }
-
-      result[k] = this.encodeData(prop.value);
-    }
-
-    return Object.freeze(result);
   }
 
   /**
@@ -90,14 +57,19 @@ export default class Encoder extends CommonBase {
    * @returns {object} The converted value.
    */
   _encodeInstance(value) {
-    const itemCodec      = this._reg.codecForValue(value);
-    const payload        = itemCodec.encode(value);
-    const encodedPayload = payload.map(this.encodeData.bind(this));
+    const itemCodec = this._reg.codecForValue(value);
+    const payload   = itemCodec.encode(value, this._encodeData);
 
-    // "Unshift" the item tag onto the encoded payload; that is, push on the
-    // front.
-    encodedPayload.unshift(itemCodec.tag);
+    if (Array.isArray(payload)) {
+      // "Unshift" the item tag onto the encoded payload; that is, push on the
+      // front.
+      payload.unshift(itemCodec.tag);
+    }
 
-    return Object.freeze(encodedPayload);
+    // **Note:** If `payload` isn't an array, that means that its not in
+    // "construction arguments" form. In that case its "tag" is implicit in the
+    // type of the value.
+
+    return Object.freeze(payload);
   }
 }

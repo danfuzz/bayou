@@ -11,8 +11,64 @@ import { CommonBase } from 'util-common';
  * them, deriving construction parameters from instances of them, and
  * constructing instances of them from (presumably) previously-derived
  * parameters.
+ *
+ * The `decode` and `encode` arguments to the constructor are the "workhorses"
+ * of an instance of this class. Each of these takes two parameters, the second
+ * of which is a function to recursively code any sub-components of the value in
+ * question:
+ *
+ * * `decode(payload, subDecode)` &mdash; `payload` is the payload to decode
+ *   into a value, and `subDecode(subPayload)` is a function to call on any
+ *   sub-components of the payload; it returns the decoded form of `subPayload`.
+ *   The overall return value from `decode()` is a value that is (or is
+ *   equivalent to) one that was encoded via `encode()` on this instance to
+ *   produce the received `payload`.
+ *
+ * * `encode(value, subEncode)` &mdash; `value` is the value to encode, and
+ *   `subEncode(subValue)` is a function to call on any sub-components of the
+ *   value; it returns the encoded form of `subValue`. The overall return value
+ *   from `encode()` is a payload which is suitable for passing into `decode()`
+ *   on the same (or equivalent) item codec.
+ *
+ * In most cases, the encoded payload returned by `encode()` and taken by
+ * `decode()` is an array. This is the classic "reconstruction arguments" style
+ * of object coding, and is what is done by instances produced by the
+ * `fromClass()` static method. However, this system also supports two other
+ * possibilities:
+ *
+ * * The encoded form is allowed to be a plain JavaScript object, that is, a
+ *   simple mapping of string keys to arbitrary values.
+ *
+ * * The encoded form is allowed to be a non-object value, such as a number or
+ *   string.
+ *
+ * In these cases, the codec instance needs to be tagged with the type of the
+ * value and not a class-name-like string.
  */
 export default class ItemCodec extends CommonBase {
+  /**
+   * Gets the tag string to use when the encoded form is a value of a particular
+   * type (and not the usual "construction arguments" form).
+   *
+   * @param {string} type The name of the type.
+   * @returns {string} The corresponding tag to use.
+   */
+  static tagFromType(type) {
+    return `type:${type}`;
+  }
+
+  /**
+   * Performs the reverse of `tagFromType()`, see which. This returns `null` if
+   * the given tag isn't of the right form to be a type name.
+   *
+   * @param {string} tag The tag.
+   * @returns {string|null} The corresponding type name, or `null` if `tag`
+   *   doesn't represent a type name.
+   */
+  static typeFromTag(tag) {
+    return /^type:/.test(tag) ? tag.slice(5) : null;
+  }
+
   /**
    * Constructs an instance from a class that has the standard API-coding
    * methods.
@@ -25,15 +81,24 @@ export default class ItemCodec extends CommonBase {
     TClass.check(clazz);
     TFunction.check(clazz.prototype.toApi);
 
+    const tag = clazz.API_TAG || clazz.name;
+
+    let fromApi;
     if (clazz.fromApi) {
-      TFunction.check(clazz.fromApi);
+      fromApi = TFunction.check(clazz.fromApi);
+    } else {
+      fromApi = (...args) => new clazz(...args);
     }
 
-    const tag = clazz.API_TAG || clazz.name;
-    const encode = (value) => { return value.toApi(); };
-    const decode = clazz.fromApi
-      ? (payload) => { return clazz.fromApi(...payload); }
-      : (payload) => { return new clazz(...payload); };
+    const encode = (value, subEncode) => {
+      const payload = TArray.check(value.toApi());
+      return payload.map(subEncode);
+    };
+
+    const decode = (payload, subDecode) => {
+      payload = payload.map(subDecode);
+      return fromApi(...payload);
+    };
 
     return new ItemCodec(tag, clazz, null, encode, decode);
   }
@@ -41,8 +106,10 @@ export default class ItemCodec extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {string} tag Tag (name) for the item's type. This must be unique
-   *   amongst all `ItemCodec`s using a given registry.
+   * @param {string} tag Tag (name) for the item's type in encoded form,
+   *   or, if not encoded in "construction arguments" form, the name of its type
+   *   in encoded form. For the latter case, the `tag` should be produced by
+   *   a call to the static method `tagForType()`.
    * @param {function|string} clazzOrType Either the class (constructor
    *   function) which values must be exact instances of (not subclasses), or
    *   the (string) name of the type (as in `typeof value`) which values must
@@ -50,19 +117,22 @@ export default class ItemCodec extends CommonBase {
    * @param {function|null} predicate Additional predicate that values must
    *   satisfy in order to match this instance, or `null` if there are no
    *   additional qualifications.
-   * @param {function} encode Encoder function, which accepts a single argument,
-   *   `value`, of a value to encode as this item type. It must return an array
-   *   of values which represent the construction parameters for the value.
-   * @param {function} decode Decoder function, which accepts the same kinds of
-   *   value that the `encode` function returns (that is, an array of
-   *   construction parameters) . It must return a value that is equivalent to
-   *   one that got encoded to produce the payload it received.
+   * @param {function} encode Encoder function, as described in this class's
+   *   header.
+   * @param {function} decode Decoder function, as described in this class's
+   *   header.
    */
   constructor(tag, clazzOrType, predicate, encode, decode) {
     super();
 
     /** {string} Tag (name) for the item's type. */
     this._tag = TString.nonempty(tag);
+
+    /**
+     * {string|null} Type name for the encoded form, or `null` if this instance
+     * encodes into "construction arguments" form.
+     */
+    this._encodedType = ItemCodec.typeFromTag(tag);
 
     /**
      * {function|null} The class (constructor function) which identifies
@@ -99,6 +169,15 @@ export default class ItemCodec extends CommonBase {
   }
 
   /**
+   * {string|null} Name of the type of encoded values, if they are _not_
+   * encoded in "construction arguments" form. This is `null` for a
+   * "construction arguments" form.
+   */
+  get encodedType() {
+    return this._encodedType;
+  }
+
+  /**
    * {function|null} Additional predicate that must be `true` of values for them
    * to qualify, if any.
    */
@@ -111,7 +190,9 @@ export default class ItemCodec extends CommonBase {
     return this._tag;
   }
 
-  /** {string} Name of the type which identifies qualified values. */
+  /**
+   * {string} Name of the type which identifies qualified values for encoding.
+   */
   get type() {
     return this._type;
   }
@@ -146,11 +227,13 @@ export default class ItemCodec extends CommonBase {
    *
    * @param {array<*>} payload Arguments which resulted from an earlier call to
    *   `encode()` on this instance, or the equivalent thereto.
+   * @param {function} subDecode Function to call to decode component values
+   *   inside `payload`, as needed.
    * @returns {*} A value for which `canEncode()` on this instance would return
    *   `true`.
    */
-  decode(payload) {
-    const result = this._decode(payload);
+  decode(payload, subDecode) {
+    const result = this._decode(payload, subDecode);
 
     if (!this.canEncode(result)) {
       throw new Error('Invalid result from decoder.');
@@ -165,21 +248,32 @@ export default class ItemCodec extends CommonBase {
    *
    * @param {*} value Value to encode. It is only valid to pass a value for
    *   which `canEncode()` would have returned `true`.
+   * @param {function} subEncode Function to call to encode component values
+   *   inside `value`, as needed.
    * @returns {array<*>} Array of arguments suitable for passing to `decode()`
    *   on this instance.
    */
-  encode(value) {
+  encode(value, subEncode) {
     if (!this.canEncode(value)) {
       throw new Error('Attempt to encode invalid value.');
     }
 
-    const result = this._encode(value);
+    const encodedType = this._encodedType;
+    const result      = this._encode(value, subEncode);
 
-    try {
-      return TArray.check(result);
-    } catch (e) {
-      // Throw a higher-fidelity error.
-      throw new Error('Invalid encoding result (not an array).');
+    // Validate the result.
+    if (encodedType === null) {
+      try {
+        return TArray.check(result);
+      } catch (e) {
+        // Throw a higher-fidelity error.
+        throw new Error('Invalid encoding result (not an array).');
+      }
+    } else if ((typeof result) !== encodedType) {
+      throw new Error('Invalid encoding result: ' +
+        `got type ${typeof result}; expected type ${encodedType}`);
     }
+
+    return result;
   }
 }

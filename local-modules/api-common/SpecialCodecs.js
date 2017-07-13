@@ -21,33 +21,34 @@ export default class SpecialCodecs extends UtilityClass {
    * Decodes an array.
    *
    * @param {array<*>} payload Construction payload as previously produced by
-   *   `arrayEncode()`.
+   *   `_arrayEncode()`.
+   * @param {function} subDecode Function to call to decode component values
+   *   inside `payload`, as needed.
    * @returns {array<*>} Decoded array.
    */
-  static _arrayDecode(payload) {
-    // The array payload is self-representative. Easy!
-    return payload;
+  static _arrayDecode(payload, subDecode) {
+    return Object.freeze(payload.map(subDecode));
   }
 
   /**
    * Encodes an array.
    *
    * @param {array<*>} value Array to encode.
+   * @param {function} subEncode Function to call to encode component values
+   *   inside `value`, as needed.
    * @returns {array<*>} Encoded form.
    */
-  static _arrayEncode(value) {
+  static _arrayEncode(value, subEncode) {
     // Because of how the calling code operates, we know that by the time we get
     // here, `value` has passed `arrayPredicate()`. This means that all we have
-    // to do is return the `value` itself. The one twist is that the coding
-    // logic may want to alter the return value, so we can't return the same
-    // exact object; but we _can_ just return a simple shallow copy.
-    return value.slice();
+    // to do is encode all the elements.
+    return value.map(subEncode);
   }
 
   /**
-   * Checks an array for encodability.
+   * Checks a value for encodability as an array.
    *
-   * @param {array<*>} value Array to encode.
+   * @param {array<*>} value Array to (potentially) encode.
    * @returns {boolean} `true` iff `value` can be encoded.
    */
   static _arrayPredicate(value) {
@@ -68,6 +69,69 @@ export default class SpecialCodecs extends UtilityClass {
     // array is not encodable.
     if (value.length !== Object.keys(value).length) {
       return false;
+    }
+
+    return true;
+  }
+
+  /** {ItemCodec} Codec used for coding simple objects. */
+  static get SIMPLE_OBJECT() {
+    return new ItemCodec(ItemCodec.tagFromType('object'), 'object',
+      this._objectPredicate, this._objectEncode, this._objectDecode);
+  }
+
+  /**
+   * Decodes a simple object.
+   *
+   * @param {object} payload Construction payload as previously produced by
+   *   `_objectEncode()`.
+   * @param {function} subDecode Function to call to decode component values
+   *   inside `payload`, as needed.
+   * @returns {object} Decoded object.
+   */
+  static _objectDecode(payload, subDecode) {
+    // Iterate over all the properties in `payload`, decoding the bound values.
+    const result = {};
+    for (const [k, v] of Object.entries(payload)) {
+      result[k] = subDecode(v);
+    }
+
+    return Object.freeze(result);
+  }
+
+  /**
+   * Encodes a simple object.
+   *
+   * @param {object} value Object to encode.
+   * @param {function} subEncode Function to call to encode component values
+   *   inside `value`, as needed.
+   * @returns {object} Encoded form.
+   */
+  static _objectEncode(value, subEncode) {
+    // Iterate over all the properties in `value`, encoding the bound values.
+    const result = {};
+    for (const [k, v] of Object.entries(value)) {
+      result[k] = subEncode(v);
+    }
+
+    return Object.freeze(result);
+  }
+
+  /**
+   * Checks a value for encodability as a simple object.
+   *
+   * @param {array<*>} value Value to (potentially) encode.
+   * @returns {boolean} `true` iff `value` can be encoded.
+   */
+  static _objectPredicate(value) {
+    // Iterate over all the properties in `value` to see if there are any that
+    // are synthetic. If so, the object is not encodable.
+    for (const k of Object.getOwnPropertyNames(value)) {
+      const prop = Object.getOwnPropertyDescriptor(value, k);
+
+      if ((prop.get !== undefined) || (prop.set !== undefined)) {
+        return false;
+      }
     }
 
     return true;

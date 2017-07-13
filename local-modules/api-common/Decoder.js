@@ -4,6 +4,8 @@
 
 import { CommonBase } from 'util-common';
 
+import ItemCodec from './ItemCodec';
+
 /**
  * Main implementation of `Codec.decodeData()`.
  */
@@ -18,6 +20,9 @@ export default class Decoder extends CommonBase {
 
     /** {Registry} Registry instance to use. */
     this._reg = reg;
+
+    /** {function} Handy pre-bound version of `decodeData()`. */
+    this._decodeData = this.decodeData.bind(this);
   }
 
   /**
@@ -34,12 +39,10 @@ export default class Decoder extends CommonBase {
     } else if ((type !== 'object') || (value === null)) {
       // Pass through as-is.
       return value;
-    } else if (Object.getPrototypeOf(value) === Object.prototype) {
-      return this._decodeSimpleObject(value);
-    } else if (!Array.isArray(value)) {
-      throw new Error(`API cannot decode object of class \`${value.constructor.name}\`.`);
-    } else {
+    } else if (Array.isArray(value)) {
       return this._decodeInstance(value);
+    } else {
+      return this._decodeNonInstance(value);
     }
   }
 
@@ -49,14 +52,11 @@ export default class Decoder extends CommonBase {
    * @param {object} encoded The encoded value.
    * @returns {object} The decoded value.
    */
-  _decodeSimpleObject(encoded) {
-    const result = {};
+  _decodeNonInstance(encoded) {
+    const itemCodec =
+      this._reg.codecForTag(ItemCodec.tagFromType(typeof encoded));
 
-    for (const k in encoded) {
-      result[k] = this.decodeData(encoded[k]);
-    }
-
-    return Object.freeze(result);
+    return itemCodec.decode(encoded, this._decodeData);
   }
 
   /**
@@ -85,9 +85,7 @@ export default class Decoder extends CommonBase {
     }
 
     const itemCodec = this._reg.codecForTag(tag);
-    const decodedPayload =
-      Object.freeze(payload.map(this.decodeData.bind(this)));
 
-    return itemCodec.decode(decodedPayload);
+    return itemCodec.decode(payload, this._decodeData);
   }
 }
