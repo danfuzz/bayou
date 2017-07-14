@@ -95,7 +95,7 @@ export default class ItemCodec extends CommonBase {
    *
    * @param {*} value Value in question.
    * @returns {string} Name of value's type, with the type of `null` being
-   *   `null`.
+   *   `'null'`.
    */
   static typeOf(value) {
     return (value === null) ? 'null' : (typeof value);
