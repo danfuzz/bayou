@@ -136,4 +136,30 @@ export default class SpecialCodecs extends UtilityClass {
 
     return true;
   }
+
+  /**
+   * Makes a self-representative codec which matches the given value type.
+   * The result encodes and decodes all values of the type to themselves.
+   *
+   * @param {string} type Name of the type.
+   * @returns {ItemCodec} Codec for `type` which passes values through unaltered
+   *   in both directions.
+   */
+  static selfRepresentative(type) {
+    return new ItemCodec(ItemCodec.tagFromType(type), type, null,
+      this._passThrough, this._passThrough);
+  }
+
+  /**
+   * Implementation of both `encode()` and `decode()` for any
+   * self-representative codec, which (per `selfRepresentative()`) passes
+   * through values unaltered.
+   *
+   * @param {*} valueOrPayload The value or payload.
+   * @param {function} subCoder_unused The sub-encoder or sub-decoder.
+   * @returns {*} `valueOrPayload`, always.
+   */
+  static _passThrough(valueOrPayload, subCoder_unused) {
+    return valueOrPayload;
+  }
 }
