@@ -44,8 +44,8 @@ import { CommonBase } from 'util-common';
  *
  * In these cases, the codec instance needs to be tagged with the type of the
  * value and not a class-name-like string. For the purposes of this class, the
- * value `null` is considered a distinct type from non-null object values, with
- * the type name `'null'`.
+ * value `null` is considered a distinct type from non-null object values and
+ * has the type name `'null'`.
  */
 export default class ItemCodec extends CommonBase {
   /**
