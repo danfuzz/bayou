@@ -43,7 +43,9 @@ import { CommonBase } from 'util-common';
  *   string.
  *
  * In these cases, the codec instance needs to be tagged with the type of the
- * value and not a class-name-like string.
+ * value and not a class-name-like string. For the purposes of this class, the
+ * value `null` is considered a distinct type from non-null object values, with
+ * the type name `'null'`.
  */
 export default class ItemCodec extends CommonBase {
   /**
@@ -60,7 +62,7 @@ export default class ItemCodec extends CommonBase {
       const tag = payload[0];
       return ((typeof tag) === 'string') ? tag : null;
     } else {
-      return ItemCodec.tagFromType(typeof payload);
+      return ItemCodec.tagFromType(ItemCodec.typeOf(payload));
     }
   }
 
@@ -85,6 +87,18 @@ export default class ItemCodec extends CommonBase {
    */
   static typeFromTag(tag) {
     return /^type:/.test(tag) ? tag.slice(5) : null;
+  }
+
+  /**
+   * Like `typeof value`, except that `null` is treated as its own type, instead
+   * of being called an `object`.
+   *
+   * @param {*} value Value in question.
+   * @returns {string} Name of value's type, with the type of `null` being
+   *   `null`.
+   */
+  static typeOf(value) {
+    return (value === null) ? 'null' : (typeof value);
   }
 
   /**
@@ -130,8 +144,8 @@ export default class ItemCodec extends CommonBase {
    *   a call to the static method `tagForType()`.
    * @param {function|string} clazzOrType Either the class (constructor
    *   function) which values must be exact instances of (not subclasses), or
-   *   the (string) name of the type (as in `typeof value`) which values must
-   *   be, in order to match this instance.
+   *   the (string) name of the type (as in `ItemCodec.typeof(value)`) which
+   *   values must be, in order to match this instance.
    * @param {function|null} predicate Additional predicate that values must
    *   satisfy in order to match this instance, or `null` if there are no
    *   additional qualifications.
@@ -239,7 +253,7 @@ export default class ItemCodec extends CommonBase {
    *   or `false` if not.
    */
   canEncode(value) {
-    if ((typeof value) !== this.type) {
+    if (ItemCodec.typeOf(value) !== this.type) {
       return false;
     }
 
@@ -313,9 +327,9 @@ export default class ItemCodec extends CommonBase {
       }
 
       result.unshift(this._tag);
-    } else if ((typeof result) !== encodedType) {
+    } else if (ItemCodec.typeOf(result) !== encodedType) {
       throw new Error('Invalid encoding result: ' +
-        `got type ${typeof result}; expected type ${encodedType}`);
+        `got type ${ItemCodec.typeOf(result)}; expected type ${encodedType}`);
     }
 
     return Object.freeze(result);
