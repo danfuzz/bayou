@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CommonBase } from 'util-common';
+import { TInt, TString } from 'typecheck';
+import { ColorSelector, CommonBase } from 'util-common';
 
 /**
  * Information about the state of a single document editing session. Instances
@@ -15,12 +16,58 @@ import { CommonBase } from 'util-common';
  */
 export default class Caret extends CommonBase {
   /**
-   * Constructs an instance. **TODO:** Fill this in!
+   * Constructs an instance.
+   *
+   *  @param {string} sessionId An opaque token that can be used with other
+   *    APIs to get information about the author whose caret this is (e.g. author
+   *    name, avatar, user id, etc). No assumptions should be made about the
+   *    format of `sessionId`.
+   * @param {Int} index The zero-based location of the caret (or beginning of a selection)
+   *    within the document.
+   * @param {Int} length The number of characters within a selection, or zero if
+   *    this caret merely represents the insertion point and not a selection.
+   *  @param {string} color The color to be used when annotating this caret. The
+   *    color must be in the CSS three-byte hex form (e.g. `'#b8ff2e'`).
    */
-  constructor() {
+  constructor(sessionId, index, length, color) {
     super();
 
+    this._sessionId = TString.check(sessionId);
+    this._index = TInt.min(index, 0);
+    this._length = TInt.min(length, 0);
+    this.color = ColorSelector.checkHexColor(color);
+
     Object.freeze(this);
+  }
+
+  /**
+   * {Int} The zero-based leading position of this caret/selection.
+   */
+  get index() {
+    return this._index;
+  }
+
+  /**
+   * {Int} The length of the selection, or zero if it is just an insertion point.
+   */
+  get length() {
+    return this._length;
+  }
+
+  /**
+   * {string} The color to be used when annotating this selection. It is in CSS
+   *   three-byte hex format (e.g. `'#ffeab9'`).
+   */
+  get color() {
+    return this._color;
+  }
+
+  /**
+   * {string} Opaque reference to be used with other APIs to get information about
+   *   the author whose caret this is.
+   */
+  get sessionId() {
+    return this._sessionId;
   }
 
   /**
@@ -29,6 +76,6 @@ export default class Caret extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [];
+    return [this._sessionId, this._index, this._length, this._color];
   }
 }
