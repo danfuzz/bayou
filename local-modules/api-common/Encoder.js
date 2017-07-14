@@ -39,13 +39,8 @@ export default class Encoder extends CommonBase {
       }
 
       case 'object': {
-        // Pass `null` through as-is, and attempt to encode anything else.
-        if (value === null) {
-          return null;
-        } else {
-          const itemCodec = this._reg.codecForValue(value);
-          return itemCodec.encode(value, this._encodeData);
-        }
+        const itemCodec = this._reg.codecForValue(value);
+        return itemCodec.encode(value, this._encodeData);
       }
 
       default: {

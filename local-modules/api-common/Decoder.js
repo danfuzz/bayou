@@ -33,8 +33,8 @@ export default class Decoder extends CommonBase {
     const type = typeof payload;
 
     if (type === 'function') {
-      throw new Error(`API cannot decode functions.`);
-    } else if ((type !== 'object') || (payload === null)) {
+      throw new Error('API cannot decode functions.');
+    } else if (type !== 'object') {
       // Pass through as-is.
       return payload;
     } else {

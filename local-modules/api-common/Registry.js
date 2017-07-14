@@ -45,6 +45,7 @@ export default class Registry extends CommonBase {
     // Register all the special codecs.
     this.registerCodec(SpecialCodecs.ARRAY);
     this.registerCodec(SpecialCodecs.SIMPLE_OBJECT);
+    this.registerCodec(SpecialCodecs.selfRepresentative('null'));
   }
 
   /**
@@ -127,19 +128,18 @@ export default class Registry extends CommonBase {
    * @returns {ItemCodec} A codec suitable for encoding `value`.
    */
   codecForValue(value) {
-    const valueType = typeof value;
+    const valueType = ItemCodec.typeOf(value);
     let clazz;
     let codecs;
 
     if (   (valueType === 'object')
-        && (value !== null)
         && (Object.getPrototypeOf(value) !== Object.prototype)) {
       // The value is an instance of a class.
       clazz = value.constructor;
       codecs = this._classToCodecs.get(clazz);
     } else {
       // The value is a non-class-instance, including possibly being a simple
-      // object (e.g., `{florps: 10}`).
+      // object (e.g., `{florps: 10}`) or `null`.
       clazz = null;
       codecs = this._typeToCodecs.get(valueType);
     }
