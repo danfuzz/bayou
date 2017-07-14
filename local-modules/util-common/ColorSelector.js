@@ -2,6 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { TString } from 'typecheck';
+
+/*
+ * A regular expression that can be used to validate colors
+ *    that are expected to be in CSS three-byte hex format (e.g. `'#fe8ef1'`)
+ */
+const HEX_COLOR_REGEXP = /^#[a-fA-F0-9]{6}$/;
+
 /**
  * Generator of an unending progression of colors. The original
  * task for which it was created was to make background colors for chat bubbles
@@ -17,6 +25,17 @@
  * pastel range.
  */
 export default class ColorSelector {
+  /**
+   * Checks whether a given string matches this module's requirements form
+   * color hex strings.
+   *
+   * @param {string} hexColor The string to check.
+   * @returns {string} Returns the input as-is if it meets requirements.
+   */
+  static checkHexColor(hexColor) {
+    return TString.check(hexColor, HEX_COLOR_REGEXP);
+  }
+
   /**
    * Constructs a new ColorSelector object.
    *
