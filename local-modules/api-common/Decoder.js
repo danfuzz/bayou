@@ -30,16 +30,7 @@ export default class Decoder extends CommonBase {
    * @returns {*} The decoded value.
    */
   decodeData(payload) {
-    const type = typeof payload;
-
-    if (type === 'function') {
-      throw new Error('API cannot decode functions.');
-    } else if (type !== 'object') {
-      // Pass through as-is.
-      return payload;
-    } else {
-      const itemCodec = this._reg.codecForPayload(payload);
-      return itemCodec.decode(payload, this._decodeData);
-    }
+    const itemCodec = this._reg.codecForPayload(payload);
+    return itemCodec.decode(payload, this._decodeData);
   }
 }

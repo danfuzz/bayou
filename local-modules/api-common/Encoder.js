@@ -30,22 +30,7 @@ export default class Encoder extends CommonBase {
    * @returns {*} The converted value.
    */
   encodeData(value) {
-    switch (typeof value) {
-      case 'boolean':
-      case 'number':
-      case 'string': {
-        // Pass through as-is.
-        return value;
-      }
-
-      case 'object': {
-        const itemCodec = this._reg.codecForValue(value);
-        return itemCodec.encode(value, this._encodeData);
-      }
-
-      default: {
-        throw new Error(`API cannot encode type \`${typeof value}\`.`);
-      }
-    }
+    const itemCodec = this._reg.codecForValue(value);
+    return itemCodec.encode(value, this._encodeData);
   }
 }
