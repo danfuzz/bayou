@@ -4,8 +4,6 @@
 
 import { FrozenBuffer, Singleton } from 'util-common';
 
-import Decoder from './Decoder';
-import Encoder from './Encoder';
 import Registry from './Registry';
 
 /**
@@ -29,6 +27,12 @@ export default class Codec extends Singleton {
      * stops being a singleton, this will get set from a constructor argument.
      */
     this._reg = new Registry();
+
+    /** {function} Handy pre-bound version of `decodeData()`. */
+    this._decodeData = this.decodeData.bind(this);
+
+    /** {function} Handy pre-bound version of `encodeData()`. */
+    this._encodeData = this.encodeData.bind(this);
   }
 
   /**
@@ -55,11 +59,12 @@ export default class Codec extends Singleton {
    * In addition, if the result is an object (including an array), it is
    * guaranteed to be recursively frozen.
    *
-   * @param {*} value Value to convert.
-   * @returns {*} The converted value.
+   * @param {*} payload Payload to decode.
+   * @returns {*} The decoded value.
    */
-  decodeData(value) {
-    return new Decoder(this._reg).decodeData(value);
+  decodeData(payload) {
+    const itemCodec = this._reg.codecForPayload(payload);
+    return itemCodec.decode(payload, this._decodeData);
   }
 
   /**
@@ -116,11 +121,12 @@ export default class Codec extends Singleton {
    * In addition, if the result is an object (including an array), it is
    * guaranteed to be recursively frozen.
    *
-   * @param {*} value Value to convert.
-   * @returns {*} The converted value.
+   * @param {*} value Value to encode.
+   * @returns {*} The encoded value payload.
    */
   encodeData(value) {
-    return new Encoder(this._reg).encodeData(value);
+    const itemCodec = this._reg.codecForValue(value);
+    return itemCodec.encode(value, this._encodeData);
   }
 
   /**
@@ -151,7 +157,7 @@ export default class Codec extends Singleton {
    * Registers a class to be accepted for API use. This is a pass-through to
    * the method of the same name on the instance's `Registry`.
    *
-   * @param {object} clazz The class to register.
+   * @param {class} clazz The class to register.
    */
   registerClass(clazz) {
     this._reg.registerClass(clazz);
