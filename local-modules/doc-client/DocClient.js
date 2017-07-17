@@ -464,8 +464,6 @@ export default class DocClient extends StateMachine {
         }
       })();
     }
-
-    this.s_idle();
   }
 
   /**
@@ -503,8 +501,6 @@ export default class DocClient extends StateMachine {
       await PromDelay.resolve(PULL_DELAY_MSEC);
       this.q_wantChanges();
     })();
-
-    this.s_idle();
   }
 
   /**
