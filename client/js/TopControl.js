@@ -2,9 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ApiClient } from 'api-client';
 import { Codec, SplitKey } from 'api-common';
-import { DocClient } from 'doc-client';
+import { DocClient, DocSession } from 'doc-client';
 import { Hooks } from 'hooks-client';
 import { EditorComplex, QuillEvent } from 'quill-util';
 import { Logger } from 'see-all';
@@ -32,15 +31,13 @@ export default class TopControl {
     // Pull the incoming parameters from `window.*` globals into instance
     // variables. Validate that they're present before doing anything further.
 
-    /**
-     * {SplitKey} Key that authorizes access to a session. A session is tied to
-     * a specific document and a specific author, allowing general read access
-     * to the document and allowing modification to the document as the one
-     * specific author. The incoming parameter `BAYOU_KEY` (transmitted via a
-     * `window` global) is expected to be a `SplitKey` in JSON-encoded form.
-     */
-    this._sessionKey =
-      SplitKey.check(Codec.theOne.decodeJson(window.BAYOU_KEY));
+    // This is the (initial) key that authorizes access to a session. A session
+    // is tied to a specific document and a specific author, allowing general
+    // read access to the document and allowing modification to the document as
+    // the one specific author. The incoming parameter `BAYOU_KEY` (transmitted
+    // via a `window` global) is expected to be a `SplitKey` in JSON-encoded
+    // form.
+    const sessionKey = this._parseAndFixKey(window.BAYOU_KEY);
 
     /** {Element} DOM node to use for the editor. */
     this._editorNode = TObject.check(window.BAYOU_NODE, Element);
@@ -58,17 +55,14 @@ export default class TopControl {
     this._recover =
       TFunction.check(window.BAYOU_RECOVER || (() => { /* empty */ }));
 
+    /** {DocSession} Session control/management instance. */
+    this._docSession = new DocSession(sessionKey);
+
     /**
      * {EditorComplex|null} Editor "complex" instance, for all of the
      * DOM-related state and control. Becomes non-null in `start()`.
      */
     this._editorComplex = null;
-
-    /**
-     * {ApiClient|null} API client instance (client-to-server hookup). Becomes
-     * non-null in `_makeApiClient()`.
-     */
-    this._apiClient = null;
 
     /**
      * {DocClient|null} Client instance (API-to-editor hookup). Becomes non-null
@@ -85,10 +79,6 @@ export default class TopControl {
    * Starts things up.
    */
   start() {
-    // Initialize the API connection. We do this in parallel with the rest of
-    // the page loading, so as to minimize time-to-interactive.
-    this._makeApiClient();
-
     // Arrange for the rest of initialization to happen once the initial page
     // contents are ready (from the browser's perspective).
     const document = this._window.document;
@@ -113,7 +103,7 @@ export default class TopControl {
    */
   async _onReady() {
     const document   = this._window.document;
-    const baseUrl    = this._apiClient.baseUrl;
+    const baseUrl    = this._docSession.baseUrl;
     const editorNode = this._editorNode;
 
     // Do our basic page setup. Specifically, we add the CSS we need to the
@@ -160,7 +150,7 @@ export default class TopControl {
    */
   async _watchSelection() {
     const sessionProxy =
-      await this._apiClient.authorizeTarget(this._sessionKey);
+      await this._docSession.apiClient.authorizeTarget(this._docSession.key);
 
     let currentEvent = this._editorComplex.quill.currentEvent;
 
@@ -171,7 +161,13 @@ export default class TopControl {
       // Only update when given a non-`null` range. `null` gets sent when the
       // editor UI loses focus.
       if (range !== null) {
-        sessionProxy.caretUpdate(range.index, range.length);
+        try {
+          await sessionProxy.caretUpdate(range.index, range.length);
+        } catch (e) {
+          // This happens when the server gets restarted. As currently written,
+          // the caret updater doesn't track session recovery. (See TODO above.)
+          log.info('Trouble updating caret.');
+        }
       }
 
       // Avoid spamming the server with tons of updates. To see every event,
@@ -182,48 +178,13 @@ export default class TopControl {
   }
 
   /**
-   * Fixes the instance's `_sessionKey`, if necessary, so that it has a real URL
-   * (and not just a catch-all). Replaces the instance variable if any fixing
-   * was required.
-   *
-   * **Note:** Under normal circumstances, the key we receive comes with a
-   * real URL. However, when using the debugging routes, it's possible that we
-   * end up with the catchall "URL" `*`. If so, that's when we fall back to
-   * using the document's URL. client.
-   */
-  _fixKeyIfNecessary() {
-    const key = this._sessionKey;
-
-    if (key.url === '*') {
-      const url = new URL(this._window.document.URL);
-      this._sessionKey = key.withUrl(`${url.origin}/api`);
-    }
-  }
-
-  /**
-   * Constructs and connects an `ApiClient` instance.
-   */
-  _makeApiClient() {
-    log.detail('Opening API client...');
-
-    // Fix the key first if necessary (to have a proper URL).
-    this._fixKeyIfNecessary();
-
-    this._apiClient = new ApiClient(this._sessionKey.url);
-
-    (async () => {
-      await this._apiClient.open();
-      log.detail('API client open.');
-    })();
-  }
-
-  /**
    * Constructs and hooks up a `DocClient` instance.
    */
   _makeDocClient() {
     const quill = this._editorComplex.quill;
 
-    this._docClient = new DocClient(quill, this._apiClient, this._sessionKey);
+    this._docClient =
+      new DocClient(quill, this._docSession.apiClient, this._docSession.key);
     this._docClient.start();
 
     // Log a note once everything is all set up.
@@ -247,7 +208,7 @@ export default class TopControl {
   async _recoverIfPossible() {
     log.error('Editor gave up!');
 
-    const newKey = await this._recover(this._sessionKey);
+    const newKey = await this._recover(this._docSession.key);
 
     if (typeof newKey !== 'string') {
       log.info('Nothing more to do. :\'(');
@@ -255,8 +216,26 @@ export default class TopControl {
     }
 
     log.info('Attempting recovery with new key...');
-    this._sessionKey = SplitKey.check(Codec.theOne.decodeJson(newKey));
-    this._makeApiClient();
+    const sessionKey = this._parseAndFixKey(newKey);
+    this._docSession = new DocSession(sessionKey);
     this._makeDocClient();
+  }
+
+  /**
+   * Parses a session key, and fixes it if necessary to have a real (not
+   * wildcard) URL.
+   *
+   * @param {string} keyJson The key, in JSON-encoded form.
+   * @returns {SplitKey} The parsed and fixed key.
+   */
+  _parseAndFixKey(keyJson) {
+    const key = SplitKey.check(Codec.theOne.decodeJson(keyJson));
+
+    if (key.url === '*') {
+      const url = new URL(this._window.document.URL);
+      return key.withUrl(`${url.origin}/api`);
+    }
+
+    return key;
   }
 }
