@@ -38,6 +38,12 @@ export default class DocSession extends CommonBase {
      * `apiClient`.
      */
     this._apiClient = null;
+
+    /**
+     * {Promise<Proxy>|null} Promise for the API session proxy. Set to
+     * non-`null` in `makeSessionProxy()`.
+     */
+    this._sessionProxyPromise = null;
   }
 
   /**
@@ -79,5 +85,24 @@ export default class DocSession extends CommonBase {
   /** {BaseKey} The session key. */
   get key() {
     return this._key;
+  }
+
+  /**
+   * Returns a proxy for the the server-side session object. This will cause the
+   * API client connection to be established if it is not already established or
+   * opening. The return value from this method always resolves to the same
+   * proxy instance, and it will only ever perform authorization for the session
+   * the first time it is called.
+   *
+   * @returns {Proxy} A proxy for the server-side session.
+   */
+  async makeSessionProxy() {
+    if (this._sessionProxyPromise === null) {
+      this._sessionProxyPromise = this.apiClient.authorizeTarget(this._key);
+    }
+
+    // **Note:** Because this is an `async` method, it's okay to return a
+    // promise.
+    return this._sessionProxyPromise;
   }
 }

@@ -149,10 +149,8 @@ export default class TopControl {
    * to actually do something more useful.
    */
   async _watchSelection() {
-    const sessionProxy =
-      await this._docSession.apiClient.authorizeTarget(this._docSession.key);
-
-    let currentEvent = this._editorComplex.quill.currentEvent;
+    const sessionProxy = await this._docSession.makeSessionProxy();
+    let currentEvent   = this._editorComplex.quill.currentEvent;
 
     for (;;) {
       const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
