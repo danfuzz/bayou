@@ -181,8 +181,7 @@ export default class TopControl {
   _makeDocClient() {
     const quill = this._editorComplex.quill;
 
-    this._docClient =
-      new DocClient(quill, this._docSession.apiClient, this._docSession.key);
+    this._docClient = new DocClient(quill, this._docSession);
     this._docClient.start();
 
     // Log a note once everything is all set up.
