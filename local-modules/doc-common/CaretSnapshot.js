@@ -7,6 +7,7 @@ import { CommonBase } from 'util-common';
 
 import Caret from './Caret';
 import CaretDelta from './CaretDelta';
+import CaretOp from './CaretOp';
 import RevisionNumber from './RevisionNumber';
 
 /**
@@ -76,12 +77,36 @@ export default class CaretSnapshot extends CommonBase {
   compose(delta) {
     CaretDelta.check(delta);
 
-    // **TODO:** Implement this!
-    if (delta === delta) {
-      throw new Error('TODO');
+    const sessions = new Map();
+
+    for (const caret of this._carets) {
+      sessions.set(caret.sessionId, caret);
     }
 
-    return null;
+    for (const op of delta.ops) {
+      const sessionId = op.args.get('sessionId');
+
+      switch (op.name) {
+        case CaretOp.BEGIN_AUTHOR_SESSION_OP:
+          // Nothing to do here
+          break;
+
+        case CaretOp.UPDATE_AUTHOR_SELECTION_OP:
+          sessions.set(sessionId, new Caret(
+            sessionId,
+            op.get('index'),
+            op.get('length'),
+            op.get('color')
+          ));
+          break;
+
+        case CaretOp.END_AUTHOR_SESSION_OP:
+          sessions.delete(sessionId);
+          break;
+      }
+    }
+
+    return new CaretSnapshot(this.docRevNum, delta.revNum, sessions.values());
   }
 
   /**
@@ -97,11 +122,50 @@ export default class CaretSnapshot extends CommonBase {
   diff(newerSnapshot) {
     CaretSnapshot.check(newerSnapshot);
 
-    // **TODO:** Implement this!
-    if (newerSnapshot === newerSnapshot) {
-      throw new Error('TODO');
+    const caretsAdded = [];
+    const caretsUpdated = [];
+    const caretsRemoved = [];
+
+    for (const newerCaret of newerSnapshot.carets) {
+      const sessionId = newerCaret.sessionId;
+
+      if (this.carets.some((caret) => {
+        return caret.sessionId === sessionId;
+      })) {
+        // If a `sessionId` matches between the two snapshots then it's an update.
+        caretsUpdated.push(newerCaret);
+      } else {
+        // If `sessionId` is in `newerSnapshot` but not `this` then its a addition.
+        caretsAdded.push(newerCaret);
+      }
     }
 
-    return null;
+    // Finally, find carets removed from `this` when going to `newerSnapshot`
+    for (const oldCaret of this.carets) {
+      const sessionId = oldCaret.sessionId;
+
+      if (!newerSnapshot.carets.some((caret) => {
+        return caret.sessionId === sessionId;
+      })) {
+        caretsRemoved.push(oldCaret);
+      }
+    }
+
+    const revNum = Math.max(this.revNum, newerSnapshot.revNum);
+    const caretOps = [];
+
+    for (const caret of caretsAdded) {
+      caretOps.push(CaretDelta.op_addAuthor(caret.sessionId));
+    }
+
+    for (const caret of caretsUpdated) {
+      caretOps.push(CaretDelta.op_updateAuthorSelecton(caret.sessionId, caret.index, caret.length, caret.color));
+    }
+
+    for (const caret of caretsRemoved) {
+      caretOps.push(CaretDelta.op_removeAuthor(caret.sessionId));
+    }
+
+    return new CaretDelta(revNum, caretOps);
   }
 }

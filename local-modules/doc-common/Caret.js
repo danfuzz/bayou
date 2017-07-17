@@ -41,6 +41,14 @@ export default class Caret extends CommonBase {
   }
 
   /**
+   * {string} Opaque reference to be used with other APIs to get information about
+   *   the author whose caret this is.
+   */
+  get sessionId() {
+    return this._sessionId;
+  }
+
+  /**
    * {Int} The zero-based leading position of this caret/selection.
    */
   get index() {
@@ -60,14 +68,6 @@ export default class Caret extends CommonBase {
    */
   get color() {
     return this._color;
-  }
-
-  /**
-   * {string} Opaque reference to be used with other APIs to get information about
-   *   the author whose caret this is.
-   */
-  get sessionId() {
-    return this._sessionId;
   }
 
   /**
