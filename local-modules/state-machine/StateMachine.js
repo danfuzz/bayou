@@ -53,7 +53,9 @@ import { PromCondition, PropertyIter } from 'util-common';
  *
  * Lastly (and also similarly), a method is added for each state, `when_<name>`,
  * each of which takes no arguments and returns a promise which becomes resolved
- * the moment the machine switches into the so-named state.
+ * the moment the machine switches into the so-named state. (If the machine is
+ * already in the named state at the moment of the `when_*` call, the promise is
+ * immediately resolved.)
  *
  * This class defines a single event type `error(exception)`, which gets
  * queued up any time a handler throws an otherwise uncaught exception. This
@@ -178,13 +180,18 @@ export default class StateMachine {
       };
 
       this[`when_${name}`] = () => {
-        this._log.detail(`Awaiter added for state: ${name}`);
-        let condition = this._stateConditions.get(name);
-        if (!condition) {
-          condition = new PromCondition();
-          this._stateConditions.set(name, condition);
+        if (this._state === name) {
+          this._log.detail(`Immediately-resolved awaiter for state: ${name}`);
+          return Promise.resolve(true);
+        } else {
+          this._log.detail(`Awaiter added for state: ${name}`);
+          let condition = this._stateConditions.get(name);
+          if (!condition) {
+            condition = new PromCondition();
+            this._stateConditions.set(name, condition);
+          }
+          return condition.whenTrue();
         }
-        return condition.whenTrue();
       };
     }
   }

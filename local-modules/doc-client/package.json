@@ -5,6 +5,7 @@
 
   "dependencies": {
     "api-client": "local",
+    "api-common": "local",
     "doc-common": "local",
     "see-all": "local",
     "state-machine": "local",

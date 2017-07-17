@@ -3,5 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import DocClient from './DocClient';
+import DocSession from './DocSession';
 
-export { DocClient };
+export { DocClient, DocSession };

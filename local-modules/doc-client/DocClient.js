@@ -5,10 +5,11 @@
 import { ApiError } from 'api-client';
 import { DocumentDelta, DocumentSnapshot, FrozenDelta } from 'doc-common';
 import { QuillEvent } from 'quill-util';
-import { Logger } from 'see-all';
 import { TObject, TString } from 'typecheck';
 import { StateMachine } from 'state-machine';
 import { PromDelay } from 'util-common';
+
+import DocSession from './DocSession';
 
 /**
  * {Int} Amount of time in msec over which errors are counted, in order to
@@ -21,9 +22,6 @@ const ERROR_WINDOW_MSEC = 3 * 60 * 1000; // Three minutes.
  * sufficient evidence that the instance is in an "unrecoverable" error state.
  */
 const ERROR_MAX_PER_MINUTE = 2.25;
-
-/** Logger. */
-const log = new Logger('doc');
 
 /**
  * How long to wait (in msec) after receiving a local change (to allow time for
@@ -84,29 +82,26 @@ export default class DocClient extends StateMachine {
    * Quill instance it manages.
    *
    * @param {QuillProm} quill Quill editor instance.
-   * @param {ApiClient} api API Client instance.
-   * @param {BaseKey} sessionKey Key that identifies the session and grants
-   *   access to it. **Note:** A session is specifically tied to a single
-   *   author and a single document.
+   * @param {DocSession} docSession Server session control / manager.
    */
-  constructor(quill, api, sessionKey) {
-    super('detached', log);
+  constructor(quill, docSession) {
+    super('detached', docSession.log);
 
     /** {Quill} Editor object. */
     this._quill = quill;
 
+    /** {DocSession} Server session control / manager. */
+    this._docSession = DocSession.check(docSession);
+
     /** {ApiClient} API interface. */
-    this._apiClient = api;
+    this._apiClient = docSession.apiClient;
 
     /** {Logger} Logger specific to this document's ID. */
-    this._log = log.withPrefix(`[${sessionKey.id}]`);
-
-    /** {BaseKey} Key that identifies the session and grants access to it. */
-    this._sessionKey = sessionKey;
+    this._log = docSession.log;
 
     /**
-     * {Proxy} Local proxy for accessing the server session. Becomes non-null
-     * during the handling of the `start` event.
+     * {Proxy|null} Local proxy for accessing the server session. Becomes
+     * non-`null` during the handling of the `start` event.
      */
     this._sessionProxy = null;
 
@@ -350,10 +345,9 @@ export default class DocClient extends StateMachine {
 
     // Perform a challenge-response to authorize access to the document.
     try {
-      this._sessionProxy =
-        await this._apiClient.authorizeTarget(this._sessionKey);
+      this._sessionProxy = await this._docSession.makeSessionProxy();
     } catch (e) {
-      this.q_apiError('authorizeTarget', e);
+      this.q_apiError('makeSessionProxy', e);
       return;
     }
 
@@ -464,8 +458,6 @@ export default class DocClient extends StateMachine {
         }
       })();
     }
-
-    this.s_idle();
   }
 
   /**
@@ -503,8 +495,6 @@ export default class DocClient extends StateMachine {
       await PromDelay.resolve(PULL_DELAY_MSEC);
       this.q_wantChanges();
     })();
-
-    this.s_idle();
   }
 
   /**
