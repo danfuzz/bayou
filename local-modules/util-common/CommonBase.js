@@ -22,7 +22,7 @@ export default class CommonBase {
     clazz.check         = this.check;
     clazz.coerce        = this.coerce;
     clazz.coerceOrNull  = this.coerceOrNull;
-    clazz._mustOverride = this.mustOverride;
+    clazz._mustOverride = this._mustOverride;
 
     const thisProto  = this.prototype;
     const clazzProto = clazz.prototype;
