@@ -250,7 +250,7 @@ export default class DocClient extends StateMachine {
     // Stop the user from trying to do more edits, as they'd get lost.
     this._quill.disable();
 
-    if (reason.layer === ApiError.CONN) {
+    if (reason.isConnectionError()) {
       // It's connection-related and probably no big deal.
       this._log.info(`${reason.code}, ${reason.desc}`);
     } else {

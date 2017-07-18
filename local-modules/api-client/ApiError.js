@@ -100,6 +100,16 @@ export default class ApiError extends Error {
   }
 
   /**
+   * Returns an indication of whether or not this instance is a
+   * connection-related error.
+   *
+   * @returns {boolean} `true` iff this instance is a connection-related error.
+   */
+  isConnectionError() {
+    return this._layer === 'CONN';
+  }
+
+  /**
    * Makes a full message string from the given parts.
    *
    * @param {string} layer String as defined by the constructor.
