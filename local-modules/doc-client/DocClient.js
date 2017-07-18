@@ -5,7 +5,7 @@
 import { ApiError } from 'api-client';
 import { DocumentDelta, DocumentSnapshot, FrozenDelta } from 'doc-common';
 import { QuillEvent } from 'quill-util';
-import { TObject, TString } from 'typecheck';
+import { TString } from 'typecheck';
 import { StateMachine } from 'state-machine';
 import { PromDelay } from 'util-common';
 
@@ -163,11 +163,11 @@ export default class DocClient extends StateMachine {
    * back from an API call.
    *
    * @param {string} method Name of the method that was called.
-   * @param {object} reason Error reason.
+   * @param {ApiError} reason Error reason.
    */
   _check_apiError(method, reason) {
     TString.nonempty(method);
-    TObject.check(reason);
+    ApiError.check(reason);
   }
 
   /**
@@ -244,7 +244,7 @@ export default class DocClient extends StateMachine {
    * reason.
    *
    * @param {string} method Name of the method that was called.
-   * @param {object} reason Error reason.
+   * @param {ApiError} reason Error reason.
    */
   _handle_any_apiError(method, reason) {
     // Stop the user from trying to do more edits, as they'd get lost.
@@ -252,14 +252,10 @@ export default class DocClient extends StateMachine {
 
     if (reason.isConnectionError()) {
       // It's connection-related and probably no big deal.
-      this._log.info(`${reason.code}, ${reason.desc}`);
+      this._log.info(reason.message);
     } else {
       // It's something more dire; could be a bug on either side, for example.
-      if (reason instanceof Error) {
-        this._log.error(`Severe synch issue in \`${method}\``, reason);
-      } else {
-        this._log.error(`Severe synch issue in \`${method}\`: ${reason.code}, ${reason.desc}`);
-      }
+      this._log.error(`Severe synch issue in \`${method}\``, reason);
     }
 
     // Note the time of the error, and determine if we've hit the point of

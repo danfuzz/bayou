@@ -224,11 +224,14 @@ export default class ApiClient {
    * the current connection ID in the description.
    *
    * @param {string} code Short error code.
-   * @param {string} desc Longer-form description.
+   * @param {string|null} [desc = null] Longer-form description, or `null` if
+   *   there is nothing additional.
    * @returns {ApiError} An appropriately-constructed instance.
    */
-  _connError(code, desc) {
-    return ApiError.connError(code, `[${this._connectionId}] ${desc}`);
+  _connError(code, desc = null) {
+    const extra = (desc === null) ? [] : [desc];
+    const cause = new ApiError(code, ...extra);
+    return ApiError.connError(cause, this._connectionId);
   }
 
   /**
@@ -250,10 +253,10 @@ export default class ApiClient {
     // consistently handle errors via one of the promise chaining mechanisms.
     switch (wsState) {
       case WebSocket.CLOSED: {
-        return Promise.reject(this._connError('closed', 'Closed.'));
+        return Promise.reject(this._connError('connection_closed'));
       }
       case WebSocket.CLOSING: {
-        return Promise.reject(this._connError('closing', 'Closing.'));
+        return Promise.reject(this._connError('connection_closing'));
       }
     }
 
@@ -315,8 +318,8 @@ export default class ApiClient {
     this._log.info('Closed:', event);
 
     const code = WebsocketCodes.close(event.code);
-    const reason = event.reason || 'Websocket closed.';
-    const error = ApiError.connError(code, reason);
+    const desc = event.reason ? `${code}: ${event.reason}` : code;
+    const error = this._connError('connection_closed', desc);
 
     this._handleTermination(event, error);
   }
@@ -337,7 +340,7 @@ export default class ApiClient {
     // **Note:** The error event does not have any particularly useful extra
     // info, so -- alas -- there is nothing to get out of it for the `ApiError`
     // description.
-    const error = this._connError('error', 'Unknown error.');
+    const error = this._connError('unknown_error');
     this._handleTermination(event, error);
   }
 
@@ -394,7 +397,7 @@ export default class ApiClient {
       delete this._callbacks[id];
       if (error) {
         this._log.detail(`Reject ${id}:`, error);
-        callback.reject(ApiError.appError('app_error', error));
+        callback.reject(new ApiError('remote_error', this.connectionId, error));
       } else {
         this._log.detail(`Resolve ${id}:`, result);
         callback.resolve(result);
