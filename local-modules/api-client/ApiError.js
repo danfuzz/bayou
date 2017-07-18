@@ -17,6 +17,14 @@ import { InfoError } from 'util-common';
  */
 export default class ApiError extends InfoError {
   /**
+   * {string} Error name which indicates trouble with the connection (as opposed
+   * to, say, an application logic error).
+   */
+  static get CONNECTION_ERROR() {
+    return 'connection_error';
+  }
+
+  /**
    * Constructs an instance.
    *
    * @param {...*} args Constructor arguments, as described by `InfoError`.
@@ -36,7 +44,7 @@ export default class ApiError extends InfoError {
     ApiError.check(cause);
     TString.check(connectionId);
 
-    return new ApiError(cause, 'connection_error', connectionId);
+    return new ApiError(cause, ApiError.CONNECTION_ERROR, connectionId);
   }
 
   /**
@@ -46,6 +54,6 @@ export default class ApiError extends InfoError {
    * @returns {boolean} `true` iff this instance is a connection-related error.
    */
   isConnectionError() {
-    return this.name === 'connection_error';
+    return this.name === ApiError.CONNECTION_ERROR;
   }
 }
