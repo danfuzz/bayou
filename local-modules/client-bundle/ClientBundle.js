@@ -117,12 +117,12 @@ const webpackOptions = {
                   targets: {
                     browsers: [
                       // See <https://github.com/ai/browserslist> for syntax.
-                      'Chrome >= 55',
-                      'ChromeAndroid >= 55',
-                      'Electron >= 1',
-                      'Firefox >= 50',
-                      'iOS > 9',
-                      'Safari >= 9'
+                      'Chrome >= 59',
+                      'ChromeAndroid >= 59',
+                      'Electron >= 1.7',
+                      'Firefox >= 54',
+                      'iOS >= 10',
+                      'Safari >= 10.1'
                     ]
                   }
                 }
