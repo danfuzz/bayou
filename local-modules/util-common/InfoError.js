@@ -4,6 +4,7 @@
 
 import { TString } from 'typecheck';
 
+import CommonBase from './CommonBase';
 import DataUtil from './DataUtil';
 
 /**
@@ -108,3 +109,7 @@ export default class InfoError extends Error {
     }
   }
 }
+
+// Add `CommonBase` as a mixin, because the main inheritence is the `Error`
+// class.
+CommonBase.mixInto(InfoError);

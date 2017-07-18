@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
+import { InfoError } from 'util-common';
 
 /**
  * Error class for reporting errors coming from `ApiClient`. Differentiates
@@ -14,100 +15,45 @@ import { TString } from 'typecheck';
  * stack trace associated with these instances will almost never be useful, as
  * they will almost always get thrown most directly from API handler code.
  */
-export default class ApiError extends Error {
-  /** Constant indicating an application logic error. */
-  static get APP() { return 'app'; }
-
-  /** Constant indicating a connection / transport error. */
-  static get CONN() { return 'conn'; }
+export default class ApiError extends InfoError {
+  /**
+   * {string} Error name which indicates trouble with the connection (as opposed
+   * to, say, an application logic error).
+   */
+  static get CONNECTION_ERROR() {
+    return 'connection_error';
+  }
 
   /**
    * Constructs an instance.
    *
-   * @param {string} layer Which layer is the source of the problem. One of
-   *   `CONN` (connection / transport) or `APP` (application, that is, the code
-   *   on the far side of the connection).
-   * @param {string} code Short error code, meant to be human-readable and
-   *   machine-friendly. Must consist only of lowercase alphanumerics and the
-   *   underscore, and be at least 5 and at most 40 characters total.
-   * @param {string} [desc = 'API Error'] Longer-form human-readable
-   *   error description.
+   * @param {...*} args Constructor arguments, as described by `InfoError`.
    */
-  constructor(layer, code, desc = 'API Error') {
-    TString.check(layer);
-    TString.check(code);
-    TString.check(desc);
-
-    if ((layer !== ApiError.APP) && (layer !== ApiError.CONN)) {
-      throw new Error('Invalid value for `layer`.');
-    }
-
-    if (!/[a-z0-9_]{5,40}/.test(code)) {
-      throw new Error('Invalid value for `code`.');
-    }
-
-    super(ApiError._fullMessage(layer, code, desc));
-
-    /** The error layer. */
-    this._layer = layer;
-
-    /** The short error code. */
-    this._code = code;
-
-    /** The long-form error description. */
-    this._desc = desc;
+  constructor(...args) {
+    super(...args);
   }
 
   /**
-   * Convenient wrapper for `new ApiError(ApiError.APP, ...)`.
+   * Convenient wrapper for `new ApiError('connection_error', ...)`.
    *
-   * @param {...string} args Constructor arguments.
+   * @param {ApiError} cause Cause of the connection error.
+   * @param {string} connectionId Connection ID string.
    * @returns {ApiError} The constructed error.
    */
-  static appError(...args) {
-    return new ApiError(ApiError.APP, ...args);
+  static connError(cause, connectionId) {
+    ApiError.check(cause);
+    TString.check(connectionId);
+
+    return new ApiError(cause, ApiError.CONNECTION_ERROR, connectionId);
   }
 
   /**
-   * Convenient wrapper for `new ApiError(ApiError.CONN, ...)`.
+   * Returns an indication of whether or not this instance is a
+   * connection-related error.
    *
-   * @param {...string} args Constructor arguments.
-   * @returns {ApiError} The constructed error.
+   * @returns {boolean} `true` iff this instance is a connection-related error.
    */
-  static connError(...args) {
-    return new ApiError(ApiError.CONN, ...args);
-  }
-
-  /**
-   * The error layer. One of `ApiError.APP` or `ApiError.CONN`.
-   */
-  get layer() {
-    return this._layer;
-  }
-
-  /**
-   * The short human-readable and machine-friendly error code.
-   */
-  get code() {
-    return this._code;
-  }
-
-  /**
-   * The long-form human-readable description.
-   */
-  get desc() {
-    return this._desc;
-  }
-
-  /**
-   * Makes a full message string from the given parts.
-   *
-   * @param {string} layer String as defined by the constructor.
-   * @param {string} code String as defined by the constructor.
-   * @param {string} desc String as defined by the constructor.
-   * @returns {string} Full message.
-   */
-  static _fullMessage(layer, code, desc) {
-    return `[${layer} ${code}] ${desc}`;
+  isConnectionError() {
+    return this.name === ApiError.CONNECTION_ERROR;
   }
 }
