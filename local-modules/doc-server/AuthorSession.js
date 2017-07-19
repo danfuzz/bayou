@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CaretDelta, CaretSnapshot } from 'doc-common';
+import { CaretDelta, CaretSnapshot, RevisionNumber } from 'doc-common';
 import { Logger } from 'see-all';
 import { TInt, TString } from 'typecheck';
 
@@ -38,6 +38,9 @@ export default class AuthorSession {
 
     /** {string} Author ID. */
     this._authorId = TString.nonempty(authorId);
+
+    /** {Logger} Logger for this session. */
+    this._log = log.withPrefix(`[${sessionId}]`);
   }
 
   /**
@@ -166,18 +169,25 @@ export default class AuthorSession {
    * Informs the system of the client's current caret or text selection extent.
    * This should be called by clients when they notice user activity that
    * changes the selection. More specifically, Quill's `SELECTION_CHANGED`
-   * events are expected to drive calls to this method. Arguments to this method
-   * have the semantics of offset and length within a Quill `Delta`.
+   * events are expected to drive calls to this method. The `index` and `length
+   * arguments to this method have the same semantics as they have in Quill,
+   * that is, they ultimately refer to an extent within a Quill `Delta`.
    *
+   * @param {Int} docRevNum The _document_ revision number that this information
+   *   is with respect to.
    * @param {Int} index Caret position (if no selection per se) or starting
    *   caret position of the selection.
    * @param {Int} [length = 0] If non-zero, length of the selection.
    */
-  caretUpdate(index, length = 0) {
+  caretUpdate(docRevNum, index, length = 0) {
+    RevisionNumber.check(docRevNum);
     TInt.min(index, 0);
     TInt.min(length, 0);
 
     // **TODO:** Something interesting should go here.
-    log.info(`Got caret update for ${this._sessionId}: ${index}, ${length}`);
+    const caretStr = (length === 0)
+      ? `@${index}`
+      : `[${index}..${index + length - 1}]`;
+    this._log.info(`Caret update: r${docRevNum}, ${caretStr}`);
   }
 }
