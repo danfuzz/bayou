@@ -63,15 +63,11 @@ export default class CaretTracker extends CommonBase {
       return;
     }
 
-    const index  = range.index;
-    const length = range.length;
-    this._log.info(`Caret update: r${docRevNum}, ${index}, ${length}`);
-
     // Inform the server, and then suppress further updates for the prescribed
     // amount of time.
 
-    // TODO: If this call fails, there's nothing to catch the exception.
-    this._sessionProxy.caretUpdate(0, range.index, range.length);
+    // **TODO:** If this call fails, there's nothing to catch the exception.
+    this._sessionProxy.caretUpdate(docRevNum, range.index, range.length);
 
     this._suppress = true;
 
