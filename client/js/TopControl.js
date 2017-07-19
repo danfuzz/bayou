@@ -153,14 +153,19 @@ export default class TopControl {
     let currentEvent   = this._editorComplex.quill.currentEvent;
 
     for (;;) {
-      const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
-      const range    = selEvent.range;
+      // Using `lastestOfNow()`, along with the explicit delay at the bottom of
+      // the loop, is how we avoid spamming the server with tons of caret
+      // updates.
+      currentEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
+      currentEvent = currentEvent.latestOfNow(QuillEvent.SELECTION_CHANGE);
+
+      const range = currentEvent.range;
 
       // Only update when given a non-`null` range. `null` gets sent when the
       // editor UI loses focus.
       if (range !== null) {
         try {
-          await sessionProxy.caretUpdate(range.index, range.length);
+          await sessionProxy.caretUpdate(0, range.index, range.length);
         } catch (e) {
           // This happens when the server gets restarted. As currently written,
           // the caret updater doesn't track session recovery. (See TODO above.)
@@ -168,9 +173,7 @@ export default class TopControl {
         }
       }
 
-      // Avoid spamming the server with tons of updates. To see every event,
-      // this should just be `currentEvent = selEvent`.
-      currentEvent = this._editorComplex.quill.currentEvent;
+      // See comment at top of loop.
       await PromDelay.resolve(5000);
     }
   }
