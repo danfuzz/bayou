@@ -7,6 +7,8 @@ import { BaseKey } from 'api-common';
 import { Logger } from 'see-all';
 import { CommonBase } from 'util-common';
 
+import CaretTracker from './CaretTracker';
+
 /** Logger. */
 const log = new Logger('doc');
 
@@ -38,6 +40,12 @@ export default class DocSession extends CommonBase {
      * `apiClient`.
      */
     this._apiClient = null;
+
+    /**
+     * {CaretTracker|null} Caret tracker for this session. Set to non-`null` in
+     * the getter `caretTracker`.
+     */
+    this._caretTracker = null;
 
     /**
      * {Promise<Proxy>|null} Promise for the API session proxy. Set to
@@ -80,6 +88,15 @@ export default class DocSession extends CommonBase {
   /** {string} The base URL for talking with the server. */
   get baseUrl() {
     return this.apiClient.baseUrl;
+  }
+
+  /** {CaretTracker} Caret tracker for this session. */
+  get caretTracker() {
+    if (this._caretTracker === null) {
+      this._caretTracker = new CaretTracker(this);
+    }
+
+    return this._caretTracker;
   }
 
   /** {BaseKey} The session key. */
