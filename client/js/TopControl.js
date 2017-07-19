@@ -5,11 +5,10 @@
 import { Codec, SplitKey } from 'api-common';
 import { DocClient, DocSession } from 'doc-client';
 import { Hooks } from 'hooks-client';
-import { EditorComplex, QuillEvent } from 'quill-util';
+import { EditorComplex } from 'quill-util';
 import { Logger } from 'see-all';
 import { TFunction, TObject } from 'typecheck';
 import { DomUtil } from 'util-client';
-import { PromDelay } from 'util-common';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('top');
@@ -136,46 +135,6 @@ export default class TopControl {
     // Hook up the `DocClient` (which intermediates between the server and
     // the local Quill instance).
     this._makeDocClient();
-
-    // Shuttle caret / selection changes from Quill up to the API client.
-    // **TODO:** This code should almost certainly live elsewhere.
-    this._watchSelection();
-  }
-
-  /**
-   * Skeletal code for updating the caret / selection.
-   *
-   * **TODO:** This code should almost certainly live elsewhere. Also, it needs
-   * to actually do something more useful.
-   */
-  async _watchSelection() {
-    const sessionProxy = await this._docSession.makeSessionProxy();
-    let currentEvent   = this._editorComplex.quill.currentEvent;
-
-    for (;;) {
-      // Using `lastestOfNow()`, along with the explicit delay at the bottom of
-      // the loop, is how we avoid spamming the server with tons of caret
-      // updates.
-      currentEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
-      currentEvent = currentEvent.latestOfNow(QuillEvent.SELECTION_CHANGE);
-
-      const range = currentEvent.range;
-
-      // Only update when given a non-`null` range. `null` gets sent when the
-      // editor UI loses focus.
-      if (range !== null) {
-        try {
-          await sessionProxy.caretUpdate(0, range.index, range.length);
-        } catch (e) {
-          // This happens when the server gets restarted. As currently written,
-          // the caret updater doesn't track session recovery. (See TODO above.)
-          log.info('Trouble updating caret.');
-        }
-      }
-
-      // See comment at top of loop.
-      await PromDelay.resolve(5000);
-    }
   }
 
   /**
