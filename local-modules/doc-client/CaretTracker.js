@@ -32,7 +32,7 @@ export default class CaretTracker extends CommonBase {
 
     /**
      * {Proxy|null} Proxy for the server-side session object. Becomes non-`null`
-     * when the promise for same resolves, as arraged for in this constructor,
+     * when the promise for same resolves, as arranged for in this constructor,
      * below.
      */
     this._sessionProxy = null;
