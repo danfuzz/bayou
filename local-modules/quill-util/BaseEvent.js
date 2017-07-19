@@ -58,7 +58,7 @@ export default class BaseEvent extends CommonBase {
    * matching event is available.
    *
    * @param {string} eventName Event name of interest.
-   * @returns {QuillEvent} The earliest event with the indidated name, starting
+   * @returns {BaseEvent} The earliest event with the indidated name, starting
    *   at this instance.
    */
   async earliestOf(eventName) {
@@ -75,9 +75,9 @@ export default class BaseEvent extends CommonBase {
    * matching event is immediately available, this method returns `null`.
    *
    * @param {string} eventName Event name of interest.
-   * @returns {QuillEvent|null} The earliest immediately-available event with
+   * @returns {BaseEvent|null} The earliest immediately-available event with
    *   the indidated name, starting at this instance; or `null` if there is no
-   * such event.
+   *   such event.
    */
   earliestOfNow(eventName) {
     for (let e = this; e !== null; e = e.nextNow) {
@@ -90,11 +90,57 @@ export default class BaseEvent extends CommonBase {
   }
 
   /**
+   * Gets the latest (most recent) event of the indicated name in the event
+   * chain, starting at (and possibly including) this instance. This method only
+   * returns once a matching event is available.
+   *
+   * @param {string} eventName Event name of interest.
+   * @returns {BaseEvent|null} The latest immediately-available event with the
+   *   indidated name, starting at this instance; or `null` if there is no
+   *   such event.
+   */
+  async latestOf(eventName) {
+    const resultNow = this.latestOfNow(eventName);
+
+    if (resultNow !== null) {
+      return resultNow;
+    } else {
+      // Wait for at least one matching event, and then get the instantaneously-
+      // latest (because there could have been more than one).
+      const next = await this.nextOf(eventName);
+      return next.latestOfNow(eventName);
+    }
+  }
+
+  /**
+   * Gets the latest (most recent) immediately-available event of the indicated
+   * name in the event chain, starting at (and possibly including) this
+   * instance. If no matching event is immediately available, this method
+   * returns `null`.
+   *
+   * @param {string} eventName Event name of interest.
+   * @returns {BaseEvent|null} The latest immediately-available event with the
+   *   indidated name, starting at this instance; or `null` if there is no
+   *   such event.
+   */
+  latestOfNow(eventName) {
+    let result = null;
+
+    for (let e = this; e !== null; e = e.nextNow) {
+      if (e.eventName === eventName) {
+        result = e;
+      }
+    }
+
+    return result;
+  }
+
+  /**
    * Gets the next event of the indicated name after this instance, whenever it
    * becomes resolved.
    *
    * @param {string} eventName Event name of interest.
-   * @returns {QuillEvent} The next event with the indidated name, once it has
+   * @returns {BaseEvent} The next event with the indidated name, once it has
    *   become resolved.
    */
   async nextOf(eventName) {
@@ -106,7 +152,7 @@ export default class BaseEvent extends CommonBase {
    * immediately available.
    *
    * @param {string} eventName Event name of interest.
-   * @returns {QuillEvent|null} The next event with the indidated name that has
+   * @returns {BaseEvent|null} The next event with the indidated name that has
    *   already been resolved, or `null` if there is no such event.
    */
   nextOfNow(eventName) {
