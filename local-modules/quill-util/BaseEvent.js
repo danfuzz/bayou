@@ -63,8 +63,9 @@ export default class BaseEvent extends CommonBase {
    */
   async earliestOf(eventName) {
     for (let e = this; /*e*/; e = await e.next) {
-      if (e.eventName === eventName) {
-        return e;
+      const resultNow = e.earliestOfNow(eventName);
+      if (resultNow !== null) {
+        return resultNow;
       }
     }
   }
