@@ -3,13 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { CaretDelta, CaretSnapshot, RevisionNumber } from 'doc-common';
-import { Logger } from 'see-all';
 import { TInt, TString } from 'typecheck';
 
-import DocControl from './DocControl';
-
-/** {Logger} Logger to use for this module. */
-const log = new Logger('author-session');
+import FileComplex from './FileComplex';
 
 /**
  * Server side representative for a session for a specific author and document.
@@ -24,23 +20,27 @@ export default class AuthorSession {
   /**
    * Constructs an instance.
    *
+   * @param {fileComplex} fileComplex File complex representing the underlying
+   *   file for this instance to use.
    * @param {string} sessionId Session ID for this instance, which is expected
    *   to be guaranteed unique by whatever service it is that generates it.
-   * @param {DocControl} doc The underlying document controller.
    * @param {string} authorId The author this instance acts on behalf of.
    */
-  constructor(sessionId, doc, authorId) {
+  constructor(fileComplex, sessionId, authorId) {
+    /** {FileComplex} File complex that this instance is part of. */
+    this._fileComplex = FileComplex.check(fileComplex);
+
     /** {string} Author ID. */
     this._sessionId = TString.nonempty(sessionId);
-
-    /** {DocControl} The underlying document controller. */
-    this._doc = DocControl.check(doc);
 
     /** {string} Author ID. */
     this._authorId = TString.nonempty(authorId);
 
+    /** {DocControl} The underlying document controller. */
+    this._doc = fileComplex.docControl;
+
     /** {Logger} Logger for this session. */
-    this._log = log.withPrefix(`[${sessionId}]`);
+    this._log = fileComplex.log.withPrefix(`[${sessionId}]`);
   }
 
   /**

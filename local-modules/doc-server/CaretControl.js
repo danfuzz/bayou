@@ -32,7 +32,5 @@ export default class CaretControl extends CommonBase {
 
     /** {Logger} Logger specific to this document's ID. */
     this._log = fileComplex.log;
-
-    this._log.detail('Constructed.');
   }
 }
