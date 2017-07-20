@@ -97,7 +97,7 @@ export default class FileComplex extends CommonBase {
   /** {DocControl} The document controller to use with this instance. */
   get docControl() {
     if (this._docControl === null) {
-      this._docControl = new DocControl(this.codec, this.file, this.formatVersion);
+      this._docControl = new DocControl(this);
       this._log.info('Constructed document controller.');
     }
 
