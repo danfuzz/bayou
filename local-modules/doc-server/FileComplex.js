@@ -4,15 +4,32 @@
 
 import { Codec } from 'api-common';
 import { BaseFile } from 'content-store';
+import { FrozenDelta } from 'doc-common';
+import { DEFAULT_DOCUMENT } from 'hooks-server';
 import { Logger } from 'see-all';
 import { ProductInfo } from 'server-env';
 import { TString } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase, PromMutex } from 'util-common';
 
 import DocControl from './DocControl';
 
 /** {Logger} Logger to use for this module. */
 const log = new Logger('doc');
+
+/** {FrozenDelta} Default contents when creating a new document. */
+const DEFAULT_TEXT = FrozenDelta.coerce(DEFAULT_DOCUMENT);
+
+/**
+ * {FrozenDelta} Message used as document to indicate a major validation error.
+ */
+const ERROR_NOTE = FrozenDelta.coerce(
+  [{ insert: '(Recreated document due to validation error(s).)\n' }]);
+
+/**
+ * {FrozenDelta} Message used as document instead of migrating documents from
+ * old format versions. */
+const MIGRATION_NOTE = FrozenDelta.coerce(
+  [{ insert: '(Recreated document due to format version skew.)\n' }]);
 
 /**
  * Manager for the "complex" of objects which in aggregate allow access and
@@ -46,11 +63,15 @@ export default class FileComplex extends CommonBase {
      * corresponding getter.
      */
     this._docControl = null;
+
+    /** {PromMutex} Mutex to avoid overlapping initialization operations. */
+    this._initMutex = new PromMutex();
   }
 
   /** {DocControl} The document controller to use with this instance. */
   get docControl() {
     if (this._docControl === null) {
+      this._log.info('Contructing document controller.');
       this._docControl = new DocControl(this.codec, this.file, this.formatVersion);
     }
 
@@ -81,5 +102,40 @@ export default class FileComplex extends CommonBase {
    */
   get formatVersion() {
     return this._formatVersion;
+  }
+
+  /**
+   * Initializes the document content, if either the file doesn't exist or the
+   * content doesn't pass validation.
+   */
+  async initIfMissingOrInvalid() {
+    const unlock = await this._initMutex.lock();
+    try {
+      const control   = this.docControl;
+      const status    = await control.validationStatus();
+      const needsInit = (status !== DocControl.STATUS_OK);
+      let   firstText = DEFAULT_TEXT;
+
+      if (status === DocControl.STATUS_MIGRATE) {
+        // **TODO:** Ultimately, this code path will evolve into forward
+        // migration of documents found to be in older formats. For now, we just
+        // fall through to the document creation logic below, which will leave
+        // a note what's going on in the document contents.
+        this.log.info('Needs migration. (But just noting that fact for now.)');
+        firstText = MIGRATION_NOTE;
+      } else if (status === DocControl.STATUS_ERROR) {
+        // **TODO:** Ultimately, it should be a Really Big Deal if we find
+        // ourselves here. We might want to implement some form of "hail mary"
+        // attempt to recover _something_ of use from the document storage.
+        this.log.info('Major problem with stored data!');
+        firstText = ERROR_NOTE;
+      }
+
+      if (needsInit) {
+        await control.create(firstText);
+      }
+    } finally {
+      unlock();
+    }
   }
 }
