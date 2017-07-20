@@ -87,11 +87,6 @@ export default class DocControl extends CommonBase {
     this._log = fileComplex.log;
   }
 
-  /** {string} The ID of the document that this instance represents. */
-  get id() {
-    return this._file.id;
-  }
-
   /**
    * Creates or re-creates the document. If passed, the given `delta` becomes
    * the initial content of the document (which will be in the second change,

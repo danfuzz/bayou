@@ -91,7 +91,11 @@ export default class AuthorSession {
    * @returns {string} A succinct identification string.
    */
   getLogInfo() {
-    return `session ${this._sessionId}; doc ${this._doc.id}; author ${this._authorId}`;
+    const file    = this._fileComplex.file.id;
+    const session = this._sessionId;
+    const author  = this._authorId;
+
+    return `file ${file}; session ${session}; author ${author}`;
   }
 
   /**
