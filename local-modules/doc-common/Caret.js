@@ -18,16 +18,16 @@ export default class Caret extends CommonBase {
   /**
    * Constructs an instance.
    *
-   *  @param {string} sessionId An opaque token that can be used with other
-   *    APIs to get information about the author whose caret this is (e.g. author
-   *    name, avatar, user id, etc). No assumptions should be made about the
-   *    format of `sessionId`.
-   * @param {Int} index The zero-based location of the caret (or beginning of a selection)
-   *    within the document.
+   * @param {string} sessionId An opaque token that can be used with other
+   *   APIs to get information about the author whose caret this is (e.g. author
+   *   name, avatar, user id, etc). No assumptions should be made about the
+   *   format of `sessionId`.
+   * @param {Int} index The zero-based location of the caret (or beginning of a
+   *   selection) within the document.
    * @param {Int} length The number of characters within a selection, or zero if
-   *    this caret merely represents the insertion point and not a selection.
-   *  @param {string} color The color to be used when annotating this caret. The
-   *    color must be in the CSS three-byte hex form (e.g. `'#b8ff2e'`).
+   *   this caret merely represents the insertion point and not a selection.
+   * @param {string} color The color to be used when annotating this caret. The
+   *   color must be in the CSS three-byte hex form (e.g. `'#b8ff2e'`).
    */
   constructor(sessionId, index, length, color) {
     super();
@@ -35,14 +35,14 @@ export default class Caret extends CommonBase {
     this._sessionId = TString.check(sessionId);
     this._index = TInt.min(index, 0);
     this._length = TInt.min(length, 0);
-    this.color = ColorSelector.checkHexColor(color);
+    this._color = ColorSelector.checkHexColor(color);
 
     Object.freeze(this);
   }
 
   /**
-   * {string} Opaque reference to be used with other APIs to get information about
-   *   the author whose caret this is.
+   * {string} Opaque reference to be used with other APIs to get information
+   * about the author whose caret this is.
    */
   get sessionId() {
     return this._sessionId;
@@ -64,7 +64,7 @@ export default class Caret extends CommonBase {
 
   /**
    * {string} The color to be used when annotating this selection. It is in CSS
-   *   three-byte hex format (e.g. `'#ffeab9'`).
+   * three-byte hex format (e.g. `'#ffeab9'`).
    */
   get color() {
     return this._color;
