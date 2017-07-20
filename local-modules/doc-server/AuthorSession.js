@@ -54,10 +54,10 @@ export default class AuthorSession {
    *   to.
    * @param {FrozenDelta} delta Delta indicating what has changed with respect
    *   to `baseRevNum`.
-   * @returns {Promise<DocumentDelta>} Promise for the correction from the
-   *   implied expected result to get the actual result.
+   * @returns {DocumentDelta} The correction from the implied expected result to
+   *   get the actual result.
    */
-  applyDelta(baseRevNum, delta) {
+  async applyDelta(baseRevNum, delta) {
     return this._docControl.applyDelta(baseRevNum, delta, this._authorId);
   }
 
@@ -66,9 +66,9 @@ export default class AuthorSession {
    * `DocControl` method for details.
    *
    * @param {Int} revNum The revision number of the change.
-   * @returns {Promise<DocumentChange>} Promise for the requested change.
+   * @returns {DocumentChange} The requested change.
    */
-  change(revNum) {
+  async change(revNum) {
     return this._docControl.change(revNum);
   }
 
@@ -77,11 +77,11 @@ export default class AuthorSession {
    * `baseRevNum`. See the equivalent `DocControl` method for details.
    *
    * @param {Int} baseRevNum Revision number for the document.
-   * @returns {Promise<DocumentDelta>} Promise for a delta and associated
-   *   revision number. The result's `delta` can be applied to revision
-   *   `baseRevNum` to produce revision `revNum` of the document.
+   * @returns {DocumentDelta} Delta and associated revision number. The result's
+   *   `delta` can be applied to revision `baseRevNum` to produce revision
+   *   `revNum` of the document.
    */
-  deltaAfter(baseRevNum) {
+  async deltaAfter(baseRevNum) {
     return this._docControl.deltaAfter(baseRevNum);
   }
 
@@ -115,9 +115,9 @@ export default class AuthorSession {
    *
    * @param {Int|null} [revNum = null] Which revision to get. If passed as
    *   `null`, indicates the latest (most recent) revision.
-   * @returns {Promise<DocumentSnapshot>} Promise for the requested snapshot.
+   * @returns {DocumentSnapshot} The requested snapshot.
    */
-  snapshot(revNum = null) {
+  async snapshot(revNum = null) {
     return this._docControl.snapshot(revNum);
   }
 
