@@ -90,21 +90,6 @@ export default class DocServer extends Singleton {
   /**
    * Gets the document controller for the document with the given ID. If the
    * document doesn't exist (that is, the underlying file storage doesn't
-   * exist) or the document exists but has invalid content, it gets initialized.
-   *
-   * @param {string} docId The document ID.
-   * @returns {DocControl} The corresponding document controller.
-   */
-  async getDoc(docId) {
-    const complex = await this.getFileComplex(docId);
-
-    await complex.initIfMissingOrInvalid();
-    return complex.docControl;
-  }
-
-  /**
-   * Gets the document controller for the document with the given ID. If the
-   * document doesn't exist (that is, the underlying file storage doesn't
    * exist), this method returns `null`. If the document exists but has invalid
    * content, this will re-initialize the content.
    *
