@@ -97,20 +97,21 @@ export default class CaretSnapshot extends CommonBase {
     CaretDelta.check(delta);
 
     const sessions = new Map();
+    let docRevNum = this.docRevNum;
 
     for (const caret of this._carets) {
       sessions.set(caret.sessionId, caret);
     }
 
     for (const op of delta.ops) {
-      const sessionId = op.args.get('sessionId');
-
       switch (op.name) {
-        case CaretOp.BEGIN_AUTHOR_SESSION_OP:
-          // Nothing to do here
+        case CaretOp.BEGIN_AUTHOR_SESSION_OP: {
+          // Nothing to do here.
           break;
+        }
 
-        case CaretOp.UPDATE_AUTHOR_SELECTION_OP:
+        case CaretOp.UPDATE_AUTHOR_SELECTION_OP: {
+          const sessionId = op.args.get('sessionId');
           sessions.set(sessionId, new Caret(
             sessionId,
             op.get('index'),
@@ -118,14 +119,21 @@ export default class CaretSnapshot extends CommonBase {
             op.get('color')
           ));
           break;
+        }
 
-        case CaretOp.END_AUTHOR_SESSION_OP:
+        case CaretOp.END_AUTHOR_SESSION_OP: {
+          const sessionId = op.args.get('sessionId');
           sessions.delete(sessionId);
           break;
+        }
+
+        case CaretOp.UPDATE_DOC_REV_NUM_OP: {
+          docRevNum = op.get('docRevNum');
+        }
       }
     }
 
-    return new CaretSnapshot(this.docRevNum, delta.revNum, sessions.values());
+    return new CaretSnapshot(docRevNum, delta.revNum, sessions.values());
   }
 
   /**
@@ -183,6 +191,10 @@ export default class CaretSnapshot extends CommonBase {
 
     for (const caret of caretsRemoved) {
       caretOps.push(CaretDelta.op_removeAuthor(caret.sessionId));
+    }
+
+    if (this.docRevNum !== newerSnapshot.docRevNum) {
+      caretOps.push(CaretDelta.op_updateDocRevNum(newerSnapshot.docRevNum));
     }
 
     return new CaretDelta(revNum, caretOps);
