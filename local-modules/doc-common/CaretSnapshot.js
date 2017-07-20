@@ -68,6 +68,25 @@ export default class CaretSnapshot extends CommonBase {
   }
 
   /**
+   * Gets the caret info for the given session, if any.
+   *
+   * @param {string} sessionId Session in question.
+   * @returns {Caret|null} Corresponding caret, or `null` if there is none.
+   */
+  caretForSession(sessionId) {
+    // **TODO:** This implementation strongly suggests that `_carets` ought to
+    // be a map.
+
+    for (const c of this.carets) {
+      if (c.sessionId === sessionId) {
+        return c;
+      }
+    }
+
+    return null;
+  }
+
+  /**
    * Composes a delta on top of this instance, to produce a new instance.
    *
    * @param {CaretDelta} delta Delta to compose on top of this instance.
