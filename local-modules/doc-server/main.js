@@ -5,5 +5,6 @@
 import AuthorSession from './AuthorSession';
 import DocControl from './DocControl';
 import DocServer from './DocServer';
+import FileComplex from './FileComplex';
 
-export { AuthorSession, DocControl, DocServer };
+export { AuthorSession, DocControl, DocServer, FileComplex };
