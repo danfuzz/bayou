@@ -37,7 +37,7 @@ export default class AuthorSession {
     this._authorId = TString.nonempty(authorId);
 
     /** {DocControl} The underlying document controller. */
-    this._doc = fileComplex.docControl;
+    this._docControl = fileComplex.docControl;
 
     /** {Logger} Logger for this session. */
     this._log = fileComplex.log.withPrefix(`[${sessionId}]`);
@@ -56,7 +56,7 @@ export default class AuthorSession {
    *   implied expected result to get the actual result.
    */
   applyDelta(baseRevNum, delta) {
-    return this._doc.applyDelta(baseRevNum, delta, this._authorId);
+    return this._docControl.applyDelta(baseRevNum, delta, this._authorId);
   }
 
   /**
@@ -67,7 +67,7 @@ export default class AuthorSession {
    * @returns {Promise<DocumentChange>} Promise for the requested change.
    */
   change(revNum) {
-    return this._doc.change(revNum);
+    return this._docControl.change(revNum);
   }
 
   /**
@@ -80,7 +80,7 @@ export default class AuthorSession {
    *   `baseRevNum` to produce revision `revNum` of the document.
    */
   deltaAfter(baseRevNum) {
-    return this._doc.deltaAfter(baseRevNum);
+    return this._docControl.deltaAfter(baseRevNum);
   }
 
   /**
@@ -116,7 +116,7 @@ export default class AuthorSession {
    * @returns {Promise<DocumentSnapshot>} Promise for the requested snapshot.
    */
   snapshot(revNum = null) {
-    return this._doc.snapshot(revNum);
+    return this._docControl.snapshot(revNum);
   }
 
   /**
