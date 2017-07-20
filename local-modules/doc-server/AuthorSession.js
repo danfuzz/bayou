@@ -2,8 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CaretDelta, CaretSnapshot, RevisionNumber } from 'doc-common';
-import { TInt, TString } from 'typecheck';
+import { TString } from 'typecheck';
 
 import FileComplex from './FileComplex';
 
@@ -140,14 +139,12 @@ export default class AuthorSession {
    *   will form the basis for the result. If `baseRevNum` is the current
    *   revision number, this method will block until a new revision is
    *   available.
-   * @returns {Promise<CaretDelta>} Promise for a delta from the base caret
-   *   revision to a newer one. Applying this result to a `CaretSnapshot` for
-   *   `baseRevNum` will produce an up-to-date snapshot.
+   * @returns {CaretDelta} Delta from the base caret revision to a newer one.
+   *   Applying this result to a `CaretSnapshot` for `baseRevNum` will produce
+   *  an up-to-date snapshot.
    */
-  caretDeltaAfter(baseRevNum) {
-    // TODO: Something more interesting.
-    const docRevNum = 0;
-    return new CaretDelta(baseRevNum, baseRevNum + 1, docRevNum, []);
+  async caretDeltaAfter(baseRevNum) {
+    return this._caretControl.deltaAfter(baseRevNum);
   }
 
   /**
@@ -163,20 +160,15 @@ export default class AuthorSession {
    *   `null`, indicates the latest (most recent) revision.
    * @returns {CaretSnapshot} Snapshot of all the active carets.
    */
-  caretSnapshot(revNum = null) {
-    // TODO: Something more interesting.
-    if (revNum === null) {
-      revNum = 0;
-    }
-    const docRevNum = 0;
-    return new CaretSnapshot(revNum, docRevNum, []);
+  async caretSnapshot(revNum = null) {
+    return this._caretControl.snapshot(revNum);
   }
 
   /**
    * Informs the system of the client's current caret or text selection extent.
    * This should be called by clients when they notice user activity that
    * changes the selection. More specifically, Quill's `SELECTION_CHANGED`
-   * events are expected to drive calls to this method. The `index` and `length
+   * events are expected to drive calls to this method. The `index` and `length`
    * arguments to this method have the same semantics as they have in Quill,
    * that is, they ultimately refer to an extent within a Quill `Delta`.
    *
@@ -185,16 +177,10 @@ export default class AuthorSession {
    * @param {Int} index Caret position (if no selection per se) or starting
    *   caret position of the selection.
    * @param {Int} [length = 0] If non-zero, length of the selection.
+   * @returns {Int} The _caret_ revision number at which this information was
+   *   integrated.
    */
-  caretUpdate(docRevNum, index, length = 0) {
-    RevisionNumber.check(docRevNum);
-    TInt.min(index, 0);
-    TInt.min(length, 0);
-
-    // **TODO:** Something interesting should go here.
-    const caretStr = (length === 0)
-      ? `@${index}`
-      : `[${index}..${index + length - 1}]`;
-    this._log.info(`Caret update: r${docRevNum}, ${caretStr}`);
+  async caretUpdate(docRevNum, index, length = 0) {
+    return this._caretControl.update(this._sessionId, docRevNum, index, length);
   }
 }
