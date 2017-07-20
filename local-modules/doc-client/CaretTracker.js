@@ -13,7 +13,7 @@ import DocSession from './DocSession';
 const UPDATE_DELAY_MSEC = 1000;
 
 /**
- * Manager of the API connection(s) needed to maintain a server session.
+ * Handler for the upload of caret info from this client.
  */
 export default class CaretTracker extends CommonBase {
   /**
@@ -48,7 +48,7 @@ export default class CaretTracker extends CommonBase {
     (async () => {
       this._sessionProxy = await docSession.makeSessionProxy();
       this._suppress = false;
-      this._log.detail('Caret updater got session proxy.');
+      this._log.detail('Caret tracker got session proxy.');
     })();
   }
 

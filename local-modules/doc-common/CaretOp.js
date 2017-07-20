@@ -5,6 +5,8 @@
 import { TInt, TString } from 'typecheck';
 import { ColorSelector } from 'util-common';
 
+import RevisionNumber from './RevisionNumber';
+
 const KEY = Symbol('CaretOp constructor key');
 
 export default class CaretOp {
@@ -20,15 +22,19 @@ export default class CaretOp {
     return 'end-author-session-op';
   }
 
+  static get UPDATE_DOC_REV_NUM_OP() {
+    return 'update-doc-rev-num-op';
+  }
+
   /**
-  * Constructs an instance. This should not be used directly. Instead, used
-  * the static constructor methods defined by this class.
-  *
-  * @param {object} constructorKey The private-to-this-module key that
-  *   enforces the exhortation in the method documentation above.
-  * @param {string} name The operation name.
-  * @param {Map<string,*>} args Arguments to the operation.
-  */
+   * Constructs an instance. This should not be used directly. Instead, used
+   * the static constructor methods defined by this class.
+   *
+   * @param {object} constructorKey The private-to-this-module key that
+   *   enforces the exhortation in the method documentation above.
+   * @param {string} name The operation name.
+   * @param {Map<string,*>} args Arguments to the operation.
+   */
   constructor(constructorKey, name, args) {
     if (constructorKey !== KEY) {
       throw new Error('Constructor is private');
@@ -44,26 +50,26 @@ export default class CaretOp {
   }
 
   /**
-  * @returns {string} The name of this operation.
-  */
+   * @returns {string} The name of this operation.
+   */
   get name() {
     return this._name;
   }
 
   /**
-  * @returns {Map<string, *>} The arguments needed for this operation.
-  */
+   * @returns {Map<string, *>} The arguments needed for this operation.
+   */
   get args() {
     /* TODO: _args is at risk for mutation */
     return this._args;
   }
 
   /**
-  * Constructs a new instance of an add-author operation.
-  *
-  * @param {string} sessionId An author-editing session id.
-  * @returns {CaretOp} The operation representing the addition of the referenced author.
-  */
+   * Constructs a new instance of an add-author operation.
+   *
+   * @param {string} sessionId An author-editing session id.
+   * @returns {CaretOp} The operation representing the addition of the referenced author.
+   */
   static op_addAuthor(sessionId) {
     TString.check(sessionId);
 
@@ -75,20 +81,20 @@ export default class CaretOp {
   }
 
   /**
-  * Constructs a new instance of an update-selection operation.
-  *
-  * @param {string} sessionId The session id for the author whose selection is changing.
-  * @param {Int} index The starting point of the new selection.
-  * @param {Int} length The length o the selection, or zero if the update represents
-  *   a mere insertion point movement rather than a selection.
-  * @param {string} color The color to use for the background of the referenced author's selection.
-  *   It must be in three-byte CSS hex for (e.g. `'#fa9cb3'`).
-  * @returns {CaretOp} The operation representing the additoin of the referenced author.
-  */
+   * Constructs a new instance of an update-selection operation.
+   *
+   * @param {string} sessionId The session id for the author whose selection is changing.
+   * @param {Int} index The starting point of the new selection.
+   * @param {Int} length The length o the selection, or zero if the update represents
+   *   a mere insertion point movement rather than a selection.
+   * @param {string} color The color to use for the background of the referenced author's selection.
+   *   It must be in three-byte CSS hex for (e.g. `'#fa9cb3'`).
+   * @returns {CaretOp} The operation representing the addition of the referenced author.
+   */
   static op_updateAuthorSelection(sessionId, index, length, color) {
     TString.check(sessionId);
-    TInt.min(0, index);
-    TInt.min(0, length);
+    TInt.min(index, 0);
+    TInt.min(length, 0);
     ColorSelector.checkHexColor(color);
 
     const args = new Map();
@@ -102,11 +108,11 @@ export default class CaretOp {
   }
 
   /**
-  * Constructs a new instance of a remove-author operation.
-  *
-  * @param {string} sessionId An author-editing session id.
-  * @returns {CaretOp} The operation representing the removal of the referenced author.
-  */
+   * Constructs a new instance of a remove-author operation.
+   *
+   * @param {string} sessionId An author-editing session id.
+   * @returns {CaretOp} The operation representing the removal of the referenced author.
+   */
   static op_removeAuthor(sessionId) {
     TString.check(sessionId);
 
@@ -115,6 +121,22 @@ export default class CaretOp {
     args.set('sessionId', sessionId);
 
     return new CaretOp(KEY, CaretOp.END_AUTHOR_SESSION_OP, args);
+  }
+
+  /**
+   * Constructs a new instance of an update-doc-rev-num operation.
+   *
+   * @param {Int} docRevNum The new revision number.
+   * @returns {CaretOp} The corresponding operation.
+   */
+  static op_updateDocRevNum(docRevNum) {
+    RevisionNumber.check(docRevNum);
+
+    const args = new Map();
+
+    args.set('docRevNum', docRevNum);
+
+    return new CaretOp(KEY, CaretOp.UPDATE_DOC_REV_NUM_OP, args);
   }
 
   /**
