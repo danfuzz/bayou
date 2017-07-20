@@ -89,7 +89,7 @@ export default class CaretOp {
    *   a mere insertion point movement rather than a selection.
    * @param {string} color The color to use for the background of the referenced author's selection.
    *   It must be in three-byte CSS hex for (e.g. `'#fa9cb3'`).
-   * @returns {CaretOp} The operation representing the additoin of the referenced author.
+   * @returns {CaretOp} The operation representing the addition of the referenced author.
    */
   static op_updateAuthorSelection(sessionId, index, length, color) {
     TString.check(sessionId);
