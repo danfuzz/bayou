@@ -2,17 +2,13 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Codec } from 'api-common';
-import { BaseFile, FileCodec, TransactionSpec } from 'content-store';
+import { FileCodec, TransactionSpec } from 'content-store';
 import { DocumentDelta, DocumentChange, DocumentSnapshot, FrozenDelta, RevisionNumber, Timestamp } from 'doc-common';
-import { Logger } from 'see-all';
 import { TInt, TString } from 'typecheck';
 import { CommonBase, InfoError, PromDelay } from 'util-common';
 
+import FileComplex from './FileComplex';
 import Paths from './Paths';
-
-/** {Logger} Logger for this module. */
-const log = new Logger('doc-control');
 
 /** {number} Initial amount of time (in msec) between append retries. */
 const INITIAL_APPEND_RETRY_MSEC = 50;
@@ -34,9 +30,13 @@ const MAX_APPEND_TIME_MSEC = 20 * 1000; // 20 seconds.
 const MAX_CHANGE_READS_PER_TRANSACTION = 20;
 
 /**
- * Controller for a given document. There is only ever exactly one instance of
- * this class per document, no matter how many active editors there are on that
- * document. (This guarantee is provided by `DocServer`.)
+ * Controller for a given document's content.
+ *
+ * There is only ever exactly one instance of this class per document, no matter
+ * how many active editors there are on that document. (This guarantee is
+ * provided by virtue of the fact that `DocServer` only ever creates one
+ * `FileComplex` per document, and each `FileComplex` instance only ever makes
+ * one instance of this class.
  */
 export default class DocControl extends CommonBase {
   /** {string} Return value from `validationStatus()`, see which for details. */
@@ -62,24 +62,20 @@ export default class DocControl extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {Codec} codec Codec instance to use.
-   * @param {BaseFile} file The underlying document storage.
-   * @param {string} formatVersion Format version to expect and use.
+   * @param {FileComplex} fileComplex File complex that this instance is part
+   *   of.
    */
-  constructor(codec, file, formatVersion) {
+  constructor(fileComplex) {
     super();
 
-    /** {Codec} Codec instance to use. */
-    this._codec = Codec.check(codec);
+    /** {FileComplex} File complex that this instance is part of. */
+    this._fileComplex = FileComplex.check(fileComplex);
 
     /** {BaseFile} The underlying document storage. */
-    this._file = BaseFile.check(file);
+    this._file = fileComplex.file;
 
     /** {FileCodec} File-codec wrapper to use. */
-    this._fileCodec = new FileCodec(this._file, this._codec);
-
-    /** {string} The document format version to expect and use. */
-    this._formatVersion = TString.nonempty(formatVersion);
+    this._fileCodec = new FileCodec(fileComplex.file, fileComplex.codec);
 
     /**
      * {Map<RevisionNumber,DocumentSnapshot>} Mapping from revision numbers to
@@ -88,7 +84,7 @@ export default class DocControl extends CommonBase {
     this._snapshots = new Map();
 
     /** {Logger} Logger specific to this document's ID. */
-    this._log = log.withPrefix(`[${this._file.id}]`);
+    this._log = fileComplex.log;
 
     this._log.detail('Constructed.');
   }
@@ -138,7 +134,7 @@ export default class DocControl extends CommonBase {
       fc.op_checkPathEmpty(Paths.REVISION_NUMBER),
 
       // Version for the file format.
-      fc.op_writePath(Paths.FORMAT_VERSION, this._formatVersion),
+      fc.op_writePath(Paths.FORMAT_VERSION, this._fileComplex.formatVersion),
 
       // Initial revision number.
       fc.op_writePath(Paths.REVISION_NUMBER, revNum),
@@ -265,10 +261,10 @@ export default class DocControl extends CommonBase {
       return DocControl.STATUS_ERROR;
     }
 
-    if (formatVersion !== this._formatVersion) {
+    const expectFormatVersion = this._fileComplex.formatVersion;
+    if (formatVersion !== expectFormatVersion) {
       const got = formatVersion;
-      const expected = this._formatVersion;
-      this._log.info(`Mismatched format version: got ${got}; expected ${expected}`);
+      this._log.info(`Mismatched format version: got ${got}; expected ${expectFormatVersion}`);
       return DocControl.STATUS_MIGRATE;
     }
 

@@ -8,7 +8,7 @@ import { TInt, TString } from 'typecheck';
 
 import DocControl from './DocControl';
 
-/** Logger. */
+/** {Logger} Logger to use for this module. */
 const log = new Logger('author-session');
 
 /**

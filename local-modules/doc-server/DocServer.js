@@ -5,29 +5,12 @@
 import weak from 'weak';
 
 import { Codec } from 'api-common';
-import { FrozenDelta } from 'doc-common';
-import { DEFAULT_DOCUMENT, Hooks } from 'hooks-server';
+import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
-import { ProductInfo } from 'server-env';
-import { TBoolean, TString } from 'typecheck';
+import { TString } from 'typecheck';
 import { Singleton } from 'util-common';
 
-import DocControl from './DocControl';
-
-/** {FrozenDelta} Default contents when creating a new document. */
-const DEFAULT_TEXT = FrozenDelta.coerce(DEFAULT_DOCUMENT);
-
-/**
- * {FrozenDelta} Message used as document to indicate a major validation error.
- */
-const ERROR_NOTE = FrozenDelta.coerce(
-  [{ insert: '(Recreated document due to validation error(s).)\n' }]);
-
-/**
- * {FrozenDelta} Message used as document instead of migrating documents from
- * old format versions. */
-const MIGRATION_NOTE = FrozenDelta.coerce(
-  [{ insert: '(Recreated document due to format version skew.)\n' }]);
+import FileComplex from './FileComplex';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('doc-server');
@@ -55,163 +38,90 @@ export default class DocServer extends Singleton {
     this._codec = Codec.theOne;
 
     /**
-     * {Map<string,Weak<DocControl>>} Map from document IDs to a
-     * weak-reference-wrapped document controller for the so-IDed document.
+     * {Map<string,Weak<Promise<FileComplex>>>} Map from document IDs to a
+     * weak-reference-wrapped promise to the `FileComplex` for the so-IDed
+     * document. It's weak because we don't want its presence here to preclude
+     * it from getting GC'ed. It's a promise because it can only be initialized
+     * in an asynchronous fashion.
      */
-    this._controls = new Map();
-
-    /**
-     * {Map<string,Promise<DocControl|null>>} Map from document IDs to a
-     * promise for a document controller for the so-IDed document. A promise
-     * can resolve to `null` if the pending request turned out to _not_ request
-     * initialization of a missing document.
-     */
-    this._pending = new Map();
-
-    /**
-     * {string} The document format version to use for new documents and
-     * to expect in existing documents.
-     */
-    this._formatVersion = TString.nonempty(ProductInfo.theOne.INFO.version);
+    this._complexes = new Map();
   }
 
   /**
-   * Gets the document controller for the document with the given ID. If the
-   * document doesn't exist, it gets initialized.
+   * Gets the `FileComplex` for the document with the given ID. It is okay (not
+   * an error) if the underlying file doesn't happen to exist.
    *
    * @param {string} docId The document ID.
-   * @returns {DocControl} The corresponding document accessor.
+   * @returns {FileComplex} The corresponding `FileComplex`.
    */
-  async getDoc(docId) {
-    return this._getDoc(docId, true);
-  }
-
-  /**
-   * Gets the document controller for the document with the given ID. If the
-   * document doesn't exist, this returns `null`.
-   *
-   * @param {string} docId The document ID.
-   * @returns {DocControl|null} The corresponding document accessor, or `null`
-   *   if there is no such document.
-   */
-  async getDocOrNull(docId) {
-    return this._getDoc(docId, false);
-  }
-
-  /**
-   * Common code for both `getDoc*()` methods, which performs "traffic control"
-   * on the requests.
-   *
-   * @param {string} docId The document ID.
-   * @param {boolean} initIfMissing If `true`, initializes a nonexistent doc
-   *   instead of returning `null`.
-   * @returns {DocControl|null} The corresponding document accessor, or `null`
-   *   if there is no such document _and_ we were not asked to fill in missing
-   *   docs.
-   */
-  async _getDoc(docId, initIfMissing) {
+  async getFileComplex(docId) {
     TString.nonempty(docId);
-    TBoolean.check(initIfMissing);
 
-    // Make a temporary logger specific to this doc.
-    const docLog = log.withPrefix(`[${docId}]`);
+    // Return the cached result (a promise, which might already be resolved), if
+    // it turns out to exist.
 
-    const already = this._controls.get(docId);
+    const already = this._complexes.get(docId);
     if (already && !weak.isDead(already)) {
-      docLog.info('Retrieved from in-memory cache.');
-      return weak.get(already);
-    }
+      const result = await weak.get(already);
 
-    const pending = this._pending.get(docId);
-    if (pending) {
-      // There is already a request for this document in flight. Use its result.
-      docLog.info('Awaiting result from parallel request.');
-      const result = await pending;
-      if ((result === null) && initIfMissing) {
-        // This request wants a missing doc to be initialized, but the formerly
-        // pending one didn't. So, we try again. (We will eventually win the
-        // race, if any.)
-        docLog.info('Retrying parallel request.');
-        return this._getDoc(docId, true);
-      }
-      docLog.info('Satisfied parallel request.');
+      result.log.info('Retrieved cached complex.');
       return result;
     }
 
-    // The controller is not already cached, and its construction is not
-    // currently pending. Start constructing it, and register it as pending, so
-    // as to let other requesters find it (per above).
+    // Asynchronously construct the ultimate result.
 
-    docLog.info('Contructing controller.');
-    const resultPromise = this._makeController(docId, initIfMissing);
-    this._pending.set(docId, resultPromise);
+    const resultPromise = (async () => {
+      const file   = await Hooks.theOne.contentStore.getFile(docId);
+      const result = new FileComplex(this._codec, file);
 
-    // Get the construction result.
-    const result = await resultPromise;
+      result.log.info('Constructed new complex.');
+      return result;
+    })();
 
-    // The construction action is no longer pending.
-    this._pending.delete(docId);
+    // Store the (weak reference to) the promise for the result in the cache,
+    // and return it.
 
-    if (result === null) {
-      docLog.info('No such document.');
-    } else {
-      // Set up the weak reference so the controller won't hang around once it's
-      // no longer being used, and store that ref in the main `_controls` map.
-      const resultRef = weak(result, this._reapDocument.bind(this, docId));
-      this._controls.set(docId, resultRef);
-      docLog.info('Controller constructed.');
-    }
+    const resultRef = weak(resultPromise, this._reapDocument.bind(this, docId));
 
-    return result;
+    this._complexes.set(docId, resultRef);
+    return resultPromise;
   }
 
   /**
-   * Constructs and returns a `DocControl` for a specific document, initializing
-   * it if requested (or alternatively returning `null` if nonexistent).
+   * Gets the document controller for the document with the given ID. If the
+   * document doesn't exist (that is, the underlying file storage doesn't
+   * exist) or the document exists but has invalid content, it gets initialized.
    *
    * @param {string} docId The document ID.
-   * @param {boolean} initIfMissing If `true`, initializes a nonexistent doc
-   *   instead of returning `null`.
-   * @returns {DocControl|null} The corresponding document accessor, or `null`
-   *   if there is no such document _and_ we were not asked to fill in missing
-   *   docs.
+   * @returns {DocControl} The corresponding document controller.
    */
-  async _makeController(docId, initIfMissing) {
-    // Make a temporary logger specific to this doc.
-    const docLog = log.withPrefix(`[${docId}]`);
+  async getDoc(docId) {
+    const complex = await this.getFileComplex(docId);
 
-    const file         = await Hooks.theOne.contentStore.getFile(docId);
-    const result       = new DocControl(this._codec, file, this._formatVersion);
-    const docStatus    = await result.validationStatus();
-    const docNeedsInit = (docStatus !== DocControl.STATUS_OK);
-    let   firstText    = DEFAULT_TEXT;
+    await complex.initIfMissingOrInvalid();
+    return complex.docControl;
+  }
 
-    if (docStatus === DocControl.STATUS_MIGRATE) {
-      // **TODO:** Ultimately, this code path will evolve into forward
-      // migration of documents found to be in older formats. For now, we just
-      // fall through to the document creation logic below, which will leave
-      // a note what's going on in the document contents.
-      docLog.info('Needs migration. (But just noting that fact for now.)');
-      firstText = MIGRATION_NOTE;
-    } else if (docStatus === DocControl.STATUS_ERROR) {
-      // **TODO:** Ultimately, it should be a Really Big Deal if we find
-      // ourselves here. We might want to implement some form of "hail mary"
-      // attempt to recover _something_ of use from the document storage.
-      docLog.info('Major problem with stored data!');
-      firstText = ERROR_NOTE;
+  /**
+   * Gets the document controller for the document with the given ID. If the
+   * document doesn't exist (that is, the underlying file storage doesn't
+   * exist), this method returns `null`. If the document exists but has invalid
+   * content, this will re-initialize the content.
+   *
+   * @param {string} docId The document ID.
+   * @returns {DocControl|null} The corresponding document controller, or `null`
+   *   if there is no such document.
+   */
+  async getDocOrNull(docId) {
+    const complex = await this.getFileComplex(docId);
+    const exists  = await complex.file.exists();
+
+    if (exists) {
+      await complex.initIfMissingOrInvalid();
+      return complex.docControl;
+    } else {
+      return null;
     }
-
-    if (!initIfMissing) {
-      if (docStatus === DocControl.STATUS_NOT_FOUND) {
-        return null;
-      }
-    }
-
-    if (docNeedsInit) {
-      await result.create(firstText);
-    }
-
-    return result;
   }
 
   /**
@@ -221,7 +131,7 @@ export default class DocServer extends Singleton {
    * @param {string} docId ID of the document to remove.
    */
   _reapDocument(docId) {
-    this._controls.delete(docId);
+    this._complexes.delete(docId);
     log.info(`Reaped idle document: ${docId}`);
   }
 }
