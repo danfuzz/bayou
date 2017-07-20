@@ -104,6 +104,8 @@ export default class CaretSnapshot extends CommonBase {
     }
 
     for (const op of delta.ops) {
+      const args = op.args;
+
       switch (op.name) {
         case CaretOp.BEGIN_AUTHOR_SESSION_OP: {
           // Nothing to do here.
@@ -111,29 +113,29 @@ export default class CaretSnapshot extends CommonBase {
         }
 
         case CaretOp.UPDATE_AUTHOR_SELECTION_OP: {
-          const sessionId = op.args.get('sessionId');
+          const sessionId = args.get('sessionId');
           sessions.set(sessionId, new Caret(
             sessionId,
-            op.get('index'),
-            op.get('length'),
-            op.get('color')
+            args.get('index'),
+            args.get('length'),
+            args.get('color')
           ));
           break;
         }
 
         case CaretOp.END_AUTHOR_SESSION_OP: {
-          const sessionId = op.args.get('sessionId');
+          const sessionId = args.get('sessionId');
           sessions.delete(sessionId);
           break;
         }
 
         case CaretOp.UPDATE_DOC_REV_NUM_OP: {
-          docRevNum = op.get('docRevNum');
+          docRevNum = args.get('docRevNum');
         }
       }
     }
 
-    return new CaretSnapshot(docRevNum, delta.revNum, sessions.values());
+    return new CaretSnapshot(docRevNum, delta.revNum, Array.from(sessions.values()));
   }
 
   /**
@@ -167,7 +169,7 @@ export default class CaretSnapshot extends CommonBase {
       }
     }
 
-    // Finally, find carets removed from `this` when going to `newerSnapshot`
+    // Finally, find carets removed from `this` when going to `newerSnapshot`.
     for (const oldCaret of this.carets) {
       const sessionId = oldCaret.sessionId;
 
