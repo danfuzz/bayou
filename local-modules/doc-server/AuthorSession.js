@@ -36,6 +36,9 @@ export default class AuthorSession {
     /** {string} Author ID. */
     this._authorId = TString.nonempty(authorId);
 
+    /** {CaretControl} The underlying caret info controller. */
+    this._caretControl = fileComplex.caretControl;
+
     /** {DocControl} The underlying document controller. */
     this._docControl = fileComplex.docControl;
 
