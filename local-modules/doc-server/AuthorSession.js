@@ -2,14 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CaretDelta, CaretSnapshot, RevisionNumber } from 'doc-common';
-import { Logger } from 'see-all';
-import { TInt, TString } from 'typecheck';
+import { TString } from 'typecheck';
 
-import DocControl from './DocControl';
-
-/** {Logger} Logger to use for this module. */
-const log = new Logger('author-session');
+import FileComplex from './FileComplex';
 
 /**
  * Server side representative for a session for a specific author and document.
@@ -24,23 +19,30 @@ export default class AuthorSession {
   /**
    * Constructs an instance.
    *
+   * @param {fileComplex} fileComplex File complex representing the underlying
+   *   file for this instance to use.
    * @param {string} sessionId Session ID for this instance, which is expected
    *   to be guaranteed unique by whatever service it is that generates it.
-   * @param {DocControl} doc The underlying document controller.
    * @param {string} authorId The author this instance acts on behalf of.
    */
-  constructor(sessionId, doc, authorId) {
+  constructor(fileComplex, sessionId, authorId) {
+    /** {FileComplex} File complex that this instance is part of. */
+    this._fileComplex = FileComplex.check(fileComplex);
+
     /** {string} Author ID. */
     this._sessionId = TString.nonempty(sessionId);
-
-    /** {DocControl} The underlying document controller. */
-    this._doc = DocControl.check(doc);
 
     /** {string} Author ID. */
     this._authorId = TString.nonempty(authorId);
 
+    /** {CaretControl} The underlying caret info controller. */
+    this._caretControl = fileComplex.caretControl;
+
+    /** {DocControl} The underlying document controller. */
+    this._docControl = fileComplex.docControl;
+
     /** {Logger} Logger for this session. */
-    this._log = log.withPrefix(`[${sessionId}]`);
+    this._log = fileComplex.log.withPrefix(`[${sessionId}]`);
   }
 
   /**
@@ -52,11 +54,11 @@ export default class AuthorSession {
    *   to.
    * @param {FrozenDelta} delta Delta indicating what has changed with respect
    *   to `baseRevNum`.
-   * @returns {Promise<DocumentDelta>} Promise for the correction from the
-   *   implied expected result to get the actual result.
+   * @returns {DocumentDelta} The correction from the implied expected result to
+   *   get the actual result.
    */
-  applyDelta(baseRevNum, delta) {
-    return this._doc.applyDelta(baseRevNum, delta, this._authorId);
+  async applyDelta(baseRevNum, delta) {
+    return this._docControl.applyDelta(baseRevNum, delta, this._authorId);
   }
 
   /**
@@ -64,10 +66,10 @@ export default class AuthorSession {
    * `DocControl` method for details.
    *
    * @param {Int} revNum The revision number of the change.
-   * @returns {Promise<DocumentChange>} Promise for the requested change.
+   * @returns {DocumentChange} The requested change.
    */
-  change(revNum) {
-    return this._doc.change(revNum);
+  async change(revNum) {
+    return this._docControl.change(revNum);
   }
 
   /**
@@ -75,12 +77,12 @@ export default class AuthorSession {
    * `baseRevNum`. See the equivalent `DocControl` method for details.
    *
    * @param {Int} baseRevNum Revision number for the document.
-   * @returns {Promise<DocumentDelta>} Promise for a delta and associated
-   *   revision number. The result's `delta` can be applied to revision
-   *   `baseRevNum` to produce revision `revNum` of the document.
+   * @returns {DocumentDelta} Delta and associated revision number. The result's
+   *   `delta` can be applied to revision `baseRevNum` to produce revision
+   *   `revNum` of the document.
    */
-  deltaAfter(baseRevNum) {
-    return this._doc.deltaAfter(baseRevNum);
+  async deltaAfter(baseRevNum) {
+    return this._docControl.deltaAfter(baseRevNum);
   }
 
   /**
@@ -91,7 +93,11 @@ export default class AuthorSession {
    * @returns {string} A succinct identification string.
    */
   getLogInfo() {
-    return `session ${this._sessionId}; doc ${this._doc.id}; author ${this._authorId}`;
+    const file    = this._fileComplex.file.id;
+    const session = this._sessionId;
+    const author  = this._authorId;
+
+    return `file ${file}; session ${session}; author ${author}`;
   }
 
   /**
@@ -109,10 +115,10 @@ export default class AuthorSession {
    *
    * @param {Int|null} [revNum = null] Which revision to get. If passed as
    *   `null`, indicates the latest (most recent) revision.
-   * @returns {Promise<DocumentSnapshot>} Promise for the requested snapshot.
+   * @returns {DocumentSnapshot} The requested snapshot.
    */
-  snapshot(revNum = null) {
-    return this._doc.snapshot(revNum);
+  async snapshot(revNum = null) {
+    return this._docControl.snapshot(revNum);
   }
 
   /**
@@ -133,14 +139,12 @@ export default class AuthorSession {
    *   will form the basis for the result. If `baseRevNum` is the current
    *   revision number, this method will block until a new revision is
    *   available.
-   * @returns {Promise<CaretDelta>} Promise for a delta from the base caret
-   *   revision to a newer one. Applying this result to a `CaretSnapshot` for
-   *   `baseRevNum` will produce an up-to-date snapshot.
+   * @returns {CaretDelta} Delta from the base caret revision to a newer one.
+   *   Applying this result to a `CaretSnapshot` for `baseRevNum` will produce
+   *  an up-to-date snapshot.
    */
-  caretDeltaAfter(baseRevNum) {
-    // TODO: Something more interesting.
-    const docRevNum = 0;
-    return new CaretDelta(baseRevNum, baseRevNum + 1, docRevNum, []);
+  async caretDeltaAfter(baseRevNum) {
+    return this._caretControl.deltaAfter(baseRevNum);
   }
 
   /**
@@ -156,20 +160,15 @@ export default class AuthorSession {
    *   `null`, indicates the latest (most recent) revision.
    * @returns {CaretSnapshot} Snapshot of all the active carets.
    */
-  caretSnapshot(revNum = null) {
-    // TODO: Something more interesting.
-    if (revNum === null) {
-      revNum = 0;
-    }
-    const docRevNum = 0;
-    return new CaretSnapshot(revNum, docRevNum, []);
+  async caretSnapshot(revNum = null) {
+    return this._caretControl.snapshot(revNum);
   }
 
   /**
    * Informs the system of the client's current caret or text selection extent.
    * This should be called by clients when they notice user activity that
    * changes the selection. More specifically, Quill's `SELECTION_CHANGED`
-   * events are expected to drive calls to this method. The `index` and `length
+   * events are expected to drive calls to this method. The `index` and `length`
    * arguments to this method have the same semantics as they have in Quill,
    * that is, they ultimately refer to an extent within a Quill `Delta`.
    *
@@ -178,16 +177,10 @@ export default class AuthorSession {
    * @param {Int} index Caret position (if no selection per se) or starting
    *   caret position of the selection.
    * @param {Int} [length = 0] If non-zero, length of the selection.
+   * @returns {Int} The _caret_ revision number at which this information was
+   *   integrated.
    */
-  caretUpdate(docRevNum, index, length = 0) {
-    RevisionNumber.check(docRevNum);
-    TInt.min(index, 0);
-    TInt.min(length, 0);
-
-    // **TODO:** Something interesting should go here.
-    const caretStr = (length === 0)
-      ? `@${index}`
-      : `[${index}..${index + length - 1}]`;
-    this._log.info(`Caret update: r${docRevNum}, ${caretStr}`);
+  async caretUpdate(docRevNum, index, length = 0) {
+    return this._caretControl.update(this._sessionId, docRevNum, index, length);
   }
 }

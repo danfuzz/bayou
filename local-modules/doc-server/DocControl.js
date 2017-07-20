@@ -85,13 +85,6 @@ export default class DocControl extends CommonBase {
 
     /** {Logger} Logger specific to this document's ID. */
     this._log = fileComplex.log;
-
-    this._log.detail('Constructed.');
-  }
-
-  /** {string} The ID of the document that this instance represents. */
-  get id() {
-    return this._file.id;
   }
 
   /**

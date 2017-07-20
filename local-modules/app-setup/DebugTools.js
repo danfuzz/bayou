@@ -325,16 +325,17 @@ export default class DebugTools {
    * @returns {Promise<DocControl>} Promise for the requested document.
    */
   async _getExistingDoc(req) {
-    const documentId = req.params.documentId;
-    const doc        = await DocServer.theOne.getDocOrNull(documentId);
+    const documentId  = req.params.documentId;
+    const fileComplex = await DocServer.theOne.getFileComplex(documentId);
+    const exists      = await fileComplex.file.exists();
 
-    if (doc === null) {
+    if (!exists) {
       const error = new Error();
       error.debugMsg = `No such document: ${documentId}`;
       throw error;
     }
 
-    return doc;
+    return fileComplex.docControl;
   }
 
   /**

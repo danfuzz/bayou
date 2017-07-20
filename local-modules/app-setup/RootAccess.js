@@ -43,7 +43,8 @@ export default class RootAccess {
     TString.nonempty(authorId);
     TString.nonempty(docId);
 
-    const docControl = await DocServer.theOne.getDoc(docId);
+    const fileComplex = await DocServer.theOne.getFileComplex(docId);
+    await fileComplex.initIfMissingOrInvalid();
 
     // Under normal circumstances, this method is called in the context of an
     // active API connection, but it can also be called when debugging, and in
@@ -70,10 +71,10 @@ export default class RootAccess {
       // just iterate and try again.
     }
 
-    const doc = new AuthorSession(key.id, docControl, authorId);
+    const doc = new AuthorSession(fileComplex, key.id, authorId);
     this._context.add(key, doc);
 
-    log.info(`Newly-authorized access.`);
+    log.info('Newly-authorized access.');
     log.info(`  author:  ${authorId}`);
     log.info(`  doc:     ${docId}`);
     log.info(`  key id:  ${key.id}`); // The ID is safe to log (not security-sensitive).

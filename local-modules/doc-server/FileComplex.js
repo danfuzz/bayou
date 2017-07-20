@@ -11,7 +11,7 @@ import { ProductInfo } from 'server-env';
 import { TString } from 'typecheck';
 import { CommonBase, PromMutex } from 'util-common';
 
-import CaretControl from './DocControl';
+import CaretControl from './CaretControl';
 import DocControl from './DocControl';
 
 /** {Logger} Logger to use for this module. */
