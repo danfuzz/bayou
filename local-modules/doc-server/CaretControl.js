@@ -18,7 +18,8 @@ import FileComplex from './FileComplex';
  * one instance of this class.
  *
  * **TODO:** This class needs to store caret info via the `content-store`,
- * instead of being purely ephemeral.
+ * instead of being purely ephemeral. It also needs to know how to remove
+ * sessions that go idle for too long.
  */
 export default class CaretControl extends CommonBase {
   /**
