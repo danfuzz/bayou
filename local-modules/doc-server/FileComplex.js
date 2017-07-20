@@ -11,6 +11,7 @@ import { ProductInfo } from 'server-env';
 import { TString } from 'typecheck';
 import { CommonBase, PromMutex } from 'util-common';
 
+import CaretControl from './DocControl';
 import DocControl from './DocControl';
 
 /** {Logger} Logger to use for this module. */
@@ -63,7 +64,13 @@ export default class FileComplex extends CommonBase {
     this._formatVersion = TString.nonempty(ProductInfo.theOne.INFO.version);
 
     /**
-     * {DocControl|null} Document controller. Set to non-`null` in the
+     * {CaretControl|null} Caret info controller. Set to non-`null` in the
+     * corresponding getter.
+     */
+    this._caretControl = null;
+
+    /**
+     * {DocControl|null} Document content controller. Set to non-`null` in the
      * corresponding getter.
      */
     this._docControl = null;
@@ -72,19 +79,29 @@ export default class FileComplex extends CommonBase {
     this._initMutex = new PromMutex();
   }
 
-  /** {DocControl} The document controller to use with this instance. */
-  get docControl() {
-    if (this._docControl === null) {
-      this._log.info('Contructing document controller.');
-      this._docControl = new DocControl(this.codec, this.file, this.formatVersion);
+  /** {CaretControl} The caret info controller to use with this instance. */
+  get caretControl() {
+    if (this._caretControl === null) {
+      this._caretControl = new CaretControl(this);
+      this._log.info('Constructed caret controller.');
     }
 
-    return this._docControl;
+    return this._caretControl;
   }
 
   /** {Codec} Codec instance to use with the underlying file. */
   get codec() {
     return this._codec;
+  }
+
+  /** {DocControl} The document controller to use with this instance. */
+  get docControl() {
+    if (this._docControl === null) {
+      this._docControl = new DocControl(this.codec, this.file, this.formatVersion);
+      this._log.info('Constructed document controller.');
+    }
+
+    return this._docControl;
   }
 
   /** {BaseFile} The underlying document storage. */
@@ -93,19 +110,19 @@ export default class FileComplex extends CommonBase {
   }
 
   /**
-   * {Logger} Logger to use with this instance. It prefixes logged items with
-   * the file's ID.
-   */
-  get log() {
-    return this._log;
-  }
-
-  /**
    * {string} The document format version to use for new documents and to expect
    * in existing documents.
    */
   get formatVersion() {
     return this._formatVersion;
+  }
+
+  /**
+   * {Logger} Logger to use with this instance. It prefixes logged items with
+   * the file's ID.
+   */
+  get log() {
+    return this._log;
   }
 
   /**
