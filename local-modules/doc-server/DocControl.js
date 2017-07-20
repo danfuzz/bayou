@@ -34,9 +34,13 @@ const MAX_APPEND_TIME_MSEC = 20 * 1000; // 20 seconds.
 const MAX_CHANGE_READS_PER_TRANSACTION = 20;
 
 /**
- * Controller for a given document. There is only ever exactly one instance of
- * this class per document, no matter how many active editors there are on that
- * document. (This guarantee is provided by `DocServer`.)
+ * Controller for a given document's content.
+ *
+ * There is only ever exactly one instance of this class per document, no matter
+ * how many active editors there are on that document. (This guarantee is
+ * provided by virtue of the fact that `DocServer` only ever creates one
+ * `FileComplex` per document, and each `FileComplex` instance only ever makes
+ * one instance of this class.
  */
 export default class DocControl extends CommonBase {
   /** {string} Return value from `validationStatus()`, see which for details. */

@@ -35,6 +35,10 @@ const MIGRATION_NOTE = FrozenDelta.coerce(
  * Manager for the "complex" of objects which in aggregate allow access and
  * update to a file, for the purpose of managing it as an actively-edited
  * document.
+ *
+ * There is only ever exactly one instance of this class per document, no matter
+ * how many active editors there are on that document. (This guarantee is
+ * provided by `DocServer`.)
  */
 export default class FileComplex extends CommonBase {
   /**
