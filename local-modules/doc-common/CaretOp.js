@@ -87,8 +87,8 @@ export default class CaretOp {
   */
   static op_updateAuthorSelection(sessionId, index, length, color) {
     TString.check(sessionId);
-    TInt.min(0, index);
-    TInt.min(0, length);
+    TInt.min(index, 0);
+    TInt.min(length, 0);
     ColorSelector.checkHexColor(color);
 
     const args = new Map();
