@@ -2,9 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CaretDelta, CaretSnapshot, RevisionNumber } from 'doc-common';
+import { CaretDelta, CaretOp, CaretSnapshot, RevisionNumber } from 'doc-common';
 import { TInt, TString } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { ColorSelector, CommonBase, PromCondition } from 'util-common';
 
 import FileComplex from './FileComplex';
 
@@ -16,6 +16,9 @@ import FileComplex from './FileComplex';
  * provided by virtue of the fact that `DocServer` only ever creates one
  * `FileComplex` per document, and each `FileComplex` instance only ever makes
  * one instance of this class.
+ *
+ * **TODO:** This class needs to store caret info via the `content-store`,
+ * instead of being purely ephemeral.
  */
 export default class CaretControl extends CommonBase {
   /**
@@ -29,6 +32,21 @@ export default class CaretControl extends CommonBase {
 
     /** {FileComplex} File complex that this instance is part of. */
     this._fileComplex = FileComplex.check(fileComplex);
+
+    /**
+     * {CaretSnapshot} Latest caret info. Starts out as an empty stub; gets
+     * filled in as updates arrive.
+     */
+    this._snapshot = new CaretSnapshot(0, 0, []);
+
+    /**
+     * {PromCondition} Condition that gets triggered whenever the snapshot is
+     * updated.
+     */
+    this._updatedCondition = new PromCondition();
+
+    /** {ColorSelector} Provider of well-distributed colors. */
+    this._colorSelector = new ColorSelector();
 
     /** {Logger} Logger specific to this document's ID. */
     this._log = fileComplex.log;
@@ -46,9 +64,17 @@ export default class CaretControl extends CommonBase {
    * @returns {CaretDelta} Delta from the base caret revision to a newer one.
    */
   async deltaAfter(baseRevNum) {
-    // **TODO:** Something more interesting.
-    const docRevNum = 0;
-    return new CaretDelta(baseRevNum, baseRevNum + 1, docRevNum, []);
+    const oldSnapshot = this._snapshot;
+
+    // For now, we only succeed if the latest revision is being requested.
+    // **TODO:** Handle past revisions, details to be driven by client
+    // requirements.
+    if (baseRevNum !== oldSnapshot.revNum) {
+      throw new Error(`Revision not available: ${baseRevNum}`);
+    }
+
+    await this._updatedCondition.whenTrue();
+    return oldSnapshot.diff(this._snapshot);
   }
 
   /**
@@ -61,12 +87,14 @@ export default class CaretControl extends CommonBase {
    * @returns {CaretSnapshot} Snapshot of all the active carets.
    */
   async snapshot(revNum = null) {
-    // **TODO:** Something more interesting.
-    if (revNum === null) {
-      revNum = 0;
+    // For now, we only succeed if the latest revision is being requested.
+    // **TODO:** Handle past revisions, details to be driven by client
+    // requirements.
+    if ((revNum !== null) && (revNum !== this._snapshot.revNum)) {
+      throw new Error(`Revision not available: ${revNum}`);
     }
-    const docRevNum = 0;
-    return new CaretSnapshot(revNum, docRevNum, []);
+
+    return this._snapshot;
   }
 
   /**
@@ -91,12 +119,38 @@ export default class CaretControl extends CommonBase {
     TInt.min(index, 0);
     TInt.min(length, 0);
 
-    // **TODO:** Something interesting should go here.
     const caretStr = (length === 0)
       ? `@${index}`
       : `[${index}..${index + length - 1}]`;
     this._log.info(`[${sessionId}] Caret update: r${docRevNum}, ${caretStr}`);
 
-    return 0;
+    // Build up a delta to apply to the current snapshot.
+
+    const snapshot       = this._snapshot;
+    const newCaretRevNum = snapshot.revNum + 1;
+    const ops            = [];
+    const oldCaret       = snapshot.caretForSession(sessionId);
+    let color;
+
+    if (oldCaret === null) {
+      ops.push(CaretOp.op_addAuthor(sessionId));
+      color = this._colorSelector.nextColorHex();
+    } else {
+      color = oldCaret.color;
+    }
+
+    ops.push(CaretOp.op_updateAuthorSelection(sessionId, index, length, color));
+
+    // **TODO:** Handle `docRevNum` sensibly instead of just blithely thwacking
+    // it into the new snapshot.
+    ops.push(CaretOp.op_updateDocRevNum(docRevNum));
+
+    const delta = new CaretDelta(newCaretRevNum, ops);
+
+    // Update the snapshot, and wake up any waiters.
+    this._snapshot = snapshot.compose(delta);
+    this._updatedCondition.onOff();
+
+    return newCaretRevNum;
   }
 }
