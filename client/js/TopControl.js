@@ -129,7 +129,7 @@ export default class TopControl {
 
     // Make the editor "complex." This "fluffs" out the DOM and makes the
     // salient controller objects.
-    this._editorComplex = new EditorComplex(editorNode);
+    this._editorComplex = new EditorComplex(this._docSession, editorNode);
     log.detail('Made editor complex.');
 
     // Hook up the `DocClient` (which intermediates between the server and

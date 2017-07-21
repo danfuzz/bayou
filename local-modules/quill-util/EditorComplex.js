@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { DocSession } from 'doc-client';
 import { Hooks } from 'hooks-client';
 import { AuthorOverlay } from 'remote-authors';
 import { TObject } from 'typecheck';
@@ -31,10 +32,14 @@ export default class EditorComplex extends CommonBase {
   /**
    * Constructs an instance.
    *
+   * @param {DocSession} docSession The session to use for server communication.
    * @param {Element} topNode DOM element to attach the complex to.
    */
-  constructor(topNode) {
+  constructor(docSession, topNode) {
     super();
+
+    /** {DocSession} The session to use for server communication. */
+    this._docSession = DocSession.check(docSession);
 
     /** {Element} DOM element the complex is attached to. */
     this._topNode = TObject.check(topNode, Element);
