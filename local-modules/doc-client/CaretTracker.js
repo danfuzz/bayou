@@ -46,7 +46,7 @@ export default class CaretTracker extends CommonBase {
 
     // Arrange for `_sessionProxy` to get set.
     (async () => {
-      this._sessionProxy = await docSession.makeSessionProxy();
+      this._sessionProxy = await docSession.getSessionProxy();
       this._suppress = false;
       this._log.detail('Caret tracker got session proxy.');
     })();

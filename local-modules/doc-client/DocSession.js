@@ -49,7 +49,7 @@ export default class DocSession extends CommonBase {
 
     /**
      * {Promise<Proxy>|null} Promise for the API session proxy. Set to
-     * non-`null` in `makeSessionProxy()`.
+     * non-`null` in `getSessionProxy()`.
      */
     this._sessionProxyPromise = null;
   }
@@ -113,7 +113,7 @@ export default class DocSession extends CommonBase {
    *
    * @returns {Proxy} A proxy for the server-side session.
    */
-  async makeSessionProxy() {
+  async getSessionProxy() {
     if (this._sessionProxyPromise === null) {
       this._sessionProxyPromise = this.apiClient.authorizeTarget(this._key);
     }
