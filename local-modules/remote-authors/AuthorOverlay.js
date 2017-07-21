@@ -20,23 +20,31 @@ const REFRESH_DELAY_MSEC = 2000;
  * into an SVG element that overlays the Quill editor.
  */
 export default class AuthorOverlay {
-  constructor(quill, svgElement) {
+  /**
+   * Constructs an instance.
+   *
+   * @param {EditorComplex} editorComplex Editor complex that this instance is
+   *   a part of.
+   * @param {Element} svgElement The `<svg>` element to attach to.
+   */
+  constructor(editorComplex, svgElement) {
     /**
      * {Map<string, Map<string, object>>} _Ad hoc_ storage for arbitrary data
      * associated with remote authors (highlights, color, avatar, etc).
      */
     this._authors = new Map();
 
-    /** {QuillProm} The Quill instance hosting the document we're editing. */
-    this._quill = quill;
+    /** {EditorComplex} Editor complex that this instance is a part of. */
+    this._editorComplex = editorComplex;
 
     /** {Document} The HTML document hosting our annotations. */
     this._document = TObject.check(svgElement.ownerDocument, Document);
 
     /**
-     * {Element} The SVG element in which we'll render the selections.
-     * The SVG should be the same dimensions as `this._quillInstance.scrollingContainer`
-     * and on top of it in z-index order (closer to the viewer).
+     * {Element} The SVG element in which we'll render the selections. The SVG
+     * should be the same dimensions as
+     * `_editorComplex.quill.scrollingContainer` and on top of it in z-index
+     * order (closer to the viewer).
      */
     this._authorOverlay = TObject.check(svgElement, Element);
 
@@ -125,7 +133,7 @@ export default class AuthorOverlay {
    * activity.
    */
   async _watchSelection() {
-    let currentEvent = this._quill.currentEvent;
+    let currentEvent = this._editorComplex.quill.currentEvent;
 
     for (;;) {
       const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
@@ -167,7 +175,8 @@ export default class AuthorOverlay {
     // For each author…
     for (const [authorSessionId_unused, authorInfo] of this._authors) {
       // Generate a list of rectangles representing their selection…
-      let rects = QuillGeometry.boundsForLinesInRange(this._quill, authorInfo.get('selection'));
+      let rects = QuillGeometry.boundsForLinesInRange(
+        this._editorComplex.quill, authorInfo.get('selection'));
 
       rects = rects.map(QuillGeometry.snapRectToPixels);
 

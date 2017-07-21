@@ -97,11 +97,11 @@ export default class EditorComplex extends CommonBase {
         }
       });
 
-      /** {AuthorOverlay} The author overlay controller. */
-      this._authorOverlay = new AuthorOverlay(this._quill, authorOverlayNode);
-
       // Let the overlay do extra initialization.
       Hooks.theOne.quillInstanceInit(this._quill);
+
+      /** {AuthorOverlay} The author overlay controller. */
+      this._authorOverlay = new AuthorOverlay(this, authorOverlayNode);
 
       // Do session setup using the initial key.
       this._initSession(sessionKey, true);
