@@ -85,11 +85,6 @@ export default class DocSession extends CommonBase {
     return this._apiClient;
   }
 
-  /** {string} The base URL for talking with the server. */
-  get baseUrl() {
-    return this.apiClient.baseUrl;
-  }
-
   /** {CaretTracker} Caret tracker for this session. */
   get caretTracker() {
     if (this._caretTracker === null) {

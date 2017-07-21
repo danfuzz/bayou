@@ -3,7 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Codec, SplitKey } from 'api-common';
-import { DocClient, DocSession } from 'doc-client';
 import { EditorComplex } from 'quill-util';
 import { Logger } from 'see-all';
 import { TFunction, TObject } from 'typecheck';
@@ -61,12 +60,6 @@ export default class TopControl {
      */
     this._editorComplex = null;
 
-    /**
-     * {DocClient|null} Client instance (API-to-editor hookup). Becomes non-null
-     * in `_makeDocClient()`.
-     */
-    this._docClient = null;
-
     // Store this instance as a window global, mostly for ease of debugging.
     // TODO: Consider removing this.
     window.BAYOU_CONTROL = this;
@@ -105,31 +98,16 @@ export default class TopControl {
       new EditorComplex(this._sessionKey, this._window, this._editorNode);
 
     await this._editorComplex.whenReady();
-    log.detail('Made editor complex.');
-
-    // Hook up the `DocClient` (which intermediates between the server and
-    // the local Quill instance).
-    this._makeDocClient();
+    this._recoverySetup();
   }
 
   /**
-   * Constructs and hooks up a `DocClient` instance.
+   * Hooks things up so that this instance gets notified if/when the `DocClient`
+   * aborts due to error. Should that happen, a recovery attempt is initiated.
    */
-  _makeDocClient() {
-    const quill = this._editorComplex.quill;
-
-    this._docClient = new DocClient(quill, this._editorComplex.docSession);
-    this._docClient.start();
-
-    // Log a note once everything is all set up.
+  _recoverySetup() {
     (async () => {
-      await this._docClient.when_idle();
-      log.info('Initialization complete!');
-    })();
-
-    // Handle doc client failure if and when it ever happens.
-    (async () => {
-      await this._docClient.when_unrecoverableError();
+      await this._editorComplex.docClient.when_unrecoverableError();
       this._recoverIfPossible();
     })();
   }
@@ -152,7 +130,7 @@ export default class TopControl {
     log.info('Attempting recovery with new key...');
     const sessionKey = this._parseAndFixKey(newKey);
     this._editorComplex.connectNewSession(sessionKey);
-    this._makeDocClient();
+    this._recoverySetup();
   }
 
   /**

@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { SplitKey } from 'api-common';
-import { DocSession } from 'doc-client';
+import { DocClient, DocSession } from 'doc-client';
 import { Hooks } from 'hooks-client';
 import { AuthorOverlay } from 'remote-authors';
 import { Logger } from 'see-all';
@@ -32,7 +32,7 @@ const DEFAULT_TOOLBAR_CONFIG = [
 
 /**
  * Manager for the "complex" of objects and DOM nodes which in aggregate form
- * the editor UI.
+ * the client-side editor.
  */
 export default class EditorComplex extends CommonBase {
   /**
@@ -71,17 +71,21 @@ export default class EditorComplex extends CommonBase {
      */
     this._docSession = null;
 
-    // Do session setup using the initial key.
-    this._initSession(sessionKey);
+    /**
+     * {DocClient|null} Document client instance (API-to-editor hookup). Set in
+     * `_initSession()`.
+     */
+    this._docClient = null;
 
     // The rest of the initialization has to happen asynchronously. In
     // particular, there is no avoiding the asynchrony in `_domSetup()`, and
     // that setup needs to be complete before we construct the Quill and
-    // author overlay instances.
+    // author overlay instances. And _all_ of this needs to be done before we
+    // make a `DocClient` (which gets done by `_initSession()`).
     (async () => {
       // Do all of the DOM setup for the instance.
       const [quillNode, authorOverlayNode] =
-        await this._domSetup(topNode);
+        await this._domSetup(topNode, sessionKey.baseUrl);
 
       /** {QuillProm} The Quill editor object. */
       this._quill = new QuillProm(quillNode, {
@@ -99,6 +103,9 @@ export default class EditorComplex extends CommonBase {
       // Let the overlay do extra initialization.
       Hooks.theOne.quillInstanceInit(this._quill);
 
+      // Do session setup using the initial key.
+      this._initSession(sessionKey, true);
+
       this._ready.value = true;
     })();
   }
@@ -106,6 +113,11 @@ export default class EditorComplex extends CommonBase {
   /** {AuthorOverlay} The author overlay controller. */
   get authorOverlay() {
     return this._authorOverlay;
+  }
+
+  /** {DocClient} The document client instance. */
+  get docClient() {
+    return this._docClient;
   }
 
   /** {DocSession} The session control instance. */
@@ -125,7 +137,7 @@ export default class EditorComplex extends CommonBase {
    */
   connectNewSession(sessionKey) {
     log.info(`Hooking up new session: ${sessionKey}`);
-    this._initSession(sessionKey);
+    this._initSession(sessionKey, false);
   }
 
   /**
@@ -141,10 +153,25 @@ export default class EditorComplex extends CommonBase {
    * Initialize the session, based on the given key.
    *
    * @param {SplitKey} sessionKey The session key.
+   * @param {boolean} fromConstructor `true` iff this call is from the
+   *   constructor.
    */
-  _initSession(sessionKey) {
+  _initSession(sessionKey, fromConstructor) {
     this._sessionKey = SplitKey.check(sessionKey);
     this._docSession = new DocSession(this._sessionKey);
+    this._docClient  = new DocClient(this._quill, this._docSession);
+
+    this._docClient.start();
+
+    // Log a note once everything is all set up.
+    (async () => {
+      await this._docClient.when_idle();
+      if (fromConstructor) {
+        log.info('Initialization complete!');
+      } else {
+        log.info('Done with reinitialization.');
+      }
+    })();
   }
 
   /**
@@ -152,10 +179,11 @@ export default class EditorComplex extends CommonBase {
    * ready to have Quill and the author overlay attached to it.
    *
    * @param {Element} topNode The top DOM node for the complex.
+   * @param {string} baseUrl Base URL of the server.
    * @returns {array<Element>} Array of `[quillNode, authorOverlayNode]`, for
    *   immediate consumption by the constructor.
    */
-  async _domSetup(topNode) {
+  async _domSetup(topNode, baseUrl) {
     // Validate the top node, and give it the right CSS style.
     if (topNode.nodeName !== 'DIV') {
       throw new Error('Expected `topNode` to be a `div`.');
@@ -164,7 +192,6 @@ export default class EditorComplex extends CommonBase {
     topNode.classList.add('bayou-top');
 
     const document = topNode.ownerDocument;
-    const baseUrl  = this._docSession.baseUrl;
 
     // Similarly, give the page itself the right CSS style.
     const htmlNode = document.getElementsByTagName('html')[0];

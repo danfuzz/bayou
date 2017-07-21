@@ -49,6 +49,17 @@ export default class BaseKey extends CommonBase {
     this._id = TString.minLen(id, 8);
   }
 
+  /** {string} Base of `url` (that is, the origin without any path). */
+  get baseUrl() {
+    const match = this._url.match(/^[^:]+:\/\/[^/]+/);
+
+    if (match === null) {
+      throw new Error('Invalid URL; no apparent base.');
+    }
+
+    return match[0];
+  }
+
   /** {string} URL at which the resource may be accessed, or `*`. */
   get url() {
     return this._url;
