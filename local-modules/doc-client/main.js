@@ -4,5 +4,6 @@
 
 import DocClient from './DocClient';
 import DocSession from './DocSession';
+import EditorComplex from './EditorComplex';
 
-export { DocClient, DocSession };
+export { DocClient, DocSession, EditorComplex };

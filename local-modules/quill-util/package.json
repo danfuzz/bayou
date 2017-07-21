@@ -7,8 +7,7 @@
     "quill": "^1.1.7",
 
     "doc-common": "local",
-    "hooks-client": "local",
-    "remote-authors": "local",
+    "typecheck": "local",
     "util-common": "local"
   }
 }

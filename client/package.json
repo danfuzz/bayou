@@ -18,12 +18,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "api-client": "local",
+    "api-common": "local",
     "doc-client": "local",
-    "hooks-client": "local",
-    "quill-util": "local",
     "see-all-client": "local",
-    "testing-client": "local",
-    "util-client": "local"
+    "testing-client": "local"
   }
 }

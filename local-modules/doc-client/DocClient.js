@@ -341,9 +341,9 @@ export default class DocClient extends StateMachine {
 
     // Perform a challenge-response to authorize access to the document.
     try {
-      this._sessionProxy = await this._docSession.makeSessionProxy();
+      this._sessionProxy = await this._docSession.getSessionProxy();
     } catch (e) {
-      this.q_apiError('makeSessionProxy', e);
+      this.q_apiError('getSessionProxy', e);
       return;
     }
 

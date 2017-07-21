@@ -20,23 +20,31 @@ const REFRESH_DELAY_MSEC = 2000;
  * into an SVG element that overlays the Quill editor.
  */
 export default class AuthorOverlay {
-  constructor(quill, svgElement) {
+  /**
+   * Constructs an instance.
+   *
+   * @param {EditorComplex} editorComplex Editor complex that this instance is
+   *   a part of.
+   * @param {Element} svgElement The `<svg>` element to attach to.
+   */
+  constructor(editorComplex, svgElement) {
     /**
      * {Map<string, Map<string, object>>} _Ad hoc_ storage for arbitrary data
      * associated with remote authors (highlights, color, avatar, etc).
      */
     this._authors = new Map();
 
-    /** {QuillProm} The Quill instance hosting the document we're editing. */
-    this._quill = quill;
+    /** {EditorComplex} Editor complex that this instance is a part of. */
+    this._editorComplex = editorComplex;
 
     /** {Document} The HTML document hosting our annotations. */
     this._document = TObject.check(svgElement.ownerDocument, Document);
 
     /**
-     * {Element} The SVG element in which we'll render the selections.
-     * The SVG should be the same dimensions as `this._quillInstance.scrollingContainer`
-     * and on top of it in z-index order (closer to the viewer).
+     * {Element} The SVG element in which we'll render the selections. The SVG
+     * should be the same dimensions as
+     * `_editorComplex.quill.scrollingContainer` and on top of it in z-index
+     * order (closer to the viewer).
      */
     this._authorOverlay = TObject.check(svgElement, Element);
 
@@ -121,20 +129,39 @@ export default class AuthorOverlay {
   }
 
   /**
-   * Watches this instance's associated Quill object for selection-related
-   * activity.
+   * Watches for selection-related activity.
    */
   async _watchSelection() {
-    let currentEvent = this._quill.currentEvent;
+    await this._editorComplex.whenReady();
+
+    // Change `false` to `true` here if you want to see the local user's
+    // selection get highlighted. Handy during development!
+    if (false) { // eslint-disable-line no-constant-condition
+      let currentEvent = this._editorComplex.quill.currentEvent;
+      while (currentEvent) {
+        const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
+        const range    = selEvent.range;
+
+        this.setAuthorSelection('local-author', range.index, range.length, '#ffb8b8');
+        currentEvent = selEvent;
+      }
+    }
+
+    const docSession   = this._editorComplex.docSession;
+    const sessionProxy = await docSession.getSessionProxy();
 
     for (;;) {
-      const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
+      const snapshot = await sessionProxy.caretSnapshot();
 
-      // **TODO:** Uncomment this to see the local user's selection get
-      // highlighted. Handy during development!
-      //this.setAuthorSelection('local-author', selEvent.range.index, selEvent.range.length, '#ffb8b8');
+      docSession.log.info(`Got snapshot! ${snapshot.carets.length} caret(s).`);
 
-      currentEvent = selEvent;
+      for (const c of snapshot.carets) {
+        docSession.log.info(`Caret: ${c.sessionId}, ${c.index}, ${c.length}, ${c.color}`);
+        this.setAuthorSelection(c.sessionId, c.index, c.length, c.color);
+      }
+
+      // TODO: Make this properly wait for and integrate changes.
+      await PromDelay.resolve(5000);
     }
   }
 
@@ -167,7 +194,8 @@ export default class AuthorOverlay {
     // For each author…
     for (const [authorSessionId_unused, authorInfo] of this._authors) {
       // Generate a list of rectangles representing their selection…
-      let rects = QuillGeometry.boundsForLinesInRange(this._quill, authorInfo.get('selection'));
+      let rects = QuillGeometry.boundsForLinesInRange(
+        this._editorComplex.quill, authorInfo.get('selection'));
 
       rects = rects.map(QuillGeometry.snapRectToPixels);
 

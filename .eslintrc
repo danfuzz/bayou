@@ -18,7 +18,8 @@
     "Element": false,
     "FileReader": false,
     "URL": false,
-    "WebSocket": false
+    "WebSocket": false,
+    "Window": false
   },
   "rules" : {
     "array-bracket-spacing": "error",
