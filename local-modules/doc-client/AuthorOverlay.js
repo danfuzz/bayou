@@ -129,20 +129,39 @@ export default class AuthorOverlay {
   }
 
   /**
-   * Watches this instance's associated Quill object for selection-related
-   * activity.
+   * Watches for selection-related activity.
    */
   async _watchSelection() {
-    let currentEvent = this._editorComplex.quill.currentEvent;
+    await this._editorComplex.whenReady();
+
+    // Change `false` to `true` here if you want to see the local user's
+    // selection get highlighted. Handy during development!
+    if (false) { // eslint-disable-line no-constant-condition
+      let currentEvent = this._editorComplex.quill.currentEvent;
+      while (currentEvent) {
+        const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
+        const range    = selEvent.range;
+
+        this.setAuthorSelection('local-author', range.index, range.length, '#ffb8b8');
+        currentEvent = selEvent;
+      }
+    }
+
+    const docSession   = this._editorComplex.docSession;
+    const sessionProxy = await docSession.getSessionProxy();
 
     for (;;) {
-      const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
+      const snapshot = await sessionProxy.caretSnapshot();
 
-      // **TODO:** Uncomment this to see the local user's selection get
-      // highlighted. Handy during development!
-      //this.setAuthorSelection('local-author', selEvent.range.index, selEvent.range.length, '#ffb8b8');
+      docSession.log.info(`Got snapshot! ${snapshot.carets.length} caret(s).`);
 
-      currentEvent = selEvent;
+      for (const c of snapshot.carets) {
+        docSession.log.info(`Caret: ${c.sessionId}, ${c.index}, ${c.length}, ${c.color}`);
+        this.setAuthorSelection(c.sessionId, c.index, c.length, c.color);
+      }
+
+      // TODO: Make this properly wait for and integrate changes.
+      await PromDelay.resolve(5000);
     }
   }
 
