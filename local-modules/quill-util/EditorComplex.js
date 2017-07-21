@@ -5,12 +5,12 @@
 import { SplitKey } from 'api-common';
 import { DocClient, DocSession } from 'doc-client';
 import { Hooks } from 'hooks-client';
-import { AuthorOverlay } from 'remote-authors';
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
 import { DomUtil } from 'util-client';
 import { CommonBase, PromCondition } from 'util-common';
 
+import AuthorOverlay from './AuthorOverlay';
 import QuillProm from './QuillProm';
 
 /** {Logger} Logger for this module. */
