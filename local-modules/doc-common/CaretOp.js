@@ -147,7 +147,8 @@ export default class CaretOp {
   toApi() {
     const args = {};
 
-    /* TODO: we need a codec for `Map`s. */
+    // TODO: We need a codec for `Map`s. Or, more particularly here, we need to
+    // not use JSON strings as part of the coding form.
     this._args.forEach((k, v) => { args.set(k, v); });
 
     return [this._name, JSON.stringify(args)];
