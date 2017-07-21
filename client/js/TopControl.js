@@ -4,11 +4,9 @@
 
 import { Codec, SplitKey } from 'api-common';
 import { DocClient, DocSession } from 'doc-client';
-import { Hooks } from 'hooks-client';
 import { EditorComplex } from 'quill-util';
 import { Logger } from 'see-all';
 import { TFunction, TObject } from 'typecheck';
-import { DomUtil } from 'util-client';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('top');
@@ -30,13 +28,16 @@ export default class TopControl {
     // Pull the incoming parameters from `window.*` globals into instance
     // variables. Validate that they're present before doing anything further.
 
-    // This is the (initial) key that authorizes access to a session. A session
-    // is tied to a specific document and a specific author, allowing general
-    // read access to the document and allowing modification to the document as
-    // the one specific author. The incoming parameter `BAYOU_KEY` (transmitted
-    // via a `window` global) is expected to be a `SplitKey` in JSON-encoded
-    // form.
-    const sessionKey = this._parseAndFixKey(window.BAYOU_KEY);
+    /**
+     * {SplitKey} The key that authorizes access to a session. Set initially
+     * based on the incoming parameter `BAYOU_KEY` (transmitted
+     * via a `window` global), which is expected to be a `SplitKey` in
+     * JSON-encoded form. The so-referenced session is tied to a specific
+     * document and a specific author, allowing general read access to the
+     * document and allowing modification to the document as the one specific
+     * author.
+     */
+    this._sessionKey = this._parseAndFixKey(window.BAYOU_KEY);
 
     /** {Element} DOM node to use for the editor. */
     this._editorNode = TObject.check(window.BAYOU_NODE, Element);
@@ -53,9 +54,6 @@ export default class TopControl {
      */
     this._recover =
       TFunction.check(window.BAYOU_RECOVER || (() => { /* empty */ }));
-
-    /** {DocSession} Session control/management instance. */
-    this._docSession = new DocSession(sessionKey);
 
     /**
      * {EditorComplex|null} Editor "complex" instance, for all of the
@@ -101,35 +99,12 @@ export default class TopControl {
    * Callback for page content readiness. This is set up in `start()`.
    */
   async _onReady() {
-    const document   = this._window.document;
-    const baseUrl    = this._docSession.baseUrl;
-    const editorNode = this._editorNode;
-
-    // Do our basic page setup. Specifically, we add the CSS we need to the
-    // page, set the expected classes on the `html` and editor nodes, and build
-    // the required node structure within the editor node.
-
-    const styleDone =
-      DomUtil.addStylesheet(document, `${baseUrl}/static/index.css`);
-
-    const htmlNode = document.getElementsByTagName('html')[0];
-    if (!htmlNode) {
-      throw new Error('Shouldn\'t happen: No `html` node?!');
-    }
-    htmlNode.classList.add('bayou-page');
-
-    // Give the overlay a chance to do any initialization.
-    const hookDone = Hooks.theOne.run(this._window, baseUrl);
-
-    // Let all that activity finish before proceeding.
-    log.detail('Async operations now in progress...');
-    await styleDone;
-    await hookDone;
-    log.detail('Done with async operations.');
-
     // Make the editor "complex." This "fluffs" out the DOM and makes the
     // salient controller objects.
-    this._editorComplex = new EditorComplex(this._docSession, editorNode);
+    this._editorComplex =
+      new EditorComplex(this._sessionKey, this._window, this._editorNode);
+
+    await this._editorComplex.whenReady();
     log.detail('Made editor complex.');
 
     // Hook up the `DocClient` (which intermediates between the server and
@@ -143,7 +118,7 @@ export default class TopControl {
   _makeDocClient() {
     const quill = this._editorComplex.quill;
 
-    this._docClient = new DocClient(quill, this._docSession);
+    this._docClient = new DocClient(quill, this._editorComplex.docSession);
     this._docClient.start();
 
     // Log a note once everything is all set up.
@@ -167,7 +142,7 @@ export default class TopControl {
   async _recoverIfPossible() {
     log.error('Editor gave up!');
 
-    const newKey = await this._recover(this._docSession.key);
+    const newKey = await this._recover(this._editorComplex.docSession.key);
 
     if (typeof newKey !== 'string') {
       log.info('Nothing more to do. :\'(');
@@ -176,7 +151,7 @@ export default class TopControl {
 
     log.info('Attempting recovery with new key...');
     const sessionKey = this._parseAndFixKey(newKey);
-    this._docSession = new DocSession(sessionKey);
+    this._editorComplex.connectNewSession(sessionKey);
     this._makeDocClient();
   }
 

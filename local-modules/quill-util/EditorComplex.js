@@ -2,13 +2,19 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { SplitKey } from 'api-common';
 import { DocSession } from 'doc-client';
 import { Hooks } from 'hooks-client';
 import { AuthorOverlay } from 'remote-authors';
+import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { DomUtil } from 'util-client';
+import { CommonBase, PromCondition } from 'util-common';
 
 import QuillProm from './QuillProm';
+
+/** {Logger} Logger for this module. */
+const log = new Logger('editor-complex');
 
 /** Default toolbar configuration. */
 const DEFAULT_TOOLBAR_CONFIG = [
@@ -32,51 +38,69 @@ export default class EditorComplex extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {DocSession} docSession The session to use for server communication.
+   * @param {SplitKey} sessionKey Access credentials to the session to use for
+   *   server communication.
+   * @param {Window} window The browser window in which we are operating.
    * @param {Element} topNode DOM element to attach the complex to.
    */
-  constructor(docSession, topNode) {
+  constructor(sessionKey, window, topNode) {
+    SplitKey.check(sessionKey);
+    TObject.check(window, Window);
+    TObject.check(topNode, Element);
+
     super();
 
-    /** {DocSession} The session to use for server communication. */
-    this._docSession = DocSession.check(docSession);
+    /** {Window} The browser window in which we are operating. */
+    this._window = window;
 
-    /** {Element} DOM element the complex is attached to. */
-    this._topNode = TObject.check(topNode, Element);
+    /**
+     * {PromCondition} Condition that becomes true when the instance is
+     * ready to be used.
+     */
+    this._ready = new PromCondition();
 
-    // Validate the top node.
-    if (topNode.nodeName !== 'DIV') {
-      throw new Error('Expected `topNode` to be a `div`.');
-    }
+    /**
+     * {SplitKey|null} Access credentials to the session to use for server
+     * communication. Set in `_initSession()`.
+     */
+    this._sessionKey = null;
 
-    // Do all of the DOM setup for the instance.
-    const [quillNode, authorOverlayNode] =
-      EditorComplex._doSetupForNode(topNode);
+    /**
+     * {DocSession|null} Session control/management instance. Set in
+     * `_initSession()`.
+     */
+    this._docSession = null;
 
-    /** {Element} The DOM node which Quill manages. */
-    this._quillNode = quillNode;
+    // Do session setup using the initial key.
+    this._initSession(sessionKey);
 
-    /** {Element} The DOM node which is used for author overlay. */
-    this._authorOverlayNode = authorOverlayNode;
+    // The rest of the initialization has to happen asynchronously. In
+    // particular, there is no avoiding the asynchrony in `_domSetup()`, and
+    // that setup needs to be complete before we construct the Quill and
+    // author overlay instances.
+    (async () => {
+      // Do all of the DOM setup for the instance.
+      const [quillNode, authorOverlayNode] =
+        await this._domSetup(topNode);
 
-    /** {QuillProm} The Quill editor object. */
-    this._quill = new QuillProm(quillNode, {
-      readOnly: true,
-      strict: true,
-      theme: 'bubble',
-      modules: {
-        toolbar: EditorComplex._toolbarConfig
-      }
-    });
+      /** {QuillProm} The Quill editor object. */
+      this._quill = new QuillProm(quillNode, {
+        readOnly: true,
+        strict: true,
+        theme: 'bubble',
+        modules: {
+          toolbar: EditorComplex._toolbarConfig
+        }
+      });
 
-    /** {AuthorOverlay} The author overlay controller. */
-    this._authorOverlay =
-      new AuthorOverlay(this._quill, this._authorOverlayNode);
+      /** {AuthorOverlay} The author overlay controller. */
+      this._authorOverlay = new AuthorOverlay(this._quill, authorOverlayNode);
 
-    // Let the overlay do extra initialization.
-    Hooks.theOne.quillInstanceInit(this._quill);
+      // Let the overlay do extra initialization.
+      Hooks.theOne.quillInstanceInit(this._quill);
 
-    Object.freeze(this);
+      this._ready.value = true;
+    })();
   }
 
   /** {AuthorOverlay} The author overlay controller. */
@@ -84,9 +108,9 @@ export default class EditorComplex extends CommonBase {
     return this._authorOverlay;
   }
 
-  /** {Element} The DOM node that the author overlay manages. */
-  get authorOverlayNode() {
-    return this._authorOverlayNode;
+  /** {DocSession} The session control instance. */
+  get docSession() {
+    return this._docSession;
   }
 
   /** {QuillProm} The Quill editor object. */
@@ -94,9 +118,33 @@ export default class EditorComplex extends CommonBase {
     return this._quill;
   }
 
-  /** {Element} The DOM node that Quill manages. */
-  get quillNode() {
-    return this._quillNode;
+  /**
+   * Hook this instance up to a new session.
+   *
+   * @param {SplitKey} sessionKey New session key to use.
+   */
+  connectNewSession(sessionKey) {
+    log.info(`Hooking up new session: ${sessionKey}`);
+    this._initSession(sessionKey);
+  }
+
+  /**
+   * Returns `true` once the instance is ready for use.
+   *
+   * @returns {boolean} `true` once the instance is ready for use.
+   */
+  async whenReady() {
+    return this._ready.whenTrue();
+  }
+
+  /**
+   * Initialize the session, based on the given key.
+   *
+   * @param {SplitKey} sessionKey The session key.
+   */
+  _initSession(sessionKey) {
+    this._sessionKey = SplitKey.check(sessionKey);
+    this._docSession = new DocSession(this._sessionKey);
   }
 
   /**
@@ -107,9 +155,35 @@ export default class EditorComplex extends CommonBase {
    * @returns {array<Element>} Array of `[quillNode, authorOverlayNode]`, for
    *   immediate consumption by the constructor.
    */
-  static _doSetupForNode(topNode) {
+  async _domSetup(topNode) {
+    // Validate the top node, and give it the right CSS style.
+    if (topNode.nodeName !== 'DIV') {
+      throw new Error('Expected `topNode` to be a `div`.');
+    }
+
     topNode.classList.add('bayou-top');
+
     const document = topNode.ownerDocument;
+    const baseUrl  = this._docSession.baseUrl;
+
+    // Similarly, give the page itself the right CSS style.
+    const htmlNode = document.getElementsByTagName('html')[0];
+    if (!htmlNode) {
+      throw new Error('Shouldn\'t happen: No `html` node?!');
+    }
+    htmlNode.classList.add('bayou-page');
+
+    const styleDone =
+      DomUtil.addStylesheet(document, `${baseUrl}/static/index.css`);
+
+    // Give the overlay a chance to do any initialization.
+    const hookDone = Hooks.theOne.run(this._window, baseUrl);
+
+    // Let all that activity finish before proceeding.
+    log.detail('Async operations now in progress...');
+    await styleDone;
+    await hookDone;
+    log.detail('Done with async operations.');
 
     // The "top" node that gets passed in actually ends up being a container
     // for both the editor per se as well as other bits. The node we make here
