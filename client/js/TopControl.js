@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Codec, SplitKey } from 'api-common';
-import { EditorComplex } from 'quill-util';
+import { EditorComplex } from 'doc-client';
 import { Logger } from 'see-all';
 import { TFunction, TObject } from 'typecheck';
 

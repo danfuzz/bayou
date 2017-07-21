@@ -6,9 +6,7 @@
   "dependencies": {
     "quill": "^1.1.7",
 
-    "doc-client": "local",
     "doc-common": "local",
-    "hooks-client": "local",
     "typecheck": "local",
     "util-common": "local"
   }
