@@ -4,7 +4,7 @@
 
 import { SplitKey } from 'api-common';
 import { Connection, Context } from 'api-server';
-import { AuthorSession, DocServer } from 'doc-server';
+import { DocServer } from 'doc-server';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 
@@ -57,22 +57,10 @@ export default class RootAccess {
       ? `${Connection.activeNow.baseUrl}/api`
       : '*';
 
-    // Make a new random key, with a guaranteed unique ID. **Note:** There
-    // cannot be any `await`s between here and when the resulting key gets added
-    // to the context, as otherwise we could end up generating a duplicate key.
-    let key = null;
-    for (;;) {
-      key = SplitKey.randomInstance(url);
-      if (!this._context.hasId(key.id)) {
-        break;
-      }
-
-      // We managed to get an ID collision. Unlikely, but it can happen. So,
-      // just iterate and try again.
-    }
-
-    const doc = new AuthorSession(fileComplex, key.id, authorId);
-    this._context.add(key, doc);
+    const session =
+      fileComplex.makeNewSession(authorId, this._randomId.bind(this));
+    const key = new SplitKey(url, session.getSessionId());
+    this._context.add(key, session);
 
     log.info('Newly-authorized access.');
     log.info(`  author:  ${authorId}`);
@@ -81,5 +69,22 @@ export default class RootAccess {
     log.info(`  key url: ${key.url}`);
 
     return key;
+  }
+
+  /**
+   * Makes and returns a random ID that isn't already used.
+   *
+   * @returns {string} A random ID.
+   */
+  _randomId() {
+    for (;;) {
+      const result = SplitKey.randomId();
+      if (!this._context.hasId(result)) {
+        return result;
+      }
+
+      // We managed to get an ID collision. Unlikely, but it can happen. So,
+      // just iterate and try again.
+    }
   }
 }

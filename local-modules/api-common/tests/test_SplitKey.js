@@ -11,7 +11,7 @@ const FAKE_KEY = '0011223344556677';
 const FAKE_SECRET = '00112233445566778899aabbccddeeff';
 
 describe('api-common/SplitKey', () => {
-  describe('constructor(url, id, secret)', () => {
+  describe('constructor', () => {
     it('should reject non-string urls', () => {
       assert.throws(() => new SplitKey(37, FAKE_KEY, FAKE_SECRET));
     });
@@ -24,21 +24,23 @@ describe('api-common/SplitKey', () => {
       assert.throws(() => new SplitKey('https://www.example.com', FAKE_KEY, 'this better not work!'));
     });
 
-    it('should return a frozen instance of SplitKey when given proper parameters', () => {
+    it('should return a frozen instance of SplitKey when given 2 valid parameters', () => {
       let key = null;
 
       assert.doesNotThrow(() => {
-        key = new SplitKey('https://www.example.com', FAKE_KEY, FAKE_SECRET);
+        key = new SplitKey('https://www.example.com', FAKE_KEY);
       });
 
       assert.instanceOf(key, SplitKey);
       assert.isFrozen(key);
     });
-  });
 
-  describe('randomInstance(url)', () => {
-    it('should return a frozen instance of SplitKey', () => {
-      const key = SplitKey.randomInstance('https://www.example.com');
+    it('should return a frozen instance of SplitKey when given 3 valid parameters', () => {
+      let key = null;
+
+      assert.doesNotThrow(() => {
+        key = new SplitKey('https://www.example.com', FAKE_KEY, FAKE_SECRET);
+      });
 
       assert.instanceOf(key, SplitKey);
       assert.isFrozen(key);

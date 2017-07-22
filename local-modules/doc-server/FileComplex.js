@@ -13,6 +13,7 @@ import { CommonBase, PromMutex } from 'util-common';
 
 import CaretControl from './CaretControl';
 import DocControl from './DocControl';
+import DocServer from './DocServer';
 
 /** {Logger} Logger to use for this module. */
 const log = new Logger('doc');
@@ -158,5 +159,19 @@ export default class FileComplex extends CommonBase {
     } finally {
       unlock();
     }
+  }
+
+  /**
+   * Makes a new author-associated session for this instance.
+   *
+   * @param {string} authorId ID for the author.
+   * @param {function} makeSessionId Function of no argument which should return
+   *   a randomly-generated string to use as a session ID. This will get called
+   *   more than once if the string happens to be a duplicate in the namespace
+   *   for session IDs.
+   * @returns {AuthorSession} A newly-constructed session.
+   */
+  makeNewSession(authorId, makeSessionId) {
+    return DocServer.theOne._makeNewSession(this, authorId, makeSessionId);
   }
 }

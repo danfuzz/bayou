@@ -7,9 +7,10 @@ import weak from 'weak';
 import { Codec } from 'api-common';
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
-import { TString } from 'typecheck';
+import { TFunction, TString } from 'typecheck';
 import { Singleton } from 'util-common';
 
+import AuthorSession from './AuthorSession';
 import FileComplex from './FileComplex';
 
 /** {Logger} Logger for this module. */
@@ -45,6 +46,32 @@ export default class DocServer extends Singleton {
      * in an asynchronous fashion.
      */
     this._complexes = new Map();
+
+    /**
+     * {Map<string,Weak<AuthorSession>>} Map from session IDs to corresponding
+     * weak-reference-wrapped `AuthorSession` instances. See `_complexes` for
+     * rationale on weakness.
+     */
+    this._sessions = new Map();
+  }
+
+  /**
+   * Gets the session with the given ID, if it exists.
+   *
+   * @param {string} sessionId The session ID in question.
+   * @returns {AuthorSession|null} Corresponding session instance, or `null` if
+   *   there is no such session.
+   */
+  getSessionOrNull(sessionId) {
+    TString.nonempty(sessionId);
+
+    const already = this._sessions.get(sessionId);
+
+    if (already && !weak.isDead(already)) {
+      return weak.get(already);
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -88,6 +115,39 @@ export default class DocServer extends Singleton {
   }
 
   /**
+   * Makes and returns a new author-tied session. This is a "friend" method to
+   * the public `FileComplex` method of the same(ish) name, which is where this
+   * functionality is exposed.
+   *
+   * @param {FileComplex} fileComplex Main complex to attach to.
+   * @param {string} authorId ID for the author.
+   * @param {function} makeSessionId Function to generate a random session ID.
+   * @returns {AuthorSession} A newly-constructed session.
+   */
+  _makeNewSession(fileComplex, authorId, makeSessionId) {
+    FileComplex.check(fileComplex);
+    TString.nonempty(authorId);
+    TFunction.check(makeSessionId);
+
+    // Make a unique session ID.
+    let sessionId;
+    for (;;) {
+      sessionId = makeSessionId();
+      if (!this._sessions.get(sessionId)) {
+        break;
+      }
+
+      // We managed to get an ID collision. Unlikely, but it can happen. So,
+      // just iterate and try again.
+    }
+
+    const result = new AuthorSession(fileComplex, sessionId, authorId);
+
+    this._sessions.set(sessionId, weak(result, this._reapSession.bind(this, sessionId)));
+    return result;
+  }
+
+  /**
    * Weak reference callback that removes a collected document object from the
    * document map.
    *
@@ -96,5 +156,16 @@ export default class DocServer extends Singleton {
   _reapDocument(docId) {
     this._complexes.delete(docId);
     log.info(`Reaped idle document: ${docId}`);
+  }
+
+  /**
+   * Weak reference callback that removes a collected session object from the
+   * session map.
+   *
+   * @param {string} sessionId ID of the session to remove.
+   */
+  _reapSession(sessionId) {
+    this._sessions.delete(sessionId);
+    log.info(`Reaped idle session: ${sessionId}`);
   }
 }
