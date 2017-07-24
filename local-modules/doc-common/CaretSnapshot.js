@@ -104,8 +104,6 @@ export default class CaretSnapshot extends CommonBase {
     }
 
     for (const op of delta.ops) {
-      const args = op.args;
-
       switch (op.name) {
         case CaretOp.BEGIN_SESSION: {
           // Nothing to do here.
@@ -113,24 +111,24 @@ export default class CaretSnapshot extends CommonBase {
         }
 
         case CaretOp.UPDATE_CARET: {
-          const sessionId = args.get('sessionId');
+          const sessionId = op.arg('sessionId');
           sessions.set(sessionId, new Caret(
             sessionId,
-            args.get('index'),
-            args.get('length'),
-            args.get('color')
+            op.arg('index'),
+            op.arg('length'),
+            op.arg('color')
           ));
           break;
         }
 
         case CaretOp.END_SESSION: {
-          const sessionId = args.get('sessionId');
+          const sessionId = op.arg('sessionId');
           sessions.delete(sessionId);
           break;
         }
 
         case CaretOp.UPDATE_DOC_REV_NUM: {
-          docRevNum = args.get('docRevNum');
+          docRevNum = op.arg('docRevNum');
         }
       }
     }

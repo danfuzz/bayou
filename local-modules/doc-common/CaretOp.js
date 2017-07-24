@@ -139,11 +139,21 @@ export default class CaretOp {
   }
 
   /**
-   * @returns {Map<string, *>} The arguments needed for this operation.
+   * Gets the operation argument with the given name. It is an error to
+   * request an argument that is not bound. Return values are guaranteed to be
+   * deep frozen.
+   *
+   * @param {string} name The argument name.
+   * @returns {*} Corresponding argument value.
    */
-  get args() {
-    /* TODO: _args is at risk for mutation */
-    return this._args;
+  arg(name) {
+    const result = this._args.get(name);
+
+    if (result === undefined) {
+      throw new Error(`No such argument: ${name}`);
+    }
+
+    return result;
   }
 
   /**
