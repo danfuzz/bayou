@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CaretDelta, CaretOp, CaretSnapshot, RevisionNumber } from 'doc-common';
+import { Caret, CaretDelta, CaretOp, CaretSnapshot, RevisionNumber }
+  from 'doc-common';
 import { TInt, TString } from 'typecheck';
 import { ColorSelector, CommonBase, PromCondition } from 'util-common';
 
@@ -139,7 +140,8 @@ export default class CaretControl extends CommonBase {
       color = oldCaret.color;
     }
 
-    ops.push(CaretOp.op_updateCaret(sessionId, index, length, color));
+    const caret = new Caret(sessionId, index, length, color);
+    ops.push(CaretOp.op_updateCaret(caret));
 
     // **TODO:** Handle `docRevNum` sensibly instead of just blithely thwacking
     // it into the new snapshot.
