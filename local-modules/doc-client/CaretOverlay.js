@@ -14,12 +14,12 @@ import { PromDelay } from 'util-common';
 const REFRESH_DELAY_MSEC = 2000;
 
 /**
- * The AuthorOverlay class manages the visual display of the
+ * The CaretOverlay class manages the visual display of the
  * selection and insertion caret of remote users editing the
  * same document as the local user. It renders the selections
  * into an SVG element that overlays the Quill editor.
  */
-export default class AuthorOverlay {
+export default class CaretOverlay {
   /**
    * Constructs an instance.
    *
