@@ -135,12 +135,21 @@ export default class CaretOverlay {
 
     for (;;) {
       const snapshot = await sessionProxy.caretSnapshot();
+      const oldSessions = new Set(this._sessions.keys());
 
       docSession.log.info(`Got snapshot! ${snapshot.carets.length} caret(s).`);
 
       for (const c of snapshot.carets) {
         docSession.log.info(`Caret: ${c.sessionId}, ${c.index}, ${c.length}, ${c.color}`);
         this._updateCaret(c.sessionId, c.index, c.length, c.color);
+        oldSessions.delete(c.sessionId);
+      }
+
+      // The remaining elements of `oldSessions` are sessions which have gone
+      // away.
+      for (const s of oldSessions) {
+        docSession.log.info(`Session ended: ${s}`);
+        this._endSession(s);
       }
 
       // TODO: Make this properly wait for and integrate changes.
