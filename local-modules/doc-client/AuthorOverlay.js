@@ -59,7 +59,7 @@ export default class AuthorOverlay {
   }
 
   /**
-   * Begin tracking a new author's selections.
+   * Begin tracking a new session.
    *
    * @param {string} sessionId The session to track.
    */
@@ -85,23 +85,25 @@ export default class AuthorOverlay {
    * Updates annotation for a remote session's selection, and updates the
    * display.
    *
-   * @param {string} authorSessionId The session whose state we're updating.
-   * @param {Int} index The position of the remote author caret or start of teh selection.
-   * @param {Int} length The extend of the remote author selection, or 0 for just the caret.
-   * @param {string} color The color to use for the background of the remote author selection.
-   *    It should be in hex format (e.g. `#ffb8b8`).
+   * @param {string} sessionId The session whose state we're updating.
+   * @param {Int} index The position of the remote caret or start of the
+   *   selection.
+   * @param {Int} length The extent of the remote selection, or `0` for just the
+   *   caret.
+   * @param {string} color The color to use for the background of the remote
+   *    selection. It must be in hex format (e.g. `#ffb8b8`).
    */
-  _updateCaret(authorSessionId, index, length, color) {
-    TString.check(authorSessionId);
+  _updateCaret(sessionId, index, length, color) {
+    TString.check(sessionId);
     TInt.min(index, 0);
     TInt.min(length, 0);
     TString.check(color);
 
-    if (!this._sessions.has(authorSessionId)) {
-      this._beginSession(authorSessionId);
+    if (!this._sessions.has(sessionId)) {
+      this._beginSession(sessionId);
     }
 
-    const info = this._sessions.get(authorSessionId);
+    const info = this._sessions.get(sessionId);
 
     info.set('selection', { index, length });
     info.set('color', color);
@@ -160,7 +162,7 @@ export default class AuthorOverlay {
   }
 
   /**
-   * Waits a bit of time and then redraws remote author annotations.
+   * Waits a bit of time and then redraws our state.
    */
   async _waitThenUpdateDisplay() {
     await PromDelay.resolve(REFRESH_DELAY_MSEC);
@@ -172,8 +174,8 @@ export default class AuthorOverlay {
       this._authorOverlay.removeChild(this._authorOverlay.firstChild);
     }
 
-    // For each author…
-    for (const [authorSessionId_unused, authorInfo] of this._sessions) {
+    // For each session…
+    for (const [sessionId_unused, authorInfo] of this._sessions) {
       // Generate a list of rectangles representing their selection…
       let rects = QuillGeometry.boundsForLinesInRange(
         this._editorComplex.quill, authorInfo.get('selection'));
