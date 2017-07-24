@@ -30,9 +30,9 @@ export default class AuthorOverlay {
   constructor(editorComplex, svgElement) {
     /**
      * {Map<string, Map<string, object>>} _Ad hoc_ storage for arbitrary data
-     * associated with remote authors (highlights, color, avatar, etc).
+     * associated with sessions (highlights, color, avatar, etc).
      */
-    this._authors = new Map();
+    this._sessions = new Map();
 
     /** {EditorComplex} Editor complex that this instance is a part of. */
     this._editorComplex = editorComplex;
@@ -66,7 +66,7 @@ export default class AuthorOverlay {
   _beginSession(sessionId) {
     TString.check(sessionId);
 
-    this._authors.set(sessionId, new Map());
+    this._sessions.set(sessionId, new Map());
   }
 
   /**
@@ -77,14 +77,15 @@ export default class AuthorOverlay {
   _endSession(sessionId) {
     TString.check(sessionId);
 
-    this._authors.delete(sessionId);
+    this._sessions.delete(sessionId);
     this._displayNeedsRedraw();
   }
 
   /**
-   * Updates annotation for a remote author's selection, and updates the display.
+   * Updates annotation for a remote session's selection, and updates the
+   * display.
    *
-   * @param {string} authorSessionId The author whose state we're updating.
+   * @param {string} authorSessionId The session whose state we're updating.
    * @param {Int} index The position of the remote author caret or start of teh selection.
    * @param {Int} length The extend of the remote author selection, or 0 for just the caret.
    * @param {string} color The color to use for the background of the remote author selection.
@@ -96,14 +97,14 @@ export default class AuthorOverlay {
     TInt.min(length, 0);
     TString.check(color);
 
-    if (!this._authors.has(authorSessionId)) {
+    if (!this._sessions.has(authorSessionId)) {
       this._beginSession(authorSessionId);
     }
 
-    const authorInfo = this._authors.get(authorSessionId);
+    const info = this._sessions.get(authorSessionId);
 
-    authorInfo.set('selection', { index, length });
-    authorInfo.set('color', color);
+    info.set('selection', { index, length });
+    info.set('color', color);
 
     this._displayNeedsRedraw();
   }
@@ -172,7 +173,7 @@ export default class AuthorOverlay {
     }
 
     // For each author…
-    for (const [authorSessionId_unused, authorInfo] of this._authors) {
+    for (const [authorSessionId_unused, authorInfo] of this._sessions) {
       // Generate a list of rectangles representing their selection…
       let rects = QuillGeometry.boundsForLinesInRange(
         this._editorComplex.quill, authorInfo.get('selection'));
