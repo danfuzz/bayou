@@ -4,22 +4,21 @@
 
 import { QuillEvent, QuillGeometry } from 'quill-util';
 import { TObject, TInt, TString } from 'typecheck';
-import { PromDelay } from 'util-common';
+import { ColorSelector, PromDelay } from 'util-common';
 
 /**
- * Time span to wait between refreshes of remote author annotations.
+ * Time span to wait between refreshes of remote session annotations.
  * New changes are aggregated during the delay and incorporated into
  * the next refresh.
  */
 const REFRESH_DELAY_MSEC = 2000;
 
 /**
- * The AuthorOverlay class manages the visual display of the
- * selection and insertion caret of remote users editing the
- * same document as the local user. It renders the selections
+ * Manager of the visual display of the selection and insertion caret of remote
+ * users editing the same document as the local user. It renders the selections
  * into an SVG element that overlays the Quill editor.
  */
-export default class AuthorOverlay {
+export default class CaretOverlay {
   /**
    * Constructs an instance.
    *
@@ -30,9 +29,9 @@ export default class AuthorOverlay {
   constructor(editorComplex, svgElement) {
     /**
      * {Map<string, Map<string, object>>} _Ad hoc_ storage for arbitrary data
-     * associated with remote authors (highlights, color, avatar, etc).
+     * associated with sessions (highlights, color, avatar, etc).
      */
-    this._authors = new Map();
+    this._sessions = new Map();
 
     /** {EditorComplex} Editor complex that this instance is a part of. */
     this._editorComplex = editorComplex;
@@ -41,12 +40,12 @@ export default class AuthorOverlay {
     this._document = TObject.check(svgElement.ownerDocument, Document);
 
     /**
-     * {Element} The SVG element in which we'll render the selections. The SVG
+     * {Element} The SVG element in which we render the remote carets. The SVG
      * should be the same dimensions as
      * `_editorComplex.quill.scrollingContainer` and on top of it in z-index
      * order (closer to the viewer).
      */
-    this._authorOverlay = TObject.check(svgElement, Element);
+    this._overlay = TObject.check(svgElement, Element);
 
     /**
      * {boolean} Whether or not there is any current need to update the
@@ -55,83 +54,66 @@ export default class AuthorOverlay {
      */
     this._displayIsDirty = false;
 
-    this._watchSelection();
+    this._watchCarets();
   }
 
   /**
-   * Begin tracking a new author's selections.
+   * Begin tracking a new session.
    *
-   * @param {string} authorSessionId The author to track.
+   * @param {string} sessionId The session to track.
    */
-  addAuthor(authorSessionId) {
-    TString.check(authorSessionId);
+  _beginSession(sessionId) {
+    TString.check(sessionId);
 
-    this._authors.set(authorSessionId, new Map());
+    this._sessions.set(sessionId, new Map());
   }
 
   /**
-   * Stop tracking a new author's selections.
+   * Stop tracking a given session.
    *
-   * @param {string} authorSessionId The author to stop tracking.
+   * @param {string} sessionId The session to stop tracking.
    */
-  removeAuthor(authorSessionId) {
-    TString.check(authorSessionId);
+  _endSession(sessionId) {
+    TString.check(sessionId);
 
-    this._authors.delete(authorSessionId);
+    this._sessions.delete(sessionId);
     this._displayNeedsRedraw();
   }
 
   /**
-   * Updates annotation for a remote author's selection, and updates the display.
+   * Updates annotation for a remote session's selection, and updates the
+   * display.
    *
-   * @param {string} authorSessionId The author whose state we're updating.
-   * @param {Int} index The position of the remote author caret or start of teh selection.
-   * @param {Int} length The extend of the remote author selection, or 0 for just the caret.
-   * @param {string} color The color to use for the background of the remote author selection.
-   *    It should be in hex format (e.g. `#ffb8b8`).
+   * @param {string} sessionId The session whose state we're updating.
+   * @param {Int} index The position of the remote caret or start of the
+   *   selection.
+   * @param {Int} length The extent of the remote selection, or `0` for just the
+   *   caret.
+   * @param {string} color The color to use for the background of the remote
+   *    selection. It must be in hex format (e.g. `#ffb8b8`).
    */
-  setAuthorSelection(authorSessionId, index, length, color) {
-    TString.check(authorSessionId);
+  _updateCaret(sessionId, index, length, color) {
+    TString.check(sessionId);
     TInt.min(index, 0);
     TInt.min(length, 0);
-    TString.check(color);
+    ColorSelector.checkHexColor(color);
 
-    if (!this._authors.has(authorSessionId)) {
-      this.addAuthor(authorSessionId);
+    if (!this._sessions.has(sessionId)) {
+      this._beginSession(sessionId);
     }
 
-    const authorInfo = this._authors.get(authorSessionId);
+    const info = this._sessions.get(sessionId);
 
-    authorInfo.set('selection', { index, length });
-    authorInfo.set('color', color);
+    info.set('selection', { index, length });
+    info.set('color', color);
 
-    this._displayNeedsRedraw();
-  }
-
-  /**
-   * Updates the local ledger of author selections in light
-   * of changes from an editor delta. For instance, if a remote author has a
-   * selection of `{ index:5, length:10 }` and a delta says that there was an
-   * insert of 2 characters at `index:6` then the selection will be adjusted
-   * to show `{ index:5, length:12 }`
-   *
-   * @param {Delta} delta_unused The edit that is to be applied to each of the
-   *  selections tracked by this module.
-   */
-  updateSelectionsWithDelta(delta_unused) {
-    //  TODO
-    //  for (op of delta.ops) {
-    //    for (authorInfo of this._authors.values()) {
-    //      update authorInfo['selection'] with op
-    //    }
-    //  }
     this._displayNeedsRedraw();
   }
 
   /**
    * Watches for selection-related activity.
    */
-  async _watchSelection() {
+  async _watchCarets() {
     await this._editorComplex.whenReady();
 
     // Change `false` to `true` here if you want to see the local user's
@@ -142,7 +124,8 @@ export default class AuthorOverlay {
         const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
         const range    = selEvent.range;
 
-        this.setAuthorSelection('local-author', range.index, range.length, '#ffb8b8');
+        this._updateCaret(
+          'local-session', range.index, range.length, '#ffb8b8');
         currentEvent = selEvent;
       }
     }
@@ -157,7 +140,7 @@ export default class AuthorOverlay {
 
       for (const c of snapshot.carets) {
         docSession.log.info(`Caret: ${c.sessionId}, ${c.index}, ${c.length}, ${c.color}`);
-        this.setAuthorSelection(c.sessionId, c.index, c.length, c.color);
+        this._updateCaret(c.sessionId, c.index, c.length, c.color);
       }
 
       // TODO: Make this properly wait for and integrate changes.
@@ -179,7 +162,7 @@ export default class AuthorOverlay {
   }
 
   /**
-   * Waits a bit of time and then redraws remote author annotations.
+   * Waits a bit of time and then redraws our state.
    */
   async _waitThenUpdateDisplay() {
     await PromDelay.resolve(REFRESH_DELAY_MSEC);
@@ -187,15 +170,15 @@ export default class AuthorOverlay {
     this._displayIsDirty = false;
 
     // Remove extant annotations
-    while (this._authorOverlay.firstChild) {
-      this._authorOverlay.removeChild(this._authorOverlay.firstChild);
+    while (this._overlay.firstChild) {
+      this._overlay.removeChild(this._overlay.firstChild);
     }
 
-    // For each author…
-    for (const [authorSessionId_unused, authorInfo] of this._authors) {
+    // For each session…
+    for (const [sessionId_unused, info] of this._sessions) {
       // Generate a list of rectangles representing their selection…
       let rects = QuillGeometry.boundsForLinesInRange(
-        this._editorComplex.quill, authorInfo.get('selection'));
+        this._editorComplex.quill, info.get('selection'));
 
       rects = rects.map(QuillGeometry.snapRectToPixels);
 
@@ -205,13 +188,13 @@ export default class AuthorOverlay {
         const path = this._document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
         path.setAttribute('d', pathCommands);
-        path.setAttribute('fill', authorInfo.get('color'));
+        path.setAttribute('fill', info.get('color'));
         path.setAttribute('fill-opacity', '0.25');
         path.setAttribute('stroke-width', '1.0');
-        path.setAttribute('stroke', authorInfo.get('color'));
+        path.setAttribute('stroke', info.get('color'));
         path.setAttribute('stroke-opacity', '0.75');
 
-        this._authorOverlay.appendChild(path);
+        this._overlay.appendChild(path);
       }
     }
   }

@@ -10,7 +10,7 @@ import { TObject } from 'typecheck';
 import { DomUtil } from 'util-client';
 import { CommonBase, PromCondition } from 'util-common';
 
-import AuthorOverlay from './AuthorOverlay';
+import CaretOverlay from './CaretOverlay';
 import DocClient from './DocClient';
 import DocSession from './DocSession';
 
@@ -101,8 +101,8 @@ export default class EditorComplex extends CommonBase {
       // Let the overlay do extra initialization.
       Hooks.theOne.quillInstanceInit(this._quill);
 
-      /** {AuthorOverlay} The author overlay controller. */
-      this._authorOverlay = new AuthorOverlay(this, authorOverlayNode);
+      /** {CaretOverlay} The remote caret overlay controller. */
+      this._caretOverlay = new CaretOverlay(this, authorOverlayNode);
 
       // Do session setup using the initial key.
       this._initSession(sessionKey, true);
@@ -111,9 +111,9 @@ export default class EditorComplex extends CommonBase {
     })();
   }
 
-  /** {AuthorOverlay} The author overlay controller. */
+  /** {CaretOverlay} The author overlay controller. */
   get authorOverlay() {
-    return this._authorOverlay;
+    return this._caretOverlay;
   }
 
   /** {DocClient} The document client instance. */

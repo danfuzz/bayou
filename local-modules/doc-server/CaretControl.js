@@ -133,13 +133,13 @@ export default class CaretControl extends CommonBase {
     let color;
 
     if (oldCaret === null) {
-      ops.push(CaretOp.op_addAuthor(sessionId));
+      ops.push(CaretOp.op_beginSession(sessionId));
       color = this._colorSelector.nextColorHex();
     } else {
       color = oldCaret.color;
     }
 
-    ops.push(CaretOp.op_updateAuthorSelection(sessionId, index, length, color));
+    ops.push(CaretOp.op_updateCaret(sessionId, index, length, color));
 
     // **TODO:** Handle `docRevNum` sensibly instead of just blithely thwacking
     // it into the new snapshot.
@@ -182,7 +182,7 @@ export default class CaretControl extends CommonBase {
     const oldCaret = snapshot.caretForSession(sessionId);
 
     if (oldCaret !== null) {
-      const ops   = [CaretOp.op_removeAuthor(sessionId)];
+      const ops   = [CaretOp.op_endSession(sessionId)];
 
       this._log.info(`[${sessionId}] Caret removed.`);
       this._applyOps(ops);

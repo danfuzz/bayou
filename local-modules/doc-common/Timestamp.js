@@ -6,7 +6,7 @@ import { TInt } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 /**
- * Minimum (inclusive) acceptable timestamp `secs` value.
+ * {Int} Minimum (inclusive) acceptable timestamp `secs` value.
  *
  * ```
  * $ date -u -r 1010000000
@@ -16,7 +16,7 @@ import { CommonBase } from 'util-common';
 const MIN_SECS = 1010000000;
 
 /**
- * Maximum (exclusive) acceptable timestamp `secs` value.
+ * {Int} Maximum (exclusive) acceptable timestamp `secs` value.
  *
  * ```
  * $ date -u -r 2530000000
@@ -25,7 +25,7 @@ const MIN_SECS = 1010000000;
  */
 const MAX_SECS = 2530000000;
 
-/** Number of microseconds in a second. */
+/** {Int} Number of microseconds in a second. */
 const USECS_PER_SEC = 1000000;
 
 /**
@@ -90,12 +90,12 @@ export default class Timestamp extends CommonBase {
     return [this._secs, this._usecs];
   }
 
-  /** The number of seconds since the Unix Epoch. */
+  /** {Int} The number of seconds since the Unix Epoch. */
   get secs() {
     return this._secs;
   }
 
-  /** The additional microseconds. */
+  /** {Int} The additional microseconds. */
   get usecs() {
     return this._usecs;
   }

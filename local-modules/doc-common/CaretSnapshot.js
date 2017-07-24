@@ -104,33 +104,31 @@ export default class CaretSnapshot extends CommonBase {
     }
 
     for (const op of delta.ops) {
-      const args = op.args;
-
       switch (op.name) {
-        case CaretOp.BEGIN_AUTHOR_SESSION_OP: {
+        case CaretOp.BEGIN_SESSION: {
           // Nothing to do here.
           break;
         }
 
-        case CaretOp.UPDATE_AUTHOR_SELECTION_OP: {
-          const sessionId = args.get('sessionId');
+        case CaretOp.UPDATE_CARET: {
+          const sessionId = op.arg('sessionId');
           sessions.set(sessionId, new Caret(
             sessionId,
-            args.get('index'),
-            args.get('length'),
-            args.get('color')
+            op.arg('index'),
+            op.arg('length'),
+            op.arg('color')
           ));
           break;
         }
 
-        case CaretOp.END_AUTHOR_SESSION_OP: {
-          const sessionId = args.get('sessionId');
+        case CaretOp.END_SESSION: {
+          const sessionId = op.arg('sessionId');
           sessions.delete(sessionId);
           break;
         }
 
-        case CaretOp.UPDATE_DOC_REV_NUM_OP: {
-          docRevNum = args.get('docRevNum');
+        case CaretOp.UPDATE_DOC_REV_NUM: {
+          docRevNum = op.arg('docRevNum');
         }
       }
     }
@@ -184,7 +182,7 @@ export default class CaretSnapshot extends CommonBase {
     const caretOps = [];
 
     for (const caret of caretsAdded) {
-      caretOps.push(CaretDelta.op_addAuthor(caret.sessionId));
+      caretOps.push(CaretDelta.op_beginSession(caret.sessionId));
     }
 
     for (const caret of caretsUpdated) {
@@ -192,7 +190,7 @@ export default class CaretSnapshot extends CommonBase {
     }
 
     for (const caret of caretsRemoved) {
-      caretOps.push(CaretDelta.op_removeAuthor(caret.sessionId));
+      caretOps.push(CaretDelta.op_endSession(caret.sessionId));
     }
 
     if (this.docRevNum !== newerSnapshot.docRevNum) {
