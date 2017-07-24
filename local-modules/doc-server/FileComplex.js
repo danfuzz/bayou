@@ -169,7 +169,7 @@ export default class FileComplex extends CommonBase {
    *   a randomly-generated string to use as a session ID. This will get called
    *   more than once if the string happens to be a duplicate in the namespace
    *   for session IDs.
-   * @returns {AuthorSession} A newly-constructed session.
+   * @returns {DocSession} A newly-constructed session.
    */
   makeNewSession(authorId, makeSessionId) {
     return DocServer.theOne._makeNewSession(this, authorId, makeSessionId);

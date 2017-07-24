@@ -10,7 +10,7 @@ import { Logger } from 'see-all';
 import { TFunction, TString } from 'typecheck';
 import { Singleton } from 'util-common';
 
-import AuthorSession from './AuthorSession';
+import DocSession from './DocSession';
 import FileComplex from './FileComplex';
 
 /** {Logger} Logger for this module. */
@@ -49,8 +49,8 @@ export default class DocServer extends Singleton {
     this._complexes = new Map();
 
     /**
-     * {Map<string,Weak<AuthorSession>>} Map from session IDs to corresponding
-     * weak-reference-wrapped `AuthorSession` instances. See `_complexes` for
+     * {Map<string,Weak<DocSession>>} Map from session IDs to corresponding
+     * weak-reference-wrapped `DocSession` instances. See `_complexes` for
      * rationale on weakness.
      */
     this._sessions = new Map();
@@ -60,7 +60,7 @@ export default class DocServer extends Singleton {
    * Gets the session with the given ID, if it exists.
    *
    * @param {string} sessionId The session ID in question.
-   * @returns {AuthorSession|null} Corresponding session instance, or `null` if
+   * @returns {DocSession|null} Corresponding session instance, or `null` if
    *   there is no such session.
    */
   getSessionOrNull(sessionId) {
@@ -137,7 +137,7 @@ export default class DocServer extends Singleton {
    * @param {FileComplex} fileComplex Main complex to attach to.
    * @param {string} authorId ID for the author.
    * @param {function} makeSessionId Function to generate a random session ID.
-   * @returns {AuthorSession} A newly-constructed session.
+   * @returns {DocSession} A newly-constructed session.
    */
   _makeNewSession(fileComplex, authorId, makeSessionId) {
     FileComplex.check(fileComplex);
@@ -156,8 +156,8 @@ export default class DocServer extends Singleton {
       // just iterate and try again.
     }
 
-    const result = new AuthorSession(fileComplex, sessionId, authorId);
-    const reaper = this._sessionreaper(fileComplex, sessionId);
+    const result = new DocSession(fileComplex, sessionId, authorId);
+    const reaper = this._sessionReaper(fileComplex, sessionId);
 
     this._sessions.set(sessionId, weak(result, reaper));
     return result;

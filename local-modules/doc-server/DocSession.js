@@ -15,7 +15,7 @@ import FileComplex from './FileComplex';
  * underlying `DocControl` while implicitly adding an author argument to methods
  * that modify the document.
  */
-export default class AuthorSession {
+export default class DocSession {
   /**
    * Constructs an instance.
    *
