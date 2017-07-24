@@ -246,7 +246,9 @@ export default class ApiClient {
    *   `ApiError` (see which for details).
    */
   _send(target, action, name, args = []) {
-    const wsState = this._ws.readyState;
+    const wsState = (this._ws === null)
+      ? WebSocket.CLOSED
+      : this._ws.readyState;
 
     // Handle the cases where socket shutdown is imminent or has already
     // happened. We don't just `throw` directly here, so that clients can

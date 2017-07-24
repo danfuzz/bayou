@@ -7,9 +7,10 @@ import weak from 'weak';
 import { Codec } from 'api-common';
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
-import { TString } from 'typecheck';
+import { TFunction, TString } from 'typecheck';
 import { Singleton } from 'util-common';
 
+import AuthorSession from './AuthorSession';
 import FileComplex from './FileComplex';
 
 /** {Logger} Logger for this module. */
@@ -38,13 +39,40 @@ export default class DocServer extends Singleton {
     this._codec = Codec.theOne;
 
     /**
-     * {Map<string,Weak<Promise<FileComplex>>>} Map from document IDs to a
-     * weak-reference-wrapped promise to the `FileComplex` for the so-IDed
-     * document. It's weak because we don't want its presence here to preclude
-     * it from getting GC'ed. It's a promise because it can only be initialized
-     * in an asynchronous fashion.
+     * {Map<string,Weak<FileComplex>|Promise<FileComplex>>} Map from document
+     * IDs to either a weak-reference or a promise to a `FileComplex`, for the
+     * so-IDed document. During asynchrounous construction, the binding is to a
+     * promise, and once constructed it becomes a weak reference. The weak
+     * reference is made because we don't want its presence here to preclude it
+     * from getting GC'ed.
      */
     this._complexes = new Map();
+
+    /**
+     * {Map<string,Weak<AuthorSession>>} Map from session IDs to corresponding
+     * weak-reference-wrapped `AuthorSession` instances. See `_complexes` for
+     * rationale on weakness.
+     */
+    this._sessions = new Map();
+  }
+
+  /**
+   * Gets the session with the given ID, if it exists.
+   *
+   * @param {string} sessionId The session ID in question.
+   * @returns {AuthorSession|null} Corresponding session instance, or `null` if
+   *   there is no such session.
+   */
+  getSessionOrNull(sessionId) {
+    TString.nonempty(sessionId);
+
+    const already = this._sessions.get(sessionId);
+
+    if (already && !weak.isDead(already)) {
+      return weak.get(already);
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -57,34 +85,81 @@ export default class DocServer extends Singleton {
   async getFileComplex(docId) {
     TString.nonempty(docId);
 
-    // Return the cached result (a promise, which might already be resolved), if
-    // it turns out to exist.
+    // Look for a cached or in-progress result.
 
     const already = this._complexes.get(docId);
-    if (already && !weak.isDead(already)) {
-      const result = await weak.get(already);
-
-      result.log.info('Retrieved cached complex.');
-      return result;
+    if (already) {
+      // There's something in the cache...
+      if (weak.isWeakRef(already)) {
+        // It's a weak reference. If not dead, it refers to a `FileComplex`.
+        if (!weak.isDead(already)) {
+          const result = weak.get(already);
+          result.log.info('Retrieved cached complex.');
+          return result;
+        }
+        // else, it's a dead reference. We'll fall through and construct a
+        // new result.
+      } else {
+        // It's actually a _promise_ for a `FileComplex`. This happens if we
+        // got a request for a file in parallel with it getting constructed.
+        const result = await already;
+        result.log.info('Retrieved parallel-requested complex.');
+        return result;
+      }
     }
 
-    // Asynchronously construct the ultimate result.
+    // Nothing in the cache. Asynchronously construct the ultimate result.
 
     const resultPromise = (async () => {
-      const file   = await Hooks.theOne.contentStore.getFile(docId);
-      const result = new FileComplex(this._codec, file);
+      const file      = await Hooks.theOne.contentStore.getFile(docId);
+      const result    = new FileComplex(this._codec, file);
+      const resultRef = weak(result, this._reapDocument.bind(this, docId));
+
+      // Replace the promise in the cache with a weak reference to the actaul
+      // result.
+      this._complexes.set(docId, resultRef);
 
       result.log.info('Constructed new complex.');
       return result;
     })();
 
-    // Store the (weak reference to) the promise for the result in the cache,
-    // and return it.
+    // Store the the promise for the result in the cache, and return it.
 
-    const resultRef = weak(resultPromise, this._reapDocument.bind(this, docId));
-
-    this._complexes.set(docId, resultRef);
+    this._complexes.set(docId, resultPromise);
     return resultPromise;
+  }
+
+  /**
+   * Makes and returns a new author-tied session. This is a "friend" method to
+   * the public `FileComplex` method of the same(ish) name, which is where this
+   * functionality is exposed.
+   *
+   * @param {FileComplex} fileComplex Main complex to attach to.
+   * @param {string} authorId ID for the author.
+   * @param {function} makeSessionId Function to generate a random session ID.
+   * @returns {AuthorSession} A newly-constructed session.
+   */
+  _makeNewSession(fileComplex, authorId, makeSessionId) {
+    FileComplex.check(fileComplex);
+    TString.nonempty(authorId);
+    TFunction.check(makeSessionId);
+
+    // Make a unique session ID.
+    let sessionId;
+    for (;;) {
+      sessionId = makeSessionId();
+      if (!this._sessions.get(sessionId)) {
+        break;
+      }
+
+      // We managed to get an ID collision. Unlikely, but it can happen. So,
+      // just iterate and try again.
+    }
+
+    const result = new AuthorSession(fileComplex, sessionId, authorId);
+
+    this._sessions.set(sessionId, weak(result, this._reapSession.bind(this, sessionId)));
+    return result;
   }
 
   /**
@@ -96,5 +171,16 @@ export default class DocServer extends Singleton {
   _reapDocument(docId) {
     this._complexes.delete(docId);
     log.info(`Reaped idle document: ${docId}`);
+  }
+
+  /**
+   * Weak reference callback that removes a collected session object from the
+   * session map.
+   *
+   * @param {string} sessionId ID of the session to remove.
+   */
+  _reapSession(sessionId) {
+    this._sessions.delete(sessionId);
+    log.info(`Reaped idle session: ${sessionId}`);
   }
 }

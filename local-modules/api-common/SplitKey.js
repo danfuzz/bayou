@@ -18,16 +18,23 @@ import BaseKey from './BaseKey';
  */
 export default class SplitKey extends BaseKey {
   /**
-   * Constructs an instance with random ID and secret.
+   * Makes and returns a random ID, suitable for use when constructing instances
+   * of this class.
    *
-   * @param {string} url URL at which the resource may be accessed. This is
-   *   expected to be an API endpoint.
-   * @returns {SplitKey} The constructed instance.
+   * @returns {string} A random ID.
    */
-  static randomInstance(url) {
-    const id = Random.hexByteString(8);
-    const secret = Random.hexByteString(16);
-    return new SplitKey(url, id, secret);
+  static randomId() {
+    return Random.hexByteString(8);
+  }
+
+  /**
+   * Makes and returns a random secret, suitable for use when constructing
+   * instances of this class.
+   *
+   * @returns {string} A random secret.
+   */
+  static randomSecret() {
+    return Random.hexByteString(16);
   }
 
   /**
@@ -37,14 +44,17 @@ export default class SplitKey extends BaseKey {
    *   expected to be an API endpoint.
    * @param {string} id Key / resource identifier. This must be a string of 16
    *   hex digits (lower case).
-   * @param {string} secret Shared secret. This must be a string of 32 hex
-   *   digits (lower case).
+   * @param {string|null} [secret = null] Shared secret. This must be a string
+   *   of 32 hex digits (lower case). If passed as `null`, a randomly-generated
+   *   string will be used.
    */
-  constructor(url, id, secret) {
+  constructor(url, id, secret = null) {
     super(url, TString.hexBytes(id, 8, 8));
 
     /** {string} Shared secret. */
-    this._secret = TString.hexBytes(secret, 16, 16);
+    this._secret = (secret === null)
+      ? SplitKey.randomSecret()
+      : TString.hexBytes(secret, 16, 16);
 
     Object.freeze(this);
   }
