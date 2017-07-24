@@ -4,7 +4,7 @@
 
 import { QuillEvent, QuillGeometry } from 'quill-util';
 import { TObject, TInt, TString } from 'typecheck';
-import { PromDelay } from 'util-common';
+import { ColorSelector, PromDelay } from 'util-common';
 
 /**
  * Time span to wait between refreshes of remote session annotations.
@@ -96,7 +96,7 @@ export default class CaretOverlay {
     TString.check(sessionId);
     TInt.min(index, 0);
     TInt.min(length, 0);
-    TString.check(color);
+    ColorSelector.checkHexColor(color);
 
     if (!this._sessions.has(sessionId)) {
       this._beginSession(sessionId);
