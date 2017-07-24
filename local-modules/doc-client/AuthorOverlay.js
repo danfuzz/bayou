@@ -7,7 +7,7 @@ import { TObject, TInt, TString } from 'typecheck';
 import { PromDelay } from 'util-common';
 
 /**
- * Time span to wait between refreshes of remote author annotations.
+ * Time span to wait between refreshes of remote session annotations.
  * New changes are aggregated during the delay and incorporated into
  * the next refresh.
  */
@@ -41,12 +41,12 @@ export default class AuthorOverlay {
     this._document = TObject.check(svgElement.ownerDocument, Document);
 
     /**
-     * {Element} The SVG element in which we'll render the selections. The SVG
+     * {Element} The SVG element in which we render the remote carets. The SVG
      * should be the same dimensions as
      * `_editorComplex.quill.scrollingContainer` and on top of it in z-index
      * order (closer to the viewer).
      */
-    this._authorOverlay = TObject.check(svgElement, Element);
+    this._overlay = TObject.check(svgElement, Element);
 
     /**
      * {boolean} Whether or not there is any current need to update the
@@ -125,7 +125,8 @@ export default class AuthorOverlay {
         const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
         const range    = selEvent.range;
 
-        this._updateCaret('local-author', range.index, range.length, '#ffb8b8');
+        this._updateCaret(
+          'local-session', range.index, range.length, '#ffb8b8');
         currentEvent = selEvent;
       }
     }
@@ -170,15 +171,15 @@ export default class AuthorOverlay {
     this._displayIsDirty = false;
 
     // Remove extant annotations
-    while (this._authorOverlay.firstChild) {
-      this._authorOverlay.removeChild(this._authorOverlay.firstChild);
+    while (this._overlay.firstChild) {
+      this._overlay.removeChild(this._overlay.firstChild);
     }
 
     // For each session…
-    for (const [sessionId_unused, authorInfo] of this._sessions) {
+    for (const [sessionId_unused, info] of this._sessions) {
       // Generate a list of rectangles representing their selection…
       let rects = QuillGeometry.boundsForLinesInRange(
-        this._editorComplex.quill, authorInfo.get('selection'));
+        this._editorComplex.quill, info.get('selection'));
 
       rects = rects.map(QuillGeometry.snapRectToPixels);
 
@@ -188,13 +189,13 @@ export default class AuthorOverlay {
         const path = this._document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
         path.setAttribute('d', pathCommands);
-        path.setAttribute('fill', authorInfo.get('color'));
+        path.setAttribute('fill', info.get('color'));
         path.setAttribute('fill-opacity', '0.25');
         path.setAttribute('stroke-width', '1.0');
-        path.setAttribute('stroke', authorInfo.get('color'));
+        path.setAttribute('stroke', info.get('color'));
         path.setAttribute('stroke-opacity', '0.75');
 
-        this._authorOverlay.appendChild(path);
+        this._overlay.appendChild(path);
       }
     }
   }

@@ -101,8 +101,8 @@ export default class EditorComplex extends CommonBase {
       // Let the overlay do extra initialization.
       Hooks.theOne.quillInstanceInit(this._quill);
 
-      /** {AuthorOverlay} The author overlay controller. */
-      this._authorOverlay = new AuthorOverlay(this, authorOverlayNode);
+      /** {AuthorOverlay} The remote caret overlay controller. */
+      this._caretOverlay = new AuthorOverlay(this, authorOverlayNode);
 
       // Do session setup using the initial key.
       this._initSession(sessionKey, true);
@@ -113,7 +113,7 @@ export default class EditorComplex extends CommonBase {
 
   /** {AuthorOverlay} The author overlay controller. */
   get authorOverlay() {
-    return this._authorOverlay;
+    return this._caretOverlay;
   }
 
   /** {DocClient} The document client instance. */
