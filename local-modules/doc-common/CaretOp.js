@@ -2,9 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TInt, TString } from 'typecheck';
-import { ColorSelector } from 'util-common';
+import { TString } from 'typecheck';
 
+import Caret from './Caret';
 import RevisionNumber from './RevisionNumber';
 
 const KEY = Symbol('CaretOp constructor key');
@@ -50,27 +50,17 @@ export default class CaretOp {
   /**
    * Constructs a new "update caret" operation.
    *
-   * @param {string} sessionId The session id for the author whose selection is changing.
-   * @param {Int} index The starting point of the new selection.
-   * @param {Int} length The length o the selection, or zero if the update represents
-   *   a mere insertion point movement rather than a selection.
-   * @param {string} color The color to use for the background of the referenced author's selection.
-   *   It must be in three-byte CSS hex for (e.g. `'#fa9cb3'`).
+   * @param {Caret} caret The caret to update. `Caret` objects notably know what
+   *   session they are associated with.
    * @returns {CaretOp} An operation representing new caret information for a
    *   particular session.
    */
-  static op_updateCaret(sessionId, index, length, color) {
-    TString.check(sessionId);
-    TInt.min(index, 0);
-    TInt.min(length, 0);
-    ColorSelector.checkHexColor(color);
+  static op_updateCaret(caret) {
+    Caret.check(caret);
 
     const args = new Map();
 
-    args.set('sessionId', sessionId);
-    args.set('index', index);
-    args.set('length', length);
-    args.set('color', color);
+    args.set('caret', caret);
 
     return new CaretOp(KEY, CaretOp.UPDATE_CARET, args);
   }

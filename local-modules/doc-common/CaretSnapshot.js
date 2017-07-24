@@ -111,13 +111,8 @@ export default class CaretSnapshot extends CommonBase {
         }
 
         case CaretOp.UPDATE_CARET: {
-          const sessionId = op.arg('sessionId');
-          sessions.set(sessionId, new Caret(
-            sessionId,
-            op.arg('index'),
-            op.arg('length'),
-            op.arg('color')
-          ));
+          const caret = op.arg('caret');
+          sessions.set(caret.sessionId, caret);
           break;
         }
 

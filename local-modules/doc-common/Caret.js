@@ -33,9 +33,9 @@ export default class Caret extends CommonBase {
     super();
 
     this._sessionId = TString.check(sessionId);
-    this._index = TInt.min(index, 0);
-    this._length = TInt.min(length, 0);
-    this._color = ColorSelector.checkHexColor(color);
+    this._index     = TInt.min(index, 0);
+    this._length    = TInt.min(length, 0);
+    this._color     = ColorSelector.checkHexColor(color);
 
     Object.freeze(this);
   }
