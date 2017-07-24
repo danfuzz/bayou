@@ -10,18 +10,22 @@ import RevisionNumber from './RevisionNumber';
 const KEY = Symbol('CaretOp constructor key');
 
 export default class CaretOp {
+  /** {string} Operation name for "begin session" operations. */
   static get BEGIN_SESSION() {
     return 'begin-session';
   }
 
+  /** {string} Operation name for "update caret" operations. */
   static get UPDATE_AUTHOR_SELECTION() {
     return 'update-author-selection';
   }
 
+  /** {string} Operation name for "end session" operations. */
   static get END_SESSION() {
     return 'end-session';
   }
 
+  /** {string} Operation name for "update document rev-num" operations. */
   static get UPDATE_DOC_REV_NUM() {
     return 'update-doc-rev-num';
   }
