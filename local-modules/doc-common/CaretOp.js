@@ -162,30 +162,24 @@ export default class CaretOp {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
+    // Convert the `_args` map to a simple object for the purpose of coding.
     const args = {};
+    for (const [k, v] of this._args) {
+      args[k] = v;
+    }
 
-    // TODO: We need a codec for `Map`s. Or, more particularly here, we need to
-    // not use JSON strings as part of the coding form.
-    this._args.forEach((k, v) => { args.set(k, v); });
-
-    return [this._name, JSON.stringify(args)];
+    return [this._name, args];
   }
 
   /**
    * Instaniate a new instance of this class from API arguments.
    *
    * @param {string} name The name of the operation.
-   * @param {string} argsJson The JSON-encoded arguments for this operation.
+   * @param {object} args The arguments for the operation, as a simple object
+   *   (not a map).
    * @returns {CaretOp} The new instance.
    */
-  static fromApi(name, argsJson) {
-    const argsObj = JSON.parse(argsJson);
-    const args = new Map();
-
-    for (const k of Object.keys(argsObj)) {
-      args.set(k, argsObj[k]);
-    }
-
-    return new CaretOp(KEY, name, args);
+  static fromApi(name, args) {
+    return new CaretOp(KEY, name, new Map(Object.entries(args)));
   }
 }
