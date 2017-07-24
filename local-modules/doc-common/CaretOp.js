@@ -31,44 +31,6 @@ export default class CaretOp {
   }
 
   /**
-   * Constructs an instance. This should not be used directly. Instead, used
-   * the static constructor methods defined by this class.
-   *
-   * @param {object} constructorKey The private-to-this-module key that
-   *   enforces the exhortation in the method documentation above.
-   * @param {string} name The operation name.
-   * @param {Map<string,*>} args Arguments to the operation.
-   */
-  constructor(constructorKey, name, args) {
-    if (constructorKey !== KEY) {
-      throw new Error('Constructor is private');
-    }
-
-    /** {string} name The name of this operation. */
-    this._name = name;
-
-    /** {Map<string,*>} args The arguments needed for the operation. */
-    this._args = args;
-
-    Object.freeze(this);
-  }
-
-  /**
-   * @returns {string} The name of this operation.
-   */
-  get name() {
-    return this._name;
-  }
-
-  /**
-   * @returns {Map<string, *>} The arguments needed for this operation.
-   */
-  get args() {
-    /* TODO: _args is at risk for mutation */
-    return this._args;
-  }
-
-  /**
    * Constructs a new "begin session" operation.
    *
    * @param {string} sessionId The session ID.
@@ -144,6 +106,44 @@ export default class CaretOp {
     args.set('docRevNum', docRevNum);
 
     return new CaretOp(KEY, CaretOp.UPDATE_DOC_REV_NUM, args);
+  }
+
+  /**
+   * Constructs an instance. This should not be used directly. Instead, used
+   * the static constructor methods defined by this class.
+   *
+   * @param {object} constructorKey The private-to-this-module key that
+   *   enforces the exhortation in the method documentation above.
+   * @param {string} name The operation name.
+   * @param {Map<string,*>} args Arguments to the operation.
+   */
+  constructor(constructorKey, name, args) {
+    if (constructorKey !== KEY) {
+      throw new Error('Constructor is private');
+    }
+
+    /** {string} name The name of this operation. */
+    this._name = name;
+
+    /** {Map<string,*>} args The arguments needed for the operation. */
+    this._args = args;
+
+    Object.freeze(this);
+  }
+
+  /**
+   * @returns {string} The name of this operation.
+   */
+  get name() {
+    return this._name;
+  }
+
+  /**
+   * @returns {Map<string, *>} The arguments needed for this operation.
+   */
+  get args() {
+    /* TODO: _args is at risk for mutation */
+    return this._args;
   }
 
   /**
