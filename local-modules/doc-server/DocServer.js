@@ -113,7 +113,7 @@ export default class DocServer extends Singleton {
     const resultPromise = (async () => {
       const file      = await Hooks.theOne.contentStore.getFile(docId);
       const result    = new FileComplex(this._codec, file);
-      const resultRef = weak(result, this._reapDocument.bind(this, docId));
+      const resultRef = weak(result, this._reapFileComplex.bind(this, docId));
 
       // Replace the promise in the cache with a weak reference to the actaul
       // result.
@@ -157,30 +157,37 @@ export default class DocServer extends Singleton {
     }
 
     const result = new AuthorSession(fileComplex, sessionId, authorId);
+    const reaper = this._sessionreaper(fileComplex, sessionId);
 
-    this._sessions.set(sessionId, weak(result, this._reapSession.bind(this, sessionId)));
+    this._sessions.set(sessionId, weak(result, reaper));
     return result;
   }
 
   /**
-   * Weak reference callback that removes a collected document object from the
-   * document map.
+   * Weak reference callback that removes a collected file complex from the
+   * map of same.
    *
-   * @param {string} docId ID of the document to remove.
+   * @param {string} docId Document ID of the file complex to remove.
    */
-  _reapDocument(docId) {
+  _reapFileComplex(docId) {
     this._complexes.delete(docId);
-    log.info(`Reaped idle document: ${docId}`);
+    log.info(`Reaped idle file complex: ${docId}`);
   }
 
   /**
-   * Weak reference callback that removes a collected session object from the
-   * session map.
+   * Returns a weak reference callback function for the indicated complex/session
+   * pair, that removes a collected session object from the session map and
+   * informs the associated file complex.
    *
+   * @param {FileComplex} fileComplex File complex the session was used with.
    * @param {string} sessionId ID of the session to remove.
+   * @returns {function} An appropriately-constructed function.
    */
-  _reapSession(sessionId) {
-    this._sessions.delete(sessionId);
-    log.info(`Reaped idle session: ${sessionId}`);
+  _sessionReaper(fileComplex, sessionId) {
+    return () => {
+      fileComplex._sessionReaped(sessionId);
+      this._sessions.delete(sessionId);
+      log.info(`Reaped idle session: ${sessionId}`);
+    };
   }
 }

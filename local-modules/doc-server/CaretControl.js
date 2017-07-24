@@ -125,12 +125,11 @@ export default class CaretControl extends CommonBase {
       : `[${index}..${index + length - 1}]`;
     this._log.info(`[${sessionId}] Caret update: r${docRevNum}, ${caretStr}`);
 
-    // Build up a delta to apply to the current snapshot.
+    // Build up an array of ops to apply to the current snapshot.
 
-    const snapshot       = this._snapshot;
-    const newCaretRevNum = snapshot.revNum + 1;
-    const ops            = [];
-    const oldCaret       = snapshot.caretForSession(sessionId);
+    const snapshot = this._snapshot;
+    const ops      = [];
+    const oldCaret = snapshot.caretForSession(sessionId);
     let color;
 
     if (oldCaret === null) {
@@ -146,12 +145,47 @@ export default class CaretControl extends CommonBase {
     // it into the new snapshot.
     ops.push(CaretOp.op_updateDocRevNum(docRevNum));
 
-    const delta = new CaretDelta(newCaretRevNum, ops);
+    // Apply the ops, and inform any waiters.
+    return this._applyOps(ops);
+  }
+
+  /**
+   * Applies the given operations to the current snapshot, producing a new
+   * snapshot with an incremented caret revision number.
+   *
+   * @param {array<CaretOp>} ops Operations to apply.
+   * @returns {Int} The _caret_ revision number at which this information was
+   *   integrated.
+   */
+  _applyOps(ops) {
+    const snapshot  = this._snapshot;
+    const newRevNum = snapshot.revNum + 1;
+    const delta     = new CaretDelta(newRevNum, ops);
 
     // Update the snapshot, and wake up any waiters.
     this._snapshot = snapshot.compose(delta);
     this._updatedCondition.onOff();
 
-    return newCaretRevNum;
+    this._log.detail(`New caret revision number: ${newRevNum}`);
+
+    return newRevNum;
+  }
+
+  /**
+   * Indicates that a particular session was reaped (GC'ed). This is a "friend"
+   * method which gets called by `FileComplex`.
+   *
+   * @param {string} sessionId ID of the session that got reaped.
+   */
+  _sessionReaped(sessionId) {
+    const snapshot = this.snapshot;
+    const oldCaret = snapshot.caretForSession(sessionId);
+
+    if (oldCaret !== null) {
+      const ops   = [CaretOp.op_removeAuthor(sessionId)];
+
+      this._log.info(`[${sessionId}] Caret removed.`);
+      this._applyOps(ops);
+    }
   }
 }
