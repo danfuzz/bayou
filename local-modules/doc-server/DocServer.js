@@ -113,7 +113,7 @@ export default class DocServer extends Singleton {
     const resultPromise = (async () => {
       const file      = await Hooks.theOne.contentStore.getFile(docId);
       const result    = new FileComplex(this._codec, file);
-      const resultRef = weak(result, this._reapFileComplex.bind(this, docId));
+      const resultRef = weak(result, this._complexReaper(docId));
 
       // Replace the promise in the cache with a weak reference to the actaul
       // result.
@@ -164,20 +164,23 @@ export default class DocServer extends Singleton {
   }
 
   /**
-   * Weak reference callback that removes a collected file complex from the
-   * map of same.
+   * Returns a weak reference callback function for the indicated document ID,
+   * that removes a collected file complex from the map of same.
    *
    * @param {string} docId Document ID of the file complex to remove.
+   * @returns {function} An appropriately-constructed function.
    */
-  _reapFileComplex(docId) {
-    this._complexes.delete(docId);
-    log.info(`Reaped idle file complex: ${docId}`);
+  _complexReaper(docId) {
+    return () => {
+      this._complexes.delete(docId);
+      log.info(`Reaped idle file complex: ${docId}`);
+    };
   }
 
   /**
-   * Returns a weak reference callback function for the indicated complex/session
-   * pair, that removes a collected session object from the session map and
-   * informs the associated file complex.
+   * Returns a weak reference callback function for the indicated complex /
+   * session pair, that removes a collected session object from the session map
+   * and informs the associated file complex.
    *
    * @param {FileComplex} fileComplex File complex the session was used with.
    * @param {string} sessionId ID of the session to remove.
