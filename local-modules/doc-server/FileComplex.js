@@ -174,4 +174,18 @@ export default class FileComplex extends CommonBase {
   makeNewSession(authorId, makeSessionId) {
     return DocServer.theOne._makeNewSession(this, authorId, makeSessionId);
   }
+
+  /**
+   * Indicates that a particular session was reaped (GC'ed). This is a "friend"
+   * method which gets called by `DocServer`.
+   *
+   * @param {string} sessionId ID of the session that got reaped.
+   */
+  _sessionReaped(sessionId) {
+    // Pass through to the caret controller (if present), since it might have a
+    // record of the session.
+    if (this._caretControl) {
+      this._caretControl._sessionReaped(sessionId);
+    }
+  }
 }
