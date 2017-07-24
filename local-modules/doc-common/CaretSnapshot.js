@@ -184,7 +184,7 @@ export default class CaretSnapshot extends CommonBase {
     const caretOps = [];
 
     for (const caret of caretsAdded) {
-      caretOps.push(CaretDelta.op_addAuthor(caret.sessionId));
+      caretOps.push(CaretDelta.op_beginSession(caret.sessionId));
     }
 
     for (const caret of caretsUpdated) {
@@ -192,7 +192,7 @@ export default class CaretSnapshot extends CommonBase {
     }
 
     for (const caret of caretsRemoved) {
-      caretOps.push(CaretDelta.op_removeAuthor(caret.sessionId));
+      caretOps.push(CaretDelta.op_endSession(caret.sessionId));
     }
 
     if (this.docRevNum !== newerSnapshot.docRevNum) {

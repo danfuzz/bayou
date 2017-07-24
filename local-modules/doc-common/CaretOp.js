@@ -65,12 +65,13 @@ export default class CaretOp {
   }
 
   /**
-   * Constructs a new instance of an add-author operation.
+   * Constructs a new "begin session" operation.
    *
-   * @param {string} sessionId An author-editing session id.
-   * @returns {CaretOp} The operation representing the addition of the referenced author.
+   * @param {string} sessionId The session ID.
+   * @returns {CaretOp} An operation representing the start of the so-IDed
+   *   session.
    */
-  static op_addAuthor(sessionId) {
+  static op_beginSession(sessionId) {
     TString.check(sessionId);
 
     const args = new Map();
@@ -108,12 +109,13 @@ export default class CaretOp {
   }
 
   /**
-   * Constructs a new instance of a remove-author operation.
+   * Constructs a new "end session" operation.
    *
-   * @param {string} sessionId An author-editing session id.
-   * @returns {CaretOp} The operation representing the removal of the referenced author.
+   * @param {string} sessionId ID of the session.
+   * @returns {CaretOp} An operation representing the end of the so-IDed
+   *   session.
    */
-  static op_removeAuthor(sessionId) {
+  static op_endSession(sessionId) {
     TString.check(sessionId);
 
     const args = new Map();
