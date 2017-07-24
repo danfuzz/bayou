@@ -10,19 +10,19 @@ import RevisionNumber from './RevisionNumber';
 const KEY = Symbol('CaretOp constructor key');
 
 export default class CaretOp {
-  static get BEGIN_SESSION_OP() {
+  static get BEGIN_SESSION() {
     return 'begin-session';
   }
 
-  static get UPDATE_AUTHOR_SELECTION_OP() {
+  static get UPDATE_AUTHOR_SELECTION() {
     return 'update-author-selection';
   }
 
-  static get END_SESSION_OP() {
+  static get END_SESSION() {
     return 'end-session';
   }
 
-  static get UPDATE_DOC_REV_NUM_OP() {
+  static get UPDATE_DOC_REV_NUM() {
     return 'update-doc-rev-num';
   }
 
@@ -77,7 +77,7 @@ export default class CaretOp {
 
     args.set('sessionId', sessionId);
 
-    return new CaretOp(KEY, CaretOp.BEGIN_SESSION_OP, args);
+    return new CaretOp(KEY, CaretOp.BEGIN_SESSION, args);
   }
 
   /**
@@ -104,7 +104,7 @@ export default class CaretOp {
     args.set('length', length);
     args.set('color', color);
 
-    return new CaretOp(KEY, CaretOp.UPDATE_AUTHOR_SELECTION_OP, args);
+    return new CaretOp(KEY, CaretOp.UPDATE_AUTHOR_SELECTION, args);
   }
 
   /**
@@ -120,7 +120,7 @@ export default class CaretOp {
 
     args.set('sessionId', sessionId);
 
-    return new CaretOp(KEY, CaretOp.END_SESSION_OP, args);
+    return new CaretOp(KEY, CaretOp.END_SESSION, args);
   }
 
   /**
@@ -136,7 +136,7 @@ export default class CaretOp {
 
     args.set('docRevNum', docRevNum);
 
-    return new CaretOp(KEY, CaretOp.UPDATE_DOC_REV_NUM_OP, args);
+    return new CaretOp(KEY, CaretOp.UPDATE_DOC_REV_NUM, args);
   }
 
   /**
