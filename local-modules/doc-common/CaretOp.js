@@ -10,16 +10,16 @@ import RevisionNumber from './RevisionNumber';
 const KEY = Symbol('CaretOp constructor key');
 
 export default class CaretOp {
-  static get BEGIN_AUTHOR_SESSION_OP() {
-    return 'begin-author-session-op';
+  static get BEGIN_SESSION_OP() {
+    return 'begin-session-op';
   }
 
   static get UPDATE_AUTHOR_SELECTION_OP() {
     return 'update-author-selection-op';
   }
 
-  static get END_AUTHOR_SESSION_OP() {
-    return 'end-author-session-op';
+  static get END_SESSION_OP() {
+    return 'end-session-op';
   }
 
   static get UPDATE_DOC_REV_NUM_OP() {
@@ -77,7 +77,7 @@ export default class CaretOp {
 
     args.set('sessionId', sessionId);
 
-    return new CaretOp(KEY, CaretOp.BEGIN_AUTHOR_SESSION_OP, args);
+    return new CaretOp(KEY, CaretOp.BEGIN_SESSION_OP, args);
   }
 
   /**
@@ -120,7 +120,7 @@ export default class CaretOp {
 
     args.set('sessionId', sessionId);
 
-    return new CaretOp(KEY, CaretOp.END_AUTHOR_SESSION_OP, args);
+    return new CaretOp(KEY, CaretOp.END_SESSION_OP, args);
   }
 
   /**

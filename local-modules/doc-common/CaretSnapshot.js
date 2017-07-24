@@ -107,7 +107,7 @@ export default class CaretSnapshot extends CommonBase {
       const args = op.args;
 
       switch (op.name) {
-        case CaretOp.BEGIN_AUTHOR_SESSION_OP: {
+        case CaretOp.BEGIN_SESSION_OP: {
           // Nothing to do here.
           break;
         }
@@ -123,7 +123,7 @@ export default class CaretSnapshot extends CommonBase {
           break;
         }
 
-        case CaretOp.END_AUTHOR_SESSION_OP: {
+        case CaretOp.END_SESSION_OP: {
           const sessionId = args.get('sessionId');
           sessions.delete(sessionId);
           break;
