@@ -55,7 +55,7 @@ export default class AuthorOverlay {
      */
     this._displayIsDirty = false;
 
-    this._watchSelection();
+    this._watchCarets();
   }
 
   /**
@@ -63,7 +63,7 @@ export default class AuthorOverlay {
    *
    * @param {string} authorSessionId The author to track.
    */
-  addAuthor(authorSessionId) {
+  beginSession(authorSessionId) {
     TString.check(authorSessionId);
 
     this._authors.set(authorSessionId, new Map());
@@ -74,7 +74,7 @@ export default class AuthorOverlay {
    *
    * @param {string} authorSessionId The author to stop tracking.
    */
-  removeAuthor(authorSessionId) {
+  endSession(authorSessionId) {
     TString.check(authorSessionId);
 
     this._authors.delete(authorSessionId);
@@ -90,14 +90,14 @@ export default class AuthorOverlay {
    * @param {string} color The color to use for the background of the remote author selection.
    *    It should be in hex format (e.g. `#ffb8b8`).
    */
-  setAuthorSelection(authorSessionId, index, length, color) {
+  updateCaret(authorSessionId, index, length, color) {
     TString.check(authorSessionId);
     TInt.min(index, 0);
     TInt.min(length, 0);
     TString.check(color);
 
     if (!this._authors.has(authorSessionId)) {
-      this.addAuthor(authorSessionId);
+      this.beginSession(authorSessionId);
     }
 
     const authorInfo = this._authors.get(authorSessionId);
@@ -131,7 +131,7 @@ export default class AuthorOverlay {
   /**
    * Watches for selection-related activity.
    */
-  async _watchSelection() {
+  async _watchCarets() {
     await this._editorComplex.whenReady();
 
     // Change `false` to `true` here if you want to see the local user's
@@ -142,7 +142,7 @@ export default class AuthorOverlay {
         const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
         const range    = selEvent.range;
 
-        this.setAuthorSelection('local-author', range.index, range.length, '#ffb8b8');
+        this.updateCaret('local-author', range.index, range.length, '#ffb8b8');
         currentEvent = selEvent;
       }
     }
@@ -157,7 +157,7 @@ export default class AuthorOverlay {
 
       for (const c of snapshot.carets) {
         docSession.log.info(`Caret: ${c.sessionId}, ${c.index}, ${c.length}, ${c.color}`);
-        this.setAuthorSelection(c.sessionId, c.index, c.length, c.color);
+        this.updateCaret(c.sessionId, c.index, c.length, c.color);
       }
 
       // TODO: Make this properly wait for and integrate changes.
