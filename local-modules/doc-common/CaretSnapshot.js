@@ -112,7 +112,7 @@ export default class CaretSnapshot extends CommonBase {
           break;
         }
 
-        case CaretOp.UPDATE_AUTHOR_SELECTION: {
+        case CaretOp.UPDATE_CARET: {
           const sessionId = args.get('sessionId');
           sessions.set(sessionId, new Caret(
             sessionId,

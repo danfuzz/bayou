@@ -139,7 +139,7 @@ export default class CaretControl extends CommonBase {
       color = oldCaret.color;
     }
 
-    ops.push(CaretOp.op_updateAuthorSelection(sessionId, index, length, color));
+    ops.push(CaretOp.op_updateCaret(sessionId, index, length, color));
 
     // **TODO:** Handle `docRevNum` sensibly instead of just blithely thwacking
     // it into the new snapshot.

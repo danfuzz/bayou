@@ -16,8 +16,8 @@ export default class CaretOp {
   }
 
   /** {string} Operation name for "update caret" operations. */
-  static get UPDATE_AUTHOR_SELECTION() {
-    return 'update-author-selection';
+  static get UPDATE_CARET() {
+    return 'update-caret';
   }
 
   /** {string} Operation name for "end session" operations. */
@@ -86,7 +86,7 @@ export default class CaretOp {
   }
 
   /**
-   * Constructs a new instance of an update-selection operation.
+   * Constructs a new "update caret" operation.
    *
    * @param {string} sessionId The session id for the author whose selection is changing.
    * @param {Int} index The starting point of the new selection.
@@ -94,9 +94,10 @@ export default class CaretOp {
    *   a mere insertion point movement rather than a selection.
    * @param {string} color The color to use for the background of the referenced author's selection.
    *   It must be in three-byte CSS hex for (e.g. `'#fa9cb3'`).
-   * @returns {CaretOp} The operation representing the addition of the referenced author.
+   * @returns {CaretOp} An operation representing new caret information for a
+   *   particular session.
    */
-  static op_updateAuthorSelection(sessionId, index, length, color) {
+  static op_updateCaret(sessionId, index, length, color) {
     TString.check(sessionId);
     TInt.min(index, 0);
     TInt.min(length, 0);
@@ -109,7 +110,7 @@ export default class CaretOp {
     args.set('length', length);
     args.set('color', color);
 
-    return new CaretOp(KEY, CaretOp.UPDATE_AUTHOR_SELECTION, args);
+    return new CaretOp(KEY, CaretOp.UPDATE_CARET, args);
   }
 
   /**
