@@ -109,26 +109,6 @@ export default class AuthorOverlay {
   }
 
   /**
-   * Updates the local ledger of author selections in light
-   * of changes from an editor delta. For instance, if a remote author has a
-   * selection of `{ index:5, length:10 }` and a delta says that there was an
-   * insert of 2 characters at `index:6` then the selection will be adjusted
-   * to show `{ index:5, length:12 }`
-   *
-   * @param {Delta} delta_unused The edit that is to be applied to each of the
-   *  selections tracked by this module.
-   */
-  updateSelectionsWithDelta(delta_unused) {
-    //  TODO
-    //  for (op of delta.ops) {
-    //    for (authorInfo of this._authors.values()) {
-    //      update authorInfo['selection'] with op
-    //    }
-    //  }
-    this._displayNeedsRedraw();
-  }
-
-  /**
    * Watches for selection-related activity.
    */
   async _watchCarets() {
