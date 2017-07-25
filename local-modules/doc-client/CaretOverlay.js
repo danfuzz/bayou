@@ -130,16 +130,46 @@ export default class CaretOverlay {
       }
     }
 
-    const docSession   = this._editorComplex.docSession;
-    const sessionProxy = await docSession.getSessionProxy();
+    let docSession = null;
+    let sessionProxy;
+    let sessionId;
 
     for (;;) {
-      const snapshot = await sessionProxy.caretSnapshot();
-      const oldSessions = new Set(this._sessions.keys());
+      if (docSession === null) {
+        // Init the session variables (on the first iteration), or re-init them
+        // if we got a failure during a previous iteration.
+        docSession   = this._editorComplex.docSession;
+        sessionProxy = await docSession.getSessionProxy();
+
+        // Can only get the session ID after we have a proxy. (Before that, the
+        // ID might not be set, because the session might not even exist!)
+        sessionId = this._editorComplex.sessionId;
+      }
+
+      let snapshot;
+      try {
+        snapshot = await sessionProxy.caretSnapshot();
+      } catch (e) {
+        // Assume that the error is transient and most likely due to the session
+        // getting terminated / restarted. Null out the session variables, wait
+        // a moment, and try again.
+        docSession.log.warn('Trouble with `caretSnapshot`:', e);
+        docSession   = null;
+        sessionProxy = null;
+        await PromDelay.resolve(5000);
+        continue;
+      }
 
       docSession.log.info(`Got snapshot! ${snapshot.carets.length} caret(s).`);
 
+      const oldSessions = new Set(this._sessions.keys());
+
       for (const c of snapshot.carets) {
+        if (c.sessionId === sessionId) {
+          // Don't render the caret for this client.
+          continue;
+        }
+
         docSession.log.info(`Caret: ${c.sessionId}, ${c.index}, ${c.length}, ${c.color}`);
         this._updateCaret(c.sessionId, c.index, c.length, c.color);
         oldSessions.delete(c.sessionId);
