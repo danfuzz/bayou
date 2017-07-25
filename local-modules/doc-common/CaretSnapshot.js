@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TArray } from 'typecheck';
+import { TIterable } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import Caret from './Caret';
@@ -21,19 +21,27 @@ export default class CaretSnapshot extends CommonBase {
    * @param {Int} revNum Revision number of the caret information.
    * @param {Int} docRevNum Revision number of the document to which the caret
    *   information applies.
-   * @param {array<Caret>} carets Array of all the active carets.
+   * @param {Iterable<Caret>} carets Iterable of all the active carets.
    */
   constructor(revNum, docRevNum, carets) {
+    RevisionNumber.check(revNum);
+    RevisionNumber.check(docRevNum);
+    TIterable.check(carets);
+
     super();
 
     /** {Int} The associated caret information revision number. */
-    this._revNum = RevisionNumber.check(revNum);
+    this._revNum = revNum;
 
     /** {Int} The associated document information revision number. */
-    this._docRevNum = RevisionNumber.check(docRevNum);
+    this._docRevNum = docRevNum;
 
-    /** {array<Caret>} Array of all the active carets. */
-    this._carets = Object.freeze(TArray.check(carets, Caret.check));
+    /** {Map<string,Caret>} Map of session ID to corresponding caret. */
+    this._carets = new Map();
+    for (const c of carets) {
+      Caret.check(c);
+      this._carets.set(c.sessionId, c);
+    }
 
     Object.freeze(this);
   }
@@ -44,7 +52,7 @@ export default class CaretSnapshot extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._revNum, this._docRevNum, this._carets];
+    return [this._revNum, this._docRevNum, [...this._carets.values()]];
   }
 
   /**
@@ -64,7 +72,7 @@ export default class CaretSnapshot extends CommonBase {
    * (immutable) value.
    */
   get carets() {
-    return this._carets;
+    return Object.freeze(Array.from(this._carets.values()));
   }
 
   /**
@@ -74,16 +82,7 @@ export default class CaretSnapshot extends CommonBase {
    * @returns {Caret|null} Corresponding caret, or `null` if there is none.
    */
   caretForSession(sessionId) {
-    // **TODO:** This implementation strongly suggests that `_carets` ought to
-    // be a map.
-
-    for (const c of this.carets) {
-      if (c.sessionId === sessionId) {
-        return c;
-      }
-    }
-
-    return null;
+    return this._carets.get(sessionId) || null;
   }
 
   /**
@@ -96,12 +95,8 @@ export default class CaretSnapshot extends CommonBase {
   compose(delta) {
     CaretDelta.check(delta);
 
-    const sessions = new Map();
+    const newCarets = new Map(this._carets.entries());
     let docRevNum = this.docRevNum;
-
-    for (const caret of this._carets) {
-      sessions.set(caret.sessionId, caret);
-    }
 
     for (const op of delta.ops) {
       switch (op.name) {
@@ -112,13 +107,13 @@ export default class CaretSnapshot extends CommonBase {
 
         case CaretOp.UPDATE_CARET: {
           const caret = op.arg('caret');
-          sessions.set(caret.sessionId, caret);
+          newCarets.set(caret.sessionId, caret);
           break;
         }
 
         case CaretOp.END_SESSION: {
           const sessionId = op.arg('sessionId');
-          sessions.delete(sessionId);
+          newCarets.delete(sessionId);
           break;
         }
 
@@ -128,7 +123,7 @@ export default class CaretSnapshot extends CommonBase {
       }
     }
 
-    return new CaretSnapshot(docRevNum, delta.revNum, Array.from(sessions.values()));
+    return new CaretSnapshot(docRevNum, delta.revNum, newCarets.values());
   }
 
   /**
@@ -144,31 +139,27 @@ export default class CaretSnapshot extends CommonBase {
   diff(newerSnapshot) {
     CaretSnapshot.check(newerSnapshot);
 
-    const caretsAdded = [];
+    const newerCarets   = newerSnapshot._carets;
+    const caretsAdded   = [];
     const caretsUpdated = [];
     const caretsRemoved = [];
 
-    for (const newerCaret of newerSnapshot.carets) {
-      const sessionId = newerCaret.sessionId;
-
-      if (this.carets.some((caret) => {
-        return caret.sessionId === sessionId;
-      })) {
-        // If a `sessionId` matches between the two snapshots then it's an update.
+    // Find carets that are new or updated from `this` when going to
+    // `newerSnapshot`.
+    for (const [sessionId, newerCaret] of newerCarets) {
+      if (this._carets.get(sessionId)) {
+        // The `sessionId` matches between the two snapshots, so it's an update.
         caretsUpdated.push(newerCaret);
       } else {
-        // If `sessionId` is in `newerSnapshot` but not `this` then its a addition.
+        // The `sessionId` is in `newerSnapshot` but not `this`, so it's an
+        // addition.
         caretsAdded.push(newerCaret);
       }
     }
 
     // Finally, find carets removed from `this` when going to `newerSnapshot`.
-    for (const oldCaret of this.carets) {
-      const sessionId = oldCaret.sessionId;
-
-      if (!newerSnapshot.carets.some((caret) => {
-        return caret.sessionId === sessionId;
-      })) {
+    for (const [sessionId, oldCaret] of this._carets) {
+      if (!newerCarets.get(sessionId)) {
         caretsRemoved.push(oldCaret);
       }
     }
