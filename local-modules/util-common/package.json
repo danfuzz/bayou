@@ -4,6 +4,8 @@
   "main": "main.js",
 
   "dependencies": {
+    "grapheme-splitter": "^1.0.1",
+
     "typecheck": "local"
   }
 }

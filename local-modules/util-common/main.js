@@ -15,6 +15,7 @@ import PromMutex from './PromMutex';
 import PropertyIter from './PropertyIter';
 import Random from './Random';
 import Singleton from './Singleton';
+import StringUtil from './StringUtil';
 import WebsocketCodes from './WebsocketCodes';
 
 export {
@@ -31,6 +32,7 @@ export {
   PropertyIter,
   Random,
   Singleton,
+  StringUtil,
   WebsocketCodes
 };
 
