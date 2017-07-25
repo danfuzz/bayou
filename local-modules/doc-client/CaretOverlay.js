@@ -139,8 +139,11 @@ export default class CaretOverlay {
         // Init the session variables (on the first iteration), or re-init them
         // if we got a failure during a previous iteration.
         docSession   = this._editorComplex.docSession;
-        sessionId    = this._editorComplex.sessionId;
         sessionProxy = await docSession.getSessionProxy();
+
+        // Can only get the session ID after we have a proxy. (Before that, the
+        // ID might not be set, because the session might not even exist!)
+        sessionId = this._editorComplex.sessionId;
       }
 
       let snapshot;
