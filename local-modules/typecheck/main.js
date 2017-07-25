@@ -8,6 +8,7 @@ import TBuffer from './TBuffer';
 import TClass from './TClass';
 import TFunction from './TFunction';
 import TInt from './TInt';
+import TIterable from './TIterable';
 import TMap from './TMap';
 import TObject from './TObject';
 import TString from './TString';
@@ -20,6 +21,7 @@ export {
   TClass,
   TFunction,
   TInt,
+  TIterable,
   TMap,
   TObject,
   TString,
