@@ -180,7 +180,7 @@ export default class CaretControl extends CommonBase {
    * @param {string} sessionId ID of the session that got reaped.
    */
   _sessionReaped(sessionId) {
-    const snapshot = this.snapshot;
+    const snapshot = this._snapshot;
     const oldCaret = snapshot.caretForSession(sessionId);
 
     if (oldCaret !== null) {
