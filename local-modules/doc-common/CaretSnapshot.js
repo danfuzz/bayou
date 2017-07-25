@@ -158,9 +158,9 @@ export default class CaretSnapshot extends CommonBase {
     }
 
     // Finally, find carets removed from `this` when going to `newerSnapshot`.
-    for (const [sessionId, oldCaret] of this._carets) {
+    for (const [sessionId, olderCaret] of this._carets) {
       if (!newerCarets.get(sessionId)) {
-        caretsRemoved.push(oldCaret);
+        caretsRemoved.push(olderCaret);
       }
     }
 
