@@ -21,7 +21,8 @@ export default class CaretSnapshot extends CommonBase {
    * @param {Int} revNum Revision number of the caret information.
    * @param {Int} docRevNum Revision number of the document to which the caret
    *   information applies.
-   * @param {Iterable<Caret>} carets Iterable of all the active carets.
+   * @param {Iterable<Caret>} carets Iterable of all the active carets. This
+   *   constructor will iterate with it exactly once.
    */
   constructor(revNum, docRevNum, carets) {
     RevisionNumber.check(revNum);
