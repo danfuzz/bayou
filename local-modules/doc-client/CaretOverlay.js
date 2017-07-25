@@ -132,12 +132,14 @@ export default class CaretOverlay {
 
     let docSession = null;
     let sessionProxy;
+    let sessionId;
 
     for (;;) {
       if (docSession === null) {
         // Init the session variables (on the first iteration), or re-init them
         // if we got a failure during a previous iteration.
-        docSession = this._editorComplex.docSession;
+        docSession   = this._editorComplex.docSession;
+        sessionId    = this._editorComplex.sessionId;
         sessionProxy = await docSession.getSessionProxy();
       }
 
@@ -160,6 +162,11 @@ export default class CaretOverlay {
       const oldSessions = new Set(this._sessions.keys());
 
       for (const c of snapshot.carets) {
+        if (c.sessionId === sessionId) {
+          // Don't render the caret for this client.
+          continue;
+        }
+
         docSession.log.info(`Caret: ${c.sessionId}, ${c.index}, ${c.length}, ${c.color}`);
         this._updateCaret(c.sessionId, c.index, c.length, c.color);
         oldSessions.delete(c.sessionId);
