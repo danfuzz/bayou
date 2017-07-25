@@ -8,6 +8,24 @@
  */
 export default class QuillGeometry {
   /**
+   * Takes a Quill character offset and returns a bounding rectangle for an insertion point
+   * cursor at that offset.
+   *
+   * @param {Quill} quill The Quill editor instance that we're measuring against
+   * @param {Int} offset The character offset within the Quill document.
+   * @returns {object} A bounds objects representing the
+   *  screen bounds of the insertion point. A bounds object is
+   *  `{ left, top, right (exclusive), bottom (exclusive), width, height }`.
+   */
+  static boundsForCursorAtOffset(quill, offset) {
+    const bounds = quill.getBounds(offset, 1);
+
+    bounds.right = bounds.left + 1;
+    bounds.width = 1;
+
+    return QuillGeometry.snapRectToPixels(bounds);
+  }
+  /**
    * Takes a Quill selection range and returns an array of bounding
    * rectangles for that range.
    *
