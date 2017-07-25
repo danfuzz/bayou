@@ -183,27 +183,49 @@ export default class CaretOverlay {
       this._overlay.removeChild(this._overlay.firstChild);
     }
 
+    const quill = this._editorComplex.quill;
+
     // For each session…
     for (const [sessionId_unused, info] of this._sessions) {
-      // Generate a list of rectangles representing their selection…
-      let rects = QuillGeometry.boundsForLinesInRange(
-        this._editorComplex.quill, info.get('selection'));
+      const selection = info.get('selection');
 
-      rects = rects.map(QuillGeometry.snapRectToPixels);
+      if (selection.length === 0) {
+        const rect = QuillGeometry.boundsForCursorAtOffset(quill, selection.index);
 
-      // Convert each rect to an SVG path and add it to the `<svg>` overlay element.
-      for (const rect of rects) {
-        const pathCommands = QuillGeometry.svgPathCommandsForRect(rect);
+        const pathCommand = QuillGeometry.svgPathCommandsForRect(rect);
         const path = this._document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-        path.setAttribute('d', pathCommands);
+        path.setAttribute('d', pathCommand);
         path.setAttribute('fill', info.get('color'));
-        path.setAttribute('fill-opacity', '0.25');
+        path.setAttribute('fill-opacity', '1.0');
         path.setAttribute('stroke-width', '1.0');
         path.setAttribute('stroke', info.get('color'));
-        path.setAttribute('stroke-opacity', '0.75');
+        path.setAttribute('stroke-opacity', '1.0');
 
         this._overlay.appendChild(path);
+      } else {
+        // Generate a list of rectangles representing their selection…
+        let rects = QuillGeometry.boundsForLinesInRange(quill, selection);
+
+        rects = rects.map(QuillGeometry.snapRectToPixels);
+
+        for (const rect of rects) {
+          const svgRect = this._document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+
+          svgRect.setAttribute('x', rect.left);
+          svgRect.setAttribute('y', rect.top);
+          svgRect.setAttribute('width', rect.width);
+          svgRect.setAttribute('height', rect.height);
+          svgRect.setAttribute('rx', 3);
+          svgRect.setAttribute('ry', 3);
+          svgRect.setAttribute('fill', info.get('color'));
+          svgRect.setAttribute('fill-opacity', '0.50');
+          svgRect.setAttribute('stroke-width', '1.0');
+          svgRect.setAttribute('stroke', info.get('color'));
+          svgRect.setAttribute('stroke-opacity', '1.0');
+
+          this._overlay.appendChild(svgRect);
+        }
       }
     }
   }
