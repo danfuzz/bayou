@@ -559,7 +559,9 @@ export default class DocClient extends StateMachine {
       case QuillEvent.SELECTION_CHANGE: {
         // Consume the event, and send it onward to the caret tracker, which
         // might ultimately inform the server about it. Then go back to idling.
-        this._docSession.caretTracker.update(this._doc.revNum, event.range);
+        if (event.range) {
+          this._docSession.caretTracker.update(this._doc.revNum, event.range);
+        }
         this._currentEvent = event;
         this._becomeIdle();
         return;

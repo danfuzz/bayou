@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { RevisionNumber } from 'doc-common';
+import { TInt } from 'typecheck';
 import { CommonBase, PromDelay } from 'util-common';
 
 import DocSession from './DocSession';
@@ -38,17 +40,30 @@ export default class CaretTracker extends CommonBase {
     this._sessionProxy = null;
 
     /**
-     * {boolean} Whether to suppress updates. Starts out `true` while the
-     * session proxy is getting set up, and then it is `false` in steady state.
-     * It is set temporarily to `true` in `update()`.
+     * {boolean} Whether there is a caret update in progress. Starts out `true`
+     * while the session proxy is getting set up (which is a lie, but one which
+     * prevents failing server calls to be made), and then it is `false` in
+     * steady state. It is set temporarily to `true` in `update()`.
      */
-    this._suppress = true;
+    this._updating = true;
+
+    /**
+     * {array|null} The latest caret update that was supplied, as an array of
+     * arguments suitable for passing to `caretUpdate()`, for asynchronous
+     * consumption. If `null`, indicates that there is no pending caret update.
+     * This variable is set and reset in `update()`.
+     */
+    this._latestCaret = null;
 
     // Arrange for `_sessionProxy` to get set.
     (async () => {
       this._sessionProxy = await docSession.getSessionProxy();
-      this._suppress = false;
+      this._updating = false;
       this._log.detail('Caret tracker got session proxy.');
+
+      // Give the update loop a chance to send caret updates that happened
+      // during initialization (if any).
+      this._runUpdateLoop();
     })();
   }
 
@@ -59,21 +74,45 @@ export default class CaretTracker extends CommonBase {
    * @param {object} range Range of the selection.
    */
   update(docRevNum, range) {
-    if (this._suppress || (range === null)) {
+    RevisionNumber.check(docRevNum);
+    TInt.min(range.index, 0);
+    TInt.min(range.length, 0);
+
+    this._latestCaret = [docRevNum, range.index, range.length];
+    this._runUpdateLoop();
+  }
+
+  /**
+   * Initiates the caret-update loop, if not already initiated. The loop runs
+   * asynchronously, informing the server of the latest caret, and then waiting
+   * a moment for further local updates before informing again. It exits once
+   * updates have stopped coming in.
+   */
+  _runUpdateLoop() {
+    if (this._updating) {
+      // The loop below is already running; no need (and it would be
+      // counterproductive) to run it again.
       return;
     }
 
-    // Inform the server, and then suppress further updates for the prescribed
-    // amount of time.
+    this._updating = true;
 
-    // **TODO:** If this call fails, there's nothing to catch the exception.
-    this._sessionProxy.caretUpdate(docRevNum, range.index, range.length);
-
-    this._suppress = true;
-
+    // **TODO:** If anything in this `async` block throws, there's nothing to
+    // catch the exception.
     (async () => {
-      await PromDelay.resolve(UPDATE_DELAY_MSEC);
-      this._suppress = false;
+      for (;;) {
+        const info = this._latestCaret;
+        if (info === null) {
+          break;
+        }
+
+        this._latestCaret = null;
+        await Promise.all([
+          this._sessionProxy.caretUpdate(...info),
+          PromDelay.resolve(UPDATE_DELAY_MSEC)]);
+      }
+
+      this._updating = false;
     })();
   }
 }
