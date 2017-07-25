@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { RevisionNumber } from 'doc-common';
-import { TInt } from 'typecheck';
+import { TInt, TObject } from 'typecheck';
 import { CommonBase, PromDelay } from 'util-common';
 
 import DocSession from './DocSession';
@@ -75,6 +75,7 @@ export default class CaretTracker extends CommonBase {
    */
   update(docRevNum, range) {
     RevisionNumber.check(docRevNum);
+    TObject.check(range);
     TInt.min(range.index, 0);
     TInt.min(range.length, 0);
 
