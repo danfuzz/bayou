@@ -39,7 +39,7 @@ export default class Random extends UtilityClass {
    */
   static byteArray(length) {
     const buffer = crypto.randomBytes(TInt.min(length, 0));
-    return Array.from(buffer);
+    return [...buffer];
   }
 
   /**
