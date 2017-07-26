@@ -55,6 +55,7 @@ export default class IterableUtil extends UtilityClass {
       for (;;) {
         // Yield elements that got appended by other simultaneously-active
         // iterators or by our own handling of `next()` below.
+
         while (at < elements.length) {
           yield elements[at];
           at++;
