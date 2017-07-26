@@ -8,6 +8,7 @@ import DataUtil from './DataUtil';
 import DeferredLoader from './DeferredLoader';
 import FrozenBuffer from './FrozenBuffer';
 import InfoError from './InfoError';
+import IterableUtil from './IterableUtil';
 import JsonUtil from './JsonUtil';
 import PromCondition from './PromCondition';
 import PromDelay from './PromDelay';
@@ -25,6 +26,7 @@ export {
   DeferredLoader,
   FrozenBuffer,
   InfoError,
+  IterableUtil,
   JsonUtil,
   PromCondition,
   PromDelay,
