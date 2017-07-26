@@ -73,7 +73,7 @@ export default class CaretSnapshot extends CommonBase {
    * (immutable) value.
    */
   get carets() {
-    return Object.freeze(Array.from(this._carets.values()));
+    return Object.freeze([...this._carets.values()]);
   }
 
   /**
