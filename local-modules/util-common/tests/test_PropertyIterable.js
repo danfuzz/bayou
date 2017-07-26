@@ -6,20 +6,20 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { TObject } from 'typecheck';
-import { PropertyIter } from 'util-common';
+import { PropertyIterable } from 'util-common';
 
 const TEST_OBJECT = {
   a: 1,
   b: 2,
   functionItem: assert,
-  classItem: PropertyIter,
+  classItem: PropertyIterable,
   objectItem: {}
 };
 
-describe('util-common/PropertyIter', () => {
+describe('util-common/PropertyIterable', () => {
   describe('iterating over all properties', () => {
     it('should return all properties of the object', () => {
-      const iter = new PropertyIter(TEST_OBJECT);
+      const iter = new PropertyIterable(TEST_OBJECT);
       const expectedProperties = ['a', 'b', 'functionItem', 'classItem', 'objectItem'];
 
       assert.doesNotThrow(() => _testIterator(iter, expectedProperties));
@@ -28,7 +28,7 @@ describe('util-common/PropertyIter', () => {
 
   describe('iterating soley over methods', () => {
     it('should return just function elements of the object', () => {
-      const iter = new PropertyIter(TEST_OBJECT);
+      const iter = new PropertyIterable(TEST_OBJECT);
       const methodIter = iter.onlyMethods();
       const expectedProperties = ['functionItem', 'classItem'];
       const unexpectedProperties = ['a', 'b', 'objectItem'];
@@ -39,7 +39,7 @@ describe('util-common/PropertyIter', () => {
 
   describe('iterating over properties not defined on Object', () => {
     it('should return just properties that are not part of Object', () => {
-      const iter = new PropertyIter(TEST_OBJECT);
+      const iter = new PropertyIterable(TEST_OBJECT);
       const nonObjectIter = iter.skipObject();
       const expectedProperties = ['a', 'b', 'objectItem', 'functionItem', 'classItem'];
 
@@ -63,7 +63,7 @@ describe('util-common/PropertyIter', () => {
  * were not. There may be additional properties set in the results beyond what
  * was specifically checked.
  *
- * @param {PropertyIter} iter The iterator we are testing.
+ * @param {PropertyIterable} iter The iterator we are testing.
  * @param {Array<string>|null} [expectedProperties=[]] A list of property
  *   names. The iterator must return _at least_ all of the properties in this
  *   list.

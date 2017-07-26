@@ -4,7 +4,7 @@
 
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
-import { PromCondition, PropertyIter } from 'util-common';
+import { PromCondition, PropertyIterable } from 'util-common';
 
 /**
  * Lightweight state machine framework. This allows a subclass to define
@@ -205,7 +205,7 @@ export default class StateMachine {
   _makeValidatorMap() {
     const result = {}; // Built-up result.
 
-    for (const desc of new PropertyIter(this).onlyMethods()) {
+    for (const desc of new PropertyIterable(this).onlyMethods()) {
       const match = desc.name.match(/^_check_([a-zA-Z0-9]+)$/);
       if (!match) {
         // Not the right name format.
@@ -231,7 +231,7 @@ export default class StateMachine {
 
     // First pass: Find all methods with the right name form, including those
     // with `any` (wildcard) names.
-    for (const desc of new PropertyIter(this).onlyMethods()) {
+    for (const desc of new PropertyIterable(this).onlyMethods()) {
       const match = desc.name.match(/^_handle_([a-zA-Z0-9]+)_([a-zA-Z0-9]+)$/);
       if (!match) {
         // Not the right name format.

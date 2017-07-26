@@ -10,7 +10,7 @@
  * either a string or a symbol) and `target` to the target object (either the
  * top-level object or an element in its prototype chain).
  */
-export default class PropertyIter {
+export default class PropertyIterable {
   /**
    * Constructs an instance.
    *
@@ -34,7 +34,7 @@ export default class PropertyIter {
    * specified.
    *
    * @param {function} filter The additional filter.
-   * @returns {PropertyIter} The new iterator.
+   * @returns {PropertyIterable} The new iterator.
    */
   filter(filter) {
     const origFilter = this._filter;
@@ -42,14 +42,14 @@ export default class PropertyIter {
       ? (desc => (origFilter(desc) && filter(desc)))
       : filter;
 
-    return new PropertyIter(this._object, newFilter);
+    return new PropertyIterable(this._object, newFilter);
   }
 
   /**
    * Gets an instance that is like this one but with an addition filter that
    * only passes methods (non-synthetic function-valued properties).
    *
-   * @returns {PropertyIter} The new iterator.
+   * @returns {PropertyIterable} The new iterator.
    */
   onlyMethods() {
     // **Note:** If `value` is defined, the property is guaranteed not to be
@@ -61,7 +61,7 @@ export default class PropertyIter {
    * Gets an instance that is like this one but with an addition filter that
    * skips properties defined on the root `Object` prototype.
    *
-   * @returns {PropertyIter} The new iterator.
+   * @returns {PropertyIterable} The new iterator.
    */
   skipObject() {
     return this.filter(desc => (desc.target !== Object.prototype));
@@ -71,7 +71,7 @@ export default class PropertyIter {
    * Gets an instance that is like this one but with an addition filter that
    * only passes regular non-synthetic properties.
    *
-   * @returns {PropertyIter} The new iterator.
+   * @returns {PropertyIterable} The new iterator.
    */
   skipSynthetic() {
     return this.filter(desc => !(desc.get || desc.set));

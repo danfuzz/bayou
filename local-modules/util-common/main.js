@@ -12,7 +12,7 @@ import JsonUtil from './JsonUtil';
 import PromCondition from './PromCondition';
 import PromDelay from './PromDelay';
 import PromMutex from './PromMutex';
-import PropertyIter from './PropertyIter';
+import PropertyIterable from './PropertyIterable';
 import Random from './Random';
 import Singleton from './Singleton';
 import StringUtil from './StringUtil';
@@ -29,7 +29,7 @@ export {
   PromCondition,
   PromDelay,
   PromMutex,
-  PropertyIter,
+  PropertyIterable,
   Random,
   Singleton,
   StringUtil,
