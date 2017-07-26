@@ -2,7 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import inspect from 'object-inspect';
+// **Note:** Webpack's browser polyfill includes a Node-compatible `util`
+// module, which is why this is possible to import regardless of environment.
+import { inspect } from 'util';
 
 /**
  * Error subclass for problems reported by this module, meant also to be used
