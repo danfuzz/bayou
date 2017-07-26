@@ -12,7 +12,7 @@ import { UtilityClass } from 'util-common-base';
  * of the finer points of dealing with Unicdode) a little nicer.
  */
 export default class StringUtil extends UtilityClass {
-  /*
+  /**
    * Splits a string into its distinct grapheme clusters. For instance, the letter
    * 'ñ' could be represented as the single Unicode code point `0x00F1`, or as the
    * the letter 'n' (`0x63`) plus the '~' combinding mark (`0x0303`). The built-in
@@ -21,7 +21,8 @@ export default class StringUtil extends UtilityClass {
    * surrogate pairs, etc.
    *
    * @param {string} string The string to split.
-   * @returns {array<string>} An array of strings, one for each grapheme cluster in the input.
+   * @returns {array<string>} An array of strings, one for each grapheme cluster
+   *   in the input.
    */
   static graphemesForString(string) {
     const splitter = new GraphemeSplitter();
