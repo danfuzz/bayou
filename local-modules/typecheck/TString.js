@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import url from 'url';
+import { URL } from 'url';
 
 import { UtilityClass } from 'util-common-base';
 
@@ -126,7 +126,9 @@ export default class TString extends UtilityClass {
   }
 
   /**
-   * Checks a value which must be a syntactically valid absolute URL.
+   * Checks a value which must be a syntactically valid absolute URL without
+   * auth info. (Auth info consists of a username and optional password before
+   * the host name.)
    *
    * @param {*} value Value to check.
    * @returns {string} `value`.
@@ -134,11 +136,17 @@ export default class TString extends UtilityClass {
   static urlAbsolute(value) {
     TString.nonempty(value);
 
-    // `url.parse()` is fairly lenient. TODO: Might want to be less lenient.
-    const parsed = url.parse(value);
+    // `new URL()` is somewhat lenient with syntax checking. **TODO:** Might
+    // want to be less lenient.
+    const url = new URL(value);
 
-    if (!(parsed.protocol && parsed.slashes && parsed.host)) {
+    if (!url.host) {
       return TypeError.badValue(value, 'String', 'absolute URL syntax');
+    }
+
+    if (url.username || url.password) {
+      return TypeError.badValue(
+        value, 'String', 'absolute URL syntax, without auth');
     }
 
     return value;

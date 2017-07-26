@@ -155,5 +155,10 @@ describe('typecheck/TString', () => {
       assert.throws(() => TString.urlAbsolute(undefined));
       assert.throws(() => TString.urlAbsolute(null));
     });
+
+    it('should throw an Error if value has auth info', () => {
+      assert.throws(() => TString.urlAbsolute('http://user@example.com/'));
+      assert.throws(() => TString.urlAbsolute('http://user:pass@example.com/'));
+    });
   });
 });

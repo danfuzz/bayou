@@ -31,6 +31,13 @@ class FakeKey extends BaseKey {
 }
 
 describe('api-common/BaseKey', () => {
+  describe('constructor', () => {
+    it('should throw an error given a URL with auth', () => {
+      assert.throws(() => new BaseKey('http://foo@example.com/', ID));
+      assert.throws(() => new BaseKey('http://foo:blort@example.com/', ID));
+    });
+  });
+
   describe('.url', () => {
     it('should return the URL passed to the constructor', () => {
       const key = new BaseKey(URL, ID);
@@ -62,12 +69,10 @@ describe('api-common/BaseKey', () => {
       test('https://x.y');
       test('https://x.y/');
       test('https://x.y/a');
+      test('https://x.y/a/b/c');
       test('https://x.y:37/');
       test('https://x.y:123/b');
-      test('https://florp@x.y:914/');
-      test('https://florp@x.y:667/c');
-      test('https://florp:like@x.y:23/');
-      test('https://florp:like@x.y:242/d');
+      test('https://x.y.z/aa/bb/cc/');
 
       test('https://example.com/?what=does&this=mean');
       test('https://example.com/foo/bar?what=does&this=mean');
