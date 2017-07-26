@@ -105,7 +105,7 @@ describe('typecheck/TString', () => {
     });
   });
 
-  describe('nonempty(value)', () => {
+  describe('nonempty()', () => {
     it('should return the provided value if it is a string with length >= 1', () => {
       const value = 'This better work!';
 
@@ -119,7 +119,7 @@ describe('typecheck/TString', () => {
     });
   });
 
-  describe('orNull(value)', () => {
+  describe('orNull()', () => {
     it('should return the provided value if it is a string', () => {
       const value = 'This better work!';
 
@@ -141,14 +141,14 @@ describe('typecheck/TString', () => {
     });
   });
 
-  describe('urlAbsolute(value)', () => {
-    it('should return the provided value if it is an absolute url string', () => {
+  describe('urlAbsolute()', () => {
+    it('should return the provided value if it is an absolute URL string', () => {
       const value = 'https://www.example.com';
 
       assert.strictEqual(TString.urlAbsolute(value), value);
     });
 
-    it('should throw an Error if value is not an absolute url', () => {
+    it('should throw an Error if value is not a URL string at all', () => {
       assert.throws(() => TString.urlAbsolute('this better not work!'));
       assert.throws(() => TString.urlAbsolute('/home/users/fnord'));
       assert.throws(() => TString.urlAbsolute(5.1));
@@ -159,6 +159,35 @@ describe('typecheck/TString', () => {
     it('should throw an Error if value has auth info', () => {
       assert.throws(() => TString.urlAbsolute('http://user@example.com/'));
       assert.throws(() => TString.urlAbsolute('http://user:pass@example.com/'));
+    });
+  });
+
+  describe('urlOrigin()', () => {
+    it('should return the provided value if it is an origin-only URL', () => {
+      let which = 0;
+      function test(value) {
+        which++;
+        assert.strictEqual(TString.urlOrigin(value), value, `#${which}`);
+      }
+
+      test('https://www.example.com');
+      test('http://example.com');
+      test('http://florp.co.uk:123');
+    });
+
+    it('should throw an Error if value is not an origin-only URL', () => {
+      assert.throws(() => TString.urlOrigin('http://foo.bar/'));
+      assert.throws(() => TString.urlOrigin('http://foo.bar/x'));
+      assert.throws(() => TString.urlOrigin('https://foo@bar.com'));
+      assert.throws(() => TString.urlOrigin('https://florp:like@example.com'));
+    });
+
+    it('should throw an Error if value is not a URL string at all', () => {
+      assert.throws(() => TString.urlOrigin('this better not work!'));
+      assert.throws(() => TString.urlOrigin('/home/users/fnord'));
+      assert.throws(() => TString.urlOrigin(5.1));
+      assert.throws(() => TString.urlOrigin(undefined));
+      assert.throws(() => TString.urlOrigin(null));
     });
   });
 });

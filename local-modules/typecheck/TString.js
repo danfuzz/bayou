@@ -136,11 +136,15 @@ export default class TString extends UtilityClass {
    * @returns {string} `value`.
    */
   static urlAbsolute(value) {
-    TString.nonempty(value);
-
-    // `new URL()` is somewhat lenient with syntax checking. **TODO:** Might
-    // want to be less lenient.
-    const url = new URL(value);
+    let url;
+    try {
+      // `new URL()` is somewhat lenient with syntax checking. **TODO:** Might
+      // want to be less lenient.
+      url = new URL(TString.nonempty(value));
+    } catch (e) {
+      // Throw a higher-fidelity error.
+      return TypeError.badValue(value, 'String', 'absolute URL syntax');
+    }
 
     if (!url.host) {
       return TypeError.badValue(value, 'String', 'absolute URL syntax');
@@ -149,6 +153,31 @@ export default class TString extends UtilityClass {
     if (url.username || url.password) {
       return TypeError.badValue(
         value, 'String', 'absolute URL syntax, without auth');
+    }
+
+    return value;
+  }
+
+  /**
+   * Checks a value which must be a syntactically valid origin-only URL (that
+   * is, neither auth nor path fields).
+   *
+   * @param {*} value Value to check.
+   * @returns {string} `value`.
+   */
+  static urlOrigin(value) {
+    let url;
+    try {
+      // `new URL()` is somewhat lenient with syntax checking. **TODO:** Might
+      // want to be less lenient.
+      url = new URL(TString.nonempty(value));
+    } catch (e) {
+      // Throw a higher-fidelity error.
+      return TypeError.badValue(value, 'String', 'origin-only URL syntax');
+    }
+
+    if (value !== url.origin) {
+      return TypeError.badValue(value, 'String', 'origin-only URL syntax');
     }
 
     return value;
