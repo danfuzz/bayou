@@ -8,11 +8,12 @@ import DataUtil from './DataUtil';
 import DeferredLoader from './DeferredLoader';
 import FrozenBuffer from './FrozenBuffer';
 import InfoError from './InfoError';
+import IterableUtil from './IterableUtil';
 import JsonUtil from './JsonUtil';
 import PromCondition from './PromCondition';
 import PromDelay from './PromDelay';
 import PromMutex from './PromMutex';
-import PropertyIter from './PropertyIter';
+import PropertyIterable from './PropertyIterable';
 import Random from './Random';
 import Singleton from './Singleton';
 import StringUtil from './StringUtil';
@@ -25,11 +26,12 @@ export {
   DeferredLoader,
   FrozenBuffer,
   InfoError,
+  IterableUtil,
   JsonUtil,
   PromCondition,
   PromDelay,
   PromMutex,
-  PropertyIter,
+  PropertyIterable,
   Random,
   Singleton,
   StringUtil,

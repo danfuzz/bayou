@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TObject, TString } from 'typecheck';
-import { PropertyIter } from 'util-common';
+import { PropertyIterable } from 'util-common';
 
 /**
  * Schema for an object. Represents what actions are available. More
@@ -49,7 +49,7 @@ export default class Schema {
   static _makeSchemaFor(target) {
     const result = new Map();
 
-    for (const desc of new PropertyIter(target).skipObject().onlyMethods()) {
+    for (const desc of new PropertyIterable(target).skipObject().onlyMethods()) {
       const name = desc.name;
 
       if (name.match(/^_/) || (name === 'constructor')) {

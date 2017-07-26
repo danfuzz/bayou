@@ -4,9 +4,9 @@
 
 import { TString } from 'typecheck';
 
-/*
- * A regular expression that can be used to validate colors
- *    that are expected to be in CSS three-byte hex format (e.g. `'#fe8ef1'`)
+/**
+ * {RegExp} Regular expression that can be used to validate colors that are
+ * expected to be in CSS three-byte hex format (e.g. `'#fe8ef1'`).
  */
 const HEX_COLOR_REGEXP = /^#[a-fA-F0-9]{6}$/;
 
