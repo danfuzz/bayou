@@ -83,7 +83,7 @@ describe('api-common/BaseKey', () => {
 
   describe('.id', () => {
     it('should return the ID passed to the constructor', () => {
-      const key = new FakeKey(URL, ID);
+      const key = new BaseKey(URL, ID);
       const id = key.id;
 
       assert.strictEqual(id, ID);
@@ -91,11 +91,10 @@ describe('api-common/BaseKey', () => {
   });
 
   describe('toString()', () => {
-    it('returns a redacted (log-safe) representation of the key', () => {
-      const key = new FakeKey(URL, ID);
-      const s = key.toString();
+    it('returns a string', () => {
+      const key = new BaseKey(URL, ID);
 
-      assert.isString(s);
+      assert.isString(key.toString());
     });
   });
 
