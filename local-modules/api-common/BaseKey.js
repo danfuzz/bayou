@@ -49,7 +49,10 @@ export default class BaseKey extends CommonBase {
     this._id = TString.minLen(id, 8);
   }
 
-  /** {string} Base of `url` (that is, the origin without any path). */
+  /**
+   * {string} Base of `url` (that is, the origin without any path). This throws
+   * an error if `url` is `*`.
+   */
   get baseUrl() {
     const match = this._url.match(/^[^:]+:\/\/[^/]+/);
 
