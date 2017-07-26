@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+// **Note:** Webpack's browser polyfill includes a Node-compatible `url`
+// module, which is why this is possible to import regardless of environment.
 import { URL } from 'url';
 
 import { TString } from 'typecheck';
