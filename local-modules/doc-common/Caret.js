@@ -71,6 +71,21 @@ export default class Caret extends CommonBase {
   }
 
   /**
+   * Compares this to another instance, for equality of content.
+   *
+   * @param {Caret} other Caret to compare to.
+   * @returns {boolean} `true` iff `this` and `other` have equal contents.
+   */
+  equals(other) {
+    Caret.check(other);
+
+    return (this._sessionId === other._sessionId)
+      &&   (this._index     === other._index)
+      &&   (this._length    === other._length)
+      &&   (this._color     === other._color);
+  }
+
+  /**
    * Converts this instance for API transmission.
    *
    * @returns {array} Reconstruction arguments.
