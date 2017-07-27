@@ -162,10 +162,12 @@ export default class CaretControl extends CommonBase {
   _applyOps(ops) {
     const snapshot  = this._snapshot;
     const newRevNum = snapshot.revNum + 1;
-    const delta     = new CaretDelta(newRevNum, ops);
+
+    // Add the op to bump up the revision number.
+    ops.push(CaretOp.op_updateRevNum(newRevNum));
 
     // Update the snapshot, and wake up any waiters.
-    this._snapshot = snapshot.compose(delta);
+    this._snapshot = snapshot.compose(new CaretDelta(ops));
     this._updatedCondition.onOff();
 
     this._log.detail(`New caret revision number: ${newRevNum}`);

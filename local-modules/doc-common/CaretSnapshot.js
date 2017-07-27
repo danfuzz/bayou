@@ -89,6 +89,10 @@ export default class CaretSnapshot extends CommonBase {
   /**
    * Composes a delta on top of this instance, to produce a new instance.
    *
+   * **Note:** It is an error if `delta` contains an `op_updateCaret` to a caret
+   * that either does not exist in `this` or was not first introduced with an
+   * `op_beginSession`.
+   *
    * @param {CaretDelta} delta Delta to compose on top of this instance.
    * @returns {CaretSnapshot} New instance consisting of the composition of
    *   this instance with `delta`.
@@ -97,18 +101,26 @@ export default class CaretSnapshot extends CommonBase {
     CaretDelta.check(delta);
 
     const newCarets = new Map(this._carets.entries());
-    let docRevNum = this.docRevNum;
+    let   docRevNum = this._docRevNum;
+    let   revNum    = this._revNum;
 
     for (const op of delta.ops) {
       switch (op.name) {
         case CaretOp.BEGIN_SESSION: {
-          // Nothing to do here.
+          const sessionId = op.arg('sessionId');
+          newCarets.set(sessionId, new Caret(sessionId));
           break;
         }
 
         case CaretOp.UPDATE_CARET: {
-          const caret = op.arg('caret');
-          newCarets.set(caret.sessionId, caret);
+          const caret     = op.arg('caret');
+          const sessionId = caret.sessionId;
+
+          if (!newCarets.get(sessionId)) {
+            throw new Error(`Invalid delta; update to nonexistent caret: ${sessionId}`);
+          }
+
+          newCarets.set(sessionId, caret);
           break;
         }
 
@@ -120,11 +132,17 @@ export default class CaretSnapshot extends CommonBase {
 
         case CaretOp.UPDATE_DOC_REV_NUM: {
           docRevNum = op.arg('docRevNum');
+          break;
+        }
+
+        case CaretOp.UPDATE_REV_NUM: {
+          revNum = op.arg('revNum');
+          break;
         }
       }
     }
 
-    return new CaretSnapshot(docRevNum, delta.revNum, newCarets.values());
+    return new CaretSnapshot(revNum, docRevNum, newCarets.values());
   }
 
   /**
@@ -140,50 +158,74 @@ export default class CaretSnapshot extends CommonBase {
   diff(newerSnapshot) {
     CaretSnapshot.check(newerSnapshot);
 
-    const newerCarets   = newerSnapshot._carets;
-    const caretsAdded   = [];
-    const caretsUpdated = [];
-    const caretsRemoved = [];
+    const newerCarets = newerSnapshot._carets;
+    const caretOps    = [];
+
+    // Add ops for the revision numbers, as needed.
+
+    if (this._revNum !== newerSnapshot._revNum) {
+      caretOps.push(CaretOp.op_updateRevNum(newerSnapshot._revNum));
+    }
+
+    if (this._docRevNum !== newerSnapshot._docRevNum) {
+      caretOps.push(CaretOp.op_updateDocRevNum(newerSnapshot._docRevNum));
+    }
 
     // Find carets that are new or updated from `this` when going to
     // `newerSnapshot`.
+
     for (const [sessionId, newerCaret] of newerCarets) {
-      if (this._carets.get(sessionId)) {
-        // The `sessionId` matches between the two snapshots, so it's an update.
-        caretsUpdated.push(newerCaret);
+      const already = this._carets.get(sessionId);
+      if (already) {
+        // The `sessionId` matches the older snapshot. Indicate an update if the
+        // values are different.
+        if (!already.equals(newerCaret)) {
+          caretOps.push(CaretOp.op_updateCaret(newerCaret));
+        }
       } else {
-        // The `sessionId` is in `newerSnapshot` but not `this`, so it's an
-        // addition.
-        caretsAdded.push(newerCaret);
+        // The `sessionId` isn't in the older snapshot, so this is an addition.
+        caretOps.push(CaretOp.op_beginSession(newerCaret.sessionId));
+        caretOps.push(CaretOp.op_updateCaret(newerCaret));
       }
     }
 
-    // Finally, find carets removed from `this` when going to `newerSnapshot`.
+    // Find carets removed from `this` when going to `newerSnapshot`.
+
     for (const [sessionId, olderCaret] of this._carets) {
       if (!newerCarets.get(sessionId)) {
-        caretsRemoved.push(olderCaret);
+        caretOps.push(CaretOp.op_endSession(olderCaret.sessionId));
       }
     }
 
-    const revNum = Math.max(this.revNum, newerSnapshot.revNum);
-    const caretOps = [];
+    // Build the result.
+    return new CaretDelta(caretOps);
+  }
 
-    for (const caret of caretsAdded) {
-      caretOps.push(CaretDelta.op_beginSession(caret.sessionId));
+  /**
+   * Compares this to another instance, for equality of content.
+   *
+   * @param {CaretSnapshot} other Snapshot to compare to.
+   * @returns {boolean} `true` iff `this` and `other` have equal contents.
+   */
+  equals(other) {
+    CaretSnapshot.check(other);
+
+    const thisCarets  = this._carets;
+    const otherCarets = other._carets;
+
+    if (   (this._revNum    !== other._revNum)
+        || (this._docRevNum !== other._docRevNum)
+        || (thisCarets.size !== otherCarets.size)) {
+      return false;
     }
 
-    for (const caret of caretsUpdated) {
-      caretOps.push(CaretDelta.op_updateAuthorSelecton(caret.sessionId, caret.index, caret.length, caret.color));
+    for (const [sessionId, thisCaret] of thisCarets) {
+      const otherCaret = otherCarets.get(sessionId);
+      if (!(otherCaret && otherCaret.equals(thisCaret))) {
+        return false;
+      }
     }
 
-    for (const caret of caretsRemoved) {
-      caretOps.push(CaretDelta.op_endSession(caret.sessionId));
-    }
-
-    if (this.docRevNum !== newerSnapshot.docRevNum) {
-      caretOps.push(CaretDelta.op_updateDocRevNum(newerSnapshot.docRevNum));
-    }
-
-    return new CaretDelta(revNum, caretOps);
+    return true;
   }
 }

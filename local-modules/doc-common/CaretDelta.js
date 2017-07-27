@@ -5,7 +5,11 @@
 import { TArray } from 'typecheck';
 import { CommonBase } from 'util-common';
 
-import RevisionNumber from './RevisionNumber';
+/**
+ * {CaretDelta|null} Empty instance. Initialized in the static getter of the
+ * same name.
+ */
+let EMPTY = null;
 
 /**
  * Delta for caret information. Instances of this class can be applied to
@@ -14,19 +18,23 @@ import RevisionNumber from './RevisionNumber';
  * Instances of this class are immutable.
  */
 export default class CaretDelta extends CommonBase {
+  /** {CaretDelta} Empty instance. */
+  static get EMPTY() {
+    if (EMPTY === null) {
+      EMPTY = new CaretDelta([]);
+    }
+
+    return EMPTY;
+  }
+
   /**
    * Constructs an instance.
    *
-   * @param {Int} revNum Revision number of the caret information produced by
-   *   this instance.
    * @param {array<object>} ops Array of individual caret information
    *   modification operations.
    */
-  constructor(revNum, ops) {
+  constructor(ops) {
     super();
-
-    /** {Int} The produced revision number. */
-    this._revNum = RevisionNumber.check(revNum);
 
     /**
      * {array<object>} Array of operations to perform on the (implied) base
@@ -41,12 +49,7 @@ export default class CaretDelta extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._revNum, this._ops];
-  }
-
-  /** {Int} The produced revision number. */
-  get revNum() {
-    return this._revNum;
+    return [this._ops];
   }
 
   /**

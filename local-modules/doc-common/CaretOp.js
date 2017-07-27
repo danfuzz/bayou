@@ -30,6 +30,11 @@ export default class CaretOp {
     return 'update-doc-rev-num';
   }
 
+  /** {string} Operation name for "update rev-num" operations. */
+  static get UPDATE_REV_NUM() {
+    return 'update-rev-num';
+  }
+
   /**
    * Constructs a new "begin session" operation.
    *
@@ -96,6 +101,22 @@ export default class CaretOp {
     args.set('docRevNum', docRevNum);
 
     return new CaretOp(KEY, CaretOp.UPDATE_DOC_REV_NUM, args);
+  }
+
+  /**
+   * Constructs a new instance of an update-rev-num operation.
+   *
+   * @param {Int} revNum The new revision number.
+   * @returns {CaretOp} The corresponding operation.
+   */
+  static op_updateRevNum(revNum) {
+    RevisionNumber.check(revNum);
+
+    const args = new Map();
+
+    args.set('revNum', revNum);
+
+    return new CaretOp(KEY, CaretOp.UPDATE_REV_NUM, args);
   }
 
   /**
