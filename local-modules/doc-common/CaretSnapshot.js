@@ -170,4 +170,32 @@ export default class CaretSnapshot extends CommonBase {
     // Build the result.
     return new CaretDelta(newerSnapshot.revNum, caretOps);
   }
+
+  /**
+   * Compares this to another instance, for equality of content.
+   *
+   * @param {CaretSnapshot} other Snapshot to compare to.
+   * @returns {boolean} `true` iff `this` and `other` have equal contents.
+   */
+  equals(other) {
+    CaretSnapshot.check(other);
+
+    const thisCarets  = this._carets;
+    const otherCarets = other._carets;
+
+    if (   (this._revNum    !== other._revNum)
+        || (this._docRevNum !== other._docRevNum)
+        || (thisCarets.size !== otherCarets.size)) {
+      return false;
+    }
+
+    for (const [sessionId, thisCaret] of thisCarets) {
+      const otherCaret = otherCarets.get(sessionId);
+      if (!(otherCaret && otherCaret.equals(thisCaret))) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 }
