@@ -140,47 +140,34 @@ export default class CaretSnapshot extends CommonBase {
   diff(newerSnapshot) {
     CaretSnapshot.check(newerSnapshot);
 
-    const newerCarets   = newerSnapshot._carets;
-    const caretsAdded   = [];
-    const caretsUpdated = [];
-    const caretsRemoved = [];
+    const newerCarets = newerSnapshot._carets;
+    const caretOps    = [];
 
     // Find carets that are new or updated from `this` when going to
     // `newerSnapshot`.
     for (const [sessionId, newerCaret] of newerCarets) {
-      if (!this._carets.get(sessionId)) {
+      const already = this._carets.get(sessionId);
+      if (already) {
+        // The `sessionId` matches the older snapshot. Indicate an update if the
+        // values are different.
+        if (!already.equals(newerCaret)) {
+          caretOps.push(CaretOp.op_updateCaret(newerCaret));
+        }
+      } else {
         // The `sessionId` isn't in the older snapshot, so this is an addition.
-        caretsAdded.push(newerCaret);
+        caretOps.push(CaretOp.op_beginSession(newerCaret.sessionId));
+        caretOps.push(CaretOp.op_updateCaret(newerCaret));
       }
-      caretsUpdated.push(newerCaret);
     }
 
-    // Finally, find carets removed from `this` when going to `newerSnapshot`.
+    // Find carets removed from `this` when going to `newerSnapshot`.
     for (const [sessionId, olderCaret] of this._carets) {
       if (!newerCarets.get(sessionId)) {
-        caretsRemoved.push(olderCaret);
+        caretOps.push(CaretOp.op_endSession(olderCaret.sessionId));
       }
     }
 
-    const revNum = Math.max(this.revNum, newerSnapshot.revNum);
-    const caretOps = [];
-
-    for (const caret of caretsAdded) {
-      caretOps.push(CaretOp.op_beginSession(caret.sessionId));
-    }
-
-    for (const caret of caretsUpdated) {
-      caretOps.push(CaretOp.op_updateCaret(caret));
-    }
-
-    for (const caret of caretsRemoved) {
-      caretOps.push(CaretOp.op_endSession(caret.sessionId));
-    }
-
-    if (this.docRevNum !== newerSnapshot.docRevNum) {
-      caretOps.push(CaretOp.op_updateDocRevNum(newerSnapshot.docRevNum));
-    }
-
-    return new CaretDelta(revNum, caretOps);
+    // Build the result.
+    return new CaretDelta(newerSnapshot.revNum, caretOps);
   }
 }
