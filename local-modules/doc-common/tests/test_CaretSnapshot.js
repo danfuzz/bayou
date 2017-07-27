@@ -68,7 +68,7 @@ describe('doc-common/CaretSnapshot', () => {
       assert.isTrue(result.equals(expected));
     });
 
-    it('should allow introduction of a new caret with valuet given the appropriate ops', () => {
+    it('should allow introduction of a new caret with value given the appropriate ops', () => {
       const snap     = new CaretSnapshot(1, 2, []);
       const expected = new CaretSnapshot(1, 2, [caret1]);
 
