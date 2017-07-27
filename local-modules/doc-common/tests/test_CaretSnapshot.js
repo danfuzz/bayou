@@ -37,10 +37,28 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should update `revNum` given the appropriate op', () => {
-      const snap     = new CaretSnapshot(1,   2, [caret1]);
-      const expected = new CaretSnapshot(999, 2, [caret1]);
+      const snap     = new CaretSnapshot(1,   2, [caret1, caret2]);
+      const expected = new CaretSnapshot(999, 2, [caret1, caret2]);
       const result =
         snap.compose(new CaretDelta([CaretOp.op_updateRevNum(999)]));
+
+      assert.isTrue(result.equals(expected));
+    });
+
+    it('should add a default caret given the appropriate op', () => {
+      const snap     = new CaretSnapshot(1, 2, [caret1]);
+      const expected = new CaretSnapshot(1, 2, [caret1, new Caret('florp')]);
+      const result =
+        snap.compose(new CaretDelta([CaretOp.op_beginSession('florp')]));
+
+      assert.isTrue(result.equals(expected));
+    });
+
+    it('should remove a caret given the appropriate op', () => {
+      const snap     = new CaretSnapshot(1, 2, [caret1, caret2]);
+      const expected = new CaretSnapshot(1, 2, [caret2]);
+      const result =
+        snap.compose(new CaretDelta([CaretOp.op_endSession(caret1.sessionId)]));
 
       assert.isTrue(result.equals(expected));
     });
