@@ -103,7 +103,8 @@ export default class CaretSnapshot extends CommonBase {
     for (const op of delta.ops) {
       switch (op.name) {
         case CaretOp.BEGIN_SESSION: {
-          newCarets.set(new Caret(op.arg('sessionId')));
+          const sessionId = op.arg('sessionId');
+          newCarets.set(sessionId, new Caret(sessionId));
           break;
         }
 
