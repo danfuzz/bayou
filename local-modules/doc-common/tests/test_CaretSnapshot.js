@@ -30,8 +30,7 @@ describe('doc-common/CaretSnapshot', () => {
     it('should update `docRevNum` given the appropriate op', () => {
       const snap     = new CaretSnapshot(1, 2,   [caret1]);
       const expected = new CaretSnapshot(1, 999, [caret1]);
-      const result =
-        snap.compose(new CaretDelta([CaretOp.op_updateDocRevNum(999)]));
+      const result   = snap.compose(new CaretDelta([CaretOp.op_updateDocRevNum(999)]));
 
       assert.isTrue(result.equals(expected));
     });
@@ -39,8 +38,7 @@ describe('doc-common/CaretSnapshot', () => {
     it('should update `revNum` given the appropriate op', () => {
       const snap     = new CaretSnapshot(1,   2, [caret1, caret2]);
       const expected = new CaretSnapshot(999, 2, [caret1, caret2]);
-      const result =
-        snap.compose(new CaretDelta([CaretOp.op_updateRevNum(999)]));
+      const result   = snap.compose(new CaretDelta([CaretOp.op_updateRevNum(999)]));
 
       assert.isTrue(result.equals(expected));
     });
@@ -48,8 +46,37 @@ describe('doc-common/CaretSnapshot', () => {
     it('should add a default caret given the appropriate op', () => {
       const snap     = new CaretSnapshot(1, 2, [caret1]);
       const expected = new CaretSnapshot(1, 2, [caret1, new Caret('florp')]);
-      const result =
-        snap.compose(new CaretDelta([CaretOp.op_beginSession('florp')]));
+      const result   = snap.compose(new CaretDelta([CaretOp.op_beginSession('florp')]));
+
+      assert.isTrue(result.equals(expected));
+    });
+
+    it('should refuse to update a nonexistent caret', () => {
+      const snap  = new CaretSnapshot(1, 2, [caret1]);
+      const delta = new CaretDelta([CaretOp.op_updateCaret(new Caret('florp'))]);
+
+      assert.throws(() => { snap.update(delta); });
+    });
+
+    it('should update a pre-existing caret given the appropriate op', () => {
+      const c1       = new Caret('foo', 1, 2, '#333333');
+      const c2       = new Caret('foo', 3, 4, '#555555');
+      const snap     = new CaretSnapshot(1, 2, [caret1, c1]);
+      const expected = new CaretSnapshot(1, 2, [caret1, c2]);
+      const result   = snap.compose(new CaretDelta([CaretOp.op_updateCaret(c2)]));
+
+      assert.isTrue(result.equals(expected));
+    });
+
+    it('should allow introduction of a new caret with valuet given the appropriate ops', () => {
+      const snap     = new CaretSnapshot(1, 2, []);
+      const expected = new CaretSnapshot(1, 2, [caret1]);
+
+      const delta = new CaretDelta([
+        CaretOp.op_beginSession(caret1.sessionId),
+        CaretOp.op_updateCaret(caret1)]);
+
+      const result = snap.compose(delta);
 
       assert.isTrue(result.equals(expected));
     });
