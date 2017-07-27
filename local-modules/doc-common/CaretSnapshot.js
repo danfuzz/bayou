@@ -148,14 +148,11 @@ export default class CaretSnapshot extends CommonBase {
     // Find carets that are new or updated from `this` when going to
     // `newerSnapshot`.
     for (const [sessionId, newerCaret] of newerCarets) {
-      if (this._carets.get(sessionId)) {
-        // The `sessionId` matches between the two snapshots, so it's an update.
-        caretsUpdated.push(newerCaret);
-      } else {
-        // The `sessionId` is in `newerSnapshot` but not `this`, so it's an
-        // addition.
+      if (!this._carets.get(sessionId)) {
+        // The `sessionId` isn't in the older snapshot, so this is an addition.
         caretsAdded.push(newerCaret);
       }
+      caretsUpdated.push(newerCaret);
     }
 
     // Finally, find carets removed from `this` when going to `newerSnapshot`.
@@ -173,7 +170,7 @@ export default class CaretSnapshot extends CommonBase {
     }
 
     for (const caret of caretsUpdated) {
-      caretOps.push(CaretDelta.op_updateAuthorSelecton(caret.sessionId, caret.index, caret.length, caret.color));
+      caretOps.push(CaretDelta.op_updateCaret(caret));
     }
 
     for (const caret of caretsRemoved) {
