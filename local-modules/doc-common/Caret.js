@@ -16,20 +16,24 @@ import { ColorSelector, CommonBase } from 'util-common';
  */
 export default class Caret extends CommonBase {
   /**
-   * Constructs an instance.
+   * Constructs an instance. Only the first argument (`sessionId`) is required;
+   * though generally short-lived, instances constructed with the rest of the
+   * arguments as defaults are used as the carets for newly-minted sessions.
    *
    * @param {string} sessionId An opaque token that can be used with other
    *   APIs to get information about the author whose caret this is (e.g. author
    *   name, avatar, user id, etc). No assumptions should be made about the
    *   format of `sessionId`.
-   * @param {Int} index The zero-based location of the caret (or beginning of a
-   *   selection) within the document.
-   * @param {Int} length The number of characters within a selection, or zero if
-   *   this caret merely represents the insertion point and not a selection.
-   * @param {string} color The color to be used when annotating this caret. The
-   *   color must be in the CSS three-byte hex form (e.g. `'#b8ff2e'`).
+   * @param {Int} [index = 0] The zero-based location of the caret (or beginning
+   *   of a selection) within the document.
+   * @param {Int} [length = 0] The number of characters within a selection, or
+   *   zero if this caret merely represents the insertion point and not a
+   *   selection.
+   * @param {string} [color = '#000000'] The color to be used when annotating
+   *   this caret. The color must be in the CSS three-byte hex form (e.g.
+   *   `'#b8ff2e'`).
    */
-  constructor(sessionId, index, length, color) {
+  constructor(sessionId, index = 0, length = 0, color = '#000000') {
     super();
 
     this._sessionId = TString.check(sessionId);
