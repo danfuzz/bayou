@@ -6,12 +6,27 @@ import { TArray } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 /**
+ * {CaretDelta|null} Empty instance. Initialized in the static getter of the
+ * same name.
+ */
+let EMPTY = null;
+
+/**
  * Delta for caret information. Instances of this class can be applied to
  * instances of `CaretSnapshot` to produce updated snapshots.
  *
  * Instances of this class are immutable.
  */
 export default class CaretDelta extends CommonBase {
+  /** {CaretDelta} Empty instance. */
+  static get EMPTY() {
+    if (EMPTY === null) {
+      EMPTY = new CaretDelta([]);
+    }
+
+    return EMPTY;
+  }
+
   /**
    * Constructs an instance.
    *
