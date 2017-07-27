@@ -5,8 +5,6 @@
 import { TArray } from 'typecheck';
 import { CommonBase } from 'util-common';
 
-import RevisionNumber from './RevisionNumber';
-
 /**
  * Delta for caret information. Instances of this class can be applied to
  * instances of `CaretSnapshot` to produce updated snapshots.
@@ -17,16 +15,11 @@ export default class CaretDelta extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {Int} revNum Revision number of the caret information produced by
-   *   this instance.
    * @param {array<object>} ops Array of individual caret information
    *   modification operations.
    */
-  constructor(revNum, ops) {
+  constructor(ops) {
     super();
-
-    /** {Int} The produced revision number. */
-    this._revNum = RevisionNumber.check(revNum);
 
     /**
      * {array<object>} Array of operations to perform on the (implied) base
@@ -41,12 +34,7 @@ export default class CaretDelta extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._revNum, this._ops];
-  }
-
-  /** {Int} The produced revision number. */
-  get revNum() {
-    return this._revNum;
+    return [this._ops];
   }
 
   /**

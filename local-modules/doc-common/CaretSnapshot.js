@@ -97,7 +97,8 @@ export default class CaretSnapshot extends CommonBase {
     CaretDelta.check(delta);
 
     const newCarets = new Map(this._carets.entries());
-    let docRevNum = this.docRevNum;
+    let docRevNum   = this._docRevNum;
+    let revNum      = this._revNum;
 
     for (const op of delta.ops) {
       switch (op.name) {
@@ -120,11 +121,17 @@ export default class CaretSnapshot extends CommonBase {
 
         case CaretOp.UPDATE_DOC_REV_NUM: {
           docRevNum = op.arg('docRevNum');
+          break;
+        }
+
+        case CaretOp.UPDATE_REV_NUM: {
+          revNum = op.arg('revNum');
+          break;
         }
       }
     }
 
-    return new CaretSnapshot(docRevNum, delta.revNum, newCarets.values());
+    return new CaretSnapshot(docRevNum, revNum, newCarets.values());
   }
 
   /**
@@ -143,8 +150,19 @@ export default class CaretSnapshot extends CommonBase {
     const newerCarets = newerSnapshot._carets;
     const caretOps    = [];
 
+    // Add ops for the revision numbers, as needed.
+
+    if (this._revNum !== newerSnapshot._revNum) {
+      caretOps.push(CaretOp.op_updateRevNum(newerSnapshot._revNum));
+    }
+
+    if (this._docRevNum !== newerSnapshot._docRevNum) {
+      caretOps.push(CaretOp.op_updateRevNum(newerSnapshot._docRevNum));
+    }
+
     // Find carets that are new or updated from `this` when going to
     // `newerSnapshot`.
+
     for (const [sessionId, newerCaret] of newerCarets) {
       const already = this._carets.get(sessionId);
       if (already) {
@@ -161,6 +179,7 @@ export default class CaretSnapshot extends CommonBase {
     }
 
     // Find carets removed from `this` when going to `newerSnapshot`.
+
     for (const [sessionId, olderCaret] of this._carets) {
       if (!newerCarets.get(sessionId)) {
         caretOps.push(CaretOp.op_endSession(olderCaret.sessionId));
@@ -168,7 +187,7 @@ export default class CaretSnapshot extends CommonBase {
     }
 
     // Build the result.
-    return new CaretDelta(newerSnapshot.revNum, caretOps);
+    return new CaretDelta(caretOps);
   }
 
   /**

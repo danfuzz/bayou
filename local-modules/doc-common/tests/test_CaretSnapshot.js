@@ -18,7 +18,6 @@ describe('doc-common/CaretSnapshot', () => {
       const result = snap.diff(snap);
 
       assert.instanceOf(result, CaretDelta);
-      assert.strictEqual(result.revNum, snap.revNum);
       assert.deepEqual(result.ops, []);
     });
   });
