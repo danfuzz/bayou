@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase, URL } from 'util-common';
 
 /**
  * Base class for access keys. An access key consists of information for
@@ -28,10 +28,12 @@ export default class BaseKey extends CommonBase {
    * Constructs an instance with the indicated parts. Subclasses should override
    * methods as described in the documentation.
    *
-   * @param {string} url URL at which the resource may be accessed. This is
-   *   expected to be an API endpoint. Alternatively, if this instance will only
-   *   ever be used in a context where the URL is implied or superfluous, this
-   *   can be passed as `*` (a literal asterisk).
+   * @param {string} url Absolute URL at which the resource may be accessed.
+   *   This is expected to be an API endpoint. Alternatively, if this instance
+   *   will only ever be used in a context where the URL is implied or
+   *   superfluous, this can be passed as `*` (a literal asterisk). This is
+   *   _not_ allowed to have URL-level "auth" info (e.g.,
+   *   `http://user:pass@example.com/`).
    * @param {string} id Key / resource identifier. This must be a string of at
    *   least 8 characters.
    */
@@ -49,15 +51,16 @@ export default class BaseKey extends CommonBase {
     this._id = TString.minLen(id, 8);
   }
 
-  /** {string} Base of `url` (that is, the origin without any path). */
+  /**
+   * {string} Base of `url` (that is, the origin without any path). This throws
+   * an error if `url` is `*`.
+   */
   get baseUrl() {
-    const match = this._url.match(/^[^:]+:\/\/[^/]+/);
-
-    if (match === null) {
-      throw new Error('Invalid URL; no apparent base.');
+    if (this._url === '*') {
+      throw new Error('Cannot get base of wildcard URL.');
     }
 
-    return match[0];
+    return new URL(this._url).origin;
   }
 
   /** {string} URL at which the resource may be accessed, or `*`. */

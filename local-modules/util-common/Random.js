@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-// **Note:** Babel's browser polyfill includes a Node-compatible `crypto`
+// **Note:** Webpack's browser polyfill includes a Node-compatible `crypto`
 // module, which is why this is possible to import regardless of environment.
 import crypto from 'crypto';
 
@@ -39,7 +39,7 @@ export default class Random extends UtilityClass {
    */
   static byteArray(length) {
     const buffer = crypto.randomBytes(TInt.min(length, 0));
-    return Array.from(buffer);
+    return [...buffer];
   }
 
   /**

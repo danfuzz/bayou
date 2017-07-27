@@ -3,12 +3,10 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { assert } from 'chai';
-import { beforeEach, describe, it } from 'mocha';
+import { describe, it } from 'mocha';
 
 import { BaseKey } from 'api-common';
 import { DataUtil, Random } from 'util-common';
-
-let key = null;
 
 const URL = '*';
 const ID = '12345678';
@@ -33,20 +31,59 @@ class FakeKey extends BaseKey {
 }
 
 describe('api-common/BaseKey', () => {
-  beforeEach(() => {
-    key = new FakeKey(URL, ID);
+  describe('constructor', () => {
+    it('should throw an error given a URL with auth', () => {
+      assert.throws(() => new BaseKey('http://foo@example.com/', ID));
+      assert.throws(() => new BaseKey('http://foo:blort@example.com/', ID));
+    });
   });
 
   describe('.url', () => {
     it('should return the URL passed to the constructor', () => {
+      const key = new BaseKey(URL, ID);
       const url = key.url;
 
       assert.strictEqual(url, URL);
     });
   });
 
+  describe('.baseUrl', () => {
+    it('should throw an error for URL `*`', () => {
+      assert.throws(() => new BaseKey('*', ID).baseUrl);
+    });
+
+    it('should return the base URL of the originally-passed URL', () => {
+      // This uses a regex to chop up the URL. The actual implementation uses
+      // the URL class. To the extent that they differ, the regex is probably
+      // wrong.
+      let which = 0;
+      function test(orig) {
+        const key = new BaseKey(orig, ID);
+        const expected = orig.match(/^[^:]+:\/\/[^/]+/)[0];
+
+        which++;
+        assert.strictEqual(key.baseUrl, expected, `#${which}`);
+      }
+
+      test('https://x');
+      test('https://x.y');
+      test('https://x.y/');
+      test('https://x.y/a');
+      test('https://x.y/a/b/c');
+      test('https://x.y:37/');
+      test('https://x.y:123/b');
+      test('https://x.y.z/aa/bb/cc/');
+
+      test('https://example.com/?what=does&this=mean');
+      test('https://example.com/foo/bar?what=does&this=mean');
+      test('https://example.com/#hashie');
+      test('https://example.com/foo/bar#hashie');
+    });
+  });
+
   describe('.id', () => {
     it('should return the ID passed to the constructor', () => {
+      const key = new BaseKey(URL, ID);
       const id = key.id;
 
       assert.strictEqual(id, ID);
@@ -54,15 +91,16 @@ describe('api-common/BaseKey', () => {
   });
 
   describe('toString()', () => {
-    it('returns a redacted (log-safe) representation of the key', () => {
-      const s = key.toString();
+    it('returns a string', () => {
+      const key = new BaseKey(URL, ID);
 
-      assert.isString(s);
+      assert.isString(key.toString());
     });
   });
 
   describe('makeChallengePair()', () => {
     it('returns a challenge/response pair in an object', () => {
+      const key = new FakeKey(URL, ID);
       const pair = key.makeChallengePair();
 
       assert.property(pair, 'challenge');

@@ -37,7 +37,7 @@ export default class StringUtil extends UtilityClass {
    * @returns {Int} The count of bytes needed to encode the input as UTF-8.
    */
   static utf8LengthForString(string) {
-    return Buffer.byteLength(string, 'utf-8');
+    return Buffer.byteLength(string, 'utf8');
   }
 
   /**
@@ -59,7 +59,7 @@ export default class StringUtil extends UtilityClass {
     // Add grapheme clusters to the output, one at a time, until doing so would make a string whose
     // UTF-8 encoded form would excede the limit.
     for (const grapheme of graphemes) {
-      const graphemeByteCount = Buffer.byteLength(grapheme, 'utf-8');
+      const graphemeByteCount = Buffer.byteLength(grapheme, 'utf8');
 
       if (graphemeByteCount + totalByteCount > limit) {
         break;

@@ -2,9 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import url from 'url';
-
-import { UtilityClass } from 'util-common-base';
+import { URL, UtilityClass } from 'util-common-base';
 
 import TypeError from './TypeError';
 
@@ -126,19 +124,56 @@ export default class TString extends UtilityClass {
   }
 
   /**
-   * Checks a value which must be a syntactically valid absolute URL.
+   * Checks a value which must be a syntactically valid absolute URL without
+   * auth info. (Auth info consists of a username and optional password before
+   * the host name.)
    *
    * @param {*} value Value to check.
    * @returns {string} `value`.
    */
   static urlAbsolute(value) {
-    TString.nonempty(value);
-
-    // `url.parse()` is fairly lenient. TODO: Might want to be less lenient.
-    const parsed = url.parse(value);
-
-    if (!(parsed.protocol && parsed.slashes && parsed.host)) {
+    let url;
+    try {
+      // `new URL()` is somewhat lenient with syntax checking. **TODO:** Might
+      // want to be less lenient.
+      url = new URL(TString.nonempty(value));
+    } catch (e) {
+      // Throw a higher-fidelity error.
       return TypeError.badValue(value, 'String', 'absolute URL syntax');
+    }
+
+    if (!url.host) {
+      return TypeError.badValue(value, 'String', 'absolute URL syntax');
+    }
+
+    if (url.username || url.password) {
+      return TypeError.badValue(
+        value, 'String', 'absolute URL syntax, without auth');
+    }
+
+    return value;
+  }
+
+  /**
+   * Checks a value which must be a syntactically valid origin-only URL (that
+   * is, neither auth nor path fields).
+   *
+   * @param {*} value Value to check.
+   * @returns {string} `value`.
+   */
+  static urlOrigin(value) {
+    let url;
+    try {
+      // `new URL()` is somewhat lenient with syntax checking. **TODO:** Might
+      // want to be less lenient.
+      url = new URL(TString.nonempty(value));
+    } catch (e) {
+      // Throw a higher-fidelity error.
+      return TypeError.badValue(value, 'String', 'origin-only URL syntax');
+    }
+
+    if (value !== url.origin) {
+      return TypeError.badValue(value, 'String', 'origin-only URL syntax');
     }
 
     return value;
