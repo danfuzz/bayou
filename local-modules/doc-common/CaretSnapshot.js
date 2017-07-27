@@ -97,8 +97,8 @@ export default class CaretSnapshot extends CommonBase {
     CaretDelta.check(delta);
 
     const newCarets = new Map(this._carets.entries());
-    let docRevNum   = this._docRevNum;
-    let revNum      = this._revNum;
+    let   docRevNum = this._docRevNum;
+    let   revNum    = this._revNum;
 
     for (const op of delta.ops) {
       switch (op.name) {
@@ -131,7 +131,7 @@ export default class CaretSnapshot extends CommonBase {
       }
     }
 
-    return new CaretSnapshot(docRevNum, revNum, newCarets.values());
+    return new CaretSnapshot(revNum, docRevNum, newCarets.values());
   }
 
   /**
