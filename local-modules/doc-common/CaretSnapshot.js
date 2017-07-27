@@ -89,6 +89,10 @@ export default class CaretSnapshot extends CommonBase {
   /**
    * Composes a delta on top of this instance, to produce a new instance.
    *
+   * **Note:** It is an error if `delta` contains an `op_updateCaret` to a caret
+   * that either does not exist in `this` or was not first introduced with an
+   * `op_beginSession`.
+   *
    * @param {CaretDelta} delta Delta to compose on top of this instance.
    * @returns {CaretSnapshot} New instance consisting of the composition of
    *   this instance with `delta`.
@@ -109,8 +113,14 @@ export default class CaretSnapshot extends CommonBase {
         }
 
         case CaretOp.UPDATE_CARET: {
-          const caret = op.arg('caret');
-          newCarets.set(caret.sessionId, caret);
+          const caret     = op.arg('caret');
+          const sessionId = caret.sessionId;
+
+          if (!newCarets.get(sessionId)) {
+            throw new Error(`Invalid delta; update to nonexistent caret: ${sessionId}`);
+          }
+
+          newCarets.set(sessionId, caret);
           break;
         }
 
