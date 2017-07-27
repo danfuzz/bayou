@@ -151,6 +151,11 @@ export default class CaretSnapshot extends CommonBase {
    * snapshot passed in here as an argument. That is, `newerSnapshot ==
    * this.compose(this.diff(newerSnapshot))`.
    *
+   * **Note:** The word `newer` in the argument name is meant to be suggestive
+   * of typical usage of this method, but there is no actual requirement that
+   * the argument be strictly newer in any sense, compared to the instance this
+   * method is called on.
+   *
    * @param {CaretSnapshot} newerSnapshot Snapshot to take the difference from.
    * @returns {CaretDelta} Delta which represents the difference between
    *   `newerSnapshot` and this instance.
