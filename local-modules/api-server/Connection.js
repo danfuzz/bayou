@@ -66,7 +66,7 @@ export default class Connection extends CommonBase {
     this._context = Context.check(context).clone();
 
     /** {string} The public-facing base URL for this connection. */
-    this._baseUrl = TString.nonempty(baseUrl);
+    this._baseUrl = TString.urlOrigin(baseUrl);
 
     /**
      * {string} Short label string used to identify this connection in logs.
