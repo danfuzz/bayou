@@ -157,7 +157,7 @@ export default class CaretSnapshot extends CommonBase {
     }
 
     if (this._docRevNum !== newerSnapshot._docRevNum) {
-      caretOps.push(CaretOp.op_updateRevNum(newerSnapshot._docRevNum));
+      caretOps.push(CaretOp.op_updateDocRevNum(newerSnapshot._docRevNum));
     }
 
     // Find carets that are new or updated from `this` when going to
