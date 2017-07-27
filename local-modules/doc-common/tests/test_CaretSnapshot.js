@@ -5,13 +5,47 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Caret, CaretDelta, CaretSnapshot } from 'doc-common';
+import { Caret, CaretDelta, CaretOp, CaretSnapshot } from 'doc-common';
 
 const caret1 = new Caret('session-1', 1, 0,  '#111111');
 const caret2 = new Caret('session-2', 2, 6,  '#222222');
 const caret3 = new Caret('session-3', 3, 99, '#333333');
 
 describe('doc-common/CaretSnapshot', () => {
+  describe('compose()', () => {
+    it('should produce an equal instance when passed an empty delta', () => {
+      let which = 0;
+      function test(snap) {
+        which++;
+        const result = snap.compose(CaretDelta.EMPTY);
+        assert.deepEqual(result, snap, `#${which}`);
+      }
+
+      test(new CaretSnapshot(123, 456, []));
+      test(new CaretSnapshot(0,   234, [caret1]));
+      test(new CaretSnapshot(321, 0,   [caret1, caret2]));
+      test(new CaretSnapshot(999, 888, [caret1, caret2, caret3]));
+    });
+
+    it('should update `docRevNum` given the appropriate op', () => {
+      const snap     = new CaretSnapshot(1, 2,   [caret1]);
+      const expected = new CaretSnapshot(1, 999, [caret1]);
+      const result =
+        snap.compose(new CaretDelta([CaretOp.op_updateDocRevNum(999)]));
+
+      assert.isTrue(result.equals(expected));
+    });
+
+    it('should update `revNum` given the appropriate op', () => {
+      const snap     = new CaretSnapshot(1,   2, [caret1]);
+      const expected = new CaretSnapshot(999, 2, [caret1]);
+      const result =
+        snap.compose(new CaretDelta([CaretOp.op_updateRevNum(999)]));
+
+      assert.isTrue(result.equals(expected));
+    });
+  });
+
   describe('diff()', () => {
     it('should produce an empty diff when passed itself', () => {
       const snap = new CaretSnapshot(123, 234, [caret1, caret2]);
@@ -19,6 +53,26 @@ describe('doc-common/CaretSnapshot', () => {
 
       assert.instanceOf(result, CaretDelta);
       assert.deepEqual(result.ops, []);
+    });
+
+    it('should result in a `docRevNum` diff if that in fact changes', () => {
+      const snap1 = new CaretSnapshot(1, 2, [caret1, caret2]);
+      const snap2 = new CaretSnapshot(1, 9, [caret1, caret2]);
+      const result = snap1.diff(snap2);
+
+      const composed = new CaretSnapshot(0, 0, []).compose(result);
+      const expected = new CaretSnapshot(0, 9, []);
+      assert.isTrue(composed.equals(expected));
+    });
+
+    it('should result in a `revNum` diff if that in fact changes', () => {
+      const snap1 = new CaretSnapshot(1, 2, [caret1, caret2]);
+      const snap2 = new CaretSnapshot(9, 2, [caret1, caret2]);
+      const result = snap1.diff(snap2);
+
+      const composed = new CaretSnapshot(0, 0, []).compose(result);
+      const expected = new CaretSnapshot(9, 0, []);
+      assert.isTrue(composed.equals(expected));
     });
   });
 
