@@ -6,6 +6,12 @@ import { TInt, TString } from 'typecheck';
 import { ColorSelector, CommonBase } from 'util-common';
 
 /**
+ * {Caret|null} An instance with all default values. Initialized in the static
+ * method of the same name.
+ */
+let EMPTY = null;
+
+/**
  * Information about the state of a single document editing session. Instances
  * of this class are always frozen (immutable).
  *
@@ -15,6 +21,15 @@ import { ColorSelector, CommonBase } from 'util-common';
  * se is merely the most blatant aspect of it.
  */
 export default class Caret extends CommonBase {
+  /** {Caret} An instance with all default values. */
+  static get EMPTY() {
+    if (EMPTY === null) {
+      EMPTY = new Caret('no-session', 0, 0, '#000000');
+    }
+
+    return EMPTY;
+  }
+
   /**
    * Constructs an instance. Only the first argument (`sessionId`) is required;
    * though generally short-lived, instances constructed with the rest of the
@@ -36,10 +51,15 @@ export default class Caret extends CommonBase {
   constructor(sessionId, index = 0, length = 0, color = '#000000') {
     super();
 
+    /** {string} The session ID. */
     this._sessionId = TString.check(sessionId);
-    this._index     = TInt.min(index, 0);
-    this._length    = TInt.min(length, 0);
-    this._color     = ColorSelector.checkHexColor(color);
+
+    /** {Map<string,*>} Map of all of the caret fields, from name to value. */
+    this._fields = new Map([
+      ['index',  TInt.nonNegative(index)],
+      ['length', TInt.nonNegative(length)],
+      ['color',  ColorSelector.checkHexColor(color)]
+    ]);
 
     Object.freeze(this);
   }
@@ -56,14 +76,14 @@ export default class Caret extends CommonBase {
    * {Int} The zero-based leading position of this caret/selection.
    */
   get index() {
-    return this._index;
+    return this._fields.get('index');
   }
 
   /**
    * {Int} The length of the selection, or zero if it is just an insertion point.
    */
   get length() {
-    return this._length;
+    return this._fields.get('length');
   }
 
   /**
@@ -71,7 +91,7 @@ export default class Caret extends CommonBase {
    * three-byte hex format (e.g. `'#ffeab9'`).
    */
   get color() {
-    return this._color;
+    return this._fields.get('color');
   }
 
   /**
@@ -83,10 +103,18 @@ export default class Caret extends CommonBase {
   equals(other) {
     Caret.check(other);
 
-    return (this._sessionId === other._sessionId)
-      &&   (this._index     === other._index)
-      &&   (this._length    === other._length)
-      &&   (this._color     === other._color);
+    if (this._sessionId !== other._sessionId) {
+      return false;
+    }
+
+    const fields = this._fields;
+    for (const [k, v] of other._fields) {
+      if (v !== fields.get(k)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**
@@ -95,6 +123,23 @@ export default class Caret extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._sessionId, this._index, this._length, this._color];
+    // Convert the `_fields` map to a simple object for the purpose of coding.
+    const fields = {};
+    for (const [k, v] of this._fields) {
+      fields[k] = v;
+    }
+
+    return [this._sessionId, fields];
+  }
+
+  /**
+   * Makes a new instance of this class from API arguments.
+   *
+   * @param {string} sessionId The session ID.
+   * @param {object} fields The caret fields, as a simple object (not a map).
+   * @returns {Caret} The new instance.
+   */
+  static fromApi(sessionId, fields) {
+    return new Caret(sessionId, fields.index, fields.length, fields.color);
   }
 }
