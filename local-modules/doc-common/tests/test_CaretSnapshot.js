@@ -55,7 +55,7 @@ describe('doc-common/CaretSnapshot', () => {
       const snap  = new CaretSnapshot(1, 2, [caret1]);
       const delta = new CaretDelta([CaretOp.op_updateCaret(new Caret('florp'))]);
 
-      assert.throws(() => { snap.update(delta); });
+      assert.throws(() => { snap.compose(delta); });
     });
 
     it('should update a pre-existing caret given the appropriate op', () => {
