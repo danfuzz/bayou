@@ -114,7 +114,10 @@ export default class Caret extends CommonBase {
     for (const op of delta.ops) {
       if (op.name !== CaretOp.UPDATE_CARET_FIELD) {
         throw new Error(`Invalid operation name: ${op.name}`);
+      } else if (op.arg('sessionId') !== this.sessionId) {
+        throw new Error('Mismatched session ID.');
       }
+
       fields.set(op.arg('key'), op.arg('value'));
     }
 
