@@ -5,6 +5,9 @@
 import { TInt, TString } from 'typecheck';
 import { ColorSelector, CommonBase } from 'util-common';
 
+import CaretDelta from './CaretDelta';
+import CaretOp from './CaretOp';
+
 /**
  * {Caret|null} An instance with all default values. Initialized in the static
  * method of the same name.
@@ -92,6 +95,68 @@ export default class Caret extends CommonBase {
    */
   get color() {
     return this._fields.get('color');
+  }
+
+  /**
+   * Composes the given `delta` on top of this instance, producing a new
+   * instance. The operations in `delta` must all be `updateCaretField` ops
+   * for the same `sessionId` as this instance.
+   *
+   * @param {CaretDelta} delta Delta to apply.
+   * @returns {Caret} Caret consisting of this instance's data as the base, with
+   *   `delta`'s updates applied.
+   */
+  compose(delta) {
+    CaretDelta.check(delta);
+
+    const fields = new Map(this._fields);
+
+    for (const op of delta.ops) {
+      if (op.name !== CaretOp.UPDATE_CARET_FIELD) {
+        throw new Error(`Invalid operation name: ${op.name}`);
+      }
+      fields.set(op.arg('key'), op.arg('value'));
+    }
+
+    return new Caret(this.sessionId,
+      fields.get('index'), fields.get('length'), fields.get('color'));
+  }
+
+  /**
+   * Calculates the difference from a given caret to this one. The return
+   * value is a delta which can be composed with this instance to produce the
+   * snapshot passed in here as an argument. That is, `newerCaret ==
+   * this.compose(this.diff(newerCaret))`.
+   *
+   * **Note:** The word `newer` in the argument name is meant to be suggestive
+   * of typical usage of this method, but there is no actual requirement that
+   * the argument be strictly newer in any sense, compared to the instance this
+   * method is called on.
+   *
+   * @param {Caret} newerCaret Caret to take the difference from. It must have
+   *   the same `sessionId` as this instance.
+   * @returns {CaretDelta} Delta which represents the difference between
+   *   `newerCaret` and this instance.
+   */
+  diff(newerCaret) {
+    Caret.check(newerCaret);
+
+    const sessionId = this.sessionId;
+
+    if (sessionId !== newerCaret.sessionId) {
+      throw new Error('Cannot `diff` carets with mismatched `sessionId`.');
+    }
+
+    const fields = this._fields;
+    const ops    = [];
+
+    for (const [k, v] of newerCaret._fields) {
+      if (v !== fields.get(k)) {
+        ops.push(CaretOp.op_updateCaretField(sessionId, k, v));
+      }
+    }
+
+    return new CaretDelta(ops);
   }
 
   /**
