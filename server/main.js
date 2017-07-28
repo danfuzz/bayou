@@ -25,6 +25,7 @@ import { Logger } from 'see-all';
 import { FileSink, ServerSink } from 'see-all-server';
 import { Dirs, ProductInfo, ServerEnv } from 'server-env';
 import { ServerTests } from 'testing-server';
+import { PromDelay } from 'util-common';
 
 
 /** Logger for this file. */
@@ -156,8 +157,33 @@ async function serverTest() {
 }
 
 // Initialize logging.
+
 ServerSink.init();
 new FileSink(path.resolve(Dirs.theOne.LOG_DIR, 'general.log'));
+
+process.on('unhandledRejection', (reason, promise_unused) => {
+  log.error('Unhandled promise rejection:', reason);
+
+  // Give the system a moment, so it has a chance to actually flush the log,
+  // and then exit.
+  (async () => {
+    await PromDelay.resolve(250); // 0.25 second.
+    process.exit(1);
+  })();
+});
+
+process.on('uncaughtException', (error) => {
+  log.error('Uncaught error:', error);
+
+  // Give the system a moment, so it has a chance to actually flush the log,
+  // and then exit.
+  (async () => {
+    await PromDelay.resolve(250); // 0.25 second.
+    process.exit(1);
+  })();
+});
+
+// Dispatch to the selected top-level function.
 
 if (clientBundleMode) {
   clientBundle();
