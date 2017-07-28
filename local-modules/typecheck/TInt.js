@@ -83,6 +83,17 @@ export default class TInt extends UtilityClass {
   }
 
   /**
+   * Checks a value of type `Int`, which must furthermore be a non-negative
+   * number.
+   *
+   * @param {*} value Value to check.
+   * @returns {Int} `value`.
+   */
+  static nonNegative(value) {
+    return TInt.min(value, 0);
+  }
+
+  /**
    * Checks a value of type `Int`, which must furthermore be within an indicated
    * inclusive-exclusive range.
    *
