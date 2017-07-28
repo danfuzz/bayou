@@ -150,8 +150,24 @@ export default class Caret extends CommonBase {
       throw new Error('Cannot `diff` carets with mismatched `sessionId`.');
     }
 
-    const fields = this._fields;
-    const ops    = [];
+    return this.diffFields(newerCaret, sessionId);
+  }
+
+  /**
+   * Like `diff()`, except does _not_ check to see if the two instances'
+   * `sessionId`s match. That is, it only looks at the fields.
+   *
+   * @param {Caret} newerCaret Caret to take the difference from.
+   * @param {string} sessionId Session ID to use for the ops in the result.
+   * @returns {CaretDelta} Delta which represents the difference between
+   *   `newerCaret` and this instance, _not_ including any difference in
+   *   `sessionId`, if any.
+   */
+  diffFields(newerCaret, sessionId) {
+    Caret.check(newerCaret);
+
+    const fields    = this._fields;
+    const ops       = [];
 
     for (const [k, v] of newerCaret._fields) {
       if (v !== fields.get(k)) {
