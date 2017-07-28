@@ -2,15 +2,27 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TString } from 'typecheck';
+import { TInt, TString } from 'typecheck';
+import { ColorSelector, CommonBase } from 'util-common';
 
 import Caret from './Caret';
 import RevisionNumber from './RevisionNumber';
 
-import { CommonBase } from 'util-common';
-
 /** {Symbol} Key which protects the constructor from being called improperly. */
 const KEY = Symbol('CaretOp constructor key');
+
+/**
+ * {Map<string,function>} Map from each allowed caret field name to a type
+ * checker predicate for same, for use in `updateCaretField` operations.
+ *
+ * **Note:** `sessionId` is not included, because that can't be altered by those
+ * operations.
+ */
+const CARET_FIELDS = new Map([
+  ['index',     TInt.nonNegative],
+  ['length',    TInt.nonNegative],
+  ['color',     ColorSelector.checkHexColor]
+]);
 
 /**
  * Operation which can be applied to a `Caret` or `CaretSnapshot`.
@@ -24,6 +36,11 @@ export default class CaretOp extends CommonBase {
   /** {string} Operation name for "update caret" operations. */
   static get UPDATE_CARET() {
     return 'update-caret';
+  }
+
+  /** {string} Operation name for "update caret field" operations. */
+  static get UPDATE_CARET_FIELD() {
+    return 'update-caret-field';
   }
 
   /** {string} Operation name for "end session" operations. */
@@ -74,6 +91,41 @@ export default class CaretOp extends CommonBase {
     args.set('caret', caret);
 
     return new CaretOp(KEY, CaretOp.UPDATE_CARET, args);
+  }
+
+  /**
+   * Constructs a new "update caret field" operation.
+   *
+   * @param {string} sessionId Session for the caret to update.
+   * @param {string} key Name of the field to update.
+   * @param {*} value New value for the so-named field. Type restriction on this
+   *   varies by name.
+   * @returns {CaretOp} An operation representing the update of the indicated
+   *   field on the indicated caret.
+   */
+  static op_updateCaretField(sessionId, key, value) {
+    TString.check(sessionId);
+    TString.nonempty(key);
+
+    const checker = CARET_FIELDS.get(key);
+    if (!checker) {
+      throw new Error(`Invalid caret field name: ${key}`);
+    } else {
+      try {
+        checker(value);
+      } catch (e) {
+        // Higher-fidelity error.
+        throw new Error(`Invalid value for caret field ${key}: ${value}`);
+      }
+    }
+
+    const args = new Map();
+
+    args.set('sessionId', sessionId);
+    args.set('key',       key);
+    args.set('value',     value);
+
+    return new CaretOp(KEY, CaretOp.UPDATE_CARET_FIELD, args);
   }
 
   /**
@@ -191,7 +243,7 @@ export default class CaretOp extends CommonBase {
   }
 
   /**
-   * Instaniate a new instance of this class from API arguments.
+   * Makes a new instance of this class from API arguments.
    *
    * @param {string} name The name of the operation.
    * @param {object} args The arguments for the operation, as a simple object
