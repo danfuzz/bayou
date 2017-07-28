@@ -129,19 +129,21 @@ export default class CaretControl extends CommonBase {
     // Build up an array of ops to apply to the current snapshot.
 
     const snapshot = this._snapshot;
-    const ops      = [];
     const oldCaret = snapshot.caretForSession(sessionId);
-    let color;
+    let ops;
 
     if (oldCaret === null) {
-      ops.push(CaretOp.op_beginSession(sessionId));
-      color = this._colorSelector.nextColorHex();
-    } else {
-      color = oldCaret.color;
-    }
+      const color    = this._colorSelector.nextColorHex();
+      const newCaret = new Caret(sessionId, index, length, color);
+      const diff     = Caret.EMPTY.diffFields(newCaret, sessionId);
 
-    const caret = new Caret(sessionId, index, length, color);
-    ops.push(CaretOp.op_updateCaret(caret));
+      ops = [CaretOp.op_beginSession(sessionId), ...diff.ops];
+    } else {
+      const newCaret = new Caret(sessionId, index, length, oldCaret.color);
+      const diff     = oldCaret.diff(newCaret);
+
+      ops = [...diff.ops]; // `[...x]` so as to be mutable for `push()` below.
+    }
 
     // **TODO:** Handle `docRevNum` sensibly instead of just blithely thwacking
     // it into the new snapshot.
