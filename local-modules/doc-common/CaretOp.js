@@ -7,9 +7,15 @@ import { TString } from 'typecheck';
 import Caret from './Caret';
 import RevisionNumber from './RevisionNumber';
 
+import { CommonBase } from 'util-common';
+
+/** {Symbol} Key which protects the constructor from being called improperly. */
 const KEY = Symbol('CaretOp constructor key');
 
-export default class CaretOp {
+/**
+ * Operation which can be applied to a `Caret` or `CaretSnapshot`.
+ */
+export default class CaretOp extends CommonBase {
   /** {string} Operation name for "begin session" operations. */
   static get BEGIN_SESSION() {
     return 'begin-session';
@@ -129,6 +135,8 @@ export default class CaretOp {
    * @param {Map<string,*>} args Arguments to the operation.
    */
   constructor(constructorKey, name, args) {
+    super();
+
     if (constructorKey !== KEY) {
       throw new Error('Constructor is private');
     }
