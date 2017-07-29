@@ -5,7 +5,6 @@
 import { TInt, TString } from 'typecheck';
 import { ColorSelector, CommonBase } from 'util-common';
 
-import Caret from './Caret';
 import RevisionNumber from './RevisionNumber';
 
 /** {Symbol} Key which protects the constructor from being called improperly. */
@@ -31,11 +30,6 @@ export default class CaretOp extends CommonBase {
   /** {string} Operation name for "begin session" operations. */
   static get BEGIN_SESSION() {
     return 'begin-session';
-  }
-
-  /** {string} Operation name for "update caret" operations. */
-  static get UPDATE_CARET() {
-    return 'update-caret';
   }
 
   /** {string} Operation name for "update caret field" operations. */
@@ -73,24 +67,6 @@ export default class CaretOp extends CommonBase {
     args.set('sessionId', sessionId);
 
     return new CaretOp(KEY, CaretOp.BEGIN_SESSION, args);
-  }
-
-  /**
-   * Constructs a new "update caret" operation.
-   *
-   * @param {Caret} caret The caret to update. `Caret` objects notably know what
-   *   session they are associated with.
-   * @returns {CaretOp} An operation representing new caret information for a
-   *   particular session.
-   */
-  static op_updateCaret(caret) {
-    Caret.check(caret);
-
-    const args = new Map();
-
-    args.set('caret', caret);
-
-    return new CaretOp(KEY, CaretOp.UPDATE_CARET, args);
   }
 
   /**
