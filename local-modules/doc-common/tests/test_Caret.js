@@ -77,6 +77,49 @@ describe('doc-common/Caret', () => {
     });
   });
 
+  describe('diffFields()', () => {
+    it('should produce an empty diff when passed itself', () => {
+      const result = caret1.diffFields(caret1, 'florp');
+
+      assert.instanceOf(result, CaretDelta);
+      assert.deepEqual(result.ops, []);
+    });
+
+    it('should diff fields even if given a non-matching session ID', () => {
+      assert.doesNotThrow(() => { caret1.diffFields(caret2, 'florp'); });
+    });
+
+    it('should result in an `index` diff if that in fact changes', () => {
+      const older   = caret1;
+      const op      = CaretOp.op_updateField(older.sessionId, 'index', 99999);
+      const newer   = older.compose(new CaretDelta([op]));
+      const diffOps = older.diffFields(newer, older.sessionId).ops;
+
+      assert.strictEqual(diffOps.length, 1);
+      assert.deepEqual(diffOps[0], op);
+    });
+
+    it('should result in a `length` diff if that in fact changes', () => {
+      const older   = caret1;
+      const op      = CaretOp.op_updateField(older.sessionId, 'length', 99999);
+      const newer   = older.compose(new CaretDelta([op]));
+      const diffOps = older.diffFields(newer, older.sessionId).ops;
+
+      assert.strictEqual(diffOps.length, 1);
+      assert.deepEqual(diffOps[0], op);
+    });
+
+    it('should result in a `color` diff if that in fact changes', () => {
+      const older   = caret1;
+      const op      = CaretOp.op_updateField(older.sessionId, 'color', '#abcdef');
+      const newer   = older.compose(new CaretDelta([op]));
+      const diffOps = older.diffFields(newer, older.sessionId).ops;
+
+      assert.strictEqual(diffOps.length, 1);
+      assert.deepEqual(diffOps[0], op);
+    });
+  });
+
   describe('equals()', () => {
     it('should return `true` when passed itself', () => {
       assert.isTrue(caret1.equals(caret1));
