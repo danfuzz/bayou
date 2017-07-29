@@ -2,8 +2,17 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TInt, TString } from 'typecheck';
-import { ColorSelector, CommonBase } from 'util-common';
+import { TIterable, TString } from 'typecheck';
+import { CommonBase } from 'util-common';
+
+import CaretDelta from './CaretDelta';
+import CaretOp from './CaretOp';
+
+/**
+ * {Caret|null} An instance with all default values. Initialized in the static
+ * method of the same name.
+ */
+let EMPTY = null;
 
 /**
  * Information about the state of a single document editing session. Instances
@@ -15,31 +24,55 @@ import { ColorSelector, CommonBase } from 'util-common';
  * se is merely the most blatant aspect of it.
  */
 export default class Caret extends CommonBase {
+  /** {Caret} An instance with all default values. */
+  static get EMPTY() {
+    if (EMPTY === null) {
+      EMPTY = new Caret('no-session',
+        Object.entries({ index: 0, length: 0, color: '#000000' }));
+    }
+
+    return EMPTY;
+  }
+
   /**
-   * Constructs an instance. Only the first argument (`sessionId`) is required;
-   * though generally short-lived, instances constructed with the rest of the
-   * arguments as defaults are used as the carets for newly-minted sessions.
+   * Constructs an instance. Only the first argument (`sessionId`) is required,
+   * and it is not necessary to specify all the fields in `fields`; those not
+   * listed are set to the default (based on `Caret.EMPTY`). Though generally
+   * short-lived, instances constructed with all defaults are used as the carets
+   * for newly-minted sessions.
    *
-   * @param {string} sessionId An opaque token that can be used with other
-   *   APIs to get information about the author whose caret this is (e.g. author
-   *   name, avatar, user id, etc). No assumptions should be made about the
-   *   format of `sessionId`.
-   * @param {Int} [index = 0] The zero-based location of the caret (or beginning
-   *   of a selection) within the document.
-   * @param {Int} [length = 0] The number of characters within a selection, or
-   *   zero if this caret merely represents the insertion point and not a
-   *   selection.
-   * @param {string} [color = '#000000'] The color to be used when annotating
-   *   this caret. The color must be in the CSS three-byte hex form (e.g.
-   *   `'#b8ff2e'`).
+   * @param {string|Caret} sessionIdOrBase Session ID that identifies the caret,
+   *   or a base caret instance which provides the session and default values
+   *   for fields.
+   * @param {Iterable<string,*>} [fields = []] Fields of the caret.
    */
-  constructor(sessionId, index = 0, length = 0, color = '#000000') {
+  constructor(sessionIdOrBase, fields = []) {
+    let sessionId;
+    let newFields;
+
+    if (sessionIdOrBase instanceof Caret) {
+      newFields = new Map(sessionIdOrBase._fields);
+      sessionId = sessionIdOrBase.sessionId;
+    } else {
+      newFields = EMPTY ? new Map(EMPTY._fields) : new Map();
+      sessionId = TString.check(sessionIdOrBase);
+    }
+
+    TIterable.check(fields);
+
     super();
 
-    this._sessionId = TString.check(sessionId);
-    this._index     = TInt.min(index, 0);
-    this._length    = TInt.min(length, 0);
-    this._color     = ColorSelector.checkHexColor(color);
+    /** {string} The session ID. */
+    this._sessionId = sessionId;
+
+    /** {Map<string,*>} Map of all of the caret fields, from name to value. */
+    this._fields = newFields;
+    for (const [k, v] of fields) {
+      // Construct an `updateField` op, which forces `k` and `v` to be
+      // validated.
+      CaretOp.op_updateField(sessionId, k, v);
+      this._fields.set(k, v);
+    }
 
     Object.freeze(this);
   }
@@ -56,14 +89,14 @@ export default class Caret extends CommonBase {
    * {Int} The zero-based leading position of this caret/selection.
    */
   get index() {
-    return this._index;
+    return this._fields.get('index');
   }
 
   /**
    * {Int} The length of the selection, or zero if it is just an insertion point.
    */
   get length() {
-    return this._length;
+    return this._fields.get('length');
   }
 
   /**
@@ -71,7 +104,88 @@ export default class Caret extends CommonBase {
    * three-byte hex format (e.g. `'#ffeab9'`).
    */
   get color() {
-    return this._color;
+    return this._fields.get('color');
+  }
+
+  /**
+   * Composes the given `delta` on top of this instance, producing a new
+   * instance. The operations in `delta` must all be `updateField` ops
+   * for the same `sessionId` as this instance.
+   *
+   * @param {CaretDelta} delta Delta to apply.
+   * @returns {Caret} Caret consisting of this instance's data as the base, with
+   *   `delta`'s updates applied.
+   */
+  compose(delta) {
+    CaretDelta.check(delta);
+
+    const fields = new Map();
+
+    for (const op of delta.ops) {
+      if (op.name !== CaretOp.UPDATE_FIELD) {
+        throw new Error(`Invalid operation name: ${op.name}`);
+      } else if (op.arg('sessionId') !== this.sessionId) {
+        throw new Error('Mismatched session ID.');
+      }
+
+      fields.set(op.arg('key'), op.arg('value'));
+    }
+
+    return new Caret(this, fields);
+  }
+
+  /**
+   * Calculates the difference from a given caret to this one. The return
+   * value is a delta which can be composed with this instance to produce the
+   * snapshot passed in here as an argument. That is, `newerCaret ==
+   * this.compose(this.diff(newerCaret))`.
+   *
+   * **Note:** The word `newer` in the argument name is meant to be suggestive
+   * of typical usage of this method, but there is no actual requirement that
+   * the argument be strictly newer in any sense, compared to the instance this
+   * method is called on.
+   *
+   * @param {Caret} newerCaret Caret to take the difference from. It must have
+   *   the same `sessionId` as this instance.
+   * @returns {CaretDelta} Delta which represents the difference between
+   *   `newerCaret` and this instance.
+   */
+  diff(newerCaret) {
+    Caret.check(newerCaret);
+
+    const sessionId = this.sessionId;
+
+    if (sessionId !== newerCaret.sessionId) {
+      throw new Error('Cannot `diff` carets with mismatched `sessionId`.');
+    }
+
+    return this.diffFields(newerCaret, sessionId);
+  }
+
+  /**
+   * Like `diff()`, except does _not_ check to see if the two instances'
+   * `sessionId`s match. That is, it only looks at the fields.
+   *
+   * @param {Caret} newerCaret Caret to take the difference from.
+   * @param {string} sessionId Session ID to use for the ops in the result.
+   * @returns {CaretDelta} Delta which represents the difference between
+   *   `newerCaret` and this instance, _not_ including any difference in
+   *   `sessionId`, if any.
+   */
+  diffFields(newerCaret, sessionId) {
+    Caret.check(newerCaret);
+    TString.nonempty(sessionId);
+
+    const fields    = this._fields;
+    const ops       = [];
+
+    for (const [k, v] of newerCaret._fields) {
+      if (v !== fields.get(k)) {
+        ops.push(CaretOp.op_updateField(sessionId, k, v));
+      }
+    }
+
+    return new CaretDelta(ops);
   }
 
   /**
@@ -83,10 +197,18 @@ export default class Caret extends CommonBase {
   equals(other) {
     Caret.check(other);
 
-    return (this._sessionId === other._sessionId)
-      &&   (this._index     === other._index)
-      &&   (this._length    === other._length)
-      &&   (this._color     === other._color);
+    if (this._sessionId !== other._sessionId) {
+      return false;
+    }
+
+    const fields = this._fields;
+    for (const [k, v] of other._fields) {
+      if (v !== fields.get(k)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**
@@ -95,6 +217,23 @@ export default class Caret extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._sessionId, this._index, this._length, this._color];
+    // Convert the `_fields` map to a simple object for the purpose of coding.
+    const fields = {};
+    for (const [k, v] of this._fields) {
+      fields[k] = v;
+    }
+
+    return [this._sessionId, fields];
+  }
+
+  /**
+   * Makes a new instance of this class from API arguments.
+   *
+   * @param {string} sessionId The session ID.
+   * @param {object} fields The caret fields, as a simple object (not a map).
+   * @returns {Caret} The new instance.
+   */
+  static fromApi(sessionId, fields) {
+    return new Caret(sessionId, Object.entries(fields));
   }
 }

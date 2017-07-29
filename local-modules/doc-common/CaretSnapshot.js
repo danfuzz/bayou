@@ -89,7 +89,7 @@ export default class CaretSnapshot extends CommonBase {
   /**
    * Composes a delta on top of this instance, to produce a new instance.
    *
-   * **Note:** It is an error if `delta` contains an `op_updateCaret` to a caret
+   * **Note:** It is an error if `delta` contains an `op_updateField` to a caret
    * that either does not exist in `this` or was not first introduced with an
    * `op_beginSession`.
    *
@@ -112,15 +112,15 @@ export default class CaretSnapshot extends CommonBase {
           break;
         }
 
-        case CaretOp.UPDATE_CARET: {
-          const caret     = op.arg('caret');
-          const sessionId = caret.sessionId;
+        case CaretOp.UPDATE_FIELD: {
+          const sessionId = op.arg('sessionId');
+          const caret     = newCarets.get(sessionId);
 
-          if (!newCarets.get(sessionId)) {
+          if (!caret) {
             throw new Error(`Invalid delta; update to nonexistent caret: ${sessionId}`);
           }
 
-          newCarets.set(sessionId, caret);
+          newCarets.set(sessionId, caret.compose(new CaretDelta([op])));
           break;
         }
 
@@ -185,12 +185,19 @@ export default class CaretSnapshot extends CommonBase {
         // The `sessionId` matches the older snapshot. Indicate an update if the
         // values are different.
         if (!already.equals(newerCaret)) {
-          caretOps.push(CaretOp.op_updateCaret(newerCaret));
+          const diff = already.diff(newerCaret);
+          for (const op of diff.ops) {
+            caretOps.push(op);
+          }
         }
       } else {
         // The `sessionId` isn't in the older snapshot, so this is an addition.
-        caretOps.push(CaretOp.op_beginSession(newerCaret.sessionId));
-        caretOps.push(CaretOp.op_updateCaret(newerCaret));
+        caretOps.push(CaretOp.op_beginSession(sessionId));
+
+        const diff = Caret.EMPTY.diffFields(newerCaret, sessionId);
+        for (const op of diff.ops) {
+          caretOps.push(op);
+        }
       }
     }
 
