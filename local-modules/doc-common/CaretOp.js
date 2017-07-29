@@ -101,7 +101,7 @@ export default class CaretOp extends CommonBase {
     args.set('key',       key);
     args.set('value',     value);
 
-    return new CaretOp(KEY, CaretOp.UPDATE_CARET_FIELD, args);
+    return new CaretOp(KEY, CaretOp.UPDATE_FIELD, args);
   }
 
   /**

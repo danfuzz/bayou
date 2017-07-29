@@ -112,19 +112,7 @@ export default class CaretSnapshot extends CommonBase {
           break;
         }
 
-        case CaretOp.UPDATE_CARET: {
-          const caret     = op.arg('caret');
-          const sessionId = caret.sessionId;
-
-          if (!newCarets.get(sessionId)) {
-            throw new Error(`Invalid delta; update to nonexistent caret: ${sessionId}`);
-          }
-
-          newCarets.set(sessionId, caret);
-          break;
-        }
-
-        case CaretOp.UPDATE_CARET_FIELD: {
+        case CaretOp.UPDATE_FIELD: {
           const sessionId = op.arg('sessionId');
           const caret     = newCarets.get(sessionId);
 
