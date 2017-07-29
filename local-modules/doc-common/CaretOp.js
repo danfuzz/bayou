@@ -12,7 +12,7 @@ const KEY = Symbol('CaretOp constructor key');
 
 /**
  * {Map<string,function>} Map from each allowed caret field name to a type
- * checker predicate for same, for use in `updateCaretField` operations.
+ * checker predicate for same, for use in `updateField` operations.
  *
  * **Note:** `sessionId` is not included, because that can't be altered by those
  * operations.
@@ -32,9 +32,9 @@ export default class CaretOp extends CommonBase {
     return 'begin-session';
   }
 
-  /** {string} Operation name for "update caret field" operations. */
-  static get UPDATE_CARET_FIELD() {
-    return 'update-caret-field';
+  /** {string} Operation name for "update field" operations. */
+  static get UPDATE_FIELD() {
+    return 'update-field';
   }
 
   /** {string} Operation name for "end session" operations. */
@@ -79,7 +79,7 @@ export default class CaretOp extends CommonBase {
    * @returns {CaretOp} An operation representing the update of the indicated
    *   field on the indicated caret.
    */
-  static op_updateCaretField(sessionId, key, value) {
+  static op_updateField(sessionId, key, value) {
     TString.check(sessionId);
     TString.nonempty(key);
 

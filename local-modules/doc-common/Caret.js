@@ -99,7 +99,7 @@ export default class Caret extends CommonBase {
 
   /**
    * Composes the given `delta` on top of this instance, producing a new
-   * instance. The operations in `delta` must all be `updateCaretField` ops
+   * instance. The operations in `delta` must all be `updateField` ops
    * for the same `sessionId` as this instance.
    *
    * @param {CaretDelta} delta Delta to apply.
@@ -172,7 +172,7 @@ export default class Caret extends CommonBase {
 
     for (const [k, v] of newerCaret._fields) {
       if (v !== fields.get(k)) {
-        ops.push(CaretOp.op_updateCaretField(sessionId, k, v));
+        ops.push(CaretOp.op_updateField(sessionId, k, v));
       }
     }
 

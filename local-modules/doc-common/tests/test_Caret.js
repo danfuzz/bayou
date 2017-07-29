@@ -27,28 +27,28 @@ describe('doc-common/Caret', () => {
     });
 
     it('should update `index` given the appropriate op', () => {
-      const op     = CaretOp.op_updateCaretField(caret1.sessionId, 'index', 99999);
+      const op     = CaretOp.op_updateField(caret1.sessionId, 'index', 99999);
       const result = caret1.compose(new CaretDelta([op]));
 
       assert.strictEqual(result.index, 99999);
     });
 
     it('should update `length` given the appropriate op', () => {
-      const op     = CaretOp.op_updateCaretField(caret1.sessionId, 'length', 99999);
+      const op     = CaretOp.op_updateField(caret1.sessionId, 'length', 99999);
       const result = caret1.compose(new CaretDelta([op]));
 
       assert.strictEqual(result.length, 99999);
     });
 
     it('should update `color` given the appropriate op', () => {
-      const op     = CaretOp.op_updateCaretField(caret1.sessionId, 'color', '#aabbcc');
+      const op     = CaretOp.op_updateField(caret1.sessionId, 'color', '#aabbcc');
       const result = caret1.compose(new CaretDelta([op]));
 
       assert.strictEqual(result.color, '#aabbcc');
     });
 
     it('should refuse to compose if given a non-matching session ID', () => {
-      const op = CaretOp.op_updateCaretField(caret2.sessionId, 'index', 55);
+      const op = CaretOp.op_updateField(caret2.sessionId, 'index', 55);
 
       assert.throws(() => { caret1.compose(new CaretDelta([op])); });
     });
@@ -68,7 +68,7 @@ describe('doc-common/Caret', () => {
 
     it('should result in an `index` diff if that in fact changes', () => {
       const older   = caret1;
-      const op      = CaretOp.op_updateCaretField(older.sessionId, 'index', 99999);
+      const op      = CaretOp.op_updateField(older.sessionId, 'index', 99999);
       const newer   = older.compose(new CaretDelta([op]));
       const diffOps = older.diff(newer).ops;
 
@@ -100,15 +100,15 @@ describe('doc-common/Caret', () => {
       const c1 = caret1;
       let   c2, op;
 
-      op = CaretOp.op_updateCaretField(c1.sessionId, 'index', 99999);
+      op = CaretOp.op_updateField(c1.sessionId, 'index', 99999);
       c2 = c1.compose(new CaretDelta([op]));
       assert.isFalse(c1.equals(c2));
 
-      op = CaretOp.op_updateCaretField(c1.sessionId, 'length', 99999);
+      op = CaretOp.op_updateField(c1.sessionId, 'length', 99999);
       c2 = c1.compose(new CaretDelta([op]));
       assert.isFalse(c1.equals(c2));
 
-      op = CaretOp.op_updateCaretField(c1.sessionId, 'color', '#999999');
+      op = CaretOp.op_updateField(c1.sessionId, 'color', '#999999');
       c2 = c1.compose(new CaretDelta([op]));
       assert.isFalse(c1.equals(c2));
     });
