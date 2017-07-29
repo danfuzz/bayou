@@ -134,12 +134,13 @@ export default class CaretControl extends CommonBase {
 
     if (oldCaret === null) {
       const color    = this._colorSelector.nextColorHex();
-      const newCaret = new Caret(sessionId, index, length, color);
+      const newCaret = new Caret(sessionId, Object.entries({ index, length, color }));
       const diff     = Caret.EMPTY.diffFields(newCaret, sessionId);
 
       ops = [CaretOp.op_beginSession(sessionId), ...diff.ops];
     } else {
-      const newCaret = new Caret(sessionId, index, length, oldCaret.color);
+      const color    = oldCaret.color;
+      const newCaret = new Caret(sessionId, Object.entries({ index, length, color }));
       const diff     = oldCaret.diff(newCaret);
 
       ops = [...diff.ops]; // `[...x]` so as to be mutable for `push()` below.

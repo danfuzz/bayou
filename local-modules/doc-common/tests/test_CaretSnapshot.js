@@ -7,9 +7,22 @@ import { describe, it } from 'mocha';
 
 import { Caret, CaretDelta, CaretOp, CaretSnapshot } from 'doc-common';
 
-const caret1 = new Caret('session-1', 1, 0,  '#111111');
-const caret2 = new Caret('session-2', 2, 6,  '#222222');
-const caret3 = new Caret('session-3', 3, 99, '#333333');
+/**
+ * Convenient caret constructor, which takes positional parameters.
+ *
+ * @param {string} sessionId Session ID.
+ * @param {Int} index Start caret position.
+ * @param {Int} length Selection length.
+ * @param {string} color Highlight color.
+ * @returns {Caret} Appropriately-constructed caret.
+ */
+function newCaret(sessionId, index, length, color) {
+  return new Caret(sessionId, Object.entries({ index, length, color }));
+}
+
+const caret1 = newCaret('session-1', 1, 0,  '#111111');
+const caret2 = newCaret('session-2', 2, 6,  '#222222');
+const caret3 = newCaret('session-3', 3, 99, '#333333');
 
 describe('doc-common/CaretSnapshot', () => {
   describe('compose()', () => {
@@ -59,8 +72,8 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should update a pre-existing caret given an appropriate op', () => {
-      const c1       = new Caret('foo', 1, 2, '#333333');
-      const c2       = new Caret('foo', 3, 2, '#333333');
+      const c1       = newCaret('foo', 1, 2, '#333333');
+      const c2       = newCaret('foo', 3, 2, '#333333');
       const snap     = new CaretSnapshot(1, 2, [caret1, c1]);
       const expected = new CaretSnapshot(1, 2, [caret1, c2]);
       const op       = CaretOp.op_updateField('foo', 'index', 3);
@@ -142,9 +155,9 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should result in a caret update if that in fact happens', () => {
-      const c1 = new Caret('florp', 1, 3, '#444444');
-      const c2 = new Caret('florp', 2, 4, '#555555');
-      const c3 = new Caret('florp', 3, 5, '#666666');
+      const c1 = newCaret('florp', 1, 3, '#444444');
+      const c2 = newCaret('florp', 2, 4, '#555555');
+      const c3 = newCaret('florp', 3, 5, '#666666');
       const snap1 = new CaretSnapshot(1, 2, [c1]);
       const snap2 = new CaretSnapshot(1, 2, [c2]);
       const result = snap1.diff(snap2);
@@ -192,10 +205,10 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should return `true` when equal carets are not also `===`', () => {
-      const c1a = new Caret('florp', 2, 3, '#444444');
-      const c1b = new Caret('florp', 2, 3, '#444444');
-      const c2a = new Caret('like',  3, 0, '#dbdbdb');
-      const c2b = new Caret('like',  3, 0, '#dbdbdb');
+      const c1a = newCaret('florp', 2, 3, '#444444');
+      const c1b = newCaret('florp', 2, 3, '#444444');
+      const c2a = newCaret('like',  3, 0, '#dbdbdb');
+      const c2b = newCaret('like',  3, 0, '#dbdbdb');
 
       const snap1 = new CaretSnapshot(1, 2, [c1a, c2a]);
       const snap2 = new CaretSnapshot(1, 2, [c1b, c2b]);

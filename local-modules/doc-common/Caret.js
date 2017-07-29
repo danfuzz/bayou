@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TInt, TString } from 'typecheck';
-import { ColorSelector, CommonBase } from 'util-common';
+import { TIterable, TString } from 'typecheck';
+import { CommonBase } from 'util-common';
 
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';
@@ -27,42 +27,40 @@ export default class Caret extends CommonBase {
   /** {Caret} An instance with all default values. */
   static get EMPTY() {
     if (EMPTY === null) {
-      EMPTY = new Caret('no-session', 0, 0, '#000000');
+      EMPTY = new Caret('no-session',
+        Object.entries({ index: 0, length: 0, color: '#000000' }));
     }
 
     return EMPTY;
   }
 
   /**
-   * Constructs an instance. Only the first argument (`sessionId`) is required;
-   * though generally short-lived, instances constructed with the rest of the
-   * arguments as defaults are used as the carets for newly-minted sessions.
+   * Constructs an instance. Only the first argument (`sessionId`) is required,
+   * and it is not necessary to specify all the fields in `fields`; those not
+   * listed are set to the default (based on `Caret.EMPTY`). Though generally
+   * short-lived, instances constructed with all defaults are used as the carets
+   * for newly-minted sessions.
    *
-   * @param {string} sessionId An opaque token that can be used with other
-   *   APIs to get information about the author whose caret this is (e.g. author
-   *   name, avatar, user id, etc). No assumptions should be made about the
-   *   format of `sessionId`.
-   * @param {Int} [index = 0] The zero-based location of the caret (or beginning
-   *   of a selection) within the document.
-   * @param {Int} [length = 0] The number of characters within a selection, or
-   *   zero if this caret merely represents the insertion point and not a
-   *   selection.
-   * @param {string} [color = '#000000'] The color to be used when annotating
-   *   this caret. The color must be in the CSS three-byte hex form (e.g.
-   *   `'#b8ff2e'`).
+   * @param {string} sessionId Session ID that identifies the caret.
+   * @param {Iterable<string,*>} [fields = []] Fields of the caret.
    */
-  constructor(sessionId, index = 0, length = 0, color = '#000000') {
+  constructor(sessionId, fields = []) {
+    TString.check(sessionId);
+    TIterable.check(fields);
+
     super();
 
     /** {string} The session ID. */
-    this._sessionId = TString.check(sessionId);
+    this._sessionId = sessionId;
 
     /** {Map<string,*>} Map of all of the caret fields, from name to value. */
-    this._fields = new Map([
-      ['index',  TInt.nonNegative(index)],
-      ['length', TInt.nonNegative(length)],
-      ['color',  ColorSelector.checkHexColor(color)]
-    ]);
+    this._fields = new Map(EMPTY ? EMPTY._fields : []);
+    for (const [k, v] of fields) {
+      // Construct an `updateField` op, which forces `k` and `v` to be
+      // validated.
+      CaretOp.op_updateField(sessionId, k, v);
+      this._fields.set(k, v);
+    }
 
     Object.freeze(this);
   }
@@ -121,8 +119,7 @@ export default class Caret extends CommonBase {
       fields.set(op.arg('key'), op.arg('value'));
     }
 
-    return new Caret(this.sessionId,
-      fields.get('index'), fields.get('length'), fields.get('color'));
+    return new Caret(this.sessionId, fields);
   }
 
   /**
@@ -225,6 +222,6 @@ export default class Caret extends CommonBase {
    * @returns {Caret} The new instance.
    */
   static fromApi(sessionId, fields) {
-    return new Caret(sessionId, fields.index, fields.length, fields.color);
+    return new Caret(sessionId, Object.entries(fields));
   }
 }

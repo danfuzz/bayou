@@ -7,9 +7,22 @@ import { describe, it } from 'mocha';
 
 import { Caret, CaretDelta, CaretOp } from 'doc-common';
 
-const caret1 = new Caret('session-1', 1, 0,  '#111111');
-const caret2 = new Caret('session-2', 2, 6,  '#222222');
-const caret3 = new Caret('session-3', 3, 99, '#333333');
+/**
+ * Convenient caret constructor, which takes positional parameters.
+ *
+ * @param {string} sessionId Session ID.
+ * @param {Int} index Start caret position.
+ * @param {Int} length Selection length.
+ * @param {string} color Highlight color.
+ * @returns {Caret} Appropriately-constructed caret.
+ */
+function newCaret(sessionId, index, length, color) {
+  return new Caret(sessionId, Object.entries({ index, length, color }));
+}
+
+const caret1 = newCaret('session-1', 1, 0,  '#111111');
+const caret2 = newCaret('session-2', 2, 6,  '#222222');
+const caret3 = newCaret('session-3', 3, 99, '#333333');
 
 describe('doc-common/Caret', () => {
   describe('compose()', () => {
@@ -134,8 +147,8 @@ describe('doc-common/Caret', () => {
     });
 
     it('should return `false` when session IDs differ', () => {
-      const c1 = new Caret('x', 1, 2, '#000011');
-      const c2 = new Caret('y', 1, 2, '#000011');
+      const c1 = newCaret('x', 1, 2, '#000011');
+      const c2 = newCaret('y', 1, 2, '#000011');
       assert.isFalse(c1.equals(c2));
     });
 
