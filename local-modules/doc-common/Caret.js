@@ -41,11 +41,23 @@ export default class Caret extends CommonBase {
    * short-lived, instances constructed with all defaults are used as the carets
    * for newly-minted sessions.
    *
-   * @param {string} sessionId Session ID that identifies the caret.
+   * @param {string|Caret} sessionIdOrBase Session ID that identifies the caret,
+   *   or a base caret instance which provides the session and default values
+   *   for fields.
    * @param {Iterable<string,*>} [fields = []] Fields of the caret.
    */
-  constructor(sessionId, fields = []) {
-    TString.check(sessionId);
+  constructor(sessionIdOrBase, fields = []) {
+    let sessionId;
+    let newFields;
+
+    if (sessionIdOrBase instanceof Caret) {
+      newFields = new Map(sessionIdOrBase._fields);
+      sessionId = sessionIdOrBase.sessionId;
+    } else {
+      newFields = EMPTY ? new Map(EMPTY._fields) : new Map();
+      sessionId = TString.check(sessionIdOrBase);
+    }
+
     TIterable.check(fields);
 
     super();
@@ -54,7 +66,7 @@ export default class Caret extends CommonBase {
     this._sessionId = sessionId;
 
     /** {Map<string,*>} Map of all of the caret fields, from name to value. */
-    this._fields = new Map(EMPTY ? EMPTY._fields : []);
+    this._fields = newFields;
     for (const [k, v] of fields) {
       // Construct an `updateField` op, which forces `k` and `v` to be
       // validated.
@@ -107,7 +119,7 @@ export default class Caret extends CommonBase {
   compose(delta) {
     CaretDelta.check(delta);
 
-    const fields = new Map(this._fields);
+    const fields = new Map();
 
     for (const op of delta.ops) {
       if (op.name !== CaretOp.UPDATE_FIELD) {
@@ -119,7 +131,7 @@ export default class Caret extends CommonBase {
       fields.set(op.arg('key'), op.arg('value'));
     }
 
-    return new Caret(this.sessionId, fields);
+    return new Caret(this, fields);
   }
 
   /**
