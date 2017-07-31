@@ -126,6 +126,11 @@ export default class EditorComplex extends CommonBase {
     return this._docSession;
   }
 
+  /** {Logger} Logger to use when _not_ referring to the session. */
+  get log() {
+    return log;
+  }
+
   /** {QuillProm} The Quill editor object. */
   get quill() {
     return this._quill;

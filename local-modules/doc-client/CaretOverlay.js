@@ -15,6 +15,12 @@ import { ColorSelector, PromDelay } from 'util-common';
 const REQUEST_DELAY_MSEC = 250;
 
 /**
+ * {Int} Amount of time (in msec) to wait after noticing a local edit before
+ * looking for a new one.
+ */
+const LOCAL_EDIT_DELAY_MSEC = 1000;
+
+/**
  * {Int} Amount of time (in msec) to wait after a failure to communicate with
  * the server, before trying to reconnect.
  */
@@ -55,6 +61,7 @@ export default class CaretOverlay {
     this._overlay = TObject.check(svgElement, Element);
 
     this._watchCarets();
+    this._watchLocalEdits();
   }
 
   /**
@@ -206,6 +213,28 @@ export default class CaretOverlay {
       }
 
       await PromDelay.resolve(REQUEST_DELAY_MSEC);
+    }
+  }
+
+  /**
+   * Watches the local editor for edits. When noticed, causes the display to
+   * update. Much of the time, this will be a no-op because the caret activity
+   * will have already caused an update. However, some edits won't actually
+   * affect carets (notably, style-only changes), and this method effectively
+   * provides a backstop that prevents those edits from causing lingering
+   * inaccuracy in the overlay.
+   */
+  async _watchLocalEdits() {
+    const log = this._editorComplex.log;
+    let currentEvent = this._editorComplex.quill.currentEvent;
+
+    for (;;) {
+      currentEvent = await currentEvent.nextOf(QuillEvent.TEXT_CHANGE);
+      currentEvent = currentEvent.latestOfNow(QuillEvent.TEXT_CHANGE);
+
+      log.detail('Got local edit event.');
+      this._updateDisplay();
+      await PromDelay.resolve(LOCAL_EDIT_DELAY_MSEC);
     }
   }
 
