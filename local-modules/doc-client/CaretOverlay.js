@@ -160,7 +160,7 @@ export default class CaretOverlay {
           // to do that.
           const delta = await sessionProxy.caretDeltaAfter(snapshot.revNum);
           snapshot = snapshot.compose(delta);
-          docSession.log.info(`Got caret delta. ${snapshot.carets.length} caret(s).`);
+          docSession.log.detail(`Got caret delta. ${snapshot.carets.length} caret(s).`);
         }
       } catch (e) {
         // Assume that the error isn't truly fatal. Most likely, it's because
@@ -179,7 +179,7 @@ export default class CaretOverlay {
           // latter is why this section isn't just part of an `else` block to
           // the previous `if`).
           snapshot = await sessionProxy.caretSnapshot();
-          docSession.log.info(`Got ${snapshot.carets.length} new caret(s)!`);
+          docSession.log.detail(`Got ${snapshot.carets.length} new caret(s)!`);
         }
       } catch (e) {
         // Assume that the error is transient and most likely due to the session
@@ -200,7 +200,6 @@ export default class CaretOverlay {
           continue;
         }
 
-        docSession.log.info(`Caret: ${c.sessionId}, ${c.index}, ${c.length}, ${c.color}`);
         this._updateCaret(c.sessionId, c.index, c.length, c.color);
         oldSessions.delete(c.sessionId);
       }
