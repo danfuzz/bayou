@@ -115,7 +115,7 @@ export default class Timestamp extends CommonBase {
    * Adds the indicated number of msec to this instance's value, returning a new
    * instance.
    *
-   * @param {Int} addMsec Amount to add.
+   * @param {Int} addMsec Amount to add. It can be negative.
    * @returns {Timestamp} An appropriately-constructed instance.
    */
   addMsec(addMsec) {
