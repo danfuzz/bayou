@@ -14,6 +14,20 @@ import { ColorSelector, PromDelay } from 'util-common';
 const REFRESH_DELAY_MSEC = 2000;
 
 /**
+ * {Int} Amount of time (in msec) to wait after receiving a caret update from
+ * the server before requesting another one. This is to prevent the client from
+ * inundating the server with requests when there is some particularly active
+ * editing going on.
+ */
+const REQUEST_DELAY_MSEC = 250;
+
+/**
+ * {Int} Amount of time (in msec) to wait after a failure to communicate with
+ * the server, before trying to reconnect.
+ */
+const ERROR_DELAY_MSEC = 5000;
+
+/**
  * Manager of the visual display of the selection and insertion caret of remote
  * users editing the same document as the local user. It renders the selections
  * into an SVG element that overlays the Quill editor.
@@ -181,7 +195,7 @@ export default class CaretOverlay {
         docSession.log.warn('Trouble with `caretSnapshot`:', e);
         docSession   = null;
         sessionProxy = null;
-        await PromDelay.resolve(5000);
+        await PromDelay.resolve(ERROR_DELAY_MSEC);
         continue;
       }
 
@@ -205,8 +219,7 @@ export default class CaretOverlay {
         this._endSession(s);
       }
 
-      // TODO: Make this properly wait for and integrate changes.
-      await PromDelay.resolve(5000);
+      await PromDelay.resolve(REQUEST_DELAY_MSEC);
     }
   }
 
