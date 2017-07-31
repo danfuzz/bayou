@@ -7,13 +7,6 @@ import { TObject, TInt, TString } from 'typecheck';
 import { ColorSelector, PromDelay } from 'util-common';
 
 /**
- * Time span to wait between refreshes of remote session annotations.
- * New changes are aggregated during the delay and incorporated into
- * the next refresh.
- */
-const REFRESH_DELAY_MSEC = 2000;
-
-/**
  * {Int} Amount of time (in msec) to wait after receiving a caret update from
  * the server before requesting another one. This is to prevent the client from
  * inundating the server with requests when there is some particularly active
@@ -61,13 +54,6 @@ export default class CaretOverlay {
      */
     this._overlay = TObject.check(svgElement, Element);
 
-    /**
-     * {boolean} Whether or not there is any current need to update the
-     * visual selection display. This is set to `true` when updates are
-     * made and back to `false` once the display has been updated.
-     */
-    this._displayIsDirty = false;
-
     this._watchCarets();
   }
 
@@ -91,7 +77,7 @@ export default class CaretOverlay {
     TString.check(sessionId);
 
     this._sessions.delete(sessionId);
-    this._displayNeedsRedraw();
+    this._updateDisplay();
   }
 
   /**
@@ -121,7 +107,7 @@ export default class CaretOverlay {
     info.set('selection', { index, length });
     info.set('color', color);
 
-    this._displayNeedsRedraw();
+    this._updateDisplay();
   }
 
   /**
@@ -224,27 +210,10 @@ export default class CaretOverlay {
   }
 
   /**
-   * Marks the current presentation as out-of-date and schedules
-   * a refresh.
-   */
-  _displayNeedsRedraw() {
-    if (this._displayIsDirty) {
-      return;
-    }
-
-    this._displayIsDirty = true;
-    this._waitThenUpdateDisplay();
-  }
-
-  /**
    * Waits a bit of time and then redraws our state.
    */
-  async _waitThenUpdateDisplay() {
-    await PromDelay.resolve(REFRESH_DELAY_MSEC);
-
-    this._displayIsDirty = false;
-
-    // Remove extant annotations
+  _updateDisplay() {
+    // Remove extant annotations.
     while (this._overlay.firstChild) {
       this._overlay.removeChild(this._overlay.firstChild);
     }
