@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Caret, CaretDelta, CaretOp, CaretSnapshot, RevisionNumber }
+import { Caret, CaretDelta, CaretOp, CaretSnapshot, RevisionNumber, Timestamp }
   from 'doc-common';
 import { TInt, TString } from 'typecheck';
 import { ColorSelector, CommonBase, PromCondition } from 'util-common';
@@ -160,14 +160,18 @@ export default class CaretControl extends CommonBase {
     let ops;
 
     if (oldCaret === null) {
-      const color    = this._colorSelector.nextColorHex();
-      const newCaret = new Caret(sessionId, Object.entries({ index, length, color }));
-      const diff     = Caret.EMPTY.diffFields(newCaret, sessionId);
+      const lastActive = Timestamp.now();
+      const color      = this._colorSelector.nextColorHex();
+      const fields     = { lastActive, index, length, color };
+      const newCaret   = new Caret(sessionId, Object.entries(fields));
+      const diff       = Caret.EMPTY.diffFields(newCaret, sessionId);
 
       ops = [CaretOp.op_beginSession(sessionId), ...diff.ops];
     } else {
-      const newCaret = new Caret(oldCaret, Object.entries({ index, length }));
-      const diff     = oldCaret.diff(newCaret);
+      const lastActive = Timestamp.now();
+      const fields     = { lastActive, index, length };
+      const newCaret   = new Caret(oldCaret, Object.entries(fields));
+      const diff       = oldCaret.diff(newCaret);
 
       ops = [...diff.ops]; // `[...x]` so as to be mutable for `push()` below.
     }
