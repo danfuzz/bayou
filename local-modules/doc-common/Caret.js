@@ -104,6 +104,13 @@ export default class Caret extends CommonBase {
   }
 
   /**
+   * {Timestamp} The moment in time when this session was last active.
+   */
+  get lastActive() {
+    return this._fields.get('lastActive');
+  }
+
+  /**
    * {Int} The length of the selection, or zero if it is just an insertion point.
    */
   get length() {

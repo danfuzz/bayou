@@ -16,6 +16,12 @@ import FileComplex from './FileComplex';
 const MAX_OLD_SNAPSHOTS = 20;
 
 /**
+ * {Int} How long (in msec) that a session must be inactive before it gets
+ * culled from the current caret snapshot.
+ */
+const MAX_SESSION_IDLE_MSEC = 10 * 60 * 1000; // Ten minutes.
+
+/**
  * Controller for the active caret info for a given document.
  *
  * There is only ever exactly one instance of this class per document, no matter
@@ -80,6 +86,8 @@ export default class CaretControl extends CommonBase {
    * @returns {CaretDelta} Delta from the base caret revision to a newer one.
    */
   async deltaAfter(baseRevNum) {
+    this._removeInactiveSessions();
+
     const minRevNum     = this._oldSnapshots[0].revNum;
     const currentRevNum = this._snapshot.revNum;
 
@@ -116,6 +124,8 @@ export default class CaretControl extends CommonBase {
    * @returns {CaretSnapshot} Snapshot of all the active carets.
    */
   async snapshot(revNum = null) {
+    this._removeInactiveSessions();
+
     // For now, we only succeed if the latest revision is being requested.
     // **TODO:** Handle past revisions, details to be driven by client
     // requirements.
@@ -214,6 +224,26 @@ export default class CaretControl extends CommonBase {
       `document revision ${this._snapshot.docRevNum}`);
 
     return newRevNum;
+  }
+
+  /**
+   * Removes sessions that haven't been active recently out of the snapshot.
+   */
+  _removeInactiveSessions() {
+    const minTime = Timestamp.now().addMsec(-MAX_SESSION_IDLE_MSEC);
+    const ops = [];
+
+    for (const c of this._snapshot.carets) {
+      if (minTime.compareTo(c.lastActive) > 0) {
+        // Too old!
+        this._log.info(`[${c.sessionId}] Caret became inactive.`);
+        ops.push(CaretOp.op_endSession(c.sessionId));
+      }
+    }
+
+    if (ops.length !== 0) {
+      this._applyOps(ops);
+    }
   }
 
   /**
