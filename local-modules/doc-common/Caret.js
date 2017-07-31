@@ -7,6 +7,7 @@ import { CommonBase } from 'util-common';
 
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';
+import Timestamp from './Timestamp';
 
 /**
  * {Caret|null} An instance with all default values. Initialized in the static
@@ -29,9 +30,10 @@ export default class Caret extends CommonBase {
     if (EMPTY === null) {
       EMPTY = new Caret('no-session',
         Object.entries({
-          index:  0,
-          length: 0,
-          color:  '#000000'
+          lastActive: Timestamp.now(),
+          index:      0,
+          length:     0,
+          color:      '#000000'
         }));
     }
 
