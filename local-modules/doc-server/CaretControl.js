@@ -100,9 +100,6 @@ export default class CaretControl extends CommonBase {
     // `_snapshot` because `_snapshot` is always the last element of
     // `_oldSnapshots`.
     const oldSnapshot = this._oldSnapshots[baseRevNum - minRevNum];
-    if (oldSnapshot.revNum !== baseRevNum) {
-      this._log.wtf(`Snapshot rev-num inconsistency: ${baseRevNum}, ${oldSnapshot.revNum}`);
-    }
 
     if (baseRevNum === currentRevNum) {
       // We've been asked for a revision newer than the most recent one, so we
