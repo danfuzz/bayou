@@ -242,3 +242,6 @@ export default class Caret extends CommonBase {
     return new Caret(sessionId, Object.entries(fields));
   }
 }
+
+// Ensure that `EMPTY` is initialized.
+Caret.EMPTY;
