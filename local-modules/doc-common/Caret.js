@@ -67,11 +67,16 @@ export default class Caret extends CommonBase {
 
     /** {Map<string,*>} Map of all of the caret fields, from name to value. */
     this._fields = newFields;
+
     for (const [k, v] of fields) {
       // Construct an `updateField` op, which forces `k` and `v` to be
       // validated.
       CaretOp.op_updateField(sessionId, k, v);
-      this._fields.set(k, v);
+      newFields.set(k, v);
+    }
+
+    if (EMPTY && (newFields.size !== EMPTY._fields.size)) {
+      throw new Error(`Missing field.`);
     }
 
     Object.freeze(this);
