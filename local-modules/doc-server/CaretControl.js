@@ -172,7 +172,8 @@ export default class CaretControl extends CommonBase {
     this._snapshot = snapshot.compose(new CaretDelta(ops));
     this._updatedCondition.onOff();
 
-    this._log.detail(`New caret revision number: ${newRevNum}`);
+    this._log.info(`Updated carets: Caret revision ${newRevNum}; ` +
+      `document revision ${this._snapshot.docRevNum}`);
 
     return newRevNum;
   }

@@ -131,6 +131,7 @@ export default class CaretOverlay {
     }
 
     let docSession = null;
+    let snapshot = null;
     let sessionProxy;
     let sessionId;
 
@@ -146,9 +147,33 @@ export default class CaretOverlay {
         sessionId = this._editorComplex.sessionId;
       }
 
-      let snapshot;
       try {
-        snapshot = await sessionProxy.caretSnapshot();
+        if (snapshot !== null) {
+          // We have a snapshot which we can presumably get a delta from, so try
+          // to do that.
+          const delta = await sessionProxy.caretDeltaAfter(snapshot.revNum);
+          snapshot = snapshot.compose(delta);
+          docSession.log.info(`Got caret delta. ${snapshot.carets.length} caret(s).`);
+        }
+      } catch (e) {
+        // Assume that the error isn't truly fatal. Most likely, it's because
+        // the session got restarted or because the snapshot we have is too old
+        // to get a delta from. We just `null` out the snapshot and let the next
+        // clause try to get it afresh.
+        docSession.log.warn('Trouble with `caretDeltaAfter`:', e);
+        snapshot = null;
+      }
+
+      try {
+        if (snapshot === null) {
+          // We don't yet have a snapshot to base deltas off of, so get one!
+          // This can happen either because we've just started a new session or
+          // because the attempt to get a delta failed for some reason. (The
+          // latter is why this section isn't just part of an `else` block to
+          // the previous `if`).
+          snapshot = await sessionProxy.caretSnapshot();
+          docSession.log.info(`Got ${snapshot.carets.length} new caret(s)!`);
+        }
       } catch (e) {
         // Assume that the error is transient and most likely due to the session
         // getting terminated / restarted. Null out the session variables, wait
@@ -159,8 +184,6 @@ export default class CaretOverlay {
         await PromDelay.resolve(5000);
         continue;
       }
-
-      docSession.log.info(`Got snapshot! ${snapshot.carets.length} caret(s).`);
 
       const oldSessions = new Set(this._sessions.keys());
 
