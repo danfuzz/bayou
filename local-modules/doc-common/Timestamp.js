@@ -56,9 +56,7 @@ export default class Timestamp extends CommonBase {
    * @returns {Timestamp} An appropriately-constructed instance of this class.
    */
   static fromUsec(usec) {
-    TInt.check(usec);
-    const secs = Math.floor(usec / USECS_PER_SEC);
-    const usecs = usec - (secs * USECS_PER_SEC);
+    const [secs, usecs] = Timestamp._splitUsecs(usec);
     return new Timestamp(secs, usecs);
   }
 
@@ -135,18 +133,17 @@ export default class Timestamp extends CommonBase {
   addUsec(addUsec) {
     TInt.check(addUsec);
 
-    let secs  = Math.floor(addUsec / USECS_PER_SEC);
-    let usecs = addUsec - (secs * USECS_PER_SEC);
+    let [secs, usecs] = Timestamp._splitUsecs(addUsec);
 
     secs  += this._secs;
     usecs += this._usecs;
 
+    // Bump up `secs` if `usecs` overflows. **Note:** `_splitUsecs()` always
+    // returns non-negative values for `usecs`, therefore we don't need to check
+    // for underflow.
     if (usecs >= USECS_PER_SEC) {
       usecs -= USECS_PER_SEC;
       secs++;
-    } else if (usecs < 0) {
-      usecs += USECS_PER_SEC;
-      secs--;
     }
 
     return new Timestamp(secs, usecs);
@@ -192,5 +189,22 @@ export default class Timestamp extends CommonBase {
     const usecs = ('' + (this._usecs + USECS_PER_SEC)).slice(1);
 
     return `${this._secs}.${usecs}`;
+  }
+
+  /**
+   * Splits a microseconds time value (either absolute or relative) into
+   * separate seconds and microseconds values. If given a negative value, the
+   * resulting `secs` will be negative, but `usecs` will always be non-negative.
+   *
+   * @param {Int} fullUsecs Microseconds since the Unix Epoch.
+   * @returns {array<Int>} A two element array of `[secs, usecs]`.
+   */
+  static _splitUsecs(fullUsecs) {
+    TInt.check(fullUsecs);
+
+    const secs = Math.floor(fullUsecs / USECS_PER_SEC);
+    const usecs = fullUsecs - (secs * USECS_PER_SEC);
+
+    return [secs, usecs];
   }
 }
