@@ -12,7 +12,7 @@ import DocSession from './DocSession';
  * How long to wait (in msec) after sending a caret update before sending the
  * next one.
  */
-const UPDATE_DELAY_MSEC = 1000;
+const UPDATE_DELAY_MSEC = 250;
 
 /**
  * Handler for the upload of caret info from this client.

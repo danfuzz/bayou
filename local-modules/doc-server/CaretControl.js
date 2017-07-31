@@ -10,6 +10,12 @@ import { ColorSelector, CommonBase, PromCondition } from 'util-common';
 import FileComplex from './FileComplex';
 
 /**
+ * {Int} How many older caret snapshots should be maintained for potential use
+ * as the base for `deltaAfter()`.
+ */
+const MAX_OLD_SNAPSHOTS = 20;
+
+/**
  * Controller for the active caret info for a given document.
  *
  * There is only ever exactly one instance of this class per document, no matter
@@ -42,6 +48,12 @@ export default class CaretControl extends CommonBase {
     this._snapshot = new CaretSnapshot(0, 0, []);
 
     /**
+     * {array<CaretSnapshot>} Array of older caret snapshots, available for use
+     * for `deltaAfter()`.
+     */
+    this._oldSnapshots = [this._snapshot];
+
+    /**
      * {PromCondition} Condition that gets triggered whenever the snapshot is
      * updated.
      */
@@ -52,6 +64,8 @@ export default class CaretControl extends CommonBase {
 
     /** {Logger} Logger specific to this document's ID. */
     this._log = fileComplex.log;
+
+    Object.seal(this);
   }
 
   /**
@@ -66,16 +80,29 @@ export default class CaretControl extends CommonBase {
    * @returns {CaretDelta} Delta from the base caret revision to a newer one.
    */
   async deltaAfter(baseRevNum) {
-    const oldSnapshot = this._snapshot;
+    const minRevNum     = this._oldSnapshots[0].revNum;
+    const currentRevNum = this._snapshot.revNum;
 
-    // For now, we only succeed if the latest revision is being requested.
-    // **TODO:** Handle past revisions, details to be driven by client
-    // requirements.
-    if (baseRevNum !== oldSnapshot.revNum) {
+    if ((baseRevNum < minRevNum) || (baseRevNum > currentRevNum)) {
       throw new Error(`Revision not available: ${baseRevNum}`);
     }
 
-    await this._updatedCondition.whenTrue();
+    // Grab the snapshot to use as the base. **Note:** If `baseRevNum` is in
+    // fact the current revision number, this will turn out to be the same as
+    // `_snapshot` because `_snapshot` is always the last element of
+    // `_oldSnapshots`.
+    const oldSnapshot = this._oldSnapshots[baseRevNum - minRevNum];
+    if (oldSnapshot.revNum !== baseRevNum) {
+      this._log.wtf(`Snapshot rev-num inconsistency: ${baseRevNum}, ${oldSnapshot.revNum}`);
+    }
+
+    if (baseRevNum === currentRevNum) {
+      // We've been asked for a revision newer than the most recent one, so we
+      // have to wait for a change to be made. `_snapshot` will have been
+      // changed by the time this `await` returns.
+      await this._updatedCondition.whenTrue();
+    }
+
     return oldSnapshot.diff(this._snapshot);
   }
 
@@ -169,10 +196,18 @@ export default class CaretControl extends CommonBase {
     ops.push(CaretOp.op_updateRevNum(newRevNum));
 
     // Update the snapshot, and wake up any waiters.
-    this._snapshot = snapshot.compose(new CaretDelta(ops));
+    const newSnapshot = snapshot.compose(new CaretDelta(ops));
+    this._snapshot = newSnapshot;
+    this._oldSnapshots.push(newSnapshot);
     this._updatedCondition.onOff();
 
-    this._log.detail(`New caret revision number: ${newRevNum}`);
+    while (this._oldSnapshots.length > MAX_OLD_SNAPSHOTS) {
+      // Trim `_oldSnapshots` down to its allowed length.
+      this._oldSnapshots.shift();
+    }
+
+    this._log.info(`Updated carets: Caret revision ${newRevNum}; ` +
+      `document revision ${this._snapshot.docRevNum}`);
 
     return newRevNum;
   }
