@@ -210,7 +210,7 @@ export default class CaretOverlay {
   }
 
   /**
-   * Waits a bit of time and then redraws our state.
+   * Redraws the current state of the remote carets.
    */
   _updateDisplay() {
     // Remove extant annotations.
