@@ -126,14 +126,16 @@ export default class CaretControl extends CommonBase {
   async snapshot(revNum = null) {
     this._removeInactiveSessions();
 
-    // For now, we only succeed if the latest revision is being requested.
-    // **TODO:** Handle past revisions, details to be driven by client
-    // requirements.
-    if ((revNum !== null) && (revNum !== this._snapshot.revNum)) {
+    const minRevNum     = this._oldSnapshots[0].revNum;
+    const currentRevNum = this._snapshot.revNum;
+
+    if (revNum === null) {
+      revNum = currentRevNum;
+    } else if ((revNum < minRevNum) || (revNum > currentRevNum)) {
       throw new Error(`Revision not available: ${revNum}`);
     }
 
-    return this._snapshot;
+    return this._oldSnapshots[revNum - minRevNum];
   }
 
   /**
