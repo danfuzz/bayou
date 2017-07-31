@@ -28,7 +28,11 @@ export default class Caret extends CommonBase {
   static get EMPTY() {
     if (EMPTY === null) {
       EMPTY = new Caret('no-session',
-        Object.entries({ index: 0, length: 0, color: '#000000' }));
+        Object.entries({
+          index:  0,
+          length: 0,
+          color:  '#000000'
+        }));
     }
 
     return EMPTY;
