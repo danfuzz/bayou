@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Caret, CaretDelta, CaretOp, CaretSnapshot, RevisionNumber }
+import { Caret, CaretDelta, CaretOp, CaretSnapshot, RevisionNumber, Timestamp }
   from 'doc-common';
 import { TInt, TString } from 'typecheck';
 import { ColorSelector, CommonBase, PromCondition } from 'util-common';
@@ -14,6 +14,12 @@ import FileComplex from './FileComplex';
  * as the base for `deltaAfter()`.
  */
 const MAX_OLD_SNAPSHOTS = 20;
+
+/**
+ * {Int} How long (in msec) that a session must be inactive before it gets
+ * culled from the current caret snapshot.
+ */
+const MAX_SESSION_IDLE_MSEC = 10 * 60 * 1000; // Ten minutes.
 
 /**
  * Controller for the active caret info for a given document.
@@ -80,6 +86,8 @@ export default class CaretControl extends CommonBase {
    * @returns {CaretDelta} Delta from the base caret revision to a newer one.
    */
   async deltaAfter(baseRevNum) {
+    this._removeInactiveSessions();
+
     const minRevNum     = this._oldSnapshots[0].revNum;
     const currentRevNum = this._snapshot.revNum;
 
@@ -92,9 +100,6 @@ export default class CaretControl extends CommonBase {
     // `_snapshot` because `_snapshot` is always the last element of
     // `_oldSnapshots`.
     const oldSnapshot = this._oldSnapshots[baseRevNum - minRevNum];
-    if (oldSnapshot.revNum !== baseRevNum) {
-      this._log.wtf(`Snapshot rev-num inconsistency: ${baseRevNum}, ${oldSnapshot.revNum}`);
-    }
 
     if (baseRevNum === currentRevNum) {
       // We've been asked for a revision newer than the most recent one, so we
@@ -116,14 +121,18 @@ export default class CaretControl extends CommonBase {
    * @returns {CaretSnapshot} Snapshot of all the active carets.
    */
   async snapshot(revNum = null) {
-    // For now, we only succeed if the latest revision is being requested.
-    // **TODO:** Handle past revisions, details to be driven by client
-    // requirements.
-    if ((revNum !== null) && (revNum !== this._snapshot.revNum)) {
+    this._removeInactiveSessions();
+
+    const minRevNum     = this._oldSnapshots[0].revNum;
+    const currentRevNum = this._snapshot.revNum;
+
+    if (revNum === null) {
+      revNum = currentRevNum;
+    } else if ((revNum < minRevNum) || (revNum > currentRevNum)) {
       throw new Error(`Revision not available: ${revNum}`);
     }
 
-    return this._snapshot;
+    return this._oldSnapshots[revNum - minRevNum];
   }
 
   /**
@@ -160,14 +169,18 @@ export default class CaretControl extends CommonBase {
     let ops;
 
     if (oldCaret === null) {
-      const color    = this._colorSelector.nextColorHex();
-      const newCaret = new Caret(sessionId, Object.entries({ index, length, color }));
-      const diff     = Caret.EMPTY.diffFields(newCaret, sessionId);
+      const lastActive = Timestamp.now();
+      const color      = this._colorSelector.nextColorHex();
+      const fields     = { lastActive, index, length, color };
+      const newCaret   = new Caret(sessionId, Object.entries(fields));
+      const diff       = Caret.EMPTY.diffFields(newCaret, sessionId);
 
       ops = [CaretOp.op_beginSession(sessionId), ...diff.ops];
     } else {
-      const newCaret = new Caret(oldCaret, Object.entries({ index, length }));
-      const diff     = oldCaret.diff(newCaret);
+      const lastActive = Timestamp.now();
+      const fields     = { lastActive, index, length };
+      const newCaret   = new Caret(oldCaret, Object.entries(fields));
+      const diff       = oldCaret.diff(newCaret);
 
       ops = [...diff.ops]; // `[...x]` so as to be mutable for `push()` below.
     }
@@ -210,6 +223,26 @@ export default class CaretControl extends CommonBase {
       `document revision ${this._snapshot.docRevNum}`);
 
     return newRevNum;
+  }
+
+  /**
+   * Removes sessions that haven't been active recently out of the snapshot.
+   */
+  _removeInactiveSessions() {
+    const minTime = Timestamp.now().addMsec(-MAX_SESSION_IDLE_MSEC);
+    const ops = [];
+
+    for (const c of this._snapshot.carets) {
+      if (minTime.compareTo(c.lastActive) > 0) {
+        // Too old!
+        this._log.info(`[${c.sessionId}] Caret became inactive.`);
+        ops.push(CaretOp.op_endSession(c.sessionId));
+      }
+    }
+
+    if (ops.length !== 0) {
+      this._applyOps(ops);
+    }
   }
 
   /**

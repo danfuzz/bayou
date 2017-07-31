@@ -6,6 +6,7 @@ import { TInt, TString } from 'typecheck';
 import { ColorSelector, CommonBase } from 'util-common';
 
 import RevisionNumber from './RevisionNumber';
+import Timestamp from './Timestamp';
 
 /** {Symbol} Key which protects the constructor from being called improperly. */
 const KEY = Symbol('CaretOp constructor key');
@@ -18,9 +19,10 @@ const KEY = Symbol('CaretOp constructor key');
  * operations.
  */
 const CARET_FIELDS = new Map([
-  ['index',     TInt.nonNegative],
-  ['length',    TInt.nonNegative],
-  ['color',     ColorSelector.checkHexColor]
+  ['lastActive', Timestamp.check],
+  ['index',      TInt.nonNegative],
+  ['length',     TInt.nonNegative],
+  ['color',      ColorSelector.checkHexColor]
 ]);
 
 /**

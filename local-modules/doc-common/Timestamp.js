@@ -46,9 +46,17 @@ export default class Timestamp extends CommonBase {
    * @returns {Timestamp} An appropriately-constructed instance of this class.
    */
   static fromMsec(msec) {
-    TInt.check(msec);
-    const secs = Math.floor(msec / 1000);
-    const usecs = (msec - (secs * 1000)) * 1000;
+    return Timestamp.fromUsec(msec * 1000);
+  }
+
+  /**
+   * Constructs an instance from a microsecond-granularity time value.
+   *
+   * @param {Int} usec Microseconds since the Unix Epoch.
+   * @returns {Timestamp} An appropriately-constructed instance of this class.
+   */
+  static fromUsec(usec) {
+    const [secs, usecs] = Timestamp._splitUsecs(usec);
     return new Timestamp(secs, usecs);
   }
 
@@ -95,9 +103,79 @@ export default class Timestamp extends CommonBase {
     return this._secs;
   }
 
-  /** {Int} The additional microseconds. */
+  /**
+   * {Int} The additional microseconds. This is always a value in the range
+   * `[0..999999]`.
+   */
   get usecs() {
     return this._usecs;
+  }
+
+  /**
+   * Adds the indicated number of msec to this instance's value, returning a new
+   * instance.
+   *
+   * @param {Int} addMsec Amount to add. It can be negative.
+   * @returns {Timestamp} An appropriately-constructed instance.
+   */
+  addMsec(addMsec) {
+    TInt.check(addMsec);
+    return this.addUsec(addMsec * 1000);
+  }
+
+  /**
+   * Adds the indicated number of usec to this instance's value, returning a new
+   * instance.
+   *
+   * @param {Int} addUsec Amount to add.
+   * @returns {Timestamp} An appropriately-constructed instance.
+   */
+  addUsec(addUsec) {
+    TInt.check(addUsec);
+
+    let [secs, usecs] = Timestamp._splitUsecs(addUsec);
+
+    secs  += this._secs;
+    usecs += this._usecs;
+
+    // Bump up `secs` if `usecs` overflows. **Note:** `_splitUsecs()` always
+    // returns non-negative values for `usecs`, therefore we don't need to check
+    // for underflow.
+    if (usecs >= USECS_PER_SEC) {
+      usecs -= USECS_PER_SEC;
+      secs++;
+    }
+
+    return new Timestamp(secs, usecs);
+  }
+
+  /**
+   * Compares this to another instance, returning the usual integer result of
+   * comparison.
+   *
+   * @param {Timestamp} other Timestamp to compare to.
+   * @returns {Int} `0` if the two have equal values; `-1` if this instance
+   *   comes before `other`; or `1` if this instance comes after `other`.
+   */
+  compareTo(other) {
+    Timestamp.check(other);
+
+    let thisValue  = this._secs;
+    let otherValue = other._secs;
+
+    if (thisValue === otherValue) {
+      // Seconds match, so compare based on usecs.
+      thisValue  = this._usecs;
+      otherValue = other._usecs;
+    }
+
+    if (thisValue === otherValue) {
+      return 0;
+    } else if (thisValue < otherValue) {
+      return -1;
+    } else {
+      return 1;
+    }
   }
 
   /**
@@ -111,5 +189,22 @@ export default class Timestamp extends CommonBase {
     const usecs = ('' + (this._usecs + USECS_PER_SEC)).slice(1);
 
     return `${this._secs}.${usecs}`;
+  }
+
+  /**
+   * Splits a microseconds time value (either absolute or relative) into
+   * separate seconds and microseconds values. If given a negative value, the
+   * resulting `secs` will be negative, but `usecs` will always be non-negative.
+   *
+   * @param {Int} fullUsecs Microseconds since the Unix Epoch.
+   * @returns {array<Int>} A two element array of `[secs, usecs]`.
+   */
+  static _splitUsecs(fullUsecs) {
+    TInt.check(fullUsecs);
+
+    const secs = Math.floor(fullUsecs / USECS_PER_SEC);
+    const usecs = fullUsecs - (secs * USECS_PER_SEC);
+
+    return [secs, usecs];
   }
 }

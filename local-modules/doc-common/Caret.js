@@ -7,6 +7,7 @@ import { CommonBase } from 'util-common';
 
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';
+import Timestamp from './Timestamp';
 
 /**
  * {Caret|null} An instance with all default values. Initialized in the static
@@ -28,7 +29,12 @@ export default class Caret extends CommonBase {
   static get EMPTY() {
     if (EMPTY === null) {
       EMPTY = new Caret('no-session',
-        Object.entries({ index: 0, length: 0, color: '#000000' }));
+        Object.entries({
+          lastActive: Timestamp.now(),
+          index:      0,
+          length:     0,
+          color:      '#000000'
+        }));
     }
 
     return EMPTY;
@@ -95,6 +101,13 @@ export default class Caret extends CommonBase {
    */
   get index() {
     return this._fields.get('index');
+  }
+
+  /**
+   * {Timestamp} The moment in time when this session was last active.
+   */
+  get lastActive() {
+    return this._fields.get('lastActive');
   }
 
   /**
