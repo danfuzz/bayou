@@ -84,9 +84,7 @@ export default class Caret extends CommonBase {
   /**
    * Constructs an instance. Only the first argument (`sessionId`) is required,
    * and it is not necessary to specify all the fields in `fields`; those not
-   * listed are set to the default (based on `Caret.EMPTY`). Though generally
-   * short-lived, instances constructed with all defaults are used as the carets
-   * for newly-minted sessions.
+   * listed are set to the default (based on `Caret.EMPTY`).
    *
    * @param {string|Caret} sessionIdOrBase Session ID that identifies the caret,
    *   or a base caret instance which provides the session and default values
@@ -116,10 +114,7 @@ export default class Caret extends CommonBase {
     this._fields = newFields;
 
     for (const [k, v] of fields) {
-      // Construct an `updateField` op, which forces `k` and `v` to be
-      // validated.
-      CaretOp.op_updateField(sessionId, k, v);
-      newFields.set(k, v);
+      newFields.set(k, Caret.checkField(k, v));
     }
 
     if (EMPTY && (newFields.size !== EMPTY._fields.size)) {
