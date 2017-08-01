@@ -51,9 +51,7 @@ export default class CaretOp extends CommonBase {
   static op_beginSession(caret) {
     Caret.check(caret);
 
-    const args = new Map(Object.entries({ caret }));
-
-    return new CaretOp(KEY, CaretOp.BEGIN_SESSION, args);
+    return new CaretOp(KEY, CaretOp.BEGIN_SESSION, { caret });
   }
 
   /**
@@ -70,9 +68,7 @@ export default class CaretOp extends CommonBase {
     TString.check(sessionId);
     Caret.checkField(key, value);
 
-    const args = new Map(Object.entries({ sessionId, key, value }));
-
-    return new CaretOp(KEY, CaretOp.UPDATE_FIELD, args);
+    return new CaretOp(KEY, CaretOp.UPDATE_FIELD, { sessionId, key, value });
   }
 
   /**
@@ -85,9 +81,7 @@ export default class CaretOp extends CommonBase {
   static op_endSession(sessionId) {
     TString.check(sessionId);
 
-    const args = new Map(Object.entries({ sessionId }));
-
-    return new CaretOp(KEY, CaretOp.END_SESSION, args);
+    return new CaretOp(KEY, CaretOp.END_SESSION, { sessionId });
   }
 
   /**
@@ -99,9 +93,7 @@ export default class CaretOp extends CommonBase {
   static op_updateDocRevNum(docRevNum) {
     RevisionNumber.check(docRevNum);
 
-    const args = new Map(Object.entries({ docRevNum }));
-
-    return new CaretOp(KEY, CaretOp.UPDATE_DOC_REV_NUM, args);
+    return new CaretOp(KEY, CaretOp.UPDATE_DOC_REV_NUM, { docRevNum });
   }
 
   /**
@@ -113,9 +105,7 @@ export default class CaretOp extends CommonBase {
   static op_updateRevNum(revNum) {
     RevisionNumber.check(revNum);
 
-    const args = new Map(Object.entries({ revNum }));
-
-    return new CaretOp(KEY, CaretOp.UPDATE_REV_NUM, args);
+    return new CaretOp(KEY, CaretOp.UPDATE_REV_NUM, { revNum });
   }
 
   /**
@@ -125,7 +115,7 @@ export default class CaretOp extends CommonBase {
    * @param {object} constructorKey The private-to-this-module key that
    *   enforces the exhortation in the method documentation above.
    * @param {string} name The operation name.
-   * @param {Map<string,*>} args Arguments to the operation.
+   * @param {object} args Arguments to the operation.
    */
   constructor(constructorKey, name, args) {
     super();
@@ -138,7 +128,7 @@ export default class CaretOp extends CommonBase {
     this._name = name;
 
     /** {Map<string,*>} args The arguments needed for the operation. */
-    this._args = args;
+    this._args = new Map(Object.entries(args));
 
     Object.freeze(this);
   }
@@ -192,6 +182,6 @@ export default class CaretOp extends CommonBase {
    * @returns {CaretOp} The new instance.
    */
   static fromApi(name, args) {
-    return new CaretOp(KEY, name, new Map(Object.entries(args)));
+    return new CaretOp(KEY, name, args);
   }
 }
