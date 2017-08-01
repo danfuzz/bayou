@@ -4,7 +4,7 @@
 
 import { FileCodec, TransactionSpec } from 'content-store';
 import { DocumentDelta, DocumentChange, DocumentSnapshot, FrozenDelta, RevisionNumber, Timestamp } from 'doc-common';
-import { TInt, TString } from 'typecheck';
+import { TString } from 'typecheck';
 import { CommonBase, InfoError, PromDelay } from 'util-common';
 
 import FileComplex from './FileComplex';
