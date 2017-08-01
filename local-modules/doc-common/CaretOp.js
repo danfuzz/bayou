@@ -51,9 +51,7 @@ export default class CaretOp extends CommonBase {
   static op_beginSession(caret) {
     Caret.check(caret);
 
-    const args = new Map();
-
-    args.set('caret', caret);
+    const args = new Map(Object.entries({ caret }));
 
     return new CaretOp(KEY, CaretOp.BEGIN_SESSION, args);
   }
@@ -72,11 +70,7 @@ export default class CaretOp extends CommonBase {
     TString.check(sessionId);
     Caret.checkField(key, value);
 
-    const args = new Map();
-
-    args.set('sessionId', sessionId);
-    args.set('key',       key);
-    args.set('value',     value);
+    const args = new Map(Object.entries({ sessionId, key, value }));
 
     return new CaretOp(KEY, CaretOp.UPDATE_FIELD, args);
   }
@@ -91,9 +85,7 @@ export default class CaretOp extends CommonBase {
   static op_endSession(sessionId) {
     TString.check(sessionId);
 
-    const args = new Map();
-
-    args.set('sessionId', sessionId);
+    const args = new Map(Object.entries({ sessionId }));
 
     return new CaretOp(KEY, CaretOp.END_SESSION, args);
   }
@@ -107,9 +99,7 @@ export default class CaretOp extends CommonBase {
   static op_updateDocRevNum(docRevNum) {
     RevisionNumber.check(docRevNum);
 
-    const args = new Map();
-
-    args.set('docRevNum', docRevNum);
+    const args = new Map(Object.entries({ docRevNum }));
 
     return new CaretOp(KEY, CaretOp.UPDATE_DOC_REV_NUM, args);
   }
@@ -123,9 +113,7 @@ export default class CaretOp extends CommonBase {
   static op_updateRevNum(revNum) {
     RevisionNumber.check(revNum);
 
-    const args = new Map();
-
-    args.set('revNum', revNum);
+    const args = new Map(Object.entries({ revNum }));
 
     return new CaretOp(KEY, CaretOp.UPDATE_REV_NUM, args);
   }
