@@ -32,6 +32,16 @@ const ERROR_DELAY_MSEC = 5000;
  */
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
+/** {number} The target square dimension for user avatars. */
+const AVATAR_DIMENSION = 20.0;
+
+/**
+ * {number} The avatar drawing code is done as though the dimension was
+ * 400x400 (to make the numbers prettier). This value is the divisor needed
+ * to scale it down to the target dimension for avatars.
+ */
+const AVATAR_SCALE_FACTOR = AVATAR_DIMENSION / 400.0;
+
 /**
  * Manager of the visual display of the selection and insertion caret of remote
  * users editing the same document as the local user. It renders the selections
@@ -322,10 +332,10 @@ export default class CaretOverlay {
         // TODO: These magic numbers are present to nudge the avatar to the right location after
         //       it is scaled down to 20x20 (the scale(0.05) below). These values should be
         //       based on the final element width/height after transformations.
-        const x = rect.left - 10;
-        const y = rect.top - 20;
+        const x = rect.left - (AVATAR_DIMENSION / 2.0);
+        const y = rect.top - AVATAR_DIMENSION;
 
-        avatarReference.setAttribute('transform', `translate(${x}, ${y}) scale(0.05)`);
+        avatarReference.setAttribute('transform', `translate(${x}, ${y})`);
         this._svgOverlay.appendChild(avatarReference);
       } else {
         // Generate a list of rectangles representing the selection
@@ -352,10 +362,10 @@ export default class CaretOverlay {
 
           // TODO: see above vis-a-vis magic numbers.
           const topLeft = QuillGeometry.boundsForCursorAtOffset(quill, selection.index);
-          const x = topLeft.left - 10;
-          const y = topLeft.top - 20;
+          const x = topLeft.left - (AVATAR_DIMENSION / 2.0);
+          const y = topLeft.top - AVATAR_DIMENSION;
 
-          avatarReference.setAttribute('transform', `translate(${x}, ${y}) scale(0.05)`);
+          avatarReference.setAttribute('transform', `translate(${x}, ${y})`);
           this._svgOverlay.appendChild(avatarReference);
         }
       }
@@ -373,9 +383,9 @@ export default class CaretOverlay {
 
     const clippingCircle = this._document.createElementNS(SVG_NAMESPACE, 'circle');
 
-    clippingCircle.setAttribute('cx', 200);
-    clippingCircle.setAttribute('cy', 200);
-    clippingCircle.setAttribute('r', 195);
+    clippingCircle.setAttribute('cx', 200 * AVATAR_SCALE_FACTOR);
+    clippingCircle.setAttribute('cy', 200 * AVATAR_SCALE_FACTOR);
+    clippingCircle.setAttribute('r', 195 * AVATAR_SCALE_FACTOR);
 
     avatarClipPath.appendChild(clippingCircle);
     defs.appendChild(avatarClipPath);
@@ -389,11 +399,6 @@ export default class CaretOverlay {
    * @param {Map<string, object>} sessionInfo The metadata for this session.
    */
   _addAvatarToDefs(sessionInfo) {
-    // TODO: All of the drawing here is done on a 400x400 canvas (to make the math easier). Since
-    //       this is a vector image a scaling transformation can be applied to make it any final
-    //       size you want at render time. However, this causes the black outline frames to
-    //       wash out so ultimately we'll need to render these directly at the target size.
-
     const color = sessionInfo.get('color');
 
     // The whole avatar is set in a group with a known id
@@ -405,9 +410,9 @@ export default class CaretOverlay {
     // Add the circle that will hold the background color
     const backgroundCircle = this._document.createElementNS(SVG_NAMESPACE, 'circle');
 
-    backgroundCircle.setAttribute('cx', 200);
-    backgroundCircle.setAttribute('cy', 200);
-    backgroundCircle.setAttribute('r', 195);
+    backgroundCircle.setAttribute('cx', 200 * AVATAR_SCALE_FACTOR);
+    backgroundCircle.setAttribute('cy', 200 * AVATAR_SCALE_FACTOR);
+    backgroundCircle.setAttribute('r', 195 * AVATAR_SCALE_FACTOR);
     backgroundCircle.setAttribute('fill', color);
     backgroundCircle.classList.add('avatar-theme-color');
 
@@ -418,20 +423,20 @@ export default class CaretOverlay {
 
     const shoulders = this._document.createElementNS(SVG_NAMESPACE, 'ellipse');
 
-    shoulders.setAttribute('cx', 200);
-    shoulders.setAttribute('cy', 350);
-    shoulders.setAttribute('rx', 180);
-    shoulders.setAttribute('ry', 85);
+    shoulders.setAttribute('cx', 200 * AVATAR_SCALE_FACTOR);
+    shoulders.setAttribute('cy', 350 * AVATAR_SCALE_FACTOR);
+    shoulders.setAttribute('rx', 180 * AVATAR_SCALE_FACTOR);
+    shoulders.setAttribute('ry', 85 * AVATAR_SCALE_FACTOR);
     shoulders.setAttribute('fill', '#ffffff');
     shoulders.setAttribute('stroke', '#000000');
     shoulders.setAttribute('stroke-width', 1);
 
     const head = this._document.createElementNS(SVG_NAMESPACE, 'ellipse');
 
-    head.setAttribute('cx', 200);
-    head.setAttribute('cy', 190);
-    head.setAttribute('rx', 96);
-    head.setAttribute('ry', 108);
+    head.setAttribute('cx', 200 * AVATAR_SCALE_FACTOR);
+    head.setAttribute('cy', 190 * AVATAR_SCALE_FACTOR);
+    head.setAttribute('rx', 96 * AVATAR_SCALE_FACTOR);
+    head.setAttribute('ry', 108 * AVATAR_SCALE_FACTOR);
     head.setAttribute('fill', '#ffffff');
     head.setAttribute('stroke', '#000000');
     head.setAttribute('stroke-width', 1);
@@ -439,11 +444,11 @@ export default class CaretOverlay {
     // Add the black frame that goes around the whole thing.
     const frame = this._document.createElementNS(SVG_NAMESPACE, 'circle');
 
-    frame.setAttribute('cx', 200);
-    frame.setAttribute('cy', 200);
-    frame.setAttribute('r', 195);
+    frame.setAttribute('cx', 200 * AVATAR_SCALE_FACTOR);
+    frame.setAttribute('cy', 200 * AVATAR_SCALE_FACTOR);
+    frame.setAttribute('r', 195 * AVATAR_SCALE_FACTOR);
     frame.setAttribute('fill-opacity', 0);
-    frame.setAttribute('stroke', '0x000000');
+    frame.setAttribute('stroke', '#000000');
     frame.setAttribute('stroke-width', 1);
 
     // Put it all together
@@ -498,8 +503,8 @@ export default class CaretOverlay {
     const useElement = this._document.createElementNS(SVG_NAMESPACE, 'use');
 
     useElement.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${avatarName}`);
-    useElement.setAttribute('width', 20);
-    useElement.setAttribute('height', 20);
+    useElement.setAttribute('width', AVATAR_DIMENSION);
+    useElement.setAttribute('height', AVATAR_DIMENSION);
 
     return useElement;
   }
