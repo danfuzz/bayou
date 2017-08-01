@@ -73,6 +73,8 @@ export default class CaretOverlay {
   _beginSession(caret) {
     Caret.check(caret);
 
+    // **TODO:** Things will probably be easier if we just store `caret`
+    // directly in the map.
     this._sessions.set(caret.sessionId, new Map());
   }
 
@@ -104,6 +106,8 @@ export default class CaretOverlay {
 
     const info = this._sessions.get(sessionId);
 
+    // **TODO:** Things will probably be easier if we just store `caret`
+    // directly in the map.
     info.set('selection', { index: caret.index, length: caret.length });
     info.set('color', caret.color);
 

@@ -2,29 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TInt, TString } from 'typecheck';
-import { ColorSelector, CommonBase } from 'util-common';
+import { TString } from 'typecheck';
+import { CommonBase } from 'util-common';
 
 import Caret from './Caret';
 import RevisionNumber from './RevisionNumber';
-import Timestamp from './Timestamp';
 
 /** {Symbol} Key which protects the constructor from being called improperly. */
 const KEY = Symbol('CaretOp constructor key');
-
-/**
- * {Map<string,function>} Map from each allowed caret field name to a type
- * checker predicate for same, for use in `updateField` operations.
- *
- * **Note:** `sessionId` is not included, because that can't be altered by those
- * operations.
- */
-const CARET_FIELDS = new Map([
-  ['lastActive', Timestamp.check],
-  ['index',      TInt.nonNegative],
-  ['length',     TInt.nonNegative],
-  ['color',      ColorSelector.checkHexColor]
-]);
 
 /**
  * Operation which can be applied to a `Caret` or `CaretSnapshot`.
@@ -85,19 +70,7 @@ export default class CaretOp extends CommonBase {
    */
   static op_updateField(sessionId, key, value) {
     TString.check(sessionId);
-    TString.nonempty(key);
-
-    const checker = CARET_FIELDS.get(key);
-    if (!checker) {
-      throw new Error(`Invalid caret field name: ${key}`);
-    } else {
-      try {
-        checker(value);
-      } catch (e) {
-        // Higher-fidelity error.
-        throw new Error(`Invalid value for caret field ${key}: ${value}`);
-      }
-    }
+    Caret.checkField(key, value);
 
     const args = new Map();
 

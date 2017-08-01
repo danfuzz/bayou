@@ -2,12 +2,26 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TIterable, TString } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { TInt, TIterable, TString } from 'typecheck';
+import { ColorSelector, CommonBase } from 'util-common';
 
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';
 import Timestamp from './Timestamp';
+
+/**
+ * {Map<string,function>} Map from each allowed caret field name to a type
+ * checker predicate for same, for use in `updateField` operations.
+ *
+ * **Note:** `sessionId` is not included, because that can't be altered by those
+ * operations.
+ */
+const CARET_FIELDS = new Map([
+  ['lastActive', Timestamp.check],
+  ['index',      TInt.nonNegative],
+  ['length',     TInt.nonNegative],
+  ['color',      ColorSelector.checkHexColor]
+]);
 
 /**
  * {Caret|null} An instance with all default values. Initialized in the static
@@ -38,6 +52,33 @@ export default class Caret extends CommonBase {
     }
 
     return EMPTY;
+  }
+
+  /**
+   * Checks a potential value for an instance field. This throws an error if
+   * the field name is invalid or the value is not valid for the named field.
+   *
+   * @param {string} name Field name.
+   * @param {*} value Potential value for the named field.
+   * @returns {*} `value` if it is valid.
+   */
+  static checkField(name, value) {
+    TString.check(name);
+
+    const checker = CARET_FIELDS.get(name);
+
+    if (!checker) {
+      throw new Error(`Invalid caret field name: ${name}`);
+    }
+
+    try {
+      checker(value);
+    } catch (e) {
+      // Higher-fidelity error.
+      throw new Error(`Invalid value for caret field ${name}: ${value}`);
+    }
+
+    return value;
   }
 
   /**
