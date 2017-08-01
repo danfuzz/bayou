@@ -5,6 +5,7 @@
 import { TInt, TString } from 'typecheck';
 import { ColorSelector, CommonBase } from 'util-common';
 
+import Caret from './Caret';
 import RevisionNumber from './RevisionNumber';
 import Timestamp from './Timestamp';
 
@@ -57,16 +58,17 @@ export default class CaretOp extends CommonBase {
   /**
    * Constructs a new "begin session" operation.
    *
-   * @param {string} sessionId The session ID.
+   * @param {Caret} caret The initial caret for the new session (which includes
+   *   a session ID).
    * @returns {CaretOp} An operation representing the start of the so-IDed
    *   session.
    */
-  static op_beginSession(sessionId) {
-    TString.check(sessionId);
+  static op_beginSession(caret) {
+    Caret.check(caret);
 
     const args = new Map();
 
-    args.set('sessionId', sessionId);
+    args.set('caret', caret);
 
     return new CaretOp(KEY, CaretOp.BEGIN_SESSION, args);
   }

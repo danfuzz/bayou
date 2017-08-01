@@ -107,8 +107,8 @@ export default class CaretSnapshot extends CommonBase {
     for (const op of delta.ops) {
       switch (op.name) {
         case CaretOp.BEGIN_SESSION: {
-          const sessionId = op.arg('sessionId');
-          newCarets.set(sessionId, new Caret(sessionId));
+          const caret = op.arg('caret');
+          newCarets.set(caret.sessionId, caret);
           break;
         }
 
@@ -192,12 +192,7 @@ export default class CaretSnapshot extends CommonBase {
         }
       } else {
         // The `sessionId` isn't in the older snapshot, so this is an addition.
-        caretOps.push(CaretOp.op_beginSession(sessionId));
-
-        const diff = Caret.EMPTY.diffFields(newerCaret, sessionId);
-        for (const op of diff.ops) {
-          caretOps.push(op);
-        }
+        caretOps.push(CaretOp.op_beginSession(newerCaret));
       }
     }
 
