@@ -4,7 +4,7 @@
 
 import { FileCodec, TransactionSpec } from 'content-store';
 import { DocumentDelta, DocumentChange, DocumentSnapshot, FrozenDelta, RevisionNumber, Timestamp } from 'doc-common';
-import { TInt, TString } from 'typecheck';
+import { TString } from 'typecheck';
 import { CommonBase, InfoError, PromDelay } from 'util-common';
 
 import FileComplex from './FileComplex';
@@ -23,7 +23,7 @@ const APPEND_RETRY_GROWTH_FACTOR = 5;
 const MAX_APPEND_TIME_MSEC = 20 * 1000; // 20 seconds.
 
 /**
- * {nubmer} Maximum number of document changes to request in a single
+ * {number} Maximum number of document changes to request in a single
  * transaction. (The idea is to avoid making a request that would result in
  * running into an upper limit on transaction data size.)
  */
@@ -262,7 +262,7 @@ export default class DocControl extends CommonBase {
     }
 
     try {
-      TInt.min(revNum, 0);
+      RevisionNumber.check(revNum);
     } catch (e) {
       this._log.info('Corrupt document: Bogus revision number.');
       return DocControl.STATUS_ERROR;

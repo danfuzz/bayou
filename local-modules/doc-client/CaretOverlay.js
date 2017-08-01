@@ -2,9 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Caret } from 'doc-common';
 import { QuillEvent, QuillGeometry } from 'quill-util';
-import { TObject, TInt, TString } from 'typecheck';
-import { ColorSelector, PromDelay } from 'util-common';
+import { TObject, TString } from 'typecheck';
+import { PromDelay } from 'util-common';
 
 /**
  * {Int} Amount of time (in msec) to wait after receiving a caret update from
@@ -67,12 +68,14 @@ export default class CaretOverlay {
   /**
    * Begin tracking a new session.
    *
-   * @param {string} sessionId The session to track.
+   * @param {Caret} caret The new caret to track (which includes a session ID).
    */
-  _beginSession(sessionId) {
-    TString.check(sessionId);
+  _beginSession(caret) {
+    Caret.check(caret);
 
-    this._sessions.set(sessionId, new Map());
+    // **TODO:** Things will probably be easier if we just store `caret`
+    // directly in the map.
+    this._sessions.set(caret.sessionId, new Map());
   }
 
   /**
@@ -88,31 +91,25 @@ export default class CaretOverlay {
   }
 
   /**
-   * Updates annotation for a remote session's selection, and updates the
-   * display.
+   * Updates annotation for a remote session's caret, and updates the display.
    *
-   * @param {string} sessionId The session whose state we're updating.
-   * @param {Int} index The position of the remote caret or start of the
-   *   selection.
-   * @param {Int} length The extent of the remote selection, or `0` for just the
-   *   caret.
-   * @param {string} color The color to use for the background of the remote
-   *    selection. It must be in hex format (e.g. `#ffb8b8`).
+   * @param {Caret} caret The caret to update.
    */
-  _updateCaret(sessionId, index, length, color) {
-    TString.check(sessionId);
-    TInt.min(index, 0);
-    TInt.min(length, 0);
-    ColorSelector.checkHexColor(color);
+  _updateCaret(caret) {
+    Caret.check(caret);
+
+    const sessionId = caret.sessionId;
 
     if (!this._sessions.has(sessionId)) {
-      this._beginSession(sessionId);
+      this._beginSession(caret);
     }
 
     const info = this._sessions.get(sessionId);
 
-    info.set('selection', { index, length });
-    info.set('color', color);
+    // **TODO:** Things will probably be easier if we just store `caret`
+    // directly in the map.
+    info.set('selection', { index: caret.index, length: caret.length });
+    info.set('color', caret.color);
 
     this._updateDisplay();
   }
@@ -132,7 +129,8 @@ export default class CaretOverlay {
         const range    = selEvent.range;
 
         this._updateCaret(
-          'local-session', range.index, range.length, '#ffb8b8');
+          new Caret('local-session',
+            { index: range.index, length: range.length, color: '#ffb8b8' }));
         currentEvent = selEvent;
       }
     }
@@ -200,7 +198,7 @@ export default class CaretOverlay {
           continue;
         }
 
-        this._updateCaret(c.sessionId, c.index, c.length, c.color);
+        this._updateCaret(c);
         oldSessions.delete(c.sessionId);
       }
 
@@ -219,20 +217,29 @@ export default class CaretOverlay {
    * Watches the local editor for edits. When noticed, causes the display to
    * update. Much of the time, this will be a no-op because the caret activity
    * will have already caused an update. However, some edits won't actually
-   * affect carets (notably, style-only changes), and this method effectively
-   * provides a backstop that prevents those edits from causing lingering
-   * inaccuracy in the overlay.
+   * affect caret data even though the rendered coordinates for carets would
+   * change (notably, style-only changes), and this method effectively provides
+   * a backstop that prevents those edits from causing lingering inaccuracy in
+   * the rendered overlay.
    */
   async _watchLocalEdits() {
     const log = this._editorComplex.log;
     let currentEvent = this._editorComplex.quill.currentEvent;
 
     for (;;) {
+      // Wait for a text change.
       currentEvent = await currentEvent.nextOf(QuillEvent.TEXT_CHANGE);
+
+      // Skip any additional text changes that have already been posted, so that
+      // we won't just be slowly iterating over all changes.
       currentEvent = currentEvent.latestOfNow(QuillEvent.TEXT_CHANGE);
 
       log.detail('Got local edit event.');
       this._updateDisplay();
+
+      // Wait a moment, before looking for more changes. If there are multiple
+      // changes during this time, the `latestOfNow()` call above will elide
+      // them.
       await PromDelay.resolve(LOCAL_EDIT_DELAY_MSEC);
     }
   }

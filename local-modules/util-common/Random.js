@@ -38,7 +38,7 @@ export default class Random extends UtilityClass {
    * @returns {Array<Int>} Array of `length` random bytes.
    */
   static byteArray(length) {
-    const buffer = crypto.randomBytes(TInt.min(length, 0));
+    const buffer = crypto.randomBytes(TInt.nonNegative(length));
     return [...buffer];
   }
 

@@ -154,8 +154,8 @@ export default class CaretControl extends CommonBase {
   async update(sessionId, docRevNum, index, length = 0) {
     TString.check(sessionId);
     RevisionNumber.check(docRevNum);
-    TInt.min(index, 0);
-    TInt.min(length, 0);
+    TInt.nonNegative(index);
+    TInt.nonNegative(length);
 
     const caretStr = (length === 0)
       ? `@${index}`
@@ -173,9 +173,8 @@ export default class CaretControl extends CommonBase {
       const color      = this._colorSelector.nextColorHex();
       const fields     = { lastActive, index, length, color };
       const newCaret   = new Caret(sessionId, Object.entries(fields));
-      const diff       = Caret.EMPTY.diffFields(newCaret, sessionId);
 
-      ops = [CaretOp.op_beginSession(sessionId), ...diff.ops];
+      ops = [CaretOp.op_beginSession(newCaret)];
     } else {
       const lastActive = Timestamp.now();
       const fields     = { lastActive, index, length };

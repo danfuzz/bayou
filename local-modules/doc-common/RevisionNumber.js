@@ -18,7 +18,7 @@ export default class RevisionNumber extends UtilityClass {
    */
   static check(value) {
     try {
-      return TInt.min(value, 0);
+      return TInt.nonNegative(value);
     } catch (e) {
       // More appropriate error.
       return TypeError.badValue(value, 'RevisionNumber');

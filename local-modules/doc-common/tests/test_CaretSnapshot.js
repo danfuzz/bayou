@@ -56,10 +56,11 @@ describe('doc-common/CaretSnapshot', () => {
       assert.isTrue(result.equals(expected));
     });
 
-    it('should add a default caret given the appropriate op', () => {
-      const snap     = new CaretSnapshot(1, 2, [caret1]);
-      const expected = new CaretSnapshot(1, 2, [caret1, new Caret('florp')]);
-      const result   = snap.compose(new CaretDelta([CaretOp.op_beginSession('florp')]));
+    it('should add a new caret given the appropriate op', () => {
+      const snap     = new CaretSnapshot(1, 2, []);
+      const expected = new CaretSnapshot(1, 2, [caret1]);
+      const delta    = new CaretDelta([CaretOp.op_beginSession(caret1)]);
+      const result   = snap.compose(delta);
 
       assert.isTrue(result.equals(expected));
     });
@@ -78,19 +79,6 @@ describe('doc-common/CaretSnapshot', () => {
       const expected = new CaretSnapshot(1, 2, [caret1, c2]);
       const op       = CaretOp.op_updateField('foo', 'index', 3);
       const result   = snap.compose(new CaretDelta([op]));
-
-      assert.isTrue(result.equals(expected));
-    });
-
-    it('should allow introduction of a new caret with value given the appropriate ops', () => {
-      const snap     = new CaretSnapshot(1, 2, []);
-      const expected = new CaretSnapshot(1, 2, [caret1]);
-
-      const delta = new CaretDelta([
-        CaretOp.op_beginSession(caret1.sessionId),
-        ...(Caret.EMPTY.diffFields(caret1, caret1.sessionId).ops)]);
-
-      const result = snap.compose(delta);
 
       assert.isTrue(result.equals(expected));
     });

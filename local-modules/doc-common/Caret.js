@@ -2,18 +2,32 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TIterable, TString } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { TInt, TIterable, TString } from 'typecheck';
+import { ColorSelector, CommonBase } from 'util-common';
 
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';
 import Timestamp from './Timestamp';
 
 /**
+ * {Map<string,function>} Map from each allowed caret field name to a type
+ * checker predicate for same.
+ *
+ * **Note:** `sessionId` is not included, because that's separate from the
+ * caret's "fields" per se.
+ */
+const CARET_FIELDS = new Map([
+  ['lastActive', Timestamp.check],
+  ['index',      TInt.nonNegative],
+  ['length',     TInt.nonNegative],
+  ['color',      ColorSelector.checkHexColor]
+]);
+
+/**
  * {Caret|null} An instance with all default values. Initialized in the static
  * method of the same name.
  */
-let EMPTY = null;
+let DEFAULT = null;
 
 /**
  * Information about the state of a single document editing session. Instances
@@ -26,9 +40,9 @@ let EMPTY = null;
  */
 export default class Caret extends CommonBase {
   /** {Caret} An instance with all default values. */
-  static get EMPTY() {
-    if (EMPTY === null) {
-      EMPTY = new Caret('no-session',
+  static get DEFAULT() {
+    if (DEFAULT === null) {
+      DEFAULT = new Caret('no-session',
         Object.entries({
           lastActive: Timestamp.now(),
           index:      0,
@@ -37,15 +51,42 @@ export default class Caret extends CommonBase {
         }));
     }
 
-    return EMPTY;
+    return DEFAULT;
   }
 
   /**
-   * Constructs an instance. Only the first argument (`sessionId`) is required,
-   * and it is not necessary to specify all the fields in `fields`; those not
-   * listed are set to the default (based on `Caret.EMPTY`). Though generally
-   * short-lived, instances constructed with all defaults are used as the carets
-   * for newly-minted sessions.
+   * Checks a potential value for an instance field. This throws an error if
+   * the field name is invalid or the value is not valid for the named field.
+   *
+   * @param {string} name Field name.
+   * @param {*} value Potential value for the named field.
+   * @returns {*} `value` if it is valid.
+   */
+  static checkField(name, value) {
+    TString.check(name);
+
+    const checker = CARET_FIELDS.get(name);
+
+    if (!checker) {
+      throw new Error(`Invalid caret field name: ${name}`);
+    }
+
+    try {
+      checker(value);
+    } catch (e) {
+      // Higher-fidelity error.
+      throw new Error(`Invalid value for caret field ${name}: ${value}`);
+    }
+
+    return value;
+  }
+
+  /**
+   * Constructs an instance. Only the first argument (`sessionIdOrBase`) is
+   * required, and it is not necessary to specify all the fields in `fields`.
+   * Fields not listed are derived from the base caret (first argument) if
+   * specified as such, or from the default value `Caret.DEFAULT` if the first
+   * argument is a session ID.
    *
    * @param {string|Caret} sessionIdOrBase Session ID that identifies the caret,
    *   or a base caret instance which provides the session and default values
@@ -60,7 +101,7 @@ export default class Caret extends CommonBase {
       newFields = new Map(sessionIdOrBase._fields);
       sessionId = sessionIdOrBase.sessionId;
     } else {
-      newFields = EMPTY ? new Map(EMPTY._fields) : new Map();
+      newFields = DEFAULT ? new Map(DEFAULT._fields) : new Map();
       sessionId = TString.check(sessionIdOrBase);
     }
 
@@ -75,13 +116,10 @@ export default class Caret extends CommonBase {
     this._fields = newFields;
 
     for (const [k, v] of fields) {
-      // Construct an `updateField` op, which forces `k` and `v` to be
-      // validated.
-      CaretOp.op_updateField(sessionId, k, v);
-      newFields.set(k, v);
+      newFields.set(k, Caret.checkField(k, v));
     }
 
-    if (EMPTY && (newFields.size !== EMPTY._fields.size)) {
+    if (DEFAULT && (newFields.size !== DEFAULT._fields.size)) {
       throw new Error(`Missing field.`);
     }
 
@@ -256,5 +294,5 @@ export default class Caret extends CommonBase {
   }
 }
 
-// Ensure that `EMPTY` is initialized.
-Caret.EMPTY;
+// Ensure that `DEFAULT` is initialized.
+Caret.DEFAULT;

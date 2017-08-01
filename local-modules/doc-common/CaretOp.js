@@ -2,28 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TInt, TString } from 'typecheck';
-import { ColorSelector, CommonBase } from 'util-common';
+import { TString } from 'typecheck';
+import { CommonBase } from 'util-common';
 
+import Caret from './Caret';
 import RevisionNumber from './RevisionNumber';
-import Timestamp from './Timestamp';
 
 /** {Symbol} Key which protects the constructor from being called improperly. */
 const KEY = Symbol('CaretOp constructor key');
-
-/**
- * {Map<string,function>} Map from each allowed caret field name to a type
- * checker predicate for same, for use in `updateField` operations.
- *
- * **Note:** `sessionId` is not included, because that can't be altered by those
- * operations.
- */
-const CARET_FIELDS = new Map([
-  ['lastActive', Timestamp.check],
-  ['index',      TInt.nonNegative],
-  ['length',     TInt.nonNegative],
-  ['color',      ColorSelector.checkHexColor]
-]);
 
 /**
  * Operation which can be applied to a `Caret` or `CaretSnapshot`.
@@ -57,18 +43,15 @@ export default class CaretOp extends CommonBase {
   /**
    * Constructs a new "begin session" operation.
    *
-   * @param {string} sessionId The session ID.
+   * @param {Caret} caret The initial caret for the new session (which includes
+   *   a session ID).
    * @returns {CaretOp} An operation representing the start of the so-IDed
    *   session.
    */
-  static op_beginSession(sessionId) {
-    TString.check(sessionId);
+  static op_beginSession(caret) {
+    Caret.check(caret);
 
-    const args = new Map();
-
-    args.set('sessionId', sessionId);
-
-    return new CaretOp(KEY, CaretOp.BEGIN_SESSION, args);
+    return new CaretOp(KEY, CaretOp.BEGIN_SESSION, { caret });
   }
 
   /**
@@ -83,27 +66,9 @@ export default class CaretOp extends CommonBase {
    */
   static op_updateField(sessionId, key, value) {
     TString.check(sessionId);
-    TString.nonempty(key);
+    Caret.checkField(key, value);
 
-    const checker = CARET_FIELDS.get(key);
-    if (!checker) {
-      throw new Error(`Invalid caret field name: ${key}`);
-    } else {
-      try {
-        checker(value);
-      } catch (e) {
-        // Higher-fidelity error.
-        throw new Error(`Invalid value for caret field ${key}: ${value}`);
-      }
-    }
-
-    const args = new Map();
-
-    args.set('sessionId', sessionId);
-    args.set('key',       key);
-    args.set('value',     value);
-
-    return new CaretOp(KEY, CaretOp.UPDATE_FIELD, args);
+    return new CaretOp(KEY, CaretOp.UPDATE_FIELD, { sessionId, key, value });
   }
 
   /**
@@ -116,11 +81,7 @@ export default class CaretOp extends CommonBase {
   static op_endSession(sessionId) {
     TString.check(sessionId);
 
-    const args = new Map();
-
-    args.set('sessionId', sessionId);
-
-    return new CaretOp(KEY, CaretOp.END_SESSION, args);
+    return new CaretOp(KEY, CaretOp.END_SESSION, { sessionId });
   }
 
   /**
@@ -132,11 +93,7 @@ export default class CaretOp extends CommonBase {
   static op_updateDocRevNum(docRevNum) {
     RevisionNumber.check(docRevNum);
 
-    const args = new Map();
-
-    args.set('docRevNum', docRevNum);
-
-    return new CaretOp(KEY, CaretOp.UPDATE_DOC_REV_NUM, args);
+    return new CaretOp(KEY, CaretOp.UPDATE_DOC_REV_NUM, { docRevNum });
   }
 
   /**
@@ -148,11 +105,7 @@ export default class CaretOp extends CommonBase {
   static op_updateRevNum(revNum) {
     RevisionNumber.check(revNum);
 
-    const args = new Map();
-
-    args.set('revNum', revNum);
-
-    return new CaretOp(KEY, CaretOp.UPDATE_REV_NUM, args);
+    return new CaretOp(KEY, CaretOp.UPDATE_REV_NUM, { revNum });
   }
 
   /**
@@ -162,7 +115,7 @@ export default class CaretOp extends CommonBase {
    * @param {object} constructorKey The private-to-this-module key that
    *   enforces the exhortation in the method documentation above.
    * @param {string} name The operation name.
-   * @param {Map<string,*>} args Arguments to the operation.
+   * @param {object} args Arguments to the operation.
    */
   constructor(constructorKey, name, args) {
     super();
@@ -175,7 +128,7 @@ export default class CaretOp extends CommonBase {
     this._name = name;
 
     /** {Map<string,*>} args The arguments needed for the operation. */
-    this._args = args;
+    this._args = new Map(Object.entries(args));
 
     Object.freeze(this);
   }
@@ -229,6 +182,6 @@ export default class CaretOp extends CommonBase {
    * @returns {CaretOp} The new instance.
    */
   static fromApi(name, args) {
-    return new CaretOp(KEY, name, new Map(Object.entries(args)));
+    return new CaretOp(KEY, name, args);
   }
 }
