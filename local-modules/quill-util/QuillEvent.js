@@ -144,8 +144,8 @@ export default class QuillEvent extends BaseEvent {
   static _checkAndFreezeRange(range) {
     if (range !== null) {
       TObject.withExactKeys(range, ['index', 'length']);
-      TInt.min(range.index, 0);
-      TInt.min(range.length, 0);
+      TInt.nonNegative(range.index);
+      TInt.nonNegative(range.length);
       Object.freeze(range);
     }
 

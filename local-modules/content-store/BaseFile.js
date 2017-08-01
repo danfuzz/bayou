@@ -83,7 +83,7 @@ export default class BaseFile extends CommonBase {
         : value;
     }
 
-    TInt.min(value, 0);
+    TInt.nonNegative(value);
 
     const minTimeoutMsec = this.minTimeoutMsec;
     if (minTimeoutMsec !== null) {
@@ -202,7 +202,7 @@ export default class BaseFile extends CommonBase {
 
     // Validate and convert the result to be as documented.
 
-    TInt.min(result.revNum, 0);
+    TInt.nonNegative(result.revNum);
 
     if (result.newRevNum === null) {
       delete result.newRevNum;
@@ -265,7 +265,7 @@ export default class BaseFile extends CommonBase {
    */
   async whenChange(timeoutMsec, baseRevNum, storagePath = null) {
     timeoutMsec = this.clampTimeoutMsec(timeoutMsec);
-    TInt.min(baseRevNum, 0);
+    TInt.nonNegative(baseRevNum);
     StoragePath.orNull(storagePath);
 
     const result =

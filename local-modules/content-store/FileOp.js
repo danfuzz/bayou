@@ -401,7 +401,7 @@ export default class FileOp extends CommonBase {
               break;
             }
             case TYPE_DUR_MSEC: {
-              TInt.min(arg, 0);
+              TInt.nonNegative(arg);
               break;
             }
             case TYPE_HASH: {
@@ -414,7 +414,7 @@ export default class FileOp extends CommonBase {
               break;
             }
             case TYPE_REV_NUM: {
-              TInt.min(arg, 0);
+              TInt.nonNegative(arg);
               break;
             }
             case TYPE_REV_NUM_1: {

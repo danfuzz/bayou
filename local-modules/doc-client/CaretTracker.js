@@ -76,8 +76,8 @@ export default class CaretTracker extends CommonBase {
   update(docRevNum, range) {
     RevisionNumber.check(docRevNum);
     TObject.check(range);
-    TInt.min(range.index, 0);
-    TInt.min(range.length, 0);
+    TInt.nonNegative(range.index);
+    TInt.nonNegative(range.length);
 
     this._latestCaret = [docRevNum, range.index, range.length];
     this._runUpdateLoop();

@@ -154,8 +154,8 @@ export default class CaretControl extends CommonBase {
   async update(sessionId, docRevNum, index, length = 0) {
     TString.check(sessionId);
     RevisionNumber.check(docRevNum);
-    TInt.min(index, 0);
-    TInt.min(length, 0);
+    TInt.nonNegative(index);
+    TInt.nonNegative(length);
 
     const caretStr = (length === 0)
       ? `@${index}`

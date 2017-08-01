@@ -262,7 +262,7 @@ export default class DocControl extends CommonBase {
     }
 
     try {
-      TInt.min(revNum, 0);
+      RevisionNumber.check(revNum);
     } catch (e) {
       this._log.info('Corrupt document: Bogus revision number.');
       return DocControl.STATUS_ERROR;

@@ -50,7 +50,7 @@ export default class StringUtil extends UtilityClass {
    */
   static stringWithUtf8ByteLimit(string, limit) {
     TString.check(string);
-    TInt.min(limit, 0);
+    TInt.nonNegative(limit);
 
     let resultString = '';
     let totalByteCount = 0;
