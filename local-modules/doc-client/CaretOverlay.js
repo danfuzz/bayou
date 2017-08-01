@@ -217,9 +217,10 @@ export default class CaretOverlay {
    * Watches the local editor for edits. When noticed, causes the display to
    * update. Much of the time, this will be a no-op because the caret activity
    * will have already caused an update. However, some edits won't actually
-   * affect carets (notably, style-only changes), and this method effectively
-   * provides a backstop that prevents those edits from causing lingering
-   * inaccuracy in the overlay.
+   * affect caret data even though the rendered coordinates for carets would
+   * change (notably, style-only changes), and this method effectively provides
+   * a backstop that prevents those edits from causing lingering inaccuracy in
+   * the rendered overlay.
    */
   async _watchLocalEdits() {
     const log = this._editorComplex.log;
