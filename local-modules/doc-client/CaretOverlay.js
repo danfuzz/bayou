@@ -5,7 +5,7 @@
 import { Caret } from 'doc-common';
 import { QuillEvent, QuillGeometry } from 'quill-util';
 import { TObject, TString } from 'typecheck';
-import { PromDelay } from 'util-common';
+import { ColorSelector, PromDelay } from 'util-common';
 
 /**
  * {Int} Amount of time (in msec) to wait after receiving a caret update from
@@ -26,6 +26,11 @@ const LOCAL_EDIT_DELAY_MSEC = 1000;
  * the server, before trying to reconnect.
  */
 const ERROR_DELAY_MSEC = 5000;
+
+/**
+ * {string} XML namespace for SVG documents.
+ */
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
 /**
  * Manager of the visual display of the selection and insertion caret of remote
@@ -54,12 +59,33 @@ export default class CaretOverlay {
     this._document = TObject.check(svgElement.ownerDocument, Document);
 
     /**
-     * {Element} The SVG element in which we render the remote carets. The SVG
+     * {SVGSVGElement} The `<svg>` element in which we render the remote carets. The SVG
      * should be the same dimensions as
      * `_editorComplex.quill.scrollingContainer` and on top of it in z-index
      * order (closer to the viewer).
+     * @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/svg
+     *
+     * The structure of the overlay contents is roughly...
+     *  <svg>
+     *    <defs>
+     *      [reusuable elements such as clip paths, avatars, gradients, etc]
+     *    </defs>
+     *    [caret/selection drawing commands for session A]
+     *    <use href="#avatarA" />
+     *    [caret/selection drawing commands for session B]
+     *    <use href="#avatarB" />
+     *    [caret/selection drawing commands for session N]
+     *    <use href="#avatarN" />
+     *  </svg>
      */
-    this._overlay = TObject.check(svgElement, Element);
+    this._svgOverlay = TObject.check(svgElement, Element);
+
+    /**
+     * {SVGDefsElement} The `<defs>` element within `_svgOverlay`. This holds reusable definitions
+     * such as clip paths, gradients, session avatars, etc.
+     * @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/defs
+     */
+    this._svgDefs = this._addInitialSvgDefs();
 
     this._watchCarets();
     this._watchLocalEdits();
@@ -73,9 +99,16 @@ export default class CaretOverlay {
   _beginSession(caret) {
     Caret.check(caret);
 
-    // **TODO:** Things will probably be easier if we just store `caret`
-    // directly in the map.
-    this._sessions.set(caret.sessionId, new Map());
+    const sessionInfo = new Map();
+
+    sessionInfo.set('sessionId', caret.sessionId);
+    sessionInfo.set('selection', { index: 0, length: 0 });
+    sessionInfo.set('color', '#000000');
+
+    this._sessions.set(caret.sessionId, sessionInfo);
+
+    this._addAvatarToDefs(sessionInfo);
+    this._updateDisplay();
   }
 
   /**
@@ -86,7 +119,9 @@ export default class CaretOverlay {
   _endSession(sessionId) {
     TString.check(sessionId);
 
+    this._removeAvatarFromDefs(sessionId);
     this._sessions.delete(sessionId);
+
     this._updateDisplay();
   }
 
@@ -109,7 +144,11 @@ export default class CaretOverlay {
     // **TODO:** Things will probably be easier if we just store `caret`
     // directly in the map.
     info.set('selection', { index: caret.index, length: caret.length });
-    info.set('color', caret.color);
+
+    if (info.get('color') !== caret.color) {
+      info.set('color', caret.color);
+      this._updateAvatarColor(sessionId, caret.color);
+    }
 
     this._updateDisplay();
   }
@@ -249,22 +288,28 @@ export default class CaretOverlay {
    */
   _updateDisplay() {
     // Remove extant annotations.
-    while (this._overlay.firstChild) {
-      this._overlay.removeChild(this._overlay.firstChild);
+    while (this._svgOverlay.firstChild) {
+      this._svgOverlay.removeChild(this._svgOverlay.firstChild);
     }
+
+    // Put back our pre-made definitions.
+    this._svgOverlay.appendChild(this._svgDefs);
 
     const quill = this._editorComplex.quill;
 
     // For each session…
     for (const [sessionId_unused, info] of this._sessions) {
       const selection = info.get('selection');
+      const avatarReference = info.get('avatarReference');
 
       if (selection.length === 0) {
+        // Length of zero means an insertion point instead of a selection
         const rect = QuillGeometry.boundsForCursorAtOffset(quill, selection.index);
 
         const pathCommand = QuillGeometry.svgPathCommandsForRect(rect);
-        const path = this._document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const path = this._document.createElementNS(SVG_NAMESPACE, 'path');
 
+        // Even for a zero-width rect we get what we expect when we stroke the frame.
         path.setAttribute('d', pathCommand);
         path.setAttribute('fill', info.get('color'));
         path.setAttribute('fill-opacity', '1.0');
@@ -272,15 +317,24 @@ export default class CaretOverlay {
         path.setAttribute('stroke', info.get('color'));
         path.setAttribute('stroke-opacity', '1.0');
 
-        this._overlay.appendChild(path);
+        this._svgOverlay.appendChild(path);
+
+        // TODO: These magic numbers are present to nudge the avatar to the right location after
+        //       it is scaled down to 20x20 (the scale(0.05) below). These values should be
+        //       based on the final element width/height after transformations.
+        const x = rect.left - 10;
+        const y = rect.top - 20;
+
+        avatarReference.setAttribute('transform', `translate(${x}, ${y}) scale(0.05)`);
+        this._svgOverlay.appendChild(avatarReference);
       } else {
-        // Generate a list of rectangles representing their selection…
+        // Generate a list of rectangles representing the selection
         let rects = QuillGeometry.boundsForLinesInRange(quill, selection);
 
         rects = rects.map(QuillGeometry.snapRectToPixels);
 
         for (const rect of rects) {
-          const svgRect = this._document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          const svgRect = this._document.createElementNS(SVG_NAMESPACE, 'rect');
 
           svgRect.setAttribute('x', rect.left);
           svgRect.setAttribute('y', rect.top);
@@ -294,8 +348,215 @@ export default class CaretOverlay {
           svgRect.setAttribute('stroke', info.get('color'));
           svgRect.setAttribute('stroke-opacity', '1.0');
 
-          this._overlay.appendChild(svgRect);
+          this._svgOverlay.appendChild(svgRect);
+
+          // TODO: see above vis-a-vis magic numbers.
+          const topLeft = QuillGeometry.boundsForCursorAtOffset(quill, selection.index);
+          const x = topLeft.left - 10;
+          const y = topLeft.top - 20;
+
+          avatarReference.setAttribute('transform', `translate(${x}, ${y}) scale(0.05)`);
+          this._svgOverlay.appendChild(avatarReference);
         }
+      }
+    }
+  }
+
+  _addInitialSvgDefs() {
+    const defs = this._document.createElementNS(SVG_NAMESPACE, 'defs');
+
+    // This is the outer clipping mask. This keeps the shoulders from extending
+    // outside of the outer frame.
+    const avatarClipPath = this._document.createElementNS(SVG_NAMESPACE, 'clipPath');
+
+    avatarClipPath.setAttribute('id', 'avatarClipPath');
+
+    const clippingCircle = this._document.createElementNS(SVG_NAMESPACE, 'circle');
+
+    clippingCircle.setAttribute('cx', 200);
+    clippingCircle.setAttribute('cy', 200);
+    clippingCircle.setAttribute('r', 195);
+
+    avatarClipPath.appendChild(clippingCircle);
+    defs.appendChild(avatarClipPath);
+
+    return defs;
+  }
+
+  /**
+   * Constructs an avatar image for the session and adds it to the `<defs>` section of the SVG.
+   *
+   * @param {Map<string, object>} sessionInfo The metadata for this session.
+   */
+  _addAvatarToDefs(sessionInfo) {
+    // TODO: All of the drawing here is done on a 400x400 canvas (to make the math easier). Since
+    //       this is a vector image a scaling transformation can be applied to make it any final
+    //       size you want at render time. However, this causes the black outline frames to
+    //       wash out so ultimately we'll need to render these directly at the target size.
+
+    const color = sessionInfo.get('color');
+
+    // The whole avatar is set in a group with a known id
+    const avatarGroup = this._document.createElementNS(SVG_NAMESPACE, 'g');
+    const sessionId = sessionInfo.get('sessionId');
+
+    avatarGroup.setAttribute('id', CaretOverlay.avatarNameForSessionId(sessionId));
+
+    // Add the circle that will hold the background color
+    const backgroundCircle = this._document.createElementNS(SVG_NAMESPACE, 'circle');
+
+    backgroundCircle.setAttribute('cx', 200);
+    backgroundCircle.setAttribute('cy', 200);
+    backgroundCircle.setAttribute('r', 195);
+    backgroundCircle.setAttribute('fill', color);
+    backgroundCircle.classList.add('avatar-theme-color');
+
+    // Create a new group to hold the head and shoulders and clip it to the mask we made earlier.
+    const personGroup = this._document.createElementNS(SVG_NAMESPACE, 'g');
+
+    personGroup.setAttribute('clip-path', 'url(#avatarClipPath)');
+
+    const shoulders = this._document.createElementNS(SVG_NAMESPACE, 'ellipse');
+
+    shoulders.setAttribute('cx', 200);
+    shoulders.setAttribute('cy', 350);
+    shoulders.setAttribute('rx', 180);
+    shoulders.setAttribute('ry', 85);
+    shoulders.setAttribute('fill', '#ffffff');
+    shoulders.setAttribute('stroke', '#000000');
+    shoulders.setAttribute('stroke-width', 1);
+
+    const head = this._document.createElementNS(SVG_NAMESPACE, 'ellipse');
+
+    head.setAttribute('cx', 200);
+    head.setAttribute('cy', 190);
+    head.setAttribute('rx', 96);
+    head.setAttribute('ry', 108);
+    head.setAttribute('fill', '#ffffff');
+    head.setAttribute('stroke', '#000000');
+    head.setAttribute('stroke-width', 1);
+
+    // Add the black frame that goes around the whole thing.
+    const frame = this._document.createElementNS(SVG_NAMESPACE, 'circle');
+
+    frame.setAttribute('cx', 200);
+    frame.setAttribute('cy', 200);
+    frame.setAttribute('r', 195);
+    frame.setAttribute('fill-opacity', 0);
+    frame.setAttribute('stroke', '0x000000');
+    frame.setAttribute('stroke-width', 1);
+
+    // Put it all together
+    personGroup.appendChild(shoulders);
+    personGroup.appendChild(head);
+
+    avatarGroup.appendChild(backgroundCircle);
+    avatarGroup.appendChild(personGroup);
+    avatarGroup.appendChild(frame);
+
+    this._svgDefs.appendChild(avatarGroup);
+
+    const useReferenceForAvatar = this._useElementForSessionAvatar(sessionInfo.get('sessionId'));
+
+    sessionInfo.set('avatarReference', useReferenceForAvatar);
+  }
+
+  _avatarDefWithName(name) {
+    for (const child of this._svgDefs.childNodes) {
+      if (child.getAttribute('id') === name) {
+        return child;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Removes a session avatar from the `<defs>` section of the SVG.
+   *
+   * @param {string} sessionId The session whose avatar is being removed.
+   */
+  _removeAvatarFromDefs(sessionId) {
+    const avatarName = CaretOverlay.avatarNameForSessionId(sessionId);
+    const avatar = this._avatarDefWithname(avatarName);
+
+    if (avatar) {
+      this._svgDefs.removeChild(avatar);
+    }
+  }
+
+  /**
+   * Prepares an SVG `<use>` element to use-by-reference a session avatar stored
+   * in the `<defs>` section of the layer.
+   * @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/use
+   *
+   * @param {string} sessionId The id for the session being referenced.
+   * @returns {SVGUseElement} A reference to the session's avatar definition.
+   */
+  _useElementForSessionAvatar(sessionId) {
+    const avatarName = CaretOverlay.avatarNameForSessionId(sessionId);
+    const useElement = this._document.createElementNS(SVG_NAMESPACE, 'use');
+
+    useElement.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${avatarName}`);
+    useElement.setAttribute('width', 20);
+    useElement.setAttribute('height', 20);
+
+    return useElement;
+  }
+
+  /**
+   * Takes a session id as input and returns a DOM id to use to reference the avatar for that
+   * session in the `<defs>` section of the SVG.
+   *
+   * @param {string} sessionId The if for the session being referenced.
+   * @returns {string} The DOM id to use when referencing the avatar definition for this session.
+   */
+  static avatarNameForSessionId(sessionId) {
+    return `avatar-${sessionId}`;
+  }
+
+  /**
+   * Finds the avatar for a given session in the `<defs>` section of the SVG and updates
+   * all of its thematic color values to the given new color.
+   *
+   * @param {string} sessionId The session whose avatar's colors need updating.
+   * @param {string} color The new color value. The color must be in 3-byte hex
+   *   format (e.g. `#dead37`).
+   */
+  _updateAvatarColor(sessionId, color) {
+    ColorSelector.checkHexColor(color);
+
+    const avatarName = CaretOverlay.avatarNameForSessionId(sessionId);
+    const avatar = this._avatarDefWithName(avatarName);
+
+    if (avatar) {
+      this._updateAvatarChildColors(avatar, color);
+    }
+  }
+
+  /**
+   * Checks the given root element to see if it has a thematic color that needs updating,
+   * and then recurses through all of its children — performing the same check as it goes.
+   *
+   * @param {SVGElement} root The local root element being inspected.
+   * @param {string} color The new color value. The color must be in 3-byte hex
+   *   format (e.g. `#dead37`).
+   */
+  _updateAvatarChildColors(root, color) {
+    ColorSelector.checkHexColor(color);
+
+    // Predefined elements in the `<defs>` section of the SVG that adopt the thematic color
+    // for a given session are tagged with the class `avatar-theme-color`. Items in that
+    // class will have their `fill` colors changed to the provided value.
+    if (root.classList.contains('avatar-theme-color')) {
+      if (root.hasAttribute('fill')) {
+        root.setAttribute('fill', color);
+      }
+    }
+
+    if (root.hasChildNodes()) {
+      for (const child of root.childNodes) {
+        this._updateAvatarChildColors(child, color);
       }
     }
   }
