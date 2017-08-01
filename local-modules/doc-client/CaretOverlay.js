@@ -226,11 +226,19 @@ export default class CaretOverlay {
     let currentEvent = this._editorComplex.quill.currentEvent;
 
     for (;;) {
+      // Wait for a text change.
       currentEvent = await currentEvent.nextOf(QuillEvent.TEXT_CHANGE);
+
+      // Skip any additional text changes that have already been posted, so that
+      // we won't just be slowly iterating over all changes.
       currentEvent = currentEvent.latestOfNow(QuillEvent.TEXT_CHANGE);
 
       log.detail('Got local edit event.');
       this._updateDisplay();
+
+      // Wait a moment, before looking for more changes. If there are multiple
+      // changes during this time, the `latestOfNow()` call above will elide
+      // them.
       await PromDelay.resolve(LOCAL_EDIT_DELAY_MSEC);
     }
   }
