@@ -23,7 +23,7 @@ const APPEND_RETRY_GROWTH_FACTOR = 5;
 const MAX_APPEND_TIME_MSEC = 20 * 1000; // 20 seconds.
 
 /**
- * {nubmer} Maximum number of document changes to request in a single
+ * {number} Maximum number of document changes to request in a single
  * transaction. (The idea is to avoid making a request that would result in
  * running into an upper limit on transaction data size.)
  */
