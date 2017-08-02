@@ -483,7 +483,7 @@ export default class CaretOverlay {
    */
   _removeAvatarFromDefs(sessionId) {
     const avatarName = CaretOverlay.avatarNameForSessionId(sessionId);
-    const avatar = this._avatarDefWithname(avatarName);
+    const avatar = this._avatarDefWithName(avatarName);
 
     if (avatar) {
       this._svgDefs.removeChild(avatar);
