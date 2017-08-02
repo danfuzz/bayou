@@ -548,7 +548,7 @@ export default class CaretOverlay {
       }
     }
 
-    for (const child of root.childNodes) {
+    for (const child of root.children) {
       this._updateAvatarChildColors(child, color);
     }
   }
