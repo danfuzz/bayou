@@ -5,7 +5,7 @@
 import { Caret } from 'doc-common';
 import { QuillEvent, QuillGeometry } from 'quill-util';
 import { TObject, TString } from 'typecheck';
-import { ColorSelector, PromDelay } from 'util-common';
+import { PromDelay } from 'util-common';
 
 /**
  * {Int} Amount of time (in msec) to wait after receiving a caret update from
@@ -153,7 +153,7 @@ export default class CaretOverlay {
     info.set('caret', caret);
 
     if (caret.color !== oldCaret.color) {
-      this._updateAvatarColor(sessionId, caret);
+      this._updateAvatarColor(caret);
     }
 
     this._updateDisplay();
@@ -521,7 +521,6 @@ export default class CaretOverlay {
    * @param {Caret} caret Caret for the session.
    */
   _updateAvatarColor(caret) {
-
     const avatarName = CaretOverlay.avatarNameForSessionId(caret.sessionId);
     const avatar = this._avatarDefWithName(avatarName);
 
@@ -540,8 +539,6 @@ export default class CaretOverlay {
    *   format (e.g. `#dead37`).
    */
   _updateAvatarChildColors(root, color) {
-    ColorSelector.checkHexColor(color);
-
     // Predefined elements in the `<defs>` section of the SVG that adopt the thematic color
     // for a given session are tagged with the class `avatar-theme-color`. Items in that
     // class will have their `fill` colors changed to the provided value.
@@ -551,10 +548,8 @@ export default class CaretOverlay {
       }
     }
 
-    if (root.hasChildNodes()) {
-      for (const child of root.childNodes) {
-        this._updateAvatarChildColors(child, color);
-      }
+    for (const child of root.childNodes) {
+      this._updateAvatarChildColors(child, color);
     }
   }
 }
