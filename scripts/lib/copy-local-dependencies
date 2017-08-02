@@ -1,0 +1,231 @@
+#!/bin/bash
+#
+# Copyright 2016-2017 the Bayou Authors (Dan Bornstein et alia).
+# Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+# Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+#
+# Derives module dependencies for the given `package.json`, by iterating over
+# local dependencies. This outputs a replacement `package.json`.
+
+# Set `progName` to the program name, `progDir` to its directory, and `baseDir`
+# to `progDir`'s directory. Follows symlinks.
+function init-prog {
+    local newp p="$0"
+
+    while newp="$(readlink "$p")"; do
+        [[ ${newp} =~ ^/ ]] && p="${newp}" || p="$(dirname "$p")/${newp}"
+    done
+
+    progName="${p##*/}"
+    progDir="$(cd "$(dirname "$p")"; /bin/pwd -P)"
+    baseDir="$(cd "${progDir}/.."; /bin/pwd -P)"
+}
+init-prog
+
+# Move `baseDir` up one layer (not done above because the above is boilerplate).
+baseDir="$(cd "${baseDir}/.."; /bin/pwd -P)"
+
+
+#
+# Argument parsing
+#
+
+# Where to find local module sources.
+localModules=''
+
+# Error during argument processing?
+argError=0
+
+# Need help?
+showHelp=0
+
+while (( $# != 0 )); do
+    opt="$1"
+    if [[ ${opt} == '--' ]]; then
+        shift
+        break
+    elif [[    ${opt} == '--help'
+            || ${opt} == '-h' ]]; then
+        showHelp=1
+    elif [[ ${opt} =~ ^--local-modules=(.*) ]]; then
+        localModules="${BASH_REMATCH[1]}"
+    elif [[ ${opt} =~ ^- ]]; then
+        echo "Unknown option: ${opt}" 1>&2
+        argError=1
+        break
+    else
+        break
+    fi
+    shift
+done
+unset opt
+
+if (( $# != 1 )); then
+    argError=1
+else
+    projectDir="$1"
+fi
+
+if [[ ${localModules} == '' ]]; then
+    echo 'Need to specify `--local-modules`.' 1>&2
+    argError=1
+fi
+
+if (( ${showHelp} || ${argError} )); then
+    echo 'Usage:'
+    echo ''
+    echo "${progName} --local-modules=<path> <dir/of/subproject>"
+    echo '  Copies local dependencies and adjusts `package.json`.'
+    echo ''
+    echo '  --local-modules=<dir>'
+    echo '    Find local module sources in directory <dir>. This must be'
+    echo '    specified (not actually an optional option).'
+    echo ''
+    echo "${progName} [--help | -h]"
+    echo '  Display this message.'
+    exit ${argError}
+fi
+
+
+#
+# Main script
+#
+
+# Collect all of the modules referenced by this package, transitively including
+# all referenced local modules. The result is two lists, one of local modules
+# and one of regular (published via npm) dependencies. This uses a work queue
+# arrangement where we start with the main subproject as the sole element of the
+# to-be-processed queue.
+
+unprocessed=("${projectDir}")
+localDeps=()
+regularDeps=()
+while (( ${#unprocessed[@]} != 0 )); do
+    oneDep="${unprocessed[0]}"
+    unprocessed=("${unprocessed[@]:1}") # Delete first element.
+
+    already=0
+    for f in "${localDeps[@]}"; do
+        if [[ ${f} == ${oneDep} ]]; then
+            already=1
+            break
+        fi
+    done
+
+    if (( ${already} )); then
+        # We already processed this one.
+        continue
+    fi
+
+    localDeps+=("${oneDep}")
+    oneDep="${oneDep}/package.json"
+
+    if [[ ! -r "${oneDep}" ]]; then
+        echo "Not readable: ${oneDep}" 1>&2
+        exit 1
+    fi
+
+    # Extract local dependencies.
+    unprocessed+=($(
+        jq --raw-output --arg localModules "${localModules}/" '
+              (.dependencies // {})
+            | to_entries
+            | .[]
+            | select(.value == "local")
+            | $localModules + .key' \
+            "${oneDep}"
+    ))
+
+    # Extract regular dependencies.
+    regularDeps+=($(
+        jq --raw-output '
+              (.dependencies // {})
+            | to_entries
+            | .[]
+            | select(.value != "local")
+            | .key + "@" + .value' \
+            "${oneDep}"
+    ))
+done
+
+# Remove the first "local dep" because that's the original input file.
+localDeps=("${localDeps[@]:1}")
+
+# Verify that there aren't two (or more) different versions listed for any
+# single regular dependency. We do this by constructing and evaluating a `jq`
+# program that emits a complaint when there's trouble.
+
+problem="$(
+    (
+        echo '{}'
+
+        for d in "${regularDeps[@]}"; do
+            [[ ${d} =~ ^(.*)@([^@]*)$ ]]
+            name="${BASH_REMATCH[1]}"
+            spec="${BASH_REMATCH[2]}"
+            nameq='"'"${name}"'"'
+            specq='"'"${spec}"'"'
+
+            echo "| if (.dependencies.${nameq} // ${specq}) == ${specq}"
+            echo "then .dependencies.${nameq} = ${specq}"
+            echo 'else .error = (.error // "") + "Differing versions of " +' "${nameq}" '+ ".\n"'
+            echo "end"
+        done
+
+        echo '| if (.error) then .error else "" end'
+    ) | jq -f /dev/stdin --null-input --raw-output
+)"
+
+if [[ ${problem} != '' ]]; then
+    echo "${problem}" 1>&2
+    exit 1
+fi
+
+# Construct and evaluate a `jq` program to perform all the edits. This removes
+# all local dependencies and adds in all the regular dependencies. The fixed
+# file replaces the original `package.json` and is also left at
+# `package-fixed.json`. The original is left at `package-unfixed.json`.
+
+origFile="${projectDir}/package.json"
+unfixedFile="${projectDir}/package-unfixed.json"
+fixedFile="${projectDir}/package-fixed.json"
+
+cp "${origFile}" "${unfixedFile}"
+
+(
+    echo '.dependencies = {}'
+
+    for d in "${regularDeps[@]}"; do
+        [[ ${d} =~ ^(.*)@([^@]*)$ ]]
+        name="${BASH_REMATCH[1]}"
+        spec="${BASH_REMATCH[2]}"
+        nameq='"'"${name}"'"'
+        specq='"'"${spec}"'"'
+
+        echo "| .dependencies.${nameq} = ${specq}"
+    done
+) | jq -f /dev/stdin "${origFile}" > "${fixedFile}" \
+|| exit 1
+
+cp "${fixedFile}" "${origFile}" || exit 1
+
+# Copy all of the local modules into the `node_modules` director. We use `rsync`
+# (even though this is a totally local operation) instead of `cp` because it has
+# more understandable and predictable behavior, especially with regards to
+# copying over existing directories. Note that trailing slashes on source
+# directory names are significant to `rsync` semantics; in this case we
+# explicitly _don't_ have a trailing slash.
+
+nodeModules="${projectDir}/node_modules"
+
+mkdir -p "${nodeModules}" || exit 1
+
+for d in "${localDeps[@]}"; do
+    rsync --archive "${d}" "${nodeModules}"
+
+    # Remove the `dependencies` from the `package.json`, because otherwise `npm`
+    # tries to process them (and they aren't valid as far as it's concerned).
+    name="$(basename "${d}")"
+    jq 'del(.dependencies)' \
+        "${d}/package.json" > "${nodeModules}/${name}/package.json"
+done
