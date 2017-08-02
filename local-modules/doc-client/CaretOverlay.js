@@ -109,14 +109,9 @@ export default class CaretOverlay {
   _beginSession(caret) {
     Caret.check(caret);
 
-    const sessionInfo = new Map();
-
-    sessionInfo.set('sessionId', caret.sessionId);
-    sessionInfo.set('selection', { index: 0, length: 0 });
-    sessionInfo.set('color', '#000000');
+    const sessionInfo = new Map(Object.entries({ caret }));
 
     this._sessions.set(caret.sessionId, sessionInfo);
-
     this._addAvatarToDefs(sessionInfo);
     this._updateDisplay();
   }
@@ -149,14 +144,12 @@ export default class CaretOverlay {
       this._beginSession(caret);
     }
 
-    const info = this._sessions.get(sessionId);
+    const info     = this._sessions.get(sessionId);
+    const oldCaret = info.get('caret');
 
-    // **TODO:** Things will probably be easier if we just store `caret`
-    // directly in the map.
-    info.set('selection', { index: caret.index, length: caret.length });
+    info.set('caret', caret);
 
-    if (info.get('color') !== caret.color) {
-      info.set('color', caret.color);
+    if (caret.color !== oldCaret.color) {
       this._updateAvatarColor(sessionId, caret.color);
     }
 
@@ -309,37 +302,34 @@ export default class CaretOverlay {
 
     // For each session…
     for (const [sessionId_unused, info] of this._sessions) {
-      const selection = info.get('selection');
+      const caret = info.get('caret');
       const avatarReference = info.get('avatarReference');
 
-      if (selection.length === 0) {
+      if (caret.length === 0) {
         // Length of zero means an insertion point instead of a selection
-        const rect = QuillGeometry.boundsForCursorAtOffset(quill, selection.index);
+        const rect = QuillGeometry.boundsForCursorAtOffset(quill, caret.index);
 
         const pathCommand = QuillGeometry.svgPathCommandsForRect(rect);
         const path = this._document.createElementNS(SVG_NAMESPACE, 'path');
 
         // Even for a zero-width rect we get what we expect when we stroke the frame.
         path.setAttribute('d', pathCommand);
-        path.setAttribute('fill', info.get('color'));
+        path.setAttribute('fill', caret.color);
         path.setAttribute('fill-opacity', '1.0');
         path.setAttribute('stroke-width', '1.0');
-        path.setAttribute('stroke', info.get('color'));
+        path.setAttribute('stroke', caret.color);
         path.setAttribute('stroke-opacity', '1.0');
 
         this._svgOverlay.appendChild(path);
 
-        // TODO: These magic numbers are present to nudge the avatar to the right location after
-        //       it is scaled down to 20x20 (the scale(0.05) below). These values should be
-        //       based on the final element width/height after transformations.
         const x = rect.left - (AVATAR_DIMENSION / 2.0);
         const y = rect.top - AVATAR_DIMENSION;
 
         avatarReference.setAttribute('transform', `translate(${x}, ${y})`);
         this._svgOverlay.appendChild(avatarReference);
       } else {
-        // Generate a list of rectangles representing the selection
-        let rects = QuillGeometry.boundsForLinesInRange(quill, selection);
+        // Generate a list of rectangles representing the selection.
+        let rects = QuillGeometry.boundsForLinesInRange(quill, caret.index, caret.length);
 
         rects = rects.map(QuillGeometry.snapRectToPixels);
 
@@ -352,16 +342,15 @@ export default class CaretOverlay {
           svgRect.setAttribute('height', rect.height);
           svgRect.setAttribute('rx', 3);
           svgRect.setAttribute('ry', 3);
-          svgRect.setAttribute('fill', info.get('color'));
+          svgRect.setAttribute('fill', caret.color);
           svgRect.setAttribute('fill-opacity', '0.50');
           svgRect.setAttribute('stroke-width', '1.0');
-          svgRect.setAttribute('stroke', info.get('color'));
+          svgRect.setAttribute('stroke', caret.color);
           svgRect.setAttribute('stroke-opacity', '1.0');
 
           this._svgOverlay.appendChild(svgRect);
 
-          // TODO: see above vis-a-vis magic numbers.
-          const topLeft = QuillGeometry.boundsForCursorAtOffset(quill, selection.index);
+          const topLeft = QuillGeometry.boundsForCursorAtOffset(quill, caret.index);
           const x = topLeft.left - (AVATAR_DIMENSION / 2.0);
           const y = topLeft.top - AVATAR_DIMENSION;
 
@@ -399,11 +388,11 @@ export default class CaretOverlay {
    * @param {Map<string, object>} sessionInfo The metadata for this session.
    */
   _addAvatarToDefs(sessionInfo) {
-    const color = sessionInfo.get('color');
+    const caret = sessionInfo.get('caret');
 
     // The whole avatar is set in a group with a known id
     const avatarGroup = this._document.createElementNS(SVG_NAMESPACE, 'g');
-    const sessionId = sessionInfo.get('sessionId');
+    const sessionId = caret.sessionId;
 
     avatarGroup.setAttribute('id', CaretOverlay.avatarNameForSessionId(sessionId));
 
@@ -413,7 +402,7 @@ export default class CaretOverlay {
     backgroundCircle.setAttribute('cx', 200 * AVATAR_SCALE_FACTOR);
     backgroundCircle.setAttribute('cy', 200 * AVATAR_SCALE_FACTOR);
     backgroundCircle.setAttribute('r', 195 * AVATAR_SCALE_FACTOR);
-    backgroundCircle.setAttribute('fill', color);
+    backgroundCircle.setAttribute('fill', caret.color);
     backgroundCircle.classList.add('avatar-theme-color');
 
     // Create a new group to hold the head and shoulders and clip it to the mask we made earlier.
@@ -451,7 +440,7 @@ export default class CaretOverlay {
     frame.setAttribute('stroke', '#000000');
     frame.setAttribute('stroke-width', 1);
 
-    // Put it all together
+    // Put it all together.
     personGroup.appendChild(shoulders);
     personGroup.appendChild(head);
 
@@ -461,7 +450,7 @@ export default class CaretOverlay {
 
     this._svgDefs.appendChild(avatarGroup);
 
-    const useReferenceForAvatar = this._useElementForSessionAvatar(sessionInfo.get('sessionId'));
+    const useReferenceForAvatar = this._useElementForSessionAvatar(caret.sessionId);
 
     sessionInfo.set('avatarReference', useReferenceForAvatar);
   }

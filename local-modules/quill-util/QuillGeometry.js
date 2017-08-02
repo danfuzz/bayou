@@ -25,13 +25,14 @@ export default class QuillGeometry {
 
     return QuillGeometry.snapRectToPixels(bounds);
   }
+
   /**
    * Takes a Quill selection range and returns an array of bounding
    * rectangles for that range.
    *
    * @param {Quill} quill The Quill editor instance that we're measuring against
-   * @param {object} range A selection range within the Quill editor. A
-   *  range object has the form `{ index, length }`.
+   * @param {Int} index Start position of the range.
+   * @param {Int} length Length of (number of cursor positions in) the range.
    * @param {boolean} includeLeading A flag indicating whether the space between
    *  successive lines of text should be included in the result. If
    *  set to `true` then a rectangle representing the leading will be inserted
@@ -42,9 +43,9 @@ export default class QuillGeometry {
    *  `{ left, top, right (exclusive), bottom (exclusive), width, height }`.
    *  If `range` is a nonsensical value then `[]` is returned.
    */
-  static boundsForLinesInRange(quill, range, includeLeading = false) {
+  static boundsForLinesInRange(quill, index, length, includeLeading = false) {
     // Get the list of Quill Lines represented by the selection.
-    const lines = quill.getLines(range);
+    const lines = quill.getLines({ index, length });
 
     if (lines.length < 1) {
       return [];
@@ -76,7 +77,7 @@ export default class QuillGeometry {
 
     // Start by getting the leftmost pixel position of the first character
     // in the range.
-    const leadingBounds = quill.getBounds(range.index, 1);
+    const leadingBounds = quill.getBounds(index, 1);
 
     lineBounds[0].left = leadingBounds.left;
     lineBounds[0].width = lineBounds[0].right - lineBounds[0].left;
@@ -85,7 +86,7 @@ export default class QuillGeometry {
 
     // Then by getting the rightmost bound of the last character in the range.
     const lastLineIndex = lineBounds.length - 1;
-    const trailingBounds = quill.getBounds(range.index + range.length - 1, 1);
+    const trailingBounds = quill.getBounds(index + length - 1, 1);
 
     lineBounds[lastLineIndex].right = trailingBounds.right;
     lineBounds[lastLineIndex].width = lineBounds[lastLineIndex].right - lineBounds[lastLineIndex].left;
