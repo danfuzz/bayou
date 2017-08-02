@@ -153,7 +153,7 @@ export default class CaretOverlay {
     info.set('caret', caret);
 
     if (caret.color !== oldCaret.color) {
-      this._updateAvatarColor(sessionId, caret.color);
+      this._updateAvatarColor(sessionId, caret);
     }
 
     this._updateDisplay();
@@ -518,18 +518,15 @@ export default class CaretOverlay {
    * Finds the avatar for a given session in the `<defs>` section of the SVG and
    * updates all of its thematic color values to the given new color.
    *
-   * @param {string} sessionId The session whose avatar's colors need updating.
-   * @param {string} color The new color value. The color must be in 3-byte hex
-   *   format (e.g. `#dead37`).
+   * @param {Caret} caret Caret for the session.
    */
-  _updateAvatarColor(sessionId, color) {
-    ColorSelector.checkHexColor(color);
+  _updateAvatarColor(caret) {
 
-    const avatarName = CaretOverlay.avatarNameForSessionId(sessionId);
+    const avatarName = CaretOverlay.avatarNameForSessionId(caret.sessionId);
     const avatar = this._avatarDefWithName(avatarName);
 
     if (avatar) {
-      this._updateAvatarChildColors(avatar, color);
+      this._updateAvatarChildColors(avatar, caret.color);
     }
   }
 
