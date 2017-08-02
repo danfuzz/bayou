@@ -17,18 +17,18 @@ describe('api-common/SplitKey', () => {
     });
 
     it('should reject non-hex keys', () => {
-      assert.throws(() => new SplitKey('https://www.example.com', 'this better not work!', FAKE_SECRET));
+      assert.throws(() => new SplitKey('https://www.example.com/', 'this better not work!', FAKE_SECRET));
     });
 
     it('should reject non-hex secrets', () => {
-      assert.throws(() => new SplitKey('https://www.example.com', FAKE_KEY, 'this better not work!'));
+      assert.throws(() => new SplitKey('https://www.example.com/', FAKE_KEY, 'this better not work!'));
     });
 
     it('should return a frozen instance of SplitKey when given 2 valid parameters', () => {
       let key = null;
 
       assert.doesNotThrow(() => {
-        key = new SplitKey('https://www.example.com', FAKE_KEY);
+        key = new SplitKey('https://www.example.com/api', FAKE_KEY);
       });
 
       assert.instanceOf(key, SplitKey);
@@ -39,7 +39,7 @@ describe('api-common/SplitKey', () => {
       let key = null;
 
       assert.doesNotThrow(() => {
-        key = new SplitKey('https://www.example.com', FAKE_KEY, FAKE_SECRET);
+        key = new SplitKey('https://www.example.com/', FAKE_KEY, FAKE_SECRET);
       });
 
       assert.instanceOf(key, SplitKey);

@@ -13,7 +13,7 @@
 
 'use strict';
 
-const babel = require('babel-core');
+const babel    = require('babel-core');
 const chalk    = require('chalk');
 const fs       = require('fs');
 const fs_extra = require('fs-extra');
@@ -73,9 +73,7 @@ function compileFile(inputFile, outputFile) {
   try {
     inputStat = fs.statSync(inputFile);
     outputStat = fs.statSync(outputFile);
-    // **TODO:** Newer versions of Node have a numeric `mtimeMs` field on stats
-    // objects. Would be great to use it instead of `valueOf()`.
-    if (inputStat.mtime.valueOf() <= outputStat.mtime.valueOf()) {
+    if (inputStat.mtimeMs <= outputStat.mtimeMs) {
       console.log(chalk.gray.bold('Unchanged:'), chalk.gray(pathToLog));
       return;
     }

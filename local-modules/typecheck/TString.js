@@ -124,9 +124,9 @@ export default class TString extends UtilityClass {
   }
 
   /**
-   * Checks a value which must be a syntactically valid absolute URL without
-   * auth info. (Auth info consists of a username and optional password before
-   * the host name.)
+   * Checks a value which must be a syntactically valid absolute URL with a path
+   * (which can just be `/`) and without auth info. (Auth info consists of a
+   * username and optional password before the host name.)
    *
    * @param {*} value Value to check.
    * @returns {string} `value`.
@@ -134,15 +134,22 @@ export default class TString extends UtilityClass {
   static urlAbsolute(value) {
     let url;
     try {
-      // `new URL()` is somewhat lenient with syntax checking. **TODO:** Might
-      // want to be less lenient.
       url = new URL(TString.nonempty(value));
     } catch (e) {
       // Throw a higher-fidelity error.
       return TypeError.badValue(value, 'String', 'absolute URL syntax');
     }
 
-    if (!url.host) {
+    // Some versions of `URL` will parse a missing origin into the literal
+    // string `null`, hence the third check here. The last check ensures that
+    // the original `value` is well-formed; while `new URL()` is somewhat
+    // lenient, the `href` it produces is guaranteed to be well-formed, and so
+    // the `===` comparison transitively ensures that the original `value` is
+    // also well-formed.
+    if (!(   url.host
+          && url.origin
+          && (url.origin !== 'null')
+          && (url.href === value))) {
       return TypeError.badValue(value, 'String', 'absolute URL syntax');
     }
 
@@ -156,7 +163,7 @@ export default class TString extends UtilityClass {
 
   /**
    * Checks a value which must be a syntactically valid origin-only URL (that
-   * is, neither auth nor path fields).
+   * is, neither auth nor path fields, and without a final slash).
    *
    * @param {*} value Value to check.
    * @returns {string} `value`.
@@ -164,14 +171,16 @@ export default class TString extends UtilityClass {
   static urlOrigin(value) {
     let url;
     try {
-      // `new URL()` is somewhat lenient with syntax checking. **TODO:** Might
-      // want to be less lenient.
       url = new URL(TString.nonempty(value));
     } catch (e) {
       // Throw a higher-fidelity error.
       return TypeError.badValue(value, 'String', 'origin-only URL syntax');
     }
 
+    // **Note:** Though `new URL()` is lenient with respect to parsing, if it
+    // _does_ parse successfully, `origin` will always be a well-formed URL
+    // prefix, and the `!==` comparison here therefore transitively confirms
+    // that the original `value` is also well-formed.
     if (value !== url.origin) {
       return TypeError.badValue(value, 'String', 'origin-only URL syntax');
     }

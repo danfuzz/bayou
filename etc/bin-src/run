@@ -60,7 +60,7 @@ function check-dependency {
 
 # Checks the versions of our various expected-installed dependencies.
 function check-environment-dependencies {
-    check-dependency 'Node' 'node --version' '^v[678]\.'
+    check-dependency 'Node' 'node --version' '^v[78]\.'
 }
 
 

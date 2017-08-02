@@ -31,8 +31,7 @@ const MAX_SESSION_IDLE_MSEC = 10 * 60 * 1000; // Ten minutes.
  * one instance of this class.
  *
  * **TODO:** This class needs to store caret info via the `content-store`,
- * instead of being purely ephemeral. It also needs to know how to remove
- * sessions that go idle for too long.
+ * instead of being purely ephemeral.
  */
 export default class CaretControl extends CommonBase {
   /**
