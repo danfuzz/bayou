@@ -143,7 +143,7 @@ describe('typecheck/TString', () => {
 
   describe('urlAbsolute()', () => {
     it('should return the provided value if it is an absolute URL string', () => {
-      const value = 'https://www.example.com';
+      const value = 'https://www.example.com/';
 
       assert.strictEqual(TString.urlAbsolute(value), value);
     });
@@ -151,6 +151,10 @@ describe('typecheck/TString', () => {
     it('should throw an Error if value is not a URL string at all', () => {
       assert.throws(() => TString.urlAbsolute('this better not work!'));
       assert.throws(() => TString.urlAbsolute('/home/users/fnord'));
+      assert.throws(() => TString.urlAbsolute('http:example.com'));
+      assert.throws(() => TString.urlAbsolute('http:example.com/foo'));
+      assert.throws(() => TString.urlAbsolute('http:/example.com'));
+      assert.throws(() => TString.urlAbsolute('http://example.com')); // Needs final slash.
       assert.throws(() => TString.urlAbsolute(5.1));
       assert.throws(() => TString.urlAbsolute(undefined));
       assert.throws(() => TString.urlAbsolute(null));
@@ -185,6 +189,9 @@ describe('typecheck/TString', () => {
     it('should throw an Error if value is not a URL string at all', () => {
       assert.throws(() => TString.urlOrigin('this better not work!'));
       assert.throws(() => TString.urlOrigin('/home/users/fnord'));
+      assert.throws(() => TString.urlOrigin('http:example.com'));
+      assert.throws(() => TString.urlOrigin('http:example.com/foo'));
+      assert.throws(() => TString.urlOrigin('http:/example.com'));
       assert.throws(() => TString.urlOrigin(5.1));
       assert.throws(() => TString.urlOrigin(undefined));
       assert.throws(() => TString.urlOrigin(null));
