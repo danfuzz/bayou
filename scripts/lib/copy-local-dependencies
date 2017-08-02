@@ -4,8 +4,10 @@
 # Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 # Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 #
-# Derives module dependencies for the given `package.json`, by iterating over
-# local dependencies. This outputs a replacement `package.json`.
+# Installs local module dependencies in a package. This copies the local
+# modules into `node_modules` and updates `package.json` files so that the main
+# one contains all external dependencies and _no_ local modules mention any
+# dependencies at all. This arrangement makes `npm` happy.
 
 # Set `progName` to the program name, `progDir` to its directory, and `baseDir`
 # to `progDir`'s directory. Follows symlinks.
@@ -209,11 +211,11 @@ cp "${origFile}" "${unfixedFile}"
 
 cp "${fixedFile}" "${origFile}" || exit 1
 
-# Copy all of the local modules into the `node_modules` director. We use `rsync`
-# (even though this is a totally local operation) instead of `cp` because it has
-# more understandable and predictable behavior, especially with regards to
-# copying over existing directories. Note that trailing slashes on source
-# directory names are significant to `rsync` semantics; in this case we
+# Copy all of the local modules into the `node_modules` directory. We use
+# `rsync` (even though this is a totally local operation) instead of `cp`
+# because it has more understandable and predictable behavior, especially with
+# regards to copying over existing directories. Note that trailing slashes on
+# source directory names are significant to `rsync` semantics; in this case we
 # explicitly _don't_ have a trailing slash.
 
 nodeModules="${projectDir}/node_modules"
