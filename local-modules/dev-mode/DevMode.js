@@ -266,7 +266,15 @@ export default class DevMode extends Singleton {
 
     if (fromPath === null) {
       // The source file was deleted.
-      fs.unlinkSync(toPath);
+      try {
+        fs.unlinkSync(toPath);
+      } catch (e) {
+        // Ignore the error. The file was probably removed out from under us,
+        // which is no big deal. This has been observed to happen when
+        // development is done semi-remotely, e.g. `rsync`ing files from a
+        // laptop to a machine in a dev-production environment.
+        log.info(`Already removed: ${toPath}`);
+      }
     } else {
       // The source file changed.
       fs_extra.ensureDirSync(path.dirname(toPath));
