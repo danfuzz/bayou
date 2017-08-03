@@ -113,8 +113,8 @@ div.bayou-editor .ql-editor h6 {
  * overrides Quill's default coloring. (Quill's specifiers end up being more
  * "specific" than the ones here, which is why we use `!important`.)
  */
-.bayou-editor code,
-.bayou-editor pre {
+.bayou-editor .ql-editor code,
+.bayou-editor .ql-editor pre {
   border-color:  rgba(0, 0, 0, 0.15) !important;
   border-style:  solid               !important;
   border-width:  1px                 !important;
@@ -122,13 +122,13 @@ div.bayou-editor .ql-editor h6 {
 }
 
 /* Inline monospace coloring. (See above about `!important`.) */
-.bayou-editor code {
+.bayou-editor .ql-editor code {
   background-color: #f7f7f9 !important;
   color:            #cc2255 !important;
 }
 
 /* Multiline monospace coloring. (See above about `!important`.) */
-.bayou-editor pre {
+.bayou-editor .ql-editor pre {
   color:            #333333 !important;
   background-color: #fbfaf8 !important;
 }
