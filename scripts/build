@@ -261,8 +261,8 @@ function copy-sources {
             echo '--exclude=node_modules'
 
             # Exclude the copy we might have made of the original `package.json`
-            # file, and the fixed version, so that we can properly detect when
-            # it needs reprocessing.
+            # file, and the fixed version. These are generated during the build
+            # and shouldn't get copied over or erased.
             echo '--exclude=package-unfixed.json'
             echo '--exclude=package-fixed.json'
 
