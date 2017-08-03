@@ -163,10 +163,6 @@ function build-source-for {
             rsync --archive "${overlayDir}/${dir}/" "${targetDir}"
         fi
     fi
-
-    # Remove files we don't care about.
-    cd "${targetDir}"
-    find . -type f '!' -name 'package.json' -exec rm '{}' ';'
 }
 
 # Creates a box for the given directory's dependencies.
@@ -177,10 +173,8 @@ function make-box {
     build-source-for "${dir}"
 
     # Fix the dependencies (pulling in local module dependencies).
-    cd "${targetDir}"
-    mv package.json package-unfixed.json
-    "${progDir}/lib/fix-dependencies" --no-locals --out=package.json \
-        package-unfixed.json \
+    "${progDir}/lib/copy-local-dependencies" \
+        --local-modules="${outDir}/work/local-modules" "${targetDir}" \
         || return 1
 
     cd "${outDir}"

@@ -260,6 +260,12 @@ function copy-sources {
             # during the build, and we don't want to trample them.
             echo '--exclude=node_modules'
 
+            # Exclude the copy we might have made of the original `package.json`
+            # file, and the fixed version. These are generated during the build
+            # and shouldn't get copied over or erased.
+            echo '--exclude=package-unfixed.json'
+            echo '--exclude=package-fixed.json'
+
             # Exclude subdirectories that have maps. We don't have to bother
             # mentioning `node_modules` subdirectories here because of the
             # earlier blanket exclusion.
@@ -287,31 +293,6 @@ function copy-sources {
     done
 }
 
-# Fixes the `package.json` files so that local modules are referred to by
-# explicit path.
-function fix-packages {
-    local files=(
-        "${outDir}/client/package.json"
-        "${outDir}/server-src/package.json"
-        $(find "${outDir}/local-modules" -name package.json)
-    )
-
-    local f unfixed
-    for f in "${files[@]}"; do
-        unfixed="$(dirname "${f}")/package-unfixed.json"
-        if [[ -r "${unfixed}" ]]; then
-            continue
-        fi
-
-        # This one hasn't yet been fixed with regard to local dependencies.
-        # Fix it!
-        cp "${f}" "${unfixed}"
-        "${progDir}/lib/fix-dependencies" --out="${f}" \
-            --overlay="${overlayDir}" "${unfixed}" \
-            || return 1
-    done
-}
-
 # Does an `npm install` in the given directory, or the equivalent by using
 # boxed dependencies. After installation, applies local patches to installed
 # modules.
@@ -319,18 +300,16 @@ function do-install {
     local dir="$1"
     local toDir="${outDir}/${dir}"
 
-    cd "${toDir}"
-
-    # We have to remove any pre-existing versions of the local modules first,
-    # because otherwise `npm` won't notice when they get updated. (We determine
-    # what's a "local module" by the presence of a source map file.)
-    local f
-    for f in $(find node_modules -name "${sourceMapName}" 2>/dev/null); do
-        rm -rf "$(dirname "${f}")"
-    done
+    # Integrates local dependencies into this package. It copies the required
+    # local modules and also rewrites the top-level `package.json` so that it
+    # names the transitive closure of external module dependencies.
+    "${progDir}/lib/copy-local-dependencies" \
+        --local-modules="${outDir}/local-modules" "${toDir}" \
+    || return 1
 
     if [[ ${boxDir} == '' ]]; then
         # No boxed dependencies. Normal install.
+        cd "${toDir}"
         npm install --cache="${outDir}/npm-cache" || return 1
     else
         # We were asked to use the boxed dependencies.
@@ -346,13 +325,14 @@ function do-install {
             return 1
         fi
 
+        cd "${toDir}"
         "${progDir}/lib/box-install" "${boxDir}/${dir}.npmbox" || return 1
     fi
 
     # We are somewhat at the mercy of what's published via npm, and in fact
     # some modules that we use occasionally have bugs in their published
     # versions. This script patches them in situ based on the contents of the
-    # directory `etc/module-overlay`
+    # directory `etc/module-overlay`.
     "${progDir}/lib/fix-modules" "${baseDir}/etc/module-overlay" "${toDir}"
 }
 
@@ -379,7 +359,7 @@ function build-server {
     # Process the main `server` directory.
     "${compile}" "${fromDir}" "${toDir}" || return 1
 
-    # Process each of the local modules that are used by `server`.
+    # Process each of the local modules that is used by `server`.
     local name
     for name in $(local-module-names); do
         if [[ -d "${fromDir}/node_modules/${name}" ]]; then
@@ -470,7 +450,6 @@ fi
     check-environment-dependencies \
         && set-up-dir-mapping \
         && copy-sources \
-        && fix-packages \
         && build-compiler \
         && build-client \
         && build-server \
