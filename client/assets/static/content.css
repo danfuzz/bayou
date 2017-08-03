@@ -108,7 +108,27 @@ div.bayou-editor .ql-editor h6 {
   padding-bottom: 0.25em;
 }
 
-/* Colorful markup for code. */
-.bayou-editor code, .bayou-editor pre {
-  color: #c25;
+/*
+ * Common definitions for monospace (code), both inline and multiline. This
+ * overrides Quill's default coloring. (Quill's specifiers end up being more
+ * "specific" than the ones here, which is why we use `!important`.)
+ */
+.bayou-editor code,
+.bayou-editor pre {
+  border-color:     rgba(0, 0, 0, 0.15) !important;
+  border-style:     solid               !important;
+  border-width:     1px                 !important;
+  border-radius:    4px                 !important;
+}
+
+/* Inline monospace coloring. (See above about `!important`.) */
+.bayou-editor code {
+  background-color: #f7f7f9 !important;
+  color:            #cc2255 !important;
+}
+
+/* Multiline monospace coloring. (See above about `!important`.) */
+.bayou-editor pre {
+  color:            #333333 !important;
+  background-color: #fbfaf8 !important;
 }
