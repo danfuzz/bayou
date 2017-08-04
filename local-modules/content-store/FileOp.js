@@ -46,26 +46,20 @@ const TYPE_REV_NUM_1 = 'RevNum1';
 // So it goes.
 const OPERATIONS = DataUtil.deepFreeze([
   /*
-   * Convenience wrapper for `checkBlobHash` operation, which uses a given
-   * buffer's data. This is equivalent to `checkBlobHash(buffer.hash)`.
+   * Convenience wrapper for `checkBlob` operations, which uses a given buffer's
+   * data. This is equivalent to `checkBlob(buffer.hash)`.
    *
    * @param {FrozenBuffer} value Buffer whose hash should be taken.
    */
-  [
-    CAT_CONVENIENCE, 'checkBlobBufferHash',
-    ['value', TYPE_BUFFER]
-  ],
+  [CAT_CONVENIENCE, 'checkBlobBuffer', ['value', TYPE_BUFFER]],
 
   /*
-   * A `checkBlobHash` operation. This is a prerequisite operation that
-   * verifies that the file stores a blob with the indicated hash.
+   * A `checkBlob` operation. This is a prerequisite operation that verifies
+   * that the file stores a blob with the indicated hash.
    *
    * @param {string} hash The expected hash.
    */
-  [
-    CAT_PREREQUISITE, 'checkBlobHash',
-    ['hash', TYPE_HASH]
-  ],
+  [CAT_PREREQUISITE, 'checkBlob', ['hash', TYPE_HASH]],
 
   /*
    * A `checkPathEmpty` operation. This is a prerequisite operation that
@@ -510,13 +504,13 @@ export default class FileOp extends CommonBase {
   }
 
   /**
-   * Transformer for the convenience op `checkBlobBufferHash`.
+   * Transformer for the convenience op `checkBlobBuffer`.
    *
    * @param {FrozenBuffer} value The value.
    * @returns {array<*>} Replacement constructor info.
    */
-  static _xform_checkBlobBufferHash(value) {
-    return ['checkBlobHash', value.hash];
+  static _xform_checkBlobBuffer(value) {
+    return ['checkBlob', value.hash];
   }
 
   /**

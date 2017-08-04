@@ -88,11 +88,11 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `checkBlobHash` operations.
+   * Handler for `checkBlob` operations.
    *
    * @param {FileOp} op The operation.
    */
-  _op_checkBlobHash(op) {
+  _op_checkBlob(op) {
     // **TODO:** Implement this.
     throw new InfoError('not_implemented', op.name);
   }
