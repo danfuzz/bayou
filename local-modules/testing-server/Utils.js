@@ -19,11 +19,21 @@ export default class Utils extends UtilityClass {
    * @returns {array<string>} The bayou-local module names under `dir`.
    */
   static localModulesIn(dir) {
-    const packageData = fs.readFileSync(path.resolve(dir, 'package.json'));
-    const packageParsed = JSON.parse(packageData);
-    const dependencies = packageParsed['dependencies'];
-    const modules = Object.keys(dependencies).filter((name) => {
-      return /\/local-modules\//.test(dependencies[name]);
+    // What we're doing here is looking for module directories whose
+    // `package.json` indicates that it is a `localModule` (which we arrange for
+    // in the build).
+
+    const allModules = fs.readdirSync(path.resolve(dir, 'node_modules'));
+    const modules = allModules.filter((name) => {
+      try {
+        const packageData = fs.readFileSync(
+          path.resolve(dir, 'node_modules', name, 'package.json'));
+        const packageParsed = JSON.parse(packageData);
+        return packageParsed.localModule;
+      } catch (e) {
+        // Probably no `package.json`.
+        return false;
+      }
     });
 
     return modules.sort();
