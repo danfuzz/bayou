@@ -43,6 +43,16 @@ export default class Random extends UtilityClass {
   }
 
   /**
+   * Returns a buffer of random bytes, of a given length.
+   *
+   * @param {Int} length Desired length.
+   * @returns {Buffer} Buffer of `length` random bytes.
+   */
+  static byteBuffer(length) {
+    return crypto.randomBytes(TInt.nonNegative(length));
+  }
+
+  /**
    * Returns a string of random hex digits (lower case), of a given length of
    * _bytes_. That is, the string length will be twice the given `length`.
    *
@@ -50,8 +60,8 @@ export default class Random extends UtilityClass {
    * @returns {string} String of `length * 2` random hexadecimal characters.
    */
   static hexByteString(length) {
-    const bytes = Random.byteArray(length);
-    return DataUtil.hexFromBytes(bytes);
+    const bytes = Random.byteBuffer(length);
+    return bytes.toString('hex');
   }
 
   /**

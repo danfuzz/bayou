@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TArray, TInt, TString } from 'typecheck';
+import { TString } from 'typecheck';
 import { ObjectUtil, UtilityClass } from 'util-common-base';
 
 /**
@@ -83,37 +83,15 @@ export default class DataUtil extends UtilityClass {
   }
 
   /**
-   * Parses an even-length string of hex digits (lower case), producing an array
-   * of unsigned integers in the range `0..255`.
+   * Parses an even-length string of hex digits (lower case), producing a
+   * `Buffer`.
    *
    * @param {string} hex String of hex digits.
-   * @returns {Array<int>} Array of parsed bytes, always frozen.
+   * @returns {Buffer} Buffer of parsed bytes.
    */
-  static bytesFromHex(hex) {
+  static bufferFromHex(hex) {
     TString.hexBytes(hex);
 
-    const result = [];
-    for (let i = 0; i < hex.length; i += 2) {
-      result.push(parseInt(hex.slice(i, i + 2), 16));
-    }
-
-    return Object.freeze(result);
-  }
-
-  /**
-   * Converts an array of byte values to a hex string.
-   *
-   * @param {Array<int>} bytes Byte values.
-   * @returns {string} Equivalent hex string.
-   */
-  static hexFromBytes(bytes) {
-    TArray.check(bytes, TInt.unsignedByte);
-
-    function byteString(byte) {
-      const result = byte.toString(16);
-      return (byte < 16) ? `0${result}` : result;
-    }
-
-    return bytes.map(byteString).join('');
+    return Buffer.from(hex, 'hex');
   }
 }

@@ -101,8 +101,8 @@ export default class SplitKey extends BaseKey {
 
     const hash = crypto.createHash('sha256');
 
-    hash.update(DataUtil.bytesFromHex(challenge));
-    hash.update(DataUtil.bytesFromHex(this._secret));
+    hash.update(DataUtil.bufferFromHex(challenge));
+    hash.update(DataUtil.bufferFromHex(this._secret));
 
     return hash.digest('hex');
   }
