@@ -98,6 +98,16 @@ export default class Transactor extends CommonBase {
   }
 
   /**
+   * Handler for `checkBlobAbsent` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_checkBlobAbsent(op) {
+    // **TODO:** Implement this.
+    throw new InfoError('not_implemented', op.name);
+  }
+
+  /**
    * Handler for `checkPathAbsent` operations.
    *
    * @param {FileOp} op The operation.

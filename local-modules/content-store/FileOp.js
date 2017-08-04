@@ -46,6 +46,22 @@ const TYPE_REV_NUM_1 = 'RevNum1';
 // So it goes.
 const OPERATIONS = DataUtil.deepFreeze([
   /*
+   * A `checkBlob` operation. This is a prerequisite operation that verifies
+   * that the file stores a blob with the indicated hash.
+   *
+   * @param {string} hash The expected hash.
+   */
+  [CAT_PREREQUISITE, 'checkBlob', ['hash', TYPE_HASH]],
+
+  /*
+   * A `checkBlobAbsent` operation. This is a prerequisite operation that
+   * verifies that the file does not store a blob with the indicated hash.
+   *
+   * @param {string} hash The expected-to-be-absent hash.
+   */
+  [CAT_PREREQUISITE, 'checkBlobAbsent', ['hash', TYPE_HASH]],
+
+  /*
    * Convenience wrapper for `checkBlob` operations, which uses a given buffer's
    * data. This is equivalent to `checkBlob(buffer.hash)`.
    *
@@ -54,12 +70,12 @@ const OPERATIONS = DataUtil.deepFreeze([
   [CAT_CONVENIENCE, 'checkBlobBuffer', ['value', TYPE_BUFFER]],
 
   /*
-   * A `checkBlob` operation. This is a prerequisite operation that verifies
-   * that the file stores a blob with the indicated hash.
+   * Convenience wrapper for `checkBlobAbsent` operations, which uses a given
+   * buffer's data. This is equivalent to `checkBlobAbsent(buffer.hash)`.
    *
-   * @param {string} hash The expected hash.
+   * @param {FrozenBuffer} value Buffer whose hash should be taken.
    */
-  [CAT_PREREQUISITE, 'checkBlob', ['hash', TYPE_HASH]],
+  [CAT_CONVENIENCE, 'checkBlobBufferAbsent', ['value', TYPE_BUFFER]],
 
   /*
    * A `checkPathAbsent` operation. This is a prerequisite operation that
@@ -511,6 +527,16 @@ export default class FileOp extends CommonBase {
    */
   static _xform_checkBlobBuffer(value) {
     return ['checkBlob', value.hash];
+  }
+
+  /**
+   * Transformer for the convenience op `checkBlobBufferAbsent`.
+   *
+   * @param {FrozenBuffer} value The value.
+   * @returns {array<*>} Replacement constructor info.
+   */
+  static _xform_checkBlobBufferAbsent(value) {
+    return ['checkBlobAbsent', value.hash];
   }
 
   /**
