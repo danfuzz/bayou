@@ -19,7 +19,7 @@ export default class Utils extends UtilityClass {
    * @returns {array<string>} The bayou-local module names under `dir`.
    */
   static localModulesIn(dir) {
-    // What we're doing here is looking for module directories whose
+    // What we're doing here is looking for each module directory whose
     // `package.json` indicates that it is a `localModule` (which we arrange for
     // in the build).
 
