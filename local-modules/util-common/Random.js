@@ -30,17 +30,6 @@ export default class Random extends UtilityClass {
   }
 
   /**
-   * Returns an array of random bytes, of a given length.
-   *
-   * @param {Int} length Desired length.
-   * @returns {Array<Int>} Array of `length` random bytes.
-   */
-  static byteArray(length) {
-    const buffer = crypto.randomBytes(TInt.nonNegative(length));
-    return [...buffer];
-  }
-
-  /**
    * Returns a buffer of random bytes, of a given length.
    *
    * @param {Int} length Desired length.
