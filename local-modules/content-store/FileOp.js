@@ -46,6 +46,28 @@ const TYPE_REV_NUM_1 = 'RevNum1';
 // So it goes.
 const OPERATIONS = DataUtil.deepFreeze([
   /*
+   * Convenience wrapper for `checkBlobHash` operation, which uses a given
+   * buffer's data. This is equivalent to `checkBlobHash(buffer.hash)`.
+   *
+   * @param {FrozenBuffer} value Buffer whose hash should be taken.
+   */
+  [
+    CAT_CONVENIENCE, 'checkBlobBufferHash',
+    ['value', TYPE_BUFFER]
+  ],
+
+  /*
+   * A `checkBlobHash` operation. This is a prerequisite operation that
+   * verifies that the file stores a blob with the indicated hash.
+   *
+   * @param {string} hash The expected hash.
+   */
+  [
+    CAT_PREREQUISITE, 'checkBlobHash',
+    ['hash', TYPE_HASH]
+  ],
+
+  /*
    * A `checkPathEmpty` operation. This is a prerequisite operation that
    * verifies that a given storage path is not bound to any value. This is the
    * opposite of `checkPathExists`.
@@ -127,6 +149,22 @@ const OPERATIONS = DataUtil.deepFreeze([
   [CAT_REVISION, 'minRevNum', ['revNum', TYPE_REV_NUM]],
 
   /*
+   * A `readBlob` operation. This is a read operation that retrieves the full
+   * value of the indicated blob (identified by hash), if any. If there is no
+   * so-identified blob in the file, then the hash is _not_ represented in the
+   * result of the transaction at all (specifically, it is _not_ bound to `null`
+   * or similar).
+   *
+   * **Rationale for not-found behavior:** Higher layers of the system can
+   * produce interpreted transaction results, where a `null` value can represent
+   * successfully finding `null`. By consistently _not_ binding non-found
+   * results, we provide disambiguation in such cases.
+   *
+   * @param {string} hash The content hash of the blob to read.
+   */
+  [CAT_READ, 'readBlob', ['hash', TYPE_HASH]],
+
+  /*
    * A `readPath` operation. This is a read operation that retrieves the value
    * bound to the indicated path in the file, if any. If the given path is not
    * bound, then that path is _not_ represented in the result of the transaction
@@ -153,6 +191,15 @@ const OPERATIONS = DataUtil.deepFreeze([
    * @param {Int} durMsec Duration of the timeout, in milliseconds.
    */
   [CAT_ENVIRONMENT, 'timeout', ['durMsec', TYPE_DUR_MSEC]],
+
+  /*
+   * A a `writeBlob` operation. This is a write operation that stores the
+   * indicated value in the file, binding it to its content hash. If the content
+   * hash was already bound, then this operation does nothing.
+   *
+   * @param {FrozenBuffer} value The value to store.
+   */
+  [CAT_WRITE, 'writeBlob', ['value', TYPE_BUFFER]],
 
   /*
    * A a `writePath` operation. This is a write operation that stores the
@@ -442,6 +489,16 @@ export default class FileOp extends CommonBase {
 
       FileOp[`op_${opName}`] = constructorMethod;
     }
+  }
+
+  /**
+   * Transformer for the convenience op `checkBlobBufferHash`.
+   *
+   * @param {FrozenBuffer} value The value.
+   * @returns {array<*>} Replacement constructor info.
+   */
+  static _xform_checkBlobBufferHash(value) {
+    return ['checkBlobHash', value.hash];
   }
 
   /**

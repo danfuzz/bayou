@@ -88,6 +88,16 @@ export default class Transactor extends CommonBase {
   }
 
   /**
+   * Handler for `checkBlobHash` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_checkBlobHash(op) {
+    // **TODO:** Implement this.
+    throw new InfoError('not_implemented', op.name);
+  }
+
+  /**
    * Handler for `checkPathEmpty` operations.
    *
    * @param {FileOp} op The operation.
@@ -170,6 +180,16 @@ export default class Transactor extends CommonBase {
   }
 
   /**
+   * Handler for `readBlob` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_readBlob(op) {
+    // **TODO:** Implement this.
+    throw new InfoError('not_implemented', op.name);
+  }
+
+  /**
    * Handler for `readPath` operations.
    *
    * @param {FileOp} op The operation.
@@ -194,6 +214,16 @@ export default class Transactor extends CommonBase {
    */
   _op_timeout(op_unused) {
     // This space intentionally left blank.
+  }
+
+  /**
+   * Handler for `writeBlob` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_writeBlob(op) {
+    // **TODO:** Implement this.
+    throw new InfoError('not_implemented', op.name);
   }
 
   /**
