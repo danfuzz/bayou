@@ -19,7 +19,7 @@ const MAP_FILE_NAME = 'source-map.txt';
 
 /**
  * Development mode handler. This expects to be invoked when the product is
- * running in an `out` directory under a source repo. This does two thing:
+ * running in an `out` directory under a source repo. This does two things:
  *
  * * It synchs the client (web browser) files from the original source, so that
  *   the Webpack "watcher" will find updated code and do its bundling thing.
