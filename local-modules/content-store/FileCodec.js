@@ -76,7 +76,7 @@ export default class FileCodec extends CommonBase {
 
   /**
    * Adds `FileOp` constructor methods to this class. These are _instance_
-   * methods that are aware of the codec being used. (Look at the bottome of
+   * methods that are aware of the codec being used. (Look at the bottom of
    * this file for the call.)
    */
   static _addFileOpConstructorMethods() {
