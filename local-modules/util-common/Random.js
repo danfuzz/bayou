@@ -9,8 +9,6 @@ import crypto from 'crypto';
 import { TInt } from 'typecheck';
 import { UtilityClass } from 'util-common-base';
 
-import DataUtil from './DataUtil';
-
 /**
  * Character set used for ID strings. This is intended to be the set of 32 most
  * visually and audibly unambiguous alphanumerics.
