@@ -76,7 +76,7 @@ export default class FileCodec extends CommonBase {
 
   /**
    * Adds `FileOp` constructor methods to this class. These are _instance_
-   * methods that are aware of the codec being used. (Look at the bottome of
+   * methods that are aware of the codec being used. (Look at the bottom of
    * this file for the call.)
    */
   static _addFileOpConstructorMethods() {
@@ -85,7 +85,7 @@ export default class FileCodec extends CommonBase {
       const methodName = `op_${opName}`;
       const originalMethod = FileOp[methodName].bind(FileOp);
 
-      // Figure out if which arguments are buffers, if any.
+      // Figure out which arguments are buffers, if any.
       const bufferAt = [];
       for (let i = 0; i < argInfo.length; i++) {
         const [name_unused, type] = argInfo[i];

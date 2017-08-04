@@ -88,11 +88,31 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `checkPathEmpty` operations.
+   * Handler for `checkBlob` operations.
    *
    * @param {FileOp} op The operation.
    */
-  _op_checkPathEmpty(op) {
+  _op_checkBlob(op) {
+    // **TODO:** Implement this.
+    throw new InfoError('not_implemented', op.name);
+  }
+
+  /**
+   * Handler for `checkBlobAbsent` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_checkBlobAbsent(op) {
+    // **TODO:** Implement this.
+    throw new InfoError('not_implemented', op.name);
+  }
+
+  /**
+   * Handler for `checkPathAbsent` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_checkPathAbsent(op) {
     const storagePath = op.arg('storagePath');
     if (this._fileFriend.readPathOrNull(storagePath) !== null) {
       throw new InfoError('path_not_empty', storagePath);
@@ -126,6 +146,16 @@ export default class Transactor extends CommonBase {
     } else if (data.hash !== expectedHash) {
       throw new InfoError('path_hash_mismatch', storagePath, expectedHash);
     }
+  }
+
+  /**
+   * Handler for `deleteBlob` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_deleteBlob(op) {
+    // **TODO:** Implement this.
+    throw new InfoError('not_implemented', op.name);
   }
 
   /**
@@ -170,6 +200,16 @@ export default class Transactor extends CommonBase {
   }
 
   /**
+   * Handler for `readBlob` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_readBlob(op) {
+    // **TODO:** Implement this.
+    throw new InfoError('not_implemented', op.name);
+  }
+
+  /**
    * Handler for `readPath` operations.
    *
    * @param {FileOp} op The operation.
@@ -194,6 +234,16 @@ export default class Transactor extends CommonBase {
    */
   _op_timeout(op_unused) {
     // This space intentionally left blank.
+  }
+
+  /**
+   * Handler for `writeBlob` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_writeBlob(op) {
+    // **TODO:** Implement this.
+    throw new InfoError('not_implemented', op.name);
   }
 
   /**

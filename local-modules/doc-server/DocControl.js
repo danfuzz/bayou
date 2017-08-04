@@ -123,8 +123,8 @@ export default class DocControl extends CommonBase {
     const spec = new TransactionSpec(
       // These make the transaction fail if we lose a race to (re)create the
       // file.
-      fc.op_checkPathEmpty(Paths.FORMAT_VERSION),
-      fc.op_checkPathEmpty(Paths.REVISION_NUMBER),
+      fc.op_checkPathAbsent(Paths.FORMAT_VERSION),
+      fc.op_checkPathAbsent(Paths.REVISION_NUMBER),
 
       // Version for the file format.
       fc.op_writePath(Paths.FORMAT_VERSION, this._fileComplex.formatVersion),
@@ -570,7 +570,7 @@ export default class DocControl extends CommonBase {
 
     const fc   = this._fileCodec; // Avoids boilerplate immediately below.
     const spec = new TransactionSpec(
-      fc.op_checkPathEmpty(changePath),
+      fc.op_checkPathAbsent(changePath),
       fc.op_checkPathBufferHash(Paths.REVISION_NUMBER, baseRevNum),
       fc.op_writePath(changePath, change),
       fc.op_writePath(Paths.REVISION_NUMBER, revNum)

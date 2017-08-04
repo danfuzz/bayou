@@ -46,26 +46,58 @@ const TYPE_REV_NUM_1 = 'RevNum1';
 // So it goes.
 const OPERATIONS = DataUtil.deepFreeze([
   /*
-   * A `checkPathEmpty` operation. This is a prerequisite operation that
+   * A `checkBlob` operation. This is a prerequisite operation that verifies
+   * that the file stores a blob with the indicated hash.
+   *
+   * @param {string} hash The expected hash.
+   */
+  [CAT_PREREQUISITE, 'checkBlob', ['hash', TYPE_HASH]],
+
+  /*
+   * A `checkBlobAbsent` operation. This is a prerequisite operation that
+   * verifies that the file does not store a blob with the indicated hash.
+   *
+   * @param {string} hash The expected-to-be-absent hash.
+   */
+  [CAT_PREREQUISITE, 'checkBlobAbsent', ['hash', TYPE_HASH]],
+
+  /*
+   * Convenience wrapper for `checkBlob` operations, which uses a given buffer's
+   * data. This is equivalent to `checkBlob(buffer.hash)`.
+   *
+   * @param {FrozenBuffer} value Buffer whose hash should be taken.
+   */
+  [CAT_CONVENIENCE, 'checkBlobBuffer', ['value', TYPE_BUFFER]],
+
+  /*
+   * Convenience wrapper for `checkBlobAbsent` operations, which uses a given
+   * buffer's data. This is equivalent to `checkBlobAbsent(buffer.hash)`.
+   *
+   * @param {FrozenBuffer} value Buffer whose hash should be taken.
+   */
+  [CAT_CONVENIENCE, 'checkBlobBufferAbsent', ['value', TYPE_BUFFER]],
+
+  /*
+   * A `checkPathAbsent` operation. This is a prerequisite operation that
    * verifies that a given storage path is not bound to any value. This is the
    * opposite of `checkPathExists`.
    *
    * @param {string} storagePath The storage path to check.
    */
-  [CAT_PREREQUISITE, 'checkPathEmpty', ['storagePath', TYPE_PATH]],
+  [CAT_PREREQUISITE, 'checkPathAbsent', ['storagePath', TYPE_PATH]],
 
   /*
    * A `checkPathExists` operation. This is a prerequisite operation that
    * verifies that a given storage path is bound to a value (any value,
-   * including one of zero length). This is the opposite of the `checkPathEmpty`
-   * operation.
+   * including one of zero length). This is the opposite of the
+   * `checkPathAbsent` operation.
    *
    * @param {string} storagePath The storage path to check.
    */
   [CAT_PREREQUISITE, 'checkPathExists', ['storagePath', TYPE_PATH]],
 
   /*
-   * Convenience wrapper for `checkPathHash` operation, which uses a given
+   * Convenience wrapper for `checkPathHash` operations, which uses a given
    * buffer's data. This is equivalent to `checkPathHash(storagePath,
    * buffer.hash)`.
    *
@@ -89,6 +121,24 @@ const OPERATIONS = DataUtil.deepFreeze([
     CAT_PREREQUISITE, 'checkPathHash',
     ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]
   ],
+
+  /*
+   * A `deleteBlob` operation. This is a write operation that the blob with the
+   * indicated hash, if any. If there was no such blob, then this operation does
+   * nothing.
+   *
+   * @param {string} hash The hash of the blob to delete.
+   */
+  [CAT_WRITE, 'deleteBlob', ['hash', TYPE_HASH]],
+
+  /*
+   * Convenience wrapper for `deleteBlob` operations, which uses a given
+   * buffer's data. This is equivalent to `deleteBlob(buffer.hash)`.
+   *
+   * @param {FrozenBuffer} value Buffer whose hash should be taken, indicating a
+   *   blob to delete.
+   */
+  [CAT_CONVENIENCE, 'deleteBlobHash', ['value', TYPE_BUFFER]],
 
   /*
    * A `deletePath` operation. This is a write operation that deletes the
@@ -127,6 +177,22 @@ const OPERATIONS = DataUtil.deepFreeze([
   [CAT_REVISION, 'minRevNum', ['revNum', TYPE_REV_NUM]],
 
   /*
+   * A `readBlob` operation. This is a read operation that retrieves the full
+   * value of the indicated blob (identified by hash), if any. If there is no
+   * so-identified blob in the file, then the hash is _not_ represented in the
+   * result of the transaction at all (specifically, it is _not_ bound to `null`
+   * or similar).
+   *
+   * **Rationale for not-found behavior:** Higher layers of the system can
+   * produce interpreted transaction results, where a `null` value can represent
+   * successfully finding `null`. By consistently _not_ binding non-found
+   * results, we provide disambiguation in such cases.
+   *
+   * @param {string} hash The content hash of the blob to read.
+   */
+  [CAT_READ, 'readBlob', ['hash', TYPE_HASH]],
+
+  /*
    * A `readPath` operation. This is a read operation that retrieves the value
    * bound to the indicated path in the file, if any. If the given path is not
    * bound, then that path is _not_ represented in the result of the transaction
@@ -153,6 +219,15 @@ const OPERATIONS = DataUtil.deepFreeze([
    * @param {Int} durMsec Duration of the timeout, in milliseconds.
    */
   [CAT_ENVIRONMENT, 'timeout', ['durMsec', TYPE_DUR_MSEC]],
+
+  /*
+   * A a `writeBlob` operation. This is a write operation that stores the
+   * indicated value in the file, binding it to its content hash. If the content
+   * hash was already bound, then this operation does nothing.
+   *
+   * @param {FrozenBuffer} value The value to store.
+   */
+  [CAT_WRITE, 'writeBlob', ['value', TYPE_BUFFER]],
 
   /*
    * A a `writePath` operation. This is a write operation that stores the
@@ -226,9 +301,9 @@ export default class FileOp extends CommonBase {
   }
 
   /**
-   * {array<array>} List of operation schemata. These are used to programatically
-   * define static methods on `FileOp` for constructing instances. Each element
-   * consists of three parts, as follows:
+   * {array<array>} List of operation schemata. These are used to
+   * programatically define static methods on `FileOp` for constructing
+   * instances. Each element consists of three parts, as follows:
    *
    * * `category` &mdash; The category of the operation.
    * * `name` &mdsah; The name of the operation.
@@ -445,6 +520,26 @@ export default class FileOp extends CommonBase {
   }
 
   /**
+   * Transformer for the convenience op `checkBlobBuffer`.
+   *
+   * @param {FrozenBuffer} value The value.
+   * @returns {array<*>} Replacement constructor info.
+   */
+  static _xform_checkBlobBuffer(value) {
+    return ['checkBlob', value.hash];
+  }
+
+  /**
+   * Transformer for the convenience op `checkBlobBufferAbsent`.
+   *
+   * @param {FrozenBuffer} value The value.
+   * @returns {array<*>} Replacement constructor info.
+   */
+  static _xform_checkBlobBufferAbsent(value) {
+    return ['checkBlobAbsent', value.hash];
+  }
+
+  /**
    * Transformer for the convenience op `checkPathBufferHash`.
    *
    * @param {string} storagePath The storage path.
@@ -453,6 +548,16 @@ export default class FileOp extends CommonBase {
    */
   static _xform_checkPathBufferHash(storagePath, value) {
     return ['checkPathHash', storagePath, value.hash];
+  }
+
+  /**
+   * Transformer for the convenience op `deleteBlobBuffer`.
+   *
+   * @param {FrozenBuffer} value The value.
+   * @returns {array<*>} Replacement constructor info.
+   */
+  static _xform_deleteBlobBuffer(value) {
+    return ['deleteBlob', value.hash];
   }
 
   /**
