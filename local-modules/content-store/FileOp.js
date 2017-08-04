@@ -113,6 +113,24 @@ const OPERATIONS = DataUtil.deepFreeze([
   ],
 
   /*
+   * A `deleteBlob` operation. This is a write operation that the blob with the
+   * indicated hash, if any. If there was no such blob, then this operation does
+   * nothing.
+   *
+   * @param {string} hash The hash of the blob to delete.
+   */
+  [CAT_WRITE, 'deleteBlob', ['hash', TYPE_HASH]],
+
+  /*
+   * Convenience wrapper for `deleteBlob` operations, which uses a given
+   * buffer's data. This is equivalent to `deleteBlob(buffer.hash)`.
+   *
+   * @param {FrozenBuffer} value Buffer whose hash should be taken, indicating a
+   *   blob to delete.
+   */
+  [CAT_CONVENIENCE, 'deleteBlobHash', ['value', TYPE_BUFFER]],
+
+  /*
    * A `deletePath` operation. This is a write operation that deletes the
    * binding for the given path, if any. If the path wasn't bound, then this
    * operation does nothing.
@@ -510,6 +528,16 @@ export default class FileOp extends CommonBase {
    */
   static _xform_checkPathBufferHash(storagePath, value) {
     return ['checkPathHash', storagePath, value.hash];
+  }
+
+  /**
+   * Transformer for the convenience op `deleteBlobBuffer`.
+   *
+   * @param {FrozenBuffer} value The value.
+   * @returns {array<*>} Replacement constructor info.
+   */
+  static _xform_deleteBlobBuffer(value) {
+    return ['deleteBlob', value.hash];
   }
 
   /**

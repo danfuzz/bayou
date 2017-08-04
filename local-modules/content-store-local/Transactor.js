@@ -139,6 +139,16 @@ export default class Transactor extends CommonBase {
   }
 
   /**
+   * Handler for `deleteBlob` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_deleteBlob(op) {
+    // **TODO:** Implement this.
+    throw new InfoError('not_implemented', op.name);
+  }
+
+  /**
    * Handler for `deletePath` operations.
    *
    * @param {FileOp} op The operation.
