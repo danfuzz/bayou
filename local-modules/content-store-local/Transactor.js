@@ -98,11 +98,11 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `checkPathEmpty` operations.
+   * Handler for `checkPathAbsent` operations.
    *
    * @param {FileOp} op The operation.
    */
-  _op_checkPathEmpty(op) {
+  _op_checkPathAbsent(op) {
     const storagePath = op.arg('storagePath');
     if (this._fileFriend.readPathOrNull(storagePath) !== null) {
       throw new InfoError('path_not_empty', storagePath);

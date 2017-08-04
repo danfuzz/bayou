@@ -62,19 +62,19 @@ const OPERATIONS = DataUtil.deepFreeze([
   [CAT_PREREQUISITE, 'checkBlob', ['hash', TYPE_HASH]],
 
   /*
-   * A `checkPathEmpty` operation. This is a prerequisite operation that
+   * A `checkPathAbsent` operation. This is a prerequisite operation that
    * verifies that a given storage path is not bound to any value. This is the
    * opposite of `checkPathExists`.
    *
    * @param {string} storagePath The storage path to check.
    */
-  [CAT_PREREQUISITE, 'checkPathEmpty', ['storagePath', TYPE_PATH]],
+  [CAT_PREREQUISITE, 'checkPathAbsent', ['storagePath', TYPE_PATH]],
 
   /*
    * A `checkPathExists` operation. This is a prerequisite operation that
    * verifies that a given storage path is bound to a value (any value,
-   * including one of zero length). This is the opposite of the `checkPathEmpty`
-   * operation.
+   * including one of zero length). This is the opposite of the
+   * `checkPathAbsent` operation.
    *
    * @param {string} storagePath The storage path to check.
    */
@@ -285,9 +285,9 @@ export default class FileOp extends CommonBase {
   }
 
   /**
-   * {array<array>} List of operation schemata. These are used to programatically
-   * define static methods on `FileOp` for constructing instances. Each element
-   * consists of three parts, as follows:
+   * {array<array>} List of operation schemata. These are used to
+   * programatically define static methods on `FileOp` for constructing
+   * instances. Each element consists of three parts, as follows:
    *
    * * `category` &mdash; The category of the operation.
    * * `name` &mdsah; The name of the operation.
