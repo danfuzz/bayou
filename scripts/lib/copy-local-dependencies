@@ -227,7 +227,10 @@ for d in "${localDeps[@]}"; do
 
     # Remove the `dependencies` from the `package.json`, because otherwise `npm`
     # tries to process them (and they aren't valid as far as it's concerned).
+    # Also, add a binding to make it unambiguous that this is a local module.
     name="$(basename "${d}")"
-    jq 'del(.dependencies)' \
+    jq '
+          del(.dependencies)
+        | .localModule = true' \
         "${d}/package.json" > "${nodeModules}/${name}/package.json"
 done

@@ -9,24 +9,24 @@ import { TString } from 'typecheck';
 import { Random } from 'util-common';
 
 describe('util-common/Random', () => {
-  describe('byteArray(length)', () => {
-    it('should return an array of the requested length', () => {
+  describe('byteBuffer()', () => {
+    it('should return a buffer of the requested length', () => {
       const length = 17;
-      const randomBytes = Random.byteArray(length);
+      const randomBytes = Random.byteBuffer(length);
 
       assert.strictEqual(length, randomBytes.length);
     });
 
     it('should return different results every time', () => {
       const length = 23;
-      const bytesA = Random.byteArray(length);
-      const bytesB = Random.byteArray(length);
+      const bytesA = Random.byteBuffer(length);
+      const bytesB = Random.byteBuffer(length);
 
       assert.notDeepEqual(bytesA, bytesB);
     });
   });
 
-  describe('hexByteString(length)', () => {
+  describe('hexByteString()', () => {
     it('should return a string of hex digits of the requested length', () => {
       const length = 13;
       const string = Random.hexByteString(length);
@@ -35,7 +35,7 @@ describe('util-common/Random', () => {
     });
   });
 
-  describe('shortLabel(prefix)', () => {
+  describe('shortLabel()', () => {
     it('should return a probably-random string of the form "[prefix]-[8 * base32ish random character]"', () => {
       const label1A = Random.shortLabel('A');
       const label2A = Random.shortLabel('A');

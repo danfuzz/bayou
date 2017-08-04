@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { DataUtil } from 'util-common';
 
 describe('util-common/DataUtil', () => {
-  describe('deepFreeze(value)', () => {
+  describe('deepFreeze()', () => {
     it('should return the provided value if it is a primitive', () => {
       const symbol = Symbol('foo');
 
@@ -38,46 +38,25 @@ describe('util-common/DataUtil', () => {
     });
   });
 
-  describe('bytesFromHex(value)', () => {
+  describe('bufferFromHex()', () => {
     it('should throw an Error if passed an odd-lengthed string', () => {
-      assert.throws(() => DataUtil.bytesFromHex('aabbc'));
+      assert.throws(() => DataUtil.bufferFromHex('aabbc'));
     });
 
     it('should throw an error if pass a string that isn\'t solely hex bytes', () => {
-      assert.throws(() => DataUtil.bytesFromHex('this better not work!'));
+      assert.throws(() => DataUtil.bufferFromHex('this better not work!'));
     });
 
-    it('should return an array of ints when passed a valid hex string', () => {
-      const bytesArray = DataUtil.bytesFromHex('deadbeef');
+    it('should return a buffer when passed a valid hex string', () => {
+      const bytes = DataUtil.bufferFromHex('deadbeef');
 
-      assert.isTrue(Array.isArray(bytesArray));
+      assert.isTrue(Buffer.isBuffer(bytes));
 
-      for (const value of bytesArray) {
-        assert.isTrue(Number.isSafeInteger(value));
-      }
-
-      assert.strictEqual(bytesArray[0], 0xde);
-      assert.strictEqual(bytesArray[1], 0xad);
-      assert.strictEqual(bytesArray[2], 0xbe);
-      assert.strictEqual(bytesArray[3], 0xef);
-    });
-  });
-
-  describe('hexFromBytes(value)', () => {
-    it('should throw an Error if passed anything but an array of byte values', () => {
-      assert.throws(() => DataUtil.hexFromBytes('this better not work!'));
-      assert.throws(() => DataUtil.hexFromBytes(37));
-      assert.throws(() => DataUtil.hexFromBytes(true));
-      assert.throws(() => DataUtil.hexFromBytes({}));
-      assert.throws(() => DataUtil.hexFromBytes(['foo', true, {}]));
-      assert.throws(() => DataUtil.hexFromBytes(true));
-      assert.throws(() => DataUtil.hexFromBytes([298374, 203849023, 92837492374, 29384]));
-    });
-
-    it('should return a hex string if passed an array of byte values', () => {
-      const bytesArray = [0xde, 0xad, 0xbe, 0xef];
-
-      assert.strictEqual(DataUtil.hexFromBytes(bytesArray), 'deadbeef');
+      assert.strictEqual(bytes.length, 4);
+      assert.strictEqual(bytes[0], 0xde);
+      assert.strictEqual(bytes[1], 0xad);
+      assert.strictEqual(bytes[2], 0xbe);
+      assert.strictEqual(bytes[3], 0xef);
     });
   });
 });

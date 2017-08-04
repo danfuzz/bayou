@@ -16,16 +16,13 @@ class FakeKey extends BaseKey {
   }
 
   _impl_challengeResponseFor(challenge) {
-    const bytes = DataUtil.bytesFromHex(challenge);
-    const newBytes = [];
+    const bytes = DataUtil.bufferFromHex(challenge);
 
     for (let i = 0; i < bytes.length; i++) {
-      const byte = bytes[i];
-
-      newBytes[i] = byte ^ 0x0e;
+      bytes[i] ^= 0x0e;
     }
 
-    return DataUtil.hexFromBytes(newBytes);
+    return bytes.toString('hex');
   }
 }
 

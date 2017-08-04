@@ -9,8 +9,6 @@ import crypto from 'crypto';
 import { TInt } from 'typecheck';
 import { UtilityClass } from 'util-common-base';
 
-import DataUtil from './DataUtil';
-
 /**
  * Character set used for ID strings. This is intended to be the set of 32 most
  * visually and audibly unambiguous alphanumerics.
@@ -32,14 +30,13 @@ export default class Random extends UtilityClass {
   }
 
   /**
-   * Returns an array of random bytes, of a given length.
+   * Returns a buffer of random bytes, of a given length.
    *
    * @param {Int} length Desired length.
-   * @returns {Array<Int>} Array of `length` random bytes.
+   * @returns {Buffer} Buffer of `length` random bytes.
    */
-  static byteArray(length) {
-    const buffer = crypto.randomBytes(TInt.nonNegative(length));
-    return [...buffer];
+  static byteBuffer(length) {
+    return crypto.randomBytes(TInt.nonNegative(length));
   }
 
   /**
@@ -50,8 +47,8 @@ export default class Random extends UtilityClass {
    * @returns {string} String of `length * 2` random hexadecimal characters.
    */
   static hexByteString(length) {
-    const bytes = Random.byteArray(length);
-    return DataUtil.hexFromBytes(bytes);
+    const bytes = Random.byteBuffer(length);
+    return bytes.toString('hex');
   }
 
   /**
