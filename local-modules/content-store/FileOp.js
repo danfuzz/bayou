@@ -97,7 +97,7 @@ const OPERATIONS = DataUtil.deepFreeze([
   [CAT_PREREQUISITE, 'checkPathExists', ['storagePath', TYPE_PATH]],
 
   /*
-   * Convenience wrapper for `checkPathHash` operation, which uses a given
+   * Convenience wrapper for `checkPathHash` operations, which uses a given
    * buffer's data. This is equivalent to `checkPathHash(storagePath,
    * buffer.hash)`.
    *
