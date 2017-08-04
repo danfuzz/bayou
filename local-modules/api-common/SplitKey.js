@@ -2,7 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import sha256 from 'js-sha256';
+// **Note:** Babel's browser polyfill includes a Node-compatible `crypto`
+// module, which is why this is possible to import regardless of environment.
+import crypto from 'crypto';
 
 import { TString } from 'typecheck';
 import { DataUtil, Random } from 'util-common';
@@ -97,12 +99,12 @@ export default class SplitKey extends BaseKey {
   _impl_challengeResponseFor(challenge) {
     TString.hexBytes(challenge, 8, 8);
 
-    const hash = sha256.create();
+    const hash = crypto.createHash('sha256');
 
     hash.update(DataUtil.bytesFromHex(challenge));
     hash.update(DataUtil.bytesFromHex(this._secret));
 
-    return hash.hex();
+    return hash.digest('hex');
   }
 
   /**
