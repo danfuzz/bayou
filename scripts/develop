@@ -121,7 +121,7 @@ while true; do
     "${progDir}/build" "${cleanArg[@]}" "${buildOpts[@]}" || exit 1
     echo ''
 
-    "${outDir}/bin/run" --dev
+    "${outDir}/final/bin/run" --dev
     status="$?"
     if (( ${status} != 0 )); then
         # Not a clean exit, so better to err on the side of not looping. This

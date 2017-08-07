@@ -80,8 +80,8 @@ export default class Dirs extends Singleton {
 
   /**
    * Figures out where the base directory is. This walks up from the directory
-   * where this module is stored, looking for a directory that contains a
-   * `local-modules` directory.
+   * where this module is stored, looking for a directory that contains the file
+   * `product-info.txt`.
    *
    * @returns {string} The base directory path.
    */
@@ -94,8 +94,8 @@ export default class Dirs extends Singleton {
       }
 
       try {
-        const stat = fs.statSync(path.resolve(dir, 'local-modules'));
-        if (stat.isDirectory()) {
+        const stat = fs.statSync(path.resolve(dir, 'product-info.txt'));
+        if (stat.isFile()) {
           return dir;
         }
       } catch (e) {
