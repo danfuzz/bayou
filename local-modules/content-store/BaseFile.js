@@ -28,13 +28,6 @@ export default class BaseFile extends CommonBase {
 
     /** {string} The ID of the file that this instance represents. */
     this._id = TString.nonempty(fileId);
-
-    /**
-     * {Int} Last instantaneous revision number reported by the subclass, or
-     * `0` if none ever reported. Reset to `0` in `create()`. This is used to
-     * validate the behavior of the subclass.
-     */
-    this._lastRevNum = -1;
   }
 
   /** {string} The ID of the file that this instance represents. */
@@ -105,7 +98,6 @@ export default class BaseFile extends CommonBase {
    */
   async create() {
     await this._impl_create();
-    this._lastRevNum = 0;
   }
 
   /**
@@ -136,32 +128,6 @@ export default class BaseFile extends CommonBase {
    */
   async _impl_exists() {
     this._mustOverride();
-  }
-
-  /**
-   * Gets the instantaneously current revision number of the file. The revision
-   * number starts at `0` for a newly-created file and increases monotonically
-   * as changes are made to it.
-   *
-   * **Note:** Due to the asynchronous nature of the system, it is possible
-   * (common even) for the revision number to have increased by the time this
-   * method returns to a caller.
-   *
-   * @returns {Int} The instantaneously current revision number of the file.
-   */
-  async revNum() {
-    // By definition executing an empty transaction spec will have a result that
-    // binds `revNum` to the instantaneously current revision number.
-    const spec = new TransactionSpec();
-    const transactionResult = await this.transact(spec);
-    const revNum = transactionResult.revNum;
-
-    // Validate that the subclass doesn't move the number in the wrong
-    // direction.
-    TInt.min(revNum, this._lastRevNum);
-
-    this._lastRevNum = revNum;
-    return revNum;
   }
 
   /**
