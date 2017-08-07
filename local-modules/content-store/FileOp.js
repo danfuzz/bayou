@@ -36,7 +36,6 @@ const TYPE_DUR_MSEC  = 'DurMsec';
 const TYPE_PATH      = 'Path';
 const TYPE_HASH      = 'Hath';
 const TYPE_REV_NUM   = 'RevNum';
-const TYPE_REV_NUM_1 = 'RevNum1';
 
 // Operation schemata. See the doc for the equivalent static property for
 // details.
@@ -150,33 +149,6 @@ const OPERATIONS = DataUtil.deepFreeze([
   [CAT_WRITE, 'deletePath', ['storagePath', TYPE_PATH]],
 
   /*
-   * A `maxRevNum` operation. This is a revision restriction that limits a
-   * transaction to only be performed with respect to an earlier revision number
-   * of the file than the indicated revision. That is, it specifies an
-   * _exclusive_ maximum.
-   *
-   * @param {Int} revNum Maximum revision number (exclusive).
-   */
-  [CAT_REVISION, 'maxRevNum', ['revNum', TYPE_REV_NUM_1]],
-
-  /*
-   * Convenience wrapper for inclusive `maxRevNum` operations. This is
-   * equivalent to the operation `maxRevNum(revNum + 1)`.
-   *
-   * @param {Int} revNum Maximum revision number (inclusive).
-   */
-  [CAT_CONVENIENCE, 'maxRevNumInc', ['revNum', TYPE_REV_NUM]],
-
-  /*
-   * A `minRevNum` operation. This is a revision restriction that limits a
-   * transaction to only be performed with respect to the indicated revision
-   * number of the file or later. That is, it specifies an _inclusive_ minimum.
-   *
-   * @param {Int} revNum Minimum revision number (inclusive).
-   */
-  [CAT_REVISION, 'minRevNum', ['revNum', TYPE_REV_NUM]],
-
-  /*
    * A `readBlob` operation. This is a read operation that retrieves the full
    * value of the indicated blob (identified by hash), if any. If there is no
    * so-identified blob in the file, then the hash is _not_ represented in the
@@ -206,6 +178,15 @@ const OPERATIONS = DataUtil.deepFreeze([
    * @param {string} storagePath The storage path to read from.
    */
   [CAT_READ, 'readPath', ['storagePath', TYPE_PATH]],
+
+  /*
+   * A `revNum` operation. This is a revision restriction that limits a
+   * transaction to only be performed with respect to the indicated revision
+   * number.
+   *
+   * @param {Int} revNum Required revision number.
+   */
+  [CAT_REVISION, 'revNum', ['revNum', TYPE_REV_NUM]],
 
   /*
    * A `timeout` operation. This is an environment operation which limits a
@@ -341,11 +322,6 @@ export default class FileOp extends CommonBase {
   /** {string} Type name for revision numbers. */
   static get TYPE_REV_NUM() {
     return TYPE_REV_NUM;
-  }
-
-  /** {string} Type name for revision numbers that must be `1` or greater. */
-  static get TYPE_REV_NUM_1() {
-    return TYPE_REV_NUM_1;
   }
 
   /**
@@ -492,10 +468,6 @@ export default class FileOp extends CommonBase {
               TInt.nonNegative(arg);
               break;
             }
-            case TYPE_REV_NUM_1: {
-              TInt.min(arg, 1);
-              break;
-            }
             default: {
               // Indicates a bug in this class.
               throw new Error(`Weird \`type\` constant: ${type}`);
@@ -558,16 +530,6 @@ export default class FileOp extends CommonBase {
    */
   static _xform_deleteBlobBuffer(value) {
     return ['deleteBlob', value.hash];
-  }
-
-  /**
-   * Transformer for the convenience op `maxRevNumInc`.
-   *
-   * @param {Int} revNum Maximum revision number (inclusive).
-   * @returns {array<*>} Replacement constructor info.
-   */
-  static _xform_maxRevNumInc(revNum) {
-    return ['maxRevNum', revNum + 1];
   }
 }
 

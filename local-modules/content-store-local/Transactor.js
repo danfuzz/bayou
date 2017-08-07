@@ -168,38 +168,6 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `maxRevNum` operations. In this implementation, we only ever
-   * have a single revision available, and we reject the transaction should it
-   * not be covered by the requested restriction.
-   *
-   * @param {FileOp} op The operation.
-   */
-  _op_maxRevNum(op) {
-    const revNum = op.arg('revNum');
-
-    // **Note:** `>=` because the op is for an exclusive (not inclusive)
-    // maximum.
-    if (this._fileFriend.revNum >= revNum) {
-      throw new InfoError('revision_not_available', 'max', revNum);
-    }
-  }
-
-  /**
-   * Handler for `minRevNum` operations. In this implementation, we only ever
-   * have a single revision available, and we reject the transaction should it
-   * not be covered by the requested restriction.
-   *
-   * @param {FileOp} op The operation.
-   */
-  _op_minRevNum(op) {
-    const revNum = op.arg('revNum');
-
-    if (this._fileFriend.revNum < revNum) {
-      throw new InfoError('revision_not_available', 'min', revNum);
-    }
-  }
-
-  /**
    * Handler for `readBlob` operations.
    *
    * @param {FileOp} op The operation.
@@ -222,6 +190,21 @@ export default class Transactor extends CommonBase {
       // Per the `FileOp` documentation, we are _not_ supposed to bind result
       // data if the path isn't found.
       this._data.set(storagePath, data);
+    }
+  }
+
+  /**
+   * Handler for `revNum` operations. In this implementation, we only ever have
+   * a single revision available, and we reject the transaction should it not be
+   * the requested restriction.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_revNum(op) {
+    const revNum = op.arg('revNum');
+
+    if (this._fileFriend.revNum !== revNum) {
+      throw new InfoError('revision_not_available', revNum);
     }
   }
 
