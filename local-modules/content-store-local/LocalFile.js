@@ -68,14 +68,6 @@ export default class LocalFile extends BaseFile {
     this._storage = null;
 
     /**
-     * {Map<string,Int>|null} Map from `StoragePath` strings to the most recent
-     * revision number that affected the corresponding path. This includes
-     * entries for paths that have been deleted. `null` indicates that the map
-     * is not yet initialized.
-     */
-    this._storageRevNums = null;
-
-    /**
      * {Map<string,FrozenBuffer>|null} Map from `StoragePath` strings to
      * corresponding stored data, for file contents that have not yet been
      * written to disk.
@@ -163,7 +155,6 @@ export default class LocalFile extends BaseFile {
 
     this._revNum              = 0;
     this._storage             = new Map();
-    this._storageRevNums      = new Map();
     this._storageToWrite      = new Map();
     this._storageNeedsErasing = true;
     this._storageReadyPromise = Promise.resolve(true);
@@ -259,7 +250,6 @@ export default class LocalFile extends BaseFile {
           this._storage.set(storagePath, value);
         }
 
-        this._storageRevNums.set(storagePath, newRevNum);
         this._storageToWrite.set(storagePath, value);
       }
 
@@ -361,9 +351,8 @@ export default class LocalFile extends BaseFile {
   async _readStorage() {
     if (!await afs.exists(this._storageDir)) {
       // Directory doesn't actually exist. Just initialize empty storage.
-      this._revNum         = 0;
-      this._storage        = new Map();
-      this._storageRevNums = new Map();
+      this._revNum  = 0;
+      this._storage = new Map();
       this._log.info('New storage.');
       return true;
     }
@@ -371,9 +360,8 @@ export default class LocalFile extends BaseFile {
     // The directory exists. Read its contents.
     this._log.info('Reading storage from disk...');
 
-    const files          = await afs.readdir(this._storageDir);
-    const storage        = new Map();
-    const storageRevNums = new Map();
+    const files   = await afs.readdir(this._storageDir);
+    const storage = new Map();
     let   revNum;
 
     // This gets called to await on a chunk of FS ops at a time, storing them
@@ -426,18 +414,10 @@ export default class LocalFile extends BaseFile {
       this._log.info(`Starting with "fake" revision number: ${revNum}`);
     }
 
-    // Note the revision number of all paths. Since we don't record this info
-    // to the FS, the best we can do is peg them all at the current revision
-    // number.
-    for (const k of storage.keys()) {
-      storageRevNums.set(k, revNum);
-    }
-
     // Only set the instance variables after all the reading is done and the
     // current revision number is known.
     this._revNum              = revNum;
     this._storage             = storage;
-    this._storageRevNums      = storageRevNums;
     this._storageToWrite      = new Map();
     this._storageNeedsErasing = false;
     this._storageIsDirty      = false;
