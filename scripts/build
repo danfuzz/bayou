@@ -154,9 +154,11 @@ function check-environment-dependencies {
 }
 
 # Sets up the output directory, including cleaning it out or creating it, as
-# necessary.
+# necessary. This also sets `finalDir` to the directory under `outDir` for the
+# final built product.
 function set-up-out {
     outDir="$(${progDir}/lib/out-dir-setup "${outOpts[@]}")"
+    finalDir="${outDir}/final"
     if [[ $? != 0 ]]; then
         return 1
     fi
@@ -178,21 +180,20 @@ function local-module-names {
 # Adds a new directory mapping to the build info file. This includes handling
 # an overlay if it exists.
 function add-directory-mapping {
-    local fromDir="$1"
-    local toDir="$2"
-    local dirInfoFile="${outDir}/${toDir}/${sourceMapName}"
+    local dirName="$1"
+    local dirInfoFile="${outDir}/${dirName}/${sourceMapName}"
 
     mkdir -p "$(dirname "${dirInfoFile}")"
 
     (
         # Note: Some directories _only_ exist in the overlay, so we check for
         # existence of it before adding it to the mapping.
-        if [[ -e "${baseDir}/${fromDir}" ]]; then
-            echo "${baseDir}/${fromDir}"
+        if [[ -e "${baseDir}/${dirName}" ]]; then
+            echo "${baseDir}/${dirName}"
         fi
 
-        if [[ ${overlayDir} != '' && -e "${overlayDir}/${fromDir}" ]]; then
-            echo "${overlayDir}/${fromDir}"
+        if [[ ${overlayDir} != '' && -e "${overlayDir}/${dirName}" ]]; then
+            echo "${overlayDir}/${dirName}"
         fi
     ) > "${dirInfoFile}"
 
@@ -225,16 +226,16 @@ function add-subdirectory-mapping {
 function set-up-dir-mapping {
     # This is the sub-module that's holds the compiler (transpiler) used for
     # processing `server` files.
-    add-directory-mapping 'compiler' 'compiler'
+    add-directory-mapping 'compiler'
 
     # The `server` files ultimately go through an additional build step (hence
     # the change in directory name), though some of the files are used as-is.
-    add-directory-mapping 'server' 'server-src'
+    add-directory-mapping 'server'
 
     # The `client` files are used as-is by the server (because it serves the
     # static assets directly and also knows how to (re)build the JavaScript
     # bundle).
-    add-directory-mapping 'client' 'client'
+    add-directory-mapping 'client'
 
     # The `local-modules` get pulled into both `client` and `server` (as
     # required by dependencies). We make a mapping per subdirectory because it
@@ -313,11 +314,6 @@ function do-install {
         npm install --cache="${outDir}/npm-cache" || return 1
     else
         # We were asked to use the boxed dependencies.
-        if [[ ${dir} =~ ^(.*)-src$ ]]; then
-            # `server-src` gets built from the box `server.npmbox`.
-            dir="${BASH_REMATCH[1]}"
-        fi
-
         local boxFile="${boxDir}/${dir}.npmbox"
 
         if [[ ! -r ${boxFile} ]]; then
@@ -336,12 +332,12 @@ function do-install {
     "${progDir}/lib/fix-modules" "${baseDir}/etc/module-overlay" "${toDir}"
 }
 
-# Builds the server code. This builds from `server-src` into `server`. The
+# Builds the server code. This builds from `server` into `final/server`. The
 # JS files in the former are treated as modern ECMAScript, which are processed
 # by Babel.
 function build-server {
-    local fromDir="${outDir}/server-src"
-    local toDir="${outDir}/server"
+    local fromDir="${outDir}/server"
+    local toDir="${finalDir}/server"
 
     # Find the `babel` script (provided by the `compiler` submodule).
     local compile="$(find "${outDir}/compiler" -name 'bayou-compile')"
@@ -351,7 +347,7 @@ function build-server {
     fi
 
     # Do the initial npm(ish) installation.
-    do-install server-src || return 1
+    do-install server || return 1
 
     # Run Babel on all of the local source files, storing them next to the
     # imported and patched modules.
@@ -378,7 +374,14 @@ function build-server {
 
 # Builds the client code.
 function build-client {
+    local toDir="${finalDir}/client"
+
+    mkdir -p "${toDir}" || return 1
     do-install client || return 1
+
+    # Copy the built result into the final output. See above about `rsync`.
+    rsync --archive --delete "${outDir}/client/" "${toDir}" \
+    || return 1
 }
 
 # Builds the compiler (transpiler) code.
@@ -388,7 +391,7 @@ function build-compiler {
 
 # "Builds" the `bin` directory.
 function build-bin {
-    local toDir="${outDir}/bin"
+    local toDir="${finalDir}/bin"
 
     mkdir -p "${toDir}" || return 1
 
@@ -403,7 +406,7 @@ function build-bin {
 # Builds the product info file.
 function build-product-info {
     local fileName='product-info.txt'
-    local outFile="${outDir}/${fileName}"
+    local outFile="${finalDir}/${fileName}"
     local inFile="${baseDir}/${fileName}"
 
     # Use the overlay file, if it exists.
@@ -458,11 +461,11 @@ fi
 ) || exit 1
 
 if (( ${clientBundle} )); then
-    "${outDir}/bin/run" --client-bundle || exit 1
+    "${finalDir}/bin/run" --client-bundle || exit 1
 fi
 
 if (( ${serverTest} )); then
-    "${outDir}/bin/run" --server-test || exit 1
+    "${finalDir}/bin/run" --server-test || exit 1
 fi
 
 echo 'Done!'

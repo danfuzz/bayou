@@ -42,7 +42,7 @@ In production, run using the `run` script placed in the product's `bin`
 directory:
 
 ```
-$ ./out/bin/run
+$ ./out/final/bin/run
 ```
 
 ### Hermetic build
@@ -74,8 +74,8 @@ There are a couple options on the `build` script that cause tests to be run.
 * `--server-test` &mdash; Run the tests for the server code.
 
 In addition, if you have already made a build, you can provide either of these
-options to the built script `out/bin/run`, to run the tests in question with
-respect to the built product.
+options to the built script `out/final/bin/run`, to run the tests in question
+with respect to the built product.
 
 ### Cleanup
 
