@@ -75,6 +75,28 @@ export default class FileCodec extends CommonBase {
   }
 
   /**
+   * Waits for a change to be made to a file at a specific path. The return
+   * value becomes resolved soon after a change is made or the specified timeout
+   * elapses. This is just like the same-named method on `BaseFile`, except that
+   * the given `value` is first encoded.
+   *
+   * @param {Int|'never'} timeoutMsec The maximum amount of time (in msec) to
+   *   wait for a change. If the requested change does not occur within this
+   *   time, then this method returns `false`. This value is clamped as if by
+   *   `BaseFile.clampTimeoutMsec()`, see which.
+   * @param {string} storagePath The specific path to watch for changes to.
+   * @param {*} value Value which is considered the "unchanged" value at
+   *   `storagePath`.
+   * @returns {boolean} `true` if a change was detected, or `false` if the
+   *   call is returning due to timeout.
+   */
+  async whenChange(timeoutMsec, storagePath, value) {
+    const encodedValue = this._codec.encodeJsonBuffer(value);
+
+    return this._file.whenChange(timeoutMsec, storagePath, encodedValue.hash);
+  }
+
+  /**
    * Adds `FileOp` constructor methods to this class. These are _instance_
    * methods that are aware of the codec being used. (Look at the bottom of
    * this file for the call.)

@@ -274,11 +274,12 @@ export default class LocalFile extends BaseFile {
    * Implementation as required by the superclass.
    *
    * @param {Int} timeoutMsec Same as with `whenChange()`.
-   * @param {Int} baseRevNum Same as with `whenChange()`.
-   * @param {string|null} storagePath Same as with `whenChange()`.
-   * @returns {Int|null} Same as with `whenChange()`.
+   * @param {string} storagePath Same as with `whenChange()`.
+   * @param {string|null} valueOrHash Same as with `whenChange()`, except that
+   *   a buffer argument will have already been converted to a hash.
+   * @returns {boolean} Same as with `whenChange()`.
    */
-  async _impl_whenChange(timeoutMsec, baseRevNum, storagePath) {
+  async _impl_whenChange(timeoutMsec, storagePath, valueOrHash) {
     // Arrange for timeout. **Note:** Needs to be done _before_ reading
     // storage, as that storage read can take significant time.
     let timeout = false; // Gets set to `true` when the timeout expires.
@@ -291,47 +292,35 @@ export default class LocalFile extends BaseFile {
     await Promise.race([this._readStorageIfNecessary(), timeoutProm]);
     if (timeout) {
       this._log.detail('Timed out.');
-      return null;
+      return false;
     }
 
-    if (baseRevNum > this._revNum) {
-      // Per the superclass docs (and due to the asynch nature of the system),
-      // we don't know that `baseRevNum` was passed in as an in-range value.
-      throw new Error(`Nonexistent \`revNum\`: ${baseRevNum}`);
-    }
-
-    if (storagePath === null) {
-      this._log.detail(`Want change after \`revNum\` ${baseRevNum}.`);
+    if (valueOrHash === null) {
+      this._log.detail(`Want path to exist: ${storagePath}`);
     } else {
-      this._log.detail(`Want change after \`revNum\` ${baseRevNum}: ${storagePath}`);
+      this._log.detail(`Want change to path: ${storagePath}`);
     }
 
     // Check for the change condition, and iterate until either it's found or
     // the timeout expires.
     while (!timeout) {
-      // If `storagePath` is `null`, we are looking for any revision after the
-      // file's overall current revision number. If `path` is non-`null`, we are
-      // looking for a revision since the last one for that specific path.
-      let foundRevNum;
-      if (storagePath === null) {
-        // `storagePath` is `null`. We are looking for any revision after the
-        // file's overall current revision number.
-        foundRevNum = this._revNum;
-      } else {
-        // `storagePath` is non-`null`. We are looking for a revision
-        // specifically on that path.
-        foundRevNum = this._storageRevNums.get(storagePath);
-        if (foundRevNum === undefined) {
-          // A non-existent and never-existed path is effectively unmodified, for
-          // the subsequent logic.
-          foundRevNum = baseRevNum;
+      const storedValue = this._storage.get(storagePath);
+      if (valueOrHash === null) {
+        // If anything at all is stored at the path, the condition is satisfied.
+        if (storedValue) {
+          return true;
         }
-      }
-
-      if (foundRevNum > baseRevNum) {
-        // Found!
-        this._log.detail(`Noticed change at \`revNum\` ${foundRevNum}.`);
-        return foundRevNum;
+      } else {
+        // We are looking for a change from a specific value.
+        if (storedValue && (storedValue.hash !== valueOrHash)) {
+          // The stored value is indeed different than the given original.
+          return true;
+        } else if (!storedValue) {
+          // There is no value stored at the path (that is, it was deleted or
+          // perhaps was never bound), which counts as a change from any
+          // existing value.
+          return true;
+        }
       }
 
       this._log.detail('Waiting for file to change.');
@@ -345,7 +334,7 @@ export default class LocalFile extends BaseFile {
 
     // The timeout expired.
     this._log.detail('Timed out.');
-    return null;
+    return false;
   }
 
   /**

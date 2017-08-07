@@ -325,7 +325,7 @@ export default class DocControl extends CommonBase {
     RevisionNumber.check(baseRevNum);
 
     for (;;) {
-      const { docRevNum, fileRevNum } = await this._currentRevNums();
+      const { docRevNum, fileRevNum_unused } = await this._currentRevNums();
 
       // We can only validate the upper limit of `baseRevNum` after we have
       // determined the document revision number. If we end up iterating we'll
@@ -344,7 +344,7 @@ export default class DocControl extends CommonBase {
       // Wait for the file to change (or for the storage layer to reach its
       // timeout), and then iterate to see if in fact the change updated the
       // document revision number.
-      await this._file.whenChange('never', fileRevNum, Paths.REVISION_NUMBER);
+      await this._fileCodec.whenChange('never', Paths.REVISION_NUMBER, docRevNum);
     }
   }
 
