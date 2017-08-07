@@ -231,7 +231,7 @@ const OPERATIONS = DataUtil.deepFreeze([
  * * Environment ops &mdash; An environment operation performs some action or
  *   checks some aspect of the execution environment of the transaction.
  * * Revision restrictions &mdash; A revision restriction limits a transaction
- *   to being based only on certain revisions of the file.
+ *   to being based only on a certain revision of the file.
  * * Prerequisite checks &mdash; A prerequisite check must pass in order for
  *   the remainder of a transaction to apply.
  * * Data reads &mdash; A data read gets the value of a blob within a file.
