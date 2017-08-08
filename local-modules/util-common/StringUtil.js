@@ -15,10 +15,10 @@ export default class StringUtil extends UtilityClass {
   /**
    * Splits a string into its distinct grapheme clusters. For instance, the
    * letter `ñ` could be represented as the single Unicode code point `0x00F1`,
-   * or as the the letter `n` (`0x63`) plus the `~` combinding mark (`0x0303`).
-   * The built-in splitting routines for JavaScript strings do not take care to
-   * not split the string in the middle of such clusters. The function knows
-   * about combining marks, surrogate pairs, etc.
+   * or as the letter `n` (`0x63`) plus the `~` combinding mark (`0x0303`). The
+   * built-in splitting routines for JavaScript strings do not take care to not
+   * split the string in the middle of such clusters. The function knows about
+   * combining marks, surrogate pairs, etc.
    *
    * @param {string} string The string to split.
    * @returns {array<string>} An array of strings, one for each grapheme cluster
