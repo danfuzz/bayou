@@ -34,7 +34,7 @@ const CATEGORY_EXECUTION_ORDER = [
 const TYPE_BUFFER    = 'Buffer';
 const TYPE_DUR_MSEC  = 'DurMsec';
 const TYPE_PATH      = 'Path';
-const TYPE_HASH      = 'Hath';
+const TYPE_HASH      = 'Hash';
 const TYPE_REV_NUM   = 'RevNum';
 
 // Operation schemata. See the doc for the equivalent static property for
