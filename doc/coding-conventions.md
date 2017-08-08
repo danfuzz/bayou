@@ -28,45 +28,18 @@ taking into account recent additions to the language.
 
 ### Other conventions in this codebase
 
-* There are specific conventions of how local module exports are set up. Find
-  that info in the [`local-modules/` README file](../local-modules/README.md).
+#### Documentation comments
 
-* `import` order &mdash; Separate imports into three sections, in the following
-  order and separated with a single blank line:
+* We use JSDoc-style annotations on classes, methods, and properties (including
+  instance variables), using `/** ... */` cladding.
 
-  * Built-in Node modules and modules imported from the public registry.
-  * Local modules defined in this product.
-  * Module-private files defined as a peer to the file doing the importing.
+* The type annotation used for arrays is `{array}` or `{array<elementType>}`,
+  with a lower case `a`.
 
-  Within each section, sort lines alphabetically by name of file or module (not
-  name within same). Within a multi-name `import` _line_, sort names
-  alphabetically. Complete example:
-
-  ```javascript
-  import express from 'express';
-  import fs from 'fs';
-
-  import { BaseFile, FileOp } from 'content-store';
-  import { DataUtil, InfoError, Singleton } from 'util-common';
-
-  import RegularBlort from './RegularBlort';
-  import SpecialBlort from './SpecialBlort';
-  ```
-
-* Private fields and methods &mdash; This project is coded as if JavaScript
-  will grow the ability to have private fields and methods on classes. As such,
-  an underscore (`_`) prefix is used on names that are supposed to be treated as
-  private. If and when the facility is added to the language, it will be a Small
-  Matter Of Coding to programmatically replace the underscored declarations and
-  use sites with the real syntax.
-
-  **Note:** This is an intentional deviation from Airbnb style.
-
-* Websockets &mdash; JavaScript has a `WebSocket` class, but when talking about
-  them in prose or in our own variable or class names, we use "websocket" (one
-  word, all lower case, though capitalized as appropriate for prose or
-  `camelCasing`). In addition, `ws` is a good choice for a shorthand name of a
-  variable that contains an instance of one (or something related).
+* We define a `typecheck` module which effectively defines a few primitive
+  "types" that aren't actually real types in JavaScript, most notably `Int` to
+  represent primitive numbers that are in fact integers. We use these type names
+  in annotations as if they were real types. The names are always capitalized.
 
 * When documenting functions marked `async`, the implicit promise returned by
   the function should _not_ be represented in its prose or `@returns`
@@ -96,6 +69,67 @@ taking into account recent additions to the language.
     return 'frobnicator';
   }
   ```
+
+#### Module imports and exports
+
+* There are specific conventions of how local module exports are set up. Find
+  that info in the [`local-modules/` README file](../local-modules/README.md).
+
+* `import` order &mdash; Separate imports into three sections, in the following
+  order and separated with a single blank line:
+
+  * Built-in Node modules and modules imported from the public registry.
+  * Local modules defined in this product.
+  * Module-private files defined as a peer to the file doing the importing.
+
+  Within each section, sort lines alphabetically by name of file or module (not
+  name within same). Within a multi-name `import` _line_, sort names
+  alphabetically. Complete example:
+
+  ```javascript
+  import express from 'express';
+  import fs from 'fs';
+
+  import { BaseFile, FileOp } from 'content-store';
+  import { DataUtil, InfoError, Singleton } from 'util-common';
+
+  import RegularBlort from './RegularBlort';
+  import SpecialBlort from './SpecialBlort';
+  ```
+
+#### Class definitions
+
+* Private fields and methods &mdash; This project is coded as if JavaScript
+  will grow the ability to have private fields and methods on classes. As such,
+  an underscore (`_`) prefix is used on names that are supposed to be treated as
+  private. If and when the facility is added to the language, it will be a Small
+  Matter Of Coding to programmatically replace the underscored declarations and
+  use sites with the real syntax.
+
+  **Note:** This is an intentional deviation from Airbnb style.
+
+* Utility classes &mdash; Utility classes are classes which only serve as a
+  collection of functionality exposed as static methods (and sometimes static
+  properties). Utility classes should be defined as `extends UtilityClass` both
+  to document the intent and to provide enforced guarantees.
+  **Note:** Preferably, utility classes are _not_ a vector for exposing
+  application state and are merely holders of "pure" functionality. For a
+  utility-like class that maintains and/or exposes state, it is better to use
+  a singleton.
+
+* Singleton classes &mdash; Singleton classes are classes which should only
+  ever have a single instance within the system. These should be defined as
+  `extends Singleton` both to document the intent and to provide enforced
+  guarantees. Additionally, instead of explicitly constructing singletons,
+  the convention is to use the static property `theOne` on the so-defined class.
+
+#### Other items
+
+* Websockets &mdash; JavaScript has a `WebSocket` class, but when talking about
+  them in prose or in our own variable or class names, we use "websocket" (one
+  word, all lower case, though capitalized as appropriate for prose or
+  `camelCasing`). In addition, `ws` is a good choice for a shorthand name of a
+  variable that contains an instance of one (or something related).
 
 * Immediate-async blocks &mdash; When programming in the `async`/`await` style,
   sometimes it's useful to to "spawn" an independent thread of control which
@@ -134,19 +168,3 @@ taking into account recent additions to the language.
     ...
   }
   ```
-
-* Utility classes &mdash; Utility classes are classes which only serve as a
-  collection of functionality exposed as static methods (and sometimes static
-  properties). Utility classes should be defined as `extends UtilityClass` both
-  to document the intent and to provide enforced guarantees.
-
-  **Note:** Preferably, utility classes are _not_ a vector for exposing
-  application state and are merely holders of "pure" functionality. For a
-  utility-like class that maintains and/or exposes state, it is better to use
-  a singleton.
-
-* Singleton classes &mdash; Singleton classes are classes which should only
-  ever have a single instance within the system. These should be defined as
-  `extends Singleton` both to document the intent and to provide enforced
-  guarantees. Additionally, instead of explicitly constructing singletons,
-  the convention is to use the static property `theOne` on the so-defined class.
