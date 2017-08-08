@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Codec, SplitKey } from 'api-common';
+import { SplitKey } from 'api-common';
+import { Codec } from 'codec';
 import { EditorComplex } from 'doc-client';
 import { Logger } from 'see-all';
 import { TFunction, TObject } from 'typecheck';

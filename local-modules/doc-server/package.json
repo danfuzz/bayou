@@ -6,7 +6,7 @@
   "dependencies": {
     "weak": "^1.0.1",
 
-    "api-common": "local",
+    "codec": "local",
     "content-store": "local",
     "doc-common": "local",
     "hooks-server": "local",

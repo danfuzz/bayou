@@ -2,9 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Codec } from 'codec';
+
 import BaseKey from './BaseKey';
-import Codec from './Codec';
-import ItemCodec from './ItemCodec';
 import Message from './Message';
 import SplitKey from './SplitKey';
 
@@ -12,4 +12,4 @@ import SplitKey from './SplitKey';
 Codec.theOne.registerClass(Message);
 Codec.theOne.registerClass(SplitKey);
 
-export { BaseKey, Codec, ItemCodec, Message, SplitKey };
+export { BaseKey, Message, SplitKey };

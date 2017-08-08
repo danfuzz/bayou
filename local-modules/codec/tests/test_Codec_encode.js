@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Codec } from 'api-common';
+import { Codec } from 'codec';
 import { FrozenBuffer } from 'util-common';
 
 import MockApiObject from './MockApiObject';

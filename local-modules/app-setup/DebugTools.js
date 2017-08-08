@@ -6,7 +6,7 @@ import camelCase from 'camel-case';
 import express from 'express';
 import util from 'util';
 
-import { Codec } from 'api-common';
+import { Codec } from 'codec';
 import { AuthorId, DocumentId } from 'doc-common';
 import { DocServer } from 'doc-server';
 import { Logger } from 'see-all';
