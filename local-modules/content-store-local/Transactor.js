@@ -38,7 +38,7 @@ export default class Transactor extends CommonBase {
     this._fileFriend = fileFriend;
 
     /**
-     * {Map<string,FrozenBuffer|null>|null} Map from paths retrieved while
+     * {Map<string, FrozenBuffer|null>|null} Map from paths retrieved while
      * running the transaction to the retrieved contents, or `null` if the
      * transaction has no data read operations.
      */
@@ -47,7 +47,7 @@ export default class Transactor extends CommonBase {
       : new Map();
 
     /**
-     * {Map<string,FrozenBuffer|null>} Map from paths updated while running the
+     * {Map<string, FrozenBuffer|null>} Map from paths updated while running the
      * transaction to the updated data or `null` for deleted paths.
      */
     this._updatedStorage = new Map();
@@ -62,8 +62,8 @@ export default class Transactor extends CommonBase {
    * Runs the transaction.
    *
    * @returns {object} Object that binds `data` to a
-   *   `{Map<string,FrozenBuffer|null>}` of retrieved data and `updatedStorage`
-   *   to a `{Map<string,FrozenBuffer|null>}` of updated storage (paths to be
+   *   `{Map<string, FrozenBuffer|null>}` of retrieved data and `updatedStorage`
+   *   to a `{Map<string, FrozenBuffer|null>}` of updated storage (paths to be
    *   written or deleted).
    */
   run() {

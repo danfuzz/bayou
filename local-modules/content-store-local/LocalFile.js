@@ -61,14 +61,14 @@ export default class LocalFile extends BaseFile {
     this._revNum = null;
 
     /**
-     * {Map<string,FrozenBuffer>|null} Map from `StoragePath` strings to
+     * {Map<string, FrozenBuffer>|null} Map from `StoragePath` strings to
      * corresponding stored data, for the entire file. `null` indicates that
      * the map is not yet initialized.
      */
     this._storage = null;
 
     /**
-     * {Map<string,FrozenBuffer>|null} Map from `StoragePath` strings to
+     * {Map<string, FrozenBuffer>|null} Map from `StoragePath` strings to
      * corresponding stored data, for file contents that have not yet been
      * written to disk.
      */

@@ -29,7 +29,7 @@ export default class Context extends CommonBase {
   constructor() {
     super();
 
-    /** {Map<string,Target>} The underlying map. */
+    /** {Map<string, Target>} The underlying map. */
     this._map = new Map();
 
     Object.freeze(this);

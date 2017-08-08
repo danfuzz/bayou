@@ -78,7 +78,7 @@ export default class DocControl extends CommonBase {
     this._fileCodec = new FileCodec(fileComplex.file, fileComplex.codec);
 
     /**
-     * {Map<RevisionNumber,DocumentSnapshot>} Mapping from revision numbers to
+     * {Map<RevisionNumber, DocumentSnapshot>} Mapping from revision numbers to
      * corresponding document snapshots. Sparse.
      */
     this._snapshots = new Map();

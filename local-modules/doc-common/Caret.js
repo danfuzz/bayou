@@ -10,7 +10,7 @@ import CaretOp from './CaretOp';
 import Timestamp from './Timestamp';
 
 /**
- * {Map<string,function>} Map from each allowed caret field name to a type
+ * {Map<string, function>} Map from each allowed caret field name to a type
  * checker predicate for same.
  *
  * **Note:** `sessionId` is not included, because that's separate from the

@@ -183,7 +183,7 @@ export default class ClientBundle extends Singleton {
      */
     this._fs = new memory_fs();
 
-    /** {Map<string,Buffer>} Current (most recently built) compiled bundles. */
+    /** {Map<string, Buffer>} Current (most recently built) compiled bundles. */
     this._currentBundles = new Map();
 
     /** {boolean} Dev mode running? */
