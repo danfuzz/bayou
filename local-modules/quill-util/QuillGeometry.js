@@ -8,8 +8,8 @@
  */
 export default class QuillGeometry {
   /**
-   * Takes a Quill character offset and returns a bounding rectangle for an insertion point
-   * cursor at that offset.
+   * Takes a Quill character offset and returns a bounding rectangle for an
+   * insertion point cursor at that offset.
    *
    * @param {Quill} quill The Quill editor instance that we're measuring against
    * @param {Int} offset The character offset within the Quill document.
@@ -37,7 +37,7 @@ export default class QuillGeometry {
    *  successive lines of text should be included in the result. If
    *  set to `true` then a rectangle representing the leading will be inserted
    *  between each pair of line bounds.
-   * @returns {Array<object>} An array of bounds objects representing the
+   * @returns {array<object>} An array of bounds objects representing the
    *  screen bounds of each line of the provided range in top-to-bottom
    *  visual order. A bounds object is
    *  `{ left, top, right (exclusive), bottom (exclusive), width, height }`.
@@ -70,13 +70,13 @@ export default class QuillGeometry {
       return bounds;
     });
 
-    // At this point we have the bounds of each whole line. However, the first and
-    // last lines of a selection may not be completely selected.
-    // So, offset those line bounds. Note that in the case of a single line
-    // the first and last line are the same line.
+    // At this point we have the bounds of each whole line. However, the first
+    // and last lines of a selection may not be completely selected. So, offset
+    // those line bounds. Note that in the case of a single line the first and
+    // last line are the same line.
 
-    // Start by getting the leftmost pixel position of the first character
-    // in the range.
+    // Start by getting the leftmost pixel position of the first character in
+    // the range.
     const leadingBounds = quill.getBounds(index, 1);
 
     lineBounds[0].left = leadingBounds.left;

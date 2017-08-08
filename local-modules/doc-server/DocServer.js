@@ -39,7 +39,7 @@ export default class DocServer extends Singleton {
     this._codec = Codec.theOne;
 
     /**
-     * {Map<string,Weak<FileComplex>|Promise<FileComplex>>} Map from document
+     * {Map<string, Weak<FileComplex>|Promise<FileComplex>>} Map from document
      * IDs to either a weak-reference or a promise to a `FileComplex`, for the
      * so-IDed document. During asynchrounous construction, the binding is to a
      * promise, and once constructed it becomes a weak reference. The weak
@@ -49,7 +49,7 @@ export default class DocServer extends Singleton {
     this._complexes = new Map();
 
     /**
-     * {Map<string,Weak<DocSession>>} Map from session IDs to corresponding
+     * {Map<string, Weak<DocSession>>} Map from session IDs to corresponding
      * weak-reference-wrapped `DocSession` instances. See `_complexes` for
      * rationale on weakness.
      */

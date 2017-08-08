@@ -90,7 +90,7 @@ export default class StateMachine {
     this._anyEventPending = new PromCondition(false);
 
     /**
-     * {Map<string,PromCondition>} Map from state names to conditions which
+     * {Map<string, PromCondition>} Map from state names to conditions which
      * become momentarily `true` when transitioning into those states. Populated
      * only as needed.
      */

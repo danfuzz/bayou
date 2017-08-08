@@ -37,7 +37,7 @@ export default class CaretSnapshot extends CommonBase {
     /** {Int} The associated document information revision number. */
     this._docRevNum = docRevNum;
 
-    /** {Map<string,Caret>} Map of session ID to corresponding caret. */
+    /** {Map<string, Caret>} Map of session ID to corresponding caret. */
     this._carets = new Map();
     for (const c of carets) {
       Caret.check(c);

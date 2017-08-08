@@ -34,7 +34,7 @@ export default class Message {
    * @param {string} action Kind of action to take. Currently, the only valid
    *   values are `call`.
    * @param {string} name Method (or property) name to access.
-   * @param {Array<*>} args Arguments to include with the message.
+   * @param {array<*>} args Arguments to include with the message.
    */
   constructor(id, target, action, name, args) {
     /** {Int} Message ID. `-1` is only used in case of (some) errors. */
@@ -49,7 +49,7 @@ export default class Message {
     /** {string} Method / property name to access. */
     this._name = TString.nonempty(name);
 
-    /** {Array<*>} Arguments of the message. */
+    /** {array<*>} Arguments of the message. */
     this._args = TArray.check(args);
 
     // Validate `action`.
@@ -133,7 +133,7 @@ export default class Message {
     return this._name;
   }
 
-  /** {Array<*>} Arguments of the message. */
+  /** {array<*>} Arguments of the message. */
   get args() {
     return this._args;
   }

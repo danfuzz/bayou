@@ -35,7 +35,7 @@ export default class ApiLog extends Singleton {
    *
    * @param {string} connectionId Identifier for the connection.
    * @param {object} msg Incoming message.
-   * @returns {int} Standard msec timestamp indicating the start time of the API
+   * @returns {Int} Standard msec timestamp indicating the start time of the API
    *   call being represented here.
    */
   incomingMessage(connectionId, msg) {
@@ -51,7 +51,7 @@ export default class ApiLog extends Singleton {
    * to be sent.
    *
    * @param {string} connectionId Identifier for the connection.
-   * @param {int} startTime Standard msec timestamp indicating the start time of
+   * @param {Int} startTime Standard msec timestamp indicating the start time of
    *   the API call being represented here. Should be the value returned from
    *   the earlier call to `incomingMessage()` for `msg`.
    * @param {object} msg Incoming message.

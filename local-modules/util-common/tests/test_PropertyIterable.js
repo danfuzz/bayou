@@ -64,12 +64,12 @@ describe('util-common/PropertyIterable', () => {
  * was specifically checked.
  *
  * @param {PropertyIterable} iter The iterator we are testing.
- * @param {Array<string>|null} [expectedProperties=[]] A list of property
+ * @param {array<string>|null} [expectedProperties=[]] A list of property
  *   names. The iterator must return _at least_ all of the properties in this
  *   list.
- * @param {Array<string>|null} [unexpectedProperties=[]] A list of property
+ * @param {array<string>|null} [unexpectedProperties=[]] A list of property
  *   names. The iterator must not return any of the properties in this list.
- * @returns {Array<string>} An array of property names returned by the iterator.
+ * @returns {array<string>} An array of property names returned by the iterator.
  */
 function _testIterator(iter, expectedProperties = [], unexpectedProperties = []) {
   const result = {};

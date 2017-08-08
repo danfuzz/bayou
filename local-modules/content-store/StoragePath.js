@@ -100,7 +100,7 @@ export default class StoragePath extends UtilityClass {
    * the inverse of `join()`.
    *
    * @param {string} path Storage path.
-   * @returns {Array<string>} Array consisting of the components of `path`.
+   * @returns {array<string>} Array consisting of the components of `path`.
    */
   static split(path) {
     StoragePath.check(path);

@@ -136,7 +136,7 @@ export default class Target {
    * result or (directly) throwing an error.
    *
    * @param {string} name The method name.
-   * @param {Array} args Arguments to the method.
+   * @param {array} args Arguments to the method.
    * @returns {*} The result of calling. Because `undefined` isn't used across
    *   the API, this method returns `null` if the original method returned
    *   `undefined`.

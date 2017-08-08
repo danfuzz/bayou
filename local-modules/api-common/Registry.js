@@ -21,13 +21,13 @@ export default class Registry extends CommonBase {
     super();
 
     /**
-     * {Map<string,ItemCodec>} Map of registered item tags to their respective
+     * {Map<string, ItemCodec>} Map of registered item tags to their respective
      * item codecs.
      */
     this._tagToCodec = new Map();
 
     /**
-     * {Map<class,array<ItemCodec>>} Map of classes that have `ItemCodec`s
+     * {Map<class, array<ItemCodec>>} Map of classes that have `ItemCodec`s
      * registered to the set of such codecs. The reason there can be more than
      * one is that some classes can be encoded multiple ways, with the multiple
      * `ItemCodec`'s `predicate`s determining which one applies.
@@ -35,7 +35,7 @@ export default class Registry extends CommonBase {
     this._classToCodecs = new Map();
 
     /**
-     * {Map<string,array<ItemCodec>} Map of non-class types that have
+     * {Map<string, array<ItemCodec>} Map of non-class types that have
      * `ItemCodec`s registered to the set of such codecs. There can be more
      * than one codec per type for the same reason as `_classToCodecs` can (see
      * which).

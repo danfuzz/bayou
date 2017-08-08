@@ -16,7 +16,7 @@ import Transactor from './Transactor';
 const log = new Logger('local-file');
 
 /**
- * {int} How long to wait (in msec) after a file becomes dirty and before it
+ * {Int} How long to wait (in msec) after a file becomes dirty and before it
  * gets written to disk. This keeps the system from thrashing the disk while
  * a file is being actively updated.
  */
@@ -61,14 +61,14 @@ export default class LocalFile extends BaseFile {
     this._revNum = null;
 
     /**
-     * {Map<string,FrozenBuffer>|null} Map from `StoragePath` strings to
+     * {Map<string, FrozenBuffer>|null} Map from `StoragePath` strings to
      * corresponding stored data, for the entire file. `null` indicates that
      * the map is not yet initialized.
      */
     this._storage = null;
 
     /**
-     * {Map<string,FrozenBuffer>|null} Map from `StoragePath` strings to
+     * {Map<string, FrozenBuffer>|null} Map from `StoragePath` strings to
      * corresponding stored data, for file contents that have not yet been
      * written to disk.
      */

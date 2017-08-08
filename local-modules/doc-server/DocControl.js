@@ -78,7 +78,7 @@ export default class DocControl extends CommonBase {
     this._fileCodec = new FileCodec(fileComplex.file, fileComplex.codec);
 
     /**
-     * {Map<RevisionNumber,DocumentSnapshot>} Mapping from revision numbers to
+     * {Map<RevisionNumber, DocumentSnapshot>} Mapping from revision numbers to
      * corresponding document snapshots. Sparse.
      */
     this._snapshots = new Map();
@@ -672,7 +672,7 @@ export default class DocControl extends CommonBase {
    *
    * @param {Int} start Start change number (inclusive) of changes to read.
    * @param {Int} endExc End change number (exclusive) of changes to read.
-   * @returns {Array<DocumentChange>} Array of changes, in order by change
+   * @returns {array<DocumentChange>} Array of changes, in order by change
    *   number.
    */
   async _readChangeRange(start, endExc) {
