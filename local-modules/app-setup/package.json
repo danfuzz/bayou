@@ -13,6 +13,7 @@
     "api-common": "local",
     "api-server": "local",
     "client-bundle": "local",
+    "codec": "local",
     "doc-common": "local",
     "doc-server": "local",
     "see-all": "local",

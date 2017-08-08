@@ -5,7 +5,7 @@
 import afs from 'async-file';
 import path from 'path';
 
-import { Codec } from 'api-common';
+import { Codec } from 'codec';
 import { BaseFile } from 'content-store';
 import { Logger } from 'see-all';
 import { FrozenBuffer, PromCondition, PromDelay, PromMutex } from 'util-common';

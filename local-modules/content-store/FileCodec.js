@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Codec } from 'api-common';
+import { Codec } from 'codec';
 import { CommonBase } from 'util-common';
 
 import BaseFile from './BaseFile';

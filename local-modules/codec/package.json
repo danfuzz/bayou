@@ -1,13 +1,9 @@
 {
-  "name": "doc-common",
+  "name": "codec",
   "version": "1.0.0",
   "main": "main.js",
 
   "dependencies": {
-    "quill-delta": "^3.4.3",
-
-    "codec": "local",
-    "hooks-common": "local",
     "typecheck": "local",
     "util-common": "local"
   }

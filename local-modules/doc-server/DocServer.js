@@ -4,7 +4,7 @@
 
 import weak from 'weak';
 
-import { Codec } from 'api-common';
+import { Codec } from 'codec';
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
 import { TFunction, TString } from 'typecheck';

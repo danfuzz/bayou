@@ -4,7 +4,7 @@
   "main": "main.js",
 
   "dependencies": {
-    "api-common": "local",
+    "codec": "local",
     "hooks-server": "local",
     "typecheck": "local",
     "util-common": "local"

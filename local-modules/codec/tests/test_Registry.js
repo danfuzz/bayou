@@ -5,11 +5,11 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { ItemCodec } from 'api-common';
+import { ItemCodec } from 'codec';
 
 // The class being tested here isn't exported from the module, so we import it
 // by path.
-import Registry from 'api-common/Registry';
+import Registry from 'codec/Registry';
 
 class RegistryTestApiObject {
   constructor() {
