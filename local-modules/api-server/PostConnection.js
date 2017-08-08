@@ -30,7 +30,7 @@ export default class PostConnection extends Connection {
     /** {object} The HTTP response. */
     this._res = res;
 
-    /** {Array<Buffer>} The request POST payload, as individual chunks. */
+    /** {array<Buffer>} The request POST payload, as individual chunks. */
     this._chunks = [];
 
     const contentTypeError = this._validateContentType();

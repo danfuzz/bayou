@@ -33,7 +33,7 @@ export default class TObject extends UtilityClass {
    * of keys as "own" properties.
    *
    * @param {*} value Value to check.
-   * @param {Array<string>} keys Keys that must be present in `value`.
+   * @param {array<string>} keys Keys that must be present in `value`.
    * @returns {object} `value`.
    */
   static withExactKeys(value, keys) {

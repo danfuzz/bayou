@@ -37,7 +37,7 @@ export default class QuillGeometry {
    *  successive lines of text should be included in the result. If
    *  set to `true` then a rectangle representing the leading will be inserted
    *  between each pair of line bounds.
-   * @returns {Array<object>} An array of bounds objects representing the
+   * @returns {array<object>} An array of bounds objects representing the
    *  screen bounds of each line of the provided range in top-to-bottom
    *  visual order. A bounds object is
    *  `{ left, top, right (exclusive), bottom (exclusive), width, height }`.

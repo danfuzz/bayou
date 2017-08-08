@@ -25,7 +25,7 @@ export default class PromMutex extends CommonBase {
     this._lockedBy = null;
 
     /**
-     * {Array<object>} Array of waiters for lock acquisition, in FIFO order.
+     * {array<object>} Array of waiters for lock acquisition, in FIFO order.
      * Each element binds `key` to the would-be holder key (see `_lockedBy`) and
      * `release` to a function which indicates that the key's owner can now
      * acquire the lock.

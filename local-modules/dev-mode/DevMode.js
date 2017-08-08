@@ -57,7 +57,7 @@ export default class DevMode extends Singleton {
    * Constructs and returns the source mappings.
    *
    * @param {string} copyTo Destination directory.
-   * @param {Array} [soFar = []] Partial result (passed through to recursive
+   * @param {array} [soFar = []] Partial result (passed through to recursive
    *   calls).
    * @param {boolean} [first = true] Whether this is the top-level call.
    * @returns {object} The constructed mappings.
