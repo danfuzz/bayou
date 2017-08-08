@@ -43,8 +43,8 @@ export default class TargetHandler {
     this._targetId = targetId;
 
     /**
-     * {Map<string, function>} Cached method call handlers, as a map from name to
-     * handler.
+     * {Map<string, function>} Cached method call handlers, as a map from name
+     * to handler.
      */
     this._methods = new Map();
 

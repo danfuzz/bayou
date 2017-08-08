@@ -149,7 +149,8 @@ export default class Caret extends CommonBase {
   }
 
   /**
-   * {Int} The length of the selection, or zero if it is just an insertion point.
+   * {Int} The length of the selection, or zero if it is just an insertion
+   * point.
    */
   get length() {
     return this._fields.get('length');
