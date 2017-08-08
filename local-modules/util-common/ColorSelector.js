@@ -39,7 +39,7 @@ export default class ColorSelector {
   /**
    * Constructs a new ColorSelector object.
    *
-   * @param {int} [seed = 0] The initial hue angle to be used. This value will
+   * @param {Int} [seed = 0] The initial hue angle to be used. This value will
    * be MODed with 360 to get a valid angle. The default is 0, which is pure red.
    * @param {number} [stride=53] The number of degrees of hue angle to advance on
    * each iteration.

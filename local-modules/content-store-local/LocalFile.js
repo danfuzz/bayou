@@ -16,7 +16,7 @@ import Transactor from './Transactor';
 const log = new Logger('local-file');
 
 /**
- * {int} How long to wait (in msec) after a file becomes dirty and before it
+ * {Int} How long to wait (in msec) after a file becomes dirty and before it
  * gets written to disk. This keeps the system from thrashing the disk while
  * a file is being actively updated.
  */
