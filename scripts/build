@@ -246,6 +246,8 @@ function set-up-dir-mapping {
 # Copies the server and client source directories into `out`, including the
 # overlay contents (if any).
 function copy-sources {
+    echo 'Copying sources...'
+
     # For each mapping file, copy all of the specified source files, but don't
     # include directories that themselves have separately-specified maps; those
     # get handled in their own iterations of this loop.
@@ -262,10 +264,11 @@ function copy-sources {
             echo '--exclude=node_modules'
 
             # Exclude the copy we might have made of the original `package.json`
-            # file, and the fixed version. These are generated during the build
+            # file, and the fixed versions. These are generated during the build
             # and shouldn't get copied over or erased.
             echo '--exclude=package-unfixed.json'
             echo '--exclude=package-fixed.json'
+            echo '--exclude=package-npm.json'
 
             # Exclude subdirectories that have maps. We don't have to bother
             # mentioning `node_modules` subdirectories here because of the
@@ -292,6 +295,8 @@ function copy-sources {
             delArg=()
         done
     done
+
+    echo 'Copying sources... done.'
 }
 
 # Does an `npm install` in the given directory, or the equivalent by using
@@ -300,18 +305,37 @@ function copy-sources {
 function do-install {
     local dir="$1"
     local toDir="${outDir}/${dir}"
+    local npmDir="${toDir}/from-npm"
+    local packageJson="${toDir}/package.json"
+    local npmPackageJson="${toDir}/package-npm.json"
 
-    # Integrates local dependencies into this package. It copies the required
-    # local modules and also rewrites the top-level `package.json` so that it
-    # names the transitive closure of external module dependencies.
+    # Integrates local module dependencies into this package. It copies the
+    # required local modules and also rewrites the top-level `package.json` so
+    # that it lists the transitive closure of external module dependencies.
     "${progDir}/lib/copy-local-dependencies" \
         --local-modules="${outDir}/local-modules" "${toDir}" \
     || return 1
 
+    if [[ -r ${npmPackageJson} ]] \
+           && cmp --quiet "${npmPackageJson}" "${packageJson}"; then
+        # The `package.json` hasn't changed since we `npm install`ed, so we can
+        # skip the rest of this function.
+        echo "${dir}:" \
+            'No change to external dependencies. Skipping `npm install`.'
+        return
+    fi
+
+    echo "${dir}:" 'Installing external dependencies...'
+
+    rm -rf "${npmDir}"
+    mkdir -p "${npmDir}"
+    rsync --archive "${packageJson}" "${npmDir}/package.json"
+
     if [[ ${boxDir} == '' ]]; then
         # No boxed dependencies. Normal install.
-        cd "${toDir}"
-        npm install --cache="${outDir}/npm-cache" || return 1
+        (cd "${npmDir}" \
+            && npm install --cache="${outDir}/npm-cache") \
+        || return 1
     else
         # We were asked to use the boxed dependencies.
         local boxFile="${boxDir}/${dir}.npmbox"
@@ -321,15 +345,37 @@ function do-install {
             return 1
         fi
 
-        cd "${toDir}"
-        "${progDir}/lib/box-install" "${boxDir}/${dir}.npmbox" || return 1
+        (cd "${npmDir}" \
+            && "${progDir}/lib/box-install" "${boxDir}/${dir}.npmbox") \
+        || return 1
     fi
 
     # We are somewhat at the mercy of what's published via npm, and in fact
     # some modules that we use occasionally have bugs in their published
     # versions. This script patches them in situ based on the contents of the
     # directory `etc/module-overlay`.
-    "${progDir}/lib/fix-modules" "${baseDir}/etc/module-overlay" "${toDir}"
+    "${progDir}/lib/fix-modules" "${baseDir}/etc/module-overlay" "${npmDir}" \
+    || return 1
+
+    # Copy each of the directories that `npm` got for us.
+    #
+    # **Note:** We don't just `rsync --delete` the whole `node_modules`
+    # directory, because we want to keep our local modules, and if we don't
+    # `--delete` then we could end up with weird module amalgams in cases where
+    # an external module got updated.
+    local d
+    for d in $(cd "${npmDir}/node_modules"; /bin/ls); do
+        rsync --archive --delete \
+            "${npmDir}/node_modules/${d}" "${toDir}/node_modules" \
+            || return 1
+    done
+    rm -rf "${npmDir}" || return 1
+
+    # Copy the `package.json` that we installed with, so we can compare it on
+    # subsequent builds.
+    rsync --archive "${packageJson}" "${npmPackageJson}" || return 1
+
+    echo "${dir}:" 'Installing external dependencies... done.'
 }
 
 # Builds the server code. This builds from `server` into `final/server`. The

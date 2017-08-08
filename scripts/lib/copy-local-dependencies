@@ -191,8 +191,15 @@ fi
 origFile="${projectDir}/package.json"
 unfixedFile="${projectDir}/package-unfixed.json"
 fixedFile="${projectDir}/package-fixed.json"
+oldFixedFile="${projectDir}/package-fixed-old.json"
 
-cp "${origFile}" "${unfixedFile}"
+if [[ -r ${fixedFile} ]]; then
+    # `rsync --archive` to maintain the timestamp.
+    rsync --archive "${fixedFile}" "${oldFixedFile}" || exit 1
+fi
+
+# `rsync --archive` to maintain the timestamp.
+rsync --archive "${origFile}" "${unfixedFile}" || exit 1
 
 (
     echo '.dependencies = {}'
@@ -209,7 +216,19 @@ cp "${origFile}" "${unfixedFile}"
 ) | jq -f /dev/stdin "${origFile}" > "${fixedFile}" \
 || exit 1
 
-cp "${fixedFile}" "${origFile}" || exit 1
+# Copy the fixed `package.json` file over the original. If the fixed
+# `package.json` isn't changed from the previous version (from a previous run of
+# this script, that is), restore the previous timestamp (so timestamp-based
+# change detection will work).
+
+if [[ -r "${oldFixedFile}" ]] && cmp --quiet "${fixedFile}" "${oldFixedFile}"; then
+    # Fixed file is unchanged.
+    rsync --archive "${oldFixedFile}" "${fixedFile}"
+    rm "${oldFixedFile}"
+fi
+
+# `rsync --archive` to maintain the timestamp.
+rsync --archive "${fixedFile}" "${origFile}"
 
 # Copy all of the local modules into the `node_modules` directory. We use
 # `rsync` (even though this is a totally local operation) instead of `cp`
