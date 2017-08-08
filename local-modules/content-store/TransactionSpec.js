@@ -40,12 +40,7 @@ export default class TransactionSpec extends CommonBase {
    * obvious that the contents are immutable.
    */
   get ops() {
-    const ops = this._ops;
-    function* generate() {
-      yield* ops;
-    }
-
-    return { [Symbol.iterator]: generate };
+    return this._ops.values();
   }
 
   /**
