@@ -148,7 +148,7 @@ function check-dependency {
 # including Node and npm.
 function check-environment-dependencies {
     check-dependency 'Node' 'node --version' '^v[78]\.'
-    check-dependency 'npm' 'npm --version' '^4\.'
+    check-dependency 'npm' 'npm --version' '^[45]\.'
     check-dependency 'jq' 'jq --version' '^jq-1\.'
     check-dependency 'rsync' 'rsync --version' '.' # No actual version check.
 }
@@ -327,6 +327,14 @@ function do-install {
 
     echo "${dir}:" 'Installing external dependencies...'
 
+    # This runs `npm install` in a new empty directory, because as of npm v5,
+    # npm _really really_ wants to manage all modules under `node_modules`, and
+    # in our case we have local modules which npm doesn't know about and
+    # therefore wants to remove whenever we do `npm install`. **TODO:** Simplify
+    # this back to just doing `npm install` in the main directory, should npm
+    # ever gain a way to understand that there are some module directories that
+    # it shouldn't touch. See <https://github.com/npm/npm/issues/18062>.
+    
     rm -rf "${npmDir}"
     mkdir -p "${npmDir}"
     rsync --archive "${packageJson}" "${npmDir}/package.json"
