@@ -92,9 +92,12 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Creates this file if it does not already exist, or re-creates it if it does
-   * already exist. After this call, the file both exists and is empty (that is,
-   * has no stored values). In addition, the revision number of the file is `0`.
+   * Creates this file if it does not already exist. This does nothing if the
+   * file already exists. After this call returns (successfully), the file is
+   * guaranteed to exist but might not be empty.
+   *
+   * **Note:** To erase the contents of a file, use the `deleteAll` operation in
+   * a transaction.
    */
   async create() {
     await this._impl_create();

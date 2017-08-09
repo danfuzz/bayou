@@ -14,6 +14,10 @@ import { FrozenBuffer } from 'util-common';
 const STORE_PREFIX = 'bayou-test-';
 let storeDir = null;
 
+function filePath() {
+  return path.join(storeDir, 'test_file');
+}
+
 describe('content-store-local/LocalFile', () => {
   before(() => {
     storeDir = fs.mkdtempSync(STORE_PREFIX);
@@ -34,16 +38,14 @@ describe('content-store-local/LocalFile', () => {
     // }, 2000);
   });
 
-  describe('constructor(fileId, filePath)', () => {
-    it('should create a local dir for storing files at the specified path', () => {
-      const file = new LocalFile('0', filePath());
-
-      assert.isNotNull(file);
+  describe('constructor()', () => {
+    it('should not throw given valid arguments', () => {
+      assert.doesNotThrow(() => { new LocalFile('0', filePath()); });
     });
   });
 
   describe('create()', () => {
-    it('should erase the file if called on a non-empty file', async () => {
+    it('should do nothing if called on a non-empty file', async () => {
       const file = new LocalFile('0', filePath());
       const storagePath = '/abc';
       const value = FrozenBuffer.coerce('x');
@@ -70,11 +72,7 @@ describe('content-store-local/LocalFile', () => {
 
       // Same transaction as above.
       result = (await file.transact(spec)).data.get(storagePath);
-      assert.strictEqual(result, undefined);
+      assert.strictEqual(result.string, value.string);
     });
   });
 });
-
-function filePath() {
-  return path.join(storeDir, 'test_file');
-}

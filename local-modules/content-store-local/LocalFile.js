@@ -75,12 +75,6 @@ export default class LocalFile extends BaseFile {
     this._storageToWrite = new Map();
 
     /**
-     * {boolean} Whether or not the storage directory should be totally erased
-     * and recreated before proceeding with any writing of dirty values.
-     */
-    this._storageNeedsErasing = false;
-
-    /**
      * {boolean} Whether or not there is any current need to write stored values
      * to disk. This is set to `true` when updates are made and back to `false`
      * once the writing has been done.
@@ -90,9 +84,8 @@ export default class LocalFile extends BaseFile {
     /**
      * {Promise<true>|null} Promise which resolves to `true` if `_storage` is
      * fully initialized with respect to the stored state. Becomes non-`null`
-     * during the first call to `_readStorageIfNecessary()` and in
-     * `_impl_create()`. It is used to prevent superfluous re-reading of the
-     * storage directory.
+     * during the first call to `_readStorageIfNecessary()`. It is used to
+     * prevent superfluous re-reading of the storage directory.
      */
     this._storageReadyPromise = null;
 
@@ -145,22 +138,13 @@ export default class LocalFile extends BaseFile {
    * Implementation as required by the superclass.
    */
   async _impl_create() {
-    if (this._storageReadyPromise !== null) {
-      // The storage could conceivably be in the middle of being read. Make sure
-      // it's no longer in-process before proceeding. If it were in-process,
-      // then when it was done it would mess up the instance variables being
-      // set here.
-      await this._storageReadyPromise;
-    }
+    // This call will in fact create the file if it didn't already exist.
+    await this._readStorageIfNecessary();
 
-    this._revNum              = 0;
-    this._storage             = new Map();
-    this._storageToWrite      = new Map();
-    this._storageNeedsErasing = true;
-    this._storageReadyPromise = Promise.resolve(true);
-
-    // **Note:** This call _synchronously_ (and promptly) indicates that writing
-    // needs to happen, but the actual writing takes place asynchronously.
+    // Indicate that the file needs to be written. If the file already exists,
+    // this ends up being a no-op. **Note:** This call _synchronously_ (and
+    // promptly) indicates that writing needs to happen, but the actual writing
+    // takes place asynchronously.
     this._storageNeedsWrite();
   }
 
@@ -427,11 +411,10 @@ export default class LocalFile extends BaseFile {
 
     // Only set the instance variables after all the reading is done and the
     // current revision number is known.
-    this._revNum              = revNum;
-    this._storage             = storage;
-    this._storageToWrite      = new Map();
-    this._storageNeedsErasing = false;
-    this._storageIsDirty      = false;
+    this._revNum         = revNum;
+    this._storage        = storage;
+    this._storageToWrite = new Map();
+    this._storageIsDirty = false;
 
     return true;
   }
@@ -497,13 +480,11 @@ export default class LocalFile extends BaseFile {
     // method is running, the dirty flag will end up getting flipped back on
     // and a separate call to `_waitThenWriteStorage()` will be made.
 
-    const storageNeedsErasing = this._storageNeedsErasing;
-    const dirtyValues         = this._storageToWrite;
-    const revNum              = this._revNum;
+    const dirtyValues = this._storageToWrite;
+    const revNum      = this._revNum;
 
-    this._storageIsDirty      = false;
-    this._storageNeedsErasing = false;
-    this._storageToWrite      = new Map();
+    this._storageIsDirty = false;
+    this._storageToWrite = new Map();
 
     // Put the file revision number in the `dirtyValues` map. This way, it gets
     // written out without further special casing.
@@ -511,31 +492,13 @@ export default class LocalFile extends BaseFile {
 
     this._log.info(`About to write ${dirtyValues.size} value(s).`);
 
-    // Erase and/or create the storage directory as needed.
-
-    let needDirCreate = false;
+    // Create the storage directory if needed.
 
     try {
+      // If this call fails, then we assume the directory doesn't exist.
       await afs.access(this._storageDir, afs.constants.F_OK);
     } catch (e) {
-      needDirCreate = true;
-    }
-
-    if (storageNeedsErasing && !needDirCreate) {
-      try {
-        // This is a "deep delete" a la `rm -rf`.
-        await afs.delete(this._storageDir);
-        this._log.info('Erased storage.');
-      } catch (e) {
-        // Ignore it: This is most likely because the directory didn't exist in
-        // the first place. But if not, the directory creation immediately
-        // below will fail with an error that _isn't_ caught here.
-      }
-
-      needDirCreate = true;
-    }
-
-    if (needDirCreate) {
+      // The call failed.
       await afs.mkdir(this._storageDir);
       this._log.info('Created storage directory.');
     }
