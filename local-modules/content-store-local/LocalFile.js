@@ -158,6 +158,24 @@ export default class LocalFile extends BaseFile {
 
   /**
    * Implementation as required by the superclass.
+   */
+  async _impl_delete() {
+    await this._readStorageIfNecessary();
+
+    if (this._fileShouldExist) {
+      // Indicate that the file should not exist, and reset the storage (to be
+      // ready for potential re-creation).
+      this._fileShouldExist = false;
+      this._revNum          = 0;
+      this._storage         = new Map();
+
+      // Get it erased.
+      this._storageNeedsWrite();
+    }
+  }
+
+  /**
+   * Implementation as required by the superclass.
    *
    * @returns {boolean} `true` iff this file exists.
    */

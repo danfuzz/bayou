@@ -93,11 +93,11 @@ export default class BaseFile extends CommonBase {
 
   /**
    * Creates this file if it does not already exist. This does nothing if the
-   * file already exists. After this call returns (successfully), the file is
-   * guaranteed to exist but might not be empty.
+   * file already exists. Immediately after this call returns successfully, the
+   * file is guaranteed to exist but might not be empty.
    *
-   * **Note:** To erase the contents of a file, use the `deleteAll` operation in
-   * a transaction.
+   * **Note:** To erase the contents of a file without deleting the file itself,
+   * use the `deleteAll` operation in a transaction.
    */
   async create() {
     await this._impl_create();
@@ -109,6 +109,24 @@ export default class BaseFile extends CommonBase {
    * @abstract
    */
   async _impl_create() {
+    this._mustOverride();
+  }
+
+  /**
+   * Deletes the storage for this file if it exists. This does nothing if the
+   * file does not exist. Immediately after this call returns successfully, the
+   * file is guaranteed not to exist.
+   */
+  async delete() {
+    await this._impl_delete();
+  }
+
+  /**
+   * Main implementation of `delete()`.
+   *
+   * @abstract
+   */
+  async _impl_delete() {
     this._mustOverride();
   }
 

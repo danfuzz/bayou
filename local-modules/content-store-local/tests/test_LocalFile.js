@@ -14,8 +14,8 @@ import { FrozenBuffer } from 'util-common';
 const STORE_PREFIX = 'bayou-test-';
 let storeDir = null;
 
-function filePath() {
-  return path.join(storeDir, 'test_file');
+function filePath(name = 'test-file') {
+  return path.join(storeDir, name);
 }
 
 describe('content-store-local/LocalFile', () => {
@@ -44,7 +44,31 @@ describe('content-store-local/LocalFile', () => {
     });
   });
 
+  describe('exists()', () => {
+    it('should return `false` if the underlying storage does not exist.', async () => {
+      const file = new LocalFile('0', filePath('non-existent-file'));
+      assert.isFalse(await file.exists());
+    });
+
+    it('should return `true` if the underlying storage does exist.', async () => {
+      const dir = filePath('exist-already');
+      const file = new LocalFile('0', dir);
+
+      fs.mkdirSync(dir);
+      assert.isTrue(await file.exists());
+    });
+  });
+
   describe('create()', () => {
+    it('should cause a non-existent file to come into existence.', async () => {
+      const file = new LocalFile('0', filePath('will-exist'));
+
+      assert.isFalse(await file.exists()); // Baseline assumption.
+      await file.create();
+
+      assert.isTrue(await file.exists()); // The actual test.
+    });
+
     it('should do nothing if called on a non-empty file', async () => {
       const file = new LocalFile('0', filePath());
       const storagePath = '/abc';
@@ -70,9 +94,23 @@ describe('content-store-local/LocalFile', () => {
 
       await file.create();
 
+      // Ensure the file exists.
+      assert.isTrue(await file.exists());
+
       // Same transaction as above.
       result = (await file.transact(spec)).data.get(storagePath);
       assert.strictEqual(result.string, value.string);
+    });
+  });
+
+  describe('delete()', () => {
+    it('should cause an existing file to stop existing.', async () => {
+      const file = new LocalFile('0', filePath('will-be-deleted'));
+      await file.create();
+      assert.isTrue(await file.exists()); // Baseline assumption.
+
+      await file.delete();
+      assert.isFalse(await file.exists()); // The actual test.
     });
   });
 });
