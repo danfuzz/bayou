@@ -42,7 +42,7 @@ export default class Transactor extends CommonBase {
      * running the transaction to the retrieved contents, or `null` if the
      * transaction has no data read operations.
      */
-    this._data = (spec.opsWithCategory(FileOp.CAT_READ).size === 0)
+    this._data = (spec.opsWithCategory(FileOp.CAT_READ).length === 0)
       ? null
       : new Map();
 
@@ -145,6 +145,17 @@ export default class Transactor extends CommonBase {
       throw new InfoError('path_not_found', storagePath);
     } else if (data.hash !== expectedHash) {
       throw new InfoError('path_hash_mismatch', storagePath, expectedHash);
+    }
+  }
+
+  /**
+   * Handler for `deleteAll` operations.
+   *
+   * @param {FileOp} op_unused The operation.
+   */
+  _op_deleteAll(op_unused) {
+    for (const [path, value_unused] of this._fileFriend.pathStorage()) {
+      this._updatedStorage.set(path, null);
     }
   }
 

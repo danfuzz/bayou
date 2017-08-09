@@ -92,9 +92,12 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Creates this file if it does not already exist, or re-creates it if it does
-   * already exist. After this call, the file both exists and is empty (that is,
-   * has no stored values). In addition, the revision number of the file is `0`.
+   * Creates this file if it does not already exist. This does nothing if the
+   * file already exists. Immediately after this call returns successfully, the
+   * file is guaranteed to exist but might not be empty.
+   *
+   * **Note:** To erase the contents of a file without deleting the file itself,
+   * use the `deleteAll` operation in a transaction.
    */
   async create() {
     await this._impl_create();
@@ -106,6 +109,24 @@ export default class BaseFile extends CommonBase {
    * @abstract
    */
   async _impl_create() {
+    this._mustOverride();
+  }
+
+  /**
+   * Deletes the storage for this file if it exists. This does nothing if the
+   * file does not exist. Immediately after this call returns successfully, the
+   * file is guaranteed not to exist.
+   */
+  async delete() {
+    await this._impl_delete();
+  }
+
+  /**
+   * Main implementation of `delete()`.
+   *
+   * @abstract
+   */
+  async _impl_delete() {
     this._mustOverride();
   }
 
@@ -149,10 +170,14 @@ export default class BaseFile extends CommonBase {
    *   operations, the revision number of the file that resulted from those
    *   writes.
    * * `data` &mdash; If the transaction spec included any read operations, a
-   *   `Map<string,FrozenBuffer>` from storage paths to the data which was read.
-   *   **Note:** Even if there was no data to read (e.g., all read operations
-   *   were for non-bound paths) as long as the spec included read operations,
-   *   this property will still be present.
+   *   `Map<string, FrozenBuffer>` from storage paths to the data which was
+   *   read. **Note:** Even if there was no data to read (e.g., all read
+   *   operations were for non-bound paths) as long as the spec included read
+   *   operations, this property will still be present.
+   *
+   * It is an error to call this method on a file that doesn't exist, in the
+   * sense of the `exists()` method. That is, if `exists()` would return
+   * `false`, then this method will fail.
    *
    * @param {TransactionSpec} spec Specification for the transaction, that is,
    *   the set of operations to perform.
@@ -206,6 +231,10 @@ export default class BaseFile extends CommonBase {
    * Waits for a change to be made to a file at a specific path, including both
    * updating and deleting a value at the path. The return value becomes
    * resolved soon after a change is made or the specified timeout elapses.
+   *
+   * It is an error to call this method on a file that doesn't exist, in the
+   * sense of the `exists()` method. That is, if `exists()` would return
+   * `false`, then this method will fail.
    *
    * **Note:** Subclasses are allowed to silently increase the given
    * `timeoutMsec` if they have a _minimum_ timeout. In such cases, it is

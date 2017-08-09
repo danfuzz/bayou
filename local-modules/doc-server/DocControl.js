@@ -121,10 +121,8 @@ export default class DocControl extends CommonBase {
     const revNum = (contents === null) ? 0 : 1;
 
     const spec = new TransactionSpec(
-      // These make the transaction fail if we lose a race to (re)create the
-      // file.
-      fc.op_checkPathAbsent(Paths.FORMAT_VERSION),
-      fc.op_checkPathAbsent(Paths.REVISION_NUMBER),
+      // If the file already existed, this clears out the old contents.
+      fc.op_deleteAll(),
 
       // Version for the file format.
       fc.op_writePath(Paths.FORMAT_VERSION, this._fileComplex.formatVersion),
