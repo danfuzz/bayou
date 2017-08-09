@@ -122,9 +122,16 @@ const OPERATIONS = DataUtil.deepFreeze([
   ],
 
   /*
-   * A `deleteBlob` operation. This is a write operation that the blob with the
-   * indicated hash, if any. If there was no such blob, then this operation does
+   * A `deleteAll` operation. This is a write operation that removes all stored
+   * items in the file. If the file was already empty, then this operation does
    * nothing.
+   */
+  [CAT_WRITE, 'deleteAll'],
+
+  /*
+   * A `deleteBlob` operation. This is a write operation that removes from the
+   * file the blob with the indicated hash, if any. If there was no such blob,
+   * then this operation does nothing.
    *
    * @param {string} hash The hash of the blob to delete.
    */
