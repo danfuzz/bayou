@@ -68,6 +68,13 @@ export default class LocalFile extends BaseFile {
     this._storage = null;
 
     /**
+     * {boolean|null} Whether the file should exist as of the next write. This
+     * is used to drive initial file creation, file deletion, and tests of file
+     * existence. `null` indicates that the value is not yet initialized.
+     */
+    this._fileShouldExist = null;
+
+    /**
      * {Map<string, FrozenBuffer>|null} Map from `StoragePath` strings to
      * corresponding stored data, for file contents that have not yet been
      * written to disk.
@@ -138,14 +145,15 @@ export default class LocalFile extends BaseFile {
    * Implementation as required by the superclass.
    */
   async _impl_create() {
-    // This call will in fact create the file if it didn't already exist.
     await this._readStorageIfNecessary();
 
-    // Indicate that the file needs to be written. If the file already exists,
-    // this ends up being a no-op. **Note:** This call _synchronously_ (and
-    // promptly) indicates that writing needs to happen, but the actual writing
-    // takes place asynchronously.
-    this._storageNeedsWrite();
+    if (!this._fileShouldExist) {
+      // Indicate that the file should exist.
+      this._fileShouldExist = true;
+
+      // Get it written out.
+      this._storageNeedsWrite();
+    }
   }
 
   /**
@@ -154,17 +162,9 @@ export default class LocalFile extends BaseFile {
    * @returns {boolean} `true` iff this file exists.
    */
   async _impl_exists() {
-    if (this._storage !== null) {
-      // Whether or not the file exists, the file is considered to exist because
-      // it has a non-empty in-memory model. (For example, it might have been
-      // `create()`d but not yet stored to disk.)
-      return true;
-    } else {
-      // If the file exists, then the file exists. It might turn out to be the
-      // case that the file contents are invalid; however, by definition that is
-      // taken to be an _existing_ but _empty_ file.
-      return afs.exists(this._storageDir);
-    }
+    await this._readStorageIfNecessary();
+
+    return this._fileShouldExist;
   }
 
   /**
@@ -190,6 +190,10 @@ export default class LocalFile extends BaseFile {
     await Promise.race([this._readStorageIfNecessary(), timeoutProm]);
     if (timeout) {
       throw new Error('Transaction timed out.');
+    }
+
+    if (!this._fileShouldExist) {
+      throw new Error('Cannot operate on non-existent file.');
     }
 
     // Construct the "file friend" object. This exposes just enough private
@@ -280,6 +284,10 @@ export default class LocalFile extends BaseFile {
       return false;
     }
 
+    if (!this._fileShouldExist) {
+      throw new Error('Cannot operate on non-existent file.');
+    }
+
     if (valueOrHash === null) {
       this._log.detail(`Want path to exist: ${storagePath}`);
     } else {
@@ -346,8 +354,9 @@ export default class LocalFile extends BaseFile {
   async _readStorage() {
     if (!await afs.exists(this._storageDir)) {
       // Directory doesn't actually exist. Just initialize empty storage.
-      this._revNum  = 0;
-      this._storage = new Map();
+      this._fileShouldExist = false;
+      this._revNum          = 0;
+      this._storage         = new Map();
       this._log.info('New storage.');
       return true;
     }
@@ -411,18 +420,19 @@ export default class LocalFile extends BaseFile {
 
     // Only set the instance variables after all the reading is done and the
     // current revision number is known.
-    this._revNum         = revNum;
-    this._storage        = storage;
-    this._storageToWrite = new Map();
-    this._storageIsDirty = false;
+    this._fileShouldExist = true;
+    this._revNum          = revNum;
+    this._storage         = storage;
+    this._storageToWrite  = new Map();
+    this._storageIsDirty  = false;
 
     return true;
   }
 
   /**
-   * Indicates that there are elements of `_storage` that need to be written to
-   * disk. This method acts (and returns) promptly. It will kick off a timed
-   * callback to actually perform the writing operation(s) if one isn't already
+   * Indicates that there is file state that needs to be written to disk. This
+   * method acts (and returns) promptly. It will kick off a timed callback to
+   * actually perform any needed writing operation(s) if one isn't already
    * pending. In addition, it flips `_changeCondition` to `true` (if not
    * already set as such), which unblocks code that was awaiting any changes.
    */
@@ -460,7 +470,11 @@ export default class LocalFile extends BaseFile {
     try {
       // **TODO:** If we want to catch write errors (e.g. filesystem full), here
       // is where we need to do it.
-      await this._writeStorage();
+      if (this._fileShouldExist) {
+        await this._writeStorage();
+      } else {
+        await this._deleteStorage();
+      }
     } finally {
       unlock();
     }
@@ -469,8 +483,37 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * Main guts of `_waitThenWriteStorage()`, which does all the actual
-   * filesystem stuff.
+   * Helper for `_waitThenWriteStorage()`, which does all the actual filesystem
+   * stuff when the file is supposed to be deleted.
+   *
+   * @returns {true} `true`, upon successful operation.
+   */
+  async _deleteStorage() {
+    this._log.info('About to erase storage.');
+
+    const exists = await afs.exists(this._storageDir);
+
+    if (!exists) {
+      this._log.info('Storage directory doesn\'t exist in the first place.');
+      return true;
+    }
+
+    // This is a "deep delete" a la `rm -rf`.
+    await afs.delete(this._storageDir);
+    this._log.info('Erased storage directory.');
+
+    // Reset the storage state instance variables. These should already be set
+    // as such; this is just an innocuous extra bit of blatant safety.
+    this._fileShouldExist = false;
+    this._revNum          = 0;
+    this._storage         = new Map();
+
+    return true;
+  }
+
+  /**
+   * Helper for `_waitThenWriteStorage()`, which does all the actual filesystem
+   * stuff when there is stuff to write.
    *
    * @returns {true} `true`, upon successful writing.
    */
@@ -480,8 +523,8 @@ export default class LocalFile extends BaseFile {
     // method is running, the dirty flag will end up getting flipped back on
     // and a separate call to `_waitThenWriteStorage()` will be made.
 
-    const dirtyValues = this._storageToWrite;
-    const revNum      = this._revNum;
+    const dirtyValues     = this._storageToWrite;
+    const revNum          = this._revNum;
 
     this._storageIsDirty = false;
     this._storageToWrite = new Map();

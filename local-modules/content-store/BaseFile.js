@@ -157,6 +157,10 @@ export default class BaseFile extends CommonBase {
    *   were for non-bound paths) as long as the spec included read operations,
    *   this property will still be present.
    *
+   * It is an error to call this method on a file that doesn't exist, in the
+   * sense of the `exists()` method. That is, if `exists()` would return
+   * `false`, then this method will fail.
+   *
    * @param {TransactionSpec} spec Specification for the transaction, that is,
    *   the set of operations to perform.
    * @returns {object} Object with mappings as described above.
@@ -209,6 +213,10 @@ export default class BaseFile extends CommonBase {
    * Waits for a change to be made to a file at a specific path, including both
    * updating and deleting a value at the path. The return value becomes
    * resolved soon after a change is made or the specified timeout elapses.
+   *
+   * It is an error to call this method on a file that doesn't exist, in the
+   * sense of the `exists()` method. That is, if `exists()` would return
+   * `false`, then this method will fail.
    *
    * **Note:** Subclasses are allowed to silently increase the given
    * `timeoutMsec` if they have a _minimum_ timeout. In such cases, it is
