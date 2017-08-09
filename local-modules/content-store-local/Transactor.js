@@ -42,7 +42,7 @@ export default class Transactor extends CommonBase {
      * running the transaction to the retrieved contents, or `null` if the
      * transaction has no data read operations.
      */
-    this._data = (spec.opsWithCategory(FileOp.CAT_READ).size === 0)
+    this._data = (spec.opsWithCategory(FileOp.CAT_READ).length === 0)
       ? null
       : new Map();
 

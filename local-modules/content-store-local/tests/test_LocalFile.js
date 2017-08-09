@@ -44,23 +44,8 @@ describe('content-store-local/LocalFile', () => {
     });
   });
 
-  describe('exists()', () => {
-    it('should return `false` if the underlying storage does not exist.', async () => {
-      const file = new LocalFile('0', filePath('non-existent-file'));
-      assert.isFalse(await file.exists());
-    });
-
-    it('should return `true` if the underlying storage does exist.', async () => {
-      const dir = filePath('exist-already');
-      const file = new LocalFile('0', dir);
-
-      fs.mkdirSync(dir);
-      assert.isTrue(await file.exists());
-    });
-  });
-
   describe('create()', () => {
-    it('should cause a non-existent file to come into existence.', async () => {
+    it('should cause a non-existent file to come into existence', async () => {
       const file = new LocalFile('0', filePath('will-exist'));
 
       assert.isFalse(await file.exists()); // Baseline assumption.
@@ -104,13 +89,50 @@ describe('content-store-local/LocalFile', () => {
   });
 
   describe('delete()', () => {
-    it('should cause an existing file to stop existing.', async () => {
+    it('should cause an existing file to stop existing', async () => {
       const file = new LocalFile('0', filePath('will-be-deleted'));
       await file.create();
       assert.isTrue(await file.exists()); // Baseline assumption.
 
       await file.delete();
       assert.isFalse(await file.exists()); // The actual test.
+    });
+  });
+
+  describe('exists()', () => {
+    it('should return `false` if the underlying storage does not exis.', async () => {
+      const file = new LocalFile('0', filePath('non-existent-file'));
+      assert.isFalse(await file.exists());
+    });
+
+    it('should return `true` if the underlying storage does exist', async () => {
+      const dir = filePath('exist-already');
+      const file = new LocalFile('0', dir);
+
+      fs.mkdirSync(dir);
+      assert.isTrue(await file.exists());
+    });
+  });
+
+  describe('transact()', () => {
+    it('should succeed and return no data from an empty transaction on an existing file', async () => {
+      const file = new LocalFile('0', filePath('empty-file-for-transact'));
+      await file.create();
+
+      const spec = new TransactionSpec();
+      const result = await file.transact(spec);
+      assert.strictEqual(result.revNum, 0);
+      assert.isUndefined(result.newRevNum);
+      assert.isUndefined(result.data);
+    });
+
+    it('should throw an error if the file doesn\'t exist', async () => {
+      const file = new LocalFile('0', filePath('non-existent-file'));
+      assert.isFalse(await file.exists()); // Baseline assumption.
+
+      // The actual test.
+      const spec = new TransactionSpec();
+      await assert.isRejected(file.transact(spec));
     });
   });
 });

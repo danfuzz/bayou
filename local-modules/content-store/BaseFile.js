@@ -170,10 +170,10 @@ export default class BaseFile extends CommonBase {
    *   operations, the revision number of the file that resulted from those
    *   writes.
    * * `data` &mdash; If the transaction spec included any read operations, a
-   *   `Map<string,FrozenBuffer>` from storage paths to the data which was read.
-   *   **Note:** Even if there was no data to read (e.g., all read operations
-   *   were for non-bound paths) as long as the spec included read operations,
-   *   this property will still be present.
+   *   `Map<string, FrozenBuffer>` from storage paths to the data which was
+   *   read. **Note:** Even if there was no data to read (e.g., all read
+   *   operations were for non-bound paths) as long as the spec included read
+   *   operations, this property will still be present.
    *
    * It is an error to call this method on a file that doesn't exist, in the
    * sense of the `exists()` method. That is, if `exists()` would return
