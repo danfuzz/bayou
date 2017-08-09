@@ -230,6 +230,17 @@ export default class LocalFile extends BaseFile {
        */
       readPathOrNull(storagePath) {
         return storage.get(storagePath) || null;
+      },
+
+      /**
+       * Gets an iterator over all path-based storage. Yielded elements are
+       * entries of the form `[path, data]`.
+       *
+       * @returns {Iterator<string, FrozenBuffer>} Iterator over all path-based
+       *   storage.
+       */
+      pathStorage() {
+        return storage.entries();
       }
     };
 

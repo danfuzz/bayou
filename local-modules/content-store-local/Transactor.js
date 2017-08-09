@@ -151,11 +151,12 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `deleteAll` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {FileOp} op_unused The operation.
    */
-  _op_deleteAll(op) {
-    // **TODO:** Implement this.
-    throw new InfoError('not_implemented', op.name);
+  _op_deleteAll(op_unused) {
+    for (const [path, value_unused] of this._fileFriend.pathStorage()) {
+      this._updatedStorage.set(path, null);
+    }
   }
 
   /**
