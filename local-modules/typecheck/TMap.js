@@ -18,7 +18,7 @@ export default class TMap extends UtilityClass {
    * @param {Function} [keyCheck = null] Key type checker. If passed as
    *   non-`null`, must be a function that behaves like a standard
    *   `<type>.check()` method.
-   * @param {Function} [valueCheck = null] Key type checker. If passed as,
+   * @param {Function} [valueCheck = null] Value type checker. If passed as,
    *   non-`null`, must be a function that behaves like a standard
    *   `<type>.check()` method.
    * @returns {Map} `value`.
