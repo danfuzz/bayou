@@ -58,6 +58,29 @@ export default class TransactionSpec extends CommonBase {
   }
 
   /**
+   * Indicates whether or not this instance has any read operations, that is,
+   * any operations with category `CAT_READ`.
+   *
+   * @returns {boolean} `true` iff there are any read operations in this
+   *   instance.
+   */
+  hasReadOps() {
+    return this.opsWithCategory(FileOp.CAT_READ).length !== 0;
+  }
+
+  /**
+   * Indicates whether or not this instance has any modification operations,
+   * that is, any operations with category `CAT_DELETE` or `CAT_WRITE`.
+   *
+   * @returns {boolean} `true` iff there are any modification operations in this
+   *   instance.
+   */
+  hasModificationOps() {
+    return (this.opsWithCategory(FileOp.CAT_DELETE).length !== 0)
+      || (this.opsWithCategory(FileOp.CAT_WRITE).length !== 0);
+  }
+
+  /**
    * Gets all of the operations with the given category.
    *
    * @param {string} category Category of the operations.
