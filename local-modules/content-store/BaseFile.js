@@ -201,10 +201,16 @@ export default class BaseFile extends CommonBase {
       TInt.min(result.newRevNum, result.revNum + 1);
     }
 
-    if (result.data === null) {
-      delete result.data;
-    } else {
+    if (spec.hasReadOps()) {
+      if (result.data === null) {
+        throw new Error('Improper subclass behavior: Expected non-`null` `data`.');
+      }
       TMap.check(result.data, TString.check, FrozenBuffer.check);
+    } else {
+      if (result.data !== null) {
+        throw new Error('Improper subclass behavior: Expected `null` `data`.');
+      }
+      delete result.data;
     }
 
     return result;

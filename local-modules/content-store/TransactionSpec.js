@@ -25,9 +25,14 @@ export default class TransactionSpec extends CommonBase {
     /** {array<FileOp>} Category-sorted array of operations. */
     this._ops = FileOp.sortByCategory(ops);
 
-    // Validate the restriction on timeouts.
+    // Validate the op combo restrictions.
+
     if (this.opsWithName('timeout').length > 1) {
       throw new Error('Too many `timeout` operations.');
+    }
+
+    if (this.opsWithName('revNum').length > 1) {
+      throw new Error('Too many `revNum` operations.');
     }
   }
 
@@ -50,6 +55,29 @@ export default class TransactionSpec extends CommonBase {
   get timeoutMsec() {
     const result = this.opsWithName('timeout')[0];
     return (result === undefined) ? 'never' : result;
+  }
+
+  /**
+   * Indicates whether or not this instance has any read operations, that is,
+   * any operations with category `CAT_READ`.
+   *
+   * @returns {boolean} `true` iff there are any read operations in this
+   *   instance.
+   */
+  hasReadOps() {
+    return this.opsWithCategory(FileOp.CAT_READ).length !== 0;
+  }
+
+  /**
+   * Indicates whether or not this instance has any modification operations,
+   * that is, any operations with category `CAT_DELETE` or `CAT_WRITE`.
+   *
+   * @returns {boolean} `true` iff there are any modification operations in this
+   *   instance.
+   */
+  hasModificationOps() {
+    return (this.opsWithCategory(FileOp.CAT_DELETE).length !== 0)
+      || (this.opsWithCategory(FileOp.CAT_WRITE).length !== 0);
   }
 
   /**

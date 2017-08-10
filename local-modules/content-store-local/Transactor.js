@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { FileOp } from 'content-store';
 import { CommonBase, InfoError } from 'util-common';
 
 /**
@@ -42,9 +41,7 @@ export default class Transactor extends CommonBase {
      * running the transaction to the retrieved contents, or `null` if the
      * transaction has no data read operations.
      */
-    this._data = (spec.opsWithCategory(FileOp.CAT_READ).length === 0)
-      ? null
-      : new Map();
+    this._data = spec.hasReadOps() ? new Map() : null;
 
     /**
      * {Map<string, FrozenBuffer|null>} Map from paths updated while running the

@@ -18,6 +18,7 @@ const KEY = Symbol('FileOp constructor key');
 
 // Operation category constants. See docs on the static properties for details.
 const CAT_CONVENIENCE  = 'convenience';
+const CAT_DELETE       = 'delete';
 const CAT_ENVIRONMENT  = 'environment';
 const CAT_PREREQUISITE = 'prerequisite';
 const CAT_READ         = 'read';
@@ -26,7 +27,8 @@ const CAT_WRITE        = 'write';
 
 /** {array<string>} List of categories in defined execution order. */
 const CATEGORY_EXECUTION_ORDER = [
-  CAT_ENVIRONMENT, CAT_REVISION, CAT_PREREQUISITE, CAT_READ, CAT_WRITE
+  CAT_ENVIRONMENT, CAT_REVISION, CAT_PREREQUISITE, CAT_READ, CAT_DELETE,
+  CAT_WRITE
 ];
 
 // Schema argument type constants. See docs on the static properties for
@@ -126,7 +128,7 @@ const OPERATIONS = DataUtil.deepFreeze([
    * items in the file. If the file was already empty, then this operation does
    * nothing.
    */
-  [CAT_WRITE, 'deleteAll'],
+  [CAT_DELETE, 'deleteAll'],
 
   /*
    * A `deleteBlob` operation. This is a write operation that removes from the
@@ -135,7 +137,7 @@ const OPERATIONS = DataUtil.deepFreeze([
    *
    * @param {string} hash The hash of the blob to delete.
    */
-  [CAT_WRITE, 'deleteBlob', ['hash', TYPE_HASH]],
+  [CAT_DELETE, 'deleteBlob', ['hash', TYPE_HASH]],
 
   /*
    * Convenience wrapper for `deleteBlob` operations, which uses a given
@@ -153,7 +155,7 @@ const OPERATIONS = DataUtil.deepFreeze([
    *
    * @param {string} storagePath The storage path to delete.
    */
-  [CAT_WRITE, 'deletePath', ['storagePath', TYPE_PATH]],
+  [CAT_DELETE, 'deletePath', ['storagePath', TYPE_PATH]],
 
   /*
    * A `readBlob` operation. This is a read operation that retrieves the full
@@ -190,6 +192,9 @@ const OPERATIONS = DataUtil.deepFreeze([
    * A `revNum` operation. This is a revision restriction that limits a
    * transaction to only be performed with respect to the indicated revision
    * number.
+   *
+   * **Note:** It is an error (and pointless) for a transaction to contain more
+   * than one `revNum` operation.
    *
    * @param {Int} revNum Required revision number.
    */
@@ -242,8 +247,9 @@ const OPERATIONS = DataUtil.deepFreeze([
  * * Prerequisite checks &mdash; A prerequisite check must pass in order for
  *   the remainder of a transaction to apply.
  * * Data reads &mdash; A data read gets the value of a blob within a file.
- * * Data writes &mdash; A data write stores new data in a file or erases
- *   previously-existing data within a file.
+ * * Data deletions &mdash; A data deletion erases previously-existing data
+ *   within a file.
+ * * Data writes &mdash; A data write stores new data into a file.
  *
  * When executed, the operations of a transaction are effectively performed in
  * order by category; but within a category there is no effective ordering.
@@ -261,6 +267,11 @@ export default class FileOp extends CommonBase {
    */
   static get CAT_CONVENIENCE() {
     return CAT_CONVENIENCE;
+  }
+
+  /** {string} Operation category for deletion ops. */
+  static get CAT_DELETE() {
+    return CAT_DELETE;
   }
 
   /** {string} Operation category for environment ops. */
@@ -366,6 +377,7 @@ export default class FileOp extends CommonBase {
    */
   static validateCategory(category) {
     switch (category) {
+      case CAT_DELETE:
       case CAT_ENVIRONMENT:
       case CAT_PREREQUISITE:
       case CAT_READ:
