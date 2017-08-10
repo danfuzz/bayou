@@ -27,6 +27,35 @@ const PATH_REGEX = /^(\/[a-zA-Z0-9_]+)+$/;
  */
 export default class StoragePath extends UtilityClass {
   /**
+   * Gets all the prefixes of the given storage path, where each prefix names
+   * a "superdirectory" that the original `path` can be considered to be in.
+   * The return value is in super- to sub-directory order.
+   *
+   * **Note:** This returns an empty array (`[]`) if given a single-component
+   * path (e.g. `/foo`).
+   *
+   * @param {string} path Storage path.
+   * @returns {array<string>} List of all prefixes that "lead" to `path`.
+   */
+  static allPrefixes(path) {
+    const components = StoragePath.split(path);
+    const result = [];
+    let soFar = '';
+
+    // Pop off the final component, as including it would end up with the full
+    // path as the last element of the result (and that would be wrong per the
+    // method's contract.)
+    components.pop();
+
+    for (const c of components) {
+      soFar += `/${c}`;
+      result.push(soFar);
+    }
+
+    return result;
+  }
+
+  /**
    * Validates that the given value is a valid storage path string. Throws an
    * error if not.
    *
@@ -105,7 +134,7 @@ export default class StoragePath extends UtilityClass {
   static split(path) {
     StoragePath.check(path);
 
-    // Slice off the initial `/` because otherwise, the first element of the
+    // Slice off the initial `/`, because otherwise the first element of the
     // result is an empty string.
     return path.slice(1).split('/');
   }

@@ -9,6 +9,19 @@ import { StoragePath } from 'content-store';
 
 
 describe('content-store/StoragePath', () => {
+  describe('allPrefixes()', () => {
+    it('should work as expected', () => {
+      function test(value, expected) {
+        assert.deepEqual(StoragePath.allPrefixes(value), expected);
+      }
+
+      test('/foo', []);
+      test('/foo/bar', ['/foo']);
+      test('/foo/bar/baz', ['/foo', '/foo/bar']);
+      test('/foo/bar/baz/blort/florp', ['/foo', '/foo/bar', '/foo/bar/baz', '/foo/bar/baz/blort']);
+    });
+  });
+
   describe('check()', () => {
     it('should accept valid paths', () => {
       function test(value) {
