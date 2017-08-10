@@ -4,6 +4,7 @@
 
 import BaseContentStore from './BaseContentStore';
 import BaseFile from './BaseFile';
+import Errors from './Errors';
 import FileCodec from './FileCodec';
 import FileId from './FileId';
 import FileOp from './FileOp';
@@ -13,6 +14,7 @@ import TransactionSpec from './TransactionSpec';
 export {
   BaseContentStore,
   BaseFile,
+  Errors,
   FileCodec,
   FileId,
   FileOp,
