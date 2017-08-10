@@ -228,6 +228,26 @@ export default class Transactor extends CommonBase {
   }
 
   /**
+   * Handler for `whenPath` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_whenPath(op) {
+    // **TODO:** Implement this.
+    throw new InfoError('not_implemented', op.name);
+  }
+
+  /**
+   * Handler for `whenPathAbsent` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_whenPathAbsent(op) {
+    // **TODO:** Implement this.
+    throw new InfoError('not_implemented', op.name);
+  }
+
+  /**
    * Handler for `writeBlob` operations.
    *
    * @param {FileOp} op The operation.
