@@ -91,7 +91,7 @@ export default class Transactor extends CommonBase {
    */
   _op_checkBlob(op) {
     // **TODO:** Implement this.
-    throw new InfoError('not_implemented', op.name);
+    Transactor._missingOp(op.name);
   }
 
   /**
@@ -101,7 +101,7 @@ export default class Transactor extends CommonBase {
    */
   _op_checkBlobAbsent(op) {
     // **TODO:** Implement this.
-    throw new InfoError('not_implemented', op.name);
+    Transactor._missingOp(op.name);
   }
 
   /**
@@ -163,7 +163,7 @@ export default class Transactor extends CommonBase {
    */
   _op_deleteBlob(op) {
     // **TODO:** Implement this.
-    throw new InfoError('not_implemented', op.name);
+    Transactor._missingOp(op.name);
   }
 
   /**
@@ -182,7 +182,7 @@ export default class Transactor extends CommonBase {
    */
   _op_readBlob(op) {
     // **TODO:** Implement this.
-    throw new InfoError('not_implemented', op.name);
+    Transactor._missingOp(op.name);
   }
 
   /**
@@ -234,7 +234,7 @@ export default class Transactor extends CommonBase {
    */
   _op_whenPath(op) {
     // **TODO:** Implement this.
-    throw new InfoError('not_implemented', op.name);
+    Transactor._missingOp(op.name);
   }
 
   /**
@@ -244,7 +244,7 @@ export default class Transactor extends CommonBase {
    */
   _op_whenPathAbsent(op) {
     // **TODO:** Implement this.
-    throw new InfoError('not_implemented', op.name);
+    Transactor._missingOp(op.name);
   }
 
   /**
@@ -254,7 +254,7 @@ export default class Transactor extends CommonBase {
    */
   _op_writeBlob(op) {
     // **TODO:** Implement this.
-    throw new InfoError('not_implemented', op.name);
+    Transactor._missingOp(op.name);
   }
 
   /**
@@ -264,5 +264,14 @@ export default class Transactor extends CommonBase {
    */
   _op_writePath(op) {
     this._updatedStorage.set(op.arg('storagePath'), op.arg('value'));
+  }
+
+  /**
+   * Indicate a missing op implementation. **TODO:** Fix all these!
+   *
+   * @param {string} name Name of the missing op.
+   */
+  static _missingOp(name) {
+    throw InfoError.wtf(`Missing op implementation: ${name}`);
   }
 }
