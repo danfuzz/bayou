@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TBoolean, TInt, TMap, TObject, TString } from 'typecheck';
-import { CommonBase, FrozenBuffer } from 'util-common';
+import { CommonBase, FrozenBuffer, InfoError } from 'util-common';
 
 import StoragePath from './StoragePath';
 import TransactionSpec from './TransactionSpec';
@@ -166,9 +166,9 @@ export default class BaseFile extends CommonBase {
    *   given the restrictions defined in the transaction spec (if any). If there
    *   are no restrictions, then this is always the most recent revision at the
    *   instant the transaction was run.
-   * * `newRevNum` &mdash; If the transaction spec included any write
+   * * `newRevNum` &mdash; If the transaction spec included any modification
    *   operations, the revision number of the file that resulted from those
-   *   writes.
+   *   modifications.
    * * `data` &mdash; If the transaction spec included any read operations, a
    *   `Map<string, FrozenBuffer>` from storage paths to the data which was
    *   read. **Note:** Even if there was no data to read (e.g., all read
@@ -203,12 +203,12 @@ export default class BaseFile extends CommonBase {
 
     if (spec.hasReadOps()) {
       if (result.data === null) {
-        throw new Error('Improper subclass behavior: Expected non-`null` `data`.');
+        throw InfoError.wtf('Improper subclass behavior: Expected non-`null` `data`.');
       }
       TMap.check(result.data, TString.check, FrozenBuffer.check);
     } else {
       if (result.data !== null) {
-        throw new Error('Improper subclass behavior: Expected `null` `data`.');
+        throw InfoError.wtf('Improper subclass behavior: Expected `null` `data`.');
       }
       delete result.data;
     }
