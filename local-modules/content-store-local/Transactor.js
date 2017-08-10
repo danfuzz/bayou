@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Errors } from 'content-store';
 import { CommonBase, InfoError } from 'util-common';
 
 /**
@@ -71,7 +72,7 @@ export default class Transactor extends CommonBase {
 
       const handler = this[`_op_${op.name}`];
       if (!handler) {
-        throw new Error(`Missing handler for op: ${op.name}`);
+        throw InfoError.wtf(`Missing handler for op: ${op.name}`);
       }
 
       handler.call(this, op);
@@ -112,7 +113,7 @@ export default class Transactor extends CommonBase {
   _op_checkPathAbsent(op) {
     const storagePath = op.arg('storagePath');
     if (this._fileFriend.readPathOrNull(storagePath) !== null) {
-      throw new InfoError('path_not_empty', storagePath);
+      throw Errors.path_not_absent(storagePath);
     }
   }
 
@@ -124,7 +125,7 @@ export default class Transactor extends CommonBase {
   _op_checkPathExists(op) {
     const storagePath = op.arg('storagePath');
     if (this._fileFriend.readPathOrNull(storagePath) === null) {
-      throw new InfoError('path_not_found', storagePath);
+      throw Errors.path_not_found(storagePath);
     }
   }
 
@@ -139,9 +140,9 @@ export default class Transactor extends CommonBase {
     const data         = this._fileFriend.readPathOrNull(storagePath);
 
     if (data === null) {
-      throw new InfoError('path_not_found', storagePath);
+      throw Errors.path_not_found(storagePath);
     } else if (data.hash !== expectedHash) {
-      throw new InfoError('path_hash_mismatch', storagePath, expectedHash);
+      throw Errors.path_hash_mismatch(storagePath, expectedHash);
     }
   }
 
@@ -212,7 +213,7 @@ export default class Transactor extends CommonBase {
     const revNum = op.arg('revNum');
 
     if (this._fileFriend.revNum !== revNum) {
-      throw new InfoError('revision_not_available', revNum);
+      throw Errors.revision_not_available(revNum);
     }
   }
 
