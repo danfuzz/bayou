@@ -29,7 +29,7 @@ const CAT_WRITE        = 'write';
 /** {array<string>} List of categories in defined execution order. */
 const CATEGORY_EXECUTION_ORDER = [
   CAT_ENVIRONMENT, CAT_REVISION, CAT_PREREQUISITE, CAT_READ, CAT_DELETE,
-  CAT_WRITE
+  CAT_WRITE, CAT_WAIT
 ];
 
 // Schema argument type constants. See docs on the static properties for
@@ -331,6 +331,11 @@ export default class FileOp extends CommonBase {
     return CAT_REVISION;
   }
 
+  /** {string} Operation category for waits. */
+  static get CAT_WAIT() {
+    return CAT_WAIT;
+  }
+
   /** {string} Operation category for data writes. */
   static get CAT_WRITE() {
     return CAT_WRITE;
@@ -419,6 +424,7 @@ export default class FileOp extends CommonBase {
       case CAT_PREREQUISITE:
       case CAT_READ:
       case CAT_REVISION:
+      case CAT_WAIT:
       case CAT_WRITE: {
         return category;
       }
