@@ -193,6 +193,9 @@ const OPERATIONS = DataUtil.deepFreeze([
    * transaction to only be performed with respect to the indicated revision
    * number.
    *
+   * **Note:** It is an error (and pointless) for a transaction to contain more
+   * than one `revNum` operation.
+   *
    * @param {Int} revNum Required revision number.
    */
   [CAT_REVISION, 'revNum', ['revNum', TYPE_REV_NUM]],

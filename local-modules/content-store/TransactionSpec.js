@@ -25,9 +25,14 @@ export default class TransactionSpec extends CommonBase {
     /** {array<FileOp>} Category-sorted array of operations. */
     this._ops = FileOp.sortByCategory(ops);
 
-    // Validate the restriction on timeouts.
+    // Validate the op combo restrictions.
+
     if (this.opsWithName('timeout').length > 1) {
       throw new Error('Too many `timeout` operations.');
+    }
+
+    if (this.opsWithName('revNum').length > 1) {
+      throw new Error('Too many `revNum` operations.');
     }
   }
 
