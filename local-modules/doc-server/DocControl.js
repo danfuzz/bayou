@@ -581,7 +581,7 @@ export default class DocControl extends CommonBase {
     const fc   = this._fileCodec; // Avoids boilerplate immediately below.
     const spec = new TransactionSpec(
       fc.op_checkPathAbsent(changePath),
-      fc.op_checkPathBufferHash(Paths.REVISION_NUMBER, baseRevNum),
+      fc.op_checkPathHash(Paths.REVISION_NUMBER, baseRevNum),
       fc.op_writePath(changePath, change),
       fc.op_writePath(Paths.REVISION_NUMBER, revNum)
     );
