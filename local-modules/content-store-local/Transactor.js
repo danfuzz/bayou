@@ -269,19 +269,9 @@ export default class Transactor extends CommonBase {
 
     if ((value !== null) && (value.hash === hash)) {
       this._completed = false;
-      this._waitCount++;
-      if (this._waitCount === 1) {
-        this._log.info(`Waiting for path: ${storagePath}`);
-      } else {
-        this._log.info(`Wait #${this._waitCount} for path: ${storagePath}`);
-      }
-    } else {
-      if (this._waitCount === 0) {
-        this._log.info(`No waiting required for path: ${storagePath}`);
-      } else {
-        this._log.info(`Done waiting for path: ${storagePath}`);
-      }
     }
+
+    this._logAboutWaiting(`whenPath: ${storagePath}`);
   }
 
   /**
@@ -311,6 +301,30 @@ export default class Transactor extends CommonBase {
    */
   _op_writePath(op) {
     this._updatedStorage.set(op.arg('storagePath'), op.arg('value'));
+  }
+
+  /**
+   * Helper for the `when*` ops, which logs information about waiting or the
+   * lack thereof, based on the value of `_completed` and `_waitCount`. This
+   * method also updates `_waitCount`.
+   *
+   * @param {string} message Additional message to include.
+   */
+  _logAboutWaiting(message) {
+    if (this._completed) {
+      if (this._waitCount === 0) {
+        this._log.info(`No waiting required. ${message}`);
+      } else {
+        this._log.info(`Done waiting. ${message}`);
+      }
+    } else {
+      this._waitCount++;
+      if (this._waitCount === 1) {
+        this._log.info(`Waiting. ${message}`);
+      } else {
+        this._log.info(`Wait #${this._waitCount}. ${message}`);
+      }
+    }
   }
 
   /**
