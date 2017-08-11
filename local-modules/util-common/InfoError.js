@@ -16,6 +16,11 @@ import DataUtil from './DataUtil';
  * `new InfoError('file_not_found', '/foo/bar/baz.txt')` where the error comes
  * with a name and associated info in a well-defined form such that other code
  * can succeed in doing something useful with it, should it be useful to do so.
+ *
+ * **Note:** This class mixes in `CommonBase`, so that it gets the static
+ * `check()` method and friends. However, because `CommonBase` uses this class,
+ * we can't just mix it in here. Instead, `CommonBase` does that during its own
+ * initialization.
  */
 export default class InfoError extends Error {
   /**

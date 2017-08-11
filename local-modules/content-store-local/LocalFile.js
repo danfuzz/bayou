@@ -218,14 +218,15 @@ export default class LocalFile extends BaseFile {
     // state of this instance to the transactor (constructed immediately
     // hereafter) such that the latter can do its job.
 
-    const revNum     = this._revNum;
-    const storage    = this._storage;
+    const outerThis = this;
     const fileFriend = {
       /** {Logger} Pass-through of this instance's logger. */
-      log: this._log,
+      log: outerThis._log,
 
       /** {Int} Current revision number of the file. */
-      revNum,
+      get revNum() {
+        return outerThis._revNum;
+      },
 
       /**
        * Gets the value stored at the given path, if any.
@@ -235,7 +236,7 @@ export default class LocalFile extends BaseFile {
        *   if there is none.
        */
       readPathOrNull(storagePath) {
-        return storage.get(storagePath) || null;
+        return outerThis._storage.get(storagePath) || null;
       },
 
       /**
@@ -246,14 +247,37 @@ export default class LocalFile extends BaseFile {
        *   storage.
        */
       pathStorage() {
-        return storage.entries();
+        return outerThis._storage.entries();
       }
     };
 
     // Run the transaction, gather the results, and queue up the writes.
 
-    const { data, updatedStorage } = new Transactor(spec, fileFriend).run();
-    let newRevNum = null;
+    const transactor = new Transactor(spec, fileFriend);
+
+    // The loop allows for `when` operations to wait without `Transactor.run()`
+    // having to be an `async` method.
+    for (;;) {
+      const completed = transactor.run();
+
+      if (completed) {
+        break;
+      }
+
+      // Force the `_changeCondition` to `false` (though it might already be
+      // so set; innocuous if so), and wait either for it to become `true`
+      // (that is, wait for _any_ change to the file) or for timeout to occur.
+      this._changeCondition.value = false;
+      await Promise.race([this._changeCondition.whenTrue(), timeoutProm]);
+      if (timeout) {
+        throw Errors.transaction_timed_out(timeoutMsec);
+      }
+    }
+
+    const updatedStorage = transactor.updatedStorage;
+    const data           = transactor.data;
+    const revNum         = this._revNum;
+    let   newRevNum      = null;
 
     if (updatedStorage.size !== 0) {
       this._revNum = newRevNum = revNum + 1;
@@ -275,77 +299,6 @@ export default class LocalFile extends BaseFile {
 
     this._log.detail('Transaction complete.');
     return { revNum, newRevNum, data };
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
-   * @param {Int} timeoutMsec Same as with `whenChange()`.
-   * @param {string} storagePath Same as with `whenChange()`.
-   * @param {string|null} valueOrHash Same as with `whenChange()`, except that
-   *   a buffer argument will have already been converted to a hash.
-   * @returns {boolean} Same as with `whenChange()`.
-   */
-  async _impl_whenChange(timeoutMsec, storagePath, valueOrHash) {
-    // Arrange for timeout. **Note:** Needs to be done _before_ reading
-    // storage, as that storage read can take significant time.
-    let timeout = false; // Gets set to `true` when the timeout expires.
-    const timeoutProm = PromDelay.resolve(timeoutMsec);
-    (async () => {
-      await timeoutProm;
-      timeout = true;
-    })();
-
-    await Promise.race([this._readStorageIfNecessary(), timeoutProm]);
-    if (timeout) {
-      this._log.detail('Timed out.');
-      return false;
-    }
-
-    if (!this._fileShouldExist) {
-      throw Errors.file_not_found(this.id);
-    }
-
-    if (valueOrHash === null) {
-      this._log.detail(`Want path to exist: ${storagePath}`);
-    } else {
-      this._log.detail(`Want change to path: ${storagePath}`);
-    }
-
-    // Check for the change condition, and iterate until either it's found or
-    // the timeout expires.
-    while (!timeout) {
-      const storedValue = this._storage.get(storagePath);
-      if (valueOrHash === null) {
-        // If anything at all is stored at the path, the condition is satisfied.
-        if (storedValue) {
-          return true;
-        }
-      } else {
-        // We are looking for a change from a specific value.
-        if (storedValue && (storedValue.hash !== valueOrHash)) {
-          // The stored value is indeed different than the given original.
-          return true;
-        } else if (!storedValue) {
-          // There is no value stored at the path (that is, it was deleted or
-          // perhaps was never bound), which counts as a change from any
-          // existing value.
-          return true;
-        }
-      }
-
-      this._log.detail('Waiting for file to change.');
-
-      // Force the `_changeCondition` to `false` (though it might already be
-      // so set; innocuous if so), and wait either for it to become `true` (that
-      // is, wait for _any_ change to the file) or for the timeout to pass.
-      this._changeCondition.value = false;
-      await Promise.race([this._changeCondition.whenTrue(), timeoutProm]);
-    }
-
-    // The timeout expired.
-    this._log.detail('Timed out.');
-    return false;
   }
 
   /**

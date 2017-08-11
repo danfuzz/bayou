@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { FileCodec, TransactionSpec } from 'content-store';
+import { Errors, FileCodec, TransactionSpec } from 'content-store';
 import { DocumentDelta, DocumentChange, DocumentSnapshot, FrozenDelta, RevisionNumber, Timestamp } from 'doc-common';
 import { TString } from 'typecheck';
 import { CommonBase, InfoError, PromDelay } from 'util-common';
@@ -283,7 +283,7 @@ export default class DocControl extends CommonBase {
     // they're empty.
 
     try {
-      const fc = this._fileCodec;
+      const fc  = this._fileCodec;
       const ops = [];
       for (let i = revNum + 1; i <= (revNum + 10); i++) {
         ops.push(fc.op_readPath(Paths.forRevNum(i)));
@@ -339,10 +339,22 @@ export default class DocControl extends CommonBase {
         return new DocumentDelta(revNum, delta);
       }
 
-      // Wait for the file to change (or for the storage layer to reach its
-      // timeout), and then iterate to see if in fact the change updated the
-      // document revision number.
-      await this._fileCodec.whenChange('never', Paths.REVISION_NUMBER, revNum);
+      // Wait for the file to change (or for the storage layer to time out), and
+      // then iterate to see if in fact the change updated the document revision
+      // number.
+      const fc   = this._fileCodec;
+      const ops  = [fc.op_whenPathNotBuffer(Paths.REVISION_NUMBER, revNum)];
+      const spec = new TransactionSpec(...ops);
+      try {
+        await fc.transact(spec);
+      } catch (e) {
+        if (!Errors.isTimeout(e)) {
+          // It's _not_ a timeout, so we should propagate the error.
+          throw e;
+        }
+        // It's a timeout, so just fall through and iterate.
+        this._log.info('Storage layer timeout in `deltaAfter`.');
+      }
     }
   }
 

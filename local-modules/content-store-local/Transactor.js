@@ -30,10 +30,9 @@ export default class Transactor extends CommonBase {
 
     /**
      * {object} "Friend" access to the `LocalFile` that spawned this instance.
-     * Properties and methods on this are defined in an ad-hoc
-     * manner intended to provide just enough access for this class to do its
-     * work. See `FileOp` where the friend is constructed for documentation on
-     * its makeup.
+     * Properties and methods on this are defined in an ad-hoc manner intended
+     * to provide just enough access for this class to do its work. See `FileOp`
+     # where the friend is constructed for documentation on its makeup.
      */
     this._fileFriend = fileFriend;
 
@@ -50,6 +49,19 @@ export default class Transactor extends CommonBase {
      */
     this._updatedStorage = new Map();
 
+    /**
+     * {boolean} Whether the transaction completed and doesn't require waiting
+     * and retrying. This is set to `true` at the start of `run()` and can
+     * become `false` in the various `when*` ops.
+     */
+    this._completed = true;
+
+    /**
+     * {Int} How many times a wait operation has been required. This is just
+     * used to provide more informative logging messages in the `when*` ops.
+     */
+    this._waitCount = 0;
+
     /** {Logger} Logger to use. */
     this._log = fileFriend.log;
 
@@ -59,13 +71,16 @@ export default class Transactor extends CommonBase {
   /**
    * Runs the transaction.
    *
-   * @returns {object} Object that binds `data` to a
-   *   `{Map<string, FrozenBuffer|null>}` of retrieved data and `updatedStorage`
-   *   to a `{Map<string, FrozenBuffer|null>}` of updated storage (paths to be
-   *   written or deleted).
+   * @returns {boolean} Completion / retry flag. `true` if the transaction ran
+   *   to completion, or `false` if the transaction hasn't been completed and
+   *   needs to be retried after waiting for a file change.
    */
   run() {
     this._log.detail('Transactor running.');
+
+    // This gets set to `false` if one of the ops determines that we need to
+    // wait for a change.
+    this._completed = true;
 
     for (const op of this._spec.ops) {
       this._log.detail('Op:', op);
@@ -79,10 +94,24 @@ export default class Transactor extends CommonBase {
     }
 
     this._log.detail('Transactor done.');
-    return {
-      data:           this._data,
-      updatedStorage: this._updatedStorage
-    };
+    return this._completed;
+  }
+
+  /**
+   * {Map<string, FrozenBuffer|null>|null} Map from paths retrieved while
+   * running the transaction to the retrieved contents, or `null` if the
+   * transaction has no data read operations.
+   */
+  get data() {
+    return this._data;
+  }
+
+  /**
+   * {Map<string, FrozenBuffer|null>} Map from paths updated while running the
+   * transaction to the updated data or `null` for deleted paths.
+   */
+  get updatedStorage() {
+    return this._updatedStorage;
   }
 
   /**
@@ -229,13 +258,20 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `whenPath` operations.
+   * Handler for `whenPathNot` operations.
    *
    * @param {FileOp} op The operation.
    */
-  _op_whenPath(op) {
-    // **TODO:** Implement this.
-    Transactor._missingOp(op.name);
+  async _op_whenPathNot(op) {
+    const storagePath = op.arg('storagePath');
+    const hash        = op.arg('hash');
+    const value       = this._fileFriend.readPathOrNull(storagePath);
+
+    if ((value !== null) && (value.hash === hash)) {
+      this._completed = false;
+    }
+
+    this._logAboutWaiting(`whenPathNot: ${storagePath}`);
   }
 
   /**
@@ -244,8 +280,14 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_whenPathAbsent(op) {
-    // **TODO:** Implement this.
-    Transactor._missingOp(op.name);
+    const storagePath = op.arg('storagePath');
+    const value       = this._fileFriend.readPathOrNull(storagePath);
+
+    if (value === null) {
+      this._completed = false;
+    }
+
+    this._logAboutWaiting(`whenPathAbsent: ${storagePath}`);
   }
 
   /**
@@ -265,6 +307,30 @@ export default class Transactor extends CommonBase {
    */
   _op_writePath(op) {
     this._updatedStorage.set(op.arg('storagePath'), op.arg('value'));
+  }
+
+  /**
+   * Helper for the `when*` ops, which logs information about waiting or the
+   * lack thereof, based on the value of `_completed` and `_waitCount`. This
+   * method also updates `_waitCount`.
+   *
+   * @param {string} message Additional message to include.
+   */
+  _logAboutWaiting(message) {
+    if (this._completed) {
+      if (this._waitCount === 0) {
+        this._log.info(`No waiting required. ${message}`);
+      } else {
+        this._log.info(`Done waiting. ${message}`);
+      }
+    } else {
+      this._waitCount++;
+      if (this._waitCount === 1) {
+        this._log.info(`Waiting. ${message}`);
+      } else {
+        this._log.info(`Wait #${this._waitCount}. ${message}`);
+      }
+    }
   }
 
   /**

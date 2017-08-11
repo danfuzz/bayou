@@ -63,7 +63,7 @@ export default class TransactionSpec extends CommonBase {
    */
   get timeoutMsec() {
     const result = this.opsWithName('timeout')[0];
-    return (result === undefined) ? 'never' : result;
+    return (result === undefined) ? 'never' : result.arg('durMsec');
   }
 
   /**

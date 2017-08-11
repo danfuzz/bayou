@@ -5,7 +5,6 @@
 import { TBoolean, TInt, TMap, TObject, TString } from 'typecheck';
 import { CommonBase, FrozenBuffer, InfoError } from 'util-common';
 
-import StoragePath from './StoragePath';
 import TransactionSpec from './TransactionSpec';
 
 /**
@@ -36,9 +35,9 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * {Int|null} The maximum value allowed (inclusive) as the `timeoutMsec`
-   * argument to calls to `whenChange()` on this instance, or `null` if there is
-   * no limit. Out-of-range values are clamped to this limit.
+   * {Int|null} The maximum value allowed (inclusive) as the duration specified
+   * on `timeout` operations in transactions on this instance, or `null` if
+   * there is no limit. Out-of-range values are clamped to this limit.
    *
    * @abstract
    */
@@ -47,9 +46,9 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * {Int|null} The minimum value allowed (inclusive) as the `timeoutMsec`
-   * argument to calls to `whenChange()` on this instance, or `null` if there is
-   * no limit. Out-of-range values are clamped to this limit.
+   * {Int|null} The minimum value allowed (inclusive) as the duration specified
+   * on `timeout` operations in transactions on this instance, or `null` if
+   * there is no limit. Out-of-range values are clamped to this limit.
    *
    * @abstract
    */
@@ -231,62 +230,5 @@ export default class BaseFile extends CommonBase {
    */
   async _impl_transact(spec) {
     this._mustOverride(spec);
-  }
-
-  /**
-   * Waits for a change to be made to a file at a specific path, including both
-   * updating and deleting a value at the path. The return value becomes
-   * resolved soon after a change is made or the specified timeout elapses.
-   *
-   * It is an error to call this method on a file that doesn't exist, in the
-   * sense of the `exists()` method. That is, if `exists()` would return
-   * `false`, then this method will fail.
-   *
-   * **Note:** Subclasses are allowed to silently increase the given
-   * `timeoutMsec` if they have a _minimum_ timeout. In such cases, it is
-   * expected that the minimum is relatively small in terms of human-visible
-   * time (e.g. under a second).
-   *
-   * @param {Int|'never'} timeoutMsec The maximum amount of time (in msec) to
-   *   wait for a change. If the requested change does not occur within this
-   *   time, then this method returns `false`. This value is clamped as if by
-   *   `clampTimeoutMsec()`, see which.
-   * @param {string} storagePath The specific path to watch for changes to.
-   * @param {FrozenBuffer|string|null} valueOrHash Value which is considered the
-   *   "unchanged" value at `storagePath`, or the hash for it. Passing `null`
-   *   indicates that the "unchanged" value is that the path is absent from the
-   *   file. Passing a buffer for this is just a convenient shorthand for
-   *   passing its `.hash`.
-   * @returns {boolean} `true` if a change was detected, or `false` if the
-   *   call is returning due to timeout.
-   */
-  async whenChange(timeoutMsec, storagePath, valueOrHash) {
-    timeoutMsec = this.clampTimeoutMsec(timeoutMsec);
-    StoragePath.check(storagePath);
-
-    if (valueOrHash instanceof FrozenBuffer) {
-      valueOrHash = valueOrHash.hash;
-    } else if (valueOrHash !== null) {
-      // **TODO:** Better hash validity checking.
-      TString.nonempty(valueOrHash);
-    }
-
-    return this._impl_whenChange(timeoutMsec, storagePath, valueOrHash);
-  }
-
-  /**
-   * Main implementation of `whenChange()`. It is guaranteed to be called
-   * with valid arguments (including having the timeout clamped as specified by
-   * the subclass).
-   *
-   * @abstract
-   * @param {Int} timeoutMsec Same as with `whenChange()`.
-   * @param {string} storagePath Same as with `whenChange()`.
-   * @param {string|null} valueOrHash Same as with `whenChange()`, except that
-   *   a buffer argument will have already been converted to a hash.
-   * @returns {boolean} Same as with `whenChange()`.
-   */
-  async _impl_whenChange(timeoutMsec, storagePath, valueOrHash) {
-    this._mustOverride(timeoutMsec, storagePath, valueOrHash);
   }
 }

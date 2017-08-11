@@ -215,7 +215,7 @@ const OPERATIONS = DataUtil.deepFreeze([
   [CAT_ENVIRONMENT, 'timeout', ['durMsec', TYPE_DUR_MSEC]],
 
   /*
-   * A `whenPath` operation. This is a wait operation that blocks the
+   * A `whenPathNot` operation. This is a wait operation that blocks the
    * transaction until a specific path does not store data which hashes as
    * given. This includes both storing data with other hashes as well as the
    * path being absent (not storing any data).
@@ -224,7 +224,7 @@ const OPERATIONS = DataUtil.deepFreeze([
    * @param {string} hash Hash of the blob which must _not_ be at `storagePath`
    *   for the operation to complete.
    */
-  [CAT_WAIT, 'whenPath', ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]],
+  [CAT_WAIT, 'whenPathNot', ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]],
 
   /*
    * A `whenPathAbsent` operation. This is a wait operation that blocks the
@@ -235,15 +235,15 @@ const OPERATIONS = DataUtil.deepFreeze([
   [CAT_WAIT, 'whenPathAbsent', ['storagePath', TYPE_PATH]],
 
   /*
-   * Convenience wrapper for `whenPath` operations, which hashes a given
-   * buffer's data. This is equivalent to `whenPath(buffer.hash)`.
+   * Convenience wrapper for `whenPathNot` operations, which hashes a given
+   * buffer's data. This is equivalent to `whenPathNot(buffer.hash)`.
    *
    * @param {string} storagePath The storage path to observe.
    * @param {string} hash Hash of the blob which must _not_ be at `storagePath`
    *   for the operation to complete.
    */
   [
-    CAT_CONVENIENCE, 'whenPathBuffer',
+    CAT_CONVENIENCE, 'whenPathNotBuffer',
     ['storagePath', TYPE_PATH], ['value', TYPE_BUFFER]
   ],
 
@@ -596,14 +596,14 @@ export default class FileOp extends CommonBase {
   }
 
   /**
-   * Transformer for the convenience op `whenPathBuffer`.
+   * Transformer for the convenience op `whenPathNotBuffer`.
    *
    * @param {string} storagePath The storage path.
    * @param {FrozenBuffer} value The value.
    * @returns {array<*>} Replacement constructor info.
    */
-  static _xform_whenPathBuffer(storagePath, value) {
-    return ['whenPath', storagePath, value.hash];
+  static _xform_whenPathNotBuffer(storagePath, value) {
+    return ['whenPathNot', storagePath, value.hash];
   }
 }
 

@@ -180,3 +180,7 @@ export default class CommonBase {
     throw InfoError.wtf('Must override.');
   }
 }
+
+// Mix this class into `InfoError`. We do it here to avoid a circular
+// dependency. See also class header comment in `InfoError`.
+CommonBase.mixInto(InfoError);
