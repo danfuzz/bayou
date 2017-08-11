@@ -31,8 +31,9 @@ export default class Transactor extends CommonBase {
     /**
      * {object} "Friend" access to the `LocalFile` that spawned this instance.
      * Properties and methods on this are defined in an ad-hoc manner intended
-     * to provide just enough access for this class to do its work. See `FileOp`
-     # where the friend is constructed for documentation on its makeup.
+     * to provide just enough access for this class to do its work. See
+     * {@link content-store.FileOp} where the friend is constructed for
+     * documentation on its makeup.
      */
     this._fileFriend = fileFriend;
 
