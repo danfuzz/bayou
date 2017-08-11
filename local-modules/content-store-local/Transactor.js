@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Errors } from 'content-store';
 import { CommonBase, InfoError } from 'util-common';
 
 /**
@@ -71,7 +72,7 @@ export default class Transactor extends CommonBase {
 
       const handler = this[`_op_${op.name}`];
       if (!handler) {
-        throw new Error(`Missing handler for op: ${op.name}`);
+        throw InfoError.wtf(`Missing handler for op: ${op.name}`);
       }
 
       handler.call(this, op);
@@ -91,7 +92,7 @@ export default class Transactor extends CommonBase {
    */
   _op_checkBlob(op) {
     // **TODO:** Implement this.
-    throw new InfoError('not_implemented', op.name);
+    Transactor._missingOp(op.name);
   }
 
   /**
@@ -101,7 +102,7 @@ export default class Transactor extends CommonBase {
    */
   _op_checkBlobAbsent(op) {
     // **TODO:** Implement this.
-    throw new InfoError('not_implemented', op.name);
+    Transactor._missingOp(op.name);
   }
 
   /**
@@ -112,7 +113,7 @@ export default class Transactor extends CommonBase {
   _op_checkPathAbsent(op) {
     const storagePath = op.arg('storagePath');
     if (this._fileFriend.readPathOrNull(storagePath) !== null) {
-      throw new InfoError('path_not_empty', storagePath);
+      throw Errors.path_not_absent(storagePath);
     }
   }
 
@@ -124,7 +125,7 @@ export default class Transactor extends CommonBase {
   _op_checkPathExists(op) {
     const storagePath = op.arg('storagePath');
     if (this._fileFriend.readPathOrNull(storagePath) === null) {
-      throw new InfoError('path_not_found', storagePath);
+      throw Errors.path_not_found(storagePath);
     }
   }
 
@@ -139,9 +140,9 @@ export default class Transactor extends CommonBase {
     const data         = this._fileFriend.readPathOrNull(storagePath);
 
     if (data === null) {
-      throw new InfoError('path_not_found', storagePath);
+      throw Errors.path_not_found(storagePath);
     } else if (data.hash !== expectedHash) {
-      throw new InfoError('path_hash_mismatch', storagePath, expectedHash);
+      throw Errors.path_hash_mismatch(storagePath, expectedHash);
     }
   }
 
@@ -163,7 +164,7 @@ export default class Transactor extends CommonBase {
    */
   _op_deleteBlob(op) {
     // **TODO:** Implement this.
-    throw new InfoError('not_implemented', op.name);
+    Transactor._missingOp(op.name);
   }
 
   /**
@@ -182,7 +183,7 @@ export default class Transactor extends CommonBase {
    */
   _op_readBlob(op) {
     // **TODO:** Implement this.
-    throw new InfoError('not_implemented', op.name);
+    Transactor._missingOp(op.name);
   }
 
   /**
@@ -212,7 +213,7 @@ export default class Transactor extends CommonBase {
     const revNum = op.arg('revNum');
 
     if (this._fileFriend.revNum !== revNum) {
-      throw new InfoError('revision_not_available', revNum);
+      throw Errors.revision_not_available(revNum);
     }
   }
 
@@ -228,13 +229,33 @@ export default class Transactor extends CommonBase {
   }
 
   /**
+   * Handler for `whenPath` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_whenPath(op) {
+    // **TODO:** Implement this.
+    Transactor._missingOp(op.name);
+  }
+
+  /**
+   * Handler for `whenPathAbsent` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_whenPathAbsent(op) {
+    // **TODO:** Implement this.
+    Transactor._missingOp(op.name);
+  }
+
+  /**
    * Handler for `writeBlob` operations.
    *
    * @param {FileOp} op The operation.
    */
   _op_writeBlob(op) {
     // **TODO:** Implement this.
-    throw new InfoError('not_implemented', op.name);
+    Transactor._missingOp(op.name);
   }
 
   /**
@@ -244,5 +265,14 @@ export default class Transactor extends CommonBase {
    */
   _op_writePath(op) {
     this._updatedStorage.set(op.arg('storagePath'), op.arg('value'));
+  }
+
+  /**
+   * Indicate a missing op implementation. **TODO:** Fix all these!
+   *
+   * @param {string} name Name of the missing op.
+   */
+  static _missingOp(name) {
+    throw InfoError.wtf(`Missing op implementation: ${name}`);
   }
 }

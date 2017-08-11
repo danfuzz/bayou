@@ -4,6 +4,8 @@
 
 import { TObject } from 'typecheck';
 
+import InfoError from './InfoError';
+
 /**
  * Base class which provides a couple conveniences beyond what baseline
  * JavaScript has.
@@ -76,7 +78,7 @@ export default class CommonBase {
       if (!(result instanceof this)) {
         // There is a bug in the subclass, as it should never return any other
         // kind of value.
-        throw new Error('Invalid `_impl_coerce()` implementation.');
+        throw InfoError.wtf('Invalid `_impl_coerce()` implementation.');
       }
       return result;
     }
@@ -127,7 +129,7 @@ export default class CommonBase {
       if ((result !== null) && !(result instanceof this)) {
         // There is a bug in the subclass, as it should never return any other
         // kind of value.
-        throw new Error('Invalid `_impl_coerceOrNull()` implementation.');
+        throw InfoError.wtf('Invalid `_impl_coerceOrNull()` implementation.');
       }
       return result;
     }
@@ -175,6 +177,6 @@ export default class CommonBase {
    * @param {...*} args_unused Anything you want, to keep the linter happy.
    */
   static _mustOverride(...args_unused) {
-    throw new Error('Must override.');
+    throw InfoError.wtf('Must override.');
   }
 }

@@ -34,6 +34,15 @@ export default class TransactionSpec extends CommonBase {
     if (this.opsWithName('revNum').length > 1) {
       throw new Error('Too many `revNum` operations.');
     }
+
+    const waitCount = this.opsWithCategory(FileOp.CAT_WAIT);
+    if (waitCount === 1) {
+      if (this.hasReadOps() || this.hasModificationOps()) {
+        throw new Error('Cannot mix wait operations with reads and modifications.');
+      }
+    } else if (waitCount > 1) {
+      throw new Error('Too many wait operations.');
+    }
   }
 
   /**
@@ -78,6 +87,17 @@ export default class TransactionSpec extends CommonBase {
   hasModificationOps() {
     return (this.opsWithCategory(FileOp.CAT_DELETE).length !== 0)
       || (this.opsWithCategory(FileOp.CAT_WRITE).length !== 0);
+  }
+
+  /**
+   * Indicates whether or not this instance has any wait operations, that is,
+   * any operations with category `CAT_WAIT`.
+   *
+   * @returns {boolean} `true` iff there are any wait operations in this
+   *   instance.
+   */
+  hasWaitOps() {
+    return this.opsWithCategory(FileOp.CAT_WAIT).length !== 0;
   }
 
   /**

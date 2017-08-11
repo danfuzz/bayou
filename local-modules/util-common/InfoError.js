@@ -4,7 +4,6 @@
 
 import { TString } from 'typecheck';
 
-import CommonBase from './CommonBase';
 import DataUtil from './DataUtil';
 
 /**
@@ -19,6 +18,19 @@ import DataUtil from './DataUtil';
  * can succeed in doing something useful with it, should it be useful to do so.
  */
 export default class InfoError extends Error {
+  /**
+   * Constructs an instance which is meant to indicate that the program
+   * exhibited unexpected behavior. This should be used as an indication of a
+   * likely bug in the program.
+   *
+   * @param {string} message Human-oriented message with some indication of what
+   *   went wrong.
+   */
+  static wtf(message) {
+    TString.check(message);
+    throw new InfoError('wtf', message);
+  }
+
   /**
    * Makes a message for passing to the superclass constructor.
    *
@@ -109,7 +121,3 @@ export default class InfoError extends Error {
     }
   }
 }
-
-// Add `CommonBase` as a mixin, because the main inheritence is the `Error`
-// class.
-CommonBase.mixInto(InfoError);

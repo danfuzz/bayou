@@ -11,6 +11,7 @@ import TInt from './TInt';
 import TIterable from './TIterable';
 import TMap from './TMap';
 import TObject from './TObject';
+import TSet from './TSet';
 import TString from './TString';
 import TypeError from './TypeError';
 
@@ -24,6 +25,7 @@ export {
   TIterable,
   TMap,
   TObject,
+  TSet,
   TString,
   TypeError
 };

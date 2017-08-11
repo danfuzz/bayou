@@ -6,7 +6,7 @@ import afs from 'async-file';
 import path from 'path';
 
 import { Codec } from 'codec';
-import { BaseFile } from 'content-store';
+import { BaseFile, Errors } from 'content-store';
 import { Logger } from 'see-all';
 import { FrozenBuffer, PromCondition, PromDelay, PromMutex } from 'util-common';
 
@@ -207,11 +207,11 @@ export default class LocalFile extends BaseFile {
 
     await Promise.race([this._readStorageIfNecessary(), timeoutProm]);
     if (timeout) {
-      throw new Error('Transaction timed out.');
+      throw Errors.transaction_timed_out(timeoutMsec);
     }
 
     if (!this._fileShouldExist) {
-      throw new Error('Cannot operate on non-existent file.');
+      throw Errors.file_not_found(this.id);
     }
 
     // Construct the "file friend" object. This exposes just enough private
@@ -303,7 +303,7 @@ export default class LocalFile extends BaseFile {
     }
 
     if (!this._fileShouldExist) {
-      throw new Error('Cannot operate on non-existent file.');
+      throw Errors.file_not_found(this.id);
     }
 
     if (valueOrHash === null) {

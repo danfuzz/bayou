@@ -23,12 +23,13 @@ const CAT_ENVIRONMENT  = 'environment';
 const CAT_PREREQUISITE = 'prerequisite';
 const CAT_READ         = 'read';
 const CAT_REVISION     = 'revision';
+const CAT_WAIT         = 'wait';
 const CAT_WRITE        = 'write';
 
 /** {array<string>} List of categories in defined execution order. */
 const CATEGORY_EXECUTION_ORDER = [
   CAT_ENVIRONMENT, CAT_REVISION, CAT_PREREQUISITE, CAT_READ, CAT_DELETE,
-  CAT_WRITE
+  CAT_WRITE, CAT_WAIT
 ];
 
 // Schema argument type constants. See docs on the static properties for
@@ -214,7 +215,40 @@ const OPERATIONS = DataUtil.deepFreeze([
   [CAT_ENVIRONMENT, 'timeout', ['durMsec', TYPE_DUR_MSEC]],
 
   /*
-   * A a `writeBlob` operation. This is a write operation that stores the
+   * A `whenPath` operation. This is a wait operation that blocks the
+   * transaction until a specific path does not store data which hashes as
+   * given. This includes both storing data with other hashes as well as the
+   * path being absent (not storing any data).
+   *
+   * @param {string} storagePath The storage path to observe.
+   * @param {string} hash Hash of the blob which must _not_ be at `storagePath`
+   *   for the operation to complete.
+   */
+  [CAT_WAIT, 'whenPath', ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]],
+
+  /*
+   * A `whenPathAbsent` operation. This is a wait operation that blocks the
+   * transaction until a specific path _does not_ have any data stored.
+   *
+   * @param {string} storagePath The storage path to observe.
+   */
+  [CAT_WAIT, 'whenPathAbsent', ['storagePath', TYPE_PATH]],
+
+  /*
+   * Convenience wrapper for `whenPath` operations, which hashes a given
+   * buffer's data. This is equivalent to `whenPath(buffer.hash)`.
+   *
+   * @param {string} storagePath The storage path to observe.
+   * @param {string} hash Hash of the blob which must _not_ be at `storagePath`
+   *   for the operation to complete.
+   */
+  [
+    CAT_CONVENIENCE, 'whenPathBuffer',
+    ['storagePath', TYPE_PATH], ['value', TYPE_BUFFER]
+  ],
+
+  /*
+   * A `writeBlob` operation. This is a write operation that stores the
    * indicated value in the file, binding it to its content hash. If the content
    * hash was already bound, then this operation does nothing.
    *
@@ -223,7 +257,7 @@ const OPERATIONS = DataUtil.deepFreeze([
   [CAT_WRITE, 'writeBlob', ['value', TYPE_BUFFER]],
 
   /*
-   * A a `writePath` operation. This is a write operation that stores the
+   * A `writePath` operation. This is a write operation that stores the
    * indicated value in the file, binding it to the given path. If the path was
    * already bound to that value, then this operation does nothing.
    *
@@ -250,6 +284,10 @@ const OPERATIONS = DataUtil.deepFreeze([
  * * Data deletions &mdash; A data deletion erases previously-existing data
  *   within a file.
  * * Data writes &mdash; A data write stores new data into a file.
+ * * Waits &mdash; A wait operation blocks a transaction until some condition
+ *   holds. **Note:** A transaction specification must not include more than
+ *   one wait operation, and if it has one, the transaction must not perform any
+ *   reads, deletes, or writes.
  *
  * When executed, the operations of a transaction are effectively performed in
  * order by category; but within a category there is no effective ordering.
@@ -292,6 +330,11 @@ export default class FileOp extends CommonBase {
   /** {string} Operation category for revision restrictions. */
   static get CAT_REVISION() {
     return CAT_REVISION;
+  }
+
+  /** {string} Operation category for waits. */
+  static get CAT_WAIT() {
+    return CAT_WAIT;
   }
 
   /** {string} Operation category for data writes. */
@@ -382,6 +425,7 @@ export default class FileOp extends CommonBase {
       case CAT_PREREQUISITE:
       case CAT_READ:
       case CAT_REVISION:
+      case CAT_WAIT:
       case CAT_WRITE: {
         return category;
       }
@@ -549,6 +593,17 @@ export default class FileOp extends CommonBase {
    */
   static _xform_deleteBlobBuffer(value) {
     return ['deleteBlob', value.hash];
+  }
+
+  /**
+   * Transformer for the convenience op `whenPathBuffer`.
+   *
+   * @param {string} storagePath The storage path.
+   * @param {FrozenBuffer} value The value.
+   * @returns {array<*>} Replacement constructor info.
+   */
+  static _xform_whenPathBuffer(storagePath, value) {
+    return ['whenPath', storagePath, value.hash];
   }
 }
 
