@@ -216,8 +216,9 @@ const OPERATIONS = DataUtil.deepFreeze([
 
   /*
    * A `whenPath` operation. This is a wait operation that blocks the
-   * transaction until a specific path stores data other than as given, or until
-   * the path is deleted.
+   * transaction until a specific path does not store data which hashes as
+   * given. This includes both storing data with other hashes as well as the
+   * path being absent (not storing any data).
    *
    * @param {string} storagePath The storage path to observe.
    * @param {string} hash Hash of the blob which must _not_ be at `storagePath`
