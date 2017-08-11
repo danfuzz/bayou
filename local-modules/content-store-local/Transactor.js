@@ -258,11 +258,11 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `whenPath` operations.
+   * Handler for `whenPathNot` operations.
    *
    * @param {FileOp} op The operation.
    */
-  async _op_whenPath(op) {
+  async _op_whenPathNot(op) {
     const storagePath = op.arg('storagePath');
     const hash        = op.arg('hash');
     const value       = this._fileFriend.readPathOrNull(storagePath);
@@ -271,7 +271,7 @@ export default class Transactor extends CommonBase {
       this._completed = false;
     }
 
-    this._logAboutWaiting(`whenPath: ${storagePath}`);
+    this._logAboutWaiting(`whenPathNot: ${storagePath}`);
   }
 
   /**
