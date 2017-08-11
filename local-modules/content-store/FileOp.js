@@ -236,7 +236,7 @@ const OPERATIONS = DataUtil.deepFreeze([
 
   /*
    * Convenience wrapper for `whenPath` operations, which hashes a given
-   * buffer's data. This is equivalent to `whenPaath(buffer.hash)`.
+   * buffer's data. This is equivalent to `whenPath(buffer.hash)`.
    *
    * @param {string} storagePath The storage path to observe.
    * @param {string} hash Hash of the blob which must _not_ be at `storagePath`
