@@ -85,4 +85,15 @@ export default class Errors extends UtilityClass {
     TInt.check(timeoutMsec);
     return new InfoError('transaction_timed_out', timeoutMsec);
   }
+
+  /**
+   * Indicates whether or not the given error is a transaction timeout error.
+   *
+   * @param {Error} error Error in question.
+   * @returns {boolean} `true` iff it represents a transaction timeout.
+   */
+  static isTimeout(error) {
+    return (error instanceof InfoError)
+      &&   (error.name === 'transaction_timed_out');
+  }
 }

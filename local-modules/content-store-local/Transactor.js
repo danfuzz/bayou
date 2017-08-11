@@ -267,7 +267,7 @@ export default class Transactor extends CommonBase {
     const hash        = op.arg('hash');
     const value       = this._fileFriend.readPathOrNull(storagePath);
 
-    if ((value === null) || (value.hash !== hash)) {
+    if ((value !== null) && (value.hash === hash)) {
       this._completed = false;
       this._waitCount++;
       if (this._waitCount === 1) {
