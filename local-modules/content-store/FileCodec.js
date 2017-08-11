@@ -17,10 +17,10 @@ import FileOp from './FileOp';
  * defines a set of instance methods for constructing transaction operations,
  * that is, instances of `FileOp`, with the same method names as the static
  * constructor methods defined by `FileOp`. In the case of the methods defined
- * here, instead of accepting `FrozenBuffer` arguments where `FileOp` so defines
- * them, this class accepts any objects at all, so long as they can successfully
- * be encoded by the codec with which the instance of this class was
- * instantiated.
+ * here, instead of accepting `FrozenBuffer` or hash string arguments where
+ * `FileOp` so defines them, this class accepts any objects at all, so long as
+ * they can successfully be encoded by the codec with which the instance of this
+ * class was instantiated.
  *
  * **Note:** This class is _intentionally_ not a full wrapper over `BaseFile`.
  * It _just_ provides operations that benefit from the application of a `Codec`.
@@ -89,7 +89,7 @@ export default class FileCodec extends CommonBase {
       const bufferAt = [];
       for (let i = 0; i < argInfo.length; i++) {
         const [name_unused, type] = argInfo[i];
-        if (type === FileOp.TYPE_BUFFER) {
+        if ((type === FileOp.TYPE_BUFFER) || (type === FileOp.TYPE_HASH)) {
           bufferAt.push(i);
         }
       }
