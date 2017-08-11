@@ -17,7 +17,6 @@ import StoragePath from './StoragePath';
 const KEY = Symbol('FileOp constructor key');
 
 // Operation category constants. See docs on the static properties for details.
-const CAT_CONVENIENCE  = 'convenience';
 const CAT_DELETE       = 'delete';
 const CAT_ENVIRONMENT  = 'environment';
 const CAT_PREREQUISITE = 'prerequisite';
@@ -243,19 +242,10 @@ const OPERATIONS = DataUtil.deepFreeze([
  * Specifically, the category ordering is as listed above.
  *
  * There are static methods on this class to construct each named operation,
- * named `op_<name>`, as well as some convenience methods to construct variants.
- * See documentation on those methods for details about the meaning and
- * arguments of each of these.
+ * named `op_<name>`. See documentation on those methods for details about the
+ * meaning and arguments of each of these.
  */
 export default class FileOp extends CommonBase {
-  /**
-   * {string} Operation category for convenience wrapper ops. This category only
-   * shows up in `OPERATIONS`, not in actual operation instances.
-   */
-  static get CAT_CONVENIENCE() {
-    return CAT_CONVENIENCE;
-  }
-
   /** {string} Operation category for deletion ops. */
   static get CAT_DELETE() {
     return CAT_DELETE;
@@ -452,13 +442,12 @@ export default class FileOp extends CommonBase {
    */
   static _addConstructorMethods() {
     for (const [category, opName, ...argInfo] of OPERATIONS) {
-      const isConvenience = (category === CAT_CONVENIENCE);
       const constructorMethod = (...args) => {
         if (args.length !== argInfo.length) {
           throw new Error(`Wrong argument count for op constructor. Expected ${argInfo.length}.`);
         }
 
-        const argMap = isConvenience ? null : new Map();
+        const argMap = new Map();
         for (let i = 0; i < argInfo.length; i++) {
           const [name, type] = argInfo[i];
           let arg = args[i];
@@ -494,17 +483,10 @@ export default class FileOp extends CommonBase {
             }
           }
 
-          if (argMap) {
-            argMap.set(name, arg);
-          }
+          argMap.set(name, arg);
         }
 
-        if (isConvenience) {
-          const [newOpName, ...newArgs] = FileOp[`_xform_${opName}`](...args);
-          return FileOp[`op_${newOpName}`](...newArgs);
-        } else {
-          return new FileOp(KEY, category, opName, argMap);
-        }
+        return new FileOp(KEY, category, opName, argMap);
       };
 
       FileOp[`op_${opName}`] = constructorMethod;
