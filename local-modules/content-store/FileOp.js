@@ -375,7 +375,11 @@ export default class FileOp extends CommonBase {
     return TYPE_PATH;
   }
 
-  /** {string} Type name for hash values. */
+  /**
+   * {string} Type name for hash values. Arguments of this type will also
+   * accept instances of `FrozenBuffer`. When given a buffer, the constructor
+   * automatically converts it to its hash.
+   */
   static get TYPE_HASH() {
     return TYPE_HASH;
   }
@@ -508,7 +512,7 @@ export default class FileOp extends CommonBase {
         const argMap = isConvenience ? null : new Map();
         for (let i = 0; i < argInfo.length; i++) {
           const [name, type] = argInfo[i];
-          const arg  = args[i];
+          let arg = args[i];
           switch (type) {
             case TYPE_BUFFER: {
               FrozenBuffer.check(arg);
@@ -519,8 +523,12 @@ export default class FileOp extends CommonBase {
               break;
             }
             case TYPE_HASH: {
-              // **TODO:** Better validation of hashes.
-              TString.nonempty(arg);
+              if (arg instanceof FrozenBuffer) {
+                arg = arg.hash;
+              } else {
+                // **TODO:** Better validation of hashes.
+                TString.nonempty(arg);
+              }
               break;
             }
             case TYPE_PATH: {
