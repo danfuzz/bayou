@@ -280,8 +280,14 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_whenPathAbsent(op) {
-    // **TODO:** Implement this.
-    Transactor._missingOp(op.name);
+    const storagePath = op.arg('storagePath');
+    const value       = this._fileFriend.readPathOrNull(storagePath);
+
+    if (value === null) {
+      this._completed = false;
+    }
+
+    this._logAboutWaiting(`whenPathAbsent: ${storagePath}`);
   }
 
   /**
