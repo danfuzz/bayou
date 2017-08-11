@@ -244,7 +244,7 @@ const OPERATIONS = DataUtil.deepFreeze([
    */
   [
     CAT_CONVENIENCE, 'whenPathBuffer',
-    ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]
+    ['storagePath', TYPE_PATH], ['value', TYPE_BUFFER]
   ],
 
   /*
