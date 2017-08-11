@@ -343,7 +343,7 @@ export default class DocControl extends CommonBase {
       // then iterate to see if in fact the change updated the document revision
       // number.
       const fc   = this._fileCodec;
-      const ops  = [fc.op_whenPathNotBuffer(Paths.REVISION_NUMBER, revNum)];
+      const ops  = [fc.op_whenPathNot(Paths.REVISION_NUMBER, revNum)];
       const spec = new TransactionSpec(...ops);
       try {
         await fc.transact(spec);
