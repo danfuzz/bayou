@@ -83,19 +83,6 @@ const OPERATIONS = DataUtil.deepFreeze([
   [CAT_PREREQUISITE, 'checkPathExists', ['storagePath', TYPE_PATH]],
 
   /*
-   * Convenience wrapper for `checkPathHash` operations, which uses a given
-   * buffer's data. This is equivalent to `checkPathHash(storagePath,
-   * buffer.hash)`.
-   *
-   * @param {string} storagePath The storage path to check.
-   * @param {FrozenBuffer} value Buffer whose hash should be taken.
-   */
-  [
-    CAT_CONVENIENCE, 'checkPathBufferHash',
-    ['storagePath', TYPE_PATH], ['value', TYPE_BUFFER]
-  ],
-
-  /*
    * A `checkPathHash` operation. This is a prerequisite operation that
    * verifies that a given storage path is bound to a value whose hash is as
    * given.
@@ -208,19 +195,6 @@ const OPERATIONS = DataUtil.deepFreeze([
    * @param {string} storagePath The storage path to observe.
    */
   [CAT_WAIT, 'whenPathAbsent', ['storagePath', TYPE_PATH]],
-
-  /*
-   * Convenience wrapper for `whenPathNot` operations, which hashes a given
-   * buffer's data. This is equivalent to `whenPathNot(buffer.hash)`.
-   *
-   * @param {string} storagePath The storage path to observe.
-   * @param {string} hash Hash of the blob which must _not_ be at `storagePath`
-   *   for the operation to complete.
-   */
-  [
-    CAT_CONVENIENCE, 'whenPathNotBuffer',
-    ['storagePath', TYPE_PATH], ['value', TYPE_BUFFER]
-  ],
 
   /*
    * A `writeBlob` operation. This is a write operation that stores the
@@ -535,28 +509,6 @@ export default class FileOp extends CommonBase {
 
       FileOp[`op_${opName}`] = constructorMethod;
     }
-  }
-
-  /**
-   * Transformer for the convenience op `checkPathBufferHash`.
-   *
-   * @param {string} storagePath The storage path.
-   * @param {FrozenBuffer} value The value.
-   * @returns {array<*>} Replacement constructor info.
-   */
-  static _xform_checkPathBufferHash(storagePath, value) {
-    return ['checkPathHash', storagePath, value.hash];
-  }
-
-  /**
-   * Transformer for the convenience op `whenPathNotBuffer`.
-   *
-   * @param {string} storagePath The storage path.
-   * @param {FrozenBuffer} value The value.
-   * @returns {array<*>} Replacement constructor info.
-   */
-  static _xform_whenPathNotBuffer(storagePath, value) {
-    return ['whenPathNot', storagePath, value.hash];
   }
 }
 
