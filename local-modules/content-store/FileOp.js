@@ -64,22 +64,6 @@ const OPERATIONS = DataUtil.deepFreeze([
   [CAT_PREREQUISITE, 'checkBlobAbsent', ['hash', TYPE_HASH]],
 
   /*
-   * Convenience wrapper for `checkBlob` operations, which uses a given buffer's
-   * data. This is equivalent to `checkBlob(buffer.hash)`.
-   *
-   * @param {FrozenBuffer} value Buffer whose hash should be taken.
-   */
-  [CAT_CONVENIENCE, 'checkBlobBuffer', ['value', TYPE_BUFFER]],
-
-  /*
-   * Convenience wrapper for `checkBlobAbsent` operations, which uses a given
-   * buffer's data. This is equivalent to `checkBlobAbsent(buffer.hash)`.
-   *
-   * @param {FrozenBuffer} value Buffer whose hash should be taken.
-   */
-  [CAT_CONVENIENCE, 'checkBlobBufferAbsent', ['value', TYPE_BUFFER]],
-
-  /*
    * A `checkPathAbsent` operation. This is a prerequisite operation that
    * verifies that a given storage path is not bound to any value. This is the
    * opposite of `checkPathExists`.
@@ -139,15 +123,6 @@ const OPERATIONS = DataUtil.deepFreeze([
    * @param {string} hash The hash of the blob to delete.
    */
   [CAT_DELETE, 'deleteBlob', ['hash', TYPE_HASH]],
-
-  /*
-   * Convenience wrapper for `deleteBlob` operations, which uses a given
-   * buffer's data. This is equivalent to `deleteBlob(buffer.hash)`.
-   *
-   * @param {FrozenBuffer} value Buffer whose hash should be taken, indicating a
-   *   blob to delete.
-   */
-  [CAT_CONVENIENCE, 'deleteBlobHash', ['value', TYPE_BUFFER]],
 
   /*
    * A `deletePath` operation. This is a write operation that deletes the
@@ -563,26 +538,6 @@ export default class FileOp extends CommonBase {
   }
 
   /**
-   * Transformer for the convenience op `checkBlobBuffer`.
-   *
-   * @param {FrozenBuffer} value The value.
-   * @returns {array<*>} Replacement constructor info.
-   */
-  static _xform_checkBlobBuffer(value) {
-    return ['checkBlob', value.hash];
-  }
-
-  /**
-   * Transformer for the convenience op `checkBlobBufferAbsent`.
-   *
-   * @param {FrozenBuffer} value The value.
-   * @returns {array<*>} Replacement constructor info.
-   */
-  static _xform_checkBlobBufferAbsent(value) {
-    return ['checkBlobAbsent', value.hash];
-  }
-
-  /**
    * Transformer for the convenience op `checkPathBufferHash`.
    *
    * @param {string} storagePath The storage path.
@@ -591,16 +546,6 @@ export default class FileOp extends CommonBase {
    */
   static _xform_checkPathBufferHash(storagePath, value) {
     return ['checkPathHash', storagePath, value.hash];
-  }
-
-  /**
-   * Transformer for the convenience op `deleteBlobBuffer`.
-   *
-   * @param {FrozenBuffer} value The value.
-   * @returns {array<*>} Replacement constructor info.
-   */
-  static _xform_deleteBlobBuffer(value) {
-    return ['deleteBlob', value.hash];
   }
 
   /**
