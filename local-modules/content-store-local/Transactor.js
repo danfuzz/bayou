@@ -267,7 +267,7 @@ export default class Transactor extends CommonBase {
     const storagePath = op.arg('storagePath');
     const value       = this._fileFriend.readPathOrNull(storagePath);
 
-    if (value === null) {
+    if (value !== null) {
       this._completed = false;
     }
 
@@ -289,6 +289,22 @@ export default class Transactor extends CommonBase {
     }
 
     this._logAboutWaiting(`whenPathNot: ${storagePath}`);
+  }
+
+  /**
+   * Handler for `whenPathPresent` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_whenPathPresent(op) {
+    const storagePath = op.arg('storagePath');
+    const value       = this._fileFriend.readPathOrNull(storagePath);
+
+    if (value === null) {
+      this._completed = false;
+    }
+
+    this._logAboutWaiting(`whenPathPresent: ${storagePath}`);
   }
 
   /**

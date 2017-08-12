@@ -195,6 +195,14 @@ const OPERATIONS = DataUtil.deepFreeze([
   [CAT_WAIT, 'whenPathNot', ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]],
 
   /*
+   * A `whenPathPresent` operation. This is a wait operation that blocks the
+   * transaction until a specific path has some data (any value) stored.
+   *
+   * @param {string} storagePath The storage path to observe.
+   */
+  [CAT_WAIT, 'whenPathPresent', ['storagePath', TYPE_PATH]],
+
+  /*
    * A `writeBlob` operation. This is a write operation that stores the
    * indicated value in the file, binding it to its content hash. If the content
    * hash was already bound, then this operation does nothing.
