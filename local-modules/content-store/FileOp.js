@@ -47,12 +47,12 @@ const TYPE_REV_NUM   = 'RevNum';
 // So it goes.
 const OPERATIONS = DataUtil.deepFreeze([
   /*
-   * A `checkBlob` operation. This is a prerequisite operation that verifies
-   * that the file stores a blob with the indicated hash.
+   * A `checkBlobPresent` operation. This is a prerequisite operation that
+   * verifies that the file stores a blob with the indicated hash.
    *
    * @param {string} hash The expected hash.
    */
-  [CAT_PREREQUISITE, 'checkBlob', ['hash', TYPE_HASH]],
+  [CAT_PREREQUISITE, 'checkBlobPresent', ['hash', TYPE_HASH]],
 
   /*
    * A `checkBlobAbsent` operation. This is a prerequisite operation that

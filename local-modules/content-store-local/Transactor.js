@@ -116,11 +116,11 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `checkBlob` operations.
+   * Handler for `checkBlobPresent` operations.
    *
    * @param {FileOp} op The operation.
    */
-  _op_checkBlob(op) {
+  _op_checkBlobPresent(op) {
     // **TODO:** Implement this.
     Transactor._missingOp(op.name);
   }
