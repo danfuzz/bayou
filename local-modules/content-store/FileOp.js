@@ -65,21 +65,21 @@ const OPERATIONS = DataUtil.deepFreeze([
   /*
    * A `checkPathAbsent` operation. This is a prerequisite operation that
    * verifies that a given storage path is not bound to any value. This is the
-   * opposite of `checkPathExists`.
+   * opposite of `checkPathPresent`.
    *
    * @param {string} storagePath The storage path to check.
    */
   [CAT_PREREQUISITE, 'checkPathAbsent', ['storagePath', TYPE_PATH]],
 
   /*
-   * A `checkPathExists` operation. This is a prerequisite operation that
+   * A `checkPathPresent` operation. This is a prerequisite operation that
    * verifies that a given storage path is bound to a value (any value,
    * including one of zero length). This is the opposite of the
    * `checkPathAbsent` operation.
    *
    * @param {string} storagePath The storage path to check.
    */
-  [CAT_PREREQUISITE, 'checkPathExists', ['storagePath', TYPE_PATH]],
+  [CAT_PREREQUISITE, 'checkPathPresent', ['storagePath', TYPE_PATH]],
 
   /*
    * A `checkPathIs` operation. This is a prerequisite operation that verifies

@@ -660,7 +660,7 @@ export default class DocControl extends CommonBase {
     const fc = this._fileCodec;
     const storagePath = Paths.REVISION_NUMBER;
     const spec = new TransactionSpec(
-      fc.op_checkPathExists(storagePath),
+      fc.op_checkPathPresent(storagePath),
       fc.op_readPath(storagePath)
     );
 
@@ -711,7 +711,7 @@ export default class DocControl extends CommonBase {
     const fc = this._fileCodec;
     const ops = [];
     for (const p of paths) {
-      ops.push(fc.op_checkPathExists(p));
+      ops.push(fc.op_checkPathPresent(p));
       ops.push(fc.op_readPath(p));
     }
 

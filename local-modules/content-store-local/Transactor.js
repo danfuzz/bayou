@@ -148,11 +148,11 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `checkPathExists` operations.
+   * Handler for `checkPathPresent` operations.
    *
    * @param {FileOp} op The operation.
    */
-  _op_checkPathExists(op) {
+  _op_checkPathPresent(op) {
     const storagePath = op.arg('storagePath');
     if (this._fileFriend.readPathOrNull(storagePath) === null) {
       throw Errors.path_not_found(storagePath);
