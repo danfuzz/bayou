@@ -47,20 +47,20 @@ const TYPE_REV_NUM   = 'RevNum';
 // So it goes.
 const OPERATIONS = DataUtil.deepFreeze([
   /*
-   * A `checkBlobPresent` operation. This is a prerequisite operation that
-   * verifies that the file stores a blob with the indicated hash.
-   *
-   * @param {string} hash The expected hash.
-   */
-  [CAT_PREREQUISITE, 'checkBlobPresent', ['hash', TYPE_HASH]],
-
-  /*
    * A `checkBlobAbsent` operation. This is a prerequisite operation that
    * verifies that the file does not store a blob with the indicated hash.
    *
    * @param {string} hash The expected-to-be-absent hash.
    */
   [CAT_PREREQUISITE, 'checkBlobAbsent', ['hash', TYPE_HASH]],
+
+  /*
+   * A `checkBlobPresent` operation. This is a prerequisite operation that
+   * verifies that the file stores a blob with the indicated hash.
+   *
+   * @param {string} hash The expected hash.
+   */
+  [CAT_PREREQUISITE, 'checkBlobPresent', ['hash', TYPE_HASH]],
 
   /*
    * A `checkPathAbsent` operation. This is a prerequisite operation that
@@ -70,16 +70,6 @@ const OPERATIONS = DataUtil.deepFreeze([
    * @param {string} storagePath The storage path to check.
    */
   [CAT_PREREQUISITE, 'checkPathAbsent', ['storagePath', TYPE_PATH]],
-
-  /*
-   * A `checkPathPresent` operation. This is a prerequisite operation that
-   * verifies that a given storage path is bound to a value (any value,
-   * including one of zero length). This is the opposite of the
-   * `checkPathAbsent` operation.
-   *
-   * @param {string} storagePath The storage path to check.
-   */
-  [CAT_PREREQUISITE, 'checkPathPresent', ['storagePath', TYPE_PATH]],
 
   /*
    * A `checkPathIs` operation. This is a prerequisite operation that verifies
@@ -92,6 +82,16 @@ const OPERATIONS = DataUtil.deepFreeze([
     CAT_PREREQUISITE, 'checkPathIs',
     ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]
   ],
+
+  /*
+   * A `checkPathPresent` operation. This is a prerequisite operation that
+   * verifies that a given storage path is bound to a value (any value,
+   * including one of zero length). This is the opposite of the
+   * `checkPathAbsent` operation.
+   *
+   * @param {string} storagePath The storage path to check.
+   */
+  [CAT_PREREQUISITE, 'checkPathPresent', ['storagePath', TYPE_PATH]],
 
   /*
    * A `deleteAll` operation. This is a write operation that removes all stored
@@ -175,6 +175,14 @@ const OPERATIONS = DataUtil.deepFreeze([
   [CAT_ENVIRONMENT, 'timeout', ['durMsec', TYPE_DUR_MSEC]],
 
   /*
+   * A `whenPathAbsent` operation. This is a wait operation that blocks the
+   * transaction until a specific path _does not_ have any data stored.
+   *
+   * @param {string} storagePath The storage path to observe.
+   */
+  [CAT_WAIT, 'whenPathAbsent', ['storagePath', TYPE_PATH]],
+
+  /*
    * A `whenPathNot` operation. This is a wait operation that blocks the
    * transaction until a specific path does not store data which hashes as
    * given. This includes both storing data with other hashes as well as the
@@ -185,14 +193,6 @@ const OPERATIONS = DataUtil.deepFreeze([
    *   for the operation to complete.
    */
   [CAT_WAIT, 'whenPathNot', ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]],
-
-  /*
-   * A `whenPathAbsent` operation. This is a wait operation that blocks the
-   * transaction until a specific path _does not_ have any data stored.
-   *
-   * @param {string} storagePath The storage path to observe.
-   */
-  [CAT_WAIT, 'whenPathAbsent', ['storagePath', TYPE_PATH]],
 
   /*
    * A `writeBlob` operation. This is a write operation that stores the
