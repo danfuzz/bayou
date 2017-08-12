@@ -160,11 +160,11 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `checkPathHash` operations.
+   * Handler for `checkPathIs` operations.
    *
    * @param {FileOp} op The operation.
    */
-  _op_checkPathHash(op) {
+  _op_checkPathIs(op) {
     const storagePath  = op.arg('storagePath');
     const expectedHash = op.arg('hash');
     const data         = this._fileFriend.readPathOrNull(storagePath);

@@ -82,15 +82,14 @@ const OPERATIONS = DataUtil.deepFreeze([
   [CAT_PREREQUISITE, 'checkPathExists', ['storagePath', TYPE_PATH]],
 
   /*
-   * A `checkPathHash` operation. This is a prerequisite operation that
-   * verifies that a given storage path is bound to a value whose hash is as
-   * given.
+   * A `checkPathIs` operation. This is a prerequisite operation that verifies
+   * that a given storage path is bound to a value whose hash is as given.
    *
    * @param {string} storagePath The storage path to check.
    * @param {string} hash The expected hash.
    */
   [
-    CAT_PREREQUISITE, 'checkPathHash',
+    CAT_PREREQUISITE, 'checkPathIs',
     ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]
   ],
 
