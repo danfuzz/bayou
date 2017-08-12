@@ -116,21 +116,21 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `checkBlob` operations.
-   *
-   * @param {FileOp} op The operation.
-   */
-  _op_checkBlob(op) {
-    // **TODO:** Implement this.
-    Transactor._missingOp(op.name);
-  }
-
-  /**
    * Handler for `checkBlobAbsent` operations.
    *
    * @param {FileOp} op The operation.
    */
   _op_checkBlobAbsent(op) {
+    // **TODO:** Implement this.
+    Transactor._missingOp(op.name);
+  }
+
+  /**
+   * Handler for `checkBlobPresent` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_checkBlobPresent(op) {
     // **TODO:** Implement this.
     Transactor._missingOp(op.name);
   }
@@ -148,23 +148,11 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `checkPathExists` operations.
+   * Handler for `checkPathIs` operations.
    *
    * @param {FileOp} op The operation.
    */
-  _op_checkPathExists(op) {
-    const storagePath = op.arg('storagePath');
-    if (this._fileFriend.readPathOrNull(storagePath) === null) {
-      throw Errors.path_not_found(storagePath);
-    }
-  }
-
-  /**
-   * Handler for `checkPathHash` operations.
-   *
-   * @param {FileOp} op The operation.
-   */
-  _op_checkPathHash(op) {
+  _op_checkPathIs(op) {
     const storagePath  = op.arg('storagePath');
     const expectedHash = op.arg('hash');
     const data         = this._fileFriend.readPathOrNull(storagePath);
@@ -173,6 +161,18 @@ export default class Transactor extends CommonBase {
       throw Errors.path_not_found(storagePath);
     } else if (data.hash !== expectedHash) {
       throw Errors.path_hash_mismatch(storagePath, expectedHash);
+    }
+  }
+
+  /**
+   * Handler for `checkPathPresent` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_checkPathPresent(op) {
+    const storagePath = op.arg('storagePath');
+    if (this._fileFriend.readPathOrNull(storagePath) === null) {
+      throw Errors.path_not_found(storagePath);
     }
   }
 
@@ -259,6 +259,22 @@ export default class Transactor extends CommonBase {
   }
 
   /**
+   * Handler for `whenPathAbsent` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_whenPathAbsent(op) {
+    const storagePath = op.arg('storagePath');
+    const value       = this._fileFriend.readPathOrNull(storagePath);
+
+    if (value !== null) {
+      this._completed = false;
+    }
+
+    this._logAboutWaiting(`whenPathAbsent: ${storagePath}`);
+  }
+
+  /**
    * Handler for `whenPathNot` operations.
    *
    * @param {FileOp} op The operation.
@@ -276,11 +292,11 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `whenPathAbsent` operations.
+   * Handler for `whenPathPresent` operations.
    *
    * @param {FileOp} op The operation.
    */
-  _op_whenPathAbsent(op) {
+  _op_whenPathPresent(op) {
     const storagePath = op.arg('storagePath');
     const value       = this._fileFriend.readPathOrNull(storagePath);
 
@@ -288,7 +304,7 @@ export default class Transactor extends CommonBase {
       this._completed = false;
     }
 
-    this._logAboutWaiting(`whenPathAbsent: ${storagePath}`);
+    this._logAboutWaiting(`whenPathPresent: ${storagePath}`);
   }
 
   /**

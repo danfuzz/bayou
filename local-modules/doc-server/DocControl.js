@@ -343,7 +343,7 @@ export default class DocControl extends CommonBase {
       // then iterate to see if in fact the change updated the document revision
       // number.
       const fc   = this._fileCodec;
-      const ops  = [fc.op_whenPathNotBuffer(Paths.REVISION_NUMBER, revNum)];
+      const ops  = [fc.op_whenPathNot(Paths.REVISION_NUMBER, revNum)];
       const spec = new TransactionSpec(...ops);
       try {
         await fc.transact(spec);
@@ -581,7 +581,7 @@ export default class DocControl extends CommonBase {
     const fc   = this._fileCodec; // Avoids boilerplate immediately below.
     const spec = new TransactionSpec(
       fc.op_checkPathAbsent(changePath),
-      fc.op_checkPathBufferHash(Paths.REVISION_NUMBER, baseRevNum),
+      fc.op_checkPathIs(Paths.REVISION_NUMBER, baseRevNum),
       fc.op_writePath(changePath, change),
       fc.op_writePath(Paths.REVISION_NUMBER, revNum)
     );
@@ -660,7 +660,7 @@ export default class DocControl extends CommonBase {
     const fc = this._fileCodec;
     const storagePath = Paths.REVISION_NUMBER;
     const spec = new TransactionSpec(
-      fc.op_checkPathExists(storagePath),
+      fc.op_checkPathPresent(storagePath),
       fc.op_readPath(storagePath)
     );
 
@@ -711,7 +711,7 @@ export default class DocControl extends CommonBase {
     const fc = this._fileCodec;
     const ops = [];
     for (const p of paths) {
-      ops.push(fc.op_checkPathExists(p));
+      ops.push(fc.op_checkPathPresent(p));
       ops.push(fc.op_readPath(p));
     }
 
