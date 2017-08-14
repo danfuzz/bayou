@@ -257,13 +257,9 @@ describe('util-common/FrozenBuffer', () => {
         assert.deepEqual(buf.toBuffer(), nodeBuf);
       }
 
-      test('');
-      test('florp');
-      test('\u0001');
-      test('I 😍 U.');
-      test('á');
-      test('⣿');
-      test('😀');
+      for (const s of STRING_CASES) {
+        test(s);
+      }
     });
   });
 
