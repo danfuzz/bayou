@@ -83,12 +83,15 @@ export default class FrozenBuffer extends CommonBase {
 
   /**
    * {string} Hashcode of the data. This is a string of the form
-   * `<algorithm>-<length>-<hash>`, where the first part names the hashing
+   * `=<algorithm>_<length>_<digest>`, where the first part names the hashing
    * algorithm used, the second indicates the data length, and the last is the
-   * hash value per se. The length and hash are represented in lowercase
+   * hash digest value per se. The length and hash are represented in lowercase
    * hexadecimal. The length is _not_ zero-padded, and the hash contains
    * exactly enough characters to indicate its length (and so may have an
    * arbitrary number of leading zeroes).
+   *
+   * The `=` at the beginning unambiguously identifies this as a hash, in
+   * contexts where hashes might be mixed with (filesystem-like) storage paths.
    */
   get hash() {
     if (this._hash === null) {
@@ -101,7 +104,7 @@ export default class FrozenBuffer extends CommonBase {
       const length = Number(buf.length).toString(16);
       const digest = hash.digest('hex');
 
-      this._hash = `${name}-${length}-${digest}`;
+      this._hash = `=${name}_${length}_${digest}`;
     }
 
     return this._hash;
