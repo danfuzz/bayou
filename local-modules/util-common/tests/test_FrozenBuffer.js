@@ -22,6 +22,43 @@ const STRING_CASES = [
 ];
 
 describe('util-common/FrozenBuffer', () => {
+  describe('checkHash()', () => {
+    it('should accept valid hash strings', () => {
+      function test(string) {
+        assert.strictEqual(FrozenBuffer.checkHash(string), string);
+      }
+
+      test('=sha3_0_0000000011111111222222223333333300000000111111112222222233333333');
+      test('=sha3_1_0000000011111111222222223333333300000000111111112222222233333333');
+      test('=sha3_9abcdef_0000000011111111222222223333333300000000111111112222222233333333');
+      test('=sha3_123abc_00000000123456782222222233333333000000001111111122222222abcdef99');
+    });
+
+    it('should reject invalid hash strings', () => {
+      assert.throws(() => FrozenBuffer.checkHash(''));
+      assert.throws(() => FrozenBuffer.checkHash('1234'));
+      assert.throws(() => FrozenBuffer.checkHash('sha3_1234'));
+      assert.throws(() => FrozenBuffer.checkHash('sha3_1234_0000000011111111222222223333333300000000111111112222222233333333'));
+
+      // Wrong algorithm.
+      assert.throws(() => FrozenBuffer.checkHash('=blort_1234_0000000011111111222222223333333300000000111111112222222233333333'));
+
+      // Length too long.
+      assert.throws(() => FrozenBuffer.checkHash('=sha3_123456789_0000000011111111222222223333333300000000111111112222222233333333'));
+
+      // Zero-prefixed length.
+      assert.throws(() => FrozenBuffer.checkHash('=sha3_01_0000000011111111222222223333333300000000111111112222222233333333'));
+    });
+
+    it('should reject non-strings', () => {
+      assert.throws(() => FrozenBuffer.checkHash(undefined));
+      assert.throws(() => FrozenBuffer.checkHash(null));
+      assert.throws(() => FrozenBuffer.checkHash(true));
+      assert.throws(() => FrozenBuffer.checkHash(123.456));
+      assert.throws(() => FrozenBuffer.checkHash(['yo']));
+    });
+  });
+
   describe('constructor()', () => {
     it('should throw an error if handed anything other than a string or Buffer', () => {
       assert.throws(() => new FrozenBuffer(1));
