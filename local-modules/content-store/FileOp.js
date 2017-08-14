@@ -471,8 +471,7 @@ export default class FileOp extends CommonBase {
               if (arg instanceof FrozenBuffer) {
                 arg = arg.hash;
               } else {
-                // **TODO:** Better validation of hashes.
-                TString.nonempty(arg);
+                FrozenBuffer.checkHash(arg);
               }
               break;
             }

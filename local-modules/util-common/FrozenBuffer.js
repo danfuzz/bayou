@@ -6,7 +6,7 @@
 // module, which is why this is possible to import regardless of environment.
 import crypto from 'crypto';
 
-import { TBuffer, TInt, TypeError } from 'typecheck';
+import { TBuffer, TInt, TString, TypeError } from 'typecheck';
 
 import CommonBase from './CommonBase';
 
@@ -23,6 +23,43 @@ const HASH_BIT_LENGTH = 256;
  * Immutable buffer of data.
  */
 export default class FrozenBuffer extends CommonBase {
+  /**
+   * Validates that the given value is a valid hash string, such as might be
+   * returned by the instance property `.hash` on this class. Throws an error if
+   * not valid.
+   *
+   * @param {*} hash The (alleged) hash value.
+   * @returns {string} `hash`.
+   */
+  static checkHash(hash) {
+    try {
+      TString.nonempty(hash);
+    } catch (e) {
+      // Throw a higher-fidelity error.
+      return TypeError.badValue(hash, 'Hash');
+    }
+
+    // Validate the fields.
+
+    const match = hash.match(/^=([a-z0-9]+)_([1-9a-f][0-9a-f]*|0)_([0-9a-f]+)/);
+
+    if (match === null) {
+      return TypeError.badValue(hash, 'Hash');
+    }
+
+    const algorithm = match[1];
+    const length    = match[2];
+    const digest    = match[3];
+
+    if (   (algorithm !== PUBLIC_HASH_NAME)
+        || (length.length > 8)
+        || (digest.length !== (HASH_BIT_LENGTH / 4))) {
+      return TypeError.badValue(hash, 'Hash');
+    }
+
+    return hash;
+  }
+
   /**
    * Main coercion implementation, per the superclass documentation. In this
    * case, it merely tries to construct an instance with the given argument.
@@ -83,12 +120,15 @@ export default class FrozenBuffer extends CommonBase {
 
   /**
    * {string} Hashcode of the data. This is a string of the form
-   * `<algorithm>-<length>-<hash>`, where the first part names the hashing
+   * `=<algorithm>_<length>_<digest>`, where the first part names the hashing
    * algorithm used, the second indicates the data length, and the last is the
-   * hash value per se. The length and hash are represented in lowercase
+   * hash digest value per se. The length and hash are represented in lowercase
    * hexadecimal. The length is _not_ zero-padded, and the hash contains
    * exactly enough characters to indicate its length (and so may have an
    * arbitrary number of leading zeroes).
+   *
+   * The `=` at the beginning unambiguously identifies this as a hash, in
+   * contexts where hashes might be mixed with (filesystem-like) storage paths.
    */
   get hash() {
     if (this._hash === null) {
@@ -101,7 +141,7 @@ export default class FrozenBuffer extends CommonBase {
       const length = Number(buf.length).toString(16);
       const digest = hash.digest('hex');
 
-      this._hash = `${name}-${length}-${digest}`;
+      this._hash = `=${name}_${length}_${digest}`;
     }
 
     return this._hash;
