@@ -5,7 +5,8 @@
 import { Caret, CaretDelta, CaretOp, CaretSnapshot, RevisionNumber, Timestamp }
   from 'doc-common';
 import { TInt, TString } from 'typecheck';
-import { ColorSelector, CommonBase, PromCondition } from 'util-common';
+import { ColorSelector, CommonBase, PromCondition, PromDelay }
+  from 'util-common';
 
 import FileComplex from './FileComplex';
 
@@ -20,6 +21,12 @@ const MAX_OLD_SNAPSHOTS = 20;
  * culled from the current caret snapshot.
  */
 const MAX_SESSION_IDLE_MSEC = 10 * 60 * 1000; // Ten minutes.
+
+/** {Int} How many times to retry session removal. */
+const MAX_SESSION_REMOVAL_RETRIES = 10;
+
+/** {Int} How long (in msec) to wait between session removal retries. */
+const SESSION_REMOVAL_RETRY_DELAY_MSEC = 10 * 1000; // Ten seconds.
 
 /**
  * Controller for the active caret info for a given document.
@@ -197,7 +204,7 @@ export default class CaretControl extends CommonBase {
    * @returns {Int} The _caret_ revision number at which this information was
    *   integrated.
    */
-  _applyOps(ops) {
+  async _applyOps(ops) {
     const snapshot  = this._snapshot;
     const newRevNum = snapshot.revNum + 1;
 
@@ -237,7 +244,7 @@ export default class CaretControl extends CommonBase {
     }
 
     if (ops.length !== 0) {
-      this._applyOps(ops);
+      await this._removeSessionsWithRetry(ops);
     }
   }
 
@@ -266,7 +273,37 @@ export default class CaretControl extends CommonBase {
       const ops   = [CaretOp.op_endSession(sessionId)];
 
       this._log.info(`[${sessionId}] Caret removed.`);
-      this._applyOps(ops);
+      await this._removeSessionsWithRetry(ops);
     }
+  }
+
+  /**
+   * Apply ops which are session removals, with retry logic. This is called
+   * during session cleanup, in a context where it's okay if it ultimately
+   * fails, which is why we just warn when that happens.
+   *
+   * @param {array<CaretOp>} ops Session removal ops.
+   */
+  async _removeSessionsWithRetry(ops) {
+    for (let i = 0; i < MAX_SESSION_REMOVAL_RETRIES; i++) {
+      try {
+        await this._applyOps(ops);
+      } catch (e) {
+        this._log.warn('Caret removal failed.', e);
+      }
+
+      // Wait a moment, and then make sure we have the latest snapshot (but we
+      // still might lose another update race).
+
+      await PromDelay.resolve(SESSION_REMOVAL_RETRY_DELAY_MSEC);
+
+      try {
+        await this.snapshot();
+      } catch (e) {
+        this._log.warn('`snapshot()` failed during caret removal.', e);
+      }
+    }
+
+    this._log.warn('Caret removal failed too many times. Giving up!');
   }
 }
