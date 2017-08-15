@@ -7,6 +7,7 @@ import { describe, it } from 'mocha';
 
 import { FileOp, TransactionSpec } from 'file-store';
 import { LocalFile } from 'file-store-local';
+import { FrozenBuffer } from 'util-common';
 
 import TempFiles from './TempFiles';
 
@@ -40,6 +41,73 @@ describe('file-store-local/LocalFile.transact', () => {
       const result = await file.transact(spec);
       assert.instanceOf(result.paths, Set);
       assert.strictEqual(result.paths.size, 0);
+    });
+
+    it('should return a single result immediately under the path', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+
+      let spec = new TransactionSpec(
+        FileOp.op_writePath('/blort/yep', new FrozenBuffer('yep')),
+        FileOp.op_writePath('/nope', new FrozenBuffer('nope'))
+      );
+      await file.transact(spec);
+
+      spec = new TransactionSpec(FileOp.op_listPath('/blort'));
+      const result = await file.transact(spec);
+      const paths = result.paths;
+
+      assert.instanceOf(paths, Set);
+      assert.strictEqual(paths.size, 1);
+      assert.isTrue(paths.has('/blort/yep'));
+    });
+
+    it('should return a single result immediately under the path, even if the full result path has more components', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+
+      let spec = new TransactionSpec(
+        FileOp.op_writePath('/blort/yep/nope', new FrozenBuffer('yep')),
+        FileOp.op_writePath('/nope', new FrozenBuffer('nope'))
+      );
+      await file.transact(spec);
+
+      spec = new TransactionSpec(FileOp.op_listPath('/blort'));
+      const result = await file.transact(spec);
+      const paths = result.paths;
+
+      assert.instanceOf(paths, Set);
+      assert.strictEqual(paths.size, 1);
+      assert.isTrue(paths.has('/blort/yep'));
+    });
+
+    it('should return multiple results properly', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+
+      let spec = new TransactionSpec(
+        FileOp.op_writePath('/abraxas/1/2/3', new FrozenBuffer('nope')),
+        FileOp.op_writePath('/blort/nope', new FrozenBuffer('nope')),
+        FileOp.op_writePath('/blort/x/affirmed', new FrozenBuffer('yep')),
+        FileOp.op_writePath('/blort/x/definitely/a/b/c', new FrozenBuffer('yep')),
+        FileOp.op_writePath('/blort/x/definitely/d/e/f', new FrozenBuffer('yep')),
+        FileOp.op_writePath('/blort/x/yep/1', new FrozenBuffer('yep')),
+        FileOp.op_writePath('/blort/x/yep/2', new FrozenBuffer('yep')),
+        FileOp.op_writePath('/blort/x/yep/3', new FrozenBuffer('yep')),
+        FileOp.op_writePath('/nope', new FrozenBuffer('nope')),
+        FileOp.op_writePath('/nope/blort', new FrozenBuffer('nope'))
+      );
+      await file.transact(spec);
+
+      spec = new TransactionSpec(FileOp.op_listPath('/blort/x'));
+      const result = await file.transact(spec);
+      const paths = result.paths;
+
+      assert.instanceOf(paths, Set);
+      assert.strictEqual(paths.size, 3);
+      assert.isTrue(paths.has('/blort/x/yep'));
+      assert.isTrue(paths.has('/blort/x/affirmed'));
+      assert.isTrue(paths.has('/blort/x/definitely'));
     });
   });
 });
