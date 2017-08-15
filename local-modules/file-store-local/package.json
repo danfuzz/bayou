@@ -1,5 +1,5 @@
 {
-  "name": "content-store-local",
+  "name": "file-store-local",
   "version": "1.0.0",
   "main": "main.js",
 
