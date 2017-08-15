@@ -45,6 +45,12 @@ export default class Transactor extends CommonBase {
     this._data = spec.hasReadOps() ? new Map() : null;
 
     /**
+     * {Set<string>|null} Set of paths listed while running the transaction, or
+     * `null` if the transaction has no path list operations.
+     */
+    this._paths = spec.hasListOps() ? new Set() : null;
+
+    /**
      * {Map<string, FrozenBuffer|null>} Map from paths updated while running the
      * transaction to the updated data or `null` for deleted paths.
      */
@@ -105,6 +111,14 @@ export default class Transactor extends CommonBase {
    */
   get data() {
     return this._data;
+  }
+
+  /**
+   * {Set<string>|null} Set of paths listed while running the transaction, or
+   * `null` if the transaction has no path list operations.
+   */
+  get paths() {
+    return this._paths;
   }
 
   /**
@@ -204,6 +218,25 @@ export default class Transactor extends CommonBase {
    */
   _op_deletePath(op) {
     this._updatedStorage.set(op.arg('storagePath'), null);
+  }
+
+  /**
+   * Handler for `listPath` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_listPath(op) {
+    const prefix = `${op.arg('storagePath')}/`;
+
+    for (const [path, value_unused] of this._fileFriend.pathStorage()) {
+      if (path.startsWith(prefix)) {
+        // We have a prefix match. Strip off components beyond the one
+        // immediately under the prefix, if any.
+        const nextSlashAt = path.indexOf('/', prefix.length);
+        this._paths.add(
+          (nextSlashAt === -1) ? path : path.slice(0, nextSlashAt));
+      }
+    }
   }
 
   /**

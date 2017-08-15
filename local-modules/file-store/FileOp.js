@@ -19,6 +19,7 @@ const KEY = Symbol('FileOp constructor key');
 // Operation category constants. See docs on the static properties for details.
 const CAT_DELETE       = 'delete';
 const CAT_ENVIRONMENT  = 'environment';
+const CAT_LIST         = 'list';
 const CAT_PREREQUISITE = 'prerequisite';
 const CAT_READ         = 'read';
 const CAT_REVISION     = 'revision';
@@ -27,8 +28,8 @@ const CAT_WRITE        = 'write';
 
 /** {array<string>} List of categories in defined execution order. */
 const CATEGORY_EXECUTION_ORDER = [
-  CAT_ENVIRONMENT, CAT_REVISION, CAT_PREREQUISITE, CAT_READ, CAT_DELETE,
-  CAT_WRITE, CAT_WAIT
+  CAT_ENVIRONMENT, CAT_REVISION, CAT_PREREQUISITE, CAT_LIST, CAT_READ,
+  CAT_DELETE, CAT_WRITE, CAT_WAIT
 ];
 
 // Schema argument type constants. See docs on the static properties for
@@ -117,6 +118,17 @@ const OPERATIONS = DataUtil.deepFreeze([
    * @param {string} storagePath The storage path to delete.
    */
   [CAT_DELETE, 'deletePath', ['storagePath', TYPE_PATH]],
+
+  /*
+   * A `listPath` operation. This is a read operation that retrieves a list of
+   * all paths immediately under the given prefix that store data. The resulting
+   * list can contain both paths that store blobs as well as "directories" under
+   * which other blobs are stored. If there are no such paths, the result is an
+   * empty list.
+   *
+   * @param {string} storagePath The storage path to list contents of.
+   */
+  [CAT_LIST, 'listPath', ['storagePath', TYPE_PATH]],
 
   /*
    * A `readBlob` operation. This is a read operation that retrieves the full
@@ -235,6 +247,8 @@ const OPERATIONS = DataUtil.deepFreeze([
  *   to being based only on a certain revision of the file.
  * * Prerequisite checks &mdash; A prerequisite check must pass in order for
  *   the remainder of a transaction to apply.
+ * * Path lists &mdash; A path list finds or identifies some number of storage
+ *   paths, yielding the paths themselves (and not the data so referenced).
  * * Data reads &mdash; A data read gets the value of a blob within a file.
  * * Data deletions &mdash; A data deletion erases previously-existing data
  *   within a file.
@@ -261,6 +275,11 @@ export default class FileOp extends CommonBase {
   /** {string} Operation category for environment ops. */
   static get CAT_ENVIRONMENT() {
     return CAT_ENVIRONMENT;
+  }
+
+  /** {string} Operation category for path lists. */
+  static get CAT_LIST() {
+    return CAT_LIST;
   }
 
   /** {string} Operation category for prerequisites. */
@@ -372,6 +391,7 @@ export default class FileOp extends CommonBase {
     switch (category) {
       case CAT_DELETE:
       case CAT_ENVIRONMENT:
+      case CAT_LIST:
       case CAT_PREREQUISITE:
       case CAT_READ:
       case CAT_REVISION:

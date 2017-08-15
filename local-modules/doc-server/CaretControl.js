@@ -75,8 +75,7 @@ export default class CaretControl extends CommonBase {
 
   /**
    * Gets a delta of caret information from the indicated base caret revision.
-   * This will throw an error if the indicated revision doesn't have caret
-   * information available.
+   * This will throw an error if the indicated caret revision isn't available.
    *
    * @param {Int} baseRevNum Revision number for the caret information which
    *   will form the basis for the result. If `baseRevNum` is the current
@@ -111,9 +110,8 @@ export default class CaretControl extends CommonBase {
   }
 
   /**
-   * Gets a snapshot of all active session caret information. This will throw
-   * an error if the indicated caret revision doesn't have caret information
-   * available.
+   * Gets a snapshot of all active session caret information. This will throw an
+   * error if the indicated caret revision isn't available.
    *
    * @param {Int|null} [revNum = null] Which caret revision to get. If passed as
    *   `null`, indicates the latest (most recent) revision.
