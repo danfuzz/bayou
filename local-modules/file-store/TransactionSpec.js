@@ -67,14 +67,14 @@ export default class TransactionSpec extends CommonBase {
   }
 
   /**
-   * Indicates whether or not this instance has any read operations, that is,
-   * any operations with category `CAT_READ`.
+   * Indicates whether or not this instance has any path list operations, that
+   * is, any operations with category `CAT_LIST`.
    *
-   * @returns {boolean} `true` iff there are any read operations in this
+   * @returns {boolean} `true` iff there are any path list operations in this
    *   instance.
    */
-  hasReadOps() {
-    return this.opsWithCategory(FileOp.CAT_READ).length !== 0;
+  hasListOps() {
+    return this.opsWithCategory(FileOp.CAT_LIST).length !== 0;
   }
 
   /**
@@ -87,6 +87,17 @@ export default class TransactionSpec extends CommonBase {
   hasModificationOps() {
     return (this.opsWithCategory(FileOp.CAT_DELETE).length !== 0)
       || (this.opsWithCategory(FileOp.CAT_WRITE).length !== 0);
+  }
+
+  /**
+   * Indicates whether or not this instance has any read operations, that is,
+   * any operations with category `CAT_READ`.
+   *
+   * @returns {boolean} `true` iff there are any read operations in this
+   *   instance.
+   */
+  hasReadOps() {
+    return this.opsWithCategory(FileOp.CAT_READ).length !== 0;
   }
 
   /**

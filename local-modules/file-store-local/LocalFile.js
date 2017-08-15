@@ -276,6 +276,7 @@ export default class LocalFile extends BaseFile {
 
     const updatedStorage = transactor.updatedStorage;
     const data           = transactor.data;
+    const paths          = transactor.paths;
     const revNum         = this._revNum;
     let   newRevNum      = null;
 
@@ -298,7 +299,7 @@ export default class LocalFile extends BaseFile {
     }
 
     this._log.detail('Transaction complete.');
-    return { revNum, newRevNum, data };
+    return { revNum, newRevNum, data, paths };
   }
 
   /**

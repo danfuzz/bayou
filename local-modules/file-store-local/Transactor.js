@@ -45,6 +45,12 @@ export default class Transactor extends CommonBase {
     this._data = spec.hasReadOps() ? new Map() : null;
 
     /**
+     * {Set<string>|null} Set of paths listed while running the transaction, or
+     * `null` if the transaction has no path list operations.
+     */
+    this._paths = spec.hasListOps() ? new Set() : null;
+
+    /**
      * {Map<string, FrozenBuffer|null>} Map from paths updated while running the
      * transaction to the updated data or `null` for deleted paths.
      */
@@ -105,6 +111,14 @@ export default class Transactor extends CommonBase {
    */
   get data() {
     return this._data;
+  }
+
+  /**
+   * {Set<string>|null} Set of paths listed while running the transaction, or
+   * `null` if the transaction has no path list operations.
+   */
+  get paths() {
+    return this._paths;
   }
 
   /**
@@ -204,6 +218,16 @@ export default class Transactor extends CommonBase {
    */
   _op_deletePath(op) {
     this._updatedStorage.set(op.arg('storagePath'), null);
+  }
+
+  /**
+   * Handler for `pathList` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_pathList(op) {
+    // **TODO:** Implement this.
+    Transactor._missingOp(op.name);
   }
 
   /**

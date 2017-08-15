@@ -2,9 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TBoolean, TInt, TMap, TObject, TString } from 'typecheck';
+import { TBoolean, TInt, TMap, TObject, TSet, TString } from 'typecheck';
 import { CommonBase, FrozenBuffer, InfoError } from 'util-common';
 
+import StoragePath from './StoragePath';
 import TransactionSpec from './TransactionSpec';
 
 /**
@@ -168,10 +169,15 @@ export default class BaseFile extends CommonBase {
    * * `newRevNum` &mdash; If the transaction spec included any modification
    *   operations, the revision number of the file that resulted from those
    *   modifications.
-   * * `data` &mdash; If the transaction spec included any read operations, a
-   *   `Map<string, FrozenBuffer>` from storage paths to the data which was
+   * * `data` &mdash; If the transaction spec included any data read operations,
+   *   a `Map<string, FrozenBuffer>` from storage paths to the data which was
    *   read. **Note:** Even if there was no data to read (e.g., all read
-   *   operations were for non-bound paths) as long as the spec included read
+   *   operations were for non-bound paths), as long as the spec included any
+   *   read operations, this property will still be present.
+   * * `paths` &mdash; If the transaction spec included any path list
+   *   operations, a `Set<string>` of storage paths that resulted from the
+   *   operations. **Note:** Even if there were no found paths (e.g., no
+   *   operations matched any paths), as long as the spec included any path list
    *   operations, this property will still be present.
    *
    * It is an error to call this method on a file that doesn't exist, in the
@@ -188,7 +194,7 @@ export default class BaseFile extends CommonBase {
     TransactionSpec.check(spec);
 
     const result = await this._impl_transact(spec);
-    TObject.withExactKeys(result, ['revNum', 'newRevNum', 'data']);
+    TObject.withExactKeys(result, ['revNum', 'newRevNum', 'data', 'paths']);
 
     // Validate and convert the result to be as documented.
 
@@ -204,12 +210,24 @@ export default class BaseFile extends CommonBase {
       if (result.data === null) {
         throw InfoError.wtf('Improper subclass behavior: Expected non-`null` `data`.');
       }
-      TMap.check(result.data, TString.check, FrozenBuffer.check);
+      TMap.check(result.data, StoragePath.check, FrozenBuffer.check);
     } else {
       if (result.data !== null) {
         throw InfoError.wtf('Improper subclass behavior: Expected `null` `data`.');
       }
       delete result.data;
+    }
+
+    if (spec.hasListOps()) {
+      if (result.paths === null) {
+        throw InfoError.wtf('Improper subclass behavior: Expected non-`null` `paths`.');
+      }
+      TSet.check(result.paths, StoragePath.check);
+    } else {
+      if (result.paths !== null) {
+        throw InfoError.wtf('Improper subclass behavior: Expected `null` `paths`.');
+      }
+      delete result.paths;
     }
 
     return result;
