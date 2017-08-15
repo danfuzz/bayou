@@ -221,14 +221,14 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `pathList` operations.
+   * Handler for `listPath` operations.
    *
    * @param {FileOp} op The operation.
    */
-  _op_pathList(op) {
+  _op_listPath(op) {
     const prefix = `${op.arg('storagePath')}/`;
 
-    for (const [path, value_unused] of this._fileFriend.pathStorage) {
+    for (const [path, value_unused] of this._fileFriend.pathStorage()) {
       if (path.startsWith(prefix)) {
         // We have a prefix match. Strip off components beyond the one
         // immediately under the prefix, if any.
