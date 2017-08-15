@@ -12,7 +12,7 @@ import { Dirs } from 'server-env';
 import LocalFile from './LocalFile';
 
 /** {Logger} Logger for this module. */
-const log = new Logger('local-content');
+const log = new Logger('local-file');
 
 /**
  * File storage implementation that stores everything in the locally-accessible
@@ -28,12 +28,12 @@ export default class LocalFileStore extends BaseFileStore {
     /** {Map<string, LocalFile>} Map from file IDs to file instances. */
     this._files = new Map();
 
-    /** {string} The directory for content storage. */
-    this._dir = path.resolve(Dirs.theOne.VAR_DIR, 'content');
+    /** {string} The directory for file storage. */
+    this._dir = path.resolve(Dirs.theOne.VAR_DIR, 'files');
 
     /**
-     * {boolean} `true` iff the content storage directory is known to exist. Set
-     * to `true` in `_ensureContentDirectory()`.
+     * {boolean} `true` iff the file storage directory is known to exist. Set
+     * to `true` in `_ensureFileStorageDirectory()`.
      */
     this._ensuredDir = false;
 
@@ -53,7 +53,7 @@ export default class LocalFileStore extends BaseFileStore {
       return already;
     }
 
-    await this._ensureContentDirectory();
+    await this._ensureFileStorageDirectory();
 
     const result = new LocalFile(fileId, this._filePath(fileId));
     this._files.set(fileId, result);
@@ -78,16 +78,16 @@ export default class LocalFileStore extends BaseFileStore {
    * break if something removes the file storage directory without restarting
    * the server.
    */
-  async _ensureContentDirectory() {
+  async _ensureFileStorageDirectory() {
     if (this._ensuredDir) {
       return;
     }
 
     if (await afs.exists(this._dir)) {
-      log.detail('Content directory already exists.');
+      log.detail('File storage directory already exists.');
     } else {
       await afs.mkdir(this._dir);
-      log.info('Created content directory.');
+      log.info('Created file storage directory.');
     }
 
     this._ensuredDir = true;

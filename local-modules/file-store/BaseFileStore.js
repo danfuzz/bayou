@@ -9,13 +9,14 @@ import BaseFile from './BaseFile';
 import FileId from './FileId';
 
 /**
- * Base class for content storage access. Subclasses must override several
- * methods defined by this class, as indicated in the documentation. Methods to
- * override are all named with the prefix `_impl_`.
+ * Base class for file storage access. This is, essentially, the filesystem
+ * interface when dealing with the high-level "files" of this system. Subclasses
+ * must override several methods defined by this class, as indicated in the
+ * documentation. Methods to override are all named with the prefix `_impl_`.
  *
  * **Note:** This is a subclass of `Singleton`, that is, the system is set up
- * to only ever expect there to be one content store instance. (Technically,
- * this inheritence relationship allows for the possibility of having singleton
+ * to only ever expect there to be one file store instance. (Technically, this
+ * inheritence relationship allows for the possibility of having singleton
  * instances of several subclasses of this class, but in practice that's not
  * what happens.)
  */
