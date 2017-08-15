@@ -123,9 +123,9 @@ export default class DocSession {
 
   /**
    * Gets a delta of caret information from the indicated base caret revision.
-   * This will throw an error if the indicated revision doesn't have caret
-   * information available, in which case the client will likely want to use
-   * `caretSnapshot()` to get back in synch.
+   * This will throw an error if the indicated caret revision isn't available,
+   * in which case the client will likely want to use `caretSnapshot()` to get
+   * back in synch.
    *
    * **Note:** Caret information and the main document have _separate_ revision
    * numbers. `CaretSnapshot` instances have information about both revision
@@ -148,9 +148,8 @@ export default class DocSession {
   }
 
   /**
-   * Gets a snapshot of all active session caret information. This will throw
-   * an error if the indicated caret revision doesn't have caret information
-   * available.
+   * Gets a snapshot of all active session caret information. This will throw an
+   * error if the indicated caret revision isn't available.
    *
    * **Note:** Caret information is only maintained ephemerally, so it is
    * common for it not to be available for other than just a few recent
