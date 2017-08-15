@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import BaseContentStore from './BaseContentStore';
 import BaseFile from './BaseFile';
+import BaseFileStore from './BaseFileStore';
 import Errors from './Errors';
 import FileCodec from './FileCodec';
 import FileId from './FileId';
@@ -12,8 +12,8 @@ import StoragePath from './StoragePath';
 import TransactionSpec from './TransactionSpec';
 
 export {
-  BaseContentStore,
   BaseFile,
+  BaseFileStore,
   Errors,
   FileCodec,
   FileId,

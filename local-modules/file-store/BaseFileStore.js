@@ -19,7 +19,7 @@ import FileId from './FileId';
  * instances of several subclasses of this class, but in practice that's not
  * what happens.)
  */
-export default class BaseContentStore extends Singleton {
+export default class BaseFileStore extends Singleton {
   /**
    * Checks a file ID for validity. Returns regularly (with no value) if all is
    * well, or throws an error if the ID is invalid. Only ever called on a

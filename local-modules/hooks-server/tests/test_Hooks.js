@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { BaseContentStore } from 'file-store';
+import { BaseFileStore } from 'file-store';
 import { BearerTokens, Hooks } from 'hooks-server';
 import { Mocks } from 'testing-server';
 
@@ -26,8 +26,8 @@ describe('hooks-server/Hooks', () => {
   });
 
   describe('.contentStore', () => {
-    it('should return an instance of BaseContentStore', () => {
-      assert.instanceOf(Hooks.theOne.contentStore, BaseContentStore);
+    it('should return an instance of BaseFileStore', () => {
+      assert.instanceOf(Hooks.theOne.contentStore, BaseFileStore);
     });
   });
 
