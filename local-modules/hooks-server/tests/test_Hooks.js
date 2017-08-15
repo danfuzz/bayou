@@ -25,9 +25,9 @@ describe('hooks-server/Hooks', () => {
     });
   });
 
-  describe('.contentStore', () => {
+  describe('.fileStore', () => {
     it('should return an instance of BaseFileStore', () => {
-      assert.instanceOf(Hooks.theOne.contentStore, BaseFileStore);
+      assert.instanceOf(Hooks.theOne.fileStore, BaseFileStore);
     });
   });
 
