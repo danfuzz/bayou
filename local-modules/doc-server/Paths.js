@@ -15,7 +15,7 @@ export default class Paths extends UtilityClass {
    * {string} `StoragePath` string for the caret information revision number.
    */
   static get CARET_REVISION_NUMBER() {
-    return '/carets/revision_number';
+    return '/caret/revision_number';
   }
 
   /** {string} `StoragePath` string for the document format version. */
@@ -55,6 +55,6 @@ export default class Paths extends UtilityClass {
    */
   static forCaret(sessionId) {
     TString.check(sessionId);
-    return `/carets/${sessionId}`;
+    return `/caret/${sessionId}`;
   }
 }
