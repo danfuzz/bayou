@@ -84,7 +84,7 @@ export default class CaretControl extends CommonBase {
    * @returns {CaretDelta} Delta from the base caret revision to a newer one.
    */
   async deltaAfter(baseRevNum) {
-    this._removeInactiveSessions();
+    await this._removeInactiveSessions();
 
     const minRevNum     = this._oldSnapshots[0].revNum;
     const currentRevNum = this._snapshot.revNum;
@@ -118,7 +118,7 @@ export default class CaretControl extends CommonBase {
    * @returns {CaretSnapshot} Snapshot of all the active carets.
    */
   async snapshot(revNum = null) {
-    this._removeInactiveSessions();
+    await this._removeInactiveSessions();
 
     const minRevNum     = this._oldSnapshots[0].revNum;
     const currentRevNum = this._snapshot.revNum;
@@ -224,7 +224,7 @@ export default class CaretControl extends CommonBase {
   /**
    * Removes sessions that haven't been active recently out of the snapshot.
    */
-  _removeInactiveSessions() {
+  async _removeInactiveSessions() {
     const minTime = Timestamp.now().addMsec(-MAX_SESSION_IDLE_MSEC);
     const ops = [];
 
@@ -247,7 +247,7 @@ export default class CaretControl extends CommonBase {
    *
    * @param {string} sessionId ID of the session that got reaped.
    */
-  _sessionReaped(sessionId) {
+  async _sessionReaped(sessionId) {
     const snapshot = this._snapshot;
 
     // **TODO:** These conditionals check for a weird case that has shown up

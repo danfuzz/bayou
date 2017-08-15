@@ -181,11 +181,11 @@ export default class FileComplex extends CommonBase {
    *
    * @param {string} sessionId ID of the session that got reaped.
    */
-  _sessionReaped(sessionId) {
+  async _sessionReaped(sessionId) {
     // Pass through to the caret controller (if present), since it might have a
     // record of the session.
     if (this._caretControl) {
-      this._caretControl._sessionReaped(sessionId);
+      await this._caretControl._sessionReaped(sessionId);
     }
   }
 }
