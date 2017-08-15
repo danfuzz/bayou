@@ -19,23 +19,17 @@ export default class CaretSnapshot extends CommonBase {
    * Constructs an instance.
    *
    * @param {Int} revNum Revision number of the caret information.
-   * @param {Int} docRevNum Revision number of the document to which the caret
-   *   information applies.
    * @param {Iterable<Caret>} carets Iterable of all the active carets. This
    *   constructor will iterate with it exactly once.
    */
-  constructor(revNum, docRevNum, carets) {
+  constructor(revNum, carets) {
     RevisionNumber.check(revNum);
-    RevisionNumber.check(docRevNum);
     TIterable.check(carets);
 
     super();
 
     /** {Int} The associated caret information revision number. */
     this._revNum = revNum;
-
-    /** {Int} The associated document information revision number. */
-    this._docRevNum = docRevNum;
 
     /** {Map<string, Caret>} Map of session ID to corresponding caret. */
     this._carets = new Map();
@@ -53,14 +47,7 @@ export default class CaretSnapshot extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._revNum, this._docRevNum, [...this._carets.values()]];
-  }
-
-  /**
-   * {Int} The document revision number to which the caret information applies.
-   */
-  get docRevNum() {
-    return this._docRevNum;
+    return [this._revNum, [...this._carets.values()]];
   }
 
   /** {Int} The caret information revision number. */
@@ -101,7 +88,6 @@ export default class CaretSnapshot extends CommonBase {
     CaretDelta.check(delta);
 
     const newCarets = new Map(this._carets.entries());
-    let   docRevNum = this._docRevNum;
     let   revNum    = this._revNum;
 
     for (const op of delta.ops) {
@@ -130,11 +116,6 @@ export default class CaretSnapshot extends CommonBase {
           break;
         }
 
-        case CaretOp.UPDATE_DOC_REV_NUM: {
-          docRevNum = op.arg('docRevNum');
-          break;
-        }
-
         case CaretOp.UPDATE_REV_NUM: {
           revNum = op.arg('revNum');
           break;
@@ -142,7 +123,7 @@ export default class CaretSnapshot extends CommonBase {
       }
     }
 
-    return new CaretSnapshot(revNum, docRevNum, newCarets.values());
+    return new CaretSnapshot(revNum, newCarets.values());
   }
 
   /**
@@ -170,10 +151,6 @@ export default class CaretSnapshot extends CommonBase {
 
     if (this._revNum !== newerSnapshot._revNum) {
       caretOps.push(CaretOp.op_updateRevNum(newerSnapshot._revNum));
-    }
-
-    if (this._docRevNum !== newerSnapshot._docRevNum) {
-      caretOps.push(CaretOp.op_updateDocRevNum(newerSnapshot._docRevNum));
     }
 
     // Find carets that are new or updated from `this` when going to
@@ -221,7 +198,6 @@ export default class CaretSnapshot extends CommonBase {
     const otherCarets = other._carets;
 
     if (   (this._revNum    !== other._revNum)
-        || (this._docRevNum !== other._docRevNum)
         || (thisCarets.size !== otherCarets.size)) {
       return false;
     }

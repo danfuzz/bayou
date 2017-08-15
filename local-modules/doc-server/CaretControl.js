@@ -50,7 +50,7 @@ export default class CaretControl extends CommonBase {
      * {CaretSnapshot} Latest caret info. Starts out as an empty stub; gets
      * filled in as updates arrive.
      */
-    this._snapshot = new CaretSnapshot(0, 0, []);
+    this._snapshot = new CaretSnapshot(0, []);
 
     /**
      * {array<CaretSnapshot>} Array of older caret snapshots, available for use

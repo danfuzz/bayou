@@ -30,11 +30,6 @@ export default class CaretOp extends CommonBase {
     return 'end-session';
   }
 
-  /** {string} Operation name for "update document rev-num" operations. */
-  static get UPDATE_DOC_REV_NUM() {
-    return 'update-doc-rev-num';
-  }
-
   /** {string} Operation name for "update rev-num" operations. */
   static get UPDATE_REV_NUM() {
     return 'update-rev-num';
@@ -82,18 +77,6 @@ export default class CaretOp extends CommonBase {
     TString.check(sessionId);
 
     return new CaretOp(KEY, CaretOp.END_SESSION, { sessionId });
-  }
-
-  /**
-   * Constructs a new instance of an update-doc-rev-num operation.
-   *
-   * @param {Int} docRevNum The new revision number.
-   * @returns {CaretOp} The corresponding operation.
-   */
-  static op_updateDocRevNum(docRevNum) {
-    RevisionNumber.check(docRevNum);
-
-    return new CaretOp(KEY, CaretOp.UPDATE_DOC_REV_NUM, { docRevNum });
   }
 
   /**
