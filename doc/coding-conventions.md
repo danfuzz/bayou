@@ -90,7 +90,7 @@ taking into account recent additions to the language.
   import express from 'express';
   import fs from 'fs';
 
-  import { BaseFile, FileOp } from 'content-store';
+  import { BaseFile, FileOp } from 'file-store';
   import { DataUtil, InfoError, Singleton } from 'util-common';
 
   import RegularBlort from './RegularBlort';

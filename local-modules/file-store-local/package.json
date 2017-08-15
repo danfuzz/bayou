@@ -5,7 +5,7 @@
 
   "dependencies": {
     "codec": "local",
-    "content-store": "local",
+    "file-store": "local",
     "see-all": "local",
     "util-common": "local",
     "server-env": "local",

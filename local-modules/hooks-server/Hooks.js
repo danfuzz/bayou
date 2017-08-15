@@ -52,7 +52,7 @@ export default class Hooks extends Singleton {
 
   /**
    * The object which provides access to content storage. This is an instance
-   * of a subclass of `BaseContentStore`, as defined by the `content-store`
+   * of a subclass of `BaseContentStore`, as defined by the `file-store`
    * module.
    */
   get contentStore() {

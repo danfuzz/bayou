@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { BaseContentStore } from 'content-store';
+import { BaseContentStore } from 'file-store';
 import { BearerTokens, Hooks } from 'hooks-server';
 import { Mocks } from 'testing-server';
 

@@ -7,7 +7,7 @@ import fs from 'fs';
 import { after, before, describe, it } from 'mocha';
 import path from 'path';
 
-import { FileOp, TransactionSpec } from 'content-store';
+import { FileOp, TransactionSpec } from 'file-store';
 import { LocalFile } from 'file-store-local';
 import { FrozenBuffer } from 'util-common';
 
