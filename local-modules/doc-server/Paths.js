@@ -28,7 +28,7 @@ export default class Paths extends UtilityClass {
    * This corresponds to the highest change number.
    */
   static get CHANGE_REVISION_NUMBER() {
-    return '/revision_number';
+    return '/change/revision_number';
   }
 
   /**
