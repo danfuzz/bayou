@@ -5,20 +5,20 @@
 import afs from 'async-file';
 import path from 'path';
 
-import { BaseContentStore } from 'content-store';
+import { BaseFileStore } from 'file-store';
 import { Logger } from 'see-all';
 import { Dirs } from 'server-env';
 
 import LocalFile from './LocalFile';
 
 /** {Logger} Logger for this module. */
-const log = new Logger('local-content');
+const log = new Logger('local-file');
 
 /**
- * Content storage implementation that stores everything in the
- * locally-accessible filesystem.
+ * File storage implementation that stores everything in the locally-accessible
+ * filesystem.
  */
-export default class LocalContentStore extends BaseContentStore {
+export default class LocalFileStore extends BaseFileStore {
   /**
    * Constructs an instance. This is not meant to be used publicly.
    */
@@ -28,16 +28,16 @@ export default class LocalContentStore extends BaseContentStore {
     /** {Map<string, LocalFile>} Map from file IDs to file instances. */
     this._files = new Map();
 
-    /** {string} The directory for content storage. */
-    this._dir = path.resolve(Dirs.theOne.VAR_DIR, 'content');
+    /** {string} The directory for file storage. */
+    this._dir = path.resolve(Dirs.theOne.VAR_DIR, 'files');
 
     /**
-     * {boolean} `true` iff the content storage directory is known to exist. Set
-     * to `true` in `_ensureContentDirectory()`.
+     * {boolean} `true` iff the file storage directory is known to exist. Set
+     * to `true` in `_ensureFileStorageDirectory()`.
      */
     this._ensuredDir = false;
 
-    log.info(`Content directory: ${this._dir}`);
+    log.info(`File storage directory: ${this._dir}`);
   }
 
   /**
@@ -53,7 +53,7 @@ export default class LocalContentStore extends BaseContentStore {
       return already;
     }
 
-    await this._ensureContentDirectory();
+    await this._ensureFileStorageDirectory();
 
     const result = new LocalFile(fileId, this._filePath(fileId));
     this._files.set(fileId, result);
@@ -78,16 +78,16 @@ export default class LocalContentStore extends BaseContentStore {
    * break if something removes the file storage directory without restarting
    * the server.
    */
-  async _ensureContentDirectory() {
+  async _ensureFileStorageDirectory() {
     if (this._ensuredDir) {
       return;
     }
 
     if (await afs.exists(this._dir)) {
-      log.detail('Content directory already exists.');
+      log.detail('File storage directory already exists.');
     } else {
       await afs.mkdir(this._dir);
-      log.info('Created content directory.');
+      log.info('Created file storage directory.');
     }
 
     this._ensuredDir = true;

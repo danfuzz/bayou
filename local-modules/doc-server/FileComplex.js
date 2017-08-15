@@ -3,8 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Codec } from 'codec';
-import { BaseFile } from 'content-store';
 import { FrozenDelta } from 'doc-common';
+import { BaseFile } from 'file-store';
 import { DEFAULT_DOCUMENT } from 'hooks-server';
 import { Logger } from 'see-all';
 import { ProductInfo } from 'server-env';

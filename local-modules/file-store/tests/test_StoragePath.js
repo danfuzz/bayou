@@ -5,10 +5,10 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { StoragePath } from 'content-store';
+import { StoragePath } from 'file-store';
 
 
-describe('content-store/StoragePath', () => {
+describe('file-store/StoragePath', () => {
   describe('allPrefixes()', () => {
     it('should work as expected', () => {
       function test(value, expected) {

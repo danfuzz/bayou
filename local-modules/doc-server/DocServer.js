@@ -111,7 +111,7 @@ export default class DocServer extends Singleton {
     // Nothing in the cache. Asynchronously construct the ultimate result.
 
     const resultPromise = (async () => {
-      const file      = await Hooks.theOne.contentStore.getFile(docId);
+      const file      = await Hooks.theOne.fileStore.getFile(docId);
       const result    = new FileComplex(this._codec, file);
       const resultRef = weak(result, this._complexReaper(docId));
 

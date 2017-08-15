@@ -2,8 +2,11 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Errors, FileCodec, TransactionSpec } from 'content-store';
-import { DocumentDelta, DocumentChange, DocumentSnapshot, FrozenDelta, RevisionNumber, Timestamp } from 'doc-common';
+import {
+  DocumentDelta, DocumentChange, DocumentSnapshot, FrozenDelta, RevisionNumber,
+  Timestamp
+} from 'doc-common';
+import { Errors, FileCodec, TransactionSpec } from 'file-store';
 import { TString } from 'typecheck';
 import { CommonBase, InfoError, PromDelay } from 'util-common';
 

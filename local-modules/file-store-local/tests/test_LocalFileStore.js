@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import LocalFile from './LocalFile';
-import LocalContentStore from './LocalContentStore';
+import { describe, it } from 'mocha';
 
-export { LocalContentStore, LocalFile };
+describe('file-store-local/LocalFileStore', () => {
+  it('needs a way to be tested');
+});

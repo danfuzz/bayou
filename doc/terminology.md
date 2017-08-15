@@ -4,7 +4,9 @@ Terminology
 Within the code, there are a few terms that are used which warrant further
 explanation.
 
-* "content store" &mdash; Where files are stored.
+* "file store" &mdash; Where files are stored. Roughly speaking, this is the
+  filesystem, though this system implements deeper semantics beyond just a
+  flat file of bytes.
 
 * "document" &mdash; The high-level thing that this system works with.
 

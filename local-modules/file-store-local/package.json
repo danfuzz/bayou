@@ -1,11 +1,11 @@
 {
-  "name": "content-store-local",
+  "name": "file-store-local",
   "version": "1.0.0",
   "main": "main.js",
 
   "dependencies": {
     "codec": "local",
-    "content-store": "local",
+    "file-store": "local",
     "see-all": "local",
     "util-common": "local",
     "server-env": "local",

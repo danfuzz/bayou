@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { LocalContentStore } from 'content-store-local';
+import { LocalFileStore } from 'file-store-local';
 import { Hooks as HooksCommon } from 'hooks-common';
 import { Singleton } from 'util-common';
 
@@ -51,12 +51,13 @@ export default class Hooks extends Singleton {
   }
 
   /**
-   * The object which provides access to content storage. This is an instance
-   * of a subclass of `BaseContentStore`, as defined by the `content-store`
+   * The object which provides access to file storage (roughly speaking, the
+   * filesystem to store the "files" this system deals with). This is an
+   * instance of a subclass of `BaseFileStore`, as defined by the `file-store`
    * module.
    */
-  get contentStore() {
-    return LocalContentStore.theOne;
+  get fileStore() {
+    return LocalFileStore.theOne;
   }
 
   /**

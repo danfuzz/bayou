@@ -7,8 +7,8 @@ import fs from 'fs';
 import { after, before, describe, it } from 'mocha';
 import path from 'path';
 
-import { FileOp, TransactionSpec } from 'content-store';
-import { LocalFile } from 'content-store-local';
+import { FileOp, TransactionSpec } from 'file-store';
+import { LocalFile } from 'file-store-local';
 import { FrozenBuffer } from 'util-common';
 
 const STORE_PREFIX = 'bayou-test-';
@@ -18,7 +18,7 @@ function filePath(name = 'test-file') {
   return path.join(storeDir, name);
 }
 
-describe('content-store-local/LocalFile', () => {
+describe('file-store-local/LocalFile', () => {
   before(() => {
     storeDir = fs.mkdtempSync(STORE_PREFIX);
   });

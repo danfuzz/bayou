@@ -30,7 +30,7 @@ const MAX_SESSION_IDLE_MSEC = 10 * 60 * 1000; // Ten minutes.
  * `FileComplex` per document, and each `FileComplex` instance only ever makes
  * one instance of this class.
  *
- * **TODO:** This class needs to store caret info via the `content-store`,
+ * **TODO:** This class needs to store caret info via the `file-store`,
  * instead of being purely ephemeral.
  */
 export default class CaretControl extends CommonBase {
