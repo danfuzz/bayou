@@ -28,7 +28,7 @@ export default class Paths extends UtilityClass {
    * @param {RevisionNumber} revNum The revision number.
    * @returns {string} The corresponding `StoragePath` string.
    */
-  static forRevNum(revNum) {
+  static forDocumentChange(revNum) {
     RevisionNumber.check(revNum);
     return `/change/${revNum}`;
   }

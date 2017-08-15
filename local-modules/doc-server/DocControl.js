@@ -116,7 +116,7 @@ export default class DocControl extends CommonBase {
     const maybeChange1 = [];
     if (contents !== null) {
       const change = new DocumentChange(1, contents, Timestamp.now(), null);
-      const op     = fc.op_writePath(Paths.forRevNum(1), change);
+      const op     = fc.op_writePath(Paths.forDocumentChange(1), change);
       maybeChange1.push(op);
     }
 
@@ -134,7 +134,7 @@ export default class DocControl extends CommonBase {
       fc.op_writePath(Paths.REVISION_NUMBER, revNum),
 
       // Empty change #0 (per documented interface).
-      fc.op_writePath(Paths.forRevNum(0), change0),
+      fc.op_writePath(Paths.forDocumentChange(0), change0),
 
       // The given `content` (if any) for change #1.
       ...maybeChange1
@@ -289,7 +289,7 @@ export default class DocControl extends CommonBase {
       const fc  = this._fileCodec;
       const ops = [];
       for (let i = revNum + 1; i <= (revNum + 10); i++) {
-        ops.push(fc.op_readPath(Paths.forRevNum(i)));
+        ops.push(fc.op_readPath(Paths.forDocumentChange(i)));
       }
       const spec = new TransactionSpec(...ops);
       transactionResult = await fc.transact(spec);
@@ -579,7 +579,7 @@ export default class DocControl extends CommonBase {
 
     const revNum     = change.revNum;
     const baseRevNum = revNum - 1;
-    const changePath = Paths.forRevNum(revNum);
+    const changePath = Paths.forDocumentChange(revNum);
 
     const fc   = this._fileCodec; // Avoids boilerplate immediately below.
     const spec = new TransactionSpec(
@@ -708,7 +708,7 @@ export default class DocControl extends CommonBase {
 
     const paths = [];
     for (let i = start; i < endExc; i++) {
-      paths.push(Paths.forRevNum(i));
+      paths.push(Paths.forDocumentChange(i));
     }
 
     const fc = this._fileCodec;
