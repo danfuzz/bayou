@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { LocalContentStore } from 'file-store-local';
+import { LocalFileStore } from 'file-store-local';
 import { Hooks as HooksCommon } from 'hooks-common';
 import { Singleton } from 'util-common';
 
@@ -56,7 +56,7 @@ export default class Hooks extends Singleton {
    * module.
    */
   get contentStore() {
-    return LocalContentStore.theOne;
+    return LocalFileStore.theOne;
   }
 
   /**

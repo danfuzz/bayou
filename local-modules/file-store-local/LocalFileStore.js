@@ -15,10 +15,10 @@ import LocalFile from './LocalFile';
 const log = new Logger('local-content');
 
 /**
- * Content storage implementation that stores everything in the
- * locally-accessible filesystem.
+ * File storage implementation that stores everything in the locally-accessible
+ * filesystem.
  */
-export default class LocalContentStore extends BaseFileStore {
+export default class LocalFileStore extends BaseFileStore {
   /**
    * Constructs an instance. This is not meant to be used publicly.
    */

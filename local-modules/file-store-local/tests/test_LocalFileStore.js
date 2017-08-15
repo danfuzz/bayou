@@ -4,6 +4,6 @@
 
 import { describe, it } from 'mocha';
 
-describe('file-store-local/LocalContentStore', () => {
+describe('file-store-local/LocalFileStore', () => {
   it('needs a way to be tested');
 });
