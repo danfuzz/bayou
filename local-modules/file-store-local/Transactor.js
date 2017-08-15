@@ -226,8 +226,17 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_pathList(op) {
-    // **TODO:** Implement this.
-    Transactor._missingOp(op.name);
+    const prefix = `${op.arg('storagePath')}/`;
+
+    for (const [path, value_unused] of this._fileFriend.pathStorage) {
+      if (path.startsWith(prefix)) {
+        // We have a prefix match. Strip off components beyond the one
+        // immediately under the prefix, if any.
+        const nextSlashAt = path.indexOf('/', prefix.length);
+        this._paths.add(
+          (nextSlashAt === -1) ? path : path.slice(0, nextSlashAt));
+      }
+    }
   }
 
   /**
