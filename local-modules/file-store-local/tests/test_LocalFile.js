@@ -4,25 +4,15 @@
 
 import { assert } from 'chai';
 import fs from 'fs';
-import { after, before, describe, it } from 'mocha';
-import path from 'path';
+import { after, describe, it } from 'mocha';
 
 import { FileOp, TransactionSpec } from 'file-store';
 import { LocalFile } from 'file-store-local';
 import { FrozenBuffer } from 'util-common';
 
-const STORE_PREFIX = 'bayou-test-';
-let storeDir = null;
-
-function filePath(name = 'test-file') {
-  return path.join(storeDir, name);
-}
+import TempFiles from './TempFiles';
 
 describe('file-store-local/LocalFile', () => {
-  before(() => {
-    storeDir = fs.mkdtempSync(STORE_PREFIX);
-  });
-
   // The expectation was that this would run after all tests were finish and
   // clean up the directory into which we are writing test files. However, since
   // it takes as much as 5 seconds for any `LocalFile` files to be written to
@@ -40,13 +30,13 @@ describe('file-store-local/LocalFile', () => {
 
   describe('constructor()', () => {
     it('should not throw given valid arguments', () => {
-      assert.doesNotThrow(() => { new LocalFile('0', filePath()); });
+      assert.doesNotThrow(() => { new LocalFile('0', TempFiles.uniquePath()); });
     });
   });
 
   describe('create()', () => {
     it('should cause a non-existent file to come into existence', async () => {
-      const file = new LocalFile('0', filePath('will-exist'));
+      const file = new LocalFile('0', TempFiles.uniquePath());
 
       assert.isFalse(await file.exists()); // Baseline assumption.
       await file.create();
@@ -55,7 +45,7 @@ describe('file-store-local/LocalFile', () => {
     });
 
     it('should do nothing if called on a non-empty file', async () => {
-      const file = new LocalFile('0', filePath());
+      const file = new LocalFile('0', TempFiles.uniquePath());
       const storagePath = '/abc';
       const value = FrozenBuffer.coerce('x');
 
@@ -90,7 +80,7 @@ describe('file-store-local/LocalFile', () => {
 
   describe('delete()', () => {
     it('should cause an existing file to stop existing', async () => {
-      const file = new LocalFile('0', filePath('will-be-deleted'));
+      const file = new LocalFile('0', TempFiles.uniquePath());
       await file.create();
       assert.isTrue(await file.exists()); // Baseline assumption.
 
@@ -101,38 +91,16 @@ describe('file-store-local/LocalFile', () => {
 
   describe('exists()', () => {
     it('should return `false` if the underlying storage does not exis.', async () => {
-      const file = new LocalFile('0', filePath('non-existent-file'));
+      const file = new LocalFile('0', TempFiles.uniquePath());
       assert.isFalse(await file.exists());
     });
 
     it('should return `true` if the underlying storage does exist', async () => {
-      const dir = filePath('exist-already');
+      const dir = TempFiles.uniquePath();
       const file = new LocalFile('0', dir);
 
       fs.mkdirSync(dir);
       assert.isTrue(await file.exists());
-    });
-  });
-
-  describe('transact()', () => {
-    it('should succeed and return no data from an empty transaction on an existing file', async () => {
-      const file = new LocalFile('0', filePath('empty-file-for-transact'));
-      await file.create();
-
-      const spec = new TransactionSpec();
-      const result = await file.transact(spec);
-      assert.strictEqual(result.revNum, 0);
-      assert.isUndefined(result.newRevNum);
-      assert.isUndefined(result.data);
-    });
-
-    it('should throw an error if the file doesn\'t exist', async () => {
-      const file = new LocalFile('0', filePath('non-existent-file'));
-      assert.isFalse(await file.exists()); // Baseline assumption.
-
-      // The actual test.
-      const spec = new TransactionSpec();
-      await assert.isRejected(file.transact(spec));
     });
   });
 });
