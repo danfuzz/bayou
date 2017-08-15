@@ -154,10 +154,14 @@ export default class CaretControl extends CommonBase {
     TInt.nonNegative(index);
     TInt.nonNegative(length);
 
+    // Rename for method-internal convenience. (The argument name serves a
+    // didactic purpose.)
+    const revNum = docRevNum;
+
     const caretStr = (length === 0)
       ? `@${index}`
       : `[${index}..${index + length - 1}]`;
-    this._log.info(`[${sessionId}] Caret update: r${docRevNum}, ${caretStr}`);
+    this._log.info(`[${sessionId}] Caret update: r${revNum}, ${caretStr}`);
 
     // Build up an array of ops to apply to the current snapshot.
 
@@ -168,22 +172,18 @@ export default class CaretControl extends CommonBase {
     if (oldCaret === null) {
       const lastActive = Timestamp.now();
       const color      = this._colorSelector.nextColorHex();
-      const fields     = { lastActive, index, length, color };
+      const fields     = { revNum, lastActive, index, length, color };
       const newCaret   = new Caret(sessionId, Object.entries(fields));
 
       ops = [CaretOp.op_beginSession(newCaret)];
     } else {
       const lastActive = Timestamp.now();
-      const fields     = { lastActive, index, length };
+      const fields     = { revNum, lastActive, index, length };
       const newCaret   = new Caret(oldCaret, Object.entries(fields));
       const diff       = oldCaret.diff(newCaret);
 
       ops = [...diff.ops]; // `[...x]` so as to be mutable for `push()` below.
     }
-
-    // **TODO:** Handle `docRevNum` sensibly instead of just blithely thwacking
-    // it into the new snapshot.
-    ops.push(CaretOp.op_updateDocRevNum(docRevNum));
 
     // Apply the ops, and inform any waiters.
     return this._applyOps(ops);
