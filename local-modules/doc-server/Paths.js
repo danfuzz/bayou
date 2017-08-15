@@ -27,7 +27,7 @@ export default class Paths extends UtilityClass {
    * {string} `StoragePath` string for the document content revision number.
    * This corresponds to the highest change number.
    */
-  static get REVISION_NUMBER() {
+  static get CHANGE_REVISION_NUMBER() {
     return '/revision_number';
   }
 
