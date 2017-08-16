@@ -9,6 +9,7 @@
  * there to be a DOM node tagged with id `editor`.
  */
 
+import { ClientEnv } from 'env-client';
 import { Logger } from 'see-all';
 import { ClientSink } from 'see-all-client';
 
@@ -18,6 +19,9 @@ import TopControl from './TopControl';
 ClientSink.init();
 const log = new Logger('page-init');
 log.detail('Starting...');
+
+// Init the environment utilities.
+ClientEnv.init(window);
 
 const control = new TopControl(window);
 log.detail('Made `control`.');
