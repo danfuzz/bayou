@@ -7,6 +7,7 @@ import { ColorSelector, CommonBase } from 'util-common';
 
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';
+import RevisionNumber from './RevisionNumber';
 import Timestamp from './Timestamp';
 
 /**
@@ -18,6 +19,7 @@ import Timestamp from './Timestamp';
  */
 const CARET_FIELDS = new Map([
   ['lastActive', Timestamp.check],
+  ['revNum',     RevisionNumber.check],
   ['index',      TInt.nonNegative],
   ['length',     TInt.nonNegative],
   ['color',      ColorSelector.checkHexColor]
@@ -45,6 +47,7 @@ export default class Caret extends CommonBase {
       DEFAULT = new Caret('no-session',
         Object.entries({
           lastActive: Timestamp.now(),
+          revNum:     0,
           index:      0,
           length:     0,
           color:      '#000000'
@@ -127,15 +130,15 @@ export default class Caret extends CommonBase {
   }
 
   /**
-   * {string} Opaque reference to be used with other APIs to get information
-   * about the author whose caret this is.
+   * {string} The color to be used when annotating this selection. It is in CSS
+   * three-byte hex format (e.g. `'#ffeab9'`).
    */
-  get sessionId() {
-    return this._sessionId;
+  get color() {
+    return this._fields.get('color');
   }
 
   /**
-   * {Int} The zero-based leading position of this caret/selection.
+   * {Int} The zero-based leading position of this caret / selection.
    */
   get index() {
     return this._fields.get('index');
@@ -157,11 +160,19 @@ export default class Caret extends CommonBase {
   }
 
   /**
-   * {string} The color to be used when annotating this selection. It is in CSS
-   * three-byte hex format (e.g. `'#ffeab9'`).
+   * {Int} Document revision number which the instances position / selection is
+   * with respect to.
    */
-  get color() {
-    return this._fields.get('color');
+  get revNum() {
+    return this._fields.get('revNum');
+  }
+
+  /**
+   * {string} Opaque reference to be used with other APIs to get information
+   * about the author whose caret this is.
+   */
+  get sessionId() {
+    return this._sessionId;
   }
 
   /**

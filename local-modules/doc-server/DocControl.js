@@ -6,7 +6,7 @@ import {
   DocumentDelta, DocumentChange, DocumentSnapshot, FrozenDelta, RevisionNumber,
   Timestamp
 } from 'doc-common';
-import { Errors, FileCodec, TransactionSpec } from 'file-store';
+import { Errors, TransactionSpec } from 'file-store';
 import { TString } from 'typecheck';
 import { CommonBase, InfoError, PromDelay } from 'util-common';
 
@@ -78,7 +78,7 @@ export default class DocControl extends CommonBase {
     this._file = fileComplex.file;
 
     /** {FileCodec} File-codec wrapper to use. */
-    this._fileCodec = new FileCodec(fileComplex.file, fileComplex.codec);
+    this._fileCodec = fileComplex.fileCodec;
 
     /**
      * {Map<RevisionNumber, DocumentSnapshot>} Mapping from revision numbers to
@@ -116,7 +116,7 @@ export default class DocControl extends CommonBase {
     const maybeChange1 = [];
     if (contents !== null) {
       const change = new DocumentChange(1, contents, Timestamp.now(), null);
-      const op     = fc.op_writePath(Paths.forRevNum(1), change);
+      const op     = fc.op_writePath(Paths.forDocumentChange(1), change);
       maybeChange1.push(op);
     }
 
@@ -131,10 +131,10 @@ export default class DocControl extends CommonBase {
       fc.op_writePath(Paths.FORMAT_VERSION, this._fileComplex.formatVersion),
 
       // Initial revision number.
-      fc.op_writePath(Paths.REVISION_NUMBER, revNum),
+      fc.op_writePath(Paths.CHANGE_REVISION_NUMBER, revNum),
 
       // Empty change #0 (per documented interface).
-      fc.op_writePath(Paths.forRevNum(0), change0),
+      fc.op_writePath(Paths.forDocumentChange(0), change0),
 
       // The given `content` (if any) for change #1.
       ...maybeChange1
@@ -233,7 +233,7 @@ export default class DocControl extends CommonBase {
       const fc = this._fileCodec;
       const spec = new TransactionSpec(
         fc.op_readPath(Paths.FORMAT_VERSION),
-        fc.op_readPath(Paths.REVISION_NUMBER)
+        fc.op_readPath(Paths.CHANGE_REVISION_NUMBER)
       );
       transactionResult = await fc.transact(spec);
     } catch (e) {
@@ -243,7 +243,7 @@ export default class DocControl extends CommonBase {
 
     const data          = transactionResult.data;
     const formatVersion = data.get(Paths.FORMAT_VERSION);
-    const revNum        = data.get(Paths.REVISION_NUMBER);
+    const revNum        = data.get(Paths.CHANGE_REVISION_NUMBER);
 
     if (!formatVersion) {
       this._log.info('Corrupt document: Missing format version.');
@@ -289,7 +289,7 @@ export default class DocControl extends CommonBase {
       const fc  = this._fileCodec;
       const ops = [];
       for (let i = revNum + 1; i <= (revNum + 10); i++) {
-        ops.push(fc.op_readPath(Paths.forRevNum(i)));
+        ops.push(fc.op_readPath(Paths.forDocumentChange(i)));
       }
       const spec = new TransactionSpec(...ops);
       transactionResult = await fc.transact(spec);
@@ -346,7 +346,7 @@ export default class DocControl extends CommonBase {
       // then iterate to see if in fact the change updated the document revision
       // number.
       const fc   = this._fileCodec;
-      const ops  = [fc.op_whenPathNot(Paths.REVISION_NUMBER, revNum)];
+      const ops  = [fc.op_whenPathNot(Paths.CHANGE_REVISION_NUMBER, revNum)];
       const spec = new TransactionSpec(...ops);
       try {
         await fc.transact(spec);
@@ -579,14 +579,14 @@ export default class DocControl extends CommonBase {
 
     const revNum     = change.revNum;
     const baseRevNum = revNum - 1;
-    const changePath = Paths.forRevNum(revNum);
+    const changePath = Paths.forDocumentChange(revNum);
 
     const fc   = this._fileCodec; // Avoids boilerplate immediately below.
     const spec = new TransactionSpec(
       fc.op_checkPathAbsent(changePath),
-      fc.op_checkPathIs(Paths.REVISION_NUMBER, baseRevNum),
+      fc.op_checkPathIs(Paths.CHANGE_REVISION_NUMBER, baseRevNum),
       fc.op_writePath(changePath, change),
-      fc.op_writePath(Paths.REVISION_NUMBER, revNum)
+      fc.op_writePath(Paths.CHANGE_REVISION_NUMBER, revNum)
     );
 
     try {
@@ -661,7 +661,7 @@ export default class DocControl extends CommonBase {
    */
   async _currentRevNum() {
     const fc = this._fileCodec;
-    const storagePath = Paths.REVISION_NUMBER;
+    const storagePath = Paths.CHANGE_REVISION_NUMBER;
     const spec = new TransactionSpec(
       fc.op_checkPathPresent(storagePath),
       fc.op_readPath(storagePath)
@@ -708,7 +708,7 @@ export default class DocControl extends CommonBase {
 
     const paths = [];
     for (let i = start; i < endExc; i++) {
-      paths.push(Paths.forRevNum(i));
+      paths.push(Paths.forDocumentChange(i));
     }
 
     const fc = this._fileCodec;

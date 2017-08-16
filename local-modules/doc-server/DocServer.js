@@ -187,9 +187,16 @@ export default class DocServer extends Singleton {
    * @returns {function} An appropriately-constructed function.
    */
   _sessionReaper(fileComplex, sessionId) {
-    return () => {
-      fileComplex._sessionReaped(sessionId);
+    return async () => {
       this._sessions.delete(sessionId);
+
+      try {
+        await fileComplex._sessionReaped(sessionId);
+      } catch (e) {
+        // Ignore the error, except to report it.
+        log.error(`Trouble reaping session ${sessionId}.`, e);
+      }
+
       log.info(`Reaped idle session: ${sessionId}`);
     };
   }

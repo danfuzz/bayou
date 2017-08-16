@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { RevisionNumber } from 'doc-common';
+import { TString } from 'typecheck';
 import { UtilityClass } from 'util-common';
 
 /**
@@ -10,14 +11,24 @@ import { UtilityClass } from 'util-common';
  * by the document storage format.
  */
 export default class Paths extends UtilityClass {
+  /**
+   * {string} `StoragePath` string for the caret information revision number.
+   */
+  static get CARET_REVISION_NUMBER() {
+    return '/caret/revision_number';
+  }
+
+  /**
+   * {string} `StoragePath` string for the document content revision number.
+   * This corresponds to the highest change number.
+   */
+  static get CHANGE_REVISION_NUMBER() {
+    return '/change/revision_number';
+  }
+
   /** {string} `StoragePath` string for the document format version. */
   static get FORMAT_VERSION() {
     return '/format_version';
-  }
-
-  /** {string} `StoragePath` string for the document revision number. */
-  static get REVISION_NUMBER() {
-    return '/revision_number';
   }
 
   /**
@@ -26,10 +37,24 @@ export default class Paths extends UtilityClass {
    * revision.
    *
    * @param {RevisionNumber} revNum The revision number.
-   * @returns {string} The corresponding `StoragePath` string.
+   * @returns {string} The corresponding `StoragePath` string for document
+   *   change storage.
    */
-  static forRevNum(revNum) {
+  static forDocumentChange(revNum) {
     RevisionNumber.check(revNum);
     return `/change/${revNum}`;
+  }
+
+  /**
+   * Gets the `StoragePath` string corresponding to the indicated session,
+   * specifically to store caret data for that session.
+   *
+   * @param {string} sessionId The session ID.
+   * @returns {string} The corresponding `StoragePath` string for caret
+   *   information.
+   */
+  static forCaret(sessionId) {
+    TString.check(sessionId);
+    return `/caret/${sessionId}`;
   }
 }
