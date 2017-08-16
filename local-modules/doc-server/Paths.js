@@ -18,17 +18,17 @@ export default class Paths extends UtilityClass {
     return '/caret/revision_number';
   }
 
-  /** {string} `StoragePath` string for the document format version. */
-  static get FORMAT_VERSION() {
-    return '/format_version';
-  }
-
   /**
    * {string} `StoragePath` string for the document content revision number.
    * This corresponds to the highest change number.
    */
   static get CHANGE_REVISION_NUMBER() {
     return '/change/revision_number';
+  }
+
+  /** {string} `StoragePath` string for the document format version. */
+  static get FORMAT_VERSION() {
+    return '/format_version';
   }
 
   /**

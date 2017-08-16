@@ -4,11 +4,13 @@
 
 import { Caret, CaretDelta, CaretOp, CaretSnapshot, RevisionNumber, Timestamp }
   from 'doc-common';
+import { TransactionSpec } from 'file-store';
 import { TInt, TString } from 'typecheck';
 import { ColorSelector, CommonBase, PromCondition, PromDelay }
   from 'util-common';
 
 import FileComplex from './FileComplex';
+import Paths from './Paths';
 
 /**
  * {Int} How many older caret snapshots should be maintained for potential use
@@ -52,6 +54,9 @@ export default class CaretControl extends CommonBase {
 
     /** {FileComplex} File complex that this instance is part of. */
     this._fileComplex = FileComplex.check(fileComplex);
+
+    /** {FileCodec} File-codec wrapper to use. */
+    this._fileCodec = fileComplex.fileCodec;
 
     /**
      * {CaretSnapshot} Latest caret info. Starts out as an empty stub; gets
@@ -208,11 +213,17 @@ export default class CaretControl extends CommonBase {
     const snapshot  = this._snapshot;
     const newRevNum = snapshot.revNum + 1;
 
-    // Add the op to bump up the revision number.
+    // Add the op to bump up the revision number, and construct the new
+    // snapshot.
     ops.push(CaretOp.op_updateRevNum(newRevNum));
-
-    // Update the snapshot, and wake up any waiters.
     const newSnapshot = snapshot.compose(new CaretDelta(ops));
+
+    // Perform a transaction to update the stored carets to match the new
+    // state of affairs. This can fail if there is a data storage race. (Higher
+    // level logic will need to retry, if appropriate.)
+    await this._storeCarets(newSnapshot);
+
+    // Update the snapshot locally, and wake up any waiters.
     this._snapshot = newSnapshot;
     this._oldSnapshots.push(newSnapshot);
     this._updatedCondition.onOff();
@@ -222,8 +233,7 @@ export default class CaretControl extends CommonBase {
       this._oldSnapshots.shift();
     }
 
-    this._log.info(`Updated carets: Caret revision ${newRevNum}; ` +
-      `document revision ${this._snapshot.docRevNum}`);
+    this._log.info(`Updated carets: Caret revision ${newRevNum}.`);
 
     return newRevNum;
   }
@@ -246,6 +256,90 @@ export default class CaretControl extends CommonBase {
     if (ops.length !== 0) {
       await this._removeSessionsWithRetry(ops);
     }
+  }
+
+  /**
+   * Stores the carets represented in the given new snapshot, to the underlying
+   * file storage. This throws an error if there was a storage race and this
+   * call lost.
+   *
+   * @param {CaretSnapshot} snapshot Carets to store.
+   */
+  async _storeCarets(snapshot) {
+    const oldRevNum = this._snapshot.revNum;
+    const newRevNum = snapshot.revNum;
+    const fc        = this._fileCodec;
+
+    if (newRevNum !== (oldRevNum + 1)) {
+      throw new Error('Unexpected `revNum` for `_storeCarets()`.');
+    }
+
+    // **TODO:** For now, we just update the caret revision number without even
+    // checking for races. Ultimately, this needs to do a lot more! See the
+    // work-in-progress version of this, below.
+    const spec = new TransactionSpec(
+      fc.op_writePath(Paths.CARET_REVISION_NUMBER, newRevNum));
+    await this._fileCodec.transact(spec);
+  }
+
+  /**
+   * Stores the carets represented in the given new snapshot, to the underlying
+   * file storage. This throws an error if there was a storage race and this
+   * call lost.
+   *
+   * **TODO:** This is a non-functional work-in-progress version of the method.
+   *
+   * @param {CaretSnapshot} snapshot Carets to store.
+   */
+  async _storeCarets_workInProgress(snapshot) {
+    const oldRevNum = this._snapshot.revNum;
+    const newRevNum = snapshot.revNum;
+    const fc        = this._fileCodec;
+
+    if (newRevNum !== (oldRevNum + 1)) {
+      throw new Error('Unexpected `revNum` for `_storeCarets()`.');
+    }
+
+    try {
+      // **TODO:** For now, we just update the caret revision number.
+      // Ultimately, we should also be storing carets.
+      const spec = new TransactionSpec(
+        fc.op_checkPathIs(Paths.CARET_REVISION_NUMBER, oldRevNum),
+        fc.op_writePath(Paths.CARET_REVISION_NUMBER, newRevNum));
+      await this._fileCodec.transact(spec);
+    } catch (e) {
+      // We probably lost a race, but it could also be that the caret revision
+      // number is missing (new-ish file) or corrupt. The code below tries to
+      // sort it all out.
+      this._log.info('Failed to write carets.', e);
+    }
+
+    // Read the revision number (which might be absent), and take further action
+    // based on it. We don't try to catch errors here, because there's nothing
+    // we can do to recover at this point. Moreover, we always throw at the end
+    // of whatever we do, so that the higher layer will be set up to retry (or
+    // it might just itself fail).
+
+    let spec = new TransactionSpec(fc.op_readPath(Paths.CARET_REVISION_NUMBER));
+    const transactionResult = await this._fileCodec.transact(spec);
+    const revNum = transactionResult.data[Paths.CARET_REVISION_NUMBER];
+
+    if (((typeof revNum) === 'number') && (revNum >= newRevNum)) {
+      // Stored revision number indicates a data storage race loss. Just throw,
+      // so that the higher layer can recover (or fail).
+      throw new Error('Lost data storage race.');
+    }
+
+    if (revNum === undefined) {
+      // No carets ever stored.
+      this._log.info('Writing initial caret revision number.');
+    } else {
+      // The revision number is probably corrupt.
+      this._log.warn('Likely corrupt caret info. Resetting.');
+    }
+
+    spec = new TransactionSpec(fc.op_writePath(Paths.CARET_REVISION_NUMBER, 0));
+    await this._fileCodec.transact(spec);
   }
 
   /**

@@ -4,7 +4,7 @@
 
 import { Codec } from 'codec';
 import { FrozenDelta } from 'doc-common';
-import { BaseFile } from 'file-store';
+import { BaseFile, FileCodec } from 'file-store';
 import { DEFAULT_DOCUMENT } from 'hooks-server';
 import { Logger } from 'see-all';
 import { ProductInfo } from 'server-env';
@@ -64,6 +64,9 @@ export default class FileComplex extends CommonBase {
     /** {string} The document format version to use and expect. */
     this._formatVersion = TString.nonempty(ProductInfo.theOne.INFO.version);
 
+    /** {FileCodec} File-codec wrapper to use. */
+    this._fileCodec = new FileCodec(file, codec);
+
     /**
      * {CaretControl|null} Caret info controller. Set to non-`null` in the
      * corresponding getter.
@@ -108,6 +111,11 @@ export default class FileComplex extends CommonBase {
   /** {BaseFile} The underlying document storage. */
   get file() {
     return this._file;
+  }
+
+  /** {FileCodec} File-codec wrapper to use. */
+  get fileCodec() {
+    return this._fileCodec;
   }
 
   /**

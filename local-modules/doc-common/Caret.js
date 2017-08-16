@@ -47,6 +47,7 @@ export default class Caret extends CommonBase {
       DEFAULT = new Caret('no-session',
         Object.entries({
           lastActive: Timestamp.now(),
+          revNum:     0,
           index:      0,
           length:     0,
           color:      '#000000'

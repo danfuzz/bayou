@@ -6,7 +6,7 @@ import {
   DocumentDelta, DocumentChange, DocumentSnapshot, FrozenDelta, RevisionNumber,
   Timestamp
 } from 'doc-common';
-import { Errors, FileCodec, TransactionSpec } from 'file-store';
+import { Errors, TransactionSpec } from 'file-store';
 import { TString } from 'typecheck';
 import { CommonBase, InfoError, PromDelay } from 'util-common';
 
@@ -78,7 +78,7 @@ export default class DocControl extends CommonBase {
     this._file = fileComplex.file;
 
     /** {FileCodec} File-codec wrapper to use. */
-    this._fileCodec = new FileCodec(fileComplex.file, fileComplex.codec);
+    this._fileCodec = fileComplex.fileCodec;
 
     /**
      * {Map<RevisionNumber, DocumentSnapshot>} Mapping from revision numbers to
