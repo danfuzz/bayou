@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Logger } from 'see-all';
+import { TObject } from 'typecheck';
 import { UtilityClass } from 'util-common';
 
 /** {Logger} Logger for this module. */
@@ -23,6 +24,8 @@ export default class ClientEnv extends UtilityClass {
    * @param {Window} window Browser window that the application is running in.
    */
   static init(window) {
+    TObject.check(window, Window);
+
     if (ClientEnv._window) {
       throw new Error('Already initialized.');
     }

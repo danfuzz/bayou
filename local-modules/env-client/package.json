@@ -5,6 +5,7 @@
 
   "dependencies": {
     "see-all": "local",
+    "typecheck": "local",
     "util-common": "local"
   }
 }
