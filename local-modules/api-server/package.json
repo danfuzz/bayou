@@ -8,9 +8,9 @@
 
       "api-common": "local",
       "codec": "local",
+      "env-server": "local",
       "hooks-server": "local",
       "see-all": "local",
-      "server-env": "local",
       "typecheck": "local",
       "util-common": "local"
   }

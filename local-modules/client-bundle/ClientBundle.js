@@ -7,8 +7,8 @@ import memory_fs from 'memory-fs';
 import path from 'path';
 import webpack from 'webpack';
 
+import { Dirs } from 'env-server';
 import { Logger } from 'see-all';
-import { Dirs } from 'server-env';
 import { JsonUtil, Singleton } from 'util-common';
 
 import ProgressMessage from './ProgressMessage';

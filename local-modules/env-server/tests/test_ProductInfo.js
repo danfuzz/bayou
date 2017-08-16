@@ -5,10 +5,10 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { ProductInfo } from 'server-env';
+import { ProductInfo } from 'env-server';
 import { TObject } from 'typecheck';
 
-describe('server-env/ProductInfo', () => {
+describe('env-server/ProductInfo', () => {
   describe('.INFO', () => {
     it('should return an object full of product info', () => {
       const info = ProductInfo.theOne.INFO;

@@ -5,6 +5,6 @@
 //import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-describe('server-env/PidFile', () => {
+describe('env-server/PidFile', () => {
   it('needs a way to be tested');
 });

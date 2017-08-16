@@ -5,10 +5,10 @@
 
   "dependencies": {
     "codec": "local",
+    "env-server": "local",
     "file-store": "local",
     "see-all": "local",
     "util-common": "local",
-    "server-env": "local",
 
     "async-file": "^2.0.2"
   }

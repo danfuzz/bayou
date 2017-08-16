@@ -7,8 +7,8 @@
     "chokidar": "^1.6.1",
     "fs-extra": "^3.0.1",
 
+    "env-server": "local",
     "see-all": "local",
-    "server-env": "local",
     "util-common": "local"
   }
 }

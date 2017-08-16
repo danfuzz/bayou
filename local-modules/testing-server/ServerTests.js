@@ -6,7 +6,7 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import Mocha from 'mocha';
 
-import { Dirs } from 'server-env';
+import { Dirs } from 'env-server';
 import { UtilityClass } from 'util-common';
 
 import Utils from './Utils';
