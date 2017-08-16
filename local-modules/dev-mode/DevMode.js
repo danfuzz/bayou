@@ -7,8 +7,8 @@ import fs from 'fs';
 import fs_extra from 'fs-extra';
 import path from 'path';
 
+import { Dirs } from 'env-server';
 import { Logger } from 'see-all';
-import { Dirs } from 'server-env';
 import { PromDelay, Singleton } from 'util-common';
 
 /** Logger. */

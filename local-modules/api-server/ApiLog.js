@@ -5,8 +5,8 @@
 import fs from 'fs';
 import path from 'path';
 
+import { Dirs } from 'env-server';
 import { Logger } from 'see-all';
-import { Dirs } from 'server-env';
 import { Singleton } from 'util-common';
 
 /**

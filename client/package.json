@@ -20,6 +20,7 @@
   "dependencies": {
     "api-common": "local",
     "doc-client": "local",
+    "env-client": "local",
     "see-all-client": "local",
     "testing-client": "local"
   }

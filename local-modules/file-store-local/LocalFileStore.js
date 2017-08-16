@@ -5,9 +5,9 @@
 import afs from 'async-file';
 import path from 'path';
 
+import { Dirs } from 'env-server';
 import { BaseFileStore } from 'file-store';
 import { Logger } from 'see-all';
-import { Dirs } from 'server-env';
 
 import LocalFile from './LocalFile';
 

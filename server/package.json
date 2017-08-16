@@ -23,10 +23,10 @@
     "app-setup": "local",
     "client-bundle": "local",
     "dev-mode": "local",
+    "env-server": "local",
     "hooks-server": "local",
     "see-all": "local",
     "see-all-server": "local",
-    "server-env": "local",
     "testing-server": "local"
   }
 }

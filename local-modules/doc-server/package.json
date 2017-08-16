@@ -8,10 +8,10 @@
 
     "codec": "local",
     "doc-common": "local",
+    "env-server": "local",
     "file-store": "local",
     "hooks-server": "local",
     "see-all": "local",
-    "server-env": "local",
     "typecheck": "local",
     "util-common": "local"
   }

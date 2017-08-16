@@ -1,11 +1,11 @@
 {
-  "name": "server-env",
+  "name": "env-client",
   "version": "1.0.0",
   "main": "main.js",
 
   "dependencies": {
-    "proppy": "local",
     "see-all": "local",
+    "typecheck": "local",
     "util-common": "local"
   }
 }

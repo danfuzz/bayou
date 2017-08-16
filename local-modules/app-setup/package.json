@@ -16,9 +16,9 @@
     "codec": "local",
     "doc-common": "local",
     "doc-server": "local",
+    "env-server": "local",
     "see-all": "local",
     "see-all-server": "local",
-    "server-env": "local",
     "testing-server": "local"
   }
 }

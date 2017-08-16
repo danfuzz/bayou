@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Dirs } from 'server-env';
+import { Dirs } from 'env-server';
 import { UtilityClass } from 'util-common';
 
 import Utils from './Utils';

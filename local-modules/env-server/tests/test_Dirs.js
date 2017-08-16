@@ -8,9 +8,9 @@ import { describe, it } from 'mocha';
 import fs from 'fs';
 import path from 'path';
 
-import { Dirs } from 'server-env';
+import { Dirs } from 'env-server';
 
-describe('server-env/Dirs', () => {
+describe('env-server/Dirs', () => {
   describe('.BASE_DIR', () => {
     it('should return a directory path that exists', () => {
       const baseDir = Dirs.theOne.BASE_DIR;

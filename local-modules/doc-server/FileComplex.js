@@ -4,10 +4,10 @@
 
 import { Codec } from 'codec';
 import { FrozenDelta } from 'doc-common';
+import { ProductInfo } from 'env-server';
 import { BaseFile, FileCodec } from 'file-store';
 import { DEFAULT_DOCUMENT } from 'hooks-server';
 import { Logger } from 'see-all';
-import { ProductInfo } from 'server-env';
 import { TString } from 'typecheck';
 import { CommonBase, PromMutex } from 'util-common';
 

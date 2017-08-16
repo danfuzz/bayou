@@ -1,13 +1,10 @@
 {
-  "name": "dev-mode",
+  "name": "env-server",
   "version": "1.0.0",
   "main": "main.js",
 
   "dependencies": {
-    "chokidar": "^1.6.1",
-    "fs-extra": "^3.0.1",
-
-    "env-server": "local",
+    "proppy": "local",
     "see-all": "local",
     "util-common": "local"
   }

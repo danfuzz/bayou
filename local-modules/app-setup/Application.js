@@ -9,9 +9,9 @@ import path from 'path';
 
 import { BearerToken, Context, PostConnection, WsConnection } from 'api-server';
 import { ClientBundle } from 'client-bundle';
+import { Dirs } from 'env-server';
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
-import { Dirs } from 'server-env';
 
 import DebugTools from './DebugTools';
 import RequestLogger from './RequestLogger';
