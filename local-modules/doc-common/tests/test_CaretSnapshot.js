@@ -267,6 +267,21 @@ describe('doc-common/CaretSnapshot', () => {
     });
   });
 
+  describe('withRevNum()', () => {
+    it('should return `this` if the given `revNum` is the same as in the snapshot', () => {
+      const snap = new CaretSnapshot(1, [caret1]);
+
+      assert.strictEqual(snap.withRevNum(1), snap);
+    });
+
+    it('should return an appropriately-constructed instance given a different `revNum`', () => {
+      const snap =     new CaretSnapshot(1, [caret1, caret2]);
+      const expected = new CaretSnapshot(2, [caret1, caret2]);
+
+      assert.isTrue(snap.withRevNum(2).equals(expected));
+    });
+  });
+
   describe('withoutCaret()', () => {
     it('should return `this` if there is no matching session', () => {
       const snap = new CaretSnapshot(1, [caret1]);
