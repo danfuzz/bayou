@@ -240,4 +240,69 @@ describe('doc-common/CaretSnapshot', () => {
       assert.isFalse(snap2.equals(snap1));
     });
   });
+
+  describe('withCaret()', () => {
+    it('should return `this` if the exact caret is already in the snapshot', () => {
+      const snap = new CaretSnapshot(1, [caret1]);
+
+      assert.strictEqual(snap.withCaret(caret1), snap);
+
+      const cloneCaret = new Caret(caret1, []);
+      assert.strictEqual(snap.withCaret(cloneCaret), snap);
+    });
+
+    it('should return an appropriately-constructed instance given a new caret', () => {
+      const snap =     new CaretSnapshot(1, [caret1]);
+      const expected = new CaretSnapshot(1, [caret1, caret2]);
+
+      assert.isTrue(snap.withCaret(caret2).equals(expected));
+    });
+
+    it('should return an appropriately-constructed instance given an updated caret', () => {
+      const modCaret = new Caret(caret1, Object.entries({ index: 321 }));
+      const snap =     new CaretSnapshot(1, [caret1,   caret2]);
+      const expected = new CaretSnapshot(1, [modCaret, caret2]);
+
+      assert.isTrue(snap.withCaret(modCaret).equals(expected));
+    });
+  });
+
+  describe('withRevNum()', () => {
+    it('should return `this` if the given `revNum` is the same as in the snapshot', () => {
+      const snap = new CaretSnapshot(1, [caret1]);
+
+      assert.strictEqual(snap.withRevNum(1), snap);
+    });
+
+    it('should return an appropriately-constructed instance given a different `revNum`', () => {
+      const snap =     new CaretSnapshot(1, [caret1, caret2]);
+      const expected = new CaretSnapshot(2, [caret1, caret2]);
+
+      assert.isTrue(snap.withRevNum(2).equals(expected));
+    });
+  });
+
+  describe('withoutCaret()', () => {
+    it('should return `this` if there is no matching session', () => {
+      const snap = new CaretSnapshot(1, [caret1]);
+
+      assert.strictEqual(snap.withoutCaret(caret2), snap);
+      assert.strictEqual(snap.withoutCaret(caret3), snap);
+    });
+
+    it('should return an appropriately-constructed instance if there is a matching session', () => {
+      const snap =     new CaretSnapshot(1, [caret1, caret2]);
+      const expected = new CaretSnapshot(1, [caret2]);
+
+      assert.isTrue(snap.withoutCaret(caret1).equals(expected));
+    });
+
+    it('should only pay attention to the session ID of the given caret', () => {
+      const snap =     new CaretSnapshot(1, [caret1, caret2]);
+      const expected = new CaretSnapshot(1, [caret2]);
+      const modCaret = new Caret(caret1, Object.entries({ revNum: 999999, index: 99 }));
+
+      assert.isTrue(snap.withoutCaret(modCaret).equals(expected));
+    });
+  });
 });

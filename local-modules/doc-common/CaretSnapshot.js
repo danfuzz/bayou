@@ -211,4 +211,70 @@ export default class CaretSnapshot extends CommonBase {
 
     return true;
   }
+
+  /**
+   * Constructs an instance just like this one, except with an additional or
+   * updated reference to the indicated caret. If the given caret (including all
+   * fields) is already represented in this instance, this method returns
+   * `this`.
+   *
+   * @param {Caret} caret The caret to include in the result.
+   * @returns {CaretSnapshot} An appropriately-constructed instance.
+   */
+  withCaret(caret) {
+    Caret.check(caret);
+    const sessionId = caret.sessionId;
+    const carets    = this._carets;
+    const already   = carets.get(sessionId);
+
+    if (already && already.equals(caret)) {
+      return this;
+    }
+
+    const newCarets = new Map(carets);
+    newCarets.set(sessionId, caret);
+
+    return new CaretSnapshot(this._revNum, newCarets.values());
+  }
+
+  /**
+   * Constructs an instance just like this one, except with a different
+   * caret revision number. If the given revision number is the same as what
+   * this instance already stores, this method returns `this`.
+   *
+   * @param {Int} revNum The new caret revision number.
+   * @returns {CaretSnapshot} An appropriately-constructed instance.
+   */
+  withRevNum(revNum) {
+    RevisionNumber.check(revNum);
+
+    return (revNum === this._revNum)
+      ? this
+      : new CaretSnapshot(revNum, this._carets.values());
+  }
+
+  /**
+   * Constructs an instance just like this one, except without any reference to
+   * the session indicated by the given caret. If there is no session for the
+   * given caret, this method returns `this`.
+   *
+   * @param {Caret} caret The caret whose session should not be represented in
+   *   the result. Only the `sessionId` of the caret is consulted; it doesn't
+   *   matter if other caret fields match.
+   * @returns {CaretSnapshot} An appropriately-constructed instance.
+   */
+  withoutCaret(caret) {
+    Caret.check(caret);
+    const sessionId = caret.sessionId;
+    const carets    = this._carets;
+
+    if (!carets.has(sessionId)) {
+      return this;
+    }
+
+    const newCarets = new Map(carets);
+    newCarets.delete(sessionId);
+
+    return new CaretSnapshot(this._revNum, newCarets.values());
+  }
 }
