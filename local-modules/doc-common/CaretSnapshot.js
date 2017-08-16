@@ -213,6 +213,31 @@ export default class CaretSnapshot extends CommonBase {
   }
 
   /**
+   * Constructs an instance just like this one, except with an additional or
+   * updated reference to the indicated caret. If the given caret (including all
+   * fields) is already represented in this instance, this method returns
+   * `this`.
+   *
+   * @param {Caret} caret The caret to include in the result.
+   * @returns {CaretSnapshot} An appropriately-constructed instance.
+   */
+  withCaret(caret) {
+    Caret.check(caret);
+    const sessionId = caret.sessionId;
+    const carets    = this._carets;
+    const already   = carets.get(sessionId);
+
+    if (already && already.equals(caret)) {
+      return this;
+    }
+
+    const newCarets = new Map(carets);
+    newCarets.set(sessionId, caret);
+
+    return new CaretSnapshot(this._revNum, newCarets.values());
+  }
+
+  /**
    * Constructs an instance just like this one, except without any reference to
    * the session indicated by the given caret. If there is no session for the
    * given caret, this method returns `this`.

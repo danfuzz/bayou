@@ -241,6 +241,32 @@ describe('doc-common/CaretSnapshot', () => {
     });
   });
 
+  describe('withCaret()', () => {
+    it('should return `this` if the exact caret is already in the snapshot', () => {
+      const snap = new CaretSnapshot(1, [caret1]);
+
+      assert.strictEqual(snap.withCaret(caret1), snap);
+
+      const cloneCaret = new Caret(caret1, []);
+      assert.strictEqual(snap.withCaret(cloneCaret), snap);
+    });
+
+    it('should return an appropriately-constructed instance given a new caret', () => {
+      const snap =     new CaretSnapshot(1, [caret1]);
+      const expected = new CaretSnapshot(1, [caret1, caret2]);
+
+      assert.isTrue(snap.withCaret(caret2).equals(expected));
+    });
+
+    it('should return an appropriately-constructed instance given an updated caret', () => {
+      const modCaret = new Caret(caret1, Object.entries({ index: 321 }));
+      const snap =     new CaretSnapshot(1, [caret1,   caret2]);
+      const expected = new CaretSnapshot(1, [modCaret, caret2]);
+
+      assert.isTrue(snap.withCaret(modCaret).equals(expected));
+    });
+  });
+
   describe('withoutCaret()', () => {
     it('should return `this` if there is no matching session', () => {
       const snap = new CaretSnapshot(1, [caret1]);
