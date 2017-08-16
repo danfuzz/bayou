@@ -60,6 +60,13 @@ describe('doc-common/Caret', () => {
       assert.strictEqual(result.color, '#aabbcc');
     });
 
+    it('should update `revNum` given the appropriate op', () => {
+      const op     = CaretOp.op_updateField(caret1.sessionId, 'revNum', 12345);
+      const result = caret1.compose(new CaretDelta([op]));
+
+      assert.strictEqual(result.revNum, 12345);
+    });
+
     it('should refuse to compose if given a non-matching session ID', () => {
       const op = CaretOp.op_updateField(caret2.sessionId, 'index', 55);
 
