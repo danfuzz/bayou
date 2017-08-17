@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Caret } from 'doc-common';
+import { Caret, CaretSnapshot } from 'doc-common';
 import { TransactionSpec } from 'file-store';
 import { CommonBase, PromDelay } from 'util-common';
 
@@ -62,17 +62,18 @@ export default class CaretStorage extends CommonBase {
     this._localSessions = new Set();
 
     /**
-     * {Map<string,Caret>} Map from session IDs to carets, for all
-     * currently-known carets, both from local sessions and from file storage.
+     * {CaretSnapshot} Snapshot containing all currently-known carets, both
+     * from local sessions and from file storage. **Note:** The `revNum` of this
+     * snapshot never changes.
      */
-    this._carets = new Map();
+    this._carets = CaretSnapshot.EMPTY;
 
     /**
-     * {Map<string,Caret>} Map from session IDs to carets, for carets that are
-     * believed to be currently represented in file storage. The differences
-     * between this and `_carets` are what get written to file storage.
+     * {CaretSnapshot} Snapshot of carets as believed to be in file storage.
+     * (It is a combination of values read from and written to storage.) This
+     * is used to drive synchronization between `_carets` and file storage.
      */
-    this._storedCarets = new Map();
+    this._storedCarets = CaretSnapshot.EMPTY;
 
     /**
      * {Promise|null} Promise for the result of a pending storage write, or
@@ -93,14 +94,13 @@ export default class CaretStorage extends CommonBase {
    */
   delete(caret) {
     Caret.check(caret);
-    const sessionId = caret.sessionId;
 
     // Indicate that the local server is asserting authority over this session.
     // This means that, when it comes time to write out caret info, this session
     // will be removed from file storage.
-    this._localSessions.add(sessionId);
+    this._localSessions.add(caret.sessionId);
 
-    this._carets.delete(sessionId);
+    this._carets = this._carets.withoutCaret(caret);
     this._needsWrite();
   }
 
@@ -113,14 +113,13 @@ export default class CaretStorage extends CommonBase {
    */
   update(caret) {
     Caret.check(caret);
-    const sessionId = caret.sessionId;
 
     // Indicate that the local server is asserting authority over this session.
     // This means that, when it comes time to write out caret info, this session
     // will be written to file storage.
-    this._localSessions.add(sessionId);
+    this._localSessions.add(caret.sessionId);
 
-    this._carets.set(sessionId, caret);
+    this._carets = this._carets.withCaret(caret);
     this._needsWrite();
   }
 
@@ -177,8 +176,8 @@ export default class CaretStorage extends CommonBase {
     const updatedCarets = new Map();
 
     for (const s of this._localSessions) {
-      const caret       = this._carets.get(s) || null;
-      const storedCaret = this._storedCarets.get(s) || null;
+      const caret       = this._carets.caretForSession(s);
+      const storedCaret = this._storedCarets.caretForSession(s);
       const path        = Paths.forCaret(s);
 
       if (   (caret === storedCaret)
@@ -218,17 +217,27 @@ export default class CaretStorage extends CommonBase {
 
     // Update instance variables to reflect the new state of affairs.
 
+    let storedCarets    = this._storedCarets;
+    const localSessions = this._localSessions;
+
     for (const [s, caret] of updatedCarets) {
       if (caret) {
-        this._storedCarets.set(s, caret);
+        storedCarets = storedCarets.withCaret(caret);
       } else {
         // The session has ended. In addition to deleting the caret from the
         // file storage model, this removes the session from the set of
         // locally-controlled sessions. This is done because we only ever have
         // to delete a given session from file storage once.
-        this._storedCarets.delete(s);
-        this._localSessions.delete(s);
+
+        const already = storedCarets.caretForSession(s);
+        if (already) {
+          storedCarets = storedCarets.withoutCaret(s);
+        }
+
+        localSessions.delete(s);
       }
     }
+
+    this._storedCarets = storedCarets;
   }
 }

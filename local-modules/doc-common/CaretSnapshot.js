@@ -11,10 +11,28 @@ import CaretOp from './CaretOp';
 import RevisionNumber from './RevisionNumber';
 
 /**
+ * {CaretSnapshot|null} Empty instance. Initialized in the `EMPTY` property
+ * accessor.
+ */
+let emptyInstance = null;
+
+/**
  * Snapshot of information about all active sessions on a particular document.
  * Instances of this class are always frozen (immutable).
  */
 export default class CaretSnapshot extends CommonBase {
+  /**
+   * {CaretSnapshot} Empty instance of this class. It has no carets and a
+   * revision number of `0`.
+   */
+  static get EMPTY() {
+    if (emptyInstance === null) {
+      emptyInstance = new CaretSnapshot(0, []);
+    }
+
+    return emptyInstance;
+  }
+
   /**
    * Constructs an instance.
    *
