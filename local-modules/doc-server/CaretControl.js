@@ -83,22 +83,13 @@ export default class CaretControl extends CommonBase {
    * @returns {CaretDelta} Delta from the base caret revision to a newer one.
    */
   async deltaAfter(baseRevNum) {
-    this._removeInactiveSessions();
+    const oldSnapshot = await this.snapshot(baseRevNum);
 
-    const minRevNum     = this._oldSnapshots[0].revNum;
+    // **Note:** Can only do this after the above `await` returns (because the
+    // current snapshot from before the `await` may be out-of-date).
     const currentRevNum = this._snapshot.revNum;
 
-    if ((baseRevNum < minRevNum) || (baseRevNum > currentRevNum)) {
-      throw new Error(`Revision not available: ${baseRevNum}`);
-    }
-
-    // Grab the snapshot to use as the base. **Note:** If `baseRevNum` is in
-    // fact the current revision number, this will turn out to be the same as
-    // `_snapshot` because `_snapshot` is always the last element of
-    // `_oldSnapshots`.
-    const oldSnapshot = this._oldSnapshots[baseRevNum - minRevNum];
-
-    if (baseRevNum === currentRevNum) {
+    if (oldSnapshot.revNum === currentRevNum) {
       // We've been asked for a revision newer than the most recent one, so we
       // have to wait for a change to be made. `_snapshot` will have been
       // changed by the time this `await` returns.
