@@ -109,6 +109,7 @@ export default class CaretControl extends CommonBase {
    */
   async snapshot(revNum = null) {
     this._removeInactiveSessions();
+    this._integrateRemoteSessions();
 
     const minRevNum     = this._oldSnapshots[0].revNum;
     const currentRevNum = this._snapshot.revNum;
@@ -172,6 +173,23 @@ export default class CaretControl extends CommonBase {
     this._caretStorage.update(newCaret);
 
     return this._updateSnapshot(snapshot);
+  }
+
+  /**
+   * Merges any new remote session info into the snapshot.
+   */
+  _integrateRemoteSessions() {
+    const snapshot = this._snapshot;
+    const remotes = this._caretStorage.remoteSnapshot();
+
+    let newSnapshot = snapshot;
+    for (const c of remotes.carets) {
+      newSnapshot = newSnapshot.withCaret(c);
+    }
+
+    if (newSnapshot !== snapshot) {
+      this._updateSnapshot(newSnapshot);
+    }
   }
 
   /**
