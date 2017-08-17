@@ -10,6 +10,12 @@ import FileComplex from './FileComplex';
 import Paths from './Paths';
 
 /**
+ * {Int} Maximum amount of time that a call to `whenRemoteChange()` will take
+ * before timing out.
+ */
+const REMOTE_CHANGE_TIMEOUT_MSEC = 5 * 60 * 1000; // 5 minutes;
+
+/**
  * {Int} How long to wait (in msec) after sessions are updated before an attempt
  * is made to write session info to file storage. This keeps the system from
  * storing too many ephemeral session updates, with the downside that caret
@@ -105,6 +111,26 @@ export default class CaretStorage extends CommonBase {
   }
 
   /**
+   * Gets a snapshot of all remote carets, that is, carets represented in file
+   * storage that haven't been pushed there by this server. The resulting
+   * snapshot always has a revision number of `0`.
+   *
+   * **Note:** This returns the locally-cached information about the stored
+   * state. To make sure the local state gets updated, use `whenRemoteChange()`.
+   *
+   * @returns {CaretSnapshot} Snapshot of remote carets.
+   */
+  remoteSnapshot() {
+    let result = this._carets;
+
+    for (const s of this._localSessions) {
+      result = result.withoutSession(s);
+    }
+
+    return result;
+  }
+
+  /**
    * Updates a caret for a locally-controlled session. This update will
    * eventually get written to file storage (unless superseded by another change
    * to the same session in the meantime).
@@ -121,6 +147,19 @@ export default class CaretStorage extends CommonBase {
 
     this._carets = this._carets.withCaret(caret);
     this._needsWrite();
+  }
+
+  /**
+   * Waits for a change to the stored caret state. This method returns when a
+   * change has been detected, or after the request times out.
+   *
+   * **TODO:** This is currently a no-op. It should be filled in.
+   *
+   * @returns {boolean} `true` if a change was detected, or `false` if not.
+   */
+  async whenRemoteChange() {
+    await PromDelay.resolve(REMOTE_CHANGE_TIMEOUT_MSEC);
+    return false;
   }
 
   /**
