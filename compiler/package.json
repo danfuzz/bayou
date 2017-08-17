@@ -17,10 +17,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "babel-core": "^6.22.0",
-    "babel-polyfill": "^6.22.0",
-    "babel-preset-env": "^1.4.0",
     "chalk": "^1.1.1",
-    "fs-extra": "^3.0.1"
+    "fs-extra": "^3.0.1",
+
+    "compiler-dependencies": "local"
   }
 }

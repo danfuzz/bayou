@@ -102,6 +102,16 @@ function compileFile(inputFile, outputFile) {
   if (output !== null) {
     fs_extra.ensureDirSync(path.dirname(outputFile));
     fs.writeFileSync(outputFile, output.code);
+
+    // Update the access and modification time to make it look like the output
+    // file was written one second after the original instead of when it was
+    // actually written (which will generally be much later). This is done to
+    // make it so that subsequent builds won't mistakenly think a compiled file
+    // is up-to-date in the case where the source file was updated in the
+    // middle of a build.
+    const newTime = Math.ceil(inputStat.mtimeMs / 1000) + 1;
+    fs.utimesSync(outputFile, newTime, newTime);
+
     console.log(chalk.green.bold('Compiled: '), pathToLog);
   }
 }

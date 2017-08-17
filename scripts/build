@@ -334,7 +334,7 @@ function do-install {
     # this back to just doing `npm install` in the main directory, should npm
     # ever gain a way to understand that there are some module directories that
     # it shouldn't touch. See <https://github.com/npm/npm/issues/18062>.
-    
+
     rm -rf "${npmDir}"
     mkdir -p "${npmDir}"
     rsync --archive "${packageJson}" "${npmDir}/package.json"
@@ -371,6 +371,9 @@ function do-install {
     # directory, because we want to keep our local modules, and if we don't
     # `--delete` then we could end up with weird module amalgams in cases where
     # an external module got updated.
+
+    echo "${dir}:" 'Moving external dependencies into place...'
+
     local d
     for d in $(cd "${npmDir}/node_modules"; /bin/ls); do
         rsync --archive --delete \
@@ -383,7 +386,7 @@ function do-install {
     # subsequent builds.
     rsync --archive "${packageJson}" "${npmPackageJson}" || return 1
 
-    echo "${dir}:" 'Installing external dependencies... done.'
+    echo "${dir}:" 'External dependencies... done.'
 }
 
 # Builds the server code. This builds from `server` into `final/server`. The
