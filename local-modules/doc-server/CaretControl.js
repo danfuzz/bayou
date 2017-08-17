@@ -85,15 +85,20 @@ export default class CaretControl extends CommonBase {
   async deltaAfter(baseRevNum) {
     const oldSnapshot = await this.snapshot(baseRevNum);
 
-    // **Note:** Can only do this after the above `await` returns (because the
-    // current snapshot from before the `await` may be out-of-date).
-    const currentRevNum = this._snapshot.revNum;
+    // Iterate if / as long as the base revision is still the current one. This
+    // will stop being the case if either there's a local or remote update. The
+    // loop is needed because the remote update check can time out without an
+    // actual change happening.
+    while (oldSnapshot.revNum === this._snapshot.revNum) {
+      // Wait for either a local or remote update, whichever comes first.
+      await Promise.race([
+        this._updatedCondition.whenTrue(),
+        this._caretStorage.whenRemoteChange()
+      ]);
 
-    if (oldSnapshot.revNum === currentRevNum) {
-      // We've been asked for a revision newer than the most recent one, so we
-      // have to wait for a change to be made. `_snapshot` will have been
-      // changed by the time this `await` returns.
-      await this._updatedCondition.whenTrue();
+      // If there were remote changes, this will cause the snapshot to get
+      // updated.
+      this._integrateRemoteSessions();
     }
 
     return oldSnapshot.diff(this._snapshot);
