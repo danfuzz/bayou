@@ -25,6 +25,15 @@ const caret2 = newCaret('session-2', 2, 6,  '#222222');
 const caret3 = newCaret('session-3', 3, 99, '#333333');
 
 describe('doc-common/CaretSnapshot', () => {
+  describe('.EMPTY', () => {
+    it('should be an empty instance', () => {
+      const EMPTY = CaretSnapshot.EMPTY;
+
+      assert.strictEqual(EMPTY.revNum, 0);
+      assert.deepEqual(EMPTY.carets, []);
+    });
+  });
+
   describe('compose()', () => {
     it('should produce an equal instance when passed an empty delta', () => {
       let which = 0;
@@ -303,6 +312,21 @@ describe('doc-common/CaretSnapshot', () => {
       const modCaret = new Caret(caret1, Object.entries({ revNum: 999999, index: 99 }));
 
       assert.isTrue(snap.withoutCaret(modCaret).equals(expected));
+    });
+  });
+
+  describe('withoutSession()', () => {
+    it('should return `this` if there is no matching session', () => {
+      const snap = new CaretSnapshot(1, [caret1]);
+
+      assert.strictEqual(snap.withoutSession('blort-is-not-a-session'), snap);
+    });
+
+    it('should return an appropriately-constructed instance if there is a matching session', () => {
+      const snap =     new CaretSnapshot(1, [caret1, caret2]);
+      const expected = new CaretSnapshot(1, [caret2]);
+
+      assert.isTrue(snap.withoutSession(caret1.sessionId).equals(expected));
     });
   });
 });

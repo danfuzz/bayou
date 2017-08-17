@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TIterable } from 'typecheck';
+import { TIterable, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import Caret from './Caret';
@@ -283,8 +283,21 @@ export default class CaretSnapshot extends CommonBase {
    */
   withoutCaret(caret) {
     Caret.check(caret);
-    const sessionId = caret.sessionId;
-    const carets    = this._carets;
+    return this.withoutSession(caret.sessionId);
+  }
+
+  /**
+   * Constructs an instance just like this one, except without any reference to
+   * the indicated session. If the session is not represented in this instance,
+   * this method returns `this`.
+   *
+   * @param {string} sessionId ID of the session which should not be represented
+   *   in the result.
+   * @returns {CaretSnapshot} An appropriately-constructed instance.
+   */
+  withoutSession(sessionId) {
+    TString.nonempty(sessionId);
+    const carets = this._carets;
 
     if (!carets.has(sessionId)) {
       return this;
