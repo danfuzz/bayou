@@ -267,12 +267,7 @@ export default class CaretStorage extends CommonBase {
         // file storage model, this removes the session from the set of
         // locally-controlled sessions. This is done because we only ever have
         // to delete a given session from file storage once.
-
-        const already = storedCarets.caretForSession(s);
-        if (already) {
-          storedCarets = storedCarets.withoutCaret(s);
-        }
-
+        storedCarets = storedCarets.withoutSession(s);
         localSessions.delete(s);
       }
     }
