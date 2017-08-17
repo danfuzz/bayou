@@ -173,8 +173,8 @@ export default class FileComplex extends CommonBase {
    * Makes a new author-associated session for this instance.
    *
    * @param {string} authorId ID for the author.
-   * @param {function} makeSessionId Function of no argument which should return
-   *   a randomly-generated string to use as a session ID. This will get called
+   * @param {function} makeSessionId No-argument function which should return a
+   *   randomly-generated string to use as a session ID. This will get called
    *   more than once if the string happens to be a duplicate in the namespace
    *   for session IDs.
    * @returns {DocSession} A newly-constructed session.
