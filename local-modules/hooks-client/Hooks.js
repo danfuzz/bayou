@@ -38,12 +38,24 @@ export default class Hooks extends Singleton {
   }
 
   /**
+   * Called to construct the Quill module configuration. This is only ever
+   * called once per run of the application (and not, e.g., once per
+   * instantiation of a `Quill` object).
+   *
+   * @param {object} defaultConfig The default module configuration.
+   * @returns {object} The desired module configuration.
+   */
+  quillModuleConfig(defaultConfig) {
+    return defaultConfig;
+  }
+
+  /**
    * Called to construct the Quill toolbar configuration. This is only ever
    * called once per run of the application (and not, e.g., once per
    * instantiation of a `Quill` object).
    *
-   * @param {object} defaultConfig The default toolbar configuration.
-   * @returns {object} The desired toolbar configuration.
+   * @param {array<array<*>>} defaultConfig The default toolbar configuration.
+   * @returns {array<array<*>>} The desired toolbar configuration.
    */
   quillToolbarConfig(defaultConfig) {
     return defaultConfig;

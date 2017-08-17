@@ -17,7 +17,7 @@ import DocSession from './DocSession';
 /** {Logger} Logger for this module. */
 const log = new Logger('editor-complex');
 
-/** Default toolbar configuration. */
+/** {array<array<*>>} Default toolbar configuration. */
 const DEFAULT_TOOLBAR_CONFIG = [
   ['bold', 'italic', 'underline', 'strike', 'code'], // toggled buttons
   ['blockquote', 'code-block'],
@@ -30,6 +30,9 @@ const DEFAULT_TOOLBAR_CONFIG = [
 
   ['clean']                                      // remove formatting button
 ];
+
+/** {object} Default Quill module configuration. */
+const DEFAULT_MODULE_CONFIG = {};
 
 /**
  * Manager for the "complex" of objects and DOM nodes which in aggregate form
@@ -91,11 +94,9 @@ export default class EditorComplex extends CommonBase {
       /** {QuillProm} The Quill editor object. */
       this._quill = new QuillProm(quillNode, {
         readOnly: true,
-        strict: true,
-        theme: 'bubble',
-        modules: {
-          toolbar: EditorComplex._toolbarConfig
-        }
+        strict:   true,
+        theme:    'bubble',
+        modules:  EditorComplex._moduleConfig
       });
 
       // Let the overlay do extra initialization.
@@ -255,15 +256,20 @@ export default class EditorComplex extends CommonBase {
   }
 
   /**
-   * The toolbar configuration to use. This uses a hook to get the value the
-   * first time it's needed, caching the result for later reuse.
+   * The Quill module configuration to use. This uses a hook to get the value
+   * the first time it's needed, caching the result for later reuse.
    */
-  static get _toolbarConfig() {
-    if (!EditorComplex._toolbarConfigValue) {
-      EditorComplex._toolbarConfigValue = Object.freeze(
-        Hooks.theOne.quillToolbarConfig(DEFAULT_TOOLBAR_CONFIG));
+  static get _moduleConfig() {
+    if (!EditorComplex._moduleConfigValue) {
+      const moduleConfig =
+        Hooks.theOne.quillModuleConfig(DEFAULT_MODULE_CONFIG);
+      const toolbarConfig =
+        Hooks.theOne.quillToolbarConfig(DEFAULT_TOOLBAR_CONFIG);
+
+      moduleConfig.toolbar = toolbarConfig;
+      EditorComplex._moduleConfigValue = Object.freeze(moduleConfig);
     }
 
-    return EditorComplex._toolbarConfigValue;
+    return EditorComplex._moduleConfigValue;
   }
 }
