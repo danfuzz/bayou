@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { RevisionNumber } from 'doc-common';
+import { StoragePath } from 'file-store';
 import { TString } from 'typecheck';
 import { UtilityClass } from 'util-common';
 
@@ -12,10 +13,10 @@ import { UtilityClass } from 'util-common';
  */
 export default class Paths extends UtilityClass {
   /**
-   * {string} `StoragePath` string for the caret information revision number.
+   * {string} `StoragePath` string for the caret information path prefix.
    */
-  static get CARET_REVISION_NUMBER() {
-    return '/caret/revision_number';
+  static get CARET_PREFIX() {
+    return '/caret';
   }
 
   /**
@@ -55,6 +56,22 @@ export default class Paths extends UtilityClass {
    */
   static forCaret(sessionId) {
     TString.check(sessionId);
-    return `/caret/${sessionId}`;
+    return `${Paths.CARET_PREFIX}/${sessionId}`;
+  }
+
+  /**
+   * Takes a full storage path for a caret and returns the session ID part of
+   * it. This is the reverse of `forCaret()`.
+   *
+   * @param {string} path The full storage path.
+   * @returns {string} The corresponding caret session ID.
+   */
+  static sessionFromCaretPath(path) {
+    if (!StoragePath.isPrefix(Paths.CARET_PREFIX, path)) {
+      throw new Error(`Not a caret path: ${path}`);
+    }
+
+    const split = StoragePath.split(path);
+    return split[1];
   }
 }
