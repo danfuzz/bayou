@@ -18,7 +18,7 @@
  * be useful.
  */
 html.bayou-page {
-  font-size: 18px;
+  font-size: 100%;
 }
 
 /* Top-level container for all the nodes for a single editor "complex." */
@@ -53,16 +53,30 @@ html.bayou-page {
 
 /* Basic font and layout characteristics. */
 .bayou-editor .ql-editor {
-  line-height: 1.7rem;
-  font-size:   1rem; /* This thwacks it back from Quill's smaller default. */
+  color:          #2c2d30;
+  letter-spacing: normal;
+  line-height:    1.75rem;
+  font-size:      1rem; /* This thwacks it back from Quill's smaller default. */
 
   /*
    * This arranges for a maximum line width that won't force the reader's eyes
    * to glaze over.
+   * TODO: The max-width is specified as pixels in the Figma designs. Need to check with
+   *       designer as this might be more appropriately specified in `rem`s.
    */
-  max-width:    60rem;
-  margin-left:  auto;
-  margin-right: auto;
+  max-width:     45rem;
+  margin-left:   auto;
+  margin-right:  auto;
+}
+
+.bayou-editor .ql-editor ::selection {
+  background: #b2e8ff;
+}
+
+.bayou-editor .ql-editor p {
+  font-size:     1.125rem;
+  line-height:   1.75rem;
+  margin-bottom: 1.75rem;
 }
 
 /*
@@ -91,21 +105,36 @@ html.bayou-page {
  * (hence `rem` units) and the spacing below is based on the actual header font
  * size (hence `em` units).
  */
-.bayou-editor .ql-editor h1,
-.bayou-editor .ql-editor h2,
-.bayou-editor .ql-editor h3 {
-  padding-top:    2rem;
-  padding-bottom: 0.5em;
+.bayou-editor .ql-editor h1 {
+  font-size:     2.25rem;
+  line-height:   2.625rem;
+  margin-top:    0.75rem;
+  margin-bottom: 0.75rem;
+}
+.bayou-editor .ql-editor h2 {
+  font-size:     1.75rem;
+  line-height:   2.25rem;
+  margin-bottom: 0.5rem;
 }
 
-/*
- * Smaller header spacing. Similar above/below setup as for the bigger headers.
- */
-.bayou-editor .ql-editor h4,
-.bayou-editor .ql-editor h5,
-.bayou-editor .ql-editor h6 {
-  padding-top:    1rem;
-  padding-bottom: 0.25em;
+.bayou-editor .ql-editor h3 {
+  font-size:     1.375rem;
+  line-height:   2.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.bayou-editor .ql-editor a:link {
+  color:           #007ab8;
+  text-decoration: none;
+}
+
+.bayou-editor .ql-editor a:visited {
+  text-decoration: none;
+}
+
+.bayou-editor .ql-editor a:hover {
+  text-decoration:       underline;
+  text-decoration-color: #007ab8;
 }
 
 /*

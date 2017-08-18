@@ -24,7 +24,7 @@ const DEFAULT_TOOLBAR_CONFIG = [
 
   [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
 
-  [{ header: [1, 2, 3, 4, false] }],
+  [{ header: [1, 2, 3, false] }],
 
   [{ align: [] }],
 
