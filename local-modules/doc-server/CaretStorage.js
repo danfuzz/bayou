@@ -336,6 +336,12 @@ export default class CaretStorage extends CommonBase {
       }
     }
 
+    if (ops.length === 0) {
+      // There aren't any active remote sessions, so there's nothing more to do.
+      this._log.info('No remote carets to read.');
+      return;
+    }
+
     try {
       const spec = new TransactionSpec(...ops);
       const transactionResult = await fc.transact(spec);
@@ -370,6 +376,7 @@ export default class CaretStorage extends CommonBase {
    * things are working) than hard failure.
    */
   async _waitThenWriteCarets() {
+    this._log.detail('Waiting a moment before writing carets.');
     await PromDelay.resolve(WRITE_DELAY_MSEC);
 
     // Build up a transaction spec to perform all the caret updates, and extract
@@ -386,20 +393,26 @@ export default class CaretStorage extends CommonBase {
       const storedCaret = this._storedCarets.caretForSession(s);
       const path        = Paths.forCaret(s);
 
-      if (   (caret === storedCaret)
-          || (caret && storedCaret && caret.equals(storedCaret))) {
-        // The file already stores this caret info (or properly doesn't-store
-        // a caret for a terminated session).
+      if (caret && storedCaret && caret.equals(storedCaret)) {
+        // The file already stores this caret info.
         continue;
       }
 
       if (caret) {
+        this._log.detail(`Updating caret: ${s}`);
         ops.push(fc.op_writePath(path, caret));
       } else {
+        this._log.detail(`Deleting caret: ${s}`);
         ops.push(fc.op_deletePath(path));
       }
 
       updatedCarets.set(path, caret);
+    }
+
+    if (ops.length === 0) {
+      // Nothing got updated, as it turns out.
+      this._log.detail('No updated carets to write.');
+      return;
     }
 
     // Run the transaction, retrying a few times on failure.
@@ -412,7 +425,9 @@ export default class CaretStorage extends CommonBase {
       }
 
       try {
+        this._log.detail('Writing updated carets...');
         await fc.transact(spec);
+        this._log.detail('Wrote updated carets.');
         break;
       } catch (e) {
         this._log.warn('Failed to write carets.', e);
@@ -440,5 +455,6 @@ export default class CaretStorage extends CommonBase {
     }
 
     this._storedCarets = storedCarets;
+    this._log.info('Carets are now updated in storage..');
   }
 }
