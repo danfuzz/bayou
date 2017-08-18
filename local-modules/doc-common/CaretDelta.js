@@ -59,4 +59,33 @@ export default class CaretDelta extends CommonBase {
   get ops() {
     return this._ops;
   }
+
+  /**
+   * Gets a human-oriented string representation of this instance.
+   *
+   * @returns {string} The human-oriented representation.
+   */
+  toString() {
+    const result = ['CaretDelta ['];
+
+    let first = true;
+    for (const op of this._ops) {
+      if (first) {
+        first = false;
+        result.push('\n  ');
+      } else {
+        result.push(',\n  ');
+      }
+
+      result.push(op.toString());
+    }
+
+    if (!first) {
+      result.push('\n');
+    }
+
+    result.push(']');
+
+    return result.join('');
+  }
 }

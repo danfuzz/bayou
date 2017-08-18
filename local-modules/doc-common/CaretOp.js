@@ -167,4 +167,31 @@ export default class CaretOp extends CommonBase {
   static fromApi(name, args) {
     return new CaretOp(KEY, name, args);
   }
+
+  /**
+   * Gets a human-oriented string representation of this instance.
+   *
+   * @returns {string} The human-oriented representation.
+   */
+  toString() {
+    const result = ['CaretOp ', this._name, ' {'];
+
+    let first = true;
+    for (const [k, v] of this._args) {
+      if (first) {
+        first = false;
+      } else {
+        result.push(', ');
+      }
+
+      result.push(' ');
+      result.push(k);
+      result.push(': ');
+      result.push(v.toString());
+    }
+
+    result.push('}');
+
+    return result.join('');
+  }
 }
