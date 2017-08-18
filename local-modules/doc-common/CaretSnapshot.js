@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TIterable } from 'typecheck';
+import { TIterable, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import Caret from './Caret';
@@ -11,10 +11,28 @@ import CaretOp from './CaretOp';
 import RevisionNumber from './RevisionNumber';
 
 /**
+ * {CaretSnapshot|null} Empty instance. Initialized in the `EMPTY` property
+ * accessor.
+ */
+let emptyInstance = null;
+
+/**
  * Snapshot of information about all active sessions on a particular document.
  * Instances of this class are always frozen (immutable).
  */
 export default class CaretSnapshot extends CommonBase {
+  /**
+   * {CaretSnapshot} Empty instance of this class. It has no carets and a
+   * revision number of `0`.
+   */
+  static get EMPTY() {
+    if (emptyInstance === null) {
+      emptyInstance = new CaretSnapshot(0, []);
+    }
+
+    return emptyInstance;
+  }
+
   /**
    * Constructs an instance.
    *
@@ -265,8 +283,21 @@ export default class CaretSnapshot extends CommonBase {
    */
   withoutCaret(caret) {
     Caret.check(caret);
-    const sessionId = caret.sessionId;
-    const carets    = this._carets;
+    return this.withoutSession(caret.sessionId);
+  }
+
+  /**
+   * Constructs an instance just like this one, except without any reference to
+   * the indicated session. If the session is not represented in this instance,
+   * this method returns `this`.
+   *
+   * @param {string} sessionId ID of the session which should not be represented
+   *   in the result.
+   * @returns {CaretSnapshot} An appropriately-constructed instance.
+   */
+  withoutSession(sessionId) {
+    TString.nonempty(sessionId);
+    const carets = this._carets;
 
     if (!carets.has(sessionId)) {
       return this;

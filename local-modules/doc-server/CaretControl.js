@@ -49,7 +49,7 @@ export default class CaretControl extends CommonBase {
      * {CaretSnapshot} Latest caret info. Starts out as an empty stub; gets
      * filled in as updates arrive.
      */
-    this._snapshot = new CaretSnapshot(0, []);
+    this._snapshot = CaretSnapshot.EMPTY;
 
     /**
      * {array<CaretSnapshot>} Array of older caret snapshots, available for use
@@ -83,26 +83,22 @@ export default class CaretControl extends CommonBase {
    * @returns {CaretDelta} Delta from the base caret revision to a newer one.
    */
   async deltaAfter(baseRevNum) {
-    this._removeInactiveSessions();
+    const oldSnapshot = await this.snapshot(baseRevNum);
 
-    const minRevNum     = this._oldSnapshots[0].revNum;
-    const currentRevNum = this._snapshot.revNum;
+    // Iterate if / as long as the base revision is still the current one. This
+    // will stop being the case if either there's a local or remote update. The
+    // loop is needed because the remote update check can time out without an
+    // actual change happening.
+    while (oldSnapshot.revNum === this._snapshot.revNum) {
+      // Wait for either a local or remote update, whichever comes first.
+      await Promise.race([
+        this._updatedCondition.whenTrue(),
+        this._caretStorage.whenRemoteChange()
+      ]);
 
-    if ((baseRevNum < minRevNum) || (baseRevNum > currentRevNum)) {
-      throw new Error(`Revision not available: ${baseRevNum}`);
-    }
-
-    // Grab the snapshot to use as the base. **Note:** If `baseRevNum` is in
-    // fact the current revision number, this will turn out to be the same as
-    // `_snapshot` because `_snapshot` is always the last element of
-    // `_oldSnapshots`.
-    const oldSnapshot = this._oldSnapshots[baseRevNum - minRevNum];
-
-    if (baseRevNum === currentRevNum) {
-      // We've been asked for a revision newer than the most recent one, so we
-      // have to wait for a change to be made. `_snapshot` will have been
-      // changed by the time this `await` returns.
-      await this._updatedCondition.whenTrue();
+      // If there were remote changes, this will cause the snapshot to get
+      // updated.
+      this._integrateRemoteSessions();
     }
 
     return oldSnapshot.diff(this._snapshot);
@@ -118,6 +114,7 @@ export default class CaretControl extends CommonBase {
    */
   async snapshot(revNum = null) {
     this._removeInactiveSessions();
+    this._integrateRemoteSessions();
 
     const minRevNum     = this._oldSnapshots[0].revNum;
     const currentRevNum = this._snapshot.revNum;
@@ -181,6 +178,23 @@ export default class CaretControl extends CommonBase {
     this._caretStorage.update(newCaret);
 
     return this._updateSnapshot(snapshot);
+  }
+
+  /**
+   * Merges any new remote session info into the snapshot.
+   */
+  _integrateRemoteSessions() {
+    const snapshot = this._snapshot;
+    const remotes = this._caretStorage.remoteSnapshot();
+
+    let newSnapshot = snapshot;
+    for (const c of remotes.carets) {
+      newSnapshot = newSnapshot.withCaret(c);
+    }
+
+    if (newSnapshot !== snapshot) {
+      this._updateSnapshot(newSnapshot);
+    }
   }
 
   /**
