@@ -217,7 +217,11 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_deletePath(op) {
-    this._updatedStorage.set(op.arg('storagePath'), null);
+    const storagePath = op.arg('storagePath');
+
+    if (this._fileFriend.readPathOrNull(storagePath) !== null) {
+      this._updatedStorage.set(storagePath, null);
+    }
   }
 
   /**
