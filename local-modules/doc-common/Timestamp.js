@@ -179,6 +179,16 @@ export default class Timestamp extends CommonBase {
   }
 
   /**
+   * Compares this to another instance for equality.
+   *
+   * @param {Timestamp} other Timestamp to compare to.
+   * @returns {boolean} `true` if the two have equal values, or `false` if not.
+   */
+  equals(other) {
+    return this.compareTo(other) === 0;
+  }
+
+  /**
    * Returns a string form for this instance. This is always of the form
    * `<secs>.<usecs>` where `<usecs>` is always six digits long.
    *

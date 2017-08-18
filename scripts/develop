@@ -118,24 +118,42 @@ while true; do
     fi
 
     echo ''
-    "${progDir}/build" "${cleanArg[@]}" "${buildOpts[@]}" || exit 1
+
+    "${progDir}/build" "${cleanArg[@]}" "${buildOpts[@]}"
+    if (( $? != 0 )); then
+        echo "Build failure. Waiting a moment before trying again..."
+        echo ''
+        sleep 15
+        continue
+    fi
+
     echo ''
 
     "${outDir}/final/bin/run" --dev
     status="$?"
-    if (( ${status} != 0 )); then
-        # Not a clean exit, so better to err on the side of not looping. This
-        # most notably happens when the developer hits ctrl-C on the console.
 
-        # Wait a second for "last licks" console logging.
-        sleep 2
-
-        # We suppress the error message in the ctrl-C case by checking for the
-        # distinctive exit code used in that case.
-        if (( ${status} != 130 )); then
-            echo "Application exited with non-zero status: ${status}"
+    if (( ${status} >= 128 && ${status} <= 191 )); then
+        # `130` is the status code if the developer hits `ctrl-C` on the
+        # console. `131` is the status code for a `QUIT` signal (`ctrl-\` or
+        # via `kill`). We don't really need to note those.
+        if (( ${status} != 130 && ${status} != 131 )); then
+            echo "Application halted via signal: $((status - 128))"
         fi
+        break # out of the loop.
+    elif (( ${status} != 0 )); then
+        # Not a clean exit, probably due to the application failing to catch an
+        # exception. This is most commonly a transient error during development.
+        #
+        # We wait a few seconds, both so that lingering console logs can make it
+        # out, and to give a little breathing room during development (instead
+        # of pegging the CPU in case of repeated failure). Then, we iterate and
+        # run again.
 
-        break
+        echo "Application halted with status: ${status}"
+        echo 'Probably an uncaught exception.' \
+            'Waiting a moment before trying again...'
+        echo ''
+
+        sleep 15
     fi
 done

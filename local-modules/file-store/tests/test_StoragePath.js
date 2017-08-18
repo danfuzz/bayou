@@ -140,6 +140,36 @@ describe('file-store/StoragePath', () => {
     });
   });
 
+  describe('isPrefix()', () => {
+    it('should return `true` for prefix relationships', () => {
+      function test(prefix, path) {
+        assert.isTrue(StoragePath.isPrefix(prefix, path));
+      }
+
+      test('/a', '/a/b');
+      test('/a', '/a/b/c');
+      test('/a', '/a/b/c/d');
+      test('/a', '/a/b/c/d/e');
+      test('/a', '/a/b/c/d/e/f');
+      test('/blort/florp', '/blort/florp/a');
+      test('/blort/florp', '/blort/florp/aa');
+      test('/blort/florp', '/blort/florp/aa/b');
+      test('/blort/florp', '/blort/florp/aa/bb');
+    });
+
+    it('should return `false` for non-prefix relationships', () => {
+      function test(prefix, path) {
+        assert.isFalse(StoragePath.isPrefix(prefix, path));
+      }
+
+      test('/a', '/b');
+      test('/a', '/b/a');
+      test('/a/b', '/a');
+      test('/a', '/aa');
+      test('/a/b', '/a/bb');
+    });
+  });
+
   describe('join()', () => {
     it('should join as expected', () => {
       function test(value, expected) {

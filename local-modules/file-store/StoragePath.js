@@ -91,6 +91,23 @@ export default class StoragePath extends UtilityClass {
   }
 
   /**
+   * Indicates whether the first path is a prefix of the second. In filesystem
+   * terms, this indicates whether the first path names a directory above the
+   * second path.
+   *
+   * @param {string} prefix Path prefix.
+   * @param {string} path Path which might start with `prefix`.
+   * @returns {boolean} `true` if `prefix` is indeed a path prefix of `path`, or
+   *   `false` if not.
+   */
+  static isPrefix(prefix, path) {
+    StoragePath.check(prefix);
+    StoragePath.check(path);
+
+    return path.startsWith(`${prefix}/`);
+  }
+
+  /**
    * Joins an array of components into a single storage path string. Components
    * must _not_ include slashes (`/`). This operation is the inverse of
    * `split()`.

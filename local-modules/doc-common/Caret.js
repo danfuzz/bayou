@@ -244,11 +244,11 @@ export default class Caret extends CommonBase {
     Caret.check(newerCaret);
     TString.nonempty(sessionId);
 
-    const fields    = this._fields;
-    const ops       = [];
+    const fields = this._fields;
+    const ops    = [];
 
     for (const [k, v] of newerCaret._fields) {
-      if (v !== fields.get(k)) {
+      if (!Caret._equalFields(v, fields.get(k))) {
         ops.push(CaretOp.op_updateField(sessionId, k, v));
       }
     }
@@ -271,7 +271,7 @@ export default class Caret extends CommonBase {
 
     const fields = this._fields;
     for (const [k, v] of other._fields) {
-      if (v !== fields.get(k)) {
+      if (!Caret._equalFields(v, fields.get(k))) {
         return false;
       }
     }
@@ -303,6 +303,34 @@ export default class Caret extends CommonBase {
    */
   static fromApi(sessionId, fields) {
     return new Caret(sessionId, Object.entries(fields));
+  }
+
+  /**
+   * Helper for `diff()` and `equals()` which compares two corresponding fields
+   * for equality.
+   *
+   * @param {*} v1 Value to compare.
+   * @param {*} v2 Value to compare.
+   * @returns {boolean} `true` iff they should be considered equal.
+   */
+  static _equalFields(v1, v2) {
+    if (v1 === v2) {
+      return true;
+    }
+
+    // For non-primitive values, both must be objects of the same class to be
+    // considered equal. And that class must define an `equals()` method.
+
+    const t1 = typeof v1;
+    const t2 = typeof v2;
+
+    if (   ((t1 !== 'object') || (t2 !== 'object'))
+        || (v1.constructor !== v2.constructor)
+        || !v1.equals) {
+      return false;
+    }
+
+    return v1.equals(v2);
   }
 }
 
