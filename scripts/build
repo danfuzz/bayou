@@ -341,9 +341,7 @@ function do-install {
 
     if [[ ${boxDir} == '' ]]; then
         # No boxed dependencies. Normal install.
-        (cd "${npmDir}" \
-            && npm install --cache="${outDir}/npm-cache") \
-        || return 1
+        (cd "${npmDir}" && npm install) || return 1
     else
         # We were asked to use the boxed dependencies.
         local boxFile="${boxDir}/${dir}.npmbox"
