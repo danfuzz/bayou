@@ -203,24 +203,16 @@ export default class CaretStorage extends CommonBase {
         this._log.info(`Pre-read wait in \`whenRemoteChange\`: ${readDelay} msec`);
         // Wait the prescribed amount of time.
         await PromDelay.resolve(readDelay);
-
-        // And see if there was already a change.
-        const newSnapshot = this.remoteSnapshot();
-        if (!newSnapshot.equals(startSnapshot)) {
-          // Yes, change!
-          return true;
-        }
+      } else {
+        // No need to wait. Just indicate that a read should be in progress, and
+        // wait for it to be done.
+        this._log.info('Waiting for read results in `whenRemoteChange`.');
+        await this._needsRead();
       }
 
-      // No change after waiting (or no waiting yet), so wait for the next read
-      // to complete (triggering that read if it wasn't already in-progress).
-      this._log.info('Waiting for read results in `whenRemoteChange`.');
-      await this._needsRead();
-
-      // And see if that caused a change.
       const newSnapshot = this.remoteSnapshot();
       if (!newSnapshot.equals(startSnapshot)) {
-        // Yes, change!
+        // Yes, there was a change!
         return true;
       }
     }
