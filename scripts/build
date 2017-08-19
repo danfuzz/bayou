@@ -148,7 +148,7 @@ function check-dependency {
 # including Node and npm.
 function check-environment-dependencies {
     check-dependency 'Node' 'node --version' '^v[78]\.'
-    check-dependency 'npm' 'npm --version' '^[45]\.'
+    check-dependency 'npm' 'npm --version' '^5\.'
     check-dependency 'jq' 'jq --version' '^jq-1\.'
     check-dependency 'rsync' 'rsync --version' '.' # No actual version check.
 }
@@ -341,9 +341,7 @@ function do-install {
 
     if [[ ${boxDir} == '' ]]; then
         # No boxed dependencies. Normal install.
-        (cd "${npmDir}" \
-            && npm install --cache="${outDir}/npm-cache") \
-        || return 1
+        (cd "${npmDir}" && npm install --no-package-lock) || return 1
     else
         # We were asked to use the boxed dependencies.
         local boxFile="${boxDir}/${dir}.npmbox"
