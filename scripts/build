@@ -373,7 +373,7 @@ function do-install {
     echo "${dir}:" 'Moving external dependencies into place...'
 
     local d
-    for d in $(cd "${npmDir}/node_modules"; /bin/ls -a); do
+    for d in $(cd "${npmDir}/node_modules"; /bin/ls -A); do
         rsync --archive --delete \
             "${npmDir}/node_modules/${d}" "${toDir}/node_modules" \
             || return 1
