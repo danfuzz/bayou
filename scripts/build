@@ -33,6 +33,9 @@ argError=0
 # Need help?
 showHelp=0
 
+# List of subprojects to build.
+buildProjects=(compiler server client bin)
+
 # Boxed dependency directory, if any.
 boxDir=''
 
@@ -62,6 +65,8 @@ while (( $# != 0 )); do
     elif [[    ${opt} == '--help'
             || ${opt} == '-h' ]]; then
         showHelp=1
+    elif [[ ${opt} == '--linter' ]]; then
+        buildProjects=(linter)
     elif [[ ${opt} =~ ^--out=(.*) ]]; then
         outOpts+=("${opt}")
     elif [[ ${opt} =~ ^--overlay=(.*) ]]; then
@@ -91,6 +96,8 @@ if (( ${showHelp} || ${argError} )); then
     echo '    Start from a clean build.'
     echo '  --client-bundle'
     echo '    On successful build, also try building a client bundle.'
+    echo '  --linter'
+    echo '    Just build the linter.'
     echo '  --out=<dir>'
     echo '    Place output in directory <dir>.'
     echo '  --overlay=<dir>'
@@ -224,22 +231,15 @@ function add-subdirectory-mapping {
 
 # Sets up the directory mappings from the source into the `out` directory.
 function set-up-dir-mapping {
-    # This is the sub-module that's holds the compiler (transpiler) used for
-    # processing `server` files.
     add-directory-mapping 'compiler'
-
-    # The `server` files ultimately go through an additional build step (hence
-    # the change in directory name), though some of the files are used as-is.
+    add-directory-mapping 'linter'
     add-directory-mapping 'server'
-
-    # The `client` files are used as-is by the server (because it serves the
-    # static assets directly and also knows how to (re)build the JavaScript
-    # bundle).
     add-directory-mapping 'client'
 
-    # The `local-modules` get pulled into both `client` and `server` (as
+    # The `local-modules` get pulled into `client`, `server`, and `compiler` (as
     # required by dependencies). We make a mapping per subdirectory because it
-    # is the subdirectories (and not the whole) that get pulled in.
+    # is the subdirectories  that get pulled in (not the entirety of the
+    # `local-modules` directory).
     add-subdirectory-mapping 'local-modules'
 }
 
@@ -373,11 +373,12 @@ function do-install {
     echo "${dir}:" 'Moving external dependencies into place...'
 
     local d
-    for d in $(cd "${npmDir}/node_modules"; /bin/ls); do
+    for d in $(cd "${npmDir}/node_modules"; /bin/ls -a); do
         rsync --archive --delete \
             "${npmDir}/node_modules/${d}" "${toDir}/node_modules" \
             || return 1
     done
+
     rm -rf "${npmDir}" || return 1
 
     # Copy the `package.json` that we installed with, so we can compare it on
@@ -444,6 +445,11 @@ function build-compiler {
     do-install compiler || return 1
 }
 
+# Builds the code linter.
+function build-linter {
+    do-install linter || return 1
+}
+
 # "Builds" the `bin` directory.
 function build-bin {
     local toDir="${finalDir}/bin"
@@ -479,6 +485,8 @@ function build-product-info {
         )
     )"
 
+    mkdir -p "$(dirname "${outFile}")"
+
     # Combine the static info file from the source with the git info to produce
     # the final output.
     (
@@ -508,12 +516,12 @@ fi
     check-environment-dependencies \
         && set-up-dir-mapping \
         && copy-sources \
-        && build-compiler \
-        && build-client \
-        && build-server \
-        && build-bin \
         && build-product-info
 ) || exit 1
+
+for proj in "${buildProjects[@]}"; do
+    "build-${proj}" || exit 1
+done
 
 if (( ${clientBundle} )); then
     "${finalDir}/bin/run" --client-bundle || exit 1
