@@ -96,3 +96,12 @@ lintDir="${outDir}/linter"
     --ignore-pattern "/$(basename "${outDir}")/" \
     --max-warnings 0 \
     -- "${args[@]}"
+status="$?"
+
+echo ''
+
+if (( ${status} == 0 )); then
+    echo 'No linter errors! Yay!'
+else
+    echo 'Linter errors. Alas.'
+fi
