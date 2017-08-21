@@ -531,4 +531,4 @@ if (( ${serverTest} )); then
     "${finalDir}/bin/run" --server-test || exit 1
 fi
 
-echo 'Done!'
+echo 'Done with build!'
