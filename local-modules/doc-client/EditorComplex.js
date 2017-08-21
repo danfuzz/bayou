@@ -17,8 +17,17 @@ import DocSession from './DocSession';
 /** {Logger} Logger for this module. */
 const log = new Logger('editor-complex');
 
+/** {array<array<*>>} Default title toolbar configuration. */
+const DEFAULT_TITLE_TOOLBAR_CONFIG = [
+  ['italic', 'underline', 'strike', 'code'], // toggled buttons
+
+  [{ align: [] }],
+
+  ['clean']                                      // remove formatting button
+];
+
 /** {array<array<*>>} Default toolbar configuration. */
-const DEFAULT_TOOLBAR_CONFIG = [
+const DEFAULT_BODY_TOOLBAR_CONFIG = [
   ['bold', 'italic', 'underline', 'strike', 'code'], // toggled buttons
   ['blockquote', 'code-block'],
 
@@ -31,8 +40,11 @@ const DEFAULT_TOOLBAR_CONFIG = [
   ['clean']                                      // remove formatting button
 ];
 
-/** {object} Default Quill module configuration. */
-const DEFAULT_MODULE_CONFIG = {};
+/** {object} Default Quill module configuration for the title field. */
+const DEFAULT_TITLE_MODULE_CONFIG = {};
+
+/** {object} Default Quill module configuration for the document body. */
+const DEFAULT_BODY_MODULE_CONFIG = {};
 
 /**
  * Manager for the "complex" of objects and DOM nodes which in aggregate form
@@ -88,19 +100,28 @@ export default class EditorComplex extends CommonBase {
     // make a `DocClient` (which gets done by `_initSession()`).
     (async () => {
       // Do all of the DOM setup for the instance.
-      const [quillNode, authorOverlayNode] =
+      const [titleNode, quillNode, authorOverlayNode] =
         await this._domSetup(topNode, sessionKey.baseUrl);
 
+      /** {QuillProm} The Quill editor object for the document title. */
+      this._titleQuill = new QuillProm(titleNode, {
+        readOnly: false,
+        strict:   true,
+        theme:    'bubble',
+        modules:  EditorComplex._titleModuleConfig
+      });
+
       /** {QuillProm} The Quill editor object. */
-      this._quill = new QuillProm(quillNode, {
+      this._bodyQuill = new QuillProm(quillNode, {
         readOnly: true,
         strict:   true,
         theme:    'bubble',
-        modules:  EditorComplex._moduleConfig
+        modules:  EditorComplex._bodyModuleConfig
       });
 
       // Let the overlay do extra initialization.
-      Hooks.theOne.quillInstanceInit(this._quill);
+      Hooks.theOne.quillInstanceInit(this._titleQuill);
+      Hooks.theOne.quillInstanceInit(this._bodyQuill);
 
       /** {CaretOverlay} The remote caret overlay controller. */
       this._caretOverlay = new CaretOverlay(this, authorOverlayNode);
@@ -132,9 +153,14 @@ export default class EditorComplex extends CommonBase {
     return log;
   }
 
-  /** {QuillProm} The Quill editor object. */
-  get quill() {
-    return this._quill;
+  /** {QuillProm} The Quill editor object for the title field. */
+  get titleQuill() {
+    return this._titleQuill;
+  }
+
+  /** {QuillProm} The Quill editor object for the body text. */
+  get bodyQuill() {
+    return this._bodyQuill;
   }
 
   /**
@@ -175,7 +201,7 @@ export default class EditorComplex extends CommonBase {
   _initSession(sessionKey, fromConstructor) {
     this._sessionKey = SplitKey.check(sessionKey);
     this._docSession = new DocSession(this._sessionKey);
-    this._docClient  = new DocClient(this._quill, this._docSession);
+    this._docClient  = new DocClient(this._bodyQuill, this._docSession);
 
     this._docClient.start();
 
@@ -252,24 +278,48 @@ export default class EditorComplex extends CommonBase {
     authorOverlayNode.classList.add('bayou-author-overlay');
     topNode.appendChild(authorOverlayNode);
 
-    return [quillNode, authorOverlayNode];
+    const titleNode = document.createElement('div');
+    titleNode.classList.add('bayou-title-editor');
+
+    topNode.insertBefore(titleNode, quillNode);
+
+    return [titleNode, quillNode, authorOverlayNode];
+  }
+
+  /**
+   * The Quill module configuration to use for the title field.
+   * This uses a hook to get the value the first time it's needed,
+   * caching the result for later reuse.
+   */
+  static get _titleModuleConfig() {
+    if (!EditorComplex._titleModuleConfigValue) {
+      const moduleConfig =
+        Hooks.theOne.quillTitleModuleConfig(DEFAULT_TITLE_MODULE_CONFIG);
+      const toolbarConfig =
+        Hooks.theOne.quillTitleToolbarConfig(DEFAULT_TITLE_TOOLBAR_CONFIG);
+
+      moduleConfig.toolbar = toolbarConfig;
+      EditorComplex._titleModuleConfigValue = Object.freeze(moduleConfig);
+    }
+
+    return EditorComplex._titleModuleConfigValue;
   }
 
   /**
    * The Quill module configuration to use. This uses a hook to get the value
    * the first time it's needed, caching the result for later reuse.
    */
-  static get _moduleConfig() {
-    if (!EditorComplex._moduleConfigValue) {
+  static get _bodyModuleConfig() {
+    if (!EditorComplex._bodyModuleConfigValue) {
       const moduleConfig =
-        Hooks.theOne.quillModuleConfig(DEFAULT_MODULE_CONFIG);
+        Hooks.theOne.quillBodyModuleConfig(DEFAULT_BODY_MODULE_CONFIG);
       const toolbarConfig =
-        Hooks.theOne.quillToolbarConfig(DEFAULT_TOOLBAR_CONFIG);
+        Hooks.theOne.quillBodyToolbarConfig(DEFAULT_BODY_TOOLBAR_CONFIG);
 
       moduleConfig.toolbar = toolbarConfig;
-      EditorComplex._moduleConfigValue = Object.freeze(moduleConfig);
+      EditorComplex._bodyModuleConfigValue = Object.freeze(moduleConfig);
     }
 
-    return EditorComplex._moduleConfigValue;
+    return EditorComplex._bodyModuleConfigValue;
   }
 }

@@ -71,7 +71,7 @@ export default class CaretOverlay {
     /**
      * {SVGSVGElement} The `<svg>` element in which we render the remote carets.
      * The SVG should be the same dimensions as
-     * `_editorComplex.quill.scrollingContainer` and on top of it in z-index
+     * `_editorComplex.bodyQuill.scrollingContainer` and on top of it in z-index
      * order (closer to the viewer).
      * @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/svg
      *
@@ -168,7 +168,7 @@ export default class CaretOverlay {
     // Change `false` to `true` here if you want to see the local user's
     // selection get highlighted. Handy during development!
     if (false) { // eslint-disable-line no-constant-condition
-      let currentEvent = this._editorComplex.quill.currentEvent;
+      let currentEvent = this._editorComplex.bodyQuill.currentEvent;
       while (currentEvent) {
         const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
         const range    = selEvent.range;
@@ -269,7 +269,7 @@ export default class CaretOverlay {
    */
   async _watchLocalEdits() {
     const log = this._editorComplex.log;
-    let currentEvent = this._editorComplex.quill.currentEvent;
+    let currentEvent = this._editorComplex.bodyQuill.currentEvent;
 
     for (;;) {
       // Wait for a text change.
@@ -301,7 +301,7 @@ export default class CaretOverlay {
     // Put back our pre-made definitions.
     this._svgOverlay.appendChild(this._svgDefs);
 
-    const quill = this._editorComplex.quill;
+    const quill = this._editorComplex.bodyQuill;
 
     // For each session…
     for (const [sessionId_unused, info] of this._sessions) {

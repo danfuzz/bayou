@@ -34,7 +34,30 @@ html.bayou-page {
   position: relative;
 }
 
-/* Container for the Quill editor. */
+/* Container for the Quill editor for the document title field */
+.bayou-title-editor .ql-editor {
+  color: #2c2d30;
+  font-weight: 900;
+  font-size: 3rem;
+  margin-top: 3.25rem;
+  margin-bottom: 2.25rem
+}
+
+.bayou-title-editor .ql-editor a:link {
+  color:           #007ab8;
+  text-decoration: none;
+}
+
+.bayou-title-editor .ql-editor a:visited {
+  text-decoration: none;
+}
+
+.bayou-title-editor .ql-editor a:hover {
+  text-decoration:       underline;
+  text-decoration-color: #007ab8;
+}
+
+/* Container for the Quill editor for the document body text. */
 .bayou-editor {
   margin: 0;
 

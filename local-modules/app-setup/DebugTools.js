@@ -231,7 +231,6 @@ export default class DebugTools {
       '</script>\n' +
       '<script src="/boot-for-debug.js"></script>\n';
     const body =
-      '<h1>Editor</h1>\n' +
       '<div id="debugEditor"><p>Loading&hellip;</p></div>\n';
 
     this._htmlResponse(res, head, body);
