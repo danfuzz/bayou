@@ -28,15 +28,15 @@ import { ServerTests } from 'testing-server';
 import { PromDelay } from 'util-common';
 
 
-/** Logger for this file. */
+/** {Logger} Logger for this file. */
 const log = new Logger('main');
 
-/** Error during argument processing? */
+/** {boolean} Error during argument processing? */
 let argError = false;
 
 /**
- * Parsed command-line options. **Note:** The `slice` gets rid of the `node`
- * binary name and the name of the initial script (that is, this file).
+ * {object} Parsed command-line options. **Note:** The `slice` gets rid of the
+ * `node` binary name and the name of the initial script (that is, this file).
  */
 const opts = minimist(process.argv.slice(2), {
   boolean: ['client-bundle', 'dev', 'help', 'server-test'],
@@ -53,16 +53,16 @@ const opts = minimist(process.argv.slice(2), {
   }
 });
 
-/** Client bundle build mode? */
+/** {boolean} Client bundle build mode? */
 const clientBundleMode = opts['client-bundle'];
 
-/** Dev mode? */
+/** {boolean} Dev mode? */
 const devMode = opts['dev'];
 
-/** Server test mode? */
+/** {boolean} Server test mode? */
 const serverTestMode = opts['server-test'];
 
-/** Want help? */
+/** {boolean} Want help? */
 const showHelp = opts['help'];
 
 if ((clientBundleMode + devMode + serverTestMode) > 1) {
@@ -130,6 +130,8 @@ function run() {
 async function clientBundle() {
   try {
     await new ClientBundle().build();
+    log.info('');
+    log.info('Built client bundles. No errors!');
     process.exit(0);
   } catch (e) {
     log.error(e);
