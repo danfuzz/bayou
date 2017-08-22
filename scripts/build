@@ -165,10 +165,11 @@ function check-environment-dependencies {
 # final built product.
 function set-up-out {
     outDir="$(${progDir}/lib/out-dir-setup "${outOpts[@]}")"
-    finalDir="${outDir}/final"
-    if [[ $? != 0 ]]; then
+    if (( $? != 0 )); then
         return 1
     fi
+
+    finalDir="${outDir}/final"
 }
 
 # Gets a list of all the local module names. The output is a series of
