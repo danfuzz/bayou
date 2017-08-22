@@ -1,2 +1,5 @@
-# Directory where build results / artifacts land
+# Directory where build results / artifacts land.
 out/
+
+# Directory created by by macOS.
+.DS_Store
