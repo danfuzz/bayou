@@ -84,15 +84,17 @@ fi
 # Main script
 #
 
-# Options to pass to `out-dir-setup`
+# Options to pass to `out-dir-setup`.
 setupOpts=()
 
 if [[ ${outDir} != '' ]]; then
     setupOpts+=("--out=${outDir}")
 fi
 
-if (( !${create} )); then
+if (( ${create} )); then
+    setupOpts+=('--clean')
+else
     setupOpts+=('--just-clean')
 fi
 
-"${progDir}/lib/out-dir-setup" "${setupOpts[@]}"
+"${progDir}/lib/out-dir-setup" --no-print "${setupOpts[@]}"
