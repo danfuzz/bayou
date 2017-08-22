@@ -39,14 +39,8 @@ buildProjects=(compiler server client bin)
 # Boxed dependency directory, if any.
 boxDir=''
 
-# Try building a client bundle?
-clientBundle=0
-
 # Overlay source directory, if any.
 overlayDir=''
-
-# Run server tests?
-serverTest=0
 
 # Options to pass to `out-dir-setup`.
 outOpts=()
@@ -60,8 +54,6 @@ while (( $# != 0 )); do
         boxDir="${BASH_REMATCH[1]}"
     elif [[ ${opt} == '--clean' ]]; then
         outOpts+=("${opt}")
-    elif [[ ${opt} == '--client-bundle' ]]; then
-        clientBundle=1
     elif [[    ${opt} == '--help'
             || ${opt} == '-h' ]]; then
         showHelp=1
@@ -71,8 +63,6 @@ while (( $# != 0 )); do
         outOpts+=("${opt}")
     elif [[ ${opt} =~ ^--overlay=(.*) ]]; then
         overlayDir="${BASH_REMATCH[1]}"
-    elif [[ ${opt} == '--server-test' ]]; then
-        serverTest=1
     elif [[ ${opt} =~ ^- ]]; then
         echo "Unknown option: ${opt}" 1>&2
         argError=1
@@ -94,16 +84,12 @@ if (( ${showHelp} || ${argError} )); then
     echo '    Find boxed dependencies in directory <dir>.'
     echo '  --clean'
     echo '    Start from a clean build.'
-    echo '  --client-bundle'
-    echo '    On successful build, also try building a client bundle.'
     echo '  --linter'
     echo '    Just build the linter.'
     echo '  --out=<dir>'
     echo '    Place output in directory <dir>.'
     echo '  --overlay=<dir>'
     echo '    Find overlay source in directory <dir>.'
-    echo '  --server-test'
-    echo '    On successful build, also try running the server tests.'
     echo ''
     echo "${progName} [--help | -h]"
     echo '  Display this message.'
@@ -523,13 +509,5 @@ fi
 for proj in "${buildProjects[@]}"; do
     "build-${proj}" || exit 1
 done
-
-if (( ${clientBundle} )); then
-    "${finalDir}/bin/run" --client-bundle || exit 1
-fi
-
-if (( ${serverTest} )); then
-    "${finalDir}/bin/run" --server-test || exit 1
-fi
 
 echo 'Done with build!'
