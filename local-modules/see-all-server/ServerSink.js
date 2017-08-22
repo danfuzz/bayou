@@ -102,7 +102,7 @@ export default class ServerSink extends Singleton {
           l = l.substring(chunk.length);
           // eslint-disable-next-line no-console
           console.log(`${indent}${chunk}`);
-          indent = ' +';
+          indent = '+ ';
         }
       }
     } else {
