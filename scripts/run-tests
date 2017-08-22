@@ -76,17 +76,57 @@ fi
 
 
 #
+# Helper functions
+#
+
+# Runs a test command, teeing its output and noting its status code.
+function run-test {
+    local outFile="${testOutDir}/$1"
+    shift
+    local -a cmd=("$@")
+
+    echo ''
+    echo "Running: ${cmd[@]}"
+
+    # This isn't just a simple matter of `cmd ... | tee ...`, because we want to
+    # get the status code from the left-hand side of the would-be pipeline.
+    # Instead, we use a "process substitution" (`>(...)`), which has mostly the
+    # same effect as a pipe except without masking the main command's status
+    # code.
+    "${cmd[@]}" --client-bundle > >(tee "${outFile}") 2>&1
+    local status="$?"
+
+    # Sleep a moment to let `tee` finish writing output.
+    sleep 1
+
+    (
+        echo ''
+        echo "Exit status: ${status}"
+    ) >> "${outFile}"
+
+    if (( ${status} != 0 )); then
+        testError=1
+    fi
+}
+
+
+#
 # Main script
 #
+
+# Whether any test got an error.
+testError=0
 
 outDir="$(${progDir}/lib/out-dir-setup "${outDirOpt[@]}")"
 if (( $? != 0 )); then
     return 1
 fi
 
+# How to run the product.
 runProduct="${outDir}/final/bin/run"
+
+# Directory for test output.
 testOutDir="${outDir}/test-results"
-error=0
 
 if [[ ! -e ${runProduct} ]]; then
     echo 'Could not find `run` script. Did you forget to build?' 1>&2
@@ -95,14 +135,7 @@ fi
 
 mkdir -p "${testOutDir}"
 
-"${runProduct}" --client-bundle | tee "${testOutDir}/client-bundle.txt"
-if (( $? != 0 )); then
-    error=1
-fi
+run-test "client-bundle.txt" "${runProduct}" --client-bundle
+run-test "server-test.txt" "${runProduct}" --server-test
 
-"${runProduct}" --server-test | tee "${testOutDir}/server-test.txt"
-if (( $? != 0 )); then
-    error=1
-fi
-
-exit "${error}"
+exit "${testError}"
