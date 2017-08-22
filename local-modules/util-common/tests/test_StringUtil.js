@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { StringUtil } from 'util-common';
 
 describe('util-common/StringUtil', () => {
-  describe('graphemesForString(string)', () => {
+  describe('graphemesForString()', () => {
     it('should return `.length` graphemes when passed ASCII input', () => {
       const input = 'this is a string';
       const asciiLength = input.length;
@@ -32,7 +32,7 @@ describe('util-common/StringUtil', () => {
     });
   });
 
-  describe('utf8LengthForString(strig)', () => {
+  describe('utf8LengthForString()', () => {
     it('should return a UTF-8 length of 1 for ASCII characters', () => {
       const input = 'this is a string';
       const asciiLength = input.length;
@@ -66,7 +66,7 @@ describe('util-common/StringUtil', () => {
     });
   });
 
-  describe('stringWithUtf8ByteLimit(string, limit)', () => {
+  describe('stringWithUtf8ByteLimit()', () => {
     it('should pass-through inputs that fit within the byte limit', () => {
       const input = '🇫🇷'; // If your editor doesn't render this, it's the flag of France.
       const output = StringUtil.stringWithUtf8ByteLimit(input, 100);
