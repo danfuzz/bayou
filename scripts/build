@@ -149,9 +149,9 @@ function check-environment-dependencies {
 # Calls `rsync` so as to do an all-local (not actually remote) "archive" copy
 # (preserving permissions, modtimes, etc.).
 #
-# **Note:** We use `rsync` (even though this is a totally local operation)
-# because it has well-defined behavior when copying a tree on top of another
-# tree and also knows how to create directories as needed.
+# **Note:** We use `rsync` and not `cp` (even though this is a totally local
+# operation) because it has well-defined behavior when copying a tree on top of
+# another tree and also knows how to create directories as needed.
 #
 # **Note:** Trailing slashes on source directory names are significant to
 # `rsync`. This is salient at some of the use sites.

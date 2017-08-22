@@ -88,6 +88,30 @@ if (( ${showHelp} || ${argError} )); then
     exit ${argError}
 fi
 
+#
+# Helper functions.
+#
+
+# Calls `rsync` so as to do an all-local (not actually remote) "archive" copy
+# (preserving permissions, modtimes, etc.).
+#
+# **Note:** We use `rsync` and not `cp` (even though this is a totally local
+# operation) because it has well-defined behavior when copying a tree on top of
+# another tree and also knows how to create directories as needed.
+#
+# **Note:** Trailing slashes on source directory names are significant to
+# `rsync`. This is salient at some of the use sites.
+function rsync-archive {
+    # **Note:** We turn off file-sameness checking, which is irrelevant for this
+    # use and is furthermore counterproductive, in that it can cause a failure
+    # to copy when two non-identical files happen to match in both size and
+    # timestamp. (This has happened in practice. When running a build on a
+    # freshly checked-out source tree, many many files have the same timestamps,
+    # so only the file sizes come into play, and it's very easy to have a file
+    # size coincidence.)
+    rsync --archive --ignore-times "$@"
+}
+
 
 #
 # Main script
@@ -194,12 +218,10 @@ fixedFile="${projectDir}/package-fixed.json"
 oldFixedFile="${projectDir}/package-fixed-old.json"
 
 if [[ -r ${fixedFile} ]]; then
-    # `rsync --archive` to maintain the timestamp.
-    rsync --archive "${fixedFile}" "${oldFixedFile}" || exit 1
+    rsync-archive "${fixedFile}" "${oldFixedFile}" || exit 1
 fi
 
-# `rsync --archive` to maintain the timestamp.
-rsync --archive "${origFile}" "${unfixedFile}" || exit 1
+rsync-archive "${origFile}" "${unfixedFile}" || exit 1
 
 (
     echo '.dependencies = {}'
@@ -232,26 +254,20 @@ rsync --archive "${origFile}" "${unfixedFile}" || exit 1
 
 if [[ -r "${oldFixedFile}" ]] && cmp --quiet "${fixedFile}" "${oldFixedFile}"; then
     # Fixed file is unchanged.
-    rsync --archive "${oldFixedFile}" "${fixedFile}"
+    rsync-archive "${oldFixedFile}" "${fixedFile}"
     rm "${oldFixedFile}"
 fi
 
-# `rsync --archive` to maintain the timestamp.
-rsync --archive "${fixedFile}" "${origFile}"
+rsync-archive "${fixedFile}" "${origFile}"
 
-# Copy all of the local modules into the `node_modules` directory. We use
-# `rsync` (even though this is a totally local operation) instead of `cp`
-# because it has more understandable and predictable behavior, especially with
-# regards to copying over existing directories. Note that trailing slashes on
-# source directory names are significant to `rsync` semantics; in this case we
-# explicitly _don't_ have a trailing slash.
+# Copy all of the local modules into the `node_modules` directory.
 
 nodeModules="${projectDir}/node_modules"
 
 mkdir -p "${nodeModules}" || exit 1
 
 for d in "${localDeps[@]}"; do
-    rsync --archive "${d}" "${nodeModules}"
+    rsync-archive "${d}" "${nodeModules}"
 
     # Remove the `dependencies` from the `package.json`, because otherwise `npm`
     # tries to process them (and they aren't valid as far as it's concerned).
