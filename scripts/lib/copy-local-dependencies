@@ -203,7 +203,6 @@ rsync --archive "${origFile}" "${unfixedFile}" || exit 1
 
 (
     echo '.dependencies = {}'
-
     for d in "${regularDeps[@]}"; do
         [[ ${d} =~ ^(.*)@([^@]*)$ ]]
         name="${BASH_REMATCH[1]}"
@@ -212,6 +211,16 @@ rsync --archive "${origFile}" "${unfixedFile}" || exit 1
         specq='"'"${spec}"'"'
 
         echo "| .dependencies.${nameq} = ${specq}"
+    done
+
+    # We capture the local dependencies just as a diagnostic aid (e.g., to help
+    # debug build problems). As of this writing, they aren't used for any other
+    # purpose.
+    echo '| .bayouLocalDependencies = []'
+    for d in $(printf '%s\n' "${localDeps[@]}" | sort); do
+        name="$(basename "${d}")"
+        nameq='"'"${name}"'"'
+        echo "| .bayouLocalDependencies += [${nameq}]"
     done
 ) | jq -f /dev/stdin "${origFile}" > "${fixedFile}" \
 || exit 1
