@@ -229,7 +229,7 @@ export default class ClientBundle extends Singleton {
     }
 
     if (error || (errors && (errors.length !== 0))) {
-      log.error('Trouble compiling JS bundle.');
+      log.error('Trouble compiling JS bundles.');
       for (let i = 0; i < errors.length; i++) {
         const e = errors[i];
         log.error(e.message);
@@ -304,7 +304,7 @@ export default class ClientBundle extends Singleton {
       const compiler = this._newCompiler();
       compiler.run((error, stats) => {
         this._handleCompilation(error, stats);
-        if (this._currentBundles) {
+        if (this._currentBundles.size !== 0) {
           res(this._currentBundles);
         } else {
           rej('Trouble building client bundles.');
