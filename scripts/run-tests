@@ -93,7 +93,7 @@ function run-test {
     # Instead, we use a "process substitution" (`>(...)`), which has mostly the
     # same effect as a pipe except without masking the main command's status
     # code.
-    "${cmd[@]}" --client-bundle > >(tee "${outFile}") 2>&1
+    "${cmd[@]}" > >(tee "${outFile}") 2>&1
     local status="$?"
 
     # Sleep a moment to let `tee` finish writing output.
