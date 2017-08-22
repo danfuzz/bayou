@@ -46,6 +46,9 @@ clean=0
 # Just clean? (Don't create directory.)
 justClean=0
 
+# Print out directory name?
+printDir=1
+
 # Directory for the built output.
 outDir=''
 
@@ -62,6 +65,8 @@ while (( $# != 0 )); do
     elif [[ ${opt} == '--just-clean' ]]; then
         clean=1
         justClean=1
+    elif [[ ${opt} == '--no-print' ]]; then
+        printDir=0
     elif [[ ${opt} =~ ^--out=(.*) ]]; then
         outDir="${BASH_REMATCH[1]}"
     elif [[ ${opt} =~ ^- ]]; then
@@ -80,12 +85,16 @@ if (( ${showHelp} || ${argError} )); then
     echo ''
     echo "${progName} [--clean] [--out=<dir>] [--overlay=<dir>]"
     echo '  Sets up and/or cleans the built output directory. Prints the'
-    echo '  directory name.'
+    echo '  absolute path of the output directory. This uses a default output'
+    echo '  directory relative to the project base if `--out=` is not'
+    echo '  specified.'
     echo ''
     echo '  --clean'
     echo '    Start from a clean build.'
     echo '  --just-clean'
-    echo '    Just clean (and do not recreate out directory).'
+    echo '    Just clean (and do not recreate the output directory).'
+    echo '  --no-print'
+    echo '    Do not print out the directory name.'
     echo '  --out=<dir>'
     echo '    Place output in directory <dir>.'
     echo ''
@@ -93,11 +102,6 @@ if (( ${showHelp} || ${argError} )); then
     echo '  Display this message.'
     exit ${argError}
 fi
-
-
-#
-# Helper functions
-#
 
 
 #
@@ -122,7 +126,9 @@ fi
 
 if (( !${justClean} )); then
     mkdir -p "${outDir}" || exit 1
+fi
 
+if (( ${printDir} )); then
     # Print it out as an absolute path.
     cd ${outDir}
     /bin/pwd -P

@@ -68,14 +68,12 @@ $ ./scripts/build --boxes=<box-dir>
 
 ### Testing
 
-There are a couple options on the `build` script that cause tests to be run.
+The script `run-tests` will run all of the existing tests, sending output to the
+console as well as saving it in files under the output directory.
 
-* `--client-bundle` &mdash; Build the client code bundle, reporting any errors.
-* `--server-test` &mdash; Run the tests for the server code.
-
-In addition, if you have already made a build, you can provide either of these
-options to the built script `out/final/bin/run`, to run the tests in question
-with respect to the built product.
+This script wraps calls to the build script `out/final/bin/run`, passing it
+various testing options. You can also call this script directly, as needed or
+desired.
 
 ### Cleanup
 
