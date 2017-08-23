@@ -4,7 +4,7 @@
 
 import { Caret, CaretSnapshot } from 'doc-common';
 import { TransactionSpec } from 'file-store';
-import { CommonBase, PromDelay } from 'util-common';
+import { CommonBase, FrozenBuffer, PromDelay } from 'util-common';
 
 import FileComplex from './FileComplex';
 import Paths from './Paths';
@@ -379,6 +379,7 @@ export default class CaretStorage extends CommonBase {
     const fc            = this._fileCodec;
     const ops           = [];
     const updatedCarets = new Map();
+    const setUpdates    = []; // List of new and deleted sessions.
 
     for (const s of this._localSessions) {
       const caret       = this._carets.caretForSession(s);
@@ -393,9 +394,14 @@ export default class CaretStorage extends CommonBase {
       if (caret) {
         this._log.detail(`Updating caret: ${s}`);
         ops.push(fc.op_writePath(path, caret));
+        if (!storedCaret) {
+          // First time this session is being stored.
+          setUpdates.push(s);
+        }
       } else {
         this._log.detail(`Deleting caret: ${s}`);
         ops.push(fc.op_deletePath(path));
+        setUpdates.push(s);
       }
 
       updatedCarets.set(path, caret);
@@ -405,6 +411,25 @@ export default class CaretStorage extends CommonBase {
       // Nothing got updated, as it turns out.
       this._log.detail('No updated carets to write.');
       return;
+    }
+
+    // Construct a set update op, if necessary. This is used to trigger readers
+    // into refreshing the set of sessions. This is done by noticing when the
+    // contents stored at the set update path change, to anything different.
+    //
+    // We guarantee differentness of the storead value by constructing at as a
+    // hash of all of the session IDs which have changed membership, a value
+    // which is vanishingly unlikely to collide with any other possible hash
+    // generated from such activity on other servers. We do it this way instead
+    // of just incrementing a counter because a counter increment could get
+    // messed up due to an asynchrony hazard. (That said, we could have instead
+    // used a long-enough random number. The rationale against that is a bit
+    // less solid, but boils down to it being better for this code to be fully
+    // deterministic.)
+
+    if (setUpdates.length !== 0) {
+      const setUpdateHash = new FrozenBuffer(setUpdates.join(',')).hash;
+      ops.push(fc.op_writePath(Paths.CARET_SET_UPDATE_FLAG, setUpdateHash));
     }
 
     // Run the transaction, retrying a few times on failure.
