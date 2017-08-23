@@ -27,8 +27,8 @@ export default class Paths extends UtilityClass {
    * sessions. The way this is used is that any change to this value causes the
    * caret storage code to refresh its list of active sessions. When a new
    * session is added or an old one goes away, the server that makes that change
-   * also changes the value stored here to something new (randomly generated, to
-   * make it clear that it's not a sequence number).
+   * also changes the value stored here to something new. See {@link
+   * CaretStorage#_caretSetUpdate} for details.
    */
   static get CARET_SET_UPDATE_FLAG() {
     return `${Paths.CARET_PREFIX}/set_update`;
