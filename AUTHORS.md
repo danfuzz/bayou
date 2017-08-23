@@ -6,10 +6,16 @@ Bayou Authors
   [Website](http://milk.com/) /
   [GitHub](https://github.com/danfuzz)
 
-* Chris DeSalvo
+* Chris DeSalvo:
   [Email](mailto:chris@desalvo.org) /
   [Website](https://desalvo.org/) /
   [GitHub](https://github.com/meantime)
+
+With additional contributions from:
+
+* Andreas Haugstrup Pedersen: [GitHub](https://github.com/haugstrup)
+* Angie Roscioli: [GitHub](https://github.com/ainjii)
+* Chris Montrois: [GitHub](https://github.com/montlebalm)
 
 ### Acknowledgments
 
