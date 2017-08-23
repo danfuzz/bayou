@@ -38,50 +38,19 @@ export default class Hooks extends Singleton {
   }
 
   /**
-   * Called to construct the Quill module configuration for the title. This is only ever
-   * called once per run of the application (and not, e.g., once per
-   * instantiation of a `Quill` object).
+   * Called to construct the Quill module configuration for the indicated
+   * context. This is only ever called once per context (per run of the
+   * application), and not, e.g., once per instantiation of a `Quill` object).
+   * This (default) implementation returns the given default configuration
+   * as-is.
    *
-   * @param {object} defaultConfig The default module configuration.
+   * @param {string} contextName_unused The name of the context. This is one of
+   *   `body` (for the main editor) or `title` (for the title field editor).
+   * @param {object} defaultConfig The default module configuration for this
+   *   context.
    * @returns {object} The desired module configuration.
    */
-  quillTitleModuleConfig(defaultConfig) {
-    return defaultConfig;
-  }
-
-  /**
-   * Called to construct the Quill toolbar configuration for the title. This is only ever
-   * called once per run of the application (and not, e.g., once per
-   * instantiation of a `Quill` object).
-   *
-   * @param {array<array<*>>} defaultConfig The default toolbar configuration.
-   * @returns {array<array<*>>} The desired toolbar configuration.
-   */
-  quillTitleToolbarConfig(defaultConfig) {
-    return defaultConfig;
-  }
-
-  /**
-   * Called to construct the Quill module configuration. This is only ever
-   * called once per run of the application (and not, e.g., once per
-   * instantiation of a `Quill` object).
-   *
-   * @param {object} defaultConfig The default module configuration.
-   * @returns {object} The desired module configuration.
-   */
-  quillBodyModuleConfig(defaultConfig) {
-    return defaultConfig;
-  }
-
-  /**
-   * Called to construct the Quill toolbar configuration. This is only ever
-   * called once per run of the application (and not, e.g., once per
-   * instantiation of a `Quill` object).
-   *
-   * @param {array<array<*>>} defaultConfig The default toolbar configuration.
-   * @returns {array<array<*>>} The desired toolbar configuration.
-   */
-  quillBodyToolbarConfig(defaultConfig) {
+  quillModuleConfig(contextName_unused, defaultConfig) {
     return defaultConfig;
   }
 }
