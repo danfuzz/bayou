@@ -309,7 +309,7 @@ export default class CaretStorage extends CommonBase {
       const transactionResult = await fc.transact(spec);
       caretPaths = transactionResult.paths;
     } catch (e) {
-      this._log.error('Could not read caret directory.', e);
+      this._log.error('Could not read caret session directory.', e);
       throw e;
     }
 

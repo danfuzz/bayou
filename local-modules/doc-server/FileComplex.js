@@ -29,9 +29,9 @@ const ERROR_NOTE = FrozenDelta.coerce(
 
 /**
  * {FrozenDelta} Message used as document instead of migrating documents from
- * old format versions. */
+ * old schema versions. */
 const MIGRATION_NOTE = FrozenDelta.coerce(
-  [{ insert: '(Recreated document due to format version skew.)\n' }]);
+  [{ insert: '(Recreated document due to schema version skew.)\n' }]);
 
 /**
  * Manager for the "complex" of objects which in aggregate allow access and
@@ -61,8 +61,8 @@ export default class FileComplex extends CommonBase {
     /** {Logger} Logger for this instance. */
     this._log = log.withPrefix(`[${file.id}]`);
 
-    /** {string} The document format version to use and expect. */
-    this._formatVersion = TString.nonempty(ProductInfo.theOne.INFO.version);
+    /** {string} The document schema version to use and expect. */
+    this._schemaVersion = TString.nonempty(ProductInfo.theOne.INFO.version);
 
     /** {FileCodec} File-codec wrapper to use. */
     this._fileCodec = new FileCodec(file, codec);
@@ -119,11 +119,11 @@ export default class FileComplex extends CommonBase {
   }
 
   /**
-   * {string} The document format version to use for new documents and to expect
+   * {string} The document schema version to use for new documents and to expect
    * in existing documents.
    */
-  get formatVersion() {
-    return this._formatVersion;
+  get schemaVersion() {
+    return this._schemaVersion;
   }
 
   /**

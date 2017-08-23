@@ -48,8 +48,8 @@ export default class Paths extends UtilityClass {
   }
 
   /** {string} `StoragePath` string for the file format (schema) version. */
-  static get FORMAT_VERSION() {
-    return '/format_version';
+  static get SCHEMA_VERSION() {
+    return '/schema_version';
   }
 
   /**
