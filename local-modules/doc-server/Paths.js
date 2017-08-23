@@ -12,11 +12,14 @@ import { UtilityClass } from 'util-common';
  * by the document storage format.
  */
 export default class Paths extends UtilityClass {
-  /**
-   * {string} `StoragePath` string for the caret information path prefix.
-   */
+  /** {string} `StoragePath` string for the caret information path prefix. */
   static get CARET_PREFIX() {
     return '/caret';
+  }
+
+  /** {string} `StoragePath` string for the document change path prefix. */
+  static get CHANGE_PREFIX() {
+    return '/change';
   }
 
   /**
@@ -24,10 +27,10 @@ export default class Paths extends UtilityClass {
    * This corresponds to the highest change number.
    */
   static get CHANGE_REVISION_NUMBER() {
-    return '/change/revision_number';
+    return `${Paths.CHANGE_PREFIX}/revision_number`;
   }
 
-  /** {string} `StoragePath` string for the document format version. */
+  /** {string} `StoragePath` string for the file format (schema) version. */
   static get FORMAT_VERSION() {
     return '/format_version';
   }
@@ -43,7 +46,7 @@ export default class Paths extends UtilityClass {
    */
   static forDocumentChange(revNum) {
     RevisionNumber.check(revNum);
-    return `/change/${revNum}`;
+    return `${Paths.CHANGE_PREFIX}/${revNum}`;
   }
 
   /**
