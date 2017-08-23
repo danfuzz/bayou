@@ -32,6 +32,84 @@ describe('file-store-local/LocalFile.transact', () => {
     assert.isUndefined(result.data);
   });
 
+  describe('op checkPathIs', () => {
+    it('should succeed when the path is present and content matches', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+      await file.transact(
+        new TransactionSpec(FileOp.op_writePath('/blort', new FrozenBuffer('blort'))));
+
+      const spec = new TransactionSpec(
+        FileOp.op_checkPathIs('/blort', new FrozenBuffer('blort')));
+      const resultProm = file.transact(spec);
+      await assert.isFulfilled(resultProm);
+
+      const result = await resultProm;
+      assert.strictEqual(result.revNum, 1);
+    });
+
+    it('should fail when the path is not present at all', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+
+      const spec = new TransactionSpec(
+        FileOp.op_checkPathIs('/blort', new FrozenBuffer('anything')));
+      await assert.isRejected(file.transact(spec));
+    });
+
+    it('should fail when the path is present and content does not match', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+      await file.transact(
+        new TransactionSpec(FileOp.op_writePath('/blort', new FrozenBuffer('blort'))));
+
+      const spec = new TransactionSpec(
+        FileOp.op_checkPathIs('/blort', new FrozenBuffer('not-blort')));
+      await assert.isRejected(file.transact(spec));
+    });
+  });
+
+  describe('op checkPathNot', () => {
+    it('should succeed when the path is not present at all', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+
+      const spec = new TransactionSpec(
+        FileOp.op_checkPathNot('/blort', new FrozenBuffer('anything')));
+      const resultProm = file.transact(spec);
+      await assert.isFulfilled(resultProm);
+
+      const result = await resultProm;
+      assert.strictEqual(result.revNum, 0);
+    });
+
+    it('should succeed when the path is present and content does not match', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+      await file.transact(
+        new TransactionSpec(FileOp.op_writePath('/blort', new FrozenBuffer('blort'))));
+
+      const spec = new TransactionSpec(
+        FileOp.op_checkPathNot('/blort', new FrozenBuffer('not-blort')));
+      const resultProm = file.transact(spec);
+      await assert.isFulfilled(resultProm);
+
+      const result = await resultProm;
+      assert.strictEqual(result.revNum, 1);
+    });
+
+    it('should fail when the path is present and content matches', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+      await file.transact(
+        new TransactionSpec(FileOp.op_writePath('/blort', new FrozenBuffer('blort'))));
+
+      const spec = new TransactionSpec(
+        FileOp.op_checkPathNot('/blort', new FrozenBuffer('blort')));
+      await assert.isRejected(file.transact(spec));
+    });
+  });
+
   describe('op listPath', () => {
     it('should return an empty set when no results are found', async () => {
       const file = new LocalFile('0', TempFiles.uniquePath());

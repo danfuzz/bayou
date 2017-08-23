@@ -4,7 +4,7 @@
 
 import { Caret, CaretSnapshot } from 'doc-common';
 import { TransactionSpec } from 'file-store';
-import { CommonBase, PromDelay } from 'util-common';
+import { CommonBase, FrozenBuffer, PromDelay } from 'util-common';
 
 import FileComplex from './FileComplex';
 import Paths from './Paths';
@@ -90,6 +90,14 @@ export default class CaretStorage extends CommonBase {
      * storage.
      */
     this._storedCarets = CaretSnapshot.EMPTY;
+
+    /**
+     * {string} The latest value read from the caret set update flag. This is
+     * used to notice when the set of active sessions changes due to the
+     * activity of other servers. See {@link #_waitThenWriteCarets} below for
+     * more info.
+     */
+    this._caretSetUpdate = '';
 
     /**
      * {Int} Last time (in msec since the Unix Epoch) that carets were read
@@ -305,11 +313,11 @@ export default class CaretStorage extends CommonBase {
 
     try {
       const spec = new TransactionSpec(
-        fc.op_listPath(Paths.CARET_PREFIX));
+        fc.op_listPath(Paths.CARET_SESSION_PREFIX));
       const transactionResult = await fc.transact(spec);
       caretPaths = transactionResult.paths;
     } catch (e) {
-      this._log.error('Could not read caret directory.', e);
+      this._log.error('Could not read caret session directory.', e);
       throw e;
     }
 
@@ -334,6 +342,9 @@ export default class CaretStorage extends CommonBase {
       return;
     }
 
+    // Read in the latest set update flag, for later change detection.
+    ops.push(fc.op_readPath(Paths.CARET_SET_UPDATE_FLAG));
+
     try {
       const spec = new TransactionSpec(...ops);
       const transactionResult = await fc.transact(spec);
@@ -346,8 +357,12 @@ export default class CaretStorage extends CommonBase {
     const carets  = this._carets;
     let newCarets = carets;
 
-    for (const c of caretData.values()) {
-      newCarets = newCarets.withCaret(c);
+    for (const [k, v] of caretData) {
+      if (k === Paths.CARET_SET_UPDATE_FLAG) {
+        this._caretSetUpdate = v;
+      } else {
+        newCarets = newCarets.withCaret(v);
+      }
     }
 
     if (carets === newCarets) {
@@ -379,6 +394,7 @@ export default class CaretStorage extends CommonBase {
     const fc            = this._fileCodec;
     const ops           = [];
     const updatedCarets = new Map();
+    const setUpdates    = []; // List of new and deleted sessions.
 
     for (const s of this._localSessions) {
       const caret       = this._carets.caretForSession(s);
@@ -393,9 +409,14 @@ export default class CaretStorage extends CommonBase {
       if (caret) {
         this._log.detail(`Updating caret: ${s}`);
         ops.push(fc.op_writePath(path, caret));
+        if (!storedCaret) {
+          // First time this session is being stored.
+          setUpdates.push(s);
+        }
       } else {
         this._log.detail(`Deleting caret: ${s}`);
         ops.push(fc.op_deletePath(path));
+        setUpdates.push(s);
       }
 
       updatedCarets.set(path, caret);
@@ -405,6 +426,25 @@ export default class CaretStorage extends CommonBase {
       // Nothing got updated, as it turns out.
       this._log.detail('No updated carets to write.');
       return;
+    }
+
+    // Construct a set update op, if necessary. This is used to trigger readers
+    // into refreshing the set of sessions. This is done by noticing when the
+    // contents stored at the set update path change, to anything different.
+    //
+    // We guarantee differentness of the storead value by constructing it as a
+    // hash of all of the session IDs which have changed membership, a value
+    // which is vanishingly unlikely to collide with any other possible hash
+    // generated from such activity on other servers. We do it this way instead
+    // of just incrementing a counter because a counter increment could get
+    // messed up due to an asynchrony hazard. (That said, we could have instead
+    // used a long-enough random number. The rationale against that is a bit
+    // less solid, but boils down to it being better for this code to be fully
+    // deterministic.)
+
+    if (setUpdates.length !== 0) {
+      const setUpdateHash = new FrozenBuffer(setUpdates.join(',')).hash;
+      ops.push(fc.op_writePath(Paths.CARET_SET_UPDATE_FLAG, setUpdateHash));
     }
 
     // Run the transaction, retrying a few times on failure.

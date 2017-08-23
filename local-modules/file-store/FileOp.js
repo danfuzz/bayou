@@ -85,6 +85,22 @@ const OPERATIONS = DataUtil.deepFreeze([
   ],
 
   /*
+   * A `checkPathNot` operation. This is a prerequisite operation that verifies
+   * that a given storage path is _not_ bound to a value whose hash is as given.
+   * If the path doesn't store any data at all, that counts as success from the
+   * perspective of this operation.
+   *
+   * **Note:** This is the opposite of the `checkPathIs` operation.
+   *
+   * @param {string} storagePath The storage path to check.
+   * @param {string} hash The non-expected hash.
+   */
+  [
+    CAT_PREREQUISITE, 'checkPathNot',
+    ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]
+  ],
+
+  /*
    * A `checkPathPresent` operation. This is a prerequisite operation that
    * verifies that a given storage path is bound to a value (any value,
    * including one of zero length). This is the opposite of the

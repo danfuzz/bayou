@@ -127,8 +127,8 @@ export default class DocControl extends CommonBase {
       // If the file already existed, this clears out the old contents.
       fc.op_deleteAll(),
 
-      // Version for the file format.
-      fc.op_writePath(Paths.FORMAT_VERSION, this._fileComplex.formatVersion),
+      // Version for the file schema.
+      fc.op_writePath(Paths.SCHEMA_VERSION, this._fileComplex.schemaVersion),
 
       // Initial revision number.
       fc.op_writePath(Paths.CHANGE_REVISION_NUMBER, revNum),
@@ -232,7 +232,7 @@ export default class DocControl extends CommonBase {
     try {
       const fc = this._fileCodec;
       const spec = new TransactionSpec(
-        fc.op_readPath(Paths.FORMAT_VERSION),
+        fc.op_readPath(Paths.SCHEMA_VERSION),
         fc.op_readPath(Paths.CHANGE_REVISION_NUMBER)
       );
       transactionResult = await fc.transact(spec);
@@ -242,11 +242,11 @@ export default class DocControl extends CommonBase {
     }
 
     const data          = transactionResult.data;
-    const formatVersion = data.get(Paths.FORMAT_VERSION);
+    const schemaVersion = data.get(Paths.SCHEMA_VERSION);
     const revNum        = data.get(Paths.CHANGE_REVISION_NUMBER);
 
-    if (!formatVersion) {
-      this._log.info('Corrupt document: Missing format version.');
+    if (!schemaVersion) {
+      this._log.info('Corrupt document: Missing schema version.');
       return DocControl.STATUS_ERROR;
     }
 
@@ -255,10 +255,10 @@ export default class DocControl extends CommonBase {
       return DocControl.STATUS_ERROR;
     }
 
-    const expectFormatVersion = this._fileComplex.formatVersion;
-    if (formatVersion !== expectFormatVersion) {
-      const got = formatVersion;
-      this._log.info(`Mismatched format version: got ${got}; expected ${expectFormatVersion}`);
+    const expectSchemaVersion = this._fileComplex.schemaVersion;
+    if (schemaVersion !== expectSchemaVersion) {
+      const got = schemaVersion;
+      this._log.info(`Mismatched schema version: got ${got}; expected ${expectSchemaVersion}`);
       return DocControl.STATUS_MIGRATE;
     }
 
