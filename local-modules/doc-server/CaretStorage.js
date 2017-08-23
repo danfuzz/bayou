@@ -92,6 +92,14 @@ export default class CaretStorage extends CommonBase {
     this._storedCarets = CaretSnapshot.EMPTY;
 
     /**
+     * {string} The latest value read from the caret set update flag. This is
+     * used to notice when the set of active sessions changes due to the
+     * activity of other servers. See {@link #_waitThenWriteCarets} below for
+     * more info.
+     */
+    this._caretSetUpdate = '';
+
+    /**
      * {Int} Last time (in msec since the Unix Epoch) that carets were read
      * from storage.
      */
@@ -334,6 +342,9 @@ export default class CaretStorage extends CommonBase {
       return;
     }
 
+    // Read in the latest set update flag, for later change detection.
+    ops.push(fc.op_readPath(Paths.CARET_SET_UPDATE_FLAG));
+
     try {
       const spec = new TransactionSpec(...ops);
       const transactionResult = await fc.transact(spec);
@@ -346,8 +357,12 @@ export default class CaretStorage extends CommonBase {
     const carets  = this._carets;
     let newCarets = carets;
 
-    for (const c of caretData.values()) {
-      newCarets = newCarets.withCaret(c);
+    for (const [k, v] of caretData) {
+      if (k === Paths.CARET_SET_UPDATE_FLAG) {
+        this._caretSetUpdate = v;
+      } else {
+        newCarets = newCarets.withCaret(v);
+      }
     }
 
     if (carets === newCarets) {
