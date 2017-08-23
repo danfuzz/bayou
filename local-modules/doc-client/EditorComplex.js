@@ -4,7 +4,7 @@
 
 import { SplitKey } from 'api-common';
 import { Hooks } from 'hooks-client';
-import { QuillProm } from 'quill-util';
+import { BayouKeyHandlers, QuillProm } from 'quill-util';
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
 import { DomUtil } from 'util-client';
@@ -40,11 +40,15 @@ const DEFAULT_BODY_TOOLBAR_CONFIG = [
   ['clean']                                      // remove formatting button
 ];
 
-/** {object} Default Quill module configuration for the title field. */
-const DEFAULT_TITLE_MODULE_CONFIG = {};
-
 /** {object} Default Quill module configuration for the document body. */
-const DEFAULT_BODY_MODULE_CONFIG = {};
+const DEFAULT_BODY_MODULE_CONFIG = {
+  keyboard: BayouKeyHandlers.defaultKeyHandlers
+};
+
+/** {object} Default Quill module configuration for the title field. */
+const DEFAULT_TITLE_MODULE_CONFIG = {
+  keyboard: BayouKeyHandlers.singleLineKeyHandlers
+};
 
 /**
  * Manager for the "complex" of objects and DOM nodes which in aggregate form
