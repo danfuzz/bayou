@@ -93,15 +93,9 @@ const MAC_SPECIFIC_BINDINGS = Object.freeze({
  */
 function isMac() {
   const window = ClientEnv.window;
-  let result = false;
+  const userAgentString = window.navigator.userAgent;
 
-  if (window) {
-    const userAgentString = window.navigator.userAgent;
-
-    result = /Mac/i.test(userAgentString);
-  }
-
-  return result;
+  return /Mac/i.test(userAgentString);
 }
 
 /**
