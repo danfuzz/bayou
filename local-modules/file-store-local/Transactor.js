@@ -179,6 +179,21 @@ export default class Transactor extends CommonBase {
   }
 
   /**
+   * Handler for `checkPathNot` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_checkPathNot(op) {
+    const storagePath    = op.arg('storagePath');
+    const unexpectedHash = op.arg('hash');
+    const data           = this._fileFriend.readPathOrNull(storagePath);
+
+    if ((data !== null) && (data.hash === unexpectedHash)) {
+      throw Errors.path_hash_mismatch(storagePath, unexpectedHash);
+    }
+  }
+
+  /**
    * Handler for `checkPathPresent` operations.
    *
    * @param {FileOp} op The operation.
