@@ -46,10 +46,8 @@ const MAX_WRITE_RETRIES = 10;
  * methods on this class is considered to be "locally controlled," and so such
  * caret updates are pushed to the file storage.
  *
- * **TODO:** This class currently only ever _writes_ carets to storage but
- * doesn't ever read carets that might have been written by other servers. It
- * should in fact also try reading other carets, providing a way for the
- * caret controller to see them and get them updated in a timely fashion.
+ * **TODO:** This class currently polls for carets updated by other servers. It
+ * should instead do proper waiting.
  */
 export default class CaretStorage extends CommonBase {
   /**
@@ -463,6 +461,17 @@ export default class CaretStorage extends CommonBase {
         break;
       } catch (e) {
         this._log.warn('Failed to write carets.', e);
+        if (i === MAX_WRITE_RETRIES) {
+          // This was the last attempt. Log it as an error (but don't rethrow,
+          // per the rationale in the header comment). And return from the
+          // method (instead of continuing below), so that we don't incorrectly
+          // indicate that the stuff we were trying to store was actually
+          // stored.
+          this._log.error('Failed to write carets, too many times.', e);
+          return;
+        } else {
+          this._log.warn('Failed to write carets.', e);
+        }
       }
 
       await PromDelay.resolve(WRITE_RETRY_DELAY_MSEC);
@@ -487,6 +496,6 @@ export default class CaretStorage extends CommonBase {
     }
 
     this._storedCarets = storedCarets;
-    this._log.info('Carets are now updated in storage..');
+    this._log.info('Carets are now updated in storage.');
   }
 }
