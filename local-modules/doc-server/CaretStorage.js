@@ -305,7 +305,7 @@ export default class CaretStorage extends CommonBase {
 
     try {
       const spec = new TransactionSpec(
-        fc.op_listPath(Paths.CARET_PREFIX));
+        fc.op_listPath(Paths.CARET_SESSION_PREFIX));
       const transactionResult = await fc.transact(spec);
       caretPaths = transactionResult.paths;
     } catch (e) {

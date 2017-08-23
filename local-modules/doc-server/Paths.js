@@ -12,12 +12,29 @@ import { UtilityClass } from 'util-common';
  * by the document storage format.
  */
 export default class Paths extends UtilityClass {
-  /** {string} `StoragePath` string for the caret information path prefix. */
+  /** {string} `StoragePath` prefix string for caret information. */
   static get CARET_PREFIX() {
     return '/caret';
   }
 
-  /** {string} `StoragePath` string for the document change path prefix. */
+  /** {string} `StoragePath` prefix string for caret session data. */
+  static get CARET_SESSION_PREFIX() {
+    return `${Paths.CARET_PREFIX}/session`;
+  }
+
+  /**
+   * {string} `StoragePath` string used to flag updates to the set of active
+   * sessions. The way this is used is that any change to this value causes the
+   * caret storage code to refresh its list of active sessions. When a new
+   * session is added or an old one goes away, the server that makes that change
+   * also changes the value stored here to something new (randomly generated, to
+   * make it clear that it's not a sequence number).
+   */
+  static get CARET_SET_UPDATE_FLAG() {
+    return `${Paths.CARET_PREFIX}/set_update`;
+  }
+
+  /** {string} `StoragePath` prefix string for document changes. */
   static get CHANGE_PREFIX() {
     return '/change';
   }
@@ -59,7 +76,7 @@ export default class Paths extends UtilityClass {
    */
   static forCaret(sessionId) {
     TString.check(sessionId);
-    return `${Paths.CARET_PREFIX}/${sessionId}`;
+    return `${Paths.CARET_SESSION_PREFIX}/${sessionId}`;
   }
 
   /**
@@ -70,11 +87,11 @@ export default class Paths extends UtilityClass {
    * @returns {string} The corresponding caret session ID.
    */
   static sessionFromCaretPath(path) {
-    if (!StoragePath.isPrefix(Paths.CARET_PREFIX, path)) {
+    if (!StoragePath.isPrefix(Paths.CARET_SESSION_PREFIX, path)) {
       throw new Error(`Not a caret path: ${path}`);
     }
 
     const split = StoragePath.split(path);
-    return split[1];
+    return split[split.length - 1];
   }
 }
