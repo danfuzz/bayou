@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { UtilityClass } from 'util-common';
+
 /**
  * The `BayouKeyboard` module is a subclass of the default Quill Keyboard
  * module, but with a better system of configuring special handlers. For
@@ -24,7 +26,7 @@
  * });
  * ```
  */
-export default class BayouKeyHandlers {
+export default class BayouKeyHandlers extends UtilityClass {
   /**
    * Convenience function that returns the group of key handlers that provide
    * default behavior (i.e., what you'd get from Quill if this class were not
