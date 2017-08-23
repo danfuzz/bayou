@@ -432,7 +432,7 @@ export default class CaretStorage extends CommonBase {
     // into refreshing the set of sessions. This is done by noticing when the
     // contents stored at the set update path change, to anything different.
     //
-    // We guarantee differentness of the storead value by constructing at as a
+    // We guarantee differentness of the storead value by constructing it as a
     // hash of all of the session IDs which have changed membership, a value
     // which is vanishingly unlikely to collide with any other possible hash
     // generated from such activity on other servers. We do it this way instead
