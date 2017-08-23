@@ -47,7 +47,7 @@ export default class Paths extends UtilityClass {
     return `${Paths.CHANGE_PREFIX}/revision_number`;
   }
 
-  /** {string} `StoragePath` string for the file format (schema) version. */
+  /** {string} `StoragePath` string for the file schema (format) version. */
   static get SCHEMA_VERSION() {
     return '/schema_version';
   }

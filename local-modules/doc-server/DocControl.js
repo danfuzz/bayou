@@ -127,7 +127,7 @@ export default class DocControl extends CommonBase {
       // If the file already existed, this clears out the old contents.
       fc.op_deleteAll(),
 
-      // Version for the file format.
+      // Version for the file schema.
       fc.op_writePath(Paths.SCHEMA_VERSION, this._fileComplex.schemaVersion),
 
       // Initial revision number.
