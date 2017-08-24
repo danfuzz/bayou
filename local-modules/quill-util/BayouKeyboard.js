@@ -26,20 +26,15 @@ const KEYMAP = Object.freeze({
   DOWN:   40
 });
 
-/** No-op function, used for the `DEFAULT_OPTIONS`. */
-function noop() {
-  // This space intentionally left blank.
-}
-
 /**
  * {object} A collection of no-op keyboard key handlers. This is the base over
  * which custom options are layered.
  */
 const DEFAULT_OPTIONS = {
   bindings:   {},
-  onEnter:    noop,
-  onEscape:   noop,
-  onTab:      noop
+  onEnter:    () => { /*empty*/ },
+  onEscape:   () => { /*empty*/ },
+  onTab:      () => { /*empty*/ }
 };
 
 /**
