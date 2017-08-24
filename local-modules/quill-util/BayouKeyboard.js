@@ -86,18 +86,6 @@ const MAC_SPECIFIC_BINDINGS = Object.freeze({
 });
 
 /**
- * Returns `true` if the client environment is macOS, or `false` if it is not.
- *
- * @returns {boolean} Whether the client environment is macOS or not.
- */
-function isMac() {
-  const window = ClientEnv.window;
-  const userAgentString = window.navigator.userAgent;
-
-  return /Mac/i.test(userAgentString);
-}
-
-/**
  * A subclass of the Quill keyboard module. The purpose of this subclass is to
  * extend Quill with methods such as `onEnter(metaKeys)`, `onEscape(metaKeys)`,
  * etc. so that custom behaviors for various configurations can be defined
@@ -206,7 +194,7 @@ export default class BayouKeyboard extends Keyboard {
       },
     };
 
-    if (isMac()) {
+    if (ClientEnv.isMac()) {
       return Object.assign(bindings, MAC_SPECIFIC_BINDINGS);
     }
 

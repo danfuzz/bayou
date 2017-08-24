@@ -44,4 +44,19 @@ export default class ClientEnv extends UtilityClass {
 
     return result;
   }
+
+  /**
+   * Returns an indication of whether this client is running on macOS. This is
+   * particularly useful to drive tweaks to conform to the native platform's
+   * standard UI (e.g., the semantics of various keys).
+   *
+   * @returns {boolean} `true` if we seem to be running on macOS, or `false` if
+   *   not.
+   */
+  static isMac() {
+    const window = ClientEnv.window;
+    const userAgentString = window.navigator.userAgent;
+
+    return /Mac/i.test(userAgentString);
+  }
 }
