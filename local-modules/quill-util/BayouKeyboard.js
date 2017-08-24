@@ -39,13 +39,13 @@ const DEFAULT_OPTIONS = {
   bindings:   {},
   onEnter:    noop,
   onEscape:   noop,
-  onTab:      noop,
+  onTab:      noop
 };
 
 /**
- * Additional Quill key bindings for macOS environments. There are several references to
- * `this.quill` in these handlers. That property will be filled in by other layers before
- * the handlers are called. It is guaranteed to be set.
+ * Additional Quill key bindings for macOS environments. There are several
+ * references to `this.quill` in these handlers. That property will be filled in
+ * by other layers before the handlers are called. It is guaranteed to be set.
  *
  * @returns {object} Mac-specific bindings for use when configuring Quill.
  */
@@ -82,7 +82,7 @@ const MAC_SPECIFIC_BINDINGS = Object.freeze({
       // Expand selection to to the end of the document.
       this.quill.setSelection(range.index, this.quill.getLength() - range.index);
     },
-  },
+  }
 });
 
 /**
@@ -158,7 +158,7 @@ export default class BayouKeyboard extends Keyboard {
         context: {
           empty: false,
         },
-        handler: () => onEnter(),
+        handler: () => onEnter()
       },
 
       shiftEnter: {
@@ -167,30 +167,30 @@ export default class BayouKeyboard extends Keyboard {
         context: {
           empty: false,
         },
-        handler: () => onEnter({ shiftKey: true }),
+        handler: () => onEnter({ shiftKey: true })
       },
 
       optionEnter: {
         key: KEYMAP.ENTER,
         altKey: true,
-        handler: () => onEnter({ altKey: true }),
+        handler: () => onEnter({ altKey: true })
       },
 
       ctrlEnter: {
         key: KEYMAP.ENTER,
         ctrlKey: true,
-        handler: () => onEnter({ ctrlKey: true }),
+        handler: () => onEnter({ ctrlKey: true })
       },
 
       tab: {
         key: KEYMAP.TAB,
-        handler: () => onTab({ shiftKey: false }),
+        handler: () => onTab({ shiftKey: false })
       },
 
       shiftTab: {
         key: KEYMAP.TAB,
         shiftKey: true,
-        handler: () => onTab({ shiftKey: true }),
+        handler: () => onTab({ shiftKey: true })
       },
     };
 
@@ -212,7 +212,7 @@ export default class BayouKeyboard extends Keyboard {
     return {
       escape: {
         key: KEYMAP.ESCAPE,
-        handler: () => onEscape(),
+        handler: () => onEscape()
       }
     };
   }
