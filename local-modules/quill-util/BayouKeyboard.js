@@ -31,10 +31,10 @@ const KEYMAP = Object.freeze({
  * which custom options are layered.
  */
 const DEFAULT_OPTIONS = {
-  bindings:   {},
-  onEnter:    () => { /*empty*/ },
-  onEscape:   () => { /*empty*/ },
-  onTab:      () => { /*empty*/ }
+  bindings:  {},
+  onEnter()  { /*empty*/ },
+  onEscape() { /*empty*/ },
+  onTab()    { /*empty*/ }
 };
 
 /**
