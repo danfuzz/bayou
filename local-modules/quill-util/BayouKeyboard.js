@@ -98,79 +98,6 @@ function isMac() {
 }
 
 /**
- * Configuration for the Quill Keyboard module. We must pass these binding into
- * the configuration to have them run before Quill's built-in key bindings.
- * Otherwise Quill swallows certain key events such as `enter`.
- *
- * @param {object} options The configuration options.
- * @returns {object} The early bindings.
- */
-function getEarlyBindings({ onEnter, onTab }) {
-  const bindings = {
-    enter: {
-      key: KEYMAP.ENTER,
-      context: {
-        empty: false,
-      },
-      handler: () => onEnter(),
-    },
-
-    shiftEnter: {
-      key: KEYMAP.ENTER,
-      shiftKey: true,
-      context: {
-        empty: false,
-      },
-      handler: () => onEnter({ shiftKey: true }),
-    },
-
-    optionEnter: {
-      key: KEYMAP.ENTER,
-      altKey: true,
-      handler: () => onEnter({ altKey: true }),
-    },
-
-    ctrlEnter: {
-      key: KEYMAP.ENTER,
-      ctrlKey: true,
-      handler: () => onEnter({ ctrlKey: true }),
-    },
-
-    tab: {
-      key: KEYMAP.TAB,
-      handler: () => onTab({ shiftKey: false }),
-    },
-
-    shiftTab: {
-      key: KEYMAP.TAB,
-      shiftKey: true,
-      handler: () => onTab({ shiftKey: true }),
-    },
-  };
-
-  if (isMac()) {
-    return Object.assign(bindings, MAC_SPECIFIC_BINDINGS);
-  }
-
-  return bindings;
-}
-
-/**
- * Bindings that should run after default Quill bindings.
- *
- * @param {object} options The configuration options.
- * @returns {object} The late bindings.
-*/
-function getLateBindings({ onEscape }) {
-  return {
-    escape: {
-      key: KEYMAP.ESCAPE,
-      handler: () => onEscape(),
-    }
-  };
-}
-
-/**
  * A subclass of the Quill keyboard module. The purpose of this subclass is to
  * extend Quill with methods such as `onEnter(metaKeys)`, `onEscape(metaKeys)`,
  * etc. so that custom behaviors for various configurations can be defined
@@ -203,7 +130,7 @@ export default class BayouKeyboard extends Keyboard {
     opts = Object.assign({}, DEFAULT_OPTIONS, opts);
 
     // Get the bindings that run before Quill's own.
-    const earlyBindings = getEarlyBindings(opts);
+    const earlyBindings = BayouKeyboard._getEarlyBindings(opts);
     opts.bindings = Object.assign({}, opts.bindings, earlyBindings);
 
     // Add our events before Quill has a chance to add its own.
@@ -219,10 +146,86 @@ export default class BayouKeyboard extends Keyboard {
 
     super(quill, opts);
 
-    const lateBindings = getLateBindings(opts);
+    const lateBindings = BayouKeyboard._getLateBindings(opts);
 
     Object.keys(lateBindings).forEach((name) => {
       this.addBinding(lateBindings[name]);
     });
+  }
+
+  /**
+   * Given full configuration options, return the key bindings that should run
+   * before default Quill bindings.
+   *
+   * Most notably, Quill by default will swallow (act on and not propagate)
+   * `enter` key events, and we want to be able to override that behavior.
+   *
+   * @param {object} options The configuration options.
+   * @returns {object} The early bindings.
+   */
+  static _getEarlyBindings({ onEnter, onTab }) {
+    const bindings = {
+      enter: {
+        key: KEYMAP.ENTER,
+        context: {
+          empty: false,
+        },
+        handler: () => onEnter(),
+      },
+
+      shiftEnter: {
+        key: KEYMAP.ENTER,
+        shiftKey: true,
+        context: {
+          empty: false,
+        },
+        handler: () => onEnter({ shiftKey: true }),
+      },
+
+      optionEnter: {
+        key: KEYMAP.ENTER,
+        altKey: true,
+        handler: () => onEnter({ altKey: true }),
+      },
+
+      ctrlEnter: {
+        key: KEYMAP.ENTER,
+        ctrlKey: true,
+        handler: () => onEnter({ ctrlKey: true }),
+      },
+
+      tab: {
+        key: KEYMAP.TAB,
+        handler: () => onTab({ shiftKey: false }),
+      },
+
+      shiftTab: {
+        key: KEYMAP.TAB,
+        shiftKey: true,
+        handler: () => onTab({ shiftKey: true }),
+      },
+    };
+
+    if (isMac()) {
+      return Object.assign(bindings, MAC_SPECIFIC_BINDINGS);
+    }
+
+    return bindings;
+  }
+
+  /**
+   * Given full configuration options, return the key bindings that should run
+   * after default Quill bindings.
+   *
+   * @param {object} options The configuration options.
+   * @returns {object} The late bindings.
+   */
+  static _getLateBindings({ onEscape }) {
+    return {
+      escape: {
+        key: KEYMAP.ESCAPE,
+        handler: () => onEscape(),
+      }
+    };
   }
 }
