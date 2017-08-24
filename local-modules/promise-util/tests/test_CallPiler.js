@@ -42,6 +42,17 @@ describe('promise-util/CallPiler', () => {
       await test([1, 2, 3], { x: 10, y: 20 }, 'blort', true);
     });
 
+    it('does not pass `this` to the underlying function', async () => {
+      let gotThis = '123';
+      function func() {
+        gotThis = this;
+      }
+
+      const piler = new CallPiler(func);
+      await piler.call();
+      assert.isUndefined(gotThis);
+    });
+
     it('returns the result from the underlying function call', async () => {
       function func() {
         return 914;
@@ -80,6 +91,47 @@ describe('promise-util/CallPiler', () => {
       assert.strictEqual(await call2d, 2);
       assert.strictEqual(await call2e, 2);
       assert.strictEqual(callCount, 2);
+    });
+
+    it('initiates a new call after _any_ result resolves', async () => {
+      let callCount = 0;
+      function func() {
+        callCount++;
+        return callCount;
+      }
+
+      // What we're doing here is only awaiting one of the sequence of N calls
+      // that should all be folded together, to make sure that folding happens
+      // as expected.
+
+      const piler = new CallPiler(func);
+
+      const call1a = piler.call();
+      const call1b = piler.call();
+      await call1a;
+
+      const call2a = piler.call();
+      const call2b = piler.call();
+      await call2b;
+
+      const call3a = piler.call();
+      const call3b = piler.call();
+      const call3c = piler.call();
+      const call3d = piler.call();
+      await call3c;
+
+      const call4a = piler.call();
+      await call4a;
+
+      assert.strictEqual(await call1a, 1);
+      assert.strictEqual(await call1b, 1);
+      assert.strictEqual(await call2a, 2);
+      assert.strictEqual(await call2b, 2);
+      assert.strictEqual(await call3a, 3);
+      assert.strictEqual(await call3b, 3);
+      assert.strictEqual(await call3c, 3);
+      assert.strictEqual(await call3d, 3);
+      assert.strictEqual(await call4a, 4);
     });
   });
 });

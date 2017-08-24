@@ -64,15 +64,14 @@ export default class CallPiler {
    * @returns {*} The result of calling the wrapped function.
    */
   async call() {
-    if (this._resultProm !== null) {
-      return this._resultProm;
+    if (this._resultProm === null) {
+      // No call currently in progress. Make one.
+      this._resultProm = this._doCall();
     }
 
-    // No call currently in progress. Make the call, and arrange to clean up
-    // the pending result promise once it becomes resolved.
+    // Arrange to clean up the pending result promise once it becomes resolved.
 
-    const resultProm = this._func(...(this._args));
-    this._resultProm = resultProm;
+    const resultProm = this._resultProm;
 
     try {
       return (await resultProm);
@@ -83,5 +82,16 @@ export default class CallPiler {
         this._resultProm = null;
       }
     }
+  }
+
+  /**
+   * Makes a call to the wrapped function, asynchronously.
+   *
+   * @returns {*} Result from the wrapped call.
+   */
+  async _doCall() {
+    // Grab `this._func` into a local to make calling it _not_ be a method call.
+    const func = this._func;
+    return func(...(this._args));
   }
 }
