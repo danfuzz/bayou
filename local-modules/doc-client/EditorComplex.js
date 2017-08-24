@@ -4,7 +4,7 @@
 
 import { SplitKey } from 'api-common';
 import { Hooks } from 'hooks-client';
-import { QuillProm } from 'quill-util';
+import { BayouKeyHandlers, QuillProm } from 'quill-util';
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
 import { DomUtil } from 'util-client';
@@ -17,34 +17,28 @@ import DocSession from './DocSession';
 /** {Logger} Logger for this module. */
 const log = new Logger('editor-complex');
 
-/** {array<array<*>>} Default title toolbar configuration. */
-const DEFAULT_TITLE_TOOLBAR_CONFIG = [
-  ['italic', 'underline', 'strike', 'code'], // toggled buttons
-
-  [{ align: [] }],
-
-  ['clean']                                      // remove formatting button
-];
-
-/** {array<array<*>>} Default toolbar configuration. */
-const DEFAULT_BODY_TOOLBAR_CONFIG = [
-  ['bold', 'italic', 'underline', 'strike', 'code'], // toggled buttons
-  ['blockquote', 'code-block'],
-
-  [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
-
-  [{ header: [1, 2, 3, false] }],
-
-  [{ align: [] }],
-
-  ['clean']                                      // remove formatting button
-];
+/** {object} Default Quill module configuration for the document body. */
+const DEFAULT_BODY_MODULE_CONFIG = {
+  keyboard: BayouKeyHandlers.defaultKeyHandlers,
+  toolbar: [
+    ['bold', 'italic', 'underline', 'strike', 'code'], // Toggled buttons.
+    ['blockquote', 'code-block'],
+    [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
+    [{ header: [1, 2, 3, false] }],
+    [{ align: [] }],
+    ['clean'] // "Remove formatting" button.
+  ]
+};
 
 /** {object} Default Quill module configuration for the title field. */
-const DEFAULT_TITLE_MODULE_CONFIG = {};
-
-/** {object} Default Quill module configuration for the document body. */
-const DEFAULT_BODY_MODULE_CONFIG = {};
+const DEFAULT_TITLE_MODULE_CONFIG = {
+  keyboard: BayouKeyHandlers.singleLineKeyHandlers,
+  toolbar: [
+    ['italic', 'underline', 'strike', 'code'], // Toggled buttons.
+    [{ align: [] }],
+    ['clean'] // "Remove formatting" button.
+  ]
+};
 
 /**
  * Manager for the "complex" of objects and DOM nodes which in aggregate form
@@ -294,11 +288,7 @@ export default class EditorComplex extends CommonBase {
   static get _titleModuleConfig() {
     if (!EditorComplex._titleModuleConfigValue) {
       const moduleConfig =
-        Hooks.theOne.quillTitleModuleConfig(DEFAULT_TITLE_MODULE_CONFIG);
-      const toolbarConfig =
-        Hooks.theOne.quillTitleToolbarConfig(DEFAULT_TITLE_TOOLBAR_CONFIG);
-
-      moduleConfig.toolbar = toolbarConfig;
+        Hooks.theOne.quillModuleConfig('title', DEFAULT_TITLE_MODULE_CONFIG);
       EditorComplex._titleModuleConfigValue = Object.freeze(moduleConfig);
     }
 
@@ -312,11 +302,7 @@ export default class EditorComplex extends CommonBase {
   static get _bodyModuleConfig() {
     if (!EditorComplex._bodyModuleConfigValue) {
       const moduleConfig =
-        Hooks.theOne.quillBodyModuleConfig(DEFAULT_BODY_MODULE_CONFIG);
-      const toolbarConfig =
-        Hooks.theOne.quillBodyToolbarConfig(DEFAULT_BODY_TOOLBAR_CONFIG);
-
-      moduleConfig.toolbar = toolbarConfig;
+        Hooks.theOne.quillModuleConfig('body', DEFAULT_BODY_MODULE_CONFIG);
       EditorComplex._bodyModuleConfigValue = Object.freeze(moduleConfig);
     }
 
