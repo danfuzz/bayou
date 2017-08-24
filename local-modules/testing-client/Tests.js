@@ -6,7 +6,7 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { assert } from 'chai';
 
-import { PromDelay } from 'promise-util';
+import { Delay } from 'promise-util';
 import { Logger } from 'see-all';
 import { UtilityClass } from 'util-common';
 
@@ -48,6 +48,6 @@ export default class Tests extends UtilityClass {
       log.info('Caught expected exception', e);
     }
 
-    return PromDelay.resolve(5000, 'All succeeded! ;-)');
+    return Delay.resolve(5000, 'All succeeded! ;-)');
   }
 }

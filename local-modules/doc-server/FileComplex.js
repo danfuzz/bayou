@@ -7,7 +7,7 @@ import { FrozenDelta } from 'doc-common';
 import { ProductInfo } from 'env-server';
 import { BaseFile, FileCodec } from 'file-store';
 import { DEFAULT_DOCUMENT } from 'hooks-server';
-import { PromMutex } from 'promise-util';
+import { Mutex } from 'promise-util';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase } from 'util-common';
@@ -80,8 +80,8 @@ export default class FileComplex extends CommonBase {
      */
     this._docControl = null;
 
-    /** {PromMutex} Mutex to avoid overlapping initialization operations. */
-    this._initMutex = new PromMutex();
+    /** {Mutex} Mutex to avoid overlapping initialization operations. */
+    this._initMutex = new Mutex();
   }
 
   /** {CaretControl} The caret info controller to use with this instance. */

@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
-import { PromDelay } from 'promise-util';
+import { Delay } from 'promise-util';
 
 /** {Int} How long an unanswered challenge remains active for, in msec. */
 const CHALLENGE_TIMEOUT_MSEC = 5 * 60 * 1000; // Five minutes.
@@ -104,7 +104,7 @@ export default class MetaHandler {
     this._activeChallenges.set(challenge, { id, response });
 
     (async () => {
-      await PromDelay.resolve(CHALLENGE_TIMEOUT_MSEC);
+      await Delay.resolve(CHALLENGE_TIMEOUT_MSEC);
       if (this._activeChallenges.delete(challenge)) {
         // `delete` returns `true` to indicate that the value was found. In this
         // case, it means that it expired.

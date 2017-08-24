@@ -9,7 +9,7 @@ import { CommonBase } from 'util-common';
  * exclusion. This class can be used to serialize running of critical sections
  * of code, among other things.
  */
-export default class PromMutex extends CommonBase {
+export default class Mutex extends CommonBase {
   /**
    * Constructs an instance.
    */

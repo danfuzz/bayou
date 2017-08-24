@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { RevisionNumber } from 'doc-common';
-import { PromDelay } from 'promise-util';
+import { Delay } from 'promise-util';
 import { TInt, TObject } from 'typecheck';
 import { CommonBase } from 'util-common';
 
@@ -111,7 +111,7 @@ export default class CaretTracker extends CommonBase {
         this._latestCaret = null;
         await Promise.all([
           this._sessionProxy.caretUpdate(...info),
-          PromDelay.resolve(UPDATE_DELAY_MSEC)]);
+          Delay.resolve(UPDATE_DELAY_MSEC)]);
       }
 
       this._updating = false;

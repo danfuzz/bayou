@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BearerToken } from 'api-server';
-import { PromDelay } from 'promise-util';
+import { Delay } from 'promise-util';
 import { Singleton } from 'util-common';
 
 /**
@@ -66,6 +66,6 @@ export default class BearerTokens extends Singleton {
    */
   whenRootTokensChange() {
     const CHANGE_FREQUENCY_MSEC = 10 * 60 * 60 * 1000;
-    return PromDelay.resolve(CHANGE_FREQUENCY_MSEC);
+    return Delay.resolve(CHANGE_FREQUENCY_MSEC);
   }
 }

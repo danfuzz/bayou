@@ -22,7 +22,7 @@ import { ClientBundle } from 'client-bundle';
 import { DevMode } from 'dev-mode';
 import { Dirs, ProductInfo, ServerEnv } from 'env-server';
 import { Hooks } from 'hooks-server';
-import { PromDelay } from 'promise-util';
+import { Delay } from 'promise-util';
 import { Logger } from 'see-all';
 import { FileSink, ServerSink } from 'see-all-server';
 import { ServerTests } from 'testing-server';
@@ -169,7 +169,7 @@ process.on('unhandledRejection', (reason, promise_unused) => {
   // Give the system a moment, so it has a chance to actually flush the log,
   // and then exit.
   (async () => {
-    await PromDelay.resolve(250); // 0.25 second.
+    await Delay.resolve(250); // 0.25 second.
     process.exit(1);
   })();
 });
@@ -180,7 +180,7 @@ process.on('uncaughtException', (error) => {
   // Give the system a moment, so it has a chance to actually flush the log,
   // and then exit.
   (async () => {
-    await PromDelay.resolve(250); // 0.25 second.
+    await Delay.resolve(250); // 0.25 second.
     process.exit(1);
   })();
 });

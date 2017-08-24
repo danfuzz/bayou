@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Caret } from 'doc-common';
-import { PromDelay } from 'promise-util';
+import { Delay } from 'promise-util';
 import { QuillEvent, QuillGeometry } from 'quill-util';
 import { TObject, TString } from 'typecheck';
 
@@ -231,7 +231,7 @@ export default class CaretOverlay {
         docSession.log.warn('Trouble with `caretSnapshot`:', e);
         docSession   = null;
         sessionProxy = null;
-        await PromDelay.resolve(ERROR_DELAY_MSEC);
+        await Delay.resolve(ERROR_DELAY_MSEC);
         continue;
       }
 
@@ -254,7 +254,7 @@ export default class CaretOverlay {
         this._endSession(s);
       }
 
-      await PromDelay.resolve(REQUEST_DELAY_MSEC);
+      await Delay.resolve(REQUEST_DELAY_MSEC);
     }
   }
 
@@ -285,7 +285,7 @@ export default class CaretOverlay {
       // Wait a moment, before looking for more changes. If there are multiple
       // changes during this time, the `latestOfNow()` call above will elide
       // them.
-      await PromDelay.resolve(LOCAL_EDIT_DELAY_MSEC);
+      await Delay.resolve(LOCAL_EDIT_DELAY_MSEC);
     }
   }
 

@@ -4,7 +4,7 @@
 
 import { Caret, CaretSnapshot } from 'doc-common';
 import { TransactionSpec } from 'file-store';
-import { PromDelay } from 'promise-util';
+import { Delay } from 'promise-util';
 import { CommonBase, FrozenBuffer } from 'util-common';
 
 import FileComplex from './FileComplex';
@@ -209,7 +209,7 @@ export default class CaretStorage extends CommonBase {
       if (readDelay > 0) {
         this._log.info(`Pre-read wait in \`whenRemoteChange\`: ${readDelay} msec`);
         // Wait the prescribed amount of time.
-        await PromDelay.resolve(readDelay);
+        await Delay.resolve(readDelay);
       } else {
         // No need to wait. Just indicate that a read should be in progress, and
         // wait for it to be done.
@@ -383,7 +383,7 @@ export default class CaretStorage extends CommonBase {
    */
   async _waitThenWriteCarets() {
     this._log.detail('Waiting a moment before writing carets.');
-    await PromDelay.resolve(WRITE_DELAY_MSEC);
+    await Delay.resolve(WRITE_DELAY_MSEC);
 
     // Build up a transaction spec to perform all the caret updates, and extract
     // a set of changes to make to instance variables should the transaction
@@ -475,7 +475,7 @@ export default class CaretStorage extends CommonBase {
         }
       }
 
-      await PromDelay.resolve(WRITE_RETRY_DELAY_MSEC);
+      await Delay.resolve(WRITE_RETRY_DELAY_MSEC);
     }
 
     // Update instance variables to reflect the new state of affairs.

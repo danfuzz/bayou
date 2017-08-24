@@ -5,12 +5,12 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { PromMutex } from 'promise-util';
+import { Mutex } from 'promise-util';
 
-describe('util-common/PromMutex', () => {
+describe('util-common/Mutex', () => {
   describe('lock()', () => {
     it('should work when there is blatantly no contention', async () => {
-      const mutex = new PromMutex();
+      const mutex = new Mutex();
       const unlock = await mutex.lock();
 
       assert.isFunction(unlock);
@@ -18,7 +18,7 @@ describe('util-common/PromMutex', () => {
     });
 
     it('should reject attempts to double-unlock with the same unlocker', async () => {
-      const mutex = new PromMutex();
+      const mutex = new Mutex();
       const unlock = await mutex.lock();
 
       unlock();
@@ -26,7 +26,7 @@ describe('util-common/PromMutex', () => {
     });
 
     it('should provide the lock in request order', async () => {
-      const mutex       = new PromMutex();
+      const mutex       = new Mutex();
       const gotOrder    = [];
       const expectOrder = [];
       const innerProms  = [];

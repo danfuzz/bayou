@@ -4,7 +4,7 @@
 
 import { SplitKey } from 'api-common';
 import { Hooks } from 'hooks-client';
-import { PromCondition } from 'promise-util';
+import { Condition } from 'promise-util';
 import { BayouKeyHandlers, QuillProm } from 'quill-util';
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
@@ -65,10 +65,10 @@ export default class EditorComplex extends CommonBase {
     this._window = window;
 
     /**
-     * {PromCondition} Condition that becomes true when the instance is
+     * {Condition} Condition that becomes true when the instance is
      * ready to be used.
      */
-    this._ready = new PromCondition();
+    this._ready = new Condition();
 
     /**
      * {SplitKey|null} Access credentials to the session to use for server

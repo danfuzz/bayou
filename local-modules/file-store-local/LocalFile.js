@@ -7,7 +7,7 @@ import path from 'path';
 
 import { Codec } from 'codec';
 import { BaseFile, Errors } from 'file-store';
-import { PromCondition, PromDelay, PromMutex } from 'promise-util';
+import { Condition, Delay, Mutex } from 'promise-util';
 import { Logger } from 'see-all';
 import { FrozenBuffer } from 'util-common';
 
@@ -98,10 +98,10 @@ export default class LocalFile extends BaseFile {
     this._storageReadyPromise = null;
 
     /**
-     * {PromMutex} Mutex that guards file writing operations, so that we only
+     * {Mutex} Mutex that guards file writing operations, so that we only
      * ever have one set of writes in flight at any given time.
      */
-    this._writeMutex = new PromMutex();
+    this._writeMutex = new Mutex();
 
     /**
      * Condition that transitions from `false` to `true` when there is a
@@ -109,7 +109,7 @@ export default class LocalFile extends BaseFile {
      * the steady state (when there are no waiters). As soon as the first waiter
      * comes along, it gets set to `false`.
      */
-    this._changeCondition = new PromCondition(true);
+    this._changeCondition = new Condition(true);
 
     /**
      * {Codec} Codec to use specifically _just_ to encode and decode the file
@@ -200,7 +200,7 @@ export default class LocalFile extends BaseFile {
     // storage, as that storage read can take significant time.
     const timeoutMsec = this.clampTimeoutMsec(spec.timeoutMsec);
     let timeout = false; // Gets set to `true` when the timeout expires.
-    const timeoutProm = PromDelay.resolve(timeoutMsec);
+    const timeoutProm = Delay.resolve(timeoutMsec);
     (async () => {
       await timeoutProm;
       timeout = true;
@@ -435,7 +435,7 @@ export default class LocalFile extends BaseFile {
     this._log.info('Storage modified. Waiting a moment for further changes.');
 
     // Wait for the prescribed amount of time.
-    await PromDelay.resolve(DIRTY_DELAY_MSEC);
+    await Delay.resolve(DIRTY_DELAY_MSEC);
 
     // Call `_writeStorge()` with the writer mutex held. The `try..finally` here
     // guarantees that we release the mutex in the face of errors.

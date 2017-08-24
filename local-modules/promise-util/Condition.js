@@ -13,7 +13,7 @@ const RESOLVED_TRUE = Promise.resolve(true);
 /**
  * Boolean condition with promise-attached level triggers.
  */
-export default class PromCondition {
+export default class Condition {
   /**
    * Constructs an instance.
    *

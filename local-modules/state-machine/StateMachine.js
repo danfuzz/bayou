@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { PromCondition } from 'promise-util';
+import { Condition } from 'promise-util';
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
 import { PropertyIterable } from 'util-common';
@@ -85,13 +85,13 @@ export default class StateMachine {
     this._eventQueue = [];
 
     /**
-     * {PromCondition} Condition which is set to `true` whenever the event queue
+     * {Condition} Condition which is set to `true` whenever the event queue
      * has events in it or when it is time to abort.
      */
-    this._anyEventPending = new PromCondition(false);
+    this._anyEventPending = new Condition(false);
 
     /**
-     * {Map<string, PromCondition>} Map from state names to conditions which
+     * {Map<string, Condition>} Map from state names to conditions which
      * become momentarily `true` when transitioning into those states. Populated
      * only as needed.
      */
@@ -188,7 +188,7 @@ export default class StateMachine {
           this._log.detail(`Awaiter added for state: ${name}`);
           let condition = this._stateConditions.get(name);
           if (!condition) {
-            condition = new PromCondition();
+            condition = new Condition();
             this._stateConditions.set(name, condition);
           }
           return condition.whenTrue();

@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import PromCondition from './PromCondition';
-import PromDelay from './PromDelay';
-import PromMutex from './PromMutex';
+import Condition from './Condition';
+import Delay from './Delay';
+import Mutex from './Mutex';
 
-export { PromCondition, PromDelay, PromMutex };
+export { Condition, Delay, Mutex };
