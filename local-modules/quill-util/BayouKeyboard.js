@@ -172,7 +172,7 @@ function getLateBindings({ onEscape }) {
 
 /**
  * A subclass of the Quill keyboard module. The purpose of this subclass is to
- * extend Quill with methods such as `onEnter(metaKeys)`, `onEsc(metaKeys)`,
+ * extend Quill with methods such as `onEnter(metaKeys)`, `onEscape(metaKeys)`,
  * etc. so that custom behaviors for various configurations can be defined
  * merely by passing in an appropriately named function to override the default
  * handler behavior.
