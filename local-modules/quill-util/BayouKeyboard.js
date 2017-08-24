@@ -32,9 +32,9 @@ const KEYMAP = Object.freeze({
  */
 const DEFAULT_OPTIONS = {
   bindings:  {},
-  onEnter()  { /*empty*/ },
-  onEscape() { /*empty*/ },
-  onTab()    { /*empty*/ }
+  onEnter()  { return true; },
+  onEscape() { return true; },
+  onTab()    { return true; }
 };
 
 /**
