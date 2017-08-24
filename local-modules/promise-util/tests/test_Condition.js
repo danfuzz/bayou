@@ -4,6 +4,6 @@
 
 import { describe, it } from 'mocha';
 
-describe('util-common/Condition', () => {
+describe('promise-util/Condition', () => {
   it('needs a way to be tested');
 });

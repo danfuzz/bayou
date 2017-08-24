@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { Delay } from 'promise-util';
 
-describe('util-common/Delay', () => {
+describe('promise-util/Delay', () => {
   describe('delay(delayMSec)', () => {
     it('should eventually resolve to true', () => {
       assert.isFulfilled(Delay.resolve(10));
