@@ -157,37 +157,37 @@ export default class BayouKeyboard extends Keyboard {
       enter: {
         key:      KEYMAP.ENTER,
         context:  { empty: false },
-        handler() { onEnter(); }
+        handler() { return onEnter(); }
       },
 
       shiftEnter: {
         key:      KEYMAP.ENTER,
         shiftKey: true,
         context:  { empty: false },
-        handler() { onEnter({ shiftKey: true }); }
+        handler() { return onEnter({ shiftKey: true }); }
       },
 
       optionEnter: {
         key:      KEYMAP.ENTER,
         altKey:   true,
-        handler() { onEnter({ altKey: true }); }
+        handler() { return onEnter({ altKey: true }); }
       },
 
       ctrlEnter: {
         key:      KEYMAP.ENTER,
         ctrlKey:  true,
-        handler() { onEnter({ ctrlKey: true }); }
+        handler() { return onEnter({ ctrlKey: true }); }
       },
 
       tab: {
         key:      KEYMAP.TAB,
-        handler() { onTab({ shiftKey: false }); }
+        handler() { return onTab({ shiftKey: false }); }
       },
 
       shiftTab: {
         key:      KEYMAP.TAB,
         shiftKey: true,
-        handler() { onTab({ shiftKey: true }); }
+        handler() { return onTab({ shiftKey: true }); }
       }
     };
 
@@ -209,7 +209,7 @@ export default class BayouKeyboard extends Keyboard {
     return {
       escape: {
         key:      KEYMAP.ESCAPE,
-        handler() { onEscape(); }
+        handler() { return onEscape(); }
       }
     };
   }
