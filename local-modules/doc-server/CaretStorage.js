@@ -297,7 +297,7 @@ export default class CaretStorage extends CommonBase {
     } else {
       // Do the reading and updating of caret contents.
       this._log.info('Reading remote carets...');
-      this._readTransactAndUpdate(ops);
+      await this._readTransactAndUpdate(ops);
     }
 
     // Update the last-read time, so we know when to try reading again.
