@@ -26,26 +26,21 @@ const KEYMAP = Object.freeze({
   DOWN:   40
 });
 
-/** No-op function, used for the `DEFAULT_OPTIONS`. */
-function noop() {
-  // This space intentionally left blank.
-}
-
 /**
  * {object} A collection of no-op keyboard key handlers. This is the base over
  * which custom options are layered.
  */
 const DEFAULT_OPTIONS = {
-  bindings:   {},
-  onEnter:    noop,
-  onEscape:   noop,
-  onTab:      noop,
+  bindings:  {},
+  onEnter()  { /*empty*/ },
+  onEscape() { /*empty*/ },
+  onTab()    { /*empty*/ }
 };
 
 /**
- * Additional Quill key bindings for macOS environments. There are several references to
- * `this.quill` in these handlers. That property will be filled in by other layers before
- * the handlers are called. It is guaranteed to be set.
+ * Additional Quill key bindings for macOS environments. There are several
+ * references to `this.quill` in these handlers. That property will be filled in
+ * by other layers before the handlers are called. It is guaranteed to be set.
  *
  * @returns {object} Mac-specific bindings for use when configuring Quill.
  */
@@ -55,16 +50,16 @@ const MAC_SPECIFIC_BINDINGS = Object.freeze({
     handler() {
       // Set selection to beginning of document.
       this.quill.setSelection(0, 0);
-    },
+    }
   },
 
   shiftHome: {
-    key: KEYMAP.HOME,
+    key:      KEYMAP.HOME,
     shiftKey: true,
     handler(range) {
       // Expand selection to the start of the document.
       this.quill.setSelection(0, range.index + range.length);
-    },
+    }
   },
 
   end: {
@@ -72,107 +67,22 @@ const MAC_SPECIFIC_BINDINGS = Object.freeze({
     handler() {
       // Set selection to the end of the document.
       this.quill.setSelection(this.quill.getLength(), 0);
-    },
+    }
   },
 
   shiftEnd: {
-    key: KEYMAP.END,
+    key:      KEYMAP.END,
     shiftKey: true,
     handler(range) {
       // Expand selection to to the end of the document.
       this.quill.setSelection(range.index, this.quill.getLength() - range.index);
-    },
-  },
+    }
+  }
 });
 
 /**
- * Returns `true` if the client environment is macOS, or `false` if it is not.
- *
- * @returns {boolean} Whether the client environment is macOS or not.
- */
-function isMac() {
-  const window = ClientEnv.window;
-  const userAgentString = window.navigator.userAgent;
-
-  return /Mac/i.test(userAgentString);
-}
-
-/**
- * Configuration for the Quill Keyboard module. We must pass these binding into
- * the configuration to have them run before Quill's built-in key bindings.
- * Otherwise Quill swallows certain key events such as `enter`.
- *
- * @param {object} options The configuration options.
- * @returns {object} The early bindings.
- */
-function getEarlyBindings({ onEnter, onTab }) {
-  const bindings = {
-    enter: {
-      key: KEYMAP.ENTER,
-      context: {
-        empty: false,
-      },
-      handler: () => onEnter(),
-    },
-
-    shiftEnter: {
-      key: KEYMAP.ENTER,
-      shiftKey: true,
-      context: {
-        empty: false,
-      },
-      handler: () => onEnter({ shiftKey: true }),
-    },
-
-    optionEnter: {
-      key: KEYMAP.ENTER,
-      altKey: true,
-      handler: () => onEnter({ altKey: true }),
-    },
-
-    ctrlEnter: {
-      key: KEYMAP.ENTER,
-      ctrlKey: true,
-      handler: () => onEnter({ ctrlKey: true }),
-    },
-
-    tab: {
-      key: KEYMAP.TAB,
-      handler: () => onTab({ shiftKey: false }),
-    },
-
-    shiftTab: {
-      key: KEYMAP.TAB,
-      shiftKey: true,
-      handler: () => onTab({ shiftKey: true }),
-    },
-  };
-
-  if (isMac()) {
-    return Object.assign(bindings, MAC_SPECIFIC_BINDINGS);
-  }
-
-  return bindings;
-}
-
-/**
- * Bindings that should run after default Quill bindings.
- *
- * @param {object} options The configuration options.
- * @returns {object} The late bindings.
-*/
-function getLateBindings({ onEscape }) {
-  return {
-    escape: {
-      key: KEYMAP.ESCAPE,
-      handler: () => onEscape(),
-    }
-  };
-}
-
-/**
  * A subclass of the Quill keyboard module. The purpose of this subclass is to
- * extend Quill with methods such as `onEnter(metaKeys)`, `onEsc(metaKeys)`,
+ * extend Quill with methods such as `onEnter(metaKeys)`, `onEscape(metaKeys)`,
  * etc. so that custom behaviors for various configurations can be defined
  * merely by passing in an appropriately named function to override the default
  * handler behavior.
@@ -192,7 +102,12 @@ export default class BayouKeyboard extends Keyboard {
   }
 
   /**
-   * Constructs an instance.
+   * Constructs an instance. The keys for `options` are the same as the default
+   * Quill keyboard, with the addition of the following:
+   *
+   * * `onEnter` &mdash; Function to call when the `enter` key is pressed.
+   * * `onEscape` &mdash; Function to call when the `escape` key is pressed.
+   * * `onTab` &mdash; Function to call when the `tab` key is pressed.
    *
    * @param {Quill} quill The quill instance to attach to.
    * @param {object} options Key handling configuration options.
@@ -203,7 +118,7 @@ export default class BayouKeyboard extends Keyboard {
     opts = Object.assign({}, DEFAULT_OPTIONS, opts);
 
     // Get the bindings that run before Quill's own.
-    const earlyBindings = getEarlyBindings(opts);
+    const earlyBindings = BayouKeyboard._getEarlyBindings(opts);
     opts.bindings = Object.assign({}, opts.bindings, earlyBindings);
 
     // Add our events before Quill has a chance to add its own.
@@ -219,10 +134,83 @@ export default class BayouKeyboard extends Keyboard {
 
     super(quill, opts);
 
-    const lateBindings = getLateBindings(opts);
+    const lateBindings = BayouKeyboard._getLateBindings(opts);
 
-    Object.keys(lateBindings).forEach((name) => {
-      this.addBinding(lateBindings[name]);
-    });
+    for (const binding of Object.values(lateBindings)) {
+      this.addBinding(binding);
+    }
+  }
+
+  /**
+   * Given full configuration options, return the key bindings that should run
+   * before default Quill bindings.
+   *
+   * Most notably, Quill by default will swallow (act on and not propagate)
+   * `enter` key events, and we want to be able to override that behavior.
+   *
+   * @param {function} onEnter The `enter` key handler function.
+   * @param {function} onTab The `tab` key handler function.
+   * @returns {object} The early bindings.
+   */
+  static _getEarlyBindings({ onEnter, onTab }) {
+    const bindings = {
+      enter: {
+        key:      KEYMAP.ENTER,
+        context:  { empty: false },
+        handler() { onEnter(); }
+      },
+
+      shiftEnter: {
+        key:      KEYMAP.ENTER,
+        shiftKey: true,
+        context:  { empty: false },
+        handler() { onEnter({ shiftKey: true }); }
+      },
+
+      optionEnter: {
+        key:      KEYMAP.ENTER,
+        altKey:   true,
+        handler() { onEnter({ altKey: true }); }
+      },
+
+      ctrlEnter: {
+        key:      KEYMAP.ENTER,
+        ctrlKey:  true,
+        handler() { onEnter({ ctrlKey: true }); }
+      },
+
+      tab: {
+        key:      KEYMAP.TAB,
+        handler() { onTab({ shiftKey: false }); }
+      },
+
+      shiftTab: {
+        key:      KEYMAP.TAB,
+        shiftKey: true,
+        handler() { onTab({ shiftKey: true }); }
+      }
+    };
+
+    if (ClientEnv.isMac()) {
+      return Object.assign(bindings, MAC_SPECIFIC_BINDINGS);
+    }
+
+    return bindings;
+  }
+
+  /**
+   * Given full configuration options, return the key bindings that should run
+   * after default Quill bindings.
+   *
+   * @param {function} onEscape The `enscape` key handler function.
+   * @returns {object} The late bindings.
+   */
+  static _getLateBindings({ onEscape }) {
+    return {
+      escape: {
+        key:      KEYMAP.ESCAPE,
+        handler() { onEscape(); }
+      }
+    };
   }
 }
