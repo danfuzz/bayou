@@ -25,13 +25,18 @@ import { TFunction } from 'typecheck';
  * const call1 = piler.call();
  * const call2 = piler.call();
  * console.log('Results', await call1, await call2);
+ * const call3 = piler.call();
+ * const call4 = piler.call();
+ * console.log('Results', await call1, await call2);
  * ```
  *
  * will print the following when run:
  *
  * ```
  * Blort!
- * 1 1
+ * Results 1 1
+ * Blort!
+ * Results 2 2
  * ```
  */
 export default class CallPiler {
