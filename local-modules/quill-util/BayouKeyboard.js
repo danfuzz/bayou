@@ -148,7 +148,8 @@ export default class BayouKeyboard extends Keyboard {
    * Most notably, Quill by default will swallow (act on and not propagate)
    * `enter` key events, and we want to be able to override that behavior.
    *
-   * @param {object} options The configuration options.
+   * @param {function} onEnter The `enter` key handler function.
+   * @param {function} onTab The `tab` key handler function.
    * @returns {object} The early bindings.
    */
   static _getEarlyBindings({ onEnter, onTab }) {
@@ -201,7 +202,7 @@ export default class BayouKeyboard extends Keyboard {
    * Given full configuration options, return the key bindings that should run
    * after default Quill bindings.
    *
-   * @param {object} options The configuration options.
+   * @param {function} onEscape The `enscape` key handler function.
    * @returns {object} The late bindings.
    */
   static _getLateBindings({ onEscape }) {
