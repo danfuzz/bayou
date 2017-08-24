@@ -54,7 +54,7 @@ const MAC_SPECIFIC_BINDINGS = Object.freeze({
   },
 
   shiftHome: {
-    key: KEYMAP.HOME,
+    key:      KEYMAP.HOME,
     shiftKey: true,
     handler(range) {
       // Expand selection to the start of the document.
@@ -71,7 +71,7 @@ const MAC_SPECIFIC_BINDINGS = Object.freeze({
   },
 
   shiftEnd: {
-    key: KEYMAP.END,
+    key:      KEYMAP.END,
     shiftKey: true,
     handler(range) {
       // Expand selection to to the end of the document.
@@ -149,43 +149,39 @@ export default class BayouKeyboard extends Keyboard {
   static _getEarlyBindings({ onEnter, onTab }) {
     const bindings = {
       enter: {
-        key: KEYMAP.ENTER,
-        context: {
-          empty: false,
-        },
-        handler: () => onEnter()
+        key:      KEYMAP.ENTER,
+        context:  { empty: false },
+        handler() { onEnter(); }
       },
 
       shiftEnter: {
-        key: KEYMAP.ENTER,
+        key:      KEYMAP.ENTER,
         shiftKey: true,
-        context: {
-          empty: false,
-        },
-        handler: () => onEnter({ shiftKey: true })
+        context:  { empty: false },
+        handler() { onEnter({ shiftKey: true }); }
       },
 
       optionEnter: {
-        key: KEYMAP.ENTER,
-        altKey: true,
-        handler: () => onEnter({ altKey: true })
+        key:      KEYMAP.ENTER,
+        altKey:   true,
+        handler() { onEnter({ altKey: true }); }
       },
 
       ctrlEnter: {
-        key: KEYMAP.ENTER,
-        ctrlKey: true,
-        handler: () => onEnter({ ctrlKey: true })
+        key:      KEYMAP.ENTER,
+        ctrlKey:  true,
+        handler() { onEnter({ ctrlKey: true }); }
       },
 
       tab: {
-        key: KEYMAP.TAB,
-        handler: () => onTab({ shiftKey: false })
+        key:      KEYMAP.TAB,
+        handler() { onTab({ shiftKey: false }); }
       },
 
       shiftTab: {
-        key: KEYMAP.TAB,
+        key:      KEYMAP.TAB,
         shiftKey: true,
-        handler: () => onTab({ shiftKey: true })
+        handler() { onTab({ shiftKey: true }); }
       }
     };
 
@@ -206,8 +202,8 @@ export default class BayouKeyboard extends Keyboard {
   static _getLateBindings({ onEscape }) {
     return {
       escape: {
-        key: KEYMAP.ESCAPE,
-        handler: () => onEscape()
+        key:      KEYMAP.ESCAPE,
+        handler() { onEscape(); }
       }
     };
   }
