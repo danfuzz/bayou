@@ -27,7 +27,7 @@ import { TFunction } from 'typecheck';
  * console.log('Results', await call1, await call2);
  * const call3 = piler.call();
  * const call4 = piler.call();
- * console.log('Results', await call1, await call2);
+ * console.log('Results', await call3, await call4);
  * ```
  *
  * will print the following when run:
