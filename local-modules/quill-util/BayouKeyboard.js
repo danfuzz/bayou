@@ -131,9 +131,9 @@ export default class BayouKeyboard extends Keyboard {
 
     const lateBindings = BayouKeyboard._getLateBindings(opts);
 
-    Object.keys(lateBindings).forEach((name) => {
-      this.addBinding(lateBindings[name]);
-    });
+    for (const binding of Object.values(lateBindings)) {
+      this.addBinding(binding);
+    }
   }
 
   /**
