@@ -86,8 +86,7 @@ const MAC_SPECIFIC_BINDINGS = Object.freeze({
 });
 
 /**
- * Returns `true` if the client environment is macOS, or `false` if it is not or
- * if the environment cannot be determined.
+ * Returns `true` if the client environment is macOS, or `false` if it is not.
  *
  * @returns {boolean} Whether the client environment is macOS or not.
  */
