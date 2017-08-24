@@ -6,8 +6,9 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { assert } from 'chai';
 
+import { Delay } from 'promise-util';
 import { Logger } from 'see-all';
-import { PromDelay, UtilityClass } from 'util-common';
+import { UtilityClass } from 'util-common';
 
 // If we tweak the Webpack config to point the module `mocha` at the browser-ish
 // build, then the following `import` will cause `window.mocha` to be defined.
@@ -47,6 +48,6 @@ export default class Tests extends UtilityClass {
       log.info('Caught expected exception', e);
     }
 
-    return PromDelay.resolve(5000, 'All succeeded! ;-)');
+    return Delay.resolve(5000, 'All succeeded! ;-)');
   }
 }

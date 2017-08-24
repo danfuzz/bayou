@@ -4,10 +4,10 @@
 
 import { ApiError } from 'api-client';
 import { DocumentDelta, DocumentSnapshot, FrozenDelta } from 'doc-common';
+import { Delay } from 'promise-util';
 import { QuillEvent } from 'quill-util';
 import { TString } from 'typecheck';
 import { StateMachine } from 'state-machine';
-import { PromDelay } from 'util-common';
 
 import DocSession from './DocSession';
 
@@ -273,7 +273,7 @@ export default class DocClient extends StateMachine {
     // be handled differently than a clean start from scratch.
 
     (async () => {
-      await PromDelay.resolve(RESTART_DELAY_MSEC);
+      await Delay.resolve(RESTART_DELAY_MSEC);
       this.start();
     })();
 
@@ -488,7 +488,7 @@ export default class DocClient extends StateMachine {
     // delay. The delay is just to keep network traffic at a stately pace
     // despite any particularly active editing by other clients.
     (async () => {
-      await PromDelay.resolve(PULL_DELAY_MSEC);
+      await Delay.resolve(PULL_DELAY_MSEC);
       this.q_wantChanges();
     })();
   }
@@ -548,7 +548,7 @@ export default class DocClient extends StateMachine {
         // `collecting` handler will hoover up the event with any other edits
         // that happened in the mean time.
         (async () => {
-          await PromDelay.resolve(PUSH_DELAY_MSEC);
+          await Delay.resolve(PUSH_DELAY_MSEC);
           this.q_wantApplyDelta(baseDoc);
         })();
 

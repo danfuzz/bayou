@@ -7,8 +7,9 @@ import {
   Timestamp
 } from 'doc-common';
 import { Errors, TransactionSpec } from 'file-store';
+import { Delay } from 'promise-util';
 import { TString } from 'typecheck';
-import { CommonBase, InfoError, PromDelay } from 'util-common';
+import { CommonBase, InfoError } from 'util-common';
 
 import FileComplex from './FileComplex';
 import Paths from './Paths';
@@ -436,7 +437,7 @@ export default class DocControl extends CommonBase {
       }
 
       this._log.info(`Sleeping ${retryDelayMsec} msec.`);
-      await PromDelay.resolve(retryDelayMsec);
+      await Delay.resolve(retryDelayMsec);
       retryTotalMsec += retryDelayMsec;
       retryDelayMsec *= APPEND_RETRY_GROWTH_FACTOR;
     }

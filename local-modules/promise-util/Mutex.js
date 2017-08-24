@@ -2,14 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import CommonBase from './CommonBase';
+import { CommonBase } from 'util-common';
 
 /**
  * Promise-based mutex implementation. This provides _non-reentrant_ mutual
  * exclusion. This class can be used to serialize running of critical sections
  * of code, among other things.
  */
-export default class PromMutex extends CommonBase {
+export default class Mutex extends CommonBase {
   /**
    * Constructs an instance.
    */

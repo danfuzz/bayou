@@ -8,8 +8,9 @@ import fs_extra from 'fs-extra';
 import path from 'path';
 
 import { Dirs } from 'env-server';
+import { Delay } from 'promise-util';
 import { Logger } from 'see-all';
-import { PromDelay, Singleton } from 'util-common';
+import { Singleton } from 'util-common';
 
 /** Logger. */
 const log = new Logger('dev-mode');
@@ -309,7 +310,7 @@ export default class DevMode extends Singleton {
     this._shuttingDown = true;
     log.info('Server file changed. About to exit...');
 
-    await PromDelay.resolve(5 * 1000);
+    await Delay.resolve(5 * 1000);
     process.exit();
   }
 

@@ -9,6 +9,7 @@
     "doc-client": "local",
     "doc-common": "local",
     "hooks-client": "local",
+    "promise-util": "local",
     "quill-util": "local",
     "see-all": "local",
     "state-machine": "local",

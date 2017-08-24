@@ -267,7 +267,7 @@ nodeModules="${projectDir}/node_modules"
 mkdir -p "${nodeModules}" || exit 1
 
 for d in "${localDeps[@]}"; do
-    rsync-archive "${d}" "${nodeModules}"
+    rsync-archive --delete "${d}" "${nodeModules}"
 
     # Remove the `dependencies` from the `package.json`, because otherwise `npm`
     # tries to process them (and they aren't valid as far as it's concerned).

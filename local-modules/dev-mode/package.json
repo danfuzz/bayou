@@ -8,6 +8,7 @@
     "fs-extra": "^3.0.1",
 
     "env-server": "local",
+    "promise-util": "local",
     "see-all": "local",
     "util-common": "local"
   }

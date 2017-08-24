@@ -10,6 +10,7 @@
       "codec": "local",
       "env-server": "local",
       "hooks-server": "local",
+      "promise-util": "local",
       "see-all": "local",
       "typecheck": "local",
       "util-common": "local"

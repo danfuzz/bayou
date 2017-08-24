@@ -1,12 +1,9 @@
 {
-  "name": "file-store",
+  "name": "promise-util",
   "version": "1.0.0",
   "main": "main.js",
 
   "dependencies": {
-    "codec": "local",
-    "hooks-server": "local",
-    "promise-util": "local",
     "typecheck": "local",
     "util-common": "local"
   }

@@ -4,7 +4,8 @@
 
 import { Caret, CaretSnapshot } from 'doc-common';
 import { TransactionSpec } from 'file-store';
-import { CommonBase, FrozenBuffer, PromDelay } from 'util-common';
+import { CallPiler, Delay } from 'promise-util';
+import { CommonBase, FrozenBuffer } from 'util-common';
 
 import FileComplex from './FileComplex';
 import Paths from './Paths';
@@ -103,17 +104,11 @@ export default class CaretStorage extends CommonBase {
      */
     this._lastReadTime = 0;
 
-    /**
-     * {Promise|null} Promise for the result of a pending storage read, or
-     * `null` if no storage read is currently pending.
-     */
-    this._readResultProm = null;
+    /** {CallPiler} Call piler for performing reads from storage. */
+    this._readPiler = new CallPiler(this._readCarets.bind(this));
 
-    /**
-     * {Promise|null} Promise for the result of a pending storage write, or
-     * `null` if no storage write is currently pending.
-     */
-    this._writeResultProm = null;
+    /** {CallPiler} Call piler for performing writes to storage. */
+    this._writePiler = new CallPiler(this._waitThenWriteCarets.bind(this));
 
     Object.seal(this);
   }
@@ -208,7 +203,7 @@ export default class CaretStorage extends CommonBase {
       if (readDelay > 0) {
         this._log.info(`Pre-read wait in \`whenRemoteChange\`: ${readDelay} msec`);
         // Wait the prescribed amount of time.
-        await PromDelay.resolve(readDelay);
+        await Delay.resolve(readDelay);
       } else {
         // No need to wait. Just indicate that a read should be in progress, and
         // wait for it to be done.
@@ -233,30 +228,11 @@ export default class CaretStorage extends CommonBase {
    * will ultimately cause such reading to be done.
    *
    * **Note:** This method only returns after the reading is done.
+   *
+   * @returns {undefined} `undefined` upon completion.
    */
   async _needsRead() {
-    if (this._readResultProm === null) {
-      this._readResultProm = this._readCarets();
-    }
-
-    // Note the current promise, so as to prevent us from messing with the
-    // next round of reading.
-    const currentProm = this._readResultProm;
-
-    try {
-      await currentProm;
-    } finally {
-      if (this._readResultProm === currentProm) {
-        // This round of reading is done, but the promise hasn't yet been reset
-        // (either to `null` or to a new promise). `null` it out, so that the
-        // next call to `_needsRead()` will in fact kick off a new round of
-        // reading.
-        this._readResultProm = null;
-
-        // And update the last-read time, so we know when to try reading again.
-        this._lastReadTime = Date.now();
-      }
-    }
+    return this._readPiler.call();
   }
 
   /**
@@ -267,27 +243,11 @@ export default class CaretStorage extends CommonBase {
    * reiterate only happens after a delay. If you want to make a bunch of writes
    * that all end up written (approximately) together, do _not_ `await` the
    * result of this call.
+   *
+   * @returns {undefined} `undefined` upon completion.
    */
   async _needsWrite() {
-    if (this._writeResultProm === null) {
-      this._writeResultProm = this._waitThenWriteCarets();
-    }
-
-    // Note the current promise, so as to prevent us from messing with the
-    // next round of writing.
-    const currentProm = this._writeResultProm;
-
-    try {
-      await currentProm;
-    } finally {
-      if (this._writeResultProm === currentProm) {
-        // This round of writing is done, but the promise hasn't yet been reset
-        // (either to `null` or to a new promise). `null` it out, so that the
-        // next call to `_needsWrite()` will in fact kick off a new round of
-        // writing.
-        this._writeResultProm = null;
-      }
-    }
+    return this._writePiler.call();
   }
 
   /**
@@ -302,7 +262,7 @@ export default class CaretStorage extends CommonBase {
     // waiting for changes from the current known state. This should be fixed to
     // use `when*` ops instead, which will avoid this kind of polling behavior.
 
-    // Get a set of all session IDs currently stored.
+    // Get a set of all session IDs currently in file storage.
 
     this._log.info('Reading caret directory...');
 
@@ -322,10 +282,7 @@ export default class CaretStorage extends CommonBase {
     // Filter out all the sessions that are controlled locally, and read all the
     // the other carets.
 
-    this._log.info('Reading remote carets...');
-
     const ops = [];
-    let caretData;
 
     for (const path of caretPaths) {
       const sessionId = Paths.sessionFromCaretPath(path);
@@ -337,12 +294,29 @@ export default class CaretStorage extends CommonBase {
     if (ops.length === 0) {
       // There aren't any active remote sessions, so there's nothing more to do.
       this._log.info('No remote carets to read.');
-      return;
+    } else {
+      // Do the reading and updating of caret contents.
+      this._log.info('Reading remote carets...');
+      await this._readTransactAndUpdate(ops);
     }
+
+    // Update the last-read time, so we know when to try reading again.
+    this._lastReadTime = Date.now();
+  }
+
+  /**
+   * Helper for `_readCarets()` which performs the main read transaction to
+   * get caret data, and then updates instance variables accordingly.
+   *
+   * @param {array<FileOp>} ops List of ops for reading individual carets.
+   */
+  async _readTransactAndUpdate(ops) {
+    const fc = this._fileCodec;
 
     // Read in the latest set update flag, for later change detection.
     ops.push(fc.op_readPath(Paths.CARET_SET_UPDATE_FLAG));
 
+    let caretData;
     try {
       const spec = new TransactionSpec(...ops);
       const transactionResult = await fc.transact(spec);
@@ -382,7 +356,7 @@ export default class CaretStorage extends CommonBase {
    */
   async _waitThenWriteCarets() {
     this._log.detail('Waiting a moment before writing carets.');
-    await PromDelay.resolve(WRITE_DELAY_MSEC);
+    await Delay.resolve(WRITE_DELAY_MSEC);
 
     // Build up a transaction spec to perform all the caret updates, and extract
     // a set of changes to make to instance variables should the transaction
@@ -474,7 +448,7 @@ export default class CaretStorage extends CommonBase {
         }
       }
 
-      await PromDelay.resolve(WRITE_RETRY_DELAY_MSEC);
+      await Delay.resolve(WRITE_RETRY_DELAY_MSEC);
     }
 
     // Update instance variables to reflect the new state of affairs.

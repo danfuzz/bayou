@@ -6,6 +6,7 @@
   "dependencies": {
     "grapheme-splitter": "^1.0.1",
 
-    "typecheck": "local"
+    "typecheck": "local",
+    "util-common-base": "local"
   }
 }

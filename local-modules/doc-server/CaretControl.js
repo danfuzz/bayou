@@ -3,8 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Caret, CaretSnapshot, RevisionNumber, Timestamp } from 'doc-common';
+import { Condition } from 'promise-util';
 import { TInt, TString } from 'typecheck';
-import { ColorSelector, CommonBase, PromCondition } from 'util-common';
+import { ColorSelector, CommonBase } from 'util-common';
 
 import CaretStorage from './CaretStorage';
 
@@ -58,10 +59,10 @@ export default class CaretControl extends CommonBase {
     this._oldSnapshots = [this._snapshot];
 
     /**
-     * {PromCondition} Condition that gets triggered whenever the snapshot is
+     * {Condition} Condition that gets triggered whenever the snapshot is
      * updated.
      */
-    this._updatedCondition = new PromCondition();
+    this._updatedCondition = new Condition();
 
     /**
      * {Promise|null} Promise that gets fulfilled when a pending
