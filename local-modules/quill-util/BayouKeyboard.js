@@ -102,7 +102,12 @@ export default class BayouKeyboard extends Keyboard {
   }
 
   /**
-   * Constructs an instance.
+   * Constructs an instance. The keys for `options` are the same as the default
+   * Quill keyboard, with the addition of the following:
+   *
+   * * `onEnter` &mdash; Function to call when the `enter` key is pressed.
+   * * `onEscape` &mdash; Function to call when the `escape` key is pressed.
+   * * `onTab` &mdash; Function to call when the `tab` key is pressed.
    *
    * @param {Quill} quill The quill instance to attach to.
    * @param {object} options Key handling configuration options.
