@@ -50,7 +50,7 @@ const MAC_SPECIFIC_BINDINGS = Object.freeze({
     handler() {
       // Set selection to beginning of document.
       this.quill.setSelection(0, 0);
-    },
+    }
   },
 
   shiftHome: {
@@ -59,7 +59,7 @@ const MAC_SPECIFIC_BINDINGS = Object.freeze({
     handler(range) {
       // Expand selection to the start of the document.
       this.quill.setSelection(0, range.index + range.length);
-    },
+    }
   },
 
   end: {
@@ -67,7 +67,7 @@ const MAC_SPECIFIC_BINDINGS = Object.freeze({
     handler() {
       // Set selection to the end of the document.
       this.quill.setSelection(this.quill.getLength(), 0);
-    },
+    }
   },
 
   shiftEnd: {
@@ -76,7 +76,7 @@ const MAC_SPECIFIC_BINDINGS = Object.freeze({
     handler(range) {
       // Expand selection to to the end of the document.
       this.quill.setSelection(range.index, this.quill.getLength() - range.index);
-    },
+    }
   }
 });
 
@@ -186,7 +186,7 @@ export default class BayouKeyboard extends Keyboard {
         key: KEYMAP.TAB,
         shiftKey: true,
         handler: () => onTab({ shiftKey: true })
-      },
+      }
     };
 
     if (ClientEnv.isMac()) {
