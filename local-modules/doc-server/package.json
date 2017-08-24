@@ -11,6 +11,7 @@
     "env-server": "local",
     "file-store": "local",
     "hooks-server": "local",
+    "promise-util": "local",
     "see-all": "local",
     "typecheck": "local",
     "util-common": "local"

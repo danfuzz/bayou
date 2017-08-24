@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { PromDelay } from 'util-common';
+import { PromDelay } from 'promise-util';
 
 describe('util-common/PromDelay', () => {
   describe('delay(delayMSec)', () => {

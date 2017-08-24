@@ -8,8 +8,9 @@ import fs_extra from 'fs-extra';
 import path from 'path';
 
 import { Dirs } from 'env-server';
+import { PromDelay } from 'promise-util';
 import { Logger } from 'see-all';
-import { PromDelay, Singleton } from 'util-common';
+import { Singleton } from 'util-common';
 
 /** Logger. */
 const log = new Logger('dev-mode');

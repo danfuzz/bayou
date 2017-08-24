@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { PromMutex } from 'util-common';
+import { PromMutex } from 'promise-util';
 
 describe('util-common/PromMutex', () => {
   describe('lock()', () => {

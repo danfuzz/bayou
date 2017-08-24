@@ -4,11 +4,12 @@
 
 import { SplitKey } from 'api-common';
 import { Hooks } from 'hooks-client';
+import { PromCondition } from 'promise-util';
 import { BayouKeyHandlers, QuillProm } from 'quill-util';
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
 import { DomUtil } from 'util-client';
-import { CommonBase, PromCondition } from 'util-common';
+import { CommonBase } from 'util-common';
 
 import CaretOverlay from './CaretOverlay';
 import DocClient from './DocClient';

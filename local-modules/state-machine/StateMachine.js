@@ -2,9 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { PromCondition } from 'promise-util';
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
-import { PromCondition, PropertyIterable } from 'util-common';
+import { PropertyIterable } from 'util-common';
 
 /**
  * Lightweight state machine framework. This allows a subclass to define

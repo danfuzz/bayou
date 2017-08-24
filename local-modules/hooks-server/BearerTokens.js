@@ -3,7 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BearerToken } from 'api-server';
-import { PromDelay, Singleton } from 'util-common';
+import { PromDelay } from 'promise-util';
+import { Singleton } from 'util-common';
 
 /**
  * Base class for and default implementation of `Hooks.bearerTokens`, which

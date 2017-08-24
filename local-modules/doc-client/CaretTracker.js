@@ -3,8 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { RevisionNumber } from 'doc-common';
+import { PromDelay } from 'promise-util';
 import { TInt, TObject } from 'typecheck';
-import { CommonBase, PromDelay } from 'util-common';
+import { CommonBase } from 'util-common';
 
 import DocSession from './DocSession';
 

@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
-import { PromDelay } from 'util-common';
+import { PromDelay } from 'promise-util';
 
 /** {Int} How long an unanswered challenge remains active for, in msec. */
 const CHALLENGE_TIMEOUT_MSEC = 5 * 60 * 1000; // Five minutes.

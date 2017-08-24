@@ -10,9 +10,6 @@ import FrozenBuffer from './FrozenBuffer';
 import InfoError from './InfoError';
 import IterableUtil from './IterableUtil';
 import JsonUtil from './JsonUtil';
-import PromCondition from './PromCondition';
-import PromDelay from './PromDelay';
-import PromMutex from './PromMutex';
 import PropertyIterable from './PropertyIterable';
 import Random from './Random';
 import Singleton from './Singleton';
@@ -28,9 +25,6 @@ export {
   InfoError,
   IterableUtil,
   JsonUtil,
-  PromCondition,
-  PromDelay,
-  PromMutex,
   PropertyIterable,
   Random,
   Singleton,

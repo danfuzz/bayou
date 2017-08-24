@@ -7,8 +7,9 @@ import path from 'path';
 
 import { Codec } from 'codec';
 import { BaseFile, Errors } from 'file-store';
+import { PromCondition, PromDelay, PromMutex } from 'promise-util';
 import { Logger } from 'see-all';
-import { FrozenBuffer, PromCondition, PromDelay, PromMutex } from 'util-common';
+import { FrozenBuffer } from 'util-common';
 
 import Transactor from './Transactor';
 

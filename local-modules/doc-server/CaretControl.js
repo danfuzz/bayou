@@ -3,8 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Caret, CaretSnapshot, RevisionNumber, Timestamp } from 'doc-common';
+import { PromCondition } from 'promise-util';
 import { TInt, TString } from 'typecheck';
-import { ColorSelector, CommonBase, PromCondition } from 'util-common';
+import { ColorSelector, CommonBase } from 'util-common';
 
 import CaretStorage from './CaretStorage';
 

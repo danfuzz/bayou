@@ -3,9 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Caret } from 'doc-common';
+import { PromDelay } from 'promise-util';
 import { QuillEvent, QuillGeometry } from 'quill-util';
 import { TObject, TString } from 'typecheck';
-import { PromDelay } from 'util-common';
 
 /**
  * {Int} Amount of time (in msec) to wait after receiving a caret update from

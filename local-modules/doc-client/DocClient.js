@@ -4,10 +4,10 @@
 
 import { ApiError } from 'api-client';
 import { DocumentDelta, DocumentSnapshot, FrozenDelta } from 'doc-common';
+import { PromDelay } from 'promise-util';
 import { QuillEvent } from 'quill-util';
 import { TString } from 'typecheck';
 import { StateMachine } from 'state-machine';
-import { PromDelay } from 'util-common';
 
 import DocSession from './DocSession';
 

@@ -4,7 +4,8 @@
 
 import { Caret, CaretSnapshot } from 'doc-common';
 import { TransactionSpec } from 'file-store';
-import { CommonBase, FrozenBuffer, PromDelay } from 'util-common';
+import { PromDelay } from 'promise-util';
+import { CommonBase, FrozenBuffer } from 'util-common';
 
 import FileComplex from './FileComplex';
 import Paths from './Paths';
