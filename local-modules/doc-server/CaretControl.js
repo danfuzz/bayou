@@ -64,12 +64,6 @@ export default class CaretControl extends CommonBase {
      */
     this._updatedCondition = new Condition();
 
-    /**
-     * {Promise|null} Promise that gets fulfilled when a pending
-     * `whenRemoteChange()` returns. If `null`, there is no such call pending.
-     */
-    this._remoteChangeProm = null;
-
     /** {ColorSelector} Provider of well-distributed colors. */
     this._colorSelector = new ColorSelector();
 
@@ -98,27 +92,9 @@ export default class CaretControl extends CommonBase {
     // actual change happening.
     while (oldSnapshot.revNum === this._snapshot.revNum) {
       // Wait for either a local or remote update, whichever comes first.
-
-      if (!this._remoteChangeProm) {
-        // This arrangement guarantees that we only ever have one pending call
-        // at any given time to `whenRemoteChange()`.
-        const prom = this._caretStorage.whenRemoteChange();
-        this._remoteChangeProm = prom;
-
-        (async () => {
-          try {
-            await prom;
-          } finally {
-            if (this._remoteChangeProm === prom) {
-              this._remoteChangeProm = null;
-            }
-          }
-        })();
-      }
-
       await Promise.race([
         this._updatedCondition.whenTrue(),
-        this._remoteChangeProm
+        this._caretStorage.whenRemoteChange()
       ]);
 
       // If there were remote changes, this will cause the snapshot to get
