@@ -199,48 +199,6 @@ export default class CaretStorage extends CommonBase {
   }
 
   /**
-   * Main implementation of `whenRemoteChange()`, see which for details.
-   *
-   * @returns {boolean} `true` if a change was detected, or `false` if not.
-   */
-  async _whenRemoteChange() {
-    const startSnapshot = this.remoteSnapshot();
-    const timeoutAt = Date.now() + REMOTE_CHANGE_TIMEOUT_MSEC;
-
-    // Loop until change detected or timeout.
-    for (;;) {
-      const now = Date.now();
-      if (now >= timeoutAt) {
-        break;
-      }
-
-      // Wait until the next allowed caret read, or figure out that we don't
-      // need to wait at all.
-      const readDelay = (this._lastReadTime + READ_DELAY_MSEC) - now;
-      if (readDelay > 0) {
-        this._log.info(`Pre-read wait in \`whenRemoteChange\`: ${readDelay} msec`);
-        // Wait the prescribed amount of time.
-        await Delay.resolve(readDelay);
-      } else {
-        // No need to wait. Just indicate that a read should be in progress, and
-        // wait for it to be done.
-        this._log.info('Waiting for read results in `whenRemoteChange`.');
-        await this._needsRead();
-      }
-
-      const newSnapshot = this.remoteSnapshot();
-      if (!newSnapshot.equals(startSnapshot)) {
-        // Yes, there was a change!
-        return true;
-      }
-    }
-
-    // No change detected, and we timed out.
-    this._log.info('Timeout reached in `whenRemoteChange`.');
-    return false;
-  }
-
-  /**
    * Indicates that caret information should be read from file storage. This
    * will ultimately cause such reading to be done.
    *
@@ -488,5 +446,47 @@ export default class CaretStorage extends CommonBase {
 
     this._storedCarets = storedCarets;
     this._log.info('Carets are now updated in storage.');
+  }
+
+  /**
+   * Main implementation of `whenRemoteChange()`, see which for details.
+   *
+   * @returns {boolean} `true` if a change was detected, or `false` if not.
+   */
+  async _whenRemoteChange() {
+    const startSnapshot = this.remoteSnapshot();
+    const timeoutAt = Date.now() + REMOTE_CHANGE_TIMEOUT_MSEC;
+
+    // Loop until change detected or timeout.
+    for (;;) {
+      const now = Date.now();
+      if (now >= timeoutAt) {
+        break;
+      }
+
+      // Wait until the next allowed caret read, or figure out that we don't
+      // need to wait at all.
+      const readDelay = (this._lastReadTime + READ_DELAY_MSEC) - now;
+      if (readDelay > 0) {
+        this._log.info(`Pre-read wait in \`whenRemoteChange\`: ${readDelay} msec`);
+        // Wait the prescribed amount of time.
+        await Delay.resolve(readDelay);
+      } else {
+        // No need to wait. Just indicate that a read should be in progress, and
+        // wait for it to be done.
+        this._log.info('Waiting for read results in `whenRemoteChange`.');
+        await this._needsRead();
+      }
+
+      const newSnapshot = this.remoteSnapshot();
+      if (!newSnapshot.equals(startSnapshot)) {
+        // Yes, there was a change!
+        return true;
+      }
+    }
+
+    // No change detected, and we timed out.
+    this._log.info('Timeout reached in `whenRemoteChange`.');
+    return false;
   }
 }

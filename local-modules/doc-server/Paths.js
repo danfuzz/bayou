@@ -53,6 +53,19 @@ export default class Paths extends UtilityClass {
   }
 
   /**
+   * Gets the `StoragePath` string corresponding to the indicated session,
+   * specifically to store caret data for that session.
+   *
+   * @param {string} sessionId The session ID.
+   * @returns {string} The corresponding `StoragePath` string for caret
+   *   information.
+   */
+  static forCaret(sessionId) {
+    TString.check(sessionId);
+    return `${Paths.CARET_SESSION_PREFIX}/${sessionId}`;
+  }
+
+  /**
    * Gets the `StoragePath` string corresponding to the indicated revision
    * number, specifically to store the document change that results in that
    * revision.
@@ -64,19 +77,6 @@ export default class Paths extends UtilityClass {
   static forDocumentChange(revNum) {
     RevisionNumber.check(revNum);
     return `${Paths.CHANGE_PREFIX}/${revNum}`;
-  }
-
-  /**
-   * Gets the `StoragePath` string corresponding to the indicated session,
-   * specifically to store caret data for that session.
-   *
-   * @param {string} sessionId The session ID.
-   * @returns {string} The corresponding `StoragePath` string for caret
-   *   information.
-   */
-  static forCaret(sessionId) {
-    TString.check(sessionId);
-    return `${Paths.CARET_SESSION_PREFIX}/${sessionId}`;
   }
 
   /**
