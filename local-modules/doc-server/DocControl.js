@@ -92,6 +92,104 @@ export default class DocControl extends CommonBase {
   }
 
   /**
+   * Takes a base revision number and delta therefrom, and applies the delta,
+   * including merging of any intermediate revisions. The return value consists
+   * of a new revision number, and a delta to be used to get the new document
+   * state. The delta is with respect to the client's "expected result," that
+   * is to say, what the client would get if the delta were applied with no
+   * intervening changes.
+   *
+   * As a special case, as long as `baseRevNum` is valid, if `delta` is empty,
+   * this method returns a result of the same revision number along with an
+   * empty "correction" delta. That is, the return value from passing an empty
+   * delta doesn't provide any information about subsequent revisions of the
+   * document.
+   *
+   * @param {Int} baseRevNum Revision number which `delta` is with respect to.
+   * @param {FrozenDelta} delta Delta indicating what has changed with respect
+   *   to `baseRevNum`.
+   * @param {string|null} authorId Author of `delta`, or `null` if the change
+   *   is to be considered authorless.
+   * @returns {DocumentDelta} The correction to the implied expected result of
+   *   this operation. The `delta` of this result can be applied to the expected
+   *   result to get the actual result. The promise resolves sometime after the
+   *   delta has been applied to the document.
+   */
+  async applyDelta(baseRevNum, delta, authorId) {
+    // Very basic argument validation. Once in the guts of the thing, we will
+    // discover (and properly complain) if there are deeper problems with them.
+    FrozenDelta.check(delta);
+    TString.orNull(authorId);
+
+    // Snapshot of the base revision. This call validates `baseRevNum`.
+    const base = await this.snapshot(baseRevNum);
+
+    // Check for an empty `delta`. If it is, we don't bother trying to apply it.
+    // See method header comment for more info.
+    if (delta.isEmpty()) {
+      return new DocumentDelta(baseRevNum, FrozenDelta.EMPTY);
+    }
+
+    // Compose the implied expected result. This has the effect of validating
+    // the contents of `delta`.
+    const expected = base.compose(new DocumentDelta(baseRevNum + 1, delta));
+
+    // We try performing the apply, and then we iterate if it failed _and_ the
+    // reason is simply that there were any changes that got made while we were
+    // in the middle of the attempt. Any other problems are transparently thrown
+    // to the caller.
+    let retryDelayMsec = INITIAL_APPEND_RETRY_MSEC;
+    let retryTotalMsec = 0;
+    let attemptCount = 0;
+    for (;;) {
+      attemptCount++;
+      if (attemptCount !== 1) {
+        this._log.info(`Append attempt #${attemptCount}.`);
+      }
+
+      const current = await this.snapshot();
+      const result =
+        await this._applyDeltaTo(base, delta, authorId, current, expected);
+
+      if (result !== null) {
+        return result;
+      }
+
+      // A `null` result from the call means that we lost an append race (that
+      // is, there was revision skew between the snapshot and the latest reality
+      // at the moment of attempted appending), so we delay briefly and iterate.
+
+      if (retryTotalMsec >= MAX_APPEND_TIME_MSEC) {
+        // ...except if these attempts have taken wayyyy too long. If we land
+        // here, it's probably due to a bug (but not a total given).
+        throw new Error('Too many failed attempts in `applyDelta()`.');
+      }
+
+      this._log.info(`Sleeping ${retryDelayMsec} msec.`);
+      await Delay.resolve(retryDelayMsec);
+      retryTotalMsec += retryDelayMsec;
+      retryDelayMsec *= APPEND_RETRY_GROWTH_FACTOR;
+    }
+  }
+
+  /**
+   * Gets a particular change to the document. The document consists of a
+   * sequence of changes, each modifying revision N of the document to produce
+   * revision N+1.
+   *
+   * @param {Int} revNum The revision number of the change. The result is the
+   *   change which produced that revision. E.g., `0` is a request for the first
+   *   change (the change from the empty document).
+   * @returns {DocumentChange} The requested change.
+   */
+  async change(revNum) {
+    RevisionNumber.check(revNum);
+
+    const changes = await this._readChangeRange(revNum, revNum + 1);
+    return changes[0];
+  }
+
+  /**
    * Creates or re-creates the document. If passed, the given `delta` becomes
    * the initial content of the document (which will be in the second change,
    * because by definition the first change of a document is empty).
@@ -149,20 +247,55 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Gets a particular change to the document. The document consists of a
-   * sequence of changes, each modifying revision N of the document to produce
-   * revision N+1.
+   * Returns a promise for a revision &mdash; any revision &mdash; of the
+   * document after the given `baseRevNum`, with the return result represented
+   * as a delta relative to that given revision. If called when `baseRevNum` is
+   * the current revision, this will not resolve the result promise until at
+   * least one change has been made.
    *
-   * @param {Int} revNum The revision number of the change. The result is the
-   *   change which produced that revision. E.g., `0` is a request for the first
-   *   change (the change from the empty document).
-   * @returns {DocumentChange} The requested change.
+   * @param {Int} baseRevNum Revision number for the document.
+   * @returns {DocumentDelta} Delta and associated revision number. The result's
+   *   `revNum` is guaranteed to be at least one more than `baseRevNum` (and
+   *   could possibly be even larger.) The result's `delta` can be applied to
+   *   revision `baseRevNum` to produce revision `revNum` of the document.
    */
-  async change(revNum) {
-    RevisionNumber.check(revNum);
+  async deltaAfter(baseRevNum) {
+    RevisionNumber.check(baseRevNum);
 
-    const changes = await this._readChangeRange(revNum, revNum + 1);
-    return changes[0];
+    for (;;) {
+      const revNum = await this._currentRevNum();
+
+      // We can only validate the upper limit of `baseRevNum` after we have
+      // determined the document revision number. If we end up iterating we'll
+      // do redundant checks, but that's a very minor inefficiency.
+      RevisionNumber.maxInc(baseRevNum, revNum);
+
+      if (baseRevNum < revNum) {
+        // The document's revision is in fact newer than the base, so we can now
+        // form and return a result. Compose all the deltas from the revision
+        // after the base through and including the current revision.
+        const delta = await this._composeRevisions(
+          FrozenDelta.EMPTY, baseRevNum + 1, revNum + 1);
+        return new DocumentDelta(revNum, delta);
+      }
+
+      // Wait for the file to change (or for the storage layer to time out), and
+      // then iterate to see if in fact the change updated the document revision
+      // number.
+      const fc   = this._fileCodec;
+      const ops  = [fc.op_whenPathNot(Paths.CHANGE_REVISION_NUMBER, revNum)];
+      const spec = new TransactionSpec(...ops);
+      try {
+        await fc.transact(spec);
+      } catch (e) {
+        if (!Errors.isTimeout(e)) {
+          // It's _not_ a timeout, so we should propagate the error.
+          throw e;
+        }
+        // It's a timeout, so just fall through and iterate.
+        this._log.info('Storage layer timeout in `deltaAfter`.');
+      }
+    }
   }
 
   /**
@@ -311,136 +444,56 @@ export default class DocControl extends CommonBase {
   }
 
   /**
-   * Returns a promise for a revision &mdash; any revision &mdash; of the
-   * document after the given `baseRevNum`, with the return result represented
-   * as a delta relative to that given revision. If called when `baseRevNum` is
-   * the current revision, this will not resolve the result promise until at
-   * least one change has been made.
+   * Appends a new delta to the document. On success, this returns the revision
+   * number of the document after the append. On a failure due to `baseRevNum`
+   * not being current at the moment of application, this returns `null`. All
+   * other errors are reported via thrown errors. See `_applyDeltaTo()` above
+   * for further discussion.
    *
-   * @param {Int} baseRevNum Revision number for the document.
-   * @returns {DocumentDelta} Delta and associated revision number. The result's
-   *   `revNum` is guaranteed to be at least one more than `baseRevNum` (and
-   *   could possibly be even larger.) The result's `delta` can be applied to
-   *   revision `baseRevNum` to produce revision `revNum` of the document.
+   * **Note:** If the delta is a no-op, then this method throws an error,
+   * because the calling code should have handled that case without calling this
+   * method.
+   *
+   * @param {DocumentChange} change Change to append.
+   * @returns {Int|null} The revision number after appending `change`, or `null`
+   *   if `change.revNum` is out-of-date (that is, isn't the immediately-next
+   *   revision number) at the moment of attempted application.
+   * @throws {Error} If `change.delta.isEmpty()`.
    */
-  async deltaAfter(baseRevNum) {
-    RevisionNumber.check(baseRevNum);
+  async _appendChange(change) {
+    DocumentChange.check(change);
 
-    for (;;) {
-      const revNum = await this._currentRevNum();
-
-      // We can only validate the upper limit of `baseRevNum` after we have
-      // determined the document revision number. If we end up iterating we'll
-      // do redundant checks, but that's a very minor inefficiency.
-      RevisionNumber.maxInc(baseRevNum, revNum);
-
-      if (baseRevNum < revNum) {
-        // The document's revision is in fact newer than the base, so we can now
-        // form and return a result. Compose all the deltas from the revision
-        // after the base through and including the current revision.
-        const delta = await this._composeRevisions(
-          FrozenDelta.EMPTY, baseRevNum + 1, revNum + 1);
-        return new DocumentDelta(revNum, delta);
-      }
-
-      // Wait for the file to change (or for the storage layer to time out), and
-      // then iterate to see if in fact the change updated the document revision
-      // number.
-      const fc   = this._fileCodec;
-      const ops  = [fc.op_whenPathNot(Paths.CHANGE_REVISION_NUMBER, revNum)];
-      const spec = new TransactionSpec(...ops);
-      try {
-        await fc.transact(spec);
-      } catch (e) {
-        if (!Errors.isTimeout(e)) {
-          // It's _not_ a timeout, so we should propagate the error.
-          throw e;
-        }
-        // It's a timeout, so just fall through and iterate.
-        this._log.info('Storage layer timeout in `deltaAfter`.');
-      }
-    }
-  }
-
-  /**
-   * Takes a base revision number and delta therefrom, and applies the delta,
-   * including merging of any intermediate revisions. The return value consists
-   * of a new revision number, and a delta to be used to get the new document
-   * state. The delta is with respect to the client's "expected result," that
-   * is to say, what the client would get if the delta were applied with no
-   * intervening changes.
-   *
-   * As a special case, as long as `baseRevNum` is valid, if `delta` is empty,
-   * this method returns a result of the same revision number along with an
-   * empty "correction" delta. That is, the return value from passing an empty
-   * delta doesn't provide any information about subsequent revisions of the
-   * document.
-   *
-   * @param {Int} baseRevNum Revision number which `delta` is with respect to.
-   * @param {FrozenDelta} delta Delta indicating what has changed with respect
-   *   to `baseRevNum`.
-   * @param {string|null} authorId Author of `delta`, or `null` if the change
-   *   is to be considered authorless.
-   * @returns {DocumentDelta} The correction to the implied expected result of
-   *   this operation. The `delta` of this result can be applied to the expected
-   *   result to get the actual result. The promise resolves sometime after the
-   *   delta has been applied to the document.
-   */
-  async applyDelta(baseRevNum, delta, authorId) {
-    // Very basic argument validation. Once in the guts of the thing, we will
-    // discover (and properly complain) if there are deeper problems with them.
-    FrozenDelta.check(delta);
-    TString.orNull(authorId);
-
-    // Snapshot of the base revision. This call validates `baseRevNum`.
-    const base = await this.snapshot(baseRevNum);
-
-    // Check for an empty `delta`. If it is, we don't bother trying to apply it.
-    // See method header comment for more info.
-    if (delta.isEmpty()) {
-      return new DocumentDelta(baseRevNum, FrozenDelta.EMPTY);
+    if (change.delta.isEmpty()) {
+      throw new Error('Should not have been called with an empty delta.');
     }
 
-    // Compose the implied expected result. This has the effect of validating
-    // the contents of `delta`.
-    const expected = base.compose(new DocumentDelta(baseRevNum + 1, delta));
+    const revNum     = change.revNum;
+    const baseRevNum = revNum - 1;
+    const changePath = Paths.forDocumentChange(revNum);
 
-    // We try performing the apply, and then we iterate if it failed _and_ the
-    // reason is simply that there were any changes that got made while we were
-    // in the middle of the attempt. Any other problems are transparently thrown
-    // to the caller.
-    let retryDelayMsec = INITIAL_APPEND_RETRY_MSEC;
-    let retryTotalMsec = 0;
-    let attemptCount = 0;
-    for (;;) {
-      attemptCount++;
-      if (attemptCount !== 1) {
-        this._log.info(`Append attempt #${attemptCount}.`);
+    const fc   = this._fileCodec; // Avoids boilerplate immediately below.
+    const spec = new TransactionSpec(
+      fc.op_checkPathAbsent(changePath),
+      fc.op_checkPathIs(Paths.CHANGE_REVISION_NUMBER, baseRevNum),
+      fc.op_writePath(changePath, change),
+      fc.op_writePath(Paths.CHANGE_REVISION_NUMBER, revNum)
+    );
+
+    try {
+      await fc.transact(spec);
+    } catch (e) {
+      if ((e instanceof InfoError) && (e.name === 'path_not_empty')) {
+        // This happens if and when we lose an append race, which will regularly
+        // occur if there are simultaneous editors.
+        this._log.info(`Lost append race for revision ${revNum}.`);
+        return null;
+      } else {
+        // No other errors are expected, so just rethrow.
+        throw e;
       }
-
-      const current = await this.snapshot();
-      const result =
-        await this._applyDeltaTo(base, delta, authorId, current, expected);
-
-      if (result !== null) {
-        return result;
-      }
-
-      // A `null` result from the call means that we lost an append race (that
-      // is, there was revision skew between the snapshot and the latest reality
-      // at the moment of attempted appending), so we delay briefly and iterate.
-
-      if (retryTotalMsec >= MAX_APPEND_TIME_MSEC) {
-        // ...except if these attempts have taken wayyyy too long. If we land
-        // here, it's probably due to a bug (but not a total given).
-        throw new Error('Too many failed attempts in `applyDelta()`.');
-      }
-
-      this._log.info(`Sleeping ${retryDelayMsec} msec.`);
-      await Delay.resolve(retryDelayMsec);
-      retryTotalMsec += retryDelayMsec;
-      retryDelayMsec *= APPEND_RETRY_GROWTH_FACTOR;
     }
+
+    return revNum;
   }
 
   /**
@@ -552,59 +605,6 @@ export default class DocControl extends CommonBase {
     // is exactly what we want.
     const dCorrection = rExpected.diff(rNext);
     return dCorrection;
-  }
-
-  /**
-   * Appends a new delta to the document. On success, this returns the revision
-   * number of the document after the append. On a failure due to `baseRevNum`
-   * not being current at the moment of application, this returns `null`. All
-   * other errors are reported via thrown errors. See `_applyDeltaTo()` above
-   * for further discussion.
-   *
-   * **Note:** If the delta is a no-op, then this method throws an error,
-   * because the calling code should have handled that case without calling this
-   * method.
-   *
-   * @param {DocumentChange} change Change to append.
-   * @returns {Int|null} The revision number after appending `change`, or `null`
-   *   if `change.revNum` is out-of-date (that is, isn't the immediately-next
-   *   revision number) at the moment of attempted application.
-   * @throws {Error} If `change.delta.isEmpty()`.
-   */
-  async _appendChange(change) {
-    DocumentChange.check(change);
-
-    if (change.delta.isEmpty()) {
-      throw new Error('Should not have been called with an empty delta.');
-    }
-
-    const revNum     = change.revNum;
-    const baseRevNum = revNum - 1;
-    const changePath = Paths.forDocumentChange(revNum);
-
-    const fc   = this._fileCodec; // Avoids boilerplate immediately below.
-    const spec = new TransactionSpec(
-      fc.op_checkPathAbsent(changePath),
-      fc.op_checkPathIs(Paths.CHANGE_REVISION_NUMBER, baseRevNum),
-      fc.op_writePath(changePath, change),
-      fc.op_writePath(Paths.CHANGE_REVISION_NUMBER, revNum)
-    );
-
-    try {
-      await fc.transact(spec);
-    } catch (e) {
-      if ((e instanceof InfoError) && (e.name === 'path_not_empty')) {
-        // This happens if and when we lose an append race, which will regularly
-        // occur if there are simultaneous editors.
-        this._log.info(`Lost append race for revision ${revNum}.`);
-        return null;
-      } else {
-        // No other errors are expected, so just rethrow.
-        throw e;
-      }
-    }
-
-    return revNum;
   }
 
   /**
