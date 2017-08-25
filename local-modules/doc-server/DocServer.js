@@ -57,25 +57,6 @@ export default class DocServer extends Singleton {
   }
 
   /**
-   * Gets the session with the given ID, if it exists.
-   *
-   * @param {string} sessionId The session ID in question.
-   * @returns {DocSession|null} Corresponding session instance, or `null` if
-   *   there is no such session.
-   */
-  getSessionOrNull(sessionId) {
-    TString.nonempty(sessionId);
-
-    const already = this._sessions.get(sessionId);
-
-    if (already && !weak.isDead(already)) {
-      return weak.get(already);
-    } else {
-      return null;
-    }
-  }
-
-  /**
    * Gets the `FileComplex` for the document with the given ID. It is okay (not
    * an error) if the underlying file doesn't happen to exist.
    *
@@ -130,6 +111,39 @@ export default class DocServer extends Singleton {
   }
 
   /**
+   * Gets the session with the given ID, if it exists.
+   *
+   * @param {string} sessionId The session ID in question.
+   * @returns {DocSession|null} Corresponding session instance, or `null` if
+   *   there is no such session.
+   */
+  getSessionOrNull(sessionId) {
+    TString.nonempty(sessionId);
+
+    const already = this._sessions.get(sessionId);
+
+    if (already && !weak.isDead(already)) {
+      return weak.get(already);
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * Returns a weak reference callback function for the indicated document ID,
+   * that removes a collected file complex from the map of same.
+   *
+   * @param {string} docId Document ID of the file complex to remove.
+   * @returns {function} An appropriately-constructed function.
+   */
+  _complexReaper(docId) {
+    return () => {
+      this._complexes.delete(docId);
+      log.info(`Reaped idle file complex: ${docId}`);
+    };
+  }
+
+  /**
    * Makes and returns a new author-tied session. This is a "friend" method to
    * the public `FileComplex` method of the same(ish) name, which is where this
    * functionality is exposed.
@@ -161,20 +175,6 @@ export default class DocServer extends Singleton {
 
     this._sessions.set(sessionId, weak(result, reaper));
     return result;
-  }
-
-  /**
-   * Returns a weak reference callback function for the indicated document ID,
-   * that removes a collected file complex from the map of same.
-   *
-   * @param {string} docId Document ID of the file complex to remove.
-   * @returns {function} An appropriately-constructed function.
-   */
-  _complexReaper(docId) {
-    return () => {
-      this._complexes.delete(docId);
-      log.info(`Reaped idle file complex: ${docId}`);
-    };
   }
 
   /**
