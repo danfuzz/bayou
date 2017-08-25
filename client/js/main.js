@@ -5,8 +5,9 @@
 /*
  * Editor initialization
  *
- * This file is directly loaded from pages that include an editor. It expects
- * there to be a DOM node tagged with id `editor`.
+ * This file is directly loaded from pages that include an editor. See {@link
+ * TopControl} for info on how bootstrap parameters get passed into the
+ * system.
  */
 
 import { ClientEnv } from 'env-client';
