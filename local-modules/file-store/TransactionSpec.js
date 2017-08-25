@@ -35,13 +35,8 @@ export default class TransactionSpec extends CommonBase {
       throw new Error('Too many `revNum` operations.');
     }
 
-    const waitCount = this.opsWithCategory(FileOp.CAT_WAIT);
-    if (waitCount === 1) {
-      if (this.hasReadOps() || this.hasModificationOps()) {
-        throw new Error('Cannot mix wait operations with reads and modifications.');
-      }
-    } else if (waitCount > 1) {
-      throw new Error('Too many wait operations.');
+    if (this.hasWaitOps() && (this.hasPullOps() || this.hasPushOps())) {
+      throw new Error('Cannot mix wait operations with reads and modifications.');
     }
   }
 
@@ -78,15 +73,29 @@ export default class TransactionSpec extends CommonBase {
   }
 
   /**
-   * Indicates whether or not this instance has any modification operations,
-   * that is, any operations with category `CAT_DELETE` or `CAT_WRITE`.
+   * Indicates whether or not this instance has any push operations (data
+   * storage of any sort), that is, any operations with category `CAT_DELETE` or
+   * `CAT_WRITE`.
    *
-   * @returns {boolean} `true` iff there are any modification operations in this
+   * @returns {boolean} `true` iff there are any push operations in this
    *   instance.
    */
-  hasModificationOps() {
+  hasPushOps() {
     return (this.opsWithCategory(FileOp.CAT_DELETE).length !== 0)
       || (this.opsWithCategory(FileOp.CAT_WRITE).length !== 0);
+  }
+
+  /**
+   * Indicates whether or not this instance has any pull operations (data
+   * retrieval of any sort), that is, any operations with category `CAT_LIST` or
+   * `CAT_READ`.
+   *
+   * @returns {boolean} `true` iff there are any pull operations in this
+   *   instance.
+   */
+  hasPullOps() {
+    return (this.opsWithCategory(FileOp.CAT_LIST).length !== 0)
+      || (this.opsWithCategory(FileOp.CAT_READ).length !== 0);
   }
 
   /**

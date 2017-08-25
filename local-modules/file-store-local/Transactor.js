@@ -50,6 +50,9 @@ export default class Transactor extends CommonBase {
      */
     this._paths = spec.hasListOps() ? new Set() : null;
 
+    /** {boolean} Whether or not this transaction has any wait operations. */
+    this._hasWaitOps = spec.hasWaitOps();
+
     /**
      * {Map<string, FrozenBuffer|null>} Map from paths updated while running the
      * transaction to the updated data or `null` for deleted paths.
@@ -57,11 +60,12 @@ export default class Transactor extends CommonBase {
     this._updatedStorage = new Map();
 
     /**
-     * {boolean} Whether the transaction completed and doesn't require waiting
-     * and retrying. This is set to `true` at the start of `run()` and can
-     * become `false` in the various `when*` ops.
+     * {boolean} Whether any of the wait operations became satisfied during the
+     * latest transaction run, and so therefor the transaction completed and
+     * doesn't require waiting and retrying. This is set to `false` at the start
+     * of `run()` and can become `true` in the various `when*` ops.
      */
-    this._completed = true;
+    this._waitSatisfied = false;
 
     /**
      * {Int} How many times a wait operation has been required. This is just
@@ -85,9 +89,8 @@ export default class Transactor extends CommonBase {
   run() {
     this._log.detail('Transactor running.');
 
-    // This gets set to `false` if one of the ops determines that we need to
-    // wait for a change.
-    this._completed = true;
+    // This gets set to `true` in wait ops that are satisfied.
+    this._waitSatisfied = false;
 
     for (const op of this._spec.ops) {
       this._log.detail('Op:', op);
@@ -101,7 +104,7 @@ export default class Transactor extends CommonBase {
     }
 
     this._log.detail('Transactor done.');
-    return this._completed;
+    return this._waitSatisfied || !this._hasWaitOps;
   }
 
   /**
@@ -319,8 +322,8 @@ export default class Transactor extends CommonBase {
     const storagePath = op.arg('storagePath');
     const value       = this._fileFriend.readPathOrNull(storagePath);
 
-    if (value !== null) {
-      this._completed = false;
+    if (value === null) {
+      this._waitSatisfied = true;
     }
 
     this._logAboutWaiting(`whenPathAbsent: ${storagePath}`);
@@ -336,8 +339,8 @@ export default class Transactor extends CommonBase {
     const hash        = op.arg('hash');
     const value       = this._fileFriend.readPathOrNull(storagePath);
 
-    if ((value !== null) && (value.hash === hash)) {
-      this._completed = false;
+    if ((value === null) || (value.hash !== hash)) {
+      this._waitSatisfied = true;
     }
 
     this._logAboutWaiting(`whenPathNot: ${storagePath}`);
@@ -352,8 +355,8 @@ export default class Transactor extends CommonBase {
     const storagePath = op.arg('storagePath');
     const value       = this._fileFriend.readPathOrNull(storagePath);
 
-    if (value === null) {
-      this._completed = false;
+    if (value !== null) {
+      this._waitSatisfied = true;
     }
 
     this._logAboutWaiting(`whenPathPresent: ${storagePath}`);
@@ -380,13 +383,13 @@ export default class Transactor extends CommonBase {
 
   /**
    * Helper for the `when*` ops, which logs information about waiting or the
-   * lack thereof, based on the value of `_completed` and `_waitCount`. This
+   * lack thereof, based on the value of `_waitSatisfied` and `_waitCount`. This
    * method also updates `_waitCount`.
    *
    * @param {string} message Additional message to include.
    */
   _logAboutWaiting(message) {
-    if (this._completed) {
+    if (this._waitSatisfied) {
       if (this._waitCount === 0) {
         this._log.info(`No waiting required. ${message}`);
       } else {
