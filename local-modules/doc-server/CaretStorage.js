@@ -104,6 +104,13 @@ export default class CaretStorage extends CommonBase {
      */
     this._lastReadTime = 0;
 
+    /**
+     * {CallPiler} Call piler which fronts `whenRemoteChange()`, so there's only
+     * ever one call to it ongoing at any given time.
+     */
+    this._whenRemoteChangePiler =
+      new CallPiler(this._whenRemoteChange.bind(this));
+
     /** {CallPiler} Call piler for performing reads from storage. */
     this._readPiler = new CallPiler(this._readCarets.bind(this));
 
@@ -182,11 +189,21 @@ export default class CaretStorage extends CommonBase {
    * Waits for a change to the stored caret state. This method returns when a
    * change has been detected, or after the request times out.
    *
-   * **TODO:** This is currently a no-op. It should be filled in.
-   *
    * @returns {boolean} `true` if a change was detected, or `false` if not.
    */
   async whenRemoteChange() {
+    // This just passes through to the main method implementation, via a call
+    // piler which guarantees that only one such call is running at any given
+    // time, sharing the return value with all concurrent callers.
+    return this._whenRemoteChangePiler.call();
+  }
+
+  /**
+   * Main implementation of `whenRemoteChange()`, see which for details.
+   *
+   * @returns {boolean} `true` if a change was detected, or `false` if not.
+   */
+  async _whenRemoteChange() {
     const startSnapshot = this.remoteSnapshot();
     const timeoutAt = Date.now() + REMOTE_CHANGE_TIMEOUT_MSEC;
 
