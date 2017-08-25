@@ -137,15 +137,18 @@ taking into account recent additions to the language.
       * synthetic fields
       * methods
   * Private properties
-    * static
+    * instance
       * synthetic fields
       * methods
-    * instance
+    * static
       * synthetic fields
       * methods
 
   As an exception, methods that only serve as helpers for one other method will
   sometimes get located immediately below the method being helped.
+
+  Roughly speaking, you can think of this as an "instance sandwich on static
+  bread."
 
 #### Other items
 
