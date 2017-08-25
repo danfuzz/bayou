@@ -123,6 +123,30 @@ taking into account recent additions to the language.
   guarantees. Additionally, instead of explicitly constructing singletons,
   the convention is to use the static property `theOne` on the so-defined class.
 
+* Order of definitions &mdash; The canonical ordering of definitions in class
+  bodies is as follows. Within each "leaf" section, items are sorted
+  alphabetically. The intent of this is to make it easy to find stuff when
+  browsing the code.
+
+  * Public properties
+    * static
+      * synthetic fields
+      * methods
+    * constructor
+    * instance
+      * synthetic fields
+      * methods
+  * Private properties
+    * static
+      * synthetic fields
+      * methods
+    * instance
+      * synthetic fields
+      * methods
+
+  As an exception, methods that only serve as helpers for one other method will
+  sometimes get located immediately below the method being helped.
+
 #### Other items
 
 * Websockets &mdash; JavaScript has a `WebSocket` class, but when talking about
