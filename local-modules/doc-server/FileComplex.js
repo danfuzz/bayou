@@ -120,19 +120,19 @@ export default class FileComplex extends CommonBase {
   }
 
   /**
-   * {string} The document schema version to use for new documents and to expect
-   * in existing documents.
-   */
-  get schemaVersion() {
-    return this._schemaVersion;
-  }
-
-  /**
    * {Logger} Logger to use with this instance. It prefixes logged items with
    * the file's ID.
    */
   get log() {
     return this._log;
+  }
+
+  /**
+   * {string} The document schema version to use for new documents and to expect
+   * in existing documents.
+   */
+  get schemaVersion() {
+    return this._schemaVersion;
   }
 
   /**
