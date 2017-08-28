@@ -365,20 +365,23 @@ function do-install {
     "${progDir}/lib/fix-modules" "${baseDir}/etc/module-overlay" "${npmDir}" \
     || return 1
 
-    # Copy each of the directories that `npm` got for us.
+    # Move each of the directories that `npm` got for us into the subproject's
+    # `node_modules`.
     #
-    # **Note:** We don't just `rsync --delete` the whole `node_modules`
-    # directory, because we want to keep our local modules, and if we don't
-    # `--delete` then we could end up with weird module amalgams in cases where
-    # an external module got updated.
+    # **Note:** We don't just `mv` (or `rsync --delete`) the whole
+    # `node_modules` directory, because we want to keep our local modules, and
+    # if we don't `--delete` then we could end up with weird module amalgams in
+    # cases where an external module got updated.
 
     echo "${dir}:" 'Moving external dependencies into place...'
 
     local d
     for d in $(cd "${npmDir}/node_modules"; /bin/ls -A); do
-        rsync-archive --delete \
-            "${npmDir}/node_modules/${d}" "${toDir}/node_modules" \
-            || return 1
+        (
+            fromDir="${npmDir}/node_modules/${d}"
+            toDir="${toDir}/node_modules/${d}"
+            rm -rf "${toDir}" && mv "${fromDir}" "${toDir}"
+        ) || return 1
     done
 
     rm -rf "${npmDir}" || return 1
