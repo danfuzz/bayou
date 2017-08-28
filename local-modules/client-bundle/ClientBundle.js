@@ -155,6 +155,43 @@ const webpackOptions = {
         use: [{
           loader: 'client-tests-loader'
         }]
+      },
+      {
+        // This makes .css files `import`able into our JavaScript code. Doing so injects
+        // the css into the DOM (currently configured to add a `<style>` element to the
+        // `<head>`). This allows us to easily break all of our CSS files into multiple
+        // modules and only load them when needed. As part of this process the class
+        // names are transformed to be a random string. By enabling the `modules:true`
+        // option below the object presented to JavaScript will be a map from the class
+        // names defined in the source file to the transformed name.
+        // See `../client-bundle/README.md` for examples.
+        test: /\.css$/,
+        use: [
+          {
+            loader: 'style-loader'
+          },
+          {
+            loader: 'css-loader',
+            options: { modules: true }
+          }
+        ]
+      },
+      {
+        // Same as above but reference counts the object loaded into JavaScript.
+        // Calling `style.use()` increments the count, and `style.unuse()` decrements
+        // the count. Whenever the count is greater than zero the styles are active
+        // in the DOM. When it is zero the styles are removed.
+        // See `../client-bundle/README.md` for examples.
+        test: /.ucss$/,
+        use: [
+          {
+            loader: 'style-loader/useable'
+          },
+          {
+            loader: 'css-loader',
+            options: { modules: true }
+          }
+        ]
       }
     ]
   }
