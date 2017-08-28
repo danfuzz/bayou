@@ -26,13 +26,26 @@ html.bayou-page {
   /* Nothing needed here... yet. */
 }
 
+/*
+ * In the edit areas, turn off font ligatures. This works around a bug in
+ * Chrome (observed in version 60 around 2017-08-24), where the caret fails to
+ * display correctly when positioned in the middle of a ligature-rendered
+ * character sequence.
+ *
+ * **TODO:** Re-evaluate whether this workaround is necessary, with each major
+ * release of Chrome.
+ */
+.bayou-top .ql-editor {
+  font-variant-ligatures: none;
+}
+
 /* Container for the Quill editor for the document title field. */
 .bayou-title-editor .ql-editor {
-  color: #2c2d30;
-  font-weight: 900;
-  font-size: 3rem;
-  margin-top: 3.25rem;
-  margin-bottom: 2.25rem
+  color:         #2c2d30;
+  font-weight:   900;
+  font-size:     3rem;
+  margin-top:    3.25rem;
+  margin-bottom: 2.25rem;
 }
 
 .bayou-title-editor .ql-editor a:link {
@@ -113,8 +126,6 @@ html.bayou-page {
   /*
    * This arranges for a maximum line width that won't force the reader's eyes
    * to glaze over.
-   * TODO: The max-width is specified as pixels in the Figma designs. Need to check with
-   *       designer as this might be more appropriately specified in `rem`s.
    */
   max-width:     45rem;
   margin-left:   auto;
@@ -131,17 +142,13 @@ html.bayou-page {
   margin-bottom: 1.75rem;
 }
 
-/*
- * Bigger header spacing. The spacing above is based on the baseline font size
- * (hence `rem` units) and the spacing below is based on the actual header font
- * size (hence `em` units).
- */
 .bayou-editor .ql-editor h1 {
   font-size:     2.25rem;
   line-height:   2.625rem;
   margin-top:    0.75rem;
   margin-bottom: 0.75rem;
 }
+
 .bayou-editor .ql-editor h2 {
   font-size:     1.75rem;
   line-height:   2.25rem;
