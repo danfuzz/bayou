@@ -23,18 +23,10 @@ html.bayou-page {
 
 /* Top-level container for all the nodes for a single editor "complex." */
 .bayou-top {
-  /*
-   * When not given any offset, specifying `position: relative` is equivalent to
-   * not saying `position` at all, with one exception: Enclosed nodes that have
-   * `position: absolute` are defined to actually mean "relative with respect to
-   * the closest enclosing explicitly positioned node." So, by doing this, we
-   * are arranging for the enclosed author overlay to find this node and not
-   * walk all the way up to the root node.
-   */
-  position: relative;
+  /* Nothing needed here... yet. */
 }
 
-/* Container for the Quill editor for the document title field */
+/* Container for the Quill editor for the document title field. */
 .bayou-title-editor .ql-editor {
   color: #2c2d30;
   font-weight: 900;
@@ -55,6 +47,43 @@ html.bayou-page {
 .bayou-title-editor .ql-editor a:hover {
   text-decoration:       underline;
   text-decoration-color: #007ab8;
+}
+
+/*
+ * Container for the editor "body." Within this container are the main text
+ * and the author overlay.
+ */
+.bayou-body {
+  /*
+   * When not given any offset, specifying `position: relative` is equivalent to
+   * not saying `position` at all, with one exception: Enclosed nodes that have
+   * `position: absolute` are defined to actually mean "relative with respect to
+   * the closest enclosing explicitly positioned node." So, by doing this, we
+   * are arranging for the enclosed author overlay to find this node and not
+   * walk further up the containership hierarchy.
+   */
+  position: relative;
+}
+
+/*
+ * The <svg> layer on top of the Quill editor that is used to show things such
+ * as remote author highlights.
+ */
+.bayou-author-overlay {
+  /*
+   * This positions the author overlay with respect to the outer node being
+   * managed here, sizing it to exactly match it, which means (by construction)
+   * that it exactly overlays the actual editor.
+   */
+  position: absolute;
+  width:    100%;
+  height:   100%;
+  left:     0px;
+  top:      0px;
+  z-index:  2;
+
+  /* The editor, not this node, is what listens to pointer events. */
+  pointer-events: none;
 }
 
 /* Container for the Quill editor for the document body text. */
@@ -100,27 +129,6 @@ html.bayou-page {
   font-size:     1.125rem;
   line-height:   1.75rem;
   margin-bottom: 1.75rem;
-}
-
-/*
- * The <svg> layer on top of the Quill editor that is used to show things such
- * as remote author highlights.
- */
-.bayou-author-overlay {
-  /*
-   * This positions the author overlay with respect to the outer node being
-   * managed here, sizing it to exactly match it, which means (by construction)
-   * that it exactly overlays the actual editor.
-   */
-  position: absolute;
-  width:    100%;
-  height:   100%;
-  left:     0px;
-  top:      0px;
-  z-index:  2;
-
-  /* The editor, not this node, is what listens to pointer events. */
-  pointer-events: none;
 }
 
 /*

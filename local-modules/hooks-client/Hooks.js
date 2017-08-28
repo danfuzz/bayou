@@ -30,10 +30,12 @@ export default class Hooks extends Singleton {
    * Called on every `Quill` instance that is constructed, just before returning
    * it to the client.
    *
+   * @param {string} contextName_unused The name of the context. This is one of
+   *   `body` (for the main editor) or `title` (for the title field editor).
    * @param {Quill} quill_unused The initialized instance (except for whatever
    *   needs to be done here).
    */
-  quillInstanceInit(quill_unused) {
+  quillInstanceInit(contextName_unused, quill_unused) {
     // This space intentionally left blank.
   }
 

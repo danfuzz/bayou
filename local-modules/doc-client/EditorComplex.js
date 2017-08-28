@@ -115,8 +115,8 @@ export default class EditorComplex extends CommonBase {
       });
 
       // Let the overlay do extra initialization.
-      Hooks.theOne.quillInstanceInit(this._titleQuill);
-      Hooks.theOne.quillInstanceInit(this._bodyQuill);
+      Hooks.theOne.quillInstanceInit('title', this._titleQuill);
+      Hooks.theOne.quillInstanceInit('body', this._bodyQuill);
 
       /** {CaretOverlay} The remote caret overlay controller. */
       this._caretOverlay = new CaretOverlay(this, authorOverlayNode);
@@ -249,34 +249,43 @@ export default class EditorComplex extends CommonBase {
     await hookDone;
     log.detail('Done with async operations.');
 
-    // The "top" node that gets passed in actually ends up being a container
-    // for both the editor per se as well as other bits. The node we make here
-    // is the one that actually ends up getting controlled by Quill. The loop
-    // re-parents all the default content under the original editor to instead
-    // be under the Quill node.
-    const quillNode = document.createElement('div');
-    quillNode.classList.add('bayou-editor');
-    for (;;) {
-      const node = topNode.firstChild;
-      if (!node) {
-        break;
-      }
-      topNode.removeChild(node);
-      quillNode.appendChild(node);
+    // Remove the static content from the original "top" node (which is a
+    // "loading..." message).
+    while (topNode.firstChild) {
+      topNode.removeChild(topNode.firstChild);
     }
-    topNode.appendChild(quillNode);
 
-    // Make the author overlay node. **Note:** The wacky namespace URL is
-    // required. Without it, the "SVG" element is actually left uninterpreted.
-    const authorOverlayNode =
-      document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    authorOverlayNode.classList.add('bayou-author-overlay');
-    topNode.appendChild(authorOverlayNode);
+    // Make the node for the document title. **TODO:** This may want to expand
+    // to be a more general document header section.
 
     const titleNode = document.createElement('div');
     titleNode.classList.add('bayou-title-editor');
 
-    topNode.insertBefore(titleNode, quillNode);
+    // Default title contents. **TODO:** This should be coming from the server.
+    // Remove this once that is hooked up.
+    titleNode.appendChild(document.createTextNode('Untitled'));
+
+    topNode.appendChild(titleNode);
+
+    // Make the node for the document body section. The most prominent part of
+    // this section is the `<div>` managed by Quill. In addition, this is where
+    // the author overlay goes.
+
+    const bodyNode = document.createElement('div');
+    bodyNode.classList.add('bayou-body');
+    topNode.appendChild(bodyNode);
+
+    // Make the `<div>` that actually ends up getting controlled by Quill.
+    const quillNode = document.createElement('div');
+    quillNode.classList.add('bayou-editor');
+    bodyNode.appendChild(quillNode);
+
+    // Make the author overlay node. **Note:** The wacky namespace URL is
+    // required. Without it, the `<svg>` element is actually left uninterpreted.
+    const authorOverlayNode =
+      document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    authorOverlayNode.classList.add('bayou-author-overlay');
+    bodyNode.appendChild(authorOverlayNode);
 
     return [titleNode, quillNode, authorOverlayNode];
   }
