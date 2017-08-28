@@ -30,7 +30,9 @@ html.bayou-page {
  * In the edit areas, turn off font ligatures. This works around a bug in
  * Chrome (observed in version 60 around 2017-08-24), where the caret fails to
  * display correctly when positioned in the middle of a ligature-rendered
- * character sequence.
+ * character sequence. This was filed as Chromium issue #473476 on 2015-04-03
+ * <https://bugs.chromium.org/p/chromium/issues/detail?id=473476>.
+
  *
  * **TODO:** Re-evaluate whether this workaround is necessary, with each major
  * release of Chrome.
@@ -127,9 +129,9 @@ html.bayou-page {
    * This arranges for a maximum line width that won't force the reader's eyes
    * to glaze over.
    */
-  max-width:     45rem;
-  margin-left:   auto;
-  margin-right:  auto;
+  max-width:    45rem;
+  margin-left:  auto;
+  margin-right: auto;
 }
 
 .bayou-editor .ql-editor ::selection {
