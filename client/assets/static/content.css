@@ -142,17 +142,13 @@ html.bayou-page {
   margin-bottom: 1.75rem;
 }
 
-/*
- * Bigger header spacing. The spacing above is based on the baseline font size
- * (hence `rem` units) and the spacing below is based on the actual header font
- * size (hence `em` units).
- */
 .bayou-editor .ql-editor h1 {
   font-size:     2.25rem;
   line-height:   2.625rem;
   margin-top:    0.75rem;
   margin-bottom: 0.75rem;
 }
+
 .bayou-editor .ql-editor h2 {
   font-size:     1.75rem;
   line-height:   2.25rem;
