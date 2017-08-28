@@ -115,8 +115,8 @@ export default class EditorComplex extends CommonBase {
       });
 
       // Let the overlay do extra initialization.
-      Hooks.theOne.quillInstanceInit(this._titleQuill);
-      Hooks.theOne.quillInstanceInit(this._bodyQuill);
+      Hooks.theOne.quillInstanceInit('title', this._titleQuill);
+      Hooks.theOne.quillInstanceInit('body', this._bodyQuill);
 
       /** {CaretOverlay} The remote caret overlay controller. */
       this._caretOverlay = new CaretOverlay(this, authorOverlayNode);
