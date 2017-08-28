@@ -369,9 +369,7 @@ function do-install {
     # `node_modules`.
     #
     # **Note:** We don't just `mv` (or `rsync --delete`) the whole
-    # `node_modules` directory, because we want to keep our local modules, and
-    # if we don't `--delete` then we could end up with weird module amalgams in
-    # cases where an external module got updated.
+    # `node_modules` directory, because we want to keep our local modules.
 
     echo "${dir}:" 'Moving external dependencies into place...'
 
