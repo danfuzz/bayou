@@ -32,7 +32,6 @@ html.bayou-page {
  * display correctly when positioned in the middle of a ligature-rendered
  * character sequence. This was filed as Chromium issue #473476 on 2015-04-03
  * <https://bugs.chromium.org/p/chromium/issues/detail?id=473476>.
-
  *
  * **TODO:** Re-evaluate whether this workaround is necessary, with each major
  * release of Chrome.
