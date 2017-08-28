@@ -261,6 +261,10 @@ export default class EditorComplex extends CommonBase {
     const titleNode = document.createElement('div');
     titleNode.classList.add('bayou-title-editor');
 
+    // Default title contents. **TODO:** This should be coming from the server.
+    // Remove this once that is hooked up.
+    titleNode.appendChild(document.createTextNode('Untitled'));
+
     topNode.appendChild(titleNode);
 
     // Make the node for the document body section. The most prominent part of
