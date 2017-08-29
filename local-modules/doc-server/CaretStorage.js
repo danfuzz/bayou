@@ -41,9 +41,6 @@ const MAX_WRITE_RETRIES = 10;
  * caret information. Every caret that gets updated or removed via the public
  * methods on this class is considered to be "locally controlled," and so such
  * caret updates are pushed to the file storage.
- *
- * **TODO:** This class currently polls for carets updated by other servers. It
- * should instead do proper waiting.
  */
 export default class CaretStorage extends CommonBase {
   /**
@@ -105,9 +102,6 @@ export default class CaretStorage extends CommonBase {
      */
     this._whenRemoteChangePiler =
       new CallPiler(this._whenRemoteChange.bind(this));
-
-    /** {CallPiler} Call piler for performing reads from storage. */
-    this._readPiler = new CallPiler(this._readCarets.bind(this));
 
     /** {CallPiler} Call piler for performing writes to storage. */
     this._writePiler = new CallPiler(this._waitThenWriteCarets.bind(this));
@@ -189,18 +183,6 @@ export default class CaretStorage extends CommonBase {
   }
 
   /**
-   * Indicates that caret information should be read from file storage. This
-   * will ultimately cause such reading to be done.
-   *
-   * **Note:** This method only returns after the reading is done.
-   *
-   * @returns {undefined} `undefined` upon completion.
-   */
-  async _needsRead() {
-    return this._readPiler.call();
-  }
-
-  /**
    * Indicates that there is local session data that needs to be written to
    * file storage. This will ultimately cause such writing to be done.
    *
@@ -224,8 +206,9 @@ export default class CaretStorage extends CommonBase {
    */
   async _readCarets() {
     // **TODO:** For now, we are just reading all carets, always, instead of
-    // waiting for changes from the current known state. This should be fixed to
-    // use `when*` ops instead, which will avoid this kind of polling behavior.
+    // only reading ones known to have changed; we know which ones have changed
+    // because this method will have gotten called from `_whenRemoteChange()`
+    // after changes have in fact been detected.
 
     // Get a set of all session IDs currently in file storage.
 
@@ -487,9 +470,7 @@ export default class CaretStorage extends CommonBase {
     }
 
     // Change was detected. Read all the remote carets, and update local state.
-
-    this._log.info('Waiting for new remote caret info.');
-    await this._needsRead();
+    await this._readCarets();
 
     return true;
   }
