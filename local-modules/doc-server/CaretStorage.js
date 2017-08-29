@@ -13,13 +13,8 @@ import Paths from './Paths';
 /**
  * {Int} Maximum amount of time that a call to `whenRemoteChange()` will take
  * before timing out.
- *
- * **TODO:** The timeout is set to be quite low right now because the method
- * in question isn't really checking for anything, and so every call ends up
- * timing out. Once it performs real work, this should be changed to something
- * more like 5 minutes.
  */
-const REMOTE_CHANGE_TIMEOUT_MSEC = 60 * 1000; // One minute.
+const REMOTE_CHANGE_TIMEOUT_MSEC = 5 * 60 * 1000; // Five minutes.
 
 /**
  * {Int} How long to wait (in msec) after sessions are updated before an attempt
