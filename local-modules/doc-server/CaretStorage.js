@@ -19,7 +19,7 @@ import Paths from './Paths';
  * timing out. Once it performs real work, this should be changed to something
  * more like 5 minutes.
  */
-const REMOTE_CHANGE_TIMEOUT_MSEC = 60 * 1000; // 1 minute.
+const REMOTE_CHANGE_TIMEOUT_MSEC = 60 * 1000; // One minute.
 
 /**
  * {Int} How long to wait (in msec) after sessions are updated before an attempt
@@ -28,13 +28,13 @@ const REMOTE_CHANGE_TIMEOUT_MSEC = 60 * 1000; // 1 minute.
  * sharing across servers has this much more latency than sharing between
  * sessions that reside on the same machine.
  */
-const WRITE_DELAY_MSEC = 5 * 1000; // 5 seconds.
+const WRITE_DELAY_MSEC = 10 * 1000; // Ten seconds.
 
 /** {Int} How long (in msec) to wait between write retries. */
-const WRITE_RETRY_DELAY_MSEC = 10 * 1000; // Ten seconds.
+const WRITE_RETRY_DELAY_MSEC = 30 * 1000; // 30 seconds.
 
 /** {Int} How many times to retry writes. */
-const MAX_WRITE_RETRIES = 10;
+const MAX_WRITE_RETRIES = 5;
 
 /**
  * Helper class for `CaretControl` which handles the underlying file storage of
