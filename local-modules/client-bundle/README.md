@@ -13,7 +13,7 @@ with other modules. When you import the CSS module into JavaScript
 you end up with an object that maps the class names that were in the
 CSS file to the unique name.
 
-## Basic Usage
+#### Basic Usage
 
 ```css
 /* some-component.css input */
@@ -52,7 +52,7 @@ header.classList.add(styles.megaheader);
 document.body.appendChild(header);
 ```
 
-## Reference-counted Usage
+#### Reference-counted Usage
 
 If the name of the CSS input file ends with `.ucss` (`use()`-able CSS) then it
 will not be automatically added to the DOM. Instead, it will rely on
