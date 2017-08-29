@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Caret, CaretSnapshot } from 'doc-common';
-import { TransactionSpec } from 'file-store';
+import { Errors, TransactionSpec } from 'file-store';
 import { CallPiler, Delay } from 'promise-util';
 import { CommonBase, FrozenBuffer } from 'util-common';
 
@@ -91,12 +91,12 @@ export default class CaretStorage extends CommonBase {
     this._storedCarets = CaretSnapshot.EMPTY;
 
     /**
-     * {string} The latest value read from the caret set update flag. This is
-     * used to notice when the set of active sessions changes due to the
-     * activity of other servers. See {@link #_waitThenWriteCarets} below for
-     * more info.
+     * {string|null} The latest value read from the caret set update flag, or
+     * `null` if it has never been read. This is used to notice when the set of
+     * active sessions changes due to the activity of other servers. See
+     * {@link #_waitThenWriteCarets} below for more info.
      */
-    this._caretSetUpdate = '';
+    this._caretSetUpdate = null;
 
     /**
      * {Int} Last time (in msec since the Unix Epoch) that carets were read
@@ -142,8 +142,8 @@ export default class CaretStorage extends CommonBase {
 
   /**
    * Gets a snapshot of all remote carets, that is, carets represented in file
-   * storage that haven't been pushed there by this server. The resulting
-   * snapshot always has a revision number of `0`.
+   * storage that were pushed there by other servers (that is, not by this
+   * server). The resulting snapshot always has a revision number of `0`.
    *
    * This method doesn't wait for data to be read from storage &mdash; it always
    * returns immediately with whatever info is at hand &mdash; but if it has
@@ -377,9 +377,12 @@ export default class CaretStorage extends CommonBase {
 
     // Construct a set update op, if necessary. This is used to trigger readers
     // into refreshing the set of sessions. This is done by noticing when the
-    // contents stored at the set update path change, to anything different.
+    // contents stored at the set update path change, to anything different. We
+    // also store the new update flag in `_caretSetUpdate`, so that the change
+    // detection code doesn't incorrectly detect a remote change when it's
+    // actually this server that made it.
     //
-    // We guarantee differentness of the storead value by constructing it as a
+    // We guarantee differentness of the stored value by constructing it as a
     // hash of all of the session IDs which have changed membership, a value
     // which is vanishingly unlikely to collide with any other possible hash
     // generated from such activity on other servers. We do it this way instead
@@ -390,8 +393,9 @@ export default class CaretStorage extends CommonBase {
     // deterministic.)
 
     if (setUpdates.length !== 0) {
-      const setUpdateHash = new FrozenBuffer(setUpdates.join(',')).hash;
-      ops.push(fc.op_writePath(Paths.CARET_SET_UPDATE_FLAG, setUpdateHash));
+      const caretSetUpdate = new FrozenBuffer(setUpdates.join(',')).hash;
+      this._caretSetUpdate = caretSetUpdate;
+      ops.push(fc.op_writePath(Paths.CARET_SET_UPDATE_FLAG, caretSetUpdate));
     }
 
     // Run the transaction, retrying a few times on failure.
@@ -454,39 +458,49 @@ export default class CaretStorage extends CommonBase {
    * @returns {boolean} `true` if a change was detected, or `false` if not.
    */
   async _whenRemoteChange() {
-    const startSnapshot = this.remoteSnapshot();
-    const timeoutAt = Date.now() + REMOTE_CHANGE_TIMEOUT_MSEC;
+    // Build up the change detection transaction spec.
 
-    // Loop until change detected or timeout.
-    for (;;) {
-      const now = Date.now();
-      if (now >= timeoutAt) {
-        break;
-      }
+    const fc  = this._fileCodec;
+    const ops = [];
 
-      // Wait until the next allowed caret read, or figure out that we don't
-      // need to wait at all.
-      const readDelay = (this._lastReadTime + READ_DELAY_MSEC) - now;
-      if (readDelay > 0) {
-        this._log.info(`Pre-read wait in \`whenRemoteChange\`: ${readDelay} msec`);
-        // Wait the prescribed amount of time.
-        await Delay.resolve(readDelay);
+    ops.push(fc.op_timeout(REMOTE_CHANGE_TIMEOUT_MSEC));
+
+    // Detects when there are new or removed sessions.
+    if (this._caretSetUpdate === null) {
+      ops.push(fc.op_whenPathPresent(Paths.CARET_SET_UPDATE_FLAG));
+    } else {
+      ops.push(fc.op_whenPathNot(Paths.CARET_SET_UPDATE_FLAG, this._caretSetUpdate));
+    }
+
+    // Detects changes to any of the already-known remote sessions.
+    for (const caret of this.remoteSnapshot().carets) {
+      ops.push(fc.op_whenPathNot(Paths.forCaret(caret.sessionId), caret));
+    }
+
+    const transactionSpec = new TransactionSpec(...ops);
+
+    // Run the transaction. It will return either when a change is detected or
+    // the specified timeout passes.
+
+    try {
+      this._log.info('Waiting for caret changes.');
+      await fc.transact(transactionSpec);
+    } catch (e) {
+      if (Errors.isTimeout(e)) {
+        // Per the method doc, we convert timeout into a `false` return.
+        this._log.info('Timed out while waiting for caret changes.');
+        return false;
       } else {
-        // No need to wait. Just indicate that a read should be in progress, and
-        // wait for it to be done.
-        this._log.info('Waiting for read results in `whenRemoteChange`.');
-        await this._needsRead();
-      }
-
-      const newSnapshot = this.remoteSnapshot();
-      if (!newSnapshot.equals(startSnapshot)) {
-        // Yes, there was a change!
-        return true;
+        // Not a timeout; re-throw.
+        throw e;
       }
     }
 
-    // No change detected, and we timed out.
-    this._log.info('Timeout reached in `whenRemoteChange`.');
-    return false;
+    // Change was detected. Read all the remote carets, and update local state.
+
+    this._log.info('Waiting for new remote caret info.');
+    await this._needsRead();
+
+    return true;
   }
 }
