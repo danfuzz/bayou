@@ -62,14 +62,16 @@ export default class TransactionSpec extends CommonBase {
   }
 
   /**
-   * Indicates whether or not this instance has any path list operations, that
-   * is, any operations with category `CAT_LIST`.
+   * Indicates whether or not this instance has any operations which return
+   * path results, that is, any operations with category `CAT_LIST` or
+   * `CAT_WAIT`.
    *
-   * @returns {boolean} `true` iff there are any path list operations in this
+   * @returns {boolean} `true` iff there are any push operations in this
    *   instance.
    */
-  hasListOps() {
-    return this.opsWithCategory(FileOp.CAT_LIST).length !== 0;
+  hasPathOps() {
+    return (this.opsWithCategory(FileOp.CAT_LIST).length !== 0)
+      || (this.opsWithCategory(FileOp.CAT_WAIT).length !== 0);
   }
 
   /**

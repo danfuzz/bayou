@@ -43,6 +43,7 @@ const clientPackage =
 const webpackOptions = {
   context: Dirs.theOne.SERVER_DIR, // Used for resolving loaders and the like.
   devtool: '#inline-source-map',
+
   entry: {
     main: [
       'babel-polyfill',
@@ -53,6 +54,7 @@ const webpackOptions = {
       path.resolve(Dirs.theOne.CLIENT_DIR, clientPackage.testMain)
     ]
   },
+
   output: {
     // Absolute output path of `/` because we write to a memory filesystem.
     // And no `.js` suffix, because the memory filesystem contents aren't
@@ -62,9 +64,11 @@ const webpackOptions = {
     filename: '[name]',
     publicPath: '/static/js/'
   },
+
   plugins: [
     new webpack.ProgressPlugin(new ProgressMessage(log).handler)
   ],
+
   resolve: {
     alias: {
       // The `quill` module as published exports an entry point which references
@@ -87,10 +91,12 @@ const webpackOptions = {
     // Webpack doesn't offer a way to simply add to the defaults (alas).
     extensions: ['.webpack.js', '.web.js', '.js', '.ts']
   },
+
   module: {
     rules: [
+      // Convert JavaScript from the modern syntax that we use to what is
+      // supported by the browsers / environments we target.
       {
-        // The bulk of this project's code is written in modern JavaScript.
         test: /\.js$/,
 
         use: [{
@@ -117,8 +123,20 @@ const webpackOptions = {
           }
         }]
       },
+
+      // This handles dynamic construction of the main test-collector file, for
+      // client-side unit testing. **TODO:** Client-side unit testing is still
+      // a work in progress.
       {
-        // Parchment (a dependency of Quill) is written in TypeScript.
+        test: /\/client-tests$/,
+        use: [{
+          loader: 'client-tests-loader'
+        }]
+      },
+
+      // Convert TypeScript files. As of this writing, this is only required for
+      // Parchment (a dependency of Quill).
+      {
         test: /\.ts$/,
         use: [{
           loader: 'ts-loader',
@@ -137,10 +155,12 @@ const webpackOptions = {
           }
         }]
       },
+
+      // Support `import` / `require()` of SVG files. As of this writing, this
+      // is only needed by Quill. The configuration here recapitulates how Quill
+      // is set up to process those assets. See
+      // <https://github.com/quilljs/quill/blob/develop/_develop/webpack.config.js>.
       {
-        // Quill uses `require()` to access `.svg` assets. The configuration
-        // here recapitulates how Quill is set up to process those assets. See
-        // <https://github.com/quilljs/quill/blob/develop/_develop/webpack.config.js>.
         test: /\.svg$/,
         use: [{
           loader: 'html-loader',
@@ -149,22 +169,16 @@ const webpackOptions = {
           }
         }]
       },
+
+      // This makes `.css` files `import`able into our JavaScript code. Doing so
+      // injects the CSS into the DOM (currently configured to add a `<style>`
+      // element to the `<head>`). This allows us to easily break all of our CSS
+      // files into multiple modules and only load them when needed. As part of
+      // this process each class name is transformed to be a unique random
+      // string. The `modules: true` option makes the JavaScript export be a map
+      // from each class names defined in the source file to its transformed
+      // name. See <client-bundle/README.md> for examples.
       {
-        // This handles dynamic construction of the main test-collector file.
-        test: /\/client-tests$/,
-        use: [{
-          loader: 'client-tests-loader'
-        }]
-      },
-      {
-        // This makes .css files `import`able into our JavaScript code. Doing so injects
-        // the css into the DOM (currently configured to add a `<style>` element to the
-        // `<head>`). This allows us to easily break all of our CSS files into multiple
-        // modules and only load them when needed. As part of this process the class
-        // names are transformed to be a random string. By enabling the `modules:true`
-        // option below the object presented to JavaScript will be a map from the class
-        // names defined in the source file to the transformed name.
-        // See `../client-bundle/README.md` for examples.
         test: /\.css$/,
         use: [
           {
@@ -176,12 +190,13 @@ const webpackOptions = {
           }
         ]
       },
+
+      // Same as `.css` handling above but reference counts the objects loaded
+      // into JavaScript. Calling `style.use()` increments the count, and
+      // `style.unuse()` decrements the count. Whenever the count is greater
+      // than zero the styles are active in the DOM. When it is zero the styles
+      // are removed. See <client-bundle/README.md> for examples.
       {
-        // Same as above but reference counts the object loaded into JavaScript.
-        // Calling `style.use()` increments the count, and `style.unuse()` decrements
-        // the count. Whenever the count is greater than zero the styles are active
-        // in the DOM. When it is zero the styles are removed.
-        // See `../client-bundle/README.md` for examples.
         test: /.ucss$/,
         use: [
           {
