@@ -11,11 +11,6 @@ import FileComplex from './FileComplex';
 import Paths from './Paths';
 
 /**
- * {Int} Minimum amount of time (in msec) to wait between reading stored carets.
- */
-const READ_DELAY_MSEC = 10 * 1000; // 10 seconds.
-
-/**
  * {Int} Maximum amount of time that a call to `whenRemoteChange()` will take
  * before timing out.
  *
@@ -145,18 +140,13 @@ export default class CaretStorage extends CommonBase {
    * storage that were pushed there by other servers (that is, not by this
    * server). The resulting snapshot always has a revision number of `0`.
    *
-   * This method doesn't wait for data to be read from storage &mdash; it always
-   * returns immediately with whatever info is at hand &mdash; but if it has
-   * been a while since the data was updated, this method will fire off an
-   * asynchronous read, the results of which will eventually get integrated.
+   * This method doesn't wait for data to be read from storage; it always
+   * returns immediately with whatever info is at hand. To get the remote data
+   * to become updated, it is necessary to call `whenRemoteChange()`.
    *
    * @returns {CaretSnapshot} Snapshot of remote carets.
    */
   remoteSnapshot() {
-    if (Date.now() >= (this._lastReadTime + READ_DELAY_MSEC)) {
-      this._needsRead();
-    }
-
     let result = this._carets;
 
     for (const s of this._localSessions) {
