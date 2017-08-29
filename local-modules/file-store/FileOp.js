@@ -270,10 +270,13 @@ const OPERATIONS = DataUtil.deepFreeze([
  *   within a file.
  * * Data writes &mdash; A data write stores new data into a file.
  * * Waits &mdash; A wait operation blocks a transaction until some condition
- *   holds. **Note:** If a transaction includes any wait operations, it must not
- *   perform any lists, reads, deletes, or writes. If a transaction includes
- *   more than one wait operation, the transaction will complete when _any_ of
- *   the operations' conditions is satisfied.
+ *   holds. When a wait operation completes having detected one or more
+ *   conditions, the paths related to the conditions that were satisfied are
+ *   yielded in the results from the transaction. **Note:** If a transaction
+ *   includes any wait operations, it must not perform any lists, reads,
+ *   deletes, or writes. If a transaction includes more than one wait operation,
+ *   the transaction will complete when _any_ of the operations' conditions is
+ *   satisfied.
  *
  * When executed, the operations of a transaction are effectively performed in
  * order by category; but within a category there is no effective ordering.

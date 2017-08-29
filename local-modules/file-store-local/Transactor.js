@@ -46,9 +46,9 @@ export default class Transactor extends CommonBase {
 
     /**
      * {Set<string>|null} Set of paths listed while running the transaction, or
-     * `null` if the transaction has no path list operations.
+     * `null` if the transaction has no path-returning operations.
      */
-    this._paths = spec.hasListOps() ? new Set() : null;
+    this._paths = spec.hasPathOps() ? new Set() : null;
 
     /** {boolean} Whether or not this transaction has any wait operations. */
     this._hasWaitOps = spec.hasWaitOps();
@@ -323,6 +323,7 @@ export default class Transactor extends CommonBase {
     const value       = this._fileFriend.readPathOrNull(storagePath);
 
     if (value === null) {
+      this._paths.add(storagePath);
       this._waitSatisfied = true;
     }
 
@@ -340,6 +341,7 @@ export default class Transactor extends CommonBase {
     const value       = this._fileFriend.readPathOrNull(storagePath);
 
     if ((value === null) || (value.hash !== hash)) {
+      this._paths.add(storagePath);
       this._waitSatisfied = true;
     }
 
@@ -356,6 +358,7 @@ export default class Transactor extends CommonBase {
     const value       = this._fileFriend.readPathOrNull(storagePath);
 
     if (value !== null) {
+      this._paths.add(storagePath);
       this._waitSatisfied = true;
     }
 

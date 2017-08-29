@@ -174,11 +174,11 @@ export default class BaseFile extends CommonBase {
    *   read. **Note:** Even if there was no data to read (e.g., all read
    *   operations were for non-bound paths), as long as the spec included any
    *   read operations, this property will still be present.
-   * * `paths` &mdash; If the transaction spec included any path list
+   * * `paths` &mdash; If the transaction spec included any wait or path list
    *   operations, a `Set<string>` of storage paths that resulted from the
    *   operations. **Note:** Even if there were no found paths (e.g., no
-   *   operations matched any paths), as long as the spec included any path list
-   *   operations, this property will still be present.
+   *   operations matched any paths), as long as the spec included any wait or
+   *   path list operations, this property will still be present.
    *
    * It is an error to call this method on a file that doesn't exist, in the
    * sense of the `exists()` method. That is, if `exists()` would return
@@ -218,7 +218,7 @@ export default class BaseFile extends CommonBase {
       delete result.data;
     }
 
-    if (spec.hasListOps()) {
+    if (spec.hasPathOps()) {
       if (result.paths === null) {
         throw InfoError.wtf('Improper subclass behavior: Expected non-`null` `paths`.');
       }
