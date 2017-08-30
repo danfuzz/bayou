@@ -302,7 +302,8 @@ export default class CaretStorage extends CommonBase {
   }
 
   /**
-   * Gets a list of the currently-known remote session IDs.
+   * Gets a list of the currently-known remote session IDs. This returns the
+   * information that is on hand and does not initiate any storage requests.
    *
    * @returns {array<string>} Array of the session IDs in question.
    */
