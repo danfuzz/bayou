@@ -148,7 +148,7 @@ export default class CaretStorage extends CommonBase {
         const newSnapshot = snapshot.withoutSession(sessionId);
         if (newSnapshot !== snapshot) {
           snapshot = newSnapshot;
-          this._log.info(`Integrated caret removal: ${sessionId}`);
+          this._log.detail(`Integrated caret removal: ${sessionId}`);
         }
       }
     }
@@ -158,7 +158,7 @@ export default class CaretStorage extends CommonBase {
       const newSnapshot = snapshot.withCaret(carets.caretForSession(sessionId));
       if (newSnapshot !== snapshot) {
         snapshot = newSnapshot;
-        this._log.info(`Integrated caret update: ${sessionId}`);
+        this._log.detail(`Integrated caret update: ${sessionId}`);
       }
     }
 
