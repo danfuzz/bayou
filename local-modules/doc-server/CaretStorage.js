@@ -257,7 +257,7 @@ export default class CaretStorage extends CommonBase {
       }
     }
 
-    for (const sessionId of this.remoteSnapshot().sessionIds) {
+    for (const sessionId of this._remoteSessionIds()) {
       if (!currentSessionIds.has(sessionId)) {
         this._log.info(`Remote caret has gone away: ${sessionId}`);
         carets = carets.withoutSession(sessionId);
@@ -299,6 +299,19 @@ export default class CaretStorage extends CommonBase {
     }
 
     this._carets = carets;
+  }
+
+  /**
+   * Gets a list of the currently-known remote session IDs.
+   *
+   * @returns {array<string>} Array of the session IDs in question.
+   */
+  _remoteSessionIds() {
+    const allSessionIds = this._carets.sessionIds;
+
+    return allSessionIds.filter((id) => {
+      return !this._localSessions.has(id);
+    });
   }
 
   /**
@@ -454,8 +467,9 @@ export default class CaretStorage extends CommonBase {
     }
 
     // Detects changes to any of the already-known remote sessions.
-    for (const caret of this.remoteSnapshot().carets) {
-      ops.push(fc.op_whenPathNot(Paths.forCaret(caret.sessionId), caret));
+    for (const sessionId of this._remoteSessionIds()) {
+      const caret = this._carets.caretForSession(sessionId);
+      ops.push(fc.op_whenPathNot(Paths.forCaret(sessionId), caret));
     }
 
     // Run the transaction. It will return either when a change is detected or
