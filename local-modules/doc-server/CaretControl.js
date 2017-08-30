@@ -185,15 +185,10 @@ export default class CaretControl extends CommonBase {
    * Merges any new remote session info into the snapshot.
    */
   _integrateRemoteSessions() {
-    const snapshot = this._snapshot;
-    const remotes = this._caretStorage.remoteSnapshot();
+    const oldSnapshot = this._snapshot;
+    const newSnapshot = this._caretStorage.integrateRemotes(oldSnapshot);
 
-    let newSnapshot = snapshot;
-    for (const c of remotes.carets) {
-      newSnapshot = newSnapshot.withCaret(c);
-    }
-
-    if (newSnapshot !== snapshot) {
+    if (newSnapshot !== oldSnapshot) {
       this._updateSnapshot(newSnapshot);
     }
   }

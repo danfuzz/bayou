@@ -82,6 +82,14 @@ export default class CaretSnapshot extends CommonBase {
   }
 
   /**
+   * {array<string>} Array of session IDs for all active carets. It is
+   * guaranteed to be a frozen (immutable) value.
+   */
+  get sessionIds() {
+    return Object.freeze([...this._carets.keys()]);
+  }
+
+  /**
    * Gets the caret info for the given session, if any.
    *
    * @param {string} sessionId Session in question.
@@ -89,6 +97,17 @@ export default class CaretSnapshot extends CommonBase {
    */
   caretForSession(sessionId) {
     return this._carets.get(sessionId) || null;
+  }
+
+  /**
+   * Gets whether or not this instance represents the given session.
+   *
+   * @param {string} sessionId Session in question.
+   * @returns {boolean} `true` if this instance has info for the indicated
+   *   session, or `false` if not.
+   */
+  hasSession(sessionId) {
+    return this.caretForSession(sessionId) !== null;
   }
 
   /**
