@@ -5,8 +5,9 @@
 import { Caret, CaretSnapshot, RevisionNumber, Timestamp } from 'doc-common';
 import { Condition } from 'promise-util';
 import { TInt, TString } from 'typecheck';
-import { ColorSelector, CommonBase } from 'util-common';
+import { CommonBase } from 'util-common';
 
+import CaretColor from './CaretColor';
 import CaretStorage from './CaretStorage';
 
 /**
@@ -63,9 +64,6 @@ export default class CaretControl extends CommonBase {
      * updated.
      */
     this._updatedCondition = new Condition();
-
-    /** {ColorSelector} Provider of well-distributed colors. */
-    this._colorSelector = new ColorSelector();
 
     /** {Logger} Logger specific to this document's ID. */
     this._log = fileComplex.log;
@@ -161,7 +159,7 @@ export default class CaretControl extends CommonBase {
     let newCaret;
 
     if (oldCaret === null) {
-      newFields.color = this._colorSelector.nextColorHex();
+      newFields.color = this._pickSessionColor(sessionId);
       newCaret = new Caret(sessionId, Object.entries(newFields));
     } else {
       newCaret = new Caret(oldCaret, Object.entries(newFields));
@@ -191,6 +189,24 @@ export default class CaretControl extends CommonBase {
     if (newSnapshot !== oldSnapshot) {
       this._updateSnapshot(newSnapshot);
     }
+  }
+
+  /**
+   * Picks a color to use for a new session.
+   *
+   * @param {string} sessionId The ID for the new session (used as a
+   *   pseudo-random seed).
+   * @returns {string} The color to use, in CSS hex form.
+   */
+  _pickSessionColor(sessionId) {
+    // Integrate remote sessions, if any, as those will have colors we won't
+    // have yet observed.
+    this._integrateRemoteSessions();
+
+    // Extract all the currently-used caret colors.
+    const usedColors = this._snapshot.carets.map(c => c.color);
+
+    return CaretColor.colorForSession(sessionId, usedColors);
   }
 
   /**
