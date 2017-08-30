@@ -166,7 +166,9 @@ export default class CaretStorage extends CommonBase {
 
   /**
    * Waits for a change to the stored caret state. This method returns when a
-   * change has been detected, or after the request times out.
+   * change has been detected, or after the request times out. If indeed a
+   * change was detected, by the time this method returns, calls to
+   * `remoteSnapshot()` will reflect the updated information.
    *
    * @returns {boolean} `true` if a change was detected, or `false` if not.
    */
@@ -193,99 +195,110 @@ export default class CaretStorage extends CommonBase {
   }
 
   /**
-   * Reads carets from storage, updating `_carets` as a result.
-   *
-   * **Note:** This doesn't update `_storedCarets`, which are the carets as
-   * stored from this instance. (That is, those represent carets moving in the
-   * other direction from what's being done here.)
+   * Helper for `_whenRemoteChange()`, which handles the case of the caret set
+   * changing. That is, this is what we do when we've detected that at least one
+   * remote session has been created or deleted. This method adds all the new
+   * sessions and removes all the deleted sessions from our local caret
+   * snapshot.
    */
-  async _readCarets() {
-    // **TODO:** For now, we are just reading all carets, always, instead of
-    // only reading ones known to have changed; we know which ones have changed
-    // because this method will have gotten called from `_whenRemoteChange()`
-    // after changes have in fact been detected.
-
-    // Get a set of all session IDs currently in file storage.
-
+  async _readAllChangedSessions() {
     this._log.info('Reading caret directory...');
 
-    const fc = this._fileCodec;
-    let caretPaths;
+    const fc                = this._fileCodec;
+    const currentSessionIds = new Set();
 
     try {
       const spec = new TransactionSpec(
         fc.op_listPath(Paths.CARET_SESSION_PREFIX));
       const transactionResult = await fc.transact(spec);
-      caretPaths = transactionResult.paths;
+      for (const p of transactionResult.paths) {
+        currentSessionIds.add(Paths.sessionFromCaretPath(p));
+      }
     } catch (e) {
-      this._log.error('Could not read caret session directory.', e);
+      this._log.error('Could not read caret directory.', e);
       throw e;
     }
 
-    // Filter out all the sessions that are controlled locally, and read all the
-    // the other carets.
+    // Read all the carets for sessions that are new to us, as well as the
+    // current "set update" value.
 
     const ops = [];
+    let caretData;
 
-    for (const path of caretPaths) {
-      const sessionId = Paths.sessionFromCaretPath(path);
-      if (!this._localSessions.has(sessionId)) {
-        ops.push(fc.op_readPath(path));
+    for (const sessionId of currentSessionIds) {
+      if (!this._carets.hasSession(sessionId)) {
+        this._log.info(`New remote caret: ${sessionId}`);
+        ops.push(fc.op_readPath(Paths.forCaret(sessionId)));
       }
     }
 
-    if (ops.length === 0) {
-      // There aren't any active remote sessions, so there's nothing more to do.
-      this._log.info('No remote carets to read.');
-    } else {
-      // Do the reading and updating of caret contents.
-      this._log.info('Reading remote carets...');
-      await this._readTransactAndUpdate(ops);
-    }
-
-    // Update the last-read time, so we know when to try reading again.
-    this._lastReadTime = Date.now();
-  }
-
-  /**
-   * Helper for `_readCarets()` which performs the main read transaction to
-   * get caret data, and then updates instance variables accordingly.
-   *
-   * @param {array<FileOp>} ops List of ops for reading individual carets.
-   */
-  async _readTransactAndUpdate(ops) {
-    const fc = this._fileCodec;
-
-    // Read in the latest set update flag, for later change detection.
     ops.push(fc.op_readPath(Paths.CARET_SET_UPDATE_FLAG));
 
-    let caretData;
     try {
       const spec = new TransactionSpec(...ops);
       const transactionResult = await fc.transact(spec);
       caretData = transactionResult.data;
     } catch (e) {
-      this._log.error('Could not read carets.', e);
+      this._log.error('Could not read new carets.', e);
       throw e;
     }
 
-    const carets  = this._carets;
-    let newCarets = carets;
+    // Update our caret snapshot: Add all of the new carets, remove all the
+    // carets for remote sessions that have gone away, and note the lastest "set
+    // update" value.
 
-    for (const [k, v] of caretData) {
-      if (k === Paths.CARET_SET_UPDATE_FLAG) {
+    let carets = this._carets;
+
+    for (const [path, v] of caretData) {
+      if (path === Paths.CARET_SET_UPDATE_FLAG) {
         this._caretSetUpdate = v;
       } else {
-        newCarets = newCarets.withCaret(v);
+        carets = carets.withCaret(v);
       }
     }
 
-    if (carets === newCarets) {
-      this._log.info('Done reading carets. No remote changes.');
-    } else {
-      this._log.info('Done reading carets. Integrated changes.');
-      this._carets = newCarets;
+    for (const sessionId of this.remoteSnapshot().sessionIds) {
+      if (!currentSessionIds.has(sessionId)) {
+        this._log.info(`Remote caret has gone away: ${sessionId}`);
+        carets = carets.withoutSession(sessionId);
+      }
     }
+
+    this._carets = carets;
+  }
+
+  /**
+   * Reads and integrates the caret data for the given set of paths, each of
+   * which must correspond to a caret session.
+   *
+   * @param {Set<string>} paths Set of paths, one per caret to read.
+   */
+  async _readCaretsFor(paths) {
+    const fc  = this._fileCodec;
+    const ops = [];
+    let caretData;
+
+    for (const p of paths) {
+      this._log.info(`Remote caret changed: ${Paths.sessionFromCaretPath(p)}`);
+      ops.push(fc.op_readPath(p));
+    }
+
+    try {
+      this._log.info('Reading changed carets.');
+      const transactionResult = await fc.transact(new TransactionSpec(...ops));
+      caretData = transactionResult.data;
+    } catch (e) {
+      this._log.error('Could not read changed carets.', e);
+      throw e;
+    }
+
+    let carets = this._carets;
+
+    for (const c of caretData.values()) {
+      carets = carets.withCaret(c);
+    }
+
+    this._carets = carets;
   }
 
   /**
@@ -445,14 +458,14 @@ export default class CaretStorage extends CommonBase {
       ops.push(fc.op_whenPathNot(Paths.forCaret(caret.sessionId), caret));
     }
 
-    const transactionSpec = new TransactionSpec(...ops);
-
     // Run the transaction. It will return either when a change is detected or
     // the specified timeout passes.
 
+    let paths;
     try {
       this._log.info('Waiting for caret changes.');
-      await fc.transact(transactionSpec);
+      const transactionResult = await fc.transact(new TransactionSpec(...ops));
+      paths = transactionResult.paths;
     } catch (e) {
       if (Errors.isTimeout(e)) {
         // Per the method doc, we convert timeout into a `false` return.
@@ -464,8 +477,18 @@ export default class CaretStorage extends CommonBase {
       }
     }
 
-    // Change was detected. Read all the remote carets, and update local state.
-    await this._readCarets();
+    // Change was detected. Read all the changed carets, and update local state.
+
+    if (paths.has(Paths.CARET_SET_UPDATE_FLAG)) {
+      await this._readAllChangedSessions();
+      paths.delete(Paths.CARET_SET_UPDATE_FLAG);
+    }
+
+    if (paths.size !== 0) {
+      await this._readCaretsFor(paths);
+    }
+
+    this._log.info('Integrated newly-changed remote carets.');
 
     return true;
   }
