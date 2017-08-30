@@ -197,29 +197,39 @@ export default class CaretControl extends CommonBase {
    * Removes sessions out of the snapshot that haven't been active recently.
    */
   _removeInactiveSessions() {
-    const minTime = Timestamp.now().addMsec(-MAX_SESSION_IDLE_MSEC);
+    const minTime  = Timestamp.now().addMsec(-MAX_SESSION_IDLE_MSEC);
+    const toRemove = [];
 
-    for (const c of this._snapshot.carets) {
-      if (minTime.compareTo(c.lastActive) > 0) {
+    for (const caret of this._snapshot.carets) {
+      if (minTime.compareTo(caret.lastActive) > 0) {
         // Too old!
-        this._log.info(`[${c.sessionId}] Caret became inactive.`);
-        this._removeSession(c);
+        this._log.info(`[${caret.sessionId}] Caret became inactive.`);
+        toRemove.push(caret);
       }
     }
+
+    this._removeSessions(...toRemove);
   }
 
   /**
-   * Removes the indicated caret from the local snapshot, and also pushes the
-   * removal to the storage layer.
+   * Removes the sessions associated with the indicated carets from the local
+   * snapshot, and also pushes the removal to the storage layer.
    *
-   * @param {Caret} caret Caret representing the session to be removed.
+   * @param {...Caret} carets Carets representing the sessions to be removed.
    */
-  _removeSession(caret) {
-    Caret.check(caret);
+  _removeSessions(...carets) {
+    const storage     = this._caretStorage;
+    const oldSnapshot = this._snapshot;
+    let   newSnapshot = oldSnapshot;
 
-    const snapshot = this._snapshot.withoutCaret(caret);
-    this._updateSnapshot(snapshot);
-    this._caretStorage.delete(caret);
+    for (const c of carets) {
+      newSnapshot = newSnapshot.withoutCaret(c);
+      storage.delete(c);
+    }
+
+    if (newSnapshot !== oldSnapshot) {
+      this._updateSnapshot(newSnapshot);
+    }
   }
 
   /**
@@ -244,7 +254,7 @@ export default class CaretControl extends CommonBase {
     const oldCaret = snapshot.caretForSession(sessionId);
 
     if (oldCaret !== null) {
-      this._removeSession(oldCaret);
+      this._removeSessions(oldCaret);
     }
   }
 
