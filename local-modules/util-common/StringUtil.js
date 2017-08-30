@@ -42,6 +42,7 @@ export default class StringUtil extends UtilityClass {
    * @returns {Int} The corresponding hashcode.
    */
   static hash32(string) {
+    TString.check(string);
     const hash = crypto.createHash('sha256'); // Good enough for 32-bit output.
 
     hash.update(string, 'utf8');

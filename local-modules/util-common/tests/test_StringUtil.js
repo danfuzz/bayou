@@ -54,6 +54,17 @@ describe('util-common/StringUtil', () => {
       test(0x27ce5aa0, '<text>');
       test(0x86bda720, 'These pretzels are making me thirsty.');
     });
+
+    it('should reject non-strings', () => {
+      function test(v) {
+        assert.throws(() => StringUtil.hash32(v));
+      }
+
+      test(undefined);
+      test(true);
+      test([]);
+      test({ foo: 'bar' });
+    });
   });
 
   describe('utf8LengthForString()', () => {
