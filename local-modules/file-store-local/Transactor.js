@@ -92,6 +92,9 @@ export default class Transactor extends CommonBase {
     // This gets set to `true` in wait ops that are satisfied.
     this._waitSatisfied = false;
 
+    // If we have to wait, this is the number we'll report.
+    this._waitCount++;
+
     for (const op of this._spec.ops) {
       this._log.detail('Op:', op);
 
@@ -386,20 +389,18 @@ export default class Transactor extends CommonBase {
 
   /**
    * Helper for the `when*` ops, which logs information about waiting or the
-   * lack thereof, based on the value of `_waitSatisfied` and `_waitCount`. This
-   * method also updates `_waitCount`.
+   * lack thereof, based on the value of `_waitSatisfied` and `_waitCount`.
    *
    * @param {string} message Additional message to include.
    */
   _logAboutWaiting(message) {
     if (this._waitSatisfied) {
-      if (this._waitCount === 0) {
+      if (this._waitCount === 1) {
         this._log.info(`No waiting required. ${message}`);
       } else {
         this._log.info(`Done waiting. ${message}`);
       }
     } else {
-      this._waitCount++;
       if (this._waitCount === 1) {
         this._log.info(`Waiting. ${message}`);
       } else {
