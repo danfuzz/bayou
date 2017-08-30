@@ -5,8 +5,9 @@
 import { Caret, CaretSnapshot, RevisionNumber, Timestamp } from 'doc-common';
 import { Condition } from 'promise-util';
 import { TInt, TString } from 'typecheck';
-import { ColorSelector, CommonBase } from 'util-common';
+import { CommonBase } from 'util-common';
 
+import CaretColor from './CaretColor';
 import CaretStorage from './CaretStorage';
 
 /**
@@ -63,9 +64,6 @@ export default class CaretControl extends CommonBase {
      * updated.
      */
     this._updatedCondition = new Condition();
-
-    /** {ColorSelector} Provider of well-distributed colors. */
-    this._colorSelector = new ColorSelector();
 
     /** {Logger} Logger specific to this document's ID. */
     this._log = fileComplex.log;
@@ -161,7 +159,7 @@ export default class CaretControl extends CommonBase {
     let newCaret;
 
     if (oldCaret === null) {
-      newFields.color = this._colorSelector.nextColorHex();
+      newFields.color = this._pickSessionColor(sessionId);
       newCaret = new Caret(sessionId, Object.entries(newFields));
     } else {
       newCaret = new Caret(oldCaret, Object.entries(newFields));
@@ -194,32 +192,60 @@ export default class CaretControl extends CommonBase {
   }
 
   /**
-   * Removes sessions out of the snapshot that haven't been active recently.
+   * Picks a color to use for a new session.
+   *
+   * @param {string} sessionId The ID for the new session (used as a
+   *   pseudo-random seed).
+   * @returns {string} The color to use, in CSS hex form.
    */
-  _removeInactiveSessions() {
-    const minTime = Timestamp.now().addMsec(-MAX_SESSION_IDLE_MSEC);
+  _pickSessionColor(sessionId) {
+    // Integrate remote sessions, if any, as those will have colors we won't
+    // have yet observed.
+    this._integrateRemoteSessions();
 
-    for (const c of this._snapshot.carets) {
-      if (minTime.compareTo(c.lastActive) > 0) {
-        // Too old!
-        this._log.info(`[${c.sessionId}] Caret became inactive.`);
-        this._removeSession(c);
-      }
-    }
+    // Extract all the currently-used caret colors.
+    const usedColors = this._snapshot.carets.map(c => c.color);
+
+    return CaretColor.colorForSession(sessionId, usedColors);
   }
 
   /**
-   * Removes the indicated caret from the local snapshot, and also pushes the
-   * removal to the storage layer.
-   *
-   * @param {Caret} caret Caret representing the session to be removed.
+   * Removes sessions out of the snapshot that haven't been active recently.
    */
-  _removeSession(caret) {
-    Caret.check(caret);
+  _removeInactiveSessions() {
+    const minTime  = Timestamp.now().addMsec(-MAX_SESSION_IDLE_MSEC);
+    const toRemove = [];
 
-    const snapshot = this._snapshot.withoutCaret(caret);
-    this._updateSnapshot(snapshot);
-    this._caretStorage.delete(caret);
+    for (const caret of this._snapshot.carets) {
+      if (minTime.compareTo(caret.lastActive) > 0) {
+        // Too old!
+        this._log.info(`[${caret.sessionId}] Caret became inactive.`);
+        toRemove.push(caret);
+      }
+    }
+
+    this._removeSessions(...toRemove);
+  }
+
+  /**
+   * Removes the sessions associated with the indicated carets from the local
+   * snapshot, and also pushes the removal to the storage layer.
+   *
+   * @param {...Caret} carets Carets representing the sessions to be removed.
+   */
+  _removeSessions(...carets) {
+    const storage     = this._caretStorage;
+    const oldSnapshot = this._snapshot;
+    let   newSnapshot = oldSnapshot;
+
+    for (const c of carets) {
+      newSnapshot = newSnapshot.withoutCaret(c);
+      storage.delete(c);
+    }
+
+    if (newSnapshot !== oldSnapshot) {
+      this._updateSnapshot(newSnapshot);
+    }
   }
 
   /**
@@ -244,7 +270,7 @@ export default class CaretControl extends CommonBase {
     const oldCaret = snapshot.caretForSession(sessionId);
 
     if (oldCaret !== null) {
-      this._removeSession(oldCaret);
+      this._removeSessions(oldCaret);
     }
   }
 
