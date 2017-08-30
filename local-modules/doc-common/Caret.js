@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt, TIterable, TString } from 'typecheck';
-import { ColorSelector, CommonBase } from 'util-common';
+import { ColorUtil, CommonBase } from 'util-common';
 
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';
@@ -22,7 +22,7 @@ const CARET_FIELDS = new Map([
   ['revNum',     RevisionNumber.check],
   ['index',      TInt.nonNegative],
   ['length',     TInt.nonNegative],
-  ['color',      ColorSelector.checkHexColor]
+  ['color',      ColorUtil.checkCss]
 ]);
 
 /**

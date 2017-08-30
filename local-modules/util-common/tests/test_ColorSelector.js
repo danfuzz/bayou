@@ -46,19 +46,10 @@ describe('ColorSelector', () => {
       assert.equal(colorA.hue, colorB.hue - 37);
     });
 
-    describe('.nextColorRGB()', () => {
-      it('should return a valid RGB conversion of the given HSL color', () => {
-        const selector = new ColorSelector();
-        const rgb = selector.nextColorRGB();
-
-        assert.deepEqual(rgb, { red: 255, green: 191, blue: 191 });
-      });
-    });
-
-    describe('.nextColorHex()', () => {
+    describe('.nextCssColor()', () => {
       it('should return a valid hex string representation of the RGB value of a given color', () => {
         const selector = new ColorSelector();
-        const hex = selector.nextColorHex();
+        const hex = selector.nextCssColor();
 
         assert.equal(hex, '#ffbfbf');
       });
