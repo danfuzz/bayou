@@ -188,6 +188,10 @@ export default class CaretControl extends CommonBase {
     const snapshot = this._snapshot;
     const remotes = this._caretStorage.remoteSnapshot();
 
+    // **TODO:** This fails to notice when remote sessions have gone away. The
+    // solution is probably to add a new method to `CaretStorage` which can do
+    // the appropriate wrangling, instead of implementing it here.
+
     let newSnapshot = snapshot;
     for (const c of remotes.carets) {
       newSnapshot = newSnapshot.withCaret(c);
