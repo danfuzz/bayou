@@ -185,19 +185,10 @@ export default class CaretControl extends CommonBase {
    * Merges any new remote session info into the snapshot.
    */
   _integrateRemoteSessions() {
-    const snapshot = this._snapshot;
-    const remotes = this._caretStorage.remoteSnapshot();
+    const oldSnapshot = this._snapshot;
+    const newSnapshot = this._caretStorage.integrateRemotes(oldSnapshot);
 
-    // **TODO:** This fails to notice when remote sessions have gone away. The
-    // solution is probably to add a new method to `CaretStorage` which can do
-    // the appropriate wrangling, instead of implementing it here.
-
-    let newSnapshot = snapshot;
-    for (const c of remotes.carets) {
-      newSnapshot = newSnapshot.withCaret(c);
-    }
-
-    if (newSnapshot !== snapshot) {
+    if (newSnapshot !== oldSnapshot) {
       this._updateSnapshot(newSnapshot);
     }
   }

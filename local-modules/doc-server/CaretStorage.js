@@ -125,24 +125,44 @@ export default class CaretStorage extends CommonBase {
   }
 
   /**
-   * Gets a snapshot of all remote carets, that is, carets represented in file
-   * storage that were pushed there by other servers (that is, not by this
-   * server). The resulting snapshot always has a revision number of `0`.
+   * Takes a caret snapshot which is expected to be a mix of locally-controlled
+   * and remote carets, and updates just the remote carets to the most recent
+   * known state. If there are no remote updates, this method returns the
+   * originally-passed snapshot.
    *
    * This method doesn't wait for data to be read from storage; it always
    * returns immediately with whatever info is at hand. To get the remote data
    * to become updated, it is necessary to call `whenRemoteChange()`.
    *
-   * @returns {CaretSnapshot} Snapshot of remote carets.
+   * @param {CaretSnapshot} snapshot Caret snapshot to update.
+   * @returns {CaretSnapshot} `snapshot` with all known remote updates applied,
+   *   if any.
    */
-  remoteSnapshot() {
-    let result = this._carets;
+  integrateRemotes(snapshot) {
+    const carets = this._carets;
 
-    for (const s of this._localSessions) {
-      result = result.withoutSession(s);
+    // Remove any caret that isn't represented in this instance. Such carets are
+    // remote carets for sessions that have since been deleted.
+    for (const sessionId of snapshot.sessionIds) {
+      if (!carets.hasSession(sessionId)) {
+        const newSnapshot = snapshot.withoutSession(sessionId);
+        if (newSnapshot !== snapshot) {
+          snapshot = newSnapshot;
+          this._log.info(`Integrated caret removal: ${sessionId}`);
+        }
+      }
     }
 
-    return result;
+    // Update all the remote carets.
+    for (const sessionId of this._remoteSessionIds()) {
+      const newSnapshot = snapshot.withCaret(carets.caretForSession(sessionId));
+      if (newSnapshot !== snapshot) {
+        snapshot = newSnapshot;
+        this._log.info(`Integrated caret update: ${sessionId}`);
+      }
+    }
+
+    return snapshot;
   }
 
   /**
@@ -168,7 +188,7 @@ export default class CaretStorage extends CommonBase {
    * Waits for a change to the stored caret state. This method returns when a
    * change has been detected, or after the request times out. If indeed a
    * change was detected, by the time this method returns, calls to
-   * `remoteSnapshot()` will reflect the updated information.
+   * `integrateRemoteCarets()` will reflect the updated information.
    *
    * @returns {boolean} `true` if a change was detected, or `false` if not.
    */
