@@ -20,7 +20,7 @@ const MAX_OLD_SNAPSHOTS = 20;
  * {Int} How long (in msec) that a session must be inactive before it gets
  * culled from the current caret snapshot.
  */
-const MAX_SESSION_IDLE_MSEC = 10 * 60 * 1000; // Ten minutes.
+const MAX_SESSION_IDLE_MSEC = 5 * 60 * 1000; // Five minutes.
 
 /**
  * Controller for the active caret info for a given document.
