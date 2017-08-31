@@ -80,14 +80,14 @@ export default class ColorUtil extends UtilityClass {
     // Algorithm taken from
     // <https://en.wikipedia.org/wiki/HSL_and_HSV#Hue_and_chroma>.
 
-    const rgb    = parseInt(color.slice(1), 16);
-    const r      = rgb >> 16;
-    const g      = (rgb >> 8) & 0xff;
-    const b      = rgb & 0xff;
+    const rgb   = parseInt(color.slice(1), 16);
+    const r     = rgb >> 16;
+    const g     = (rgb >> 8) & 0xff;
+    const b     = rgb & 0xff;
 
-    const alpha  = 0.5 * ((r * 2) - g - b);
-    const beta   = (Math.sqrt(3) / 2) * (g - b);
-    const hue    = Math.atan2(beta, alpha);
+    const alpha = 0.5 * ((r * 2) - g - b);
+    const beta  = (Math.sqrt(3) / 2) * (g - b);
+    const hue   = Math.atan2(beta, alpha);
 
     // `hue` above is in radians in the range `[-PI..PI)`, and we want degrees
     // in the range `[0..360)`.
