@@ -247,9 +247,9 @@ export default class Connection extends CommonBase {
    * requested by the given message.
    *
    * @param {object} msg Parsed message.
-   * @returns {Promise} Promise for the result (or error).
+   * @returns {*} Whatever the dispatched message returns.
    */
-  _actOnMessage(msg) {
+  async _actOnMessage(msg) {
     const target = this.getTarget(msg.target);
     const action = msg.action;
     const name   = msg.name;
@@ -257,15 +257,12 @@ export default class Connection extends CommonBase {
 
     switch (action) {
       case 'call': {
-        return new Promise((res, rej) => {
-          activeNow = this;
-          try {
-            res(target.call(name, args));
-          } catch (e) {
-            rej(e);
-          }
+        activeNow = this;
+        try {
+          return target.call(name, args);
+        } finally {
           activeNow = null;
-        });
+        }
       }
 
       // **Note:** Ultimately we might accept `get` and `set`, for example, thus
