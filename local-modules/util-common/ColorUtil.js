@@ -7,7 +7,8 @@ import { UtilityClass } from 'util-common-base';
 
 /**
  * {RegExp} Regular expression that can be used to validate colors that are
- * expected to be in CSS three-byte hex format (e.g., `#fe8ef1`).
+ * expected to be in CSS three-byte hex format, with lowercase letters (e.g.,
+ * `#fe8ef1`).
  */
 const CSS_COLOR_REGEXP = /^#[a-f0-9]{6}$/;
 
@@ -17,7 +18,8 @@ const CSS_COLOR_REGEXP = /^#[a-f0-9]{6}$/;
 export default class ColorUtil extends UtilityClass {
   /**
    * Checks whether a given string matches this module's requirements for a
-   * CSS-style color hex string.
+   * CSS-style color hex string, with all lowercase letters and no alpha
+   * component.
    *
    * @param {string} hexColor The string to check.
    * @returns {string} The input as-is if it meets requirements.
@@ -27,7 +29,8 @@ export default class ColorUtil extends UtilityClass {
   }
 
   /**
-   * Converts an HSL color value to RGB in CSS hex string form.
+   * Converts an HSL color value to the three-byte CSS hex form, with lowercase
+   * letters.
    *
    * @param {number} hue The hue, which must be in the range `[0..360)`.
    * @param {number} saturation The saturation, which must be in the range
@@ -61,9 +64,10 @@ export default class ColorUtil extends UtilityClass {
   }
 
   /**
-   * Extracts the hue component from an RGB color.
+   * Extracts the hue component from an RGB color given as a three-byte
+   * lowercase CSS hex string.
    *
-   * @param {string} color The color, in CSS hex form.
+   * @param {string} color The color, in lowercase CSS hex form.
    * @returns {number} The hue, as an angle in degrees, in the range `[0..360)`.
    */
   static hueFromCss(color) {
