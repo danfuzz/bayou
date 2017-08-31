@@ -31,21 +31,6 @@ export default class WsConnection extends Connection {
   }
 
   /**
-   * Handles a `message` event coming from the underlying websocket. Calls on
-   * the superclass (see which) for processing.
-   *
-   * @param {string} msg Incoming message, in JSON string form.
-   */
-  async _handleMessage(msg) {
-    try {
-      const response = await this.handleJsonMessage(msg);
-      this._ws.send(response);
-    } catch (e) {
-      this._handleError(e);
-    }
-  }
-
-  /**
    * Handles a `close` event coming from the underlying websocket.
    *
    * @param {number} code The reason code for why the socket was closed.
@@ -67,5 +52,20 @@ export default class WsConnection extends Connection {
   _handleError(error) {
     this._log.info('Error:', error);
     this.close();
+  }
+
+  /**
+   * Handles a `message` event coming from the underlying websocket. Calls on
+   * the superclass (see which) for processing.
+   *
+   * @param {string} msg Incoming message, in JSON string form.
+   */
+  async _handleMessage(msg) {
+    try {
+      const response = await this.handleJsonMessage(msg);
+      this._ws.send(response);
+    } catch (e) {
+      this._handleError(e);
+    }
   }
 }

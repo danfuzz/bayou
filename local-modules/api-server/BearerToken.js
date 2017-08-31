@@ -50,16 +50,6 @@ export default class BearerToken extends BaseKey {
   }
 
   /**
-   * Gets the printable form of the ID. This class adds an "ASCII ellipsis" to
-   * the ID, to make it clear that the ID is a redaction of the full token.
-   *
-   * @returns {string} The printable form of the ID.
-   */
-  _impl_printableId() {
-    return `${this.id}...`;
-  }
-
-  /**
    * {string} Full secret token. **Note:** It is important to _never_ reveal
    * this value across an unencrypted API boundary or to log it.
    */
@@ -87,6 +77,16 @@ export default class BearerToken extends BaseKey {
     }
 
     return this._secretToken === other._secretToken;
+  }
+
+  /**
+   * Gets the printable form of the ID. This class adds an "ASCII ellipsis" to
+   * the ID, to make it clear that the ID is a redaction of the full token.
+   *
+   * @returns {string} The printable form of the ID.
+   */
+  _impl_printableId() {
+    return `${this.id}...`;
   }
 
   /**

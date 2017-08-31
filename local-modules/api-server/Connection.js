@@ -127,6 +127,41 @@ export default class Connection extends CommonBase {
   }
 
   /**
+   * Gets the target of the given message. This uses the message's `target` and
+   * either finds it as an ID directly, or if that is a no-go, tries it as the
+   * string form of a bearer token. If neither succeeds, this will throw an
+   * error.
+   *
+   * @param {string} idOrToken A target ID or bearer token in string form.
+   * @returns {Target} The target object that is associated with `idOrToken`.
+   */
+  getTarget(idOrToken) {
+    const context = this._context;
+
+    if (context === null) {
+      throw new Error('Closed.');
+    }
+
+    let target = context.getUncontrolledOrNull(idOrToken);
+
+    if (target !== null) {
+      return target;
+    }
+
+    const token = BearerToken.coerceOrNull(idOrToken);
+    if (token !== null) {
+      target = context.getOrNull(token.id);
+      if ((target !== null) && token.sameToken(target.key)) {
+        return target;
+      }
+    }
+
+    // We _don't_ include the passed argument, as that might end up revealing
+    // secret info.
+    throw new Error('Bad target.');
+  }
+
+  /**
    * Handles an incoming message, which is expected to be in JSON string form.
    * Returns a promise for the response, which is also in JSON string form.
    *
@@ -214,15 +249,50 @@ export default class Connection extends CommonBase {
   }
 
   /**
+   * Helper for `handleJsonMessage()` which actually performs the action
+   * requested by the given message.
+   *
+   * @param {object} msg Parsed message.
+   * @returns {*} Whatever the dispatched message returns.
+   */
+  async _actOnMessage(msg) {
+    const target = this.getTarget(msg.target);
+    const action = msg.action;
+    const name   = msg.name;
+    const args   = msg.args;
+
+    switch (action) {
+      case 'call': {
+        activeNow = this;
+        try {
+          return target.call(name, args);
+        } finally {
+          activeNow = null;
+        }
+      }
+
+      // **Note:** Ultimately we might accept `get` and `set`, for example, thus
+      // exposing a bit more of a JavaScript-like interface.
+
+      default: {
+        throw new Error(`Bad action: \`${action}\``);
+      }
+    }
+  }
+
+  /**
    * Helper for `handleJsonMessage()` which parses the original incoming
-   * message. In case of error, this will return an object that binds `error` to
-   * an appropriate exception; and in this case, `id` will be defined to be
-   * either the successfully parsed message ID or `-1` if parsing couldn't even
-   * make it that far. In particular, this method aims to _never_ throw an
-   * exception to its caller.
+   * message.
+   *
+   * In case of error, this method still aims to return a message and not throw
+   * an error. Specifically, this will return a message for which `isError()`
+   * returns `true`. And in such cases, `id` will be defined to be either the
+   * successfully parsed message ID or `-1` if parsing couldn't even make it
+   * that far.
    *
    * @param {string} msg Incoming message, in JSON-encoded form.
-   * @returns {object} The parsed message.
+   * @returns {Message} The parsed message or a `Message` instance representing
+   *   a parse error.
    */
   _decodeMessage(msg) {
     try {
@@ -240,75 +310,5 @@ export default class Connection extends CommonBase {
     return ((msg instanceof Message) && !msg.isError())
       ? msg
       : Message.error(-1, 'Did not receive `Message` object.');
-  }
-
-  /**
-   * Helper for `handleJsonMessage()` which actually performs the action
-   * requested by the given message.
-   *
-   * @param {object} msg Parsed message.
-   * @returns {Promise} Promise for the result (or error).
-   */
-  _actOnMessage(msg) {
-    const target = this.getTarget(msg.target);
-    const action = msg.action;
-    const name   = msg.name;
-    const args   = msg.args;
-
-    switch (action) {
-      case 'call': {
-        return new Promise((res, rej) => {
-          activeNow = this;
-          try {
-            res(target.call(name, args));
-          } catch (e) {
-            rej(e);
-          }
-          activeNow = null;
-        });
-      }
-
-      // **Note:** Ultimately we might accept `get` and `set`, for example, thus
-      // exposing a bit more of a JavaScript-like interface.
-
-      default: {
-        throw new Error(`Bad action: \`${action}\``);
-      }
-    }
-  }
-
-  /**
-   * Gets the target of the given message. This uses the message's `target` and
-   * either finds it as an ID directly, or if that is a no-go, tries it as the
-   * string form of a bearer token. If neither succeeds, this will throw an
-   * error.
-   *
-   * @param {string} idOrToken A target ID or bearer token in string form.
-   * @returns {Target} The target object that is associated with `idOrToken`.
-   */
-  getTarget(idOrToken) {
-    const context = this._context;
-
-    if (context === null) {
-      throw new Error('Closed.');
-    }
-
-    let target = context.getUncontrolledOrNull(idOrToken);
-
-    if (target !== null) {
-      return target;
-    }
-
-    const token = BearerToken.coerceOrNull(idOrToken);
-    if (token !== null) {
-      target = context.getOrNull(token.id);
-      if ((target !== null) && token.sameToken(target.key)) {
-        return target;
-      }
-    }
-
-    // We _don't_ include the passed argument, as that might end up revealing
-    // secret info.
-    throw new Error('Bad target.');
   }
 }

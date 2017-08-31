@@ -36,23 +36,6 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Adds an already-constructed `Target` to the map. This will throw an error
-   * if there is already another target with the same ID.
-   *
-   * @param {Target} target Target to add.
-   */
-  addTarget(target) {
-    TObject.check(target, Target);
-    const id = target.id;
-
-    if (this._map.get(id) !== undefined) {
-      throw new Error(`Duplicate target: \`${id}\``);
-    }
-
-    this._map.set(id, target);
-  }
-
-  /**
    * Adds a new target to this instance. This will throw an error if there is
    * already another target with the same ID. This is a convenience for calling
    * `map.addTarget(new Target(id, obj))`.
@@ -82,36 +65,47 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Cleans up (removes) bindings for targets that have become idle.
+   * Adds an already-constructed `Target` to the map. This will throw an error
+   * if there is already another target with the same ID.
+   *
+   * @param {Target} target Target to add.
    */
-  idleCleanup() {
-    const idleLimit = Date.now() - IDLE_TIME_MSEC;
-    const map = this._map;
+  addTarget(target) {
+    TObject.check(target, Target);
+    const id = target.id;
 
-    log.info('Cleaning up idle targets...');
-
-    // Note: The ECMAScript spec guarantees that it is safe to delete keys from
-    // a map while iterating over it. See
-    // <https://tc39.github.io/ecma262/#sec-runtime-semantics-forin-div-ofheadevaluation-tdznames-expr-iterationkind>.
-    for (const [key, value] of map) {
-      if (value.wasIdleAsOf(idleLimit)) {
-        log.info(`Removed: ${key}`);
-        map.delete(key);
-      }
+    if (this._map.get(id) !== undefined) {
+      throw new Error(`Duplicate target: \`${id}\``);
     }
 
-    log.info('Cleaning up idle targets... done!');
+    this._map.set(id, target);
   }
 
   /**
-   * Starts automatically cleaning up idle targets on this instance. This
-   * initiates a periodic task which iterates over all targets, removing ones
-   * that have become idle.
+   * Clones this instance. The resulting clone has a separate underlying map.
+   * That is, adding targets to the clone does not affect its progenitor.
+   *
+   * @returns {Context} The newly-cloned instance.
    */
-  startAutomaticIdleCleanup() {
-    // We run the callback at a fraction of the overall idle timeout so as to
-    // be a bit more prompt with the cleanup.
-    setInterval(() => { this.idleCleanup(); }, IDLE_TIME_MSEC / 4);
+  clone() {
+    const result = new Context();
+
+    for (const t of this._map.values()) {
+      result.addTarget(t);
+    }
+
+    return result;
+  }
+
+  /**
+   * Removes the target binding for the given ID. It is an error to try to
+   * remove a nonexistent binding.
+   *
+   * @param {string} id The ID of the binding to remove.
+   */
+  deleteId(id) {
+    this.get(id); // This will throw if `id` isn't bound.
+    this._map.delete(id);
   }
 
   /**
@@ -205,14 +199,25 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Removes the target binding for the given ID. It is an error to try to
-   * remove a nonexistent binding.
-   *
-   * @param {string} id The ID of the binding to remove.
+   * Cleans up (removes) bindings for targets that have become idle.
    */
-  deleteId(id) {
-    this.get(id); // This will throw if `id` isn't bound.
-    this._map.delete(id);
+  idleCleanup() {
+    const idleLimit = Date.now() - IDLE_TIME_MSEC;
+    const map = this._map;
+
+    log.info('Cleaning up idle targets...');
+
+    // Note: The ECMAScript spec guarantees that it is safe to delete keys from
+    // a map while iterating over it. See
+    // <https://tc39.github.io/ecma262/#sec-runtime-semantics-forin-div-ofheadevaluation-tdznames-expr-iterationkind>.
+    for (const [key, value] of map) {
+      if (value.wasIdleAsOf(idleLimit)) {
+        log.info(`Removed: ${key}`);
+        map.delete(key);
+      }
+    }
+
+    log.info('Cleaning up idle targets... done!');
   }
 
   /**
@@ -229,18 +234,13 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Clones this instance. The resulting clone has a separate underlying map.
-   * That is, adding targets to the clone does not affect its progenitor.
-   *
-   * @returns {Context} The newly-cloned instance.
+   * Starts automatically cleaning up idle targets on this instance. This
+   * initiates a periodic task which iterates over all targets, removing ones
+   * that have become idle.
    */
-  clone() {
-    const result = new Context();
-
-    for (const t of this._map.values()) {
-      result.addTarget(t);
-    }
-
-    return result;
+  startAutomaticIdleCleanup() {
+    // We run the callback at a fraction of the overall idle timeout so as to
+    // be a bit more prompt with the cleanup.
+    setInterval(() => { this.idleCleanup(); }, IDLE_TIME_MSEC / 4);
   }
 }
