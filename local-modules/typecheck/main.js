@@ -10,6 +10,7 @@ import TFunction from './TFunction';
 import TInt from './TInt';
 import TIterable from './TIterable';
 import TMap from './TMap';
+import TNumber from './TNumber';
 import TObject from './TObject';
 import TSet from './TSet';
 import TString from './TString';
@@ -24,6 +25,7 @@ export {
   TInt,
   TIterable,
   TMap,
+  TNumber,
   TObject,
   TSet,
   TString,

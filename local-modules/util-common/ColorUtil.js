@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TString } from 'typecheck';
+import { TNumber, TString } from 'typecheck';
 import { UtilityClass } from 'util-common-base';
 
 /**
@@ -40,6 +40,10 @@ export default class ColorUtil extends UtilityClass {
    * @returns {string} The color value as a CSS hex string.
    */
   static cssFromHsl(hue, saturation, lightness) {
+    TNumber.range(hue, 0, 360);
+    TNumber.rangeInc(saturation, 0, 1);
+    TNumber.rangeInc(lightness, 0, 1);
+
     // Algorithm taken from
     // <https://en.wikipedia.org/wiki/HSL_and_HSV#From_HSL>.
     const c = (1.0 - Math.abs((2.0 * lightness) - 1.0)) * saturation;
