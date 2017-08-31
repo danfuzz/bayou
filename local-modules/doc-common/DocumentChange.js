@@ -40,16 +40,15 @@ export default class DocumentChange extends DocumentDelta {
    * @param {Int} revNum The revision number of the document produced by this
    *   change. If this instance represents the first change to a document,
    *   then this value will be `0`.
-   * @param {Delta|array|object} delta The document change per se, compared to
-   *   the immediately-previous revision. Must be a value which can be coerced
-   *   to a `FrozenDelta`.
+   * @param {FrozenDelta} delta The document change per se, compared to the
+   *   immediately-previous revision.
    * @param {Timestamp} timestamp The time of the change, as msec since the Unix
    *   Epoch.
    * @param {string|null} authorId Stable identifier string representing the
    *   author of the change. Allowed to be `null` if the change is authorless.
    */
   constructor(revNum, delta, timestamp, authorId) {
-    super(revNum, FrozenDelta.coerce(delta),
+    super(revNum, delta,
       function init() {
         /** {Timestamp} The time of the change. */
         this._timestamp = Timestamp.check(timestamp);
