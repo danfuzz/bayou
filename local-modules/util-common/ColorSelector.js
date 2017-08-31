@@ -39,11 +39,11 @@ export default class ColorSelector {
     this._saturation = 1.0;
 
     /**
-     * {number} The level; the L component of an HSV color. Because HSL is biconic, a level
-     * of 50% is actually full saturation. The 87.5% we use here makes all the colors
-     * pastels.
+     * {number} The lightness; the L component of an HSV color. Because HSL is
+     * biconic, a lightness of 50% is actually full saturation. The 87.5% we use
+     * here makes all the colors pastels.
      */
-    this._level = 0.875;
+    this._lightness = 0.875;
 
     /**
      * {number} The angular amount, in degrees, that we'll advance the hue for each color.
@@ -58,15 +58,15 @@ export default class ColorSelector {
    */
   nextCssColor() {
     const hsl = this.nextColorHSL();
-    return ColorUtil.cssFromHsl(hsl.hue, hsl.saturation, hsl.level);
+    return ColorUtil.cssFromHsl(hsl.hue, hsl.saturation, hsl.lightness);
   }
 
   /**
    * Returns the next color in the progression in HSL form.
    *
    * @returns {object} The color value. The object returned will have keys of
-   * `hue`, `saturation`, and `level`. Hue is an integer `[0 .. 360)`; saturation and level
-   * are numbers from `[0.0 .. 1.0]`.
+   * `hue`, `saturation`, and `lightness`. Hue is an integer `[0 .. 360)`;
+   * saturation and lightness are numbers from `[0.0 .. 1.0]`.
    */
   nextColorHSL() {
     return this._nextColor();
@@ -79,7 +79,7 @@ export default class ColorSelector {
    * @returns {object} The HSL color value.
    */
   _nextColor() {
-    const result = { hue: this._hue, saturation: this._saturation, level: this._level };
+    const result = { hue: this._hue, saturation: this._saturation, lightness: this._lightness };
 
     this._advance();
 

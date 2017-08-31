@@ -24,11 +24,11 @@ describe('ColorSelector', () => {
       assert.equal(colorA.hue, colorB.hue - 53);
     });
 
-    it('should have a default HSL level of 87.5%', () => {
+    it('should have a default HSL lightness of 87.5%', () => {
       const selector = new ColorSelector();
       const hsl = selector.nextColorHSL();
 
-      assert.equal(hsl.level, 0.875);
+      assert.equal(hsl.lightness, 0.875);
     });
 
     it('should set the initial hue angle to the seed value MOD 360', () => {
