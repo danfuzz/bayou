@@ -32,20 +32,19 @@ export default class ColorUtil extends UtilityClass {
    * @param {number} hue The hue, which must be in the range `[0..360)`.
    * @param {number} saturation The saturation, which must be in the range
    *   `[0..1]`.
-   * @param {number} level The level, which must be in the range `[0..1]`.
+   * @param {number} lightness The lightness, which must be in the range
+   *   `[0..1]`.
    * @returns {string} The color value as a CSS hex string.
    */
-  static hslToCss(hue, saturation, level) {
+  static hslToCss(hue, saturation, lightness) {
     // Algorithm taken from
     // <https://en.wikipedia.org/wiki/HSL_and_HSV#From_HSL>.
-    const c = (1.0 - Math.abs((2.0 * level) - 1.0) * saturation);
+    const c = (1.0 - Math.abs((2.0 * lightness) - 1.0) * saturation);
     const huePrime = hue / 60.0;
     const x = c * (1.0 - Math.abs((huePrime % 2) - 1.0));
-    const m = level - (c / 2.0);
+    const m = lightness - (c / 2.0);
 
-    let red = 0;
-    let green = 0;
-    let blue = 0;
+    let red, green, blue;
 
     if      (huePrime <= 1) { red = c; green = x; blue = 0; }
     else if (huePrime <= 2) { red = x; green = c; blue = 0; }

@@ -49,6 +49,25 @@ describe('ColorUtil', () => {
     });
   });
 
+  describe('hslToCss()', () => {
+    it('should provide expected results', () => {
+      function test(h, s, l, expected) {
+        assert.strictEqual(ColorUtil.hslToCss(h, s, l), expected);
+      }
+
+      //test(0, 0, 0,   '#000000'); // Black.
+      //test(0, 0, 1.0, '#ffffff'); // White.
+      //test(0, 0, 0.5, '#777777'); // Medium gray.
+
+      test(0,   1.0, 0.5, '#ff0000'); // Pure red.
+      test(60,  1.0, 0.5, '#ffff00'); // Pure yellow.
+      test(120, 1.0, 0.5, '#00ff00'); // Pure green.
+      test(180, 1.0, 0.5, '#00ffff'); // Pure cyan.
+      test(240, 1.0, 0.5, '#0000ff'); // Pure blue.
+      test(300, 1.0, 0.5, '#ff00ff'); // Pure magenta.
+    });
+  });
+
   describe('hueFromCss()', () => {
     it('should provide expected results', () => {
       function test(color, expected) {
