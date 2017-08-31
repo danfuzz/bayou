@@ -48,4 +48,48 @@ describe('ColorUtil', () => {
       test({ foo: 'bar' });
     });
   });
+
+  describe('hueFromCss()', () => {
+    it('should provide expected results', () => {
+      function test(color, expected) {
+        assert.strictEqual(ColorUtil.hueFromCss(color), expected, color);
+      }
+
+      // Black, white, and gray don't have a defined hue in the abstract, but we
+      // expect the implementation to say their hue is `0`.
+      test('#000000', 0);
+      test('#ffffff', 0);
+      test('#010101', 0);
+
+      // Red.
+      test('#ff0000', 0);
+      test('#010000', 0);
+      test('#881111', 0);
+
+      // Yellow.
+      test('#ffff00', 60);
+      test('#010100', 60);
+      test('#888811', 60);
+
+      // Green.
+      test('#00ff00', 120);
+      test('#000100', 120);
+      test('#118811', 120);
+
+      // Cyan.
+      test('#00ffff', 180);
+      test('#000101', 180);
+      test('#118888', 180);
+
+      // Blue.
+      test('#0000ff', 240);
+      test('#000001', 240);
+      test('#111188', 240);
+
+      // Magenta.
+      test('#ff00ff', 300);
+      test('#010001', 300);
+      test('#881188', 300);
+    });
+  });
 });
