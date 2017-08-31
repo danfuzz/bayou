@@ -58,7 +58,7 @@ export default class ColorSelector {
    */
   nextCssColor() {
     const hsl = this.nextColorHSL();
-    return ColorUtil.hslToCss(hsl.hue, hsl.saturation, hsl.level);
+    return ColorUtil.cssFromHsl(hsl.hue, hsl.saturation, hsl.level);
   }
 
   /**

@@ -49,10 +49,10 @@ describe('ColorUtil', () => {
     });
   });
 
-  describe('hslToCss()', () => {
+  describe('cssFromHsl()', () => {
     it('should provide expected results', () => {
       function test(h, s, l, expected) {
-        assert.strictEqual(ColorUtil.hslToCss(h, s, l), expected);
+        assert.strictEqual(ColorUtil.cssFromHsl(h, s, l), expected);
       }
 
       test(0, 0, 0,   '#000000'); // Black.

@@ -36,7 +36,7 @@ export default class ColorUtil extends UtilityClass {
    *   `[0..1]`.
    * @returns {string} The color value as a CSS hex string.
    */
-  static hslToCss(hue, saturation, lightness) {
+  static cssFromHsl(hue, saturation, lightness) {
     // Algorithm taken from
     // <https://en.wikipedia.org/wiki/HSL_and_HSV#From_HSL>.
     const c = (1.0 - Math.abs((2.0 * lightness) - 1.0)) * saturation;

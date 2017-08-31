@@ -50,7 +50,7 @@ export default class CaretColor extends UtilityClass {
     if (usedColors.length === 0) {
       // No other colors to avoid. Just reduce the seed to a hue directly.
       const hue = seed % 360;
-      return ColorUtil.hslToCss(hue, COLOR_SATURATION, COLOR_LEVEL);
+      return ColorUtil.cssFromHsl(hue, COLOR_SATURATION, COLOR_LEVEL);
     }
 
     // All the used hues, sorted by hue and with the first and last hue
@@ -94,6 +94,6 @@ export default class CaretColor extends UtilityClass {
     // Pick one of the top N based on the seed.
     const hue = candidateHues[seed % TOP_CANDIDATES].hue;
 
-    return ColorUtil.hslToCss(hue, COLOR_SATURATION, COLOR_LEVEL);
+    return ColorUtil.cssFromHsl(hue, COLOR_SATURATION, COLOR_LEVEL);
   }
 }
