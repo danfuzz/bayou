@@ -10,6 +10,7 @@
     "babel-preset-env": "^1.4.0",
     "css-loader": "^0.28.5",
     "html-loader": "^0.4.4",
+    "source-map-loader": "^0.2.1",
     "style-loader": "^0.18.2",
     "ts-loader": "^2.0.3",
     "typescript": "^2.1.4",

@@ -42,7 +42,7 @@ const clientPackage =
  */
 const webpackOptions = {
   context: Dirs.theOne.SERVER_DIR, // Used for resolving loaders and the like.
-  devtool: '#inline-source-map',
+  devtool: 'cheap-module-eval-source-map',
 
   entry: {
     main: [
@@ -98,7 +98,6 @@ const webpackOptions = {
       // supported by the browsers / environments we target.
       {
         test: /\.js$/,
-
         use: [{
           loader: 'babel-loader',
           options: {
@@ -106,6 +105,7 @@ const webpackOptions = {
               [
                 require.resolve('babel-preset-env'),
                 {
+                  sourceMaps: 'inline',
                   targets: {
                     browsers: [
                       // See <https://github.com/ai/browserslist> for syntax.
@@ -122,6 +122,13 @@ const webpackOptions = {
             ]
           }
         }]
+      },
+
+      // Enable pass-through of the Babel-provided source maps.
+      {
+        test: /\.js$/,
+        enforce: 'pre',
+        use: [{ loader: 'source-map-loader' }]
       },
 
       // This handles dynamic construction of the main test-collector file, for
