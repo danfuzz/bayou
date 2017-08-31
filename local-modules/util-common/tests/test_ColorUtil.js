@@ -67,7 +67,10 @@ describe('ColorUtil', () => {
       test(180, 0.5, 1.0, '#ffffff');
       test(270, 1.0, 1.0, '#ffffff');
 
-      test(0, 0, 0.5, '#7f7f7f'); // Medium gray.
+      // Grays.
+      test(0, 0, 0.25, '#3f3f3f'); // Dark.
+      test(0, 0, 0.5,  '#7f7f7f'); // Medium.
+      test(0, 0, 0.75, '#bfbfbf'); // Light.
 
       test(0,   1.0, 0.5, '#ff0000'); // Pure red.
       test(60,  1.0, 0.5, '#ffff00'); // Pure yellow.
