@@ -39,7 +39,7 @@ export default class ColorSelector {
     this._saturation = 1.0;
 
     /**
-     * {number} The lightness; the L component of an HSV color. Because HSL is
+     * {number} The lightness; the L component of an HSL color. Because HSL is
      * biconic, a lightness of 50% is actually full saturation. The 87.5% we use
      * here makes all the colors pastels.
      */
