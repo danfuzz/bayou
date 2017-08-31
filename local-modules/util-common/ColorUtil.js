@@ -39,7 +39,7 @@ export default class ColorUtil extends UtilityClass {
   static hslToCss(hue, saturation, lightness) {
     // Algorithm taken from
     // <https://en.wikipedia.org/wiki/HSL_and_HSV#From_HSL>.
-    const c = (1.0 - Math.abs((2.0 * lightness) - 1.0) * saturation);
+    const c = (1.0 - Math.abs((2.0 * lightness) - 1.0)) * saturation;
     const huePrime = hue / 60.0;
     const x = c * (1.0 - Math.abs((huePrime % 2) - 1.0));
     const m = lightness - (c / 2.0);

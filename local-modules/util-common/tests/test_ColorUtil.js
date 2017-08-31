@@ -55,9 +55,9 @@ describe('ColorUtil', () => {
         assert.strictEqual(ColorUtil.hslToCss(h, s, l), expected);
       }
 
-      //test(0, 0, 0,   '#000000'); // Black.
-      //test(0, 0, 1.0, '#ffffff'); // White.
-      //test(0, 0, 0.5, '#777777'); // Medium gray.
+      test(0, 0, 0,   '#000000'); // Black.
+      test(0, 0, 1.0, '#ffffff'); // White.
+      test(0, 0, 0.5, '#7f7f7f'); // Medium gray.
 
       test(0,   1.0, 0.5, '#ff0000'); // Pure red.
       test(60,  1.0, 0.5, '#ffff00'); // Pure yellow.
