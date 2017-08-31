@@ -358,10 +358,10 @@ export default class CaretStorage extends CommonBase {
     const updatedCarets = new Map();
     const setUpdates    = []; // List of new and deleted sessions.
 
-    for (const s of this._localSessions) {
-      const caret       = this._carets.caretForSession(s);
-      const storedCaret = this._storedCarets.caretForSession(s);
-      const path        = Paths.forCaret(s);
+    for (const sessionId of this._localSessions) {
+      const caret       = this._carets.caretForSession(sessionId);
+      const storedCaret = this._storedCarets.caretForSession(sessionId);
+      const path        = Paths.forCaret(sessionId);
 
       if (caret && storedCaret && caret.equals(storedCaret)) {
         // The file already stores this caret info.
@@ -369,19 +369,19 @@ export default class CaretStorage extends CommonBase {
       }
 
       if (caret) {
-        this._log.detail(`Updating caret: ${s}`);
+        this._log.detail(`Updating caret: ${sessionId}`);
         ops.push(fc.op_writePath(path, caret));
         if (!storedCaret) {
           // First time this session is being stored.
-          setUpdates.push(s);
+          setUpdates.push(sessionId);
         }
       } else {
-        this._log.detail(`Deleting caret: ${s}`);
+        this._log.detail(`Deleting caret: ${sessionId}`);
         ops.push(fc.op_deletePath(path));
-        setUpdates.push(s);
+        setUpdates.push(sessionId);
       }
 
-      updatedCarets.set(path, caret);
+      updatedCarets.set(sessionId, caret);
     }
 
     if (ops.length === 0) {
@@ -450,7 +450,7 @@ export default class CaretStorage extends CommonBase {
     let storedCarets    = this._storedCarets;
     const localSessions = this._localSessions;
 
-    for (const [s, caret] of updatedCarets) {
+    for (const [sessionId, caret] of updatedCarets) {
       if (caret) {
         storedCarets = storedCarets.withCaret(caret);
       } else {
@@ -458,8 +458,8 @@ export default class CaretStorage extends CommonBase {
         // file storage model, this removes the session from the set of
         // locally-controlled sessions. This is done because we only ever have
         // to delete a given session from file storage once.
-        storedCarets = storedCarets.withoutSession(s);
-        localSessions.delete(s);
+        storedCarets = storedCarets.withoutSession(sessionId);
+        localSessions.delete(sessionId);
       }
     }
 
