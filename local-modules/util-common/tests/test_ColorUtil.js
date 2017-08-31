@@ -79,6 +79,47 @@ describe('ColorUtil', () => {
       test(240, 1.0, 0.5, '#0000ff'); // Pure blue.
       test(300, 1.0, 0.5, '#ff00ff'); // Pure magenta.
     });
+
+    it('should reject improper arguments', () => {
+      function test(h, s, l) {
+        assert.throws(() => ColorUtil.cssFromHsl(h, s, l));
+      }
+
+      // Hue out of range.
+      test(-1e10,    0, 0);
+      test(-1,       0, 0);
+      test(-0.00001, 0, 0);
+      test(360,      0, 0);
+      test(360.0001, 0, 0);
+      test(10000000, 0, 0);
+
+      // Saturation out of range.
+      test(0, -9e100,   0);
+      test(0, -1,       0);
+      test(0, -0.00001, 0);
+      test(0, 1.000001, 0);
+      test(0, 2,        0);
+      test(0, 99999999, 0);
+
+      // Lightness out of range.
+      test(0, 0, -9e100  );
+      test(0, 0, -1      );
+      test(0, 0, -0.00001);
+      test(0, 0, 1.000001);
+      test(0, 0, 2       );
+      test(0, 0, 99999999);
+
+      // Non-numeric arguments.
+      test('1',  0,    0   );
+      test(0,    '1',  0   );
+      test(0,    0,    '1' );
+      test(null, 0,    0   );
+      test(0,    null, 0   );
+      test(0,    0,    null);
+      test([1],  0,    0   );
+      test(0,    [1],  0   );
+      test(0,    0,    [1] );
+    });
   });
 
   describe('hueFromCss()', () => {
