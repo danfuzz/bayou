@@ -55,8 +55,18 @@ describe('ColorUtil', () => {
         assert.strictEqual(ColorUtil.cssFromHsl(h, s, l), expected);
       }
 
-      test(0, 0, 0,   '#000000'); // Black.
-      test(0, 0, 1.0, '#ffffff'); // White.
+      // Black.
+      test(0,   0,   0, '#000000');
+      test(90,  0,   0, '#000000');
+      test(180, 0.5, 0, '#000000');
+      test(270, 1.0, 0, '#000000');
+
+      // White.
+      test(0,   0,   1.0, '#ffffff');
+      test(90,  0,   1.0, '#ffffff');
+      test(180, 0.5, 1.0, '#ffffff');
+      test(270, 1.0, 1.0, '#ffffff');
+
       test(0, 0, 0.5, '#7f7f7f'); // Medium gray.
 
       test(0,   1.0, 0.5, '#ff0000'); // Pure red.
