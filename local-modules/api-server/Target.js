@@ -60,6 +60,11 @@ export default class Target {
     Object.seal(this);
   }
 
+  /** {string} The target ID. */
+  get id() {
+    return this._id;
+  }
+
   /**
    * {BaseKey|null} The access control key or `null` if this is an
    * uncontrolled target.
@@ -68,67 +73,15 @@ export default class Target {
     return this._key;
   }
 
-  /** {string} The target ID. */
-  get id() {
-    return this._id;
+  /** {Schema} The target's schema. */
+  get schema() {
+    return this._schema;
   }
 
   /** {object} The underlying target object. */
   get target() {
     this.refresh();
     return this._target;
-  }
-
-  /** {Schema} The target's schema. */
-  get schema() {
-    return this._schema;
-  }
-
-  /**
-   * Takes a timestamp (standard Unix-ish msec) and indicates whether this
-   * instance was considered idle as of that time.
-   *
-   * @param {Int} whenMsec Timestamp which the questions is with respect to.
-   * @returns {boolean} `true` iff this instance has been idle since `whenMsec`
-   *   or earlier.
-   */
-  wasIdleAsOf(whenMsec) {
-    const lastAccess = this._lastAccess;
-
-    if (lastAccess === EVERGREEN) {
-      return false;
-    } else {
-      return (lastAccess <= whenMsec);
-    }
-  }
-
-  /**
-   * "Refreshes" this instance in terms of access time. This is no different
-   * than just saying `this.target` and merely exists so as to provide a solid
-   * way to convey intent in client code.
-   */
-  refresh() {
-    if (this._lastAccess !== EVERGREEN) {
-      this._lastAccess = Date.now();
-    }
-  }
-
-  /**
-   * Sets this instance to be "evergreen," that is, to never be considered
-   * idle.
-   */
-  setEvergreen() {
-    this._lastAccess = EVERGREEN;
-  }
-
-  /**
-   * Returns an instance just like this one, except without the `key`. This
-   * method is used during resource authorization.
-   *
-   * @returns {Target} An "uncontrolled" version of this instance.
-   */
-  withoutKey() {
-    return new Target(this._id, this._target, this._schema);
   }
 
   /**
@@ -162,5 +115,52 @@ export default class Target {
     const result = impl.apply(target, args);
 
     return (result === undefined) ? null : result;
+  }
+
+  /**
+   * "Refreshes" this instance in terms of access time. This is no different
+   * than just saying `this.target` and merely exists so as to provide a solid
+   * way to convey intent at the call sites for this method.
+   */
+  refresh() {
+    if (this._lastAccess !== EVERGREEN) {
+      this._lastAccess = Date.now();
+    }
+  }
+
+  /**
+   * Sets this instance to be "evergreen," that is, to never be considered
+   * idle.
+   */
+  setEvergreen() {
+    this._lastAccess = EVERGREEN;
+  }
+
+  /**
+   * Takes a timestamp (standard Unix-ish msec) and indicates whether this
+   * instance was considered idle as of that time.
+   *
+   * @param {Int} whenMsec Timestamp which the questions is with respect to.
+   * @returns {boolean} `true` iff this instance has been idle since `whenMsec`
+   *   or earlier.
+   */
+  wasIdleAsOf(whenMsec) {
+    const lastAccess = this._lastAccess;
+
+    if (lastAccess === EVERGREEN) {
+      return false;
+    } else {
+      return (lastAccess <= whenMsec);
+    }
+  }
+
+  /**
+   * Returns an instance just like this one, except without the `key`. This
+   * method is used during resource authorization.
+   *
+   * @returns {Target} An "uncontrolled" version of this instance.
+   */
+  withoutKey() {
+    return new Target(this._id, this._target, this._schema);
   }
 }

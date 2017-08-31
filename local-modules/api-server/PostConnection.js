@@ -45,38 +45,6 @@ export default class PostConnection extends Connection {
   }
 
   /**
-   * Validates the `Content-Type` header. Returns `null` if valid or an error
-   * string if invalid.
-   *
-   * @returns {string|null} The error, if any.
-   */
-  _validateContentType() {
-    const headerString = this._req.headers['content-type'];
-    if (!headerString) {
-      return 'Missing header.';
-    }
-
-    try {
-      const parsed = contentType.parse(headerString);
-      const type = parsed.type;
-      const params = parsed.parameters;
-      if (type !== 'application/json') {
-        return 'Must specify media type `application/json`.';
-      } else if (!params.charset) {
-        return 'Missing `charset` specifier.';
-      } else if (params.charset !== 'utf-8') {
-        return 'Must specify `charset` as `utf-8`.';
-      } else if (Object.keys(params).length !== 1) {
-        return 'Superfluous parameters.';
-      }
-    } catch (e) {
-      return 'Invalid syntax.';
-    }
-
-    return null;
-  }
-
-  /**
    * Handles a `data` event coming from the request input stream.
    *
    * @param {Buffer} chunk Incoming data chunk.
@@ -132,5 +100,37 @@ export default class PostConnection extends Connection {
     .status(400)
     .type('application/json')
     .send(payload);
+  }
+
+  /**
+   * Validates the `Content-Type` header. Returns `null` if valid or an error
+   * string if invalid.
+   *
+   * @returns {string|null} The error, if any.
+   */
+  _validateContentType() {
+    const headerString = this._req.headers['content-type'];
+    if (!headerString) {
+      return 'Missing header.';
+    }
+
+    try {
+      const parsed = contentType.parse(headerString);
+      const type = parsed.type;
+      const params = parsed.parameters;
+      if (type !== 'application/json') {
+        return 'Must specify media type `application/json`.';
+      } else if (!params.charset) {
+        return 'Missing `charset` specifier.';
+      } else if (params.charset !== 'utf-8') {
+        return 'Must specify `charset` as `utf-8`.';
+      } else if (Object.keys(params).length !== 1) {
+        return 'Superfluous parameters.';
+      }
+    } catch (e) {
+      return 'Invalid syntax.';
+    }
+
+    return null;
   }
 }

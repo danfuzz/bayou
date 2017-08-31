@@ -41,27 +41,18 @@ export default class Schema {
   }
 
   /**
-   * Generates the actual property map (schema payload) for the given object.
+   * Returns a plain object (JSON-encodable map) for the property map of this
+   * instance.
    *
-   * @param {object} target Object from which to derive the schema.
-   * @returns {Map<string, string>} The corresponding property map.
+   * @returns {object<string, string>} The plain object representation.
    */
-  static _makeSchemaFor(target) {
-    const result = new Map();
-
-    for (const desc of new PropertyIterable(target).skipObject().onlyMethods()) {
-      const name = desc.name;
-
-      if (name.match(/^_/) || (name === 'constructor')) {
-        // Because we don't want properties whose names are prefixed with `_`,
-        // and we don't want to expose the constructor function.
-        continue;
-      }
-
-      result.set(name, 'method');
+  get propertiesObject() {
+    const result = {};
+    for (const [key, value] of this._properties) {
+      result[key] = value;
     }
 
-    return result;
+    return Object.freeze(result);
   }
 
   /**
@@ -84,17 +75,26 @@ export default class Schema {
   }
 
   /**
-   * Returns a plain object (JSON-encodable map) for the property map of this
-   * instance.
+   * Generates the actual property map (schema payload) for the given object.
    *
-   * @returns {object<string, string>} The plain object representation.
+   * @param {object} target Object from which to derive the schema.
+   * @returns {Map<string, string>} The corresponding property map.
    */
-  get propertiesObject() {
-    const result = {};
-    for (const [key, value] of this._properties) {
-      result[key] = value;
+  static _makeSchemaFor(target) {
+    const result = new Map();
+
+    for (const desc of new PropertyIterable(target).skipObject().onlyMethods()) {
+      const name = desc.name;
+
+      if (name.match(/^_/) || (name === 'constructor')) {
+        // Because we don't want properties whose names are prefixed with `_`,
+        // and we don't want to expose the constructor function.
+        continue;
+      }
+
+      result.set(name, 'method');
     }
 
-    return Object.freeze(result);
+    return result;
   }
 }
