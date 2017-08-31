@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import ColorSelector from './ColorSelector';
+import ColorUtil from './ColorUtil';
 import CommonBase from './CommonBase';
 import DataUtil from './DataUtil';
 import DeferredLoader from './DeferredLoader';
@@ -18,6 +19,7 @@ import WebsocketCodes from './WebsocketCodes';
 
 export {
   ColorSelector,
+  ColorUtil,
   CommonBase,
   DataUtil,
   DeferredLoader,
