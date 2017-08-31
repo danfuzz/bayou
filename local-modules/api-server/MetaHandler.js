@@ -72,6 +72,17 @@ export default class MetaHandler {
   }
 
   /**
+   * API meta-method `connectionId`: Returns the connection ID that is assigned
+   * to this connection. This is only meant to be used for logging. For example,
+   * it is _not_ guaranteed to be unique.
+   *
+   * @returns {string} The connection ID.
+   */
+  connectionId() {
+    return this._connection.connectionId;
+  }
+
+  /**
    * Generates and returns a challenge for the key that controls the target with
    * the given ID. It is an error to request a challenge for a nonexistent or
    * uncontrolled target. Once returned, challenges are considered active only
@@ -118,17 +129,6 @@ export default class MetaHandler {
     this._log.info(`  => ${response}`);
 
     return challenge;
-  }
-
-  /**
-   * API meta-method `connectionId`: Returns the connection ID that is assigned
-   * to this connection. This is only meant to be used for logging. For example,
-   * it is _not_ guaranteed to be unique.
-   *
-   * @returns {string} The connection ID.
-   */
-  connectionId() {
-    return this._connection.connectionId;
   }
 
   /**
