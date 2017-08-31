@@ -97,8 +97,8 @@ export default class TInt extends UtilityClass {
    * Checks a value of type `Int`, which must furthermore be within an indicated
    * inclusive-exclusive range.
    *
-   * **Note:** This and `intRangeInc()` are both defined because their
-   * respective errors convey different information.
+   * **Note:** This and `rangeInc()` are both defined because their respective
+   * errors convey different information.
    *
    * @param {*} value Value to check.
    * @param {Int} minInc Minimum acceptable value (inclusive).
