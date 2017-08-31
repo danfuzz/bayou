@@ -11,11 +11,11 @@ import { ColorUtil, StringUtil, UtilityClass } from 'util-common';
 const COLOR_SATURATION = 1.0;
 
 /**
- * {number} Level (in the HSL color model) of colors returned by this class.
- * Because HSL is biconic, a level of 50% is actually full saturation. The 87.5%
- * we use here makes all the colors pastels.
+ * {number} Lightness (in the HSL color model) of colors returned by this class.
+ * Because HSL is biconic, a lightness of 50% is actually full saturation. The
+ * 87.5% we use here makes all the colors pastels.
  */
-const COLOR_LEVEL = 0.875;
+const COLOR_LIGHTNESS = 0.875;
 
 /** {Int} Number of initial candidate hues to use, when picking a new color. */
 const INITIAL_CANDIDATES = 36; // That is, 10 degrees difference per candidate.
@@ -50,7 +50,7 @@ export default class CaretColor extends UtilityClass {
     if (usedColors.length === 0) {
       // No other colors to avoid. Just reduce the seed to a hue directly.
       const hue = seed % 360;
-      return ColorUtil.cssFromHsl(hue, COLOR_SATURATION, COLOR_LEVEL);
+      return ColorUtil.cssFromHsl(hue, COLOR_SATURATION, COLOR_LIGHTNESS);
     }
 
     // All the used hues, sorted by hue and with the first and last hue
@@ -94,6 +94,6 @@ export default class CaretColor extends UtilityClass {
     // Pick one of the top N based on the seed.
     const hue = candidateHues[seed % TOP_CANDIDATES].hue;
 
-    return ColorUtil.cssFromHsl(hue, COLOR_SATURATION, COLOR_LEVEL);
+    return ColorUtil.cssFromHsl(hue, COLOR_SATURATION, COLOR_LIGHTNESS);
   }
 }
