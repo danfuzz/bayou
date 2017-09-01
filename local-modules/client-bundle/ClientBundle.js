@@ -42,7 +42,11 @@ const clientPackage =
  */
 const webpackOptions = {
   context: Dirs.theOne.SERVER_DIR, // Used for resolving loaders and the like.
-  devtool: 'cheap-module-eval-source-map',
+
+  // `inline-source-map` _should_ work, but for some reason doesn't seem to.
+  // Using `cheap-module-eval-source-map` _does_ work on Chrome (v60) but causes
+  // inscrutable problems on Safari (v10.1.2). **TODO:** Investigate this.
+  devtool: 'inline-source-map',
 
   entry: {
     main: [
