@@ -11,12 +11,12 @@ import RevisionNumber from './RevisionNumber';
  * Delta which can be applied to a `DocumentSnapshot`, along with associated
  * information, to produce an updated snapshot.
  *
- * Instances of this class are returned from calls to `applyDelta()` and
+ * Instances of this class are returned from calls to `body_applyDelta()` and
  * `deltaAfter()` as defined by the various `doc-server` classes. See those for
  * more details. Note that the meaning of the `delta` value is different
  * depending on which method the result came from. In particular, there is an
- * implied "expected" result from `applyDelta()` which this instance's `delta`
- * is with respect to.
+ * implied "expected" result from `body_applyDelta()` which this instance's
+ * `delta` is with respect to.
  *
  * Instances of this class are immutable.
  */

@@ -177,7 +177,7 @@ export default class DebugTools {
    */
   async _handle_change(req, res) {
     const revNum = req.params.revNum;
-    const doc = this._getExistingDoc(req);
+    const doc = this._getExistingBody(req);
     const change = (await doc).change(revNum);
     const result = Codec.theOne.encodeJson(await change, true);
 
@@ -272,7 +272,7 @@ export default class DebugTools {
    */
   async _handle_snapshot(req, res) {
     const revNum = req.params.revNum;
-    const doc = this._getExistingDoc(req);
+    const doc = this._getExistingBody(req);
     const args = (revNum === undefined) ? [] : [revNum];
     const snapshot = (await doc).snapshot(...args);
     const result = Codec.theOne.encodeJson(await snapshot, true);
@@ -321,9 +321,9 @@ export default class DebugTools {
    * reasonably-descriptive message.
    *
    * @param {object} req HTTP request.
-   * @returns {Promise<BodyControl>} Promise for the requested document.
+   * @returns {BodyControl} Promise for the requested document.
    */
-  async _getExistingDoc(req) {
+  async _getExistingBody(req) {
     const documentId  = req.params.documentId;
     const fileComplex = await DocServer.theOne.getFileComplex(documentId);
     const exists      = await fileComplex.file.exists();

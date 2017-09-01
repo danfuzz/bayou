@@ -57,7 +57,7 @@ export default class DocSession {
    * @returns {DocumentDelta} The correction from the implied expected result to
    *   get the actual result.
    */
-  async applyDelta(baseRevNum, delta) {
+  async body_applyDelta(baseRevNum, delta) {
     return this._bodyControl.applyDelta(baseRevNum, delta, this._authorId);
   }
 
@@ -68,7 +68,7 @@ export default class DocSession {
    * @param {Int} revNum The revision number of the change.
    * @returns {DocumentChange} The requested change.
    */
-  async change(revNum) {
+  async body_change(revNum) {
     return this._bodyControl.change(revNum);
   }
 

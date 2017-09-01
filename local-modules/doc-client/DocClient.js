@@ -172,11 +172,11 @@ export default class DocClient extends StateMachine {
 
   /**
    * Validates a `gotApplyDelta` event. This represents a successful result
-   * from the API call `applyDelta()`.
+   * from the API call `body_applyDelta()`.
    *
    * @param {FrozenDelta} delta The delta that was originally applied.
    * @param {DocumentDelta} correctedChange The correction to the expected
-   *   result as returned from `applyDelta()`.
+   *   result as returned from `body_applyDelta()`.
    */
   _check_gotApplyDelta(delta, correctedChange) {
     FrozenDelta.check(delta);
@@ -623,10 +623,10 @@ export default class DocClient extends StateMachine {
     (async () => {
       try {
         const value =
-          await this._sessionProxy.applyDelta(this._doc.revNum, delta);
+          await this._sessionProxy.body_applyDelta(this._doc.revNum, delta);
         this.q_gotApplyDelta(delta, value);
       } catch (e) {
-        this.q_apiError('applyDelta', e);
+        this.q_apiError('body_applyDelta', e);
       }
     })();
 
@@ -639,7 +639,7 @@ export default class DocClient extends StateMachine {
    *
    * @param {FrozenDelta} delta The delta that was originally applied.
    * @param {DocumentDelta} correctedChange The correction to the expected
-   *   result as returned from `applyDelta()`.
+   *   result as returned from `body_applyDelta()`.
    */
   _handle_merging_gotApplyDelta(delta, correctedChange) {
     // These are the same variable names as used on the server side. See below
