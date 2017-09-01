@@ -3,9 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import CaretControl from './CaretControl';
-import DocControl from './DocControl';
+import BodyControl from './BodyControl';
 import DocServer from './DocServer';
 import DocSession from './DocSession';
 import FileComplex from './FileComplex';
 
-export { CaretControl, DocControl, DocServer, DocSession, FileComplex };
+export { CaretControl, BodyControl, DocServer, DocSession, FileComplex };

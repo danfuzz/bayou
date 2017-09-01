@@ -12,7 +12,7 @@ import FileComplex from './FileComplex';
  * all public methods are available for client use.
  *
  * For document access methods, this passes non-mutating methods through to the
- * underlying `DocControl` while implicitly adding an author argument to methods
+ * underlying `BodyControl` while implicitly adding an author argument to methods
  * that modify the document.
  */
 export default class DocSession {
@@ -35,11 +35,11 @@ export default class DocSession {
     /** {string} Author ID. */
     this._authorId = TString.nonempty(authorId);
 
+    /** {BodyControl} The underlying body content controller. */
+    this._bodyControl = fileComplex.bodyControl;
+
     /** {CaretControl} The underlying caret info controller. */
     this._caretControl = fileComplex.caretControl;
-
-    /** {DocControl} The underlying document controller. */
-    this._docControl = fileComplex.docControl;
 
     /** {Logger} Logger for this session. */
     this._log = fileComplex.log.withPrefix(`[${sessionId}]`);
@@ -47,7 +47,7 @@ export default class DocSession {
 
   /**
    * Applies a delta, assigning authorship of the change to the author
-   * represented by this instance. See the equivalent `DocControl` method for
+   * represented by this instance. See the equivalent `BodyControl` method for
    * details.
    *
    * @param {number} baseRevNum Revision number which `delta` is with respect
@@ -58,23 +58,23 @@ export default class DocSession {
    *   get the actual result.
    */
   async applyDelta(baseRevNum, delta) {
-    return this._docControl.applyDelta(baseRevNum, delta, this._authorId);
+    return this._bodyControl.applyDelta(baseRevNum, delta, this._authorId);
   }
 
   /**
    * Returns a particular change to the document. See the equivalent
-   * `DocControl` method for details.
+   * `BodyControl` method for details.
    *
    * @param {Int} revNum The revision number of the change.
    * @returns {DocumentChange} The requested change.
    */
   async change(revNum) {
-    return this._docControl.change(revNum);
+    return this._bodyControl.change(revNum);
   }
 
   /**
    * Returns a promise for a snapshot of any revision after the given
-   * `baseRevNum`. See the equivalent `DocControl` method for details.
+   * `baseRevNum`. See the equivalent `BodyControl` method for details.
    *
    * @param {Int} baseRevNum Revision number for the document.
    * @returns {DocumentDelta} Delta and associated revision number. The result's
@@ -82,7 +82,7 @@ export default class DocSession {
    *   `revNum` of the document.
    */
   async deltaAfter(baseRevNum) {
-    return this._docControl.deltaAfter(baseRevNum);
+    return this._bodyControl.deltaAfter(baseRevNum);
   }
 
   /**
@@ -111,14 +111,14 @@ export default class DocSession {
 
   /**
    * Returns a snapshot of the full document contents. See the equivalent
-   * `DocControl` method for details.
+   * `BodyControl` method for details.
    *
    * @param {Int|null} [revNum = null] Which revision to get. If passed as
    *   `null`, indicates the latest (most recent) revision.
    * @returns {DocumentSnapshot} The requested snapshot.
    */
   async snapshot(revNum = null) {
-    return this._docControl.snapshot(revNum);
+    return this._bodyControl.snapshot(revNum);
   }
 
   /**

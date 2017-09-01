@@ -697,7 +697,7 @@ export default class DocClient extends StateMachine {
     // the server.
     //
     // Using the same terminology as used on the server side (see
-    // `DocControl.js`), we start with `vExpected` (the document we would have
+    // `BodyControl.js`), we start with `vExpected` (the document we would have
     // had if the server hadn't included extra changes) and `dCorrection` (the
     // delta given back to us from the server which can be applied to
     // `vExpected` to get the _actual_ next revision). From that, here's what we

@@ -34,7 +34,7 @@ const MAX_APPEND_TIME_MSEC = 20 * 1000; // 20 seconds.
 const MAX_CHANGE_READS_PER_TRANSACTION = 20;
 
 /**
- * Controller for a given document's content.
+ * Controller for a given document's body content.
  *
  * There is only ever exactly one instance of this class per document, no matter
  * how many active editors there are on that document. (This guarantee is
@@ -42,7 +42,7 @@ const MAX_CHANGE_READS_PER_TRANSACTION = 20;
  * `FileComplex` per document, and each `FileComplex` instance only ever makes
  * one instance of this class.
  */
-export default class DocControl extends CommonBase {
+export default class BodyControl extends CommonBase {
   /** {string} Return value from `validationStatus()`, see which for details. */
   static get STATUS_ERROR() {
     return 'status_error';
@@ -356,7 +356,7 @@ export default class DocControl extends CommonBase {
    */
   async validationStatus() {
     if (!(await this._file.exists())) {
-      return DocControl.STATUS_NOT_FOUND;
+      return BodyControl.STATUS_NOT_FOUND;
     }
 
     let transactionResult;
@@ -372,7 +372,7 @@ export default class DocControl extends CommonBase {
       transactionResult = await fc.transact(spec);
     } catch (e) {
       this._log.info('Corrupt document: Failed to read/decode basic data.');
-      return DocControl.STATUS_ERROR;
+      return BodyControl.STATUS_ERROR;
     }
 
     const data          = transactionResult.data;
@@ -381,26 +381,26 @@ export default class DocControl extends CommonBase {
 
     if (!schemaVersion) {
       this._log.info('Corrupt document: Missing schema version.');
-      return DocControl.STATUS_ERROR;
+      return BodyControl.STATUS_ERROR;
     }
 
     if (!revNum) {
       this._log.info('Corrupt document: Missing revision number.');
-      return DocControl.STATUS_ERROR;
+      return BodyControl.STATUS_ERROR;
     }
 
     const expectSchemaVersion = this._fileComplex.schemaVersion;
     if (schemaVersion !== expectSchemaVersion) {
       const got = schemaVersion;
       this._log.info(`Mismatched schema version: got ${got}; expected ${expectSchemaVersion}`);
-      return DocControl.STATUS_MIGRATE;
+      return BodyControl.STATUS_MIGRATE;
     }
 
     try {
       RevisionNumber.check(revNum);
     } catch (e) {
       this._log.info('Corrupt document: Bogus revision number.');
-      return DocControl.STATUS_ERROR;
+      return BodyControl.STATUS_ERROR;
     }
 
     // Make sure all the changes can be read and decoded.
@@ -412,7 +412,7 @@ export default class DocControl extends CommonBase {
         await this._readChangeRange(i, lastI + 1);
       } catch (e) {
         this._log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
-        return DocControl.STATUS_ERROR;
+        return BodyControl.STATUS_ERROR;
       }
     }
 
@@ -429,18 +429,18 @@ export default class DocControl extends CommonBase {
       transactionResult = await fc.transact(spec);
     } catch (e) {
       this._log.info('Corrupt document: Weird empty-change read failure.');
-      return DocControl.STATUS_ERROR;
+      return BodyControl.STATUS_ERROR;
     }
 
     // In a valid doc, the loop body won't end up executing at all.
     for (const storagePath of transactionResult.data.keys()) {
       this._log.info(`Corrupt document: Extra change at path: ${storagePath}`);
-      return DocControl.STATUS_ERROR;
+      return BodyControl.STATUS_ERROR;
     }
 
     // All's well!
 
-    return DocControl.STATUS_OK;
+    return BodyControl.STATUS_OK;
   }
 
   /**

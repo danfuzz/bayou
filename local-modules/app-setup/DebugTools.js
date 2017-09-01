@@ -316,12 +316,12 @@ export default class DebugTools {
   }
 
   /**
-   * Returns an existing document based on the usual debugging request argument.
-   * If the document doesn't exist, this method throws a reasonably-descriptive
-   * message.
+   * Returns an existing document body based on the usual debugging request
+   * argument. If the document doesn't exist, this method throws an error with a
+   * reasonably-descriptive message.
    *
    * @param {object} req HTTP request.
-   * @returns {Promise<DocControl>} Promise for the requested document.
+   * @returns {Promise<BodyControl>} Promise for the requested document.
    */
   async _getExistingDoc(req) {
     const documentId  = req.params.documentId;
@@ -334,7 +334,7 @@ export default class DebugTools {
       throw error;
     }
 
-    return fileComplex.docControl;
+    return fileComplex.bodyControl;
   }
 
   /**
