@@ -504,7 +504,8 @@ export default class LocalFile extends BaseFile {
 
     // Put the file revision number in the `dirtyValues` map. This way, it gets
     // written out without further special casing.
-    dirtyValues.set(REVISION_NUMBER_PATH, this._revNumCodec.encodeJsonBuffer(revNum));
+    dirtyValues.set(REVISION_NUMBER_PATH,
+      this._revNumCodec.encodeJsonBuffer(revNum));
 
     this._log.info(`About to write ${dirtyValues.size} value(s).`);
 

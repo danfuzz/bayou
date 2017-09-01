@@ -12,8 +12,8 @@ import FileComplex from './FileComplex';
  * all public methods are available for client use.
  *
  * For document access methods, this passes non-mutating methods through to the
- * underlying `BodyControl` while implicitly adding an author argument to methods
- * that modify the document.
+ * underlying `BodyControl` while implicitly adding an author argument to
+ * methods that modify the document.
  */
 export default class DocSession {
   /**
