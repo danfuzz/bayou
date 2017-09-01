@@ -12,6 +12,27 @@ import { UtilityClass } from 'util-common';
  * by the document storage format.
  */
 export default class Paths extends UtilityClass {
+  /**
+   * {string} `StoragePath` prefix string for document body (main content)
+   * information.
+   */
+  static get BODY_PREFIX() {
+    return '/body';
+  }
+
+  /** {string} `StoragePath` prefix string for document changes. */
+  static get BODY_CHANGE_PREFIX() {
+    return `${Paths.BODY_PREFIX}/change`;
+  }
+
+  /**
+   * {string} `StoragePath` string for the body content revision number.
+   * This corresponds to the highest change number.
+   */
+  static get BODY_CHANGE_REVISION_NUMBER() {
+    return `${Paths.BODY_PREFIX}/revision_number`;
+  }
+
   /** {string} `StoragePath` prefix string for caret information. */
   static get CARET_PREFIX() {
     return '/caret';
@@ -34,22 +55,23 @@ export default class Paths extends UtilityClass {
     return `${Paths.CARET_PREFIX}/set_update`;
   }
 
-  /** {string} `StoragePath` prefix string for document changes. */
-  static get CHANGE_PREFIX() {
-    return '/change';
-  }
-
-  /**
-   * {string} `StoragePath` string for the document content revision number.
-   * This corresponds to the highest change number.
-   */
-  static get CHANGE_REVISION_NUMBER() {
-    return `${Paths.CHANGE_PREFIX}/revision_number`;
-  }
-
   /** {string} `StoragePath` string for the file schema (format) version. */
   static get SCHEMA_VERSION() {
     return '/schema_version';
+  }
+
+  /**
+   * Gets the `StoragePath` string corresponding to the indicated revision
+   * number, specifically to store the document change that results in that
+   * revision.
+   *
+   * @param {RevisionNumber} revNum The revision number.
+   * @returns {string} The corresponding `StoragePath` string for document
+   *   change storage.
+   */
+  static forBodyChange(revNum) {
+    RevisionNumber.check(revNum);
+    return `${Paths.BODY_CHANGE_PREFIX}/${revNum}`;
   }
 
   /**
@@ -63,20 +85,6 @@ export default class Paths extends UtilityClass {
   static forCaret(sessionId) {
     TString.check(sessionId);
     return `${Paths.CARET_SESSION_PREFIX}/${sessionId}`;
-  }
-
-  /**
-   * Gets the `StoragePath` string corresponding to the indicated revision
-   * number, specifically to store the document change that results in that
-   * revision.
-   *
-   * @param {RevisionNumber} revNum The revision number.
-   * @returns {string} The corresponding `StoragePath` string for document
-   *   change storage.
-   */
-  static forDocumentChange(revNum) {
-    RevisionNumber.check(revNum);
-    return `${Paths.CHANGE_PREFIX}/${revNum}`;
   }
 
   /**

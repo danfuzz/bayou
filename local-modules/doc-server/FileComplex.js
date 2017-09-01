@@ -13,7 +13,7 @@ import { TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import CaretControl from './CaretControl';
-import DocControl from './DocControl';
+import BodyControl from './BodyControl';
 import DocServer from './DocServer';
 
 /** {Logger} Logger to use for this module. */
@@ -69,19 +69,29 @@ export default class FileComplex extends CommonBase {
     this._fileCodec = new FileCodec(file, codec);
 
     /**
+     * {BodyControl|null} Document body content controller. Set to non-`null` in
+     * the corresponding getter.
+     */
+    this._bodyControl = null;
+
+    /**
      * {CaretControl|null} Caret info controller. Set to non-`null` in the
      * corresponding getter.
      */
     this._caretControl = null;
 
-    /**
-     * {DocControl|null} Document content controller. Set to non-`null` in the
-     * corresponding getter.
-     */
-    this._docControl = null;
-
     /** {Mutex} Mutex to avoid overlapping initialization operations. */
     this._initMutex = new Mutex();
+  }
+
+  /** {BodyControl} The body content controller to use with this instance. */
+  get bodyControl() {
+    if (this._bodyControl === null) {
+      this._bodyControl = new BodyControl(this);
+      this._log.info('Constructed body controller.');
+    }
+
+    return this._bodyControl;
   }
 
   /** {CaretControl} The caret info controller to use with this instance. */
@@ -97,16 +107,6 @@ export default class FileComplex extends CommonBase {
   /** {Codec} Codec instance to use with the underlying file. */
   get codec() {
     return this._codec;
-  }
-
-  /** {DocControl} The document controller to use with this instance. */
-  get docControl() {
-    if (this._docControl === null) {
-      this._docControl = new DocControl(this);
-      this._log.info('Constructed document controller.');
-    }
-
-    return this._docControl;
   }
 
   /** {BaseFile} The underlying document storage. */
@@ -142,19 +142,19 @@ export default class FileComplex extends CommonBase {
   async initIfMissingOrInvalid() {
     const unlock = await this._initMutex.lock();
     try {
-      const control   = this.docControl;
+      const control   = this.bodyControl;
       const status    = await control.validationStatus();
-      const needsInit = (status !== DocControl.STATUS_OK);
+      const needsInit = (status !== BodyControl.STATUS_OK);
       let   firstText = DEFAULT_TEXT;
 
-      if (status === DocControl.STATUS_MIGRATE) {
+      if (status === BodyControl.STATUS_MIGRATE) {
         // **TODO:** Ultimately, this code path will evolve into forward
         // migration of documents found to be in older formats. For now, we just
         // fall through to the document creation logic below, which will leave
         // a note what's going on in the document contents.
         this.log.info('Needs migration. (But just noting that fact for now.)');
         firstText = MIGRATION_NOTE;
-      } else if (status === DocControl.STATUS_ERROR) {
+      } else if (status === BodyControl.STATUS_ERROR) {
         // **TODO:** Ultimately, it should be a Really Big Deal if we find
         // ourselves here. We might want to implement some form of "hail mary"
         // attempt to recover _something_ of use from the document storage.

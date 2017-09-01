@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ApiError } from 'api-client';
-import { DocumentDelta, DocumentSnapshot, FrozenDelta } from 'doc-common';
+import { BodyDelta, BodySnapshot, FrozenDelta } from 'doc-common';
 import { Delay } from 'promise-util';
 import { QuillEvent } from 'quill-util';
 import { TString } from 'typecheck';
@@ -69,7 +69,7 @@ const CLIENT_SOURCE = 'doc-client';
  * Despite the polling nature, this arrangement still allows for changes from
  * the server to make their way to the client promptly, and it does so without
  * wasting time or network resources polling for changes that haven't happened.
- * This is because of how the `deltaAfter()` API method is defined.
+ * This is because of how the `body_deltaAfter()` API method is defined.
  * Specifically, that method does not return a result until at least one change
  * has been made. This means that the client can make that API call and then
  * just wait until it comes back with a result, instead of having to set up a
@@ -106,7 +106,7 @@ export default class DocClient extends StateMachine {
     this._sessionProxy = null;
 
     /**
-     * {DocumentSnapshot|null} Current revision of the document as received from
+     * {BodySnapshot|null} Current revision of the document as received from
      * the server. Becomes non-null once the first snapshot is received from the
      * server.
      */
@@ -127,15 +127,15 @@ export default class DocClient extends StateMachine {
 
     /**
      * {boolean} Is there currently a pending (as-yet unfulfilled)
-     * `deltaAfter()` request to the server?
+     * `body_deltaAfter()` request to the server?
      */
     this._pendingDeltaAfter = false;
 
     /**
      * {boolean} Is there currently a pending (as-yet unfulfilled) request for a
-     * new local change via the Quill document change promise chain?
+     * new local change via the Quill document event promise chain?
      */
-    this._pendingLocalDocumentChange = false;
+    this._pendingQuillChange = false;
 
     /**
      * {array<Int>} Timestamps of every transition into the `errorWait` state
@@ -172,42 +172,42 @@ export default class DocClient extends StateMachine {
 
   /**
    * Validates a `gotApplyDelta` event. This represents a successful result
-   * from the API call `applyDelta()`.
+   * from the API call `body_applyDelta()`.
    *
    * @param {FrozenDelta} delta The delta that was originally applied.
-   * @param {DocumentDelta} correctedChange The correction to the expected
-   *   result as returned from `applyDelta()`.
+   * @param {BodyDelta} correctedChange The correction to the expected
+   *   result as returned from `body_applyDelta()`.
    */
   _check_gotApplyDelta(delta, correctedChange) {
     FrozenDelta.check(delta);
-    DocumentDelta.check(correctedChange);
+    BodyDelta.check(correctedChange);
   }
 
   /**
    * Validates a `gotDeltaAfter` event. This represents a successful result
-   * from the API call `deltaAfter()`.
+   * from the API call `body_deltaAfter()`.
    *
-   * @param {DocumentSnapshot} baseDoc The document at the time of the original
+   * @param {BodySnapshot} baseDoc The document at the time of the original
    *   request.
-   * @param {DocumentDelta} result How to transform `baseDoc` to get a later
+   * @param {BodyDelta} result How to transform `baseDoc` to get a later
    *   document revision.
    */
   _check_gotDeltaAfter(baseDoc, result) {
-    DocumentSnapshot.check(baseDoc);
-    DocumentDelta.check(result);
+    BodySnapshot.check(baseDoc);
+    BodyDelta.check(result);
   }
 
   /**
-   * Validates a `gotLocalDelta` event. This indicates that there is at least
+   * Validates a `gotQuillDelta` event. This indicates that there is at least
    * one local change that Quill has made to its document which is not yet
    * reflected in the given base document. Put another way, this indicates that
    * `_currentEvent` has a resolved `next`.
    *
-   * @param {DocumentSnapshot} baseDoc The document at the time of the original
+   * @param {BodySnapshot} baseDoc The document at the time of the original
    *   request.
    */
-  _check_gotLocalDelta(baseDoc) {
-    DocumentSnapshot.check(baseDoc);
+  _check_gotQuillDelta(baseDoc) {
+    BodySnapshot.check(baseDoc);
   }
 
   /**
@@ -221,11 +221,11 @@ export default class DocClient extends StateMachine {
    * Validates a `wantApplyDelta` event. This indicates that it is time to
    * send collected local changes up to the server.
    *
-   * @param {DocumentSnapshot} baseDoc The document at the time of the original
+   * @param {BodySnapshot} baseDoc The document at the time of the original
    *   request.
    */
   _check_wantApplyDelta(baseDoc) {
-    DocumentSnapshot.check(baseDoc);
+    BodySnapshot.check(baseDoc);
   }
 
   /**
@@ -288,11 +288,11 @@ export default class DocClient extends StateMachine {
    * changes that were in-flight when the connection became problematic.
    */
   _handle_errorWait_start() {
-    this._doc                        = null;
-    this._sessionProxy               = null;
-    this._currentEvent               = null;
-    this._pendingDeltaAfter          = false;
-    this._pendingLocalDocumentChange = false;
+    this._doc                = null;
+    this._sessionProxy       = null;
+    this._currentEvent       = null;
+    this._pendingDeltaAfter  = false;
+    this._pendingQuillChange = false;
 
     // After this, it's just like starting from the `detached` state.
     this.s_detached();
@@ -353,7 +353,7 @@ export default class DocClient extends StateMachine {
 
     const sessionProxy    = this._sessionProxy;
     const infoPromise     = sessionProxy.getLogInfo();
-    const snapshotPromise = sessionProxy.snapshot();
+    const snapshotPromise = sessionProxy.body_snapshot();
 
     try {
       const info = await infoPromise;
@@ -425,15 +425,15 @@ export default class DocClient extends StateMachine {
     // for same. (Otherwise, we would unnecessarily build up redundant promise
     // resolver functions when changes are coming in from the server while the
     // local user is idle.)
-    if (!this._pendingLocalDocumentChange) {
-      this._pendingLocalDocumentChange = true;
+    if (!this._pendingQuillChange) {
+      this._pendingQuillChange = true;
 
       // **Note:** As of this writing, Quill will never reject (report an error
       // on) a document change promise.
       (async () => {
         await this._currentEvent.next;
-        this._pendingLocalDocumentChange = false;
-        this.q_gotLocalDelta(baseDoc);
+        this._pendingQuillChange = false;
+        this.q_gotQuillDelta(baseDoc);
       })();
     }
 
@@ -445,12 +445,12 @@ export default class DocClient extends StateMachine {
 
       (async () => {
         try {
-          const value = await this._sessionProxy.deltaAfter(baseDoc.revNum);
+          const value = await this._sessionProxy.body_deltaAfter(baseDoc.revNum);
           this._pendingDeltaAfter = false;
           this.q_gotDeltaAfter(baseDoc, value);
         } catch (e) {
           this._pendingDeltaAfter = false;
-          this.q_apiError('deltaAfter', e);
+          this.q_apiError('body_deltaAfter', e);
         }
       })();
     }
@@ -468,9 +468,9 @@ export default class DocClient extends StateMachine {
   /**
    * In state `idle`, handles event `gotDeltaAfter`.
    *
-   * @param {DocumentSnapshot} baseDoc The document at the time of the original
+   * @param {BodySnapshot} baseDoc The document at the time of the original
    *   request.
-   * @param {DocumentDelta} result How to transform `baseDoc` to get a later
+   * @param {BodyDelta} result How to transform `baseDoc` to get a later
    *   document revision.
    */
   _handle_idle_gotDeltaAfter(baseDoc, result) {
@@ -497,11 +497,11 @@ export default class DocClient extends StateMachine {
    * In most states, handles event `gotDeltaAfter`. This will happen when a
    * server delta comes when we're in the middle of handling a local change. As
    * such, it is safe to ignore, because after the local change is integrated,
-   * the system will fire off a new `deltaAfter()` request.
+   * the system will fire off a new `body_deltaAfter()` request.
    *
-   * @param {DocumentSnapshot} baseDoc_unused The document at the time of the
+   * @param {BodySnapshot} baseDoc_unused The document at the time of the
    *   original request.
-   * @param {DocumentDelta} result_unused How to transform `baseDoc` to get a
+   * @param {BodyDelta} result_unused How to transform `baseDoc` to get a
    *   later document revision.
    */
   _handle_any_gotDeltaAfter(baseDoc_unused, result_unused) {
@@ -509,14 +509,14 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * In state `idle`, handles event `gotLocalDelta`. This means that the local
+   * In state `idle`, handles event `gotQuillDelta`. This means that the local
    * user has started making some changes. We prepare to collect the changes
    * for a short period of time before sending them up to the server.
    *
-   * @param {DocumentSnapshot} baseDoc The document at the time of the original
+   * @param {BodySnapshot} baseDoc The document at the time of the original
    *   request.
    */
-  _handle_idle_gotLocalDelta(baseDoc) {
+  _handle_idle_gotQuillDelta(baseDoc) {
     if (this._doc.revNum !== baseDoc.revNum) {
       // This state machine event was generated with respect to a revision of
       // the document which has since been updated, or we ended up having two
@@ -576,15 +576,15 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * In most states, handles event `gotLocalDelta`. This will happen when a
+   * In most states, handles event `gotQuillDelta`. This will happen when a
    * local delta comes in after we're already in the middle of handling a
    * chain of local changes. As such, it is safe to ignore, because whatever
    * the change was, it will get handled by that pre-existing process.
    *
-   * @param {DocumentSnapshot} baseDoc_unused The document at the time of the
+   * @param {BodySnapshot} baseDoc_unused The document at the time of the
    *   original request.
    */
-  _handle_any_gotLocalDelta(baseDoc_unused) {
+  _handle_any_gotQuillDelta(baseDoc_unused) {
     // Nothing to do. Stay in the same state.
   }
 
@@ -593,12 +593,12 @@ export default class DocClient extends StateMachine {
    * is time for the collected local changes to be sent up to the server for
    * integration.
    *
-   * @param {DocumentSnapshot} baseDoc The document at the time of the original
+   * @param {BodySnapshot} baseDoc The document at the time of the original
    *   request.
    */
   _handle_collecting_wantApplyDelta(baseDoc) {
     if (this._doc.revNum !== baseDoc.revNum) {
-      // As with the `gotLocalDelta` event, we ignore this event if the doc has
+      // As with the `gotQuillDelta` event, we ignore this event if the doc has
       // changed out from under us.
       this._becomeIdle();
       return;
@@ -623,10 +623,10 @@ export default class DocClient extends StateMachine {
     (async () => {
       try {
         const value =
-          await this._sessionProxy.applyDelta(this._doc.revNum, delta);
+          await this._sessionProxy.body_applyDelta(this._doc.revNum, delta);
         this.q_gotApplyDelta(delta, value);
       } catch (e) {
-        this.q_apiError('applyDelta', e);
+        this.q_apiError('body_applyDelta', e);
       }
     })();
 
@@ -638,8 +638,8 @@ export default class DocClient extends StateMachine {
    * change was successfully merged by the server.
    *
    * @param {FrozenDelta} delta The delta that was originally applied.
-   * @param {DocumentDelta} correctedChange The correction to the expected
-   *   result as returned from `applyDelta()`.
+   * @param {BodyDelta} correctedChange The correction to the expected
+   *   result as returned from `body_applyDelta()`.
    */
   _handle_merging_gotApplyDelta(delta, correctedChange) {
     // These are the same variable names as used on the server side. See below
@@ -665,7 +665,7 @@ export default class DocClient extends StateMachine {
       // is empty) because what we are integrating into the client document is
       // exactly what Quill handed to us.
       this._updateDocWithDelta(
-        new DocumentDelta(vResultNum, delta), FrozenDelta.EMPTY);
+        new BodyDelta(vResultNum, delta), FrozenDelta.EMPTY);
       this._becomeIdle();
       return;
     }
@@ -684,7 +684,7 @@ export default class DocClient extends StateMachine {
       // were waiting for the server to get back to us, which means we can
       // cleanly apply the correction on top of Quill's current state.
       this._updateDocWithDelta(
-        new DocumentDelta(vResultNum, correctedDelta), dCorrection);
+        new BodyDelta(vResultNum, correctedDelta), dCorrection);
       this._becomeIdle();
       return;
     }
@@ -697,7 +697,7 @@ export default class DocClient extends StateMachine {
     // the server.
     //
     // Using the same terminology as used on the server side (see
-    // `DocControl.js`), we start with `vExpected` (the document we would have
+    // `BodyControl.js`), we start with `vExpected` (the document we would have
     // had if the server hadn't included extra changes) and `dCorrection` (the
     // delta given back to us from the server which can be applied to
     // `vExpected` to get the _actual_ next revision). From that, here's what we
@@ -730,7 +730,7 @@ export default class DocClient extends StateMachine {
     const dIntegratedCorrection =
       FrozenDelta.coerce(dMore.transform(dCorrection, false));
     this._updateDocWithDelta(
-      new DocumentDelta(vResultNum, correctedDelta), dIntegratedCorrection);
+      new BodyDelta(vResultNum, correctedDelta), dIntegratedCorrection);
 
     // (3)
 
@@ -807,7 +807,7 @@ export default class DocClient extends StateMachine {
    * document doesn't need to be updated. If that isn't the case, then this
    * method will throw an error.
    *
-   * @param {DocumentDelta} delta Delta from the current `_doc` contents.
+   * @param {BodyDelta} delta Delta from the current `_doc` contents.
    * @param {FrozenDelta} [quillDelta = delta] Delta from Quill's current state,
    *   which is expected to preserve any state that Quill has that isn't yet
    *   represented in `_doc`. This must be used in cases where Quill's state has
@@ -836,7 +836,7 @@ export default class DocClient extends StateMachine {
    * Updates `_doc` to be the given snapshot, and tells the attached Quill
    * instance to update itself accordingly.
    *
-   * @param {DocumentSnapshot} snapshot New snapshot.
+   * @param {BodySnapshot} snapshot New snapshot.
    */
   _updateDocWithSnapshot(snapshot) {
     this._doc = snapshot;

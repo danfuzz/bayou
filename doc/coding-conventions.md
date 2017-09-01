@@ -108,6 +108,38 @@ taking into account recent additions to the language.
 
   **Note:** This is an intentional deviation from Airbnb style.
 
+* Method namespaces &mdash; Occasionally, it is useful to group a set of
+  methods together within a class as being part of a "namespace" of some sort.
+  When this is the case, the names take the form `<namespace>_<method>` where
+  the namespace and method name are underscore-separated. For example, the
+  transaction operation constructors in `file-store.FileOp` are all defined
+  as `op_<name>`.
+
+* Abstract methods &mdash; Sometimes base classes want to define abstract
+  methods for their subclasses to fill in. The naming pattern for these is a
+  special case of method namespaces as described above, `_impl_<method>`, where
+  `<method>` is often a name that is the same as, or reasonably related to, a
+  public method defined by the same class. In the base class which defines an
+  abstract method, the method is written using a bit of boilerplate code which
+  arranges for a reasonable error when called without having been overridden.
+  Also note the use of `@abstract` in the documentation comment.
+
+  ```javascript
+  /**
+   * Does something interesting.
+   *
+   * @abstract
+   * @param ...
+   * @returns ...
+   */
+  _impl_doSomethingInteresting(arg1, arg2) {
+      return this.mustOverride(arg1, arg2);
+  }
+  ```
+
+  `mustOverride()` is defined by the class `CommonBase` in the `util-common`
+  local module.
+
 * Utility classes &mdash; Utility classes are classes which only serve as a
   collection of functionality exposed as static methods (and sometimes static
   properties). Utility classes should be defined as `extends UtilityClass` both
@@ -138,6 +170,7 @@ taking into account recent additions to the language.
       * methods
   * Private properties
     * instance
+      * implementations of `_impl_` methods (see "abstract methods" above)
       * synthetic fields
       * methods
     * static

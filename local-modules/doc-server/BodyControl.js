@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import {
-  DocumentDelta, DocumentChange, DocumentSnapshot, FrozenDelta, RevisionNumber,
+  BodyChange, BodyDelta, BodySnapshot, FrozenDelta, RevisionNumber,
   Timestamp
 } from 'doc-common';
 import { Errors, TransactionSpec } from 'file-store';
@@ -34,7 +34,7 @@ const MAX_APPEND_TIME_MSEC = 20 * 1000; // 20 seconds.
 const MAX_CHANGE_READS_PER_TRANSACTION = 20;
 
 /**
- * Controller for a given document's content.
+ * Controller for a given document's body content.
  *
  * There is only ever exactly one instance of this class per document, no matter
  * how many active editors there are on that document. (This guarantee is
@@ -42,7 +42,7 @@ const MAX_CHANGE_READS_PER_TRANSACTION = 20;
  * `FileComplex` per document, and each `FileComplex` instance only ever makes
  * one instance of this class.
  */
-export default class DocControl extends CommonBase {
+export default class BodyControl extends CommonBase {
   /** {string} Return value from `validationStatus()`, see which for details. */
   static get STATUS_ERROR() {
     return 'status_error';
@@ -82,7 +82,7 @@ export default class DocControl extends CommonBase {
     this._fileCodec = fileComplex.fileCodec;
 
     /**
-     * {Map<RevisionNumber, DocumentSnapshot>} Mapping from revision numbers to
+     * {Map<RevisionNumber, BodySnapshot>} Mapping from revision numbers to
      * corresponding document snapshots. Sparse.
      */
     this._snapshots = new Map();
@@ -110,7 +110,7 @@ export default class DocControl extends CommonBase {
    *   to `baseRevNum`.
    * @param {string|null} authorId Author of `delta`, or `null` if the change
    *   is to be considered authorless.
-   * @returns {DocumentDelta} The correction to the implied expected result of
+   * @returns {BodyDelta} The correction to the implied expected result of
    *   this operation. The `delta` of this result can be applied to the expected
    *   result to get the actual result. The promise resolves sometime after the
    *   delta has been applied to the document.
@@ -127,12 +127,12 @@ export default class DocControl extends CommonBase {
     // Check for an empty `delta`. If it is, we don't bother trying to apply it.
     // See method header comment for more info.
     if (delta.isEmpty()) {
-      return new DocumentDelta(baseRevNum, FrozenDelta.EMPTY);
+      return new BodyDelta(baseRevNum, FrozenDelta.EMPTY);
     }
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
-    const expected = base.compose(new DocumentDelta(baseRevNum + 1, delta));
+    const expected = base.compose(new BodyDelta(baseRevNum + 1, delta));
 
     // We try performing the apply, and then we iterate if it failed _and_ the
     // reason is simply that there were any changes that got made while we were
@@ -180,7 +180,7 @@ export default class DocControl extends CommonBase {
    * @param {Int} revNum The revision number of the change. The result is the
    *   change which produced that revision. E.g., `0` is a request for the first
    *   change (the change from the empty document).
-   * @returns {DocumentChange} The requested change.
+   * @returns {BodyChange} The requested change.
    */
   async change(revNum) {
     RevisionNumber.check(revNum);
@@ -207,15 +207,15 @@ export default class DocControl extends CommonBase {
     const fc = this._fileCodec; // Avoids boilerplate immediately below.
 
     // Per spec, a document starts with an empty change #0.
-    const change0 = DocumentChange.firstChange();
+    const change0 = BodyChange.firstChange();
 
     // If we get passed `contents`, that goes into change #1. We make an array
     // here (in either case) so that we can just use the `...` operator when
     // constructing the transaction spec.
     const maybeChange1 = [];
     if (contents !== null) {
-      const change = new DocumentChange(1, contents, Timestamp.now(), null);
-      const op     = fc.op_writePath(Paths.forDocumentChange(1), change);
+      const change = new BodyChange(1, contents, Timestamp.now(), null);
+      const op     = fc.op_writePath(Paths.forBodyChange(1), change);
       maybeChange1.push(op);
     }
 
@@ -230,10 +230,10 @@ export default class DocControl extends CommonBase {
       fc.op_writePath(Paths.SCHEMA_VERSION, this._fileComplex.schemaVersion),
 
       // Initial revision number.
-      fc.op_writePath(Paths.CHANGE_REVISION_NUMBER, revNum),
+      fc.op_writePath(Paths.BODY_CHANGE_REVISION_NUMBER, revNum),
 
       // Empty change #0 (per documented interface).
-      fc.op_writePath(Paths.forDocumentChange(0), change0),
+      fc.op_writePath(Paths.forBodyChange(0), change0),
 
       // The given `content` (if any) for change #1.
       ...maybeChange1
@@ -254,7 +254,7 @@ export default class DocControl extends CommonBase {
    * least one change has been made.
    *
    * @param {Int} baseRevNum Revision number for the document.
-   * @returns {DocumentDelta} Delta and associated revision number. The result's
+   * @returns {BodyDelta} Delta and associated revision number. The result's
    *   `revNum` is guaranteed to be at least one more than `baseRevNum` (and
    *   could possibly be even larger.) The result's `delta` can be applied to
    *   revision `baseRevNum` to produce revision `revNum` of the document.
@@ -276,14 +276,14 @@ export default class DocControl extends CommonBase {
         // after the base through and including the current revision.
         const delta = await this._composeRevisions(
           FrozenDelta.EMPTY, baseRevNum + 1, revNum + 1);
-        return new DocumentDelta(revNum, delta);
+        return new BodyDelta(revNum, delta);
       }
 
       // Wait for the file to change (or for the storage layer to time out), and
       // then iterate to see if in fact the change updated the document revision
       // number.
       const fc   = this._fileCodec;
-      const ops  = [fc.op_whenPathNot(Paths.CHANGE_REVISION_NUMBER, revNum)];
+      const ops  = [fc.op_whenPathNot(Paths.BODY_CHANGE_REVISION_NUMBER, revNum)];
       const spec = new TransactionSpec(...ops);
       try {
         await fc.transact(spec);
@@ -303,7 +303,7 @@ export default class DocControl extends CommonBase {
    *
    * @param {Int|null} revNum Which revision to get. If passed as `null`,
    *   indicates the latest (most recent) revision.
-   * @returns {DocumentSnapshot} The corresponding snapshot.
+   * @returns {BodySnapshot} The corresponding snapshot.
    */
   async snapshot(revNum = null) {
     const currentRevNum = await this._currentRevNum();
@@ -333,7 +333,7 @@ export default class DocControl extends CommonBase {
     const contents = (base === null)
       ? this._composeRevisions(FrozenDelta.EMPTY, 0,               revNum + 1)
       : this._composeRevisions(base.contents,     base.revNum + 1, revNum + 1);
-    const result = new DocumentSnapshot(revNum, await contents);
+    const result = new BodySnapshot(revNum, await contents);
 
     this._log.detail(`Made snapshot for revision ${revNum}.`);
 
@@ -356,7 +356,7 @@ export default class DocControl extends CommonBase {
    */
   async validationStatus() {
     if (!(await this._file.exists())) {
-      return DocControl.STATUS_NOT_FOUND;
+      return BodyControl.STATUS_NOT_FOUND;
     }
 
     let transactionResult;
@@ -367,40 +367,40 @@ export default class DocControl extends CommonBase {
       const fc = this._fileCodec;
       const spec = new TransactionSpec(
         fc.op_readPath(Paths.SCHEMA_VERSION),
-        fc.op_readPath(Paths.CHANGE_REVISION_NUMBER)
+        fc.op_readPath(Paths.BODY_CHANGE_REVISION_NUMBER)
       );
       transactionResult = await fc.transact(spec);
     } catch (e) {
       this._log.info('Corrupt document: Failed to read/decode basic data.');
-      return DocControl.STATUS_ERROR;
+      return BodyControl.STATUS_ERROR;
     }
 
     const data          = transactionResult.data;
     const schemaVersion = data.get(Paths.SCHEMA_VERSION);
-    const revNum        = data.get(Paths.CHANGE_REVISION_NUMBER);
+    const revNum        = data.get(Paths.BODY_CHANGE_REVISION_NUMBER);
 
     if (!schemaVersion) {
       this._log.info('Corrupt document: Missing schema version.');
-      return DocControl.STATUS_ERROR;
+      return BodyControl.STATUS_ERROR;
     }
 
     if (!revNum) {
       this._log.info('Corrupt document: Missing revision number.');
-      return DocControl.STATUS_ERROR;
+      return BodyControl.STATUS_ERROR;
     }
 
     const expectSchemaVersion = this._fileComplex.schemaVersion;
     if (schemaVersion !== expectSchemaVersion) {
       const got = schemaVersion;
       this._log.info(`Mismatched schema version: got ${got}; expected ${expectSchemaVersion}`);
-      return DocControl.STATUS_MIGRATE;
+      return BodyControl.STATUS_MIGRATE;
     }
 
     try {
       RevisionNumber.check(revNum);
     } catch (e) {
       this._log.info('Corrupt document: Bogus revision number.');
-      return DocControl.STATUS_ERROR;
+      return BodyControl.STATUS_ERROR;
     }
 
     // Make sure all the changes can be read and decoded.
@@ -412,7 +412,7 @@ export default class DocControl extends CommonBase {
         await this._readChangeRange(i, lastI + 1);
       } catch (e) {
         this._log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
-        return DocControl.STATUS_ERROR;
+        return BodyControl.STATUS_ERROR;
       }
     }
 
@@ -423,24 +423,24 @@ export default class DocControl extends CommonBase {
       const fc  = this._fileCodec;
       const ops = [];
       for (let i = revNum + 1; i <= (revNum + 10); i++) {
-        ops.push(fc.op_readPath(Paths.forDocumentChange(i)));
+        ops.push(fc.op_readPath(Paths.forBodyChange(i)));
       }
       const spec = new TransactionSpec(...ops);
       transactionResult = await fc.transact(spec);
     } catch (e) {
       this._log.info('Corrupt document: Weird empty-change read failure.');
-      return DocControl.STATUS_ERROR;
+      return BodyControl.STATUS_ERROR;
     }
 
     // In a valid doc, the loop body won't end up executing at all.
     for (const storagePath of transactionResult.data.keys()) {
       this._log.info(`Corrupt document: Extra change at path: ${storagePath}`);
-      return DocControl.STATUS_ERROR;
+      return BodyControl.STATUS_ERROR;
     }
 
     // All's well!
 
-    return DocControl.STATUS_OK;
+    return BodyControl.STATUS_OK;
   }
 
   /**
@@ -454,14 +454,14 @@ export default class DocControl extends CommonBase {
    * because the calling code should have handled that case without calling this
    * method.
    *
-   * @param {DocumentChange} change Change to append.
+   * @param {BodyChange} change Change to append.
    * @returns {Int|null} The revision number after appending `change`, or `null`
    *   if `change.revNum` is out-of-date (that is, isn't the immediately-next
    *   revision number) at the moment of attempted application.
    * @throws {Error} If `change.delta.isEmpty()`.
    */
   async _appendChange(change) {
-    DocumentChange.check(change);
+    BodyChange.check(change);
 
     if (change.delta.isEmpty()) {
       throw new Error('Should not have been called with an empty delta.');
@@ -469,14 +469,14 @@ export default class DocControl extends CommonBase {
 
     const revNum     = change.revNum;
     const baseRevNum = revNum - 1;
-    const changePath = Paths.forDocumentChange(revNum);
+    const changePath = Paths.forBodyChange(revNum);
 
     const fc   = this._fileCodec; // Avoids boilerplate immediately below.
     const spec = new TransactionSpec(
       fc.op_checkPathAbsent(changePath),
-      fc.op_checkPathIs(Paths.CHANGE_REVISION_NUMBER, baseRevNum),
+      fc.op_checkPathIs(Paths.BODY_CHANGE_REVISION_NUMBER, baseRevNum),
       fc.op_writePath(changePath, change),
-      fc.op_writePath(Paths.CHANGE_REVISION_NUMBER, revNum)
+      fc.op_writePath(Paths.BODY_CHANGE_REVISION_NUMBER, revNum)
     );
 
     try {
@@ -506,16 +506,16 @@ export default class DocControl extends CommonBase {
    * the snapshot being out-of-date, then this method returns `null`. All other
    * problems are reported by throwing an exception.
    *
-   * @param {DocumentSnapshot} base Snapshot of the base from which the delta is
+   * @param {BodySnapshot} base Snapshot of the base from which the delta is
    *   defined. That is, this is the snapshot of `baseRevNum` as provided to
    *   `applyDelta()`.
    * @param {FrozenDelta} delta Same as for `applyDelta()`.
    * @param {string|null} authorId Same as for `applyDelta()`.
-   * @param {DocumentSnapshot} current Snapshot of the current (latest) revision
+   * @param {BodySnapshot} current Snapshot of the current (latest) revision
    *   of the document.
-   * @param {DocumentSnapshot} expected The implied expected result as defined
+   * @param {BodySnapshot} expected The implied expected result as defined
    *   by `applyDelta()`.
-   * @returns {DocumentDelta|null} Result for the outer call to `applyDelta()`,
+   * @returns {BodyDelta|null} Result for the outer call to `applyDelta()`,
    *   or `null` if the application failed due to an out-of-date `snapshot`.
    */
   async _applyDeltaTo(base, delta, authorId, current, expected) {
@@ -526,7 +526,7 @@ export default class DocControl extends CommonBase {
       // revision. If it succeeds, then we won the append race (if any).
 
       const change =
-        new DocumentChange(base.revNum + 1, delta, Timestamp.now(), authorId);
+        new BodyChange(base.revNum + 1, delta, Timestamp.now(), authorId);
       const revNum = await this._appendChange(change);
 
       if (revNum === null) {
@@ -534,7 +534,7 @@ export default class DocControl extends CommonBase {
         return null;
       }
 
-      return new DocumentDelta(revNum, FrozenDelta.EMPTY);
+      return new BodyDelta(revNum, FrozenDelta.EMPTY);
     }
 
     // The hard case: The client has requested an application of a delta
@@ -582,14 +582,14 @@ export default class DocControl extends CommonBase {
       // It turns out that nothing changed. **Note:** It is unclear whether this
       // can actually happen in practice, given that we already return early
       // (in `applyDelta()`) if we are asked to apply an empty delta.
-      return new DocumentDelta(rCurrent.revNum, FrozenDelta.EMPTY);
+      return new BodyDelta(rCurrent.revNum, FrozenDelta.EMPTY);
     }
 
     // (3)
 
     const rNextNum = rCurrent.revNum + 1;
     const change =
-      new DocumentChange(rNextNum, dNext, Timestamp.now(), authorId);
+      new BodyChange(rNextNum, dNext, Timestamp.now(), authorId);
     const appendResult = await this._appendChange(change);
 
     if (appendResult === null) {
@@ -662,7 +662,7 @@ export default class DocControl extends CommonBase {
    */
   async _currentRevNum() {
     const fc = this._fileCodec;
-    const storagePath = Paths.CHANGE_REVISION_NUMBER;
+    const storagePath = Paths.BODY_CHANGE_REVISION_NUMBER;
     const spec = new TransactionSpec(
       fc.op_checkPathPresent(storagePath),
       fc.op_readPath(storagePath)
@@ -686,7 +686,7 @@ export default class DocControl extends CommonBase {
    *
    * @param {Int} start Start change number (inclusive) of changes to read.
    * @param {Int} endExc End change number (exclusive) of changes to read.
-   * @returns {array<DocumentChange>} Array of changes, in order by change
+   * @returns {array<BodyChange>} Array of changes, in order by change
    *   number.
    */
   async _readChangeRange(start, endExc) {
@@ -709,7 +709,7 @@ export default class DocControl extends CommonBase {
 
     const paths = [];
     for (let i = start; i < endExc; i++) {
-      paths.push(Paths.forDocumentChange(i));
+      paths.push(Paths.forBodyChange(i));
     }
 
     const fc = this._fileCodec;
@@ -725,7 +725,7 @@ export default class DocControl extends CommonBase {
 
     const result = [];
     for (const p of paths) {
-      const change = DocumentChange.check(data.get(p));
+      const change = BodyChange.check(data.get(p));
       result.push(change);
     }
 

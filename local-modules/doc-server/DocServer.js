@@ -18,7 +18,7 @@ const log = new Logger('doc-server');
 
 /**
  * Interface between this module and the storage layer. This class is
- * responsible for instantiating and tracking `DocControl` instances, such that
+ * responsible for instantiating and tracking `BodyControl` instances, such that
  * only one instance is created per actual document.
  *
  * This class is notably responsible for the lifecycle management of

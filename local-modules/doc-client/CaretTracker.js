@@ -50,7 +50,7 @@ export default class CaretTracker extends CommonBase {
 
     /**
      * {array|null} The latest caret update that was supplied, as an array of
-     * arguments suitable for passing to `caretUpdate()`, for asynchronous
+     * arguments suitable for passing to `caret_update()`, for asynchronous
      * consumption. If `null`, indicates that there is no pending caret update.
      * This variable is set and reset in `update()`.
      */
@@ -110,7 +110,7 @@ export default class CaretTracker extends CommonBase {
 
         this._latestCaret = null;
         await Promise.all([
-          this._sessionProxy.caretUpdate(...info),
+          this._sessionProxy.caret_update(...info),
           Delay.resolve(UPDATE_DELAY_MSEC)]);
       }
 
