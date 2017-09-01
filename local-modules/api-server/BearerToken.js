@@ -15,15 +15,26 @@ import { TString } from 'typecheck';
  */
 export default class BearerToken extends BaseKey {
   /**
-   * Main coercion implementation, per the superclass documentation. In this
-   * case, `value` must be a string that follows the proper syntax for bearer
-   * tokens. If not, this will throw an error.
+   * Compares two arrays of `BearerToken`s for equality.
    *
-   * @param {*} value Value to coerce.
-   * @returns {BearerToken} `value` as coerced to a `BearerToken`.
+   * @param {array<BearerToken>} array1 One array.
+   * @param {array<BearerToken>} array2 The other array.
+   * @returns {boolean} `true` iff the two arrays contain the same elements in
+   *   the same order.
    */
-  static _impl_coerce(value) {
-    return new BearerToken(value);
+  static sameArrays(array1, array2) {
+    if (array1.length !== array2.length) {
+      return false;
+    }
+
+    for (let i = 0; i < array1.length; i++) {
+      const token1 = BearerToken.check(array1[i]);
+      if (!token1.sameToken(array2[i])) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**
@@ -90,25 +101,14 @@ export default class BearerToken extends BaseKey {
   }
 
   /**
-   * Compares two arrays of `BearerToken`s for equality.
+   * Main coercion implementation, per the superclass documentation. In this
+   * case, `value` must be a string that follows the proper syntax for bearer
+   * tokens. If not, this will throw an error.
    *
-   * @param {array<BearerToken>} array1 One array.
-   * @param {array<BearerToken>} array2 The other array.
-   * @returns {boolean} `true` iff the two arrays contain the same elements in
-   *   the same order.
+   * @param {*} value Value to coerce.
+   * @returns {BearerToken} `value` as coerced to a `BearerToken`.
    */
-  static sameArrays(array1, array2) {
-    if (array1.length !== array2.length) {
-      return false;
-    }
-
-    for (let i = 0; i < array1.length; i++) {
-      const token1 = BearerToken.check(array1[i]);
-      if (!token1.sameToken(array2[i])) {
-        return false;
-      }
-    }
-
-    return true;
+  static _impl_coerce(value) {
+    return new BearerToken(value);
   }
 }

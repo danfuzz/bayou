@@ -53,43 +53,6 @@ export default class TargetHandler {
   }
 
   /**
-   * Makes a method handler for the given method name.
-   *
-   * @param {string} name The method name.
-   * @returns {function} An appropriately-constructed handler.
-   */
-  _makeMethodHandler(name) {
-    const apiClient = this._apiClient;  // Avoid re-(re-)lookup on every call.
-    const targetId  = this._targetId;   // Likewise.
-    return (...args) => {
-      return apiClient._send(targetId, 'call', name, args);
-    };
-  }
-
-  /**
-   * Sets up the method handler table. This gets called as a byproduct of the
-   * first property lookup.
-   */
-  async _becomeReady() {
-    if (this._readyState !== 'not') {
-      return;
-    }
-
-    this._readyState = 'readying';
-
-    const schema = await this._apiClient.meta.schemaFor(this._targetId);
-    const methods = this._methods;
-
-    for (const name in schema[this._targetId]) {
-      if (!VERBOTEN_METHODS.has(name)) {
-        methods.set(name, this._makeMethodHandler(name));
-      }
-    }
-
-    this._readyState = 'ready';
-  }
-
-  /**
    * Standard `Proxy` handler method.
    *
    * @param {object} target_unused The proxy target.
@@ -258,5 +221,42 @@ export default class TargetHandler {
    */
   setPrototypeOf(target_unused, prototype_unused) {
     throw new Error('unsupported');
+  }
+
+  /**
+   * Sets up the method handler table. This gets called as a byproduct of the
+   * first property lookup.
+   */
+  async _becomeReady() {
+    if (this._readyState !== 'not') {
+      return;
+    }
+
+    this._readyState = 'readying';
+
+    const schema = await this._apiClient.meta.schemaFor(this._targetId);
+    const methods = this._methods;
+
+    for (const name in schema[this._targetId]) {
+      if (!VERBOTEN_METHODS.has(name)) {
+        methods.set(name, this._makeMethodHandler(name));
+      }
+    }
+
+    this._readyState = 'ready';
+  }
+
+  /**
+   * Makes a method handler for the given method name.
+   *
+   * @param {string} name The method name.
+   * @returns {function} An appropriately-constructed handler.
+   */
+  _makeMethodHandler(name) {
+    const apiClient = this._apiClient;  // Avoid re-(re-)lookup on every call.
+    const targetId  = this._targetId;   // Likewise.
+    return (...args) => {
+      return apiClient._send(targetId, 'call', name, args);
+    };
   }
 }
