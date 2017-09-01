@@ -133,9 +133,9 @@ export default class DocClient extends StateMachine {
 
     /**
      * {boolean} Is there currently a pending (as-yet unfulfilled) request for a
-     * new local change via the Quill document change promise chain?
+     * new local change via the Quill document event promise chain?
      */
-    this._pendingLocalBodyChange = false;
+    this._pendingQuillChange = false;
 
     /**
      * {array<Int>} Timestamps of every transition into the `errorWait` state
@@ -292,7 +292,7 @@ export default class DocClient extends StateMachine {
     this._sessionProxy               = null;
     this._currentEvent               = null;
     this._pendingDeltaAfter          = false;
-    this._pendingLocalBodyChange = false;
+    this._pendingQuillChange = false;
 
     // After this, it's just like starting from the `detached` state.
     this.s_detached();
@@ -425,14 +425,14 @@ export default class DocClient extends StateMachine {
     // for same. (Otherwise, we would unnecessarily build up redundant promise
     // resolver functions when changes are coming in from the server while the
     // local user is idle.)
-    if (!this._pendingLocalBodyChange) {
-      this._pendingLocalBodyChange = true;
+    if (!this._pendingQuillChange) {
+      this._pendingQuillChange = true;
 
       // **Note:** As of this writing, Quill will never reject (report an error
       // on) a document change promise.
       (async () => {
         await this._currentEvent.next;
-        this._pendingLocalBodyChange = false;
+        this._pendingQuillChange = false;
         this.q_gotLocalDelta(baseDoc);
       })();
     }
