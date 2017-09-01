@@ -5,17 +5,17 @@
 import { FrozenDelta } from 'doc-common';
 import { TString } from 'typecheck';
 
-import DocumentDelta from './DocumentDelta';
+import BodyDelta from './BodyDelta';
 import Timestamp from './Timestamp';
 
 /**
  * Representation of a change to a document from its immediately-previous
  * revision, including time, authorship, and revision information in addition to
- * the actual delta. This class is a `DocumentDelta` plus additional metadata,
- * and it in fact derives from `DocumentDelta` per se.
+ * the actual delta. This class is a `BodyDelta` plus additional metadata,
+ * and it in fact derives from `BodyDelta` per se.
  *
  * **Note:** The meaning of the `delta` in an instance of this class is more
- * specific than that of `DocumentDelta` in general, exactly because instances
+ * specific than that of `BodyDelta` in general, exactly because instances
  * of this class always represent changes from the immediately-previous
  * revision.
  *
@@ -23,7 +23,7 @@ import Timestamp from './Timestamp';
  * if a mutable delta is passed to the constructor of this class, it is coerced
  * into immutable form.
  */
-export default class BodyChange extends DocumentDelta {
+export default class BodyChange extends BodyDelta {
   /**
    * Gets the appropriate first change to a document body (empty delta, no
    * author) for the current moment in time.

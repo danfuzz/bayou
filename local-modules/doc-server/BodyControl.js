@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import {
-  DocumentDelta, BodyChange, DocumentSnapshot, FrozenDelta, RevisionNumber,
+  BodyDelta, BodyChange, DocumentSnapshot, FrozenDelta, RevisionNumber,
   Timestamp
 } from 'doc-common';
 import { Errors, TransactionSpec } from 'file-store';
@@ -110,7 +110,7 @@ export default class BodyControl extends CommonBase {
    *   to `baseRevNum`.
    * @param {string|null} authorId Author of `delta`, or `null` if the change
    *   is to be considered authorless.
-   * @returns {DocumentDelta} The correction to the implied expected result of
+   * @returns {BodyDelta} The correction to the implied expected result of
    *   this operation. The `delta` of this result can be applied to the expected
    *   result to get the actual result. The promise resolves sometime after the
    *   delta has been applied to the document.
@@ -127,12 +127,12 @@ export default class BodyControl extends CommonBase {
     // Check for an empty `delta`. If it is, we don't bother trying to apply it.
     // See method header comment for more info.
     if (delta.isEmpty()) {
-      return new DocumentDelta(baseRevNum, FrozenDelta.EMPTY);
+      return new BodyDelta(baseRevNum, FrozenDelta.EMPTY);
     }
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
-    const expected = base.compose(new DocumentDelta(baseRevNum + 1, delta));
+    const expected = base.compose(new BodyDelta(baseRevNum + 1, delta));
 
     // We try performing the apply, and then we iterate if it failed _and_ the
     // reason is simply that there were any changes that got made while we were
@@ -254,7 +254,7 @@ export default class BodyControl extends CommonBase {
    * least one change has been made.
    *
    * @param {Int} baseRevNum Revision number for the document.
-   * @returns {DocumentDelta} Delta and associated revision number. The result's
+   * @returns {BodyDelta} Delta and associated revision number. The result's
    *   `revNum` is guaranteed to be at least one more than `baseRevNum` (and
    *   could possibly be even larger.) The result's `delta` can be applied to
    *   revision `baseRevNum` to produce revision `revNum` of the document.
@@ -276,7 +276,7 @@ export default class BodyControl extends CommonBase {
         // after the base through and including the current revision.
         const delta = await this._composeRevisions(
           FrozenDelta.EMPTY, baseRevNum + 1, revNum + 1);
-        return new DocumentDelta(revNum, delta);
+        return new BodyDelta(revNum, delta);
       }
 
       // Wait for the file to change (or for the storage layer to time out), and
@@ -515,7 +515,7 @@ export default class BodyControl extends CommonBase {
    *   of the document.
    * @param {DocumentSnapshot} expected The implied expected result as defined
    *   by `applyDelta()`.
-   * @returns {DocumentDelta|null} Result for the outer call to `applyDelta()`,
+   * @returns {BodyDelta|null} Result for the outer call to `applyDelta()`,
    *   or `null` if the application failed due to an out-of-date `snapshot`.
    */
   async _applyDeltaTo(base, delta, authorId, current, expected) {
@@ -534,7 +534,7 @@ export default class BodyControl extends CommonBase {
         return null;
       }
 
-      return new DocumentDelta(revNum, FrozenDelta.EMPTY);
+      return new BodyDelta(revNum, FrozenDelta.EMPTY);
     }
 
     // The hard case: The client has requested an application of a delta
@@ -582,7 +582,7 @@ export default class BodyControl extends CommonBase {
       // It turns out that nothing changed. **Note:** It is unclear whether this
       // can actually happen in practice, given that we already return early
       // (in `applyDelta()`) if we are asked to apply an empty delta.
-      return new DocumentDelta(rCurrent.revNum, FrozenDelta.EMPTY);
+      return new BodyDelta(rCurrent.revNum, FrozenDelta.EMPTY);
     }
 
     // (3)

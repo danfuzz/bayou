@@ -5,7 +5,7 @@
 import { TArray } from 'typecheck';
 import { CommonBase } from 'util-common';
 
-import DocumentDelta from './DocumentDelta';
+import BodyDelta from './BodyDelta';
 import FrozenDelta from './FrozenDelta';
 import RevisionNumber from './RevisionNumber';
 
@@ -89,12 +89,12 @@ export default class DocumentSnapshot extends CommonBase {
   /**
    * Composes a delta on top of this instance, to produce a new instance.
    *
-   * @param {DocumentDelta} delta Delta to compose on top of this instance.
+   * @param {BodyDelta} delta Delta to compose on top of this instance.
    * @returns {DocumentSnapshot} New instance consisting of the composition of
    *   this instance with `delta`.
    */
   compose(delta) {
-    DocumentDelta.check(delta);
+    BodyDelta.check(delta);
 
     const contents = delta.delta.isEmpty()
       ? this._contents
@@ -107,13 +107,13 @@ export default class DocumentSnapshot extends CommonBase {
    * Composes a sequence of deltas on top of this instance, in order, to produce
    * a new instance.
    *
-   * @param {array<DocumentDelta>} deltas Deltas to compose on top of this
+   * @param {array<BodyDelta>} deltas Deltas to compose on top of this
    *   instance.
    * @returns {DocumentSnapshot} New instance consisting of the composition of
    *   this instance with all of the `deltas`.
    */
   composeAll(deltas) {
-    TArray.check(deltas, DocumentDelta.check);
+    TArray.check(deltas, BodyDelta.check);
 
     if (deltas.length === 0) {
       return this;
@@ -136,7 +136,7 @@ export default class DocumentSnapshot extends CommonBase {
    *
    * @param {DocumentSnapshot} newerSnapshot Snapshot to take the difference
    *   from.
-   * @returns {DocumentDelta} Delta which represents the difference between
+   * @returns {BodyDelta} Delta which represents the difference between
    *   `newerSnapshot` and this instance.
    */
   diff(newerSnapshot) {
@@ -146,6 +146,6 @@ export default class DocumentSnapshot extends CommonBase {
     const newContents = newerSnapshot.contents;
     const delta       = FrozenDelta.coerce(oldContents.diff(newContents));
 
-    return new DocumentDelta(newerSnapshot.revNum, delta);
+    return new BodyDelta(newerSnapshot.revNum, delta);
   }
 }

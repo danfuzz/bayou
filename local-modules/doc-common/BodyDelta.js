@@ -20,7 +20,7 @@ import RevisionNumber from './RevisionNumber';
  *
  * Instances of this class are immutable.
  */
-export default class DocumentDelta extends CommonBase {
+export default class BodyDelta extends CommonBase {
   /**
    * Constructs an instance.
    *

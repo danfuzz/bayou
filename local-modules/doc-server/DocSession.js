@@ -54,7 +54,7 @@ export default class DocSession {
    *   to.
    * @param {FrozenDelta} delta Delta indicating what has changed with respect
    *   to `baseRevNum`.
-   * @returns {DocumentDelta} The correction from the implied expected result to
+   * @returns {BodyDelta} The correction from the implied expected result to
    *   get the actual result.
    */
   async body_applyDelta(baseRevNum, delta) {
@@ -77,7 +77,7 @@ export default class DocSession {
    * `baseRevNum`. See the equivalent `BodyControl` method for details.
    *
    * @param {Int} baseRevNum Revision number for the document.
-   * @returns {DocumentDelta} Delta and associated revision number. The result's
+   * @returns {BodyDelta} Delta and associated revision number. The result's
    *   `delta` can be applied to revision `baseRevNum` to produce revision
    *   `revNum` of the document.
    */

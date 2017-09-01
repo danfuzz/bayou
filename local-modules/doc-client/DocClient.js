@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ApiError } from 'api-client';
-import { DocumentDelta, DocumentSnapshot, FrozenDelta } from 'doc-common';
+import { BodyDelta, DocumentSnapshot, FrozenDelta } from 'doc-common';
 import { Delay } from 'promise-util';
 import { QuillEvent } from 'quill-util';
 import { TString } from 'typecheck';
@@ -175,12 +175,12 @@ export default class DocClient extends StateMachine {
    * from the API call `body_applyDelta()`.
    *
    * @param {FrozenDelta} delta The delta that was originally applied.
-   * @param {DocumentDelta} correctedChange The correction to the expected
+   * @param {BodyDelta} correctedChange The correction to the expected
    *   result as returned from `body_applyDelta()`.
    */
   _check_gotApplyDelta(delta, correctedChange) {
     FrozenDelta.check(delta);
-    DocumentDelta.check(correctedChange);
+    BodyDelta.check(correctedChange);
   }
 
   /**
@@ -189,12 +189,12 @@ export default class DocClient extends StateMachine {
    *
    * @param {DocumentSnapshot} baseDoc The document at the time of the original
    *   request.
-   * @param {DocumentDelta} result How to transform `baseDoc` to get a later
+   * @param {BodyDelta} result How to transform `baseDoc` to get a later
    *   document revision.
    */
   _check_gotDeltaAfter(baseDoc, result) {
     DocumentSnapshot.check(baseDoc);
-    DocumentDelta.check(result);
+    BodyDelta.check(result);
   }
 
   /**
@@ -470,7 +470,7 @@ export default class DocClient extends StateMachine {
    *
    * @param {DocumentSnapshot} baseDoc The document at the time of the original
    *   request.
-   * @param {DocumentDelta} result How to transform `baseDoc` to get a later
+   * @param {BodyDelta} result How to transform `baseDoc` to get a later
    *   document revision.
    */
   _handle_idle_gotDeltaAfter(baseDoc, result) {
@@ -501,7 +501,7 @@ export default class DocClient extends StateMachine {
    *
    * @param {DocumentSnapshot} baseDoc_unused The document at the time of the
    *   original request.
-   * @param {DocumentDelta} result_unused How to transform `baseDoc` to get a
+   * @param {BodyDelta} result_unused How to transform `baseDoc` to get a
    *   later document revision.
    */
   _handle_any_gotDeltaAfter(baseDoc_unused, result_unused) {
@@ -638,7 +638,7 @@ export default class DocClient extends StateMachine {
    * change was successfully merged by the server.
    *
    * @param {FrozenDelta} delta The delta that was originally applied.
-   * @param {DocumentDelta} correctedChange The correction to the expected
+   * @param {BodyDelta} correctedChange The correction to the expected
    *   result as returned from `body_applyDelta()`.
    */
   _handle_merging_gotApplyDelta(delta, correctedChange) {
@@ -665,7 +665,7 @@ export default class DocClient extends StateMachine {
       // is empty) because what we are integrating into the client document is
       // exactly what Quill handed to us.
       this._updateDocWithDelta(
-        new DocumentDelta(vResultNum, delta), FrozenDelta.EMPTY);
+        new BodyDelta(vResultNum, delta), FrozenDelta.EMPTY);
       this._becomeIdle();
       return;
     }
@@ -684,7 +684,7 @@ export default class DocClient extends StateMachine {
       // were waiting for the server to get back to us, which means we can
       // cleanly apply the correction on top of Quill's current state.
       this._updateDocWithDelta(
-        new DocumentDelta(vResultNum, correctedDelta), dCorrection);
+        new BodyDelta(vResultNum, correctedDelta), dCorrection);
       this._becomeIdle();
       return;
     }
@@ -730,7 +730,7 @@ export default class DocClient extends StateMachine {
     const dIntegratedCorrection =
       FrozenDelta.coerce(dMore.transform(dCorrection, false));
     this._updateDocWithDelta(
-      new DocumentDelta(vResultNum, correctedDelta), dIntegratedCorrection);
+      new BodyDelta(vResultNum, correctedDelta), dIntegratedCorrection);
 
     // (3)
 
@@ -807,7 +807,7 @@ export default class DocClient extends StateMachine {
    * document doesn't need to be updated. If that isn't the case, then this
    * method will throw an error.
    *
-   * @param {DocumentDelta} delta Delta from the current `_doc` contents.
+   * @param {BodyDelta} delta Delta from the current `_doc` contents.
    * @param {FrozenDelta} [quillDelta = delta] Delta from Quill's current state,
    *   which is expected to preserve any state that Quill has that isn't yet
    *   represented in `_doc`. This must be used in cases where Quill's state has

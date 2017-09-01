@@ -5,8 +5,8 @@
 import { Codec } from 'codec';
 
 import AuthorId from './AuthorId';
-import DocumentDelta from './DocumentDelta';
 import BodyChange from './BodyChange';
+import BodyDelta from './BodyDelta';
 import DocumentSnapshot from './DocumentSnapshot';
 import Caret from './Caret';
 import CaretDelta from './CaretDelta';
@@ -18,8 +18,8 @@ import Timestamp from './Timestamp';
 import RevisionNumber from './RevisionNumber';
 
 // Register classes with the API.
-Codec.theOne.registerClass(DocumentDelta);
 Codec.theOne.registerClass(BodyChange);
+Codec.theOne.registerClass(BodyDelta);
 Codec.theOne.registerClass(DocumentSnapshot);
 Codec.theOne.registerClass(Caret);
 Codec.theOne.registerClass(CaretDelta);
@@ -30,8 +30,8 @@ Codec.theOne.registerClass(Timestamp);
 
 export {
   AuthorId,
-  DocumentDelta,
   BodyChange,
+  BodyDelta,
   DocumentSnapshot,
   Caret,
   CaretDelta,
