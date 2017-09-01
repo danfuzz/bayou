@@ -198,7 +198,7 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * Validates a `gotLocalDelta` event. This indicates that there is at least
+   * Validates a `gotQuillDelta` event. This indicates that there is at least
    * one local change that Quill has made to its document which is not yet
    * reflected in the given base document. Put another way, this indicates that
    * `_currentEvent` has a resolved `next`.
@@ -206,7 +206,7 @@ export default class DocClient extends StateMachine {
    * @param {BodySnapshot} baseDoc The document at the time of the original
    *   request.
    */
-  _check_gotLocalDelta(baseDoc) {
+  _check_gotQuillDelta(baseDoc) {
     BodySnapshot.check(baseDoc);
   }
 
@@ -433,7 +433,7 @@ export default class DocClient extends StateMachine {
       (async () => {
         await this._currentEvent.next;
         this._pendingQuillChange = false;
-        this.q_gotLocalDelta(baseDoc);
+        this.q_gotQuillDelta(baseDoc);
       })();
     }
 
@@ -509,14 +509,14 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * In state `idle`, handles event `gotLocalDelta`. This means that the local
+   * In state `idle`, handles event `gotQuillDelta`. This means that the local
    * user has started making some changes. We prepare to collect the changes
    * for a short period of time before sending them up to the server.
    *
    * @param {BodySnapshot} baseDoc The document at the time of the original
    *   request.
    */
-  _handle_idle_gotLocalDelta(baseDoc) {
+  _handle_idle_gotQuillDelta(baseDoc) {
     if (this._doc.revNum !== baseDoc.revNum) {
       // This state machine event was generated with respect to a revision of
       // the document which has since been updated, or we ended up having two
@@ -576,7 +576,7 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * In most states, handles event `gotLocalDelta`. This will happen when a
+   * In most states, handles event `gotQuillDelta`. This will happen when a
    * local delta comes in after we're already in the middle of handling a
    * chain of local changes. As such, it is safe to ignore, because whatever
    * the change was, it will get handled by that pre-existing process.
@@ -584,7 +584,7 @@ export default class DocClient extends StateMachine {
    * @param {BodySnapshot} baseDoc_unused The document at the time of the
    *   original request.
    */
-  _handle_any_gotLocalDelta(baseDoc_unused) {
+  _handle_any_gotQuillDelta(baseDoc_unused) {
     // Nothing to do. Stay in the same state.
   }
 
@@ -598,7 +598,7 @@ export default class DocClient extends StateMachine {
    */
   _handle_collecting_wantApplyDelta(baseDoc) {
     if (this._doc.revNum !== baseDoc.revNum) {
-      // As with the `gotLocalDelta` event, we ignore this event if the doc has
+      // As with the `gotQuillDelta` event, we ignore this event if the doc has
       // changed out from under us.
       this._becomeIdle();
       return;
