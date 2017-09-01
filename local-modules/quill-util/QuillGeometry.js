@@ -125,10 +125,11 @@ export default class QuillGeometry {
    * Take a bounds object and return a copy with all of its
    * values constrained to integer bounds.
    *
-   * @param {object} rect The rectangle to convert. The object minimally needs properties
-   * of `left`, `top`, `right`, `bottom` all with `{number}` values.
-   * @returns {object} An object with properties left, `top`, `right`, `bottom`, `width`, `height`
-   * all with integer values.
+   * @param {object} rect The rectangle to convert. The object minimally needs
+   *   properties of `left`, `top`, `right`, `bottom` all with `{number}`
+   *   values.
+   * @returns {object} An object with properties left, `top`, `right`, `bottom`,
+   *   `width`, `height` all with integer values.
    */
   static snapRectToPixels(rect) {
     const result = {
@@ -146,12 +147,13 @@ export default class QuillGeometry {
   }
 
   /**
-   * Converts a rectangle object to a string that can be used as the `d` property
-   * of an SVG `<path>` element.
+   * Converts a rectangle object to a string that can be used as the `d`
+   * property of an SVG `<path>` element.
    * @see https://www.w3.org/TR/SVG/paths.html
    *
-   * @param {object} rect The rectangle to convert. See `QuillGeometry.boundsForLinesInRange()`
-   * for a description of a rect object.
+   * @param {object} rect The rectangle to convert. See
+   *   `QuillGeometry.boundsForLinesInRange()` for a description of a rect
+   *   object.
    * @returns {string} The SVG path data for the given rectangle.
    */
   static svgPathCommandsForRect(rect) {

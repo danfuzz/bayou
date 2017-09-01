@@ -9,11 +9,11 @@ import ColorUtil from './ColorUtil';
  * task for which it was created was to make background colors for chat bubbles
  * in an IM app. It's good for tasks like that.
  *
- * It operates by walking its way around the HSL color wheel. By default it rotates
- * 53° around the circle for each new color. That allows you to generate 7 colors
- * before reusing large areas of hue, and even then, the primality of the
- * stride is such that you'll still get hundreds of distinct colors before obvious
- * duplicates are generated.
+ * It operates by walking its way around the HSL color wheel. By default it
+ * rotates 53° around the circle for each new color. That allows you to generate
+ * 7 colors before reusing large areas of hue, and even then, the primality of
+ * the stride is such that you'll still get hundreds of distinct colors before
+ * obvious duplicates are generated.
  *
  * The V component of each color is 87.5% which puts all of the colors in the
  * pastel range.
@@ -23,13 +23,15 @@ export default class ColorSelector {
    * Constructs a new ColorSelector object.
    *
    * @param {Int} [seed = 0] The initial hue angle to be used. This value will
-   * be MODed with 360 to get a valid angle. The default is 0, which is pure red.
-   * @param {number} [stride=53] The number of degrees of hue angle to advance on
-   * each iteration.
+   *   be MODed with 360 to get a valid angle. The default is 0, which is pure
+   *   red.
+   * @param {number} [stride=53] The number of degrees of hue angle to advance
+   *   on each iteration.
    */
   constructor(seed = 0, stride = 53) {
     /**
-     * {number} The current hue angle in degrees; the H component of an HSL color.
+     * {number} The current hue angle in degrees; the H component of an HSL
+     * color.
      */
     this._hue = seed % 360;
 
@@ -46,7 +48,8 @@ export default class ColorSelector {
     this._lightness = 0.875;
 
     /**
-     * {number} The angular amount, in degrees, that we'll advance the hue for each color.
+     * {number} The angular amount, in degrees, that we'll advance the hue for
+     * each color.
      */
     this._stride = stride;
   }
@@ -73,7 +76,8 @@ export default class ColorSelector {
   }
 
   /**
-   * Returns the next color in the progression, and generates the following color.
+   * Returns the next color in the progression, and generates the following
+   * color.
    *
    * @see ColorSelection.nextColorHSL()
    * @returns {object} The HSL color value.

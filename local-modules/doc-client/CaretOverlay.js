@@ -315,7 +315,8 @@ export default class CaretOverlay {
         const pathCommand = QuillGeometry.svgPathCommandsForRect(rect);
         const path = this._document.createElementNS(SVG_NAMESPACE, 'path');
 
-        // Even for a zero-width rect we get what we expect when we stroke the frame.
+        // Even for a zero-width rect we get what we expect when we stroke the
+        // frame.
         path.setAttribute('d', pathCommand);
         path.setAttribute('fill', caret.color);
         path.setAttribute('fill-opacity', '1.0');
@@ -394,13 +395,13 @@ export default class CaretOverlay {
   _addAvatarToDefs(info) {
     const caret = info.get('caret');
 
-    // The whole avatar is set in a group with a known id
+    // The whole avatar is set in a group with a known id.
     const avatarGroup = this._document.createElementNS(SVG_NAMESPACE, 'g');
     const sessionId = caret.sessionId;
 
     avatarGroup.setAttribute('id', CaretOverlay.avatarNameForSessionId(sessionId));
 
-    // Add the circle that will hold the background color
+    // Add the circle that will hold the background color.
     const backgroundCircle = this._document.createElementNS(SVG_NAMESPACE, 'circle');
 
     backgroundCircle.setAttribute('cx', 200 * AVATAR_SCALE_FACTOR);
@@ -409,7 +410,8 @@ export default class CaretOverlay {
     backgroundCircle.setAttribute('fill', caret.color);
     backgroundCircle.classList.add('avatar-theme-color');
 
-    // Create a new group to hold the head and shoulders and clip it to the mask we made earlier.
+    // Create a new group to hold the head and shoulders and clip it to the mask
+    // we made earlier.
     const personGroup = this._document.createElementNS(SVG_NAMESPACE, 'g');
 
     personGroup.setAttribute('clip-path', 'url(#avatarClipPath)');
@@ -539,9 +541,10 @@ export default class CaretOverlay {
    *   format (e.g. `#dead37`).
    */
   _updateAvatarChildColors(root, color) {
-    // Predefined elements in the `<defs>` section of the SVG that adopt the thematic color
-    // for a given session are tagged with the class `avatar-theme-color`. Items in that
-    // class will have their `fill` colors changed to the provided value.
+    // Predefined elements in the `<defs>` section of the SVG that adopt the
+    // thematic color for a given session are tagged with the class
+    // `avatar-theme-color`. Items in that class will have their `fill` colors
+    // changed to the provided value.
     if (root.classList.contains('avatar-theme-color')) {
       if (root.hasAttribute('fill')) {
         root.setAttribute('fill', color);

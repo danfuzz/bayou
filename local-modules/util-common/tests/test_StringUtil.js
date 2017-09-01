@@ -110,18 +110,22 @@ describe('util-common/StringUtil', () => {
     });
 
     it('should trim strings that exceed the limit, but do it at a grapheme boundary', () => {
-      const input = '🇫🇷🇮🇪'; // If your editor doesn't render this, it's the flag of France followed by the flag of Ireland.
+      // If your editor doesn't render this, it's the flag of France followed by
+      // the flag of Ireland.
+      const input = '🇫🇷🇮🇪';
       const output = StringUtil.stringWithUtf8ByteLimit(input, 10);
       const utf8Length = StringUtil.utf8LengthForString(output);
 
-      // The Unicode flags are composed of two UTF-16 surrogate pairs totaling 8 UTF-8 bytes.
-      // For instance, The flag of France is
-      //   REGIONAL INDICATOR SYMBOL LETTER F + REGIONAL INDICATOR SYMBOL LETTER R
+      // The Unicode flags are composed of two UTF-16 surrogate pairs totaling 8
+      // UTF-8 bytes. For instance, The flag of France is:
+      //   REGIONAL INDICATOR SYMBOL LETTER F
+      //   REGIONAL INDICATOR SYMBOL LETTER R
+      // or:
       //   \uD83C\uDDEB\uD83C\uDDF7
       //
-      // Having the UTF-8 limit set for 10 puts it amid the Irish flag. If the code is working
-      // correctly it should scale back to the last full grapheme that fits, which is just the
-      // French flag.
+      // Having the UTF-8 limit set for 10 puts it amid the Irish flag. If the
+      // code is working correctly it should scale back to the last full
+      // grapheme that fits, which is just the French flag.
       assert.equal(output, '🇫🇷');
       assert.equal(utf8Length, 8);
     });
