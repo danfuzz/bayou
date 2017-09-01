@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import {
-  BodyDelta, BodyChange, DocumentSnapshot, FrozenDelta, RevisionNumber,
+  BodyDelta, BodyChange, BodySnapshot, FrozenDelta, RevisionNumber,
   Timestamp
 } from 'doc-common';
 import { Errors, TransactionSpec } from 'file-store';
@@ -82,7 +82,7 @@ export default class BodyControl extends CommonBase {
     this._fileCodec = fileComplex.fileCodec;
 
     /**
-     * {Map<RevisionNumber, DocumentSnapshot>} Mapping from revision numbers to
+     * {Map<RevisionNumber, BodySnapshot>} Mapping from revision numbers to
      * corresponding document snapshots. Sparse.
      */
     this._snapshots = new Map();
@@ -303,7 +303,7 @@ export default class BodyControl extends CommonBase {
    *
    * @param {Int|null} revNum Which revision to get. If passed as `null`,
    *   indicates the latest (most recent) revision.
-   * @returns {DocumentSnapshot} The corresponding snapshot.
+   * @returns {BodySnapshot} The corresponding snapshot.
    */
   async snapshot(revNum = null) {
     const currentRevNum = await this._currentRevNum();
@@ -333,7 +333,7 @@ export default class BodyControl extends CommonBase {
     const contents = (base === null)
       ? this._composeRevisions(FrozenDelta.EMPTY, 0,               revNum + 1)
       : this._composeRevisions(base.contents,     base.revNum + 1, revNum + 1);
-    const result = new DocumentSnapshot(revNum, await contents);
+    const result = new BodySnapshot(revNum, await contents);
 
     this._log.detail(`Made snapshot for revision ${revNum}.`);
 
@@ -506,14 +506,14 @@ export default class BodyControl extends CommonBase {
    * the snapshot being out-of-date, then this method returns `null`. All other
    * problems are reported by throwing an exception.
    *
-   * @param {DocumentSnapshot} base Snapshot of the base from which the delta is
+   * @param {BodySnapshot} base Snapshot of the base from which the delta is
    *   defined. That is, this is the snapshot of `baseRevNum` as provided to
    *   `applyDelta()`.
    * @param {FrozenDelta} delta Same as for `applyDelta()`.
    * @param {string|null} authorId Same as for `applyDelta()`.
-   * @param {DocumentSnapshot} current Snapshot of the current (latest) revision
+   * @param {BodySnapshot} current Snapshot of the current (latest) revision
    *   of the document.
-   * @param {DocumentSnapshot} expected The implied expected result as defined
+   * @param {BodySnapshot} expected The implied expected result as defined
    *   by `applyDelta()`.
    * @returns {BodyDelta|null} Result for the outer call to `applyDelta()`,
    *   or `null` if the application failed due to an out-of-date `snapshot`.

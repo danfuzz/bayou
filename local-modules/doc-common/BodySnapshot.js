@@ -11,7 +11,7 @@ import RevisionNumber from './RevisionNumber';
 
 
 /**
- * {DocumentSnapshot|null} Empty instance. Initialized in the `EMPTY` property
+ * {BodySnapshot|null} Empty instance. Initialized in the `EMPTY` property
  * accessor.
  */
 let emptyInstance = null;
@@ -19,14 +19,14 @@ let emptyInstance = null;
 /**
  * Snapshot of document contents, with other associated information.
  */
-export default class DocumentSnapshot extends CommonBase {
+export default class BodySnapshot extends CommonBase {
   /**
-   * {DocumentSnapshot} Empty instance of this class. It has an empty delta and
+   * {BodySnapshot} Empty instance of this class. It has an empty delta and
    * revision number `0`.
    */
   static get EMPTY() {
     if (emptyInstance === null) {
-      emptyInstance = new DocumentSnapshot(0, FrozenDelta.EMPTY);
+      emptyInstance = new BodySnapshot(0, FrozenDelta.EMPTY);
     }
 
     return emptyInstance;
@@ -90,7 +90,7 @@ export default class DocumentSnapshot extends CommonBase {
    * Composes a delta on top of this instance, to produce a new instance.
    *
    * @param {BodyDelta} delta Delta to compose on top of this instance.
-   * @returns {DocumentSnapshot} New instance consisting of the composition of
+   * @returns {BodySnapshot} New instance consisting of the composition of
    *   this instance with `delta`.
    */
   compose(delta) {
@@ -100,7 +100,7 @@ export default class DocumentSnapshot extends CommonBase {
       ? this._contents
       : FrozenDelta.coerce(this._contents.compose(delta.delta));
 
-    return new DocumentSnapshot(delta.revNum, contents);
+    return new BodySnapshot(delta.revNum, contents);
   }
 
   /**
@@ -109,7 +109,7 @@ export default class DocumentSnapshot extends CommonBase {
    *
    * @param {array<BodyDelta>} deltas Deltas to compose on top of this
    *   instance.
-   * @returns {DocumentSnapshot} New instance consisting of the composition of
+   * @returns {BodySnapshot} New instance consisting of the composition of
    *   this instance with all of the `deltas`.
    */
   composeAll(deltas) {
@@ -125,7 +125,7 @@ export default class DocumentSnapshot extends CommonBase {
     }
 
     const lastDelta = deltas[deltas.length - 1];
-    return new DocumentSnapshot(lastDelta.revNum, contents);
+    return new BodySnapshot(lastDelta.revNum, contents);
   }
 
   /**
@@ -134,13 +134,13 @@ export default class DocumentSnapshot extends CommonBase {
    * snapshot passed in here as an argument. That is, `newerSnapshot ==
    * this.compose(this.diff(newerSnapshot))`.
    *
-   * @param {DocumentSnapshot} newerSnapshot Snapshot to take the difference
+   * @param {BodySnapshot} newerSnapshot Snapshot to take the difference
    *   from.
    * @returns {BodyDelta} Delta which represents the difference between
    *   `newerSnapshot` and this instance.
    */
   diff(newerSnapshot) {
-    DocumentSnapshot.check(newerSnapshot);
+    BodySnapshot.check(newerSnapshot);
 
     const oldContents = this.contents;
     const newContents = newerSnapshot.contents;

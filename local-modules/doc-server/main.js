@@ -2,10 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import CaretControl from './CaretControl';
 import BodyControl from './BodyControl';
+import CaretControl from './CaretControl';
 import DocServer from './DocServer';
 import DocSession from './DocSession';
 import FileComplex from './FileComplex';
 
-export { CaretControl, BodyControl, DocServer, DocSession, FileComplex };
+export { BodyControl, CaretControl, DocServer, DocSession, FileComplex };

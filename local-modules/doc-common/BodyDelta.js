@@ -8,7 +8,7 @@ import { CommonBase } from 'util-common';
 import RevisionNumber from './RevisionNumber';
 
 /**
- * Delta which can be applied to a `DocumentSnapshot`, along with associated
+ * Delta which can be applied to a `BodySnapshot`, along with associated
  * information, to produce an updated snapshot.
  *
  * Instances of this class are returned from calls to `body_applyDelta()` and
