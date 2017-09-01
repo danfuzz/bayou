@@ -83,6 +83,29 @@ export default class ApiClient {
   }
 
   /**
+   * {string} The connection ID if known, or a reasonably suggestive string if
+   * not. This class automatically sets the ID when connections get made, so
+   * that clients don't generally have to make an API call to get this info.
+   */
+  get connectionId() {
+    return this._connectionId;
+  }
+
+  /**
+   * {Logger} The client-specific logger.
+   */
+  get log() {
+    return this._log;
+  }
+
+  /**
+   * {Proxy} The object upon which meta-API calls can be made.
+   */
+  get meta() {
+    return this._targets.get('meta');
+  }
+
+  /**
    * Performs a challenge-response authorization for a given key. When the
    * returned promise resolves successfully, that means that the corresponding
    * target (that is, `this.getTarget(key)`) can be accessed without further
@@ -103,15 +126,6 @@ export default class ApiClient {
   }
 
   /**
-   * {string} The connection ID if known, or a reasonably suggestive string if
-   * not. This class automatically sets the ID when connections get made, so
-   * that clients don't generally have to make an API call to get this info.
-   */
-  get connectionId() {
-    return this._connectionId;
-  }
-
-  /**
    * Gets a proxy for the target with the given ID or which is controlled by the
    * given key (or which was so controlled prior to authorizing it away). The
    * target must already have been authorized for this method to work (otherwise
@@ -127,20 +141,6 @@ export default class ApiClient {
       : TString.check(idOrKey);
 
     return this._targets.get(id);
-  }
-
-  /**
-   * {Logger} The client-specific logger.
-   */
-  get log() {
-    return this._log;
-  }
-
-  /**
-   * {Proxy} The object upon which meta-API calls can be made.
-   */
-  get meta() {
-    return this._targets.get('meta');
   }
 
   /**
@@ -183,16 +183,6 @@ export default class ApiClient {
     return true;
   }
 
-  /**
-   * Gets the base URL for the given original URL.
-   *
-   * @param {string} origUrl The original URL.
-   * @returns {string} The corresponding base URL.
-   */
-  static _getBaseUrl(origUrl) {
-    return new URL(origUrl).origin;
-  }
-
   /** {string} The websocket URL for this instance. */
   get _websocketUrl() {
     const url = new URL(this._baseUrl);
@@ -208,19 +198,6 @@ export default class ApiClient {
   }
 
   /**
-   * Init or reset the state having to do with an active connection. See the
-   * constructor for documentation about these fields.
-   */
-  _resetConnection() {
-    this._ws              = null;
-    this._connectionId    = UNKNOWN_CONNECTION_ID;
-    this._nextId          = 0;
-    this._callbacks       = {};
-    this._pendingPayloads = [];
-    this._targets.reset();
-  }
-
-  /**
    * Constructs an `ApiError` representing a connection error and including
    * the current connection ID in the description.
    *
@@ -233,6 +210,137 @@ export default class ApiClient {
     const extra = (desc === null) ? [] : [desc];
     const cause = new ApiError(code, ...extra);
     return ApiError.connError(cause, this._connectionId);
+  }
+
+  /**
+   * Handles a `close` event coming from a websocket. This logs the closure and
+   * terminates all active messages by rejecting their promises.
+   *
+   * @param {object} event Event that caused this callback.
+   */
+  _handleClose(event) {
+    this._log.info('Closed:', event);
+
+    const code = WebsocketCodes.close(event.code);
+    const desc = event.reason ? `${code}: ${event.reason}` : code;
+    const error = this._connError('connection_closed', desc);
+
+    this._handleTermination(event, error);
+  }
+
+  /**
+   * Handles an `error` event coming from a websocket. This behaves similarly
+   * to the `close` event.
+   *
+   * **Note:** Because errors in this case are typically due to transient
+   * connection issues (e.g. network went away) and not due to fundamental
+   * system issues, this is logged as `info` and not `error` (or `warn`).
+   *
+   * @param {object} event Event that caused this callback.
+   */
+  _handleError(event) {
+    this._log.info('Error:', event);
+
+    // **Note:** The error event does not have any particularly useful extra
+    // info, so -- alas -- there is nothing to get out of it for the `ApiError`
+    // description.
+    const error = this._connError('unknown_error');
+    this._handleTermination(event, error);
+  }
+
+  /**
+   * Handles a `message` event coming from a websocket. In this case, messages
+   * are expected to be the responses from previously-sent messages (e.g.
+   * method calls), encoded as JSON. The `id` of the response is used to look up
+   * the callback function in `this._callbacks`. That callback is then called in
+   * a separate turn.
+   *
+   * @param {object} event Event that caused this callback.
+   */
+  _handleMessage(event) {
+    this._log.detail('Received raw payload:', event.data);
+
+    const payload = Codec.theOne.decodeJson(event.data);
+    const id = payload.id;
+    let result = payload.result;
+    const error = payload.error;
+
+    if (result === undefined) {
+      result = null;
+    }
+
+    if (typeof id !== 'number') {
+      // We handle these as a `server_bug` and not, e.g. logging as `wtf()` and
+      // aborting, because this is indicative of a server-side problem and not
+      // an unrecoverable local problem.
+      if (!id) {
+        throw this._connError('server_bug', 'Missing ID on API response.');
+      } else {
+        throw this._connError('server_bug',
+          `Strange ID type \`${typeof id}\` on API response.`);
+      }
+    }
+
+    const callback = this._callbacks[id];
+    if (callback) {
+      delete this._callbacks[id];
+      if (error) {
+        this._log.detail(`Reject ${id}:`, error);
+        callback.reject(new ApiError('remote_error', this.connectionId, error));
+      } else {
+        this._log.detail(`Resolve ${id}:`, result);
+        callback.resolve(result);
+      }
+    } else {
+      // See above about `server_bug`.
+      throw this._connError('server_bug', `Orphan call for ID ${id}.`);
+    }
+  }
+
+  /**
+   * Handles an `open` event coming from a websocket. In this case, it sends
+   * any pending payloads (messages that were enqueued while the socket was
+   * still in the process of opening).
+   *
+   * @param {object} event_unused Event that caused this callback.
+   */
+  _handleOpen(event_unused) {
+    for (const payload of this._pendingPayloads) {
+      this._log.detail('Sent from queue:', payload);
+      this._ws.send(payload);
+    }
+    this._pendingPayloads = [];
+  }
+
+  /**
+   * Common code to handle both `error` and `close` events.
+   *
+   * @param {object} event_unused Event that caused this callback.
+   * @param {ApiError} error Reason for termination. "Error" is a bit of a
+   *   misnomer, as in many cases termination is a-okay.
+   */
+  _handleTermination(event_unused, error) {
+    // Reject the promises of any currently-pending messages.
+    for (const id in this._callbacks) {
+      this._callbacks[id].reject(error);
+    }
+
+    // Clear the state related to the websocket. It is safe to re-open the
+    // connection after this.
+    this._resetConnection();
+  }
+
+  /**
+   * Init or reset the state having to do with an active connection. See the
+   * constructor for documentation about these fields.
+   */
+  _resetConnection() {
+    this._ws              = null;
+    this._connectionId    = UNKNOWN_CONNECTION_ID;
+    this._nextId          = 0;
+    this._callbacks       = {};
+    this._pendingPayloads = [];
+    this._targets.reset();
   }
 
   /**
@@ -294,120 +402,12 @@ export default class ApiClient {
   }
 
   /**
-   * Common code to handle both `error` and `close` events.
+   * Gets the base URL for the given original URL.
    *
-   * @param {object} event_unused Event that caused this callback.
-   * @param {ApiError} error Reason for termination. "Error" is a bit of a
-   *   misnomer, as in many cases termination is a-okay.
+   * @param {string} origUrl The original URL.
+   * @returns {string} The corresponding base URL.
    */
-  _handleTermination(event_unused, error) {
-    // Reject the promises of any currently-pending messages.
-    for (const id in this._callbacks) {
-      this._callbacks[id].reject(error);
-    }
-
-    // Clear the state related to the websocket. It is safe to re-open the
-    // connection after this.
-    this._resetConnection();
-  }
-
-  /**
-   * Handles a `close` event coming from a websocket. This logs the closure and
-   * terminates all active messages by rejecting their promises.
-   *
-   * @param {object} event Event that caused this callback.
-   */
-  _handleClose(event) {
-    this._log.info('Closed:', event);
-
-    const code = WebsocketCodes.close(event.code);
-    const desc = event.reason ? `${code}: ${event.reason}` : code;
-    const error = this._connError('connection_closed', desc);
-
-    this._handleTermination(event, error);
-  }
-
-  /**
-   * Handles an `error` event coming from a websocket. This behaves similarly
-   * to the `close` event.
-   *
-   * **Note:** Because errors in this case are typically due to transient
-   * connection issues (e.g. network went away) and not due to fundamental
-   * system issues, this is logged as `info` and not `error` (or `warn`).
-   *
-   * @param {object} event Event that caused this callback.
-   */
-  _handleError(event) {
-    this._log.info('Error:', event);
-
-    // **Note:** The error event does not have any particularly useful extra
-    // info, so -- alas -- there is nothing to get out of it for the `ApiError`
-    // description.
-    const error = this._connError('unknown_error');
-    this._handleTermination(event, error);
-  }
-
-  /**
-   * Handles an `open` event coming from a websocket. In this case, it sends
-   * any pending payloads (messages that were enqueued while the socket was
-   * still in the process of opening).
-   *
-   * @param {object} event_unused Event that caused this callback.
-   */
-  _handleOpen(event_unused) {
-    for (const payload of this._pendingPayloads) {
-      this._log.detail('Sent from queue:', payload);
-      this._ws.send(payload);
-    }
-    this._pendingPayloads = [];
-  }
-
-  /**
-   * Handles a `message` event coming from a websocket. In this case, messages
-   * are expected to be the responses from previously-sent messages (e.g.
-   * method calls), encoded as JSON. The `id` of the response is used to look up
-   * the callback function in `this._callbacks`. That callback is then called in
-   * a separate turn.
-   *
-   * @param {object} event Event that caused this callback.
-   */
-  _handleMessage(event) {
-    this._log.detail('Received raw payload:', event.data);
-
-    const payload = Codec.theOne.decodeJson(event.data);
-    const id = payload.id;
-    let result = payload.result;
-    const error = payload.error;
-
-    if (result === undefined) {
-      result = null;
-    }
-
-    if (typeof id !== 'number') {
-      // We handle these as a `server_bug` and not, e.g. logging as `wtf()` and
-      // aborting, because this is indicative of a server-side problem and not
-      // an unrecoverable local problem.
-      if (!id) {
-        throw this._connError('server_bug', 'Missing ID on API response.');
-      } else {
-        throw this._connError('server_bug',
-          `Strange ID type \`${typeof id}\` on API response.`);
-      }
-    }
-
-    const callback = this._callbacks[id];
-    if (callback) {
-      delete this._callbacks[id];
-      if (error) {
-        this._log.detail(`Reject ${id}:`, error);
-        callback.reject(new ApiError('remote_error', this.connectionId, error));
-      } else {
-        this._log.detail(`Resolve ${id}:`, result);
-        callback.resolve(result);
-      }
-    } else {
-      // See above about `server_bug`.
-      throw this._connError('server_bug', `Orphan call for ID ${id}.`);
-    }
+  static _getBaseUrl(origUrl) {
+    return new URL(origUrl).origin;
   }
 }

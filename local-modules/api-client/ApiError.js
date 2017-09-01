@@ -25,15 +25,6 @@ export default class ApiError extends InfoError {
   }
 
   /**
-   * Constructs an instance.
-   *
-   * @param {...*} args Constructor arguments, as described by `InfoError`.
-   */
-  constructor(...args) {
-    super(...args);
-  }
-
-  /**
    * Convenient wrapper for `new ApiError('connection_error', ...)`.
    *
    * @param {ApiError} cause Cause of the connection error.
@@ -45,6 +36,15 @@ export default class ApiError extends InfoError {
     TString.check(connectionId);
 
     return new ApiError(cause, ApiError.CONNECTION_ERROR, connectionId);
+  }
+
+  /**
+   * Constructs an instance.
+   *
+   * @param {...*} args Constructor arguments, as described by `InfoError`.
+   */
+  constructor(...args) {
+    super(...args);
   }
 
   /**
