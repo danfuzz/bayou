@@ -12,8 +12,8 @@ import RevisionNumber from './RevisionNumber';
  * information, to produce an updated snapshot.
  *
  * Instances of this class are returned from calls to `body_applyDelta()` and
- * `deltaAfter()` as defined by the various `doc-server` classes. See those for
- * more details. Note that the meaning of the `delta` value is different
+ * `body_deltaAfter()` as defined by the various `doc-server` classes. See those
+ * for more details. Note that the meaning of the `delta` value is different
  * depending on which method the result came from. In particular, there is an
  * implied "expected" result from `body_applyDelta()` which this instance's
  * `delta` is with respect to.

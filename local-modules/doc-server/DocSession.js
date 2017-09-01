@@ -81,7 +81,7 @@ export default class DocSession {
    *   `delta` can be applied to revision `baseRevNum` to produce revision
    *   `revNum` of the document.
    */
-  async deltaAfter(baseRevNum) {
+  async body_deltaAfter(baseRevNum) {
     return this._bodyControl.deltaAfter(baseRevNum);
   }
 

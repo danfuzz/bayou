@@ -69,7 +69,7 @@ const CLIENT_SOURCE = 'doc-client';
  * Despite the polling nature, this arrangement still allows for changes from
  * the server to make their way to the client promptly, and it does so without
  * wasting time or network resources polling for changes that haven't happened.
- * This is because of how the `deltaAfter()` API method is defined.
+ * This is because of how the `body_deltaAfter()` API method is defined.
  * Specifically, that method does not return a result until at least one change
  * has been made. This means that the client can make that API call and then
  * just wait until it comes back with a result, instead of having to set up a
@@ -127,7 +127,7 @@ export default class DocClient extends StateMachine {
 
     /**
      * {boolean} Is there currently a pending (as-yet unfulfilled)
-     * `deltaAfter()` request to the server?
+     * `body_deltaAfter()` request to the server?
      */
     this._pendingDeltaAfter = false;
 
@@ -185,7 +185,7 @@ export default class DocClient extends StateMachine {
 
   /**
    * Validates a `gotDeltaAfter` event. This represents a successful result
-   * from the API call `deltaAfter()`.
+   * from the API call `body_deltaAfter()`.
    *
    * @param {DocumentSnapshot} baseDoc The document at the time of the original
    *   request.
@@ -445,7 +445,7 @@ export default class DocClient extends StateMachine {
 
       (async () => {
         try {
-          const value = await this._sessionProxy.deltaAfter(baseDoc.revNum);
+          const value = await this._sessionProxy.body_deltaAfter(baseDoc.revNum);
           this._pendingDeltaAfter = false;
           this.q_gotDeltaAfter(baseDoc, value);
         } catch (e) {
@@ -497,7 +497,7 @@ export default class DocClient extends StateMachine {
    * In most states, handles event `gotDeltaAfter`. This will happen when a
    * server delta comes when we're in the middle of handling a local change. As
    * such, it is safe to ignore, because after the local change is integrated,
-   * the system will fire off a new `deltaAfter()` request.
+   * the system will fire off a new `body_deltaAfter()` request.
    *
    * @param {DocumentSnapshot} baseDoc_unused The document at the time of the
    *   original request.
