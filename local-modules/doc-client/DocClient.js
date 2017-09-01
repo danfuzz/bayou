@@ -288,10 +288,10 @@ export default class DocClient extends StateMachine {
    * changes that were in-flight when the connection became problematic.
    */
   _handle_errorWait_start() {
-    this._doc                        = null;
-    this._sessionProxy               = null;
-    this._currentEvent               = null;
-    this._pendingDeltaAfter          = false;
+    this._doc                = null;
+    this._sessionProxy       = null;
+    this._currentEvent       = null;
+    this._pendingDeltaAfter  = false;
     this._pendingQuillChange = false;
 
     // After this, it's just like starting from the `detached` state.
