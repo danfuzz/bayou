@@ -174,6 +174,7 @@ taking into account recent additions to the language.
       * synthetic fields
       * methods
     * static
+      * implementations of `_impl_` methods (see "abstract methods" above)
       * synthetic fields
       * methods
 
