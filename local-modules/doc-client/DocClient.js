@@ -450,7 +450,7 @@ export default class DocClient extends StateMachine {
           this.q_gotDeltaAfter(baseDoc, value);
         } catch (e) {
           this._pendingDeltaAfter = false;
-          this.q_apiError('deltaAfter', e);
+          this.q_apiError('body_deltaAfter', e);
         }
       })();
     }
