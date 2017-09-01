@@ -86,30 +86,6 @@ export default class DocSession {
   }
 
   /**
-   * Returns a bit of identifying info about this instance, for the purposes of
-   * logging. Specifically, the client side will call this method and log the
-   * results during session initiation.
-   *
-   * @returns {string} A succinct identification string.
-   */
-  getLogInfo() {
-    const file    = this._fileComplex.file.id;
-    const session = this._sessionId;
-    const author  = this._authorId;
-
-    return `file ${file}; session ${session}; author ${author}`;
-  }
-
-  /**
-   * Returns the session ID of this instance.
-   *
-   * @returns {string} The session ID.
-   */
-  getSessionId() {
-    return this._sessionId;
-  }
-
-  /**
    * Returns a snapshot of the full document contents. See the equivalent
    * `BodyControl` method for details.
    *
@@ -181,5 +157,29 @@ export default class DocSession {
    */
   async caret_update(docRevNum, index, length = 0) {
     return this._caretControl.update(this._sessionId, docRevNum, index, length);
+  }
+
+  /**
+   * Returns a bit of identifying info about this instance, for the purposes of
+   * logging. Specifically, the client side will call this method and log the
+   * results during session initiation.
+   *
+   * @returns {string} A succinct identification string.
+   */
+  getLogInfo() {
+    const file    = this._fileComplex.file.id;
+    const session = this._sessionId;
+    const author  = this._authorId;
+
+    return `file ${file}; session ${session}; author ${author}`;
+  }
+
+  /**
+   * Returns the session ID of this instance.
+   *
+   * @returns {string} The session ID.
+   */
+  getSessionId() {
+    return this._sessionId;
   }
 }
