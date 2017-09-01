@@ -117,7 +117,7 @@ export default class DocSession {
    *   `null`, indicates the latest (most recent) revision.
    * @returns {DocumentSnapshot} The requested snapshot.
    */
-  async snapshot(revNum = null) {
+  async body_snapshot(revNum = null) {
     return this._bodyControl.snapshot(revNum);
   }
 

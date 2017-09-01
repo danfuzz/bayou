@@ -353,7 +353,7 @@ export default class DocClient extends StateMachine {
 
     const sessionProxy    = this._sessionProxy;
     const infoPromise     = sessionProxy.getLogInfo();
-    const snapshotPromise = sessionProxy.snapshot();
+    const snapshotPromise = sessionProxy.body_snapshot();
 
     try {
       const info = await infoPromise;
