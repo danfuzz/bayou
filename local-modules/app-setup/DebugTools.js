@@ -177,8 +177,8 @@ export default class DebugTools {
    */
   async _handle_change(req, res) {
     const revNum = req.params.revNum;
-    const doc = this._getExistingBody(req);
-    const change = (await doc).change(revNum);
+    const body = this._getExistingBody(req);
+    const change = (await body).change(revNum);
     const result = Codec.theOne.encodeJson(await change, true);
 
     this._textResponse(res, result);
@@ -272,9 +272,9 @@ export default class DebugTools {
    */
   async _handle_snapshot(req, res) {
     const revNum = req.params.revNum;
-    const doc = this._getExistingBody(req);
+    const body = this._getExistingBody(req);
     const args = (revNum === undefined) ? [] : [revNum];
-    const snapshot = (await doc).snapshot(...args);
+    const snapshot = (await body).snapshot(...args);
     const result = Codec.theOne.encodeJson(await snapshot, true);
 
     this._textResponse(res, result);
