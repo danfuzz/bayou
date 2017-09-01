@@ -201,7 +201,7 @@ export default class CaretOverlay {
         if (snapshot !== null) {
           // We have a snapshot which we can presumably get a delta from, so try
           // to do that.
-          const delta = await sessionProxy.caretDeltaAfter(snapshot.revNum);
+          const delta = await sessionProxy.caret_deltaAfter(snapshot.revNum);
           snapshot = snapshot.compose(delta);
           docSession.log.detail(`Got caret delta. ${snapshot.carets.length} caret(s).`);
         }
@@ -210,7 +210,7 @@ export default class CaretOverlay {
         // the session got restarted or because the snapshot we have is too old
         // to get a delta from. We just `null` out the snapshot and let the next
         // clause try to get it afresh.
-        docSession.log.warn('Trouble with `caretDeltaAfter`:', e);
+        docSession.log.warn('Trouble with `caret_deltaAfter`:', e);
         snapshot = null;
       }
 
@@ -221,14 +221,14 @@ export default class CaretOverlay {
           // because the attempt to get a delta failed for some reason. (The
           // latter is why this section isn't just part of an `else` block to
           // the previous `if`).
-          snapshot = await sessionProxy.caretSnapshot();
+          snapshot = await sessionProxy.caret_snapshot();
           docSession.log.detail(`Got ${snapshot.carets.length} new caret(s)!`);
         }
       } catch (e) {
         // Assume that the error is transient and most likely due to the session
         // getting terminated / restarted. Null out the session variables, wait
         // a moment, and try again.
-        docSession.log.warn('Trouble with `caretSnapshot`:', e);
+        docSession.log.warn('Trouble with `caret_snapshot`:', e);
         docSession   = null;
         sessionProxy = null;
         await Delay.resolve(ERROR_DELAY_MSEC);

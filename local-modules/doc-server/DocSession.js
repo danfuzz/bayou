@@ -124,7 +124,7 @@ export default class DocSession {
   /**
    * Gets a delta of caret information from the indicated base caret revision.
    * This will throw an error if the indicated caret revision isn't available,
-   * in which case the client will likely want to use `caretSnapshot()` to get
+   * in which case the client will likely want to use `caret_snapshot()` to get
    * back in synch.
    *
    * **Note:** Caret information and the main document have _separate_ revision
@@ -143,7 +143,7 @@ export default class DocSession {
    *   Applying this result to a `CaretSnapshot` for `baseRevNum` will produce
    *  an up-to-date snapshot.
    */
-  async caretDeltaAfter(baseRevNum) {
+  async caret_deltaAfter(baseRevNum) {
     return this._caretControl.deltaAfter(baseRevNum);
   }
 
@@ -159,7 +159,7 @@ export default class DocSession {
    *   `null`, indicates the latest (most recent) revision.
    * @returns {CaretSnapshot} Snapshot of all the active carets.
    */
-  async caretSnapshot(revNum = null) {
+  async caret_snapshot(revNum = null) {
     return this._caretControl.snapshot(revNum);
   }
 
@@ -179,7 +179,7 @@ export default class DocSession {
    * @returns {Int} The _caret_ revision number at which this information was
    *   integrated.
    */
-  async caretUpdate(docRevNum, index, length = 0) {
+  async caret_update(docRevNum, index, length = 0) {
     return this._caretControl.update(this._sessionId, docRevNum, index, length);
   }
 }
