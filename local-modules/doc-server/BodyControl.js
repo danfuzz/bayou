@@ -230,7 +230,7 @@ export default class BodyControl extends CommonBase {
       fc.op_writePath(Paths.SCHEMA_VERSION, this._fileComplex.schemaVersion),
 
       // Initial revision number.
-      fc.op_writePath(Paths.BODY_CHANGE_REVISION_NUMBER, revNum),
+      fc.op_writePath(Paths.BODY_REVISION_NUMBER, revNum),
 
       // Empty change #0 (per documented interface).
       fc.op_writePath(Paths.forBodyChange(0), change0),
@@ -283,7 +283,7 @@ export default class BodyControl extends CommonBase {
       // then iterate to see if in fact the change updated the document revision
       // number.
       const fc   = this._fileCodec;
-      const ops  = [fc.op_whenPathNot(Paths.BODY_CHANGE_REVISION_NUMBER, revNum)];
+      const ops  = [fc.op_whenPathNot(Paths.BODY_REVISION_NUMBER, revNum)];
       const spec = new TransactionSpec(...ops);
       try {
         await fc.transact(spec);
@@ -367,7 +367,7 @@ export default class BodyControl extends CommonBase {
       const fc = this._fileCodec;
       const spec = new TransactionSpec(
         fc.op_readPath(Paths.SCHEMA_VERSION),
-        fc.op_readPath(Paths.BODY_CHANGE_REVISION_NUMBER)
+        fc.op_readPath(Paths.BODY_REVISION_NUMBER)
       );
       transactionResult = await fc.transact(spec);
     } catch (e) {
@@ -377,7 +377,7 @@ export default class BodyControl extends CommonBase {
 
     const data          = transactionResult.data;
     const schemaVersion = data.get(Paths.SCHEMA_VERSION);
-    const revNum        = data.get(Paths.BODY_CHANGE_REVISION_NUMBER);
+    const revNum        = data.get(Paths.BODY_REVISION_NUMBER);
 
     if (!schemaVersion) {
       this._log.info('Corrupt document: Missing schema version.');
@@ -474,9 +474,9 @@ export default class BodyControl extends CommonBase {
     const fc   = this._fileCodec; // Avoids boilerplate immediately below.
     const spec = new TransactionSpec(
       fc.op_checkPathAbsent(changePath),
-      fc.op_checkPathIs(Paths.BODY_CHANGE_REVISION_NUMBER, baseRevNum),
+      fc.op_checkPathIs(Paths.BODY_REVISION_NUMBER, baseRevNum),
       fc.op_writePath(changePath, change),
-      fc.op_writePath(Paths.BODY_CHANGE_REVISION_NUMBER, revNum)
+      fc.op_writePath(Paths.BODY_REVISION_NUMBER, revNum)
     );
 
     try {
@@ -662,7 +662,7 @@ export default class BodyControl extends CommonBase {
    */
   async _currentRevNum() {
     const fc = this._fileCodec;
-    const storagePath = Paths.BODY_CHANGE_REVISION_NUMBER;
+    const storagePath = Paths.BODY_REVISION_NUMBER;
     const spec = new TransactionSpec(
       fc.op_checkPathPresent(storagePath),
       fc.op_readPath(storagePath)

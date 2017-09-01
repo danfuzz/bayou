@@ -29,7 +29,7 @@ export default class Paths extends UtilityClass {
    * {string} `StoragePath` string for the body content revision number.
    * This corresponds to the highest change number.
    */
-  static get BODY_CHANGE_REVISION_NUMBER() {
+  static get BODY_REVISION_NUMBER() {
     return `${Paths.BODY_PREFIX}/revision_number`;
   }
 
