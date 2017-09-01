@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import {
-  DocumentDelta, DocumentChange, DocumentSnapshot, FrozenDelta, RevisionNumber,
+  DocumentDelta, BodyChange, DocumentSnapshot, FrozenDelta, RevisionNumber,
   Timestamp
 } from 'doc-common';
 import { Errors, TransactionSpec } from 'file-store';
@@ -180,7 +180,7 @@ export default class BodyControl extends CommonBase {
    * @param {Int} revNum The revision number of the change. The result is the
    *   change which produced that revision. E.g., `0` is a request for the first
    *   change (the change from the empty document).
-   * @returns {DocumentChange} The requested change.
+   * @returns {BodyChange} The requested change.
    */
   async change(revNum) {
     RevisionNumber.check(revNum);
@@ -207,15 +207,15 @@ export default class BodyControl extends CommonBase {
     const fc = this._fileCodec; // Avoids boilerplate immediately below.
 
     // Per spec, a document starts with an empty change #0.
-    const change0 = DocumentChange.firstChange();
+    const change0 = BodyChange.firstChange();
 
     // If we get passed `contents`, that goes into change #1. We make an array
     // here (in either case) so that we can just use the `...` operator when
     // constructing the transaction spec.
     const maybeChange1 = [];
     if (contents !== null) {
-      const change = new DocumentChange(1, contents, Timestamp.now(), null);
-      const op     = fc.op_writePath(Paths.forDocumentChange(1), change);
+      const change = new BodyChange(1, contents, Timestamp.now(), null);
+      const op     = fc.op_writePath(Paths.forBodyChange(1), change);
       maybeChange1.push(op);
     }
 
@@ -233,7 +233,7 @@ export default class BodyControl extends CommonBase {
       fc.op_writePath(Paths.CHANGE_REVISION_NUMBER, revNum),
 
       // Empty change #0 (per documented interface).
-      fc.op_writePath(Paths.forDocumentChange(0), change0),
+      fc.op_writePath(Paths.forBodyChange(0), change0),
 
       // The given `content` (if any) for change #1.
       ...maybeChange1
@@ -423,7 +423,7 @@ export default class BodyControl extends CommonBase {
       const fc  = this._fileCodec;
       const ops = [];
       for (let i = revNum + 1; i <= (revNum + 10); i++) {
-        ops.push(fc.op_readPath(Paths.forDocumentChange(i)));
+        ops.push(fc.op_readPath(Paths.forBodyChange(i)));
       }
       const spec = new TransactionSpec(...ops);
       transactionResult = await fc.transact(spec);
@@ -454,14 +454,14 @@ export default class BodyControl extends CommonBase {
    * because the calling code should have handled that case without calling this
    * method.
    *
-   * @param {DocumentChange} change Change to append.
+   * @param {BodyChange} change Change to append.
    * @returns {Int|null} The revision number after appending `change`, or `null`
    *   if `change.revNum` is out-of-date (that is, isn't the immediately-next
    *   revision number) at the moment of attempted application.
    * @throws {Error} If `change.delta.isEmpty()`.
    */
   async _appendChange(change) {
-    DocumentChange.check(change);
+    BodyChange.check(change);
 
     if (change.delta.isEmpty()) {
       throw new Error('Should not have been called with an empty delta.');
@@ -469,7 +469,7 @@ export default class BodyControl extends CommonBase {
 
     const revNum     = change.revNum;
     const baseRevNum = revNum - 1;
-    const changePath = Paths.forDocumentChange(revNum);
+    const changePath = Paths.forBodyChange(revNum);
 
     const fc   = this._fileCodec; // Avoids boilerplate immediately below.
     const spec = new TransactionSpec(
@@ -526,7 +526,7 @@ export default class BodyControl extends CommonBase {
       // revision. If it succeeds, then we won the append race (if any).
 
       const change =
-        new DocumentChange(base.revNum + 1, delta, Timestamp.now(), authorId);
+        new BodyChange(base.revNum + 1, delta, Timestamp.now(), authorId);
       const revNum = await this._appendChange(change);
 
       if (revNum === null) {
@@ -589,7 +589,7 @@ export default class BodyControl extends CommonBase {
 
     const rNextNum = rCurrent.revNum + 1;
     const change =
-      new DocumentChange(rNextNum, dNext, Timestamp.now(), authorId);
+      new BodyChange(rNextNum, dNext, Timestamp.now(), authorId);
     const appendResult = await this._appendChange(change);
 
     if (appendResult === null) {
@@ -686,7 +686,7 @@ export default class BodyControl extends CommonBase {
    *
    * @param {Int} start Start change number (inclusive) of changes to read.
    * @param {Int} endExc End change number (exclusive) of changes to read.
-   * @returns {array<DocumentChange>} Array of changes, in order by change
+   * @returns {array<BodyChange>} Array of changes, in order by change
    *   number.
    */
   async _readChangeRange(start, endExc) {
@@ -709,7 +709,7 @@ export default class BodyControl extends CommonBase {
 
     const paths = [];
     for (let i = start; i < endExc; i++) {
-      paths.push(Paths.forDocumentChange(i));
+      paths.push(Paths.forBodyChange(i));
     }
 
     const fc = this._fileCodec;
@@ -725,7 +725,7 @@ export default class BodyControl extends CommonBase {
 
     const result = [];
     for (const p of paths) {
-      const change = DocumentChange.check(data.get(p));
+      const change = BodyChange.check(data.get(p));
       result.push(change);
     }
 

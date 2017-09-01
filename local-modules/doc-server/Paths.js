@@ -74,7 +74,7 @@ export default class Paths extends UtilityClass {
    * @returns {string} The corresponding `StoragePath` string for document
    *   change storage.
    */
-  static forDocumentChange(revNum) {
+  static forBodyChange(revNum) {
     RevisionNumber.check(revNum);
     return `${Paths.CHANGE_PREFIX}/${revNum}`;
   }

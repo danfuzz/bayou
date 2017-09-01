@@ -23,24 +23,24 @@ import Timestamp from './Timestamp';
  * if a mutable delta is passed to the constructor of this class, it is coerced
  * into immutable form.
  */
-export default class DocumentChange extends DocumentDelta {
+export default class BodyChange extends DocumentDelta {
   /**
-   * Gets the appropriate first change to a document (empty delta, no author)
-   * for the current moment in time.
+   * Gets the appropriate first change to a document body (empty delta, no
+   * author) for the current moment in time.
    *
    * @returns {FrozenDelta} An appropriate initial change.
    */
   static firstChange() {
-    return new DocumentChange(0, FrozenDelta.EMPTY, Timestamp.now(), null);
+    return new BodyChange(0, FrozenDelta.EMPTY, Timestamp.now(), null);
   }
 
   /**
    * Constructs an instance.
    *
    * @param {Int} revNum The revision number of the document produced by this
-   *   change. If this instance represents the first change to a document,
+   *   change. If this instance represents the first change to a document body,
    *   then this value will be `0`.
-   * @param {FrozenDelta} delta The document change per se, compared to the
+   * @param {FrozenDelta} delta The body change per se, compared to the
    *   immediately-previous revision.
    * @param {Timestamp} timestamp The time of the change, as msec since the Unix
    *   Epoch.
