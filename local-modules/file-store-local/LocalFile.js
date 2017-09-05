@@ -6,10 +6,10 @@ import afs from 'async-file';
 import path from 'path';
 
 import { Codec } from 'codec';
-import { BaseFile, Errors } from 'file-store';
+import { BaseFile, Errors, StoragePath } from 'file-store';
 import { Condition, Delay, Mutex } from 'promise-util';
 import { Logger } from 'see-all';
-import { FrozenBuffer } from 'util-common';
+import { FrozenBuffer, InfoError } from 'util-common';
 
 import Transactor from './Transactor';
 
@@ -24,15 +24,21 @@ const log = new Logger('local-file');
 const DIRTY_DELAY_MSEC = 5 * 1000; // 5 seconds.
 
 /**
- * {string} Special storage path to use to record the file revision number. The
- * `@` prefix on the path guarantees that it won't conflict with higher-layer
- * uses, as that isn't a valid `StoragePath` character.
+ * {string} Prefix character which indicates an internal-use storage ID. The
+ * chosen character is notably not valid in either `StoragePath` or content hash
+ * strings.
+ */
+const INTERNAL_STORAGE_ID_PREFIX = '@';
+
+/**
+ * {string} Special storage ID to use to record the file revision number.
  *
  * **Note:** Higher layers of the system (that use this module) can (and do)
  * define their own separate concept of revision numbering. These are
  * intentionally not the same thing.
  */
-const REVISION_NUMBER_PATH = '/@local_file_revision_number';
+const REVISION_NUMBER_ID =
+  `${INTERNAL_STORAGE_ID_PREFIX}local_file_revision_number`;
 
 /** {number} Maximum number of simultaneous FS calls to issue in parallel. */
 const MAX_PARALLEL_FS_CALLS = 20;
@@ -62,9 +68,9 @@ export default class LocalFile extends BaseFile {
     this._revNum = null;
 
     /**
-     * {Map<string, FrozenBuffer>|null} Map from `StoragePath` strings to
-     * corresponding stored data, for the entire file. `null` indicates that
-     * the map is not yet initialized.
+     * {Map<string, FrozenBuffer>|null} Map from storage ID strings (either a
+     * `StoragePath` or content hash) to corresponding stored data, for the
+     * entire file. `null` indicates that the map is not yet initialized.
      */
     this._storage = null;
 
@@ -76,9 +82,9 @@ export default class LocalFile extends BaseFile {
     this._fileShouldExist = null;
 
     /**
-     * {Map<string, FrozenBuffer>|null} Map from `StoragePath` strings to
-     * corresponding stored data, for file contents that have not yet been
-     * written to disk.
+     * {Map<string, FrozenBuffer>|null} Map from storage ID strings (either a
+     * `StoragePath` or content hash) to corresponding stored data, for file
+     * contents that have not yet been written to disk.
      */
     this._storageToWrite = new Map();
 
@@ -237,18 +243,27 @@ export default class LocalFile extends BaseFile {
        *   if there is none.
        */
       readPathOrNull(storagePath) {
+        StoragePath.check(storagePath);
         return outerThis._storage.get(storagePath) || null;
       },
 
       /**
        * Gets an iterator over all path-based storage. Yielded elements are
-       * entries of the form `[path, data]`.
+       * entries of the form `[storagePath, data]`.
        *
        * @returns {Iterator<string, FrozenBuffer>} Iterator over all path-based
        *   storage.
        */
       pathStorage() {
-        return outerThis._storage.entries();
+        function* pathEntries() {
+          for (const [storageId, value] of outerThis._storage) {
+            if (StoragePath.isInstance(storageId)) {
+              yield [storageId, value];
+            }
+          }
+        }
+
+        return pathEntries();
       }
     };
 
@@ -284,16 +299,16 @@ export default class LocalFile extends BaseFile {
     if (updatedStorage.size !== 0) {
       this._revNum = newRevNum = revNum + 1;
 
-      for (const [storagePath, value] of updatedStorage) {
+      for (const [storageId, value] of updatedStorage) {
         if (value === null) {
-          this._log.detail(`Transaction deleted path: ${storagePath}`);
-          this._storage.delete(storagePath);
+          this._log.detail(`Transaction deleted: ${storageId}`);
+          this._storage.delete(storageId);
         } else {
-          this._log.detail(`Transaction wrote path: ${storagePath}`);
-          this._storage.set(storagePath, value);
+          this._log.detail(`Transaction wrote: ${storageId}`);
+          this._storage.set(storageId, value);
         }
 
-        this._storageToWrite.set(storagePath, value);
+        this._storageToWrite.set(storageId, value);
       }
 
       this._storageNeedsWrite();
@@ -361,7 +376,7 @@ export default class LocalFile extends BaseFile {
     // Loop over all the files, requesting their contents, and waiting for
     // a chunk of them at a time.
     for (const f of files) {
-      paths.push(LocalFile._storagePathForFsName(f));
+      paths.push(LocalFile._storageIdForFsName(f));
       bufProms.push(afs.readFile(path.resolve(this._storageDir, f)));
       if (paths.length >= MAX_PARALLEL_FS_CALLS) {
         await storeBufs();
@@ -378,7 +393,7 @@ export default class LocalFile extends BaseFile {
     // Parse the file revision number out of its special-named blob, and handle
     // things reasonably gracefully if it's missing or corrupt.
     try {
-      const revNumBuffer = storage.get(REVISION_NUMBER_PATH);
+      const revNumBuffer = storage.get(REVISION_NUMBER_ID);
       revNum = this._revNumCodec.decodeJsonBuffer(revNumBuffer);
       this._log.info(`Starting revision number: ${revNum}`);
     } catch (e) {
@@ -504,7 +519,7 @@ export default class LocalFile extends BaseFile {
 
     // Put the file revision number in the `dirtyValues` map. This way, it gets
     // written out without further special casing.
-    dirtyValues.set(REVISION_NUMBER_PATH,
+    dirtyValues.set(REVISION_NUMBER_ID,
       this._revNumCodec.encodeJsonBuffer(revNum));
 
     this._log.info(`About to write ${dirtyValues.size} value(s).`);
@@ -523,14 +538,14 @@ export default class LocalFile extends BaseFile {
     // Perform the writes / deletes.
 
     let afsResults = [];
-    for (const [storagePath, data] of dirtyValues) {
-      const fsPath = this._fsPathForStorage(storagePath);
+    for (const [storageId, data] of dirtyValues) {
+      const fsPath = this._fsPathForStorageId(storageId);
       if (data === null) {
         afsResults.push(afs.unlink(fsPath));
-        this._log.info(`Deleted: ${storagePath}`);
+        this._log.info(`Deleted: ${storageId}`);
       } else {
         afsResults.push(afs.writeFile(fsPath, data.toBuffer()));
-        this._log.info(`Wrote: ${storagePath}`);
+        this._log.info(`Wrote: ${storageId}`);
       }
 
       if (afsResults.length >= MAX_PARALLEL_FS_CALLS) {
@@ -550,32 +565,65 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * Converts a `StoragePath` string to the name of the file at which to find
-   * the data for that path. In particular, we don't want the hiererarchical
-   * structure of the path to turn into nested directories, so slashes (`/`) get
-   * converted to tildes (`~`), the latter which is not a valid character for
-   * a storage path component. This also appends the filetype suffix `.blob`.
+   * Converts a storage ID string (`StoragePath` or content hash) to the name of
+   * the file at which to find the data for that ID. In particular, we don't
+   * want the hiererarchical structure of the path to turn into nested
+   * directories, so path slashes (`/`) get converted to tildes (`~`), the
+   * latter which is not a valid character for a storage path component. This
+   * also appends the filetype suffix `.blob`.
    *
-   * @param {string} storagePath The storage path.
+   * @param {string} storageId The storage ID.
    * @returns {string} The fully-qualified file name to use when accessing
-   *   `path`.
+   *   `storageId`.
    */
-  _fsPathForStorage(storagePath) {
-    // `slice(1)` trims off the initial slash.
-    const fileName = `${storagePath.slice(1).replace(/\//g, '~')}.blob`;
+  _fsPathForStorageId(storageId) {
+    let baseName;
+
+    if (StoragePath.isInstance(storageId)) {
+      // `slice(1)` trims off the initial slash.
+      baseName = storageId.slice(1).replace(/\//g, '~');
+    } else if (FrozenBuffer.isHash(storageId) || LocalFile._isInternalStorageId(storageId)) {
+      baseName = storageId;
+    } else {
+      throw InfoError.wtf('Invalid `storageId`.');
+    }
+
+    const fileName = `${baseName}.blob`;
     return path.resolve(this._storageDir, fileName);
   }
 
   /**
-   * Converts a filesystem file name for a stored value into a `StoragePath`
-   * string identifying same. This is approximately the inverse of
-   * `_fsPathForStorage()` (only approximate because this one expects a simple
-   * name, not a fully-qualified filesystem path).
+   * Indicates whether the given storage ID is an internal-use one.
+   *
+   * @param {string} storageId The storage ID.
+   * @returns {boolean} `true` iff `storageId` is only for the internal use of
+   *   this module.
+   */
+  static _isInternalStorageId(storageId) {
+    return storageId.startsWith(INTERNAL_STORAGE_ID_PREFIX);
+  }
+
+  /**
+   * Converts a filesystem path for a stored value into a storage ID string
+   * (`StoragePath` or content hash) identifying same. This is the inverse of
+   * `_fsPathForStorageId()`, except that this method doesn't care about the
+   * directory of the path (including that it will accept a simple file name).
    *
    * @param {string} fsName The file name for a stored value.
-   * @returns {string} The `StoragePath` string corresponding to `fsName`.
+   * @returns {string} The corresponding storage ID.
    */
-  static _storagePathForFsName(fsName) {
-    return `/${fsName.replace(/~/g, '/').replace(/\..*$/, '')}`;
+  static _storageIdForFsName(fsName) {
+    // Trim off the directory prefix and filename suffix.
+    const match = fsName.match(/([^/]+)\.[^./]*$/);
+    if (match === null) {
+      throw InfoError.wtf('Invalid storage path.');
+    }
+    const baseName = match[1];
+
+    if (FrozenBuffer.isHash(baseName) || LocalFile._isInternalStorageId(baseName)) {
+      return baseName;
+    } else {
+      return `/${baseName.replace(/~/g, '/')}`;
+    }
   }
 }
