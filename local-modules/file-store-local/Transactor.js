@@ -54,8 +54,9 @@ export default class Transactor extends CommonBase {
     this._hasWaitOps = spec.hasWaitOps();
 
     /**
-     * {Map<string, FrozenBuffer|null>} Map from paths updated while running the
-     * transaction to the updated data or `null` for deleted paths.
+     * {Map<string, FrozenBuffer|null>} Map from storage IDs updated while
+     * running the transaction to the updated data or `null` for deleted
+     * entries.
      */
     this._updatedStorage = new Map();
 
@@ -142,6 +143,7 @@ export default class Transactor extends CommonBase {
    */
   _op_checkBlobAbsent(op) {
     const hash = op.arg('hash');
+
     if (this._fileFriend.readBlobOrNull(hash) !== null) {
       throw Errors.blob_not_absent(hash);
     }
@@ -154,6 +156,7 @@ export default class Transactor extends CommonBase {
    */
   _op_checkBlobPresent(op) {
     const hash = op.arg('hash');
+
     if (this._fileFriend.readBlobOrNull(hash) === null) {
       throw Errors.blob_not_found(hash);
     }
@@ -166,6 +169,7 @@ export default class Transactor extends CommonBase {
    */
   _op_checkPathAbsent(op) {
     const storagePath = op.arg('storagePath');
+
     if (this._fileFriend.readPathOrNull(storagePath) !== null) {
       throw Errors.path_not_absent(storagePath);
     }
@@ -210,6 +214,7 @@ export default class Transactor extends CommonBase {
    */
   _op_checkPathPresent(op) {
     const storagePath = op.arg('storagePath');
+
     if (this._fileFriend.readPathOrNull(storagePath) === null) {
       throw Errors.path_not_found(storagePath);
     }
@@ -232,10 +237,11 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_deleteBlob(op) {
-    const hash_unused = op.arg('hash');
+    const hash = op.arg('hash');
 
-    // **TODO:** Implement this.
-    Transactor._missingOp(op.name);
+    if (this._fileFriend.readBlobOrNull(hash) !== null) {
+      this._updatedStorage.set(hash, null);
+    }
   }
 
   /**
@@ -278,10 +284,14 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_readBlob(op) {
-    const hash_unused = op.arg('hash');
+    const hash = op.arg('hash');
+    const data = this._fileFriend.readBlobOrNull(hash);
 
-    // **TODO:** Implement this.
-    Transactor._missingOp(op.name);
+    if (data !== null) {
+      // Per the `FileOp` documentation, we are only supposed to bind a result
+      // key if the blob is present.
+      this._data.set(hash, data);
+    }
   }
 
   /**
@@ -294,8 +304,8 @@ export default class Transactor extends CommonBase {
     const data        = this._fileFriend.readPathOrNull(storagePath);
 
     if (data !== null) {
-      // Per the `FileOp` documentation, we are _not_ supposed to bind result
-      // data if the path isn't found.
+      // Per the `FileOp` documentation, we are only supposed to bind a result
+      // key if the path is present (stores data).
       this._data.set(storagePath, data);
     }
   }
@@ -384,10 +394,9 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_writeBlob(op) {
-    const value_unused = op.arg('value');
+    const value = op.arg('value');
 
-    // **TODO:** Implement this.
-    Transactor._missingOp(op.name);
+    this._updatedStorage.set(value.hash, value);
   }
 
   /**
@@ -396,7 +405,10 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_writePath(op) {
-    this._updatedStorage.set(op.arg('storagePath'), op.arg('value'));
+    const storagePath = op.arg('storagePath');
+    const value       = op.arg('value');
+
+    this._updatedStorage.set(storagePath, value);
   }
 
   /**
