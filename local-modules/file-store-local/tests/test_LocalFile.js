@@ -90,7 +90,7 @@ describe('file-store-local/LocalFile', () => {
   });
 
   describe('exists()', () => {
-    it('should return `false` if the underlying storage does not exis.', async () => {
+    it('should return `false` if the underlying storage does not exist', async () => {
       const file = new LocalFile('0', TempFiles.uniquePath());
       assert.isFalse(await file.exists());
     });
