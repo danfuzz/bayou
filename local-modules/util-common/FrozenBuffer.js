@@ -6,7 +6,7 @@
 // module, which is why this is possible to import regardless of environment.
 import crypto from 'crypto';
 
-import { TBuffer, TInt, TString, TypeError } from 'typecheck';
+import { TBuffer, TInt, TypeError } from 'typecheck';
 
 import CommonBase from './CommonBase';
 
@@ -26,25 +26,36 @@ export default class FrozenBuffer extends CommonBase {
   /**
    * Validates that the given value is a valid hash string, such as might be
    * returned by the instance property `.hash` on this class. Throws an error if
-   * not valid.
+   * given an invalid value.
    *
-   * @param {*} hash The (alleged) hash value.
-   * @returns {string} `hash`.
+   * @param {*} value The (alleged) hash value.
+   * @returns {string} `value`, assuming it is indeed a valid hash string.
    */
-  static checkHash(hash) {
-    try {
-      TString.nonempty(hash);
-    } catch (e) {
-      // Throw a higher-fidelity error.
-      return TypeError.badValue(hash, 'Hash');
+  static checkHash(value) {
+    return FrozenBuffer.isHash(value)
+      ? value
+      : TypeError.badValue(value, 'FrozenBuffer hash');
+  }
+
+  /**
+   * Indicates whether or not the given value is a valid hash string, such as
+   * might be returned by the instance property `.hash` on this class.
+   *
+   * @param {*} value Value in question.
+   * @returns {boolean} `true` if `value` is a valid hash string, or `false` if
+   *   not.
+   */
+  static isHash(value) {
+    if (typeof value !== 'string') {
+      return false;
     }
 
     // Validate the fields.
 
-    const match = hash.match(/^=([a-z0-9]+)_([1-9a-f][0-9a-f]*|0)_([0-9a-f]+)/);
+    const match = value.match(/^=([a-z0-9]+)_([1-9a-f][0-9a-f]*|0)_([0-9a-f]+)/);
 
     if (match === null) {
-      return TypeError.badValue(hash, 'Hash');
+      return false;
     }
 
     const algorithm = match[1];
@@ -54,10 +65,10 @@ export default class FrozenBuffer extends CommonBase {
     if (   (algorithm !== PUBLIC_HASH_NAME)
         || (length.length > 8)
         || (digest.length !== (HASH_BIT_LENGTH / 4))) {
-      return TypeError.badValue(hash, 'Hash');
+      return false;
     }
 
-    return hash;
+    return true;
   }
 
   /**

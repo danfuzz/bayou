@@ -9,32 +9,68 @@ import { DataUtil } from 'util-common';
 
 describe('util-common/DataUtil', () => {
   describe('deepFreeze()', () => {
-    it('should return the provided value if it is a primitive', () => {
-      const symbol = Symbol('foo');
+    it('should return the given value if it is a primitive', () => {
+      function test(value) {
+        const popsicle = DataUtil.deepFreeze(value);
+        assert.strictEqual(popsicle, value);
+      }
 
-      assert.strictEqual(DataUtil.deepFreeze(true), true);
-      assert.strictEqual(DataUtil.deepFreeze(37), 37);
-      assert.strictEqual(DataUtil.deepFreeze('a string'), 'a string');
-      assert.strictEqual(DataUtil.deepFreeze(symbol), symbol);
-      assert.strictEqual(DataUtil.deepFreeze(undefined), undefined);
-    });
-
-    it('should return null if provided a null object', () => {
-      assert.isNull(DataUtil.deepFreeze(null));
+      test(undefined);
+      test(null);
+      test(false);
+      test(true);
+      test(37);
+      test('a string');
+      test(Symbol('foo'));
     });
 
     it('should return the provided value if it is already deep-frozen', () => {
-      const object = { 'a': 1, 'b': 2 };
-      const popsicle = DataUtil.deepFreeze(object);
+      function test(value) {
+        const popsicle = DataUtil.deepFreeze(value);
+        const deepPopsicle = DataUtil.deepFreeze(popsicle);
+        assert.strictEqual(deepPopsicle, popsicle);
+        assert.deepEqual(deepPopsicle, value);
+      }
 
-      assert.isTrue(popsicle === DataUtil.deepFreeze(popsicle));
+      test({});
+      test({ a: 1 });
+      test({ a: { b: 10 }, c: { d: 20 } });
+      test([]);
+      test([1]);
+      test([[1, 2], [3, 4]]);
     });
 
     it('should return a deep-frozen object if passed one that isn\'t already deep-frozen', () => {
-      const object = { 'a': 1, 'b': 2 };
-      const popsicle = DataUtil.deepFreeze(object);
+      // Good enough recursive frozen check for testing, but not good enough to
+      // be in the main class.
+      function isDeepFrozen(value) {
+        if (!Object.isFrozen(value)) {
+          return false;
+        } else if (typeof value !== 'object') {
+          return true;
+        }
 
-      assert.throws(() => popsicle['a'] = 37);
+        for (const v of Object.values(value)) {
+          if (!isDeepFrozen(v)) {
+            return false;
+          }
+        }
+
+        return true;
+      }
+
+      function test(value) {
+        const popsicle = DataUtil.deepFreeze(value);
+        assert.isTrue(isDeepFrozen(popsicle), value);
+        assert.deepEqual(popsicle, value);
+      }
+
+      test({});
+      test({ a: 1, b: 2 });
+      test([]);
+      test([1, 2, 'foo', 'bar']);
+      test([[[[[[[[[['hello']]]]]]]]]]);
+      test({ x: [[[[[123]]]]], y: [37, [37], [[37]], [[[37]]]], z: [{ x: 10 }] });
     });
   });
 

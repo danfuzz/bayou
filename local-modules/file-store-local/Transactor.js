@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Errors } from 'file-store';
+import { Errors, StoragePath } from 'file-store';
 import { CommonBase, InfoError } from 'util-common';
 
 /**
@@ -217,8 +217,8 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op_unused The operation.
    */
   _op_deleteAll(op_unused) {
-    for (const [path, value_unused] of this._fileFriend.pathStorage()) {
-      this._updatedStorage.set(path, null);
+    for (const [storagePath, value_unused] of this._fileFriend.pathStorage()) {
+      this._updatedStorage.set(storagePath, null);
     }
   }
 
@@ -251,15 +251,17 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_listPath(op) {
-    const prefix = `${op.arg('storagePath')}/`;
+    const prefix = op.arg('storagePath');
 
-    for (const [path, value_unused] of this._fileFriend.pathStorage()) {
-      if (path.startsWith(prefix)) {
+    for (const [storagePath, value_unused] of this._fileFriend.pathStorage()) {
+      if (StoragePath.isPrefix(prefix, storagePath)) {
         // We have a prefix match. Strip off components beyond the one
-        // immediately under the prefix, if any.
-        const nextSlashAt = path.indexOf('/', prefix.length);
-        this._paths.add(
-          (nextSlashAt === -1) ? path : path.slice(0, nextSlashAt));
+        // immediately under the prefix, if any. (`+1` to skip the slash
+        // immediately after the prefix.)
+        const nextSlashAt = storagePath.indexOf('/', prefix.length + 1);
+        const newPath =
+          (nextSlashAt === -1) ? storagePath : storagePath.slice(0, nextSlashAt);
+        this._paths.add(newPath);
       }
     }
   }

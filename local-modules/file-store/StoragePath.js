@@ -63,13 +63,9 @@ export default class StoragePath extends UtilityClass {
    * @returns {string} `value` if it is in fact a valid storage path string.
    */
   static check(value) {
-    TString.nonempty(value);
-
-    if (!PATH_REGEX.test(value)) {
-      return TypeError.badValue(value, 'StoragePath');
-    }
-
-    return value;
+    return StoragePath.isInstance(value)
+      ? value
+      : TypeError.badValue(value, 'StoragePath');
   }
 
   /**
@@ -88,6 +84,17 @@ export default class StoragePath extends UtilityClass {
     }
 
     return value;
+  }
+
+  /**
+   * Indicates whether the given value is a valid storage path.
+   *
+   * @param {*} value Value in question.
+   * @returns {boolean} `true` if `value` is indeed a valid storage path string,
+   *   or `false` if not.
+   */
+  static isInstance(value) {
+    return (typeof value === 'string') && PATH_REGEX.test(value);
   }
 
   /**
