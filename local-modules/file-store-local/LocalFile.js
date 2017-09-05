@@ -236,6 +236,24 @@ export default class LocalFile extends BaseFile {
       },
 
       /**
+       * Gets an iterator over all storage (not including internal-only
+       * entries). Yielded elements are entries of the form `[storageId, data]`.
+       *
+       * @returns {Iterator<string, FrozenBuffer>} Iterator over all storage.
+       */
+      allStorage() {
+        function* yieldEntries() {
+          for (const [storageId, value] of outerThis._storage) {
+            if (!outerThis._isInternalStorageId(storageId)) {
+              yield [storageId, value];
+            }
+          }
+        }
+
+        return yieldEntries();
+      },
+
+      /**
        * Gets the content blob from the file which has the indicated hash, if
        * any.
        *
@@ -268,7 +286,7 @@ export default class LocalFile extends BaseFile {
        *   storage.
        */
       pathStorage() {
-        function* pathEntries() {
+        function* yieldEntries() {
           for (const [storageId, value] of outerThis._storage) {
             if (StoragePath.isInstance(storageId)) {
               yield [storageId, value];
@@ -276,7 +294,7 @@ export default class LocalFile extends BaseFile {
           }
         }
 
-        return pathEntries();
+        return yieldEntries();
       }
     };
 

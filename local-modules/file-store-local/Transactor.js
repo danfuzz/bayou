@@ -221,7 +221,7 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op_unused The operation.
    */
   _op_deleteAll(op_unused) {
-    for (const [storagePath, value_unused] of this._fileFriend.pathStorage()) {
+    for (const [storagePath, value_unused] of this._fileFriend.allStorage()) {
       this._updatedStorage.set(storagePath, null);
     }
   }
