@@ -242,15 +242,7 @@ export default class LocalFile extends BaseFile {
        * @returns {Iterator<string, FrozenBuffer>} Iterator over all storage.
        */
       allStorage() {
-        function* yieldEntries() {
-          for (const [storageId, value] of outerThis._storage) {
-            if (!outerThis._isInternalStorageId(storageId)) {
-              yield [storageId, value];
-            }
-          }
-        }
-
-        return yieldEntries();
+        return outerThis._filterStorage(LocalFile._isInternalStorageId);
       },
 
       /**
@@ -286,15 +278,7 @@ export default class LocalFile extends BaseFile {
        *   storage.
        */
       pathStorage() {
-        function* yieldEntries() {
-          for (const [storageId, value] of outerThis._storage) {
-            if (StoragePath.isInstance(storageId)) {
-              yield [storageId, value];
-            }
-          }
-        }
-
-        return yieldEntries();
+        return outerThis._filterStorage(StoragePath.isInstance);
       }
     };
 
@@ -347,6 +331,31 @@ export default class LocalFile extends BaseFile {
 
     this._log.detail('Transaction complete.');
     return { revNum, newRevNum, data, paths };
+  }
+
+  /**
+   * Gets an iterator over `_storage` which filters elements (similar to
+   * `Array.filter()`) using the given function. This is a helper for the
+   * `fileFriend` used in `_impl_transact()`.
+   *
+   * @param {function} filter Filter function. It is passed storage IDs and
+   *   is expected to return `true` for keys which should be present in the
+   *   iteration.
+   * @returns {Iterator<[string, FrozenBuffer]>} Iterator over filtered storage
+   *   entries.
+   */
+  _filterStorage(filter) {
+    const storage = this._storage;
+
+    function* yieldEntries() {
+      for (const [storageId, value] of storage) {
+        if (filter(storageId)) {
+          yield [storageId, value];
+        }
+      }
+    }
+
+    return yieldEntries();
   }
 
   /**
