@@ -21,41 +21,94 @@ const STRING_CASES = [
   '😀'
 ];
 
+/** {array<string>} List of valid hash values. */
+const VALID_HASHES = [
+  '=sha3_0_0000000011111111222222223333333300000000111111112222222233333333',
+  '=sha3_1_0000000011111111222222223333333300000000111111112222222233333333',
+  '=sha3_9abcdef_0000000011111111222222223333333300000000111111112222222233333333',
+  '=sha3_123abc_00000000123456782222222233333333000000001111111122222222abcdef99'
+];
+
+/** {array<string>} List of invalid hash values. */
+const INVALID_HASHES = [
+  // Totally wrong syntax.
+  '',
+  '1234',
+  'sha3_1234',
+  'florp_like',
+  'sha3_1234_0000000011111111222222223333333300000000111111112222222233333333',
+
+  // Missing `=` sigil.
+  'sha3_123abc_00000000123456782222222233333333000000001111111122222222abcdef99',
+
+  // Wrong field separator.
+  '=sha3-123abc-00000000123456782222222233333333000000001111111122222222abcdef99',
+
+  // Uppercase hex.
+  '=sha3-123ABC-00000000123456782222222233333333000000001111111122222222abcdef99',
+  '=sha3_123abc_00000000123456782222222233333333000000001111111122222222ABCDEF99',
+
+  // Unsupported algorithm.
+  '=blort_1234_0000000011111111222222223333333300000000111111112222222233333333',
+
+  // Length of hash too long.
+  '=sha3_123456789_0000000011111111222222223333333300000000111111112222222233333333',
+
+  // Zero-prefixed length field.
+  '=sha3_01_0000000011111111222222223333333300000000111111112222222233333333'
+];
+
+/** {array<*>} List of non-string values. */
+const NON_STRINGS = [
+  null,
+  undefined,
+  false,
+  true,
+  123.456,
+  [],
+  ['/hello'],
+  {},
+  { '/x': '/y' }
+];
+
 describe('util-common/FrozenBuffer', () => {
   describe('checkHash()', () => {
     it('should accept valid hash strings', () => {
-      function test(string) {
-        assert.strictEqual(FrozenBuffer.checkHash(string), string);
+      for (const value of VALID_HASHES) {
+        assert.strictEqual(FrozenBuffer.checkHash(value), value);
       }
-
-      test('=sha3_0_0000000011111111222222223333333300000000111111112222222233333333');
-      test('=sha3_1_0000000011111111222222223333333300000000111111112222222233333333');
-      test('=sha3_9abcdef_0000000011111111222222223333333300000000111111112222222233333333');
-      test('=sha3_123abc_00000000123456782222222233333333000000001111111122222222abcdef99');
     });
 
     it('should reject invalid hash strings', () => {
-      assert.throws(() => FrozenBuffer.checkHash(''));
-      assert.throws(() => FrozenBuffer.checkHash('1234'));
-      assert.throws(() => FrozenBuffer.checkHash('sha3_1234'));
-      assert.throws(() => FrozenBuffer.checkHash('sha3_1234_0000000011111111222222223333333300000000111111112222222233333333'));
-
-      // Wrong algorithm.
-      assert.throws(() => FrozenBuffer.checkHash('=blort_1234_0000000011111111222222223333333300000000111111112222222233333333'));
-
-      // Length too long.
-      assert.throws(() => FrozenBuffer.checkHash('=sha3_123456789_0000000011111111222222223333333300000000111111112222222233333333'));
-
-      // Zero-prefixed length.
-      assert.throws(() => FrozenBuffer.checkHash('=sha3_01_0000000011111111222222223333333300000000111111112222222233333333'));
+      for (const value of INVALID_HASHES) {
+        assert.throws(() => { FrozenBuffer.checkHash(value); });
+      }
     });
 
     it('should reject non-strings', () => {
-      assert.throws(() => FrozenBuffer.checkHash(undefined));
-      assert.throws(() => FrozenBuffer.checkHash(null));
-      assert.throws(() => FrozenBuffer.checkHash(true));
-      assert.throws(() => FrozenBuffer.checkHash(123.456));
-      assert.throws(() => FrozenBuffer.checkHash(['yo']));
+      for (const value of NON_STRINGS) {
+        assert.throws(() => { FrozenBuffer.checkHash(value); });
+      }
+    });
+  });
+
+  describe('isHash()', () => {
+    it('should return `true` for valid hash strings', () => {
+      for (const value of VALID_HASHES) {
+        assert.isTrue(FrozenBuffer.isHash(value), value);
+      }
+    });
+
+    it('should reject invalid hash strings', () => {
+      for (const value of INVALID_HASHES) {
+        assert.isFalse(FrozenBuffer.isHash(value), value);
+      }
+    });
+
+    it('should reject non-strings', () => {
+      for (const value of NON_STRINGS) {
+        assert.isFalse(FrozenBuffer.isHash(value), value);
+      }
     });
   });
 
@@ -120,8 +173,7 @@ describe('util-common/FrozenBuffer', () => {
       // **Note:** You can validate this result via the commandline `openssl`
       // tool: `printf '<data>' | openssl dgst -sha256`
       const data = 'This is the most important data you have ever observed.';
-      const expected = '=sha3_37_' +
-        '0a0dd2a860af2422778911afa63c1cae54d425db402d73415cc7060d99179f3a';
+      const expected = '=sha3_37_0a0dd2a860af2422778911afa63c1cae54d425db402d73415cc7060d99179f3a';
       const buf = new FrozenBuffer(data);
 
       assert.strictEqual(buf.hash, expected);
@@ -262,5 +314,4 @@ describe('util-common/FrozenBuffer', () => {
       }
     });
   });
-
 });
