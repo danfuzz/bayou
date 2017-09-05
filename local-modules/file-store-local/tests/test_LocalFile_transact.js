@@ -256,4 +256,31 @@ describe('file-store-local/LocalFile.transact', () => {
       assert.isTrue(paths.has('/blort/x/definitely'));
     });
   });
+
+  describe('op readBlob', () => {
+    it('should succeed in reading a blob that is in the file', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Muffins are now biscuits.');
+      await file.create();
+      await file.transact(new TransactionSpec(FileOp.op_writeBlob(blob)));
+
+      // The reading is based on the hash of `blob`, so it's irrelevant that
+      // the given argument is actually the content in question.
+      const spec = new TransactionSpec(FileOp.op_readBlob(blob));
+      const transactionResult = await assert.isFulfilled(file.transact(spec));
+
+      assert.strictEqual(transactionResult.data.get(blob.hash), blob);
+    });
+
+    it('should succeed even if the blob is not present', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Muffins are now biscuits.');
+      await file.create();
+
+      const spec = new TransactionSpec(FileOp.op_readBlob(blob));
+      const transactionResult = await assert.isFulfilled(file.transact(spec));
+
+      assert.strictEqual(transactionResult.data.size, 0);
+    });
+  });
 });
