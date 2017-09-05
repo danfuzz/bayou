@@ -5,6 +5,7 @@
 import { TBoolean, TInt, TMap, TObject, TSet, TString } from 'typecheck';
 import { CommonBase, FrozenBuffer, InfoError } from 'util-common';
 
+import StorageId from './StorageId';
 import StoragePath from './StoragePath';
 import TransactionSpec from './TransactionSpec';
 
@@ -170,10 +171,11 @@ export default class BaseFile extends CommonBase {
    *   operations, the revision number of the file that resulted from those
    *   modifications.
    * * `data` &mdash; If the transaction spec included any data read operations,
-   *   a `Map<string, FrozenBuffer>` from storage paths to the data which was
-   *   read. **Note:** Even if there was no data to read (e.g., all read
-   *   operations were for non-bound paths), as long as the spec included any
-   *   read operations, this property will still be present.
+   *   a `Map<string, FrozenBuffer>` from storage ID strings (`StoragePath`s or
+   *   content hashes) to the data which was read. **Note:** Even if there was
+   *   no data to read (e.g., all read operations were for non-bound paths), as
+   *   long as the spec included any read operations, this property will still
+   *   be present.
    * * `paths` &mdash; If the transaction spec included any wait or path list
    *   operations, a `Set<string>` of storage paths that resulted from the
    *   operations. **Note:** Even if there were no found paths (e.g., no
@@ -210,7 +212,7 @@ export default class BaseFile extends CommonBase {
       if (result.data === null) {
         throw InfoError.wtf('Improper subclass behavior: Expected non-`null` `data`.');
       }
-      TMap.check(result.data, StoragePath.check, FrozenBuffer.check);
+      TMap.check(result.data, StorageId.check, FrozenBuffer.check);
     } else {
       if (result.data !== null) {
         throw InfoError.wtf('Improper subclass behavior: Expected `null` `data`.');
