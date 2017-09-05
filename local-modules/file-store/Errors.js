@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt, TString } from 'typecheck';
-import { InfoError, UtilityClass } from 'util-common';
+import { FrozenBuffer, InfoError, UtilityClass } from 'util-common';
 
 import StoragePath from './StoragePath';
 
@@ -14,6 +14,30 @@ import StoragePath from './StoragePath';
  * convention for those is `lowercase_underscore`, that is what's used.
  */
 export default class Errors extends UtilityClass {
+  /**
+   * Constructs an error indicating that a content blob was expected to be
+   * absent from the file, but turns out to be present.
+   *
+   * @param {string} hash Hash of the blob in question.
+   * @returns {InfoError} An appropriately-constructed error.
+   */
+  static blob_not_absent(hash) {
+    FrozenBuffer.checkHash(hash);
+    return new InfoError('blob_not_absent', hash);
+  }
+
+  /**
+   * Constructs an error indicating that a content blob was expected to be
+   * present in the file, but turns out to be absent.
+   *
+   * @param {string} hash Hash of the blob in question.
+   * @returns {InfoError} An appropriately-constructed error.
+   */
+  static blob_not_found(hash) {
+    FrozenBuffer.checkHash(hash);
+    return new InfoError('blob_not_found', hash);
+  }
+
   /**
    * Constructs an error indicating that a file does not exist.
    *

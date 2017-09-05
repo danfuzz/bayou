@@ -141,10 +141,10 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_checkBlobAbsent(op) {
-    const hash_unused = op.arg('hash');
-
-    // **TODO:** Implement this.
-    Transactor._missingOp(op.name);
+    const hash = op.arg('hash');
+    if (this._fileFriend.readBlobOrNull(hash) !== null) {
+      throw Errors.blob_not_absent(hash);
+    }
   }
 
   /**
@@ -153,10 +153,10 @@ export default class Transactor extends CommonBase {
    * @param {FileOp} op The operation.
    */
   _op_checkBlobPresent(op) {
-    const hash_unused = op.arg('hash');
-
-    // **TODO:** Implement this.
-    Transactor._missingOp(op.name);
+    const hash = op.arg('hash');
+    if (this._fileFriend.readBlobOrNull(hash) === null) {
+      throw Errors.blob_not_found(hash);
+    }
   }
 
   /**

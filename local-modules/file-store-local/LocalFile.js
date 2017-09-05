@@ -236,6 +236,19 @@ export default class LocalFile extends BaseFile {
       },
 
       /**
+       * Gets the content blob from the file which has the indicated hash, if
+       * any.
+       *
+       * @param {string} hash The content hash.
+       * @returns {FrozenBuffer|null} The corresponding stored blob value, or
+       *   `null` if there is none.
+       */
+      readBlobOrNull(hash) {
+        FrozenBuffer.checkHash(hash);
+        return outerThis._storage.get(hash) || null;
+      },
+
+      /**
        * Gets the value stored at the given path, if any.
        *
        * @param {string} storagePath The path.
