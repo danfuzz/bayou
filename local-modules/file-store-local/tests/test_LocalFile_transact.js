@@ -283,4 +283,25 @@ describe('file-store-local/LocalFile.transact', () => {
       assert.strictEqual(transactionResult.data.size, 0);
     });
   });
+
+  describe('op writeBlob', () => {
+    it('should succeed in writing a blob', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Puffins are now dinosaurs.');
+      await file.create();
+
+      const spec = new TransactionSpec(FileOp.op_writeBlob(blob));
+      await assert.isFulfilled(file.transact(spec));
+    });
+
+    it('should succeed in writing an already-present blob', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Puffins are now dinosaurs.');
+      await file.create();
+
+      const spec = new TransactionSpec(FileOp.op_writeBlob(blob));
+      await assert.isFulfilled(file.transact(spec));
+      await assert.isFulfilled(file.transact(spec));
+    });
+  });
 });
