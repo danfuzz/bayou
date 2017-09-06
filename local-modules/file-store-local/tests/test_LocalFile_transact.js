@@ -32,6 +32,50 @@ describe('file-store-local/LocalFile.transact', () => {
     assert.isUndefined(result.data);
   });
 
+  describe('op checkBlobAbsent', () => {
+    it('should succeed when the blob is absent', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+
+      const spec = new TransactionSpec(
+        FileOp.op_checkBlobAbsent(new FrozenBuffer('blort')));
+      const resultProm = file.transact(spec);
+      await assert.isFulfilled(resultProm);
+    });
+
+    it('should fail when the blob is present', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Likes are now florps.');
+      await file.create();
+      await file.transact(new TransactionSpec(FileOp.op_writeBlob(blob)));
+
+      const spec = new TransactionSpec(FileOp.op_checkBlobAbsent(blob));
+      await assert.isRejected(file.transact(spec));
+    });
+  });
+
+  describe('op checkBlobPresent', () => {
+    it('should succeed when the blob is present', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Likes are now florps.');
+      await file.create();
+      await file.transact(new TransactionSpec(FileOp.op_writeBlob(blob)));
+
+      const spec = new TransactionSpec(FileOp.op_checkBlobPresent(blob));
+      await assert.isFulfilled(file.transact(spec));
+    });
+
+    it('should fail when the blob is absent', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+
+      const spec = new TransactionSpec(
+        FileOp.op_checkBlobPresent(new FrozenBuffer('blort')));
+      const resultProm = file.transact(spec);
+      await assert.isRejected(resultProm);
+    });
+  });
+
   describe('op checkPathIs', () => {
     it('should succeed when the path is present and content matches', async () => {
       const file = new LocalFile('0', TempFiles.uniquePath());
@@ -107,6 +151,30 @@ describe('file-store-local/LocalFile.transact', () => {
       const spec = new TransactionSpec(
         FileOp.op_checkPathNot('/blort', new FrozenBuffer('blort')));
       await assert.isRejected(file.transact(spec));
+    });
+  });
+
+  describe('op deleteBlob', () => {
+    it('should succeed in deleting the indicated blob', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Timeline goes sideways.');
+      await file.create();
+      await file.transact(new TransactionSpec(FileOp.op_writeBlob(blob)));
+
+      const spec = new TransactionSpec(FileOp.op_deleteBlob(blob));
+      await assert.isFulfilled(file.transact(spec));
+
+      const checkSpec = new TransactionSpec(FileOp.op_checkBlobAbsent(blob));
+      await assert.isFulfilled(file.transact(checkSpec));
+    });
+
+    it('should succeed even if the blob is not present', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Timeline goes sideways.');
+      await file.create();
+
+      const spec = new TransactionSpec(FileOp.op_deleteBlob(blob));
+      await assert.isFulfilled(file.transact(spec));
     });
   });
 
@@ -186,6 +254,54 @@ describe('file-store-local/LocalFile.transact', () => {
       assert.isTrue(paths.has('/blort/x/yep'));
       assert.isTrue(paths.has('/blort/x/affirmed'));
       assert.isTrue(paths.has('/blort/x/definitely'));
+    });
+  });
+
+  describe('op readBlob', () => {
+    it('should succeed in reading a blob that is in the file', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Muffins are now biscuits.');
+      await file.create();
+      await file.transact(new TransactionSpec(FileOp.op_writeBlob(blob)));
+
+      // The reading is based on the hash of `blob`, so it's irrelevant that
+      // the given argument is actually the content in question.
+      const spec = new TransactionSpec(FileOp.op_readBlob(blob));
+      const transactionResult = await assert.isFulfilled(file.transact(spec));
+
+      assert.strictEqual(transactionResult.data.get(blob.hash), blob);
+    });
+
+    it('should succeed even if the blob is not present', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Muffins are now biscuits.');
+      await file.create();
+
+      const spec = new TransactionSpec(FileOp.op_readBlob(blob));
+      const transactionResult = await assert.isFulfilled(file.transact(spec));
+
+      assert.strictEqual(transactionResult.data.size, 0);
+    });
+  });
+
+  describe('op writeBlob', () => {
+    it('should succeed in writing a blob', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Puffins are now dinosaurs.');
+      await file.create();
+
+      const spec = new TransactionSpec(FileOp.op_writeBlob(blob));
+      await assert.isFulfilled(file.transact(spec));
+    });
+
+    it('should succeed in writing an already-present blob', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Puffins are now dinosaurs.');
+      await file.create();
+
+      const spec = new TransactionSpec(FileOp.op_writeBlob(blob));
+      await assert.isFulfilled(file.transact(spec));
+      await assert.isFulfilled(file.transact(spec));
     });
   });
 });

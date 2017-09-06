@@ -236,6 +236,29 @@ export default class LocalFile extends BaseFile {
       },
 
       /**
+       * Gets an iterator over all storage (not including internal-only
+       * entries). Yielded elements are entries of the form `[storageId, data]`.
+       *
+       * @returns {Iterator<string, FrozenBuffer>} Iterator over all storage.
+       */
+      allStorage() {
+        return outerThis._filterStorage(LocalFile._isInternalStorageId);
+      },
+
+      /**
+       * Gets the content blob from the file which has the indicated hash, if
+       * any.
+       *
+       * @param {string} hash The content hash.
+       * @returns {FrozenBuffer|null} The corresponding stored blob value, or
+       *   `null` if there is none.
+       */
+      readBlobOrNull(hash) {
+        FrozenBuffer.checkHash(hash);
+        return outerThis._storage.get(hash) || null;
+      },
+
+      /**
        * Gets the value stored at the given path, if any.
        *
        * @param {string} storagePath The path.
@@ -255,15 +278,7 @@ export default class LocalFile extends BaseFile {
        *   storage.
        */
       pathStorage() {
-        function* pathEntries() {
-          for (const [storageId, value] of outerThis._storage) {
-            if (StoragePath.isInstance(storageId)) {
-              yield [storageId, value];
-            }
-          }
-        }
-
-        return pathEntries();
+        return outerThis._filterStorage(StoragePath.isInstance);
       }
     };
 
@@ -316,6 +331,31 @@ export default class LocalFile extends BaseFile {
 
     this._log.detail('Transaction complete.');
     return { revNum, newRevNum, data, paths };
+  }
+
+  /**
+   * Gets an iterator over `_storage` which filters elements (similar to
+   * `Array.filter()`) using the given function. This is a helper for the
+   * `fileFriend` used in `_impl_transact()`.
+   *
+   * @param {function} filter Filter function. It is passed storage IDs and
+   *   is expected to return `true` for keys which should be present in the
+   *   iteration.
+   * @returns {Iterator<[string, FrozenBuffer]>} Iterator over filtered storage
+   *   entries.
+   */
+  _filterStorage(filter) {
+    const storage = this._storage;
+
+    function* yieldEntries() {
+      for (const [storageId, value] of storage) {
+        if (filter(storageId)) {
+          yield [storageId, value];
+        }
+      }
+    }
+
+    return yieldEntries();
   }
 
   /**
