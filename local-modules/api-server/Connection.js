@@ -2,11 +2,11 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Message } from 'api-common';
+import { ConnectionError, Message } from 'api-common';
 import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
-import { CommonBase, Random } from 'util-common';
+import { CommonBase, InfoError, Random } from 'util-common';
 
 import ApiLog from './ApiLog';
 import BearerToken from './BearerToken';
@@ -185,14 +185,18 @@ export default class Connection extends CommonBase {
     let result = null;
     let error = null;
 
-    if (msg.isError()) {
-      error = new Error(msg.errorMessage);
-    } else {
+    if (msg instanceof Message) {
       try {
         result = await this._actOnMessage(msg);
       } catch (e) {
         error = e;
       }
+    } else if (msg instanceof Error) {
+      error = msg;
+    } else {
+      // Shouldn't happen because `_decodeMessage()` should only return one of
+      // the above two types.
+      throw InfoError.wtf('Weird return from `_decodeMessage()`.');
     }
 
     // Set up the response contents, and encode it as the ultimate result of
@@ -284,31 +288,22 @@ export default class Connection extends CommonBase {
    * Helper for `handleJsonMessage()` which parses the original incoming
    * message.
    *
-   * In case of error, this method still aims to return a message and not throw
-   * an error. Specifically, this will return a message for which `isError()`
-   * returns `true`. And in such cases, `id` will be defined to be either the
-   * successfully parsed message ID or `-1` if parsing couldn't even make it
-   * that far.
-   *
    * @param {string} msg Incoming message, in JSON-encoded form.
-   * @returns {Message} The parsed message or a `Message` instance representing
-   *   a parse error.
+   * @returns {Message|ConnectionError} The parsed message or an error
+   *   indicating message parsing trouble.
    */
   _decodeMessage(msg) {
     try {
       msg = Codec.theOne.decodeJson(msg);
     } catch (error) {
-      // Hail-mary attempt to determine a reasonable `id`.
-      let id = -1;
-      if (Array.isArray(msg) && Number.isSafeInteger(msg[1])) {
-        id = msg[1];
-      }
-
-      return Message.error(id, error.message);
+      return ConnectionError.connection_nonsense(this._connectionId, error.message);
     }
 
-    return ((msg instanceof Message) && !msg.isError())
-      ? msg
-      : Message.error(-1, 'Did not receive `Message` object.');
+    if (msg instanceof Message) {
+      return msg;
+    }
+
+    return ConnectionError.connection_nonsense(
+      this._connectionId, 'Did not receive `Message` object.');
   }
 }
