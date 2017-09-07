@@ -24,6 +24,22 @@ import DataUtil from './DataUtil';
  */
 export default class InfoError extends Error {
   /**
+   * Checks if the given value is an instance of this class with the given
+   * name. This is a `static` method, so that the check can be made on errors
+   * in general, without having to check up front whether they are instances of
+   * this class.
+   *
+   * @param {*} value Value to check.
+   * @param {string} name Error name.
+   * @returns {boolean} `true` if `value` is an instance of this class with the
+   *   indicated name.
+   */
+  static hasName(value, name) {
+    TString.check(name);
+    return (value instanceof InfoError) && (value.name === name);
+  }
+
+  /**
    * Constructs an instance which is meant to indicate that the program
    * exhibited unexpected behavior. This should be used as an indication of a
    * likely bug in the program.
