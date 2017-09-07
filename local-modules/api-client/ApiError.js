@@ -6,36 +6,64 @@ import { TString } from 'typecheck';
 import { InfoError } from 'util-common';
 
 /**
- * Error class for reporting errors coming from `ApiClient`. Differentiates
- * between connection/transport errors and application logic errors.
- *
- * **Note:** This class is defined to be a subclass of `Error` because instances
- * are most typically used as the rejection "reason" for promises, and rejection
- * reasons are generally expected to be instances of `Error`. That said, the
- * stack trace associated with these instances will almost never be useful, as
- * they will almost always get thrown most directly from API handler code.
+ * Error class for reporting errors coming from `ApiClient` related to the
+ * connection or transport (as opposed to, e.g., being errors being relayed from
+ * the far side of an API connection).
  */
 export default class ApiError extends InfoError {
   /**
-   * {string} Error name which indicates trouble with the connection (as opposed
-   * to, say, an application logic error).
+   * Constructs an error indicating that the API connection has been closed.
+   * This error is reported in response to any API call made when the connection
+   * is closed.
+   *
+   * @param {string} connectionId Connection ID string.
+   * @param {string} detail Human-oriented detail message about the problem.
+   * @returns {ApiError} An appropriately-constructed error.
    */
-  static get CONNECTION_ERROR() {
-    return 'connection_error';
+  static connection_closed(connectionId, detail) {
+    TString.check(connectionId);
+    TString.check(detail);
+    return new ApiError('connection_closed', connectionId, detail);
   }
 
   /**
-   * Convenient wrapper for `new ApiError('connection_error', ...)`.
+   * Constructs an error indicating that the API connection is in the process of
+   * being closed. This error is reported in response to any API call made when
+   * the connection is destined to be closed.
    *
-   * @param {ApiError} cause Cause of the connection error.
    * @param {string} connectionId Connection ID string.
-   * @returns {ApiError} The constructed error.
+   * @returns {ApiError} An appropriately-constructed error.
    */
-  static connError(cause, connectionId) {
-    ApiError.check(cause);
+  static connection_closing(connectionId) {
     TString.check(connectionId);
+    return new ApiError('connection_closing', connectionId);
+  }
 
-    return new ApiError(cause, ApiError.CONNECTION_ERROR, connectionId);
+  /**
+   * Constructs an error indicating that there was unspecified trouble with the
+   * connection (as opposed to, say, an application logic error).
+   *
+   * @param {string} connectionId Connection ID string.
+   * @returns {ApiError} An appropriately-constructed error.
+   */
+  static connection_error(connectionId) {
+    TString.check(connectionId);
+    return new ApiError('connection_error', connectionId);
+  }
+
+  /**
+   * Constructs an error indicating that the API received a nonsense message of
+   * some sort. This is typically indicative of a bug on the far side of the API
+   * connection.
+   *
+   * @param {string} connectionId Connection ID string.
+   * @param {string} detail Human-oriented detail message about the problem.
+   * @returns {ApiError} An appropriately-constructed error.
+   */
+  static connection_nonsense(connectionId, detail) {
+    TString.check(connectionId);
+    TString.check(detail);
+    return new ApiError('connection_nonsense', connectionId, detail);
   }
 
   /**
@@ -45,15 +73,5 @@ export default class ApiError extends InfoError {
    */
   constructor(...args) {
     super(...args);
-  }
-
-  /**
-   * Returns an indication of whether or not this instance is a
-   * connection-related error.
-   *
-   * @returns {boolean} `true` iff this instance is a connection-related error.
-   */
-  isConnectionError() {
-    return this.name === ApiError.CONNECTION_ERROR;
   }
 }

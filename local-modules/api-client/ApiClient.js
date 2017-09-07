@@ -6,7 +6,7 @@ import { BaseKey, Message } from 'api-common';
 import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
-import { WebsocketCodes } from 'util-common';
+import { InfoError, WebsocketCodes } from 'util-common';
 
 import ApiError from './ApiError';
 import TargetMap from './TargetMap';
@@ -198,21 +198,6 @@ export default class ApiClient {
   }
 
   /**
-   * Constructs an `ApiError` representing a connection error and including
-   * the current connection ID in the description.
-   *
-   * @param {string} code Short error code.
-   * @param {string|null} [desc = null] Longer-form description, or `null` if
-   *   there is nothing additional.
-   * @returns {ApiError} An appropriately-constructed instance.
-   */
-  _connError(code, desc = null) {
-    const extra = (desc === null) ? [] : [desc];
-    const cause = new ApiError(code, ...extra);
-    return ApiError.connError(cause, this._connectionId);
-  }
-
-  /**
    * Handles a `close` event coming from a websocket. This logs the closure and
    * terminates all active messages by rejecting their promises.
    *
@@ -223,7 +208,7 @@ export default class ApiClient {
 
     const code = WebsocketCodes.close(event.code);
     const desc = event.reason ? `${code}: ${event.reason}` : code;
-    const error = this._connError('connection_closed', desc);
+    const error = ApiError.connection_closed(this._connectionId, desc);
 
     this._handleTermination(event, error);
   }
@@ -244,7 +229,7 @@ export default class ApiClient {
     // **Note:** The error event does not have any particularly useful extra
     // info, so -- alas -- there is nothing to get out of it for the `ApiError`
     // description.
-    const error = this._connError('unknown_error');
+    const error = ApiError.connection_error(this._connectionId);
     this._handleTermination(event, error);
   }
 
@@ -273,12 +258,10 @@ export default class ApiClient {
       // We handle these as a `server_bug` and not, e.g. logging as `wtf()` and
       // aborting, because this is indicative of a server-side problem and not
       // an unrecoverable local problem.
-      if (!id) {
-        throw this._connError('server_bug', 'Missing ID on API response.');
-      } else {
-        throw this._connError('server_bug',
-          `Strange ID type \`${typeof id}\` on API response.`);
-      }
+      const detail = id
+        ? `Strange ID type \`${typeof id}\` on API response.`
+        : 'Missing ID on API response.';
+      throw ApiError.connection_nonsense(this._connectionId, detail);
     }
 
     const callback = this._callbacks[id];
@@ -286,14 +269,14 @@ export default class ApiClient {
       delete this._callbacks[id];
       if (error) {
         this._log.detail(`Reject ${id}:`, error);
-        callback.reject(new ApiError('remote_error', this.connectionId, error));
+        callback.reject(new InfoError('remote_error', this.connectionId, error));
       } else {
         this._log.detail(`Resolve ${id}:`, result);
         callback.resolve(result);
       }
     } else {
       // See above about `server_bug`.
-      throw this._connError('server_bug', `Orphan call for ID ${id}.`);
+      throw ApiError.connection_nonsense(this._connectionId, `Orphan call for ID ${id}.`);
     }
   }
 
@@ -364,10 +347,13 @@ export default class ApiClient {
     // consistently handle errors via one of the promise chaining mechanisms.
     switch (wsState) {
       case WebSocket.CLOSED: {
-        return Promise.reject(this._connError('connection_closed'));
+        // The detail string here differentiates this case from cases where the
+        // API message was already queued up or sent before the websocket became
+        // closed.
+        return Promise.reject(ApiError.connection_closed(this._connectionId, 'Already closed.'));
       }
       case WebSocket.CLOSING: {
-        return Promise.reject(this._connError('connection_closing'));
+        return Promise.reject(this.connection_closing(this._connectionId));
       }
     }
 
