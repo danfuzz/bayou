@@ -10,35 +10,19 @@ import { TArray, TInt, TString } from 'typecheck';
  */
 export default class Message {
   /**
-   * Constructs an error instance. This form is used to convey the fact that a
-   * received message was malformed.
-   *
-   * @param {Int} id Message ID. Must be a non-negative integer or `-1`. `-1`
-   *   is used when it wasn't even possible to determine the ID.
-   * @param {string} message The error message.
-   * @returns {Message} An appropriately-constructed instance of this class.
-   */
-  static error(id, message) {
-    TString.nonempty(message);
-    return new Message(id, 'error', 'error', 'error', [message]);
-  }
-
-  /**
-   * Constructs an instance. **Note:** The parameter descriptions below are for
-   * non-error instances. To construct an error instance, use the static method
-   * `error()`.
+   * Constructs an instance.
    *
    * @param {Int} id Message ID, used to match requests and responses. Must be
    *   a non-negative integer.
    * @param {string} target ID of the target object to send to.
    * @param {string} action Kind of action to take. Currently, the only valid
-   *   values are `call`.
+   *   value is `call`.
    * @param {string} name Method (or property) name to access.
    * @param {array<*>} args Arguments to include with the message.
    */
   constructor(id, target, action, name, args) {
-    /** {Int} Message ID. `-1` is only used in case of (some) errors. */
-    this._id = TInt.min(id, -1);
+    /** {Int} Message ID. */
+    this._id = TInt.nonNegative(id);
 
     /** {string} ID of the target object. */
     this._target = TString.nonempty(target);
@@ -54,19 +38,13 @@ export default class Message {
 
     // Validate `action`.
     switch (action) {
-      case 'call':
-      case 'error': {
+      case 'call': {
         // Valid.
         break;
       }
       default: {
         throw new Error(`Invalid value for \`action\`: \`${action}\``);
       }
-    }
-
-    // Validate `id` wrt error-vs-not.
-    if ((action !== 'error') && (id === -1)) {
-      throw new Error('Invalid value for non-error `id`: -1');
     }
 
     Object.freeze(this);
@@ -94,23 +72,6 @@ export default class Message {
       name:   this._name,
       args:   this._args
     };
-  }
-
-  /**
-   * Indicates whether this instance represents an error.
-   *
-   * @returns {boolean} `true` iff this is an error instance.
-   */
-  isError() {
-    return (this._action === 'error');
-  }
-
-  /**
-   * {string|null} The error message of this instance, if it is indeed an error
-   * instance, or `null` if this is a non-error instance.
-   */
-  get errorMessage() {
-    return this.isError() ? this._args[0] : null;
   }
 
   /** {Int} Message ID. */
