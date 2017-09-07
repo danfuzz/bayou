@@ -2,13 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseKey, Message } from 'api-common';
+import { BaseKey, ConnectionError, Message } from 'api-common';
 import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { InfoError, WebsocketCodes } from 'util-common';
 
-import ApiError from './ApiError';
 import TargetMap from './TargetMap';
 
 /** Logger. */
@@ -149,7 +148,7 @@ export default class ApiClient {
    * this does not re-open (that is, the existing open is allowed to continue).
    *
    * @returns {boolean} `true` once the connection is open.
-   * @throws {ApiError} Indication of why the connection attempt failed.
+   * @throws {ConnectionError} Indication of why the connection attempt failed.
    */
   async open() {
     // If `_ws` is `null` that means that the connection is not already open or
@@ -208,7 +207,7 @@ export default class ApiClient {
 
     const code = WebsocketCodes.close(event.code);
     const desc = event.reason ? `${code}: ${event.reason}` : code;
-    const error = ApiError.connection_closed(this._connectionId, desc);
+    const error = ConnectionError.connection_closed(this._connectionId, desc);
 
     this._handleTermination(event, error);
   }
@@ -227,9 +226,9 @@ export default class ApiClient {
     this._log.info('Error:', event);
 
     // **Note:** The error event does not have any particularly useful extra
-    // info, so -- alas -- there is nothing to get out of it for the `ApiError`
-    // description.
-    const error = ApiError.connection_error(this._connectionId);
+    // info, so -- alas -- there is nothing to get out of it for the
+    // `ConnectionError` description.
+    const error = ConnectionError.connection_error(this._connectionId);
     this._handleTermination(event, error);
   }
 
@@ -261,7 +260,7 @@ export default class ApiClient {
       const detail = id
         ? `Strange ID type \`${typeof id}\` on API response.`
         : 'Missing ID on API response.';
-      throw ApiError.connection_nonsense(this._connectionId, detail);
+      throw ConnectionError.connection_nonsense(this._connectionId, detail);
     }
 
     const callback = this._callbacks[id];
@@ -276,7 +275,7 @@ export default class ApiClient {
       }
     } else {
       // See above about `server_bug`.
-      throw ApiError.connection_nonsense(this._connectionId, `Orphan call for ID ${id}.`);
+      throw ConnectionError.connection_nonsense(this._connectionId, `Orphan call for ID ${id}.`);
     }
   }
 
@@ -299,8 +298,8 @@ export default class ApiClient {
    * Common code to handle both `error` and `close` events.
    *
    * @param {object} event_unused Event that caused this callback.
-   * @param {ApiError} error Reason for termination. "Error" is a bit of a
-   *   misnomer, as in many cases termination is a-okay.
+   * @param {ConnectionError} error Reason for termination. "Error" is a bit of
+   *   a misnomer, as in many cases termination is a-okay.
    */
   _handleTermination(event_unused, error) {
     // Reject the promises of any currently-pending messages.
@@ -335,7 +334,7 @@ export default class ApiClient {
    * @param {object} [args = []] API-encodable object of arguments.
    * @returns {Promise} Promise for the result (or error) of the call. In the
    *   case of an error, the rejection reason will always be an instance of
-   *   `ApiError` (see which for details).
+   *   `ConnectionError` (see which for details).
    */
   _send(target, action, name, args = []) {
     const wsState = (this._ws === null)
@@ -350,7 +349,7 @@ export default class ApiClient {
         // The detail string here differentiates this case from cases where the
         // API message was already queued up or sent before the websocket became
         // closed.
-        return Promise.reject(ApiError.connection_closed(this._connectionId, 'Already closed.'));
+        return Promise.reject(ConnectionError.connection_closed(this._connectionId, 'Already closed.'));
       }
       case WebSocket.CLOSING: {
         return Promise.reject(this.connection_closing(this._connectionId));

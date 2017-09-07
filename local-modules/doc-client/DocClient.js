@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ApiError } from 'api-client';
+import { ConnectionError } from 'api-common';
 import { BodyDelta, BodySnapshot, FrozenDelta } from 'doc-common';
 import { Delay } from 'promise-util';
 import { QuillEvent } from 'quill-util';
@@ -251,7 +251,7 @@ export default class DocClient extends StateMachine {
     // Stop the user from trying to do more edits, as they'd get lost.
     this._quill.disable();
 
-    if (reason instanceof ApiError) {
+    if (reason instanceof ConnectionError) {
       // It's connection-related and probably no big deal.
       this._log.info(reason.message);
     } else {

@@ -3,6 +3,5 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import ApiClient from './ApiClient';
-import ApiError from './ApiError';
 
-export { ApiClient, ApiError };
+export { ApiClient };

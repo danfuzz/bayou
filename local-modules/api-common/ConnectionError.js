@@ -10,7 +10,7 @@ import { InfoError } from 'util-common';
  * connection or transport (as opposed to, e.g., being errors being relayed from
  * the far side of an API connection).
  */
-export default class ApiError extends InfoError {
+export default class ConnectionError extends InfoError {
   /**
    * Constructs an error indicating that the API connection has been closed.
    * This error is reported in response to any API call made when the connection
@@ -18,12 +18,12 @@ export default class ApiError extends InfoError {
    *
    * @param {string} connectionId Connection ID string.
    * @param {string} detail Human-oriented detail message about the problem.
-   * @returns {ApiError} An appropriately-constructed error.
+   * @returns {ConnectionError} An appropriately-constructed error.
    */
   static connection_closed(connectionId, detail) {
     TString.check(connectionId);
     TString.check(detail);
-    return new ApiError('connection_closed', connectionId, detail);
+    return new ConnectionError('connection_closed', connectionId, detail);
   }
 
   /**
@@ -32,11 +32,11 @@ export default class ApiError extends InfoError {
    * the connection is destined to be closed.
    *
    * @param {string} connectionId Connection ID string.
-   * @returns {ApiError} An appropriately-constructed error.
+   * @returns {ConnectionError} An appropriately-constructed error.
    */
   static connection_closing(connectionId) {
     TString.check(connectionId);
-    return new ApiError('connection_closing', connectionId);
+    return new ConnectionError('connection_closing', connectionId);
   }
 
   /**
@@ -44,11 +44,11 @@ export default class ApiError extends InfoError {
    * connection (as opposed to, say, an application logic error).
    *
    * @param {string} connectionId Connection ID string.
-   * @returns {ApiError} An appropriately-constructed error.
+   * @returns {ConnectionError} An appropriately-constructed error.
    */
   static connection_error(connectionId) {
     TString.check(connectionId);
-    return new ApiError('connection_error', connectionId);
+    return new ConnectionError('connection_error', connectionId);
   }
 
   /**
@@ -58,12 +58,12 @@ export default class ApiError extends InfoError {
    *
    * @param {string} connectionId Connection ID string.
    * @param {string} detail Human-oriented detail message about the problem.
-   * @returns {ApiError} An appropriately-constructed error.
+   * @returns {ConnectionError} An appropriately-constructed error.
    */
   static connection_nonsense(connectionId, detail) {
     TString.check(connectionId);
     TString.check(detail);
-    return new ApiError('connection_nonsense', connectionId, detail);
+    return new ConnectionError('connection_nonsense', connectionId, detail);
   }
 
   /**
