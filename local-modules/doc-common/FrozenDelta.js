@@ -20,6 +20,11 @@ let emptyInstance = null;
  * `Delta` provides.
  */
 export default class FrozenDelta extends Delta {
+  /** {string} Name of this class for the sake of API coding. */
+  static get API_TAG() {
+    return 'Delta';
+  }
+
   /** {FrozenDelta} Empty instance of this class. */
   static get EMPTY() {
     if (emptyInstance === null) {
@@ -111,11 +116,6 @@ export default class FrozenDelta extends Delta {
 
     super(DataUtil.deepFreeze(ops));
     Object.freeze(this);
-  }
-
-  /** Name of this class in the API. */
-  static get API_TAG() {
-    return 'Delta';
   }
 
   /**
