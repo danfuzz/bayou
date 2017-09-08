@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseKey, ConnectionError, Message } from 'api-common';
+import { BaseKey, ConnectionError, Message, Response } from 'api-common';
 import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
@@ -245,30 +245,21 @@ export default class ApiClient {
     this._log.detail('Received raw payload:', event.data);
 
     const payload = Codec.theOne.decodeJson(event.data);
+
+    if (!(payload instanceof Response)) {
+      throw ConnectionError.connection_nonsense(this._connectionId, 'Got strange response payload.');
+    }
+
     const id = payload.id;
-    let result = payload.result;
+    const result = payload.result;
     const error = payload.error;
-
-    if (result === undefined) {
-      result = null;
-    }
-
-    if (typeof id !== 'number') {
-      // We handle these as a `server_bug` and not, e.g. logging as `wtf()` and
-      // aborting, because this is indicative of a server-side problem and not
-      // an unrecoverable local problem.
-      const detail = id
-        ? `Strange ID type \`${typeof id}\` on API response.`
-        : 'Missing ID on API response.';
-      throw ConnectionError.connection_nonsense(this._connectionId, detail);
-    }
 
     const callback = this._callbacks[id];
     if (callback) {
       delete this._callbacks[id];
       if (error) {
         this._log.detail(`Reject ${id}:`, error);
-        callback.reject(new InfoError('remote_error', this.connectionId, error));
+        callback.reject(new InfoError('remote_error', this.connectionId, error.message));
       } else {
         this._log.detail(`Resolve ${id}:`, result);
         callback.resolve(result);

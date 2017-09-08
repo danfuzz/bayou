@@ -71,7 +71,9 @@ export default class Response extends CommonBase {
     // possible to encode the full error functor. This will probably best be
     // achieved by making a codec to handle `InfoError` (or perhaps an
     // API-specific subclass thereof.
-    return [this._id, this._result, this._error.message];
+    const error = (this._error === null) ? null : this._error.message;
+
+    return [this._id, this._result, error];
   }
 
   /**
@@ -115,8 +117,7 @@ export default class Response extends CommonBase {
     } else if (error instanceof InfoError) {
       return error;
     } else if (error instanceof Error) {
-      const result = new InfoError('general_error', error.message);
-      result.stack = error.stack;
+      return new InfoError(error, 'general_error', error.message);
     }
 
     const message = (typeof error === 'string')

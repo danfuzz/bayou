@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ConnectionError, Message } from 'api-common';
+import { ConnectionError, Message, Response } from 'api-common';
 import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
@@ -198,59 +198,18 @@ export default class Connection extends CommonBase {
     } else {
       // Shouldn't happen because `_decodeMessage()` should only return one of
       // the above two types.
-      throw InfoError.wtf('Weird return from `_decodeMessage()`.');
+      throw InfoError.wtf('Weird return value from `_decodeMessage()`.');
     }
 
-    // Set up the response contents, and encode it as the ultimate result of
-    // this call.
+    // Set up the response contents, encode it as the ultimate result of
+    // this call, log it, and return it for ulimate transmission back to the
+    // caller.
 
-    const response = { id: msg.id };
-    if (error) {
-      response.error = error.message;
-    } else {
-      response.result = result;
-    }
-
+    const response = new Response(msg.id, result, error);
     const encodedResponse = Codec.theOne.encodeJson(response);
 
-    // Log the response. In the case of an error, we include the error's stack
-    // trace. We intentionally _don't_ expose the stack trace as part of the
-    // API result, as that arguably leaks sensitive info.
-
-    if (error) {
-      // This clause cleans it up so that it is an array of separate lines and
-      // so that we omit the uninteresting parts of the file paths.
-      response.errorStack = error.stack.match(/^ +at .*$/mg).map((line) => {
-        // Lines that name functions are expected to be of the form:
-        // * `    at func.name (/path/to/file:NN:NN)`
-        // where `func.name` might actually be `new func.name` or
-        // `func.name [as other.name]` (or both).
-        let match = line.match(/^ +at ([^()]+) \(([^()]+)\)$/);
-        let funcName;
-        let filePath;
-
-        if (match) {
-          funcName = match[1];
-          filePath = match[2];
-        } else {
-          // Anonymous functions (including top-level code) have the form:
-          // * `    at /path/to/file:NN:NN`
-          match = line.match(/^ +at ([^()]*)$/);
-          funcName = '(anon)';
-          filePath = match[1];
-        }
-
-        const fileSplit = filePath.match(/\/?[^/]+/g) || ['?'];
-        const splitLen  = fileSplit.length;
-        const fileName  = (splitLen < 2)
-          ? fileSplit[0]
-          : `...${fileSplit[splitLen - 2]}${fileSplit[splitLen - 1]}`;
-
-        return `${funcName} (${fileName})`;
-      });
-    }
-
     this._apiLog.fullCall(this._connectionId, startTime, msg, response);
+
     return encodedResponse;
   }
 

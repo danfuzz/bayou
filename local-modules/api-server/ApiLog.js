@@ -39,15 +39,15 @@ export default class ApiLog extends Singleton {
    *   the earlier call to `incomingMessage()` for `msg`.
    * @param {Message|null} msg Incoming message, or `null` if there wasn't a
    *   valid message as part of this call.
-   * @param {object} response Response to the message.
+   * @param {Response} response Response to the message.
    */
   fullCall(connectionId, startTime, msg, response) {
     if (response.error) {
       // TODO: Ultimately _some_ errors coming back from API calls shouldn't
       // be considered console-log-worthy server errors. We will need to
       // differentiate them at some point.
-      this._console.error(`[${connectionId}] Error:`, response.error);
-      if (response.errorStack) {
+      this._console.error(`[${connectionId}] Error:`, response.error.message);
+      if (response.errorStack.length !== 0) {
         const stackString = response.errorStack.join('\n  ');
         this._console.info(`Original trace:\n  ${stackString}`);
       }
