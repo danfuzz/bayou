@@ -163,7 +163,7 @@ export default class Connection extends CommonBase {
 
   /**
    * Handles an incoming message, which is expected to be in JSON string form.
-   * Returns a promise for the response, which is also in JSON string form.
+   * Returns a JSON string response.
    *
    * Notably, messages only succeed in getting acted upon when addressed to
    * _uncontrolled_ targets. In order to act on a controlled target, that target
