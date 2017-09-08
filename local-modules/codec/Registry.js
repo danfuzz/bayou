@@ -137,7 +137,9 @@ export default class Registry extends CommonBase {
 
     if (   (valueType === 'object')
         && (Object.getPrototypeOf(value) !== Object.prototype)) {
-      // The value is an instance of a class.
+      // The value is an instance of a class. Look up the class in the registry.
+      // **Note:** We don't try to find superclass codecs. (This is an
+      // intentional design choice.)
       clazz = value.constructor;
       codecs = this._classToCodecs.get(clazz);
     } else {
