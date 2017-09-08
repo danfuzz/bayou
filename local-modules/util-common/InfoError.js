@@ -110,6 +110,13 @@ export default class InfoError extends Error {
     /** {array<*>} The detail arguments. */
     this._args = detailsArgs;
 
+    if (this._cause !== null) {
+      // Append the cause's stack to this instance's. **TODO:** Figure out if
+      // we can do this lazily, which would mean somehow both overriding
+      // `.stack` _and_ being able to get its originally-set value.
+      this.stack += `\ncaused by:\n${this._cause.stack}`;
+    }
+
     Object.freeze(this);
   }
 
@@ -135,21 +142,5 @@ export default class InfoError extends Error {
    */
   get args() {
     return this._args;
-  }
-
-  /**
-   * Gets the string form of this instance. This includes the `cause`, if any.
-   *
-   * @returns {string} The string form.
-   */
-  toString() {
-    const thisTrace = super.toString();
-    const cause = this._cause;
-
-    if (cause === null) {
-      return thisTrace;
-    } else {
-      return `${thisTrace}${cause.toString()}`;
-    }
   }
 }
