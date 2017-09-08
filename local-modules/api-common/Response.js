@@ -7,6 +7,8 @@ import util from 'util';
 import { TInt } from 'typecheck';
 import { CommonBase, InfoError } from 'util-common';
 
+import CodableError from './CodableError';
+
 /**
  * Payload sent as a response to a method call.
  *
@@ -45,14 +47,15 @@ export default class Response extends CommonBase {
     this._result = result;
 
     /**
-     * {InfoError|null} Error response, or `null` if this instance doesn't
+     * {CodableError|null} Error response, or `null` if this instance doesn't
      * represent an error.
      */
     this._error = Response._fixError(error);
 
     /**
-     * {array<string>|null} Error stack, or `null` if unavailable (including if
-     * this instance doesn't represent an error at all).
+     * {array<string>|null} Error stack, or `null` if this instance doesn't
+     * represent an error. In the case of an error that has no available stack
+     * info, this is an empty array (`[]`) and not `null`.
      */
     this._errorStack = Response._fixErrorStack(error);
 
@@ -65,20 +68,12 @@ export default class Response extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    // We intentionally strip the `error` down to just a message for encoding,
-    // because the stack can leak security-sensitive info. **TODO:** We should
-    // aim for a bit higher-fidelity transfer. E.g., with `InfoError`, it is
-    // possible to encode the full error functor. This will probably best be
-    // achieved by making a codec to handle `InfoError` (or perhaps an
-    // API-specific subclass thereof.
-    const error = (this._error === null) ? null : this._error.message;
-
-    return [this._id, this._result, error];
+    return [this._id, this._result, this._error];
   }
 
   /**
-   * {InfoError|null} Error result, or `null` if this instance doesn't represent
-   * an error.
+   * {CodableError|null} Error result, or `null` if this instance doesn't
+   * represent an error.
    */
   get error() {
     return this._error;
@@ -106,25 +101,30 @@ export default class Response extends CommonBase {
 
   /**
    * Fixes up an incoming `error` argument. `null` gets returned as-is.
-   * Everything else gets converted into an `InfoError` of some sort.
+   * Everything else gets converted into a `CodableError` of some sort.
    *
    * @param {*} error Error value.
-   * @returns {InfoError|null} Cleaned up error value.
+   * @returns {CodableError|null} Cleaned up error value.
    */
   static _fixError(error) {
     if (error === null) {
       return null;
-    } else if (error instanceof InfoError) {
+    } else if (error instanceof CodableError) {
       return error;
+    } else if (error instanceof InfoError) {
+      // Adopt the functor of the error. Lose the cause (if any), exact class
+      // identity, and stack.
+      return new CodableError(error.name, ...(error.args));
     } else if (error instanceof Error) {
-      return new InfoError(error, 'general_error', error.message);
+      // Adopt the message. Lose the rest of the info.
+      return new CodableError('general_error', error.message);
     }
 
     const message = (typeof error === 'string')
       ? error
       : util.inspect(error);
 
-    return new InfoError('general_error', message);
+    return new CodableError('general_error', message);
   }
 
   /**
