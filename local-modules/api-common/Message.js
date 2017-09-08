@@ -3,12 +3,13 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TArray, TInt, TString } from 'typecheck';
+import { CommonBase } from 'util-common';
 
 /**
  * The main "envelope" of a message being sent from client to server to requrest
  * action.
  */
-export default class Message {
+export default class Message extends CommonBase {
   /**
    * Constructs an instance.
    *
@@ -19,6 +20,8 @@ export default class Message {
    * @param {array<*>} args Arguments to include with the message.
    */
   constructor(id, target, name, args) {
+    super();
+
     /** {Int} Message ID. */
     this._id = TInt.nonNegative(id);
 

@@ -242,7 +242,7 @@ export default class LocalFile extends BaseFile {
        * @returns {Iterator<string, FrozenBuffer>} Iterator over all storage.
        */
       allStorage() {
-        return outerThis._filterStorage(LocalFile._isInternalStorageId);
+        return outerThis._filterStorage(LocalFile._isExternalStorageId);
       },
 
       /**
@@ -633,7 +633,20 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * Indicates whether the given storage ID is an internal-use one.
+   * Indicates whether the given storage ID is a regular for-external-use one.
+   * This is the opposite of `_isInternalStorageId()`.
+   *
+   * @param {string} storageId The storage ID.
+   * @returns {boolean} `true` iff `storageId` is only for the internal use of
+   *   this module.
+   */
+  static _isExternalStorageId(storageId) {
+    return !LocalFile._isInternalStorageId(storageId);
+  }
+
+  /**
+   * Indicates whether the given storage ID is an internal-use one. This is the
+   * opposite of `_isExternalStorageId()`.
    *
    * @param {string} storageId The storage ID.
    * @returns {boolean} `true` iff `storageId` is only for the internal use of
