@@ -329,14 +329,13 @@ export default class ApiClient {
    * Sends the given call to the server.
    *
    * @param {string} target Name of the target object.
-   * @param {string} action_unused Action to invoke.
    * @param {string} name Name of method (or meta-method) to call on the server.
    * @param {object} [args = []] API-encodable object of arguments.
    * @returns {Promise} Promise for the result (or error) of the call. In the
    *   case of an error, the rejection reason will always be an instance of
    *   `ConnectionError` (see which for details).
    */
-  _send(target, action_unused, name, args = []) {
+  _send(target, name, args = []) {
     const wsState = (this._ws === null)
       ? WebSocket.CLOSED
       : this._ws.readyState;
