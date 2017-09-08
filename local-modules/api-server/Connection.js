@@ -194,6 +194,7 @@ export default class Connection extends CommonBase {
       }
     } else if (msg instanceof Error) {
       error = msg;
+      msg = null; // Salient for logging.
     } else {
       // Shouldn't happen because `_decodeMessage()` should only return one of
       // the above two types.

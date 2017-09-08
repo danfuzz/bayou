@@ -37,7 +37,8 @@ export default class ApiLog extends Singleton {
    * @param {Int} startTime Standard msec timestamp indicating the start time of
    *   the API call being represented here. Should be the value returned from
    *   the earlier call to `incomingMessage()` for `msg`.
-   * @param {object} msg Incoming message.
+   * @param {Message|null} msg Incoming message, or `null` if there wasn't a
+   *   valid message as part of this call.
    * @param {object} response Response to the message.
    */
   fullCall(connectionId, startTime, msg, response) {
@@ -61,7 +62,7 @@ export default class ApiLog extends Singleton {
       endTime:      Date.now(),
       connectionId,
       ok:           !response.error,
-      msg:          msg.toLog()
+      msg:          msg ? msg.toLog() : null
     };
 
     if (details.ok) {
