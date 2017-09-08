@@ -117,7 +117,6 @@ export default class Errors extends UtilityClass {
    * @returns {boolean} `true` iff it represents a transaction timeout.
    */
   static isTimeout(error) {
-    return (error instanceof InfoError)
-      &&   (error.name === 'transaction_timed_out');
+    return InfoError.hasName(error, 'transaction_timed_out');
   }
 }

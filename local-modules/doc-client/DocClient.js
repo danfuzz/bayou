@@ -2,12 +2,13 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ApiError } from 'api-client';
+import { ConnectionError } from 'api-common';
 import { BodyDelta, BodySnapshot, FrozenDelta } from 'doc-common';
 import { Delay } from 'promise-util';
 import { QuillEvent } from 'quill-util';
 import { TString } from 'typecheck';
 import { StateMachine } from 'state-machine';
+import { InfoError } from 'util-common';
 
 import DocSession from './DocSession';
 
@@ -163,11 +164,11 @@ export default class DocClient extends StateMachine {
    * back from an API call.
    *
    * @param {string} method Name of the method that was called.
-   * @param {ApiError} reason Error reason.
+   * @param {InfoError} reason Error reason.
    */
   _check_apiError(method, reason) {
     TString.nonempty(method);
-    ApiError.check(reason);
+    InfoError.check(reason);
   }
 
   /**
@@ -244,13 +245,13 @@ export default class DocClient extends StateMachine {
    * reason.
    *
    * @param {string} method Name of the method that was called.
-   * @param {ApiError} reason Error reason.
+   * @param {InfoError} reason Error reason.
    */
   _handle_any_apiError(method, reason) {
     // Stop the user from trying to do more edits, as they'd get lost.
     this._quill.disable();
 
-    if (reason.isConnectionError()) {
+    if (reason instanceof ConnectionError) {
       // It's connection-related and probably no big deal.
       this._log.info(reason.message);
     } else {
