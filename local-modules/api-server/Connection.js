@@ -170,7 +170,7 @@ export default class Connection extends CommonBase {
    * first needs to be authorized via the meta-control system so as to become
    * uncontrolled on a specific connection.
    *
-   * **Note:** Subclasses are expected to call this.
+   * **Note:** Subclasses are expected to call this method.
    *
    * @param {string} msg Incoming message, in JSON string form.
    * @returns {string} Response to the message, in JSON string form. This
