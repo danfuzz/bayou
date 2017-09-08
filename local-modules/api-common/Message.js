@@ -15,37 +15,21 @@ export default class Message {
    * @param {Int} id Message ID, used to match requests and responses. Must be
    *   a non-negative integer.
    * @param {string} target ID of the target object to send to.
-   * @param {string} action Kind of action to take. Currently, the only valid
-   *   value is `call`.
    * @param {string} name Method (or property) name to access.
    * @param {array<*>} args Arguments to include with the message.
    */
-  constructor(id, target, action, name, args) {
+  constructor(id, target, name, args) {
     /** {Int} Message ID. */
     this._id = TInt.nonNegative(id);
 
     /** {string} ID of the target object. */
     this._target = TString.nonempty(target);
 
-    /** {string} Action to take / being taken. */
-    this._action = TString.nonempty(action);
-
     /** {string} Method / property name to access. */
     this._name = TString.nonempty(name);
 
     /** {array<*>} Arguments of the message. */
     this._args = TArray.check(args);
-
-    // Validate `action`.
-    switch (action) {
-      case 'call': {
-        // Valid.
-        break;
-      }
-      default: {
-        throw new Error(`Invalid value for \`action\`: \`${action}\``);
-      }
-    }
 
     Object.freeze(this);
   }
@@ -56,7 +40,7 @@ export default class Message {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._id, this._target, this._action, this._name, this._args];
+    return [this._id, this._target, this._name, this._args];
   }
 
   /**
@@ -68,7 +52,6 @@ export default class Message {
     return {
       id:     this._id,
       target: this._target,
-      action: this._action,
       name:   this._name,
       args:   this._args
     };
@@ -82,11 +65,6 @@ export default class Message {
   /** {string} ID of the target object. */
   get target() {
     return this._target;
-  }
-
-  /** {string} Action to take / being taken. */
-  get action() {
-    return this._action;
   }
 
   /** {string} Method / property name to access. */

@@ -7,10 +7,12 @@ import { Codec } from 'codec';
 import BaseKey from './BaseKey';
 import ConnectionError from './ConnectionError';
 import Message from './Message';
+import Response from './Response';
 import SplitKey from './SplitKey';
 
 // Register classes with the API.
 Codec.theOne.registerClass(Message);
+Codec.theOne.registerClass(Response);
 Codec.theOne.registerClass(SplitKey);
 
-export { BaseKey, ConnectionError, Message, SplitKey };
+export { BaseKey, ConnectionError, Message, Response, SplitKey };

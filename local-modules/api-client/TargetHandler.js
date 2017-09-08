@@ -256,7 +256,7 @@ export default class TargetHandler {
     const apiClient = this._apiClient;  // Avoid re-(re-)lookup on every call.
     const targetId  = this._targetId;   // Likewise.
     return (...args) => {
-      return apiClient._send(targetId, 'call', name, args);
+      return apiClient._send(targetId, name, args);
     };
   }
 }
