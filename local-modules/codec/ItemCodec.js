@@ -68,7 +68,7 @@ export default class ItemCodec extends CommonBase {
 
   /**
    * Gets the tag string to use when the encoded form is a value of a particular
-   * type (and not the usual "construction arguments" form).
+   * type (and not the usual "construction arguments" array form).
    *
    * @param {string} type The name of the type.
    * @returns {string} The corresponding tag to use.
@@ -163,7 +163,7 @@ export default class ItemCodec extends CommonBase {
 
     /**
      * {string|null} Type name for the encoded form, or `null` if this instance
-     * encodes into "construction arguments" form.
+     * encodes into "construction arguments" array form.
      */
     this._encodedType = ItemCodec.typeFromTag(tag);
 
@@ -204,8 +204,8 @@ export default class ItemCodec extends CommonBase {
 
   /**
    * {string|null} Name of the type of encoded values, if they are _not_
-   * encoded in "construction arguments" form. This is `null` for a
-   * "construction arguments" form.
+   * encoded in "construction arguments" array form. This is `null` for a
+   * "construction arguments" array form.
    */
   get encodedType() {
     return this._encodedType;
