@@ -262,26 +262,14 @@ export default class Connection extends CommonBase {
    */
   async _actOnMessage(msg) {
     const target = this.getTarget(msg.target);
-    const action = msg.action;
     const name   = msg.name;
     const args   = msg.args;
 
-    switch (action) {
-      case 'call': {
-        activeNow = this;
-        try {
-          return target.call(name, args);
-        } finally {
-          activeNow = null;
-        }
-      }
-
-      // **Note:** Ultimately we might accept `get` and `set`, for example, thus
-      // exposing a bit more of a JavaScript-like interface.
-
-      default: {
-        throw new Error(`Bad action: \`${action}\``);
-      }
+    activeNow = this;
+    try {
+      return target.call(name, args);
+    } finally {
+      activeNow = null;
     }
   }
 

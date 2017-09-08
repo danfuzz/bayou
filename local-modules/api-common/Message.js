@@ -25,9 +25,6 @@ export default class Message {
     /** {string} ID of the target object. */
     this._target = TString.nonempty(target);
 
-    /** {string} Action to take / being taken. */
-    this._action = 'call';
-
     /** {string} Method / property name to access. */
     this._name = TString.nonempty(name);
 
@@ -68,11 +65,6 @@ export default class Message {
   /** {string} ID of the target object. */
   get target() {
     return this._target;
-  }
-
-  /** {string} Action to take / being taken. */
-  get action() {
-    return 'call';
   }
 
   /** {string} Method / property name to access. */
