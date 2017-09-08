@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import util from 'util';
+
 import { TString } from 'typecheck';
 
 import DataUtil from './DataUtil';
@@ -55,12 +57,17 @@ export default class InfoError extends Error {
   /**
    * Makes a message for passing to the superclass constructor.
    *
-   * @param {string} detailsName The detail schema name.
    * @param {array<*>} detailsArgs The detail arguments.
    * @returns {string} An appropriately-constructed message string.
    */
-  static _makeMessage(detailsName, detailsArgs) {
-    return `${detailsName}(${detailsArgs.join(', ')})`;
+  static _makeMessage(detailsArgs) {
+    // As an array, the inspected form is `[...]` (square brackets). We replace
+    // the ends with parens.
+    const argString = util.inspect(detailsArgs)
+      .replace(/^\[ */, '(')
+      .replace(/ *\]$/, ')');
+
+    return argString;
   }
 
   /**
@@ -88,7 +95,11 @@ export default class InfoError extends Error {
     const detailsName = TString.identifier(hasCause ? args[0] : firstArg);
     const detailsArgs = DataUtil.deepFreeze(hasCause ? args.slice(1) : args);
 
-    super(InfoError._makeMessage(detailsName, detailsArgs));
+    // **Note:** `Error.toString()` includes the contents of `error.name`, so
+    // we _don't_ want to include the name in the message we pass up to the
+    // superclass constructor. If we did so, the stringified version of the
+    // instance would have the name listed twice.
+    super(InfoError._makeMessage(detailsArgs));
 
     /** {Error|null} The causal error, if any. */
     this._cause = cause;
