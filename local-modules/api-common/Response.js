@@ -128,21 +128,24 @@ export default class Response extends CommonBase {
 
   /**
    * Makes a cleaned-up stack from an incoming `error` argument. This returns
-   * `null` if `error` doesn't come with a stack.
+   * `null` if given `null`. In other cases were `error` doesn't come with a
+   * stack, this returns an empty array.
    *
    * @param {*} error Error value.
-   * @returns {string|null} Cleaned up error stack, or `null` if there is no
-   *   stack to clean up.
+   * @returns {string|null} Cleaned up error stack, `[]` if this is an error-ish
+   *   value with no stack, or `null` if `error` is `null`.
    */
   static _fixErrorStack(error) {
-    if (!(error instanceof Error)) {
+    if (error === null) {
       return null;
+    } else if (!(error instanceof Error)) {
+      return [];
     }
 
     const stack = error.stack;
 
     if (typeof stack !== 'string') {
-      return null;
+      return [];
     }
 
     // Match on each line of the stack that looks like a function/method call
