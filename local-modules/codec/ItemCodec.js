@@ -168,7 +168,8 @@ export default class ItemCodec extends CommonBase {
 
     /**
      * {function|null} The class (constructor function) which identifies
-     * qualified values, or `null` if qualified values aren't objects.
+     * qualified values, or `null` if qualified values aren't objects of a
+     * specific class (and not, e.g. a class-or-subclass).
      */
     this._clazz = ((typeof clazzOrType) === 'function')
       ? TClass.check(clazzOrType)
