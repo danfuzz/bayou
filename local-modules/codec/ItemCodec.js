@@ -138,10 +138,11 @@ export default class ItemCodec extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {string} tag Tag (name) for the item's type in encoded form,
-   *   or, if not encoded in "construction arguments" form, the name of its type
-   *   in encoded form. For the latter case, the `tag` should be produced by
-   *   a call to the static method `tagForType()`.
+   * @param {string} tag Tag (name) for the item's type in encoded form, if in
+   *   "construction arguments" array form. Or, if not encoded as such an array,
+   *   the name of the type of its encoded value form as produced by a call to
+   *   `tagForType()`; e.g., if the encoded form is a number, this would be
+   *   `ItemCodec.tagForType('number')`.
    * @param {function|string} clazzOrType Either the class (constructor
    *   function) which values must be exact instances of (not subclasses), or
    *   the (string) name of the type (as in `ItemCodec.typeof(value)`) which
