@@ -10,64 +10,50 @@ import { Message } from 'api-common';
 describe('api-common/Message', () => {
   describe('constructor(id, target, action, name, args)', () => {
     it('should require integer ids >= 0', () => {
-      assert.throws(() => new Message('this better not work!', 'foo', 'call', 'bar', []));
-      assert.throws(() => new Message(3.7, 'target', 'call', 'method', []));
-      assert.throws(() => new Message(true, 'target', 'call', 'method', []));
-      assert.throws(() => new Message(null, 'target', 'call', 'method', []));
-      assert.throws(() => new Message(undefined, 'target', 'call', 'method', []));
-      assert.throws(() => new Message(-1, 'target', 'call', 'method', []));
+      assert.throws(() => new Message('this better not work!', 'foo', 'bar', []));
+      assert.throws(() => new Message(3.7, 'target', 'method', []));
+      assert.throws(() => new Message(true, 'target', 'method', []));
+      assert.throws(() => new Message(null, 'target', 'method', []));
+      assert.throws(() => new Message(undefined, 'target', 'method', []));
+      assert.throws(() => new Message(-1, 'target', 'method', []));
 
-      assert.doesNotThrow(() => new Message(0, 'target', 'call', 'method', []));
-      assert.doesNotThrow(() => new Message(37, 'target', 'call', 'method', []));
+      assert.doesNotThrow(() => new Message(0, 'target', 'method', []));
+      assert.doesNotThrow(() => new Message(37, 'target', 'method', []));
     });
 
     it('should require target to be a non-empty string', () => {
-      assert.throws(() => new Message(37, 37, 'call', 'bar', []));
-      assert.throws(() => new Message(37, false, 'call', 'bar', []));
-      assert.throws(() => new Message(37, null, 'call', 'bar', []));
-      assert.throws(() => new Message(37, undefined, 'call', 'bar', []));
-      assert.throws(() => new Message(37, '', 'call', 'bar', []));
+      assert.throws(() => new Message(37, 37, 'bar', []));
+      assert.throws(() => new Message(37, false, 'bar', []));
+      assert.throws(() => new Message(37, null, 'bar', []));
+      assert.throws(() => new Message(37, undefined, 'bar', []));
+      assert.throws(() => new Message(37, '', 'bar', []));
 
-      assert.doesNotThrow(() => new Message(0, 'target', 'call', 'method', []));
-    });
-
-    it("should require that action be 'call'", () => {
-      assert.throws(() => new Message(0, 'target', false, 'method', []));
-      assert.throws(() => new Message(0, 'target', 37, 'method', []));
-      assert.throws(() => new Message(0, 'target', null, 'method', []));
-      assert.throws(() => new Message(0, 'target', undefined, 'method', []));
-      assert.throws(() => new Message(0, 'target', '', 'method', []));
-      assert.throws(() => new Message(0, 'target', 'this better not work!', 'method', []));
-
-      assert.doesNotThrow(() => new Message(0, 'target', 'call', 'method', []));
+      assert.doesNotThrow(() => new Message(0, 'target', 'method', []));
     });
 
     it('should require name to be a non-empty string', () => {
-      assert.throws(() => new Message(0, 'target', 'call', false, []));
-      assert.throws(() => new Message(0, 'target', 'call', 37, []));
-      assert.throws(() => new Message(0, 'target', 'call', null, []));
-      assert.throws(() => new Message(0, 'target', 'call', undefined, []));
-      assert.throws(() => new Message(0, 'target', 'call', '', []));
+      assert.throws(() => new Message(0, 'target', false, []));
+      assert.throws(() => new Message(0, 'target', 37, []));
+      assert.throws(() => new Message(0, 'target', null, []));
+      assert.throws(() => new Message(0, 'target', undefined, []));
+      assert.throws(() => new Message(0, 'target', '', []));
 
-      assert.doesNotThrow(() => new Message(0, 'target', 'call', 'method', []));
+      assert.doesNotThrow(() => new Message(0, 'target', 'method', []));
     });
 
-    it('should args to be an array', () => {
-      assert.throws(() => new Message(0, 'target', 'call', 'method', false));
-      assert.throws(() => new Message(0, 'target', 'call', 'method', 37));
-      assert.throws(() => new Message(0, 'target', 'call', 'method', null));
-      assert.throws(() => new Message(0, 'target', 'call', 'method', undefined));
-      assert.throws(() => new Message(0, 'target', 'call', 'method', { }));
+    it('should require args to be an array', () => {
+      assert.throws(() => new Message(0, 'target', 'method', false));
+      assert.throws(() => new Message(0, 'target', 'method', 37));
+      assert.throws(() => new Message(0, 'target', 'method', null));
+      assert.throws(() => new Message(0, 'target', 'method', undefined));
+      assert.throws(() => new Message(0, 'target', 'method', { }));
 
-      assert.doesNotThrow(() => new Message(0, 'target', 'call', 'method', []));
+      assert.doesNotThrow(() => new Message(0, 'target', 'method', []));
     });
 
     it('should return a frozen object', () => {
-      assert.throws(() => {
-        const message = new Message(0, 'target', 'call', 'method', false);
-
-        assert.isFrozen(message);
-      });
+      const message = new Message(0, 'target', 'method', ['args']);
+      assert.isFrozen(message);
     });
   });
 });
