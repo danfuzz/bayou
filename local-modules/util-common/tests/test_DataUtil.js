@@ -80,6 +80,48 @@ describe('util-common/DataUtil', () => {
       assert.isFrozen(popsicle);
       assert.isNotFrozen(orig);
     });
+
+    it('should work on arrays with holes', () => {
+      const orig = [1, 2, 3];
+      orig[37]   = ['florp'];
+      orig[914]  = [[['like']]];
+
+      const popsicle = DataUtil.deepFreeze(orig);
+
+      assert.isFrozen(popsicle);
+      assert.deepEqual(popsicle, orig);
+    });
+
+    it('should work on arrays with additional string-named properties', () => {
+      const orig = [1, 2, 3];
+      orig.florp = ['florp'];
+      orig.like  = [[['like']]];
+
+      const popsicle = DataUtil.deepFreeze(orig);
+
+      assert.isFrozen(popsicle);
+      assert.deepEqual(popsicle, orig);
+    });
+
+    it('should work on arrays with additional symbol-named properties', () => {
+      const orig = [1, 2, 3];
+      orig[Symbol('florp')] = ['florp'];
+      orig[Symbol('like')] = [[['like']]];
+
+      const popsicle = DataUtil.deepFreeze(orig);
+
+      assert.isFrozen(popsicle);
+      assert.deepEqual(popsicle, orig);
+    });
+
+    it('should work on objects with symbol-named properties', () => {
+      const orig = { a: 10, [Symbol('b')]: 20 };
+
+      const popsicle = DataUtil.deepFreeze(orig);
+
+      assert.isFrozen(popsicle);
+      assert.deepEqual(popsicle, orig);
+    });
   });
 
   describe('bufferFromHex()', () => {
