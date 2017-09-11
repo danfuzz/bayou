@@ -4,6 +4,7 @@
 
 import { TObject } from 'typecheck';
 
+import Errors from './Errors';
 import InfoError from './InfoError';
 
 /**
@@ -78,7 +79,7 @@ export default class CommonBase {
       if (!(result instanceof this)) {
         // There is a bug in the subclass, as it should never return any other
         // kind of value.
-        throw InfoError.wtf('Invalid `_impl_coerce()` implementation.');
+        throw Errors.wtf('Invalid `_impl_coerce()` implementation.');
       }
       return result;
     }
@@ -129,7 +130,7 @@ export default class CommonBase {
       if ((result !== null) && !(result instanceof this)) {
         // There is a bug in the subclass, as it should never return any other
         // kind of value.
-        throw InfoError.wtf('Invalid `_impl_coerceOrNull()` implementation.');
+        throw Errors.wtf('Invalid `_impl_coerceOrNull()` implementation.');
       }
       return result;
     }
@@ -177,7 +178,7 @@ export default class CommonBase {
    * @param {...*} args_unused Anything you want, to keep the linter happy.
    */
   static _mustOverride(...args_unused) {
-    throw InfoError.wtf('Must override.');
+    throw Errors.wtf('Must override.');
   }
 }
 

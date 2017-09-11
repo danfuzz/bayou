@@ -7,6 +7,7 @@ import ColorUtil from './ColorUtil';
 import CommonBase from './CommonBase';
 import DataUtil from './DataUtil';
 import DeferredLoader from './DeferredLoader';
+import Errors from './DeferredLoader';
 import FrozenBuffer from './FrozenBuffer';
 import InfoError from './InfoError';
 import IterableUtil from './IterableUtil';
@@ -23,6 +24,7 @@ export {
   CommonBase,
   DataUtil,
   DeferredLoader,
+  Errors,
   FrozenBuffer,
   InfoError,
   IterableUtil,

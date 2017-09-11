@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Errors, StoragePath } from 'file-store';
-import { CommonBase, InfoError } from 'util-common';
+import { CommonBase, Errors as UtilErrors } from 'util-common';
 
 /**
  * Handler for `LocalFile.transact()`. An instance of this class is constructed
@@ -101,7 +101,7 @@ export default class Transactor extends CommonBase {
 
       const handler = this[`_op_${op.name}`];
       if (!handler) {
-        throw InfoError.wtf(`Missing handler for op: ${op.name}`);
+        throw UtilErrors.wtf(`Missing handler for op: ${op.name}`);
       }
 
       handler.call(this, op);
@@ -439,6 +439,6 @@ export default class Transactor extends CommonBase {
    * @param {string} name Name of the missing op.
    */
   static _missingOp(name) {
-    throw InfoError.wtf(`Missing op implementation: ${name}`);
+    throw UtilErrors.wtf(`Missing op implementation: ${name}`);
   }
 }

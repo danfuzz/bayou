@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TBoolean, TInt, TMap, TObject, TSet, TString } from 'typecheck';
-import { CommonBase, FrozenBuffer, InfoError } from 'util-common';
+import { CommonBase, Errors, FrozenBuffer } from 'util-common';
 
 import StorageId from './StorageId';
 import StoragePath from './StoragePath';
@@ -210,24 +210,24 @@ export default class BaseFile extends CommonBase {
 
     if (spec.hasReadOps()) {
       if (result.data === null) {
-        throw InfoError.wtf('Improper subclass behavior: Expected non-`null` `data`.');
+        throw Errors.wtf('Improper subclass behavior: Expected non-`null` `data`.');
       }
       TMap.check(result.data, StorageId.check, FrozenBuffer.check);
     } else {
       if (result.data !== null) {
-        throw InfoError.wtf('Improper subclass behavior: Expected `null` `data`.');
+        throw Errors.wtf('Improper subclass behavior: Expected `null` `data`.');
       }
       delete result.data;
     }
 
     if (spec.hasPathOps()) {
       if (result.paths === null) {
-        throw InfoError.wtf('Improper subclass behavior: Expected non-`null` `paths`.');
+        throw Errors.wtf('Improper subclass behavior: Expected non-`null` `paths`.');
       }
       TSet.check(result.paths, StoragePath.check);
     } else {
       if (result.paths !== null) {
-        throw InfoError.wtf('Improper subclass behavior: Expected `null` `paths`.');
+        throw Errors.wtf('Improper subclass behavior: Expected `null` `paths`.');
       }
       delete result.paths;
     }

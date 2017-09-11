@@ -42,19 +42,6 @@ export default class InfoError extends Error {
   }
 
   /**
-   * Constructs an instance which is meant to indicate that the program
-   * exhibited unexpected behavior. This should be used as an indication of a
-   * likely bug in the program.
-   *
-   * @param {string} message Human-oriented message with some indication of what
-   *   went wrong.
-   */
-  static wtf(message) {
-    TString.check(message);
-    throw new InfoError('wtf', message);
-  }
-
-  /**
    * Makes a message for passing to the superclass constructor.
    *
    * @param {array<*>} detailsArgs The detail arguments.
