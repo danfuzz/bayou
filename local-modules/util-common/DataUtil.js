@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TString } from 'typecheck';
 import { ObjectUtil, UtilityClass } from 'util-common-base';
 
 /**
@@ -40,7 +39,7 @@ export default class DataUtil extends UtilityClass {
         }
 
         const proto = Object.getPrototypeOf(value);
-        let cloneBase = null; // Empty object to start from when cloning.
+        let cloneBase; // Empty object to start from when cloning.
 
         if (proto === Object.prototype) {
           cloneBase = {};
@@ -50,8 +49,20 @@ export default class DataUtil extends UtilityClass {
           throw new Error(`Cannot deep-freeze non-data object: ${value}`);
         }
 
-        let newObj = value;
-        let any = false; // Becomes `true` the first time a change is made.
+        let newObj = null;  // Becomes non-`null` with the first change.
+        const needToChange = () => {
+          if (newObj === null) {
+            // Clone the object the first time it needs to be changed.
+            newObj = Object.assign(cloneBase, value);
+          }
+        };
+
+        if (!Object.isFrozen(value)) {
+          // The original isn't frozen, which means that the top-level result
+          // needs to be a new object (even if all the properties / elements are
+          // already frozen).
+          needToChange();
+        }
 
         for (const k of Object.getOwnPropertyNames(value)) {
           const prop = Object.getOwnPropertyDescriptor(value, k);
@@ -64,16 +75,12 @@ export default class DataUtil extends UtilityClass {
           }
           const newValue = DataUtil.deepFreeze(oldValue);
           if (oldValue !== newValue) {
-            if (!any) {
-              newObj = Object.assign(cloneBase, value); // Clone the object.
-              any = true;
-            }
+            needToChange();
             newObj[k] = newValue;
           }
         }
 
-        Object.freeze(newObj);
-        return newObj;
+        return (newObj === null) ? value : Object.freeze(newObj);
       }
 
       default: {
@@ -83,15 +90,61 @@ export default class DataUtil extends UtilityClass {
   }
 
   /**
-   * Parses an even-length string of hex digits (lower case), producing a
-   * `Buffer`.
+   * Indicates whether or not the given value is deep-frozen.
    *
-   * @param {string} hex String of hex digits.
-   * @returns {Buffer} Buffer of parsed bytes.
+   * @param {*} value The value to check.
+   * @returns {boolean} `true` if `value` is deep-frozen, or `false` if not.
    */
-  static bufferFromHex(hex) {
-    TString.hexBytes(hex);
+  static isDeepFrozen(value) {
+    switch (typeof value) {
+      case 'boolean':
+      case 'number':
+      case 'string':
+      case 'symbol':
+      case 'undefined': {
+        return true;
+      }
 
-    return Buffer.from(hex, 'hex');
+      case 'object': {
+        if (value === null) {
+          return true;
+        }
+        break;
+      }
+
+      default: {
+        // This includes `function`.
+        return false;
+      }
+    }
+
+    // At this point, we have a non-null object(ish) value, which is _not_ a
+    // function or generator.
+
+    if (!Object.isFrozen(value)) {
+      return false;
+    }
+
+    const proto = Object.getPrototypeOf(value);
+    if ((proto !== Object.prototype) && (proto !== Array.prototype)) {
+      return false;
+    }
+
+    // At this point, we know we have a frozen composite of an acceptable type
+    // (either array or simple object). We still need to check the properties /
+    // elements.
+
+    for (const k of Object.getOwnPropertyNames(value)) {
+      const prop = Object.getOwnPropertyDescriptor(value, k);
+      const v = prop.value;
+      if ((v === undefined) && !ObjectUtil.hasOwnProperty(prop, 'value')) {
+        // This is a synthetic property.
+        return false;
+      } else if (!DataUtil.isDeepFrozen(v)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

@@ -7,7 +7,7 @@
 import crypto from 'crypto';
 
 import { TString } from 'typecheck';
-import { DataUtil, Random } from 'util-common';
+import { Random } from 'util-common';
 
 import BaseKey from './BaseKey';
 
@@ -101,8 +101,8 @@ export default class SplitKey extends BaseKey {
 
     const hash = crypto.createHash('sha256');
 
-    hash.update(DataUtil.bufferFromHex(challenge));
-    hash.update(DataUtil.bufferFromHex(this._secret));
+    hash.update(Buffer.from(challenge, 'hex'));
+    hash.update(Buffer.from(this._secret, 'hex'));
 
     return hash.digest('hex');
   }

@@ -28,8 +28,9 @@ describe('util-common/DataUtil', () => {
       function test(value) {
         const popsicle = DataUtil.deepFreeze(value);
         const deepPopsicle = DataUtil.deepFreeze(popsicle);
-        assert.strictEqual(deepPopsicle, popsicle);
-        assert.deepEqual(deepPopsicle, value);
+        assert.isTrue(DataUtil.isDeepFrozen(popsicle));
+        assert.strictEqual(deepPopsicle, popsicle, 'Frozen strict-equals re-frozen.');
+        assert.deepEqual(deepPopsicle, value, 'Re-frozen deep-equals original.');
       }
 
       test({});
@@ -41,27 +42,9 @@ describe('util-common/DataUtil', () => {
     });
 
     it('should return a deep-frozen object if passed one that isn\'t already deep-frozen', () => {
-      // Good enough recursive frozen check for testing, but not good enough to
-      // be in the main class.
-      function isDeepFrozen(value) {
-        if (!Object.isFrozen(value)) {
-          return false;
-        } else if (typeof value !== 'object') {
-          return true;
-        }
-
-        for (const v of Object.values(value)) {
-          if (!isDeepFrozen(v)) {
-            return false;
-          }
-        }
-
-        return true;
-      }
-
       function test(value) {
         const popsicle = DataUtil.deepFreeze(value);
-        assert.isTrue(isDeepFrozen(popsicle), value);
+        assert.isTrue(DataUtil.isDeepFrozen(popsicle));
         assert.deepEqual(popsicle, value);
       }
 
@@ -72,27 +55,182 @@ describe('util-common/DataUtil', () => {
       test([[[[[[[[[['hello']]]]]]]]]]);
       test({ x: [[[[[123]]]]], y: [37, [37], [[37]], [[[37]]]], z: [{ x: 10 }] });
     });
+
+    it('should not freeze the originally passed value', () => {
+      const orig = [1, 2, 3];
+      const popsicle = DataUtil.deepFreeze(orig);
+
+      assert.isTrue(DataUtil.isDeepFrozen(popsicle));
+      assert.isNotFrozen(orig);
+    });
+
+    it('should work on arrays with holes', () => {
+      const orig = [1, 2, 3];
+      orig[37]   = ['florp'];
+      orig[914]  = [[['like']]];
+
+      const popsicle = DataUtil.deepFreeze(orig);
+
+      assert.isTrue(DataUtil.isDeepFrozen(popsicle));
+      assert.deepEqual(popsicle, orig);
+    });
+
+    it('should work on arrays with additional string-named properties', () => {
+      const orig = [1, 2, 3];
+      orig.florp = ['florp'];
+      orig.like  = [[['like']]];
+
+      const popsicle = DataUtil.deepFreeze(orig);
+
+      assert.isTrue(DataUtil.isDeepFrozen(popsicle));
+      assert.deepEqual(popsicle, orig);
+    });
+
+    it('should work on arrays with additional symbol-named properties', () => {
+      const orig = [1, 2, 3];
+      orig[Symbol('florp')] = ['florp'];
+      orig[Symbol('like')] = [[['like']]];
+
+      const popsicle = DataUtil.deepFreeze(orig);
+
+      assert.isTrue(DataUtil.isDeepFrozen(popsicle));
+      assert.deepEqual(popsicle, orig);
+    });
+
+    it('should work on objects with symbol-named properties', () => {
+      const orig = { a: 10, [Symbol('b')]: 20 };
+
+      const popsicle = DataUtil.deepFreeze(orig);
+
+      assert.isTrue(DataUtil.isDeepFrozen(popsicle));
+      assert.deepEqual(popsicle, orig);
+    });
+
+    it('should fail if given a function or a composite that contains same', () => {
+      function test(value) {
+        assert.throws(() => { DataUtil.deepFreeze(value); });
+      }
+
+      test(test); // Because `test` is indeed a function!
+      test(() => 123);
+      test([1, 2, 3, test]);
+      test([1, 2, 3, [[[[[test]]]]]]);
+      test({ a: 10, b: test });
+      test({ a: 10, b: { c: { d: test } } });
+    });
+
+    it('should fail if given a non-simple object or a composite that contains same', () => {
+      function test(value) {
+        assert.throws(() => { DataUtil.deepFreeze(value); });
+      }
+
+      const instance = new Number(10);
+      const synthetic = {
+        a: 10,
+        get x() { return 20; }
+      };
+
+      test(instance);
+      test(synthetic);
+      test([instance]);
+      test([1, 2, 3, [[[[[synthetic]]]]]]);
+      test({ a: 10, b: instance });
+      test({ a: 10, b: { c: { d: synthetic } } });
+    });
   });
 
-  describe('bufferFromHex()', () => {
-    it('should throw an Error if passed an odd-lengthed string', () => {
-      assert.throws(() => DataUtil.bufferFromHex('aabbc'));
+  describe('isDeepFrozen()', () => {
+    it('should return `true` for primitive values', () => {
+      function test(value) {
+        assert.isTrue(DataUtil.isDeepFrozen(value));
+      }
+
+      test(undefined);
+      test(null);
+      test(false);
+      test(true);
+      test(37);
+      test('a string');
+      test(Symbol('foo'));
     });
 
-    it('should throw an error if pass a string that isn\'t solely hex bytes', () => {
-      assert.throws(() => DataUtil.bufferFromHex('this better not work!'));
+    it('should return `true` for appropriate frozen composites', () => {
+      function test(value) {
+        assert.isTrue(DataUtil.isDeepFrozen(value));
+      }
+
+      test(Object.freeze([]));
+      test(Object.freeze([1, 2, 3]));
+      test(Object.freeze([Object.freeze([1, 2, 3])]));
+
+      test(Object.freeze({}));
+      test(Object.freeze({ a: 10, b: 20 }));
+      test(Object.freeze({ a: 10, b: Object.freeze({ c: 30 }) }));
+    });
+  });
+
+  it('should return `false` for composites that are not frozen even if all elements are', () => {
+    function test(value) {
+      assert.isFalse(DataUtil.isDeepFrozen(value));
+    }
+
+    test([]);
+    test([1, 2, 3]);
+    test([Object.freeze([1, 2, 3])]);
+
+    test({});
+    test({ a: 10, b: 20 });
+    test({ a: 10, b: Object.freeze({ c: 30 }) });
+  });
+
+  it('should return `false` for frozen composites with non-frozen elements', () => {
+    function test(value) {
+      assert.isFalse(DataUtil.isDeepFrozen(value));
+    }
+
+    test(Object.freeze([[]]));
+    test(Object.freeze([Object.freeze([[]])]));
+
+    test(Object.freeze({ a: {} }));
+    test(Object.freeze({ a: Object.freeze({ b: {} }) }));
+  });
+
+  it('should return `false` for non-simple objects or composites with same', () => {
+    function test(value) {
+      assert.isFalse(DataUtil.isDeepFrozen(value));
+    }
+
+    const instance = Object.freeze(new Number(10));
+    const synthetic = Object.freeze({
+      a: 10,
+      get x() { return 20; }
     });
 
-    it('should return a buffer when passed a valid hex string', () => {
-      const bytes = DataUtil.bufferFromHex('deadbeef');
+    test(instance);
+    test(synthetic);
+    test(Object.freeze([instance]));
+    test(Object.freeze([synthetic]));
+    test(Object.freeze({ a: instance }));
+    test(Object.freeze({ a: synthetic }));
+    test(Object.freeze({ a: Object.freeze({ b: instance }) }));
+    test(Object.freeze({ a: Object.freeze([1, 2, 3, synthetic]) }));
+  });
 
-      assert.isTrue(Buffer.isBuffer(bytes));
+  it('should return `false` for functions, generators and composites containing same', () => {
+    function test(value) {
+      assert.isFalse(DataUtil.isDeepFrozen(value));
+    }
 
-      assert.strictEqual(bytes.length, 4);
-      assert.strictEqual(bytes[0], 0xde);
-      assert.strictEqual(bytes[1], 0xad);
-      assert.strictEqual(bytes[2], 0xbe);
-      assert.strictEqual(bytes[3], 0xef);
-    });
+    function func() { return 10; }
+    function* gen() { yield 10; }
+    Object.freeze(func);
+    Object.freeze(gen);
+
+    test(func);
+    test(gen);
+    test(Object.freeze([func]));
+    test(Object.freeze([gen]));
+    test(Object.freeze({ a: func }));
+    test(Object.freeze({ a: Object.freeze([1, 2, gen]) }));
   });
 });
