@@ -2,10 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TString } from 'typecheck';
-import { UtilityClass } from 'util-common-base';
+import util from 'util';
 
 import InfoError from './InfoError';
+import UtilityClass from './UtilityClass';
 
 /**
  * Utility class for constructing commonly-used errors, which are applicable to
@@ -20,12 +20,15 @@ export default class Errors extends UtilityClass {
    * exhibited unexpected behavior. This should be used as an indication of a
    * likely bug in the program.
    *
-   * @param {string} message Human-oriented message with some indication of what
-   *   went wrong.
+   * @param {*} message Human-oriented message with some indication of what
+   *   went wrong. If not a string, gets converted to one via `util.inspect()`.
    * @returns {InfoError} An appropriately-constructed error.
    */
   static wtf(message) {
-    TString.check(message);
+    if (typeof message !== 'string') {
+      message = util.inspect(message);
+    }
+
     return new InfoError('wtf', message);
   }
 }

@@ -4,9 +4,8 @@
 
 import util from 'util';
 
-import { TString } from 'typecheck';
-
 import DataUtil from './DataUtil';
+import Types from './Types';
 
 /**
  * `Error` subclass that comes with additional structured information.
@@ -21,8 +20,8 @@ import DataUtil from './DataUtil';
  *
  * **Note:** This class mixes in `CommonBase`, so that it gets the static
  * `check()` method and friends. However, because `CommonBase` uses this class,
- * we can't just mix it in here. Instead, `CommonBase` does that during its own
- * initialization.
+ * we can't just mix it in here (as this class is the one that gets initialized
+ * first). Instead, `CommonBase` does that during _its_ initialization.
  */
 export default class InfoError extends Error {
   /**
@@ -37,7 +36,7 @@ export default class InfoError extends Error {
    *   indicated name.
    */
   static hasName(value, name) {
-    TString.check(name);
+    Types.checkString(name);
     return (value instanceof InfoError) && (value.name === name);
   }
 
@@ -79,7 +78,7 @@ export default class InfoError extends Error {
     // call to `super()` (which is required before setting instance variables.)
     const hasCause    = (firstArg instanceof Error);
     const cause       = hasCause ? firstArg : null;
-    const detailsName = TString.identifier(hasCause ? args[0] : firstArg);
+    const detailsName = Types.checkIdentifier(hasCause ? args[0] : firstArg);
     const detailsArgs = DataUtil.deepFreeze(hasCause ? args.slice(1) : args);
 
     // **Note:** `Error.toString()` includes the contents of `error.name`, so
