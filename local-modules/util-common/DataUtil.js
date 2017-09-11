@@ -40,7 +40,7 @@ export default class DataUtil extends UtilityClass {
         }
 
         const proto = Object.getPrototypeOf(value);
-        let cloneBase = null; // Empty object to start from when cloning.
+        let cloneBase; // Empty object to start from when cloning.
 
         if (proto === Object.prototype) {
           cloneBase = {};
@@ -50,8 +50,20 @@ export default class DataUtil extends UtilityClass {
           throw new Error(`Cannot deep-freeze non-data object: ${value}`);
         }
 
-        let newObj = value;
-        let any = false; // Becomes `true` the first time a change is made.
+        let newObj = null;  // Becomes non-`null` with the first change.
+        const needToChange = () => {
+          if (newObj === null) {
+            // Clone the object the first time it needs to be changed.
+            newObj = Object.assign(cloneBase, value);
+          }
+        };
+
+        if (!Object.isFrozen(value)) {
+          // The original isn't frozen, which means that the top-level result
+          // needs to be a new object (even if all the properties / elements are
+          // already frozen).
+          needToChange();
+        }
 
         for (const k of Object.getOwnPropertyNames(value)) {
           const prop = Object.getOwnPropertyDescriptor(value, k);
@@ -64,16 +76,12 @@ export default class DataUtil extends UtilityClass {
           }
           const newValue = DataUtil.deepFreeze(oldValue);
           if (oldValue !== newValue) {
-            if (!any) {
-              newObj = Object.assign(cloneBase, value); // Clone the object.
-              any = true;
-            }
+            needToChange();
             newObj[k] = newValue;
           }
         }
 
-        Object.freeze(newObj);
-        return newObj;
+        return (newObj === null) ? value : Object.freeze(newObj);
       }
 
       default: {

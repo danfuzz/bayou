@@ -28,8 +28,8 @@ describe('util-common/DataUtil', () => {
       function test(value) {
         const popsicle = DataUtil.deepFreeze(value);
         const deepPopsicle = DataUtil.deepFreeze(popsicle);
-        assert.strictEqual(deepPopsicle, popsicle);
-        assert.deepEqual(deepPopsicle, value);
+        assert.strictEqual(deepPopsicle, popsicle, 'Frozen strict-equals re-frozen.');
+        assert.deepEqual(deepPopsicle, value, 'Re-frozen deep-equals original.');
       }
 
       test({});
@@ -71,6 +71,14 @@ describe('util-common/DataUtil', () => {
       test([1, 2, 'foo', 'bar']);
       test([[[[[[[[[['hello']]]]]]]]]]);
       test({ x: [[[[[123]]]]], y: [37, [37], [[37]], [[[37]]]], z: [{ x: 10 }] });
+    });
+
+    it('should not freeze the originally passed value', () => {
+      const orig = [1, 2, 3];
+      const popsicle = DataUtil.deepFreeze(orig);
+
+      assert.isFrozen(popsicle);
+      assert.isNotFrozen(orig);
     });
   });
 
