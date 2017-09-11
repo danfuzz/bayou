@@ -28,6 +28,7 @@ describe('util-common/DataUtil', () => {
       function test(value) {
         const popsicle = DataUtil.deepFreeze(value);
         const deepPopsicle = DataUtil.deepFreeze(popsicle);
+        assert.isTrue(DataUtil.isDeepFrozen(popsicle));
         assert.strictEqual(deepPopsicle, popsicle, 'Frozen strict-equals re-frozen.');
         assert.deepEqual(deepPopsicle, value, 'Re-frozen deep-equals original.');
       }
@@ -41,27 +42,9 @@ describe('util-common/DataUtil', () => {
     });
 
     it('should return a deep-frozen object if passed one that isn\'t already deep-frozen', () => {
-      // Good enough recursive frozen check for testing, but not good enough to
-      // be in the main class.
-      function isDeepFrozen(value) {
-        if (!Object.isFrozen(value)) {
-          return false;
-        } else if (typeof value !== 'object') {
-          return true;
-        }
-
-        for (const v of Object.values(value)) {
-          if (!isDeepFrozen(v)) {
-            return false;
-          }
-        }
-
-        return true;
-      }
-
       function test(value) {
         const popsicle = DataUtil.deepFreeze(value);
-        assert.isTrue(isDeepFrozen(popsicle), value);
+        assert.isTrue(DataUtil.isDeepFrozen(popsicle));
         assert.deepEqual(popsicle, value);
       }
 
@@ -77,7 +60,7 @@ describe('util-common/DataUtil', () => {
       const orig = [1, 2, 3];
       const popsicle = DataUtil.deepFreeze(orig);
 
-      assert.isFrozen(popsicle);
+      assert.isTrue(DataUtil.isDeepFrozen(popsicle));
       assert.isNotFrozen(orig);
     });
 
@@ -88,7 +71,7 @@ describe('util-common/DataUtil', () => {
 
       const popsicle = DataUtil.deepFreeze(orig);
 
-      assert.isFrozen(popsicle);
+      assert.isTrue(DataUtil.isDeepFrozen(popsicle));
       assert.deepEqual(popsicle, orig);
     });
 
@@ -99,7 +82,7 @@ describe('util-common/DataUtil', () => {
 
       const popsicle = DataUtil.deepFreeze(orig);
 
-      assert.isFrozen(popsicle);
+      assert.isTrue(DataUtil.isDeepFrozen(popsicle));
       assert.deepEqual(popsicle, orig);
     });
 
@@ -110,7 +93,7 @@ describe('util-common/DataUtil', () => {
 
       const popsicle = DataUtil.deepFreeze(orig);
 
-      assert.isFrozen(popsicle);
+      assert.isTrue(DataUtil.isDeepFrozen(popsicle));
       assert.deepEqual(popsicle, orig);
     });
 
@@ -119,7 +102,7 @@ describe('util-common/DataUtil', () => {
 
       const popsicle = DataUtil.deepFreeze(orig);
 
-      assert.isFrozen(popsicle);
+      assert.isTrue(DataUtil.isDeepFrozen(popsicle));
       assert.deepEqual(popsicle, orig);
     });
 
