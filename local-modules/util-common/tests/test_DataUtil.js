@@ -122,6 +122,38 @@ describe('util-common/DataUtil', () => {
       assert.isFrozen(popsicle);
       assert.deepEqual(popsicle, orig);
     });
+
+    it('should fail if given a function or a composite that contains same', () => {
+      function test(value) {
+        assert.throws(() => { DataUtil.deepFreeze(value); });
+      }
+
+      test(test); // Because `test` is indeed a function!
+      test(() => 123);
+      test([1, 2, 3, test]);
+      test([1, 2, 3, [[[[[test]]]]]]);
+      test({ a: 10, b: test });
+      test({ a: 10, b: { c: { d: test } } });
+    });
+
+    it('should fail if given a non-simple object or a composite that contains same', () => {
+      function test(value) {
+        assert.throws(() => { DataUtil.deepFreeze(value); });
+      }
+
+      const instance = new Number(10);
+      const synthetic = {
+        a: 10,
+        get x() { return 20; }
+      };
+
+      test(instance);
+      test(synthetic);
+      test([instance]);
+      test([1, 2, 3, [[[[[synthetic]]]]]]);
+      test({ a: 10, b: instance });
+      test({ a: 10, b: { c: { d: synthetic } } });
+    });
   });
 
   describe('bufferFromHex()', () => {
