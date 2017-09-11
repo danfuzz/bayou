@@ -88,4 +88,63 @@ export default class DataUtil extends UtilityClass {
       }
     }
   }
+
+  /**
+   * Indicates whether or not the given value is deep-frozen.
+   *
+   * @param {*} value The value to check.
+   * @returns {boolean} `true` if `value` is deep-frozen, or `false` if not.
+   */
+  static isDeepFrozen(value) {
+    switch (typeof value) {
+      case 'boolean':
+      case 'number':
+      case 'string':
+      case 'symbol':
+      case 'undefined': {
+        return true;
+      }
+
+      case 'object': {
+        if (value === null) {
+          return true;
+        }
+        break;
+      }
+
+      default: {
+        // This includes `function`.
+        return false;
+      }
+    }
+
+    // At this point, we have a non-null object(ish) value, which is _not_ a
+    // function or generator.
+
+    if (!Object.isFrozen(value)) {
+      return false;
+    }
+
+    const proto = Object.getPrototypeOf(value);
+    if ((proto !== Object.prototype) && (proto !== Array.prototype)) {
+      return false;
+    }
+
+    // At this point, we know we have a frozen composite of an acceptable type
+    // (either array or simple object). We still need to check the properties /
+    // elements.
+
+    for (const k of Object.getOwnPropertyNames(value)) {
+      const prop = Object.getOwnPropertyDescriptor(value, k);
+      const v = prop.value;
+      if ((v === undefined) && !ObjectUtil.hasOwnProperty(prop, 'value')) {
+        // This is a synthetic property.
+        return false;
+      } else if (!DataUtil.isDeepFrozen(v)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 }

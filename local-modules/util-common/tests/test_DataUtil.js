@@ -155,4 +155,99 @@ describe('util-common/DataUtil', () => {
       test({ a: 10, b: { c: { d: synthetic } } });
     });
   });
+
+  describe('isDeepFrozen()', () => {
+    it('should return `true` for primitive values', () => {
+      function test(value) {
+        assert.isTrue(DataUtil.isDeepFrozen(value));
+      }
+
+      test(undefined);
+      test(null);
+      test(false);
+      test(true);
+      test(37);
+      test('a string');
+      test(Symbol('foo'));
+    });
+
+    it('should return `true` for appropriate frozen composites', () => {
+      function test(value) {
+        assert.isTrue(DataUtil.isDeepFrozen(value));
+      }
+
+      test(Object.freeze([]));
+      test(Object.freeze([1, 2, 3]));
+      test(Object.freeze([Object.freeze([1, 2, 3])]));
+
+      test(Object.freeze({}));
+      test(Object.freeze({ a: 10, b: 20 }));
+      test(Object.freeze({ a: 10, b: Object.freeze({ c: 30 }) }));
+    });
+  });
+
+  it('should return `false` for composites that are not frozen even if all elements are', () => {
+    function test(value) {
+      assert.isFalse(DataUtil.isDeepFrozen(value));
+    }
+
+    test([]);
+    test([1, 2, 3]);
+    test([Object.freeze([1, 2, 3])]);
+
+    test({});
+    test({ a: 10, b: 20 });
+    test({ a: 10, b: Object.freeze({ c: 30 }) });
+  });
+
+  it('should return `false` for frozen composites with non-frozen elements', () => {
+    function test(value) {
+      assert.isFalse(DataUtil.isDeepFrozen(value));
+    }
+
+    test(Object.freeze([[]]));
+    test(Object.freeze([Object.freeze([[]])]));
+
+    test(Object.freeze({ a: {} }));
+    test(Object.freeze({ a: Object.freeze({ b: {} }) }));
+  });
+
+  it('should return `false` for non-simple objects or composites with same', () => {
+    function test(value) {
+      assert.isFalse(DataUtil.isDeepFrozen(value));
+    }
+
+    const instance = Object.freeze(new Number(10));
+    const synthetic = Object.freeze({
+      a: 10,
+      get x() { return 20; }
+    });
+
+    test(instance);
+    test(synthetic);
+    test(Object.freeze([instance]));
+    test(Object.freeze([synthetic]));
+    test(Object.freeze({ a: instance }));
+    test(Object.freeze({ a: synthetic }));
+    test(Object.freeze({ a: Object.freeze({ b: instance }) }));
+    test(Object.freeze({ a: Object.freeze([1, 2, 3, synthetic]) }));
+  });
+
+  it('should return `false` for functions, generators and composites containing same', () => {
+    function test(value) {
+      assert.isFalse(DataUtil.isDeepFrozen(value));
+    }
+
+    function func() { return 10; }
+    function* gen() { yield 10; }
+    Object.freeze(func);
+    Object.freeze(gen);
+
+    test(func);
+    test(gen);
+    test(Object.freeze([func]));
+    test(Object.freeze([gen]));
+    test(Object.freeze({ a: func }));
+    test(Object.freeze({ a: Object.freeze([1, 2, gen]) }));
+  });
 });
