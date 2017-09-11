@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BaseKey } from 'api-common';
-import { DataUtil, Random } from 'util-common';
+import { Random } from 'util-common';
 
 const VALID_ID = '12345678';
 
@@ -16,7 +16,7 @@ class FakeKey extends BaseKey {
   }
 
   _impl_challengeResponseFor(challenge) {
-    const bytes = DataUtil.bufferFromHex(challenge);
+    const bytes = Buffer.from(challenge, 'hex');
 
     for (let i = 0; i < bytes.length; i++) {
       bytes[i] ^= 0x0e;

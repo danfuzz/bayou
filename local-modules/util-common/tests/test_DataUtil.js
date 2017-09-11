@@ -155,26 +155,4 @@ describe('util-common/DataUtil', () => {
       test({ a: 10, b: { c: { d: synthetic } } });
     });
   });
-
-  describe('bufferFromHex()', () => {
-    it('should throw an Error if passed an odd-lengthed string', () => {
-      assert.throws(() => DataUtil.bufferFromHex('aabbc'));
-    });
-
-    it('should throw an error if pass a string that isn\'t solely hex bytes', () => {
-      assert.throws(() => DataUtil.bufferFromHex('this better not work!'));
-    });
-
-    it('should return a buffer when passed a valid hex string', () => {
-      const bytes = DataUtil.bufferFromHex('deadbeef');
-
-      assert.isTrue(Buffer.isBuffer(bytes));
-
-      assert.strictEqual(bytes.length, 4);
-      assert.strictEqual(bytes[0], 0xde);
-      assert.strictEqual(bytes[1], 0xad);
-      assert.strictEqual(bytes[2], 0xbe);
-      assert.strictEqual(bytes[3], 0xef);
-    });
-  });
 });

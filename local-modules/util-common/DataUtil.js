@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TString } from 'typecheck';
 import { ObjectUtil, UtilityClass } from 'util-common-base';
 
 /**
@@ -88,18 +87,5 @@ export default class DataUtil extends UtilityClass {
         throw new Error(`Cannot deep-freeze non-data value: ${value}`);
       }
     }
-  }
-
-  /**
-   * Parses an even-length string of hex digits (lower case), producing a
-   * `Buffer`.
-   *
-   * @param {string} hex String of hex digits.
-   * @returns {Buffer} Buffer of parsed bytes.
-   */
-  static bufferFromHex(hex) {
-    TString.hexBytes(hex);
-
-    return Buffer.from(hex, 'hex');
   }
 }
