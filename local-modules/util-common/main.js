@@ -30,6 +30,6 @@ export {
   WebsocketCodes
 };
 
-// Client code is expected to get at the definitions from `util-common-base` via
-// this module. See README in `util-common-base` for details.
-export * from 'util-common-base';
+// Client code is expected to get at the definitions from `util-core` via
+// this module. See the README in `util-core` for details.
+export * from 'util-core';

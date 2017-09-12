@@ -1,10 +1,11 @@
 typecheck
 =========
 
-This module consists mostly of classes with static methods, each of which is
-dedicated to doing type and content checking for values of particular types.
-In order to disambiguate between these classes and the built-in classes for the
-same types, this module prefixes type checker classes with the letter `T`.
+This module consists mostly of utility classes (just static methods), each of
+which is dedicated to doing type and content checking for values of a particular
+type. In order to disambiguate between these classes and the built-in classes
+for the same types, this module prefixes its classes with the capital letter
+`T`.
 
 The main method of each type checker class is called `check()`, which always
 takes as its first argument the value to check and in some cases accepts

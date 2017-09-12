@@ -4,6 +4,6 @@
   "main": "main.js",
 
   "dependencies": {
-    "util-common-base": "local"
+    "util-core": "local"
   }
 }
