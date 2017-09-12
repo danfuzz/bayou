@@ -446,7 +446,7 @@ export default class FileOp extends CommonBase {
     this._category = FileOp.validateCategory(category);
 
     /** {string} The operation name. */
-    this._name = TString.nonempty(name);
+    this._name = TString.nonEmpty(name);
 
     /** {Map<string,*>} Arguments to the operation. */
     this._args = args;

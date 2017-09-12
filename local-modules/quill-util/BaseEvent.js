@@ -28,7 +28,7 @@ export default class BaseEvent extends CommonBase {
     super();
 
     /** {string} Name of the event (its type, really). */
-    this._eventName = TString.nonempty(eventName);
+    this._eventName = TString.nonEmpty(eventName);
   }
 
   /** {string} Name of the event. */

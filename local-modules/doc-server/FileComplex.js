@@ -63,7 +63,7 @@ export default class FileComplex extends CommonBase {
     this._log = log.withPrefix(`[${file.id}]`);
 
     /** {string} The document schema version to use and expect. */
-    this._schemaVersion = TString.nonempty(ProductInfo.theOne.INFO.version);
+    this._schemaVersion = TString.nonEmpty(ProductInfo.theOne.INFO.version);
 
     /** {FileCodec} File-codec wrapper to use. */
     this._fileCodec = new FileCodec(file, codec);

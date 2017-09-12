@@ -7,7 +7,7 @@
 import crypto from 'crypto';
 
 import { TBuffer, TInt } from 'typecheck';
-import { Errors } from 'util-common-base';
+import { Errors } from 'util-core';
 
 import CommonBase from './CommonBase';
 

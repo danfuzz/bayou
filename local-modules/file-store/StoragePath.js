@@ -79,7 +79,7 @@ export default class StoragePath extends UtilityClass {
    * @returns {string} `value` if it is in fact a valid storage path component.
    */
   static checkComponent(value) {
-    TString.nonempty(value);
+    TString.nonEmpty(value);
 
     if (!COMPONENT_REGEX.test(value)) {
       throw Errors.bad_value(value, 'StoragePath component');

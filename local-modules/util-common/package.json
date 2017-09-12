@@ -7,6 +7,6 @@
     "grapheme-splitter": "^1.0.1",
 
     "typecheck": "local",
-    "util-common-base": "local"
+    "util-core": "local"
   }
 }

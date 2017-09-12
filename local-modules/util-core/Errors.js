@@ -4,8 +4,8 @@
 
 import { inspect } from 'util';
 
+import CoreTypecheck from './CoreTypecheck';
 import InfoError from './InfoError';
-import Types from './Types';
 import UtilityClass from './UtilityClass';
 
 /**
@@ -23,20 +23,28 @@ export default class Errors extends UtilityClass {
    *
    * @param {*} value The bad value.
    * @param {string|function} expectedType Name of the expected type or a
-   *   function whose name is the expected type.
+   *   function (presumably a constructor/class) whose name is the expected
+   *   type.
    * @param {string|null} [extra = null] Extra information about the expected
    *   value.
    * @returns {InfoError} An appropriately-constructed error.
    */
   static bad_value(value, expectedType, extra = null) {
-    if (typeof expectedType === 'function') {
+    if (typeof expectedType === 'string') {
+      // All good. No extra checks.
+    } else if (   (typeof expectedType === 'function')
+               && (typeof expectedType.name === 'string')) {
       expectedType = expectedType.name;
+    } else {
+      // Hail mary, to try to get something useful out of `expectedType` (even
+      // though it wasn't passed as a valid value per the docs).
+      expectedType = inspect(expectedType);
     }
 
-    Types.checkString(expectedType);
-    Types.checkStringOrNull(extra);
+    CoreTypecheck.checkStringOrNull(extra);
 
     return new InfoError(
+      'bad_value',
       inspect(value),
       expectedType,
       ...((extra === null) ? [] : [extra]));
@@ -52,7 +60,7 @@ export default class Errors extends UtilityClass {
    * @returns {InfoError} An appropriately-constructed error.
    */
   static wtf(message) {
-    Types.checkString(message);
+    CoreTypecheck.checkString(message);
 
     return new InfoError('wtf', message);
   }

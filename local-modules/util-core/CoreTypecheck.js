@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import Errors from './Errors';
 import UtilityClass from './UtilityClass';
 
 /**
@@ -9,7 +10,7 @@ import UtilityClass from './UtilityClass';
  * module. This class exists to avoid a circular dependency between this module
  * and `typecheck`.
  */
-export default class Types extends UtilityClass {
+export default class CoreTypecheck extends UtilityClass {
   /**
    * Checks that a value is of type `string` and has the usual form of a
    * programming language identifier.
@@ -18,26 +19,33 @@ export default class Types extends UtilityClass {
    * @returns {string} `value`.
    */
   static checkIdentifier(value) {
-    // **TODO:** Factor this regex out, so it's not duplicative with the same
-    // one in `typecheck.TString`.
-    return Types.checkString(value, /^[a-zA-Z_][a-zA-Z_0-9]*$/);
+    try {
+      return CoreTypecheck.checkString(value, /^[a-zA-Z_][a-zA-Z_0-9]*$/);
+    } catch (e) {
+      // More accurate error.
+      throw Errors.bad_value(value, String, 'identifier syntax');
+    }
   }
 
   /**
    * Checks that a value is of type `string`.
    *
    * @param {*} value Value in question.
-   * @param {RegExp} [regex = null] Regular expression to match against or
+   * @param {RegExp|null} [regex = null] Regular expression to match against or
    *   `null` if no matching is required.
    * @returns {string} `value`.
    */
   static checkString(value, regex = null) {
+    if ((regex !== null) && !(regex instanceof RegExp)) {
+      throw Errors.bad_value(regex, RegExp);
+    }
+
     if (typeof value !== 'string') {
-      throw new Error('Expected a string.');
+      throw Errors.bad_value(value, String, (regex ? regex.toString() : null));
     }
 
     if ((regex !== null) && !regex.test(value)) {
-      throw new Error('Did not match regex.');
+      throw Errors.bad_value(value, String, regex.toString());
     }
 
     return value;
@@ -51,7 +59,7 @@ export default class Types extends UtilityClass {
    */
   static checkStringOrNull(value) {
     if ((value !== null) && (typeof value !== 'string')) {
-      throw new Error('Expected a string or `null`.');
+      throw Errors.bad_value(value, 'String|null');
     }
 
     return value;

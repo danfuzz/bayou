@@ -73,7 +73,7 @@ describe('typecheck/TString', () => {
     });
   });
 
-  describe('hexBytes(value, inclusiveMinBytes, inclusiveMaxBytes)', () => {
+  describe('hexBytes(value, minBytes, maxBytes)', () => {
     it('should return the provided value if it is a string of hex bytes of the required minimum length', () => {
       const value = 'deadbeef7584930215cafe';
 
@@ -105,17 +105,17 @@ describe('typecheck/TString', () => {
     });
   });
 
-  describe('nonempty()', () => {
+  describe('nonEmpty()', () => {
     it('should return the provided value if it is a string with length >= 1', () => {
       const value = 'This better work!';
 
-      assert.strictEqual(TString.nonempty(value), value);
+      assert.strictEqual(TString.nonEmpty(value), value);
     });
 
     it('should throw an Error if value is a string of length 0', () => {
       const value = '';
 
-      assert.throws(() => TString.nonempty(value));
+      assert.throws(() => TString.nonEmpty(value));
     });
   });
 

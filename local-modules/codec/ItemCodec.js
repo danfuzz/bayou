@@ -159,7 +159,7 @@ export default class ItemCodec extends CommonBase {
     super();
 
     /** {string} Tag (name) for the item's type. */
-    this._tag = TString.nonempty(tag);
+    this._tag = TString.nonEmpty(tag);
 
     /**
      * {string|null} Type name for the encoded form, or `null` if this instance

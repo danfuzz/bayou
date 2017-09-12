@@ -59,7 +59,7 @@ export default class Errors extends UtilityClass {
    */
   static path_hash_mismatch(storagePath, hash) {
     StoragePath.check(storagePath);
-    TString.nonempty(hash);
+    TString.nonEmpty(hash);
     return new InfoError('path_hash_mismatch', storagePath, hash);
   }
 

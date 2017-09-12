@@ -30,10 +30,10 @@ export default class DocSession {
     this._fileComplex = FileComplex.check(fileComplex);
 
     /** {string} Author ID. */
-    this._sessionId = TString.nonempty(sessionId);
+    this._sessionId = TString.nonEmpty(sessionId);
 
     /** {string} Author ID. */
-    this._authorId = TString.nonempty(authorId);
+    this._authorId = TString.nonEmpty(authorId);
 
     /** {BodyControl} The underlying body content controller. */
     this._bodyControl = fileComplex.bodyControl;

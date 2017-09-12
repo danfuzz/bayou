@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TObject } from 'typecheck';
-import { Errors, InfoError } from 'util-common-base';
+import { Errors, InfoError } from 'util-core';
 
 /**
  * Base class which provides a couple conveniences beyond what baseline

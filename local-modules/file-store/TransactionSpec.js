@@ -140,7 +140,7 @@ export default class TransactionSpec extends CommonBase {
    * @returns {array<FileOp>} Array of all such operations.
    */
   opsWithName(name) {
-    TString.nonempty(name);
+    TString.nonEmpty(name);
     return this._ops.filter(op => (op.name === name));
   }
 }

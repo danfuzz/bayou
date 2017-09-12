@@ -68,7 +68,7 @@ export default class Schema {
    *   is none.
    */
   getDescriptor(name) {
-    TString.nonempty(name);
+    TString.nonEmpty(name);
     const result = this._properties.get(name);
 
     return result || null;

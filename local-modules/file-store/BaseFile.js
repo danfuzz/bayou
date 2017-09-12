@@ -28,7 +28,7 @@ export default class BaseFile extends CommonBase {
     super();
 
     /** {string} The ID of the file that this instance represents. */
-    this._id = TString.nonempty(fileId);
+    this._id = TString.nonEmpty(fileId);
   }
 
   /** {string} The ID of the file that this instance represents. */

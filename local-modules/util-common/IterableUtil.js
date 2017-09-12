@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TIterable } from 'typecheck';
-import { UtilityClass } from 'util-common-base';
+import { UtilityClass } from 'util-core';
 
 /**
  * Utility methods for dealing with iterables.

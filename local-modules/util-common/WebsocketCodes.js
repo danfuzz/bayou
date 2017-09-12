@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { UtilityClass } from 'util-common-base';
+import { UtilityClass } from 'util-core';
 
 /**
  * Map of close codes to nominally official constant names. See

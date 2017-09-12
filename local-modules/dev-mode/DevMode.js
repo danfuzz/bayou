@@ -417,7 +417,22 @@ export default class DevMode extends Singleton {
 
     // Called above for each scanned directory.
     function addChangesForDir(dir) {
-      const files = fs.readdirSync(dir);
+      let files;
+
+      try {
+        files = fs.readdirSync(dir);
+      } catch (e) {
+        if (e.code === 'ENOENT') {
+          // `ENOENT` is an indication that the directory doesn't exist. This
+          // can happen if a source directory (including a local module) has
+          // been removed. It's innocuous, so just ignore it.
+          return;
+        }
+
+        // Any other error gets rethrown up the chain.
+        throw e;
+      }
+
       for (const f of files) {
         const p = `${dir}/${f}`;
         const stat = fs.statSync(p);

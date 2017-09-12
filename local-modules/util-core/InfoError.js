@@ -4,8 +4,8 @@
 
 import util from 'util';
 
+import CoreTypecheck from './CoreTypecheck';
 import DataUtil from './DataUtil';
-import Types from './Types';
 
 /**
  * `Error` subclass that comes with additional structured information.
@@ -36,7 +36,7 @@ export default class InfoError extends Error {
    *   indicated name.
    */
   static hasName(value, name) {
-    Types.checkString(name);
+    CoreTypecheck.checkString(name);
     return (value instanceof InfoError) && (value.name === name);
   }
 
@@ -78,7 +78,7 @@ export default class InfoError extends Error {
     // call to `super()` (which is required before setting instance variables.)
     const hasCause    = (firstArg instanceof Error);
     const cause       = hasCause ? firstArg : null;
-    const detailsName = Types.checkIdentifier(hasCause ? args[0] : firstArg);
+    const detailsName = CoreTypecheck.checkIdentifier(hasCause ? args[0] : firstArg);
     const detailsArgs = DataUtil.deepFreeze(hasCause ? args.slice(1) : args);
 
     // **Note:** `Error.toString()` includes the contents of `error.name`, so
