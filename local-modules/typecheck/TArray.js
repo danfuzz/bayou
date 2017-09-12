@@ -12,8 +12,9 @@ export default class TArray extends UtilityClass {
    * Checks a value of type `Array`. Optionally checks the type of each element.
    *
    * @param {*} value The (alleged) array.
-   * @param {Function} [elementCheck = null] Element type checker. If passed,
-   *   must be a function that behaves like a standard `<type>.check()` method.
+   * @param {function|null} [elementCheck = null] Element type checker. If
+   *   passed as non-`null`, must be a function that behaves like a standard
+   *  `<type>.check()` method.
    * @returns {array} `value`.
    */
   static check(value, elementCheck = null) {

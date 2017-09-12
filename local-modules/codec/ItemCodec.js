@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TArray, TClass, TFunction, TString } from 'typecheck';
+import { TArray, TFunction, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 /**
@@ -110,14 +110,14 @@ export default class ItemCodec extends CommonBase {
    * @returns {ItemCodec} An appropriately-constructed instance.
    */
   static fromClass(clazz) {
-    TClass.check(clazz);
-    TFunction.check(clazz.prototype.toApi);
+    TFunction.checkClass(clazz);
+    TFunction.checkCallable(clazz.prototype.toApi);
 
     const tag = clazz.API_TAG || clazz.name;
 
     let fromApi;
     if (clazz.fromApi) {
-      fromApi = TFunction.check(clazz.fromApi);
+      fromApi = TFunction.checkCallable(clazz.fromApi);
     } else {
       fromApi = (...args) => new clazz(...args);
     }
@@ -173,7 +173,7 @@ export default class ItemCodec extends CommonBase {
      * specific class (and not, e.g. a class-or-subclass).
      */
     this._clazz = ((typeof clazzOrType) === 'function')
-      ? TClass.check(clazzOrType)
+      ? TFunction.checkClass(clazzOrType)
       : null;
 
     /** {string} Name of the type which identifies qualified values. */
@@ -183,13 +183,13 @@ export default class ItemCodec extends CommonBase {
      * {function|null} Additional predicate that must be `true` of values for
      * them to qualify, if any.
      */
-    this._predicate = TFunction.orNull(predicate);
+    this._predicate = TFunction.checkCallableOrNull(predicate);
 
     /** {function} Value encoder function. */
-    this._encode = TFunction.check(encode);
+    this._encode = TFunction.checkCallable(encode);
 
     /** {function} Value decoder function. */
-    this._decode = TFunction.check(decode);
+    this._decode = TFunction.checkCallable(decode);
 
     Object.freeze(this);
   }

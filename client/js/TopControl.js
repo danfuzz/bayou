@@ -53,7 +53,7 @@ export default class TopControl {
      * If not supplied, this variable defaults to a no-op function.
      */
     this._recover =
-      TFunction.check(window.BAYOU_RECOVER || (() => { /* empty */ }));
+      TFunction.checkCallable(window.BAYOU_RECOVER || (() => { /* empty */ }));
 
     /**
      * {EditorComplex|null} Editor "complex" instance, for all of the

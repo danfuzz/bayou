@@ -12,8 +12,8 @@ export default class TObject extends UtilityClass {
    * Checks a value of type `Object`.
    *
    * @param {*} value Value to check.
-   * @param {object} [clazz = null] Class (constructor) that `value` must be an
-   *   instance of. If `null` then there is no class requirement.
+   * @param {object|null} [clazz = null] Class (constructor) that `value` must
+   *   be an instance of, or `null` if there is no class requirement.
    * @returns {object} `value`.
    */
   static check(value, clazz = null) {
