@@ -2,9 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { UtilityClass } from 'util-common-base';
-
-import TypeError from './TypeError';
+import { Errors, UtilityClass } from 'util-common-base';
 
 /**
  * Type checker for type `Class`. A "class" is simply a function that can be
@@ -20,7 +18,7 @@ export default class TClass extends UtilityClass {
   static check(value) {
     if (   ((typeof value) !== 'function')
         || ((typeof value.prototype) !== 'object')) {
-      return TypeError.badValue(value, 'Class');
+      throw Errors.bad_value(value, 'Class');
     }
 
     return value;

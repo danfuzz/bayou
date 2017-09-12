@@ -2,9 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { UtilityClass } from 'util-common-base';
-
-import TypeError from './TypeError';
+import { Errors, UtilityClass } from 'util-common-base';
 
 /**
  * Type checker for type `Iterable`.
@@ -31,7 +29,7 @@ export default class TIterable extends UtilityClass {
   static check(value, entryCheck = null) {
     if (   ((typeof value) !== 'object')
         || ((typeof value[Symbol.iterator]) !== 'function')) {
-      return TypeError.badValue(value, 'Iterable');
+      throw Errors.bad_value(value, 'Iterable');
     }
 
     if (entryCheck !== null) {
