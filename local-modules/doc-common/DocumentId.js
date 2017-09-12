@@ -3,8 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Hooks } from 'hooks-common';
-import { TypeError } from 'typecheck';
-import { UtilityClass } from 'util-common';
+import { Errors, UtilityClass } from 'util-common';
 
 /**
  * Type representation of document IDs. The values themselves are always just
@@ -24,7 +23,7 @@ export default class DocumentId extends UtilityClass {
     if (   (typeof value !== 'string')
         || (value.length === 0)
         || !Hooks.theOne.isDocumentId(value)) {
-      return TypeError.badValue(value, 'DocumentId');
+      throw Errors.bad_value(value, DocumentId);
     }
 
     return value;

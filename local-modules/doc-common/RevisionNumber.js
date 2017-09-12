@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TInt, TypeError } from 'typecheck';
-import { UtilityClass } from 'util-common';
+import { TInt } from 'typecheck';
+import { Errors, UtilityClass } from 'util-common';
 
 /**
  * Type representation of revision numbers. The values themselves are always
@@ -21,7 +21,7 @@ export default class RevisionNumber extends UtilityClass {
       return TInt.nonNegative(value);
     } catch (e) {
       // More appropriate error.
-      return TypeError.badValue(value, 'RevisionNumber');
+      throw Errors.bad_value(value, RevisionNumber);
     }
   }
 
@@ -38,7 +38,7 @@ export default class RevisionNumber extends UtilityClass {
       return TInt.maxExc(value, maxExc);
     } catch (e) {
       // More appropriate error.
-      return TypeError.badValue(value, 'RevisionNumber', `value < ${maxExc}`);
+      throw Errors.bad_value(value, RevisionNumber, `value < ${maxExc}`);
     }
   }
 
@@ -55,7 +55,7 @@ export default class RevisionNumber extends UtilityClass {
       return TInt.maxInc(value, maxInc);
     } catch (e) {
       // More appropriate error.
-      return TypeError.badValue(value, 'RevisionNumber', `value <= ${maxInc}`);
+      throw Errors.bad_value(value, RevisionNumber, `value <= ${maxInc}`);
     }
   }
 
@@ -72,7 +72,7 @@ export default class RevisionNumber extends UtilityClass {
       return TInt.min(value, minInc);
     } catch (e) {
       // More appropriate error.
-      return TypeError.badValue(value, 'RevisionNumber', `value >= ${minInc}`);
+      throw Errors.bad_value(value, RevisionNumber, `value >= ${minInc}`);
     }
   }
 }

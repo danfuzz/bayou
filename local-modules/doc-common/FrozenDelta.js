@@ -4,8 +4,8 @@
 
 import Delta from 'quill-delta';
 
-import { TArray, TypeError } from 'typecheck';
-import { CommonBase, DataUtil, ObjectUtil } from 'util-common';
+import { TArray } from 'typecheck';
+import { CommonBase, DataUtil, Errors, ObjectUtil } from 'util-common';
 
 /**
  * {FrozenDelta|null} Empty instance. Initialized in the `EMPTY` property
@@ -57,7 +57,7 @@ export default class FrozenDelta extends Delta {
       return delta.ops.length === 0;
     }
 
-    return TypeError.badValue(delta, 'FrozenDelta');
+    throw Errors.bad_value(delta, FrozenDelta);
   }
 
   /**
@@ -100,7 +100,7 @@ export default class FrozenDelta extends Delta {
       return new FrozenDelta(value.ops);
     }
 
-    return TypeError.badValue(value, 'FrozenDelta');
+    throw Errors.bad_value(value, FrozenDelta);
   }
 
   /**

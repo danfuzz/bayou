@@ -3,8 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Hooks } from 'hooks-server';
-import { TypeError } from 'typecheck';
-import { UtilityClass } from 'util-common';
+import { Errors, UtilityClass } from 'util-common';
 
 /**
  * Type representation of file IDs. The values themselves are always just
@@ -32,7 +31,7 @@ export default class FileId extends UtilityClass {
     if (   (typeof value !== 'string')
         || (value.length === 0)
         || !Hooks.theOne.isFileId(value)) {
-      return TypeError.badValue(value, 'FileId');
+      throw Errors.bad_value(value, FileId);
     }
 
     return value;
