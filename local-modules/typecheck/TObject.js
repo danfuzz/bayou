@@ -2,9 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ObjectUtil, UtilityClass } from 'util-common-base';
-
-import TypeError from './TypeError';
+import { Errors, ObjectUtil, UtilityClass } from 'util-common-base';
 
 /**
  * Type checker for type `Object`.
@@ -20,9 +18,9 @@ export default class TObject extends UtilityClass {
    */
   static check(value, clazz = null) {
     if (typeof value !== 'object') {
-      return TypeError.badValue(value, 'Object');
+      throw Errors.bad_value(value, Object);
     } else if ((clazz !== null) && !(value instanceof clazz)) {
-      return TypeError.badValue(value, 'Object', `of class ${clazz.name}`);
+      throw Errors.bad_value(value, `class ${clazz.name}`);
     }
 
     return value;
@@ -38,7 +36,7 @@ export default class TObject extends UtilityClass {
    */
   static withExactKeys(value, keys) {
     if (typeof value !== 'object') {
-      return TypeError.badValue(value, 'Object');
+      throw Errors.bad_value(value, Object);
     }
 
     // Make a copy, check for and delete allowed keys, and see if anything's
@@ -47,18 +45,18 @@ export default class TObject extends UtilityClass {
     const copy = Object.assign({}, value);
     for (const k of keys) {
       if (!ObjectUtil.hasOwnProperty(copy, k)) {
-        return TypeError.badValue(value, 'Object', `Missing key \`${k}\``);
+        throw Errors.bad_value(value, Object, `with key \`${k}\``);
       }
       delete copy[k];
     }
 
     const remainingKeys = Object.keys(copy);
     if (remainingKeys.length !== 0) {
-      let msg = 'Extra keys';
+      let msg = 'Without keys:';
       for (const k of remainingKeys) {
         msg += ` \`${k}\``;
       }
-      return TypeError.badValue(value, 'Object', msg);
+      throw Errors.bad_value(value, Object, msg);
     }
 
     return value;

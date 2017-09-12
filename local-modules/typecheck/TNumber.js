@@ -2,9 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { UtilityClass } from 'util-common-base';
-
-import TypeError from './TypeError';
+import { Errors, UtilityClass } from 'util-common-base';
 
 /**
  * Type checker for type `number`.
@@ -18,7 +16,7 @@ export default class TNumber extends UtilityClass {
    */
   static check(value) {
     if (typeof value !== 'number') {
-      return TypeError.badValue(value, 'number');
+      throw Errors.bad_value(value, Number);
     }
 
     return value;
@@ -39,8 +37,7 @@ export default class TNumber extends UtilityClass {
     TNumber.check(maxExc);
 
     if ((value < minInc) || (value >= maxExc)) {
-      return TypeError.badValue(value, 'number',
-        `${minInc} <= value < ${maxExc}`);
+      throw Errors.bad_value(value, Number, `${minInc} <= value < ${maxExc}`);
     }
 
     return value;
@@ -61,8 +58,7 @@ export default class TNumber extends UtilityClass {
     TNumber.check(maxInc);
 
     if ((value < minInc) || (value > maxInc)) {
-      return TypeError.badValue(value, 'number',
-        `${minInc} <= value <= ${maxInc}`);
+      throw Errors.bad_value(value, Number, `${minInc} <= value <= ${maxInc}`);
     }
 
     return value;
