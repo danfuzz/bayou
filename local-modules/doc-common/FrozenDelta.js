@@ -71,7 +71,7 @@ export default class FrozenDelta extends Delta {
    * * If `value` is an object that binds `ops`, returns an instance with
    *   `value.ops` as the list of ops.
    * * If `value` is `null` or `undefined`, returns `EMPTY`.
-   * * Throws a `TypeError` for any other value.
+   * * Throws a `bad_value` error for any other value.
    *
    * In general, this method will return the unique instance `EMPTY` when
    * possible.
