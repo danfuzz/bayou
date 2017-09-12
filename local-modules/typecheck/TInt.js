@@ -2,9 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { UtilityClass } from 'util-common-base';
-
-import TypeError from './TypeError';
+import { Errors, UtilityClass } from 'util-common-base';
 
 /**
  * Type checker for type `Int`.
@@ -22,7 +20,7 @@ export default class TInt extends UtilityClass {
    */
   static check(value) {
     if ((typeof value !== 'number') || !Number.isSafeInteger(value)) {
-      return TypeError.badValue(value, 'Int');
+      throw Errors.bad_value(value, 'Int');
     }
 
     return value;
@@ -40,7 +38,7 @@ export default class TInt extends UtilityClass {
     TInt.check(value);
     TInt.check(maxExc);
     if (value >= maxExc) {
-      return TypeError.badValue(value, 'Int', `value < ${maxExc}`);
+      throw Errors.bad_value(value, 'Int', `value < ${maxExc}`);
     }
 
     return value;
@@ -58,7 +56,7 @@ export default class TInt extends UtilityClass {
     TInt.check(value);
     TInt.check(maxInc);
     if (value > maxInc) {
-      return TypeError.badValue(value, 'Int', `value <= ${maxInc}`);
+      throw Errors.bad_value(value, 'Int', `value <= ${maxInc}`);
     }
 
     return value;
@@ -76,7 +74,7 @@ export default class TInt extends UtilityClass {
     TInt.check(value);
     TInt.check(minInc);
     if (value < minInc) {
-      return TypeError.badValue(value, 'Int', `value >= ${minInc}`);
+      throw Errors.bad_value(value, 'Int', `value >= ${minInc}`);
     }
 
     return value;
@@ -110,7 +108,7 @@ export default class TInt extends UtilityClass {
     TInt.check(minInc);
     TInt.check(maxExc);
     if ((value < minInc) || (value >= maxExc)) {
-      return TypeError.badValue(value, 'Int', `${minInc} <= value < ${maxExc}`);
+      throw Errors.bad_value(value, 'Int', `${minInc} <= value < ${maxExc}`);
     }
 
     return value;
@@ -133,7 +131,7 @@ export default class TInt extends UtilityClass {
     TInt.check(minInc);
     TInt.check(maxInc);
     if ((value < minInc) || (value > maxInc)) {
-      return TypeError.badValue(value, 'Int', `${minInc} <= value <= ${maxInc}`);
+      throw Errors.bad_value(value, 'Int', `${minInc} <= value <= ${maxInc}`);
     }
 
     return value;

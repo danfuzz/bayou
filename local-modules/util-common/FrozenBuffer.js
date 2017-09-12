@@ -6,7 +6,8 @@
 // module, which is why this is possible to import regardless of environment.
 import crypto from 'crypto';
 
-import { TBuffer, TInt, TypeError } from 'typecheck';
+import { TBuffer, TInt } from 'typecheck';
+import { Errors } from 'util-common-base';
 
 import CommonBase from './CommonBase';
 
@@ -32,9 +33,11 @@ export default class FrozenBuffer extends CommonBase {
    * @returns {string} `value`, assuming it is indeed a valid hash string.
    */
   static checkHash(value) {
-    return FrozenBuffer.isHash(value)
-      ? value
-      : TypeError.badValue(value, 'FrozenBuffer hash');
+    if (FrozenBuffer.isHash(value)) {
+      return value;
+    }
+
+    throw Errors.bad_value(value, 'FrozenBuffer hash');
   }
 
   /**
@@ -95,7 +98,7 @@ export default class FrozenBuffer extends CommonBase {
     const isBuffer = Buffer.isBuffer(value);
 
     if (!(isString || isBuffer)) {
-      TypeError.badValue(value, 'Buffer|string');
+      throw Errors.bad_value(value, 'Buffer|string');
     }
 
     super();

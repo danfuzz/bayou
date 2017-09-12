@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TArray, TString, TypeError } from 'typecheck';
-import { UtilityClass } from 'util-common';
+import { TArray, TString } from 'typecheck';
+import { Errors, UtilityClass } from 'util-common';
 
 /**
  * {RegEx} Regular expression which passes for all valid path component strings.
@@ -63,9 +63,11 @@ export default class StoragePath extends UtilityClass {
    * @returns {string} `value` if it is in fact a valid storage path string.
    */
   static check(value) {
-    return StoragePath.isInstance(value)
-      ? value
-      : TypeError.badValue(value, 'StoragePath');
+    if (StoragePath.isInstance(value)) {
+      return value;
+    }
+
+    throw Errors.bad_value(value, StoragePath);
   }
 
   /**
@@ -80,7 +82,7 @@ export default class StoragePath extends UtilityClass {
     TString.nonempty(value);
 
     if (!COMPONENT_REGEX.test(value)) {
-      return TypeError.badValue(value, 'StoragePath component');
+      throw Errors.bad_value(value, 'StoragePath component');
     }
 
     return value;
@@ -143,7 +145,7 @@ export default class StoragePath extends UtilityClass {
       return StoragePath.check(value);
     } catch (e) {
       // More specific error.
-      return TypeError.badValue(value, 'StoragePath|null');
+      throw Errors.bad_value(value, 'StoragePath|null');
     }
   }
 

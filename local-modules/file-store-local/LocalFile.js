@@ -9,7 +9,7 @@ import { Codec } from 'codec';
 import { BaseFile, Errors, StoragePath } from 'file-store';
 import { Condition, Delay, Mutex } from 'promise-util';
 import { Logger } from 'see-all';
-import { FrozenBuffer, InfoError } from 'util-common';
+import { FrozenBuffer, Errors as UtilErrors } from 'util-common';
 
 import Transactor from './Transactor';
 
@@ -625,7 +625,7 @@ export default class LocalFile extends BaseFile {
     } else if (FrozenBuffer.isHash(storageId) || LocalFile._isInternalStorageId(storageId)) {
       baseName = storageId;
     } else {
-      throw InfoError.wtf('Invalid `storageId`.');
+      throw UtilErrors.wtf('Invalid `storageId`.');
     }
 
     const fileName = `${baseName}.blob`;
@@ -669,7 +669,7 @@ export default class LocalFile extends BaseFile {
     // Trim off the directory prefix and filename suffix.
     const match = fsName.match(/([^/]+)\.[^./]*$/);
     if (match === null) {
-      throw InfoError.wtf('Invalid storage path.');
+      throw UtilErrors.wtf('Invalid storage path.');
     }
     const baseName = match[1];
 

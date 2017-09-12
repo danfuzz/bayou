@@ -2,9 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { UtilityClass } from 'util-common-base';
-
-import TypeError from './TypeError';
+import { Errors, UtilityClass } from 'util-common-base';
 
 /**
  * Type checker for type `Buffer`.
@@ -21,7 +19,7 @@ export default class TBuffer extends UtilityClass {
    */
   static check(value) {
     if (!Buffer.isBuffer(value)) {
-      return TypeError.badValue(value, 'Buffer');
+      throw Errors.bad_value(value, Buffer);
     }
 
     return value;

@@ -2,9 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { UtilityClass } from 'util-common-base';
-
-import TypeError from './TypeError';
+import { Errors, UtilityClass } from 'util-common-base';
 
 /**
  * Type checker for type `function`.
@@ -18,7 +16,7 @@ export default class TFunction extends UtilityClass {
    */
   static check(value) {
     if (typeof value !== 'function') {
-      return TypeError.badValue(value, 'function');
+      throw Errors.bad_value(value, Function);
     }
 
     return value;
@@ -33,7 +31,7 @@ export default class TFunction extends UtilityClass {
    */
   static orNull(value) {
     if ((value !== null) && (typeof value !== 'function')) {
-      return TypeError.badValue(value, 'function|null');
+      throw Errors.bad_value(value, 'Function|null');
     }
 
     return value;

@@ -2,8 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TypeError } from 'typecheck';
-import { FrozenBuffer, UtilityClass } from 'util-common';
+import { Errors, FrozenBuffer, UtilityClass } from 'util-common';
 
 import StoragePath from './StoragePath';
 
@@ -25,9 +24,11 @@ export default class StorageId extends UtilityClass {
    * @returns {string} `value` if it is in fact a valid storage ID string.
    */
   static check(value) {
-    return StorageId.isInstance(value)
-      ? value
-      : TypeError.badValue(value, 'StorageId');
+    if (StorageId.isInstance(value)) {
+      return value;
+    }
+
+    throw Errors.bad_value(value, StorageId);
   }
 
   /**

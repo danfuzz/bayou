@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { DataUtil } from 'util-common';
+import { DataUtil } from 'util-common-base';
 
-describe('util-common/DataUtil', () => {
+describe('util-common-base/DataUtil', () => {
   describe('deepFreeze()', () => {
     it('should return the given value if it is a primitive', () => {
       function test(value) {

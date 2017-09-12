@@ -6,7 +6,7 @@ import { ConnectionError, Message, Response } from 'api-common';
 import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
-import { CommonBase, InfoError, Random } from 'util-common';
+import { CommonBase, Errors, Random } from 'util-common';
 
 import ApiLog from './ApiLog';
 import BearerToken from './BearerToken';
@@ -198,7 +198,7 @@ export default class Connection extends CommonBase {
     } else {
       // Shouldn't happen because `_decodeMessage()` should only return one of
       // the above two types.
-      throw InfoError.wtf('Weird return value from `_decodeMessage()`.');
+      throw Errors.wtf('Weird return value from `_decodeMessage()`.');
     }
 
     // Set up the response contents, encode it as the ultimate result of

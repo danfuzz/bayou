@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ObjectUtil, UtilityClass } from 'util-common-base';
+import ObjectUtil from './ObjectUtil';
+import UtilityClass from './UtilityClass';
 
 /**
  * "Data value" helper utilities. A "data value" is defined as any JavaScript

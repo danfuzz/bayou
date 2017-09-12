@@ -2,9 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { URL, UtilityClass } from 'util-common-base';
-
-import TypeError from './TypeError';
+import { Errors, URL, UtilityClass } from 'util-common-base';
 
 /**
  * Type checker for type `String`.
@@ -22,11 +20,11 @@ export default class TString extends UtilityClass {
    */
   static check(value, regex = null) {
     if (typeof value !== 'string') {
-      return TypeError.badValue(value, 'String');
+      throw Errors.bad_value(value, String);
     }
 
     if ((regex !== null) && !regex.test(value)) {
-      return TypeError.badValue(value, 'String', `!${regex}.test()`);
+      throw Errors.bad_value(value, String, regex.source);
     }
 
     return value;
@@ -48,13 +46,13 @@ export default class TString extends UtilityClass {
       TString.check(value, /^([0-9a-f]{2})*$/);
     } catch (e) {
       // More on-point error.
-      return TypeError.badValue(value, 'String', 'even number of hex digits');
+      throw Errors.bad_value(value, String, 'even number of hex digits');
     }
 
     if (value.length < (minBytes * 2)) {
-      return TypeError.badValue(value, 'String', `byteCount >= ${minBytes}`);
+      throw Errors.bad_value(value, String, `byteCount >= ${minBytes}`);
     } else if ((maxBytes !== null) && (value.length > (maxBytes * 2))) {
-      return TypeError.badValue(value, 'String', `byteCount <= ${maxBytes}`);
+      throw Errors.bad_value(value, String, `byteCount <= ${maxBytes}`);
     }
 
     return value;
@@ -74,7 +72,7 @@ export default class TString extends UtilityClass {
       return TString.check(value, /^[a-zA-Z_][a-zA-Z_0-9]*$/);
     } catch (e) {
       // More on-point error.
-      return TypeError.badValue(value, 'String', 'identifier');
+      throw Errors.bad_value(value, String, 'identifier');
     }
   }
 
@@ -88,7 +86,7 @@ export default class TString extends UtilityClass {
    */
   static minLen(value, minLen) {
     if ((typeof value !== 'string') || (value.length < minLen)) {
-      return TypeError.badValue(value, 'String', `value.length >= ${minLen}`);
+      throw Errors.bad_value(value, String, `value.length >= ${minLen}`);
     }
 
     return value;
@@ -102,7 +100,7 @@ export default class TString extends UtilityClass {
    */
   static nonempty(value) {
     if ((typeof value !== 'string') || (value === '')) {
-      return TypeError.badValue(value, 'String', 'value !== \'\'');
+      throw Errors.bad_value(value, String, 'value !== \'\'');
     }
 
     return value;
@@ -117,7 +115,7 @@ export default class TString extends UtilityClass {
    */
   static orNull(value) {
     if ((value !== null) && (typeof value !== 'string')) {
-      return TypeError.badValue(value, 'String|null');
+      throw Errors.bad_value(value, 'String|null');
     }
 
     return value;
@@ -137,7 +135,7 @@ export default class TString extends UtilityClass {
       url = new URL(TString.nonempty(value));
     } catch (e) {
       // Throw a higher-fidelity error.
-      return TypeError.badValue(value, 'String', 'absolute URL syntax');
+      throw Errors.bad_value(value, String, 'absolute URL syntax');
     }
 
     // Some versions of `URL` will parse a missing origin into the literal
@@ -150,12 +148,11 @@ export default class TString extends UtilityClass {
           && url.origin
           && (url.origin !== 'null')
           && (url.href === value))) {
-      return TypeError.badValue(value, 'String', 'absolute URL syntax');
+      throw Errors.bad_value(value, String, 'absolute URL syntax');
     }
 
     if (url.username || url.password) {
-      return TypeError.badValue(
-        value, 'String', 'absolute URL syntax, without auth');
+      throw Errors.bad_value(value, String, 'absolute URL syntax, without auth');
     }
 
     return value;
@@ -174,7 +171,7 @@ export default class TString extends UtilityClass {
       url = new URL(TString.nonempty(value));
     } catch (e) {
       // Throw a higher-fidelity error.
-      return TypeError.badValue(value, 'String', 'origin-only URL syntax');
+      throw Errors.bad_value(value, String, 'origin-only URL syntax');
     }
 
     // **Note:** Though `new URL()` is lenient with respect to parsing, if it
@@ -182,7 +179,7 @@ export default class TString extends UtilityClass {
     // prefix, and the `!==` comparison here therefore transitively confirms
     // that the original `value` is also well-formed.
     if (value !== url.origin) {
-      return TypeError.badValue(value, 'String', 'origin-only URL syntax');
+      throw Errors.bad_value(value, String, 'origin-only URL syntax');
     }
 
     return value;

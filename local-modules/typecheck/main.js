@@ -14,7 +14,6 @@ import TNumber from './TNumber';
 import TObject from './TObject';
 import TSet from './TSet';
 import TString from './TString';
-import TypeError from './TypeError';
 
 export {
   TArray,
@@ -28,6 +27,5 @@ export {
   TNumber,
   TObject,
   TSet,
-  TString,
-  TypeError
+  TString
 };

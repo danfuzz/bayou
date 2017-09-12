@@ -5,10 +5,8 @@
 import ColorSelector from './ColorSelector';
 import ColorUtil from './ColorUtil';
 import CommonBase from './CommonBase';
-import DataUtil from './DataUtil';
 import DeferredLoader from './DeferredLoader';
 import FrozenBuffer from './FrozenBuffer';
-import InfoError from './InfoError';
 import IterableUtil from './IterableUtil';
 import JsonUtil from './JsonUtil';
 import PropertyIterable from './PropertyIterable';
@@ -21,10 +19,8 @@ export {
   ColorSelector,
   ColorUtil,
   CommonBase,
-  DataUtil,
   DeferredLoader,
   FrozenBuffer,
-  InfoError,
   IterableUtil,
   JsonUtil,
   PropertyIterable,
