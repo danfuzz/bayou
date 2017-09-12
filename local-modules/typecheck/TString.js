@@ -32,7 +32,7 @@ export default class TString extends UtilityClass {
    * @param {*} value Value to check.
    * @param {number} [minBytes = 0] Minimum number of bytes (inclusive).
    * @param {number} [maxBytes = null] Maximum number of bytes (inclusive) or
-   * `null` if there is no maximum.
+   *   `null` if there is no maximum.
    * @returns {string} `value`.
    */
   static hexBytes(value, minBytes = 0, maxBytes = null) {

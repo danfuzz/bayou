@@ -73,7 +73,7 @@ describe('typecheck/TString', () => {
     });
   });
 
-  describe('hexBytes(value, inclusiveMinBytes, inclusiveMaxBytes)', () => {
+  describe('hexBytes(value, minBytes, maxBytes)', () => {
     it('should return the provided value if it is a string of hex bytes of the required minimum length', () => {
       const value = 'deadbeef7584930215cafe';
 
