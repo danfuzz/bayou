@@ -26,10 +26,10 @@ export default class Message extends CommonBase {
     this._id = TInt.nonNegative(id);
 
     /** {string} ID of the target object. */
-    this._target = TString.nonempty(target);
+    this._target = TString.nonEmpty(target);
 
     /** {string} Method / property name to access. */
-    this._name = TString.nonempty(name);
+    this._name = TString.nonEmpty(name);
 
     /** {array<*>} Arguments of the message. */
     this._args = TArray.check(args);

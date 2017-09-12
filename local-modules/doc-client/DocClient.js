@@ -167,7 +167,7 @@ export default class DocClient extends StateMachine {
    * @param {InfoError} reason Error reason.
    */
   _check_apiError(method, reason) {
-    TString.nonempty(method);
+    TString.nonEmpty(method);
     InfoError.check(reason);
   }
 

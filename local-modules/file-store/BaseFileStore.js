@@ -47,7 +47,7 @@ export default class BaseFileStore extends Singleton {
    * @returns {BaseFile} Accessor for the file in question.
    */
   async getFile(fileId) {
-    TString.nonempty(fileId);
+    TString.nonEmpty(fileId);
     await this._impl_checkFileId(FileId.check(fileId));
     return BaseFile.check(await this._impl_getFile(fileId));
   }

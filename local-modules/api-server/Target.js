@@ -95,7 +95,7 @@ export default class Target {
    *   `undefined`.
    */
   call(name, args) {
-    TString.nonempty(name);
+    TString.nonEmpty(name);
     TArray.check(args);
 
     const schema = this._schema;

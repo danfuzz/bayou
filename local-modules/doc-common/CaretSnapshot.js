@@ -315,7 +315,7 @@ export default class CaretSnapshot extends CommonBase {
    * @returns {CaretSnapshot} An appropriately-constructed instance.
    */
   withoutSession(sessionId) {
-    TString.nonempty(sessionId);
+    TString.nonEmpty(sessionId);
     const carets = this._carets;
 
     if (!carets.has(sessionId)) {

@@ -40,8 +40,8 @@ export default class RootAccess {
    *   requested access.
    */
   async makeAccessKey(authorId, docId) {
-    TString.nonempty(authorId);
-    TString.nonempty(docId);
+    TString.nonEmpty(authorId);
+    TString.nonEmpty(docId);
 
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
     await fileComplex.initIfMissingOrInvalid();

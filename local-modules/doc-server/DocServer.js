@@ -64,7 +64,7 @@ export default class DocServer extends Singleton {
    * @returns {FileComplex} The corresponding `FileComplex`.
    */
   async getFileComplex(docId) {
-    TString.nonempty(docId);
+    TString.nonEmpty(docId);
 
     // Look for a cached or in-progress result.
 
@@ -118,7 +118,7 @@ export default class DocServer extends Singleton {
    *   there is no such session.
    */
   getSessionOrNull(sessionId) {
-    TString.nonempty(sessionId);
+    TString.nonEmpty(sessionId);
 
     const already = this._sessions.get(sessionId);
 
@@ -155,7 +155,7 @@ export default class DocServer extends Singleton {
    */
   _makeNewSession(fileComplex, authorId, makeSessionId) {
     FileComplex.check(fileComplex);
-    TString.nonempty(authorId);
+    TString.nonEmpty(authorId);
     TFunction.check(makeSessionId);
 
     // Make a unique session ID.

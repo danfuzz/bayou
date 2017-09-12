@@ -89,7 +89,7 @@ export default class TString extends UtilityClass {
    * @param {*} value Value to check.
    * @returns {string} `value`.
    */
-  static nonempty(value) {
+  static nonEmpty(value) {
     if ((typeof value !== 'string') || (value === '')) {
       throw Errors.bad_value(value, String, 'value !== \'\'');
     }
@@ -121,7 +121,7 @@ export default class TString extends UtilityClass {
   static urlAbsolute(value) {
     let url;
     try {
-      url = new URL(TString.nonempty(value));
+      url = new URL(TString.nonEmpty(value));
     } catch (e) {
       // Throw a higher-fidelity error.
       throw Errors.bad_value(value, String, 'absolute URL syntax');
@@ -157,7 +157,7 @@ export default class TString extends UtilityClass {
   static urlOrigin(value) {
     let url;
     try {
-      url = new URL(TString.nonempty(value));
+      url = new URL(TString.nonEmpty(value));
     } catch (e) {
       // Throw a higher-fidelity error.
       throw Errors.bad_value(value, String, 'origin-only URL syntax');

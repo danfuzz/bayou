@@ -16,7 +16,7 @@ class DeferredLoaderHandler {
    */
   constructor(label, loaderFunction) {
     /** {string} Label to use when reporting errors. */
-    this._label = TString.nonempty(label);
+    this._label = TString.nonEmpty(label);
 
     /** {function} Function to use to effect loading of the target object. */
     this._loaderFunction = TFunction.check(loaderFunction);
