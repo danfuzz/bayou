@@ -42,4 +42,18 @@ export default class Types extends UtilityClass {
 
     return value;
   }
+
+  /**
+   * Checks that a value is either of type `string` or is `null`.
+   *
+   * @param {*} value Value in question.
+   * @returns {string|null} `value`.
+   */
+  static checkStringOrNull(value) {
+    if ((value !== null) && (typeof value !== 'string')) {
+      throw new Error('Expected a string or `null`.');
+    }
+
+    return value;
+  }
 }
