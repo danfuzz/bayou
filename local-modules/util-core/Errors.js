@@ -4,8 +4,8 @@
 
 import { inspect } from 'util';
 
+import CoreTypecheck from './CoreTypecheck';
 import InfoError from './InfoError';
-import Types from './Types';
 import UtilityClass from './UtilityClass';
 
 /**
@@ -33,8 +33,8 @@ export default class Errors extends UtilityClass {
       expectedType = expectedType.name;
     }
 
-    Types.checkString(expectedType);
-    Types.checkStringOrNull(extra);
+    CoreTypecheck.checkString(expectedType);
+    CoreTypecheck.checkStringOrNull(extra);
 
     return new InfoError(
       inspect(value),
@@ -52,7 +52,7 @@ export default class Errors extends UtilityClass {
    * @returns {InfoError} An appropriately-constructed error.
    */
   static wtf(message) {
-    Types.checkString(message);
+    CoreTypecheck.checkString(message);
 
     return new InfoError('wtf', message);
   }

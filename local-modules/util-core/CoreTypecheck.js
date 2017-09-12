@@ -9,7 +9,7 @@ import UtilityClass from './UtilityClass';
  * module. This class exists to avoid a circular dependency between this module
  * and `typecheck`.
  */
-export default class Types extends UtilityClass {
+export default class CoreTypecheck extends UtilityClass {
   /**
    * Checks that a value is of type `string` and has the usual form of a
    * programming language identifier.
@@ -20,7 +20,7 @@ export default class Types extends UtilityClass {
   static checkIdentifier(value) {
     // **TODO:** Factor this regex out, so it's not duplicative with the same
     // one in `typecheck.TString`.
-    return Types.checkString(value, /^[a-zA-Z_][a-zA-Z_0-9]*$/);
+    return CoreTypecheck.checkString(value, /^[a-zA-Z_][a-zA-Z_0-9]*$/);
   }
 
   /**

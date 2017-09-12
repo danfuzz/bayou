@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import CoreTypecheck from './CoreTypecheck';
 import DataUtil from './DataUtil';
 import Errors from './Errors';
 import InfoError from './InfoError';
@@ -9,4 +10,4 @@ import ObjectUtil from './ObjectUtil';
 import URL from './URL';
 import UtilityClass from './UtilityClass';
 
-export { DataUtil, Errors, InfoError, ObjectUtil, URL, UtilityClass };
+export { CoreTypecheck, DataUtil, Errors, InfoError, ObjectUtil, URL, UtilityClass };
