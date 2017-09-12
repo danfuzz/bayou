@@ -14,7 +14,8 @@ import { TFunction } from 'typecheck';
  * Top-level class, for `CLASS_CASES`, with a method for `NON_CLASS_FUNCTIONS`.
  */
 class SomeClass {
-  florp() { return 1; }
+  static florp() { return 1; }
+  like() { return 1; }
 }
 
 /**
@@ -43,7 +44,8 @@ const CLASS_FUNCTIONS = [
 /** {array<function>} Functions that should _not_ be considered classes. */
 const NON_CLASS_FUNCTIONS = [
   () => { return 1; },
-  SomeClass.florp, // Methods of classes are not themselves classes.
+  SomeClass.florp,          // Methods of classes are not themselves classes.
+  SomeClass.prototype.like, // Ditto.
   someGenerator
 ];
 
@@ -55,6 +57,7 @@ const NON_FUNCTIONS = [
   true,
   'blort',
   /florp/,
+  Symbol('foo'),
   914,
   ['x'],
   { 'a': 10 }
@@ -63,18 +66,23 @@ const NON_FUNCTIONS = [
 describe('typecheck/TFunction', () => {
   describe('check()', () => {
     it('should succeed when passed a function', () => {
-      const sampleFunction = function () { let a = false; if (a) a ^= 1; };
+      function test(value) {
+        assert.strictEqual(TFunction.check(value), value);
+      }
 
-      assert.strictEqual(TFunction.check(sampleFunction), sampleFunction);
+      for (const v of [...CLASS_FUNCTIONS, ...NON_CLASS_FUNCTIONS]) {
+        test(v);
+      }
     });
 
     it('should fail when passed anything other than a function', () => {
-      assert.throws(() => TFunction.check('this better not work'));
-      assert.throws(() => TFunction.check([]));
-      assert.throws(() => TFunction.check({ }));
-      assert.throws(() => TFunction.check(54));
-      assert.throws(() => TFunction.check(true));
-      assert.throws(() => TFunction.check(undefined));
+      function test(value) {
+        assert.throws(() => { TFunction.check(value); });
+      }
+
+      for (const v of NON_FUNCTIONS) {
+        test(v);
+      }
     });
   });
 
