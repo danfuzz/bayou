@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Errors, URL, UtilityClass } from 'util-core';
+import { CoreTypecheck, Errors, URL, UtilityClass } from 'util-core';
 
 /**
  * Type checker for type `String`.
@@ -13,21 +13,15 @@ export default class TString extends UtilityClass {
    * a regex.
    *
    * @param {*} value Value to check.
-   * @param {RegExp} [regex = null] Regular expression to match against or
+   * @param {RegExp|null} [regex = null] Regular expression to match against or
    *   `null` if no matching is required. **Note:** If you want to match the
    *   entire `value`, this must be anchored at both ends (`/^...$/`).
    * @returns {string} `value`.
    */
   static check(value, regex = null) {
-    if (typeof value !== 'string') {
-      throw Errors.bad_value(value, String);
-    }
-
-    if ((regex !== null) && !regex.test(value)) {
-      throw Errors.bad_value(value, String, regex.source);
-    }
-
-    return value;
+    // This is defined in `CoreTypecheck` so that it can be used by `util-core`
+    // without introducing a circular dependency on this module.
+    return CoreTypecheck.checkString(value, regex);
   }
 
   /**
@@ -68,12 +62,9 @@ export default class TString extends UtilityClass {
    * @returns {string} `value`.
    */
   static identifier(value) {
-    try {
-      return TString.check(value, /^[a-zA-Z_][a-zA-Z_0-9]*$/);
-    } catch (e) {
-      // More on-point error.
-      throw Errors.bad_value(value, String, 'identifier');
-    }
+    // This is defined in `CoreTypecheck` so that it can be used by `util-core`
+    // without introducing a circular dependency on this module.
+    return CoreTypecheck.checkIdentifier(value);
   }
 
   /**
@@ -114,11 +105,9 @@ export default class TString extends UtilityClass {
    * @returns {string|null} `value`.
    */
   static orNull(value) {
-    if ((value !== null) && (typeof value !== 'string')) {
-      throw Errors.bad_value(value, 'String|null');
-    }
-
-    return value;
+    // This is defined in `CoreTypecheck` so that it can be used by `util-core`
+    // without introducing a circular dependency on this module.
+    return CoreTypecheck.checkStringOrNull(value);
   }
 
   /**

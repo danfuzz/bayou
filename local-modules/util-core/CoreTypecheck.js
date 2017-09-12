@@ -19,8 +19,6 @@ export default class CoreTypecheck extends UtilityClass {
    * @returns {string} `value`.
    */
   static checkIdentifier(value) {
-    // **TODO:** Factor this regex out, so it's not duplicative with the same
-    // one in `typecheck.TString`.
     try {
       return CoreTypecheck.checkString(value, /^[a-zA-Z_][a-zA-Z_0-9]*$/);
     } catch (e) {
