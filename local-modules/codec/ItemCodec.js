@@ -111,13 +111,13 @@ export default class ItemCodec extends CommonBase {
    */
   static fromClass(clazz) {
     TFunction.checkClass(clazz);
-    TFunction.check(clazz.prototype.toApi);
+    TFunction.checkCallable(clazz.prototype.toApi);
 
     const tag = clazz.API_TAG || clazz.name;
 
     let fromApi;
     if (clazz.fromApi) {
-      fromApi = TFunction.check(clazz.fromApi);
+      fromApi = TFunction.checkCallable(clazz.fromApi);
     } else {
       fromApi = (...args) => new clazz(...args);
     }
@@ -186,10 +186,10 @@ export default class ItemCodec extends CommonBase {
     this._predicate = TFunction.orNull(predicate);
 
     /** {function} Value encoder function. */
-    this._encode = TFunction.check(encode);
+    this._encode = TFunction.checkCallable(encode);
 
     /** {function} Value decoder function. */
-    this._decode = TFunction.check(decode);
+    this._decode = TFunction.checkCallable(decode);
 
     Object.freeze(this);
   }

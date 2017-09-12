@@ -19,7 +19,7 @@ class DeferredLoaderHandler {
     this._label = TString.nonEmpty(label);
 
     /** {function} Function to use to effect loading of the target object. */
-    this._loaderFunction = TFunction.check(loaderFunction);
+    this._loaderFunction = TFunction.checkCallable(loaderFunction);
 
     /**
      * {object|null} The real target object. It becomes non-null on the first

@@ -156,7 +156,7 @@ export default class DocServer extends Singleton {
   _makeNewSession(fileComplex, authorId, makeSessionId) {
     FileComplex.check(fileComplex);
     TString.nonEmpty(authorId);
-    TFunction.check(makeSessionId);
+    TFunction.checkCallable(makeSessionId);
 
     // Make a unique session ID.
     let sessionId;

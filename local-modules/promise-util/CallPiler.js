@@ -48,7 +48,7 @@ export default class CallPiler {
    */
   constructor(func, ...args) {
     /** {function} Function to call. */
-    this._func = TFunction.check(func);
+    this._func = TFunction.checkCallable(func);
 
     /** {array<*>} Arguments to pass to the function. */
     this._args = args;
