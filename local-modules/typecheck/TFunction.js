@@ -5,7 +5,7 @@
 import { Errors, UtilityClass } from 'util-core';
 
 /**
- * Type checker for type `function`.
+ * Type checker for type `Function`.
  */
 export default class TFunction extends UtilityClass {
   /**
@@ -23,10 +23,29 @@ export default class TFunction extends UtilityClass {
   }
 
   /**
-   * Checks a value of type `function` which is furthermore usable as a
+   * Checks a value of type `Function` which furthermore must be directly
+   * callable.
+   *
+   * **Note:** See the documentation for {@link #isCallable} for details about
+   * the check.
+   *
+   * @param {*} value The (alleged) class / constructor.
+   * @returns {function} `value`, if it is indeed a class / constructor.
+   */
+  static checkCallable(value) {
+    if (TFunction.isCallable(value)) {
+      return value;
+    }
+
+    throw Errors.bad_value(value, Function, 'callable');
+  }
+
+  /**
+   * Checks a value of type `Function` which furthermore must be usable as a
    * "class," that is, as a constructor function.
    *
-   * **Note:** See caveat on {@link #isClass} for details about the check.
+   * **Note:** See the documentation for {@link #isClass} for details about the
+   * check.
    *
    * @param {*} value The (alleged) class / constructor.
    * @returns {function} `value`, if it is indeed a class / constructor.
@@ -41,10 +60,41 @@ export default class TFunction extends UtilityClass {
 
   /**
    * Indicates whether the given value is a function which is furthermore usable
+   * for direct function calls. The type name notwithstanding, in JavaScript
+   * some "functions" can't actually be called (they can only be used as
+   * constructors).
+   *
+   * **Note:** Unfortunately, JavaScript (a) is loosey-goosey about what sorts
+   * of functions can be called, and (b) doesn't provide a way
+   * to distinguish the various cases _except_ to look at the string conversion
+   * of functions. This method errs on the side of over-acceptance.
+   *
+   * @param {*} value Value in question.
+   * @returns {boolean} `true` if it is a callable function, or `false` if
+   *   not.
+   */
+  static isCallable(value) {
+    if ((typeof value) !== 'function') {
+      return false;
+    }
+
+    // It's a function. Now we need to know if it's callable by looking at the
+    // string form. The only variant that is definitely _not_ callable is a
+    // modern class, which will have the prefix `class ` (with a space).
+    //
+    // **Note:** We call the `toString()` of the `Function` prototype, to avoid
+    // getting fooled by functions that override that method.
+
+    const s = Function.prototype.toString.call(value);
+    return !(/^class /.test(s));
+  }
+
+  /**
+   * Indicates whether the given value is a function which is furthermore usable
    * as a "class," that is, whether it is a constructor function.
    *
    * **Note:** Unfortunately, JavaScript (a) is loosey-goosey about what sorts
-   * of functions can be called as constructors, and (b) doesn't provide a way
+   * of functions can be used as constructors, and (b) doesn't provide a way
    * to distinguish the various cases _except_ to look at the string conversion
    * of functions. This method errs on the side of over-acceptance.
    *

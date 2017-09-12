@@ -32,18 +32,27 @@ function* someGenerator() {
   yield 1;
 }
 
-/** {array<class>} Things that should be considered classes. */
-const CLASS_FUNCTIONS = [
-  class { x() { return 1; } },
+/**
+ * {array<function>} Functions that should be treated as both callable and
+ * classes.
+ */
+const AMBIGUOUS_FUNCTIONS = [
   function () { return 1; },
   function florp() { return 1; },
-  SomeClass,
   someFunc
+];
+
+/** {array<function>} Functions that should be considered classes. */
+const CLASS_FUNCTIONS = [
+  class { x() { return 1; } },
+  class Blort { },
+  SomeClass
 ];
 
 /** {array<function>} Functions that should _not_ be considered classes. */
 const NON_CLASS_FUNCTIONS = [
   () => { return 1; },
+  function* () { yield 1; },
   SomeClass.florp,          // Methods of classes are not themselves classes.
   SomeClass.prototype.like, // Ditto.
   someGenerator
@@ -70,7 +79,7 @@ describe('typecheck/TFunction', () => {
         assert.strictEqual(TFunction.check(value), value);
       }
 
-      for (const v of [...CLASS_FUNCTIONS, ...NON_CLASS_FUNCTIONS]) {
+      for (const v of [...AMBIGUOUS_FUNCTIONS, ...CLASS_FUNCTIONS, ...NON_CLASS_FUNCTIONS]) {
         test(v);
       }
     });
@@ -86,13 +95,45 @@ describe('typecheck/TFunction', () => {
     });
   });
 
+  describe('checkCallable()', () => {
+    it('should succeed when passed a callable function', () => {
+      function test(value) {
+        assert.strictEqual(TFunction.checkCallable(value), value);
+      }
+
+      for (const v of [...NON_CLASS_FUNCTIONS, ...AMBIGUOUS_FUNCTIONS]) {
+        test(v);
+      }
+    });
+
+    it('should fail when passed a non-callable function', () => {
+      function test(value) {
+        assert.throws(() => { TFunction.checkCallable(value); });
+      }
+
+      for (const v of CLASS_FUNCTIONS) {
+        test(v);
+      }
+    });
+
+    it('should fail when passed a non-function', () => {
+      function test(value) {
+        assert.throws(() => { TFunction.checkCallable(value); });
+      }
+
+      for (const v of NON_FUNCTIONS) {
+        test(v);
+      }
+    });
+  });
+
   describe('checkClass()', () => {
     it('should succeed when passed a class', () => {
       function test(value) {
         assert.strictEqual(TFunction.checkClass(value), value);
       }
 
-      for (const v of CLASS_FUNCTIONS) {
+      for (const v of [...CLASS_FUNCTIONS, ...AMBIGUOUS_FUNCTIONS]) {
         test(v);
       }
     });
@@ -110,6 +151,38 @@ describe('typecheck/TFunction', () => {
     it('should fail when passed a non-function', () => {
       function test(value) {
         assert.throws(() => { TFunction.checkClass(value); });
+      }
+
+      for (const v of NON_FUNCTIONS) {
+        test(v);
+      }
+    });
+  });
+
+  describe('isCallable()', () => {
+    it('should return `true` when passed a callable function', () => {
+      function test(value) {
+        assert.isTrue(TFunction.isCallable(value), value);
+      }
+
+      for (const v of [...NON_CLASS_FUNCTIONS, ...AMBIGUOUS_FUNCTIONS]) {
+        test(v);
+      }
+    });
+
+    it('should return `false` when passed a non-callable function', () => {
+      function test(value) {
+        assert.isFalse(TFunction.isCallable(value), value);
+      }
+
+      for (const v of CLASS_FUNCTIONS) {
+        test(v);
+      }
+    });
+
+    it('should return `false` when passed a non-function', () => {
+      function test(value) {
+        assert.isFalse(TFunction.isCallable(value), value);
       }
 
       for (const v of NON_FUNCTIONS) {
