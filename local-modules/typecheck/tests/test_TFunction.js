@@ -127,6 +127,46 @@ describe('typecheck/TFunction', () => {
     });
   });
 
+  describe('checkCallableOrNull()', () => {
+    it('should succeed when passed a callable function', () => {
+      function test(value) {
+        assert.strictEqual(TFunction.checkCallableOrNull(value), value);
+      }
+
+      for (const v of [...NON_CLASS_FUNCTIONS, ...AMBIGUOUS_FUNCTIONS]) {
+        test(v);
+      }
+    });
+
+    it('should succeed when passed `null`', () => {
+      assert.isNull(TFunction.checkCallableOrNull(null));
+    });
+
+    it('should fail when passed a non-callable function', () => {
+      function test(value) {
+        assert.throws(() => { TFunction.checkCallableOrNull(value); });
+      }
+
+      for (const v of CLASS_FUNCTIONS) {
+        test(v);
+      }
+    });
+
+    it('should fail when passed a non-`null` non-function', () => {
+      function test(value) {
+        if (value === null) {
+          return;
+        }
+
+        assert.throws(() => { TFunction.checkCallableOrNull(value); });
+      }
+
+      for (const v of NON_FUNCTIONS) {
+        test(v);
+      }
+    });
+  });
+
   describe('checkClass()', () => {
     it('should succeed when passed a class', () => {
       function test(value) {

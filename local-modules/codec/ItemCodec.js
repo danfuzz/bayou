@@ -183,7 +183,7 @@ export default class ItemCodec extends CommonBase {
      * {function|null} Additional predicate that must be `true` of values for
      * them to qualify, if any.
      */
-    this._predicate = TFunction.orNull(predicate);
+    this._predicate = TFunction.checkCallableOrNull(predicate);
 
     /** {function} Value encoder function. */
     this._encode = TFunction.checkCallable(encode);

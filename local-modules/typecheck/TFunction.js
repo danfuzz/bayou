@@ -29,8 +29,8 @@ export default class TFunction extends UtilityClass {
    * **Note:** See the documentation for {@link #isCallable} for details about
    * the check.
    *
-   * @param {*} value The (alleged) class / constructor.
-   * @returns {function} `value`, if it is indeed a class / constructor.
+   * @param {*} value The (alleged) callable function.
+   * @returns {function} `value`, if it is indeed a callable function.
    */
   static checkCallable(value) {
     if (TFunction.isCallable(value)) {
@@ -38,6 +38,21 @@ export default class TFunction extends UtilityClass {
     }
 
     throw Errors.bad_value(value, Function, 'callable');
+  }
+
+  /**
+   * Checks a value which must either pass `checkCallable()` or be `null`.
+   *
+   * @param {*} value The (alleged) class / constructor.
+   * @returns {function|null} `value`, if it is indeed a callable function or
+   *   `null`.
+   */
+  static checkCallableOrNull(value) {
+    if ((value === null) || TFunction.isCallable(value)) {
+      return value;
+    }
+
+    throw Errors.bad_value(value, 'Function|null', 'callable');
   }
 
   /**
