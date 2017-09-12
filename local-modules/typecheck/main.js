@@ -5,7 +5,6 @@
 import TArray from './TArray';
 import TBoolean from './TBoolean';
 import TBuffer from './TBuffer';
-import TClass from './TClass';
 import TFunction from './TFunction';
 import TInt from './TInt';
 import TIterable from './TIterable';
@@ -19,7 +18,6 @@ export {
   TArray,
   TBoolean,
   TBuffer,
-  TClass,
   TFunction,
   TInt,
   TIterable,

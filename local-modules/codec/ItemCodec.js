@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TArray, TClass, TFunction, TString } from 'typecheck';
+import { TArray, TFunction, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 /**
@@ -110,7 +110,7 @@ export default class ItemCodec extends CommonBase {
    * @returns {ItemCodec} An appropriately-constructed instance.
    */
   static fromClass(clazz) {
-    TClass.check(clazz);
+    TFunction.checkClass(clazz);
     TFunction.check(clazz.prototype.toApi);
 
     const tag = clazz.API_TAG || clazz.name;
@@ -173,7 +173,7 @@ export default class ItemCodec extends CommonBase {
      * specific class (and not, e.g. a class-or-subclass).
      */
     this._clazz = ((typeof clazzOrType) === 'function')
-      ? TClass.check(clazzOrType)
+      ? TFunction.checkClass(clazzOrType)
       : null;
 
     /** {string} Name of the type which identifies qualified values. */
