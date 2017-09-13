@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { CommonBase, Functor } from 'util-common';
+
 /** {Set<string>} Set of methods which never get proxied. */
 const VERBOTEN_METHODS = new Set([
   // Standard constructor method name.
@@ -17,7 +19,7 @@ const VERBOTEN_METHODS = new Set([
 /**
  * `Proxy` handler which redirects method calls to an indicated client.
  */
-export default class TargetHandler {
+export default class TargetHandler extends CommonBase {
   /**
    * Makes a proxy that is handled by an instance of this class.
    *
@@ -36,6 +38,8 @@ export default class TargetHandler {
    * @param {string} targetId The ID of the target to call on.
    */
   constructor(apiClient, targetId) {
+    super();
+
     /** The client to forward calls to. */
     this._apiClient = apiClient;
 
@@ -50,6 +54,8 @@ export default class TargetHandler {
 
     /** State of readiness, one of `not`, `readying`, or `ready`. */
     this._readyState = 'not';
+
+    Object.seal(this);
   }
 
   /**
@@ -255,8 +261,9 @@ export default class TargetHandler {
   _makeMethodHandler(name) {
     const apiClient = this._apiClient;  // Avoid re-(re-)lookup on every call.
     const targetId  = this._targetId;   // Likewise.
+
     return (...args) => {
-      return apiClient._send(targetId, name, args);
+      return apiClient._send(targetId, new Functor(name, ...args));
     };
   }
 }

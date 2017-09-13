@@ -6,7 +6,7 @@ import { BaseKey, ConnectionError, Message, Response } from 'api-common';
 import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
-import { Functor, InfoError, WebsocketCodes } from 'util-common';
+import { InfoError, WebsocketCodes } from 'util-common';
 
 import TargetMap from './TargetMap';
 
@@ -63,11 +63,11 @@ export default class ApiClient {
     this._callbacks = null;
 
     /**
-     * {array<string>} List of pending payloads (to be sent to the far side of
+     * {array<string>} List of pending messages (to be sent to the far side of
      * the connection). Only used when connection is in the middle of being
      * established. Initialized and reset in `_resetConnection()`.
      */
-    this._pendingPayloads = null;
+    this._pendingMessages = null;
 
     /** {TargetMap} Map of names to target proxies. */
     this._targets = new TargetMap(this);
@@ -242,17 +242,17 @@ export default class ApiClient {
    * @param {object} event Event that caused this callback.
    */
   _handleMessage(event) {
-    this._log.detail('Received raw payload:', event.data);
+    this._log.detail('Received raw data:', event.data);
 
-    const payload = Codec.theOne.decodeJson(event.data);
+    const response = Codec.theOne.decodeJson(event.data);
 
-    if (!(payload instanceof Response)) {
-      throw ConnectionError.connection_nonsense(this._connectionId, 'Got strange response payload.');
+    if (!(response instanceof Response)) {
+      throw ConnectionError.connection_nonsense(this._connectionId, 'Got strange response.');
     }
 
-    const id = payload.id;
-    const result = payload.result;
-    const error = payload.error;
+    const id     = response.id;
+    const result = response.result;
+    const error  = response.error;
 
     const callback = this._callbacks[id];
     if (callback) {
@@ -272,17 +272,17 @@ export default class ApiClient {
 
   /**
    * Handles an `open` event coming from a websocket. In this case, it sends
-   * any pending payloads (messages that were enqueued while the socket was
-   * still in the process of opening).
+   * any pending messages (that were enqueued while the socket was still in the
+   * process of opening).
    *
    * @param {object} event_unused Event that caused this callback.
    */
   _handleOpen(event_unused) {
-    for (const payload of this._pendingPayloads) {
-      this._log.detail('Sent from queue:', payload);
-      this._ws.send(payload);
+    for (const msgJson of this._pendingMessages) {
+      this._log.detail('Sent from queue:', msgJson);
+      this._ws.send(msgJson);
     }
-    this._pendingPayloads = [];
+    this._pendingMessages = [];
   }
 
   /**
@@ -312,7 +312,7 @@ export default class ApiClient {
     this._connectionId    = UNKNOWN_CONNECTION_ID;
     this._nextId          = 0;
     this._callbacks       = {};
-    this._pendingPayloads = [];
+    this._pendingMessages = [];
     this._targets.reset();
   }
 
@@ -320,13 +320,13 @@ export default class ApiClient {
    * Sends the given call to the server.
    *
    * @param {string} target Name of the target object.
-   * @param {string} name Name of method (or meta-method) to call on the server.
-   * @param {object} [args = []] API-encodable object of arguments.
+   * @param {Functor} payload The name of the method to call and the arguments
+   *   to call it with.
    * @returns {Promise} Promise for the result (or error) of the call. In the
    *   case of an error, the rejection reason will always be an instance of
    *   `ConnectionError` (see which for details).
    */
-  _send(target, name, args = []) {
+  _send(target, payload) {
     const wsState = (this._ws === null)
       ? WebSocket.CLOSED
       : this._ws.readyState;
@@ -349,19 +349,19 @@ export default class ApiClient {
     const id = this._nextId;
     this._nextId++;
 
-    const payloadObj = new Message(id, target, new Functor(name, ...args));
-    const payload    = Codec.theOne.encodeJson(payloadObj);
+    const msg     = new Message(id, target, payload);
+    const msgJson = Codec.theOne.encodeJson(msg);
 
     switch (wsState) {
       case WebSocket.CONNECTING: {
         // Not yet open. Need to queue it up.
-        this._log.detail('Queued:', payloadObj);
-        this._pendingPayloads.push(payload);
+        this._log.detail('Queued:', msg);
+        this._pendingMessages.push(msgJson);
         break;
       }
       case WebSocket.OPEN: {
-        this._log.detail('Sent:', payloadObj);
-        this._ws.send(payload);
+        this._log.detail('Sent:', msg);
+        this._ws.send(msgJson);
         break;
       }
       default: {
