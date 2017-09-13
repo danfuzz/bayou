@@ -2,9 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import util from 'util';
-
 import chalk from 'chalk';
+import { inspect } from 'util';
 
 import { SeeAll } from 'see-all';
 import { Singleton } from 'util-common';
@@ -52,7 +51,7 @@ export default class ServerSink extends Singleton {
         // Convert the object to a string. If it's a single line, just add it
         // to the text inline. If it's multiple lines, make sure it all ends up
         // on its own lines.
-        m = util.inspect(m);
+        m = inspect(m);
         if (/\n/.test(m)) {
           text += `${atLineStart ? '' : '\n'}${m}\n`;
           atLineStart = true;
@@ -71,7 +70,7 @@ export default class ServerSink extends Singleton {
       // is an `Error`. So, append one. We drop the first couple lines, because
       // those are (a) the `Error` header, which is info-free in this case; and
       // (b) lines corresponding to the logging code itself.
-      let trace = util.inspect(new Error());
+      let trace = inspect(new Error());
       trace = trace.replace(/^[\s\S]*\n    at Logger[^\n]+\n/, '');
       trace = trace.replace(/^    at /mg, '  at '); // Partially outdent.
       text += `${atLineStart ? '' : '\n'}${trace}`;

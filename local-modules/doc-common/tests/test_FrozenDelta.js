@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import Delta from 'quill-delta';
-import util from 'util';
+import { inspect } from 'util';
 
 import { FrozenDelta } from 'doc-common';
 
@@ -47,7 +47,7 @@ describe('doc-common/FrozenDelta', () => {
       ];
 
       for (const v of values) {
-        it(`should return \`true\` for: ${util.inspect(v)}`, () => {
+        it(`should return \`true\` for: ${inspect(v)}`, () => {
           assert.isTrue(FrozenDelta.isEmpty(v));
         });
       }
@@ -76,7 +76,7 @@ describe('doc-common/FrozenDelta', () => {
       ];
 
       for (const v of values) {
-        it(`should return \`false\` for: ${util.inspect(v)}`, () => {
+        it(`should return \`false\` for: ${inspect(v)}`, () => {
           assert.isFalse(FrozenDelta.isEmpty(v));
         });
       }
@@ -96,7 +96,7 @@ describe('doc-common/FrozenDelta', () => {
       ];
 
       for (const v of values) {
-        it(`should throw for: ${util.inspect(v)}`, () => {
+        it(`should throw for: ${inspect(v)}`, () => {
           assert.throws(() => { FrozenDelta.isEmpty(v); });
         });
       }
@@ -113,7 +113,7 @@ describe('doc-common/FrozenDelta', () => {
       ];
 
       for (const v of values) {
-        it(`should return \`true\` for: ${util.inspect(v)}`, () => {
+        it(`should return \`true\` for: ${inspect(v)}`, () => {
           assert.isTrue(FrozenDelta.coerce(v).isDocument());
         });
       }
@@ -128,7 +128,7 @@ describe('doc-common/FrozenDelta', () => {
       ];
 
       for (const v of values) {
-        it(`should return \`false\` for: ${util.inspect(v)}`, () => {
+        it(`should return \`false\` for: ${inspect(v)}`, () => {
           assert.isFalse(FrozenDelta.coerce(v).isDocument());
         });
       }

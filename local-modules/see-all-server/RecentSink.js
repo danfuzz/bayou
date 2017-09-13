@@ -2,10 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import util from 'util';
-
 import ansiHtml from 'ansi-html';
 import chalk from 'chalk';
+import { inspect } from 'util';
 
 import { SeeAll } from 'see-all';
 
@@ -114,7 +113,7 @@ export default class RecentSink {
     } else {
       tag = `[${log.tag} ${log.level}]`;
       body = log.message.map((x) => {
-        return (typeof x === 'string') ? x : util.inspect(x);
+        return (typeof x === 'string') ? x : inspect(x);
       }).join(' ');
     }
 
