@@ -75,8 +75,8 @@ export default class StateMachine {
     /** {Logger} Logger to use. */
     this._log = logger || new Logger('state-machine');
 
-    /** {string} The current state. Set below. */
-    this._state = null;
+    /** {string} The name of the current state. Set below. */
+    this._stateName = null;
 
     /**
      * {array<{name, args}>} Queue of events in need of dispatch. Becomes `null`
@@ -97,13 +97,16 @@ export default class StateMachine {
      */
     this._stateConditions = new Map();
 
-    /** Count of events handled. Used for logging. */
+    /** {Int} Count of events handled. Used for logging. */
     this._eventCount = 0;
 
-    /** Map of event names to their validator methods. */
+    /** {Map<string,function>} Map of event names to their validator methods. */
     this._eventValidators = this._makeValidatorMap();
 
-    /** Two-level map from (state, event) pairs to their respective handlers. */
+    /**
+     * {object<string,object<string, function>>} Two-level map from (state,
+     * event) pairs to their respective handler methods.
+     */
     this._handlers = this._makeHandlerMap();
 
     this._addEnqueueMethods();
@@ -118,9 +121,9 @@ export default class StateMachine {
     this._serviceEventQueue();
   }
 
-  /** {string} The current state. */
+  /** {string} The name of the current state. */
   get state() {
-    return this._state;
+    return this._stateName;
   }
 
   /**
@@ -158,15 +161,15 @@ export default class StateMachine {
    * `when_<name>`, as described in the class header docs.
    */
   _addStateMethods() {
-    const states = Object.keys(this._handlers);
-    for (const name of states) {
+    const stateNames = Object.keys(this._handlers);
+    for (const name of stateNames) {
       this[`s_${name}`] = () => {
-        if (this._state === name) {
+        if (this._stateName === name) {
           return;
         }
 
         this._log.detail(`New state: ${name}`);
-        this._state = name;
+        this._stateName = name;
 
         // Trigger the awaiter for the state, if any.
         const condition = this._stateConditions.get(name);
@@ -181,7 +184,7 @@ export default class StateMachine {
       };
 
       this[`when_${name}`] = () => {
-        if (this._state === name) {
+        if (this._stateName === name) {
           this._log.detail(`Immediately-resolved awaiter for state: ${name}`);
           return Promise.resolve(true);
         } else {
@@ -224,10 +227,10 @@ export default class StateMachine {
    * Constructs a two-level map from state-event pairs to the methods which
    * handle those pairs.
    *
-   * @returns {object} The handler map.
+   * @returns {object<string,object<string,function>>} The handler map.
    */
   _makeHandlerMap() {
-    const result = {};       // Built-up result.
+    const result       = {}; // Built-up result.
     const stateNameMap = {}; // Map with state name keys (not including `any`).
 
     // First pass: Find all methods with the right name form, including those
@@ -354,19 +357,19 @@ export default class StateMachine {
    */
   async _dispatchEvent(event) {
     const { name, args } = event;
-    const state = this._state;
-    const log = this._log;
+    const stateName      = this._stateName;
+    const log            = this._log;
 
     // Log the state name and event details (if not squelched), and occasional
     // count of how many events have been handled so far.
 
-    log.detail(`In state: ${state}`);
+    log.detail(`In state: ${stateName}`);
     log.detail('Dispatching:', name, args);
 
     // Dispatch the event. In case of exception, enqueue an `error` event.
     // (The default handler for the event will log an error and stop the queue.)
     try {
-      await this._handlers[state][name].apply(this, args);
+      await this._handlers[stateName][name].apply(this, args);
     } catch (e) {
       if (name === 'error') {
         // We got an exception in an error event handler. This is the signal to
@@ -406,7 +409,7 @@ export default class StateMachine {
    * @param {...*} args_unused Arguments to the event.
    */
   _handle_any_any(name, ...args_unused) {
-    throw new Error(`Cannot handle event \`${name}\` in state \`${this._state}\`.`);
+    throw new Error(`Cannot handle event \`${name}\` in state \`${this._stateName}\`.`);
   }
 
   /**
