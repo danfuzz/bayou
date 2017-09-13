@@ -28,6 +28,33 @@ export default class CoreTypecheck extends UtilityClass {
   }
 
   /**
+   * Checks that a value is of type `object`, and is optionally an instance of
+   * a particular class. `null` is _not_ considered an object by this check.
+   * Functions _are_ considered objects by this check.
+   *
+   * @param {*} value Value to check.
+   * @param {object|null} [clazz = null] Class (constructor) that `value` must
+   *   be an instance of, or `null` if there is no class requirement.
+   * @returns {object} `value`.
+   */
+  static checkObject(value, clazz = null) {
+    if (clazz !== null) {
+      if (!(value instanceof clazz)) {
+        throw Errors.bad_value(value, `class ${clazz.name}`);
+      }
+    } else if (value === null) {
+      throw Errors.bad_value(value, Object);
+    } else {
+      const type = typeof value;
+      if ((type !== 'object') && (type !== 'function')) {
+        throw Errors.bad_value(value, Object);
+      }
+    }
+
+    return value;
+  }
+
+  /**
    * Checks that a value is of type `string`.
    *
    * @param {*} value Value in question.
