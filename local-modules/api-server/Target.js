@@ -3,7 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseKey } from 'api-common';
-import { TArray, TObject, TString } from 'typecheck';
+import { TObject, TString } from 'typecheck';
+import { Functor } from 'util-common';
 
 import Schema from './Schema';
 
@@ -88,16 +89,15 @@ export default class Target {
    * Synchronously performs a method call on the target object, returning the
    * result or (directly) throwing an error.
    *
-   * @param {string} name The method name.
-   * @param {array} args Arguments to the method.
+   * @param {Functor} payload Functor containing the method name and arguments.
    * @returns {*} The result of calling. Because `undefined` isn't used across
    *   the API, this method returns `null` if the original method returned
    *   `undefined`.
    */
-  call(name, args) {
-    TString.nonEmpty(name);
-    TArray.check(args);
+  call(payload) {
+    Functor.check(payload);
 
+    const name   = payload.name;
     const schema = this._schema;
 
     if (schema.getDescriptor(name) !== 'method') {
@@ -111,8 +111,8 @@ export default class Target {
     this.refresh();
 
     const target = this._target;
-    const impl = target[name];
-    const result = impl.apply(target, args);
+    const impl   = target[name];
+    const result = impl.apply(target, payload.args);
 
     return (result === undefined) ? null : result;
   }

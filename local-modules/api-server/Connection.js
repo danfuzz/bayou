@@ -6,7 +6,7 @@ import { ConnectionError, Message, Response } from 'api-common';
 import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
-import { CommonBase, Errors, Random } from 'util-common';
+import { CommonBase, Errors, Functor, Random } from 'util-common';
 
 import ApiLog from './ApiLog';
 import BearerToken from './BearerToken';
@@ -217,7 +217,7 @@ export default class Connection extends CommonBase {
    * Helper for `handleJsonMessage()` which actually performs the action
    * requested by the given message.
    *
-   * @param {object} msg Parsed message.
+   * @param {Message} msg Parsed message.
    * @returns {*} Whatever the dispatched message returns.
    */
   async _actOnMessage(msg) {
@@ -227,7 +227,7 @@ export default class Connection extends CommonBase {
 
     activeNow = this;
     try {
-      return target.call(name, args);
+      return target.call(new Functor(name, ...args));
     } finally {
       activeNow = null;
     }
