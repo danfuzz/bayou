@@ -42,9 +42,9 @@ function assertThrowsInfo(func, name, args = null) {
     assert.fail('Did not throw.');
   } catch (e) {
     assert.instanceOf(e, InfoError);
-    assert.strictEqual(e.name, name);
+    assert.strictEqual(e.info.name, name);
     if (args !== null) {
-      assert.deepEqual(e.args, args);
+      assert.deepEqual(e.info.args, args);
     }
   }
 }

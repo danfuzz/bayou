@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { SeeAll } from 'see-all';
-import { Singleton } from 'util-common';
+import { InfoError, Singleton } from 'util-common';
 
 /**
  * Implementation of the `see-all` logging sink protocol for use in a web

@@ -2,10 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import util from 'util';
-
 import CoreTypecheck from './CoreTypecheck';
-import DataUtil from './DataUtil';
+import Functor from './Functor';
 
 /**
  * `Error` subclass that comes with additional structured information.
@@ -37,64 +35,42 @@ export default class InfoError extends Error {
    */
   static hasName(value, name) {
     CoreTypecheck.checkString(name);
-    return (value instanceof InfoError) && (value.name === name);
-  }
-
-  /**
-   * Makes a message for passing to the superclass constructor.
-   *
-   * @param {array<*>} detailsArgs The detail arguments.
-   * @returns {string} An appropriately-constructed message string.
-   */
-  static _makeMessage(detailsArgs) {
-    // As an array, the inspected form is `[...]` (square brackets). We replace
-    // the ends with parens.
-    const argString = util.inspect(detailsArgs)
-      .replace(/^\[ */, '(')
-      .replace(/ *\]$/, ')');
-
-    return argString;
+    return (value instanceof InfoError) && (value.info.name === name);
   }
 
   /**
    * Constructs an instance. JSDoc doesn't have enough expressiveness to
    * describe the arguments, so here is a more complete description:
    *
-   * The constructor accepts an _optional_ cause `Error`, followed by a
-   * mandatory detail schema name, followed by any number of additional detail
-   * values, whose interpretation is defined by the name. All detail values must
-   * be simple data (e.g. JSON-codable).
+   * The constructor accepts an _optional_ cause `Error`, followed by either:
    *
-   * The name must conform to the usual syntax for a programming language
-   * "identifier," that is, a non-empty string with characters taken from the
-   * set `[a-zA-Z_0-9]` and a non-numeric first character.
+   * * a functor containing the error information.
+   * * one or more arguments which can be passed to the `Functor` constructor,
+   *   for an instance containing the error information.
    *
-   * @param {Error|string} firstArg _Either_ the causal `Error` or the detail
-   *   schema name.
-   * @param {...*} args Additional arguments, as described above.
+   * Interpretation of the arguments is (informally) defined by the functor
+   * name.
+   *
+   * @param {...*} args Arguments, as described above.
    */
-  constructor(firstArg, ...args) {
-    // "Parse" the constructor arguments first, so we can make an appropriate
+  constructor(...args) {
+    // Parse the constructor arguments first, so we can make an appropriate
     // call to `super()` (which is required before setting instance variables.)
-    const hasCause    = (firstArg instanceof Error);
-    const cause       = hasCause ? firstArg : null;
-    const detailsName = CoreTypecheck.checkIdentifier(hasCause ? args[0] : firstArg);
-    const detailsArgs = DataUtil.deepFreeze(hasCause ? args.slice(1) : args);
 
-    // **Note:** `Error.toString()` includes the contents of `error.name`, so
-    // we _don't_ want to include the name in the message we pass up to the
-    // superclass constructor. If we did so, the stringified version of the
-    // instance would have the name listed twice.
-    super(InfoError._makeMessage(detailsArgs));
+    const cause = (args[0] instanceof Error) ? args[0] : null;
+    if (cause !== null) {
+      args = args.slice(1);
+    }
+
+    const info = (args[0] instanceof Functor) ? args[0] : new Functor(...args);
+
+    super(info.toString());
 
     /** {Error|null} The causal error, if any. */
     this._cause = cause;
 
-    /** {string} The detail schema name. */
-    this._name = detailsName;
-
-    /** {array<*>} The detail arguments. */
-    this._args = detailsArgs;
+    /** {Functor} The error info payload. */
+    this._info = info;
 
     if (this._cause !== null) {
       // Append the cause's stack to this instance's. **TODO:** Figure out if
@@ -114,19 +90,8 @@ export default class InfoError extends Error {
     return this._cause;
   }
 
-  /**
-   * {string} The name of the detail schema. This can be thought of as the
-   * "type" or "kind" of error.
-   */
-  get name() {
-    return this._name;
-  }
-
-  /**
-   * {array<*>} Array of arguments that provide details corresponding to the
-   * schema name. Guaranteed to be deep-frozen.
-   */
-  get args() {
-    return this._args;
+  /** {Functor} The error information payload. */
+  get info() {
+    return this._info;
   }
 }

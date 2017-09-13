@@ -259,7 +259,7 @@ export default class ApiClient {
       delete this._callbacks[id];
       if (error) {
         this._log.detail(`Reject ${id}:`, error);
-        callback.reject(new InfoError('remote_error', this.connectionId, error.message));
+        callback.reject(new InfoError('remote_error', this.connectionId, error));
       } else {
         this._log.detail(`Resolve ${id}:`, result);
         callback.resolve(result);

@@ -2,8 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TString } from 'typecheck';
-import { InfoError } from 'util-common';
+import { Functor, InfoError } from 'util-common';
 
 /**
  * Error which can be encoded and decoded across an API boundary.
@@ -21,12 +20,10 @@ export default class CodableError extends InfoError {
    * Constructs an instance. Arguments are the same as for `InfoError` except
    * that an initial "cause" argument is not allowed.
    *
-   * @param {...*} args Constructor arguments. These are the same as for
-   *   `InfoError` except that an initial "cause" argument is not allowed.
+   * @param {Functor} info Error info.
    */
-  constructor(...args) {
-    TString.check(args[0]); // Ensures it's a functor name and not a cause.
-    super(...args);
+  constructor(info) {
+    super(Functor.check(info));
   }
 
   /**
@@ -35,6 +32,6 @@ export default class CodableError extends InfoError {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this.name, ...(this.args)];
+    return [this.info];
   }
 }
