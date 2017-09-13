@@ -5,7 +5,6 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TObject } from 'typecheck';
 import { JsonUtil } from 'util-common';
 
 describe('util-common/JsonUtil', () => {
@@ -26,9 +25,9 @@ describe('util-common/JsonUtil', () => {
       const jsonString = '{ "a": 1, "b": 2, "c": 3 }';
       const object = JsonUtil.parseFrozen(jsonString);
 
-      assert.doesNotThrow(() => TObject.check(object));
-      assert.doesNotThrow(() => TObject.withExactKeys(object, ['a', 'b', 'c']));
-      assert.throws(() => object['a'] = 'this better not work!');
+      assert.isFrozen(object);
+      assert.isObject(object);
+      assert.hasAllKeys(object, ['a', 'b', 'c']);
     });
   });
 });
