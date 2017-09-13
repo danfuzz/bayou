@@ -42,12 +42,18 @@ export default class DataUtil extends UtilityClass {
         const proto = Object.getPrototypeOf(value);
         let cloneBase; // Empty object to start from when cloning.
 
-        if (proto === Object.prototype) {
-          cloneBase = {};
-        } else if (proto === Array.prototype) {
-          cloneBase = [];
-        } else {
-          throw new Error(`Cannot deep-freeze non-data object: ${value}`);
+        switch (proto) {
+          case Object.prototype: {
+            cloneBase = {};
+            break;
+          }
+          case Array.prototype: {
+            cloneBase = [];
+            break;
+          }
+          default: {
+            throw new Error(`Cannot deep-freeze non-data object: ${value}`);
+          }
         }
 
         let newObj = null;  // Becomes non-`null` with the first change.
