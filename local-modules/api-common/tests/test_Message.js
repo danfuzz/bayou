@@ -13,39 +13,72 @@ const VALID_FUNCTOR = new Functor('blort', 37, 914);
 
 describe('api-common/Message', () => {
   describe('constructor()', () => {
-    it('should require integer ids >= 0', () => {
+    it('should accept non-negative integer ids', () => {
+      assert.doesNotThrow(() => new Message(0, 'target', VALID_FUNCTOR));
+      assert.doesNotThrow(() => new Message(37, 'target', VALID_FUNCTOR));
+    });
+
+    it('should reject ids which are not non-negative integers', () => {
       assert.throws(() => new Message('this better not work!', 'foo', VALID_FUNCTOR));
       assert.throws(() => new Message(3.7, 'target', VALID_FUNCTOR));
       assert.throws(() => new Message(true, 'target', VALID_FUNCTOR));
       assert.throws(() => new Message(null, 'target', VALID_FUNCTOR));
       assert.throws(() => new Message(undefined, 'target', VALID_FUNCTOR));
       assert.throws(() => new Message(-1, 'target', VALID_FUNCTOR));
-
-      assert.doesNotThrow(() => new Message(0, 'target', VALID_FUNCTOR));
-      assert.doesNotThrow(() => new Message(37, 'target', VALID_FUNCTOR));
     });
 
-    it('should require target to be a non-empty string', () => {
+    it('should accept non-empty target strings', () => {
+      assert.doesNotThrow(() => new Message(0, 'a', VALID_FUNCTOR));
+      assert.doesNotThrow(() => new Message(0, 'A', VALID_FUNCTOR));
+      assert.doesNotThrow(() => new Message(0, '_', VALID_FUNCTOR));
+      assert.doesNotThrow(() => new Message(0, 'fooBar', VALID_FUNCTOR));
+    });
+
+    it('should reject targets that are not non-empty strings', () => {
       assert.throws(() => new Message(37, 37, VALID_FUNCTOR));
       assert.throws(() => new Message(37, false, VALID_FUNCTOR));
       assert.throws(() => new Message(37, null, VALID_FUNCTOR));
       assert.throws(() => new Message(37, undefined, VALID_FUNCTOR));
       assert.throws(() => new Message(37, '', VALID_FUNCTOR));
+    });
 
+    it('should accept a functor for the payload', () => {
       assert.doesNotThrow(() => new Message(0, 'target', VALID_FUNCTOR));
     });
 
-    it('should require a valid functor', () => {
+    it('should reject a payload that is not a functor', () => {
       assert.throws(() => new Message(0, 'target', null));
       assert.throws(() => new Message(0, 'target', 'blort'));
       assert.throws(() => new Message(0, 'target', { name: 'x', args: [] }));
-
-      assert.doesNotThrow(() => new Message(0, 'target', VALID_FUNCTOR));
     });
 
     it('should return a frozen object', () => {
       const message = new Message(0, 'target', VALID_FUNCTOR);
       assert.isFrozen(message);
+    });
+  });
+
+  describe('.id', () => {
+    it('should return the constructed id', () => {
+      const msg = new Message(123, 'target', VALID_FUNCTOR);
+
+      assert.strictEqual(msg.id, 123);
+    });
+  });
+
+  describe('.payload', () => {
+    it('should return the constructed payload', () => {
+      const msg = new Message(123, 'target', VALID_FUNCTOR);
+
+      assert.strictEqual(msg.payload, VALID_FUNCTOR);
+    });
+  });
+
+  describe('.target', () => {
+    it('should return the constructed target', () => {
+      const msg = new Message(123, 'target', VALID_FUNCTOR);
+
+      assert.strictEqual(msg.target, 'target');
     });
   });
 });
