@@ -11,20 +11,47 @@ describe('typecheck/TObject', () => {
   describe('check(value)', () => {
     it('should return the provided value when passed an object', () => {
       const value = { a: 1, b: 2 };
+      const func  = () => 123;
 
       assert.strictEqual(TObject.check(value), value);
+      assert.strictEqual(TObject.check(func),  func);
     });
 
     it('should throw an Error when passed anything other than an object', () => {
-      assert.throws(() => TObject.check('this better not work'));
+      assert.throws(() => TObject.check(null));
+      assert.throws(() => TObject.check(undefined));
       assert.throws(() => TObject.check(54));
       assert.throws(() => TObject.check(true));
-      assert.throws(() => TObject.check(() => true));
-      assert.throws(() => TObject.check(undefined));
+      assert.throws(() => TObject.check('this better not work'));
     });
   });
 
-  describe('withExactKeys(value, keys)', () => {
+  describe('check(value, clazz)', () => {
+    it('should accept a value of the given class', () => {
+      function test(value, clazz) {
+        assert.strictEqual(TObject.check(value, clazz), value);
+      }
+
+      test({ a: 10 }, Object);
+
+      test(['x'],     Array);
+      test(['x'],     Object);
+
+      test(() => 123, Function);
+      test(() => 123, Object);
+    });
+
+    it('should throw an Error when passed a value not of the given class', () => {
+      assert.throws(() => TObject.check(new Boolean(true), String));
+    });
+
+    it('should throw an Error when passed anything other than an object', () => {
+      assert.throws(() => TObject.check(null, Object));
+      assert.throws(() => TObject.check(54,   Object));
+    });
+  });
+
+  describe('withExactKeys()', () => {
     it('should allow an object with exactly the provided keys', () => {
       const value = { 'a': 1, 'b': 2, 'c': 3 };
 

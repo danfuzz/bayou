@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { CommonBase } from 'util-core';
+
 /**
  * Iterable over object properties. Instances walk over all properties of the
  * objects they are given, whether enumerable or not. The values yielded by
@@ -10,7 +12,7 @@
  * either a string or a symbol) and `target` to the target object (either the
  * top-level object or an element in its prototype chain).
  */
-export default class PropertyIterable {
+export default class PropertyIterable extends CommonBase {
   /**
    * Constructs an instance.
    *
@@ -22,6 +24,8 @@ export default class PropertyIterable {
    *   selected.
    */
   constructor(object, filter = null) {
+    super();
+
     /** The object to iterate over. */
     this._object = object;
 

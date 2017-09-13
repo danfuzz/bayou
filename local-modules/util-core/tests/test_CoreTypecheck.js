@@ -42,9 +42,9 @@ function assertThrowsInfo(func, name, args = null) {
     assert.fail('Did not throw.');
   } catch (e) {
     assert.instanceOf(e, InfoError);
-    assert.strictEqual(e.name, name);
+    assert.strictEqual(e.info.name, name);
     if (args !== null) {
-      assert.deepEqual(e.args, args);
+      assert.deepEqual(e.info.args, args);
     }
   }
 }
@@ -107,6 +107,90 @@ describe('util-core/CoreTypecheck', () => {
       for (const v of NON_STRING_CASES) {
         test(v);
       }
+    });
+  });
+
+  describe('checkObject(value)', () => {
+    it('accepts objects', () => {
+      function test(value) {
+        assert.strictEqual(CoreTypecheck.checkObject(value), value);
+      }
+
+      test({});
+      test({ a: 10, b: 20, c: 30, });
+      test([]);
+      test(['blort']);
+      test(new Set());
+      test(() => 914);
+      test(function () { return 37; });
+    });
+
+    it('rejects non-objects', () => {
+      function test(value) {
+        assertThrowsInfo(
+          () => { CoreTypecheck.checkObject(value); },
+          'bad_value',
+          [inspect(value), 'Object']);
+      }
+
+      test(null);
+      test(undefined);
+      test(false);
+      test(123);
+      test('blort');
+    });
+  });
+
+  describe('checkObject(value, clazz)', () => {
+    it('accepts objects of the given class', () => {
+      function test(value, clazz) {
+        assert.strictEqual(CoreTypecheck.checkObject(value, clazz), value);
+      }
+
+      test({},                       Object);
+      test({ a: 10, b: 20, c: 30, }, Object);
+      test([1, 2, 3],                Object);
+      test(new Set(),                Object);
+      test(new Boolean(false),       Object);
+      test(() => 914,                Object);
+
+      test([],        Array);
+      test(['blort'], Array);
+
+      test(new Boolean(false), Boolean);
+      test(new Number(123),    Number);
+      test(new Set(),          Set);
+
+      test(() => 914,                  Function);
+      test(function () { return 37; }, Function);
+    });
+
+    it('rejects objects of the wrong class', () => {
+      function test(value, clazz) {
+        assertThrowsInfo(
+          () => { CoreTypecheck.checkObject(value, clazz); },
+          'bad_value',
+          [inspect(value), `class ${clazz.name}`]);
+      }
+
+      test({},        Boolean);
+      test([],        Number);
+      test(new Set(), Array);
+    });
+
+    it('rejects non-objects', () => {
+      function test(value, clazz) {
+        assertThrowsInfo(
+          () => { CoreTypecheck.checkObject(value, clazz); },
+          'bad_value',
+          [inspect(value), `class ${clazz.name}`]);
+      }
+
+      test(null,      Object);
+      test(undefined, Number);
+      test(false,     Boolean);
+      test(123,       Number);
+      test('blort',   Set);
     });
   });
 

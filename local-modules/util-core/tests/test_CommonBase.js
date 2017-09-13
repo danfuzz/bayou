@@ -22,7 +22,7 @@ class CommonBaseSubclass extends CommonBase {
   }
 }
 
-describe('util-common/CommonBase', () => {
+describe('util-core/CommonBase', () => {
   describe('mixInto(class)', () => {
     it('should add its properties to the supplied class', () => {
       assert.notProperty(NearlyEmptyClass, 'coerce');
@@ -39,6 +39,7 @@ describe('util-common/CommonBase', () => {
       const subclass = new CommonBaseSubclass();
 
       assert.strictEqual(CommonBase.check(base), base);
+      assert.strictEqual(CommonBase.check(subclass), subclass);
       assert.strictEqual(CommonBaseSubclass.check(subclass), subclass);
     });
 

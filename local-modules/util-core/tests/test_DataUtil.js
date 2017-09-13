@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { DataUtil } from 'util-core';
+import { DataUtil, Functor } from 'util-core';
 
 describe('util-core/DataUtil', () => {
   describe('deepFreeze()', () => {
@@ -106,6 +106,35 @@ describe('util-core/DataUtil', () => {
       assert.deepEqual(popsicle, orig);
     });
 
+    it('should work on functors with freezable arguments', () => {
+      function test(...args) {
+        const ftor = new Functor(...args);
+        const popsicle = DataUtil.deepFreeze(ftor);
+        assert.deepEqual(ftor, popsicle);
+        assert.notStrictEqual(ftor, popsicle);
+      }
+
+      // All these cases have at least one non-frozen argument, because
+      // otherwise the functor would already be deep-frozen. That situation is
+      // checked in the next test.
+      test('blort', []);
+      test('blort', 'foo', ['bar']);
+      test('blort', new Functor('x', [1, 2, 3]), [4, 5, 6]);
+    });
+
+    it('should work on already-deep-frozen functors', () => {
+      function test(...args) {
+        const ftor = new Functor(...args);
+        const popsicle = DataUtil.deepFreeze(ftor);
+        assert.strictEqual(ftor, popsicle);
+      }
+
+      test('blort');
+      test('blort', 1);
+      test('blort', 'foo', Object.freeze(['bar']));
+      test('blort', new Functor('x', 1, 2, 3), 'four');
+    });
+
     it('should fail if given a function or a composite that contains same', () => {
       function test(value) {
         assert.throws(() => { DataUtil.deepFreeze(value); });
@@ -166,6 +195,11 @@ describe('util-core/DataUtil', () => {
       test(Object.freeze({}));
       test(Object.freeze({ a: 10, b: 20 }));
       test(Object.freeze({ a: 10, b: Object.freeze({ c: 30 }) }));
+
+      test(new Functor('x'));
+      test(new Functor('x', 1));
+      test(new Functor('x', Object.freeze([1, 2, 3])));
+      test(new Functor('x', new Functor('y', 914, 37)));
     });
   });
 
@@ -193,6 +227,10 @@ describe('util-core/DataUtil', () => {
 
     test(Object.freeze({ a: {} }));
     test(Object.freeze({ a: Object.freeze({ b: {} }) }));
+
+    test(new Functor('x', []));
+    test(new Functor('x', 1, 2, 3, []));
+    test(new Functor('x', new Functor('y', [])));
   });
 
   it('should return `false` for non-simple objects or composites with same', () => {
@@ -214,6 +252,8 @@ describe('util-core/DataUtil', () => {
     test(Object.freeze({ a: synthetic }));
     test(Object.freeze({ a: Object.freeze({ b: instance }) }));
     test(Object.freeze({ a: Object.freeze([1, 2, 3, synthetic]) }));
+    test(new Functor('x', instance));
+    test(new Functor('x', Object.freeze([synthetic])));
   });
 
   it('should return `false` for functions, generators and composites containing same', () => {

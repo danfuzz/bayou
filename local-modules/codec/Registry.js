@@ -44,6 +44,7 @@ export default class Registry extends CommonBase {
 
     // Register all the special codecs.
     this.registerCodec(SpecialCodecs.ARRAY);
+    this.registerCodec(SpecialCodecs.FUNCTOR);
     this.registerCodec(SpecialCodecs.SIMPLE_OBJECT);
     this.registerCodec(SpecialCodecs.selfRepresentative('boolean'));
     this.registerCodec(SpecialCodecs.selfRepresentative('null'));

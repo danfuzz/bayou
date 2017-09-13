@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TObject } from 'typecheck';
-import { Errors, InfoError } from 'util-core';
+import CoreTypecheck from './CoreTypecheck';
+import Errors from './Errors';
 
 /**
  * Base class which provides a couple conveniences beyond what baseline
@@ -45,7 +45,7 @@ export default class CommonBase {
   static check(value) {
     // **Note:** In the context of static methods, `this` refers to the class
     // that was called upon.
-    return TObject.check(value, this);
+    return CoreTypecheck.checkObject(value, this);
   }
 
   /**
@@ -179,7 +179,3 @@ export default class CommonBase {
     throw Errors.wtf('Must override.');
   }
 }
-
-// Mix this class into `InfoError`. We do it here to avoid a circular
-// dependency. See also class header comment in `InfoError`.
-CommonBase.mixInto(InfoError);

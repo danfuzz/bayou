@@ -4,7 +4,6 @@
 
 import ColorSelector from './ColorSelector';
 import ColorUtil from './ColorUtil';
-import CommonBase from './CommonBase';
 import DeferredLoader from './DeferredLoader';
 import FrozenBuffer from './FrozenBuffer';
 import IterableUtil from './IterableUtil';
@@ -18,7 +17,6 @@ import WebsocketCodes from './WebsocketCodes';
 export {
   ColorSelector,
   ColorUtil,
-  CommonBase,
   DeferredLoader,
   FrozenBuffer,
   IterableUtil,

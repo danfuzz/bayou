@@ -5,7 +5,7 @@
 import util from 'util';
 
 import { TInt } from 'typecheck';
-import { CommonBase, InfoError } from 'util-common';
+import { CommonBase, Functor, InfoError } from 'util-common';
 
 import CodableError from './CodableError';
 
@@ -114,10 +114,10 @@ export default class Response extends CommonBase {
     } else if (error instanceof InfoError) {
       // Adopt the functor of the error. Lose the cause (if any), exact class
       // identity, and stack.
-      return new CodableError(error.name, ...(error.args));
+      return new CodableError(error.info);
     } else if (error instanceof Error) {
       // Adopt the message. Lose the rest of the info.
-      return new CodableError('general_error', error.message);
+      return new CodableError(new Functor('general_error', error.message));
     }
 
     const message = (typeof error === 'string')

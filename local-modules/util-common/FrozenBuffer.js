@@ -7,9 +7,7 @@
 import crypto from 'crypto';
 
 import { TBuffer, TInt } from 'typecheck';
-import { Errors } from 'util-core';
-
-import CommonBase from './CommonBase';
+import { CommonBase, Errors } from 'util-core';
 
 /** {string} Node's name for the hashing algorithm to use. */
 const NODE_HASH_NAME = 'sha256';
