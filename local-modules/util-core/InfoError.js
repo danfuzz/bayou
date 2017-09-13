@@ -70,7 +70,7 @@ export default class InfoError extends Error {
    * set `[a-zA-Z_0-9]` and a non-numeric first character.
    *
    * @param {Error|string} firstArg _Either_ the causal `Error` or the detail
-   *   schema name
+   *   schema name.
    * @param {...*} args Additional arguments, as described above.
    */
   constructor(firstArg, ...args) {

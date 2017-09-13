@@ -5,9 +5,19 @@
 import CoreTypecheck from './CoreTypecheck';
 import DataUtil from './DataUtil';
 import Errors from './Errors';
+import Functor from './Functor';
 import InfoError from './InfoError';
 import ObjectUtil from './ObjectUtil';
 import URL from './URL';
 import UtilityClass from './UtilityClass';
 
-export { CoreTypecheck, DataUtil, Errors, InfoError, ObjectUtil, URL, UtilityClass };
+export {
+  CoreTypecheck,
+  DataUtil,
+  Errors,
+  Functor,
+  InfoError,
+  ObjectUtil,
+  URL,
+  UtilityClass
+};
