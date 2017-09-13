@@ -2,9 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ObjectUtil } from 'util-core';
-
-import CommonBase from './CommonBase';
+import { CommonBase, ObjectUtil } from 'util-core';
 
 /**
  * Base class for singletons (classes for which there is ever but a single

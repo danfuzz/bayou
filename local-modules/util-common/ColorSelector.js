@@ -4,6 +4,8 @@
 
 import ColorUtil from './ColorUtil';
 
+import { CommonBase } from 'util-core';
+
 /**
  * Generator of an unending progression of colors. The original
  * task for which it was created was to make background colors for chat bubbles
@@ -18,7 +20,7 @@ import ColorUtil from './ColorUtil';
  * The V component of each color is 87.5% which puts all of the colors in the
  * pastel range.
  */
-export default class ColorSelector {
+export default class ColorSelector extends CommonBase {
   /**
    * Constructs a new ColorSelector object.
    *
@@ -29,6 +31,8 @@ export default class ColorSelector {
    *   on each iteration.
    */
   constructor(seed = 0, stride = 53) {
+    super();
+
     /**
      * {number} The current hue angle in degrees; the H component of an HSL
      * color.
