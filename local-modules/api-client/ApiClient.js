@@ -6,7 +6,7 @@ import { BaseKey, ConnectionError, Message, Response } from 'api-common';
 import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
-import { InfoError, WebsocketCodes } from 'util-common';
+import { Functor, InfoError, WebsocketCodes } from 'util-common';
 
 import TargetMap from './TargetMap';
 
@@ -349,8 +349,8 @@ export default class ApiClient {
     const id = this._nextId;
     this._nextId++;
 
-    const payloadObj = new Message(id, target, name, args);
-    const payload = Codec.theOne.encodeJson(payloadObj);
+    const payloadObj = new Message(id, target, new Functor(name, ...args));
+    const payload    = Codec.theOne.encodeJson(payloadObj);
 
     switch (wsState) {
       case WebSocket.CONNECTING: {

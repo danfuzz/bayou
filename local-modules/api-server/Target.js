@@ -89,7 +89,8 @@ export default class Target {
    * Synchronously performs a method call on the target object, returning the
    * result or (directly) throwing an error.
    *
-   * @param {Functor} payload Functor containing the method name and arguments.
+   * @param {Functor} payload The name of the method to call and the arguments
+   *   to call it with.
    * @returns {*} The result of calling. Because `undefined` isn't used across
    *   the API, this method returns `null` if the original method returned
    *   `undefined`.
