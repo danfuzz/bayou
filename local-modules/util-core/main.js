@@ -12,6 +12,13 @@ import ObjectUtil from './ObjectUtil';
 import URL from './URL';
 import UtilityClass from './UtilityClass';
 
+// Mix this class into `Functor` and `InfoError`. We do these here to avoid
+// circular dependencies: `CommonBase` uses `Errors` which uses `InfoError`
+// which uses `Functor`. `Functor` and `InfoError` both want to get the
+// `CommonBase` methods.
+CommonBase.mixInto(Functor);
+CommonBase.mixInto(InfoError);
+
 export {
   CommonBase,
   CoreTypecheck,

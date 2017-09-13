@@ -4,7 +4,6 @@
 
 import CoreTypecheck from './CoreTypecheck';
 import Errors from './Errors';
-import InfoError from './InfoError';
 
 /**
  * Base class which provides a couple conveniences beyond what baseline
@@ -180,7 +179,3 @@ export default class CommonBase {
     throw Errors.wtf('Must override.');
   }
 }
-
-// Mix this class into `InfoError`. We do it here to avoid a circular
-// dependency. See also class header comment in `InfoError`.
-CommonBase.mixInto(InfoError);

@@ -4,6 +4,7 @@
 
 import util from 'util';
 
+//import CommonBase from './CommonBase';
 import CoreTypecheck from './CoreTypecheck';
 
 /**
@@ -13,6 +14,11 @@ import CoreTypecheck from './CoreTypecheck';
  *
  * When rendered as a string, instances of this class look like function calls,
  * e.g., `someName(1, 2, 'foo')`.
+ *
+ * **Note:** This class mixes in `CommonBase`, so that it gets the static
+ * `check()` method and friends. However, because `CommonBase` uses this class,
+ * we can't just mix it in here (as this class is the one that gets initialized
+ * first). Instead, this happens during module initialization.
  */
 export default class Functor {
   /**

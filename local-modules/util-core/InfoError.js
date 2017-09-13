@@ -21,7 +21,7 @@ import DataUtil from './DataUtil';
  * **Note:** This class mixes in `CommonBase`, so that it gets the static
  * `check()` method and friends. However, because `CommonBase` uses this class,
  * we can't just mix it in here (as this class is the one that gets initialized
- * first). Instead, `CommonBase` does that during _its_ initialization.
+ * first). Instead, this happens during module initialization.
  */
 export default class InfoError extends Error {
   /**
