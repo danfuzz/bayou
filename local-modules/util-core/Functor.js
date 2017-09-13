@@ -54,6 +54,22 @@ export default class Functor {
   }
 
   /**
+   * Same as calling the custom inspector function via its symbol-bound method.
+   *
+   * _This_ method exists because, as of this writing, the browser polyfill for
+   * `util.inspect` doesn't find `util.inspect.custom` methods. **TODO:**
+   * Occasionally check to see if this workaround is still needed, and remove it
+   * if it is finally unnecessary.
+   *
+   * @param {Int} depth Current inspection depth.
+   * @param {object} opts Inspection options.
+   * @returns {string} The inspection string form of this instance.
+   */
+  inspect(depth, opts) {
+    return this[util.inspect.custom](depth, opts);
+  }
+
+  /**
    * Custom inspector function, as called by `util.inspect`.
    *
    * @param {Int} depth Current inspection depth.
