@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import util from 'util';
+import { inspect } from 'util';
 
 import { TInt } from 'typecheck';
 import { CommonBase, Functor, InfoError } from 'util-common';
@@ -122,7 +122,7 @@ export default class Response extends CommonBase {
 
     const message = (typeof error === 'string')
       ? error
-      : util.inspect(error);
+      : inspect(error, { breakLength: Infinity });
 
     return new CodableError('general_error', message);
   }

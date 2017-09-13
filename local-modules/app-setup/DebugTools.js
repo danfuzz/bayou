@@ -4,7 +4,7 @@
 
 import camelCase from 'camel-case';
 import express from 'express';
-import util from 'util';
+import { inspect } from 'util';
 
 import { Codec } from 'codec';
 import { AuthorId, DocumentId } from 'doc-common';
@@ -306,7 +306,7 @@ export default class DebugTools {
       // connection because we should only be running code in this file at all
       // if the product is running in a dev (not production) configuration.
       log.error(error);
-      text += util.inspect(error);
+      text += inspect(error);
     }
 
     res

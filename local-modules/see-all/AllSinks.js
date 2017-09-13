@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import util from 'util';
+import { inspect } from 'util';
 
 import { Singleton } from 'util-common';
 
@@ -68,7 +68,7 @@ export default class AllSinks extends Singleton {
       // while logging to `console`), we die with an error here so that it is
       // reasonably blatant that something needs to be fixed during application
       // bootstrap.
-      const details = util.inspect(args);
+      const details = inspect(args);
       throw new Error(`Overly early log call: ${details}`);
     }
 
