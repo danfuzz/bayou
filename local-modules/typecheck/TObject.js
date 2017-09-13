@@ -2,14 +2,16 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Errors, ObjectUtil, UtilityClass } from 'util-core';
+import { CoreTypecheck, Errors, ObjectUtil, UtilityClass } from 'util-core';
 
 /**
  * Type checker for type `Object`.
  */
 export default class TObject extends UtilityClass {
   /**
-   * Checks a value of type `Object`.
+   * Checks that a value is of type `Object`, and is optionally an instance of
+   * a particular class. `null` is _not_ considered an object by this check.
+   * Functions _are_ considered objects by this check.
    *
    * @param {*} value Value to check.
    * @param {object|null} [clazz = null] Class (constructor) that `value` must
@@ -17,13 +19,9 @@ export default class TObject extends UtilityClass {
    * @returns {object} `value`.
    */
   static check(value, clazz = null) {
-    if (typeof value !== 'object') {
-      throw Errors.bad_value(value, Object);
-    } else if ((clazz !== null) && !(value instanceof clazz)) {
-      throw Errors.bad_value(value, `class ${clazz.name}`);
-    }
-
-    return value;
+    // This is defined in `CoreTypecheck` so that it can be used by `util-core`
+    // without introducing a circular dependency on this module.
+    return CoreTypecheck.checkObject(value, clazz);
   }
 
   /**
