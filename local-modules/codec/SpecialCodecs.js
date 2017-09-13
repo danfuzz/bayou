@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { UtilityClass } from 'util-common';
+import { Functor, UtilityClass } from 'util-common';
 
 import ItemCodec from './ItemCodec';
 
@@ -72,6 +72,38 @@ export default class SpecialCodecs extends UtilityClass {
     }
 
     return true;
+  }
+
+  /** {ItemCodec} Codec used for coding functors. */
+  static get FUNCTOR() {
+    return new ItemCodec('f', Functor, null,
+      this._functorEncode, this._functorDecode);
+  }
+
+  /**
+   * Decodes a functor.
+   *
+   * @param {array<*>} payload Construction payload as previously produced by
+   *   `_functorEncode()`.
+   * @param {function} subDecode Function to call to decode component values
+   *   inside `payload`, as needed.
+   * @returns {Functor} Decoded functor.
+   */
+  static _functorDecode(payload, subDecode) {
+    const decodedArgs = payload.map(subDecode);
+    return new Functor(...decodedArgs);
+  }
+
+  /**
+   * Encodes a functor.
+   *
+   * @param {Functor} value Functor to encode.
+   * @param {function} subEncode Function to call to encode component values
+   *   inside `value`, as needed.
+   * @returns {array<*>} Encoded form.
+   */
+  static _functorEncode(value, subEncode) {
+    return [value.name, ...(value.args)].map(subEncode);
   }
 
   /** {ItemCodec} Codec used for coding simple objects. */
