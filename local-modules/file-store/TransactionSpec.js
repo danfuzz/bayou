@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase, Errors } from 'util-common';
 
 import FileOp from './FileOp';
 
@@ -28,15 +28,15 @@ export default class TransactionSpec extends CommonBase {
     // Validate the op combo restrictions.
 
     if (this.opsWithName('timeout').length > 1) {
-      throw new Error('Too many `timeout` operations.');
+      throw Errors.bad_use('Too many `timeout` operations.');
     }
 
     if (this.opsWithName('revNum').length > 1) {
-      throw new Error('Too many `revNum` operations.');
+      throw Errors.bad_use('Too many `revNum` operations.');
     }
 
     if (this.hasWaitOps() && (this.hasPullOps() || this.hasPushOps())) {
-      throw new Error('Cannot mix wait operations with reads and modifications.');
+      throw Errors.bad_use('Cannot mix wait operations with reads and modifications.');
     }
   }
 

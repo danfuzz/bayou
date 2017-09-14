@@ -4,7 +4,7 @@
 
 import { LocalFileStore } from 'file-store-local';
 import { Hooks as HooksCommon } from 'hooks-common';
-import { Singleton } from 'util-common';
+import { Errors, Singleton } from 'util-common';
 
 import BearerTokens from './BearerTokens';
 
@@ -39,7 +39,7 @@ export default class Hooks extends Singleton {
       return `http://${host}`;
     }
 
-    throw new Error('Missing `host` header on request.');
+    throw Errors.bad_data('Missing `host` header on request.');
   }
 
   /**

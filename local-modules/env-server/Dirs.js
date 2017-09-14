@@ -5,7 +5,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { Singleton } from 'util-common';
+import { Errors, Singleton } from 'util-common';
 
 
 /**
@@ -90,7 +90,7 @@ export default class Dirs extends Singleton {
 
     for (;;) {
       if ((dir === '.') || (dir === '/')) {
-        throw new Error(`Unable to determine base product directory, starting from: ${__dirname}`);
+        throw Errors.bad_use(`Unable to determine base product directory, starting from: ${__dirname}`);
       }
 
       try {
@@ -119,7 +119,7 @@ export default class Dirs extends Singleton {
       if (stat.isDirectory()) {
         return;
       } else {
-        throw new Error(`Expected a directory: ${dirPath}`);
+        throw Errors.bad_use(`Expected a directory: ${dirPath}`);
       }
     } catch (e) {
       // Presumably not found. Ignore the exception, fall through, and attempt
