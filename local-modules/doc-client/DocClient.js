@@ -358,7 +358,7 @@ export default class DocClient extends StateMachine {
 
     try {
       const info = await infoPromise;
-      this._log.info(`Session info: ${info}`);
+      this._log.info('Session info:', info);
     } catch (e) {
       this.q_apiError('getLogInfo', e);
       return;
@@ -475,7 +475,7 @@ export default class DocClient extends StateMachine {
    *   document revision.
    */
   _handle_idle_gotDeltaAfter(baseDoc, result) {
-    this._log.detail(`Delta from server: ${result.revNum}`);
+    this._log.detail('Delta from server:', result.revNum);
 
     // We only take action if the result's base (what `delta` is with regard to)
     // is the current `_doc`. If that _isn't_ the case, then what we have here
@@ -648,7 +648,7 @@ export default class DocClient extends StateMachine {
     const dCorrection = correctedChange.delta;
     const vResultNum  = correctedChange.revNum;
 
-    this._log.detail(`Correction from server: r${vResultNum}`, dCorrection);
+    this._log.detail('Correction from server:', correctedChange);
 
     if (dCorrection.isEmpty()) {
       // There is no change from what we expected. This means that no other

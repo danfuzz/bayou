@@ -335,7 +335,7 @@ export default class BodyControl extends CommonBase {
       : this._composeRevisions(base.contents,     base.revNum + 1, revNum + 1);
     const result = new BodySnapshot(revNum, await contents);
 
-    this._log.detail(`Made snapshot for revision ${revNum}.`);
+    this._log.detail('Made snapshot for revision:', revNum);
 
     this._snapshots.set(revNum, result);
     return result;
@@ -434,7 +434,7 @@ export default class BodyControl extends CommonBase {
 
     // In a valid doc, the loop body won't end up executing at all.
     for (const storagePath of transactionResult.data.keys()) {
-      this._log.info(`Corrupt document: Extra change at path: ${storagePath}`);
+      this._log.info('Corrupt document. Extra change at path:', storagePath);
       return BodyControl.STATUS_ERROR;
     }
 
@@ -485,7 +485,7 @@ export default class BodyControl extends CommonBase {
       if ((e instanceof InfoError) && (e.name === 'path_not_empty')) {
         // This happens if and when we lose an append race, which will regularly
         // occur if there are simultaneous editors.
-        this._log.info(`Lost append race for revision ${revNum}.`);
+        this._log.info('Lost append race for revision:', revNum);
         return null;
       } else {
         // No other errors are expected, so just rethrow.

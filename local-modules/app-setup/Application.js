@@ -77,7 +77,7 @@ export default class Application {
   start() {
     const port = Hooks.theOne.listenPort;
     this._app.listen(port, () => {
-      log.info(`Now listening on port ${port}.`);
+      log.info('Listening on port:', port);
     });
   }
 

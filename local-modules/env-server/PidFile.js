@@ -35,7 +35,7 @@ export default class PidFile extends Singleton {
     // Write the PID file.
     fs.writeFileSync(this._pidPath, `${process.pid}\n`);
 
-    log.info(`PID: ${process.pid}`);
+    log.info('PID:', process.pid);
   }
 
   /**
@@ -45,7 +45,7 @@ export default class PidFile extends Singleton {
    * @param {string} id Signal ID.
    */
   _handleSignal(id) {
-    log.info(`Received signal: ${id}`);
+    log.info('Received signal:', id);
     this._erasePid();
     process.kill(process.pid, id);
   }
@@ -56,7 +56,7 @@ export default class PidFile extends Singleton {
   _erasePid() {
     try {
       fs.unlinkSync(this._pidPath);
-      log.info(`Removed PID file.`);
+      log.info('Removed PID file.');
     } catch (e) {
       // Ignore errors. We're about to exit anyway.
     }

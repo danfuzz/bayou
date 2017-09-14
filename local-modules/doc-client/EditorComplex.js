@@ -173,7 +173,7 @@ export default class EditorComplex extends CommonBase {
    * @param {SplitKey} sessionKey New session key to use.
    */
   connectNewSession(sessionKey) {
-    log.info(`Hooking up new session: ${sessionKey}`);
+    log.info('Hooking up new session:', sessionKey);
     this._initSession(sessionKey, false);
   }
 
