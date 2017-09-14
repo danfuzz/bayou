@@ -22,6 +22,8 @@
 // polluting the global namespace.
 (function () {
   if (!(window.BAYOU_KEY && window.BAYOU_NODE)) {
+    // **Note:** This code is run too early to be able to use `util-common`'s
+    // error facilities.
     throw new Error('Missing configuration.');
   }
 

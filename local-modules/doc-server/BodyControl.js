@@ -162,7 +162,7 @@ export default class BodyControl extends CommonBase {
       if (retryTotalMsec >= MAX_APPEND_TIME_MSEC) {
         // ...except if these attempts have taken wayyyy too long. If we land
         // here, it's probably due to a bug (but not a total given).
-        throw new Error('Too many failed attempts in `applyDelta()`.');
+        throw UtilErrors.aborted('Too many failed attempts in `applyDelta()`.');
       }
 
       this._log.info(`Sleeping ${retryDelayMsec} msec.`);

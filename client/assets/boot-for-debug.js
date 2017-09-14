@@ -54,7 +54,8 @@ window.addEventListener('load', () => {
   // This is the node that is IDed specifically in `DebugTools._handle_edit`.
   var editorNode = document.querySelector('#debugEditor');
   if (!editorNode) {
-    // Indicates a bug either here or in `DebugTools`.
+    // Indicates a bug either here or in `DebugTools`. **Note:** This code is
+    // run too early to be able to use `util-common`'s error facilities.
     throw new Error('Could not find editor node!');
   }
 

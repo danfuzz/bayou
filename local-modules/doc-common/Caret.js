@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt, TIterable, TString } from 'typecheck';
-import { ColorUtil, CommonBase } from 'util-common';
+import { ColorUtil, CommonBase, Errors } from 'util-common';
 
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';
@@ -71,14 +71,14 @@ export default class Caret extends CommonBase {
     const checker = CARET_FIELDS.get(name);
 
     if (!checker) {
-      throw new Error(`Invalid caret field name: ${name}`);
+      throw Errors.bad_value(name, 'caret field name');
     }
 
     try {
       checker(value);
     } catch (e) {
       // Higher-fidelity error.
-      throw new Error(`Invalid value for caret field ${name}: ${value}`);
+      throw Errors.bad_value(value, `${name} field value`);
     }
 
     return value;
@@ -123,7 +123,7 @@ export default class Caret extends CommonBase {
     }
 
     if (DEFAULT && (newFields.size !== DEFAULT._fields.size)) {
-      throw new Error(`Missing field.`);
+      throw Errors.bad_use(`Missing field.`);
     }
 
     Object.freeze(this);
@@ -191,9 +191,9 @@ export default class Caret extends CommonBase {
 
     for (const op of delta.ops) {
       if (op.name !== CaretOp.UPDATE_FIELD) {
-        throw new Error(`Invalid operation name: ${op.name}`);
+        throw Errors.bad_use(`Invalid operation name: ${op.name}`);
       } else if (op.arg('sessionId') !== this.sessionId) {
-        throw new Error('Mismatched session ID.');
+        throw Errors.bad_use('Mismatched session ID.');
       }
 
       fields.set(op.arg('key'), op.arg('value'));
@@ -224,7 +224,7 @@ export default class Caret extends CommonBase {
     const sessionId = this.sessionId;
 
     if (sessionId !== newerCaret.sessionId) {
-      throw new Error('Cannot `diff` carets with mismatched `sessionId`.');
+      throw Errors.bad_use('Cannot `diff` carets with mismatched `sessionId`.');
     }
 
     return this.diffFields(newerCaret, sessionId);
