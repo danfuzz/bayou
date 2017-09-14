@@ -81,7 +81,7 @@ export default class TargetMap extends CommonBase {
     if (result) {
       // We have already initiated authorization on this target. Return the
       // promise from the original initiation.
-      log.info(`Already authing: ${id}`);
+      log.info('Already authing:', id);
       return result;
     }
 
@@ -93,17 +93,17 @@ export default class TargetMap extends CommonBase {
         const challenge = await meta.makeChallenge(id);
         const response  = key.challengeResponseFor(challenge);
 
-        log.info(`Got challenge: ${id} ${challenge}`);
+        log.info('Got challenge:', id, challenge);
         await meta.authWithChallengeResponse(challenge, response);
 
         // Successful auth.
-        log.info(`Authed: ${id}`);
+        log.info('Authed:', id);
         this._pendingAuths.delete(id); // It's no longer pending.
         return this._addTarget(id);
       } catch (error) {
         // Trouble along the way. Clean out the pending auth, and propagate the
         // error.
-        log.error(`Auth failed: ${id}`);
+        log.error('Auth failed:', id);
         this._pendingAuths.delete(id);
         throw error;
       }

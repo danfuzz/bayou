@@ -158,7 +158,7 @@ export default class Application {
       }
       for (const t of rootTokens) {
         context.addEvergreen(t, this._rootAccess);
-        log.info(`Accept root: ${t}`);
+        log.info('Accept root:', t);
       }
       this._rootTokens = rootTokens;
     }

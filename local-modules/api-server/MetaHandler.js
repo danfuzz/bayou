@@ -69,7 +69,7 @@ export default class MetaHandler {
     // except without auth control.
     this._connection.context.removeControl(id);
 
-    this._log.info(`Authed challenge: ${id} ${challenge}`);
+    this._log.info('Authed challenge:', id, challenge);
   }
 
   /**
@@ -120,14 +120,14 @@ export default class MetaHandler {
       if (this._activeChallenges.delete(challenge)) {
         // `delete` returns `true` to indicate that the value was found. In this
         // case, it means that it expired.
-        this._log.info(`Challenge expired: ${id} ${challenge}`);
+        this._log.info('Challenge expired:', id, challenge);
       }
     })();
 
     // **Note:** It's probably okay to log the expected response, but may be
     // worth thinking a bit more about. (Attention: Security professionals!)
-    this._log.info(`New challenge: ${id} ${challenge}`);
-    this._log.info(`  => ${response}`);
+    this._log.info('New challenge:', id, challenge);
+    this._log.info('  => ', response);
 
     return challenge;
   }

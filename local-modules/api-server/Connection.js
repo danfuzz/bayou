@@ -88,7 +88,7 @@ export default class Connection extends CommonBase {
     // to this instance/connection.
     this._context.addEvergreen('meta', new MetaHandler(this));
 
-    this._log.info(`Open via <${this._baseUrl}>.`);
+    this._log.info('Open via:', this._baseUrl);
   }
 
   /** {string} The base URL. */
