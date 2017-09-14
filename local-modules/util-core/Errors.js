@@ -27,19 +27,12 @@ export default class Errors extends UtilityClass {
    *
    * @param {Error} [cause] Error which caused this problem. **Note:** It is
    *   optional. If the first argument isn't an `Error`, then it is taken to be
-   *   the `desc`.
-   * @param {string} desc Description of the problem.
+   *   the `message`.
+   * @param {string} message Description of the problem.
    * @returns {InfoError} An appropriately-constructed error.
    */
-  static aborted(cause, desc) {
-    if (cause instanceof Error) {
-      CoreTypecheck.checkString(desc);
-      return new InfoError(cause, 'aborted', desc);
-    } else {
-      desc = cause; // Remap the arguments, per header doc.
-      CoreTypecheck.checkString(desc);
-      return new InfoError('aborted', desc);
-    }
+  static aborted(cause, message) {
+    return Errors._make('aborted', cause, message);
   }
 
   /**
@@ -53,13 +46,14 @@ export default class Errors extends UtilityClass {
    * to report that a class's user has made an inappropriate method call (even
    * if the call is correct with regards to the types of arguments).
    *
-   * @param {string} desc Description of the problem.
+   * @param {Error} [cause] Error which caused this problem. **Note:** It is
+   *   optional. If the first argument isn't an `Error`, then it is taken to be
+   *   the `message`.
+   * @param {string} message Description of the problem.
    * @returns {InfoError} An appropriately-constructed error.
    */
-  static bad_use(desc) {
-    CoreTypecheck.checkString(desc);
-
-    return new InfoError('bad_use', desc);
+  static bad_use(cause, message) {
+    return Errors._make('bad_use', cause, message);
   }
 
   /**
@@ -114,13 +108,33 @@ export default class Errors extends UtilityClass {
    * To be clear, this is _not_ an appropriate error to use to report "possible
    * but still unusual and noteworthy" problems such as network failure.
    *
-   * @param {*} message Human-oriented message with some indication of what
-   *   went wrong.
+   * @param {Error} [cause] Error which caused this problem. **Note:** It is
+   *   optional. If the first argument isn't an `Error`, then it is taken to be
+   *   the `message`.
+   * @param {string} message Description of the problem.
    * @returns {InfoError} An appropriately-constructed error.
    */
-  static wtf(message) {
-    CoreTypecheck.checkString(message);
+  static wtf(cause, message) {
+    return Errors._make('wtf', cause, message);
+  }
 
-    return new InfoError('wtf', message);
+  /**
+   * Helper which constructs an error given either `(message)` or `(cause,
+   * message)`.
+   *
+   * @param {string} name Error name.
+   * @param {...*} args Originally-passed arguments.
+   * @returns {InfoError} An appropriately-constructed error.
+   */
+  static _make(name, ...args) {
+    if (args[0] instanceof Error) {
+      const [cause, message] = args;
+      CoreTypecheck.checkString(message);
+      return new InfoError(cause, name, message);
+    } else {
+      const [message] = args;
+      CoreTypecheck.checkString(message);
+      return new InfoError(name, message);
+    }
   }
 }
