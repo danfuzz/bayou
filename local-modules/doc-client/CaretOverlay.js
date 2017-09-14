@@ -250,7 +250,7 @@ export default class CaretOverlay {
       // The remaining elements of `oldSessions` are sessions which have gone
       // away.
       for (const s of oldSessions) {
-        docSession.log.info(`Session ended: ${s}`);
+        docSession.log.info('Session ended:', s);
         this._endSession(s);
       }
 

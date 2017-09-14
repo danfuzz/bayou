@@ -213,7 +213,7 @@ export default class DevMode extends Singleton {
 
     if (toPath === null) {
       // This file has no mapping into the target directory.
-      log.info(`Unmapped: ${fromPath}`);
+      log.info('Unmapped:', fromPath);
       return null;
     }
 
@@ -227,15 +227,15 @@ export default class DevMode extends Singleton {
 
     if (bestFromPath === null) {
       // The file was deleted.
-      log.info(`Removed: ${logPath}`);
+      log.info('Removed:', logPath);
     } else if (fromPath === bestFromPath) {
       // The file that changed is the "most overlaid" one. That is, if `foo.js`
       // has an overlay, and we just noticed that the base (non-overlay) version
       // of `foo.js` changed, then we _don't_ report it as changed.
-      log.info(`Updated: ${logPath}`);
+      log.info('Updated:', logPath);
     } else {
       // It's an underlay file.
-      log.info(`Ignored: ${logPath}`);
+      log.info('Ignored:',  logPath);
       return null;
     }
 
@@ -274,7 +274,7 @@ export default class DevMode extends Singleton {
         // which is no big deal. This has been observed to happen when
         // development is done semi-remotely, e.g. `rsync`ing files from a
         // laptop to a machine in a dev-production environment.
-        log.info(`Already removed: ${toPath}`);
+        log.info('Already removed:', toPath);
       }
     } else {
       // The source file changed.

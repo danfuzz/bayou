@@ -4,7 +4,6 @@
 
 import { inspect } from 'util';
 
-//import CommonBase from './CommonBase';
 import CoreTypecheck from './CoreTypecheck';
 
 /**

@@ -298,7 +298,7 @@ export default class CaretControl extends CommonBase {
       this._oldSnapshots.shift();
     }
 
-    this._log.info(`Updated carets: Caret revision ${newRevNum}.`);
+    this._log.info('Updated caret revision:', newRevNum);
 
     return newRevNum;
   }

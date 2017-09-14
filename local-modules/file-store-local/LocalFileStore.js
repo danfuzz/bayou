@@ -37,7 +37,7 @@ export default class LocalFileStore extends BaseFileStore {
      */
     this._ensuredDir = false;
 
-    log.info(`File storage directory: ${this._dir}`);
+    log.info('File storage directory:', this._dir);
   }
 
   /**

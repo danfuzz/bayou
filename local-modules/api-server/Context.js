@@ -212,7 +212,7 @@ export default class Context extends CommonBase {
     // <https://tc39.github.io/ecma262/#sec-runtime-semantics-forin-div-ofheadevaluation-tdznames-expr-iterationkind>.
     for (const [key, value] of map) {
       if (value.wasIdleAsOf(idleLimit)) {
-        log.info(`Removed: ${key}`);
+        log.info('Removed:', key);
         map.delete(key);
       }
     }

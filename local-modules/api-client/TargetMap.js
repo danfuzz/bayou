@@ -2,9 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TString } from 'typecheck';
-import { Errors } from 'util-common';
+import { TFunction, TString } from 'typecheck';
+import { CommonBase, Errors } from 'util-common';
 
+import ApiClient from './ApiClient';
 import TargetHandler from './TargetHandler';
 
 /**
@@ -13,15 +14,25 @@ import TargetHandler from './TargetHandler';
  * auth requirements (or, to the extent that auth requirements were ever
  * present, that they have already been fulfilled).
  */
-export default class TargetMap {
+export default class TargetMap extends CommonBase {
   /**
    * Constructs an instance.
    *
    * @param {ApiClient} apiClient The client to forward calls to.
+   * @param {function} sendMessage Function to call to send a message. This is
+   *   bound to the private `_send()` method on `apiClient`. (This arrangement
+   *   is done, instead of making a public `send()` method on `ApiClient`, to
+   *   make it clear that the right way to send messages is via the exposed
+   *   proxies.)
    */
-  constructor(apiClient) {
+  constructor(apiClient, sendMessage) {
+    super();
+
     /** {ApiClient} The client to forward calls to. */
-    this._apiClient = apiClient;
+    this._apiClient = ApiClient.check(apiClient);
+
+    /** {function} Function to call to send a message. */
+    this._sendMessage = TFunction.checkCallable(sendMessage);
 
     /**
      * {Map<string, TargetHandler>} The targets being provided, as a map from ID
@@ -55,10 +66,9 @@ export default class TargetMap {
    *   complete.
    */
   async authorizeTarget(key) {
-    const id = key.id;
-    const api = this._apiClient;
-    const log = api.log;
-    const meta = api.meta;
+    const id   = key.id;
+    const log  = this._apiClient.log;
+    const meta = this._apiClient.meta;
     let result;
 
     result = this._targets.get(id);
@@ -71,7 +81,7 @@ export default class TargetMap {
     if (result) {
       // We have already initiated authorization on this target. Return the
       // promise from the original initiation.
-      log.info(`Already authing: ${id}`);
+      log.info('Already authing:', id);
       return result;
     }
 
@@ -81,19 +91,19 @@ export default class TargetMap {
     result = (async () => {
       try {
         const challenge = await meta.makeChallenge(id);
-        const response = key.challengeResponseFor(challenge);
+        const response  = key.challengeResponseFor(challenge);
 
-        log.info(`Got challenge: ${id} ${challenge}`);
+        log.info('Got challenge:', id, challenge);
         await meta.authWithChallengeResponse(challenge, response);
 
         // Successful auth.
-        log.info(`Authed: ${id}`);
+        log.info('Authed:', id);
         this._pendingAuths.delete(id); // It's no longer pending.
         return this._addTarget(id);
       } catch (error) {
         // Trouble along the way. Clean out the pending auth, and propagate the
         // error.
-        log.error(`Auth failed: ${id}`);
+        log.error('Auth failed:', id);
         this._pendingAuths.delete(id);
         throw error;
       }
@@ -137,7 +147,7 @@ export default class TargetMap {
    * as well as when a connection gets reset.
    */
   reset() {
-    this._targets = new Map();
+    this._targets      = new Map();
     this._pendingAuths = new Map();
 
     // Set up the standard initial map contents.
@@ -156,7 +166,7 @@ export default class TargetMap {
       throw Errors.bad_use(`Already bound: ${id}`);
     }
 
-    const result = TargetHandler.makeProxy(this._apiClient, id);
+    const result = TargetHandler.makeProxy(this._apiClient, this._sendMessage, id);
     this._targets.set(id, result);
     return result;
   }

@@ -420,15 +420,15 @@ export default class Transactor extends CommonBase {
   _logAboutWaiting(message) {
     if (this._waitSatisfied) {
       if (this._waitCount === 1) {
-        this._log.info(`No waiting required. ${message}`);
+        this._log.info('No waiting required.', message);
       } else {
-        this._log.info(`Done waiting. ${message}`);
+        this._log.info('Done waiting.', message);
       }
     } else {
       if (this._waitCount === 1) {
-        this._log.info(`Waiting. ${message}`);
+        this._log.info('Waiting.', message);
       } else {
-        this._log.info(`Wait #${this._waitCount}. ${message}`);
+        this._log.info(`Wait #${this._waitCount}.`, message);
       }
     }
   }

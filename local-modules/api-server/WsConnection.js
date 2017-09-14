@@ -38,9 +38,9 @@ export default class WsConnection extends Connection {
    */
   _handleClose(code, msg) {
     const codeStr = WebsocketCodes.close(code);
-    const msgStr = msg ? `: ${msg}` : '';
+    const msgArgs = msg ? ['/', msg] : [];
 
-    this._log.info(`Close: ${codeStr}${msgStr}`);
+    this._log.info('Close:', codeStr, ...msgArgs);
     this.close();
   }
 

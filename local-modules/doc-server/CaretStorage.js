@@ -148,7 +148,7 @@ export default class CaretStorage extends CommonBase {
         const newSnapshot = snapshot.withoutSession(sessionId);
         if (newSnapshot !== snapshot) {
           snapshot = newSnapshot;
-          this._log.detail(`Integrated caret removal: ${sessionId}`);
+          this._log.detail('Integrated caret removal:', sessionId);
         }
       }
     }
@@ -158,7 +158,7 @@ export default class CaretStorage extends CommonBase {
       const newSnapshot = snapshot.withCaret(carets.caretForSession(sessionId));
       if (newSnapshot !== snapshot) {
         snapshot = newSnapshot;
-        this._log.detail(`Integrated caret update: ${sessionId}`);
+        this._log.detail('Integrated caret update:', sessionId);
       }
     }
 
@@ -247,7 +247,7 @@ export default class CaretStorage extends CommonBase {
 
     for (const sessionId of currentSessionIds) {
       if (!this._carets.hasSession(sessionId)) {
-        this._log.info(`New remote caret: ${sessionId}`);
+        this._log.info('New remote caret:', sessionId);
         ops.push(fc.op_readPath(Paths.forCaret(sessionId)));
       }
     }
@@ -279,7 +279,7 @@ export default class CaretStorage extends CommonBase {
 
     for (const sessionId of this._remoteSessionIds()) {
       if (!currentSessionIds.has(sessionId)) {
-        this._log.info(`Remote caret has gone away: ${sessionId}`);
+        this._log.info('Remote caret has gone away:', sessionId);
         carets = carets.withoutSession(sessionId);
       }
     }
@@ -299,7 +299,7 @@ export default class CaretStorage extends CommonBase {
     let caretData;
 
     for (const p of paths) {
-      this._log.info(`Remote caret changed: ${Paths.sessionFromCaretPath(p)}`);
+      this._log.info('Remote caret changed:', Paths.sessionFromCaretPath(p));
       ops.push(fc.op_readPath(p));
     }
 
@@ -369,14 +369,14 @@ export default class CaretStorage extends CommonBase {
       }
 
       if (caret) {
-        this._log.detail(`Updating caret: ${sessionId}`);
+        this._log.detail('Updating caret:', sessionId);
         ops.push(fc.op_writePath(path, caret));
         if (!storedCaret) {
           // First time this session is being stored.
           setUpdates.push(sessionId);
         }
       } else {
-        this._log.detail(`Deleting caret: ${sessionId}`);
+        this._log.detail('Deleting caret:', sessionId);
         ops.push(fc.op_deletePath(path));
         setUpdates.push(sessionId);
       }

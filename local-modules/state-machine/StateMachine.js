@@ -168,14 +168,14 @@ export default class StateMachine {
           return;
         }
 
-        this._log.detail(`New state: ${name}`);
+        this._log.detail('New state:', name);
         this._stateName = name;
 
         // Trigger the awaiter for the state, if any.
         const condition = this._stateConditions.get(name);
         if (condition) {
           condition.onOff();
-          this._log.detail(`Triggered awaiter for state: ${name}`);
+          this._log.detail('Triggered awaiter for state:', name);
 
           // Remove the condition, because in general, these kinds of state
           // awaiters are used only ephemerally.
@@ -185,10 +185,10 @@ export default class StateMachine {
 
       this[`when_${name}`] = () => {
         if (this._stateName === name) {
-          this._log.detail(`Immediately-resolved awaiter for state: ${name}`);
+          this._log.detail('Immediately-resolved awaiter for state:', name);
           return Promise.resolve(true);
         } else {
-          this._log.detail(`Awaiter added for state: ${name}`);
+          this._log.detail('Awaiter added for state:', name);
           let condition = this._stateConditions.get(name);
           if (!condition) {
             condition = new Condition();
@@ -247,7 +247,7 @@ export default class StateMachine {
     // Log the state name and event details (if not squelched), and occasional
     // count of how many events have been handled so far.
 
-    log.detail(`In state: ${stateName}`);
+    log.detail('In state:', stateName);
     log.detail('Dispatching:', event);
 
     // Dispatch the event. In case of exception, enqueue an `error` event.

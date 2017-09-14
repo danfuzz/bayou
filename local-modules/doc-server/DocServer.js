@@ -139,7 +139,7 @@ export default class DocServer extends Singleton {
   _complexReaper(docId) {
     return () => {
       this._complexes.delete(docId);
-      log.info(`Reaped idle file complex: ${docId}`);
+      log.info('Reaped idle file complex:', docId);
     };
   }
 
@@ -197,7 +197,7 @@ export default class DocServer extends Singleton {
         log.error(`Trouble reaping session ${sessionId}.`, e);
       }
 
-      log.info(`Reaped idle session: ${sessionId}`);
+      log.info('Reaped idle session:', sessionId);
     };
   }
 }
