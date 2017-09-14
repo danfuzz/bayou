@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import { TString } from 'typecheck';
 import { CommonBase, Errors, URL } from 'util-common';
 
@@ -101,6 +103,34 @@ export default class BaseKey extends CommonBase {
    */
   _impl_challengeResponseFor(challenge) {
     return this._mustOverride(challenge);
+  }
+
+  /**
+   * Same as calling the custom inspector function via its symbol-bound method.
+   *
+   * _This_ method exists because, as of this writing, the browser polyfill for
+   * `util.inspect()` doesn't find `util.inspect.custom` methods. **TODO:**
+   * Occasionally check to see if this workaround is still needed, and remove it
+   * if it is finally unnecessary.
+   *
+   * @param {Int} depth Current inspection depth.
+   * @param {object} opts Inspection options.
+   * @returns {string} The inspection string form of this instance.
+   */
+  inspect(depth, opts) {
+    return this[inspect.custom](depth, opts);
+  }
+
+  /**
+   * Custom inspector function, as called by `util.inspect()`. This is done to
+   * prevent inadvertent logging of the secret values.
+   *
+   * @param {Int} depth_unused Current inspection depth.
+   * @param {object} opts_unused Inspection options.
+   * @returns {string} The inspection string form of this instance.
+   */
+  [inspect.custom](depth_unused, opts_unused) {
+    return this.toString();
   }
 
   /**
