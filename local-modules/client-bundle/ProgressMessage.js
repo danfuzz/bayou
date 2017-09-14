@@ -12,14 +12,21 @@ export default class ProgressMessage {
    * @param {Logger} log The logger to use.
    */
   constructor(log) {
-    /** Logger. */
+    /** {Logger} Logger. */
     this._log = log;
 
     /**
-     * Timestamp of the most recent progress message. Used to limit frequency of
-     * messages so as not to spew too much.
+     * {Int} Timestamp of the most recent progress message. Used to limit
+     * frequency of messages so as not to spew too much.
      */
     this._lastTime = 0;
+
+    /**
+     * {number} Last fraction reported. Used to ensure that progress is reported
+     * as actually progressing, because Webpack sometimes ends up reporting a
+     * trend in the wrong direction.
+     */
+    this._lastFrac = 0;
   }
 
   /**
@@ -50,7 +57,30 @@ export default class ProgressMessage {
       }
     }
 
+    if (frac < 0.9999) {
+      const minFrac = this._lastFrac;
+      if (frac > minFrac) {
+        // Conservatively estimate that we're only 90% of the way from the last
+        // `frac` to this one, to start with, because Webpack will sometimes
+        // increase its time estimate, which then makes `frac` move in the wrong
+        // direction. With this wiggle room, we can show a little progress even
+        // as Webpack flails a bit (achieved in the `else` clause immediately
+        // below).
+        const maxFrac = frac;
+        frac = (maxFrac - minFrac) * 0.90 + minFrac;
+      } else {
+        // Webpack flailed, and `frac` is going the wrong way (or is stagnant).
+        // Just bump it up a little bit from the last one we reported, unless
+        // that would make it look done.
+        frac = minFrac;
+        if (frac < 0.98) {
+          frac += 0.01;
+        }
+      }
+    }
+
     this._lastTime = now;
+    this._lastFrac = frac;
     this._log.info(`${Math.floor(frac * 100)}% -- ${msg}`);
   }
 
