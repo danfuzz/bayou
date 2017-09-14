@@ -126,7 +126,7 @@ export default class LocalFile extends BaseFile {
     /** {Logger} Logger specific to this file's ID. */
     this._log = log.withPrefix(`[${fileId}]`);
 
-    this._log.info(`Path: ${this._storageDir}`);
+    this._log.info('Path:', this._storageDir);
   }
 
   /**
@@ -316,10 +316,10 @@ export default class LocalFile extends BaseFile {
 
       for (const [storageId, value] of updatedStorage) {
         if (value === null) {
-          this._log.detail(`Transaction deleted: ${storageId}`);
+          this._log.detail('Transaction deleted:', storageId);
           this._storage.delete(storageId);
         } else {
-          this._log.detail(`Transaction wrote: ${storageId}`);
+          this._log.detail('Transaction wrote:', storageId);
           this._storage.set(storageId, value);
         }
 
@@ -406,7 +406,7 @@ export default class LocalFile extends BaseFile {
       for (let i = 0; i < paths.length; i++) {
         const storagePath = paths[i];
         storage.set(storagePath, FrozenBuffer.coerce(bufs[i]));
-        this._log.info(`Read: ${storagePath}`);
+        this._log.info('Read:', storagePath);
       }
 
       paths    = [];
@@ -435,7 +435,7 @@ export default class LocalFile extends BaseFile {
     try {
       const revNumBuffer = storage.get(REVISION_NUMBER_ID);
       revNum = this._revNumCodec.decodeJsonBuffer(revNumBuffer);
-      this._log.info(`Starting revision number: ${revNum}`);
+      this._log.info('Starting revision number:', revNum);
     } catch (e) {
       // In case of failure, use the size of the storage map as a good enough
       // value for `revNum`. This case probably won't happen in practice except
@@ -443,7 +443,7 @@ export default class LocalFile extends BaseFile {
       // be fine in that the primary required guarantee is monotonic increase
       // within any given process (and not really across processes).
       revNum = storage.size;
-      this._log.info(`Starting with "fake" revision number: ${revNum}`);
+      this._log.info('Starting with "fake" revision number:', revNum);
     }
 
     // Only set the instance variables after all the reading is done and the
@@ -582,10 +582,10 @@ export default class LocalFile extends BaseFile {
       const fsPath = this._fsPathForStorageId(storageId);
       if (data === null) {
         afsResults.push(afs.unlink(fsPath));
-        this._log.info(`Deleted: ${storageId}`);
+        this._log.info('Deleted:', storageId);
       } else {
         afsResults.push(afs.writeFile(fsPath, data.toBuffer()));
-        this._log.info(`Wrote: ${storageId}`);
+        this._log.info('Wrote:', storageId);
       }
 
       if (afsResults.length >= MAX_PARALLEL_FS_CALLS) {
@@ -600,7 +600,7 @@ export default class LocalFile extends BaseFile {
       this._log.detail('Completed FS ops.');
     }
 
-    this._log.info(`Finished writing storage. Revision number: ${revNum}`);
+    this._log.info('Finished writing storage. Revision number:', revNum);
     return true;
   }
 
