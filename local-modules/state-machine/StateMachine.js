@@ -5,7 +5,7 @@
 import { Condition } from 'promise-util';
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
-import { PropertyIterable } from 'util-common';
+import { Functor, PropertyIterable } from 'util-common';
 
 /**
  * Lightweight state machine framework. This allows a subclass to define
@@ -79,7 +79,7 @@ export default class StateMachine {
     this._stateName = null;
 
     /**
-     * {array<{name, args}>} Queue of events in need of dispatch. Becomes `null`
+     * {array<Functor>} Queue of events in need of dispatch. Becomes `null`
      * when the state machine is getting aborted.
      */
     this._eventQueue = [];
@@ -132,14 +132,13 @@ export default class StateMachine {
    * associated name and the given arguments.
    */
   _addEnqueueMethods() {
-    const events = Object.keys(this._eventValidators);
+    const eventNames = Object.keys(this._eventValidators);
 
-    for (const name of events) {
+    for (const name of eventNames) {
       const validator = this._eventValidators[name];
 
       this[`q_${name}`] = (...args) => {
-        const validArgs = validator.apply(this, args);
-        args = validArgs || args;
+        const validArgs = validator.apply(this, args) || args;
 
         if ((validArgs !== undefined) && !Array.isArray(validArgs)) {
           throw new Error(`Invalid validator result (non-array) for \`${name}\`.`);
@@ -149,8 +148,9 @@ export default class StateMachine {
           throw new Error('Cannot queue events on aborted instance.');
         }
 
-        this._log.detail('Enqueued:', name, args);
-        this._eventQueue.push({ name, args });
+        const event = new Functor(name, ...args);
+        this._log.detail('Enqueued:', event);
+        this._eventQueue.push(event);
         this._anyEventPending.value = true;
       };
     }
@@ -353,25 +353,24 @@ export default class StateMachine {
   /**
    * Dispatches the given event.
    *
-   * @param {object} event The event.
+   * @param {Functor} event The event.
    */
   async _dispatchEvent(event) {
-    const { name, args } = event;
-    const stateName      = this._stateName;
-    const log            = this._log;
+    const stateName = this._stateName;
+    const log       = this._log;
 
     // Log the state name and event details (if not squelched), and occasional
     // count of how many events have been handled so far.
 
     log.detail(`In state: ${stateName}`);
-    log.detail('Dispatching:', name, args);
+    log.detail('Dispatching:', event);
 
     // Dispatch the event. In case of exception, enqueue an `error` event.
     // (The default handler for the event will log an error and stop the queue.)
     try {
-      await this._handlers[stateName][name].apply(this, args);
+      await this._handlers[stateName][event.name].apply(this, event.args);
     } catch (e) {
-      if (name === 'error') {
+      if (event.name === 'error') {
         // We got an exception in an error event handler. This is the signal to
         // abandon ship.
         log.error('Aborting state machine.', e);
@@ -384,7 +383,7 @@ export default class StateMachine {
       }
     }
 
-    log.detail('Done dispatching:', name, args);
+    log.detail('Done dispatching:', event);
 
     this._eventCount++;
     if ((this._eventCount % 25) === 0) {
