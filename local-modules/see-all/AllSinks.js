@@ -4,7 +4,7 @@
 
 import { inspect } from 'util';
 
-import { Singleton } from 'util-common';
+import { Errors, Singleton } from 'util-common';
 
 /**
  * Maximum amount of time, in msec, between successive logs that inidicate an
@@ -69,7 +69,7 @@ export default class AllSinks extends Singleton {
       // reasonably blatant that something needs to be fixed during application
       // bootstrap.
       const details = inspect(args);
-      throw new Error(`Overly early log call: ${details}`);
+      throw Errors.bad_use(`Overly early log call: ${details}`);
     }
 
     const nowMsec = this._nowMsec();

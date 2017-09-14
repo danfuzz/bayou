@@ -4,7 +4,7 @@
 
 import fs from 'fs';
 
-import { UtilityClass } from 'util-common';
+import { Errors, UtilityClass } from 'util-common';
 
 /**
  * Property file reader. This accepts a syntax which is similar to traditional
@@ -90,7 +90,7 @@ export default class Proppy extends UtilityClass {
             const key = t.value;
             if (keys.has(key)) {
               // Already have this key.
-              throw new Error(`Duplicate key: \`${key}\``);
+              throw Errors.bad_data(`Duplicate key: \`${key}\``);
             }
             keys.add(key);
             result[key] = value.value;
@@ -102,7 +102,7 @@ export default class Proppy extends UtilityClass {
 
         default: {
           const value = t.value ? ` \`${t.value}\`` : '';
-          throw new Error(`Syntax error at \`${t.type}\` token${value}.`);
+          throw Errors.bad_data(`Syntax error at \`${t.type}\` token${value}.`);
         }
       }
     }
@@ -170,7 +170,7 @@ export default class Proppy extends UtilityClass {
       const context = (source.length > 10)
         ? `${source.slice(0, 10)}...`
         : source;
-      throw new Error(`Invalid character at: \`${context}\``);
+      throw Errors.bad_data(`Invalid character at: \`${context}\``);
     }
 
     // We treat the string as always ending with a newline.
@@ -215,7 +215,7 @@ export default class Proppy extends UtilityClass {
           case '\'': { replacement = '\''; break; }
           case '"':  { replacement = '"';  break; }
           default: {
-            throw new Error(`Invalid escape character in quoted string: \`${source[0]}\``);
+            throw Errors.bad_data(`Invalid escape character in quoted string: \`${source[0]}\``);
           }
         }
 
@@ -223,7 +223,7 @@ export default class Proppy extends UtilityClass {
         continue;
       }
 
-      throw new Error(`Invalid character in quoted string: \`${source[0]}\``);
+      throw Errors.bad_data(`Invalid character in quoted string: \`${source[0]}\``);
     }
 
     return result.join('');
