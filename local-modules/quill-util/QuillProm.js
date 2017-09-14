@@ -6,12 +6,16 @@ import Quill from 'quill';
 
 import { FrozenDelta } from 'doc-common';
 import { TObject } from 'typecheck';
+import { CommonBase } from 'util-common';
 
 import QuillEvent from './QuillEvent';
 
 /**
  * Extension of the `Quill` class that provides a promise-based interface to
  * get at events.
+ *
+ * **Note:** This class mixes in `CommonBase` to get the usual typechecking
+ * functionality.
  */
 export default class QuillProm extends Quill {
   /**
@@ -101,3 +105,5 @@ export default class QuillProm extends Quill {
     return this._currentEvent;
   }
 }
+
+CommonBase.mixInto(QuillProm);

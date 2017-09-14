@@ -4,7 +4,7 @@
 
 import { BaseKey } from 'api-common';
 import { TObject, TString } from 'typecheck';
-import { Functor } from 'util-common';
+import { CommonBase, Errors, Functor } from 'util-common';
 
 import Schema from './Schema';
 
@@ -20,7 +20,7 @@ const EVERGREEN = 'evergreen';
  * "uncontrolled" (that is, be generally available without additional permission
  * checks).
  */
-export default class Target {
+export default class Target extends CommonBase {
   /**
    * Constructs an instance which wraps the given object.
    *
@@ -33,6 +33,8 @@ export default class Target {
    * @param {Schema|null} schema `target`'s schema, if already known.
    */
   constructor(nameOrKey, target, schema = null) {
+    super();
+
     /**
      * {BaseKey|null} The access key, or `null` if this is an uncontrolled
      * target.
@@ -103,7 +105,7 @@ export default class Target {
 
     if (schema.getDescriptor(name) !== 'method') {
       // Not in the schema, or not a method.
-      throw new Error(`No such method: \`${this._name}.${name}\``);
+      throw Errors.bad_use(`No such method: \`${this._name}.${name}\``);
     }
 
     // Listed in the schema as a method. So it exists, is public, is in

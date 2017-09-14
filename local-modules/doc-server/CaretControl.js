@@ -5,7 +5,7 @@
 import { Caret, CaretSnapshot, RevisionNumber, Timestamp } from 'doc-common';
 import { Condition } from 'promise-util';
 import { TInt, TString } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase, InfoError } from 'util-common';
 
 import CaretColor from './CaretColor';
 import CaretStorage from './CaretStorage';
@@ -110,6 +110,8 @@ export default class CaretControl extends CommonBase {
    * @param {Int|null} [revNum = null] Which caret revision to get. If passed as
    *   `null`, indicates the latest (most recent) revision.
    * @returns {CaretSnapshot} Snapshot of all the active carets.
+   * @throws {InfoError} Error of the form `revision_not_available(revNum)` if
+   *   the indicated caret revision isn't available.
    */
   async snapshot(revNum = null) {
     this._removeInactiveSessions();
@@ -121,7 +123,7 @@ export default class CaretControl extends CommonBase {
     if (revNum === null) {
       revNum = currentRevNum;
     } else if ((revNum < minRevNum) || (revNum > currentRevNum)) {
-      throw new Error(`Revision not available: ${revNum}`);
+      throw new InfoError('revision_not_available', revNum);
     }
 
     return this._oldSnapshots[revNum - minRevNum];

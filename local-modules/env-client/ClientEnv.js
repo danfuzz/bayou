@@ -4,7 +4,7 @@
 
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
-import { UtilityClass } from 'util-common';
+import { Errors, UtilityClass } from 'util-common';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('env-client');
@@ -27,7 +27,7 @@ export default class ClientEnv extends UtilityClass {
     TObject.check(window, Window);
 
     if (ClientEnv._window) {
-      throw new Error('Already initialized.');
+      throw Errors.bad_use('Already initialized.');
     }
 
     this._window = window;
@@ -39,7 +39,7 @@ export default class ClientEnv extends UtilityClass {
     const result = this._window;
 
     if (!result) {
-      throw new Error('Not initialized.');
+      throw Errors.bad_use('Not initialized.');
     }
 
     return result;

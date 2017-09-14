@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
-import { CommonBase, URL } from 'util-common';
+import { CommonBase, Errors, URL } from 'util-common';
 
 /**
  * Base class for access keys. An access key consists of information for
@@ -57,7 +57,7 @@ export default class BaseKey extends CommonBase {
    */
   get baseUrl() {
     if (this._url === '*') {
-      throw new Error('Cannot get base of wildcard URL.');
+      throw Errors.bad_use('Cannot get base of wildcard URL.');
     }
 
     return new URL(this._url).origin;

@@ -8,7 +8,7 @@ import { Delay } from 'promise-util';
 import { QuillEvent } from 'quill-util';
 import { TString } from 'typecheck';
 import { StateMachine } from 'state-machine';
-import { InfoError } from 'util-common';
+import { Errors, InfoError } from 'util-common';
 
 import DocSession from './DocSession';
 
@@ -384,7 +384,7 @@ export default class DocClient extends StateMachine {
     if (firstChange.source !== CLIENT_SOURCE) {
       // We expected the change to be the one we generated from the doc
       // update (above), but the `source` we got speaks otherwise.
-      throw new Error('Shouldn\'t happen: Bad `source` for initial change.');
+      throw Errors.wtf('Bad `source` for initial change.');
     }
 
     // With the Quill setup verified, remember the change as our local "head"
@@ -571,7 +571,7 @@ export default class DocClient extends StateMachine {
       default: {
         // As of this writing, there are no other Quill events, so it's weird
         // and unexpected if we land here.
-        throw new Error(`Weird Quill event: ${event.eventName}`);
+        throw Errors.wtf(`Weird Quill event: ${event.eventName}`);
       }
     }
   }
@@ -821,7 +821,7 @@ export default class DocClient extends StateMachine {
         && needQuillUpdate) {
       // It is unsafe to apply the delta as-is, because we know that Quill's
       // revision of the document has diverged.
-      throw new Error('Cannot apply delta due to revision skew.');
+      throw Errors.bad_use('Cannot apply delta due to revision skew.');
     }
 
     // Update the local document.

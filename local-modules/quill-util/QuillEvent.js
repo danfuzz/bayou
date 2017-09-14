@@ -4,6 +4,7 @@
 
 import { FrozenDelta } from 'doc-common';
 import { TInt, TObject, TString } from 'typecheck';
+import { Errors } from 'util-common';
 
 import BaseEvent from './BaseEvent';
 
@@ -84,7 +85,7 @@ export default class QuillEvent extends BaseEvent {
       }
 
       default: {
-        throw new Error(`Unrecognized event name: ${eventName}`);
+        throw Errors.bad_value(eventName, 'Quill event name');
       }
     }
 
@@ -116,7 +117,7 @@ export default class QuillEvent extends BaseEvent {
     this._gotEvent = Object.freeze((key, ...args) => {
       if (key !== accessKey) {
         // See note toward the top of this function.
-        throw new Error('Invalid access.');
+        throw Errors.bad_use('Invalid access.');
       }
 
       nextNow = new QuillEvent(key, ...args);

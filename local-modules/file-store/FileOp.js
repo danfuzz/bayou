@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt, TString } from 'typecheck';
-import { CommonBase, DataUtil, FrozenBuffer } from 'util-common';
+import { CommonBase, DataUtil, Errors, FrozenBuffer } from 'util-common';
 
 import StoragePath from './StoragePath';
 
@@ -420,7 +420,7 @@ export default class FileOp extends CommonBase {
         return category;
       }
       default: {
-        throw new Error(`Invalid category: ${category}`);
+        throw Errors.bad_value(category, 'category string');
       }
     }
   }
@@ -437,7 +437,7 @@ export default class FileOp extends CommonBase {
    */
   constructor(constructorKey, category, name, args) {
     if (constructorKey !== KEY) {
-      throw new Error('Constructor is private.');
+      throw Errors.bad_use('Constructor is private.');
     }
 
     super();
@@ -476,7 +476,7 @@ export default class FileOp extends CommonBase {
     const result = this._args.get(name);
 
     if (result === undefined) {
-      throw new Error(`No such argument: ${name}`);
+      throw Errors.bad_use(`No such argument: ${name}`);
     }
 
     return result;
@@ -491,7 +491,7 @@ export default class FileOp extends CommonBase {
     for (const [category, opName, ...argInfo] of OPERATIONS) {
       const constructorMethod = (...args) => {
         if (args.length !== argInfo.length) {
-          throw new Error(`Wrong argument count for op constructor. Expected ${argInfo.length}.`);
+          throw Errors.bad_use(`Wrong argument count for op constructor. Expected ${argInfo.length}.`);
         }
 
         const argMap = new Map();
@@ -525,7 +525,7 @@ export default class FileOp extends CommonBase {
             }
             default: {
               // Indicates a bug in this class.
-              throw new Error(`Weird \`type\` constant: ${type}`);
+              throw Errors.wtf(`Weird \`type\` constant: ${type}`);
             }
           }
 

@@ -5,7 +5,7 @@
 import { inspect } from 'util';
 
 import { TInt } from 'typecheck';
-import { CommonBase, Functor, InfoError } from 'util-common';
+import { CommonBase, Errors, Functor, InfoError } from 'util-common';
 
 import CodableError from './CodableError';
 
@@ -34,7 +34,7 @@ export default class Response extends CommonBase {
 
     // Validate the `error`/`result` combo.
     if ((result !== null) && (error !== null)) {
-      throw new Error('`result` and `error` cannot both be non-`null`.');
+      throw Errors.bad_use('`result` and `error` cannot both be non-`null`.');
     }
 
     /** {Int} Message ID. */

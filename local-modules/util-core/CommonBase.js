@@ -77,7 +77,7 @@ export default class CommonBase {
       if (!(result instanceof this)) {
         // There is a bug in the subclass, as it should never return any other
         // kind of value.
-        throw Errors.wtf('Invalid `_impl_coerce()` implementation.');
+        throw Errors.bad_use('Invalid `_impl_coerce()` implementation.');
       }
       return result;
     }
@@ -128,7 +128,7 @@ export default class CommonBase {
       if ((result !== null) && !(result instanceof this)) {
         // There is a bug in the subclass, as it should never return any other
         // kind of value.
-        throw Errors.wtf('Invalid `_impl_coerceOrNull()` implementation.');
+        throw Errors.bad_use('Invalid `_impl_coerceOrNull()` implementation.');
       }
       return result;
     }

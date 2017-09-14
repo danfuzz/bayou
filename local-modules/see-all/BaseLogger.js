@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CommonBase } from 'util-common';
+import { CommonBase, Errors } from 'util-common';
 
 import LogStream from './LogStream';
 
@@ -83,8 +83,8 @@ export default class BaseLogger extends CommonBase {
    * @param {...*} message Message to log. See `log()` for details.
    */
   wtf(...message) {
-    this.error('Shouldn\'t happen:', ...message);
-    throw new Error('shouldnt_happen');
+    this.error('wtf', ...message);
+    throw Errors.wtf(message.join(' '));
   }
 
   /**
@@ -174,7 +174,7 @@ export default class BaseLogger extends CommonBase {
    */
   static _validateLevel(level) {
     if (!LEVELS.has(level)) {
-      throw new Error(`Invalid severity level: ${level}`);
+      throw Errors.bad_value(level, 'logging severity level');
     }
   }
 }

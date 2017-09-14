@@ -5,6 +5,7 @@
 import { BaseKey } from 'api-common';
 import { Hooks } from 'hooks-server';
 import { TString } from 'typecheck';
+import { Errors } from 'util-common';
 
 /**
  * Bearer token, which is a kind of key which conflates ID and secret.
@@ -49,7 +50,7 @@ export default class BearerToken extends BaseKey {
     if (!Hooks.theOne.bearerTokens.isToken(secretToken)) {
       // We don't include any real detail in the error message, as that might
       // inadvertently leak a secret into the logs.
-      throw new Error('Invalid `secretToken` string.');
+      throw Errors.bad_value('(hidden)', 'secret token');
     }
 
     super('*', Hooks.theOne.bearerTokens.tokenId(secretToken));
