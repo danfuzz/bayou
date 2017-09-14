@@ -64,7 +64,7 @@ export default class Logger extends BaseLogger {
    * @param {string} level Severity level. Guaranteed to be a valid level.
    * @param {array} message Array of arguments to log.
    */
-  _logImpl(level, message) {
+  _impl_log(level, message) {
     if ((level === 'detail') && !this._enableDetail) {
       // This tag isn't listed as one to log at the `detail` level. (That is,
       // it's being squelched.)
