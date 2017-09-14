@@ -55,10 +55,10 @@ export default class TargetMap {
    *   complete.
    */
   async authorizeTarget(key) {
-    const id = key.id;
-    const api = this._apiClient;
-    const log = api.log;
-    const meta = api.meta;
+    const id        = key.id;
+    const apiClient = this._apiClient;
+    const log       = apiClient.log;
+    const meta      = apiClient.meta;
     let result;
 
     result = this._targets.get(id);
@@ -81,7 +81,7 @@ export default class TargetMap {
     result = (async () => {
       try {
         const challenge = await meta.makeChallenge(id);
-        const response = key.challengeResponseFor(challenge);
+        const response  = key.challengeResponseFor(challenge);
 
         log.info(`Got challenge: ${id} ${challenge}`);
         await meta.authWithChallengeResponse(challenge, response);
@@ -137,7 +137,7 @@ export default class TargetMap {
    * as well as when a connection gets reset.
    */
   reset() {
-    this._targets = new Map();
+    this._targets      = new Map();
     this._pendingAuths = new Map();
 
     // Set up the standard initial map contents.
