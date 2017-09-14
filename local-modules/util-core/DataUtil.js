@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import Errors from './Errors';
 import Functor from './Functor';
 import ObjectUtil from './ObjectUtil';
 import UtilityClass from './UtilityClass';
@@ -70,7 +71,7 @@ export default class DataUtil extends UtilityClass {
               : new Functor(value.name, ...(DataUtil.deepFreeze(args)));
           }
           default: {
-            throw new Error(`Cannot deep-freeze non-data object: ${value}`);
+            throw Errors.bad_value(value, 'data value');
           }
         }
 
@@ -96,7 +97,7 @@ export default class DataUtil extends UtilityClass {
               && !ObjectUtil.hasOwnProperty(prop, 'value')) {
             // **Note:** The `undefined` check just prevents us from having to
             // call `hasOwnProperty()` in the usual case.
-            throw new Error(`Cannot deep-freeze object with synthetic property: ${value}`);
+            throw Errors.bad_value(value, 'data value', 'without synthetic properties');
           }
           const newValue = DataUtil.deepFreeze(oldValue);
           if (oldValue !== newValue) {
@@ -109,7 +110,7 @@ export default class DataUtil extends UtilityClass {
       }
 
       default: {
-        throw new Error(`Cannot deep-freeze non-data value: ${value}`);
+        throw Errors.bad_value(value, 'data value');
       }
     }
   }

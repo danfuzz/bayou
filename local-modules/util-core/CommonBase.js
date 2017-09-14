@@ -176,6 +176,6 @@ export default class CommonBase {
    * @param {...*} args_unused Anything you want, to keep the linter happy.
    */
   static _mustOverride(...args_unused) {
-    throw Errors.wtf('Must override.');
+    throw Errors.bad_use('Subclass must override this method.');
   }
 }
