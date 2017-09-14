@@ -5,7 +5,7 @@
 import { RevisionNumber } from 'doc-common';
 import { StoragePath } from 'file-store';
 import { TString } from 'typecheck';
-import { UtilityClass } from 'util-common';
+import { Errors, UtilityClass } from 'util-common';
 
 /**
  * Utility class that just provides the common `StoragePath` strings used
@@ -96,7 +96,7 @@ export default class Paths extends UtilityClass {
    */
   static sessionFromCaretPath(path) {
     if (!StoragePath.isPrefix(Paths.CARET_SESSION_PREFIX, path)) {
-      throw new Error(`Not a caret path: ${path}`);
+      throw Errors.bad_value(path, 'caret path');
     }
 
     const split = StoragePath.split(path);

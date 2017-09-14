@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
+import { Errors } from 'util-common';
 
 import TargetHandler from './TargetHandler';
 
@@ -112,7 +113,7 @@ export default class TargetMap {
     const result = this.getOrNull(id);
 
     if (!result) {
-      throw new Error(`No such target: ${id}`);
+      throw Errors.bad_use(`No such target: ${id}`);
     }
 
     return result;
@@ -152,7 +153,7 @@ export default class TargetMap {
    */
   _addTarget(id) {
     if (this.getOrNull(id) !== null) {
-      throw new Error(`Already bound: ${id}`);
+      throw Errors.bad_use(`Already bound: ${id}`);
     }
 
     const result = TargetHandler.makeProxy(this._apiClient, id);

@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CommonBase } from 'util-common';
+import { CommonBase, Errors } from 'util-common';
 
 /**
  * Promise-based mutex implementation. This provides _non-reentrant_ mutual
@@ -64,7 +64,7 @@ export default class Mutex extends CommonBase {
     // The return value is the unlock function.
     return () => {
       if (this._lockedBy !== key) {
-        throw new Error('Attempt to unlock by non-owner.');
+        throw Errors.bad_use('Attempt to unlock by non-owner.');
       }
 
       this._lockedBy = null;
