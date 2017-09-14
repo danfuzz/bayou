@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TFunction, TString } from 'typecheck';
+import { Errors } from 'util-common';
 
 /**
  * Proxy handler for deferred loaders.
@@ -40,18 +41,33 @@ class DeferredLoaderHandler {
    */
   get(target_unused, property, receiver_unused) {
     let target = this._target;
+
     if (target === null) {
-      target = this._target = this._loaderFunction();
-      const type = typeof target;
-      if (!((type === 'function') || ((type === 'object') && (target !== null)))) {
-        throw new Error(`Failed to load ${this._label} object.`);
+      // This is the first time we've been asked to get a property.
+      try {
+        target = this._loaderFunction();
+
+        const type = typeof target;
+        if ((target === null) || ((type !== 'object') && (type !== 'function'))) {
+          target = Errors.bad_use(`Loader for ${this._label} object returned an invalid value.`);
+        }
+      } catch (e) {
+        target = Errors.bad_use(e, `Error in loader for ${this._label} object.`);
       }
+
+      this._target = target; // Either the valid value or the error to throw.
     }
 
-    const result = this._target[property];
+    if (target instanceof Error) {
+      // There was trouble getting the target, either immediately above or on
+      // an earlier call.
+      throw target;
+    }
+
+    const result = target[property];
 
     if (result === undefined) {
-      throw new Error(`Missing ${this._label}: ${property}`);
+      throw Errors.bad_use(`Missing property: ${this._label}.${property}`);
     }
 
     return result;
