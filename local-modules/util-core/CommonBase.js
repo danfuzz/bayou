@@ -15,20 +15,29 @@ export default class CommonBase {
   /**
    * Adds the instance and static methods defined on this class to another
    * class, that is, treat this class as a "mixin" and apply it to the given
-   * class.
+   * class. If the given class already defines any of the methods, the original
+   * definitions take precedence.
    *
    * @param {class} clazz Class to mix into.
    */
   static mixInto(clazz) {
-    clazz.check         = this.check;
-    clazz.coerce        = this.coerce;
-    clazz.coerceOrNull  = this.coerceOrNull;
-    clazz._mustOverride = this._mustOverride;
+    for (const k of [
+      'check', 'coerce', 'coerceOrNull', '_impl_coerce', '_impl_coerceOrNull',
+      '_mustOverride'
+    ]) {
+      if (!clazz[k]) {
+        clazz[k] = this[k];
+      }
+    }
 
     const thisProto  = this.prototype;
     const clazzProto = clazz.prototype;
 
-    clazzProto._mustOverride = thisProto._mustOverride;
+    for (const k of ['_mustOverride']) {
+      if (!clazzProto[k]) {
+        clazzProto[k] = thisProto[k];
+      }
+    }
   }
 
   /**
