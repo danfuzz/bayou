@@ -6,7 +6,7 @@ import { BaseKey, ConnectionError, Message, Response } from 'api-common';
 import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
-import { InfoError, WebsocketCodes } from 'util-common';
+import { CommonBase, InfoError, WebsocketCodes } from 'util-common';
 
 import TargetMap from './TargetMap';
 
@@ -19,7 +19,7 @@ const UNKNOWN_CONNECTION_ID = 'id-unknown';
 /**
  * Connection with the server, via a websocket.
  */
-export default class ApiClient {
+export default class ApiClient extends CommonBase {
   /**
    * Constructs an instance. This instance will connect to a websocket at the
    * same domain at the path `/api`. Once this constructor returns, it is safe
@@ -30,6 +30,8 @@ export default class ApiClient {
    * @param {string} url The server origin, as an `http` or `https` URL.
    */
   constructor(url) {
+    super();
+
     /** {string} Base URL for the server. */
     this._baseUrl = ApiClient._getBaseUrl(url);
 
@@ -69,8 +71,11 @@ export default class ApiClient {
      */
     this._pendingMessages = null;
 
-    /** {TargetMap} Map of names to target proxies. */
-    this._targets = new TargetMap(this);
+    /**
+     * {TargetMap} Map of names to target proxies. See {@link
+     * TargetMap#constructor} for details about the second argument.
+     */
+    this._targets = new TargetMap(this, this._send.bind(this));
 
     // Initialize the active connection fields (described above).
     this._resetConnection();
@@ -318,6 +323,10 @@ export default class ApiClient {
 
   /**
    * Sends the given call to the server.
+   *
+   * **Note:** This method is called via a `TargetHandler` instance, which is
+   * in turn called by a proxy object representing an object on the far side of
+   * the connection.
    *
    * @param {string} target Name of the target object.
    * @param {Functor} payload The name of the method to call and the arguments

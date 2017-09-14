@@ -28,24 +28,31 @@ export default class TargetHandler extends CommonBase {
    * Makes a proxy that is handled by an instance of this class.
    *
    * @param {ApiClient} apiClient The client to forward calls to.
+   * @param {function} sendMessage Function to call to send a message. See
+   *   {@link TargetMap#constructor} for an explanation.
    * @param {string} targetId The ID of the target to call on.
    * @returns {Proxy} An appropriately-constructed proxy object.
    */
-  static makeProxy(apiClient, targetId) {
-    return new Proxy(Object.freeze({}), new TargetHandler(apiClient, targetId));
+  static makeProxy(apiClient, sendMessage, targetId) {
+    return new Proxy(Object.freeze({}), new TargetHandler(apiClient, sendMessage, targetId));
   }
 
   /**
    * Constructs an instance.
    *
    * @param {ApiClient} apiClient The client to forward calls to.
+   * @param {function} sendMessage Function to call to send a message. See
+   *   {@link TargetMap#constructor} for an explanation.
    * @param {string} targetId The ID of the target to call on.
    */
-  constructor(apiClient, targetId) {
+  constructor(apiClient, sendMessage, targetId) {
     super();
 
-    /** The client to forward calls to. */
+    /** {ApiClient} The client to forward calls to. */
     this._apiClient = apiClient;
+
+    /** {function} Function to call to send a message. */
+    this._sendMessage = sendMessage;
 
     /** {string} The ID of the target. */
     this._targetId = targetId;
@@ -56,7 +63,7 @@ export default class TargetHandler extends CommonBase {
      */
     this._methods = new Map();
 
-    /** State of readiness, one of `not`, `readying`, or `ready`. */
+    /** {string} State of readiness, one of `not`, `readying`, or `ready`. */
     this._readyState = 'not';
 
     Object.seal(this);
@@ -263,11 +270,11 @@ export default class TargetHandler extends CommonBase {
    * @returns {function} An appropriately-constructed handler.
    */
   _makeMethodHandler(name) {
-    const apiClient = this._apiClient;  // Avoid re-(re-)lookup on every call.
-    const targetId  = this._targetId;   // Likewise.
+    const sendMessage = this._sendMessage;  // Avoid re-(re-)lookup on every call.
+    const targetId    = this._targetId;     // Likewise.
 
     return (...args) => {
-      return apiClient._send(targetId, new Functor(name, ...args));
+      return sendMessage(targetId, new Functor(name, ...args));
     };
   }
 }
