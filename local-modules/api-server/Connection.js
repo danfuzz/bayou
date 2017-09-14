@@ -139,7 +139,7 @@ export default class Connection extends CommonBase {
     const context = this._context;
 
     if (context === null) {
-      throw new Error('Closed.');
+      throw ConnectionError.connection_closed(this._connectionId, 'Connection closed.');
     }
 
     let target = context.getUncontrolledOrNull(idOrToken);
@@ -158,7 +158,7 @@ export default class Connection extends CommonBase {
 
     // We _don't_ include the passed argument, as that might end up revealing
     // secret info.
-    throw new Error('Bad target.');
+    throw Errors.bad_use('Invalid target.');
   }
 
   /**

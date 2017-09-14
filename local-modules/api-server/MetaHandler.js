@@ -4,6 +4,7 @@
 
 import { TString } from 'typecheck';
 import { Delay } from 'promise-util';
+import { Errors } from 'util-common';
 
 /** {Int} How long an unanswered challenge remains active for, in msec. */
 const CHALLENGE_TIMEOUT_MSEC = 5 * 60 * 1000; // Five minutes.
@@ -55,7 +56,7 @@ export default class MetaHandler {
     if (!challengeInfo || (response !== challengeInfo.response)) {
       // **Note:** We don't differentiate reasons for rejection (beyond type
       // checking, above), as that could reveal security-sensitive info.
-      throw new Error('Invalid challenge pair.');
+      throw Errors.bad_use('Invalid challenge pair.');
     }
 
     const id = challengeInfo.id;

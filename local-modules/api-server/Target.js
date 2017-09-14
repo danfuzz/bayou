@@ -4,7 +4,7 @@
 
 import { BaseKey } from 'api-common';
 import { TObject, TString } from 'typecheck';
-import { Functor } from 'util-common';
+import { CommonBase, Functor } from 'util-common';
 
 import Schema from './Schema';
 
@@ -20,7 +20,7 @@ const EVERGREEN = 'evergreen';
  * "uncontrolled" (that is, be generally available without additional permission
  * checks).
  */
-export default class Target {
+export default class Target extends CommonBase {
   /**
    * Constructs an instance which wraps the given object.
    *
@@ -33,6 +33,8 @@ export default class Target {
    * @param {Schema|null} schema `target`'s schema, if already known.
    */
   constructor(nameOrKey, target, schema = null) {
+    super();
+
     /**
      * {BaseKey|null} The access key, or `null` if this is an uncontrolled
      * target.

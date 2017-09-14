@@ -3,8 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Logger } from 'see-all';
-import { TObject, TString } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { TString } from 'typecheck';
+import { CommonBase, Errors } from 'util-common';
 
 import Target from './Target';
 
@@ -71,11 +71,11 @@ export default class Context extends CommonBase {
    * @param {Target} target Target to add.
    */
   addTarget(target) {
-    TObject.check(target, Target);
+    Target.check(target);
     const id = target.id;
 
     if (this._map.get(id) !== undefined) {
-      throw new Error(`Duplicate target: \`${id}\``);
+      throw Errors.bad_use(`Duplicate target: \`${id}\``);
     }
 
     this._map.set(id, target);
@@ -119,7 +119,7 @@ export default class Context extends CommonBase {
     const result = this.getOrNull(id);
 
     if (!result) {
-      throw new Error(`Unknown target: \`${id}\``);
+      throw Errors.bad_use(`Unknown target: \`${id}\``);
     }
 
     return result;
@@ -137,7 +137,7 @@ export default class Context extends CommonBase {
     const result = this.get(id);
 
     if (result.key === null) {
-      throw new Error(`Not a controlled target: \`${id}\``);
+      throw Errors.bad_use(`Not a controlled target: \`${id}\``);
     }
 
     return result;
@@ -168,7 +168,7 @@ export default class Context extends CommonBase {
     const result = this.get(id);
 
     if (result.key !== null) {
-      throw new Error(`Unauthorized target: \`${id}\``);
+      throw Errors.bad_use(`Unauthorized target: \`${id}\``);
     }
 
     return result;
