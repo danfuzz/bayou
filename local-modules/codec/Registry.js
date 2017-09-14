@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CommonBase } from 'util-common';
+import { CommonBase, Errors } from 'util-common';
 
 import ItemCodec from './ItemCodec';
 import SpecialCodecs from './SpecialCodecs';
@@ -78,7 +78,7 @@ export default class Registry extends CommonBase {
     const clazz = codec.clazz;
 
     if (this._tagToCodec.get(tag)) {
-      throw new Error(`Cannot re-register tag \`${tag}\`.`);
+      throw Errors.bad_use(`Cannot re-register tag \`${tag}\`.`);
     }
 
     this._tagToCodec.set(codec.tag, codec);
@@ -111,13 +111,13 @@ export default class Registry extends CommonBase {
     const tag = ItemCodec.tagFromPayload(payload);
 
     if (tag === null) {
-      throw new Error('Invalid payload (no tag).');
+      throw Errors.bad_value(payload, 'encoded payload');
     }
 
     const result = this._tagToCodec.get(tag);
 
     if (!result) {
-      throw new Error(`No codec registered with tag \`${tag}\`.`);
+      throw Errors.bad_use(`No codec registered with tag \`${tag}\`.`);
     }
 
     return result;
@@ -152,21 +152,21 @@ export default class Registry extends CommonBase {
 
     if (!codecs) {
       const name = Registry._nameForError(clazz, valueType);
-      throw new Error(`No codec registered for ${name}.`);
+      throw Errors.bad_use(`No codec registered for ${name}.`);
     }
 
     const applicable = codecs.filter(c => c.canEncode(value));
     switch (applicable.length) {
       case 0: {
         const name = Registry._nameForError(clazz, valueType);
-        throw new Error(`No applicable codec for value of ${name}.`);
+        throw Errors.bad_use(`No applicable codec for value of ${name}.`);
       }
       case 1: {
         return applicable[0];
       }
       default: {
         const name = Registry._nameForError(clazz, valueType);
-        throw new Error(`Multiple applicable codecs for value of ${name}.`);
+        throw Errors.bad_use(`Multiple applicable codecs for value of ${name}.`);
       }
     }
   }

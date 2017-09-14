@@ -4,7 +4,7 @@
 
 import { BaseKey } from 'api-common';
 import { TObject, TString } from 'typecheck';
-import { CommonBase, Functor } from 'util-common';
+import { CommonBase, Errors, Functor } from 'util-common';
 
 import Schema from './Schema';
 
@@ -105,7 +105,7 @@ export default class Target extends CommonBase {
 
     if (schema.getDescriptor(name) !== 'method') {
       // Not in the schema, or not a method.
-      throw new Error(`No such method: \`${this._name}.${name}\``);
+      throw Errors.bad_use(`No such method: \`${this._name}.${name}\``);
     }
 
     // Listed in the schema as a method. So it exists, is public, is in

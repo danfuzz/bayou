@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TArray, TFunction, TString } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase, Errors } from 'util-common';
 
 /**
  * Handler for API-codable items of a particular class, type, or (in general)
@@ -273,7 +273,7 @@ export default class ItemCodec extends CommonBase {
    * Decodes the given arguments into a value which is equivalent to one that
    * was previously encoded into those arguments using this instance.
    *
-   * @param {array<*>} payload Arguments which resulted from an earlier call to
+   * @param {*} payload Arguments which resulted from an earlier call to
    *   `encode()` on this instance, or the equivalent thereto.
    * @param {function} subDecode Function to call to decode component values
    *   inside `payload`, as needed.
@@ -282,7 +282,7 @@ export default class ItemCodec extends CommonBase {
    */
   decode(payload, subDecode) {
     if (!this.canDecode(payload)) {
-      throw new Error('Attempt to decode invalid payload.');
+      throw Errors.bad_value(payload, 'encoded payload');
     }
 
     if (Array.isArray(payload)) {
@@ -293,7 +293,7 @@ export default class ItemCodec extends CommonBase {
     const result = this._decode(payload, subDecode);
 
     if (!this.canEncode(result)) {
-      throw new Error('Invalid result from decoder.');
+      throw Errors.bad_use('Invalid result from decoder.');
     }
 
     return result;
@@ -312,7 +312,7 @@ export default class ItemCodec extends CommonBase {
    */
   encode(value, subEncode) {
     if (!this.canEncode(value)) {
-      throw new Error('Attempt to encode invalid value.');
+      throw Errors.bad_value(value, 'encodable value');
     }
 
     const encodedType = this._encodedType;
@@ -325,12 +325,12 @@ export default class ItemCodec extends CommonBase {
         TArray.check(result);
       } catch (e) {
         // Throw a higher-fidelity error.
-        throw new Error('Invalid encoding result (not an array).');
+        throw Errors.bad_use('Invalid encoding result (not an array).');
       }
 
       result.unshift(this._tag);
     } else if (ItemCodec.typeOf(result) !== encodedType) {
-      throw new Error('Invalid encoding result: ' +
+      throw Errors.bad_use('Invalid encoding result: ' +
         `got type ${ItemCodec.typeOf(result)}; expected type ${encodedType}`);
     }
 
