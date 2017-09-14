@@ -17,13 +17,59 @@ import UtilityClass from './UtilityClass';
  */
 export default class Errors extends UtilityClass {
   /**
-   * Constructs an instance which indicates that an improper value was passed
-   * as an argument to a function (or similar). The error includes a description
-   * (typically pseudocode-ish) of the expected type of value.
+   * Constructs an instance which indicates the unrecoverable termination of an
+   * ongoing activity (of some sort), in any way other than clean shutdown.
    *
-   * This error is typically used to report an error that crosses a line of
-   * responsibility, e.g. to report that a user of a class or module is breaking
-   * the contract by passing an out-of-spec value.
+   * This error is typically used to report a problem which is caused by
+   * an external factor in one way or another, and which, while it is _not_
+   * recoverable from the local perspective of the throwing code, might
+   * reasonably be possible to recover from at a higher layer of the system.
+   *
+   * @param {Error} [cause] Error which caused this problem. **Note:** It is
+   *   optional. If the first argument isn't an `Error`, then it is taken to be
+   *   the `desc`.
+   * @param {string} desc Description of the problem.
+   * @returns {InfoError} An appropriately-constructed error.
+   */
+  static aborted(cause, desc) {
+    if (cause instanceof Error) {
+      CoreTypecheck.checkString(desc);
+      return new InfoError(cause, 'aborted', desc);
+    } else {
+      desc = cause; // Remap the arguments, per header doc.
+      CoreTypecheck.checkString(desc);
+      return new InfoError('aborted', desc);
+    }
+  }
+
+  /**
+   * Constructs an instance which indicates that a function, class, or module is
+   * somehow being misused. The error includes a human-oriented description of
+   * the problem.
+   *
+   * This error is typically used to report a problem that crosses a line of
+   * responsibility. For example, this can be used to report that a subclass has
+   * failed to implement itself in compliance with its superclass's contract, or
+   * to report that a class's user has made an inappropriate method call (even
+   * if the call is correct with regards to the types of arguments).
+   *
+   * @param {string} desc Description of the problem.
+   * @returns {InfoError} An appropriately-constructed error.
+   */
+  static bad_use(desc) {
+    CoreTypecheck.checkString(desc);
+
+    return new InfoError('bad_use', desc);
+  }
+
+  /**
+   * Constructs an instance which indicates that an improper value was passed
+   * as an argument to a function, class, or module. The error includes a
+   * description (typically pseudocode-ish) of the expected type of value.
+   *
+   * This error is typically used to report a problem that crosses a line of
+   * responsibility, e.g. to report that a user of a class is breaking the
+   * contract by passing an out-of-spec value.
    *
    * @param {*} value The bad value.
    * @param {string|function} expectedType Name of the expected type or a
@@ -59,7 +105,7 @@ export default class Errors extends UtilityClass {
    * exhibited unexpected behavior. This should be used as an indication of a
    * likely bug in the program.
    *
-   * This error is typically used to report an error that _does not_ cross a
+   * This error is typically used to report a problem that _does not_ cross a
    * line of responsibility. That is, it is intended to convey that the code at
    * the point of failure "believed" it was being used properly and yet still
    * ran into unexpected trouble. In other systems, you might see something like
