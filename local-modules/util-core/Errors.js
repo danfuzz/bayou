@@ -36,6 +36,25 @@ export default class Errors extends UtilityClass {
   }
 
   /**
+   * Constructs an instance which indicates that a function, class, or module
+   * has received invalid data of some sort. The error includes a human-oriented
+   * description of the problem.
+   *
+   * This error is typically used to report a problem that crosses a line of
+   * responsibility. For example, this can be used to report that a file being
+   * read turns out to be syntactically invalid.
+   *
+   * @param {Error} [cause] Error which caused this problem. **Note:** It is
+   *   optional. If the first argument isn't an `Error`, then it is taken to be
+   *   the `message`.
+   * @param {string} message Description of the problem.
+   * @returns {InfoError} An appropriately-constructed error.
+   */
+  static bad_data(cause, message) {
+    return Errors._make('bad_data', cause, message);
+  }
+
+  /**
    * Constructs an instance which indicates that a function, class, or module is
    * somehow being misused. The error includes a human-oriented description of
    * the problem.
