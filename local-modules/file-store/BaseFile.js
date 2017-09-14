@@ -210,24 +210,24 @@ export default class BaseFile extends CommonBase {
 
     if (spec.hasReadOps()) {
       if (result.data === null) {
-        throw Errors.wtf('Improper subclass behavior: Expected non-`null` `data`.');
+        throw Errors.bad_use('Improper subclass behavior: Expected non-`null` `data`.');
       }
       TMap.check(result.data, StorageId.check, FrozenBuffer.check);
     } else {
       if (result.data !== null) {
-        throw Errors.wtf('Improper subclass behavior: Expected `null` `data`.');
+        throw Errors.bad_use('Improper subclass behavior: Expected `null` `data`.');
       }
       delete result.data;
     }
 
     if (spec.hasPathOps()) {
       if (result.paths === null) {
-        throw Errors.wtf('Improper subclass behavior: Expected non-`null` `paths`.');
+        throw Errors.bad_use('Improper subclass behavior: Expected non-`null` `paths`.');
       }
       TSet.check(result.paths, StoragePath.check);
     } else {
       if (result.paths !== null) {
-        throw Errors.wtf('Improper subclass behavior: Expected `null` `paths`.');
+        throw Errors.bad_use('Improper subclass behavior: Expected `null` `paths`.');
       }
       delete result.paths;
     }
