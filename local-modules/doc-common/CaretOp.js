@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase, Errors } from 'util-common';
 
 import Caret from './Caret';
 import RevisionNumber from './RevisionNumber';
@@ -104,7 +104,7 @@ export default class CaretOp extends CommonBase {
     super();
 
     if (constructorKey !== KEY) {
-      throw new Error('Constructor is private');
+      throw Errors.bad_use('Constructor is private');
     }
 
     /** {string} name The name of this operation. */
@@ -135,7 +135,7 @@ export default class CaretOp extends CommonBase {
     const result = this._args.get(name);
 
     if (result === undefined) {
-      throw new Error(`No such argument: ${name}`);
+      throw Errors.bad_use(`No such argument: ${name}`);
     }
 
     return result;

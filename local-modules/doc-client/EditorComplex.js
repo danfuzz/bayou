@@ -9,7 +9,7 @@ import { BayouKeyHandlers, QuillProm } from 'quill-util';
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
 import { DomUtil } from 'util-client';
-import { CommonBase } from 'util-common';
+import { CommonBase, Errors } from 'util-common';
 
 import CaretOverlay from './CaretOverlay';
 import DocClient from './DocClient';
@@ -223,7 +223,7 @@ export default class EditorComplex extends CommonBase {
   async _domSetup(topNode, baseUrl) {
     // Validate the top node, and give it the right CSS style.
     if (topNode.nodeName !== 'DIV') {
-      throw new Error('Expected `topNode` to be a `div`.');
+      throw Errors.bad_use('Expected `topNode` to be a `div`.');
     }
 
     topNode.classList.add('bayou-top');
@@ -233,7 +233,7 @@ export default class EditorComplex extends CommonBase {
     // Similarly, give the page itself the right CSS style.
     const htmlNode = document.getElementsByTagName('html')[0];
     if (!htmlNode) {
-      throw new Error('Shouldn\'t happen: No `html` node?!');
+      throw Errors.wtf('No `html` node?!');
     }
     htmlNode.classList.add('bayou-page');
 

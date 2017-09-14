@@ -9,7 +9,7 @@ import {
 import { Errors, TransactionSpec } from 'file-store';
 import { Delay } from 'promise-util';
 import { TString } from 'typecheck';
-import { CommonBase, InfoError } from 'util-common';
+import { CommonBase, Errors as UtilErrors, InfoError } from 'util-common';
 
 import FileComplex from './FileComplex';
 import Paths from './Paths';
@@ -464,7 +464,7 @@ export default class BodyControl extends CommonBase {
     BodyChange.check(change);
 
     if (change.delta.isEmpty()) {
-      throw new Error('Should not have been called with an empty delta.');
+      throw UtilErrors.wtf('Should not have been called with an empty delta.');
     }
 
     const revNum     = change.revNum;
@@ -694,7 +694,9 @@ export default class BodyControl extends CommonBase {
     RevisionNumber.min(endExc, start);
 
     if ((endExc - start) > MAX_CHANGE_READS_PER_TRANSACTION) {
-      throw new Error('Too many changes requested at once.');
+      // The calling code (in this class) should have made sure we weren't
+      // violating this restriction.
+      throw UtilErrors.wtf('Too many changes requested at once.');
     }
 
     if (start === endExc) {

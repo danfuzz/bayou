@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TArray } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase, Errors } from 'util-common';
 
 import BodyDelta from './BodyDelta';
 import FrozenDelta from './FrozenDelta';
@@ -60,8 +60,7 @@ export default class BodySnapshot extends CommonBase {
     // i.e. the ops themselves have to be valid in the contents of this project.
     // That validity should also be enforced.
     if (!this._contents.isDocument()) {
-      throw new Error(
-        'Expected `contents` to be a "document" (insert-only delta).');
+      throw Errors.bad_value(contents, 'document delta');
     }
 
     Object.freeze(this);

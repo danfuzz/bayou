@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TIterable, TString } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase, Errors } from 'util-common';
 
 import Caret from './Caret';
 import CaretDelta from './CaretDelta';
@@ -140,7 +140,7 @@ export default class CaretSnapshot extends CommonBase {
           const caret     = newCarets.get(sessionId);
 
           if (!caret) {
-            throw new Error(`Invalid delta; update to nonexistent caret: ${sessionId}`);
+            throw Errors.bad_use(`Invalid delta; update to nonexistent caret: ${sessionId}`);
           }
 
           newCarets.set(sessionId, caret.compose(new CaretDelta([op])));
