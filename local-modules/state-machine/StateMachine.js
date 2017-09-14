@@ -5,7 +5,7 @@
 import { Condition } from 'promise-util';
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
-import { PropertyIterable } from 'util-common';
+import { Errors, Functor, PropertyIterable } from 'util-common';
 
 /**
  * Lightweight state machine framework. This allows a subclass to define
@@ -79,7 +79,7 @@ export default class StateMachine {
     this._stateName = null;
 
     /**
-     * {array<{name, args}>} Queue of events in need of dispatch. Becomes `null`
+     * {array<Functor>} Queue of events in need of dispatch. Becomes `null`
      * when the state machine is getting aborted.
      */
     this._eventQueue = [];
@@ -132,25 +132,25 @@ export default class StateMachine {
    * associated name and the given arguments.
    */
   _addEnqueueMethods() {
-    const events = Object.keys(this._eventValidators);
+    const eventNames = Object.keys(this._eventValidators);
 
-    for (const name of events) {
+    for (const name of eventNames) {
       const validator = this._eventValidators[name];
 
       this[`q_${name}`] = (...args) => {
-        const validArgs = validator.apply(this, args);
-        args = validArgs || args;
+        const validArgs = validator.apply(this, args) || args;
 
         if ((validArgs !== undefined) && !Array.isArray(validArgs)) {
-          throw new Error(`Invalid validator result (non-array) for \`${name}\`.`);
+          throw Errors.bad_use(`Invalid validator result (non-array) for \`${name}\`.`);
         }
 
         if (this._eventQueue === null) {
-          throw new Error('Cannot queue events on aborted instance.');
+          throw Errors.bad_use('Attempt to queue events on aborted instance.');
         }
 
-        this._log.detail('Enqueued:', name, args);
-        this._eventQueue.push({ name, args });
+        const event = new Functor(name, ...args);
+        this._log.detail('Enqueued:', event);
+        this._eventQueue.push(event);
         this._anyEventPending.value = true;
       };
     }
@@ -201,26 +201,79 @@ export default class StateMachine {
   }
 
   /**
-   * Constructs a map from each valid event names to its respective event
-   * validator method.
+   * Dispatches all events on the queue, including any new events that get
+   * enqueued during dispatch.
    *
-   * @returns {object} The event validator map.
+   * @returns {boolean} `true` iff the instance should still be considered
+   *   active; `false` means it is being shut down.
    */
-  _makeValidatorMap() {
-    const result = {}; // Built-up result.
+  async _dispatchAll() {
+    for (;;) {
+      // Grab the queue locally.
+      const queue = this._eventQueue;
 
-    for (const desc of new PropertyIterable(this).onlyMethods()) {
-      const match = desc.name.match(/^_check_([a-zA-Z0-9]+)$/);
-      if (!match) {
-        // Not the right name format.
-        continue;
+      // Check to see if we're done (either idle or shutting down).
+      if (queue === null) {
+        return false; // Shutting down.
+      } else if (queue.length === 0) {
+        return true;  // Idle.
       }
 
-      const eventName = match[1];
-      result[eventName] = desc.value;
+      // Reset the queue for further event collection.
+      this._eventQueue = [];
+      this._anyEventPending.value = false;
+
+      // Dispatch each event that had been queued on entry to this (outer) loop.
+      // Check to see if the machine has been aborted (queue becomes `null` if
+      // so) before each dispatch.
+      for (const event of queue) {
+        if (this._eventQueue === null) {
+          return false;
+        }
+        await this._dispatchEvent(event);
+      }
+    }
+  }
+
+  /**
+   * Dispatches the given event.
+   *
+   * @param {Functor} event The event.
+   */
+  async _dispatchEvent(event) {
+    const stateName = this._stateName;
+    const log       = this._log;
+
+    // Log the state name and event details (if not squelched), and occasional
+    // count of how many events have been handled so far.
+
+    log.detail(`In state: ${stateName}`);
+    log.detail('Dispatching:', event);
+
+    // Dispatch the event. In case of exception, enqueue an `error` event.
+    // (The default handler for the event will log an error and stop the queue.)
+    try {
+      await this._handlers[stateName][event.name].apply(this, event.args);
+    } catch (e) {
+      if (event.name === 'error') {
+        // We got an exception in an error event handler. This is the signal to
+        // abandon ship.
+        log.error('Aborting state machine.', e);
+        this._eventQueue = null;
+        this._anyEventPending.value = true; // "Wakes up" the servicer.
+        return;
+      } else {
+        log.detail('Uncaught error:', e);
+        this.q_error(e);
+      }
     }
 
-    return result;
+    log.detail('Done dispatching:', event);
+
+    this._eventCount++;
+    if ((this._eventCount % 25) === 0) {
+      log.info(`Handled ${this._eventCount} events.`);
+    }
   }
 
   /**
@@ -247,7 +300,7 @@ export default class StateMachine {
 
       if ((eventName !== 'any') && !this._eventValidators[eventName]) {
         // No associated validator.
-        throw new Error(`Unknown event name in method: ${eventName}`);
+        throw Errors.bad_use(`Unknown event name ${eventName} in method ${desc.name}.`);
       }
 
       if (!result[stateName]) {
@@ -300,6 +353,29 @@ export default class StateMachine {
   }
 
   /**
+   * Constructs a map from each valid event names to its respective event
+   * validator method.
+   *
+   * @returns {object} The event validator map.
+   */
+  _makeValidatorMap() {
+    const result = {}; // Built-up result.
+
+    for (const desc of new PropertyIterable(this).onlyMethods()) {
+      const match = desc.name.match(/^_check_([a-zA-Z0-9]+)$/);
+      if (!match) {
+        // Not the right name format.
+        continue;
+      }
+
+      const eventName = match[1];
+      result[eventName] = desc.value;
+    }
+
+    return result;
+  }
+
+  /**
    * Services the event queue. This waits for the queue to be non-empty (via a
    * promise), dispatches all events, and then iterates. It stops only when
    * the instance has gotten halted (most likely due to an external error).
@@ -316,84 +392,7 @@ export default class StateMachine {
   }
 
   /**
-   * Dispatches all events on the queue, including any new events that get
-   * enqueued during dispatch.
-   *
-   * @returns {boolean} `true` iff the instance should still be considered
-   *   active; `false` means it is being shut down.
-   */
-  async _dispatchAll() {
-    for (;;) {
-      // Grab the queue locally.
-      const queue = this._eventQueue;
-
-      // Check to see if we're done (either idle or shutting down).
-      if (queue === null) {
-        return false; // Shutting down.
-      } else if (queue.length === 0) {
-        return true;  // Idle.
-      }
-
-      // Reset the queue for further event collection.
-      this._eventQueue = [];
-      this._anyEventPending.value = false;
-
-      // Dispatch each event that had been queued on entry to this (outer) loop.
-      // Check to see if the machine has been aborted (queue becomes `null` if
-      // so) before each dispatch.
-      for (const event of queue) {
-        if (this._eventQueue === null) {
-          return false;
-        }
-        await this._dispatchEvent(event);
-      }
-    }
-  }
-
-  /**
-   * Dispatches the given event.
-   *
-   * @param {object} event The event.
-   */
-  async _dispatchEvent(event) {
-    const { name, args } = event;
-    const stateName      = this._stateName;
-    const log            = this._log;
-
-    // Log the state name and event details (if not squelched), and occasional
-    // count of how many events have been handled so far.
-
-    log.detail(`In state: ${stateName}`);
-    log.detail('Dispatching:', name, args);
-
-    // Dispatch the event. In case of exception, enqueue an `error` event.
-    // (The default handler for the event will log an error and stop the queue.)
-    try {
-      await this._handlers[stateName][name].apply(this, args);
-    } catch (e) {
-      if (name === 'error') {
-        // We got an exception in an error event handler. This is the signal to
-        // abandon ship.
-        log.error('Aborting state machine.', e);
-        this._eventQueue = null;
-        this._anyEventPending.value = true; // "Wakes up" the servicer.
-        return;
-      } else {
-        log.detail('Uncaught error:', e);
-        this.q_error(e);
-      }
-    }
-
-    log.detail('Done dispatching:', name, args);
-
-    this._eventCount++;
-    if ((this._eventCount % 25) === 0) {
-      log.info(`Handled ${this._eventCount} events.`);
-    }
-  }
-
-  /**
-   * Validate an `error` event.
+   * Validates an `error` event.
    *
    * @param {Error} error The error.
    */
@@ -402,24 +401,32 @@ export default class StateMachine {
   }
 
   /**
-   * Default handler for any event in any state. This may be overridden by
-   * subclasses.
+   * Default handler for any event in any state, which responds by throwing a
+   * `bad_use` error, because subclasses should cover all the event
+   * possibilities. This may be overridden by subclasses if in fact having a
+   * wildcard handler is the right tactic for their particular case.
    *
    * @param {string} name The event name.
    * @param {...*} args_unused Arguments to the event.
+   * @throws {Errors.bad_use} Always thrown.
    */
   _handle_any_any(name, ...args_unused) {
-    throw new Error(`Cannot handle event \`${name}\` in state \`${this._stateName}\`.`);
+    throw Errors.bad_use(`Cannot handle event \`${name}\` in state \`${this._stateName}\`.`);
   }
 
   /**
-   * Default handler for `error` events in any state. This may be overridden by
-   * subclasses.
+   * Default handler for `error` events in any state, which responds by aborting
+   * this instance. This may be overridden by subclasses.
+   *
+   * **Note:** `error` events are only expected to be issued in response to
+   * other event handlers throwing errors back to the dispatcher. This handler
+   * is the handler of "last resort" for such errors.
    *
    * @param {Error} error The error.
+   * @throws {Errors.aborted} Always thrown.
    */
   _handle_any_error(error) {
     this._log.error('Error in handler', error);
-    throw new Error('Aborting.');
+    throw Errors.aborted(error, 'State machine shut down due to uncaught error.');
   }
 }

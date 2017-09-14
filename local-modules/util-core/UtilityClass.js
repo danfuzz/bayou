@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import Errors from './Errors';
+
 /**
  * Base class for "utility" classes. A utility class is one which is not
  * meant to be instantiated, but rather is merely a collection of `static`
@@ -14,8 +16,10 @@ export default class UtilityClass {
   /**
    * Always throws an error. That is, utility classes are not ever supposed to
    * be instantiated.
+   *
+   * @throws {Errors.bad_use} Always thrown.
    */
   constructor() {
-    throw new Error('Utility classes are not instantiable.');
+    throw Errors.bad_use('Attempt to instantiate utility class.');
   }
 }

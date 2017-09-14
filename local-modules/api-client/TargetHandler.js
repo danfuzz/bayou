@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CommonBase, Functor } from 'util-common';
+import { CommonBase, Errors, Functor } from 'util-common';
 
 /** {Set<string>} Set of methods which never get proxied. */
 const VERBOTEN_METHODS = new Set([
@@ -17,7 +17,11 @@ const VERBOTEN_METHODS = new Set([
 ]);
 
 /**
- * `Proxy` handler which redirects method calls to an indicated client.
+ * `Proxy` handler which redirects method calls to an indicated client. It does
+ * not handle any other actions aside from getting named properties (and the
+ * minimal additional support for same as required by the `Proxy` contract); and
+ * the properties it returns are always functions which perform calls to
+ * `ApiClient._send()`.
  */
 export default class TargetHandler extends CommonBase {
   /**
@@ -66,7 +70,7 @@ export default class TargetHandler extends CommonBase {
    * @param {array} args_unused List of arguments passed to the call.
    */
   apply(target_unused, thisArg_unused, args_unused) {
-    throw new Error('unsupported');
+    throw Errors.bad_use('Unsupported proxy operation.');
   }
 
   /**
@@ -78,7 +82,7 @@ export default class TargetHandler extends CommonBase {
    *   called.
    */
   construct(target_unused, args_unused, newTarget_unused) {
-    throw new Error('unsupported');
+    throw Errors.bad_use('Unsupported proxy operation.');
   }
 
   /**
@@ -89,7 +93,7 @@ export default class TargetHandler extends CommonBase {
    * @param {object} descriptor_unused The property descriptor.
    */
   defineProperty(target_unused, property_unused, descriptor_unused) {
-    throw new Error('unsupported');
+    throw Errors.bad_use('Unsupported proxy operation.');
   }
 
   /**
@@ -99,7 +103,7 @@ export default class TargetHandler extends CommonBase {
    * @param {string} property_unused The property name.
    */
   deleteProperty(target_unused, property_unused) {
-    throw new Error('unsupported');
+    throw Errors.bad_use('Unsupported proxy operation.');
   }
 
   /**
@@ -139,7 +143,7 @@ export default class TargetHandler extends CommonBase {
    * @param {string} property_unused The property name.
    */
   getOwnPropertyDescriptor(target_unused, property_unused) {
-    throw new Error('unsupported');
+    throw Errors.bad_use('Unsupported proxy operation.');
   }
 
   /**
@@ -216,7 +220,7 @@ export default class TargetHandler extends CommonBase {
    * @param {object} receiver_unused The original receiver of the request.
    */
   set(target_unused, property_unused, value_unused, receiver_unused) {
-    throw new Error('unsupported');
+    throw Errors.bad_use('Unsupported proxy operation.');
   }
 
   /**
@@ -226,7 +230,7 @@ export default class TargetHandler extends CommonBase {
    * @param {object|null} prototype_unused The new prototype.
    */
   setPrototypeOf(target_unused, prototype_unused) {
-    throw new Error('unsupported');
+    throw Errors.bad_use('Unsupported proxy operation.');
   }
 
   /**
