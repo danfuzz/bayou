@@ -2,6 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { TString } from 'typecheck';
+
+import Logger from './Logger';
+
 /**
  * Adaptor which provides a writable stream on top of a logger at a particular
  * severity level.
@@ -17,11 +21,11 @@ export default class LogStream {
    * @param {string} level Severity level to log at.
    */
   constructor(logger, level) {
-    /** Underlying logger to use. */
-    this._logger = logger;
+    /** {Logger} Underlying logger to use. */
+    this._logger = Logger.check(logger);
 
-    /** Severity level. */
-    this._level = level;
+    /** {string} Severity level. */
+    this._level = TString.check(level);
   }
 
   /**

@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { TBoolean, TString } from 'typecheck';
+
 import BaseLogger from './BaseLogger';
 import AllSinks from './AllSinks';
 
@@ -49,11 +51,11 @@ export default class Logger extends BaseLogger {
   constructor(tag, enableDetail = false) {
     super();
 
-    /** The module / subsystem tag. */
-    this._tag = tag;
+    /** {string} The module / subsystem tag. */
+    this._tag = TString.nonEmpty(tag);
 
-    /** Whether logging is enabled for the `detail` level. */
-    this._enableDetail = enableDetail;
+    /** {boolean} Whether logging is enabled for the `detail` level. */
+    this._enableDetail = TBoolean.check(enableDetail);
 
     Object.freeze(this);
   }

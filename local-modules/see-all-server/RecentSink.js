@@ -7,6 +7,7 @@ import chalk from 'chalk';
 import { inspect } from 'util';
 
 import { SeeAll } from 'see-all';
+import { TInt } from 'typecheck';
 
 /**
  * Implementation of the `see-all` logging sink protocol which collects a
@@ -21,10 +22,10 @@ export default class RecentSink {
    *   out of the list.
    */
   constructor(maxAgeMsec) {
-    /** Maximum age. */
-    this._maxAgeMsec = maxAgeMsec;
+    /** {Int} Maximum age. */
+    this._maxAgeMsec = TInt.nonNegative(maxAgeMsec);
 
-    /** The log contents. */
+    /** {array<object>} The log contents. */
     this._log = [];
 
     SeeAll.theOne.add(this);
