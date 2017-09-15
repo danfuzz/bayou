@@ -6,6 +6,7 @@ import fs from 'fs';
 import { inspect } from 'util';
 
 import { SeeAll } from 'see-all';
+import { TString } from 'typecheck';
 
 /**
  * Implementation of the `see-all` logging sink protocol which stores logged
@@ -20,7 +21,7 @@ export default class FileSink {
    */
   constructor(path) {
     /** {string} Path of the file to log to. */
-    this._path = path;
+    this._path = TString.nonEmpty(path);
 
     SeeAll.theOne.add(this);
   }

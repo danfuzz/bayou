@@ -10,7 +10,7 @@ import LogStream from './LogStream';
 const LEVELS = new Set(['debug', 'error', 'warn', 'info', 'detail']);
 
 /**
- * Base class for loggers. Subclasses must implement `_logImpl()`.
+ * Base class for loggers. Subclasses must implement `_impl_log()`.
  */
 export default class BaseLogger extends CommonBase {
   /**
@@ -25,7 +25,7 @@ export default class BaseLogger extends CommonBase {
    */
   log(level, ...message) {
     BaseLogger._validateLevel(level);
-    this._logImpl(level, message);
+    this._impl_log(level, message);
   }
 
   /**
@@ -127,7 +127,7 @@ export default class BaseLogger extends CommonBase {
   withPrefix(...prefix) {
     const result = new BaseLogger();
 
-    result._logImpl = (level, message) => {
+    result._impl_log = (level, message) => {
       this.log(level, ...prefix, ...message);
     };
 
@@ -147,7 +147,7 @@ export default class BaseLogger extends CommonBase {
   withDynamicPrefix(prefixGenerator) {
     const result = new BaseLogger();
 
-    result._logImpl = (level, message) => {
+    result._impl_log = (level, message) => {
       const prefix = prefixGenerator();
       this.log(level, ...prefix, ...message);
     };
@@ -156,13 +156,14 @@ export default class BaseLogger extends CommonBase {
   }
 
   /**
-   * Actual logging implementation.
+   * Actual logging implementation. Subclasses must override this to do
+   * something appropriate.
    *
    * @abstract
    * @param {string} level Severity level. Guaranteed to be a valid level.
    * @param {array} message Array of arguments to log.
    */
-  _logImpl(level, message) {
+  _impl_log(level, message) {
     this._mustOverride(level, message);
   }
 
