@@ -76,7 +76,7 @@ const CLIENT_SOURCE = 'doc-client';
  * just wait until it comes back with a result, instead of having to set up a
  * low-duration timeout to repeatedly ask for new changes.
  */
-export default class DocClient extends StateMachine {
+export default class BodyClient extends StateMachine {
   /**
    * Constructs an instance. It is initially in state `detached`. The
    * constructed instance expects to be the primary non-human controller of the
@@ -107,11 +107,11 @@ export default class DocClient extends StateMachine {
     this._sessionProxy = null;
 
     /**
-     * {BodySnapshot|null} Current revision of the document as received from
-     * the server. Becomes non-null once the first snapshot is received from the
-     * server.
+     * {BodySnapshot|null} Current revision of the document body as received
+     * from the server. Becomes non-null once the first snapshot is received
+     * from the server.
      */
-    this._doc = null;
+    this._snapshot = null;
 
     /**
      * {QuillEvent|object} Current (most recent) local change to the document
@@ -188,27 +188,28 @@ export default class DocClient extends StateMachine {
    * Validates a `gotDeltaAfter` event. This represents a successful result
    * from the API call `body_deltaAfter()`.
    *
-   * @param {BodySnapshot} baseDoc The document at the time of the original
-   *   request.
-   * @param {BodyDelta} result How to transform `baseDoc` to get a later
+   * @param {BodySnapshot} baseSnapshot The body state at the time of the
+   *   original request.
+   * @param {BodyDelta} result How to transform `baseSnapshot` to get a later
    *   document revision.
    */
-  _check_gotDeltaAfter(baseDoc, result) {
-    BodySnapshot.check(baseDoc);
+  _check_gotDeltaAfter(baseSnapshot, result) {
+    BodySnapshot.check(baseSnapshot);
     BodyDelta.check(result);
   }
 
   /**
-   * Validates a `gotQuillDelta` event. This indicates that there is at least
-   * one local change that Quill has made to its document which is not yet
-   * reflected in the given base document. Put another way, this indicates that
-   * `_currentEvent` has a resolved `next`.
+   * Validates a `gotQuillEvent` event. This indicates that there is at least
+   * one event which has been emitted by Quill which has not yet been consumed
+   * by this instance (e.g. a text change which is not yet integrated in the
+   * given base document). Put another way, this indicates that `_currentEvent`
+   * has a resolved `next`.
    *
-   * @param {BodySnapshot} baseDoc The document at the time of the original
-   *   request.
+   * @param {BodySnapshot} baseSnapshot The body state at the time of the
+   *   original request.
    */
-  _check_gotQuillDelta(baseDoc) {
-    BodySnapshot.check(baseDoc);
+  _check_gotQuillEvent(baseSnapshot) {
+    BodySnapshot.check(baseSnapshot);
   }
 
   /**
@@ -222,19 +223,20 @@ export default class DocClient extends StateMachine {
    * Validates a `wantApplyDelta` event. This indicates that it is time to
    * send collected local changes up to the server.
    *
-   * @param {BodySnapshot} baseDoc The document at the time of the original
-   *   request.
+   * @param {BodySnapshot} baseSnapshot The body state at the time of the
+   *   original request.
    */
-  _check_wantApplyDelta(baseDoc) {
-    BodySnapshot.check(baseDoc);
+  _check_wantApplyDelta(baseSnapshot) {
+    BodySnapshot.check(baseSnapshot);
   }
 
   /**
-   * Validates a `wantChanges` event. This indicates that it is time to
-   * request a new change from the server, but only if the client isn't in the
-   * middle of doing something else.
+   * Validates a `wantInput` event. This indicates that it is time to solicit
+   * input from the server (in the form of document deltas) and from the local
+   * Quill instance (in the form of Quill events), but only if the client isn't
+   * in the middle of doing something else.
    */
-  _check_wantChanges() {
+  _check_wantInput() {
     // Nothing to do.
   }
 
@@ -289,7 +291,7 @@ export default class DocClient extends StateMachine {
    * changes that were in-flight when the connection became problematic.
    */
   _handle_errorWait_start() {
-    this._doc                = null;
+    this._snapshot           = null;
     this._sessionProxy       = null;
     this._currentEvent       = null;
     this._pendingDeltaAfter  = false;
@@ -375,7 +377,7 @@ export default class DocClient extends StateMachine {
     // Save the result as the current (latest known) revision of the document,
     // and tell Quill about it.
     const firstEvent = this._quill.currentEvent;
-    this._updateDocWithSnapshot(snapshot);
+    this._updateWithSnapshot(snapshot);
 
     // The above action should have caused the Quill instance to make a change
     // which shows up on its event chain. Grab it, and verify that indeed it's
@@ -410,17 +412,17 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * In state `idle`, handles event `wantChanges`. This can happen as a chained
+   * In state `idle`, handles event `wantInput`. This can happen as a chained
    * event (during startup or at the end of handling the integration of changes)
    * or due to a delay timeout. This will make requests both to the server and
    * to the local Quill instance.
    */
-  _handle_idle_wantChanges() {
-    // We grab the current revision of the doc, so we can refer back to it when
-    // a response comes. That is, `_doc` might have changed out from
+  _handle_idle_wantInput() {
+    // We grab the current local body snapshot, so we can refer back to it when
+    // a response comes. That is, `_snapshot` might have changed out from
     // under us between when this event is handled and when the promises used
     // here become resolved.
-    const baseDoc = this._doc;
+    const baseSnapshot = this._snapshot;
 
     // Ask Quill for any changes we haven't yet observed, via the document
     // change promise chain, but only if there isn't already a pending request
@@ -435,7 +437,7 @@ export default class DocClient extends StateMachine {
       (async () => {
         await this._currentEvent.next;
         this._pendingQuillChange = false;
-        this.q_gotQuillDelta(baseDoc);
+        this.q_gotQuillEvent(baseSnapshot);
       })();
     }
 
@@ -447,9 +449,9 @@ export default class DocClient extends StateMachine {
 
       (async () => {
         try {
-          const value = await this._sessionProxy.body_deltaAfter(baseDoc.revNum);
+          const value = await this._sessionProxy.body_deltaAfter(baseSnapshot.revNum);
           this._pendingDeltaAfter = false;
-          this.q_gotDeltaAfter(baseDoc, value);
+          this.q_gotDeltaAfter(baseSnapshot, value);
         } catch (e) {
           this._pendingDeltaAfter = false;
           this.q_apiError('body_deltaAfter', e);
@@ -459,31 +461,31 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * In any state but `idle`, handles event `wantChanges`. We ignore the event,
+   * In any state but `idle`, handles event `wantInput`. We ignore the event,
    * because the client is in the middle of doing something else. When it's done
-   * with whatever it may be, it will send a new `wantChanges` event.
+   * with whatever it may be, it will send a new `wantInput` event.
    */
-  _handle_any_wantChanges() {
+  _handle_any_wantInput() {
     // Nothing to do. Stay in the same state.
   }
 
   /**
    * In state `idle`, handles event `gotDeltaAfter`.
    *
-   * @param {BodySnapshot} baseDoc The document at the time of the original
-   *   request.
-   * @param {BodyDelta} result How to transform `baseDoc` to get a later
+   * @param {BodySnapshot} baseSnapshot The body state at the time of the
+   *   original request.
+   * @param {BodyDelta} result How to transform `baseSnapshot` to get a later
    *   document revision.
    */
-  _handle_idle_gotDeltaAfter(baseDoc, result) {
+  _handle_idle_gotDeltaAfter(baseSnapshot, result) {
     this._log.detail('Delta from server:', result.revNum);
 
     // We only take action if the result's base (what `delta` is with regard to)
-    // is the current `_doc`. If that _isn't_ the case, then what we have here
-    // is a stale response of one sort or another. For example (and most
+    // is the current `_snapshot`. If that _isn't_ the case, then what we have
+    // here is a stale response of one sort or another. For example (and most
     // likely), it might be the delayed result from an earlier iteration.
-    if (this._doc.revNum === baseDoc.revNum) {
-      this._updateDocWithDelta(result);
+    if (this._snapshot.revNum === baseSnapshot.revNum) {
+      this._updateWithDelta(result);
     }
 
     // Fire off the next iteration of requesting server changes, after a short
@@ -491,7 +493,7 @@ export default class DocClient extends StateMachine {
     // despite any particularly active editing by other clients.
     (async () => {
       await Delay.resolve(PULL_DELAY_MSEC);
-      this.q_wantChanges();
+      this.q_wantInput();
     })();
   }
 
@@ -503,7 +505,7 @@ export default class DocClient extends StateMachine {
    *
    * @param {BodySnapshot} baseDoc_unused The document at the time of the
    *   original request.
-   * @param {BodyDelta} result_unused How to transform `baseDoc` to get a
+   * @param {BodyDelta} result_unused How to transform `baseSnapshot` to get a
    *   later document revision.
    */
   _handle_any_gotDeltaAfter(baseDoc_unused, result_unused) {
@@ -511,15 +513,16 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * In state `idle`, handles event `gotQuillDelta`. This means that the local
-   * user has started making some changes. We prepare to collect the changes
-   * for a short period of time before sending them up to the server.
+   * In state `idle`, handles event `gotQuillEvent`. This means that the local
+   * user is actively editing (or at least moving the caret around). We prepare
+   * to collect the changes for a short period of time before sending them up to
+   * the server.
    *
-   * @param {BodySnapshot} baseDoc The document at the time of the original
-   *   request.
+   * @param {BodySnapshot} baseSnapshot The body state at the time of the
+   *   original request.
    */
-  _handle_idle_gotQuillDelta(baseDoc) {
-    if (this._doc.revNum !== baseDoc.revNum) {
+  _handle_idle_gotQuillEvent(baseSnapshot) {
+    if (this._snapshot.revNum !== baseSnapshot.revNum) {
       // This state machine event was generated with respect to a revision of
       // the document which has since been updated, or we ended up having two
       // events for the same change (which can happen if the user is
@@ -552,7 +555,7 @@ export default class DocClient extends StateMachine {
         // that happened in the mean time.
         (async () => {
           await Delay.resolve(PUSH_DELAY_MSEC);
-          this.q_wantApplyDelta(baseDoc);
+          this.q_wantApplyDelta(baseSnapshot);
         })();
 
         this.s_collecting();
@@ -563,7 +566,7 @@ export default class DocClient extends StateMachine {
         // Consume the event, and send it onward to the caret tracker, which
         // might ultimately inform the server about it. Then go back to idling.
         if (props.range) {
-          this._docSession.caretTracker.update(this._doc.revNum, props.range);
+          this._docSession.caretTracker.update(this._snapshot.revNum, props.range);
         }
         this._currentEvent = event;
         this._becomeIdle();
@@ -579,7 +582,7 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * In most states, handles event `gotQuillDelta`. This will happen when a
+   * In most states, handles event `gotQuillEvent`. This will happen when a
    * local delta comes in after we're already in the middle of handling a
    * chain of local changes. As such, it is safe to ignore, because whatever
    * the change was, it will get handled by that pre-existing process.
@@ -587,7 +590,7 @@ export default class DocClient extends StateMachine {
    * @param {BodySnapshot} baseDoc_unused The document at the time of the
    *   original request.
    */
-  _handle_any_gotQuillDelta(baseDoc_unused) {
+  _handle_any_gotQuillEvent(baseDoc_unused) {
     // Nothing to do. Stay in the same state.
   }
 
@@ -596,12 +599,12 @@ export default class DocClient extends StateMachine {
    * is time for the collected local changes to be sent up to the server for
    * integration.
    *
-   * @param {BodySnapshot} baseDoc The document at the time of the original
-   *   request.
+   * @param {BodySnapshot} baseSnapshot The body state at the time of the
+   *   original request.
    */
-  _handle_collecting_wantApplyDelta(baseDoc) {
-    if (this._doc.revNum !== baseDoc.revNum) {
-      // As with the `gotQuillDelta` event, we ignore this event if the doc has
+  _handle_collecting_wantApplyDelta(baseSnapshot) {
+    if (this._snapshot.revNum !== baseSnapshot.revNum) {
+      // As with the `gotQuillEvent` event, we ignore this event if the doc has
       // changed out from under us.
       this._becomeIdle();
       return;
@@ -626,7 +629,7 @@ export default class DocClient extends StateMachine {
     (async () => {
       try {
         const value =
-          await this._sessionProxy.body_applyDelta(this._doc.revNum, delta);
+          await this._sessionProxy.body_applyDelta(this._snapshot.revNum, delta);
         this.q_gotApplyDelta(delta, value);
       } catch (e) {
         this.q_apiError('body_applyDelta', e);
@@ -661,13 +664,13 @@ export default class DocClient extends StateMachine {
       //
       // In particular, if there happened to be any local changes made (coming
       // from Quill) while the server request was in flight, they will be picked
-      // up promptly due to the handling of the `wantChanges` event which will
+      // up promptly due to the handling of the `wantInput` event which will
       // get fired off immediately.
       //
       // And note that Quill doesn't need to be updated here (that is, its delta
       // is empty) because what we are integrating into the client document is
       // exactly what Quill handed to us.
-      this._updateDocWithDelta(
+      this._updateWithDelta(
         new BodyDelta(vResultNum, delta), FrozenDelta.EMPTY);
       this._becomeIdle();
       return;
@@ -686,7 +689,7 @@ export default class DocClient extends StateMachine {
       // Thanfully, the local user hasn't made any other changes while we
       // were waiting for the server to get back to us, which means we can
       // cleanly apply the correction on top of Quill's current state.
-      this._updateDocWithDelta(
+      this._updateWithDelta(
         new BodyDelta(vResultNum, correctedDelta), dCorrection);
       this._becomeIdle();
       return;
@@ -732,7 +735,7 @@ export default class DocClient extends StateMachine {
     // second (lost any insert races or similar).
     const dIntegratedCorrection =
       FrozenDelta.coerce(dMore.transform(dCorrection, false));
-    this._updateDocWithDelta(
+    this._updateWithDelta(
       new BodyDelta(vResultNum, correctedDelta), dIntegratedCorrection);
 
     // (3)
@@ -801,23 +804,23 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * Updates `_doc` to be the given revision by applying the indicated delta
-   * to the current revision, and tells the attached Quill instance to update
-   * itself accordingly.
+   * Updates `_snapshot` to be the given revision by applying the indicated
+   * delta to the current revision, and tells the attached Quill instance to
+   * update itself accordingly.
    *
    * This is only valid to call when the revision of the document that Quill has
-   * is the same as what is represented in `_doc` _or_ if `quillDelta` is passed
-   * as an empty delta. That is, this is only valid when Quill's revision of the
-   * document doesn't need to be updated. If that isn't the case, then this
-   * method will throw an error.
+   * is the same as what is represented in `_snapshot` _or_ if `quillDelta` is
+   * passed as an empty delta. That is, this is only valid when Quill's revision
+   * of the document doesn't need to be updated. If that isn't the case, then
+   * this method will throw an error.
    *
-   * @param {BodyDelta} delta Delta from the current `_doc` contents.
+   * @param {BodyDelta} delta Delta from the current `_snapshot` contents.
    * @param {FrozenDelta} [quillDelta = delta] Delta from Quill's current state,
    *   which is expected to preserve any state that Quill has that isn't yet
-   *   represented in `_doc`. This must be used in cases where Quill's state has
-   *   progressed ahead of `_doc` due to local activity.
+   *   represented in `_snapshot`. This must be used in cases where Quill's
+   *   state has progressed ahead of `_snapshot` due to local activity.
    */
-  _updateDocWithDelta(delta, quillDelta = delta.delta) {
+  _updateWithDelta(delta, quillDelta = delta.delta) {
     const needQuillUpdate = !quillDelta.isEmpty();
 
     if (   (this._currentEvent.nextOfNow(QuillEvent.TEXT_CHANGE) !== null)
@@ -827,8 +830,8 @@ export default class DocClient extends StateMachine {
       throw Errors.bad_use('Cannot apply delta due to revision skew.');
     }
 
-    // Update the local document.
-    this._doc = this._doc.compose(delta);
+    // Update the local snapshot.
+    this._snapshot = this._snapshot.compose(delta);
 
     // Tell Quill if necessary.
     if (needQuillUpdate) {
@@ -837,22 +840,22 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * Updates `_doc` to be the given snapshot, and tells the attached Quill
+   * Updates `_snapshot` to be the given snapshot, and tells the attached Quill
    * instance to update itself accordingly.
    *
    * @param {BodySnapshot} snapshot New snapshot.
    */
-  _updateDocWithSnapshot(snapshot) {
-    this._doc = snapshot;
+  _updateWithSnapshot(snapshot) {
+    this._snapshot = snapshot;
     this._quill.setContents(snapshot.contents, CLIENT_SOURCE);
   }
 
   /**
-   * Sets up the state machine to idle while waiting for changes.
+   * Sets up the state machine to idle while waiting for input.
    */
   _becomeIdle() {
     this.s_idle();
-    this.q_wantChanges();
+    this.q_wantInput();
   }
 
   /**
