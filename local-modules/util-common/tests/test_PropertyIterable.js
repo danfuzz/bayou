@@ -49,7 +49,20 @@ describe('util-common/PropertyIterable', () => {
   });
 
   describe('iterating solely over non-synthetic properties', () => {
-    it('should iterate solely over non-synthetic properties');
+    it('should iterate solely over non-synthetic properties', () => {
+      const obj = {
+        yes1: 'x',
+        yes2: 'y',
+        get no1() { return 10; },
+        get no2() { return 20; },
+        set no2(x) { /*empty*/ },
+        set no3(x) { /*empty*/ }
+      };
+      const iter = new PropertyIterable(obj).skipSynthetic();
+      const expectedProperties = ['yes1', 'yes2'];
+
+      testIteratable(iter, expectedProperties);
+    });
   });
 });
 
@@ -61,7 +74,7 @@ describe('util-common/PropertyIterable', () => {
  * was specifically checked.
  *
  * @param {PropertyIterable} iter The iterator we are testing.
- * @param {array<string>} [expectedProperties = []] List of property names. The
+ * @param {array<string>} expectedProperties List of property names. The
  *   iterator must return _at least_ all of the properties in this list.
  * @param {array<string>} [unexpectedProperties = []] List of property names.
  *   The iterator must not return any of the properties in this list.
