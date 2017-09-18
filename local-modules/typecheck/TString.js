@@ -68,6 +68,20 @@ export default class TString extends UtilityClass {
   }
 
   /**
+   * Checks a value of type `String`, which must furthermore be a valid
+   * "label-like thing." These are just like identifiers, except that dash (`-`)
+   * is an allowable character throughout.
+   *
+   * @param {*} value Value to check.
+   * @returns {string} `value`.
+   */
+  static label(value) {
+    // This is defined in `CoreTypecheck` so that it can be used by `util-core`
+    // without introducing a circular dependency on this module.
+    return CoreTypecheck.checkLabel(value);
+  }
+
+  /**
    * Checks a value of type `String`, which must furthermore have at least a
    * given number of characters.
    *

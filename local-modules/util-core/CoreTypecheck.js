@@ -28,6 +28,23 @@ export default class CoreTypecheck extends UtilityClass {
   }
 
   /**
+   * Checks that a value is of type `string` and has the usual form of a
+   * "label-like thing" in programming. This is the same as an identifier,
+   * except that dashes are allowed throughout.
+   *
+   * @param {*} value Value to check.
+   * @returns {string} `value`.
+   */
+  static checkLabel(value) {
+    try {
+      return CoreTypecheck.checkString(value, /^[-a-zA-Z_][-a-zA-Z_0-9]*$/);
+    } catch (e) {
+      // More accurate error.
+      throw Errors.bad_value(value, String, 'label syntax');
+    }
+  }
+
+  /**
    * Checks that a value is of type `object`, and is optionally an instance of
    * a particular class. `null` is _not_ considered an object by this check.
    * Functions _are_ considered objects by this check.

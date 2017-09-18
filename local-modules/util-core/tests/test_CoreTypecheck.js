@@ -50,7 +50,7 @@ function assertThrowsInfo(func, name, args = null) {
 }
 
 describe('util-core/CoreTypecheck', () => {
-  describe('checkIdentifier(value)', () => {
+  describe('checkIdentifier()', () => {
     it('accepts identifier strings', () => {
       function test(value) {
         assert.strictEqual(CoreTypecheck.checkIdentifier(value), value);
@@ -102,6 +102,69 @@ describe('util-core/CoreTypecheck', () => {
           () => { CoreTypecheck.checkIdentifier(value); },
           'bad_value',
           [inspect(value), 'String', 'identifier syntax']);
+      }
+
+      for (const v of NON_STRING_CASES) {
+        test(v);
+      }
+    });
+  });
+
+  describe('checkLabel()', () => {
+    it('accepts label strings', () => {
+      function test(value) {
+        assert.strictEqual(CoreTypecheck.checkLabel(value), value);
+      }
+
+      test('a');
+      test('A');
+      test('_');
+      test('-');
+      test('blort');
+      test('florp_like');
+      test('florp-like');
+      test('x9');
+      test('_0123456789_');
+      test('-0123456789-');
+      test('abcdefghijklmnopqrstuvwxyz');
+      test('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+    });
+
+    it('rejects non-label strings', () => {
+      function test(value) {
+        assertThrowsInfo(
+          () => { CoreTypecheck.checkLabel(value); },
+          'bad_value',
+          [inspect(value), 'String', 'label syntax']);
+      }
+
+      // Needs at least one character.
+      test('');
+
+      // Can't start with a digit.
+      test('0a');
+      test('1a');
+      test('2a');
+      test('3a');
+      test('4a');
+      test('5a');
+      test('6a');
+      test('7a');
+      test('8a');
+      test('9a');
+
+      // Has invalid character.
+      test('a+1');
+      test('a/1');
+      test('a!@#$%^&*');
+    });
+
+    it('rejects non-strings', () => {
+      function test(value) {
+        assertThrowsInfo(
+          () => { CoreTypecheck.checkLabel(value); },
+          'bad_value',
+          [inspect(value), 'String', 'label syntax']);
       }
 
       for (const v of NON_STRING_CASES) {
