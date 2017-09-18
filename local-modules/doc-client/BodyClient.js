@@ -94,9 +94,6 @@ export default class BodyClient extends StateMachine {
     /** {DocSession} Server session control / manager. */
     this._docSession = DocSession.check(docSession);
 
-    /** {ApiClient} API interface. */
-    this._apiClient = docSession.apiClient;
-
     /** {Logger} Logger specific to this client's session. */
     this._log = docSession.log;
 
@@ -340,7 +337,7 @@ export default class BodyClient extends StateMachine {
     // won't become open synchronously, the API client code allows us to start
     // sending messages over it immediately. (They'll just get queued up as
     // necessary.)
-    this._apiClient.open();
+    this._docSession.apiClient.open();
 
     // Perform a challenge-response to authorize access to the document.
     try {
