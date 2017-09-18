@@ -377,7 +377,7 @@ export default class BodyClient extends StateMachine {
     // Save the result as the current (latest known) revision of the document,
     // and tell Quill about it.
     const firstEvent = this._quill.currentEvent;
-    this._updateDocWithSnapshot(snapshot);
+    this._updateWithSnapshot(snapshot);
 
     // The above action should have caused the Quill instance to make a change
     // which shows up on its event chain. Grab it, and verify that indeed it's
@@ -485,7 +485,7 @@ export default class BodyClient extends StateMachine {
     // here is a stale response of one sort or another. For example (and most
     // likely), it might be the delayed result from an earlier iteration.
     if (this._snapshot.revNum === baseSnapshot.revNum) {
-      this._updateDocWithDelta(result);
+      this._updateWithDelta(result);
     }
 
     // Fire off the next iteration of requesting server changes, after a short
@@ -670,7 +670,7 @@ export default class BodyClient extends StateMachine {
       // And note that Quill doesn't need to be updated here (that is, its delta
       // is empty) because what we are integrating into the client document is
       // exactly what Quill handed to us.
-      this._updateDocWithDelta(
+      this._updateWithDelta(
         new BodyDelta(vResultNum, delta), FrozenDelta.EMPTY);
       this._becomeIdle();
       return;
@@ -689,7 +689,7 @@ export default class BodyClient extends StateMachine {
       // Thanfully, the local user hasn't made any other changes while we
       // were waiting for the server to get back to us, which means we can
       // cleanly apply the correction on top of Quill's current state.
-      this._updateDocWithDelta(
+      this._updateWithDelta(
         new BodyDelta(vResultNum, correctedDelta), dCorrection);
       this._becomeIdle();
       return;
@@ -735,7 +735,7 @@ export default class BodyClient extends StateMachine {
     // second (lost any insert races or similar).
     const dIntegratedCorrection =
       FrozenDelta.coerce(dMore.transform(dCorrection, false));
-    this._updateDocWithDelta(
+    this._updateWithDelta(
       new BodyDelta(vResultNum, correctedDelta), dIntegratedCorrection);
 
     // (3)
@@ -820,7 +820,7 @@ export default class BodyClient extends StateMachine {
    *   represented in `_snapshot`. This must be used in cases where Quill's
    *   state has progressed ahead of `_snapshot` due to local activity.
    */
-  _updateDocWithDelta(delta, quillDelta = delta.delta) {
+  _updateWithDelta(delta, quillDelta = delta.delta) {
     const needQuillUpdate = !quillDelta.isEmpty();
 
     if (   (this._currentEvent.nextOfNow(QuillEvent.TEXT_CHANGE) !== null)
@@ -845,7 +845,7 @@ export default class BodyClient extends StateMachine {
    *
    * @param {BodySnapshot} snapshot New snapshot.
    */
-  _updateDocWithSnapshot(snapshot) {
+  _updateWithSnapshot(snapshot) {
     this._snapshot = snapshot;
     this._quill.setContents(snapshot.contents, CLIENT_SOURCE);
   }
