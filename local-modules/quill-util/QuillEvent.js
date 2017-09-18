@@ -4,15 +4,13 @@
 
 import { FrozenDelta } from 'doc-common';
 import { TInt, TObject, TString } from 'typecheck';
-import { Errors } from 'util-common';
+import { Errors, Functor } from 'util-common';
 
 import BaseEvent from './BaseEvent';
 
 /**
- * Event wrapper for a Quill Delta, including reference to the document source,
- * the old contents, and the chain of subsequent events. In addition to the
- * event chain properties, each instance has properties as defined by Quill,
- * with the same names as Quill indicates.
+ * Event wrapper for events coming from Quill, as part of a promise-based event
+ * chain.
  *
  * Instances of this class are always frozen (read-only) to help protect clients
  * from each other (or from inadvertently messing with themselves).
@@ -39,55 +37,80 @@ export default class QuillEvent extends BaseEvent {
   }
 
   /**
+   * "Fixes" and validates the given event payload. The fixing takes into
+   * account the fact that Quill will produce events with non-immutable data.
+   *
+   * @param {Functor} payload Event payload in question.
+   * @returns {Functor} Fixed payload.
+   */
+  static fixPayload(payload) {
+    Functor.check(payload);
+    const name = payload.name;
+
+    switch (name) {
+      case QuillEvent.TEXT_CHANGE: {
+        const [delta, oldContents, source] = payload.args;
+        return new Functor(name,
+          FrozenDelta.coerce(delta),
+          FrozenDelta.coerce(oldContents),
+          TString.check(source));
+      }
+
+      case QuillEvent.SELECTION_CHANGE: {
+        const [range, oldRange, source] = payload.args;
+        return new Functor(name,
+          QuillEvent._checkAndFreezeRange(range),
+          QuillEvent._checkAndFreezeRange(oldRange),
+          TString.check(source));
+      }
+
+      default: {
+        throw Errors.bad_value(payload, 'Quill event payload');
+      }
+    }
+  }
+
+  /**
+   * Gets the payload of the given event or event payload as an object with
+   * named properties.
+   *
+   * @param {BaseEvent|Functor} eventOrPayload Event or event payload in
+   *   question.
+   * @returns {object} The properties of `event`'s payload, in convenient named
+   *   form.
+   */
+  static propsOf(eventOrPayload) {
+    const payload = (eventOrPayload instanceof Functor)
+      ? eventOrPayload
+      : eventOrPayload.payload;
+    const name = payload.name;
+
+    switch (name) {
+      case QuillEvent.TEXT_CHANGE: {
+        const [delta, oldContents, source] = payload.args;
+        return { name, delta, oldContents, source };
+      }
+
+      case QuillEvent.SELECTION_CHANGE: {
+        const [range, oldRange, source] = payload.args;
+        return { name, range, oldRange, source };
+      }
+
+      default: {
+        throw Errors.bad_value(payload, 'Quill event payload');
+      }
+    }
+  }
+
+  /**
    * Constructs an instance.
    *
    * @param {object} accessKey Key which protects ability to resolve the next
    *   event.
-   * @param {string} eventName Name of event (its type, really). Indicates how
-   *   the rest of the arguments are interpreted.
-   * @param {...*} eventArgs Additional event arguments, depending on the event
-   *   name. Arguments are all as documented by Quill, except that `source`
-   *   isn't present in these because it was already separately passed (see
-   *   above).
+   * @param {Functor} payload Event payload (name and arguments).
    */
-  constructor(accessKey, eventName, ...eventArgs) {
-    super(eventName);
-
-    switch (eventName) {
-      case QuillEvent.TEXT_CHANGE: {
-        const [delta, oldContents, source] = eventArgs;
-
-        /** {FrozenDelta} The change to the text, per se. */
-        this.delta = FrozenDelta.coerce(delta);
-
-        /** {FrozenDelta} The text as of just before the change. */
-        this.oldContents = FrozenDelta.coerce(oldContents);
-
-        /** {String} The event source. */
-        this.source = TString.check(source);
-
-        break;
-      }
-
-      case QuillEvent.SELECTION_CHANGE: {
-        const [range, oldRange, source] = eventArgs;
-
-        /** {object|null} The new selection range. */
-        this.range = QuillEvent._checkAndFreezeRange(range);
-
-        /** {object|null} The immediately-prior selection range. */
-        this.oldRange = QuillEvent._checkAndFreezeRange(oldRange);
-
-        /** {String} The event source. */
-        this.source = TString.check(source);
-
-        break;
-      }
-
-      default: {
-        throw Errors.bad_value(eventName, 'Quill event name');
-      }
-    }
+  constructor(accessKey, payload) {
+    super(QuillEvent.fixPayload(payload));
 
     // **Note:** `accessKey` is _not_ exposed as a property. Doing so would
     // cause the security problem that its existence is meant to prevent. That
@@ -120,7 +143,7 @@ export default class QuillEvent extends BaseEvent {
         throw Errors.bad_use('Invalid access.');
       }
 
-      nextNow = new QuillEvent(key, ...args);
+      nextNow = new QuillEvent(key, new Functor(...args));
 
       resolveNext(nextNow);
       return nextNow;

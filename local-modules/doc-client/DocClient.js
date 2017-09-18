@@ -8,7 +8,7 @@ import { Delay } from 'promise-util';
 import { QuillEvent } from 'quill-util';
 import { TString } from 'typecheck';
 import { StateMachine } from 'state-machine';
-import { Errors, InfoError } from 'util-common';
+import { Errors, Functor, InfoError } from 'util-common';
 
 import DocSession from './DocSession';
 
@@ -381,7 +381,8 @@ export default class DocClient extends StateMachine {
     // which shows up on its event chain. Grab it, and verify that indeed it's
     // the change we're expecting.
     const firstChange = firstEvent.nextOfNow(QuillEvent.TEXT_CHANGE);
-    if (firstChange.source !== CLIENT_SOURCE) {
+    const source = QuillEvent.propsOf(firstChange).source;
+    if (source !== CLIENT_SOURCE) {
       // We expected the change to be the one we generated from the doc
       // update (above), but the `source` we got speaks otherwise.
       throw Errors.wtf('Bad `source` for initial change.');
@@ -529,8 +530,9 @@ export default class DocClient extends StateMachine {
     }
 
     const event = this._currentEvent.nextNow;
+    const props = QuillEvent.propsOf(event);
 
-    if (event.source === CLIENT_SOURCE) {
+    if (props.source === CLIENT_SOURCE) {
       // The Quill event was generated because of action taken by this class. We
       // don't want to act on it (and perhaps ultimately try to propagate it
       // back to the server), lest we end up in a crazy feedback loop. Since
@@ -542,7 +544,7 @@ export default class DocClient extends StateMachine {
       return;
     }
 
-    switch (event.eventName) {
+    switch (event.payload.name) {
       case QuillEvent.TEXT_CHANGE: {
         // It's a document modification. Go into state `collecting`, leaving the
         // event chain alone for now. After the prescribed amount of time, the
@@ -560,8 +562,8 @@ export default class DocClient extends StateMachine {
       case QuillEvent.SELECTION_CHANGE: {
         // Consume the event, and send it onward to the caret tracker, which
         // might ultimately inform the server about it. Then go back to idling.
-        if (event.range) {
-          this._docSession.caretTracker.update(this._doc.revNum, event.range);
+        if (props.range) {
+          this._docSession.caretTracker.update(this._doc.revNum, props.range);
         }
         this._currentEvent = event;
         this._becomeIdle();
@@ -569,9 +571,9 @@ export default class DocClient extends StateMachine {
       }
 
       default: {
-        // As of this writing, there are no other Quill events, so it's weird
-        // and unexpected if we land here.
-        throw Errors.wtf(`Weird Quill event: ${event.eventName}`);
+        // As of this writing, there are no other kinds of Quill events, so it's
+        // weird and unexpected that we landed here.
+        throw Errors.wtf('Weird Quill event:', event.payload);
       }
     }
   }
@@ -745,11 +747,11 @@ export default class DocClient extends StateMachine {
     // that we consumed to construct `dMore` above. We use `user` for the
     // source and not `CLIENT_SOURCE` because, even though we are in fact
     // making this change here (per se), the changes notionally came from
-    // the user, and as such we _don't_ want to ignore the change.
-    const nextNow = this._currentEvent.withNewPayload(QuillEvent.TEXT_CHANGE, {
-      delta:     dNewMore,
-      source:    'user'
-    });
+    // the user, and as such we _don't_ want to ignore the change. We use
+    // `EMPTY` for the old contents, because this code doesn't care about that
+    // value at all
+    const nextNow = this._currentEvent.withNewPayload(
+      new Functor(QuillEvent.TEXT_CHANGE, dNewMore, FrozenDelta.EMPTY, 'user'));
 
     // Make a new head of the change chain which points at the `nextNow` we
     // just constructed above. We don't include any payload since this class
@@ -784,11 +786,12 @@ export default class DocClient extends StateMachine {
       }
 
       change = nextNow;
-      if (!(includeOurChanges || (change.source !== CLIENT_SOURCE))) {
+      const props = QuillEvent.propsOf(change);
+      if (!(includeOurChanges || (props.source !== CLIENT_SOURCE))) {
         break;
       }
 
-      delta = (delta === null) ? change.delta : delta.compose(change.delta);
+      delta = (delta === null) ? props.delta : delta.compose(props.delta);
     }
 
     // Remember that we consumed all these changes.

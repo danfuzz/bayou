@@ -10,11 +10,11 @@ import { UtilityClass } from 'util-common';
  */
 export default class Mocks extends UtilityClass {
   static nodeRequest(uri = 'http://www.example.com',
-                     method = 'GET',
-                     headers = { host: 'example.com' },
-                     timeout = 10 * 1000,
-                     followRedirects = true,
-                     maxRedirects = 10) {
+      method = 'GET',
+      headers = { host: 'example.com' },
+      timeout = 10 * 1000,
+      followRedirects = true,
+      maxRedirects = 10) {
     return { uri, method, headers, timeout, followRedirects, maxRedirects };
   }
 }

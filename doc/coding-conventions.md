@@ -133,11 +133,11 @@ taking into account recent additions to the language.
    * @returns ...
    */
   _impl_doSomethingInteresting(arg1, arg2) {
-      return this.mustOverride(arg1, arg2);
+      return this._mustOverride(arg1, arg2);
   }
   ```
 
-  `mustOverride()` is defined by the class `CommonBase` in the `util-common`
+  `_mustOverride()` is defined by the class `CommonBase` in the `util-common`
   local module.
 
 * Utility classes &mdash; Utility classes are classes which only serve as a

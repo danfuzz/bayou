@@ -97,9 +97,9 @@ export default class PostConnection extends Connection {
     this._log.info('Error:', error);
 
     this._res
-    .status(400)
-    .type('application/json')
-    .send(payload);
+      .status(400)
+      .type('application/json')
+      .send(payload);
   }
 
   /**

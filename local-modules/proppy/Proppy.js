@@ -128,10 +128,7 @@ export default class Proppy extends UtilityClass {
         break;
       }
 
-      match = (
-           /^[ \t]+/.exec(source)
-        || /^#[^\n]*/.exec(source)
-      );
+      match = /^[ \t]+/.exec(source) || /^#[^\n]*/.exec(source);
       if (match) {
         // Whitespace or comment: Skip it. **Note:** Newlines are significant
         // to the grammar, so we don't consume them here.
@@ -150,16 +147,13 @@ export default class Proppy extends UtilityClass {
         continue;
       }
 
-      match = /^[-_.\/a-zA-Z0-9]+/.exec(source);
+      match = /^[-_./a-zA-Z0-9]+/.exec(source);
       if (match) {
         result.push({ type: 'string', value: match[0] });
         continue;
       }
 
-      match = (
-           /^'([^\\']|(\\.))*'/.exec(source)
-        || /^"([^\\"]|(\\.))*"/.exec(source)
-      );
+      match = /^'([^\\']|(\\.))*'/.exec(source) || /^"([^\\"]|(\\.))*"/.exec(source);
       if (match) {
         // Quoted string: Trim the quotes, and parse characters.
         const contents = Proppy._parseQuotedString(match[0].slice(1, -1));

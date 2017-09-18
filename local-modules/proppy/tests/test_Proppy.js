@@ -103,7 +103,7 @@ describe('proppy/Proppy', () => {
       input = '"key\\\'" = "value"';
       _testStringParsing(input, { 'key\'': 'value' });
 
-      input = '"key\\\"" = "value"';
+      input = '"key\\"" = "value"';
       _testStringParsing(input, { 'key"': 'value' });
 
       input = '"key\\n" = "value"';
