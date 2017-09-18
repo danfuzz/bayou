@@ -94,9 +94,6 @@ export default class BodyClient extends StateMachine {
     /** {DocSession} Server session control / manager. */
     this._docSession = DocSession.check(docSession);
 
-    /** {ApiClient} API interface. */
-    this._apiClient = docSession.apiClient;
-
     /** {Logger} Logger specific to this client's session. */
     this._log = docSession.log;
 
@@ -133,10 +130,10 @@ export default class BodyClient extends StateMachine {
     this._pendingDeltaAfter = false;
 
     /**
-     * {boolean} Is there currently a pending (as-yet unfulfilled) request for a
-     * new local change via the Quill document event promise chain?
+     * {boolean} Is there currently a pending (as-yet unfulfilled) `await` on
+     * the Quill event promise chain?
      */
-    this._pendingQuillChange = false;
+    this._pendingQuillAwait = false;
 
     /**
      * {array<Int>} Timestamps of every transition into the `errorWait` state
@@ -291,11 +288,11 @@ export default class BodyClient extends StateMachine {
    * changes that were in-flight when the connection became problematic.
    */
   _handle_errorWait_start() {
-    this._snapshot           = null;
-    this._sessionProxy       = null;
-    this._currentEvent       = null;
-    this._pendingDeltaAfter  = false;
-    this._pendingQuillChange = false;
+    this._snapshot          = null;
+    this._sessionProxy      = null;
+    this._currentEvent      = null;
+    this._pendingDeltaAfter = false;
+    this._pendingQuillAwait = false;
 
     // After this, it's just like starting from the `detached` state.
     this.s_detached();
@@ -340,7 +337,7 @@ export default class BodyClient extends StateMachine {
     // won't become open synchronously, the API client code allows us to start
     // sending messages over it immediately. (They'll just get queued up as
     // necessary.)
-    this._apiClient.open();
+    this._docSession.apiClient.open();
 
     // Perform a challenge-response to authorize access to the document.
     try {
@@ -429,14 +426,14 @@ export default class BodyClient extends StateMachine {
     // for same. (Otherwise, we would unnecessarily build up redundant promise
     // resolver functions when changes are coming in from the server while the
     // local user is idle.)
-    if (!this._pendingQuillChange) {
-      this._pendingQuillChange = true;
+    if (!this._pendingQuillAwait) {
+      this._pendingQuillAwait = true;
 
       // **Note:** As of this writing, Quill will never reject (report an error
       // on) a document change promise.
       (async () => {
         await this._currentEvent.next;
-        this._pendingQuillChange = false;
+        this._pendingQuillAwait = false;
         this.q_gotQuillEvent(baseSnapshot);
       })();
     }

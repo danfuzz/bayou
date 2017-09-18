@@ -5,15 +5,14 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TObject } from 'typecheck';
 import { PropertyIterable } from 'util-common';
 
 const TEST_OBJECT = {
   a: 1,
   b: 2,
-  functionItem: assert,
+  functionItem: () => true,
   classItem: PropertyIterable,
-  objectItem: {}
+  objectItem: { a: 1 }
 };
 
 describe('util-common/PropertyIterable', () => {
@@ -22,18 +21,18 @@ describe('util-common/PropertyIterable', () => {
       const iter = new PropertyIterable(TEST_OBJECT);
       const expectedProperties = ['a', 'b', 'functionItem', 'classItem', 'objectItem'];
 
-      assert.doesNotThrow(() => _testIterator(iter, expectedProperties));
+      testIteratable(iter, expectedProperties);
     });
   });
 
   describe('iterating soley over methods', () => {
-    it('should return just function elements of the object', () => {
+    it('should return just callable function elements of the object', () => {
       const iter = new PropertyIterable(TEST_OBJECT);
       const methodIter = iter.onlyMethods();
-      const expectedProperties = ['functionItem', 'classItem'];
-      const unexpectedProperties = ['a', 'b', 'objectItem'];
+      const expectedProperties = ['functionItem'];
+      const unexpectedProperties = ['a', 'b', 'classItem', 'objectItem'];
 
-      assert.doesNotThrow(() => _testIterator(methodIter, expectedProperties, unexpectedProperties));
+      testIteratable(methodIter, expectedProperties, unexpectedProperties);
     });
   });
 
@@ -43,16 +42,27 @@ describe('util-common/PropertyIterable', () => {
       const nonObjectIter = iter.skipObject();
       const expectedProperties = ['a', 'b', 'objectItem', 'functionItem', 'classItem'];
 
-      assert.doesNotThrow(() => _testIterator(nonObjectIter, expectedProperties));
+      const result = testIteratable(nonObjectIter, expectedProperties);
 
-      const result = _testIterator(nonObjectIter, expectedProperties);
-
-      TObject.withExactKeys(result, expectedProperties);
+      assert.hasAllKeys(result, expectedProperties);
     });
   });
 
   describe('iterating solely over non-synthetic properties', () => {
-    it('should iterate solely over non-synthetic properties');
+    it('should iterate solely over non-synthetic properties', () => {
+      const obj = {
+        yes1: 'x',
+        yes2: 'y',
+        get no1() { return 10; },
+        get no2() { return 20; },
+        set no2(x) { /*empty*/ },
+        set no3(x) { /*empty*/ }
+      };
+      const iter = new PropertyIterable(obj).skipSynthetic();
+      const expectedProperties = ['yes1', 'yes2'];
+
+      testIteratable(iter, expectedProperties);
+    });
   });
 });
 
@@ -64,27 +74,25 @@ describe('util-common/PropertyIterable', () => {
  * was specifically checked.
  *
  * @param {PropertyIterable} iter The iterator we are testing.
- * @param {array<string>|null} [expectedProperties=[]] A list of property
- *   names. The iterator must return _at least_ all of the properties in this
- *   list.
- * @param {array<string>|null} [unexpectedProperties=[]] A list of property
- *   names. The iterator must not return any of the properties in this list.
- * @returns {array<string>} An array of property names returned by the iterator.
+ * @param {array<string>} expectedProperties List of property names. The
+ *   iterator must return _at least_ all of the properties in this list.
+ * @param {array<string>} [unexpectedProperties = []] List of property names.
+ *   The iterator must not return any of the properties in this list.
+ * @returns {array<string>} List of property names returned by the iterator.
  */
-function _testIterator(iter, expectedProperties = [], unexpectedProperties = []) {
+function testIteratable(iter, expectedProperties, unexpectedProperties = []) {
   const result = {};
 
   for (const property of iter) {
     result[property.name] = true;
   }
 
-  for (const requiredProperty of expectedProperties) {
-    assert.isDefined(result[requiredProperty]);
-    assert.isTrue(result[requiredProperty]);
+  if (expectedProperties.length !== 0) {
+    assert.containsAllKeys(result, expectedProperties);
   }
 
-  for (const unexpectedProperty of unexpectedProperties) {
-    assert.isUndefined(result[unexpectedProperty]);
+  if (unexpectedProperties.length !== 0) {
+    assert.doesNotHaveAnyKeys(result, unexpectedProperties);
   }
 
   return result;
