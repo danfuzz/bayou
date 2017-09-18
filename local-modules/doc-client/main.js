@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import DocClient from './DocClient';
+import BodyClient from './BodyClient';
 import DocSession from './DocSession';
 import EditorComplex from './EditorComplex';
 
-export { DocClient, DocSession, EditorComplex };
+export { BodyClient, DocSession, EditorComplex };

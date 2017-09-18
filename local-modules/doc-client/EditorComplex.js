@@ -12,7 +12,7 @@ import { DomUtil } from 'util-client';
 import { CommonBase, Errors } from 'util-common';
 
 import CaretOverlay from './CaretOverlay';
-import DocClient from './DocClient';
+import BodyClient from './BodyClient';
 import DocSession from './DocSession';
 
 /** {Logger} Logger for this module. */
@@ -83,8 +83,8 @@ export default class EditorComplex extends CommonBase {
     this._docSession = null;
 
     /**
-     * {DocClient|null} Document client instance (API-to-editor hookup). Set in
-     * `_initSession()`.
+     * {BodyClient|null} Document body client instance (API-to-editor hookup).
+     * Set in `_initSession()`.
      */
     this._docClient = null;
 
@@ -92,7 +92,7 @@ export default class EditorComplex extends CommonBase {
     // particular, there is no avoiding the asynchrony in `_domSetup()`, and
     // that setup needs to be complete before we construct the Quill and
     // author overlay instances. And _all_ of this needs to be done before we
-    // make a `DocClient` (which gets done by `_initSession()`).
+    // make a `BodyClient` (which gets done by `_initSession()`).
     (async () => {
       // Do all of the DOM setup for the instance.
       const [titleNode, quillNode, authorOverlayNode] =
@@ -133,7 +133,7 @@ export default class EditorComplex extends CommonBase {
     return this._caretOverlay;
   }
 
-  /** {DocClient} The document client instance. */
+  /** {BodyClient} The document body client instance. */
   get docClient() {
     return this._docClient;
   }
@@ -196,7 +196,7 @@ export default class EditorComplex extends CommonBase {
   _initSession(sessionKey, fromConstructor) {
     this._sessionKey = SplitKey.check(sessionKey);
     this._docSession = new DocSession(this._sessionKey);
-    this._docClient  = new DocClient(this._bodyQuill, this._docSession);
+    this._docClient  = new BodyClient(this._bodyQuill, this._docSession);
 
     this._docClient.start();
 

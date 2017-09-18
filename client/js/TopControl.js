@@ -103,7 +103,7 @@ export default class TopControl {
   }
 
   /**
-   * Hooks things up so that this instance gets notified if/when the `DocClient`
+   * Hooks things up so that this instance gets notified if/when the editor
    * aborts due to error. Should that happen, a recovery attempt is initiated.
    */
   _recoverySetup() {
