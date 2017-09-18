@@ -22,7 +22,15 @@
     "consistent-return": "error",
     "eol-last": "error",
     "eqeqeq": "error",
-    "indent": ["error", 2, { "SwitchCase": 1 }],
+    "indent": [
+      "error",
+      2,
+      {
+        "FunctionDeclaration": { "parameters": 2 },
+        "FunctionExpression": { "parameters": 2 },
+        "SwitchCase": 1
+      }
+    ],
     "keyword-spacing": "error",
     "max-len": [
       "error",
