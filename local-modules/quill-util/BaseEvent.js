@@ -41,7 +41,7 @@ export default class BaseEvent extends CommonBase {
    * instance, which becomes resolved once it is available.
    */
   get next() {
-    throw this.mustOverride();
+    throw this._mustOverride();
   }
 
   /**
@@ -49,7 +49,7 @@ export default class BaseEvent extends CommonBase {
    * is immediately available, or `null` if there is not yet a next event.
    */
   get nextNow() {
-    throw this.mustOverride();
+    throw this._mustOverride();
   }
 
   /**
