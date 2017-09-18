@@ -4,8 +4,24 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
+import { inspect } from 'util';
 
 import { TString } from 'typecheck';
+
+import Assert from 'util-core/tests/Assert';
+
+/** {array<*>} Non-string values to use as test cases. */
+const NON_STRING_CASES = [
+  undefined,
+  null,
+  false,
+  true,
+  37,
+  Symbol('florp'),
+  ['like'],
+  { a: 10 },
+  /** Function. */ () => { /*empty*/ }
+];
 
 describe('typecheck/TString', () => {
   describe('check(value)', () => {
@@ -102,6 +118,129 @@ describe('typecheck/TString', () => {
       const value = 'deadbeef7584930215cafe';
 
       assert.throws(() => TString.hexBytes(value, 4, 8));
+    });
+  });
+
+  describe('checkIdentifier()', () => {
+    it('accepts identifier strings', () => {
+      function test(value) {
+        assert.strictEqual(TString.identifier(value), value);
+      }
+
+      test('a');
+      test('A');
+      test('_');
+      test('blort');
+      test('florp_like');
+      test('x9');
+      test('_0123456789_');
+      test('abcdefghijklmnopqrstuvwxyz');
+      test('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+    });
+
+    it('rejects non-identifier strings', () => {
+      function test(value) {
+        Assert.throwsInfo(
+          () => { TString.identifier(value); },
+          'bad_value',
+          [inspect(value), 'String', 'identifier syntax']);
+      }
+
+      // Needs at least one character.
+      test('');
+
+      // Can't start with a digit.
+      test('0a');
+      test('1a');
+      test('2a');
+      test('3a');
+      test('4a');
+      test('5a');
+      test('6a');
+      test('7a');
+      test('8a');
+      test('9a');
+
+      // Has invalid character.
+      test('a-1');
+      test('a/1');
+      test('a!@#$%^&*');
+    });
+
+    it('rejects non-strings', () => {
+      function test(value) {
+        Assert.throwsInfo(
+          () => { TString.identifier(value); },
+          'bad_value',
+          [inspect(value), 'String', 'identifier syntax']);
+      }
+
+      for (const v of NON_STRING_CASES) {
+        test(v);
+      }
+    });
+  });
+
+  describe('checkLabel()', () => {
+    it('accepts label strings', () => {
+      function test(value) {
+        assert.strictEqual(TString.label(value), value);
+      }
+
+      test('a');
+      test('A');
+      test('_');
+      test('-');
+      test('blort');
+      test('florp_like');
+      test('florp-like');
+      test('x9');
+      test('_0123456789_');
+      test('-0123456789-');
+      test('abcdefghijklmnopqrstuvwxyz');
+      test('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+    });
+
+    it('rejects non-label strings', () => {
+      function test(value) {
+        Assert.throwsInfo(
+          () => { TString.label(value); },
+          'bad_value',
+          [inspect(value), 'String', 'label syntax']);
+      }
+
+      // Needs at least one character.
+      test('');
+
+      // Can't start with a digit.
+      test('0a');
+      test('1a');
+      test('2a');
+      test('3a');
+      test('4a');
+      test('5a');
+      test('6a');
+      test('7a');
+      test('8a');
+      test('9a');
+
+      // Has invalid character.
+      test('a+1');
+      test('a/1');
+      test('a!@#$%^&*');
+    });
+
+    it('rejects non-strings', () => {
+      function test(value) {
+        Assert.throwsInfo(
+          () => { TString.label(value); },
+          'bad_value',
+          [inspect(value), 'String', 'label syntax']);
+      }
+
+      for (const v of NON_STRING_CASES) {
+        test(v);
+      }
     });
   });
 

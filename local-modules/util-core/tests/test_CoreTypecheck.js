@@ -6,7 +6,9 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { CoreTypecheck, InfoError } from 'util-core';
+import { CoreTypecheck } from 'util-core';
+
+import Assert from './Assert';
 
 /** {array<string>} Strings to use as test cases. */
 const STRING_CASES = [
@@ -24,30 +26,9 @@ const NON_STRING_CASES = [
   37,
   Symbol('florp'),
   ['like'],
-  { a: 10 }
+  { a: 10 },
+  /** Function. */ () => { /*empty*/ }
 ];
-
-/**
- * Like `assert.throws()`, but specifically to check the details of an
- * expected `InfoError`.
- *
- * @param {function} func Function to call, expected to throw.
- * @param {string} name Expected error name.
- * @param {array|null} args Expected error arguments, or `null` if there are no
- *   expectations.
- */
-function assertThrowsInfo(func, name, args = null) {
-  try {
-    func();
-    assert.fail('Did not throw.');
-  } catch (e) {
-    assert.instanceOf(e, InfoError);
-    assert.strictEqual(e.info.name, name);
-    if (args !== null) {
-      assert.deepEqual(e.info.args, args);
-    }
-  }
-}
 
 describe('util-core/CoreTypecheck', () => {
   describe('checkIdentifier()', () => {
@@ -69,7 +50,7 @@ describe('util-core/CoreTypecheck', () => {
 
     it('rejects non-identifier strings', () => {
       function test(value) {
-        assertThrowsInfo(
+        Assert.throwsInfo(
           () => { CoreTypecheck.checkIdentifier(value); },
           'bad_value',
           [inspect(value), 'String', 'identifier syntax']);
@@ -98,7 +79,7 @@ describe('util-core/CoreTypecheck', () => {
 
     it('rejects non-strings', () => {
       function test(value) {
-        assertThrowsInfo(
+        Assert.throwsInfo(
           () => { CoreTypecheck.checkIdentifier(value); },
           'bad_value',
           [inspect(value), 'String', 'identifier syntax']);
@@ -132,7 +113,7 @@ describe('util-core/CoreTypecheck', () => {
 
     it('rejects non-label strings', () => {
       function test(value) {
-        assertThrowsInfo(
+        Assert.throwsInfo(
           () => { CoreTypecheck.checkLabel(value); },
           'bad_value',
           [inspect(value), 'String', 'label syntax']);
@@ -161,7 +142,7 @@ describe('util-core/CoreTypecheck', () => {
 
     it('rejects non-strings', () => {
       function test(value) {
-        assertThrowsInfo(
+        Assert.throwsInfo(
           () => { CoreTypecheck.checkLabel(value); },
           'bad_value',
           [inspect(value), 'String', 'label syntax']);
@@ -190,7 +171,7 @@ describe('util-core/CoreTypecheck', () => {
 
     it('rejects non-objects', () => {
       function test(value) {
-        assertThrowsInfo(
+        Assert.throwsInfo(
           () => { CoreTypecheck.checkObject(value); },
           'bad_value',
           [inspect(value), 'Object']);
@@ -230,7 +211,7 @@ describe('util-core/CoreTypecheck', () => {
 
     it('rejects objects of the wrong class', () => {
       function test(value, clazz) {
-        assertThrowsInfo(
+        Assert.throwsInfo(
           () => { CoreTypecheck.checkObject(value, clazz); },
           'bad_value',
           [inspect(value), `class ${clazz.name}`]);
@@ -243,7 +224,7 @@ describe('util-core/CoreTypecheck', () => {
 
     it('rejects non-objects', () => {
       function test(value, clazz) {
-        assertThrowsInfo(
+        Assert.throwsInfo(
           () => { CoreTypecheck.checkObject(value, clazz); },
           'bad_value',
           [inspect(value), `class ${clazz.name}`]);
@@ -270,7 +251,7 @@ describe('util-core/CoreTypecheck', () => {
 
     it('rejects non-strings', () => {
       function test(value) {
-        assertThrowsInfo(
+        Assert.throwsInfo(
           () => { CoreTypecheck.checkString(value); },
           'bad_value',
           [inspect(value), 'String']);
@@ -294,7 +275,7 @@ describe('util-core/CoreTypecheck', () => {
 
     it('rejects strings that do not match the regex', () => {
       function test(value, regex) {
-        assertThrowsInfo(
+        Assert.throwsInfo(
           () => { CoreTypecheck.checkString(value, regex); },
           'bad_value',
           [inspect(value), 'String', regex.toString()]);
@@ -306,7 +287,7 @@ describe('util-core/CoreTypecheck', () => {
 
     it('rejects non-strings', () => {
       function test(value) {
-        assertThrowsInfo(
+        Assert.throwsInfo(
           () => { CoreTypecheck.checkString(value, /./); },
           'bad_value',
           [inspect(value), 'String', '/./']);
@@ -320,7 +301,7 @@ describe('util-core/CoreTypecheck', () => {
     it('rejects a non-`RegExp` second argument', () => {
       const notRegex = 'not-a-regex';
 
-      assertThrowsInfo(
+      Assert.throwsInfo(
         () => { CoreTypecheck.checkString('x', notRegex); },
         'bad_value',
         [inspect(notRegex), 'RegExp']);
