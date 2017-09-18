@@ -80,7 +80,7 @@ describe('util-common/PropertyIterable', () => {
  *   The iterator must not return any of the properties in this list.
  * @returns {array<string>} List of property names returned by the iterator.
  */
-function testIteratable(iter, expectedProperties = [], unexpectedProperties = []) {
+function testIteratable(iter, expectedProperties, unexpectedProperties = []) {
   const result = {};
 
   for (const property of iter) {
