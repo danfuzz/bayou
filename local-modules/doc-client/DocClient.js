@@ -231,11 +231,12 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * Validates a `wantChanges` event. This indicates that it is time to
-   * request a new change from the server, but only if the client isn't in the
-   * middle of doing something else.
+   * Validates a `wantInput` event. This indicates that it is time to solicit
+   * input from the server (in the form of document deltas) and from the local
+   * Quill instance (in the form of Quill events), but only if the client isn't
+   * in the middle of doing something else.
    */
-  _check_wantChanges() {
+  _check_wantInput() {
     // Nothing to do.
   }
 
@@ -411,12 +412,12 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * In state `idle`, handles event `wantChanges`. This can happen as a chained
+   * In state `idle`, handles event `wantInput`. This can happen as a chained
    * event (during startup or at the end of handling the integration of changes)
    * or due to a delay timeout. This will make requests both to the server and
    * to the local Quill instance.
    */
-  _handle_idle_wantChanges() {
+  _handle_idle_wantInput() {
     // We grab the current revision of the doc, so we can refer back to it when
     // a response comes. That is, `_doc` might have changed out from
     // under us between when this event is handled and when the promises used
@@ -460,11 +461,11 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * In any state but `idle`, handles event `wantChanges`. We ignore the event,
+   * In any state but `idle`, handles event `wantInput`. We ignore the event,
    * because the client is in the middle of doing something else. When it's done
-   * with whatever it may be, it will send a new `wantChanges` event.
+   * with whatever it may be, it will send a new `wantInput` event.
    */
-  _handle_any_wantChanges() {
+  _handle_any_wantInput() {
     // Nothing to do. Stay in the same state.
   }
 
@@ -492,7 +493,7 @@ export default class DocClient extends StateMachine {
     // despite any particularly active editing by other clients.
     (async () => {
       await Delay.resolve(PULL_DELAY_MSEC);
-      this.q_wantChanges();
+      this.q_wantInput();
     })();
   }
 
@@ -663,7 +664,7 @@ export default class DocClient extends StateMachine {
       //
       // In particular, if there happened to be any local changes made (coming
       // from Quill) while the server request was in flight, they will be picked
-      // up promptly due to the handling of the `wantChanges` event which will
+      // up promptly due to the handling of the `wantInput` event which will
       // get fired off immediately.
       //
       // And note that Quill doesn't need to be updated here (that is, its delta
@@ -850,11 +851,11 @@ export default class DocClient extends StateMachine {
   }
 
   /**
-   * Sets up the state machine to idle while waiting for changes.
+   * Sets up the state machine to idle while waiting for input.
    */
   _becomeIdle() {
     this.s_idle();
-    this.q_wantChanges();
+    this.q_wantInput();
   }
 
   /**
