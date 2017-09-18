@@ -6,7 +6,7 @@ import Quill from 'quill';
 
 import { FrozenDelta } from 'doc-common';
 import { TObject } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase, Functor } from 'util-common';
 
 import QuillEvent from './QuillEvent';
 
@@ -46,9 +46,8 @@ export default class QuillProm extends Quill {
      * {QuillEvent} The most recent resolved event. It is initialized as defined
      * by the documentation for `currentEvent`.
      */
-    this._currentEvent = new QuillEvent(
-      accessKey, QuillEvent.TEXT_CHANGE,
-      FrozenDelta.EMPTY, FrozenDelta.EMPTY, QuillEvent.API);
+    this._currentEvent = new QuillEvent(accessKey,
+      new Functor(QuillEvent.TEXT_CHANGE, FrozenDelta.EMPTY, FrozenDelta.EMPTY, QuillEvent.API));
 
     // We override `emitter.emit()` to _synchronously_ add an event to the
     // promise chain. We do it this way instead of relying on an event callback

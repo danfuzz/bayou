@@ -9,10 +9,8 @@ import { Errors, Functor } from 'util-common';
 import BaseEvent from './BaseEvent';
 
 /**
- * Event wrapper for a Quill Delta, including reference to the document source,
- * the old contents, and the chain of subsequent events. In addition to the
- * event chain properties, each instance has properties as defined by Quill,
- * with the same names as Quill indicates.
+ * Event wrapper for events coming from Quill, as part of a promise-based event
+ * chain.
  *
  * Instances of this class are always frozen (read-only) to help protect clients
  * from each other (or from inadvertently messing with themselves).
@@ -109,13 +107,10 @@ export default class QuillEvent extends BaseEvent {
    *
    * @param {object} accessKey Key which protects ability to resolve the next
    *   event.
-   * @param {...*} payloadArgs Arguments used to construct the event payload
-   *   functor.
+   * @param {Functor} payload Event payload (name and arguments).
    */
-  constructor(accessKey, ...payloadArgs) {
-    const payload = QuillEvent.fixPayload(new Functor(...payloadArgs));
-
-    super(payload);
+  constructor(accessKey, payload) {
+    super(QuillEvent.fixPayload(payload));
 
     // **Note:** `accessKey` is _not_ exposed as a property. Doing so would
     // cause the security problem that its existence is meant to prevent. That
@@ -148,7 +143,7 @@ export default class QuillEvent extends BaseEvent {
         throw Errors.bad_use('Invalid access.');
       }
 
-      nextNow = new QuillEvent(key, ...args);
+      nextNow = new QuillEvent(key, new Functor(...args));
 
       resolveNext(nextNow);
       return nextNow;
