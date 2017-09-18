@@ -19,10 +19,12 @@ describe('util-core/Functor', () => {
       test('a');
       test('A');
       test('_');
+      test('-');
       test('a1');
-      test('_0123456789');
+      test('_0123456789_');
+      test('-0123456789-');
       test('abcde_fghij_klmno_pqrst_uvwxy_z');
-      test('ABCDE_FGHIJ_KLMNO_PQRST_UVWXY_Z');
+      test('ABCDE-FGHIJ-KLMNO-PQRST-UVWXY-Z');
     });
 
     it('should accept various amounts and types of arguments', () => {
@@ -86,7 +88,7 @@ describe('util-core/Functor', () => {
       }
 
       test('blort');
-      test('florp_like');
+      test('florp-like');
       test('SIDEWAYS_TIMELINE');
     });
   });

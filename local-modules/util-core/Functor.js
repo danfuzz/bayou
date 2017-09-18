@@ -23,15 +23,13 @@ export default class Functor {
   /**
    * Constructs an instance.
    *
-   * @param {string} name Functor name. This must conform to the usual
-   *   conservative syntax for a programming language "identifier," that is, a
-   *   non-empty string with characters taken from the set `[a-zA-Z_0-9]` and a
-   *   non-numeric first character.
+   * @param {string} name Functor name. This must conform to the "label"
+   *   syntax as defined by {@link TString#label()`}.
    * @param {...*} args Functor arguments.
    */
   constructor(name, ...args) {
     /** {string} Functor name. */
-    this._name = CoreTypecheck.checkIdentifier(name);
+    this._name = CoreTypecheck.checkLabel(name);
 
     /** {array<*>} Functor arguments. */
     this._args = Object.freeze(args);
