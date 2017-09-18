@@ -30,11 +30,6 @@ export default class BaseEvent extends CommonBase {
     this._payload = Functor.check(payload);
   }
 
-  /** {string} Name of the event. */
-  get eventName() {
-    return this._payload.name;
-  }
-
   /** {Functor} Event payload (name and arguments). */
   get payload() {
     return this._payload;
@@ -86,7 +81,7 @@ export default class BaseEvent extends CommonBase {
    */
   earliestOfNow(eventName) {
     for (let e = this; e !== null; e = e.nextNow) {
-      if (e.eventName === eventName) {
+      if (e.payload.name === eventName) {
         return e;
       }
     }
@@ -132,7 +127,7 @@ export default class BaseEvent extends CommonBase {
     let result = null;
 
     for (let e = this; e !== null; e = e.nextNow) {
-      if (e.eventName === eventName) {
+      if (e.payload.name === eventName) {
         result = e;
       }
     }
