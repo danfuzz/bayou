@@ -108,7 +108,7 @@ export default class TopControl {
    */
   _recoverySetup() {
     (async () => {
-      await this._editorComplex.docClient.when_unrecoverableError();
+      await this._editorComplex.bodyClient.when_unrecoverableError();
       this._recoverIfPossible();
     })();
   }

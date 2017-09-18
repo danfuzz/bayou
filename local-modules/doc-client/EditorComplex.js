@@ -86,7 +86,7 @@ export default class EditorComplex extends CommonBase {
      * {BodyClient|null} Document body client instance (API-to-editor hookup).
      * Set in `_initSession()`.
      */
-    this._docClient = null;
+    this._bodyClient = null;
 
     // The rest of the initialization has to happen asynchronously. In
     // particular, there is no avoiding the asynchrony in `_domSetup()`, and
@@ -134,8 +134,8 @@ export default class EditorComplex extends CommonBase {
   }
 
   /** {BodyClient} The document body client instance. */
-  get docClient() {
-    return this._docClient;
+  get bodyClient() {
+    return this._bodyClient;
   }
 
   /** {DocSession} The session control instance. */
@@ -196,13 +196,13 @@ export default class EditorComplex extends CommonBase {
   _initSession(sessionKey, fromConstructor) {
     this._sessionKey = SplitKey.check(sessionKey);
     this._docSession = new DocSession(this._sessionKey);
-    this._docClient  = new BodyClient(this._bodyQuill, this._docSession);
+    this._bodyClient  = new BodyClient(this._bodyQuill, this._docSession);
 
-    this._docClient.start();
+    this._bodyClient.start();
 
     // Log a note once everything is all set up.
     (async () => {
-      await this._docClient.when_idle();
+      await this._bodyClient.when_idle();
       if (fromConstructor) {
         log.info('Initialization complete!');
       } else {
