@@ -107,11 +107,11 @@ export default class BodyClient extends StateMachine {
     this._sessionProxy = null;
 
     /**
-     * {BodySnapshot|null} Current revision of the document as received from
-     * the server. Becomes non-null once the first snapshot is received from the
-     * server.
+     * {BodySnapshot|null} Current revision of the document body as received
+     * from the server. Becomes non-null once the first snapshot is received
+     * from the server.
      */
-    this._doc = null;
+    this._snapshot = null;
 
     /**
      * {QuillEvent|object} Current (most recent) local change to the document
@@ -188,13 +188,13 @@ export default class BodyClient extends StateMachine {
    * Validates a `gotDeltaAfter` event. This represents a successful result
    * from the API call `body_deltaAfter()`.
    *
-   * @param {BodySnapshot} baseDoc The document at the time of the original
-   *   request.
-   * @param {BodyDelta} result How to transform `baseDoc` to get a later
+   * @param {BodySnapshot} baseSnapshot The body state at the time of the
+   *   original request.
+   * @param {BodyDelta} result How to transform `baseSnapshot` to get a later
    *   document revision.
    */
-  _check_gotDeltaAfter(baseDoc, result) {
-    BodySnapshot.check(baseDoc);
+  _check_gotDeltaAfter(baseSnapshot, result) {
+    BodySnapshot.check(baseSnapshot);
     BodyDelta.check(result);
   }
 
@@ -205,11 +205,11 @@ export default class BodyClient extends StateMachine {
    * given base document). Put another way, this indicates that `_currentEvent`
    * has a resolved `next`.
    *
-   * @param {BodySnapshot} baseDoc The document at the time of the original
-   *   request.
+   * @param {BodySnapshot} baseSnapshot The body state at the time of the
+   *   original request.
    */
-  _check_gotQuillEvent(baseDoc) {
-    BodySnapshot.check(baseDoc);
+  _check_gotQuillEvent(baseSnapshot) {
+    BodySnapshot.check(baseSnapshot);
   }
 
   /**
@@ -223,11 +223,11 @@ export default class BodyClient extends StateMachine {
    * Validates a `wantApplyDelta` event. This indicates that it is time to
    * send collected local changes up to the server.
    *
-   * @param {BodySnapshot} baseDoc The document at the time of the original
-   *   request.
+   * @param {BodySnapshot} baseSnapshot The body state at the time of the
+   *   original request.
    */
-  _check_wantApplyDelta(baseDoc) {
-    BodySnapshot.check(baseDoc);
+  _check_wantApplyDelta(baseSnapshot) {
+    BodySnapshot.check(baseSnapshot);
   }
 
   /**
@@ -291,7 +291,7 @@ export default class BodyClient extends StateMachine {
    * changes that were in-flight when the connection became problematic.
    */
   _handle_errorWait_start() {
-    this._doc                = null;
+    this._snapshot           = null;
     this._sessionProxy       = null;
     this._currentEvent       = null;
     this._pendingDeltaAfter  = false;
@@ -418,11 +418,11 @@ export default class BodyClient extends StateMachine {
    * to the local Quill instance.
    */
   _handle_idle_wantInput() {
-    // We grab the current revision of the doc, so we can refer back to it when
-    // a response comes. That is, `_doc` might have changed out from
+    // We grab the current local body snapshot, so we can refer back to it when
+    // a response comes. That is, `_snapshot` might have changed out from
     // under us between when this event is handled and when the promises used
     // here become resolved.
-    const baseDoc = this._doc;
+    const baseSnapshot = this._snapshot;
 
     // Ask Quill for any changes we haven't yet observed, via the document
     // change promise chain, but only if there isn't already a pending request
@@ -437,7 +437,7 @@ export default class BodyClient extends StateMachine {
       (async () => {
         await this._currentEvent.next;
         this._pendingQuillChange = false;
-        this.q_gotQuillEvent(baseDoc);
+        this.q_gotQuillEvent(baseSnapshot);
       })();
     }
 
@@ -449,9 +449,9 @@ export default class BodyClient extends StateMachine {
 
       (async () => {
         try {
-          const value = await this._sessionProxy.body_deltaAfter(baseDoc.revNum);
+          const value = await this._sessionProxy.body_deltaAfter(baseSnapshot.revNum);
           this._pendingDeltaAfter = false;
-          this.q_gotDeltaAfter(baseDoc, value);
+          this.q_gotDeltaAfter(baseSnapshot, value);
         } catch (e) {
           this._pendingDeltaAfter = false;
           this.q_apiError('body_deltaAfter', e);
@@ -472,19 +472,19 @@ export default class BodyClient extends StateMachine {
   /**
    * In state `idle`, handles event `gotDeltaAfter`.
    *
-   * @param {BodySnapshot} baseDoc The document at the time of the original
-   *   request.
-   * @param {BodyDelta} result How to transform `baseDoc` to get a later
+   * @param {BodySnapshot} baseSnapshot The body state at the time of the
+   *   original request.
+   * @param {BodyDelta} result How to transform `baseSnapshot` to get a later
    *   document revision.
    */
-  _handle_idle_gotDeltaAfter(baseDoc, result) {
+  _handle_idle_gotDeltaAfter(baseSnapshot, result) {
     this._log.detail('Delta from server:', result.revNum);
 
     // We only take action if the result's base (what `delta` is with regard to)
-    // is the current `_doc`. If that _isn't_ the case, then what we have here
-    // is a stale response of one sort or another. For example (and most
+    // is the current `_snapshot`. If that _isn't_ the case, then what we have
+    // here is a stale response of one sort or another. For example (and most
     // likely), it might be the delayed result from an earlier iteration.
-    if (this._doc.revNum === baseDoc.revNum) {
+    if (this._snapshot.revNum === baseSnapshot.revNum) {
       this._updateDocWithDelta(result);
     }
 
@@ -505,7 +505,7 @@ export default class BodyClient extends StateMachine {
    *
    * @param {BodySnapshot} baseDoc_unused The document at the time of the
    *   original request.
-   * @param {BodyDelta} result_unused How to transform `baseDoc` to get a
+   * @param {BodyDelta} result_unused How to transform `baseSnapshot` to get a
    *   later document revision.
    */
   _handle_any_gotDeltaAfter(baseDoc_unused, result_unused) {
@@ -518,11 +518,11 @@ export default class BodyClient extends StateMachine {
    * to collect the changes for a short period of time before sending them up to
    * the server.
    *
-   * @param {BodySnapshot} baseDoc The document at the time of the original
-   *   request.
+   * @param {BodySnapshot} baseSnapshot The body state at the time of the
+   *   original request.
    */
-  _handle_idle_gotQuillEvent(baseDoc) {
-    if (this._doc.revNum !== baseDoc.revNum) {
+  _handle_idle_gotQuillEvent(baseSnapshot) {
+    if (this._snapshot.revNum !== baseSnapshot.revNum) {
       // This state machine event was generated with respect to a revision of
       // the document which has since been updated, or we ended up having two
       // events for the same change (which can happen if the user is
@@ -555,7 +555,7 @@ export default class BodyClient extends StateMachine {
         // that happened in the mean time.
         (async () => {
           await Delay.resolve(PUSH_DELAY_MSEC);
-          this.q_wantApplyDelta(baseDoc);
+          this.q_wantApplyDelta(baseSnapshot);
         })();
 
         this.s_collecting();
@@ -566,7 +566,7 @@ export default class BodyClient extends StateMachine {
         // Consume the event, and send it onward to the caret tracker, which
         // might ultimately inform the server about it. Then go back to idling.
         if (props.range) {
-          this._docSession.caretTracker.update(this._doc.revNum, props.range);
+          this._docSession.caretTracker.update(this._snapshot.revNum, props.range);
         }
         this._currentEvent = event;
         this._becomeIdle();
@@ -599,11 +599,11 @@ export default class BodyClient extends StateMachine {
    * is time for the collected local changes to be sent up to the server for
    * integration.
    *
-   * @param {BodySnapshot} baseDoc The document at the time of the original
-   *   request.
+   * @param {BodySnapshot} baseSnapshot The body state at the time of the
+   *   original request.
    */
-  _handle_collecting_wantApplyDelta(baseDoc) {
-    if (this._doc.revNum !== baseDoc.revNum) {
+  _handle_collecting_wantApplyDelta(baseSnapshot) {
+    if (this._snapshot.revNum !== baseSnapshot.revNum) {
       // As with the `gotQuillEvent` event, we ignore this event if the doc has
       // changed out from under us.
       this._becomeIdle();
@@ -629,7 +629,7 @@ export default class BodyClient extends StateMachine {
     (async () => {
       try {
         const value =
-          await this._sessionProxy.body_applyDelta(this._doc.revNum, delta);
+          await this._sessionProxy.body_applyDelta(this._snapshot.revNum, delta);
         this.q_gotApplyDelta(delta, value);
       } catch (e) {
         this.q_apiError('body_applyDelta', e);
@@ -804,21 +804,21 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * Updates `_doc` to be the given revision by applying the indicated delta
-   * to the current revision, and tells the attached Quill instance to update
-   * itself accordingly.
+   * Updates `_snapshot` to be the given revision by applying the indicated
+   * delta to the current revision, and tells the attached Quill instance to
+   * update itself accordingly.
    *
    * This is only valid to call when the revision of the document that Quill has
-   * is the same as what is represented in `_doc` _or_ if `quillDelta` is passed
-   * as an empty delta. That is, this is only valid when Quill's revision of the
-   * document doesn't need to be updated. If that isn't the case, then this
-   * method will throw an error.
+   * is the same as what is represented in `_snapshot` _or_ if `quillDelta` is
+   * passed as an empty delta. That is, this is only valid when Quill's revision
+   * of the document doesn't need to be updated. If that isn't the case, then
+   * this method will throw an error.
    *
-   * @param {BodyDelta} delta Delta from the current `_doc` contents.
+   * @param {BodyDelta} delta Delta from the current `_snapshot` contents.
    * @param {FrozenDelta} [quillDelta = delta] Delta from Quill's current state,
    *   which is expected to preserve any state that Quill has that isn't yet
-   *   represented in `_doc`. This must be used in cases where Quill's state has
-   *   progressed ahead of `_doc` due to local activity.
+   *   represented in `_snapshot`. This must be used in cases where Quill's
+   *   state has progressed ahead of `_snapshot` due to local activity.
    */
   _updateDocWithDelta(delta, quillDelta = delta.delta) {
     const needQuillUpdate = !quillDelta.isEmpty();
@@ -830,8 +830,8 @@ export default class BodyClient extends StateMachine {
       throw Errors.bad_use('Cannot apply delta due to revision skew.');
     }
 
-    // Update the local document.
-    this._doc = this._doc.compose(delta);
+    // Update the local snapshot.
+    this._snapshot = this._snapshot.compose(delta);
 
     // Tell Quill if necessary.
     if (needQuillUpdate) {
@@ -840,13 +840,13 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * Updates `_doc` to be the given snapshot, and tells the attached Quill
+   * Updates `_snapshot` to be the given snapshot, and tells the attached Quill
    * instance to update itself accordingly.
    *
    * @param {BodySnapshot} snapshot New snapshot.
    */
   _updateDocWithSnapshot(snapshot) {
-    this._doc = snapshot;
+    this._snapshot = snapshot;
     this._quill.setContents(snapshot.contents, CLIENT_SOURCE);
   }
 
