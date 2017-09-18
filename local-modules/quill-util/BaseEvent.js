@@ -2,8 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TObject, TString } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase, Functor } from 'util-common';
 
 /**
  * Base class for promise-chainable events. Each event is chained to the next
@@ -13,27 +12,32 @@ import { CommonBase } from 'util-common';
  * case, the properties and accessors return promises that only become resolved
  * once an appropriate event has been emitted.
  *
- * This base class merely provides a couple of abstract methods to define the
- * basic interface, and a couple of helper methods to walk the chain, and it
- * only requires events have a name. Subclasses are responsible for providing
- * event payloads and arranging for the chain to become constructed.
+ * This base class provides a couple of abstract methods to define the basic
+ * interface, a couple of helper methods to walk the chain, and access to the
+ * event payload (which is a constructor argument). Subclasses are responsible
+ * for arranging for the event chain to become constructed.
  */
 export default class BaseEvent extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {string} eventName Name of the event (its type, really).
+   * @param {Functor} payload Event payload (name and arguments).
    */
-  constructor(eventName) {
+  constructor(payload) {
     super();
 
-    /** {string} Name of the event (its type, really). */
-    this._eventName = TString.nonEmpty(eventName);
+    /** {Functor} Event payload (name and arguments). */
+    this._payload = Functor.check(payload);
   }
 
   /** {string} Name of the event. */
   get eventName() {
-    return this._eventName;
+    return this._payload.name;
+  }
+
+  /** {Functor} Event payload (name and arguments). */
+  get payload() {
+    return this._payload;
   }
 
   /**
@@ -167,18 +171,13 @@ export default class BaseEvent extends CommonBase {
    * event name and payload. Put another way, this constructs a replacement
    * event for this instance, but with the same chaining.
    *
-   * @param {string} [eventName = 'none'] Event name.
-   * @param {object} [payload = {}] Event payload properties. These become
-   *   accessible as-is on the resulting event. If not passed, the resulting
-   *   event has no payload properties.
-   * @returns {BaseEvent} New event instance with `payload` properties, and
+   * @param {Functor} payload Event payload (name and arguments).
+   * @returns {BaseEvent} New event instance with the given `payload`, and
    *   whose `next` and `nextNow` behave the same as this instance's properties
    *   of the same names.
    */
-  withNewPayload(eventName = 'none', payload = {}) {
-    TObject.check(payload);
-
-    const result = new BaseEvent(eventName);
+  withNewPayload(payload) {
+    const result = new BaseEvent(payload);
     Object.defineProperties(result, {
       next:    { get: () => { return this.next;    } },
       nextNow: { get: () => { return this.nextNow; } }
@@ -195,17 +194,13 @@ export default class BaseEvent extends CommonBase {
    * instance. That is, the constructed event's `next` and `nextNow` immediately
    * point at this instance.
    *
-   * @param {string} [eventName = 'none'] Event name.
-   * @param {object} [payload = {}] Event payload properties. These become
-   *   accessible as-is on the resulting event. If not passed, the resulting
-   *   event has no payload properties.
+   * @param {Functor} [payload = new Functor('none')] Event payload (name and
+   *   arguments).
    * @returns {BaseEvent} New event instance with `payload` properties, and
    *   whose `next` and `nextNow` refer to this instance.
    */
-  withPushedHead(eventName = 'none', payload = {}) {
-    TObject.check(payload);
-
-    const result = new BaseEvent(eventName);
+  withPushedHead(payload = new Functor('none')) {
+    const result = new BaseEvent(payload);
     Object.defineProperties(result, {
       next:    { get: () => { return Promise.resolve(this); } },
       nextNow: { get: () => { return this;                  } }
