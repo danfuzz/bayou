@@ -129,5 +129,15 @@ describe('util-core/CommonBase', () => {
       const value = HasCoerce.coerceOrNull(123);
       assert.isNull(value);
     });
+
+    it('should reject a `_impl_coerceOrNull()` result that is neither `null` nor an instance of the class', () => {
+      class HasCoerce extends CommonBase {
+        static _impl_coerceOrNull(value) {
+          return value;
+        }
+      }
+
+      assert.throws(() => { HasCoerce.coerceOrNull(123); });
+    });
   });
 });
