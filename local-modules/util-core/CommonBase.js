@@ -100,7 +100,7 @@ export default class CommonBase {
    * @param {*} value Value to coerce. This is guaranteed _not_ to be an
    *   instance of this class.
    * @returns {this} `value` or its coercion to the class that this was
-   *   called on. Will always be an instance of the same as the class that this
+   *   called on. Must always be an instance of the same as the class that this
    *   method was called on.
    */
   static _impl_coerce(value) {
@@ -123,7 +123,7 @@ export default class CommonBase {
    *
    * @param {*} value Value to coerce.
    * @returns {this|null} `value` or its coercion to the class that this was
-   *   called on, or `null` if `value` can't be coerced. If non-null, will
+   *   called on, or `null` if `value` can't be coerced. If non-null, must
    *   always be an instance of the same class that this method was called on.
    */
   static coerceOrNull(value) {
