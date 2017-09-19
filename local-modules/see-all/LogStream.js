@@ -3,8 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
+import { CommonBase } from 'util-common';
 
-import Logger from './Logger';
+import BaseLogger from './BaseLogger';
 
 /**
  * Adaptor which provides a writable stream on top of a logger at a particular
@@ -13,16 +14,18 @@ import Logger from './Logger';
  * **Note:** This implements just the basic functionality, _not_ including any
  * events or flow control.
  */
-export default class LogStream {
+export default class LogStream extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {Logger} logger Underlying logger to use.
+   * @param {BaseLogger} logger Underlying logger to use.
    * @param {string} level Severity level to log at.
    */
   constructor(logger, level) {
-    /** {Logger} Underlying logger to use. */
-    this._logger = Logger.check(logger);
+    super();
+
+    /** {BaseLogger} Underlying logger to use. */
+    this._logger = BaseLogger.check(logger);
 
     /** {string} Severity level. */
     this._level = TString.check(level);

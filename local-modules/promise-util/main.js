@@ -3,8 +3,10 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import CallPiler from './CallPiler';
+import ChainedEvent from './ChainedEvent';
 import Condition from './Condition';
 import Delay from './Delay';
+import EventSource from './EventSource';
 import Mutex from './Mutex';
 
-export { CallPiler, Condition, Delay, Mutex };
+export { CallPiler, ChainedEvent, Condition, Delay, EventSource, Mutex };
