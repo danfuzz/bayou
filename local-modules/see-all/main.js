@@ -2,7 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import BaseLogger from './BaseLogger';
 import Logger from './Logger';
+import LogStream from './LogStream';
 import SeeAll from './SeeAll';
 
-export { Logger, SeeAll };
+export { BaseLogger, Logger, LogStream, SeeAll };
