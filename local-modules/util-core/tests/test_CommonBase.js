@@ -5,52 +5,139 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Logger } from 'see-all';
 import { CommonBase } from 'util-common';
 
-const logger = new Logger('test-common-base');
-
-class NearlyEmptyClass {
-  fiat() {
-    logger.debug('I exist');
-  }
-}
-
-class CommonBaseSubclass extends CommonBase {
-  fiat() {
-    logger.debug('I exist too!');
-  }
-}
-
 describe('util-core/CommonBase', () => {
-  describe('mixInto(class)', () => {
+  describe('mixInto()', () => {
     it('should add its properties to the supplied class', () => {
+      class NearlyEmptyClass {
+        fiat() { /*empty*/ }
+      }
+
+      assert.notProperty(NearlyEmptyClass, 'check');
       assert.notProperty(NearlyEmptyClass, 'coerce');
-
       CommonBase.mixInto(NearlyEmptyClass);
-
+      assert.property(NearlyEmptyClass, 'check');
       assert.property(NearlyEmptyClass, 'coerce');
     });
   });
 
-  describe('check(object)', () => {
-    it('should return the supplied value if it is an instance or subclass of CommonBase', () => {
-      const base = new CommonBase();
-      const subclass = new CommonBaseSubclass();
+  describe('check()', () => {
+    it('should return the supplied value if it is an instance of the class or a subclass', () => {
+      class Subclass1 extends CommonBase {
+        fiat() { /*empty*/ }
+      }
+
+      class Subclass2 extends Subclass1 {
+        lux() { /*empty*/ }
+      }
+
+      const base      = new CommonBase();
+      const subclass1 = new Subclass1();
+      const subclass2 = new Subclass2();
 
       assert.strictEqual(CommonBase.check(base), base);
-      assert.strictEqual(CommonBase.check(subclass), subclass);
-      assert.strictEqual(CommonBaseSubclass.check(subclass), subclass);
+      assert.strictEqual(CommonBase.check(subclass1), subclass1);
+      assert.strictEqual(CommonBase.check(subclass2), subclass2);
+      assert.strictEqual(Subclass1.check(subclass1), subclass1);
+      assert.strictEqual(Subclass1.check(subclass2), subclass2);
     });
 
-    it('should throw an Error if the supplied value is not a child instance', () => {
-      const somethingElse = new NearlyEmptyClass();
+    it('should throw an Error if the supplied value is not an instance of the class or a subclass', () => {
+      class Subclass extends CommonBase {
+        fiat() { /*empty*/ }
+      }
 
-      assert.throws(() => CommonBase.check(somethingElse));
+      assert.throws(() => CommonBase.check(new Map()));
+      assert.throws(() => Subclass.check(new CommonBase()));
     });
   });
 
-  describe('coerce(value)', () => {
-    it('needs a way to be tested');
+  describe('coerce()', () => {
+    it('should call through to `_impl_coerce()`', () => {
+      let gotValue = null;
+      class HasCoerce extends CommonBase {
+        static _impl_coerce(value) {
+          gotValue = value;
+          return new HasCoerce();
+        }
+      }
+
+      const value = HasCoerce.coerce(123);
+      assert.instanceOf(value, HasCoerce);
+      assert.strictEqual(gotValue, 123);
+    });
+
+    it('should reject a `_impl_coerce()` result that is not an instance of the class', () => {
+      class HasCoerce extends CommonBase {
+        static _impl_coerce(value) {
+          return value;
+        }
+      }
+
+      assert.throws(() => { HasCoerce.coerce(123); });
+    });
+  });
+
+  describe('coerceOrNull()', () => {
+    it('should call through to `_impl_coerce()` if there is no `_impl_coerceOrNull()`', () => {
+      let gotValue = null;
+      class HasCoerce extends CommonBase {
+        static _impl_coerce(value) {
+          gotValue = value;
+          return new HasCoerce();
+        }
+      }
+
+      const value = HasCoerce.coerceOrNull(123);
+      assert.instanceOf(value, HasCoerce);
+      assert.strictEqual(gotValue, 123);
+    });
+
+    it('should call through to `_impl_coerce()` if there is no `_impl_coerceOrNull()` and convert a throw into a `null`', () => {
+      class HasCoerce extends CommonBase {
+        static _impl_coerce(value_unused) {
+          throw new Error('oy');
+        }
+      }
+
+      const value = HasCoerce.coerceOrNull(123);
+      assert.isNull(value);
+    });
+
+    it('should call through to `_impl_coerceOrNull()`', () => {
+      let gotValue = null;
+      class HasCoerce extends CommonBase {
+        static _impl_coerceOrNull(value) {
+          gotValue = value;
+          return new HasCoerce();
+        }
+      }
+
+      const value = HasCoerce.coerceOrNull(123);
+      assert.instanceOf(value, HasCoerce);
+      assert.strictEqual(gotValue, 123);
+    });
+
+    it('should call through to `_impl_coerceOrNull()` and accept a `null` return value', () => {
+      class HasCoerce extends CommonBase {
+        static _impl_coerceOrNull(value_unused) {
+          return null;
+        }
+      }
+
+      const value = HasCoerce.coerceOrNull(123);
+      assert.isNull(value);
+    });
+
+    it('should reject a `_impl_coerceOrNull()` result that is neither `null` nor an instance of the class', () => {
+      class HasCoerce extends CommonBase {
+        static _impl_coerceOrNull(value) {
+          return value;
+        }
+      }
+
+      assert.throws(() => { HasCoerce.coerceOrNull(123); });
+    });
   });
 });

@@ -178,7 +178,6 @@ export default class BaseEvent extends CommonBase {
       nextNow: { get: () => { return this.nextNow; } }
     });
 
-    Object.assign(result, payload);
     Object.freeze(result);
     return result;
   }
@@ -201,7 +200,6 @@ export default class BaseEvent extends CommonBase {
       nextNow: { get: () => { return this;                  } }
     });
 
-    Object.assign(result, payload);
     Object.freeze(result);
     return result;
   }
