@@ -21,7 +21,7 @@ export default class ClientSink extends Singleton {
   /**
    * Logs a message at the given severity level.
    *
-   * @param {number} nowMsec_unused Timestamp of the message.
+   * @param {Int} nowMsec_unused Timestamp of the message.
    * @param {string} level Severity level.
    * @param {string} tag Name of the component associated with the message.
    * @param {...string} message Message to log.
@@ -61,7 +61,7 @@ export default class ClientSink extends Singleton {
   /**
    * Logs the indicated time value as "punctuation" on the log.
    *
-   * @param {number} nowMsec_unused Timestamp to log.
+   * @param {Int} nowMsec_unused Timestamp to log.
    * @param {string} utcString String representation of the time, as UTC.
    * @param {string} localString String representation of the time, in the local
    *   timezone.

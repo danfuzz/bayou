@@ -84,7 +84,7 @@ export default class AllSinks extends Singleton {
    * as such to `sink.log()`. This will also generate `sink.time()` calls at
    * appropriate junctures to "punctuate" gaps.
    *
-   * @returns {number} The timestamp.
+   * @returns {Int} The timestamp.
    */
   _nowMsec() {
     const now = Date.now();
@@ -109,18 +109,18 @@ export default class AllSinks extends Singleton {
   /**
    * Calls `sink.time()` on all of the logging sinks.
    *
-   * @param {number} now The time to pass.
+   * @param {Int} nowMsec The time to pass.
    */
-  _callTime(now) {
+  _callTime(nowMsec) {
     // Note: We don't check to see if there are any sinks here. That check
     // gets done more productively in `log()`, above.
 
-    const date = new Date(now);
+    const date = new Date(nowMsec);
     const utcString = AllSinks._utcTimeString(date);
     const localString = AllSinks._localTimeString(date);
 
     for (const s of this._sinks) {
-      s.time(now, utcString, localString);
+      s.time(nowMsec, utcString, localString);
     }
   }
 
