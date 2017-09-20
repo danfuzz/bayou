@@ -117,21 +117,6 @@ export default class BaseLogger extends CommonBase {
     return new LogStream(this, level);
   }
 
-  /** A writable stream for `debug` logs. */
-  get debugStream() { return this.streamFor('debug'); }
-
-  /** A writable stream for `error` logs. */
-  get errorStream() { return this.streamFor('error'); }
-
-  /** A writable stream for `warn` logs. */
-  get warnStream() { return this.streamFor('warn'); }
-
-  /** A writable stream for `info` logs. */
-  get infoStream() { return this.streamFor('info'); }
-
-  /** A writable stream for `detail` logs. */
-  get detailStream() { return this.streamFor('detail'); }
-
   /**
    * Constructs and returns a wrapper for this instance which prefixes each
    * log with the given additional arguments.
