@@ -5,8 +5,7 @@
 import chalk from 'chalk';
 import { inspect } from 'util';
 
-import { SeeAll } from 'see-all';
-import { Singleton } from 'util-common';
+import { BaseSink, SeeAll } from 'see-all';
 
 /**
  * Number of columns to reserve for log line prefixes. Prefixes under this
@@ -18,13 +17,13 @@ const PREFIX_COLS = 24;
  * Implementation of the `see-all` logging sink protocol for use in a server
  * context. It logs everything to the console.
  */
-export default class ServerSink extends Singleton {
+export default class ServerSink extends BaseSink {
   /**
    * Registers an instance of this class as a logging sink with the main
    * `see-all` module.
    */
   static init() {
-    SeeAll.theOne.add(ServerSink.theOne);
+    SeeAll.theOne.add(new ServerSink());
   }
 
   /**

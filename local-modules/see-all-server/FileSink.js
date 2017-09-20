@@ -5,14 +5,14 @@
 import fs from 'fs';
 import { inspect } from 'util';
 
-import { SeeAll } from 'see-all';
+import { BaseSink, SeeAll } from 'see-all';
 import { TString } from 'typecheck';
 
 /**
  * Implementation of the `see-all` logging sink protocol which stores logged
  * items to a file.
  */
-export default class FileSink {
+export default class FileSink extends BaseSink {
   /**
    * Constructs an instance. This will cause the instance to be registered with
    * the main `see-all` module.
@@ -20,6 +20,8 @@ export default class FileSink {
    * @param {string} path Path of the file to log to.
    */
   constructor(path) {
+    super();
+
     /** {string} Path of the file to log to. */
     this._path = TString.nonEmpty(path);
 

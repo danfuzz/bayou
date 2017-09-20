@@ -2,20 +2,19 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { SeeAll } from 'see-all';
-import { Singleton } from 'util-common';
+import { BaseSink, SeeAll } from 'see-all';
 
 /**
  * Implementation of the `see-all` logging sink protocol for use in a web
  * browser context. It logs everything to the browser window console.
  */
-export default class ClientSink extends Singleton {
+export default class ClientSink extends BaseSink {
   /**
    * Registers an instance of this class as a logging sink with the main
    * `see-all` module.
    */
   static init() {
-    SeeAll.theOne.add(ClientSink.theOne);
+    SeeAll.theOne.add(new ClientSink());
   }
 
   /**
