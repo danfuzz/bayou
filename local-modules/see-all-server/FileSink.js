@@ -32,7 +32,7 @@ export default class FileSink {
    * @param {Int} nowMsec Timestamp of the message.
    * @param {string} level Severity level.
    * @param {string} tag Name of the component associated with the message.
-   * @param {...string} message Message to log.
+   * @param {...*} message Message to log.
    */
   log(nowMsec, level, tag, ...message) {
     // For any items in `message` that aren't strings, use `inspect()` to

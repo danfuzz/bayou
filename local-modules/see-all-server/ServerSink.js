@@ -33,7 +33,7 @@ export default class ServerSink extends Singleton {
    * @param {Int} nowMsec_unused Timestamp of the message.
    * @param {string} level Severity level.
    * @param {string} tag Name of the component associated with the message.
-   * @param {...string} message Message to log.
+   * @param {...*} message Message to log.
    */
   log(nowMsec_unused, level, tag, ...message) {
     const prefix = ServerSink._makePrefix(tag, level);
