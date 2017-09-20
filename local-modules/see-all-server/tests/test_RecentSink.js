@@ -8,8 +8,30 @@ import { describe, it } from 'mocha';
 import { RecentSink } from 'see-all-server';
 
 describe('see-all-server/RecentSink', () => {
-  describe('time(nowMsec, utcString, localString)', () => {
-    it('needs a way to be tested');
+  describe('log()', () => {
+    it('should log the item as given', () => {
+      const sink = new RecentSink(1);
+
+      sink.log(90909, 'error', 'foo', 'bar', 'baz');
+
+      const contents = sink.contents;
+      assert.lengthOf(contents, 1);
+      assert.deepEqual(contents[0],
+        { nowMsec: 90909, level: 'error', tag: 'foo', message: ['bar', 'baz'] });
+    });
+  });
+
+  describe('time()', () => {
+    it('should log the time as given', () => {
+      const sink = new RecentSink(1);
+
+      sink.time(80808, 'utc-time', 'local-time');
+
+      const contents = sink.contents;
+      assert.lengthOf(contents, 1);
+      assert.deepEqual(contents[0],
+        { nowMsec: 80808, tag: 'time', utcString: 'utc-time', localString: 'local-time' });
+    });
   });
 
   describe('.contents', () => {
