@@ -8,6 +8,9 @@ import { CommonBase } from 'util-common';
 
 /**
  * Base class for logging sink. Subclasses must implement `log()` and `time()`.
+ *
+ * **TODO:** This should follow the usual abstract class pattern and make the
+ * methods to implement be named `_impl_*`.
  */
 export default class BaseSink extends CommonBase {
   /**
@@ -31,6 +34,7 @@ export default class BaseSink extends CommonBase {
   /**
    * Logs a message at the given severity level.
    *
+   * @abstract
    * @param {Int} nowMsec Timestamp of the message.
    * @param {string} level Severity level.
    * @param {string} tag Name of the component associated with the message.
@@ -44,6 +48,7 @@ export default class BaseSink extends CommonBase {
    * Logs the indicated time value as "punctuation" on the log. This class
    * also uses this call to trigger cleanup of old items.
    *
+   * @abstract
    * @param {Int} nowMsec Timestamp to log.
    * @param {string} utcString String representation of the time, as UTC.
    * @param {string} localString String representation of the time, in the local
