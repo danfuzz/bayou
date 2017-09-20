@@ -4,6 +4,9 @@
   "main": "main.js",
 
   "dependencies": {
+    "lodash": "^4.17.4",
+    "redux": "^3.7.2",
+
     "api-client": "local",
     "api-common": "local",
     "doc-client": "local",

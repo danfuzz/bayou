@@ -2,30 +2,17 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Caret } from 'doc-common';
+import { cloneDeep } from 'lodash';
+
 import { Delay } from 'promise-util';
 import { QuillEvent, QuillGeometry } from 'quill-util';
-import { TObject, TString } from 'typecheck';
-
-/**
- * {Int} Amount of time (in msec) to wait after receiving a caret update from
- * the server before requesting another one. This is to prevent the client from
- * inundating the server with requests when there is some particularly active
- * editing going on.
- */
-const REQUEST_DELAY_MSEC = 250;
+import { TObject } from 'typecheck';
 
 /**
  * {Int} Amount of time (in msec) to wait after noticing a local edit before
  * looking for a new one.
  */
 const LOCAL_EDIT_DELAY_MSEC = 1000;
-
-/**
- * {Int} Amount of time (in msec) to wait after a failure to communicate with
- * the server, before trying to reconnect.
- */
-const ERROR_DELAY_MSEC = 5000;
 
 /**
  * {string} XML namespace for SVG documents.
@@ -56,12 +43,6 @@ export default class CaretOverlay {
    * @param {Element} svgElement The `<svg>` element to attach to.
    */
   constructor(editorComplex, svgElement) {
-    /**
-     * {Map<string, Map<string, object>>} _Ad hoc_ storage for arbitrary data
-     * associated with sessions (highlights, color, avatar, etc).
-     */
-    this._sessions = new Map();
-
     /** {EditorComplex} Editor complex that this instance is a part of. */
     this._editorComplex = editorComplex;
 
@@ -100,162 +81,39 @@ export default class CaretOverlay {
      */
     this._svgDefs = this._addInitialSvgDefs();
 
-    this._watchCarets();
+    /**
+     * {Map<string, object>} Map of session ids to the caret state for
+     * that session received during the previous update. Used for diffing.
+     */
+    this._lastCaretSessions = new Map();
+
+    /**
+     * {Map<string, SVGUseElement>} Map of session id to the `<use>` elements
+     * for each avatar. By pre-allocating them and storing one for each
+     * session we can avoid te cost of redrawing the user avatar each update
+     * and can instead just translate the x/y position of this `<use>`
+     * reference.
+     */
+    this._useReferences = new Map();
+
+    /**
+     * {CaretStore} Data store and its associated mutation state machine
+     * used for updating the caret data model as changes come from the
+     * server.
+     */
+    this._caretStore = editorComplex.caretStore;
+
+    /**
+     * {function} Function which acts as our receipt for having subscribed
+     * to changes to the caret store. If called, this function will
+     * unsubscribe this module from further change notifications.
+     */
+    this._caretSubscription = this._caretStore.subscribe(this._onCaretChange.bind(this));
+
+    // Call the change callback once to make sure initial state is set.
+    this._onCaretChange();
+
     this._watchLocalEdits();
-  }
-
-  /**
-   * Begin tracking a new session.
-   *
-   * @param {Caret} caret The new caret to track (which includes a session ID).
-   */
-  _beginSession(caret) {
-    Caret.check(caret);
-
-    const info = new Map(Object.entries({ caret }));
-
-    this._sessions.set(caret.sessionId, info);
-    this._addAvatarToDefs(info);
-    this._updateDisplay();
-  }
-
-  /**
-   * Stop tracking a given session.
-   *
-   * @param {string} sessionId The session to stop tracking.
-   */
-  _endSession(sessionId) {
-    TString.check(sessionId);
-
-    this._removeAvatarFromDefs(sessionId);
-    this._sessions.delete(sessionId);
-
-    this._updateDisplay();
-  }
-
-  /**
-   * Updates annotation for a remote session's caret, and updates the display.
-   *
-   * @param {Caret} caret The caret to update.
-   */
-  _updateCaret(caret) {
-    Caret.check(caret);
-
-    const sessionId = caret.sessionId;
-
-    if (!this._sessions.has(sessionId)) {
-      this._beginSession(caret);
-    }
-
-    const info     = this._sessions.get(sessionId);
-    const oldCaret = info.get('caret');
-
-    info.set('caret', caret);
-
-    if (caret.color !== oldCaret.color) {
-      this._updateAvatarColor(caret);
-    }
-
-    this._updateDisplay();
-  }
-
-  /**
-   * Watches for selection-related activity.
-   */
-  async _watchCarets() {
-    await this._editorComplex.whenReady();
-
-    // Change `false` to `true` here if you want to see the local user's
-    // selection get highlighted. Handy during development!
-    if (false) { // eslint-disable-line no-constant-condition
-      let currentEvent = this._editorComplex.bodyQuill.currentEvent;
-      while (currentEvent) {
-        const selEvent = await currentEvent.nextOf(QuillEvent.SELECTION_CHANGE);
-        const range    = selEvent.range;
-
-        this._updateCaret(
-          new Caret('local-session',
-            { index: range.index, length: range.length, color: '#ffb8b8' }));
-        currentEvent = selEvent;
-      }
-    }
-
-    let docSession = null;
-    let snapshot = null;
-    let sessionProxy;
-    let sessionId;
-
-    for (;;) {
-      if (docSession === null) {
-        // Init the session variables (on the first iteration), or re-init them
-        // if we got a failure during a previous iteration.
-        docSession   = this._editorComplex.docSession;
-        sessionProxy = await docSession.getSessionProxy();
-
-        // Can only get the session ID after we have a proxy. (Before that, the
-        // ID might not be set, because the session might not even exist!)
-        sessionId = this._editorComplex.sessionId;
-      }
-
-      try {
-        if (snapshot !== null) {
-          // We have a snapshot which we can presumably get a delta from, so try
-          // to do that.
-          const delta = await sessionProxy.caret_deltaAfter(snapshot.revNum);
-          snapshot = snapshot.compose(delta);
-          docSession.log.detail(`Got caret delta. ${snapshot.carets.length} caret(s).`);
-        }
-      } catch (e) {
-        // Assume that the error isn't truly fatal. Most likely, it's because
-        // the session got restarted or because the snapshot we have is too old
-        // to get a delta from. We just `null` out the snapshot and let the next
-        // clause try to get it afresh.
-        docSession.log.warn('Trouble with `caret_deltaAfter`:', e);
-        snapshot = null;
-      }
-
-      try {
-        if (snapshot === null) {
-          // We don't yet have a snapshot to base deltas off of, so get one!
-          // This can happen either because we've just started a new session or
-          // because the attempt to get a delta failed for some reason. (The
-          // latter is why this section isn't just part of an `else` block to
-          // the previous `if`).
-          snapshot = await sessionProxy.caret_snapshot();
-          docSession.log.detail(`Got ${snapshot.carets.length} new caret(s)!`);
-        }
-      } catch (e) {
-        // Assume that the error is transient and most likely due to the session
-        // getting terminated / restarted. Null out the session variables, wait
-        // a moment, and try again.
-        docSession.log.warn('Trouble with `caret_snapshot`:', e);
-        docSession   = null;
-        sessionProxy = null;
-        await Delay.resolve(ERROR_DELAY_MSEC);
-        continue;
-      }
-
-      const oldSessions = new Set(this._sessions.keys());
-
-      for (const c of snapshot.carets) {
-        if (c.sessionId === sessionId) {
-          // Don't render the caret for this client.
-          continue;
-        }
-
-        this._updateCaret(c);
-        oldSessions.delete(c.sessionId);
-      }
-
-      // The remaining elements of `oldSessions` are sessions which have gone
-      // away.
-      for (const s of oldSessions) {
-        docSession.log.info('Session ended:', s);
-        this._endSession(s);
-      }
-
-      await Delay.resolve(REQUEST_DELAY_MSEC);
-    }
   }
 
   /**
@@ -304,9 +162,9 @@ export default class CaretOverlay {
     const quill = this._editorComplex.bodyQuill;
 
     // For each session…
-    for (const [sessionId_unused, info] of this._sessions) {
+    for (const [sessionId, info] of this._lastCaretSessions) {
       const caret = info.get('caret');
-      const avatarReference = info.get('avatarReference');
+      const avatarReference = this._useReferences.get(sessionId);
 
       if (caret.length === 0) {
         // Length of zero means an insertion point instead of a selection
@@ -456,9 +314,9 @@ export default class CaretOverlay {
 
     this._svgDefs.appendChild(avatarGroup);
 
-    const useReferenceForAvatar = this._useElementForSessionAvatar(caret.sessionId);
+    const useReferenceForAvatar = this._createUseElementForSessionAvatar(caret.sessionId);
 
-    info.set('avatarReference', useReferenceForAvatar);
+    this._useReferences.set(caret.sessionId, useReferenceForAvatar);
   }
 
   _avatarDefWithName(name) {
@@ -483,6 +341,8 @@ export default class CaretOverlay {
     if (avatar) {
       this._svgDefs.removeChild(avatar);
     }
+
+    this._useReferences.delete(sessionId);
   }
 
   /**
@@ -493,7 +353,7 @@ export default class CaretOverlay {
    * @param {string} sessionId The id for the session being referenced.
    * @returns {SVGUseElement} A reference to the session's avatar definition.
    */
-  _useElementForSessionAvatar(sessionId) {
+  _createUseElementForSessionAvatar(sessionId) {
     const avatarName = CaretOverlay.avatarNameForSessionId(sessionId);
     const useElement = this._document.createElementNS(SVG_NAMESPACE, 'use');
 
@@ -553,6 +413,87 @@ export default class CaretOverlay {
 
     for (const child of root.children) {
       this._updateAvatarChildColors(child, color);
+    }
+  }
+
+  /**
+   * Callback function which reponds to change notifications from the caret
+   * data model store. It keeps a copy of the prior session state and users
+   * that to diff against when new changes come in. It separates out the
+   * various kinds of changes that could have occurred in an effort to do as
+   * little work as possible.
+   *
+   * TODO: Currently _updateDisplay() blows away all of the SVG child elements
+   *       and adds them fresh with each call. With the fine(r)-grained change
+   *       diffing below, and a cache of the elements, we should be able to
+   *       merely modify them in place rather than starting from scratch
+   *       each time.
+   */
+  _onCaretChange() {
+    const oldState = this._lastCaretSessions;
+    const newState = this._caretStore.state.sessions;
+
+    const oldKeys = new Set(oldState.keys());
+    const newKeys = new Set(newState.keys());
+
+    const added = [];
+    const colorChanged = [];
+    const moved = [];
+    const removed = [];
+
+    for (const key of oldKeys) {
+      if (newKeys.has(key)) {
+        // If a given session key is in both the new and old state
+        // then the info was potentially updated between callbacks.
+        const oldCaret = oldState.get(key).get('caret');
+        const newCaret = newState.get(key).get('caret');
+
+        if (oldCaret.color !== newCaret.color) {
+          colorChanged.push(key);
+        }
+
+        if (oldCaret.index !== newCaret.index || oldCaret.length !== newCaret.length) {
+          moved.push(key);
+        }
+      } else {
+        // If the key was in the old state but not the new then
+        // clearly it was removed.
+        removed.push(key);
+      }
+
+      // NB: It is safe to mutate a Set while iterating.
+      oldKeys.delete(key);
+      newKeys.delete(key);
+    }
+
+    // newKeys now holds just the list of keys that were neither
+    // modified nor removed (i.e. just the keys added since last time).
+    for (const key of newKeys) {
+      // But let's do a quick sanity check regardless
+      const name = CaretOverlay.avatarNameForSessionId(key);
+      const avatarDef = this._avatarDefWithName(name);
+
+      if (!avatarDef) {
+        added.push(key);
+      }
+    }
+
+    this._lastCaretSessions = cloneDeep(newState);
+
+    for (const sessionId of added) {
+      this._addAvatarToDefs(this._lastCaretSessions.get(sessionId));
+    }
+
+    for (const sessionId of colorChanged) {
+      this._updateAvatarColor(this._lastCaretSessions.get(sessionId).caret);
+    }
+
+    for (const sessionId of removed) {
+      this._removeAvatarFromDefs(sessionId);
+    }
+
+    if (added.length || colorChanged.length || moved.length || removed.length) {
+      this._updateDisplay();
     }
   }
 }
