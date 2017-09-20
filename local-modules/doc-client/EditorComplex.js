@@ -12,6 +12,7 @@ import { DomUtil } from 'util-client';
 import { CommonBase, Errors } from 'util-common';
 
 import CaretOverlay from './CaretOverlay';
+import CaretStore from './CaretStore';
 import BodyClient from './BodyClient';
 import DocSession from './DocSession';
 
@@ -114,6 +115,8 @@ export default class EditorComplex extends CommonBase {
         modules:  EditorComplex._bodyModuleConfig
       });
 
+      this._caretStore = new CaretStore(this);
+
       // Let the overlay do extra initialization.
       Hooks.theOne.quillInstanceInit('title', this._titleQuill);
       Hooks.theOne.quillInstanceInit('body', this._bodyQuill);
@@ -126,6 +129,11 @@ export default class EditorComplex extends CommonBase {
 
       this._ready.value = true;
     })();
+  }
+
+  /** {CaretStore} Pub/sub interface for caret data model changes. */
+  get caretStore() {
+    return this._caretStore;
   }
 
   /** {CaretOverlay} The author overlay controller. */
