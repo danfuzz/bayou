@@ -74,16 +74,12 @@ export default class RecentSink {
     }
   }
 
-  /**
-   * Gets the saved contents of this log.
-   */
+  /** {array<object>} The saved contents of this log. */
   get contents() {
     return this._log;
   }
 
-  /**
-   * Gets the saved contents as HTML.
-   */
+  /** {string} The saved contents of this log as an HTML string. */
   get htmlContents() {
     const result = [];
 

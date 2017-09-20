@@ -3,50 +3,77 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { assert } from 'chai';
-import { beforeEach, describe, it } from 'mocha';
+import { describe, it } from 'mocha';
 
 import { RecentSink } from 'see-all-server';
 
 describe('see-all-server/RecentSink', () => {
-  let log = null;
-  const LOG_LEVEL = 'debug';
-  const LOG_TAG = 'test';
-  const LOG_PREFIX = 'this is log line ';
-  const NUM_LINES = 4;
-
-  beforeEach(() => {
-    log = new RecentSink(30 * 1000);
-
-    const now = new Date();
-
-    for (let i = 0; i < NUM_LINES; i++) {
-      log.log(now.getTime(), LOG_LEVEL, LOG_TAG, LOG_PREFIX + i);
-    }
-  });
-
   describe('time(nowMsec, utcString, localString)', () => {
     it('needs a way to be tested');
   });
 
   describe('.contents', () => {
-    it('should return the four log lines posted in the setup', () => {
-      const logContents = log.contents;
+    it('should contain all logged items assuming no `time` has been logged', () => {
+      const sink = new RecentSink(1);
+      const NUM_LINES = 10;
 
       for (let i = 0; i < NUM_LINES; i++) {
-        const line = logContents[i];
+        sink.log(12345 + i, 'info', 'blort', 'florp', i);
+      }
 
-        assert.strictEqual(line['level'], LOG_LEVEL);
-        assert.strictEqual(line['tag'], LOG_TAG);
-        assert.strictEqual(line['message'][0], LOG_PREFIX + i);
-        assert.isTrue(Number.isSafeInteger(line['nowMsec']));
+      const contents = sink.contents;
+
+      for (let i = 0; i < NUM_LINES; i++) {
+        const line = contents[i];
+
+        assert.strictEqual(line.nowMsec, 12345 + i);
+        assert.strictEqual(line.level, 'info');
+        assert.strictEqual(line.tag, 'blort');
+        assert.deepEqual(line.message, ['florp', i]);
+      }
+    });
+
+    it('should only contain new-enough items if `time` was just logged', () => {
+      function timeForLine(line) {
+        return 12345 + (line * 100);
+      }
+
+      const NUM_LINES = 1000;
+      const MAX_AGE = 2000;
+      const FINAL_TIME = timeForLine(NUM_LINES);
+      const sink = new RecentSink(MAX_AGE);
+
+      for (let i = 0; i < NUM_LINES; i++) {
+        sink.log(timeForLine(i), 'info', 'blort', 'florp');
+      }
+
+      sink.time(FINAL_TIME, 'utc', 'local');
+
+      const contents = sink.contents;
+
+      for (const line of contents) {
+        if (line.tag === 'time') {
+          assert.strictEqual(line.nowMsec, FINAL_TIME);
+          assert.strictEqual(line.utcString, 'utc');
+          assert.strictEqual(line.localString, 'local');
+        } else {
+          assert.isAtLeast(line.nowMsec, FINAL_TIME - MAX_AGE);
+        }
       }
     });
   });
 
   describe('.htmlContents', () => {
-    it('should return the four log lines posted in the setup as HTML table markup', () => {
-      const logContents = log.htmlContents;
-      const lines = logContents.match(/[^\r\n]+/g);
+    it('should return the logged lines as HTML', () => {
+      const sink = new RecentSink(1);
+      const NUM_LINES = 10;
+
+      for (let i = 0; i < NUM_LINES; i++) {
+        sink.log(12345 + i, 'info', 'blort', 'florp', i);
+      }
+
+      const contents = sink.htmlContents;
+      const lines = contents.match(/[^\r\n]+/g);
 
       // One line for each log entry, plus one more each for the <table> and
       // </table>. This is kind of a weak test but it's better than nothing.
