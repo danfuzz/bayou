@@ -4,11 +4,11 @@
 
 import Quill from 'quill';
 
-import { FrozenDelta } from 'doc-common';
+import { EventSource } from 'promise-util';
 import { TObject } from 'typecheck';
 import { CommonBase, Functor } from 'util-common';
 
-import QuillEvent from './QuillEvent';
+import QuillEvents from './QuillEvents';
 
 /**
  * Extension of the `Quill` class that provides a promise-based interface to
@@ -36,20 +36,16 @@ export default class QuillProm extends Quill {
     // constructor.
     const origEmitter = this.emitter;
 
-    // Key used to authenticate this instance to the event chain it spawns.
-    // **Not** exposed as an instance variable, as doing so would violate the
-    // security we are trying to establish by the key's existence in the first
-    // place!
-    const accessKey = Symbol('quill-prom-key');
+    /** {EventSource} Event source (emitter) for this instance. */
+    this._emitter = new EventSource();
 
     /**
-     * {QuillEvent} The most recent resolved event. It is initialized as defined
-     * by the documentation for `currentEvent`.
+     * {ChainableEvent} The most recent resolved event. It is initialized as
+     * defined by the documentation for `currentEvent`.
      */
-    this._currentEvent = new QuillEvent(accessKey,
-      new Functor(QuillEvent.TEXT_CHANGE, FrozenDelta.EMPTY, FrozenDelta.EMPTY, QuillEvent.API));
+    this._currentEvent = this._emitter.emit(QuillEvents.EMPTY_TEXT_CHANGE_PAYLOAD);
 
-    // We override `emitter.emit()` to _synchronously_ add an event to the
+    // We override `emitter.emit()` to _synchronously_ emit an event to the
     // promise chain. We do it this way instead of relying on an event callback
     // to avoid the possibility of Quill's document state advancing between the
     // time that an event callback is queued and when it is fired. That is,
@@ -73,13 +69,14 @@ export default class QuillProm extends Quill {
     // synchronously on stale information.
     const origEmit = origEmitter.emit;
     origEmitter.emit = (type, ...rest) => {
-      if (type === QuillEvent.EDITOR_CHANGE) {
+      if (type === QuillEvents.EDITOR_CHANGE) {
         // We attach to the `editor-change` event so that we see all changes in
         // their original order, even when changes were made with the "silent"
         // flag (because if we miss events, then the local and server state will
         // tragically diverge).
 
-        this._currentEvent = this._currentEvent._gotEvent(accessKey, ...rest);
+        this._currentEvent =
+          QuillEvents.emitQuillPayload(this._emitter, new Functor(...rest));
       }
 
       // This is the moral equivalent of `super.emit(...)`.
@@ -93,7 +90,7 @@ export default class QuillProm extends Quill {
   }
 
   /**
-   * {QuillEvent} The current (latest / most recent) event that has been
+   * {ChainableEvent} The current (latest / most recent) event that has been
    * emitted from this instance. It is always a regular value (not a promise).
    *
    * **Note:** If accessed before any events have ever been emitted from this
