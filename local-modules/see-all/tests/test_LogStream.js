@@ -11,6 +11,26 @@ import { LogStream } from 'see-all';
 import MockLogger from './MockLogger';
 
 describe('see-all/LogStream', () => {
+  describe('constructor()', () => {
+    it('should accept valid arguments', () => {
+      const logger = new MockLogger();
+
+      new LogStream(logger, 'info');
+      new LogStream(logger, 'warn');
+      new LogStream(logger, 'error');
+    });
+
+    it('should reject an invalid logger argument', () => {
+      assert.throws(() => { new LogStream(null, 'info'); });
+    });
+
+    it('should reject an invalid `level` argument', () => {
+      const logger = new MockLogger();
+
+      assert.throws(() => { new LogStream(logger, 'blortch is not a level'); });
+    });
+  });
+
   describe('write(string)', () => {
     it('should call through to the underlying logger', () => {
       const logger = new MockLogger();

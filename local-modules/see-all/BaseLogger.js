@@ -18,11 +18,14 @@ export default class BaseLogger extends CommonBase {
    *
    * @param {string} level Severity level. Must be one of the severity level
    *   constants defined by this class.
+   * @returns {string} `level`, if it is indeed valid.
    */
   static validateLevel(level) {
     if (!LEVELS.has(level)) {
       throw Errors.bad_value(level, 'logging severity level');
     }
+
+    return level;
   }
 
   /**
