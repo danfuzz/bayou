@@ -4,7 +4,7 @@
 
 import BayouKeyHandlers from './BayouKeyHandlers';
 import BayouKeyboard from './BayouKeyboard';
-import QuillEvent from './QuillEvent';
+import QuillEvents from './QuillEvents';
 import QuillGeometry from './QuillGeometry';
 import QuillProm from './QuillProm';
 import QuillUtil from './QuillUtil';
@@ -16,7 +16,7 @@ QuillProm.register({ 'modules/keyboard': BayouKeyboard }, true);
 export {
   BayouKeyHandlers,
   BayouKeyboard,
-  QuillEvent,
+  QuillEvents,
   QuillGeometry,
   QuillProm,
   QuillUtil

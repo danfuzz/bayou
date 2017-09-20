@@ -90,7 +90,7 @@ export default class Application {
       path.resolve(Dirs.theOne.LOG_DIR, 'access.log'),
       { flags: 'a' });
 
-    RequestLogger.addLoggers(this._app, log.infoStream, accessStream);
+    RequestLogger.addLoggers(this._app, log.streamFor('info'), accessStream);
   }
 
   /**

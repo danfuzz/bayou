@@ -34,7 +34,7 @@ export default class RecentSink {
   /**
    * Logs a message at the given severity level.
    *
-   * @param {number} nowMsec Timestamp of the message.
+   * @param {Int} nowMsec Timestamp of the message.
    * @param {string} level Severity level.
    * @param {string} tag Name of the component associated with the message.
    * @param {...string} message Message to log.
@@ -48,7 +48,7 @@ export default class RecentSink {
    * Logs the indicated time value as "punctuation" on the log. This class
    * also uses this call to trigger cleanup of old items.
    *
-   * @param {number} nowMsec Timestamp to log.
+   * @param {Int} nowMsec Timestamp to log.
    * @param {string} utcString String representation of the time, as UTC.
    * @param {string} localString String representation of the time, in the local
    *   timezone.
@@ -74,16 +74,12 @@ export default class RecentSink {
     }
   }
 
-  /**
-   * Gets the saved contents of this log.
-   */
+  /** {array<object>} The saved contents of this log. */
   get contents() {
     return this._log;
   }
 
-  /**
-   * Gets the saved contents as HTML.
-   */
+  /** {string} The saved contents of this log as an HTML string. */
   get htmlContents() {
     const result = [];
 

@@ -29,7 +29,7 @@ export default class FileSink {
   /**
    * Logs a message at the given severity level.
    *
-   * @param {number} nowMsec Timestamp of the message.
+   * @param {Int} nowMsec Timestamp of the message.
    * @param {string} level Severity level.
    * @param {string} tag Name of the component associated with the message.
    * @param {...string} message Message to log.
@@ -47,7 +47,7 @@ export default class FileSink {
   /**
    * Logs the indicated time value.
    *
-   * @param {number} nowMsec Timestamp to log.
+   * @param {Int} nowMsec Timestamp to log.
    * @param {string} utcString String representation of the time, as UTC.
    * @param {string} localString String representation of the time, in the local
    *   timezone.

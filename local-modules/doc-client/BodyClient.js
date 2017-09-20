@@ -5,7 +5,7 @@
 import { ConnectionError } from 'api-common';
 import { BodyDelta, BodySnapshot, FrozenDelta } from 'doc-common';
 import { Delay } from 'promise-util';
-import { QuillEvent } from 'quill-util';
+import { QuillEvents } from 'quill-util';
 import { TString } from 'typecheck';
 import { StateMachine } from 'state-machine';
 import { Errors, Functor, InfoError } from 'util-common';
@@ -111,15 +111,12 @@ export default class BodyClient extends StateMachine {
     this._snapshot = null;
 
     /**
-     * {QuillEvent|object} Current (most recent) local change to the document
+     * {ChainableEvent|null} Current (most recent) local change to the document
      * made by Quill that this instance is aware of. That is,
      * `_currentEvent.nextOf(TEXT_CHANGE)` (once it resolves) is the first
      * change that this instance has not yet processed. This variable is
      * initialized by getting `_quill.currentEvent` and is generally updated by
-     * getting the next `TEXT_CHANGE` on it. In a couple cases, though, instead
-     * of being a `QuillEvent` per se, it is a "manually" constructed object
-     * with a payload compatible for use within this class; these are used very
-     * transiently to handle multi-way change merging.
+     * getting the next `TEXT_CHANGE` on it.
      */
     this._currentEvent = null;
 
@@ -379,8 +376,8 @@ export default class BodyClient extends StateMachine {
     // The above action should have caused the Quill instance to make a change
     // which shows up on its event chain. Grab it, and verify that indeed it's
     // the change we're expecting.
-    const firstChange = firstEvent.nextOfNow(QuillEvent.TEXT_CHANGE);
-    const source = QuillEvent.propsOf(firstChange).source;
+    const firstChange = firstEvent.nextOfNow(QuillEvents.TEXT_CHANGE);
+    const source = QuillEvents.propsOf(firstChange).source;
     if (source !== CLIENT_SOURCE) {
       // We expected the change to be the one we generated from the doc
       // update (above), but the `source` we got speaks otherwise.
@@ -530,7 +527,7 @@ export default class BodyClient extends StateMachine {
     }
 
     const event = this._currentEvent.nextNow;
-    const props = QuillEvent.propsOf(event);
+    const props = QuillEvents.propsOf(event);
 
     if (props.source === CLIENT_SOURCE) {
       // The Quill event was generated because of action taken by this class. We
@@ -545,7 +542,7 @@ export default class BodyClient extends StateMachine {
     }
 
     switch (event.payload.name) {
-      case QuillEvent.TEXT_CHANGE: {
+      case QuillEvents.TEXT_CHANGE: {
         // It's a document modification. Go into state `collecting`, leaving the
         // event chain alone for now. After the prescribed amount of time, the
         // `collecting` handler will hoover up the event with any other edits
@@ -559,7 +556,7 @@ export default class BodyClient extends StateMachine {
         return;
       }
 
-      case QuillEvent.SELECTION_CHANGE: {
+      case QuillEvents.SELECTION_CHANGE: {
         // Consume the event, and send it onward to the caret tracker, which
         // might ultimately inform the server about it. Then go back to idling.
         if (props.range) {
@@ -682,7 +679,7 @@ export default class BodyClient extends StateMachine {
     // the server's state.
     const correctedDelta = FrozenDelta.coerce(delta.compose(dCorrection));
 
-    if (this._currentEvent.nextOfNow(QuillEvent.TEXT_CHANGE) === null) {
+    if (this._currentEvent.nextOfNow(QuillEvents.TEXT_CHANGE) === null) {
       // Thanfully, the local user hasn't made any other changes while we
       // were waiting for the server to get back to us, which means we can
       // cleanly apply the correction on top of Quill's current state.
@@ -751,7 +748,7 @@ export default class BodyClient extends StateMachine {
     // `EMPTY` for the old contents, because this code doesn't care about that
     // value at all
     const nextNow = this._currentEvent.withNewPayload(
-      new Functor(QuillEvent.TEXT_CHANGE, dNewMore, FrozenDelta.EMPTY, 'user'));
+      new Functor(QuillEvents.TEXT_CHANGE, dNewMore, FrozenDelta.EMPTY, 'user'));
 
     // Make a new head of the change chain which points at the `nextNow` we
     // just constructed above. We don't include any payload since this class
@@ -780,13 +777,13 @@ export default class BodyClient extends StateMachine {
 
     let change = this._currentEvent;
     for (;;) {
-      const nextNow = change.nextOfNow(QuillEvent.TEXT_CHANGE);
+      const nextNow = change.nextOfNow(QuillEvents.TEXT_CHANGE);
       if (nextNow === null) {
         break;
       }
 
       change = nextNow;
-      const props = QuillEvent.propsOf(change);
+      const props = QuillEvents.propsOf(change);
       if (!(includeOurChanges || (props.source !== CLIENT_SOURCE))) {
         break;
       }
@@ -820,7 +817,7 @@ export default class BodyClient extends StateMachine {
   _updateWithDelta(delta, quillDelta = delta.delta) {
     const needQuillUpdate = !quillDelta.isEmpty();
 
-    if (   (this._currentEvent.nextOfNow(QuillEvent.TEXT_CHANGE) !== null)
+    if (   (this._currentEvent.nextOfNow(QuillEvents.TEXT_CHANGE) !== null)
         && needQuillUpdate) {
       // It is unsafe to apply the delta as-is, because we know that Quill's
       // revision of the document has diverged.

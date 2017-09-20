@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import BaseLogger from './BaseLogger';
@@ -28,7 +27,7 @@ export default class LogStream extends CommonBase {
     this._logger = BaseLogger.check(logger);
 
     /** {string} Severity level. */
-    this._level = TString.check(level);
+    this._level = BaseLogger.validateLevel(level);
   }
 
   /**

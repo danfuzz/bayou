@@ -46,8 +46,4 @@ describe('api-common/SplitKey', () => {
       assert.isFrozen(key);
     });
   });
-
-  describe('_impl methods', () => {
-    it('should should have some way to be tested');
-  });
 });

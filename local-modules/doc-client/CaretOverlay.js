@@ -5,7 +5,7 @@
 import { cloneDeep } from 'lodash';
 
 import { Delay } from 'promise-util';
-import { QuillEvent, QuillGeometry } from 'quill-util';
+import { QuillEvents, QuillGeometry } from 'quill-util';
 import { TObject } from 'typecheck';
 
 /**
@@ -131,11 +131,11 @@ export default class CaretOverlay {
 
     for (;;) {
       // Wait for a text change.
-      currentEvent = await currentEvent.nextOf(QuillEvent.TEXT_CHANGE);
+      currentEvent = await currentEvent.nextOf(QuillEvents.TEXT_CHANGE);
 
       // Skip any additional text changes that have already been posted, so that
       // we won't just be slowly iterating over all changes.
-      currentEvent = currentEvent.latestOfNow(QuillEvent.TEXT_CHANGE);
+      currentEvent = currentEvent.latestOfNow(QuillEvents.TEXT_CHANGE);
 
       log.detail('Got local edit event.');
       this._updateDisplay();
