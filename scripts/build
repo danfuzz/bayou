@@ -478,11 +478,11 @@ function build-product-info {
 
     # The git info, if available.
     local commitInfo="$(
-        git log -1 --pretty=format:"commit-id = '%H'%ncommit-date = '%ai'" \
+        git log -1 --pretty=format:"commit_id = '%H'%ncommit_date = '%ai'" \
             2>/dev/null \
         || (
-            echo 'commit-id = unknown'
-            echo 'commit-date = unknown'
+            echo 'commit_id = unknown'
+            echo 'commit_date = unknown'
         )
     )"
 
