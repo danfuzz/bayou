@@ -14,6 +14,9 @@ import CaretOp from './CaretOp';
 import CaretSnapshot from './CaretSnapshot';
 import DocumentId from './DocumentId';
 import FrozenDelta from './FrozenDelta';
+import PropertyDelta from './PropertyDelta';
+import PropertyOp from './PropertyOp';
+import PropertySnapshot from './PropertySnapshot';
 import Timestamp from './Timestamp';
 import RevisionNumber from './RevisionNumber';
 
@@ -26,6 +29,9 @@ Codec.theOne.registerClass(CaretDelta);
 Codec.theOne.registerClass(CaretOp);
 Codec.theOne.registerClass(CaretSnapshot);
 Codec.theOne.registerClass(FrozenDelta);
+Codec.theOne.registerClass(PropertyDelta);
+Codec.theOne.registerClass(PropertyOp);
+Codec.theOne.registerClass(PropertySnapshot);
 Codec.theOne.registerClass(Timestamp);
 
 export {
@@ -39,6 +45,9 @@ export {
   CaretSnapshot,
   DocumentId,
   FrozenDelta,
+  PropertyDelta,
+  PropertyOp,
+  PropertySnapshot,
   Timestamp,
   RevisionNumber
 };
