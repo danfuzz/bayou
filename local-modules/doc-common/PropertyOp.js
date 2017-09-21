@@ -132,7 +132,11 @@ export default class PropertyOp extends CommonBase {
       return false;
     }
 
-    return this._payload.equals(other._payload);
+    const p1 = this._payload;
+    const p2 = other._payload;
+
+    return (p1.name === p2.name)
+      && DataUtil.equalData(p1.args, p2.args);
   }
 
   /**
