@@ -248,6 +248,18 @@ describe('doc-common/CaretSnapshot', () => {
       assert.isFalse(snap1.equals(snap2));
       assert.isFalse(snap2.equals(snap1));
     });
+
+    it('should return `false` when passed a non-snapshot', () => {
+      const snap = new CaretSnapshot(1, [caret1, caret2, caret3]);
+
+      assert.isFalse(snap.equals(undefined));
+      assert.isFalse(snap.equals(null));
+      assert.isFalse(snap.equals(false));
+      assert.isFalse(snap.equals(true));
+      assert.isFalse(snap.equals(914));
+      assert.isFalse(snap.equals(['not', 'a', 'snapshot']));
+      assert.isFalse(snap.equals(new Map()));
+    });
   });
 
   describe('withCaret()', () => {
