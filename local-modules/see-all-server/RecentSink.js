@@ -4,16 +4,15 @@
 
 import ansiHtml from 'ansi-html';
 import chalk from 'chalk';
-import { inspect } from 'util';
 
-import { SeeAll } from 'see-all';
+import { BaseSink, SeeAll } from 'see-all';
 import { TInt } from 'typecheck';
 
 /**
  * Implementation of the `see-all` logging sink protocol which collects a
  * rolling compendium of recently logged items.
  */
-export default class RecentSink {
+export default class RecentSink extends BaseSink {
   /**
    * Constructs an instance. This will cause the instance to be registered with
    * the main `see-all` module.
@@ -22,6 +21,8 @@ export default class RecentSink {
    *   out of the list.
    */
   constructor(maxAgeMsec) {
+    super();
+
     /** {Int} Maximum age. */
     this._maxAgeMsec = TInt.nonNegative(maxAgeMsec);
 
@@ -37,9 +38,10 @@ export default class RecentSink {
    * @param {Int} nowMsec Timestamp of the message.
    * @param {string} level Severity level.
    * @param {string} tag Name of the component associated with the message.
-   * @param {...string} message Message to log.
+   * @param {...*} message Message to log.
    */
   log(nowMsec, level, tag, ...message) {
+    message = BaseSink.stringifyMessage(...message);
     const details = { nowMsec, level, tag, message };
     this._log.push(details);
   }
@@ -109,9 +111,7 @@ export default class RecentSink {
       body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;
     } else {
       tag = `[${log.tag} ${log.level}]`;
-      body = log.message.map((x) => {
-        return (typeof x === 'string') ? x : inspect(x);
-      }).join(' ');
+      body = log.message;
     }
 
     // Color the prefix according to level.

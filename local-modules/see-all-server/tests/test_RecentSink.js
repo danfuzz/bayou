@@ -17,7 +17,7 @@ describe('see-all-server/RecentSink', () => {
       const contents = sink.contents;
       assert.lengthOf(contents, 1);
       assert.deepEqual(contents[0],
-        { nowMsec: 90909, level: 'error', tag: 'foo', message: ['bar', 'baz'] });
+        { nowMsec: 90909, level: 'error', tag: 'foo', message: 'bar baz' });
     });
   });
 
@@ -51,7 +51,7 @@ describe('see-all-server/RecentSink', () => {
         assert.strictEqual(line.nowMsec, 12345 + i);
         assert.strictEqual(line.level, 'info');
         assert.strictEqual(line.tag, 'blort');
-        assert.deepEqual(line.message, ['florp', i]);
+        assert.strictEqual(line.message, `florp ${i}`);
       }
     });
 
