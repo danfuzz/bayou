@@ -4,31 +4,19 @@
 
 import { createStore } from 'redux';
 
-import { Caret } from 'doc-common';
+import { CaretSnapshot } from 'doc-common';
 import { Delay } from 'promise-util';
-import { TFunction, TString } from 'typecheck';
+import { TFunction } from 'typecheck';
 
 /**
  * {object} Starting state for the caret redux store.
  */
-const INITIAL_STATE = {
-  sessions: new Map()
-};
+const INITIAL_STATE = CaretSnapshot.EMPTY;
 
 /**
- * {string} Redux action to dispatch when a new caret is added.
+ * {string} Redux action to dispatch when we receive a new caret snapshot.
  */
-const ADD_CARET = 'add_caret';
-
-/**
- * {string} Redux action to dispatch when a caret is updated.
- */
-const UPDATE_CARET = 'update_caret';
-
-/**
- * {string} Redux action to dispatch when a caret is removed.
- */
-const REMOVE_CARET = 'remove_caret';
+const CARET_SNAPSHOT_UPDATED = 'caret_snapshot_updated';
 
 /**
  * {Int} Amount of time (in msec) to wait after receiving a caret update from
@@ -103,22 +91,13 @@ export default class CaretStore {
     let newState;
 
     switch (action.type) {
-      case ADD_CARET:
-      case UPDATE_CARET:
-        newState = Object.assign({}, state);
-        newState.sessions = new Map(state.sessions);
-        newState.sessions.set(action.sessionId, action.sessionInfo);
-        break;
-
-      case REMOVE_CARET:
-        newState = Object.assign({}, state);
-        newState.sessions = new Map(state.sessions);
-        newState.sessions.delete(action.sessionId);
+      case CARET_SNAPSHOT_UPDATED:
+        newState = action.snapshot;
         break;
 
       default:
         // If we get an action we don't recognize we shouldn't be mutating
-        // the state so just return what we were given.
+        // the state so just maintain the current state.
         newState = state;
         break;
     }
@@ -138,7 +117,6 @@ export default class CaretStore {
     let docSession = null;
     let snapshot = null;
     let sessionProxy;
-    let sessionId;
 
     for (;;) {
       if (docSession === null) {
@@ -146,10 +124,6 @@ export default class CaretStore {
         // if we got a failure during a previous iteration.
         docSession   = editorComplex.docSession;
         sessionProxy = await docSession.getSessionProxy();
-
-        // Can only get the session ID after we have a proxy. (Before that, the
-        // ID might not be set, because the session might not even exist!)
-        sessionId = editorComplex.sessionId;
       }
 
       try {
@@ -190,98 +164,12 @@ export default class CaretStore {
         continue;
       }
 
-      const sessionState = this._store.getState().sessions;
-      const oldSessions = new Set(sessionState.keys());
-
-      for (const c of snapshot.carets) {
-        if (c.sessionId === sessionId) {
-          // Don't render the caret for this client.
-          continue;
-        }
-
-        this._updateCaret(c);
-        oldSessions.delete(c.sessionId);
-      }
-
-      // The remaining elements of `oldSessions` are sessions which have gone
-      // away.
-      for (const s of oldSessions) {
-        docSession.log.info('Session ended:', s);
-        this._endSession(s);
-      }
+      this._store.dispatch({
+        type: CARET_SNAPSHOT_UPDATED,
+        snapshot
+      });
 
       await Delay.resolve(REQUEST_DELAY_MSEC);
-    }
-  }
-
-  /**
-   * Begin tracking a new session.
-   *
-   * @param {Caret} caret The new caret to track (which includes a session ID).
-   */
-  _beginSession(caret) {
-    Caret.check(caret);
-
-    const info = new Map(Object.entries({ caret }));
-
-    this._store.dispatch({
-      type:        ADD_CARET,
-      sessionId:   caret.sessionId,
-      sessionInfo: info
-    });
-  }
-
-  _updateSession(caret) {
-    Caret.check(caret);
-
-    const info = new Map(Object.entries({ caret }));
-
-    this._store.dispatch({
-      type:        UPDATE_CARET,
-      sessionId:   caret.sessionId,
-      sessionInfo: info
-    });
-  }
-
-  /**
-   * Stop tracking a given session.
-   *
-   * @param {string} sessionId The session to stop tracking.
-   */
-  _endSession(sessionId) {
-    TString.check(sessionId);
-
-    this._store.dispatch({
-      type: REMOVE_CARET,
-      sessionId
-    });
-  }
-
-  /**
-   * Updates annotation for a remote session's caret.
-   * (e.g. the session's color changed)
-   *
-   * @param {Caret} caret The caret to update.
-   */
-  _updateCaret(caret) {
-    Caret.check(caret);
-
-    const sessionId = caret.sessionId;
-    const sessions = this._store.getState().sessions;
-
-    if (!sessions.has(sessionId)) {
-      this._beginSession(caret);
-    }
-
-    const info     = this.state.sessions.get(sessionId);
-    const oldCaret = info.get('caret');
-
-    info.set('caret', caret);
-
-    if ((caret.color !== oldCaret.color)
-    ||  (caret.index !== oldCaret.index)
-    ||  (caret.length !== oldCaret.length)) {
-      this._updateSession(caret);
     }
   }
 }
