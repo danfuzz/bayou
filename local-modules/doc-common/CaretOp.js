@@ -17,22 +17,22 @@ const KEY = Symbol('CaretOp constructor key');
 export default class CaretOp extends CommonBase {
   /** {string} Operation name for "begin session" operations. */
   static get BEGIN_SESSION() {
-    return 'begin-session';
+    return 'begin_session';
   }
 
   /** {string} Operation name for "update field" operations. */
   static get UPDATE_FIELD() {
-    return 'update-field';
+    return 'update_field';
   }
 
   /** {string} Operation name for "end session" operations. */
   static get END_SESSION() {
-    return 'end-session';
+    return 'end_session';
   }
 
   /** {string} Operation name for "update revision number" operations. */
   static get UPDATE_REV_NUM() {
-    return 'update-rev-num';
+    return 'update_rev_num';
   }
 
   /**
