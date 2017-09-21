@@ -3,7 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import fs from 'fs';
-import { inspect } from 'util';
 
 import { BaseSink, SeeAll } from 'see-all';
 import { TString } from 'typecheck';
@@ -37,12 +36,7 @@ export default class FileSink extends BaseSink {
    * @param {...*} message Message to log.
    */
   log(nowMsec, level, tag, ...message) {
-    // For any items in `message` that aren't strings, use `inspect()` to
-    // stringify them.
-    message = message.map((x) => {
-      return (typeof x === 'string') ? x : inspect(x);
-    });
-
+    message = BaseSink.stringifyMessage(...message);
     this._writeJson({ nowMsec, level, tag, message });
   }
 

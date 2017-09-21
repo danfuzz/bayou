@@ -4,7 +4,6 @@
 
 import ansiHtml from 'ansi-html';
 import chalk from 'chalk';
-import { inspect } from 'util';
 
 import { BaseSink, SeeAll } from 'see-all';
 import { TInt } from 'typecheck';
@@ -42,6 +41,7 @@ export default class RecentSink extends BaseSink {
    * @param {...*} message Message to log.
    */
   log(nowMsec, level, tag, ...message) {
+    message = BaseSink.stringifyMessage(...message);
     const details = { nowMsec, level, tag, message };
     this._log.push(details);
   }
@@ -111,9 +111,7 @@ export default class RecentSink extends BaseSink {
       body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;
     } else {
       tag = `[${log.tag} ${log.level}]`;
-      body = log.message.map((x) => {
-        return (typeof x === 'string') ? x : inspect(x);
-      }).join(' ');
+      body = log.message;
     }
 
     // Color the prefix according to level.
