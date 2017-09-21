@@ -116,6 +116,106 @@ export default class DataUtil extends UtilityClass {
   }
 
   /**
+   * Indicates whether the two given values (a) are both data values, and (b)
+   * contain the same data.
+   *
+   * @param {*} value1 Value to inspect.
+   * @param {*} value2 Other value to inspec.
+   * @returns {boolean} `true` iff both values are data values and contain the
+   *   same data.
+   */
+  static equalData(value1, value2) {
+    const type1 = typeof value1;
+
+    if (type1 !== typeof value2) {
+      return false;
+    }
+
+    switch (type1) {
+      case 'boolean':
+      case 'number':
+      case 'string':
+      case 'symbol':
+      case 'undefined': {
+        // `Object.is()` handles numeric edge cases (`NaN`, etc.) sensibly.
+        return Object.is(value1, value2);
+      }
+
+      case 'object': {
+        if ((value1 === null) || (value2 === null)) {
+          return value1 === value2;
+        }
+        break;
+      }
+
+      default: {
+        // This includes `function`.
+        return false;
+      }
+    }
+
+    // At this point, we know that `value1` is a non-null object(ish) value,
+    // which is _not_ a function or generator.
+
+    const proto1 = Object.getPrototypeOf(value1);
+    if (proto1 !== Object.getPrototypeOf(value2)) {
+      return false;
+    }
+
+    switch (proto1) {
+      case Object.prototype:
+      case Array.prototype: {
+        // One of the acceptable standard types (either array or simple object).
+        // We still need to compare the properties / elements.
+
+        const names1 = Object.getOwnPropertyNames(value1);
+        const names2 = Object.getOwnPropertyNames(value2);
+
+        if (names1.length !== names2.length) {
+          return false;
+        }
+
+        names1.sort();
+        names2.sort();
+
+        for (let i = 0; i < names1.length; i++) {
+          if (names1[i] !== names2[i]) {
+            return false;
+          }
+        }
+
+        // We now know both values have identically-named properties.
+
+        for (const name of names1) {
+          const prop1 = Object.getOwnPropertyDescriptor(value1, name);
+          const prop2 = Object.getOwnPropertyDescriptor(value2, name);
+          const v1 = prop1.value;
+          const v2 = prop2.value;
+
+          if (   ((v1 === undefined) && !ObjectUtil.hasOwnProperty(prop1, 'value'))
+              || ((v2 === undefined) && !ObjectUtil.hasOwnProperty(prop2, 'value'))) {
+            // One or the other (or both) is a synthetic property.
+            return false;
+          } else if (!DataUtil.equalData(v1, v2)) {
+            return false;
+          }
+        }
+
+        return true;
+      }
+
+      case Functor.prototype: {
+        return (value1.name === value2.name)
+          && DataUtil.equalData(value1.args, value2.args);
+      }
+
+      default: {
+        return false;
+      }
+    }
+  }
+
+  /**
    * Indicates whether or not the given value is deep-frozen.
    *
    * @param {*} value The value to check.
