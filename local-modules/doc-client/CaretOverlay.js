@@ -2,8 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { cloneDeep } from 'lodash';
-
+import { CaretOp, CaretSnapshot } from 'doc-common';
 import { Delay } from 'promise-util';
 import { QuillEvents, QuillGeometry } from 'quill-util';
 import { TObject } from 'typecheck';
@@ -82,10 +81,10 @@ export default class CaretOverlay {
     this._svgDefs = this._addInitialSvgDefs();
 
     /**
-     * {Map<string, object>} Map of session ids to the caret state for
-     * that session received during the previous update. Used for diffing.
+     * {CaretSnapshot} The last caret snapshot we received from `CaretStore`.
+     * We diff the new snapshot against it to find what changed.
      */
-    this._lastCaretSessions = new Map();
+    this._lastCaretSnapshot = CaretSnapshot.EMPTY;
 
     /**
      * {Map<string, SVGUseElement>} Map of session id to the `<use>` elements
@@ -162,9 +161,13 @@ export default class CaretOverlay {
     const quill = this._editorComplex.bodyQuill;
 
     // For each session…
-    for (const [sessionId, info] of this._lastCaretSessions) {
-      const caret = info.get('caret');
-      const avatarReference = this._useReferences.get(sessionId);
+    for (const caret of this._lastCaretSnapshot.carets) {
+      // Is this caret us? If so, don't draw anything.
+      if (caret.sessionId === this._editorComplex.sessionId) {
+        continue;
+      }
+
+      const avatarReference = this._useReferences.get(caret.sessionId);
 
       if (caret.length === 0) {
         // Length of zero means an insertion point instead of a selection
@@ -248,11 +251,9 @@ export default class CaretOverlay {
    * Constructs an avatar image for the session and adds it to the `<defs>`
    * section of the SVG.
    *
-   * @param {Map<string, object>} info The metadata for this session.
+   * @param {Caret} caret The caret for which we're adding an avatar def.
    */
-  _addAvatarToDefs(info) {
-    const caret = info.get('caret');
-
+  _addAvatarToDefs(caret) {
     // The whole avatar is set in a group with a known id.
     const avatarGroup = this._document.createElementNS(SVG_NAMESPACE, 'g');
     const sessionId = caret.sessionId;
@@ -418,10 +419,8 @@ export default class CaretOverlay {
 
   /**
    * Callback function which reponds to change notifications from the caret
-   * data model store. It keeps a copy of the prior session state and users
-   * that to diff against when new changes come in. It separates out the
-   * various kinds of changes that could have occurred in an effort to do as
-   * little work as possible.
+   * data model store. It keeps a copy of the prior caret snapshot and user
+   * that to diff against when new changes come in.
    *
    * TODO: Currently _updateDisplay() blows away all of the SVG child elements
    *       and adds them fresh with each call. With the fine(r)-grained change
@@ -430,69 +429,49 @@ export default class CaretOverlay {
    *       each time.
    */
   _onCaretChange() {
-    const oldState = this._lastCaretSessions;
-    const newState = this._caretStore.state.sessions;
+    const oldSnapshot = this._lastCaretSnapshot;
+    const newSnapshot = this._caretStore.state;
+    const delta = oldSnapshot.diff(newSnapshot);
+    let updateDisplay = false;
 
-    const oldKeys = new Set(oldState.keys());
-    const newKeys = new Set(newState.keys());
+    this._lastCaretSnapshot = newSnapshot;
 
-    const added = [];
-    const colorChanged = [];
-    const moved = [];
-    const removed = [];
+    for (const op of delta.ops) {
+      const name = op.name;
 
-    for (const key of oldKeys) {
-      if (newKeys.has(key)) {
-        // If a given session key is in both the new and old state
-        // then the info was potentially updated between callbacks.
-        const oldCaret = oldState.get(key).get('caret');
-        const newCaret = newState.get(key).get('caret');
-
-        if (oldCaret.color !== newCaret.color) {
-          colorChanged.push(key);
+      switch (name) {
+        case CaretOp.BEGIN_SESSION: {
+          this._addAvatarToDefs(op.arg('caret'));
+          updateDisplay = true;
+          break;
         }
 
-        if (oldCaret.index !== newCaret.index || oldCaret.length !== newCaret.length) {
-          moved.push(key);
+        case CaretOp.END_SESSION: {
+          this.removeAvatarFromDefs(op.arg('sessionId'));
+          updateDisplay = true;
+          break;
         }
-      } else {
-        // If the key was in the old state but not the new then
-        // clearly it was removed.
-        removed.push(key);
-      }
 
-      // NB: It is safe to mutate a Set while iterating.
-      oldKeys.delete(key);
-      newKeys.delete(key);
-    }
+        case CaretOp.UPDATE_FIELD: {
+          const sessionId = op.arg('sessionId');
 
-    // newKeys now holds just the list of keys that were neither
-    // modified nor removed (i.e. just the keys added since last time).
-    for (const key of newKeys) {
-      // But let's do a quick sanity check regardless
-      const name = CaretOverlay.avatarNameForSessionId(key);
-      const avatarDef = this._avatarDefWithName(name);
+          if (sessionId === this._editorComplex.sessionId) {
+            continue;
+          }
 
-      if (!avatarDef) {
-        added.push(key);
+          if (op.arg('key') === 'color') {
+            const caret = newSnapshot.caretForSession(sessionId);
+
+            this._updateAvatarColor(caret);
+          }
+
+          updateDisplay = true;
+          break;
+        }
       }
     }
 
-    this._lastCaretSessions = cloneDeep(newState);
-
-    for (const sessionId of added) {
-      this._addAvatarToDefs(this._lastCaretSessions.get(sessionId));
-    }
-
-    for (const sessionId of colorChanged) {
-      this._updateAvatarColor(this._lastCaretSessions.get(sessionId).caret);
-    }
-
-    for (const sessionId of removed) {
-      this._removeAvatarFromDefs(sessionId);
-    }
-
-    if (added.length || colorChanged.length || moved.length || removed.length) {
+    if (updateDisplay) {
       this._updateDisplay();
     }
   }
