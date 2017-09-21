@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TString } from 'typecheck';
+import { TArray, TString } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
 import PropertyDelta from './PropertyDelta';
@@ -25,7 +25,7 @@ export default class PropertySnapshot extends CommonBase {
    */
   static get EMPTY() {
     if (emptyInstance === null) {
-      emptyInstance = new PropertySnapshot(0, []);
+      emptyInstance = new PropertySnapshot([]);
     }
 
     return emptyInstance;
@@ -34,12 +34,15 @@ export default class PropertySnapshot extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {PropertyDelta} delta A from-empty delta representing all the
-   *   properties and the current revision number. If there is no revision
-   *   number operation, then the instance will have a revision number of `0`.
+   * @param {PropertyDelta|array<PropertyOp>} delta A from-empty delta or array
+   *   of ops representing all the properties and the current revision number.
+   *   If there is no revision number operation, then the instance will have a
+   *   revision number of `0`.
    */
   constructor(delta) {
-    PropertyDelta.check(delta);
+    const ops = (delta instanceof PropertyDelta)
+      ? delta.ops
+      : TArray.check(delta, PropertyOp.check);
 
     super();
 
@@ -53,7 +56,7 @@ export default class PropertySnapshot extends CommonBase {
     this._properties = new Map();
 
     // Fill in the instance variables.
-    for (const op of delta.ops) {
+    for (const op of ops) {
       const opProps = op.props;
 
       switch (opProps.opName) {
@@ -102,39 +105,25 @@ export default class PropertySnapshot extends CommonBase {
     return [this._revNum, [...this._carets.values()]];
   }
 
+  /**
+   * {Map<string, *>} Map from property names to values. Guaranteed to be
+   * immutable.
+   */
+  get properties() {
+    const result = new Map();
+
+    for (const op of this._properties.values()) {
+      const { name, value } = op.props;
+      result.set(name, value);
+    }
+
+    Object.freeze(result);
+    return result;
+  }
+
   /** {Int} The property information revision number. */
   get revNum() {
     return this._revNum;
-  }
-
-  /**
-   * Gets the property value for the given name, if any. Throws an error if
-   * `name` is not a bound property.
-   *
-   * @param {string} name Property name.
-   * @returns {*} Corresponding property value.
-   */
-  valueForName(name) {
-    TString.checkIdentifier(name);
-
-    const p = this._properties.get(name);
-
-    if (p) {
-      return p.props.value;
-    }
-
-    throw Errors.bad_use(`No such property: ${name}`);
-  }
-
-  /**
-   * Gets whether or not this instance has the indicated property.
-   *
-   * @param {string} name Property name.
-   * @returns {boolean} `true` if this instance has a binding for the indicated
-   *   property, or `false` if not.
-   */
-  hasName(name) {
-    return !!this._properties.get(name);
   }
 
   /**
@@ -175,7 +164,7 @@ export default class PropertySnapshot extends CommonBase {
       }
     }
 
-    return new PropertyDelta([
+    return new PropertySnapshot([
       PropertyOp.op_updateRevNum(revNum),
       ...newProps.values()
     ]);
@@ -258,6 +247,36 @@ export default class PropertySnapshot extends CommonBase {
     }
 
     return true;
+  }
+
+  /**
+   * Gets the property value for the given name, if any. Throws an error if
+   * `name` is not a bound property.
+   *
+   * @param {string} name Property name.
+   * @returns {*} Corresponding property value.
+   */
+  get(name) {
+    TString.identifier(name);
+
+    const p = this._properties.get(name);
+
+    if (p) {
+      return p.props.value;
+    }
+
+    throw Errors.bad_use(`No such property: ${name}`);
+  }
+
+  /**
+   * Gets whether or not this instance has the indicated property.
+   *
+   * @param {string} name Property name.
+   * @returns {boolean} `true` if this instance has a binding for the indicated
+   *   property, or `false` if not.
+   */
+  has(name) {
+    return !!this._properties.get(name);
   }
 
   /**

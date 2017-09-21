@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
-import { CommonBase, DataUtil, Errors } from 'util-common';
+import { CommonBase, DataUtil, Errors, Functor } from 'util-common';
 
 import RevisionNumber from './RevisionNumber';
 
@@ -34,9 +34,9 @@ export default class PropertyOp extends CommonBase {
    * @returns {PropertyOp} An appropriately-constructed operation.
    */
   static op_deleteProperty(name) {
-    TString.checkIdentifier(name);
+    TString.identifier(name);
 
-    return new PropertyOp(PropertyOp.DELETE_PROPERTY, { name });
+    return new PropertyOp(new Functor(PropertyOp.DELETE_PROPERTY, name));
   }
 
   /**
@@ -48,10 +48,10 @@ export default class PropertyOp extends CommonBase {
    * @returns {PropertyOp} An appropriately-constructed operation.
    */
   static op_setProperty(name, value) {
-    TString.checkIdentifier(name);
+    TString.identifier(name);
     value = DataUtil.deepFreeze(value);
 
-    return new PropertyOp(PropertyOp.SET_PROPERTY, { name, value });
+    return new PropertyOp(new Functor(PropertyOp.SET_PROPERTY, name, value));
   }
 
   /**
@@ -63,7 +63,7 @@ export default class PropertyOp extends CommonBase {
   static op_updateRevNum(revNum) {
     RevisionNumber.check(revNum);
 
-    return new PropertyOp(PropertyOp.UPDATE_REV_NUM, { revNum });
+    return new PropertyOp(new Functor(PropertyOp.UPDATE_REV_NUM, revNum));
   }
 
   /**
@@ -76,7 +76,7 @@ export default class PropertyOp extends CommonBase {
     super();
 
     /** {Functor} payload The operation payload (name and arguments). */
-    this._payload = payload;
+    this._payload = Functor.check(payload);
 
     Object.freeze(this);
   }
@@ -89,26 +89,27 @@ export default class PropertyOp extends CommonBase {
   /**
    * {object} The properties of this operation, as a conveniently-accessed
    * simple object. `opName` is always bound to the operation name. Other
-   * bindings depend on the operation name.
+   * bindings depend on the operation name. Guaranteed to be an immutable
+   * object.
    */
   get props() {
     const payload = this._payload;
     const opName  = payload.name;
 
-    switch (payload.name) {
+    switch (opName) {
       case PropertyOp.DELETE_PROPERTY: {
         const [name] = payload.args;
-        return { opName, name };
+        return Object.freeze({ opName, name });
       }
 
       case PropertyOp.SET_PROPERTY: {
         const [name, value] = payload.args;
-        return { opName, name, value };
+        return Object.freeze({ opName, name, value });
       }
 
       case PropertyOp.UPDATE_REV_NUM: {
         const [revNum] = payload.args;
-        return { opName, revNum };
+        return Object.freeze({ opName, revNum });
       }
 
       default: {
