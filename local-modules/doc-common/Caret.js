@@ -44,7 +44,7 @@ export default class Caret extends CommonBase {
   /** {Caret} An instance with all default values. */
   static get DEFAULT() {
     if (DEFAULT === null) {
-      DEFAULT = new Caret('no-session',
+      DEFAULT = new Caret('no_session',
         Object.entries({
           lastActive: Timestamp.now(),
           revNum:     0,
