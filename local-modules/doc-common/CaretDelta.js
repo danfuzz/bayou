@@ -2,8 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import { TArray } from 'typecheck';
 import { CommonBase } from 'util-common';
+
+import CaretOp from './CaretOp';
 
 /**
  * {CaretDelta|null} Empty instance. Initialized in the static getter of the
@@ -13,7 +17,8 @@ let EMPTY = null;
 
 /**
  * Delta for caret information. Instances of this class can be applied to
- * instances of `CaretSnapshot` to produce updated snapshots.
+ * instances of `Caret` and `CaretSnapshot` to produce updated instances of
+ * those classes.
  *
  * Instances of this class are immutable.
  */
@@ -30,7 +35,7 @@ export default class CaretDelta extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {array<object>} ops Array of individual caret information
+   * @param {array<CaretOp>} ops Array of individual caret information
    *   modification operations.
    */
   constructor(ops) {
@@ -40,7 +45,7 @@ export default class CaretDelta extends CommonBase {
      * {array<object>} Array of operations to perform on the (implied) base
      * `CaretSnapshot` to produce the new revision.
      */
-    this._ops = Object.freeze(TArray.check(ops));
+    this._ops = Object.freeze(TArray.check(ops, CaretOp.check));
   }
 
   /**
@@ -53,7 +58,7 @@ export default class CaretDelta extends CommonBase {
   }
 
   /**
-   * {array<object>} Array of operations to be applied. This is guaranteed to
+   * {array<CaretOp>} Array of operations to be applied. This is guaranteed to
    * be a frozen (immutable) value.
    */
   get ops() {
@@ -66,26 +71,9 @@ export default class CaretDelta extends CommonBase {
    * @returns {string} The human-oriented representation.
    */
   toString() {
-    const result = ['CaretDelta ['];
+    const name = this.constructor.name;
+    const body = inspect(this._ops);
 
-    let first = true;
-    for (const op of this._ops) {
-      if (first) {
-        first = false;
-        result.push('\n  ');
-      } else {
-        result.push(',\n  ');
-      }
-
-      result.push(op.toString());
-    }
-
-    if (!first) {
-      result.push('\n');
-    }
-
-    result.push(']');
-
-    return result.join('');
+    return `${name} ${body}`;
   }
 }
