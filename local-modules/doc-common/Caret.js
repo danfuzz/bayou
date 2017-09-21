@@ -257,13 +257,18 @@ export default class Caret extends CommonBase {
   }
 
   /**
-   * Compares this to another instance, for equality of content.
+   * Compares this to another value, for equality.
    *
    * @param {Caret} other Caret to compare to.
-   * @returns {boolean} `true` iff `this` and `other` have equal contents.
+   * @returns {boolean} `true` iff `other` is also an instance of this class,
+   *   and `this` and `other` have equal contents.
    */
   equals(other) {
-    Caret.check(other);
+    if (this === other) {
+      return true;
+    } else if (!(other instanceof Caret)) {
+      return false;
+    }
 
     if (this._sessionId !== other._sessionId) {
       return false;
