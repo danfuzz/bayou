@@ -18,6 +18,9 @@ import CoreTypecheck from './CoreTypecheck';
  * `check()` method and friends. However, because `CommonBase` uses this class,
  * we can't just mix it in here (as this class is the one that gets initialized
  * first). Instead, this happens during module initialization.
+ *
+ * **Note for pedants:** This class does _not_ implement a "functor" in the
+ * strict mathematical or category-theoretical sense of the word.
  */
 export default class Functor {
   /**
