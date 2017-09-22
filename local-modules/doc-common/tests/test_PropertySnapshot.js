@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { PropertyDelta, PropertyOp, PropertySnapshot } from 'doc-common';
-import { Functor } from 'util-common';
+import { DataUtil, Functor } from 'util-common';
 
 describe('doc-common/PropertySnapshot', () => {
   describe('.EMPTY', () => {
@@ -15,6 +15,68 @@ describe('doc-common/PropertySnapshot', () => {
 
       assert.strictEqual(EMPTY.revNum, 0);
       assert.strictEqual(EMPTY.properties.size, 0);
+    });
+  });
+
+  describe('constructor()', () => {
+    it('should accept an array of valid ops', () => {
+      function test(value) {
+        new PropertySnapshot(value);
+      }
+
+      test([]);
+      test([PropertyOp.op_updateRevNum(123)]);
+      test([PropertyOp.op_setProperty('x', 'y')]);
+      test([
+        PropertyOp.op_updateRevNum(456),
+        PropertyOp.op_setProperty('x', 'y'),
+        PropertyOp.op_setProperty('z', 'pdq')
+      ]);
+    });
+
+    it('should accept a valid delta', () => {
+      function test(value) {
+        new PropertySnapshot(value);
+      }
+
+      test(new PropertyDelta([]));
+      test(new PropertyDelta([PropertyOp.op_updateRevNum(123)]));
+      test(new PropertyDelta([PropertyOp.op_setProperty('x', 'y')]));
+      test(new PropertyDelta([
+        PropertyOp.op_updateRevNum(456),
+        PropertyOp.op_setProperty('x', 'y'),
+        PropertyOp.op_setProperty('z', 'pdq')
+      ]));
+    });
+
+    it('should reject an array that is not all valid ops', () => {
+      function test(value) {
+        assert.throws(() => { new PropertySnapshot(value); });
+      }
+
+      test([1]);
+      test([
+        'florp',
+        PropertyOp.op_setProperty('x', 'y')
+      ]);
+      test([PropertyOp.op_deleteProperty('x')]); // Deletes aren't allowed.
+      test([
+        PropertyOp.op_updateRevNum(123),
+        PropertyOp.op_deleteProperty('x') // Deletes aren't allowed.
+      ]);
+    });
+
+    it('should reject a delta with disallowed ops', () => {
+      function test(value) {
+        assert.throws(() => { new PropertySnapshot(value); });
+      }
+
+      // Deletes aren't allowed.
+      test(new PropertyDelta([PropertyOp.op_deleteProperty('x')]));
+      test(new PropertyDelta([
+        PropertyOp.op_updateRevNum(123),
+        PropertyOp.op_deleteProperty('x')
+      ]));
     });
   });
 
@@ -248,6 +310,71 @@ describe('doc-common/PropertySnapshot', () => {
       assert.isFalse(snap.equals(914));
       assert.isFalse(snap.equals(['not', 'a', 'snapshot']));
       assert.isFalse(snap.equals(new Map()));
+    });
+  });
+
+  describe('get()', () => {
+    it('should return the value associated with an existing property', () => {
+      const snap = new PropertySnapshot([PropertyOp.op_setProperty('blort', 'zorch')]);
+
+      assert.strictEqual(snap.get('blort'), 'zorch');
+    });
+
+    it('should always return a deep-frozen value even when the constructor was passed an unfrozen value', () => {
+      const value = [[['zorch']], ['splat'], 'foo'];
+      const snap = new PropertySnapshot([PropertyOp.op_setProperty('blort', value)]);
+
+      const result = snap.get('blort');
+      assert.isTrue(DataUtil.isDeepFrozen(result));
+      assert.deepEqual(result, value);
+    });
+
+    it('should throw an error when given a name that is not bound as a property', () => {
+      const snap = new PropertySnapshot([PropertyOp.op_setProperty('blort', 'zorch')]);
+
+      assert.throws(() => { snap.get('x'); });
+    });
+  });
+
+  describe('has()', () => {
+    it('should return `true` for an existing property', () => {
+      const snap = new PropertySnapshot([
+        PropertyOp.op_setProperty('blort', 'zorch'),
+        PropertyOp.op_setProperty('florp', 'like')
+      ]);
+
+      assert.isTrue(snap.has('blort'));
+      assert.isTrue(snap.has('florp'));
+    });
+
+    it('should return `false` for a non-existent property', () => {
+      const snap = new PropertySnapshot([
+        PropertyOp.op_setProperty('blort', 'zorch'),
+        PropertyOp.op_setProperty('florp', 'like')
+      ]);
+
+      assert.isFalse(snap.has('zorch'));
+      assert.isFalse(snap.has('like'));
+      assert.isFalse(snap.has('x'));
+    });
+
+    it('should throw an error when passed an argument that is not a valid name', () => {
+      const snap = PropertySnapshot.EMPTY;
+      function test(value) {
+        assert.throws(() => { snap.has(value); });
+      }
+
+      // Not a string.
+      test(undefined);
+      test(null);
+      test(123);
+      test(Symbol('x'));
+      test(['y']);
+
+      // Not an identifier string.
+      test('');
+      test('1');
+      test('foo#bar');
     });
   });
 

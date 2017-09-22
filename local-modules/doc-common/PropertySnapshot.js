@@ -276,6 +276,7 @@ export default class PropertySnapshot extends CommonBase {
    *   property, or `false` if not.
    */
   has(name) {
+    TString.identifier(name);
     return this._properties.has(name);
   }
 
