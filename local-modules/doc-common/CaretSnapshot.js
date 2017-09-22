@@ -14,7 +14,7 @@ import RevisionNumber from './RevisionNumber';
  * {CaretSnapshot|null} Empty instance. Initialized in the `EMPTY` property
  * accessor.
  */
-let emptyInstance = null;
+let EMPTY = null;
 
 /**
  * Snapshot of information about all active sessions on a particular document.
@@ -26,11 +26,11 @@ export default class CaretSnapshot extends CommonBase {
    * revision number of `0`.
    */
   static get EMPTY() {
-    if (emptyInstance === null) {
-      emptyInstance = new CaretSnapshot(0, []);
+    if (EMPTY === null) {
+      EMPTY = new CaretSnapshot(0, []);
     }
 
-    return emptyInstance;
+    return EMPTY;
   }
 
   /**
@@ -120,6 +120,7 @@ export default class CaretSnapshot extends CommonBase {
 
     for (const op of delta.ops) {
       const props = op.props;
+
       switch (props.opName) {
         case CaretOp.BEGIN_SESSION: {
           const caret = props.caret;
