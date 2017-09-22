@@ -325,7 +325,7 @@ export default class PropertySnapshot extends CommonBase {
   withoutProperty(name) {
     const op = PropertyOp.op_deleteProperty(name); // This type checks.
 
-    return this._properties.get(name)
+    return this._properties.has(name)
       ? this.compose(new PropertyDelta([op]))
       : this;
   }
