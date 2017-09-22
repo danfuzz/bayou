@@ -437,29 +437,29 @@ export default class CaretOverlay {
     this._lastCaretSnapshot = newSnapshot;
 
     for (const op of delta.ops) {
-      const name = op.name;
+      const props = op.props;
 
-      switch (name) {
+      switch (props.opName) {
         case CaretOp.BEGIN_SESSION: {
-          this._addAvatarToDefs(op.arg('caret'));
+          this._addAvatarToDefs(props.caret);
           updateDisplay = true;
           break;
         }
 
         case CaretOp.END_SESSION: {
-          this.removeAvatarFromDefs(op.arg('sessionId'));
+          this.removeAvatarFromDefs(props.sessionId);
           updateDisplay = true;
           break;
         }
 
         case CaretOp.UPDATE_FIELD: {
-          const sessionId = op.arg('sessionId');
+          const sessionId = props.sessionId;
 
           if (sessionId === this._editorComplex.sessionId) {
             continue;
           }
 
-          if (op.arg('key') === 'color') {
+          if (props.key === 'color') {
             const caret = newSnapshot.caretForSession(sessionId);
 
             this._updateAvatarColor(caret);

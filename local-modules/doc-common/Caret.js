@@ -190,13 +190,14 @@ export default class Caret extends CommonBase {
     const fields = new Map();
 
     for (const op of delta.ops) {
-      if (op.name !== CaretOp.UPDATE_FIELD) {
-        throw Errors.bad_use(`Invalid operation name: ${op.name}`);
-      } else if (op.arg('sessionId') !== this.sessionId) {
+      const props = op.props;
+      if (props.opName !== CaretOp.UPDATE_FIELD) {
+        throw Errors.bad_use(`Invalid operation name: ${props.opName}`);
+      } else if (props.sessionId !== this.sessionId) {
         throw Errors.bad_use('Mismatched session ID.');
       }
 
-      fields.set(op.arg('key'), op.arg('value'));
+      fields.set(props.key, props.value);
     }
 
     return new Caret(this, fields);

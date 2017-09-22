@@ -129,15 +129,16 @@ export default class CaretSnapshot extends CommonBase {
     let   revNum    = this._revNum;
 
     for (const op of delta.ops) {
-      switch (op.name) {
+      const props = op.props;
+      switch (props.opName) {
         case CaretOp.BEGIN_SESSION: {
-          const caret = op.arg('caret');
+          const caret = props.caret;
           newCarets.set(caret.sessionId, caret);
           break;
         }
 
         case CaretOp.UPDATE_FIELD: {
-          const sessionId = op.arg('sessionId');
+          const sessionId = props.sessionId;
           const caret     = newCarets.get(sessionId);
 
           if (!caret) {
@@ -149,14 +150,18 @@ export default class CaretSnapshot extends CommonBase {
         }
 
         case CaretOp.END_SESSION: {
-          const sessionId = op.arg('sessionId');
+          const sessionId = props.sessionId;
           newCarets.delete(sessionId);
           break;
         }
 
         case CaretOp.UPDATE_REV_NUM: {
-          revNum = op.arg('revNum');
+          revNum = props.revNum;
           break;
+        }
+
+        default: {
+          throw Errors.wtf(`Weird caret op: ${props.opName}`);
         }
       }
     }
