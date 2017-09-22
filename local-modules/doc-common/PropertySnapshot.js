@@ -102,7 +102,7 @@ export default class PropertySnapshot extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._revNum, [...this._carets.values()]];
+    return [PropertySnapshot.EMPTY.diff(this)];
   }
 
   /**
