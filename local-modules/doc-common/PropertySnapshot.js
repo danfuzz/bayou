@@ -276,7 +276,7 @@ export default class PropertySnapshot extends CommonBase {
    *   property, or `false` if not.
    */
   has(name) {
-    return !!this._properties.get(name);
+    return this._properties.has(name);
   }
 
   /**
