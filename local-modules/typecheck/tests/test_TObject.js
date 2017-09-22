@@ -51,23 +51,78 @@ describe('typecheck/TObject', () => {
     });
   });
 
-  describe('withExactKeys()', () => {
-    it('should allow an object with exactly the provided keys', () => {
-      const value = { 'a': 1, 'b': 2, 'c': 3 };
+  describe('simple()', () => {
+    it('should accept simple objects', () => {
+      function test(value) {
+        assert.strictEqual(TObject.simple(value), value);
+      }
 
-      assert.doesNotThrow(() => TObject.withExactKeys(value, ['a', 'b', 'c']));
+      test({});
+      test({ a: 10 });
+      test({ a: 10, b: 20 });
+      test({ [Symbol('blort')]: [1, 2, 3] });
     });
 
-    it('should throw an Error when an object value is missing a key', () => {
+    it('should reject non-simple objects', () => {
+      function test(value) {
+        assert.throws(() => { TObject.simple(value); });
+      }
+
+      test([]);
+      test([1]);
+      test(() => true);
+      test(new Map());
+    });
+
+    it('should reject non-objects', () => {
+      function test(value) {
+        assert.throws(() => { TObject.simple(value); });
+      }
+
+      test(null);
+      test(undefined);
+      test(false);
+      test(true);
+      test('x');
+      test(37);
+    });
+  });
+
+  describe('withExactKeys()', () => {
+    it('should accept an empty list of keys', () => {
+      const value = {};
+
+      assert.strictEqual(TObject.withExactKeys(value, []), value);
+    });
+
+    it('should accept an object with exactly the provided keys', () => {
+      const value = { 'a': 1, 'b': 2, 'c': 3 };
+
+      assert.strictEqual(TObject.withExactKeys(value, ['a', 'b', 'c']), value);
+    });
+
+    it('should reject an object value which is missing a key', () => {
       const value = { 'a': 1, 'b': 2 };
 
       assert.throws(() => TObject.withExactKeys(value, ['a', 'b', 'c']));
     });
 
-    it('should throw an Error when an object has a superset of keys', () => {
+    it('should reject an object with a superset of keys', () => {
       const value = { 'a': 1, 'b': 2, 'c': 3, 'd': 4 };
 
       assert.throws(() => TObject.withExactKeys(value, ['a', 'b', 'c']));
+    });
+
+    it('should reject non-simple objects', () => {
+      assert.throws(() => TObject.withExactKeys(new Map(),  []));
+      assert.throws(() => TObject.withExactKeys(['z'],      []));
+      assert.throws(() => TObject.withExactKeys(() => true, []));
+    });
+
+    it('should reject non-objects', () => {
+      assert.throws(() => TObject.withExactKeys('x',  []));
+      assert.throws(() => TObject.withExactKeys(914,  []));
+      assert.throws(() => TObject.withExactKeys(null, []));
     });
   });
 });
