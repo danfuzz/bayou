@@ -3,13 +3,10 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
-import { CommonBase, Errors } from 'util-common';
+import { CommonBase, Errors, Functor } from 'util-common';
 
 import Caret from './Caret';
 import RevisionNumber from './RevisionNumber';
-
-/** {Symbol} Key which protects the constructor from being called improperly. */
-const KEY = Symbol('CaretOp constructor key');
 
 /**
  * Operation which can be applied to a `Caret` or `CaretSnapshot`.
@@ -20,14 +17,14 @@ export default class CaretOp extends CommonBase {
     return 'begin_session';
   }
 
-  /** {string} Operation name for "update field" operations. */
-  static get UPDATE_FIELD() {
-    return 'update_field';
-  }
-
   /** {string} Operation name for "end session" operations. */
   static get END_SESSION() {
     return 'end_session';
+  }
+
+  /** {string} Operation name for "update field" operations. */
+  static get UPDATE_FIELD() {
+    return 'update_field';
   }
 
   /** {string} Operation name for "update revision number" operations. */
@@ -45,7 +42,19 @@ export default class CaretOp extends CommonBase {
   static op_beginSession(caret) {
     Caret.check(caret);
 
-    return new CaretOp(KEY, CaretOp.BEGIN_SESSION, { caret });
+    return new CaretOp(new Functor(CaretOp.BEGIN_SESSION, caret));
+  }
+
+  /**
+   * Constructs a new "end session" operation.
+   *
+   * @param {string} sessionId ID of the session.
+   * @returns {CaretOp} The corresponding operation.
+   */
+  static op_endSession(sessionId) {
+    TString.check(sessionId);
+
+    return new CaretOp(new Functor(CaretOp.END_SESSION, sessionId));
   }
 
   /**
@@ -61,19 +70,7 @@ export default class CaretOp extends CommonBase {
     TString.check(sessionId);
     Caret.checkField(key, value);
 
-    return new CaretOp(KEY, CaretOp.UPDATE_FIELD, { sessionId, key, value });
-  }
-
-  /**
-   * Constructs a new "end session" operation.
-   *
-   * @param {string} sessionId ID of the session.
-   * @returns {CaretOp} The corresponding operation.
-   */
-  static op_endSession(sessionId) {
-    TString.check(sessionId);
-
-    return new CaretOp(KEY, CaretOp.END_SESSION, { sessionId });
+    return new CaretOp(new Functor(CaretOp.UPDATE_FIELD, sessionId, key, value));
   }
 
   /**
@@ -85,37 +82,32 @@ export default class CaretOp extends CommonBase {
   static op_updateRevNum(revNum) {
     RevisionNumber.check(revNum);
 
-    return new CaretOp(KEY, CaretOp.UPDATE_REV_NUM, { revNum });
+    return new CaretOp(new Functor(CaretOp.UPDATE_REV_NUM, revNum));
   }
 
   /**
    * Constructs an instance. This should not be used directly. Instead, used
    * the static constructor methods defined by this class.
    *
-   * @param {object} constructorKey The private-to-this-module key that
-   *   enforces the exhortation in the method documentation above.
-   * @param {string} name The operation name.
-   * @param {object} args Arguments to the operation.
+   * @param {Functor} payload The operation payload (name and arguments).
    */
-  constructor(constructorKey, name, args) {
+  constructor(payload) {
     super();
 
-    if (constructorKey !== KEY) {
-      throw Errors.bad_use('Constructor is private');
-    }
-
-    /** {string} name The name of this operation. */
-    this._name = name;
-
-    /** {Map<string,*>} args The arguments needed for the operation. */
-    this._args = new Map(Object.entries(args));
+    /** {Functor} payload The operation payload (name and arguments). */
+    this._payload = Functor.check(payload);
 
     Object.freeze(this);
   }
 
   /** {string} The name of this operation. */
   get name() {
-    return this._name;
+    return this._payload.name;
+  }
+
+  /** {Functor} The operation payload (name and arguments). */
+  get payload() {
+    return this._payload;
   }
 
   /**
@@ -127,7 +119,7 @@ export default class CaretOp extends CommonBase {
    * @returns {*} Corresponding argument value.
    */
   arg(name) {
-    const result = this._args.get(name);
+    const result = this.props[name];
 
     if (result === undefined) {
       throw Errors.bad_use(`No such argument: ${name}`);
@@ -137,30 +129,49 @@ export default class CaretOp extends CommonBase {
   }
 
   /**
+   * {object} The properties of this operation, as a conveniently-accessed
+   * simple object. `opName` is always bound to the operation name. Other
+   * bindings depend on the operation name. Guaranteed to be an immutable
+   * object.
+   */
+  get props() {
+    const payload = this._payload;
+    const opName  = payload.name;
+
+    switch (opName) {
+      case CaretOp.BEGIN_SESSION: {
+        const [caret] = payload.args;
+        return Object.freeze({ opName, caret });
+      }
+
+      case CaretOp.END_SESSION: {
+        const [sessionId] = payload.args;
+        return Object.freeze({ opName, sessionId });
+      }
+
+      case CaretOp.UPDATE_FIELD: {
+        const [sessionId, key, value] = payload.args;
+        return Object.freeze({ opName, sessionId, key, value });
+      }
+
+      case CaretOp.UPDATE_REV_NUM: {
+        const [revNum] = payload.args;
+        return Object.freeze({ opName, revNum });
+      }
+
+      default: {
+        throw Errors.wtf(`Weird operation name: ${opName}`);
+      }
+    }
+  }
+
+  /**
    * Converts this instance for API transmission.
    *
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    // Convert the `_args` map to a simple object for the purpose of coding.
-    const args = {};
-    for (const [k, v] of this._args) {
-      args[k] = v;
-    }
-
-    return [this._name, args];
-  }
-
-  /**
-   * Makes a new instance of this class from API arguments.
-   *
-   * @param {string} name The name of the operation.
-   * @param {object} args The arguments for the operation, as a simple object
-   *   (not a map).
-   * @returns {CaretOp} The new instance.
-   */
-  static fromApi(name, args) {
-    return new CaretOp(KEY, name, args);
+    return [this._payload];
   }
 
   /**
@@ -169,24 +180,6 @@ export default class CaretOp extends CommonBase {
    * @returns {string} The human-oriented representation.
    */
   toString() {
-    const result = ['CaretOp ', this._name, ' {'];
-
-    let first = true;
-    for (const [k, v] of this._args) {
-      if (first) {
-        first = false;
-      } else {
-        result.push(', ');
-      }
-
-      result.push(' ');
-      result.push(k);
-      result.push(': ');
-      result.push(v.toString());
-    }
-
-    result.push('}');
-
-    return result.join('');
+    return `${this.constructor.name} { ${this._payload} }`;
   }
 }
