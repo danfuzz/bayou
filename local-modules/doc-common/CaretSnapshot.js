@@ -14,7 +14,7 @@ import RevisionNumber from './RevisionNumber';
  * {CaretSnapshot|null} Empty instance. Initialized in the `EMPTY` property
  * accessor.
  */
-let emptyInstance = null;
+let EMPTY = null;
 
 /**
  * Snapshot of information about all active sessions on a particular document.
@@ -26,11 +26,11 @@ export default class CaretSnapshot extends CommonBase {
    * revision number of `0`.
    */
   static get EMPTY() {
-    if (emptyInstance === null) {
-      emptyInstance = new CaretSnapshot(0, []);
+    if (EMPTY === null) {
+      EMPTY = new CaretSnapshot(0, []);
     }
 
-    return emptyInstance;
+    return EMPTY;
   }
 
   /**
@@ -97,18 +97,8 @@ export default class CaretSnapshot extends CommonBase {
    * @returns {Caret|null} Corresponding caret, or `null` if there is none.
    */
   caretForSession(sessionId) {
+    TString.nonEmpty(sessionId);
     return this._carets.get(sessionId) || null;
-  }
-
-  /**
-   * Gets whether or not this instance represents the given session.
-   *
-   * @param {string} sessionId Session in question.
-   * @returns {boolean} `true` if this instance has info for the indicated
-   *   session, or `false` if not.
-   */
-  hasSession(sessionId) {
-    return this.caretForSession(sessionId) !== null;
   }
 
   /**
@@ -129,15 +119,17 @@ export default class CaretSnapshot extends CommonBase {
     let   revNum    = this._revNum;
 
     for (const op of delta.ops) {
-      switch (op.name) {
+      const props = op.props;
+
+      switch (props.opName) {
         case CaretOp.BEGIN_SESSION: {
-          const caret = op.arg('caret');
+          const caret = props.caret;
           newCarets.set(caret.sessionId, caret);
           break;
         }
 
         case CaretOp.UPDATE_FIELD: {
-          const sessionId = op.arg('sessionId');
+          const sessionId = props.sessionId;
           const caret     = newCarets.get(sessionId);
 
           if (!caret) {
@@ -149,14 +141,18 @@ export default class CaretSnapshot extends CommonBase {
         }
 
         case CaretOp.END_SESSION: {
-          const sessionId = op.arg('sessionId');
+          const sessionId = props.sessionId;
           newCarets.delete(sessionId);
           break;
         }
 
         case CaretOp.UPDATE_REV_NUM: {
-          revNum = op.arg('revNum');
+          revNum = props.revNum;
           break;
+        }
+
+        default: {
+          throw Errors.wtf(`Weird caret op: ${props.opName}`);
         }
       }
     }
@@ -253,6 +249,18 @@ export default class CaretSnapshot extends CommonBase {
     }
 
     return true;
+  }
+
+  /**
+   * Gets whether or not this instance represents the given session.
+   *
+   * @param {string} sessionId Session in question.
+   * @returns {boolean} `true` if this instance has info for the indicated
+   *   session, or `false` if not.
+   */
+  hasSession(sessionId) {
+    TString.nonEmpty(sessionId);
+    return this.caretForSession(sessionId) !== null;
   }
 
   /**

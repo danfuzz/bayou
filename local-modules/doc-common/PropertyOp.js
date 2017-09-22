@@ -154,6 +154,6 @@ export default class PropertyOp extends CommonBase {
    * @returns {string} The human-oriented representation.
    */
   toString() {
-    return `PropertyOp { ${this._payload} }`;
+    return `${this.constructor.name} { ${this._payload} }`;
   }
 }

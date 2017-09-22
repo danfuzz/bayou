@@ -12,7 +12,7 @@ import PropertyOp from './PropertyOp';
  * {PropertySnapshot|null} Empty instance. Initialized in the `EMPTY` property
  * accessor.
  */
-let emptyInstance = null;
+let EMPTY = null;
 
 /**
  * Snapshot of information about all active sessions on a particular document.
@@ -24,11 +24,11 @@ export default class PropertySnapshot extends CommonBase {
    * revision number of `0`.
    */
   static get EMPTY() {
-    if (emptyInstance === null) {
-      emptyInstance = new PropertySnapshot([]);
+    if (EMPTY === null) {
+      EMPTY = new PropertySnapshot([]);
     }
 
-    return emptyInstance;
+    return EMPTY;
   }
 
   /**
@@ -276,6 +276,7 @@ export default class PropertySnapshot extends CommonBase {
    *   property, or `false` if not.
    */
   has(name) {
+    TString.identifier(name);
     return this._properties.has(name);
   }
 
