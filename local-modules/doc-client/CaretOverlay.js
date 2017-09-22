@@ -447,7 +447,7 @@ export default class CaretOverlay {
         }
 
         case CaretOp.END_SESSION: {
-          this.removeAvatarFromDefs(props.sessionId);
+          this._removeAvatarFromDefs(props.sessionId);
           updateDisplay = true;
           break;
         }
