@@ -45,7 +45,7 @@ export default class Mutex extends CommonBase {
    *   called.
    */
   async lock() {
-    const key = Symbol('mutex-key'); // Uninterned symbol and so unique.
+    const key = Symbol('mutex_key'); // Uninterned symbol and so unique.
 
     if (this._lockedBy !== null) {
       // There's contention, so we have to queue up. The `release` function

@@ -4,6 +4,7 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
+import { inspect } from 'util';
 
 import { DataUtil, Functor } from 'util-core';
 
@@ -165,6 +166,119 @@ describe('util-core/DataUtil', () => {
       test([1, 2, 3, [[[[[synthetic]]]]]]);
       test({ a: 10, b: instance });
       test({ a: 10, b: { c: { d: synthetic } } });
+    });
+  });
+
+  describe('equalData()', () => {
+    it('should return `true` for equal primitive values', () => {
+      function test(value) {
+        assert.isTrue(DataUtil.equalData(value, value));
+      }
+
+      test(undefined);
+      test(null);
+      test(false);
+      test(true);
+      test(37);
+      test(NaN);
+      test(-0);
+      test('a string');
+      test(Symbol('foo'));
+    });
+
+    it('should return `true` for equal-content arrays', () => {
+      function test(v1, v2) {
+        assert.isTrue(DataUtil.equalData(v1, v2), inspect(v1));
+      }
+
+      test([],                   []);
+      test([1],                  [1]);
+      test(['a', 'b', 'c'],      ['a', 'b', 'c']);
+      test([1, [2, 3]],          [1, [2, 3]]);
+      test([{ a: 1 }, { b: 2 }], [{ a: 1 }, { b: 2 }]);
+
+      // Extra properties.
+      const v1 = [1, 2, 3]; v1.x = 'x'; v1.y = 'y';
+      const v2 = [1, 2, 3]; v2.x = 'x'; v2.y = 'y';
+      test(v1, v2);
+    });
+
+    it('should return `true` for equal-content objects', () => {
+      function test(v1, v2) {
+        assert.isTrue(DataUtil.equalData(v1, v2), v1);
+      }
+
+      test({}, {});
+      test({ a: 1 }, { a: 1 });
+      test({ a: 1, b: { b: 2 } }, { a: 1, b: { b: 2 } });
+    });
+
+    it('should return `true` for equal-content functors', () => {
+      function test(v1, v2) {
+        assert.isTrue(DataUtil.equalData(v1, v2), v1);
+      }
+
+      test(new Functor('x'),           new Functor('x'));
+      test(new Functor('y', 1, 2, 3),  new Functor('y', 1, 2, 3));
+      test(new Functor('z', [1, [2]]), new Functor('z', [1, [2]]));
+    });
+
+    it('should return `false` for non-data objects even if equal', () => {
+      function test(value) {
+        assert.isFalse(DataUtil.equalData(value, value), value);
+      }
+
+      test(() => 10);
+      test(new Map());
+      test(/blort/);
+    });
+
+    it('should return `false` for non-equal values', () => {
+      function test(v1, v2) {
+        assert.isFalse(DataUtil.equalData(v1, v2), v1);
+      }
+
+      test(null, undefined);
+      test(null, false);
+      test(null, 0);
+      test(null, '');
+      test(null, []);
+      test(null, {});
+
+      test(undefined, null);
+      test(undefined, false);
+      test(undefined, 0);
+      test(undefined, '');
+      test(undefined, []);
+      test(undefined, {});
+
+      test(false, undefined);
+      test(false, null);
+      test(false, 0);
+      test(false, '');
+      test(false, []);
+      test(false, {});
+
+      test(0, undefined);
+      test(0, false);
+      test(0, null);
+      test(0, '');
+      test(0, []);
+      test(0, {});
+
+      test('', undefined);
+      test('', false);
+      test('', 0);
+      test('', null);
+      test('', []);
+      test('', {});
+
+      test(1,        '1');
+      test(true,     'true');
+      test([37],     37);
+      test({ x: 1 }, 1);
+
+      test(new Functor('x', 1, 2, 3), [1, 2, 3]);
     });
   });
 

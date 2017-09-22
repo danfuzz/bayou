@@ -86,7 +86,7 @@ describe('api-common/BaseKey', () => {
 
   describe('.id', () => {
     it('should return the ID passed to the constructor', () => {
-      const id  = 'this-is-an-id';
+      const id  = 'this_is_an_id';
       const key = new BaseKey('*', id);
 
       assert.strictEqual(key.id, id);

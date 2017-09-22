@@ -14,7 +14,7 @@ import TargetMap from './TargetMap';
 const log = new Logger('api');
 
 /** Value used for an unknown connection ID. */
-const UNKNOWN_CONNECTION_ID = 'id-unknown';
+const UNKNOWN_CONNECTION_ID = 'id_unknown';
 
 /**
  * Connection with the server, via a websocket.

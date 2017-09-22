@@ -17,22 +17,22 @@ const KEY = Symbol('CaretOp constructor key');
 export default class CaretOp extends CommonBase {
   /** {string} Operation name for "begin session" operations. */
   static get BEGIN_SESSION() {
-    return 'begin-session';
+    return 'begin_session';
   }
 
   /** {string} Operation name for "update field" operations. */
   static get UPDATE_FIELD() {
-    return 'update-field';
+    return 'update_field';
   }
 
   /** {string} Operation name for "end session" operations. */
   static get END_SESSION() {
-    return 'end-session';
+    return 'end_session';
   }
 
-  /** {string} Operation name for "update rev-num" operations. */
+  /** {string} Operation name for "update revision number" operations. */
   static get UPDATE_REV_NUM() {
-    return 'update-rev-num';
+    return 'update_rev_num';
   }
 
   /**
@@ -40,8 +40,7 @@ export default class CaretOp extends CommonBase {
    *
    * @param {Caret} caret The initial caret for the new session (which includes
    *   a session ID).
-   * @returns {CaretOp} An operation representing the start of the so-IDed
-   *   session.
+   * @returns {CaretOp} The corresponding operation.
    */
   static op_beginSession(caret) {
     Caret.check(caret);
@@ -56,8 +55,7 @@ export default class CaretOp extends CommonBase {
    * @param {string} key Name of the field to update.
    * @param {*} value New value for the so-named field. Type restriction on this
    *   varies by name.
-   * @returns {CaretOp} An operation representing the update of the indicated
-   *   field on the indicated caret.
+   * @returns {CaretOp} The corresponding operation.
    */
   static op_updateField(sessionId, key, value) {
     TString.check(sessionId);
@@ -70,8 +68,7 @@ export default class CaretOp extends CommonBase {
    * Constructs a new "end session" operation.
    *
    * @param {string} sessionId ID of the session.
-   * @returns {CaretOp} An operation representing the end of the so-IDed
-   *   session.
+   * @returns {CaretOp} The corresponding operation.
    */
   static op_endSession(sessionId) {
     TString.check(sessionId);
@@ -80,7 +77,7 @@ export default class CaretOp extends CommonBase {
   }
 
   /**
-   * Constructs a new instance of an update-rev-num operation.
+   * Constructs a new "update revision number" operation.
    *
    * @param {Int} revNum The new revision number.
    * @returns {CaretOp} The corresponding operation.
@@ -116,9 +113,7 @@ export default class CaretOp extends CommonBase {
     Object.freeze(this);
   }
 
-  /**
-   * @returns {string} The name of this operation.
-   */
+  /** {string} The name of this operation. */
   get name() {
     return this._name;
   }

@@ -46,7 +46,7 @@ export default class CaretSnapshot extends CommonBase {
 
     super();
 
-    /** {Int} The associated caret information revision number. */
+    /** {Int} The caret information revision number. */
     this._revNum = revNum;
 
     /** {Map<string, Caret>} Map of session ID to corresponding caret. */
@@ -56,6 +56,7 @@ export default class CaretSnapshot extends CommonBase {
       this._carets.set(c.sessionId, c);
     }
 
+    Object.freeze(this._carets);
     Object.freeze(this);
   }
 
@@ -184,7 +185,7 @@ export default class CaretSnapshot extends CommonBase {
     const newerCarets = newerSnapshot._carets;
     const caretOps    = [];
 
-    // Add ops for the revision numbers, as needed.
+    // Add an op for the revision number, if needed.
 
     if (this._revNum !== newerSnapshot._revNum) {
       caretOps.push(CaretOp.op_updateRevNum(newerSnapshot._revNum));
@@ -223,13 +224,18 @@ export default class CaretSnapshot extends CommonBase {
   }
 
   /**
-   * Compares this to another instance, for equality of content.
+   * Compares this to another possible-instance, for equality of content.
    *
-   * @param {CaretSnapshot} other Snapshot to compare to.
-   * @returns {boolean} `true` iff `this` and `other` have equal contents.
+   * @param {*} other Value to compare to.
+   * @returns {boolean} `true` iff `other` is also an instance of this class,
+   *   and `this` and `other` have equal contents.
    */
   equals(other) {
-    CaretSnapshot.check(other);
+    if (this === other) {
+      return true;
+    } else if (!(other instanceof CaretSnapshot)) {
+      return false;
+    }
 
     const thisCarets  = this._carets;
     const otherCarets = other._carets;

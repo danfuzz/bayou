@@ -175,5 +175,14 @@ describe('doc-common/Caret', () => {
       c2 = c1.compose(new CaretDelta([op]));
       assert.isFalse(c1.equals(c2));
     });
+
+    it('should return `false` when passed a non-caret', () => {
+      const caret = newCaret('x', 1, 2, '#000011');
+
+      assert.isFalse(caret.equals(undefined));
+      assert.isFalse(caret.equals(null));
+      assert.isFalse(caret.equals('not a caret'));
+      assert.isFalse(caret.equals(['also', 'not', 'a', 'caret']));
+    });
   });
 });
