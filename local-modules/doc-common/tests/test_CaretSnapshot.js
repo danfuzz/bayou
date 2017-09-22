@@ -17,7 +17,7 @@ import { Caret, CaretDelta, CaretOp, CaretSnapshot } from 'doc-common';
  * @returns {Caret} Appropriately-constructed caret.
  */
 function newCaret(sessionId, index, length, color) {
-  return new Caret(sessionId, Object.entries({ index, length, color }));
+  return new Caret(sessionId, { index, length, color });
 }
 
 const caret1 = newCaret('session_1', 1, 0,  '#111111');
@@ -316,7 +316,7 @@ describe('doc-common/CaretSnapshot', () => {
 
       assert.strictEqual(snap.withCaret(caret1), snap);
 
-      const cloneCaret = new Caret(caret1, []);
+      const cloneCaret = new Caret(caret1, {});
       assert.strictEqual(snap.withCaret(cloneCaret), snap);
     });
 
@@ -328,7 +328,7 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should return an appropriately-constructed instance given an updated caret', () => {
-      const modCaret = new Caret(caret1, Object.entries({ index: 321 }));
+      const modCaret = new Caret(caret1, { index: 321 });
       const snap =     new CaretSnapshot(1, [caret1,   caret2]);
       const expected = new CaretSnapshot(1, [modCaret, caret2]);
 
@@ -369,7 +369,7 @@ describe('doc-common/CaretSnapshot', () => {
     it('should only pay attention to the session ID of the given caret', () => {
       const snap =     new CaretSnapshot(1, [caret1, caret2]);
       const expected = new CaretSnapshot(1, [caret2]);
-      const modCaret = new Caret(caret1, Object.entries({ revNum: 999999, index: 99 }));
+      const modCaret = new Caret(caret1, { revNum: 999999, index: 99 });
 
       assert.isTrue(snap.withoutCaret(modCaret).equals(expected));
     });

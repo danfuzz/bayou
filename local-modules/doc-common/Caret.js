@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TInt, TIterable, TString } from 'typecheck';
+import { TInt, TObject, TString } from 'typecheck';
 import { ColorUtil, CommonBase, Errors } from 'util-common';
 
 import CaretDelta from './CaretDelta';
@@ -45,13 +45,13 @@ export default class Caret extends CommonBase {
   static get DEFAULT() {
     if (DEFAULT === null) {
       DEFAULT = new Caret('no_session',
-        Object.entries({
+        {
           lastActive: Timestamp.now(),
           revNum:     0,
           index:      0,
           length:     0,
           color:      '#000000'
-        }));
+        });
     }
 
     return DEFAULT;
@@ -94,9 +94,10 @@ export default class Caret extends CommonBase {
    * @param {string|Caret} sessionIdOrBase Session ID that identifies the caret,
    *   or a base caret instance which provides the session and default values
    *   for fields.
-   * @param {Iterable<string,*>} [fields = []] Fields of the caret.
+   * @param {object} [fields = {}] Fields of the caret, as simple object mapping
+   *   field names to values.
    */
-  constructor(sessionIdOrBase, fields = []) {
+  constructor(sessionIdOrBase, fields = {}) {
     let sessionId;
     let newFields;
 
@@ -108,7 +109,7 @@ export default class Caret extends CommonBase {
       sessionId = TString.nonEmpty(sessionIdOrBase);
     }
 
-    TIterable.check(fields);
+    TObject.simple(fields);
 
     super();
 
@@ -118,7 +119,7 @@ export default class Caret extends CommonBase {
     /** {Map<string,*>} Map of all of the caret fields, from name to value. */
     this._fields = newFields;
 
-    for (const [k, v] of fields) {
+    for (const [k, v] of Object.entries(fields)) {
       newFields.set(k, Caret.checkField(k, v));
     }
 
@@ -187,7 +188,7 @@ export default class Caret extends CommonBase {
   compose(delta) {
     CaretDelta.check(delta);
 
-    const fields = new Map();
+    const fields = {};
 
     for (const op of delta.ops) {
       const props = op.props;
@@ -197,7 +198,7 @@ export default class Caret extends CommonBase {
         throw Errors.bad_use('Mismatched session ID.');
       }
 
-      fields.set(props.key, props.value);
+      fields[props.key] = props.value;
     }
 
     return new Caret(this, fields);
@@ -298,17 +299,6 @@ export default class Caret extends CommonBase {
     }
 
     return [this._sessionId, fields];
-  }
-
-  /**
-   * Makes a new instance of this class from API arguments.
-   *
-   * @param {string} sessionId The session ID.
-   * @param {object} fields The caret fields, as a simple object (not a map).
-   * @returns {Caret} The new instance.
-   */
-  static fromApi(sessionId, fields) {
-    return new Caret(sessionId, Object.entries(fields));
   }
 
   /**
