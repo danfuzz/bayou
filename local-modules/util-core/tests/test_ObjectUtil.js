@@ -8,8 +8,37 @@ import { describe, it } from 'mocha';
 import { ObjectUtil } from 'util-core';
 
 describe('util-core/ObjectUtil', () => {
-  describe('hasOwnProperty(value, name)', () => {
-    it('should return true when asked about an object\'s own propery', () => {
+  describe('extract()', () => {
+    it('should return the extracted properties', () => {
+      function test(value, keys, expected) {
+        const result = ObjectUtil.extract(value, keys);
+        assert.isFrozen(result);
+        assert.deepEqual(result, expected);
+      }
+
+      test({},                      [],         {});
+      test({ a: 10 },               ['a'],      { a: 10 });
+      test({ a: 10, b: 20, c: 30 }, ['a', 'c'], { a: 10, c: 30 });
+      test([0, 1, 2, 3, 4, 5],      ['2', '4'], { '2': 2, '4': 4 });
+
+      const value = new Map();
+      value.blort = 'blort';
+      test(value, ['blort'], { blort: 'blort' });
+    });
+
+    it('should fail if a property is missing', () => {
+      function test(value, keys) {
+        assert.throws(() => ObjectUtil.extract(value, keys));
+      }
+
+      test({},        ['x']);
+      test({ a: 10 }, ['x']);
+      test({ a: 10 }, ['a', 'x']);
+    });
+  });
+
+  describe('hasOwnProperty()', () => {
+    it('should return `true` when asked about an object\'s own propery', () => {
       const value = {};
 
       value.uniqueProperty = 'super neat!';
@@ -17,14 +46,14 @@ describe('util-core/ObjectUtil', () => {
       assert.isTrue(ObjectUtil.hasOwnProperty(value, 'uniqueProperty'));
     });
 
-    it('should return false when asked about a property in a parent', () => {
+    it('should return `false` when asked about a property in a parent', () => {
       const value = {};
 
       assert.isFalse(ObjectUtil.hasOwnProperty(value, 'toString'));
     });
 
-    it('should return false when asked about an absent property', () => {
-      const value = 'this is a neat string!';
+    it('should return `false` when asked about an absent property', () => {
+      const value = { x: 'this is a neat string!' };
 
       assert.isFalse(ObjectUtil.hasOwnProperty(value, 'floopty'));
     });

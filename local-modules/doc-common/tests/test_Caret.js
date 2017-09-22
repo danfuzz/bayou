@@ -17,7 +17,7 @@ import { Caret, CaretDelta, CaretOp } from 'doc-common';
  * @returns {Caret} Appropriately-constructed caret.
  */
 function newCaret(sessionId, index, length, color) {
-  return new Caret(sessionId, Object.entries({ index, length, color }));
+  return new Caret(sessionId, { index, length, color });
 }
 
 const caret1 = newCaret('session-1', 1, 0,  '#111111');

@@ -25,17 +25,33 @@ export default class TObject extends UtilityClass {
   }
 
   /**
-   * Checks a value of type `Object`, which must have exactly the indicated set
-   * of keys as "own" properties.
+   * Checks that a value is of type `Object` and is furthermore a simple
+   * object, which is to say, not any of an array, a function, or an instance of
+   * a class other than `Object` itself.
+   *
+   * @param {*} value Value to check.
+   * @returns {object} `value`.
+   */
+  static simple(value) {
+    if (   (typeof value === 'object')
+        && (value !== null)
+        && (Object.getPrototypeOf(value) === Object.prototype)) {
+      return value;
+    }
+
+    throw Errors.bad_value(value, 'simple object');
+  }
+
+  /**
+   * Checks a value of type `Object`, which must be a simple object with exactly
+   * the indicated set of keys as "own" properties.
    *
    * @param {*} value Value to check.
    * @param {array<string>} keys Keys that must be present in `value`.
    * @returns {object} `value`.
    */
   static withExactKeys(value, keys) {
-    if (typeof value !== 'object') {
-      throw Errors.bad_value(value, Object);
-    }
+    TObject.simple(value);
 
     // Make a copy, check for and delete allowed keys, and see if anything's
     // left.

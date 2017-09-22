@@ -162,9 +162,9 @@ export default class CaretControl extends CommonBase {
 
     if (oldCaret === null) {
       newFields.color = this._pickSessionColor(sessionId);
-      newCaret = new Caret(sessionId, Object.entries(newFields));
+      newCaret = new Caret(sessionId, newFields);
     } else {
-      newCaret = new Caret(oldCaret, Object.entries(newFields));
+      newCaret = new Caret(oldCaret, newFields);
     }
 
     snapshot = snapshot.withCaret(newCaret);
