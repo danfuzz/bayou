@@ -100,32 +100,9 @@ export default class CaretOp extends CommonBase {
     Object.freeze(this);
   }
 
-  /** {string} The name of this operation. */
-  get name() {
-    return this._payload.name;
-  }
-
   /** {Functor} The operation payload (name and arguments). */
   get payload() {
     return this._payload;
-  }
-
-  /**
-   * Gets the operation argument with the given name. It is an error to
-   * request an argument that is not bound. Return values are guaranteed to be
-   * deep frozen.
-   *
-   * @param {string} name The argument name.
-   * @returns {*} Corresponding argument value.
-   */
-  arg(name) {
-    const result = this.props[name];
-
-    if (result === undefined) {
-      throw Errors.bad_use(`No such argument: ${name}`);
-    }
-
-    return result;
   }
 
   /**
