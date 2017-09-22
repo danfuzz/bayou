@@ -20,9 +20,9 @@ function newCaret(sessionId, index, length, color) {
   return new Caret(sessionId, Object.entries({ index, length, color }));
 }
 
-const caret1 = newCaret('session-1', 1, 0,  '#111111');
-const caret2 = newCaret('session-2', 2, 6,  '#222222');
-const caret3 = newCaret('session-3', 3, 99, '#333333');
+const caret1 = newCaret('session_1', 1, 0,  '#111111');
+const caret2 = newCaret('session_2', 2, 6,  '#222222');
+const caret3 = newCaret('session_3', 3, 99, '#333333');
 
 describe('doc-common/CaretSnapshot', () => {
   describe('.EMPTY', () => {
@@ -31,6 +31,30 @@ describe('doc-common/CaretSnapshot', () => {
 
       assert.strictEqual(EMPTY.revNum, 0);
       assert.deepEqual(EMPTY.carets, []);
+    });
+  });
+
+  describe('caretForSession()', () => {
+    it('should return the caret associated with an existing session', () => {
+      const snap = new CaretSnapshot(999, [caret1, caret2, caret3]);
+
+      assert.strictEqual(snap.caretForSession(caret1.sessionId), caret1);
+      assert.strictEqual(snap.caretForSession(caret2.sessionId), caret2);
+      assert.strictEqual(snap.caretForSession(caret3.sessionId), caret3);
+    });
+
+    it('should return `null` when given a session ID that is not in the snapshot', () => {
+      const snap = new CaretSnapshot(999, [caret1, caret3]);
+
+      assert.isNull(snap.caretForSession(caret2.sessionId));
+    });
+
+    it('should throw an error if given an invalid session ID', () => {
+      const snap = new CaretSnapshot(999, []);
+
+      assert.throws(() => { snap.caretForSession(123); });
+      assert.throws(() => { snap.caretForSession(['x']); });
+      assert.throws(() => { snap.caretForSession(''); });
     });
   });
 
@@ -262,6 +286,30 @@ describe('doc-common/CaretSnapshot', () => {
     });
   });
 
+  describe('hasSession()', () => {
+    it('should return `true` when given a session ID for an existing session', () => {
+      const snap = new CaretSnapshot(999, [caret1, caret2, caret3]);
+
+      assert.isTrue(snap.hasSession(caret1.sessionId));
+      assert.isTrue(snap.hasSession(caret2.sessionId));
+      assert.isTrue(snap.hasSession(caret3.sessionId));
+    });
+
+    it('should return `false` when given a session ID that is not in the snapshot', () => {
+      const snap = new CaretSnapshot(999, [caret1, caret3]);
+
+      assert.isFalse(snap.hasSession(caret2.sessionId));
+    });
+
+    it('should throw an error if given an invalid session ID', () => {
+      const snap = new CaretSnapshot(999, []);
+
+      assert.throws(() => { snap.hasSession(123); });
+      assert.throws(() => { snap.hasSession(['x']); });
+      assert.throws(() => { snap.hasSession(''); });
+    });
+  });
+
   describe('withCaret()', () => {
     it('should return `this` if the exact caret is already in the snapshot', () => {
       const snap = new CaretSnapshot(1, [caret1]);
@@ -331,7 +379,7 @@ describe('doc-common/CaretSnapshot', () => {
     it('should return `this` if there is no matching session', () => {
       const snap = new CaretSnapshot(1, [caret1]);
 
-      assert.strictEqual(snap.withoutSession('blort-is-not-a-session'), snap);
+      assert.strictEqual(snap.withoutSession('blort_is_not_a_session'), snap);
     });
 
     it('should return an appropriately-constructed instance if there is a matching session', () => {

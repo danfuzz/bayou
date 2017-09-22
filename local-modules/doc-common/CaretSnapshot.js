@@ -97,18 +97,8 @@ export default class CaretSnapshot extends CommonBase {
    * @returns {Caret|null} Corresponding caret, or `null` if there is none.
    */
   caretForSession(sessionId) {
+    TString.nonEmpty(sessionId);
     return this._carets.get(sessionId) || null;
-  }
-
-  /**
-   * Gets whether or not this instance represents the given session.
-   *
-   * @param {string} sessionId Session in question.
-   * @returns {boolean} `true` if this instance has info for the indicated
-   *   session, or `false` if not.
-   */
-  hasSession(sessionId) {
-    return this.caretForSession(sessionId) !== null;
   }
 
   /**
@@ -258,6 +248,18 @@ export default class CaretSnapshot extends CommonBase {
     }
 
     return true;
+  }
+
+  /**
+   * Gets whether or not this instance represents the given session.
+   *
+   * @param {string} sessionId Session in question.
+   * @returns {boolean} `true` if this instance has info for the indicated
+   *   session, or `false` if not.
+   */
+  hasSession(sessionId) {
+    TString.nonEmpty(sessionId);
+    return this.caretForSession(sessionId) !== null;
   }
 
   /**
