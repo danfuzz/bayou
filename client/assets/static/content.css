@@ -128,7 +128,7 @@ html.bayou-page {
    * This arranges for a maximum line width that won't force the reader's eyes
    * to glaze over.
    */
-  max-width:    45rem;
+  max-width:    43.75rem;
   margin-left:  auto;
   margin-right: auto;
 }
@@ -140,25 +140,26 @@ html.bayou-page {
 .bayou-editor .ql-editor p {
   font-size:     1.125rem;
   line-height:   1.75rem;
-  margin-bottom: 1.75rem;
 }
 
 .bayou-editor .ql-editor h1 {
   font-size:     2.25rem;
   line-height:   2.625rem;
-  margin-top:    0.75rem;
+  margin-top:    2.5rem;
   margin-bottom: 0.75rem;
 }
 
 .bayou-editor .ql-editor h2 {
   font-size:     1.75rem;
-  line-height:   2.25rem;
+  line-height:   2.125rem;
+  margin-top:    1.75rem;
   margin-bottom: 0.5rem;
 }
 
 .bayou-editor .ql-editor h3 {
   font-size:     1.375rem;
   line-height:   2.25rem;
+  margin-top:    1.75rem;
   margin-bottom: 0.5rem;
 }
 
