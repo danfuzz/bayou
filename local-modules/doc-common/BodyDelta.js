@@ -5,7 +5,6 @@
 import { CommonBase } from 'util-common';
 
 import BodyOpList from './BodyOpList';
-import RevisionNumber from './RevisionNumber';
 
 /**
  * {BodyDelta|null} Empty instance. Initialized in the static getter of the
@@ -23,7 +22,7 @@ export default class BodyDelta extends CommonBase {
   /** {BodyDelta} Empty instance. */
   static get EMPTY() {
     if (EMPTY === null) {
-      EMPTY = new BodyDelta(0, BodyOpList.EMPTY);
+      EMPTY = new BodyDelta(BodyOpList.EMPTY);
     }
 
     return EMPTY;
@@ -32,18 +31,12 @@ export default class BodyDelta extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {Int} revNum The revision number of the document produced by this
-   *   instance. If this instance represents the first change to a document,
-   *   then this value will be `0`.
    * @param {BodyOpList} ops List of operations (raw delta) which can be
    *   applied in context to produce the document with the indicated revision
    *   number.
    */
-  constructor(revNum, ops) {
+  constructor(ops) {
     super();
-
-    /** {Int} The produced revision number. */
-    this._revNum = RevisionNumber.check(revNum);
 
     /**
      * {BodyOpList} The actual change, as a list of operations (a raw delta).
@@ -59,12 +52,7 @@ export default class BodyDelta extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._revNum, this._ops];
-  }
-
-  /** {Int} The produced revision number. */
-  get revNum() {
-    return this._revNum;
+    return [this._ops];
   }
 
   /**

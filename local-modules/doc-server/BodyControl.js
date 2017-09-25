@@ -132,7 +132,7 @@ export default class BodyControl extends CommonBase {
     // constructing the transaction spec.
     const maybeChange1 = [];
     if (contents !== null) {
-      const change = new BodyChange(new BodyDelta(1, contents), 1, Timestamp.now(), null);
+      const change = new BodyChange(new BodyDelta(contents), 1, Timestamp.now(), null);
       const op     = fc.op_writePath(Paths.forBodyChange(1), change);
       maybeChange1.push(op);
     }
@@ -195,7 +195,7 @@ export default class BodyControl extends CommonBase {
         // after the base through and including the current revision.
         const ops = await this._composeRevisions(
           BodyOpList.EMPTY, baseRevNum + 1, revNum + 1);
-        return new BodyChange(new BodyDelta(revNum, ops), revNum);
+        return new BodyChange(new BodyDelta(ops), revNum);
       }
 
       // Wait for the file to change (or for the storage layer to time out), and
@@ -297,12 +297,12 @@ export default class BodyControl extends CommonBase {
     // Check for an empty `ops`. If it is, we don't bother trying to apply it.
     // See method header comment for more info.
     if (ops.isEmpty()) {
-      return new BodyChange(new BodyDelta(baseRevNum, BodyOpList.EMPTY), baseRevNum);
+      return new BodyChange(new BodyDelta(BodyOpList.EMPTY), baseRevNum);
     }
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
-    const expected = base.compose(new BodyChange(new BodyDelta(baseRevNum + 1, ops), baseRevNum + 1));
+    const expected = base.compose(new BodyChange(new BodyDelta(ops), baseRevNum + 1));
 
     // We try performing the apply, and then we iterate if it failed _and_ the
     // reason is simply that there were any changes that got made while we were
@@ -525,8 +525,7 @@ export default class BodyControl extends CommonBase {
       // delta. We merely have to apply the given `delta` to the current
       // revision. If it succeeds, then we won the append race (if any).
 
-      const change =
-        new BodyChange(new BodyDelta(base.revNum + 1, ops), base.revNum + 1, Timestamp.now(), authorId);
+      const change = new BodyChange(new BodyDelta(ops), base.revNum + 1, Timestamp.now(), authorId);
       const revNum = await this._appendChange(change);
 
       if (revNum === null) {
@@ -534,7 +533,7 @@ export default class BodyControl extends CommonBase {
         return null;
       }
 
-      return new BodyChange(new BodyDelta(revNum, BodyOpList.EMPTY), revNum);
+      return new BodyChange(new BodyDelta(BodyOpList.EMPTY), revNum);
     }
 
     // The hard case: The client has requested an application of a delta
@@ -582,13 +581,13 @@ export default class BodyControl extends CommonBase {
       // It turns out that nothing changed. **Note:** It is unclear whether this
       // can actually happen in practice, given that we already return early
       // (in `update()`) if we are asked to apply an empty delta.
-      return new BodyChange(new BodyDelta(rCurrent.revNum, BodyOpList.EMPTY), rCurrent.revNum);
+      return new BodyChange(new BodyDelta(BodyOpList.EMPTY), rCurrent.revNum);
     }
 
     // (3)
 
     const rNextNum     = rCurrent.revNum + 1;
-    const change       = new BodyChange(new BodyDelta(rNextNum, dNext), rNextNum, Timestamp.now(), authorId);
+    const change       = new BodyChange(new BodyDelta(dNext), rNextNum, Timestamp.now(), authorId);
     const appendResult = await this._appendChange(change);
 
     if (appendResult === null) {
