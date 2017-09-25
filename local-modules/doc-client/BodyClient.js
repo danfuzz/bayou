@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ConnectionError } from 'api-common';
-import { BodyChange, BodyDelta, BodyOpList, BodySnapshot } from 'doc-common';
+import { BodyChange, BodyDelta, BodySnapshot } from 'doc-common';
 import { Delay } from 'promise-util';
 import { QuillEvents } from 'quill-util';
 import { TString } from 'typecheck';
@@ -169,13 +169,13 @@ export default class BodyClient extends StateMachine {
    * Validates a `gotUpdate` event. This represents a successful result
    * from the API call `body_update()`.
    *
-   * @param {BodyOpList} ops The operations (raw delta) that were originally
+   * @param {BodyDelta} ops The operations (raw delta) that were originally
    *   applied.
    * @param {BodyChange} correctedChange The correction to the expected
    *   result as returned from `body_update()`.
    */
   _check_gotUpdate(ops, correctedChange) {
-    BodyOpList.check(ops);
+    BodyDelta.check(ops);
     BodyChange.check(correctedChange);
   }
 
@@ -638,7 +638,7 @@ export default class BodyClient extends StateMachine {
    * In state `merging`, handles event `gotUpdate`. This means that a local
    * change was successfully merged by the server.
    *
-   * @param {BodyOpList} ops The operations (raw delta) that were originally
+   * @param {BodyDelta} ops The operations (raw delta) that were originally
    *   applied.
    * @param {BodyChange} correctedChange The correction to the expected
    *   result as returned from `body_update()`.
@@ -646,7 +646,7 @@ export default class BodyClient extends StateMachine {
   _handle_merging_gotUpdate(ops, correctedChange) {
     // These are the same variable names as used on the server side. See below
     // for more detail.
-    const dCorrection = correctedChange.delta.ops;
+    const dCorrection = correctedChange.delta;
     const vResultNum  = correctedChange.revNum;
 
     this._log.detail('Correction from server:', correctedChange);
@@ -666,7 +666,7 @@ export default class BodyClient extends StateMachine {
       // And note that Quill doesn't need to be updated here (that is, its delta
       // is empty) because what we are integrating into the client document is
       // exactly what Quill handed to us.
-      this._updateWithChange(new BodyChange(vResultNum, new BodyDelta(ops)), BodyOpList.EMPTY);
+      this._updateWithChange(new BodyChange(vResultNum, ops), BodyDelta.EMPTY);
       this._becomeIdle();
       return;
     }
@@ -678,14 +678,14 @@ export default class BodyClient extends StateMachine {
     // state to Quill's current state) composed with the correction to that
     // delta which when applied brings the client's state into alignment with
     // the server's state.
-    const correctedDelta = BodyOpList.coerce(ops.compose(dCorrection));
+    const correctedDelta = BodyDelta.coerce(ops.compose(dCorrection));
 
     if (this._currentEvent.nextOfNow(QuillEvents.TEXT_CHANGE) === null) {
       // Thanfully, the local user hasn't made any other changes while we
       // were waiting for the server to get back to us, which means we can
       // cleanly apply the correction on top of Quill's current state.
       this._updateWithChange(
-        new BodyChange(vResultNum, new BodyDelta(correctedDelta)), dCorrection);
+        new BodyChange(vResultNum, correctedDelta), dCorrection);
       this._becomeIdle();
       return;
     }
@@ -729,9 +729,9 @@ export default class BodyClient extends StateMachine {
     // `false` indicates that `dMore` should be taken to have been applied
     // second (lost any insert races or similar).
     const dIntegratedCorrection =
-      BodyOpList.coerce(dMore.transform(dCorrection, false));
+      BodyDelta.coerce(dMore.transform(dCorrection, false));
     this._updateWithChange(
-      new BodyChange(vResultNum, new BodyDelta(correctedDelta)), dIntegratedCorrection);
+      new BodyChange(vResultNum, correctedDelta), dIntegratedCorrection);
 
     // (3)
 
@@ -749,7 +749,7 @@ export default class BodyClient extends StateMachine {
     // `EMPTY` for the old contents, because this code doesn't care about that
     // value at all
     const nextNow = this._currentEvent.withNewPayload(
-      new Functor(QuillEvents.TEXT_CHANGE, dNewMore, BodyOpList.EMPTY, 'user'));
+      new Functor(QuillEvents.TEXT_CHANGE, dNewMore, BodyDelta.EMPTY, 'user'));
 
     // Make a new head of the change chain which points at the `nextNow` we
     // just constructed above. We don't include any payload since this class
@@ -769,7 +769,7 @@ export default class BodyClient extends StateMachine {
    *
    * @param {boolean} includeOurChanges If `true` indicates that changes with
    *   source `CLIENT_SOURCE` _should_ be included.
-   * @returns {BodyOpList} A combined delta of all the salient changes. This
+   * @returns {BodyDelta} A combined delta of all the salient changes. This
    *   will be empty if there are no such changes (that is, if this class's
    *   document model is up-to-date with respect to Quill).
    */
@@ -795,7 +795,7 @@ export default class BodyClient extends StateMachine {
     // Remember that we consumed all these changes.
     this._currentEvent = change;
 
-    return BodyOpList.coerce(ops);
+    return BodyDelta.coerce(ops);
   }
 
   /**
@@ -810,13 +810,13 @@ export default class BodyClient extends StateMachine {
    * this method will throw an error.
    *
    * @param {BodyChange} change Change from the current `_snapshot` contents.
-   * @param {BodyOpList} [quillDelta = change.delta.ops] Delta from Quill's
+   * @param {BodyDelta} [quillDelta = change.delta] Delta from Quill's
    *   current state, which is expected to preserve any state that Quill has
    *   that isn't yet represented in `_snapshot`. This must be used in cases
    *   where Quill's state has progressed ahead of `_snapshot` due to local
    * activity.
    */
-  _updateWithChange(change, quillDelta = change.delta.ops) {
+  _updateWithChange(change, quillDelta = change.delta) {
     const needQuillUpdate = !quillDelta.isEmpty();
 
     if (   (this._currentEvent.nextOfNow(QuillEvents.TEXT_CHANGE) !== null)

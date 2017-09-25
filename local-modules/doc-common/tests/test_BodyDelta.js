@@ -7,14 +7,14 @@ import { describe, it } from 'mocha';
 import Delta from 'quill-delta';
 import { inspect } from 'util';
 
-import { BodyOpList } from 'doc-common';
+import { BodyDelta } from 'doc-common';
 
-describe('doc-common/BodyOpList', () => {
+describe('doc-common/BodyDelta', () => {
   describe('.EMPTY', () => {
-    const empty = BodyOpList.EMPTY;
+    const empty = BodyDelta.EMPTY;
 
-    it('should be an instance of `BodyOpList`', () => {
-      assert.instanceOf(empty, BodyOpList);
+    it('should be an instance of `BodyDelta`', () => {
+      assert.instanceOf(empty, BodyDelta);
     });
 
     it('should be a frozen object', () => {
@@ -29,8 +29,8 @@ describe('doc-common/BodyOpList', () => {
       assert.isFrozen(empty.ops);
     });
 
-    it('should be `BodyOpList.isEmpty()`', () => {
-      assert.isTrue(BodyOpList.isEmpty(empty));
+    it('should be `BodyDelta.isEmpty()`', () => {
+      assert.isTrue(BodyDelta.isEmpty(empty));
     });
   });
 
@@ -38,8 +38,8 @@ describe('doc-common/BodyOpList', () => {
     describe('valid empty values', () => {
       const values = [
         new Delta([]),
-        new BodyOpList([]),
-        BodyOpList.EMPTY,
+        new BodyDelta([]),
+        BodyDelta.EMPTY,
         null,
         undefined,
         [],
@@ -48,7 +48,7 @@ describe('doc-common/BodyOpList', () => {
 
       for (const v of values) {
         it(`should return \`true\` for: ${inspect(v)}`, () => {
-          assert.isTrue(BodyOpList.isEmpty(v));
+          assert.isTrue(BodyDelta.isEmpty(v));
         });
       }
     });
@@ -66,18 +66,18 @@ describe('doc-common/BodyOpList', () => {
         ops1,
         { ops: ops1 },
         new Delta(ops1),
-        new BodyOpList(ops1),
+        new BodyDelta(ops1),
         ops2,
         { ops: ops2 },
         new Delta(ops2),
-        new BodyOpList(ops2),
+        new BodyDelta(ops2),
         invalidNonEmptyOps,
         { ops: invalidNonEmptyOps }
       ];
 
       for (const v of values) {
         it(`should return \`false\` for: ${inspect(v)}`, () => {
-          assert.isFalse(BodyOpList.isEmpty(v));
+          assert.isFalse(BodyDelta.isEmpty(v));
         });
       }
     });
@@ -97,7 +97,7 @@ describe('doc-common/BodyOpList', () => {
 
       for (const v of values) {
         it(`should throw for: ${inspect(v)}`, () => {
-          assert.throws(() => { BodyOpList.isEmpty(v); });
+          assert.throws(() => { BodyDelta.isEmpty(v); });
         });
       }
     });
@@ -114,7 +114,7 @@ describe('doc-common/BodyOpList', () => {
 
       for (const v of values) {
         it(`should return \`true\` for: ${inspect(v)}`, () => {
-          assert.isTrue(BodyOpList.coerce(v).isDocument());
+          assert.isTrue(BodyDelta.coerce(v).isDocument());
         });
       }
     });
@@ -129,7 +129,7 @@ describe('doc-common/BodyOpList', () => {
 
       for (const v of values) {
         it(`should return \`false\` for: ${inspect(v)}`, () => {
-          assert.isFalse(BodyOpList.coerce(v).isDocument());
+          assert.isFalse(BodyDelta.coerce(v).isDocument());
         });
       }
     });

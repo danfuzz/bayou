@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BodyOpList } from 'doc-common';
+import { BodyDelta } from 'doc-common';
 import { EventSource } from 'promise-util';
 import { TString } from 'typecheck';
 import { Errors, Functor, ObjectUtil, UtilityClass } from 'util-common';
@@ -27,7 +27,7 @@ export default class QuillEvents extends UtilityClass {
    */
   static get EMPTY_TEXT_CHANGE_PAYLOAD() {
     return new Functor(
-      QuillEvents.TEXT_CHANGE, BodyOpList.EMPTY, BodyOpList.EMPTY, QuillEvents.API);
+      QuillEvents.TEXT_CHANGE, BodyDelta.EMPTY, BodyDelta.EMPTY, QuillEvents.API);
   }
 
   /** {String} Event name for selection change events. */
@@ -73,8 +73,8 @@ export default class QuillEvents extends UtilityClass {
       case QuillEvents.TEXT_CHANGE: {
         const [delta, oldContents, source] = payload.args;
         return new Functor(name,
-          BodyOpList.coerce(delta),
-          BodyOpList.coerce(oldContents),
+          BodyDelta.coerce(delta),
+          BodyDelta.coerce(oldContents),
           TString.check(source));
       }
 
