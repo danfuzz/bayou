@@ -132,7 +132,7 @@ export default class BodyControl extends CommonBase {
     // constructing the transaction spec.
     const maybeChange1 = [];
     if (contents !== null) {
-      const change = new BodyChange(new BodyDelta(1, contents), Timestamp.now(), null);
+      const change = new BodyChange(new BodyDelta(1, contents), 1, Timestamp.now(), null);
       const op     = fc.op_writePath(Paths.forBodyChange(1), change);
       maybeChange1.push(op);
     }
@@ -524,7 +524,7 @@ export default class BodyControl extends CommonBase {
       // revision. If it succeeds, then we won the append race (if any).
 
       const change =
-        new BodyChange(new BodyDelta(base.revNum + 1, ops), Timestamp.now(), authorId);
+        new BodyChange(new BodyDelta(base.revNum + 1, ops), base.revNum + 1, Timestamp.now(), authorId);
       const revNum = await this._appendChange(change);
 
       if (revNum === null) {
@@ -586,7 +586,7 @@ export default class BodyControl extends CommonBase {
     // (3)
 
     const rNextNum     = rCurrent.revNum + 1;
-    const change       = new BodyChange(new BodyDelta(rNextNum, dNext), Timestamp.now(), authorId);
+    const change       = new BodyChange(new BodyDelta(rNextNum, dNext), rNextNum, Timestamp.now(), authorId);
     const appendResult = await this._appendChange(change);
 
     if (appendResult === null) {
