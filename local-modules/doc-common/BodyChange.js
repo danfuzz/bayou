@@ -14,10 +14,12 @@ import Timestamp from './Timestamp';
  * revision, including time, authorship, and revision information in addition to
  * the actual delta. This class is a `BodyDelta` plus additional information.
  *
- * **Note:** The semantics of the `delta` in an instance of this class are more
- * specific than that of `BodyDelta` in general, exactly because instances
- * of this class always represent changes from the immediately-previous
- * revision.
+ * Instances of this class are returned from calls to `body_update()` and
+ * `body_deltaAfter()` as defined by the various `doc-server` classes. See those
+ * for more details. Note that the meaning of the `delta` value is different
+ * depending on which method the result came from. In particular, there is an
+ * implied "expected" result from `body_update()` which this instance's
+ * `delta` is with respect to.
  *
  * Instances of this class are immutable.
  */

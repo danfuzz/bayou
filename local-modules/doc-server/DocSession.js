@@ -88,8 +88,8 @@ export default class DocSession {
    *   to.
    * @param {BodyOpList} ops List of operations indicating what has changed with
    *   respect to `baseRevNum`.
-   * @returns {BodyDelta} The correction from the implied expected result to
-   *   get the actual result.
+   * @returns {BodyChange} The correction to the implied expected result of
+   *   this operation.
    */
   async body_update(baseRevNum, ops) {
     return this._bodyControl.update(baseRevNum, ops, this._authorId);

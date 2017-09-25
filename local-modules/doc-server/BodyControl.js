@@ -279,9 +279,10 @@ export default class BodyControl extends CommonBase {
    *   respect to `baseRevNum`.
    * @param {string|null} authorId Author of the change, or `null` if the change
    *   is to be considered authorless.
-   * @returns {BodyDelta} The correction to the implied expected result of
-   *   this operation. The `ops` of this result can be applied to the expected
-   *   result to get the actual result. The promise resolves sometime after the
+   * @returns {BodyChange} The correction to the implied expected result of
+   *   this operation. The `delta` of this result can be applied to the expected
+   *   result to get the actual result. The `timestamp` and `authorId` of the
+   *   result will always be `null`. The promise resolves sometime after the
    *   change has been applied to the document.
    */
   async update(baseRevNum, ops, authorId) {

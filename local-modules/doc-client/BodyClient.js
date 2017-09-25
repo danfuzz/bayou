@@ -171,12 +171,12 @@ export default class BodyClient extends StateMachine {
    *
    * @param {BodyOpList} ops The operations (raw delta) that were originally
    *   applied.
-   * @param {BodyDelta} correctedChange The correction to the expected
+   * @param {BodyChange} correctedChange The correction to the expected
    *   result as returned from `body_update()`.
    */
   _check_gotUpdate(ops, correctedChange) {
     BodyOpList.check(ops);
-    BodyDelta.check(correctedChange);
+    BodyChange.check(correctedChange);
   }
 
   /**
@@ -640,13 +640,13 @@ export default class BodyClient extends StateMachine {
    *
    * @param {BodyOpList} ops The operations (raw delta) that were originally
    *   applied.
-   * @param {BodyDelta} correctedChange The correction to the expected
+   * @param {BodyChange} correctedChange The correction to the expected
    *   result as returned from `body_update()`.
    */
   _handle_merging_gotUpdate(ops, correctedChange) {
     // These are the same variable names as used on the server side. See below
     // for more detail.
-    const dCorrection = correctedChange.ops;
+    const dCorrection = correctedChange.delta.ops;
     const vResultNum  = correctedChange.revNum;
 
     this._log.detail('Correction from server:', correctedChange);
