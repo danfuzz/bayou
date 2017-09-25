@@ -8,31 +8,25 @@ import { TArray } from 'typecheck';
 import { CommonBase, DataUtil, Errors, ObjectUtil } from 'util-common';
 
 /**
- * {BodyOpList|null} Empty instance. Initialized in the `EMPTY` property
- * accessor.
+ * {BodyDelta|null} Empty instance. Initialized in the static getter of the
+ * same name.
  */
-let emptyInstance = null;
+let EMPTY = null;
 
 /**
  * Always-frozen list of body OT operations. This is a subclass of Quill's
  * `Delta` and mixes in `CommonBase` (the latter for `check()` and `coerce()`
  * functionality). In addition, it contains extra utility functionality beyond
  * what the base `Delta` provides.
- *
- * **Note:** What Quill calls a "delta" and what this project calls a "delta"
- * differ in one important regard (beyond being different classes).
- * Specifically, in this project, a "delta" always comes with a revision
- * number (either implied or explicit). That is why this class is called an
- * "op list" even though it derives from Quill's `Delta`.
  */
 export default class BodyOpList extends Delta {
   /** {BodyOpList} Empty instance of this class. */
   static get EMPTY() {
-    if (emptyInstance === null) {
-      emptyInstance = new BodyOpList([]);
+    if (EMPTY === null) {
+      EMPTY = new BodyOpList([]);
     }
 
-    return emptyInstance;
+    return EMPTY;
   }
 
   /**
