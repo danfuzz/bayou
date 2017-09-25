@@ -46,22 +46,6 @@ export default class DocSession {
   }
 
   /**
-   * Applies an update to the body, assigning authorship of the change to the
-   * author represented by this instance. See the equivalent `BodyControl`
-   * method for details.
-   *
-   * @param {number} baseRevNum Revision number which `delta` is with respect
-   *   to.
-   * @param {BodyOpList} ops List of operations indicating what has changed with
-   *   respect to `baseRevNum`.
-   * @returns {BodyDelta} The correction from the implied expected result to
-   *   get the actual result.
-   */
-  async body_applyDelta(baseRevNum, ops) {
-    return this._bodyControl.applyDelta(baseRevNum, ops, this._authorId);
-  }
-
-  /**
    * Returns a particular change to the document. See the equivalent
    * `BodyControl` method for details.
    *
@@ -95,6 +79,22 @@ export default class DocSession {
    */
   async body_snapshot(revNum = null) {
     return this._bodyControl.snapshot(revNum);
+  }
+
+  /**
+   * Applies an update to the body, assigning authorship of the change to the
+   * author represented by this instance. See the equivalent `BodyControl`
+   * method for details.
+   *
+   * @param {number} baseRevNum Revision number which `delta` is with respect
+   *   to.
+   * @param {BodyOpList} ops List of operations indicating what has changed with
+   *   respect to `baseRevNum`.
+   * @returns {BodyDelta} The correction from the implied expected result to
+   *   get the actual result.
+   */
+  async body_update(baseRevNum, ops) {
+    return this._bodyControl.applyDelta(baseRevNum, ops, this._authorId);
   }
 
   /**

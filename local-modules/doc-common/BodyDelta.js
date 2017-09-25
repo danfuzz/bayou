@@ -17,11 +17,11 @@ let EMPTY = null;
  * Delta which can be applied to a `BodySnapshot`, along with associated
  * information, to produce an updated snapshot.
  *
- * Instances of this class are returned from calls to `body_applyDelta()` and
+ * Instances of this class are returned from calls to `body_update()` and
  * `body_deltaAfter()` as defined by the various `doc-server` classes. See those
  * for more details. Note that the meaning of the `delta` value is different
  * depending on which method the result came from. In particular, there is an
- * implied "expected" result from `body_applyDelta()` which this instance's
+ * implied "expected" result from `body_update()` which this instance's
  * `ops` list is with respect to.
  *
  * Instances of this class are immutable.
