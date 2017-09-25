@@ -214,7 +214,7 @@ export default class BodyControl extends CommonBase {
     // constructing the transaction spec.
     const maybeChange1 = [];
     if (contents !== null) {
-      const change = new BodyChange(1, contents, Timestamp.now(), null);
+      const change = new BodyChange(new BodyDelta(1, contents), Timestamp.now(), null);
       const op     = fc.op_writePath(Paths.forBodyChange(1), change);
       maybeChange1.push(op);
     }
@@ -456,18 +456,18 @@ export default class BodyControl extends CommonBase {
    *
    * @param {BodyChange} change Change to append.
    * @returns {Int|null} The revision number after appending `change`, or `null`
-   *   if `change.revNum` is out-of-date (that is, isn't the immediately-next
-   *   revision number) at the moment of attempted application.
-   * @throws {Error} If `change.delta.isEmpty()`.
+   *   if `change.delta.revNum` is out-of-date (that is, isn't the
+   *   immediately-next revision number) at the moment of attempted application.
+   * @throws {Error} If `change.delta.ops.isEmpty()`.
    */
   async _appendChange(change) {
     BodyChange.check(change);
 
-    if (change.delta.isEmpty()) {
+    if (change.delta.ops.isEmpty()) {
       throw UtilErrors.wtf('Should not have been called with an empty delta.');
     }
 
-    const revNum     = change.revNum;
+    const revNum     = change.delta.revNum;
     const baseRevNum = revNum - 1;
     const changePath = Paths.forBodyChange(revNum);
 
@@ -526,7 +526,7 @@ export default class BodyControl extends CommonBase {
       // revision. If it succeeds, then we won the append race (if any).
 
       const change =
-        new BodyChange(base.revNum + 1, delta, Timestamp.now(), authorId);
+        new BodyChange(new BodyDelta(base.revNum + 1, delta), Timestamp.now(), authorId);
       const revNum = await this._appendChange(change);
 
       if (revNum === null) {
@@ -587,9 +587,8 @@ export default class BodyControl extends CommonBase {
 
     // (3)
 
-    const rNextNum = rCurrent.revNum + 1;
-    const change =
-      new BodyChange(rNextNum, dNext, Timestamp.now(), authorId);
+    const rNextNum     = rCurrent.revNum + 1;
+    const change       = new BodyChange(new BodyDelta(rNextNum, dNext), Timestamp.now(), authorId);
     const appendResult = await this._appendChange(change);
 
     if (appendResult === null) {
@@ -646,7 +645,7 @@ export default class BodyControl extends CommonBase {
       const end = Math.min(i + MAX, endExclusive);
       const changes = await this._readChangeRange(i, end);
       for (const c of changes) {
-        result = result.compose(c.delta);
+        result = result.compose(c.delta.ops);
       }
     }
 

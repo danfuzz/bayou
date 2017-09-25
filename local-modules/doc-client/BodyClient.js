@@ -644,7 +644,7 @@ export default class BodyClient extends StateMachine {
   _handle_merging_gotApplyDelta(delta, correctedChange) {
     // These are the same variable names as used on the server side. See below
     // for more detail.
-    const dCorrection = correctedChange.delta;
+    const dCorrection = correctedChange.ops;
     const vResultNum  = correctedChange.revNum;
 
     this._log.detail('Correction from server:', correctedChange);
@@ -814,7 +814,7 @@ export default class BodyClient extends StateMachine {
    *   represented in `_snapshot`. This must be used in cases where Quill's
    *   state has progressed ahead of `_snapshot` due to local activity.
    */
-  _updateWithDelta(delta, quillDelta = delta.delta) {
+  _updateWithDelta(delta, quillDelta = delta.ops) {
     const needQuillUpdate = !quillDelta.isEmpty();
 
     if (   (this._currentEvent.nextOfNow(QuillEvents.TEXT_CHANGE) !== null)

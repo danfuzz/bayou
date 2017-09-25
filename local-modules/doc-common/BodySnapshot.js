@@ -95,9 +95,9 @@ export default class BodySnapshot extends CommonBase {
   compose(delta) {
     BodyDelta.check(delta);
 
-    const contents = delta.delta.isEmpty()
+    const contents = delta.ops.isEmpty()
       ? this._contents
-      : FrozenDelta.coerce(this._contents.compose(delta.delta));
+      : FrozenDelta.coerce(this._contents.compose(delta.ops));
 
     return new BodySnapshot(delta.revNum, contents);
   }
@@ -120,7 +120,7 @@ export default class BodySnapshot extends CommonBase {
 
     let contents = this._contents;
     for (const d of deltas) {
-      contents = contents.compose(d.delta);
+      contents = contents.compose(d.ops);
     }
 
     const lastDelta = deltas[deltas.length - 1];

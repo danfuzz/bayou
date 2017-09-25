@@ -8,6 +8,12 @@ import { CommonBase } from 'util-common';
 import RevisionNumber from './RevisionNumber';
 
 /**
+ * {BodyDelta|null} Empty instance. Initialized in the static getter of the
+ * same name.
+ */
+let EMPTY = null;
+
+/**
  * Delta which can be applied to a `BodySnapshot`, along with associated
  * information, to produce an updated snapshot.
  *
@@ -21,32 +27,33 @@ import RevisionNumber from './RevisionNumber';
  * Instances of this class are immutable.
  */
 export default class BodyDelta extends CommonBase {
+  /** {BodyDelta} Empty instance. */
+  static get EMPTY() {
+    if (EMPTY === null) {
+      EMPTY = new BodyDelta(0, FrozenDelta.EMPTY);
+    }
+
+    return EMPTY;
+  }
+
   /**
    * Constructs an instance.
    *
    * @param {Int} revNum The revision number of the document produced by this
    *   instance. If this instance represents the first change to a document,
    *   then this value will be `0`.
-   * @param {FrozenDelta} delta Delta which can be applied in context to
-   *   produce the document with the indicated revision number.
-   * @param {function} [subclassInit = null] Optional function to call (bound as
-   *   method) in order to complete instance initialization. (This arrangement
-   *   is a hack which compensates for JavaScript's lack of expressiveness
-   *   around construction within a class hierarchy where every level aims to
-   *   create frozen instances.)
+   * @param {FrozenDelta} ops List of operations (raw delta) which can be
+   *   applied in context to produce the document with the indicated revision
+   *   number.
    */
-  constructor(revNum, delta, subclassInit = null) {
+  constructor(revNum, ops) {
     super();
 
     /** {Int} The produced revision number. */
     this._revNum = RevisionNumber.check(revNum);
 
-    /** {FrozenDelta} The actual change, as a delta. */
-    this._delta = FrozenDelta.check(delta);
-
-    if (subclassInit !== null) {
-      subclassInit.call(this);
-    }
+    /** {FrozenDelta} The actual change, as a raw delta. */
+    this._ops = FrozenDelta.check(ops);
 
     Object.freeze(this);
   }
@@ -57,7 +64,7 @@ export default class BodyDelta extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._revNum, this._delta];
+    return [this._revNum, this._ops];
   }
 
   /** {Int} The produced revision number. */
@@ -66,10 +73,10 @@ export default class BodyDelta extends CommonBase {
   }
 
   /**
-   * {FrozenDelta} Delta used to produce the document with revision number
-   * `revNum`.
+   * {FrozenDelta} List of operations (raw delta) used to produce the document
+   * with revision number `revNum`.
    */
-  get delta() {
-    return this._delta;
+  get ops() {
+    return this._ops;
   }
 }
