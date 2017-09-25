@@ -5,6 +5,7 @@
 import { TArray } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
+import BodyChange from './BodyChange';
 import BodyDelta from './BodyDelta';
 import BodyOpList from './BodyOpList';
 import RevisionNumber from './RevisionNumber';
@@ -103,28 +104,28 @@ export default class BodySnapshot extends CommonBase {
   }
 
   /**
-   * Composes a sequence of deltas on top of this instance, in order, to produce
-   * a new instance.
+   * Composes a sequence of changes on top of this instance, in order, to
+   * produce a new instance.
    *
-   * @param {array<BodyDelta>} deltas Deltas to compose on top of this
+   * @param {array<BodyChange>} changes Changes to compose on top of this
    *   instance.
    * @returns {BodySnapshot} New instance consisting of the composition of
-   *   this instance with all of the `deltas`.
+   *   this instance with all of the `changes`.
    */
-  composeAll(deltas) {
-    TArray.check(deltas, BodyDelta.check);
+  composeAll(changes) {
+    TArray.check(changes, BodyChange.check);
 
-    if (deltas.length === 0) {
+    if (changes.length === 0) {
       return this;
     }
 
     let contents = this._contents;
-    for (const d of deltas) {
-      contents = contents.compose(d.ops);
+    for (const c of changes) {
+      contents = contents.compose(c.delta.ops);
     }
 
-    const lastDelta = deltas[deltas.length - 1];
-    return new BodySnapshot(lastDelta.revNum, contents);
+    const lastChange = changes[changes.length - 1];
+    return new BodySnapshot(lastChange.revNum, contents);
   }
 
   /**
