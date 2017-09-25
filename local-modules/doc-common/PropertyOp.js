@@ -21,9 +21,9 @@ export default class PropertyOp extends CommonBase {
     return 'set_property';
   }
 
-  /** {string} Operation name for "update revision number" operations. */
-  static get UPDATE_REV_NUM() {
-    return 'update_rev_num';
+  /** {string} Operation name for "set revision number" operations. */
+  static get SET_REV_NUM() {
+    return 'set_rev_num';
   }
 
   /**
@@ -55,7 +55,7 @@ export default class PropertyOp extends CommonBase {
   }
 
   /**
-   * Constructs a new "update revision number" operation.
+   * Constructs a new "set revision number" operation.
    *
    * @param {Int} revNum The new revision number.
    * @returns {PropertyOp} The corresponding operation.
@@ -63,7 +63,7 @@ export default class PropertyOp extends CommonBase {
   static op_updateRevNum(revNum) {
     RevisionNumber.check(revNum);
 
-    return new PropertyOp(new Functor(PropertyOp.UPDATE_REV_NUM, revNum));
+    return new PropertyOp(new Functor(PropertyOp.SET_REV_NUM, revNum));
   }
 
   /**
@@ -107,7 +107,7 @@ export default class PropertyOp extends CommonBase {
         return Object.freeze({ opName, name, value });
       }
 
-      case PropertyOp.UPDATE_REV_NUM: {
+      case PropertyOp.SET_REV_NUM: {
         const [revNum] = payload.args;
         return Object.freeze({ opName, revNum });
       }

@@ -70,9 +70,9 @@ export default class PropertySnapshot extends CommonBase {
           break;
         }
 
-        case PropertyOp.UPDATE_REV_NUM: {
+        case PropertyOp.SET_REV_NUM: {
           if (this._revNum !== -1) {
-            throw Errors.bad_use('Duplicate `update_rev_num` op.');
+            throw Errors.bad_use('Duplicate `set_rev_num` op.');
           }
 
           this._revNum = opProps.revNum;
@@ -153,7 +153,7 @@ export default class PropertySnapshot extends CommonBase {
           break;
         }
 
-        case PropertyOp.UPDATE_REV_NUM: {
+        case PropertyOp.SET_REV_NUM: {
           revNum = opProps.revNum;
           break;
         }

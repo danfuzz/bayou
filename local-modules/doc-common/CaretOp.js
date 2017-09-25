@@ -22,14 +22,14 @@ export default class CaretOp extends CommonBase {
     return 'end_session';
   }
 
-  /** {string} Operation name for "update field" operations. */
+  /** {string} Operation name for "set field" operations. */
   static get UPDATE_FIELD() {
     return 'update_field';
   }
 
-  /** {string} Operation name for "update revision number" operations. */
-  static get UPDATE_REV_NUM() {
-    return 'update_rev_num';
+  /** {string} Operation name for "set revision number" operations. */
+  static get SET_REV_NUM() {
+    return 'set_rev_num';
   }
 
   /**
@@ -58,7 +58,7 @@ export default class CaretOp extends CommonBase {
   }
 
   /**
-   * Constructs a new "update caret field" operation.
+   * Constructs a new "set caret field" operation.
    *
    * @param {string} sessionId Session for the caret to update.
    * @param {string} key Name of the field to update.
@@ -74,7 +74,7 @@ export default class CaretOp extends CommonBase {
   }
 
   /**
-   * Constructs a new "update revision number" operation.
+   * Constructs a new "set revision number" operation.
    *
    * @param {Int} revNum The new revision number.
    * @returns {CaretOp} The corresponding operation.
@@ -82,7 +82,7 @@ export default class CaretOp extends CommonBase {
   static op_updateRevNum(revNum) {
     RevisionNumber.check(revNum);
 
-    return new CaretOp(new Functor(CaretOp.UPDATE_REV_NUM, revNum));
+    return new CaretOp(new Functor(CaretOp.SET_REV_NUM, revNum));
   }
 
   /**
@@ -131,7 +131,7 @@ export default class CaretOp extends CommonBase {
         return Object.freeze({ opName, sessionId, key, value });
       }
 
-      case CaretOp.UPDATE_REV_NUM: {
+      case CaretOp.SET_REV_NUM: {
         const [revNum] = payload.args;
         return Object.freeze({ opName, revNum });
       }
