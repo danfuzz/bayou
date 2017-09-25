@@ -91,28 +91,28 @@ export default class BodyControl extends CommonBase {
   }
 
   /**
-   * Takes a base revision number and delta therefrom, and applies the delta,
-   * including merging of any intermediate revisions. The return value consists
-   * of a new revision number, and a delta to be used to get the new document
-   * state. The delta is with respect to the client's "expected result," that
-   * is to say, what the client would get if the delta were applied with no
-   * intervening changes.
+   * Takes a base revision number and list of operations (raw delta) to apply
+   * therefrom, and applies the operations, including merging of any
+   * intermediate revisions. The return value consists of a "correction" delta
+   * to be used to get the new document state. The correction delta is with
+   * respect to the client's "expected result," that is to say, what the client
+   * would get if the operations were applied with no intervening changes.
    *
-   * As a special case, as long as `baseRevNum` is valid, if `delta` is empty,
+   * As a special case, as long as `baseRevNum` is valid, if `ops` is empty,
    * this method returns a result of the same revision number along with an
    * empty "correction" delta. That is, the return value from passing an empty
-   * delta doesn't provide any information about subsequent revisions of the
-   * document.
+   * list of operations doesn't provide any information about subsequent
+   * revisions of the document.
    *
    * @param {Int} baseRevNum Revision number which `delta` is with respect to.
    * @param {BodyOpList} ops List of operations indicating what has changed with
    *   respect to `baseRevNum`.
-   * @param {string|null} authorId Author of `delta`, or `null` if the change
+   * @param {string|null} authorId Author of the change, or `null` if the change
    *   is to be considered authorless.
    * @returns {BodyDelta} The correction to the implied expected result of
-   *   this operation. The `delta` of this result can be applied to the expected
+   *   this operation. The `ops` of this result can be applied to the expected
    *   result to get the actual result. The promise resolves sometime after the
-   *   delta has been applied to the document.
+   *   change has been applied to the document.
    */
   async applyDelta(baseRevNum, ops, authorId) {
     // Very basic argument validation. Once in the guts of the thing, we will

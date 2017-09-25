@@ -46,9 +46,9 @@ export default class DocSession {
   }
 
   /**
-   * Applies a delta, assigning authorship of the change to the author
-   * represented by this instance. See the equivalent `BodyControl` method for
-   * details.
+   * Applies an update to the body, assigning authorship of the change to the
+   * author represented by this instance. See the equivalent `BodyControl`
+   * method for details.
    *
    * @param {number} baseRevNum Revision number which `delta` is with respect
    *   to.

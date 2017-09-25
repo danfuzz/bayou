@@ -22,7 +22,7 @@ let EMPTY = null;
  * for more details. Note that the meaning of the `delta` value is different
  * depending on which method the result came from. In particular, there is an
  * implied "expected" result from `body_applyDelta()` which this instance's
- * `delta` is with respect to.
+ * `ops` list is with respect to.
  *
  * Instances of this class are immutable.
  */

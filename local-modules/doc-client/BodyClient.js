@@ -620,7 +620,7 @@ export default class BodyClient extends StateMachine {
       return;
     }
 
-    // Send the delta, and handle the response.
+    // Send the change, and handle the response.
     (async () => {
       try {
         const value =
