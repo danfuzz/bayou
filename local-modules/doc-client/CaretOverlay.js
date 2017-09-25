@@ -452,7 +452,7 @@ export default class CaretOverlay {
           break;
         }
 
-        case CaretOp.UPDATE_FIELD: {
+        case CaretOp.SET_FIELD: {
           const sessionId = props.sessionId;
 
           if (sessionId === this._editorComplex.sessionId) {
