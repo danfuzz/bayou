@@ -600,8 +600,10 @@ export default class BodyControl extends CommonBase {
 
     // (4)
 
+    // **Note:** The result's `revNum` is the same as `rNext`'s, which is
+    // exactly what we want.
     const dCorrection = rExpected.diff(rNext);
-    return new BodyChange(dCorrection, rNextNum);
+    return dCorrection;
   }
 
   /**

@@ -130,13 +130,13 @@ export default class BodySnapshot extends CommonBase {
 
   /**
    * Calculates the difference from a given snapshot to this one. The return
-   * value is a delta which can be composed with this instance to produce the
+   * value is a change which can be composed with this instance to produce the
    * snapshot passed in here as an argument. That is, `newerSnapshot ==
    * this.compose(this.diff(newerSnapshot))`.
    *
    * @param {BodySnapshot} newerSnapshot Snapshot to take the difference
    *   from.
-   * @returns {BodyDelta} Delta which represents the difference between
+   * @returns {BodyChange} Change which represents the difference between
    *   `newerSnapshot` and this instance.
    */
   diff(newerSnapshot) {
@@ -146,6 +146,6 @@ export default class BodySnapshot extends CommonBase {
     const newContents = newerSnapshot.contents;
     const ops         = BodyOpList.coerce(oldContents.diff(newContents));
 
-    return new BodyDelta(newerSnapshot.revNum, ops);
+    return new BodyChange(new BodyDelta(newerSnapshot.revNum, ops), newerSnapshot.revNum);
   }
 }
