@@ -8,27 +8,28 @@ import { TArray } from 'typecheck';
 import { CommonBase, DataUtil, Errors, ObjectUtil } from 'util-common';
 
 /**
- * {FrozenDelta|null} Empty instance. Initialized in the `EMPTY` property
+ * {BodyOpList|null} Empty instance. Initialized in the `EMPTY` property
  * accessor.
  */
 let emptyInstance = null;
 
 /**
- * Always-frozen `Delta`. This is a subclass of `Delta` and mixes in
- * `CommonBase` (the latter for `check()` and `coerce()` functionality). In
- * addition, it contains extra utility functionality beyond what the base
- * `Delta` provides.
+ * Always-frozen list of body OT operations. This is a subclass of Quill's
+ * `Delta` and mixes in `CommonBase` (the latter for `check()` and `coerce()`
+ * functionality). In addition, it contains extra utility functionality beyond
+ * what the base `Delta` provides.
+ *
+ * **Note:** What Quill calls a "delta" and what this project calls a "delta"
+ * differ in one important regard (beyond being different classes).
+ * Specifically, in this project, a "delta" always comes with a revision
+ * number (either implied or explicit). That is why this class is called an
+ * "op list" even though it derives from Quill's `Delta`.
  */
-export default class FrozenDelta extends Delta {
-  /** {string} Name of this class for the sake of API coding. */
-  static get API_TAG() {
-    return 'Delta';
-  }
-
-  /** {FrozenDelta} Empty instance of this class. */
+export default class BodyOpList extends Delta {
+  /** {BodyOpList} Empty instance of this class. */
   static get EMPTY() {
     if (emptyInstance === null) {
-      emptyInstance = new FrozenDelta([]);
+      emptyInstance = new BodyOpList([]);
     }
 
     return emptyInstance;
@@ -41,7 +42,7 @@ export default class FrozenDelta extends Delta {
    * array contents (if any) are not inspected for validity.
    *
    * **Note:** This is a static method exactly because it accepts things other
-   * than instances of `FrozenDelta` per se.
+   * than instances of `BodyOpList` per se.
    *
    * @param {object|array|null|undefined} delta The delta or delta-like value.
    * @returns {boolean} `true` if `delta` is empty or `false` if not.
@@ -57,7 +58,7 @@ export default class FrozenDelta extends Delta {
       return delta.ops.length === 0;
     }
 
-    throw Errors.bad_value(delta, FrozenDelta);
+    throw Errors.bad_value(delta, BodyOpList);
   }
 
   /**
@@ -85,22 +86,22 @@ export default class FrozenDelta extends Delta {
    *   values.
    *
    * @param {object|array|null|undefined} value The value to coerce.
-   * @returns {FrozenDelta} The corresponding instance.
+   * @returns {BodyOpList} The corresponding instance.
    */
   static _impl_coerce(value) {
     // Note: The base class implementation guarantees that we won't get called
     // on an instance of this class.
-    if (FrozenDelta.isEmpty(value)) {
-      return FrozenDelta.EMPTY;
+    if (BodyOpList.isEmpty(value)) {
+      return BodyOpList.EMPTY;
     } else if (value instanceof Delta) {
-      return new FrozenDelta(value.ops);
+      return new BodyOpList(value.ops);
     } else if (Array.isArray(value)) {
-      return new FrozenDelta(value);
+      return new BodyOpList(value);
     } else if (Array.isArray(value.ops)) {
-      return new FrozenDelta(value.ops);
+      return new BodyOpList(value.ops);
     }
 
-    throw Errors.bad_value(value, FrozenDelta);
+    throw Errors.bad_value(value, BodyOpList);
   }
 
   /**
@@ -156,4 +157,4 @@ export default class FrozenDelta extends Delta {
 
 // Add `CommonBase` as a mixin, because the main inheritence is the `Delta`
 // class.
-CommonBase.mixInto(FrozenDelta);
+CommonBase.mixInto(BodyOpList);

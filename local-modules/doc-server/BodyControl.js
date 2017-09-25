@@ -3,8 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import {
-  BodyChange, BodyDelta, BodySnapshot, FrozenDelta, RevisionNumber,
-  Timestamp
+  BodyChange, BodyDelta, BodyOpList, BodySnapshot, RevisionNumber, Timestamp
 } from 'doc-common';
 import { Errors, TransactionSpec } from 'file-store';
 import { Delay } from 'promise-util';
@@ -106,7 +105,7 @@ export default class BodyControl extends CommonBase {
    * document.
    *
    * @param {Int} baseRevNum Revision number which `delta` is with respect to.
-   * @param {FrozenDelta} delta Delta indicating what has changed with respect
+   * @param {BodyOpList} delta Delta indicating what has changed with respect
    *   to `baseRevNum`.
    * @param {string|null} authorId Author of `delta`, or `null` if the change
    *   is to be considered authorless.
@@ -118,7 +117,7 @@ export default class BodyControl extends CommonBase {
   async applyDelta(baseRevNum, delta, authorId) {
     // Very basic argument validation. Once in the guts of the thing, we will
     // discover (and properly complain) if there are deeper problems with them.
-    FrozenDelta.check(delta);
+    BodyOpList.check(delta);
     TString.orNull(authorId);
 
     // Snapshot of the base revision. This call validates `baseRevNum`.
@@ -127,7 +126,7 @@ export default class BodyControl extends CommonBase {
     // Check for an empty `delta`. If it is, we don't bother trying to apply it.
     // See method header comment for more info.
     if (delta.isEmpty()) {
-      return new BodyDelta(baseRevNum, FrozenDelta.EMPTY);
+      return new BodyDelta(baseRevNum, BodyOpList.EMPTY);
     }
 
     // Compose the implied expected result. This has the effect of validating
@@ -194,12 +193,12 @@ export default class BodyControl extends CommonBase {
    * the initial content of the document (which will be in the second change,
    * because by definition the first change of a document is empty).
    *
-   * @param {FrozenDelta|null} [contents = null] Initial document contents, or
+   * @param {BodyOpList|null} [contents = null] Initial document contents, or
    *   `null` if the document should be completely empty.
    */
   async create(contents = null) {
     if (contents !== null) {
-      FrozenDelta.check(contents);
+      BodyOpList.check(contents);
     }
 
     this._log.info('Creating document.');
@@ -275,7 +274,7 @@ export default class BodyControl extends CommonBase {
         // form and return a result. Compose all the deltas from the revision
         // after the base through and including the current revision.
         const delta = await this._composeRevisions(
-          FrozenDelta.EMPTY, baseRevNum + 1, revNum + 1);
+          BodyOpList.EMPTY, baseRevNum + 1, revNum + 1);
         return new BodyDelta(revNum, delta);
       }
 
@@ -331,7 +330,7 @@ export default class BodyControl extends CommonBase {
     // to the base to produce the desired revision. Store it, and return it.
 
     const contents = (base === null)
-      ? this._composeRevisions(FrozenDelta.EMPTY, 0,               revNum + 1)
+      ? this._composeRevisions(BodyOpList.EMPTY, 0,               revNum + 1)
       : this._composeRevisions(base.contents,     base.revNum + 1, revNum + 1);
     const result = new BodySnapshot(revNum, await contents);
 
@@ -509,7 +508,7 @@ export default class BodyControl extends CommonBase {
    * @param {BodySnapshot} base Snapshot of the base from which the delta is
    *   defined. That is, this is the snapshot of `baseRevNum` as provided to
    *   `applyDelta()`.
-   * @param {FrozenDelta} delta Same as for `applyDelta()`.
+   * @param {BodyOpList} delta Same as for `applyDelta()`.
    * @param {string|null} authorId Same as for `applyDelta()`.
    * @param {BodySnapshot} current Snapshot of the current (latest) revision
    *   of the document.
@@ -534,7 +533,7 @@ export default class BodyControl extends CommonBase {
         return null;
       }
 
-      return new BodyDelta(revNum, FrozenDelta.EMPTY);
+      return new BodyDelta(revNum, BodyOpList.EMPTY);
     }
 
     // The hard case: The client has requested an application of a delta
@@ -570,19 +569,19 @@ export default class BodyControl extends CommonBase {
     // (1)
 
     const dServer = await this._composeRevisions(
-      FrozenDelta.EMPTY, rBase.revNum + 1, rCurrent.revNum + 1);
+      BodyOpList.EMPTY, rBase.revNum + 1, rCurrent.revNum + 1);
 
     // (2)
 
     // The `true` argument indicates that `dServer` should be taken to have been
     // applied first (won any insert races or similar).
-    const dNext = FrozenDelta.coerce(dServer.transform(dClient, true));
+    const dNext = BodyOpList.coerce(dServer.transform(dClient, true));
 
     if (dNext.isEmpty()) {
       // It turns out that nothing changed. **Note:** It is unclear whether this
       // can actually happen in practice, given that we already return early
       // (in `applyDelta()`) if we are asked to apply an empty delta.
-      return new BodyDelta(rCurrent.revNum, FrozenDelta.EMPTY);
+      return new BodyDelta(rCurrent.revNum, BodyOpList.EMPTY);
     }
 
     // (3)
@@ -616,18 +615,18 @@ export default class BodyControl extends CommonBase {
    * revision. If `startInclusive === endExclusive`, then this method returns
    * `baseDelta`.
    *
-   * @param {FrozenDelta} baseDelta Base delta onto which the indicated deltas
+   * @param {BodyOpList} baseDelta Base delta onto which the indicated deltas
    *   get composed.
    * @param {Int} startInclusive Revision number for the first delta to include
    *   in the result.
    * @param {Int} endExclusive Revision number just beyond the last delta to
    *   include in the result.
-   * @returns {FrozenDelta} The composed delta consisting of `baseDelta`
+   * @returns {BodyOpList} The composed delta consisting of `baseDelta`
    *   composed with revisions `startInclusive` through but not including
    *   `endExclusive`.
    */
   async _composeRevisions(baseDelta, startInclusive, endExclusive) {
-    FrozenDelta.check(baseDelta);
+    BodyOpList.check(baseDelta);
 
     if (startInclusive === endExclusive) {
       // Trivial case: Nothing to compose. If we were to have made it to the
@@ -649,7 +648,7 @@ export default class BodyControl extends CommonBase {
       }
     }
 
-    return FrozenDelta.coerce(result);
+    return BodyOpList.coerce(result);
   }
 
   /**

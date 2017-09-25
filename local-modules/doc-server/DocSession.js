@@ -52,7 +52,7 @@ export default class DocSession {
    *
    * @param {number} baseRevNum Revision number which `delta` is with respect
    *   to.
-   * @param {FrozenDelta} delta Delta indicating what has changed with respect
+   * @param {BodyOpList} delta Delta indicating what has changed with respect
    *   to `baseRevNum`.
    * @returns {BodyDelta} The correction from the implied expected result to
    *   get the actual result.

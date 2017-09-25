@@ -6,7 +6,7 @@ import { TArray } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
 import BodyDelta from './BodyDelta';
-import FrozenDelta from './FrozenDelta';
+import BodyOpList from './BodyOpList';
 import RevisionNumber from './RevisionNumber';
 
 
@@ -26,7 +26,7 @@ export default class BodySnapshot extends CommonBase {
    */
   static get EMPTY() {
     if (emptyInstance === null) {
-      emptyInstance = new BodySnapshot(0, FrozenDelta.EMPTY);
+      emptyInstance = new BodySnapshot(0, BodyOpList.EMPTY);
     }
 
     return emptyInstance;
@@ -37,7 +37,7 @@ export default class BodySnapshot extends CommonBase {
    *
    * @param {RevisionNumber} revNum Revision number of the document.
    * @param {Delta|array|object} contents Document contents. Can be given
-   *   anything that can be coerced into a `FrozenDelta`. Must be a "document"
+   *   anything that can be coerced into a `BodyOpList`. Must be a "document"
    *   (that is, a delta consisting only of `insert` operations).
    */
   constructor(revNum, contents) {
@@ -46,8 +46,8 @@ export default class BodySnapshot extends CommonBase {
     /** {Int} Revision number. */
     this._revNum = RevisionNumber.check(revNum);
 
-    /** {FrozenDelta} Document contents. */
-    this._contents = FrozenDelta.coerce(contents);
+    /** {BodyOpList} Document contents. */
+    this._contents = BodyOpList.coerce(contents);
 
     // Explicitly check that the `contents` delta has the form of a "document,"
     // that is, the only operations are `insert`s. For very large documents,
@@ -80,7 +80,7 @@ export default class BodySnapshot extends CommonBase {
     return this._revNum;
   }
 
-  /** {FrozenDelta} The document contents. */
+  /** {BodyOpList} The document contents. */
   get contents() {
     return this._contents;
   }
@@ -97,7 +97,7 @@ export default class BodySnapshot extends CommonBase {
 
     const contents = delta.ops.isEmpty()
       ? this._contents
-      : FrozenDelta.coerce(this._contents.compose(delta.ops));
+      : BodyOpList.coerce(this._contents.compose(delta.ops));
 
     return new BodySnapshot(delta.revNum, contents);
   }
@@ -143,7 +143,7 @@ export default class BodySnapshot extends CommonBase {
 
     const oldContents = this.contents;
     const newContents = newerSnapshot.contents;
-    const delta       = FrozenDelta.coerce(oldContents.diff(newContents));
+    const delta       = BodyOpList.coerce(oldContents.diff(newContents));
 
     return new BodyDelta(newerSnapshot.revNum, delta);
   }

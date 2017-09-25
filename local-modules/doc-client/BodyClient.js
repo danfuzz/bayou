@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ConnectionError } from 'api-common';
-import { BodyDelta, BodySnapshot, FrozenDelta } from 'doc-common';
+import { BodyDelta, BodyOpList, BodySnapshot } from 'doc-common';
 import { Delay } from 'promise-util';
 import { QuillEvents } from 'quill-util';
 import { TString } from 'typecheck';
@@ -169,12 +169,12 @@ export default class BodyClient extends StateMachine {
    * Validates a `gotApplyDelta` event. This represents a successful result
    * from the API call `body_applyDelta()`.
    *
-   * @param {FrozenDelta} delta The delta that was originally applied.
+   * @param {BodyOpList} delta The delta that was originally applied.
    * @param {BodyDelta} correctedChange The correction to the expected
    *   result as returned from `body_applyDelta()`.
    */
   _check_gotApplyDelta(delta, correctedChange) {
-    FrozenDelta.check(delta);
+    BodyOpList.check(delta);
     BodyDelta.check(correctedChange);
   }
 
@@ -637,7 +637,7 @@ export default class BodyClient extends StateMachine {
    * In state `merging`, handles event `gotApplyDelta`. This means that a local
    * change was successfully merged by the server.
    *
-   * @param {FrozenDelta} delta The delta that was originally applied.
+   * @param {BodyOpList} delta The delta that was originally applied.
    * @param {BodyDelta} correctedChange The correction to the expected
    *   result as returned from `body_applyDelta()`.
    */
@@ -665,7 +665,7 @@ export default class BodyClient extends StateMachine {
       // is empty) because what we are integrating into the client document is
       // exactly what Quill handed to us.
       this._updateWithDelta(
-        new BodyDelta(vResultNum, delta), FrozenDelta.EMPTY);
+        new BodyDelta(vResultNum, delta), BodyOpList.EMPTY);
       this._becomeIdle();
       return;
     }
@@ -677,7 +677,7 @@ export default class BodyClient extends StateMachine {
     // state to Quill's current state) composed with the correction to that
     // delta which when applied brings the client's state into alignment with
     // the server's state.
-    const correctedDelta = FrozenDelta.coerce(delta.compose(dCorrection));
+    const correctedDelta = BodyOpList.coerce(delta.compose(dCorrection));
 
     if (this._currentEvent.nextOfNow(QuillEvents.TEXT_CHANGE) === null) {
       // Thanfully, the local user hasn't made any other changes while we
@@ -728,7 +728,7 @@ export default class BodyClient extends StateMachine {
     // `false` indicates that `dMore` should be taken to have been applied
     // second (lost any insert races or similar).
     const dIntegratedCorrection =
-      FrozenDelta.coerce(dMore.transform(dCorrection, false));
+      BodyOpList.coerce(dMore.transform(dCorrection, false));
     this._updateWithDelta(
       new BodyDelta(vResultNum, correctedDelta), dIntegratedCorrection);
 
@@ -748,7 +748,7 @@ export default class BodyClient extends StateMachine {
     // `EMPTY` for the old contents, because this code doesn't care about that
     // value at all
     const nextNow = this._currentEvent.withNewPayload(
-      new Functor(QuillEvents.TEXT_CHANGE, dNewMore, FrozenDelta.EMPTY, 'user'));
+      new Functor(QuillEvents.TEXT_CHANGE, dNewMore, BodyOpList.EMPTY, 'user'));
 
     // Make a new head of the change chain which points at the `nextNow` we
     // just constructed above. We don't include any payload since this class
@@ -768,7 +768,7 @@ export default class BodyClient extends StateMachine {
    *
    * @param {boolean} includeOurChanges If `true` indicates that changes with
    *   source `CLIENT_SOURCE` _should_ be included.
-   * @returns {FrozenDelta} A combined delta of all the salient changes. This
+   * @returns {BodyOpList} A combined delta of all the salient changes. This
    *   will be empty if there are no such changes (that is, if this class's
    *   document model is up-to-date with respect to Quill).
    */
@@ -794,7 +794,7 @@ export default class BodyClient extends StateMachine {
     // Remember that we consumed all these changes.
     this._currentEvent = change;
 
-    return FrozenDelta.coerce(delta);
+    return BodyOpList.coerce(delta);
   }
 
   /**
@@ -809,7 +809,7 @@ export default class BodyClient extends StateMachine {
    * this method will throw an error.
    *
    * @param {BodyDelta} delta Delta from the current `_snapshot` contents.
-   * @param {FrozenDelta} [quillDelta = delta] Delta from Quill's current state,
+   * @param {BodyOpList} [quillDelta = delta] Delta from Quill's current state,
    *   which is expected to preserve any state that Quill has that isn't yet
    *   represented in `_snapshot`. This must be used in cases where Quill's
    *   state has progressed ahead of `_snapshot` due to local activity.

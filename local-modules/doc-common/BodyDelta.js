@@ -2,9 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { FrozenDelta } from 'doc-common';
 import { CommonBase } from 'util-common';
 
+import BodyOpList from './BodyOpList';
 import RevisionNumber from './RevisionNumber';
 
 /**
@@ -30,7 +30,7 @@ export default class BodyDelta extends CommonBase {
   /** {BodyDelta} Empty instance. */
   static get EMPTY() {
     if (EMPTY === null) {
-      EMPTY = new BodyDelta(0, FrozenDelta.EMPTY);
+      EMPTY = new BodyDelta(0, BodyOpList.EMPTY);
     }
 
     return EMPTY;
@@ -42,7 +42,7 @@ export default class BodyDelta extends CommonBase {
    * @param {Int} revNum The revision number of the document produced by this
    *   instance. If this instance represents the first change to a document,
    *   then this value will be `0`.
-   * @param {FrozenDelta} ops List of operations (raw delta) which can be
+   * @param {BodyOpList} ops List of operations (raw delta) which can be
    *   applied in context to produce the document with the indicated revision
    *   number.
    */
@@ -52,8 +52,8 @@ export default class BodyDelta extends CommonBase {
     /** {Int} The produced revision number. */
     this._revNum = RevisionNumber.check(revNum);
 
-    /** {FrozenDelta} The actual change, as a raw delta. */
-    this._ops = FrozenDelta.check(ops);
+    /** {BodyOpList} The actual change, as a raw delta. */
+    this._ops = BodyOpList.check(ops);
 
     Object.freeze(this);
   }
@@ -73,7 +73,7 @@ export default class BodyDelta extends CommonBase {
   }
 
   /**
-   * {FrozenDelta} List of operations (raw delta) used to produce the document
+   * {BodyOpList} List of operations (raw delta) used to produce the document
    * with revision number `revNum`.
    */
   get ops() {
