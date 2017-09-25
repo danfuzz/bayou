@@ -167,15 +167,16 @@ export default class BodyControl extends CommonBase {
   /**
    * Returns a promise for a revision &mdash; any revision &mdash; of the
    * document after the given `baseRevNum`, with the return result represented
-   * as a delta relative to that given revision. If called when `baseRevNum` is
+   * as a change relative to that given revision. If called when `baseRevNum` is
    * the current revision, this will not resolve the result promise until at
    * least one change has been made.
    *
    * @param {Int} baseRevNum Revision number for the document.
-   * @returns {BodyDelta} Delta and associated revision number. The result's
+   * @returns {BodyChange} Delta and associated information. The result's
    *   `revNum` is guaranteed to be at least one more than `baseRevNum` (and
    *   could possibly be even larger.) The result's `delta` can be applied to
-   *   revision `baseRevNum` to produce revision `revNum` of the document.
+   *   revision `baseRevNum` to produce revision `revNum` of the document. The
+   *   `timestamp` and `author` of the result will both be `null`.
    */
   async deltaAfter(baseRevNum) {
     RevisionNumber.check(baseRevNum);
@@ -192,9 +193,9 @@ export default class BodyControl extends CommonBase {
         // The document's revision is in fact newer than the base, so we can now
         // form and return a result. Compose all the deltas from the revision
         // after the base through and including the current revision.
-        const delta = await this._composeRevisions(
+        const ops = await this._composeRevisions(
           BodyOpList.EMPTY, baseRevNum + 1, revNum + 1);
-        return new BodyDelta(revNum, delta);
+        return new BodyChange(new BodyDelta(revNum, ops), revNum);
       }
 
       // Wait for the file to change (or for the storage layer to time out), and

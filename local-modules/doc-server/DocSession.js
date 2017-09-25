@@ -61,9 +61,7 @@ export default class DocSession {
    * `baseRevNum`. See the equivalent `BodyControl` method for details.
    *
    * @param {Int} baseRevNum Revision number for the document.
-   * @returns {BodyDelta} Delta and associated revision number. The result's
-   *   `delta` can be applied to revision `baseRevNum` to produce revision
-   *   `revNum` of the document.
+   * @returns {BodyChange} Delta and associated information.
    */
   async body_deltaAfter(baseRevNum) {
     return this._bodyControl.deltaAfter(baseRevNum);

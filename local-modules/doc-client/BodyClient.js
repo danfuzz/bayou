@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ConnectionError } from 'api-common';
-import { BodyDelta, BodyOpList, BodySnapshot } from 'doc-common';
+import { BodyChange, BodyDelta, BodyOpList, BodySnapshot } from 'doc-common';
 import { Delay } from 'promise-util';
 import { QuillEvents } from 'quill-util';
 import { TString } from 'typecheck';
@@ -185,12 +185,12 @@ export default class BodyClient extends StateMachine {
    *
    * @param {BodySnapshot} baseSnapshot The body state at the time of the
    *   original request.
-   * @param {BodyDelta} result How to transform `baseSnapshot` to get a later
+   * @param {BodyChange} result How to transform `baseSnapshot` to get a later
    *   document revision.
    */
   _check_gotDeltaAfter(baseSnapshot, result) {
     BodySnapshot.check(baseSnapshot);
-    BodyDelta.check(result);
+    BodyChange.check(result);
   }
 
   /**
@@ -469,7 +469,7 @@ export default class BodyClient extends StateMachine {
    *
    * @param {BodySnapshot} baseSnapshot The body state at the time of the
    *   original request.
-   * @param {BodyDelta} result How to transform `baseSnapshot` to get a later
+   * @param {BodyChange} result How to transform `baseSnapshot` to get a later
    *   document revision.
    */
   _handle_idle_gotDeltaAfter(baseSnapshot, result) {
@@ -480,7 +480,7 @@ export default class BodyClient extends StateMachine {
     // here is a stale response of one sort or another. For example (and most
     // likely), it might be the delayed result from an earlier iteration.
     if (this._snapshot.revNum === baseSnapshot.revNum) {
-      this._updateWithDelta(result);
+      this._updateWithChange(result);
     }
 
     // Fire off the next iteration of requesting server changes, after a short
@@ -500,7 +500,7 @@ export default class BodyClient extends StateMachine {
    *
    * @param {BodySnapshot} baseDoc_unused The document at the time of the
    *   original request.
-   * @param {BodyDelta} result_unused How to transform `baseSnapshot` to get a
+   * @param {BodyChange} result_unused How to transform `baseSnapshot` to get a
    *   later document revision.
    */
   _handle_any_gotDeltaAfter(baseDoc_unused, result_unused) {
@@ -666,7 +666,7 @@ export default class BodyClient extends StateMachine {
       // And note that Quill doesn't need to be updated here (that is, its delta
       // is empty) because what we are integrating into the client document is
       // exactly what Quill handed to us.
-      this._updateWithDelta(new BodyDelta(vResultNum, ops), BodyOpList.EMPTY);
+      this._updateWithChange(new BodyChange(new BodyDelta(vResultNum, ops), vResultNum), BodyOpList.EMPTY);
       this._becomeIdle();
       return;
     }
@@ -684,8 +684,8 @@ export default class BodyClient extends StateMachine {
       // Thanfully, the local user hasn't made any other changes while we
       // were waiting for the server to get back to us, which means we can
       // cleanly apply the correction on top of Quill's current state.
-      this._updateWithDelta(
-        new BodyDelta(vResultNum, correctedDelta), dCorrection);
+      this._updateWithChange(
+        new BodyChange(new BodyDelta(vResultNum, correctedDelta), vResultNum), dCorrection);
       this._becomeIdle();
       return;
     }
@@ -730,8 +730,8 @@ export default class BodyClient extends StateMachine {
     // second (lost any insert races or similar).
     const dIntegratedCorrection =
       BodyOpList.coerce(dMore.transform(dCorrection, false));
-    this._updateWithDelta(
-      new BodyDelta(vResultNum, correctedDelta), dIntegratedCorrection);
+    this._updateWithChange(
+      new BodyChange(new BodyDelta(vResultNum, correctedDelta), vResultNum), dIntegratedCorrection);
 
     // (3)
 
@@ -809,13 +809,14 @@ export default class BodyClient extends StateMachine {
    * of the document doesn't need to be updated. If that isn't the case, then
    * this method will throw an error.
    *
-   * @param {BodyDelta} delta Delta from the current `_snapshot` contents.
-   * @param {BodyOpList} [quillDelta = delta.ops] Delta from Quill's current
-   *   state, which is expected to preserve any state that Quill has that isn't
-   *   yet represented in `_snapshot`. This must be used in cases where Quill's
-   *   state has progressed ahead of `_snapshot` due to local activity.
+   * @param {BodyChange} change Change from the current `_snapshot` contents.
+   * @param {BodyOpList} [quillDelta = change.delta.ops] Delta from Quill's
+   *   current state, which is expected to preserve any state that Quill has
+   *   that isn't yet represented in `_snapshot`. This must be used in cases
+   *   where Quill's state has progressed ahead of `_snapshot` due to local
+   * activity.
    */
-  _updateWithDelta(delta, quillDelta = delta.ops) {
+  _updateWithChange(change, quillDelta = change.delta.ops) {
     const needQuillUpdate = !quillDelta.isEmpty();
 
     if (   (this._currentEvent.nextOfNow(QuillEvents.TEXT_CHANGE) !== null)
@@ -826,7 +827,7 @@ export default class BodyClient extends StateMachine {
     }
 
     // Update the local snapshot.
-    this._snapshot = this._snapshot.compose(delta);
+    this._snapshot = this._snapshot.compose(change.delta);
 
     // Tell Quill if necessary.
     if (needQuillUpdate) {
