@@ -16,9 +16,9 @@ import PropertyOp from './PropertyOp';
 let EMPTY = null;
 
 /**
- * Delta for property (document metadata) information. Instances of this class
- * can be applied to instances of `PropertySnapshot` to produce updated
- * snapshots.
+ * Delta for property (document metadata) information, consisting of a simple
+ * ordered list of operations. Instances of this class can be applied to
+ * instances of `PropertySnapshot` to produce updated snapshots.
  *
  * Instances of this class are immutable.
  */

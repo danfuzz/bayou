@@ -9,26 +9,24 @@ import BodyDelta from './BodyDelta';
 import Timestamp from './Timestamp';
 
 /**
- * Representation of a change to a document from its immediately-previous
+ * Representation of a change to a document body from its immediately-previous
  * revision, including time, authorship, and revision information in addition to
- * the actual delta. This class is a `BodyDelta` plus additional metadata,
+ * the actual delta. This class is a `BodyDelta` plus additional information,
  * and it in fact derives from `BodyDelta` per se.
  *
- * **Note:** The meaning of the `delta` in an instance of this class is more
+ * **Note:** The semantics of the `delta` in an instance of this class are more
  * specific than that of `BodyDelta` in general, exactly because instances
  * of this class always represent changes from the immediately-previous
  * revision.
  *
- * Instances of this class are immutable, including the deltas. In particular,
- * if a mutable delta is passed to the constructor of this class, it is coerced
- * into immutable form.
+ * Instances of this class are immutable.
  */
 export default class BodyChange extends BodyDelta {
   /**
    * Gets the appropriate first change to a document body (empty delta, no
    * author) for the current moment in time.
    *
-   * @returns {FrozenDelta} An appropriate initial change.
+   * @returns {BodyChange} An appropriate initial change.
    */
   static firstChange() {
     return new BodyChange(0, FrozenDelta.EMPTY, Timestamp.now(), null);
