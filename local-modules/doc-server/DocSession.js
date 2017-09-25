@@ -94,7 +94,7 @@ export default class DocSession {
    *   get the actual result.
    */
   async body_update(baseRevNum, ops) {
-    return this._bodyControl.applyDelta(baseRevNum, ops, this._authorId);
+    return this._bodyControl.update(baseRevNum, ops, this._authorId);
   }
 
   /**

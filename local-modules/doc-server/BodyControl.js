@@ -91,86 +91,6 @@ export default class BodyControl extends CommonBase {
   }
 
   /**
-   * Takes a base revision number and list of operations (raw delta) to apply
-   * therefrom, and applies the operations, including merging of any
-   * intermediate revisions. The return value consists of a "correction" delta
-   * to be used to get the new document state. The correction delta is with
-   * respect to the client's "expected result," that is to say, what the client
-   * would get if the operations were applied with no intervening changes.
-   *
-   * As a special case, as long as `baseRevNum` is valid, if `ops` is empty,
-   * this method returns a result of the same revision number along with an
-   * empty "correction" delta. That is, the return value from passing an empty
-   * list of operations doesn't provide any information about subsequent
-   * revisions of the document.
-   *
-   * @param {Int} baseRevNum Revision number which `delta` is with respect to.
-   * @param {BodyOpList} ops List of operations indicating what has changed with
-   *   respect to `baseRevNum`.
-   * @param {string|null} authorId Author of the change, or `null` if the change
-   *   is to be considered authorless.
-   * @returns {BodyDelta} The correction to the implied expected result of
-   *   this operation. The `ops` of this result can be applied to the expected
-   *   result to get the actual result. The promise resolves sometime after the
-   *   change has been applied to the document.
-   */
-  async applyDelta(baseRevNum, ops, authorId) {
-    // Very basic argument validation. Once in the guts of the thing, we will
-    // discover (and properly complain) if there are deeper problems with them.
-    BodyOpList.check(ops);
-    TString.orNull(authorId);
-
-    // Snapshot of the base revision. This call validates `baseRevNum`.
-    const base = await this.snapshot(baseRevNum);
-
-    // Check for an empty `ops`. If it is, we don't bother trying to apply it.
-    // See method header comment for more info.
-    if (ops.isEmpty()) {
-      return new BodyDelta(baseRevNum, BodyOpList.EMPTY);
-    }
-
-    // Compose the implied expected result. This has the effect of validating
-    // the contents of `delta`.
-    const expected = base.compose(new BodyDelta(baseRevNum + 1, ops));
-
-    // We try performing the apply, and then we iterate if it failed _and_ the
-    // reason is simply that there were any changes that got made while we were
-    // in the middle of the attempt. Any other problems are transparently thrown
-    // to the caller.
-    let retryDelayMsec = INITIAL_APPEND_RETRY_MSEC;
-    let retryTotalMsec = 0;
-    let attemptCount = 0;
-    for (;;) {
-      attemptCount++;
-      if (attemptCount !== 1) {
-        this._log.info(`Append attempt #${attemptCount}.`);
-      }
-
-      const current = await this.snapshot();
-      const result  = await this._applyDeltaTo(base, ops, authorId, current, expected);
-
-      if (result !== null) {
-        return result;
-      }
-
-      // A `null` result from the call means that we lost an append race (that
-      // is, there was revision skew between the snapshot and the latest reality
-      // at the moment of attempted appending), so we delay briefly and iterate.
-
-      if (retryTotalMsec >= MAX_APPEND_TIME_MSEC) {
-        // ...except if these attempts have taken wayyyy too long. If we land
-        // here, it's probably due to a bug (but not a total given).
-        throw UtilErrors.aborted('Too many failed attempts in `applyDelta()`.');
-      }
-
-      this._log.info(`Sleeping ${retryDelayMsec} msec.`);
-      await Delay.resolve(retryDelayMsec);
-      retryTotalMsec += retryDelayMsec;
-      retryDelayMsec *= APPEND_RETRY_GROWTH_FACTOR;
-    }
-  }
-
-  /**
    * Gets a particular change to the document. The document consists of a
    * sequence of changes, each modifying revision N of the document to produce
    * revision N+1.
@@ -340,6 +260,86 @@ export default class BodyControl extends CommonBase {
   }
 
   /**
+   * Takes a base revision number and list of operations (raw delta) to apply
+   * therefrom, and applies the operations, including merging of any
+   * intermediate revisions. The return value consists of a "correction" delta
+   * to be used to get the new document state. The correction delta is with
+   * respect to the client's "expected result," that is to say, what the client
+   * would get if the operations were applied with no intervening changes.
+   *
+   * As a special case, as long as `baseRevNum` is valid, if `ops` is empty,
+   * this method returns a result of the same revision number along with an
+   * empty "correction" delta. That is, the return value from passing an empty
+   * list of operations doesn't provide any information about subsequent
+   * revisions of the document.
+   *
+   * @param {Int} baseRevNum Revision number which `delta` is with respect to.
+   * @param {BodyOpList} ops List of operations indicating what has changed with
+   *   respect to `baseRevNum`.
+   * @param {string|null} authorId Author of the change, or `null` if the change
+   *   is to be considered authorless.
+   * @returns {BodyDelta} The correction to the implied expected result of
+   *   this operation. The `ops` of this result can be applied to the expected
+   *   result to get the actual result. The promise resolves sometime after the
+   *   change has been applied to the document.
+   */
+  async update(baseRevNum, ops, authorId) {
+    // Very basic argument validation. Once in the guts of the thing, we will
+    // discover (and properly complain) if there are deeper problems with them.
+    BodyOpList.check(ops);
+    TString.orNull(authorId);
+
+    // Snapshot of the base revision. This call validates `baseRevNum`.
+    const base = await this.snapshot(baseRevNum);
+
+    // Check for an empty `ops`. If it is, we don't bother trying to apply it.
+    // See method header comment for more info.
+    if (ops.isEmpty()) {
+      return new BodyDelta(baseRevNum, BodyOpList.EMPTY);
+    }
+
+    // Compose the implied expected result. This has the effect of validating
+    // the contents of `delta`.
+    const expected = base.compose(new BodyDelta(baseRevNum + 1, ops));
+
+    // We try performing the apply, and then we iterate if it failed _and_ the
+    // reason is simply that there were any changes that got made while we were
+    // in the middle of the attempt. Any other problems are transparently thrown
+    // to the caller.
+    let retryDelayMsec = INITIAL_APPEND_RETRY_MSEC;
+    let retryTotalMsec = 0;
+    let attemptCount = 0;
+    for (;;) {
+      attemptCount++;
+      if (attemptCount !== 1) {
+        this._log.info(`Append attempt #${attemptCount}.`);
+      }
+
+      const current = await this.snapshot();
+      const result  = await this._applyUpdateTo(base, ops, authorId, current, expected);
+
+      if (result !== null) {
+        return result;
+      }
+
+      // A `null` result from the call means that we lost an append race (that
+      // is, there was revision skew between the snapshot and the latest reality
+      // at the moment of attempted appending), so we delay briefly and iterate.
+
+      if (retryTotalMsec >= MAX_APPEND_TIME_MSEC) {
+        // ...except if these attempts have taken wayyyy too long. If we land
+        // here, it's probably due to a bug (but not a total given).
+        throw UtilErrors.aborted('Too many failed attempts in `update()`.');
+      }
+
+      this._log.info(`Sleeping ${retryDelayMsec} msec.`);
+      await Delay.resolve(retryDelayMsec);
+      retryTotalMsec += retryDelayMsec;
+      retryDelayMsec *= APPEND_RETRY_GROWTH_FACTOR;
+    }
+  }
+
+  /**
    * Evaluates the condition of the document, reporting a "validation status."
    * The return value is one of the `STATUS_*` constants defined by this class:
    *
@@ -445,7 +445,7 @@ export default class BodyControl extends CommonBase {
    * Appends a new delta to the document. On success, this returns the revision
    * number of the document after the append. On a failure due to `baseRevNum`
    * not being current at the moment of application, this returns `null`. All
-   * other errors are reported via thrown errors. See `_applyDeltaTo()` above
+   * other errors are reported via thrown errors. See `_applyUpdateTo()` above
    * for further discussion.
    *
    * **Note:** If the delta is a no-op, then this method throws an error,
@@ -495,28 +495,28 @@ export default class BodyControl extends CommonBase {
   }
 
   /**
-   * Main implementation of `applyDelta()`, which takes as an additional
-   * argument a promise for a snapshot which represents the current (latest)
-   * revision at the moment it resolves. This method attempts to perform change
-   * application relative to that snapshot. If it succeeds (that is, if the
-   * snapshot is still current at the moment of attempted application), then
-   * this method returns a proper result of `applyDelta()`. If it fails due to
+   * Main implementation of `update()`, which takes additional arguments of a
+   * specific `current` snapshot to directly update along with the expected
+   * result of a clean application on top of that snapshot. This method attempts
+   * to apply the change relative to that snapshot. If it succeeds (that is, if
+   * the snapshot is still current at the moment of attempted application), then
+   * this method returns a proper result of `update()`. If it fails due to
    * the snapshot being out-of-date, then this method returns `null`. All other
    * problems are reported by throwing an exception.
    *
    * @param {BodySnapshot} base Snapshot of the base from which the delta is
    *   defined. That is, this is the snapshot of `baseRevNum` as provided to
-   *   `applyDelta()`.
-   * @param {BodyOpList} ops Same as for `applyDelta()`.
-   * @param {string|null} authorId Same as for `applyDelta()`.
+   *   `update()`.
+   * @param {BodyOpList} ops Same as for `update()`.
+   * @param {string|null} authorId Same as for `update()`.
    * @param {BodySnapshot} current Snapshot of the current (latest) revision
    *   of the document.
    * @param {BodySnapshot} expected The implied expected result as defined
-   *   by `applyDelta()`.
-   * @returns {BodyDelta|null} Result for the outer call to `applyDelta()`,
+   *   by `update()`.
+   * @returns {BodyDelta|null} Result for the outer call to `update()`,
    *   or `null` if the application failed due to an out-of-date `snapshot`.
    */
-  async _applyDeltaTo(base, ops, authorId, current, expected) {
+  async _applyUpdateTo(base, ops, authorId, current, expected) {
     if (base.revNum === current.revNum) {
       // The easy case, because the base revision is in fact the current
       // revision of the document, so we don't have to transform the incoming
@@ -579,7 +579,7 @@ export default class BodyControl extends CommonBase {
     if (dNext.isEmpty()) {
       // It turns out that nothing changed. **Note:** It is unclear whether this
       // can actually happen in practice, given that we already return early
-      // (in `applyDelta()`) if we are asked to apply an empty delta.
+      // (in `update()`) if we are asked to apply an empty delta.
       return new BodyDelta(rCurrent.revNum, BodyOpList.EMPTY);
     }
 
