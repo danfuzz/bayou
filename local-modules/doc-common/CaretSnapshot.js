@@ -128,7 +128,7 @@ export default class CaretSnapshot extends CommonBase {
           break;
         }
 
-        case CaretOp.UPDATE_FIELD: {
+        case CaretOp.SET_FIELD: {
           const sessionId = props.sessionId;
           const caret     = newCarets.get(sessionId);
 

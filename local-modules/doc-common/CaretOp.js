@@ -23,8 +23,8 @@ export default class CaretOp extends CommonBase {
   }
 
   /** {string} Operation name for "set field" operations. */
-  static get UPDATE_FIELD() {
-    return 'update_field';
+  static get SET_FIELD() {
+    return 'set_field';
   }
 
   /** {string} Operation name for "set revision number" operations. */
@@ -70,7 +70,7 @@ export default class CaretOp extends CommonBase {
     TString.check(sessionId);
     Caret.checkField(key, value);
 
-    return new CaretOp(new Functor(CaretOp.UPDATE_FIELD, sessionId, key, value));
+    return new CaretOp(new Functor(CaretOp.SET_FIELD, sessionId, key, value));
   }
 
   /**
@@ -126,7 +126,7 @@ export default class CaretOp extends CommonBase {
         return Object.freeze({ opName, sessionId });
       }
 
-      case CaretOp.UPDATE_FIELD: {
+      case CaretOp.SET_FIELD: {
         const [sessionId, key, value] = payload.args;
         return Object.freeze({ opName, sessionId, key, value });
       }
