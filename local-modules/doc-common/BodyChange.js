@@ -31,32 +31,32 @@ export default class BodyChange extends CommonBase {
    * @returns {BodyChange} An appropriate initial change.
    */
   static firstChange() {
-    return new BodyChange(BodyDelta.EMPTY, 0, Timestamp.now(), null);
+    return new BodyChange(0, BodyDelta.EMPTY, Timestamp.now(), null);
   }
 
   /**
    * Constructs an instance.
    *
-   * @param {BodyDelta} delta The body change per se, compared to the
-   *   immediately-previous revision. **Note:** This includes the resulting
-   *   revision number.
    * @param {Int} revNum The revision number of the document produced by this
    *   instance (when composed as contextually appropriate). If this instance
    *   represents the first change to a document, then this value will be `0`.
+   * @param {BodyDelta} delta The body change per se, compared to the
+   *   immediately-previous revision. **Note:** This includes the resulting
+   *   revision number.
    * @param {Timestamp|null} [timestamp = null] The time of the change, or
    *   `null` if the change doesn't have an associated moment of time.
    * @param {string|null} [authorId = null] Stable identifier string
    *   representing the author of the change. Allowed to be `null` if the change
    *   is authorless.
    */
-  constructor(delta, revNum, timestamp = null, authorId = null) {
+  constructor(revNum, delta, timestamp = null, authorId = null) {
     super();
-
-    /** {BodyDelta} The main content delta. */
-    this._delta = BodyDelta.check(delta);
 
     /** {Int} The produced revision number. */
     this._revNum = RevisionNumber.check(revNum);
+
+    /** {BodyDelta} The main content delta. */
+    this._delta = BodyDelta.check(delta);
 
     /** {Timestamp|null} The time of the change. */
     this._timestamp = Timestamp.orNull(timestamp);
@@ -76,7 +76,7 @@ export default class BodyChange extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    const result = [this._delta, this._revNum, this._timestamp, this._authorId];
+    const result = [this._revNum, this._delta, this._timestamp, this._authorId];
 
     // Trim off one or two trailing `null`s, if possible.
     for (let i = 3; i >= 2; i--) {

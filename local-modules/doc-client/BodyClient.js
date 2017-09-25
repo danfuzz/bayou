@@ -666,7 +666,7 @@ export default class BodyClient extends StateMachine {
       // And note that Quill doesn't need to be updated here (that is, its delta
       // is empty) because what we are integrating into the client document is
       // exactly what Quill handed to us.
-      this._updateWithChange(new BodyChange(new BodyDelta(ops), vResultNum), BodyOpList.EMPTY);
+      this._updateWithChange(new BodyChange(vResultNum, new BodyDelta(ops)), BodyOpList.EMPTY);
       this._becomeIdle();
       return;
     }
@@ -685,7 +685,7 @@ export default class BodyClient extends StateMachine {
       // were waiting for the server to get back to us, which means we can
       // cleanly apply the correction on top of Quill's current state.
       this._updateWithChange(
-        new BodyChange(new BodyDelta(correctedDelta), vResultNum), dCorrection);
+        new BodyChange(vResultNum, new BodyDelta(correctedDelta)), dCorrection);
       this._becomeIdle();
       return;
     }
@@ -731,7 +731,7 @@ export default class BodyClient extends StateMachine {
     const dIntegratedCorrection =
       BodyOpList.coerce(dMore.transform(dCorrection, false));
     this._updateWithChange(
-      new BodyChange(new BodyDelta(correctedDelta), vResultNum), dIntegratedCorrection);
+      new BodyChange(vResultNum, new BodyDelta(correctedDelta)), dIntegratedCorrection);
 
     // (3)
 
