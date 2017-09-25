@@ -35,4 +35,23 @@ export default class AuthorId extends UtilityClass {
 
     return value;
   }
+
+  /**
+   * Checks a value which must be of type `AuthorId` or be `null`.
+   *
+   * @param {*} value Value to check.
+   * @returns {string|null} `value`.
+   */
+  static orNull(value) {
+    if (value === null) {
+      return null;
+    }
+
+    try {
+      return AuthorId.check(value);
+    } catch (e) {
+      // Higher-fidelity error.
+      throw Errors.bad_value(value, 'AuthorId|orNull');
+    }
+  }
 }

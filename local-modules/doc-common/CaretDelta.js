@@ -16,9 +16,9 @@ import CaretOp from './CaretOp';
 let EMPTY = null;
 
 /**
- * Delta for caret information. Instances of this class can be applied to
- * instances of `Caret` and `CaretSnapshot` to produce updated instances of
- * those classes.
+ * Delta for caret information, consisting of a simple ordered list of
+ * operations. Instances of this class can be applied to instances of `Caret`
+ * and `CaretSnapshot` to produce updated instances of those classes.
  *
  * Instances of this class are immutable.
  */

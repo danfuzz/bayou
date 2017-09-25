@@ -76,7 +76,7 @@ describe('util-common/StringUtil', () => {
       assert.equal(asciiLength, utf8Length);
     });
 
-    it('should return a UTF-8 length of 2 for characters `\\u0080 .. \\u07ff', () => {
+    it('should return a UTF-8 length of 2 for characters `[\\u0080..\\u07ff]`', () => {
       let input = '\u0080';
       let utf8Length = StringUtil.utf8LengthForString(input);
 
@@ -88,7 +88,7 @@ describe('util-common/StringUtil', () => {
       assert.equal(utf8Length, 2);
     });
 
-    it('should return a UTF-8 length of 3 for characters `\\u0800 .. \\u7fff', () => {
+    it('should return a UTF-8 length of 3 for characters `[\\u0800..\\u7fff]`', () => {
       let input = '\u0800';
       let utf8Length = StringUtil.utf8LengthForString(input);
 

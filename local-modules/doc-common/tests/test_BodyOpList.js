@@ -7,14 +7,14 @@ import { describe, it } from 'mocha';
 import Delta from 'quill-delta';
 import { inspect } from 'util';
 
-import { FrozenDelta } from 'doc-common';
+import { BodyOpList } from 'doc-common';
 
-describe('doc-common/FrozenDelta', () => {
+describe('doc-common/BodyOpList', () => {
   describe('.EMPTY', () => {
-    const empty = FrozenDelta.EMPTY;
+    const empty = BodyOpList.EMPTY;
 
-    it('should be an instance of `FrozenDelta`', () => {
-      assert.instanceOf(empty, FrozenDelta);
+    it('should be an instance of `BodyOpList`', () => {
+      assert.instanceOf(empty, BodyOpList);
     });
 
     it('should be a frozen object', () => {
@@ -29,8 +29,8 @@ describe('doc-common/FrozenDelta', () => {
       assert.isFrozen(empty.ops);
     });
 
-    it('should be `FrozenDelta.isEmpty()`', () => {
-      assert.isTrue(FrozenDelta.isEmpty(empty));
+    it('should be `BodyOpList.isEmpty()`', () => {
+      assert.isTrue(BodyOpList.isEmpty(empty));
     });
   });
 
@@ -38,8 +38,8 @@ describe('doc-common/FrozenDelta', () => {
     describe('valid empty values', () => {
       const values = [
         new Delta([]),
-        new FrozenDelta([]),
-        FrozenDelta.EMPTY,
+        new BodyOpList([]),
+        BodyOpList.EMPTY,
         null,
         undefined,
         [],
@@ -48,7 +48,7 @@ describe('doc-common/FrozenDelta', () => {
 
       for (const v of values) {
         it(`should return \`true\` for: ${inspect(v)}`, () => {
-          assert.isTrue(FrozenDelta.isEmpty(v));
+          assert.isTrue(BodyOpList.isEmpty(v));
         });
       }
     });
@@ -66,18 +66,18 @@ describe('doc-common/FrozenDelta', () => {
         ops1,
         { ops: ops1 },
         new Delta(ops1),
-        new FrozenDelta(ops1),
+        new BodyOpList(ops1),
         ops2,
         { ops: ops2 },
         new Delta(ops2),
-        new FrozenDelta(ops2),
+        new BodyOpList(ops2),
         invalidNonEmptyOps,
         { ops: invalidNonEmptyOps }
       ];
 
       for (const v of values) {
         it(`should return \`false\` for: ${inspect(v)}`, () => {
-          assert.isFalse(FrozenDelta.isEmpty(v));
+          assert.isFalse(BodyOpList.isEmpty(v));
         });
       }
     });
@@ -97,7 +97,7 @@ describe('doc-common/FrozenDelta', () => {
 
       for (const v of values) {
         it(`should throw for: ${inspect(v)}`, () => {
-          assert.throws(() => { FrozenDelta.isEmpty(v); });
+          assert.throws(() => { BodyOpList.isEmpty(v); });
         });
       }
     });
@@ -114,7 +114,7 @@ describe('doc-common/FrozenDelta', () => {
 
       for (const v of values) {
         it(`should return \`true\` for: ${inspect(v)}`, () => {
-          assert.isTrue(FrozenDelta.coerce(v).isDocument());
+          assert.isTrue(BodyOpList.coerce(v).isDocument());
         });
       }
     });
@@ -129,7 +129,7 @@ describe('doc-common/FrozenDelta', () => {
 
       for (const v of values) {
         it(`should return \`false\` for: ${inspect(v)}`, () => {
-          assert.isFalse(FrozenDelta.coerce(v).isDocument());
+          assert.isFalse(BodyOpList.coerce(v).isDocument());
         });
       }
     });

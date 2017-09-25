@@ -7,13 +7,13 @@ import { Codec } from 'codec';
 import AuthorId from './AuthorId';
 import BodyChange from './BodyChange';
 import BodyDelta from './BodyDelta';
+import BodyOpList from './BodyOpList';
 import BodySnapshot from './BodySnapshot';
 import Caret from './Caret';
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';
 import CaretSnapshot from './CaretSnapshot';
 import DocumentId from './DocumentId';
-import FrozenDelta from './FrozenDelta';
 import PropertyDelta from './PropertyDelta';
 import PropertyOp from './PropertyOp';
 import PropertySnapshot from './PropertySnapshot';
@@ -23,12 +23,12 @@ import RevisionNumber from './RevisionNumber';
 // Register classes with the API.
 Codec.theOne.registerClass(BodyChange);
 Codec.theOne.registerClass(BodyDelta);
+Codec.theOne.registerClass(BodyOpList);
 Codec.theOne.registerClass(BodySnapshot);
 Codec.theOne.registerClass(Caret);
 Codec.theOne.registerClass(CaretDelta);
 Codec.theOne.registerClass(CaretOp);
 Codec.theOne.registerClass(CaretSnapshot);
-Codec.theOne.registerClass(FrozenDelta);
 Codec.theOne.registerClass(PropertyDelta);
 Codec.theOne.registerClass(PropertyOp);
 Codec.theOne.registerClass(PropertySnapshot);
@@ -38,13 +38,13 @@ export {
   AuthorId,
   BodyChange,
   BodyDelta,
+  BodyOpList,
   BodySnapshot,
   Caret,
   CaretDelta,
   CaretOp,
   CaretSnapshot,
   DocumentId,
-  FrozenDelta,
   PropertyDelta,
   PropertyOp,
   PropertySnapshot,

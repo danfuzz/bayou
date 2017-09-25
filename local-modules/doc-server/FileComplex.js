@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Codec } from 'codec';
-import { FrozenDelta } from 'doc-common';
+import { BodyOpList } from 'doc-common';
 import { ProductInfo } from 'env-server';
 import { BaseFile, FileCodec } from 'file-store';
 import { DEFAULT_DOCUMENT } from 'hooks-server';
@@ -19,19 +19,19 @@ import DocServer from './DocServer';
 /** {Logger} Logger to use for this module. */
 const log = new Logger('doc');
 
-/** {FrozenDelta} Default contents when creating a new document. */
-const DEFAULT_TEXT = FrozenDelta.coerce(DEFAULT_DOCUMENT);
+/** {BodyOpList} Default contents when creating a new document. */
+const DEFAULT_TEXT = BodyOpList.coerce(DEFAULT_DOCUMENT);
 
 /**
- * {FrozenDelta} Message used as document to indicate a major validation error.
+ * {BodyOpList} Message used as document to indicate a major validation error.
  */
-const ERROR_NOTE = FrozenDelta.coerce(
+const ERROR_NOTE = BodyOpList.coerce(
   [{ insert: '(Recreated document due to validation error(s).)\n' }]);
 
 /**
- * {FrozenDelta} Message used as document instead of migrating documents from
+ * {BodyOpList} Message used as document instead of migrating documents from
  * old schema versions. */
-const MIGRATION_NOTE = FrozenDelta.coerce(
+const MIGRATION_NOTE = BodyOpList.coerce(
   [{ insert: '(Recreated document due to schema version skew.)\n' }]);
 
 /**

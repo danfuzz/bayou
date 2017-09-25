@@ -3,8 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import {
-  BodyChange, BodyDelta, BodySnapshot, FrozenDelta, RevisionNumber,
-  Timestamp
+  BodyChange, BodyDelta, BodyOpList, BodySnapshot, RevisionNumber, Timestamp
 } from 'doc-common';
 import { Errors, TransactionSpec } from 'file-store';
 import { Delay } from 'promise-util';
@@ -92,87 +91,6 @@ export default class BodyControl extends CommonBase {
   }
 
   /**
-   * Takes a base revision number and delta therefrom, and applies the delta,
-   * including merging of any intermediate revisions. The return value consists
-   * of a new revision number, and a delta to be used to get the new document
-   * state. The delta is with respect to the client's "expected result," that
-   * is to say, what the client would get if the delta were applied with no
-   * intervening changes.
-   *
-   * As a special case, as long as `baseRevNum` is valid, if `delta` is empty,
-   * this method returns a result of the same revision number along with an
-   * empty "correction" delta. That is, the return value from passing an empty
-   * delta doesn't provide any information about subsequent revisions of the
-   * document.
-   *
-   * @param {Int} baseRevNum Revision number which `delta` is with respect to.
-   * @param {FrozenDelta} delta Delta indicating what has changed with respect
-   *   to `baseRevNum`.
-   * @param {string|null} authorId Author of `delta`, or `null` if the change
-   *   is to be considered authorless.
-   * @returns {BodyDelta} The correction to the implied expected result of
-   *   this operation. The `delta` of this result can be applied to the expected
-   *   result to get the actual result. The promise resolves sometime after the
-   *   delta has been applied to the document.
-   */
-  async applyDelta(baseRevNum, delta, authorId) {
-    // Very basic argument validation. Once in the guts of the thing, we will
-    // discover (and properly complain) if there are deeper problems with them.
-    FrozenDelta.check(delta);
-    TString.orNull(authorId);
-
-    // Snapshot of the base revision. This call validates `baseRevNum`.
-    const base = await this.snapshot(baseRevNum);
-
-    // Check for an empty `delta`. If it is, we don't bother trying to apply it.
-    // See method header comment for more info.
-    if (delta.isEmpty()) {
-      return new BodyDelta(baseRevNum, FrozenDelta.EMPTY);
-    }
-
-    // Compose the implied expected result. This has the effect of validating
-    // the contents of `delta`.
-    const expected = base.compose(new BodyDelta(baseRevNum + 1, delta));
-
-    // We try performing the apply, and then we iterate if it failed _and_ the
-    // reason is simply that there were any changes that got made while we were
-    // in the middle of the attempt. Any other problems are transparently thrown
-    // to the caller.
-    let retryDelayMsec = INITIAL_APPEND_RETRY_MSEC;
-    let retryTotalMsec = 0;
-    let attemptCount = 0;
-    for (;;) {
-      attemptCount++;
-      if (attemptCount !== 1) {
-        this._log.info(`Append attempt #${attemptCount}.`);
-      }
-
-      const current = await this.snapshot();
-      const result =
-        await this._applyDeltaTo(base, delta, authorId, current, expected);
-
-      if (result !== null) {
-        return result;
-      }
-
-      // A `null` result from the call means that we lost an append race (that
-      // is, there was revision skew between the snapshot and the latest reality
-      // at the moment of attempted appending), so we delay briefly and iterate.
-
-      if (retryTotalMsec >= MAX_APPEND_TIME_MSEC) {
-        // ...except if these attempts have taken wayyyy too long. If we land
-        // here, it's probably due to a bug (but not a total given).
-        throw UtilErrors.aborted('Too many failed attempts in `applyDelta()`.');
-      }
-
-      this._log.info(`Sleeping ${retryDelayMsec} msec.`);
-      await Delay.resolve(retryDelayMsec);
-      retryTotalMsec += retryDelayMsec;
-      retryDelayMsec *= APPEND_RETRY_GROWTH_FACTOR;
-    }
-  }
-
-  /**
    * Gets a particular change to the document. The document consists of a
    * sequence of changes, each modifying revision N of the document to produce
    * revision N+1.
@@ -194,12 +112,12 @@ export default class BodyControl extends CommonBase {
    * the initial content of the document (which will be in the second change,
    * because by definition the first change of a document is empty).
    *
-   * @param {FrozenDelta|null} [contents = null] Initial document contents, or
+   * @param {BodyOpList|null} [contents = null] Initial document contents, or
    *   `null` if the document should be completely empty.
    */
   async create(contents = null) {
     if (contents !== null) {
-      FrozenDelta.check(contents);
+      BodyOpList.check(contents);
     }
 
     this._log.info('Creating document.');
@@ -214,7 +132,7 @@ export default class BodyControl extends CommonBase {
     // constructing the transaction spec.
     const maybeChange1 = [];
     if (contents !== null) {
-      const change = new BodyChange(1, contents, Timestamp.now(), null);
+      const change = new BodyChange(new BodyDelta(1, contents), Timestamp.now(), null);
       const op     = fc.op_writePath(Paths.forBodyChange(1), change);
       maybeChange1.push(op);
     }
@@ -275,7 +193,7 @@ export default class BodyControl extends CommonBase {
         // form and return a result. Compose all the deltas from the revision
         // after the base through and including the current revision.
         const delta = await this._composeRevisions(
-          FrozenDelta.EMPTY, baseRevNum + 1, revNum + 1);
+          BodyOpList.EMPTY, baseRevNum + 1, revNum + 1);
         return new BodyDelta(revNum, delta);
       }
 
@@ -331,7 +249,7 @@ export default class BodyControl extends CommonBase {
     // to the base to produce the desired revision. Store it, and return it.
 
     const contents = (base === null)
-      ? this._composeRevisions(FrozenDelta.EMPTY, 0,               revNum + 1)
+      ? this._composeRevisions(BodyOpList.EMPTY, 0,               revNum + 1)
       : this._composeRevisions(base.contents,     base.revNum + 1, revNum + 1);
     const result = new BodySnapshot(revNum, await contents);
 
@@ -339,6 +257,86 @@ export default class BodyControl extends CommonBase {
 
     this._snapshots.set(revNum, result);
     return result;
+  }
+
+  /**
+   * Takes a base revision number and list of operations (raw delta) to apply
+   * therefrom, and applies the operations, including merging of any
+   * intermediate revisions. The return value consists of a "correction" delta
+   * to be used to get the new document state. The correction delta is with
+   * respect to the client's "expected result," that is to say, what the client
+   * would get if the operations were applied with no intervening changes.
+   *
+   * As a special case, as long as `baseRevNum` is valid, if `ops` is empty,
+   * this method returns a result of the same revision number along with an
+   * empty "correction" delta. That is, the return value from passing an empty
+   * list of operations doesn't provide any information about subsequent
+   * revisions of the document.
+   *
+   * @param {Int} baseRevNum Revision number which `delta` is with respect to.
+   * @param {BodyOpList} ops List of operations indicating what has changed with
+   *   respect to `baseRevNum`.
+   * @param {string|null} authorId Author of the change, or `null` if the change
+   *   is to be considered authorless.
+   * @returns {BodyDelta} The correction to the implied expected result of
+   *   this operation. The `ops` of this result can be applied to the expected
+   *   result to get the actual result. The promise resolves sometime after the
+   *   change has been applied to the document.
+   */
+  async update(baseRevNum, ops, authorId) {
+    // Very basic argument validation. Once in the guts of the thing, we will
+    // discover (and properly complain) if there are deeper problems with them.
+    BodyOpList.check(ops);
+    TString.orNull(authorId);
+
+    // Snapshot of the base revision. This call validates `baseRevNum`.
+    const base = await this.snapshot(baseRevNum);
+
+    // Check for an empty `ops`. If it is, we don't bother trying to apply it.
+    // See method header comment for more info.
+    if (ops.isEmpty()) {
+      return new BodyDelta(baseRevNum, BodyOpList.EMPTY);
+    }
+
+    // Compose the implied expected result. This has the effect of validating
+    // the contents of `delta`.
+    const expected = base.compose(new BodyDelta(baseRevNum + 1, ops));
+
+    // We try performing the apply, and then we iterate if it failed _and_ the
+    // reason is simply that there were any changes that got made while we were
+    // in the middle of the attempt. Any other problems are transparently thrown
+    // to the caller.
+    let retryDelayMsec = INITIAL_APPEND_RETRY_MSEC;
+    let retryTotalMsec = 0;
+    let attemptCount = 0;
+    for (;;) {
+      attemptCount++;
+      if (attemptCount !== 1) {
+        this._log.info(`Append attempt #${attemptCount}.`);
+      }
+
+      const current = await this.snapshot();
+      const result  = await this._applyUpdateTo(base, ops, authorId, current, expected);
+
+      if (result !== null) {
+        return result;
+      }
+
+      // A `null` result from the call means that we lost an append race (that
+      // is, there was revision skew between the snapshot and the latest reality
+      // at the moment of attempted appending), so we delay briefly and iterate.
+
+      if (retryTotalMsec >= MAX_APPEND_TIME_MSEC) {
+        // ...except if these attempts have taken wayyyy too long. If we land
+        // here, it's probably due to a bug (but not a total given).
+        throw UtilErrors.aborted('Too many failed attempts in `update()`.');
+      }
+
+      this._log.info(`Sleeping ${retryDelayMsec} msec.`);
+      await Delay.resolve(retryDelayMsec);
+      retryTotalMsec += retryDelayMsec;
+      retryDelayMsec *= APPEND_RETRY_GROWTH_FACTOR;
+    }
   }
 
   /**
@@ -447,7 +445,7 @@ export default class BodyControl extends CommonBase {
    * Appends a new delta to the document. On success, this returns the revision
    * number of the document after the append. On a failure due to `baseRevNum`
    * not being current at the moment of application, this returns `null`. All
-   * other errors are reported via thrown errors. See `_applyDeltaTo()` above
+   * other errors are reported via thrown errors. See `_applyUpdateTo()` above
    * for further discussion.
    *
    * **Note:** If the delta is a no-op, then this method throws an error,
@@ -456,18 +454,18 @@ export default class BodyControl extends CommonBase {
    *
    * @param {BodyChange} change Change to append.
    * @returns {Int|null} The revision number after appending `change`, or `null`
-   *   if `change.revNum` is out-of-date (that is, isn't the immediately-next
-   *   revision number) at the moment of attempted application.
-   * @throws {Error} If `change.delta.isEmpty()`.
+   *   if `change.delta.revNum` is out-of-date (that is, isn't the
+   *   immediately-next revision number) at the moment of attempted application.
+   * @throws {Error} If `change.delta.ops.isEmpty()`.
    */
   async _appendChange(change) {
     BodyChange.check(change);
 
-    if (change.delta.isEmpty()) {
+    if (change.delta.ops.isEmpty()) {
       throw UtilErrors.wtf('Should not have been called with an empty delta.');
     }
 
-    const revNum     = change.revNum;
+    const revNum     = change.delta.revNum;
     const baseRevNum = revNum - 1;
     const changePath = Paths.forBodyChange(revNum);
 
@@ -497,28 +495,28 @@ export default class BodyControl extends CommonBase {
   }
 
   /**
-   * Main implementation of `applyDelta()`, which takes as an additional
-   * argument a promise for a snapshot which represents the current (latest)
-   * revision at the moment it resolves. This method attempts to perform change
-   * application relative to that snapshot. If it succeeds (that is, if the
-   * snapshot is still current at the moment of attempted application), then
-   * this method returns a proper result of `applyDelta()`. If it fails due to
+   * Main implementation of `update()`, which takes additional arguments of a
+   * specific `current` snapshot to directly update along with the expected
+   * result of a clean application on top of that snapshot. This method attempts
+   * to apply the change relative to that snapshot. If it succeeds (that is, if
+   * the snapshot is still current at the moment of attempted application), then
+   * this method returns a proper result of `update()`. If it fails due to
    * the snapshot being out-of-date, then this method returns `null`. All other
    * problems are reported by throwing an exception.
    *
    * @param {BodySnapshot} base Snapshot of the base from which the delta is
    *   defined. That is, this is the snapshot of `baseRevNum` as provided to
-   *   `applyDelta()`.
-   * @param {FrozenDelta} delta Same as for `applyDelta()`.
-   * @param {string|null} authorId Same as for `applyDelta()`.
+   *   `update()`.
+   * @param {BodyOpList} ops Same as for `update()`.
+   * @param {string|null} authorId Same as for `update()`.
    * @param {BodySnapshot} current Snapshot of the current (latest) revision
    *   of the document.
    * @param {BodySnapshot} expected The implied expected result as defined
-   *   by `applyDelta()`.
-   * @returns {BodyDelta|null} Result for the outer call to `applyDelta()`,
+   *   by `update()`.
+   * @returns {BodyDelta|null} Result for the outer call to `update()`,
    *   or `null` if the application failed due to an out-of-date `snapshot`.
    */
-  async _applyDeltaTo(base, delta, authorId, current, expected) {
+  async _applyUpdateTo(base, ops, authorId, current, expected) {
     if (base.revNum === current.revNum) {
       // The easy case, because the base revision is in fact the current
       // revision of the document, so we don't have to transform the incoming
@@ -526,7 +524,7 @@ export default class BodyControl extends CommonBase {
       // revision. If it succeeds, then we won the append race (if any).
 
       const change =
-        new BodyChange(base.revNum + 1, delta, Timestamp.now(), authorId);
+        new BodyChange(new BodyDelta(base.revNum + 1, ops), Timestamp.now(), authorId);
       const revNum = await this._appendChange(change);
 
       if (revNum === null) {
@@ -534,7 +532,7 @@ export default class BodyControl extends CommonBase {
         return null;
       }
 
-      return new BodyDelta(revNum, FrozenDelta.EMPTY);
+      return new BodyDelta(revNum, BodyOpList.EMPTY);
     }
 
     // The hard case: The client has requested an application of a delta
@@ -543,7 +541,7 @@ export default class BodyControl extends CommonBase {
     // `rCurrent` for the current revision). Here's what we do:
     //
     // 0. Definitions of input:
-    //    * `dClient` -- Delta to apply, as requested by the client.
+    //    * `dClient` -- Delta (ops) to apply, as requested by the client.
     //    * `rBase` -- Base revision to apply the delta to.
     //    * `rCurrent` -- Current (latest) revision of the document.
     //    * `rExpected` -- The implied expected result of application. This is
@@ -562,7 +560,7 @@ export default class BodyControl extends CommonBase {
     // (0) Assign incoming arguments to variables that correspond to the
     //     description immediately above.
 
-    const dClient   = delta;
+    const dClient   = ops;
     const rBase     = base;
     const rExpected = expected;
     const rCurrent  = current;
@@ -570,26 +568,25 @@ export default class BodyControl extends CommonBase {
     // (1)
 
     const dServer = await this._composeRevisions(
-      FrozenDelta.EMPTY, rBase.revNum + 1, rCurrent.revNum + 1);
+      BodyOpList.EMPTY, rBase.revNum + 1, rCurrent.revNum + 1);
 
     // (2)
 
     // The `true` argument indicates that `dServer` should be taken to have been
     // applied first (won any insert races or similar).
-    const dNext = FrozenDelta.coerce(dServer.transform(dClient, true));
+    const dNext = BodyOpList.coerce(dServer.transform(dClient, true));
 
     if (dNext.isEmpty()) {
       // It turns out that nothing changed. **Note:** It is unclear whether this
       // can actually happen in practice, given that we already return early
-      // (in `applyDelta()`) if we are asked to apply an empty delta.
-      return new BodyDelta(rCurrent.revNum, FrozenDelta.EMPTY);
+      // (in `update()`) if we are asked to apply an empty delta.
+      return new BodyDelta(rCurrent.revNum, BodyOpList.EMPTY);
     }
 
     // (3)
 
-    const rNextNum = rCurrent.revNum + 1;
-    const change =
-      new BodyChange(rNextNum, dNext, Timestamp.now(), authorId);
+    const rNextNum     = rCurrent.revNum + 1;
+    const change       = new BodyChange(new BodyDelta(rNextNum, dNext), Timestamp.now(), authorId);
     const appendResult = await this._appendChange(change);
 
     if (appendResult === null) {
@@ -617,18 +614,18 @@ export default class BodyControl extends CommonBase {
    * revision. If `startInclusive === endExclusive`, then this method returns
    * `baseDelta`.
    *
-   * @param {FrozenDelta} baseDelta Base delta onto which the indicated deltas
+   * @param {BodyOpList} baseDelta Base delta onto which the indicated deltas
    *   get composed.
    * @param {Int} startInclusive Revision number for the first delta to include
    *   in the result.
    * @param {Int} endExclusive Revision number just beyond the last delta to
    *   include in the result.
-   * @returns {FrozenDelta} The composed delta consisting of `baseDelta`
-   *   composed with revisions `startInclusive` through but not including
-   *   `endExclusive`.
+   * @returns {BodyOpList} The composed operations (raw delta) consisting of
+   *   `baseDelta` composed with revisions `startInclusive` through but not
+   *   including `endExclusive`.
    */
   async _composeRevisions(baseDelta, startInclusive, endExclusive) {
-    FrozenDelta.check(baseDelta);
+    BodyOpList.check(baseDelta);
 
     if (startInclusive === endExclusive) {
       // Trivial case: Nothing to compose. If we were to have made it to the
@@ -646,11 +643,11 @@ export default class BodyControl extends CommonBase {
       const end = Math.min(i + MAX, endExclusive);
       const changes = await this._readChangeRange(i, end);
       for (const c of changes) {
-        result = result.compose(c.delta);
+        result = result.compose(c.delta.ops);
       }
     }
 
-    return FrozenDelta.coerce(result);
+    return BodyOpList.coerce(result);
   }
 
   /**
