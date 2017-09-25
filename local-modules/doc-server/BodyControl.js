@@ -297,7 +297,7 @@ export default class BodyControl extends CommonBase {
     // Check for an empty `ops`. If it is, we don't bother trying to apply it.
     // See method header comment for more info.
     if (ops.isEmpty()) {
-      return new BodyDelta(baseRevNum, BodyOpList.EMPTY);
+      return new BodyChange(new BodyDelta(baseRevNum, BodyOpList.EMPTY), baseRevNum);
     }
 
     // Compose the implied expected result. This has the effect of validating
@@ -515,7 +515,7 @@ export default class BodyControl extends CommonBase {
    *   of the document.
    * @param {BodySnapshot} expected The implied expected result as defined
    *   by `update()`.
-   * @returns {BodyDelta|null} Result for the outer call to `update()`,
+   * @returns {BodyChange|null} Result for the outer call to `update()`,
    *   or `null` if the application failed due to an out-of-date `snapshot`.
    */
   async _applyUpdateTo(base, ops, authorId, current, expected) {
@@ -534,7 +534,7 @@ export default class BodyControl extends CommonBase {
         return null;
       }
 
-      return new BodyDelta(revNum, BodyOpList.EMPTY);
+      return new BodyChange(new BodyDelta(revNum, BodyOpList.EMPTY), revNum);
     }
 
     // The hard case: The client has requested an application of a delta
@@ -582,7 +582,7 @@ export default class BodyControl extends CommonBase {
       // It turns out that nothing changed. **Note:** It is unclear whether this
       // can actually happen in practice, given that we already return early
       // (in `update()`) if we are asked to apply an empty delta.
-      return new BodyDelta(rCurrent.revNum, BodyOpList.EMPTY);
+      return new BodyChange(new BodyDelta(rCurrent.revNum, BodyOpList.EMPTY), rCurrent.revNum);
     }
 
     // (3)
@@ -600,10 +600,8 @@ export default class BodyControl extends CommonBase {
 
     // (4)
 
-    // **Note:** The result's revision number is the same as `rNext`'s, which
-    // is exactly what we want.
     const dCorrection = rExpected.diff(rNext);
-    return dCorrection;
+    return new BodyChange(dCorrection, rNextNum);
   }
 
   /**

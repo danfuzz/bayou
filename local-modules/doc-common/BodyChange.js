@@ -103,6 +103,11 @@ export default class BodyChange extends CommonBase {
     return this._delta;
   }
 
+  /** {Int} The produced revision number. */
+  get revNum() {
+    return this._revNum;
+  }
+
   /** {Timestamp} The time of the change. */
   get timestamp() {
     return this._timestamp;
