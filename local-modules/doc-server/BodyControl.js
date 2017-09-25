@@ -125,7 +125,7 @@ export default class BodyControl extends CommonBase {
     const fc = this._fileCodec; // Avoids boilerplate immediately below.
 
     // Per spec, a document starts with an empty change #0.
-    const change0 = BodyChange.firstChange();
+    const change0 = BodyChange.FIRST;
 
     // If we get passed `contents`, that goes into change #1. We make an array
     // here (in either case) so that we can just use the `...` operator when

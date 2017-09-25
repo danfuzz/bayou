@@ -10,6 +10,13 @@ import RevisionNumber from './RevisionNumber';
 import Timestamp from './Timestamp';
 
 /**
+ * {BodyChange|null} Representation of the empty (and authorless and timeless)
+ * first change to a document. Initialized in the static getter of the same
+ * name.
+ */
+let FIRST = null;
+
+/**
  * Representation of a change to a document body from its immediately-previous
  * revision, including time, authorship, and revision information in addition to
  * the actual delta. This class is a `BodyDelta` plus additional information.
@@ -25,13 +32,15 @@ import Timestamp from './Timestamp';
  */
 export default class BodyChange extends CommonBase {
   /**
-   * Gets the appropriate first change to a document body (empty delta, revision
-   * number `0`, no author) for the current moment in time.
-   *
-   * @returns {BodyChange} An appropriate initial change.
+   * {BodyChange} Representation of the empty (and authorless and timeless)
+   * first change to a document.
    */
-  static firstChange() {
-    return new BodyChange(0, BodyDelta.EMPTY, Timestamp.now(), null);
+  static get FIRST() {
+    if (FIRST === null) {
+      FIRST = new BodyChange(0, BodyDelta.EMPTY);
+    }
+
+    return FIRST;
   }
 
   /**
@@ -41,8 +50,7 @@ export default class BodyChange extends CommonBase {
    *   instance (when composed as contextually appropriate). If this instance
    *   represents the first change to a document, then this value will be `0`.
    * @param {BodyDelta} delta The body change per se, compared to the
-   *   immediately-previous revision. **Note:** This includes the resulting
-   *   revision number.
+   *   implied base revision.
    * @param {Timestamp|null} [timestamp = null] The time of the change, or
    *   `null` if the change doesn't have an associated moment of time.
    * @param {string|null} [authorId = null] Stable identifier string
@@ -108,7 +116,10 @@ export default class BodyChange extends CommonBase {
     return this._revNum;
   }
 
-  /** {Timestamp} The time of the change. */
+  /**
+   * {Timestamp|null} The time of the change, or `null` if the change has no
+   * specific associated moment in time.
+   */
   get timestamp() {
     return this._timestamp;
   }
