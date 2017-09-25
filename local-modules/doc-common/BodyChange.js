@@ -37,8 +37,8 @@ export default class BodyChange extends CommonBase {
    * @param {BodyDelta} delta The body change per se, compared to the
    *   immediately-previous revision. **Note:** This includes the resulting
    *   revision number.
-   * @param {Timestamp} timestamp The time of the change, as msec since the Unix
-   *   Epoch.
+   * @param {Timestamp|null} timestamp The time of the change, or `null` if
+   *   the change doesn't have an associated moment of time.
    * @param {string|null} authorId Stable identifier string representing the
    *   author of the change. Allowed to be `null` if the change is authorless.
    */
@@ -48,8 +48,8 @@ export default class BodyChange extends CommonBase {
     /** {BodyDelta} The main content delta. */
     this._delta = BodyDelta.check(delta);
 
-    /** {Timestamp} The time of the change. */
-    this._timestamp = Timestamp.check(timestamp);
+    /** {Timestamp|null} The time of the change. */
+    this._timestamp = Timestamp.orNull(timestamp);
 
     /**
      * {string|null} Author ID string, or `null` if the change is
