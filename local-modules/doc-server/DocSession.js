@@ -52,13 +52,13 @@ export default class DocSession {
    *
    * @param {number} baseRevNum Revision number which `delta` is with respect
    *   to.
-   * @param {BodyOpList} delta Delta indicating what has changed with respect
-   *   to `baseRevNum`.
+   * @param {BodyOpList} ops List of operations indicating what has changed with
+   *   respect to `baseRevNum`.
    * @returns {BodyDelta} The correction from the implied expected result to
    *   get the actual result.
    */
-  async body_applyDelta(baseRevNum, delta) {
-    return this._bodyControl.applyDelta(baseRevNum, delta, this._authorId);
+  async body_applyDelta(baseRevNum, ops) {
+    return this._bodyControl.applyDelta(baseRevNum, ops, this._authorId);
   }
 
   /**

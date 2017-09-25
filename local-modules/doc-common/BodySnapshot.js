@@ -143,8 +143,8 @@ export default class BodySnapshot extends CommonBase {
 
     const oldContents = this.contents;
     const newContents = newerSnapshot.contents;
-    const delta       = BodyOpList.coerce(oldContents.diff(newContents));
+    const ops         = BodyOpList.coerce(oldContents.diff(newContents));
 
-    return new BodyDelta(newerSnapshot.revNum, delta);
+    return new BodyDelta(newerSnapshot.revNum, ops);
   }
 }

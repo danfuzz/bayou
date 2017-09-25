@@ -52,7 +52,9 @@ export default class BodyDelta extends CommonBase {
     /** {Int} The produced revision number. */
     this._revNum = RevisionNumber.check(revNum);
 
-    /** {BodyOpList} The actual change, as a raw delta. */
+    /**
+     * {BodyOpList} The actual change, as a list of operations (a raw delta).
+     */
     this._ops = BodyOpList.check(ops);
 
     Object.freeze(this);
