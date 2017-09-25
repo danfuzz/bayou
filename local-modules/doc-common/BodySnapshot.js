@@ -87,20 +87,20 @@ export default class BodySnapshot extends CommonBase {
   }
 
   /**
-   * Composes a delta on top of this instance, to produce a new instance.
+   * Composes a change on top of this instance, to produce a new instance.
    *
-   * @param {BodyDelta} delta Delta to compose on top of this instance.
+   * @param {BodyChange} change Change to compose on top of this instance.
    * @returns {BodySnapshot} New instance consisting of the composition of
-   *   this instance with `delta`.
+   *   this instance with `change`.
    */
-  compose(delta) {
-    BodyDelta.check(delta);
+  compose(change) {
+    BodyChange.check(change);
 
-    const contents = delta.ops.isEmpty()
+    const contents = change.delta.ops.isEmpty()
       ? this._contents
-      : BodyOpList.coerce(this._contents.compose(delta.ops));
+      : BodyOpList.coerce(this._contents.compose(change.delta.ops));
 
-    return new BodySnapshot(delta.revNum, contents);
+    return new BodySnapshot(change.revNum, contents);
   }
 
   /**

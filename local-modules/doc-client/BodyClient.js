@@ -827,7 +827,7 @@ export default class BodyClient extends StateMachine {
     }
 
     // Update the local snapshot.
-    this._snapshot = this._snapshot.compose(change.delta);
+    this._snapshot = this._snapshot.compose(change);
 
     // Tell Quill if necessary.
     if (needQuillUpdate) {

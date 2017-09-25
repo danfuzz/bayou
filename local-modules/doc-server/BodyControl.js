@@ -302,7 +302,7 @@ export default class BodyControl extends CommonBase {
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
-    const expected = base.compose(new BodyDelta(baseRevNum + 1, ops));
+    const expected = base.compose(new BodyChange(new BodyDelta(baseRevNum + 1, ops), baseRevNum + 1));
 
     // We try performing the apply, and then we iterate if it failed _and_ the
     // reason is simply that there were any changes that got made while we were
@@ -456,8 +456,8 @@ export default class BodyControl extends CommonBase {
    *
    * @param {BodyChange} change Change to append.
    * @returns {Int|null} The revision number after appending `change`, or `null`
-   *   if `change.delta.revNum` is out-of-date (that is, isn't the
-   *   immediately-next revision number) at the moment of attempted application.
+   *   if `change.revNum` is out-of-date (that is, isn't the immediately-next
+   *   revision number) at the moment of attempted application.
    * @throws {Error} If `change.delta.ops.isEmpty()`.
    */
   async _appendChange(change) {
@@ -467,7 +467,7 @@ export default class BodyControl extends CommonBase {
       throw UtilErrors.wtf('Should not have been called with an empty delta.');
     }
 
-    const revNum     = change.delta.revNum;
+    const revNum     = change.revNum;
     const baseRevNum = revNum - 1;
     const changePath = Paths.forBodyChange(revNum);
 
