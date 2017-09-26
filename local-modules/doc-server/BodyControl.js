@@ -174,8 +174,8 @@ export default class BodyControl extends CommonBase {
    * @param {Int} baseRevNum Revision number for the document.
    * @returns {BodyChange} Delta and associated information. The result's
    *   `revNum` is guaranteed to be at least one more than `baseRevNum` (and
-   *   could possibly be even larger.) The result's `delta` can be applied to
-   *   revision `baseRevNum` to produce revision `revNum` of the document. The
+   *   could possibly be even larger.) The result can be applied to revision
+   *   `baseRevNum` to produce revision `revNum` of the document. The
    *   `timestamp` and `author` of the result will both be `null`.
    */
   async deltaAfter(baseRevNum) {
@@ -261,18 +261,18 @@ export default class BodyControl extends CommonBase {
   }
 
   /**
-   * Takes a base revision number and list of operations (raw delta) to apply
-   * therefrom, and applies the operations, including merging of any
-   * intermediate revisions. The return value consists of a "correction" delta
-   * to be used to get the new document state. The correction delta is with
-   * respect to the client's "expected result," that is to say, what the client
-   * would get if the operations were applied with no intervening changes.
+   * Takes a base revision number and a delta to apply thereto, and applies the
+   * delta, including merging of any intermediate revisions. The return value
+   * consists of a "correction" change to be used to get the new document state.
+   * The correction is with respect to the client's "expected result," that is
+   * to say, what the client would get if the operations were applied with no
+   * intervening changes.
    *
    * As a special case, as long as `baseRevNum` is valid, if `ops` is empty,
    * this method returns a result of the same revision number along with an
-   * empty "correction" delta. That is, the return value from passing an empty
-   * list of operations doesn't provide any information about subsequent
-   * revisions of the document.
+   * empty "correction."" That is, the return value from passing an empty list
+   * of operations doesn't provide any information about subsequent revisions of
+   * the document.
    *
    * @param {Int} baseRevNum Revision number which `delta` is with respect to.
    * @param {BodyDelta} delta List of operations indicating what has changed
@@ -444,13 +444,13 @@ export default class BodyControl extends CommonBase {
   }
 
   /**
-   * Appends a new delta to the document. On success, this returns the revision
+   * Appends a new change to the document. On success, this returns the revision
    * number of the document after the append. On a failure due to `baseRevNum`
    * not being current at the moment of application, this returns `null`. All
    * other errors are reported via thrown errors. See `_applyUpdateTo()` above
    * for further discussion.
    *
-   * **Note:** If the delta is a no-op, then this method throws an error,
+   * **Note:** If the change is a no-op, then this method throws an error,
    * because the calling code should have handled that case without calling this
    * method.
    *

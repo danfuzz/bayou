@@ -57,8 +57,8 @@ export default class DocSession {
   }
 
   /**
-   * Returns a promise for a snapshot of any revision after the given
-   * `baseRevNum`. See the equivalent `BodyControl` method for details.
+   * Gets a change of the document body from the indicated base revision. See
+   * {@link BodyControl#deltaAfter} for details.
    *
    * @param {Int} baseRevNum Revision number for the document.
    * @returns {BodyChange} Delta and associated information.
@@ -68,8 +68,8 @@ export default class DocSession {
   }
 
   /**
-   * Returns a snapshot of the full document contents. See the equivalent
-   * `BodyControl` method for details.
+   * Returns a snapshot of the full document contents. See
+   * {@link BodyControl#snapshot} for details.
    *
    * @param {Int|null} [revNum = null] Which revision to get. If passed as
    *   `null`, indicates the latest (most recent) revision.
@@ -81,8 +81,8 @@ export default class DocSession {
 
   /**
    * Applies an update to the body, assigning authorship of the change to the
-   * author represented by this instance. See the equivalent `BodyControl`
-   * method for details.
+   * author represented by this instance. See {@link BodyControl#update} for
+   * details.
    *
    * @param {number} baseRevNum Revision number which `delta` is with respect
    *   to.
@@ -96,7 +96,7 @@ export default class DocSession {
   }
 
   /**
-   * Gets a delta of caret information from the indicated base caret revision.
+   * Gets a change of caret information from the indicated base caret revision.
    * This will throw an error if the indicated caret revision isn't available,
    * in which case the client will likely want to use `caret_snapshot()` to get
    * back in synch.

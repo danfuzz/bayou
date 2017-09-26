@@ -169,8 +169,7 @@ export default class BodyClient extends StateMachine {
    * Validates a `gotUpdate` event. This represents a successful result
    * from the API call `body_update()`.
    *
-   * @param {BodyDelta} delta The operations (raw delta) that were originally
-   *   applied.
+   * @param {BodyDelta} delta The delta that was originally applied.
    * @param {BodyChange} correctedChange The correction to the expected
    *   result as returned from `body_update()`.
    */
@@ -473,12 +472,12 @@ export default class BodyClient extends StateMachine {
    *   document revision.
    */
   _handle_idle_gotDeltaAfter(baseSnapshot, result) {
-    this._log.detail('Delta from server:', result.revNum);
+    this._log.detail('Change from server:', result.revNum);
 
-    // We only take action if the result's base (what `delta` is with regard to)
-    // is the current `_snapshot`. If that _isn't_ the case, then what we have
-    // here is a stale response of one sort or another. For example (and most
-    // likely), it might be the delayed result from an earlier iteration.
+    // We only take action if the result's base (what the change is with regard
+    // to) is the current `_snapshot`. If that _isn't_ the case, then what we
+    // have here is a stale response of one sort or another. For example (and
+    // most likely), it might be the delayed result from an earlier iteration.
     if (this._snapshot.revNum === baseSnapshot.revNum) {
       this._updateWithChange(result);
     }
@@ -494,7 +493,7 @@ export default class BodyClient extends StateMachine {
 
   /**
    * In most states, handles event `gotDeltaAfter`. This will happen when a
-   * server delta comes when we're in the middle of handling a local change. As
+   * server change comes when we're in the middle of handling a local change. As
    * such, it is safe to ignore, because after the local change is integrated,
    * the system will fire off a new `body_deltaAfter()` request.
    *
@@ -578,7 +577,7 @@ export default class BodyClient extends StateMachine {
 
   /**
    * In most states, handles event `gotQuillEvent`. This will happen when a
-   * local delta comes in after we're already in the middle of handling a
+   * local change comes in after we're already in the middle of handling a
    * chain of local changes. As such, it is safe to ignore, because whatever
    * the change was, it will get handled by that pre-existing process.
    *
@@ -637,8 +636,7 @@ export default class BodyClient extends StateMachine {
    * In state `merging`, handles event `gotUpdate`. This means that a local
    * change was successfully merged by the server.
    *
-   * @param {BodyDelta} delta The operations (raw delta) that were originally
-   *   applied.
+   * @param {BodyDelta} delta The delta that was originally applied.
    * @param {BodyChange} correctedChange The correction to the expected
    *   result as returned from `body_update()`.
    */
@@ -799,7 +797,7 @@ export default class BodyClient extends StateMachine {
 
   /**
    * Updates `_snapshot` to be the given revision by applying the indicated
-   * delta to the current revision, and tells the attached Quill instance to
+   * change to the current revision, and tells the attached Quill instance to
    * update itself accordingly.
    *
    * This is only valid to call when the revision of the document that Quill has
@@ -820,9 +818,9 @@ export default class BodyClient extends StateMachine {
 
     if (   (this._currentEvent.nextOfNow(QuillEvents.TEXT_CHANGE) !== null)
         && needQuillUpdate) {
-      // It is unsafe to apply the delta as-is, because we know that Quill's
+      // It is unsafe to apply the change as-is, because we know that Quill's
       // revision of the document has diverged.
-      throw Errors.bad_use('Cannot apply delta due to revision skew.');
+      throw Errors.bad_use('Cannot apply change due to revision skew.');
     }
 
     // Update the local snapshot.

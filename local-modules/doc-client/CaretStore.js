@@ -128,8 +128,8 @@ export default class CaretStore {
 
       try {
         if (snapshot !== null) {
-          // We have a snapshot which we can presumably get a delta from, so try
-          // to do that.
+          // We have a snapshot which we can presumably get a change with
+          // respect to, so try to do that.
           const change = await sessionProxy.caret_deltaAfter(snapshot.revNum);
           snapshot = snapshot.compose(change);
           docSession.log.detail(`Got caret change. ${snapshot.carets.length} caret(s).`);
@@ -137,8 +137,8 @@ export default class CaretStore {
       } catch (e) {
         // Assume that the error isn't truly fatal. Most likely, it's because
         // the session got restarted or because the snapshot we have is too old
-        // to get a delta from. We just `null` out the snapshot and let the next
-        // clause try to get it afresh.
+        // to get a change from. We just `null` out the snapshot and let the
+        // next clause try to get it afresh.
         docSession.log.warn('Trouble with `caret_deltaAfter`:', e);
         snapshot = null;
       }
@@ -147,7 +147,7 @@ export default class CaretStore {
         if (snapshot === null) {
           // We don't yet have a snapshot to base deltas off of, so get one!
           // This can happen either because we've just started a new session or
-          // because the attempt to get a delta failed for some reason. (The
+          // because the attempt to get a change failed for some reason. (The
           // latter is why this section isn't just part of an `else` block to
           // the previous `if`).
           snapshot = await sessionProxy.caret_snapshot();
