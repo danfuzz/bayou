@@ -58,13 +58,13 @@ export default class DocSession {
 
   /**
    * Gets a change of the document body from the indicated base revision. See
-   * {@link BodyControl#deltaAfter} for details.
+   * {@link BodyControl#getChangeAfter} for details.
    *
    * @param {Int} baseRevNum Revision number for the document.
    * @returns {BodyChange} Delta and associated information.
    */
-  async body_deltaAfter(baseRevNum) {
-    return this._bodyControl.deltaAfter(baseRevNum);
+  async body_getChangeAfter(baseRevNum) {
+    return this._bodyControl.getChangeAfter(baseRevNum);
   }
 
   /**
@@ -117,8 +117,8 @@ export default class DocSession {
    *   Applying this result to a `CaretSnapshot` for `baseRevNum` will produce
    *  an up-to-date snapshot.
    */
-  async caret_deltaAfter(baseRevNum) {
-    return this._caretControl.deltaAfter(baseRevNum);
+  async caret_getChangeAfter(baseRevNum) {
+    return this._caretControl.getChangeAfter(baseRevNum);
   }
 
   /**

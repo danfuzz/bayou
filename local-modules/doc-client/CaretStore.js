@@ -130,7 +130,7 @@ export default class CaretStore {
         if (snapshot !== null) {
           // We have a snapshot which we can presumably get a change with
           // respect to, so try to do that.
-          const change = await sessionProxy.caret_deltaAfter(snapshot.revNum);
+          const change = await sessionProxy.caret_getChangeAfter(snapshot.revNum);
           snapshot = snapshot.compose(change);
           docSession.log.detail(`Got caret change. ${snapshot.carets.length} caret(s).`);
         }
@@ -139,7 +139,7 @@ export default class CaretStore {
         // the session got restarted or because the snapshot we have is too old
         // to get a change from. We just `null` out the snapshot and let the
         // next clause try to get it afresh.
-        docSession.log.warn('Trouble with `caret_deltaAfter`:', e);
+        docSession.log.warn('Trouble with `caret_getChangeAfter`:', e);
         snapshot = null;
       }
 

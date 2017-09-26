@@ -178,7 +178,7 @@ export default class BodyControl extends CommonBase {
    *   `baseRevNum` to produce revision `revNum` of the document. The
    *   `timestamp` and `author` of the result will both be `null`.
    */
-  async deltaAfter(baseRevNum) {
+  async getChangeAfter(baseRevNum) {
     RevisionNumber.check(baseRevNum);
 
     for (;;) {
@@ -212,7 +212,7 @@ export default class BodyControl extends CommonBase {
           throw e;
         }
         // It's a timeout, so just fall through and iterate.
-        this._log.info('Storage layer timeout in `deltaAfter`.');
+        this._log.info('Storage layer timeout in `getChangeAfter`.');
       }
     }
   }

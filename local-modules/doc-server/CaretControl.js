@@ -12,7 +12,7 @@ import CaretStorage from './CaretStorage';
 
 /**
  * {Int} How many older caret snapshots should be maintained for potential use
- * as the base for `deltaAfter()`.
+ * as the base for `getChangeAfter()`.
  */
 const MAX_OLD_SNAPSHOTS = 20;
 
@@ -55,7 +55,7 @@ export default class CaretControl extends CommonBase {
 
     /**
      * {array<CaretSnapshot>} Array of older caret snapshots, available for use
-     * for `deltaAfter()`.
+     * for `getChangeAfter()`.
      */
     this._oldSnapshots = [this._snapshot];
 
@@ -81,7 +81,7 @@ export default class CaretControl extends CommonBase {
    *   available.
    * @returns {CaretChange} Change from the base caret revision to a newer one.
    */
-  async deltaAfter(baseRevNum) {
+  async getChangeAfter(baseRevNum) {
     const oldSnapshot = await this.snapshot(baseRevNum);
 
     // Iterate if / as long as the base revision is still the current one. This
