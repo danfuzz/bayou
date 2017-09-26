@@ -34,8 +34,7 @@ describe('doc-common/PropertySnapshot', () => {
 
     it('should accept a valid change', () => {
       function test(revNum, ops) {
-        const delta  = new PropertyDelta(ops);
-        const change = new PropertyChange(revNum, delta);
+        const change = new PropertyChange(revNum, ops);
         new PropertySnapshot(change);
       }
 
@@ -65,7 +64,7 @@ describe('doc-common/PropertySnapshot', () => {
 
     it('should reject a change with disallowed ops', () => {
       function test(ops) {
-        const change = new PropertyChange(0, new PropertyDelta(ops));
+        const change = new PropertyChange(0, ops);
         assert.throws(() => { new PropertySnapshot(change); });
       }
 
@@ -88,11 +87,11 @@ describe('doc-common/PropertySnapshot', () => {
       test(PropertySnapshot.EMPTY);
 
       test(new PropertySnapshot(new PropertyChange(123, PropertyDelta.EMPTY)));
-      test(new PropertySnapshot(new PropertyChange(0,   new PropertyDelta([PropertyOp.op_setProperty('foo', 'bar')]))));
-      test(new PropertySnapshot(new PropertyChange(37,  new PropertyDelta([PropertyOp.op_setProperty('foo', 'bar')]))));
+      test(new PropertySnapshot(new PropertyChange(0,   [PropertyOp.op_setProperty('foo', 'bar')])));
+      test(new PropertySnapshot(new PropertyChange(37,  [PropertyOp.op_setProperty('foo', 'bar')])));
       test(new PropertySnapshot(
         new PropertyChange(37,
-          new PropertyDelta([PropertyOp.op_setProperty('foo', 'bar'), PropertyOp.op_setProperty('baz', 914)]))));
+          [PropertyOp.op_setProperty('foo', 'bar'), PropertyOp.op_setProperty('baz', 914)])));
     });
 
     it('should update `revNum` given a change with a different `revNum`', () => {
@@ -108,7 +107,7 @@ describe('doc-common/PropertySnapshot', () => {
       const op       = PropertyOp.op_setProperty('florp', 'like');
       const snap     = new PropertySnapshot([]);
       const expected = new PropertySnapshot([op]);
-      const change   = new PropertyChange(0, new PropertyDelta([op]));
+      const change   = new PropertyChange(0, [op]);
       const result   = snap.compose(change);
 
       assert.strictEqual(result.get('florp'), 'like');
@@ -119,7 +118,7 @@ describe('doc-common/PropertySnapshot', () => {
       const op       = PropertyOp.op_setProperty('florp', 'like');
       const snap     = new PropertySnapshot([PropertyOp.op_setProperty('florp', 'unlike')]);
       const expected = new PropertySnapshot([op]);
-      const change   = new PropertyChange(0, new PropertyDelta([op]));
+      const change   = new PropertyChange(0, [op]);
       const result   = snap.compose(change);
 
       assert.strictEqual(result.get('florp'), 'like');
@@ -127,10 +126,9 @@ describe('doc-common/PropertySnapshot', () => {
     });
 
     it('should remove a property given the appropriate op', () => {
-      const snap     = new PropertySnapshot([PropertyOp.op_setProperty('florp', 'like')]);
-      const delta    = new PropertyDelta([PropertyOp.op_deleteProperty('florp')]);
-      const change   = new PropertyChange(0, delta);
-      const result   = snap.compose(change);
+      const snap   = new PropertySnapshot([PropertyOp.op_setProperty('florp', 'like')]);
+      const change = new PropertyChange(0, [PropertyOp.op_deleteProperty('florp')]);
+      const result = snap.compose(change);
 
       assert.isFalse(result.has('florp'));
       assert.isTrue(result.equals(PropertySnapshot.EMPTY));
@@ -140,7 +138,7 @@ describe('doc-common/PropertySnapshot', () => {
   describe('diff()', () => {
     it('should produce an empty diff when passed itself', () => {
       const snap = new PropertySnapshot(new PropertyChange(914,
-        new PropertyDelta([PropertyOp.op_setProperty('a', 10), PropertyOp.op_setProperty('b', 20)])));
+        [PropertyOp.op_setProperty('a', 10), PropertyOp.op_setProperty('b', 20)]));
       const result = snap.diff(snap);
 
       assert.instanceOf(result, PropertyChange);
@@ -150,9 +148,9 @@ describe('doc-common/PropertySnapshot', () => {
 
     it('should result in a `revNum` diff if that in fact changes', () => {
       const snap1 = new PropertySnapshot(
-        new PropertyChange(123, new PropertyDelta([PropertyOp.op_setProperty('a', 10)])));
+        new PropertyChange(123, [PropertyOp.op_setProperty('a', 10)]));
       const snap2 = new PropertySnapshot(
-        new PropertyChange(456, new PropertyDelta([PropertyOp.op_setProperty('a', 10)])));
+        new PropertyChange(456, [PropertyOp.op_setProperty('a', 10)]));
       const result = snap1.diff(snap2);
 
       const composed = new PropertySnapshot([]).compose(result);
@@ -252,9 +250,9 @@ describe('doc-common/PropertySnapshot', () => {
 
     it('should return `false` when `revNum`s differ', () => {
       const snap1 = new PropertySnapshot(
-        new PropertyChange(123, new PropertyDelta([PropertyOp.op_setProperty('a', 10)])));
+        new PropertyChange(123, [PropertyOp.op_setProperty('a', 10)]));
       const snap2 = new PropertySnapshot(
-        new PropertyChange(456, new PropertyDelta([PropertyOp.op_setProperty('a', 10)])));
+        new PropertyChange(456, [PropertyOp.op_setProperty('a', 10)]));
 
       assert.isFalse(snap1.equals(snap2));
     });
