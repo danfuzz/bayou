@@ -251,7 +251,7 @@ export default class Caret extends CommonBase {
 
     for (const [k, v] of newerCaret._fields) {
       if (!Caret._equalFields(v, fields.get(k))) {
-        ops.push(CaretOp.op_updateField(sessionId, k, v));
+        ops.push(CaretOp.op_setField(sessionId, k, v));
       }
     }
 

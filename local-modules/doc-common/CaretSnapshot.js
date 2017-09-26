@@ -104,7 +104,7 @@ export default class CaretSnapshot extends CommonBase {
   /**
    * Composes a delta on top of this instance, to produce a new instance.
    *
-   * **Note:** It is an error if `delta` contains an `op_updateField` to a caret
+   * **Note:** It is an error if `delta` contains an `op_setField` to a caret
    * that either does not exist in `this` or was not first introduced with an
    * `op_beginSession`.
    *

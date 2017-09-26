@@ -92,7 +92,7 @@ describe('doc-common/CaretSnapshot', () => {
 
     it('should refuse to update a nonexistent caret', () => {
       const snap  = new CaretSnapshot(1, [caret1]);
-      const delta = new CaretDelta([CaretOp.op_updateField('florp', 'index', 1)]);
+      const delta = new CaretDelta([CaretOp.op_setField('florp', 'index', 1)]);
 
       assert.throws(() => { snap.compose(delta); });
     });
@@ -102,7 +102,7 @@ describe('doc-common/CaretSnapshot', () => {
       const c2       = newCaret('foo', 3, 2, '#333333');
       const snap     = new CaretSnapshot(1, [caret1, c1]);
       const expected = new CaretSnapshot(1, [caret1, c2]);
-      const op       = CaretOp.op_updateField('foo', 'index', 3);
+      const op       = CaretOp.op_setField('foo', 'index', 3);
       const result   = snap.compose(new CaretDelta([op]));
 
       assert.isTrue(result.equals(expected));

@@ -66,7 +66,7 @@ export default class CaretOp extends CommonBase {
    *   varies by name.
    * @returns {CaretOp} The corresponding operation.
    */
-  static op_updateField(sessionId, key, value) {
+  static op_setField(sessionId, key, value) {
     TString.check(sessionId);
     Caret.checkField(key, value);
 
