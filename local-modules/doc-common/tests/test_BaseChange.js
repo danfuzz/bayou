@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 import Delta from 'quill-delta';
 
 import { BaseChange, Timestamp } from 'doc-common';
-import { CommonBase } from 'util-common';
+import { CommonBase, Errors } from 'util-common';
 
 /**
  * Mock "delta" class for testing.
@@ -18,6 +18,16 @@ class MockDelta extends CommonBase {
       this._EMPTY = new MockDelta();
     }
     return this._EMPTY;
+  }
+
+  constructor(got = null) {
+    super();
+
+    if ((got !== null) && (got.length !== 3)) {
+      throw Errors.bad_value(got, 'length 3 arrray');
+    }
+
+    this.got = got;
   }
 }
 
@@ -75,6 +85,13 @@ describe('doc-common/BaseChange', () => {
       test(242, MockDelta.EMPTY, null, 'florp9019');
     });
 
+    it('should accept an array for the `delta`, which should get passed to the delta constructor', () => {
+      const array  = ['valid', 'length 3', '(see the MockDelta constructor)'];
+      const result = new MockChange(0, array);
+
+      assert.strictEqual(result.delta.got, array);
+    });
+
     it('should reject invalid arguments', () => {
       function test(...args) {
         assert.throws(() => new MockChange(...args));
@@ -94,7 +111,7 @@ describe('doc-common/BaseChange', () => {
       test(0, false);
       test(0, new Map());
       test(0, { ops: [] });
-      test(0, []);
+      test(0, ['invalid']);
       test(0, new Delta()); // Needs to be a `MockDelta`.
 
       // Invalid `timestamp`.

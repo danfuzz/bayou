@@ -52,6 +52,13 @@ describe('doc-common/BodyChange', () => {
       test(242, BodyDelta.EMPTY,                  null, 'florp9019');
     });
 
+    it('should accept an array for the `delta`, which should get passed to the `BodyDelta` constructor', () => {
+      const ops    = [{ retain: 100 }];
+      const result = new BodyChange(0, ops);
+
+      assert.deepEqual(result.delta.ops, ops);
+    });
+
     it('should reject invalid arguments', () => {
       function test(...args) {
         assert.throws(() => new BodyChange(...args));
@@ -71,7 +78,6 @@ describe('doc-common/BodyChange', () => {
       test(0, false);
       test(0, new Map());
       test(0, { ops: [] });
-      test(0, []);
       test(0, new Delta()); // Needs to be a `BodyDelta`.
 
       // Invalid `timestamp`.

@@ -81,9 +81,10 @@ export default class BaseChange extends CommonBase {
    * @param {Int} revNum The revision number of the document produced by this
    *   instance (when composed as contextually appropriate). If this instance
    *   represents the first change to a document, then this value will be `0`.
-   * @param {object} delta The document change per se, compared to the
-   *   implied base revision. This must be an object of type `deltaClass` as
-   *   defined by the subclass.
+   * @param {object|array} delta The document change per se, compared to the
+   *   implied base revision. This must be either an object of type `deltaClass`
+   *   as defined by the subclass or an array which can be passed to the
+   *   `deltaClass` constructor to produce a valid delta.
    * @param {Timestamp|null} [timestamp = null] The time of the change, or
    *   `null` if the change doesn't have an associated moment of time.
    * @param {string|null} [authorId = null] Stable identifier string
@@ -97,7 +98,9 @@ export default class BaseChange extends CommonBase {
     this._revNum = RevisionNumber.check(revNum);
 
     /** {object} The main content delta. */
-    this._delta = this.constructor.deltaClass.check(delta);
+    this._delta = Array.isArray(delta)
+      ? new this.constructor.deltaClass(delta)
+      : this.constructor.deltaClass.check(delta);
 
     /** {Timestamp|null} The time of the change. */
     this._timestamp = Timestamp.orNull(timestamp);
