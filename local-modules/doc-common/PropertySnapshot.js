@@ -44,7 +44,7 @@ export default class PropertySnapshot extends CommonBase {
     if (Array.isArray(change)) {
       // Convert the given array into a proper change instance. (This does type
       // checking of the argument.)
-      change = new PropertyChange(0, new PropertyDelta(change));
+      change = new PropertyChange(0, change);
     }
 
     super();
@@ -146,7 +146,7 @@ export default class PropertySnapshot extends CommonBase {
     }
 
     return new PropertySnapshot(
-      new PropertyChange(change.revNum, new PropertyDelta([...newProps.values()])));
+      new PropertyChange(change.revNum, [...newProps.values()]));
   }
 
   /**
@@ -189,7 +189,7 @@ export default class PropertySnapshot extends CommonBase {
     }
 
     // Build the result.
-    return new PropertyChange(newerSnapshot.revNum, new PropertyDelta(ops));
+    return new PropertyChange(newerSnapshot.revNum, ops);
   }
 
   /**
@@ -269,7 +269,7 @@ export default class PropertySnapshot extends CommonBase {
 
     return op.equals(this._properties.get(name))
       ? this
-      : this.compose(new PropertyChange(this._revNum, new PropertyDelta([op])));
+      : this.compose(new PropertyChange(this._revNum, [op]));
   }
 
   /**
@@ -301,7 +301,7 @@ export default class PropertySnapshot extends CommonBase {
     const op = PropertyOp.op_deleteProperty(name); // This type checks.
 
     return this._properties.has(name)
-      ? this.compose(new PropertyChange(this._revNum, new PropertyDelta([op])))
+      ? this.compose(new PropertyChange(this._revNum, [op]))
       : this;
   }
 }
