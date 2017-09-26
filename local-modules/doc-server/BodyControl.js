@@ -193,9 +193,9 @@ export default class BodyControl extends CommonBase {
         // The document's revision is in fact newer than the base, so we can now
         // form and return a result. Compose all the deltas from the revision
         // after the base through and including the current revision.
-        const ops = await this._composeRevisions(
+        const delta = await this._composeRevisions(
           BodyDelta.EMPTY, baseRevNum + 1, revNum + 1);
-        return new BodyChange(revNum, ops);
+        return new BodyChange(revNum, delta);
       }
 
       // Wait for the file to change (or for the storage layer to time out), and
@@ -275,8 +275,8 @@ export default class BodyControl extends CommonBase {
    * revisions of the document.
    *
    * @param {Int} baseRevNum Revision number which `delta` is with respect to.
-   * @param {BodyDelta} ops List of operations indicating what has changed with
-   *   respect to `baseRevNum`.
+   * @param {BodyDelta} delta List of operations indicating what has changed
+   *   with respect to `baseRevNum`.
    * @param {string|null} authorId Author of the change, or `null` if the change
    *   is to be considered authorless.
    * @returns {BodyChange} The correction to the implied expected result of
@@ -285,10 +285,10 @@ export default class BodyControl extends CommonBase {
    *   result will always be `null`. The promise resolves sometime after the
    *   change has been applied to the document.
    */
-  async update(baseRevNum, ops, authorId) {
+  async update(baseRevNum, delta, authorId) {
     // Very basic argument validation. Once in the guts of the thing, we will
     // discover (and properly complain) if there are deeper problems with them.
-    BodyDelta.check(ops);
+    BodyDelta.check(delta);
     TString.orNull(authorId);
 
     // Snapshot of the base revision. This call validates `baseRevNum`.
@@ -296,13 +296,13 @@ export default class BodyControl extends CommonBase {
 
     // Check for an empty `ops`. If it is, we don't bother trying to apply it.
     // See method header comment for more info.
-    if (ops.isEmpty()) {
+    if (delta.isEmpty()) {
       return new BodyChange(baseRevNum, BodyDelta.EMPTY);
     }
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
-    const expected = base.compose(new BodyChange(baseRevNum + 1, ops));
+    const expected = base.compose(new BodyChange(baseRevNum + 1, delta));
 
     // We try performing the apply, and then we iterate if it failed _and_ the
     // reason is simply that there were any changes that got made while we were
@@ -318,7 +318,7 @@ export default class BodyControl extends CommonBase {
       }
 
       const current = await this.snapshot();
-      const result  = await this._applyUpdateTo(base, ops, authorId, current, expected);
+      const result  = await this._applyUpdateTo(base, delta, authorId, current, expected);
 
       if (result !== null) {
         return result;
@@ -509,7 +509,7 @@ export default class BodyControl extends CommonBase {
    * @param {BodySnapshot} base Snapshot of the base from which the delta is
    *   defined. That is, this is the snapshot of `baseRevNum` as provided to
    *   `update()`.
-   * @param {BodyDelta} ops Same as for `update()`.
+   * @param {BodyDelta} delta Same as for `update()`.
    * @param {string|null} authorId Same as for `update()`.
    * @param {BodySnapshot} current Snapshot of the current (latest) revision
    *   of the document.
@@ -518,14 +518,14 @@ export default class BodyControl extends CommonBase {
    * @returns {BodyChange|null} Result for the outer call to `update()`,
    *   or `null` if the application failed due to an out-of-date `snapshot`.
    */
-  async _applyUpdateTo(base, ops, authorId, current, expected) {
+  async _applyUpdateTo(base, delta, authorId, current, expected) {
     if (base.revNum === current.revNum) {
       // The easy case, because the base revision is in fact the current
       // revision of the document, so we don't have to transform the incoming
       // delta. We merely have to apply the given `delta` to the current
       // revision. If it succeeds, then we won the append race (if any).
 
-      const change = new BodyChange(base.revNum + 1, ops, Timestamp.now(), authorId);
+      const change = new BodyChange(base.revNum + 1, delta, Timestamp.now(), authorId);
       const revNum = await this._appendChange(change);
 
       if (revNum === null) {
@@ -561,7 +561,7 @@ export default class BodyControl extends CommonBase {
     // (0) Assign incoming arguments to variables that correspond to the
     //     description immediately above.
 
-    const dClient   = ops;
+    const dClient   = delta;
     const rBase     = base;
     const rExpected = expected;
     const rCurrent  = current;

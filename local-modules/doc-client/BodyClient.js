@@ -169,13 +169,13 @@ export default class BodyClient extends StateMachine {
    * Validates a `gotUpdate` event. This represents a successful result
    * from the API call `body_update()`.
    *
-   * @param {BodyDelta} ops The operations (raw delta) that were originally
+   * @param {BodyDelta} delta The operations (raw delta) that were originally
    *   applied.
    * @param {BodyChange} correctedChange The correction to the expected
    *   result as returned from `body_update()`.
    */
-  _check_gotUpdate(ops, correctedChange) {
-    BodyDelta.check(ops);
+  _check_gotUpdate(delta, correctedChange) {
+    BodyDelta.check(delta);
     BodyChange.check(correctedChange);
   }
 
@@ -610,9 +610,9 @@ export default class BodyClient extends StateMachine {
     // server) through the current (latest) change. This _excludes_
     // internally-sourced changes, because we will handle those on the next
     // iteration (from the idle state).
-    const ops = this._consumeLocalChanges(false);
+    const delta = this._consumeLocalChanges(false);
 
-    if (ops.isEmpty()) {
+    if (delta.isEmpty()) {
       // There weren't actually any net changes. This is unusual, though
       // possible. In particular, the user probably typed something and then
       // undid it.
@@ -623,9 +623,8 @@ export default class BodyClient extends StateMachine {
     // Send the change, and handle the response.
     (async () => {
       try {
-        const value =
-          await this._sessionProxy.body_update(this._snapshot.revNum, ops);
-        this.q_gotUpdate(ops, value);
+        const value = await this._sessionProxy.body_update(this._snapshot.revNum, delta);
+        this.q_gotUpdate(delta, value);
       } catch (e) {
         this.q_apiError('body_update', e);
       }
@@ -638,12 +637,12 @@ export default class BodyClient extends StateMachine {
    * In state `merging`, handles event `gotUpdate`. This means that a local
    * change was successfully merged by the server.
    *
-   * @param {BodyDelta} ops The operations (raw delta) that were originally
+   * @param {BodyDelta} delta The operations (raw delta) that were originally
    *   applied.
    * @param {BodyChange} correctedChange The correction to the expected
    *   result as returned from `body_update()`.
    */
-  _handle_merging_gotUpdate(ops, correctedChange) {
+  _handle_merging_gotUpdate(delta, correctedChange) {
     // These are the same variable names as used on the server side. See below
     // for more detail.
     const dCorrection = correctedChange.delta;
@@ -666,7 +665,7 @@ export default class BodyClient extends StateMachine {
       // And note that Quill doesn't need to be updated here (that is, its delta
       // is empty) because what we are integrating into the client document is
       // exactly what Quill handed to us.
-      this._updateWithChange(new BodyChange(vResultNum, ops), BodyDelta.EMPTY);
+      this._updateWithChange(new BodyChange(vResultNum, delta), BodyDelta.EMPTY);
       this._becomeIdle();
       return;
     }
@@ -678,7 +677,7 @@ export default class BodyClient extends StateMachine {
     // state to Quill's current state) composed with the correction to that
     // delta which when applied brings the client's state into alignment with
     // the server's state.
-    const correctedDelta = BodyDelta.coerce(ops.compose(dCorrection));
+    const correctedDelta = BodyDelta.coerce(delta.compose(dCorrection));
 
     if (this._currentEvent.nextOfNow(QuillEvents.TEXT_CHANGE) === null) {
       // Thanfully, the local user hasn't made any other changes while we
@@ -774,7 +773,7 @@ export default class BodyClient extends StateMachine {
    *   document model is up-to-date with respect to Quill).
    */
   _consumeLocalChanges(includeOurChanges) {
-    let ops = null;
+    let delta = null;
 
     let change = this._currentEvent;
     for (;;) {
@@ -789,13 +788,13 @@ export default class BodyClient extends StateMachine {
         break;
       }
 
-      ops = (ops === null) ? props.delta : ops.compose(props.delta);
+      delta = (delta === null) ? props.delta : delta.compose(props.delta);
     }
 
     // Remember that we consumed all these changes.
     this._currentEvent = change;
 
-    return BodyDelta.coerce(ops);
+    return BodyDelta.coerce(delta);
   }
 
   /**

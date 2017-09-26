@@ -86,13 +86,13 @@ export default class DocSession {
    *
    * @param {number} baseRevNum Revision number which `delta` is with respect
    *   to.
-   * @param {BodyDelta} ops List of operations indicating what has changed with
-   *   respect to `baseRevNum`.
+   * @param {BodyDelta} delta List of operations indicating what has changed
+   *   with respect to `baseRevNum`.
    * @returns {BodyChange} The correction to the implied expected result of
    *   this operation.
    */
-  async body_update(baseRevNum, ops) {
-    return this._bodyControl.update(baseRevNum, ops, this._authorId);
+  async body_update(baseRevNum, delta) {
+    return this._bodyControl.update(baseRevNum, delta, this._authorId);
   }
 
   /**
