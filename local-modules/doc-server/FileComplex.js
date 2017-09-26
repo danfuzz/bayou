@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Codec } from 'codec';
-import { BodyOpList } from 'doc-common';
+import { BodyDelta } from 'doc-common';
 import { ProductInfo } from 'env-server';
 import { BaseFile, FileCodec } from 'file-store';
 import { DEFAULT_DOCUMENT } from 'hooks-server';
@@ -19,19 +19,19 @@ import DocServer from './DocServer';
 /** {Logger} Logger to use for this module. */
 const log = new Logger('doc');
 
-/** {BodyOpList} Default contents when creating a new document. */
-const DEFAULT_TEXT = BodyOpList.coerce(DEFAULT_DOCUMENT);
+/** {BodyDelta} Default contents when creating a new document. */
+const DEFAULT_TEXT = BodyDelta.coerce(DEFAULT_DOCUMENT);
 
 /**
- * {BodyOpList} Message used as document to indicate a major validation error.
+ * {BodyDelta} Message used as document to indicate a major validation error.
  */
-const ERROR_NOTE = BodyOpList.coerce(
+const ERROR_NOTE = BodyDelta.coerce(
   [{ insert: '(Recreated document due to validation error(s).)\n' }]);
 
 /**
- * {BodyOpList} Message used as document instead of migrating documents from
+ * {BodyDelta} Message used as document instead of migrating documents from
  * old schema versions. */
-const MIGRATION_NOTE = BodyOpList.coerce(
+const MIGRATION_NOTE = BodyDelta.coerce(
   [{ insert: '(Recreated document due to schema version skew.)\n' }]);
 
 /**

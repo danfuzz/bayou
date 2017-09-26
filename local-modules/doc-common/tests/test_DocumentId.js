@@ -8,8 +8,8 @@ import { describe, it } from 'mocha';
 import { DocumentId } from 'doc-common';
 
 describe('doc-common/DocumentId', () => {
-  describe('check', () => {
-    it('should reject null values', () => {
+  describe('check()', () => {
+    it('should reject `null`', () => {
       assert.throws(() => DocumentId.check(null));
     });
 
@@ -25,7 +25,8 @@ describe('doc-common/DocumentId', () => {
     });
 
     it('should accept 32-character strings comprised of a-zA-Z0-9_-', () => {
-      assert.doesNotThrow(() => DocumentId.check('001122-445566778899AAbb_ddeeff'));
+      const value = '001122-445566778899AAbb_ddeeff';
+      assert.strictEqual(DocumentId.check(value), value);
     });
   });
 });

@@ -51,7 +51,7 @@ export default class AuthorId extends UtilityClass {
       return AuthorId.check(value);
     } catch (e) {
       // Higher-fidelity error.
-      throw Errors.bad_value(value, 'AuthorId|orNull');
+      throw Errors.bad_value(value, 'AuthorId|null');
     }
   }
 }

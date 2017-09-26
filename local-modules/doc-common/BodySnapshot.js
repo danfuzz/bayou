@@ -5,8 +5,8 @@
 import { TArray } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
+import BodyChange from './BodyChange';
 import BodyDelta from './BodyDelta';
-import BodyOpList from './BodyOpList';
 import RevisionNumber from './RevisionNumber';
 
 
@@ -26,7 +26,7 @@ export default class BodySnapshot extends CommonBase {
    */
   static get EMPTY() {
     if (emptyInstance === null) {
-      emptyInstance = new BodySnapshot(0, BodyOpList.EMPTY);
+      emptyInstance = new BodySnapshot(0, BodyDelta.EMPTY);
     }
 
     return emptyInstance;
@@ -37,7 +37,7 @@ export default class BodySnapshot extends CommonBase {
    *
    * @param {RevisionNumber} revNum Revision number of the document.
    * @param {Delta|array|object} contents Document contents. Can be given
-   *   anything that can be coerced into a `BodyOpList`. Must be a "document"
+   *   anything that can be coerced into a `BodyDelta`. Must be a "document"
    *   (that is, a delta consisting only of `insert` operations).
    */
   constructor(revNum, contents) {
@@ -46,8 +46,8 @@ export default class BodySnapshot extends CommonBase {
     /** {Int} Revision number. */
     this._revNum = RevisionNumber.check(revNum);
 
-    /** {BodyOpList} Document contents. */
-    this._contents = BodyOpList.coerce(contents);
+    /** {BodyDelta} Document contents. */
+    this._contents = BodyDelta.coerce(contents);
 
     // Explicitly check that the `contents` delta has the form of a "document,"
     // that is, the only operations are `insert`s. For very large documents,
@@ -80,62 +80,62 @@ export default class BodySnapshot extends CommonBase {
     return this._revNum;
   }
 
-  /** {BodyOpList} The document contents. */
+  /** {BodyDelta} The document contents. */
   get contents() {
     return this._contents;
   }
 
   /**
-   * Composes a delta on top of this instance, to produce a new instance.
+   * Composes a change on top of this instance, to produce a new instance.
    *
-   * @param {BodyDelta} delta Delta to compose on top of this instance.
+   * @param {BodyChange} change Change to compose on top of this instance.
    * @returns {BodySnapshot} New instance consisting of the composition of
-   *   this instance with `delta`.
+   *   this instance with `change`.
    */
-  compose(delta) {
-    BodyDelta.check(delta);
+  compose(change) {
+    BodyChange.check(change);
 
-    const contents = delta.ops.isEmpty()
+    const contents = change.delta.isEmpty()
       ? this._contents
-      : BodyOpList.coerce(this._contents.compose(delta.ops));
+      : BodyDelta.coerce(this._contents.compose(change.delta));
 
-    return new BodySnapshot(delta.revNum, contents);
+    return new BodySnapshot(change.revNum, contents);
   }
 
   /**
-   * Composes a sequence of deltas on top of this instance, in order, to produce
-   * a new instance.
+   * Composes a sequence of changes on top of this instance, in order, to
+   * produce a new instance.
    *
-   * @param {array<BodyDelta>} deltas Deltas to compose on top of this
+   * @param {array<BodyChange>} changes Changes to compose on top of this
    *   instance.
    * @returns {BodySnapshot} New instance consisting of the composition of
-   *   this instance with all of the `deltas`.
+   *   this instance with all of the `changes`.
    */
-  composeAll(deltas) {
-    TArray.check(deltas, BodyDelta.check);
+  composeAll(changes) {
+    TArray.check(changes, BodyChange.check);
 
-    if (deltas.length === 0) {
+    if (changes.length === 0) {
       return this;
     }
 
     let contents = this._contents;
-    for (const d of deltas) {
-      contents = contents.compose(d.ops);
+    for (const c of changes) {
+      contents = contents.compose(c.delta);
     }
 
-    const lastDelta = deltas[deltas.length - 1];
-    return new BodySnapshot(lastDelta.revNum, contents);
+    const lastChange = changes[changes.length - 1];
+    return new BodySnapshot(lastChange.revNum, contents);
   }
 
   /**
    * Calculates the difference from a given snapshot to this one. The return
-   * value is a delta which can be composed with this instance to produce the
+   * value is a change which can be composed with this instance to produce the
    * snapshot passed in here as an argument. That is, `newerSnapshot ==
    * this.compose(this.diff(newerSnapshot))`.
    *
    * @param {BodySnapshot} newerSnapshot Snapshot to take the difference
    *   from.
-   * @returns {BodyDelta} Delta which represents the difference between
+   * @returns {BodyChange} Change which represents the difference between
    *   `newerSnapshot` and this instance.
    */
   diff(newerSnapshot) {
@@ -143,8 +143,8 @@ export default class BodySnapshot extends CommonBase {
 
     const oldContents = this.contents;
     const newContents = newerSnapshot.contents;
-    const ops         = BodyOpList.coerce(oldContents.diff(newContents));
+    const delta       = BodyDelta.coerce(oldContents.diff(newContents));
 
-    return new BodyDelta(newerSnapshot.revNum, ops);
+    return new BodyChange(newerSnapshot.revNum, delta);
   }
 }

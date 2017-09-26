@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase, Errors } from 'util-common';
 
 /**
  * {Int} Minimum (inclusive) acceptable timestamp `secs` value.
@@ -67,6 +67,25 @@ export default class Timestamp extends CommonBase {
    */
   static now() {
     return Timestamp.fromMsec(Date.now());
+  }
+
+  /**
+   * Checks a value which must be of type `Timestamp` or be `null`.
+   *
+   * @param {*} value Value to check.
+   * @returns {Timestamp|null} `value`.
+   */
+  static orNull(value) {
+    if (value === null) {
+      return null;
+    }
+
+    try {
+      return Timestamp.check(value);
+    } catch (e) {
+      // Higher-fidelity error.
+      throw Errors.bad_value(value, 'TimeStamp|null');
+    }
   }
 
   /**

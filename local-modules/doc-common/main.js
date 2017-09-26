@@ -7,7 +7,6 @@ import { Codec } from 'codec';
 import AuthorId from './AuthorId';
 import BodyChange from './BodyChange';
 import BodyDelta from './BodyDelta';
-import BodyOpList from './BodyOpList';
 import BodySnapshot from './BodySnapshot';
 import Caret from './Caret';
 import CaretDelta from './CaretDelta';
@@ -23,7 +22,6 @@ import RevisionNumber from './RevisionNumber';
 // Register classes with the API.
 Codec.theOne.registerClass(BodyChange);
 Codec.theOne.registerClass(BodyDelta);
-Codec.theOne.registerClass(BodyOpList);
 Codec.theOne.registerClass(BodySnapshot);
 Codec.theOne.registerClass(Caret);
 Codec.theOne.registerClass(CaretDelta);
@@ -38,7 +36,6 @@ export {
   AuthorId,
   BodyChange,
   BodyDelta,
-  BodyOpList,
   BodySnapshot,
   Caret,
   CaretDelta,

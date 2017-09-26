@@ -61,9 +61,7 @@ export default class DocSession {
    * `baseRevNum`. See the equivalent `BodyControl` method for details.
    *
    * @param {Int} baseRevNum Revision number for the document.
-   * @returns {BodyDelta} Delta and associated revision number. The result's
-   *   `delta` can be applied to revision `baseRevNum` to produce revision
-   *   `revNum` of the document.
+   * @returns {BodyChange} Delta and associated information.
    */
   async body_deltaAfter(baseRevNum) {
     return this._bodyControl.deltaAfter(baseRevNum);
@@ -88,13 +86,13 @@ export default class DocSession {
    *
    * @param {number} baseRevNum Revision number which `delta` is with respect
    *   to.
-   * @param {BodyOpList} ops List of operations indicating what has changed with
-   *   respect to `baseRevNum`.
-   * @returns {BodyDelta} The correction from the implied expected result to
-   *   get the actual result.
+   * @param {BodyDelta} delta List of operations indicating what has changed
+   *   with respect to `baseRevNum`.
+   * @returns {BodyChange} The correction to the implied expected result of
+   *   this operation.
    */
-  async body_update(baseRevNum, ops) {
-    return this._bodyControl.update(baseRevNum, ops, this._authorId);
+  async body_update(baseRevNum, delta) {
+    return this._bodyControl.update(baseRevNum, delta, this._authorId);
   }
 
   /**
