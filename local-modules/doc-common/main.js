@@ -10,6 +10,7 @@ import BodyChange from './BodyChange';
 import BodyDelta from './BodyDelta';
 import BodySnapshot from './BodySnapshot';
 import Caret from './Caret';
+import CaretChange from './CaretChange';
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';
 import CaretSnapshot from './CaretSnapshot';
@@ -26,6 +27,7 @@ Codec.theOne.registerClass(BodyChange);
 Codec.theOne.registerClass(BodyDelta);
 Codec.theOne.registerClass(BodySnapshot);
 Codec.theOne.registerClass(Caret);
+Codec.theOne.registerClass(CaretChange);
 Codec.theOne.registerClass(CaretDelta);
 Codec.theOne.registerClass(CaretOp);
 Codec.theOne.registerClass(CaretSnapshot);
@@ -42,6 +44,7 @@ export {
   BodyDelta,
   BodySnapshot,
   Caret,
+  CaretChange,
   CaretDelta,
   CaretOp,
   CaretSnapshot,

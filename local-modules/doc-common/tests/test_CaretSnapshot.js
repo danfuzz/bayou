@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Caret, CaretDelta, CaretOp, CaretSnapshot } from 'doc-common';
+import { Caret, CaretChange, CaretDelta, CaretOp, CaretSnapshot } from 'doc-common';
 
 /**
  * Convenient caret constructor, which takes positional parameters.
@@ -59,11 +59,11 @@ describe('doc-common/CaretSnapshot', () => {
   });
 
   describe('compose()', () => {
-    it('should produce an equal instance when passed an empty delta', () => {
+    it('should produce an equal instance when passed an empty change with the same `revNum`', () => {
       let which = 0;
       function test(snap) {
         which++;
-        const result = snap.compose(CaretDelta.EMPTY);
+        const result = snap.compose(new CaretChange(snap.revNum, CaretDelta.EMPTY));
         assert.deepEqual(result, snap, `#${which}`);
       }
 
@@ -73,10 +73,10 @@ describe('doc-common/CaretSnapshot', () => {
       test(new CaretSnapshot(999, [caret1, caret2, caret3]));
     });
 
-    it('should update `revNum` given the appropriate op', () => {
+    it('should update `revNum` given a change with a different `revNum`', () => {
       const snap     = new CaretSnapshot(1,  [caret1, caret2]);
       const expected = new CaretSnapshot(999,[caret1, caret2]);
-      const result   = snap.compose(new CaretDelta([CaretOp.op_setRevNum(999)]));
+      const result   = snap.compose(new CaretChange(999, []));
 
       assert.isTrue(result.equals(expected));
     });
@@ -84,17 +84,17 @@ describe('doc-common/CaretSnapshot', () => {
     it('should add a new caret given the appropriate op', () => {
       const snap     = new CaretSnapshot(1, []);
       const expected = new CaretSnapshot(1, [caret1]);
-      const delta    = new CaretDelta([CaretOp.op_beginSession(caret1)]);
-      const result   = snap.compose(delta);
+      const change   = new CaretChange(1, [CaretOp.op_beginSession(caret1)]);
+      const result   = snap.compose(change);
 
       assert.isTrue(result.equals(expected));
     });
 
     it('should refuse to update a nonexistent caret', () => {
       const snap  = new CaretSnapshot(1, [caret1]);
-      const delta = new CaretDelta([CaretOp.op_updateField('florp', 'index', 1)]);
+      const change = new CaretChange(1, [CaretOp.op_setField('florp', 'index', 1)]);
 
-      assert.throws(() => { snap.compose(delta); });
+      assert.throws(() => { snap.compose(change); });
     });
 
     it('should update a pre-existing caret given an appropriate op', () => {
@@ -102,8 +102,8 @@ describe('doc-common/CaretSnapshot', () => {
       const c2       = newCaret('foo', 3, 2, '#333333');
       const snap     = new CaretSnapshot(1, [caret1, c1]);
       const expected = new CaretSnapshot(1, [caret1, c2]);
-      const op       = CaretOp.op_updateField('foo', 'index', 3);
-      const result   = snap.compose(new CaretDelta([op]));
+      const op       = CaretOp.op_setField('foo', 'index', 3);
+      const result   = snap.compose(new CaretChange(1, [op]));
 
       assert.isTrue(result.equals(expected));
     });
@@ -111,8 +111,7 @@ describe('doc-common/CaretSnapshot', () => {
     it('should remove a caret given the appropriate op', () => {
       const snap     = new CaretSnapshot(1, [caret1, caret2]);
       const expected = new CaretSnapshot(1, [caret2]);
-      const result =
-        snap.compose(new CaretDelta([CaretOp.op_endSession(caret1.sessionId)]));
+      const result   = snap.compose(new CaretChange(1, [CaretOp.op_endSession(caret1.sessionId)]));
 
       assert.isTrue(result.equals(expected));
     });
@@ -120,17 +119,21 @@ describe('doc-common/CaretSnapshot', () => {
 
   describe('diff()', () => {
     it('should produce an empty diff when passed itself', () => {
-      const snap = new CaretSnapshot(123, [caret1, caret2]);
+      const snap   = new CaretSnapshot(123, [caret1, caret2]);
       const result = snap.diff(snap);
 
-      assert.instanceOf(result, CaretDelta);
-      assert.deepEqual(result.ops, []);
+      assert.instanceOf(result, CaretChange);
+      assert.strictEqual(result.revNum, 123);
+      assert.deepEqual(result.delta, CaretDelta.EMPTY);
     });
 
     it('should result in a `revNum` diff if that in fact changes', () => {
-      const snap1 = new CaretSnapshot(1, [caret1, caret2]);
-      const snap2 = new CaretSnapshot(9, [caret1, caret2]);
+      const snap1  = new CaretSnapshot(1, [caret1, caret2]);
+      const snap2  = new CaretSnapshot(9, [caret1, caret2]);
       const result = snap1.diff(snap2);
+
+      assert.strictEqual(result.revNum, 9);
+      assert.deepEqual(result.delta, CaretDelta.EMPTY);
 
       const composed = new CaretSnapshot(0, []).compose(result);
       const expected = new CaretSnapshot(9, []);
@@ -138,35 +141,35 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should result in a caret removal if that in fact happens', () => {
-      const snap1 = new CaretSnapshot(1, [caret1, caret2]);
-      const snap2 = new CaretSnapshot(1, [caret1]);
+      const snap1  = new CaretSnapshot(4, [caret1, caret2]);
+      const snap2  = new CaretSnapshot(4, [caret1]);
       const result = snap1.diff(snap2);
 
-      const composed = new CaretSnapshot(0, [caret2, caret3]).compose(result);
-      const expected = new CaretSnapshot(0, [caret3]);
+      const composed = new CaretSnapshot(4, [caret2, caret3]).compose(result);
+      const expected = new CaretSnapshot(4, [caret3]);
       assert.isTrue(composed.equals(expected));
     });
 
     it('should result in a caret addition if that in fact happens', () => {
-      const snap1 = new CaretSnapshot(1, [caret1]);
-      const snap2 = new CaretSnapshot(1, [caret1, caret2]);
+      const snap1  = new CaretSnapshot(1, [caret1]);
+      const snap2  = new CaretSnapshot(1, [caret1, caret2]);
       const result = snap1.diff(snap2);
 
-      const composed = new CaretSnapshot(0, []).compose(result);
-      const expected = new CaretSnapshot(0, [caret2]);
+      const composed = new CaretSnapshot(1, []).compose(result);
+      const expected = new CaretSnapshot(1, [caret2]);
       assert.isTrue(composed.equals(expected));
     });
 
     it('should result in a caret update if that in fact happens', () => {
-      const c1 = newCaret('florp', 1, 3, '#444444');
-      const c2 = newCaret('florp', 2, 4, '#555555');
-      const c3 = newCaret('florp', 3, 5, '#666666');
-      const snap1 = new CaretSnapshot(1, [c1]);
-      const snap2 = new CaretSnapshot(1, [c2]);
+      const c1     = newCaret('florp', 1, 3, '#444444');
+      const c2     = newCaret('florp', 2, 4, '#555555');
+      const c3     = newCaret('florp', 3, 5, '#666666');
+      const snap1  = new CaretSnapshot(1, [c1]);
+      const snap2  = new CaretSnapshot(1, [c2]);
       const result = snap1.diff(snap2);
 
-      const composed = new CaretSnapshot(0, [caret1, c3]).compose(result);
-      const expected = new CaretSnapshot(0, [caret1, c2]);
+      const composed = new CaretSnapshot(1, [caret1, c3]).compose(result);
+      const expected = new CaretSnapshot(1, [caret1, c2]);
       assert.isTrue(composed.equals(expected));
     });
   });

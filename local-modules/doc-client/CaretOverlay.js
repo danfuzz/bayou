@@ -431,7 +431,7 @@ export default class CaretOverlay {
   _onCaretChange() {
     const oldSnapshot = this._lastCaretSnapshot;
     const newSnapshot = this._caretStore.state;
-    const delta = oldSnapshot.diff(newSnapshot);
+    const delta = oldSnapshot.diff(newSnapshot).delta;
     let updateDisplay = false;
 
     this._lastCaretSnapshot = newSnapshot;

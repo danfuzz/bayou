@@ -70,7 +70,7 @@ const CLIENT_SOURCE = 'doc-client';
  * Despite the polling nature, this arrangement still allows for changes from
  * the server to make their way to the client promptly, and it does so without
  * wasting time or network resources polling for changes that haven't happened.
- * This is because of how the `body_deltaAfter()` API method is defined.
+ * This is because of how the `body_getChangeAfter()` API method is defined.
  * Specifically, that method does not return a result until at least one change
  * has been made. This means that the client can make that API call and then
  * just wait until it comes back with a result, instead of having to set up a
@@ -122,9 +122,9 @@ export default class BodyClient extends StateMachine {
 
     /**
      * {boolean} Is there currently a pending (as-yet unfulfilled)
-     * `body_deltaAfter()` request to the server?
+     * `body_getChangeAfter()` request to the server?
      */
-    this._pendingDeltaAfter = false;
+    this._pendingChangeAfter = false;
 
     /**
      * {boolean} Is there currently a pending (as-yet unfulfilled) `await` on
@@ -169,8 +169,7 @@ export default class BodyClient extends StateMachine {
    * Validates a `gotUpdate` event. This represents a successful result
    * from the API call `body_update()`.
    *
-   * @param {BodyDelta} delta The operations (raw delta) that were originally
-   *   applied.
+   * @param {BodyDelta} delta The delta that was originally applied.
    * @param {BodyChange} correctedChange The correction to the expected
    *   result as returned from `body_update()`.
    */
@@ -180,15 +179,15 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * Validates a `gotDeltaAfter` event. This represents a successful result
-   * from the API call `body_deltaAfter()`.
+   * Validates a `gotChangeAfter` event. This represents a successful result
+   * from the API call `body_getChangeAfter()`.
    *
    * @param {BodySnapshot} baseSnapshot The body state at the time of the
    *   original request.
    * @param {BodyChange} result How to transform `baseSnapshot` to get a later
    *   document revision.
    */
-  _check_gotDeltaAfter(baseSnapshot, result) {
+  _check_gotChangeAfter(baseSnapshot, result) {
     BodySnapshot.check(baseSnapshot);
     BodyChange.check(result);
   }
@@ -289,7 +288,7 @@ export default class BodyClient extends StateMachine {
     this._snapshot          = null;
     this._sessionProxy      = null;
     this._currentEvent      = null;
-    this._pendingDeltaAfter = false;
+    this._pendingChangeAfter = false;
     this._pendingQuillAwait = false;
 
     // After this, it's just like starting from the `detached` state.
@@ -439,17 +438,17 @@ export default class BodyClient extends StateMachine {
     // Ask the server for any changes, but only if there isn't already a pending
     // request for same. (Otherwise, we would flood the server for new change
     // requests while the local user is updating the doc.)
-    if (!this._pendingDeltaAfter) {
-      this._pendingDeltaAfter = true;
+    if (!this._pendingChangeAfter) {
+      this._pendingChangeAfter = true;
 
       (async () => {
         try {
-          const value = await this._sessionProxy.body_deltaAfter(baseSnapshot.revNum);
-          this._pendingDeltaAfter = false;
-          this.q_gotDeltaAfter(baseSnapshot, value);
+          const value = await this._sessionProxy.body_getChangeAfter(baseSnapshot.revNum);
+          this._pendingChangeAfter = false;
+          this.q_gotChangeAfter(baseSnapshot, value);
         } catch (e) {
-          this._pendingDeltaAfter = false;
-          this.q_apiError('body_deltaAfter', e);
+          this._pendingChangeAfter = false;
+          this.q_apiError('body_getChangeAfter', e);
         }
       })();
     }
@@ -465,20 +464,20 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * In state `idle`, handles event `gotDeltaAfter`.
+   * In state `idle`, handles event `gotChangeAfter`.
    *
    * @param {BodySnapshot} baseSnapshot The body state at the time of the
    *   original request.
    * @param {BodyChange} result How to transform `baseSnapshot` to get a later
    *   document revision.
    */
-  _handle_idle_gotDeltaAfter(baseSnapshot, result) {
-    this._log.detail('Delta from server:', result.revNum);
+  _handle_idle_gotChangeAfter(baseSnapshot, result) {
+    this._log.detail('Change from server:', result.revNum);
 
-    // We only take action if the result's base (what `delta` is with regard to)
-    // is the current `_snapshot`. If that _isn't_ the case, then what we have
-    // here is a stale response of one sort or another. For example (and most
-    // likely), it might be the delayed result from an earlier iteration.
+    // We only take action if the result's base (what the change is with regard
+    // to) is the current `_snapshot`. If that _isn't_ the case, then what we
+    // have here is a stale response of one sort or another. For example (and
+    // most likely), it might be the delayed result from an earlier iteration.
     if (this._snapshot.revNum === baseSnapshot.revNum) {
       this._updateWithChange(result);
     }
@@ -493,17 +492,17 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * In most states, handles event `gotDeltaAfter`. This will happen when a
-   * server delta comes when we're in the middle of handling a local change. As
+   * In most states, handles event `gotChangeAfter`. This will happen when a
+   * server change comes when we're in the middle of handling a local change. As
    * such, it is safe to ignore, because after the local change is integrated,
-   * the system will fire off a new `body_deltaAfter()` request.
+   * the system will fire off a new `body_getChangeAfter()` request.
    *
    * @param {BodySnapshot} baseDoc_unused The document at the time of the
    *   original request.
    * @param {BodyChange} result_unused How to transform `baseSnapshot` to get a
    *   later document revision.
    */
-  _handle_any_gotDeltaAfter(baseDoc_unused, result_unused) {
+  _handle_any_gotChangeAfter(baseDoc_unused, result_unused) {
     // Nothing to do. Stay in the same state.
   }
 
@@ -578,7 +577,7 @@ export default class BodyClient extends StateMachine {
 
   /**
    * In most states, handles event `gotQuillEvent`. This will happen when a
-   * local delta comes in after we're already in the middle of handling a
+   * local change comes in after we're already in the middle of handling a
    * chain of local changes. As such, it is safe to ignore, because whatever
    * the change was, it will get handled by that pre-existing process.
    *
@@ -637,8 +636,7 @@ export default class BodyClient extends StateMachine {
    * In state `merging`, handles event `gotUpdate`. This means that a local
    * change was successfully merged by the server.
    *
-   * @param {BodyDelta} delta The operations (raw delta) that were originally
-   *   applied.
+   * @param {BodyDelta} delta The delta that was originally applied.
    * @param {BodyChange} correctedChange The correction to the expected
    *   result as returned from `body_update()`.
    */
@@ -799,7 +797,7 @@ export default class BodyClient extends StateMachine {
 
   /**
    * Updates `_snapshot` to be the given revision by applying the indicated
-   * delta to the current revision, and tells the attached Quill instance to
+   * change to the current revision, and tells the attached Quill instance to
    * update itself accordingly.
    *
    * This is only valid to call when the revision of the document that Quill has
@@ -820,9 +818,9 @@ export default class BodyClient extends StateMachine {
 
     if (   (this._currentEvent.nextOfNow(QuillEvents.TEXT_CHANGE) !== null)
         && needQuillUpdate) {
-      // It is unsafe to apply the delta as-is, because we know that Quill's
+      // It is unsafe to apply the change as-is, because we know that Quill's
       // revision of the document has diverged.
-      throw Errors.bad_use('Cannot apply delta due to revision skew.');
+      throw Errors.bad_use('Cannot apply change due to revision skew.');
     }
 
     // Update the local snapshot.

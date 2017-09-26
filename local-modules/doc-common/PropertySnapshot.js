@@ -151,7 +151,7 @@ export default class PropertySnapshot extends CommonBase {
 
   /**
    * Calculates the difference from a given snapshot to this one. The return
-   * value is a delta which can be composed with this instance to produce the
+   * value is a change which can be composed with this instance to produce the
    * snapshot passed in here as an argument. That is, `newerSnapshot ==
    * this.compose(this.diff(newerSnapshot))`.
    *
