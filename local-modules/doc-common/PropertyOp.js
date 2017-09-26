@@ -5,8 +5,6 @@
 import { TString } from 'typecheck';
 import { CommonBase, DataUtil, Errors, Functor } from 'util-common';
 
-import RevisionNumber from './RevisionNumber';
-
 /**
  * Operation which can be applied to a `Property` or `PropertySnapshot`.
  */
@@ -19,11 +17,6 @@ export default class PropertyOp extends CommonBase {
   /** {string} Operation name for "set property" operations. */
   static get SET_PROPERTY() {
     return 'set_property';
-  }
-
-  /** {string} Operation name for "set revision number" operations. */
-  static get SET_REV_NUM() {
-    return 'set_rev_num';
   }
 
   /**
@@ -49,21 +42,8 @@ export default class PropertyOp extends CommonBase {
    */
   static op_setProperty(name, value) {
     TString.identifier(name);
-    value = DataUtil.deepFreeze(value);
 
     return new PropertyOp(new Functor(PropertyOp.SET_PROPERTY, name, value));
-  }
-
-  /**
-   * Constructs a new "set revision number" operation.
-   *
-   * @param {Int} revNum The new revision number.
-   * @returns {PropertyOp} The corresponding operation.
-   */
-  static op_updateRevNum(revNum) {
-    RevisionNumber.check(revNum);
-
-    return new PropertyOp(new Functor(PropertyOp.SET_REV_NUM, revNum));
   }
 
   /**
@@ -76,7 +56,7 @@ export default class PropertyOp extends CommonBase {
     super();
 
     /** {Functor} payload The operation payload (name and arguments). */
-    this._payload = Functor.check(payload);
+    this._payload = DataUtil.deepFreeze(Functor.check(payload));
 
     Object.freeze(this);
   }
@@ -105,11 +85,6 @@ export default class PropertyOp extends CommonBase {
       case PropertyOp.SET_PROPERTY: {
         const [name, value] = payload.args;
         return Object.freeze({ opName, name, value });
-      }
-
-      case PropertyOp.SET_REV_NUM: {
-        const [revNum] = payload.args;
-        return Object.freeze({ opName, revNum });
       }
 
       default: {

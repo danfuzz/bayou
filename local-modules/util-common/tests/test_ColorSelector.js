@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { ColorSelector } from 'util-common';
 
 describe('ColorSelector', () => {
-  describe('.constructor()', () => {
+  describe('constructor()', () => {
     it('should default to a hue angle of pure red if given no seed', () => {
       const selector = new ColorSelector();
       const hsl = selector.nextColorHSL();
@@ -46,7 +46,7 @@ describe('ColorSelector', () => {
       assert.equal(colorA.hue, colorB.hue - 37);
     });
 
-    describe('.nextCssColor()', () => {
+    describe('nextCssColor()', () => {
       it('should return a valid hex string representation of the RGB value of a given color', () => {
         const selector = new ColorSelector();
         const hex = selector.nextCssColor();

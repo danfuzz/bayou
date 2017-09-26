@@ -76,7 +76,7 @@ describe('doc-common/CaretSnapshot', () => {
     it('should update `revNum` given the appropriate op', () => {
       const snap     = new CaretSnapshot(1,  [caret1, caret2]);
       const expected = new CaretSnapshot(999,[caret1, caret2]);
-      const result   = snap.compose(new CaretDelta([CaretOp.op_updateRevNum(999)]));
+      const result   = snap.compose(new CaretDelta([CaretOp.op_setRevNum(999)]));
 
       assert.isTrue(result.equals(expected));
     });

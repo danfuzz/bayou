@@ -2,9 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TArray, TString } from 'typecheck';
+import { TString } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
+import PropertyChange from './PropertyChange';
 import PropertyDelta from './PropertyDelta';
 import PropertyOp from './PropertyOp';
 
@@ -34,20 +35,22 @@ export default class PropertySnapshot extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {PropertyDelta|array<PropertyOp>} delta A from-empty delta or array
-   *   of ops representing all the properties and the current revision number.
-   *   If there is no revision number operation, then the instance will have a
-   *   revision number of `0`.
+   * @param {PropertyChange|array<PropertyOp>} change A from-empty change or
+   *   array of ops representing all the properties and the current revision
+   *   number. In the case of an array, the instance will have a revision number
+   *   of `0`.
    */
-  constructor(delta) {
-    const ops = (delta instanceof PropertyDelta)
-      ? delta.ops
-      : TArray.check(delta, PropertyOp.check);
+  constructor(change) {
+    if (Array.isArray(change)) {
+      // Convert the given array into a proper change instance. (This does type
+      // checking of the argument.)
+      change = new PropertyChange(0, change);
+    }
 
     super();
 
     /** {Int} The property information revision number. */
-    this._revNum = -1;
+    this._revNum = change.revNum;
 
     /**
      * {Map<string, PropertyOp>} Map of name to corresponding property, in the
@@ -56,7 +59,7 @@ export default class PropertySnapshot extends CommonBase {
     this._properties = new Map();
 
     // Fill in the instance variables.
-    for (const op of ops) {
+    for (const op of change.delta.ops) {
       const opProps = op.props;
 
       switch (opProps.opName) {
@@ -70,26 +73,10 @@ export default class PropertySnapshot extends CommonBase {
           break;
         }
 
-        case PropertyOp.SET_REV_NUM: {
-          if (this._revNum !== -1) {
-            throw Errors.bad_use('Duplicate `set_rev_num` op.');
-          }
-
-          this._revNum = opProps.revNum;
-          break;
-        }
-
         default: {
           throw Errors.bad_value(op, 'PropertySnapshot construction op');
         }
       }
-    }
-
-    if (this._revNum === -1) {
-      // Default value if it was never set. (We don't just initialize it to `0`,
-      // because that would make it impossible to error out in some cases of
-      // duplicate ops.
-      this._revNum = 0;
     }
 
     Object.freeze(this._properties);
@@ -127,19 +114,18 @@ export default class PropertySnapshot extends CommonBase {
   }
 
   /**
-   * Composes a delta on top of this instance, to produce a new instance.
+   * Composes a change on top of this instance, to produce a new instance.
    *
-   * @param {PropertyDelta} delta Delta to compose on top of this instance.
+   * @param {PropertyChange} change Change to compose on top of this instance.
    * @returns {PropertySnapshot} New instance consisting of the composition of
-   *   this instance with `delta`.
+   *   this instance with `change`.
    */
-  compose(delta) {
-    PropertyDelta.check(delta);
+  compose(change) {
+    PropertyChange.check(change);
 
     const newProps = new Map(this._properties.entries());
-    let   revNum   = this._revNum;
 
-    for (const op of delta.ops) {
+    for (const op of change.delta.ops) {
       const opProps = op.props;
 
       switch (opProps.opName) {
@@ -153,21 +139,14 @@ export default class PropertySnapshot extends CommonBase {
           break;
         }
 
-        case PropertyOp.SET_REV_NUM: {
-          revNum = opProps.revNum;
-          break;
-        }
-
         default: {
           throw Errors.wtf(`Weird op name: ${opProps.opName}`);
         }
       }
     }
 
-    return new PropertySnapshot([
-      PropertyOp.op_updateRevNum(revNum),
-      ...newProps.values()
-    ]);
+    return new PropertySnapshot(
+      new PropertyChange(change.revNum, [...newProps.values()]));
   }
 
   /**
@@ -183,7 +162,7 @@ export default class PropertySnapshot extends CommonBase {
    *
    * @param {PropertySnapshot} newerSnapshot Snapshot to take the difference
    *   from.
-   * @returns {PropertyDelta} Delta which represents the difference between
+   * @returns {PropertyChange} Change which represents the difference between
    *   `newerSnapshot` and this instance.
    */
   diff(newerSnapshot) {
@@ -191,11 +170,6 @@ export default class PropertySnapshot extends CommonBase {
 
     const newerProps = newerSnapshot._properties;
     const ops        = [];
-
-    // Add an op for the revision number, if needed.
-    if (this._revNum !== newerSnapshot._revNum) {
-      ops.push(PropertyOp.op_updateRevNum(newerSnapshot._revNum));
-    }
 
     // Find properties that are new or updated from `this` when going to
     // `newerSnapshot`.
@@ -215,7 +189,7 @@ export default class PropertySnapshot extends CommonBase {
     }
 
     // Build the result.
-    return new PropertyDelta(ops);
+    return new PropertyChange(newerSnapshot.revNum, ops);
   }
 
   /**
@@ -295,7 +269,7 @@ export default class PropertySnapshot extends CommonBase {
 
     return op.equals(this._properties.get(name))
       ? this
-      : this.compose(new PropertyDelta([op]));
+      : this.compose(new PropertyChange(this._revNum, [op]));
   }
 
   /**
@@ -307,11 +281,11 @@ export default class PropertySnapshot extends CommonBase {
    * @returns {PropertySnapshot} An appropriately-constructed instance.
    */
   withRevNum(revNum) {
-    const op = PropertyOp.op_updateRevNum(revNum); // This type checks.
+    // This type checks `revNum`, which is why it's not just run when we need
+    // to call `compose()`.
+    const change = new PropertyChange(revNum, PropertyDelta.EMPTY);
 
-    return (revNum === this._revNum)
-      ? this
-      : this.compose(new PropertyDelta([op]));
+    return (revNum === this._revNum) ? this : this.compose(change);
   }
 
   /**
@@ -327,7 +301,7 @@ export default class PropertySnapshot extends CommonBase {
     const op = PropertyOp.op_deleteProperty(name); // This type checks.
 
     return this._properties.has(name)
-      ? this.compose(new PropertyDelta([op]))
+      ? this.compose(new PropertyChange(this._revNum, [op]))
       : this;
   }
 }
