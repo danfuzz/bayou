@@ -130,9 +130,9 @@ export default class CaretStore {
         if (snapshot !== null) {
           // We have a snapshot which we can presumably get a delta from, so try
           // to do that.
-          const delta = await sessionProxy.caret_deltaAfter(snapshot.revNum);
-          snapshot = snapshot.compose(delta);
-          docSession.log.detail(`Got caret delta. ${snapshot.carets.length} caret(s).`);
+          const change = await sessionProxy.caret_deltaAfter(snapshot.revNum);
+          snapshot = snapshot.compose(change);
+          docSession.log.detail(`Got caret change. ${snapshot.carets.length} caret(s).`);
         }
       } catch (e) {
         // Assume that the error isn't truly fatal. Most likely, it's because

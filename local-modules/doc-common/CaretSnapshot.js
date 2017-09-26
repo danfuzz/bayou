@@ -6,6 +6,7 @@ import { TIterable, TString } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
 import Caret from './Caret';
+import CaretChange from './CaretChange';
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';
 import RevisionNumber from './RevisionNumber';
@@ -102,23 +103,22 @@ export default class CaretSnapshot extends CommonBase {
   }
 
   /**
-   * Composes a delta on top of this instance, to produce a new instance.
+   * Composes a change on top of this instance, to produce a new instance.
    *
-   * **Note:** It is an error if `delta` contains an `op_setField` to a caret
+   * **Note:** It is an error if `change` contains an `op_setField` to a caret
    * that either does not exist in `this` or was not first introduced with an
    * `op_beginSession`.
    *
-   * @param {CaretDelta} delta Delta to compose on top of this instance.
+   * @param {CaretChange} change Changeto compose on top of this instance.
    * @returns {CaretSnapshot} New instance consisting of the composition of
-   *   this instance with `delta`.
+   *   this instance with `change`.
    */
-  compose(delta) {
-    CaretDelta.check(delta);
+  compose(change) {
+    CaretChange.check(change);
 
     const newCarets = new Map(this._carets.entries());
-    let   revNum    = this._revNum;
 
-    for (const op of delta.ops) {
+    for (const op of change.delta.ops) {
       const props = op.props;
 
       switch (props.opName) {
@@ -146,23 +146,18 @@ export default class CaretSnapshot extends CommonBase {
           break;
         }
 
-        case CaretOp.SET_REV_NUM: {
-          revNum = props.revNum;
-          break;
-        }
-
         default: {
           throw Errors.wtf(`Weird caret op: ${props.opName}`);
         }
       }
     }
 
-    return new CaretSnapshot(revNum, newCarets.values());
+    return new CaretSnapshot(change.revNum, newCarets.values());
   }
 
   /**
    * Calculates the difference from a given snapshot to this one. The return
-   * value is a delta which can be composed with this instance to produce the
+   * value is a change which can be composed with this instance to produce the
    * snapshot passed in here as an argument. That is, `newerSnapshot ==
    * this.compose(this.diff(newerSnapshot))`.
    *
@@ -172,7 +167,7 @@ export default class CaretSnapshot extends CommonBase {
    * method is called on.
    *
    * @param {CaretSnapshot} newerSnapshot Snapshot to take the difference from.
-   * @returns {CaretDelta} Delta which represents the difference between
+   * @returns {CaretChange} Change which represents the difference between
    *   `newerSnapshot` and this instance.
    */
   diff(newerSnapshot) {
@@ -180,12 +175,6 @@ export default class CaretSnapshot extends CommonBase {
 
     const newerCarets = newerSnapshot._carets;
     const caretOps    = [];
-
-    // Add an op for the revision number, if needed.
-
-    if (this._revNum !== newerSnapshot._revNum) {
-      caretOps.push(CaretOp.op_setRevNum(newerSnapshot._revNum));
-    }
 
     // Find carets that are new or updated from `this` when going to
     // `newerSnapshot`.
@@ -216,7 +205,7 @@ export default class CaretSnapshot extends CommonBase {
     }
 
     // Build the result.
-    return new CaretDelta(caretOps);
+    return new CaretChange(newerSnapshot.revNum, caretOps);
   }
 
   /**
@@ -297,11 +286,11 @@ export default class CaretSnapshot extends CommonBase {
    * @returns {CaretSnapshot} An appropriately-constructed instance.
    */
   withRevNum(revNum) {
-    RevisionNumber.check(revNum);
+    // This type checks `revNum`, which is why it's not just run when we need
+    // to call `compose()`.
+    const change = new CaretChange(revNum, CaretDelta.EMPTY);
 
-    return (revNum === this._revNum)
-      ? this
-      : new CaretSnapshot(revNum, this._carets.values());
+    return (revNum === this._revNum) ? this : this.compose(change);
   }
 
   /**

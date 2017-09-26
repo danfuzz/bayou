@@ -72,14 +72,14 @@ export default class CaretControl extends CommonBase {
   }
 
   /**
-   * Gets a delta of caret information from the indicated base caret revision.
+   * Gets a change of caret information from the indicated base caret revision.
    * This will throw an error if the indicated caret revision isn't available.
    *
    * @param {Int} baseRevNum Revision number for the caret information which
    *   will form the basis for the result. If `baseRevNum` is the current
    *   revision number, this method will block until a new revision is
    *   available.
-   * @returns {CaretDelta} Delta from the base caret revision to a newer one.
+   * @returns {CaretChange} Change from the base caret revision to a newer one.
    */
   async deltaAfter(baseRevNum) {
     const oldSnapshot = await this.snapshot(baseRevNum);
