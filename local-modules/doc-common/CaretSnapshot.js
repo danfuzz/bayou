@@ -184,7 +184,7 @@ export default class CaretSnapshot extends CommonBase {
     // Add an op for the revision number, if needed.
 
     if (this._revNum !== newerSnapshot._revNum) {
-      caretOps.push(CaretOp.op_updateRevNum(newerSnapshot._revNum));
+      caretOps.push(CaretOp.op_setRevNum(newerSnapshot._revNum));
     }
 
     // Find carets that are new or updated from `this` when going to

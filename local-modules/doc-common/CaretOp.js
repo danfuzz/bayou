@@ -79,7 +79,7 @@ export default class CaretOp extends CommonBase {
    * @param {Int} revNum The new revision number.
    * @returns {CaretOp} The corresponding operation.
    */
-  static op_updateRevNum(revNum) {
+  static op_setRevNum(revNum) {
     RevisionNumber.check(revNum);
 
     return new CaretOp(new Functor(CaretOp.SET_REV_NUM, revNum));
