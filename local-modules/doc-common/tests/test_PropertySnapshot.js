@@ -16,6 +16,7 @@ describe('doc-common/PropertySnapshot', () => {
 
       assert.strictEqual(EMPTY.revNum, 0);
       assert.strictEqual(EMPTY.properties.size, 0);
+      assert.isFrozen(EMPTY);
     });
   });
 
@@ -54,6 +55,11 @@ describe('doc-common/PropertySnapshot', () => {
       test([PropertyOp.op_setProperty('x', 'y')]);
       test([PropertyOp.op_setProperty('x', 'y')]);
       test([PropertyOp.op_setProperty('x', 'y'), PropertyOp.op_setProperty('z', 'pdq')]);
+    });
+
+    it('should produce a frozen instance', () => {
+      const snap = new PropertySnapshot(0, [PropertyOp.op_setProperty('x', 'y')]);
+      assert.isFrozen(snap);
     });
 
     it('should reject an array that is not all valid ops', () => {
