@@ -57,11 +57,6 @@ describe('doc-common/BodyDelta', () => {
       const ops1 = [{ insert: 'x' }];
       const ops2 = [{ insert: 'line 1' }, { insert: '\n' }, { insert: 'line 2' }];
 
-      // This one is not a valid `ops` array, but per docs, `isEmpty()` doesn't
-      // inspect the contents of `ops` arrays and so using this value should
-      // succeed.
-      const invalidNonEmptyOps = [null, undefined, /blort/, 1, 2, 3];
-
       const values = [
         ops1,
         { ops: ops1 },
@@ -70,9 +65,7 @@ describe('doc-common/BodyDelta', () => {
         ops2,
         { ops: ops2 },
         new Delta(ops2),
-        new BodyDelta(ops2),
-        invalidNonEmptyOps,
-        { ops: invalidNonEmptyOps }
+        new BodyDelta(ops2)
       ];
 
       for (const v of values) {
@@ -98,6 +91,48 @@ describe('doc-common/BodyDelta', () => {
       for (const v of values) {
         it(`should throw for: ${inspect(v)}`, () => {
           assert.throws(() => { BodyDelta.isEmpty(v); });
+        });
+      }
+    });
+  });
+
+  describe('constructor()', () => {
+    describe('valid arguments', () => {
+      // This one is not a valid `ops` array, but per docs, the constructor
+      // doesn't inspect the contents of `ops` arrays and so using this value
+      // should succeed (for some values of the terms "should" and "succeed").
+      const invalidNonEmptyOps = [null, undefined, ['x'], { a: 10 }, 1, 2, 3];
+
+      const values = [
+        [],
+        [{ insert: 'x' }],
+        [{ delete: 123 }],
+        [{ retain: 123 }],
+        [{ insert: 'x', attributes: { bold: true } }],
+        [{ insert: 'florp' }, { insert: 'x', attributes: { bold: true } }],
+        invalidNonEmptyOps
+      ];
+
+      for (const v of values) {
+        it(`should succeed for: ${inspect(v)}`, () => {
+          new BodyDelta(v);
+        });
+      }
+    });
+
+    describe('invalid arguments', () => {
+      const values = [
+        null,
+        undefined,
+        123,
+        'florp',
+        { insert: 123 },
+        new Map()
+      ];
+
+      for (const v of values) {
+        it(`should fail for: ${inspect(v)}`, () => {
+          assert.throws(() => new BodyDelta(v));
         });
       }
     });
