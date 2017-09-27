@@ -88,9 +88,9 @@ export default class CaretSnapshot extends CommonBase {
     Object.freeze(this);
   }
 
-  /** {Int} The caret information revision number. */
-  get revNum() {
-    return this._revNum;
+  /** {CaretDelta} The document contents as a from-empty delta. */
+  get contents() {
+    return new CaretDelta([...this._carets.values()]);
   }
 
   /**
@@ -105,6 +105,11 @@ export default class CaretSnapshot extends CommonBase {
     }
 
     return Object.freeze(result);
+  }
+
+  /** {Int} The caret information revision number. */
+  get revNum() {
+    return this._revNum;
   }
 
   /**
@@ -285,7 +290,7 @@ export default class CaretSnapshot extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._revNum, [...this._carets.values()]];
+    return [this._revNum, this.contents.ops];
   }
 
   /**
