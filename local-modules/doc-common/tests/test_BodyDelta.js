@@ -34,63 +34,55 @@ describe('doc-common/BodyDelta', () => {
     });
   });
 
-  describe('static isEmpty()', () => {
-    describe('valid empty values', () => {
+  describe('coerce()', () => {
+    describe('valid empty arguments', () => {
       const values = [
-        new Delta([]),
-        new BodyDelta([]),
-        BodyDelta.EMPTY,
         null,
         undefined,
         [],
+        new Delta([]),
         { ops: [] }
       ];
 
       for (const v of values) {
-        it(`should return \`true\` for: ${inspect(v)}`, () => {
-          assert.isTrue(BodyDelta.isEmpty(v));
+        it(`should yield \`EMPTY\` for: ${inspect(v)}`, () => {
+          const result = BodyDelta.coerce(v);
+          assert.strictEqual(result, BodyDelta.EMPTY);
         });
       }
     });
 
-    describe('valid non-empty values', () => {
-      const ops1 = [{ insert: 'x' }];
-      const ops2 = [{ insert: 'line 1' }, { insert: '\n' }, { insert: 'line 2' }];
-
+    describe('valid non-empty arguments', () => {
       const values = [
-        ops1,
-        { ops: ops1 },
-        new Delta(ops1),
-        new BodyDelta(ops1),
-        ops2,
-        { ops: ops2 },
-        new Delta(ops2),
-        new BodyDelta(ops2)
+        [{ insert: 'x' }],
+        [{ delete: 123 }],
+        [{ retain: 123 }],
+        [{ insert: 'x', attributes: { bold: true } }],
+        [{ insert: 'florp' }, { insert: 'x', attributes: { bold: true } }],
+        new Delta([{ insert: 'x' }]),
+        { ops: [{ retain: 123 }] }
       ];
 
       for (const v of values) {
-        it(`should return \`false\` for: ${inspect(v)}`, () => {
-          assert.isFalse(BodyDelta.isEmpty(v));
+        it(`should succeed for: ${inspect(v)}`, () => {
+          const result = BodyDelta.coerce(v);
+          assert.instanceOf(result, BodyDelta);
         });
       }
     });
 
-    describe('non-delta-like values', () => {
+    describe('invalid arguments', () => {
       const values = [
-        37,
-        true,
         false,
-        '',
-        'this better not work!',
-        {},
-        () => true,
-        /blort/,
-        Symbol.for('foo')
+        123,
+        'florp',
+        /xyz/,
+        new Map()
       ];
 
       for (const v of values) {
-        it(`should throw for: ${inspect(v)}`, () => {
-          assert.throws(() => { BodyDelta.isEmpty(v); });
+        it(`should fail for: ${inspect(v)}`, () => {
+          assert.throws(() => BodyDelta.coerce(v));
         });
       }
     });
