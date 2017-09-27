@@ -11,30 +11,30 @@ import { BodyDelta } from 'doc-common';
 
 describe('doc-common/BodyDelta', () => {
   describe('.EMPTY', () => {
-    const empty = BodyDelta.EMPTY;
+    const EMPTY = BodyDelta.EMPTY;
 
     it('should be an instance of `BodyDelta`', () => {
-      assert.instanceOf(empty, BodyDelta);
+      assert.instanceOf(EMPTY, BodyDelta);
     });
 
     it('should be a frozen object', () => {
-      assert.isFrozen(empty);
+      assert.isFrozen(EMPTY);
     });
 
     it('should have an empty `ops`', () => {
-      assert.strictEqual(empty.ops.length, 0);
+      assert.strictEqual(EMPTY.ops.length, 0);
     });
 
     it('should have a frozen `ops`', () => {
-      assert.isFrozen(empty.ops);
+      assert.isFrozen(EMPTY.ops);
     });
 
-    it('should be `BodyDelta.isEmpty()`', () => {
-      assert.isTrue(BodyDelta.isEmpty(empty));
+    it('should be `.isEmpty()`', () => {
+      assert.isTrue(EMPTY.isEmpty());
     });
   });
 
-  describe('isEmpty()', () => {
+  describe('static isEmpty()', () => {
     describe('valid empty values', () => {
       const values = [
         new Delta([]),
@@ -114,7 +114,7 @@ describe('doc-common/BodyDelta', () => {
 
       for (const v of values) {
         it(`should return \`true\` for: ${inspect(v)}`, () => {
-          assert.isTrue(BodyDelta.coerce(v).isDocument());
+          assert.isTrue(new BodyDelta(v).isDocument());
         });
       }
     });
@@ -122,6 +122,8 @@ describe('doc-common/BodyDelta', () => {
     describe('`false` cases', () => {
       const values = [
         [{ retain: 37 }],
+        [{ delete: 914 }],
+        [{ retain: 37, attributes: { bold: true } }],
         [{ insert: 'line 1' }, { retain: 9 }],
         [{ insert: 'line 1' }, { retain: 14 }, { insert: '\n' }],
         [{ insert: 'line 1' }, { insert: '\n' }, { retain: 23 }, { insert: 'line 2' }]
@@ -129,7 +131,7 @@ describe('doc-common/BodyDelta', () => {
 
       for (const v of values) {
         it(`should return \`false\` for: ${inspect(v)}`, () => {
-          assert.isFalse(BodyDelta.coerce(v).isDocument());
+          assert.isFalse(new BodyDelta(v).isDocument());
         });
       }
     });
