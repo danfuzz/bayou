@@ -86,6 +86,11 @@ export default class PropertySnapshot extends CommonBase {
     Object.freeze(this);
   }
 
+  /** {PropertyDelta} The property contents as a from-empty delta. */
+  get contents() {
+    return new PropertyDelta([...this._properties.values()]);
+  }
+
   /**
    * {Map<string, *>} Map from property names to values. Guaranteed to be
    * immutable.
@@ -253,7 +258,7 @@ export default class PropertySnapshot extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [this._revNum, [...this._properties.values()]];
+    return [this._revNum, this.contents.ops];
   }
 
   /**

@@ -88,7 +88,7 @@ export default class CaretSnapshot extends CommonBase {
     Object.freeze(this);
   }
 
-  /** {CaretDelta} The document contents as a from-empty delta. */
+  /** {CaretDelta} The caret state as a from-empty delta. */
   get contents() {
     return new CaretDelta([...this._carets.values()]);
   }
