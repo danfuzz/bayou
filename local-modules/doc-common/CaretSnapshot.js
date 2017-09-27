@@ -43,25 +43,18 @@ export default class CaretSnapshot extends CommonBase {
    *   include in the instance.
    */
   constructor(revNum, delta) {
-    RevisionNumber.check(revNum);
-
-    if (   Array.isArray(delta)
-        && ((delta.length === 0) || (delta[0] instanceof CaretOp))) {
+    if (Array.isArray(delta)) {
+      // Convert the given array into a proper delta instance. (This does type
+      // checking of the argument.)
       delta = new CaretDelta(delta);
-    } else if (delta[Symbol.iterator]) {
-      // FIXME: Remove this clause after conversion of call sites.
-      TIterable.check(delta);
-      const ops = [];
-      for (const caret of delta) {
-        ops.push(CaretOp.op_beginSession(caret));
-      }
-      delta = new CaretDelta(ops);
+    } else {
+      CaretDelta.check(delta);
     }
 
     super();
 
     /** {Int} The caret information revision number. */
-    this._revNum = revNum;
+    this._revNum = RevisionNumber.check(revNum);
 
     /**
      * {Map<string, CaretOp>} Map of session ID to an `op_beginSession` which

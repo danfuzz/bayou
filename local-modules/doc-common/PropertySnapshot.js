@@ -46,6 +46,8 @@ export default class PropertySnapshot extends CommonBase {
       // Convert the given array into a proper delta instance. (This does type
       // checking of the argument.)
       delta = new PropertyDelta(delta);
+    } else {
+      PropertyDelta.check(delta);
     }
 
     super();
