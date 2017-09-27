@@ -6,7 +6,6 @@ import { TString } from 'typecheck';
 import { CommonBase, DataUtil, Errors, Functor } from 'util-common';
 
 import Caret from './Caret';
-import RevisionNumber from './RevisionNumber';
 
 /**
  * Operation which can be applied to a `Caret` or `CaretSnapshot`.
@@ -25,11 +24,6 @@ export default class CaretOp extends CommonBase {
   /** {string} Operation name for "set field" operations. */
   static get SET_FIELD() {
     return 'set_field';
-  }
-
-  /** {string} Operation name for "set revision number" operations. */
-  static get SET_REV_NUM() {
-    return 'set_rev_num';
   }
 
   /**
@@ -71,18 +65,6 @@ export default class CaretOp extends CommonBase {
     Caret.checkField(key, value);
 
     return new CaretOp(new Functor(CaretOp.SET_FIELD, sessionId, key, value));
-  }
-
-  /**
-   * Constructs a new "set revision number" operation.
-   *
-   * @param {Int} revNum The new revision number.
-   * @returns {CaretOp} The corresponding operation.
-   */
-  static op_setRevNum(revNum) {
-    RevisionNumber.check(revNum);
-
-    return new CaretOp(new Functor(CaretOp.SET_REV_NUM, revNum));
   }
 
   /**
