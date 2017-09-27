@@ -59,7 +59,7 @@ export default class PropertySnapshot extends CommonBase {
      */
     this._properties = new Map();
 
-    // Fill in the instance variables.
+    // Fill in `_properties`.
     for (const op of delta.ops) {
       const opProps = op.props;
 

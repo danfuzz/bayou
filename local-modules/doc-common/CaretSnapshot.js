@@ -38,12 +38,24 @@ export default class CaretSnapshot extends CommonBase {
    * Constructs an instance.
    *
    * @param {Int} revNum Revision number of the caret information.
-   * @param {Iterable<Caret>} carets Iterable of all the active carets. This
-   *   constructor will iterate with it exactly once.
+   * @param {CaretDelta|array<CaretOp>} delta A from-empty delta (or array of
+   *   ops which can be used to construct same), representing all the carets to
+   *   include in the instance.
    */
-  constructor(revNum, carets) {
+  constructor(revNum, delta) {
     RevisionNumber.check(revNum);
-    TIterable.check(carets);
+
+    if (Array.isArray(delta)) {
+      delta = new CaretDelta(delta);
+    } else if (delta[Symbol.iterator]) {
+      // FIXME: Remove this clause after conversion of call sites.
+      TIterable.check(delta);
+      const ops = [];
+      for (const caret of delta) {
+        ops.push(CaretOp.op_beginSession(caret));
+      }
+      delta = new CaretDelta(ops);
+    }
 
     super();
 
@@ -52,9 +64,28 @@ export default class CaretSnapshot extends CommonBase {
 
     /** {Map<string, Caret>} Map of session ID to corresponding caret. */
     this._carets = new Map();
-    for (const c of carets) {
-      Caret.check(c);
-      this._carets.set(c.sessionId, c);
+
+    // Fill in `_carets`.
+    for (const op of delta.ops) {
+      const opProps = op.props;
+
+      switch (opProps.opName) {
+        case CaretOp.BEGIN_SESSION: {
+          const caret     = opProps.caret;
+          const sessionId = caret.sessionId;
+
+          if (this._carets.has(sessionId)) {
+            throw Errors.bad_use(`Duplicate caret: ${sessionId}`);
+          }
+
+          this._carets.set(sessionId, caret);
+          break;
+        }
+
+        default: {
+          throw Errors.bad_value(op, 'CaretSnapshot construction op');
+        }
+      }
     }
 
     Object.freeze(this._carets);
