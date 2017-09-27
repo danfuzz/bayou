@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
-import { CommonBase, DataUtil, Errors, Functor } from 'util-common';
+import { CommonBase, Errors, Functor } from 'util-common';
 
 import Caret from './Caret';
 
@@ -133,21 +133,7 @@ export default class CaretOp extends CommonBase {
       return false;
     }
 
-    const p1 = this._payload;
-    const p2 = other._payload;
-
-    // **TODO:** This should just be `Functor.equals()`, except that method
-    // needs to be able to use `equals()` on elements.
-
-    if (p1.name !== p2.name) {
-      return false;
-    }
-
-    if (DataUtil.equalData(p1.args, p2.args)) {
-      return true;
-    }
-
-    return (p1.name === CaretOp.BEGIN_SESSION) && p1.args[0].equals(p2.args[0]);
+    return this._payload.equals(other._payload);
   }
 
   /**
