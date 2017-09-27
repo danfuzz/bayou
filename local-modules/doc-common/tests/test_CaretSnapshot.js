@@ -53,6 +53,94 @@ describe('doc-common/CaretSnapshot', () => {
     });
   });
 
+  describe('constructor()', () => {
+    it('should accept an array of valid ops', () => {
+      function test(value) {
+        new CaretSnapshot(0, value);
+      }
+
+      test([]);
+      test([op1]);
+      test([op1, op2]);
+      test([op1, op2, op3]);
+    });
+
+    it('should accept valid revision numbers', () => {
+      function test(value) {
+        new CaretSnapshot(value, CaretDelta.EMPTY);
+      }
+
+      test(0);
+      test(1);
+      test(999999);
+    });
+
+    it('should accept a valid delta', () => {
+      function test(ops) {
+        const delta = new CaretDelta(ops);
+        new CaretSnapshot(0, delta);
+      }
+
+      test([]);
+      test([op1]);
+      test([op1, op2]);
+      test([op1, op2, op3]);
+    });
+
+    it('should produce a frozen instance', () => {
+      const snap = new CaretSnapshot(0, [op1]);
+      assert.isFrozen(snap);
+    });
+
+    it('should reject an array that is not all valid ops', () => {
+      function test(value) {
+        assert.throws(() => { new CaretSnapshot(0, value); });
+      }
+
+      test([1]);
+      test(['florp', op1]);
+      test([op1, 'florp', op2]);
+      test([CaretOp.op_endSession('x')]); // Session ends aren't allowed.
+      test([CaretOp.op_setField('x', 'revNum', 1)]); // Individual field sets aren't allowed.
+      test([op1, op1]); // Duplicates aren't allowed.
+    });
+
+    it('should reject a delta with disallowed ops', () => {
+      function test(ops) {
+        const delta = new CaretDelta(ops);
+        assert.throws(() => { new CaretSnapshot(0, delta); });
+      }
+
+      // Session ends aren't allowed.
+      test([CaretOp.op_endSession('x')]);
+      test([op1, CaretOp.op_endSession('x')]);
+      test([op1, CaretOp.op_endSession(caret1.sessionId)]);
+
+      // Individual field sets aren't allowed.
+      test([CaretOp.op_setField('x', 'revNum', 1)]);
+      test([op1, CaretOp.op_setField('x', 'revNum', 1)]);
+      test([op1, CaretOp.op_setField(caret1.sessionId, 'revNum', 1)]);
+
+      // Duplicates aren't allowed.
+      test([op1, op1]);
+    });
+
+    it('should reject invalid revision numbers', () => {
+      function test(value) {
+        assert.throws(() => { new CaretSnapshot(value, CaretDelta.EMPTY); });
+      }
+
+      test(-1);
+      test(1.5);
+      test(null);
+      test(false);
+      test(undefined);
+      test([]);
+      test([789]);
+      test({ a: 10 });
+    });
+  });
+
   describe('caretForSession()', () => {
     it('should return the caret associated with an existing session', () => {
       const snap = new CaretSnapshot(999, [op1, op2, op3]);

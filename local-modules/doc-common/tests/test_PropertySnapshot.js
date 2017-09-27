@@ -51,8 +51,6 @@ describe('doc-common/PropertySnapshot', () => {
       }
 
       test([]);
-      test([]);
-      test([PropertyOp.op_setProperty('x', 'y')]);
       test([PropertyOp.op_setProperty('x', 'y')]);
       test([PropertyOp.op_setProperty('x', 'y'), PropertyOp.op_setProperty('z', 'pdq')]);
     });
