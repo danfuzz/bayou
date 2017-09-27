@@ -8,6 +8,19 @@ import { inspect } from 'util';
 
 import { Functor } from 'util-core';
 
+/**
+ * Simple class with an `equals()` method.
+ */
+class HasEquals {
+  constructor(x) {
+    this.x = x;
+  }
+
+  equals(other) {
+    return (other instanceof HasEquals) && (other.x === this.x);
+  }
+}
+
 describe('util-core/Functor', () => {
   describe('constructor()', () => {
     it('should accept valid names', () => {
@@ -99,17 +112,50 @@ describe('util-core/Functor', () => {
       assert.isTrue(ftor.equals(ftor));
     });
 
-    it('should return `true` when compared to a samely-constructed instance', () => {
-      const arrayArg = ['a', 'b'];
-      const ftor1 = new Functor('blort', 10, arrayArg);
-      const ftor2 = new Functor('blort', 10, arrayArg);
+    it('should return `true` when the name and all arguments are `===`', () => {
+      function test(...args) {
+        const ftor1 = new Functor('blort', ...args);
+        const ftor2 = new Functor('blort', ...args);
+        assert.isTrue(ftor1.equals(ftor2));
+        assert.isTrue(ftor2.equals(ftor1));
+      }
+
+      test();
+      test(1);
+      test('x', true, undefined);
+      test([]);
+      test([1, 2, 3]);
+      test({ a: 10, b: 20 }, 'foo');
+      test(/florp/);
+      test(new Set(['x', 'y']));
+    });
+
+    it('should return `true` when the name is `===` and all arguments are `equalData()`', () => {
+      const ftor1 = new Functor('blort', 10, ['x', ['y']], { a: 123 }, new Functor('z'));
+      const ftor2 = new Functor('blort', 10, ['x', ['y']], { a: 123 }, new Functor('z'));
       assert.isTrue(ftor1.equals(ftor2));
+      assert.isTrue(ftor2.equals(ftor1));
+    });
+
+    it('should return `true` when the name is `===` and all arguments are `.equals()`', () => {
+      function test(...args) {
+        const args1 = args.map(x => new HasEquals(x));
+        const args2 = args.map(x => new HasEquals(x));
+        const ftor1 = new Functor('blort', ...args1);
+        const ftor2 = new Functor('blort', ...args2);
+        assert.isTrue(ftor1.equals(ftor2));
+        assert.isTrue(ftor2.equals(ftor1));
+      }
+
+      test(1);
+      test('x', 'y', [123]);
     });
 
     it('should return `false` when the names do not match', () => {
       const ftor1 = new Functor('blort', 10);
       const ftor2 = new Functor('florp', 10);
       assert.isFalse(ftor1.equals(ftor2));
+      assert.isFalse(ftor2.equals(ftor1));
     });
 
     it('should return `false` when argument counts do not match', () => {
@@ -119,10 +165,19 @@ describe('util-core/Functor', () => {
       assert.isFalse(ftor2.equals(ftor1));
     });
 
-    it('should return `false` when an argument is not strict-equal', () => {
-      const ftor1 = new Functor('blort', 10, ['a']);
-      const ftor2 = new Functor('blort', 10, ['a']);
-      assert.isFalse(ftor1.equals(ftor2));
+    it('should return `false` when an argument is not `===` or `equalData()` or `.equals()`', () => {
+      function test(args1, args2) {
+        const ftor1 = new Functor('blort', ...args1);
+        const ftor2 = new Functor('blort', ...args2);
+        assert.isFalse(ftor1.equals(ftor2));
+        assert.isFalse(ftor2.equals(ftor1));
+      }
+
+      test([1],                          ['x']);
+      test([1, 2],                       [1, 2, 3]);
+      test([true],                       [new Set([true])]);
+      test([1, new Map()],               [1, new HasEquals(123)]);
+      test(['x', new HasEquals(321), 3], ['x', new HasEquals(123), 3]);
     });
 
     it('should return `false` when compared to a non-functor', () => {

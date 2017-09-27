@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TIterable, TString } from 'typecheck';
+import { TString } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
 import Caret from './Caret';
@@ -38,23 +38,50 @@ export default class CaretSnapshot extends CommonBase {
    * Constructs an instance.
    *
    * @param {Int} revNum Revision number of the caret information.
-   * @param {Iterable<Caret>} carets Iterable of all the active carets. This
-   *   constructor will iterate with it exactly once.
+   * @param {CaretDelta|array<CaretOp>} delta A from-empty delta (or array of
+   *   ops which can be used to construct same), representing all the carets to
+   *   include in the instance.
    */
-  constructor(revNum, carets) {
-    RevisionNumber.check(revNum);
-    TIterable.check(carets);
+  constructor(revNum, delta) {
+    if (Array.isArray(delta)) {
+      // Convert the given array into a proper delta instance. (This does type
+      // checking of the argument.)
+      delta = new CaretDelta(delta);
+    } else {
+      CaretDelta.check(delta);
+    }
 
     super();
 
     /** {Int} The caret information revision number. */
-    this._revNum = revNum;
+    this._revNum = RevisionNumber.check(revNum);
 
-    /** {Map<string, Caret>} Map of session ID to corresponding caret. */
+    /**
+     * {Map<string, CaretOp>} Map of session ID to an `op_beginSession` which
+     * defines the caret for that session.
+     */
     this._carets = new Map();
-    for (const c of carets) {
-      Caret.check(c);
-      this._carets.set(c.sessionId, c);
+
+    // Fill in `_carets`.
+    for (const op of delta.ops) {
+      const opProps = op.props;
+
+      switch (opProps.opName) {
+        case CaretOp.BEGIN_SESSION: {
+          const sessionId = opProps.caret.sessionId;
+
+          if (this._carets.has(sessionId)) {
+            throw Errors.bad_use(`Duplicate caret: ${sessionId}`);
+          }
+
+          this._carets.set(sessionId, op);
+          break;
+        }
+
+        default: {
+          throw Errors.bad_value(op, 'CaretSnapshot construction op');
+        }
+      }
     }
 
     Object.freeze(this._carets);
@@ -80,7 +107,13 @@ export default class CaretSnapshot extends CommonBase {
    * (immutable) value.
    */
   get carets() {
-    return Object.freeze([...this._carets.values()]);
+    const result = [];
+
+    for (const op of this._carets.values()) {
+      result.push(op.props.caret);
+    }
+
+    return Object.freeze(result);
   }
 
   /**
@@ -99,7 +132,10 @@ export default class CaretSnapshot extends CommonBase {
    */
   caretForSession(sessionId) {
     TString.nonEmpty(sessionId);
-    return this._carets.get(sessionId) || null;
+
+    const found = this._carets.get(sessionId);
+
+    return found ? found.props.caret : null;
   }
 
   /**
@@ -116,7 +152,7 @@ export default class CaretSnapshot extends CommonBase {
   compose(change) {
     CaretChange.check(change);
 
-    const newCarets = new Map(this._carets.entries());
+    const newCarets = new Map(this._carets);
 
     for (const op of change.delta.ops) {
       const props = op.props;
@@ -124,19 +160,20 @@ export default class CaretSnapshot extends CommonBase {
       switch (props.opName) {
         case CaretOp.BEGIN_SESSION: {
           const caret = props.caret;
-          newCarets.set(caret.sessionId, caret);
+          newCarets.set(caret.sessionId, op);
           break;
         }
 
         case CaretOp.SET_FIELD: {
           const sessionId = props.sessionId;
-          const caret     = newCarets.get(sessionId);
+          const caretOp   = newCarets.get(sessionId);
 
-          if (!caret) {
-            throw Errors.bad_use(`Invalid delta; update to nonexistent caret: ${sessionId}`);
+          if (!caretOp) {
+            throw Errors.bad_use(`Cannot update nonexistent caret: ${sessionId}`);
           }
 
-          newCarets.set(sessionId, caret.compose(new CaretDelta([op])));
+          const caret = caretOp.props.caret.compose(new CaretDelta([op]));
+          newCarets.set(sessionId, CaretOp.op_beginSession(caret));
           break;
         }
 
@@ -152,7 +189,7 @@ export default class CaretSnapshot extends CommonBase {
       }
     }
 
-    return new CaretSnapshot(change.revNum, newCarets.values());
+    return new CaretSnapshot(change.revNum, [...newCarets.values()]);
   }
 
   /**
@@ -174,38 +211,38 @@ export default class CaretSnapshot extends CommonBase {
     CaretSnapshot.check(newerSnapshot);
 
     const newerCarets = newerSnapshot._carets;
-    const caretOps    = [];
+    const resultOps   = [];
 
     // Find carets that are new or updated from `this` when going to
     // `newerSnapshot`.
 
-    for (const [sessionId, newerCaret] of newerCarets) {
+    for (const [sessionId, caretOp] of newerCarets) {
       const already = this._carets.get(sessionId);
       if (already) {
         // The `sessionId` matches the older snapshot. Indicate an update if the
         // values are different.
-        if (!already.equals(newerCaret)) {
-          const diff = already.diff(newerCaret);
+        if (!already.equals(caretOp)) {
+          const diff = already.props.caret.diff(caretOp.props.caret);
           for (const op of diff.ops) {
-            caretOps.push(op);
+            resultOps.push(op);
           }
         }
       } else {
         // The `sessionId` isn't in the older snapshot, so this is an addition.
-        caretOps.push(CaretOp.op_beginSession(newerCaret));
+        resultOps.push(caretOp);
       }
     }
 
     // Find carets removed from `this` when going to `newerSnapshot`.
 
-    for (const [sessionId, olderCaret] of this._carets) {
+    for (const sessionId of this._carets.keys()) {
       if (!newerCarets.get(sessionId)) {
-        caretOps.push(CaretOp.op_endSession(olderCaret.sessionId));
+        resultOps.push(CaretOp.op_endSession(sessionId));
       }
     }
 
     // Build the result.
-    return new CaretChange(newerSnapshot.revNum, caretOps);
+    return new CaretChange(newerSnapshot.revNum, resultOps);
   }
 
   /**
@@ -231,8 +268,7 @@ export default class CaretSnapshot extends CommonBase {
     }
 
     for (const [sessionId, thisCaret] of thisCarets) {
-      const otherCaret = otherCarets.get(sessionId);
-      if (!(otherCaret && otherCaret.equals(thisCaret))) {
+      if (!thisCaret.equals(otherCarets.get(sessionId))) {
         return false;
       }
     }
@@ -263,18 +299,13 @@ export default class CaretSnapshot extends CommonBase {
    */
   withCaret(caret) {
     Caret.check(caret);
+
     const sessionId = caret.sessionId;
-    const carets    = this._carets;
-    const already   = carets.get(sessionId);
+    const op        = CaretOp.op_beginSession(caret);
 
-    if (already && already.equals(caret)) {
-      return this;
-    }
-
-    const newCarets = new Map(carets);
-    newCarets.set(sessionId, caret);
-
-    return new CaretSnapshot(this._revNum, newCarets.values());
+    return op.equals(this._carets.get(sessionId))
+      ? this
+      : this.compose(new CaretChange(this._revNum, [op]));
   }
 
   /**
@@ -318,16 +349,12 @@ export default class CaretSnapshot extends CommonBase {
    * @returns {CaretSnapshot} An appropriately-constructed instance.
    */
   withoutSession(sessionId) {
-    TString.nonEmpty(sessionId);
-    const carets = this._carets;
+    // This type checks `sessionId`, which is why it's not just run when we need
+    // to call `compose()`.
+    const op = CaretOp.op_endSession(sessionId);
 
-    if (!carets.has(sessionId)) {
-      return this;
-    }
-
-    const newCarets = new Map(carets);
-    newCarets.delete(sessionId);
-
-    return new CaretSnapshot(this._revNum, newCarets.values());
+    return this._carets.has(sessionId)
+      ? this.compose(new CaretChange(this._revNum, [op]))
+      : this;
   }
 }

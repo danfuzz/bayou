@@ -8,6 +8,7 @@ import { CommonBase, Errors } from 'util-common';
 import PropertyChange from './PropertyChange';
 import PropertyDelta from './PropertyDelta';
 import PropertyOp from './PropertyOp';
+import RevisionNumber from './RevisionNumber';
 
 /**
  * {PropertySnapshot|null} Empty instance. Initialized in the `EMPTY` property
@@ -26,7 +27,7 @@ export default class PropertySnapshot extends CommonBase {
    */
   static get EMPTY() {
     if (EMPTY === null) {
-      EMPTY = new PropertySnapshot([]);
+      EMPTY = new PropertySnapshot(0, []);
     }
 
     return EMPTY;
@@ -35,31 +36,33 @@ export default class PropertySnapshot extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {PropertyChange|array<PropertyOp>} change A from-empty change or
-   *   array of ops representing all the properties and the current revision
-   *   number. In the case of an array, the instance will have a revision number
-   *   of `0`.
+   * @param {Int} revNum Revision number of the caret information.
+   * @param {PropertyDelta|array<PropertyOp>} delta A from-empty delta (or
+   *   array of ops which can be used to construct same), representing all the
+   *   properties to include in the instance.
    */
-  constructor(change) {
-    if (Array.isArray(change)) {
-      // Convert the given array into a proper change instance. (This does type
+  constructor(revNum, delta) {
+    if (Array.isArray(delta)) {
+      // Convert the given array into a proper delta instance. (This does type
       // checking of the argument.)
-      change = new PropertyChange(0, change);
+      delta = new PropertyDelta(delta);
+    } else {
+      PropertyDelta.check(delta);
     }
 
     super();
 
     /** {Int} The property information revision number. */
-    this._revNum = change.revNum;
+    this._revNum = RevisionNumber.check(revNum);
 
     /**
      * {Map<string, PropertyOp>} Map of name to corresponding property, in the
-     * form of a "set property" instance.
+     * form of an `op_setProperty`.
      */
     this._properties = new Map();
 
-    // Fill in the instance variables.
-    for (const op of change.delta.ops) {
+    // Fill in `_properties`.
+    for (const op of delta.ops) {
       const opProps = op.props;
 
       switch (opProps.opName) {
@@ -89,7 +92,7 @@ export default class PropertySnapshot extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [PropertySnapshot.EMPTY.diff(this)];
+    return [this._revNum, [...this._properties.values()]];
   }
 
   /**
@@ -145,8 +148,7 @@ export default class PropertySnapshot extends CommonBase {
       }
     }
 
-    return new PropertySnapshot(
-      new PropertyChange(change.revNum, [...newProps.values()]));
+    return new PropertySnapshot(change.revNum, [...newProps.values()]);
   }
 
   /**

@@ -6,7 +6,6 @@ import { TString } from 'typecheck';
 import { CommonBase, Errors, Functor } from 'util-common';
 
 import Caret from './Caret';
-import RevisionNumber from './RevisionNumber';
 
 /**
  * Operation which can be applied to a `Caret` or `CaretSnapshot`.
@@ -25,11 +24,6 @@ export default class CaretOp extends CommonBase {
   /** {string} Operation name for "set field" operations. */
   static get SET_FIELD() {
     return 'set_field';
-  }
-
-  /** {string} Operation name for "set revision number" operations. */
-  static get SET_REV_NUM() {
-    return 'set_rev_num';
   }
 
   /**
@@ -52,7 +46,7 @@ export default class CaretOp extends CommonBase {
    * @returns {CaretOp} The corresponding operation.
    */
   static op_endSession(sessionId) {
-    TString.check(sessionId);
+    TString.nonEmpty(sessionId);
 
     return new CaretOp(new Functor(CaretOp.END_SESSION, sessionId));
   }
@@ -67,22 +61,10 @@ export default class CaretOp extends CommonBase {
    * @returns {CaretOp} The corresponding operation.
    */
   static op_setField(sessionId, key, value) {
-    TString.check(sessionId);
+    TString.nonEmpty(sessionId);
     Caret.checkField(key, value);
 
     return new CaretOp(new Functor(CaretOp.SET_FIELD, sessionId, key, value));
-  }
-
-  /**
-   * Constructs a new "set revision number" operation.
-   *
-   * @param {Int} revNum The new revision number.
-   * @returns {CaretOp} The corresponding operation.
-   */
-  static op_setRevNum(revNum) {
-    RevisionNumber.check(revNum);
-
-    return new CaretOp(new Functor(CaretOp.SET_REV_NUM, revNum));
   }
 
   /**
@@ -131,15 +113,27 @@ export default class CaretOp extends CommonBase {
         return Object.freeze({ opName, sessionId, key, value });
       }
 
-      case CaretOp.SET_REV_NUM: {
-        const [revNum] = payload.args;
-        return Object.freeze({ opName, revNum });
-      }
-
       default: {
         throw Errors.wtf(`Weird operation name: ${opName}`);
       }
     }
+  }
+
+  /**
+   * Compares this to another possible-instance, for equality of content.
+   *
+   * @param {*} other Value to compare to.
+   * @returns {boolean} `true` iff `other` is also an instance of this class,
+   *   and `this` and `other` have equal contents.
+   */
+  equals(other) {
+    if (this === other) {
+      return true;
+    } else if (!(other instanceof CaretOp)) {
+      return false;
+    }
+
+    return this._payload.equals(other._payload);
   }
 
   /**

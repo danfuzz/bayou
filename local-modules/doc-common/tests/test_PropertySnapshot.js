@@ -4,6 +4,7 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
+import { inspect } from 'util';
 
 import { PropertyChange, PropertyDelta, PropertyOp, PropertySnapshot } from 'doc-common';
 import { DataUtil, Functor } from 'util-common';
@@ -15,13 +16,14 @@ describe('doc-common/PropertySnapshot', () => {
 
       assert.strictEqual(EMPTY.revNum, 0);
       assert.strictEqual(EMPTY.properties.size, 0);
+      assert.isFrozen(EMPTY);
     });
   });
 
   describe('constructor()', () => {
     it('should accept an array of valid ops', () => {
       function test(value) {
-        new PropertySnapshot(value);
+        new PropertySnapshot(0, value);
       }
 
       test([]);
@@ -32,22 +34,35 @@ describe('doc-common/PropertySnapshot', () => {
       ]);
     });
 
-    it('should accept a valid change', () => {
-      function test(revNum, ops) {
-        const change = new PropertyChange(revNum, ops);
-        new PropertySnapshot(change);
+    it('should accept valid revision numbers', () => {
+      function test(value) {
+        new PropertySnapshot(value, PropertyDelta.EMPTY);
       }
 
-      test(0,   []);
-      test(123, []);
-      test(0,   [PropertyOp.op_setProperty('x', 'y')]);
-      test(123, [PropertyOp.op_setProperty('x', 'y')]);
-      test(37,  [PropertyOp.op_setProperty('x', 'y'), PropertyOp.op_setProperty('z', 'pdq')]);
+      test(0);
+      test(1);
+      test(999999);
+    });
+
+    it('should accept a valid delta', () => {
+      function test(ops) {
+        const delta = new PropertyDelta(ops);
+        new PropertySnapshot(0, delta);
+      }
+
+      test([]);
+      test([PropertyOp.op_setProperty('x', 'y')]);
+      test([PropertyOp.op_setProperty('x', 'y'), PropertyOp.op_setProperty('z', 'pdq')]);
+    });
+
+    it('should produce a frozen instance', () => {
+      const snap = new PropertySnapshot(0, [PropertyOp.op_setProperty('x', 'y')]);
+      assert.isFrozen(snap);
     });
 
     it('should reject an array that is not all valid ops', () => {
       function test(value) {
-        assert.throws(() => { new PropertySnapshot(value); });
+        assert.throws(() => { new PropertySnapshot(0, value); });
       }
 
       test([1]);
@@ -62,15 +77,30 @@ describe('doc-common/PropertySnapshot', () => {
       ]);
     });
 
-    it('should reject a change with disallowed ops', () => {
+    it('should reject a delta with disallowed ops', () => {
       function test(ops) {
-        const change = new PropertyChange(0, ops);
-        assert.throws(() => { new PropertySnapshot(change); });
+        const delta = new PropertyDelta(ops);
+        assert.throws(() => { new PropertySnapshot(0, delta); });
       }
 
       // Deletes aren't allowed.
       test([PropertyOp.op_deleteProperty('x')]);
       test([PropertyOp.op_setProperty('x', 'y'), PropertyOp.op_deleteProperty('x')]);
+    });
+
+    it('should reject invalid revision numbers', () => {
+      function test(value) {
+        assert.throws(() => { new PropertySnapshot(value, PropertyDelta.EMPTY); });
+      }
+
+      test(-1);
+      test(1.5);
+      test(null);
+      test(false);
+      test(undefined);
+      test([]);
+      test([789]);
+      test({ a: 10 });
     });
   });
 
@@ -86,17 +116,16 @@ describe('doc-common/PropertySnapshot', () => {
 
       test(PropertySnapshot.EMPTY);
 
-      test(new PropertySnapshot(new PropertyChange(123, PropertyDelta.EMPTY)));
-      test(new PropertySnapshot(new PropertyChange(0,   [PropertyOp.op_setProperty('foo', 'bar')])));
-      test(new PropertySnapshot(new PropertyChange(37,  [PropertyOp.op_setProperty('foo', 'bar')])));
-      test(new PropertySnapshot(
-        new PropertyChange(37,
-          [PropertyOp.op_setProperty('foo', 'bar'), PropertyOp.op_setProperty('baz', 914)])));
+      test(new PropertySnapshot(123, PropertyDelta.EMPTY));
+      test(new PropertySnapshot(0,   [PropertyOp.op_setProperty('foo', 'bar')]));
+      test(new PropertySnapshot(37,  [PropertyOp.op_setProperty('foo', 'bar')]));
+      test(new PropertySnapshot(37,
+        [PropertyOp.op_setProperty('foo', 'bar'), PropertyOp.op_setProperty('baz', 914)]));
     });
 
     it('should update `revNum` given a change with a different `revNum`', () => {
-      const snap     = new PropertySnapshot(new PropertyChange(123, PropertyDelta.EMPTY));
-      const expected = new PropertySnapshot(new PropertyChange(456, PropertyDelta.EMPTY));
+      const snap     = new PropertySnapshot(123, PropertyDelta.EMPTY);
+      const expected = new PropertySnapshot(456, PropertyDelta.EMPTY);
       const result   = snap.compose(new PropertyChange(456, PropertyDelta.EMPTY));
 
       assert.strictEqual(result.revNum, 456);
@@ -105,8 +134,8 @@ describe('doc-common/PropertySnapshot', () => {
 
     it('should add a new property given the appropriate op', () => {
       const op       = PropertyOp.op_setProperty('florp', 'like');
-      const snap     = new PropertySnapshot([]);
-      const expected = new PropertySnapshot([op]);
+      const snap     = new PropertySnapshot(0, []);
+      const expected = new PropertySnapshot(0, [op]);
       const change   = new PropertyChange(0, [op]);
       const result   = snap.compose(change);
 
@@ -116,8 +145,8 @@ describe('doc-common/PropertySnapshot', () => {
 
     it('should update a pre-existing property given an appropriate op', () => {
       const op       = PropertyOp.op_setProperty('florp', 'like');
-      const snap     = new PropertySnapshot([PropertyOp.op_setProperty('florp', 'unlike')]);
-      const expected = new PropertySnapshot([op]);
+      const snap     = new PropertySnapshot(0, [PropertyOp.op_setProperty('florp', 'unlike')]);
+      const expected = new PropertySnapshot(0, [op]);
       const change   = new PropertyChange(0, [op]);
       const result   = snap.compose(change);
 
@@ -126,7 +155,7 @@ describe('doc-common/PropertySnapshot', () => {
     });
 
     it('should remove a property given the appropriate op', () => {
-      const snap   = new PropertySnapshot([PropertyOp.op_setProperty('florp', 'like')]);
+      const snap   = new PropertySnapshot(0, [PropertyOp.op_setProperty('florp', 'like')]);
       const change = new PropertyChange(0, [PropertyOp.op_deleteProperty('florp')]);
       const result = snap.compose(change);
 
@@ -137,8 +166,8 @@ describe('doc-common/PropertySnapshot', () => {
 
   describe('diff()', () => {
     it('should produce an empty diff when passed itself', () => {
-      const snap = new PropertySnapshot(new PropertyChange(914,
-        [PropertyOp.op_setProperty('a', 10), PropertyOp.op_setProperty('b', 20)]));
+      const snap = new PropertySnapshot(914,
+        [PropertyOp.op_setProperty('a', 10), PropertyOp.op_setProperty('b', 20)]);
       const result = snap.diff(snap);
 
       assert.instanceOf(result, PropertyChange);
@@ -147,25 +176,23 @@ describe('doc-common/PropertySnapshot', () => {
     });
 
     it('should result in a `revNum` diff if that in fact changes', () => {
-      const snap1 = new PropertySnapshot(
-        new PropertyChange(123, [PropertyOp.op_setProperty('a', 10)]));
-      const snap2 = new PropertySnapshot(
-        new PropertyChange(456, [PropertyOp.op_setProperty('a', 10)]));
+      const snap1 = new PropertySnapshot(123, [PropertyOp.op_setProperty('a', 10)]);
+      const snap2 = new PropertySnapshot(456, [PropertyOp.op_setProperty('a', 10)]);
       const result = snap1.diff(snap2);
 
-      const composed = new PropertySnapshot([]).compose(result);
-      const expected = new PropertySnapshot(new PropertyChange(456, PropertyDelta.EMPTY));
+      const composed = new PropertySnapshot(0, []).compose(result);
+      const expected = new PropertySnapshot(456, PropertyDelta.EMPTY);
       assert.strictEqual(composed.revNum, 456);
       assert.isTrue(composed.equals(expected));
     });
 
     it('should result in a property removal if that in fact happens', () => {
-      const snap1 = new PropertySnapshot([
+      const snap1 = new PropertySnapshot(0, [
         PropertyOp.op_setProperty('a', 10),
         PropertyOp.op_setProperty('b', 20),
         PropertyOp.op_setProperty('c', 30)
       ]);
-      const snap2 = new PropertySnapshot([
+      const snap2 = new PropertySnapshot(0, [
         PropertyOp.op_setProperty('a', 10),
         PropertyOp.op_setProperty('c', 30)
       ]);
@@ -178,53 +205,49 @@ describe('doc-common/PropertySnapshot', () => {
 
   describe('equals()', () => {
     it('should return `true` when passed itself', () => {
-      let snap;
+      function test(...args) {
+        const snap = new PropertySnapshot(...args);
+        assert.isTrue(snap.equals(snap), inspect(snap));
+      }
 
-      snap = PropertySnapshot.EMPTY;
-      assert.isTrue(snap.equals(snap));
-
-      snap = new PropertySnapshot(new PropertyChange(37, PropertyDelta.EMPTY));
-      assert.isTrue(snap.equals(snap));
-
-      snap = new PropertySnapshot([
+      test(0, []);
+      test(0, PropertyDelta.EMPTY);
+      test(37, []);
+      test(37, PropertyDelta.EMPTY);
+      test(914, [
         PropertyOp.op_setProperty('a', 10),
         PropertyOp.op_setProperty('b', 20),
         PropertyOp.op_setProperty('c', 30)
       ]);
-      assert.isTrue(snap.equals(snap));
     });
 
     it('should return `true` when passed an identically-constructed value', () => {
-      let snap1, snap2;
+      function test(...args) {
+        const snap1 = new PropertySnapshot(...args);
+        const snap2 = new PropertySnapshot(...args);
+        const label = inspect(snap1);
+        assert.isTrue(snap1.equals(snap2), label);
+        assert.isTrue(snap2.equals(snap1), label);
+      }
 
-      snap1 = PropertySnapshot.EMPTY;
-      snap2 = new PropertySnapshot([]);
-      assert.isTrue(snap1.equals(snap2));
-
-      snap1 = new PropertySnapshot(new PropertyChange(37, PropertyDelta.EMPTY));
-      snap2 = new PropertySnapshot(new PropertyChange(37, PropertyDelta.EMPTY));
-      assert.isTrue(snap1.equals(snap2));
-
-      snap1 = new PropertySnapshot([
+      test(0, []);
+      test(0, PropertyDelta.EMPTY);
+      test(37, []);
+      test(37, PropertyDelta.EMPTY);
+      test(914, [
         PropertyOp.op_setProperty('a', 10),
         PropertyOp.op_setProperty('b', 20),
         PropertyOp.op_setProperty('c', 30)
       ]);
-      snap2 = new PropertySnapshot([
-        PropertyOp.op_setProperty('a', 10),
-        PropertyOp.op_setProperty('b', 20),
-        PropertyOp.op_setProperty('c', 30)
-      ]);
-      assert.isTrue(snap1.equals(snap2));
     });
 
     it('should return `true` when identical construction ops are passed in different orders', () => {
-      const snap1 = new PropertySnapshot([
+      const snap1 = new PropertySnapshot(321, [
         PropertyOp.op_setProperty('a', 10),
         PropertyOp.op_setProperty('b', 20),
         PropertyOp.op_setProperty('c', 30)
       ]);
-      const snap2 = new PropertySnapshot([
+      const snap2 = new PropertySnapshot(321, [
         PropertyOp.op_setProperty('b', 20),
         PropertyOp.op_setProperty('a', 10),
         PropertyOp.op_setProperty('c', 30),
@@ -234,36 +257,36 @@ describe('doc-common/PropertySnapshot', () => {
     });
 
     it('should return `true` when equal property values are not also `===`', () => {
-      const snap1 = new PropertySnapshot([
+      const snap1 = new PropertySnapshot(37, [
         PropertyOp.op_setProperty('a', [1, 2]),
         PropertyOp.op_setProperty('b', { b: 20 }),
         PropertyOp.op_setProperty('c', new Functor('x', [1, 2, 3]))
       ]);
-      const snap2 = new PropertySnapshot([
+      const snap2 = new PropertySnapshot(37, [
         PropertyOp.op_setProperty('a', [1, 2]),
         PropertyOp.op_setProperty('b', { b: 20 }),
         PropertyOp.op_setProperty('c', new Functor('x', [1, 2, 3]))
       ]);
 
       assert.isTrue(snap1.equals(snap2));
+      assert.isTrue(snap2.equals(snap1));
     });
 
     it('should return `false` when `revNum`s differ', () => {
-      const snap1 = new PropertySnapshot(
-        new PropertyChange(123, [PropertyOp.op_setProperty('a', 10)]));
-      const snap2 = new PropertySnapshot(
-        new PropertyChange(456, [PropertyOp.op_setProperty('a', 10)]));
+      const snap1 = new PropertySnapshot(123, [PropertyOp.op_setProperty('a', 10)]);
+      const snap2 = new PropertySnapshot(456, [PropertyOp.op_setProperty('a', 10)]);
 
       assert.isFalse(snap1.equals(snap2));
+      assert.isFalse(snap2.equals(snap1));
     });
 
     it('should return `false` when a property value differs', () => {
-      const snap1 = new PropertySnapshot([
+      const snap1 = new PropertySnapshot(9, [
         PropertyOp.op_setProperty('a', 10),
         PropertyOp.op_setProperty('b', 20),
         PropertyOp.op_setProperty('c', 30)
       ]);
-      const snap2 = new PropertySnapshot([
+      const snap2 = new PropertySnapshot(9, [
         PropertyOp.op_setProperty('a', 10),
         PropertyOp.op_setProperty('b', 22222),
         PropertyOp.op_setProperty('c', 30)
@@ -288,14 +311,14 @@ describe('doc-common/PropertySnapshot', () => {
 
   describe('get()', () => {
     it('should return the value associated with an existing property', () => {
-      const snap = new PropertySnapshot([PropertyOp.op_setProperty('blort', 'zorch')]);
+      const snap = new PropertySnapshot(1, [PropertyOp.op_setProperty('blort', 'zorch')]);
 
       assert.strictEqual(snap.get('blort'), 'zorch');
     });
 
     it('should always return a deep-frozen value even when the constructor was passed an unfrozen value', () => {
       const value = [[['zorch']], ['splat'], 'foo'];
-      const snap = new PropertySnapshot([PropertyOp.op_setProperty('blort', value)]);
+      const snap = new PropertySnapshot(1, [PropertyOp.op_setProperty('blort', value)]);
 
       const result = snap.get('blort');
       assert.isTrue(DataUtil.isDeepFrozen(result));
@@ -303,7 +326,7 @@ describe('doc-common/PropertySnapshot', () => {
     });
 
     it('should throw an error when given a name that is not bound as a property', () => {
-      const snap = new PropertySnapshot([PropertyOp.op_setProperty('blort', 'zorch')]);
+      const snap = new PropertySnapshot(1, [PropertyOp.op_setProperty('blort', 'zorch')]);
 
       assert.throws(() => { snap.get('x'); });
     });
@@ -311,7 +334,7 @@ describe('doc-common/PropertySnapshot', () => {
 
   describe('has()', () => {
     it('should return `true` for an existing property', () => {
-      const snap = new PropertySnapshot([
+      const snap = new PropertySnapshot(1, [
         PropertyOp.op_setProperty('blort', 'zorch'),
         PropertyOp.op_setProperty('florp', 'like')
       ]);
@@ -321,7 +344,7 @@ describe('doc-common/PropertySnapshot', () => {
     });
 
     it('should return `false` for a non-existent property', () => {
-      const snap = new PropertySnapshot([
+      const snap = new PropertySnapshot(1, [
         PropertyOp.op_setProperty('blort', 'zorch'),
         PropertyOp.op_setProperty('florp', 'like')
       ]);
@@ -353,14 +376,14 @@ describe('doc-common/PropertySnapshot', () => {
 
   describe('withProperty()', () => {
     it('should return `this` if the exact property is already in the snapshot', () => {
-      const snap = new PropertySnapshot([PropertyOp.op_setProperty('blort', 'zorch')]);
+      const snap = new PropertySnapshot(1, [PropertyOp.op_setProperty('blort', 'zorch')]);
 
       assert.strictEqual(snap.withProperty('blort', 'zorch'), snap);
     });
 
     it('should return an appropriately-constructed instance given a new property', () => {
-      const snap     = new PropertySnapshot([PropertyOp.op_setProperty('blort', 'zorch')]);
-      const expected = new PropertySnapshot([
+      const snap     = new PropertySnapshot(1, [PropertyOp.op_setProperty('blort', 'zorch')]);
+      const expected = new PropertySnapshot(1, [
         PropertyOp.op_setProperty('blort', 'zorch'),
         PropertyOp.op_setProperty('florp', 'like')
       ]);
@@ -369,8 +392,8 @@ describe('doc-common/PropertySnapshot', () => {
     });
 
     it('should return an appropriately-constructed instance given an updated property', () => {
-      const snap     = new PropertySnapshot([PropertyOp.op_setProperty('blort', 'zorch')]);
-      const expected = new PropertySnapshot([PropertyOp.op_setProperty('blort', 'like')]);
+      const snap     = new PropertySnapshot(2, [PropertyOp.op_setProperty('blort', 'zorch')]);
+      const expected = new PropertySnapshot(2, [PropertyOp.op_setProperty('blort', 'like')]);
 
       assert.isTrue(snap.withProperty('blort', 'like').equals(expected));
     });
@@ -378,15 +401,15 @@ describe('doc-common/PropertySnapshot', () => {
 
   describe('withRevNum()', () => {
     it('should return `this` if the given `revNum` is the same as in the snapshot', () => {
-      const snap = new PropertySnapshot(new PropertyChange(123, PropertyDelta.EMPTY));
+      const snap = new PropertySnapshot(123, PropertyDelta.EMPTY);
 
       assert.strictEqual(snap.withRevNum(123), snap);
     });
 
     it('should return an appropriately-constructed instance given a different `revNum`', () => {
       const delta    = new PropertyDelta([PropertyOp.op_setProperty('blort', 'zorch')]);
-      const snap     = new PropertySnapshot(new PropertyChange(123, delta));
-      const expected = new PropertySnapshot(new PropertyChange(456, delta));
+      const snap     = new PropertySnapshot(123, delta);
+      const expected = new PropertySnapshot(456, delta);
 
       assert.deepEqual(snap.withRevNum(456), expected);
     });
@@ -394,18 +417,18 @@ describe('doc-common/PropertySnapshot', () => {
 
   describe('withoutProperty()', () => {
     it('should return `this` if there is no matching property', () => {
-      const snap = new PropertySnapshot([PropertyOp.op_setProperty('blort', 'zorch')]);
+      const snap = new PropertySnapshot(1, [PropertyOp.op_setProperty('blort', 'zorch')]);
 
       assert.strictEqual(snap.withoutProperty('x'), snap);
       assert.strictEqual(snap.withoutProperty('y'), snap);
     });
 
     it('should return an appropriately-constructed instance if there is a matching property', () => {
-      const snap = new PropertySnapshot([
+      const snap = new PropertySnapshot(2, [
         PropertyOp.op_setProperty('blort', 'zorch'),
         PropertyOp.op_setProperty('florp', 'like')
       ]);
-      const expected = new PropertySnapshot([
+      const expected = new PropertySnapshot(2, [
         PropertyOp.op_setProperty('florp', 'like')
       ]);
 

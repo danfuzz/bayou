@@ -251,7 +251,7 @@ export default class BodyControl extends CommonBase {
 
     const contents = (base === null)
       ? this._composeRevisions(BodyDelta.EMPTY, 0,               revNum + 1)
-      : this._composeRevisions(base.contents,     base.revNum + 1, revNum + 1);
+      : this._composeRevisions(base.contents,   base.revNum + 1, revNum + 1);
     const result = new BodySnapshot(revNum, await contents);
 
     this._log.detail('Made snapshot for revision:', revNum);
@@ -294,7 +294,7 @@ export default class BodyControl extends CommonBase {
     // Snapshot of the base revision. This call validates `baseRevNum`.
     const base = await this.snapshot(baseRevNum);
 
-    // Check for an empty `ops`. If it is, we don't bother trying to apply it.
+    // Check for an empty `delta`. If it is, we don't bother trying to apply it.
     // See method header comment for more info.
     if (delta.isEmpty()) {
       return new BodyChange(baseRevNum, BodyDelta.EMPTY);

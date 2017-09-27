@@ -20,9 +20,27 @@ function newCaret(sessionId, index, length, color) {
   return new Caret(sessionId, { index, length, color });
 }
 
+/**
+ * Convenient `op_beginSession` constructor, which takes positional parameters
+ * for the caret fields.
+ *
+ * @param {string} sessionId Session ID.
+ * @param {Int} index Start caret position.
+ * @param {Int} length Selection length.
+ * @param {string} color Highlight color.
+ * @returns {Caret} Appropriately-constructed caret.
+ */
+function newCaretOp(sessionId, index, length, color) {
+  return CaretOp.op_beginSession(newCaret(sessionId, index, length, color));
+}
+
 const caret1 = newCaret('session_1', 1, 0,  '#111111');
 const caret2 = newCaret('session_2', 2, 6,  '#222222');
 const caret3 = newCaret('session_3', 3, 99, '#333333');
+
+const op1 = CaretOp.op_beginSession(caret1);
+const op2 = CaretOp.op_beginSession(caret2);
+const op3 = CaretOp.op_beginSession(caret3);
 
 describe('doc-common/CaretSnapshot', () => {
   describe('.EMPTY', () => {
@@ -31,12 +49,101 @@ describe('doc-common/CaretSnapshot', () => {
 
       assert.strictEqual(EMPTY.revNum, 0);
       assert.deepEqual(EMPTY.carets, []);
+      assert.isFrozen(EMPTY);
+    });
+  });
+
+  describe('constructor()', () => {
+    it('should accept an array of valid ops', () => {
+      function test(value) {
+        new CaretSnapshot(0, value);
+      }
+
+      test([]);
+      test([op1]);
+      test([op1, op2]);
+      test([op1, op2, op3]);
+    });
+
+    it('should accept valid revision numbers', () => {
+      function test(value) {
+        new CaretSnapshot(value, CaretDelta.EMPTY);
+      }
+
+      test(0);
+      test(1);
+      test(999999);
+    });
+
+    it('should accept a valid delta', () => {
+      function test(ops) {
+        const delta = new CaretDelta(ops);
+        new CaretSnapshot(0, delta);
+      }
+
+      test([]);
+      test([op1]);
+      test([op1, op2]);
+      test([op1, op2, op3]);
+    });
+
+    it('should produce a frozen instance', () => {
+      const snap = new CaretSnapshot(0, [op1]);
+      assert.isFrozen(snap);
+    });
+
+    it('should reject an array that is not all valid ops', () => {
+      function test(value) {
+        assert.throws(() => { new CaretSnapshot(0, value); });
+      }
+
+      test([1]);
+      test(['florp', op1]);
+      test([op1, 'florp', op2]);
+      test([CaretOp.op_endSession('x')]); // Session ends aren't allowed.
+      test([CaretOp.op_setField('x', 'revNum', 1)]); // Individual field sets aren't allowed.
+      test([op1, op1]); // Duplicates aren't allowed.
+    });
+
+    it('should reject a delta with disallowed ops', () => {
+      function test(ops) {
+        const delta = new CaretDelta(ops);
+        assert.throws(() => { new CaretSnapshot(0, delta); });
+      }
+
+      // Session ends aren't allowed.
+      test([CaretOp.op_endSession('x')]);
+      test([op1, CaretOp.op_endSession('x')]);
+      test([op1, CaretOp.op_endSession(caret1.sessionId)]);
+
+      // Individual field sets aren't allowed.
+      test([CaretOp.op_setField('x', 'revNum', 1)]);
+      test([op1, CaretOp.op_setField('x', 'revNum', 1)]);
+      test([op1, CaretOp.op_setField(caret1.sessionId, 'revNum', 1)]);
+
+      // Duplicates aren't allowed.
+      test([op1, op1]);
+    });
+
+    it('should reject invalid revision numbers', () => {
+      function test(value) {
+        assert.throws(() => { new CaretSnapshot(value, CaretDelta.EMPTY); });
+      }
+
+      test(-1);
+      test(1.5);
+      test(null);
+      test(false);
+      test(undefined);
+      test([]);
+      test([789]);
+      test({ a: 10 });
     });
   });
 
   describe('caretForSession()', () => {
     it('should return the caret associated with an existing session', () => {
-      const snap = new CaretSnapshot(999, [caret1, caret2, caret3]);
+      const snap = new CaretSnapshot(999, [op1, op2, op3]);
 
       assert.strictEqual(snap.caretForSession(caret1.sessionId), caret1);
       assert.strictEqual(snap.caretForSession(caret2.sessionId), caret2);
@@ -44,7 +151,7 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should return `null` when given a session ID that is not in the snapshot', () => {
-      const snap = new CaretSnapshot(999, [caret1, caret3]);
+      const snap = new CaretSnapshot(999, [op1, op3]);
 
       assert.isNull(snap.caretForSession(caret2.sessionId));
     });
@@ -68,14 +175,14 @@ describe('doc-common/CaretSnapshot', () => {
       }
 
       test(new CaretSnapshot(123, []));
-      test(new CaretSnapshot(0,   [caret1]));
-      test(new CaretSnapshot(321, [caret1, caret2]));
-      test(new CaretSnapshot(999, [caret1, caret2, caret3]));
+      test(new CaretSnapshot(0,   [op1]));
+      test(new CaretSnapshot(321, [op1, op2]));
+      test(new CaretSnapshot(999, [op1, op2, op3]));
     });
 
     it('should update `revNum` given a change with a different `revNum`', () => {
-      const snap     = new CaretSnapshot(1,  [caret1, caret2]);
-      const expected = new CaretSnapshot(999,[caret1, caret2]);
+      const snap     = new CaretSnapshot(1,  [op1, op2]);
+      const expected = new CaretSnapshot(999,[op1, op2]);
       const result   = snap.compose(new CaretChange(999, []));
 
       assert.isTrue(result.equals(expected));
@@ -83,7 +190,7 @@ describe('doc-common/CaretSnapshot', () => {
 
     it('should add a new caret given the appropriate op', () => {
       const snap     = new CaretSnapshot(1, []);
-      const expected = new CaretSnapshot(1, [caret1]);
+      const expected = new CaretSnapshot(1, [op1]);
       const change   = new CaretChange(1, [CaretOp.op_beginSession(caret1)]);
       const result   = snap.compose(change);
 
@@ -91,17 +198,17 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should refuse to update a nonexistent caret', () => {
-      const snap  = new CaretSnapshot(1, [caret1]);
+      const snap  = new CaretSnapshot(1, [op1]);
       const change = new CaretChange(1, [CaretOp.op_setField('florp', 'index', 1)]);
 
       assert.throws(() => { snap.compose(change); });
     });
 
     it('should update a pre-existing caret given an appropriate op', () => {
-      const c1       = newCaret('foo', 1, 2, '#333333');
-      const c2       = newCaret('foo', 3, 2, '#333333');
-      const snap     = new CaretSnapshot(1, [caret1, c1]);
-      const expected = new CaretSnapshot(1, [caret1, c2]);
+      const c1       = newCaretOp('foo', 1, 2, '#333333');
+      const c2       = newCaretOp('foo', 3, 2, '#333333');
+      const snap     = new CaretSnapshot(1, [op1, c1]);
+      const expected = new CaretSnapshot(1, [op1, c2]);
       const op       = CaretOp.op_setField('foo', 'index', 3);
       const result   = snap.compose(new CaretChange(1, [op]));
 
@@ -109,8 +216,8 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should remove a caret given the appropriate op', () => {
-      const snap     = new CaretSnapshot(1, [caret1, caret2]);
-      const expected = new CaretSnapshot(1, [caret2]);
+      const snap     = new CaretSnapshot(1, [op1, op2]);
+      const expected = new CaretSnapshot(1, [op2]);
       const result   = snap.compose(new CaretChange(1, [CaretOp.op_endSession(caret1.sessionId)]));
 
       assert.isTrue(result.equals(expected));
@@ -119,7 +226,7 @@ describe('doc-common/CaretSnapshot', () => {
 
   describe('diff()', () => {
     it('should produce an empty diff when passed itself', () => {
-      const snap   = new CaretSnapshot(123, [caret1, caret2]);
+      const snap   = new CaretSnapshot(123, [op1, op2]);
       const result = snap.diff(snap);
 
       assert.instanceOf(result, CaretChange);
@@ -128,8 +235,8 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should result in a `revNum` diff if that in fact changes', () => {
-      const snap1  = new CaretSnapshot(1, [caret1, caret2]);
-      const snap2  = new CaretSnapshot(9, [caret1, caret2]);
+      const snap1  = new CaretSnapshot(1, [op1, op2]);
+      const snap2  = new CaretSnapshot(9, [op1, op2]);
       const result = snap1.diff(snap2);
 
       assert.strictEqual(result.revNum, 9);
@@ -141,35 +248,35 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should result in a caret removal if that in fact happens', () => {
-      const snap1  = new CaretSnapshot(4, [caret1, caret2]);
-      const snap2  = new CaretSnapshot(4, [caret1]);
+      const snap1  = new CaretSnapshot(4, [op1, op2]);
+      const snap2  = new CaretSnapshot(4, [op1]);
       const result = snap1.diff(snap2);
 
-      const composed = new CaretSnapshot(4, [caret2, caret3]).compose(result);
-      const expected = new CaretSnapshot(4, [caret3]);
+      const composed = new CaretSnapshot(4, [op2, op3]).compose(result);
+      const expected = new CaretSnapshot(4, [op3]);
       assert.isTrue(composed.equals(expected));
     });
 
     it('should result in a caret addition if that in fact happens', () => {
-      const snap1  = new CaretSnapshot(1, [caret1]);
-      const snap2  = new CaretSnapshot(1, [caret1, caret2]);
+      const snap1  = new CaretSnapshot(1, [op1]);
+      const snap2  = new CaretSnapshot(1, [op1, op2]);
       const result = snap1.diff(snap2);
 
       const composed = new CaretSnapshot(1, []).compose(result);
-      const expected = new CaretSnapshot(1, [caret2]);
+      const expected = new CaretSnapshot(1, [op2]);
       assert.isTrue(composed.equals(expected));
     });
 
     it('should result in a caret update if that in fact happens', () => {
-      const c1     = newCaret('florp', 1, 3, '#444444');
-      const c2     = newCaret('florp', 2, 4, '#555555');
-      const c3     = newCaret('florp', 3, 5, '#666666');
+      const c1     = newCaretOp('florp', 1, 3, '#444444');
+      const c2     = newCaretOp('florp', 2, 4, '#555555');
+      const c3     = newCaretOp('florp', 3, 5, '#666666');
       const snap1  = new CaretSnapshot(1, [c1]);
       const snap2  = new CaretSnapshot(1, [c2]);
       const result = snap1.diff(snap2);
 
-      const composed = new CaretSnapshot(1, [caret1, c3]).compose(result);
-      const expected = new CaretSnapshot(1, [caret1, c2]);
+      const composed = new CaretSnapshot(1, [op1, c3]).compose(result);
+      const expected = new CaretSnapshot(1, [op1, c2]);
       assert.isTrue(composed.equals(expected));
     });
   });
@@ -181,10 +288,10 @@ describe('doc-common/CaretSnapshot', () => {
       snap = new CaretSnapshot(0, []);
       assert.isTrue(snap.equals(snap));
 
-      snap = new CaretSnapshot(12, [caret1]);
+      snap = new CaretSnapshot(12, [op1]);
       assert.isTrue(snap.equals(snap));
 
-      snap = new CaretSnapshot(234, [caret1, caret2]);
+      snap = new CaretSnapshot(234, [op1, op2]);
       assert.isTrue(snap.equals(snap));
     });
 
@@ -195,26 +302,26 @@ describe('doc-common/CaretSnapshot', () => {
       snap2 = new CaretSnapshot(0, []);
       assert.isTrue(snap1.equals(snap2));
 
-      snap1 = new CaretSnapshot(12, [caret1]);
-      snap2 = new CaretSnapshot(12, [caret1]);
+      snap1 = new CaretSnapshot(12, [op1]);
+      snap2 = new CaretSnapshot(12, [op1]);
       assert.isTrue(snap1.equals(snap2));
 
-      snap1 = new CaretSnapshot(234, [caret1, caret2]);
-      snap2 = new CaretSnapshot(234, [caret1, caret2]);
+      snap1 = new CaretSnapshot(234, [op1, op2]);
+      snap2 = new CaretSnapshot(234, [op1, op2]);
       assert.isTrue(snap1.equals(snap2));
     });
 
     it('should return `true` when identical carets are passed in different orders', () => {
-      const snap1 = new CaretSnapshot(37, [caret1, caret2, caret3]);
-      const snap2 = new CaretSnapshot(37, [caret3, caret1, caret2]);
+      const snap1 = new CaretSnapshot(37, [op1, op2, op3]);
+      const snap2 = new CaretSnapshot(37, [op3, op1, op2]);
       assert.isTrue(snap1.equals(snap2));
     });
 
     it('should return `true` when equal carets are not also `===`', () => {
-      const c1a = newCaret('florp', 2, 3, '#444444');
-      const c1b = newCaret('florp', 2, 3, '#444444');
-      const c2a = newCaret('like',  3, 0, '#dbdbdb');
-      const c2b = newCaret('like',  3, 0, '#dbdbdb');
+      const c1a = newCaretOp('florp', 2, 3, '#444444');
+      const c1b = newCaretOp('florp', 2, 3, '#444444');
+      const c2a = newCaretOp('like',  3, 0, '#dbdbdb');
+      const c2b = newCaretOp('like',  3, 0, '#dbdbdb');
 
       const snap1 = new CaretSnapshot(1, [c1a, c2a]);
       const snap2 = new CaretSnapshot(1, [c1b, c2b]);
@@ -222,62 +329,62 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should return `false` when `revNum`s differ', () => {
-      const snap1 = new CaretSnapshot(1, [caret1, caret2, caret3]);
-      const snap2 = new CaretSnapshot(2, [caret1, caret2, caret3]);
+      const snap1 = new CaretSnapshot(1, [op1, op2, op3]);
+      const snap2 = new CaretSnapshot(2, [op1, op2, op3]);
       assert.isFalse(snap1.equals(snap2));
     });
 
     it('should return `false` when caret contents differ', () => {
       let snap1, snap2;
 
-      snap1 = new CaretSnapshot(1, [caret1]);
+      snap1 = new CaretSnapshot(1, [op1]);
       snap2 = new CaretSnapshot(1, []);
       assert.isFalse(snap1.equals(snap2));
       assert.isFalse(snap2.equals(snap1));
 
-      snap1 = new CaretSnapshot(1, [caret1, caret2]);
+      snap1 = new CaretSnapshot(1, [op1, op2]);
       snap2 = new CaretSnapshot(1, []);
       assert.isFalse(snap1.equals(snap2));
       assert.isFalse(snap2.equals(snap1));
 
-      snap1 = new CaretSnapshot(1, [caret1, caret2]);
-      snap2 = new CaretSnapshot(1, [caret1]);
+      snap1 = new CaretSnapshot(1, [op1, op2]);
+      snap2 = new CaretSnapshot(1, [op1]);
       assert.isFalse(snap1.equals(snap2));
       assert.isFalse(snap2.equals(snap1));
 
-      snap1 = new CaretSnapshot(1, [caret1, caret2]);
-      snap2 = new CaretSnapshot(1, [caret3]);
+      snap1 = new CaretSnapshot(1, [op1, op2]);
+      snap2 = new CaretSnapshot(1, [op3]);
       assert.isFalse(snap1.equals(snap2));
       assert.isFalse(snap2.equals(snap1));
 
-      snap1 = new CaretSnapshot(1, [caret1, caret2]);
-      snap2 = new CaretSnapshot(1, [caret3, caret1]);
+      snap1 = new CaretSnapshot(1, [op1, op2]);
+      snap2 = new CaretSnapshot(1, [op3, op1]);
       assert.isFalse(snap1.equals(snap2));
       assert.isFalse(snap2.equals(snap1));
 
-      snap1 = new CaretSnapshot(1, [caret1, caret2]);
-      snap2 = new CaretSnapshot(1, [caret1, caret3]);
+      snap1 = new CaretSnapshot(1, [op1, op2]);
+      snap2 = new CaretSnapshot(1, [op1, op3]);
       assert.isFalse(snap1.equals(snap2));
       assert.isFalse(snap2.equals(snap1));
 
-      snap1 = new CaretSnapshot(1, [caret1, caret2, caret3]);
+      snap1 = new CaretSnapshot(1, [op1, op2, op3]);
       snap2 = new CaretSnapshot(1, []);
       assert.isFalse(snap1.equals(snap2));
       assert.isFalse(snap2.equals(snap1));
 
-      snap1 = new CaretSnapshot(1, [caret1, caret2, caret3]);
-      snap2 = new CaretSnapshot(1, [caret1]);
+      snap1 = new CaretSnapshot(1, [op1, op2, op3]);
+      snap2 = new CaretSnapshot(1, [op1]);
       assert.isFalse(snap1.equals(snap2));
       assert.isFalse(snap2.equals(snap1));
 
-      snap1 = new CaretSnapshot(1, [caret1, caret2, caret3]);
-      snap2 = new CaretSnapshot(1, [caret1, caret2]);
+      snap1 = new CaretSnapshot(1, [op1, op2, op3]);
+      snap2 = new CaretSnapshot(1, [op1, op2]);
       assert.isFalse(snap1.equals(snap2));
       assert.isFalse(snap2.equals(snap1));
     });
 
     it('should return `false` when passed a non-snapshot', () => {
-      const snap = new CaretSnapshot(1, [caret1, caret2, caret3]);
+      const snap = new CaretSnapshot(1, [op1, op2, op3]);
 
       assert.isFalse(snap.equals(undefined));
       assert.isFalse(snap.equals(null));
@@ -291,7 +398,7 @@ describe('doc-common/CaretSnapshot', () => {
 
   describe('hasSession()', () => {
     it('should return `true` when given a session ID for an existing session', () => {
-      const snap = new CaretSnapshot(999, [caret1, caret2, caret3]);
+      const snap = new CaretSnapshot(999, [op1, op2, op3]);
 
       assert.isTrue(snap.hasSession(caret1.sessionId));
       assert.isTrue(snap.hasSession(caret2.sessionId));
@@ -299,7 +406,7 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should return `false` when given a session ID that is not in the snapshot', () => {
-      const snap = new CaretSnapshot(999, [caret1, caret3]);
+      const snap = new CaretSnapshot(999, [op1, op3]);
 
       assert.isFalse(snap.hasSession(caret2.sessionId));
     });
@@ -315,7 +422,7 @@ describe('doc-common/CaretSnapshot', () => {
 
   describe('withCaret()', () => {
     it('should return `this` if the exact caret is already in the snapshot', () => {
-      const snap = new CaretSnapshot(1, [caret1]);
+      const snap = new CaretSnapshot(1, [op1]);
 
       assert.strictEqual(snap.withCaret(caret1), snap);
 
@@ -324,16 +431,17 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should return an appropriately-constructed instance given a new caret', () => {
-      const snap =     new CaretSnapshot(1, [caret1]);
-      const expected = new CaretSnapshot(1, [caret1, caret2]);
+      const snap     = new CaretSnapshot(1, [op1]);
+      const expected = new CaretSnapshot(1, [op1, op2]);
 
       assert.isTrue(snap.withCaret(caret2).equals(expected));
     });
 
     it('should return an appropriately-constructed instance given an updated caret', () => {
       const modCaret = new Caret(caret1, { index: 321 });
-      const snap =     new CaretSnapshot(1, [caret1,   caret2]);
-      const expected = new CaretSnapshot(1, [modCaret, caret2]);
+      const modOp    = CaretOp.op_beginSession(modCaret);
+      const snap     = new CaretSnapshot(1, [op1,   op2]);
+      const expected = new CaretSnapshot(1, [modOp, op2]);
 
       assert.isTrue(snap.withCaret(modCaret).equals(expected));
     });
@@ -341,14 +449,14 @@ describe('doc-common/CaretSnapshot', () => {
 
   describe('withRevNum()', () => {
     it('should return `this` if the given `revNum` is the same as in the snapshot', () => {
-      const snap = new CaretSnapshot(1, [caret1]);
+      const snap = new CaretSnapshot(1, [op1]);
 
       assert.strictEqual(snap.withRevNum(1), snap);
     });
 
     it('should return an appropriately-constructed instance given a different `revNum`', () => {
-      const snap =     new CaretSnapshot(1, [caret1, caret2]);
-      const expected = new CaretSnapshot(2, [caret1, caret2]);
+      const snap     = new CaretSnapshot(1, [op1, op2]);
+      const expected = new CaretSnapshot(2, [op1, op2]);
 
       assert.isTrue(snap.withRevNum(2).equals(expected));
     });
@@ -356,22 +464,22 @@ describe('doc-common/CaretSnapshot', () => {
 
   describe('withoutCaret()', () => {
     it('should return `this` if there is no matching session', () => {
-      const snap = new CaretSnapshot(1, [caret1]);
+      const snap = new CaretSnapshot(1, [op1]);
 
       assert.strictEqual(snap.withoutCaret(caret2), snap);
       assert.strictEqual(snap.withoutCaret(caret3), snap);
     });
 
     it('should return an appropriately-constructed instance if there is a matching session', () => {
-      const snap =     new CaretSnapshot(1, [caret1, caret2]);
-      const expected = new CaretSnapshot(1, [caret2]);
+      const snap     = new CaretSnapshot(1, [op1, op2]);
+      const expected = new CaretSnapshot(1, [op2]);
 
       assert.isTrue(snap.withoutCaret(caret1).equals(expected));
     });
 
     it('should only pay attention to the session ID of the given caret', () => {
-      const snap =     new CaretSnapshot(1, [caret1, caret2]);
-      const expected = new CaretSnapshot(1, [caret2]);
+      const snap     = new CaretSnapshot(1, [op1, op2]);
+      const expected = new CaretSnapshot(1, [op2]);
       const modCaret = new Caret(caret1, { revNum: 999999, index: 99 });
 
       assert.isTrue(snap.withoutCaret(modCaret).equals(expected));
@@ -380,14 +488,14 @@ describe('doc-common/CaretSnapshot', () => {
 
   describe('withoutSession()', () => {
     it('should return `this` if there is no matching session', () => {
-      const snap = new CaretSnapshot(1, [caret1]);
+      const snap = new CaretSnapshot(1, [op1]);
 
       assert.strictEqual(snap.withoutSession('blort_is_not_a_session'), snap);
     });
 
     it('should return an appropriately-constructed instance if there is a matching session', () => {
-      const snap =     new CaretSnapshot(1, [caret1, caret2]);
-      const expected = new CaretSnapshot(1, [caret2]);
+      const snap     = new CaretSnapshot(1, [op1, op2]);
+      const expected = new CaretSnapshot(1, [op2]);
 
       assert.isTrue(snap.withoutSession(caret1.sessionId).equals(expected));
     });
