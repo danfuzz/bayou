@@ -46,7 +46,7 @@ export default class CaretOp extends CommonBase {
    * @returns {CaretOp} The corresponding operation.
    */
   static op_endSession(sessionId) {
-    TString.check(sessionId);
+    TString.nonEmpty(sessionId);
 
     return new CaretOp(new Functor(CaretOp.END_SESSION, sessionId));
   }
@@ -61,7 +61,7 @@ export default class CaretOp extends CommonBase {
    * @returns {CaretOp} The corresponding operation.
    */
   static op_setField(sessionId, key, value) {
-    TString.check(sessionId);
+    TString.nonEmpty(sessionId);
     Caret.checkField(key, value);
 
     return new CaretOp(new Functor(CaretOp.SET_FIELD, sessionId, key, value));
@@ -111,11 +111,6 @@ export default class CaretOp extends CommonBase {
       case CaretOp.SET_FIELD: {
         const [sessionId, key, value] = payload.args;
         return Object.freeze({ opName, sessionId, key, value });
-      }
-
-      case CaretOp.SET_REV_NUM: {
-        const [revNum] = payload.args;
-        return Object.freeze({ opName, revNum });
       }
 
       default: {
