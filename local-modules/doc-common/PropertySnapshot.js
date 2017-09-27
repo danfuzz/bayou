@@ -86,13 +86,9 @@ export default class PropertySnapshot extends CommonBase {
     Object.freeze(this);
   }
 
-  /**
-   * Converts this instance for API transmission.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toApi() {
-    return [this._revNum, [...this._properties.values()]];
+  /** {PropertyDelta} The property contents as a from-empty delta. */
+  get contents() {
+    return new PropertyDelta([...this._properties.values()]);
   }
 
   /**
@@ -254,6 +250,15 @@ export default class PropertySnapshot extends CommonBase {
   has(name) {
     TString.identifier(name);
     return this._properties.has(name);
+  }
+
+  /**
+   * Converts this instance for API transmission.
+   *
+   * @returns {array} Reconstruction arguments.
+   */
+  toApi() {
+    return [this._revNum, this.contents.ops];
   }
 
   /**

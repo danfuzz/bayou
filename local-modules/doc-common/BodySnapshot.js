@@ -66,23 +66,14 @@ export default class BodySnapshot extends CommonBase {
     Object.freeze(this);
   }
 
-  /**
-   * Converts this instance for API transmission.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toApi() {
-    return [this._revNum, this._contents];
+  /** {BodyDelta} The document contents as a from-empty delta. */
+  get contents() {
+    return this._contents;
   }
 
   /** {RevisionNumber} The revision number. */
   get revNum() {
     return this._revNum;
-  }
-
-  /** {BodyDelta} The document contents. */
-  get contents() {
-    return this._contents;
   }
 
   /**
@@ -146,5 +137,14 @@ export default class BodySnapshot extends CommonBase {
     const delta       = BodyDelta.coerce(oldContents.diff(newContents));
 
     return new BodyChange(newerSnapshot.revNum, delta);
+  }
+
+  /**
+   * Converts this instance for API transmission.
+   *
+   * @returns {array} Reconstruction arguments.
+   */
+  toApi() {
+    return [this._revNum, this._contents];
   }
 }
