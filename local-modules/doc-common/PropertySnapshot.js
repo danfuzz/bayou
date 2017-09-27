@@ -57,7 +57,7 @@ export default class PropertySnapshot extends CommonBase {
 
     /**
      * {Map<string, PropertyOp>} Map of name to corresponding property, in the
-     * form of a "set property" instance.
+     * form of an `op_setProperty`.
      */
     this._properties = new Map();
 
@@ -92,7 +92,7 @@ export default class PropertySnapshot extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
-    return [PropertySnapshot.EMPTY.diff(this)];
+    return [this._revNum, [...this._properties.values()]];
   }
 
   /**
