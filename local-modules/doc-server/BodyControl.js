@@ -251,7 +251,7 @@ export default class BodyControl extends CommonBase {
 
     const contents = (base === null)
       ? this._composeRevisions(BodyDelta.EMPTY, 0,               revNum + 1)
-      : this._composeRevisions(base.contents,     base.revNum + 1, revNum + 1);
+      : this._composeRevisions(base.contents,   base.revNum + 1, revNum + 1);
     const result = new BodySnapshot(revNum, await contents);
 
     this._log.detail('Made snapshot for revision:', revNum);
