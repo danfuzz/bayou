@@ -55,4 +55,18 @@ export default class Hooks extends Singleton {
   quillModuleConfig(contextName_unused, defaultConfig) {
     return defaultConfig;
   }
+
+  /**
+   * Called to get the name of the Quill theme to use for the indicated
+   * context. This (default) implementation always returns `bubble`. If this
+   * hook is overlaid, it is up to the overlay to initialize the theme
+   * (presumably in the `run()` hook).
+   *
+   * @param {string} contextName_unused The name of the context. This is one of
+   *   `body` (for the main editor) or `title` (for the title field editor).
+   * @returns {string} The desired theme name.
+   */
+  quillThemeName(contextName_unused) {
+    return 'bubble';
+  }
 }

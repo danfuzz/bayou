@@ -103,7 +103,7 @@ export default class EditorComplex extends CommonBase {
       this._titleQuill = new QuillProm(titleNode, {
         readOnly: false,
         strict:   true,
-        theme:    'bubble',
+        theme:    Hooks.theOne.quillThemeName('title'),
         modules:  EditorComplex._titleModuleConfig
       });
 
@@ -111,7 +111,7 @@ export default class EditorComplex extends CommonBase {
       this._bodyQuill = new QuillProm(quillNode, {
         readOnly: true,
         strict:   true,
-        theme:    'bubble',
+        theme:    Hooks.theOne.quillThemeName('body'),
         modules:  EditorComplex._bodyModuleConfig
       });
 
@@ -299,6 +299,21 @@ export default class EditorComplex extends CommonBase {
   }
 
   /**
+   * The Quill module configuration to use for the main body editor. This uses a
+   * hook to get the value the first time it's needed, caching the result for
+   * later reuse.
+   */
+  static get _bodyModuleConfig() {
+    if (!EditorComplex._bodyModuleConfigValue) {
+      const moduleConfig =
+        Hooks.theOne.quillModuleConfig('body', DEFAULT_BODY_MODULE_CONFIG);
+      EditorComplex._bodyModuleConfigValue = Object.freeze(moduleConfig);
+    }
+
+    return EditorComplex._bodyModuleConfigValue;
+  }
+
+  /**
    * The Quill module configuration to use for the title field.
    * This uses a hook to get the value the first time it's needed,
    * caching the result for later reuse.
@@ -311,19 +326,5 @@ export default class EditorComplex extends CommonBase {
     }
 
     return EditorComplex._titleModuleConfigValue;
-  }
-
-  /**
-   * The Quill module configuration to use. This uses a hook to get the value
-   * the first time it's needed, caching the result for later reuse.
-   */
-  static get _bodyModuleConfig() {
-    if (!EditorComplex._bodyModuleConfigValue) {
-      const moduleConfig =
-        Hooks.theOne.quillModuleConfig('body', DEFAULT_BODY_MODULE_CONFIG);
-      EditorComplex._bodyModuleConfigValue = Object.freeze(moduleConfig);
-    }
-
-    return EditorComplex._bodyModuleConfigValue;
   }
 }
