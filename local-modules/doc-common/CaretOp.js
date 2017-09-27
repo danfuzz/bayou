@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
-import { CommonBase, Errors, Functor } from 'util-common';
+import { CommonBase, DataUtil, Errors, Functor } from 'util-common';
 
 import Caret from './Caret';
 import RevisionNumber from './RevisionNumber';
@@ -140,6 +140,37 @@ export default class CaretOp extends CommonBase {
         throw Errors.wtf(`Weird operation name: ${opName}`);
       }
     }
+  }
+
+  /**
+   * Compares this to another possible-instance, for equality of content.
+   *
+   * @param {*} other Value to compare to.
+   * @returns {boolean} `true` iff `other` is also an instance of this class,
+   *   and `this` and `other` have equal contents.
+   */
+  equals(other) {
+    if (this === other) {
+      return true;
+    } else if (!(other instanceof CaretOp)) {
+      return false;
+    }
+
+    const p1 = this._payload;
+    const p2 = other._payload;
+
+    // **TODO:** This should just be `Functor.equals()`, except that method
+    // needs to be able to use `equals()` on elements.
+
+    if (p1.name !== p2.name) {
+      return false;
+    }
+
+    if (DataUtil.equalData(p1.args, p2.args)) {
+      return true;
+    }
+
+    return (p1.name === CaretOp.BEGIN_SESSION) && p1.args[0].equals(p2.args[0]);
   }
 
   /**
