@@ -11,99 +11,156 @@ import { BodyDelta } from 'doc-common';
 
 describe('doc-common/BodyDelta', () => {
   describe('.EMPTY', () => {
-    const empty = BodyDelta.EMPTY;
+    const EMPTY = BodyDelta.EMPTY;
 
     it('should be an instance of `BodyDelta`', () => {
-      assert.instanceOf(empty, BodyDelta);
+      assert.instanceOf(EMPTY, BodyDelta);
     });
 
     it('should be a frozen object', () => {
-      assert.isFrozen(empty);
+      assert.isFrozen(EMPTY);
     });
 
     it('should have an empty `ops`', () => {
-      assert.strictEqual(empty.ops.length, 0);
+      assert.strictEqual(EMPTY.ops.length, 0);
     });
 
     it('should have a frozen `ops`', () => {
-      assert.isFrozen(empty.ops);
+      assert.isFrozen(EMPTY.ops);
     });
 
-    it('should be `BodyDelta.isEmpty()`', () => {
-      assert.isTrue(BodyDelta.isEmpty(empty));
+    it('should be `.isEmpty()`', () => {
+      assert.isTrue(EMPTY.isEmpty());
+    });
+  });
+
+  describe('coerce()', () => {
+    describe('valid empty arguments', () => {
+      const values = [
+        null,
+        undefined,
+        [],
+        new Delta([]),
+        { ops: [] }
+      ];
+
+      for (const v of values) {
+        it(`should yield \`EMPTY\` for: ${inspect(v)}`, () => {
+          const result = BodyDelta.coerce(v);
+          assert.strictEqual(result, BodyDelta.EMPTY);
+        });
+      }
+    });
+
+    describe('valid non-empty arguments', () => {
+      const values = [
+        [{ insert: 'x' }],
+        [{ delete: 123 }],
+        [{ retain: 123 }],
+        [{ insert: 'x', attributes: { bold: true } }],
+        [{ insert: 'florp' }, { insert: 'x', attributes: { bold: true } }],
+        new Delta([{ insert: 'x' }]),
+        { ops: [{ retain: 123 }] }
+      ];
+
+      for (const v of values) {
+        it(`should succeed for: ${inspect(v)}`, () => {
+          const result = BodyDelta.coerce(v);
+          assert.instanceOf(result, BodyDelta);
+        });
+      }
+    });
+
+    describe('invalid arguments', () => {
+      const values = [
+        false,
+        123,
+        'florp',
+        /xyz/,
+        new Map()
+      ];
+
+      for (const v of values) {
+        it(`should fail for: ${inspect(v)}`, () => {
+          assert.throws(() => BodyDelta.coerce(v));
+        });
+      }
+    });
+  });
+
+  describe('constructor()', () => {
+    describe('valid arguments', () => {
+      // This one is not a valid `ops` array, but per docs, the constructor
+      // doesn't inspect the contents of `ops` arrays and so using this value
+      // should succeed (for some values of the terms "should" and "succeed").
+      const invalidNonEmptyOps = [null, undefined, ['x'], { a: 10 }, 1, 2, 3];
+
+      const values = [
+        [],
+        [{ insert: 'x' }],
+        [{ delete: 123 }],
+        [{ retain: 123 }],
+        [{ insert: 'x', attributes: { bold: true } }],
+        [{ insert: 'florp' }, { insert: 'x', attributes: { bold: true } }],
+        invalidNonEmptyOps
+      ];
+
+      for (const v of values) {
+        it(`should succeed for: ${inspect(v)}`, () => {
+          new BodyDelta(v);
+        });
+      }
+    });
+
+    describe('invalid arguments', () => {
+      const values = [
+        null,
+        undefined,
+        123,
+        'florp',
+        { insert: 123 },
+        new Map()
+      ];
+
+      for (const v of values) {
+        it(`should fail for: ${inspect(v)}`, () => {
+          assert.throws(() => new BodyDelta(v));
+        });
+      }
     });
   });
 
   describe('isEmpty()', () => {
     describe('valid empty values', () => {
       const values = [
-        new Delta([]),
         new BodyDelta([]),
         BodyDelta.EMPTY,
-        null,
-        undefined,
-        [],
-        { ops: [] }
       ];
 
       for (const v of values) {
         it(`should return \`true\` for: ${inspect(v)}`, () => {
-          assert.isTrue(BodyDelta.isEmpty(v));
+          assert.isTrue(v.isEmpty());
         });
       }
     });
 
     describe('valid non-empty values', () => {
-      const ops1 = [{ insert: 'x' }];
-      const ops2 = [{ insert: 'line 1' }, { insert: '\n' }, { insert: 'line 2' }];
-
-      // This one is not a valid `ops` array, but per docs, `isEmpty()` doesn't
-      // inspect the contents of `ops` arrays and so using this value should
-      // succeed.
-      const invalidNonEmptyOps = [null, undefined, /blort/, 1, 2, 3];
-
       const values = [
-        ops1,
-        { ops: ops1 },
-        new Delta(ops1),
-        new BodyDelta(ops1),
-        ops2,
-        { ops: ops2 },
-        new Delta(ops2),
-        new BodyDelta(ops2),
-        invalidNonEmptyOps,
-        { ops: invalidNonEmptyOps }
+        [{ insert: 'x' }],
+        [{ insert: 'line 1' }, { insert: '\n' }, { insert: 'line 2' }],
+        [{ retain: 100 }]
       ];
 
       for (const v of values) {
         it(`should return \`false\` for: ${inspect(v)}`, () => {
-          assert.isFalse(BodyDelta.isEmpty(v));
-        });
-      }
-    });
-
-    describe('non-delta-like values', () => {
-      const values = [
-        37,
-        true,
-        false,
-        '',
-        'this better not work!',
-        {},
-        () => true,
-        /blort/,
-        Symbol.for('foo')
-      ];
-
-      for (const v of values) {
-        it(`should throw for: ${inspect(v)}`, () => {
-          assert.throws(() => { BodyDelta.isEmpty(v); });
+          const delta = new BodyDelta(v);
+          assert.isFalse(delta.isEmpty());
         });
       }
     });
   });
 
-  describe('isDocument(doc)', () => {
+  describe('isDocument()', () => {
     describe('`true` cases', () => {
       const values = [
         [],
@@ -114,7 +171,7 @@ describe('doc-common/BodyDelta', () => {
 
       for (const v of values) {
         it(`should return \`true\` for: ${inspect(v)}`, () => {
-          assert.isTrue(BodyDelta.coerce(v).isDocument());
+          assert.isTrue(new BodyDelta(v).isDocument());
         });
       }
     });
@@ -122,6 +179,8 @@ describe('doc-common/BodyDelta', () => {
     describe('`false` cases', () => {
       const values = [
         [{ retain: 37 }],
+        [{ delete: 914 }],
+        [{ retain: 37, attributes: { bold: true } }],
         [{ insert: 'line 1' }, { retain: 9 }],
         [{ insert: 'line 1' }, { retain: 14 }, { insert: '\n' }],
         [{ insert: 'line 1' }, { insert: '\n' }, { retain: 23 }, { insert: 'line 2' }]
@@ -129,7 +188,7 @@ describe('doc-common/BodyDelta', () => {
 
       for (const v of values) {
         it(`should return \`false\` for: ${inspect(v)}`, () => {
-          assert.isFalse(BodyDelta.coerce(v).isDocument());
+          assert.isFalse(new BodyDelta(v).isDocument());
         });
       }
     });

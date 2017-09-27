@@ -30,32 +30,6 @@ export default class BodyDelta extends Delta {
   }
 
   /**
-   * Returns `true` iff the given delta or delta-like value is empty. This
-   * accepts the same set of values as `coerce()`, see which. Anything else is
-   * considered to be an error, except that when not given a `Delta` per se the
-   * array contents (if any) are not inspected for validity.
-   *
-   * **Note:** This is a static method exactly because it accepts things other
-   * than instances of `BodyDelta` per se.
-   *
-   * @param {object|array|null|undefined} delta The delta or delta-like value.
-   * @returns {boolean} `true` if `delta` is empty or `false` if not.
-   */
-  static isEmpty(delta) {
-    if (delta instanceof Delta) {
-      return (delta.ops.length === 0);
-    } else if ((delta === null) || (delta === undefined)) {
-      return true;
-    } else if (Array.isArray(delta)) {
-      return delta.length === 0;
-    } else if ((typeof delta === 'object') && Array.isArray(delta.ops)) {
-      return delta.ops.length === 0;
-    }
-
-    throw Errors.bad_value(delta, BodyDelta);
-  }
-
-  /**
    * Main coercion implementation, per the superclass documentation. In this
    * case, the following is how it proceeds:
    *
@@ -85,14 +59,13 @@ export default class BodyDelta extends Delta {
   static _impl_coerce(value) {
     // Note: The base class implementation guarantees that we won't get called
     // on an instance of this class.
-    if (BodyDelta.isEmpty(value)) {
+    if ((value === null) || (value === undefined)) {
       return BodyDelta.EMPTY;
-    } else if (value instanceof Delta) {
-      return new BodyDelta(value.ops);
     } else if (Array.isArray(value)) {
-      return new BodyDelta(value);
-    } else if (Array.isArray(value.ops)) {
-      return new BodyDelta(value.ops);
+      return (value.length === 0) ? BodyDelta.EMPTY : new BodyDelta(value);
+    } else if ((value instanceof Delta) || Array.isArray(value.ops)) {
+      const ops = value.ops;
+      return (ops.length === 0) ? BodyDelta.EMPTY : new BodyDelta(ops);
     }
 
     throw Errors.bad_value(value, BodyDelta);
@@ -111,15 +84,6 @@ export default class BodyDelta extends Delta {
 
     super(DataUtil.deepFreeze(ops));
     Object.freeze(this);
-  }
-
-  /**
-   * Converts this instance for API transmission.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toApi() {
-    return [this.ops];
   }
 
   /**
@@ -146,6 +110,15 @@ export default class BodyDelta extends Delta {
    */
   isEmpty() {
     return this.ops.length === 0;
+  }
+
+  /**
+   * Converts this instance for API transmission.
+   *
+   * @returns {array} Reconstruction arguments.
+   */
+  toApi() {
+    return [this.ops];
   }
 }
 
