@@ -45,7 +45,8 @@ export default class CaretSnapshot extends CommonBase {
   constructor(revNum, delta) {
     RevisionNumber.check(revNum);
 
-    if (Array.isArray(delta)) {
+    if (   Array.isArray(delta)
+        && ((delta.length === 0) || (delta[0] instanceof CaretOp))) {
       delta = new CaretDelta(delta);
     } else if (delta[Symbol.iterator]) {
       // FIXME: Remove this clause after conversion of call sites.
