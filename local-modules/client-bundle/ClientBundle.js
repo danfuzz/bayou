@@ -196,8 +196,7 @@ const webpackOptions = {
             loader: 'style-loader'
           },
           {
-            loader: 'css-loader',
-            options: { modules: true }
+            loader: 'css-loader'
           }
         ]
       },
@@ -214,8 +213,7 @@ const webpackOptions = {
             loader: 'style-loader/useable'
           },
           {
-            loader: 'css-loader',
-            options: { modules: true }
+            loader: 'css-loader'
           }
         ]
       }

@@ -23,12 +23,8 @@ const log = new Logger('editor-complex');
 const DEFAULT_BODY_MODULE_CONFIG = {
   keyboard: BayouKeyHandlers.defaultKeyHandlers,
   toolbar: [
+    [{ header: 1 }, { header: 2 }, { header: 3 }],
     ['bold', 'italic', 'underline', 'strike', 'code'], // Toggled buttons.
-    ['blockquote', 'code-block'],
-    [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
-    [{ header: [1, 2, 3, false] }],
-    [{ align: [] }],
-    ['clean'] // "Remove formatting" button.
   ]
 };
 
@@ -37,8 +33,6 @@ const DEFAULT_TITLE_MODULE_CONFIG = {
   keyboard: BayouKeyHandlers.singleLineKeyHandlers,
   toolbar: [
     ['italic', 'underline', 'strike', 'code'], // Toggled buttons.
-    [{ align: [] }],
-    ['clean'] // "Remove formatting" button.
   ]
 };
 

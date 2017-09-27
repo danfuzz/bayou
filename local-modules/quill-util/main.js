@@ -11,7 +11,10 @@ import QuillUtil from './QuillUtil';
 
 // Register this module's keyboard handler as an override of Quill's built-in
 // one.
-QuillProm.register({ 'modules/keyboard': BayouKeyboard }, true);
+QuillProm.register({
+  'modules/keyboard': BayouKeyboard
+}, true);
+
 
 export {
   BayouKeyHandlers,
