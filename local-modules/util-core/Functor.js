@@ -5,6 +5,7 @@
 import { inspect } from 'util';
 
 import CoreTypecheck from './CoreTypecheck';
+import DataUtil from './DataUtil';
 
 /**
  * Functor data value. A "functor," generally speaking, is a thing that looks
@@ -115,7 +116,8 @@ export default class Functor {
    * only considered to be equal to other direct instances of this class. (This
    * class is not meant to be subclassed.) Given two instances of this class,
    * their names must be strictly equal, their argument array lengths must be
-   * the same, and corresponding arguments must be strictly equal.
+   * the same, and corresponding arguments must be either strictly equal or
+   * equal as defined by `DataUtil.equalData()`.
    *
    * @param {*} other Value to compare to.
    * @returns {boolean} `true` if `other` is equal to this instance, or `false`
@@ -137,7 +139,9 @@ export default class Functor {
     }
 
     for (let i = 0; i < thisArgs.length; i++) {
-      if (thisArgs[i] !== otherArgs[i]) {
+      const arg1 = thisArgs[i];
+      const arg2 = otherArgs[i];
+      if ((arg1 !== arg2) && !DataUtil.equalData(arg1, arg2)) {
         return false;
       }
     }

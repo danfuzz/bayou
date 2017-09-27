@@ -99,10 +99,26 @@ describe('util-core/Functor', () => {
       assert.isTrue(ftor.equals(ftor));
     });
 
-    it('should return `true` when compared to a samely-constructed instance', () => {
-      const arrayArg = ['a', 'b'];
-      const ftor1 = new Functor('blort', 10, arrayArg);
-      const ftor2 = new Functor('blort', 10, arrayArg);
+    it('should return `true` when the name and all arguments are `===`', () => {
+      function test(...args) {
+        const ftor1 = new Functor('blort', ...args);
+        const ftor2 = new Functor('blort', ...args);
+        assert.isTrue(ftor1.equals(ftor2));
+      }
+
+      test();
+      test(1);
+      test('x', true, undefined);
+      test([]);
+      test([1, 2, 3]);
+      test({ a: 10, b: 20 }, 'foo');
+      test(/florp/);
+      test(new Set(['x', 'y']));
+    });
+
+    it('should return `true` when the name is `===` and all arguments are `equalData()`', () => {
+      const ftor1 = new Functor('blort', 10, ['x', ['y']], { a: 123 }, new Functor('z'));
+      const ftor2 = new Functor('blort', 10, ['x', ['y']], { a: 123 }, new Functor('z'));
       assert.isTrue(ftor1.equals(ftor2));
     });
 
@@ -119,9 +135,9 @@ describe('util-core/Functor', () => {
       assert.isFalse(ftor2.equals(ftor1));
     });
 
-    it('should return `false` when an argument is not strict-equal', () => {
-      const ftor1 = new Functor('blort', 10, ['a']);
-      const ftor2 = new Functor('blort', 10, ['a']);
+    it('should return `false` when an argument is not `===` or `equalData()`', () => {
+      const ftor1 = new Functor('blort', 10, new Set(['a', 'b']));
+      const ftor2 = new Functor('blort', 10, new Set(['a', 'b']));
       assert.isFalse(ftor1.equals(ftor2));
     });
 
