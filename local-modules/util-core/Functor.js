@@ -115,9 +115,16 @@ export default class Functor {
    * Compares this to another value for equality. Instances of this class are
    * only considered to be equal to other direct instances of this class. (This
    * class is not meant to be subclassed.) Given two instances of this class,
-   * their names must be strictly equal, their argument array lengths must be
-   * the same, and corresponding arguments must be either strictly equal or
-   * equal as defined by `DataUtil.equalData()`.
+   * in order to be considered equal, the following must hold:
+   *
+   * * Their names must be strictly equal.
+   * * Their argument array lengths must be the same.
+   * * Each pair of corresponding arguments must be equal, by one of the
+   *   following tests (performed in order):
+   *   * The arguments must be strictly equal.
+   *   * The arguments must be equal as defined by `DataUtil.equalData()`.
+   *   * The argument of this instance must define a `.equal()` method which
+   *     returns `true` when passed the argument of the other instance.
    *
    * @param {*} other Value to compare to.
    * @returns {boolean} `true` if `other` is equal to this instance, or `false`
@@ -142,7 +149,9 @@ export default class Functor {
       const arg1 = thisArgs[i];
       const arg2 = otherArgs[i];
       if ((arg1 !== arg2) && !DataUtil.equalData(arg1, arg2)) {
-        return false;
+        if ((typeof arg1.equals !== 'function') || !arg1.equals(arg2)) {
+          return false;
+        }
       }
     }
 
