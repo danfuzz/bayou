@@ -294,7 +294,7 @@ export default class BodyControl extends CommonBase {
     // Snapshot of the base revision. This call validates `baseRevNum`.
     const base = await this.snapshot(baseRevNum);
 
-    // Check for an empty `ops`. If it is, we don't bother trying to apply it.
+    // Check for an empty `delta`. If it is, we don't bother trying to apply it.
     // See method header comment for more info.
     if (delta.isEmpty()) {
       return new BodyChange(baseRevNum, BodyDelta.EMPTY);
