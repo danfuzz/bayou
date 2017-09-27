@@ -87,15 +87,6 @@ export default class PropertySnapshot extends CommonBase {
   }
 
   /**
-   * Converts this instance for API transmission.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toApi() {
-    return [this._revNum, [...this._properties.values()]];
-  }
-
-  /**
    * {Map<string, *>} Map from property names to values. Guaranteed to be
    * immutable.
    */
@@ -254,6 +245,15 @@ export default class PropertySnapshot extends CommonBase {
   has(name) {
     TString.identifier(name);
     return this._properties.has(name);
+  }
+
+  /**
+   * Converts this instance for API transmission.
+   *
+   * @returns {array} Reconstruction arguments.
+   */
+  toApi() {
+    return [this._revNum, [...this._properties.values()]];
   }
 
   /**

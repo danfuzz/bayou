@@ -88,15 +88,6 @@ export default class CaretSnapshot extends CommonBase {
     Object.freeze(this);
   }
 
-  /**
-   * Converts this instance for API transmission.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toApi() {
-    return [this._revNum, [...this._carets.values()]];
-  }
-
   /** {Int} The caret information revision number. */
   get revNum() {
     return this._revNum;
@@ -286,6 +277,15 @@ export default class CaretSnapshot extends CommonBase {
   hasSession(sessionId) {
     TString.nonEmpty(sessionId);
     return this.caretForSession(sessionId) !== null;
+  }
+
+  /**
+   * Converts this instance for API transmission.
+   *
+   * @returns {array} Reconstruction arguments.
+   */
+  toApi() {
+    return [this._revNum, [...this._carets.values()]];
   }
 
   /**
