@@ -85,14 +85,13 @@ export default class BodyDelta extends Delta {
   static _impl_coerce(value) {
     // Note: The base class implementation guarantees that we won't get called
     // on an instance of this class.
-    if (BodyDelta.isEmpty(value)) {
+    if ((value === null) || (value === undefined)) {
       return BodyDelta.EMPTY;
-    } else if (value instanceof Delta) {
-      return new BodyDelta(value.ops);
     } else if (Array.isArray(value)) {
-      return new BodyDelta(value);
-    } else if (Array.isArray(value.ops)) {
-      return new BodyDelta(value.ops);
+      return (value.length === 0) ? BodyDelta.EMPTY : new BodyDelta(value);
+    } else if ((value instanceof Delta) || Array.isArray(value.ops)) {
+      const ops = value.ops;
+      return (ops.length === 0) ? BodyDelta.EMPTY : new BodyDelta(ops);
     }
 
     throw Errors.bad_value(value, BodyDelta);
