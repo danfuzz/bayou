@@ -37,9 +37,6 @@ export default class BodyDelta extends Delta {
    *   ops.
    * * If `value` is an array, returns an instance with `value` as the list
    *   of ops.
-   * * If `value` is an object that binds `ops`, returns an instance with
-   *   `value.ops` as the list of ops.
-   * * If `value` is `null` or `undefined`, returns `EMPTY`.
    * * Throws a `bad_value` error for any other value.
    *
    * In general, this method will return the unique instance `EMPTY` when
@@ -47,28 +44,44 @@ export default class BodyDelta extends Delta {
    *
    * Unlike the `Delta` constructor:
    *
-   * * This method does not construct a new instance if the given value is in
-   *   fact an instance of this class.
    * * The result is always deeply frozen.
    * * This method will throw an error instead of silently accepting invalid
    *   values.
+   * * This does not accept arbitrary objects that just happen to have an `ops`
+   *   field.
    *
    * @param {object|array|null|undefined} value The value to coerce.
    * @returns {BodyDelta} The corresponding instance.
    */
   static _impl_coerce(value) {
-    // Note: The base class implementation guarantees that we won't get called
-    // on an instance of this class.
-    if ((value === null) || (value === undefined)) {
-      return BodyDelta.EMPTY;
-    } else if (Array.isArray(value)) {
-      return (value.length === 0) ? BodyDelta.EMPTY : new BodyDelta(value);
-    } else if ((value instanceof Delta) || Array.isArray(value.ops)) {
-      const ops = value.ops;
-      return (ops.length === 0) ? BodyDelta.EMPTY : new BodyDelta(ops);
+    // **Note:** The base class implementation guarantees that we won't get
+    // called on an instance of this class.
+
+    let ops;
+    if (Array.isArray(value)) {
+      ops = value;
+    } else if (value instanceof Delta) {
+      ops = value.ops;
+    } else {
+      // Invalid argument. Diagnose further.
+      if ((typeof value === 'object') && value.constructor && (value.constructor.name === 'Delta')) {
+        // The version of `Delta` used by Quill is different than the one we
+        // specified in our `package.json`. Even though it will often happen to
+        // work if we just let it slide (e.g. by snarfing `ops` out of the
+        // object and running with it), we don't want to end up shipping two
+        // versions of `Delta` to the client; so, instead of just blithely
+        // accepting this possibility, we reject it here and report an error
+        // which makes it easy to figure out what happened. Should you find
+        // yourself looking at this error, the right thing to do is look at
+        // Quill's `package.json` and update the `quill-delta` dependency here
+        // to what you find there.
+        throw Errors.bad_use('Divergent versions of `quill-delta` package.');
+      } else {
+        throw Errors.bad_value(value, BodyDelta);
+      }
     }
 
-    throw Errors.bad_value(value, BodyDelta);
+    return (ops.length === 0) ? BodyDelta.EMPTY : new BodyDelta(ops);
   }
 
   /**
