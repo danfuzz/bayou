@@ -29,6 +29,14 @@ class MockDelta extends CommonBase {
 
     this.got = got;
   }
+
+  isDocument() {
+    return true;
+  }
+
+  equals(other) {
+    return this === other;
+  }
 }
 
 /**
