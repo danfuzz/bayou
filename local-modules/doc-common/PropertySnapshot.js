@@ -7,7 +7,6 @@ import { Errors } from 'util-common';
 
 import BaseSnapshot from './BaseSnapshot';
 import PropertyChange from './PropertyChange';
-import PropertyDelta from './PropertyDelta';
 import PropertyOp from './PropertyOp';
 
 /**
@@ -225,22 +224,6 @@ export default class PropertySnapshot extends BaseSnapshot {
     return op.equals(this._properties.get(name))
       ? this
       : this.compose(new PropertyChange(this._revNum, [op]));
-  }
-
-  /**
-   * Constructs an instance just like this one, except with a different
-   * caret revision number. If the given revision number is the same as what
-   * this instance already stores, this method returns `this`.
-   *
-   * @param {Int} revNum The new caret revision number.
-   * @returns {PropertySnapshot} An appropriately-constructed instance.
-   */
-  withRevNum(revNum) {
-    // This type checks `revNum`, which is why it's not just run when we need
-    // to call `compose()`.
-    const change = new PropertyChange(revNum, PropertyDelta.EMPTY);
-
-    return (revNum === this.revNum) ? this : this.compose(change);
   }
 
   /**

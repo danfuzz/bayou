@@ -386,6 +386,29 @@ describe('doc-common/PropertySnapshot', () => {
     });
   });
 
+  describe('withContents()', () => {
+    it('should return `this` if the given `contents` is `===` to the snapshot\'s', () => {
+      const snap = new PropertySnapshot(123, PropertyDelta.EMPTY);
+
+      assert.strictEqual(snap.withContents(PropertyDelta.EMPTY), snap);
+    });
+
+    it('should return an appropriately-constructed instance given a different `contents`', () => {
+      const delta  = new PropertyDelta([PropertyOp.op_setProperty('blort', 'zorch')]);
+      const snap   = new PropertySnapshot(123, []);
+      const result = snap.withContents(delta);
+
+      assert.strictEqual(result.revNum,   123);
+      assert.strictEqual(result.contents, delta);
+    });
+
+    it('should reject an invalid `contents`', () => {
+      const snap = new PropertySnapshot(123, []);
+
+      assert.throws(() => snap.withContents('blortch'));
+    });
+  });
+
   describe('withProperty()', () => {
     it('should return `this` if the exact property is already in the snapshot', () => {
       const snap = new PropertySnapshot(1, [PropertyOp.op_setProperty('blort', 'zorch')]);
@@ -419,11 +442,18 @@ describe('doc-common/PropertySnapshot', () => {
     });
 
     it('should return an appropriately-constructed instance given a different `revNum`', () => {
-      const delta    = new PropertyDelta([PropertyOp.op_setProperty('blort', 'zorch')]);
-      const snap     = new PropertySnapshot(123, delta);
-      const expected = new PropertySnapshot(456, delta);
+      const delta  = new PropertyDelta([PropertyOp.op_setProperty('blort', 'zorch')]);
+      const snap   = new PropertySnapshot(123, delta);
+      const result = snap.withRevNum(456);
 
-      assert.deepEqual(snap.withRevNum(456), expected);
+      assert.strictEqual(result.revNum,   456);
+      assert.strictEqual(result.contents, delta);
+    });
+
+    it('should reject an invalid `revNum`', () => {
+      const snap = new PropertySnapshot(123, []);
+
+      assert.throws(() => snap.withRevNum('blortch'));
     });
   });
 

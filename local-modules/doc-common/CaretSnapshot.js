@@ -262,22 +262,6 @@ export default class CaretSnapshot extends BaseSnapshot {
   }
 
   /**
-   * Constructs an instance just like this one, except with a different
-   * caret revision number. If the given revision number is the same as what
-   * this instance already stores, this method returns `this`.
-   *
-   * @param {Int} revNum The new caret revision number.
-   * @returns {CaretSnapshot} An appropriately-constructed instance.
-   */
-  withRevNum(revNum) {
-    // This type checks `revNum`, which is why it's not just run when we need
-    // to call `compose()`.
-    const change = new CaretChange(revNum, CaretDelta.EMPTY);
-
-    return (revNum === this.revNum) ? this : this.compose(change);
-  }
-
-  /**
    * Constructs an instance just like this one, except without any reference to
    * the session indicated by the given caret. If there is no session for the
    * given caret, this method returns `this`.

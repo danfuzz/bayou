@@ -133,6 +133,36 @@ export default class BaseSnapshot extends CommonBase {
   }
 
   /**
+   * Returns an instance just like this one except with the content set as
+   * given. This will return `this` if `content` is strictly equal (`===`) to
+   * `this.content`.
+   *
+   * @param {object} contents The new contents.
+   * @returns {BaseSnapshot} An appropriately-constructed instance. This will be
+   *   a direct instance of the same class as `this`.
+   */
+  withContents(contents) {
+    return (contents === this._contents)
+      ? this
+      : new this.constructor(this._revNum, contents);
+  }
+
+  /**
+   * Returns an instance just like this one except with the revision number set
+   * as given. This will return `this` if `revNum` is the same as what this
+   * instance already has.
+   *
+   * @param {Int} revNum The new revision number.
+   * @returns {BaseSnapshot} An appropriately-constructed instance. This will be
+   *   a direct instance of the same class as `this`.
+   */
+  withRevNum(revNum) {
+    return (revNum === this._revNum)
+      ? this
+      : new this.constructor(revNum, this._contents);
+  }
+
+  /**
    * {class} Class (constructor function) of change objects to be used with
    * instances of this class. Subclasses must be fill this in.
    *
