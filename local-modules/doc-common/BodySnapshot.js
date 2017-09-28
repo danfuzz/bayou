@@ -14,6 +14,20 @@ import BodyDelta from './BodyDelta';
  */
 export default class BodySnapshot extends BaseSnapshot {
   /**
+   * Constructs an instance.
+   *
+   * @param {RevisionNumber} revNum Revision number of the document.
+   * @param {object|array} contents The document contents per se, in the form of
+   *   a document delta (that is, a from-empty delta). This must be either a
+   *   `BodyDelta` or an array which can be passed to the `BodyDelta`
+   *   constructor to produce a valid delta.
+   */
+  constructor(revNum, contents) {
+    super(revNum, contents);
+    Object.freeze(this);
+  }
+
+  /**
    * Composes a change on top of this instance, to produce a new instance.
    *
    * @param {BodyChange} change Change to compose on top of this instance.

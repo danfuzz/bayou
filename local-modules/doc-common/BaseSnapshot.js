@@ -10,7 +10,8 @@ import RevisionNumber from './RevisionNumber';
 
 /**
  * Base class for snapshots of (parts of) documents. Every snapshot consists of
- * a revision number and a from-empty delta.
+ * a revision number and a from-empty delta. Instances of this class are always
+ * frozen.
  */
 export default class BaseSnapshot extends CommonBase {
   /**
@@ -60,6 +61,8 @@ export default class BaseSnapshot extends CommonBase {
   /**
    * Constructs an instance.
    *
+   * **Note:** Subclasses are responsible for freezing the constructed instance.
+   *
    * @param {RevisionNumber} revNum Revision number of the document.
    * @param {object|array} contents The document contents per se, in the form of
    *   a document delta (that is, a from-empty delta). This must be either an
@@ -86,8 +89,6 @@ export default class BaseSnapshot extends CommonBase {
     if (!this._contents.isDocument()) {
       throw Errors.bad_value(contents, this.constructor.deltaClass, 'document');
     }
-
-    Object.freeze(this);
   }
 
   /** {BaseDelta} The document contents as a from-empty delta. */
@@ -105,6 +106,8 @@ export default class BaseSnapshot extends CommonBase {
    * to be considered equal, they must be instances of the same exact class,
    * their revision numbers must be the same, and their contents must be
    * `.equals()`.
+   *
+   * Subclasses may override this method if this behavior isn't right for them.
    *
    * @param {*} other Instance to compare to.
    * @returns {boolean} `true` if `this` and `other` are equal, or `false` if

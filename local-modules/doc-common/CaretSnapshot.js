@@ -3,64 +3,30 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
-import { CommonBase, Errors } from 'util-common';
+import { Errors } from 'util-common';
 
+import BaseSnapshot from './BaseSnapshot';
 import Caret from './Caret';
 import CaretChange from './CaretChange';
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';
-import RevisionNumber from './RevisionNumber';
 
-/**
- * {CaretSnapshot|null} Empty instance. Initialized in the `EMPTY` property
- * accessor.
- */
-let EMPTY = null;
 
 /**
  * Snapshot of information about all active sessions on a particular document.
  * Instances of this class are always frozen (immutable).
  */
-export default class CaretSnapshot extends CommonBase {
-  /**
-   * {CaretSnapshot} Empty instance of this class. It has no carets and a
-   * revision number of `0`.
-   */
-  static get EMPTY() {
-    if (EMPTY === null) {
-      EMPTY = new CaretSnapshot(0, []);
-    }
-
-    return EMPTY;
-  }
-
+export default class CaretSnapshot extends BaseSnapshot {
   /**
    * Constructs an instance.
    *
    * @param {Int} revNum Revision number of the caret information.
-   * @param {CaretDelta|array<CaretOp>} delta A from-empty delta (or array of
+   * @param {CaretDelta|array<CaretOp>} contents A from-empty delta (or array of
    *   ops which can be used to construct same), representing all the carets to
    *   include in the instance.
    */
-  constructor(revNum, delta) {
-    if (Array.isArray(delta)) {
-      // Convert the given array into a proper delta instance. (This does type
-      // checking of the argument.)
-      delta = new CaretDelta(delta);
-    } else {
-      CaretDelta.check(delta);
-    }
-
-    // We know we have a valid delta, but we furthermore need it to be a
-    // _document_ (from-empty) delta.
-    if (!delta.isDocument()) {
-      throw Errors.bad_value(delta, CaretDelta, 'isDocument()');
-    }
-
-    super();
-
-    /** {Int} The caret information revision number. */
-    this._revNum = RevisionNumber.check(revNum);
+  constructor(revNum, contents) {
+    super(revNum, contents);
 
     /**
      * {Map<string, CaretOp>} Map of session ID to an `op_beginSession` which
@@ -69,7 +35,7 @@ export default class CaretSnapshot extends CommonBase {
     this._carets = new Map();
 
     // Fill in `_carets`.
-    for (const op of delta.ops) {
+    for (const op of this.contents.ops) {
       const opProps = op.props;
 
       switch (opProps.opName) {
@@ -89,11 +55,6 @@ export default class CaretSnapshot extends CommonBase {
     Object.freeze(this);
   }
 
-  /** {CaretDelta} The caret state as a from-empty delta. */
-  get contents() {
-    return new CaretDelta([...this._carets.values()]);
-  }
-
   /**
    * {array<Caret>} Array of active carets. It is guaranteed to be a frozen
    * (immutable) value.
@@ -106,11 +67,6 @@ export default class CaretSnapshot extends CommonBase {
     }
 
     return Object.freeze(result);
-  }
-
-  /** {Int} The caret information revision number. */
-  get revNum() {
-    return this._revNum;
   }
 
   /**
@@ -259,7 +215,7 @@ export default class CaretSnapshot extends CommonBase {
     const thisCarets  = this._carets;
     const otherCarets = other._carets;
 
-    if (   (this._revNum    !== other._revNum)
+    if (   (this.revNum     !== other.revNum)
         || (thisCarets.size !== otherCarets.size)) {
       return false;
     }
@@ -286,15 +242,6 @@ export default class CaretSnapshot extends CommonBase {
   }
 
   /**
-   * Converts this instance for API transmission.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toApi() {
-    return [this._revNum, this.contents.ops];
-  }
-
-  /**
    * Constructs an instance just like this one, except with an additional or
    * updated reference to the indicated caret. If the given caret (including all
    * fields) is already represented in this instance, this method returns
@@ -311,7 +258,7 @@ export default class CaretSnapshot extends CommonBase {
 
     return op.equals(this._carets.get(sessionId))
       ? this
-      : this.compose(new CaretChange(this._revNum, [op]));
+      : this.compose(new CaretChange(this.revNum, [op]));
   }
 
   /**
@@ -327,7 +274,7 @@ export default class CaretSnapshot extends CommonBase {
     // to call `compose()`.
     const change = new CaretChange(revNum, CaretDelta.EMPTY);
 
-    return (revNum === this._revNum) ? this : this.compose(change);
+    return (revNum === this.revNum) ? this : this.compose(change);
   }
 
   /**
@@ -360,7 +307,15 @@ export default class CaretSnapshot extends CommonBase {
     const op = CaretOp.op_endSession(sessionId);
 
     return this._carets.has(sessionId)
-      ? this.compose(new CaretChange(this._revNum, [op]))
+      ? this.compose(new CaretChange(this.revNum, [op]))
       : this;
+  }
+
+  /**
+   * {class} Class (constructor function) of change objects to be used with
+   * instances of this class.
+   */
+  static get _impl_changeClass() {
+    return CaretChange;
   }
 }

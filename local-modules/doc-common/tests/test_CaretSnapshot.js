@@ -198,7 +198,7 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should refuse to update a nonexistent caret', () => {
-      const snap  = new CaretSnapshot(1, [op1]);
+      const snap   = new CaretSnapshot(1, [op1]);
       const change = new CaretChange(1, [CaretOp.op_setField('florp', 'index', 1)]);
 
       assert.throws(() => { snap.compose(change); });
