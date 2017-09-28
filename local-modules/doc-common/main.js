@@ -6,6 +6,7 @@ import { Codec } from 'codec';
 
 import AuthorId from './AuthorId';
 import BaseChange from './BaseChange';
+import BaseSnapshot from './BaseSnapshot';
 import BodyChange from './BodyChange';
 import BodyDelta from './BodyDelta';
 import BodySnapshot from './BodySnapshot';
@@ -40,6 +41,7 @@ Codec.theOne.registerClass(Timestamp);
 export {
   AuthorId,
   BaseChange,
+  BaseSnapshot,
   BodyChange,
   BodyDelta,
   BodySnapshot,

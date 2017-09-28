@@ -6,47 +6,10 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import Delta from 'quill-delta';
 
-import { BaseChange, Timestamp } from 'doc-common';
-import { CommonBase, Errors } from 'util-common';
+import { Timestamp } from 'doc-common';
 
-/**
- * Mock "delta" class for testing.
- */
-class MockDelta extends CommonBase {
-  static get EMPTY() {
-    if (!this._EMPTY) {
-      this._EMPTY = new MockDelta();
-    }
-    return this._EMPTY;
-  }
-
-  constructor(got = null) {
-    super();
-
-    if ((got !== null) && (got.length !== 3)) {
-      throw Errors.bad_value(got, 'length 3 array');
-    }
-
-    this.got = got;
-  }
-
-  isDocument() {
-    return true;
-  }
-
-  equals(other) {
-    return this === other;
-  }
-}
-
-/**
- * Subclass of `BaseChange` used to do the testing.
- */
-class MockChange extends BaseChange {
-  static get _impl_deltaClass() {
-    return MockDelta;
-  }
-}
+import MockChange from './MockChange';
+import MockDelta from './MockDelta';
 
 /**
  * Asserts that the given instance has fields that are `===` to the given
@@ -107,11 +70,17 @@ describe('doc-common/BaseChange', () => {
       test(242, MockDelta.EMPTY, Timestamp.MAX_VALUE, 'florp9019');
     });
 
-    it('should accept an array for the `delta`, which should get passed to the delta constructor', () => {
+    it('should accept a valid `delta` array, which should get passed to the delta constructor', () => {
       const array  = ['valid', 'length 3', '(see the MockDelta constructor)'];
       const result = new MockChange(0, array);
 
-      assert.strictEqual(result.delta.got, array);
+      assert.strictEqual(result.delta.ops, array);
+    });
+
+    it('should reject an invalid `delta` array, via the delta constructor', () => {
+      const array  = ['invalid', 'length', 4, '(see the MockDelta constructor)'];
+
+      assert.throws(() => { new MockChange(0, array); });
     });
 
     it('should reject invalid arguments', () => {
@@ -133,7 +102,6 @@ describe('doc-common/BaseChange', () => {
       test(0, false);
       test(0, new Map());
       test(0, { ops: [] });
-      test(0, ['invalid']);
       test(0, new Delta()); // Needs to be a `MockDelta`.
 
       // Invalid `timestamp`.

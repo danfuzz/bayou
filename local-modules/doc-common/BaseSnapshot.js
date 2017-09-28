@@ -116,6 +116,10 @@ export default class BaseSnapshot extends CommonBase {
   equals(other) {
     if (this === other) {
       return true;
+    } else if (!(other instanceof BaseSnapshot)) {
+      // **Note:** This handles non-objects and `null`s, making the final
+      // `return` expression pretty straightforward.
+      return false;
     }
 
     return (this.constructor === other.constructor)
