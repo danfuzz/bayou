@@ -24,7 +24,7 @@ class MockDelta extends CommonBase {
     super();
 
     if ((got !== null) && (got.length !== 3)) {
-      throw Errors.bad_value(got, 'length 3 arrray');
+      throw Errors.bad_value(got, 'length 3 array');
     }
 
     this.got = got;
@@ -38,6 +38,23 @@ class MockChange extends BaseChange {
   static get _impl_deltaClass() {
     return MockDelta;
   }
+}
+
+/**
+ * Asserts that the given instance has fields that are `===` to the given
+ * values.
+ *
+ * @param {BaseChange} change Change in question.
+ * @param {Int} revNum Revision number.
+ * @param {object} delta Delta.
+ * @param {Timestamp} timestamp Timestamp.
+ * @param {string} authorId Author ID.
+ */
+function assertFields(change, revNum, delta, timestamp = null, authorId = null) {
+  assert.strictEqual(change.revNum,    revNum);
+  assert.strictEqual(change.delta,     delta);
+  assert.strictEqual(change.timestamp, timestamp);
+  assert.strictEqual(change.authorId,  authorId);
 }
 
 describe('doc-common/BaseChange', () => {
@@ -68,21 +85,18 @@ describe('doc-common/BaseChange', () => {
 
     it('should accept valid arguments, which should be reflected in the accessors', () => {
       function test(...args) {
-        const [revNum, delta, timestamp = null, authorId = null] = args;
-        const result = new MockChange(...args);
-        assert.strictEqual(result.revNum, revNum);
-        assert.strictEqual(result.delta, delta);
-        assert.strictEqual(result.timestamp, timestamp);
-        assert.strictEqual(result.authorId, authorId);
+        assertFields(new MockChange(...args), ...args);
       }
 
       test(0,   MockDelta.EMPTY);
       test(123, MockDelta.EMPTY);
       test(0,   new MockDelta());
       test(909, new MockDelta(), null);
-      test(909, new MockDelta(), Timestamp.now());
-      test(242, MockDelta.EMPTY, null, null);
-      test(242, MockDelta.EMPTY, null, 'florp9019');
+      test(909, new MockDelta(), Timestamp.MIN_VALUE);
+      test(909, new MockDelta(), Timestamp.MIN_VALUE, null);
+      test(242, MockDelta.EMPTY, null,                null);
+      test(242, MockDelta.EMPTY, null,                'florp9019');
+      test(242, MockDelta.EMPTY, Timestamp.MAX_VALUE, 'florp9019');
     });
 
     it('should accept an array for the `delta`, which should get passed to the delta constructor', () => {
@@ -126,6 +140,40 @@ describe('doc-common/BaseChange', () => {
       test(0, MockDelta.EMPTY, null, 123);
       test(0, MockDelta.EMPTY, null, [123]);
       test(0, MockDelta.EMPTY, null, new Map());
+    });
+  });
+
+  describe('with*', () => {
+    function test(methodName, args, argIndex, newValue) {
+      const orig   = new MockChange(...args);
+      const result = orig[methodName](newValue);
+
+      args[argIndex] = newValue;
+      assertFields(result, ...args);
+    }
+
+    describe('withAuthorId()', () => {
+      it('should produce a new instance with the expected fields', () => {
+        test('withAuthorId', [99, new MockDelta(), Timestamp.MIN_VALUE, 'florp'], 3, 'blort');
+      });
+    });
+
+    describe('withDelta()', () => {
+      it('should produce a new instance with the expected fields', () => {
+        test('withDelta', [999, new MockDelta(), Timestamp.MAX_VALUE, 'like'], 1, new MockDelta());
+      });
+    });
+
+    describe('withRevNum()', () => {
+      it('should produce a new instance with the expected fields', () => {
+        test('withRevNum', [9999, new MockDelta(), Timestamp.MIN_VALUE, 'zorch'], 0, 123);
+      });
+    });
+
+    describe('withTimestamp()', () => {
+      it('should produce a new instance with the expected fields', () => {
+        test('withTimestamp', [99999, new MockDelta(), Timestamp.MIN_VALUE, 'zorch'], 2, Timestamp.MAX_VALUE);
+      });
     });
   });
 });
