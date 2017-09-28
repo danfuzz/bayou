@@ -5,7 +5,7 @@
 import { inspect } from 'util';
 
 import { TArray } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase, DataUtil } from 'util-common';
 
 import CaretOp from './CaretOp';
 
@@ -49,20 +49,38 @@ export default class CaretDelta extends CommonBase {
   }
 
   /**
+   * {array<CaretOp>} Array of operations to be applied. This is guaranteed to
+   * be a frozen (immutable) value.
+   */
+  get ops() {
+    return this._ops;
+  }
+
+  /**
+   * Compares this to another possible-instance, for equality. To be considered
+   * equal, `other` must be an instance of this class with an `ops` which is
+   * `DataUtil.equalData()` to this instance's `ops`.
+   *
+   * @param {*} other Instance to compare to.
+   * @returns {boolean} `true` if `this` and `other` are equal, or `false` if
+   *   not.
+   */
+  equals(other) {
+    if (this === other) {
+      return true;
+    }
+
+    return (other instanceof CaretDelta)
+      && DataUtil.equalData(this._ops, other._ops);
+  }
+
+  /**
    * Converts this instance for API transmission.
    *
    * @returns {array} Reconstruction arguments.
    */
   toApi() {
     return [this._ops];
-  }
-
-  /**
-   * {array<CaretOp>} Array of operations to be applied. This is guaranteed to
-   * be a frozen (immutable) value.
-   */
-  get ops() {
-    return this._ops;
   }
 
   /**

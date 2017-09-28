@@ -79,11 +79,29 @@ export default class BodyDelta extends Delta {
    *   of the given value.
    */
   constructor(ops) {
-    // TODO: Should consider validating the contents of `ops`.
+    // **TODO:** The contents of `ops` should be validated.
     TArray.check(ops);
 
     super(DataUtil.deepFreeze(ops));
     Object.freeze(this);
+  }
+
+  /**
+   * Compares this to another possible-instance, for equality. To be considered
+   * equal, `other` must be an instance of this class with an `ops` which is
+   * `DataUtil.equalData()` to this instance's `ops`.
+   *
+   * @param {*} other Instance to compare to.
+   * @returns {boolean} `true` if `this` and `other` are equal, or `false` if
+   *   not.
+   */
+  equals(other) {
+    if (this === other) {
+      return true;
+    }
+
+    return (other instanceof BodyDelta)
+      && DataUtil.equalData(this._ops, other._ops);
   }
 
   /**
