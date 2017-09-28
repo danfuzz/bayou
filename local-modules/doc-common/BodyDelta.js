@@ -105,8 +105,9 @@ export default class BodyDelta extends Delta {
   }
 
   /**
-   * Returns `true` iff this instance has the form of a "document." In Quill
-   * terms, a "document" is a delta that consists _only_ of `insert` operations.
+   * Returns `true` iff this instance has the form of a "document," or put
+   * another way, iff it is valid to compose with an empty snapshot. In Quill
+   * terms, a document is a delta that consists _only_ of `insert` operations.
    *
    * @returns {boolean} `true` if this instance is a document or `false` if not.
    */

@@ -51,6 +51,12 @@ export default class CaretSnapshot extends CommonBase {
       CaretDelta.check(delta);
     }
 
+    // We know we have a valid delta, but we furthermore need it to be a
+    // _document_ (from-empty) delta.
+    if (!delta.isDocument()) {
+      throw Errors.bad_value(delta, CaretDelta, 'isDocument()');
+    }
+
     super();
 
     /** {Int} The caret information revision number. */
@@ -68,18 +74,13 @@ export default class CaretSnapshot extends CommonBase {
 
       switch (opProps.opName) {
         case CaretOp.BEGIN_SESSION: {
-          const sessionId = opProps.caret.sessionId;
-
-          if (this._carets.has(sessionId)) {
-            throw Errors.bad_use(`Duplicate caret: ${sessionId}`);
-          }
-
-          this._carets.set(sessionId, op);
+          this._carets.set(opProps.caret.sessionId, op);
           break;
         }
 
         default: {
-          throw Errors.bad_value(op, 'CaretSnapshot construction op');
+          // Should have been prevented by the `isDocument()` check.
+          throw Errors.wtf('Weird op');
         }
       }
     }

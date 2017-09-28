@@ -60,7 +60,7 @@ export default class BodySnapshot extends CommonBase {
     // i.e. the ops themselves have to be valid in the contents of this project.
     // That validity should also be enforced.
     if (!this._contents.isDocument()) {
-      throw Errors.bad_value(contents, 'document delta');
+      throw Errors.bad_value(contents, BodyDelta, 'isDocument()');
     }
 
     Object.freeze(this);
