@@ -47,7 +47,7 @@ describe('doc-common/BodyChange', () => {
       test(0,   new BodyDelta([{ retain: 100 }]));
       test(123, BodyDelta.EMPTY);
       test(909, new BodyDelta([{ insert: 'x' }]), null);
-      test(909, new BodyDelta([{ insert: 'x' }]), Timestamp.now());
+      test(909, new BodyDelta([{ insert: 'x' }]), Timestamp.MIN_VALUE);
       test(242, BodyDelta.EMPTY,                  null, null);
       test(242, BodyDelta.EMPTY,                  null, 'florp9019');
     });

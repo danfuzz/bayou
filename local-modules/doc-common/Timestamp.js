@@ -38,6 +38,16 @@ const USECS_PER_SEC = 1000000;
  * of the year 2002 and a maximum around the start of the year 2050.
  */
 export default class Timestamp extends CommonBase {
+  /** {Timestamp} The maximum valid timestamp. */
+  static get MAX_VALUE() {
+    return new Timestamp(MAX_SECS - 1, USECS_PER_SEC - 1);
+  }
+
+  /** {Timestamp} The minimum valid timestamp. */
+  static get MIN_VALUE() {
+    return new Timestamp(MIN_SECS, 0);
+  }
+
   /**
    * Constructs an instance from a millisecond-granularity time value, such as
    * might have been returned from `Date.now()`.
