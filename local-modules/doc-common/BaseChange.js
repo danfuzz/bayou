@@ -164,6 +164,52 @@ export default class BaseChange extends CommonBase {
   }
 
   /**
+   * Returns an instance just like this one except with the author set as given.
+   *
+   * @param {string} authorId The new author ID.
+   * @returns {BaseChange} An appropriately-constructed instance. This will be
+   *   a direct instance of the same class as `this`.
+   */
+  withAuthorId(authorId) {
+    return new this.constructor(this._revNum, this._delta, this._timestamp, authorId);
+  }
+
+  /**
+   * Returns an instance just like this one except with the delta set as given.
+   *
+   * @param {object} delta The new delta.
+   * @returns {BaseChange} An appropriately-constructed instance. This will be
+   *   a direct instance of the same class as `this`.
+   */
+  withDelta(delta) {
+    return new this.constructor(this._revNum, delta, this._timestamp, this._authorId);
+  }
+
+  /**
+   * Returns an instance just like this one except with the revision number set
+   * as given.
+   *
+   * @param {Int} revNum The new revision number.
+   * @returns {BaseChange} An appropriately-constructed instance. This will be
+   *   a direct instance of the same class as `this`.
+   */
+  withRevNum(revNum) {
+    return new this.constructor(revNum, this._delta, this._timestamp, this._authorId);
+  }
+
+  /**
+   * Returns an instance just like this one except with the timestamp set as
+   * given.
+   *
+   * @param {Timestamp} timestamp The new timestamp.
+   * @returns {BaseChange} An appropriately-constructed instance. This will be
+   *   a direct instance of the same class as `this`.
+   */
+  withTimestamp(timestamp) {
+    return new this.constructor(this._revNum, this._delta, timestamp, this._authorId);
+  }
+
+  /**
    * {class} Class (constructor function) of delta objects to be used with
    * instances of this class. Subclasses must be fill this in.
    *
