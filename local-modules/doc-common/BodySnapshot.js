@@ -36,9 +36,10 @@ export default class BodySnapshot extends CommonBase {
    * Constructs an instance.
    *
    * @param {RevisionNumber} revNum Revision number of the document.
-   * @param {Delta|array|object} contents Document contents. Can be given
-   *   anything that can be coerced into a `BodyDelta`. Must be a "document"
-   *   (that is, a delta consisting only of `insert` operations).
+   * @param {object|array} contents The document contents per se, in the form of
+   *   a document delta (that is, a from-empty delta). This must be either a
+   *   `BodyDelta` or an array which can be passed to the `BodyDelta`
+   *   constructor to produce a valid delta.
    */
   constructor(revNum, contents) {
     super();
@@ -46,8 +47,10 @@ export default class BodySnapshot extends CommonBase {
     /** {Int} Revision number. */
     this._revNum = RevisionNumber.check(revNum);
 
-    /** {BodyDelta} Document contents. */
-    this._contents = BodyDelta.coerce(contents);
+    /** {object} Document contents. */
+    this._contents = Array.isArray(contents)
+      ? new BodyDelta(contents)
+      : BodyDelta.check(contents);
 
     // Explicitly check that the `contents` delta has the form of a "document,"
     // that is, the only operations are `insert`s. For very large documents,
