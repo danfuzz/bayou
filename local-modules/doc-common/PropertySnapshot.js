@@ -50,6 +50,12 @@ export default class PropertySnapshot extends CommonBase {
       PropertyDelta.check(delta);
     }
 
+    // We know we have a valid delta, but we furthermore need it to be a
+    // _document_ (from-empty) delta.
+    if (!delta.isDocument()) {
+      throw Errors.bad_value(delta, PropertyDelta, 'isDocument()');
+    }
+
     super();
 
     /** {Int} The property information revision number. */
@@ -67,17 +73,13 @@ export default class PropertySnapshot extends CommonBase {
 
       switch (opProps.opName) {
         case PropertyOp.SET_PROPERTY: {
-          const name = opProps.name;
-          if (this._properties.has(name)) {
-            throw Errors.bad_use(`Duplicate property name: ${name}`);
-          }
-
-          this._properties.set(name, op);
+          this._properties.set(opProps.name, op);
           break;
         }
 
         default: {
-          throw Errors.bad_value(op, 'PropertySnapshot construction op');
+          // Should have been prevented by the `isDocument()` check.
+          throw Errors.wtf('Weird op');
         }
       }
     }

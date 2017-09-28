@@ -75,6 +75,10 @@ describe('doc-common/PropertySnapshot', () => {
         PropertyOp.op_setProperty('x', 'y'),
         PropertyOp.op_deleteProperty('x') // Deletes aren't allowed.
       ]);
+      test([
+        PropertyOp.op_setProperty('x', 'y'),
+        PropertyOp.op_setProperty('x', 'z') // Duplicate names aren't allowed.
+      ]);
     });
 
     it('should reject a delta with disallowed ops', () => {
@@ -85,7 +89,15 @@ describe('doc-common/PropertySnapshot', () => {
 
       // Deletes aren't allowed.
       test([PropertyOp.op_deleteProperty('x')]);
-      test([PropertyOp.op_setProperty('x', 'y'), PropertyOp.op_deleteProperty('x')]);
+      test([
+        PropertyOp.op_setProperty('x', 'y'),
+        PropertyOp.op_deleteProperty('x')]);
+
+      // Duplicate names aren't allowed.
+      test([
+        PropertyOp.op_setProperty('x', 'y'),
+        PropertyOp.op_setProperty('x', 'z')
+      ]);
     });
 
     it('should reject invalid revision numbers', () => {

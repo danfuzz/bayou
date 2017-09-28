@@ -75,6 +75,41 @@ export default class PropertyDelta extends CommonBase {
   }
 
   /**
+   * Returns `true` iff this instance has the form of a "document," or put
+   * another way, iff it is valid to compose with an empty snapshot. For this
+   * class, to be a document, `ops` must consist only of `op_setProperty`
+   * instances, and no two ops may refer to the same property name.
+   *
+   * @returns {boolean} `true` if this instance is a document or `false` if not.
+   */
+  isDocument() {
+    const names = new Set();
+
+    for (const op of this.ops) {
+      const opProps = op.props;
+
+      switch (opProps.opName) {
+        case PropertyOp.SET_PROPERTY: {
+          const sessionId = opProps.name;
+
+          if (names.has(sessionId)) {
+            return false;
+          }
+
+          names.add(sessionId);
+          break;
+        }
+
+        default: {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  /**
    * Converts this instance for API transmission.
    *
    * @returns {array} Reconstruction arguments.
