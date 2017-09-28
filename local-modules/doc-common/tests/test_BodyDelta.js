@@ -35,13 +35,25 @@ describe('doc-common/BodyDelta', () => {
   });
 
   describe('coerce()', () => {
+    describe('instances of the actual class', () => {
+      const values = [
+        BodyDelta.EMPTY,
+        new BodyDelta([]),
+        new BodyDelta([{ insert: '123' }])
+      ];
+
+      for (const v of values) {
+        it(`should yield the same value for: ${inspect(v)}`, () => {
+          const result = BodyDelta.coerce(v);
+          assert.strictEqual(result, v);
+        });
+      }
+    });
+
     describe('valid empty arguments', () => {
       const values = [
-        null,
-        undefined,
         [],
-        new Delta([]),
-        { ops: [] }
+        new Delta([])
       ];
 
       for (const v of values) {
@@ -59,8 +71,7 @@ describe('doc-common/BodyDelta', () => {
         [{ retain: 123 }],
         [{ insert: 'x', attributes: { bold: true } }],
         [{ insert: 'florp' }, { insert: 'x', attributes: { bold: true } }],
-        new Delta([{ insert: 'x' }]),
-        { ops: [{ retain: 123 }] }
+        new Delta([{ insert: 'x' }])
       ];
 
       for (const v of values) {
@@ -73,6 +84,9 @@ describe('doc-common/BodyDelta', () => {
 
     describe('invalid arguments', () => {
       const values = [
+        { ops: [] },
+        null,
+        undefined,
         false,
         123,
         'florp',
@@ -130,36 +144,6 @@ describe('doc-common/BodyDelta', () => {
     });
   });
 
-  describe('isEmpty()', () => {
-    describe('valid empty values', () => {
-      const values = [
-        new BodyDelta([]),
-        BodyDelta.EMPTY,
-      ];
-
-      for (const v of values) {
-        it(`should return \`true\` for: ${inspect(v)}`, () => {
-          assert.isTrue(v.isEmpty());
-        });
-      }
-    });
-
-    describe('valid non-empty values', () => {
-      const values = [
-        [{ insert: 'x' }],
-        [{ insert: 'line 1' }, { insert: '\n' }, { insert: 'line 2' }],
-        [{ retain: 100 }]
-      ];
-
-      for (const v of values) {
-        it(`should return \`false\` for: ${inspect(v)}`, () => {
-          const delta = new BodyDelta(v);
-          assert.isFalse(delta.isEmpty());
-        });
-      }
-    });
-  });
-
   describe('isDocument()', () => {
     describe('`true` cases', () => {
       const values = [
@@ -189,6 +173,36 @@ describe('doc-common/BodyDelta', () => {
       for (const v of values) {
         it(`should return \`false\` for: ${inspect(v)}`, () => {
           assert.isFalse(new BodyDelta(v).isDocument());
+        });
+      }
+    });
+  });
+
+  describe('isEmpty()', () => {
+    describe('valid empty values', () => {
+      const values = [
+        new BodyDelta([]),
+        BodyDelta.EMPTY,
+      ];
+
+      for (const v of values) {
+        it(`should return \`true\` for: ${inspect(v)}`, () => {
+          assert.isTrue(v.isEmpty());
+        });
+      }
+    });
+
+    describe('valid non-empty values', () => {
+      const values = [
+        [{ insert: 'x' }],
+        [{ insert: 'line 1' }, { insert: '\n' }, { insert: 'line 2' }],
+        [{ retain: 100 }]
+      ];
+
+      for (const v of values) {
+        it(`should return \`false\` for: ${inspect(v)}`, () => {
+          const delta = new BodyDelta(v);
+          assert.isFalse(delta.isEmpty());
         });
       }
     });

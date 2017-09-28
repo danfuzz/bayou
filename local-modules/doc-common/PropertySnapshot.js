@@ -3,57 +3,27 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
-import { CommonBase, Errors } from 'util-common';
+import { Errors } from 'util-common';
 
+import BaseSnapshot from './BaseSnapshot';
 import PropertyChange from './PropertyChange';
-import PropertyDelta from './PropertyDelta';
 import PropertyOp from './PropertyOp';
-import RevisionNumber from './RevisionNumber';
-
-/**
- * {PropertySnapshot|null} Empty instance. Initialized in the `EMPTY` property
- * accessor.
- */
-let EMPTY = null;
 
 /**
  * Snapshot of information about all active sessions on a particular document.
  * Instances of this class are always frozen (immutable).
  */
-export default class PropertySnapshot extends CommonBase {
-  /**
-   * {PropertySnapshot} Empty instance of this class. It has no properties and a
-   * revision number of `0`.
-   */
-  static get EMPTY() {
-    if (EMPTY === null) {
-      EMPTY = new PropertySnapshot(0, []);
-    }
-
-    return EMPTY;
-  }
-
+export default class PropertySnapshot extends BaseSnapshot {
   /**
    * Constructs an instance.
    *
    * @param {Int} revNum Revision number of the caret information.
-   * @param {PropertyDelta|array<PropertyOp>} delta A from-empty delta (or
+   * @param {PropertyDelta|array<PropertyOp>} contents A from-empty delta (or
    *   array of ops which can be used to construct same), representing all the
    *   properties to include in the instance.
    */
-  constructor(revNum, delta) {
-    if (Array.isArray(delta)) {
-      // Convert the given array into a proper delta instance. (This does type
-      // checking of the argument.)
-      delta = new PropertyDelta(delta);
-    } else {
-      PropertyDelta.check(delta);
-    }
-
-    super();
-
-    /** {Int} The property information revision number. */
-    this._revNum = RevisionNumber.check(revNum);
+  constructor(revNum, contents) {
+    super(revNum, contents);
 
     /**
      * {Map<string, PropertyOp>} Map of name to corresponding property, in the
@@ -62,33 +32,24 @@ export default class PropertySnapshot extends CommonBase {
     this._properties = new Map();
 
     // Fill in `_properties`.
-    for (const op of delta.ops) {
+    for (const op of this.contents.ops) {
       const opProps = op.props;
 
       switch (opProps.opName) {
         case PropertyOp.SET_PROPERTY: {
-          const name = opProps.name;
-          if (this._properties.has(name)) {
-            throw Errors.bad_use(`Duplicate property name: ${name}`);
-          }
-
-          this._properties.set(name, op);
+          this._properties.set(opProps.name, op);
           break;
         }
 
         default: {
-          throw Errors.bad_value(op, 'PropertySnapshot construction op');
+          // Should have been prevented by the `isDocument()` check.
+          throw Errors.wtf('Weird op');
         }
       }
     }
 
     Object.freeze(this._properties);
     Object.freeze(this);
-  }
-
-  /** {PropertyDelta} The property contents as a from-empty delta. */
-  get contents() {
-    return new PropertyDelta([...this._properties.values()]);
   }
 
   /**
@@ -105,11 +66,6 @@ export default class PropertySnapshot extends CommonBase {
 
     Object.freeze(result);
     return result;
-  }
-
-  /** {Int} The property information revision number. */
-  get revNum() {
-    return this._revNum;
   }
 
   /**
@@ -207,7 +163,7 @@ export default class PropertySnapshot extends CommonBase {
     const thisProps  = this._properties;
     const otherProps = other._properties;
 
-    if (   (this._revNum   !== other._revNum)
+    if (   (this.revNum    !== other.revNum)
         || (thisProps.size !== otherProps.size)) {
       return false;
     }
@@ -253,15 +209,6 @@ export default class PropertySnapshot extends CommonBase {
   }
 
   /**
-   * Converts this instance for API transmission.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toApi() {
-    return [this._revNum, this.contents.ops];
-  }
-
-  /**
    * Constructs an instance just like this one, except with an additional or
    * updated property binding. If the given property (same name and value) is
    * already represented in this instance, this method returns `this`.
@@ -280,22 +227,6 @@ export default class PropertySnapshot extends CommonBase {
   }
 
   /**
-   * Constructs an instance just like this one, except with a different
-   * caret revision number. If the given revision number is the same as what
-   * this instance already stores, this method returns `this`.
-   *
-   * @param {Int} revNum The new caret revision number.
-   * @returns {PropertySnapshot} An appropriately-constructed instance.
-   */
-  withRevNum(revNum) {
-    // This type checks `revNum`, which is why it's not just run when we need
-    // to call `compose()`.
-    const change = new PropertyChange(revNum, PropertyDelta.EMPTY);
-
-    return (revNum === this._revNum) ? this : this.compose(change);
-  }
-
-  /**
    * Constructs an instance just like this one, except without the named
    * property. If this instance does not have the named property, then this
    * method returns `this`.
@@ -308,7 +239,15 @@ export default class PropertySnapshot extends CommonBase {
     const op = PropertyOp.op_deleteProperty(name); // This type checks.
 
     return this._properties.has(name)
-      ? this.compose(new PropertyChange(this._revNum, [op]))
+      ? this.compose(new PropertyChange(this.revNum, [op]))
       : this;
+  }
+
+  /**
+   * {class} Class (constructor function) of change objects to be used with
+   * instances of this class.
+   */
+  static get _impl_changeClass() {
+    return PropertyChange;
   }
 }

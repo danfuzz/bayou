@@ -198,7 +198,7 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should refuse to update a nonexistent caret', () => {
-      const snap  = new CaretSnapshot(1, [op1]);
+      const snap   = new CaretSnapshot(1, [op1]);
       const change = new CaretChange(1, [CaretOp.op_setField('florp', 'index', 1)]);
 
       assert.throws(() => { snap.compose(change); });
@@ -447,6 +447,29 @@ describe('doc-common/CaretSnapshot', () => {
     });
   });
 
+  describe('withContents()', () => {
+    it('should return `this` if the given `contents` is `===` to the snapshot\'s', () => {
+      const snap = new CaretSnapshot(123, CaretDelta.EMPTY);
+
+      assert.strictEqual(snap.withContents(CaretDelta.EMPTY), snap);
+    });
+
+    it('should return an appropriately-constructed instance given a different `contents`', () => {
+      const delta  = new CaretDelta([op1, op2, op3]);
+      const snap   = new CaretSnapshot(111, [op1]);
+      const result = snap.withContents(delta);
+
+      assert.strictEqual(result.revNum,   111);
+      assert.strictEqual(result.contents, delta);
+    });
+
+    it('should reject an invalid `contents`', () => {
+      const snap = new CaretSnapshot(123, []);
+
+      assert.throws(() => snap.withContents('blortch'));
+    });
+  });
+
   describe('withRevNum()', () => {
     it('should return `this` if the given `revNum` is the same as in the snapshot', () => {
       const snap = new CaretSnapshot(1, [op1]);
@@ -455,10 +478,18 @@ describe('doc-common/CaretSnapshot', () => {
     });
 
     it('should return an appropriately-constructed instance given a different `revNum`', () => {
-      const snap     = new CaretSnapshot(1, [op1, op2]);
-      const expected = new CaretSnapshot(2, [op1, op2]);
+      const delta  = new CaretDelta([op1, op2]);
+      const snap   = new CaretSnapshot(1, delta);
+      const result = snap.withRevNum(2);
 
-      assert.isTrue(snap.withRevNum(2).equals(expected));
+      assert.strictEqual(result.revNum,   2);
+      assert.strictEqual(result.contents, delta);
+    });
+
+    it('should reject an invalid `revNum`', () => {
+      const snap = new CaretSnapshot(1, [op1, op2]);
+
+      assert.throws(() => snap.withRevNum('blortch'));
     });
   });
 

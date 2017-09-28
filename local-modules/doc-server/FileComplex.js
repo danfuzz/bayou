@@ -20,18 +20,18 @@ import DocServer from './DocServer';
 const log = new Logger('doc');
 
 /** {BodyDelta} Default contents when creating a new document. */
-const DEFAULT_TEXT = BodyDelta.coerce(DEFAULT_DOCUMENT);
+const DEFAULT_TEXT = new BodyDelta(DEFAULT_DOCUMENT);
 
 /**
  * {BodyDelta} Message used as document to indicate a major validation error.
  */
-const ERROR_NOTE = BodyDelta.coerce(
+const ERROR_NOTE = new BodyDelta(
   [{ insert: '(Recreated document due to validation error(s).)\n' }]);
 
 /**
  * {BodyDelta} Message used as document instead of migrating documents from
  * old schema versions. */
-const MIGRATION_NOTE = BodyDelta.coerce(
+const MIGRATION_NOTE = new BodyDelta(
   [{ insert: '(Recreated document due to schema version skew.)\n' }]);
 
 /**

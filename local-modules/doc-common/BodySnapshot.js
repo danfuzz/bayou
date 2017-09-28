@@ -3,77 +3,28 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TArray } from 'typecheck';
-import { CommonBase, Errors } from 'util-common';
 
+import BaseSnapshot from './BaseSnapshot';
 import BodyChange from './BodyChange';
 import BodyDelta from './BodyDelta';
-import RevisionNumber from './RevisionNumber';
 
 
 /**
- * {BodySnapshot|null} Empty instance. Initialized in the `EMPTY` property
- * accessor.
+ * Snapshot of main document body contents.
  */
-let emptyInstance = null;
-
-/**
- * Snapshot of document contents, with other associated information.
- */
-export default class BodySnapshot extends CommonBase {
-  /**
-   * {BodySnapshot} Empty instance of this class. It has an empty delta and
-   * revision number `0`.
-   */
-  static get EMPTY() {
-    if (emptyInstance === null) {
-      emptyInstance = new BodySnapshot(0, BodyDelta.EMPTY);
-    }
-
-    return emptyInstance;
-  }
-
+export default class BodySnapshot extends BaseSnapshot {
   /**
    * Constructs an instance.
    *
    * @param {RevisionNumber} revNum Revision number of the document.
-   * @param {Delta|array|object} contents Document contents. Can be given
-   *   anything that can be coerced into a `BodyDelta`. Must be a "document"
-   *   (that is, a delta consisting only of `insert` operations).
+   * @param {object|array} contents The document contents per se, in the form of
+   *   a document delta (that is, a from-empty delta). This must be either a
+   *   `BodyDelta` or an array which can be passed to the `BodyDelta`
+   *   constructor to produce a valid delta.
    */
   constructor(revNum, contents) {
-    super();
-
-    /** {Int} Revision number. */
-    this._revNum = RevisionNumber.check(revNum);
-
-    /** {BodyDelta} Document contents. */
-    this._contents = BodyDelta.coerce(contents);
-
-    // Explicitly check that the `contents` delta has the form of a "document,"
-    // that is, the only operations are `insert`s. For very large documents,
-    // this might turn out to be a prohibitively slow operation, so...
-    //
-    // **TODO:** Evaluate how expensive this is in practice, and figure out a
-    // better tactic if need be.
-    //
-    // **TODO:** There is more to being valid than just being `isDocument()`,
-    // i.e. the ops themselves have to be valid in the contents of this project.
-    // That validity should also be enforced.
-    if (!this._contents.isDocument()) {
-      throw Errors.bad_value(contents, 'document delta');
-    }
-
+    super(revNum, contents);
     Object.freeze(this);
-  }
-
-  /** {BodyDelta} The document contents as a from-empty delta. */
-  get contents() {
-    return this._contents;
-  }
-
-  /** {RevisionNumber} The revision number. */
-  get revNum() {
-    return this._revNum;
   }
 
   /**
@@ -87,8 +38,8 @@ export default class BodySnapshot extends CommonBase {
     BodyChange.check(change);
 
     const contents = change.delta.isEmpty()
-      ? this._contents
-      : BodyDelta.coerce(this._contents.compose(change.delta));
+      ? this.contents
+      : BodyDelta.coerce(this.contents.compose(change.delta));
 
     return new BodySnapshot(change.revNum, contents);
   }
@@ -109,7 +60,7 @@ export default class BodySnapshot extends CommonBase {
       return this;
     }
 
-    let contents = this._contents;
+    let contents = this.contents;
     for (const c of changes) {
       contents = contents.compose(c.delta);
     }
@@ -140,11 +91,10 @@ export default class BodySnapshot extends CommonBase {
   }
 
   /**
-   * Converts this instance for API transmission.
-   *
-   * @returns {array} Reconstruction arguments.
+   * {class} Class (constructor function) of change objects to be used with
+   * instances of this class.
    */
-  toApi() {
-    return [this._revNum, this._contents];
+  static get _impl_changeClass() {
+    return BodyChange;
   }
 }
