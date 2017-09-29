@@ -287,11 +287,11 @@ export default class Caret extends CommonBase {
   }
 
   /**
-   * Converts this instance for API transmission.
+   * Converts this instance to codec reconstruction arguments.
    *
    * @returns {array} Reconstruction arguments.
    */
-  toApi() {
+  toCodecArgs() {
     // Convert the `_fields` map to a simple object for the purpose of coding.
     const fields = {};
     for (const [k, v] of this._fields) {

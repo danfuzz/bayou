@@ -20,7 +20,7 @@ class RegistryTestApiObject {
     return 'RegistryTestApiObject';
   }
 
-  toApi() {
+  toCodecArgs() {
     return ['fake argument', 0, 1, 2];
   }
 
@@ -30,7 +30,7 @@ class RegistryTestApiObject {
 }
 
 class NoApiTag {
-  toApi() {
+  toCodecArgs() {
     return 'NoApiTag!';
   }
 
@@ -39,13 +39,13 @@ class NoApiTag {
   }
 }
 
-class NoToApi {
+class NoToCodecArgs {
   constructor() {
-    this.API_TAG = 'NoToApi';
+    this.API_TAG = 'NoToCodecArgs';
   }
 
   static fromCodecArgs() {
-    return new NoToApi();
+    return new NoToCodecArgs();
   }
 }
 
@@ -54,7 +54,7 @@ class NoFromCodecArgs {
     this.API_TAG = 'NoFromCodecArgs';
   }
 
-  toApi() {
+  toCodecArgs() {
     return new NoFromCodecArgs();
   }
 }
@@ -72,9 +72,9 @@ describe('api-common/Registry', () => {
       assert.doesNotThrow(() => reg.registerClass(NoFromCodecArgs));
     });
 
-    it('should reject a class without `toApi()`', () => {
+    it('should reject a class without `toCodecArgs()`', () => {
       const reg = new Registry();
-      assert.throws(() => reg.registerClass(NoToApi));
+      assert.throws(() => reg.registerClass(NoToCodecArgs));
     });
 
     it('should reject non-classes', () => {

@@ -148,11 +148,11 @@ export default class BaseChange extends CommonBase {
   }
 
   /**
-   * Converts this instance for API transmission.
+   * Converts this instance to codec reconstruction arguments.
    *
    * @returns {array} Reconstruction arguments.
    */
-  toApi() {
+  toCodecArgs() {
     const result = [this._revNum, this._delta, this._timestamp, this._authorId];
 
     // Trim off one or two trailing `null`s, if possible.

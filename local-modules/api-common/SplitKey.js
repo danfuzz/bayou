@@ -62,20 +62,20 @@ export default class SplitKey extends BaseKey {
   }
 
   /**
-   * Converts this instance for API transmission.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toApi() {
-    return [this.url, this.id, this._secret];
-  }
-
-  /**
    * {string} Shared secret. **Note:** It is important to _never_ reveal this
    * value across an unencrypted API boundary or to log it.
    */
   get secret() {
     return this._secret;
+  }
+
+  /**
+   * Converts this instance to codec reconstruction arguments.
+   *
+   * @returns {array} Reconstruction arguments.
+   */
+  toCodecArgs() {
+    return [this.url, this.id, this._secret];
   }
 
   /**

@@ -119,11 +119,11 @@ export default class Timestamp extends CommonBase {
   }
 
   /**
-   * Converts this instance for API transmission.
+   * Converts this instance to codec reconstruction arguments.
    *
    * @returns {array} Reconstruction arguments.
    */
-  toApi() {
+  toCodecArgs() {
     return [this._secs, this._usecs];
   }
 

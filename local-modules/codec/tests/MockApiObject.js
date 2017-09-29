@@ -14,7 +14,7 @@ export default class MockApiObject {
     return 'MockApiObject';
   }
 
-  toApi() {
+  toCodecArgs() {
     return ['fake argument', 0, 1, 2];
   }
 
