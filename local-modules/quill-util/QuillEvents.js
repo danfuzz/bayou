@@ -73,8 +73,8 @@ export default class QuillEvents extends UtilityClass {
       case QuillEvents.TEXT_CHANGE: {
         const [delta, oldContents, source] = payload.args;
         return new Functor(name,
-          BodyDelta.coerce(delta),
-          BodyDelta.coerce(oldContents),
+          new BodyDelta(delta.ops),
+          new BodyDelta(oldContents.ops),
           TString.check(source));
       }
 
