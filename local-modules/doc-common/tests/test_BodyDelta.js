@@ -34,6 +34,30 @@ describe('doc-common/BodyDelta', () => {
     });
   });
 
+  describe('fromQuillForm()', () => {
+    it('should return an instance with equal `ops`', () => {
+      const ops        = [{ insert: 'foo' }, { retain: 10 }, { insert: 'bar' }];
+      const quillDelta = new Delta(ops);
+      const result     = BodyDelta.fromQuillForm(quillDelta);
+
+      assert.deepEqual(result.ops, ops);
+    });
+
+    it('should reject non-quill-delta arguments', () => {
+      function test(v) {
+        assert.throws(() => { BodyDelta.fromQuillForm(v); });
+      }
+
+      test(null);
+      test(undefined);
+      test(false);
+      test('blort');
+      test({ insert: '123' });
+      test([{ insert: '123' }]);
+      test(new BodyDelta([{ insert: '123' }]));
+    });
+  });
+
   describe('constructor()', () => {
     describe('valid arguments', () => {
       // This one is not a valid `ops` array, but per docs, the constructor
