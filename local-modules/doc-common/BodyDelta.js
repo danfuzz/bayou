@@ -164,8 +164,8 @@ export default class BodyDelta extends CommonBase {
    * **Note:** Generally speaking, instances for which `isDocument()` is true
    * can _also_ be used as non-document deltas.
    *
-   * @returns {boolean} `true` if this instance is a document delta or `false`
-   * if not.
+   * @returns {boolean} `true` if this instance can be treated as a document
+   *   delta or `false` if not.
    */
   isDocument() {
     for (const op of this.ops) {
