@@ -74,24 +74,9 @@ export default class QuillEvents extends UtilityClass {
     switch (name) {
       case QuillEvents.TEXT_CHANGE: {
         const [delta, oldContents, source] = payload.args;
-
-        if (!(delta instanceof Delta)) {
-          // The version of `Delta` used by Quill is different than the one we
-          // specified in our `package.json`. Even though it will often happen
-          // to work if we just let it slide (e.g. by snarfing `ops` out of the
-          // object and running with it), we don't want to end up shipping two
-          // versions of `Delta` to the client; so, instead of just blithely
-          // accepting this possibility, we reject it here and report an error
-          // which makes it easy to figure out what happened. Should you find
-          // yourself looking at this error, the right thing to do is look at
-          // Quill's `package.json` and update the `quill-delta` dependency in
-          // the `doc-common` module to what you find there.
-          throw Errors.bad_use('Divergent versions of `quill-delta` package.');
-        }
-
         return new Functor(name,
-          new BodyDelta(delta.ops),
-          new BodyDelta(oldContents.ops),
+          BodyDelta.fromQuillForm(delta),
+          BodyDelta.fromQuillForm(oldContents),
           TString.check(source));
       }
 
