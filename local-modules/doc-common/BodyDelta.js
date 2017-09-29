@@ -4,7 +4,7 @@
 
 import Delta from 'quill-delta';
 
-import { TArray } from 'typecheck';
+import { TArray, TBoolean } from 'typecheck';
 import { CommonBase, DataUtil, Errors, ObjectUtil } from 'util-common';
 
 /**
@@ -100,6 +100,53 @@ export default class BodyDelta extends Delta {
   }
 
   /**
+   * Composes another instance on top of this one, to produce a new instance.
+   * This operation works equally whether or not `this` is a document delta.
+   *
+   * @param {BodyDelta} other The delta to compose.
+   * @returns {BodyDelta} Result of composition.
+   */
+  compose(other) {
+    BodyDelta.check(other);
+
+    // Use Quill's implementation.
+    const quillThis   = new Delta(this.ops);
+    const quillOther  = new Delta(other.ops);
+    const quillResult = quillThis.compose(quillOther);
+
+    return new BodyDelta(quillResult.ops);
+  }
+
+  /**
+   * Computes the difference between this instance and another, where both must
+   * be document (from-empty) deltas. The return value is a delta which can be
+   * `compose()`d with this instance to produce the delta passed in here as an
+   * argument. That is, `newerDelta == this.compose(this.diff(newerDelta))`.
+   *
+   * **Note:** The parameter name `newer` is meant to be suggestive of the
+   * typical use case for this method, but strictly speaking there does not have
+   * to be a particular time order between this instance and the argument.
+   *
+   * @param {BodyDelta} newerDelta Instance to take the difference from.
+   * @returns {BodyDelta} Delta which represents the difference between
+   *   `newerDelta` and this instance.
+   */
+  diff(newerDelta) {
+    if (!this.isDocument()) {
+      throw Errors.bad_use('Called on non-document instance.');
+    } else if (!newerDelta.isDocument()) {
+      throw Errors.bad_value(newerDelta, BodyDelta, 'isDocument()');
+    }
+
+    // Use Quill's implementation.
+    const quillThis   = new Delta(this.ops);
+    const quillNewer  = new Delta(newerDelta.ops);
+    const quillResult = quillThis.diff(quillNewer);
+
+    return new BodyDelta(quillResult.ops);
+  }
+
+  /**
    * Compares this to another possible-instance, for equality. To be considered
    * equal, `other` must be an instance of this class with an `ops` which is
    * `DataUtil.equalData()` to this instance's `ops`.
@@ -122,7 +169,11 @@ export default class BodyDelta extends Delta {
    * another way, iff it is valid to compose with an empty snapshot. In Quill
    * terms, a document is a delta that consists _only_ of `insert` operations.
    *
-   * @returns {boolean} `true` if this instance is a document or `false` if not.
+   * **Note:** Generally speaking, instances for which `isDocument()` is true
+   * can _also_ be used as non-document deltas.
+   *
+   * @returns {boolean} `true` if this instance is a document delta or `false`
+   * if not.
    */
   isDocument() {
     for (const op of this.ops) {
@@ -151,6 +202,40 @@ export default class BodyDelta extends Delta {
    */
   toApi() {
     return [this.ops];
+  }
+
+  /**
+   * Computes the transformation of a delta with respect to this one, such that
+   * the result can be composed on top of this instance to produce a sensible
+   * combined result. For example, given a document delta and two different
+   * change deltas to that specific document, it is reasonable to write code
+   * such as:
+   *
+   * ```javascript
+   * document.compose(change1).compose(change1.transform(change2, true))
+   * ```
+   *
+   * **Note:** This operation only makes sense when both `this` and `other` are
+   * being treated as non-document deltas.
+   *
+   * @param {BodyDelta} other Instance to transform.
+   * @param {boolean} thisIsFirst "Priority" of the two instances. If `true`
+   *   then the operations of `this` are taken to have come first / won the
+   *   race. Contrawise, if `false` then the operations of `other` are taken to
+   *   have come first.
+   * @returns {BodyDelta} Delta which represents the transformation ofbetween
+   *   `newerDelta` and this instance.
+   */
+  transform(other, thisIsFirst) {
+    BodyDelta.check(other);
+    TBoolean.check(thisIsFirst);
+
+    // Use Quill's implementation.
+    const quillThis   = new Delta(this.ops);
+    const quillOther  = new Delta(other.ops);
+    const quillResult = quillThis.transform(quillOther, thisIsFirst);
+
+    return new BodyDelta(quillResult.ops);
   }
 }
 

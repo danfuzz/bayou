@@ -144,6 +144,105 @@ describe('doc-common/BodyDelta', () => {
     });
   });
 
+  describe('compose()', () => {
+    it('should return an empty result from `EMPTY.compose(EMPTY)`', () => {
+      const result = BodyDelta.EMPTY.compose(BodyDelta.EMPTY);
+      assert.instanceOf(result, BodyDelta);
+      assert.deepEqual(result.ops, []);
+    });
+
+    it('should reject calls when `other` is not an instance of the class', () => {
+      const delta = BodyDelta.EMPTY;
+      const other = 'blort';
+      assert.throws(() => delta.compose(other));
+    });
+  });
+
+  describe('diff()', () => {
+    it('should return an empty result from `EMPTY.diff(EMPTY)`', () => {
+      const result = BodyDelta.EMPTY.diff(BodyDelta.EMPTY);
+      assert.instanceOf(result, BodyDelta);
+      assert.deepEqual(result.ops, []);
+    });
+
+    it('should reject calls when `this` is not a document', () => {
+      const delta = new BodyDelta([{ retain: 10 }]);
+      const other = BodyDelta.EMPTY;
+      assert.throws(() => delta.diff(other));
+    });
+
+    it('should reject calls when `other` is not a document', () => {
+      const delta = BodyDelta.EMPTY;
+      const other = new BodyDelta([{ retain: 10 }]);
+      assert.throws(() => delta.diff(other));
+    });
+
+    it('should reject calls when `other` is not an instance of the class', () => {
+      const delta = BodyDelta.EMPTY;
+      const other = 'blort';
+      assert.throws(() => delta.diff(other));
+    });
+  });
+
+  describe('compose() / diff()', () => {
+    // These tests take composition triples `origDoc + change = newDoc` and test
+    // `compose()` and `diff()` in various combinations.
+    function test(label, origDoc, change, newDoc) {
+      origDoc = new BodyDelta(origDoc);
+      change  = new BodyDelta(change);
+      newDoc  = new BodyDelta(newDoc);
+
+      describe(label, () => {
+        it('should produce the expected composition', () => {
+          const result = origDoc.compose(change);
+          assert.instanceOf(result, BodyDelta);
+          assert.deepEqual(result.ops, newDoc.ops);
+        });
+
+        it('should produce the expected diff', () => {
+          const result = origDoc.diff(newDoc);
+          assert.instanceOf(result, BodyDelta);
+          assert.deepEqual(result.ops, change.ops);
+        });
+
+        it('should produce the new doc when composing the orig doc with the diff', () => {
+          const diff   = origDoc.diff(newDoc);
+          const result = origDoc.compose(diff);
+          assert.instanceOf(result, BodyDelta);
+          assert.deepEqual(result.ops, newDoc.ops);
+        });
+      });
+    }
+
+    test('full replacement',
+      [{ insert: '111' }],
+      [{ insert: '222' }, { delete: 3 }],
+      [{ insert: '222' }]);
+    test('insert at start',
+      [{ insert: '111' }],
+      [{ insert: '222' }],
+      [{ insert: '222111' }]);
+    test('append at end',
+      [{ insert: '111' }],
+      [{ retain: 3 }, { insert: '222' }],
+      [{ insert: '111222' }]);
+    test('surround',
+      [{ insert: '111' }],
+      [{ insert: '222' }, { retain: 3 }, { insert: '333' }],
+      [{ insert: '222111333' }]);
+    test('replace one middle bit',
+      [{ insert: 'Drink more Slurm.' }],
+      [{ retain: 6 }, { insert: 'LESS' }, { delete: 4 }],
+      [{ insert: 'Drink LESS Slurm.' }]);
+    test('replace two middle bits',
+      [{ insert: '[[hello]] [[goodbye]]' }],
+      [
+        { retain: 2 }, { insert: 'YO' }, { delete: 5 }, { retain: 5 },
+        { insert: 'LATER' }, { delete: 7 }
+      ],
+      [{ insert: '[[YO]] [[LATER]]' }]);
+  });
+
   describe('isDocument()', () => {
     describe('`true` cases', () => {
       const values = [
@@ -205,6 +304,65 @@ describe('doc-common/BodyDelta', () => {
           assert.isFalse(delta.isEmpty());
         });
       }
+    });
+  });
+
+  describe('transform()', () => {
+    it('should return an empty result from `EMPTY.transform(EMPTY, *)`', () => {
+      const result1 = BodyDelta.EMPTY.transform(BodyDelta.EMPTY, false);
+      assert.instanceOf(result1, BodyDelta);
+      assert.deepEqual(result1.ops, []);
+
+      const result2 = BodyDelta.EMPTY.transform(BodyDelta.EMPTY, true);
+      assert.instanceOf(result2, BodyDelta);
+      assert.deepEqual(result2.ops, []);
+    });
+
+    it('should reject calls when `other` is not an instance of the class', () => {
+      const delta = BodyDelta.EMPTY;
+      const other = 'blort';
+      assert.throws(() => delta.transform(other, true));
+    });
+
+    it('should reject calls when `thisIsFirst` is not a boolean', () => {
+      const delta = BodyDelta.EMPTY;
+      assert.throws(() => delta.transform(delta, 'blort'));
+    });
+
+    it('should produce the expected transformations', () => {
+      function test(d1, d2, expectedTrue, expectedFalse = expectedTrue) {
+        d1 = new BodyDelta(d1);
+        d2 = new BodyDelta(d2);
+
+        const xformTrue  = d1.transform(d2, true);
+        const xformFalse = d1.transform(d2, false);
+
+        assert.deepEqual(xformTrue.ops,  expectedTrue);
+        assert.deepEqual(xformFalse.ops, expectedFalse);
+      }
+
+      test(
+        [{ insert: 'blort' }],
+        [{ insert: 'blort' }],
+        [{ retain: 5 }, { insert: 'blort' }],
+        [{ insert: 'blort' }]);
+      test(
+        [{ delete: 10 }],
+        [{ delete: 10 }],
+        []);
+      test(
+        [{ delete: 10 }],
+        [{ delete: 10 }, { insert: 'florp' }],
+        [{ insert: 'florp' }]);
+      test(
+        [{ insert: '111' }],
+        [{ insert: '222' }],
+        [{ retain: 3 }, { insert: '222' }],
+        [{ insert: '222' }]);
+      test(
+        [{ retain: 10 }, { insert: '111' }],
+        [{ retain: 20 }, { insert: '222' }],
+        [{ retain: 23 }, { insert: '222' }]);
     });
   });
 });
