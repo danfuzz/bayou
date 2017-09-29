@@ -8,26 +8,6 @@ import { describe, it } from 'mocha';
 import { CommonBase } from 'util-common';
 
 describe('util-core/CommonBase', () => {
-  describe('mixInto()', () => {
-    it('should add its properties to the supplied class', () => {
-      class NearlyEmptyClass {
-        fiat() { /*empty*/ }
-      }
-
-      assert.notProperty(NearlyEmptyClass, 'check');
-      assert.notProperty(NearlyEmptyClass, 'coerce');
-      assert.notProperty(NearlyEmptyClass, 'mixInto');
-      assert.notProperty(NearlyEmptyClass.prototype, '_mustOverride');
-
-      CommonBase.mixInto(NearlyEmptyClass);
-
-      assert.property(NearlyEmptyClass, 'check');
-      assert.property(NearlyEmptyClass, 'coerce');
-      assert.property(NearlyEmptyClass, 'mixInto');
-      assert.property(NearlyEmptyClass.prototype, '_mustOverride');
-    });
-  });
-
   describe('check()', () => {
     it('should return the supplied value if it is an instance of the class or a subclass', () => {
       class Subclass1 extends CommonBase {
@@ -144,6 +124,26 @@ describe('util-core/CommonBase', () => {
       }
 
       assert.throws(() => { HasCoerce.coerceOrNull(123); });
+    });
+  });
+
+  describe('mixInto()', () => {
+    it('should add its properties to the supplied class', () => {
+      class NearlyEmptyClass {
+        fiat() { /*empty*/ }
+      }
+
+      assert.notProperty(NearlyEmptyClass, 'check');
+      assert.notProperty(NearlyEmptyClass, 'coerce');
+      assert.notProperty(NearlyEmptyClass, 'mixInto');
+      assert.notProperty(NearlyEmptyClass.prototype, '_mustOverride');
+
+      CommonBase.mixInto(NearlyEmptyClass);
+
+      assert.property(NearlyEmptyClass, 'check');
+      assert.property(NearlyEmptyClass, 'coerce');
+      assert.property(NearlyEmptyClass, 'mixInto');
+      assert.property(NearlyEmptyClass.prototype, '_mustOverride');
     });
   });
 });

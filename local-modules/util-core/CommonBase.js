@@ -14,31 +14,6 @@ import ObjectUtil from './ObjectUtil';
  */
 export default class CommonBase {
   /**
-   * Adds the instance and static properties defined on this class to another
-   * class, that is, treat this class as a "mixin" and apply it to the given
-   * class. If the given class already defines any of the methods, the original
-   * definitions take precedence.
-   *
-   * @param {class} clazz Class to mix into.
-   */
-  static mixInto(clazz) {
-    // **Note:** In the context of static methods, `this` refers to the class
-    // that was called upon.
-
-    function mixOne(target, source) {
-      const descriptors = Object.getOwnPropertyDescriptors(source);
-      for (const [name, desc] of Object.entries(descriptors)) {
-        if (!ObjectUtil.hasOwnProperty(target, name)) {
-          Object.defineProperty(target, name, desc);
-        }
-      }
-    }
-
-    mixOne(clazz, this);                     // Mix in the static properties.
-    mixOne(clazz.prototype, this.prototype); // Mix in the instance properties.
-  }
-
-  /**
    * Checks that a value is an instance of this class. Throws an error if not.
    *
    * This method works for any subclass of this class, e.g., if `Foo` is a
@@ -91,21 +66,6 @@ export default class CommonBase {
   }
 
   /**
-   * Subclass-specifc implementation of `coerce()`. Subclasses can override this
-   * as needed.
-   *
-   * @abstract
-   * @param {*} value Value to coerce. This is guaranteed _not_ to be an
-   *   instance of this class.
-   * @returns {this} `value` or its coercion to the class that this was
-   *   called on. Must always be an instance of the same as the class that this
-   *   method was called on.
-   */
-  static _impl_coerce(value) {
-    this._mustOverride(value);
-  }
-
-  /**
    * Coerces the given value into an instance of this class, if possible. If
    * given an instance of this class, returns that instance. If given any other
    * argument, calls `_impl_coerceOrNull()` on that value, which is responsible
@@ -142,6 +102,59 @@ export default class CommonBase {
   }
 
   /**
+   * Adds the instance and static properties defined on this class to another
+   * class, that is, treat this class as a "mixin" and apply it to the given
+   * class. If the given class already defines any of the methods, the original
+   * definitions take precedence.
+   *
+   * @param {class} clazz Class to mix into.
+   */
+  static mixInto(clazz) {
+    // **Note:** In the context of static methods, `this` refers to the class
+    // that was called upon.
+
+    function mixOne(target, source) {
+      const descriptors = Object.getOwnPropertyDescriptors(source);
+
+      for (const [name, desc] of Object.entries(descriptors)) {
+        if (!ObjectUtil.hasOwnProperty(target, name)) {
+          Object.defineProperty(target, name, desc);
+        }
+      }
+    }
+
+    mixOne(clazz, this);                     // Mix in the static properties.
+    mixOne(clazz.prototype, this.prototype); // Mix in the instance properties.
+  }
+
+  /**
+   * Helper function which always throws an error with the message `Must
+   * override.`. Using this both documents the intent in code and keeps the
+   * linter from complaining about the documentation (`@param`, `@returns`,
+   * etc.).
+   *
+   * @param {...*} args_unused Anything you want, to keep the linter happy.
+   */
+  _mustOverride(...args_unused) {
+    CommonBase._mustOverride();
+  }
+
+  /**
+   * Subclass-specifc implementation of `coerce()`. Subclasses can override this
+   * as needed.
+   *
+   * @abstract
+   * @param {*} value Value to coerce. This is guaranteed _not_ to be an
+   *   instance of this class.
+   * @returns {this} `value` or its coercion to the class that this was
+   *   called on. Must always be an instance of the same as the class that this
+   *   method was called on.
+   */
+  static _impl_coerce(value) {
+    this._mustOverride(value);
+  }
+
+  /**
    * Subclass-specific implementation of `coerceOrNull()`. Subclasses can
    * override this as needed. The default implementation here simply calls
    * through to `_impl_coerce()` and converts any thrown exception into a `null`
@@ -160,18 +173,6 @@ export default class CommonBase {
       // Swallow the error and return `null`, per the docs.
       return null;
     }
-  }
-
-  /**
-   * Helper function which always throws an error with the message `Must
-   * override.`. Using this both documents the intent in code and keeps the
-   * linter from complaining about the documentation (`@param`, `@returns`,
-   * etc.).
-   *
-   * @param {...*} args_unused Anything you want, to keep the linter happy.
-   */
-  _mustOverride(...args_unused) {
-    CommonBase._mustOverride();
   }
 
   /**
