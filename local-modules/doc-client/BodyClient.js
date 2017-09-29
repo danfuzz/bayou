@@ -725,8 +725,7 @@ export default class BodyClient extends StateMachine {
 
     // `false` indicates that `dMore` should be taken to have been applied
     // second (lost any insert races or similar).
-    const dIntegratedCorrection =
-      BodyDelta.coerce(dMore.transform(dCorrection, false));
+    const dIntegratedCorrection = dMore.transform(dCorrection, false);
     this._updateWithChange(
       new BodyChange(vResultNum, correctedDelta), dIntegratedCorrection);
 
