@@ -16,9 +16,15 @@ describe('util-core/CommonBase', () => {
 
       assert.notProperty(NearlyEmptyClass, 'check');
       assert.notProperty(NearlyEmptyClass, 'coerce');
+      assert.notProperty(NearlyEmptyClass, 'mixInto');
+      assert.notProperty(NearlyEmptyClass.prototype, '_mustOverride');
+
       CommonBase.mixInto(NearlyEmptyClass);
+
       assert.property(NearlyEmptyClass, 'check');
       assert.property(NearlyEmptyClass, 'coerce');
+      assert.property(NearlyEmptyClass, 'mixInto');
+      assert.property(NearlyEmptyClass.prototype, '_mustOverride');
     });
   });
 

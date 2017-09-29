@@ -4,6 +4,7 @@
 
 import CoreTypecheck from './CoreTypecheck';
 import Errors from './Errors';
+import ObjectUtil from './ObjectUtil';
 
 /**
  * Base class which provides a couple conveniences beyond what baseline
@@ -13,7 +14,7 @@ import Errors from './Errors';
  */
 export default class CommonBase {
   /**
-   * Adds the instance and static methods defined on this class to another
+   * Adds the instance and static properties defined on this class to another
    * class, that is, treat this class as a "mixin" and apply it to the given
    * class. If the given class already defines any of the methods, the original
    * definitions take precedence.
@@ -21,23 +22,20 @@ export default class CommonBase {
    * @param {class} clazz Class to mix into.
    */
   static mixInto(clazz) {
-    for (const k of [
-      'check', 'coerce', 'coerceOrNull', '_impl_coerce', '_impl_coerceOrNull',
-      '_mustOverride'
-    ]) {
-      if (!clazz[k]) {
-        clazz[k] = this[k];
+    // **Note:** In the context of static methods, `this` refers to the class
+    // that was called upon.
+
+    function mixOne(target, source) {
+      const descriptors = Object.getOwnPropertyDescriptors(source);
+      for (const [name, desc] of Object.entries(descriptors)) {
+        if (!ObjectUtil.hasOwnProperty(target, name)) {
+          Object.defineProperty(target, name, desc);
+        }
       }
     }
 
-    const thisProto  = this.prototype;
-    const clazzProto = clazz.prototype;
-
-    for (const k of ['_mustOverride']) {
-      if (!clazzProto[k]) {
-        clazzProto[k] = thisProto[k];
-      }
-    }
+    mixOne(clazz, this);                     // Mix in the static properties.
+    mixOne(clazz.prototype, this.prototype); // Mix in the instance properties.
   }
 
   /**
