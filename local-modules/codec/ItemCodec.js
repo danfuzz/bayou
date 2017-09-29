@@ -111,25 +111,25 @@ export default class ItemCodec extends CommonBase {
    */
   static fromClass(clazz) {
     TFunction.checkClass(clazz);
-    TFunction.checkCallable(clazz.prototype.toApi);
+    TFunction.checkCallable(clazz.prototype.toCodecArgs);
 
-    const tag = clazz.API_TAG || clazz.name;
+    const tag = clazz.CODEC_TAG || clazz.name;
 
-    let fromApi;
-    if (clazz.fromApi) {
-      fromApi = TFunction.checkCallable(clazz.fromApi);
+    let fromCodecArgs;
+    if (clazz.fromCodecArgs) {
+      fromCodecArgs = TFunction.checkCallable(clazz.fromCodecArgs);
     } else {
-      fromApi = (...args) => new clazz(...args);
+      fromCodecArgs = (...args) => new clazz(...args);
     }
 
     const encode = (value, subEncode) => {
-      const payload = TArray.check(value.toApi());
+      const payload = TArray.check(value.toCodecArgs());
       return payload.map(subEncode);
     };
 
     const decode = (payload, subDecode) => {
       payload = payload.map(subDecode);
-      return fromApi(...payload);
+      return fromCodecArgs(...payload);
     };
 
     return new ItemCodec(tag, clazz, null, encode, decode);

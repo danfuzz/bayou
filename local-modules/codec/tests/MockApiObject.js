@@ -6,19 +6,19 @@
  * Trivial API-compatible class for use in tests.
  */
 export default class MockApiObject {
+  static get CODEC_TAG() {
+    return 'MockApiObject';
+  }
+
   constructor() {
     this.initialized = true;
   }
 
-  static get API_TAG() {
-    return 'MockApiObject';
-  }
-
-  toApi() {
+  toCodecArgs() {
     return ['fake argument', 0, 1, 2];
   }
 
-  static fromApi(arguments_unused) {
+  static fromCodecArgs(arguments_unused) {
     return new MockApiObject();
   }
 }

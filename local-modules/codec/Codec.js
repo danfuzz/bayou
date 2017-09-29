@@ -96,26 +96,37 @@ export default class Codec extends Singleton {
    * rejects values. Specifically:
    *
    * * Functions are rejected.
+   *
    * * Symbols are rejected.
+   *
    * * `undefined` is rejected.
+   *
    * * Other non-object values are passed through as-is.
+   *
    * * `null` is passed through as-is.
+   *
    * * Direct instances of `Object` (`x` such that `Object.getPrototypeOf(x) ===
    *   Object.prototype`) are allowed, with their values processed recursively
    *   using (the equivalent of) this method.
+   *
    * * Arrays with holes (unset value of `x[n]` for `n < x.length`) are
    *   rejected.
+   *
    * * Arrays with non-numeric properties are rejected.
+   *
    * * Other arrays are allowed, with their values processed recursively using
    *   (the equivalent of) this method. The encoded form is also an array but
    *   with an additional first element of the value `SpecialCodec.ARRAY.tag`.
+   *
    * * Objects that are instances of classes (that is, have constructor
-   *   functions) are allowed, as long as they at least bind a method `toApi()`.
-   *   In addition, if they have a static `API_TAG` property and/or a static
-   *   `fromApi()` method, those are used. See `ItemCodec` for how these are all
-   *   used to effect encoding and decoding. The encoded form is an array with
-   *   the first element being the value tag (typically the class name) and the
-   *   rest of the elements whatever was returned by `toApi()`.
+   *   functions) are allowed, as long as they at least bind a method
+   *   `toCodecArgs()`. In addition, if they have a static `CODEC_TAG` property
+   *   and/or a static `fromCodecArgs()` method, those are used. See {@link
+   *   ItemCodec} for how these are all used to effect encoding and decoding.
+   *   The encoded form is an array with the first element being the value tag
+   *   (typically the class name) and the rest of the elements whatever was
+   *   returned by `toCodecArgs()`.
+   *
    * * All other objects are rejected.
    *
    * In addition, if the result is an object (including an array), it is

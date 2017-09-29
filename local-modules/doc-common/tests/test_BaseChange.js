@@ -121,35 +121,40 @@ describe('doc-common/BaseChange', () => {
 
   describe('with*', () => {
     function test(methodName, args, argIndex, newValue) {
-      const orig   = new MockChange(...args);
-      const result = orig[methodName](newValue);
+      const orig = new MockChange(...args);
 
-      args[argIndex] = newValue;
-      assertFields(result, ...args);
+      describe(`${methodName}()`, () => {
+        it('should produce a new instance with the expected fields', () => {
+          const result     = orig[methodName](newValue);
+          const expectArgs = args.slice();
+
+          expectArgs[argIndex] = newValue;
+          assertFields(result, ...expectArgs);
+        });
+
+        it('should return `this` if the given argument is the same as what is in the instance', () => {
+          const result = orig[methodName](args[argIndex]);
+          assert.strictEqual(result, orig);
+        });
+
+        it('should reject invalid arguments', () => {
+          function reject(v) {
+            assert.throws(() => orig[methodName](v));
+          }
+
+          // Conservative choices for invalid arguments that should work for all
+          // fields.
+          reject(false);
+          reject(-11235);
+          reject({ x: 914 });
+          reject(new Map());
+        });
+      });
     }
 
-    describe('withAuthorId()', () => {
-      it('should produce a new instance with the expected fields', () => {
-        test('withAuthorId', [99, new MockDelta(), Timestamp.MIN_VALUE, 'florp'], 3, 'blort');
-      });
-    });
-
-    describe('withDelta()', () => {
-      it('should produce a new instance with the expected fields', () => {
-        test('withDelta', [999, new MockDelta(), Timestamp.MAX_VALUE, 'like'], 1, new MockDelta());
-      });
-    });
-
-    describe('withRevNum()', () => {
-      it('should produce a new instance with the expected fields', () => {
-        test('withRevNum', [9999, new MockDelta(), Timestamp.MIN_VALUE, 'zorch'], 0, 123);
-      });
-    });
-
-    describe('withTimestamp()', () => {
-      it('should produce a new instance with the expected fields', () => {
-        test('withTimestamp', [99999, new MockDelta(), Timestamp.MIN_VALUE, 'zorch'], 2, Timestamp.MAX_VALUE);
-      });
-    });
+    test('withAuthorId', [99, new MockDelta(), Timestamp.MIN_VALUE, 'florp'], 3, 'blort');
+    test('withDelta', [999, new MockDelta(), Timestamp.MAX_VALUE, 'like'], 1, new MockDelta());
+    test('withRevNum', [9999, new MockDelta(), Timestamp.MIN_VALUE, 'zorch'], 0, 123);
+    test('withTimestamp', [99999, new MockDelta(), Timestamp.MIN_VALUE, 'zorch'], 2, Timestamp.MAX_VALUE);
   });
 });

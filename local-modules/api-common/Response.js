@@ -63,15 +63,6 @@ export default class Response extends CommonBase {
   }
 
   /**
-   * Converts this instance for API transmission.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toApi() {
-    return [this._id, this._result, this._error];
-  }
-
-  /**
    * {CodableError|null} Error result, or `null` if this instance doesn't
    * represent an error.
    */
@@ -97,6 +88,15 @@ export default class Response extends CommonBase {
    */
   get result() {
     return this._result;
+  }
+
+  /**
+   * Converts this instance to codec reconstruction arguments.
+   *
+   * @returns {array} Reconstruction arguments.
+   */
+  toCodecArgs() {
+    return [this._id, this._result, this._error];
   }
 
   /**

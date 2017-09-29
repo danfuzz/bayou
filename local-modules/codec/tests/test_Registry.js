@@ -16,46 +16,46 @@ class RegistryTestApiObject {
     this.initialized = true;
   }
 
-  static get API_TAG() {
+  static get CODEC_TAG() {
     return 'RegistryTestApiObject';
   }
 
-  toApi() {
+  toCodecArgs() {
     return ['fake argument', 0, 1, 2];
   }
 
-  static fromApi(arguments_unused) {
+  static fromCodecArgs(arguments_unused) {
     return new RegistryTestApiObject();
   }
 }
 
-class NoApiTag {
-  toApi() {
-    return 'NoApiTag!';
+class NoCodecTag {
+  toCodecArgs() {
+    return 'NoCodecTag!';
   }
 
-  static fromApi() {
-    return new NoApiTag();
-  }
-}
-
-class NoToApi {
-  constructor() {
-    this.API_TAG = 'NoToApi';
-  }
-
-  static fromApi() {
-    return new NoToApi();
+  static fromCodecArgs() {
+    return new NoCodecTag();
   }
 }
 
-class NoFromApi {
+class NoToCodecArgs {
   constructor() {
-    this.API_TAG = 'NoFromApi';
+    this.CODEC_TAG = 'NoToCodecArgs';
   }
 
-  toApi() {
-    return new NoFromApi();
+  static fromCodecArgs() {
+    return new NoToCodecArgs();
+  }
+}
+
+class NoFromCodecArgs {
+  constructor() {
+    this.CODEC_TAG = 'NoFromCodecArgs';
+  }
+
+  toCodecArgs() {
+    return new NoFromCodecArgs();
   }
 }
 
@@ -66,15 +66,15 @@ describe('api-common/Registry', () => {
       assert.doesNotThrow(() => reg.registerClass(RegistryTestApiObject));
     });
 
-    it('should allow classes without `API_TAG` or `fromApi()`', () => {
+    it('should allow classes without `CODEC_TAG` or `fromCodecArgs()`', () => {
       const reg = new Registry();
-      assert.doesNotThrow(() => reg.registerClass(NoApiTag));
-      assert.doesNotThrow(() => reg.registerClass(NoFromApi));
+      assert.doesNotThrow(() => reg.registerClass(NoCodecTag));
+      assert.doesNotThrow(() => reg.registerClass(NoFromCodecArgs));
     });
 
-    it('should reject a class without `toApi()`', () => {
+    it('should reject a class without `toCodecArgs()`', () => {
       const reg = new Registry();
-      assert.throws(() => reg.registerClass(NoToApi));
+      assert.throws(() => reg.registerClass(NoToCodecArgs));
     });
 
     it('should reject non-classes', () => {
