@@ -4,6 +4,7 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
+import Delta from 'quill-delta';
 import { inspect } from 'util';
 
 import { BodyDelta } from 'doc-common';
@@ -235,6 +236,21 @@ describe('doc-common/BodyDelta', () => {
           assert.isFalse(delta.isEmpty());
         });
       }
+    });
+  });
+
+  describe('toQuillForm()', () => {
+    it('should produce `Delta` instances with strict-equal ops', () => {
+      function test(ops) {
+        const delta  = new BodyDelta(ops);
+        const result = delta.toQuillForm();
+        assert.instanceOf(result, Delta);
+        assert.strictEqual(result.ops, delta.ops);
+      }
+
+      test([]);
+      test([{ insert: 'blort' }]);
+      test([{ retain: 123 }]);
     });
   });
 

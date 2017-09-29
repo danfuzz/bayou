@@ -150,6 +150,15 @@ export default class BodyDelta extends Delta {
   }
 
   /**
+   * Produces a Quill `Delta` (per se) with the same contents as this instance.
+   *
+   * @returns {Delta} A Quill `Delta` with the same contents as `this`.
+   */
+  toQuillForm() {
+    return new Delta(this.ops);
+  }
+
+  /**
    * Computes the transformation of a delta with respect to this one, such that
    * the result can be composed on top of this instance to produce a sensible
    * combined result. For example, given a document delta and two different

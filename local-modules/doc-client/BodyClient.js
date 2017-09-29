@@ -827,7 +827,7 @@ export default class BodyClient extends StateMachine {
 
     // Tell Quill if necessary.
     if (needQuillUpdate) {
-      this._quill.updateContents(quillDelta, CLIENT_SOURCE);
+      this._quill.updateContents(quillDelta.toQuillForm(), CLIENT_SOURCE);
     }
   }
 
@@ -839,7 +839,7 @@ export default class BodyClient extends StateMachine {
    */
   _updateWithSnapshot(snapshot) {
     this._snapshot = snapshot;
-    this._quill.setContents(snapshot.contents, CLIENT_SOURCE);
+    this._quill.setContents(snapshot.contents.toQuillForm(), CLIENT_SOURCE);
   }
 
   /**
