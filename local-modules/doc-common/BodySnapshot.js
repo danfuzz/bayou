@@ -6,7 +6,6 @@ import { TArray } from 'typecheck';
 
 import BaseSnapshot from './BaseSnapshot';
 import BodyChange from './BodyChange';
-import BodyDelta from './BodyDelta';
 
 
 /**
@@ -39,7 +38,7 @@ export default class BodySnapshot extends BaseSnapshot {
 
     const contents = change.delta.isEmpty()
       ? this.contents
-      : BodyDelta.coerce(this.contents.compose(change.delta));
+      : this.contents.compose(change.delta);
 
     return new BodySnapshot(change.revNum, contents);
   }
@@ -85,7 +84,7 @@ export default class BodySnapshot extends BaseSnapshot {
 
     const oldContents = this.contents;
     const newContents = newerSnapshot.contents;
-    const delta       = BodyDelta.coerce(oldContents.diff(newContents));
+    const delta       = oldContents.diff(newContents);
 
     return new BodyChange(newerSnapshot.revNum, delta);
   }

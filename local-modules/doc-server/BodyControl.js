@@ -648,7 +648,7 @@ export default class BodyControl extends CommonBase {
       }
     }
 
-    return BodyDelta.coerce(result);
+    return result;
   }
 
   /**
