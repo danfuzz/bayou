@@ -575,7 +575,7 @@ export default class BodyControl extends CommonBase {
 
     // The `true` argument indicates that `dServer` should be taken to have been
     // applied first (won any insert races or similar).
-    const dNext = BodyDelta.coerce(dServer.transform(dClient, true));
+    const dNext = dServer.transform(dClient, true);
 
     if (dNext.isEmpty()) {
       // It turns out that nothing changed. **Note:** It is unclear whether this
@@ -648,7 +648,7 @@ export default class BodyControl extends CommonBase {
       }
     }
 
-    return BodyDelta.coerce(result);
+    return result;
   }
 
   /**

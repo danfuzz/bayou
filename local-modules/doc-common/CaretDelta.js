@@ -77,10 +77,12 @@ export default class CaretDelta extends CommonBase {
   /**
    * Returns `true` iff this instance has the form of a "document," or put
    * another way, iff it is valid to compose with an empty snapshot. For this
-   * class, to be a document, `ops` must consist only of `op_beginSession`
-   * instances, and no two ops may refer to the same session ID.
+   * class, to be considered a document `ops` must consist only of
+   * `op_beginSession` instances, and no two ops may refer to the same session
+   * ID.
    *
-   * @returns {boolean} `true` if this instance is a document or `false` if not.
+   * @returns {boolean} `true` if this instance can be used as a document or
+   *   `false` if not.
    */
   isDocument() {
     const ids = new Set();

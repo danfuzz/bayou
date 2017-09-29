@@ -4,7 +4,7 @@
 
 import Delta from 'quill-delta';
 
-import { TArray } from 'typecheck';
+import { TArray, TBoolean, TObject } from 'typecheck';
 import { CommonBase, DataUtil, Errors, ObjectUtil } from 'util-common';
 
 /**
@@ -14,12 +14,20 @@ import { CommonBase, DataUtil, Errors, ObjectUtil } from 'util-common';
 let EMPTY = null;
 
 /**
- * Always-frozen list of body OT operations. This is a subclass of Quill's
- * `Delta` and mixes in `CommonBase` (the latter for `check()` and `coerce()`
- * functionality). In addition, it contains extra utility functionality beyond
- * what the base `Delta` provides.
+ * Always-frozen list of body OT operations. This uses Quill's `Delta` class to
+ * implement the "interesting" OT functionality, however this class does _not_
+ * inherit from that class, because while the method names have the same names
+ * and high-level semantics, the _types_ of the arguments and results are not
+ * actually the same. The methods `toQuillForm()` and `fromQuillForm()` can be
+ * used to convert back and forth as needed.
+ *
+ * **Note:** As of this writing, there are no actual differences between the
+ * operations of an instance of this class and those of a Quill `Delta`.
+ * However, there is a very good chance that this will stop being the case in
+ * the near future, once the operations of this class become more strongly
+ * typed (and verified).
  */
-export default class BodyDelta extends Delta {
+export default class BodyDelta extends CommonBase {
   /** {BodyDelta} Empty instance of this class. */
   static get EMPTY() {
     if (EMPTY === null) {
@@ -30,58 +38,33 @@ export default class BodyDelta extends Delta {
   }
 
   /**
-   * Main coercion implementation, per the superclass documentation. In this
-   * case, the following is how it proceeds:
+   * Given a Quill `Delta` instance, returns an instance of this class with the
+   * same operations.
    *
-   * * If `value` is a `Delta`, returns an instance with the same list of
-   *   ops.
-   * * If `value` is an array, returns an instance with `value` as the list
-   *   of ops.
-   * * Throws a `bad_value` error for any other value.
-   *
-   * In general, this method will return the unique instance `EMPTY` when
-   * possible.
-   *
-   * Unlike the `Delta` constructor:
-   *
-   * * The result is always deeply frozen.
-   * * This method will throw an error instead of silently accepting invalid
-   *   values.
-   * * This does not accept arbitrary objects that just happen to have an `ops`
-   *   field.
-   *
-   * @param {object|array|null|undefined} value The value to coerce.
-   * @returns {BodyDelta} The corresponding instance.
+   * @param {Delta} quillDelta Quill `Delta` instance.
+   * @returns {BodyDelta} Equivalent instance of this class.
    */
-  static _impl_coerce(value) {
-    // **Note:** The base class implementation guarantees that we won't get
-    // called on an instance of this class.
-
-    let ops;
-    if (Array.isArray(value)) {
-      ops = value;
-    } else if (value instanceof Delta) {
-      ops = value.ops;
-    } else {
-      // Invalid argument. Diagnose further.
-      if ((typeof value === 'object') && value.constructor && (value.constructor.name === 'Delta')) {
+  static fromQuillForm(quillDelta) {
+    try {
+      TObject.check(quillDelta, Delta);
+    } catch (e) {
+      if ((typeof quillDelta === 'object') && (quillDelta.constructor.name === 'Delta')) {
         // The version of `Delta` used by Quill is different than the one we
-        // specified in our `package.json`. Even though it will often happen to
-        // work if we just let it slide (e.g. by snarfing `ops` out of the
+        // specified in our `package.json`. Even though it will often happen
+        // to work if we just let it slide (e.g. by snarfing `ops` out of the
         // object and running with it), we don't want to end up shipping two
         // versions of `Delta` to the client; so, instead of just blithely
         // accepting this possibility, we reject it here and report an error
         // which makes it easy to figure out what happened. Should you find
         // yourself looking at this error, the right thing to do is look at
-        // Quill's `package.json` and update the `quill-delta` dependency here
-        // to what you find there.
+        // Quill's `package.json` and update the `quill-delta` dependency in
+        // the this module to what you find there.
         throw Errors.bad_use('Divergent versions of `quill-delta` package.');
-      } else {
-        throw Errors.bad_value(value, BodyDelta);
       }
+      throw e;
     }
 
-    return (ops.length === 0) ? BodyDelta.EMPTY : new BodyDelta(ops);
+    return new BodyDelta(quillDelta.ops);
   }
 
   /**
@@ -92,11 +75,67 @@ export default class BodyDelta extends Delta {
    *   of the given value.
    */
   constructor(ops) {
-    // **TODO:** The contents of `ops` should be validated.
-    TArray.check(ops);
+    super();
 
-    super(DataUtil.deepFreeze(ops));
+    /**
+     * {array} Array of operations. **TODO:** The contents of `ops` should be
+     * validated.
+     */
+    this._ops = DataUtil.deepFreeze(TArray.check(ops));
+
     Object.freeze(this);
+  }
+
+  /** {array} Array of operations. Always a deep-frozen value. */
+  get ops() {
+    return this._ops;
+  }
+
+  /**
+   * Composes another instance on top of this one, to produce a new instance.
+   * This operation works equally whether or not `this` is a document delta.
+   *
+   * @param {BodyDelta} other The delta to compose.
+   * @returns {BodyDelta} Result of composition.
+   */
+  compose(other) {
+    BodyDelta.check(other);
+
+    // Use Quill's implementation.
+    const quillThis   = this.toQuillForm();
+    const quillOther  = other.toQuillForm();
+    const quillResult = quillThis.compose(quillOther);
+
+    return BodyDelta.fromQuillForm(quillResult);
+  }
+
+  /**
+   * Computes the difference between this instance and another, where both must
+   * be document (from-empty) deltas. The return value is a delta which can be
+   * `compose()`d with this instance to produce the delta passed in here as an
+   * argument. That is, `newerDelta == this.compose(this.diff(newerDelta))`.
+   *
+   * **Note:** The parameter name `newer` is meant to be suggestive of the
+   * typical use case for this method, but strictly speaking there does not have
+   * to be a particular time order between this instance and the argument.
+   *
+   * @param {BodyDelta} newerDelta Instance to take the difference from.
+   * @returns {BodyDelta} Delta which represents the difference between
+   *   `newerDelta` and this instance.
+   */
+  diff(newerDelta) {
+    if (!this.isDocument()) {
+      throw Errors.bad_use('Called on non-document instance.');
+    } else if (!newerDelta.isDocument()) {
+      throw Errors.bad_value(newerDelta, BodyDelta, 'isDocument()');
+    }
+
+    // Use Quill's implementation.
+    const quillThis   = this.toQuillForm();
+    const quillNewer  = newerDelta.toQuillForm();
+    const quillResult = quillThis.diff(quillNewer);
+
+    return BodyDelta.fromQuillForm(quillResult);
   }
 
   /**
@@ -122,7 +161,11 @@ export default class BodyDelta extends Delta {
    * another way, iff it is valid to compose with an empty snapshot. In Quill
    * terms, a document is a delta that consists _only_ of `insert` operations.
    *
-   * @returns {boolean} `true` if this instance is a document or `false` if not.
+   * **Note:** Generally speaking, instances for which `isDocument()` is true
+   * can _also_ be used as non-document deltas.
+   *
+   * @returns {boolean} `true` if this instance can be treated as a document
+   *   delta or `false` if not.
    */
   isDocument() {
     for (const op of this.ops) {
@@ -152,8 +195,47 @@ export default class BodyDelta extends Delta {
   toApi() {
     return [this.ops];
   }
-}
 
-// Add `CommonBase` as a mixin, because the main inheritence is the `Delta`
-// class.
-CommonBase.mixInto(BodyDelta);
+  /**
+   * Produces a Quill `Delta` (per se) with the same contents as this instance.
+   *
+   * @returns {Delta} A Quill `Delta` with the same contents as `this`.
+   */
+  toQuillForm() {
+    return new Delta(this.ops);
+  }
+
+  /**
+   * Computes the transformation of a delta with respect to this one, such that
+   * the result can be composed on top of this instance to produce a sensible
+   * combined result. For example, given a document delta and two different
+   * change deltas to that specific document, it is reasonable to write code
+   * such as:
+   *
+   * ```javascript
+   * document.compose(change1).compose(change1.transform(change2, true))
+   * ```
+   *
+   * **Note:** This operation only makes sense when both `this` and `other` are
+   * being treated as non-document deltas.
+   *
+   * @param {BodyDelta} other Instance to transform.
+   * @param {boolean} thisIsFirst "Priority" of the two instances. If `true`
+   *   then the operations of `this` are taken to have come first / won the
+   *   race. Contrawise, if `false` then the operations of `other` are taken to
+   *   have come first.
+   * @returns {BodyDelta} Delta which represents the transformation ofbetween
+   *   `newerDelta` and this instance.
+   */
+  transform(other, thisIsFirst) {
+    BodyDelta.check(other);
+    TBoolean.check(thisIsFirst);
+
+    // Use Quill's implementation.
+    const quillThis   = this.toQuillForm();
+    const quillOther  = other.toQuillForm();
+    const quillResult = quillThis.transform(quillOther, thisIsFirst);
+
+    return BodyDelta.fromQuillForm(quillResult);
+  }
+}

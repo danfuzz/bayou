@@ -675,7 +675,7 @@ export default class BodyClient extends StateMachine {
     // state to Quill's current state) composed with the correction to that
     // delta which when applied brings the client's state into alignment with
     // the server's state.
-    const correctedDelta = BodyDelta.coerce(delta.compose(dCorrection));
+    const correctedDelta = delta.compose(dCorrection);
 
     if (this._currentEvent.nextOfNow(QuillEvents.TEXT_CHANGE) === null) {
       // Thanfully, the local user hasn't made any other changes while we
@@ -725,8 +725,7 @@ export default class BodyClient extends StateMachine {
 
     // `false` indicates that `dMore` should be taken to have been applied
     // second (lost any insert races or similar).
-    const dIntegratedCorrection =
-      BodyDelta.coerce(dMore.transform(dCorrection, false));
+    const dIntegratedCorrection = dMore.transform(dCorrection, false);
     this._updateWithChange(
       new BodyChange(vResultNum, correctedDelta), dIntegratedCorrection);
 
@@ -792,7 +791,7 @@ export default class BodyClient extends StateMachine {
     // Remember that we consumed all these changes.
     this._currentEvent = change;
 
-    return BodyDelta.coerce(delta);
+    return delta;
   }
 
   /**
@@ -828,7 +827,7 @@ export default class BodyClient extends StateMachine {
 
     // Tell Quill if necessary.
     if (needQuillUpdate) {
-      this._quill.updateContents(quillDelta, CLIENT_SOURCE);
+      this._quill.updateContents(quillDelta.toQuillForm(), CLIENT_SOURCE);
     }
   }
 
@@ -840,7 +839,7 @@ export default class BodyClient extends StateMachine {
    */
   _updateWithSnapshot(snapshot) {
     this._snapshot = snapshot;
-    this._quill.setContents(snapshot.contents, CLIENT_SOURCE);
+    this._quill.setContents(snapshot.contents.toQuillForm(), CLIENT_SOURCE);
   }
 
   /**
