@@ -57,8 +57,8 @@ export default class Registry extends CommonBase {
    * define an instance method `toApi()`. In addition, it can optionally
    * define a static property `API_TAG` as a replacement for its class name
    * for use as the tag when encoding; and optionally define a static method
-   * `fromApi()` to override the default of using the class's constructor when
-   * decoding.
+   * `fromCodecArgs()` to override the default of using the class's constructor
+   * when decoding.
    *
    * @param {object} clazz The class to register.
    */

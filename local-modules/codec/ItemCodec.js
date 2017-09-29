@@ -115,11 +115,11 @@ export default class ItemCodec extends CommonBase {
 
     const tag = clazz.API_TAG || clazz.name;
 
-    let fromApi;
-    if (clazz.fromApi) {
-      fromApi = TFunction.checkCallable(clazz.fromApi);
+    let fromCodecArgs;
+    if (clazz.fromCodecArgs) {
+      fromCodecArgs = TFunction.checkCallable(clazz.fromCodecArgs);
     } else {
-      fromApi = (...args) => new clazz(...args);
+      fromCodecArgs = (...args) => new clazz(...args);
     }
 
     const encode = (value, subEncode) => {
@@ -129,7 +129,7 @@ export default class ItemCodec extends CommonBase {
 
     const decode = (payload, subDecode) => {
       payload = payload.map(subDecode);
-      return fromApi(...payload);
+      return fromCodecArgs(...payload);
     };
 
     return new ItemCodec(tag, clazz, null, encode, decode);

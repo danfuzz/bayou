@@ -18,7 +18,7 @@ export default class MockApiObject {
     return ['fake argument', 0, 1, 2];
   }
 
-  static fromApi(arguments_unused) {
+  static fromCodecArgs(arguments_unused) {
     return new MockApiObject();
   }
 }
