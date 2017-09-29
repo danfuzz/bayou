@@ -4,7 +4,6 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
-import Delta from 'quill-delta';
 import { inspect } from 'util';
 
 import { BodyDelta } from 'doc-common';
@@ -31,74 +30,6 @@ describe('doc-common/BodyDelta', () => {
 
     it('should be `.isEmpty()`', () => {
       assert.isTrue(EMPTY.isEmpty());
-    });
-  });
-
-  describe('coerce()', () => {
-    describe('instances of the actual class', () => {
-      const values = [
-        BodyDelta.EMPTY,
-        new BodyDelta([]),
-        new BodyDelta([{ insert: '123' }])
-      ];
-
-      for (const v of values) {
-        it(`should yield the same value for: ${inspect(v)}`, () => {
-          const result = BodyDelta.coerce(v);
-          assert.strictEqual(result, v);
-        });
-      }
-    });
-
-    describe('valid empty arguments', () => {
-      const values = [
-        [],
-        new Delta([])
-      ];
-
-      for (const v of values) {
-        it(`should yield \`EMPTY\` for: ${inspect(v)}`, () => {
-          const result = BodyDelta.coerce(v);
-          assert.strictEqual(result, BodyDelta.EMPTY);
-        });
-      }
-    });
-
-    describe('valid non-empty arguments', () => {
-      const values = [
-        [{ insert: 'x' }],
-        [{ delete: 123 }],
-        [{ retain: 123 }],
-        [{ insert: 'x', attributes: { bold: true } }],
-        [{ insert: 'florp' }, { insert: 'x', attributes: { bold: true } }],
-        new Delta([{ insert: 'x' }])
-      ];
-
-      for (const v of values) {
-        it(`should succeed for: ${inspect(v)}`, () => {
-          const result = BodyDelta.coerce(v);
-          assert.instanceOf(result, BodyDelta);
-        });
-      }
-    });
-
-    describe('invalid arguments', () => {
-      const values = [
-        { ops: [] },
-        null,
-        undefined,
-        false,
-        123,
-        'florp',
-        /xyz/,
-        new Map()
-      ];
-
-      for (const v of values) {
-        it(`should fail for: ${inspect(v)}`, () => {
-          assert.throws(() => BodyDelta.coerce(v));
-        });
-      }
     });
   });
 
