@@ -6,12 +6,12 @@
  * Trivial API-compatible class for use in tests.
  */
 export default class MockApiObject {
-  constructor() {
-    this.initialized = true;
+  static get CODEC_TAG() {
+    return 'MockApiObject';
   }
 
-  static get API_TAG() {
-    return 'MockApiObject';
+  constructor() {
+    this.initialized = true;
   }
 
   toCodecArgs() {

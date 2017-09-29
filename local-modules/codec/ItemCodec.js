@@ -113,7 +113,7 @@ export default class ItemCodec extends CommonBase {
     TFunction.checkClass(clazz);
     TFunction.checkCallable(clazz.prototype.toCodecArgs);
 
-    const tag = clazz.API_TAG || clazz.name;
+    const tag = clazz.CODEC_TAG || clazz.name;
 
     let fromCodecArgs;
     if (clazz.fromCodecArgs) {

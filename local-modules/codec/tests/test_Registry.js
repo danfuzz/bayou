@@ -16,7 +16,7 @@ class RegistryTestApiObject {
     this.initialized = true;
   }
 
-  static get API_TAG() {
+  static get CODEC_TAG() {
     return 'RegistryTestApiObject';
   }
 
@@ -29,19 +29,19 @@ class RegistryTestApiObject {
   }
 }
 
-class NoApiTag {
+class NoCodecTag {
   toCodecArgs() {
-    return 'NoApiTag!';
+    return 'NoCodecTag!';
   }
 
   static fromCodecArgs() {
-    return new NoApiTag();
+    return new NoCodecTag();
   }
 }
 
 class NoToCodecArgs {
   constructor() {
-    this.API_TAG = 'NoToCodecArgs';
+    this.CODEC_TAG = 'NoToCodecArgs';
   }
 
   static fromCodecArgs() {
@@ -51,7 +51,7 @@ class NoToCodecArgs {
 
 class NoFromCodecArgs {
   constructor() {
-    this.API_TAG = 'NoFromCodecArgs';
+    this.CODEC_TAG = 'NoFromCodecArgs';
   }
 
   toCodecArgs() {
@@ -66,9 +66,9 @@ describe('api-common/Registry', () => {
       assert.doesNotThrow(() => reg.registerClass(RegistryTestApiObject));
     });
 
-    it('should allow classes without `API_TAG` or `fromCodecArgs()`', () => {
+    it('should allow classes without `CODEC_TAG` or `fromCodecArgs()`', () => {
       const reg = new Registry();
-      assert.doesNotThrow(() => reg.registerClass(NoApiTag));
+      assert.doesNotThrow(() => reg.registerClass(NoCodecTag));
       assert.doesNotThrow(() => reg.registerClass(NoFromCodecArgs));
     });
 

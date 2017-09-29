@@ -12,7 +12,7 @@ import { Functor, InfoError } from 'util-common';
  */
 export default class CodableError extends InfoError {
   /** {string} Name of this class for the sake of API coding. */
-  static get API_TAG() {
+  static get CODEC_TAG() {
     return 'Error';
   }
 

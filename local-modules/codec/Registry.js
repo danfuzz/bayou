@@ -55,7 +55,7 @@ export default class Registry extends CommonBase {
   /**
    * Registers a class to be accepted for API use. To be valid, a class must
    * define an instance method `toCodecArgs()`. In addition, it can optionally
-   * define a static property `API_TAG` as a replacement for its class name
+   * define a static property `CODEC_TAG` as a replacement for its class name
    * for use as the tag when encoding; and optionally define a static method
    * `fromCodecArgs()` to override the default of using the class's constructor
    * when decoding.

@@ -10,15 +10,15 @@ import { FrozenBuffer } from 'util-common';
 
 import MockApiObject from './MockApiObject';
 
-class NoApiTag {
+class NoCodecTag {
   toCodecArgs() {
-    return 'NoApiTag!';
+    return 'NoCodecTag!';
   }
 }
 
 class NoToCodecArgs {
   constructor() {
-    this.API_TAG = 'NoToCodecArgs';
+    this.CODEC_TAG = 'NoToCodecArgs';
   }
 }
 
@@ -75,10 +75,10 @@ describe('api-common/Codec.encode*()r', () => {
       assert.throws(() => encodeData(value));
     });
 
-    it('should reject API objects with no API_TAG property', () => {
-      const noApiTag = new NoApiTag();
+    it('should reject API objects with no CODEC_TAG property', () => {
+      const noCodecTag = new NoCodecTag();
 
-      assert.throws(() => encodeData(noApiTag));
+      assert.throws(() => encodeData(noCodecTag));
     });
 
     it('should reject API objects with no toCodecArgs() method', () => {
@@ -87,7 +87,7 @@ describe('api-common/Codec.encode*()r', () => {
       assert.throws(() => encodeData(noToCodecArgs));
     });
 
-    it('should accept objects with an API_TAG property and toCodecArgs() method', () => {
+    it('should accept objects with an CODEC_TAG property and toCodecArgs() method', () => {
       const fakeObject = new MockApiObject();
 
       assert.doesNotThrow(() => encodeData(fakeObject));
