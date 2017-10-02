@@ -9,9 +9,13 @@ import { CommonBase, Errors } from 'util-common';
 
 
 /**
- * Delta for caret information, consisting of a simple ordered list of
- * operations. Instances of this class can be applied to instances of `Caret`
- * and `CaretSnapshot` to produce updated instances of those classes.
+ * Base class for document deltas. These are ordered lists of operations which
+ * indicate how to take one document state and transform it into a new document
+ * state. Subclasses of this class specialize on particular aspects of a
+ * (larger) document.
+ *
+ * Instances of (subclasses of) this class are used as the main payload data for
+ * the various "change" and "snapshot" classes.
  *
  * Instances of this class are immutable.
  */
@@ -115,8 +119,8 @@ export default class BaseDelta extends CommonBase {
     if (this === other) {
       return true;
     } else if (!(other instanceof BaseDelta)) {
-      // **Note:** This handles non-objects and `null`s, making the final
-      // `return` expression pretty straightforward.
+      // **Note:** This handles non-objects and `null`s, making the next
+      // pair of checks (below) more straightforward.
       return false;
     }
 
@@ -199,7 +203,7 @@ export default class BaseDelta extends CommonBase {
   /**
    * {class|function} Class (constructor function) of operation objects to be
    * used with instances of this class, _or_ a predicate which identifies valid
-   * operations. Subclasses must be fill this in.
+   * operations. Subclasses must fill this in.
    *
    * **TODO:** The `function` form is allowed specifically so that `BodyDelta`
    * can use simple objects as operations. `BodyDelta` should be changed to use
