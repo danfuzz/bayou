@@ -225,7 +225,7 @@ export default class BaseChange extends CommonBase {
 
   /**
    * {class} Class (constructor function) of delta objects to be used with
-   * instances of this class. Subclasses must be fill this in.
+   * instances of this class. Subclasses must fill this in.
    *
    * @abstract
    */

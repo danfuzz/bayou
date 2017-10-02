@@ -211,7 +211,7 @@ export default class BaseSnapshot extends CommonBase {
 
   /**
    * {class} Class (constructor function) of change objects to be used with
-   * instances of this class. Subclasses must be fill this in.
+   * instances of this class. Subclasses must fill this in.
    *
    * @abstract
    */
