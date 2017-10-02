@@ -105,6 +105,8 @@ export default class BaseDelta extends CommonBase {
    * * The two instance's `ops` arrays must be the same length.
    * * Corresponding `ops` elements must be `.equals()`.
    *
+   * Subclasses may override this method if this behavior isn't right for them.
+   *
    * @param {*} other Instance to compare to.
    * @returns {boolean} `true` if `this` and `other` are equal, or `false` if
    *   not.

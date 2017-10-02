@@ -10,7 +10,7 @@ import { DEFAULT_DOCUMENT } from 'hooks-server';
 import { Mutex } from 'promise-util';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase, DataUtil } from 'util-common';
 
 import CaretControl from './CaretControl';
 import BodyControl from './BodyControl';
@@ -25,14 +25,14 @@ const DEFAULT_TEXT = new BodyDelta(DEFAULT_DOCUMENT);
 /**
  * {BodyDelta} Message used as document to indicate a major validation error.
  */
-const ERROR_NOTE = new BodyDelta(
-  [{ insert: '(Recreated document due to validation error(s).)\n' }]);
+const ERROR_NOTE = new BodyDelta(DataUtil.deepFreeze(
+  [{ insert: '(Recreated document due to validation error(s).)\n' }]));
 
 /**
  * {BodyDelta} Message used as document instead of migrating documents from
  * old schema versions. */
-const MIGRATION_NOTE = new BodyDelta(
-  [{ insert: '(Recreated document due to schema version skew.)\n' }]);
+const MIGRATION_NOTE = new BodyDelta(DataUtil.deepFreeze(
+  [{ insert: '(Recreated document due to schema version skew.)\n' }]));
 
 /**
  * Manager for the "complex" of objects which in aggregate allow access and
