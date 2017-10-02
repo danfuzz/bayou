@@ -79,9 +79,9 @@ export default class BodyDelta extends CommonBase {
 
     /**
      * {array} Array of operations. **TODO:** The contents of `ops` should be
-     * validated.
+     * validated more completely.
      */
-    this._ops = DataUtil.deepFreeze(TArray.check(ops));
+    this._ops = DataUtil.deepFreeze(TArray.check(ops, TObject.simple));
 
     Object.freeze(this);
   }
