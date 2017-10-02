@@ -61,9 +61,10 @@ describe('doc-common/BodyDelta', () => {
   describe('constructor()', () => {
     describe('valid arguments', () => {
       // This one is not a valid `ops` array, but per docs, the constructor
-      // doesn't inspect the contents of `ops` arrays and so using this value
-      // should succeed (for some values of the terms "should" and "succeed").
-      const invalidNonEmptyOps = [null, undefined, ['x'], { a: 10 }, 1, 2, 3];
+      // doesn't inspect the contents of `ops` arrays other than seeing that
+      // elements are all simple objects, and so using this value should succeed
+      // (for some values of the terms "should" and "succeed").
+      const invalidNonEmptyOps = [{ a: 10 }, { b: 'florp' }];
 
       const values = [
         [],
@@ -89,7 +90,11 @@ describe('doc-common/BodyDelta', () => {
         123,
         'florp',
         { insert: 123 },
-        new Map()
+        new Map(),
+        [null],
+        [undefined],
+        ['x'],
+        [1, 2, 3]
       ];
 
       for (const v of values) {

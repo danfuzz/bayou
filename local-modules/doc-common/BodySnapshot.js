@@ -69,24 +69,19 @@ export default class BodySnapshot extends BaseSnapshot {
   }
 
   /**
-   * Calculates the difference from a given snapshot to this one. The return
-   * value is a change which can be composed with this instance to produce the
-   * snapshot passed in here as an argument. That is, `newerSnapshot ==
-   * this.compose(this.diff(newerSnapshot))`.
+   * Main implementation of {@link #diff}, which produces a delta (not a
+   * change).
    *
    * @param {BodySnapshot} newerSnapshot Snapshot to take the difference
    *   from.
-   * @returns {BodyChange} Change which represents the difference between
+   * @returns {BodyDelta} Delta which represents the difference between
    *   `newerSnapshot` and this instance.
    */
-  diff(newerSnapshot) {
-    BodySnapshot.check(newerSnapshot);
-
+  _impl_diffAsDelta(newerSnapshot) {
     const oldContents = this.contents;
     const newContents = newerSnapshot.contents;
-    const delta       = oldContents.diff(newContents);
 
-    return new BodyChange(newerSnapshot.revNum, delta);
+    return oldContents.diff(newContents);
   }
 
   /**

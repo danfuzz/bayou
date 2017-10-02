@@ -20,6 +20,24 @@ class MockSnapshot extends BaseSnapshot {
     Object.freeze(this);
   }
 
+  _impl_diffAsDelta(newerSnapshot) {
+    return ['diff_delta', newerSnapshot.contents.ops[0]];
+  }
+
+  static get _impl_changeClass() {
+    return MockChange;
+  }
+}
+
+/**
+ * A second mock subclass of `BaseSnapshot`.
+ */
+class AnotherSnapshot extends BaseSnapshot {
+  constructor(revNum, contents) {
+    super(revNum, contents);
+    Object.freeze(this);
+  }
+
   static get _impl_changeClass() {
     return MockChange;
   }
@@ -105,6 +123,45 @@ describe('doc-common/BaseSnapshot', () => {
       test([]);
       test([789]);
       test({ a: 10 });
+    });
+  });
+
+  describe('diff()', () => {
+    it('should call through to the impl and wrap the result in a timeless authorless change', () => {
+      const oldSnap = new MockSnapshot(10, []);
+      const newSnap = new MockSnapshot(20, ['new_snap']);
+      const result  = oldSnap.diff(newSnap);
+
+      assert.instanceOf(result, MockChange);
+      assert.strictEqual(result.revNum, 20);
+      assert.instanceOf(result.delta, MockDelta);
+      assert.isNull(result.timestamp);
+      assert.isNull(result.authorId);
+
+      assert.deepEqual(result.delta.ops, ['diff_delta', 'new_snap']);
+    });
+
+    it('should reject instances of the wrong snapshot class', () => {
+      const oldSnap = new MockSnapshot(10, []);
+      const newSnap = new AnotherSnapshot(20, []);
+
+      assert.throws(() => { oldSnap.diff(newSnap); });
+    });
+
+    it('should reject non-snapshot arguments', () => {
+      const oldSnap = new MockSnapshot(10, []);
+
+      function test(v) {
+        assert.throws(() => { oldSnap.diff(v); });
+      }
+
+      test(undefined);
+      test(null);
+      test(false);
+      test('blort');
+      test(['florp']);
+      test({ x: 10 });
+      test(new Map());
     });
   });
 

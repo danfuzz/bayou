@@ -102,6 +102,32 @@ export default class BaseSnapshot extends CommonBase {
   }
 
   /**
+   * Calculates the difference from a given snapshot to this one. The return
+   * value is a change which can be composed with this instance to produce the
+   * snapshot passed in here as an argument. That is, roughly speaking,
+   * `newerSnapshot == this.compose(this.diff(newerSnapshot))`.
+   *
+   * **Note:** The parameter name `newer` is meant to be suggestive of the
+   * typical use case for this method, but strictly speaking there does not have
+   * to be a particular time order between this instance and the argument.
+   *
+   * @param {BaseSnapshot} newerSnapshot Snapshot to take the difference
+   *   from. Must be an instance of the same direct class as `this`.
+   * @returns {BaseChange} Change which represents the difference between
+   *   `newerSnapshot` and this instance. The result is always an instance of
+   *   the `deltaClass` as defined by the subclass. The `revNum` of the result
+   *   will be the same as `newerSnapshot.revNum`. The `authorId` and
+   *   `timestamp` will always be `null`.
+   */
+  diff(newerSnapshot) {
+    this.constructor.check(newerSnapshot);
+
+    const diffDelta = this._impl_diffAsDelta(newerSnapshot);
+
+    return new this.constructor.changeClass(newerSnapshot.revNum, diffDelta);
+  }
+
+  /**
    * Compares this to another possible-instance, for equality. For two instances
    * to be considered equal, they must be instances of the same exact class,
    * their revision numbers must be the same, and their contents must be
@@ -164,6 +190,23 @@ export default class BaseSnapshot extends CommonBase {
     return (revNum === this._revNum)
       ? this
       : new this.constructor(revNum, this._contents);
+  }
+
+  /**
+   * Main implementation of {@link #diff}, as defined by the subclass. Takes a
+   * snapshot of the same class, and produces a delta (not a change)
+   * representing the difference.
+   *
+   * @abstract
+   * @param {BaseSnapshot} newerSnapshot Snapshot to take the difference
+   *   from. Guaranteed to be an instance of the same direct class as `this`.
+   * @returns {BaseDelta|array} Delta which represents the difference between
+   *   `newerSnapshot` and this instance. Must be an instance of the
+   *   `deltaClass` as defined by the subclass or an array of operations that
+   *   can be used to produce same.
+   */
+  _impl_diffAsDelta(newerSnapshot) {
+    return this._mustOverride(newerSnapshot);
   }
 
   /**
