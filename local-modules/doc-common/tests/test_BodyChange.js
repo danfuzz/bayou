@@ -7,6 +7,19 @@ import { describe, it } from 'mocha';
 import Delta from 'quill-delta';
 
 import { BodyChange, BodyDelta, Timestamp } from 'doc-common';
+import { DataUtil } from 'util-common';
+
+/**
+ * Helper to call `new BodyDelta()` with a deep-frozen argument.
+ *
+ * @param {*} ops Value to pass to the constructor, which doesn't have to be
+ *   frozen.
+ * @returns {BodyDelta} the result of calling the constructor with a deep-frozen
+ *   version of `ops`.
+ */
+function newBodyDelta(ops) {
+  return new BodyDelta(DataUtil.deepFreeze(ops));
+}
 
 describe('doc-common/BodyChange', () => {
   describe('.FIRST', () => {
@@ -44,16 +57,16 @@ describe('doc-common/BodyChange', () => {
         assert.strictEqual(result.authorId, authorId);
       }
 
-      test(0,   new BodyDelta([{ retain: 100 }]));
+      test(0,   newBodyDelta([{ retain: 100 }]));
       test(123, BodyDelta.EMPTY);
-      test(909, new BodyDelta([{ insert: 'x' }]), null);
-      test(909, new BodyDelta([{ insert: 'x' }]), Timestamp.MIN_VALUE);
+      test(909, newBodyDelta([{ insert: 'x' }]), null);
+      test(909, newBodyDelta([{ insert: 'x' }]), Timestamp.MIN_VALUE);
       test(242, BodyDelta.EMPTY,                  null, null);
       test(242, BodyDelta.EMPTY,                  null, 'florp9019');
     });
 
     it('should accept an array for the `delta`, which should get passed to the `BodyDelta` constructor', () => {
-      const ops    = [{ retain: 100 }];
+      const ops    = DataUtil.deepFreeze([{ retain: 100 }]);
       const result = new BodyChange(0, ops);
 
       assert.deepEqual(result.delta.ops, ops);

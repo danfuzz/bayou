@@ -20,6 +20,24 @@ class MockSnapshot extends BaseSnapshot {
     Object.freeze(this);
   }
 
+  _impl_diffAsDelta(newerSnapshot) {
+    return [MockDelta.makeOp('diff_delta'), newerSnapshot.contents.ops[0]];
+  }
+
+  static get _impl_changeClass() {
+    return MockChange;
+  }
+}
+
+/**
+ * A second mock subclass of `BaseSnapshot`.
+ */
+class AnotherSnapshot extends BaseSnapshot {
+  constructor(revNum, contents) {
+    super(revNum, contents);
+    Object.freeze(this);
+  }
+
   static get _impl_changeClass() {
     return MockChange;
   }
@@ -43,8 +61,7 @@ describe('doc-common/BaseSnapshot', () => {
       }
 
       test([]);
-      test(['x']);
-      test(['x', 2, 3]);
+      test(MockDelta.VALID_OPS);
     });
 
     it('should accept valid revision numbers', () => {
@@ -64,30 +81,22 @@ describe('doc-common/BaseSnapshot', () => {
       }
 
       test([]);
-      test(['x']);
-      test(['x', 2, 3]);
+      test(MockDelta.VALID_OPS);
     });
 
     it('should produce a frozen instance', () => {
-      const snap = new MockSnapshot(0, ['blort']);
+      const snap = new MockSnapshot(0, MockDelta.VALID_OPS);
       assert.isFrozen(snap);
     });
 
     it('should reject an invalid array', () => {
-      // The `MockDelta` contructor requires the `ops` array to have three or
-      // fewer elements.
-      const badArray1 = [1, 2, 3, 4];
-
-      // This will become a valid delta for which `isDocument()` is `false`.
-      const badArray2 = ['not_document'];
-
-      assert.throws(() => { new MockSnapshot(0, badArray1); });
-      assert.throws(() => { new MockSnapshot(0, badArray2); });
+      assert.throws(() => { new MockSnapshot(0, MockDelta.INVALID_OPS); });
+      assert.throws(() => { new MockSnapshot(0, MockDelta.NOT_DOCUMENT_OPS); });
     });
 
     it('should reject a non-document delta', () => {
       // This is a valid delta for which `isDocument()` is `false`.
-      const badDelta = new MockDelta(['not_document']);
+      const badDelta = new MockDelta(MockDelta.NOT_DOCUMENT_OPS);
 
       assert.throws(() => { new MockSnapshot(0, badDelta); });
     });
@@ -108,6 +117,46 @@ describe('doc-common/BaseSnapshot', () => {
     });
   });
 
+  describe('diff()', () => {
+    it('should call through to the impl and wrap the result in a timeless authorless change', () => {
+      const oldSnap = new MockSnapshot(10, []);
+      const newSnap = new MockSnapshot(20, [MockDelta.makeOp('new_snap')]);
+      const result  = oldSnap.diff(newSnap);
+
+      assert.instanceOf(result, MockChange);
+      assert.strictEqual(result.revNum, 20);
+      assert.instanceOf(result.delta, MockDelta);
+      assert.isNull(result.timestamp);
+      assert.isNull(result.authorId);
+
+      assert.deepEqual(result.delta.ops,
+        [MockDelta.makeOp('diff_delta'), MockDelta.makeOp('new_snap')]);
+    });
+
+    it('should reject instances of the wrong snapshot class', () => {
+      const oldSnap = new MockSnapshot(10, []);
+      const newSnap = new AnotherSnapshot(20, []);
+
+      assert.throws(() => { oldSnap.diff(newSnap); });
+    });
+
+    it('should reject non-snapshot arguments', () => {
+      const oldSnap = new MockSnapshot(10, []);
+
+      function test(v) {
+        assert.throws(() => { oldSnap.diff(v); });
+      }
+
+      test(undefined);
+      test(null);
+      test(false);
+      test('blort');
+      test(['florp']);
+      test({ x: 10 });
+      test(new Map());
+    });
+  });
+
   describe('equals()', () => {
     it('should return `true` when passed itself', () => {
       function test(...args) {
@@ -115,11 +164,11 @@ describe('doc-common/BaseSnapshot', () => {
         assert.isTrue(snap.equals(snap), inspect(snap));
       }
 
-      test(0, []);
-      test(0, MockDelta.EMPTY);
-      test(37, []);
-      test(37, MockDelta.EMPTY);
-      test(914, ['a', 'b', 'c']);
+      test(0,   []);
+      test(0,   MockDelta.EMPTY);
+      test(37,  []);
+      test(37,  MockDelta.EMPTY);
+      test(914, MockDelta.VALID_OPS);
     });
 
     it('should return `true` when passed an identically-constructed value', () => {
@@ -131,17 +180,17 @@ describe('doc-common/BaseSnapshot', () => {
         assert.isTrue(snap2.equals(snap1), label);
       }
 
-      test(0, []);
-      test(0, MockDelta.EMPTY);
-      test(37, []);
-      test(37, MockDelta.EMPTY);
-      test(914, ['a', 'b', 'c']);
+      test(0,   []);
+      test(0,   MockDelta.EMPTY);
+      test(37,  []);
+      test(37,  MockDelta.EMPTY);
+      test(914, MockDelta.VALID_OPS);
     });
 
     it('should return `true` when equal property values are not also `===`', () => {
       // This validates that the base class calls `.equals()` on the delta.
-      const snap1 = new MockSnapshot(37, [1, 2, 3]);
-      const snap2 = new MockSnapshot(37, [1, 2, 3]);
+      const snap1 = new MockSnapshot(37, MockDelta.VALID_OPS);
+      const snap2 = new MockSnapshot(37, MockDelta.VALID_OPS);
 
       assert.isTrue(snap1.equals(snap2));
       assert.isTrue(snap2.equals(snap1));
@@ -156,8 +205,8 @@ describe('doc-common/BaseSnapshot', () => {
     });
 
     it('should return `false` when deltas are not equal', () => {
-      const snap1 = new MockSnapshot(123, [1]);
-      const snap2 = new MockSnapshot(123, [2, 3]);
+      const snap1 = new MockSnapshot(123, [MockDelta.makeOp('x')]);
+      const snap2 = new MockSnapshot(123, [MockDelta.makeOp('y')]);
 
       assert.isFalse(snap1.equals(snap2));
       assert.isFalse(snap2.equals(snap1));
@@ -184,8 +233,8 @@ describe('doc-common/BaseSnapshot', () => {
     });
 
     it('should return an appropriately-constructed instance given a different `contents`', () => {
-      const delta  = new MockDelta(['yo']);
-      const snap   = new MockSnapshot(123, [3]);
+      const delta  = new MockDelta([MockDelta.makeOp('yo')]);
+      const snap   = new MockSnapshot(123, [MockDelta.makeOp('hello')]);
       const result = snap.withContents(delta);
 
       assert.strictEqual(result.revNum,   123);
@@ -208,7 +257,7 @@ describe('doc-common/BaseSnapshot', () => {
     });
 
     it('should return an appropriately-constructed instance given a different `revNum`', () => {
-      const delta  = new MockDelta([1, 2]);
+      const delta  = new MockDelta(MockDelta.VALID_OPS);
       const snap   = new MockSnapshot(123, delta);
       const result = snap.withRevNum(456);
 

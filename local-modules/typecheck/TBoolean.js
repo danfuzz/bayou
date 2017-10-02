@@ -12,16 +12,9 @@ export default class TBoolean extends UtilityClass {
    * Checks a value of type `Boolean`.
    *
    * @param {*} value The (alleged) boolean.
-   * @param {boolean|null} [defaultValue = null] Default value. If passed,
-   *   indicates that `undefined` should be treated as that value. If not
-   *   passed, `undefined` is an error.
-   * @returns {boolean} `value` or `defaultValue`.
+   * @returns {boolean} `value`, if it is indeed a boolean.
    */
-  static check(value, defaultValue = null) {
-    if ((value === undefined) && (defaultValue !== null)) {
-      value = defaultValue;
-    }
-
+  static check(value) {
     if (typeof value !== 'boolean') {
       throw Errors.bad_value(value, Boolean);
     }

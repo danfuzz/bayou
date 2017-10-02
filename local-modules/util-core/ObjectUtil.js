@@ -49,4 +49,18 @@ export default class ObjectUtil extends UtilityClass {
   static hasOwnProperty(value, name) {
     return Object.prototype.hasOwnProperty.call(value, name);
   }
+
+  /**
+   * Tests whether a value is a "simple object." A simple object is defined as
+   * being a value of type `object` which is not `null` and whose direct
+   * prototype is `Object.prototype`. Notably, arrays are _not_ simple objects.
+   *
+   * @param {*} value Value to check.
+   * @returns {boolean} `true` if `value` is a simple object, or `false` if not.
+   */
+  static isSimple(value) {
+    return (typeof value === 'object')
+        && (value !== null)
+        && (Object.getPrototypeOf(value) === Object.prototype);
+  }
 }

@@ -4,14 +4,10 @@
 
 import Delta from 'quill-delta';
 
-import { TArray, TBoolean, TObject } from 'typecheck';
-import { CommonBase, DataUtil, Errors, ObjectUtil } from 'util-common';
+import { TBoolean, TObject } from 'typecheck';
+import { DataUtil, Errors, ObjectUtil } from 'util-common';
 
-/**
- * {BodyDelta|null} Empty instance. Initialized in the static getter of the
- * same name.
- */
-let EMPTY = null;
+import BaseDelta from './BaseDelta';
 
 /**
  * Always-frozen list of body OT operations. This uses Quill's `Delta` class to
@@ -27,16 +23,7 @@ let EMPTY = null;
  * the near future, once the operations of this class become more strongly
  * typed (and verified).
  */
-export default class BodyDelta extends CommonBase {
-  /** {BodyDelta} Empty instance of this class. */
-  static get EMPTY() {
-    if (EMPTY === null) {
-      EMPTY = new BodyDelta([]);
-    }
-
-    return EMPTY;
-  }
-
+export default class BodyDelta extends BaseDelta {
   /**
    * Given a Quill `Delta` instance, returns an instance of this class with the
    * same operations.
@@ -64,31 +51,7 @@ export default class BodyDelta extends CommonBase {
       throw e;
     }
 
-    return new BodyDelta(quillDelta.ops);
-  }
-
-  /**
-   * Constructs an instance.
-   *
-   * @param {array<object>} ops The transformation operations of this instance.
-   *   If not deeply frozen, the actual stored `ops` will be a deep-frozen clone
-   *   of the given value.
-   */
-  constructor(ops) {
-    super();
-
-    /**
-     * {array} Array of operations. **TODO:** The contents of `ops` should be
-     * validated.
-     */
-    this._ops = DataUtil.deepFreeze(TArray.check(ops));
-
-    Object.freeze(this);
-  }
-
-  /** {array} Array of operations. Always a deep-frozen value. */
-  get ops() {
-    return this._ops;
+    return new BodyDelta(DataUtil.deepFreeze(quillDelta.ops));
   }
 
   /**
@@ -143,6 +106,9 @@ export default class BodyDelta extends CommonBase {
    * equal, `other` must be an instance of this class with an `ops` which is
    * `DataUtil.equalData()` to this instance's `ops`.
    *
+   * **TODO:** Once this class uses a real ops class, let the superclass's
+   * implementation of this method stand.
+   *
    * @param {*} other Instance to compare to.
    * @returns {boolean} `true` if `this` and `other` are equal, or `false` if
    *   not.
@@ -154,46 +120,6 @@ export default class BodyDelta extends CommonBase {
 
     return (other instanceof BodyDelta)
       && DataUtil.equalData(this._ops, other._ops);
-  }
-
-  /**
-   * Returns `true` iff this instance has the form of a "document," or put
-   * another way, iff it is valid to compose with an empty snapshot. In Quill
-   * terms, a document is a delta that consists _only_ of `insert` operations.
-   *
-   * **Note:** Generally speaking, instances for which `isDocument()` is true
-   * can _also_ be used as non-document deltas.
-   *
-   * @returns {boolean} `true` if this instance can be treated as a document
-   *   delta or `false` if not.
-   */
-  isDocument() {
-    for (const op of this.ops) {
-      if (!ObjectUtil.hasOwnProperty(op, 'insert')) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Returns `true` iff this instance is empty (that is, it has an empty list
-   * of ops).
-   *
-   * @returns {boolean} `true` if this instance is empty or `false` if not.
-   */
-  isEmpty() {
-    return this.ops.length === 0;
-  }
-
-  /**
-   * Converts this instance to codec reconstruction arguments.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toCodecArgs() {
-    return [this.ops];
   }
 
   /**
@@ -237,5 +163,33 @@ export default class BodyDelta extends CommonBase {
     const quillResult = quillThis.transform(quillOther, thisIsFirst);
 
     return BodyDelta.fromQuillForm(quillResult);
+  }
+
+  /**
+   * Main implementation of {@link #isDocument}.
+   *
+   * @returns {boolean} `true` if this instance can be used as a document or
+   *   `false` if not.
+   */
+  _impl_isDocument() {
+    for (const op of this.ops) {
+      if (!ObjectUtil.hasOwnProperty(op, 'insert')) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * {function} Predicate which indicates valid operation values for use with
+   * this class.
+   */
+  static get _impl_opClassOrPredicate() {
+    function bodyOpPredicate(v) {
+      return ObjectUtil.isSimple(v) && DataUtil.isDeepFrozen(v);
+    }
+
+    return bodyOpPredicate;
   }
 }

@@ -235,7 +235,7 @@ describe('util-core/DataUtil', () => {
 
     it('should return `false` for non-equal values', () => {
       function test(v1, v2) {
-        assert.isFalse(DataUtil.equalData(v1, v2), v1);
+        assert.isFalse(DataUtil.equalData(v1, v2), inspect(v1));
       }
 
       test(null, undefined);
@@ -279,6 +279,27 @@ describe('util-core/DataUtil', () => {
       test({ x: 1 }, 1);
 
       test(new Functor('x', 1, 2, 3), [1, 2, 3]);
+    });
+
+    it('should return `false` given an object/array with non-data bindings', () => {
+      function test(v) {
+        const obj = { a: 10, b: v, c: 20 };
+        assert.isFalse(DataUtil.equalData(obj, obj), inspect(v));
+
+        const arr = [1, 2, 3, v, 4, 5, 6];
+        assert.isFalse(DataUtil.equalData(arr, arr), inspect(v));
+      }
+
+      // Direct.
+      test(/regex_is_not_data/);
+      test(new Map());
+
+      // Nested.
+      test([/regex_is_not_data/]);
+      test([new Map()]);
+      test({ x: /regex_is_not_data/ });
+      test({ x: new Map() });
+      test([[[[[[[[[[[/regex_is_not_data/]]]]]]]]]]]);
     });
   });
 

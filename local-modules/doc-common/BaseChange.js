@@ -2,10 +2,11 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TFunction, TObject } from 'typecheck';
+import { TObject } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import AuthorId from './AuthorId';
+import BaseDelta from './BaseDelta';
 import RevisionNumber from './RevisionNumber';
 import Timestamp from './Timestamp';
 
@@ -64,14 +65,10 @@ export default class BaseChange extends CommonBase {
     // instance.
 
     if (!this._deltaClass) {
-      // Call the `_impl` and verify the result (via duck-typing, because there
-      // is no `BaseDelta` base class).
-      const clazz = TFunction.checkClass(this._impl_deltaClass);
+      // Call the `_impl` and verify the result.
+      const clazz = this._impl_deltaClass;
 
-      TObject.check(clazz.EMPTY, clazz);
-      TFunction.checkCallable(clazz.check);
-      TFunction.checkCallable(clazz.prototype.equals);
-      TFunction.checkCallable(clazz.prototype.isDocument);
+      TObject.check(clazz.prototype, BaseDelta);
       this._deltaClass = clazz;
     }
 
@@ -153,7 +150,7 @@ export default class BaseChange extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toCodecArgs() {
-    const result = [this._revNum, this._delta, this._timestamp, this._authorId];
+    const result = [this._revNum, this._delta.ops, this._timestamp, this._authorId];
 
     // Trim off one or two trailing `null`s, if possible.
     for (let i = 3; i >= 2; i--) {
@@ -228,7 +225,7 @@ export default class BaseChange extends CommonBase {
 
   /**
    * {class} Class (constructor function) of delta objects to be used with
-   * instances of this class. Subclasses must be fill this in.
+   * instances of this class. Subclasses must fill this in.
    *
    * @abstract
    */

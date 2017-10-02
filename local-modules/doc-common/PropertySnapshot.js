@@ -7,6 +7,7 @@ import { Errors } from 'util-common';
 
 import BaseSnapshot from './BaseSnapshot';
 import PropertyChange from './PropertyChange';
+import PropertyDelta from './PropertyDelta';
 import PropertyOp from './PropertyOp';
 
 /**
@@ -104,49 +105,6 @@ export default class PropertySnapshot extends BaseSnapshot {
   }
 
   /**
-   * Calculates the difference from a given snapshot to this one. The return
-   * value is a change which can be composed with this instance to produce the
-   * snapshot passed in here as an argument. That is, `newerSnapshot ==
-   * this.compose(this.diff(newerSnapshot))`.
-   *
-   * **Note:** The word `newer` in the argument name is meant to be suggestive
-   * of typical usage of this method, but there is no actual requirement that
-   * the argument be strictly newer in any sense, compared to the instance this
-   * method is called on.
-   *
-   * @param {PropertySnapshot} newerSnapshot Snapshot to take the difference
-   *   from.
-   * @returns {PropertyChange} Change which represents the difference between
-   *   `newerSnapshot` and this instance.
-   */
-  diff(newerSnapshot) {
-    PropertySnapshot.check(newerSnapshot);
-
-    const newerProps = newerSnapshot._properties;
-    const ops        = [];
-
-    // Find properties that are new or updated from `this` when going to
-    // `newerSnapshot`.
-    for (const [name, op] of newerProps) {
-      if (!op.equals(this._properties.get(name))) {
-        // The newer snapshot has a property that is new or updated compared to
-        // this one.
-        ops.push(op);
-      }
-    }
-
-    // Find properties removed from `this` when going to `newerSnapshot`.
-    for (const name of this._properties.keys()) {
-      if (!newerProps.get(name)) {
-        ops.push(PropertyOp.op_deleteProperty(name));
-      }
-    }
-
-    // Build the result.
-    return new PropertyChange(newerSnapshot.revNum, ops);
-  }
-
-  /**
    * Compares this to another possible-instance, for equality of content.
    *
    * @param {*} other Value to compare to.
@@ -241,6 +199,40 @@ export default class PropertySnapshot extends BaseSnapshot {
     return this._properties.has(name)
       ? this.compose(new PropertyChange(this.revNum, [op]))
       : this;
+  }
+
+  /**
+   * Main implementation of {@link #diff}, which produces a delta (not a
+   * change).
+   *
+   * @param {PropertySnapshot} newerSnapshot Snapshot to take the difference
+   *   from.
+   * @returns {PropertyDelta} Delta which represents the difference between
+   *   `newerSnapshot` and this instance.
+   */
+  _impl_diffAsDelta(newerSnapshot) {
+    const newerProps = newerSnapshot._properties;
+    const resultOps  = [];
+
+    // Find properties that are new or updated from `this` when going to
+    // `newerSnapshot`.
+    for (const [name, op] of newerProps) {
+      if (!op.equals(this._properties.get(name))) {
+        // The newer snapshot has a property that is new or updated compared to
+        // this one.
+        resultOps.push(op);
+      }
+    }
+
+    // Find properties removed from `this` when going to `newerSnapshot`.
+    for (const name of this._properties.keys()) {
+      if (!newerProps.get(name)) {
+        resultOps.push(PropertyOp.op_deleteProperty(name));
+      }
+    }
+
+    // Build the result.
+    return new PropertyDelta(resultOps);
   }
 
   /**

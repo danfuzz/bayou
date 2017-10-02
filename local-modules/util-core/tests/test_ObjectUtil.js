@@ -58,4 +58,42 @@ describe('util-core/ObjectUtil', () => {
       assert.isFalse(ObjectUtil.hasOwnProperty(value, 'floopty'));
     });
   });
+
+  describe('isSimple()', () => {
+    it('should return `true` for simple objects', () => {
+      function test(value) {
+        assert.isTrue(ObjectUtil.isSimple(value));
+      }
+
+      test({});
+      test({ a: 10 });
+      test({ a: 10, b: 20 });
+      test({ [Symbol('blort')]: [1, 2, 3] });
+    });
+
+    it('should return `false` for non-simple objects', () => {
+      function test(value) {
+        assert.isFalse(ObjectUtil.isSimple(value));
+      }
+
+      test([]);
+      test([1]);
+      test(() => true);
+      test(new Map());
+    });
+
+    it('should return `false` for non-objects', () => {
+      function test(value) {
+        assert.isFalse(ObjectUtil.isSimple(value));
+      }
+
+      test(null);
+      test(undefined);
+      test(false);
+      test(true);
+      test('x');
+      test(Symbol('x'));
+      test(37);
+    });
+  });
 });

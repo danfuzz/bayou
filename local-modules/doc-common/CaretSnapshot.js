@@ -146,59 +146,6 @@ export default class CaretSnapshot extends BaseSnapshot {
   }
 
   /**
-   * Calculates the difference from a given snapshot to this one. The return
-   * value is a change which can be composed with this instance to produce the
-   * snapshot passed in here as an argument. That is, `newerSnapshot ==
-   * this.compose(this.diff(newerSnapshot))`.
-   *
-   * **Note:** The word `newer` in the argument name is meant to be suggestive
-   * of typical usage of this method, but there is no actual requirement that
-   * the argument be strictly newer in any sense, compared to the instance this
-   * method is called on.
-   *
-   * @param {CaretSnapshot} newerSnapshot Snapshot to take the difference from.
-   * @returns {CaretChange} Change which represents the difference between
-   *   `newerSnapshot` and this instance.
-   */
-  diff(newerSnapshot) {
-    CaretSnapshot.check(newerSnapshot);
-
-    const newerCarets = newerSnapshot._carets;
-    const resultOps   = [];
-
-    // Find carets that are new or updated from `this` when going to
-    // `newerSnapshot`.
-
-    for (const [sessionId, caretOp] of newerCarets) {
-      const already = this._carets.get(sessionId);
-      if (already) {
-        // The `sessionId` matches the older snapshot. Indicate an update if the
-        // values are different.
-        if (!already.equals(caretOp)) {
-          const diff = already.props.caret.diff(caretOp.props.caret);
-          for (const op of diff.ops) {
-            resultOps.push(op);
-          }
-        }
-      } else {
-        // The `sessionId` isn't in the older snapshot, so this is an addition.
-        resultOps.push(caretOp);
-      }
-    }
-
-    // Find carets removed from `this` when going to `newerSnapshot`.
-
-    for (const sessionId of this._carets.keys()) {
-      if (!newerCarets.get(sessionId)) {
-        resultOps.push(CaretOp.op_endSession(sessionId));
-      }
-    }
-
-    // Build the result.
-    return new CaretChange(newerSnapshot.revNum, resultOps);
-  }
-
-  /**
    * Compares this to another possible-instance, for equality of content.
    *
    * @param {*} other Value to compare to.
@@ -293,6 +240,51 @@ export default class CaretSnapshot extends BaseSnapshot {
     return this._carets.has(sessionId)
       ? this.compose(new CaretChange(this.revNum, [op]))
       : this;
+  }
+
+  /**
+   * Main implementation of {@link #diff}, which produces a delta (not a
+   * change).
+   *
+   * @param {CaretSnapshot} newerSnapshot Snapshot to take the difference
+   *   from.
+   * @returns {CaretDelta} Delta which represents the difference between
+   *   `newerSnapshot` and this instance.
+   */
+  _impl_diffAsDelta(newerSnapshot) {
+    const newerCarets = newerSnapshot._carets;
+    const resultOps   = [];
+
+    // Find carets that are new or updated from `this` when going to
+    // `newerSnapshot`.
+
+    for (const [sessionId, caretOp] of newerCarets) {
+      const already = this._carets.get(sessionId);
+      if (already) {
+        // The `sessionId` matches the older snapshot. Indicate an update if the
+        // values are different.
+        if (!already.equals(caretOp)) {
+          const diff = already.props.caret.diff(caretOp.props.caret);
+          for (const op of diff.ops) {
+            resultOps.push(op);
+          }
+        }
+      } else {
+        // The `sessionId` isn't in the older snapshot, so this is an addition.
+        resultOps.push(caretOp);
+      }
+    }
+
+    // Find carets removed from `this` when going to `newerSnapshot`.
+
+    for (const sessionId of this._carets.keys()) {
+      if (!newerCarets.get(sessionId)) {
+        resultOps.push(CaretOp.op_endSession(sessionId));
+      }
+    }
+
+    // Build the result.
+    return new CaretDelta(resultOps);
   }
 
   /**
