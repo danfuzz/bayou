@@ -102,6 +102,30 @@ export default class BaseSnapshot extends CommonBase {
   }
 
   /**
+   * Composes a change on top of this instance, to produce a new instance. If
+   * the given `change` has an empty `delta` and has a `revNum` which is the
+   * same as this instance, then this method returns `this`. Otherwise, this
+   * method always returns a new instance.
+   *
+   * @param {BaseChange} change Change to compose on top of this instance. Must
+   *   be an instance of the `changeClass` as defined by the subclass.
+   * @returns {BaseSnapshot} New instance consisting of the composition of
+   *   this instance with `change`. Will be a direct instance of the same class
+   *   as `this`.
+   */
+  compose(change) {
+    this.constructor.changeClass.check(change);
+
+    const delta = change.delta;
+
+    if (delta.isEmpty()) {
+      return this.withRevNum(change.revNum);
+    }
+
+    return new this.constructor(change.revNum, this._impl_composeWithDelta(delta));
+  }
+
+  /**
    * Calculates the difference from a given snapshot to this one. The return
    * value is a change which can be composed with this instance to produce the
    * snapshot passed in here as an argument. That is, roughly speaking,
@@ -190,6 +214,23 @@ export default class BaseSnapshot extends CommonBase {
     return (revNum === this._revNum)
       ? this
       : new this.constructor(revNum, this._contents);
+  }
+
+  /**
+   * Main implementation of {@link #compose}, as defined by the subclass. Takes
+   * a delta (not a change instance), and produces a document delta (not a
+   * snapshot).
+   *
+   * @abstract
+   * @param {BaseDelta} delta Difference to compose with this instance's
+   *   contents. Guaranteed to be an instance of the `deltaClass` as defined
+   *   by the subclass.
+   * @returns {BaseDelta|array} Delta which represents the composed document
+   *   contents. Must be an instance of the `deltaClass` as defined by the
+   *   subclass or an array of operations that can be used to produce same.
+   */
+  _impl_composeWithDelta(delta) {
+    return this._mustOverride(delta);
   }
 
   /**

@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { BaseSnapshot } from 'doc-common';
+import { BaseChange, BaseSnapshot } from 'doc-common';
 
 import MockChange from './MockChange';
 import MockDelta from './MockDelta';
@@ -20,12 +20,25 @@ class MockSnapshot extends BaseSnapshot {
     Object.freeze(this);
   }
 
+  _impl_composeWithDelta(delta) {
+    return [MockDelta.makeOp('composed_delta'), delta.ops[0]];
+  }
+
   _impl_diffAsDelta(newerSnapshot) {
     return [MockDelta.makeOp('diff_delta'), newerSnapshot.contents.ops[0]];
   }
 
   static get _impl_changeClass() {
     return MockChange;
+  }
+}
+
+/**
+ * A second mock subclass of `BaseChange`.
+ */
+class AnotherChange extends BaseChange {
+  static get _impl_deltaClass() {
+    return MockDelta;
   }
 }
 
@@ -114,6 +127,55 @@ describe('doc-common/BaseSnapshot', () => {
       test([]);
       test([789]);
       test({ a: 10 });
+    });
+  });
+
+  describe('compose()', () => {
+    it('should call through to the impl and wrap the result in a new instance', () => {
+      const snap   = new MockSnapshot(10, [MockDelta.makeOp('some_op')]);
+      const change = new MockChange(20, [MockDelta.makeOp('change_op')]);
+      const result = snap.compose(change);
+
+      assert.instanceOf(result, MockSnapshot);
+      assert.strictEqual(result.revNum, 20);
+      assert.instanceOf(result.contents, MockDelta);
+
+      assert.deepEqual(result.contents.ops,
+        [MockDelta.makeOp('composed_delta'), MockDelta.makeOp('change_op')]);
+    });
+
+    it('should return `this` given a same-`revNum` empty-`delta` change', () => {
+      const snap   = new MockSnapshot(10, [MockDelta.makeOp('some_op')]);
+      const change = new MockChange(10, []);
+      const result = snap.compose(change);
+
+      assert.strictEqual(result, snap);
+    });
+
+    it('should reject instances of the wrong change class', () => {
+      const snap   = new MockSnapshot(10, []);
+      const change = new AnotherChange(0, []);
+
+      assert.throws(() => { snap.compose(change); });
+    });
+
+    it('should reject non-change arguments', () => {
+      const snap = new MockSnapshot(10, []);
+
+      function test(v) {
+        assert.throws(() => { snap.compose(v); });
+      }
+
+      test(undefined);
+      test(null);
+      test(false);
+      test('blort');
+      test([]);
+      test(['florp']);
+      test({ x: 10 });
+      test(new Map());
+      test(MockDelta.EMPTY);
+      test(MockSnapshot.EMPTY);
     });
   });
 

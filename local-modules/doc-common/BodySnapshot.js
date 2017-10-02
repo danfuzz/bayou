@@ -27,23 +27,6 @@ export default class BodySnapshot extends BaseSnapshot {
   }
 
   /**
-   * Composes a change on top of this instance, to produce a new instance.
-   *
-   * @param {BodyChange} change Change to compose on top of this instance.
-   * @returns {BodySnapshot} New instance consisting of the composition of
-   *   this instance with `change`.
-   */
-  compose(change) {
-    BodyChange.check(change);
-
-    const contents = change.delta.isEmpty()
-      ? this.contents
-      : this.contents.compose(change.delta);
-
-    return new BodySnapshot(change.revNum, contents);
-  }
-
-  /**
    * Composes a sequence of changes on top of this instance, in order, to
    * produce a new instance.
    *
@@ -66,6 +49,19 @@ export default class BodySnapshot extends BaseSnapshot {
 
     const lastChange = changes[changes.length - 1];
     return new BodySnapshot(lastChange.revNum, contents);
+  }
+
+  /**
+   * Main implementation of {@link #compose}. Takes a delta (not a change
+   * instance), and produces a document delta (not a snapshot).
+   *
+   * @param {BodyDelta} delta Difference to compose with this instance's
+   *   contents.
+   * @returns {BodyDelta} Delta which represents the composed document
+   *   contents.
+   */
+  _impl_composeWithDelta(delta) {
+    return this.contents.compose(delta);
   }
 
   /**
