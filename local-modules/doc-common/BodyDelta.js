@@ -106,6 +106,9 @@ export default class BodyDelta extends BaseDelta {
    * equal, `other` must be an instance of this class with an `ops` which is
    * `DataUtil.equalData()` to this instance's `ops`.
    *
+   * **TODO:** Once this class uses a real ops class, let the superclass's
+   * implementation of this method stand.
+   *
    * @param {*} other Instance to compare to.
    * @returns {boolean} `true` if `this` and `other` are equal, or `false` if
    *   not.
