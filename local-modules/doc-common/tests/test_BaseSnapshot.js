@@ -21,7 +21,15 @@ class MockSnapshot extends BaseSnapshot {
   }
 
   _impl_composeWithDelta(delta) {
-    return [MockDelta.makeOp('composed_delta'), delta.ops[0]];
+    let resultName = 'composed_delta';
+    const op0 = this.contents.ops[0];
+
+    if (op0 && op0.name.startsWith(resultName)) {
+      // The first op gets a `+` suffix for each additional composition.
+      resultName = op0.name + '+';
+    }
+
+    return [MockDelta.makeOp(resultName), ...delta.ops];
   }
 
   _impl_diffAsDelta(newerSnapshot) {
@@ -176,6 +184,62 @@ describe('doc-common/BaseSnapshot', () => {
       test(new Map());
       test(MockDelta.EMPTY);
       test(MockSnapshot.EMPTY);
+    });
+  });
+
+  describe('composeAll()', () => {
+    it('should call through to the impl and wrap the result in a new instance', () => {
+      const snap    = new MockSnapshot(10, [MockDelta.makeOp('some_op')]);
+      const change1 = new MockChange(21, [MockDelta.makeOp('change_op1')]);
+      const change2 = new MockChange(22, [MockDelta.makeOp('change_op2')]);
+      const result = snap.composeAll([change1, change2]);
+
+      assert.instanceOf(result, MockSnapshot);
+      assert.strictEqual(result.revNum, 22);
+      assert.instanceOf(result.contents, MockDelta);
+
+      assert.deepEqual(result.contents.ops,
+        [MockDelta.makeOp('composed_delta+'), MockDelta.makeOp('change_op2')]);
+    });
+
+    it('should return `this` given same-`revNum` empty-`delta` changes', () => {
+      const snap   = new MockSnapshot(10, [MockDelta.makeOp('some_op')]);
+      const change = new MockChange(10, []);
+      const result = snap.composeAll([change, change, change, change]);
+
+      assert.strictEqual(result, snap);
+    });
+
+    it('should reject instances of the wrong change class', () => {
+      const snap   = new MockSnapshot(10, []);
+      const change = new AnotherChange(0, []);
+
+      assert.throws(() => { snap.composeAll([change]); });
+    });
+
+    it('should reject non-change array elements', () => {
+      const snap = new MockSnapshot(10, []);
+
+      function test(v) {
+        assert.throws(() => { snap.compose([v]); });
+      }
+
+      test(undefined);
+      test(null);
+      test(false);
+      test('blort');
+      test([]);
+      test(['florp']);
+      test({ x: 10 });
+      test(new Map());
+      test(MockDelta.EMPTY);
+      test(MockSnapshot.EMPTY);
+    });
+
+    it('should reject non-array arguments', () => {
+      const snap   = new MockSnapshot(10, []);
+
+      assert.throws(() => { snap.composeAll(123); });
     });
   });
 

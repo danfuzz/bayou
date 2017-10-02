@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TObject } from 'typecheck';
+import { TArray, TObject } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
 import BaseChange from './BaseChange';
@@ -105,7 +105,7 @@ export default class BaseSnapshot extends CommonBase {
    * Composes a change on top of this instance, to produce a new instance. If
    * the given `change` has an empty `delta` and has a `revNum` which is the
    * same as this instance, then this method returns `this`. Otherwise, this
-   * method always returns a new instance.
+   * method returns a new instance.
    *
    * @param {BaseChange} change Change to compose on top of this instance. Must
    *   be an instance of the `changeClass` as defined by the subclass.
@@ -123,6 +123,32 @@ export default class BaseSnapshot extends CommonBase {
     }
 
     return new this.constructor(change.revNum, this._impl_composeWithDelta(delta));
+  }
+
+  /**
+   * Composes a sequence of changes on top of this instance, in order, to
+   * produce a new instance. If the given array of changes is empty, this method
+   * returns `this`. If all of the changes have an empty `delta` and the same
+   * `revNum` as this instance, this method returns `this`. Otherwise, this
+   * method returns a new instance.
+   *
+   * @param {array<BaseChange>} changes Changes to compose on top of this
+   *   instance. Each array element must be an instance of the `changeClass` as
+   *   defined by the subclass.
+   * @returns {BaseSnapshot} New instance consisting of the composition of
+   *   this instance with all of the `changes`. Will be a direct instance of the
+   *   same class as `this`.
+   */
+  composeAll(changes) {
+    TArray.check(changes);
+
+    let result = this;
+
+    for (const c of changes) {
+      result = result.compose(c);
+    }
+
+    return result;
   }
 
   /**
