@@ -61,26 +61,24 @@ describe('doc-common/BaseChange', () => {
 
       test(0,   MockDelta.EMPTY);
       test(123, MockDelta.EMPTY);
-      test(0,   new MockDelta());
-      test(909, new MockDelta(), null);
-      test(909, new MockDelta(), Timestamp.MIN_VALUE);
-      test(909, new MockDelta(), Timestamp.MIN_VALUE, null);
-      test(242, MockDelta.EMPTY, null,                null);
-      test(242, MockDelta.EMPTY, null,                'florp9019');
-      test(242, MockDelta.EMPTY, Timestamp.MAX_VALUE, 'florp9019');
+      test(0,   new MockDelta([]));
+      test(909, new MockDelta([]), null);
+      test(909, new MockDelta([]), Timestamp.MIN_VALUE);
+      test(909, new MockDelta([]), Timestamp.MIN_VALUE, null);
+      test(242, MockDelta.EMPTY,   null,                null);
+      test(242, MockDelta.EMPTY,   null,                'florp9019');
+      test(242, MockDelta.EMPTY,   Timestamp.MAX_VALUE, 'florp9019');
     });
 
     it('should accept a valid `delta` array, which should get passed to the delta constructor', () => {
-      const array  = ['valid', 'length 3', '(see the MockDelta constructor)'];
+      const array  = MockDelta.VALID_OPS;
       const result = new MockChange(0, array);
 
-      assert.strictEqual(result.delta.ops, array);
+      assert.deepEqual(result.delta.ops, array);
     });
 
     it('should reject an invalid `delta` array, via the delta constructor', () => {
-      const array  = ['invalid', 'length', 4, '(see the MockDelta constructor)'];
-
-      assert.throws(() => { new MockChange(0, array); });
+      assert.throws(() => { new MockChange(0, MockDelta.INVALID_OPS); });
     });
 
     it('should reject invalid arguments', () => {
@@ -152,9 +150,9 @@ describe('doc-common/BaseChange', () => {
       });
     }
 
-    test('withAuthorId', [99, new MockDelta(), Timestamp.MIN_VALUE, 'florp'], 3, 'blort');
-    test('withDelta', [999, new MockDelta(), Timestamp.MAX_VALUE, 'like'], 1, new MockDelta());
-    test('withRevNum', [9999, new MockDelta(), Timestamp.MIN_VALUE, 'zorch'], 0, 123);
-    test('withTimestamp', [99999, new MockDelta(), Timestamp.MIN_VALUE, 'zorch'], 2, Timestamp.MAX_VALUE);
+    test('withAuthorId', [99, new MockDelta([]), Timestamp.MIN_VALUE, 'florp'], 3, 'blort');
+    test('withDelta', [999, new MockDelta([]), Timestamp.MAX_VALUE, 'like'], 1, new MockDelta(MockDelta.VALID_OPS));
+    test('withRevNum', [9999, new MockDelta([]), Timestamp.MIN_VALUE, 'zorch'], 0, 123);
+    test('withTimestamp', [99999, new MockDelta([]), Timestamp.MIN_VALUE, 'zorch'], 2, Timestamp.MAX_VALUE);
   });
 });

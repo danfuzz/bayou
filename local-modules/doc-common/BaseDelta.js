@@ -85,6 +85,8 @@ export default class BaseDelta extends CommonBase {
 
     /** {array<object>} Array of operations. */
     this._ops = this.constructor.checkOpArray(ops);
+
+    Object.freeze(this);
   }
 
   /**
@@ -148,6 +150,16 @@ export default class BaseDelta extends CommonBase {
     const result = this._impl_isDocument();
 
     return TBoolean.check(result);
+  }
+
+  /**
+   * Returns `true` iff this instance is empty. An empty instance is defined as
+   * one whose `ops` array has no elements.
+   *
+   * @returns {boolean} `true` if this instance is empty, or `false` if not.
+   */
+  isEmpty() {
+    return this._ops.length === 0;
   }
 
   /**
