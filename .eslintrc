@@ -1,12 +1,13 @@
 {
-  "extends": "eslint:recommended",
+  "extends": ["eslint:recommended", "plugin:react/recommended"],
   "env": {
     "es6": true,
     "node": true
   },
   "parserOptions": {
     "sourceType": "module",
-    "ecmaVersion": "2017"
+    "ecmaVersion": "2017",
+    "jsx": true
   },
   "globals": {
     "Document": false,
@@ -16,6 +17,9 @@
     "WebSocket": false,
     "Window": false
   },
+  "plugins": [
+    "eslint-plugin-react"
+  ],
   "rules" : {
     "array-bracket-spacing": "error",
     "arrow-parens": ["error", "as-needed", { "requireForBlockBody": true }],
@@ -105,5 +109,12 @@
         "requireReturn": false
       }
     ]
+  },
+  "settings": {
+    "react": {
+      "createClass": "createReactClass", // Regex for Component Factory to use, default to "createReactClass"
+      "pragma": "React",  // Pragma to use, default to "React"
+      "version": "16.0" // React version, default to the latest React stable release
+    }
   }
 }

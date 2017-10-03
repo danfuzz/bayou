@@ -122,6 +122,9 @@ const webpackOptions = {
                     ]
                   }
                 }
+              ],
+              [
+                require.resolve('babel-preset-react')
               ]
             ]
           }
