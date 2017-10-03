@@ -15,7 +15,7 @@ describe('doc-common/PropertySnapshot', () => {
       const EMPTY = PropertySnapshot.EMPTY;
 
       assert.strictEqual(EMPTY.revNum, 0);
-      assert.strictEqual(EMPTY.properties.size, 0);
+      assert.strictEqual(EMPTY.size, 0);
       assert.isFrozen(EMPTY);
     });
   });
@@ -116,6 +116,27 @@ describe('doc-common/PropertySnapshot', () => {
     });
   });
 
+  describe('.size', () => {
+    it('should indicate the count of bindings', () => {
+      function test(ops) {
+        const snap = new PropertySnapshot(1, ops);
+        assert.strictEqual(snap.size, ops.length);
+      }
+
+      test([]);
+      test([PropertyOp.op_setProperty('x', 'y')]);
+      test([
+        PropertyOp.op_setProperty('x', 'y'),
+        PropertyOp.op_setProperty('z', 'pdq')
+      ]);
+      test([
+        PropertyOp.op_setProperty('x', 'y'),
+        PropertyOp.op_setProperty('z', 'pdq'),
+        PropertyOp.op_setProperty('florp', 'like')
+      ]);
+    });
+  });
+
   describe('compose()', () => {
     it('should produce an equal instance when passed an empty change with the same `revNum`', () => {
       let which = 0;
@@ -212,6 +233,58 @@ describe('doc-common/PropertySnapshot', () => {
 
       const composed = snap1.compose(result);
       assert.isTrue(composed.equals(snap2));
+    });
+  });
+
+  describe('entries()', () => {
+    it('should return an iterator', () => {
+      const snap   = new PropertySnapshot(0, []);
+      const result = snap.entries();
+
+      assert.isFunction(result.next);
+
+      // Iterators are supposed to return themselves from `[Symbol.iterator]()`.
+      assert.isFunction(result[Symbol.iterator]);
+      assert.strictEqual(result[Symbol.iterator](), result);
+    });
+
+    it('should in fact iterate over the properties', () => {
+      function test(ops) {
+        // Expectations as a map of keys to values.
+        const expectMap = new Map();
+        for (const op of ops) {
+          const { name, value } = op.props;
+          expectMap.set(name, value);
+        }
+
+        const snap = new PropertySnapshot(1, ops);
+        for (const [name, value] of snap.entries()) {
+          assert.isTrue(expectMap.has(name)); // Differentiate `null` value from absent key.
+          assert.strictEqual(value, expectMap.get(name));
+          expectMap.delete(name);
+        }
+
+        assert.strictEqual(expectMap.size, 0, 'All properties accounted for.');
+      }
+
+      test([]);
+      test([PropertyOp.op_setProperty('x', null)]);
+      test([PropertyOp.op_setProperty('x', 10)]);
+      test([PropertyOp.op_setProperty('x', 'florp')]);
+      test([PropertyOp.op_setProperty('x', [1, 2, 3])]);
+      test([
+        PropertyOp.op_setProperty('a', 10),
+        PropertyOp.op_setProperty('b', 20)
+      ]);
+      test([
+        PropertyOp.op_setProperty('a', 10),
+        PropertyOp.op_setProperty('b', 20),
+        PropertyOp.op_setProperty('c', 30),
+        PropertyOp.op_setProperty('d', 40),
+        PropertyOp.op_setProperty('e', 50),
+        PropertyOp.op_setProperty('f', 60),
+        PropertyOp.op_setProperty('g', 70)
+      ]);
     });
   });
 
