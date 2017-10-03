@@ -30,6 +30,9 @@ const BABEL_CONFIG = Object.freeze({
     [
       'env',
       { targets: { node: 8 } }
+    ],
+    [
+      'react'
     ]
   ]
 });

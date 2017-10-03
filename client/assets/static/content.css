@@ -109,13 +109,6 @@ html.bayou-page {
   padding-left:   0.1em;
   padding-right:  0.1em;
   padding-bottom: 5em;
-
-  border-top-style:    solid;
-  border-top-width:    1px;
-  border-top-color:    black;
-  border-bottom-style: solid;
-  border-bottom-width: 1px;
-  border-bottom-color: black;
 }
 
 /* Basic font and layout characteristics. */

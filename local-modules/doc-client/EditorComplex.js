@@ -2,12 +2,16 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import React from 'react';
+import ReactDOM from 'react-dom';
+
 import { SplitKey } from 'api-common';
 import { Hooks } from 'hooks-client';
 import { Condition } from 'promise-util';
 import { BayouKeyHandlers, QuillProm } from 'quill-util';
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
+import { Header } from 'ui-header';
 import { DomUtil } from 'util-client';
 import { CommonBase, Errors } from 'util-common';
 
@@ -90,8 +94,13 @@ export default class EditorComplex extends CommonBase {
     // make a `BodyClient` (which gets done by `_initSession()`).
     (async () => {
       // Do all of the DOM setup for the instance.
-      const [titleNode, quillNode, authorOverlayNode] =
+      const [headerNode, titleNode, quillNode, authorOverlayNode] =
         await this._domSetup(topNode, sessionKey.baseUrl);
+
+      ReactDOM.render(
+        <Header />,
+        headerNode
+      );
 
       /** {QuillProm} The Quill editor object for the document title. */
       this._titleQuill = new QuillProm(titleNode, {
@@ -257,6 +266,11 @@ export default class EditorComplex extends CommonBase {
       topNode.removeChild(topNode.firstChild);
     }
 
+    // Make the node for the document header. The includes the title, the
+    // widgets for sharing, list of viewers/editors, etc.
+    const headerNode = document.createElement('div');
+    topNode.appendChild(headerNode);
+
     // Make the node for the document title. **TODO:** This may want to expand
     // to be a more general document header section.
 
@@ -289,7 +303,7 @@ export default class EditorComplex extends CommonBase {
     authorOverlayNode.classList.add('bayou-author-overlay');
     bodyNode.appendChild(authorOverlayNode);
 
-    return [titleNode, quillNode, authorOverlayNode];
+    return [headerNode, titleNode, quillNode, authorOverlayNode];
   }
 
   /**
