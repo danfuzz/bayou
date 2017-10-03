@@ -85,9 +85,9 @@ export default class PropertyIterable extends CommonBase {
   /**
    * Gets an iterator which iterates over this instance's object's properties.
    *
-   * @returns {object} The iterator.
+   * @yields {object} The property descriptors.
    */
-  [Symbol.iterator]() {
+  * [Symbol.iterator]() {
     const filter = this._filter;
     let   object = this._object;
 
@@ -95,42 +95,38 @@ export default class PropertyIterable extends CommonBase {
     // shadowed by a superclass.
     const covered = new Map();
 
-    function* propIterate() {
-      while (object) {
-        const names = Object.getOwnPropertyNames(object);
-        for (const name of names) {
-          if (covered.get(name)) {
-            continue;
-          }
-          covered.set(name, true);
-          const desc = Object.getOwnPropertyDescriptor(object, name);
-          desc.name   = name;
-          desc.target = object;
-          if (filter && !filter(desc)) {
-            continue;
-          }
-          yield desc;
+    while (object) {
+      const names = Object.getOwnPropertyNames(object);
+      for (const name of names) {
+        if (covered.get(name)) {
+          continue;
         }
-
-        const symbols = Object.getOwnPropertySymbols(object);
-        for (const symbol of symbols) {
-          if (covered.get(symbol)) {
-            continue;
-          }
-          covered.set(symbol, true);
-          const desc = Object.getOwnPropertyDescriptor(object, symbol);
-          desc.name   = symbol;
-          desc.target = object;
-          if (filter && !filter(desc)) {
-            continue;
-          }
-          yield desc;
+        covered.set(name, true);
+        const desc = Object.getOwnPropertyDescriptor(object, name);
+        desc.name   = name;
+        desc.target = object;
+        if (filter && !filter(desc)) {
+          continue;
         }
-
-        object = Object.getPrototypeOf(object);
+        yield desc;
       }
-    }
 
-    return propIterate();
+      const symbols = Object.getOwnPropertySymbols(object);
+      for (const symbol of symbols) {
+        if (covered.get(symbol)) {
+          continue;
+        }
+        covered.set(symbol, true);
+        const desc = Object.getOwnPropertyDescriptor(object, symbol);
+        desc.name   = symbol;
+        desc.target = object;
+        if (filter && !filter(desc)) {
+          continue;
+        }
+        yield desc;
+      }
+
+      object = Object.getPrototypeOf(object);
+    }
   }
 }
