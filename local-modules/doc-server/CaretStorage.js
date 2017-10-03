@@ -144,7 +144,7 @@ export default class CaretStorage extends CommonBase {
     // Remove any caret that isn't represented in this instance. Such carets are
     // remote carets for sessions that have since been deleted.
     for (const [sessionId, caret_unused] of snapshot.entries()) {
-      if (!carets.hasSession(sessionId)) {
+      if (!carets.has(sessionId)) {
         const newSnapshot = snapshot.withoutSession(sessionId);
         if (newSnapshot !== snapshot) {
           snapshot = newSnapshot;
@@ -246,7 +246,7 @@ export default class CaretStorage extends CommonBase {
     let caretData;
 
     for (const sessionId of currentSessionIds) {
-      if (!this._carets.hasSession(sessionId)) {
+      if (!this._carets.has(sessionId)) {
         this._log.info('New remote caret:', sessionId);
         ops.push(fc.op_readPath(Paths.forCaret(sessionId)));
       }

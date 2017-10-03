@@ -15,6 +15,9 @@ import CaretOp from './CaretOp';
 /**
  * Snapshot of information about all active sessions on a particular document.
  * Instances of this class are always frozen (immutable).
+ *
+ * When thought of in terms of a map, instances of this class can be taken to
+ * be maps from session ID strings to `Caret` values.
  */
 export default class CaretSnapshot extends BaseSnapshot {
   /**
@@ -128,13 +131,16 @@ export default class CaretSnapshot extends BaseSnapshot {
   }
 
   /**
-   * Gets whether or not this instance represents the given session.
+   * Gets whether or not this instance has a caret for the given session.
+   *
+   * **Note:** This has identical semantics to the `Map` method of the same
+   * name, except that it will reject `name`s of the wrong type.
    *
    * @param {string} sessionId Session in question.
-   * @returns {boolean} `true` if this instance has info for the indicated
+   * @returns {boolean} `true` if this instance has a caret for the indicated
    *   session, or `false` if not.
    */
-  hasSession(sessionId) {
+  has(sessionId) {
     TString.nonEmpty(sessionId);
     return this.caretForSession(sessionId) !== null;
   }

@@ -447,27 +447,27 @@ describe('doc-common/CaretSnapshot', () => {
     });
   });
 
-  describe('hasSession()', () => {
+  describe('has()', () => {
     it('should return `true` when given a session ID for an existing session', () => {
       const snap = new CaretSnapshot(999, [op1, op2, op3]);
 
-      assert.isTrue(snap.hasSession(caret1.sessionId));
-      assert.isTrue(snap.hasSession(caret2.sessionId));
-      assert.isTrue(snap.hasSession(caret3.sessionId));
+      assert.isTrue(snap.has(caret1.sessionId));
+      assert.isTrue(snap.has(caret2.sessionId));
+      assert.isTrue(snap.has(caret3.sessionId));
     });
 
     it('should return `false` when given a session ID that is not in the snapshot', () => {
       const snap = new CaretSnapshot(999, [op1, op3]);
 
-      assert.isFalse(snap.hasSession(caret2.sessionId));
+      assert.isFalse(snap.has(caret2.sessionId));
     });
 
     it('should throw an error if given an invalid session ID', () => {
       const snap = new CaretSnapshot(999, []);
 
-      assert.throws(() => { snap.hasSession(123); });
-      assert.throws(() => { snap.hasSession(['x']); });
-      assert.throws(() => { snap.hasSession(''); });
+      assert.throws(() => { snap.has(123); });
+      assert.throws(() => { snap.has(['x']); });
+      assert.throws(() => { snap.has(''); });
     });
   });
 

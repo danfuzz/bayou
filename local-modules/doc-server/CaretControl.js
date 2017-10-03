@@ -260,7 +260,7 @@ export default class CaretControl extends CommonBase {
    * @param {string} sessionId ID of the session that got reaped.
    */
   async _sessionReaped(sessionId) {
-    if (this._snapshot.hasSession(sessionId)) {
+    if (this._snapshot.has(sessionId)) {
       this._removeSessions(sessionId);
     }
   }
