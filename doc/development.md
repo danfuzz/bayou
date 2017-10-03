@@ -20,9 +20,8 @@ Development Guide
 Bayou uses [Node](https://nodejs.org) on the server side, and it uses
 [npm](https://npmjs,com) for module management. Install both of these if you
 haven't already done so. As of this writing, the bulk of development and
-testing have been done using `node` versions 7 and 8, and `npm` version 5.
-Notably, the server code is _not_ expected to run on `node` versions earlier
-than 7, and it may soon (probably some time in 2017) require version 8.
+testing have been done using `node` version 8, and `npm` version 5. The system
+will fail to build or run with earlier versions.
 
 To build and run, say:
 
