@@ -70,41 +70,6 @@ export default class PropertySnapshot extends BaseSnapshot {
   }
 
   /**
-   * Composes a change on top of this instance, to produce a new instance.
-   *
-   * @param {PropertyChange} change Change to compose on top of this instance.
-   * @returns {PropertySnapshot} New instance consisting of the composition of
-   *   this instance with `change`.
-   */
-  compose(change) {
-    PropertyChange.check(change);
-
-    const newProps = new Map(this._properties.entries());
-
-    for (const op of change.delta.ops) {
-      const opProps = op.props;
-
-      switch (opProps.opName) {
-        case PropertyOp.SET_PROPERTY: {
-          newProps.set(opProps.name, op);
-          break;
-        }
-
-        case PropertyOp.DELETE_PROPERTY: {
-          newProps.delete(opProps.name);
-          break;
-        }
-
-        default: {
-          throw Errors.wtf(`Weird op name: ${opProps.opName}`);
-        }
-      }
-    }
-
-    return new PropertySnapshot(change.revNum, [...newProps.values()]);
-  }
-
-  /**
    * Compares this to another possible-instance, for equality of content.
    *
    * @param {*} other Value to compare to.
@@ -199,6 +164,41 @@ export default class PropertySnapshot extends BaseSnapshot {
     return this._properties.has(name)
       ? this.compose(new PropertyChange(this.revNum, [op]))
       : this;
+  }
+
+  /**
+   * Main implementation of {@link #compose}. Takes a delta (not a change
+   * instance), and produces a document delta (not a snapshot).
+   *
+   * @param {PropertyDelta} delta Difference to compose with this instance's
+   *   contents.
+   * @returns {PropertyDelta} Delta which represents the composed document
+   *   contents.
+   */
+  _impl_composeWithDelta(delta) {
+    const newProps = new Map(this._properties.entries());
+
+    for (const op of delta.ops) {
+      const opProps = op.props;
+
+      switch (opProps.opName) {
+        case PropertyOp.SET_PROPERTY: {
+          newProps.set(opProps.name, op);
+          break;
+        }
+
+        case PropertyOp.DELETE_PROPERTY: {
+          newProps.delete(opProps.name);
+          break;
+        }
+
+        default: {
+          throw Errors.wtf(`Weird op name: ${opProps.opName}`);
+        }
+      }
+    }
+
+    return new PropertyDelta([...newProps.values()]);
   }
 
   /**

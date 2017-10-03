@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TObject } from 'typecheck';
+import { TArray, TObject } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
 import BaseChange from './BaseChange';
@@ -102,6 +102,56 @@ export default class BaseSnapshot extends CommonBase {
   }
 
   /**
+   * Composes a change on top of this instance, to produce a new instance. If
+   * the given `change` has an empty `delta` and has a `revNum` which is the
+   * same as this instance, then this method returns `this`. Otherwise, this
+   * method returns a new instance.
+   *
+   * @param {BaseChange} change Change to compose on top of this instance. Must
+   *   be an instance of the `changeClass` as defined by the subclass.
+   * @returns {BaseSnapshot} New instance consisting of the composition of
+   *   this instance with `change`. Will be a direct instance of the same class
+   *   as `this`.
+   */
+  compose(change) {
+    this.constructor.changeClass.check(change);
+
+    const delta = change.delta;
+
+    if (delta.isEmpty()) {
+      return this.withRevNum(change.revNum);
+    }
+
+    return new this.constructor(change.revNum, this._impl_composeWithDelta(delta));
+  }
+
+  /**
+   * Composes a sequence of changes on top of this instance, in order, to
+   * produce a new instance. If the given array of changes is empty, this method
+   * returns `this`. If all of the changes have an empty `delta` and the same
+   * `revNum` as this instance, this method returns `this`. Otherwise, this
+   * method returns a new instance.
+   *
+   * @param {array<BaseChange>} changes Changes to compose on top of this
+   *   instance. Each array element must be an instance of the `changeClass` as
+   *   defined by the subclass.
+   * @returns {BaseSnapshot} New instance consisting of the composition of
+   *   this instance with all of the `changes`. Will be a direct instance of the
+   *   same class as `this`.
+   */
+  composeAll(changes) {
+    TArray.check(changes);
+
+    let result = this;
+
+    for (const c of changes) {
+      result = result.compose(c);
+    }
+
+    return result;
+  }
+
+  /**
    * Calculates the difference from a given snapshot to this one. The return
    * value is a change which can be composed with this instance to produce the
    * snapshot passed in here as an argument. That is, roughly speaking,
@@ -190,6 +240,23 @@ export default class BaseSnapshot extends CommonBase {
     return (revNum === this._revNum)
       ? this
       : new this.constructor(revNum, this._contents);
+  }
+
+  /**
+   * Main implementation of {@link #compose}, as defined by the subclass. Takes
+   * a delta (not a change instance), and produces a document delta (not a
+   * snapshot).
+   *
+   * @abstract
+   * @param {BaseDelta} delta Difference to compose with this instance's
+   *   contents. Guaranteed to be an instance of the `deltaClass` as defined
+   *   by the subclass.
+   * @returns {BaseDelta|array} Delta which represents the composed document
+   *   contents. Must be an instance of the `deltaClass` as defined by the
+   *   subclass or an array of operations that can be used to produce same.
+   */
+  _impl_composeWithDelta(delta) {
+    return this._mustOverride(delta);
   }
 
   /**
