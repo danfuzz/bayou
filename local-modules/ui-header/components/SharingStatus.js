@@ -15,9 +15,9 @@ export default class SharingStatus extends React.Component {
         color:      '#2c2d30',
         lineHeight: '1rem',
         userSelect: 'none',
-        '-webkit-user-select': 'none',
-        '-moz-user-select':    'none',
-        '-ms-user-select':     'none'
+        WebkitUserSelect: 'none',
+        MozUserSelect:    'none',
+        msUserSelect:     'none'
       }}>
         Everyone in this workspace can access this file
       </p>

@@ -12,9 +12,9 @@ export default class Divider extends React.Component {
         marginRight: '0.5rem',
         color:       '#a0a0a2',
         userSelect:  'none',
-        '-webkit-user-select': 'none',
-        '-moz-user-select':    'none',
-        '-ms-user-select':     'none'
+        WebkitUserSelect: 'none',
+        MozUserSelect:    'none',
+        msUserSelect:     'none'
       }}>
         |
       </span>

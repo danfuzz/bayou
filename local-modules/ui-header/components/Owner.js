@@ -15,9 +15,9 @@ export default class Owner extends React.Component {
         color:      '#2c2d30',
         lineHeight: '1rem',
         userSelect: 'none',
-        '-webkit-user-select': 'none',
-        '-moz-user-select':    'none',
-        '-ms-user-select':     'none'
+        WebkitUserSelect: 'none',
+        MozUserSelect:    'none',
+        msUserSelect:     'none'
       }}>
         Some Lovely Team Member
       </p>
