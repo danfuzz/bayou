@@ -493,7 +493,7 @@ export default class CaretStorage extends CommonBase {
 
     // Detects changes to any of the already-known remote sessions.
     for (const sessionId of this._remoteSessionIds()) {
-      const caret = this._carets.caretForSession(sessionId);
+      const caret = this._carets.get(sessionId);
       ops.push(fc.op_whenPathNot(Paths.forCaret(sessionId), caret));
     }
 
