@@ -206,7 +206,10 @@ export default class CaretControl extends CommonBase {
     this._integrateRemoteSessions();
 
     // Extract all the currently-used caret colors.
-    const usedColors = this._snapshot.carets.map(c => c.color);
+    const usedColors = [];
+    for (const [sessionId_unused, caret] of this._snapshot.entries()) {
+      usedColors.push(caret.color);
+    }
 
     return CaretColor.colorForSession(sessionId, usedColors);
   }
@@ -218,10 +221,10 @@ export default class CaretControl extends CommonBase {
     const minTime  = Timestamp.now().addMsec(-MAX_SESSION_IDLE_MSEC);
     const toRemove = [];
 
-    for (const caret of this._snapshot.carets) {
+    for (const [sessionId, caret] of this._snapshot.entries()) {
       if (minTime.compareTo(caret.lastActive) > 0) {
         // Too old!
-        this._log.info(`[${caret.sessionId}] Caret became inactive.`);
+        this._log.info(`[${sessionId}] Caret became inactive.`);
         toRemove.push(caret);
       }
     }
