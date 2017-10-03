@@ -78,6 +78,16 @@ export default class CaretSnapshot extends BaseSnapshot {
   }
 
   /**
+   * {Int} The number of carets defined by this instance.
+   *
+   * **Note:** This has identical semantics to the `Map` property of the same
+   * name.
+   */
+  get size() {
+    return this.contents.ops.length;
+  }
+
+  /**
    * Gets the caret info for the given session, if any.
    *
    * @param {string} sessionId Session in question.
@@ -89,6 +99,23 @@ export default class CaretSnapshot extends BaseSnapshot {
     const found = this._carets.get(sessionId);
 
     return found ? found.props.caret : null;
+  }
+
+  /**
+   * Gets an iterator over the `[sessionId, caret]` entries that make up the
+   * snapshot.
+   *
+   * **Note:** This has identical semantics to the `Map` method of the same
+   * name.
+   *
+   * @yields {Iterator<[string, Caret]>} Iterator over the entries. The keys are
+   *   the session IDs, and the values are the corresponding caret values.
+   */
+  *entries() {
+    for (const op of this.contents.ops) {
+      const caret = op.props.caret;
+      yield [caret.sessionId, caret];
+    }
   }
 
   /**

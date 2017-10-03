@@ -132,7 +132,7 @@ export default class CaretStore {
           // respect to, so try to do that.
           const change = await sessionProxy.caret_getChangeAfter(snapshot.revNum);
           snapshot = snapshot.compose(change);
-          docSession.log.detail(`Got caret change. ${snapshot.carets.length} caret(s).`);
+          docSession.log.detail(`Got caret change. ${snapshot.size} caret(s).`);
         }
       } catch (e) {
         // Assume that the error isn't truly fatal. Most likely, it's because
@@ -151,7 +151,7 @@ export default class CaretStore {
           // latter is why this section isn't just part of an `else` block to
           // the previous `if`).
           snapshot = await sessionProxy.caret_snapshot();
-          docSession.log.detail(`Got ${snapshot.carets.length} new caret(s)!`);
+          docSession.log.detail(`Got ${snapshot.size} new caret(s)!`);
         }
       } catch (e) {
         // Assume that the error is transient and most likely due to the session

@@ -48,7 +48,7 @@ describe('doc-common/CaretSnapshot', () => {
       const EMPTY = CaretSnapshot.EMPTY;
 
       assert.strictEqual(EMPTY.revNum, 0);
-      assert.deepEqual(EMPTY.carets, []);
+      assert.strictEqual(EMPTY.size, 0);
       assert.isFrozen(EMPTY);
     });
   });
@@ -138,6 +138,20 @@ describe('doc-common/CaretSnapshot', () => {
       test([]);
       test([789]);
       test({ a: 10 });
+    });
+  });
+
+  describe('.size', () => {
+    it('should indicate the count of carets', () => {
+      function test(ops) {
+        const snap = new CaretSnapshot(1, ops);
+        assert.strictEqual(snap.size, ops.length);
+      }
+
+      test([]);
+      test([op1]);
+      test([op1, op2]);
+      test([op1, op2, op3]);
     });
   });
 
@@ -278,6 +292,43 @@ describe('doc-common/CaretSnapshot', () => {
       const composed = new CaretSnapshot(1, [op1, c3]).compose(result);
       const expected = new CaretSnapshot(1, [op1, c2]);
       assert.isTrue(composed.equals(expected));
+    });
+  });
+
+  describe('entries()', () => {
+    it('should return an iterator', () => {
+      const snap   = new CaretSnapshot(0, []);
+      const result = snap.entries();
+
+      assert.isFunction(result.next);
+
+      // Iterators are supposed to return themselves from `[Symbol.iterator]()`.
+      assert.isFunction(result[Symbol.iterator]);
+      assert.strictEqual(result[Symbol.iterator](), result);
+    });
+
+    it('should in fact iterate over the properties', () => {
+      function test(ops) {
+        // Expectations as a map of keys to values.
+        const expectMap = new Map();
+        for (const op of ops) {
+          const caret = op.props.caret;
+          expectMap.set(caret.sessionId, caret);
+        }
+
+        const snap = new CaretSnapshot(1, ops);
+        for (const [sessionId, caret] of snap.entries()) {
+          assert.strictEqual(caret, expectMap.get(sessionId));
+          expectMap.delete(sessionId);
+        }
+
+        assert.strictEqual(expectMap.size, 0, 'All carets accounted for.');
+      }
+
+      test([]);
+      test([op1]);
+      test([op1, op2]);
+      test([op1, op2, op3]);
     });
   });
 

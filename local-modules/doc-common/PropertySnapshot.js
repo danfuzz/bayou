@@ -137,7 +137,7 @@ export default class PropertySnapshot extends BaseSnapshot {
    * Gets whether or not this instance has the indicated property.
    *
    * **Note:** This has identical semantics to the `Map` method of the same
-   * name.
+   * name, except that it will reject `name`s of the wrong type.
    *
    * @param {string} name Property name.
    * @returns {boolean} `true` if this instance has a binding for the indicated
