@@ -261,17 +261,6 @@ export default class CaretControl extends CommonBase {
    */
   async _sessionReaped(sessionId) {
     const snapshot = this._snapshot;
-
-    // **TODO:** These conditionals check for a weird case that has shown up
-    // intermittently, namely that `_snapshot` doesn't have a `caretForSession`
-    // method. It is unclear what's going on as of this writing, and the hope is
-    // that this check and message may help sort things out.
-    if (!snapshot) {
-      this._log.wtf('Snapshot not set? Currently:', snapshot);
-    } else if (!snapshot.caretForSession) {
-      this._log.wtf('`caretForSession` not defined? Snapshot:', snapshot);
-    }
-
     const oldCaret = snapshot.caretForSession(sessionId);
 
     if (oldCaret !== null) {
