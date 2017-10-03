@@ -68,7 +68,7 @@ export default class CaretOp extends CommonBase {
   }
 
   /**
-   * Constructs an instance. This should not be used directly. Instead, used
+   * Constructs an instance. This should not be used directly. Instead, use
    * the static constructor methods defined by this class.
    *
    * @param {Functor} payload The operation payload (name and arguments).
