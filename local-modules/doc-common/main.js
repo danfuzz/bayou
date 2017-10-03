@@ -10,6 +10,7 @@ import BaseDelta from './BaseDelta';
 import BaseSnapshot from './BaseSnapshot';
 import BodyChange from './BodyChange';
 import BodyDelta from './BodyDelta';
+import BodyOp from './BodyOp';
 import BodySnapshot from './BodySnapshot';
 import Caret from './Caret';
 import CaretChange from './CaretChange';
@@ -27,6 +28,7 @@ import RevisionNumber from './RevisionNumber';
 // Register classes with the API.
 Codec.theOne.registerClass(BodyChange);
 Codec.theOne.registerClass(BodyDelta);
+Codec.theOne.registerClass(BodyOp);
 Codec.theOne.registerClass(BodySnapshot);
 Codec.theOne.registerClass(Caret);
 Codec.theOne.registerClass(CaretChange);
@@ -46,6 +48,7 @@ export {
   BaseSnapshot,
   BodyChange,
   BodyDelta,
+  BodyOp,
   BodySnapshot,
   Caret,
   CaretChange,
