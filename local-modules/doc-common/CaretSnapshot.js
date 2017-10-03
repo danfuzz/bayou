@@ -56,28 +56,6 @@ export default class CaretSnapshot extends BaseSnapshot {
   }
 
   /**
-   * {array<Caret>} Array of active carets. It is guaranteed to be a frozen
-   * (immutable) value.
-   */
-  get carets() {
-    const result = [];
-
-    for (const op of this._carets.values()) {
-      result.push(op.props.caret);
-    }
-
-    return Object.freeze(result);
-  }
-
-  /**
-   * {array<string>} Array of session IDs for all active carets. It is
-   * guaranteed to be a frozen (immutable) value.
-   */
-  get sessionIds() {
-    return Object.freeze([...this._carets.keys()]);
-  }
-
-  /**
    * {Int} The number of carets defined by this instance.
    *
    * **Note:** This has identical semantics to the `Map` property of the same
