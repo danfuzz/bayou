@@ -373,13 +373,6 @@ export default class BodyClient extends StateMachine {
     const firstEvent = this._quill.currentEvent;
     this._updateWithSnapshot(snapshot);
 
-    // This prevents "undo" from backing over the snapshot. When first starting
-    // up, this means the user can't undo and find themselves looking at the
-    // "loading..." text. And during a reconnection, it prevents hard-to-predict
-    // glitches (in that the Quill state could have diverged significantly from
-    // the stored document state).
-    this._quill.history.clear();
-
     // The above action should have caused the Quill instance to make a change
     // which shows up on its event chain. Grab it, and verify that indeed it's
     // the change we're expecting.
@@ -847,6 +840,13 @@ export default class BodyClient extends StateMachine {
   _updateWithSnapshot(snapshot) {
     this._snapshot = snapshot;
     this._quill.setContents(snapshot.contents.toQuillForm(), CLIENT_SOURCE);
+
+    // This prevents "undo" from backing over the snapshot. When first starting
+    // up, this means the user can't undo and find themselves looking at the
+    // "loading..." text. And during a reconnection, it prevents hard-to-predict
+    // glitches (in that the Quill state could have diverged significantly from
+    // the stored document state).
+    this._quill.history.clear();
   }
 
   /**
