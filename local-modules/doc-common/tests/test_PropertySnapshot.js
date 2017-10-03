@@ -396,9 +396,30 @@ describe('doc-common/PropertySnapshot', () => {
 
   describe('get()', () => {
     it('should return the value associated with an existing property', () => {
-      const snap = new PropertySnapshot(1, [PropertyOp.op_setProperty('blort', 'zorch')]);
+      function test(name, value) {
+        const op = PropertyOp.op_setProperty(name, value);
+        const snap = new PropertySnapshot(1, [
+          PropertyOp.op_setProperty('a', 1),
+          PropertyOp.op_setProperty('b', 2),
+          PropertyOp.op_setProperty('c', 3),
+          op,
+          PropertyOp.op_setProperty('X', 11),
+          PropertyOp.op_setProperty('Y', 22),
+          PropertyOp.op_setProperty('Z', 33)
+        ]);
 
-      assert.strictEqual(snap.get('blort'), 'zorch');
+        assert.strictEqual(snap.get(name), op.props.value);
+      }
+
+      test('zilch', undefined);
+      test('zilch', null);
+      test('zilch', false);
+      test('zilch', []);
+      test('zilch', {});
+      test('zilch', 0);
+
+      test('foo',   'bar');
+      test('florp', ['like']);
     });
 
     it('should always return a deep-frozen value even when the constructor was passed an unfrozen value', () => {
@@ -420,12 +441,18 @@ describe('doc-common/PropertySnapshot', () => {
   describe('has()', () => {
     it('should return `true` for an existing property', () => {
       const snap = new PropertySnapshot(1, [
-        PropertyOp.op_setProperty('blort', 'zorch'),
-        PropertyOp.op_setProperty('florp', 'like')
+        PropertyOp.op_setProperty('blort',  'zorch'),
+        PropertyOp.op_setProperty('florp',  'like'),
+        PropertyOp.op_setProperty('zilch',  null),
+        PropertyOp.op_setProperty('zip',    undefined),
+        PropertyOp.op_setProperty('zither', false)
       ]);
 
       assert.isTrue(snap.has('blort'));
       assert.isTrue(snap.has('florp'));
+      assert.isTrue(snap.has('zilch'));
+      assert.isTrue(snap.has('zip'));
+      assert.isTrue(snap.has('zither'));
     });
 
     it('should return `false` for a non-existent property', () => {
