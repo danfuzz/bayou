@@ -75,8 +75,8 @@ export default class CaretSnapshot extends BaseSnapshot {
    * **Note:** This has identical semantics to the `Map` method of the same
    * name.
    *
-   * @yields {Iterator<[string, Caret]>} Iterator over the entries. The keys are
-   *   the session IDs, and the values are the corresponding caret values.
+   * @yields {[string, Caret]} Snapshot entries. The keys are the session IDs,
+   *   and the values are the corresponding caret values.
    */
   * entries() {
     for (const op of this.contents.ops) {

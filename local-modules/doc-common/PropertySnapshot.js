@@ -73,8 +73,8 @@ export default class PropertySnapshot extends BaseSnapshot {
    * **Note:** This has identical semantics to the `Map` method of the same
    * name.
    *
-   * @yields {Iterator<[string, *]>} Iterator over the entries. The keys are
-   *   the property names, and the values are the corresponding property values.
+   * @yields {[string, *]} Snapshot entries. The keys are the property names,
+   *   and the values are the corresponding property values.
    */
   * entries() {
     for (const op of this.contents.ops) {
