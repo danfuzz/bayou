@@ -810,7 +810,7 @@ export default class BodyClient extends StateMachine {
    *   current state, which is expected to preserve any state that Quill has
    *   that isn't yet represented in `_snapshot`. This must be used in cases
    *   where Quill's state has progressed ahead of `_snapshot` due to local
-   * activity.
+   *   activity.
    */
   _updateWithChange(change, quillDelta = change.delta) {
     const needQuillUpdate = !quillDelta.isEmpty();
