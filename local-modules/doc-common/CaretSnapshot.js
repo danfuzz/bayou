@@ -15,6 +15,9 @@ import CaretOp from './CaretOp';
 /**
  * Snapshot of information about all active sessions on a particular document.
  * Instances of this class are always frozen (immutable).
+ *
+ * When thought of in terms of a map, instances of this class can be taken to
+ * be maps from session ID strings to `Caret` values.
  */
 export default class CaretSnapshot extends BaseSnapshot {
   /**
@@ -56,25 +59,50 @@ export default class CaretSnapshot extends BaseSnapshot {
   }
 
   /**
-   * {array<Caret>} Array of active carets. It is guaranteed to be a frozen
-   * (immutable) value.
+   * {Int} The number of carets defined by this instance.
+   *
+   * **Note:** This has identical semantics to the `Map` property of the same
+   * name.
    */
-  get carets() {
-    const result = [];
-
-    for (const op of this._carets.values()) {
-      result.push(op.props.caret);
-    }
-
-    return Object.freeze(result);
+  get size() {
+    return this.contents.ops.length;
   }
 
   /**
-   * {array<string>} Array of session IDs for all active carets. It is
-   * guaranteed to be a frozen (immutable) value.
+   * Gets an iterator over the `[sessionId, caret]` entries that make up the
+   * snapshot.
+   *
+   * **Note:** This has identical semantics to the `Map` method of the same
+   * name.
+   *
+   * @yields {[string, Caret]} Snapshot entries. The keys are the session IDs,
+   *   and the values are the corresponding caret values.
    */
-  get sessionIds() {
-    return Object.freeze([...this._carets.keys()]);
+  * entries() {
+    for (const op of this.contents.ops) {
+      const caret = op.props.caret;
+      yield [caret.sessionId, caret];
+    }
+  }
+
+  /**
+   * Gets the caret info for the given session. It is an error if this instance
+   * has no caret for the indicated session.
+   *
+   * **Note:** This differs from the semantics of the `Map` method of the same
+   * name in that the not-found case is an error.
+   *
+   * @param {string} sessionId Session in question.
+   * @returns {Caret} Corresponding caret.
+   */
+  get(sessionId) {
+    const found = this.getOrNull(sessionId);
+
+    if (found) {
+      return found;
+    }
+
+    throw Errors.bad_use(`No such session: ${sessionId}`);
   }
 
   /**
@@ -83,7 +111,7 @@ export default class CaretSnapshot extends BaseSnapshot {
    * @param {string} sessionId Session in question.
    * @returns {Caret|null} Corresponding caret, or `null` if there is none.
    */
-  caretForSession(sessionId) {
+  getOrNull(sessionId) {
     TString.nonEmpty(sessionId);
 
     const found = this._carets.get(sessionId);
@@ -123,15 +151,17 @@ export default class CaretSnapshot extends BaseSnapshot {
   }
 
   /**
-   * Gets whether or not this instance represents the given session.
+   * Gets whether or not this instance has a caret for the given session.
+   *
+   * **Note:** This has identical semantics to the `Map` method of the same
+   * name, except that it will reject `name`s of the wrong type.
    *
    * @param {string} sessionId Session in question.
-   * @returns {boolean} `true` if this instance has info for the indicated
+   * @returns {boolean} `true` if this instance has a caret for the indicated
    *   session, or `false` if not.
    */
-  hasSession(sessionId) {
-    TString.nonEmpty(sessionId);
-    return this.caretForSession(sessionId) !== null;
+  has(sessionId) {
+    return this.getOrNull(sessionId) !== null;
   }
 
   /**

@@ -341,21 +341,16 @@ export default class LocalFile extends BaseFile {
    * @param {function} filter Filter function. It is passed storage IDs and
    *   is expected to return `true` for keys which should be present in the
    *   iteration.
-   * @returns {Iterator<[string, FrozenBuffer]>} Iterator over filtered storage
-   *   entries.
+   * @yields {[string, FrozenBuffer]} Filtered storage entries.
    */
-  _filterStorage(filter) {
+  * _filterStorage(filter) {
     const storage = this._storage;
 
-    function* yieldEntries() {
-      for (const [storageId, value] of storage) {
-        if (filter(storageId)) {
-          yield [storageId, value];
-        }
+    for (const [storageId, value] of storage) {
+      if (filter(storageId)) {
+        yield [storageId, value];
       }
     }
-
-    return yieldEntries();
   }
 
   /**

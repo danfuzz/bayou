@@ -5,6 +5,7 @@
 import { Caret, CaretSnapshot } from 'doc-common';
 import { Errors, TransactionSpec } from 'file-store';
 import { CallPiler, Delay } from 'promise-util';
+import { TString } from 'typecheck';
 import { CommonBase, FrozenBuffer } from 'util-common';
 
 import FileComplex from './FileComplex';
@@ -109,18 +110,17 @@ export default class CaretStorage extends CommonBase {
    * written to file storage (unless superseded by another change to the same
    * session in the meantime).
    *
-   * @param {Caret} caret Caret for the session to be deleted. Only the
-   *   `sessionId` of the caret is actually used.
+   * @param {string} sessionId ID of the session to be deleted.
    */
-  delete(caret) {
-    Caret.check(caret);
+  delete(sessionId) {
+    TString.nonEmpty(sessionId);
 
     // Indicate that the local server is asserting authority over this session.
     // This means that, when it comes time to write out caret info, this session
     // will be removed from file storage.
-    this._localSessions.add(caret.sessionId);
+    this._localSessions.add(sessionId);
 
-    this._carets = this._carets.withoutCaret(caret);
+    this._carets = this._carets.withoutSession(sessionId);
     this._needsWrite();
   }
 
@@ -143,8 +143,8 @@ export default class CaretStorage extends CommonBase {
 
     // Remove any caret that isn't represented in this instance. Such carets are
     // remote carets for sessions that have since been deleted.
-    for (const sessionId of snapshot.sessionIds) {
-      if (!carets.hasSession(sessionId)) {
+    for (const [sessionId, caret_unused] of snapshot.entries()) {
+      if (!carets.has(sessionId)) {
         const newSnapshot = snapshot.withoutSession(sessionId);
         if (newSnapshot !== snapshot) {
           snapshot = newSnapshot;
@@ -155,7 +155,7 @@ export default class CaretStorage extends CommonBase {
 
     // Update all the remote carets.
     for (const sessionId of this._remoteSessionIds()) {
-      const newSnapshot = snapshot.withCaret(carets.caretForSession(sessionId));
+      const newSnapshot = snapshot.withCaret(carets.get(sessionId));
       if (newSnapshot !== snapshot) {
         snapshot = newSnapshot;
         this._log.detail('Integrated caret update:', sessionId);
@@ -246,7 +246,7 @@ export default class CaretStorage extends CommonBase {
     let caretData;
 
     for (const sessionId of currentSessionIds) {
-      if (!this._carets.hasSession(sessionId)) {
+      if (!this._carets.has(sessionId)) {
         this._log.info('New remote caret:', sessionId);
         ops.push(fc.op_readPath(Paths.forCaret(sessionId)));
       }
@@ -328,11 +328,15 @@ export default class CaretStorage extends CommonBase {
    * @returns {array<string>} Array of the session IDs in question.
    */
   _remoteSessionIds() {
-    const allSessionIds = this._carets.sessionIds;
+    const result = [];
 
-    return allSessionIds.filter((id) => {
-      return !this._localSessions.has(id);
-    });
+    for (const [sessionId, caret_unused] of this._carets.entries()) {
+      if (!this._localSessions.has(sessionId)) {
+        result.push(sessionId);
+      }
+    }
+
+    return result;
   }
 
   /**
@@ -359,8 +363,8 @@ export default class CaretStorage extends CommonBase {
     const setUpdates    = []; // List of new and deleted sessions.
 
     for (const sessionId of this._localSessions) {
-      const caret       = this._carets.caretForSession(sessionId);
-      const storedCaret = this._storedCarets.caretForSession(sessionId);
+      const caret       = this._carets.getOrNull(sessionId);
+      const storedCaret = this._storedCarets.getOrNull(sessionId);
       const path        = Paths.forCaret(sessionId);
 
       if (caret && storedCaret && caret.equals(storedCaret)) {
@@ -489,7 +493,7 @@ export default class CaretStorage extends CommonBase {
 
     // Detects changes to any of the already-known remote sessions.
     for (const sessionId of this._remoteSessionIds()) {
-      const caret = this._carets.caretForSession(sessionId);
+      const caret = this._carets.get(sessionId);
       ops.push(fc.op_whenPathNot(Paths.forCaret(sessionId), caret));
     }
 

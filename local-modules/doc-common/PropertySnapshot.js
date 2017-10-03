@@ -13,6 +13,9 @@ import PropertyOp from './PropertyOp';
 /**
  * Snapshot of information about all active sessions on a particular document.
  * Instances of this class are always frozen (immutable).
+ *
+ * When thought of in terms of a map, instances of this class can be taken to
+ * be maps from string keys to arbitrary data values.
  */
 export default class PropertySnapshot extends BaseSnapshot {
   /**
@@ -54,19 +57,30 @@ export default class PropertySnapshot extends BaseSnapshot {
   }
 
   /**
-   * {Map<string, *>} Map from property names to values. Guaranteed to be
-   * immutable.
+   * {Int} The number of properties defined by this instance.
+   *
+   * **Note:** This has identical semantics to the `Map` property of the same
+   * name.
    */
-  get properties() {
-    const result = new Map();
+  get size() {
+    return this.contents.ops.length;
+  }
 
-    for (const op of this._properties.values()) {
+  /**
+   * Gets an iterator over the `[name, value]` entries that make up the
+   * snapshot.
+   *
+   * **Note:** This has identical semantics to the `Map` method of the same
+   * name.
+   *
+   * @yields {[string, *]} Snapshot entries. The keys are the property names,
+   *   and the values are the corresponding property values.
+   */
+  * entries() {
+    for (const op of this.contents.ops) {
       const { name, value } = op.props;
-      result.set(name, value);
+      yield [name, value];
     }
-
-    Object.freeze(result);
-    return result;
   }
 
   /**
@@ -104,6 +118,9 @@ export default class PropertySnapshot extends BaseSnapshot {
    * Gets the property value for the given name, if any. Throws an error if
    * `name` is not a bound property.
    *
+   * **Note:** This differs from the semantics of the `Map` method of the same
+   * name in that the not-found case is an error.
+   *
    * @param {string} name Property name.
    * @returns {*} Corresponding property value.
    */
@@ -121,6 +138,9 @@ export default class PropertySnapshot extends BaseSnapshot {
 
   /**
    * Gets whether or not this instance has the indicated property.
+   *
+   * **Note:** This has identical semantics to the `Map` method of the same
+   * name, except that it will reject `name`s of the wrong type.
    *
    * @param {string} name Property name.
    * @returns {boolean} `true` if this instance has a binding for the indicated

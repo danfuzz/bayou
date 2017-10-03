@@ -78,8 +78,6 @@ export default class IterableUtil extends UtilityClass {
       }
     }
 
-    return {
-      [Symbol.iterator]: () => { return makeIterator(); }
-    };
+    return { [Symbol.iterator]: makeIterator };
   }
 }

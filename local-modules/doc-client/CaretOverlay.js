@@ -161,13 +161,13 @@ export default class CaretOverlay {
     const quill = this._editorComplex.bodyQuill;
 
     // For each session…
-    for (const caret of this._lastCaretSnapshot.carets) {
+    for (const [sessionId, caret] of this._lastCaretSnapshot.entries()) {
       // Is this caret us? If so, don't draw anything.
-      if (caret.sessionId === this._editorComplex.sessionId) {
+      if (sessionId === this._editorComplex.sessionId) {
         continue;
       }
 
-      const avatarReference = this._useReferences.get(caret.sessionId);
+      const avatarReference = this._useReferences.get(sessionId);
 
       if (caret.length === 0) {
         // Length of zero means an insertion point instead of a selection
@@ -460,7 +460,7 @@ export default class CaretOverlay {
           }
 
           if (props.key === 'color') {
-            const caret = newSnapshot.caretForSession(sessionId);
+            const caret = newSnapshot.get(sessionId);
 
             this._updateAvatarColor(caret);
           }

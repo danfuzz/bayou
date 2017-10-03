@@ -154,7 +154,7 @@ export default class CaretControl extends CommonBase {
     // Construct the new/updated caret and updated snapshot.
 
     let snapshot     = this._snapshot;
-    const oldCaret   = snapshot.caretForSession(sessionId);
+    const oldCaret   = snapshot.getOrNull(sessionId);
     const revNum     = docRevNum; // Done to match the caret field name.
     const lastActive = Timestamp.now();
     const newFields  = { revNum, lastActive, index, length };
@@ -206,7 +206,10 @@ export default class CaretControl extends CommonBase {
     this._integrateRemoteSessions();
 
     // Extract all the currently-used caret colors.
-    const usedColors = this._snapshot.carets.map(c => c.color);
+    const usedColors = [];
+    for (const [sessionId_unused, caret] of this._snapshot.entries()) {
+      usedColors.push(caret.color);
+    }
 
     return CaretColor.colorForSession(sessionId, usedColors);
   }
@@ -218,11 +221,11 @@ export default class CaretControl extends CommonBase {
     const minTime  = Timestamp.now().addMsec(-MAX_SESSION_IDLE_MSEC);
     const toRemove = [];
 
-    for (const caret of this._snapshot.carets) {
+    for (const [sessionId, caret] of this._snapshot.entries()) {
       if (minTime.compareTo(caret.lastActive) > 0) {
         // Too old!
-        this._log.info(`[${caret.sessionId}] Caret became inactive.`);
-        toRemove.push(caret);
+        this._log.info(`[${sessionId}] Caret became inactive.`);
+        toRemove.push(sessionId);
       }
     }
 
@@ -230,19 +233,19 @@ export default class CaretControl extends CommonBase {
   }
 
   /**
-   * Removes the sessions associated with the indicated carets from the local
-   * snapshot, and also pushes the removal to the storage layer.
+   * Removes the indicated sessions from the local snapshot, and also pushes the
+   * removal to the storage layer.
    *
-   * @param {...Caret} carets Carets representing the sessions to be removed.
+   * @param {...string} sessionIds IDs of the sessions to be removed.
    */
-  _removeSessions(...carets) {
+  _removeSessions(...sessionIds) {
     const storage     = this._caretStorage;
     const oldSnapshot = this._snapshot;
     let   newSnapshot = oldSnapshot;
 
-    for (const c of carets) {
-      newSnapshot = newSnapshot.withoutCaret(c);
-      storage.delete(c);
+    for (const sessionId of sessionIds) {
+      newSnapshot = newSnapshot.withoutSession(sessionId);
+      storage.delete(sessionId);
     }
 
     if (newSnapshot !== oldSnapshot) {
@@ -257,22 +260,8 @@ export default class CaretControl extends CommonBase {
    * @param {string} sessionId ID of the session that got reaped.
    */
   async _sessionReaped(sessionId) {
-    const snapshot = this._snapshot;
-
-    // **TODO:** These conditionals check for a weird case that has shown up
-    // intermittently, namely that `_snapshot` doesn't have a `caretForSession`
-    // method. It is unclear what's going on as of this writing, and the hope is
-    // that this check and message may help sort things out.
-    if (!snapshot) {
-      this._log.wtf('Snapshot not set? Currently:', snapshot);
-    } else if (!snapshot.caretForSession) {
-      this._log.wtf('`caretForSession` not defined? Snapshot:', snapshot);
-    }
-
-    const oldCaret = snapshot.caretForSession(sessionId);
-
-    if (oldCaret !== null) {
-      this._removeSessions(oldCaret);
+    if (this._snapshot.has(sessionId)) {
+      this._removeSessions(sessionId);
     }
   }
 

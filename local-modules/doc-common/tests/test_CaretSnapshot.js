@@ -48,7 +48,7 @@ describe('doc-common/CaretSnapshot', () => {
       const EMPTY = CaretSnapshot.EMPTY;
 
       assert.strictEqual(EMPTY.revNum, 0);
-      assert.deepEqual(EMPTY.carets, []);
+      assert.strictEqual(EMPTY.size, 0);
       assert.isFrozen(EMPTY);
     });
   });
@@ -141,27 +141,17 @@ describe('doc-common/CaretSnapshot', () => {
     });
   });
 
-  describe('caretForSession()', () => {
-    it('should return the caret associated with an existing session', () => {
-      const snap = new CaretSnapshot(999, [op1, op2, op3]);
+  describe('.size', () => {
+    it('should indicate the count of carets', () => {
+      function test(ops) {
+        const snap = new CaretSnapshot(1, ops);
+        assert.strictEqual(snap.size, ops.length);
+      }
 
-      assert.strictEqual(snap.caretForSession(caret1.sessionId), caret1);
-      assert.strictEqual(snap.caretForSession(caret2.sessionId), caret2);
-      assert.strictEqual(snap.caretForSession(caret3.sessionId), caret3);
-    });
-
-    it('should return `null` when given a session ID that is not in the snapshot', () => {
-      const snap = new CaretSnapshot(999, [op1, op3]);
-
-      assert.isNull(snap.caretForSession(caret2.sessionId));
-    });
-
-    it('should throw an error if given an invalid session ID', () => {
-      const snap = new CaretSnapshot(999, []);
-
-      assert.throws(() => { snap.caretForSession(123); });
-      assert.throws(() => { snap.caretForSession(['x']); });
-      assert.throws(() => { snap.caretForSession(''); });
+      test([]);
+      test([op1]);
+      test([op1, op2]);
+      test([op1, op2, op3]);
     });
   });
 
@@ -281,6 +271,43 @@ describe('doc-common/CaretSnapshot', () => {
     });
   });
 
+  describe('entries()', () => {
+    it('should return an iterator', () => {
+      const snap   = new CaretSnapshot(0, []);
+      const result = snap.entries();
+
+      assert.isFunction(result.next);
+
+      // Iterators are supposed to return themselves from `[Symbol.iterator]()`.
+      assert.isFunction(result[Symbol.iterator]);
+      assert.strictEqual(result[Symbol.iterator](), result);
+    });
+
+    it('should in fact iterate over the properties', () => {
+      function test(ops) {
+        // Expectations as a map of keys to values.
+        const expectMap = new Map();
+        for (const op of ops) {
+          const caret = op.props.caret;
+          expectMap.set(caret.sessionId, caret);
+        }
+
+        const snap = new CaretSnapshot(1, ops);
+        for (const [sessionId, caret] of snap.entries()) {
+          assert.strictEqual(caret, expectMap.get(sessionId));
+          expectMap.delete(sessionId);
+        }
+
+        assert.strictEqual(expectMap.size, 0, 'All carets accounted for.');
+      }
+
+      test([]);
+      test([op1]);
+      test([op1, op2]);
+      test([op1, op2, op3]);
+    });
+  });
+
   describe('equals()', () => {
     it('should return `true` when passed itself', () => {
       let snap;
@@ -396,27 +423,75 @@ describe('doc-common/CaretSnapshot', () => {
     });
   });
 
-  describe('hasSession()', () => {
-    it('should return `true` when given a session ID for an existing session', () => {
+  describe('get()', () => {
+    it('should return the caret associated with an existing session', () => {
       const snap = new CaretSnapshot(999, [op1, op2, op3]);
 
-      assert.isTrue(snap.hasSession(caret1.sessionId));
-      assert.isTrue(snap.hasSession(caret2.sessionId));
-      assert.isTrue(snap.hasSession(caret3.sessionId));
+      assert.strictEqual(snap.get(caret1.sessionId), caret1);
+      assert.strictEqual(snap.get(caret2.sessionId), caret2);
+      assert.strictEqual(snap.get(caret3.sessionId), caret3);
     });
 
-    it('should return `false` when given a session ID that is not in the snapshot', () => {
+    it('should throw an error when given a session ID that is not in the snapshot', () => {
       const snap = new CaretSnapshot(999, [op1, op3]);
 
-      assert.isFalse(snap.hasSession(caret2.sessionId));
+      assert.throws(() => { snap.get(caret2.sessionId); });
     });
 
     it('should throw an error if given an invalid session ID', () => {
       const snap = new CaretSnapshot(999, []);
 
-      assert.throws(() => { snap.hasSession(123); });
-      assert.throws(() => { snap.hasSession(['x']); });
-      assert.throws(() => { snap.hasSession(''); });
+      assert.throws(() => { snap.get(123); });
+      assert.throws(() => { snap.get(['x']); });
+      assert.throws(() => { snap.get(''); });
+    });
+  });
+
+  describe('getOrNull()', () => {
+    it('should return the caret associated with an existing session', () => {
+      const snap = new CaretSnapshot(999, [op1, op2, op3]);
+
+      assert.strictEqual(snap.getOrNull(caret1.sessionId), caret1);
+      assert.strictEqual(snap.getOrNull(caret2.sessionId), caret2);
+      assert.strictEqual(snap.getOrNull(caret3.sessionId), caret3);
+    });
+
+    it('should return `null` when given a session ID that is not in the snapshot', () => {
+      const snap = new CaretSnapshot(999, [op1, op3]);
+
+      assert.isNull(snap.getOrNull(caret2.sessionId));
+    });
+
+    it('should throw an error if given an invalid session ID', () => {
+      const snap = new CaretSnapshot(999, []);
+
+      assert.throws(() => { snap.getOrNull(123); });
+      assert.throws(() => { snap.getOrNull(['x']); });
+      assert.throws(() => { snap.getOrNull(''); });
+    });
+  });
+
+  describe('has()', () => {
+    it('should return `true` when given a session ID for an existing session', () => {
+      const snap = new CaretSnapshot(999, [op1, op2, op3]);
+
+      assert.isTrue(snap.has(caret1.sessionId));
+      assert.isTrue(snap.has(caret2.sessionId));
+      assert.isTrue(snap.has(caret3.sessionId));
+    });
+
+    it('should return `false` when given a session ID that is not in the snapshot', () => {
+      const snap = new CaretSnapshot(999, [op1, op3]);
+
+      assert.isFalse(snap.has(caret2.sessionId));
+    });
+
+    it('should throw an error if given an invalid session ID', () => {
+      const snap = new CaretSnapshot(999, []);
+
+      assert.throws(() => { snap.has(123); });
+      assert.throws(() => { snap.has(['x']); });
+      assert.throws(() => { snap.has(''); });
     });
   });
 
