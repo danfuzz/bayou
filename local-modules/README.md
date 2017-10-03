@@ -8,7 +8,7 @@ contexts.
 
 ### Module naming conventions
 
-* `<name>-base` &mdash; A module that is akin to a "base class," that is, a
+* `<name>-core` &mdash; A module that is akin to a "base class," that is, a
   module expected to be used primarily by defining another module which expands
   on its behavior in some fashion.
 * `<name>-common` &mdash; A module that contains code that is meant to be
@@ -39,7 +39,10 @@ Internal to a module, the convention is a little more nuanced:
 * Files are allowed to _either_ define a single class or define a collection of
   data.
 * If a file defines a class, then that class is the single default export of
-  the file, and there are no other exports.
+  the file, and there are no other exports. In this case, the file's base name
+  and the class name should be the same including capitalization. For example,
+  the class `FooBlort` should reside in a file named `FooBlort.js` (and notably
+  not, `foo-blort.js`).
 * If a file defines a collection of data, then it is exported (as with the main
   module) as a set of explicit names and _no_ default.
 

@@ -827,7 +827,13 @@ export default class BodyClient extends StateMachine {
 
     // Tell Quill if necessary.
     if (needQuillUpdate) {
+      // The `cutoff()` calls force the update to be treated as an atomic "undo"
+      // item that will not get combined with edits that the local user has
+      // made. **Note:** As of this writing, `cutoff()` is listed in the Quill
+      // docs as an "experimental" feature.
+      this._quill.history.cutoff();
       this._quill.updateContents(quillDelta.toQuillForm(), CLIENT_SOURCE);
+      this._quill.history.cutoff();
     }
   }
 
@@ -840,6 +846,13 @@ export default class BodyClient extends StateMachine {
   _updateWithSnapshot(snapshot) {
     this._snapshot = snapshot;
     this._quill.setContents(snapshot.contents.toQuillForm(), CLIENT_SOURCE);
+
+    // This prevents "undo" from backing over the snapshot. When first starting
+    // up, this means the user can't undo and find themselves looking at the
+    // "loading..." text. And during a reconnection, it prevents hard-to-predict
+    // glitches (in that the Quill state could have diverged significantly from
+    // the stored document state).
+    this._quill.history.clear();
   }
 
   /**
