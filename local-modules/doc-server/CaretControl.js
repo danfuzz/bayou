@@ -225,7 +225,7 @@ export default class CaretControl extends CommonBase {
       if (minTime.compareTo(caret.lastActive) > 0) {
         // Too old!
         this._log.info(`[${sessionId}] Caret became inactive.`);
-        toRemove.push(caret);
+        toRemove.push(sessionId);
       }
     }
 
@@ -233,19 +233,19 @@ export default class CaretControl extends CommonBase {
   }
 
   /**
-   * Removes the sessions associated with the indicated carets from the local
-   * snapshot, and also pushes the removal to the storage layer.
+   * Removes the indicated sessions from the local snapshot, and also pushes the
+   * removal to the storage layer.
    *
-   * @param {...Caret} carets Carets representing the sessions to be removed.
+   * @param {...string} sessionIds IDs of the sessions to be removed.
    */
-  _removeSessions(...carets) {
+  _removeSessions(...sessionIds) {
     const storage     = this._caretStorage;
     const oldSnapshot = this._snapshot;
     let   newSnapshot = oldSnapshot;
 
-    for (const c of carets) {
-      newSnapshot = newSnapshot.withoutCaret(c);
-      storage.delete(c);
+    for (const sessionId of sessionIds) {
+      newSnapshot = newSnapshot.withoutSession(sessionId);
+      storage.delete(sessionId);
     }
 
     if (newSnapshot !== oldSnapshot) {
@@ -260,11 +260,8 @@ export default class CaretControl extends CommonBase {
    * @param {string} sessionId ID of the session that got reaped.
    */
   async _sessionReaped(sessionId) {
-    const snapshot = this._snapshot;
-    const oldCaret = snapshot.caretForSession(sessionId);
-
-    if (oldCaret !== null) {
-      this._removeSessions(oldCaret);
+    if (this._snapshot.hasSession(sessionId)) {
+      this._removeSessions(sessionId);
     }
   }
 

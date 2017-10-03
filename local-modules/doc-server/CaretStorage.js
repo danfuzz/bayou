@@ -5,6 +5,7 @@
 import { Caret, CaretSnapshot } from 'doc-common';
 import { Errors, TransactionSpec } from 'file-store';
 import { CallPiler, Delay } from 'promise-util';
+import { TString } from 'typecheck';
 import { CommonBase, FrozenBuffer } from 'util-common';
 
 import FileComplex from './FileComplex';
@@ -109,18 +110,17 @@ export default class CaretStorage extends CommonBase {
    * written to file storage (unless superseded by another change to the same
    * session in the meantime).
    *
-   * @param {Caret} caret Caret for the session to be deleted. Only the
-   *   `sessionId` of the caret is actually used.
+   * @param {string} sessionId ID of the session to be deleted.
    */
-  delete(caret) {
-    Caret.check(caret);
+  delete(sessionId) {
+    TString.nonEmpty(sessionId);
 
     // Indicate that the local server is asserting authority over this session.
     // This means that, when it comes time to write out caret info, this session
     // will be removed from file storage.
-    this._localSessions.add(caret.sessionId);
+    this._localSessions.add(sessionId);
 
-    this._carets = this._carets.withoutCaret(caret);
+    this._carets = this._carets.withoutSession(sessionId);
     this._needsWrite();
   }
 
