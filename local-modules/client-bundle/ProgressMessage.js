@@ -90,4 +90,12 @@ export default class ProgressMessage {
   get handler() {
     return this._handler.bind(this);
   }
+
+  /**
+   * Resets progress, for a new round of work.
+   */
+  reset() {
+    this._lastTime = 0;
+    this._lastFrac= 0;
+  }
 }

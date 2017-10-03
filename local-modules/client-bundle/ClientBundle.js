@@ -13,21 +13,24 @@ import { JsonUtil, Singleton } from 'util-common';
 
 import ProgressMessage from './ProgressMessage';
 
-/** Logger. */
+/** {Logger} Logger. */
 const log = new Logger('client-bundle');
 
+/** {ProgressMessage} Handler that logs progress messages during compilation. */
+const progress = new ProgressMessage(log);
+
 /**
- * The parsed `package.json` for the client. This is used for some of the
- * `webpack` config.
+ * {object} The parsed `package.json` for the client. This is used for some of
+ * the `webpack` config.
  */
 const clientPackage =
   JsonUtil.parseFrozen(
     fs.readFileSync(path.resolve(Dirs.theOne.CLIENT_DIR, 'package.json')));
 
 /**
- * Options passed to the `webpack` compiler constructor. Of particular note,
- * we _do not_ try to restrict the loaders to any particular directories (e.g.
- * via `include` configs), instead _just_ applying them based on filename
+ * {object} Options passed to the `webpack` compiler constructor. Of particular
+ * note, we _do not_ try to restrict the loaders to any particular directories
+ * (e.g. via `include` configs), instead _just_ applying them based on filename
  * extension. As such, any `.js` file will get loaded via our "modern ES"
  * pipeline, and any `.ts` file will get loaded via the TypeScript loader.
  *
@@ -70,7 +73,7 @@ const webpackOptions = {
   },
 
   plugins: [
-    new webpack.ProgressPlugin(new ProgressMessage(log).handler)
+    new webpack.ProgressPlugin(progress.handler)
   ],
 
   resolve: {
@@ -278,6 +281,8 @@ export default class ClientBundle extends Singleton {
    * @param {object} stats Detailed information about the compilation.
    */
   _handleCompilation(error, stats) {
+    progress.reset(); // So the progress message doesn't get stuck at 100%.
+
     const warnings = stats.compilation.warnings;
     const errors = stats.compilation.errors;
 
