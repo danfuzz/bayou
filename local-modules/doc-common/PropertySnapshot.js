@@ -76,7 +76,7 @@ export default class PropertySnapshot extends BaseSnapshot {
    * @yields {Iterator<[string, *]>} Iterator over the entries. The keys are
    *   the property names, and the values are the corresponding property values.
    */
-  *entries() {
+  * entries() {
     for (const op of this.contents.ops) {
       const { name, value } = op.props;
       yield [name, value];

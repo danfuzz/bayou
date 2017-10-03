@@ -155,30 +155,6 @@ describe('doc-common/CaretSnapshot', () => {
     });
   });
 
-  describe('caretForSession()', () => {
-    it('should return the caret associated with an existing session', () => {
-      const snap = new CaretSnapshot(999, [op1, op2, op3]);
-
-      assert.strictEqual(snap.caretForSession(caret1.sessionId), caret1);
-      assert.strictEqual(snap.caretForSession(caret2.sessionId), caret2);
-      assert.strictEqual(snap.caretForSession(caret3.sessionId), caret3);
-    });
-
-    it('should return `null` when given a session ID that is not in the snapshot', () => {
-      const snap = new CaretSnapshot(999, [op1, op3]);
-
-      assert.isNull(snap.caretForSession(caret2.sessionId));
-    });
-
-    it('should throw an error if given an invalid session ID', () => {
-      const snap = new CaretSnapshot(999, []);
-
-      assert.throws(() => { snap.caretForSession(123); });
-      assert.throws(() => { snap.caretForSession(['x']); });
-      assert.throws(() => { snap.caretForSession(''); });
-    });
-  });
-
   describe('compose()', () => {
     it('should produce an equal instance when passed an empty change with the same `revNum`', () => {
       let which = 0;
@@ -468,6 +444,30 @@ describe('doc-common/CaretSnapshot', () => {
       assert.throws(() => { snap.get(123); });
       assert.throws(() => { snap.get(['x']); });
       assert.throws(() => { snap.get(''); });
+    });
+  });
+
+  describe('getOrNull()', () => {
+    it('should return the caret associated with an existing session', () => {
+      const snap = new CaretSnapshot(999, [op1, op2, op3]);
+
+      assert.strictEqual(snap.getOrNull(caret1.sessionId), caret1);
+      assert.strictEqual(snap.getOrNull(caret2.sessionId), caret2);
+      assert.strictEqual(snap.getOrNull(caret3.sessionId), caret3);
+    });
+
+    it('should return `null` when given a session ID that is not in the snapshot', () => {
+      const snap = new CaretSnapshot(999, [op1, op3]);
+
+      assert.isNull(snap.getOrNull(caret2.sessionId));
+    });
+
+    it('should throw an error if given an invalid session ID', () => {
+      const snap = new CaretSnapshot(999, []);
+
+      assert.throws(() => { snap.getOrNull(123); });
+      assert.throws(() => { snap.getOrNull(['x']); });
+      assert.throws(() => { snap.getOrNull(''); });
     });
   });
 

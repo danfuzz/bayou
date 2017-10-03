@@ -363,8 +363,8 @@ export default class CaretStorage extends CommonBase {
     const setUpdates    = []; // List of new and deleted sessions.
 
     for (const sessionId of this._localSessions) {
-      const caret       = this._carets.caretForSession(sessionId);
-      const storedCaret = this._storedCarets.caretForSession(sessionId);
+      const caret       = this._carets.getOrNull(sessionId);
+      const storedCaret = this._storedCarets.getOrNull(sessionId);
       const path        = Paths.forCaret(sessionId);
 
       if (caret && storedCaret && caret.equals(storedCaret)) {

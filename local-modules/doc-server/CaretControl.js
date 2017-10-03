@@ -154,7 +154,7 @@ export default class CaretControl extends CommonBase {
     // Construct the new/updated caret and updated snapshot.
 
     let snapshot     = this._snapshot;
-    const oldCaret   = snapshot.caretForSession(sessionId);
+    const oldCaret   = snapshot.getOrNull(sessionId);
     const revNum     = docRevNum; // Done to match the caret field name.
     const lastActive = Timestamp.now();
     const newFields  = { revNum, lastActive, index, length };

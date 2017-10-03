@@ -69,20 +69,6 @@ export default class CaretSnapshot extends BaseSnapshot {
   }
 
   /**
-   * Gets the caret info for the given session, if any.
-   *
-   * @param {string} sessionId Session in question.
-   * @returns {Caret|null} Corresponding caret, or `null` if there is none.
-   */
-  caretForSession(sessionId) {
-    TString.nonEmpty(sessionId);
-
-    const found = this._carets.get(sessionId);
-
-    return found ? found.props.caret : null;
-  }
-
-  /**
    * Gets an iterator over the `[sessionId, caret]` entries that make up the
    * snapshot.
    *
@@ -92,7 +78,7 @@ export default class CaretSnapshot extends BaseSnapshot {
    * @yields {Iterator<[string, Caret]>} Iterator over the entries. The keys are
    *   the session IDs, and the values are the corresponding caret values.
    */
-  *entries() {
+  * entries() {
     for (const op of this.contents.ops) {
       const caret = op.props.caret;
       yield [caret.sessionId, caret];
@@ -110,15 +96,27 @@ export default class CaretSnapshot extends BaseSnapshot {
    * @returns {Caret} Corresponding caret.
    */
   get(sessionId) {
+    const found = this.getOrNull(sessionId);
+
+    if (found) {
+      return found;
+    }
+
+    throw Errors.bad_use(`No such session: ${sessionId}`);
+  }
+
+  /**
+   * Gets the caret info for the given session, if any.
+   *
+   * @param {string} sessionId Session in question.
+   * @returns {Caret|null} Corresponding caret, or `null` if there is none.
+   */
+  getOrNull(sessionId) {
     TString.nonEmpty(sessionId);
 
     const found = this._carets.get(sessionId);
 
-    if (found) {
-      return found.props.caret;
-    }
-
-    throw Errors.bad_use(`No such session: ${sessionId}`);
+    return found ? found.props.caret : null;
   }
 
   /**
@@ -163,8 +161,7 @@ export default class CaretSnapshot extends BaseSnapshot {
    *   session, or `false` if not.
    */
   has(sessionId) {
-    TString.nonEmpty(sessionId);
-    return this._carets.has(sessionId);
+    return this.getOrNull(sessionId) !== null;
   }
 
   /**
