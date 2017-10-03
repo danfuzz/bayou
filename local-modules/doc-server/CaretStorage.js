@@ -155,7 +155,7 @@ export default class CaretStorage extends CommonBase {
 
     // Update all the remote carets.
     for (const sessionId of this._remoteSessionIds()) {
-      const newSnapshot = snapshot.withCaret(carets.caretForSession(sessionId));
+      const newSnapshot = snapshot.withCaret(carets.get(sessionId));
       if (newSnapshot !== snapshot) {
         snapshot = newSnapshot;
         this._log.detail('Integrated caret update:', sessionId);

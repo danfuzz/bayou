@@ -100,6 +100,28 @@ export default class CaretSnapshot extends BaseSnapshot {
   }
 
   /**
+   * Gets the caret info for the given session. It is an error if this instance
+   * has no caret for the indicated session.
+   *
+   * **Note:** This differs from the semantics of the `Map` method of the same
+   * name in that the not-found case is an error.
+   *
+   * @param {string} sessionId Session in question.
+   * @returns {Caret} Corresponding caret.
+   */
+  get(sessionId) {
+    TString.nonEmpty(sessionId);
+
+    const found = this._carets.get(sessionId);
+
+    if (found) {
+      return found.props.caret;
+    }
+
+    throw Errors.bad_use(`No such session: ${sessionId}`);
+  }
+
+  /**
    * Compares this to another possible-instance, for equality of content.
    *
    * @param {*} other Value to compare to.
@@ -142,7 +164,7 @@ export default class CaretSnapshot extends BaseSnapshot {
    */
   has(sessionId) {
     TString.nonEmpty(sessionId);
-    return this.caretForSession(sessionId) !== null;
+    return this._carets.has(sessionId);
   }
 
   /**

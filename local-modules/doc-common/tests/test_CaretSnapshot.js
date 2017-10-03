@@ -447,6 +447,30 @@ describe('doc-common/CaretSnapshot', () => {
     });
   });
 
+  describe('get()', () => {
+    it('should return the caret associated with an existing session', () => {
+      const snap = new CaretSnapshot(999, [op1, op2, op3]);
+
+      assert.strictEqual(snap.get(caret1.sessionId), caret1);
+      assert.strictEqual(snap.get(caret2.sessionId), caret2);
+      assert.strictEqual(snap.get(caret3.sessionId), caret3);
+    });
+
+    it('should throw an error when given a session ID that is not in the snapshot', () => {
+      const snap = new CaretSnapshot(999, [op1, op3]);
+
+      assert.throws(() => { snap.get(caret2.sessionId); });
+    });
+
+    it('should throw an error if given an invalid session ID', () => {
+      const snap = new CaretSnapshot(999, []);
+
+      assert.throws(() => { snap.get(123); });
+      assert.throws(() => { snap.get(['x']); });
+      assert.throws(() => { snap.get(''); });
+    });
+  });
+
   describe('has()', () => {
     it('should return `true` when given a session ID for an existing session', () => {
       const snap = new CaretSnapshot(999, [op1, op2, op3]);

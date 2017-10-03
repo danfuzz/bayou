@@ -460,7 +460,7 @@ export default class CaretOverlay {
           }
 
           if (props.key === 'color') {
-            const caret = newSnapshot.caretForSession(sessionId);
+            const caret = newSnapshot.get(sessionId);
 
             this._updateAvatarColor(caret);
           }
