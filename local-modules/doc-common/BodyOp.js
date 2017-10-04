@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt, TObject, TString } from 'typecheck';
-import { CommonBase, Errors, Functor } from 'util-common';
+import { CommonBase, DataUtil, Errors, Functor } from 'util-common';
 
 /**
  * Operation on a text document body.
@@ -46,10 +46,14 @@ export default class BodyOp extends CommonBase {
     const { attributes = null, delete: del, insert, retain } = quillOp;
 
     if (insert !== undefined) {
-      if (typeof insert === 'number') {
-        throw Errors.wtf(`TODO: Figure out how to map to an embed type name: ${insert}`);
-      } else {
+      if (typeof insert === 'string') {
         return BodyOp.op_insertText(insert, attributes);
+      } else {
+        // An "embed" is represented as a single-binding `object`, where the
+        // key of the binding is the type of the embed, and the bound value is
+        // an arbitrary value as defined by the type.
+        const [key, value] = Object.entries(insert).next();
+        return BodyOp.op_insertEmbed(new Functor(key, value));
       }
     } else if (del !== undefined) {
       return BodyOp.op_delete(del);
@@ -76,19 +80,15 @@ export default class BodyOp extends CommonBase {
   /**
    * Constructs a new "insert embed" operation.
    *
-   * @param {string} type The string-identified embed type. Must be in
-   *   "identifier" syntax form.
-   * @param {object|null} [attributes = null] Attributes of the embed, or `null`
-   *   if it has none.
+   * @param {Functor} value Functor representing the embed type (functor name)
+   *   and construction argument (functor argument).
    * @returns {BodyOp} The corresponding operation.
    */
-  static op_insertEmbed(type, attributes = null) {
-    TString.identifier(type);
-    if (attributes !== null) {
-      TObject.checkSimple(attributes);
-    }
+  static op_insertEmbed(value) {
+    Functor.check(value);
+    value = DataUtil.deepFreeze(value);
 
-    return new BodyOp(new Functor(BodyOp.INSERT_EMBED, type, attributes));
+    return new BodyOp(new Functor(BodyOp.INSERT_EMBED, value));
   }
 
   /**
@@ -166,11 +166,11 @@ export default class BodyOp extends CommonBase {
    * property of the operation, or `undefined` if not defined for this instance.
    */
   get insert() {
-    const { opName, type, text } = this.props;
+    const { opName, text, value } = this.props;
 
     switch (opName) {
       case BodyOp.INSERT_EMBED: {
-        throw new Errors.wtf(`TODO: Figure out how to map to an int: ${type}`);
+        return { [value.name]: value.args[0] };
       }
       case BodyOp.INSERT_TEXT: {
         return text;
@@ -213,8 +213,8 @@ export default class BodyOp extends CommonBase {
       }
 
       case BodyOp.INSERT_EMBED: {
-        const [type, attributes] = payload.args;
-        return Object.freeze({ opName, type, attributes });
+        const [value] = payload.args;
+        return Object.freeze({ opName, value });
       }
 
       case BodyOp.INSERT_TEXT: {
