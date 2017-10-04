@@ -236,10 +236,11 @@ export default class BodyOp extends CommonBase {
 
       case BodyOp.INSERT_EMBED: {
         const { value: { name, args: [arg0] }, attributes } = props;
+        const insert = { [name]: arg0 };
 
         return attributes
-          ? { [name]: arg0, attributes }
-          : { [name]: arg0 };
+          ? { insert, attributes }
+          : { insert };
       }
 
       case BodyOp.INSERT_TEXT: {
