@@ -7,8 +7,7 @@ import { describe, it } from 'mocha';
 import Delta from 'quill-delta';
 import { inspect } from 'util';
 
-import { BodyDelta } from 'doc-common';
-import { DataUtil } from 'util-common';
+import { BodyDelta, BodyOp } from 'doc-common';
 
 /**
  * Helper to call `new BodyDelta()` with a deep-frozen argument.
@@ -19,7 +18,7 @@ import { DataUtil } from 'util-common';
  *   version of `ops`.
  */
 function newWithFrozenOps(ops) {
-  return new BodyDelta(DataUtil.deepFreeze(ops));
+  return new BodyDelta(ops);
 }
 
 describe('doc-common/BodyDelta', () => {
@@ -65,28 +64,22 @@ describe('doc-common/BodyDelta', () => {
       test(undefined);
       test(false);
       test('blort');
-      test({ insert: '123' });
-      test([{ insert: '123' }]);
+      test(BodyOp.op_insertText('123'));
+      test([BodyOp.op_insertText('123')]);
       test(BodyDelta.EMPTY);
     });
   });
 
   describe('constructor()', () => {
     describe('valid arguments', () => {
-      // This one is not a valid `ops` array, but per docs, the constructor
-      // doesn't inspect the contents of `ops` arrays other than seeing that
-      // elements are all simple objects, and so using this value should succeed
-      // (for some values of the terms "should" and "succeed").
-      const invalidNonEmptyOps = [{ a: 10 }, { b: 'florp' }];
-
       const values = [
         [],
-        [{ insert: 'x' }],
-        [{ delete: 123 }],
-        [{ retain: 123 }],
-        [{ insert: 'x', attributes: { bold: true } }],
-        [{ insert: 'florp' }, { insert: 'x', attributes: { bold: true } }],
-        invalidNonEmptyOps
+        [BodyOp.op_insertText('x')],
+        [BodyOp.op_insertText('x', { bold: true })],
+        [BodyOp.op_delete(123)],
+        [BodyOp.op_retain(123)],
+        [BodyOp.op_retain(123, { bold: true })],
+        [BodyOp.op_insertText('x'), BodyOp.op_insertText('y', { bold: true })]
       ];
 
       for (const v of values) {
@@ -102,7 +95,8 @@ describe('doc-common/BodyDelta', () => {
         undefined,
         123,
         'florp',
-        { insert: 123 },
+        { insert: 'x' },
+        [{ insert: 'x' }],
         new Map(),
         [null],
         [undefined],
@@ -141,14 +135,14 @@ describe('doc-common/BodyDelta', () => {
     });
 
     it('should reject calls when `this` is not a document', () => {
-      const delta = newWithFrozenOps([{ retain: 10 }]);
+      const delta = newWithFrozenOps([BodyOp.op_retain(10)]);
       const other = BodyDelta.EMPTY;
       assert.throws(() => delta.diff(other));
     });
 
     it('should reject calls when `other` is not a document', () => {
       const delta = BodyDelta.EMPTY;
-      const other = new newWithFrozenOps([{ retain: 10 }]);
+      const other = new newWithFrozenOps([BodyOp.op_retain(10)]);
       assert.throws(() => delta.diff(other));
     });
 
@@ -190,41 +184,41 @@ describe('doc-common/BodyDelta', () => {
     }
 
     test('full replacement',
-      [{ insert: '111' }],
-      [{ insert: '222' }, { delete: 3 }],
-      [{ insert: '222' }]);
+      [BodyOp.op_insertText('111')],
+      [BodyOp.op_insertText('222'), BodyOp.op_delete(3)],
+      [BodyOp.op_insertText('222')]);
     test('insert at start',
-      [{ insert: '111' }],
-      [{ insert: '222' }],
-      [{ insert: '222111' }]);
+      [BodyOp.op_insertText('111')],
+      [BodyOp.op_insertText('222')],
+      [BodyOp.op_insertText('222111')]);
     test('append at end',
-      [{ insert: '111' }],
-      [{ retain: 3 }, { insert: '222' }],
-      [{ insert: '111222' }]);
+      [BodyOp.op_insertText('111')],
+      [BodyOp.op_retain(3), BodyOp.op_insertText('222')],
+      [BodyOp.op_insertText('111222')]);
     test('surround',
-      [{ insert: '111' }],
-      [{ insert: '222' }, { retain: 3 }, { insert: '333' }],
-      [{ insert: '222111333' }]);
+      [BodyOp.op_insertText('111')],
+      [BodyOp.op_insertText('222'), BodyOp.op_retain(3), BodyOp.op_insertText('333')],
+      [BodyOp.op_insertText('222111333')]);
     test('replace one middle bit',
-      [{ insert: 'Drink more Slurm.' }],
-      [{ retain: 6 }, { insert: 'LESS' }, { delete: 4 }],
-      [{ insert: 'Drink LESS Slurm.' }]);
+      [BodyOp.op_insertText('Drink more Slurm.')],
+      [BodyOp.op_retain(6), BodyOp.op_insertText('LESS'), BodyOp.op_delete(4)],
+      [BodyOp.op_insertText('Drink LESS Slurm.')]);
     test('replace two middle bits',
-      [{ insert: '[[hello]] [[goodbye]]' }],
+      [BodyOp.op_insertText('[[hello]] [[goodbye]]')],
       [
-        { retain: 2 }, { insert: 'YO' }, { delete: 5 }, { retain: 5 },
-        { insert: 'LATER' }, { delete: 7 }
+        BodyOp.op_retain(2), BodyOp.op_insertText('YO'), BodyOp.op_delete(5), BodyOp.op_retain(5),
+        BodyOp.op_insertText('LATER'), BodyOp.op_delete(7)
       ],
-      [{ insert: '[[YO]] [[LATER]]' }]);
+      [BodyOp.op_insertText('[[YO]] [[LATER]]')]);
   });
 
   describe('isDocument()', () => {
     describe('`true` cases', () => {
       const values = [
         [],
-        [{ insert: 'line 1' }],
-        [{ insert: 'line 1' }, { insert: '\n' }],
-        [{ insert: 'line 1' }, { insert: '\n' }, { insert: 'line 2' }]
+        [BodyOp.op_insertText('line 1')],
+        [BodyOp.op_insertText('line 1'), BodyOp.op_insertText('\n')],
+        [BodyOp.op_insertText('line 1'), BodyOp.op_insertText('\n'), BodyOp.op_insertText('line 2')]
       ];
 
       for (const v of values) {
@@ -236,12 +230,12 @@ describe('doc-common/BodyDelta', () => {
 
     describe('`false` cases', () => {
       const values = [
-        [{ retain: 37 }],
-        [{ delete: 914 }],
-        [{ retain: 37, attributes: { bold: true } }],
-        [{ insert: 'line 1' }, { retain: 9 }],
-        [{ insert: 'line 1' }, { retain: 14 }, { insert: '\n' }],
-        [{ insert: 'line 1' }, { insert: '\n' }, { retain: 23 }, { insert: 'line 2' }]
+        [BodyOp.op_retain(37)],
+        [BodyOp.op_delete(914)],
+        [BodyOp.op_retain(37, { bold: true })],
+        [BodyOp.op_insertText('line 1'), BodyOp.op_retain(9)],
+        [BodyOp.op_insertText('line 1'), BodyOp.op_retain(14), BodyOp.op_insertText('\n')],
+        [BodyOp.op_insertText('line 1'), BodyOp.op_insertText('\n'), BodyOp.op_retain(23), BodyOp.op_insertText('line 2')]
       ];
 
       for (const v of values) {
@@ -268,9 +262,9 @@ describe('doc-common/BodyDelta', () => {
 
     describe('valid non-empty values', () => {
       const values = [
-        [{ insert: 'x' }],
-        [{ insert: 'line 1' }, { insert: '\n' }, { insert: 'line 2' }],
-        [{ retain: 100 }]
+        [BodyOp.op_insertText('x')],
+        [BodyOp.op_insertText('line 1'), BodyOp.op_insertText('\n'), BodyOp.op_insertText('line 2')],
+        [BodyOp.op_retain(100)]
       ];
 
       for (const v of values) {
@@ -283,7 +277,7 @@ describe('doc-common/BodyDelta', () => {
   });
 
   describe('toQuillForm()', () => {
-    it('should produce `Delta` instances with strict-equal ops', () => {
+    it('should produce `Delta` instances with appropriately-converted ops', () => {
       function test(ops) {
         const delta  = newWithFrozenOps(ops);
         const result = delta.toQuillForm();
@@ -292,8 +286,8 @@ describe('doc-common/BodyDelta', () => {
       }
 
       test([]);
-      test([{ insert: 'blort' }]);
-      test([{ retain: 123 }]);
+      test([BodyOp.op_insertText('blort')]);
+      test([BodyOp.op_retain(123)]);
     });
   });
 
@@ -332,27 +326,27 @@ describe('doc-common/BodyDelta', () => {
       }
 
       test(
-        [{ insert: 'blort' }],
-        [{ insert: 'blort' }],
-        [{ retain: 5 }, { insert: 'blort' }],
-        [{ insert: 'blort' }]);
+        [BodyOp.op_insertText('blort')],
+        [BodyOp.op_insertText('blort')],
+        [BodyOp.op_retain(5), BodyOp.op_insertText('blort')],
+        [BodyOp.op_insertText('blort')]);
       test(
-        [{ delete: 10 }],
-        [{ delete: 10 }],
+        [BodyOp.op_delete(10)],
+        [BodyOp.op_delete(10)],
         []);
       test(
-        [{ delete: 10 }],
-        [{ delete: 10 }, { insert: 'florp' }],
-        [{ insert: 'florp' }]);
+        [BodyOp.op_delete(10)],
+        [BodyOp.op_delete(10), BodyOp.op_insertText('florp')],
+        [BodyOp.op_insertText('florp')]);
       test(
-        [{ insert: '111' }],
-        [{ insert: '222' }],
-        [{ retain: 3 }, { insert: '222' }],
-        [{ insert: '222' }]);
+        [BodyOp.op_insertText('111')],
+        [BodyOp.op_insertText('222')],
+        [BodyOp.op_retain(3), BodyOp.op_insertText('222')],
+        [BodyOp.op_insertText('222')]);
       test(
-        [{ retain: 10 }, { insert: '111' }],
-        [{ retain: 20 }, { insert: '222' }],
-        [{ retain: 23 }, { insert: '222' }]);
+        [BodyOp.op_retain(10), BodyOp.op_insertText('111')],
+        [BodyOp.op_retain(20), BodyOp.op_insertText('222')],
+        [BodyOp.op_retain(23), BodyOp.op_insertText('222')]);
     });
   });
 });
