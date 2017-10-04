@@ -4,8 +4,8 @@
 
 import { inspect } from 'util';
 
-import { TBoolean } from 'typecheck';
-import { CommonBase, Errors } from 'util-common';
+import { TArray, TBoolean, TObject } from 'typecheck';
+import { CommonBase } from 'util-common';
 
 
 /**
@@ -37,6 +37,25 @@ export default class BaseDelta extends CommonBase {
   }
 
   /**
+   * {class} Class (constructor function) of operation objects to be used with
+   * instances of this class.
+   */
+  static get opClass() {
+    // **Note:** `this` in the context of a static method is the class, not an
+    // instance.
+
+    if (!this._opClass) {
+      // Call the `_impl` and verify the result.
+      const clazz = this._impl_opClass;
+
+      TObject.check(clazz.prototype, CommonBase); // **TODO:** Should be `BaseOp`.
+      this._opClass = clazz;
+    }
+
+    return this._opClass;
+  }
+
+  /**
    * Checks the given value to see if it is a valid array of operations for use
    * with this class. This does _not_ check to see if the array is frozen.
    *
@@ -47,30 +66,7 @@ export default class BaseDelta extends CommonBase {
   static checkOpArray(value) {
     // **Note:** `this` in the context of a static method is the class, not an
     // instance.
-
-    if (!this._opPredicate) {
-      // Call the `_impl` and construct the predicate based on what we get back.
-      const classOrPredicate = this._impl_opClassOrPredicate;
-      if (classOrPredicate.prototype instanceof CommonBase) {
-        // It's a class as generally defined by this project.
-        this._opPredicate = (v => v instanceof classOrPredicate);
-      } else {
-        // Assume it's a plain predicate function.
-        this._opPredicate = classOrPredicate;
-      }
-    }
-
-    if (!Array.isArray(value)) {
-      throw Errors.bad_value(value, Array, `${this.name} operation`);
-    }
-
-    for (const op of value) {
-      if (!this._opPredicate(op)) {
-        throw Errors.bad_value(op, `${this.name} operation`);
-      }
-    }
-
-    return value;
+    return TArray.check(value, this.opClass.check);
   }
 
   /**
@@ -212,7 +208,7 @@ export default class BaseDelta extends CommonBase {
    *
    * @abstract
    */
-  static get _impl_opClassOrPredicate() {
+  static get _impl_opClass() {
     return this._mustOverride();
   }
 }

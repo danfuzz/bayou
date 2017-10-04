@@ -187,10 +187,10 @@ export default class BodyDelta extends BaseDelta {
   }
 
   /**
-   * {function} Predicate which indicates valid operation values for use with
-   * this class.
+   * {class} Class (constructor function) of operation objects to be used with
+   * instances of this class.
    */
-  static get _impl_opClassOrPredicate() {
+  static get _impl_opClass() {
     return BodyOp;
   }
 }

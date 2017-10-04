@@ -50,7 +50,7 @@ export default class CaretDelta extends BaseDelta {
    * {class} Class (constructor function) of operation objects to be used with
    * instances of this class.
    */
-  static get _impl_opClassOrPredicate() {
+  static get _impl_opClass() {
     return CaretOp;
   }
 }
