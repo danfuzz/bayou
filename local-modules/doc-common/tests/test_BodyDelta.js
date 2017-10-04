@@ -81,13 +81,11 @@ describe('doc-common/BodyDelta', () => {
       const values = [
         null,
         undefined,
+        false,
         123,
         'florp',
         { insert: 'x' },
-        [{ insert: 'x' }],
         new Map(),
-        [null],
-        [undefined],
         ['x'],
         [1, 2, 3]
       ];
@@ -95,7 +93,7 @@ describe('doc-common/BodyDelta', () => {
       for (const v of values) {
         it(`should fail for: ${inspect(v)}`, () => {
           assert.throws(() => new BodyDelta(v));
-          assert.throws(() => new BodyDelta(v));
+          assert.throws(() => new BodyDelta([v]));
         });
       }
     });
