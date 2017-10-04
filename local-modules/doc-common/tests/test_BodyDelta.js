@@ -8,6 +8,7 @@ import Delta from 'quill-delta';
 import { inspect } from 'util';
 
 import { BodyDelta, BodyOp } from 'doc-common';
+import { Functor } from 'util-common';
 
 describe('doc-common/BodyDelta', () => {
   describe('.EMPTY', () => {
@@ -35,12 +36,16 @@ describe('doc-common/BodyDelta', () => {
   });
 
   describe('fromQuillForm()', () => {
-    it('should return an instance with equal `ops`', () => {
-      const ops        = [{ insert: 'foo' }, { retain: 10 }, { insert: 'bar' }];
+    it('should return an instance with appropriately-converted `ops`', () => {
+      const ops        = [{ insert: 'foo' }, { retain: 10 }, { insert: 'bar', attributes: { bold: true } }];
       const quillDelta = new Delta(ops);
       const result     = BodyDelta.fromQuillForm(quillDelta);
 
-      assert.deepEqual(result.ops, ops);
+      assert.deepEqual(result.ops, [
+        BodyOp.op_insertText('foo'),
+        BodyOp.op_retain(10),
+        BodyOp.op_insertText('bar', { bold: true })
+      ]);
     });
 
     it('should reject non-quill-delta arguments', () => {
@@ -268,12 +273,27 @@ describe('doc-common/BodyDelta', () => {
         const delta  = new BodyDelta(ops);
         const result = delta.toQuillForm();
         assert.instanceOf(result, Delta);
-        assert.strictEqual(result.ops, delta.ops);
+
+        const origOps = delta.ops;
+        const quillOps = result.ops;
+
+        assert.strictEqual(origOps.length, quillOps.length);
+        for (let i = 0; i < origOps.length; i++) {
+          const op1 = origOps[i].toQuillForm();
+          const op2 = quillOps[i];
+          assert.deepEqual(op2, op1);
+        }
       }
 
       test([]);
+      test([BodyOp.op_insertEmbed(new Functor('zither', 123))]);
       test([BodyOp.op_insertText('blort')]);
       test([BodyOp.op_retain(123)]);
+      test([
+        BodyOp.op_retain(123, { bold: true }),
+        BodyOp.op_delete(10),
+        BodyOp.op_insertText('foo')
+      ]);
     });
   });
 
