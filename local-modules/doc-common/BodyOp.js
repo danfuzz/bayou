@@ -43,6 +43,11 @@ export default class BodyOp extends CommonBase {
    * @returns {BodyOp} Corresponding instance of this class.
    */
   static fromQuillForm(quillOp) {
+    if (quillOp instanceof BodyOp) {
+      // No need to make a new instance if this is the tail end of a round trip.
+      return quillOp;
+    }
+
     const { attributes = null, delete: del, insert, retain } = quillOp;
 
     if (insert !== undefined) {
@@ -53,7 +58,7 @@ export default class BodyOp extends CommonBase {
         // key of the binding is the type of the embed, and the bound value is
         // an arbitrary value as defined by the type.
         const [key, value] = Object.entries(insert).next();
-        return BodyOp.op_insertEmbed(new Functor(key, value));
+        return BodyOp.op_insertEmbed(new Functor(key, value), attributes);
       }
     } else if (del !== undefined) {
       return BodyOp.op_delete(del);
@@ -82,13 +87,15 @@ export default class BodyOp extends CommonBase {
    *
    * @param {Functor} value Functor representing the embed type (functor name)
    *   and construction argument (functor argument).
+   * @param {object|null} [attributes = null] Attributes to apply to (or
+   *   associate with) the text, or `null` if there are no attributes to apply.
    * @returns {BodyOp} The corresponding operation.
    */
-  static op_insertEmbed(value) {
-    Functor.check(value);
-    value = DataUtil.deepFreeze(value);
+  static op_insertEmbed(value, attributes = null) {
+    value      = DataUtil.deepFreeze(Functor.check(value));
+    attributes = BodyOp._checkAndFreezeAttributes(attributes);
 
-    return new BodyOp(new Functor(BodyOp.INSERT_EMBED, value));
+    return new BodyOp(new Functor(BodyOp.INSERT_EMBED, value, attributes));
   }
 
   /**
@@ -101,9 +108,7 @@ export default class BodyOp extends CommonBase {
    */
   static op_insertText(text, attributes = null) {
     TString.nonEmpty(text);
-    if (attributes !== null) {
-      TObject.checkSimple(attributes);
-    }
+    attributes = BodyOp._checkAndFreezeAttributes(attributes);
 
     return new BodyOp(new Functor(BodyOp.INSERT_TEXT, text, attributes));
   }
@@ -120,9 +125,7 @@ export default class BodyOp extends CommonBase {
    */
   static op_retain(count, attributes = null) {
     TInt.min(count, 1);
-    if (attributes !== null) {
-      TObject.checkSimple(attributes);
-    }
+    attributes = BodyOp._checkAndFreezeAttributes(attributes);
 
     return new BodyOp(new Functor(BodyOp.RETAIN, count, attributes));
   }
@@ -266,5 +269,27 @@ export default class BodyOp extends CommonBase {
    */
   toString() {
     return `${this.constructor.name} { ${this._payload} }`;
+  }
+
+  /**
+   * Validates an `attributes` value, and returning a deep-frozen version of it
+   * if not already deep-frozen. Throws an error if invalid. In order to be
+   * valid, it must be either a simple data object or `null`.
+   *
+   * @param {*} value The (alleged) attributes.
+   * @returns {object|null} `value` if valid.
+   */
+  static _checkAndFreezeAttributes(value) {
+    if (value === null) {
+      return null;
+    }
+
+    try {
+      TObject.checkSimple(value);
+      return DataUtil.deepFreeze(value);
+    } catch (e) {
+      // More specific error.
+      throw Errors.bad_value(value, 'body attributes');
+    }
   }
 }
