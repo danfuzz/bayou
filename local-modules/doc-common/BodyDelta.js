@@ -5,9 +5,10 @@
 import Delta from 'quill-delta';
 
 import { TBoolean, TObject } from 'typecheck';
-import { DataUtil, Errors, ObjectUtil } from 'util-common';
+import { DataUtil, Errors } from 'util-common';
 
 import BaseDelta from './BaseDelta';
+import BodyOp from './BodyOp';
 
 /**
  * Always-frozen list of body OT operations. This uses Quill's `Delta` class to
@@ -16,42 +17,45 @@ import BaseDelta from './BaseDelta';
  * and high-level semantics, the _types_ of the arguments and results are not
  * actually the same. The methods `toQuillForm()` and `fromQuillForm()` can be
  * used to convert back and forth as needed.
- *
- * **Note:** As of this writing, there are no actual differences between the
- * operations of an instance of this class and those of a Quill `Delta`.
- * However, there is a very good chance that this will stop being the case in
- * the near future, once the operations of this class become more strongly
- * typed (and verified).
  */
 export default class BodyDelta extends BaseDelta {
   /**
    * Given a Quill `Delta` instance, returns an instance of this class with the
    * same operations.
    *
-   * @param {Delta} quillDelta Quill `Delta` instance.
+   * @param {Delta|array} quillDelta Quill `Delta` instance or array of Quill
+   *   delta ops.
    * @returns {BodyDelta} Equivalent instance of this class.
    */
   static fromQuillForm(quillDelta) {
-    try {
-      TObject.check(quillDelta, Delta);
-    } catch (e) {
-      if ((typeof quillDelta === 'object') && (quillDelta.constructor.name === 'Delta')) {
-        // The version of `Delta` used by Quill is different than the one we
-        // specified in our `package.json`. Even though it will often happen
-        // to work if we just let it slide (e.g. by snarfing `ops` out of the
-        // object and running with it), we don't want to end up shipping two
-        // versions of `Delta` to the client; so, instead of just blithely
-        // accepting this possibility, we reject it here and report an error
-        // which makes it easy to figure out what happened. Should you find
-        // yourself looking at this error, the right thing to do is look at
-        // Quill's `package.json` and update the `quill-delta` dependency in
-        // the this module to what you find there.
-        throw Errors.bad_use('Divergent versions of `quill-delta` package.');
+    let ops;
+
+    if (Array.isArray(quillDelta)) {
+      ops = quillDelta;
+    } else {
+      try {
+        TObject.check(quillDelta, Delta);
+        ops = quillDelta.ops;
+      } catch (e) {
+        if ((typeof quillDelta === 'object') && (quillDelta.constructor.name === 'Delta')) {
+          // The version of `Delta` used by Quill is different than the one we
+          // specified in our `package.json`. Even though it will often happen
+          // to work if we just let it slide (e.g. by snarfing `ops` out of the
+          // object and running with it), we don't want to end up shipping two
+          // versions of `Delta` to the client; so, instead of just blithely
+          // accepting this possibility, we reject it here and report an error
+          // which makes it easy to figure out what happened. Should you find
+          // yourself looking at this error, the right thing to do is look at
+          // Quill's `package.json` and update the `quill-delta` dependency in
+          // the this module to what you find there.
+          throw Errors.bad_use('Divergent versions of `quill-delta` package.');
+        }
+        throw e;
       }
-      throw e;
     }
 
-    return new BodyDelta(DataUtil.deepFreeze(quillDelta.ops));
+    ops = Object.freeze(ops.map(BodyOp.fromQuillForm));
+    return new BodyDelta(ops);
   }
 
   /**
@@ -128,7 +132,8 @@ export default class BodyDelta extends BaseDelta {
    * @returns {Delta} A Quill `Delta` with the same contents as `this`.
    */
   toQuillForm() {
-    return new Delta(this.ops);
+    const ops = this.ops.map(op => op.toQuillForm());
+    return new Delta(ops);
   }
 
   /**
@@ -173,7 +178,7 @@ export default class BodyDelta extends BaseDelta {
    */
   _impl_isDocument() {
     for (const op of this.ops) {
-      if (!ObjectUtil.hasOwnProperty(op, 'insert')) {
+      if (!op.isInsert()) {
         return false;
       }
     }
@@ -186,10 +191,6 @@ export default class BodyDelta extends BaseDelta {
    * this class.
    */
   static get _impl_opClassOrPredicate() {
-    function bodyOpPredicate(v) {
-      return ObjectUtil.isSimple(v) && DataUtil.isDeepFrozen(v);
-    }
-
-    return bodyOpPredicate;
+    return BodyOp;
   }
 }
