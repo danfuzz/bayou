@@ -197,14 +197,8 @@ export default class BaseDelta extends CommonBase {
   }
 
   /**
-   * {class|function} Class (constructor function) of operation objects to be
-   * used with instances of this class, _or_ a predicate which identifies valid
-   * operations. Subclasses must fill this in.
-   *
-   * **TODO:** The `function` form is allowed specifically so that `BodyDelta`
-   * can use simple objects as operations. `BodyDelta` should be changed to use
-   * proper class instances for its operations. Once that is done, {@link
-   * #checkOp} will be able to be simplified a bit.
+   * {class} Class (constructor function) of operation objects to be used with
+   * instances of this class.
    *
    * @abstract
    */
