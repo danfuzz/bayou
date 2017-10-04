@@ -56,20 +56,6 @@ export default class BaseDelta extends CommonBase {
   }
 
   /**
-   * Checks the given value to see if it is a valid array of operations for use
-   * with this class. This does _not_ check to see if the array is frozen.
-   *
-   * @param {*} value The alleged operation.
-   * @returns {array<object>} `value` if it is indeed valid.
-   * @throws {Error} if `value` is not valid.
-   */
-  static checkOpArray(value) {
-    // **Note:** `this` in the context of a static method is the class, not an
-    // instance.
-    return TArray.check(value, this.opClass.check);
-  }
-
-  /**
    * Constructs an instance.
    *
    * @param {array<object>} ops Array of operations. Each operation must be an
@@ -79,12 +65,14 @@ export default class BaseDelta extends CommonBase {
   constructor(ops) {
     super();
 
+    TArray.check(ops, this.constructor.opClass.check);
+
     if (!Object.isFrozen(ops)) {
       ops = Object.freeze(ops.slice());
     }
 
     /** {array<object>} Array of operations. */
-    this._ops = this.constructor.checkOpArray(ops);
+    this._ops = ops;
 
     Object.freeze(this);
   }
