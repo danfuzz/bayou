@@ -65,7 +65,7 @@ export default class BaseDelta extends CommonBase {
   constructor(ops) {
     super();
 
-    TArray.check(ops, this.constructor.opClass.check);
+    TArray.check(ops, op => this.constructor.opClass.check(op));
 
     if (!Object.isFrozen(ops)) {
       ops = Object.freeze(ops.slice());
