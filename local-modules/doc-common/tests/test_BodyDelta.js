@@ -9,18 +9,6 @@ import { inspect } from 'util';
 
 import { BodyDelta, BodyOp } from 'doc-common';
 
-/**
- * Helper to call `new BodyDelta()` with a deep-frozen argument.
- *
- * @param {*} ops Value to pass to the constructor, which doesn't have to be
- *   frozen.
- * @returns {BodyDelta} the result of calling the constructor with a deep-frozen
- *   version of `ops`.
- */
-function newWithFrozenOps(ops) {
-  return new BodyDelta(ops);
-}
-
 describe('doc-common/BodyDelta', () => {
   describe('.EMPTY', () => {
     const EMPTY = BodyDelta.EMPTY;
@@ -84,7 +72,7 @@ describe('doc-common/BodyDelta', () => {
 
       for (const v of values) {
         it(`should succeed for: ${inspect(v)}`, () => {
-          newWithFrozenOps(v);
+          new BodyDelta(v);
         });
       }
     });
@@ -107,7 +95,7 @@ describe('doc-common/BodyDelta', () => {
       for (const v of values) {
         it(`should fail for: ${inspect(v)}`, () => {
           assert.throws(() => new BodyDelta(v));
-          assert.throws(() => newWithFrozenOps(v));
+          assert.throws(() => new BodyDelta(v));
         });
       }
     });
@@ -135,14 +123,14 @@ describe('doc-common/BodyDelta', () => {
     });
 
     it('should reject calls when `this` is not a document', () => {
-      const delta = newWithFrozenOps([BodyOp.op_retain(10)]);
+      const delta = new BodyDelta([BodyOp.op_retain(10)]);
       const other = BodyDelta.EMPTY;
       assert.throws(() => delta.diff(other));
     });
 
     it('should reject calls when `other` is not a document', () => {
       const delta = BodyDelta.EMPTY;
-      const other = new newWithFrozenOps([BodyOp.op_retain(10)]);
+      const other = new BodyDelta([BodyOp.op_retain(10)]);
       assert.throws(() => delta.diff(other));
     });
 
@@ -157,9 +145,9 @@ describe('doc-common/BodyDelta', () => {
     // These tests take composition triples `origDoc + change = newDoc` and test
     // `compose()` and `diff()` in various combinations.
     function test(label, origDoc, change, newDoc) {
-      origDoc = newWithFrozenOps(origDoc);
-      change  = newWithFrozenOps(change);
-      newDoc  = newWithFrozenOps(newDoc);
+      origDoc = new BodyDelta(origDoc);
+      change  = new BodyDelta(change);
+      newDoc  = new BodyDelta(newDoc);
 
       describe(label, () => {
         it('should produce the expected composition', () => {
@@ -223,7 +211,7 @@ describe('doc-common/BodyDelta', () => {
 
       for (const v of values) {
         it(`should return \`true\` for: ${inspect(v)}`, () => {
-          assert.isTrue(newWithFrozenOps(v).isDocument());
+          assert.isTrue(new BodyDelta(v).isDocument());
         });
       }
     });
@@ -240,7 +228,7 @@ describe('doc-common/BodyDelta', () => {
 
       for (const v of values) {
         it(`should return \`false\` for: ${inspect(v)}`, () => {
-          assert.isFalse(newWithFrozenOps(v).isDocument());
+          assert.isFalse(new BodyDelta(v).isDocument());
         });
       }
     });
@@ -249,7 +237,7 @@ describe('doc-common/BodyDelta', () => {
   describe('isEmpty()', () => {
     describe('valid empty values', () => {
       const values = [
-        newWithFrozenOps([]),
+        new BodyDelta([]),
         BodyDelta.EMPTY,
       ];
 
@@ -269,7 +257,7 @@ describe('doc-common/BodyDelta', () => {
 
       for (const v of values) {
         it(`should return \`false\` for: ${inspect(v)}`, () => {
-          const delta = newWithFrozenOps(v);
+          const delta = new BodyDelta(v);
           assert.isFalse(delta.isEmpty());
         });
       }
@@ -279,7 +267,7 @@ describe('doc-common/BodyDelta', () => {
   describe('toQuillForm()', () => {
     it('should produce `Delta` instances with appropriately-converted ops', () => {
       function test(ops) {
-        const delta  = newWithFrozenOps(ops);
+        const delta  = new BodyDelta(ops);
         const result = delta.toQuillForm();
         assert.instanceOf(result, Delta);
         assert.strictEqual(result.ops, delta.ops);
@@ -315,8 +303,8 @@ describe('doc-common/BodyDelta', () => {
 
     it('should produce the expected transformations', () => {
       function test(d1, d2, expectedTrue, expectedFalse = expectedTrue) {
-        d1 = newWithFrozenOps(d1);
-        d2 = newWithFrozenOps(d2);
+        d1 = new BodyDelta(d1);
+        d2 = new BodyDelta(d2);
 
         const xformTrue  = d1.transform(d2, true);
         const xformFalse = d1.transform(d2, false);
