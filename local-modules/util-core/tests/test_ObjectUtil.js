@@ -80,6 +80,8 @@ describe('util-core/ObjectUtil', () => {
       test([1]);
       test(() => true);
       test(new Map());
+      test({ get x() { return 10; } });
+      test({ set x(v) { /*empty*/ } });
     });
 
     it('should return `false` for non-objects', () => {
