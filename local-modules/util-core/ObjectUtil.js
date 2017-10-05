@@ -12,7 +12,7 @@ import UtilityClass from './UtilityClass';
 export default class ObjectUtil extends UtilityClass {
   /**
    * Extracts the named keys from the given object, returning a new frozen
-   * simple object (frozen but not deep-frozen) with those bindings. It is an
+   * plain object (frozen but not deep-frozen) with those bindings. It is an
    * error if the given value doesn't have all of the named bindings.
    *
    * @param {object} value Object to extract bindings from.
@@ -51,12 +51,12 @@ export default class ObjectUtil extends UtilityClass {
   }
 
   /**
-   * Tests whether a value is a "simple object." A simple object is defined as
+   * Tests whether a value is a "plain object." A plain object is defined as
    * being a value of type `object` which is not `null` and whose direct
-   * prototype is `Object.prototype`. Notably, arrays are _not_ simple objects.
+   * prototype is `Object.prototype`. Notably, arrays are _not_ plain objects.
    *
    * @param {*} value Value to check.
-   * @returns {boolean} `true` if `value` is a simple object, or `false` if not.
+   * @returns {boolean} `true` if `value` is a plain object, or `false` if not.
    */
   static isSimple(value) {
     return (typeof value === 'object')

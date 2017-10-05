@@ -144,8 +144,8 @@ export default class Registry extends CommonBase {
       clazz = value.constructor;
       codecs = this._classToCodecs.get(clazz);
     } else {
-      // The value is a non-class-instance, including possibly being a simple
-      // object (e.g., `{florps: 10}`) or `null`.
+      // The value is a non-class-instance, including possibly being a plain
+      // object (e.g., `{ florps: 10 }`) or `null`.
       clazz = null;
       codecs = this._typeToCodecs.get(valueType);
     }

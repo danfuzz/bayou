@@ -94,7 +94,7 @@ export default class Caret extends CommonBase {
    * @param {string|Caret} sessionIdOrBase Session ID that identifies the caret,
    *   or a base caret instance which provides the session and default values
    *   for fields.
-   * @param {object} [fields = {}] Fields of the caret, as simple object mapping
+   * @param {object} [fields = {}] Fields of the caret, as plain object mapping
    *   field names to values.
    */
   constructor(sessionIdOrBase, fields = {}) {
@@ -292,7 +292,7 @@ export default class Caret extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toCodecArgs() {
-    // Convert the `_fields` map to a simple object for the purpose of coding.
+    // Convert the `_fields` map to a plain object for the purpose of coding.
     const fields = {};
     for (const [k, v] of this._fields) {
       fields[k] = v;

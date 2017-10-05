@@ -149,7 +149,7 @@ describe('util-core/DataUtil', () => {
       test({ a: 10, b: { c: { d: test } } });
     });
 
-    it('should fail if given a non-simple object or a composite that contains same', () => {
+    it('should fail if given a non-plain object or a composite that contains same', () => {
       function test(value) {
         assert.throws(() => { DataUtil.deepFreeze(value); });
       }
@@ -368,7 +368,7 @@ describe('util-core/DataUtil', () => {
     test(new Functor('x', new Functor('y', [])));
   });
 
-  it('should return `false` for non-simple objects or composites with same', () => {
+  it('should return `false` for non-plain objects or composites with same', () => {
     function test(value) {
       assert.isFalse(DataUtil.isDeepFrozen(value));
     }

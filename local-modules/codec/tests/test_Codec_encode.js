@@ -50,7 +50,7 @@ describe('api-common/Codec.encode*()r', () => {
       assert.strictEqual(encodeData(null), null);
     });
 
-    it('should pass through simple objects whose values are self-encoding as-is', () => {
+    it('should pass through as-is plain objects whose values are self-encoding', () => {
       assert.deepEqual(encodeData({}), {});
       assert.deepEqual(encodeData({ a: 10 }), { a: 10 });
       assert.deepEqual(encodeData({ b: false }), { b: false });
