@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt, TObject, TString } from 'typecheck';
-import { CommonBase, DataUtil, Errors, Functor } from 'util-common';
+import { CommonBase, DataUtil, Errors, Functor, ObjectUtil } from 'util-common';
 
 /**
  * Operation on a text document body.
@@ -42,19 +42,43 @@ export default class BodyOp extends CommonBase {
    * @returns {BodyOp} Corresponding instance of this class.
    */
   static fromQuillForm(quillOp) {
+    try {
+      TObject.plain(quillOp);
+    } catch (e) {
+      // More specific error.
+      throw Errors.bad_value(quillOp, 'Quill delta operation');
+    }
+
     const { attributes = null, delete: del, insert, retain } = quillOp;
+
+    const allowedSize = (attributes === null) ? 1 : 2;
+    if (Object.entries(quillOp).length !== allowedSize) {
+      // Extra bindings, of some sort.
+      throw Errors.bad_value(quillOp, 'Quill delta operation');
+    }
 
     if (insert !== undefined) {
       if (typeof insert === 'string') {
         return BodyOp.op_insertText(insert, attributes);
-      } else {
+      } else if (ObjectUtil.isPlain(insert)) {
         // An "embed" is represented as a single-binding plain object, where the
         // key of the binding is the type of the embed, and the bound value is
         // an arbitrary value as defined by the type.
-        const [[key, value]] = Object.entries(insert);
+        const [[key, value], ...rest] = Object.entries(insert);
+        if (rest.length !== 0) {
+          // Invalid form for an embed.
+          throw Errors.bad_value(quillOp, 'Quill delta operation');
+        }
         return BodyOp.op_insertEmbed(new Functor(key, value), attributes);
+      } else {
+        // Neither in text nor embed form.
+        throw Errors.bad_value(quillOp, 'Quill delta operation');
       }
     } else if (del !== undefined) {
+      if (attributes !== null) {
+        // Deletes can't have attributes.
+        throw Errors.bad_value(quillOp, 'Quill delta operation');
+      }
       return BodyOp.op_delete(del);
     } else if (retain !== undefined) {
       return BodyOp.op_retain(retain, attributes);
@@ -86,10 +110,10 @@ export default class BodyOp extends CommonBase {
    * @returns {BodyOp} The corresponding operation.
    */
   static op_insertEmbed(value, attributes = null) {
-    value      = DataUtil.deepFreeze(Functor.check(value));
-    attributes = BodyOp._checkAndFreezeAttributes(attributes);
+    value           = DataUtil.deepFreeze(Functor.check(value));
+    const attribArg = BodyOp._attributesArg(attributes);
 
-    return new BodyOp(new Functor(BodyOp.INSERT_EMBED, value, attributes));
+    return new BodyOp(new Functor(BodyOp.INSERT_EMBED, value, ...attribArg));
   }
 
   /**
@@ -102,9 +126,9 @@ export default class BodyOp extends CommonBase {
    */
   static op_insertText(text, attributes = null) {
     TString.nonEmpty(text);
-    attributes = BodyOp._checkAndFreezeAttributes(attributes);
+    const attribArg = BodyOp._attributesArg(attributes);
 
-    return new BodyOp(new Functor(BodyOp.INSERT_TEXT, text, attributes));
+    return new BodyOp(new Functor(BodyOp.INSERT_TEXT, text, ...attribArg));
   }
 
   /**
@@ -119,9 +143,9 @@ export default class BodyOp extends CommonBase {
    */
   static op_retain(count, attributes = null) {
     TInt.min(count, 1);
-    attributes = BodyOp._checkAndFreezeAttributes(attributes);
+    const attribArg = BodyOp._attributesArg(attributes);
 
-    return new BodyOp(new Functor(BodyOp.RETAIN, count, attributes));
+    return new BodyOp(new Functor(BodyOp.RETAIN, count, ...attribArg));
   }
 
   /**
@@ -161,17 +185,17 @@ export default class BodyOp extends CommonBase {
       }
 
       case BodyOp.INSERT_EMBED: {
-        const [value, attributes] = payload.args;
+        const [value, attributes = null] = payload.args;
         return Object.freeze({ opName, value, attributes });
       }
 
       case BodyOp.INSERT_TEXT: {
-        const [text, attributes] = payload.args;
+        const [text, attributes = null] = payload.args;
         return Object.freeze({ opName, text, attributes });
       }
 
       case BodyOp.RETAIN: {
-        const [count, attributes] = payload.args;
+        const [count, attributes = null] = payload.args;
         return Object.freeze({ opName, count, attributes });
       }
 
@@ -275,21 +299,23 @@ export default class BodyOp extends CommonBase {
   }
 
   /**
-   * Validates an `attributes` value, and returning a deep-frozen version of it
-   * if not already deep-frozen. Throws an error if invalid. In order to be
-   * valid, it must be either a plain data object or `null`.
+   * Converts an `attributes` argument value into an array (of zero or one
+   * element), suitable for passing to the payload constructor call, including
+   * deep freezing a non-`null` value (if not already deep-frozen). Throws an
+   * error if invalid. In order to be valid, it must be either a plain data
+   * object or `null`.
    *
    * @param {*} value The (alleged) attributes.
    * @returns {object|null} `value` if valid.
    */
-  static _checkAndFreezeAttributes(value) {
+  static _attributesArg(value) {
     if (value === null) {
-      return null;
+      return [];
     }
 
     try {
       TObject.plain(value);
-      return DataUtil.deepFreeze(value);
+      return [DataUtil.deepFreeze(value)];
     } catch (e) {
       // More specific error.
       throw Errors.bad_value(value, 'body attributes');
