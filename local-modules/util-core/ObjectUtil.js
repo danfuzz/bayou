@@ -58,7 +58,7 @@ export default class ObjectUtil extends UtilityClass {
    * @param {*} value Value to check.
    * @returns {boolean} `true` if `value` is a plain object, or `false` if not.
    */
-  static isSimple(value) {
+  static isPlain(value) {
     return (typeof value === 'object')
         && (value !== null)
         && (Object.getPrototypeOf(value) === Object.prototype);
