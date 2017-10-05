@@ -9,10 +9,9 @@ import { CommonBase, DataUtil, Errors, Functor } from 'util-common';
  * Operation on a text document body.
  *
  * This class is designed to bridge the two worlds of the Bayou OT framework and
- * Quill's ad-hoc-object-based deltas. As such, it defines a number of
- * properties that act as a Quill-compatible "front" for the underlying
- * operation payload, each one marked prominently to indicate that fact.
- * ***These properties should never be used directly by Bayou code.***
+ * Quill's ad-hoc-object-based deltas. As such, it defines a static method
+ * `fromQuillForm()` and an instance method `toQuillForm()` to convert back and
+ * forth as needed.
  */
 export default class BodyOp extends CommonBase {
   /** {string} Operation name for "delete" operations. */
@@ -49,11 +48,11 @@ export default class BodyOp extends CommonBase {
       if (typeof insert === 'string') {
         return BodyOp.op_insertText(insert, attributes);
       } else {
-        // An "embed" is represented as a single-binding `object`, where the
+        // An "embed" is represented as a single-binding plain object, where the
         // key of the binding is the type of the embed, and the bound value is
         // an arbitrary value as defined by the type.
-        const [key, value] = Object.entries(insert).next();
-        return BodyOp.op_insertEmbed(new Functor(key, value));
+        const [[key, value]] = Object.entries(insert);
+        return BodyOp.op_insertEmbed(new Functor(key, value), attributes);
       }
     } else if (del !== undefined) {
       return BodyOp.op_delete(del);
@@ -82,13 +81,15 @@ export default class BodyOp extends CommonBase {
    *
    * @param {Functor} value Functor representing the embed type (functor name)
    *   and construction argument (functor argument).
+   * @param {object|null} [attributes = null] Attributes to apply to (or
+   *   associate with) the text, or `null` if there are no attributes to apply.
    * @returns {BodyOp} The corresponding operation.
    */
-  static op_insertEmbed(value) {
-    Functor.check(value);
-    value = DataUtil.deepFreeze(value);
+  static op_insertEmbed(value, attributes = null) {
+    value      = DataUtil.deepFreeze(Functor.check(value));
+    attributes = BodyOp._checkAndFreezeAttributes(attributes);
 
-    return new BodyOp(new Functor(BodyOp.INSERT_EMBED, value));
+    return new BodyOp(new Functor(BodyOp.INSERT_EMBED, value, attributes));
   }
 
   /**
@@ -101,9 +102,7 @@ export default class BodyOp extends CommonBase {
    */
   static op_insertText(text, attributes = null) {
     TString.nonEmpty(text);
-    if (attributes !== null) {
-      TObject.checkSimple(attributes);
-    }
+    attributes = BodyOp._checkAndFreezeAttributes(attributes);
 
     return new BodyOp(new Functor(BodyOp.INSERT_TEXT, text, attributes));
   }
@@ -120,9 +119,7 @@ export default class BodyOp extends CommonBase {
    */
   static op_retain(count, attributes = null) {
     TInt.min(count, 1);
-    if (attributes !== null) {
-      TObject.checkSimple(attributes);
-    }
+    attributes = BodyOp._checkAndFreezeAttributes(attributes);
 
     return new BodyOp(new Functor(BodyOp.RETAIN, count, attributes));
   }
@@ -142,58 +139,9 @@ export default class BodyOp extends CommonBase {
     Object.freeze(this);
   }
 
-  /**
-   * {object|undefined} **Quill interop:** The Quill-compatible `attributes`
-   * property of the operation, or `undefined` if either set to `null` or not
-   * defined for this instance.
-   */
-  get attributes() {
-    return this.props.attributes || undefined;
-  }
-
-  /**
-   * {Int|undefined} **Quill interop:** The Quill-compatible `delete` property
-   * of the operation, or `undefined` if not defined for this instance.
-   */
-  get delete() {
-    const { opName, count } = this.props;
-
-    return (opName === BodyOp.DELETE) ? count : undefined;
-  }
-
-  /**
-   * {string|Int|undefined} **Quill interop:** The Quill-compatible `insert`
-   * property of the operation, or `undefined` if not defined for this instance.
-   */
-  get insert() {
-    const { opName, text, value } = this.props;
-
-    switch (opName) {
-      case BodyOp.INSERT_EMBED: {
-        return { [value.name]: value.args[0] };
-      }
-      case BodyOp.INSERT_TEXT: {
-        return text;
-      }
-      default: {
-        return undefined;
-      }
-    }
-  }
-
   /** {Functor} The operation payload (name and arguments). */
   get payload() {
     return this._payload;
-  }
-
-  /**
-   * {Int|undefined} **Quill interop:** The Quill-compatible `retain` property
-   * of the operation, or `undefined` if not defined for this instance.
-   */
-  get retain() {
-    const { opName, count } = this.props;
-
-    return (opName === BodyOp.RETAIN) ? count : undefined;
   }
 
   /**
@@ -213,8 +161,8 @@ export default class BodyOp extends CommonBase {
       }
 
       case BodyOp.INSERT_EMBED: {
-        const [value] = payload.args;
-        return Object.freeze({ opName, value });
+        const [value, attributes] = payload.args;
+        return Object.freeze({ opName, value, attributes });
       }
 
       case BodyOp.INSERT_TEXT: {
@@ -251,6 +199,18 @@ export default class BodyOp extends CommonBase {
   }
 
   /**
+   * Indicates whether or not this instance is an "insert" operation of some
+   * sort.
+   *
+   * @returns {boolean} `true` if this instance is an "insert," or `false` if
+   *   not.
+   */
+  isInsert() {
+    const opName = this._payload.name;
+    return (opName === BodyOp.INSERT_TEXT) || (opName === BodyOp.INSERT_EMBED);
+  }
+
+  /**
    * Converts this instance to codec reconstruction arguments.
    *
    * @returns {array} Reconstruction arguments.
@@ -260,11 +220,79 @@ export default class BodyOp extends CommonBase {
   }
 
   /**
+   * Produces a Quill `Delta` operation (per se) with equivalent semantics to
+   * this this instance.
+   *
+   * @returns {object} A Quill `Delta` operation with the same semantics as
+   *   `this`.
+   */
+  toQuillForm() {
+    const props = this.props;
+
+    switch (props.opName) {
+      case BodyOp.DELETE: {
+        return { delete: props.count };
+      }
+
+      case BodyOp.INSERT_EMBED: {
+        const { value: { name, args: [arg0] }, attributes } = props;
+        const insert = { [name]: arg0 };
+
+        return attributes
+          ? { insert, attributes }
+          : { insert };
+      }
+
+      case BodyOp.INSERT_TEXT: {
+        const { text: insert, attributes } = props;
+
+        return attributes
+          ? { insert, attributes }
+          : { insert };
+      }
+
+      case BodyOp.RETAIN: {
+        const { count: retain, attributes } = props;
+
+        return attributes
+          ? { retain, attributes }
+          : { retain };
+      }
+
+      default: {
+        throw Errors.wtf(`Weird operation name: ${props.opName}`);
+      }
+    }
+  }
+
+  /**
    * Gets a human-oriented string representation of this instance.
    *
    * @returns {string} The human-oriented representation.
    */
   toString() {
     return `${this.constructor.name} { ${this._payload} }`;
+  }
+
+  /**
+   * Validates an `attributes` value, and returning a deep-frozen version of it
+   * if not already deep-frozen. Throws an error if invalid. In order to be
+   * valid, it must be either a simple data object or `null`.
+   *
+   * @param {*} value The (alleged) attributes.
+   * @returns {object|null} `value` if valid.
+   */
+  static _checkAndFreezeAttributes(value) {
+    if (value === null) {
+      return null;
+    }
+
+    try {
+      TObject.simple(value);
+      return DataUtil.deepFreeze(value);
+    } catch (e) {
+      // More specific error.
+      throw Errors.bad_value(value, 'body attributes');
+    }
   }
 }

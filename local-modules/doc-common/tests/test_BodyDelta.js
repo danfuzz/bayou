@@ -7,20 +7,8 @@ import { describe, it } from 'mocha';
 import Delta from 'quill-delta';
 import { inspect } from 'util';
 
-import { BodyDelta } from 'doc-common';
-import { DataUtil } from 'util-common';
-
-/**
- * Helper to call `new BodyDelta()` with a deep-frozen argument.
- *
- * @param {*} ops Value to pass to the constructor, which doesn't have to be
- *   frozen.
- * @returns {BodyDelta} the result of calling the constructor with a deep-frozen
- *   version of `ops`.
- */
-function newWithFrozenOps(ops) {
-  return new BodyDelta(DataUtil.deepFreeze(ops));
-}
+import { BodyDelta, BodyOp } from 'doc-common';
+import { Functor } from 'util-common';
 
 describe('doc-common/BodyDelta', () => {
   describe('.EMPTY', () => {
@@ -48,12 +36,16 @@ describe('doc-common/BodyDelta', () => {
   });
 
   describe('fromQuillForm()', () => {
-    it('should return an instance with equal `ops`', () => {
-      const ops        = [{ insert: 'foo' }, { retain: 10 }, { insert: 'bar' }];
+    it('should return an instance with appropriately-converted `ops`', () => {
+      const ops        = [{ insert: 'foo' }, { retain: 10 }, { insert: 'bar', attributes: { bold: true } }];
       const quillDelta = new Delta(ops);
       const result     = BodyDelta.fromQuillForm(quillDelta);
 
-      assert.deepEqual(result.ops, ops);
+      assert.deepEqual(result.ops, [
+        BodyOp.op_insertText('foo'),
+        BodyOp.op_retain(10),
+        BodyOp.op_insertText('bar', { bold: true })
+      ]);
     });
 
     it('should reject non-quill-delta arguments', () => {
@@ -65,33 +57,27 @@ describe('doc-common/BodyDelta', () => {
       test(undefined);
       test(false);
       test('blort');
-      test({ insert: '123' });
-      test([{ insert: '123' }]);
+      test(BodyOp.op_insertText('123'));
+      test([BodyOp.op_insertText('123')]);
       test(BodyDelta.EMPTY);
     });
   });
 
   describe('constructor()', () => {
     describe('valid arguments', () => {
-      // This one is not a valid `ops` array, but per docs, the constructor
-      // doesn't inspect the contents of `ops` arrays other than seeing that
-      // elements are all simple objects, and so using this value should succeed
-      // (for some values of the terms "should" and "succeed").
-      const invalidNonEmptyOps = [{ a: 10 }, { b: 'florp' }];
-
       const values = [
         [],
-        [{ insert: 'x' }],
-        [{ delete: 123 }],
-        [{ retain: 123 }],
-        [{ insert: 'x', attributes: { bold: true } }],
-        [{ insert: 'florp' }, { insert: 'x', attributes: { bold: true } }],
-        invalidNonEmptyOps
+        [BodyOp.op_insertText('x')],
+        [BodyOp.op_insertText('x', { bold: true })],
+        [BodyOp.op_delete(123)],
+        [BodyOp.op_retain(123)],
+        [BodyOp.op_retain(123, { bold: true })],
+        [BodyOp.op_insertText('x'), BodyOp.op_insertText('y', { bold: true })]
       ];
 
       for (const v of values) {
         it(`should succeed for: ${inspect(v)}`, () => {
-          newWithFrozenOps(v);
+          new BodyDelta(v);
         });
       }
     });
@@ -100,12 +86,11 @@ describe('doc-common/BodyDelta', () => {
       const values = [
         null,
         undefined,
+        false,
         123,
         'florp',
-        { insert: 123 },
+        { insert: 'x' },
         new Map(),
-        [null],
-        [undefined],
         ['x'],
         [1, 2, 3]
       ];
@@ -113,7 +98,7 @@ describe('doc-common/BodyDelta', () => {
       for (const v of values) {
         it(`should fail for: ${inspect(v)}`, () => {
           assert.throws(() => new BodyDelta(v));
-          assert.throws(() => newWithFrozenOps(v));
+          assert.throws(() => new BodyDelta([v]));
         });
       }
     });
@@ -141,14 +126,14 @@ describe('doc-common/BodyDelta', () => {
     });
 
     it('should reject calls when `this` is not a document', () => {
-      const delta = newWithFrozenOps([{ retain: 10 }]);
+      const delta = new BodyDelta([BodyOp.op_retain(10)]);
       const other = BodyDelta.EMPTY;
       assert.throws(() => delta.diff(other));
     });
 
     it('should reject calls when `other` is not a document', () => {
       const delta = BodyDelta.EMPTY;
-      const other = new newWithFrozenOps([{ retain: 10 }]);
+      const other = new BodyDelta([BodyOp.op_retain(10)]);
       assert.throws(() => delta.diff(other));
     });
 
@@ -163,9 +148,9 @@ describe('doc-common/BodyDelta', () => {
     // These tests take composition triples `origDoc + change = newDoc` and test
     // `compose()` and `diff()` in various combinations.
     function test(label, origDoc, change, newDoc) {
-      origDoc = newWithFrozenOps(origDoc);
-      change  = newWithFrozenOps(change);
-      newDoc  = newWithFrozenOps(newDoc);
+      origDoc = new BodyDelta(origDoc);
+      change  = new BodyDelta(change);
+      newDoc  = new BodyDelta(newDoc);
 
       describe(label, () => {
         it('should produce the expected composition', () => {
@@ -190,63 +175,63 @@ describe('doc-common/BodyDelta', () => {
     }
 
     test('full replacement',
-      [{ insert: '111' }],
-      [{ insert: '222' }, { delete: 3 }],
-      [{ insert: '222' }]);
+      [BodyOp.op_insertText('111')],
+      [BodyOp.op_insertText('222'), BodyOp.op_delete(3)],
+      [BodyOp.op_insertText('222')]);
     test('insert at start',
-      [{ insert: '111' }],
-      [{ insert: '222' }],
-      [{ insert: '222111' }]);
+      [BodyOp.op_insertText('111')],
+      [BodyOp.op_insertText('222')],
+      [BodyOp.op_insertText('222111')]);
     test('append at end',
-      [{ insert: '111' }],
-      [{ retain: 3 }, { insert: '222' }],
-      [{ insert: '111222' }]);
+      [BodyOp.op_insertText('111')],
+      [BodyOp.op_retain(3), BodyOp.op_insertText('222')],
+      [BodyOp.op_insertText('111222')]);
     test('surround',
-      [{ insert: '111' }],
-      [{ insert: '222' }, { retain: 3 }, { insert: '333' }],
-      [{ insert: '222111333' }]);
+      [BodyOp.op_insertText('111')],
+      [BodyOp.op_insertText('222'), BodyOp.op_retain(3), BodyOp.op_insertText('333')],
+      [BodyOp.op_insertText('222111333')]);
     test('replace one middle bit',
-      [{ insert: 'Drink more Slurm.' }],
-      [{ retain: 6 }, { insert: 'LESS' }, { delete: 4 }],
-      [{ insert: 'Drink LESS Slurm.' }]);
+      [BodyOp.op_insertText('Drink more Slurm.')],
+      [BodyOp.op_retain(6), BodyOp.op_insertText('LESS'), BodyOp.op_delete(4)],
+      [BodyOp.op_insertText('Drink LESS Slurm.')]);
     test('replace two middle bits',
-      [{ insert: '[[hello]] [[goodbye]]' }],
+      [BodyOp.op_insertText('[[hello]] [[goodbye]]')],
       [
-        { retain: 2 }, { insert: 'YO' }, { delete: 5 }, { retain: 5 },
-        { insert: 'LATER' }, { delete: 7 }
+        BodyOp.op_retain(2), BodyOp.op_insertText('YO'), BodyOp.op_delete(5), BodyOp.op_retain(5),
+        BodyOp.op_insertText('LATER'), BodyOp.op_delete(7)
       ],
-      [{ insert: '[[YO]] [[LATER]]' }]);
+      [BodyOp.op_insertText('[[YO]] [[LATER]]')]);
   });
 
   describe('isDocument()', () => {
     describe('`true` cases', () => {
       const values = [
         [],
-        [{ insert: 'line 1' }],
-        [{ insert: 'line 1' }, { insert: '\n' }],
-        [{ insert: 'line 1' }, { insert: '\n' }, { insert: 'line 2' }]
+        [BodyOp.op_insertText('line 1')],
+        [BodyOp.op_insertText('line 1'), BodyOp.op_insertText('\n')],
+        [BodyOp.op_insertText('line 1'), BodyOp.op_insertText('\n'), BodyOp.op_insertText('line 2')]
       ];
 
       for (const v of values) {
         it(`should return \`true\` for: ${inspect(v)}`, () => {
-          assert.isTrue(newWithFrozenOps(v).isDocument());
+          assert.isTrue(new BodyDelta(v).isDocument());
         });
       }
     });
 
     describe('`false` cases', () => {
       const values = [
-        [{ retain: 37 }],
-        [{ delete: 914 }],
-        [{ retain: 37, attributes: { bold: true } }],
-        [{ insert: 'line 1' }, { retain: 9 }],
-        [{ insert: 'line 1' }, { retain: 14 }, { insert: '\n' }],
-        [{ insert: 'line 1' }, { insert: '\n' }, { retain: 23 }, { insert: 'line 2' }]
+        [BodyOp.op_retain(37)],
+        [BodyOp.op_delete(914)],
+        [BodyOp.op_retain(37, { bold: true })],
+        [BodyOp.op_insertText('line 1'), BodyOp.op_retain(9)],
+        [BodyOp.op_insertText('line 1'), BodyOp.op_retain(14), BodyOp.op_insertText('\n')],
+        [BodyOp.op_insertText('line 1'), BodyOp.op_insertText('\n'), BodyOp.op_retain(23), BodyOp.op_insertText('line 2')]
       ];
 
       for (const v of values) {
         it(`should return \`false\` for: ${inspect(v)}`, () => {
-          assert.isFalse(newWithFrozenOps(v).isDocument());
+          assert.isFalse(new BodyDelta(v).isDocument());
         });
       }
     });
@@ -255,7 +240,7 @@ describe('doc-common/BodyDelta', () => {
   describe('isEmpty()', () => {
     describe('valid empty values', () => {
       const values = [
-        newWithFrozenOps([]),
+        new BodyDelta([]),
         BodyDelta.EMPTY,
       ];
 
@@ -268,14 +253,14 @@ describe('doc-common/BodyDelta', () => {
 
     describe('valid non-empty values', () => {
       const values = [
-        [{ insert: 'x' }],
-        [{ insert: 'line 1' }, { insert: '\n' }, { insert: 'line 2' }],
-        [{ retain: 100 }]
+        [BodyOp.op_insertText('x')],
+        [BodyOp.op_insertText('line 1'), BodyOp.op_insertText('\n'), BodyOp.op_insertText('line 2')],
+        [BodyOp.op_retain(100)]
       ];
 
       for (const v of values) {
         it(`should return \`false\` for: ${inspect(v)}`, () => {
-          const delta = newWithFrozenOps(v);
+          const delta = new BodyDelta(v);
           assert.isFalse(delta.isEmpty());
         });
       }
@@ -283,17 +268,32 @@ describe('doc-common/BodyDelta', () => {
   });
 
   describe('toQuillForm()', () => {
-    it('should produce `Delta` instances with strict-equal ops', () => {
+    it('should produce `Delta` instances with appropriately-converted ops', () => {
       function test(ops) {
-        const delta  = newWithFrozenOps(ops);
+        const delta  = new BodyDelta(ops);
         const result = delta.toQuillForm();
         assert.instanceOf(result, Delta);
-        assert.strictEqual(result.ops, delta.ops);
+
+        const origOps = delta.ops;
+        const quillOps = result.ops;
+
+        assert.strictEqual(origOps.length, quillOps.length);
+        for (let i = 0; i < origOps.length; i++) {
+          const op1 = origOps[i].toQuillForm();
+          const op2 = quillOps[i];
+          assert.deepEqual(op2, op1);
+        }
       }
 
       test([]);
-      test([{ insert: 'blort' }]);
-      test([{ retain: 123 }]);
+      test([BodyOp.op_insertEmbed(new Functor('zither', 123))]);
+      test([BodyOp.op_insertText('blort')]);
+      test([BodyOp.op_retain(123)]);
+      test([
+        BodyOp.op_retain(123, { bold: true }),
+        BodyOp.op_delete(10),
+        BodyOp.op_insertText('foo')
+      ]);
     });
   });
 
@@ -321,8 +321,8 @@ describe('doc-common/BodyDelta', () => {
 
     it('should produce the expected transformations', () => {
       function test(d1, d2, expectedTrue, expectedFalse = expectedTrue) {
-        d1 = newWithFrozenOps(d1);
-        d2 = newWithFrozenOps(d2);
+        d1 = new BodyDelta(d1);
+        d2 = new BodyDelta(d2);
 
         const xformTrue  = d1.transform(d2, true);
         const xformFalse = d1.transform(d2, false);
@@ -332,27 +332,27 @@ describe('doc-common/BodyDelta', () => {
       }
 
       test(
-        [{ insert: 'blort' }],
-        [{ insert: 'blort' }],
-        [{ retain: 5 }, { insert: 'blort' }],
-        [{ insert: 'blort' }]);
+        [BodyOp.op_insertText('blort')],
+        [BodyOp.op_insertText('blort')],
+        [BodyOp.op_retain(5), BodyOp.op_insertText('blort')],
+        [BodyOp.op_insertText('blort')]);
       test(
-        [{ delete: 10 }],
-        [{ delete: 10 }],
+        [BodyOp.op_delete(10)],
+        [BodyOp.op_delete(10)],
         []);
       test(
-        [{ delete: 10 }],
-        [{ delete: 10 }, { insert: 'florp' }],
-        [{ insert: 'florp' }]);
+        [BodyOp.op_delete(10)],
+        [BodyOp.op_delete(10), BodyOp.op_insertText('florp')],
+        [BodyOp.op_insertText('florp')]);
       test(
-        [{ insert: '111' }],
-        [{ insert: '222' }],
-        [{ retain: 3 }, { insert: '222' }],
-        [{ insert: '222' }]);
+        [BodyOp.op_insertText('111')],
+        [BodyOp.op_insertText('222')],
+        [BodyOp.op_retain(3), BodyOp.op_insertText('222')],
+        [BodyOp.op_insertText('222')]);
       test(
-        [{ retain: 10 }, { insert: '111' }],
-        [{ retain: 20 }, { insert: '222' }],
-        [{ retain: 23 }, { insert: '222' }]);
+        [BodyOp.op_retain(10), BodyOp.op_insertText('111')],
+        [BodyOp.op_retain(20), BodyOp.op_insertText('222')],
+        [BodyOp.op_retain(23), BodyOp.op_insertText('222')]);
     });
   });
 });
