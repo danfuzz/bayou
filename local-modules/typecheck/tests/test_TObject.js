@@ -72,6 +72,8 @@ describe('typecheck/TObject', () => {
       test([1]);
       test(() => true);
       test(new Map());
+      test({ get x() { return 'x'; } });
+      test({ set x(v) { /*empty*/ } });
     });
 
     it('should reject non-objects', () => {

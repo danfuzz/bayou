@@ -33,9 +33,7 @@ export default class TObject extends UtilityClass {
    * @returns {object} `value`.
    */
   static plain(value) {
-    if (   (typeof value === 'object')
-        && (value !== null)
-        && (Object.getPrototypeOf(value) === Object.prototype)) {
+    if (ObjectUtil.isPlain(value)) {
       return value;
     }
 
