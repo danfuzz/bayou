@@ -107,7 +107,7 @@ export default class SpecialCodecs extends UtilityClass {
   }
 
   /** {ItemCodec} Codec used for coding plain objects. */
-  static get SIMPLE_OBJECT() {
+  static get PLAIN_OBJECT() {
     return new ItemCodec(ItemCodec.tagFromType('object'), 'object',
       this._objectPredicate, this._objectEncode, this._objectDecode);
   }
