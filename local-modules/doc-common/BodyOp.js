@@ -146,7 +146,7 @@ export default class BodyOp extends CommonBase {
 
   /**
    * {object} The properties of this operation, as a conveniently-accessed
-   * simple object. `opName` is always bound to the operation name. Other
+   * plain object. `opName` is always bound to the operation name. Other
    * bindings depend on the operation name. Guaranteed to be an immutable
    * object.
    */
@@ -277,7 +277,7 @@ export default class BodyOp extends CommonBase {
   /**
    * Validates an `attributes` value, and returning a deep-frozen version of it
    * if not already deep-frozen. Throws an error if invalid. In order to be
-   * valid, it must be either a simple data object or `null`.
+   * valid, it must be either a plain data object or `null`.
    *
    * @param {*} value The (alleged) attributes.
    * @returns {object|null} `value` if valid.
@@ -288,7 +288,7 @@ export default class BodyOp extends CommonBase {
     }
 
     try {
-      TObject.simple(value);
+      TObject.plain(value);
       return DataUtil.deepFreeze(value);
     } catch (e) {
       // More specific error.

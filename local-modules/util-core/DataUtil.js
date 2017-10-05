@@ -165,7 +165,7 @@ export default class DataUtil extends UtilityClass {
     switch (proto1) {
       case Object.prototype:
       case Array.prototype: {
-        // One of the acceptable standard types (either array or simple object).
+        // One of the acceptable standard types (either array or plain object).
         // We still need to compare the properties / elements.
 
         const names1 = Object.getOwnPropertyNames(value1);
@@ -255,7 +255,7 @@ export default class DataUtil extends UtilityClass {
       case Object.prototype:
       case Array.prototype: {
         // We have a frozen composite of one of the acceptable standard types
-        // (either array or simple object). We still need to check the
+        // (either array or plain object). We still need to check the
         // properties / elements.
 
         for (const k of Object.getOwnPropertyNames(value)) {

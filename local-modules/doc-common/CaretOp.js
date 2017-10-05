@@ -89,7 +89,7 @@ export default class CaretOp extends CommonBase {
 
   /**
    * {object} The properties of this operation, as a conveniently-accessed
-   * simple object. `opName` is always bound to the operation name. Other
+   * plain object. `opName` is always bound to the operation name. Other
    * bindings depend on the operation name. Guaranteed to be an immutable
    * object.
    */

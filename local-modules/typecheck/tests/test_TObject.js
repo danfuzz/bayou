@@ -51,10 +51,10 @@ describe('typecheck/TObject', () => {
     });
   });
 
-  describe('simple()', () => {
-    it('should accept simple objects', () => {
+  describe('plain()', () => {
+    it('should accept plain objects', () => {
       function test(value) {
-        assert.strictEqual(TObject.simple(value), value);
+        assert.strictEqual(TObject.plain(value), value);
       }
 
       test({});
@@ -63,9 +63,9 @@ describe('typecheck/TObject', () => {
       test({ [Symbol('blort')]: [1, 2, 3] });
     });
 
-    it('should reject non-simple objects', () => {
+    it('should reject non-plain objects', () => {
       function test(value) {
-        assert.throws(() => { TObject.simple(value); });
+        assert.throws(() => { TObject.plain(value); });
       }
 
       test([]);
@@ -76,7 +76,7 @@ describe('typecheck/TObject', () => {
 
     it('should reject non-objects', () => {
       function test(value) {
-        assert.throws(() => { TObject.simple(value); });
+        assert.throws(() => { TObject.plain(value); });
       }
 
       test(null);
@@ -113,7 +113,7 @@ describe('typecheck/TObject', () => {
       assert.throws(() => TObject.withExactKeys(value, ['a', 'b', 'c']));
     });
 
-    it('should reject non-simple objects', () => {
+    it('should reject non-plain objects', () => {
       assert.throws(() => TObject.withExactKeys(new Map(),  []));
       assert.throws(() => TObject.withExactKeys(['z'],      []));
       assert.throws(() => TObject.withExactKeys(() => true, []));

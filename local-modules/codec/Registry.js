@@ -45,7 +45,7 @@ export default class Registry extends CommonBase {
     // Register all the special codecs.
     this.registerCodec(SpecialCodecs.ARRAY);
     this.registerCodec(SpecialCodecs.FUNCTOR);
-    this.registerCodec(SpecialCodecs.SIMPLE_OBJECT);
+    this.registerCodec(SpecialCodecs.PLAIN_OBJECT);
     this.registerCodec(SpecialCodecs.selfRepresentative('boolean'));
     this.registerCodec(SpecialCodecs.selfRepresentative('null'));
     this.registerCodec(SpecialCodecs.selfRepresentative('number'));
@@ -144,8 +144,8 @@ export default class Registry extends CommonBase {
       clazz = value.constructor;
       codecs = this._classToCodecs.get(clazz);
     } else {
-      // The value is a non-class-instance, including possibly being a simple
-      // object (e.g., `{florps: 10}`) or `null`.
+      // The value is a non-class-instance, including possibly being a plain
+      // object (e.g., `{ florps: 10 }`) or `null`.
       clazz = null;
       codecs = this._typeToCodecs.get(valueType);
     }

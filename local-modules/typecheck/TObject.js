@@ -25,25 +25,25 @@ export default class TObject extends UtilityClass {
   }
 
   /**
-   * Checks that a value is of type `Object` and is furthermore a simple
-   * object, which is to say, not any of an array, a function, or an instance of
-   * a class other than `Object` itself.
+   * Checks that a value is of type `Object` and is furthermore a plain object,
+   * which is to say, not any of an array, a function, or an instance of a class
+   * other than `Object` itself.
    *
    * @param {*} value Value to check.
    * @returns {object} `value`.
    */
-  static simple(value) {
+  static plain(value) {
     if (   (typeof value === 'object')
         && (value !== null)
         && (Object.getPrototypeOf(value) === Object.prototype)) {
       return value;
     }
 
-    throw Errors.bad_value(value, 'simple object');
+    throw Errors.bad_value(value, 'plain object');
   }
 
   /**
-   * Checks a value of type `Object`, which must be a simple object with exactly
+   * Checks a value of type `Object`, which must be a plain object with exactly
    * the indicated set of keys as "own" properties.
    *
    * @param {*} value Value to check.
@@ -51,7 +51,7 @@ export default class TObject extends UtilityClass {
    * @returns {object} `value`.
    */
   static withExactKeys(value, keys) {
-    TObject.simple(value);
+    TObject.plain(value);
 
     // Make a copy, check for and delete allowed keys, and see if anything's
     // left.

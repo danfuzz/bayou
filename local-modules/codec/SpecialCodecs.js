@@ -106,14 +106,14 @@ export default class SpecialCodecs extends UtilityClass {
     return [value.name, ...(value.args)].map(subEncode);
   }
 
-  /** {ItemCodec} Codec used for coding simple objects. */
-  static get SIMPLE_OBJECT() {
+  /** {ItemCodec} Codec used for coding plain objects. */
+  static get PLAIN_OBJECT() {
     return new ItemCodec(ItemCodec.tagFromType('object'), 'object',
       this._objectPredicate, this._objectEncode, this._objectDecode);
   }
 
   /**
-   * Decodes a simple object.
+   * Decodes a plain object.
    *
    * @param {object} payload Construction payload as previously produced by
    *   `_objectEncode()`.
@@ -132,7 +132,7 @@ export default class SpecialCodecs extends UtilityClass {
   }
 
   /**
-   * Encodes a simple object.
+   * Encodes a plain object.
    *
    * @param {object} value Object to encode.
    * @param {function} subEncode Function to call to encode component values
@@ -150,7 +150,7 @@ export default class SpecialCodecs extends UtilityClass {
   }
 
   /**
-   * Checks a value for encodability as a simple object.
+   * Checks a value for encodability as a plain object.
    *
    * @param {array<*>} value Value to (potentially) encode.
    * @returns {boolean} `true` iff `value` can be encoded.

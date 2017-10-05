@@ -37,7 +37,7 @@ describe('api-common/Codec.decode*()', () => {
       assert.isNull(decodeData(null));
     });
 
-    it('should accept simple objects', () => {
+    it('should accept plain objects', () => {
       // The tests here are of objects whose values all decode to themselves.
       assert.deepEqual(decodeData({}), {});
       assert.deepEqual(decodeData({ a: true, b: 'yo' }), { a: true, b: 'yo' });

@@ -59,10 +59,10 @@ describe('util-core/ObjectUtil', () => {
     });
   });
 
-  describe('isSimple()', () => {
-    it('should return `true` for simple objects', () => {
+  describe('isPlain()', () => {
+    it('should return `true` for plain objects', () => {
       function test(value) {
-        assert.isTrue(ObjectUtil.isSimple(value));
+        assert.isTrue(ObjectUtil.isPlain(value));
       }
 
       test({});
@@ -71,9 +71,9 @@ describe('util-core/ObjectUtil', () => {
       test({ [Symbol('blort')]: [1, 2, 3] });
     });
 
-    it('should return `false` for non-simple objects', () => {
+    it('should return `false` for non-plain objects', () => {
       function test(value) {
-        assert.isFalse(ObjectUtil.isSimple(value));
+        assert.isFalse(ObjectUtil.isPlain(value));
       }
 
       test([]);
@@ -84,7 +84,7 @@ describe('util-core/ObjectUtil', () => {
 
     it('should return `false` for non-objects', () => {
       function test(value) {
-        assert.isFalse(ObjectUtil.isSimple(value));
+        assert.isFalse(ObjectUtil.isPlain(value));
       }
 
       test(null);
