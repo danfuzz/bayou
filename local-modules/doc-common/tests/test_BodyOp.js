@@ -122,7 +122,7 @@ describe('doc-common/BodyOp', () => {
       const attrib = { bold: true };
 
       const result1 = BodyOp.op_insertEmbed(embed);
-      assert.deepEqual(result1.payload, new Functor('insert_embed', embed, null));
+      assert.deepEqual(result1.payload, new Functor('insert_embed', embed));
 
       const result2 = BodyOp.op_insertEmbed(embed, attrib);
       assert.deepEqual(result2.payload, new Functor('insert_embed', embed, attrib));
@@ -134,7 +134,7 @@ describe('doc-common/BodyOp', () => {
       const attrib = { italic: true, bold: null };
 
       const result1 = BodyOp.op_insertText('florp');
-      assert.deepEqual(result1.payload, new Functor('insert_text', 'florp', null));
+      assert.deepEqual(result1.payload, new Functor('insert_text', 'florp'));
 
       const result2 = BodyOp.op_insertText('like', attrib);
       assert.deepEqual(result2.payload, new Functor('insert_text', 'like', attrib));
@@ -146,7 +146,7 @@ describe('doc-common/BodyOp', () => {
       const attrib = { header: 1 };
 
       const result1 = BodyOp.op_retain(123);
-      assert.deepEqual(result1.payload, new Functor('retain', 123, null));
+      assert.deepEqual(result1.payload, new Functor('retain', 123));
 
       const result2 = BodyOp.op_retain(456, attrib);
       assert.deepEqual(result2.payload, new Functor('retain', 456, attrib));
