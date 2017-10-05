@@ -7,6 +7,7 @@ import { Codec } from 'codec';
 import AuthorId from './AuthorId';
 import BaseChange from './BaseChange';
 import BaseDelta from './BaseDelta';
+import BaseOp from './BaseOp';
 import BaseSnapshot from './BaseSnapshot';
 import BodyChange from './BodyChange';
 import BodyDelta from './BodyDelta';
@@ -45,6 +46,7 @@ export {
   AuthorId,
   BaseChange,
   BaseDelta,
+  BaseOp,
   BaseSnapshot,
   BodyChange,
   BodyDelta,

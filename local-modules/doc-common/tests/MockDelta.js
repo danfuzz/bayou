@@ -2,23 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CommonBase } from 'util-common';
-
 import { BaseDelta } from 'doc-common';
+import { Functor } from 'util-common';
 
-/**
- * Mock operation class.
- */
-class MockOp extends CommonBase {
-  constructor(name) {
-    super();
-    this.name = name;
-  }
-
-  equals(other) {
-    return (other instanceof MockOp) && (this.name === other.name);
-  }
-}
+import MockOp from './MockOp';
 
 /**
  * Mock "delta" class for testing.
@@ -34,12 +21,12 @@ export default class MockDelta extends BaseDelta {
    * document.
    */
   static get NOT_DOCUMENT_OPS() {
-    return [new MockOp('not_document')];
+    return [new MockOp(new Functor('not_document'))];
   }
 
   /** {array<object>} Ops array that will be considered valid. */
   static get VALID_OPS() {
-    return [new MockOp('yes')];
+    return [new MockOp(new Functor('yes'))];
   }
 
   /**
@@ -49,7 +36,7 @@ export default class MockDelta extends BaseDelta {
    * @returns {object} An op with the indicated name.
    */
   static makeOp(name) {
-    return new MockOp(name);
+    return new MockOp(new Functor(name));
   }
 
   _impl_isDocument() {

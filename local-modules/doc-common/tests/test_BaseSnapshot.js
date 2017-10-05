@@ -25,8 +25,9 @@ class MockSnapshot extends BaseSnapshot {
     const op0 = this.contents.ops[0];
 
     if (op0 && op0.name.startsWith(resultName)) {
-      // The first op gets a `+` suffix for each additional composition.
-      resultName = op0.name + '+';
+      // The first op gets a `_` suffix on its name for each additional
+      // composition.
+      resultName = op0.name + '_';
     }
 
     return [MockDelta.makeOp(resultName), ...delta.ops];
@@ -199,7 +200,7 @@ describe('doc-common/BaseSnapshot', () => {
       assert.instanceOf(result.contents, MockDelta);
 
       assert.deepEqual(result.contents.ops,
-        [MockDelta.makeOp('composed_delta+'), MockDelta.makeOp('change_op2')]);
+        [MockDelta.makeOp('composed_delta_'), MockDelta.makeOp('change_op2')]);
     });
 
     it('should return `this` given same-`revNum` empty-`delta` changes', () => {
