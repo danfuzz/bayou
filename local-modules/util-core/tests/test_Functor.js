@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { Functor } from 'util-core';
+import { DataUtil, Functor, ObjectUtil } from 'util-core';
 
 /**
  * Simple class with an `equals()` method.
@@ -217,6 +217,64 @@ describe('util-core/Functor', () => {
       test('blort(1)',              'blort', 1);
       test('florp(1, \'foo\')',     'florp', 1, 'foo');
       test('florp([ 1, \'foo\' ])', 'florp', [1, 'foo']);
+    });
+  });
+
+  describe('withFrozenArgs()', () => {
+    it('should return `this` if the arguments are all already frozen', () => {
+      function test(...args) {
+        const func   = new Functor('florp', ...args);
+        const result = func.withFrozenArgs();
+        assert.strictEqual(result, func);
+      }
+
+      test();
+
+      test(Object.freeze([]));
+      test(Object.freeze([1, 2, 3]));
+      test(Object.freeze(['a']), Object.freeze(['b']));
+
+      test(Object.freeze({}));
+      test(Object.freeze({ a: 'florp' }));
+    });
+
+    it('should produce an instance with all frozen arguments equal to the original arguments', () => {
+      function test(...args) {
+        const result = new Functor('florp', ...args).withFrozenArgs();
+
+        for (const a of result.args) {
+          assert.isFrozen(a);
+          if (ObjectUtil.isPlain(a)) {
+            assert.isTrue(DataUtil.isDeepFrozen(a));
+          }
+        }
+
+        assert.strictEqual(result.args.length, args.length);
+        for (let i = 0; i < args.length; i++) {
+          assert.deepEqual(result.args[i], args[i]);
+        }
+      }
+
+      test([]);
+      test([1]);
+      test([1], [1, 2]);
+      test([1], [1, 2], [1, 2, 3]);
+      test([[[[[[[[[[['florp']]]]]]]]]]]);
+
+      test({});
+      test({ a: 10 });
+      test({ a: 10, b: { c: 20 } });
+      test({ a: 10, b: { c: 20 }, d: { e: { f: ['yo'] } } });
+
+      const alreadyFrozen = new Map();
+      Object.freeze(alreadyFrozen);
+      test(1, 2, alreadyFrozen, 4, 5);
+    });
+
+    it('should reject non-frozen non-data arguments', () => {
+      const func = new Functor('florp', new Map());
+
+      assert.throws(() => func.withFrozenArgs());
     });
   });
 });

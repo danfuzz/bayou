@@ -162,12 +162,38 @@ export default class Functor {
   }
 
   /**
-   * Get the string form of this instance. This uses `util.inspect()` on the
+   * Gets the string form of this instance. This uses `util.inspect()` on the
    * elements of the `args` array.
    *
    * @returns {string} The string form of this instance.
    */
   toString() {
     return inspect(this, { breakLength: Infinity });
+  }
+
+  /**
+   * Gets an instance just like this one except with all arguments frozen. If
+   * all arguments are already frozen, this method returns `this`. Otherwise,
+   * it will attempt to freeze non-frozen arguments using {@link
+   * DataUtil#deepFreeze}, which means that those arguments must be data values.
+   * If there are any non-frozen values which aren't data values, this method
+   * will throw an error.
+   *
+   * @returns {Functor} A frozen-argument version of `this`.
+   */
+  withFrozenArgs() {
+    const args = [];
+    let   any  = false;
+
+    for (const a of this._args) {
+      if (Object.isFrozen(a)) {
+        args.push(a);
+      } else {
+        any = true;
+        args.push(DataUtil.deepFreeze(a));
+      }
+    }
+
+    return any ? new Functor(this._name, ...args) : this;
   }
 }
