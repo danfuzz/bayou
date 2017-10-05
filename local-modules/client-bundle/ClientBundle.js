@@ -187,14 +187,43 @@ const webpackOptions = {
         }]
       },
 
+      {
+        test: /\.module.less$/,
+        use: [
+          {
+            loader: 'style-loader'
+          },
+          {
+            loader: 'css-loader',
+            options: { modules: true }
+          },
+          {
+            loader: 'less-loader'
+          }
+        ]
+      },
+
+      {
+        test: /^((?!\.module).)*less$/,
+        use: [
+          {
+            loader: 'style-loader'
+          },
+          {
+            loader: 'css-loader'
+          },
+          {
+            loader: 'less-loader'
+          }
+        ]
+      },
+
       // This makes `.css` files `import`able into our JavaScript code. Doing so
       // injects the CSS into the DOM (currently configured to add a `<style>`
       // element to the `<head>`). This allows us to easily break all of our CSS
       // files into multiple modules and only load them when needed. As part of
       // this process each class name is transformed to be a unique random
-      // string. The `modules: true` option makes the JavaScript export be a map
-      // from each class names defined in the source file to its transformed
-      // name. See <client-bundle/README.md> for examples.
+      // string.
       {
         test: /\.css$/,
         use: [

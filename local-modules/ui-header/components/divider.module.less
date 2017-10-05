@@ -1,0 +1,13 @@
+@import "~ui-common/colors";
+@import "~ui-common/helpers";
+
+.divider {
+  margin-left:  0.5rem;
+  margin-right: 0.5rem;
+  color:        @sk_light_gray;
+  .user-select(none);
+}
+
+.divider::before {
+  content: '|';
+}

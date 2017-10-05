@@ -4,17 +4,12 @@
 
 import React from 'react';
 
+import styles from './title.module.less';
+
 export default class Title extends React.Component {
   render() {
     return (
-      <p style={{
-        fontSize:     '1.125rem',
-        fontWeight:   '900',
-        margin:       0,
-        color:        '#2c2d30',
-        lineHeight:   '1.375rem',
-        marginBottom: '2px'
-      }}>
+      <p className={ styles.title }>
         Untitled
       </p>
     );

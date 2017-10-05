@@ -4,21 +4,12 @@
 
 import React from 'react';
 
+import styles from './owner.module.less';
+
 export default class Owner extends React.Component {
   render() {
     return (
-      <p style={{
-        display:    'inline-block',
-        margin:     0,
-        fontWeight: '100',
-        fontSize:   '0.8125rem',
-        color:      '#2c2d30',
-        lineHeight: '1rem',
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-        MozUserSelect:    'none',
-        msUserSelect:     'none'
-      }}>
+      <p className={ styles.owner }>
         Some Lovely Team Member
       </p>
     );
