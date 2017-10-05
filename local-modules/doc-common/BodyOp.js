@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt, TObject, TString } from 'typecheck';
-import { CommonBase, DataUtil, Errors, Functor } from 'util-common';
+import { CommonBase, DataUtil, Errors, Functor, ObjectUtil } from 'util-common';
 
 /**
  * Operation on a text document body.
@@ -60,12 +60,19 @@ export default class BodyOp extends CommonBase {
     if (insert !== undefined) {
       if (typeof insert === 'string') {
         return BodyOp.op_insertText(insert, attributes);
-      } else {
+      } else if (ObjectUtil.isPlain(insert)) {
         // An "embed" is represented as a single-binding plain object, where the
         // key of the binding is the type of the embed, and the bound value is
         // an arbitrary value as defined by the type.
-        const [[key, value]] = Object.entries(insert);
+        const [[key, value], ...rest] = Object.entries(insert);
+        if (rest.length !== 0) {
+          // Invalid form for an embed.
+          throw Errors.bad_value(quillOp, 'Quill delta operation');
+        }
         return BodyOp.op_insertEmbed(new Functor(key, value), attributes);
+      } else {
+        // Neither in text nor embed form.
+        throw Errors.bad_value(quillOp, 'Quill delta operation');
       }
     } else if (del !== undefined) {
       if (attributes !== null) {

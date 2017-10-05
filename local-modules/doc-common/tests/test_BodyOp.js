@@ -61,8 +61,11 @@ describe('doc-common/BodyOp', () => {
       test({ retain: 123, attributes: null });
 
       // Wrong type for valid binding name.
+      test({ delete: null });
       test({ delete: 'x' });
       test({ delete: [123] });
+      test({ insert: null });
+      test({ insert: undefined });
       test({ insert: 123 });
       test({ insert: ['foo'] });
       test({ retain: 'x' });
@@ -71,6 +74,11 @@ describe('doc-common/BodyOp', () => {
       test({ insert: 'x', attributes: 123 });
       test({ insert: 'x', attributes: ['x', 'y'] });
       test({ insert: 'x', attributes: new Map() });
+
+      // Invalid embed form. (Must be a single-binding plain object.)
+      test({ insert: {} });
+      test({ insert: { x: 1, y: 2 } });
+      test({ insert: new Map() });
     });
   });
 
