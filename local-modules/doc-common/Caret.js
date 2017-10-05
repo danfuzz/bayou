@@ -109,7 +109,7 @@ export default class Caret extends CommonBase {
       sessionId = TString.nonEmpty(sessionIdOrBase);
     }
 
-    TObject.simple(fields);
+    TObject.plain(fields);
 
     super();
 

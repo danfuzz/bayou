@@ -51,10 +51,10 @@ describe('typecheck/TObject', () => {
     });
   });
 
-  describe('simple()', () => {
+  describe('plain()', () => {
     it('should accept plain objects', () => {
       function test(value) {
-        assert.strictEqual(TObject.simple(value), value);
+        assert.strictEqual(TObject.plain(value), value);
       }
 
       test({});
@@ -65,7 +65,7 @@ describe('typecheck/TObject', () => {
 
     it('should reject non-plain objects', () => {
       function test(value) {
-        assert.throws(() => { TObject.simple(value); });
+        assert.throws(() => { TObject.plain(value); });
       }
 
       test([]);
@@ -76,7 +76,7 @@ describe('typecheck/TObject', () => {
 
     it('should reject non-objects', () => {
       function test(value) {
-        assert.throws(() => { TObject.simple(value); });
+        assert.throws(() => { TObject.plain(value); });
       }
 
       test(null);

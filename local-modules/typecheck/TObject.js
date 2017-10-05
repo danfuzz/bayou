@@ -32,7 +32,7 @@ export default class TObject extends UtilityClass {
    * @param {*} value Value to check.
    * @returns {object} `value`.
    */
-  static simple(value) {
+  static plain(value) {
     if (   (typeof value === 'object')
         && (value !== null)
         && (Object.getPrototypeOf(value) === Object.prototype)) {
@@ -51,7 +51,7 @@ export default class TObject extends UtilityClass {
    * @returns {object} `value`.
    */
   static withExactKeys(value, keys) {
-    TObject.simple(value);
+    TObject.plain(value);
 
     // Make a copy, check for and delete allowed keys, and see if anything's
     // left.

@@ -288,7 +288,7 @@ export default class BodyOp extends CommonBase {
     }
 
     try {
-      TObject.simple(value);
+      TObject.plain(value);
       return DataUtil.deepFreeze(value);
     } catch (e) {
       // More specific error.
