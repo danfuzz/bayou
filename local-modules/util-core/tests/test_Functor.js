@@ -178,6 +178,17 @@ describe('util-core/Functor', () => {
       test([true],                       [new Set([true])]);
       test([1, new Map()],               [1, new HasEquals(123)]);
       test(['x', new HasEquals(321), 3], ['x', new HasEquals(123), 3]);
+
+      // These make sure we aren't trying to call `.equals()` on a non-object.
+      const haseq = new HasEquals('foo');
+      test([haseq], [null]);
+      test([haseq], [undefined]);
+      test([haseq], [true]);
+      test([haseq], [123]);
+      test([haseq], ['blort']);
+      test([haseq], [Symbol('x')]);
+      test([haseq, 1], [null, 1]);
+      test([1, haseq, 1], [1, null, 1]);
     });
 
     it('should return `false` when compared to a non-functor', () => {

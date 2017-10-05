@@ -149,7 +149,10 @@ export default class Functor {
       const arg1 = thisArgs[i];
       const arg2 = otherArgs[i];
       if ((arg1 !== arg2) && !DataUtil.equalData(arg1, arg2)) {
-        if ((typeof arg1.equals !== 'function') || !arg1.equals(arg2)) {
+        if (   (arg1 === null)
+            || (typeof arg1 !== 'object')
+            || (typeof arg1.equals !== 'function')
+            || !arg1.equals(arg2)) {
           return false;
         }
       }
