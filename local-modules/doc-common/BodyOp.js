@@ -42,7 +42,20 @@ export default class BodyOp extends CommonBase {
    * @returns {BodyOp} Corresponding instance of this class.
    */
   static fromQuillForm(quillOp) {
+    try {
+      TObject.plain(quillOp);
+    } catch (e) {
+      // More specific error.
+      throw Errors.bad_value(quillOp, 'Quill delta operation');
+    }
+
     const { attributes = null, delete: del, insert, retain } = quillOp;
+
+    const allowedSize = (attributes === null) ? 1 : 2;
+    if (Object.entries(quillOp).length !== allowedSize) {
+      // Extra bindings, of some sort.
+      throw Errors.bad_value(quillOp, 'Quill delta operation');
+    }
 
     if (insert !== undefined) {
       if (typeof insert === 'string') {
@@ -55,6 +68,10 @@ export default class BodyOp extends CommonBase {
         return BodyOp.op_insertEmbed(new Functor(key, value), attributes);
       }
     } else if (del !== undefined) {
+      if (attributes !== null) {
+        // Deletes can't have attributes.
+        throw Errors.bad_value(quillOp, 'Quill delta operation');
+      }
       return BodyOp.op_delete(del);
     } else if (retain !== undefined) {
       return BodyOp.op_retain(retain, attributes);
