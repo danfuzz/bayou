@@ -9,6 +9,7 @@
 
     "api-client": "local",
     "api-common": "local",
+    "data-model-client": "local",
     "doc-client": "local",
     "doc-common": "local",
     "hooks-client": "local",

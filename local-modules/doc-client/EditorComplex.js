@@ -4,8 +4,10 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
 
 import { SplitKey } from 'api-common';
+import { ClientStore } from 'data-model-client';
 import { Hooks } from 'hooks-client';
 import { Condition } from 'promise-util';
 import { BayouKeyHandlers, QuillProm } from 'quill-util';
@@ -87,6 +89,11 @@ export default class EditorComplex extends CommonBase {
      */
     this._bodyClient = null;
 
+    /**
+     * {ClientStore} Wrapper for the redux data store for this client.
+     */
+    this._clientStore = new ClientStore();
+
     // The rest of the initialization has to happen asynchronously. In
     // particular, there is no avoiding the asynchrony in `_domSetup()`, and
     // that setup needs to be complete before we construct the Quill and
@@ -97,8 +104,14 @@ export default class EditorComplex extends CommonBase {
       const [headerNode, titleNode, quillNode, authorOverlayNode] =
         await this._domSetup(topNode, sessionKey.baseUrl);
 
+      // The Provider component wraps our React application and makes the
+      // Redux store available in the context of all of the wrapped
+      // components. This is needed for the calls to `react-redux.connect()`
+      // that are used within each of the header components.
       ReactDOM.render(
-        <Header />,
+        <Provider store={ this._clientStore.store }>
+          <Header />
+        </Provider>,
         headerNode
       );
 
