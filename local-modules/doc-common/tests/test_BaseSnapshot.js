@@ -10,6 +10,7 @@ import { BaseChange, BaseSnapshot } from 'doc-common';
 
 import MockChange from './MockChange';
 import MockDelta from './MockDelta';
+import MockOp from './MockOp';
 
 /**
  * Mock subclass of `BaseSnapshot` for testing.
@@ -30,11 +31,11 @@ class MockSnapshot extends BaseSnapshot {
       resultName = op0.name + '_';
     }
 
-    return [MockDelta.makeOp(resultName), ...delta.ops];
+    return [MockOp.make(resultName), ...delta.ops];
   }
 
   _impl_diffAsDelta(newerSnapshot) {
-    return [MockDelta.makeOp('diff_delta'), newerSnapshot.contents.ops[0]];
+    return [MockOp.make('diff_delta'), newerSnapshot.contents.ops[0]];
   }
 
   static get _impl_changeClass() {
@@ -141,8 +142,8 @@ describe('doc-common/BaseSnapshot', () => {
 
   describe('compose()', () => {
     it('should call through to the impl and wrap the result in a new instance', () => {
-      const snap   = new MockSnapshot(10, [MockDelta.makeOp('some_op')]);
-      const change = new MockChange(20, [MockDelta.makeOp('change_op')]);
+      const snap   = new MockSnapshot(10, [MockOp.make('some_op')]);
+      const change = new MockChange(20, [MockOp.make('change_op')]);
       const result = snap.compose(change);
 
       assert.instanceOf(result, MockSnapshot);
@@ -150,11 +151,11 @@ describe('doc-common/BaseSnapshot', () => {
       assert.instanceOf(result.contents, MockDelta);
 
       assert.deepEqual(result.contents.ops,
-        [MockDelta.makeOp('composed_delta'), MockDelta.makeOp('change_op')]);
+        [MockOp.make('composed_delta'), MockOp.make('change_op')]);
     });
 
     it('should return `this` given a same-`revNum` empty-`delta` change', () => {
-      const snap   = new MockSnapshot(10, [MockDelta.makeOp('some_op')]);
+      const snap   = new MockSnapshot(10, [MockOp.make('some_op')]);
       const change = new MockChange(10, []);
       const result = snap.compose(change);
 
@@ -190,9 +191,9 @@ describe('doc-common/BaseSnapshot', () => {
 
   describe('composeAll()', () => {
     it('should call through to the impl and wrap the result in a new instance', () => {
-      const snap    = new MockSnapshot(10, [MockDelta.makeOp('some_op')]);
-      const change1 = new MockChange(21, [MockDelta.makeOp('change_op1')]);
-      const change2 = new MockChange(22, [MockDelta.makeOp('change_op2')]);
+      const snap    = new MockSnapshot(10, [MockOp.make('some_op')]);
+      const change1 = new MockChange(21, [MockOp.make('change_op1')]);
+      const change2 = new MockChange(22, [MockOp.make('change_op2')]);
       const result = snap.composeAll([change1, change2]);
 
       assert.instanceOf(result, MockSnapshot);
@@ -200,11 +201,11 @@ describe('doc-common/BaseSnapshot', () => {
       assert.instanceOf(result.contents, MockDelta);
 
       assert.deepEqual(result.contents.ops,
-        [MockDelta.makeOp('composed_delta_'), MockDelta.makeOp('change_op2')]);
+        [MockOp.make('composed_delta_'), MockOp.make('change_op2')]);
     });
 
     it('should return `this` given same-`revNum` empty-`delta` changes', () => {
-      const snap   = new MockSnapshot(10, [MockDelta.makeOp('some_op')]);
+      const snap   = new MockSnapshot(10, [MockOp.make('some_op')]);
       const change = new MockChange(10, []);
       const result = snap.composeAll([change, change, change, change]);
 
@@ -247,7 +248,7 @@ describe('doc-common/BaseSnapshot', () => {
   describe('diff()', () => {
     it('should call through to the impl and wrap the result in a timeless authorless change', () => {
       const oldSnap = new MockSnapshot(10, []);
-      const newSnap = new MockSnapshot(20, [MockDelta.makeOp('new_snap')]);
+      const newSnap = new MockSnapshot(20, [MockOp.make('new_snap')]);
       const result  = oldSnap.diff(newSnap);
 
       assert.instanceOf(result, MockChange);
@@ -257,7 +258,7 @@ describe('doc-common/BaseSnapshot', () => {
       assert.isNull(result.authorId);
 
       assert.deepEqual(result.delta.ops,
-        [MockDelta.makeOp('diff_delta'), MockDelta.makeOp('new_snap')]);
+        [MockOp.make('diff_delta'), MockOp.make('new_snap')]);
     });
 
     it('should reject instances of the wrong snapshot class', () => {
@@ -332,8 +333,8 @@ describe('doc-common/BaseSnapshot', () => {
     });
 
     it('should return `false` when deltas are not equal', () => {
-      const snap1 = new MockSnapshot(123, [MockDelta.makeOp('x')]);
-      const snap2 = new MockSnapshot(123, [MockDelta.makeOp('y')]);
+      const snap1 = new MockSnapshot(123, [MockOp.make('x')]);
+      const snap2 = new MockSnapshot(123, [MockOp.make('y')]);
 
       assert.isFalse(snap1.equals(snap2));
       assert.isFalse(snap2.equals(snap1));
@@ -360,8 +361,8 @@ describe('doc-common/BaseSnapshot', () => {
     });
 
     it('should return an appropriately-constructed instance given a different `contents`', () => {
-      const delta  = new MockDelta([MockDelta.makeOp('yo')]);
-      const snap   = new MockSnapshot(123, [MockDelta.makeOp('hello')]);
+      const delta  = new MockDelta([MockOp.make('yo')]);
+      const snap   = new MockSnapshot(123, [MockOp.make('hello')]);
       const result = snap.withContents(delta);
 
       assert.strictEqual(result.revNum,   123);
