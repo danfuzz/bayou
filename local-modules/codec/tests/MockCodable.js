@@ -10,15 +10,12 @@ export default class MockCodable {
     return 'MockCodable';
   }
 
-  constructor() {
+  constructor(...args) {
     this.initialized = true;
+    this.args        = args;
   }
 
   toCodecArgs() {
     return ['fake argument', 0, 1, 2];
-  }
-
-  static fromCodecArgs(arguments_unused) {
-    return new MockCodable();
   }
 }
