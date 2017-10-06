@@ -5,9 +5,9 @@
 /**
  * Trivial codec-compatible class for use in tests.
  */
-export default class MockApiObject {
+export default class MockCodable {
   static get CODEC_TAG() {
-    return 'MockApiObject';
+    return 'MockCodable';
   }
 
   constructor() {
@@ -19,6 +19,6 @@ export default class MockApiObject {
   }
 
   static fromCodecArgs(arguments_unused) {
-    return new MockApiObject();
+    return new MockCodable();
   }
 }

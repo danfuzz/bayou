@@ -8,7 +8,7 @@ import { before, describe, it } from 'mocha';
 import { Codec } from 'codec';
 import { FrozenBuffer } from 'util-common';
 
-import MockApiObject from './MockApiObject';
+import MockCodable from './MockCodable';
 
 describe('api-common/Codec.decode*()', () => {
   // Convenient bindings for `decode*()` and `encodeData()` to avoid a lot of
@@ -21,7 +21,7 @@ describe('api-common/Codec.decode*()', () => {
 
   before(() => {
     try {
-      Codec.theOne.registerClass(MockApiObject);
+      Codec.theOne.registerClass(MockCodable);
     } catch (e) {
       // nothing to do here, the try/catch is just in case some other test
       // file has already registered the mock class.
@@ -64,7 +64,7 @@ describe('api-common/Codec.decode*()', () => {
     });
 
     it('should convert propertly formatted values to a decoded instance', () => {
-      const apiObject = new MockApiObject();
+      const apiObject = new MockCodable();
       const encoding = encodeData(apiObject);
       let decodedObject = null;
 

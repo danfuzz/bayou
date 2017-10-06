@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { Codec } from 'codec';
 import { FrozenBuffer } from 'util-common';
 
-import MockApiObject from './MockApiObject';
+import MockCodable from './MockCodable';
 
 class NoCodecTag {
   toCodecArgs() {
@@ -88,7 +88,7 @@ describe('api-common/Codec.encode*()r', () => {
     });
 
     it('should accept objects with an CODEC_TAG property and toCodecArgs() method', () => {
-      const fakeObject = new MockApiObject();
+      const fakeObject = new MockCodable();
 
       assert.doesNotThrow(() => encodeData(fakeObject));
     });
