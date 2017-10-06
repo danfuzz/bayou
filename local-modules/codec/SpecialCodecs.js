@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Functor, UtilityClass } from 'util-common';
+import { Functor, ObjectUtil, UtilityClass } from 'util-common';
 
 import ItemCodec from './ItemCodec';
 
@@ -109,7 +109,7 @@ export default class SpecialCodecs extends UtilityClass {
   /** {ItemCodec} Codec used for coding plain objects. */
   static get PLAIN_OBJECT() {
     return new ItemCodec(ItemCodec.tagFromType('object'), 'object',
-      this._objectPredicate, this._objectEncode, this._objectDecode);
+      ObjectUtil.isPlain, this._objectEncode, this._objectDecode);
   }
 
   /**
@@ -147,26 +147,6 @@ export default class SpecialCodecs extends UtilityClass {
     }
 
     return result;
-  }
-
-  /**
-   * Checks a value for encodability as a plain object.
-   *
-   * @param {array<*>} value Value to (potentially) encode.
-   * @returns {boolean} `true` iff `value` can be encoded.
-   */
-  static _objectPredicate(value) {
-    // Iterate over all the properties in `value` to see if there are any that
-    // are synthetic. If so, the object is not encodable.
-    for (const k of Object.getOwnPropertyNames(value)) {
-      const prop = Object.getOwnPropertyDescriptor(value, k);
-
-      if ((prop.get !== undefined) || (prop.set !== undefined)) {
-        return false;
-      }
-    }
-
-    return true;
   }
 
   /**
