@@ -82,6 +82,7 @@ describe('util-core/ObjectUtil', () => {
       test(new Map());
       test({ get x() { return 10; } });
       test({ set x(v) { /*empty*/ } });
+      test({ [Symbol('foo')]: 'foo' });
     });
 
     it('should return `false` for non-objects', () => {
