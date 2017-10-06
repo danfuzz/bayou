@@ -5,9 +5,11 @@
 import ClientStore from './ClientStore';
 import DocumentState from './DocumentState';
 import OwnerState from './OwnerState';
+import SharingState from './SharingState';
 
 export {
   ClientStore,
   DocumentState,
-  OwnerState
+  OwnerState,
+  SharingState
 };
