@@ -168,10 +168,10 @@ export default class BaseDelta extends CommonBase {
    * @returns {string} The human-oriented representation.
    */
   toString() {
-    const name = this.constructor.name;
-    const body = inspect(this._ops);
+    // `depth: null` means to recurse indefinitely.
+    const body = inspect(this._ops, { depth: null });
 
-    return `${name} ${body}`;
+    return `${this.constructor.name} ${body}`;
   }
 
   /**
