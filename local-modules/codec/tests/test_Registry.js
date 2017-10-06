@@ -11,13 +11,13 @@ import { ItemCodec } from 'codec';
 // by path.
 import Registry from 'codec/Registry';
 
-class RegistryTestApiObject {
+class RegistryTestClass {
   constructor() {
     this.initialized = true;
   }
 
   static get CODEC_TAG() {
-    return 'RegistryTestApiObject';
+    return 'RegistryTestClass';
   }
 
   toCodecArgs() {
@@ -39,10 +39,10 @@ class NoToCodecArgs {
 }
 
 describe('api-common/Registry', () => {
-  describe('register(class)', () => {
+  describe('register()', () => {
     it('should accept a class with all salient properties', () => {
       const reg = new Registry();
-      assert.doesNotThrow(() => reg.registerClass(RegistryTestApiObject));
+      assert.doesNotThrow(() => reg.registerClass(RegistryTestClass));
     });
 
     it('should allow classes without `CODEC_TAG`', () => {
@@ -67,7 +67,7 @@ describe('api-common/Registry', () => {
     });
   });
 
-  describe('codecForPayload(payload)', () => {
+  describe('codecForPayload()', () => {
     it('should throw an error if an unregistered tag is requested', () => {
       const reg = new Registry();
       assert.throws(() => reg.codecForPayload(['florp']));

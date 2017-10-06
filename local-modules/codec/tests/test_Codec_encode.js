@@ -29,7 +29,7 @@ describe('api-common/Codec.encode*()r', () => {
   const encodeJson       = (value) => { return codec.encodeJson(value);       };
   const encodeJsonBuffer = (value) => { return codec.encodeJsonBuffer(value); };
 
-  describe('encodeData', () => {
+  describe('encodeData()', () => {
     it('should reject function values', () => {
       assert.throws(() => encodeData(() => 1));
     });
@@ -94,7 +94,7 @@ describe('api-common/Codec.encode*()r', () => {
     });
   });
 
-  describe('encodeJson', () => {
+  describe('encodeJson()', () => {
     it('should produce a string', () => {
       assert.isString(encodeJson(null));
       assert.isString(encodeJson(914));
@@ -108,7 +108,7 @@ describe('api-common/Codec.encode*()r', () => {
     });
   });
 
-  describe('encodeJsonBuffer', () => {
+  describe('encodeJsonBuffer()', () => {
     it('should produce a `FrozenBuffer`', () => {
       assert.instanceOf(encodeJsonBuffer(null), FrozenBuffer);
       assert.instanceOf(encodeJsonBuffer(914), FrozenBuffer);

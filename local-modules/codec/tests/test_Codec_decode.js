@@ -28,7 +28,7 @@ describe('api-common/Codec.decode*()', () => {
     }
   });
 
-  describe('decodeData', () => {
+  describe('decodeData()', () => {
     it('should pass non-object values through as-is', () => {
       assert.strictEqual(decodeData(37), 37);
       assert.strictEqual(decodeData(true), true);
@@ -76,7 +76,7 @@ describe('api-common/Codec.decode*()', () => {
     });
   });
 
-  describe('decodeJson', () => {
+  describe('decodeJson()', () => {
     it('should decode as expected', () => {
       assert.strictEqual(decodeJson('null'), null);
       assert.strictEqual(decodeJson('914'), 914);
@@ -84,7 +84,7 @@ describe('api-common/Codec.decode*()', () => {
     });
   });
 
-  describe('decodeJsonBuffer', () => {
+  describe('decodeJsonBuffer()', () => {
     it('should decode as expected', () => {
       function bufAndDecode(s) {
         return decodeJsonBuffer(FrozenBuffer.coerce(s));
