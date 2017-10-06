@@ -35,6 +35,9 @@ Star.propTypes = {
 /**
  * Function to map global document state to just the
  * properties needed by this component.
+ *
+ * @param {object} state The redux state object to be mapped to Star props.
+ * @returns {object} The Star props.
  */
 const mapStateToProps = (state) => {
   return {
@@ -45,6 +48,9 @@ const mapStateToProps = (state) => {
 /**
  * Function to map actions on the redux store to
  * properties needed by this component.
+ *
+ * @param {function} dispatch The redux store's `dispatch` function.
+ * @returns {object} The redux actions allowed for this component.
  */
 const mapDispatchToProps = (dispatch) => {
   return {

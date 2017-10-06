@@ -23,9 +23,10 @@ export default class DocumentState {
   static get reducer() {
     return (state = DEFAULT_STATE, action) => {
       switch (action.type) {
-        case TOGGLE_STAR_ACTION:
+        case TOGGLE_STAR_ACTION: {
           const newState = Object.assign({}, state, { starred: !state.starred });
           return newState;
+        }
 
         default: {
           return state;

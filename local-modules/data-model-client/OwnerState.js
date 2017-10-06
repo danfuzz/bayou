@@ -36,6 +36,7 @@ export default class OwnerState {
   /**
    * Creates a dispatch action object for setting the owner's name.
    *
+   * @param {string} newName The new display name for the document owner.
    * @returns {object} The dispatch action.
    */
   static setOwnerName(newName) {
