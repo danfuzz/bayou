@@ -7,6 +7,7 @@ import { inspect } from 'util';
 import { TArray, TBoolean, TObject } from 'typecheck';
 import { CommonBase } from 'util-common';
 
+import BaseOp from './BaseOp';
 
 /**
  * Base class for document deltas. These are ordered lists of operations which
@@ -48,7 +49,7 @@ export default class BaseDelta extends CommonBase {
       // Call the `_impl` and verify the result.
       const clazz = this._impl_opClass;
 
-      TObject.check(clazz.prototype, CommonBase); // **TODO:** Should be `BaseOp`.
+      TObject.check(clazz.prototype, BaseOp);
       this._opClass = clazz;
     }
 

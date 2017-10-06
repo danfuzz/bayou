@@ -216,7 +216,7 @@ export default class DataUtil extends UtilityClass {
   }
 
   /**
-   * Indicates whether or not the given value is deep-frozen.
+   * Indicates whether or not the given value is a deep-frozen data value.
    *
    * @param {*} value The value to check.
    * @returns {boolean} `true` if `value` is deep-frozen, or `false` if not.

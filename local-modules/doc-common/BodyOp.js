@@ -3,7 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt, TObject, TString } from 'typecheck';
-import { CommonBase, DataUtil, Errors, Functor, ObjectUtil } from 'util-common';
+import { DataUtil, Errors, Functor, ObjectUtil } from 'util-common';
+
+import BaseOp from './BaseOp';
 
 /**
  * Operation on a text document body.
@@ -13,7 +15,7 @@ import { CommonBase, DataUtil, Errors, Functor, ObjectUtil } from 'util-common';
  * `fromQuillForm()` and an instance method `toQuillForm()` to convert back and
  * forth as needed.
  */
-export default class BodyOp extends CommonBase {
+export default class BodyOp extends BaseOp {
   /** {string} Operation name for "delete" operations. */
   static get DELETE() {
     return 'delete';
@@ -149,26 +151,6 @@ export default class BodyOp extends CommonBase {
   }
 
   /**
-   * Constructs an instance. This should not be used directly. Instead, use
-   * the static constructor methods defined by this class.
-   *
-   * @param {Functor} payload The operation payload (name and arguments).
-   */
-  constructor(payload) {
-    super();
-
-    /** {Functor} payload The operation payload (name and arguments). */
-    this._payload = Functor.check(payload);
-
-    Object.freeze(this);
-  }
-
-  /** {Functor} The operation payload (name and arguments). */
-  get payload() {
-    return this._payload;
-  }
-
-  /**
    * {object} The properties of this operation, as a conveniently-accessed
    * plain object. `opName` is always bound to the operation name. Other
    * bindings depend on the operation name. Guaranteed to be an immutable
@@ -206,23 +188,6 @@ export default class BodyOp extends CommonBase {
   }
 
   /**
-   * Compares this to another possible-instance, for equality of content.
-   *
-   * @param {*} other Value to compare to.
-   * @returns {boolean} `true` iff `other` is also an instance of this class,
-   *   and `this` and `other` have equal contents.
-   */
-  equals(other) {
-    if (this === other) {
-      return true;
-    } else if (!(other instanceof BodyOp)) {
-      return false;
-    }
-
-    return this._payload.equals(other._payload);
-  }
-
-  /**
    * Indicates whether or not this instance is an "insert" operation of some
    * sort.
    *
@@ -232,15 +197,6 @@ export default class BodyOp extends CommonBase {
   isInsert() {
     const opName = this._payload.name;
     return (opName === BodyOp.INSERT_TEXT) || (opName === BodyOp.INSERT_EMBED);
-  }
-
-  /**
-   * Converts this instance to codec reconstruction arguments.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toCodecArgs() {
-    return [this._payload];
   }
 
   /**
@@ -287,15 +243,6 @@ export default class BodyOp extends CommonBase {
         throw Errors.wtf(`Weird operation name: ${props.opName}`);
       }
     }
-  }
-
-  /**
-   * Gets a human-oriented string representation of this instance.
-   *
-   * @returns {string} The human-oriented representation.
-   */
-  toString() {
-    return `${this.constructor.name} { ${this._payload} }`;
   }
 
   /**
