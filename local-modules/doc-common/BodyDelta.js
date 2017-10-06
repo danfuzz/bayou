@@ -5,7 +5,7 @@
 import Delta from 'quill-delta';
 
 import { TBoolean, TObject } from 'typecheck';
-import { DataUtil, Errors } from 'util-common';
+import { Errors } from 'util-common';
 
 import BaseDelta from './BaseDelta';
 import BodyOp from './BodyOp';
@@ -103,27 +103,6 @@ export default class BodyDelta extends BaseDelta {
     const quillResult = quillThis.diff(quillNewer);
 
     return BodyDelta.fromQuillForm(quillResult);
-  }
-
-  /**
-   * Compares this to another possible-instance, for equality. To be considered
-   * equal, `other` must be an instance of this class with an `ops` which is
-   * `DataUtil.equalData()` to this instance's `ops`.
-   *
-   * **TODO:** Once this class uses a real ops class, let the superclass's
-   * implementation of this method stand.
-   *
-   * @param {*} other Instance to compare to.
-   * @returns {boolean} `true` if `this` and `other` are equal, or `false` if
-   *   not.
-   */
-  equals(other) {
-    if (this === other) {
-      return true;
-    }
-
-    return (other instanceof BodyDelta)
-      && DataUtil.equalData(this._ops, other._ops);
   }
 
   /**
