@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import { CommonBase, Functor } from 'util-common';
 
 /**
@@ -71,6 +73,11 @@ export default class BaseOp extends CommonBase {
    * @returns {string} The human-oriented representation.
    */
   toString() {
-    return `${this.constructor.name} { ${this._payload} }`;
+    // `depth: null` means to recurse indefinitely.
+    const payload = inspect(this._payload, { depth : null });
+
+    // Since the payload is a functor -- which has a custom inspect renderer --
+    // the result here looks like `FlorpOp:some_op_name(arg, arg)`.
+    return `${this.constructor.name}:${payload}`;
   }
 }
