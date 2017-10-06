@@ -10,6 +10,8 @@ import { inspect } from 'util';
 import { BodyDelta, BodyOp } from 'doc-common';
 import { Functor } from 'util-common';
 
+import MockDelta from './MockDelta';
+
 describe('doc-common/BodyDelta', () => {
   describe('.EMPTY', () => {
     const EMPTY = BodyDelta.EMPTY;
@@ -201,6 +203,90 @@ describe('doc-common/BodyDelta', () => {
         BodyOp.op_insertText('LATER'), BodyOp.op_delete(7)
       ],
       [BodyOp.op_insertText('[[YO]] [[LATER]]')]);
+  });
+
+  describe('equals()', () => {
+    it('should return `true` when passed itself', () => {
+      function test(ops) {
+        const delta = new BodyDelta(ops);
+        assert.isTrue(delta.equals(delta));
+      }
+
+      test([]);
+      test([BodyOp.op_insertText('aaa')]);
+      test([BodyOp.op_insertText('aaa'), BodyOp.op_insertText('bbb')]);
+    });
+
+    it('should return `true` when passed an identically-constructed value', () => {
+      function test(ops) {
+        const d1 = new BodyDelta(ops);
+        const d2 = new BodyDelta(ops);
+        assert.isTrue(d1.equals(d2));
+        assert.isTrue(d2.equals(d1));
+      }
+
+      test([]);
+      test([BodyOp.op_insertText('aaa')]);
+      test([BodyOp.op_insertText('aaa'), BodyOp.op_insertText('bbb')]);
+    });
+
+    it('should return `true` when equal ops are not also `===`', () => {
+      const ops1 = [BodyOp.op_insertText('aaa'), BodyOp.op_insertText('bbb')];
+      const ops2 = [BodyOp.op_insertText('aaa'), BodyOp.op_insertText('bbb')];
+      const d1 = new BodyDelta(ops1);
+      const d2 = new BodyDelta(ops2);
+
+      assert.isTrue(d1.equals(d2));
+      assert.isTrue(d2.equals(d1));
+    });
+
+    it('should return `false` when array lengths differ', () => {
+      const op1 = BodyOp.op_insertText('aaa');
+      const op2 = BodyOp.op_insertText('bbb');
+      const d1 = new BodyDelta([op1]);
+      const d2 = new BodyDelta([op1, op2]);
+
+      assert.isFalse(d1.equals(d2));
+      assert.isFalse(d2.equals(d1));
+    });
+
+    it('should return `false` when corresponding ops differ', () => {
+      function test(ops1, ops2) {
+        const d1 = new BodyDelta(ops1);
+        const d2 = new BodyDelta(ops2);
+
+        assert.isFalse(d1.equals(d2));
+        assert.isFalse(d2.equals(d1));
+      }
+
+      const op1 = BodyOp.op_insertText('foo');
+      const op2 = BodyOp.op_insertText('bar');
+      const op3 = BodyOp.op_insertText('baz');
+      const op4 = BodyOp.op_insertText('biff');
+      const op5 = BodyOp.op_insertText('quux');
+
+      test([op1],                     [op2]);
+      test([op1, op2],                [op1, op3]);
+      test([op1, op2],                [op3, op2]);
+      test([op1, op2, op3, op4, op5], [op5, op2, op3, op4, op5]);
+      test([op1, op2, op3, op4, op5], [op1, op5, op3, op4, op5]);
+      test([op1, op2, op3, op4, op5], [op1, op2, op5, op4, op5]);
+      test([op1, op2, op3, op4, op5], [op1, op2, op3, op5, op5]);
+      test([op1, op2, op3, op4, op5], [op1, op2, op3, op4, op1]);
+    });
+
+    it('should return `false` when passed a non-instance or an instance of a different class', () => {
+      const delta = new BodyDelta([]);
+
+      assert.isFalse(delta.equals(undefined));
+      assert.isFalse(delta.equals(null));
+      assert.isFalse(delta.equals(false));
+      assert.isFalse(delta.equals(true));
+      assert.isFalse(delta.equals(914));
+      assert.isFalse(delta.equals(['not', 'a', 'delta']));
+      assert.isFalse(delta.equals(new Map()));
+      assert.isFalse(delta.equals(new MockDelta([])));
+    });
   });
 
   describe('isDocument()', () => {
