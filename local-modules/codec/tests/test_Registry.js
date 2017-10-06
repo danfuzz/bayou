@@ -76,12 +76,23 @@ describe('api-common/Registry', () => {
     });
 
     it('should return the named codec if it is registered', () => {
-      const reg = new Registry();
+      const reg       = new Registry();
       const itemCodec = new ItemCodec('florp', Boolean, null, () => 0, () => 0);
 
       reg.registerCodec(itemCodec);
 
       const testCodec = reg.codecForPayload(['florp']);
+      assert.strictEqual(testCodec, itemCodec);
+    });
+
+    it('should return the codec for a special type if it is registered', () => {
+      const reg       = new Registry();
+      const type      = 'symbol';
+      const itemCodec = new ItemCodec(ItemCodec.tagFromType(type), type, null, () => 0, () => 0);
+
+      reg.registerCodec(itemCodec);
+
+      const testCodec = reg.codecForPayload(Symbol('x'));
       assert.strictEqual(testCodec, itemCodec);
     });
   });
