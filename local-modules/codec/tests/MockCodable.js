@@ -3,22 +3,19 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 /**
- * Trivial API-compatible class for use in tests.
+ * Trivial codec-compatible class for use in tests.
  */
-export default class MockApiObject {
+export default class MockCodable {
   static get CODEC_TAG() {
-    return 'MockApiObject';
+    return 'MockCodable';
   }
 
-  constructor() {
+  constructor(...args) {
     this.initialized = true;
+    this.args        = args;
   }
 
   toCodecArgs() {
     return ['fake argument', 0, 1, 2];
-  }
-
-  static fromCodecArgs(arguments_unused) {
-    return new MockApiObject();
   }
 }

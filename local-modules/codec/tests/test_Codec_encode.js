@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { Codec } from 'codec';
 import { FrozenBuffer } from 'util-common';
 
-import MockApiObject from './MockApiObject';
+import MockCodable from './MockCodable';
 
 class NoCodecTag {
   toCodecArgs() {
@@ -29,7 +29,7 @@ describe('api-common/Codec.encode*()r', () => {
   const encodeJson       = (value) => { return codec.encodeJson(value);       };
   const encodeJsonBuffer = (value) => { return codec.encodeJsonBuffer(value); };
 
-  describe('encodeData', () => {
+  describe('encodeData()', () => {
     it('should reject function values', () => {
       assert.throws(() => encodeData(() => 1));
     });
@@ -75,26 +75,26 @@ describe('api-common/Codec.encode*()r', () => {
       assert.throws(() => encodeData(value));
     });
 
-    it('should reject API objects with no CODEC_TAG property', () => {
+    it('should reject objects with no CODEC_TAG property', () => {
       const noCodecTag = new NoCodecTag();
 
       assert.throws(() => encodeData(noCodecTag));
     });
 
-    it('should reject API objects with no toCodecArgs() method', () => {
+    it('should reject objects with no toCodecArgs() method', () => {
       const noToCodecArgs = new NoToCodecArgs();
 
       assert.throws(() => encodeData(noToCodecArgs));
     });
 
     it('should accept objects with an CODEC_TAG property and toCodecArgs() method', () => {
-      const fakeObject = new MockApiObject();
+      const fakeObject = new MockCodable();
 
       assert.doesNotThrow(() => encodeData(fakeObject));
     });
   });
 
-  describe('encodeJson', () => {
+  describe('encodeJson()', () => {
     it('should produce a string', () => {
       assert.isString(encodeJson(null));
       assert.isString(encodeJson(914));
@@ -108,7 +108,7 @@ describe('api-common/Codec.encode*()r', () => {
     });
   });
 
-  describe('encodeJsonBuffer', () => {
+  describe('encodeJsonBuffer()', () => {
     it('should produce a `FrozenBuffer`', () => {
       assert.instanceOf(encodeJsonBuffer(null), FrozenBuffer);
       assert.instanceOf(encodeJsonBuffer(914), FrozenBuffer);

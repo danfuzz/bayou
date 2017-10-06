@@ -53,7 +53,9 @@ export default class ObjectUtil extends UtilityClass {
   /**
    * Tests whether a value is a "plain object." A plain object is defined as
    * being a value of type `object` which is not `null`, whose direct prototype
-   * is `Object.prototype`, and which does not define any synthetic properties.
+   * is `Object.prototype`, which does not define synthetic properties, and
+   * which does not bind any properties using `Symbol`s.
+   *
    * Notably, arrays are _not_ plain objects.
    *
    * @param {*} value Value to check.
@@ -62,11 +64,12 @@ export default class ObjectUtil extends UtilityClass {
   static isPlain(value) {
     if (   (value === null)
         || (typeof value !== 'object')
-        || (Object.getPrototypeOf(value) !== Object.prototype)) {
+        || (Object.getPrototypeOf(value) !== Object.prototype)
+        || (Object.getOwnPropertySymbols(value).length !== 0)) {
       return false;
     }
 
-    // Make sure there are no synthetic or symbol-bound properties.
+    // Make sure there are no synthetic properties.
     const descriptors = Object.getOwnPropertyDescriptors(value);
     for (const [name, desc] of Object.entries(descriptors)) {
       if ((typeof name !== 'string') || desc.get || desc.set) {

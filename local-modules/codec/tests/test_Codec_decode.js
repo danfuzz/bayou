@@ -8,7 +8,7 @@ import { before, describe, it } from 'mocha';
 import { Codec } from 'codec';
 import { FrozenBuffer } from 'util-common';
 
-import MockApiObject from './MockApiObject';
+import MockCodable from './MockCodable';
 
 describe('api-common/Codec.decode*()', () => {
   // Convenient bindings for `decode*()` and `encodeData()` to avoid a lot of
@@ -21,14 +21,14 @@ describe('api-common/Codec.decode*()', () => {
 
   before(() => {
     try {
-      Codec.theOne.registerClass(MockApiObject);
+      Codec.theOne.registerClass(MockCodable);
     } catch (e) {
       // nothing to do here, the try/catch is just in case some other test
-      // file has already registered the mock API object.
+      // file has already registered the mock class.
     }
   });
 
-  describe('decodeData', () => {
+  describe('decodeData()', () => {
     it('should pass non-object values through as-is', () => {
       assert.strictEqual(decodeData(37), 37);
       assert.strictEqual(decodeData(true), true);
@@ -63,8 +63,8 @@ describe('api-common/Codec.decode*()', () => {
       assert.deepEqual(decodeData(encoded), orig);
     });
 
-    it('should convert propertly formatted values to an API object', () => {
-      const apiObject = new MockApiObject();
+    it('should convert propertly formatted values to a decoded instance', () => {
+      const apiObject = new MockCodable();
       const encoding = encodeData(apiObject);
       let decodedObject = null;
 
@@ -76,7 +76,7 @@ describe('api-common/Codec.decode*()', () => {
     });
   });
 
-  describe('decodeJson', () => {
+  describe('decodeJson()', () => {
     it('should decode as expected', () => {
       assert.strictEqual(decodeJson('null'), null);
       assert.strictEqual(decodeJson('914'), 914);
@@ -84,7 +84,7 @@ describe('api-common/Codec.decode*()', () => {
     });
   });
 
-  describe('decodeJsonBuffer', () => {
+  describe('decodeJsonBuffer()', () => {
     it('should decode as expected', () => {
       function bufAndDecode(s) {
         return decodeJsonBuffer(FrozenBuffer.coerce(s));

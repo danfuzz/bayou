@@ -11,21 +11,17 @@ import { ItemCodec } from 'codec';
 // by path.
 import Registry from 'codec/Registry';
 
-class RegistryTestApiObject {
+class RegistryTestClass {
   constructor() {
     this.initialized = true;
   }
 
   static get CODEC_TAG() {
-    return 'RegistryTestApiObject';
+    return 'RegistryTestClass';
   }
 
   toCodecArgs() {
     return ['fake argument', 0, 1, 2];
-  }
-
-  static fromCodecArgs(arguments_unused) {
-    return new RegistryTestApiObject();
   }
 }
 
@@ -33,43 +29,24 @@ class NoCodecTag {
   toCodecArgs() {
     return 'NoCodecTag!';
   }
-
-  static fromCodecArgs() {
-    return new NoCodecTag();
-  }
 }
 
 class NoToCodecArgs {
   constructor() {
     this.CODEC_TAG = 'NoToCodecArgs';
   }
-
-  static fromCodecArgs() {
-    return new NoToCodecArgs();
-  }
-}
-
-class NoFromCodecArgs {
-  constructor() {
-    this.CODEC_TAG = 'NoFromCodecArgs';
-  }
-
-  toCodecArgs() {
-    return new NoFromCodecArgs();
-  }
 }
 
 describe('api-common/Registry', () => {
-  describe('register(class)', () => {
+  describe('register()', () => {
     it('should accept a class with all salient properties', () => {
       const reg = new Registry();
-      assert.doesNotThrow(() => reg.registerClass(RegistryTestApiObject));
+      assert.doesNotThrow(() => reg.registerClass(RegistryTestClass));
     });
 
-    it('should allow classes without `CODEC_TAG` or `fromCodecArgs()`', () => {
+    it('should allow classes without `CODEC_TAG`', () => {
       const reg = new Registry();
       assert.doesNotThrow(() => reg.registerClass(NoCodecTag));
-      assert.doesNotThrow(() => reg.registerClass(NoFromCodecArgs));
     });
 
     it('should reject a class without `toCodecArgs()`', () => {
@@ -89,7 +66,7 @@ describe('api-common/Registry', () => {
     });
   });
 
-  describe('codecForPayload(payload)', () => {
+  describe('codecForPayload()', () => {
     it('should throw an error if an unregistered tag is requested', () => {
       const reg = new Registry();
       assert.throws(() => reg.codecForPayload(['florp']));
@@ -99,12 +76,23 @@ describe('api-common/Registry', () => {
     });
 
     it('should return the named codec if it is registered', () => {
-      const reg = new Registry();
+      const reg       = new Registry();
       const itemCodec = new ItemCodec('florp', Boolean, null, () => 0, () => 0);
 
       reg.registerCodec(itemCodec);
 
       const testCodec = reg.codecForPayload(['florp']);
+      assert.strictEqual(testCodec, itemCodec);
+    });
+
+    it('should return the codec for a special type if it is registered', () => {
+      const reg       = new Registry();
+      const type      = 'symbol';
+      const itemCodec = new ItemCodec(ItemCodec.tagFromType(type), type, null, () => 0, () => 0);
+
+      reg.registerCodec(itemCodec);
+
+      const testCodec = reg.codecForPayload(Symbol('x'));
       assert.strictEqual(testCodec, itemCodec);
     });
   });
