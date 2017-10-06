@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Functor } from 'util-common';
+import { DataUtil, Functor } from 'util-common';
 
 import MockOp from './MockOp';
 
@@ -18,6 +18,45 @@ describe('doc-common/BaseOp', () => {
     it('should produce a frozen instance', () => {
       const op = new MockOp(new Functor('blort'));
       assert.isFrozen(op);
+    });
+
+    it('should have a deep-frozen payload even when not passed as such', () => {
+      function test(...args) {
+        const op      = new MockOp(new Functor('blort', ...args));
+        const gotArgs = op.payload.args;
+
+        assert.isFrozen(gotArgs);
+
+        for (let i = 0; i < gotArgs.length; i++) {
+          assert.isFrozen(gotArgs[i]);
+        }
+
+        assert.isTrue(DataUtil.isDeepFrozen(gotArgs));
+      }
+
+      test(1);
+      test(1, 'foo');
+      test(1, 'foo', Symbol('bar'));
+      test([]);
+      test([1, 2, 3]);
+      test([[4, 5, 6]]);
+      test([[[7, 8, 9]]]);
+      test([1], [2, [3, [4]]], ['florp']);
+      test({});
+      test({ a: 10 });
+      test({ a: { b: 20 }, c: 30 });
+      test({ a: { b: { c: 30 } }, d: [[[[['like']]]]] });
+    });
+
+    it('should reject payloads with arguments that are neither frozen nor deep-freezable', () => {
+      function test(...args) {
+        assert.throws(() => new MockOp(new Functor(...args)));
+      }
+
+      test(new Map());
+      test(/blort/);
+      test(() => 'woo');
+      test(1, 2, 3, new Map(), 4, 5, 6);
     });
 
     it('should reject non-functor arguments', () => {

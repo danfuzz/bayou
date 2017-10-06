@@ -15,13 +15,16 @@ export default class BaseOp extends CommonBase {
    * the static constructor methods defined by concrete subclasses of this
    * class.
    *
-   * @param {Functor} payload The operation payload (name and arguments).
+   * @param {Functor} payload The operation payload (name and arguments). All
+   *   arguments must either be frozen or be data values which _can_ be frozen.
+   *   In the latter case, the resulting instance's payload is a deep-frozen
+   *   clone of the value given here.
    */
   constructor(payload) {
-    super(payload);
+    super();
 
     /** {Functor} payload The operation payload (name and arguments). */
-    this._payload = Functor.check(payload);
+    this._payload = Functor.check(payload).withFrozenArgs();
 
     Object.freeze(this);
   }
