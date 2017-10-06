@@ -6,11 +6,10 @@ import { TArray, TFunction, TString } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
 /**
- * Handler for API-codable items of a particular class, type, or (in general)
- * kind. This bundles the functionality of identifying codable values, naming
- * them, deriving construction parameters from instances of them, and
- * constructing instances of them from (presumably) previously-derived
- * parameters.
+ * Handler for codable items of a particular class, type, or (in general) kind.
+ * This bundles the functionality of identifying codable values, naming them,
+ * deriving construction parameters from instances of them, and constructing
+ * instances of them from (presumably) previously-derived parameters.
  *
  * The `decode` and `encode` arguments to the constructor are the "workhorses"
  * of an instance of this class. Each of these takes two parameters, the second
@@ -102,8 +101,7 @@ export default class ItemCodec extends CommonBase {
   }
 
   /**
-   * Constructs an instance from a class that has the standard API-coding
-   * methods.
+   * Constructs an instance from a class that has the standard coding methods.
    *
    * @param {function} clazz Class (constructor function) to base the instance
    *   on.

@@ -24,7 +24,7 @@ describe('api-common/Codec.decode*()', () => {
       Codec.theOne.registerClass(MockApiObject);
     } catch (e) {
       // nothing to do here, the try/catch is just in case some other test
-      // file has already registered the mock API object.
+      // file has already registered the mock class.
     }
   });
 
@@ -63,7 +63,7 @@ describe('api-common/Codec.decode*()', () => {
       assert.deepEqual(decodeData(encoded), orig);
     });
 
-    it('should convert propertly formatted values to an API object', () => {
+    it('should convert propertly formatted values to a decoded instance', () => {
       const apiObject = new MockApiObject();
       const encoding = encodeData(apiObject);
       let decodedObject = null;

@@ -75,13 +75,13 @@ describe('api-common/Codec.encode*()r', () => {
       assert.throws(() => encodeData(value));
     });
 
-    it('should reject API objects with no CODEC_TAG property', () => {
+    it('should reject objects with no CODEC_TAG property', () => {
       const noCodecTag = new NoCodecTag();
 
       assert.throws(() => encodeData(noCodecTag));
     });
 
-    it('should reject API objects with no toCodecArgs() method', () => {
+    it('should reject objects with no toCodecArgs() method', () => {
       const noToCodecArgs = new NoToCodecArgs();
 
       assert.throws(() => encodeData(noToCodecArgs));

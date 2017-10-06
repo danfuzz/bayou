@@ -7,13 +7,13 @@ import { FrozenBuffer, Singleton } from 'util-common';
 import Registry from './Registry';
 
 /**
- * Encoder and decoder of values for transport over the API (or for storage on
- * disk or in databases), with binding to a name-to-class registry.
+ * Encoder and decoder of values for transport over an API or for storage on
+ * disk or in databases, with binding to a name-to-class registry.
  *
  * **TODO:** This class should probably _not_ be a singleton, in that there are
- * legitimately multiple different API coding contexts which ultimately might
- * want to have different sets of classes (or different name bindings even if
- * the classes overlap).
+ * legitimately multiple different coding contexts which ultimately might want
+ * to have different sets of classes (or different name bindings even if the
+ * classes overlap).
  */
 export default class Codec extends Singleton {
   /**
@@ -165,7 +165,7 @@ export default class Codec extends Singleton {
   }
 
   /**
-   * Registers a class to be accepted for API use. This is a pass-through to
+   * Registers a class to be accepted for codec use. This is a pass-through to
    * the method of the same name on the instance's `Registry`.
    *
    * @param {class} clazz The class to register.
@@ -175,8 +175,8 @@ export default class Codec extends Singleton {
   }
 
   /**
-   * Registers an item codec to be accepted for API use. This is a pass-through
-   * to the method of the same name on the instance's `Registry`.
+   * Registers an item codec to be accepted for codec use. This is a
+   * pass-through to the method of the same name on the instance's `Registry`.
    *
    * @param {ItemCodec} codec The codec to register.
    */

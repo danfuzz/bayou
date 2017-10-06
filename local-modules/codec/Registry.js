@@ -9,9 +9,7 @@ import SpecialCodecs from './SpecialCodecs';
 
 /**
  * Methods for registering and looking up item codecs by name. The names are
- * how classes/types are identified when encoding and decoding instances on
- * the wire (for API transmission and receipt, and for storage to disk or in
- * a database).
+ * how classes/types are identified when encoding and decoding instances.
  */
 export default class Registry extends CommonBase {
   /**
@@ -53,7 +51,7 @@ export default class Registry extends CommonBase {
   }
 
   /**
-   * Registers a class to be accepted for API use. To be valid, a class must
+   * Registers a class to be accepted for codec use. To be valid, a class must
    * define an instance method `toCodecArgs()`. In addition, it can optionally
    * define a static property `CODEC_TAG` as a replacement for its class name
    * for use as the tag when encoding; and optionally define a static method

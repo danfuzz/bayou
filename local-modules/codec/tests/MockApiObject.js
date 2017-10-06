@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 /**
- * Trivial API-compatible class for use in tests.
+ * Trivial codec-compatible class for use in tests.
  */
 export default class MockApiObject {
   static get CODEC_TAG() {
