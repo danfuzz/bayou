@@ -68,7 +68,7 @@ describe('util-core/ObjectUtil', () => {
       test({});
       test({ a: 10 });
       test({ a: 10, b: 20 });
-      test({ [Symbol('blort')]: [1, 2, 3] });
+      test({ a: 10, b: 20, c: [1, 2, 3] });
     });
 
     it('should return `false` for non-plain objects', () => {

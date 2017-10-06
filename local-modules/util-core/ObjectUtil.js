@@ -64,11 +64,12 @@ export default class ObjectUtil extends UtilityClass {
   static isPlain(value) {
     if (   (value === null)
         || (typeof value !== 'object')
-        || (Object.getPrototypeOf(value) !== Object.prototype)) {
+        || (Object.getPrototypeOf(value) !== Object.prototype)
+        || (Object.getOwnPropertySymbols(value).length !== 0)) {
       return false;
     }
 
-    // Make sure there are no synthetic or symbol-bound properties.
+    // Make sure there are no synthetic properties.
     const descriptors = Object.getOwnPropertyDescriptors(value);
     for (const [name, desc] of Object.entries(descriptors)) {
       if ((typeof name !== 'string') || desc.get || desc.set) {

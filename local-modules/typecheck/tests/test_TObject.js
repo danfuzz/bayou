@@ -60,7 +60,6 @@ describe('typecheck/TObject', () => {
       test({});
       test({ a: 10 });
       test({ a: 10, b: 20 });
-      test({ [Symbol('blort')]: [1, 2, 3] });
     });
 
     it('should reject non-plain objects', () => {
@@ -74,6 +73,7 @@ describe('typecheck/TObject', () => {
       test(new Map());
       test({ get x() { return 'x'; } });
       test({ set x(v) { /*empty*/ } });
+      test({ [Symbol('blort')]: [1, 2, 3] });
     });
 
     it('should reject non-objects', () => {
