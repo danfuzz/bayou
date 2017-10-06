@@ -23,7 +23,6 @@ class RegistryTestClass {
   toCodecArgs() {
     return ['fake argument', 0, 1, 2];
   }
-
 }
 
 class NoCodecTag {
