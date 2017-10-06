@@ -6,7 +6,23 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
+import { BaseDelta } from 'doc-common';
+
 import MockDelta from './MockDelta';
+import MockOp from './MockOp';
+
+/**
+ * Second mock "delta" class for testing.
+ */
+export default class AnotherDelta extends BaseDelta {
+  _impl_isDocument() {
+    return true;
+  }
+
+  static get _impl_opClass() {
+    return MockOp;
+  }
+}
 
 describe('doc-common/BaseDelta', () => {
   describe('.EMPTY', () => {
@@ -69,6 +85,90 @@ describe('doc-common/BaseDelta', () => {
           assert.throws(() => new MockDelta(v));
         });
       }
+    });
+  });
+
+  describe('equals()', () => {
+    it('should return `true` when passed itself', () => {
+      function test(ops) {
+        const delta = new MockDelta(ops);
+        assert.isTrue(delta.equals(delta));
+      }
+
+      test([]);
+      test(MockDelta.VALID_OPS);
+      test(MockDelta.NOT_DOCUMENT_OPS);
+    });
+
+    it('should return `true` when passed an identically-constructed value', () => {
+      function test(ops) {
+        const d1 = new MockDelta(ops);
+        const d2 = new MockDelta(ops);
+        assert.isTrue(d1.equals(d2));
+        assert.isTrue(d2.equals(d1));
+      }
+
+      test([]);
+      test(MockDelta.VALID_OPS);
+      test(MockDelta.NOT_DOCUMENT_OPS);
+    });
+
+    it('should return `true` when equal ops are not also `===`', () => {
+      const ops1 = [MockDelta.makeOp('foo'), MockDelta.makeOp('bar')];
+      const ops2 = [MockDelta.makeOp('foo'), MockDelta.makeOp('bar')];
+      const d1 = new MockDelta(ops1);
+      const d2 = new MockDelta(ops2);
+
+      assert.isTrue(d1.equals(d2));
+      assert.isTrue(d2.equals(d1));
+    });
+
+    it('should return `false` when array lengths differ', () => {
+      const op1 = MockDelta.makeOp('foo');
+      const op2 = MockDelta.makeOp('bar');
+      const d1 = new MockDelta([op1]);
+      const d2 = new MockDelta([op1, op2]);
+
+      assert.isFalse(d1.equals(d2));
+      assert.isFalse(d2.equals(d1));
+    });
+
+    it('should return `false` when corresponding ops differ', () => {
+      function test(ops1, ops2) {
+        const d1 = new MockDelta(ops1);
+        const d2 = new MockDelta(ops2);
+
+        assert.isFalse(d1.equals(d2));
+        assert.isFalse(d2.equals(d1));
+      }
+
+      const op1 = MockDelta.makeOp('foo');
+      const op2 = MockDelta.makeOp('bar');
+      const op3 = MockDelta.makeOp('baz');
+      const op4 = MockDelta.makeOp('biff');
+      const op5 = MockDelta.makeOp('quux');
+
+      test([op1],                     [op2]);
+      test([op1, op2],                [op1, op3]);
+      test([op1, op2],                [op3, op2]);
+      test([op1, op2, op3, op4, op5], [op5, op2, op3, op4, op5]);
+      test([op1, op2, op3, op4, op5], [op1, op5, op3, op4, op5]);
+      test([op1, op2, op3, op4, op5], [op1, op2, op5, op4, op5]);
+      test([op1, op2, op3, op4, op5], [op1, op2, op3, op5, op5]);
+      test([op1, op2, op3, op4, op5], [op1, op2, op3, op4, op1]);
+    });
+
+    it('should return `false` when passed a non-instance or an instance of a different class', () => {
+      const delta = new MockDelta([]);
+
+      assert.isFalse(delta.equals(undefined));
+      assert.isFalse(delta.equals(null));
+      assert.isFalse(delta.equals(false));
+      assert.isFalse(delta.equals(true));
+      assert.isFalse(delta.equals(914));
+      assert.isFalse(delta.equals(['not', 'a', 'delta']));
+      assert.isFalse(delta.equals(new Map()));
+      assert.isFalse(delta.equals(new AnotherDelta([])));
     });
   });
 
