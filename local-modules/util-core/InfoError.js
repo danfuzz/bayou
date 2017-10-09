@@ -94,4 +94,15 @@ export default class InfoError extends Error {
   get info() {
     return this._info;
   }
+
+  /**
+   * This just calls through to the superclass's `toString()`. This method
+   * exists so that `CommonBase.mixin()` won't try to override `toString()` on
+   * this class.
+   *
+   * @returns {string} String form of this instance.
+   */
+  toString() {
+    return super.toString();
+  }
 }

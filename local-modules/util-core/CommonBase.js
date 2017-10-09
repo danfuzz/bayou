@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import CoreTypecheck from './CoreTypecheck';
 import Errors from './Errors';
 import ObjectUtil from './ObjectUtil';
@@ -125,6 +127,119 @@ export default class CommonBase {
 
     mixOne(clazz, this);                     // Mix in the static properties.
     mixOne(clazz.prototype, this.prototype); // Mix in the instance properties.
+  }
+
+  /**
+   * Same as calling the custom inspector function via its symbol-bound method,
+   * `[util.inpsect.custom]`. Subclasses that wish to provide custom `inspect()`
+   * functionality should do so by overriding the symbol-bound method and not
+   * this one.
+   *
+   * _This_ method exists because, as of this writing, the browser polyfill for
+   * `util.inspect()` doesn't find `util.inspect.custom` methods. **TODO:**
+   * Occasionally check to see if this workaround is still needed, and remove it
+   * if it is finally unnecessary.
+   *
+   * @param {Int} depth Current inspection depth.
+   * @param {object} opts Inspection options.
+   * @returns {string} The inspection string form of this instance.
+   */
+  inspect(depth, opts) {
+    return this[inspect.custom](depth, opts);
+  }
+
+  /**
+   * Custom inspector function, as called by `util.inspect()`. This
+   * implementation returns a string that uses the instance's class name and
+   * public synthetic properties (which is an arrangement by and large suitable
+   * for classes as typically defined in this project), with the latter enclosed
+   * in `{...}` and displayed in a map-like way.
+   *
+   * Subclasses may choose to override this method if they can produce something
+   * more appropriate and/or higher fidelity.
+   *
+   * @param {Int} depth Current inspection depth.
+   * @param {object} opts Inspection options.
+   * @returns {string} The inspection string form of this instance.
+   */
+  [inspect.custom](depth, opts) {
+    const name = this.constructor.name;
+
+    if (depth <= 0) {
+      return `${name} {...}`;
+    }
+
+    // Set up the inspection opts so that recursive `inspect()` calls respect
+    // the topmost requested depth.
+    const subOpts = (opts.depth === null)
+      ? opts
+      : Object.assign({}, opts, { depth: opts.depth - 1 });
+
+    // Walk the prototype chain up to this class, collecting the values of
+    // public synthetic properties.
+    const values = new Map();
+    for (let obj = this; obj !== CommonBase.prototype; obj = Object.getPrototypeOf(obj)) {
+      for (const n of Object.getOwnPropertyNames(obj)) {
+        if (values.get(n) || /^_/.test(n)) {
+          // It's either already been found (on a previous iteration) or it's
+          // not a "public" property as defined by this project. (The `_` prefix
+          // means it's effectively private or protected.)
+          continue;
+        }
+
+        const desc = Object.getOwnPropertyDescriptor(obj, n);
+
+        if (!desc.get) {
+          // It's either not a synthetic property at all, or it's synthetic but
+          // without a getter.
+          continue;
+        }
+
+        // Call the getter, and add its `inspect()` result to the map of same.
+        values.set(n, inspect(obj[n], subOpts));
+      }
+    }
+
+    // Sort the values by name, and use those to build up the final result.
+
+    const sortedEntries = [...values].sort(([k1, v1_unused], [k2, v2_unused]) => {
+      if (k1 < k2) {
+        return -1;
+      } else if (k1 > k2) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+
+    const result = [name, ' { '];
+    let   first  = true;
+
+    for (const [k, v] of sortedEntries) {
+      if (first) {
+        first = false;
+      } else {
+        result.push(', ');
+      }
+
+      result.push(k);
+      result.push(': ');
+      result.push(v);
+    }
+
+    result.push(' }');
+    return result.join('');
+  }
+
+  /**
+   * Gets the string form of this instance. This implementation calls through
+   * to `util.inspect()` requesting a single-line result with the default
+   * recursion depth (which is `2` as of this writing).
+   *
+   * @returns {string} The string form of this instance.
+   */
+  toString() {
+    return inspect(this, { breakLength: Infinity });
   }
 
   /**
