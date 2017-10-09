@@ -2,8 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { inspect } from 'util';
-
 import { TObject } from 'typecheck';
 import { CommonBase } from 'util-common';
 
@@ -163,21 +161,6 @@ export default class BaseChange extends CommonBase {
     }
 
     return result;
-  }
-
-  /**
-   * Gets a human-oriented string representation of this instance.
-   *
-   * @returns {string} The human-oriented representation.
-   */
-  toString() {
-    // `depth: null` means to recurse indefinitely.
-    const bodyArr = inspect(this.toCodecArgs(), { depth: null });
-
-    // The `replace()` removes the bracketing around the inspected array.
-    const body = bodyArr.replace(/^.([^]*).$/, '$1');
-
-    return `${this.constructor.name} {${body}}`;
   }
 
   /**
