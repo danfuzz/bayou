@@ -44,6 +44,6 @@ const mapStateToProps = (state) => {
 };
 
 /**
- * Constracuts a wrapper class that includes the redux connect binding.
+ * Constructs a wrapper class that includes the redux connect binding.
  */
 export default connect(mapStateToProps)(Owner);

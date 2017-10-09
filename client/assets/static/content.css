@@ -4,6 +4,16 @@
  * Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
  */
 
+body {
+  // Firefox on OSX: greyscale anti-aliased font smoothing, "thinner" type
+  //  closer to Safari/webkit. https://bugzilla.mozilla.org/show_bug.cgi?id=857142
+  -moz-osx-font-smoothing: grayscale;
+  // Default to greyscale anti-aliasing (vs. subpixel-antialiased which
+  // will look thicker.)
+  // Worth a read: http://usabilitypost.com/2012/11/05/stop-fixing-font-smoothing/
+  -webkit-font-smoothing:  antialiased;
+}
+
 /*
  * Definitions for the editor content area.
  */
@@ -47,7 +57,7 @@ html.bayou-page {
   font-size:     3rem;
   line-height:   3.25rem;
   margin-top:    3.25rem;
-  margin-bottom: 2.25rem;
+  margin-bottom: 2.0rem;
 }
 
 .bayou-title-editor .ql-editor a:link {
@@ -125,6 +135,8 @@ html.bayou-page {
   max-width:    43.75rem;
   margin-left:  auto;
   margin-right: auto;
+
+  padding:      0;
 }
 
 .bayou-editor .ql-editor ::selection {
@@ -143,8 +155,8 @@ html.bayou-page {
   font-size:     2.25rem;
   font-weight:   900;
   line-height:   2.625rem;
-  margin-top:    2.5rem;
-  margin-bottom: 0.75rem;
+  margin-top:    1.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .bayou-editor .ql-editor h2 {
@@ -152,7 +164,7 @@ html.bayou-page {
   font-weight:   900;
   line-height:   2.125rem;
   margin-top:    1.75rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .bayou-editor .ql-editor h3 {
@@ -160,7 +172,7 @@ html.bayou-page {
   font-weight:   900;
   line-height:   2.25rem;
   margin-top:    1.75rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
 }
 
 .bayou-editor .ql-editor a:link {
