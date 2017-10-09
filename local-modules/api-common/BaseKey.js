@@ -117,7 +117,7 @@ export default class BaseKey extends CommonBase {
   [inspect.custom](depth_unused, opts) {
     const name = this.constructor.name;
 
-    return (opts.depth <= 0)
+    return (opts.depth < 0)
       ? `${name} {...}`
       : `${name} { ${this._url} ${this._impl_printableId()} }`;
   }
