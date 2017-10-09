@@ -165,7 +165,7 @@ export default class CommonBase {
   [inspect.custom](depth, opts) {
     const name = this.constructor.name;
 
-    if (depth <= 0) {
+    if (depth < 0) {
       return `${name} {...}`;
     }
 
@@ -196,7 +196,7 @@ export default class CommonBase {
         }
 
         // Call the getter, and add its `inspect()` result to the map of same.
-        values.set(n, inspect(obj[n], subOpts));
+        values.set(n, inspect(this[n], subOpts));
       }
     }
 

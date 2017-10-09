@@ -62,7 +62,7 @@ export default class Functor {
    * @returns {string} The inspection string form of this instance.
    */
   [inspect.custom](depth, opts) {
-    if (depth <= 0) {
+    if (depth < 0) {
       // Minimal expansion if we're at the depth limit.
       return `${this._name}(${this._args.length === 0 ? '' : '...'})`;
     }
