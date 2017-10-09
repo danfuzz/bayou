@@ -2,12 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import SharingState from './SharingState';
-
 const DEFAULT_STATE = {
   /** {boolean} Whether this document is favorited or not. */
   starred: false,
-  sharingStatus: SharingState.UNKNOWN
 };
 
 /** {string} Action type to use for toggling the star state. */

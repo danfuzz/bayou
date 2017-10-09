@@ -57,7 +57,7 @@ SharingStatus.propTypes = {
  */
 const mapStateToProps = (state) => {
   return {
-    sharingState: state.document.sharingState
+    sharingStatus: state.sharing.state
   };
 };
 

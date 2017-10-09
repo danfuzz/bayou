@@ -6,6 +6,7 @@ import { combineReducers, createStore } from 'redux';
 
 import DocumentState from './DocumentState';
 import OwnerState from './OwnerState';
+import SharingState from './SharingState';
 
 /**
  * Wrapper for a redux store. Its main purpose is to compose the
@@ -18,7 +19,8 @@ export default class ClientStore {
   constructor() {
     const rootReducer = combineReducers({
       document: DocumentState.reducer,
-      owner:    OwnerState.reducer
+      owner:    OwnerState.reducer,
+      sharing:  SharingState.reducer
     });
 
     this._store = createStore(rootReducer);
