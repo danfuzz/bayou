@@ -8,16 +8,6 @@ import { BaseOp } from 'doc-common';
  * Mock operation class for testing.
  */
 export default class MockOp extends BaseOp {
-  /**
-   * Makes a valid op with the indicated name.
-   *
-   * @param {string} name Name of the op.
-   * @returns {object} An op with the indicated name.
-   */
-  static make(name) {
-    return new MockOp(name);
-  }
-
   get name() {
     return this.payload.name;
   }
