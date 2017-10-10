@@ -6,6 +6,8 @@ import { inspect } from 'util';
 
 import CoreTypecheck from './CoreTypecheck';
 import DataUtil from './DataUtil';
+import Errors from './Errors';
+import ObjectUtil from './ObjectUtil';
 
 /**
  * Functor data value. A "functor," generally speaking, is a thing that looks
@@ -139,12 +141,12 @@ export default class Functor {
   }
 
   /**
-   * Gets an instance just like this one except with all arguments frozen. If
-   * all arguments are already frozen, this method returns `this`. Otherwise,
-   * it will attempt to freeze non-frozen arguments using {@link
-   * DataUtil#deepFreeze}, which means that those arguments must be data values.
-   * If there are any non-frozen values which aren't data values, this method
-   * will throw an error.
+   * Gets an instance just like this one except with all arguments guaranteed to
+   * be _either_ deep-frozen data values or already-frozen non-plain / non-array
+   * objects. If all arguments are already conformant, this method returns
+   * `this`. Otherwise, it will freeze non-frozen data arguments using {@link
+   * DataUtil#deepFreeze}, and will throw an error if given any other non-frozen
+   * values.
    *
    * @returns {Functor} A frozen-argument version of `this`.
    */
@@ -153,11 +155,18 @@ export default class Functor {
     let   any  = false;
 
     for (const a of this._args) {
-      if (Object.isFrozen(a)) {
-        args.push(a);
+      let newArg;
+      if (Array.isArray(a) || ObjectUtil.isPlain(a)) {
+        newArg = DataUtil.deepFreeze(a);
+      } else if (Object.isFrozen(a)) {
+        newArg = a;
       } else {
+        throw Errors.bad_use('Non-frozen non-data argument.');
+      }
+
+      args.push(newArg);
+      if (a !== newArg) {
         any = true;
-        args.push(DataUtil.deepFreeze(a));
       }
     }
 
