@@ -216,10 +216,74 @@ export default class DataUtil extends UtilityClass {
   }
 
   /**
+   * Indicates whether or not the given value is a data value.
+   *
+   * @param {*} value The value to check.
+   * @returns {boolean} `true` if `value` is a data value, or `false` if not.
+   */
+  static isData(value) {
+    switch (typeof value) {
+      case 'boolean':
+      case 'number':
+      case 'string':
+      case 'symbol':
+      case 'undefined': {
+        return true;
+      }
+
+      case 'object': {
+        if (value === null) {
+          return true;
+        }
+        break;
+      }
+
+      default: {
+        // This includes `function`.
+        return false;
+      }
+    }
+
+    // At this point, we have a non-null object(ish) value, which is _not_ a
+    // function or generator.
+
+    switch (Object.getPrototypeOf(value)) {
+      case Object.prototype:
+      case Array.prototype: {
+        // We have a composite of one of the acceptable standard types (either
+        // array or plain object). We still need to check the properties /
+        // elements.
+
+        for (const k of Object.getOwnPropertyNames(value)) {
+          const prop = Object.getOwnPropertyDescriptor(value, k);
+          const v = prop.value;
+          if ((v === undefined) && !ObjectUtil.hasOwnProperty(prop, 'value')) {
+            // This is a synthetic property.
+            return false;
+          } else if (!DataUtil.isData(v)) {
+            return false;
+          }
+        }
+
+        return true;
+      }
+
+      case Functor.prototype: {
+        return DataUtil.isData(value.args);
+      }
+
+      default: {
+        return false;
+      }
+    }
+  }
+
+  /**
    * Indicates whether or not the given value is a deep-frozen data value.
    *
    * @param {*} value The value to check.
-   * @returns {boolean} `true` if `value` is deep-frozen, or `false` if not.
+   * @returns {boolean} `true` if `value` is a deep-frozen data value, or
+   *   `false` if not.
    */
   static isDeepFrozen(value) {
     switch (typeof value) {
