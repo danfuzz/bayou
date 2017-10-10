@@ -17,13 +17,20 @@ export default class BaseOp extends CommonBase {
    * the static constructor methods defined by concrete subclasses of this
    * class.
    *
-   * @param {Functor} payload The operation payload (name and arguments). All
-   *   arguments must either be frozen or be data values which _can_ be frozen.
-   *   In the latter case, the resulting instance's payload is a deep-frozen
-   *   clone of the value given here.
+   * @param {string} name The operation name.
+   * @param {...*} args The operation arguments. Each argument must either be
+   *   frozen or be a data values which _can_ be frozen. In the latter case, the
+   *   resulting instance's corresponding argument is a deep-frozen clone of the
+   *   value given here.
    */
-  constructor(payload) {
+  constructor(name, ...args) {
     super();
+
+    // **TODO:** Remove the functor argument option, once call sites have been
+    // fixed.
+    const payload = (name instanceof Functor)
+      ? name
+      : new Functor(name, ...args);
 
     /** {Functor} payload The operation payload (name and arguments). */
     this._payload = Functor.check(payload).withFrozenArgs();
@@ -89,6 +96,6 @@ export default class BaseOp extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toCodecArgs() {
-    return [this._payload];
+    return [this._payload.name, ...this._payload.args];
   }
 }

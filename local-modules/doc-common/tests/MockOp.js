@@ -3,7 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseOp } from 'doc-common';
-import { Functor } from 'util-common';
 
 /**
  * Mock operation class for testing.
@@ -16,7 +15,7 @@ export default class MockOp extends BaseOp {
    * @returns {object} An op with the indicated name.
    */
   static make(name) {
-    return new MockOp(new Functor(name));
+    return new MockOp(name);
   }
 
   get name() {

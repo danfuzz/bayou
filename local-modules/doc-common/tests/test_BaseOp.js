@@ -4,6 +4,7 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
+import { inspect } from 'util';
 
 import { DataUtil, Functor } from 'util-common';
 
@@ -11,27 +12,34 @@ import MockOp from './MockOp';
 
 describe('doc-common/BaseOp', () => {
   describe('constructor()', () => {
-    it('should accept a functor argument', () => {
-      new MockOp(new Functor('blort'));
+    it('should accept a string `name argument', () => {
+      const result = new MockOp('blort');
+      assert.strictEqual(result.payload.name, 'blort');
     });
 
-    it('should produce a frozen instance', () => {
-      const op = new MockOp(new Functor('blort'));
+    it('should accept at least ten arguments after the name', () => {
+      const result = new MockOp('blort', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+      assert.strictEqual(result.payload.args.length, 10);
+    });
+
+    it('should produce a frozen instance with a frozen payload', () => {
+      const op = new MockOp('blort');
       assert.isFrozen(op);
+      assert.isFrozen(op.payload);
     });
 
-    it('should have a deep-frozen payload even when not passed as such', () => {
+    it('should have all frozen payload arguments even when given non-frozen ones', () => {
       function test(...args) {
-        const op      = new MockOp(new Functor('blort', ...args));
+        const op      = new MockOp('blort', ...args);
         const gotArgs = op.payload.args;
 
-        assert.isFrozen(gotArgs);
-
-        for (let i = 0; i < gotArgs.length; i++) {
-          assert.isFrozen(gotArgs[i]);
+        for (const arg of gotArgs) {
+          if (DataUtil.isData(arg)) {
+            assert.isTrue(DataUtil.isDeepFrozen(arg), inspect(arg));
+          } else {
+            assert.isFrozen(arg);
+          }
         }
-
-        assert.isTrue(DataUtil.isDeepFrozen(gotArgs));
       }
 
       test(1);
@@ -48,9 +56,9 @@ describe('doc-common/BaseOp', () => {
       test({ a: { b: { c: 30 } }, d: [[[[['like']]]]] });
     });
 
-    it('should reject payloads with arguments that are neither frozen nor deep-freezable', () => {
+    it('should reject payloads with arguments that are neither frozen nor deep-freezable data', () => {
       function test(...args) {
-        assert.throws(() => new MockOp(new Functor(...args)));
+        assert.throws(() => new MockOp(...args));
       }
 
       test(new Map());
@@ -59,38 +67,37 @@ describe('doc-common/BaseOp', () => {
       test(1, 2, 3, new Map(), 4, 5, 6);
     });
 
-    it('should reject non-functor arguments', () => {
+    it('should reject non-string first arguments', () => {
       function test(v) {
         assert.throws(() => new MockOp(v));
       }
 
       test(undefined);
       test(null);
-      test('blort');
       test(['blort']);
       test({ x: 'blort' });
     });
   });
 
   describe('.payload', () => {
-    it('should be the value passed to the constructor', () => {
+    it('should be a functor based on the constructor arguments', () => {
       const payload = new Functor('x', 1, 2, 3);
-      const op = new MockOp(payload);
+      const op = new MockOp(payload.name, ...payload.args);
 
-      assert.strictEqual(op.payload, payload);
+      assert.deepEqual(op.payload, payload);
     });
   });
 
   describe('equals()', () => {
     it('should return `true` when passed itself', () => {
-      const op = new MockOp(new Functor('x', 'y', 'z'));
+      const op = new MockOp('x', 'y', 'z');
       assert.isTrue(op.equals(op));
     });
 
     it('should return `true` when passed an identically-constructed value', () => {
       function test(...args) {
-        const op1 = new MockOp(new Functor(...args));
-        const op2 = new MockOp(new Functor(...args));
+        const op1 = new MockOp(...args);
+        const op2 = new MockOp(...args);
         assert.isTrue(op1.equals(op2));
       }
 
@@ -102,8 +109,8 @@ describe('doc-common/BaseOp', () => {
 
     it('should return `false` when payloads differ', () => {
       function test(p1, p2) {
-        const op1 = new MockOp(new Functor(...p1));
-        const op2 = new MockOp(new Functor(...p2));
+        const op1 = new MockOp(...p1);
+        const op2 = new MockOp(...p2);
         assert.isFalse(op1.equals(op2));
         assert.isFalse(op2.equals(op1));
       }
@@ -121,7 +128,7 @@ describe('doc-common/BaseOp', () => {
     });
 
     it('should return `false` when passed a non-instance', () => {
-      const op = new MockOp(new Functor('x'));
+      const op = new MockOp('x');
 
       assert.isFalse(op.equals(undefined));
       assert.isFalse(op.equals(null));
