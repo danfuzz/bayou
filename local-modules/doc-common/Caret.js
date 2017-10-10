@@ -261,7 +261,7 @@ export default class Caret extends CommonBase {
   /**
    * Compares this to another value, for equality.
    *
-   * @param {Caret} other Caret to compare to.
+   * @param {*} other Value to compare to.
    * @returns {boolean} `true` iff `other` is also an instance of this class,
    *   and `this` and `other` have equal contents.
    */
