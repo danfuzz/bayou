@@ -41,7 +41,7 @@ export default class PropertySnapshot extends BaseSnapshot {
 
       switch (opProps.opName) {
         case PropertyOp.SET_PROPERTY: {
-          this._properties.set(opProps.name, op);
+          this._properties.set(opProps.property.name, op);
           break;
         }
 
@@ -67,7 +67,7 @@ export default class PropertySnapshot extends BaseSnapshot {
   }
 
   /**
-   * Gets an iterator over the `[name, value]` entries that make up the
+   * Gets an iterator over the `[name, property]` entries that make up the
    * snapshot.
    *
    * **Note:** This has identical semantics to the `Map` method of the same
@@ -78,8 +78,8 @@ export default class PropertySnapshot extends BaseSnapshot {
    */
   * entries() {
     for (const op of this.contents.ops) {
-      const { name, value } = op.props;
-      yield [name, value];
+      const property = op.props.property;
+      yield [property.name, property];
     }
   }
 
@@ -115,14 +115,14 @@ export default class PropertySnapshot extends BaseSnapshot {
   }
 
   /**
-   * Gets the property value for the given name, if any. Throws an error if
-   * `name` is not a bound property.
+   * Gets the property for the given name, if any. Throws an error if `name` is
+   * not a bound property.
    *
    * **Note:** This differs from the semantics of the `Map` method of the same
    * name in that the not-found case is an error.
    *
    * @param {string} name Property name.
-   * @returns {*} Corresponding property value.
+   * @returns {Property} Corresponding property.
    */
   get(name) {
     TString.identifier(name);
@@ -130,7 +130,7 @@ export default class PropertySnapshot extends BaseSnapshot {
     const p = this._properties.get(name);
 
     if (p) {
-      return p.props.value;
+      return p.props.property;
     }
 
     throw Errors.bad_use(`No such property: ${name}`);
@@ -203,7 +203,7 @@ export default class PropertySnapshot extends BaseSnapshot {
 
       switch (opProps.opName) {
         case PropertyOp.SET_PROPERTY: {
-          newProps.set(opProps.name, op);
+          newProps.set(opProps.property.name, op);
           break;
         }
 

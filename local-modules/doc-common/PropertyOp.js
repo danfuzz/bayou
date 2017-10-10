@@ -6,6 +6,7 @@ import { TString } from 'typecheck';
 import { Errors } from 'util-common';
 
 import BaseOp from './BaseOp';
+import Property from './Property';
 
 /**
  * Operation which can be applied to a `PropertySnapshot`.
@@ -43,9 +44,7 @@ export default class PropertyOp extends BaseOp {
    * @returns {PropertyOp} An appropriately-constructed operation.
    */
   static op_setProperty(name, value) {
-    TString.identifier(name);
-
-    return new PropertyOp(PropertyOp.SET_PROPERTY, name, value);
+    return new PropertyOp(PropertyOp.SET_PROPERTY, new Property(name, value));
   }
 
   /**
@@ -65,8 +64,8 @@ export default class PropertyOp extends BaseOp {
       }
 
       case PropertyOp.SET_PROPERTY: {
-        const [name, value] = payload.args;
-        return Object.freeze({ opName, name, value });
+        const [property] = payload.args;
+        return Object.freeze({ opName, property });
       }
 
       default: {

@@ -172,7 +172,7 @@ describe('doc-common/PropertySnapshot', () => {
       const change   = new PropertyChange(0, [op]);
       const result   = snap.compose(change);
 
-      assert.strictEqual(result.get('florp'), 'like');
+      assert.strictEqual(result.get('florp'), op.props.property);
       assert.isTrue(result.equals(expected));
     });
 
@@ -183,7 +183,7 @@ describe('doc-common/PropertySnapshot', () => {
       const change   = new PropertyChange(0, [op]);
       const result   = snap.compose(change);
 
-      assert.strictEqual(result.get('florp'), 'like');
+      assert.strictEqual(result.get('florp'), op.props.property);
       assert.isTrue(result.equals(expected));
     });
 
@@ -253,13 +253,13 @@ describe('doc-common/PropertySnapshot', () => {
         // Expectations as a map of keys to values.
         const expectMap = new Map();
         for (const op of ops) {
-          const { name, value } = op.props;
-          expectMap.set(name, value);
+          const { property } = op.props;
+          expectMap.set(property.name, property);
         }
 
         const snap = new PropertySnapshot(1, ops);
         for (const [name, value] of snap.entries()) {
-          assert.isTrue(expectMap.has(name)); // Differentiate `null` value from absent key.
+          assert.isTrue(expectMap.has(name));
           assert.strictEqual(value, expectMap.get(name));
           expectMap.delete(name);
         }
@@ -408,7 +408,7 @@ describe('doc-common/PropertySnapshot', () => {
           PropertyOp.op_setProperty('Z', 33)
         ]);
 
-        assert.strictEqual(snap.get(name), op.props.value);
+        assert.strictEqual(snap.get(name), op.props.property);
       }
 
       test('zilch', undefined);
@@ -422,13 +422,13 @@ describe('doc-common/PropertySnapshot', () => {
       test('florp', ['like']);
     });
 
-    it('should always return a deep-frozen value even when the constructor was passed an unfrozen value', () => {
+    it('should always return a deep-frozen property value even when the constructor was passed an unfrozen value', () => {
       const value = [[['zorch']], ['splat'], 'foo'];
       const snap = new PropertySnapshot(1, [PropertyOp.op_setProperty('blort', value)]);
 
       const result = snap.get('blort');
-      assert.isTrue(DataUtil.isDeepFrozen(result));
-      assert.deepEqual(result, value);
+      assert.isTrue(DataUtil.isDeepFrozen(result.value));
+      assert.deepEqual(result.value, value);
     });
 
     it('should throw an error when given a name that is not bound as a property', () => {

@@ -27,7 +27,7 @@ export default class PropertyDelta extends BaseDelta {
 
       switch (opProps.opName) {
         case PropertyOp.SET_PROPERTY: {
-          const name = opProps.name;
+          const name = opProps.property.name;
 
           if (names.has(name)) {
             return false;
