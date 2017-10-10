@@ -27,13 +27,13 @@ export default class PropertyDelta extends BaseDelta {
 
       switch (opProps.opName) {
         case PropertyOp.SET_PROPERTY: {
-          const sessionId = opProps.name;
+          const name = opProps.name;
 
-          if (names.has(sessionId)) {
+          if (names.has(name)) {
             return false;
           }
 
-          names.add(sessionId);
+          names.add(name);
           break;
         }
 
