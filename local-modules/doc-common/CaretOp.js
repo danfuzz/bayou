@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
-import { Errors, Functor } from 'util-common';
+import { Errors } from 'util-common';
 
 import BaseOp from './BaseOp';
 import Caret from './Caret';
@@ -37,7 +37,7 @@ export default class CaretOp extends BaseOp {
   static op_beginSession(caret) {
     Caret.check(caret);
 
-    return new CaretOp(new Functor(CaretOp.BEGIN_SESSION, caret));
+    return new CaretOp(CaretOp.BEGIN_SESSION, caret);
   }
 
   /**
@@ -49,7 +49,7 @@ export default class CaretOp extends BaseOp {
   static op_endSession(sessionId) {
     TString.nonEmpty(sessionId);
 
-    return new CaretOp(new Functor(CaretOp.END_SESSION, sessionId));
+    return new CaretOp(CaretOp.END_SESSION, sessionId);
   }
 
   /**
@@ -65,7 +65,7 @@ export default class CaretOp extends BaseOp {
     TString.nonEmpty(sessionId);
     Caret.checkField(key, value);
 
-    return new CaretOp(new Functor(CaretOp.SET_FIELD, sessionId, key, value));
+    return new CaretOp(CaretOp.SET_FIELD, sessionId, key, value);
   }
 
   /**

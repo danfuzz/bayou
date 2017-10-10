@@ -221,7 +221,7 @@ describe('util-core/Functor', () => {
   });
 
   describe('withFrozenArgs()', () => {
-    it('should return `this` if the arguments are all already frozen', () => {
+    it('should return `this` if the arguments are all already frozen / deep-frozen', () => {
       function test(...args) {
         const func   = new Functor('florp', ...args);
         const result = func.withFrozenArgs();
@@ -229,6 +229,10 @@ describe('util-core/Functor', () => {
       }
 
       test();
+      test(1, 2, 3);
+      test('a', 'b', 'c');
+      test(true, false);
+      test(Symbol('x'), Symbol('y'));
 
       test(Object.freeze([]));
       test(Object.freeze([1, 2, 3]));
@@ -236,6 +240,11 @@ describe('util-core/Functor', () => {
 
       test(Object.freeze({}));
       test(Object.freeze({ a: 'florp' }));
+
+      test(Object.freeze([1, 2, 3, Object.freeze([4, 5])]));
+
+      const alreadyFrozenInstance = Object.freeze(new Map());
+      test(alreadyFrozenInstance);
     });
 
     it('should produce an instance with all frozen arguments equal to the original arguments', () => {
@@ -269,12 +278,27 @@ describe('util-core/Functor', () => {
       const alreadyFrozen = new Map();
       Object.freeze(alreadyFrozen);
       test(1, 2, alreadyFrozen, 4, 5);
+
+      // This makes sure partially-frozen data ends up fully frozen in the
+      // result.
+      test(Object.freeze([1, 2, [3, 4, 5]]));
+      test(Object.freeze({ a: [1, 2, 3], b: [2, 3, 4] }));
     });
 
     it('should reject non-frozen non-data arguments', () => {
-      const func = new Functor('florp', new Map());
+      function test(...args) {
+        const func = new Functor('florp', ...args);
+        assert.throws(() => func.withFrozenArgs());
+      }
 
-      assert.throws(() => func.withFrozenArgs());
+      test(new Map());
+      test({ x: new Map() });
+      test([new Map()]);
+      test([1, 2, 3, [[[[[new Map()]]]]]]);
+      test({ get x() { return 10; } });
+
+      test(1, new Map());
+      test(1, 2, ['x', new Map()]);
     });
   });
 });

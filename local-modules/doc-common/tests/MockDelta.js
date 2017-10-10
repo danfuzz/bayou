@@ -20,12 +20,12 @@ export default class MockDelta extends BaseDelta {
    * document.
    */
   static get NOT_DOCUMENT_OPS() {
-    return [MockOp.make('not_document')];
+    return [new MockOp('not_document')];
   }
 
   /** {array<object>} Ops array that will be considered valid. */
   static get VALID_OPS() {
-    return [MockOp.make('yes')];
+    return [new MockOp('yes')];
   }
 
   _impl_isDocument() {

@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from 'typecheck';
-import { Errors, Functor } from 'util-common';
+import { Errors } from 'util-common';
 
 import BaseOp from './BaseOp';
 
@@ -31,7 +31,7 @@ export default class PropertyOp extends BaseOp {
   static op_deleteProperty(name) {
     TString.identifier(name);
 
-    return new PropertyOp(new Functor(PropertyOp.DELETE_PROPERTY, name));
+    return new PropertyOp(PropertyOp.DELETE_PROPERTY, name);
   }
 
   /**
@@ -45,7 +45,7 @@ export default class PropertyOp extends BaseOp {
   static op_setProperty(name, value) {
     TString.identifier(name);
 
-    return new PropertyOp(new Functor(PropertyOp.SET_PROPERTY, name, value));
+    return new PropertyOp(PropertyOp.SET_PROPERTY, name, value);
   }
 
   /**

@@ -55,7 +55,7 @@ describe('doc-common/BaseDelta', () => {
         [],
         MockDelta.VALID_OPS,
         MockDelta.NOT_DOCUMENT_OPS,
-        [MockOp.make('x'), MockOp.make('y')]
+        [new MockOp('x'), new MockOp('y')]
       ];
 
       for (const v of values) {
@@ -114,8 +114,8 @@ describe('doc-common/BaseDelta', () => {
     });
 
     it('should return `true` when equal ops are not also `===`', () => {
-      const ops1 = [MockOp.make('foo'), MockOp.make('bar')];
-      const ops2 = [MockOp.make('foo'), MockOp.make('bar')];
+      const ops1 = [new MockOp('foo'), new MockOp('bar')];
+      const ops2 = [new MockOp('foo'), new MockOp('bar')];
       const d1 = new MockDelta(ops1);
       const d2 = new MockDelta(ops2);
 
@@ -124,8 +124,8 @@ describe('doc-common/BaseDelta', () => {
     });
 
     it('should return `false` when array lengths differ', () => {
-      const op1 = MockOp.make('foo');
-      const op2 = MockOp.make('bar');
+      const op1 = new MockOp('foo');
+      const op2 = new MockOp('bar');
       const d1 = new MockDelta([op1]);
       const d2 = new MockDelta([op1, op2]);
 
@@ -142,11 +142,11 @@ describe('doc-common/BaseDelta', () => {
         assert.isFalse(d2.equals(d1));
       }
 
-      const op1 = MockOp.make('foo');
-      const op2 = MockOp.make('bar');
-      const op3 = MockOp.make('baz');
-      const op4 = MockOp.make('biff');
-      const op5 = MockOp.make('quux');
+      const op1 = new MockOp('foo');
+      const op2 = new MockOp('bar');
+      const op3 = new MockOp('baz');
+      const op4 = new MockOp('biff');
+      const op5 = new MockOp('quux');
 
       test([op1],                     [op2]);
       test([op1, op2],                [op1, op3]);

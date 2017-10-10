@@ -99,7 +99,7 @@ export default class BodyOp extends BaseOp {
   static op_delete(count) {
     TInt.min(count, 1);
 
-    return new BodyOp(new Functor(BodyOp.DELETE, count));
+    return new BodyOp(BodyOp.DELETE, count);
   }
 
   /**
@@ -115,7 +115,7 @@ export default class BodyOp extends BaseOp {
     value           = DataUtil.deepFreeze(Functor.check(value));
     const attribArg = BodyOp._attributesArg(attributes);
 
-    return new BodyOp(new Functor(BodyOp.INSERT_EMBED, value, ...attribArg));
+    return new BodyOp(BodyOp.INSERT_EMBED, value, ...attribArg);
   }
 
   /**
@@ -130,7 +130,7 @@ export default class BodyOp extends BaseOp {
     TString.nonEmpty(text);
     const attribArg = BodyOp._attributesArg(attributes);
 
-    return new BodyOp(new Functor(BodyOp.INSERT_TEXT, text, ...attribArg));
+    return new BodyOp(BodyOp.INSERT_TEXT, text, ...attribArg);
   }
 
   /**
@@ -147,7 +147,7 @@ export default class BodyOp extends BaseOp {
     TInt.min(count, 1);
     const attribArg = BodyOp._attributesArg(attributes);
 
-    return new BodyOp(new Functor(BodyOp.RETAIN, count, ...attribArg));
+    return new BodyOp(BodyOp.RETAIN, count, ...attribArg);
   }
 
   /**
