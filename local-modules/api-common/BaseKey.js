@@ -106,31 +106,20 @@ export default class BaseKey extends CommonBase {
   }
 
   /**
-   * Same as calling the custom inspector function via its symbol-bound method.
+   * Custom inspector function, as called by `util.inspect()`. This
+   * implementation redacts the contents so as to prevent inadvertent logging of
+   * the secret values.
    *
-   * _This_ method exists because, as of this writing, the browser polyfill for
-   * `util.inspect()` doesn't find `util.inspect.custom` methods. **TODO:**
-   * Occasionally check to see if this workaround is still needed, and remove it
-   * if it is finally unnecessary.
-   *
-   * @param {Int} depth Current inspection depth.
+   * @param {Int} depth_unused Current inspection depth.
    * @param {object} opts Inspection options.
    * @returns {string} The inspection string form of this instance.
    */
-  inspect(depth, opts) {
-    return this[inspect.custom](depth, opts);
-  }
+  [inspect.custom](depth_unused, opts) {
+    const name = this.constructor.name;
 
-  /**
-   * Custom inspector function, as called by `util.inspect()`. This is done to
-   * prevent inadvertent logging of the secret values.
-   *
-   * @param {Int} depth_unused Current inspection depth.
-   * @param {object} opts_unused Inspection options.
-   * @returns {string} The inspection string form of this instance.
-   */
-  [inspect.custom](depth_unused, opts_unused) {
-    return this.toString();
+    return (opts.depth < 0)
+      ? `${name} {...}`
+      : `${name} { ${this._url} ${this._impl_printableId()} }`;
   }
 
   /**
@@ -169,15 +158,5 @@ export default class BaseKey extends CommonBase {
    */
   _impl_printableId() {
     return this.id;
-  }
-
-  /**
-   * Gets the redacted form of this instance.
-   *
-   * @returns {string} The redacted form.
-   */
-  toString() {
-    const tag = this.constructor.name;
-    return `{${tag} ${this._url} ${this._impl_printableId()}}`;
   }
 }

@@ -55,22 +55,6 @@ export default class Functor {
   }
 
   /**
-   * Same as calling the custom inspector function via its symbol-bound method.
-   *
-   * _This_ method exists because, as of this writing, the browser polyfill for
-   * `util.inspect()` doesn't find `util.inspect.custom` methods. **TODO:**
-   * Occasionally check to see if this workaround is still needed, and remove it
-   * if it is finally unnecessary.
-   *
-   * @param {Int} depth Current inspection depth.
-   * @param {object} opts Inspection options.
-   * @returns {string} The inspection string form of this instance.
-   */
-  inspect(depth, opts) {
-    return this[inspect.custom](depth, opts);
-  }
-
-  /**
    * Custom inspector function, as called by `util.inspect()`.
    *
    * @param {Int} depth Current inspection depth.
@@ -79,32 +63,25 @@ export default class Functor {
    */
   [inspect.custom](depth, opts) {
     if (depth < 0) {
+      // Minimal expansion if we're at the depth limit.
       return `${this._name}(${this._args.length === 0 ? '' : '...'})`;
     }
 
+    // Set up the inspection opts so that recursive calls respect the topmost
+    // requested depth.
+    const subOpts = (opts.depth === null)
+      ? opts
+      : Object.assign({}, opts, { depth: opts.depth - 1 });
     const result = [this._name, '('];
 
-    if (depth < 0) {
-      // Minimal expansion if we're at the depth limit.
-      if (this._args.length !== 0) {
-        result.push('...');
+    let first = true;
+    for (const a of this._args) {
+      if (first) {
+        first = false;
+      } else {
+        result.push(', ');
       }
-    } else {
-      // Set up the inspection opts so that recursive calls respect the topmost
-      // requested depth.
-      const subOpts = (opts.depth === null)
-        ? opts
-        : Object.assign({}, opts, { depth: opts.depth - 1 });
-
-      let first = true;
-      for (const a of this._args) {
-        if (first) {
-          first = false;
-        } else {
-          result.push(', ');
-        }
-        result.push(inspect(a, subOpts));
-      }
+      result.push(inspect(a, subOpts));
     }
 
     result.push(')');
@@ -159,16 +136,6 @@ export default class Functor {
     }
 
     return true;
-  }
-
-  /**
-   * Gets the string form of this instance. This uses `util.inspect()` on the
-   * elements of the `args` array.
-   *
-   * @returns {string} The string form of this instance.
-   */
-  toString() {
-    return inspect(this, { breakLength: Infinity });
   }
 
   /**

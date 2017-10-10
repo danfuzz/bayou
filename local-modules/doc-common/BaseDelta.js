@@ -127,6 +127,29 @@ export default class BaseDelta extends CommonBase {
   }
 
   /**
+   * Custom inspector function, as called by `util.inspect()`.
+   *
+   * @param {Int} depth Current inspection depth.
+   * @param {object} opts Inspection options.
+   * @returns {string} The inspection string form of this instance.
+   */
+  [inspect.custom](depth, opts) {
+    if (depth < 0) {
+      return `${this.constructor.name} [...]`;
+    }
+
+    // Set up the inspection opts so that recursive calls respect the topmost
+    // requested depth.
+    const subOpts = (opts.depth === null)
+      ? opts
+      : Object.assign({}, opts, { depth: opts.depth - 1 });
+
+    const body = inspect(this._ops, subOpts);
+
+    return `${this.constructor.name} ${body}`;
+  }
+
+  /**
    * Returns `true` iff this instance has the form of a "document," or put
    * another way, iff it is valid to compose with an instance which represents
    * an empty snapshot. The details of what makes an instance a document vary
@@ -160,18 +183,6 @@ export default class BaseDelta extends CommonBase {
    */
   toCodecArgs() {
     return [this._ops];
-  }
-
-  /**
-   * Gets a human-oriented string representation of this instance.
-   *
-   * @returns {string} The human-oriented representation.
-   */
-  toString() {
-    // `depth: null` means to recurse indefinitely.
-    const body = inspect(this._ops, { depth: null });
-
-    return `${this.constructor.name} ${body}`;
   }
 
   /**

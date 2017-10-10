@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import CoreTypecheck from './CoreTypecheck';
 import Functor from './Functor';
 
@@ -72,6 +74,12 @@ export default class InfoError extends Error {
     /** {Functor} The error info payload. */
     this._info = info;
 
+    /**
+     * {array<string>} Array of stack trace line items, in canonical form. See
+     * {@link #_stackLines} for details.
+     */
+    this._stack = InfoError._stackLines(this.stack);
+
     if (this._cause !== null) {
       // Append the cause's stack to this instance's. **TODO:** Figure out if
       // we can do this lazily, which would mean somehow both overriding
@@ -93,5 +101,89 @@ export default class InfoError extends Error {
   /** {Functor} The error information payload. */
   get info() {
     return this._info;
+  }
+
+  /**
+   * Custom inspector function, as called by `util.inspect()`. This just returns
+   * implementation is similar to the default `Error` inspector, except that
+   * this one formats the first line in a nicer way given the structured error
+   * content.
+   *
+   * @param {Int} depth_unused Current inspection depth. **Note:** This
+   *   implementation mimics the behavior of the default implementation in that
+   *   it includes the stack trace even when `depth` is `0`.
+   * @param {object} opts Inspection options.
+   * @returns {string} The inspection string form of this instance.
+   */
+  [inspect.custom](depth_unused, opts) {
+    // Set up the inspection opts so that recursive calls respect the topmost
+    // requested depth.
+    const subOpts = (opts.depth === null)
+      ? opts
+      : Object.assign({}, opts, { depth: opts.depth - 1 });
+
+
+    const result = [
+      this.constructor.name,
+      ': ',
+      inspect(this._info, subOpts),
+      '\n'
+    ];
+
+    for (const l of this._stack) {
+      result.push('  at ');
+      result.push(l);
+      result.push('\n');
+    }
+
+    if (this._cause !== null) {
+      result.push('caused by:\n');
+      // `opts` and not `subOpts` so that the cause is inspected at the same
+      // depth (which makes reasonable sense, as it's more of a linear than a
+      // recursive thing, in context).
+      result.push(inspect(this._cause, opts));
+    }
+
+    return result.join('').replace(/\n+$/, '');
+  }
+
+  /**
+   * Gets a concise string form of this instance.
+   *
+   * @returns {string} String form of this instance.
+   */
+  toString() {
+    return `${this.constructor.name}:${this._info}`;
+  }
+
+  /**
+   * Gets an array of stack lines from an original `.stack` string. This is
+   * meant to work cross-platform, taking into account known differences between
+   * Chrome / Chromium and Safari.
+   *
+   * @param {string} orig The original `.stack` string.
+   * @returns {array<string>} Array of trace items.
+   */
+  static _stackLines(orig) {
+    const lines = orig.split('\n');
+
+    if (lines[lines.length - 1] === '') {
+      lines.pop();
+    }
+
+    if (lines.length === 0) {
+      return lines;
+    }
+
+    if (/^    at /.test(lines[lines.length - 1])) {
+      // Chrome / Chromium style, which means its first line is a recapitualtion
+      // of the error name and message. We also want to strip off all the `at`s.
+      lines.shift();
+      for (let i = 0; i < lines.length; i++) {
+        lines[i] = lines[i].slice(7);
+      }
+    }
+
+    return lines;
   }
 }
