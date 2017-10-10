@@ -253,7 +253,7 @@ describe('doc-common/PropertySnapshot', () => {
         // Expectations as a map of keys to values.
         const expectMap = new Map();
         for (const op of ops) {
-          const { property } = op.props;
+          const property = op.props.property;
           expectMap.set(property.name, property);
         }
 
