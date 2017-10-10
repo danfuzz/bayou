@@ -62,6 +62,7 @@ describe('doc-common/BaseOp', () => {
       }
 
       test(new Map());
+      test(new Functor('x', 1, 2));
       test(/blort/);
       test(() => 'woo');
       test(1, 2, 3, new Map(), 4, 5, 6);

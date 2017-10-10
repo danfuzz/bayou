@@ -26,14 +26,8 @@ export default class BaseOp extends CommonBase {
   constructor(name, ...args) {
     super();
 
-    // **TODO:** Remove the functor argument option, once call sites have been
-    // fixed.
-    const payload = (name instanceof Functor)
-      ? name
-      : new Functor(name, ...args);
-
-    /** {Functor} payload The operation payload (name and arguments). */
-    this._payload = Functor.check(payload).withFrozenArgs();
+    /** {Functor} The operation payload (name and arguments). */
+    this._payload = new Functor(name, ...args).withFrozenArgs();
 
     Object.freeze(this);
   }
