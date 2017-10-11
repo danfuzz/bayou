@@ -108,10 +108,12 @@ export default class BaseSnapshot extends CommonBase {
    * method returns a new instance.
    *
    * @param {BaseChange} change Change to compose on top of this instance. Must
-   *   be an instance of the `changeClass` as defined by the subclass.
-   * @returns {BaseSnapshot} New instance consisting of the composition of
-   *   this instance with `change`. Will be a direct instance of the same class
-   *   as `this`.
+   *   be an instance of the `changeClass` as defined by the subclass. **Note:**
+   *   The `authorId` and `timestamp` of the change are irrelevant to this
+   *   operation and so are ignored.
+   * @returns {BaseSnapshot} New instance consisting of the composition of this
+   *   instance with `change`. Will be a direct instance of the same class as
+   *   `this`.
    */
   compose(change) {
     this.constructor.changeClass.check(change);

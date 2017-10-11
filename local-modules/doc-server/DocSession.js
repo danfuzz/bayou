@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { BodyChange, Timestamp } from 'doc-common';
 import { TString } from 'typecheck';
 
 import FileComplex from './FileComplex';
@@ -81,8 +82,8 @@ export default class DocSession {
 
   /**
    * Applies an update to the body, assigning authorship of the change to the
-   * author represented by this instance. See {@link BodyControl#update} for
-   * details.
+   * author represented by this instance and a timestamp which is approximately
+   * the current time. See {@link BodyControl#update} for details.
    *
    * @param {number} baseRevNum Revision number which `delta` is with respect
    *   to.
@@ -92,7 +93,13 @@ export default class DocSession {
    *   this operation.
    */
   async body_update(baseRevNum, delta) {
-    return this._bodyControl.update(baseRevNum, delta, this._authorId);
+    // **Note:** The change instance gets `baseRevNum + 1` because that's what
+    // revision would result if the `delta` were able to be applied directly. If
+    // we get "lucky" (win any races) that will be the actual revision number,
+    // but the ultimate result might have a higher `revNum`.
+    const change = new BodyChange(baseRevNum + 1, delta, Timestamp.now(), this._authorId);
+
+    return this._bodyControl.update(change);
   }
 
   /**
