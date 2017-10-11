@@ -4,6 +4,7 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
+import { inspect } from 'util';
 
 import { TFunction } from 'typecheck';
 
@@ -39,7 +40,9 @@ function* someGenerator() {
 const AMBIGUOUS_FUNCTIONS = [
   function () { return 1; },
   function florp() { return 1; },
-  someFunc
+  someFunc,
+  Object,
+  Map
 ];
 
 /** {array<function>} Functions that should be considered classes. */
@@ -167,7 +170,7 @@ describe('typecheck/TFunction', () => {
     });
   });
 
-  describe('checkClass()', () => {
+  describe('checkClass(value)', () => {
     it('should succeed when passed a class', () => {
       function test(value) {
         assert.strictEqual(TFunction.checkClass(value), value);
@@ -194,6 +197,86 @@ describe('typecheck/TFunction', () => {
       }
 
       for (const v of NON_FUNCTIONS) {
+        test(v);
+      }
+    });
+  });
+
+  describe('checkClass(value, ancestor)', () => {
+    it('should accept a `null` ancestor', () => {
+      function test(value) {
+        assert.strictEqual(TFunction.checkClass(value, null), value);
+      }
+
+      for (const v of [...CLASS_FUNCTIONS, ...AMBIGUOUS_FUNCTIONS]) {
+        test(v);
+      }
+    });
+
+    it('should accept a value that is the same as the given `ancestor`', () => {
+      class Blort { }
+
+      assert.strictEqual(TFunction.checkClass(Map, Map), Map);
+      assert.strictEqual(TFunction.checkClass(Blort, Blort), Blort);
+    });
+
+    it('should accept a value that is a subclass of the given `ancestor`', () => {
+      class Blort { }
+      class SubBlort extends Blort { }
+      class UltraBlort extends SubBlort { }
+
+      assert.strictEqual(TFunction.checkClass(Map, Object), Map);
+      assert.strictEqual(TFunction.checkClass(Blort, Object), Blort);
+      assert.strictEqual(TFunction.checkClass(SubBlort, Blort), SubBlort);
+      assert.strictEqual(TFunction.checkClass(UltraBlort, Blort), UltraBlort);
+    });
+
+    it('should reject a class that is not the same as or a subclass of the given `ancestor`', () => {
+      function test(value, ancestor) {
+        assert.throws(() => { TFunction.checkClass(value, ancestor); });
+      }
+
+      class Blort { }
+      class SubBlort extends Blort { }
+
+      test(Map, Set);
+      test(Object, Map);
+      test(Object, Blort);
+      test(Object, SubBlort);
+      test(Blort, SubBlort);
+    });
+
+    it('should fail when passed a non-class function for `value`', () => {
+      function test(value) {
+        assert.throws(() => { TFunction.checkClass(value, Object); });
+      }
+
+      for (const v of NON_CLASS_FUNCTIONS) {
+        test(v);
+      }
+    });
+
+    it('should fail when passed a non-function for `value`', () => {
+      function test(value) {
+        assert.throws(() => { TFunction.checkClass(value, Object); });
+      }
+
+      for (const v of NON_FUNCTIONS) {
+        test(v);
+      }
+    });
+
+    it('should fail when passed a non-class for `ancestor`', () => {
+      function test(ancestor) {
+        assert.throws(() => { TFunction.checkClass(Object, ancestor); },
+          /./, /./, inspect(ancestor));
+      }
+
+      for (const v of [...NON_CLASS_FUNCTIONS, ...NON_FUNCTIONS]) {
+        if ((v === null) || (v === undefined)) {
+          // Skip these, because they degenerate to the one-argument case.
+          continue;
+        }
         test(v);
       }
     });
@@ -231,7 +314,7 @@ describe('typecheck/TFunction', () => {
     });
   });
 
-  describe('isClass()', () => {
+  describe('isClass(value)', () => {
     it('should return `true` when passed a class', () => {
       function test(value) {
         assert.isTrue(TFunction.isClass(value), value);
@@ -258,6 +341,81 @@ describe('typecheck/TFunction', () => {
       }
 
       for (const v of NON_FUNCTIONS) {
+        test(v);
+      }
+    });
+  });
+
+  describe('isClass(value, ancestor)', () => {
+    it('should accept a `null` ancestor', () => {
+      assert.isTrue(TFunction.isClass(Map, null));
+      assert.isFalse(TFunction.isClass(123, null));
+    });
+
+    it('should return `true` for a value that is the same as the given `ancestor`', () => {
+      class Blort { }
+
+      assert.isTrue(TFunction.isClass(Map, Map));
+      assert.isTrue(TFunction.isClass(Blort, Blort));
+    });
+
+    it('should return `true` for a value that is a subclass of the given `ancestor`', () => {
+      class Blort { }
+      class SubBlort extends Blort { }
+      class UltraBlort extends SubBlort { }
+
+      assert.isTrue(TFunction.isClass(Map, Object));
+      assert.isTrue(TFunction.isClass(Blort, Object));
+      assert.isTrue(TFunction.isClass(SubBlort, Blort));
+      assert.isTrue(TFunction.isClass(UltraBlort, Blort));
+    });
+
+    it('should return `false` when passed a class that is not the same as `ancestor` nor is a subclass of it', () => {
+      function test(value, ancestor) {
+        assert.isFalse(TFunction.isClass(value, ancestor));
+      }
+
+      class Blort { }
+      class SubBlort extends Blort { }
+
+      test(Map, Set);
+      test(Object, Map);
+      test(Object, Blort);
+      test(Object, SubBlort);
+      test(Blort, SubBlort);
+    });
+
+    it('should return `false` when passed a non-class function', () => {
+      function test(value) {
+        assert.isFalse(TFunction.isClass(value, Object), value);
+      }
+
+      for (const v of NON_CLASS_FUNCTIONS) {
+        test(v);
+      }
+    });
+
+    it('should return `false` when passed a non-function', () => {
+      function test(value) {
+        assert.isFalse(TFunction.isClass(value, Object), value);
+      }
+
+      for (const v of NON_FUNCTIONS) {
+        test(v);
+      }
+    });
+
+    it('should fail when passed a non-class for `ancestor`', () => {
+      function test(ancestor) {
+        assert.throws(() => { TFunction.isClass(Object, ancestor); },
+          /./, /./, inspect(ancestor));
+      }
+
+      for (const v of [...NON_CLASS_FUNCTIONS, ...NON_FUNCTIONS]) {
+        if ((v === null) || (v === undefined)) {
+          // Skip these, because they degenerate to the one-argument case.
+          continue;
+        }
         test(v);
       }
     });
