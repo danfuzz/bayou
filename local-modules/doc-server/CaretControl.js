@@ -2,10 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Caret, CaretSnapshot, RevisionNumber, Timestamp } from 'doc-common';
+import {
+  Caret, CaretChange, CaretDelta, CaretOp, CaretSnapshot, RevisionNumber, Timestamp
+} from 'doc-common';
 import { Condition } from 'promise-util';
 import { TInt, TString } from 'typecheck';
-import { CommonBase, InfoError } from 'util-common';
+import { CommonBase, Errors, InfoError } from 'util-common';
 
 import CaretColor from './CaretColor';
 import CaretStorage from './CaretStorage';
@@ -72,6 +74,52 @@ export default class CaretControl extends CommonBase {
   }
 
   /**
+   * Constructs a `CaretChange` instance which updates the caret as indicated
+   * by the given individual arguments, along with additional information as
+   * needed (in particular, a timestamp in all cases and a session color if this
+   * update represents the introduction of a new session). The `index` and
+   * `length` arguments to this method have the same semantics as they have in
+   * Quill, that is, they ultimately refer to an extent within a Quill document
+   * `Delta`.
+   *
+   * @param {string} sessionId ID of the session from which this information
+   *   comes.
+   * @param {Int} docRevNum The _document_ revision number that this information
+   *   is with respect to.
+   * @param {Int} index Caret position (if no selection per se) or starting
+   *   caret position of the selection.
+   * @param {Int} [length = 0] If non-zero, length of the selection.
+   * @returns {CaretChange} A change instance which represents the above
+   *   information, along with anything else needed to be properly applied.
+   */
+  changeFor(sessionId, docRevNum, index, length = 0) {
+    TString.check(sessionId);
+    RevisionNumber.check(docRevNum);
+    TInt.nonNegative(index);
+    TInt.nonNegative(length);
+
+    // Construct the new/updated caret.
+
+    const snapshot   = this._snapshot;
+    const oldCaret   = snapshot.getOrNull(sessionId);
+    const lastActive = Timestamp.now();
+    const newFields  = { revNum: docRevNum, lastActive, index, length };
+    let caret;
+
+    if (oldCaret === null) {
+      newFields.color = this._pickSessionColor(sessionId);
+      caret = new Caret(sessionId, newFields);
+    } else {
+      caret = new Caret(oldCaret, newFields);
+    }
+
+    // We always make a delta with a "begin session" op. Even though this change
+    // isn't always actually beginning a session, when ultimately applied via
+    // `update()` it will always turn into an appropriate new snapshot.
+    return new CaretChange(snapshot.revNum + 1, [CaretOp.op_beginSession(caret)]);
+  }
+
+  /**
    * Gets a change of caret information from the indicated base caret revision.
    * This will throw an error if the indicated caret revision isn't available.
    *
@@ -130,55 +178,62 @@ export default class CaretControl extends CommonBase {
   }
 
   /**
-   * Informs the system of a particular session's current caret or text
-   * selection extent. The `index` and `length` arguments to this method have
-   * the same semantics as they have in Quill, that is, they ultimately refer to
-   * an extent within a Quill `Delta`.
+   * Takes a change consisting of one or more caret updates, and applies it to
+   * this instance, producing an updated snapshot.
    *
-   * @param {string} sessionId ID of the session from which this information
-   *   comes.
-   * @param {Int} docRevNum The _document_ revision number that this information
-   *   is with respect to.
-   * @param {Int} index Caret position (if no selection per se) or starting
-   *   caret position of the selection.
-   * @param {Int} [length = 0] If non-zero, length of the selection.
-   * @returns {Int} The _caret_ revision number at which this information was
-   *   integrated.
+   * **Note:** This method trusts the contents of the change (e.g., that
+   * information about a particular session really did come from that session),
+   * and as such it is _not_ appropriate to expose this method directly to
+   * client access.
+   *
+   * @param {CaretChange} change Change to apply.
+   * @returns {CaretChange} The correction to the implied expected result of
+   *   this operation. The `delta` of this result can be applied to the expected
+   *   result to get the actual result. The `timestamp` and `authorId` of the
+   *   result will always be `null`. The promise resolves sometime after the
+   *   change has been applied to the caret state.
    */
-  async update(sessionId, docRevNum, index, length = 0) {
-    TString.check(sessionId);
-    RevisionNumber.check(docRevNum);
-    TInt.nonNegative(index);
-    TInt.nonNegative(length);
+  async update(change) {
+    CaretChange.check(change);
 
-    // Construct the new/updated caret and updated snapshot.
-
-    let snapshot     = this._snapshot;
-    const oldCaret   = snapshot.getOrNull(sessionId);
-    const revNum     = docRevNum; // Done to match the caret field name.
-    const lastActive = Timestamp.now();
-    const newFields  = { revNum, lastActive, index, length };
-    let newCaret;
-
-    if (oldCaret === null) {
-      newFields.color = this._pickSessionColor(sessionId);
-      newCaret = new Caret(sessionId, newFields);
-    } else {
-      newCaret = new Caret(oldCaret, newFields);
-    }
-
-    snapshot = snapshot.withCaret(newCaret);
+    const baseSnapshot    = await this.getSnapshot(change.revNum - 1);
+    const currentSnapshot = this._snapshot;
+    const newSnapshot     = currentSnapshot.compose(change);
 
     // Apply the update, and inform both the storage layer and any waiters.
 
-    const caretStr = (length === 0)
-      ? `@${index}`
-      : `[${index}..${index + length - 1}]`;
-    this._log.info(`[${sessionId}] Caret update: r${revNum}, ${caretStr}`);
+    for (const op of change.delta.ops) {
+      const { opName, sessionId, caret } = op.props;
+      switch (opName) {
+        case CaretOp.BEGIN_SESSION: {
+          this._caretStorage.update(newSnapshot.get(caret.sessionId));
+          break;
+        }
+        case CaretOp.END_SESSION: {
+          this._caretStorage.delete(sessionId);
+          break;
+        }
+        case CaretOp.SET_FIELD: {
+          this._caretStorage.update(newSnapshot.get(sessionId));
+          break;
+        }
+        default: {
+          throw Errors.wtf(`Weird caret operation: ${opName}`);
+        }
+      }
+    }
 
-    this._caretStorage.update(newCaret);
+    this._updateSnapshot(newSnapshot);
 
-    return this._updateSnapshot(snapshot);
+    // Figure out and return the "correction" change.
+
+    if (baseSnapshot.revNum === currentSnapshot.revNum) {
+      // No intervening changes, so no correction.
+      return new CaretChange(change.revNum, CaretDelta.EMPTY);
+    }
+
+    const expectedResult = baseSnapshot.compose(change);
+    return baseSnapshot.diff(expectedResult);
   }
 
   /**
@@ -270,7 +325,6 @@ export default class CaretControl extends CommonBase {
    * caret revision number.
    *
    * @param {CaretSnapshot} snapshot The new snapshot.
-   * @returns {Int} The new caret revision number.
    */
   _updateSnapshot(snapshot) {
     const oldSnapshot = this._snapshot;
@@ -282,13 +336,17 @@ export default class CaretControl extends CommonBase {
     this._oldSnapshots.push(newSnapshot);
     this._updatedCondition.onOff();
 
+    // Trim `_oldSnapshots` down to its allowed length.
     while (this._oldSnapshots.length > MAX_OLD_SNAPSHOTS) {
-      // Trim `_oldSnapshots` down to its allowed length.
       this._oldSnapshots.shift();
     }
 
-    this._log.info('Updated caret revision:', newRevNum);
+    // Log the changes.
+    const diff = oldSnapshot.diff(snapshot);
+    for (const op of diff.delta.ops) {
+      this._log.info('Update:', op);
+    }
 
-    return newRevNum;
+    this._log.info('Updated caret revision:', newRevNum);
   }
 }

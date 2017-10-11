@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BodyChange, Timestamp } from 'doc-common';
+import { BodyChange, RevisionNumber, Timestamp } from 'doc-common';
 import { TString } from 'typecheck';
 
 import FileComplex from './FileComplex';
@@ -90,9 +90,14 @@ export default class DocSession {
    * @param {BodyDelta} delta List of operations indicating what has changed
    *   with respect to `baseRevNum`.
    * @returns {BodyChange} The correction to the implied expected result of
-   *   this operation.
+   *   this operation. The `delta` of this result can be applied to the expected
+   *   result to get the actual result. The `timestamp` and `authorId` of the
+   *   result will always be `null`. The promise resolves sometime after the
+   *   change has been applied to the document.
    */
   async body_update(baseRevNum, delta) {
+    RevisionNumber.check(baseRevNum);
+
     // **Note:** The change instance gets `baseRevNum + 1` because that's what
     // revision would result if the `delta` were able to be applied directly. If
     // we get "lucky" (win any races) that will be the actual revision number,
@@ -157,11 +162,15 @@ export default class DocSession {
    * @param {Int} index Caret position (if no selection per se) or starting
    *   caret position of the selection.
    * @param {Int} [length = 0] If non-zero, length of the selection.
-   * @returns {Int} The _caret_ revision number at which this information was
-   *   integrated.
+   * @returns {CaretChange} The correction to the implied expected result of
+   *   this operation. The `delta` of this result can be applied to the expected
+   *   result to get the actual result. The `timestamp` and `authorId` of the
+   *   result will always be `null`. The promise resolves sometime after the
+   *   change has been applied to the caret state.
    */
   async caret_update(docRevNum, index, length = 0) {
-    return this._caretControl.update(this._sessionId, docRevNum, index, length);
+    const change = this._caretControl.changeFor(this._sessionId, docRevNum, index, length);
+    return this._caretControl.update(change);
   }
 
   /**
