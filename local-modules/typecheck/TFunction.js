@@ -57,16 +57,20 @@ export default class TFunction extends UtilityClass {
 
   /**
    * Checks a value of type `Function` which furthermore must be usable as a
-   * "class," that is, as a constructor function.
+   * "class," that is, as a constructor function. In addition, optionally checks
+   * that the value is or inherits from a particular other class.
    *
    * **Note:** See the documentation for {@link #isClass} for details about the
    * check.
    *
    * @param {*} value The (alleged) class / constructor.
-   * @returns {function} `value`, if it is indeed a class / constructor.
+   * @param {function|null} [ancestor = null] If non-`null` a class which must
+   *   be either the same as `value` or a superclass of `value`.
+   * @returns {function} `value`, if it is indeed a class / constructor and
+   *   inherits from (or is) `ancestor` if that was specified.
    */
-  static checkClass(value) {
-    if (TFunction.isClass(value)) {
+  static checkClass(value, ancestor = null) {
+    if (TFunction.isClass(value, ancestor)) {
       return value;
     }
 
@@ -106,7 +110,9 @@ export default class TFunction extends UtilityClass {
 
   /**
    * Indicates whether the given value is a function which is furthermore usable
-   * as a "class," that is, whether it is a constructor function.
+   * as a "class," that is, whether it is a constructor function. In addition,
+   * optionally checks that the value is or inherits from a particular other
+   * class.
    *
    * **Note:** Unfortunately, JavaScript (a) is loosey-goosey about what sorts
    * of functions can be used as constructors, and (b) doesn't provide a way
@@ -114,10 +120,16 @@ export default class TFunction extends UtilityClass {
    * of functions. This method errs on the side of over-acceptance.
    *
    * @param {*} value Value in question.
-   * @returns {boolean} `true` if it is a class / constructor, or `false` if
-   *   not.
+   * @param {function|null} [ancestor = null] If non-`null` a class which must
+   *   be either the same as `value` or a superclass of `value`.
+   * @returns {boolean} `true` if it is a class / constructor which inherits
+   *   from (or is) `ancestor` if specified, or `false` if not.
    */
-  static isClass(value) {
+  static isClass(value, ancestor = null) {
+    if (ancestor && !TFunction.isClass(ancestor)) {
+      throw Errors.bad_value(value, Function, 'class');
+    }
+
     if (   ((typeof value) !== 'function')
         || ((typeof value.constructor) !== 'function')) {
       return false;
@@ -151,7 +163,15 @@ export default class TFunction extends UtilityClass {
     // getting fooled by functions that override that method.
 
     const s = Function.prototype.toString.call(value);
-    return /^(class|function) /.test(s);
+    if (!/^(class|function) /.test(s)) {
+      return false;
+    }
+
+    // We now know we have a class. Only thing left is to check inheritence if
+    // `ancestor` was specified.
+    return (ancestor === null)
+      || (value === ancestor)
+      || (value.prototype instanceof ancestor);
   }
 
   /**
