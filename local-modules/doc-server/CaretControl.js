@@ -342,11 +342,46 @@ export default class CaretControl extends CommonBase {
     }
 
     // Log the changes.
-    const diff = oldSnapshot.diff(snapshot);
-    for (const op of diff.delta.ops) {
-      this._log.info('Update:', op);
+
+    const loggedSessions = new Set();
+    for (const op of oldSnapshot.diff(snapshot).delta.ops) {
+      const opName = op.props.opName;
+      let { sessionId, caret } = op.props;
+      switch (opName) {
+        case CaretOp.BEGIN_SESSION: {
+          sessionId = caret.sessionId;
+          break;
+        }
+        case CaretOp.END_SESSION: {
+          caret = null;
+          break;
+        }
+        case CaretOp.SET_FIELD: {
+          caret = snapshot.get(sessionId);
+          break;
+        }
+        default: {
+          throw Errors.wtf(`Weird caret operation: ${opName}`);
+        }
+      }
+
+      if (loggedSessions.has(sessionId)) {
+        continue;
+      }
+
+      if (caret === null) {
+        this._log.info(`[${sessionId}] Ended.`);
+      } else {
+        const { index, length, revNum } = caret;
+        const caretStr = (length === 0)
+          ? `@${index}`
+          : `[${index}..${index + length - 1}]`;
+        this._log.info(`[${sessionId}] Update: rev ${revNum}, ${caretStr}`);
+      }
+
+      loggedSessions.add(sessionId);
     }
 
-    this._log.info('Updated caret revision:', newRevNum);
+    this._log.info('New caret revision number:', newRevNum);
   }
 }
