@@ -52,7 +52,7 @@ export default class DocSession {
    * @param {Int} revNum The revision number of the change.
    * @returns {BodyChange} The requested change.
    */
-  async body_change(revNum) {
+  async body_getChange(revNum) {
     return this._bodyControl.getChange(revNum);
   }
 
