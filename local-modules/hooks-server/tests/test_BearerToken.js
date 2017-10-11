@@ -45,7 +45,5 @@ describe('hooks-server/BearerTokens', () => {
       assert.property(changePromise, 'then');
       assert.isFunction(changePromise.then);
     });
-
-    it('should eventually resolve but the time is set for 10 minutes and who can wait for that??');
   });
 });

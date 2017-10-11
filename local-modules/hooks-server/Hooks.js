@@ -51,10 +51,10 @@ export default class Hooks extends Singleton {
   }
 
   /**
-   * The object which provides access to file storage (roughly speaking, the
-   * filesystem to store the "files" this system deals with). This is an
-   * instance of a subclass of `BaseFileStore`, as defined by the `file-store`
-   * module.
+   * {BaseFileStore} The object which provides access to file storage (roughly
+   * speaking, the filesystem to store the "files" this system deals with). This
+   * is an instance of a subclass of `BaseFileStore`, as defined by the
+   * `file-store` module.
    */
   get fileStore() {
     return LocalFileStore.theOne;
