@@ -16,7 +16,7 @@ const INITIAL_STATE = CaretSnapshot.EMPTY;
 /**
  * {string} Redux action to dispatch when we receive a new caret snapshot.
  */
-const CARET_SNAPSHOT_UPDATED = 'caret_snapshot_updated';
+const CARET_SNAPSHOT_UPDATED = 'caret_getSnapshot_updated';
 
 /**
  * {Int} Amount of time (in msec) to wait after receiving a caret update from
@@ -150,14 +150,14 @@ export default class CaretStore {
           // because the attempt to get a change failed for some reason. (The
           // latter is why this section isn't just part of an `else` block to
           // the previous `if`).
-          snapshot = await sessionProxy.caret_snapshot();
+          snapshot = await sessionProxy.caret_getSnapshot();
           docSession.log.detail(`Got ${snapshot.size} new caret(s)!`);
         }
       } catch (e) {
         // Assume that the error is transient and most likely due to the session
         // getting terminated / restarted. Null out the session variables, wait
         // a moment, and try again.
-        docSession.log.warn('Trouble with `caret_snapshot`:', e);
+        docSession.log.warn('Trouble with `caret_getSnapshot`:', e);
         docSession   = null;
         sessionProxy = null;
         await Delay.resolve(ERROR_DELAY_MSEC);

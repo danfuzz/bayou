@@ -75,7 +75,7 @@ export default class DocSession {
    *   `null`, indicates the latest (most recent) revision.
    * @returns {BodySnapshot} The requested snapshot.
    */
-  async body_snapshot(revNum = null) {
+  async body_getSnapshot(revNum = null) {
     return this._bodyControl.snapshot(revNum);
   }
 
@@ -98,8 +98,8 @@ export default class DocSession {
   /**
    * Gets a change of caret information from the indicated base caret revision.
    * This will throw an error if the indicated caret revision isn't available,
-   * in which case the client will likely want to use `caret_snapshot()` to get
-   * back in synch.
+   * in which case the client will likely want to use `caret_getSnapshot()` to
+   * get back in synch.
    *
    * **Note:** Caret information and the main document have _separate_ revision
    * numbers. `CaretSnapshot` instances have information about both revision
@@ -133,7 +133,7 @@ export default class DocSession {
    *   `null`, indicates the latest (most recent) revision.
    * @returns {CaretSnapshot} Snapshot of all the active carets.
    */
-  async caret_snapshot(revNum = null) {
+  async caret_getSnapshot(revNum = null) {
     return this._caretControl.snapshot(revNum);
   }
 
