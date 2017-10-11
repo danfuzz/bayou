@@ -82,7 +82,7 @@ export default class CaretControl extends CommonBase {
    * @returns {CaretChange} Change from the base caret revision to a newer one.
    */
   async getChangeAfter(baseRevNum) {
-    const oldSnapshot = await this.snapshot(baseRevNum);
+    const oldSnapshot = await this.getSnapshot(baseRevNum);
 
     // Iterate if / as long as the base revision is still the current one. This
     // will stop being the case if either there's a local or remote update. The
@@ -113,7 +113,7 @@ export default class CaretControl extends CommonBase {
    * @throws {InfoError} Error of the form `revision_not_available(revNum)` if
    *   the indicated caret revision isn't available.
    */
-  async snapshot(revNum = null) {
+  async getSnapshot(revNum = null) {
     this._removeInactiveSessions();
     this._integrateRemoteSessions();
 

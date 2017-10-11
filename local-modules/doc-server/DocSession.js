@@ -76,7 +76,7 @@ export default class DocSession {
    * @returns {BodySnapshot} The requested snapshot.
    */
   async body_getSnapshot(revNum = null) {
-    return this._bodyControl.snapshot(revNum);
+    return this._bodyControl.getSnapshot(revNum);
   }
 
   /**
@@ -134,7 +134,7 @@ export default class DocSession {
    * @returns {CaretSnapshot} Snapshot of all the active carets.
    */
   async caret_getSnapshot(revNum = null) {
-    return this._caretControl.snapshot(revNum);
+    return this._caretControl.getSnapshot(revNum);
   }
 
   /**

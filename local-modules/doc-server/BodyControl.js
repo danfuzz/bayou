@@ -224,7 +224,7 @@ export default class BodyControl extends CommonBase {
    *   indicates the latest (most recent) revision.
    * @returns {BodySnapshot} The corresponding snapshot.
    */
-  async snapshot(revNum = null) {
+  async getSnapshot(revNum = null) {
     const currentRevNum = await this._currentRevNum();
     revNum = (revNum === null)
       ? currentRevNum
@@ -292,7 +292,7 @@ export default class BodyControl extends CommonBase {
     TString.orNull(authorId);
 
     // Snapshot of the base revision. This call validates `baseRevNum`.
-    const base = await this.snapshot(baseRevNum);
+    const base = await this.getSnapshot(baseRevNum);
 
     // Check for an empty `delta`. If it is, we don't bother trying to apply it.
     // See method header comment for more info.
@@ -317,7 +317,7 @@ export default class BodyControl extends CommonBase {
         this._log.info(`Append attempt #${attemptCount}.`);
       }
 
-      const current = await this.snapshot();
+      const current = await this.getSnapshot();
       const result  = await this._applyUpdateTo(base, delta, authorId, current, expected);
 
       if (result !== null) {
@@ -595,7 +595,7 @@ export default class BodyControl extends CommonBase {
       return null;
     }
 
-    const rNext = await this.snapshot(rNextNum);
+    const rNext = await this.getSnapshot(rNextNum);
 
     // (4)
 
