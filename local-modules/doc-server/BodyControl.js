@@ -317,8 +317,7 @@ export default class BodyControl extends CommonBase {
         this._log.info(`Append attempt #${attemptCount}.`);
       }
 
-      const current = await this.getSnapshot();
-      const result  = await this._applyUpdateTo(base, change, current, expected);
+      const result = await this._applyUpdateTo(base, change, expected);
 
       if (result !== null) {
         return result;
@@ -498,25 +497,30 @@ export default class BodyControl extends CommonBase {
 
   /**
    * Main implementation of `update()`, which takes additional arguments of a
-   * specific `current` snapshot to directly update along with the expected
-   * result of a clean application on top of that snapshot. This method attempts
-   * to apply the change relative to that snapshot. If it succeeds (that is, if
-   * the snapshot is still current at the moment of attempted application), then
-   * this method returns a proper result of `update()`. If it fails due to
-   * the snapshot being out-of-date, then this method returns `null`. All other
-   * problems are reported by throwing an exception.
+   * `base` snapshot being applied to and the `expected` result of a clean
+   * application on top of that `base`. This method attempts to apply the change
+   * relative to that snapshot. If it succeeds (that is, if it manages to
+   * get an instantaneous current snapshot, and use that snapshot to create a
+   * final change which is successfully appended to the document, without an
+   * other "racing" code doing the same first), then this method returns a
+   * proper result for an outer `update()` call. If it fails due to a lost race,
+   * then this method returns `null`. All other problems are reported by
+   * throwing an error.
    *
    * @param {BodySnapshot} base Snapshot of the base from which the delta is
    *   defined. That is, this is the snapshot of `change.revNum - 1`.
    * @param {BodyChange} change The change to apply, same as for `update()`.
-   * @param {BodySnapshot} current Snapshot of the current (latest) revision
-   *   of the document.
    * @param {BodySnapshot} expected The implied expected result as defined
    *   by `update()`.
    * @returns {BodyChange|null} Result for the outer call to `update()`,
    *   or `null` if the application failed due to an out-of-date `snapshot`.
    */
-  async _applyUpdateTo(base, change, current, expected) {
+  async _applyUpdateTo(base, change, expected) {
+    // Instantaneously current (latest) revision of the document. We'll find out
+    // if it turned out to remain current when we finally get to try appending
+    // the (possibly modified) change, below.
+    const current = await this.getSnapshot();
+
     if (base.revNum === current.revNum) {
       // The easy case, because the base revision is in fact the current
       // revision of the document, so we don't have to transform the incoming
