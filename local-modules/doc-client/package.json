@@ -4,9 +4,6 @@
   "main": "main.js",
 
   "dependencies": {
-    "react-dom": "^16.0.0",
-    "redux": "^3.7.2",
-
     "api-client": "local",
     "api-common": "local",
     "data-model-client": "local",
@@ -15,6 +12,7 @@
     "hooks-client": "local",
     "promise-util": "local",
     "quill-util": "local",
+    "react-dependencies": "local",
     "see-all": "local",
     "state-machine": "local",
     "typecheck": "local",
