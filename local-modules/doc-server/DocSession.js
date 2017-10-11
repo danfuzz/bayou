@@ -53,7 +53,7 @@ export default class DocSession {
    * @returns {BodyChange} The requested change.
    */
   async body_change(revNum) {
-    return this._bodyControl.change(revNum);
+    return this._bodyControl.getChange(revNum);
   }
 
   /**

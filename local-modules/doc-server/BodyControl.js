@@ -91,23 +91,6 @@ export default class BodyControl extends CommonBase {
   }
 
   /**
-   * Gets a particular change to the document. The document consists of a
-   * sequence of changes, each modifying revision N of the document to produce
-   * revision N+1.
-   *
-   * @param {Int} revNum The revision number of the change. The result is the
-   *   change which produced that revision. E.g., `0` is a request for the first
-   *   change (the change from the empty document).
-   * @returns {BodyChange} The requested change.
-   */
-  async change(revNum) {
-    RevisionNumber.check(revNum);
-
-    const changes = await this._readChangeRange(revNum, revNum + 1);
-    return changes[0];
-  }
-
-  /**
    * Creates or re-creates the document. If passed, the given `delta` becomes
    * the initial content of the document (which will be in the second change,
    * because by definition the first change of a document is empty).
@@ -162,6 +145,23 @@ export default class BodyControl extends CommonBase {
 
     // Any cached snapshots are no longer valid.
     this._snapshots = new Map();
+  }
+
+  /**
+   * Gets a particular change to the document. The document consists of a
+   * sequence of changes, each modifying revision N of the document to produce
+   * revision N+1.
+   *
+   * @param {Int} revNum The revision number of the change. The result is the
+   *   change which produced that revision. E.g., `0` is a request for the first
+   *   change (the change from the empty document).
+   * @returns {BodyChange} The requested change.
+   */
+  async getChange(revNum) {
+    RevisionNumber.check(revNum);
+
+    const changes = await this._readChangeRange(revNum, revNum + 1);
+    return changes[0];
   }
 
   /**
