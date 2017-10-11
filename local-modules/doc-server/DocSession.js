@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { BodyChange, RevisionNumber, Timestamp } from 'doc-common';
 import { TString } from 'typecheck';
 
 import FileComplex from './FileComplex';
@@ -52,8 +53,8 @@ export default class DocSession {
    * @param {Int} revNum The revision number of the change.
    * @returns {BodyChange} The requested change.
    */
-  async body_change(revNum) {
-    return this._bodyControl.change(revNum);
+  async body_getChange(revNum) {
+    return this._bodyControl.getChange(revNum);
   }
 
   /**
@@ -75,31 +76,42 @@ export default class DocSession {
    *   `null`, indicates the latest (most recent) revision.
    * @returns {BodySnapshot} The requested snapshot.
    */
-  async body_snapshot(revNum = null) {
-    return this._bodyControl.snapshot(revNum);
+  async body_getSnapshot(revNum = null) {
+    return this._bodyControl.getSnapshot(revNum);
   }
 
   /**
    * Applies an update to the body, assigning authorship of the change to the
-   * author represented by this instance. See {@link BodyControl#update} for
-   * details.
+   * author represented by this instance and a timestamp which is approximately
+   * the current time. See {@link BodyControl#update} for details.
    *
    * @param {number} baseRevNum Revision number which `delta` is with respect
    *   to.
    * @param {BodyDelta} delta List of operations indicating what has changed
    *   with respect to `baseRevNum`.
    * @returns {BodyChange} The correction to the implied expected result of
-   *   this operation.
+   *   this operation. The `delta` of this result can be applied to the expected
+   *   result to get the actual result. The `timestamp` and `authorId` of the
+   *   result will always be `null`. The promise resolves sometime after the
+   *   change has been applied to the document.
    */
   async body_update(baseRevNum, delta) {
-    return this._bodyControl.update(baseRevNum, delta, this._authorId);
+    RevisionNumber.check(baseRevNum);
+
+    // **Note:** The change instance gets `baseRevNum + 1` because that's what
+    // revision would result if the `delta` were able to be applied directly. If
+    // we get "lucky" (win any races) that will be the actual revision number,
+    // but the ultimate result might have a higher `revNum`.
+    const change = new BodyChange(baseRevNum + 1, delta, Timestamp.now(), this._authorId);
+
+    return this._bodyControl.update(change);
   }
 
   /**
    * Gets a change of caret information from the indicated base caret revision.
    * This will throw an error if the indicated caret revision isn't available,
-   * in which case the client will likely want to use `caret_snapshot()` to get
-   * back in synch.
+   * in which case the client will likely want to use `caret_getSnapshot()` to
+   * get back in synch.
    *
    * **Note:** Caret information and the main document have _separate_ revision
    * numbers. `CaretSnapshot` instances have information about both revision
@@ -133,8 +145,8 @@ export default class DocSession {
    *   `null`, indicates the latest (most recent) revision.
    * @returns {CaretSnapshot} Snapshot of all the active carets.
    */
-  async caret_snapshot(revNum = null) {
-    return this._caretControl.snapshot(revNum);
+  async caret_getSnapshot(revNum = null) {
+    return this._caretControl.getSnapshot(revNum);
   }
 
   /**
@@ -150,11 +162,15 @@ export default class DocSession {
    * @param {Int} index Caret position (if no selection per se) or starting
    *   caret position of the selection.
    * @param {Int} [length = 0] If non-zero, length of the selection.
-   * @returns {Int} The _caret_ revision number at which this information was
-   *   integrated.
+   * @returns {CaretChange} The correction to the implied expected result of
+   *   this operation. The `delta` of this result can be applied to the expected
+   *   result to get the actual result. The `timestamp` and `authorId` of the
+   *   result will always be `null`. The promise resolves sometime after the
+   *   change has been applied to the caret state.
    */
   async caret_update(docRevNum, index, length = 0) {
-    return this._caretControl.update(this._sessionId, docRevNum, index, length);
+    const change = this._caretControl.changeFor(this._sessionId, docRevNum, index, length);
+    return this._caretControl.update(change);
   }
 
   /**

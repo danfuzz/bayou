@@ -7,7 +7,6 @@ import {
 } from 'doc-common';
 import { Errors, TransactionSpec } from 'file-store';
 import { Delay } from 'promise-util';
-import { TString } from 'typecheck';
 import { CommonBase, Errors as UtilErrors, InfoError } from 'util-common';
 
 import FileComplex from './FileComplex';
@@ -91,23 +90,6 @@ export default class BodyControl extends CommonBase {
   }
 
   /**
-   * Gets a particular change to the document. The document consists of a
-   * sequence of changes, each modifying revision N of the document to produce
-   * revision N+1.
-   *
-   * @param {Int} revNum The revision number of the change. The result is the
-   *   change which produced that revision. E.g., `0` is a request for the first
-   *   change (the change from the empty document).
-   * @returns {BodyChange} The requested change.
-   */
-  async change(revNum) {
-    RevisionNumber.check(revNum);
-
-    const changes = await this._readChangeRange(revNum, revNum + 1);
-    return changes[0];
-  }
-
-  /**
    * Creates or re-creates the document. If passed, the given `delta` becomes
    * the initial content of the document (which will be in the second change,
    * because by definition the first change of a document is empty).
@@ -162,6 +144,23 @@ export default class BodyControl extends CommonBase {
 
     // Any cached snapshots are no longer valid.
     this._snapshots = new Map();
+  }
+
+  /**
+   * Gets a particular change to the document. The document consists of a
+   * sequence of changes, each modifying revision N of the document to produce
+   * revision N+1.
+   *
+   * @param {Int} revNum The revision number of the change. The result is the
+   *   change which produced that revision. E.g., `0` is a request for the first
+   *   change (the change from the empty document).
+   * @returns {BodyChange} The requested change.
+   */
+  async getChange(revNum) {
+    RevisionNumber.check(revNum);
+
+    const changes = await this._readChangeRange(revNum, revNum + 1);
+    return changes[0];
   }
 
   /**
@@ -224,7 +223,7 @@ export default class BodyControl extends CommonBase {
    *   indicates the latest (most recent) revision.
    * @returns {BodySnapshot} The corresponding snapshot.
    */
-  async snapshot(revNum = null) {
+  async getSnapshot(revNum = null) {
     const currentRevNum = await this._currentRevNum();
     revNum = (revNum === null)
       ? currentRevNum
@@ -261,53 +260,54 @@ export default class BodyControl extends CommonBase {
   }
 
   /**
-   * Takes a base revision number and a delta to apply thereto, and applies the
-   * delta, including merging of any intermediate revisions. The return value
-   * consists of a "correction" change to be used to get the new document state.
-   * The correction is with respect to the client's "expected result," that is
-   * to say, what the client would get if the operations were applied with no
-   * intervening changes.
+   * Takes a body change consisting of full information (resulting revision
+   * number, delta, possibly-`null` author ID, and timestamp), and applies it,
+   * including merging of any intermediate revisions. The return value consists
+   * of a "correction" change to be used to get the new document state. The
+   * correction is with respect to the client's "expected result," that is to
+   * say, what the client would get if the operations were applied with no
+   * intervening changes. So, for example, if the change is able to be applied
+   * as exactly given, the returned correction will have an empty `delta`.
    *
-   * As a special case, as long as `baseRevNum` is valid, if `ops` is empty,
-   * this method returns a result of the same revision number along with an
-   * empty "correction."" That is, the return value from passing an empty list
-   * of operations doesn't provide any information about subsequent revisions of
-   * the document.
+   * As a special case, if the `revNum` is valid and `ops` is empty, this method
+   * returns a result of the same revision number along with an empty
+   * correction. That is, the return value from passing an empty delta doesn't
+   * provide any information about subsequent revisions of the document.
    *
-   * @param {Int} baseRevNum Revision number which `delta` is with respect to.
-   * @param {BodyDelta} delta List of operations indicating what has changed
-   *   with respect to `baseRevNum`.
-   * @param {string|null} authorId Author of the change, or `null` if the change
-   *   is to be considered authorless.
+   * **Note:** This method trusts the `authorId` and `timestamp`, and as such it
+   * is _not_ appropriate to expose this method directly to client access.
+   *
+   * @param {BodyChange} change Change to apply.
    * @returns {BodyChange} The correction to the implied expected result of
    *   this operation. The `delta` of this result can be applied to the expected
    *   result to get the actual result. The `timestamp` and `authorId` of the
    *   result will always be `null`. The promise resolves sometime after the
    *   change has been applied to the document.
    */
-  async update(baseRevNum, delta, authorId) {
-    // Very basic argument validation. Once in the guts of the thing, we will
-    // discover (and properly complain) if there are deeper problems with them.
-    BodyDelta.check(delta);
-    TString.orNull(authorId);
+  async update(change) {
+    // This makes sure we have a proper instance, but doesn't check for deeper
+    // problems (such as an invalid `revNum`). Once in the guts of the
+    // operation, we will discover (and properly complain) if things are amiss.
+    BodyChange.check(change);
 
-    // Snapshot of the base revision. This call validates `baseRevNum`.
-    const base = await this.snapshot(baseRevNum);
+    // Snapshot of the base revision. This call effectively validates
+    // `change.revNum`.
+    const base = await this.getSnapshot(change.revNum - 1);
 
     // Check for an empty `delta`. If it is, we don't bother trying to apply it.
     // See method header comment for more info.
-    if (delta.isEmpty()) {
-      return new BodyChange(baseRevNum, BodyDelta.EMPTY);
+    if (change.delta.isEmpty()) {
+      return new BodyChange(base.revNum, BodyDelta.EMPTY);
     }
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
-    const expected = base.compose(new BodyChange(baseRevNum + 1, delta));
+    const expected = base.compose(change);
 
-    // We try performing the apply, and then we iterate if it failed _and_ the
-    // reason is simply that there were any changes that got made while we were
-    // in the middle of the attempt. Any other problems are transparently thrown
-    // to the caller.
+    // Try performing the apply, and then iterate if it failed _and_ the reason
+    // is simply that there were any changes that got made while we were in the
+    // middle of the attempt. Any other problems are transparently thrown to the
+    // caller.
     let retryDelayMsec = INITIAL_APPEND_RETRY_MSEC;
     let retryTotalMsec = 0;
     let attemptCount = 0;
@@ -317,8 +317,7 @@ export default class BodyControl extends CommonBase {
         this._log.info(`Append attempt #${attemptCount}.`);
       }
 
-      const current = await this.snapshot();
-      const result  = await this._applyUpdateTo(base, delta, authorId, current, expected);
+      const result = await this._applyUpdateTo(base, change, expected);
 
       if (result !== null) {
         return result;
@@ -498,34 +497,36 @@ export default class BodyControl extends CommonBase {
 
   /**
    * Main implementation of `update()`, which takes additional arguments of a
-   * specific `current` snapshot to directly update along with the expected
-   * result of a clean application on top of that snapshot. This method attempts
-   * to apply the change relative to that snapshot. If it succeeds (that is, if
-   * the snapshot is still current at the moment of attempted application), then
-   * this method returns a proper result of `update()`. If it fails due to
-   * the snapshot being out-of-date, then this method returns `null`. All other
-   * problems are reported by throwing an exception.
+   * `base` snapshot being applied to and the `expected` result of a clean
+   * application on top of that `base`. This method attempts to apply the change
+   * relative to that snapshot. If it succeeds (that is, if it manages to
+   * get an instantaneous current snapshot, and use that snapshot to create a
+   * final change which is successfully appended to the document, without an
+   * other "racing" code doing the same first), then this method returns a
+   * proper result for an outer `update()` call. If it fails due to a lost race,
+   * then this method returns `null`. All other problems are reported by
+   * throwing an error.
    *
    * @param {BodySnapshot} base Snapshot of the base from which the delta is
-   *   defined. That is, this is the snapshot of `baseRevNum` as provided to
-   *   `update()`.
-   * @param {BodyDelta} delta Same as for `update()`.
-   * @param {string|null} authorId Same as for `update()`.
-   * @param {BodySnapshot} current Snapshot of the current (latest) revision
-   *   of the document.
+   *   defined. That is, this is the snapshot of `change.revNum - 1`.
+   * @param {BodyChange} change The change to apply, same as for `update()`.
    * @param {BodySnapshot} expected The implied expected result as defined
    *   by `update()`.
    * @returns {BodyChange|null} Result for the outer call to `update()`,
    *   or `null` if the application failed due to an out-of-date `snapshot`.
    */
-  async _applyUpdateTo(base, delta, authorId, current, expected) {
+  async _applyUpdateTo(base, change, expected) {
+    // Instantaneously current (latest) revision of the document. We'll find out
+    // if it turned out to remain current when we finally get to try appending
+    // the (possibly modified) change, below.
+    const current = await this.getSnapshot();
+
     if (base.revNum === current.revNum) {
       // The easy case, because the base revision is in fact the current
       // revision of the document, so we don't have to transform the incoming
       // delta. We merely have to apply the given `delta` to the current
       // revision. If it succeeds, then we won the append race (if any).
 
-      const change = new BodyChange(base.revNum + 1, delta, Timestamp.now(), authorId);
       const revNum = await this._appendChange(change);
 
       if (revNum === null) {
@@ -561,7 +562,7 @@ export default class BodyControl extends CommonBase {
     // (0) Assign incoming arguments to variables that correspond to the
     //     description immediately above.
 
-    const dClient   = delta;
+    const dClient   = change.delta;
     const rBase     = base;
     const rExpected = expected;
     const rCurrent  = current;
@@ -587,15 +588,15 @@ export default class BodyControl extends CommonBase {
     // (3)
 
     const rNextNum     = rCurrent.revNum + 1;
-    const change       = new BodyChange(rNextNum, dNext, Timestamp.now(), authorId);
-    const appendResult = await this._appendChange(change);
+    const appendResult = await this._appendChange(
+      new BodyChange(rNextNum, dNext, change.timestamp, change.authorId));
 
     if (appendResult === null) {
       // Turns out we lost an append race.
       return null;
     }
 
-    const rNext = await this.snapshot(rNextNum);
+    const rNext = await this.getSnapshot(rNextNum);
 
     // (4)
 

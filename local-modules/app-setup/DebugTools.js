@@ -178,7 +178,7 @@ export default class DebugTools {
   async _handle_change(req, res) {
     const revNum = req.params.revNum;
     const body = this._getExistingBody(req);
-    const change = (await body).change(revNum);
+    const change = (await body).getChange(revNum);
     const result = Codec.theOne.encodeJson(await change, true);
 
     this._textResponse(res, result);
@@ -274,7 +274,7 @@ export default class DebugTools {
     const revNum = req.params.revNum;
     const body = this._getExistingBody(req);
     const args = (revNum === undefined) ? [] : [revNum];
-    const snapshot = (await body).snapshot(...args);
+    const snapshot = (await body).getSnapshot(...args);
     const result = Codec.theOne.encodeJson(await snapshot, true);
 
     this._textResponse(res, result);

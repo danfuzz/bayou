@@ -350,7 +350,7 @@ export default class BodyClient extends StateMachine {
 
     const sessionProxy    = this._sessionProxy;
     const infoPromise     = sessionProxy.getLogInfo();
-    const snapshotPromise = sessionProxy.body_snapshot();
+    const snapshotPromise = sessionProxy.body_getSnapshot();
 
     try {
       const info = await infoPromise;
