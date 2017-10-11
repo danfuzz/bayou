@@ -232,8 +232,8 @@ describe('typecheck/TFunction', () => {
     });
 
     it('should reject a class that is not the same as or a subclass of the given `ancestor`', () => {
-      function test(value, clazz) {
-        assert.throws(() => { TFunction.checkClass(value, clazz); });
+      function test(value, ancestor) {
+        assert.throws(() => { TFunction.checkClass(value, ancestor); });
       }
 
       class Blort { }
@@ -267,9 +267,9 @@ describe('typecheck/TFunction', () => {
     });
 
     it('should fail when passed a non-class for `ancestor`', () => {
-      function test(clazz) {
-        assert.throws(() => { TFunction.checkClass(Object, clazz); },
-          /./, /./, inspect(clazz));
+      function test(ancestor) {
+        assert.throws(() => { TFunction.checkClass(Object, ancestor); },
+          /./, /./, inspect(ancestor));
       }
 
       for (const v of [...NON_CLASS_FUNCTIONS, ...NON_FUNCTIONS]) {
@@ -314,7 +314,7 @@ describe('typecheck/TFunction', () => {
     });
   });
 
-  describe('isClass()', () => {
+  describe('isClass(value)', () => {
     it('should return `true` when passed a class', () => {
       function test(value) {
         assert.isTrue(TFunction.isClass(value), value);
@@ -341,6 +341,81 @@ describe('typecheck/TFunction', () => {
       }
 
       for (const v of NON_FUNCTIONS) {
+        test(v);
+      }
+    });
+  });
+
+  describe('isClass(value, ancestor)', () => {
+    it('should accept a `null` ancestor', () => {
+      assert.isTrue(TFunction.isClass(Map, null));
+      assert.isFalse(TFunction.isClass(123, null));
+    });
+
+    it('should return `true` for a value that is the same as the given `ancestor`', () => {
+      class Blort { }
+
+      assert.isTrue(TFunction.isClass(Map, Map));
+      assert.isTrue(TFunction.isClass(Blort, Blort));
+    });
+
+    it('should return `true` for a value that is a subclass of the given `ancestor`', () => {
+      class Blort { }
+      class SubBlort extends Blort { }
+      class UltraBlort extends SubBlort { }
+
+      assert.isTrue(TFunction.isClass(Map, Object));
+      assert.isTrue(TFunction.isClass(Blort, Object));
+      assert.isTrue(TFunction.isClass(SubBlort, Blort));
+      assert.isTrue(TFunction.isClass(UltraBlort, Blort));
+    });
+
+    it('should return `false` when passed a class that is not the same as `ancestor` nor is a subclass of it', () => {
+      function test(value, ancestor) {
+        assert.isFalse(TFunction.isClass(value, ancestor));
+      }
+
+      class Blort { }
+      class SubBlort extends Blort { }
+
+      test(Map, Set);
+      test(Object, Map);
+      test(Object, Blort);
+      test(Object, SubBlort);
+      test(Blort, SubBlort);
+    });
+
+    it('should return `false` when passed a non-class function', () => {
+      function test(value) {
+        assert.isFalse(TFunction.isClass(value, Object), value);
+      }
+
+      for (const v of NON_CLASS_FUNCTIONS) {
+        test(v);
+      }
+    });
+
+    it('should return `false` when passed a non-function', () => {
+      function test(value) {
+        assert.isFalse(TFunction.isClass(value, Object), value);
+      }
+
+      for (const v of NON_FUNCTIONS) {
+        test(v);
+      }
+    });
+
+    it('should fail when passed a non-class for `ancestor`', () => {
+      function test(ancestor) {
+        assert.throws(() => { TFunction.isClass(Object, ancestor); },
+          /./, /./, inspect(ancestor));
+      }
+
+      for (const v of [...NON_CLASS_FUNCTIONS, ...NON_FUNCTIONS]) {
+        if ((v === null) || (v === undefined)) {
+          // Skip these, because they degenerate to the one-argument case.
+          continue;
+        }
         test(v);
       }
     });
