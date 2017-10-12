@@ -20,7 +20,7 @@ import DocServer from './DocServer';
 const log = new Logger('doc');
 
 /** {BodyDelta} Default contents when creating a new document. */
-const DEFAULT_TEXT = BodyDelta.fromQuillForm(DEFAULT_DOCUMENT);
+const DEFAULT_TEXT = BodyDelta.fromOpArgArray(DEFAULT_DOCUMENT);
 
 /**
  * {BodyDelta} Message used as document to indicate a major validation error.

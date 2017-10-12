@@ -6,11 +6,11 @@
  * Default (initial) contents of documents.
  */
 export default [
-  { insert: 'Welcome to Bayou!' },
-  { insert: '\n', attributes: { header: 1 } },
-  { insert: 'Now go grab a ' },
-  { insert: 'boat', attributes: { bold: true } },
-  { insert: ' and start ' },
-  { insert: 'a-rowin\'', attributes: { italic: true } },
-  { insert: '.\n' }
+  ['insert_text', 'Welcome to Bayou!'],
+  ['insert_text', '\n', { header: 1 }],
+  ['insert_text', 'Now go grab a '],
+  ['insert_text', 'boat', { bold: true }],
+  ['insert_text', ' and start '],
+  ['insert_text', 'a-rowin\'', { italic: true }],
+  ['insert_text', '.\n']
 ];
