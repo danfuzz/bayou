@@ -115,4 +115,38 @@ describe('doc-common/Timestamp', () => {
       assert.strictEqual(Timestamp.orNull(value), value);
     });
   });
+
+  describe('constructor()', () => {
+    it('should accept two in-range integers and reflect those values in the corresponding fields', () => {
+      function test(secs, usecs) {
+        const result = new Timestamp(secs, usecs);
+        assert.strictEqual(result.secs, secs);
+        assert.strictEqual(result.usecs, usecs);
+      }
+
+      test(Timestamp.MIN_VALUE.secs, Timestamp.MIN_VALUE.usecs);
+      test(Timestamp.MAX_VALUE.secs, Timestamp.MAX_VALUE.usecs);
+      test(Timestamp.MIN_VALUE.secs + 12345, 543219);
+    });
+  });
+
+  describe('toString()', () => {
+    it('should convert as expected', () => {
+      function test(secs, usecs) {
+        const result = new Timestamp(secs, usecs);
+
+        let ustr = `${usecs}`;
+        while (ustr.length < 6) {
+          ustr = `0${ustr}`;
+        }
+
+        const expected = `Timestamp(${secs}.${ustr})`;
+        assert.strictEqual(result.toString(), expected);
+      }
+
+      test(Timestamp.MIN_VALUE.secs, Timestamp.MIN_VALUE.usecs);
+      test(Timestamp.MAX_VALUE.secs, Timestamp.MAX_VALUE.usecs);
+      test(Timestamp.MIN_VALUE.secs + 12345, 543219);
+    });
+  });
 });

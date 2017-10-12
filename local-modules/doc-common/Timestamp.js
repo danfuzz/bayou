@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import { TInt } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
@@ -218,16 +220,19 @@ export default class Timestamp extends CommonBase {
   }
 
   /**
-   * Returns a string form for this instance. This is always of the form
-   * `<secs>.<usecs>` where `<usecs>` is always six digits long.
+   * Custom inspector function, as called by `util.inspect()`. This is always of
+   * the form `Timestamp(<secs>.<usecs>)` where `<usecs>` is always six digits
+   * long.
    *
-   * @returns {string} The string form.
+   * @param {Int} depth_unused Current inspection depth.
+   * @param {object} opts_unused Inspection options.
+   * @returns {string} The inspection string form of this instance.
    */
-  toString() {
+  [inspect.custom](depth_unused, opts_unused) {
     // A little cheeky, but this left-pads the usecs with zeroes.
     const usecs = ('' + (this._usecs + USECS_PER_SEC)).slice(1);
 
-    return `${this._secs}.${usecs}`;
+    return `${this.constructor.name}(${this._secs}.${usecs})`;
   }
 
   /**
