@@ -140,14 +140,23 @@ export default class FileComplex extends CommonBase {
   /**
    * Initializes the document content, if either the file doesn't exist or the
    * content doesn't pass validation.
+   *
+   * @returns {undefined} `undefined` once setup and initialization are
+   *   complete.
    */
   async initIfMissingOrInvalid() {
-    const unlock = await this._initMutex.lock();
-    try {
-      const control   = this.bodyControl;
-      const status    = await control.validationStatus();
-      const needsInit = (status !== BodyControl.STATUS_OK);
-      let   firstText = DEFAULT_TEXT;
+    return this._initMutex.withLockHeld(async () => {
+      const control = this.bodyControl;
+      const status  = await control.validationStatus();
+
+      if (status === BodyControl.STATUS_OK) {
+        // All's well.
+        return;
+      }
+
+      // The document needs to be initialized.
+
+      let firstText;
 
       if (status === BodyControl.STATUS_MIGRATE) {
         // **TODO:** Ultimately, this code path will evolve into forward
@@ -162,14 +171,13 @@ export default class FileComplex extends CommonBase {
         // attempt to recover _something_ of use from the document storage.
         this.log.info('Major problem with stored data!');
         firstText = ERROR_NOTE;
+      } else {
+        // The document simply didn't exist.
+        firstText = DEFAULT_TEXT;
       }
 
-      if (needsInit) {
-        await control.create(firstText);
-      }
-    } finally {
-      unlock();
-    }
+      await control.create(firstText);
+    });
   }
 
   /**
