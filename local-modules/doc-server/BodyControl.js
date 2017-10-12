@@ -88,11 +88,11 @@ export default class BodyControl extends CommonBase {
   }
 
   /**
-   * Creates or re-creates the document. This will result in a body with an
+   * Creates or re-creates the document body. This will result in a body with an
    * empty change for revision `0` and a `revNum` of `0`.
    */
   async create() {
-    this._log.info('Creating document.');
+    this._log.info('Creating document body.');
 
     const fc = this._fileCodec; // Avoids boilerplate immediately below.
 
