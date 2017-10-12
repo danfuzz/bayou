@@ -141,8 +141,7 @@ export default class FileComplex extends CommonBase {
    * Initializes the document content, if either the file doesn't exist or the
    * content doesn't pass validation.
    *
-   * @returns {undefined} `undefined` once setup and initialization are
-   *   complete.
+   * @returns {boolean} `true` once setup and initialization are complete.
    */
   async initIfMissingOrInvalid() {
     return this._initMutex.withLockHeld(async () => {
@@ -151,7 +150,7 @@ export default class FileComplex extends CommonBase {
 
       if (status === BodyControl.STATUS_OK) {
         // All's well.
-        return;
+        return true;
       }
 
       // The document needs to be initialized.
@@ -177,6 +176,8 @@ export default class FileComplex extends CommonBase {
       }
 
       await control.create(firstText);
+
+      return true;
     });
   }
 
