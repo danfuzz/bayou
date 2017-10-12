@@ -2,9 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import {
-  BodyChange, BodyDelta, BodySnapshot, RevisionNumber, Timestamp
-} from 'doc-common';
+import { BodyChange, BodyDelta, BodySnapshot, RevisionNumber } from 'doc-common';
 import { Errors, TransactionSpec } from 'file-store';
 import { Delay } from 'promise-util';
 import { CommonBase, Errors as UtilErrors, InfoError } from 'util-common';
@@ -90,53 +88,29 @@ export default class BodyControl extends CommonBase {
   }
 
   /**
-   * Creates or re-creates the document. If passed, the given `delta` becomes
-   * the initial content of the document (which will be in the second change,
-   * because by definition the first change of a document is empty).
-   *
-   * @param {BodyDelta|null} [contents = null] Initial document contents, or
-   *   `null` if the document should be completely empty.
+   * Creates or re-creates the document body. This will result in a body with an
+   * empty change for revision `0` and a `revNum` of `0`.
    */
-  async create(contents = null) {
-    if (contents !== null) {
-      BodyDelta.check(contents);
-    }
-
-    this._log.info('Creating document.');
+  async create() {
+    this._log.info('Creating document body.');
 
     const fc = this._fileCodec; // Avoids boilerplate immediately below.
 
-    // Per spec, a document starts with an empty change #0.
-    const change0 = BodyChange.FIRST;
-
-    // If we get passed `contents`, that goes into change #1. We make an array
-    // here (in either case) so that we can just use the `...` operator when
-    // constructing the transaction spec.
-    const maybeChange1 = [];
-    if (contents !== null) {
-      const change = new BodyChange(1, contents, Timestamp.now(), null);
-      const op     = fc.op_writePath(Paths.forBodyChange(1), change);
-      maybeChange1.push(op);
-    }
-
-    // Initial document revision number.
-    const revNum = (contents === null) ? 0 : 1;
-
     const spec = new TransactionSpec(
       // If the file already existed, this clears out the old contents.
+      // **TODO:** This clears the entire file, not just the body. This should
+      // only really clear the body-specific prefix.
       fc.op_deleteAll(),
 
-      // Version for the file schema.
+      // Version for the file schema. **TODO:** As above, this path isn't
+      // body-specific and so would be better handled elsewhere.
       fc.op_writePath(Paths.SCHEMA_VERSION, this._fileComplex.schemaVersion),
 
       // Initial revision number.
-      fc.op_writePath(Paths.BODY_REVISION_NUMBER, revNum),
+      fc.op_writePath(Paths.BODY_REVISION_NUMBER, 0),
 
       // Empty change #0 (per documented interface).
-      fc.op_writePath(Paths.forBodyChange(0), change0),
-
-      // The given `content` (if any) for change #1.
-      ...maybeChange1
+      fc.op_writePath(Paths.forBodyChange(0), BodyChange.FIRST),
     );
 
     await this._file.create();

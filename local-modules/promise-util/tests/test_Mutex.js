@@ -54,4 +54,51 @@ describe('promise-util/Mutex', () => {
       assert.deepEqual(gotOrder, expectOrder);
     });
   });
+
+  describe('withLockHeld()', () => {
+    it('should work with a synchronous function when there is blatantly no contention', async () => {
+      const mutex = new Mutex();
+
+      const result = await mutex.withLockHeld(() => { return 'blort'; });
+      assert.strictEqual(result, 'blort');
+
+      assert.isRejected(mutex.withLockHeld(() => { throw new Error('oy'); }));
+    });
+
+    it('should work with an `async` function when there is blatantly no contention', async () => {
+      const mutex = new Mutex();
+
+      const result = await mutex.withLockHeld(async () => { return 'blort'; });
+      assert.strictEqual(result, 'blort');
+
+      assert.isRejected(mutex.withLockHeld(async () => { throw new Error('oy'); }));
+    });
+
+    it('should provide the lock in request order', async () => {
+      const mutex = new Mutex();
+
+      let result = 'x';
+      const promises = [];
+
+      for (let i = 0; i < 10; i++) {
+        const p = mutex.withLockHeld(() => { result += `${i}`; });
+        promises.push(p);
+      }
+
+      await Promise.all(promises);
+      assert.strictEqual(result, 'x0123456789');
+    });
+
+    it('should reject non-function arguments', async () => {
+      const mutex = new Mutex();
+      function test(v) {
+        assert.isRejected(mutex.withLockHeld(v));
+      }
+
+      test(null);
+      test(undefined);
+      test('foo');
+      test(Mutex);
+    });
+  });
 });

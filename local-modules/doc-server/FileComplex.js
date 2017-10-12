@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Codec } from 'codec';
-import { BodyDelta } from 'doc-common';
+import { BodyChange, BodyDelta, Timestamp } from 'doc-common';
 import { ProductInfo } from 'env-server';
 import { BaseFile, FileCodec } from 'file-store';
 import { DEFAULT_DOCUMENT } from 'hooks-server';
@@ -20,20 +20,20 @@ import DocServer from './DocServer';
 const log = new Logger('doc');
 
 /** {BodyDelta} Default contents when creating a new document. */
-const DEFAULT_TEXT = BodyDelta.fromQuillForm(DEFAULT_DOCUMENT);
+const DEFAULT_TEXT = BodyDelta.fromOpArgArray(DEFAULT_DOCUMENT);
 
 /**
  * {BodyDelta} Message used as document to indicate a major validation error.
  */
-const ERROR_NOTE = BodyDelta.fromQuillForm([
-  { insert: '(Recreated document due to validation error(s).)\n' }
+const ERROR_NOTE = BodyDelta.fromOpArgArray([
+  ['insert_text', '(Recreated document due to validation error(s).)\n']
 ]);
 
 /**
  * {BodyDelta} Message used as document instead of migrating documents from
  * old schema versions. */
-const MIGRATION_NOTE = BodyDelta.fromQuillForm([
-  { insert: '(Recreated document due to schema version skew.)\n' }
+const MIGRATION_NOTE = BodyDelta.fromOpArgArray([
+  ['insert_text', '(Recreated document due to schema version skew.)\n']
 ]);
 
 /**
@@ -140,14 +140,22 @@ export default class FileComplex extends CommonBase {
   /**
    * Initializes the document content, if either the file doesn't exist or the
    * content doesn't pass validation.
+   *
+   * @returns {boolean} `true` once setup and initialization are complete.
    */
   async initIfMissingOrInvalid() {
-    const unlock = await this._initMutex.lock();
-    try {
-      const control   = this.bodyControl;
-      const status    = await control.validationStatus();
-      const needsInit = (status !== BodyControl.STATUS_OK);
-      let   firstText = DEFAULT_TEXT;
+    return this._initMutex.withLockHeld(async () => {
+      const control = this.bodyControl;
+      const status  = await control.validationStatus();
+
+      if (status === BodyControl.STATUS_OK) {
+        // All's well.
+        return true;
+      }
+
+      // The document needs to be initialized.
+
+      let firstText;
 
       if (status === BodyControl.STATUS_MIGRATE) {
         // **TODO:** Ultimately, this code path will evolve into forward
@@ -162,14 +170,20 @@ export default class FileComplex extends CommonBase {
         // attempt to recover _something_ of use from the document storage.
         this.log.info('Major problem with stored data!');
         firstText = ERROR_NOTE;
+      } else {
+        // The document simply didn't exist.
+        firstText = DEFAULT_TEXT;
       }
 
-      if (needsInit) {
-        await control.create(firstText);
-      }
-    } finally {
-      unlock();
-    }
+      // `revNum` is `1` because a newly-created body always has an empty
+      // change for revision `0`.
+      const change = new BodyChange(1, firstText, Timestamp.now());
+
+      await control.create();
+      await control.update(change);
+
+      return true;
+    });
   }
 
   /**

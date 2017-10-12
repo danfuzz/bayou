@@ -487,20 +487,16 @@ export default class LocalFile extends BaseFile {
     // Wait for the prescribed amount of time.
     await Delay.resolve(DIRTY_DELAY_MSEC);
 
-    // Call `_writeStorge()` with the writer mutex held. The `try..finally` here
-    // guarantees that we release the mutex in the face of errors.
-    const unlock = await this._writeMutex.lock();
-    try {
-      // **TODO:** If we want to catch write errors (e.g. filesystem full), here
-      // is where we need to do it.
+    // Call `_writeStorge()` with the writer mutex held. **TODO:** If we want to
+    // catch write errors (e.g. filesystem full), here is where we need to do
+    // it.
+    await this._writeMutex.withLockHeld(async () => {
       if (this._fileShouldExist) {
         await this._writeStorage();
       } else {
         await this._deleteStorage();
       }
-    } finally {
-      unlock();
-    }
+    });
 
     return true;
   }

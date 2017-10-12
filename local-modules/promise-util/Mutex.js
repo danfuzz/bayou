@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { TFunction } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
 /**
@@ -39,7 +40,21 @@ export default class Mutex extends CommonBase {
    * Acquires the mutual exclusion lock. This method returns only after the
    * lock has been released by all previous lock requesters. The return value is
    * a function which, when called, releases the lock and so allows other
-   * threads of control to get the lock.
+   * threads of control to get the lock. Typical use should look like this:
+   *
+   * ```javascript
+   * const unlock = await mutex.lock();
+   * try {
+   *   ... do something interesting ...
+   * } finally {
+   *   unlock();
+   * }
+   * ```
+   *
+   * **Note:** It is preferable to use `withLockHeld()` instead of this method,
+   * if your use case allows for it, because that method automatically handles
+   * the unlocking of the mutex as control passes back out of the protected
+   * code.
    *
    * @returns {Function} Function of no arguments which releases the lock when
    *   called.
@@ -74,5 +89,28 @@ export default class Mutex extends CommonBase {
         this._waiters[0].release();
       }
     };
+  }
+
+  /**
+   * Acquires the mutex lock, calls the given function with the lock held, and
+   * then releases the lock. The return value of this method is whatever is
+   * returned by the given function; or if the function throws an error, then
+   * likewise this method throws that same error.
+   *
+   * @param {function} func The function to call once the mutex is acquired. It
+   *   is allowed to be an `async` function.
+   * @returns {*} Whatever `func()` returns, if anything.
+   * @throws {*} Whatever `func()` throws, if anything.
+   */
+  async withLockHeld(func) {
+    TFunction.checkCallable(func);
+
+    const unlock = await this.lock();
+
+    try {
+      return await func();
+    } finally {
+      unlock();
+    }
   }
 }
