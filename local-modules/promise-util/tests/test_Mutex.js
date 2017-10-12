@@ -54,4 +54,36 @@ describe('promise-util/Mutex', () => {
       assert.deepEqual(gotOrder, expectOrder);
     });
   });
+
+  describe('withLockHeld()', () => {
+    it('should work with a synchronous function when there is blatantly no contention', async () => {
+      const mutex = new Mutex();
+
+      const result = await mutex.withLockHeld(() => { return 'blort'; });
+      assert.strictEqual(result, 'blort');
+
+      assert.isRejected(mutex.withLockHeld(() => { throw new Error('oy'); }));
+    });
+
+    it('should work with an `async` function when there is blatantly no contention', async () => {
+      const mutex = new Mutex();
+
+      const result = await mutex.withLockHeld(async () => { return 'blort'; });
+      assert.strictEqual(result, 'blort');
+
+      assert.isRejected(mutex.withLockHeld(async () => { throw new Error('oy'); }));
+    });
+
+    it('should reject non-function arguments', () => {
+      const mutex = new Mutex();
+      function test(v) {
+        assert.throws(() => mutex.withLockHeld(v));
+      }
+
+      test(null);
+      test(undefined);
+      test('foo');
+      test(Mutex);
+    });
+  });
 });
