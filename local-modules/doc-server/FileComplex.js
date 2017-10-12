@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Codec } from 'codec';
-import { BodyDelta } from 'doc-common';
+import { BodyChange, BodyDelta, Timestamp } from 'doc-common';
 import { ProductInfo } from 'env-server';
 import { BaseFile, FileCodec } from 'file-store';
 import { DEFAULT_DOCUMENT } from 'hooks-server';
@@ -175,7 +175,12 @@ export default class FileComplex extends CommonBase {
         firstText = DEFAULT_TEXT;
       }
 
-      await control.create(firstText);
+      // `revNum` is `1` because a newly-created body always has an empty
+      // change for revision `0`.
+      const change = new BodyChange(1, firstText, Timestamp.now());
+
+      await control.create();
+      await control.update(change);
 
       return true;
     });
