@@ -74,10 +74,25 @@ describe('promise-util/Mutex', () => {
       assert.isRejected(mutex.withLockHeld(async () => { throw new Error('oy'); }));
     });
 
-    it('should reject non-function arguments', () => {
+    it('should provide the lock in request order', async () => {
+      const mutex = new Mutex();
+
+      let result = 'x';
+      const promises = [];
+
+      for (let i = 0; i < 10; i++) {
+        const p = mutex.withLockHeld(() => { result += `${i}`; });
+        promises.push(p);
+      }
+
+      await Promise.all(promises);
+      assert.strictEqual(result, 'x0123456789');
+    });
+
+    it('should reject non-function arguments', async () => {
       const mutex = new Mutex();
       function test(v) {
-        assert.throws(() => mutex.withLockHeld(v));
+        assert.isRejected(mutex.withLockHeld(v));
       }
 
       test(null);
