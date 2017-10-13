@@ -186,12 +186,11 @@ describe('doc-common/BodyOp', () => {
     }
 
     const attrib = { italic: true, bold: null };
-    const embed  = new Functor('x', ['y']);
 
     test(BodyOp.op_delete(668),               { opName: 'delete', count: 668 });
-    test(BodyOp.op_embed('x', ['y']),         { opName: 'embed', value: embed, attributes: null });
-    test(BodyOp.op_embed('x', ['y'], null),   { opName: 'embed', value: embed, attributes: null });
-    test(BodyOp.op_embed('x', ['y'], attrib), { opName: 'embed', value: embed, attributes: attrib });
+    test(BodyOp.op_embed('x', ['y']),         { opName: 'embed', type: 'x', value: ['y'], attributes: null });
+    test(BodyOp.op_embed('x', ['y'], null),   { opName: 'embed', type: 'x', value: ['y'], attributes: null });
+    test(BodyOp.op_embed('x', ['y'], attrib), { opName: 'embed', type: 'x', value: ['y'], attributes: attrib });
     test(BodyOp.op_text('hello'),             { opName: 'text', text: 'hello', attributes: null });
     test(BodyOp.op_text('hello', null),       { opName: 'text', text: 'hello', attributes: null });
     test(BodyOp.op_text('hello', attrib),     { opName: 'text', text: 'hello', attributes: attrib });

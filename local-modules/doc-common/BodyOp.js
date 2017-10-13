@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt, TObject, TString } from 'typecheck';
-import { DataUtil, Errors, Functor, ObjectUtil } from 'util-common';
+import { DataUtil, Errors, ObjectUtil } from 'util-common';
 
 import BaseOp from './BaseOp';
 
@@ -175,7 +175,7 @@ export default class BodyOp extends BaseOp {
 
       case BodyOp.EMBED: {
         const [type, value, attributes = null] = payload.args;
-        return Object.freeze({ opName, value: new Functor(type, value), attributes });
+        return Object.freeze({ opName, type, value, attributes });
       }
 
       case BodyOp.RETAIN: {
@@ -222,8 +222,8 @@ export default class BodyOp extends BaseOp {
       }
 
       case BodyOp.EMBED: {
-        const { value: { name, args: [arg0] }, attributes } = props;
-        const insert = { [name]: arg0 };
+        const { type, value, attributes } = props;
+        const insert = { [type]: value };
 
         return attributes
           ? { insert, attributes }
