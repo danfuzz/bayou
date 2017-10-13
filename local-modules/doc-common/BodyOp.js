@@ -21,19 +21,22 @@ export default class BodyOp extends BaseOp {
     return 'delete';
   }
 
-  /** {string} Operation name for "insert embed" operations. */
-  static get INSERT_EMBED() {
-    return 'insert_embed';
-  }
-
-  /** {string} Operation name for "insert text" operations. */
-  static get INSERT_TEXT() {
-    return 'insert_text';
+  /**
+   * {string} Operation name for "embed" (insert / append embedded object)
+   * operations.
+   */
+  static get EMBED() {
+    return 'embed';
   }
 
   /** {string} Operation name for "retain" operations. */
   static get RETAIN() {
     return 'retain';
+  }
+
+  /** {string} Operation name for "text" (insert / append text) operations. */
+  static get TEXT() {
+    return 'text';
   }
 
   /**
@@ -115,7 +118,7 @@ export default class BodyOp extends BaseOp {
     value           = DataUtil.deepFreeze(Functor.check(value));
     const attribArg = BodyOp._attributesArg(attributes);
 
-    return new BodyOp(BodyOp.INSERT_EMBED, value, ...attribArg);
+    return new BodyOp(BodyOp.EMBED, value, ...attribArg);
   }
 
   /**
@@ -130,7 +133,7 @@ export default class BodyOp extends BaseOp {
     TString.nonEmpty(text);
     const attribArg = BodyOp._attributesArg(attributes);
 
-    return new BodyOp(BodyOp.INSERT_TEXT, text, ...attribArg);
+    return new BodyOp(BodyOp.TEXT, text, ...attribArg);
   }
 
   /**
@@ -166,12 +169,12 @@ export default class BodyOp extends BaseOp {
         return Object.freeze({ opName, count });
       }
 
-      case BodyOp.INSERT_EMBED: {
+      case BodyOp.EMBED: {
         const [value, attributes = null] = payload.args;
         return Object.freeze({ opName, value, attributes });
       }
 
-      case BodyOp.INSERT_TEXT: {
+      case BodyOp.TEXT: {
         const [text, attributes = null] = payload.args;
         return Object.freeze({ opName, text, attributes });
       }
@@ -196,7 +199,7 @@ export default class BodyOp extends BaseOp {
    */
   isInsert() {
     const opName = this._payload.name;
-    return (opName === BodyOp.INSERT_TEXT) || (opName === BodyOp.INSERT_EMBED);
+    return (opName === BodyOp.TEXT) || (opName === BodyOp.EMBED);
   }
 
   /**
@@ -214,7 +217,7 @@ export default class BodyOp extends BaseOp {
         return { delete: props.count };
       }
 
-      case BodyOp.INSERT_EMBED: {
+      case BodyOp.EMBED: {
         const { value: { name, args: [arg0] }, attributes } = props;
         const insert = { [name]: arg0 };
 
@@ -223,7 +226,7 @@ export default class BodyOp extends BaseOp {
           : { insert };
       }
 
-      case BodyOp.INSERT_TEXT: {
+      case BodyOp.TEXT: {
         const { text: insert, attributes } = props;
 
         return attributes

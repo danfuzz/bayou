@@ -26,14 +26,14 @@ const DEFAULT_TEXT = BodyDelta.fromOpArgArray(DEFAULT_DOCUMENT);
  * {BodyDelta} Message used as document to indicate a major validation error.
  */
 const ERROR_NOTE = BodyDelta.fromOpArgArray([
-  ['insert_text', '(Recreated document due to validation error(s).)\n']
+  ['text', '(Recreated document due to validation error(s).)\n']
 ]);
 
 /**
  * {BodyDelta} Message used as document instead of migrating documents from
  * old schema versions. */
 const MIGRATION_NOTE = BodyDelta.fromOpArgArray([
-  ['insert_text', '(Recreated document due to schema version skew.)\n']
+  ['text', '(Recreated document due to schema version skew.)\n']
 ]);
 
 /**

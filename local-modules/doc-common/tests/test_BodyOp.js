@@ -130,10 +130,10 @@ describe('doc-common/BodyOp', () => {
       const attrib = { bold: true };
 
       const result1 = BodyOp.op_insertEmbed(embed);
-      assert.deepEqual(result1.payload, new Functor('insert_embed', embed));
+      assert.deepEqual(result1.payload, new Functor('embed', embed));
 
       const result2 = BodyOp.op_insertEmbed(embed, attrib);
-      assert.deepEqual(result2.payload, new Functor('insert_embed', embed, attrib));
+      assert.deepEqual(result2.payload, new Functor('embed', embed, attrib));
     });
   });
 
@@ -142,10 +142,10 @@ describe('doc-common/BodyOp', () => {
       const attrib = { italic: true, bold: null };
 
       const result1 = BodyOp.op_insertText('florp');
-      assert.deepEqual(result1.payload, new Functor('insert_text', 'florp'));
+      assert.deepEqual(result1.payload, new Functor('text', 'florp'));
 
       const result2 = BodyOp.op_insertText('like', attrib);
-      assert.deepEqual(result2.payload, new Functor('insert_text', 'like', attrib));
+      assert.deepEqual(result2.payload, new Functor('text', 'like', attrib));
     });
   });
 
@@ -174,12 +174,12 @@ describe('doc-common/BodyOp', () => {
     const embed  = new Functor('blort', { x: 10 });
 
     test(BodyOp.op_delete(668),                 { opName: 'delete', count: 668 });
-    test(BodyOp.op_insertEmbed(embed),          { opName: 'insert_embed', value: embed, attributes: null });
-    test(BodyOp.op_insertEmbed(embed, null),    { opName: 'insert_embed', value: embed, attributes: null });
-    test(BodyOp.op_insertEmbed(embed, attrib),  { opName: 'insert_embed', value: embed, attributes: attrib });
-    test(BodyOp.op_insertText('hello'),         { opName: 'insert_text', text: 'hello', attributes: null });
-    test(BodyOp.op_insertText('hello', null),   { opName: 'insert_text', text: 'hello', attributes: null });
-    test(BodyOp.op_insertText('hello', attrib), { opName: 'insert_text', text: 'hello', attributes: attrib });
+    test(BodyOp.op_insertEmbed(embed),          { opName: 'embed', value: embed, attributes: null });
+    test(BodyOp.op_insertEmbed(embed, null),    { opName: 'embed', value: embed, attributes: null });
+    test(BodyOp.op_insertEmbed(embed, attrib),  { opName: 'embed', value: embed, attributes: attrib });
+    test(BodyOp.op_insertText('hello'),         { opName: 'text', text: 'hello', attributes: null });
+    test(BodyOp.op_insertText('hello', null),   { opName: 'text', text: 'hello', attributes: null });
+    test(BodyOp.op_insertText('hello', attrib), { opName: 'text', text: 'hello', attributes: attrib });
     test(BodyOp.op_retain(5),                   { opName: 'retain', count: 5, attributes: null });
     test(BodyOp.op_retain(5, null),             { opName: 'retain', count: 5, attributes: null });
     test(BodyOp.op_retain(5, attrib),           { opName: 'retain', count: 5, attributes: attrib });
