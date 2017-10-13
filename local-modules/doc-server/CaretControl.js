@@ -7,8 +7,9 @@ import {
 } from 'doc-common';
 import { Condition } from 'promise-util';
 import { TInt, TString } from 'typecheck';
-import { CommonBase, Errors, InfoError } from 'util-common';
+import { Errors, InfoError } from 'util-common';
 
+import BaseControl from './BaseControl';
 import CaretColor from './CaretColor';
 import CaretStorage from './CaretStorage';
 
@@ -33,7 +34,7 @@ const MAX_SESSION_IDLE_MSEC = 5 * 60 * 1000; // Five minutes.
  * `FileComplex` per document, and each `FileComplex` instance only ever makes
  * one instance of this class.
  */
-export default class CaretControl extends CommonBase {
+export default class CaretControl extends BaseControl {
   /**
    * Constructs an instance.
    *
@@ -41,7 +42,7 @@ export default class CaretControl extends CommonBase {
    *   of.
    */
   constructor(fileComplex) {
-    super();
+    super(fileComplex);
 
     /**
      * {CaretStorage} File storage handler. This is responsible for all of the
@@ -66,9 +67,6 @@ export default class CaretControl extends CommonBase {
      * updated.
      */
     this._updatedCondition = new Condition();
-
-    /** {Logger} Logger specific to this document's ID. */
-    this._log = fileComplex.log;
 
     Object.seal(this);
   }
@@ -279,7 +277,7 @@ export default class CaretControl extends CommonBase {
     for (const [sessionId, caret] of this._snapshot.entries()) {
       if (minTime.compareTo(caret.lastActive) > 0) {
         // Too old!
-        this._log.info(`[${sessionId}] Caret became inactive.`);
+        this.log.info(`[${sessionId}] Caret became inactive.`);
         toRemove.push(sessionId);
       }
     }
@@ -370,18 +368,18 @@ export default class CaretControl extends CommonBase {
       }
 
       if (caret === null) {
-        this._log.info(`[${sessionId}] Ended.`);
+        this.log.info(`[${sessionId}] Ended.`);
       } else {
         const { index, length, revNum } = caret;
         const caretStr = (length === 0)
           ? `@${index}`
           : `[${index}..${index + length - 1}]`;
-        this._log.info(`[${sessionId}] Update: rev ${revNum}, ${caretStr}`);
+        this.log.info(`[${sessionId}] Update: rev ${revNum}, ${caretStr}`);
       }
 
       loggedSessions.add(sessionId);
     }
 
-    this._log.info('New caret revision number:', newRevNum);
+    this.log.info('New caret revision number:', newRevNum);
   }
 }

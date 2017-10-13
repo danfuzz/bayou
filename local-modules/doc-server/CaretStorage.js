@@ -6,9 +6,9 @@ import { Caret, CaretSnapshot } from 'doc-common';
 import { Errors, TransactionSpec } from 'file-store';
 import { CallPiler, Delay } from 'promise-util';
 import { TString } from 'typecheck';
-import { CommonBase, FrozenBuffer } from 'util-common';
+import { FrozenBuffer } from 'util-common';
 
-import FileComplex from './FileComplex';
+import BaseComplexMember from './BaseComplexMember';
 import Paths from './Paths';
 
 /**
@@ -38,7 +38,7 @@ const MAX_WRITE_RETRIES = 5;
  * methods on this class is considered to be "locally controlled," and so such
  * caret updates are pushed to the file storage.
  */
-export default class CaretStorage extends CommonBase {
+export default class CaretStorage extends BaseComplexMember {
   /**
    * Constructs an instance.
    *
@@ -46,16 +46,7 @@ export default class CaretStorage extends CommonBase {
    *   of.
    */
   constructor(fileComplex) {
-    super();
-
-    /** {FileComplex} File complex that this instance is part of. */
-    this._fileComplex = FileComplex.check(fileComplex);
-
-    /** {FileCodec} File-codec wrapper to use. */
-    this._fileCodec = fileComplex.fileCodec;
-
-    /** {Logger} Logger specific to this document's ID. */
-    this._log = fileComplex.log;
+    super(fileComplex);
 
     /**
      * {Set<string>} Set of session IDs, indicating all of the editing sessions
@@ -148,7 +139,7 @@ export default class CaretStorage extends CommonBase {
         const newSnapshot = snapshot.withoutSession(sessionId);
         if (newSnapshot !== snapshot) {
           snapshot = newSnapshot;
-          this._log.detail('Integrated caret removal:', sessionId);
+          this.log.detail('Integrated caret removal:', sessionId);
         }
       }
     }
@@ -158,7 +149,7 @@ export default class CaretStorage extends CommonBase {
       const newSnapshot = snapshot.withCaret(carets.get(sessionId));
       if (newSnapshot !== snapshot) {
         snapshot = newSnapshot;
-        this._log.detail('Integrated caret update:', sessionId);
+        this.log.detail('Integrated caret update:', sessionId);
       }
     }
 
@@ -222,9 +213,9 @@ export default class CaretStorage extends CommonBase {
    * snapshot.
    */
   async _readAllChangedSessions() {
-    this._log.info('Reading caret directory...');
+    this.log.info('Reading caret directory...');
 
-    const fc                = this._fileCodec;
+    const fc                = this.fileCodec;
     const currentSessionIds = new Set();
 
     try {
@@ -235,7 +226,7 @@ export default class CaretStorage extends CommonBase {
         currentSessionIds.add(Paths.sessionFromCaretPath(p));
       }
     } catch (e) {
-      this._log.error('Could not read caret directory.', e);
+      this.log.error('Could not read caret directory.', e);
       throw e;
     }
 
@@ -247,7 +238,7 @@ export default class CaretStorage extends CommonBase {
 
     for (const sessionId of currentSessionIds) {
       if (!this._carets.has(sessionId)) {
-        this._log.info('New remote caret:', sessionId);
+        this.log.info('New remote caret:', sessionId);
         ops.push(fc.op_readPath(Paths.forCaret(sessionId)));
       }
     }
@@ -259,7 +250,7 @@ export default class CaretStorage extends CommonBase {
       const transactionResult = await fc.transact(spec);
       caretData = transactionResult.data;
     } catch (e) {
-      this._log.error('Could not read new carets.', e);
+      this.log.error('Could not read new carets.', e);
       throw e;
     }
 
@@ -279,7 +270,7 @@ export default class CaretStorage extends CommonBase {
 
     for (const sessionId of this._remoteSessionIds()) {
       if (!currentSessionIds.has(sessionId)) {
-        this._log.info('Remote caret has gone away:', sessionId);
+        this.log.info('Remote caret has gone away:', sessionId);
         carets = carets.withoutSession(sessionId);
       }
     }
@@ -294,21 +285,21 @@ export default class CaretStorage extends CommonBase {
    * @param {Set<string>} paths Set of paths, one per caret to read.
    */
   async _readCaretsFor(paths) {
-    const fc  = this._fileCodec;
+    const fc  = this.fileCodec;
     const ops = [];
     let caretData;
 
     for (const p of paths) {
-      this._log.info('Remote caret changed:', Paths.sessionFromCaretPath(p));
+      this.log.info('Remote caret changed:', Paths.sessionFromCaretPath(p));
       ops.push(fc.op_readPath(p));
     }
 
     try {
-      this._log.info('Reading changed carets.');
+      this.log.info('Reading changed carets.');
       const transactionResult = await fc.transact(new TransactionSpec(...ops));
       caretData = transactionResult.data;
     } catch (e) {
-      this._log.error('Could not read changed carets.', e);
+      this.log.error('Could not read changed carets.', e);
       throw e;
     }
 
@@ -349,7 +340,7 @@ export default class CaretStorage extends CommonBase {
    * things are working) than hard failure.
    */
   async _waitThenWriteCarets() {
-    this._log.detail('Waiting a moment before writing carets.');
+    this.log.detail('Waiting a moment before writing carets.');
     await Delay.resolve(WRITE_DELAY_MSEC);
 
     // Build up a transaction spec to perform all the caret updates, and extract
@@ -357,7 +348,7 @@ export default class CaretStorage extends CommonBase {
     // succeed. (We have to do this latter part before we `await` the
     // transaction, since otherwise we could be looking at stale state.)
 
-    const fc            = this._fileCodec;
+    const fc            = this.fileCodec;
     const ops           = [];
     const updatedCarets = new Map();
     const setUpdates    = []; // List of new and deleted sessions.
@@ -373,14 +364,14 @@ export default class CaretStorage extends CommonBase {
       }
 
       if (caret) {
-        this._log.detail('Updating caret:', sessionId);
+        this.log.detail('Updating caret:', sessionId);
         ops.push(fc.op_writePath(path, caret));
         if (!storedCaret) {
           // First time this session is being stored.
           setUpdates.push(sessionId);
         }
       } else {
-        this._log.detail('Deleting caret:', sessionId);
+        this.log.detail('Deleting caret:', sessionId);
         ops.push(fc.op_deletePath(path));
         setUpdates.push(sessionId);
       }
@@ -390,7 +381,7 @@ export default class CaretStorage extends CommonBase {
 
     if (ops.length === 0) {
       // Nothing got updated, as it turns out.
-      this._log.detail('No updated carets to write.');
+      this.log.detail('No updated carets to write.');
       return;
     }
 
@@ -423,26 +414,26 @@ export default class CaretStorage extends CommonBase {
 
     for (let i = 0; i < MAX_WRITE_RETRIES; i++) {
       if (i !== 0) {
-        this._log.info(`Caret write attempt #${i+1}.`);
+        this.log.info(`Caret write attempt #${i+1}.`);
       }
 
       try {
-        this._log.detail('Writing updated carets...');
+        this.log.detail('Writing updated carets...');
         await fc.transact(spec);
-        this._log.detail('Wrote updated carets.');
+        this.log.detail('Wrote updated carets.');
         break;
       } catch (e) {
-        this._log.warn('Failed to write carets.', e);
+        this.log.warn('Failed to write carets.', e);
         if (i === MAX_WRITE_RETRIES) {
           // This was the last attempt. Log it as an error (but don't rethrow,
           // per the rationale in the header comment). And return from the
           // method (instead of continuing below), so that we don't incorrectly
           // indicate that the stuff we were trying to store was actually
           // stored.
-          this._log.error('Failed to write carets, too many times.', e);
+          this.log.error('Failed to write carets, too many times.', e);
           return;
         } else {
-          this._log.warn('Failed to write carets.', e);
+          this.log.warn('Failed to write carets.', e);
         }
       }
 
@@ -468,7 +459,7 @@ export default class CaretStorage extends CommonBase {
     }
 
     this._storedCarets = storedCarets;
-    this._log.info('Carets are now updated in storage.');
+    this.log.info('Carets are now updated in storage.');
   }
 
   /**
@@ -479,7 +470,7 @@ export default class CaretStorage extends CommonBase {
   async _whenRemoteChange() {
     // Build up the change detection transaction spec.
 
-    const fc  = this._fileCodec;
+    const fc  = this.fileCodec;
     const ops = [];
 
     ops.push(fc.op_timeout(REMOTE_CHANGE_TIMEOUT_MSEC));
@@ -502,13 +493,13 @@ export default class CaretStorage extends CommonBase {
 
     let paths;
     try {
-      this._log.info('Waiting for caret changes.');
+      this.log.info('Waiting for caret changes.');
       const transactionResult = await fc.transact(new TransactionSpec(...ops));
       paths = transactionResult.paths;
     } catch (e) {
       if (Errors.isTimeout(e)) {
         // Per the method doc, we convert timeout into a `false` return.
-        this._log.info('Timed out while waiting for caret changes.');
+        this.log.info('Timed out while waiting for caret changes.');
         return false;
       } else {
         // Not a timeout; re-throw.
@@ -527,7 +518,7 @@ export default class CaretStorage extends CommonBase {
       await this._readCaretsFor(paths);
     }
 
-    this._log.info('Integrated newly-changed remote carets.');
+    this.log.info('Integrated newly-changed remote carets.');
 
     return true;
   }
