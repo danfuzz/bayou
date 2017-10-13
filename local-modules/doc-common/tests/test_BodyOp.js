@@ -137,18 +137,6 @@ describe('doc-common/BodyOp', () => {
     });
   });
 
-  describe('op_text()', () => {
-    it('should produce a value with expected payload', () => {
-      const attrib = { italic: true, bold: null };
-
-      const result1 = BodyOp.op_text('florp');
-      assert.deepEqual(result1.payload, new Functor('text', 'florp'));
-
-      const result2 = BodyOp.op_text('like', attrib);
-      assert.deepEqual(result2.payload, new Functor('text', 'like', attrib));
-    });
-  });
-
   describe('op_retain()', () => {
     it('should produce a value with expected payload', () => {
       const attrib = { header: 1 };
@@ -158,6 +146,18 @@ describe('doc-common/BodyOp', () => {
 
       const result2 = BodyOp.op_retain(456, attrib);
       assert.deepEqual(result2.payload, new Functor('retain', 456, attrib));
+    });
+  });
+
+  describe('op_text()', () => {
+    it('should produce a value with expected payload', () => {
+      const attrib = { italic: true, bold: null };
+
+      const result1 = BodyOp.op_text('florp');
+      assert.deepEqual(result1.payload, new Functor('text', 'florp'));
+
+      const result2 = BodyOp.op_text('like', attrib);
+      assert.deepEqual(result2.payload, new Functor('text', 'like', attrib));
     });
   });
 
