@@ -46,10 +46,10 @@ describe('doc-common/BodyChange', () => {
 
       test(0,   new BodyDelta([BodyOp.op_retain(100)]));
       test(123, BodyDelta.EMPTY);
-      test(909, new BodyDelta([BodyOp.op_insertText('x')]), null);
-      test(909, new BodyDelta([BodyOp.op_insertText('x')]), Timestamp.MIN_VALUE);
-      test(242, BodyDelta.EMPTY,                           null, null);
-      test(242, BodyDelta.EMPTY,                           null, 'florp9019');
+      test(909, new BodyDelta([BodyOp.op_text('x')]), null);
+      test(909, new BodyDelta([BodyOp.op_text('x')]), Timestamp.MIN_VALUE);
+      test(242, BodyDelta.EMPTY,                      null, null);
+      test(242, BodyDelta.EMPTY,                      null, 'florp9019');
     });
 
     it('should accept an array for the `delta`, which should get passed to the `BodyDelta` constructor', () => {

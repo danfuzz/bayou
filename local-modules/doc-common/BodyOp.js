@@ -64,7 +64,7 @@ export default class BodyOp extends BaseOp {
 
     if (insert !== undefined) {
       if (typeof insert === 'string') {
-        return BodyOp.op_insertText(insert, attributes);
+        return BodyOp.op_text(insert, attributes);
       } else if (ObjectUtil.isPlain(insert)) {
         // An "embed" is represented as a single-binding plain object, where the
         // key of the binding is the type of the embed, and the bound value is
@@ -74,7 +74,7 @@ export default class BodyOp extends BaseOp {
           // Invalid form for an embed.
           throw Errors.bad_value(quillOp, 'Quill delta operation');
         }
-        return BodyOp.op_insertEmbed(new Functor(key, value), attributes);
+        return BodyOp.op_embed(new Functor(key, value), attributes);
       } else {
         // Neither in text nor embed form.
         throw Errors.bad_value(quillOp, 'Quill delta operation');
@@ -114,7 +114,7 @@ export default class BodyOp extends BaseOp {
    *   associate with) the text, or `null` if there are no attributes to apply.
    * @returns {BodyOp} The corresponding operation.
    */
-  static op_insertEmbed(value, attributes = null) {
+  static op_embed(value, attributes = null) {
     value           = DataUtil.deepFreeze(Functor.check(value));
     const attribArg = BodyOp._attributesArg(attributes);
 
@@ -146,7 +146,7 @@ export default class BodyOp extends BaseOp {
    *   associate with) the text, or `null` if there are no attributes to apply.
    * @returns {BodyOp} The corresponding operation.
    */
-  static op_insertText(text, attributes = null) {
+  static op_text(text, attributes = null) {
     TString.nonEmpty(text);
     const attribArg = BodyOp._attributesArg(attributes);
 
