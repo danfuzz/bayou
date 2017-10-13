@@ -2,46 +2,44 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-// This module's exports are set up to make it reasonably convenient for use
-// in test files, which is why it exports naked functions instead of the more
-// usual arrangement (for this project) of bundling functions into a utility
-// class.
+// This module's sole purpose is to act as a loader proxy for
+// webpack so that other modules can `import mocha from 'mocha';`
+// without fail and make the compiler and linter happy events
+// though Mocha isn't really loaded and available until runtime
+// when the test runner page loads.
 
-import { Logger } from 'see-all';
-
-/** {Logger} Logger for this module. */
-const log = new Logger('test-all');
-
-// TODO: Fill in these stubs.
-
-function after() {
-  // TODO: Something.
-  log.info('TODO: after');
+function after(action) {
+  window.after(action); // eslint-disable-line
 }
 
-function afterEach() {
-  // TODO: Something.
-  log.info('TODO: afterEach');
+function afterEach(action) {
+  window.afterEach(action); // eslint-disable-line
 }
 
-function before() {
-  // TODO: Something.
-  log.info('TODO: before');
+function before(action) {
+  window.before(action); // eslint-disable-line
 }
 
-function beforeEach() {
-  // TODO: Something.
-  log.info('TODO: beforeEach');
+function beforeEach(action) {
+  window.beforeEach(action); // eslint-disable-line
 }
 
-function describe() {
-  // TODO: Something.
-  log.info('TODO: describe');
+function describe(description, action) {
+  window.describe(description, action); // eslint-disable-line
 }
 
-function it() {
-  // TODO: Something.
-  log.info('TODO: it');
+// Alias for `describe()`
+function context(description, action) {
+  window.context(description, action); // eslint-disable-line
 }
 
-export { after, afterEach, before, beforeEach, describe, it };
+function it(description, action) {
+  window.it(description, action); // eslint-disable-line
+}
+
+// Alias for `it()`
+function specify(description, action) {
+  window.specify(description, action); // eslint-disable-line
+}
+
+export { after, afterEach, before, beforeEach, describe, context, it, specify };

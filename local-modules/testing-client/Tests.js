@@ -4,10 +4,7 @@
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import { assert } from 'chai';
 
-import { Delay } from 'promise-util';
-import { Logger } from 'see-all';
 import { UtilityClass } from 'util-common';
 
 // If we tweak the Webpack config to point the module `mocha` at the browser-ish
@@ -20,9 +17,6 @@ import { UtilityClass } from 'util-common';
 // This file is dynamically-generated when loadad. See comments in it for more
 // detail.
 import { registerTests } from './client-tests';
-
-/** {Logger} Logger for this module. */
-const log = new Logger('testing-client');
 
 // One-time setup to hook `chai-as-promised` into the main `chai` module.
 chai.use(chaiAsPromised);
@@ -37,17 +31,16 @@ export default class Tests extends UtilityClass {
    * @returns {Promise<string>} Promise for the results of running the tests.
    */
   static runAll() {
-    log.info('TODO');
+    // Adds the BDD methods to the runtime (`describe`, `it`, `before`, etc.)
+    window.mocha.setup('bdd'); // eslint-disable-line
+
+    // Find all of our test files and load them into the runtime. The
+    // process of loading the modules also registers all of the tests with
+    // mocha.
     registerTests();
 
-    // Demonstrate that Chai works.
-    assert.isNull(null);
-    try {
-      assert.isNull(1);
-    } catch (e) {
-      log.info('Caught expected exception', e);
-    }
+    window.mocha.run(); // eslint-disable-line
 
-    return Delay.resolve(5000, 'All succeeded! ;-)');
+    return Promise.resolve('Test run completed');
   }
 }

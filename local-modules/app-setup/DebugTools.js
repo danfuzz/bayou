@@ -195,9 +195,11 @@ export default class DebugTools {
     // TODO: Probably want to use a real template.
     const head =
       '<title>Client Tests</title>\n' +
+      '<link href="https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.css" rel="stylesheet" />' +
+      '<script src="https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.js"></script>' +
       '<script src="/boot-for-test.js"></script>\n';
     const body =
-      '<h1>Client Tests</h1>\n';
+      '<h1>Client Tests</h1>\n<div id="mocha"></div>';
 
     this._htmlResponse(res, head, body);
   }
