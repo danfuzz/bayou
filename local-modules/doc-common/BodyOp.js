@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt, TObject, TString } from 'typecheck';
-import { DataUtil, Errors, Functor, ObjectUtil } from 'util-common';
+import { DataUtil, Errors, ObjectUtil } from 'util-common';
 
 import BaseOp from './BaseOp';
 
@@ -21,19 +21,22 @@ export default class BodyOp extends BaseOp {
     return 'delete';
   }
 
-  /** {string} Operation name for "insert embed" operations. */
-  static get INSERT_EMBED() {
-    return 'insert_embed';
-  }
-
-  /** {string} Operation name for "insert text" operations. */
-  static get INSERT_TEXT() {
-    return 'insert_text';
+  /**
+   * {string} Operation name for "embed" (insert / append embedded object)
+   * operations.
+   */
+  static get EMBED() {
+    return 'embed';
   }
 
   /** {string} Operation name for "retain" operations. */
   static get RETAIN() {
     return 'retain';
+  }
+
+  /** {string} Operation name for "text" (insert / append text) operations. */
+  static get TEXT() {
+    return 'text';
   }
 
   /**
@@ -61,7 +64,7 @@ export default class BodyOp extends BaseOp {
 
     if (insert !== undefined) {
       if (typeof insert === 'string') {
-        return BodyOp.op_insertText(insert, attributes);
+        return BodyOp.op_text(insert, attributes);
       } else if (ObjectUtil.isPlain(insert)) {
         // An "embed" is represented as a single-binding plain object, where the
         // key of the binding is the type of the embed, and the bound value is
@@ -71,7 +74,7 @@ export default class BodyOp extends BaseOp {
           // Invalid form for an embed.
           throw Errors.bad_value(quillOp, 'Quill delta operation');
         }
-        return BodyOp.op_insertEmbed(new Functor(key, value), attributes);
+        return BodyOp.op_embed(key, value, attributes);
       } else {
         // Neither in text nor embed form.
         throw Errors.bad_value(quillOp, 'Quill delta operation');
@@ -105,32 +108,21 @@ export default class BodyOp extends BaseOp {
   /**
    * Constructs a new "insert embed" operation.
    *
-   * @param {Functor} value Functor representing the embed type (functor name)
-   *   and construction argument (functor argument).
+   * @param {string} type The "type" of the embed. Must conform to "identifier"
+   *   syntax.
+   * @param {*} value Arbitrary embed data, as defined by the embed type. Must
+   *   be a deep-freezable data value (see {@link DataUtil#deepFreeze}).
    * @param {object|null} [attributes = null] Attributes to apply to (or
    *   associate with) the text, or `null` if there are no attributes to apply.
    * @returns {BodyOp} The corresponding operation.
    */
-  static op_insertEmbed(value, attributes = null) {
-    value           = DataUtil.deepFreeze(Functor.check(value));
+  static op_embed(type, value, attributes = null) {
+    TString.identifier(type);
+    value = DataUtil.deepFreeze(value);
+
     const attribArg = BodyOp._attributesArg(attributes);
 
-    return new BodyOp(BodyOp.INSERT_EMBED, value, ...attribArg);
-  }
-
-  /**
-   * Constructs a new "insert text" operation.
-   *
-   * @param {string} text The text to insert. Must be non-empty.
-   * @param {object|null} [attributes = null] Attributes to apply to (or
-   *   associate with) the text, or `null` if there are no attributes to apply.
-   * @returns {BodyOp} The corresponding operation.
-   */
-  static op_insertText(text, attributes = null) {
-    TString.nonEmpty(text);
-    const attribArg = BodyOp._attributesArg(attributes);
-
-    return new BodyOp(BodyOp.INSERT_TEXT, text, ...attribArg);
+    return new BodyOp(BodyOp.EMBED, type, value, ...attribArg);
   }
 
   /**
@@ -151,6 +143,21 @@ export default class BodyOp extends BaseOp {
   }
 
   /**
+   * Constructs a new "insert text" operation.
+   *
+   * @param {string} text The text to insert. Must be non-empty.
+   * @param {object|null} [attributes = null] Attributes to apply to (or
+   *   associate with) the text, or `null` if there are no attributes to apply.
+   * @returns {BodyOp} The corresponding operation.
+   */
+  static op_text(text, attributes = null) {
+    TString.nonEmpty(text);
+    const attribArg = BodyOp._attributesArg(attributes);
+
+    return new BodyOp(BodyOp.TEXT, text, ...attribArg);
+  }
+
+  /**
    * {object} The properties of this operation, as a conveniently-accessed
    * plain object. `opName` is always bound to the operation name. Other
    * bindings depend on the operation name. Guaranteed to be an immutable
@@ -166,19 +173,19 @@ export default class BodyOp extends BaseOp {
         return Object.freeze({ opName, count });
       }
 
-      case BodyOp.INSERT_EMBED: {
-        const [value, attributes = null] = payload.args;
-        return Object.freeze({ opName, value, attributes });
-      }
-
-      case BodyOp.INSERT_TEXT: {
-        const [text, attributes = null] = payload.args;
-        return Object.freeze({ opName, text, attributes });
+      case BodyOp.EMBED: {
+        const [type, value, attributes = null] = payload.args;
+        return Object.freeze({ opName, type, value, attributes });
       }
 
       case BodyOp.RETAIN: {
         const [count, attributes = null] = payload.args;
         return Object.freeze({ opName, count, attributes });
+      }
+
+      case BodyOp.TEXT: {
+        const [text, attributes = null] = payload.args;
+        return Object.freeze({ opName, text, attributes });
       }
 
       default: {
@@ -196,7 +203,7 @@ export default class BodyOp extends BaseOp {
    */
   isInsert() {
     const opName = this._payload.name;
-    return (opName === BodyOp.INSERT_TEXT) || (opName === BodyOp.INSERT_EMBED);
+    return (opName === BodyOp.TEXT) || (opName === BodyOp.EMBED);
   }
 
   /**
@@ -214,17 +221,9 @@ export default class BodyOp extends BaseOp {
         return { delete: props.count };
       }
 
-      case BodyOp.INSERT_EMBED: {
-        const { value: { name, args: [arg0] }, attributes } = props;
-        const insert = { [name]: arg0 };
-
-        return attributes
-          ? { insert, attributes }
-          : { insert };
-      }
-
-      case BodyOp.INSERT_TEXT: {
-        const { text: insert, attributes } = props;
+      case BodyOp.EMBED: {
+        const { type, value, attributes } = props;
+        const insert = { [type]: value };
 
         return attributes
           ? { insert, attributes }
@@ -237,6 +236,14 @@ export default class BodyOp extends BaseOp {
         return attributes
           ? { retain, attributes }
           : { retain };
+      }
+
+      case BodyOp.TEXT: {
+        const { text: insert, attributes } = props;
+
+        return attributes
+          ? { insert, attributes }
+          : { insert };
       }
 
       default: {

@@ -8,7 +8,6 @@ import Delta from 'quill-delta';
 import { inspect } from 'util';
 
 import { BodyDelta, BodyOp } from 'doc-common';
-import { Functor } from 'util-common';
 
 import MockDelta from './MockDelta';
 
@@ -44,9 +43,9 @@ describe('doc-common/BodyDelta', () => {
       const result     = BodyDelta.fromQuillForm(quillDelta);
 
       assert.deepEqual(result.ops, [
-        BodyOp.op_insertText('foo'),
+        BodyOp.op_text('foo'),
         BodyOp.op_retain(10),
-        BodyOp.op_insertText('bar', { bold: true })
+        BodyOp.op_text('bar', { bold: true })
       ]);
     });
 
@@ -59,8 +58,8 @@ describe('doc-common/BodyDelta', () => {
       test(undefined);
       test(false);
       test('blort');
-      test(BodyOp.op_insertText('123'));
-      test([BodyOp.op_insertText('123')]);
+      test(BodyOp.op_text('123'));
+      test([BodyOp.op_text('123')]);
       test(BodyDelta.EMPTY);
     });
   });
@@ -69,12 +68,12 @@ describe('doc-common/BodyDelta', () => {
     describe('valid arguments', () => {
       const values = [
         [],
-        [BodyOp.op_insertText('x')],
-        [BodyOp.op_insertText('x', { bold: true })],
+        [BodyOp.op_text('x')],
+        [BodyOp.op_text('x', { bold: true })],
         [BodyOp.op_delete(123)],
         [BodyOp.op_retain(123)],
         [BodyOp.op_retain(123, { bold: true })],
-        [BodyOp.op_insertText('x'), BodyOp.op_insertText('y', { bold: true })]
+        [BodyOp.op_text('x'), BodyOp.op_text('y', { bold: true })]
       ];
 
       for (const v of values) {
@@ -177,32 +176,32 @@ describe('doc-common/BodyDelta', () => {
     }
 
     test('full replacement',
-      [BodyOp.op_insertText('111')],
-      [BodyOp.op_insertText('222'), BodyOp.op_delete(3)],
-      [BodyOp.op_insertText('222')]);
+      [BodyOp.op_text('111')],
+      [BodyOp.op_text('222'), BodyOp.op_delete(3)],
+      [BodyOp.op_text('222')]);
     test('insert at start',
-      [BodyOp.op_insertText('111')],
-      [BodyOp.op_insertText('222')],
-      [BodyOp.op_insertText('222111')]);
+      [BodyOp.op_text('111')],
+      [BodyOp.op_text('222')],
+      [BodyOp.op_text('222111')]);
     test('append at end',
-      [BodyOp.op_insertText('111')],
-      [BodyOp.op_retain(3), BodyOp.op_insertText('222')],
-      [BodyOp.op_insertText('111222')]);
+      [BodyOp.op_text('111')],
+      [BodyOp.op_retain(3), BodyOp.op_text('222')],
+      [BodyOp.op_text('111222')]);
     test('surround',
-      [BodyOp.op_insertText('111')],
-      [BodyOp.op_insertText('222'), BodyOp.op_retain(3), BodyOp.op_insertText('333')],
-      [BodyOp.op_insertText('222111333')]);
+      [BodyOp.op_text('111')],
+      [BodyOp.op_text('222'), BodyOp.op_retain(3), BodyOp.op_text('333')],
+      [BodyOp.op_text('222111333')]);
     test('replace one middle bit',
-      [BodyOp.op_insertText('Drink more Slurm.')],
-      [BodyOp.op_retain(6), BodyOp.op_insertText('LESS'), BodyOp.op_delete(4)],
-      [BodyOp.op_insertText('Drink LESS Slurm.')]);
+      [BodyOp.op_text('Drink more Slurm.')],
+      [BodyOp.op_retain(6), BodyOp.op_text('LESS'), BodyOp.op_delete(4)],
+      [BodyOp.op_text('Drink LESS Slurm.')]);
     test('replace two middle bits',
-      [BodyOp.op_insertText('[[hello]] [[goodbye]]')],
+      [BodyOp.op_text('[[hello]] [[goodbye]]')],
       [
-        BodyOp.op_retain(2), BodyOp.op_insertText('YO'), BodyOp.op_delete(5), BodyOp.op_retain(5),
-        BodyOp.op_insertText('LATER'), BodyOp.op_delete(7)
+        BodyOp.op_retain(2), BodyOp.op_text('YO'), BodyOp.op_delete(5), BodyOp.op_retain(5),
+        BodyOp.op_text('LATER'), BodyOp.op_delete(7)
       ],
-      [BodyOp.op_insertText('[[YO]] [[LATER]]')]);
+      [BodyOp.op_text('[[YO]] [[LATER]]')]);
   });
 
   describe('equals()', () => {
@@ -213,8 +212,8 @@ describe('doc-common/BodyDelta', () => {
       }
 
       test([]);
-      test([BodyOp.op_insertText('aaa')]);
-      test([BodyOp.op_insertText('aaa'), BodyOp.op_insertText('bbb')]);
+      test([BodyOp.op_text('aaa')]);
+      test([BodyOp.op_text('aaa'), BodyOp.op_text('bbb')]);
     });
 
     it('should return `true` when passed an identically-constructed value', () => {
@@ -226,13 +225,13 @@ describe('doc-common/BodyDelta', () => {
       }
 
       test([]);
-      test([BodyOp.op_insertText('aaa')]);
-      test([BodyOp.op_insertText('aaa'), BodyOp.op_insertText('bbb')]);
+      test([BodyOp.op_text('aaa')]);
+      test([BodyOp.op_text('aaa'), BodyOp.op_text('bbb')]);
     });
 
     it('should return `true` when equal ops are not also `===`', () => {
-      const ops1 = [BodyOp.op_insertText('aaa'), BodyOp.op_insertText('bbb')];
-      const ops2 = [BodyOp.op_insertText('aaa'), BodyOp.op_insertText('bbb')];
+      const ops1 = [BodyOp.op_text('aaa'), BodyOp.op_text('bbb')];
+      const ops2 = [BodyOp.op_text('aaa'), BodyOp.op_text('bbb')];
       const d1 = new BodyDelta(ops1);
       const d2 = new BodyDelta(ops2);
 
@@ -241,8 +240,8 @@ describe('doc-common/BodyDelta', () => {
     });
 
     it('should return `false` when array lengths differ', () => {
-      const op1 = BodyOp.op_insertText('aaa');
-      const op2 = BodyOp.op_insertText('bbb');
+      const op1 = BodyOp.op_text('aaa');
+      const op2 = BodyOp.op_text('bbb');
       const d1 = new BodyDelta([op1]);
       const d2 = new BodyDelta([op1, op2]);
 
@@ -259,11 +258,11 @@ describe('doc-common/BodyDelta', () => {
         assert.isFalse(d2.equals(d1));
       }
 
-      const op1 = BodyOp.op_insertText('foo');
-      const op2 = BodyOp.op_insertText('bar');
-      const op3 = BodyOp.op_insertText('baz');
-      const op4 = BodyOp.op_insertText('biff');
-      const op5 = BodyOp.op_insertText('quux');
+      const op1 = BodyOp.op_text('foo');
+      const op2 = BodyOp.op_text('bar');
+      const op3 = BodyOp.op_text('baz');
+      const op4 = BodyOp.op_text('biff');
+      const op5 = BodyOp.op_text('quux');
 
       test([op1],                     [op2]);
       test([op1, op2],                [op1, op3]);
@@ -293,9 +292,9 @@ describe('doc-common/BodyDelta', () => {
     describe('`true` cases', () => {
       const values = [
         [],
-        [BodyOp.op_insertText('line 1')],
-        [BodyOp.op_insertText('line 1'), BodyOp.op_insertText('\n')],
-        [BodyOp.op_insertText('line 1'), BodyOp.op_insertText('\n'), BodyOp.op_insertText('line 2')]
+        [BodyOp.op_text('line 1')],
+        [BodyOp.op_text('line 1'), BodyOp.op_text('\n')],
+        [BodyOp.op_text('line 1'), BodyOp.op_text('\n'), BodyOp.op_text('line 2')]
       ];
 
       for (const v of values) {
@@ -310,9 +309,9 @@ describe('doc-common/BodyDelta', () => {
         [BodyOp.op_retain(37)],
         [BodyOp.op_delete(914)],
         [BodyOp.op_retain(37, { bold: true })],
-        [BodyOp.op_insertText('line 1'), BodyOp.op_retain(9)],
-        [BodyOp.op_insertText('line 1'), BodyOp.op_retain(14), BodyOp.op_insertText('\n')],
-        [BodyOp.op_insertText('line 1'), BodyOp.op_insertText('\n'), BodyOp.op_retain(23), BodyOp.op_insertText('line 2')]
+        [BodyOp.op_text('line 1'), BodyOp.op_retain(9)],
+        [BodyOp.op_text('line 1'), BodyOp.op_retain(14), BodyOp.op_text('\n')],
+        [BodyOp.op_text('line 1'), BodyOp.op_text('\n'), BodyOp.op_retain(23), BodyOp.op_text('line 2')]
       ];
 
       for (const v of values) {
@@ -339,8 +338,8 @@ describe('doc-common/BodyDelta', () => {
 
     describe('valid non-empty values', () => {
       const values = [
-        [BodyOp.op_insertText('x')],
-        [BodyOp.op_insertText('line 1'), BodyOp.op_insertText('\n'), BodyOp.op_insertText('line 2')],
+        [BodyOp.op_text('x')],
+        [BodyOp.op_text('line 1'), BodyOp.op_text('\n'), BodyOp.op_text('line 2')],
         [BodyOp.op_retain(100)]
       ];
 
@@ -372,13 +371,13 @@ describe('doc-common/BodyDelta', () => {
       }
 
       test([]);
-      test([BodyOp.op_insertEmbed(new Functor('zither', 123))]);
-      test([BodyOp.op_insertText('blort')]);
+      test([BodyOp.op_embed('zither', 123)]);
+      test([BodyOp.op_text('blort')]);
       test([BodyOp.op_retain(123)]);
       test([
         BodyOp.op_retain(123, { bold: true }),
         BodyOp.op_delete(10),
-        BodyOp.op_insertText('foo')
+        BodyOp.op_text('foo')
       ]);
     });
   });
@@ -418,27 +417,27 @@ describe('doc-common/BodyDelta', () => {
       }
 
       test(
-        [BodyOp.op_insertText('blort')],
-        [BodyOp.op_insertText('blort')],
-        [BodyOp.op_retain(5), BodyOp.op_insertText('blort')],
-        [BodyOp.op_insertText('blort')]);
+        [BodyOp.op_text('blort')],
+        [BodyOp.op_text('blort')],
+        [BodyOp.op_retain(5), BodyOp.op_text('blort')],
+        [BodyOp.op_text('blort')]);
       test(
         [BodyOp.op_delete(10)],
         [BodyOp.op_delete(10)],
         []);
       test(
         [BodyOp.op_delete(10)],
-        [BodyOp.op_delete(10), BodyOp.op_insertText('florp')],
-        [BodyOp.op_insertText('florp')]);
+        [BodyOp.op_delete(10), BodyOp.op_text('florp')],
+        [BodyOp.op_text('florp')]);
       test(
-        [BodyOp.op_insertText('111')],
-        [BodyOp.op_insertText('222')],
-        [BodyOp.op_retain(3), BodyOp.op_insertText('222')],
-        [BodyOp.op_insertText('222')]);
+        [BodyOp.op_text('111')],
+        [BodyOp.op_text('222')],
+        [BodyOp.op_retain(3), BodyOp.op_text('222')],
+        [BodyOp.op_text('222')]);
       test(
-        [BodyOp.op_retain(10), BodyOp.op_insertText('111')],
-        [BodyOp.op_retain(20), BodyOp.op_insertText('222')],
-        [BodyOp.op_retain(23), BodyOp.op_insertText('222')]);
+        [BodyOp.op_retain(10), BodyOp.op_text('111')],
+        [BodyOp.op_retain(20), BodyOp.op_text('222')],
+        [BodyOp.op_retain(23), BodyOp.op_text('222')]);
     });
   });
 });
