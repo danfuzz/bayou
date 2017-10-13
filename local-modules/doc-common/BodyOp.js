@@ -122,21 +122,6 @@ export default class BodyOp extends BaseOp {
   }
 
   /**
-   * Constructs a new "insert text" operation.
-   *
-   * @param {string} text The text to insert. Must be non-empty.
-   * @param {object|null} [attributes = null] Attributes to apply to (or
-   *   associate with) the text, or `null` if there are no attributes to apply.
-   * @returns {BodyOp} The corresponding operation.
-   */
-  static op_insertText(text, attributes = null) {
-    TString.nonEmpty(text);
-    const attribArg = BodyOp._attributesArg(attributes);
-
-    return new BodyOp(BodyOp.TEXT, text, ...attribArg);
-  }
-
-  /**
    * Constructs a new "retain" operation.
    *
    * @param {Int} count The number of elements (characters or embeds) to retain.
@@ -151,6 +136,21 @@ export default class BodyOp extends BaseOp {
     const attribArg = BodyOp._attributesArg(attributes);
 
     return new BodyOp(BodyOp.RETAIN, count, ...attribArg);
+  }
+
+  /**
+   * Constructs a new "insert text" operation.
+   *
+   * @param {string} text The text to insert. Must be non-empty.
+   * @param {object|null} [attributes = null] Attributes to apply to (or
+   *   associate with) the text, or `null` if there are no attributes to apply.
+   * @returns {BodyOp} The corresponding operation.
+   */
+  static op_insertText(text, attributes = null) {
+    TString.nonEmpty(text);
+    const attribArg = BodyOp._attributesArg(attributes);
+
+    return new BodyOp(BodyOp.TEXT, text, ...attribArg);
   }
 
   /**
@@ -174,14 +174,14 @@ export default class BodyOp extends BaseOp {
         return Object.freeze({ opName, value, attributes });
       }
 
-      case BodyOp.TEXT: {
-        const [text, attributes = null] = payload.args;
-        return Object.freeze({ opName, text, attributes });
-      }
-
       case BodyOp.RETAIN: {
         const [count, attributes = null] = payload.args;
         return Object.freeze({ opName, count, attributes });
+      }
+
+      case BodyOp.TEXT: {
+        const [text, attributes = null] = payload.args;
+        return Object.freeze({ opName, text, attributes });
       }
 
       default: {
@@ -226,20 +226,20 @@ export default class BodyOp extends BaseOp {
           : { insert };
       }
 
-      case BodyOp.TEXT: {
-        const { text: insert, attributes } = props;
-
-        return attributes
-          ? { insert, attributes }
-          : { insert };
-      }
-
       case BodyOp.RETAIN: {
         const { count: retain, attributes } = props;
 
         return attributes
           ? { retain, attributes }
           : { retain };
+      }
+
+      case BodyOp.TEXT: {
+        const { text: insert, attributes } = props;
+
+        return attributes
+          ? { insert, attributes }
+          : { insert };
       }
 
       default: {
