@@ -5,25 +5,25 @@
 import { BodyChange, BodyDelta, BodySnapshot, RevisionNumber } from 'doc-common';
 import { Errors, TransactionSpec } from 'file-store';
 import { Delay } from 'promise-util';
-import { CommonBase, Errors as UtilErrors, InfoError } from 'util-common';
+import { Errors as UtilErrors, InfoError } from 'util-common';
 
-import FileComplex from './FileComplex';
+import BaseControl from './BaseControl';
 import Paths from './Paths';
 
-/** {number} Initial amount of time (in msec) between append retries. */
+/** {Int} Initial amount of time (in msec) between append retries. */
 const INITIAL_APPEND_RETRY_MSEC = 50;
 
-/** {number} Growth factor for append retry delays. */
+/** {Int} Growth factor for append retry delays. */
 const APPEND_RETRY_GROWTH_FACTOR = 5;
 
 /**
- * {number} Maximum amount of time to spend (in msec) retrying append
+ * {Int} Maximum amount of time to spend (in msec) retrying append
  * operations.
  */
 const MAX_APPEND_TIME_MSEC = 20 * 1000; // 20 seconds.
 
 /**
- * {number} Maximum number of document changes to request in a single
+ * {Int} Maximum number of document changes to request in a single
  * transaction. (The idea is to avoid making a request that would result in
  * running into an upper limit on transaction data size.)
  */
@@ -38,7 +38,7 @@ const MAX_CHANGE_READS_PER_TRANSACTION = 20;
  * `FileComplex` per document, and each `FileComplex` instance only ever makes
  * one instance of this class.
  */
-export default class BodyControl extends CommonBase {
+export default class BodyControl extends BaseControl {
   /** {string} Return value from `validationStatus()`, see which for details. */
   static get STATUS_ERROR() {
     return 'status_error';
@@ -66,25 +66,13 @@ export default class BodyControl extends CommonBase {
    *   of.
    */
   constructor(fileComplex) {
-    super();
-
-    /** {FileComplex} File complex that this instance is part of. */
-    this._fileComplex = FileComplex.check(fileComplex);
-
-    /** {BaseFile} The underlying document storage. */
-    this._file = fileComplex.file;
-
-    /** {FileCodec} File-codec wrapper to use. */
-    this._fileCodec = fileComplex.fileCodec;
+    super(fileComplex);
 
     /**
      * {Map<RevisionNumber, BodySnapshot>} Mapping from revision numbers to
      * corresponding document snapshots. Sparse.
      */
     this._snapshots = new Map();
-
-    /** {Logger} Logger specific to this document's ID. */
-    this._log = fileComplex.log;
   }
 
   /**
@@ -92,9 +80,9 @@ export default class BodyControl extends CommonBase {
    * empty change for revision `0` and a `revNum` of `0`.
    */
   async create() {
-    this._log.info('Creating document body.');
+    this.log.info('Creating document body.');
 
-    const fc = this._fileCodec; // Avoids boilerplate immediately below.
+    const fc = this.fileCodec; // Avoids boilerplate immediately below.
 
     const spec = new TransactionSpec(
       // If the file already existed, this clears out the old contents.
@@ -104,7 +92,7 @@ export default class BodyControl extends CommonBase {
 
       // Version for the file schema. **TODO:** As above, this path isn't
       // body-specific and so would be better handled elsewhere.
-      fc.op_writePath(Paths.SCHEMA_VERSION, this._fileComplex.schemaVersion),
+      fc.op_writePath(Paths.SCHEMA_VERSION, this.fileComplex.schemaVersion),
 
       // Initial revision number.
       fc.op_writePath(Paths.BODY_REVISION_NUMBER, 0),
@@ -113,8 +101,8 @@ export default class BodyControl extends CommonBase {
       fc.op_writePath(Paths.forBodyChange(0), BodyChange.FIRST),
     );
 
-    await this._file.create();
-    await this._file.transact(spec);
+    await this.file.create();
+    await this.file.transact(spec);
 
     // Any cached snapshots are no longer valid.
     this._snapshots = new Map();
@@ -174,7 +162,7 @@ export default class BodyControl extends CommonBase {
       // Wait for the file to change (or for the storage layer to time out), and
       // then iterate to see if in fact the change updated the document revision
       // number.
-      const fc   = this._fileCodec;
+      const fc   = this.fileCodec;
       const ops  = [fc.op_whenPathNot(Paths.BODY_REVISION_NUMBER, revNum)];
       const spec = new TransactionSpec(...ops);
       try {
@@ -185,7 +173,7 @@ export default class BodyControl extends CommonBase {
           throw e;
         }
         // It's a timeout, so just fall through and iterate.
-        this._log.info('Storage layer timeout in `getChangeAfter`.');
+        this.log.info('Storage layer timeout in `getChangeAfter`.');
       }
     }
   }
@@ -227,7 +215,7 @@ export default class BodyControl extends CommonBase {
       : this._composeRevisions(base.contents,   base.revNum + 1, revNum + 1);
     const result = new BodySnapshot(revNum, await contents);
 
-    this._log.detail('Made snapshot for revision:', revNum);
+    this.log.detail('Made snapshot for revision:', revNum);
 
     this._snapshots.set(revNum, result);
     return result;
@@ -288,7 +276,7 @@ export default class BodyControl extends CommonBase {
     for (;;) {
       attemptCount++;
       if (attemptCount !== 1) {
-        this._log.info(`Append attempt #${attemptCount}.`);
+        this.log.info(`Append attempt #${attemptCount}.`);
       }
 
       const result = await this._applyUpdateTo(base, change, expected);
@@ -307,7 +295,7 @@ export default class BodyControl extends CommonBase {
         throw UtilErrors.aborted('Too many failed attempts in `update()`.');
       }
 
-      this._log.info(`Sleeping ${retryDelayMsec} msec.`);
+      this.log.info(`Sleeping ${retryDelayMsec} msec.`);
       await Delay.resolve(retryDelayMsec);
       retryTotalMsec += retryDelayMsec;
       retryDelayMsec *= APPEND_RETRY_GROWTH_FACTOR;
@@ -328,7 +316,7 @@ export default class BodyControl extends CommonBase {
    * @returns {string} The validation status.
    */
   async validationStatus() {
-    if (!(await this._file.exists())) {
+    if (!(await this.file.exists())) {
       return BodyControl.STATUS_NOT_FOUND;
     }
 
@@ -337,14 +325,14 @@ export default class BodyControl extends CommonBase {
     // Check the required metainfo paths.
 
     try {
-      const fc = this._fileCodec;
+      const fc = this.fileCodec;
       const spec = new TransactionSpec(
         fc.op_readPath(Paths.SCHEMA_VERSION),
         fc.op_readPath(Paths.BODY_REVISION_NUMBER)
       );
       transactionResult = await fc.transact(spec);
     } catch (e) {
-      this._log.info('Corrupt document: Failed to read/decode basic data.');
+      this.log.info('Corrupt document: Failed to read/decode basic data.');
       return BodyControl.STATUS_ERROR;
     }
 
@@ -353,26 +341,26 @@ export default class BodyControl extends CommonBase {
     const revNum        = data.get(Paths.BODY_REVISION_NUMBER);
 
     if (!schemaVersion) {
-      this._log.info('Corrupt document: Missing schema version.');
+      this.log.info('Corrupt document: Missing schema version.');
       return BodyControl.STATUS_ERROR;
     }
 
     if (!revNum) {
-      this._log.info('Corrupt document: Missing revision number.');
+      this.log.info('Corrupt document: Missing revision number.');
       return BodyControl.STATUS_ERROR;
     }
 
-    const expectSchemaVersion = this._fileComplex.schemaVersion;
+    const expectSchemaVersion = this.fileComplex.schemaVersion;
     if (schemaVersion !== expectSchemaVersion) {
       const got = schemaVersion;
-      this._log.info(`Mismatched schema version: got ${got}; expected ${expectSchemaVersion}`);
+      this.log.info(`Mismatched schema version: got ${got}; expected ${expectSchemaVersion}`);
       return BodyControl.STATUS_MIGRATE;
     }
 
     try {
       RevisionNumber.check(revNum);
     } catch (e) {
-      this._log.info('Corrupt document: Bogus revision number.');
+      this.log.info('Corrupt document: Bogus revision number.');
       return BodyControl.STATUS_ERROR;
     }
 
@@ -384,7 +372,7 @@ export default class BodyControl extends CommonBase {
       try {
         await this._readChangeRange(i, lastI + 1);
       } catch (e) {
-        this._log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
+        this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
         return BodyControl.STATUS_ERROR;
       }
     }
@@ -393,7 +381,7 @@ export default class BodyControl extends CommonBase {
     // they're empty.
 
     try {
-      const fc  = this._fileCodec;
+      const fc  = this.fileCodec;
       const ops = [];
       for (let i = revNum + 1; i <= (revNum + 10); i++) {
         ops.push(fc.op_readPath(Paths.forBodyChange(i)));
@@ -401,13 +389,13 @@ export default class BodyControl extends CommonBase {
       const spec = new TransactionSpec(...ops);
       transactionResult = await fc.transact(spec);
     } catch (e) {
-      this._log.info('Corrupt document: Weird empty-change read failure.');
+      this.log.info('Corrupt document: Weird empty-change read failure.');
       return BodyControl.STATUS_ERROR;
     }
 
     // In a valid doc, the loop body won't end up executing at all.
     for (const storagePath of transactionResult.data.keys()) {
-      this._log.info('Corrupt document. Extra change at path:', storagePath);
+      this.log.info('Corrupt document. Extra change at path:', storagePath);
       return BodyControl.STATUS_ERROR;
     }
 
@@ -444,7 +432,7 @@ export default class BodyControl extends CommonBase {
     const baseRevNum = revNum - 1;
     const changePath = Paths.forBodyChange(revNum);
 
-    const fc   = this._fileCodec; // Avoids boilerplate immediately below.
+    const fc   = this.fileCodec; // Avoids boilerplate immediately below.
     const spec = new TransactionSpec(
       fc.op_checkPathAbsent(changePath),
       fc.op_checkPathIs(Paths.BODY_REVISION_NUMBER, baseRevNum),
@@ -458,7 +446,7 @@ export default class BodyControl extends CommonBase {
       if ((e instanceof InfoError) && (e.name === 'path_not_empty')) {
         // This happens if and when we lose an append race, which will regularly
         // occur if there are simultaneous editors.
-        this._log.info('Lost append race for revision:', revNum);
+        this.log.info('Lost append race for revision:', revNum);
         return null;
       } else {
         // No other errors are expected, so just rethrow.
@@ -634,7 +622,7 @@ export default class BodyControl extends CommonBase {
    * @returns {Int} The document revision number.
    */
   async _currentRevNum() {
-    const fc = this._fileCodec;
+    const fc = this.fileCodec;
     const storagePath = Paths.BODY_REVISION_NUMBER;
     const spec = new TransactionSpec(
       fc.op_checkPathPresent(storagePath),
@@ -687,7 +675,7 @@ export default class BodyControl extends CommonBase {
       paths.push(Paths.forBodyChange(i));
     }
 
-    const fc = this._fileCodec;
+    const fc = this.fileCodec;
     const ops = [];
     for (const p of paths) {
       ops.push(fc.op_checkPathPresent(p));
