@@ -5,37 +5,19 @@
 import Quill from 'quill';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { TBoolean, TFunction, TObject, TString } from 'typecheck';
+import { TFunction, TObject, TString } from 'typecheck';
 
 const BlockEmbed = Quill.import('blots/block/embed');
 
-const COMPONENT_NAME_KEY = 'component-name-key';
-
+import ComponentRegistry from './ComponentRegistry';
 import EmbeddableComponent from './components/EmbeddableComponent';
 
-/**
- * {Map<string, EmbeddableComponent>} Mapping of registry names to
- * components
- */
-const registry = new Map();
+/** {ComponentRegistry} Mapping of registry names to components */
+const _registry = new ComponentRegistry();
 
 export default class ReactEmbed extends BlockEmbed {
-  static get componentNameKey() {
-    return COMPONENT_NAME_KEY;
-  }
-
   static registerComponent(component, force = false) {
-    TFunction.checkClass(component, EmbeddableComponent);
-    TBoolean.check(force);
-
-    const name = TString.nonEmpty(component.registryName);
-    const entry = registry.get(name);
-
-    if (entry && (force === false)) {
-      throw new Error(`A component named '${name}' is already registered.`);
-    }
-
-    registry.set(name, component);
+    _registry.registerComponent(component, force);
   }
 
   /**
@@ -45,26 +27,23 @@ export default class ReactEmbed extends BlockEmbed {
    * @returns {EmbeddableComponent} The requested component.
    */
   static componentForName(name) {
-    TString.nonEmpty(name);
-
-    return registry.get(name);
+    return _registry.componentForName(name);
   }
-
   static assignComponentToValue(component, value) {
     TFunction.checkClass(component, EmbeddableComponent);
     TObject.plain(value);
 
-    value[COMPONENT_NAME_KEY] = component.registryName;
+    value[ComponentRegistry.componentNameKey] = component.registryName;
   }
 
   constructor(domNode, value) {
     super(domNode, value);
 
-    if ((COMPONENT_NAME_KEY in value) === false) {
+    if ((ComponentRegistry.componentNameKey in value) === false) {
       throw new Error('Component name missing from value');
     }
 
-    const componentName = TString.nonEmpty(value[COMPONENT_NAME_KEY]);
+    const componentName = TString.nonEmpty(value[ComponentRegistry.componentNameKey]);
     const component = ReactEmbed.componentForName(componentName);
 
     TFunction.checkClass(component, EmbeddableComponent);
@@ -77,21 +56,21 @@ export default class ReactEmbed extends BlockEmbed {
 
   static create(value) {
     const node = super.create(value);
-    const componentName = value[COMPONENT_NAME_KEY];
+    const componentName = value[ComponentRegistry.componentNameKey];
     const component = this.componentForName(componentName);
 
     component.assignPropertiesToElementAttributes(value, node);
-    node.setAttribute(`data-${COMPONENT_NAME_KEY}`, componentName);
+    node.setAttribute(`data-${ComponentRegistry.componentNameKey}`, componentName);
 
     return node;
   }
 
   static value(domNode) {
-    const componentName = domNode.dataset[COMPONENT_NAME_KEY];
+    const componentName = domNode.dataset[ComponentRegistry.componentNameKey];
     const component = this.componentForName(componentName);
     const value = component.extractPropertiesFromElementAttributes(domNode);
 
-    const result = Object.assign({}, value, { [COMPONENT_NAME_KEY]: componentName });
+    const result = Object.assign({}, value, { [ComponentRegistry.componentNameKey]: componentName });
 
     return result;
   }
