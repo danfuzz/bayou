@@ -8,7 +8,6 @@ import Delta from 'quill-delta';
 import { inspect } from 'util';
 
 import { BodyDelta, BodyOp } from 'doc-common';
-import { Functor } from 'util-common';
 
 import MockDelta from './MockDelta';
 
@@ -372,7 +371,7 @@ describe('doc-common/BodyDelta', () => {
       }
 
       test([]);
-      test([BodyOp.op_embed(new Functor('zither', 123))]);
+      test([BodyOp.op_embed('zither', 123)]);
       test([BodyOp.op_text('blort')]);
       test([BodyOp.op_retain(123)]);
       test([

@@ -74,7 +74,7 @@ export default class BodyOp extends BaseOp {
           // Invalid form for an embed.
           throw Errors.bad_value(quillOp, 'Quill delta operation');
         }
-        return BodyOp.op_embed(new Functor(key, value), attributes);
+        return BodyOp.op_embed(key, value, attributes);
       } else {
         // Neither in text nor embed form.
         throw Errors.bad_value(quillOp, 'Quill delta operation');
@@ -108,14 +108,19 @@ export default class BodyOp extends BaseOp {
   /**
    * Constructs a new "insert embed" operation.
    *
-   * @param {Functor} value Functor representing the embed type (functor name)
-   *   and construction argument (functor argument).
+   * @param {string} type The "type" of the embed. Must conform to "identifier"
+   *   syntax.
+   * @param {*} value Arbitrary embed data, as defined by the embed type. Must
+   *   be a deep-freezable data value (see {@link DataUtil#deepFreeze}).
    * @param {object|null} [attributes = null] Attributes to apply to (or
    *   associate with) the text, or `null` if there are no attributes to apply.
    * @returns {BodyOp} The corresponding operation.
    */
-  static op_embed(value, attributes = null) {
-    value           = DataUtil.deepFreeze(Functor.check(value));
+  static op_embed(type, value, attributes = null) {
+    TString.identifier(type);
+    value = DataUtil.deepFreeze(value);
+
+    value           = new Functor(type, value);
     const attribArg = BodyOp._attributesArg(attributes);
 
     return new BodyOp(BodyOp.EMBED, value, ...attribArg);

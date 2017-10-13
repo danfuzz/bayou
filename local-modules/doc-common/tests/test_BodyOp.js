@@ -100,18 +100,20 @@ describe('doc-common/BodyOp', () => {
     const at1 = { x: 10, y: 20, z: 30 };
     const at2 = { p: [[[['p']]]], d: { d: 'd' }, q: true };
 
-    const bemb1 = new Functor('image', 'some_url');
-    const qemb1 = { [bemb1.name]: bemb1.args[0] };
+    const name1  = 'image';
+    const value1 = 'https://example.com/some_url';
+    const qemb1  = { [name1]: value1 };
 
-    const bemb2 = new Functor('blort', { x: 'x', y: 'y' });
-    const qemb2 = { [bemb2.name]: bemb2.args[0] };
+    const name2  = 'blort';
+    const value2 = { x: 'x', y: 'y' };
+    const qemb2  = { [name2]: value2 };
 
     test({ delete: 1 },                      BodyOp.op_delete(1));
     test({ delete: 10000 },                  BodyOp.op_delete(10000));
     test({ insert: 'hello' },                BodyOp.op_text('hello'));
     test({ insert: 'yo', attributes: at1 },  BodyOp.op_text('yo', at1));
-    test({ insert: qemb1 },                  BodyOp.op_embed(bemb1));
-    test({ insert: qemb2, attributes: at2 }, BodyOp.op_embed(bemb2, at2));
+    test({ insert: qemb1 },                  BodyOp.op_embed(name1, value1));
+    test({ insert: qemb2, attributes: at2 }, BodyOp.op_embed(name2, value2, at2));
     test({ retain: 123 },                    BodyOp.op_retain(123));
     test({ retain: 12345 },                  BodyOp.op_retain(12345));
     test({ retain: 1, attributes: at1 },     BodyOp.op_retain(1, at1));
@@ -126,14 +128,27 @@ describe('doc-common/BodyOp', () => {
 
   describe('op_embed()', () => {
     it('should produce a value with expected payload', () => {
-      const embed  = new Functor('blort', { x: 10 });
       const attrib = { bold: true };
 
-      const result1 = BodyOp.op_embed(embed);
-      assert.deepEqual(result1.payload, new Functor('embed', embed));
+      const result1 = BodyOp.op_embed('blort', { x: 10 });
+      assert.deepEqual(result1.payload, new Functor('embed', new Functor('blort', { x: 10 })));
 
-      const result2 = BodyOp.op_embed(embed, attrib);
-      assert.deepEqual(result2.payload, new Functor('embed', embed, attrib));
+      const result2 = BodyOp.op_embed('florp', ['like'], attrib);
+      assert.deepEqual(result2.payload, new Functor('embed', new Functor('florp', ['like']), attrib));
+    });
+
+    it('should reject a non-identifier `type`', () => {
+      assert.throws(() => BodyOp.op_embed('', 1));
+      assert.throws(() => BodyOp.op_embed('*', 1));
+      assert.throws(() => BodyOp.op_embed(null, 1));
+      assert.throws(() => BodyOp.op_embed([], 1));
+      assert.throws(() => BodyOp.op_embed(['x'], 1));
+      assert.throws(() => BodyOp.op_embed({ florp: 'like' }, 1));
+    });
+
+    it('should reject a non-data `value`', () => {
+      assert.throws(() => BodyOp.op_embed('x', new Map()));
+      assert.throws(() => BodyOp.op_embed('x', { get x() { return 10; } }));
     });
   });
 
@@ -171,18 +186,18 @@ describe('doc-common/BodyOp', () => {
     }
 
     const attrib = { italic: true, bold: null };
-    const embed  = new Functor('blort', { x: 10 });
+    const embed  = new Functor('x', ['y']);
 
-    test(BodyOp.op_delete(668),           { opName: 'delete', count: 668 });
-    test(BodyOp.op_embed(embed),          { opName: 'embed', value: embed, attributes: null });
-    test(BodyOp.op_embed(embed, null),    { opName: 'embed', value: embed, attributes: null });
-    test(BodyOp.op_embed(embed, attrib),  { opName: 'embed', value: embed, attributes: attrib });
-    test(BodyOp.op_text('hello'),         { opName: 'text', text: 'hello', attributes: null });
-    test(BodyOp.op_text('hello', null),   { opName: 'text', text: 'hello', attributes: null });
-    test(BodyOp.op_text('hello', attrib), { opName: 'text', text: 'hello', attributes: attrib });
-    test(BodyOp.op_retain(5),             { opName: 'retain', count: 5, attributes: null });
-    test(BodyOp.op_retain(5, null),       { opName: 'retain', count: 5, attributes: null });
-    test(BodyOp.op_retain(5, attrib),     { opName: 'retain', count: 5, attributes: attrib });
+    test(BodyOp.op_delete(668),               { opName: 'delete', count: 668 });
+    test(BodyOp.op_embed('x', ['y']),         { opName: 'embed', value: embed, attributes: null });
+    test(BodyOp.op_embed('x', ['y'], null),   { opName: 'embed', value: embed, attributes: null });
+    test(BodyOp.op_embed('x', ['y'], attrib), { opName: 'embed', value: embed, attributes: attrib });
+    test(BodyOp.op_text('hello'),             { opName: 'text', text: 'hello', attributes: null });
+    test(BodyOp.op_text('hello', null),       { opName: 'text', text: 'hello', attributes: null });
+    test(BodyOp.op_text('hello', attrib),     { opName: 'text', text: 'hello', attributes: attrib });
+    test(BodyOp.op_retain(5),                 { opName: 'retain', count: 5, attributes: null });
+    test(BodyOp.op_retain(5, null),           { opName: 'retain', count: 5, attributes: null });
+    test(BodyOp.op_retain(5, attrib),         { opName: 'retain', count: 5, attributes: attrib });
   });
 
   describe('equals()', () => {
@@ -199,8 +214,9 @@ describe('doc-common/BodyOp', () => {
       }
 
       test('op_delete', 100);
-      test('op_embed', new Functor('florp', 'like'));
-      test('op_embed', new Functor('florp', 'like'), { bold: true });
+      test('op_embed', 'florp', 'like');
+      test('op_embed', 'florp', ['like', 'yeah']);
+      test('op_embed', 'florp', 'like', { bold: true });
       test('op_text', 'foo', { italic: true });
       test('op_text', 'foo');
       test('op_text', 'foo', { italic: true });
@@ -216,20 +232,19 @@ describe('doc-common/BodyOp', () => {
 
       const at1  = { bold: true };
       const at2  = { bold: true, italic: true };
-      const emb1 = new Functor('x', 'zorch');
-      const emb2 = new Functor('x', 'splat');
 
-      test(BodyOp.op_delete(100),      BodyOp.op_retain(100));
-      test(BodyOp.op_delete(100),      BodyOp.op_delete(101));
-      test(BodyOp.op_embed(emb1),      BodyOp.op_embed(emb2));
-      test(BodyOp.op_embed(emb1, at1), BodyOp.op_embed(emb1));
-      test(BodyOp.op_embed(emb1, at1), BodyOp.op_embed(emb1, at2));
-      test(BodyOp.op_text('x'),        BodyOp.op_text('y'));
-      test(BodyOp.op_text('x', at1),   BodyOp.op_text('x'));
-      test(BodyOp.op_text('x', at1),   BodyOp.op_text('x', at2));
-      test(BodyOp.op_retain(100),      BodyOp.op_retain(900));
-      test(BodyOp.op_retain(1, at1),   BodyOp.op_retain(1));
-      test(BodyOp.op_retain(1, at1),   BodyOp.op_retain(1, at2));
+      test(BodyOp.op_delete(100),        BodyOp.op_retain(100));
+      test(BodyOp.op_delete(100),        BodyOp.op_delete(101));
+      test(BodyOp.op_embed('x', 1),      BodyOp.op_embed('y', 1));
+      test(BodyOp.op_embed('x', 1),      BodyOp.op_embed('x', 2));
+      test(BodyOp.op_embed('x', 1, at1), BodyOp.op_embed('x', 1));
+      test(BodyOp.op_embed('x', 1, at1), BodyOp.op_embed('x', 1, at2));
+      test(BodyOp.op_text('x'),          BodyOp.op_text('y'));
+      test(BodyOp.op_text('x', at1),     BodyOp.op_text('x'));
+      test(BodyOp.op_text('x', at1),     BodyOp.op_text('x', at2));
+      test(BodyOp.op_retain(100),        BodyOp.op_retain(900));
+      test(BodyOp.op_retain(1, at1),     BodyOp.op_retain(1));
+      test(BodyOp.op_retain(1, at1),     BodyOp.op_retain(1, at2));
     });
 
     it('should return `false` when passed a non-instance', () => {
@@ -249,10 +264,19 @@ describe('doc-common/BodyOp', () => {
         assert.isTrue(v.isInsert());
       }
 
-      test(BodyOp.op_embed(new Functor('x')));
-      test(BodyOp.op_embed(new Functor('x'), { bold: true }));
+      test(BodyOp.op_embed('x', 1));
+      test(BodyOp.op_embed('x', 1), { bold: true });
       test(BodyOp.op_text('foo'));
       test(BodyOp.op_text('foo', { bold: true }));
+    });
+
+    it('should return `false` for non-inserts', () => {
+      function test(v) {
+        assert.isFalse(v.isInsert());
+      }
+
+      test(BodyOp.op_delete(1));
+      test(BodyOp.op_retain(1));
     });
   });
 });
