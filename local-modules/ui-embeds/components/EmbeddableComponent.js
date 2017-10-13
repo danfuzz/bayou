@@ -5,20 +5,49 @@
 import _ from 'lodash';
 import PropTypes from 'prop-types';
 import React from 'react';
+import { TBoolean, TNumber, TString } from 'typecheck';
 
 const STRING_CONVERTER = s => s;
 const NUMBER_CONVERTER = s => Number.parseFloat(s);
 const BOOLEAN_CONVERTER = s => s === 'true';
 
-const TYPE_MAPPER = {
-  [PropTypes.string.isRequired]: { isRequired: true, converter: STRING_CONVERTER },
-  [PropTypes.number.isRequired]: { isRequired: true, converter: NUMBER_CONVERTER },
-  [PropTypes.bool.isRequired]: { isRequired: true, converter: BOOLEAN_CONVERTER },
+const TYPE_MAPPER = new Map([
+  [PropTypes.string.isRequired, {
+    isRequired: true,
+    converter: STRING_CONVERTER,
+    validator: TString.check
+  }],
 
-  [PropTypes.string]: { isRequired: false, converter: STRING_CONVERTER },
-  [PropTypes.number]: { isRequired: false, converter: NUMBER_CONVERTER },
-  [PropTypes.bool]: { isRequired: false, converter: BOOLEAN_CONVERTER }
-};
+  [PropTypes.number.isRequired, {
+    isRequired: true,
+    converter: NUMBER_CONVERTER,
+    validator: TNumber.check
+  }],
+
+  [PropTypes.bool.isRequired, {
+    isRequired: true,
+    converter: BOOLEAN_CONVERTER,
+    validator: TBoolean.check
+  }],
+
+  [PropTypes.string, {
+    isRequired: false,
+    converter: STRING_CONVERTER,
+    validator: TString.check
+  }],
+
+  [PropTypes.number, {
+    isRequired: false,
+    converter: NUMBER_CONVERTER,
+    validator: TNumber.check
+  }],
+
+  [PropTypes.bool, {
+    isRequired: false,
+    converter: BOOLEAN_CONVERTER,
+    validator: TBoolean.check
+  }]
+]);
 
 /**
  * This is a subclass of React.Component and works in cooperation with
@@ -76,6 +105,7 @@ export default class EmbeddableComponent extends React.Component {
     const propTypes = this.embeddingPropTypes;
 
     for (const [prop, type] of Object.entries(propTypes)) {
+      const { validator } = TYPE_MAPPER.get(type);
       let isRequired = false;
 
       switch (type) {
@@ -103,14 +133,28 @@ export default class EmbeddableComponent extends React.Component {
         throw new Error(`Required embedding property '${prop}' is missing`);
       }
 
-      const value = props[prop];
+      let value = props[prop];
 
-      // If a required property is present but has no value, it is an error.
-      if (isRequired && (value === null)) {
-        throw new Error(`Required embedding property '${prop}' is missing`);
+      if (value === undefined) {
+        // A property is missing or has no value, check to see if it was
+        // required
+        if (isRequired) {
+          throw new Error(`Required embedding property '${prop}' is missing`);
+        } else {
+          continue;
+        }
       }
 
-      // convert "propertyName" to "data-property-name"
+      if (value === null) {
+        // No need to encode null. We can infer that when we go the other
+        // direction in `extractPropertiesFromElementAttributes`.
+        continue;
+      }
+
+      // Check to make sure we got the type that we say we require.
+      value = validator(value);
+
+      // Convert "propertyName" to "data-property-name"
       const attributeName = `data-${_.kebabCase(prop)}`;
 
       // Finally, asign the property to the DOM element.
@@ -138,27 +182,27 @@ export default class EmbeddableComponent extends React.Component {
     // also figure out how which converter to use to go from a string to
     // the defined type.
     for (const [prop, type] of Object.entries(propTypes)) {
-      const { isRequired, converter } = TYPE_MAPPER[type];
+      const supportedType = TYPE_MAPPER.get(type);
 
-      if (isRequired === undefined) {
-        throw new Error('Only string, number, and boolean proptery types are allowed');
+      if (supportedType === null) {
+        throw new Error('Only string, number, and boolean property types are allowed');
       }
+
+      const { isRequired, converter, validator } = supportedType;
 
       const attributeName = `data-${_.kebabCase(prop)}`;
       let value = element.getAttribute(attributeName);
 
       // `getAttribute()` will return `null` if the key isn't defined.
-
-      if (value) {
-        // The property had a value defined for it.
-        value = converter(value);
-      } else if (isRequired) {
-        // There wasn't a value and it was a required property.
-        throw new Error(`Required embedding property '${prop}' is missing`);
-      } else {
-        // There was no value but it was an optional property.
-        value = null;
+      if (value === null) {
+        if (isRequired) {
+          // There wasn't a value and it was a required property.
+          throw new Error(`Required embedding property '${prop}' is missing`);
+        }
       }
+
+      value = converter(value);
+      value = validator(value);
 
       result[prop] = value;
     }
