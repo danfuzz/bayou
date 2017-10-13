@@ -120,10 +120,9 @@ export default class BodyOp extends BaseOp {
     TString.identifier(type);
     value = DataUtil.deepFreeze(value);
 
-    value           = new Functor(type, value);
     const attribArg = BodyOp._attributesArg(attributes);
 
-    return new BodyOp(BodyOp.EMBED, value, ...attribArg);
+    return new BodyOp(BodyOp.EMBED, type, value, ...attribArg);
   }
 
   /**
@@ -175,8 +174,8 @@ export default class BodyOp extends BaseOp {
       }
 
       case BodyOp.EMBED: {
-        const [value, attributes = null] = payload.args;
-        return Object.freeze({ opName, value, attributes });
+        const [type, value, attributes = null] = payload.args;
+        return Object.freeze({ opName, value: new Functor(type, value), attributes });
       }
 
       case BodyOp.RETAIN: {

@@ -131,10 +131,10 @@ describe('doc-common/BodyOp', () => {
       const attrib = { bold: true };
 
       const result1 = BodyOp.op_embed('blort', { x: 10 });
-      assert.deepEqual(result1.payload, new Functor('embed', new Functor('blort', { x: 10 })));
+      assert.deepEqual(result1.payload, new Functor('embed', 'blort', { x: 10 }));
 
       const result2 = BodyOp.op_embed('florp', ['like'], attrib);
-      assert.deepEqual(result2.payload, new Functor('embed', new Functor('florp', ['like']), attrib));
+      assert.deepEqual(result2.payload, new Functor('embed', 'florp', ['like'], attrib));
     });
 
     it('should reject a non-identifier `type`', () => {
