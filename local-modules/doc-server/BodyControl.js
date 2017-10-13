@@ -73,6 +73,8 @@ export default class BodyControl extends BaseControl {
      * corresponding document snapshots. Sparse.
      */
     this._snapshots = new Map();
+
+    Object.seal(this);
   }
 
   /**
