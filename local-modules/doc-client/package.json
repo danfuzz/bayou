@@ -1,7 +1,6 @@
 {
   "name": "doc-client",
   "version": "1.0.0",
-  "main": "main.js",
 
   "dependencies": {
     "api-client": "local",

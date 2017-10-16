@@ -1,7 +1,6 @@
 {
   "name": "api-server",
   "version": "1.0.0",
-  "main": "main.js",
 
   "dependencies": {
       "content-type": "^1.0.2",

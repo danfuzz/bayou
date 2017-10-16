@@ -1,7 +1,6 @@
 {
   "name": "compiler-dependencies",
   "version": "1.0.0",
-  "main": "main.js",
 
   "dependencies": {
     "babel-core": "^6.22.0",

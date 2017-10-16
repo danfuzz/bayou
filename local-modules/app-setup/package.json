@@ -1,7 +1,6 @@
 {
   "name": "app-setup",
   "version": "1.0.0",
-  "main": "main.js",
 
   "dependencies": {
     "camel-case": "^3.0.0",
