@@ -235,6 +235,16 @@ export default class CaretControl extends BaseControl {
   }
 
   /**
+   * Underlying implementation of `currentRevNum()`, as required by the
+   * superclass.
+   *
+   * @returns {Int} The instantaneously-current revision number.
+   */
+  async _impl_currentRevNum() {
+    return this._snapshot.revNum;
+  }
+
+  /**
    * Merges any new remote session info into the snapshot.
    */
   _integrateRemoteSessions() {

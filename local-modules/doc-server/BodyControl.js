@@ -145,7 +145,7 @@ export default class BodyControl extends BaseControl {
     RevisionNumber.check(baseRevNum);
 
     for (;;) {
-      const revNum = await this._currentRevNum();
+      const revNum = await this.currentRevNum();
 
       // We can only validate the upper limit of `baseRevNum` after we have
       // determined the document revision number. If we end up iterating we'll
@@ -188,7 +188,7 @@ export default class BodyControl extends BaseControl {
    * @returns {BodySnapshot} The corresponding snapshot.
    */
   async getSnapshot(revNum = null) {
-    const currentRevNum = await this._currentRevNum();
+    const currentRevNum = await this.currentRevNum();
     revNum = (revNum === null)
       ? currentRevNum
       : RevisionNumber.maxInc(revNum, currentRevNum);
@@ -407,6 +407,24 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
+   * Underlying implementation of `currentRevNum()`, as required by the
+   * superclass.
+   *
+   * @returns {Int} The instantaneously-current revision number.
+   */
+  async _impl_currentRevNum() {
+    const fc = this.fileCodec;
+    const storagePath = Paths.BODY_REVISION_NUMBER;
+    const spec = new TransactionSpec(
+      fc.op_checkPathPresent(storagePath),
+      fc.op_readPath(storagePath)
+    );
+
+    const transactionResult = await fc.transact(spec);
+    return transactionResult.data.get(storagePath);
+  }
+
+  /**
    * Appends a new change to the document. On success, this returns the revision
    * number of the document after the append. On a failure due to `baseRevNum`
    * not being current at the moment of application, this returns `null`. All
@@ -575,7 +593,7 @@ export default class BodyControl extends BaseControl {
    * given initial revision through but not including the indicated end
    * revision, and composed from a given base. It is valid to pass as either
    * revision number parameter one revision beyond the current document revision
-   * number (that is, `(await this._currentRevNum()) + 1`. It is invalid to
+   * number (that is, `(await this.currentRevNum()) + 1`. It is invalid to
    * specify a non-existent revision _other_ than one beyond the current
    * revision. If `startInclusive === endExclusive`, then this method returns
    * `baseDelta`.
@@ -617,25 +635,6 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
-   * Gets the instantaneously current document revision number. It is an error
-   * to call this on an uninitialized document (that is, if the underlying file
-   * is empty).
-   *
-   * @returns {Int} The document revision number.
-   */
-  async _currentRevNum() {
-    const fc = this.fileCodec;
-    const storagePath = Paths.BODY_REVISION_NUMBER;
-    const spec = new TransactionSpec(
-      fc.op_checkPathPresent(storagePath),
-      fc.op_readPath(storagePath)
-    );
-
-    const transactionResult = await fc.transact(spec);
-    return transactionResult.data.get(storagePath);
-  }
-
-  /**
    * Reads a sequential set of changes. It is an error to request a change that
    * does not exist. It is valid for either `start` or `endExc` to indicate a
    * change that does not exist _only_ if it is one past the last existing
@@ -666,7 +665,7 @@ export default class BodyControl extends BaseControl {
       // Per docs, just need to verify that the arguments don't name an invalid
       // change. `0` is always valid, so we don't actually need to check that.
       if (start !== 0) {
-        const revNum = await this._currentRevNum();
+        const revNum = await this.currentRevNum();
         RevisionNumber.maxInc(start, revNum + 1);
       }
       return [];
