@@ -62,11 +62,11 @@ export default class BodyControl extends BaseControl {
   /**
    * Constructs an instance.
    *
-   * @param {FileComplex} fileComplex File complex that this instance is part
-   *   of.
+   * @param {FileAccess} fileAccess Low-level file access and related
+   *   miscellanea.
    */
-  constructor(fileComplex) {
-    super(fileComplex);
+  constructor(fileAccess) {
+    super(fileAccess);
 
     /**
      * {Map<RevisionNumber, BodySnapshot>} Mapping from revision numbers to
@@ -94,7 +94,7 @@ export default class BodyControl extends BaseControl {
 
       // Version for the file schema. **TODO:** As above, this path isn't
       // body-specific and so would be better handled elsewhere.
-      fc.op_writePath(Paths.SCHEMA_VERSION, this.fileComplex.schemaVersion),
+      fc.op_writePath(Paths.SCHEMA_VERSION, this.schemaVersion),
 
       // Initial revision number.
       fc.op_writePath(Paths.BODY_REVISION_NUMBER, 0),
@@ -125,102 +125,6 @@ export default class BodyControl extends BaseControl {
 
     const changes = await this._readChangeRange(revNum, revNum + 1);
     return changes[0];
-  }
-
-  /**
-   * Returns a promise for a revision &mdash; any revision &mdash; of the
-   * document after the given `baseRevNum`, with the return result represented
-   * as a change relative to that given revision. If called when `baseRevNum` is
-   * the current revision, this will not resolve the result promise until at
-   * least one change has been made.
-   *
-   * @param {Int} baseRevNum Revision number for the document.
-   * @returns {BodyChange} Delta and associated information. The result's
-   *   `revNum` is guaranteed to be at least one more than `baseRevNum` (and
-   *   could possibly be even larger.) The result can be applied to revision
-   *   `baseRevNum` to produce revision `revNum` of the document. The
-   *   `timestamp` and `author` of the result will both be `null`.
-   */
-  async getChangeAfter(baseRevNum) {
-    RevisionNumber.check(baseRevNum);
-
-    for (;;) {
-      const revNum = await this._currentRevNum();
-
-      // We can only validate the upper limit of `baseRevNum` after we have
-      // determined the document revision number. If we end up iterating we'll
-      // do redundant checks, but that's a very minor inefficiency.
-      RevisionNumber.maxInc(baseRevNum, revNum);
-
-      if (baseRevNum < revNum) {
-        // The document's revision is in fact newer than the base, so we can now
-        // form and return a result. Compose all the deltas from the revision
-        // after the base through and including the current revision.
-        const delta = await this._composeRevisions(
-          BodyDelta.EMPTY, baseRevNum + 1, revNum + 1);
-        return new BodyChange(revNum, delta);
-      }
-
-      // Wait for the file to change (or for the storage layer to time out), and
-      // then iterate to see if in fact the change updated the document revision
-      // number.
-      const fc   = this.fileCodec;
-      const ops  = [fc.op_whenPathNot(Paths.BODY_REVISION_NUMBER, revNum)];
-      const spec = new TransactionSpec(...ops);
-      try {
-        await fc.transact(spec);
-      } catch (e) {
-        if (!Errors.isTimeout(e)) {
-          // It's _not_ a timeout, so we should propagate the error.
-          throw e;
-        }
-        // It's a timeout, so just fall through and iterate.
-        this.log.info('Storage layer timeout in `getChangeAfter`.');
-      }
-    }
-  }
-
-  /**
-   * Gets a snapshot of the full document contents.
-   *
-   * @param {Int|null} revNum Which revision to get. If passed as `null`,
-   *   indicates the latest (most recent) revision.
-   * @returns {BodySnapshot} The corresponding snapshot.
-   */
-  async getSnapshot(revNum = null) {
-    const currentRevNum = await this._currentRevNum();
-    revNum = (revNum === null)
-      ? currentRevNum
-      : RevisionNumber.maxInc(revNum, currentRevNum);
-
-    // Search backward through the full revisions for a base for forward
-    // composition.
-    let base = null;
-    for (let i = revNum; i >= 0; i--) {
-      const v = this._snapshots.get(i);
-      if (v) {
-        base = v;
-        break;
-      }
-    }
-
-    if (base && (base.revNum === revNum)) {
-      // Found the right revision!
-      return base;
-    }
-
-    // We didn't actully find a snapshot of the requested revision. Apply deltas
-    // to the base to produce the desired revision. Store it, and return it.
-
-    const contents = (base === null)
-      ? this._composeRevisions(BodyDelta.EMPTY, 0,               revNum + 1)
-      : this._composeRevisions(base.contents,   base.revNum + 1, revNum + 1);
-    const result = new BodySnapshot(revNum, await contents);
-
-    this.log.detail('Made snapshot for revision:', revNum);
-
-    this._snapshots.set(revNum, result);
-    return result;
   }
 
   /**
@@ -352,7 +256,7 @@ export default class BodyControl extends BaseControl {
       return BodyControl.STATUS_ERROR;
     }
 
-    const expectSchemaVersion = this.fileComplex.schemaVersion;
+    const expectSchemaVersion = this.schemaVersion;
     if (schemaVersion !== expectSchemaVersion) {
       const got = schemaVersion;
       this.log.info(`Mismatched schema version: got ${got}; expected ${expectSchemaVersion}`);
@@ -404,6 +308,120 @@ export default class BodyControl extends BaseControl {
     // All's well!
 
     return BodyControl.STATUS_OK;
+  }
+
+  /**
+   * {class} Class (constructor function) of snapshot objects to be used with
+   * instances of this class.
+   */
+  static get _impl_snapshotClass() {
+    return BodySnapshot;
+  }
+
+  /**
+   * Underlying implementation of `currentRevNum()`, as required by the
+   * superclass.
+   *
+   * @returns {Int} The instantaneously-current revision number.
+   */
+  async _impl_currentRevNum() {
+    const fc = this.fileCodec;
+    const storagePath = Paths.BODY_REVISION_NUMBER;
+    const spec = new TransactionSpec(
+      fc.op_checkPathPresent(storagePath),
+      fc.op_readPath(storagePath)
+    );
+
+    const transactionResult = await fc.transact(spec);
+    return transactionResult.data.get(storagePath);
+  }
+
+  /**
+   * Underlying implementation of `getChangeAfter()`, as required by the
+   * superclass.
+   *
+   * @param {Int} baseRevNum Revision number for the base to get a change with
+   *   respect to. Guaranteed to refer to the instantaneously-current revision
+   *   or earlier.
+   * @param {Int} currentRevNum The instantaneously-current revision number that
+   *   was determined just before this method was called, and which should be
+   *   treated as the actually-current revision number at the start of this
+   *   method.
+   * @returns {BodyChange} Delta and associated information. Though the
+   *   superclass allows it, this method never returns `null`.
+   */
+  async _impl_getChangeAfter(baseRevNum, currentRevNum) {
+    for (;;) {
+      if (baseRevNum < currentRevNum) {
+        // The document's revision is in fact newer than the base, so we can now
+        // form and return a result. Compose all the deltas from the revision
+        // after the base through and including the current revision.
+        const delta = await this._composeRevisions(
+          BodyDelta.EMPTY, baseRevNum + 1, currentRevNum + 1);
+        return new BodyChange(currentRevNum, delta);
+      }
+
+      // Wait for the file to change (or for the storage layer to time out), and
+      // then iterate to see if in fact the change updated the document revision
+      // number.
+      const fc   = this.fileCodec;
+      const ops  = [fc.op_whenPathNot(Paths.BODY_REVISION_NUMBER, currentRevNum)];
+      const spec = new TransactionSpec(...ops);
+      try {
+        await fc.transact(spec);
+      } catch (e) {
+        if (!Errors.isTimeout(e)) {
+          // It's _not_ a timeout, so we should propagate the error.
+          throw e;
+        }
+        // It's a timeout, so just fall through and iterate.
+        this.log.info('Storage layer timeout in `getChangeAfter`.');
+      }
+
+      // Update what we think of as the current revision number, and iterate to
+      // try again.
+      currentRevNum = await this.currentRevNum();
+    }
+  }
+
+  /**
+   * Underlying implementation of `getSnapshot()`, as required by the
+   * superclass.
+   *
+   * @param {Int} revNum Which revision to get. Guaranteed to be a revision
+   *   number for the instantaneously-current revision or earlier.
+   * @returns {BodySnapshot} Snapshot of the indicated revision. Though the
+   *   superclass allows it, this method never returns `null`.
+   */
+  async _impl_getSnapshot(revNum) {
+    // Search backward through the full revisions for a base for forward
+    // composition.
+    let base = null;
+    for (let i = revNum; i >= 0; i--) {
+      const v = this._snapshots.get(i);
+      if (v) {
+        base = v;
+        break;
+      }
+    }
+
+    if (base && (base.revNum === revNum)) {
+      // Found the right revision!
+      return base;
+    }
+
+    // We didn't actully find a snapshot of the requested revision. Apply deltas
+    // to the base to produce the desired revision. Store it, and return it.
+
+    const contents = (base === null)
+      ? this._composeRevisions(BodyDelta.EMPTY, 0,               revNum + 1)
+      : this._composeRevisions(base.contents,   base.revNum + 1, revNum + 1);
+    const result = new BodySnapshot(revNum, await contents);
+
+    this.log.detail('Made snapshot for revision:', revNum);
+
+    this._snapshots.set(revNum, result);
+    return result;
   }
 
   /**
@@ -575,7 +593,7 @@ export default class BodyControl extends BaseControl {
    * given initial revision through but not including the indicated end
    * revision, and composed from a given base. It is valid to pass as either
    * revision number parameter one revision beyond the current document revision
-   * number (that is, `(await this._currentRevNum()) + 1`. It is invalid to
+   * number (that is, `(await this.currentRevNum()) + 1`. It is invalid to
    * specify a non-existent revision _other_ than one beyond the current
    * revision. If `startInclusive === endExclusive`, then this method returns
    * `baseDelta`.
@@ -617,25 +635,6 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
-   * Gets the instantaneously current document revision number. It is an error
-   * to call this on an uninitialized document (that is, if the underlying file
-   * is empty).
-   *
-   * @returns {Int} The document revision number.
-   */
-  async _currentRevNum() {
-    const fc = this.fileCodec;
-    const storagePath = Paths.BODY_REVISION_NUMBER;
-    const spec = new TransactionSpec(
-      fc.op_checkPathPresent(storagePath),
-      fc.op_readPath(storagePath)
-    );
-
-    const transactionResult = await fc.transact(spec);
-    return transactionResult.data.get(storagePath);
-  }
-
-  /**
    * Reads a sequential set of changes. It is an error to request a change that
    * does not exist. It is valid for either `start` or `endExc` to indicate a
    * change that does not exist _only_ if it is one past the last existing
@@ -666,7 +665,7 @@ export default class BodyControl extends BaseControl {
       // Per docs, just need to verify that the arguments don't name an invalid
       // change. `0` is always valid, so we don't actually need to check that.
       if (start !== 0) {
-        const revNum = await this._currentRevNum();
+        const revNum = await this.currentRevNum();
         RevisionNumber.maxInc(start, revNum + 1);
       }
       return [];

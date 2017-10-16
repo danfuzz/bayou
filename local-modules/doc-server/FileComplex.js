@@ -2,22 +2,15 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Codec } from 'codec';
 import { BodyChange, BodyDelta, Timestamp } from 'doc-common';
-import { ProductInfo } from 'env-server';
-import { BaseFile, FileCodec } from 'file-store';
 import { DEFAULT_DOCUMENT } from 'hooks-server';
 import { Mutex } from 'promise-util';
-import { Logger } from 'see-all';
-import { TString } from 'typecheck';
-import { CommonBase } from 'util-common';
 
+import BaseComplexMember from './BaseComplexMember';
 import CaretControl from './CaretControl';
 import BodyControl from './BodyControl';
 import DocServer from './DocServer';
-
-/** {Logger} Logger to use for this module. */
-const log = new Logger('doc');
+import FileAccess from './FileAccess';
 
 /** {BodyDelta} Default contents when creating a new document. */
 const DEFAULT_TEXT = BodyDelta.fromOpArgArray(DEFAULT_DOCUMENT);
@@ -45,7 +38,7 @@ const MIGRATION_NOTE = BodyDelta.fromOpArgArray([
  * how many active editors there are on that document. (This guarantee is
  * provided by `DocServer`.)
  */
-export default class FileComplex extends CommonBase {
+export default class FileComplex extends BaseComplexMember {
   /**
    * Constructs an instance.
    *
@@ -53,22 +46,7 @@ export default class FileComplex extends CommonBase {
    * @param {BaseFile} file The underlying document storage.
    */
   constructor(codec, file) {
-    super();
-
-    /** {Codec} Codec instance to use. */
-    this._codec = Codec.check(codec);
-
-    /** {BaseFile} The underlying document storage. */
-    this._file = BaseFile.check(file);
-
-    /** {Logger} Logger for this instance. */
-    this._log = log.withPrefix(`[${file.id}]`);
-
-    /** {string} The document schema version to use and expect. */
-    this._schemaVersion = TString.nonEmpty(ProductInfo.theOne.INFO.version);
-
-    /** {FileCodec} File-codec wrapper to use. */
-    this._fileCodec = new FileCodec(file, codec);
+    super(new FileAccess(codec, file));
 
     /**
      * {BodyControl|null} Document body content controller. Set to non-`null` in
@@ -84,13 +62,15 @@ export default class FileComplex extends CommonBase {
 
     /** {Mutex} Mutex to avoid overlapping initialization operations. */
     this._initMutex = new Mutex();
+
+    Object.seal(this);
   }
 
   /** {BodyControl} The body content controller to use with this instance. */
   get bodyControl() {
     if (this._bodyControl === null) {
-      this._bodyControl = new BodyControl(this);
-      this._log.info('Constructed body controller.');
+      this._bodyControl = new BodyControl(this._fileAccess);
+      this.log.info('Constructed body controller.');
     }
 
     return this._bodyControl;
@@ -99,42 +79,11 @@ export default class FileComplex extends CommonBase {
   /** {CaretControl} The caret info controller to use with this instance. */
   get caretControl() {
     if (this._caretControl === null) {
-      this._caretControl = new CaretControl(this);
-      this._log.info('Constructed caret controller.');
+      this._caretControl = new CaretControl(this._fileAccess);
+      this.log.info('Constructed caret controller.');
     }
 
     return this._caretControl;
-  }
-
-  /** {Codec} Codec instance to use with the underlying file. */
-  get codec() {
-    return this._codec;
-  }
-
-  /** {BaseFile} The underlying document storage. */
-  get file() {
-    return this._file;
-  }
-
-  /** {FileCodec} File-codec wrapper to use. */
-  get fileCodec() {
-    return this._fileCodec;
-  }
-
-  /**
-   * {Logger} Logger to use with this instance. It prefixes logged items with
-   * the file's ID.
-   */
-  get log() {
-    return this._log;
-  }
-
-  /**
-   * {string} The document schema version to use for new documents and to expect
-   * in existing documents.
-   */
-  get schemaVersion() {
-    return this._schemaVersion;
   }
 
   /**

@@ -4,62 +4,56 @@
 
 import { CommonBase } from 'util-common';
 
-/**
- * {class|null} The class `FileClass`, or `null` if it hasn't yet been fetched.
- * This arrangement is done because directly `import`ing it would result in a
- * circular dependency between `FileComplex` and this class, which &mdash; as
- * observed in practice &mdash; leads to a failure to initialize subclasses of
- * this class. Alas!
- */
-let FileComplex = null;
+import FileAccess from './FileAccess';
 
 /**
- * Base class for things that hook up to a {@link FileComplex}.
+ * Base class for things that hook up to a {@link FileComplex} and for
+ * `FileComplex` itself.
  */
 export default class BaseComplexMember extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {FileComplex} fileComplex File complex that this instance is part
-   *   of.
+   * @param {FileAccess} fileAccess Low-level file access and related
+   *   miscellanea.
    */
-  constructor(fileComplex) {
-    if (FileComplex === null) {
-      FileComplex = require('./FileComplex');
-    }
-
+  constructor(fileAccess) {
     super();
 
-    /** {FileComplex} File complex that this instance is part of. */
-    this._fileComplex = /*FileComplex.check*/(fileComplex);
+    /** {FileAccess} Low-level file access and associated miscellanea. */
+    this._fileAccess = FileAccess.check(fileAccess);
+  }
 
-    /** {BaseFile} The underlying document storage. */
-    this._file = fileComplex.file;
-
-    /** {FileCodec} File-codec wrapper to use. */
-    this._fileCodec = fileComplex.fileCodec;
-
-    /** {Logger} Logger specific to this document's ID. */
-    this._log = fileComplex.log;
+  /** {Codec} Codec instance to use with the underlying file. */
+  get codec() {
+    return this._fileAccess.codec;
   }
 
   /** {BaseFile} The underlying document storage. */
   get file() {
-    return this._file;
+    return this._fileAccess.file;
+  }
+
+  /** {FileAccess} Low-level file access and associated miscellanea. */
+  get fileAccess() {
+    return this._fileAccess;
   }
 
   /** {FileCodec} File-codec wrapper to use when dealing with encoded data. */
   get fileCodec() {
-    return this._fileCodec;
-  }
-
-  /** {FileComplex} File complex that this instance is part of. */
-  get fileComplex() {
-    return this._fileComplex;
+    return this._fileAccess.fileCodec;
   }
 
   /** {Logger} Logger to use with this instance. */
   get log() {
-    return this._log;
+    return this._fileAccess.log;
+  }
+
+  /**
+   * {string} The document schema version to use for new documents and to expect
+   * in existing documents.
+   */
+  get schemaVersion() {
+    return this._fileAccess.schemaVersion;
   }
 }

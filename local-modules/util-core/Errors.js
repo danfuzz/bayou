@@ -106,9 +106,18 @@ export default class Errors extends UtilityClass {
 
     CoreTypecheck.checkStringOrNull(extra);
 
+    let inspectedValue;
+    try {
+      inspectedValue = inspect(value);
+    } catch (e) {
+      // Don't let a problem with `inspect()` keep us from throwing something
+      // at least vaguely useful.
+      inspectedValue = '<uninspectable object>';
+    }
+
     return new InfoError(
       'bad_value',
-      inspect(value),
+      inspectedValue,
       expectedType,
       ...((extra === null) ? [] : [extra]));
   }
