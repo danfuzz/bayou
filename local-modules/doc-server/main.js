@@ -6,6 +6,7 @@ import BodyControl from './BodyControl';
 import CaretControl from './CaretControl';
 import DocServer from './DocServer';
 import DocSession from './DocSession';
+import FileAccess from './FileAccess';
 import FileComplex from './FileComplex';
 
-export { BodyControl, CaretControl, DocServer, DocSession, FileComplex };
+export { BodyControl, CaretControl, DocServer, DocSession, FileAccess, FileComplex };

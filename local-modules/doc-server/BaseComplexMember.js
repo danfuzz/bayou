@@ -25,7 +25,7 @@ export default class BaseComplexMember extends CommonBase {
    */
   constructor(fileComplex) {
     if (FileComplex === null) {
-      FileComplex = require('./FileComplex');
+      FileComplex = require('./FileComplex').default;
     }
 
     super();

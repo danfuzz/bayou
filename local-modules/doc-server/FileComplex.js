@@ -2,22 +2,15 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Codec } from 'codec';
 import { BodyChange, BodyDelta, Timestamp } from 'doc-common';
-import { ProductInfo } from 'env-server';
-import { BaseFile, FileCodec } from 'file-store';
 import { DEFAULT_DOCUMENT } from 'hooks-server';
 import { Mutex } from 'promise-util';
-import { Logger } from 'see-all';
-import { TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import CaretControl from './CaretControl';
 import BodyControl from './BodyControl';
 import DocServer from './DocServer';
-
-/** {Logger} Logger to use for this module. */
-const log = new Logger('doc');
+import FileAccess from './FileAccess';
 
 /** {BodyDelta} Default contents when creating a new document. */
 const DEFAULT_TEXT = BodyDelta.fromOpArgArray(DEFAULT_DOCUMENT);
@@ -55,20 +48,8 @@ export default class FileComplex extends CommonBase {
   constructor(codec, file) {
     super();
 
-    /** {Codec} Codec instance to use. */
-    this._codec = Codec.check(codec);
-
-    /** {BaseFile} The underlying document storage. */
-    this._file = BaseFile.check(file);
-
-    /** {Logger} Logger for this instance. */
-    this._log = log.withPrefix(`[${file.id}]`);
-
-    /** {string} The document schema version to use and expect. */
-    this._schemaVersion = TString.nonEmpty(ProductInfo.theOne.INFO.version);
-
-    /** {FileCodec} File-codec wrapper to use. */
-    this._fileCodec = new FileCodec(file, codec);
+    /** {FileAccess} Low-level file access and associated miscellanea. */
+    this._fileAccess = new FileAccess(codec, file);
 
     /**
      * {BodyControl|null} Document body content controller. Set to non-`null` in
@@ -90,7 +71,7 @@ export default class FileComplex extends CommonBase {
   get bodyControl() {
     if (this._bodyControl === null) {
       this._bodyControl = new BodyControl(this);
-      this._log.info('Constructed body controller.');
+      this.log.info('Constructed body controller.');
     }
 
     return this._bodyControl;
@@ -100,7 +81,7 @@ export default class FileComplex extends CommonBase {
   get caretControl() {
     if (this._caretControl === null) {
       this._caretControl = new CaretControl(this);
-      this._log.info('Constructed caret controller.');
+      this.log.info('Constructed caret controller.');
     }
 
     return this._caretControl;
@@ -108,17 +89,17 @@ export default class FileComplex extends CommonBase {
 
   /** {Codec} Codec instance to use with the underlying file. */
   get codec() {
-    return this._codec;
+    return this._fileAccess.codec;
   }
 
   /** {BaseFile} The underlying document storage. */
   get file() {
-    return this._file;
+    return this._fileAccess.file;
   }
 
   /** {FileCodec} File-codec wrapper to use. */
   get fileCodec() {
-    return this._fileCodec;
+    return this._fileAccess.fileCodec;
   }
 
   /**
@@ -126,7 +107,7 @@ export default class FileComplex extends CommonBase {
    * the file's ID.
    */
   get log() {
-    return this._log;
+    return this._fileAccess.log;
   }
 
   /**
@@ -134,7 +115,7 @@ export default class FileComplex extends CommonBase {
    * in existing documents.
    */
   get schemaVersion() {
-    return this._schemaVersion;
+    return this._fileAccess.schemaVersion;
   }
 
   /**
