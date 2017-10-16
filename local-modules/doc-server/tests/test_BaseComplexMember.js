@@ -5,19 +5,20 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
+import { BaseComplexMember } from 'doc-server';
+
 import { Codec } from 'codec';
 import { FileAccess } from 'doc-server';
 
-import MockControl from './MockControl';
 import MockFile from './MockFile';
 
-describe('doc-server/BaseControl', () => {
+describe('doc-server/BaseComplexMember', () => {
   describe('constructor()', () => {
-    it('should accept a `FileAccess` and reflect it in the inherited getters', () => {
+    it('should accept a `FileAccess` and reflect it in the getters', () => {
       const codec  = Codec.theOne;
       const file   = new MockFile('blort');
       const fa     = new FileAccess(codec, file);
-      const result = new MockControl(fa);
+      const result = new BaseComplexMember(fa);
 
       assert.strictEqual(result.codec,         codec);
       assert.strictEqual(result.file,          file);
@@ -28,10 +29,8 @@ describe('doc-server/BaseControl', () => {
     });
 
     it('should reject non-`FileAccess` arguments', () => {
-      assert.throws(() => new MockControl(null));
-      assert.throws(() => new MockControl({ x: 10 }));
+      assert.throws(() => new BaseComplexMember(null));
+      assert.throws(() => new BaseComplexMember({ x: 10 }));
     });
   });
-
-  // **TODO:** Fill this out!
 });

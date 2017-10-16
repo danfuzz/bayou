@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import BaseComplexMember from './BaseComplexMember';
+import BaseControl from './BaseControl';
 import BodyControl from './BodyControl';
 import CaretControl from './CaretControl';
 import DocServer from './DocServer';
@@ -9,4 +11,13 @@ import DocSession from './DocSession';
 import FileAccess from './FileAccess';
 import FileComplex from './FileComplex';
 
-export { BodyControl, CaretControl, DocServer, DocSession, FileAccess, FileComplex };
+export {
+  BaseComplexMember,
+  BaseControl,
+  BodyControl,
+  CaretControl,
+  DocServer,
+  DocSession,
+  FileAccess,
+  FileComplex
+};
