@@ -36,7 +36,7 @@
   var baseUrl = ((url === '*') ? window.location : new URL(url)).origin;
 
   // Add the main JavaScript bundle to the page. Once loaded, this continues
-  // the boot process. You can find its main entrypoint in `client/js/main.js`.
+  // the boot process. You can find its main entrypoint in `client/js/index.js`.
   var elem = document.createElement('script');
   elem.src = baseUrl + '/static/js/main.bundle.js';
   document.head.appendChild(elem);

@@ -14,9 +14,7 @@
 
   "main": "js/index.js",
   "testMain": "js/tests/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+
   "dependencies": {
     "api-common": "local",
     "doc-client": "local",
