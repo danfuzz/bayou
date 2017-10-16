@@ -65,12 +65,14 @@ export default class FileComplex extends CommonBase {
 
     /** {Mutex} Mutex to avoid overlapping initialization operations. */
     this._initMutex = new Mutex();
+
+    Object.seal(this);
   }
 
   /** {BodyControl} The body content controller to use with this instance. */
   get bodyControl() {
     if (this._bodyControl === null) {
-      this._bodyControl = new BodyControl(this);
+      this._bodyControl = new BodyControl(this._fileAccess);
       this.log.info('Constructed body controller.');
     }
 
@@ -80,7 +82,7 @@ export default class FileComplex extends CommonBase {
   /** {CaretControl} The caret info controller to use with this instance. */
   get caretControl() {
     if (this._caretControl === null) {
-      this._caretControl = new CaretControl(this);
+      this._caretControl = new CaretControl(this._fileAccess);
       this.log.info('Constructed caret controller.');
     }
 
@@ -108,14 +110,6 @@ export default class FileComplex extends CommonBase {
    */
   get log() {
     return this._fileAccess.log;
-  }
-
-  /**
-   * {string} The document schema version to use for new documents and to expect
-   * in existing documents.
-   */
-  get schemaVersion() {
-    return this._fileAccess.schemaVersion;
   }
 
   /**

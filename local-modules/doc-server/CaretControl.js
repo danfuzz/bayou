@@ -38,17 +38,17 @@ export default class CaretControl extends BaseControl {
   /**
    * Constructs an instance.
    *
-   * @param {FileComplex} fileComplex File complex that this instance is part
-   *   of.
+   * @param {FileAccess} fileAccess Low-level file access and related
+   *   miscellanea.
    */
-  constructor(fileComplex) {
-    super(fileComplex);
+  constructor(fileAccess) {
+    super(fileAccess);
 
     /**
      * {CaretStorage} File storage handler. This is responsible for all of the
      * file reading and writing.
      */
-    this._caretStorage = new CaretStorage(fileComplex);
+    this._caretStorage = new CaretStorage(fileAccess);
 
     /**
      * {CaretSnapshot} Latest caret info. Starts out as an empty stub; gets

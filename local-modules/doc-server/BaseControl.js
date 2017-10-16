@@ -46,11 +46,11 @@ export default class BaseControl extends BaseComplexMember {
   /**
    * Constructs an instance.
    *
-   * @param {FileComplex} fileComplex File complex that this instance is part
-   *   of.
+   * @param {FileAccess} fileAccess Low-level file access and related
+   *   miscellanea.
    */
-  constructor(fileComplex) {
-    super(fileComplex);
+  constructor(fileAccess) {
+    super(fileAccess);
   }
 
   /**

@@ -62,11 +62,11 @@ export default class BodyControl extends BaseControl {
   /**
    * Constructs an instance.
    *
-   * @param {FileComplex} fileComplex File complex that this instance is part
-   *   of.
+   * @param {FileAccess} fileAccess Low-level file access and related
+   *   miscellanea.
    */
-  constructor(fileComplex) {
-    super(fileComplex);
+  constructor(fileAccess) {
+    super(fileAccess);
 
     /**
      * {Map<RevisionNumber, BodySnapshot>} Mapping from revision numbers to
@@ -94,7 +94,7 @@ export default class BodyControl extends BaseControl {
 
       // Version for the file schema. **TODO:** As above, this path isn't
       // body-specific and so would be better handled elsewhere.
-      fc.op_writePath(Paths.SCHEMA_VERSION, this.fileComplex.schemaVersion),
+      fc.op_writePath(Paths.SCHEMA_VERSION, this.schemaVersion),
 
       // Initial revision number.
       fc.op_writePath(Paths.BODY_REVISION_NUMBER, 0),
@@ -256,7 +256,7 @@ export default class BodyControl extends BaseControl {
       return BodyControl.STATUS_ERROR;
     }
 
-    const expectSchemaVersion = this.fileComplex.schemaVersion;
+    const expectSchemaVersion = this.schemaVersion;
     if (schemaVersion !== expectSchemaVersion) {
       const got = schemaVersion;
       this.log.info(`Mismatched schema version: got ${got}; expected ${expectSchemaVersion}`);
