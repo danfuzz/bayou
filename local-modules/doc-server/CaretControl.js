@@ -118,38 +118,6 @@ export default class CaretControl extends BaseControl {
   }
 
   /**
-   * Gets a change of caret information from the indicated base caret revision.
-   * This will throw an error if the indicated caret revision isn't available.
-   *
-   * @param {Int} baseRevNum Revision number for the caret information which
-   *   will form the basis for the result. If `baseRevNum` is the current
-   *   revision number, this method will block until a new revision is
-   *   available.
-   * @returns {CaretChange} Change from the base caret revision to a newer one.
-   */
-  async getChangeAfter(baseRevNum) {
-    const oldSnapshot = await this.getSnapshot(baseRevNum);
-
-    // Iterate if / as long as the base revision is still the current one. This
-    // will stop being the case if either there's a local or remote update. The
-    // loop is needed because the remote update check can time out without an
-    // actual change happening.
-    while (oldSnapshot.revNum === this._snapshot.revNum) {
-      // Wait for either a local or remote update, whichever comes first.
-      await Promise.race([
-        this._updatedCondition.whenTrue(),
-        this._caretStorage.whenRemoteChange()
-      ]);
-
-      // If there were remote changes, this will cause the snapshot to get
-      // updated.
-      this._integrateRemoteSessions();
-    }
-
-    return oldSnapshot.diff(this._snapshot);
-  }
-
-  /**
    * Takes a change consisting of one or more caret updates, and applies it to
    * this instance, producing an updated snapshot.
    *
@@ -227,6 +195,49 @@ export default class CaretControl extends BaseControl {
     this._integrateRemoteSessions();
 
     return this._snapshot.revNum;
+  }
+
+  /**
+   * Underlyingimplementation of `getChangeAfter()`, as required by the
+   * superclass.
+   *
+   * @param {Int} baseRevNum Revision number for the base to get a change with
+   *   respect to. Guaranteed to refer to the instantaneously-current revision
+   *   or earlier.
+   * @param {Int} currentRevNum_unused The instantaneously-current revision
+   *   number that was determined just before this method was called. It is
+   *   unused in this case because the implementation has synchronous knowledge
+   *   of the actually-current revision.
+   * @returns {CaretChange|null} Change with respect to the revision indicated
+   *   by `baseRevNum`, or `null` to indicate that the revision was not
+   *   available as a base.
+   */
+  async _impl_getChangeAfter(baseRevNum, currentRevNum_unused) {
+    // This uses the `_impl` snapshot so that we get a `null` instead of a
+    // thrown error when the revision isn't available.
+    const oldSnapshot = await this._impl_getSnapshot(baseRevNum);
+
+    if (oldSnapshot === null) {
+      return null;
+    }
+
+    // Iterate if / as long as the base revision is still the current one. This
+    // will stop being the case if either there's a local or remote update. The
+    // loop is needed because the remote update check can time out without an
+    // actual change happening.
+    while (oldSnapshot.revNum === this._snapshot.revNum) {
+      // Wait for either a local or remote update, whichever comes first.
+      await Promise.race([
+        this._updatedCondition.whenTrue(),
+        this._caretStorage.whenRemoteChange()
+      ]);
+
+      // If there were remote changes, this will cause the snapshot to get
+      // updated.
+      this._integrateRemoteSessions();
+    }
+
+    return oldSnapshot.diff(this._snapshot);
   }
 
   /**

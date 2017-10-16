@@ -4,7 +4,7 @@
 
 import { BaseSnapshot, RevisionNumber } from 'doc-common';
 import { TFunction } from 'typecheck';
-import { InfoError } from 'util-common';
+import { Errors, InfoError } from 'util-common';
 
 import BaseComplexMember from './BaseComplexMember';
 
@@ -14,6 +14,16 @@ import BaseComplexMember from './BaseComplexMember';
  * all managed and hooked up via {@link FileComplex}.
  */
 export default class BaseControl extends BaseComplexMember {
+  /**
+   * {class} Class (constructor function) of change objects to be used with
+   * instances of this class.
+   */
+  static get changeClass() {
+    // **Note:** `this` in the context of a static method is the class, not an
+    // instance.
+    return this.snapshotClass.changeClass;
+  }
+
   /**
    * {class} Class (constructor function) of snapshot objects to be used with
    * instances of this class.
@@ -62,6 +72,47 @@ export default class BaseControl extends BaseComplexMember {
     const revNum = await this._impl_currentRevNum();
 
     return RevisionNumber.check(revNum);
+  }
+
+  /**
+   * Returns a document change representing a change to the portion of the file
+   * controlled by this instance which has been made with respect to a given
+   * revision. This returns a promptly-resolved value when `baseRevNum` is not
+   * the current revision (that is, it is an older revision); but when
+   * `baseRevNum` _is_ the current revision, the return value only resolves
+   * after at least one change has been made. It is an error to request a
+   * revision that does not yet exist. For subclasses that don't keep full
+   * history, it is also an error to request a revision that is _no longer_
+   * available as a base; in this case, the error name is always
+   * `revision_not_available`.
+   *
+   * The return value is a change instance with respect to (that is, whose base
+   * revision is) the one indicated by `baseRevNum` as passed to the method.
+   * That is, roughly speaking, if `snapshot[result.revNum] =
+   * snapshot(baseRevNum).compose(result)`.
+   *
+   * @param {Int} baseRevNum Revision number for the base to get a change with
+   *   respect to.
+   * @returns {BaseChange} Change with respect to the revision indicated by
+   *   `baseRevNum`. Always an instance of the appropriate change class as
+   *   specified by the concrete subclass of this class. The result's `revNum`
+   *   is guaranteed to be at least one greater than `baseRevNum` (and could
+   *   possibly be even larger). The `timestamp` and `authorId` of the result
+   *   will both be `null`.
+   */
+  async getChangeAfter(baseRevNum) {
+    const currentRevNum = await this.currentRevNum();
+    RevisionNumber.maxInc(baseRevNum, currentRevNum);
+
+    const result = await this._impl_getChangeAfter(baseRevNum, currentRevNum);
+
+    this.constructor.changeClass.check(result);
+
+    if ((result.timestamp !== null) || (result.authorId !== null)) {
+      throw new Errors.bad_value(result, this.constructor.changeClass, 'timestamp === null && authorId === null');
+    }
+
+    return result;
   }
 
   /**
@@ -116,6 +167,28 @@ export default class BaseControl extends BaseComplexMember {
   }
 
   /**
+   * Subclass-specific implementation of `getChangeAfter()`. Subclasses must
+   * override this.
+   *
+   * @abstract
+   * @param {Int} baseRevNum Revision number for the base to get a change with
+   *   respect to. Guaranteed to refer to the instantaneously-current revision
+   *   or earlier.
+   * @param {Int} currentRevNum The instantaneously-current revision number that
+   *   was determined just before this method was called, and which should be
+   *   treated as the actually-current revision number at the start of this
+   *   method.
+   * @returns {BaseChange|null} Change with respect to the revision indicated by
+   *   `baseRevNum`, or `null` to indicate that the revision was not available
+   *   as a base. If non-`null`, must be an instance of the appropriate change
+   *   class as specified by the concrete subclass of this class with `null` for
+   *   both `timestamp` and `authorId`.
+   */
+  async _impl_getChangeAfter(baseRevNum, currentRevNum) {
+    return this._mustOverride(baseRevNum, currentRevNum);
+  }
+
+  /**
    * Subclass-specific implementation of `getSnapshot()`. Subclasses must
    * override this.
    *
@@ -131,5 +204,5 @@ export default class BaseControl extends BaseComplexMember {
     return this._mustOverride(revNum);
   }
 
-  // **TODO:** `create()`, `getChangeAfter()`, and `update()`.
+  // **TODO:** `create()` and `update()`.
 }

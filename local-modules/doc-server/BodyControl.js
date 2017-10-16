@@ -128,59 +128,6 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
-   * Returns a promise for a revision &mdash; any revision &mdash; of the
-   * document after the given `baseRevNum`, with the return result represented
-   * as a change relative to that given revision. If called when `baseRevNum` is
-   * the current revision, this will not resolve the result promise until at
-   * least one change has been made.
-   *
-   * @param {Int} baseRevNum Revision number for the document.
-   * @returns {BodyChange} Delta and associated information. The result's
-   *   `revNum` is guaranteed to be at least one more than `baseRevNum` (and
-   *   could possibly be even larger.) The result can be applied to revision
-   *   `baseRevNum` to produce revision `revNum` of the document. The
-   *   `timestamp` and `author` of the result will both be `null`.
-   */
-  async getChangeAfter(baseRevNum) {
-    RevisionNumber.check(baseRevNum);
-
-    for (;;) {
-      const revNum = await this.currentRevNum();
-
-      // We can only validate the upper limit of `baseRevNum` after we have
-      // determined the document revision number. If we end up iterating we'll
-      // do redundant checks, but that's a very minor inefficiency.
-      RevisionNumber.maxInc(baseRevNum, revNum);
-
-      if (baseRevNum < revNum) {
-        // The document's revision is in fact newer than the base, so we can now
-        // form and return a result. Compose all the deltas from the revision
-        // after the base through and including the current revision.
-        const delta = await this._composeRevisions(
-          BodyDelta.EMPTY, baseRevNum + 1, revNum + 1);
-        return new BodyChange(revNum, delta);
-      }
-
-      // Wait for the file to change (or for the storage layer to time out), and
-      // then iterate to see if in fact the change updated the document revision
-      // number.
-      const fc   = this.fileCodec;
-      const ops  = [fc.op_whenPathNot(Paths.BODY_REVISION_NUMBER, revNum)];
-      const spec = new TransactionSpec(...ops);
-      try {
-        await fc.transact(spec);
-      } catch (e) {
-        if (!Errors.isTimeout(e)) {
-          // It's _not_ a timeout, so we should propagate the error.
-          throw e;
-        }
-        // It's a timeout, so just fall through and iterate.
-        this.log.info('Storage layer timeout in `getChangeAfter`.');
-      }
-    }
-  }
-
-  /**
    * Takes a body change consisting of full information (resulting revision
    * number, delta, possibly-`null` author ID, and timestamp), and applies it,
    * including merging of any intermediate revisions. The return value consists
@@ -387,6 +334,54 @@ export default class BodyControl extends BaseControl {
 
     const transactionResult = await fc.transact(spec);
     return transactionResult.data.get(storagePath);
+  }
+
+  /**
+   * Underlyingimplementation of `getChangeAfter()`, as required by the
+   * superclass.
+   *
+   * @param {Int} baseRevNum Revision number for the base to get a change with
+   *   respect to. Guaranteed to refer to the instantaneously-current revision
+   *   or earlier.
+   * @param {Int} currentRevNum The instantaneously-current revision number that
+   *   was determined just before this method was called, and which should be
+   *   treated as the actually-current revision number at the start of this
+   *   method.
+   * @returns {BodyChange} Delta and associated information. Though the
+   *   superclass allows it, this method never returns `null`.
+   */
+  async _impl_getChangeAfter(baseRevNum, currentRevNum) {
+    for (;;) {
+      if (baseRevNum < currentRevNum) {
+        // The document's revision is in fact newer than the base, so we can now
+        // form and return a result. Compose all the deltas from the revision
+        // after the base through and including the current revision.
+        const delta = await this._composeRevisions(
+          BodyDelta.EMPTY, baseRevNum + 1, currentRevNum + 1);
+        return new BodyChange(currentRevNum, delta);
+      }
+
+      // Wait for the file to change (or for the storage layer to time out), and
+      // then iterate to see if in fact the change updated the document revision
+      // number.
+      const fc   = this.fileCodec;
+      const ops  = [fc.op_whenPathNot(Paths.BODY_REVISION_NUMBER, currentRevNum)];
+      const spec = new TransactionSpec(...ops);
+      try {
+        await fc.transact(spec);
+      } catch (e) {
+        if (!Errors.isTimeout(e)) {
+          // It's _not_ a timeout, so we should propagate the error.
+          throw e;
+        }
+        // It's a timeout, so just fall through and iterate.
+        this.log.info('Storage layer timeout in `getChangeAfter`.');
+      }
+
+      // Update what we think of as the current revision number, and iterate to
+      // try again.
+      currentRevNum = await this.currentRevNum();
+    }
   }
 
   /**
