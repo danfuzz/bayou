@@ -70,4 +70,4 @@ function check-environment-dependencies {
 
 check-environment-dependencies
 cd "${baseDir}/server"
-exec node ./main.js --prog-name="${progName}" "$@"
+exec node ./index.js --prog-name="${progName}" "$@"
