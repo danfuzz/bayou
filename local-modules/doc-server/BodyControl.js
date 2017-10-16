@@ -337,7 +337,7 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
-   * Underlyingimplementation of `getChangeAfter()`, as required by the
+   * Underlying implementation of `getChangeAfter()`, as required by the
    * superclass.
    *
    * @param {Int} baseRevNum Revision number for the base to get a change with
