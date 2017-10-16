@@ -7,7 +7,8 @@ import { CommonBase } from 'util-common';
 import FileAccess from './FileAccess';
 
 /**
- * Base class for things that hook up to a {@link FileComplex}.
+ * Base class for things that hook up to a {@link FileComplex} and for
+ * `FileComplex` itself.
  */
 export default class BaseComplexMember extends CommonBase {
   /**
@@ -33,14 +34,14 @@ export default class BaseComplexMember extends CommonBase {
     return this._fileAccess.file;
   }
 
+  /** {FileAccess} Low-level file access and associated miscellanea. */
+  get fileAccess() {
+    return this._fileAccess;
+  }
+
   /** {FileCodec} File-codec wrapper to use when dealing with encoded data. */
   get fileCodec() {
     return this._fileAccess.fileCodec;
-  }
-
-  /** {FileComplex} File complex that this instance is part of. */
-  get fileComplex() {
-    return this._fileAccess.fileComplex;
   }
 
   /** {Logger} Logger to use with this instance. */

@@ -5,8 +5,8 @@
 import { BodyChange, BodyDelta, Timestamp } from 'doc-common';
 import { DEFAULT_DOCUMENT } from 'hooks-server';
 import { Mutex } from 'promise-util';
-import { CommonBase } from 'util-common';
 
+import BaseComplexMember from './BaseComplexMember';
 import CaretControl from './CaretControl';
 import BodyControl from './BodyControl';
 import DocServer from './DocServer';
@@ -38,7 +38,7 @@ const MIGRATION_NOTE = BodyDelta.fromOpArgArray([
  * how many active editors there are on that document. (This guarantee is
  * provided by `DocServer`.)
  */
-export default class FileComplex extends CommonBase {
+export default class FileComplex extends BaseComplexMember {
   /**
    * Constructs an instance.
    *
@@ -46,10 +46,7 @@ export default class FileComplex extends CommonBase {
    * @param {BaseFile} file The underlying document storage.
    */
   constructor(codec, file) {
-    super();
-
-    /** {FileAccess} Low-level file access and associated miscellanea. */
-    this._fileAccess = new FileAccess(codec, file);
+    super(new FileAccess(codec, file));
 
     /**
      * {BodyControl|null} Document body content controller. Set to non-`null` in
@@ -87,29 +84,6 @@ export default class FileComplex extends CommonBase {
     }
 
     return this._caretControl;
-  }
-
-  /** {Codec} Codec instance to use with the underlying file. */
-  get codec() {
-    return this._fileAccess.codec;
-  }
-
-  /** {BaseFile} The underlying document storage. */
-  get file() {
-    return this._fileAccess.file;
-  }
-
-  /** {FileCodec} File-codec wrapper to use. */
-  get fileCodec() {
-    return this._fileAccess.fileCodec;
-  }
-
-  /**
-   * {Logger} Logger to use with this instance. It prefixes logged items with
-   * the file's ID.
-   */
-  get log() {
-    return this._fileAccess.log;
   }
 
   /**
