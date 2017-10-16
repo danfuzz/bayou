@@ -31,7 +31,7 @@ export default class BaseComplexMember extends CommonBase {
     super();
 
     /** {FileComplex} File complex that this instance is part of. */
-    this._fileComplex = /*FileComplex.check*/(fileComplex);
+    this._fileComplex = FileComplex.check(fileComplex);
 
     /** {BaseFile} The underlying document storage. */
     this._file = fileComplex.file;
