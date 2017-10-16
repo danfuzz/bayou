@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TArray, TObject } from 'typecheck';
+import { TArray, TFunction } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
 import BaseChange from './BaseChange';
@@ -41,7 +41,7 @@ export default class BaseSnapshot extends CommonBase {
       // Call the `_impl` and verify the result.
       const clazz = this._impl_changeClass;
 
-      TObject.check(clazz.prototype, BaseChange);
+      TFunction.checkClass(clazz, BaseChange);
       this._changeClass = clazz;
     }
 

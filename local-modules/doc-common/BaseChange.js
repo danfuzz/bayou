@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TObject } from 'typecheck';
+import { TFunction } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import AuthorId from './AuthorId';
@@ -68,7 +68,7 @@ export default class BaseChange extends CommonBase {
       // Call the `_impl` and verify the result.
       const clazz = this._impl_deltaClass;
 
-      TObject.check(clazz.prototype, BaseDelta);
+      TFunction.checkClass(clazz, BaseDelta);
       this._deltaClass = clazz;
     }
 

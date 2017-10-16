@@ -4,7 +4,7 @@
 
 import { inspect } from 'util';
 
-import { TArray, TBoolean, TObject } from 'typecheck';
+import { TArray, TBoolean, TFunction } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import BaseOp from './BaseOp';
@@ -49,7 +49,7 @@ export default class BaseDelta extends CommonBase {
       // Call the `_impl` and verify the result.
       const clazz = this._impl_opClass;
 
-      TObject.check(clazz.prototype, BaseOp);
+      TFunction.checkClass(clazz, BaseOp);
       this._opClass = clazz;
     }
 
