@@ -7,7 +7,7 @@ import {
 } from 'doc-common';
 import { Condition } from 'promise-util';
 import { TInt, TString } from 'typecheck';
-import { Errors, InfoError } from 'util-common';
+import { Errors } from 'util-common';
 
 import BaseControl from './BaseControl';
 import CaretColor from './CaretColor';
@@ -58,7 +58,7 @@ export default class CaretControl extends BaseControl {
 
     /**
      * {array<CaretSnapshot>} Array of older caret snapshots, available for use
-     * for `getChangeAfter()`.
+     * for `getChangeAfter()` and `getSnapshot()`.
      */
     this._oldSnapshots = [this._snapshot];
 
@@ -150,32 +150,6 @@ export default class CaretControl extends BaseControl {
   }
 
   /**
-   * Gets a snapshot of all active session caret information. This will throw an
-   * error if the indicated caret revision isn't available.
-   *
-   * @param {Int|null} [revNum = null] Which caret revision to get. If passed as
-   *   `null`, indicates the latest (most recent) revision.
-   * @returns {CaretSnapshot} Snapshot of all the active carets.
-   * @throws {InfoError} Error of the form `revision_not_available(revNum)` if
-   *   the indicated caret revision isn't available.
-   */
-  async getSnapshot(revNum = null) {
-    this._removeInactiveSessions();
-    this._integrateRemoteSessions();
-
-    const minRevNum     = this._oldSnapshots[0].revNum;
-    const currentRevNum = this._snapshot.revNum;
-
-    if (revNum === null) {
-      revNum = currentRevNum;
-    } else if ((revNum < minRevNum) || (revNum > currentRevNum)) {
-      throw new InfoError('revision_not_available', revNum);
-    }
-
-    return this._oldSnapshots[revNum - minRevNum];
-  }
-
-  /**
    * Takes a change consisting of one or more caret updates, and applies it to
    * this instance, producing an updated snapshot.
    *
@@ -235,13 +209,48 @@ export default class CaretControl extends BaseControl {
   }
 
   /**
+   * {class} Class (constructor function) of snapshot objects to be used with
+   * instances of this class.
+   */
+  static get _impl_snapshotClass() {
+    return CaretSnapshot;
+  }
+
+  /**
    * Underlying implementation of `currentRevNum()`, as required by the
    * superclass.
    *
    * @returns {Int} The instantaneously-current revision number.
    */
   async _impl_currentRevNum() {
+    this._removeInactiveSessions();
+    this._integrateRemoteSessions();
+
     return this._snapshot.revNum;
+  }
+
+  /**
+   * Underlying implementation of `getSnapshot()`, as required by the
+   * superclass.
+   *
+   * @param {Int} revNum Which revision to get. Guaranteed to be a revision
+   *   number for the instantaneously-current revision or earlier.
+   * @returns {CaretSnapshot|null} Snapshot of the indicated revision, or `null`
+   *   to indicate that the revision is not available.
+   */
+  async _impl_getSnapshot(revNum) {
+    const minRevNum = this._oldSnapshots[0].revNum;
+    const maxRevNum = this._snapshot.revNum;
+
+    if (revNum < minRevNum) {
+      return null;
+    } else if (revNum > maxRevNum) {
+      // Shouldn't happen, because the superclass should have guaranteed that we
+      // never get requests for future revisions.
+      throw Errors.wtf(`Invalid request for future revision: ${revNum}`);
+    }
+
+    return this._oldSnapshots[revNum - minRevNum];
   }
 
   /**

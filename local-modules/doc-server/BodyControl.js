@@ -181,49 +181,6 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
-   * Gets a snapshot of the full document contents.
-   *
-   * @param {Int|null} revNum Which revision to get. If passed as `null`,
-   *   indicates the latest (most recent) revision.
-   * @returns {BodySnapshot} The corresponding snapshot.
-   */
-  async getSnapshot(revNum = null) {
-    const currentRevNum = await this.currentRevNum();
-    revNum = (revNum === null)
-      ? currentRevNum
-      : RevisionNumber.maxInc(revNum, currentRevNum);
-
-    // Search backward through the full revisions for a base for forward
-    // composition.
-    let base = null;
-    for (let i = revNum; i >= 0; i--) {
-      const v = this._snapshots.get(i);
-      if (v) {
-        base = v;
-        break;
-      }
-    }
-
-    if (base && (base.revNum === revNum)) {
-      // Found the right revision!
-      return base;
-    }
-
-    // We didn't actully find a snapshot of the requested revision. Apply deltas
-    // to the base to produce the desired revision. Store it, and return it.
-
-    const contents = (base === null)
-      ? this._composeRevisions(BodyDelta.EMPTY, 0,               revNum + 1)
-      : this._composeRevisions(base.contents,   base.revNum + 1, revNum + 1);
-    const result = new BodySnapshot(revNum, await contents);
-
-    this.log.detail('Made snapshot for revision:', revNum);
-
-    this._snapshots.set(revNum, result);
-    return result;
-  }
-
-  /**
    * Takes a body change consisting of full information (resulting revision
    * number, delta, possibly-`null` author ID, and timestamp), and applies it,
    * including merging of any intermediate revisions. The return value consists
@@ -407,6 +364,14 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
+   * {class} Class (constructor function) of snapshot objects to be used with
+   * instances of this class.
+   */
+  static get _impl_snapshotClass() {
+    return BodySnapshot;
+  }
+
+  /**
    * Underlying implementation of `currentRevNum()`, as required by the
    * superclass.
    *
@@ -422,6 +387,46 @@ export default class BodyControl extends BaseControl {
 
     const transactionResult = await fc.transact(spec);
     return transactionResult.data.get(storagePath);
+  }
+
+  /**
+   * Underlying implementation of `getSnapshot()`, as required by the
+   * superclass.
+   *
+   * @param {Int} revNum Which revision to get. Guaranteed to be a revision
+   *   number for the instantaneously-current revision or earlier.
+   * @returns {BodySnapshot} Snapshot of the indicated revision. Though the
+   *   superclass allows it, this method never returns `null`.
+   */
+  async _impl_getSnapshot(revNum) {
+    // Search backward through the full revisions for a base for forward
+    // composition.
+    let base = null;
+    for (let i = revNum; i >= 0; i--) {
+      const v = this._snapshots.get(i);
+      if (v) {
+        base = v;
+        break;
+      }
+    }
+
+    if (base && (base.revNum === revNum)) {
+      // Found the right revision!
+      return base;
+    }
+
+    // We didn't actully find a snapshot of the requested revision. Apply deltas
+    // to the base to produce the desired revision. Store it, and return it.
+
+    const contents = (base === null)
+      ? this._composeRevisions(BodyDelta.EMPTY, 0,               revNum + 1)
+      : this._composeRevisions(base.contents,   base.revNum + 1, revNum + 1);
+    const result = new BodySnapshot(revNum, await contents);
+
+    this.log.detail('Made snapshot for revision:', revNum);
+
+    this._snapshots.set(revNum, result);
+    return result;
   }
 
   /**
