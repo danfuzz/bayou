@@ -8,9 +8,7 @@ import { inspect } from 'util';
 
 import { BaseChange, BaseSnapshot } from 'doc-common';
 
-import MockChange from './MockChange';
-import MockDelta from './MockDelta';
-import MockOp from './MockOp';
+import { MockChange, MockDelta, MockOp } from 'doc-common/mocks';
 
 /**
  * Mock subclass of `BaseSnapshot` for testing.
