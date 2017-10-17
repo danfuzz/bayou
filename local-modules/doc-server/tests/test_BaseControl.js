@@ -113,6 +113,7 @@ describe('doc-server/BaseControl', () => {
 
       await test(null);
       await test(undefined);
+      await test(false);
       await test(-1);
       await test(0.05);
       await test('blort');
@@ -160,6 +161,7 @@ describe('doc-server/BaseControl', () => {
 
       await test(null);
       await test(undefined);
+      await test(false);
       await test(-1);
       await test(0.05);
       await test('blort');
@@ -208,6 +210,7 @@ describe('doc-server/BaseControl', () => {
         await assert.isRejected(control.getChangeAfter(1), /^bad_value/);
       }
 
+      await test(false);
       await test(-1);
       await test(0.05);
       await test('blort');
@@ -236,6 +239,116 @@ describe('doc-server/BaseControl', () => {
       };
 
       await assert.isRejected(control.getChangeAfter(1), /^bad_value/);
+    });
+  });
+
+  describe('getSnapshot()', () => {
+    it('should call through to `_impl_currentRevNum()` before anything else', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        throw new Error('Oy!');
+      };
+      control._impl_getSnapshot = async (revNum_unused) => {
+        throw new Error('This should not have been called.');
+      };
+
+      await assert.isRejected(control.getSnapshot(5), /^Oy!/);
+      await assert.isRejected(control.getSnapshot(), /^Oy!/);
+    });
+
+    it('should check the validity of a non-`null` `revNum` against the response from `_impl_currentRevNum()`', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        return 10;
+      };
+      control._impl_getSnapshot = async (revNum_unused) => {
+        throw new Error('This should not have been called.');
+      };
+
+      await assert.isRejected(control.getSnapshot(11), /^bad_value/);
+    });
+
+    it('should reject blatantly invalid `revNum` values', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        return 10;
+      };
+      control._impl_getSnapshot = async (revNum_unused) => {
+        throw new Error('This should not have been called.');
+      };
+
+      async function test(value) {
+        await assert.isRejected(control.getSnapshot(value), /^bad_value/);
+      }
+
+      await test(false);
+      await test(true);
+      await test(-1);
+      await test(0.05);
+      await test('blort');
+      await test([10]);
+    });
+
+    it('should return back a valid non-`null` subclass response', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        return 10;
+      };
+      control._impl_getSnapshot = async (revNum) => {
+        return new MockSnapshot(revNum, [new MockOp('x', revNum)]);
+      };
+
+      const result = await control.getSnapshot(5);
+      assert.instanceOf(result, MockSnapshot);
+      assert.strictEqual(result.revNum, 5);
+      assert.deepEqual(result.contents.ops, [new MockOp('x', 5)]);
+    });
+
+    it('should use the returned `currentRevNum` when `revNum` is passed asa `null`', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        return 37;
+      };
+      control._impl_getSnapshot = async (revNum) => {
+        return new MockSnapshot(revNum, [new MockOp('x', revNum)]);
+      };
+
+      const result = await control.getSnapshot();
+      assert.instanceOf(result, MockSnapshot);
+      assert.strictEqual(result.revNum, 37);
+      assert.deepEqual(result.contents.ops, [new MockOp('x', 37)]);
+    });
+
+    it('should convert a `null` subclass response to a `revision_not_available` error', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        return 10;
+      };
+      control._impl_getSnapshot = async (revNum_unused) => {
+        return null;
+      };
+
+      await assert.isRejected(control.getSnapshot(1), /^revision_not_available/);
+    });
+
+    it('should reject a non-snapshot subclass response', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        return 10;
+      };
+
+      async function test(value) {
+        control._impl_getSnapshot = async (revNum_unused) => {
+          return value;
+        };
+
+        await assert.isRejected(control.getSnapshot(1), /^bad_value/);
+      }
+
+      await test(-1);
+      await test(0.05);
+      await test('blort');
+      await test([10]);
     });
   });
 });
