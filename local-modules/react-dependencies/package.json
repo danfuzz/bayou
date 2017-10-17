@@ -1,7 +1,6 @@
 {
   "name": "react-dependencies",
   "version": "1.0.0",
-  "main": "main.js",
 
   "dependencies": {
     "prop-types": "^15.6.0",

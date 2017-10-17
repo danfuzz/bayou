@@ -1,7 +1,6 @@
 {
   "name": "testing-client",
   "version": "1.0.0",
-  "main": "main.js",
 
   "dependencies": {
     "chai": "^4.1.0",

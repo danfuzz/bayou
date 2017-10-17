@@ -7,12 +7,13 @@
 // defined here can end up `import`ing other modules which in turn want to use
 // hooks, that is to say, they can cause a circular dependency.
 //
-// See the comment in `hooks-server/main.js` for a longer discussion about this.
+// See the comment in `hooks-server/index.js` for a longer discussion about
+// this.
 
 import { DeferredLoader } from 'util-common';
 
 const Hooks = DeferredLoader.makeProxy(
-  'common hook',
+  'client hook',
   () => {
     return require('./Hooks').default;
   });

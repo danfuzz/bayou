@@ -7,9 +7,7 @@ import { describe, it } from 'mocha';
 
 import { Codec } from 'codec';
 import { FileAccess } from 'doc-server';
-
-import MockControl from './MockControl';
-import MockFile from './MockFile';
+import { MockControl, MockFile } from 'doc-server/mocks';
 
 describe('doc-server/BaseControl', () => {
   describe('constructor()', () => {

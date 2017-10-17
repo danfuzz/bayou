@@ -14,7 +14,7 @@
 (function () {
   // Add the main JavaScript bundle to the page. Once loaded, this continues
   // the test-running procedure. You can find its main entrypoint in
-  // `client/js/tests/main.js`.
+  // `client/js/tests/index.js`.
   var baseUrl = window.location.origin;
   var elem = document.createElement('script');
   elem.src = baseUrl + '/static/js/test.bundle.js';

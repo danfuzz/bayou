@@ -6,9 +6,8 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { Codec } from 'codec';
+import { MockCodable } from 'codec/mocks';
 import { FrozenBuffer } from 'util-common';
-
-import MockCodable from './MockCodable';
 
 class NoCodecTag {
   toCodecArgs() {

@@ -1,7 +1,6 @@
 {
   "name": "ui-header",
   "version": "1.0.0",
-  "main": "main.js",
 
   "dependencies": {
     "react-dependencies": "local",

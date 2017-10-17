@@ -4,7 +4,7 @@ Development Guide
 ### Directory structure
 
 * `client` &mdash; Client code and static assets. The main client-side
-  application entrypoint is `js/main.js`.
+  application entrypoint is `js/index.js`.
 * `compiler` &mdash; Submodule used to build the server-side code, using Babel
   in an appropriately-configured manner.
 * `doc` &mdash; Project documentation.
@@ -13,7 +13,7 @@ Development Guide
   which can be used on both the client and server sides.
 * `out` &mdash; Where the results of doing a build end up (by default).
 * `scripts` &mdash; Scripts for use during development (see above).
-* `server` &mdash; Server code. The main entrypoint is `main.js`.
+* `server` &mdash; Server code. The main entrypoint is `index.js`.
 
 ### Build and Run
 

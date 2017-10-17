@@ -1,7 +1,6 @@
 {
   "name": "doc-common",
   "version": "1.0.0",
-  "main": "main.js",
 
   "dependencies": {
     "quill-delta": "3.6.2",

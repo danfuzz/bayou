@@ -1,7 +1,6 @@
 {
   "name": "util-common",
   "version": "1.0.0",
-  "main": "main.js",
 
   "dependencies": {
     "grapheme-splitter": "^1.0.1",

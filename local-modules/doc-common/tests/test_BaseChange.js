@@ -8,8 +8,7 @@ import Delta from 'quill-delta';
 
 import { Timestamp } from 'doc-common';
 
-import MockChange from './MockChange';
-import MockDelta from './MockDelta';
+import { MockChange, MockDelta } from 'doc-common/mocks';
 
 /**
  * Asserts that the given instance has fields that are `===` to the given

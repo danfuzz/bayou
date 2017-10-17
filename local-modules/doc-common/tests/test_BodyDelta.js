@@ -9,7 +9,7 @@ import { inspect } from 'util';
 
 import { BodyDelta, BodyOp } from 'doc-common';
 
-import MockDelta from './MockDelta';
+import { MockDelta } from 'doc-common/mocks';
 
 describe('doc-common/BodyDelta', () => {
   describe('.EMPTY', () => {

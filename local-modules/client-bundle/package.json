@@ -1,7 +1,6 @@
 {
   "name": "client-bundle",
   "version": "1.0.0",
-  "main": "main.js",
 
   "dependencies": {
     "memory-fs": "^0.4.1",

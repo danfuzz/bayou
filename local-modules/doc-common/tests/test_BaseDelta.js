@@ -8,8 +8,7 @@ import { inspect } from 'util';
 
 import { BaseDelta } from 'doc-common';
 
-import MockDelta from './MockDelta';
-import MockOp from './MockOp';
+import { MockDelta, MockOp } from 'doc-common/mocks';
 
 /**
  * Second mock "delta" class for testing.

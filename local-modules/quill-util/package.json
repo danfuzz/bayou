@@ -1,7 +1,6 @@
 {
   "name": "quill-util",
   "version": "1.0.0",
-  "main": "main.js",
 
   "dependencies": {
     "quill": "^1.3.1",

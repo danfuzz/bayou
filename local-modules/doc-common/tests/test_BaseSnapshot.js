@@ -8,40 +8,7 @@ import { inspect } from 'util';
 
 import { BaseChange, BaseSnapshot } from 'doc-common';
 
-import MockChange from './MockChange';
-import MockDelta from './MockDelta';
-import MockOp from './MockOp';
-
-/**
- * Mock subclass of `BaseSnapshot` for testing.
- */
-class MockSnapshot extends BaseSnapshot {
-  constructor(revNum, contents) {
-    super(revNum, contents);
-    Object.freeze(this);
-  }
-
-  _impl_composeWithDelta(delta) {
-    let resultName = 'composed_delta';
-    const op0 = this.contents.ops[0];
-
-    if (op0 && op0.name.startsWith(resultName)) {
-      // The first op gets a `_` suffix on its name for each additional
-      // composition.
-      resultName = op0.name + '_';
-    }
-
-    return [new MockOp(resultName), ...delta.ops];
-  }
-
-  _impl_diffAsDelta(newerSnapshot) {
-    return [new MockOp('diff_delta'), newerSnapshot.contents.ops[0]];
-  }
-
-  static get _impl_changeClass() {
-    return MockChange;
-  }
-}
+import { MockChange, MockDelta, MockOp, MockSnapshot } from 'doc-common/mocks';
 
 /**
  * A second mock subclass of `BaseChange`.
