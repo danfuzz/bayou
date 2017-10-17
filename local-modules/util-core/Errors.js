@@ -123,6 +123,17 @@ export default class Errors extends UtilityClass {
   }
 
   /**
+   * Constructs an error indicating that a timeout of some sort occurred.
+   *
+   * @param {Int} timeoutMsec The original length of the timeout, in msec.
+   * @returns {InfoError} An appropriately-constructed error.
+   */
+  static timed_out(timeoutMsec) {
+    CoreTypecheck.checkInt(timeoutMsec, 0);
+    return new InfoError('timed_out', timeoutMsec);
+  }
+
+  /**
    * Constructs an instance which is meant to indicate that the program
    * exhibited unexpected behavior. This should be used as an indication of a
    * likely bug in the program.
@@ -144,6 +155,16 @@ export default class Errors extends UtilityClass {
    */
   static wtf(cause, message) {
     return Errors._make('wtf', cause, message);
+  }
+
+  /**
+   * Indicates whether or not the given error is a timeout.
+   *
+   * @param {Error} error Error in question.
+   * @returns {boolean} `true` iff it represents a timeout.
+   */
+  static isTimeout(error) {
+    return InfoError.hasName(error, 'timed_out');
   }
 
   /**

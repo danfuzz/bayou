@@ -98,25 +98,4 @@ export default class Errors extends UtilityClass {
     TInt.nonNegative(revNum);
     return new InfoError('revision_not_available', revNum);
   }
-
-  /**
-   * Constructs an error indicating that a transaction timed out.
-   *
-   * @param {Int} timeoutMsec The original length of the timeout, in msec.
-   * @returns {InfoError} An appropriately-constructed error.
-   */
-  static transaction_timed_out(timeoutMsec) {
-    TInt.check(timeoutMsec);
-    return new InfoError('transaction_timed_out', timeoutMsec);
-  }
-
-  /**
-   * Indicates whether or not the given error is a transaction timeout error.
-   *
-   * @param {Error} error Error in question.
-   * @returns {boolean} `true` iff it represents a transaction timeout.
-   */
-  static isTimeout(error) {
-    return InfoError.hasName(error, 'transaction_timed_out');
-  }
 }
