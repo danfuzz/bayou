@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { TInt } from 'typecheck';
 
 describe('typecheck/TInt', () => {
-  describe('check(value)', () => {
+  describe('check()', () => {
     it('should return the provided value when passed a safe integer', () => {
       const value = 9823674;
 
@@ -16,7 +16,7 @@ describe('typecheck/TInt', () => {
       assert.strictEqual(TInt.check(value), value, 'returns same value it was passed when valid');
     });
 
-    it('should throw an Error when passed an unsafe integer', () => {
+    it('should throw an Error when passed a number which is not a safe integer', () => {
       assert.throws(() => TInt.check(3.1));
     });
 
@@ -25,7 +25,7 @@ describe('typecheck/TInt', () => {
     });
   });
 
-  describe('maxInc(value, maxInc)', () => {
+  describe('maxInc()', () => {
     it('should allow value <= maxInc', () => {
       assert.doesNotThrow(() => TInt.maxInc(4, 4));
       assert.doesNotThrow(() => TInt.maxInc(4, 5));
@@ -36,57 +36,57 @@ describe('typecheck/TInt', () => {
     });
   });
 
-  describe('min(value, inclusiveMinimum)', () => {
-    it('should allow value >= inclusiveMinimum', () => {
+  describe('min()', () => {
+    it('should allow value >= minInc', () => {
       assert.doesNotThrow(() => TInt.min(11, 3));
     });
 
-    it('should throw an error when value < inclusiveMinimum', () => {
+    it('should throw an error when value < minInc', () => {
       assert.throws(() => TInt.min(2, 3));
     });
   });
 
-  describe('range(value, inclusiveMinimum, exclusiveMaximum)', () => {
-    it('should allow inclusiveMinimum <= value < exclusiveMaximum', () => {
+  describe('range()', () => {
+    it('should allow minInc <= value < maxExc', () => {
       assert.doesNotThrow(() => TInt.range(11, 3, 27));
     });
 
-    it('should not throw an error when value = inclusiveMinimum', () => {
+    it('should not throw an error when value === minInc', () => {
       assert.doesNotThrow(() => TInt.range(3, 3, 27));
     });
 
-    it('should throw an error when value < inclusiveMinimum', () => {
+    it('should throw an error when value < minInc', () => {
       assert.throws(() => TInt.range(2, 3, 27));
     });
 
-    it('should throw an error when value = exclusiveMaximum', () => {
+    it('should throw an error when value === maxExc', () => {
       assert.throws(() => TInt.range(27, 3, 27));
     });
 
-    it('should throw an error when value > exclusiveMaximum', () => {
+    it('should throw an error when value > maxExc', () => {
       assert.throws(() => TInt.range(37, 3, 27));
     });
   });
 
-  describe('rangeInc(value, inclusiveMinimum, inclusiveMaximum)', () => {
-    it('should allow inclusiveMinimum <= value <= inclusiveMaximum', () => {
+  describe('rangeInc()', () => {
+    it('should allow minInc <= value <= maxInc', () => {
       assert.doesNotThrow(() => TInt.rangeInc(11, 3, 27));
     });
 
-    it('should throw an error when value < inclusiveMinimum', () => {
+    it('should throw an error when value < minInc', () => {
       assert.throws(() => TInt.rangeInc(2, 3, 27));
     });
 
-    it('should not throw an error when value = inclusiveMaximum', () => {
+    it('should not throw an error when value = maxInc', () => {
       assert.doesNotThrow(() => TInt.rangeInc(27, 3, 27));
     });
 
-    it('should throw an error when value > inclusiveMaximum', () => {
+    it('should throw an error when value > maxInc', () => {
       assert.throws(() => TInt.rangeInc(37, 3, 27));
     });
   });
 
-  describe('unsignedByte(value)', () => {
+  describe('unsignedByte()', () => {
     it('should allow integer values from [0..255]', () => {
       assert.doesNotThrow(() => TInt.unsignedByte(0));
       assert.doesNotThrow(() => TInt.unsignedByte(128));
