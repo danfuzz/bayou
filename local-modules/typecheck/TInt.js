@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Errors, UtilityClass } from 'util-core';
+import { CoreTypecheck, Errors, UtilityClass } from 'util-core';
 
 /**
  * Type checker for type `Int`.
@@ -19,11 +19,7 @@ export default class TInt extends UtilityClass {
    * @returns {Int} `value`.
    */
   static check(value) {
-    if ((typeof value !== 'number') || !Number.isSafeInteger(value)) {
-      throw Errors.bad_value(value, 'Int');
-    }
-
-    return value;
+    return CoreTypecheck.checkInt(value);
   }
 
   /**
@@ -35,13 +31,7 @@ export default class TInt extends UtilityClass {
    * @returns {Int} `value`.
    */
   static maxExc(value, maxExc) {
-    TInt.check(value);
-    TInt.check(maxExc);
-    if (value >= maxExc) {
-      throw Errors.bad_value(value, 'Int', `value < ${maxExc}`);
-    }
-
-    return value;
+    return CoreTypecheck.checkInt(value, null, maxExc);
   }
 
   /**
@@ -55,6 +45,7 @@ export default class TInt extends UtilityClass {
   static maxInc(value, maxInc) {
     TInt.check(value);
     TInt.check(maxInc);
+
     if (value > maxInc) {
       throw Errors.bad_value(value, 'Int', `value <= ${maxInc}`);
     }
@@ -71,13 +62,7 @@ export default class TInt extends UtilityClass {
    * @returns {Int} `value`.
    */
   static min(value, minInc) {
-    TInt.check(value);
-    TInt.check(minInc);
-    if (value < minInc) {
-      throw Errors.bad_value(value, 'Int', `value >= ${minInc}`);
-    }
-
-    return value;
+    return CoreTypecheck.checkInt(value, minInc);
   }
 
   /**
@@ -88,7 +73,7 @@ export default class TInt extends UtilityClass {
    * @returns {Int} `value`.
    */
   static nonNegative(value) {
-    return TInt.min(value, 0);
+    return CoreTypecheck.checkInt(value, 0);
   }
 
   /**
@@ -104,14 +89,7 @@ export default class TInt extends UtilityClass {
    * @returns {Int} `value`.
    */
   static range(value, minInc, maxExc) {
-    TInt.check(value);
-    TInt.check(minInc);
-    TInt.check(maxExc);
-    if ((value < minInc) || (value >= maxExc)) {
-      throw Errors.bad_value(value, 'Int', `${minInc} <= value < ${maxExc}`);
-    }
-
-    return value;
+    return CoreTypecheck.checkInt(value, minInc, maxExc);
   }
 
   /**
@@ -130,6 +108,7 @@ export default class TInt extends UtilityClass {
     TInt.check(value);
     TInt.check(minInc);
     TInt.check(maxInc);
+
     if ((value < minInc) || (value > maxInc)) {
       throw Errors.bad_value(value, 'Int', `${minInc} <= value <= ${maxInc}`);
     }

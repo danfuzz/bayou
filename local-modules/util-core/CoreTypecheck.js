@@ -57,14 +57,11 @@ export default class CoreTypecheck extends UtilityClass {
 
     // It's an error, so figure out the details and throw.
 
-    const minMsg = (minInc === null) ? null : `value >= ${minInc}`;
-    const maxMsg = (maxExc === null) ? null : `value < ${maxExc}`;
     let msgArg;
-
-    if (minMsg) {
-      msgArg = [maxMsg ? `${minMsg} && ${maxMsg}` : minMsg];
-    } else if (maxMsg) {
-      msgArg = [maxMsg];
+    if (minInc !== null) {
+      msgArg = [(maxExc === null) ? `${minInc} <= value < ${maxExc}` : `value >= ${minInc}`];
+    } else if (maxExc !== null) {
+      msgArg = [`value < ${maxExc}`];
     } else {
       msgArg = [];
     }
