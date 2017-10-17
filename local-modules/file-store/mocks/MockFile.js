@@ -5,8 +5,7 @@
 import { BaseFile } from 'file-store';
 
 /**
- * Trivial {@link BaseFile} implementation for use with the tests in this
- * module.
+ * Trivial {@link BaseFile} implementation for use with the tests.
  */
 export default class MockFile extends BaseFile {
   // **TODO:** This ultimately probably needs to _not_ be empty.

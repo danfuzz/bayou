@@ -3,10 +3,19 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseControl } from 'doc-server';
+import { MockSnapshot } from 'doc-common/mocks';
 
 /**
  * Subclass of {@link BaseControl} for use in testing.
  */
 export default class MockControl extends BaseControl {
-  // **TODO:** This ultimately probably needs to _not_ be empty.
+  constructor(fileAccess) {
+    super(fileAccess);
+
+    this.revNum = 0;
+  }
+
+  static get _impl_snapshotClass() {
+    return MockSnapshot;
+  }
 }

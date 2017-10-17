@@ -35,7 +35,7 @@ export default class RevisionNumber extends UtilityClass {
    */
   static maxExc(value, maxExc) {
     try {
-      return TInt.maxExc(value, maxExc);
+      return TInt.range(value, 0, maxExc);
     } catch (e) {
       // More appropriate error.
       throw Errors.bad_value(value, RevisionNumber, `value < ${maxExc}`);
@@ -52,7 +52,7 @@ export default class RevisionNumber extends UtilityClass {
    */
   static maxInc(value, maxInc) {
     try {
-      return TInt.maxInc(value, maxInc);
+      return TInt.rangeInc(value, 0, maxInc);
     } catch (e) {
       // More appropriate error.
       throw Errors.bad_value(value, RevisionNumber, `value <= ${maxInc}`);

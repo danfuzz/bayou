@@ -4,6 +4,4 @@
 
 import MockCodable from './MockCodable';
 
-export {
-  MockCodable
-};
+export { MockCodable };

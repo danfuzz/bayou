@@ -9,7 +9,7 @@ import { BaseComplexMember } from 'doc-server';
 
 import { Codec } from 'codec';
 import { FileAccess } from 'doc-server';
-import { MockFile } from 'doc-server/mocks';
+import { MockFile } from 'file-store/mocks';
 
 describe('doc-server/BaseComplexMember', () => {
   describe('constructor()', () => {
