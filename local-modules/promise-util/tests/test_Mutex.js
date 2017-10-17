@@ -62,7 +62,7 @@ describe('promise-util/Mutex', () => {
       const result = await mutex.withLockHeld(() => { return 'blort'; });
       assert.strictEqual(result, 'blort');
 
-      assert.isRejected(mutex.withLockHeld(() => { throw new Error('oy'); }));
+      await assert.isRejected(mutex.withLockHeld(() => { throw new Error('oy'); }));
     });
 
     it('should work with an `async` function when there is blatantly no contention', async () => {
@@ -71,7 +71,7 @@ describe('promise-util/Mutex', () => {
       const result = await mutex.withLockHeld(async () => { return 'blort'; });
       assert.strictEqual(result, 'blort');
 
-      assert.isRejected(mutex.withLockHeld(async () => { throw new Error('oy'); }));
+      await assert.isRejected(mutex.withLockHeld(async () => { throw new Error('oy'); }));
     });
 
     it('should provide the lock in request order', async () => {
@@ -91,14 +91,14 @@ describe('promise-util/Mutex', () => {
 
     it('should reject non-function arguments', async () => {
       const mutex = new Mutex();
-      function test(v) {
-        assert.isRejected(mutex.withLockHeld(v));
+      async function test(v) {
+        await assert.isRejected(mutex.withLockHeld(v));
       }
 
-      test(null);
-      test(undefined);
-      test('foo');
-      test(Mutex);
+      await test(null);
+      await test(undefined);
+      await test('foo');
+      await test(Mutex);
     });
   });
 });

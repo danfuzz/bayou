@@ -9,23 +9,23 @@ import { Delay } from 'promise-util';
 
 describe('promise-util/Delay', () => {
   describe('delay(delayMSec)', () => {
-    it('should eventually resolve to true', () => {
-      assert.isFulfilled(Delay.resolve(10));
-      assert.becomes(Delay.resolve(10), true);
+    it('should eventually resolve to true', async () => {
+      await assert.isFulfilled(Delay.resolve(10));
+      await assert.eventually.strictEqual(Delay.resolve(10), true);
     });
   });
 
   describe('delay(delayMSec, value)', () => {
-    it('should eventually resolve to the supplied value', () => {
-      assert.isFulfilled(Delay.resolve(10, 'floopty'));
-      assert.becomes(Delay.resolve(10, 'floopty'), 'floopty');
+    it('should eventually resolve to the supplied value', async () => {
+      await assert.isFulfilled(Delay.resolve(10, 'floopty'));
+      await assert.eventually.strictEqual(Delay.resolve(10, 'floopty'), 'floopty');
     });
   });
 
   describe('reject(delayMSec, reason)', () => {
-    it('should eventually be rejected with the specified reason', () => {
-      assert.isRejected(Delay.reject(10, 'you smell'));
-      assert.isRejected(Delay.reject(10, 'you smell'), /^you smell$/);
+    it('should eventually be rejected with the specified reason', async () => {
+      await assert.isRejected(Delay.reject(10, 'you smell'));
+      await assert.isRejected(Delay.reject(10, 'you smell'), /^you smell$/);
     });
   });
 });
