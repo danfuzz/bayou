@@ -2,16 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import Quill from 'quill';
 import React from 'react';
+import ComponentBlotWrapper from '../ComponentBlotWrapper';
 
-import EmbeddableComponent from './EmbeddableComponent';
-import ReactEmbed from '../ReactEmbed';
-
-export default class Clock extends EmbeddableComponent {
-  static get registryName() {
-    return 'embeddable-clock';
+export default class Clock extends React.Component {
+  static get blotName() {
+    return 'clock_embed';
   }
-
   constructor(props) {
     super(props);
 
@@ -45,4 +43,4 @@ export default class Clock extends EmbeddableComponent {
   }
 }
 
-ReactEmbed.registerComponent(Clock);
+Quill.register(ComponentBlotWrapper.blotWrapperForComponent(Clock));

@@ -3,13 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import Clock from './components/Clock';
-import ComponentRegistry from './ComponentRegistry';
-import EmbeddableComponent from './components/EmbeddableComponent';
-import ReactEmbed from './ReactEmbed';
+import ComponentBlotWrapper from './ComponentBlotWrapper';
 
 export {
   Clock,
-  ComponentRegistry,
-  EmbeddableComponent,
-  ReactEmbed
+  ComponentBlotWrapper
 };
