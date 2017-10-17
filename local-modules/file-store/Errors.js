@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TInt, TString } from 'typecheck';
+import { TString } from 'typecheck';
 import { FrozenBuffer, InfoError, UtilityClass } from 'util-common';
 
 import StoragePath from './StoragePath';
@@ -85,38 +85,5 @@ export default class Errors extends UtilityClass {
   static path_not_found(storagePath) {
     StoragePath.check(storagePath);
     return new InfoError('path_not_found', storagePath);
-  }
-
-  /**
-   * Constructs an error indicating that a requested file revision is not
-   * available.
-   *
-   * @param {Int} revNum Requested revision number.
-   * @returns {InfoError} An appropriately-constructed error.
-   */
-  static revision_not_available(revNum) {
-    TInt.nonNegative(revNum);
-    return new InfoError('revision_not_available', revNum);
-  }
-
-  /**
-   * Constructs an error indicating that a transaction timed out.
-   *
-   * @param {Int} timeoutMsec The original length of the timeout, in msec.
-   * @returns {InfoError} An appropriately-constructed error.
-   */
-  static transaction_timed_out(timeoutMsec) {
-    TInt.check(timeoutMsec);
-    return new InfoError('transaction_timed_out', timeoutMsec);
-  }
-
-  /**
-   * Indicates whether or not the given error is a transaction timeout error.
-   *
-   * @param {Error} error Error in question.
-   * @returns {boolean} `true` iff it represents a transaction timeout.
-   */
-  static isTimeout(error) {
-    return InfoError.hasName(error, 'transaction_timed_out');
   }
 }

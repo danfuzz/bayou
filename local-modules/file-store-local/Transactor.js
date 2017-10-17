@@ -321,7 +321,7 @@ export default class Transactor extends CommonBase {
     const revNum = op.arg('revNum');
 
     if (this._fileFriend.revNum !== revNum) {
-      throw Errors.revision_not_available(revNum);
+      throw UtilErrors.revision_not_available(revNum);
     }
   }
 

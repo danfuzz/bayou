@@ -28,6 +28,48 @@ export default class CoreTypecheck extends UtilityClass {
   }
 
   /**
+   * Checks that a value is of type `Int`. That is, it must be an integer (more
+   * specifically a "safe integer") of JavaScript type `number`. In addition, it
+   * optionally checks lower (inclusive) and upper (exclusive) bounds.
+   *
+   * @param {*} value Value to check.
+   * @param {Int|null} [minInc = null] Minimum (inclusive) allowed value, or
+   *   `null` if there is no minimum.
+   * @param {Int|null} [maxExc = null] Maximum (exclusive) allowed value, or
+   *   `null` if there is no maximum.
+   * @returns {Int} `value`.
+   */
+  static checkInt(value, minInc = null, maxExc = null) {
+    if (minInc !== null) {
+      CoreTypecheck.checkInt(minInc);
+    }
+
+    if (maxExc !== null) {
+      CoreTypecheck.checkInt(maxExc);
+    }
+
+    if (   (typeof value === 'number')
+        && Number.isSafeInteger(value)
+        && ((minInc === null) || (value >= minInc))
+        && ((maxExc === null) || (value < maxExc))) {
+      return value;
+    }
+
+    // It's an error, so figure out the details and throw.
+
+    let msgArg;
+    if (minInc !== null) {
+      msgArg = [(maxExc === null) ? `${minInc} <= value < ${maxExc}` : `value >= ${minInc}`];
+    } else if (maxExc !== null) {
+      msgArg = [`value < ${maxExc}`];
+    } else {
+      msgArg = [];
+    }
+
+    throw Errors.bad_value(value, 'Int', ...msgArg);
+  }
+
+  /**
    * Checks that a value is of type `string` and has the usual form of a
    * "label-like thing" in programming. This is the same as an identifier,
    * except that dashes are allowed throughout.

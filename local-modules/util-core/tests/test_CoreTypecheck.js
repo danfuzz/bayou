@@ -91,6 +91,160 @@ describe('util-core/CoreTypecheck', () => {
     });
   });
 
+  describe('checkInt()', () => {
+    describe('with no limits', () => {
+      it('accepts integers', () => {
+        function test(value) {
+          assert.strictEqual(CoreTypecheck.checkInt(value), value);
+        }
+
+        test(-1);
+        test(0);
+        test(1);
+        test(10000000);
+      });
+    });
+
+    describe('with a non-`null` value for `minInc`', () => {
+      it('accepts in-range integers', () => {
+        function test(value, minInc) {
+          assert.strictEqual(CoreTypecheck.checkInt(value, minInc), value);
+        }
+
+        test(-1,    -1);
+        test(-1,    -10);
+        test(0,     -123);
+        test(0,     0);
+        test(10000, 100);
+      });
+
+      it('rejects out-of-range integers', () => {
+        function test(value, minInc) {
+          assert.throws(() => CoreTypecheck.checkInt(value, minInc), /^bad_value/);
+        }
+
+        test(-1,  0);
+        test(0,   1);
+        test(0,   12);
+        test(100, 101);
+        test(100, 1200);
+      });
+
+      it('rejects bad values for `minInc`', () => {
+        function test(minInc) {
+          assert.throws(() => CoreTypecheck.checkInt(0, minInc), /^bad_value/);
+        }
+
+        test(false);
+        test(1.2);
+        test('blort');
+      });
+    });
+
+    describe('with a non-`null` value for `maxExc`', () => {
+      it('accepts in-range integers', () => {
+        function test(value, maxExc) {
+          assert.strictEqual(CoreTypecheck.checkInt(value, null, maxExc), value);
+        }
+
+        test(-1,  0);
+        test(-1,  1);
+        test(-1,  10);
+        test(0,   1);
+        test(0,   1000000);
+        test(123, 914);
+        test(913, 914);
+      });
+
+      it('rejects out-of-range integers', () => {
+        function test(value, maxExc) {
+          assert.throws(() => CoreTypecheck.checkInt(value, null, maxExc), /^bad_value/);
+        }
+
+        test(-1,  -2);
+        test(0,   -1);
+        test(0,   -1200);
+        test(100, 99);
+        test(100, 90);
+        test(100, -9000);
+      });
+
+      it('rejects bad values for `maxExc`', () => {
+        function test(maxExc) {
+          assert.throws(() => CoreTypecheck.checkInt(0, null, maxExc), /^bad_value/);
+        }
+
+        test(false);
+        test(1.2);
+        test('blort');
+      });
+    });
+
+    describe('with non-`null` values for both `minInc` and `maxExc`', () => {
+      it('accepts in-range integers', () => {
+        function test(value, minInc, maxExc) {
+          assert.strictEqual(CoreTypecheck.checkInt(value, minInc, maxExc), value);
+        }
+
+        test(-1,  -1,   10);
+        test(-1,  -2,   0);
+        test(0,   0,    1);
+        test(0,   0,    2);
+        test(0,   -1,   2);
+        test(0,   -123, 456);
+        test(40,  38,   41);
+        test(40,  39,   900);
+        test(40,  40,   7123);
+      });
+
+      it('rejects out-of-range integers', () => {
+        function test(value, minInc, maxExc) {
+          assert.throws(() => CoreTypecheck.checkInt(value, minInc, maxExc), /^bad_value/);
+        }
+
+        test(-1,  0,   10);
+        test(-1,  -20, -1);
+        test(0,   -100, -10);
+        test(0,   -100, 0);
+        test(0,   1,    2);
+        test(10,  0,    9);
+        test(10,  4,    10);
+        test(10,  11,   100);
+        test(10,  12,   100);
+      });
+    });
+
+    it('rejects numbers that are not safe integers', () => {
+      function test(value) {
+        assert.throws(() => CoreTypecheck.checkInt(value), /^bad_value/);
+        assert.throws(() => CoreTypecheck.checkInt(value, 1), /^bad_value/);
+        assert.throws(() => CoreTypecheck.checkInt(value, null, 100), /^bad_value/);
+        assert.throws(() => CoreTypecheck.checkInt(value, 5, 50), /^bad_value/);
+      }
+
+      test(-0.5);
+      test(0.5);
+      test(12.34);
+      test(123.456);
+      test(Infinity);
+      test(NaN);
+      test(1e100);
+    });
+
+    it('rejects non-number values', () => {
+      function test(value) {
+        assert.throws(() => CoreTypecheck.checkInt(value), /^bad_value/);
+        assert.throws(() => CoreTypecheck.checkInt(value, 1), /^bad_value/);
+        assert.throws(() => CoreTypecheck.checkInt(value, null, 2), /^bad_value/);
+        assert.throws(() => CoreTypecheck.checkInt(value, 1, 2), /^bad_value/);
+      }
+
+      test(undefined);
+      test(null);
+      test('florp');
+    });
+  });
+
   describe('checkLabel()', () => {
     it('accepts label strings', () => {
       function test(value) {

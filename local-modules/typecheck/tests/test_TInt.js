@@ -8,92 +8,156 @@ import { describe, it } from 'mocha';
 import { TInt } from 'typecheck';
 
 describe('typecheck/TInt', () => {
-  describe('check(value)', () => {
-    it('should return the provided value when passed a safe integer', () => {
-      const value = 9823674;
+  describe('check()', () => {
+    it('should accept safe integers', () => {
+      function test(value) {
+        assert.strictEqual(TInt.check(value), value);
+      }
 
-      assert.doesNotThrow(() => TInt.check(value));
-      assert.strictEqual(TInt.check(value), value, 'returns same value it was passed when valid');
+      test(-1);
+      test(0);
+      test(1);
+      test(10000000);
     });
 
-    it('should throw an Error when passed an unsafe integer', () => {
+    it('should reject numbers which are not safe integers', () => {
       assert.throws(() => TInt.check(3.1));
+      assert.throws(() => TInt.check(NaN));
+      assert.throws(() => TInt.check(1e100));
     });
 
-    it('should throw an Error when passed a non-number value', () => {
+    it('should reject a non-number value', () => {
       assert.throws(() => TInt.check('this better not work'));
     });
   });
 
-  describe('maxInc(value, maxInc)', () => {
+  describe('maxExc()', () => {
+    it('accepts in-range integers', () => {
+      function test(value, maxExc) {
+        assert.strictEqual(TInt.maxExc(value, maxExc), value);
+      }
+
+      test(-1,  0);
+      test(-1,  1);
+      test(-1,  10);
+      test(0,   1);
+      test(0,   1000000);
+      test(123, 914);
+      test(913, 914);
+    });
+
+    it('rejects out-of-range integers', () => {
+      function test(value, maxExc) {
+        assert.throws(() => TInt.maxExc(value, maxExc), /^bad_value/);
+      }
+
+      test(-1,  -2);
+      test(0,   -1);
+      test(0,   -1200);
+      test(100, 99);
+      test(100, 90);
+      test(100, -9000);
+    });
+  });
+
+  describe('maxInc()', () => {
     it('should allow value <= maxInc', () => {
       assert.doesNotThrow(() => TInt.maxInc(4, 4));
       assert.doesNotThrow(() => TInt.maxInc(4, 5));
     });
 
-    it('should throw an error when value > maxInc', () => {
+    it('should throw an error when `value > maxInc`', () => {
       assert.throws(() => TInt.maxInc(4, 3));
     });
   });
 
-  describe('min(value, inclusiveMinimum)', () => {
-    it('should allow value >= inclusiveMinimum', () => {
-      assert.doesNotThrow(() => TInt.min(11, 3));
+  describe('min()', () => {
+    it('accepts in-range integers', () => {
+      function test(value, minInc) {
+        assert.strictEqual(TInt.min(value, minInc), value);
+      }
+
+      test(-1,    -1);
+      test(-1,    -10);
+      test(0,     -123);
+      test(0,     0);
+      test(10000, 100);
     });
 
-    it('should throw an error when value < inclusiveMinimum', () => {
-      assert.throws(() => TInt.min(2, 3));
-    });
-  });
+    it('rejects out-of-range integers', () => {
+      function test(value, minInc) {
+        assert.throws(() => TInt.min(value, minInc), /^bad_value/);
+      }
 
-  describe('range(value, inclusiveMinimum, exclusiveMaximum)', () => {
-    it('should allow inclusiveMinimum <= value < exclusiveMaximum', () => {
-      assert.doesNotThrow(() => TInt.range(11, 3, 27));
-    });
-
-    it('should not throw an error when value = inclusiveMinimum', () => {
-      assert.doesNotThrow(() => TInt.range(3, 3, 27));
-    });
-
-    it('should throw an error when value < inclusiveMinimum', () => {
-      assert.throws(() => TInt.range(2, 3, 27));
-    });
-
-    it('should throw an error when value = exclusiveMaximum', () => {
-      assert.throws(() => TInt.range(27, 3, 27));
-    });
-
-    it('should throw an error when value > exclusiveMaximum', () => {
-      assert.throws(() => TInt.range(37, 3, 27));
+      test(-1,  0);
+      test(0,   1);
+      test(0,   12);
+      test(100, 101);
+      test(100, 1200);
     });
   });
 
-  describe('rangeInc(value, inclusiveMinimum, inclusiveMaximum)', () => {
-    it('should allow inclusiveMinimum <= value <= inclusiveMaximum', () => {
+  describe('range()', () => {
+    it('accepts in-range integers', () => {
+      function test(value, minInc, maxExc) {
+        assert.strictEqual(TInt.range(value, minInc, maxExc), value);
+      }
+
+      test(-1,  -1,   10);
+      test(-1,  -2,   0);
+      test(0,   0,    1);
+      test(0,   0,    2);
+      test(0,   -1,   2);
+      test(0,   -123, 456);
+      test(40,  38,   41);
+      test(40,  39,   900);
+      test(40,  40,   7123);
+    });
+
+    it('rejects out-of-range integers', () => {
+      function test(value, minInc, maxExc) {
+        assert.throws(() => TInt.range(value, minInc, maxExc), /^bad_value/);
+      }
+
+      test(-1,  0,   10);
+      test(-1,  -20, -1);
+      test(0,   -100, -10);
+      test(0,   -100, 0);
+      test(0,   1,    2);
+      test(10,  0,    9);
+      test(10,  4,    10);
+      test(10,  11,   100);
+      test(10,  12,   100);
+    });
+  });
+
+  describe('rangeInc()', () => {
+    it('should allow `minInc <= value <= maxInc`', () => {
       assert.doesNotThrow(() => TInt.rangeInc(11, 3, 27));
     });
 
-    it('should throw an error when value < inclusiveMinimum', () => {
+    it('should throw an error when `value < minInc`', () => {
       assert.throws(() => TInt.rangeInc(2, 3, 27));
     });
 
-    it('should not throw an error when value = inclusiveMaximum', () => {
+    it('should not throw an error when `value === maxInc`', () => {
       assert.doesNotThrow(() => TInt.rangeInc(27, 3, 27));
     });
 
-    it('should throw an error when value > inclusiveMaximum', () => {
+    it('should throw an error when `value > maxInc`', () => {
       assert.throws(() => TInt.rangeInc(37, 3, 27));
     });
   });
 
-  describe('unsignedByte(value)', () => {
-    it('should allow integer values from [0..255]', () => {
-      assert.doesNotThrow(() => TInt.unsignedByte(0));
-      assert.doesNotThrow(() => TInt.unsignedByte(128));
-      assert.doesNotThrow(() => TInt.unsignedByte(255));
+  describe('unsignedByte()', () => {
+    it('should allow integer values in range `[0..255]`', () => {
+      assert.strictEqual(TInt.unsignedByte(0),   0);
+      assert.strictEqual(TInt.unsignedByte(1),   1);
+      assert.strictEqual(TInt.unsignedByte(128), 128);
+      assert.strictEqual(TInt.unsignedByte(255), 255);
     });
 
-    it('should throw an error when value is outside [0..255]', () => {
+    it('should throw an error when value is outsid of range `[0..255]`', () => {
       assert.throws(() => TInt.unsgignedByte(-1));
       assert.throws(() => TInt.unsgignedByte(256));
     });
