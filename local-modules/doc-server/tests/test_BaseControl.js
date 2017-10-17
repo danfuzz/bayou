@@ -11,6 +11,10 @@ import { MockSnapshot } from 'doc-common/mocks';
 import { FileAccess } from 'doc-server';
 import { MockControl } from 'doc-server/mocks';
 import { MockFile } from 'file-store/mocks';
+import { Delay } from 'promise-util';
+
+/** {FileAccess} Convenient instance of `FileAccess`. */
+const FILE_ACCESS = new FileAccess(Codec.theOne, new MockFile('blort'));
 
 describe('doc-server/BaseControl', () => {
   describe('.changeClass', () => {
@@ -57,13 +61,11 @@ describe('doc-server/BaseControl', () => {
 
   describe('constructor()', () => {
     it('should accept a `FileAccess` and reflect it in the inherited getters', () => {
-      const codec  = Codec.theOne;
-      const file   = new MockFile('blort');
-      const fa     = new FileAccess(codec, file);
+      const fa     = FILE_ACCESS;
       const result = new MockControl(fa);
 
-      assert.strictEqual(result.codec,         codec);
-      assert.strictEqual(result.file,          file);
+      assert.strictEqual(result.codec,         fa.codec);
+      assert.strictEqual(result.file,          fa.file);
       assert.strictEqual(result.fileAccess,    fa);
       assert.strictEqual(result.fileCodec,     fa.fileCodec);
       assert.strictEqual(result.log,           fa.log);
@@ -73,6 +75,46 @@ describe('doc-server/BaseControl', () => {
     it('should reject non-`FileAccess` arguments', () => {
       assert.throws(() => new MockControl(null));
       assert.throws(() => new MockControl({ x: 10 }));
+    });
+  });
+
+  describe('currentRevNum()', () => {
+    it('should call through to the subclass implementation', async () => {
+      const control = new MockControl(FILE_ACCESS);
+
+      control._impl_currentRevNum = async () => {
+        return 123;
+      };
+      await assert.eventually.strictEqual(control.currentRevNum(), 123);
+
+      control._impl_currentRevNum = async () => {
+        await Delay.resolve(50);
+        return 321;
+      };
+      await assert.eventually.strictEqual(control.currentRevNum(), 321);
+
+      const error = new Error('Oy!');
+      control._impl_currentRevNum = async () => {
+        throw error;
+      };
+      await assert.isRejected(control.currentRevNum(), /^Oy!$/);
+    });
+
+    it('should reject improper subclass return values', async () => {
+      const control = new MockControl(FILE_ACCESS);
+
+      async function test(value) {
+        control._impl_currentRevNum = async () => {
+          return value;
+        };
+
+        await assert.isRejected(control.currentRevNum(), /^bad_value/);
+      }
+
+      await test(-1);
+      await test(0.05);
+      await test('blort');
+      await test([10]);
     });
   });
 
