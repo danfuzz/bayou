@@ -86,16 +86,4 @@ export default class Errors extends UtilityClass {
     StoragePath.check(storagePath);
     return new InfoError('path_not_found', storagePath);
   }
-
-  /**
-   * Constructs an error indicating that a requested file revision is not
-   * available.
-   *
-   * @param {Int} revNum Requested revision number.
-   * @returns {InfoError} An appropriately-constructed error.
-   */
-  static revision_not_available(revNum) {
-    TInt.nonNegative(revNum);
-    return new InfoError('revision_not_available', revNum);
-  }
 }

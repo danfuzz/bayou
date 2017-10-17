@@ -4,7 +4,7 @@
 
 import { BaseSnapshot, RevisionNumber } from 'doc-common';
 import { TFunction } from 'typecheck';
-import { Errors, InfoError } from 'util-common';
+import { Errors } from 'util-common';
 
 import BaseComplexMember from './BaseComplexMember';
 
@@ -107,7 +107,7 @@ export default class BaseControl extends BaseComplexMember {
     const result = await this._impl_getChangeAfter(baseRevNum, currentRevNum);
 
     if (result === null) {
-      throw new InfoError('revision_not_available', baseRevNum);
+      throw Errors.revision_not_available(baseRevNum);
     }
 
     this.constructor.changeClass.check(result);
@@ -143,7 +143,7 @@ export default class BaseControl extends BaseComplexMember {
     const result = await this._impl_getSnapshot(revNum);
 
     if (result === null) {
-      throw new InfoError('revision_not_available', revNum);
+      throw Errors.revision_not_available(revNum);
     }
 
     return this.constructor.snapshotClass.check(result);
