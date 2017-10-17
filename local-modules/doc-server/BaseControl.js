@@ -106,10 +106,14 @@ export default class BaseControl extends BaseComplexMember {
 
     const result = await this._impl_getChangeAfter(baseRevNum, currentRevNum);
 
+    if (result === null) {
+      throw new InfoError('revision_not_available', baseRevNum);
+    }
+
     this.constructor.changeClass.check(result);
 
     if ((result.timestamp !== null) || (result.authorId !== null)) {
-      throw new Errors.bad_value(result, this.constructor.changeClass, 'timestamp === null && authorId === null');
+      throw Errors.bad_value(result, this.constructor.changeClass, 'timestamp === null && authorId === null');
     }
 
     return result;

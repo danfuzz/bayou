@@ -5,10 +5,10 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { BaseControl } from 'doc-server';
 import { Codec } from 'codec';
-import { MockSnapshot } from 'doc-common/mocks';
-import { FileAccess } from 'doc-server';
+import { Timestamp } from 'doc-common';
+import { MockChange, MockOp, MockSnapshot } from 'doc-common/mocks';
+import { BaseControl, FileAccess } from 'doc-server';
 import { MockControl } from 'doc-server/mocks';
 import { MockFile } from 'file-store/mocks';
 import { Delay } from 'promise-util';
@@ -111,6 +111,8 @@ describe('doc-server/BaseControl', () => {
         await assert.isRejected(control.currentRevNum(), /^bad_value/);
       }
 
+      await test(null);
+      await test(undefined);
       await test(-1);
       await test(0.05);
       await test('blort');
@@ -118,5 +120,122 @@ describe('doc-server/BaseControl', () => {
     });
   });
 
-  // **TODO:** Fill this out!
+  describe('getChangeAfter()', () => {
+    it('should call through to `_impl_currentRevNum()` before anything else', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        throw new Error('Oy!');
+      };
+      control._impl_getChangeAfter = async (baseRevNum_unused, currentRevNum_unused) => {
+        throw new Error('This should not have been called.');
+      };
+
+      await assert.isRejected(control.getChangeAfter(0), /^Oy!/);
+    });
+
+    it('should check the validity of `baseRevNum` against the response from `_impl_currentRevNum()`', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        return 10;
+      };
+      control._impl_getChangeAfter = async (baseRevNum_unused, currentRevNum_unused) => {
+        throw new Error('This should not have been called.');
+      };
+
+      await assert.isRejected(control.getChangeAfter(11), /^bad_value/);
+    });
+
+    it('should reject blatantly invalid `baseRevNum` values', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        return 10;
+      };
+      control._impl_getChangeAfter = async (baseRevNum_unused, currentRevNum_unused) => {
+        throw new Error('This should not have been called.');
+      };
+
+      async function test(value) {
+        await assert.isRejected(control.getChangeAfter(value), /^bad_value/);
+      }
+
+      await test(null);
+      await test(undefined);
+      await test(-1);
+      await test(0.05);
+      await test('blort');
+      await test([10]);
+    });
+
+    it('should return back a valid non-`null` subclass response', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        return 10;
+      };
+      control._impl_getChangeAfter = async (baseRevNum, currentRevNum) => {
+        const rev = currentRevNum + 1;
+        return new MockChange(rev, [new MockOp('x', baseRevNum, rev)]);
+      };
+
+      const result = await control.getChangeAfter(5);
+      assert.instanceOf(result, MockChange);
+      assert.strictEqual(result.revNum, 11);
+      assert.deepEqual(result.delta.ops, [new MockOp('x', 5, 11)]);
+    });
+
+    it('should convert a `null` subclass response to a `revision_not_available` error', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        return 10;
+      };
+      control._impl_getChangeAfter = async (baseRevNum_unused, currentRevNum_unused) => {
+        return null;
+      };
+
+      await assert.isRejected(control.getChangeAfter(1), /^revision_not_available/);
+    });
+
+    it('should reject a non-change subclass response', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        return 10;
+      };
+
+      async function test(value) {
+        control._impl_getChangeAfter = async (baseRevNum_unused, currentRevNum_unused) => {
+          return value;
+        };
+
+        await assert.isRejected(control.getChangeAfter(1), /^bad_value/);
+      }
+
+      await test(-1);
+      await test(0.05);
+      await test('blort');
+      await test([10]);
+    });
+
+    it('should reject a change response that has a `timestamp`', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        return 10;
+      };
+      control._impl_getChangeAfter = async (baseRevNum_unused, currentRevNum) => {
+        return new MockChange(currentRevNum + 1, [], Timestamp.MIN_VALUE);
+      };
+
+      await assert.isRejected(control.getChangeAfter(1), /^bad_value/);
+    });
+
+    it('should reject a change response that has an `authorId`', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        return 10;
+      };
+      control._impl_getChangeAfter = async (baseRevNum_unused, currentRevNum) => {
+        return new MockChange(currentRevNum + 1, [], null, 'some_author');
+      };
+
+      await assert.isRejected(control.getChangeAfter(1), /^bad_value/);
+    });
+  });
 });
