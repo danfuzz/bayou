@@ -261,7 +261,7 @@ async function clientTest() {
   // Clean up, print out the results, and exit.
   await browser.close();
   testLog.info('Test run is complete!');
-  console.log('%s', text); // eslint-disable-line no-console
+  console.log('\n%s', text); // eslint-disable-line no-console
 
   const msg = anyFailed
     ? `Failed: ${failures}`
