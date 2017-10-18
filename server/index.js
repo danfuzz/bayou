@@ -13,6 +13,7 @@ import 'source-map-support/register';
 import 'babel-core/register';
 import 'babel-polyfill';
 
+import http from 'http';
 import path from 'path';
 import puppeteer from 'puppeteer';
 import minimist from 'minimist';
@@ -151,6 +152,9 @@ async function clientBundle() {
  * Does a client testing run.
  */
 async function clientTest() {
+  const baseUrl = `http://localhost:${Hooks.theOne.listenPort}`;
+  const url     = `${baseUrl}/debug/client-test`;
+
   // Set up and start up headless Chrome (via Puppeteer).
   const browser = await puppeteer.launch();
   const page    = await browser.newPage();
@@ -160,36 +164,76 @@ async function clientTest() {
     testLog.info(`[${msg.type}] ${msg.text}`);
   });
 
-  // **TODO:** This whole arrangement is a bit hacky. Ideally, we'd use a
-  // different test output formatter that works better with this use case.
-
-  // Start up the system in dev mode, so that we can point our Chrome instance
-  // at it.
+  // Figure out if there is already a server listening on the designated
+  // application port.
+  let alreadyRunning = false;
   try {
-    run(true); // `true` === dev mode.
+    const alreadyRunningProm = new Promise((resolve, reject_unused) => {
+      const request = http.get(baseUrl);
+
+      request.setTimeout(10 * 1000);
+      request.end();
+
+      request.on('response', (response) => {
+        response.setTimeout(10 * 1000);
+
+        response.on('data', () => {
+          // Ignore the payload. The `http` API requires us to acknowledge the
+          // data. (There are other ways of doing so too, but this is the
+          // simplest.)
+        });
+
+        response.on('end', () => {
+          // Successful request. That means that, yes, there is indeed already
+          // a server running.
+          testLog.info(
+            'NOTE: There is a server already running on this machine. The test run\n' +
+            '      will issue requests to it instead of trying to build a new test bundle.');
+          resolve(true);
+        });
+
+        response.on('timeout', () => {
+          request.abort();
+          resolve(false);
+        });
+      });
+
+      request.on('error', (error_unused) => {
+        resolve(false);
+      });
+
+      request.on('timeout', () => {
+        request.abort();
+        resolve(false);
+      });
+    });
+
+    alreadyRunning = await alreadyRunningProm;
+  } catch (e) {
+    testLog.error('Trouble determining if server is already running.', e);
+    process.exit(1);
+  }
+
+  // Start up a server in this process, if we determined that this machine isn't
+  // already running one.
+  if (!alreadyRunning) {
+    // Start up the system in dev mode, so that we can point our Chrome instance
+    // at it.
+    await run(true); // `true` === dev mode.
 
     // Wait a few seconds, so that we can be reasonably sure that the request
-    // handlers are ready to handle requests.
+    // handlers are ready to handle requests. And there's no point in issuing
+    // a request until the test code bundle is built, anyway; that takes at
+    // least this long (probably longer).
     await Delay.resolve(15 * 1000);
-  } catch (e) {
-    // The `run()` call failed. Check to see if it's because the port is in use.
-    // If so, we assume it's because this is being run on an engineer's
-    // individual dev box which is already running the server. So, we can just
-    // issue the request to that other server.
-    if ((e.syscall === 'listen') && (e.code === 'EADDRINUSE')) {
-      testLog.info(
-        'NOTE: There is another server already running on this machine.\n' +
-        '      Will issue requests to it instead of trying to build a new test bundle.');
-    } else {
-      // Not what we expected. Rethrow and let the system exit.
-      throw e;
-    }
   }
+
+  // **TODO:** This whole arrangement is a bit hacky. Ideally, we'd use a
+  // different test output formatter that works better with this use case.
 
   testLog.info('Issuing request to start test run...');
 
   // Issue the request to load up the client tests.
-  const url = `http://localhost:${Hooks.theOne.listenPort}/debug/client-test`;
   await page.goto(url, { waitUntil: 'load' });
 
   // Now wait until the test run is complete. This happens an indeterminate
