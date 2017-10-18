@@ -13,8 +13,9 @@ import 'source-map-support/register';
 import 'babel-core/register';
 import 'babel-polyfill';
 
+import http from 'http';
 import path from 'path';
-
+import puppeteer from 'puppeteer';
 import minimist from 'minimist';
 
 import { Application } from 'app-setup';
@@ -39,7 +40,7 @@ let argError = false;
  * `node` binary name and the name of the initial script (that is, this file).
  */
 const opts = minimist(process.argv.slice(2), {
-  boolean: ['client-bundle', 'dev', 'help', 'server-test'],
+  boolean: ['client-bundle', 'client-test', 'dev', 'help', 'server-test'],
   string: ['prog-name'],
   alias: {
     'h': 'help'
@@ -56,6 +57,9 @@ const opts = minimist(process.argv.slice(2), {
 /** {boolean} Client bundle build mode? */
 const clientBundleMode = opts['client-bundle'];
 
+/** {boolean} Client test mode? */
+const clientTestMode = opts['client-test'];
+
 /** {boolean} Dev mode? */
 const devMode = opts['dev'];
 
@@ -65,7 +69,7 @@ const serverTestMode = opts['server-test'];
 /** {boolean} Want help? */
 const showHelp = opts['help'];
 
-if ((clientBundleMode + devMode + serverTestMode) > 1) {
+if ((clientBundleMode + clientTestMode + devMode + serverTestMode) > 1) {
   // eslint-disable-next-line no-console
   console.log('Cannot specify multiple mode options.');
   argError = true;
@@ -81,6 +85,9 @@ if (showHelp || argError) {
     '',
     '  --client-bundle',
     '    Just build a client bundle, and report any errors encountered.',
+    '  --client-test',
+    '    Just run the client tests (via headless Chrome), and report any errors',
+    '    encountered.',
     '  --dev',
     '    Run in development mode, for interactive development without having',
     '    to restart.',
@@ -98,8 +105,10 @@ if (showHelp || argError) {
 
 /**
  * Runs the system normally or in dev mode.
+ *
+ * @param {boolean} dev Whether or not to use dev mode.
  */
-function run() {
+function run(dev) {
   // Set up the server environment bits (including, e.g. the PID file).
   ServerEnv.init();
 
@@ -109,7 +118,7 @@ function run() {
     log.info(k, '=', info[k]);
   }
 
-  if (devMode) {
+  if (dev) {
     // We're in dev mode. This starts the system that live-syncs the client
     // source.
     DevMode.theOne.start();
@@ -118,7 +127,7 @@ function run() {
   Hooks.theOne.run();
 
   /** The main app server. */
-  const theApp = new Application(devMode);
+  const theApp = new Application(dev);
 
   // Start the app!
   theApp.start();
@@ -140,6 +149,129 @@ async function clientBundle() {
 }
 
 /**
+ * Does a client testing run.
+ */
+async function clientTest() {
+  const baseUrl = `http://localhost:${Hooks.theOne.listenPort}`;
+  const url     = `${baseUrl}/debug/client-test`;
+
+  // Set up and start up headless Chrome (via Puppeteer).
+  const browser = await puppeteer.launch();
+  const page    = await browser.newPage();
+  const testLog = new Logger('client-test');
+
+  page.on('console', (msg) => {
+    testLog.info(`[${msg.type}] ${msg.text}`);
+  });
+
+  // Figure out if there is already a server listening on the designated
+  // application port.
+  let alreadyRunning = false;
+  try {
+    const alreadyRunningProm = new Promise((resolve, reject_unused) => {
+      const request = http.get(baseUrl);
+
+      request.setTimeout(10 * 1000);
+      request.end();
+
+      request.on('response', (response) => {
+        response.setTimeout(10 * 1000);
+
+        response.on('data', () => {
+          // Ignore the payload. The `http` API requires us to acknowledge the
+          // data. (There are other ways of doing so too, but this is the
+          // simplest.)
+        });
+
+        response.on('end', () => {
+          // Successful request. That means that, yes, there is indeed already
+          // a server running.
+          testLog.info(
+            'NOTE: There is a server already running on this machine. The test run\n' +
+            '      will issue requests to it instead of trying to build a new test bundle.');
+          resolve(true);
+        });
+
+        response.on('timeout', () => {
+          request.abort();
+          resolve(false);
+        });
+      });
+
+      request.on('error', (error_unused) => {
+        resolve(false);
+      });
+
+      request.on('timeout', () => {
+        request.abort();
+        resolve(false);
+      });
+    });
+
+    alreadyRunning = await alreadyRunningProm;
+  } catch (e) {
+    testLog.error('Trouble determining if server is already running.', e);
+    process.exit(1);
+  }
+
+  // Start up a server in this process, if we determined that this machine isn't
+  // already running one.
+  if (!alreadyRunning) {
+    // Start up the system in dev mode, so that we can point our Chrome instance
+    // at it.
+    await run(true); // `true` === dev mode.
+
+    // Wait a few seconds, so that we can be reasonably sure that the request
+    // handlers are ready to handle requests. And there's no point in issuing
+    // a request until the test code bundle is built, anyway; that takes at
+    // least this long (probably longer).
+    await Delay.resolve(15 * 1000);
+  }
+
+  // **TODO:** This whole arrangement is a bit hacky. Ideally, we'd use a
+  // different test output formatter that works better with this use case.
+
+  testLog.info('Issuing request to start test run...');
+
+  // Issue the request to load up the client tests.
+  await page.goto(url, { waitUntil: 'load' });
+
+  // Now wait until the test run is complete. This happens an indeterminate
+  // amount of time after the page is done loading (typically a few seconds).
+  // During the intervening time, the page contents get updated with test
+  // information and results. We poll until the content settles.
+  let text = '';
+  for (;;) {
+    testLog.info('Waiting for test run to complete...');
+    const newText = await page.evaluate('document.querySelector("body").innerText');
+    if (newText === text) {
+      break;
+    }
+
+    text = newText;
+    await Delay.resolve(1000);
+  }
+
+  // Figure out if there were any failures.
+  const textStart = text.slice(0, 500);
+  const failMatch = textStart.match(/failures: ([0-9]+)/);
+  const failures  = failMatch ? failMatch[1] : '(undetermined)';
+  const anyFailed = (failures !== '0');
+
+  // Clean up, print out the results, and exit.
+  await browser.close();
+  testLog.info('Test run is complete!');
+  console.log('\n%s', text); // eslint-disable-line no-console
+
+  const msg = anyFailed
+    ? `Failed: ${failures}`
+    : 'All good! Yay!';
+  console.log('\n%s', msg); // eslint-disable-line no-console
+
+  process.exit(anyFailed ? 1 : 0);
+}
+
+/**
  * Does a server testing run.
  */
 async function serverTest() {
@@ -148,13 +280,14 @@ async function serverTest() {
   // initialization and perhaps even teardown.)
   ServerEnv.init();
 
-  const failures = await ServerTests.runAll();
+  const failures  = await ServerTests.runAll();
   const anyFailed = (failures !== 0);
+
   const msg = anyFailed
     ? `Failed: ${failures}`
     : 'All good! Yay!';
+  console.log('\n%s', msg); // eslint-disable-line no-console
 
-  console.log(msg); // eslint-disable-line no-console
   process.exit(anyFailed ? 1 : 0);
 }
 
@@ -189,8 +322,10 @@ process.on('uncaughtException', (error) => {
 
 if (clientBundleMode) {
   clientBundle();
+} else if (clientTestMode) {
+  clientTest();
 } else if (serverTestMode) {
   serverTest();
 } else {
-  run();
+  run(devMode);
 }

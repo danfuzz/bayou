@@ -14,7 +14,7 @@ import { UtilityClass } from 'util-common';
 // import 'mocha';
 // const mocha = window.mocha;
 
-// This file is dynamically-generated when loadad. See comments in it for more
+// This file is dynamically-generated when loaded. See comments in it for more
 // detail.
 import { registerTests } from './client-tests';
 
