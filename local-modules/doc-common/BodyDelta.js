@@ -47,7 +47,7 @@ export default class BodyDelta extends BaseDelta {
           // which makes it easy to figure out what happened. Should you find
           // yourself looking at this error, the right thing to do is look at
           // Quill's `package.json` and update the `quill-delta` dependency in
-          // the this module to what you find there.
+          // this module to what you find there.
           throw Errors.bad_use('Divergent versions of `quill-delta` package.');
         }
         throw e;
