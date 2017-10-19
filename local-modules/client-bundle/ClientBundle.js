@@ -91,6 +91,8 @@ const webpackOptions = {
       // On the client side, we use a built-in module called `test-all` as a
       // substitute for `mocha`. This alias makes it so that testing code can
       // still write `import ... from 'mocha';`.
+      'mocha-client-bundle':
+        path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/mocha/mocha.js'),
       'mocha':
         path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/test-all')
     },

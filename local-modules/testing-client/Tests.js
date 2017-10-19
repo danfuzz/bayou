@@ -5,6 +5,7 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
+import { mocha } from 'test-all';
 import { UtilityClass } from 'util-common';
 
 // If we tweak the Webpack config to point the module `mocha` at the browser-ish
@@ -32,14 +33,14 @@ export default class Tests extends UtilityClass {
    */
   static runAll() {
     // Adds the BDD methods to the runtime (`describe`, `it`, `before`, etc.)
-    window.mocha.setup('bdd'); // eslint-disable-line
+    mocha.setup('bdd');
 
     // Find all of our test files and load them into the runtime. The
     // process of loading the modules also registers all of the tests with
     // mocha.
     registerTests();
 
-    window.mocha.run(); // eslint-disable-line
+    mocha.run();
 
     return Promise.resolve('Test run completed');
   }

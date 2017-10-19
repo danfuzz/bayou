@@ -8,6 +8,10 @@
 // though Mocha isn't really loaded and available until runtime
 // when the test runner page loads.
 
+import 'mocha-client-bundle';
+
+const mocha = window.mocha; // eslint-disable-line
+
 function after(action) {
   window.after(action); // eslint-disable-line
 }
@@ -42,4 +46,4 @@ function specify(description, action) {
   window.specify(description, action); // eslint-disable-line
 }
 
-export { after, afterEach, before, beforeEach, describe, context, it, specify };
+export { after, afterEach, before, beforeEach, describe, context, it, mocha, specify };
