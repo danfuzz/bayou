@@ -2,14 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-// This module's sole purpose is to act as a loader proxy for
-// webpack so that other modules can `import mocha from 'mocha';`
-// without fail and make the compiler and linter happy events
-// though Mocha isn't really loaded and available until runtime
-// when the test runner page loads.
-
+// This `import` gets the client-friendly versions of the `mocha` bindings into
+// the _global_ scope. The rest of the file republishes the bindings as exports
+// from _this_ module.
 import 'mocha-client-bundle';
 
+/** {Mocha} Main instance of the test driver class. */
 const mocha = window.mocha; // eslint-disable-line
 
 function after(action) {

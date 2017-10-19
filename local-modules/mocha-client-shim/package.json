@@ -1,5 +1,5 @@
 {
-  "name": "test-all",
+  "name": "mocha-client-shim",
   "version": "1.0.0",
 
   "dependencies": {
