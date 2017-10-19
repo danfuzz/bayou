@@ -21,7 +21,7 @@ class NoToCodecArgs {
   }
 }
 
-describe('api-common/Codec.encode*()r', () => {
+describe('api-common/Codec.encode*()', () => {
   // Convenient bindings for `encode*()` to avoid a lot of boilerplate.
   const codec            = Codec.theOne;
   const encodeData       = (value) => { return codec.encodeData(value);       };

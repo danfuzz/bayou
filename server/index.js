@@ -17,6 +17,7 @@ import http from 'http';
 import path from 'path';
 import puppeteer from 'puppeteer';
 import minimist from 'minimist';
+import { format } from 'util';
 
 import { Application } from 'app-setup';
 import { ClientBundle } from 'client-bundle';
@@ -154,15 +155,7 @@ async function clientBundle() {
 async function clientTest() {
   const baseUrl = `http://localhost:${Hooks.theOne.listenPort}`;
   const url     = `${baseUrl}/debug/client-test`;
-
-  // Set up and start up headless Chrome (via Puppeteer).
-  const browser = await puppeteer.launch();
-  const page    = await browser.newPage();
   const testLog = new Logger('client-test');
-
-  page.on('console', (msg) => {
-    testLog.info(`[${msg.type}] ${msg.text}`);
-  });
 
   // Figure out if there is already a server listening on the designated
   // application port.
@@ -228,8 +221,20 @@ async function clientTest() {
     await Delay.resolve(15 * 1000);
   }
 
-  // **TODO:** This whole arrangement is a bit hacky. Ideally, we'd use a
-  // different test output formatter that works better with this use case.
+  // **TODO:** This whole arrangement is a bit hacky and should be improved.
+
+  // Set up and start up headless Chrome (via Puppeteer).
+  const browser  = await puppeteer.launch();
+  const page     = await browser.newPage();
+  const logLines = [];
+
+  page.on('console', (...args) => {
+    // **TODO:** This doesn't quite work, because the first argument can have
+    // Chrome-specific `%` escapes in it, which are similar to but not exactly
+    // what Node's `util.format()` uses.
+    const msg = format(...args);
+    logLines.push(msg);
+  });
 
   testLog.info('Issuing request to start test run...');
 
@@ -238,35 +243,65 @@ async function clientTest() {
 
   // Now wait until the test run is complete. This happens an indeterminate
   // amount of time after the page is done loading (typically a few seconds).
-  // During the intervening time, the page contents get updated with test
-  // information and results. We poll until the content settles.
-  let text = '';
+  // During the intervening time, we should see lots of calls to the `console`
+  // event handler. We poll and wait until the activity stops.
+  let lastChangeAt = Date.now();
+  let lastCount    = logLines.length;
+  let lastStatus   = lastChangeAt;
   for (;;) {
-    testLog.info('Waiting for test run to complete...');
-    const newText = await page.evaluate('document.querySelector("body").innerText');
-    if (newText === text) {
+    const newCount = logLines.length;
+    const now      = Date.now();
+
+    if ((now - lastStatus) > (1.5 * 1000)) {
+      testLog.info('Waiting for test run to complete...');
+      lastStatus = now;
+    }
+
+    if (newCount !== lastCount) {
+      lastChangeAt = now;
+      lastCount    = newCount;
+    } else if ((now - lastChangeAt) > (4 * 1000)) {
+      // It's been more than four seconds since there were logs written.
+      testLog.info('Test run is complete!');
       break;
     }
 
-    text = newText;
-    await Delay.resolve(1000);
+    await Delay.resolve(250);
   }
 
-  // Figure out if there were any failures.
-  const textStart = text.slice(0, 500);
-  const failMatch = textStart.match(/failures: ([0-9]+)/);
-  const failures  = failMatch ? failMatch[1] : '(undetermined)';
-  const anyFailed = (failures !== '0');
+  // Print out the results, and figure out if there were any failures, report
+  // about it, and exit.
 
-  // Clean up, print out the results, and exit.
   await browser.close();
-  testLog.info('Test run is complete!');
-  console.log('\n%s', text); // eslint-disable-line no-console
 
-  const msg = anyFailed
-    ? `Failed: ${failures}`
-    : 'All good! Yay!';
-  console.log('\n%s', msg); // eslint-disable-line no-console
+  const stats = {
+    tests: '(undetermined)',
+    pass:  '(undetermined)',
+    fail:  '(undetermined)'
+  };
+
+  console.log(''); // eslint-disable-line no-console
+  for (let i = 0; i < logLines.length; i++) {
+    const line = logLines[i];
+    const match = line.match(/^# (tests|pass|fail) ([0-9]+)$/);
+
+    if (match !== null) {
+      stats[match[1]] = match[2];
+    }
+
+    console.log('%s', line); // eslint-disable-line no-console
+  }
+
+  const anyFailed = (stats.fail !== '0');
+
+  // eslint-disable-next-line no-console
+  console.log(
+    '\nSummary:\n' +
+    `  Total:  ${stats.tests}\n` +
+    `  Passed: ${stats.pass}\n` +
+    `  Failed: ${stats.fail}\n\n` +
+    (anyFailed ? 'Alas.' : 'All good! Yay!')
+  );
 
   process.exit(anyFailed ? 1 : 0);
 }

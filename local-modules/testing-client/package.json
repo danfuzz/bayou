@@ -8,7 +8,7 @@
 
     "see-all": "local",
     "promise-util": "local",
-    "test-all": "local",
+    "mocha-client-shim": "local",
     "util-common": "local"
   }
 }

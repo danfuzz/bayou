@@ -1,8 +1,0 @@
-{
-  "name": "test-all",
-  "version": "1.0.0",
-
-  "dependencies": {
-    "see-all": "local"
-  }
-}

@@ -1,0 +1,10 @@
+{
+  "name": "mocha-client-shim",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "see-all": "local",
+
+    "mocha": "^3.3.0"
+  }
+}

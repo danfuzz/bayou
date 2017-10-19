@@ -137,5 +137,6 @@ mkdir -p "${testOutDir}"
 
 run-test "client-bundle.txt" "${runProduct}" --client-bundle
 run-test "server-test.txt" "${runProduct}" --server-test
+run-test "client-test.txt" "${runProduct}" --client-test
 
 exit "${testError}"
