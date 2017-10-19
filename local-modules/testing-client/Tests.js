@@ -5,18 +5,14 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import { mocha } from 'test-all';
 import { UtilityClass } from 'util-common';
 
-// If we tweak the Webpack config to point the module `mocha` at the browser-ish
-// build, then the following `import` will cause `window.mocha` to be defined.
-// It is unclear whether this is really how we want to get this hooked up, which
-// is why it remains commented out.
-// import 'mocha';
-// const mocha = window.mocha;
+// **Note:** This is really the local module `mocha-client-shim`. See that
+// module and {@link client-bundle.ClientBundle} for more details.
+import { mocha } from 'mocha';
 
-// This file is dynamically-generated when loaded. See comments in it for more
-// detail.
+// This file is dynamically-generated when loaded. See comments in the file for
+// more info.
 import { registerTests } from './client-tests';
 
 // One-time setup to hook `chai-as-promised` into the main `chai` module.
