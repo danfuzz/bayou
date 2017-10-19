@@ -6,6 +6,7 @@
  * Top-level entry point for client tests.
  */
 
+import { ClientEnv } from 'env-client';
 import { Logger } from 'see-all';
 import { ClientSink } from 'see-all-client';
 import { Tests } from 'testing-client';
@@ -14,6 +15,9 @@ import { Tests } from 'testing-client';
 ClientSink.init();
 const log = new Logger('page-init');
 log.info('Starting up testing environment...');
+
+// Init the environment utilities.
+ClientEnv.init(window);
 
 const elem = document.createElement('p');
 elem.innerHTML = 'Running&hellip;';
