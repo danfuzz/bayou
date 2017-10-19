@@ -3,9 +3,11 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import Clock from './components/Clock';
+import FileEmbed from './components/FileEmbed';
 import ComponentBlotWrapper from './ComponentBlotWrapper';
 
 export {
   Clock,
-  ComponentBlotWrapper
+  ComponentBlotWrapper,
+  FileEmbed
 };
