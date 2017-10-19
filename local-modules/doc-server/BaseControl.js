@@ -3,10 +3,20 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseSnapshot, RevisionNumber } from 'doc-common';
+import { Delay } from 'promise-util';
 import { TFunction } from 'typecheck';
 import { Errors } from 'util-common';
 
 import BaseComplexMember from './BaseComplexMember';
+
+/** {Int} Initial amount of time (in msec) between update retries. */
+const INITIAL_UPDATE_RETRY_MSEC = 50;
+
+/** {Int} Growth factor for update retry delays. */
+const UPDATE_RETRY_GROWTH_FACTOR = 5;
+
+/** {Int} Maximum amount of time to spend (in msec) retrying updates. */
+const MAX_UPDATE_TIME_MSEC = 20 * 1000; // 20 seconds.
 
 /**
  * Base class for document part controllers. There is one instance of each
@@ -150,6 +160,97 @@ export default class BaseControl extends BaseComplexMember {
   }
 
   /**
+   * Takes a change consisting of full information (except that the author ID
+   * is optionally `null`), and applies it, including merging of any
+   * intermediate revisions. The return value consists of a "correction" change
+   * to be used to get the new latest document state. The correction is with
+   * respect to the client's "expected result," that is to say, what the client
+   * would get if the operations were applied with no intervening changes. So,
+   * for example, if the change is able to be applied as exactly given, the
+   * returned correction will have an empty `delta`.
+   *
+   * As a special case, if the `revNum` is valid and `ops` is empty, this method
+   * returns a result of the same revision number along with an empty
+   * correction. That is, the return value from passing an empty delta doesn't
+   * provide any information about subsequent revisions of the document.
+   *
+   * **Note:** This method trusts the `authorId` and `timestamp`, and as such it
+   * is _not_ appropriate to expose this method directly to client access.
+   *
+   * @param {BaseChange} change Change to apply. Must be an instance of the
+   *   concrete change class as expected by this instance's class.
+   * @returns {BaseChange} The correction to the implied expected result of
+   *   this operation. Will always be an instance of the appropriate concrete
+   *   change class as defined by this instance's class. The `delta` of this
+   *   result can be applied to the expected result to derive the revision
+   *   indicated by the result's `revNum`. The `timestamp` and `authorId` of the
+   *   result will always be `null`.
+   */
+  async update(change) {
+    const changeClass = this.constructor.changeClass;
+
+    // This makes sure we have a surface-level proper instance, but doesn't
+    // check for deeper problems (such as an invalid `revNum`). Once in the guts
+    // of the operation, we will discover (and properly complain) if things are
+    // amiss.
+    changeClass.check(change);
+    if (change.timestamp === null) {
+      throw Errors.bad_value(change, changeClass, 'timestamp !== null');
+    }
+
+    // Base revision number and snapshot thereof. The `getSnapshot()` call
+    // effectively validates `change.revNum`.
+    const baseRevNum   = change.revNum - 1;
+    const baseSnapshot = await this.getSnapshot(baseRevNum);
+
+    // Check for an empty `delta`. If it is, we don't bother trying to apply it.
+    // See method header comment for more info.
+    if (change.delta.isEmpty()) {
+      return new changeClass(
+        baseSnapshot.revNum, changeClass.FIRST.withRevNum(baseRevNum));
+    }
+
+    // Compose the implied expected result. This has the effect of validating
+    // the contents of `delta`.
+    const expectedSnapshot = baseSnapshot.compose(change);
+
+    // Try performing the update, and then iterate if it failed _and_ the reason
+    // is simply that there were any changes that got made while we were in the
+    // middle of the attempt. Any other problems are transparently thrown to the
+    // caller.
+    let retryDelayMsec = INITIAL_UPDATE_RETRY_MSEC;
+    let retryTotalMsec = 0;
+    let attemptCount = 0;
+    for (;;) {
+      attemptCount++;
+      if (attemptCount !== 1) {
+        this.log.info(`Update attempt #${attemptCount}.`);
+      }
+
+      const result = await this._impl_update(baseSnapshot, change, expectedSnapshot);
+
+      if (result !== null) {
+        return result;
+      }
+
+      // A `null` result from the call means that we lost an update race (that
+      // is, there was revision skew that occurred during the update attempt),
+      // so we delay briefly and iterate.
+
+      if (retryTotalMsec >= MAX_UPDATE_TIME_MSEC) {
+        // ...except if these attempts have taken wayyyy too long. If we land
+        // here, it's probably due to a bug (but not a total given).
+        throw Errors.aborted('Too many failed attempts in `update()`.');
+      }
+
+      this.log.info(`Sleeping ${retryDelayMsec} msec.`);
+      await Delay.resolve(retryDelayMsec);
+      retryTotalMsec += retryDelayMsec;
+      retryDelayMsec *= UPDATE_RETRY_GROWTH_FACTOR;
+    }
+  }
+
+  /**
    * {class} Class (constructor function) of snapshot objects to be used with
    * instances of this class. Subclasses must fill this in.
    *
@@ -172,7 +273,7 @@ export default class BaseControl extends BaseComplexMember {
 
   /**
    * Subclass-specific implementation of `getChangeAfter()`. Subclasses must
-   * override this.
+   * override this method.
    *
    * @abstract
    * @param {Int} baseRevNum Revision number for the base to get a change with
@@ -194,7 +295,7 @@ export default class BaseControl extends BaseComplexMember {
 
   /**
    * Subclass-specific implementation of `getSnapshot()`. Subclasses must
-   * override this.
+   * override this method.
    *
    * @abstract
    * @param {Int} revNum Which revision to get. Guaranteed to be a revision
@@ -208,5 +309,34 @@ export default class BaseControl extends BaseComplexMember {
     return this._mustOverride(revNum);
   }
 
-  // **TODO:** `create()` and `update()`.
+  /**
+   * Subclass-specific implementation of `update()`, which should perform one
+   * attempt to apply the given change. Additional arguments (beyond what
+   * `update()` takes) are pre-calculated snapshots that only ever have to be
+   * derived once per outer call to `update()`. This method attempts to apply
+   * `change` relative to `baseSnapshot`, taking into account any intervening
+   * revisions between `baseSnapshot` and the instantaneously-current revision.
+   * If it succeeds (that is, if it manages to get an instantaneously-current
+   * snapshot, and use that snapshot to create a final change which is
+   * successfully appended to the document, without any other "racing" code
+   * doing the same first), then this method returns a proper result for an
+   * outer `update()` call. If it fails due to a lost race, then this method
+   * returns `null`. All other problems are reported by throwing an error.
+   * Subclasses must override this method.
+   *
+   * @abstract
+   * @param {BaseSnapshot} baseSnapshot Snapshot of the base from which the
+   *   change is defined. That is, this is the snapshot of `change.revNum - 1`.
+   * @param {BaseChange} change The change to apply, same as for `update()`,
+   *   except additionally guaranteed to have a non-empty `delta`.
+   * @param {BaseSnapshot} expectedSnapshot The implied expected result as
+   *   defined by `update()`.
+   * @returns {BaseChange|null} Result for the outer call to `update()`,
+   *   or `null` if the application failed due losing a race.
+   */
+  async _impl_update(baseSnapshot, change, expectedSnapshot) {
+    return this._mustOverride(baseSnapshot, change, expectedSnapshot);
+  }
+
+  // **TODO:** `create()`.
 }
