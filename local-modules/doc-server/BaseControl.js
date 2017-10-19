@@ -170,15 +170,17 @@ export default class BaseControl extends BaseComplexMember {
    * returned correction will have an empty `delta`.
    *
    * As a special case, if the `revNum` is valid and `ops` is empty, this method
-   * returns a result of the same revision number along with an empty
-   * correction. That is, the return value from passing an empty delta doesn't
-   * provide any information about subsequent revisions of the document.
+   * returns a result of `change.revNum - 1` along with an empty correction.
+   * That is, the return value from passing an empty delta doesn't provide any
+   * information about subsequent revisions of the document. In this case, the
+   * method does _not_ verify whether `change.revNum` is possibly valid.
    *
    * **Note:** This method trusts the `authorId` and `timestamp`, and as such it
    * is _not_ appropriate to expose this method directly to client access.
    *
    * @param {BaseChange} change Change to apply. Must be an instance of the
-   *   concrete change class as expected by this instance's class.
+   *   concrete change class as expected by this instance's class, and must
+   *   have a `revNum` of at least `1`.
    * @returns {BaseChange} The correction to the implied expected result of
    *   this operation. Will always be an instance of the appropriate concrete
    *   change class as defined by this instance's class. The `delta` of this
@@ -198,17 +200,22 @@ export default class BaseControl extends BaseComplexMember {
       throw Errors.bad_value(change, changeClass, 'timestamp !== null');
     }
 
-    // Base revision number and snapshot thereof. The `getSnapshot()` call
-    // effectively validates `change.revNum`.
-    const baseRevNum   = change.revNum - 1;
-    const baseSnapshot = await this.getSnapshot(baseRevNum);
+    const baseRevNum = change.revNum - 1;
+
+    if (baseRevNum < 0) {
+      throw Errors.bad_value(change, changeClass, 'revNum >= 1');
+    }
 
     // Check for an empty `delta`. If it is, we don't bother trying to apply it.
     // See method header comment for more info.
     if (change.delta.isEmpty()) {
-      return new changeClass(
-        baseSnapshot.revNum, changeClass.FIRST.withRevNum(baseRevNum));
+      return changeClass.FIRST.withRevNum(change.revNum - 1);
     }
+
+    // Snapshot of the base revision. The `getSnapshot()` call effectively
+    // validates `change.revNum` as a legit value for the current document
+    // state.
+    const baseSnapshot = await this.getSnapshot(baseRevNum);
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
