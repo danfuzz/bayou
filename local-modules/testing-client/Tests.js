@@ -28,9 +28,6 @@ export default class Tests extends UtilityClass {
    * @returns {Promise<string>} Promise for the results of running the tests.
    */
   static runAll() {
-    // Adds the BDD methods to the runtime (`describe`, `it`, `before`, etc.)
-    mocha.setup('bdd');
-
     // Find all of our test files and load them into the runtime. The
     // process of loading the modules also registers all of the tests with
     // mocha.

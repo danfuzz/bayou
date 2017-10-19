@@ -7,41 +7,26 @@
 // from _this_ module.
 import 'mocha-client-bundle';
 
+/**
+ * {Window} The browser globals. We have ESLint configured conservatively by
+ * default (so as to be reasonable for both Node and browser). The `*disable*`
+ * directive lets us tactically access the globals, and then we can be on our
+ * merry way.
+ */
+const global = window; // eslint-disable-line no-undef
+
 /** {Mocha} Main instance of the test driver class. */
-const mocha = window.mocha; // eslint-disable-line
+const mocha = global.mocha;
 
-function after(action) {
-  window.after(action); // eslint-disable-line
-}
+// Add the BDD methods to the globals.
+mocha.setup('bdd');
 
-function afterEach(action) {
-  window.afterEach(action); // eslint-disable-line
-}
+// Extract the BDD API functions.
+const {
+  after, afterEach, before, beforeEach, describe, context, it, specify
+} = global;
 
-function before(action) {
-  window.before(action); // eslint-disable-line
-}
-
-function beforeEach(action) {
-  window.beforeEach(action); // eslint-disable-line
-}
-
-function describe(description, action) {
-  window.describe(description, action); // eslint-disable-line
-}
-
-// Alias for `describe()`
-function context(description, action) {
-  window.context(description, action); // eslint-disable-line
-}
-
-function it(description, action) {
-  window.it(description, action); // eslint-disable-line
-}
-
-// Alias for `it()`
-function specify(description, action) {
-  window.specify(description, action); // eslint-disable-line
-}
-
-export { after, afterEach, before, beforeEach, describe, context, it, mocha, specify };
+export {
+  mocha,
+  after, afterEach, before, beforeEach, describe, context, it, specify
+};
