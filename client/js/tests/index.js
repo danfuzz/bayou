@@ -13,7 +13,7 @@ import { Tests } from 'testing-client';
 // Init logging.
 ClientSink.init();
 const log = new Logger('page-init');
-log.detail('Starting...');
+log.info('Starting up testing environment...');
 
 const elem = document.createElement('p');
 elem.innerHTML = 'Running&hellip;';

@@ -19,7 +19,10 @@ const global = window; // eslint-disable-line no-undef
 const mocha = global.mocha;
 
 // Add the BDD methods to the globals.
-mocha.setup('bdd');
+mocha.setup({
+  reporter: 'tap',
+  ui:       'bdd'
+});
 
 // Extract the BDD API functions.
 const {
