@@ -20,6 +20,14 @@ elem.innerHTML = 'Running&hellip;';
 document.body.appendChild(elem);
 
 (async () => {
-  const result = await Tests.runAll();
-  elem.innerHTML = result;
+  const failures = await Tests.runAll();
+
+  let msg;
+  switch (failures) {
+    case 0:  { msg = 'All good! Yay!';                         break; }
+    case 1:  { msg = 'Alas, there was one failure.';           break; }
+    default: { msg = `Alas, there were ${failures} failures.`; break; }
+  }
+
+  elem.innerHTML = msg;
 })();

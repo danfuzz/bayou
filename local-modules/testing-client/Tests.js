@@ -25,16 +25,17 @@ export default class Tests extends UtilityClass {
   /**
    * Runs all of the tests.
    *
-   * @returns {Promise<string>} Promise for the results of running the tests.
+   * @returns {number} The number of test failures as reported by the
+   *   `mocha.run()` callback.
    */
-  static runAll() {
+  static async runAll() {
     // Find all of our test files and load them into the runtime. The
     // process of loading the modules also registers all of the tests with
     // mocha.
     registerTests();
 
-    mocha.run();
-
-    return Promise.resolve('Test run completed');
+    return new Promise((res, rej_unused) => {
+      mocha.run(res);
+    });
   }
 }
