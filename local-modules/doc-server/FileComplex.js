@@ -13,19 +13,19 @@ import DocServer from './DocServer';
 import FileAccess from './FileAccess';
 
 /** {BodyDelta} Default contents when creating a new document. */
-const DEFAULT_TEXT = BodyDelta.fromOpArgArray(DEFAULT_DOCUMENT);
+const DEFAULT_TEXT = new BodyDelta(DEFAULT_DOCUMENT);
 
 /**
  * {BodyDelta} Message used as document to indicate a major validation error.
  */
-const ERROR_NOTE = BodyDelta.fromOpArgArray([
+const ERROR_NOTE = new BodyDelta([
   ['text', '(Recreated document due to validation error(s).)\n']
 ]);
 
 /**
  * {BodyDelta} Message used as document instead of migrating documents from
  * old schema versions. */
-const MIGRATION_NOTE = BodyDelta.fromOpArgArray([
+const MIGRATION_NOTE = new BodyDelta([
   ['text', '(Recreated document due to schema version skew.)\n']
 ]);
 
