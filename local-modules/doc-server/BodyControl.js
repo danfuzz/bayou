@@ -3,8 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BodyChange, BodyDelta, BodySnapshot, RevisionNumber } from 'doc-common';
-import { Errors, TransactionSpec } from 'file-store';
-import { Errors as UtilErrors, InfoError } from 'util-common';
+import { TransactionSpec } from 'file-store';
+import { Errors, InfoError } from 'util-common';
 
 import BaseControl from './BaseControl';
 import Paths from './Paths';
@@ -453,7 +453,7 @@ export default class BodyControl extends BaseControl {
     BodyChange.check(change);
 
     if (change.delta.isEmpty()) {
-      throw UtilErrors.wtf('Should not have been called with an empty change.');
+      throw Errors.wtf('Should not have been called with an empty change.');
     }
 
     const revNum     = change.revNum;
@@ -555,7 +555,7 @@ export default class BodyControl extends BaseControl {
     if ((endExc - start) > MAX_CHANGE_READS_PER_TRANSACTION) {
       // The calling code (in this class) should have made sure we weren't
       // violating this restriction.
-      throw UtilErrors.wtf('Too many changes requested at once.');
+      throw Errors.wtf('Too many changes requested at once.');
     }
 
     if (start === endExc) {
