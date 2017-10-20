@@ -3,10 +3,10 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Caret, CaretSnapshot } from 'doc-common';
-import { Errors, TransactionSpec } from 'file-store';
+import { TransactionSpec } from 'file-store';
 import { CallPiler, Delay } from 'promise-util';
 import { TString } from 'typecheck';
-import { FrozenBuffer } from 'util-common';
+import { Errors, FrozenBuffer } from 'util-common';
 
 import BaseComplexMember from './BaseComplexMember';
 import Paths from './Paths';

@@ -14,10 +14,7 @@ describe('hooks-server/DEFAULT_DOCUMENT', () => {
     const doc = DEFAULT_DOCUMENT;
 
     assert.isFrozen(doc);
-
-    const deepFrozen = DataUtil.deepFreeze(doc);
-
-    assert.strictEqual(deepFrozen, doc);
+    assert.isTrue(DataUtil.isDeepFrozen(doc));
   });
 
   it('should be an array-of-arrays', () => {
@@ -32,7 +29,7 @@ describe('hooks-server/DEFAULT_DOCUMENT', () => {
   it('should be usable to construct a `BodyDelta` for which `isDocument()` is `true`', () => {
     const doc = DEFAULT_DOCUMENT;
 
-    const result = BodyDelta.fromOpArgArray(doc);
+    const result = new BodyDelta(doc);
     assert.isTrue(result.isDocument());
   });
 });

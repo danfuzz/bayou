@@ -211,7 +211,11 @@ export default class BaseSnapshot extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toCodecArgs() {
-    return [this._revNum, this._contents.ops];
+    // **Note:** `[0]` on the `delta` argument is because `deconstruct()`
+    // returns an _array_ of arguments which can be used to reconstruct an
+    // instance, and we know in this case that deltas always deconstruct to a
+    // single-element array (because the constructor only accepts one argument).
+    return [this._revNum, this._contents.deconstruct()[0]];
   }
 
   /**

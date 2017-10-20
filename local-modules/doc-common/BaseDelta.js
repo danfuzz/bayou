@@ -57,46 +57,45 @@ export default class BaseDelta extends CommonBase {
   }
 
   /**
-   * Constructs an instance from an array of operation constructor argument
-   * arrays. This is meant to be a convenient way to represent literal delta
-   * content in code, and isn't expected to be used outside of that narrow use
-   * case.
-   *
-   * @param {array<array<*>>} opArgArray Array of op construction argument
-   *   arrays.
-   * @returns {BaseDelta} appropriately-constructed instance of the concrete
-   *   class that this method was called on.
-   */
-  static fromOpArgArray(opArgArray) {
-    TArray.check(opArgArray, TArray.check);
-
-    // **Note:** `this` in the context of a static method is the class, not an
-    // instance.
-
-    const opClass = this.opClass;
-    const ops     = [];
-
-    for (const a of opArgArray) {
-      ops.push(new opClass(...a));
-    }
-
-    return new this(Object.freeze(ops));
-  }
-
-  /**
    * Constructs an instance.
    *
-   * @param {array<BaseOp>} ops Array of operations. Each operation must be an
-   *   instance of {@link opClass}. If not passed as a frozen array, the
-   *   constructed instance will instead store a frozen clone of this value.
+   * @param {array<BaseOp>|array<array<*>>} ops Array of operations _or_ array
+   *   of arrays of operation construction arguments. In the former case, each
+   *   operation must be an instance of {@link #opClass} as defined by the
+   *   subclass, and if not passed as a frozen array, the constructed instance
+   *   will instead store a frozen clone of this value. In the latter case, each
+   *   element of the array must be valid as arguments to the {@link #opClass}
+   *   constructor; the resulting instance of this class stores the array of
+   *   so-constructed operations.
    */
   constructor(ops) {
     super();
 
-    TArray.check(ops, op => this.constructor.opClass.check(op));
+    const opClass = this.constructor.opClass;
+    TArray.check(ops);
 
-    if (!Object.isFrozen(ops)) {
-      ops = Object.freeze(ops.slice());
+    // Use the first element of `ops` to figure out how to validate the
+    // contents. Treat a zero-length array as an array of ops (not of
+    // arguments).
+    if ((ops.length !== 0) && (Array.isArray(ops[0]))) {
+      // Array of op constructor argument arrays.
+
+      TArray.check(ops, TArray.check);
+      const constructedOps = [];
+
+      for (const args of ops) {
+        constructedOps.push(new opClass(...args));
+      }
+
+      ops = Object.freeze(constructedOps);
+    } else {
+      // Array of ops (or empty array).
+
+      TArray.check(ops, op => opClass.check(op));
+
+      if (!Object.isFrozen(ops)) {
+        ops = Object.freeze(ops.slice());
+      }
     }
 
     /** {array<object>} Array of operations. */
@@ -111,6 +110,32 @@ export default class BaseDelta extends CommonBase {
    */
   get ops() {
     return this._ops;
+  }
+
+  /**
+   * "Deconstructs" this instance, returning an array of arguments which is
+   * suitable for passing to the constructor of this class.
+   *
+   * More specifically in this case, this returns a top-level single-element
+   * array (because the constructor of this class expects a single argument
+   * which is an array), with the sole element being a compact array-of-arrays
+   * form. Each element of the returned array is a list of arguments which can
+   * be passed to the {@link #opClass} constructor to recreate the corresponding
+   * op.
+   *
+   * The point of this choice of return form is to allow for more compact
+   * representation of instances of this class (and of instances of classes that
+   * use this class) in codec-encoded form. In particular, the name of the
+   * `opClass` gets to be implied instead of redundantly encoded.
+   *
+   * @returns {array<array<*>>} Array of array of operation-construction
+   *   arguments. The result is always a deeply-frozen array.
+   */
+  deconstruct() {
+    const ops = this._ops.map(op => op.deconstruct());
+
+    Object.freeze(ops);
+    return Object.freeze([ops]);
   }
 
   /**
@@ -209,7 +234,7 @@ export default class BaseDelta extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toCodecArgs() {
-    return [this._ops];
+    return this.deconstruct();
   }
 
   /**

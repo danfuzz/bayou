@@ -7,6 +7,7 @@ import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
 import { BaseDelta } from 'doc-common';
+import { DataUtil } from 'util-common';
 
 import { MockDelta, MockOp } from 'doc-common/mocks';
 
@@ -36,7 +37,7 @@ describe('doc-common/BaseDelta', () => {
     });
 
     it('should have an empty `ops`', () => {
-      assert.strictEqual(EMPTY.ops.length, 0);
+      assert.lengthOf(EMPTY.ops, 0);
     });
 
     it('should have a frozen `ops`', () => {
@@ -48,19 +49,56 @@ describe('doc-common/BaseDelta', () => {
     });
   });
 
-  describe('fromOpArgArray()', () => {
-    it('should accept an empty array', () => {
-      const result = MockDelta.fromOpArgArray([]);
+  describe('constructor()', () => {
+    describe('valid arguments', () => {
+      const values = [
+        MockDelta.VALID_OPS,
+        MockDelta.NOT_DOCUMENT_OPS,
+        [],
+        [new MockOp('x'), new MockOp('y')],
+        [['x']],
+        [['x', 1, 2, 3]],
+        [['x', 1], ['y', 2], ['z', 3]]
+      ];
 
-      assert.strictEqual(result.ops.length, 0);
+      for (const v of values) {
+        it(`should succeed for: ${inspect(v)}`, () => {
+          new MockDelta(v);
+        });
+      }
     });
 
-    it('should use the array arguments to make ops', () => {
+    describe('invalid arguments', () => {
+      const values = [
+        MockDelta.INVALID_OPS,
+        null,
+        undefined,
+        123,
+        'florp',
+        { insert: 123 },
+        new Map(),
+        [null],
+        [undefined],
+        ['x'],
+        [1, 2, 3],
+        [[123]], // Because op constructors require an initial string argument.
+        [['x'], new MockOp('y')], // Shouldn't mix the two forms.
+        [new MockOp('y'), ['x']]  // Likewise.
+      ];
+
+      for (const v of values) {
+        it(`should fail for: ${inspect(v)}`, () => {
+          assert.throws(() => new MockDelta(v));
+        });
+      }
+    });
+
+    it('should convert array-of-array arguments into constructed ops', () => {
       function test(...argses) {
         const ops = argses.map(a => new MockOp(...a));
-        const result = MockDelta.fromOpArgArray(argses);
+        const result = new MockDelta(argses);
 
-        assert.strictEqual(result.ops.length, ops.length);
+        assert.lengthOf(result.ops, ops.length);
 
         for (let i = 0; i < ops.length; i++) {
           assert.deepEqual(result.ops[i], ops[i]);
@@ -75,42 +113,44 @@ describe('doc-common/BaseDelta', () => {
     });
   });
 
-  describe('constructor()', () => {
-    describe('valid arguments', () => {
-      const values = [
-        [],
-        MockDelta.VALID_OPS,
-        MockDelta.NOT_DOCUMENT_OPS,
-        [new MockOp('x'), new MockOp('y')]
-      ];
+  describe('deconstruct()', () => {
+    it('should return a deep-frozen data value', () => {
+      const delta  = new MockDelta([['a', 1, 2, 3, [4, 5, 6]], ['b', { x: ['y'] }]]);
+      const result = delta.deconstruct();
 
-      for (const v of values) {
-        it(`should succeed for: ${inspect(v)}`, () => {
-          new MockDelta(v);
-        });
+      assert.isTrue(DataUtil.isDeepFrozen(result));
+    });
+
+    it('should return an array of length one, which contains an array-of-arrays', () => {
+      const delta  = new MockDelta([['a', 1], ['b', [1, 2]]]);
+      const result = delta.deconstruct();
+
+      assert.isArray(result);
+      assert.lengthOf(result, 1);
+      assert.isArray(result[0]);
+
+      for (const a of result[0]) {
+        assert.isArray(a);
       }
     });
 
-    describe('invalid arguments', () => {
-      const values = [
-        null,
-        undefined,
-        123,
-        'florp',
-        { insert: 123 },
-        new Map(),
-        [null],
-        [undefined],
-        ['x'],
-        [1, 2, 3],
-        MockDelta.INVALID_OPS
-      ];
+    it('should return a value which successfully round-trips from and to a constructor argument', () => {
+      function test(arg) {
+        const delta1 = new MockDelta(arg);
+        const result = delta1.deconstruct();
+        const delta2 = new MockDelta(...result);
 
-      for (const v of values) {
-        it(`should fail for: ${inspect(v)}`, () => {
-          assert.throws(() => new MockDelta(v));
-        });
+        assert.deepEqual(arg, result[0]);
+        assert.deepEqual(delta1, delta2);
       }
+
+      test([]);
+      test([['x']]);
+      test([['x', 1, 2, 3]]);
+      test([['x', [1, 2, 3]]]);
+      test([['x', { a: 10, b: 20 }]]);
+      test([['x'], ['y'], ['z']]);
+      test([['x', 1], ['y', 2], ['z', 3]]);
     });
   });
 
@@ -137,6 +177,8 @@ describe('doc-common/BaseDelta', () => {
       test([]);
       test(MockDelta.VALID_OPS);
       test(MockDelta.NOT_DOCUMENT_OPS);
+      test([new MockOp('x', 1), new MockOp('y', 2)]);
+      test([['x'], ['y', 1, 2, 3]]);
     });
 
     it('should return `true` when equal ops are not also `===`', () => {

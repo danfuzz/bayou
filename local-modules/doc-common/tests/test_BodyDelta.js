@@ -73,7 +73,10 @@ describe('doc-common/BodyDelta', () => {
         [BodyOp.op_delete(123)],
         [BodyOp.op_retain(123)],
         [BodyOp.op_retain(123, { bold: true })],
-        [BodyOp.op_text('x'), BodyOp.op_text('y', { bold: true })]
+        [BodyOp.op_text('x'), BodyOp.op_text('y', { bold: true })],
+        [['text', 'hello']],
+        [['retain', 123]],
+        [['delete', 5], ['text', 'yo']]
       ];
 
       for (const v of values) {
@@ -92,14 +95,16 @@ describe('doc-common/BodyDelta', () => {
         'florp',
         { insert: 'x' },
         new Map(),
+        [null],
+        [true],
         ['x'],
-        [1, 2, 3]
+        [1, 2, 3],
+        [['not.a.valid.identifier', 1, 2, 3]]
       ];
 
       for (const v of values) {
         it(`should fail for: ${inspect(v)}`, () => {
           assert.throws(() => new BodyDelta(v));
-          assert.throws(() => new BodyDelta([v]));
         });
       }
     });
