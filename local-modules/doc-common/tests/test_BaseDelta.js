@@ -49,33 +49,6 @@ describe('doc-common/BaseDelta', () => {
     });
   });
 
-  describe('fromOpArgArray()', () => {
-    it('should accept an empty array', () => {
-      const result = MockDelta.fromOpArgArray([]);
-
-      assert.lengthOf(result.ops, 0);
-    });
-
-    it('should use the array arguments to make ops', () => {
-      function test(...argses) {
-        const ops = argses.map(a => new MockOp(...a));
-        const result = MockDelta.fromOpArgArray(argses);
-
-        assert.lengthOf(result.ops, ops.length);
-
-        for (let i = 0; i < ops.length; i++) {
-          assert.deepEqual(result.ops[i], ops[i]);
-        }
-      }
-
-      test(['blort']);
-      test(['blort', 1]);
-      test(['blort', 1, 2, 3, 4, 'florp']);
-      test(['x'], ['y'], ['z']);
-      test(['x', ['a']], ['y', { b: 10 }], ['z', [[['pdq']]]]);
-    });
-  });
-
   describe('constructor()', () => {
     describe('valid arguments', () => {
       const values = [

@@ -57,33 +57,6 @@ export default class BaseDelta extends CommonBase {
   }
 
   /**
-   * Constructs an instance from an array of operation constructor argument
-   * arrays. This is meant to be a convenient way to represent literal delta
-   * content in code, and isn't expected to be used outside of that narrow use
-   * case.
-   *
-   * @param {array<array<*>>} opArgArray Array of op construction argument
-   *   arrays.
-   * @returns {BaseDelta} appropriately-constructed instance of the concrete
-   *   class that this method was called on.
-   */
-  static fromOpArgArray(opArgArray) {
-    TArray.check(opArgArray, TArray.check);
-
-    // **Note:** `this` in the context of a static method is the class, not an
-    // instance.
-
-    const opClass = this.opClass;
-    const ops     = [];
-
-    for (const a of opArgArray) {
-      ops.push(new opClass(...a));
-    }
-
-    return new this(Object.freeze(ops));
-  }
-
-  /**
    * Constructs an instance.
    *
    * @param {array<BaseOp>|array<array<*>>} ops Array of operations _or_ array
