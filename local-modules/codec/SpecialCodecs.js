@@ -13,7 +13,7 @@ import ItemCodec from './ItemCodec';
 export default class SpecialCodecs extends UtilityClass {
   /** {ItemCodec} Codec used for coding arrays. */
   static get ARRAY() {
-    return new ItemCodec('array', Array, this._arrayPredicate,
+    return new ItemCodec('a', Array, this._arrayPredicate,
       this._arrayEncode, this._arrayDecode);
   }
 
