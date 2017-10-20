@@ -261,7 +261,7 @@ export default class BaseDelta extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toCodecArgs() {
-    return [this._ops];
+    return this.deconstruct();
   }
 
   /**

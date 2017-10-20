@@ -101,6 +101,6 @@ export default class BaseOp extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toCodecArgs() {
-    return [this._payload.name, ...this._payload.args];
+    return this.deconstruct();
   }
 }
