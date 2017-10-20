@@ -63,8 +63,13 @@ export default class QuillUtil extends UtilityClass {
       return POSITION_NOT_FOUND;
     }
 
-    x -= quillInstance.container.offsetLeft;
-    y -= quillInstance.container.offsetTop;
+    const containerBounds = quillInstance.container.getBoundingClientRect();
+
+    // The `quill.getBounds()` calls further down return rectancles relative
+    // the quill container element so we need to offset x and y by that
+    // amount before we start making comparisons.
+    x -= containerBounds.x;
+    y -= containerBounds.y;
 
     const blotOrQuill = Quill.find(domElement, true);
 

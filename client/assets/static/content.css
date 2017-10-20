@@ -48,6 +48,12 @@ html.bayou-page {
  */
 .bayou-top .ql-editor {
   font-variant-ligatures: none;
+
+  max-width:    43.75rem;
+  margin-left:  auto;
+  margin-right: auto;
+
+  padding:      0;
 }
 
 /* Container for the Quill editor for the document title field. */
