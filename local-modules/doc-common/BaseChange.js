@@ -150,6 +150,10 @@ export default class BaseChange extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toCodecArgs() {
+    // **Note:** `[0]` on the `delta` argument is because `deconstruct()`
+    // returns an _array_ of arguments which can be used to reconstruct an
+    // instance, and we know in this case that deltas always deconstruct to a
+    // single-element array (because the constructor only accepts one argument).
     const result = [this._revNum, this._delta.deconstruct()[0], this._timestamp, this._authorId];
 
     // Trim off one or two trailing `null`s, if possible.
