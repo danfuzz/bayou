@@ -150,7 +150,7 @@ export default class BaseChange extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toCodecArgs() {
-    const result = [this._revNum, this._delta.ops, this._timestamp, this._authorId];
+    const result = [this._revNum, this._delta.deconstruct()[0], this._timestamp, this._authorId];
 
     // Trim off one or two trailing `null`s, if possible.
     for (let i = 3; i >= 2; i--) {

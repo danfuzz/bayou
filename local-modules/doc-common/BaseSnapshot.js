@@ -211,7 +211,7 @@ export default class BaseSnapshot extends CommonBase {
    * @returns {array} Reconstruction arguments.
    */
   toCodecArgs() {
-    return [this._revNum, this._contents.ops];
+    return [this._revNum, this._contents.deconstruct()[0]];
   }
 
   /**
