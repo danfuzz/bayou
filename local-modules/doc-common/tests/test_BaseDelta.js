@@ -78,10 +78,13 @@ describe('doc-common/BaseDelta', () => {
   describe('constructor()', () => {
     describe('valid arguments', () => {
       const values = [
-        [],
         MockDelta.VALID_OPS,
         MockDelta.NOT_DOCUMENT_OPS,
-        [new MockOp('x'), new MockOp('y')]
+        [],
+        [new MockOp('x'), new MockOp('y')],
+        [['x']],
+        [['x', 1, 2, 3]],
+        [['x', 1], ['y', 2], ['z', 3]]
       ];
 
       for (const v of values) {
@@ -93,6 +96,7 @@ describe('doc-common/BaseDelta', () => {
 
     describe('invalid arguments', () => {
       const values = [
+        MockDelta.INVALID_OPS,
         null,
         undefined,
         123,
@@ -103,7 +107,9 @@ describe('doc-common/BaseDelta', () => {
         [undefined],
         ['x'],
         [1, 2, 3],
-        MockDelta.INVALID_OPS
+        [[123]], // Because op constructors require an initial string argument.
+        [['x'], new MockOp('y')], // Shouldn't mix the two forms.
+        [new MockOp('y'), ['x']]  // Likewise.
       ];
 
       for (const v of values) {
@@ -111,6 +117,25 @@ describe('doc-common/BaseDelta', () => {
           assert.throws(() => new MockDelta(v));
         });
       }
+    });
+
+    it('should convert array-of-array arguments into constructed ops', () => {
+      function test(...argses) {
+        const ops = argses.map(a => new MockOp(...a));
+        const result = new MockDelta(argses);
+
+        assert.strictEqual(result.ops.length, ops.length);
+
+        for (let i = 0; i < ops.length; i++) {
+          assert.deepEqual(result.ops[i], ops[i]);
+        }
+      }
+
+      test(['blort']);
+      test(['blort', 1]);
+      test(['blort', 1, 2, 3, 4, 'florp']);
+      test(['x'], ['y'], ['z']);
+      test(['x', ['a']], ['y', { b: 10 }], ['z', [[['pdq']]]]);
     });
   });
 
@@ -137,6 +162,8 @@ describe('doc-common/BaseDelta', () => {
       test([]);
       test(MockDelta.VALID_OPS);
       test(MockDelta.NOT_DOCUMENT_OPS);
+      test([new MockOp('x', 1), new MockOp('y', 2)]);
+      test([['x'], ['y', 1, 2, 3]]);
     });
 
     it('should return `true` when equal ops are not also `===`', () => {

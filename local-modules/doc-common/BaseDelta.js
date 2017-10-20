@@ -86,17 +86,43 @@ export default class BaseDelta extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {array<BaseOp>} ops Array of operations. Each operation must be an
-   *   instance of {@link opClass}. If not passed as a frozen array, the
-   *   constructed instance will instead store a frozen clone of this value.
+   * @param {array<BaseOp>|array<array<*>>} ops Array of operations _or_ array
+   *   of arrays of operation construction arguments. In the former case, each
+   *   operation must be an instance of {@link #opClass} as defined by the
+   *   subclass, and if not passed as a frozen array, the constructed instance
+   *   will instead store a frozen clone of this value. In the latter case, each
+   *   element of the array must be valid as arguments to the {@link #opClass}
+   *   constructor; the resulting instance of this class stores the array of
+   *   so-constructed operations.
    */
   constructor(ops) {
     super();
 
-    TArray.check(ops, op => this.constructor.opClass.check(op));
+    const opClass = this.constructor.opClass;
+    TArray.check(ops);
 
-    if (!Object.isFrozen(ops)) {
-      ops = Object.freeze(ops.slice());
+    // Use the first element of `ops` to figure out how to validate the
+    // contents. Treat a zero-length array as an array of ops (not of
+    // arguments).
+    if ((ops.length !== 0) && (Array.isArray(ops[0]))) {
+      // Array of op constructor argument arrays.
+
+      TArray.check(ops, TArray.check);
+      const constructedOps = [];
+
+      for (const args of ops) {
+        constructedOps.push(new opClass(...args));
+      }
+
+      ops = Object.freeze(constructedOps);
+    } else {
+      // Array of ops (or empty array).
+
+      TArray.check(ops, op => opClass.check(op));
+
+      if (!Object.isFrozen(ops)) {
+        ops = Object.freeze(ops.slice());
+      }
     }
 
     /** {array<object>} Array of operations. */
