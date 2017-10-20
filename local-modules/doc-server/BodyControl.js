@@ -4,23 +4,10 @@
 
 import { BodyChange, BodyDelta, BodySnapshot, RevisionNumber } from 'doc-common';
 import { Errors, TransactionSpec } from 'file-store';
-import { Delay } from 'promise-util';
 import { Errors as UtilErrors, InfoError } from 'util-common';
 
 import BaseControl from './BaseControl';
 import Paths from './Paths';
-
-/** {Int} Initial amount of time (in msec) between append retries. */
-const INITIAL_APPEND_RETRY_MSEC = 50;
-
-/** {Int} Growth factor for append retry delays. */
-const APPEND_RETRY_GROWTH_FACTOR = 5;
-
-/**
- * {Int} Maximum amount of time to spend (in msec) retrying append
- * operations.
- */
-const MAX_APPEND_TIME_MSEC = 20 * 1000; // 20 seconds.
 
 /**
  * {Int} Maximum number of document changes to request in a single
@@ -125,87 +112,6 @@ export default class BodyControl extends BaseControl {
 
     const changes = await this._readChangeRange(revNum, revNum + 1);
     return changes[0];
-  }
-
-  /**
-   * Takes a body change consisting of full information (resulting revision
-   * number, delta, possibly-`null` author ID, and timestamp), and applies it,
-   * including merging of any intermediate revisions. The return value consists
-   * of a "correction" change to be used to get the new document state. The
-   * correction is with respect to the client's "expected result," that is to
-   * say, what the client would get if the operations were applied with no
-   * intervening changes. So, for example, if the change is able to be applied
-   * as exactly given, the returned correction will have an empty `delta`.
-   *
-   * As a special case, if the `revNum` is valid and `ops` is empty, this method
-   * returns a result of the same revision number along with an empty
-   * correction. That is, the return value from passing an empty delta doesn't
-   * provide any information about subsequent revisions of the document.
-   *
-   * **Note:** This method trusts the `authorId` and `timestamp`, and as such it
-   * is _not_ appropriate to expose this method directly to client access.
-   *
-   * @param {BodyChange} change Change to apply.
-   * @returns {BodyChange} The correction to the implied expected result of
-   *   this operation. The `delta` of this result can be applied to the expected
-   *   result to get the actual result. The `timestamp` and `authorId` of the
-   *   result will always be `null`. The promise resolves sometime after the
-   *   change has been applied to the document.
-   */
-  async update(change) {
-    // This makes sure we have a proper instance, but doesn't check for deeper
-    // problems (such as an invalid `revNum`). Once in the guts of the
-    // operation, we will discover (and properly complain) if things are amiss.
-    BodyChange.check(change);
-
-    // Snapshot of the base revision. This call effectively validates
-    // `change.revNum`.
-    const base = await this.getSnapshot(change.revNum - 1);
-
-    // Check for an empty `delta`. If it is, we don't bother trying to apply it.
-    // See method header comment for more info.
-    if (change.delta.isEmpty()) {
-      return new BodyChange(base.revNum, BodyDelta.EMPTY);
-    }
-
-    // Compose the implied expected result. This has the effect of validating
-    // the contents of `delta`.
-    const expected = base.compose(change);
-
-    // Try performing the apply, and then iterate if it failed _and_ the reason
-    // is simply that there were any changes that got made while we were in the
-    // middle of the attempt. Any other problems are transparently thrown to the
-    // caller.
-    let retryDelayMsec = INITIAL_APPEND_RETRY_MSEC;
-    let retryTotalMsec = 0;
-    let attemptCount = 0;
-    for (;;) {
-      attemptCount++;
-      if (attemptCount !== 1) {
-        this.log.info(`Append attempt #${attemptCount}.`);
-      }
-
-      const result = await this._applyUpdateTo(base, change, expected);
-
-      if (result !== null) {
-        return result;
-      }
-
-      // A `null` result from the call means that we lost an append race (that
-      // is, there was revision skew between the snapshot and the latest reality
-      // at the moment of attempted appending), so we delay briefly and iterate.
-
-      if (retryTotalMsec >= MAX_APPEND_TIME_MSEC) {
-        // ...except if these attempts have taken wayyyy too long. If we land
-        // here, it's probably due to a bug (but not a total given).
-        throw UtilErrors.aborted('Too many failed attempts in `update()`.');
-      }
-
-      this.log.info(`Sleeping ${retryDelayMsec} msec.`);
-      await Delay.resolve(retryDelayMsec);
-      retryTotalMsec += retryDelayMsec;
-      retryDelayMsec *= APPEND_RETRY_GROWTH_FACTOR;
-    }
   }
 
   /**
@@ -425,6 +331,108 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
+   * Main implementation of `update()`, as required by the superclass.
+   *
+   * @param {BodySnapshot} baseSnapshot Snapshot of the base from which the
+   *   change is defined.
+   * @param {BodyChange} change The change to apply, same as for `update()`.
+   * @param {BodySnapshot} expectedSnapshot The implied expected result as
+   *   defined by `update()`.
+   * @returns {BodyChange|null} Result for the outer call to `update()`,
+   *   or `null` if the application failed due losing a race.
+   */
+  async _impl_update(baseSnapshot, change, expectedSnapshot) {
+    // Instantaneously current (latest) revision of the document. We'll find out
+    // if it turned out to remain current when we finally get to try appending
+    // the (possibly modified) change, below.
+    const current = await this.getSnapshot();
+
+    if (baseSnapshot.revNum === current.revNum) {
+      // The easy case, because the base revision is in fact the current
+      // revision of the document, so we don't have to transform the incoming
+      // delta. We merely have to apply the given `delta` to the current
+      // revision. If it succeeds, then we won the append race (if any).
+
+      const revNum = await this._appendChange(change);
+
+      if (revNum === null) {
+        // Turns out we lost an append race.
+        return null;
+      }
+
+      return new BodyChange(revNum, BodyDelta.EMPTY);
+    }
+
+    // The hard case: The client has requested an application of a delta
+    // (hereafter `dClient`) against a revision of the document which is _not_
+    // the current revision (hereafter, `rBase` for the common base and
+    // `rCurrent` for the current revision). Here's what we do:
+    //
+    // 0. Definitions of input:
+    //    * `dClient` -- Delta (ops) to apply, as requested by the client.
+    //    * `rBase` -- Base revision to apply the delta to.
+    //    * `rCurrent` -- Current (latest) revision of the document.
+    //    * `rExpected` -- The implied expected result of application. This is
+    //      `rBase.compose(dClient)` as revision number `rBase.revNum + 1`.
+    // 1. Construct a combined delta for all the server changes made between
+    //    `rBase` and `rCurrent`. This is `dServer`.
+    // 2. Transform (rebase) `dClient` with regard to (on top of) `dServer`.
+    //    This is `dNext`. If `dNext` turns out to be empty, stop here and
+    //    report that fact.
+    // 3. Apply `dNext` to `rCurrent`, producing `rNext` as the new current
+    //    server revision.
+    // 4. Construct a delta from `rExpected` to `rNext` (that is, the diff).
+    //    This is `dCorrection`. Return this to the client; they will compose
+    //    `rExpected` with `dCorrection` to arrive at `rNext`.
+
+    // (0) Assign incoming arguments to variables that correspond to the
+    //     description immediately above.
+
+    const dClient   = change.delta;
+    const rBase     = baseSnapshot;
+    const rExpected = expectedSnapshot;
+    const rCurrent  = current;
+
+    // (1)
+
+    const dServer = await this._composeRevisions(
+      BodyDelta.EMPTY, rBase.revNum + 1, rCurrent.revNum + 1);
+
+    // (2)
+
+    // The `true` argument indicates that `dServer` should be taken to have been
+    // applied first (won any insert races or similar).
+    const dNext = dServer.transform(dClient, true);
+
+    if (dNext.isEmpty()) {
+      // It turns out that nothing changed. **Note:** It is unclear whether this
+      // can actually happen in practice, given that we already return early
+      // (in `update()`) if we are asked to apply an empty delta.
+      return new BodyChange(rCurrent.revNum, BodyDelta.EMPTY);
+    }
+
+    // (3)
+
+    const rNextNum     = rCurrent.revNum + 1;
+    const appendResult = await this._appendChange(
+      new BodyChange(rNextNum, dNext, change.timestamp, change.authorId));
+
+    if (appendResult === null) {
+      // Turns out we lost an append race.
+      return null;
+    }
+
+    const rNext = await this.getSnapshot(rNextNum);
+
+    // (4)
+
+    // **Note:** The result's `revNum` is the same as `rNext`'s, which is
+    // exactly what we want.
+    const dCorrection = rExpected.diff(rNext);
+    return dCorrection;
+  }
+
+  /**
    * Appends a new change to the document. On success, this returns the revision
    * number of the document after the append. On a failure due to `baseRevNum`
    * not being current at the moment of application, this returns `null`. All
@@ -475,117 +483,6 @@ export default class BodyControl extends BaseControl {
     }
 
     return revNum;
-  }
-
-  /**
-   * Main implementation of `update()`, which takes additional arguments of a
-   * `base` snapshot being applied to and the `expected` result of a clean
-   * application on top of that `base`. This method attempts to apply the change
-   * relative to that snapshot. If it succeeds (that is, if it manages to
-   * get an instantaneous current snapshot, and use that snapshot to create a
-   * final change which is successfully appended to the document, without an
-   * other "racing" code doing the same first), then this method returns a
-   * proper result for an outer `update()` call. If it fails due to a lost race,
-   * then this method returns `null`. All other problems are reported by
-   * throwing an error.
-   *
-   * @param {BodySnapshot} base Snapshot of the base from which the delta is
-   *   defined. That is, this is the snapshot of `change.revNum - 1`.
-   * @param {BodyChange} change The change to apply, same as for `update()`.
-   * @param {BodySnapshot} expected The implied expected result as defined
-   *   by `update()`.
-   * @returns {BodyChange|null} Result for the outer call to `update()`,
-   *   or `null` if the application failed due to an out-of-date `snapshot`.
-   */
-  async _applyUpdateTo(base, change, expected) {
-    // Instantaneously current (latest) revision of the document. We'll find out
-    // if it turned out to remain current when we finally get to try appending
-    // the (possibly modified) change, below.
-    const current = await this.getSnapshot();
-
-    if (base.revNum === current.revNum) {
-      // The easy case, because the base revision is in fact the current
-      // revision of the document, so we don't have to transform the incoming
-      // delta. We merely have to apply the given `delta` to the current
-      // revision. If it succeeds, then we won the append race (if any).
-
-      const revNum = await this._appendChange(change);
-
-      if (revNum === null) {
-        // Turns out we lost an append race.
-        return null;
-      }
-
-      return new BodyChange(revNum, BodyDelta.EMPTY);
-    }
-
-    // The hard case: The client has requested an application of a delta
-    // (hereafter `dClient`) against a revision of the document which is _not_
-    // the current revision (hereafter, `rBase` for the common base and
-    // `rCurrent` for the current revision). Here's what we do:
-    //
-    // 0. Definitions of input:
-    //    * `dClient` -- Delta (ops) to apply, as requested by the client.
-    //    * `rBase` -- Base revision to apply the delta to.
-    //    * `rCurrent` -- Current (latest) revision of the document.
-    //    * `rExpected` -- The implied expected result of application. This is
-    //      `rBase.compose(dClient)` as revision number `rBase.revNum + 1`.
-    // 1. Construct a combined delta for all the server changes made between
-    //    `rBase` and `rCurrent`. This is `dServer`.
-    // 2. Transform (rebase) `dClient` with regard to (on top of) `dServer`.
-    //    This is `dNext`. If `dNext` turns out to be empty, stop here and
-    //    report that fact.
-    // 3. Apply `dNext` to `rCurrent`, producing `rNext` as the new current
-    //    server revision.
-    // 4. Construct a delta from `rExpected` to `rNext` (that is, the diff).
-    //    This is `dCorrection`. Return this to the client; they will compose
-    //    `rExpected` with `dCorrection` to arrive at `rNext`.
-
-    // (0) Assign incoming arguments to variables that correspond to the
-    //     description immediately above.
-
-    const dClient   = change.delta;
-    const rBase     = base;
-    const rExpected = expected;
-    const rCurrent  = current;
-
-    // (1)
-
-    const dServer = await this._composeRevisions(
-      BodyDelta.EMPTY, rBase.revNum + 1, rCurrent.revNum + 1);
-
-    // (2)
-
-    // The `true` argument indicates that `dServer` should be taken to have been
-    // applied first (won any insert races or similar).
-    const dNext = dServer.transform(dClient, true);
-
-    if (dNext.isEmpty()) {
-      // It turns out that nothing changed. **Note:** It is unclear whether this
-      // can actually happen in practice, given that we already return early
-      // (in `update()`) if we are asked to apply an empty delta.
-      return new BodyChange(rCurrent.revNum, BodyDelta.EMPTY);
-    }
-
-    // (3)
-
-    const rNextNum     = rCurrent.revNum + 1;
-    const appendResult = await this._appendChange(
-      new BodyChange(rNextNum, dNext, change.timestamp, change.authorId));
-
-    if (appendResult === null) {
-      // Turns out we lost an append race.
-      return null;
-    }
-
-    const rNext = await this.getSnapshot(rNextNum);
-
-    // (4)
-
-    // **Note:** The result's `revNum` is the same as `rNext`'s, which is
-    // exactly what we want.
-    const dCorrection = rExpected.diff(rNext);
-    return dCorrection;
   }
 
   /**

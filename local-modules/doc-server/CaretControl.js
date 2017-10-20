@@ -114,66 +114,8 @@ export default class CaretControl extends BaseControl {
     // We always make a delta with a "begin session" op. Even though this change
     // isn't always actually beginning a session, when ultimately applied via
     // `update()` it will always turn into an appropriate new snapshot.
-    return new CaretChange(snapshot.revNum + 1, [CaretOp.op_beginSession(caret)]);
-  }
-
-  /**
-   * Takes a change consisting of one or more caret updates, and applies it to
-   * this instance, producing an updated snapshot.
-   *
-   * **Note:** This method trusts the contents of the change (e.g., that
-   * information about a particular session really did come from that session),
-   * and as such it is _not_ appropriate to expose this method directly to
-   * client access.
-   *
-   * @param {CaretChange} change Change to apply.
-   * @returns {CaretChange} The correction to the implied expected result of
-   *   this operation. The `delta` of this result can be applied to the expected
-   *   result to get the actual result. The `timestamp` and `authorId` of the
-   *   result will always be `null`. The promise resolves sometime after the
-   *   change has been applied to the caret state.
-   */
-  async update(change) {
-    CaretChange.check(change);
-
-    const baseSnapshot    = await this.getSnapshot(change.revNum - 1);
-    const currentSnapshot = this._snapshot;
-    const newSnapshot     = currentSnapshot.compose(change);
-
-    // Apply the update, and inform both the storage layer and any waiters.
-
-    for (const op of change.delta.ops) {
-      const { opName, sessionId, caret } = op.props;
-      switch (opName) {
-        case CaretOp.BEGIN_SESSION: {
-          this._caretStorage.update(newSnapshot.get(caret.sessionId));
-          break;
-        }
-        case CaretOp.END_SESSION: {
-          this._caretStorage.delete(sessionId);
-          break;
-        }
-        case CaretOp.SET_FIELD: {
-          this._caretStorage.update(newSnapshot.get(sessionId));
-          break;
-        }
-        default: {
-          throw Errors.wtf(`Weird caret operation: ${opName}`);
-        }
-      }
-    }
-
-    this._updateSnapshot(newSnapshot);
-
-    // Figure out and return the "correction" change.
-
-    if (baseSnapshot.revNum === currentSnapshot.revNum) {
-      // No intervening changes, so no correction.
-      return new CaretChange(change.revNum, CaretDelta.EMPTY);
-    }
-
-    const expectedResult = baseSnapshot.compose(change);
-    return baseSnapshot.diff(expectedResult);
+    return new CaretChange(
+      snapshot.revNum + 1, [CaretOp.op_beginSession(caret)], lastActive);
   }
 
   /**
@@ -262,6 +204,56 @@ export default class CaretControl extends BaseControl {
     }
 
     return this._oldSnapshots[revNum - minRevNum];
+  }
+
+  /**
+   * Main implementation of `update()`, as required by the superclass.
+   *
+   * @param {CaretSnapshot} baseSnapshot Snapshot of the base from which the
+   *   change is defined.
+   * @param {CaretChange} change The change to apply, same as for `update()`.
+   * @param {CaretSnapshot} expectedSnapshot The implied expected result as
+   *   defined by `update()`.
+   * @returns {CaretChange} Result for the outer call to `update()`. Though the
+   *   superclass allows it, this implementation will never return `null`.
+   */
+  async _impl_update(baseSnapshot, change, expectedSnapshot) {
+    const currentSnapshot = this._snapshot;
+    const newSnapshot     = currentSnapshot.compose(change);
+
+    // Apply the update, and inform both the storage layer and any waiters.
+
+    for (const op of change.delta.ops) {
+      const { opName, sessionId, caret } = op.props;
+      switch (opName) {
+        case CaretOp.BEGIN_SESSION: {
+          this._caretStorage.update(newSnapshot.get(caret.sessionId));
+          break;
+        }
+        case CaretOp.END_SESSION: {
+          this._caretStorage.delete(sessionId);
+          break;
+        }
+        case CaretOp.SET_FIELD: {
+          this._caretStorage.update(newSnapshot.get(sessionId));
+          break;
+        }
+        default: {
+          throw Errors.wtf(`Weird caret operation: ${opName}`);
+        }
+      }
+    }
+
+    this._updateSnapshot(newSnapshot);
+
+    // Figure out and return the "correction" change.
+
+    if (baseSnapshot.revNum === currentSnapshot.revNum) {
+      // No intervening changes, so no correction.
+      return new CaretChange(change.revNum, CaretDelta.EMPTY);
+    }
+
+    return baseSnapshot.diff(expectedSnapshot);
   }
 
   /**

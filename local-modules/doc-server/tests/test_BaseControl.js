@@ -351,4 +351,154 @@ describe('doc-server/BaseControl', () => {
       await test([10]);
     });
   });
+
+  describe('update()', () => {
+    it('should reject non-change arguments', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        throw new Error('This should not have been called.');
+      };
+      control._impl_getSnapshot = async (revNum_unused) => {
+        throw new Error('This should not have been called.');
+      };
+      control._impl_update = async (baseSnapshot_unused, change_unused, expectedSnapshot_unused) => {
+        throw new Error('This should not have been called.');
+      };
+
+      async function test(value) {
+        await assert.isRejected(control.update(value), /^bad_value/);
+      }
+
+      await test(null);
+      await test(undefined);
+      await test(123);
+      await test('florp');
+      await test(['boop']);
+    });
+
+    it('should reject change arguments with invalid fields', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        throw new Error('This should not have been called.');
+      };
+      control._impl_getSnapshot = async (revNum_unused) => {
+        throw new Error('This should not have been called.');
+      };
+      control._impl_update = async (baseSnapshot_unused, change_unused, expectedSnapshot_unused) => {
+        throw new Error('This should not have been called.');
+      };
+
+      async function test(value) {
+        await assert.isRejected(control.update(value), /^bad_value/);
+      }
+
+      // `0` is not a valid `revNum` for this method.
+      await test(new MockChange(0, [], Timestamp.MIN_VALUE));
+
+      // `timestamp` must be present for this method.
+      await test(new MockChange(1, []));
+    });
+
+    it('should accept an empty change without calling through to the impl', async () => {
+      const control = new MockControl(FILE_ACCESS);
+      control._impl_currentRevNum = async () => {
+        throw new Error('This should not have been called.');
+      };
+      control._impl_getSnapshot = async (revNum_unused) => {
+        throw new Error('This should not have been called.');
+      };
+      control._impl_update = async (baseSnapshot_unused, change_unused, expectedSnapshot_unused) => {
+        throw new Error('This should not have been called.');
+      };
+
+      async function test(value) {
+        const expectRevNum = value.revNum - 1;
+        const result = await control.update(value);
+
+        assert.instanceOf(result, MockChange);
+        assert.strictEqual(result.revNum, expectRevNum);
+        assert.isTrue(result.delta.isEmpty());
+        assert.strictEqual(result.timestamp, null);
+        assert.strictEqual(result.authorId, null);
+      }
+
+      await test(new MockChange(1,  [], Timestamp.MIN_VALUE));
+      await test(new MockChange(10, [], Timestamp.MIN_VALUE.addMsec(12345)));
+    });
+  });
+
+  it('should reject a too-large `revNum` in valid nontrivial cases', async () => {
+    const control   = new MockControl(FILE_ACCESS);
+    control._impl_currentRevNum = async () => {
+      return 10;
+    };
+    control._impl_getSnapshot = async (revNum) => {
+      return new MockSnapshot(revNum, [new MockOp('x', revNum)]);
+    };
+    control._impl_update = async (baseSnapshot_unused, change_unused, expectedSnapshot_unused) => {
+      throw new Error('This should not have been called.');
+    };
+
+    const change = new MockChange(12, [new MockOp('abc')], Timestamp.MIN_VALUE);
+    await assert.isRejected(control.update(change), /^bad_value/);
+  });
+
+  it('should call through to the impl in valid nontrivial cases', async () => {
+    const control   = new MockControl(FILE_ACCESS);
+    let callCount   = 0;
+    let gotBase     = 'x';
+    let gotChange   = 'x';
+    let gotExpected = 'x';
+
+    control._impl_currentRevNum = async () => {
+      return 10;
+    };
+    control._impl_getSnapshot = async (revNum) => {
+      return new MockSnapshot(revNum, [new MockOp('x', revNum)]);
+    };
+    control._impl_update = async (baseSnapshot, change, expectedSnapshot) => {
+      callCount++;
+      gotBase     = baseSnapshot;
+      gotChange   = change;
+      gotExpected = expectedSnapshot;
+      return new MockChange(14, [new MockOp('q')]);
+    };
+
+    const change = new MockChange(7, [new MockOp('abc')], Timestamp.MIN_VALUE);
+    const result = await control.update(change);
+
+    assert.strictEqual(callCount, 1);
+    assert.deepEqual(gotBase, new MockSnapshot(6, [new MockOp('x', 6)]));
+    assert.strictEqual(gotChange, change);
+    assert.deepEqual(gotExpected,
+      new MockSnapshot(7, [new MockOp('composed_delta'), new MockOp('abc')]));
+
+    assert.instanceOf(result, MockChange);
+    assert.deepEqual(result, new MockChange(14, [new MockOp('q')]));
+  });
+
+  it('should retry the impl call if it returns `null`', async () => {
+    const control = new MockControl(FILE_ACCESS);
+    let callCount = 0;
+
+    control._impl_currentRevNum = async () => {
+      return 10;
+    };
+    control._impl_getSnapshot = async (revNum) => {
+      return new MockSnapshot(revNum, [new MockOp('x', revNum)]);
+    };
+    control._impl_update = async (baseSnapshot_unused, change_unused, expectedSnapshot_unused) => {
+      callCount++;
+      if (callCount === 1) {
+        return null;
+      }
+      return new MockChange(14, [new MockOp('florp')]);
+    };
+
+    const change = new MockChange(7, [new MockOp('abc')], Timestamp.MIN_VALUE);
+    const result = await control.update(change);
+
+    assert.strictEqual(callCount, 2);
+    assert.deepEqual(result, new MockChange(14, [new MockOp('florp')]));
+  });
 });
