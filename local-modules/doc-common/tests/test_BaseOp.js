@@ -89,6 +89,33 @@ describe('doc-common/BaseOp', () => {
     });
   });
 
+  describe('deconstruct()', () => {
+    it('should return a deep-frozen array data value', () => {
+      const op     = new MockOp('blort', ['florp', 'like'], { timeline: 'sideways' });
+      const result = op.deconstruct();
+
+      assert.isArray(result);
+      assert.isTrue(DataUtil.isDeepFrozen(result));
+    });
+
+    it('should return a value which successfully round-trips from and to constructor arguments', () => {
+      function test(...args) {
+        const op1    = new MockOp(...args);
+        const result = op1.deconstruct();
+        const op2    = new MockOp(...result);
+
+        assert.deepEqual(args, result);
+        assert.deepEqual(op1, op2);
+      }
+
+      test('foo');
+      test('bar', 1, 2, 3);
+      test('baz', ['florp', 'like']);
+      test('goo', { timeline: 'sideways' });
+      test('boo', [[[[[[[[[['floomp']]]]]]]]]]);
+    });
+  });
+
   describe('equals()', () => {
     it('should return `true` when passed itself', () => {
       const op = new MockOp('x', 'y', 'z');

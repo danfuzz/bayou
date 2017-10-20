@@ -38,6 +38,17 @@ export default class BaseOp extends CommonBase {
   }
 
   /**
+   * "Deconstructs" this instance, returning an array which is suitable for
+   * passing to the constructor of this class.
+   *
+   * @returns {array<*>} Reconstruction arguments. The result is always deeply
+   * frozen.
+   */
+  deconstruct() {
+    return Object.freeze([this._payload.name, ...this._payload.args]);
+  }
+
+  /**
    * Compares this to another possible-instance, for equality of content. In
    * order to be considered equal to `this`, `other` must be an instance of the
    * same concrete class and have a payload which is `.equals()` to this

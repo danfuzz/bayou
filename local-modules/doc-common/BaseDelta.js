@@ -140,6 +140,32 @@ export default class BaseDelta extends CommonBase {
   }
 
   /**
+   * "Deconstructs" this instance, returning an array of arguments which is
+   * suitable for passing to the constructor of this class.
+   *
+   * More specifically in this case, this returns a top-level single-element
+   * array (because the constructor of this class expects a single argument
+   * which is an array), with the sole element being a compact array-of-arrays
+   * form. Each element of the returned array is a list of arguments which can
+   * be passed to the {@link #opClass} constructor to recreate the corresponding
+   * op.
+   *
+   * The point of this choice of return form is to allow for more compact
+   * representation of instances of this class (and of instances of classes that
+   * use this class) in codec-encoded form. In particular, the name of the
+   * `opClass` gets to be implied instead of redundantly encoded.
+   *
+   * @returns {array<array<*>>} Array of array of operation-construction
+   *   arguments. The result is always a deeply-frozen array.
+   */
+  deconstruct() {
+    const ops = this._ops.map(op => op.deconstruct());
+
+    Object.freeze(ops);
+    return Object.freeze([ops]);
+  }
+
+  /**
    * Compares this to another possible-instance, for equality. To be considered
    * equal:
    *
