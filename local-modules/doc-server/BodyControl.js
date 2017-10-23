@@ -41,7 +41,8 @@ export default class BodyControl extends BaseControl {
 
   /**
    * Creates or re-creates the document body. This will result in a body with an
-   * empty change for revision `0` and a `revNum` of `0`.
+   * empty change for revision `0` and a `revNum` of `0`. This method assumes
+   * that the underlying file must already exist (have been `create()d`).
    */
   async create() {
     this.log.info('Creating document body.');
@@ -49,14 +50,9 @@ export default class BodyControl extends BaseControl {
     const fc = this.fileCodec; // Avoids boilerplate immediately below.
 
     const spec = new TransactionSpec(
-      // If the file already existed, this clears out the old contents.
-      // **TODO:** This clears the entire file, not just the body. This should
-      // only really clear the body-specific prefix.
-      fc.op_deleteAll(),
-
-      // Version for the file schema. **TODO:** As above, this path isn't
-      // body-specific and so would be better handled elsewhere.
-      fc.op_writePath(Paths.SCHEMA_VERSION, this.schemaVersion),
+      // If there was any body content (e.g. and most likely data in an earlier
+      // schema, this clears it out.
+      fc.op_deletePathPrefix(Paths.BODY_PREFIX),
 
       // Initial revision number.
       fc.op_writePath(Paths.BODY_REVISION_NUMBER, 0),
@@ -65,7 +61,6 @@ export default class BodyControl extends BaseControl {
       fc.op_writePath(Paths.forBodyChange(0), BodyChange.FIRST),
     );
 
-    await this.file.create();
     await this.file.transact(spec);
 
     // Any cached snapshots are no longer valid.

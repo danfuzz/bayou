@@ -52,6 +52,31 @@ export default class SchemaHandler extends BaseComplexMember {
   }
 
   /**
+   * Creates or re-creates the file. This will result in a file that is totally
+   * devoid of content _except_ for a schema version.
+   */
+  async create() {
+    this.log.info('Creating / re-creating file.');
+
+    const fc = this.fileCodec; // Avoids boilerplate immediately below.
+
+    const spec = new TransactionSpec(
+      // If the file already existed, this clears out the old contents.
+      // **TODO:** In cases where this is a re-creation based on a migration
+      // problem, we probably want to preserve the old data by moving it aside
+      // (e.g. into a `lossage/<timestamp>` prefix) instead of just blasting it
+      // away entirely.
+      fc.op_deleteAll(),
+
+      // Version for the file schema.
+      fc.op_writePath(Paths.SCHEMA_VERSION, this.schemaVersion)
+    );
+
+    await this.file.create();
+    await this.file.transact(spec);
+  }
+
+  /**
    * Evaluates the condition of the document, reporting a "validation status."
    * The return value is one of the `STATUS_*` constants defined by this class:
    *
