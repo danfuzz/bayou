@@ -258,15 +258,31 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `listPath` operations.
+   * Handler for `deletePathPrefix` operations.
    *
    * @param {FileOp} op The operation.
    */
-  _op_listPath(op) {
+  _op_deletePathPrefix(op) {
     const prefix = op.arg('storagePath');
 
     for (const [storagePath, value_unused] of this._fileFriend.pathStorage()) {
-      if (StoragePath.isPrefix(prefix, storagePath)) {
+      if (StoragePath.isPrefixOrSame(prefix, storagePath)) {
+        // We have a match.
+        this._updatedStorage.set(storagePath, null);
+      }
+    }
+  }
+
+  /**
+   * Handler for `listPathPrefix` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_listPathPrefix(op) {
+    const prefix = op.arg('storagePath');
+
+    for (const [storagePath, value_unused] of this._fileFriend.pathStorage()) {
+      if (StoragePath.isPrefixOrSame(prefix, storagePath)) {
         // We have a prefix match. Strip off components beyond the one
         // immediately under the prefix, if any. (`+1` to skip the slash
         // immediately after the prefix.)

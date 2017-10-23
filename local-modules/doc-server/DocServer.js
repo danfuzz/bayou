@@ -92,16 +92,29 @@ export default class DocServer extends Singleton {
     // Nothing in the cache. Asynchronously construct the ultimate result.
 
     const resultPromise = (async () => {
-      const file      = await Hooks.theOne.fileStore.getFile(docId);
-      const result    = new FileComplex(this._codec, file);
-      const resultRef = weak(result, this._complexReaper(docId));
+      try {
+        const file   = await Hooks.theOne.fileStore.getFile(docId);
+        const result = new FileComplex(this._codec, file);
 
-      // Replace the promise in the cache with a weak reference to the actaul
-      // result.
-      this._complexes.set(docId, resultRef);
+        await result.init();
 
-      result.log.info('Constructed new complex.');
-      return result;
+        const resultRef = weak(result, this._complexReaper(docId));
+
+        // Replace the promise in the cache with a weak reference to the actaul
+        // result.
+        this._complexes.set(docId, resultRef);
+
+        result.log.info('Constructed new complex.');
+        return result;
+      } catch (e) {
+        log.error(`Trouble constructing complex ${docId}.`, e);
+
+        // Remove the promise in the cache, so that we will try again instead of
+        // continuing to report this error.
+        this._complexes.delete(docId);
+
+        throw e; // Becomes the rejection value of the promise.
+      }
     })();
 
     // Store the the promise for the result in the cache, and return it.

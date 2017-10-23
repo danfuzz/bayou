@@ -44,7 +44,6 @@ export default class RootAccess {
     TString.nonEmpty(docId);
 
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
-    await fileComplex.initIfMissingOrInvalid();
 
     // Under normal circumstances, this method is called in the context of an
     // active API connection, but it can also be called when debugging, and in

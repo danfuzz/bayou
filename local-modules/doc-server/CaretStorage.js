@@ -220,7 +220,7 @@ export default class CaretStorage extends BaseComplexMember {
 
     try {
       const spec = new TransactionSpec(
-        fc.op_listPath(Paths.CARET_SESSION_PREFIX));
+        fc.op_listPathPrefix(Paths.CARET_SESSION_PREFIX));
       const transactionResult = await fc.transact(spec);
       for (const p of transactionResult.paths) {
         currentSessionIds.add(Paths.sessionFromCaretPath(p));
