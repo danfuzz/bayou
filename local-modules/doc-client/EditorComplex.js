@@ -138,7 +138,7 @@ export default class EditorComplex extends CommonBase {
       this._caretOverlay = new CaretOverlay(this, authorOverlayNode);
 
       // Let the overlay do extra initialization.
-      Hooks.theOne.quillInstanceInit(this);
+      Hooks.theOne.editorComplexInit(this);
 
       // Do session setup using the initial key.
       this._initSession(sessionKey, true);
