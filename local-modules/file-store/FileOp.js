@@ -146,16 +146,16 @@ const OPERATIONS = DataUtil.deepFreeze([
   [CAT_DELETE, 'deletePathPrefix', ['storagePath', TYPE_PATH]],
 
   /*
-   * A `listPath` operation. This is a read operation that retrieves a list of
-   * all paths immediately under the given prefix that store data. The resulting
-   * list can contain both paths that store blobs as well as "directories" under
-   * which other blobs are stored. If there are no such paths, the result is an
-   * empty list.
+   * A `listPathPrefix` operation. This is a read operation that retrieves a
+   * list of all paths immediately under the given prefix that store data, or
+   * the path itself if it stores data directly. The resulting list can contain
+   * both paths that store blobs as well as "directories" under which other
+   * blobs are stored. If there are no such paths, the result is an empty list.
    *
    * @param {string} storagePath The storage path prefix to list the contents
-   * of.
+   *   of.
    */
-  [CAT_LIST, 'listPath', ['storagePath', TYPE_PATH]],
+  [CAT_LIST, 'listPathPrefix', ['storagePath', TYPE_PATH]],
 
   /*
    * A `readBlob` operation. This is a read operation that retrieves the full

@@ -287,12 +287,12 @@ describe('file-store-local/LocalFile.transact', () => {
     });
   });
 
-  describe('op listPath', () => {
+  describe('op listPathPrefix', () => {
     it('should return an empty set when no results are found', async () => {
       const file = new LocalFile('0', TempFiles.uniquePath());
       await file.create();
 
-      const spec = new TransactionSpec(FileOp.op_listPath('/blort'));
+      const spec = new TransactionSpec(FileOp.op_listPathPrefix('/blort'));
       const result = await file.transact(spec);
       assert.instanceOf(result.paths, Set);
       assert.strictEqual(result.paths.size, 0);
@@ -308,7 +308,7 @@ describe('file-store-local/LocalFile.transact', () => {
       );
       await file.transact(spec);
 
-      spec = new TransactionSpec(FileOp.op_listPath('/yep'));
+      spec = new TransactionSpec(FileOp.op_listPathPrefix('/yep'));
       const result = await file.transact(spec);
       const paths = result.paths;
 
@@ -327,7 +327,7 @@ describe('file-store-local/LocalFile.transact', () => {
       );
       await file.transact(spec);
 
-      spec = new TransactionSpec(FileOp.op_listPath('/blort'));
+      spec = new TransactionSpec(FileOp.op_listPathPrefix('/blort'));
       const result = await file.transact(spec);
       const paths = result.paths;
 
@@ -346,7 +346,7 @@ describe('file-store-local/LocalFile.transact', () => {
       );
       await file.transact(spec);
 
-      spec = new TransactionSpec(FileOp.op_listPath('/blort'));
+      spec = new TransactionSpec(FileOp.op_listPathPrefix('/blort'));
       const result = await file.transact(spec);
       const paths = result.paths;
 
@@ -373,7 +373,7 @@ describe('file-store-local/LocalFile.transact', () => {
       );
       await file.transact(spec);
 
-      spec = new TransactionSpec(FileOp.op_listPath('/blort/x'));
+      spec = new TransactionSpec(FileOp.op_listPathPrefix('/blort/x'));
       const result = await file.transact(spec);
       const paths = result.paths;
 
