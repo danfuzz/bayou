@@ -258,6 +258,22 @@ export default class Transactor extends CommonBase {
   }
 
   /**
+   * Handler for `deletePathPrefix` operations.
+   *
+   * @param {FileOp} op The operation.
+   */
+  _op_deletePathPrefix(op) {
+    const prefix = op.arg('storagePath');
+
+    for (const [storagePath, value_unused] of this._fileFriend.pathStorage()) {
+      if (StoragePath.isPrefixOrSame(prefix, storagePath)) {
+        // We have a match.
+        this._updatedStorage.set(storagePath, null);
+      }
+    }
+  }
+
+  /**
    * Handler for `listPath` operations.
    *
    * @param {FileOp} op The operation.

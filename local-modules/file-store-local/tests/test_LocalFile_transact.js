@@ -178,6 +178,115 @@ describe('file-store-local/LocalFile.transact', () => {
     });
   });
 
+  describe('op deletePath', () => {
+    it('should succeed in deleting the indicated path', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Timeline goes sideways.');
+      await file.create();
+      await file.transact(new TransactionSpec(FileOp.op_writePath('/florp', blob)));
+
+      const spec = new TransactionSpec(FileOp.op_deletePath('/florp'));
+      await assert.isFulfilled(file.transact(spec));
+
+      const checkSpec = new TransactionSpec(FileOp.op_checkPathAbsent('/florp'));
+      await assert.isFulfilled(file.transact(checkSpec));
+    });
+
+    it('should succeed even if the path is not present', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+
+      const spec = new TransactionSpec(FileOp.op_deletePath('/florp'));
+      await assert.isFulfilled(file.transact(spec));
+    });
+
+    it('should not affect non-listed paths', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Timeline goes sideways.');
+      await file.create();
+      await file.transact(new TransactionSpec(
+        FileOp.op_writePath('/florp', blob),
+        FileOp.op_writePath('/blort', blob),
+        FileOp.op_writePath('/glorch', blob)
+      ));
+
+      const spec = new TransactionSpec(FileOp.op_deletePath('/florp'));
+      await assert.isFulfilled(file.transact(spec));
+
+      const checkSpec = new TransactionSpec(
+        FileOp.op_checkPathAbsent('/florp'),
+        FileOp.op_checkPathPresent('/blort'),
+        FileOp.op_checkPathPresent('/glorch')
+      );
+      await assert.isFulfilled(file.transact(checkSpec));
+    });
+  });
+
+  describe('op deletePathPrefix', () => {
+    it('should succeed in deleting the indicated path (it counts as a prefix)', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Muffins are tasty.');
+      await file.create();
+      await file.transact(new TransactionSpec(FileOp.op_writePath('/bakery', blob)));
+
+      const spec = new TransactionSpec(FileOp.op_deletePathPrefix('/bakery'));
+      await assert.isFulfilled(file.transact(spec));
+
+      const checkSpec = new TransactionSpec(FileOp.op_checkPathAbsent('/bakery'));
+      await assert.isFulfilled(file.transact(checkSpec));
+    });
+
+    it('should succeed in deleting the indicated prefix', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Muffins are tasty.');
+      await file.create();
+      await file.transact(new TransactionSpec(
+        FileOp.op_writePath('/bakery/biscuit', blob),
+        FileOp.op_writePath('/bakery/muffin', blob),
+        FileOp.op_writePath('/bakery/british/scone', blob)
+      ));
+
+      const spec = new TransactionSpec(FileOp.op_deletePathPrefix('/bakery'));
+      await assert.isFulfilled(file.transact(spec));
+
+      const checkSpec = new TransactionSpec(
+        FileOp.op_checkPathAbsent('/bakery/biscuit'),
+        FileOp.op_checkPathAbsent('/bakery/muffin'),
+        FileOp.op_checkPathAbsent('/bakery/british/scone'),
+      );
+      await assert.isFulfilled(file.transact(checkSpec));
+    });
+
+    it('should succeed even if the path or prefix is not present', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+
+      const spec = new TransactionSpec(FileOp.op_deletePathPrefix('/bakery'));
+      await assert.isFulfilled(file.transact(spec));
+    });
+
+    it('should not affect non-prefix paths', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Muffins are tasty.');
+      await file.create();
+      await file.transact(new TransactionSpec(
+        FileOp.op_writePath('/bakery/muffin', blob),
+        FileOp.op_writePath('/bakeryx', blob),
+        FileOp.op_writePath('/baker', blob)
+      ));
+
+      const spec = new TransactionSpec(FileOp.op_deletePathPrefix('/bakery'));
+      await assert.isFulfilled(file.transact(spec));
+
+      const checkSpec = new TransactionSpec(
+        FileOp.op_checkPathAbsent('/bakery/muffin'),
+        FileOp.op_checkPathPresent('/bakeryx'),
+        FileOp.op_checkPathPresent('/baker')
+      );
+      await assert.isFulfilled(file.transact(checkSpec));
+    });
+  });
+
   describe('op listPath', () => {
     it('should return an empty set when no results are found', async () => {
       const file = new LocalFile('0', TempFiles.uniquePath());
