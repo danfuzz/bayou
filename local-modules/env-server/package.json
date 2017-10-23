@@ -3,6 +3,8 @@
   "version": "1.0.0",
 
   "dependencies": {
+    "is-running": "^2.1.0",
+
     "proppy": "local",
     "see-all": "local",
     "util-common": "local"

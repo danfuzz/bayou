@@ -13,7 +13,6 @@ import 'source-map-support/register';
 import 'babel-core/register';
 import 'babel-polyfill';
 
-import http from 'http';
 import path from 'path';
 import puppeteer from 'puppeteer';
 import minimist from 'minimist';
@@ -109,9 +108,9 @@ if (showHelp || argError) {
  *
  * @param {boolean} dev Whether or not to use dev mode.
  */
-function run(dev) {
+async function run(dev) {
   // Set up the server environment bits (including, e.g. the PID file).
-  ServerEnv.init();
+  await ServerEnv.init();
 
   // A little spew to identify us.
   const info = ProductInfo.theOne.INFO;
@@ -153,65 +152,21 @@ async function clientBundle() {
  * Does a client testing run.
  */
 async function clientTest() {
-  const baseUrl = `http://localhost:${Hooks.theOne.listenPort}`;
-  const url     = `${baseUrl}/debug/client-test`;
   const testLog = new Logger('client-test');
 
   // Figure out if there is already a server listening on the designated
-  // application port.
-  let alreadyRunning = false;
-  try {
-    const alreadyRunningProm = new Promise((resolve, reject_unused) => {
-      const request = http.get(baseUrl);
+  // application port. If not, run one locally in this process.
 
-      request.setTimeout(10 * 1000);
-      request.end();
+  const alreadyRunning = await ServerEnv.isAlreadyRunningLocally();
 
-      request.on('response', (response) => {
-        response.setTimeout(10 * 1000);
-
-        response.on('data', () => {
-          // Ignore the payload. The `http` API requires us to acknowledge the
-          // data. (There are other ways of doing so too, but this is the
-          // simplest.)
-        });
-
-        response.on('end', () => {
-          // Successful request. That means that, yes, there is indeed already
-          // a server running.
-          testLog.info(
-            'NOTE: There is a server already running on this machine. The test run\n' +
-            '      will issue requests to it instead of trying to build a new test bundle.');
-          resolve(true);
-        });
-
-        response.on('timeout', () => {
-          request.abort();
-          resolve(false);
-        });
-      });
-
-      request.on('error', (error_unused) => {
-        resolve(false);
-      });
-
-      request.on('timeout', () => {
-        request.abort();
-        resolve(false);
-      });
-    });
-
-    alreadyRunning = await alreadyRunningProm;
-  } catch (e) {
-    testLog.error('Trouble determining if server is already running.', e);
-    process.exit(1);
-  }
-
-  // Start up a server in this process, if we determined that this machine isn't
-  // already running one.
-  if (!alreadyRunning) {
-    // Start up the system in dev mode, so that we can point our Chrome instance
-    // at it.
+  if (alreadyRunning) {
+    testLog.info(
+      'NOTE: There is a server already running on this machine. The test run\n' +
+      '      will issue requests to it instead of trying to build a new test bundle.');
+  } else {
+    // Start up a server in this process, since we determined that this machine
+    // isn't already running one. We run in dev mode so that we can point our
+    // Chrome instance at it.
     await run(true); // `true` === dev mode.
 
     // Wait a few seconds, so that we can be reasonably sure that the request
@@ -239,6 +194,7 @@ async function clientTest() {
   testLog.info('Issuing request to start test run...');
 
   // Issue the request to load up the client tests.
+  const url = `${ServerEnv.loopbackUrl}/debug/client-test`;
   await page.goto(url, { waitUntil: 'load' });
 
   // Now wait until the test run is complete. This happens an indeterminate
@@ -313,7 +269,7 @@ async function serverTest() {
   // TODO: Arguably this call shouldn't be necessary. (That is, the test code
   // that cares about server env stuff should arrange for its appropriate
   // initialization and perhaps even teardown.)
-  ServerEnv.init();
+  await ServerEnv.init();
 
   const failures  = await ServerTests.runAll();
   const anyFailed = (failures !== 0);
