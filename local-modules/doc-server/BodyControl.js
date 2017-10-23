@@ -108,8 +108,8 @@ export default class BodyControl extends BaseControl {
       return SchemaHandler.STATUS_ERROR;
     }
 
-    const data          = transactionResult.data;
-    const revNum        = data.get(Paths.BODY_REVISION_NUMBER);
+    const data   = transactionResult.data;
+    const revNum = data.get(Paths.BODY_REVISION_NUMBER);
 
     if (!revNum) {
       this.log.info('Corrupt document: Missing revision number.');
@@ -178,9 +178,9 @@ export default class BodyControl extends BaseControl {
    * @returns {Int} The instantaneously-current revision number.
    */
   async _impl_currentRevNum() {
-    const fc = this.fileCodec;
+    const fc          = this.fileCodec;
     const storagePath = Paths.BODY_REVISION_NUMBER;
-    const spec = new TransactionSpec(
+    const spec        = new TransactionSpec(
       fc.op_checkPathPresent(storagePath),
       fc.op_readPath(storagePath)
     );
