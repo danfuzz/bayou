@@ -13,7 +13,7 @@ import Dirs from './Dirs';
 import PidFile from './PidFile';
 import ProductInfo from './ProductInfo';
 
-/** Logger. */
+/** {Logger} Logger. */
 const log = new Logger('env-server');
 
 /**

@@ -11,7 +11,7 @@ import { Singleton } from 'util-common';
 
 import Dirs from './Dirs';
 
-/** Logger. */
+/** {Logger} Logger. */
 const log = new Logger('pid');
 
 /**
@@ -20,7 +20,7 @@ const log = new Logger('pid');
  */
 export default class PidFile extends Singleton {
   /**
-   * Construct an instance. Logging aside, this doesn't cause any external
+   * Constructs an instance. Logging aside, this doesn't cause any external
    * action to take place (such as writing the PID file); that stuff happens in
    * {@link #init}.
    */
