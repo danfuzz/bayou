@@ -104,7 +104,7 @@ export default class BodyControl extends BaseControl {
       );
       transactionResult = await fc.transact(spec);
     } catch (e) {
-      this.log.error('Major problem trying to read file!');
+      this.log.error('Major problem trying to read file!', e);
       return SchemaHandler.STATUS_ERROR;
     }
 
