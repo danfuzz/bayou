@@ -298,6 +298,25 @@ describe('file-store-local/LocalFile.transact', () => {
       assert.strictEqual(result.paths.size, 0);
     });
 
+    it('should return a single result for the path itself when bound', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+
+      let spec = new TransactionSpec(
+        FileOp.op_writePath('/yep', new FrozenBuffer('yep')),
+        FileOp.op_writePath('/nope', new FrozenBuffer('nope'))
+      );
+      await file.transact(spec);
+
+      spec = new TransactionSpec(FileOp.op_listPath('/yep'));
+      const result = await file.transact(spec);
+      const paths = result.paths;
+
+      assert.instanceOf(paths, Set);
+      assert.strictEqual(paths.size, 1);
+      assert.isTrue(paths.has('/yep'));
+    });
+
     it('should return a single result immediately under the path', async () => {
       const file = new LocalFile('0', TempFiles.uniquePath());
       await file.create();
