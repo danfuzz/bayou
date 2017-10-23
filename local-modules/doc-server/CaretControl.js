@@ -27,12 +27,6 @@ const MAX_SESSION_IDLE_MSEC = 5 * 60 * 1000; // Five minutes.
 
 /**
  * Controller for the active caret info for a given document.
- *
- * There is only ever exactly one instance of this class per document, no matter
- * how many active editors there are on that document. (This guarantee is
- * provided by virtue of the fact that `DocServer` only ever creates one
- * `FileComplex` per document, and each `FileComplex` instance only ever makes
- * one instance of this class.
  */
 export default class CaretControl extends BaseControl {
   /**

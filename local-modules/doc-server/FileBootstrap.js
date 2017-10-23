@@ -10,6 +10,7 @@ import { Errors } from 'util-common';
 import BaseComplexMember from './BaseComplexMember';
 import CaretControl from './CaretControl';
 import BodyControl from './BodyControl';
+import SchemaHandler from './SchemaHandler';
 
 /** {BodyDelta} Default contents when creating a new document. */
 const DEFAULT_TEXT = new BodyDelta(DEFAULT_DOCUMENT);
@@ -48,17 +49,14 @@ export default class FileBootstrap extends BaseComplexMember {
     /** {boolean} Whether or not initialization has been completed. */
     this._initialized = false;
 
-    /**
-     * {BodyControl|null} Document body content controller. Set to non-`null` in
-     * the corresponding getter.
-     */
+    /** {BodyControl} Document body content controller. */
     this._bodyControl = new BodyControl(fileAccess);
 
-    /**
-     * {CaretControl|null} Caret info controller. Set to non-`null` in the
-     * corresponding getter.
-     */
+    /** {CaretControl} Caret info controller. */
     this._caretControl = new CaretControl(fileAccess);
+
+    /** {SchemaHandler} Schema (and migration) handler. */
+    this._schemaHandler = new SchemaHandler(fileAccess);
 
     Object.seal(this);
   }
@@ -102,10 +100,9 @@ export default class FileBootstrap extends BaseComplexMember {
    * @returns {boolean} `true` once setup and initialization are complete.
    */
   async _init() {
-    const control = this._bodyControl;
-    const status  = await control.validationStatus();
+    const status  = await this._overallValidationStatus();
 
-    if (status === BodyControl.STATUS_OK) {
+    if (status === SchemaHandler.STATUS_OK) {
       // All's well.
       return true;
     }
@@ -114,14 +111,14 @@ export default class FileBootstrap extends BaseComplexMember {
 
     let firstText;
 
-    if (status === BodyControl.STATUS_MIGRATE) {
+    if (status === SchemaHandler.STATUS_MIGRATE) {
       // **TODO:** Ultimately, this code path will evolve into forward
       // migration of documents found to be in older formats. For now, we just
       // fall through to the document creation logic below, which will leave
       // a note what's going on in the document contents.
       this.log.info('Needs migration. (But just noting that fact for now.)');
       firstText = MIGRATION_NOTE;
-    } else if (status === BodyControl.STATUS_ERROR) {
+    } else if (status === SchemaHandler.STATUS_ERROR) {
       // **TODO:** Ultimately, it should be a Really Big Deal if we find
       // ourselves here. We might want to implement some form of "hail mary"
       // attempt to recover _something_ of use from the document storage.
@@ -136,9 +133,29 @@ export default class FileBootstrap extends BaseComplexMember {
     // change for revision `0`.
     const change = new BodyChange(1, firstText, Timestamp.now());
 
+    // **TODO:** The following should all happen in a single transaction.
+
+    const control = this._bodyControl;
     await control.create();
     await control.update(change);
 
     return true;
+  }
+
+  /**
+   * Helper for `init()` which determines overall status based on checks from
+   * the various file components.
+   *
+   * @returns {string} One of the `STATUS_*` constants defined by
+   *   {@link SchemaHandler}.
+   */
+  async _overallValidationStatus() {
+    const schemaStatus = await this._schemaHandler.validationStatus();
+
+    if (schemaStatus !== SchemaHandler.STATUS_OK) {
+      return schemaStatus;
+    }
+
+    return this._bodyControl.validationStatus();
   }
 }

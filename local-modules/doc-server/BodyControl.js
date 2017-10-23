@@ -8,6 +8,7 @@ import { Errors, InfoError } from 'util-common';
 
 import BaseControl from './BaseControl';
 import Paths from './Paths';
+import SchemaHandler from './SchemaHandler';
 
 /**
  * {Int} Maximum number of document changes to request in a single
@@ -18,34 +19,8 @@ const MAX_CHANGE_READS_PER_TRANSACTION = 20;
 
 /**
  * Controller for a given document's body content.
- *
- * There is only ever exactly one instance of this class per document, no matter
- * how many active editors there are on that document. (This guarantee is
- * provided by virtue of the fact that `DocServer` only ever creates one
- * `FileComplex` per document, and each `FileComplex` instance only ever makes
- * one instance of this class.
  */
 export default class BodyControl extends BaseControl {
-  /** {string} Return value from `validationStatus()`, see which for details. */
-  static get STATUS_ERROR() {
-    return 'status_error';
-  }
-
-  /** {string} Return value from `validationStatus()`, see which for details. */
-  static get STATUS_MIGRATE() {
-    return 'status_migrate';
-  }
-
-  /** {string} Return value from `validationStatus()`, see which for details. */
-  static get STATUS_NOT_FOUND() {
-    return 'status_not_found';
-  }
-
-  /** {string} Return value from `validationStatus()`, see which for details. */
-  static get STATUS_OK() {
-    return 'status_ok';
-  }
-
   /**
    * Constructs an instance.
    *
@@ -115,65 +90,42 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
-   * Evaluates the condition of the document, reporting a "validation status."
-   * The return value is one of the `STATUS_*` constants defined by this class:
+   * Evaluates the condition of the document, reporting a "validation status,"
+   * as defined by {@link SchemaHandler}. This method must not be called unless
+   * the file is known to exist and have an appropriate schema version.
    *
-   * * `STATUS_OK` &mdash; No problems.
-   * * `STATUS_MIGRATE` &mdash; Document is in a format that is not understood.
-   * * `STATUS_NOT_FOUND` &mdash; The document doesn't exist.
-   * * `STATUS_ERROR` &mdash; Document is in an unrecoverably-bad state.
-   *
-   * This method will also emit information to the log about problems.
-   *
-   * @returns {string} The validation status.
+   * @returns {string} One of the `STATUS_*` constants defined by
+   *   {@link SchemaHandler}.
    */
   async validationStatus() {
-    if (!(await this.file.exists())) {
-      return BodyControl.STATUS_NOT_FOUND;
-    }
-
     let transactionResult;
 
-    // Check the required metainfo paths.
+    // Check the revision number.
 
     try {
       const fc = this.fileCodec;
       const spec = new TransactionSpec(
-        fc.op_readPath(Paths.SCHEMA_VERSION),
         fc.op_readPath(Paths.BODY_REVISION_NUMBER)
       );
       transactionResult = await fc.transact(spec);
     } catch (e) {
-      this.log.info('Corrupt document: Failed to read/decode basic data.');
-      return BodyControl.STATUS_ERROR;
+      this.log.error('Major problem trying to read file!');
+      return SchemaHandler.STATUS_ERROR;
     }
 
     const data          = transactionResult.data;
-    const schemaVersion = data.get(Paths.SCHEMA_VERSION);
     const revNum        = data.get(Paths.BODY_REVISION_NUMBER);
-
-    if (!schemaVersion) {
-      this.log.info('Corrupt document: Missing schema version.');
-      return BodyControl.STATUS_ERROR;
-    }
 
     if (!revNum) {
       this.log.info('Corrupt document: Missing revision number.');
-      return BodyControl.STATUS_ERROR;
-    }
-
-    const expectSchemaVersion = this.schemaVersion;
-    if (schemaVersion !== expectSchemaVersion) {
-      const got = schemaVersion;
-      this.log.info(`Mismatched schema version: got ${got}; expected ${expectSchemaVersion}`);
-      return BodyControl.STATUS_MIGRATE;
+      return SchemaHandler.STATUS_ERROR;
     }
 
     try {
       RevisionNumber.check(revNum);
     } catch (e) {
       this.log.info('Corrupt document: Bogus revision number.');
-      return BodyControl.STATUS_ERROR;
+      return SchemaHandler.STATUS_ERROR;
     }
 
     // Make sure all the changes can be read and decoded.
@@ -185,7 +137,7 @@ export default class BodyControl extends BaseControl {
         await this._readChangeRange(i, lastI + 1);
       } catch (e) {
         this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
-        return BodyControl.STATUS_ERROR;
+        return SchemaHandler.STATUS_ERROR;
       }
     }
 
@@ -202,18 +154,18 @@ export default class BodyControl extends BaseControl {
       transactionResult = await fc.transact(spec);
     } catch (e) {
       this.log.info('Corrupt document: Weird empty-change read failure.');
-      return BodyControl.STATUS_ERROR;
+      return SchemaHandler.STATUS_ERROR;
     }
 
     // In a valid doc, the loop body won't end up executing at all.
     for (const storagePath of transactionResult.data.keys()) {
       this.log.info('Corrupt document. Extra change at path:', storagePath);
-      return BodyControl.STATUS_ERROR;
+      return SchemaHandler.STATUS_ERROR;
     }
 
     // All's well!
 
-    return BodyControl.STATUS_OK;
+    return SchemaHandler.STATUS_OK;
   }
 
   /**
