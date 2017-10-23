@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import Quill from 'quill';
+import { TObject } from 'typecheck';
 
 import { UtilityClass } from 'util-common';
 
@@ -162,5 +163,31 @@ export default class QuillUtil extends UtilityClass {
       lineOffset,
       range: { index: low, length: 0 }
     });
+  }
+
+  /**
+   * Returns the `<div>` container for the entire Quill complex.
+   *
+   * @param {Quill} quill The Quill instance whose container will
+   *   be returned.
+   * @returns {HTMLDivElement} The container `<div>`.
+   */
+  static containerDiv(quill) {
+    TObject.check(quill, Quill);
+
+    return quill.container;
+  }
+
+  /**
+   * Returns the `<div>` representing the editor.
+   *
+   * @param {Quill} quill The Quill instance whose editor `<div>` is to
+   *   be returned.
+   * @returns {HTMLDivElement} The editor `<div>`.
+   */
+  static editorDiv(quill) {
+    TObject.check(quill, Quill);
+
+    return QuillUtil.containerDiv(quill).getElementsByClassName('ql-editor').item(0);
   }
 }
