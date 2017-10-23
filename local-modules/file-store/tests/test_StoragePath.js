@@ -159,75 +159,91 @@ describe('file-store/StoragePath', () => {
     });
   });
 
-  describe('isPrefix()', () => {
-    it('should return `true` for prefix relationships', () => {
-      function test(prefix, path) {
-        assert.isTrue(StoragePath.isPrefix(prefix, path));
-      }
+  describe('isPrefix*()', () => {
+    // Common tests for both `isPrefix*()` methods, because they only differ in
+    // how `===` arguments are treated.
+    function outerTest(methodName, equalExpectation) {
+      const func = (prefix, path) => {
+        return StoragePath[methodName](prefix, path);
+      };
 
-      test('/a', '/a/b');
-      test('/a', '/a/b/c');
-      test('/a', '/a/b/c/d');
-      test('/a', '/a/b/c/d/e');
-      test('/a', '/a/b/c/d/e/f');
-      test('/blort/florp', '/blort/florp/a');
-      test('/blort/florp', '/blort/florp/aa');
-      test('/blort/florp', '/blort/florp/aa/b');
-      test('/blort/florp', '/blort/florp/aa/bb');
+      it('should return `true` for prefix relationships', () => {
+        function test(prefix, path) {
+          assert.isTrue(func(prefix, path));
+        }
+
+        test('/a', '/a/b');
+        test('/a', '/a/b/c');
+        test('/a', '/a/b/c/d');
+        test('/a', '/a/b/c/d/e');
+        test('/a', '/a/b/c/d/e/f');
+        test('/blort/florp', '/blort/florp/a');
+        test('/blort/florp', '/blort/florp/aa');
+        test('/blort/florp', '/blort/florp/aa/b');
+        test('/blort/florp', '/blort/florp/aa/bb');
+      });
+
+      it(`should return \`${equalExpectation}\` when the two values are equal`, () => {
+        function test(prefix, path) {
+          assert.strictEqual(func(prefix, path), equalExpectation);
+        }
+
+        test('/a',      '/a');
+        test('/ab',     '/ab');
+        test('/x/y/zz', '/x/y/zz');
+      });
+
+      it('should return `false` for non-prefix, non-equal relationships', () => {
+        function test(prefix, path) {
+          assert.isFalse(func(prefix, path));
+        }
+
+        test('/a',   '/aa');
+        test('/aa',  '/a');
+        test('/a',   '/b');
+        test('/a',   '/b/a');
+        test('/a/b', '/a');
+        test('/ax',  '/axb');
+        test('/ax',  '/axb/c');
+        test('/a/b', '/a/bb');
+      });
+
+      it('should throw an error if either argument is not a valid absolute path', () => {
+        function test(value) {
+          assert.throws(() => func('/x', value));
+          assert.throws(() => func(value, '/x'));
+          assert.throws(() => func(value, value));
+        }
+
+        // Non-strings.
+        test(null);
+        test(undefined);
+        test(false);
+        test(123);
+        test(new Map());
+        test(['x']);
+        test({ x: 10 });
+
+        // Not valid absolute path syntax.
+        test('');
+        test('foo');
+        test('foo/');
+        test('/boo$');
+        test('/@');
+        test('/!x');
+        test('florp/');
+        test('/florp/');
+        test('x/y');
+        test('x/y/');
+      });
+    }
+
+    describe('isPrefix()', () => {
+      outerTest('isPrefix', false);
     });
 
-    it('should return `false` when the two values are equal', () => {
-      function test(prefix, path) {
-        assert.isFalse(StoragePath.isPrefix(prefix, path));
-      }
-
-      test('/a',      '/a');
-      test('/ab',     '/ab');
-      test('/x/y/zz', '/x/y/zz');
-    });
-
-    it('should return `false` for non-prefix relationships', () => {
-      function test(prefix, path) {
-        assert.isFalse(StoragePath.isPrefix(prefix, path));
-      }
-
-      test('/a',   '/aa');
-      test('/aa',  '/a');
-      test('/a',   '/b');
-      test('/a',   '/b/a');
-      test('/a/b', '/a');
-      test('/ax',  '/axb');
-      test('/ax',  '/axb/c');
-      test('/a/b', '/a/bb');
-    });
-
-    it('should throw an error if either argument is not a valid absolute path', () => {
-      function test(value) {
-        assert.throws(() => StoragePath.isPrefix('/x', value));
-        assert.throws(() => StoragePath.isPrefix(value, '/x'));
-        assert.throws(() => StoragePath.isPrefix(value, value));
-      }
-
-      // Non-strings.
-      test(null);
-      test(undefined);
-      test(false);
-      test(123);
-      test(new Map());
-      test(['x']);
-      test({ x: 10 });
-
-      // Not valid absolute path syntax.
-      test('');
-      test('foo');
-      test('foo/');
-      test('/boo$');
-      test('/@');
-      test('/!x');
-      test('florp/');
-      test('/florp/');
-      test('x/y');
-      test('x/y/');
+    describe('isPrefixOrSame()', () => {
+      outerTest('isPrefixOrSame', true);
     });
   });
 

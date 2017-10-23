@@ -117,6 +117,21 @@ export default class StoragePath extends UtilityClass {
   }
 
   /**
+   * Indicates whether the first path is either a prefix of or the same as the
+   * second path.
+   *
+   * @param {string} prefix Path prefix.
+   * @param {string} path Path which might either be or start with `prefix`.
+   * @returns {boolean} `true` if `prefix` is indeed the same as `path` or is
+   *   a path prefix of `path`, or `false` if not.
+   */
+  static isPrefixOrSame(prefix, path) {
+    // **Note:** We do the `isPrefix()` call first so as to get its error checks
+    // in all cases.
+    return StoragePath.isPrefix(prefix, path) || (path === prefix);
+  }
+
+  /**
    * Joins an array of components into a single storage path string. Components
    * must _not_ include slashes (`/`). This operation is the inverse of
    * `split()`.
