@@ -93,8 +93,8 @@ export default class DocServer extends Singleton {
 
     const resultPromise = (async () => {
       try {
-        const file      = await Hooks.theOne.fileStore.getFile(docId);
-        const result    = new FileComplex(this._codec, file);
+        const file   = await Hooks.theOne.fileStore.getFile(docId);
+        const result = new FileComplex(this._codec, file);
 
         await result.init();
 

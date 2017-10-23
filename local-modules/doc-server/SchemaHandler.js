@@ -58,8 +58,7 @@ export default class SchemaHandler extends BaseComplexMember {
   async create() {
     this.log.info('Creating / re-creating file.');
 
-    const fc = this.fileCodec; // Avoids boilerplate immediately below.
-
+    const fc   = this.fileCodec; // Avoids boilerplate immediately below.
     const spec = new TransactionSpec(
       // If the file already existed, this clears out the old contents.
       // **TODO:** In cases where this is a re-creation based on a migration
