@@ -5,6 +5,7 @@
 import { combineReducers, createStore } from 'redux';
 
 import DocumentState from './DocumentState';
+import DragState from './DragState';
 import OwnerState from './OwnerState';
 import SharingState from './SharingState';
 
@@ -19,6 +20,7 @@ export default class ClientStore {
   constructor() {
     const rootReducer = combineReducers({
       document: DocumentState.reducer,
+      drag:     DragState.reducer,
       owner:    OwnerState.reducer,
       sharing:  SharingState.reducer
     });
@@ -26,8 +28,40 @@ export default class ClientStore {
     this._store = createStore(rootReducer);
   }
 
-  /** {object} The redux store. */
+  /**
+   * {object} The redux store. The wrapped Redux store should
+   * only be used when passing it as an argument to
+   * redux-connect.
+  */
   get store() {
     return this._store;
+  }
+
+  /**
+   * Call-through to the Redux subscribe function.
+   *
+   * @param {function} callback a
+   * @returns {function} The function to call to unsubscribe.
+   */
+  subscribe(callback) {
+    return this._store.subscribe(callback);
+  }
+
+  /**
+   * Call-through to the Redux `getState()` function.
+   *
+   * @returns {object} The current state of the store.
+   */
+  getState() {
+    return this._store.getState();
+  }
+
+  /**
+   * Call-through to the Redux `dispatch()` function.
+   *
+   * @param {object} action The action to dispatch to the store.
+   */
+  dispatch(action) {
+    this._store.dispatch(action);
   }
 }

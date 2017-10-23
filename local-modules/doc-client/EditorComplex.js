@@ -134,8 +134,8 @@ export default class EditorComplex extends CommonBase {
       this._caretStore = new CaretStore(this);
 
       // Let the overlay do extra initialization.
-      Hooks.theOne.quillInstanceInit('title', this._titleQuill);
-      Hooks.theOne.quillInstanceInit('body', this._bodyQuill);
+      Hooks.theOne.quillInstanceInit('title', this, this._titleQuill);
+      Hooks.theOne.quillInstanceInit('body', this, this._bodyQuill);
 
       /** {CaretOverlay} The remote caret overlay controller. */
       this._caretOverlay = new CaretOverlay(this, authorOverlayNode);
@@ -165,6 +165,11 @@ export default class EditorComplex extends CommonBase {
   /** {DocSession} The session control instance. */
   get docSession() {
     return this._docSession;
+  }
+
+  /** {ClientStore} Pub/sub interface for client data model changes. */
+  get clientStore() {
+    return this._clientStore;
   }
 
   /** {Logger} Logger to use when _not_ referring to the session. */

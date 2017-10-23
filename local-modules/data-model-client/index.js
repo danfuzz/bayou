@@ -4,12 +4,14 @@
 
 import ClientStore from './ClientStore';
 import DocumentState from './DocumentState';
+import DragState from './DragState';
 import OwnerState from './OwnerState';
 import SharingState from './SharingState';
 
 export {
   ClientStore,
   DocumentState,
+  DragState,
   OwnerState,
   SharingState
 };
