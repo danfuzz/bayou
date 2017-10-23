@@ -27,17 +27,14 @@ export default class Hooks extends Singleton {
   }
 
   /**
-   * Called on every `Quill` instance that is constructed, just before returning
-   * it to the client.
+   * Called on every `EditorComplex` instance that is constructed, just before
+   * making it active from the user's perspective. This hook is expected to
+   * (or at least allowed to) perform initialization on the Quill instances
+   * within the complex.
    *
-   * @param {string} contextName_unused The name of the context. This is one of
-   *   `body` (for the main editor) or `title` (for the title field editor).
-   * @param {EditorComplex} editorComplex_unused The editor complex
-   *   hosting the Quill instance.
-   * @param {Quill} quill_unused The initialized instance (except for whatever
-   *   needs to be done here).
+   * @param {EditorComplex} editorComplex_unused The editor complex in question.
    */
-  quillInstanceInit(contextName_unused, editorComplex_unused, quill_unused) {
+  quillInstanceInit(editorComplex_unused) {
     // This space intentionally left blank.
   }
 

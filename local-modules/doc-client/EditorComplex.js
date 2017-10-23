@@ -131,14 +131,14 @@ export default class EditorComplex extends CommonBase {
         modules:  EditorComplex._bodyModuleConfig
       });
 
+      /** {CaretStore} Redux store for caret-related info. */
       this._caretStore = new CaretStore(this);
-
-      // Let the overlay do extra initialization.
-      Hooks.theOne.quillInstanceInit('title', this, this._titleQuill);
-      Hooks.theOne.quillInstanceInit('body', this, this._bodyQuill);
 
       /** {CaretOverlay} The remote caret overlay controller. */
       this._caretOverlay = new CaretOverlay(this, authorOverlayNode);
+
+      // Let the overlay do extra initialization.
+      Hooks.theOne.quillInstanceInit(this);
 
       // Do session setup using the initial key.
       this._initSession(sessionKey, true);
