@@ -115,7 +115,7 @@ if (showHelp || argError) {
  */
 async function run(mode) {
   // Set up the server environment bits (including, e.g. the PID file).
-  await ServerEnv.init();
+  await ServerEnv.theOne.init();
 
   // A little spew to identify us.
   const info = ProductInfo.theOne.INFO;
@@ -162,7 +162,7 @@ async function clientTest() {
   // Figure out if there is already a server listening on the designated
   // application port. If not, run one locally in this process.
 
-  const alreadyRunning = await ServerEnv.isAlreadyRunningLocally();
+  const alreadyRunning = await ServerEnv.theOne.isAlreadyRunningLocally();
   let port;
 
   if (alreadyRunning) {
