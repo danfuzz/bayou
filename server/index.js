@@ -305,15 +305,9 @@ async function clientTest() {
  * Does a server testing run.
  */
 async function serverTest() {
-  const failures  = await ServerTests.runAll();
-  const anyFailed = (failures !== 0);
+  const failures = await ServerTests.runAll(testOut || null);
 
-  const msg = anyFailed
-    ? `Failed: ${failures}`
-    : 'All good! Yay!';
-  console.log('\n%s', msg); // eslint-disable-line no-console
-
-  process.exit(anyFailed ? 1 : 0);
+  process.exit((failures === 0) ? 0 : 1);
 }
 
 // Initialize logging.

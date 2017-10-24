@@ -150,7 +150,7 @@ fi
 mkdir -p "${testOutDir}"
 
 run-test --tee 'client-bundle.txt' "${runProduct}" --client-bundle
-run-test --tee 'server-test.txt' "${runProduct}" --server-test
+run-test 'server-test.txt' "${runProduct}" --server-test
 run-test 'client-test.txt' "${runProduct}" --client-test
 
 exit "${testError}"
