@@ -36,7 +36,7 @@ export default class PidFile extends Singleton {
   }
 
   /**
-   * Writes the PID file, and arrange for its timely erasure. This should only
+   * Writes the PID file, and arranges for its timely erasure. This should only
    * get called if we are reasonably sure there isn't another local server
    * process running.
    */
