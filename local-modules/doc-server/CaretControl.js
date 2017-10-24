@@ -5,6 +5,7 @@
 import {
   Caret, CaretChange, CaretDelta, CaretOp, CaretSnapshot, RevisionNumber, Timestamp
 } from 'doc-common';
+import { TransactionSpec } from 'file-store';
 import { Condition } from 'promise-util';
 import { TInt, TString } from 'typecheck';
 import { Errors } from 'util-common';
@@ -12,6 +13,7 @@ import { Errors } from 'util-common';
 import BaseControl from './BaseControl';
 import CaretColor from './CaretColor';
 import CaretStorage from './CaretStorage';
+import Paths from './Paths';
 
 /**
  * {Int} How many older caret snapshots should be maintained for potential use
@@ -110,6 +112,27 @@ export default class CaretControl extends BaseControl {
     // `update()` it will always turn into an appropriate new snapshot.
     return new CaretChange(
       snapshot.revNum + 1, [CaretOp.op_beginSession(caret)], lastActive);
+  }
+
+  /**
+   * {TransactionSpec} Spec for a transaction which when run will initialize the
+   * portion of the file which this class is responsible for.
+   */
+  get _impl_initSpec() {
+    const fc = this.fileCodec; // Avoids boilerplate immediately below.
+
+    return new TransactionSpec(
+      // Clear out old caret data, if any.
+      fc.op_deletePathPrefix(Paths.CARET_PREFIX)
+    );
+  }
+
+  /**
+   * Subclass-specific implementation of `afterInit()`.
+   */
+  async _impl_afterInit() {
+    // No action needed: The system will automatically notice that stuff got
+    // erased.
   }
 
   /**

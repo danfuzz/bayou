@@ -134,8 +134,6 @@ export default class FileBootstrap extends BaseComplexMember {
     // change for revision `0`.
     const change = new BodyChange(1, firstText, Timestamp.now());
 
-    // **TODO:** The following should all happen in a single transaction.
-
     const eraseSpec = new TransactionSpec(
       // If the file already existed, this clears out the old contents.
       // **TODO:** In cases where this is a re-creation based on a migration
@@ -147,12 +145,17 @@ export default class FileBootstrap extends BaseComplexMember {
 
     const schemaSpec = this._schemaHandler.initSpec;
     const bodySpec   = this._bodyControl.initSpec;
-    const fullSpec   = eraseSpec.concat(schemaSpec).concat(bodySpec);
+    const caretSpec  = this._caretControl.initSpec;
+    const fullSpec   = eraseSpec.concat(schemaSpec).concat(bodySpec).concat(caretSpec);
 
     await this.file.create();
     await this.file.transact(fullSpec);
 
     await this._bodyControl.afterInit();
+    await this._caretControl.afterInit();
+
+    // **TODO:** Ideally, this would be rolled into the transaction as defined
+    // by `fullSpec` above.
     await this._bodyControl.update(change);
 
     return true;
