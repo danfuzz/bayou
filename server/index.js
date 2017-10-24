@@ -13,7 +13,6 @@ import 'source-map-support/register';
 import 'babel-core/register';
 import 'babel-polyfill';
 
-import http from 'http';
 import path from 'path';
 import puppeteer from 'puppeteer';
 import minimist from 'minimist';
@@ -105,13 +104,18 @@ if (showHelp || argError) {
 }
 
 /**
- * Runs the system normally or in dev mode.
+ * Runs the system. `mode` options are:
  *
- * @param {boolean} dev Whether or not to use dev mode.
+ * * `prod` &mdash; Normal production run.
+ * * `dev` &mdash; Local development.
+ * * `test` &mdash; Configured for live testing.
+ *
+ * @param {string} mode The mode as described above.
+ * @returns {Int} The port being listened on, once listening has started.
  */
-function run(dev) {
+async function run(mode) {
   // Set up the server environment bits (including, e.g. the PID file).
-  ServerEnv.init();
+  await ServerEnv.init();
 
   // A little spew to identify us.
   const info = ProductInfo.theOne.INFO;
@@ -119,7 +123,7 @@ function run(dev) {
     log.info(k, '=', info[k]);
   }
 
-  if (dev) {
+  if (mode === 'dev') {
     // We're in dev mode. This starts the system that live-syncs the client
     // source.
     DevMode.theOne.start();
@@ -128,10 +132,10 @@ function run(dev) {
   Hooks.theOne.run();
 
   /** The main app server. */
-  const theApp = new Application(dev);
+  const theApp = new Application(mode !== 'prod');
 
   // Start the app!
-  theApp.start();
+  return theApp.start(mode === 'test');
 }
 
 /**
@@ -153,66 +157,26 @@ async function clientBundle() {
  * Does a client testing run.
  */
 async function clientTest() {
-  const baseUrl = `http://localhost:${Hooks.theOne.listenPort}`;
-  const url     = `${baseUrl}/debug/client-test`;
   const testLog = new Logger('client-test');
 
   // Figure out if there is already a server listening on the designated
-  // application port.
-  let alreadyRunning = false;
-  try {
-    const alreadyRunningProm = new Promise((resolve, reject_unused) => {
-      const request = http.get(baseUrl);
+  // application port. If not, run one locally in this process.
 
-      request.setTimeout(10 * 1000);
-      request.end();
+  const alreadyRunning = await ServerEnv.isAlreadyRunningLocally();
+  let port;
 
-      request.on('response', (response) => {
-        response.setTimeout(10 * 1000);
-
-        response.on('data', () => {
-          // Ignore the payload. The `http` API requires us to acknowledge the
-          // data. (There are other ways of doing so too, but this is the
-          // simplest.)
-        });
-
-        response.on('end', () => {
-          // Successful request. That means that, yes, there is indeed already
-          // a server running.
-          testLog.info(
-            'NOTE: There is a server already running on this machine. The test run\n' +
-            '      will issue requests to it instead of trying to build a new test bundle.');
-          resolve(true);
-        });
-
-        response.on('timeout', () => {
-          request.abort();
-          resolve(false);
-        });
-      });
-
-      request.on('error', (error_unused) => {
-        resolve(false);
-      });
-
-      request.on('timeout', () => {
-        request.abort();
-        resolve(false);
-      });
-    });
-
-    alreadyRunning = await alreadyRunningProm;
-  } catch (e) {
-    testLog.error('Trouble determining if server is already running.', e);
-    process.exit(1);
-  }
-
-  // Start up a server in this process, if we determined that this machine isn't
-  // already running one.
-  if (!alreadyRunning) {
-    // Start up the system in dev mode, so that we can point our Chrome instance
-    // at it.
-    await run(true); // `true` === dev mode.
+  if (alreadyRunning) {
+    port = Hooks.theOne.listenPort;
+    testLog.info(
+      'NOTE: There is a server already running on this machine. The test run\n' +
+      '      will issue requests to it instead of trying to build a new test bundle.');
+  } else {
+    // Start up a server in this process, since we determined that this machine
+    // isn't already running one. We run in test mode so that it will pick a
+    // free port (instead of assuming the usual one is available; it likely
+    // won't be if the tests are running on a shared machine) and will make the
+    // `/debug` endpoints available.
+    port = await run('test');
 
     // Wait a few seconds, so that we can be reasonably sure that the request
     // handlers are ready to handle requests. And there's no point in issuing
@@ -236,9 +200,11 @@ async function clientTest() {
     logLines.push(msg);
   });
 
-  testLog.info('Issuing request to start test run...');
-
   // Issue the request to load up the client tests.
+  const url = `http://localhost:${port}/debug/client-test`;
+
+  testLog.info(`Issuing request to start test run:\n  ${url}`);
+
   await page.goto(url, { waitUntil: 'load' });
 
   // Now wait until the test run is complete. This happens an indeterminate
@@ -313,7 +279,7 @@ async function serverTest() {
   // TODO: Arguably this call shouldn't be necessary. (That is, the test code
   // that cares about server env stuff should arrange for its appropriate
   // initialization and perhaps even teardown.)
-  ServerEnv.init();
+  await ServerEnv.init();
 
   const failures  = await ServerTests.runAll();
   const anyFailed = (failures !== 0);
@@ -362,5 +328,5 @@ if (clientBundleMode) {
 } else if (serverTestMode) {
   serverTest();
 } else {
-  run(devMode);
+  run(devMode ? 'dev' : 'prod');
 }

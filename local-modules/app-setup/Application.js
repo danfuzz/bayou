@@ -4,8 +4,10 @@
 
 import express from 'express';
 import express_ws from 'express-ws';
+import http from 'http';
 import fs from 'fs';
 import path from 'path';
+import { promisify } from 'util';
 
 import { BearerToken, Context, PostConnection, WsConnection } from 'api-server';
 import { ClientBundle } from 'client-bundle';
@@ -73,12 +75,27 @@ export default class Application {
 
   /**
    * Starts up the server.
+   *
+   * @param {boolean} [pickPort = false] If `true`, causes the app to pick an
+   *   arbitrary available port to listen on instead of the configured port.
+   *   This is only meant to be passed as `true` in testing scenarios.
+   * @returns {Int} The port being listened on, once listening has started.
    */
-  start() {
-    const port = Hooks.theOne.listenPort;
-    this._app.listen(port, () => {
-      log.info('Listening on port:', port);
-    });
+  async start(pickPort = false) {
+    const port   = pickPort ? 0 : Hooks.theOne.listenPort;
+    const server = http.createServer(this._app);
+
+    await promisify(cb => server.listen(port, cb))();
+
+    const resultPort = server.address().port;
+
+    log.info(`Listening on port: ${resultPort}.`);
+
+    if ((port !== 0) && (port !== resultPort)) {
+      log.warn(`Originally requested port: ${port}`);
+    }
+
+    return resultPort;
   }
 
   /**

@@ -11,6 +11,18 @@ import { Singleton } from 'util-common';
  */
 export default class Hooks extends Singleton {
   /**
+   * Called on every `EditorComplex` instance that is constructed, just before
+   * making it active from the user's perspective. This hook is expected to
+   * (or at least allowed to) perform initialization on the Quill instances
+   * within the complex.
+   *
+   * @param {EditorComplex} editorComplex_unused The editor complex in question.
+   */
+  editorComplexInit(editorComplex_unused) {
+    // This space intentionally left blank.
+  }
+
+  /**
    * Called during application startup. This is called just after the logging
    * library has been set up and before almost everything else. It is called
    * in the context of setting up an editor within a web page.
@@ -24,21 +36,6 @@ export default class Hooks extends Singleton {
   run(window_unused, baseUrl_unused) {
     // This space intentionally left (nearly) blank.
     return undefined;
-  }
-
-  /**
-   * Called on every `Quill` instance that is constructed, just before returning
-   * it to the client.
-   *
-   * @param {string} contextName_unused The name of the context. This is one of
-   *   `body` (for the main editor) or `title` (for the title field editor).
-   * @param {EditorComplex} editorComplex_unused The editor complex
-   *   hosting the Quill instance.
-   * @param {Quill} quill_unused The initialized instance (except for whatever
-   *   needs to be done here).
-   */
-  quillInstanceInit(contextName_unused, editorComplex_unused, quill_unused) {
-    // This space intentionally left blank.
   }
 
   /**

@@ -75,10 +75,14 @@ export default class Hooks extends Singleton {
   }
 
   /**
-   * {Int} The local port to listen for connections on. The default value is
-   * `8080`. In general, this often but does not necessarily match the value
-   * in `baseUrl`. It won't match in cases where this server runs behind a
-   * reverse proxy, for example.
+   * {Int} The local port to listen for connections on by default. This
+   * typically but does not _necessarily_ match the values returned by
+   * {@link #baseUrlFromRequest}. It won't match in cases where this server runs
+   * behind a reverse proxy, for example. It also won't match when the system
+   * is brought up in `test` mode, as that mode will pick an arbitrary port to
+   * listen on.
+   *
+   * This (default) implementation of the property always returns `8080`.
    */
   get listenPort() {
     return 8080;

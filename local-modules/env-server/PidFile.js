@@ -6,11 +6,12 @@ import fs from 'fs';
 import path from 'path';
 
 import { Logger } from 'see-all';
+import { TInt } from 'typecheck';
 import { Singleton } from 'util-common';
 
 import Dirs from './Dirs';
 
-/** Logger. */
+/** {Logger} Logger. */
 const log = new Logger('pid');
 
 /**
@@ -19,7 +20,9 @@ const log = new Logger('pid');
  */
 export default class PidFile extends Singleton {
   /**
-   * Write the PID file, and arrange for its timely erasure.
+   * Constructs an instance. Logging aside, this doesn't cause any external
+   * action to take place (such as writing the PID file); that stuff happens in
+   * {@link #init}.
    */
   constructor() {
     super();
@@ -27,6 +30,17 @@ export default class PidFile extends Singleton {
     /** {string} Path for the PID file. */
     this._pidPath = path.resolve(Dirs.theOne.VAR_DIR, 'pid.txt');
 
+    log.info('PID:', process.pid);
+
+    Object.freeze(this);
+  }
+
+  /**
+   * Writes the PID file, and arrange for its timely erasure. This should only
+   * get called if we are reasonably sure there isn't another local server
+   * process running.
+   */
+  init() {
     // Erase the file on exit.
     process.once('exit',    this._erasePid.bind(this));
     process.once('SIGINT',  this._handleSignal.bind(this, 'SIGINT'));
@@ -35,7 +49,38 @@ export default class PidFile extends Singleton {
     // Write the PID file.
     fs.writeFileSync(this._pidPath, `${process.pid}\n`);
 
-    log.info('PID:', process.pid);
+    log.info('PID file initialized.');
+  }
+
+  /**
+   * Reads and parses the contents of the PID file, if it exists and contains
+   * a valid process ID (followed by a newline).
+   *
+   * @returns {Int|null} The process ID contained in the file if the file is
+   *   valid, or `null` if the file doesn't exist or contains invalid data.
+   */
+  readFile() {
+    try {
+      const text  = fs.readFileSync(this._pidPath, { encoding: 'utf8' });
+      const match = text.match(/^([0-9]+)\n$/);
+
+      if (match === null) {
+        return null;
+      }
+
+      // `TInt.check()` ensures it's a "safe" integer.
+      const result = TInt.check(parseInt(match));
+
+      log.info(`Server already running: PID ${result}`);
+
+      return result;
+    } catch (e) {
+      // `ENOENT` is "file not found." Anything else is logworthy.
+      if (e.code !== 'ENOENT') {
+        log.error('Trouble reading PID file.', e);
+      }
+      return null;
+    }
   }
 
   /**
