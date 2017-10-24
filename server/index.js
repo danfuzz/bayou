@@ -276,11 +276,6 @@ async function clientTest() {
  * Does a server testing run.
  */
 async function serverTest() {
-  // TODO: Arguably this call shouldn't be necessary. (That is, the test code
-  // that cares about server env stuff should arrange for its appropriate
-  // initialization and perhaps even teardown.)
-  await ServerEnv.init();
-
   const failures  = await ServerTests.runAll();
   const anyFailed = (failures !== 0);
 
