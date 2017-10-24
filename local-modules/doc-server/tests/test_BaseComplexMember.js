@@ -24,7 +24,6 @@ describe('doc-server/BaseComplexMember', () => {
       assert.strictEqual(result.fileAccess,    fa);
       assert.strictEqual(result.fileCodec,     fa.fileCodec);
       assert.strictEqual(result.log,           fa.log);
-      assert.strictEqual(result.schemaVersion, fa.schemaVersion);
     });
 
     it('should reject non-`FileAccess` arguments', () => {

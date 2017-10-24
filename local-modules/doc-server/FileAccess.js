@@ -3,10 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Codec } from 'codec';
-import { ProductInfo } from 'env-server';
 import { BaseFile, FileCodec } from 'file-store';
 import { Logger } from 'see-all';
-import { TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 /** {Logger} Logger to use for this module. */
@@ -37,9 +35,6 @@ export default class FileAccess extends CommonBase {
 
     /** {Logger} Logger for this instance. */
     this._log = log.withPrefix(`[${file.id}]`);
-
-    /** {string} The document schema version to use and expect. */
-    this._schemaVersion = TString.nonEmpty(ProductInfo.theOne.INFO.version);
 
     /** {FileCodec} File-codec wrapper to use. */
     this._fileCodec = new FileCodec(file, codec);

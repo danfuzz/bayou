@@ -48,12 +48,4 @@ export default class BaseComplexMember extends CommonBase {
   get log() {
     return this._fileAccess.log;
   }
-
-  /**
-   * {string} The document schema version to use for new documents and to expect
-   * in existing documents.
-   */
-  get schemaVersion() {
-    return this._fileAccess.schemaVersion;
-  }
 }
