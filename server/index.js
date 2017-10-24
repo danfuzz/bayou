@@ -104,12 +104,16 @@ if (showHelp || argError) {
 }
 
 /**
- * Runs the system normally or in dev mode.
+ * Runs the system. `mode` options are:
  *
- * @param {boolean} dev Whether or not to use dev mode.
+ * * `prod` &mdash; Normal production run.
+ * * `dev` &mdash; Local development.
+ * * `test` &mdash; Configured for live testing.
+ *
+ * @param {string} mode The mode as described above.
  * @returns {Int} The port being listened on, once listening has started.
  */
-async function run(dev) {
+async function run(mode) {
   // Set up the server environment bits (including, e.g. the PID file).
   await ServerEnv.init();
 
@@ -119,7 +123,7 @@ async function run(dev) {
     log.info(k, '=', info[k]);
   }
 
-  if (dev) {
+  if (mode === 'dev') {
     // We're in dev mode. This starts the system that live-syncs the client
     // source.
     DevMode.theOne.start();
@@ -128,10 +132,10 @@ async function run(dev) {
   Hooks.theOne.run();
 
   /** The main app server. */
-  const theApp = new Application(dev);
+  const theApp = new Application(mode !== 'prod');
 
   // Start the app!
-  return theApp.start();
+  return theApp.start(mode === 'test');
 }
 
 /**
@@ -170,7 +174,7 @@ async function clientTest() {
     // Start up a server in this process, since we determined that this machine
     // isn't already running one. We run in dev mode so that we can point our
     // Chrome instance at it.
-    port = await run(true); // `true` === dev mode.
+    port = await run('test');
 
     // Wait a few seconds, so that we can be reasonably sure that the request
     // handlers are ready to handle requests. And there's no point in issuing
@@ -322,5 +326,5 @@ if (clientBundleMode) {
 } else if (serverTestMode) {
   serverTest();
 } else {
-  run(devMode);
+  run(devMode ? 'dev' : 'prod');
 }

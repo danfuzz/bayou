@@ -76,10 +76,13 @@ export default class Application {
   /**
    * Starts up the server.
    *
+   * @param {boolean} [pickPort = false] If `true`, causes the app to pick an
+   *   arbitrary available port to listen on instead of the configured port.
+   *   This is only meant to be passed as `true` in testing scenarios.
    * @returns {Int} The port being listened on, once listening has started.
    */
-  async start() {
-    const port   = Hooks.theOne.listenPort;
+  async start(pickPort = false) {
+    const port   = pickPort ? 0 : Hooks.theOne.listenPort;
     const server = http.createServer(this._app);
 
     await promisify(cb => server.listen(port, cb))();
