@@ -40,34 +40,6 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
-   * Creates or re-creates the document body. This will result in a body with an
-   * empty change for revision `0` and a `revNum` of `0`. This method assumes
-   * that the underlying file must already exist (have been `create()d`).
-   */
-  async create() {
-    this.log.info('Creating document body.');
-
-    const fc = this.fileCodec; // Avoids boilerplate immediately below.
-
-    const spec = new TransactionSpec(
-      // If there was any body content (e.g. and most likely data in an earlier
-      // schema, this clears it out.
-      fc.op_deletePathPrefix(Paths.BODY_PREFIX),
-
-      // Initial revision number.
-      fc.op_writePath(Paths.BODY_REVISION_NUMBER, 0),
-
-      // Empty change #0 (per documented interface).
-      fc.op_writePath(Paths.forBodyChange(0), BodyChange.FIRST),
-    );
-
-    await this.file.transact(spec);
-
-    // Any cached snapshots are no longer valid.
-    this._snapshots = new Map();
-  }
-
-  /**
    * Gets a particular change to the document. The document consists of a
    * sequence of changes, each modifying revision N of the document to produce
    * revision N+1.
@@ -164,11 +136,31 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
-   * {class} Class (constructor function) of snapshot objects to be used with
-   * instances of this class.
+   * {TransactionSpec} Spec for a transaction which when run will initialize the
+   * portion of the file which this class is responsible for.
    */
-  static get _impl_snapshotClass() {
-    return BodySnapshot;
+  get _impl_initSpec() {
+    const fc = this.fileCodec; // Avoids boilerplate immediately below.
+
+    return new TransactionSpec(
+      // If there was any body content (e.g. and most likely data in an earlier
+      // schema, this clears it out.
+      fc.op_deletePathPrefix(Paths.BODY_PREFIX),
+
+      // Initial revision number.
+      fc.op_writePath(Paths.BODY_REVISION_NUMBER, 0),
+
+      // Empty change #0 (per documented interface).
+      fc.op_writePath(Paths.forBodyChange(0), BodyChange.FIRST),
+    );
+  }
+
+  /**
+   * Subclass-specific implementation of `afterInit()`.
+   */
+  async _impl_afterInit() {
+    // Any cached snapshots are no longer valid.
+    this._snapshots = new Map();
   }
 
   /**
@@ -538,5 +530,13 @@ export default class BodyControl extends BaseControl {
     }
 
     return result;
+  }
+
+  /**
+   * {class} Class (constructor function) of snapshot objects to be used with
+   * instances of this class.
+   */
+  static get _impl_snapshotClass() {
+    return BodySnapshot;
   }
 }

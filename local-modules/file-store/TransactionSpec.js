@@ -23,7 +23,7 @@ export default class TransactionSpec extends CommonBase {
     super();
 
     /** {array<FileOp>} Category-sorted array of operations. */
-    this._ops = FileOp.sortByCategory(ops);
+    this._ops = Object.freeze(FileOp.sortByCategory(ops));
 
     // Validate the op combo restrictions.
 
@@ -38,6 +38,8 @@ export default class TransactionSpec extends CommonBase {
     if (this.hasWaitOps() && (this.hasPullOps() || this.hasPushOps())) {
       throw Errors.bad_use('Cannot mix wait operations with reads and modifications.');
     }
+
+    Object.freeze(this);
   }
 
   /**
@@ -59,6 +61,21 @@ export default class TransactionSpec extends CommonBase {
   get timeoutMsec() {
     const result = this.opsWithName('timeout')[0];
     return (result === undefined) ? 'never' : result.arg('durMsec');
+  }
+
+  /**
+   * Concatenates the operations of this instance with that of another instance.
+   * Returns a new instance of this class with the combined operations.
+   *
+   * @param {TransactionSpec} other Instance to concatenate with.
+   * @returns {TransactionSpec} Instance with the operations of both `this` and
+   *   `other`.
+   */
+  concat(other) {
+    TransactionSpec.check(other);
+
+    const ops = this._ops.concat(other._ops);
+    return new TransactionSpec(...ops);
   }
 
   /**

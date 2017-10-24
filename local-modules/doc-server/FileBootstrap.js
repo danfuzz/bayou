@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BodyChange, BodyDelta, Timestamp } from 'doc-common';
+import { TransactionSpec } from 'file-store';
 import { DEFAULT_DOCUMENT } from 'hooks-server';
 import { Mutex } from 'promise-util';
 import { Errors } from 'util-common';
@@ -133,13 +134,29 @@ export default class FileBootstrap extends BaseComplexMember {
     // change for revision `0`.
     const change = new BodyChange(1, firstText, Timestamp.now());
 
-    // **TODO:** The following should all happen in a single transaction.
+    const eraseSpec = new TransactionSpec(
+      // If the file already existed, this clears out the old contents.
+      // **TODO:** In cases where this is a re-creation based on a migration
+      // problem, we probably want to preserve the old data by moving it aside
+      // (e.g. into a `lossage/<timestamp>` prefix) instead of just blasting it
+      // away entirely.
+      this.fileCodec.op_deleteAll()
+    );
 
-    await this._schemaHandler.create();
+    const schemaSpec = this._schemaHandler.initSpec;
+    const bodySpec   = this._bodyControl.initSpec;
+    const caretSpec  = this._caretControl.initSpec;
+    const fullSpec   = eraseSpec.concat(schemaSpec).concat(bodySpec).concat(caretSpec);
 
-    const control = this._bodyControl;
-    await control.create();
-    await control.update(change);
+    await this.file.create();
+    await this.file.transact(fullSpec);
+
+    await this._bodyControl.afterInit();
+    await this._caretControl.afterInit();
+
+    // **TODO:** Ideally, this would be rolled into the transaction as defined
+    // by `fullSpec` above.
+    await this._bodyControl.update(change);
 
     return true;
   }
