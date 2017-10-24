@@ -42,7 +42,7 @@ export default class BodyControl extends BaseControl {
   /**
    * Creates or re-creates the document body. This will result in a body with an
    * empty change for revision `0` and a `revNum` of `0`. This method assumes
-   * that the underlying file must already exist (have been `create()d`).
+   * that the underlying file already exists (has been `create()d`).
    */
   async create() {
     this.log.info('Creating document body.');

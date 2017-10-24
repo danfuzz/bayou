@@ -135,6 +135,7 @@ export default class FileBootstrap extends BaseComplexMember {
 
     // **TODO:** The following should all happen in a single transaction.
 
+    await this.file.create();
     await this._schemaHandler.create();
 
     const control = this._bodyControl;

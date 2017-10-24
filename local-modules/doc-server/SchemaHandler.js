@@ -53,7 +53,8 @@ export default class SchemaHandler extends BaseComplexMember {
 
   /**
    * Creates or re-creates the file. This will result in a file that is totally
-   * devoid of content _except_ for a schema version.
+   * devoid of content _except_ for a schema version. This method assumes that
+   * the underlying file already exists (has been `create()d`).
    */
   async create() {
     this.log.info('Creating / re-creating file.');
@@ -68,10 +69,9 @@ export default class SchemaHandler extends BaseComplexMember {
       fc.op_deleteAll(),
 
       // Version for the file schema.
-      fc.op_writePath(Paths.SCHEMA_VERSION, this.schemaVersion)
+      fc.op_writePath(Paths.SCHEMA_VERSION, this._schemaVersion)
     );
 
-    await this.file.create();
     await this.file.transact(spec);
   }
 
