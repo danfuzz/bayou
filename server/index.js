@@ -172,8 +172,10 @@ async function clientTest() {
       '      will issue requests to it instead of trying to build a new test bundle.');
   } else {
     // Start up a server in this process, since we determined that this machine
-    // isn't already running one. We run in dev mode so that we can point our
-    // Chrome instance at it.
+    // isn't already running one. We run in test mode so that it will pick a
+    // free port (instead of assuming the usual one is available; it likely
+    // won't be if the tests are running on a shared machine) and will make the
+    // `/debug` endpoints available.
     port = await run('test');
 
     // Wait a few seconds, so that we can be reasonably sure that the request
