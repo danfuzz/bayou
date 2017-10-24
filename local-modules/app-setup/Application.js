@@ -4,8 +4,10 @@
 
 import express from 'express';
 import express_ws from 'express-ws';
+import http from 'http';
 import fs from 'fs';
 import path from 'path';
+import { promisify } from 'util';
 
 import { BearerToken, Context, PostConnection, WsConnection } from 'api-server';
 import { ClientBundle } from 'client-bundle';
@@ -73,12 +75,24 @@ export default class Application {
 
   /**
    * Starts up the server.
+   *
+   * @returns {Int} The port being listened on, once listening has started.
    */
-  start() {
-    const port = Hooks.theOne.listenPort;
-    this._app.listen(port, () => {
-      log.info('Listening on port:', port);
-    });
+  async start() {
+    const port   = Hooks.theOne.listenPort;
+    const server = http.createServer(this._app);
+
+    await promisify(cb => server.listen(port, cb))();
+
+    const resultPort = server.address().port;
+
+    log.info(`Listening on port: ${resultPort}.`);
+
+    if ((port !== 0) && (port !== resultPort)) {
+      log.warn(`Originally requested port: ${port}`);
+    }
+
+    return resultPort;
   }
 
   /**

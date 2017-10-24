@@ -107,6 +107,7 @@ if (showHelp || argError) {
  * Runs the system normally or in dev mode.
  *
  * @param {boolean} dev Whether or not to use dev mode.
+ * @returns {Int} The port being listened on, once listening has started.
  */
 async function run(dev) {
   // Set up the server environment bits (including, e.g. the PID file).
@@ -130,7 +131,7 @@ async function run(dev) {
   const theApp = new Application(dev);
 
   // Start the app!
-  theApp.start();
+  return theApp.start();
 }
 
 /**
@@ -158,8 +159,10 @@ async function clientTest() {
   // application port. If not, run one locally in this process.
 
   const alreadyRunning = await ServerEnv.isAlreadyRunningLocally();
+  let port;
 
   if (alreadyRunning) {
+    port = Hooks.theOne.listenPort;
     testLog.info(
       'NOTE: There is a server already running on this machine. The test run\n' +
       '      will issue requests to it instead of trying to build a new test bundle.');
@@ -167,7 +170,7 @@ async function clientTest() {
     // Start up a server in this process, since we determined that this machine
     // isn't already running one. We run in dev mode so that we can point our
     // Chrome instance at it.
-    await run(true); // `true` === dev mode.
+    port = await run(true); // `true` === dev mode.
 
     // Wait a few seconds, so that we can be reasonably sure that the request
     // handlers are ready to handle requests. And there's no point in issuing
@@ -191,10 +194,11 @@ async function clientTest() {
     logLines.push(msg);
   });
 
-  testLog.info('Issuing request to start test run...');
-
   // Issue the request to load up the client tests.
-  const url = `${ServerEnv.loopbackUrl}/debug/client-test`;
+  const url = `http://localhost:${port}/debug/client-test`;
+
+  testLog.info(`Issuing request to start test run:\n  ${url}`);
+
   await page.goto(url, { waitUntil: 'load' });
 
   // Now wait until the test run is complete. This happens an indeterminate
