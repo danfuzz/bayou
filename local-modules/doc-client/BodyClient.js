@@ -5,7 +5,7 @@
 import { ConnectionError } from 'api-common';
 import { BodyChange, BodyDelta, BodySnapshot } from 'doc-common';
 import { Delay } from 'promise-util';
-import { QuillEvents } from 'quill-util';
+import { QuillEvents, QuillUtil } from 'quill-util';
 import { TString } from 'typecheck';
 import { StateMachine } from 'state-machine';
 import { Errors, Functor, InfoError } from 'util-common';
@@ -391,6 +391,10 @@ export default class BodyClient extends StateMachine {
     // And with that, it's now safe to enable Quill so that it will accept user
     // input.
     this._quill.enable();
+
+    // Focus the editor area so the user can start typing right away rather than
+    // make them have to click-to-focus first.
+    QuillUtil.editorDiv(this._quill).focus();
 
     // Head into our first iteration of idling while waiting for changes coming
     // in locally (from quill) or from the server.
