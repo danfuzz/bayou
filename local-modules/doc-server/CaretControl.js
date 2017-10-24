@@ -113,14 +113,6 @@ export default class CaretControl extends BaseControl {
   }
 
   /**
-   * {class} Class (constructor function) of snapshot objects to be used with
-   * instances of this class.
-   */
-  static get _impl_snapshotClass() {
-    return CaretSnapshot;
-  }
-
-  /**
    * Underlying implementation of `currentRevNum()`, as required by the
    * superclass.
    *
@@ -397,5 +389,13 @@ export default class CaretControl extends BaseControl {
     }
 
     this.log.info('New caret revision number:', newRevNum);
+  }
+
+  /**
+   * {class} Class (constructor function) of snapshot objects to be used with
+   * instances of this class.
+   */
+  static get _impl_snapshotClass() {
+    return CaretSnapshot;
   }
 }

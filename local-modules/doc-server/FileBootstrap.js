@@ -145,14 +145,15 @@ export default class FileBootstrap extends BaseComplexMember {
       this.fileCodec.op_deleteAll()
     );
 
-    const fullSpec = eraseSpec.concat(this._schemaHandler.initSpec);
+    const schemaSpec = this._schemaHandler.initSpec;
+    const bodySpec   = this._bodyControl.initSpec;
+    const fullSpec   = eraseSpec.concat(schemaSpec).concat(bodySpec);
 
     await this.file.create();
     await this.file.transact(fullSpec);
 
-    const control = this._bodyControl;
-    await control.create();
-    await control.update(change);
+    await this._bodyControl.afterInit();
+    await this._bodyControl.update(change);
 
     return true;
   }
