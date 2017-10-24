@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BodyChange, BodyDelta, Timestamp } from 'doc-common';
+import { TransactionSpec } from 'file-store';
 import { DEFAULT_DOCUMENT } from 'hooks-server';
 import { Mutex } from 'promise-util';
 import { Errors } from 'util-common';
@@ -135,8 +136,19 @@ export default class FileBootstrap extends BaseComplexMember {
 
     // **TODO:** The following should all happen in a single transaction.
 
+    const eraseSpec = new TransactionSpec(
+      // If the file already existed, this clears out the old contents.
+      // **TODO:** In cases where this is a re-creation based on a migration
+      // problem, we probably want to preserve the old data by moving it aside
+      // (e.g. into a `lossage/<timestamp>` prefix) instead of just blasting it
+      // away entirely.
+      this.fileCodec.op_deleteAll()
+    );
+
+    const fullSpec = eraseSpec.concat(this._schemaHandler.initSpec);
+
     await this.file.create();
-    await this._schemaHandler.create();
+    await this.file.transact(fullSpec);
 
     const control = this._bodyControl;
     await control.create();
