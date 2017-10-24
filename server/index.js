@@ -13,6 +13,7 @@ import 'source-map-support/register';
 import 'babel-core/register';
 import 'babel-polyfill';
 
+import fs from 'fs';
 import path from 'path';
 import puppeteer from 'puppeteer';
 import minimist from 'minimist';
@@ -41,7 +42,7 @@ let argError = false;
  */
 const opts = minimist(process.argv.slice(2), {
   boolean: ['client-bundle', 'client-test', 'dev', 'help', 'server-test'],
-  string: ['prog-name'],
+  string: ['prog-name', 'test-out'],
   alias: {
     'h': 'help'
   },
@@ -66,6 +67,9 @@ const devMode = opts['dev'];
 /** {boolean} Server test mode? */
 const serverTestMode = opts['server-test'];
 
+/** {string} Path for test output. */
+let testOut = opts['test-out'];
+
 /** {boolean} Want help? */
 const showHelp = opts['help'];
 
@@ -73,6 +77,14 @@ if ((clientBundleMode + clientTestMode + devMode + serverTestMode) > 1) {
   // eslint-disable-next-line no-console
   console.log('Cannot specify multiple mode options.');
   argError = true;
+} else if (testOut) {
+  if (!(clientTestMode || serverTestMode)) {
+    // eslint-disable-next-line no-console
+    console.log('Cannot specify `--test-out` except when running in a test mode.');
+    argError = true;
+  } else {
+    testOut = path.resolve(testOut);
+  }
 }
 
 if (showHelp || argError) {
@@ -80,7 +92,9 @@ if (showHelp || argError) {
   [
     'Usage:',
     '',
-    `${progName} [--dev | --client-bundle | --server-test ]`,
+    `${progName} [--dev | --client-bundle | --client-test | --server-test ]`,
+    '  [--test-out=<path>]',
+    '',
     '  Run the project.',
     '',
     '  --client-bundle',
@@ -93,6 +107,9 @@ if (showHelp || argError) {
     '    to restart.',
     '  --server-test',
     '    Just run the server tests, and report any errors encountered.',
+    '  --test-out=<path>',
+    '    Where to write the output from a test run in addition to writing to the',
+    '    console. (If not specified, will just write to the console.)',
     '',
     `${progName} [--help | -h]`,
     '  Display this message.'
@@ -246,7 +263,8 @@ async function clientTest() {
     fail:  '(undetermined)'
   };
 
-  console.log(''); // eslint-disable-line no-console
+  const outputLines = [''];
+
   for (let i = 0; i < logLines.length; i++) {
     const line = logLines[i];
     const match = line.match(/^# (tests|pass|fail) ([0-9]+)$/);
@@ -255,19 +273,30 @@ async function clientTest() {
       stats[match[1]] = match[2];
     }
 
-    console.log('%s', line); // eslint-disable-line no-console
+    outputLines.push(line);
   }
 
   const anyFailed = (stats.fail !== '0');
 
+  outputLines.push('');
+  outputLines.push('Summary:');
+  outputLines.push(`  Total:  ${stats.tests}`);
+  outputLines.push(`  Passed: ${stats.pass}`);
+  outputLines.push(`  Failed: ${stats.fail}`);
+  outputLines.push('');
+  outputLines.push(anyFailed ? 'Alas.' : 'All good! Yay!');
+  outputLines.push('');
+
+  const allOutput = outputLines.join('\n');
+
   // eslint-disable-next-line no-console
-  console.log(
-    '\nSummary:\n' +
-    `  Total:  ${stats.tests}\n` +
-    `  Passed: ${stats.pass}\n` +
-    `  Failed: ${stats.fail}\n\n` +
-    (anyFailed ? 'Alas.' : 'All good! Yay!')
-  );
+  console.log('%s', allOutput);
+
+  if (testOut) {
+    fs.writeFileSync(testOut, allOutput);
+    // eslint-disable-next-line no-console
+    console.log('Wrote test results to file:', testOut);
+  }
 
   process.exit(anyFailed ? 1 : 0);
 }
