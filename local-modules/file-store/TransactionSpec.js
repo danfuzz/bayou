@@ -74,8 +74,8 @@ export default class TransactionSpec extends CommonBase {
   concat(other) {
     TransactionSpec.check(other);
 
-    const ops = this._ops.concat(other.ops);
-    return new TransactionSpec(ops);
+    const ops = this._ops.concat(other._ops);
+    return new TransactionSpec(...ops);
   }
 
   /**
