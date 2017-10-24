@@ -62,8 +62,18 @@ export default class Application {
       }
     })();
 
-    /** The underlying webserver run by this instance. */
+    /**
+     * {function} The top-level "Express application" run by this instance. It
+     * is a request handler function which is suitable for use with Node's
+     * `http` library.
+     */
     this._app = express();
+
+    /** {http.Server} The server that directly answers HTTP requests. */
+    this._server = http.createServer(this._app);
+
+    // Make the webserver able to handle websockets.
+    express_ws(this._app, this._server);
 
     this._addRequestLogging();
     this._addRoutes();
@@ -83,7 +93,7 @@ export default class Application {
    */
   async start(pickPort = false) {
     const port   = pickPort ? 0 : Hooks.theOne.listenPort;
-    const server = http.createServer(this._app);
+    const server = this._server;
 
     await promisify(cb => server.listen(port, cb))();
 
@@ -115,9 +125,6 @@ export default class Application {
    */
   _addRoutes() {
     const app = this._app;
-
-    // Make the webserver able to handle websockets.
-    express_ws(app);
 
     // Map Quill files into `/static/quill`. This is used for CSS files but not
     // for the JS code; the JS code is included in the overall JS bundle file.
