@@ -57,24 +57,16 @@ export default class ValidationStatus extends UtilityClass {
    * an error if not.
    *
    * @param {*} value (Alleged) validation status.
-   * @param {boolean} [allowNotFound = false] Whether to allow
-   *   {@link #STATUS_NOT_FOUND} as a value. It defaults to `false`, because
-   *   that value is only allowed in limited circumstances.
    * @returns {string} `value` if it is indeed valid.
    */
-  static check(value, allowNotFound = false) {
+  static check(value) {
     switch (value) {
       case ValidationStatus.STATUS_ERROR:
       case ValidationStatus.STATUS_MIGRATE:
+      case ValidationStatus.STATUS_NOT_FOUND:
       case ValidationStatus.STATUS_OK:
       case ValidationStatus.STATUS_RECOVER: {
         return value;
-      }
-      case ValidationStatus.STATUS_NOT_FOUND: {
-        if (allowNotFound) {
-          return value;
-        }
-        throw Errors.bad_value(value, ValidationStatus, 'value !== STATUS_NOT_FOUND');
       }
     }
 

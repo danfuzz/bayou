@@ -116,7 +116,7 @@ export default class FileBootstrap extends BaseComplexMember {
     const members = [
       this._schemaHandler,
       this._bodyControl,
-      //this._caretControl
+      this._caretControl
     ];
 
     for (const member of members) {

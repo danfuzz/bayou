@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CommonBase } from 'util-common';
+import { CommonBase, Errors } from 'util-common';
 
 import FileAccess from './FileAccess';
 import ValidationStatus from './ValidationStatus';
@@ -67,16 +67,22 @@ export default class BaseComplexMember extends CommonBase {
   async validationStatus() {
     const result = await this._impl_validationStatus();
 
-    return ValidationStatus.check(result);
+    if (result === null) {
+      throw Errors.bad_use('Not subject to validation. Should not have called.');
+    } else {
+      return ValidationStatus.check(result);
+    }
   }
 
   /**
    * Subclass-specific implementation of {@link #validationStatus}. Subclasses
-   * must override this to either perform validation or throw an error
-   * indicating that they don't participate in validation.
+   * must override this to either perform validation or return `null` to
+   * indicate that they don't participate in validation.
    *
    * @abstract
-   * @returns {string} One of the constants defined by {@link ValidationStatus}.
+   * @returns {string|null} One of the constants defined by
+   *  {@link ValidationStatus}, or `null` to indicate that this is not an
+   *  object which participates in validation.
    */
   async _impl_validationStatus() {
     return this._mustOverride();

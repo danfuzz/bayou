@@ -14,6 +14,7 @@ import BaseControl from './BaseControl';
 import CaretColor from './CaretColor';
 import CaretStorage from './CaretStorage';
 import Paths from './Paths';
+import ValidationStatus from './ValidationStatus';
 
 /**
  * {Int} How many older caret snapshots should be maintained for potential use
@@ -263,6 +264,16 @@ export default class CaretControl extends BaseControl {
     }
 
     return baseSnapshot.diff(expectedSnapshot);
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #validationStatus}. In this
+   * case, it does nothing because this class blithely tolerates old data.
+   *
+   * @returns {string} One of the constants defined by {@link ValidationStatus}.
+   */
+  async _impl_validationStatus() {
+    return ValidationStatus.STATUS_OK;
   }
 
   /**
