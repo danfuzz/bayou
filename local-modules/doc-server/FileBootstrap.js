@@ -12,6 +12,7 @@ import BaseComplexMember from './BaseComplexMember';
 import CaretControl from './CaretControl';
 import BodyControl from './BodyControl';
 import SchemaHandler from './SchemaHandler';
+import ValidationStatus from './ValidationStatus';
 
 /** {BodyDelta} Default contents when creating a new document. */
 const DEFAULT_TEXT = new BodyDelta(DEFAULT_DOCUMENT);
@@ -103,7 +104,7 @@ export default class FileBootstrap extends BaseComplexMember {
   async _init() {
     const status  = await this._overallValidationStatus();
 
-    if (status === SchemaHandler.STATUS_OK) {
+    if (status === ValidationStatus.STATUS_OK) {
       // All's well.
       return true;
     }
@@ -112,14 +113,14 @@ export default class FileBootstrap extends BaseComplexMember {
 
     let firstText;
 
-    if (status === SchemaHandler.STATUS_MIGRATE) {
+    if (status === ValidationStatus.STATUS_MIGRATE) {
       // **TODO:** Ultimately, this code path will evolve into forward
       // migration of documents found to be in older formats. For now, we just
       // fall through to the document creation logic below, which will leave
       // a note what's going on in the document contents.
       this.log.info('Needs migration. (But just noting that fact for now.)');
       firstText = MIGRATION_NOTE;
-    } else if (status === SchemaHandler.STATUS_ERROR) {
+    } else if (status === ValidationStatus.STATUS_ERROR) {
       // **TODO:** Ultimately, it should be a Really Big Deal if we find
       // ourselves here. We might want to implement some form of "hail mary"
       // attempt to recover _something_ of use from the document storage.
@@ -171,7 +172,7 @@ export default class FileBootstrap extends BaseComplexMember {
   async _overallValidationStatus() {
     const schemaStatus = await this._schemaHandler.validationStatus();
 
-    if (schemaStatus !== SchemaHandler.STATUS_OK) {
+    if (schemaStatus !== ValidationStatus.STATUS_OK) {
       return schemaStatus;
     }
 

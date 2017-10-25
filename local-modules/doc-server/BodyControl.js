@@ -8,7 +8,7 @@ import { Errors, InfoError } from 'util-common';
 
 import BaseControl from './BaseControl';
 import Paths from './Paths';
-import SchemaHandler from './SchemaHandler';
+import ValidationStatus from './ValidationStatus';
 
 /**
  * {Int} Maximum number of document changes to request in a single
@@ -77,7 +77,7 @@ export default class BodyControl extends BaseControl {
       transactionResult = await fc.transact(spec);
     } catch (e) {
       this.log.error('Major problem trying to read file!', e);
-      return SchemaHandler.STATUS_ERROR;
+      return ValidationStatus.STATUS_ERROR;
     }
 
     const data   = transactionResult.data;
@@ -85,14 +85,14 @@ export default class BodyControl extends BaseControl {
 
     if (!revNum) {
       this.log.info('Corrupt document: Missing revision number.');
-      return SchemaHandler.STATUS_ERROR;
+      return ValidationStatus.STATUS_ERROR;
     }
 
     try {
       RevisionNumber.check(revNum);
     } catch (e) {
       this.log.info('Corrupt document: Bogus revision number.');
-      return SchemaHandler.STATUS_ERROR;
+      return ValidationStatus.STATUS_ERROR;
     }
 
     // Make sure all the changes can be read and decoded.
@@ -104,7 +104,7 @@ export default class BodyControl extends BaseControl {
         await this._readChangeRange(i, lastI + 1);
       } catch (e) {
         this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
-        return SchemaHandler.STATUS_ERROR;
+        return ValidationStatus.STATUS_ERROR;
       }
     }
 
@@ -121,18 +121,18 @@ export default class BodyControl extends BaseControl {
       transactionResult = await fc.transact(spec);
     } catch (e) {
       this.log.info('Corrupt document: Weird empty-change read failure.');
-      return SchemaHandler.STATUS_ERROR;
+      return ValidationStatus.STATUS_ERROR;
     }
 
     // In a valid doc, the loop body won't end up executing at all.
     for (const storagePath of transactionResult.data.keys()) {
       this.log.info('Corrupt document. Extra change at path:', storagePath);
-      return SchemaHandler.STATUS_ERROR;
+      return ValidationStatus.STATUS_ERROR;
     }
 
     // All's well!
 
-    return SchemaHandler.STATUS_OK;
+    return ValidationStatus.STATUS_OK;
   }
 
   /**

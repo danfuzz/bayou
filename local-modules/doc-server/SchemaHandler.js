@@ -8,6 +8,7 @@ import { TString } from 'typecheck';
 
 import BaseComplexMember from './BaseComplexMember';
 import Paths from './Paths';
+import ValidationStatus from './ValidationStatus';
 
 /**
  * Handler for the schema of a file. As of this writing, this class merely knows
@@ -16,26 +17,6 @@ import Paths from './Paths';
  * from older schemas.
  */
 export default class SchemaHandler extends BaseComplexMember {
-  /** {string} Return value from `validationStatus()`, see which for details. */
-  static get STATUS_ERROR() {
-    return 'status_error';
-  }
-
-  /** {string} Return value from `validationStatus()`, see which for details. */
-  static get STATUS_MIGRATE() {
-    return 'status_migrate';
-  }
-
-  /** {string} Return value from `validationStatus()`, see which for details. */
-  static get STATUS_NOT_FOUND() {
-    return 'status_not_found';
-  }
-
-  /** {string} Return value from `validationStatus()`, see which for details. */
-  static get STATUS_OK() {
-    return 'status_ok';
-  }
-
   /**
    * Constructs an instance.
    *
@@ -77,7 +58,7 @@ export default class SchemaHandler extends BaseComplexMember {
    */
   async validationStatus() {
     if (!(await this.file.exists())) {
-      return SchemaHandler.STATUS_NOT_FOUND;
+      return ValidationStatus.STATUS_NOT_FOUND;
     }
 
     let transactionResult;
@@ -90,7 +71,7 @@ export default class SchemaHandler extends BaseComplexMember {
       transactionResult = await fc.transact(spec);
     } catch (e) {
       this.log.error('Major problem trying to read file!', e);
-      return SchemaHandler.STATUS_ERROR;
+      return ValidationStatus.STATUS_ERROR;
     }
 
     const data          = transactionResult.data;
@@ -98,16 +79,16 @@ export default class SchemaHandler extends BaseComplexMember {
 
     if (!schemaVersion) {
       this.log.info('Corrupt document: Missing schema version.');
-      return SchemaHandler.STATUS_ERROR;
+      return ValidationStatus.STATUS_ERROR;
     }
 
     const expectSchemaVersion = this._schemaVersion;
     if (schemaVersion !== expectSchemaVersion) {
       const got = schemaVersion;
       this.log.info(`Mismatched schema version: got ${got}; expected ${expectSchemaVersion}`);
-      return SchemaHandler.STATUS_MIGRATE;
+      return ValidationStatus.STATUS_MIGRATE;
     }
 
-    return SchemaHandler.STATUS_OK;
+    return ValidationStatus.STATUS_OK;
   }
 }
