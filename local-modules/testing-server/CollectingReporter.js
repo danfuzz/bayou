@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { reporters } from 'mocha';
+import { format } from 'util';
 
 import { CommonBase } from 'util-common';
 
@@ -26,17 +27,31 @@ export default class CollectingReporter extends CommonBase {
     // code that consumes this value.
     options.reporterOptions.holder[0] = this;
 
-    /** {object} Mocha's default `spec` reporter. */
-    this._specReporter = new reporters.spec(runner);
-
     /** {array<mocha.Suite>} Current stack of active test suites. */
     this._suites = [];
 
     /**
-     * {array<{ test, status, suites }>} Array of collected test results, each
-     * an ad-hoc plain object.
+     * {array<string>} Ongoing collected console output, reset for each test.
+     */
+    this._console = [];
+
+    /** {function} Original value of `console.log`. */
+    this._originalLog = console.log; // eslint-disable-line no-console
+
+    /**
+     * {array<{ test, status, suites, log }>} Array of collected test results,
+     * each an ad-hoc plain object.
      */
     this._results = [];
+
+    runner.on('test', () => {
+      console.log = this._log.bind(this); // eslint-disable-line no-console
+      this._console = [];
+    });
+
+    runner.on('test end', () => {
+      console.log = this._originalLog; // eslint-disable-line no-console
+    });
 
     runner.on('suite', (suite) => {
       this._suites.push(suite);
@@ -57,6 +72,9 @@ export default class CollectingReporter extends CommonBase {
     runner.on('fail', (test) => {
       this._addResult(test, 'fail');
     });
+
+    /** {object} Mocha's default `spec` reporter. */
+    this._specReporter = new reporters.spec(runner);
   }
 
   /**
@@ -69,13 +87,20 @@ export default class CollectingReporter extends CommonBase {
     const lines = [];
     const stats = { fail: 0, pass: 0, pending: 0 };
 
-    for (const { test, status, suites } of this._results) {
+    for (const { test, status, suites, log } of this._results) {
       const testPath = [...suites.map(s => s.title), test.title].join(' / ');
-      const speed = (test.speed === 'fast') ? '' : ', ${test.speed}ms';
+      const speed = (test.speed === 'fast') ? '' : ', ${test.duration}ms';
       const statusStr = `(${status}${speed})`;
 
       lines.push(`${statusStr} ${testPath}`);
       stats[status]++;
+
+      if (log.length !== 0) {
+        for (const line of log) {
+          lines.push(`  ${line}`);
+        }
+        lines.push('');
+      }
     }
 
     lines.push('');
@@ -98,6 +123,20 @@ export default class CollectingReporter extends CommonBase {
   _addResult(test, status) {
     // `slice(1)` because we don't care about the anonymous top-level suite.
     const suites = this._suites.slice(1);
-    this._results.push({ test, status, suites });
+
+    // `slice()` to make an independent clone.
+    const log = this._console.slice();
+
+    this._results.push({ test, status, suites, log });
+  }
+
+  /**
+   * Replacement for `console.log()` which is active when a test is running.
+   *
+   * @param {...*} args Original arguments to `console.log()`.
+   */
+  _log(...args) {
+    this._originalLog(...args);
+    this._console.push(format(...args));
   }
 }
