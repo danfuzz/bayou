@@ -2,11 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { createStore } from 'redux';
-
 import { CaretSnapshot } from 'doc-common';
 import { Delay } from 'promise-util';
-import { TFunction } from 'typecheck';
 
 /**
  * {object} Starting state for the caret redux store.
@@ -38,9 +35,9 @@ const ERROR_DELAY_MSEC = 5000;
  * actions to a redux data store to update the client caret model.
  *
  * Other entities interested in caret changes (notably CaretOverly) should
- * use the `subscribe(callback)` method of this class.
+ * look at the `carets` entry in `EditorComplex`'s store.
  */
-export default class CaretStore {
+export default class CaretState {
   /**
    * Constructs an instance of this class.
    *
@@ -48,33 +45,8 @@ export default class CaretStore {
    *   instance will operate.
    */
   constructor(editorComplex) {
-    this._store = createStore(this._caretStoreReducer);
-
+    this._store = editorComplex.clientStore;
     this._watchCarets(editorComplex);
-  }
-
-  /**
-   * {object} The current settled data model from the redux
-   * store used for carets.
-   */
-  get state() {
-    return this._store.getState();
-  }
-
-  /**
-   * Adds a notification callback to the list of change subscribers
-   * for the caret redux store.
-   *
-   * @param {function} callback A function to be called when the caret
-   *   data model is changed. Note that it may not be called for each discrete
-   *   change since the redux system may bundle individual mutations together.
-   * @returns {function} A function to be used to unsubscribe the
-   *   callback from future change notifications.
-   */
-  subscribe(callback) {
-    TFunction.checkCallable(callback);
-
-    return this._store.subscribe(callback);
   }
 
   /**
@@ -82,27 +54,26 @@ export default class CaretStore {
    * state changes.
    * @see http://redux.js.org/docs/basics/Reducers.html
    *
-   * @param {object} [state = INITIAL_STATE] The previous settled state, or
-   *  `undefined` if no state has been set yet.
-   * @param {object} action The
-   * @returns {object} The new state after the action is applied.
+   * @returns {function} The reducer function.
    */
-  _caretStoreReducer(state = INITIAL_STATE, action) {
-    let newState;
+  static get reducer() {
+    return (state = INITIAL_STATE, action) => {
+      let newState;
 
-    switch (action.type) {
-      case CARET_SNAPSHOT_UPDATED:
-        newState = action.snapshot;
-        break;
+      switch (action.type) {
+        case CARET_SNAPSHOT_UPDATED:
+          newState = action.snapshot;
+          break;
 
-      default:
-        // If we get an action we don't recognize we shouldn't be mutating
-        // the state so just maintain the current state.
-        newState = state;
-        break;
-    }
+        default:
+          // If we get an action we don't recognize we shouldn't be mutating
+          // the state so just maintain the current state.
+          newState = state;
+          break;
+      }
 
-    return newState;
+      return newState;
+    };
   }
 
   /**

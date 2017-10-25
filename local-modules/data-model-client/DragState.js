@@ -26,7 +26,7 @@ export default class DocumentState {
     return (state = DEFAULT_STATE, action) => {
       switch (action.type) {
         case UPDATE_DRAG_LOCATION_ACTION: {
-          const newState = Object.assign({}, state, { index: action.index });
+          const newState = Object.assign({}, state, { dragIndex: action.index });
           return newState;
         }
 

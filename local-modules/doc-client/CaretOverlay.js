@@ -81,7 +81,7 @@ export default class CaretOverlay {
     this._svgDefs = this._addInitialSvgDefs();
 
     /**
-     * {CaretSnapshot} The last caret snapshot we received from `CaretStore`.
+     * {CaretSnapshot} The last caret snapshot we received from `ClientStore`.
      * We diff the new snapshot against it to find what changed.
      */
     this._lastCaretSnapshot = CaretSnapshot.EMPTY;
@@ -108,18 +108,18 @@ export default class CaretOverlay {
     editorComplex.clientStore.subscribe(this._updateDragIndicator.bind(this));
 
     /**
-     * {CaretStore} Data store and its associated mutation state machine
-     * used for updating the caret data model as changes come from the
+     * {ClientStore} Data store and its associated mutation state machine
+     * used for updating the client data model as changes come from the
      * server.
      */
-    this._caretStore = editorComplex.caretStore;
+    this._clientStore = editorComplex.clientStore;
 
     /**
      * {function} Function which acts as our receipt for having subscribed
      * to changes to the caret store. If called, this function will
      * unsubscribe this module from further change notifications.
      */
-    this._caretSubscription = this._caretStore.subscribe(this._onCaretChange.bind(this));
+    this._caretSubscription = this._clientStore.subscribe(this._onCaretChange.bind(this));
 
     // Call the change callback once to make sure initial state is set.
     this._onCaretChange();
@@ -475,7 +475,7 @@ export default class CaretOverlay {
    */
   _onCaretChange() {
     const oldSnapshot = this._lastCaretSnapshot;
-    const newSnapshot = this._caretStore.state;
+    const newSnapshot = this._clientStore.getState().carets;
     const delta = oldSnapshot.diff(newSnapshot).delta;
     let updateDisplay = false;
 
@@ -525,11 +525,11 @@ export default class CaretOverlay {
     const state = this._editorComplex.clientStore.getState();
     const dragState = state.drag;
 
-    if (this._dragIndex === dragState.index) {
+    if (this._dragIndex === dragState.dragIndex) {
       return;
     }
 
-    this._dragIndex = dragState.index;
+    this._dragIndex = dragState.dragIndex;
     this._updateDisplay();
   }
 }

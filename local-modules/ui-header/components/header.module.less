@@ -1,10 +1,29 @@
 @import "~ui-common/colors";
 
-.header {
-  border-width:   0px 0px 1px 0px;
-  border-color:   @sk_light_gray;
-  border-style:   solid;
-  margin-left:    0.5rem;
-  margin-top:     0.5rem;
-  padding-bottom: 0.5rem;
+.document-header {
+  border-bottom: 1px solid #f1f1f1;
+  box-shadow: 0 1px 0 @sk_soft_gray;
+  display: flex;
+  margin: 8px 16px;
+  overflow-y: hidden;
+}
+
+.document_header__meta {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  margin-bottom: 8px;
+  margin-right: 16px;
+  min-width: 150px;
+}
+
+.document-header__info {
+  display: flex;
+  flex-direction: row;
+}
+
+.document-header__collaboration {
+  display: flex;
+  flex: 1 0 auto;
+  justify-content: flex-end;
 }

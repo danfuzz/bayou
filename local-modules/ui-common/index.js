@@ -2,10 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import * as icons from './icon-font.less';
 import * as colors from './colors.less';
+import * as common from './common.less';
+import * as icons from './icon-font.less';
 
 export {
   colors,
+  common,
   icons
 };

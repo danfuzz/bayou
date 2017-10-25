@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { CaretState } from 'doc-client';
 import { combineReducers, createStore } from 'redux';
 
 import DocumentState from './DocumentState';
@@ -19,6 +20,7 @@ export default class ClientStore {
    */
   constructor() {
     const rootReducer = combineReducers({
+      carets:   CaretState.reducer,
       document: DocumentState.reducer,
       drag:     DragState.reducer,
       owner:    OwnerState.reducer,

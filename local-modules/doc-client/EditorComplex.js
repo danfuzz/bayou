@@ -17,9 +17,9 @@ import { Header } from 'ui-header';
 import { DomUtil } from 'util-client';
 import { CommonBase, Errors } from 'util-common';
 
-import CaretOverlay from './CaretOverlay';
-import CaretStore from './CaretStore';
 import BodyClient from './BodyClient';
+import CaretOverlay from './CaretOverlay';
+import CaretState from './CaretState';
 import DocSession from './DocSession';
 
 /** {Logger} Logger for this module. */
@@ -131,8 +131,11 @@ export default class EditorComplex extends CommonBase {
         modules:  EditorComplex._bodyModuleConfig
       });
 
-      /** {CaretStore} Redux store for caret-related info. */
-      this._caretStore = new CaretStore(this);
+      /**
+       * {CaretState} Machinery that watches for changes to the
+       * session state and updates the client redux store.
+       */
+      this._caretState = new CaretState(this);
 
       /** {CaretOverlay} The remote caret overlay controller. */
       this._caretOverlay = new CaretOverlay(this, authorOverlayNode);
@@ -145,11 +148,6 @@ export default class EditorComplex extends CommonBase {
 
       this._ready.value = true;
     })();
-  }
-
-  /** {CaretStore} Pub/sub interface for caret data model changes. */
-  get caretStore() {
-    return this._caretStore;
   }
 
   /** {CaretOverlay} The author overlay controller. */
