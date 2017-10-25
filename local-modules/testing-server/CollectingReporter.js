@@ -89,7 +89,7 @@ export default class CollectingReporter extends CommonBase {
    */
   resultLines() {
     const lines = [];
-    const stats = { fail: 0, pass: 0, pending: 0 };
+    const stats = { fail: 0, pass: 0, pending: 0, total: 0 };
 
     for (const { test, status, suites, log } of this._results) {
       const testPath = [...suites.map(s => s.title), test.title].join(' / ');
@@ -98,6 +98,7 @@ export default class CollectingReporter extends CommonBase {
 
       lines.push(`${statusStr} ${testPath}`);
       stats[status]++;
+      stats.total++;
 
       if (log.length !== 0) {
         for (const line of log) {
@@ -109,7 +110,7 @@ export default class CollectingReporter extends CommonBase {
 
     lines.push('');
     lines.push('Summary:');
-    lines.push(`  Total:  ${stats.tests}`);
+    lines.push(`  Total:  ${stats.total}`);
     lines.push(`  Passed: ${stats.pass}`);
     lines.push(`  Failed: ${stats.fail}`);
     lines.push('');

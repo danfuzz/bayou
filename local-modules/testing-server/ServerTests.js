@@ -56,7 +56,7 @@ export default class ServerTests extends UtilityClass {
 
     log.info('Running server tests...');
 
-    const failures = await promisify((cb) => { mocha.run(cb); })();
+    const failures = await promisify(cb => mocha.run(f => cb(null, f)))();
 
     if (testOut !== null) {
       const output = reporterHolder[0].resultLines().join('\n');

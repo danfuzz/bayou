@@ -95,7 +95,7 @@ export default class Application {
     const port   = pickPort ? 0 : Hooks.theOne.listenPort;
     const server = this._server;
 
-    await promisify(cb => server.listen(port, cb))();
+    await promisify(cb => server.listen(port, value => cb(null, value)))();
 
     const resultPort = server.address().port;
 
