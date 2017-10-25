@@ -4,6 +4,7 @@
 
 import { BodyChange, RevisionNumber, Timestamp } from 'doc-common';
 import { TString } from 'typecheck';
+import { CommonBase } from 'util-common';
 
 import FileComplex from './FileComplex';
 
@@ -16,7 +17,7 @@ import FileComplex from './FileComplex';
  * underlying `BodyControl` while implicitly adding an author argument to
  * methods that modify the document.
  */
-export default class DocSession {
+export default class DocSession extends CommonBase {
   /**
    * Constructs an instance.
    *
@@ -27,6 +28,8 @@ export default class DocSession {
    * @param {string} authorId The author this instance acts on behalf of.
    */
   constructor(fileComplex, sessionId, authorId) {
+    super();
+
     /** {FileComplex} File complex that this instance is part of. */
     this._fileComplex = FileComplex.check(fileComplex);
 

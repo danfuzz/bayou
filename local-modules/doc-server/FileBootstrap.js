@@ -12,6 +12,7 @@ import BaseComplexMember from './BaseComplexMember';
 import CaretControl from './CaretControl';
 import BodyControl from './BodyControl';
 import SchemaHandler from './SchemaHandler';
+import ValidationStatus from './ValidationStatus';
 
 /** {BodyDelta} Default contents when creating a new document. */
 const DEFAULT_TEXT = new BodyDelta(DEFAULT_DOCUMENT);
@@ -25,9 +26,15 @@ const ERROR_NOTE = new BodyDelta([
 
 /**
  * {BodyDelta} Message used as document instead of migrating documents from
- * old schema versions. */
+ * old schema versions.
+ */
 const MIGRATION_NOTE = new BodyDelta([
   ['text', '(Recreated document due to schema version skew.)\n']
+]);
+
+/** {BodyDelta} Message used as document instead of attempting recovery. */
+const RECOVERY_NOTE = new BodyDelta([
+  ['text', '(Recreated document due to allegedly-recoverable corruption.)\n']
 ]);
 
 /**
@@ -96,14 +103,41 @@ export default class FileBootstrap extends BaseComplexMember {
   }
 
   /**
+   * Subclass-specific implementation of {@link #validationStatus}. This
+   * class implements overall validation for all document pieces.
+   *
+   * @returns {string} One of the constants defined by {@link ValidationStatus}.
+   */
+  async _impl_validationStatus() {
+    if (!(await this.file.exists())) {
+      return ValidationStatus.STATUS_NOT_FOUND;
+    }
+
+    const members = [
+      this._schemaHandler,
+      this._bodyControl,
+      this._caretControl
+    ];
+
+    for (const member of members) {
+      const status = await member.validationStatus();
+      if (status !== ValidationStatus.STATUS_OK) {
+        return status;
+      }
+    }
+
+    return ValidationStatus.STATUS_OK;
+  }
+
+  /**
    * Main guts of `init()`, which is called while the init mutex is locked.
    *
    * @returns {boolean} `true` once setup and initialization are complete.
    */
   async _init() {
-    const status  = await this._overallValidationStatus();
+    const status  = await this.validationStatus();
 
-    if (status === SchemaHandler.STATUS_OK) {
+    if (status === ValidationStatus.STATUS_OK) {
       // All's well.
       return true;
     }
@@ -112,22 +146,43 @@ export default class FileBootstrap extends BaseComplexMember {
 
     let firstText;
 
-    if (status === SchemaHandler.STATUS_MIGRATE) {
-      // **TODO:** Ultimately, this code path will evolve into forward
-      // migration of documents found to be in older formats. For now, we just
-      // fall through to the document creation logic below, which will leave
-      // a note what's going on in the document contents.
-      this.log.info('Needs migration. (But just noting that fact for now.)');
-      firstText = MIGRATION_NOTE;
-    } else if (status === SchemaHandler.STATUS_ERROR) {
-      // **TODO:** Ultimately, it should be a Really Big Deal if we find
-      // ourselves here. We might want to implement some form of "hail mary"
-      // attempt to recover _something_ of use from the document storage.
-      this.log.info('Major problem with stored data!');
-      firstText = ERROR_NOTE;
-    } else {
-      // The document simply didn't exist.
-      firstText = DEFAULT_TEXT;
+    switch (status) {
+      case ValidationStatus.STATUS_MIGRATE: {
+        // **TODO:** Ultimately, this code path will evolve into forward
+        // migration of documents found to be in older formats. For now, we just
+        // fall through to the document creation logic below, which will leave
+        // a note what's going on in the document contents.
+        this.log.info('Needs migration. (But just noting that fact for now.)');
+        firstText = MIGRATION_NOTE;
+        break;
+      }
+
+      case ValidationStatus.STATUS_RECOVER: {
+        // **TODO:** As with `STATUS_MIGRATE`, this code path will eventually
+        // expand into some sort of recovery mechanism.
+        this.log.info('Needs recovery. (But just noting that fact for now.)');
+        firstText = RECOVERY_NOTE;
+        break;
+      }
+
+      case ValidationStatus.STATUS_ERROR: {
+        // **TODO:** Ultimately, it should be a Really Big Deal if we find
+        // ourselves here. We might want to implement some form of "hail mary"
+        // attempt to recover _something_ of use from the document storage.
+        this.log.info('Major problem with stored data!');
+        firstText = ERROR_NOTE;
+        break;
+      }
+
+      case ValidationStatus.STATUS_NOT_FOUND: {
+        // The file simply didn't exist.
+        firstText = DEFAULT_TEXT;
+        break;
+      }
+
+      default: {
+        throw Errors.wtf(`Weird status: ${status}`);
+      }
     }
 
     // `revNum` is `1` because a newly-created body always has an empty
@@ -159,22 +214,5 @@ export default class FileBootstrap extends BaseComplexMember {
     await this._bodyControl.update(change);
 
     return true;
-  }
-
-  /**
-   * Helper for `init()` which determines overall status based on checks from
-   * the various file components.
-   *
-   * @returns {string} One of the `STATUS_*` constants defined by
-   *   {@link SchemaHandler}.
-   */
-  async _overallValidationStatus() {
-    const schemaStatus = await this._schemaHandler.validationStatus();
-
-    if (schemaStatus !== SchemaHandler.STATUS_OK) {
-      return schemaStatus;
-    }
-
-    return this._bodyControl.validationStatus();
   }
 }

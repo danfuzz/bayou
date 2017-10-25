@@ -191,6 +191,17 @@ export default class CaretStorage extends BaseComplexMember {
   }
 
   /**
+   * Subclass-specific implementation of {@link #validationStatus}. In this
+   * case, it returns `null` because this class doesn't do validation. (Caret
+   * validation is handled by {@link CaretContro}.)
+   *
+   * @returns {object} `null`, always.
+   */
+  async _impl_validationStatus() {
+    return null;
+  }
+
+  /**
    * Indicates that there is local session data that needs to be written to
    * file storage. This will ultimately cause such writing to be done.
    *
