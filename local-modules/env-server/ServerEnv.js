@@ -7,7 +7,7 @@ import http from 'http';
 
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
-import { Errors, UtilityClass } from 'util-common';
+import { Errors, Singleton } from 'util-common';
 
 import Dirs from './Dirs';
 import PidFile from './PidFile';
@@ -19,15 +19,23 @@ const log = new Logger('env-server');
 /**
  * Miscellaneous server-side utilities.
  */
-export default class ServerEnv extends UtilityClass {
+export default class ServerEnv extends Singleton {
+  /**
+   * {string} The base URL to use for loopback requests from this machine. This
+   * is always an `http://localhost/` URL.
+   */
+  get loopbackUrl() {
+    return `http://localhost:${Hooks.theOne.listenPort}`;
+  }
+
   /**
    * Initializes this module. This sets up the info for the `Dirs` class, sets
    * up the PID file, and gathers the product metainfo.
    */
-  static async init() {
+  async init() {
     Dirs.theOne;
 
-    const alreadyRunning = await ServerEnv.isAlreadyRunningLocally();
+    const alreadyRunning = await this.isAlreadyRunningLocally();
     if (alreadyRunning) {
       log.error(
         'Another server is already running locally.\n' +
@@ -41,15 +49,15 @@ export default class ServerEnv extends UtilityClass {
 
   /**
    * Checks to see if a server is already running on this machine. This is
-   * called by `ServerEnv.init()` to avoid trampling on another process, and it
-   * can be called directly (before calling `ServerEnv.init()`) as needed, too.
-   * (In particular, the latter case is handy when trying to run tests in a
-   * local development environment.)
+   * called by {@link #init} to avoid trampling on another process, and it can
+   * be called directly (before calling `init()`) as needed, too. (In
+   * particular, the latter case is handy when trying to run tests in a local
+   * development environment.)
    *
    * @returns {boolean} `true` if a server seems to be running locally already,
    *   or `false` if not.
    */
-  static async isAlreadyRunningLocally() {
+  async isAlreadyRunningLocally() {
     // Check the PID file. If it's non-existent or invalid, then it's reasonable
     // to say there is no server running. And if it _does_ exist and _is_ valid,
     // then the so-identified process needs to be running.
@@ -70,7 +78,7 @@ export default class ServerEnv extends UtilityClass {
     // dead.
 
     const isActive = new Promise((resolve, reject_unused) => {
-      const request = http.get(ServerEnv.loopbackUrl);
+      const request = http.get(this.loopbackUrl);
 
       request.setTimeout(10 * 1000); // Give the server 10 seconds to respond.
       request.end();
@@ -115,13 +123,5 @@ export default class ServerEnv extends UtilityClass {
     }
 
     return result;
-  }
-
-  /**
-   * {string} The base URL to use for loopback requests from this machine. This
-   * is always an `http://localhost/` URL.
-   */
-  static get loopbackUrl() {
-    return `http://localhost:${Hooks.theOne.listenPort}`;
   }
 }

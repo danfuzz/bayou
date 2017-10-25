@@ -79,30 +79,44 @@ fi
 # Helper functions
 #
 
-# Runs a test command, teeing its output and noting its status code.
+# Runs a test command, either teeing its output or passing `--test-out` to get
+# output, and always noting its exit status code.
 function run-test {
-    local outFile="${testOutDir}/$1"
+    local tee=0
+    if [[ $1 == '--tee' ]]; then
+        tee=1
+        shift
+    fi
+
+    local outPath="${testOutDir}/$1"
     shift
+
     local -a cmd=("$@")
+    local status=0
 
     echo ''
     echo "Running: ${cmd[@]}"
 
-    # This isn't just a simple matter of `cmd ... | tee ...`, because we want to
-    # get the status code from the left-hand side of the would-be pipeline.
-    # Instead, we use a "process substitution" (`>(...)`), which has mostly the
-    # same effect as a pipe except without masking the main command's status
-    # code.
-    "${cmd[@]}" > >(tee "${outFile}") 2>&1
-    local status="$?"
+    if (( $tee )); then
+        # This isn't just a simple matter of `cmd ... | tee ...`, because we
+        # want to get the status code from the left-hand side of the would-be
+        # pipeline. Instead, we use a "process substitution" (`>(...)`), which
+        # has mostly the same effect as a pipe except without masking the main
+        # command's status code.
+        "${cmd[@]}" > >(tee "${outPath}") 2>&1
+        status="$?"
 
-    # Sleep a moment to let `tee` finish writing output.
-    sleep 1
+        # Sleep a moment to let `tee` finish writing output.
+        sleep 1
+    else
+        "${cmd[@]}" --test-out="${outPath}"
+        status="$?"
+    fi
 
     (
         echo ''
         echo "Exit status: ${status}"
-    ) >> "${outFile}"
+    ) >> "${outPath}"
 
     if (( ${status} != 0 )); then
         testError=1
@@ -135,8 +149,8 @@ fi
 
 mkdir -p "${testOutDir}"
 
-run-test "client-bundle.txt" "${runProduct}" --client-bundle
-run-test "server-test.txt" "${runProduct}" --server-test
-run-test "client-test.txt" "${runProduct}" --client-test
+run-test --tee 'client-bundle.txt' "${runProduct}" --client-bundle
+run-test 'server-test.txt' "${runProduct}" --server-test
+run-test 'client-test.txt' "${runProduct}" --client-test
 
 exit "${testError}"
