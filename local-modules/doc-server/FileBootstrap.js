@@ -26,9 +26,15 @@ const ERROR_NOTE = new BodyDelta([
 
 /**
  * {BodyDelta} Message used as document instead of migrating documents from
- * old schema versions. */
+ * old schema versions.
+ */
 const MIGRATION_NOTE = new BodyDelta([
   ['text', '(Recreated document due to schema version skew.)\n']
+]);
+
+/** {BodyDelta} Message used as document instead of attempting recovery. */
+const RECOVERY_NOTE = new BodyDelta([
+  ['text', '(Recreated document due to allegedly-recoverable corruption.)\n']
 ]);
 
 /**
@@ -113,22 +119,43 @@ export default class FileBootstrap extends BaseComplexMember {
 
     let firstText;
 
-    if (status === ValidationStatus.STATUS_MIGRATE) {
-      // **TODO:** Ultimately, this code path will evolve into forward
-      // migration of documents found to be in older formats. For now, we just
-      // fall through to the document creation logic below, which will leave
-      // a note what's going on in the document contents.
-      this.log.info('Needs migration. (But just noting that fact for now.)');
-      firstText = MIGRATION_NOTE;
-    } else if (status === ValidationStatus.STATUS_ERROR) {
-      // **TODO:** Ultimately, it should be a Really Big Deal if we find
-      // ourselves here. We might want to implement some form of "hail mary"
-      // attempt to recover _something_ of use from the document storage.
-      this.log.info('Major problem with stored data!');
-      firstText = ERROR_NOTE;
-    } else {
-      // The document simply didn't exist.
-      firstText = DEFAULT_TEXT;
+    switch (status) {
+      case ValidationStatus.STATUS_MIGRATE: {
+        // **TODO:** Ultimately, this code path will evolve into forward
+        // migration of documents found to be in older formats. For now, we just
+        // fall through to the document creation logic below, which will leave
+        // a note what's going on in the document contents.
+        this.log.info('Needs migration. (But just noting that fact for now.)');
+        firstText = MIGRATION_NOTE;
+        break;
+      }
+
+      case ValidationStatus.STATUS_RECOVER: {
+        // **TODO:** As with `STATUS_MIGRATE`, this code path will eventually
+        // expand into some sort of recovery mechanism.
+        this.log.info('Needs recovery. (But just noting that fact for now.)');
+        firstText = RECOVERY_NOTE;
+        break;
+      }
+
+      case ValidationStatus.STATUS_ERROR: {
+        // **TODO:** Ultimately, it should be a Really Big Deal if we find
+        // ourselves here. We might want to implement some form of "hail mary"
+        // attempt to recover _something_ of use from the document storage.
+        this.log.info('Major problem with stored data!');
+        firstText = ERROR_NOTE;
+        break;
+      }
+
+      case ValidationStatus.STATUS_NOT_FOUND: {
+        // The file simply didn't exist.
+        firstText = DEFAULT_TEXT;
+        break;
+      }
+
+      default: {
+        throw Errors.wtf(`Weird status: ${status}`);
+      }
     }
 
     // `revNum` is `1` because a newly-created body always has an empty
@@ -173,12 +200,19 @@ export default class FileBootstrap extends BaseComplexMember {
       return ValidationStatus.STATUS_NOT_FOUND;
     }
 
-    const schemaStatus = await this._schemaHandler.validationStatus();
+    const members = [
+      this._schemaHandler,
+      this._bodyControl,
+      //this._caretControl
+    ];
 
-    if (schemaStatus !== ValidationStatus.STATUS_OK) {
-      return schemaStatus;
+    for (const member of members) {
+      const status = await member.validationStatus();
+      if (status !== ValidationStatus.STATUS_OK) {
+        return status;
+      }
     }
 
-    return this._bodyControl.validationStatus();
+    return ValidationStatus.STATUS_OK;
   }
 }
