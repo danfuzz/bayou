@@ -57,85 +57,6 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
-   * Evaluates the condition of the document, reporting a "validation status,"
-   * as defined by {@link SchemaHandler}. This method must not be called unless
-   * the file is known to exist and have an appropriate schema version.
-   *
-   * @returns {string} One of the `STATUS_*` constants defined by
-   *   {@link SchemaHandler}.
-   */
-  async validationStatus() {
-    let transactionResult;
-
-    // Check the revision number.
-
-    try {
-      const fc = this.fileCodec;
-      const spec = new TransactionSpec(
-        fc.op_readPath(Paths.BODY_REVISION_NUMBER)
-      );
-      transactionResult = await fc.transact(spec);
-    } catch (e) {
-      this.log.error('Major problem trying to read file!', e);
-      return ValidationStatus.STATUS_ERROR;
-    }
-
-    const data   = transactionResult.data;
-    const revNum = data.get(Paths.BODY_REVISION_NUMBER);
-
-    if (!revNum) {
-      this.log.info('Corrupt document: Missing revision number.');
-      return ValidationStatus.STATUS_ERROR;
-    }
-
-    try {
-      RevisionNumber.check(revNum);
-    } catch (e) {
-      this.log.info('Corrupt document: Bogus revision number.');
-      return ValidationStatus.STATUS_ERROR;
-    }
-
-    // Make sure all the changes can be read and decoded.
-
-    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
-    for (let i = 0; i <= revNum; i += MAX) {
-      const lastI = Math.min(i + MAX - 1, revNum);
-      try {
-        await this._readChangeRange(i, lastI + 1);
-      } catch (e) {
-        this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
-        return ValidationStatus.STATUS_ERROR;
-      }
-    }
-
-    // Look for a few changes past the stored revision number to make sure
-    // they're empty.
-
-    try {
-      const fc  = this.fileCodec;
-      const ops = [];
-      for (let i = revNum + 1; i <= (revNum + 10); i++) {
-        ops.push(fc.op_readPath(Paths.forBodyChange(i)));
-      }
-      const spec = new TransactionSpec(...ops);
-      transactionResult = await fc.transact(spec);
-    } catch (e) {
-      this.log.info('Corrupt document: Weird empty-change read failure.');
-      return ValidationStatus.STATUS_ERROR;
-    }
-
-    // In a valid doc, the loop body won't end up executing at all.
-    for (const storagePath of transactionResult.data.keys()) {
-      this.log.info('Corrupt document. Extra change at path:', storagePath);
-      return ValidationStatus.STATUS_ERROR;
-    }
-
-    // All's well!
-
-    return ValidationStatus.STATUS_OK;
-  }
-
-  /**
    * {TransactionSpec} Spec for a transaction which when run will initialize the
    * portion of the file which this class is responsible for.
    */
@@ -369,6 +290,82 @@ export default class BodyControl extends BaseControl {
     // exactly what we want.
     const dCorrection = rExpected.diff(rNext);
     return dCorrection;
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #validationStatus}.
+   *
+   * @returns {string} One of the constants defined by {@link ValidationStatus}.
+   */
+  async _impl_validationStatus() {
+    let transactionResult;
+
+    // Check the revision number.
+
+    try {
+      const fc = this.fileCodec;
+      const spec = new TransactionSpec(
+        fc.op_readPath(Paths.BODY_REVISION_NUMBER)
+      );
+      transactionResult = await fc.transact(spec);
+    } catch (e) {
+      this.log.error('Major problem trying to read file!', e);
+      return ValidationStatus.STATUS_ERROR;
+    }
+
+    const data   = transactionResult.data;
+    const revNum = data.get(Paths.BODY_REVISION_NUMBER);
+
+    if (!revNum) {
+      this.log.info('Corrupt document: Missing revision number.');
+      return ValidationStatus.STATUS_ERROR;
+    }
+
+    try {
+      RevisionNumber.check(revNum);
+    } catch (e) {
+      this.log.info('Corrupt document: Bogus revision number.');
+      return ValidationStatus.STATUS_ERROR;
+    }
+
+    // Make sure all the changes can be read and decoded.
+
+    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
+    for (let i = 0; i <= revNum; i += MAX) {
+      const lastI = Math.min(i + MAX - 1, revNum);
+      try {
+        await this._readChangeRange(i, lastI + 1);
+      } catch (e) {
+        this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
+        return ValidationStatus.STATUS_ERROR;
+      }
+    }
+
+    // Look for a few changes past the stored revision number to make sure
+    // they're empty.
+
+    try {
+      const fc  = this.fileCodec;
+      const ops = [];
+      for (let i = revNum + 1; i <= (revNum + 10); i++) {
+        ops.push(fc.op_readPath(Paths.forBodyChange(i)));
+      }
+      const spec = new TransactionSpec(...ops);
+      transactionResult = await fc.transact(spec);
+    } catch (e) {
+      this.log.info('Corrupt document: Weird empty-change read failure.');
+      return ValidationStatus.STATUS_ERROR;
+    }
+
+    // In a valid doc, the loop body won't end up executing at all.
+    for (const storagePath of transactionResult.data.keys()) {
+      this.log.info('Corrupt document. Extra change at path:', storagePath);
+      return ValidationStatus.STATUS_ERROR;
+    }
+
+    // All's well!
+
+    return ValidationStatus.STATUS_OK;
   }
 
   /**

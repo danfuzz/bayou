@@ -44,23 +44,11 @@ export default class SchemaHandler extends BaseComplexMember {
   }
 
   /**
-   * Evaluates the condition of the document, reporting a "validation status."
-   * The return value is one of the `STATUS_*` constants defined by this class:
+   * Subclass-specific implementation of {@link #validationStatus}.
    *
-   * * `STATUS_OK` &mdash; No problems.
-   * * `STATUS_MIGRATE` &mdash; Document is in a format that is not understood.
-   * * `STATUS_NOT_FOUND` &mdash; The document doesn't exist.
-   * * `STATUS_ERROR` &mdash; Document is in an unrecoverably-bad state.
-   *
-   * This method will also emit information to the log about problems.
-   *
-   * @returns {string} The validation status.
+   * @returns {string} One of the constants defined by {@link ValidationStatus}.
    */
-  async validationStatus() {
-    if (!(await this.file.exists())) {
-      return ValidationStatus.STATUS_NOT_FOUND;
-    }
-
+  async _impl_validationStatus() {
     let transactionResult;
 
     try {

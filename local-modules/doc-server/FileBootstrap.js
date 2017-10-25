@@ -166,10 +166,13 @@ export default class FileBootstrap extends BaseComplexMember {
    * Helper for `init()` which determines overall status based on checks from
    * the various file components.
    *
-   * @returns {string} One of the `STATUS_*` constants defined by
-   *   {@link SchemaHandler}.
+   * @returns {string} One of the constants defined by {@link ValidationStatus}.
    */
   async _overallValidationStatus() {
+    if (!(await this.file.exists())) {
+      return ValidationStatus.STATUS_NOT_FOUND;
+    }
+
     const schemaStatus = await this._schemaHandler.validationStatus();
 
     if (schemaStatus !== ValidationStatus.STATUS_OK) {
