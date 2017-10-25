@@ -73,7 +73,11 @@ export default class CollectingReporter extends CommonBase {
       this._addResult(test, 'fail');
     });
 
-    /** {object} Mocha's default `spec` reporter. */
+    /**
+     * {object} Mocha's default `spec` reporter. This is done _after_ this
+     * instance adds its event handlers, as otherwise the `spec` console output
+     * would get collected into `_console`.
+     */
     this._specReporter = new reporters.spec(runner);
   }
 
