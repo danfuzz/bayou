@@ -52,9 +52,11 @@ export default class BaseComplexMember extends CommonBase {
 
   /**
    * Evaluates the condition of the portion of the document controlled by this
-   * instance, reporting a "validation status." This method must not be called
-   * unless the file is known to exist. Except for {@link SchemaHandler}, this
-   * method must not be called unless the schema version is known to be valid.
+   * instance, reporting a "validation status." Except for on
+   * {@link FileBootstrap}, this method must not be called unless the file is
+   * known to exist. Except for on {@link FileBootstrap} and
+   * {@link SchemaHandler}, this method must not be called unless the schema
+   * version is known to be valid.
    *
    * **Note:** Some concrete instances of this class do not participate in
    * validation. Calling this method on them will result in an error being

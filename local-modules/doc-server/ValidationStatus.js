@@ -6,10 +6,9 @@ import { Errors, UtilityClass } from 'util-common';
 
 /**
  * Type representation of "validation status" values as used by
- * {@link BaseComplexMember#validationStatus} and
- * {@link FileBootstrap#_overallValidationStatus}. The values themselves are
- * just string constants. This class is merely where the constants and type
- * checker code live.
+ * {@link BaseComplexMember#validationStatus}. The values themselves are just
+ * string constants. This class is merely where the constants and type checker
+ * code live.
  */
 export default class ValidationStatus extends UtilityClass {
   /**

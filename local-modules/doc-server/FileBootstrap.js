@@ -103,12 +103,39 @@ export default class FileBootstrap extends BaseComplexMember {
   }
 
   /**
+   * Subclass-specific implementation of {@link #validationStatus}. This
+   * class implements overall validation for all document pieces.
+   *
+   * @returns {string} One of the constants defined by {@link ValidationStatus}.
+   */
+  async _impl_validationStatus() {
+    if (!(await this.file.exists())) {
+      return ValidationStatus.STATUS_NOT_FOUND;
+    }
+
+    const members = [
+      this._schemaHandler,
+      this._bodyControl,
+      //this._caretControl
+    ];
+
+    for (const member of members) {
+      const status = await member.validationStatus();
+      if (status !== ValidationStatus.STATUS_OK) {
+        return status;
+      }
+    }
+
+    return ValidationStatus.STATUS_OK;
+  }
+
+  /**
    * Main guts of `init()`, which is called while the init mutex is locked.
    *
    * @returns {boolean} `true` once setup and initialization are complete.
    */
   async _init() {
-    const status  = await this._overallValidationStatus();
+    const status  = await this.validationStatus();
 
     if (status === ValidationStatus.STATUS_OK) {
       // All's well.
@@ -187,32 +214,5 @@ export default class FileBootstrap extends BaseComplexMember {
     await this._bodyControl.update(change);
 
     return true;
-  }
-
-  /**
-   * Helper for `init()` which determines overall status based on checks from
-   * the various file components.
-   *
-   * @returns {string} One of the constants defined by {@link ValidationStatus}.
-   */
-  async _overallValidationStatus() {
-    if (!(await this.file.exists())) {
-      return ValidationStatus.STATUS_NOT_FOUND;
-    }
-
-    const members = [
-      this._schemaHandler,
-      this._bodyControl,
-      //this._caretControl
-    ];
-
-    for (const member of members) {
-      const status = await member.validationStatus();
-      if (status !== ValidationStatus.STATUS_OK) {
-        return status;
-      }
-    }
-
-    return ValidationStatus.STATUS_OK;
   }
 }
