@@ -10,6 +10,7 @@ import DocServer from './DocServer';
 import DocSession from './DocSession';
 import FileAccess from './FileAccess';
 import FileComplex from './FileComplex';
+import PropertyControl from './PropertyControl';
 import SchemaHandler from './SchemaHandler';
 import ValidationStatus from './ValidationStatus';
 
@@ -22,6 +23,7 @@ export {
   DocSession,
   FileAccess,
   FileComplex,
+  PropertyControl,
   SchemaHandler,
   ValidationStatus
 };

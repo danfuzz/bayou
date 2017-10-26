@@ -174,7 +174,11 @@ export default class BaseSnapshot extends CommonBase {
   diff(newerSnapshot) {
     this.constructor.check(newerSnapshot);
 
-    const diffDelta = this._impl_diffAsDelta(newerSnapshot);
+    // Avoid bothering with a heavyweight diff operation if the deltas are
+    // equal.
+    const diffDelta = this._contents.equals(newerSnapshot._contents)
+      ? this.constructor.deltaClass.EMPTY
+      : this._impl_diffAsDelta(newerSnapshot);
 
     return new this.constructor.changeClass(newerSnapshot.revNum, diffDelta);
   }

@@ -228,6 +228,27 @@ describe('doc-common/BaseSnapshot', () => {
         [new MockOp('diff_delta'), new MockOp('new_snap')]);
     });
 
+    it('should return an empty change when given an argument with identical contents', () => {
+      function test(s1, s2) {
+        const result = s1.diff(s2);
+
+        assert.strictEqual(result.revNum, s2.revNum);
+        assert.lengthOf(result.delta.ops, 0);
+      }
+
+      const snap1 = new MockSnapshot(10, [new MockOp('some_op')]);
+      const snap2 = new MockSnapshot(20, [new MockOp('some_op')]);
+      const snap3 = new MockSnapshot(30, snap2.contents);
+
+      test(snap1, snap1);
+      test(snap1, snap2);
+      test(snap1, snap3);
+      test(snap2, snap1);
+      test(snap2, snap3);
+      test(snap3, snap1);
+      test(snap3, snap2);
+    });
+
     it('should reject instances of the wrong snapshot class', () => {
       const oldSnap = new MockSnapshot(10, []);
       const newSnap = new AnotherSnapshot(20, []);
