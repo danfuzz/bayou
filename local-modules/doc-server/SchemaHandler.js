@@ -36,11 +36,21 @@ export default class SchemaHandler extends BaseComplexMember {
    * {TransactionSpec} Spec for a transaction which when run will initialize the
    * portion of the file which this class is responsible for.
    */
-  get initSpec() {
+  get _impl_initSpec() {
     return new TransactionSpec(
       // Version for the file schema.
       this.fileCodec.op_writePath(Paths.SCHEMA_VERSION, this._schemaVersion)
     );
+  }
+
+  /**
+   * Subclass-specific implementation of `afterInit()`.
+   *
+   * @returns {boolean} `true`, always.
+   */
+  async _impl_afterInit() {
+    // No action needed... yet.
+    return true;
   }
 
   /**

@@ -130,10 +130,13 @@ export default class CaretControl extends BaseControl {
 
   /**
    * Subclass-specific implementation of `afterInit()`.
+   *
+   * @returns {boolean} `true`, always.
    */
   async _impl_afterInit() {
     // No action needed: The system will automatically notice that stuff got
     // erased.
+    return true;
   }
 
   /**
