@@ -191,9 +191,27 @@ export default class CaretStorage extends BaseComplexMember {
   }
 
   /**
+   * {null} Indication that this class does not directly manage file data.
+   * (Caret data is handled by {@link CaretControl}.)
+   */
+  get _impl_initSpec() {
+    return null;
+  }
+
+  /**
+   * Subclass-specific implementation of `afterInit()`. In this case, it returns
+   * `null` to indicate that this class isn't directly responsible for data.
+   *
+   * @returns {null} `null`, always.
+   */
+  async _impl_afterInit() {
+    return null;
+  }
+
+  /**
    * Subclass-specific implementation of {@link #validationStatus}. In this
    * case, it returns `null` because this class doesn't do validation. (Caret
-   * validation is handled by {@link CaretContro}.)
+   * validation is handled by {@link CaretControl}.)
    *
    * @returns {object} `null`, always.
    */
