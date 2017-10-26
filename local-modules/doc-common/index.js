@@ -19,6 +19,7 @@ import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';
 import CaretSnapshot from './CaretSnapshot';
 import DocumentId from './DocumentId';
+import Property from './Property';
 import PropertyChange from './PropertyChange';
 import PropertyDelta from './PropertyDelta';
 import PropertyOp from './PropertyOp';
@@ -36,6 +37,7 @@ Codec.theOne.registerClass(CaretChange);
 Codec.theOne.registerClass(CaretDelta);
 Codec.theOne.registerClass(CaretOp);
 Codec.theOne.registerClass(CaretSnapshot);
+Codec.theOne.registerClass(Property);
 Codec.theOne.registerClass(PropertyChange);
 Codec.theOne.registerClass(PropertyDelta);
 Codec.theOne.registerClass(PropertyOp);
@@ -58,6 +60,7 @@ export {
   CaretOp,
   CaretSnapshot,
   DocumentId,
+  Property,
   PropertyChange,
   PropertyDelta,
   PropertyOp,
