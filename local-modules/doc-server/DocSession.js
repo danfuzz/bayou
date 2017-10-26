@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BodyChange, RevisionNumber, Timestamp } from 'doc-common';
+import { BodyChange, PropertyChange, RevisionNumber, Timestamp } from 'doc-common';
 import { TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
@@ -50,8 +50,8 @@ export default class DocSession extends CommonBase {
   }
 
   /**
-   * Returns a particular change to the document. See the equivalent
-   * `BodyControl` method for details.
+   * Returns a particular change to the document body. See the equivalent
+   * {@link BodyControl#getChange} for details.
    *
    * @param {Int} revNum The revision number of the change.
    * @returns {BodyChange} The requested change.
@@ -72,7 +72,7 @@ export default class DocSession extends CommonBase {
   }
 
   /**
-   * Returns a snapshot of the full document contents. See
+   * Returns a snapshot of the full document body contents. See
    * {@link BodyControl#snapshot} for details.
    *
    * @param {Int|null} [revNum = null] Which revision to get. If passed as
@@ -84,9 +84,9 @@ export default class DocSession extends CommonBase {
   }
 
   /**
-   * Applies an update to the body, assigning authorship of the change to the
-   * author represented by this instance and a timestamp which is approximately
-   * the current time. See {@link BodyControl#update} for details.
+   * Applies an update to the document body, assigning authorship of the change
+   * to the author represented by this instance and a timestamp which is
+   * approximately the current time. See {@link BodyControl#update} for details.
    *
    * @param {number} baseRevNum Revision number which `delta` is with respect
    *   to.
@@ -174,6 +174,68 @@ export default class DocSession extends CommonBase {
   async caret_update(docRevNum, index, length = 0) {
     const change = this._caretControl.changeFor(this._sessionId, docRevNum, index, length);
     return this._caretControl.update(change);
+  }
+
+  /**
+   * Returns a particular change to the properties (document metadata). See
+   * {@link PropertyControl#getChange} for details.
+   *
+   * @param {Int} revNum The revision number of the change.
+   * @returns {PropertyChange} The requested change.
+   */
+  async property_getChange(revNum) {
+    return this._propertyControl.getChange(revNum);
+  }
+
+  /**
+   * Gets a change of the properties (document metadata) from the indicated base
+   * revision. See {@link PropertyControl#getChangeAfter} for details.
+   *
+   * @param {Int} baseRevNum Revision number for the document.
+   * @returns {PropertyChange} Delta and associated information.
+   */
+  async property_getChangeAfter(baseRevNum) {
+    return this._propertyControl.getChangeAfter(baseRevNum);
+  }
+
+  /**
+   * Returns a snapshot of the properties (document metadata). See
+   * {@link PropertyControl#snapshot} for details.
+   *
+   * @param {Int|null} [revNum = null] Which revision to get. If passed as
+   *   `null`, indicates the latest (most recent) revision.
+   * @returns {PropertySnapshot} The requested snapshot.
+   */
+  async property_getSnapshot(revNum = null) {
+    return this._propertyControl.getSnapshot(revNum);
+  }
+
+  /**
+   * Applies an update to the properties (document metadata), assigning
+   * authorship of the change to the author represented by this instance and a
+   * timestamp which is approximately the current time. See
+   * {@link PropertyControl#update} for details.
+   *
+   * @param {number} baseRevNum Revision number which `delta` is with respect
+   *   to.
+   * @param {PropertyDelta} delta List of operations indicating what has changed
+   *   with respect to `baseRevNum`.
+   * @returns {PropertyChange} The correction to the implied expected result of
+   *   this operation. The `delta` of this result can be applied to the expected
+   *   result to get the actual result. The `timestamp` and `authorId` of the
+   *   result will always be `null`. The promise resolves sometime after the
+   *   change has been applied to the document.
+   */
+  async property_update(baseRevNum, delta) {
+    RevisionNumber.check(baseRevNum);
+
+    // **Note:** The change instance gets `baseRevNum + 1` because that's what
+    // revision would result if the `delta` were able to be applied directly. If
+    // we get "lucky" (win any races) that will be the actual revision number,
+    // but the ultimate result might have a higher `revNum`.
+    const change = new PropertyChange(baseRevNum + 1, delta, Timestamp.now(), this._authorId);
+
+    return this._propertyControl.update(change);
   }
 
   /**
