@@ -45,6 +45,11 @@ export default class FileComplex extends BaseComplexMember {
     return this._bootstrap.caretControl;
   }
 
+  /** {PropertyControl} The property controller to use with this instance. */
+  get propertyControl() {
+    return this._bootstrap.propertyControl;
+  }
+
   /**
    * Initializes the document content.
    *
