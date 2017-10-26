@@ -30,7 +30,7 @@ const REQUEST_DELAY_MSEC = 250;
 const ERROR_DELAY_MSEC = 5000;
 
 /**
- * Tracker of the state of carets for all seesions editing a given document.
+ * Tracker of the state of carets for all sessions editing a given document.
  * It watches for changes observed from the session proxy and dispatches
  * actions to a redux data store to update the client caret model.
  *
