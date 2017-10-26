@@ -57,7 +57,7 @@ export default class PropertyClient extends CommonBase {
     const delta = new PropertyDelta([PropertyOp.op_deleteProperty(name)]);
 
     const proxy    = await this._proxyWhenReady();
-    const snapshot = await proxy.property_snapshot();
+    const snapshot = await proxy.property_getSnapshot();
 
     await proxy.property_update(snapshot.revNum, delta);
   }
@@ -73,7 +73,7 @@ export default class PropertyClient extends CommonBase {
     TString.identifier(name);
 
     const proxy    = await this._proxyWhenReady();
-    const snapshot = await proxy.property_snapshot();
+    const snapshot = await proxy.property_getSnapshot();
 
     return snapshot.get(name);
   }
@@ -90,7 +90,7 @@ export default class PropertyClient extends CommonBase {
     TString.identifier(name);
 
     const proxy    = await this._proxyWhenReady();
-    const snapshot = await proxy.property_snapshot();
+    const snapshot = await proxy.property_getSnapshot();
 
     return snapshot.has(name);
   }
@@ -107,7 +107,7 @@ export default class PropertyClient extends CommonBase {
     const delta = new PropertyDelta([PropertyOp.op_setProperty(name, value)]);
 
     const proxy    = await this._proxyWhenReady();
-    const snapshot = await proxy.property_snapshot();
+    const snapshot = await proxy.property_getSnapshot();
 
     await proxy.property_update(snapshot.revNum, delta);
   }
