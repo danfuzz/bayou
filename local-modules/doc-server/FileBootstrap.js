@@ -9,8 +9,9 @@ import { Mutex } from 'promise-util';
 import { Errors } from 'util-common';
 
 import BaseComplexMember from './BaseComplexMember';
-import CaretControl from './CaretControl';
 import BodyControl from './BodyControl';
+import CaretControl from './CaretControl';
+import PropertyControl from './PropertyControl';
 import SchemaHandler from './SchemaHandler';
 import ValidationStatus from './ValidationStatus';
 
@@ -63,6 +64,9 @@ export default class FileBootstrap extends BaseComplexMember {
     /** {CaretControl} Caret info controller. */
     this._caretControl = new CaretControl(fileAccess);
 
+    /** {PropertyControl} Property (metadata) controller. */
+    this._propertyControl = new PropertyControl(fileAccess);
+
     /** {SchemaHandler} Schema (and migration) handler. */
     this._schemaHandler = new SchemaHandler(fileAccess);
 
@@ -71,20 +75,20 @@ export default class FileBootstrap extends BaseComplexMember {
 
   /** {BodyControl} The body content controller to use with this instance. */
   get bodyControl() {
-    if (!this._initialized) {
-      throw Errors.bad_use('Must be `init()`ed before access.');
-    }
-
+    this._initCheck();
     return this._bodyControl;
   }
 
   /** {CaretControl} The caret info controller to use with this instance. */
   get caretControl() {
-    if (!this._initialized) {
-      throw Errors.bad_use('Must be `init()`ed before access.');
-    }
-
+    this._initCheck();
     return this._caretControl;
+  }
+
+  /** {PropertyControl} The property controller to use with this instance. */
+  get propertyControl() {
+    this._initCheck();
+    return this._propertyControl;
   }
 
   /**
@@ -116,7 +120,8 @@ export default class FileBootstrap extends BaseComplexMember {
     const members = [
       this._schemaHandler,
       this._bodyControl,
-      this._caretControl
+      this._caretControl,
+      this._propertyControl
     ];
 
     for (const member of members) {
@@ -198,21 +203,37 @@ export default class FileBootstrap extends BaseComplexMember {
       this.fileCodec.op_deleteAll()
     );
 
-    const schemaSpec = this._schemaHandler.initSpec;
-    const bodySpec   = this._bodyControl.initSpec;
-    const caretSpec  = this._caretControl.initSpec;
-    const fullSpec   = eraseSpec.concat(schemaSpec).concat(bodySpec).concat(caretSpec);
+    const schemaSpec   = this._schemaHandler.initSpec;
+    const bodySpec     = this._bodyControl.initSpec;
+    const caretSpec    = this._caretControl.initSpec;
+    const propertySpec = this._propertyControl.initSpec;
+
+    const fullSpec = eraseSpec
+      .concat(schemaSpec)
+      .concat(bodySpec)
+      .concat(caretSpec)
+      .concat(propertySpec);
 
     await this.file.create();
     await this.file.transact(fullSpec);
 
     await this._bodyControl.afterInit();
     await this._caretControl.afterInit();
+    await this._propertyControl.afterInit();
 
     // **TODO:** Ideally, this would be rolled into the transaction as defined
     // by `fullSpec` above.
     await this._bodyControl.update(change);
 
     return true;
+  }
+
+  /**
+   * Checks that `init()` has been called, and complains with an error if not.
+   */
+  _initCheck() {
+    if (!this._initialized) {
+      throw Errors.bad_use('Must be `init()`ed before access.');
+    }
   }
 }
