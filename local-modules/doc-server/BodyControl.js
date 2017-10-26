@@ -78,14 +78,10 @@ export default class BodyControl extends BaseControl {
 
   /**
    * Subclass-specific implementation of `afterInit()`.
-   *
-   * @returns {boolean} `true`, always.
    */
   async _impl_afterInit() {
     // Any cached snapshots are no longer valid.
     this._snapshots = new Map();
-
-    return true;
   }
 
   /**

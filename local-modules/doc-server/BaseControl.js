@@ -7,7 +7,7 @@ import { Delay } from 'promise-util';
 import { TFunction } from 'typecheck';
 import { Errors } from 'util-common';
 
-import BaseComplexMember from './BaseComplexMember';
+import BaseDataManager from './BaseDataManager';
 
 /** {Int} Initial amount of time (in msec) between update retries. */
 const INITIAL_UPDATE_RETRY_MSEC = 50;
@@ -23,7 +23,7 @@ const MAX_UPDATE_TIME_MSEC = 20 * 1000; // 20 seconds.
  * concrete subclass of this class for each actively-edited document. They are
  * all managed and hooked up via {@link FileComplex}.
  */
-export default class BaseControl extends BaseComplexMember {
+export default class BaseControl extends BaseDataManager {
   /**
    * {class} Class (constructor function) of change objects to be used with
    * instances of this class.

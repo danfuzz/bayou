@@ -8,7 +8,7 @@ import { DEFAULT_DOCUMENT } from 'hooks-server';
 import { Mutex } from 'promise-util';
 import { Errors } from 'util-common';
 
-import BaseComplexMember from './BaseComplexMember';
+import BaseDataManager from './BaseDataManager';
 import BodyControl from './BodyControl';
 import CaretControl from './CaretControl';
 import PropertyControl from './PropertyControl';
@@ -42,7 +42,7 @@ const RECOVERY_NOTE = new BodyDelta([
  * Handler for the "bootstrap" setup of a file, including initializing new
  * files, validating existing files, and dealing with validation problems.
  */
-export default class FileBootstrap extends BaseComplexMember {
+export default class FileBootstrap extends BaseDataManager {
   /**
    * Constructs an instance.
    *
@@ -139,8 +139,6 @@ export default class FileBootstrap extends BaseComplexMember {
   /**
    * Subclass-specific implementation of `afterInit()`. In this case, it runs
    * the `afterInit()` methods on each of the subcomponents.
-   *
-   * @returns {boolean} `true`, always.
    */
   async _impl_afterInit() {
     await Promise.all([
@@ -149,8 +147,6 @@ export default class FileBootstrap extends BaseComplexMember {
       this._caretControl.afterInit(),
       this._propertyControl.afterInit()
     ]);
-
-    return true;
   }
 
   /**

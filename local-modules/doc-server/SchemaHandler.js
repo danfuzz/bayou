@@ -6,7 +6,7 @@ import { ProductInfo } from 'env-server';
 import { TransactionSpec } from 'file-store';
 import { TString } from 'typecheck';
 
-import BaseComplexMember from './BaseComplexMember';
+import BaseDataManager from './BaseDataManager';
 import Paths from './Paths';
 import ValidationStatus from './ValidationStatus';
 
@@ -16,7 +16,7 @@ import ValidationStatus from './ValidationStatus';
  * long term, it will be the locus of responsibility for migration of content
  * from older schemas.
  */
-export default class SchemaHandler extends BaseComplexMember {
+export default class SchemaHandler extends BaseDataManager {
   /**
    * Constructs an instance.
    *
@@ -45,12 +45,9 @@ export default class SchemaHandler extends BaseComplexMember {
 
   /**
    * Subclass-specific implementation of `afterInit()`.
-   *
-   * @returns {boolean} `true`, always.
    */
   async _impl_afterInit() {
     // No action needed... yet.
-    return true;
   }
 
   /**
