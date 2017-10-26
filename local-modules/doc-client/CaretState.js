@@ -30,12 +30,12 @@ const REQUEST_DELAY_MSEC = 250;
 const ERROR_DELAY_MSEC = 5000;
 
 /**
- * Tracker of the state of carets for all seesions editing a given document.
+ * Tracker of the state of carets for all sessions editing a given document.
  * It watches for changes observed from the session proxy and dispatches
  * actions to a redux data store to update the client caret model.
  *
- * Other entities interested in caret changes (notably CaretOverly) should
- * look at the `carets` entry in `EditorComplex`'s store.
+ * Other entities interested in caret changes (notably {@link CaretOverlay}
+ * should look at the `carets` entry in {@link EditorComplex}'s store.
  */
 export default class CaretState {
   /**

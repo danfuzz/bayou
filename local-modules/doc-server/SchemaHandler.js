@@ -6,7 +6,7 @@ import { ProductInfo } from 'env-server';
 import { TransactionSpec } from 'file-store';
 import { TString } from 'typecheck';
 
-import BaseComplexMember from './BaseComplexMember';
+import BaseDataManager from './BaseDataManager';
 import Paths from './Paths';
 import ValidationStatus from './ValidationStatus';
 
@@ -16,7 +16,7 @@ import ValidationStatus from './ValidationStatus';
  * long term, it will be the locus of responsibility for migration of content
  * from older schemas.
  */
-export default class SchemaHandler extends BaseComplexMember {
+export default class SchemaHandler extends BaseDataManager {
   /**
    * Constructs an instance.
    *
@@ -36,11 +36,18 @@ export default class SchemaHandler extends BaseComplexMember {
    * {TransactionSpec} Spec for a transaction which when run will initialize the
    * portion of the file which this class is responsible for.
    */
-  get initSpec() {
+  get _impl_initSpec() {
     return new TransactionSpec(
       // Version for the file schema.
       this.fileCodec.op_writePath(Paths.SCHEMA_VERSION, this._schemaVersion)
     );
+  }
+
+  /**
+   * Subclass-specific implementation of `afterInit()`.
+   */
+  async _impl_afterInit() {
+    // No action needed... yet.
   }
 
   /**

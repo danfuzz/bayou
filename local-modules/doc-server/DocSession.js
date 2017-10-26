@@ -45,6 +45,9 @@ export default class DocSession extends CommonBase {
     /** {CaretControl} The underlying caret info controller. */
     this._caretControl = fileComplex.caretControl;
 
+    /** {PropertyControl} The underlying property (metadata) controller. */
+    this._propertyControl = fileComplex.propertyControl;
+
     /** {Logger} Logger for this session. */
     this._log = fileComplex.log.withPrefix(`[${sessionId}]`);
   }

@@ -16,7 +16,7 @@ import DocSession from './DocSession';
 const UPDATE_DELAY_MSEC = 250;
 
 /**
- * Handler for the upload of caret info from this client.
+ * Handler for the upload of caret info from a client.
  */
 export default class CaretTracker extends CommonBase {
   /**

@@ -52,9 +52,12 @@ export default class PropertyControl extends BaseControl {
 
   /**
    * Subclass-specific implementation of `afterInit()`.
+   *
+   * @returns {boolean} `true`, always.
    */
   async _impl_afterInit() {
     // No action needed... yet.
+    return true;
   }
 
   /**

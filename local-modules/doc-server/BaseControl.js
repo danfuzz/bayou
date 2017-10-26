@@ -3,12 +3,11 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseSnapshot, RevisionNumber } from 'doc-common';
-import { TransactionSpec } from 'file-store';
 import { Delay } from 'promise-util';
 import { TFunction } from 'typecheck';
 import { Errors } from 'util-common';
 
-import BaseComplexMember from './BaseComplexMember';
+import BaseDataManager from './BaseDataManager';
 
 /** {Int} Initial amount of time (in msec) between update retries. */
 const INITIAL_UPDATE_RETRY_MSEC = 50;
@@ -24,7 +23,7 @@ const MAX_UPDATE_TIME_MSEC = 20 * 1000; // 20 seconds.
  * concrete subclass of this class for each actively-edited document. They are
  * all managed and hooked up via {@link FileComplex}.
  */
-export default class BaseControl extends BaseComplexMember {
+export default class BaseControl extends BaseDataManager {
   /**
    * {class} Class (constructor function) of change objects to be used with
    * instances of this class.
@@ -62,25 +61,6 @@ export default class BaseControl extends BaseComplexMember {
    */
   constructor(fileAccess) {
     super(fileAccess);
-  }
-
-  /**
-   * {TransactionSpec} Spec for a transaction which when run will initialize the
-   * portion of the file which this class is responsible for.
-   */
-  get initSpec() {
-    return TransactionSpec.check(this._impl_initSpec);
-  }
-
-
-  /**
-   * Performs any actions that are required in the wake of having run the
-   * {@link #initSpec} transaction.
-   */
-  async afterInit() {
-    // The only point of this arrangement is to preserve the invariant that
-    // subclasses are only expected to override `_impl_*` methods.
-    await this._impl_afterInit();
   }
 
   /**
@@ -275,27 +255,6 @@ export default class BaseControl extends BaseComplexMember {
       retryTotalMsec += retryDelayMsec;
       retryDelayMsec *= UPDATE_RETRY_GROWTH_FACTOR;
     }
-  }
-
-  /**
-   * {TransactionSpec} Spec for a transaction which when run will initialize the
-   * portion of the file which this class is responsible for. Subclasses must
-   * fill this in.
-   *
-   * @abstract
-   */
-  get _impl_initSpec() {
-    return this._mustOverride();
-  }
-
-  /**
-   * Subclass-specific implementation of `afterInit()`. Subclasses must
-   * override this.
-   *
-   * @abstract
-   */
-  async _impl_afterInit() {
-    this._mustOverride();
   }
 
   /**

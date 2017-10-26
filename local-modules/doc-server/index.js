@@ -4,6 +4,7 @@
 
 import BaseComplexMember from './BaseComplexMember';
 import BaseControl from './BaseControl';
+import BaseDataManager from './BaseDataManager';
 import BodyControl from './BodyControl';
 import CaretControl from './CaretControl';
 import DocServer from './DocServer';
@@ -17,6 +18,7 @@ import ValidationStatus from './ValidationStatus';
 export {
   BaseComplexMember,
   BaseControl,
+  BaseDataManager,
   BodyControl,
   CaretControl,
   DocServer,

@@ -8,7 +8,7 @@ import { DEFAULT_DOCUMENT } from 'hooks-server';
 import { Mutex } from 'promise-util';
 import { Errors } from 'util-common';
 
-import BaseComplexMember from './BaseComplexMember';
+import BaseDataManager from './BaseDataManager';
 import BodyControl from './BodyControl';
 import CaretControl from './CaretControl';
 import PropertyControl from './PropertyControl';
@@ -42,7 +42,7 @@ const RECOVERY_NOTE = new BodyDelta([
  * Handler for the "bootstrap" setup of a file, including initializing new
  * files, validating existing files, and dealing with validation problems.
  */
-export default class FileBootstrap extends BaseComplexMember {
+export default class FileBootstrap extends BaseDataManager {
   /**
    * Constructs an instance.
    *
@@ -104,6 +104,49 @@ export default class FileBootstrap extends BaseComplexMember {
       }
       return true;
     });
+  }
+
+  /**
+   * {TransactionSpec} Spec for a transaction which when run will initialize the
+   * portion of the file which this class is responsible for. In this case, it
+   * constructs the combined spec for the entire file, based on all the
+   * subcomponents.
+   */
+  get _impl_initSpec() {
+    const eraseSpec = new TransactionSpec(
+      // If the file already existed, this clears out the old contents.
+      // **TODO:** In cases where this is a re-creation based on a migration
+      // problem, we probably want to preserve the old data by moving it aside
+      // (e.g. into a `lossage/<timestamp>` prefix) instead of just blasting it
+      // away entirely.
+      this.fileCodec.op_deleteAll()
+    );
+
+    const schemaSpec   = this._schemaHandler.initSpec;
+    const bodySpec     = this._bodyControl.initSpec;
+    const caretSpec    = this._caretControl.initSpec;
+    const propertySpec = this._propertyControl.initSpec;
+
+    const result = eraseSpec
+      .concat(schemaSpec)
+      .concat(bodySpec)
+      .concat(caretSpec)
+      .concat(propertySpec);
+
+    return result;
+  }
+
+  /**
+   * Subclass-specific implementation of `afterInit()`. In this case, it runs
+   * the `afterInit()` methods on each of the subcomponents.
+   */
+  async _impl_afterInit() {
+    await Promise.all([
+      this._schemaHandler.afterInit(),
+      this._bodyControl.afterInit(),
+      this._caretControl.afterInit(),
+      this._propertyControl.afterInit()
+    ]);
   }
 
   /**
@@ -192,34 +235,13 @@ export default class FileBootstrap extends BaseComplexMember {
 
     // `revNum` is `1` because a newly-created body always has an empty
     // change for revision `0`.
-    const change = new BodyChange(1, firstText, Timestamp.now());
-
-    const eraseSpec = new TransactionSpec(
-      // If the file already existed, this clears out the old contents.
-      // **TODO:** In cases where this is a re-creation based on a migration
-      // problem, we probably want to preserve the old data by moving it aside
-      // (e.g. into a `lossage/<timestamp>` prefix) instead of just blasting it
-      // away entirely.
-      this.fileCodec.op_deleteAll()
-    );
-
-    const schemaSpec   = this._schemaHandler.initSpec;
-    const bodySpec     = this._bodyControl.initSpec;
-    const caretSpec    = this._caretControl.initSpec;
-    const propertySpec = this._propertyControl.initSpec;
-
-    const fullSpec = eraseSpec
-      .concat(schemaSpec)
-      .concat(bodySpec)
-      .concat(caretSpec)
-      .concat(propertySpec);
+    const change   = new BodyChange(1, firstText, Timestamp.now());
+    const initSpec = this.initSpec;
 
     await this.file.create();
-    await this.file.transact(fullSpec);
+    await this.file.transact(initSpec);
 
-    await this._bodyControl.afterInit();
-    await this._caretControl.afterInit();
-    await this._propertyControl.afterInit();
+    await this.afterInit();
 
     // **TODO:** Ideally, this would be rolled into the transaction as defined
     // by `fullSpec` above.

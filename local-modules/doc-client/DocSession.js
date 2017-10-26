@@ -8,6 +8,7 @@ import { Logger } from 'see-all';
 import { CommonBase } from 'util-common';
 
 import CaretTracker from './CaretTracker';
+import PropertyClient from './PropertyClient';
 
 /** Logger. */
 const log = new Logger('doc');
@@ -43,9 +44,15 @@ export default class DocSession extends CommonBase {
 
     /**
      * {CaretTracker|null} Caret tracker for this session. Set to non-`null` in
-     * the getter `caretTracker`.
+     * the getter {@link #caretTracker}.
      */
     this._caretTracker = null;
+
+    /**
+     * {PropertyClient} Accessor (read and write) for the document properties
+     * (metadata). Set to non-`null` in the getter {@link #propertyClient}.
+     */
+    this._propertyClient = null;
 
     /**
      * {Promise<Proxy>|null} Promise for the API session proxy. Set to
@@ -97,6 +104,15 @@ export default class DocSession extends CommonBase {
   /** {BaseKey} The session key. */
   get key() {
     return this._key;
+  }
+
+  /** {PropertyClient} Property accessor this session. */
+  get propertyClient() {
+    if (this._propertyClient === null) {
+      this._propertyClient = new PropertyClient(this);
+    }
+
+    return this._propertyClient;
   }
 
   /**
