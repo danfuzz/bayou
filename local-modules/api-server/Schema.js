@@ -11,6 +11,8 @@ import { PropertyIterable } from 'util-common';
  *
  * * Methods whose names start with an underscore (`_`) are excluded from
  *   schemas.
+ * * Methods whose names are symbols (e.g. `Symbol('foo')`) are excluded from
+ *   schemas.
  * * Constructor methods are excluded from schemas.
  * * Methods inherited from the base `Object` prototype are excluded from
  *   schemas.
@@ -86,9 +88,11 @@ export default class Schema {
     for (const desc of new PropertyIterable(target).skipObject().onlyMethods()) {
       const name = desc.name;
 
-      if (name.match(/^_/) || (name === 'constructor')) {
-        // Because we don't want properties whose names are prefixed with `_`,
-        // and we don't want to expose the constructor function.
+      if ((typeof name !== 'string') || name.match(/^_/) || (name === 'constructor')) {
+        // Because we don't want properties whose names aren't strings (that is,
+        // are symbols), are prefixed with `_`, or are constructor functions. In
+        // all cases these are effectively private with respect to the API
+        // boundary.
         continue;
       }
 
