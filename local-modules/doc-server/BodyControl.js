@@ -72,7 +72,7 @@ export default class BodyControl extends BaseControl {
       fc.op_writePath(Paths.BODY_REVISION_NUMBER, 0),
 
       // Empty change #0 (per documented interface).
-      fc.op_writePath(Paths.forBodyChange(0), BodyChange.FIRST),
+      fc.op_writePath(Paths.forBodyChange(0), BodyChange.FIRST)
     );
   }
 

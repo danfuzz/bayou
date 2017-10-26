@@ -55,6 +55,26 @@ export default class Paths extends UtilityClass {
     return `${Paths.CARET_PREFIX}/set_update`;
   }
 
+  /**
+   * {string} `StoragePath` prefix string for property (metadata) information.
+   */
+  static get PROPERTY_PREFIX() {
+    return '/prop';
+  }
+
+  /** {string} `StoragePath` prefix string for property changes. */
+  static get PROPERTY_CHANGE_PREFIX() {
+    return `${Paths.PROPERTY_PREFIX}/change`;
+  }
+
+  /**
+   * {string} `StoragePath` string for the property data revision number. This
+   * corresponds to the highest change number.
+   */
+  static get PROPERTY_REVISION_NUMBER() {
+    return `${Paths.PROPERTY_PREFIX}/revision_number`;
+  }
+
   /** {string} `StoragePath` string for the file schema (format) version. */
   static get SCHEMA_VERSION() {
     return '/schema_version';
@@ -85,6 +105,20 @@ export default class Paths extends UtilityClass {
   static forCaret(sessionId) {
     TString.check(sessionId);
     return `${Paths.CARET_SESSION_PREFIX}/${sessionId}`;
+  }
+
+  /**
+   * Gets the `StoragePath` string corresponding to the indicated revision
+   * number, specifically to store the property data change that results in that
+   * revision.
+   *
+   * @param {RevisionNumber} revNum The revision number.
+   * @returns {string} The corresponding `StoragePath` string for property
+   *   change storage.
+   */
+  static forPropertyChange(revNum) {
+    RevisionNumber.check(revNum);
+    return `${Paths.PROPERTY_CHANGE_PREFIX}/${revNum}`;
   }
 
   /**
