@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { DocumentState } from 'data-model-client';
-import { QuillUtil } from 'quill-util';
+import { QuillEvents, QuillUtil } from 'quill-util';
 import { CommonBase } from 'util-common';
 
 /**
@@ -46,6 +46,16 @@ export default class TitleClient extends CommonBase {
    */
   start() {
     // **TODO:** Needs to be implemented nontrivially.
+    this._pusherLoop();
+  }
+
+  /**
+   * Handles "blur" events when done on a title field.
+   *
+   * @param {FocusEvent} event_unused Event object.
+   */
+  titleOnBlur(event_unused) {
+    this._pushUpdate();
   }
 
   /**
@@ -56,6 +66,41 @@ export default class TitleClient extends CommonBase {
    * @returns {boolean} `false`, always, which tells Quill to stop processing.
    */
   titleOnEnter(metaKeys_unused) {
+    this._pushUpdate();
+
+    // Move focus to the body.
+    const div = QuillUtil.editorDiv(this._editorComplex.bodyQuill);
+    div.focus();
+
+    return false;
+  }
+
+  /**
+   * Loop which listens for events indicating that the title Quill lost focus,
+   * using them to drive updates.
+   */
+  async _pusherLoop() {
+    let currentEvent = this._quill.currentEvent;
+
+    for (;;) {
+      const event = await currentEvent.nextOf(QuillEvents.SELECTION_CHANGE);
+
+      // We check to see if the title `<div>` has focus or not. Ideally, the
+      // Quill event in which focus is lost would reflect that (e.g. with a
+      // `null` selection), but that doesn't happen in practice.
+      const div = QuillUtil.editorDiv(this._quill);
+      if (div !== div.ownerDocument.activeElement) {
+        this._pushUpdate();
+      }
+
+      currentEvent = event;
+    }
+  }
+
+  /**
+   * Performs a push of the local title state to Redux and to the server.
+   */
+  _pushUpdate() {
     // **TODO:** This should be a call to `getContents()` so we have a marked-up
     // delta and not just flat text.
     const text = this._quill.getText();
@@ -68,11 +113,5 @@ export default class TitleClient extends CommonBase {
     const store  = this._editorComplex.clientStore;
     const action = DocumentState.setTitleAction(text);
     store.dispatch(action);
-
-    // Move focus to the body.
-    const div = QuillUtil.editorDiv(this._editorComplex.bodyQuill);
-    div.focus();
-
-    return false;
   }
 }
