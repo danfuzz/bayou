@@ -21,6 +21,7 @@ import BodyClient from './BodyClient';
 import CaretOverlay from './CaretOverlay';
 import CaretState from './CaretState';
 import DocSession from './DocSession';
+import TitleClient from './TitleClient';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('editor-complex');
@@ -88,6 +89,12 @@ export default class EditorComplex extends CommonBase {
      * Set in `_initSession()`.
      */
     this._bodyClient = null;
+
+    /**
+     * {TitleClient|null} Document title client instance (API-to-editor hookup).
+     * Set in `_initSession()`.
+     */
+    this._titleClient = null;
 
     /**
      * {ClientStore} Wrapper for the redux data store for this client.
@@ -184,6 +191,11 @@ export default class EditorComplex extends CommonBase {
     return log;
   }
 
+  /** {TitleClient} The document title client instance. */
+  get titleClient() {
+    return this._titleClient;
+  }
+
   /** {QuillProm} The Quill editor object for the title field. */
   get titleQuill() {
     return this._titleQuill;
@@ -254,11 +266,13 @@ export default class EditorComplex extends CommonBase {
    *   constructor.
    */
   _initSession(sessionKey, fromConstructor) {
-    this._sessionKey = SplitKey.check(sessionKey);
-    this._docSession = new DocSession(this._sessionKey);
+    this._sessionKey  = SplitKey.check(sessionKey);
+    this._docSession  = new DocSession(this._sessionKey);
     this._bodyClient  = new BodyClient(this._bodyQuill, this._docSession);
+    this._titleClient = new TitleClient(this._titleQuill, this._docSession);
 
     this._bodyClient.start();
+    this._titleClient.start();
 
     // Log a note once everything is all set up.
     (async () => {

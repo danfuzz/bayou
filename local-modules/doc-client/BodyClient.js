@@ -82,7 +82,7 @@ export default class BodyClient extends StateMachine {
    * constructed instance expects to be the primary non-human controller of the
    * Quill instance it manages.
    *
-   * @param {QuillProm} quill Quill editor instance.
+   * @param {QuillProm} quill Quill editor instance for the body.
    * @param {DocSession} docSession Server session control / manager.
    */
   constructor(quill, docSession) {
