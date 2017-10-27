@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { reporters } from 'mocha';
-import { format } from 'util';
+import { format, inspect } from 'util';
 
 import { CommonBase } from 'util-common';
 
@@ -69,8 +69,8 @@ export default class CollectingReporter extends CommonBase {
       this._addResult(test, 'pass');
     });
 
-    runner.on('fail', (test) => {
-      this._addResult(test, 'fail');
+    runner.on('fail', (test, error) => {
+      this._addResult(test, 'fail', error);
     });
 
     /**
@@ -91,7 +91,7 @@ export default class CollectingReporter extends CommonBase {
     const lines = [];
     const stats = { fail: 0, pass: 0, pending: 0, total: 0 };
 
-    for (const { test, status, suites, log } of this._results) {
+    for (const { test, status, suites, log, error } of this._results) {
       const testPath =
         `${[...suites.map(s => s.title)].join(' / ')} :: ${test.title}`
           .replace(/\n/, ' ');
@@ -103,10 +103,32 @@ export default class CollectingReporter extends CommonBase {
       stats[status]++;
       stats.total++;
 
+      let anyExtra = false;
+
       if (log.length !== 0) {
+        anyExtra = true;
+        lines.push('');
+
         for (const line of log) {
           lines.push(`  ${line}`);
         }
+      }
+
+      if (error !== null) {
+        const errString = (error instanceof Error)
+          ? error.stack
+          : inspect(error);
+        const errLines = errString.replace(/\n{2,}/, '\n').split('\n');
+
+        anyExtra = true;
+        lines.push('');
+
+        for (const line of errLines) {
+          lines.push(`  ${line}`);
+        }
+      }
+
+      if (anyExtra) {
         lines.push('');
       }
     }
@@ -128,15 +150,16 @@ export default class CollectingReporter extends CommonBase {
    *
    * @param {mocha.Test} test The test that was run.
    * @param {string} status Its success status.
+   * @param {*} [error = null] Cause of failure, if any.
    */
-  _addResult(test, status) {
+  _addResult(test, status, error = null) {
     // `slice(1)` because we don't care about the anonymous top-level suite.
     const suites = this._suites.slice(1);
 
     // `slice()` to make an independent clone.
     const log = this._console.slice();
 
-    this._results.push({ test, status, suites, log });
+    this._results.push({ test, status, suites, log, error });
   }
 
   /**
