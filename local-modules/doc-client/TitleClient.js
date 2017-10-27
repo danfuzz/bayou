@@ -48,9 +48,14 @@ export default class TitleClient extends CommonBase {
     // **TODO:** Needs to be implemented nontrivially. This just gets a snapshot
     // of the property at start time and never listens for updates coming from
     // the server.
-    const initialValue = await this._propertyClient.get('title');
-    this._quill.setText(initialValue);
-    this._pushUpdate();
+    try {
+      const initialValue = await this._propertyClient.get('title');
+      this._quill.setText(initialValue);
+      this._pushUpdate();
+    } catch (e) {
+      // Probably that the property wasn't found, which is no big deal.
+      this._log.warn('Trouble getting initial title value.', e);
+    }
 
     // Start noticing when the local client changes the title.
     this._pusherLoop();
