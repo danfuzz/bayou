@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { DocumentState } from 'data-model-client';
 import { QuillUtil } from 'quill-util';
 import { CommonBase } from 'util-common';
 
@@ -44,7 +45,7 @@ export default class TitleClient extends CommonBase {
    * Starts handling bidirectional updates.
    */
   start() {
-    // **TODO:** Needs to be implemented.
+    // **TODO:** Needs to be implemented nontrivially.
   }
 
   /**
@@ -63,8 +64,12 @@ export default class TitleClient extends CommonBase {
     // exception) needs to be handled.
     this._docSession.propertyClient.set('title', text);
 
-    // **TODO:** The Redux store's title should get updated here too.
+    // Update the Redux store.
+    const store  = this._editorComplex.clientStore;
+    const action = DocumentState.setTitleAction(text);
+    store.dispatch(action);
 
+    // Move focus to the body.
     const div = QuillUtil.editorDiv(this._editorComplex.bodyQuill);
     div.focus();
 
