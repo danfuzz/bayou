@@ -10,7 +10,7 @@ import { SplitKey } from 'api-common';
 import { ClientStore } from 'data-model-client';
 import { Hooks } from 'hooks-client';
 import { Condition } from 'promise-util';
-import { BayouKeyHandlers, QuillProm } from 'quill-util';
+import { BayouKeyHandlers, QuillProm, QuillUtil } from 'quill-util';
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
 import { Header } from 'ui-header';
@@ -115,12 +115,21 @@ export default class EditorComplex extends CommonBase {
         headerNode
       );
 
+      // Makes a clone of the default config with the additional binding of
+      // the "enter" key to our special handler. **TODO:** This is way more
+      // verbose and precarious than it ought to be. We should fix it to be
+      // less icky.
+      const titleModuleConfig = Object.assign({}, EditorComplex._titleModuleConfig);
+      titleModuleConfig.keyboard = Object.assign({},
+        titleModuleConfig.keyboard,
+        { onEnter: this.titleOnEnter.bind(this) });
+
       /** {QuillProm} The Quill editor object for the document title. */
       this._titleQuill = new QuillProm(titleNode, {
         readOnly: false,
         strict:   true,
         theme:    Hooks.theOne.quillThemeName('title'),
-        modules:  EditorComplex._titleModuleConfig
+        modules:  titleModuleConfig
       });
 
       /** {QuillProm} The Quill editor object. */
@@ -202,6 +211,30 @@ export default class EditorComplex extends CommonBase {
   connectNewSession(sessionKey) {
     log.info('Hooking up new session:', sessionKey.toString());
     this._initSession(sessionKey, false);
+  }
+
+  /**
+   * Handles "enter" key events when done on a title field.
+   *
+   * @param {object} metaKeys_unused Plain object indicating which meta keys are
+   *   active.
+   * @returns {booolean} `false`, always, which tells Quill to stop processing.
+   */
+  titleOnEnter(metaKeys_unused) {
+    // **TODO:** This should be a call to `getContents()` so we have a marked-up
+    // delta and not just flat text.
+    const text = this._titleQuill.getText();
+
+    // **TODO:** This is an async call, and its response (which could be an
+    // exception) needs to be handled.
+    this._docSession.propertyClient.set('title', text);
+
+    // **TODO:** The Redux store's title should get updated here too.
+
+    const div = QuillUtil.editorDiv(this._bodyQuill);
+    div.focus();
+
+    return false;
   }
 
   /**
