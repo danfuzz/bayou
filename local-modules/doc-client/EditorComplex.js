@@ -36,7 +36,7 @@ const DEFAULT_BODY_MODULE_CONFIG = {
 
 /** {object} Default Quill module configuration for the title field. */
 const DEFAULT_TITLE_MODULE_CONFIG = {
-  keyboard: BayouKeyHandlers.singleLineKeyHandlers,
+  keyboard: BayouKeyHandlers.defaultSingleLineKeyHandlers,
   toolbar: [
     ['italic', 'underline', 'strike', 'code'], // Toggled buttons.
   ]
