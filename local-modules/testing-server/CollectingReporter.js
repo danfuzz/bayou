@@ -92,9 +92,12 @@ export default class CollectingReporter extends CommonBase {
     const stats = { fail: 0, pass: 0, pending: 0, total: 0 };
 
     for (const { test, status, suites, log } of this._results) {
-      const testPath = [...suites.map(s => s.title), test.title].join(' / ');
-      const speed = (test.speed === 'fast') ? '' : `, ${test.duration}ms`;
-      const statusStr = `(${status}${speed})`;
+      const testPath =
+        `${[...suites.map(s => s.title)].join(' / ')} :: ${test.title}`
+          .replace(/\n/, ' ');
+      const speed = test.speed || 'fast';
+      const speedStr = (speed === 'fast') ? '' : `, ${speed} ${test.duration}ms`;
+      const statusStr = `(${status}${speedStr})`;
 
       lines.push(`${statusStr} ${testPath}`);
       stats[status]++;
@@ -110,9 +113,10 @@ export default class CollectingReporter extends CommonBase {
 
     lines.push('');
     lines.push('Summary:');
-    lines.push(`  Total:  ${stats.total}`);
-    lines.push(`  Passed: ${stats.pass}`);
-    lines.push(`  Failed: ${stats.fail}`);
+    lines.push(`  Total:   ${stats.total}`);
+    lines.push(`  Passed:  ${stats.pass}`);
+    lines.push(`  Failed:  ${stats.fail}`);
+    lines.push(`  Pending: ${stats.pending}`);
     lines.push('');
     lines.push((stats.fail === 0) ? 'All good! Yay!' : 'Alas.');
 
