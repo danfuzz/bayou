@@ -93,7 +93,7 @@ export default class CollectingReporter extends CommonBase {
 
     for (const { test, status, suites, log } of this._results) {
       const testPath = [...suites.map(s => s.title), test.title].join(' / ');
-      const speed = (test.speed === 'fast') ? '' : ', ${test.duration}ms';
+      const speed = (test.speed === 'fast') ? '' : `, ${test.duration}ms`;
       const statusStr = `(${status}${speed})`;
 
       lines.push(`${statusStr} ${testPath}`);
