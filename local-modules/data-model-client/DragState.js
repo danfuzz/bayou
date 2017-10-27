@@ -26,7 +26,7 @@ export default class DocumentState {
     return (state = DEFAULT_STATE, action) => {
       switch (action.type) {
         case UPDATE_DRAG_LOCATION_ACTION: {
-          const newState = Object.assign({}, state, { dragIndex: action.index });
+          const newState = Object.assign({}, state, { dragIndex: action.payload.index });
           return newState;
         }
 
@@ -44,14 +44,29 @@ export default class DocumentState {
    *   or `null` if the drag has ended.
    * @returns {object} The dispatch action.
    */
-  static setDragIndex(index) {
+  static setDragIndexAction(index) {
     if (index !== null) {
       TInt.nonNegative(index);
     }
 
     return {
       type: UPDATE_DRAG_LOCATION_ACTION,
-      index
+      payload: {
+        index
+      }
     };
   }
+
+  /**
+   * Redux selector for the location of the file-drop coach mark.
+   *
+   * @param {object} state The redux state to query.
+   * @returns {Int|null} If a drag is in progress returns the cursor
+   *   position's offset into the Quill document. If there is no drag
+   *   then `null` is returned.
+   */
+  static dragIndex(state) {
+    return state.drag.dragIndex;
+  }
+
 }

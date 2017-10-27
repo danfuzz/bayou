@@ -37,7 +37,7 @@ export default class DocumentState {
         }
 
         case SET_TITLE_ACTION: {
-          const newState = Object.assign({}, state, { title: action.title });
+          const newState = Object.assign({}, state, { title: action.payload.title });
           return newState;
         }
 
@@ -72,7 +72,23 @@ export default class DocumentState {
 
     return {
       type: SET_TITLE_ACTION,
-      title
+      payload: {
+        title
+      }
     };
+  }
+
+  /**
+   * Redux selector indicating whether the document is "starred".
+   *
+   * @param {object} state The redux state to query.
+   * @returns {boolean} True if the document is starred, otherwise false.
+   */
+  static isStarred(state) {
+    return state.document.starred;
+  }
+
+  static title(state) {
+    return state.document.title;
   }
 }

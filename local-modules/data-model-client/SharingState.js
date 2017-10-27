@@ -38,7 +38,7 @@ export default class SharingState {
     return (state = DEFAULT_STATE, action) => {
       switch (action.type) {
         case SET_SHARING_STATE: {
-          const newState = Object.assign({}, state, { state: action.newState });
+          const newState = Object.assign({}, state, { state: action.payload.newState });
           return newState;
         }
 
@@ -55,10 +55,22 @@ export default class SharingState {
    * @param {string} newState The new sharing state for the document.
    * @returns {object} The dispatch action.
    */
-  static setSharingState(newState) {
+  static setSharingStateAction(newState) {
     return {
       type: SET_SHARING_STATE,
-      newState
+      payload: {
+        newState
+      }
     };
+  }
+
+  /**
+   * Redux selector for the sharing state of the document.
+   *
+   * @param {object} state The redux state to query.
+   * @returns {string} The sharing state.
+   */
+  static sharingState(state) {
+    return state.sharing.state;
   }
 }

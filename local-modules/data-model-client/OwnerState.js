@@ -24,7 +24,7 @@ export default class OwnerState {
     return (state = DEFAULT_STATE, action) => {
       switch (action.type) {
         case SET_OWNER_NAME_ACTION:
-          return Object.assign({}, state, { name: action.newName });
+          return Object.assign({}, state, { name: action.payload.newName });
 
         default: {
           return state;
@@ -39,10 +39,22 @@ export default class OwnerState {
    * @param {string} newName The new display name for the document owner.
    * @returns {object} The dispatch action.
    */
-  static setOwnerName(newName) {
+  static setOwnerNameAction(newName) {
     return {
       type: SET_OWNER_NAME_ACTION,
-      newName
+      payload: {
+        newName
+      }
     };
+  }
+
+  /**
+   * Redux selector for the name of the owner of the document.
+   *
+   * @param {object} state The redux state to query.
+   * @returns {string} The name for the owner of the document.
+   */
+  static ownerName(state) {
+    return state.owner.name;
   }
 }

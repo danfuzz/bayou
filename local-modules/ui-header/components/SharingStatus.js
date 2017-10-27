@@ -7,7 +7,6 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import { SharingState } from 'data-model-client';
-
 import styles from './sharing-status.module.less';
 
 /**
@@ -57,7 +56,7 @@ SharingStatus.propTypes = {
  */
 const mapStateToProps = (state) => {
   return {
-    sharingStatus: state.sharing.state
+    sharingStatus: SharingState.sharingState(state)
   };
 };
 

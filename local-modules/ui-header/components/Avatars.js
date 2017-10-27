@@ -7,6 +7,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import styles from './avatar.module.less';
+import { CaretState } from 'doc-client';
 
 class Avatars extends React.Component {
   render() {
@@ -45,7 +46,7 @@ Avatars.propTypes = {
  */
 const mapStateToProps = (state) => {
   return {
-    sessions: state.carets  // {CaretSnapshot}
+    sessions: CaretState.caretSnapshot(state)
   };
 };
 

@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 
+import { OwnerState } from 'data-model-client';
 import styles from './owner.module.less';
 
 /**
@@ -39,7 +40,7 @@ Owner.propTypes = {
  */
 const mapStateToProps = (state) => {
   return {
-    ownerName: state.owner.name
+    ownerName: OwnerState.ownerName(state)
   };
 };
 

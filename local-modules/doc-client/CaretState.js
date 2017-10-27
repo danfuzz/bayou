@@ -143,4 +143,15 @@ export default class CaretState {
       await Delay.resolve(REQUEST_DELAY_MSEC);
     }
   }
+
+  /**
+   * Redux selector for the caret snapshot.
+   *
+   * @param {object} state The redux state to query.
+   * @returns {CaretSnapshot} The caret snapshot.
+   */
+  static caretSnapshot(state) {
+    return state.carets;
+  }
+
 }

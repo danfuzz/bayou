@@ -41,7 +41,7 @@ Star.propTypes = {
  */
 const mapStateToProps = (state) => {
   return {
-    isStarred: state.document.starred
+    isStarred: DocumentState.isStarred(state)
   };
 };
 

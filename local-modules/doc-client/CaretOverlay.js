@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { DragState } from 'data-model-client';
 import { CaretOp, CaretSnapshot } from 'doc-common';
 import { Delay } from 'promise-util';
 import { QuillEvents, QuillGeometry, QuillUtil } from 'quill-util';
@@ -523,13 +524,13 @@ export default class CaretOverlay {
 
   _updateDragIndicator() {
     const state = this._editorComplex.clientStore.getState();
-    const dragState = state.drag;
+    const dragIndex = DragState.dragIndex(state);
 
-    if (this._dragIndex === dragState.dragIndex) {
+    if (this._dragIndex === dragIndex) {
       return;
     }
 
-    this._dragIndex = dragState.dragIndex;
+    this._dragIndex = dragIndex;
     this._updateDisplay();
   }
 }
