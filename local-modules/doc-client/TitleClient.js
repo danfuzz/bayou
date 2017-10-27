@@ -2,9 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { QuillUtil } from 'quill-util';
 import { CommonBase } from 'util-common';
-
-import DocSession from './DocSession';
 
 /**
  * Plumbing between the title field (managed by Quill) on the client and the
@@ -15,23 +14,30 @@ export default class TitleClient extends CommonBase {
    * Constructs an instance. The constructed instance expects to be the primary
    * non-human controller of the Quill instance it manages.
    *
+   * @param {EditorComplex} editorComplex The editor complex which this instance
+   *   is associated with.
    * @param {QuillProm} quill Quill editor instance for the title.
-   * @param {DocSession} docSession Server session control / manager.
    */
-  constructor(quill, docSession) {
+  constructor(editorComplex) {
     super();
 
+    /**
+     * {EditorComplex} The editor complex which this instance is associated
+     * with.
+     */
+    this._editorComplex = editorComplex;
+
     /** {Quill} Editor object. */
-    this._quill = quill;
+    this._quill = editorComplex.titleQuill;
 
     /** {DocSession} Server session control / manager. */
-    this._docSession = DocSession.check(docSession);
+    this._docSession = editorComplex.docSession;
 
     /** {Logger} Logger specific to this client's session. */
-    this._log = docSession.log;
+    this._log = this._docSession.log;
 
     /** {PropertyClient} Property data communication handler. */
-    this._propertyClient = docSession.propertyClient;
+    this._propertyClient = this._docSession.propertyClient;
   }
 
   /**
@@ -39,5 +45,29 @@ export default class TitleClient extends CommonBase {
    */
   start() {
     // **TODO:** Needs to be implemented.
+  }
+
+  /**
+   * Handles "enter" key events when done on a title field.
+   *
+   * @param {object} metaKeys_unused Plain object indicating which meta keys are
+   *   active.
+   * @returns {boolean} `false`, always, which tells Quill to stop processing.
+   */
+  titleOnEnter(metaKeys_unused) {
+    // **TODO:** This should be a call to `getContents()` so we have a marked-up
+    // delta and not just flat text.
+    const text = this._quill.getText();
+
+    // **TODO:** This is an async call, and its response (which could be an
+    // exception) needs to be handled.
+    this._docSession.propertyClient.set('title', text);
+
+    // **TODO:** The Redux store's title should get updated here too.
+
+    const div = QuillUtil.editorDiv(this._editorComplex.bodyQuill);
+    div.focus();
+
+    return false;
   }
 }

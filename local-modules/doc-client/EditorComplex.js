@@ -10,7 +10,7 @@ import { SplitKey } from 'api-common';
 import { ClientStore } from 'data-model-client';
 import { Hooks } from 'hooks-client';
 import { Condition } from 'promise-util';
-import { BayouKeyHandlers, QuillProm, QuillUtil } from 'quill-util';
+import { BayouKeyHandlers, QuillProm } from 'quill-util';
 import { Logger } from 'see-all';
 import { TObject } from 'typecheck';
 import { Header } from 'ui-header';
@@ -176,14 +176,14 @@ export default class EditorComplex extends CommonBase {
     return this._bodyClient;
   }
 
-  /** {DocSession} The session control instance. */
-  get docSession() {
-    return this._docSession;
-  }
-
   /** {ClientStore} Pub/sub interface for client data model changes. */
   get clientStore() {
     return this._clientStore;
+  }
+
+  /** {DocSession} The session control instance. */
+  get docSession() {
+    return this._docSession;
   }
 
   /** {Logger} Logger to use when _not_ referring to the session. */
@@ -228,25 +228,14 @@ export default class EditorComplex extends CommonBase {
   /**
    * Handles "enter" key events when done on a title field.
    *
-   * @param {object} metaKeys_unused Plain object indicating which meta keys are
+   * @param {object} metaKeys Plain object indicating which meta keys are
    *   active.
-   * @returns {booolean} `false`, always, which tells Quill to stop processing.
+   * @returns {boolean} `false`, always, which tells Quill to stop processing.
    */
-  titleOnEnter(metaKeys_unused) {
-    // **TODO:** This should be a call to `getContents()` so we have a marked-up
-    // delta and not just flat text.
-    const text = this._titleQuill.getText();
-
-    // **TODO:** This is an async call, and its response (which could be an
-    // exception) needs to be handled.
-    this._docSession.propertyClient.set('title', text);
-
-    // **TODO:** The Redux store's title should get updated here too.
-
-    const div = QuillUtil.editorDiv(this._bodyQuill);
-    div.focus();
-
-    return false;
+  titleOnEnter(metaKeys) {
+    // **TODO:** It would be nice if this could be handled more directly by
+    // `TitleClient`.
+    return this._titleClient.titleOnEnter(metaKeys);
   }
 
   /**
@@ -269,7 +258,7 @@ export default class EditorComplex extends CommonBase {
     this._sessionKey  = SplitKey.check(sessionKey);
     this._docSession  = new DocSession(this._sessionKey);
     this._bodyClient  = new BodyClient(this._bodyQuill, this._docSession);
-    this._titleClient = new TitleClient(this._titleQuill, this._docSession);
+    this._titleClient = new TitleClient(this);
 
     this._bodyClient.start();
     this._titleClient.start();

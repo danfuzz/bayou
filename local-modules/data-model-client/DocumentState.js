@@ -7,6 +7,9 @@ import { TString } from 'typecheck';
 const DEFAULT_STATE = {
   /** {boolean} Whether this document is favorited or not. */
   starred: false,
+
+  /** {string} Document title. */
+  title: 'Untitled'
 };
 
 /** {string} Action type to use for toggling the star state. */
