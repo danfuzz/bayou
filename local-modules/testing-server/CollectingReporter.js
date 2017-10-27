@@ -3,9 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { reporters } from 'mocha';
-import { format } from 'util';
+import { format, inspect } from 'util';
 
-import { CommonBase } from 'util-common';
+import { CommonBase, ErrorUtil } from 'util-common';
 
 /**
  * Mocha reporter which uses its built-in `spec` reporter to write to the
@@ -69,8 +69,8 @@ export default class CollectingReporter extends CommonBase {
       this._addResult(test, 'pass');
     });
 
-    runner.on('fail', (test) => {
-      this._addResult(test, 'fail');
+    runner.on('fail', (test, error) => {
+      this._addResult(test, 'fail', error);
     });
 
     /**
@@ -91,28 +91,58 @@ export default class CollectingReporter extends CommonBase {
     const lines = [];
     const stats = { fail: 0, pass: 0, pending: 0, total: 0 };
 
-    for (const { test, status, suites, log } of this._results) {
-      const testPath = [...suites.map(s => s.title), test.title].join(' / ');
-      const speed = (test.speed === 'fast') ? '' : ', ${test.duration}ms';
-      const statusStr = `(${status}${speed})`;
+    for (const { test, status, suites, log, error } of this._results) {
+      const testPath =
+        `${[...suites.map(s => s.title)].join(' / ')} :: ${test.title}`
+          .replace(/\n/, ' ');
+      const speed = test.speed || 'fast';
+      const speedStr = (speed === 'fast') ? '' : `, ${speed} ${test.duration}ms`;
+      const statusStr = `(${status}${speedStr})`;
 
       lines.push(`${statusStr} ${testPath}`);
       stats[status]++;
       stats.total++;
 
+      let anyExtra = false;
+
       if (log.length !== 0) {
+        anyExtra = true;
+        lines.push('');
+
         for (const line of log) {
           lines.push(`  ${line}`);
         }
+      }
+
+      if (error !== null) {
+        let errLines;
+        if (error instanceof Error) {
+          const msgLines   = error.toString().split('\n');
+          const stackLines = ErrorUtil.stackLines(error).map(s => `  at ${s}`);
+          errLines = [...msgLines, ...stackLines];
+        } else {
+          errLines = inspect(error).split('\n');
+        }
+
+        anyExtra = true;
+        lines.push('');
+
+        for (const line of errLines) {
+          lines.push(`  ${line}`);
+        }
+      }
+
+      if (anyExtra) {
         lines.push('');
       }
     }
 
     lines.push('');
     lines.push('Summary:');
-    lines.push(`  Total:  ${stats.total}`);
-    lines.push(`  Passed: ${stats.pass}`);
-    lines.push(`  Failed: ${stats.fail}`);
+    lines.push(`  Total:   ${stats.total}`);
+    lines.push(`  Passed:  ${stats.pass}`);
+    lines.push(`  Failed:  ${stats.fail}`);
+    lines.push(`  Pending: ${stats.pending}`);
     lines.push('');
     lines.push((stats.fail === 0) ? 'All good! Yay!' : 'Alas.');
 
@@ -124,15 +154,16 @@ export default class CollectingReporter extends CommonBase {
    *
    * @param {mocha.Test} test The test that was run.
    * @param {string} status Its success status.
+   * @param {*} [error = null] Cause of failure, if any.
    */
-  _addResult(test, status) {
+  _addResult(test, status, error = null) {
     // `slice(1)` because we don't care about the anonymous top-level suite.
     const suites = this._suites.slice(1);
 
     // `slice()` to make an independent clone.
     const log = this._console.slice();
 
-    this._results.push({ test, status, suites, log });
+    this._results.push({ test, status, suites, log, error });
   }
 
   /**

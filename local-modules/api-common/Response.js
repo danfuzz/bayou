@@ -5,7 +5,7 @@
 import { inspect } from 'util';
 
 import { TInt } from 'typecheck';
-import { CommonBase, Errors, Functor, InfoError } from 'util-common';
+import { CommonBase, ErrorUtil, Errors, Functor, InfoError } from 'util-common';
 
 import CodableError from './CodableError';
 
@@ -133,8 +133,9 @@ export default class Response extends CommonBase {
    * stack, this returns an empty array.
    *
    * @param {*} error Error value.
-   * @returns {string|null} Cleaned up error stack, `[]` if this is an error-ish
-   *   value with no stack, or `null` if `error` is `null`.
+   * @returns {array<string>|null} Cleaned up error stack as an array of stack
+   *   lines. Will be `[]` if this is an error-ish value with no stack, or
+   *   `null` if `error` is `null`.
    */
   static _fixErrorStack(error) {
     if (error === null) {
@@ -143,40 +144,6 @@ export default class Response extends CommonBase {
       return [];
     }
 
-    const stack = error.stack;
-
-    if (typeof stack !== 'string') {
-      return [];
-    }
-
-    // Match on each line of the stack that looks like a function/method call
-    // (`...at...`). Using `map()` strip each one of the unintersting parts.
-    return stack.match(/^ +at .*$/mg).map((line) => {
-      // Lines that name functions are expected to be of the form
-      // `    at func.name (/path/to/file:NN:NN)`, where `func.name` might
-      // actually be `new func.name` or `func.name [as other.name]` (or both).
-      let match = line.match(/^ +at ([^()]+) \(([^()]+)\)$/);
-      let funcName;
-      let filePath;
-
-      if (match) {
-        funcName = match[1];
-        filePath = match[2];
-      } else {
-        // Anonymous functions (including top-level code) have the form
-        // `    at /path/to/file:NN:NN`.
-        match = line.match(/^ +at ([^()]*)$/);
-        funcName = '(anon)';
-        filePath = match[1];
-      }
-
-      const fileSplit = filePath.match(/\/?[^/]+/g) || ['?'];
-      const splitLen  = fileSplit.length;
-      const fileName  = (splitLen < 2)
-        ? fileSplit[0]
-        : `...${fileSplit[splitLen - 2]}${fileSplit[splitLen - 1]}`;
-
-      return `${funcName} (${fileName})`;
-    });
+    return ErrorUtil.stackLines(error);
   }
 }

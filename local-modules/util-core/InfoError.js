@@ -161,6 +161,11 @@ export default class InfoError extends Error {
    * meant to work cross-platform, taking into account known differences between
    * Chrome / Chromium and Safari.
    *
+   * **TODO:** This should be removed and call sites fixed to use
+   * {@link UtilError#stackLines()}, except that method would have to be fixed
+   * to be (a) accessible here (wrong module) and (b) become explicitly aware of
+   * Safari's style.
+   *
    * @param {string} orig The original `.stack` string.
    * @returns {array<string>} Array of trace items.
    */
