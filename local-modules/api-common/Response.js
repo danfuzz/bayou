@@ -133,8 +133,9 @@ export default class Response extends CommonBase {
    * stack, this returns an empty array.
    *
    * @param {*} error Error value.
-   * @returns {string|null} Cleaned up error stack, `[]` if this is an error-ish
-   *   value with no stack, or `null` if `error` is `null`.
+   * @returns {array<string>|null} Cleaned up error stack as an array of stack
+   *   lines. Will be `[]` if this is an error-ish value with no stack, or
+   *   `null` if `error` is `null`.
    */
   static _fixErrorStack(error) {
     if (error === null) {
