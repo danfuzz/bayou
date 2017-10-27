@@ -17,7 +17,7 @@ import { UtilityClass } from 'util-common';
  * An example of usage might be:
  *
  * ```
- * const keyHandlers = BayouKeyHandlers.singleLineKeyHandlers;
+ * const keyHandlers = BayouKeyHandlers.defaultSingleLineKeyHandlers;
  * const quill = new QuillProm(domNode, {
  *   modules: {
  *     [ other configuration options ],
@@ -43,16 +43,29 @@ export default class BayouKeyHandlers extends UtilityClass {
   }
 
   /**
-   * Convenience function that returns the group of key handlers that will
-   * transform a Quill instance into a single-line input field.
+   * Convenience function that returns the default group of key handlers that
+   * will transform a Quill instance into a single-line input field.
    *
    * @returns {object} The key handlers.
    */
-  static get singleLineKeyHandlers() {
+  static get defaultSingleLineKeyHandlers() {
     return Object.assign(
       BayouKeyHandlers.defaultKeyHandlers,
       { onEnter: BayouKeyHandlers._singleLineOnEnter }
     );
+  }
+
+  /**
+   * Gets a key handler object configured for single-line use, with additional
+   * overridden key bindings as given.
+   *
+   * @param {object} [bindings = {}] Additional key bindings.
+   * @returns {object} The key bindings as specified.
+   */
+  static singleLineKeyHandlers(bindings = {}) {
+    return Object.assign(
+      BayouKeyHandlers.defaultSingleLineKeyHandlers,
+      bindings);
   }
 
   /**

@@ -21,6 +21,7 @@ import BodyClient from './BodyClient';
 import CaretOverlay from './CaretOverlay';
 import CaretState from './CaretState';
 import DocSession from './DocSession';
+import TitleClient from './TitleClient';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('editor-complex');
@@ -36,7 +37,7 @@ const DEFAULT_BODY_MODULE_CONFIG = {
 
 /** {object} Default Quill module configuration for the title field. */
 const DEFAULT_TITLE_MODULE_CONFIG = {
-  keyboard: BayouKeyHandlers.singleLineKeyHandlers,
+  keyboard: BayouKeyHandlers.defaultSingleLineKeyHandlers,
   toolbar: [
     ['italic', 'underline', 'strike', 'code'], // Toggled buttons.
   ]
@@ -90,6 +91,12 @@ export default class EditorComplex extends CommonBase {
     this._bodyClient = null;
 
     /**
+     * {TitleClient|null} Document title client instance (API-to-editor hookup).
+     * Set in `_initSession()`.
+     */
+    this._titleClient = null;
+
+    /**
      * {ClientStore} Wrapper for the redux data store for this client.
      */
     this._clientStore = new ClientStore();
@@ -115,12 +122,21 @@ export default class EditorComplex extends CommonBase {
         headerNode
       );
 
+      // Makes a clone of the default config with the additional binding of
+      // the "enter" key to our special handler. **TODO:** This is way more
+      // verbose and precarious than it ought to be. We should fix it to be
+      // less icky.
+      const titleModuleConfig = Object.assign({}, EditorComplex._titleModuleConfig);
+      titleModuleConfig.keyboard = Object.assign({},
+        titleModuleConfig.keyboard,
+        { onEnter: this.titleOnEnter.bind(this) });
+
       /** {QuillProm} The Quill editor object for the document title. */
       this._titleQuill = new QuillProm(titleNode, {
         readOnly: false,
         strict:   true,
         theme:    Hooks.theOne.quillThemeName('title'),
-        modules:  EditorComplex._titleModuleConfig
+        modules:  titleModuleConfig
       });
 
       /** {QuillProm} The Quill editor object. */
@@ -160,19 +176,24 @@ export default class EditorComplex extends CommonBase {
     return this._bodyClient;
   }
 
-  /** {DocSession} The session control instance. */
-  get docSession() {
-    return this._docSession;
-  }
-
   /** {ClientStore} Pub/sub interface for client data model changes. */
   get clientStore() {
     return this._clientStore;
   }
 
+  /** {DocSession} The session control instance. */
+  get docSession() {
+    return this._docSession;
+  }
+
   /** {Logger} Logger to use when _not_ referring to the session. */
   get log() {
     return log;
+  }
+
+  /** {TitleClient} The document title client instance. */
+  get titleClient() {
+    return this._titleClient;
   }
 
   /** {QuillProm} The Quill editor object for the title field. */
@@ -205,6 +226,19 @@ export default class EditorComplex extends CommonBase {
   }
 
   /**
+   * Handles "enter" key events when done on a title field.
+   *
+   * @param {object} metaKeys Plain object indicating which meta keys are
+   *   active.
+   * @returns {boolean} `false`, always, which tells Quill to stop processing.
+   */
+  titleOnEnter(metaKeys) {
+    // **TODO:** It would be nice if this could be handled more directly by
+    // `TitleClient`.
+    return this._titleClient.titleOnEnter(metaKeys);
+  }
+
+  /**
    * Returns `true` once the instance is ready for use.
    *
    * @returns {boolean} `true` once the instance is ready for use.
@@ -221,11 +255,13 @@ export default class EditorComplex extends CommonBase {
    *   constructor.
    */
   _initSession(sessionKey, fromConstructor) {
-    this._sessionKey = SplitKey.check(sessionKey);
-    this._docSession = new DocSession(this._sessionKey);
+    this._sessionKey  = SplitKey.check(sessionKey);
+    this._docSession  = new DocSession(this._sessionKey);
     this._bodyClient  = new BodyClient(this._bodyQuill, this._docSession);
+    this._titleClient = new TitleClient(this);
 
     this._bodyClient.start();
+    this._titleClient.start();
 
     // Log a note once everything is all set up.
     (async () => {

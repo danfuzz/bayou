@@ -75,7 +75,7 @@ export default class PropertyClient extends CommonBase {
     const proxy    = await this._proxyWhenReady();
     const snapshot = await proxy.property_getSnapshot();
 
-    return snapshot.get(name);
+    return snapshot.get(name).value;
   }
 
   /**
