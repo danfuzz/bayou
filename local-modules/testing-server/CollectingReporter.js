@@ -5,7 +5,7 @@
 import { reporters } from 'mocha';
 import { format, inspect } from 'util';
 
-import { CommonBase } from 'util-common';
+import { CommonBase, ErrorUtil } from 'util-common';
 
 /**
  * Mocha reporter which uses its built-in `spec` reporter to write to the
@@ -115,10 +115,14 @@ export default class CollectingReporter extends CommonBase {
       }
 
       if (error !== null) {
-        const errString = (error instanceof Error)
-          ? error.stack
-          : inspect(error);
-        const errLines = errString.replace(/\n{2,}/, '\n').split('\n');
+        let errLines;
+        if (error instanceof Error) {
+          const msgLines   = error.toString().split('\n');
+          const stackLines = ErrorUtil.stackLines(error).map(s => `  at ${s}`);
+          errLines = [...msgLines, ...stackLines];
+        } else {
+          errLines = inspect(error).split('\n');
+        }
 
         anyExtra = true;
         lines.push('');
