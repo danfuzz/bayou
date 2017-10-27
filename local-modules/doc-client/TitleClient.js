@@ -44,8 +44,15 @@ export default class TitleClient extends CommonBase {
   /**
    * Starts handling bidirectional updates.
    */
-  start() {
-    // **TODO:** Needs to be implemented nontrivially.
+  async start() {
+    // **TODO:** Needs to be implemented nontrivially. This just gets a snapshot
+    // of the property at start time and never listens for updates coming from
+    // the server.
+    const initialValue = await this._propertyClient.get('title');
+    this._quill.setText(initialValue);
+    this._pushUpdate();
+
+    // Start noticing when the local client changes the title.
     this._pusherLoop();
   }
 
