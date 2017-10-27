@@ -96,12 +96,9 @@ export default class TitleClient extends CommonBase {
 
     for (;;) {
       const event = await currentEvent.nextOf(QuillEvents.SELECTION_CHANGE);
+      const { range } = QuillEvents.propsOf(event);
 
-      // We check to see if the title `<div>` has focus or not. Ideally, the
-      // Quill event in which focus is lost would reflect that (e.g. with a
-      // `null` selection), but that doesn't happen in practice.
-      const div = QuillUtil.editorDiv(this._quill);
-      if (div !== div.ownerDocument.activeElement) {
+      if (range === null) {
         this._pushUpdate();
       }
 
