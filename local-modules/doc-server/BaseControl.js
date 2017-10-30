@@ -26,6 +26,15 @@ const MAX_UPDATE_TIME_MSEC = 20 * 1000; // 20 seconds.
  */
 export default class BaseControl extends BaseDataManager {
   /**
+   * {Int} Maximum number of document changes to request in a single
+   * transaction. (The idea is to avoid making a request that would result in
+   * running into an upper limit on transaction data size.)
+   */
+  static get MAX_CHANGE_READS_PER_TRANSACTION() {
+    return 20;
+  }
+
+  /**
    * {class} Class (constructor function) of change objects to be used with
    * instances of this class.
    */
@@ -183,6 +192,86 @@ export default class BaseControl extends BaseDataManager {
 
     if ((result.timestamp !== null) || (result.authorId !== null)) {
       throw Errors.bad_value(result, this.constructor.changeClass, 'timestamp === null && authorId === null');
+    }
+
+    return result;
+  }
+
+  /**
+   * Reads a sequential chunk of changes. It is an error to request a change
+   * that does not exist. It is valid for either `start` or `endExc` to indicate
+   * a change that does not exist _only_ if it is one past the last existing
+   * change. If `start === endExc`, then this verifies that the arguments are in
+   * range and returns an empty array. It is an error if `(endExc - start) >
+   * BaseControl.MAX_CHANGE_READS_PER_TRANSACTION`. For subclasses that don't
+   * keep full history, it is also an error to request a change that is _no
+   * longer_  available; in this case, the error name is always
+   * `revision_not_available`.
+   *
+   * **Note:** The point of the max count limit is that we want to avoid
+   * creating a transaction which could run afoul of a limit on the amount of
+   * data returned by any one transaction.
+   *
+   * @param {Int} start Start change number (inclusive) of changes to read.
+   * @param {Int} endExc End change number (exclusive) of changes to read. Must
+   *   be `>= start`.
+   * @returns {array<BaseChange>} Array of changes, in order by revision number.
+   */
+  async getChangeRange(start, endExc) {
+    const clazz = this.constructor;
+
+    RevisionNumber.check(start);
+    RevisionNumber.min(endExc, start);
+
+    if ((endExc - start) > BaseControl.MAX_CHANGE_READS_PER_TRANSACTION) {
+      // The calling code (in this class) should have made sure we weren't
+      // violating this restriction.
+      throw Errors.bad_use(`Too many changes requested at once: ${endExc - start}`);
+    }
+
+    if (start === endExc) {
+      // Per docs, just need to verify that the arguments don't name an invalid
+      // change. `0` is always valid, so we don't actually need to check that.
+      if (start !== 0) {
+        const revNum = await this.currentRevNum();
+        RevisionNumber.maxInc(start, revNum + 1);
+      }
+      return [];
+    }
+
+    const paths = [];
+    for (let i = start; i < endExc; i++) {
+      paths.push(clazz._impl_pathForChange(i));
+    }
+
+    const fc = this.fileCodec;
+    const ops = [];
+    for (const p of paths) {
+      ops.push(fc.op_checkPathPresent(p));
+      ops.push(fc.op_readPath(p));
+    }
+
+    let data;
+
+    try {
+      const spec              = new TransactionSpec(...ops);
+      const transactionResult = await fc.transact(spec);
+
+      data = transactionResult.data;
+    } catch (e) {
+      if ((e instanceof InfoError) && (e.name === 'path_not_found')) {
+        // One of the requested revisions is no longer available. If thrown, we
+        // know that at least the first one requested will be missing (because
+        // we won't drop a change without also dropping its predecessors). Throw
+        // the error as specified in the docs.
+        throw Errors.revision_not_available(start);
+      }
+    }
+
+    const result = [];
+    for (const p of paths) {
+      const change = clazz.changeClass.check(data.get(p));
+      result.push(change);
     }
 
     return result;

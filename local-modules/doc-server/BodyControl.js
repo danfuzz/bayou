@@ -11,13 +11,6 @@ import Paths from './Paths';
 import ValidationStatus from './ValidationStatus';
 
 /**
- * {Int} Maximum number of document changes to request in a single
- * transaction. (The idea is to avoid making a request that would result in
- * running into an upper limit on transaction data size.)
- */
-const MAX_CHANGE_READS_PER_TRANSACTION = 20;
-
-/**
  * Controller for a given document's body content.
  */
 export default class BodyControl extends BaseControl {
@@ -52,7 +45,7 @@ export default class BodyControl extends BaseControl {
   async getChange(revNum) {
     RevisionNumber.check(revNum);
 
-    const changes = await this._readChangeRange(revNum, revNum + 1);
+    const changes = await this.getChangeRange(revNum, revNum + 1);
     return changes[0];
   }
 
@@ -330,11 +323,11 @@ export default class BodyControl extends BaseControl {
 
     // Make sure all the changes can be read and decoded.
 
-    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
+    const MAX = BaseControl.MAX_CHANGE_READS_PER_TRANSACTION;
     for (let i = 0; i <= revNum; i += MAX) {
       const lastI = Math.min(i + MAX - 1, revNum);
       try {
-        await this._readChangeRange(i, lastI + 1);
+        await this.getChangeRange(i, lastI + 1);
       } catch (e) {
         this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
         return ValidationStatus.STATUS_ERROR;
@@ -393,84 +386,22 @@ export default class BodyControl extends BaseControl {
 
     if (startInclusive === endExclusive) {
       // Trivial case: Nothing to compose. If we were to have made it to the
-      // loop below, `_readChangeRange()` would have taken care of the error
+      // loop below, `getChangeRange()` would have taken care of the error
       // checking on the range arguments. But because we're short-circuiting out
       // of it here, we need to explicitly make a call to confirm argument
       // validity.
-      await this._readChangeRange(startInclusive, startInclusive);
+      await this.getChangeRange(startInclusive, startInclusive);
       return baseDelta;
     }
 
     let result = baseDelta;
-    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
+    const MAX = BaseControl.MAX_CHANGE_READS_PER_TRANSACTION;
     for (let i = startInclusive; i < endExclusive; i += MAX) {
       const end = Math.min(i + MAX, endExclusive);
-      const changes = await this._readChangeRange(i, end);
+      const changes = await this.getChangeRange(i, end);
       for (const c of changes) {
         result = result.compose(c.delta);
       }
-    }
-
-    return result;
-  }
-
-  /**
-   * Reads a sequential set of changes. It is an error to request a change that
-   * does not exist. It is valid for either `start` or `endExc` to indicate a
-   * change that does not exist _only_ if it is one past the last existing
-   * change. If `start === endExc`, then this verifies that the arguments are in
-   * range and returns an empty array. It is an error if `(endExc - start) >
-   * MAX_CHANGE_READS_PER_TRANSACTION`.
-   *
-   * **Note:** The point of the max count limit is that we want to avoid
-   * creating a transaction which could run afoul of a limit on the amount of
-   * data returned by any one transaction.
-   *
-   * @param {Int} start Start change number (inclusive) of changes to read.
-   * @param {Int} endExc End change number (exclusive) of changes to read.
-   * @returns {array<BodyChange>} Array of changes, in order by change
-   *   number.
-   */
-  async _readChangeRange(start, endExc) {
-    RevisionNumber.check(start);
-    RevisionNumber.min(endExc, start);
-
-    if ((endExc - start) > MAX_CHANGE_READS_PER_TRANSACTION) {
-      // The calling code (in this class) should have made sure we weren't
-      // violating this restriction.
-      throw Errors.wtf('Too many changes requested at once.');
-    }
-
-    if (start === endExc) {
-      // Per docs, just need to verify that the arguments don't name an invalid
-      // change. `0` is always valid, so we don't actually need to check that.
-      if (start !== 0) {
-        const revNum = await this.currentRevNum();
-        RevisionNumber.maxInc(start, revNum + 1);
-      }
-      return [];
-    }
-
-    const paths = [];
-    for (let i = start; i < endExc; i++) {
-      paths.push(Paths.forBodyChange(i));
-    }
-
-    const fc = this.fileCodec;
-    const ops = [];
-    for (const p of paths) {
-      ops.push(fc.op_checkPathPresent(p));
-      ops.push(fc.op_readPath(p));
-    }
-
-    const spec              = new TransactionSpec(...ops);
-    const transactionResult = await fc.transact(spec);
-    const data              = transactionResult.data;
-
-    const result = [];
-    for (const p of paths) {
-      const change = BodyChange.check(data.get(p));
-      result.push(change);
     }
 
     return result;
