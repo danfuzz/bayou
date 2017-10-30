@@ -30,7 +30,9 @@ export default class JsonUtil extends UtilityClass {
     // with a header "line" consisting of the error name and message. ("Line" is
     // in scare quotes because it can end up containing embedded newlines.) If
     // it does, then strip it off before doing further processing.
-    const messagePrefix = `${error.name}: ${error.message}\n`;
+    const messagePrefix = (error.message === '')
+      ? `${error.name}\n`
+      : `${error.name}: ${error.message}\n`;
     if (stack.startsWith(messagePrefix)) {
       stack = stack.slice(messagePrefix.length);
     }
