@@ -212,35 +212,36 @@ export default class BaseControl extends BaseDataManager {
    * creating a transaction which could run afoul of a limit on the amount of
    * data returned by any one transaction.
    *
-   * @param {Int} start Start change number (inclusive) of changes to read.
-   * @param {Int} endExc End change number (exclusive) of changes to read. Must
-   *   be `>= start`.
+   * @param {Int} startInclusive Start change number (inclusive) of changes to
+   *   read.
+   * @param {Int} endExclusive End change number (exclusive) of changes to read.
+   *   Must be `>= startInclusive`.
    * @returns {array<BaseChange>} Array of changes, in order by revision number.
    */
-  async getChangeRange(start, endExc) {
+  async getChangeRange(startInclusive, endExclusive) {
     const clazz = this.constructor;
 
-    RevisionNumber.check(start);
-    RevisionNumber.min(endExc, start);
+    RevisionNumber.check(startInclusive);
+    RevisionNumber.min(endExclusive, startInclusive);
 
-    if ((endExc - start) > BaseControl.MAX_CHANGE_READS_PER_TRANSACTION) {
+    if ((endExclusive - startInclusive) > BaseControl.MAX_CHANGE_READS_PER_TRANSACTION) {
       // The calling code (in this class) should have made sure we weren't
       // violating this restriction.
-      throw Errors.bad_use(`Too many changes requested at once: ${endExc - start}`);
+      throw Errors.bad_use(`Too many changes requested at once: ${endExclusive - startInclusive}`);
     }
 
-    if (start === endExc) {
+    if (startInclusive === endExclusive) {
       // Per docs, just need to verify that the arguments don't name an invalid
       // change. `0` is always valid, so we don't actually need to check that.
-      if (start !== 0) {
+      if (startInclusive !== 0) {
         const revNum = await this.currentRevNum();
-        RevisionNumber.maxInc(start, revNum + 1);
+        RevisionNumber.maxInc(startInclusive, revNum + 1);
       }
       return [];
     }
 
     const paths = [];
-    for (let i = start; i < endExc; i++) {
+    for (let i = startInclusive; i < endExclusive; i++) {
       paths.push(clazz._impl_pathForChange(i));
     }
 
@@ -264,7 +265,7 @@ export default class BaseControl extends BaseDataManager {
         // know that at least the first one requested will be missing (because
         // we won't drop a change without also dropping its predecessors). Throw
         // the error as specified in the docs.
-        throw Errors.revision_not_available(start);
+        throw Errors.revision_not_available(startInclusive);
       }
     }
 
