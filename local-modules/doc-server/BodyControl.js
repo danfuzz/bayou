@@ -213,14 +213,14 @@ export default class BodyControl extends BaseControl {
       // delta. We merely have to apply the given `delta` to the current
       // revision. If it succeeds, then we won the append race (if any).
 
-      const revNum = await this._appendChange(change);
+      const success = await this._appendChange(change);
 
-      if (revNum === null) {
+      if (!success) {
         // Turns out we lost an append race.
         return null;
       }
 
-      return new BodyChange(revNum, BodyDelta.EMPTY);
+      return new BodyChange(change.revNum, BodyDelta.EMPTY);
     }
 
     // The hard case: The client has requested an application of a delta
@@ -273,11 +273,11 @@ export default class BodyControl extends BaseControl {
 
     // (3)
 
-    const rNextNum     = rCurrent.revNum + 1;
-    const appendResult = await this._appendChange(
+    const rNextNum      = rCurrent.revNum + 1;
+    const appendSuccess = await this._appendChange(
       new BodyChange(rNextNum, dNext, change.timestamp, change.authorId));
 
-    if (appendResult === null) {
+    if (!appendSuccess) {
       // Turns out we lost an append race.
       return null;
     }
@@ -369,20 +369,19 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
-   * Appends a new change to the document. On success, this returns the revision
-   * number of the document after the append. On a failure due to `baseRevNum`
-   * not being current at the moment of application, this returns `null`. All
-   * other errors are reported via thrown errors. See `_applyUpdateTo()` above
-   * for further discussion.
+   * Appends a new change to the document. On success, this returns `true`. On a
+   * failure due to `baseRevNum` not being current at the moment of application,
+   * this returns `false`. All other failures are reported via thrown errors.
    *
    * **Note:** If the change is a no-op, then this method throws an error,
    * because the calling code should have handled that case without calling this
    * method.
    *
    * @param {BodyChange} change Change to append.
-   * @returns {Int|null} The revision number after appending `change`, or `null`
-   *   if `change.revNum` is out-of-date (that is, isn't the immediately-next
-   *   revision number) at the moment of attempted application.
+   * @returns {boolean} Success flag. `true` indicates that the change was
+   *   appended. `false` indicates that it was unsuccessful specifically because
+   *   it lost an append race (that is, revision `change.revNum` already exists
+   *   at the moment of the write attempt).
    * @throws {Error} If `change.delta.isEmpty()`.
    */
   async _appendChange(change) {
@@ -411,14 +410,14 @@ export default class BodyControl extends BaseControl {
         // This happens if and when we lose an append race, which will regularly
         // occur if there are simultaneous editors.
         this.log.info('Lost append race for revision:', revNum);
-        return null;
+        return false;
       } else {
         // No other errors are expected, so just rethrow.
         throw e;
       }
     }
 
-    return revNum;
+    return true;
   }
 
   /**
