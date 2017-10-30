@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Errors } from 'util-common';
+
 import BaseDelta from './BaseDelta';
 import PropertyOp from './PropertyOp';
 
@@ -13,6 +15,40 @@ import PropertyOp from './PropertyOp';
  * Instances of this class are immutable.
  */
 export default class PropertyDelta extends BaseDelta {
+  /**
+   * Composes another instance on top of this one, to produce a new instance.
+   * This operation works equally whether or not `this` is a document delta.
+   *
+   * @param {PropertyDelta} other The delta to compose.
+   * @returns {PropertyDelta} Result of composition.
+   */
+  compose(other) {
+    PropertyDelta.check(other);
+
+    const props = new Map();
+
+    // Add / replace the ops, first from `this` and then from `other`, as a
+    // mapping from the property name. Note that we need to remember properties
+    // that are deleted (by `this` or `other`), so that the deletion is part of
+    // the result delta.
+    for (const op of [...this.ops, ...other.ops]) {
+      const opProps = op.props;
+
+      let name;
+      switch (opProps.opName) {
+        case PropertyOp.SET_PROPERTY:    { name = opProps.property.name; break; }
+        case PropertyOp.DELETE_PROPERTY: { name = opProps.name;          break; }
+        default: {
+          throw Errors.wtf(`Weird op name: ${opProps.opName}`);
+        }
+      }
+
+      props.set(name, op);
+    }
+
+    return new PropertyDelta([...props.values()]);
+  }
+
   /**
    * Main implementation of {@link #isDocument}.
    *
