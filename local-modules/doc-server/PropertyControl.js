@@ -182,7 +182,7 @@ export default class PropertyControl extends BaseControl {
     const finalContents = await this.getComposedChanges(
       expectedSnapshot.contents, baseSnapshot.revNum + 1, current.revNum + 1);
 
-    if (finalContents.equal(current.contents)) {
+    if (finalContents.equals(current.contents)) {
       // The changes after the base either overwrote or included the contents of
       // the requested change, so there is nothing to append. We merely return a
       // diff that gets from the expected result to the already-current
