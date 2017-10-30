@@ -20,40 +20,63 @@ export default class JsonUtil extends UtilityClass {
   static stackLines(error) {
     TObject.check(error, Error);
 
-    const stack = error.stack;
+    let stack = error.stack;
 
     if (typeof stack !== 'string') {
       return [];
     }
 
-    // Match on each line of the stack that looks like a function/method call
-    // (`...at...`). Using `map()` strip each one of the unintersting parts.
-    return stack.match(/^ +at .*$/mg).map((line) => {
-      // Lines that name functions are expected to be of the form
-      // `    at func.name (/path/to/file:NN:NN)`, where `func.name` might
-      // actually be `new func.name` or `func.name [as other.name]` (or both).
-      let match = line.match(/^ +at ([^()]+) \(([^()]+)\)$/);
-      let funcName;
-      let filePath;
+    // Sometimes (on some platforms, notably V8/Chrome/Node), the `stack` starts
+    // with a header "line" consisting of the error name and message. ("Line" is
+    // in scare quotes because it can end up containing embedded newlines.) If
+    // it does, then strip it off before doing further processing.
+    const messagePrefix = `${error.name}: ${error.message}\n`;
+    if (stack.startsWith(messagePrefix)) {
+      stack = stack.slice(messagePrefix.length);
+    }
 
-      if (match) {
-        funcName = match[1];
-        filePath = match[2];
-      } else {
-        // Anonymous functions (including top-level code) have the form
-        // `    at /path/to/file:NN:NN`.
-        match = line.match(/^ +at ([^()]*)$/);
-        funcName = '(anon)';
-        filePath = match[1];
+    // Get an array of all non-empty lines. Each should represent a stack frame
+    // (but we act conservatively because there's no hard guarantee, and code
+    // that we don't directly control can end up doing surprising things).
+    const lines = stack.replace(/(^\n+)|(\n+$)/g, '').split(/\n+/);
+
+    // Transform lines that are in a recognized format into our preferred form.
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+
+      const v8Match = line.match(/^ +at ([^()]+)(?: \(([^()]+)\))?$/);
+      if (v8Match !== null) {
+        // Looks like V8/Chrome/Node, specifically something of the form
+        // `    at func.name (/path/to/file:NN:NN)`, where `func.name` might
+        // actually be `new func.name` or `func.name [as other.name]` (or both),
+        // or of the form `    at /path/to/file:NN:NN` for anonymous contexts
+        // (including top-level code).
+        let funcName;
+        let filePath;
+
+        if (v8Match[2] === undefined) {
+          funcName = '<anonymous>';
+          filePath = v8Match[1];
+        } else {
+          funcName = v8Match[1];
+          filePath = v8Match[2];
+        }
+
+        const fileSplit = filePath.split('/');
+        const splitLen  = fileSplit.length;
+        const fileName  = (splitLen < 3)
+          ? filePath
+          : `.../${fileSplit[splitLen - 2]}/${fileSplit[splitLen - 1]}`;
+
+        line = `${funcName} (${fileName})`;
       }
 
-      const fileSplit = filePath.match(/\/?[^/]+/g) || ['?'];
-      const splitLen  = fileSplit.length;
-      const fileName  = (splitLen < 2)
-        ? fileSplit[0]
-        : `...${fileSplit[splitLen - 2]}${fileSplit[splitLen - 1]}`;
+      // **TODO:** Something reasonable if the stack looks like it came from
+      // WebKit/Safari.
 
-      return `${funcName} (${fileName})`;
-    });
+      lines[i] = line;
+    }
+
+    return lines;
   }
 }
