@@ -115,7 +115,7 @@ export default class BodyControl extends BaseControl {
         // The document's revision is in fact newer than the base, so we can now
         // form and return a result. Compose all the deltas from the revision
         // after the base through and including the current revision.
-        const delta = await this._composeRevisions(
+        const delta = await this.getComposedChanges(
           BodyDelta.EMPTY, baseRevNum + 1, currentRevNum + 1);
         return new BodyChange(currentRevNum, delta);
       }
@@ -173,8 +173,8 @@ export default class BodyControl extends BaseControl {
     // to the base to produce the desired revision. Store it, and return it.
 
     const contents = (base === null)
-      ? this._composeRevisions(BodyDelta.EMPTY, 0,               revNum + 1)
-      : this._composeRevisions(base.contents,   base.revNum + 1, revNum + 1);
+      ? this.getComposedChanges(BodyDelta.EMPTY, 0,               revNum + 1)
+      : this.getComposedChanges(base.contents,   base.revNum + 1, revNum + 1);
     const result = new BodySnapshot(revNum, await contents);
 
     this.log.detail('Made snapshot for revision:', revNum);
@@ -248,7 +248,7 @@ export default class BodyControl extends BaseControl {
 
     // (1)
 
-    const dServer = await this._composeRevisions(
+    const dServer = await this.getComposedChanges(
       BodyDelta.EMPTY, rBase.revNum + 1, rCurrent.revNum + 1);
 
     // (2)
@@ -359,52 +359,6 @@ export default class BodyControl extends BaseControl {
     // All's well!
 
     return ValidationStatus.STATUS_OK;
-  }
-
-  /**
-   * Constructs a delta consisting of the composition of the deltas from the
-   * given initial revision through but not including the indicated end
-   * revision, and composed from a given base. It is valid to pass as either
-   * revision number parameter one revision beyond the current document revision
-   * number (that is, `(await this.currentRevNum()) + 1`. It is invalid to
-   * specify a non-existent revision _other_ than one beyond the current
-   * revision. If `startInclusive === endExclusive`, then this method returns
-   * `baseDelta`.
-   *
-   * @param {BodyDelta} baseDelta Base delta onto which the indicated deltas
-   *   get composed.
-   * @param {Int} startInclusive Revision number for the first delta to include
-   *   in the result.
-   * @param {Int} endExclusive Revision number just beyond the last delta to
-   *   include in the result.
-   * @returns {BodyDelta} The composed operations (raw delta) consisting of
-   *   `baseDelta` composed with revisions `startInclusive` through but not
-   *   including `endExclusive`.
-   */
-  async _composeRevisions(baseDelta, startInclusive, endExclusive) {
-    BodyDelta.check(baseDelta);
-
-    if (startInclusive === endExclusive) {
-      // Trivial case: Nothing to compose. If we were to have made it to the
-      // loop below, `getChangeRange()` would have taken care of the error
-      // checking on the range arguments. But because we're short-circuiting out
-      // of it here, we need to explicitly make a call to confirm argument
-      // validity.
-      await this.getChangeRange(startInclusive, startInclusive);
-      return baseDelta;
-    }
-
-    let result = baseDelta;
-    const MAX = BaseControl.MAX_CHANGE_READS_PER_TRANSACTION;
-    for (let i = startInclusive; i < endExclusive; i += MAX) {
-      const end = Math.min(i + MAX, endExclusive);
-      const changes = await this.getChangeRange(i, end);
-      for (const c of changes) {
-        result = result.compose(c.delta);
-      }
-    }
-
-    return result;
   }
 
   /**

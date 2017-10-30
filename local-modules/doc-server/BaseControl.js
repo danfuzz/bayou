@@ -45,6 +45,16 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * {class} Class (constructor function) of delta objects to be used with
+   * instances of this class.
+   */
+  static get deltaClass() {
+    // **Note:** `this` in the context of a static method is the class, not an
+    // instance.
+    return this.snapshotClass.deltaClass;
+  }
+
+  /**
    * {class} Class (constructor function) of snapshot objects to be used with
    * instances of this class.
    */
@@ -204,8 +214,8 @@ export default class BaseControl extends BaseDataManager {
    * change. If `start === endExc`, then this verifies that the arguments are in
    * range and returns an empty array. It is an error if `(endExc - start) >
    * BaseControl.MAX_CHANGE_READS_PER_TRANSACTION`. For subclasses that don't
-   * keep full history, it is also an error to request a change that is _no
-   * longer_  available; in this case, the error name is always
+   * keep full change history, it is also an error to request a change that is
+   * _no longer_  available; in this case, the error name is always
    * `revision_not_available`.
    *
    * **Note:** The point of the max count limit is that we want to avoid
@@ -273,6 +283,57 @@ export default class BaseControl extends BaseDataManager {
     for (const p of paths) {
       const change = clazz.changeClass.check(data.get(p));
       result.push(change);
+    }
+
+    return result;
+  }
+
+  /**
+   * Constructs a delta consisting of the given base delta composed with the
+   * deltas of the changes from the given initial revision through but not
+   * including the indicated end revision. It is valid to pass as either
+   * revision number parameter one revision beyond the current document revision
+   * number (that is, `(await this.currentRevNum()) + 1`. It is invalid to
+   * specify a non-existent revision _other_ than one beyond the current
+   * revision. If `startInclusive === endExclusive`, then this method returns
+   * `baseDelta`. For subclasses that don't keep full change history, it is also
+   * an error to request a change that is _no longer_  available; in this case,
+   * the error name is always `revision_not_available`.
+   *
+   * @param {BaseDelta} baseDelta Base delta onto which the indicated deltas
+   *   get composed. Must be an instance of the delta class appropriate to the
+   *   concrete subclass being called.
+   * @param {Int} startInclusive Revision number for the first change to include
+   *   in the result.
+   * @param {Int} endExclusive Revision number just beyond the last change to
+   *   include in the result.
+   * @returns {BaseDelta} The composed result consisting of `baseDelta` composed
+   *   with the deltas of revisions `startInclusive` through but not including
+   *  `endExclusive`.
+   */
+  async getComposedChanges(baseDelta, startInclusive, endExclusive) {
+    const clazz = this.constructor;
+
+    clazz.deltaClass.check(baseDelta);
+
+    if (startInclusive === endExclusive) {
+      // Trivial case: Nothing to compose. If we were to have made it to the
+      // loop below, `getChangeRange()` would have taken care of the error
+      // checking on the range arguments. But because we're short-circuiting out
+      // of it here, we need to explicitly make a call to confirm argument
+      // validity.
+      await this.getChangeRange(startInclusive, startInclusive);
+      return baseDelta;
+    }
+
+    let result = baseDelta;
+    const MAX = BaseControl.MAX_CHANGE_READS_PER_TRANSACTION;
+    for (let i = startInclusive; i < endExclusive; i += MAX) {
+      const end = Math.min(i + MAX, endExclusive);
+      const changes = await this.getChangeRange(i, end);
+      for (const c of changes) {
+        result = result.compose(c.delta);
+      }
     }
 
     return result;
