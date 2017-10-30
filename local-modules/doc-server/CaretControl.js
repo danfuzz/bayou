@@ -30,6 +30,12 @@ const MAX_SESSION_IDLE_MSEC = 5 * 60 * 1000; // Five minutes.
 
 /**
  * Controller for the active caret info for a given document.
+ *
+ * **TODO:** This class was written before it was clear that we'd want all the
+ * sub-parts of a file to be managed as lists of OT-friendly changes. You'll see
+ * a bunch of comments and `throw`s in the code here which stub out the parts
+ * which are defined in terms of that model, which is not _yet_ implemented in
+ * this class.
  */
 export default class CaretControl extends BaseControl {
   /**
@@ -113,6 +119,30 @@ export default class CaretControl extends BaseControl {
     // `update()` it will always turn into an appropriate new snapshot.
     return new CaretChange(
       snapshot.revNum + 1, [CaretOp.op_beginSession(caret)], lastActive);
+  }
+
+  /**
+   * Stubbed out because this class isn't yet fully OT-friendly. **TODO:** This
+   * method should be removed, allowing the superclass's implementation to run.
+   */
+  async appendChange() {
+    throw Errors.wtf('Not yet fully OT-friendly.');
+  }
+
+  /**
+   * Stubbed out because this class isn't yet fully OT-friendly. **TODO:** This
+   * method should be removed, allowing the superclass's implementation to run.
+   */
+  async getChangeRange() {
+    throw Errors.wtf('Not yet fully OT-friendly.');
+  }
+
+  /**
+   * Stubbed out because this class isn't yet fully OT-friendly. **TODO:** This
+   * method should be removed, allowing the superclass's implementation to run.
+   */
+  async getComposedChanges() {
+    throw Errors.wtf('Not yet fully OT-friendly.');
   }
 
   /**
@@ -426,10 +456,33 @@ export default class CaretControl extends BaseControl {
   }
 
   /**
+   * {string} `StoragePath` string which stores the current revision number for
+   * the portion of the document controlled by this class.
+   */
+  static get _impl_revisionNumberPath() {
+    // **TODO:** This class doesn't behave like a nice member of OT society,
+    // yet. This should be fixed.
+    throw Errors.wtf('Not yet fully OT-friendly.');
+  }
+
+  /**
    * {class} Class (constructor function) of snapshot objects to be used with
    * instances of this class.
    */
   static get _impl_snapshotClass() {
     return CaretSnapshot;
+  }
+
+  /**
+   * Gets the `StoragePath` string corresponding to the indicated revision
+   * number, specifically for the portion of the document controlled by this
+   * class.
+   *
+   * @param {RevisionNumber} revNum_unused The revision number.
+   */
+  static _impl_pathForChange(revNum_unused) {
+    // **TODO:** This class doesn't behave like a nice member of OT society,
+    // yet. This should be fixed.
+    throw Errors.wtf('Not yet fully OT-friendly.');
   }
 }

@@ -4,18 +4,11 @@
 
 import { BodyChange, BodyDelta, BodySnapshot, RevisionNumber } from 'doc-common';
 import { TransactionSpec } from 'file-store';
-import { Errors, InfoError } from 'util-common';
+import { Errors } from 'util-common';
 
 import BaseControl from './BaseControl';
 import Paths from './Paths';
 import ValidationStatus from './ValidationStatus';
-
-/**
- * {Int} Maximum number of document changes to request in a single
- * transaction. (The idea is to avoid making a request that would result in
- * running into an upper limit on transaction data size.)
- */
-const MAX_CHANGE_READS_PER_TRANSACTION = 20;
 
 /**
  * Controller for a given document's body content.
@@ -52,7 +45,7 @@ export default class BodyControl extends BaseControl {
   async getChange(revNum) {
     RevisionNumber.check(revNum);
 
-    const changes = await this._readChangeRange(revNum, revNum + 1);
+    const changes = await this.getChangeRange(revNum, revNum + 1);
     return changes[0];
   }
 
@@ -122,7 +115,7 @@ export default class BodyControl extends BaseControl {
         // The document's revision is in fact newer than the base, so we can now
         // form and return a result. Compose all the deltas from the revision
         // after the base through and including the current revision.
-        const delta = await this._composeRevisions(
+        const delta = await this.getComposedChanges(
           BodyDelta.EMPTY, baseRevNum + 1, currentRevNum + 1);
         return new BodyChange(currentRevNum, delta);
       }
@@ -180,8 +173,8 @@ export default class BodyControl extends BaseControl {
     // to the base to produce the desired revision. Store it, and return it.
 
     const contents = (base === null)
-      ? this._composeRevisions(BodyDelta.EMPTY, 0,               revNum + 1)
-      : this._composeRevisions(base.contents,   base.revNum + 1, revNum + 1);
+      ? this.getComposedChanges(BodyDelta.EMPTY, 0,               revNum + 1)
+      : this.getComposedChanges(base.contents,   base.revNum + 1, revNum + 1);
     const result = new BodySnapshot(revNum, await contents);
 
     this.log.detail('Made snapshot for revision:', revNum);
@@ -213,14 +206,14 @@ export default class BodyControl extends BaseControl {
       // delta. We merely have to apply the given `delta` to the current
       // revision. If it succeeds, then we won the append race (if any).
 
-      const revNum = await this._appendChange(change);
+      const success = await this.appendChange(change);
 
-      if (revNum === null) {
+      if (!success) {
         // Turns out we lost an append race.
         return null;
       }
 
-      return new BodyChange(revNum, BodyDelta.EMPTY);
+      return new BodyChange(change.revNum, BodyDelta.EMPTY);
     }
 
     // The hard case: The client has requested an application of a delta
@@ -255,7 +248,7 @@ export default class BodyControl extends BaseControl {
 
     // (1)
 
-    const dServer = await this._composeRevisions(
+    const dServer = await this.getComposedChanges(
       BodyDelta.EMPTY, rBase.revNum + 1, rCurrent.revNum + 1);
 
     // (2)
@@ -273,11 +266,11 @@ export default class BodyControl extends BaseControl {
 
     // (3)
 
-    const rNextNum     = rCurrent.revNum + 1;
-    const appendResult = await this._appendChange(
+    const rNextNum      = rCurrent.revNum + 1;
+    const appendSuccess = await this.appendChange(
       new BodyChange(rNextNum, dNext, change.timestamp, change.authorId));
 
-    if (appendResult === null) {
+    if (!appendSuccess) {
       // Turns out we lost an append race.
       return null;
     }
@@ -330,11 +323,11 @@ export default class BodyControl extends BaseControl {
 
     // Make sure all the changes can be read and decoded.
 
-    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
+    const MAX = BaseControl.MAX_CHANGE_READS_PER_TRANSACTION;
     for (let i = 0; i <= revNum; i += MAX) {
       const lastI = Math.min(i + MAX - 1, revNum);
       try {
-        await this._readChangeRange(i, lastI + 1);
+        await this.getChangeRange(i, lastI + 1);
       } catch (e) {
         this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
         return ValidationStatus.STATUS_ERROR;
@@ -369,164 +362,11 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
-   * Appends a new change to the document. On success, this returns the revision
-   * number of the document after the append. On a failure due to `baseRevNum`
-   * not being current at the moment of application, this returns `null`. All
-   * other errors are reported via thrown errors. See `_applyUpdateTo()` above
-   * for further discussion.
-   *
-   * **Note:** If the change is a no-op, then this method throws an error,
-   * because the calling code should have handled that case without calling this
-   * method.
-   *
-   * @param {BodyChange} change Change to append.
-   * @returns {Int|null} The revision number after appending `change`, or `null`
-   *   if `change.revNum` is out-of-date (that is, isn't the immediately-next
-   *   revision number) at the moment of attempted application.
-   * @throws {Error} If `change.delta.isEmpty()`.
+   * {string} `StoragePath` string which stores the current revision number for
+   * the portion of the document controlled by this class.
    */
-  async _appendChange(change) {
-    BodyChange.check(change);
-
-    if (change.delta.isEmpty()) {
-      throw Errors.wtf('Should not have been called with an empty change.');
-    }
-
-    const revNum     = change.revNum;
-    const baseRevNum = revNum - 1;
-    const changePath = Paths.forBodyChange(revNum);
-
-    const fc   = this.fileCodec; // Avoids boilerplate immediately below.
-    const spec = new TransactionSpec(
-      fc.op_checkPathAbsent(changePath),
-      fc.op_checkPathIs(Paths.BODY_REVISION_NUMBER, baseRevNum),
-      fc.op_writePath(changePath, change),
-      fc.op_writePath(Paths.BODY_REVISION_NUMBER, revNum)
-    );
-
-    try {
-      await fc.transact(spec);
-    } catch (e) {
-      if ((e instanceof InfoError) && (e.name === 'path_not_empty')) {
-        // This happens if and when we lose an append race, which will regularly
-        // occur if there are simultaneous editors.
-        this.log.info('Lost append race for revision:', revNum);
-        return null;
-      } else {
-        // No other errors are expected, so just rethrow.
-        throw e;
-      }
-    }
-
-    return revNum;
-  }
-
-  /**
-   * Constructs a delta consisting of the composition of the deltas from the
-   * given initial revision through but not including the indicated end
-   * revision, and composed from a given base. It is valid to pass as either
-   * revision number parameter one revision beyond the current document revision
-   * number (that is, `(await this.currentRevNum()) + 1`. It is invalid to
-   * specify a non-existent revision _other_ than one beyond the current
-   * revision. If `startInclusive === endExclusive`, then this method returns
-   * `baseDelta`.
-   *
-   * @param {BodyDelta} baseDelta Base delta onto which the indicated deltas
-   *   get composed.
-   * @param {Int} startInclusive Revision number for the first delta to include
-   *   in the result.
-   * @param {Int} endExclusive Revision number just beyond the last delta to
-   *   include in the result.
-   * @returns {BodyDelta} The composed operations (raw delta) consisting of
-   *   `baseDelta` composed with revisions `startInclusive` through but not
-   *   including `endExclusive`.
-   */
-  async _composeRevisions(baseDelta, startInclusive, endExclusive) {
-    BodyDelta.check(baseDelta);
-
-    if (startInclusive === endExclusive) {
-      // Trivial case: Nothing to compose. If we were to have made it to the
-      // loop below, `_readChangeRange()` would have taken care of the error
-      // checking on the range arguments. But because we're short-circuiting out
-      // of it here, we need to explicitly make a call to confirm argument
-      // validity.
-      await this._readChangeRange(startInclusive, startInclusive);
-      return baseDelta;
-    }
-
-    let result = baseDelta;
-    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
-    for (let i = startInclusive; i < endExclusive; i += MAX) {
-      const end = Math.min(i + MAX, endExclusive);
-      const changes = await this._readChangeRange(i, end);
-      for (const c of changes) {
-        result = result.compose(c.delta);
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * Reads a sequential set of changes. It is an error to request a change that
-   * does not exist. It is valid for either `start` or `endExc` to indicate a
-   * change that does not exist _only_ if it is one past the last existing
-   * change. If `start === endExc`, then this verifies that the arguments are in
-   * range and returns an empty array. It is an error if `(endExc - start) >
-   * MAX_CHANGE_READS_PER_TRANSACTION`.
-   *
-   * **Note:** The point of the max count limit is that we want to avoid
-   * creating a transaction which could run afoul of a limit on the amount of
-   * data returned by any one transaction.
-   *
-   * @param {Int} start Start change number (inclusive) of changes to read.
-   * @param {Int} endExc End change number (exclusive) of changes to read.
-   * @returns {array<BodyChange>} Array of changes, in order by change
-   *   number.
-   */
-  async _readChangeRange(start, endExc) {
-    RevisionNumber.check(start);
-    RevisionNumber.min(endExc, start);
-
-    if ((endExc - start) > MAX_CHANGE_READS_PER_TRANSACTION) {
-      // The calling code (in this class) should have made sure we weren't
-      // violating this restriction.
-      throw Errors.wtf('Too many changes requested at once.');
-    }
-
-    if (start === endExc) {
-      // Per docs, just need to verify that the arguments don't name an invalid
-      // change. `0` is always valid, so we don't actually need to check that.
-      if (start !== 0) {
-        const revNum = await this.currentRevNum();
-        RevisionNumber.maxInc(start, revNum + 1);
-      }
-      return [];
-    }
-
-    const paths = [];
-    for (let i = start; i < endExc; i++) {
-      paths.push(Paths.forBodyChange(i));
-    }
-
-    const fc = this.fileCodec;
-    const ops = [];
-    for (const p of paths) {
-      ops.push(fc.op_checkPathPresent(p));
-      ops.push(fc.op_readPath(p));
-    }
-
-    const spec              = new TransactionSpec(...ops);
-    const transactionResult = await fc.transact(spec);
-    const data              = transactionResult.data;
-
-    const result = [];
-    for (const p of paths) {
-      const change = BodyChange.check(data.get(p));
-      result.push(change);
-    }
-
-    return result;
+  static get _impl_revisionNumberPath() {
+    return Paths.BODY_REVISION_NUMBER;
   }
 
   /**
@@ -535,5 +375,17 @@ export default class BodyControl extends BaseControl {
    */
   static get _impl_snapshotClass() {
     return BodySnapshot;
+  }
+
+  /**
+   * Gets the `StoragePath` string corresponding to the indicated revision
+   * number, specifically for the portion of the document controlled by this
+   * class.
+   *
+   * @param {RevisionNumber} revNum The revision number.
+   * @returns {string} The corresponding `StoragePath` string.
+   */
+  static _impl_pathForChange(revNum) {
+    return Paths.forBodyChange(revNum);
   }
 }

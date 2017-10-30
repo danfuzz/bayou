@@ -24,6 +24,13 @@ describe('doc-server/BaseControl', () => {
     });
   });
 
+  describe('.deltaClass', () => {
+    it('should reflect the subclass\'s implementation', () => {
+      const result = MockControl.deltaClass;
+      assert.strictEqual(result, MockSnapshot.deltaClass);
+    });
+  });
+
   describe('.snapshotClass', () => {
     it('should reflect the subclass\'s implementation', () => {
       const result = MockControl.snapshotClass;

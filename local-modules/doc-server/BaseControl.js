@@ -3,9 +3,10 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseSnapshot, RevisionNumber } from 'doc-common';
+import { TransactionSpec } from 'file-store';
 import { Delay } from 'promise-util';
 import { TFunction } from 'typecheck';
-import { Errors } from 'util-common';
+import { Errors, InfoError } from 'util-common';
 
 import BaseDataManager from './BaseDataManager';
 
@@ -25,6 +26,15 @@ const MAX_UPDATE_TIME_MSEC = 20 * 1000; // 20 seconds.
  */
 export default class BaseControl extends BaseDataManager {
   /**
+   * {Int} Maximum number of document changes to request in a single
+   * transaction. (The idea is to avoid making a request that would result in
+   * running into an upper limit on transaction data size.)
+   */
+  static get MAX_CHANGE_READS_PER_TRANSACTION() {
+    return 20;
+  }
+
+  /**
    * {class} Class (constructor function) of change objects to be used with
    * instances of this class.
    */
@@ -32,6 +42,16 @@ export default class BaseControl extends BaseDataManager {
     // **Note:** `this` in the context of a static method is the class, not an
     // instance.
     return this.snapshotClass.changeClass;
+  }
+
+  /**
+   * {class} Class (constructor function) of delta objects to be used with
+   * instances of this class.
+   */
+  static get deltaClass() {
+    // **Note:** `this` in the context of a static method is the class, not an
+    // instance.
+    return this.snapshotClass.deltaClass;
   }
 
   /**
@@ -61,6 +81,64 @@ export default class BaseControl extends BaseDataManager {
    */
   constructor(fileAccess) {
     super(fileAccess);
+  }
+
+  /**
+   * Appends a new change to the document. On success, this returns `true`. On a
+   * failure due to `baseRevNum` not being current at the moment of application,
+   * this returns `false`. All other failures are reported via thrown errors.
+   *
+   * **Note:** This method trusts the `change` to be valid. As such, it is _not_
+   * appropriate to expose this method directly to client access.
+   *
+   * **Note:** If the change is a no-op, then this method throws an error,
+   * because the calling code should have handled that case without calling this
+   * method.
+   *
+   * @param {BaseChange} change Change to append. Must be an instance of the
+   *   appropriate subclass of `BaseChange` for this instance.
+   * @returns {boolean} Success flag. `true` indicates that the change was
+   *   appended. `false` indicates that it was unsuccessful specifically because
+   *   it lost an append race (that is, revision `change.revNum` already exists
+   *   at the moment of the write attempt).
+   * @throws {Error} If `change.delta.isEmpty()`.
+   */
+  async appendChange(change) {
+    const clazz = this.constructor;
+    clazz.changeClass.check(change);
+
+    if (change.delta.isEmpty()) {
+      throw Errors.bad_use('Should not have been called with an empty change.');
+    }
+
+    const revNum       = change.revNum;
+    const baseRevNum   = revNum - 1;
+    const changePath   = clazz._impl_pathForChange(revNum);
+    const revisionPath = clazz._impl_revisionNumberPath;
+
+    const fc   = this.fileCodec; // Avoids boilerplate immediately below.
+    const spec = new TransactionSpec(
+      fc.op_checkPathAbsent(changePath),
+      fc.op_checkPathIs(revisionPath, baseRevNum),
+      fc.op_writePath(changePath, change),
+      fc.op_writePath(revisionPath, revNum)
+    );
+
+    try {
+      await fc.transact(spec);
+    } catch (e) {
+      if ((e instanceof InfoError) && (e.name === 'path_not_empty')) {
+        // This happens if and when we lose an append race, which will regularly
+        // occur if there are simultaneous editors.
+        this.log.info('Lost append race for revision:', revNum);
+        return false;
+      } else {
+        // No other errors are expected, so just rethrow.
+        throw e;
+      }
+    }
+
+    return true;
   }
 
   /**
@@ -124,6 +202,138 @@ export default class BaseControl extends BaseDataManager {
 
     if ((result.timestamp !== null) || (result.authorId !== null)) {
       throw Errors.bad_value(result, this.constructor.changeClass, 'timestamp === null && authorId === null');
+    }
+
+    return result;
+  }
+
+  /**
+   * Reads a sequential chunk of changes. It is an error to request a change
+   * that does not exist. It is valid for either `start` or `endExc` to indicate
+   * a change that does not exist _only_ if it is one past the last existing
+   * change. If `start === endExc`, then this verifies that the arguments are in
+   * range and returns an empty array. It is an error if `(endExc - start) >
+   * BaseControl.MAX_CHANGE_READS_PER_TRANSACTION`. For subclasses that don't
+   * keep full change history, it is also an error to request a change that is
+   * _no longer_  available; in this case, the error name is always
+   * `revision_not_available`.
+   *
+   * **Note:** The point of the max count limit is that we want to avoid
+   * creating a transaction which could run afoul of a limit on the amount of
+   * data returned by any one transaction.
+   *
+   * @param {Int} startInclusive Start change number (inclusive) of changes to
+   *   read.
+   * @param {Int} endExclusive End change number (exclusive) of changes to read.
+   *   Must be `>= startInclusive`.
+   * @returns {array<BaseChange>} Array of changes, in order by revision number.
+   */
+  async getChangeRange(startInclusive, endExclusive) {
+    const clazz = this.constructor;
+
+    RevisionNumber.check(startInclusive);
+    RevisionNumber.min(endExclusive, startInclusive);
+
+    if ((endExclusive - startInclusive) > BaseControl.MAX_CHANGE_READS_PER_TRANSACTION) {
+      // The calling code (in this class) should have made sure we weren't
+      // violating this restriction.
+      throw Errors.bad_use(`Too many changes requested at once: ${endExclusive - startInclusive}`);
+    }
+
+    if (startInclusive === endExclusive) {
+      // Per docs, just need to verify that the arguments don't name an invalid
+      // change. `0` is always valid, so we don't actually need to check that.
+      if (startInclusive !== 0) {
+        const revNum = await this.currentRevNum();
+        RevisionNumber.maxInc(startInclusive, revNum + 1);
+      }
+      return [];
+    }
+
+    const paths = [];
+    for (let i = startInclusive; i < endExclusive; i++) {
+      paths.push(clazz._impl_pathForChange(i));
+    }
+
+    const fc = this.fileCodec;
+    const ops = [];
+    for (const p of paths) {
+      ops.push(fc.op_checkPathPresent(p));
+      ops.push(fc.op_readPath(p));
+    }
+
+    let data;
+
+    try {
+      const spec              = new TransactionSpec(...ops);
+      const transactionResult = await fc.transact(spec);
+
+      data = transactionResult.data;
+    } catch (e) {
+      if ((e instanceof InfoError) && (e.name === 'path_not_found')) {
+        // One of the requested revisions is no longer available. If thrown, we
+        // know that at least the first one requested will be missing (because
+        // we won't drop a change without also dropping its predecessors). Throw
+        // the error as specified in the docs.
+        throw Errors.revision_not_available(startInclusive);
+      }
+    }
+
+    const result = [];
+    for (const p of paths) {
+      const change = clazz.changeClass.check(data.get(p));
+      result.push(change);
+    }
+
+    return result;
+  }
+
+  /**
+   * Constructs a delta consisting of the given base delta composed with the
+   * deltas of the changes from the given initial revision through but not
+   * including the indicated end revision. It is valid to pass as either
+   * revision number parameter one revision beyond the current document revision
+   * number (that is, `(await this.currentRevNum()) + 1`. It is invalid to
+   * specify a non-existent revision _other_ than one beyond the current
+   * revision. If `startInclusive === endExclusive`, then this method returns
+   * `baseDelta`. For subclasses that don't keep full change history, it is also
+   * an error to request a change that is _no longer_  available; in this case,
+   * the error name is always `revision_not_available`.
+   *
+   * @param {BaseDelta} baseDelta Base delta onto which the indicated deltas
+   *   get composed. Must be an instance of the delta class appropriate to the
+   *   concrete subclass being called.
+   * @param {Int} startInclusive Revision number for the first change to include
+   *   in the result.
+   * @param {Int} endExclusive Revision number just beyond the last change to
+   *   include in the result.
+   * @returns {BaseDelta} The composed result consisting of `baseDelta` composed
+   *   with the deltas of revisions `startInclusive` through but not including
+   *  `endExclusive`.
+   */
+  async getComposedChanges(baseDelta, startInclusive, endExclusive) {
+    const clazz = this.constructor;
+
+    clazz.deltaClass.check(baseDelta);
+
+    if (startInclusive === endExclusive) {
+      // Trivial case: Nothing to compose. If we were to have made it to the
+      // loop below, `getChangeRange()` would have taken care of the error
+      // checking on the range arguments. But because we're short-circuiting out
+      // of it here, we need to explicitly make a call to confirm argument
+      // validity.
+      await this.getChangeRange(startInclusive, startInclusive);
+      return baseDelta;
+    }
+
+    let result = baseDelta;
+    const MAX = BaseControl.MAX_CHANGE_READS_PER_TRANSACTION;
+    for (let i = startInclusive; i < endExclusive; i += MAX) {
+      const end = Math.min(i + MAX, endExclusive);
+      const changes = await this.getChangeRange(i, end);
+      for (const c of changes) {
+        result = result.compose(c.delta);
+      }
     }
 
     return result;
@@ -336,6 +546,17 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * {string} `StoragePath` string which stores the current revision number for
+   * the portion of the document controlled by this class. Subclasses must
+   * override this.
+   *
+   * @abstract
+   */
+  static get _impl_revisionNumberPath() {
+    return this._mustOverride();
+  }
+
+  /**
    * {class} Class (constructor function) of snapshot objects to be used with
    * instances of this class. Subclasses must fill this in.
    *
@@ -343,5 +564,18 @@ export default class BaseControl extends BaseDataManager {
    */
   static get _impl_snapshotClass() {
     return this._mustOverride();
+  }
+
+  /**
+   * Gets the `StoragePath` string corresponding to the indicated revision
+   * number, specifically for the portion of the document controlled by this
+   * class. Subclasses must override this.
+   *
+   * @abstract
+   * @param {RevisionNumber} revNum The revision number.
+   * @returns {string} The corresponding `StoragePath` string.
+   */
+  static _impl_pathForChange(revNum) {
+    return this._mustOverride(revNum);
   }
 }

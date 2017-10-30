@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { PropertyChange, PropertySnapshot } from 'doc-common';
+import { PropertyChange, PropertyDelta, PropertySnapshot } from 'doc-common';
 import { TransactionSpec } from 'file-store';
 import { Delay } from 'promise-util';
 
@@ -67,7 +67,15 @@ export default class PropertyControl extends BaseControl {
    * @returns {Int} The instantaneously-current revision number.
    */
   async _impl_currentRevNum() {
-    return this._snapshot.revNum;
+    const fc          = this.fileCodec;
+    const storagePath = Paths.PROPERTY_REVISION_NUMBER;
+    const spec        = new TransactionSpec(
+      fc.op_checkPathPresent(storagePath),
+      fc.op_readPath(storagePath)
+    );
+
+    const transactionResult = await fc.transact(spec);
+    return transactionResult.data.get(storagePath);
   }
 
   /**
@@ -114,10 +122,17 @@ export default class PropertyControl extends BaseControl {
    *   `null` to indicate that the revision is not available.
    */
   async _impl_getSnapshot(revNum) {
-    // **TODO:** Real implementation.
+    // **TODO:** Realer implementation.
 
     const snapshot = this._snapshot;
-    return (revNum === snapshot.revNum) ? snapshot : null;
+    if (revNum === snapshot.revNum) {
+      // Easy out: It's the latest we have.
+      return snapshot;
+    }
+
+    // Compose all the changes up to the requested one.
+    const contents = this.getComposedChanges(PropertyDelta.EMPTY, 0, revNum + 1);
+    return new PropertySnapshot(revNum, await contents);
   }
 
   /**
@@ -132,17 +147,70 @@ export default class PropertyControl extends BaseControl {
    *   or `null` if the application failed due losing a race.
    */
   async _impl_update(baseSnapshot, change, expectedSnapshot) {
-    // **TODO:** Real implementation.
+    // Instantaneously current (latest) revision of the document portion. We'll
+    // find out if it turned out to remain current when we finally get to try
+    // appending the (possibly modified) change, below.
+    const current = await this.getSnapshot();
 
-    if (this._snapshot === baseSnapshot) {
-      this._snapshot = expectedSnapshot;
-    } else {
-      // This is arguably super-wrong, but it will work well enough to bootstrap
-      // the rest of the implementation.
-      this._snapshot = this._snapshot.compose(change);
+    if (baseSnapshot.revNum === current.revNum) {
+      // The easy case, because the base revision is in fact the current
+      // revision, so we don't have to transform the incoming delta. We merely
+      // have to apply the given `delta` to the current revision. If it
+      // succeeds, then we won the append race (if any).
+
+      const success = await this.appendChange(change);
+
+      if (!success) {
+        // Turns out we lost an append race.
+        return null;
+      }
+
+      return new PropertyChange(change.revNum, PropertyDelta.EMPTY);
     }
 
-    return expectedSnapshot.diff(this._snapshot);
+    // The hard case: The client has requested an application of a delta
+    // against a revision of the document which is _not_ current. Though hard,
+    // this is considerably simpler than the equivalent document-body update
+    // operation, because of the nature of the data being managed (that is, a
+    // single-level key-value map, whose contents are treated as atomic units).
+    //
+    // What we do is simply compose all of the revisions after the base on top
+    // of the expected result to get the final result. We diff from the final
+    // result both to get the actual change to append and to get the correction
+    // to return to the caller.
+
+    const finalContents = await this.getComposedChanges(
+      expectedSnapshot.contents, baseSnapshot.revNum + 1, current.revNum + 1);
+
+    if (finalContents.equal(current.contents)) {
+      // The changes after the base either overwrote or included the contents of
+      // the requested change, so there is nothing to append. We merely return a
+      // diff that gets from the expected result to the already-current
+      // snapshot.
+      return expectedSnapshot.diff(current);
+    }
+
+    const finalSnapshot = new PropertySnapshot(current.revNum + 1, finalContents);
+    const finalChange = current.diff(finalSnapshot)
+      .withTimestamp(change.timestamp)
+      .withAuthorId(change.authorId);
+
+    // Attempt to append the change.
+
+    const success = await this.appendChange(finalChange);
+
+    if (!success) {
+      // Turns out we lost an append race.
+      return null;
+    }
+
+    // We won the race (or had no contention).
+
+    // **TODO:** For now, we just store the saved snapshot in an instance
+    // variable. Ultimately, we shouldn't have to do this.
+    this._snapshot = finalSnapshot;
+
+    return expectedSnapshot.diff(finalSnapshot);
   }
 
   /**
@@ -156,10 +224,30 @@ export default class PropertyControl extends BaseControl {
   }
 
   /**
+   * {string} `StoragePath` string which stores the current revision number for
+   * the portion of the document controlled by this class.
+   */
+  static get _impl_revisionNumberPath() {
+    return Paths.PROPERTY_REVISION_NUMBER;
+  }
+
+  /**
    * {class} Class (constructor function) of snapshot objects to be used with
    * instances of this class.
    */
   static get _impl_snapshotClass() {
     return PropertySnapshot;
+  }
+
+  /**
+   * Gets the `StoragePath` string corresponding to the indicated revision
+   * number, specifically for the portion of the document controlled by this
+   * class.
+   *
+   * @param {RevisionNumber} revNum The revision number.
+   * @returns {string} The corresponding `StoragePath` string.
+   */
+  static _impl_pathForChange(revNum) {
+    return Paths.forPropertyChange(revNum);
   }
 }
