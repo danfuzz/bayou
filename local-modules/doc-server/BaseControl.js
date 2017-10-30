@@ -3,9 +3,10 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseSnapshot, RevisionNumber } from 'doc-common';
+import { TransactionSpec } from 'file-store';
 import { Delay } from 'promise-util';
 import { TFunction } from 'typecheck';
-import { Errors } from 'util-common';
+import { Errors, InfoError } from 'util-common';
 
 import BaseDataManager from './BaseDataManager';
 
@@ -61,6 +62,64 @@ export default class BaseControl extends BaseDataManager {
    */
   constructor(fileAccess) {
     super(fileAccess);
+  }
+
+  /**
+   * Appends a new change to the document. On success, this returns `true`. On a
+   * failure due to `baseRevNum` not being current at the moment of application,
+   * this returns `false`. All other failures are reported via thrown errors.
+   *
+   * **Note:** This method trusts the `change` to be valid. As such, it is _not_
+   * appropriate to expose this method directly to client access.
+   *
+   * **Note:** If the change is a no-op, then this method throws an error,
+   * because the calling code should have handled that case without calling this
+   * method.
+   *
+   * @param {BaseChange} change Change to append. Must be an instance of the
+   *   appropriate subclass of `BaseChange` for this instance.
+   * @returns {boolean} Success flag. `true` indicates that the change was
+   *   appended. `false` indicates that it was unsuccessful specifically because
+   *   it lost an append race (that is, revision `change.revNum` already exists
+   *   at the moment of the write attempt).
+   * @throws {Error} If `change.delta.isEmpty()`.
+   */
+  async appendChange(change) {
+    const clazz = this.constructor;
+    clazz.changeClass.check(change);
+
+    if (change.delta.isEmpty()) {
+      throw Errors.bad_use('Should not have been called with an empty change.');
+    }
+
+    const revNum       = change.revNum;
+    const baseRevNum   = revNum - 1;
+    const changePath   = clazz._impl_pathForChange(revNum);
+    const revisionPath = clazz._impl_revisionNumberPath;
+
+    const fc   = this.fileCodec; // Avoids boilerplate immediately below.
+    const spec = new TransactionSpec(
+      fc.op_checkPathAbsent(changePath),
+      fc.op_checkPathIs(revisionPath, baseRevNum),
+      fc.op_writePath(changePath, change),
+      fc.op_writePath(revisionPath, revNum)
+    );
+
+    try {
+      await fc.transact(spec);
+    } catch (e) {
+      if ((e instanceof InfoError) && (e.name === 'path_not_empty')) {
+        // This happens if and when we lose an append race, which will regularly
+        // occur if there are simultaneous editors.
+        this.log.info('Lost append race for revision:', revNum);
+        return false;
+      } else {
+        // No other errors are expected, so just rethrow.
+        throw e;
+      }
+    }
+
+    return true;
   }
 
   /**
@@ -336,6 +395,21 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * {string} `StoragePath` string which stores the current revision number for
+   * the portion of the document controlled by this class. Subclasses must
+   * override this.
+   *
+   * **Note:** As of this writing, {@link CaretControl} does not operate as a
+   * normal OT class and does not use this. **TODO:** That class should be
+   * fixed to be properly OT-compliant.
+   *
+   * @abstract
+   */
+  static get _impl_revisionNumberPath() {
+    return this._mustOverride();
+  }
+
+  /**
    * {class} Class (constructor function) of snapshot objects to be used with
    * instances of this class. Subclasses must fill this in.
    *
@@ -343,5 +417,22 @@ export default class BaseControl extends BaseDataManager {
    */
   static get _impl_snapshotClass() {
     return this._mustOverride();
+  }
+
+  /**
+   * Gets the `StoragePath` string corresponding to the indicated revision
+   * number, specifically for the portion of the document controlled by this
+   * class. Subclasses must override this.
+   *
+   * **Note:** As of this writing, {@link CaretControl} does not operate as a
+   * normal OT class and does not use this. **TODO:** That class should be
+   * fixed to be properly OT-compliant.
+   *
+   * @abstract
+   * @param {RevisionNumber} revNum The revision number.
+   * @returns {string} The corresponding `StoragePath` string.
+   */
+  static _impl_pathForChange(revNum) {
+    return this._mustOverride(revNum);
   }
 }
