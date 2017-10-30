@@ -104,6 +104,14 @@ export default class InfoError extends Error {
   }
 
   /**
+   * {string} The name of the error. This is expected by the default `Error`
+   * implementation.
+   */
+  get name() {
+    return this.constructor.name;
+  }
+
+  /**
    * Custom inspector function, as called by `util.inspect()`. This just returns
    * implementation is similar to the default `Error` inspector, except that
    * this one formats the first line in a nicer way given the structured error
@@ -153,7 +161,7 @@ export default class InfoError extends Error {
    * @returns {string} String form of this instance.
    */
   toString() {
-    return `${this.constructor.name}:${this._info}`;
+    return `${this.constructor.name}: ${this._info}`;
   }
 
   /**
