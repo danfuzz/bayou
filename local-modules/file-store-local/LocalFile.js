@@ -6,10 +6,10 @@ import afs from 'async-file';
 import path from 'path';
 
 import { Codec } from 'codec';
-import { BaseFile, Errors, StoragePath } from 'file-store';
+import { BaseFile, Errors as FileStoreErrors, StoragePath } from 'file-store';
 import { Condition, Delay, Mutex } from 'promise-util';
 import { Logger } from 'see-all';
-import { FrozenBuffer, Errors as UtilErrors } from 'util-common';
+import { FrozenBuffer, Errors } from 'util-common';
 
 import Transactor from './Transactor';
 
@@ -214,11 +214,11 @@ export default class LocalFile extends BaseFile {
 
     await Promise.race([this._readStorageIfNecessary(), timeoutProm]);
     if (timeout) {
-      throw UtilErrors.timed_out(timeoutMsec);
+      throw Errors.timed_out(timeoutMsec);
     }
 
     if (!this._fileShouldExist) {
-      throw Errors.file_not_found(this.id);
+      throw FileStoreErrors.file_not_found(this.id);
     }
 
     // Construct the "file friend" object. This exposes just enough private
@@ -301,7 +301,7 @@ export default class LocalFile extends BaseFile {
       this._changeCondition.value = false;
       await Promise.race([this._changeCondition.whenTrue(), timeoutProm]);
       if (timeout) {
-        throw UtilErrors.timed_out(timeoutMsec);
+        throw Errors.timed_out(timeoutMsec);
       }
     }
 
@@ -616,7 +616,7 @@ export default class LocalFile extends BaseFile {
     } else if (FrozenBuffer.isHash(storageId) || LocalFile._isInternalStorageId(storageId)) {
       baseName = storageId;
     } else {
-      throw UtilErrors.wtf('Invalid `storageId`.');
+      throw Errors.wtf('Invalid `storageId`.');
     }
 
     const fileName = `${baseName}.blob`;
@@ -660,7 +660,7 @@ export default class LocalFile extends BaseFile {
     // Trim off the directory prefix and filename suffix.
     const match = fsName.match(/([^/]+)\.[^./]*$/);
     if (match === null) {
-      throw UtilErrors.wtf('Invalid storage path.');
+      throw Errors.wtf('Invalid storage path.');
     }
     const baseName = match[1];
 
