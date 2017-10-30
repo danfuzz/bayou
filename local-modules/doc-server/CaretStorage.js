@@ -497,7 +497,7 @@ export default class CaretStorage extends BaseComplexMember {
       const transactionResult = await fc.transact(new TransactionSpec(...ops));
       paths = transactionResult.paths;
     } catch (e) {
-      if (Errors.isTimeout(e)) {
+      if (Errors.isTimedOut(e)) {
         // Per the method doc, we convert timeout into a `false` return.
         this.log.info('Timed out while waiting for caret changes.');
         return false;

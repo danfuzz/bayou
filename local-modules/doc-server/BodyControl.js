@@ -129,7 +129,7 @@ export default class BodyControl extends BaseControl {
       try {
         await fc.transact(spec);
       } catch (e) {
-        if (!Errors.isTimeout(e)) {
+        if (!Errors.isTimedOut(e)) {
           // It's _not_ a timeout, so we should propagate the error.
           throw e;
         }

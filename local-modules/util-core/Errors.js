@@ -170,12 +170,12 @@ export default class Errors extends UtilityClass {
   }
 
   /**
-   * Indicates whether or not the given error is a timeout.
+   * Indicates whether or not the given error is a `timed_out`.
    *
    * @param {Error} error Error in question.
    * @returns {boolean} `true` iff it represents a timeout.
    */
-  static isTimeout(error) {
+  static isTimedOut(error) {
     return InfoError.hasName(error, 'timed_out');
   }
 
