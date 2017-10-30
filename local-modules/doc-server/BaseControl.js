@@ -550,10 +550,6 @@ export default class BaseControl extends BaseDataManager {
    * the portion of the document controlled by this class. Subclasses must
    * override this.
    *
-   * **Note:** As of this writing, {@link CaretControl} does not operate as a
-   * normal OT class and does not use this. **TODO:** That class should be
-   * fixed to be properly OT-compliant.
-   *
    * @abstract
    */
   static get _impl_revisionNumberPath() {
@@ -574,10 +570,6 @@ export default class BaseControl extends BaseDataManager {
    * Gets the `StoragePath` string corresponding to the indicated revision
    * number, specifically for the portion of the document controlled by this
    * class. Subclasses must override this.
-   *
-   * **Note:** As of this writing, {@link CaretControl} does not operate as a
-   * normal OT class and does not use this. **TODO:** That class should be
-   * fixed to be properly OT-compliant.
    *
    * @abstract
    * @param {RevisionNumber} revNum The revision number.
