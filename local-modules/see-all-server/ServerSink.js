@@ -139,9 +139,7 @@ export default class ServerSink extends BaseSink {
 
       for (const l of lines) {
         console.log(`${first ? prefix : spaces}${l}`);
-        if (first) {
-          first = false;
-        }
+        first = false;
       }
     }
   }
