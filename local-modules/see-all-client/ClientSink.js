@@ -4,6 +4,9 @@
 
 import { BaseSink, SeeAll } from 'see-all';
 
+// The whole point of this file is to use `console.<whatever>`, so...
+/* eslint-disable no-console */
+
 /**
  * Implementation of the `see-all` logging sink protocol for use in a web
  * browser context. It logs everything to the browser window console.
@@ -27,7 +30,6 @@ export default class ClientSink extends BaseSink {
    */
   log(nowMsec_unused, level, tag, ...message) {
     const prefix = `[${tag} ${level}]`;
-    const style  = 'color: #bbb; font-weight: bold';
 
     // The browser's `console` methods _mostly_ do the right thing with regard
     // to providing distinguishing markings and stack traces when appropriate.
@@ -35,10 +37,11 @@ export default class ClientSink extends BaseSink {
     // and a trace in a "group."
 
     let logMethod;
+    let prefixColor;
     switch (level) {
-      case 'error': { logMethod = console.error; break; } // eslint-disable-line no-console
-      case 'warn':  { logMethod = console.warn;  break; } // eslint-disable-line no-console
-      default:      { logMethod = console.log;   break; } // eslint-disable-line no-console
+      case 'error': { logMethod = 'error'; prefixColor = '#a44'; break; }
+      case 'warn':  { logMethod = 'warn';  prefixColor = '#a70'; break; }
+      default:      { logMethod = 'log';   prefixColor = '#999'; break; }
     }
 
     if (level === 'debug') {
@@ -49,11 +52,24 @@ export default class ClientSink extends BaseSink {
       console.group(prefix);        // eslint-disable-line no-console
     }
 
-    logMethod.call(console, `%c${prefix}`, style, ...message);
+    const formatStr = ['%c%s%c'];
+    const args      = [`color: ${prefixColor}; font-weight: bold`, prefix, ''];
+
+    for (const m of message) {
+      switch (typeof m) {
+        case 'object':   { formatStr.push((m === null) ? ' %s' : ' %o'); break; }
+        case 'function': { formatStr.push(' %o');                        break; }
+        default:         { formatStr.push(' %s');                        break; }
+      }
+
+      args.push(m);
+    }
+
+    console[logMethod](formatStr.join(''), ...args);
 
     if (level === 'debug') {
-      console.trace('stack trace'); // eslint-disable-line no-console
-      console.groupEnd();           // eslint-disable-line no-console
+      console.trace('stack trace');
+      console.groupEnd();
     }
   }
 
@@ -66,11 +82,10 @@ export default class ClientSink extends BaseSink {
    *   timezone.
    */
   time(nowMsec_unused, utcString, localString) {
-    // eslint-disable-next-line no-console
     console.log(`%c[time] %c${utcString} %c/ %c${localString}`,
-      'color: #bbb; font-weight: bold',
+      'color: #999; font-weight: bold',
       'color: #66a; font-weight: bold',
-      'color: #bbb; font-weight: bold',
+      'color: #999; font-weight: bold',
       'color: #99e; font-weight: bold');
   }
 }
