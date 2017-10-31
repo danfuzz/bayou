@@ -6,10 +6,8 @@ import chalk from 'chalk';
 import { inspect } from 'util';
 
 import { BaseSink, SeeAll } from 'see-all';
+import { TFunction } from 'typecheck';
 import { ErrorUtil } from 'util-common';
-
-// The whole point of this file is to use `console.<whatever>`, so...
-/* eslint-disable no-console */
 
 /**
  * Implementation of the `see-all` logging sink protocol for use in a server
@@ -21,14 +19,23 @@ export default class ServerSink extends BaseSink {
    * `see-all` module.
    */
   static init() {
-    SeeAll.theOne.add(new ServerSink());
+    // eslint-disable-next-line no-console
+    const log = (...args) => { console.log(...args); };
+
+    SeeAll.theOne.add(new ServerSink(log));
   }
 
   /**
    * Constructs an instance.
+   *
+   * @param {function} log Function to call to actually perform logging. Must
+   *   be call-compatible with (and will often actually be) `console.log()`.
    */
-  constructor() {
+  constructor(log) {
     super();
+
+    /** {function} Function to call to actually perform logging. */
+    this._log = TFunction.checkCallable(log);
 
     /**
      * {Int} Number of columns currently being reserved for log line prefixes.
@@ -122,14 +129,14 @@ export default class ServerSink extends BaseSink {
       0);
 
     if (maxLineWidth > (consoleWidth - this._prefixLength)) {
-      console.log(prefix);
+      this._log(prefix);
       for (let l of lines) {
         let indent = '  ';
 
         while (l) {
           const chunk = l.substring(0, consoleWidth - indent.length);
           l = l.substring(chunk.length);
-          console.log(`${indent}${chunk}`);
+          this._log(`${indent}${chunk}`);
           indent = '+ ';
         }
       }
@@ -138,7 +145,7 @@ export default class ServerSink extends BaseSink {
       let   first  = true;
 
       for (const l of lines) {
-        console.log(`${first ? prefix : spaces}${l}`);
+        this._log(`${first ? prefix : spaces}${l}`);
         first = false;
       }
     }
@@ -157,7 +164,7 @@ export default class ServerSink extends BaseSink {
     localString  = chalk.blue.dim.bold(localString);
     const prefix = this._makePrefix('time');
 
-    console.log(`${prefix}${utcString} / ${localString}`);
+    this._log(`${prefix}${utcString} / ${localString}`);
   }
 
   /**
