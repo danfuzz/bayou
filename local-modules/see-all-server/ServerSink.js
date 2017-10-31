@@ -3,11 +3,14 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import chalk from 'chalk';
-import { inspect } from 'util';
+import { format, inspect } from 'util';
 
-import { BaseSink, SeeAll } from 'see-all';
+import { BaseSink, Logger, SeeAll } from 'see-all';
 import { TFunction } from 'typecheck';
 import { ErrorUtil } from 'util-common';
+
+// The whole point of this file is to use `console.<whatever>`, so...
+/* eslint-disable no-console */
 
 /**
  * Implementation of the `see-all` logging sink protocol for use in a server
@@ -16,13 +19,22 @@ import { ErrorUtil } from 'util-common';
 export default class ServerSink extends BaseSink {
   /**
    * Registers an instance of this class as a logging sink with the main
-   * `see-all` module.
+   * `see-all` module. Also, patches `console.log()` and friends to call through
+   * to `see-all`, such that they will ultimately log to the console via this
+   * class as well as getting logged with any other sink that's hooked up (e.g.
+   * a {@link RecentSink}).
    */
   static init() {
-    // eslint-disable-next-line no-console
-    const log = (...args) => { console.log(...args); };
+    const origConsoleLog = console.log;
+    const log = (...args) => { origConsoleLog.apply(console, args); };
 
     SeeAll.theOne.add(new ServerSink(log));
+
+    const consoleLogger = new Logger('node-console');
+    console.info  = (...args) => { consoleLogger.info(format(...args));  };
+    console.warn  = (...args) => { consoleLogger.warn(format(...args));  };
+    console.error = (...args) => { consoleLogger.error(format(...args)); };
+    console.log   = console.info;
   }
 
   /**
