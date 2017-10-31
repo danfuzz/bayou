@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Errors, StoragePath } from 'file-store';
-import { CommonBase, Errors as UtilErrors } from 'util-common';
+import { Errors as FileStoreErrors, StoragePath } from 'file-store';
+import { CommonBase, Errors } from 'util-common';
 
 /**
  * Handler for `LocalFile.transact()`. An instance of this class is constructed
@@ -101,7 +101,7 @@ export default class Transactor extends CommonBase {
 
       const handler = this[`_op_${op.name}`];
       if (!handler) {
-        throw UtilErrors.wtf(`Missing handler for op: ${op.name}`);
+        throw Errors.wtf(`Missing handler for op: ${op.name}`);
       }
 
       handler.call(this, op);
@@ -145,7 +145,7 @@ export default class Transactor extends CommonBase {
     const hash = op.arg('hash');
 
     if (this._fileFriend.readBlobOrNull(hash) !== null) {
-      throw Errors.blob_not_absent(hash);
+      throw FileStoreErrors.blob_not_absent(hash);
     }
   }
 
@@ -158,7 +158,7 @@ export default class Transactor extends CommonBase {
     const hash = op.arg('hash');
 
     if (this._fileFriend.readBlobOrNull(hash) === null) {
-      throw Errors.blob_not_found(hash);
+      throw FileStoreErrors.blob_not_found(hash);
     }
   }
 
@@ -171,7 +171,7 @@ export default class Transactor extends CommonBase {
     const storagePath = op.arg('storagePath');
 
     if (this._fileFriend.readPathOrNull(storagePath) !== null) {
-      throw Errors.path_not_absent(storagePath);
+      throw FileStoreErrors.path_not_absent(storagePath);
     }
   }
 
@@ -186,9 +186,9 @@ export default class Transactor extends CommonBase {
     const data         = this._fileFriend.readPathOrNull(storagePath);
 
     if (data === null) {
-      throw Errors.path_not_found(storagePath);
+      throw FileStoreErrors.path_not_found(storagePath);
     } else if (data.hash !== expectedHash) {
-      throw Errors.path_hash_mismatch(storagePath, expectedHash);
+      throw FileStoreErrors.path_hash_mismatch(storagePath, expectedHash);
     }
   }
 
@@ -203,7 +203,7 @@ export default class Transactor extends CommonBase {
     const data           = this._fileFriend.readPathOrNull(storagePath);
 
     if ((data !== null) && (data.hash === unexpectedHash)) {
-      throw Errors.path_hash_mismatch(storagePath, unexpectedHash);
+      throw FileStoreErrors.path_hash_mismatch(storagePath, unexpectedHash);
     }
   }
 
@@ -216,7 +216,7 @@ export default class Transactor extends CommonBase {
     const storagePath = op.arg('storagePath');
 
     if (this._fileFriend.readPathOrNull(storagePath) === null) {
-      throw Errors.path_not_found(storagePath);
+      throw FileStoreErrors.path_not_found(storagePath);
     }
   }
 
@@ -337,7 +337,7 @@ export default class Transactor extends CommonBase {
     const revNum = op.arg('revNum');
 
     if (this._fileFriend.revNum !== revNum) {
-      throw UtilErrors.revision_not_available(revNum);
+      throw Errors.revision_not_available(revNum);
     }
   }
 
@@ -455,6 +455,6 @@ export default class Transactor extends CommonBase {
    * @param {string} name Name of the missing op.
    */
   static _missingOp(name) {
-    throw UtilErrors.wtf(`Missing op implementation: ${name}`);
+    throw Errors.wtf(`Missing op implementation: ${name}`);
   }
 }

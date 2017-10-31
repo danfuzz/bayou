@@ -86,4 +86,24 @@ export default class Errors extends UtilityClass {
     StoragePath.check(storagePath);
     return new InfoError('path_not_found', storagePath);
   }
+
+  /**
+   * Indicates whether or not the given error is a `path_not_empty`.
+   *
+   * @param {Error} error Error in question.
+   * @returns {boolean} `true` iff it represents a `path_not_empty`.
+   */
+  static isPathNotEmpty(error) {
+    return InfoError.hasName(error, 'path_not_empty');
+  }
+
+  /**
+   * Indicates whether or not the given error is a `path_not_found`.
+   *
+   * @param {Error} error Error in question.
+   * @returns {boolean} `true` iff it represents a `path_not_found`.
+   */
+  static isPathNotFound(error) {
+    return InfoError.hasName(error, 'path_not_found');
+  }
 }

@@ -6,6 +6,7 @@ import chalk from 'chalk';
 import { inspect } from 'util';
 
 import { BaseSink, SeeAll } from 'see-all';
+import { ErrorUtil } from 'util-common';
 
 /**
  * Number of columns to reserve for log line prefixes. Prefixes under this
@@ -66,13 +67,18 @@ export default class ServerSink extends BaseSink {
 
     if (!gotError && (level !== 'detail') && (level !== 'info')) {
       // It's at a level that warrants a stack trace, and none of the arguments
-      // is an `Error`. So, append one. We drop the first couple lines, because
-      // those are (a) the `Error` header, which is info-free in this case; and
-      // (b) lines corresponding to the logging code itself.
-      let trace = inspect(new Error());
-      trace = trace.replace(/^[\s\S]*\n    at Logger[^\n]+\n/, '');
-      trace = trace.replace(/^    at /mg, '  at '); // Partially outdent.
-      text += `${atLineStart ? '' : '\n'}${trace}`;
+      // is an `Error`. So, append one. We drop the initial set of stack lines
+      // coming from the logging module.
+      const trace = ErrorUtil.stackLines(new Error());
+      let   skip  = true;
+      for (const line of trace) {
+        if (skip && !/[/]see-all/.test(line)) {
+          skip = false;
+        }
+        if (!skip) {
+          text += `\n  ${line}`;
+        }
+      }
     }
 
     // Remove the trailing newline, if any, and split on newlines to produce an

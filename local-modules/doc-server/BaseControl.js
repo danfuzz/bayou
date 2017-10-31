@@ -3,10 +3,10 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseSnapshot, RevisionNumber } from 'doc-common';
-import { TransactionSpec } from 'file-store';
+import { Errors as FileStoreErrors, TransactionSpec } from 'file-store';
 import { Delay } from 'promise-util';
 import { TFunction } from 'typecheck';
-import { Errors, InfoError } from 'util-common';
+import { Errors } from 'util-common';
 
 import BaseDataManager from './BaseDataManager';
 
@@ -127,7 +127,7 @@ export default class BaseControl extends BaseDataManager {
     try {
       await fc.transact(spec);
     } catch (e) {
-      if ((e instanceof InfoError) && (e.name === 'path_not_empty')) {
+      if (FileStoreErrors.isPathNotEmpty(e)) {
         // This happens if and when we lose an append race, which will regularly
         // occur if there are simultaneous editors.
         this.log.info('Lost append race for revision:', revNum);
@@ -270,7 +270,7 @@ export default class BaseControl extends BaseDataManager {
 
       data = transactionResult.data;
     } catch (e) {
-      if ((e instanceof InfoError) && (e.name === 'path_not_found')) {
+      if (FileStoreErrors.isPathNotFound(e)) {
         // One of the requested revisions is no longer available. If thrown, we
         // know that at least the first one requested will be missing (because
         // we won't drop a change without also dropping its predecessors). Throw
