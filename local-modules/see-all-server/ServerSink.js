@@ -31,6 +31,34 @@ export default class ServerSink extends BaseSink {
   }
 
   /**
+   * Constructs an instance.
+   */
+  constructor() {
+    super();
+
+    /**
+     * {Int} Number of columns currently being reserved for log line prefixes.
+     * This starts with a reasonable guess (to avoid initial churn) and gets
+     * updated in {@link #_makePrefix()}.
+     */
+    this._prefixLength = 25;
+
+    /**
+     * {Int} The maximum prefix observed over the previous
+     * {@link #_recentLineCount} lines. This gets updated in
+     * {@link #_makePrefix()}.
+     */
+    this._recentMaxPrefix = 0;
+
+    /**
+     * {Int} The number of lines in the reckoning recorded by
+     * {@link #_recentMaxPrefix} lines. This gets updated in
+     * {@link #_makePrefix()}.
+     */
+    this._recentLineCount = 0;
+  }
+
+  /**
    * Logs a message at the given severity level.
    *
    * @param {Int} nowMsec_unused Timestamp of the message.
@@ -39,7 +67,7 @@ export default class ServerSink extends BaseSink {
    * @param {...*} message Message to log.
    */
   log(nowMsec_unused, level, tag, ...message) {
-    const prefix = ServerSink._makePrefix(tag, level);
+    const prefix = this._makePrefix(tag, level);
 
     // Make a unified string of the entire message.
     let text = '';
@@ -133,14 +161,15 @@ export default class ServerSink extends BaseSink {
   time(nowMsec_unused, utcString, localString) {
     utcString = chalk.blue.bold(utcString);
     localString  = chalk.blue.dim.bold(localString);
-    const prefix = ServerSink._makePrefix('time');
+    const prefix = this._makePrefix('time');
 
     console.log(`${prefix.text}${utcString} / ${localString}`);
   }
 
   /**
    * Constructs a prefix header with the given tag (required) and level
-   * (optional).
+   * (optional). Also updates the instance fields that track the observed
+   * prefix lengths.
    *
    * @param {string} tag The component tag.
    * @param {string} [level = ''] The severity level.
@@ -148,13 +177,8 @@ export default class ServerSink extends BaseSink {
    *   handy in that it _doesn't_ include the count of the characters used in
    *   color control sequences.
    */
-  static _makePrefix(tag, level = '') {
-    let text = `[${tag}${level !== '' ? ' ' : ''}${level}]`;
-
-    if (text.length < PREFIX_COLS) {
-      text += ' '.repeat(PREFIX_COLS - text.length);
-    }
-
+  _makePrefix(tag, level = '') {
+    let   text   = `[${tag}${level !== '' ? ' ' : ''}${level}]`;
     const length = text.length + 1; // `+1` for the space at the end.
 
     // Color the prefix according to level.
@@ -164,7 +188,25 @@ export default class ServerSink extends BaseSink {
       default:      { text = chalk.dim.bold(text);    break; }
     }
 
-    text += ' ';
+    // Update the prefix length instance variables. What we're doing here is
+    // adjusting the prefix area to be wider when we discover a prefix which
+    // would be longer than what we've seen before. At the same time, we record
+    // a recently-observed maximum, and we reset to that from time to time. The
+    // latter prevents brief "prefix blow-outs" from permanently messing with
+    // the log output.
+    this._prefixLength    = Math.max(this._prefixLength,    length);
+    this._recentMaxPrefix = Math.max(this._recentMaxPrefix, length);
+    this._recentLineCount++;
+    if (this._recentLineCount >= 100) {
+      this._prefixLength = this._recentMaxPrefix;
+      this._recentMaxPrefix = 0;
+      this._recentLineCount = 0;
+    }
+
+    // Right-pad with spaces. This is designed to always add at least one space
+    // (so there is always at least one between the prefix and main log
+    // content).
+    text += ' '.repeat(this._prefixLength - length + 1);
 
     return { text, length };
   }
