@@ -612,7 +612,7 @@ export default class LocalFile extends BaseFile {
 
     if (StoragePath.isInstance(storageId)) {
       // `slice(1)` trims off the initial slash.
-      baseName = storageId.slice(1).replace(/\//g, '~');
+      baseName = storageId.slice(1).replace(/[/]/g, '~');
     } else if (FrozenBuffer.isHash(storageId) || LocalFile._isInternalStorageId(storageId)) {
       baseName = storageId;
     } else {

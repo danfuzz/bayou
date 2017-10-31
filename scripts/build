@@ -187,7 +187,7 @@ function local-module-names {
             find "${overlayDir}/local-modules" -mindepth 1 -maxdepth 1 -type d
         fi
     ) \
-        | sed -e 's!.*\/!!g' \
+        | sed -e 's!.*/!!g' \
         | sort -u
 }
 

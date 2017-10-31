@@ -13,7 +13,7 @@ const COMPONENT_REGEX = /^[a-zA-Z0-9_]+$/;
 /**
  * {RegEx} Regular expression which passes for all valid path strings.
  */
-const PATH_REGEX = /^(\/[a-zA-Z0-9_]+)+$/;
+const PATH_REGEX = /^([/][a-zA-Z0-9_]+)+$/;
 
 /**
  * Utility class for handling storage paths. A storage path is a

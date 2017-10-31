@@ -63,7 +63,7 @@ describe('api-common/BaseKey', () => {
       let which = 0;
       function test(orig) {
         const key = new BaseKey(orig, VALID_ID);
-        const expected = orig.match(/^[^:]+:\/\/[^/]+/)[0];
+        const expected = orig.match(/^[^:]+:[/][/][^/]+/)[0];
 
         which++;
         assert.strictEqual(key.baseUrl, expected, `#${which}`);

@@ -45,14 +45,14 @@ const BABEL_CONFIG = Object.freeze({
  */
 function pathForLogging(file) {
   // Trim up to and including `node_modules/`.
-  if (/\/node_modules\//.test(file)) {
-    return file.replace(/^.*\/node_modules\//, '.../');
+  if (/[/]node_modules[/]/.test(file)) {
+    return file.replace(/^.*[/]node_modules[/]/, '.../');
   }
 
   // Not under `node_modules`. Just trim off initial path components to produce
   // a shorter string.
   while (file.length > 30) {
-    const newFile = file.replace(/^\/?([^/]+\/){2}/, '.../');
+    const newFile = file.replace(/^[/]?([^/]+[/]){2}/, '.../');
     if (newFile === file) {
       break;
     }

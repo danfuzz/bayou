@@ -93,7 +93,7 @@ export default class RequestLogger extends UtilityClass {
     // `express-ws` appends a pseudo-path `/.websocket` to the end of
     // websocket requests. We chop that off here.
     const url = isWs
-      ? req.originalUrl.replace(/\/\.websocket$/, '')
+      ? req.originalUrl.replace(/[/]\.websocket$/, '')
       : req.originalUrl;
 
     let contentLength = (res === null) ? undefined : res.get('content-length');
