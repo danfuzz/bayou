@@ -61,11 +61,12 @@ export default class RootAccess {
     const key = new SplitKey(url, session.getSessionId());
     this._context.add(key, session);
 
-    log.info('Newly-authorized access.');
-    log.info('  author:  ', authorId);
-    log.info('  doc:     ', docId);
-    log.info('  key id:  ', key.id); // The ID is safe to log (not security-sensitive).
-    log.info('  key url: ', key.url);
+    log.info(
+      'Newly-authorized access.\n',
+      '  author: ', authorId, '\n',
+      '  doc:    ', docId,    '\n',
+      '  key id: ', key.id,   '\n', // The ID is safe to log (not security-sensitive).
+      '  key url:', key.url);
 
     return key;
   }
