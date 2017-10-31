@@ -12,12 +12,6 @@ import { ErrorUtil } from 'util-common';
 /* eslint-disable no-console */
 
 /**
- * Number of columns to reserve for log line prefixes. Prefixes under this
- * length get padded.
- */
-const PREFIX_COLS = 24;
-
-/**
  * Implementation of the `see-all` logging sink protocol for use in a server
  * context. It logs everything to the console.
  */
@@ -127,10 +121,11 @@ export default class ServerSink extends BaseSink {
       (prev, l) => { return Math.max(prev, l.length); },
       0);
 
-    if (maxLineWidth > (consoleWidth - prefix.length)) {
-      console.log(prefix.text);
+    if (maxLineWidth > (consoleWidth - this._prefixLength)) {
+      console.log(prefix);
       for (let l of lines) {
         let indent = '  ';
+
         while (l) {
           const chunk = l.substring(0, consoleWidth - indent.length);
           l = l.substring(chunk.length);
@@ -139,12 +134,13 @@ export default class ServerSink extends BaseSink {
         }
       }
     } else {
-      let first = true;
+      const spaces = ' '.repeat(this._prefixLength);
+      let   first  = true;
+
       for (const l of lines) {
-        console.log(`${prefix.text}${l}`);
+        console.log(`${first ? prefix : spaces}${l}`);
         if (first) {
           first = false;
-          prefix.text = ' '.repeat(prefix.length);
         }
       }
     }
@@ -163,7 +159,7 @@ export default class ServerSink extends BaseSink {
     localString  = chalk.blue.dim.bold(localString);
     const prefix = this._makePrefix('time');
 
-    console.log(`${prefix.text}${utcString} / ${localString}`);
+    console.log(`${prefix}${utcString} / ${localString}`);
   }
 
   /**
@@ -173,9 +169,7 @@ export default class ServerSink extends BaseSink {
    *
    * @param {string} tag The component tag.
    * @param {string} [level = ''] The severity level.
-   * @returns {object} an object that maps `text` and `length`. The latter is
-   *   handy in that it _doesn't_ include the count of the characters used in
-   *   color control sequences.
+   * @returns {string} The prefix, including coloring and padding.
    */
   _makePrefix(tag, level = '') {
     let   text   = `[${tag}${level !== '' ? ' ' : ''}${level}]`;
@@ -208,7 +202,7 @@ export default class ServerSink extends BaseSink {
     // content).
     text += ' '.repeat(this._prefixLength - length + 1);
 
-    return { text, length };
+    return text;
   }
 
   /**
