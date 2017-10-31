@@ -8,6 +8,9 @@ import { inspect } from 'util';
 import { BaseSink, SeeAll } from 'see-all';
 import { ErrorUtil } from 'util-common';
 
+// The whole point of this file is to use `console.<whatever>`, so...
+/* eslint-disable no-console */
+
 /**
  * Number of columns to reserve for log line prefixes. Prefixes under this
  * length get padded.
@@ -97,14 +100,12 @@ export default class ServerSink extends BaseSink {
       0);
 
     if (maxLineWidth > (consoleWidth - prefix.length)) {
-      // eslint-disable-next-line no-console
       console.log(prefix.text);
       for (let l of lines) {
         let indent = '  ';
         while (l) {
           const chunk = l.substring(0, consoleWidth - indent.length);
           l = l.substring(chunk.length);
-          // eslint-disable-next-line no-console
           console.log(`${indent}${chunk}`);
           indent = '+ ';
         }
@@ -112,7 +113,6 @@ export default class ServerSink extends BaseSink {
     } else {
       let first = true;
       for (const l of lines) {
-        // eslint-disable-next-line no-console
         console.log(`${prefix.text}${l}`);
         if (first) {
           first = false;
@@ -135,7 +135,6 @@ export default class ServerSink extends BaseSink {
     localString  = chalk.blue.dim.bold(localString);
     const prefix = ServerSink._makePrefix('time');
 
-    // eslint-disable-next-line no-console
     console.log(`${prefix.text}${utcString} / ${localString}`);
   }
 
