@@ -126,8 +126,9 @@ export default class MetaHandler {
 
     // **Note:** It's probably okay to log the expected response, but may be
     // worth thinking a bit more about. (Attention: Security professionals!)
-    this._log.info('New challenge:', id, challenge);
-    this._log.info('  => ', response);
+    this._log.info(
+      'New challenge:', id, challenge, '\n',
+      '  =>', response);
 
     return challenge;
   }
