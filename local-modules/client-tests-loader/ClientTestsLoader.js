@@ -22,7 +22,7 @@ export default class ClientTestsLoader extends UtilityClass {
     // subdirectory path underneath it along with the file name _without_ the
     // `.js` suffix.
     const allFiles = ClientTests.allTestFiles().map((file) => {
-      return file.replace(/^.*\/node_modules\/(.*)\.js$/,
+      return file.replace(/^.*[/]node_modules[/](.*)\.js$/,
         (match_unused, group1) => { return group1; });
     });
 
