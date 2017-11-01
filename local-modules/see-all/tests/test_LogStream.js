@@ -7,8 +7,7 @@ import { describe, it } from 'mocha';
 
 import { Delay } from 'promise-util';
 import { LogStream } from 'see-all';
-
-import MockLogger from './MockLogger';
+import { MockLogger } from 'see-all/mocks';
 
 describe('see-all/LogStream', () => {
   describe('constructor()', () => {

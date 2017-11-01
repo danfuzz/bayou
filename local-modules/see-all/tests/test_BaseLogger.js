@@ -6,8 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BaseLogger } from 'see-all';
-
-import MockLogger from './MockLogger';
+import { MockLogger } from 'see-all/mocks';
 
 /** {array<string>} All the valid levels. */
 const LEVELS = ['debug', 'detail', 'error', 'info', 'warn'];
