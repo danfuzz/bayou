@@ -12,8 +12,6 @@ import ValidationStatus from './ValidationStatus';
 
 /**
  * Controller for the property metadata of a particular document.
- *
- * **TODO:** Store properties to the file.
  */
 export default class PropertyControl extends BaseControl {
   /**
@@ -106,7 +104,7 @@ export default class PropertyControl extends BaseControl {
       if (oldSnapshot !== this._snapshot) {
         break;
       }
-      this.log('Waiting for property update...');
+      this.log.info('Waiting for property update...');
     }
 
     return oldSnapshot.diff(this._snapshot);
