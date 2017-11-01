@@ -12,6 +12,15 @@ import { ErrorUtil } from 'util-common';
 // The whole point of this file is to use `console.<whatever>`, so...
 /* eslint-disable no-console */
 
+/** {Int} The minimum length of the prefix area, in characters/columns. */
+const MIN_PREFIX_LENGTH = 20;
+
+/**
+ * {Int} The minimum increment to use for prefix length adjustment (so as to
+ * avoid overly-sinuous alignment).
+ */
+const PREFIX_ADJUST_INCREMENT = 4;
+
 /**
  * Implementation of the `see-all` logging sink protocol for use in a server
  * context. It logs everything to the console.
@@ -54,7 +63,7 @@ export default class ServerSink extends BaseSink {
      * This starts with a reasonable guess (to avoid initial churn) and gets
      * updated in {@link #_makePrefix()}.
      */
-    this._prefixLength = 25;
+    this._prefixLength = MIN_PREFIX_LENGTH;
 
     /**
      * {Int} The maximum prefix observed over the previous
@@ -189,7 +198,7 @@ export default class ServerSink extends BaseSink {
    * @returns {string} The prefix, including coloring and padding.
    */
   _makePrefix(tag, level = '') {
-    const levelStr = ((level === 'info') || (level === '')) ? '' : ` ${level}`;
+    const levelStr = ((level === 'info') || (level === '')) ? '' : ` ${level[0].toUpperCase()}`;
     let   text     = `[${tag}${levelStr}]`;
     const length   = text.length + 1; // `+1` for the space at the end.
 
@@ -206,8 +215,13 @@ export default class ServerSink extends BaseSink {
     // a recently-observed maximum, and we reset to that from time to time. The
     // latter prevents brief "prefix blow-outs" from permanently messing with
     // the log output.
-    this._prefixLength    = Math.max(this._prefixLength,    length);
-    this._recentMaxPrefix = Math.max(this._recentMaxPrefix, length);
+    const MIN    = MIN_PREFIX_LENGTH;
+    const ADJUST = PREFIX_ADJUST_INCREMENT;
+    const prefixLength = (length <= MIN)
+      ? MIN
+      : Math.ceil((length - MIN) / ADJUST) * ADJUST + MIN;
+    this._prefixLength    = Math.max(this._prefixLength,    prefixLength);
+    this._recentMaxPrefix = Math.max(this._recentMaxPrefix, prefixLength);
     this._recentLineCount++;
     if (this._recentLineCount >= 100) {
       this._prefixLength = this._recentMaxPrefix;
