@@ -95,11 +95,19 @@ describe('see-all-server/RecentSink', () => {
       }
 
       const contents = sink.htmlContents;
-      const lines = contents.match(/[^\r\n]+/g);
+      const lines    = contents.match(/[^\r\n]+/g);
 
-      // One line for each log entry, plus one more each for the <table> and
-      // </table>. This is kind of a weak test but it's better than nothing.
-      assert.strictEqual(lines.length, 1 + NUM_LINES + 1);
+      // Count the lines starting with `<tr>`. This is kind of a weak test but
+      // it's better than nothing.
+
+      let count = 0;
+      for (const l of lines) {
+        if (/^<tr>/.test(l)) {
+          count++;
+        }
+      }
+
+      assert.strictEqual(count, NUM_LINES);
     });
   });
 });
