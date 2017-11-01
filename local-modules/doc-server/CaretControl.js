@@ -45,7 +45,7 @@ export default class CaretControl extends BaseControl {
    *   miscellanea.
    */
   constructor(fileAccess) {
-    super(fileAccess);
+    super(fileAccess, 'caret');
 
     /**
      * {CaretStorage} File storage handler. This is responsible for all of the

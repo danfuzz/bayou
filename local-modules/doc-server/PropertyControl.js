@@ -22,7 +22,7 @@ export default class PropertyControl extends BaseControl {
    *   miscellanea.
    */
   constructor(fileAccess) {
-    super(fileAccess);
+    super(fileAccess, 'prop');
 
     /** {SnapshotManager} Snapshot manager. */
     this._snapshots = new SnapshotManager(this);

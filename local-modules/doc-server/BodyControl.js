@@ -22,7 +22,7 @@ export default class BodyControl extends BaseControl {
    *   miscellanea.
    */
   constructor(fileAccess) {
-    super(fileAccess);
+    super(fileAccess, 'body');
 
     /** {SnapshotManager} Snapshot manager. */
     this._snapshots = new SnapshotManager(this);

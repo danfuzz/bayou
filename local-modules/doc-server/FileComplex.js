@@ -24,7 +24,7 @@ export default class FileComplex extends BaseComplexMember {
    * @param {BaseFile} file The underlying document storage.
    */
   constructor(codec, file) {
-    super(new FileAccess(codec, file));
+    super(new FileAccess(codec, file), 'complex');
 
     /**
      * {FileBootstrap} Bootstrap handler, and also where the complex members are

@@ -46,7 +46,7 @@ export default class CaretStorage extends BaseComplexMember {
    *   miscellanea.
    */
   constructor(fileAccess) {
-    super(fileAccess);
+    super(fileAccess, 'caret');
 
     /**
      * {Set<string>} Set of session IDs, indicating all of the editing sessions

@@ -4,7 +4,7 @@
 
 import { Codec } from 'codec';
 import { BaseFile, FileCodec } from 'file-store';
-import { Logger } from 'see-all';
+import { BaseLogger, Logger } from 'see-all';
 import { CommonBase } from 'util-common';
 
 /** {Logger} Logger to use for this module. */
@@ -23,8 +23,14 @@ export default class FileAccess extends CommonBase {
    *
    * @param {Codec} codec Codec instance to use.
    * @param {BaseFile} file The underlying document storage.
+   * @param {BaseLogger} [logger = null] If non-`null`, logger to use instead of
+   *   the usual one. This is only meant to be used for unit testing.
    */
-  constructor(codec, file) {
+  constructor(codec, file, logger = null) {
+    if (logger !== null) {
+      BaseLogger.check(logger);
+    }
+
     super();
 
     /** {Codec} Codec instance to use. */
@@ -33,8 +39,8 @@ export default class FileAccess extends CommonBase {
     /** {BaseFile} The underlying document storage. */
     this._file = BaseFile.check(file);
 
-    /** {Logger} Logger for this instance. */
-    this._log = log.withPrefix(`[${file.id}]`);
+    /** {BaseLogger} Logger for this instance. */
+    this._log = (logger || log).withPrefix(`[${file.id}]`);
 
     /** {FileCodec} File-codec wrapper to use. */
     this._fileCodec = new FileCodec(file, codec);

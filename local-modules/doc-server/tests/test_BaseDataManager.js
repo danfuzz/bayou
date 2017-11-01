@@ -23,7 +23,7 @@ describe('doc-server/BaseDataManager', () => {
         }
       }
 
-      const dm = new TestDataManager(FILE_ACCESS);
+      const dm = new TestDataManager(FILE_ACCESS, 'boop');
       assert.strictEqual(dm.initSpec, spec);
     });
 
@@ -34,14 +34,14 @@ describe('doc-server/BaseDataManager', () => {
         }
       }
 
-      const dm = new HasBadSpec(FILE_ACCESS);
+      const dm = new HasBadSpec(FILE_ACCESS, 'boop');
       assert.throws(() => dm.initSpec);
     });
   });
 
   describe('afterInit()', () => {
     it('should call through to the impl', async () => {
-      const dm = new BaseDataManager(FILE_ACCESS);
+      const dm = new BaseDataManager(FILE_ACCESS, 'boop');
 
       let callCount = 0;
       dm._impl_afterInit = async () => {
@@ -55,7 +55,7 @@ describe('doc-server/BaseDataManager', () => {
     });
 
     it('should throw whatever error is thrown by the impl', async () => {
-      const dm = new BaseDataManager(FILE_ACCESS);
+      const dm = new BaseDataManager(FILE_ACCESS, 'boop');
       dm._impl_afterInit = async () => {
         throw new Error('oy');
       };
@@ -66,7 +66,7 @@ describe('doc-server/BaseDataManager', () => {
 
   describe('validationStatus()', () => {
     it('should call through to the impl', async () => {
-      const dm = new BaseDataManager(FILE_ACCESS);
+      const dm = new BaseDataManager(FILE_ACCESS, 'boop');
 
       let callCount = 0;
       dm._impl_validationStatus = async () => {
@@ -80,7 +80,7 @@ describe('doc-server/BaseDataManager', () => {
     });
 
     it('should throw whatever error is thrown by the impl', async () => {
-      const dm = new BaseDataManager(FILE_ACCESS);
+      const dm = new BaseDataManager(FILE_ACCESS, 'boop');
       dm._impl_validationStatus = async () => {
         throw new Error('oy');
       };
@@ -89,7 +89,7 @@ describe('doc-server/BaseDataManager', () => {
     });
 
     it('should reject bogus impl return values', async () => {
-      const dm = new BaseDataManager(FILE_ACCESS);
+      const dm = new BaseDataManager(FILE_ACCESS, 'boop');
       dm._impl_validationStatus = async () => {
         return ['not actually a validation status'];
       };
