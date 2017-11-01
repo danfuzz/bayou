@@ -5,6 +5,8 @@
 import PropTypes from 'prop-types';
 import Quill from 'quill';
 import React from 'react';
+import { Units } from 'util-common';
+
 import ComponentBlotWrapper from '../ComponentBlotWrapper';
 
 import styles from './file-embed.module.less';
@@ -23,15 +25,35 @@ export default class FileEmbed extends React.Component {
     return 'file_embed';
   }
 
+  constructor(props) {
+    super(props);
+
+    this.beginHover = this.beginHover.bind(this);
+    this.endHover = this.endHover.bind(this);
+
+    this.state = {
+      inHover: false
+    };
+  }
+
+  beginHover() {
+    this.setState({ inHover: true });
+  }
+
+  endHover() {
+    this.setState({ inHover: false });
+  }
+
   render() {
     return (
-      <div className = { styles.container }>
+      <div className = { styles.container } onMouseEnter = { this.beginHover } onMouseLeave = { this.endHover } >
         <div className = { styles.iconContainer }>
           <p className={`ts_icon_file_generic ${styles.icon}`}></p>
+          { this.state.inHover && <button className = { `${styles.downloadButton} ts_icon_cloud_download` }></button> }
         </div>
         <div className = { styles.metadataContainer }>
           <p className = { styles.filename }>{ this.props.filename }</p>
-          <p className = { styles.size }>{ this.props.sizeInBytes }</p>
+          <p className = { styles.size }>{ Units.filesizeToString(this.props.sizeInBytes, 1) }</p>
         </div>
       </div>
     );
