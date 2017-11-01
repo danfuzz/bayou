@@ -189,8 +189,9 @@ export default class ServerSink extends BaseSink {
    * @returns {string} The prefix, including coloring and padding.
    */
   _makePrefix(tag, level = '') {
-    let   text   = `[${tag}${level !== '' ? ' ' : ''}${level}]`;
-    const length = text.length + 1; // `+1` for the space at the end.
+    const levelStr = ((level === 'info') || (level === '')) ? '' : ` ${level}`;
+    let   text     = `[${tag}${levelStr}]`;
+    const length   = text.length + 1; // `+1` for the space at the end.
 
     // Color the prefix according to level.
     switch (level) {

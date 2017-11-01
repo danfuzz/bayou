@@ -124,8 +124,8 @@ export default class RecentSink extends BaseSink {
       tag = '[time]';
       body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;
     } else {
-      const level = (log.level === 'info') ? '' : ` ${log.level}`;
-      tag = `[${log.tag}${level}]`;
+      const levelStr = (log.level === 'info') ? '' : ` ${log.level}`;
+      tag = `[${log.tag}${levelStr}]`;
       body = log.message;
       body = body.replace(/(^\n+)|(\n+$)/g, ''); // Trim leading and trailing newlines.
     }
