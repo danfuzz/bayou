@@ -8,6 +8,7 @@ import { Errors } from 'util-common';
 
 import BaseControl from './BaseControl';
 import Paths from './Paths';
+import SnapshotManager from './SnapshotManager';
 import ValidationStatus from './ValidationStatus';
 
 /**
@@ -23,11 +24,8 @@ export default class BodyControl extends BaseControl {
   constructor(fileAccess) {
     super(fileAccess);
 
-    /**
-     * {Map<RevisionNumber, BodySnapshot>} Mapping from revision numbers to
-     * corresponding document snapshots. Sparse.
-     */
-    this._snapshots = new Map();
+    /** {SnapshotManager} Snapshot manager. */
+    this._snapshots = new SnapshotManager(this);
 
     Object.seal(this);
   }
@@ -74,7 +72,7 @@ export default class BodyControl extends BaseControl {
    */
   async _impl_afterInit() {
     // Any cached snapshots are no longer valid.
-    this._snapshots = new Map();
+    this._snapshots.clear();
   }
 
   /**
@@ -153,34 +151,7 @@ export default class BodyControl extends BaseControl {
    *   superclass allows it, this method never returns `null`.
    */
   async _impl_getSnapshot(revNum) {
-    // Search backward through the full revisions for a base for forward
-    // composition.
-    let base = null;
-    for (let i = revNum; i >= 0; i--) {
-      const v = this._snapshots.get(i);
-      if (v) {
-        base = v;
-        break;
-      }
-    }
-
-    if (base && (base.revNum === revNum)) {
-      // Found the right revision!
-      return base;
-    }
-
-    // We didn't actully find a snapshot of the requested revision. Apply deltas
-    // to the base to produce the desired revision. Store it, and return it.
-
-    const contents = (base === null)
-      ? this.getComposedChanges(BodyDelta.EMPTY, 0,               revNum + 1)
-      : this.getComposedChanges(base.contents,   base.revNum + 1, revNum + 1);
-    const result = new BodySnapshot(revNum, await contents);
-
-    this.log.detail('Made snapshot for revision:', revNum);
-
-    this._snapshots.set(revNum, result);
-    return result;
+    return this._snapshots.getSnapshot(revNum);
   }
 
   /**
