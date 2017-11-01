@@ -310,11 +310,6 @@ async function serverTest() {
   process.exit((failures === 0) ? 0 : 1);
 }
 
-// Initialize logging.
-
-ServerSink.init();
-new FileSink(path.resolve(Dirs.theOne.LOG_DIR, 'general.log'));
-
 process.on('unhandledRejection', (reason, promise_unused) => {
   log.error('Unhandled promise rejection:', reason);
 
@@ -340,11 +335,16 @@ process.on('uncaughtException', (error) => {
 // Dispatch to the selected top-level function.
 
 if (clientBundleMode) {
+  ServerSink.init(false);
   clientBundle();
 } else if (clientTestMode) {
+  ServerSink.init(false);
   clientTest();
 } else if (serverTestMode) {
+  ServerSink.init(false);
   serverTest();
 } else {
+  ServerSink.init(true);
+  new FileSink(path.resolve(Dirs.theOne.LOG_DIR, 'general.log'));
   run(devMode ? 'dev' : 'prod');
 }

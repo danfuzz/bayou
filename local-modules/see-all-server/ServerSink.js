@@ -28,22 +28,27 @@ const PREFIX_ADJUST_INCREMENT = 4;
 export default class ServerSink extends BaseSink {
   /**
    * Registers an instance of this class as a logging sink with the main
-   * `see-all` module. Also, patches `console.log()` and friends to call through
-   * to `see-all`, such that they will ultimately log to the console via this
-   * class as well as getting logged with any other sink that's hooked up (e.g.
-   * a {@link RecentSink}).
+   * `see-all` module. Also, optionally patches `console.log()` and friends to
+   * call through to `see-all`, such that they will ultimately log to the
+   * console via this class as well as getting logged with any other sink that's
+   * hooked up (e.g. a {@link RecentSink}).
+   *
+   * @param {boolean} patchConsole If `true`, patches `console.log()` and
+   *   friends.
    */
-  static init() {
+  static init(patchConsole) {
     const origConsoleLog = console.log;
     const log = (...args) => { origConsoleLog.apply(console, args); };
 
     SeeAll.theOne.add(new ServerSink(log));
 
-    const consoleLogger = new Logger('node-console');
-    console.info  = (...args) => { consoleLogger.info(format(...args));  };
-    console.warn  = (...args) => { consoleLogger.warn(format(...args));  };
-    console.error = (...args) => { consoleLogger.error(format(...args)); };
-    console.log   = console.info;
+    if (patchConsole) {
+      const consoleLogger = new Logger('node-console');
+      console.info  = (...args) => { consoleLogger.info(format(...args));  };
+      console.warn  = (...args) => { consoleLogger.warn(format(...args));  };
+      console.error = (...args) => { consoleLogger.error(format(...args)); };
+      console.log   = console.info;
+    }
   }
 
   /**
