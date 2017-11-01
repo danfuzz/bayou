@@ -7,24 +7,26 @@ import { inspect } from 'util';
 import { Errors, Singleton } from 'util-common';
 
 /**
- * Maximum amount of time, in msec, between successive logs that inidicate an
- * active spate of logging, and thus _should not_ be a cause for emitting a
+ * {Int} Maximum amount of time, in msec, between successive logs that inidicate
+ * an active spate of logging, and thus _should not_ be a cause for emitting a
  * `sink.time()` call.
  */
 const LULL_MSEC = 60 * 1000; // One minute.
 
 /**
- * Maximum amount of time, in msec, between `sink.time()` calls, even when there
- * is logging activity which is frequent enough not to run afoul of `LULL_MSEC`.
- * That is, if logging is chatty, there will still be calls to `sink.time()` at
- * about this frequency.
+ * {Int} Maximum amount of time, in msec, between `sink.time()` calls, even when
+ * there is logging activity which is frequent enough not to run afoul of
+ * `LULL_MSEC`. That is, if logging is chatty, there will still be calls to
+ * `sink.time()` at about this frequency.
  */
 const MAX_GAP_MSEC = 5 * 60 * 1000; // Five minutes.
 
 /**
- * The timestamp of the most recently logged line.
+ * {Int} Maximum number of log lines that should be written before a
+ * `sink.time()` call. That is, super-duper chatty logging will still get
+ * punctuated by regular time logs.
  */
-let lastNow = 0;
+const MAX_LOGS_PER_TIME = 100;
 
 /**
  * Set of all logging sinks (final logging destinations). This is a
@@ -38,12 +40,16 @@ export default class AllSinks extends Singleton {
   constructor() {
     super();
 
-    /**
-     * {array<object>} The actual sinks to use.
-     */
+    /** {array<object>} The actual sinks to use. */
     this._sinks = [];
 
-    Object.freeze(this);
+    /** {Int} The timestamp of the most recently logged line. */
+    this._lastNow = 0;
+
+    /** {Int} Count of lines logged since the most recent time log. */
+    this._linesSinceTime = 0;
+
+    Object.seal(this);
   }
 
   /**
@@ -87,9 +93,13 @@ export default class AllSinks extends Singleton {
    * @returns {Int} The timestamp.
    */
   _nowMsec() {
-    const now = Date.now();
+    const lastNow = this._lastNow;
+    const now     = Date.now();
 
-    if (now >= (lastNow + LULL_MSEC)) {
+    if (this._linesSinceTime >= MAX_LOGS_PER_TIME) {
+      // Logging is coming fast and furious right now.
+      this._callTime(now);
+    } else if (now >= (lastNow + LULL_MSEC)) {
       // There was a lull between the last log and this one.
       this._callTime(now);
     } else {
@@ -102,7 +112,9 @@ export default class AllSinks extends Singleton {
       }
     }
 
-    lastNow = now;
+    this._linesSinceTime++;
+    this._lastNow = now;
+
     return now;
   }
 
@@ -122,6 +134,8 @@ export default class AllSinks extends Singleton {
     for (const s of this._sinks) {
       s.time(nowMsec, utcString, localString);
     }
+
+    this._linesSinceTime = 0;
   }
 
   /**
