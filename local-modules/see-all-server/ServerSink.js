@@ -3,13 +3,23 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import chalk from 'chalk';
-import { inspect } from 'util';
+import { format, inspect } from 'util';
 
-import { BaseSink, SeeAll } from 'see-all';
+import { BaseSink, Logger, SeeAll } from 'see-all';
+import { TFunction } from 'typecheck';
 import { ErrorUtil } from 'util-common';
 
 // The whole point of this file is to use `console.<whatever>`, so...
 /* eslint-disable no-console */
+
+/** {Int} The minimum length of the prefix area, in characters/columns. */
+const MIN_PREFIX_LENGTH = 20;
+
+/**
+ * {Int} The minimum increment to use for prefix length adjustment (so as to
+ * avoid overly-sinuous alignment).
+ */
+const PREFIX_ADJUST_INCREMENT = 4;
 
 /**
  * Implementation of the `see-all` logging sink protocol for use in a server
@@ -18,24 +28,47 @@ import { ErrorUtil } from 'util-common';
 export default class ServerSink extends BaseSink {
   /**
    * Registers an instance of this class as a logging sink with the main
-   * `see-all` module.
+   * `see-all` module. Also, optionally patches `console.log()` and friends to
+   * call through to `see-all`, such that they will ultimately log to the
+   * console via this class as well as getting logged with any other sink that's
+   * hooked up (e.g. a {@link RecentSink}).
+   *
+   * @param {boolean} patchConsole If `true`, patches `console.log()` and
+   *   friends.
    */
-  static init() {
-    SeeAll.theOne.add(new ServerSink());
+  static init(patchConsole) {
+    const origConsoleLog = console.log;
+    const log = (...args) => { origConsoleLog.apply(console, args); };
+
+    SeeAll.theOne.add(new ServerSink(log));
+
+    if (patchConsole) {
+      const consoleLogger = new Logger('node-console');
+      console.info  = (...args) => { consoleLogger.info(format(...args));  };
+      console.warn  = (...args) => { consoleLogger.warn(format(...args));  };
+      console.error = (...args) => { consoleLogger.error(format(...args)); };
+      console.log   = console.info;
+    }
   }
 
   /**
    * Constructs an instance.
+   *
+   * @param {function} log Function to call to actually perform logging. Must
+   *   be call-compatible with (and will often actually be) `console.log()`.
    */
-  constructor() {
+  constructor(log) {
     super();
+
+    /** {function} Function to call to actually perform logging. */
+    this._log = TFunction.checkCallable(log);
 
     /**
      * {Int} Number of columns currently being reserved for log line prefixes.
      * This starts with a reasonable guess (to avoid initial churn) and gets
      * updated in {@link #_makePrefix()}.
      */
-    this._prefixLength = 25;
+    this._prefixLength = MIN_PREFIX_LENGTH;
 
     /**
      * {Int} The maximum prefix observed over the previous
@@ -122,14 +155,14 @@ export default class ServerSink extends BaseSink {
       0);
 
     if (maxLineWidth > (consoleWidth - this._prefixLength)) {
-      console.log(prefix);
+      this._log(prefix);
       for (let l of lines) {
         let indent = '  ';
 
         while (l) {
           const chunk = l.substring(0, consoleWidth - indent.length);
           l = l.substring(chunk.length);
-          console.log(`${indent}${chunk}`);
+          this._log(`${indent}${chunk}`);
           indent = '+ ';
         }
       }
@@ -138,7 +171,7 @@ export default class ServerSink extends BaseSink {
       let   first  = true;
 
       for (const l of lines) {
-        console.log(`${first ? prefix : spaces}${l}`);
+        this._log(`${first ? prefix : spaces}${l}`);
         first = false;
       }
     }
@@ -157,7 +190,7 @@ export default class ServerSink extends BaseSink {
     localString  = chalk.blue.dim.bold(localString);
     const prefix = this._makePrefix('time');
 
-    console.log(`${prefix}${utcString} / ${localString}`);
+    this._log(`${prefix}${utcString} / ${localString}`);
   }
 
   /**
@@ -170,8 +203,9 @@ export default class ServerSink extends BaseSink {
    * @returns {string} The prefix, including coloring and padding.
    */
   _makePrefix(tag, level = '') {
-    let   text   = `[${tag}${level !== '' ? ' ' : ''}${level}]`;
-    const length = text.length + 1; // `+1` for the space at the end.
+    const levelStr = ((level === 'info') || (level === '')) ? '' : ` ${level[0].toUpperCase()}`;
+    let   text     = `[${tag}${levelStr}]`;
+    const length   = text.length + 1; // `+1` for the space at the end.
 
     // Color the prefix according to level.
     switch (level) {
@@ -186,8 +220,13 @@ export default class ServerSink extends BaseSink {
     // a recently-observed maximum, and we reset to that from time to time. The
     // latter prevents brief "prefix blow-outs" from permanently messing with
     // the log output.
-    this._prefixLength    = Math.max(this._prefixLength,    length);
-    this._recentMaxPrefix = Math.max(this._recentMaxPrefix, length);
+    const MIN    = MIN_PREFIX_LENGTH;
+    const ADJUST = PREFIX_ADJUST_INCREMENT;
+    const prefixLength = (length <= MIN)
+      ? MIN
+      : Math.ceil((length - MIN) / ADJUST) * ADJUST + MIN;
+    this._prefixLength    = Math.max(this._prefixLength,    prefixLength);
+    this._recentMaxPrefix = Math.max(this._recentMaxPrefix, prefixLength);
     this._recentLineCount++;
     if (this._recentLineCount >= 100) {
       this._prefixLength = this._recentMaxPrefix;

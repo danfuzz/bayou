@@ -85,7 +85,21 @@ export default class RecentSink extends BaseSink {
   get htmlContents() {
     const result = [];
 
-    result.push('<table>');
+    result.push(
+      '<style>\n' +
+      'table { border-collapse: collapse; border-spacing: 0; ' +
+      '  width: 90vw; margin-left: 5vw; margin-right: 5vw; }\n' +
+      'td { padding-bottom: 0.1em; padding-right: 1em; }\n' +
+      'td:first-child { width: 15%; }\n' +
+      'pre { white-space: pre-wrap; margin: 0; }\n' +
+      '</style>'
+    );
+
+    result.push(
+      '<table>' +
+      //'<colgroup><col style="width:20%"><col style="width:80%"></colgroup>' +
+      ''
+    );
 
     for (const l of this._log) {
       result.push(RecentSink._htmlLine(l));
@@ -110,8 +124,10 @@ export default class RecentSink extends BaseSink {
       tag = '[time]';
       body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;
     } else {
-      tag = `[${log.tag} ${log.level}]`;
+      const levelStr = (log.level === 'info') ? '' : ` ${log.level}`;
+      tag = `[${log.tag}${levelStr}]`;
       body = log.message;
+      body = body.replace(/(^\n+)|(\n+$)/g, ''); // Trim leading and trailing newlines.
     }
 
     // Color the prefix according to level.
@@ -124,6 +140,6 @@ export default class RecentSink extends BaseSink {
     const tagHtml = ansiHtml(tag);
     const bodyHtml = ansiHtml(body);
 
-    return `<tr><td>${tagHtml}</td><td>${bodyHtml}</td>`;
+    return `<tr><td>${tagHtml}</td><td><pre>${bodyHtml}</pre></td>`;
   }
 }
