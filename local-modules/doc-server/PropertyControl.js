@@ -89,9 +89,8 @@ export default class PropertyControl extends BaseControl {
    *   not available as a base.
    */
   async _impl_getChangeAfter(baseRevNum, currentRevNum) {
-    // **TODO:** Real implementation.
-
-    // Just spin (with delays) waiting for a change.
+    // Just spin (with delays) waiting for a change. **TODO:** Wait specifically
+    // for the revision number to change using a transaction.
     for (;;) {
       if (baseRevNum < currentRevNum) {
         // The document's revision is in fact newer than the base, so we can now
