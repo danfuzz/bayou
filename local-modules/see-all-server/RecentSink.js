@@ -85,7 +85,20 @@ export default class RecentSink extends BaseSink {
   get htmlContents() {
     const result = [];
 
-    result.push('<table>');
+    result.push(
+      '<style>\n' +
+      'table { width: 100vw; border-collapse: collapse; border-spacing: 0; }\n' +
+      'td { padding: 1px; margin: 0; }\n' +
+      'td:firstChild { width: 20%; }\n' +
+      'td:firstChild + td { width: 80%; }\n' +
+      'pre { white-space: pre-wrap; }\n' +
+      '</style>'
+    );
+
+    result.push(
+      '<table>' +
+      '<colgroup><col style="width:20%"><col style="width:80%"></colgroup>'
+    );
 
     for (const l of this._log) {
       result.push(RecentSink._htmlLine(l));
@@ -110,7 +123,8 @@ export default class RecentSink extends BaseSink {
       tag = '[time]';
       body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;
     } else {
-      tag = `[${log.tag} ${log.level}]`;
+      const level = (log.level === 'info') ? '' : ` ${log.level}`;
+      tag = `[${log.tag}${level}]`;
       body = log.message;
     }
 
@@ -124,6 +138,6 @@ export default class RecentSink extends BaseSink {
     const tagHtml = ansiHtml(tag);
     const bodyHtml = ansiHtml(body);
 
-    return `<tr><td>${tagHtml}</td><td>${bodyHtml}</td>`;
+    return `<tr><td>${tagHtml}</td><td><pre>${bodyHtml}</pre></td>`;
   }
 }
