@@ -8,6 +8,7 @@ import { Delay } from 'promise-util';
 
 import BaseControl from './BaseControl';
 import Paths from './Paths';
+import SnapshotManager from './SnapshotManager';
 import ValidationStatus from './ValidationStatus';
 
 /**
@@ -23,8 +24,8 @@ export default class PropertyControl extends BaseControl {
   constructor(fileAccess) {
     super(fileAccess);
 
-    /** {PropertySnapshot} Current snapshot. */
-    this._snapshot = PropertySnapshot.EMPTY;
+    /** {SnapshotManager} Snapshot manager. */
+    this._snapshots = new SnapshotManager(this);
 
     Object.seal(this);
   }
@@ -50,12 +51,10 @@ export default class PropertyControl extends BaseControl {
 
   /**
    * Subclass-specific implementation of `afterInit()`.
-   *
-   * @returns {boolean} `true`, always.
    */
   async _impl_afterInit() {
-    // No action needed... yet.
-    return true;
+    // Any cached snapshots are no longer valid.
+    this._snapshots.clear();
   }
 
   /**
@@ -83,31 +82,32 @@ export default class PropertyControl extends BaseControl {
    * @param {Int} baseRevNum Revision number for the base to get a change with
    *   respect to. Guaranteed to refer to the instantaneously-current revision
    *   or earlier.
-   * @param {Int} currentRevNum_unused The instantaneously-current revision
-   *   number that was determined just before this method was called.
+   * @param {Int} currentRevNum The instantaneously-current revision number that
+   *   was determined just before this method was called.
    * @returns {PropertyChange|null} Change with respect to the revision
    *   indicated by `baseRevNum`, or `null` to indicate that the revision was
    *   not available as a base.
    */
-  async _impl_getChangeAfter(baseRevNum, currentRevNum_unused) {
+  async _impl_getChangeAfter(baseRevNum, currentRevNum) {
     // **TODO:** Real implementation.
-
-    const oldSnapshot = this._snapshot;
-
-    if (oldSnapshot.revNum !== baseRevNum) {
-      return null;
-    }
 
     // Just spin (with delays) waiting for a change.
     for (;;) {
-      await Delay.resolve(2000);
-      if (oldSnapshot !== this._snapshot) {
+      if (baseRevNum < currentRevNum) {
+        // The document's revision is in fact newer than the base, so we can now
+        // stop waiting and return a result.
         break;
       }
+
       this.log.info('Waiting for property update...');
+      await Delay.resolve(2000);
+      currentRevNum = await this.currentRevNum();
     }
 
-    return oldSnapshot.diff(this._snapshot);
+    const oldSnapshot = await this.getSnapshot(baseRevNum);
+    const newSnapshot = await this.getSnapshot(currentRevNum);
+
+    return oldSnapshot.diff(newSnapshot);
   }
 
   /**
@@ -120,17 +120,7 @@ export default class PropertyControl extends BaseControl {
    *   `null` to indicate that the revision is not available.
    */
   async _impl_getSnapshot(revNum) {
-    // **TODO:** Realer implementation.
-
-    const snapshot = this._snapshot;
-    if (revNum === snapshot.revNum) {
-      // Easy out: It's the latest we have.
-      return snapshot;
-    }
-
-    // Compose all the changes up to the requested one.
-    const contents = this.getComposedChanges(PropertyDelta.EMPTY, 0, revNum + 1);
-    return new PropertySnapshot(revNum, await contents);
+    return this._snapshots.getSnapshot(revNum);
   }
 
   /**
@@ -203,11 +193,6 @@ export default class PropertyControl extends BaseControl {
     }
 
     // We won the race (or had no contention).
-
-    // **TODO:** For now, we just store the saved snapshot in an instance
-    // variable. Ultimately, we shouldn't have to do this.
-    this._snapshot = finalSnapshot;
-
     return expectedSnapshot.diff(finalSnapshot);
   }
 
