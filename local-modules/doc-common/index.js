@@ -24,6 +24,7 @@ import PropertyChange from './PropertyChange';
 import PropertyDelta from './PropertyDelta';
 import PropertyOp from './PropertyOp';
 import PropertySnapshot from './PropertySnapshot';
+import Timeouts from './Timeouts';
 import Timestamp from './Timestamp';
 import RevisionNumber from './RevisionNumber';
 
@@ -65,6 +66,7 @@ export {
   PropertyDelta,
   PropertyOp,
   PropertySnapshot,
+  Timeouts,
   Timestamp,
   RevisionNumber
 };
