@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BodyDelta } from 'doc-common';
-import { EventSource } from 'promise-util';
+import { ChainedEvent, EventSource } from 'promise-util';
 import { TString } from 'typecheck';
 import { Errors, Functor, ObjectUtil, UtilityClass } from 'util-common';
 
@@ -41,7 +41,7 @@ export default class QuillEvents extends UtilityClass {
   }
 
   /**
-   * Emits a `ChainableEvent` on the given `EventSource`, based on the payload
+   * Emits a `ChainedEvent` on the given `EventSource`, based on the payload
    * of a Quill event callback. This "fixes" the payload (via
    * {@link #fixPayload}) so that the various values adhere to the `doc-client`
    * contract.
@@ -50,7 +50,7 @@ export default class QuillEvents extends UtilityClass {
    * @param {Functor} payload Original Quill event payload, where the functor
    *   name is the name of the original event, and the functor arguments are the
    *   arguments as originally passed to the event handler callback.
-   * @returns {ChainableEvent} The emitted event.
+   * @returns {ChainedEvent} The emitted event.
    */
   static emitQuillPayload(source, payload) {
     EventSource.check(source);
@@ -93,10 +93,10 @@ export default class QuillEvents extends UtilityClass {
   }
 
   /**
-   * Gets the payload of the given event or event payload as an object with
+   * Gets the payload of the given event or event payload, as an object with
    * named properties.
    *
-   * @param {ChainableEvent|Functor} eventOrPayload Event or event payload in
+   * @param {ChainedEvent|Functor} eventOrPayload Event or event payload in
    *   question.
    * @returns {object} The properties of `event`'s payload, in convenient named
    *   form.
@@ -104,7 +104,7 @@ export default class QuillEvents extends UtilityClass {
   static propsOf(eventOrPayload) {
     const payload = (eventOrPayload instanceof Functor)
       ? eventOrPayload
-      : eventOrPayload.payload;
+      : ChainedEvent.check(eventOrPayload).payload;
     const name = payload.name;
 
     switch (name) {
