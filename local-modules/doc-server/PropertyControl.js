@@ -84,9 +84,9 @@ export default class PropertyControl extends BaseControl {
    *   or earlier.
    * @param {Int} currentRevNum The instantaneously-current revision number that
    *   was determined just before this method was called.
-   * @returns {PropertyChange|null} Change with respect to the revision
-   *   indicated by `baseRevNum`, or `null` to indicate that the revision was
-   *   not available as a base.
+   * @returns {PropertyChange} Change with respect to the revision indicated by
+   *   `baseRevNum`. Though the superclass allows it, this method never returns
+   *   `null`.
    */
   async _impl_getChangeAfter(baseRevNum, currentRevNum) {
     // Just spin (with delays) waiting for a change. **TODO:** Wait specifically
@@ -102,6 +102,13 @@ export default class PropertyControl extends BaseControl {
       await Delay.resolve(2000);
       currentRevNum = await this.currentRevNum();
     }
+
+    // There are two possible ways to calculate the result, namely (1) compose
+    // all the changes that were made after `baseRevNum`, or (2) calculate the
+    // OT diff between `baseRevNum` and `currentRevNum`. We're doing the latter
+    // here, because it's a little simpler and because (as of this writing at
+    // least) there isn't actually that much data stored as properties. (N.b.,
+    // `BodyControl` does the (1) tactic.)
 
     const oldSnapshot = await this.getSnapshot(baseRevNum);
     const newSnapshot = await this.getSnapshot(currentRevNum);
