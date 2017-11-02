@@ -24,7 +24,7 @@ export default class SchemaHandler extends BaseDataManager {
    *   miscellanea.
    */
   constructor(fileAccess) {
-    super(fileAccess);
+    super(fileAccess, 'schema');
 
     /** {string} The document schema version to use and expect. */
     this._schemaVersion = TString.nonEmpty(ProductInfo.theOne.INFO.version);

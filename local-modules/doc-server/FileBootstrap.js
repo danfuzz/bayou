@@ -50,7 +50,7 @@ export default class FileBootstrap extends BaseDataManager {
    *   miscellanea.
    */
   constructor(fileAccess) {
-    super(fileAccess);
+    super(fileAccess, 'boot');
 
     /** {Mutex} Mutex to avoid overlapping initialization operations. */
     this._initMutex = new Mutex();

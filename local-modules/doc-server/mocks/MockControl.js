@@ -9,8 +9,8 @@ import { MockSnapshot } from 'doc-common/mocks';
  * Subclass of {@link BaseControl} for use in testing.
  */
 export default class MockControl extends BaseControl {
-  constructor(fileAccess) {
-    super(fileAccess);
+  constructor(fileAccess, logLabel) {
+    super(fileAccess, logLabel);
 
     this.revNum = 0;
   }

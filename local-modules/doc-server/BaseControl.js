@@ -74,16 +74,6 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
-   * Constructs an instance.
-   *
-   * @param {FileAccess} fileAccess Low-level file access and related
-   *   miscellanea.
-   */
-  constructor(fileAccess) {
-    super(fileAccess);
-  }
-
-  /**
    * Appends a new change to the document. On success, this returns `true`. On a
    * failure due to `baseRevNum` not being current at the moment of application,
    * this returns `false`. All other failures are reported via thrown errors.

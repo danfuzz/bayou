@@ -10,6 +10,7 @@ import { BaseComplexMember } from 'doc-server';
 import { Codec } from 'codec';
 import { FileAccess } from 'doc-server';
 import { MockFile } from 'file-store/mocks';
+import { MockLogger } from 'see-all/mocks';
 
 describe('doc-server/BaseComplexMember', () => {
   describe('constructor()', () => {
@@ -17,18 +18,31 @@ describe('doc-server/BaseComplexMember', () => {
       const codec  = Codec.theOne;
       const file   = new MockFile('blort');
       const fa     = new FileAccess(codec, file);
-      const result = new BaseComplexMember(fa);
+      const result = new BaseComplexMember(fa, 'boop');
 
-      assert.strictEqual(result.codec,         codec);
-      assert.strictEqual(result.file,          file);
-      assert.strictEqual(result.fileAccess,    fa);
-      assert.strictEqual(result.fileCodec,     fa.fileCodec);
-      assert.strictEqual(result.log,           fa.log);
+      assert.strictEqual(result.codec,      codec);
+      assert.strictEqual(result.file,       file);
+      assert.strictEqual(result.fileAccess, fa);
+      assert.strictEqual(result.fileCodec,  fa.fileCodec);
+
+      // `log` will be different, because it adds the `logLabel` as a prefix.
+      assert.notStrictEqual(result.log, fa.log);
     });
 
     it('should reject non-`FileAccess` arguments', () => {
-      assert.throws(() => new BaseComplexMember(null));
-      assert.throws(() => new BaseComplexMember({ x: 10 }));
+      assert.throws(() => new BaseComplexMember(null,      'boop'));
+      assert.throws(() => new BaseComplexMember({ x: 10 }, 'boop'));
+    });
+
+    it('should use the `logLabel` to create an appropriate `log`', () => {
+      const log    = new MockLogger();
+      const fa     = new FileAccess(Codec.theOne, new MockFile('file-id'), log);
+      const result = new BaseComplexMember(fa, 'boop');
+
+      result.log.info('florp', 'like');
+      const got = log.record[0];
+
+      assert.deepEqual(got, ['info', '[file-id]', '[boop]', 'florp', 'like']);
     });
   });
 });

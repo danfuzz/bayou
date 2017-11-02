@@ -13,7 +13,7 @@ import { ErrorUtil } from 'util-common';
 /* eslint-disable no-console */
 
 /** {Int} The minimum length of the prefix area, in characters/columns. */
-const MIN_PREFIX_LENGTH = 20;
+const MIN_PREFIX_LENGTH = 16;
 
 /**
  * {Int} The minimum increment to use for prefix length adjustment (so as to

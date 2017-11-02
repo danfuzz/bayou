@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import FileAccess from './FileAccess';
@@ -16,12 +17,20 @@ export default class BaseComplexMember extends CommonBase {
    *
    * @param {FileAccess} fileAccess Low-level file access and related
    *   miscellanea.
+   * @param {string} logLabel Label (prefix) to include with all log messages
+   *   coming from this instance.
    */
-  constructor(fileAccess) {
+  constructor(fileAccess, logLabel) {
     super();
 
     /** {FileAccess} Low-level file access and associated miscellanea. */
     this._fileAccess = FileAccess.check(fileAccess);
+
+    /** {string} Label to use for this instance's log messages. */
+    this._logLabel = TString.check(logLabel);
+
+    /** {Logger} Logger to use with this instance. Includes the log label. */
+    this._log = fileAccess.log.withPrefix(`[${logLabel}]`);
   }
 
   /** {Codec} Codec instance to use with the underlying file. */
@@ -46,6 +55,6 @@ export default class BaseComplexMember extends CommonBase {
 
   /** {Logger} Logger to use with this instance. */
   get log() {
-    return this._fileAccess.log;
+    return this._log;
   }
 }
