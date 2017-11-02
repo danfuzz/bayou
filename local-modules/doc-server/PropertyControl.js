@@ -4,7 +4,7 @@
 
 import { PropertyChange, PropertyDelta, PropertySnapshot } from 'doc-common';
 import { TransactionSpec } from 'file-store';
-import { Delay } from 'promise-util';
+import { Errors } from 'util-common';
 
 import BaseControl from './BaseControl';
 import Paths from './Paths';
@@ -98,8 +98,26 @@ export default class PropertyControl extends BaseControl {
         break;
       }
 
-      this.log.info('Waiting for property update...');
-      await Delay.resolve(2000);
+      // Wait for the file to change (or for the storage layer to time out), and
+      // then iterate to see if in fact the change updated the document revision
+      // number.
+
+      const fc   = this.fileCodec;
+      const ops  = [fc.op_whenPathNot(Paths.PROPERTY_REVISION_NUMBER, currentRevNum)];
+      const spec = new TransactionSpec(...ops);
+
+      try {
+        await fc.transact(spec);
+      } catch (e) {
+        if (!Errors.isTimedOut(e)) {
+          // It's _not_ a timeout, so we should propagate the error.
+          throw e;
+        }
+
+        // It's a timeout, so just fall through and iterate.
+        this.log.info('Storage layer timeout in `getChangeAfter()`.');
+      }
+
       currentRevNum = await this.currentRevNum();
     }
 

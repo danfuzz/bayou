@@ -119,9 +119,11 @@ export default class BodyControl extends BaseControl {
       // Wait for the file to change (or for the storage layer to time out), and
       // then iterate to see if in fact the change updated the document revision
       // number.
+
       const fc   = this.fileCodec;
       const ops  = [fc.op_whenPathNot(Paths.BODY_REVISION_NUMBER, currentRevNum)];
       const spec = new TransactionSpec(...ops);
+
       try {
         await fc.transact(spec);
       } catch (e) {
@@ -131,7 +133,7 @@ export default class BodyControl extends BaseControl {
         }
 
         // It's a timeout, so just fall through and iterate.
-        this.log.info('Storage layer timeout in `getChangeAfter`.');
+        this.log.info('Storage layer timeout in `getChangeAfter()`.');
       }
 
       // Update what we think of as the current revision number, and iterate to
