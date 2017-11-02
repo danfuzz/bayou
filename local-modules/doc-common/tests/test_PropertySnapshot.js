@@ -438,6 +438,50 @@ describe('doc-common/PropertySnapshot', () => {
     });
   });
 
+  describe('getOrNull()', () => {
+    it('should return the value associated with an existing property', () => {
+      function test(name, value) {
+        const op = PropertyOp.op_setProperty(name, value);
+        const snap = new PropertySnapshot(1, [
+          PropertyOp.op_setProperty('a', 1),
+          PropertyOp.op_setProperty('b', 2),
+          PropertyOp.op_setProperty('c', 3),
+          op,
+          PropertyOp.op_setProperty('X', 11),
+          PropertyOp.op_setProperty('Y', 22),
+          PropertyOp.op_setProperty('Z', 33)
+        ]);
+
+        assert.strictEqual(snap.getOrNull(name), op.props.property);
+      }
+
+      test('zilch', undefined);
+      test('zilch', null);
+      test('zilch', false);
+      test('zilch', []);
+      test('zilch', {});
+      test('zilch', 0);
+
+      test('foo',   'bar');
+      test('florp', ['like']);
+    });
+
+    it('should always return a deep-frozen property value even when the constructor was passed an unfrozen value', () => {
+      const value = [[['zorch']], ['splat'], 'foo'];
+      const snap = new PropertySnapshot(1, [PropertyOp.op_setProperty('blort', value)]);
+
+      const result = snap.getOrNull('blort');
+      assert.isTrue(DataUtil.isDeepFrozen(result.value));
+      assert.deepEqual(result.value, value);
+    });
+
+    it('should return `null` when given a name that is not bound as a property', () => {
+      const snap = new PropertySnapshot(1, [PropertyOp.op_setProperty('blort', 'zorch')]);
+
+      assert.isNull(snap.getOrNull('x'));
+    });
+  });
+
   describe('has()', () => {
     it('should return `true` for an existing property', () => {
       const snap = new PropertySnapshot(1, [

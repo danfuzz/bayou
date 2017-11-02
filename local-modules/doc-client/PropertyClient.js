@@ -2,10 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { PropertyDelta, PropertyOp } from 'doc-common';
+import { PropertyDelta, PropertyOp, Timeouts } from 'doc-common';
 import { Delay } from 'promise-util';
 import { TString } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase, DataUtil, Errors } from 'util-common';
 
 import DocSession from './DocSession';
 
@@ -110,6 +110,56 @@ export default class PropertyClient extends CommonBase {
     const snapshot = await proxy.property_getSnapshot();
 
     await proxy.property_update(snapshot.revNum, delta);
+  }
+
+  /**
+   * Returns the new value for a given property, once it is bound to a different
+   * value from the one given. If the property loses its value (that is, the
+   * property is deleted), that will _not_ cause this method to return.
+   *
+   * **Note:** Due to the asynchronous nature of the system, the property's
+   * value could possibly have changed _again_ by the time the caller receives
+   * its result.
+   *
+   * @param {string} name Name of the property to monitor. Must be an
+   *   "identifier" string.
+   * @param {*} value Value of the property. Must be a pure data value.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call. If specified, this value will be silently clamped to a
+   *   system-defined range. If `null`, defaults to the maximum allowed.
+   * @returns {*} New value of the property, soon after it gets changed.
+   * @throws {Error} A `timed_out` error if the property doesn't change within
+   *   a reasonable period of time.
+   */
+  async getUpdate(name, value, timeoutMsec = null) {
+    // Use the op constructor just for its type checking.
+    PropertyOp.op_setProperty(name, value);
+
+    timeoutMsec = Timeouts.clamp(timeoutMsec);
+
+    const timeoutTime = Date.now() + timeoutMsec;
+    const proxy       = await this._proxyWhenReady();
+
+    for (;;) {
+      const snapshot = await proxy.property_getSnapshot();
+      const gotProp  = snapshot.getOrNull(name);
+
+      if (gotProp !== null) {
+        const gotValue = gotProp.value;
+        if (!DataUtil.equalData(value, gotValue)) {
+          return gotValue;
+        }
+      }
+
+      const now = Date.now();
+      if (now >= timeoutTime) {
+        throw Errors.timed_out(timeoutMsec);
+      }
+
+      // **TODO:** Fix this to respect the timeout, once `getChangeAfter()` can
+      // time out.
+      await proxy.property_getChangeAfter(snapshot.revNum);
+    }
   }
 
   /**

@@ -104,26 +104,26 @@ export default class BodyControl extends BaseControl {
    *   was determined just before this method was called, and which should be
    *   treated as the actually-current revision number at the start of this
    *   method.
-   * @returns {BodyChange} Delta and associated information. Though the
-   *   superclass allows it, this method never returns `null`.
+   * @returns {BodyChange} Change with respect to the revision indicated by
+   *   `baseRevNum`. Though the superclass allows it, this method never returns
+   *   `null`.
    */
   async _impl_getChangeAfter(baseRevNum, currentRevNum) {
     for (;;) {
       if (baseRevNum < currentRevNum) {
         // The document's revision is in fact newer than the base, so we can now
-        // form and return a result. Compose all the deltas from the revision
-        // after the base through and including the current revision.
-        const delta = await this.getComposedChanges(
-          BodyDelta.EMPTY, baseRevNum + 1, currentRevNum + 1);
-        return new BodyChange(currentRevNum, delta);
+        // stop waiting and return a result.
+        break;
       }
 
       // Wait for the file to change (or for the storage layer to time out), and
       // then iterate to see if in fact the change updated the document revision
       // number.
+
       const fc   = this.fileCodec;
       const ops  = [fc.op_whenPathNot(Paths.BODY_REVISION_NUMBER, currentRevNum)];
       const spec = new TransactionSpec(...ops);
+
       try {
         await fc.transact(spec);
       } catch (e) {
@@ -131,14 +131,28 @@ export default class BodyControl extends BaseControl {
           // It's _not_ a timeout, so we should propagate the error.
           throw e;
         }
+
         // It's a timeout, so just fall through and iterate.
-        this.log.info('Storage layer timeout in `getChangeAfter`.');
+        this.log.info('Storage layer timeout in `getChangeAfter()`.');
       }
 
       // Update what we think of as the current revision number, and iterate to
       // try again.
       currentRevNum = await this.currentRevNum();
     }
+
+    // There are two possible ways to calculate the result, namely (1) compose
+    // all the changes that were made after `baseRevNum`, or (2) calculate the
+    // OT diff between `baseRevNum` and `currentRevNum`. We're doing the former
+    // here, because the usual case is one or two small deltas being made to a
+    // document of (to a first approximation) unbounded size, making the
+    // composition option clearly preferable. **TODO:** Heuristically figure out
+    // when option (2) would be more profitable.
+
+    const delta = await this.getComposedChanges(
+      BodyDelta.EMPTY, baseRevNum + 1, currentRevNum + 1);
+
+    return new BodyChange(currentRevNum, delta);
   }
 
   /**

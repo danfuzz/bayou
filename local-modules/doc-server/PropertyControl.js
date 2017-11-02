@@ -4,7 +4,7 @@
 
 import { PropertyChange, PropertyDelta, PropertySnapshot } from 'doc-common';
 import { TransactionSpec } from 'file-store';
-import { Delay } from 'promise-util';
+import { Errors } from 'util-common';
 
 import BaseControl from './BaseControl';
 import Paths from './Paths';
@@ -84,9 +84,9 @@ export default class PropertyControl extends BaseControl {
    *   or earlier.
    * @param {Int} currentRevNum The instantaneously-current revision number that
    *   was determined just before this method was called.
-   * @returns {PropertyChange|null} Change with respect to the revision
-   *   indicated by `baseRevNum`, or `null` to indicate that the revision was
-   *   not available as a base.
+   * @returns {PropertyChange} Change with respect to the revision indicated by
+   *   `baseRevNum`. Though the superclass allows it, this method never returns
+   *   `null`.
    */
   async _impl_getChangeAfter(baseRevNum, currentRevNum) {
     // Just spin (with delays) waiting for a change. **TODO:** Wait specifically
@@ -98,10 +98,35 @@ export default class PropertyControl extends BaseControl {
         break;
       }
 
-      this.log.info('Waiting for property update...');
-      await Delay.resolve(2000);
+      // Wait for the file to change (or for the storage layer to time out), and
+      // then iterate to see if in fact the change updated the document revision
+      // number.
+
+      const fc   = this.fileCodec;
+      const ops  = [fc.op_whenPathNot(Paths.PROPERTY_REVISION_NUMBER, currentRevNum)];
+      const spec = new TransactionSpec(...ops);
+
+      try {
+        await fc.transact(spec);
+      } catch (e) {
+        if (!Errors.isTimedOut(e)) {
+          // It's _not_ a timeout, so we should propagate the error.
+          throw e;
+        }
+
+        // It's a timeout, so just fall through and iterate.
+        this.log.info('Storage layer timeout in `getChangeAfter()`.');
+      }
+
       currentRevNum = await this.currentRevNum();
     }
+
+    // There are two possible ways to calculate the result, namely (1) compose
+    // all the changes that were made after `baseRevNum`, or (2) calculate the
+    // OT diff between `baseRevNum` and `currentRevNum`. We're doing the latter
+    // here, because it's a little simpler and because (as of this writing at
+    // least) there isn't actually that much data stored as properties. (N.b.,
+    // `BodyControl` does the (1) tactic.)
 
     const oldSnapshot = await this.getSnapshot(baseRevNum);
     const newSnapshot = await this.getSnapshot(currentRevNum);
