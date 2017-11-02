@@ -125,15 +125,28 @@ export default class PropertySnapshot extends BaseSnapshot {
    * @returns {Property} Corresponding property.
    */
   get(name) {
-    TString.identifier(name);
+    const found = this.getOrNull(name);
 
-    const p = this._properties.get(name);
-
-    if (p) {
-      return p.props.property;
+    if (found) {
+      return found;
     }
 
     throw Errors.bad_use(`No such property: ${name}`);
+  }
+
+  /**
+   * Gets the property for the given name, if any.
+   *
+   * @param {string} name Property name.
+   * @returns {Property|null} Corresponding property, , or `null` if there is
+   *   none.
+   */
+  getOrNull(name) {
+    TString.identifier(name);
+
+    const found = this._properties.get(name);
+
+    return found ? found.props.property : null;
   }
 
   /**
