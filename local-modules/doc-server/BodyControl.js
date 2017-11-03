@@ -188,7 +188,7 @@ export default class BodyControl extends BaseControl {
     if (baseSnapshot.revNum === current.revNum) {
       // The easy case, because the base revision is in fact the current
       // revision of the document, so we don't have to transform the incoming
-      // delta. We merely have to apply the given `delta` to the current
+      // delta. We merely have to apply the given `change` to the current
       // revision. If it succeeds, then we won the append race (if any).
 
       const success = await this.appendChange(change);
