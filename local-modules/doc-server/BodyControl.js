@@ -177,7 +177,7 @@ export default class BodyControl extends BaseControl {
    * @param {BodySnapshot} expectedSnapshot The implied expected result as
    *   defined by `update()`.
    * @returns {BodyChange|null} Result for the outer call to `update()`,
-   *   or `null` if the application failed due losing a race.
+   *   or `null` if the application failed due to losing a race.
    */
   async _impl_update(baseSnapshot, change, expectedSnapshot) {
     // Instantaneously current (latest) revision of the document. We'll find out

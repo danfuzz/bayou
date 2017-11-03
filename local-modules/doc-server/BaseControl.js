@@ -529,7 +529,7 @@ export default class BaseControl extends BaseDataManager {
    * @param {BaseSnapshot} expectedSnapshot The implied expected result as
    *   defined by `update()`.
    * @returns {BaseChange|null} Result for the outer call to `update()`,
-   *   or `null` if the application failed due losing a race.
+   *   or `null` if the application failed due to losing a race.
    */
   async _impl_update(baseSnapshot, change, expectedSnapshot) {
     return this._mustOverride(baseSnapshot, change, expectedSnapshot);
