@@ -177,7 +177,7 @@ export default class BodyControl extends BaseControl {
    * @param {BodySnapshot} expectedSnapshot The implied expected result as
    *   defined by `update()`.
    * @returns {BodyChange|null} Result for the outer call to `update()`,
-   *   or `null` if the application failed due losing a race.
+   *   or `null` if the application failed due to losing a race.
    */
   async _impl_update(baseSnapshot, change, expectedSnapshot) {
     // Instantaneously current (latest) revision of the document. We'll find out
@@ -188,7 +188,7 @@ export default class BodyControl extends BaseControl {
     if (baseSnapshot.revNum === current.revNum) {
       // The easy case, because the base revision is in fact the current
       // revision of the document, so we don't have to transform the incoming
-      // delta. We merely have to apply the given `delta` to the current
+      // delta. We merely have to apply the given `change` to the current
       // revision. If it succeeds, then we won the append race (if any).
 
       const success = await this.appendChange(change);

@@ -156,7 +156,7 @@ export default class PropertyControl extends BaseControl {
    * @param {PropertySnapshot} expectedSnapshot The implied expected result as
    *   defined by `update()`.
    * @returns {PropertyChange|null} Result for the outer call to `update()`,
-   *   or `null` if the application failed due losing a race.
+   *   or `null` if the application failed due to losing a race.
    */
   async _impl_update(baseSnapshot, change, expectedSnapshot) {
     // Instantaneously current (latest) revision of the document portion. We'll
