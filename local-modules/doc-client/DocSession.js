@@ -127,6 +127,11 @@ export default class DocSession extends CommonBase {
   async getSessionProxy() {
     if (this._sessionProxyPromise === null) {
       this._sessionProxyPromise = this.apiClient.authorizeTarget(this._key);
+      (async () => {
+        // This will log a note once the promise resolves.
+        await this._sessionProxyPromise;
+        this._log.info('Received session proxy.');
+      })();
     }
 
     // **Note:** Because this is an `async` method, it's okay to return a

@@ -35,7 +35,7 @@ export default class PropertyClient extends CommonBase {
      * Typically becomes resolved very soon after a server connection is
      * initiated.
      */
-    this._sessionProxyProm = docSession.getSessionProxy();
+    this._sessionProxyPromise = docSession.getSessionProxy();
   }
 
   /**
@@ -49,7 +49,7 @@ export default class PropertyClient extends CommonBase {
     // The op constructor type checks its arguments.
     const delta = new PropertyDelta([PropertyOp.op_deleteProperty(name)]);
 
-    const proxy    = await this._sessionProxyProm;
+    const proxy    = await this._sessionProxyPromise;
     const snapshot = await proxy.property_getSnapshot();
 
     await proxy.property_update(snapshot.revNum, delta);
@@ -65,7 +65,7 @@ export default class PropertyClient extends CommonBase {
   async get(name) {
     TString.identifier(name);
 
-    const proxy    = await this._sessionProxyProm;
+    const proxy    = await this._sessionProxyPromise;
     const snapshot = await proxy.property_getSnapshot();
 
     return snapshot.get(name).value;
@@ -82,7 +82,7 @@ export default class PropertyClient extends CommonBase {
   async has(name) {
     TString.identifier(name);
 
-    const proxy    = await this._sessionProxyProm;
+    const proxy    = await this._sessionProxyPromise;
     const snapshot = await proxy.property_getSnapshot();
 
     return snapshot.has(name);
@@ -99,7 +99,7 @@ export default class PropertyClient extends CommonBase {
     // The op constructor type checks its arguments.
     const delta = new PropertyDelta([PropertyOp.op_setProperty(name, value)]);
 
-    const proxy    = await this._sessionProxyProm;
+    const proxy    = await this._sessionProxyPromise;
     const snapshot = await proxy.property_getSnapshot();
 
     await proxy.property_update(snapshot.revNum, delta);
@@ -131,7 +131,7 @@ export default class PropertyClient extends CommonBase {
     timeoutMsec = Timeouts.clamp(timeoutMsec);
 
     const timeoutTime = Date.now() + timeoutMsec;
-    const proxy       = await this._sessionProxyProm;
+    const proxy       = await this._sessionProxyPromise;
 
     for (;;) {
       const snapshot = await proxy.property_getSnapshot();
