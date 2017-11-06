@@ -286,6 +286,13 @@ export default class ClientBundle extends Singleton {
 
     /** {boolean} Dev mode running? */
     this._devModeRunning = false;
+
+    /**
+     * {Int} How many times have we seen Webpack run with a result of no
+     * compiled code changing. This count is used to drive a bit of informative
+     * logging.
+     */
+    this._nothingChanged = 0;
   }
 
   /**
@@ -352,11 +359,22 @@ export default class ClientBundle extends Singleton {
       }
     }
 
-    if (!any) {
+    if (any) {
+      this._nothingChanged = 0;
+    } else {
       // No bundles found. This will happen when it turns out there were no
       // code changes _or_ when there was a bona fide error. In the latter
       // case, though, we would have caught and reported it before we got here.
-      log.info('No bundles updated (code was unchanged).');
+      this._nothingChanged++;
+      if (this._nothingChanged < 5) {
+        log.info('No bundles updated (code was unchanged).');
+      } else if (this._nothingChanged === 5) {
+        log.info(
+          'No bundles updated. This is probably happening because your\n' +
+          'virus checker is fooling Webpack into rereading source files.');
+      } else {
+        log.info('No bundles updated. Probably more virus checker churn.');
+      }
     }
   }
 

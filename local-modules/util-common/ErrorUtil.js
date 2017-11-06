@@ -5,6 +5,12 @@
 import { TObject } from 'typecheck';
 import { UtilityClass } from 'util-core';
 
+/** {string} How anonymous functions are represented in V8. */
+const V8_ANONYMOUS = '<anonymous>';
+
+/** {string} How this module represents anonymous functions. */
+const ANONYMOUS_FUNCTION = V8_ANONYMOUS;
+
 /**
  * JSON helper utilities.
  */
@@ -57,20 +63,36 @@ export default class JsonUtil extends UtilityClass {
         let filePath;
 
         if (v8Match[2] === undefined) {
-          funcName = '<anonymous>';
+          funcName = ANONYMOUS_FUNCTION;
           filePath = v8Match[1];
+          if (filePath === V8_ANONYMOUS) {
+            filePath = '';
+          }
         } else {
           funcName = v8Match[1];
           filePath = v8Match[2];
         }
 
-        const fileSplit = filePath.split('/');
-        const splitLen  = fileSplit.length;
-        const fileName  = (splitLen < 3)
-          ? filePath
-          : `.../${fileSplit[splitLen - 2]}/${fileSplit[splitLen - 1]}`;
+        // Trim `filePath` to highlight the interesting end portion and drop the
+        // noisy initial portion.
+        const MAX_PATH = 65;
+        filePath = filePath.replace(/^.*[/]node_modules[/]/, '.../');
+        if (filePath.length > MAX_PATH) {
+          const split = filePath.split(/[/]+/);
 
-        line = `${funcName} (${fileName})`;
+          filePath = '';
+          for (const name of split.reverse()) {
+            if ((name === '...') || ((name.length + filePath.length + 1) > MAX_PATH)) {
+              filePath = `.../${filePath}`;
+              break;
+            }
+            filePath = (filePath === '') ? name : `${name}/${filePath}`;
+          }
+        }
+
+        line = (filePath === '')
+          ? funcName
+          : `${funcName} (${filePath})`;
       }
 
       // **TODO:** Something reasonable if the stack looks like it came from

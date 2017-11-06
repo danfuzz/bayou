@@ -3,7 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "quill-delta": "3.6.2",
+    "quill-delta": "^3.6.2",
 
     "codec": "local",
     "hooks-common": "local",
