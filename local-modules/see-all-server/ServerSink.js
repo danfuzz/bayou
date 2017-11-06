@@ -109,7 +109,7 @@ export default class ServerSink extends BaseSink {
         // Convert the object to a string. If it's a single line, just add it
         // to the text inline. If it's multiple lines, make sure it all ends up
         // on its own lines.
-        m = inspect(m);
+        m = ServerSink._inspect(m);
         if (/\n/.test(m)) {
           text += `${atLineStart ? '' : '\n'}${m}\n`;
           atLineStart = true;
@@ -254,5 +254,27 @@ export default class ServerSink extends BaseSink {
     }
 
     return Math.max(process.stdout.getWindowSize()[0] || 80, 80);
+  }
+
+  /**
+   * Returns a string form for the given value, suitable for logging. The main
+   * point of this method is to do something better than `inspect()` for `Error`
+   * instances.
+   *
+   * @param {*} value Value to convert.
+   * @returns {string} String form of `value`.
+   */
+  static _inspect(value) {
+    if (value instanceof Error) {
+      const lines = [value.toString()];
+
+      for (const s of ErrorUtil.stackLines(value)) {
+        lines.push(`  ${s}`);
+      }
+
+      return lines.join('\n');
+    }
+
+    return inspect(value);
   }
 }
