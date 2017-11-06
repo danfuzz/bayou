@@ -111,36 +111,26 @@ export default class BodyControl extends BaseControl {
    *   `null`.
    */
   async _impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum) {
-    for (;;) {
-      if (baseRevNum < currentRevNum) {
-        // The document's revision is in fact newer than the base, so we can now
-        // stop waiting and return a result.
-        break;
-      }
-
-      // Wait for the file to change (or for the storage layer to time out), and
-      // then iterate to see if in fact the change updated the document revision
-      // number.
+    if (currentRevNum === baseRevNum) {
+      // The current revision is the same as the base, so we have to wait for
+      // the file to change (or for the storage layer to time out), and then
+      // check to see if in fact the revision number was changed.
 
       const fc   = this.fileCodec;
-      const ops  = [fc.op_whenPathNot(Paths.BODY_REVISION_NUMBER, currentRevNum)];
-      const spec = new TransactionSpec(...ops);
+      const spec = new TransactionSpec(
+        fc.op_timeout(timeoutMsec),
+        fc.op_whenPathNot(Paths.BODY_REVISION_NUMBER, currentRevNum));
 
-      try {
-        await fc.transact(spec);
-      } catch (e) {
-        if (!Errors.isTimedOut(e)) {
-          // It's _not_ a timeout, so we should propagate the error.
-          throw e;
-        }
+      // If this returns normally (doesn't throw), then we know it wasn't due
+      // to hitting the timeout. And if it _is_ a timeout, then the exception
+      // that's thrown is exactly what should be reported upward.
+      await fc.transact(spec);
 
-        // It's a timeout, so just fall through and iterate.
-        this.log.info('Storage layer timeout in `getChangeAfter()`.');
-      }
-
-      // Update what we think of as the current revision number, and iterate to
-      // try again.
+      // Verify that the revision number went up. It's a bug if it didn't.
       currentRevNum = await this.currentRevNum();
+      if (currentRevNum <= baseRevNum) {
+        throw Errors.wtf(`Revision number should have gone up. Instead was ${baseRevNum} then ${currentRevNum}.`);
+      }
     }
 
     // There are two possible ways to calculate the result, namely (1) compose

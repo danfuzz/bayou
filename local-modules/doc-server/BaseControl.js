@@ -189,7 +189,17 @@ export default class BaseControl extends BaseDataManager {
     const currentRevNum = await this.currentRevNum();
     RevisionNumber.maxInc(baseRevNum, currentRevNum);
 
-    const result = await this._impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum);
+    let result;
+    try {
+      result = await this._impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum);
+    } catch (e) {
+      // Note a timeout to the logs, but other than that just let the error
+      // bubble up.
+      if (Errors.isTimedOut(e)) {
+        this.log.info(`Call to \`getChangeAfter()\` timed out: ${timeoutMsec}msec`);
+      }
+      throw e;
+    }
 
     if (result === null) {
       throw Errors.revision_not_available(baseRevNum);
