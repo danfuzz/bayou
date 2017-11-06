@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import { Functor, InfoError } from 'util-common';
 
 /**
@@ -24,6 +26,27 @@ export default class CodableError extends InfoError {
    */
   constructor(info) {
     super(Functor.check(info));
+  }
+
+  /**
+   * Custom inspector function, as called by `util.inspect()`. This just returns
+   * the info portion instead of also including the stack trace, since the stack
+   * trace is meaningless on instances of this class (will typically just
+   * indicate that there is an object graph that's in the middle of being
+   * decoded).
+   *
+   * @param {Int} depth_unused Current inspection depth.
+   * @param {object} opts Inspection options.
+   * @returns {string} The inspection string form of this instance.
+   */
+  [inspect.custom](depth_unused, opts) {
+    // Set up the inspection opts so that recursive calls respect the topmost
+    // requested depth.
+    const subOpts = (opts.depth === null)
+      ? opts
+      : Object.assign({}, opts, { depth: opts.depth - 1 });
+
+    return `${this.constructor.name}: ${inspect(this.info, subOpts)}`;
   }
 
   /**
