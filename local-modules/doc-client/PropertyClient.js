@@ -3,7 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { PropertyDelta, PropertyOp, Timeouts } from 'doc-common';
-import { Delay } from 'promise-util';
 import { TString } from 'typecheck';
 import { CommonBase, DataUtil, Errors } from 'util-common';
 
@@ -32,17 +31,11 @@ export default class PropertyClient extends CommonBase {
     this._log = docSession.log;
 
     /**
-     * {Proxy|null} Proxy for the server-side session object. Becomes non-`null`
-     * when the promise for same resolves, as arranged for in this constructor,
-     * below.
+     * {Promise<Proxy>} Promise for the proxy to the server-side session object.
+     * Typically becomes resolved very soon after a server connection is
+     * initiated.
      */
-    this._sessionProxy = null;
-
-    // Arrange for `_sessionProxy` to get set.
-    (async () => {
-      this._sessionProxy = await docSession.getSessionProxy();
-      this._log.detail('Property client got session proxy.');
-    })();
+    this._sessionProxyPromise = docSession.getSessionProxy();
   }
 
   /**
@@ -56,7 +49,7 @@ export default class PropertyClient extends CommonBase {
     // The op constructor type checks its arguments.
     const delta = new PropertyDelta([PropertyOp.op_deleteProperty(name)]);
 
-    const proxy    = await this._proxyWhenReady();
+    const proxy    = await this._sessionProxyPromise;
     const snapshot = await proxy.property_getSnapshot();
 
     await proxy.property_update(snapshot.revNum, delta);
@@ -72,7 +65,7 @@ export default class PropertyClient extends CommonBase {
   async get(name) {
     TString.identifier(name);
 
-    const proxy    = await this._proxyWhenReady();
+    const proxy    = await this._sessionProxyPromise;
     const snapshot = await proxy.property_getSnapshot();
 
     return snapshot.get(name).value;
@@ -89,7 +82,7 @@ export default class PropertyClient extends CommonBase {
   async has(name) {
     TString.identifier(name);
 
-    const proxy    = await this._proxyWhenReady();
+    const proxy    = await this._sessionProxyPromise;
     const snapshot = await proxy.property_getSnapshot();
 
     return snapshot.has(name);
@@ -106,7 +99,7 @@ export default class PropertyClient extends CommonBase {
     // The op constructor type checks its arguments.
     const delta = new PropertyDelta([PropertyOp.op_setProperty(name, value)]);
 
-    const proxy    = await this._proxyWhenReady();
+    const proxy    = await this._sessionProxyPromise;
     const snapshot = await proxy.property_getSnapshot();
 
     await proxy.property_update(snapshot.revNum, delta);
@@ -138,7 +131,7 @@ export default class PropertyClient extends CommonBase {
     timeoutMsec = Timeouts.clamp(timeoutMsec);
 
     const timeoutTime = Date.now() + timeoutMsec;
-    const proxy       = await this._proxyWhenReady();
+    const proxy       = await this._sessionProxyPromise;
 
     for (;;) {
       const snapshot = await proxy.property_getSnapshot();
@@ -160,24 +153,5 @@ export default class PropertyClient extends CommonBase {
       // time out.
       await proxy.property_getChangeAfter(snapshot.revNum);
     }
-  }
-
-  /**
-   * Waits for the session proxy to be ready, and returns it once it is.
-   *
-   * @returns {Proxy} The session proxy.
-   */
-  async _proxyWhenReady() {
-    // **TODO:** This should be driven by a `Condition` instead of polling.
-    for (;;) {
-      if (this._sessionProxy !== null) {
-        break;
-      }
-
-      this._log.info('Waiting for session proxy...');
-      await Delay.resolve(1000);
-    }
-
-    return this._sessionProxy;
   }
 }
