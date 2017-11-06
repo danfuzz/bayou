@@ -100,6 +100,8 @@ export default class BodyControl extends BaseControl {
    * @param {Int} baseRevNum Revision number for the base to get a change with
    *   respect to. Guaranteed to refer to the instantaneously-current revision
    *   or earlier.
+   * @param {Int} timeoutMsec Maximum amount of time to allow in this call, in
+   *   msec. Guaranteed to be a valid value as defined by {@link Timeouts}.
    * @param {Int} currentRevNum The instantaneously-current revision number that
    *   was determined just before this method was called, and which should be
    *   treated as the actually-current revision number at the start of this
@@ -108,7 +110,7 @@ export default class BodyControl extends BaseControl {
    *   `baseRevNum`. Though the superclass allows it, this method never returns
    *   `null`.
    */
-  async _impl_getChangeAfter(baseRevNum, currentRevNum) {
+  async _impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum) {
     for (;;) {
       if (baseRevNum < currentRevNum) {
         // The document's revision is in fact newer than the base, so we can now

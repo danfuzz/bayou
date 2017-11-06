@@ -82,13 +82,15 @@ export default class PropertyControl extends BaseControl {
    * @param {Int} baseRevNum Revision number for the base to get a change with
    *   respect to. Guaranteed to refer to the instantaneously-current revision
    *   or earlier.
+   * @param {Int} timeoutMsec Maximum amount of time to allow in this call, in
+   *   msec. Guaranteed to be a valid value as defined by {@link Timeouts}.
    * @param {Int} currentRevNum The instantaneously-current revision number that
    *   was determined just before this method was called.
    * @returns {PropertyChange} Change with respect to the revision indicated by
    *   `baseRevNum`. Though the superclass allows it, this method never returns
    *   `null`.
    */
-  async _impl_getChangeAfter(baseRevNum, currentRevNum) {
+  async _impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum) {
     // Wait for the revision number to change using a transaction. Iterate
     // because sometimes the transaction can return without an actual change
     // happening.

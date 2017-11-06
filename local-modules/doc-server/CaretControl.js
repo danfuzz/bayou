@@ -186,6 +186,8 @@ export default class CaretControl extends BaseControl {
    * @param {Int} baseRevNum Revision number for the base to get a change with
    *   respect to. Guaranteed to refer to the instantaneously-current revision
    *   or earlier.
+   * @param {Int} timeoutMsec Maximum amount of time to allow in this call, in
+   *   msec. Guaranteed to be a valid value as defined by {@link Timeouts}.
    * @param {Int} currentRevNum_unused The instantaneously-current revision
    *   number that was determined just before this method was called. It is
    *   unused in this case because the implementation has synchronous knowledge
@@ -194,7 +196,7 @@ export default class CaretControl extends BaseControl {
    *   by `baseRevNum`, or `null` to indicate that the revision was not
    *   available as a base.
    */
-  async _impl_getChangeAfter(baseRevNum, currentRevNum_unused) {
+  async _impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum_unused) {
     // This uses the `_impl` snapshot so that we get a `null` instead of a
     // thrown error when the revision isn't available.
     const oldSnapshot = await this._impl_getSnapshot(baseRevNum);
