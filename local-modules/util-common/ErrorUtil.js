@@ -27,10 +27,11 @@ export default class ErrorUtil extends UtilityClass {
    * property if present.
    *
    * @param {Error} error Error value.
+   * @param {string} [indent = ''] String to use for indentation on each line.
    * @returns {string} Corresponding inspection string.
    */
-  static fullTrace(error) {
-    const lines = ErrorUtil.fullTraceLines(error);
+  static fullTrace(error, indent = '') {
+    const lines = ErrorUtil.fullTraceLines(error, indent);
     return lines.join('\n');
   }
 
@@ -38,22 +39,25 @@ export default class ErrorUtil extends UtilityClass {
    * Like {@link #fullTrace}, but returns an array of individual lines.
    *
    * @param {Error} error Error value.
+   * @param {string} [indent = ''] String to use for indentation on each line.
    * @returns {array<string>} Corresponding inspection string, as an array of
    *   individual lines.
    */
-  static fullTraceLines(error) {
+  static fullTraceLines(error, indent = '') {
     TObject.check(error, Error);
 
-    const traces = [];
-    let   first  = true;
+    const causeLine = [`${indent}caused by:`];
+    const traces    = [];
+    let   first     = true;
 
     while (error !== null) {
-      const { cause, lines } = ErrorUtil._oneTrace(error, first ? '' : '  ');
+      const { cause, lines } = ErrorUtil._oneTrace(error, indent);
 
       if (first) {
         first = false;
+        indent = `${indent}  `;
       } else {
-        traces.push(['  caused by:']);
+        traces.push(causeLine);
       }
 
       traces.push(lines);
@@ -68,10 +72,11 @@ export default class ErrorUtil extends UtilityClass {
    * to be reasonable for logging.
    *
    * @param {Error} error Error value.
+   * @param {string} [indent = ''] String to use for indentation on each line.
    * @returns {array<string>} Cleaned up error stack as an array of lines, each
    *   one corresponding to one call in the stack.
    */
-  static stackLines(error) {
+  static stackLines(error, indent = '') {
     TObject.check(error, Error);
 
     let stack = error.stack;
@@ -146,7 +151,7 @@ export default class ErrorUtil extends UtilityClass {
       // **TODO:** Something reasonable if the stack looks like it came from
       // WebKit/Safari.
 
-      lines[i] = line;
+      lines[i] = `${indent}${line}`;
     }
 
     return lines;
@@ -167,7 +172,8 @@ export default class ErrorUtil extends UtilityClass {
     const extra    = {};
     let   anyExtra = false;
 
-    for (const prop of new PropertyIterable(error).skipObject().skipSynthetic()) {
+    const iter = new PropertyIterable(error).skipObject().skipSynthetic().skipMethods();
+    for (const prop of iter) {
       const name = prop.name;
       if ((name === 'name') || (name === 'message') || (name === 'stack')) {
         // These are handled more directly, below.
@@ -189,13 +195,13 @@ export default class ErrorUtil extends UtilityClass {
       extraLines = [];
     }
 
-    const stack  = ErrorUtil.stackLines(error);
+    const stack = ErrorUtil.stackLines(error, `${indent}  `);
 
     return {
       cause,
       lines: [
         `${indent}${error.name}: ${error.message}`,
-        ...stack.map(line => `${indent}  ${line}`),
+        ...stack,
         ...extraLines
       ]
     };

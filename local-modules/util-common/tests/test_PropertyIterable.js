@@ -64,6 +64,22 @@ describe('util-common/PropertyIterable', () => {
       testIteratable(iter, expectedProperties);
     });
   });
+
+  describe('iterating solely over non-methods', () => {
+    it('should iterate solely over non-methods', () => {
+      const obj = {
+        yes1: 'x',
+        yes2: 'y',
+        get yes3() { return 10; },
+        no1() { /*empty*/ },
+        no2: () => { /*empty*/ }
+      };
+      const iter = new PropertyIterable(obj).skipMethods();
+      const expectedProperties = ['yes1', 'yes2', 'yes3'];
+
+      testIteratable(iter, expectedProperties);
+    });
+  });
 });
 
 /**
