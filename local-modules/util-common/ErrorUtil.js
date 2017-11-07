@@ -2,8 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import { TObject } from 'typecheck';
 import { UtilityClass } from 'util-core';
+
+import PropertyIterable from './PropertyIterable';
 
 /** {string} How anonymous functions are represented in V8. */
 const V8_ANONYMOUS = '<anonymous>';
@@ -12,9 +16,53 @@ const V8_ANONYMOUS = '<anonymous>';
 const ANONYMOUS_FUNCTION = V8_ANONYMOUS;
 
 /**
- * JSON helper utilities.
+ * Error helper utilities.
  */
-export default class JsonUtil extends UtilityClass {
+export default class ErrorUtil extends UtilityClass {
+  /**
+   * Gets a full trace "dump" of an error, in a consistent format meant to be
+   * reasonable for logging. This includes the error name and message, a clean
+   * stack trace, any additional properties (e.g., `code` is a common one used
+   * by Node), and the same info for an `Error` instance bound as a `cause`
+   * property if present.
+   *
+   * @param {Error} error Error value.
+   * @returns {string} Corresponding inspection string.
+   */
+  static fullTrace(error) {
+    const lines = ErrorUtil.fullTraceLines(error);
+    return lines.join('\n');
+  }
+
+  /**
+   * Like {@link #fullTrace}, but returns an array of individual lines.
+   *
+   * @param {Error} error Error value.
+   * @returns {array<string>} Corresponding inspection string, as an array of
+   *   individual lines.
+   */
+  static fullTraceLines(error) {
+    TObject.check(error, Error);
+
+    const traces = [];
+    let   first  = true;
+
+    while (error !== null) {
+      const { cause, lines } = ErrorUtil._oneTrace(error, first ? '' : '  ');
+
+      if (first) {
+        first = false;
+      } else {
+        traces.push(['  caused by:']);
+      }
+
+      traces.push(lines);
+      error = cause;
+    }
+
+    return [].concat(...traces);
+  }
+
   /**
    * Gets an array of stack lines out of an error, in a consistent format meant
    * to be reasonable for logging.
@@ -102,5 +150,54 @@ export default class JsonUtil extends UtilityClass {
     }
 
     return lines;
+  }
+
+  /**
+   * Helper for {@link #fullTraceLines}, which produces the lines for a single
+   * error in a causal chain, and also returns the next cause in the chain (if
+   * any).
+   *
+   * @param {Error} error Error to inspect.
+   * @param {string} indent String to prepend on each result line.
+   * @returns {object} Plain object that binds `lines` to an array of lines, and
+   *   `cause` to the chained cause or to `null` if there is no chained cause.
+   */
+  static _oneTrace(error, indent) {
+    let   cause    = null;
+    const extra    = {};
+    let   anyExtra = false;
+
+    for (const prop of new PropertyIterable(error).skipObject().skipSynthetic()) {
+      const name = prop.name;
+      if ((name === 'name') || (name === 'message') || (name === 'stack')) {
+        // These are handled more directly, below.
+        continue;
+      } else if ((name === 'cause') && (prop.value instanceof Error)) {
+        // This is handled via the outer call.
+        cause = prop.value;
+        continue;
+      }
+
+      extra[prop.name] = prop.value;
+      anyExtra = true;
+    }
+
+    let extraLines;
+    if (anyExtra) {
+      extraLines = inspect(extra).split('\n').map(line => `${indent}${line}`);
+    } else {
+      extraLines = [];
+    }
+
+    const stack  = ErrorUtil.stackLines(error);
+
+    return {
+      cause,
+      lines: [
+        `${indent}${error.name}: ${error.message}`,
+        ...stack.map(line => `${indent}  ${line}`),
+        ...extraLines
+      ]
+    };
   }
 }
