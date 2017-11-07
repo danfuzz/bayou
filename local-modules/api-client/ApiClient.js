@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseKey, ConnectionError, Message, Response } from 'api-common';
+import { BaseKey, CodableError, ConnectionError, Message, Response } from 'api-common';
 import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
@@ -255,16 +255,24 @@ export default class ApiClient extends CommonBase {
       throw ConnectionError.connection_nonsense(this._connectionId, 'Got strange response.');
     }
 
-    const id     = response.id;
-    const result = response.result;
-    const error  = response.error;
+    const { id, result, error } = response;
 
     const callback = this._callbacks[id];
     if (callback) {
       delete this._callbacks[id];
       if (error) {
+        // **Note:** `error` is always an instance of `CodableError`.
         this._log.detail(`Reject ${id}:`, error);
-        callback.reject(new InfoError('remote_error', this.connectionId, error));
+        // What's going on here is that we use the information from the original
+        // error as the outer error payload, and include a `cause` that
+        // unambiguously indicates that the origin is remote. This arrangement
+        // means that clients can handle well-defined errors fairly
+        // transparently and straightforwardly (e.g. and notably, they don't
+        // have to "unwrap" the errors in the usual case), while still being
+        // able to ascertain the foreign origin of the errors when warranted.
+        const remoteCause = new CodableError('remote_error', this.connectionId);
+        const rejectReason = new CodableError(remoteCause, error.info);
+        callback.reject(rejectReason);
       } else {
         this._log.detail(`Resolve ${id}:`, result);
         callback.resolve(result);
