@@ -4,10 +4,12 @@
 
 import Clock from './components/Clock';
 import FileEmbed from './components/FileEmbed';
+import ImageEmbed from './components/ImageEmbed';
 import ComponentBlotWrapper from './ComponentBlotWrapper';
 
 export {
   Clock,
   ComponentBlotWrapper,
-  FileEmbed
+  FileEmbed,
+  ImageEmbed
 };

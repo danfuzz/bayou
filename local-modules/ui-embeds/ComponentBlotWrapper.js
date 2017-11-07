@@ -103,16 +103,23 @@ export default class BlockEmbedWrapper extends UtilityClass {
 
         TFunction.checkClass(component, React.Component);
 
-        ReactDOM.render(
-          React.createElement(component, value, null),
-          domNode
-        );
+        this._domNode = domNode;
+
+        this._props = Object.assign({}, value, {
+          addClassToContainer: this.addClassToContainer.bind(this),
+          removeClassFromContainer: this.removeClassFromContainer.bind(this),
+          handleUpdate: this.handleUpdate.bind(this),
+          exportProps: this.exportProps.bind(this)
+        });
+
+        this._element = React.createElement(component, this._props, null);
+        this.handleUpdate();
       }
 
       /**
        * Allocates the outer DOM element that contains this blot.
        * The result will be an `HTMLElement` of type `tagName` as
-       * defined above. Any data that needs to persis with the element
+       * defined above. Any data that needs to persist with the element
        * should be transferred from the `value` argument to attributes
        * on the DOM element. This method is a required part of the blot
        * interface.
@@ -161,7 +168,13 @@ export default class BlockEmbedWrapper extends UtilityClass {
         TObject.plain(propTypes);
 
         for (const [prop, type] of Object.entries(propTypes)) {
-          const { validator } = TYPE_MAPPER.get(type);
+          const supportedType = TYPE_MAPPER.get(type);
+
+          if (!supportedType) {
+            continue;
+          }
+
+          const { validator } = supportedType;
           let isRequired = false;
 
           switch (type) {
@@ -247,7 +260,7 @@ export default class BlockEmbedWrapper extends UtilityClass {
         for (const [prop, type] of Object.entries(propTypes)) {
           const supportedType = TYPE_MAPPER.get(type);
 
-          if (supportedType === null) {
+          if (!supportedType) {
             continue;
           }
 
@@ -262,16 +275,89 @@ export default class BlockEmbedWrapper extends UtilityClass {
               // There wasn't a value and it was a required property.
               throw Errors.bad_data(`'${prop}' is required`);
             }
+          } else {
+            value = converter(value);
+            value = validator(value);
           }
-
-          value = converter(value);
-          value = validator(value);
 
           result[prop] = value;
         }
 
         return Object.freeze(result);
       }
+
+      /**
+       * Allows an embedded component to set CSS classes on the `DIV` that
+       * is wrapping it. Since each component is self-rooted in its own
+       * little React world there is no other entity that can have
+       * responsibiity for runtime styling of the container.
+       *
+       * @param {string} cssClass The class to add to the container.
+       */
+      addClassToContainer(cssClass) {
+        TString.nonEmpty(cssClass);
+
+        this._domNode.classList.add(cssClass);
+      }
+
+      /**
+       * Allows an embedded component to remove CSS classes from the `DIV` that
+       * is wrapping it. Since each component is self-rooted in its own
+       * little React world there is no other entity that can have
+       * responsibiity for runtime styling of the container.
+       *
+       * @param {string} cssClass The class to remove from the container.
+       */
+      removeClassFromContainer(cssClass) {
+        this._domNode.classList.remove(cssClass);
+      }
+
+      /**
+       * React components are not allows to modify their own props. But
+       * since embedded components are self-rooted there is no other
+       * entity that can pass down new props and cause a rerender. This
+       * method is passed down to the wrapped component so that it can
+       * trigger an update on its own.
+       *
+       * @param {object} propsToUpdate A plain object of key/value pairs.
+       *   It will be used as an overlay on the existing props for the
+       *   wrapped component as it is updated.
+       */
+      handleUpdate(propsToUpdate) {
+        if (propsToUpdate) {
+          propsToUpdate = TObject.plain(propsToUpdate);
+          this._element = React.cloneElement(this._element, propsToUpdate);
+        }
+
+        ReactDOM.render(
+          this._element,
+          this._domNode
+        );
+      }
+
+      /**
+       * When Quill notices a change to the DOM it asks blots to report the
+       * properties needed to recreate them later. Unfortunately the only
+       * thing Quill gives us to work with is the outermost DOM element of
+       * the blot. So we stash all of the embedded component's required
+       * string/number/boolean properties in the element's `dataset` so
+       * we can find it later.
+       *
+       * In an ideal world we'd be able to patch the component's
+       * `componentWillUpdate()` method so that we could stash these values
+       * automatically. But all the component elements created by React are
+       * immutable. The best we can conveniently do is to pass this method
+       * down to the component as part of its props so that it can signal
+       * on its own that it needs to have its new props exported to Quill.
+       *
+       * @param {object} props A plain object of keys/values to push from
+       *   the embedded React component to the `dataset` of the `DIV`
+       *   hosting the component.
+       */
+      exportProps(props) {
+        BlotWrapper.assignPropertiesToElementAttributes(component.propTypes, props, this._domNode);
+      }
+
     }
 
     /** {string} The unique name for this blot, as required by Quill. */
