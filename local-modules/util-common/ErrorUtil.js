@@ -174,7 +174,7 @@ export default class ErrorUtil extends UtilityClass {
     const extra    = {};
     let   anyExtra = false;
 
-    const iter = new PropertyIterable(error).skipObject().skipSynthetic().skipMethods();
+    const iter = new PropertyIterable(error).skipObject().skipSynthetic().skipMethods().skipPrivate();
     for (const prop of iter) {
       const name = prop.name;
       if ((name === 'name') || (name === 'message') || (name === 'stack')) {
