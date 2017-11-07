@@ -68,10 +68,14 @@ export default class DocSession extends CommonBase {
    * {@link BodyControl#getChangeAfter} for details.
    *
    * @param {Int} baseRevNum Revision number for the document.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {BodyChange} Delta and associated information.
    */
-  async body_getChangeAfter(baseRevNum) {
-    return this._bodyControl.getChangeAfter(baseRevNum);
+  async body_getChangeAfter(baseRevNum, timeoutMsec = null) {
+    return this._bodyControl.getChangeAfter(baseRevNum, timeoutMsec);
   }
 
   /**
@@ -131,12 +135,16 @@ export default class DocSession extends CommonBase {
    *   will form the basis for the result. If `baseRevNum` is the current
    *   revision number, this method will block until a new revision is
    *   available.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {CaretDelta} Delta from the base caret revision to a newer one.
    *   Applying this result to a `CaretSnapshot` for `baseRevNum` will produce
    *  an up-to-date snapshot.
    */
-  async caret_getChangeAfter(baseRevNum) {
-    return this._caretControl.getChangeAfter(baseRevNum);
+  async caret_getChangeAfter(baseRevNum, timeoutMsec = null) {
+    return this._caretControl.getChangeAfter(baseRevNum, timeoutMsec);
   }
 
   /**
@@ -195,10 +203,14 @@ export default class DocSession extends CommonBase {
    * revision. See {@link PropertyControl#getChangeAfter} for details.
    *
    * @param {Int} baseRevNum Revision number for the document.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {PropertyChange} Delta and associated information.
    */
-  async property_getChangeAfter(baseRevNum) {
-    return this._propertyControl.getChangeAfter(baseRevNum);
+  async property_getChangeAfter(baseRevNum, timeoutMsec = null) {
+    return this._propertyControl.getChangeAfter(baseRevNum, timeoutMsec);
   }
 
   /**

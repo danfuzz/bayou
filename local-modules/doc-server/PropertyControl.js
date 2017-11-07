@@ -82,44 +82,35 @@ export default class PropertyControl extends BaseControl {
    * @param {Int} baseRevNum Revision number for the base to get a change with
    *   respect to. Guaranteed to refer to the instantaneously-current revision
    *   or earlier.
+   * @param {Int} timeoutMsec Maximum amount of time to allow in this call, in
+   *   msec. Guaranteed to be a valid value as defined by {@link Timeouts}.
    * @param {Int} currentRevNum The instantaneously-current revision number that
    *   was determined just before this method was called.
    * @returns {PropertyChange} Change with respect to the revision indicated by
    *   `baseRevNum`. Though the superclass allows it, this method never returns
    *   `null`.
    */
-  async _impl_getChangeAfter(baseRevNum, currentRevNum) {
-    // Wait for the revision number to change using a transaction. Iterate
-    // because sometimes the transaction can return without an actual change
-    // happening.
-    for (;;) {
-      if (baseRevNum < currentRevNum) {
-        // The document's revision is in fact newer than the base, so we can now
-        // stop waiting and return a result.
-        break;
-      }
-
-      // Wait for the file to change (or for the storage layer to time out), and
-      // then iterate to see if in fact the change updated the document revision
-      // number.
+  async _impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum) {
+    if (currentRevNum === baseRevNum) {
+      // The current revision is the same as the base, so we have to wait for
+      // the file to change (or for the storage layer to time out), and then
+      // check to see if in fact the revision number was changed.
 
       const fc   = this.fileCodec;
-      const ops  = [fc.op_whenPathNot(Paths.PROPERTY_REVISION_NUMBER, currentRevNum)];
-      const spec = new TransactionSpec(...ops);
+      const spec = new TransactionSpec(
+        fc.op_timeout(timeoutMsec),
+        fc.op_whenPathNot(Paths.PROPERTY_REVISION_NUMBER, currentRevNum));
 
-      try {
-        await fc.transact(spec);
-      } catch (e) {
-        if (!Errors.isTimedOut(e)) {
-          // It's _not_ a timeout, so we should propagate the error.
-          throw e;
-        }
+      // If this returns normally (doesn't throw), then we know it wasn't due
+      // to hitting the timeout. And if it _is_ a timeout, then the exception
+      // that's thrown is exactly what should be reported upward.
+      await fc.transact(spec);
 
-        // It's a timeout, so just fall through and iterate.
-        this.log.info('Storage layer timeout in `getChangeAfter()`.');
-      }
-
+      // Verify that the revision number went up. It's a bug if it didn't.
       currentRevNum = await this.currentRevNum();
+      if (currentRevNum <= baseRevNum) {
+        throw Errors.wtf(`Revision number should have gone up. Instead was ${baseRevNum} then ${currentRevNum}.`);
+      }
     }
 
     // There are two possible ways to calculate the result, namely (1) compose

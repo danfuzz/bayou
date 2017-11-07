@@ -452,7 +452,15 @@ export default class BodyClient extends StateMachine {
           this.q_gotChangeAfter(baseSnapshot, value);
         } catch (e) {
           this._pendingChangeAfter = false;
-          this.q_apiError('body_getChangeAfter', e);
+          if (Errors.isTimedOut(e)) {
+            // Emit `wantInput` in response to a timeout. If we're idling, this
+            // will end up retrying the `getChangeAfter()`. In any other state,
+            // it will (correctly) get ignored.
+            this.q_wantInput();
+          } else {
+            // Any other thrown error is a bona fide problem.
+            this.q_apiError('body_getChangeAfter', e);
+          }
         }
       })();
     }
@@ -520,17 +528,21 @@ export default class BodyClient extends StateMachine {
    *   original request.
    */
   _handle_idle_gotQuillEvent(baseSnapshot) {
-    if (this._snapshot.revNum !== baseSnapshot.revNum) {
+    const event = this._currentEvent.nextNow;
+
+    if ((this._snapshot.revNum !== baseSnapshot.revNum) || (event === null)) {
       // This state machine event was generated with respect to a revision of
       // the document which has since been updated, or we ended up having two
-      // events for the same change (which can happen if the user is
-      // particularly chatty) and this one lost the race. That is, this is from
-      // a stale request for changes. Go back to idling.
+      // state-machine events for the same Quill event (which can happen for at
+      // least a couple reasons, notably including (a) if the user is
+      // particularly chatty or (b) during recovery from a server timeout) and
+      // this handler lost the race. That is, this is a stale request for
+      // changes. Go back to idling (which very well might end up issuing a new
+      // request for changes).
       this._becomeIdle();
       return;
     }
 
-    const event = this._currentEvent.nextNow;
     const props = QuillEvents.propsOf(event);
 
     if (props.source === CLIENT_SOURCE) {

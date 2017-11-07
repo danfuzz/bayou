@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseSnapshot, RevisionNumber } from 'doc-common';
+import { BaseSnapshot, RevisionNumber, Timeouts } from 'doc-common';
 import { Errors as FileStoreErrors, TransactionSpec } from 'file-store';
 import { Delay } from 'promise-util';
 import { TFunction } from 'typecheck';
@@ -171,18 +171,35 @@ export default class BaseControl extends BaseDataManager {
    *
    * @param {Int} baseRevNum Revision number for the base to get a change with
    *   respect to.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {BaseChange} Change with respect to the revision indicated by
    *   `baseRevNum`. Always an instance of the appropriate change class as
    *   specified by the concrete subclass of this class. The result's `revNum`
    *   is guaranteed to be at least one greater than `baseRevNum` (and could
    *   possibly be even larger). The `timestamp` and `authorId` of the result
    *   will both be `null`.
+   * @throws {Errors.timed_out} Thrown if the timeout time is reached befor a
+   *   change becomes available.
    */
-  async getChangeAfter(baseRevNum) {
+  async getChangeAfter(baseRevNum, timeoutMsec = null) {
+    timeoutMsec = Timeouts.clamp(timeoutMsec);
     const currentRevNum = await this.currentRevNum();
     RevisionNumber.maxInc(baseRevNum, currentRevNum);
 
-    const result = await this._impl_getChangeAfter(baseRevNum, currentRevNum);
+    let result;
+    try {
+      result = await this._impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum);
+    } catch (e) {
+      // Note a timeout to the logs, but other than that just let the error
+      // bubble up.
+      if (Errors.isTimedOut(e)) {
+        this.log.info(`Call to \`getChangeAfter()\` timed out: ${timeoutMsec}msec`);
+      }
+      throw e;
+    }
 
     if (result === null) {
       throw Errors.revision_not_available(baseRevNum);
@@ -476,6 +493,8 @@ export default class BaseControl extends BaseDataManager {
    * @param {Int} baseRevNum Revision number for the base to get a change with
    *   respect to. Guaranteed to refer to the instantaneously-current revision
    *   or earlier.
+   * @param {Int} timeoutMsec Maximum amount of time to allow in this call, in
+   *   msec. Guaranteed to be a valid value as defined by {@link Timeouts}.
    * @param {Int} currentRevNum The instantaneously-current revision number that
    *   was determined just before this method was called, and which should be
    *   treated as the actually-current revision number at the start of this
@@ -486,8 +505,8 @@ export default class BaseControl extends BaseDataManager {
    *   class as specified by the concrete subclass of this class with `null` for
    *   both `timestamp` and `authorId`.
    */
-  async _impl_getChangeAfter(baseRevNum, currentRevNum) {
-    return this._mustOverride(baseRevNum, currentRevNum);
+  async _impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum) {
+    return this._mustOverride(baseRevNum, timeoutMsec, currentRevNum);
   }
 
   /**

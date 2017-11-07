@@ -149,9 +149,7 @@ export default class PropertyClient extends CommonBase {
         throw Errors.timed_out(timeoutMsec);
       }
 
-      // **TODO:** Fix this to respect the timeout, once `getChangeAfter()` can
-      // time out.
-      await proxy.property_getChangeAfter(snapshot.revNum);
+      await proxy.property_getChangeAfter(snapshot.revNum, timeoutTime - now);
     }
   }
 }

@@ -6,7 +6,7 @@ import {
   Caret, CaretChange, CaretDelta, CaretOp, CaretSnapshot, RevisionNumber, Timestamp
 } from 'doc-common';
 import { TransactionSpec } from 'file-store';
-import { Condition } from 'promise-util';
+import { Condition, Delay } from 'promise-util';
 import { TInt, TString } from 'typecheck';
 import { Errors } from 'util-common';
 
@@ -186,6 +186,8 @@ export default class CaretControl extends BaseControl {
    * @param {Int} baseRevNum Revision number for the base to get a change with
    *   respect to. Guaranteed to refer to the instantaneously-current revision
    *   or earlier.
+   * @param {Int} timeoutMsec Maximum amount of time to allow in this call, in
+   *   msec. Guaranteed to be a valid value as defined by {@link Timeouts}.
    * @param {Int} currentRevNum_unused The instantaneously-current revision
    *   number that was determined just before this method was called. It is
    *   unused in this case because the implementation has synchronous knowledge
@@ -194,7 +196,7 @@ export default class CaretControl extends BaseControl {
    *   by `baseRevNum`, or `null` to indicate that the revision was not
    *   available as a base.
    */
-  async _impl_getChangeAfter(baseRevNum, currentRevNum_unused) {
+  async _impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum_unused) {
     // This uses the `_impl` snapshot so that we get a `null` instead of a
     // thrown error when the revision isn't available.
     const oldSnapshot = await this._impl_getSnapshot(baseRevNum);
@@ -203,15 +205,25 @@ export default class CaretControl extends BaseControl {
       return null;
     }
 
-    // Iterate if / as long as the base revision is still the current one. This
-    // will stop being the case if either there's a local or remote update. The
-    // loop is needed because the remote update check can time out without an
-    // actual change happening.
+    const timeoutTime = Date.now() + timeoutMsec;
+
+    // Iterate if / as long as the base revision is still the current one and
+    // the timeout time has not passed. Timeouts aside, this will stop being the
+    // case if either there's a local or remote update. The loop is needed
+    // because the remote update check can time out without an actual change
+    // happening.
     while (oldSnapshot.revNum === this._snapshot.revNum) {
-      // Wait for either a local or remote update, whichever comes first.
+      const now = Date.now();
+
+      if (now >= timeoutTime) {
+        throw Errors.timed_out(timeoutMsec);
+      }
+
+      // Wait for one of the salient events.
       await Promise.race([
         this._updatedCondition.whenTrue(),
-        this._caretStorage.whenRemoteChange()
+        this._caretStorage.whenRemoteChange(),
+        Delay.resolve(timeoutTime - now)
       ]);
 
       // If there were remote changes, this will cause the snapshot to get

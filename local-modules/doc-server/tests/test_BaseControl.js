@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { Codec } from 'codec';
-import { Timestamp } from 'doc-common';
+import { Timeouts, Timestamp } from 'doc-common';
 import { MockChange, MockOp, MockSnapshot } from 'doc-common/mocks';
 import { BaseControl, FileAccess } from 'doc-server';
 import { MockControl } from 'doc-server/mocks';
@@ -135,7 +135,7 @@ describe('doc-server/BaseControl', () => {
       control._impl_currentRevNum = async () => {
         throw new Error('Oy!');
       };
-      control._impl_getChangeAfter = async (baseRevNum_unused, currentRevNum_unused) => {
+      control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum_unused) => {
         throw new Error('This should not have been called.');
       };
 
@@ -147,7 +147,7 @@ describe('doc-server/BaseControl', () => {
       control._impl_currentRevNum = async () => {
         return 10;
       };
-      control._impl_getChangeAfter = async (baseRevNum_unused, currentRevNum_unused) => {
+      control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum_unused) => {
         throw new Error('This should not have been called.');
       };
 
@@ -159,7 +159,7 @@ describe('doc-server/BaseControl', () => {
       control._impl_currentRevNum = async () => {
         return 10;
       };
-      control._impl_getChangeAfter = async (baseRevNum_unused, currentRevNum_unused) => {
+      control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum_unused) => {
         throw new Error('This should not have been called.');
       };
 
@@ -176,12 +176,39 @@ describe('doc-server/BaseControl', () => {
       await test([10]);
     });
 
+    it('should appropriately clamp `timeoutMsec` values', async () => {
+      let gotTimeout = null;
+
+      const control = new MockControl(FILE_ACCESS, 'boop');
+      control._impl_currentRevNum = async () => {
+        return 10;
+      };
+      control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec, currentRevNum_unused) => {
+        gotTimeout = timeoutMsec;
+        throw new Error('boop');
+      };
+
+      async function test(value, expect) {
+        await assert.isRejected(control.getChangeAfter(10, value), /boop/);
+        assert.strictEqual(gotTimeout, expect);
+      }
+
+      await test(null,                      Timeouts.MAX_TIMEOUT_MSEC);
+      await test(0,                         Timeouts.MIN_TIMEOUT_MSEC);
+      await test(Timeouts.MAX_TIMEOUT_MSEC, Timeouts.MAX_TIMEOUT_MSEC);
+      await test(Timeouts.MIN_TIMEOUT_MSEC, Timeouts.MIN_TIMEOUT_MSEC);
+
+      for (let i = Timeouts.MIN_TIMEOUT_MSEC + 1; i < Timeouts.MAX_TIMEOUT_MSEC; i += 2347) {
+        await test(i, i);
+      }
+    });
+
     it('should return back a valid non-`null` subclass response', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control._impl_currentRevNum = async () => {
         return 10;
       };
-      control._impl_getChangeAfter = async (baseRevNum, currentRevNum) => {
+      control._impl_getChangeAfter = async (baseRevNum, timeoutMsec_unused, currentRevNum) => {
         const rev = currentRevNum + 1;
         return new MockChange(rev, [new MockOp('x', baseRevNum, rev)]);
       };
@@ -197,7 +224,7 @@ describe('doc-server/BaseControl', () => {
       control._impl_currentRevNum = async () => {
         return 10;
       };
-      control._impl_getChangeAfter = async (baseRevNum_unused, currentRevNum_unused) => {
+      control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum_unused) => {
         return null;
       };
 
@@ -211,7 +238,7 @@ describe('doc-server/BaseControl', () => {
       };
 
       async function test(value) {
-        control._impl_getChangeAfter = async (baseRevNum_unused, currentRevNum_unused) => {
+        control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum_unused) => {
           return value;
         };
 
@@ -230,7 +257,7 @@ describe('doc-server/BaseControl', () => {
       control._impl_currentRevNum = async () => {
         return 10;
       };
-      control._impl_getChangeAfter = async (baseRevNum_unused, currentRevNum) => {
+      control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum) => {
         return new MockChange(currentRevNum + 1, [], Timestamp.MIN_VALUE);
       };
 
@@ -242,7 +269,7 @@ describe('doc-server/BaseControl', () => {
       control._impl_currentRevNum = async () => {
         return 10;
       };
-      control._impl_getChangeAfter = async (baseRevNum_unused, currentRevNum) => {
+      control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum) => {
         return new MockChange(currentRevNum + 1, [], null, 'some_author');
       };
 

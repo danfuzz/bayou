@@ -112,7 +112,7 @@ export default class InfoError extends Error {
   }
 
   /**
-   * Custom inspector function, as called by `util.inspect()`. This just returns
+   * Custom inspector function, as called by `util.inspect()`. This
    * implementation is similar to the default `Error` inspector, except that
    * this one formats the first line in a nicer way given the structured error
    * content.
