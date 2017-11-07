@@ -71,7 +71,7 @@ export default class PropertyIterable extends CommonBase {
   skipMethods() {
     // **Note:** If `value` is defined, the property is guaranteed not to be
     // synthetic.
-    return this.filter(desc => !TFunction.isCallable(desc.value));
+    return this.filter(desc => (typeof desc.value) !== 'function');
   }
 
   /**

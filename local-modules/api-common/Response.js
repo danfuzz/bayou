@@ -53,29 +53,29 @@ export default class Response extends CommonBase {
     this._error = Response._fixError(error);
 
     /**
-     * {array<string>|null} Error stack, or `null` if this instance doesn't
-     * represent an error. In the case of an error that has no available stack
-     * info, this is an empty array (`[]`) and not `null`.
+     * {array<string>|null} Error trace, or `null` if this instance doesn't
+     * represent an error.
      */
-    this._errorStack = Response._fixErrorStack(error);
+    this._errorTrace = Response._fixErrorTrace(error);
 
     Object.freeze(this);
   }
 
   /**
    * {CodableError|null} Error result, or `null` if this instance doesn't
-   * represent an error.
+   * represent an error. This value is guaranteed to be suitable for encoding
+   * across an API boundary.
    */
   get error() {
     return this._error;
   }
 
   /**
-   * {array<string>|null} Clean error stack, or `null` if this instance doesn't
-   * represent an error.
+   * {array<string>|null} Clean error trace (including message and causes if
+   * any), or `null` if this instance doesn't represent an error.
    */
-  get errorStack() {
-    return this._errorStack;
+  get errorTrace() {
+    return this._errorTrace;
   }
 
   /** {Int} Message ID. */
@@ -128,22 +128,21 @@ export default class Response extends CommonBase {
   }
 
   /**
-   * Makes a cleaned-up stack from an incoming `error` argument. This returns
-   * `null` if given `null`. In other cases were `error` doesn't come with a
-   * stack, this returns an empty array.
+   * Makes a cleaned-up trace from an incoming `error` argument. This returns
+   * `null` if given `null`.
    *
    * @param {*} error Error value.
-   * @returns {array<string>|null} Cleaned up error stack as an array of stack
+   * @returns {array<string>|null} Cleaned up error trace as an array of lines,
    *   lines. Will be `[]` if this is an error-ish value with no stack, or
    *   `null` if `error` is `null`.
    */
-  static _fixErrorStack(error) {
+  static _fixErrorTrace(error) {
     if (error === null) {
       return null;
     } else if (!(error instanceof Error)) {
       return [];
     }
 
-    return ErrorUtil.stackLines(error);
+    return ErrorUtil.fullTraceLines(error);
   }
 }

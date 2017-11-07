@@ -46,10 +46,13 @@ export default class ApiLog extends Singleton {
       // TODO: Ultimately _some_ errors coming back from API calls shouldn't
       // be considered console-log-worthy server errors. We will need to
       // differentiate them at some point.
-      this._console.error(`[${connectionId}] Error:`, response.error.message);
-      if (response.errorStack.length !== 0) {
-        const stackString = response.errorStack.join('\n  ');
-        this._console.info(`Original trace:\n  ${stackString}`);
+
+      if (response.errorTrace.length === 0) {
+        this._console.error(`[${connectionId}] Error:`, response.error.message);
+      } else {
+        this._console.error(`[${connectionId}] Error.`);
+        const trace = response.errorTrace.map(line => `  ${line}`).join('\n');
+        this._console.info(trace);
       }
     }
 
@@ -69,7 +72,7 @@ export default class ApiLog extends Singleton {
       details.result = response.result;
     } else {
       details.error      = response.error;
-      details.errorStack = response.errorStack || [];
+      details.errorTrace = response.errorTrace || [];
     }
 
     this._writeJson(details);
