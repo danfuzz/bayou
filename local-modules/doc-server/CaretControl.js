@@ -6,7 +6,7 @@ import {
   Caret, CaretChange, CaretDelta, CaretOp, CaretSnapshot, RevisionNumber, Timestamp
 } from 'doc-common';
 import { TransactionSpec } from 'file-store';
-import { Condition } from 'promise-util';
+import { Condition, Delay } from 'promise-util';
 import { TInt, TString } from 'typecheck';
 import { Errors } from 'util-common';
 
@@ -205,15 +205,25 @@ export default class CaretControl extends BaseControl {
       return null;
     }
 
-    // Iterate if / as long as the base revision is still the current one. This
-    // will stop being the case if either there's a local or remote update. The
-    // loop is needed because the remote update check can time out without an
-    // actual change happening.
+    const timeoutTime = Date.now() + timeoutMsec;
+
+    // Iterate if / as long as the base revision is still the current one and
+    // the timeout time has not passed. Timeouts aside, this will stop being the
+    // case if either there's a local or remote update. The loop is needed
+    // because the remote update check can time out without an actual change
+    // happening.
     while (oldSnapshot.revNum === this._snapshot.revNum) {
-      // Wait for either a local or remote update, whichever comes first.
+      const now = Date.now();
+
+      if (now >= timeoutTime) {
+        throw Errors.timed_out(timeoutMsec);
+      }
+
+      // Wait for one of the salient events.
       await Promise.race([
         this._updatedCondition.whenTrue(),
-        this._caretStorage.whenRemoteChange()
+        this._caretStorage.whenRemoteChange(),
+        Delay.resolve(timeoutTime - now)
       ]);
 
       // If there were remote changes, this will cause the snapshot to get
