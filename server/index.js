@@ -17,7 +17,7 @@ import fs from 'fs';
 import path from 'path';
 import puppeteer from 'puppeteer';
 import minimist from 'minimist';
-import { format } from 'util';
+import { format, promisify } from 'util';
 
 import { Application } from 'app-setup';
 import { ClientBundle } from 'client-bundle';
@@ -297,6 +297,10 @@ async function clientTest() {
     // eslint-disable-next-line no-console
     console.log('Wrote test results to file:', testOut);
   }
+
+  // This ensures that `stdout` (including the `console.log()` output) has been
+  // flushed.
+  await promisify(cb => process.stdout.write('', 'utf8', cb))();
 
   process.exit(anyFailed ? 1 : 0);
 }
