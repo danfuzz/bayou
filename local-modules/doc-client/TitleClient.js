@@ -4,7 +4,7 @@
 
 import { DocumentState } from 'data-model-client';
 import { QuillEvents, QuillUtil } from 'quill-util';
-import { CommonBase } from 'util-common';
+import { CommonBase, Errors } from 'util-common';
 
 /**
  * Plumbing between the title field (managed by Quill) on the client and the
@@ -116,9 +116,18 @@ export default class TitleClient extends CommonBase {
             return { event };
           })(),
           (async () => {
-            const value =
-              await this._docSession.propertyClient.getUpdate('title', currentContents);
-            return { value };
+            try {
+              const value =
+                await this._docSession.propertyClient.getUpdate('title', currentContents);
+              return { value };
+            } catch (e) {
+              // A timeout will just elicit a retry. Everything else is a
+              // throw-worthy problem.
+              if (Errors.isTimedOut(e)) {
+                return {}; // ...so that neither `if` clause below will activate.
+              }
+              throw e;
+            }
           })()
         ]);
 
@@ -126,7 +135,7 @@ export default class TitleClient extends CommonBase {
         if (value !== undefined) {
           this._quill.setText(value);
           await this._pushUpdate();
-        } else {
+        } else if (event !== undefined) {
           currentEvent = event;
         }
       } else {
