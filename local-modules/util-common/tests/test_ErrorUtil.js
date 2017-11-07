@@ -21,7 +21,7 @@ describe('util-common/ErrorUtil', () => {
 
   describe('stackLines(error, indent)', () => {
     it('should return an array of strings, each with the specified indentation', () => {
-      const result = ErrorUtil.stackLines(new Error('oy'), '123');
+      const result = ErrorUtil.stackLines(new Error('oy\nyo'), '123');
 
       assert.isArray(result);
       for (const line of result) {
@@ -57,6 +57,18 @@ describe('util-common/ErrorUtil', () => {
       error3.name  = 'Foo';
       error3.cause = error2;
       test(error3, 'Foo: bar');
+    });
+
+    it('should split a multi-line name and/or message into separate result elements', () => {
+      const error = new Error('what\nis\nhappening?');
+      error.name = 'Who\nWhat';
+
+      const result = ErrorUtil.fullTraceLines(error);
+      const expect = ['Who', 'What: what', 'is', 'happening?'];
+
+      for (let i = 0; i < expect.length; i++) {
+        assert.strictEqual(result[i], expect[i]);
+      }
     });
 
     it('should have lines that indicate extra properties', () => {

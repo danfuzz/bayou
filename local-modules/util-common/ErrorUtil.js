@@ -199,10 +199,15 @@ export default class ErrorUtil extends UtilityClass {
 
     const stack = ErrorUtil.stackLines(error, indent2);
 
+    // The message can contain multiple lines. (The name too, though that'd be
+    // pretty unusual.)
+    const message =
+      `${error.name}: ${error.message}`.split('\n').map(line => `${indent}${line}`);
+
     return {
       cause,
       lines: [
-        `${indent}${error.name}: ${error.message}`,
+        ...message,
         ...stack,
         ...extraLines
       ]
