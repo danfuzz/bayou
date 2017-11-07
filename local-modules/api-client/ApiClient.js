@@ -6,7 +6,7 @@ import { BaseKey, CodableError, ConnectionError, Message, Response } from 'api-c
 import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
-import { CommonBase, InfoError, WebsocketCodes } from 'util-common';
+import { CommonBase, WebsocketCodes } from 'util-common';
 
 import TargetMap from './TargetMap';
 
