@@ -265,16 +265,8 @@ export default class ServerSink extends BaseSink {
    * @returns {string} String form of `value`.
    */
   static _inspect(value) {
-    if (value instanceof Error) {
-      const lines = [value.toString()];
-
-      for (const s of ErrorUtil.stackLines(value)) {
-        lines.push(`  ${s}`);
-      }
-
-      return lines.join('\n');
-    }
-
-    return inspect(value);
+    return (value instanceof Error)
+      ? ErrorUtil.fullTrace(value)
+      : inspect(value);
   }
 }

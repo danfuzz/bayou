@@ -64,12 +64,34 @@ export default class PropertyIterable extends CommonBase {
 
   /**
    * Gets an instance that is like this one but with an addition filter that
+   * skips methods (non-synthetic function-valued properties).
+   *
+   * @returns {PropertyIterable} The new iterator.
+   */
+  skipMethods() {
+    // **Note:** If `value` is defined, the property is guaranteed not to be
+    // synthetic.
+    return this.filter(desc => (typeof desc.value) !== 'function');
+  }
+
+  /**
+   * Gets an instance that is like this one but with an addition filter that
    * skips properties defined on the root `Object` prototype.
    *
    * @returns {PropertyIterable} The new iterator.
    */
   skipObject() {
     return this.filter(desc => (desc.target !== Object.prototype));
+  }
+
+  /**
+   * Gets an instance that is like this one but with an addition filter that
+   * skips properties in "private" form (that is, prefixed with `_`).
+   *
+   * @returns {PropertyIterable} The new iterator.
+   */
+  skipPrivate() {
+    return this.filter(desc => !/^_/.test(desc.name));
   }
 
   /**

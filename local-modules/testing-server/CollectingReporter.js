@@ -117,19 +117,14 @@ export default class CollectingReporter extends CommonBase {
       if (error !== null) {
         let errLines;
         if (error instanceof Error) {
-          const msgLines   = error.toString().split('\n');
-          const stackLines = ErrorUtil.stackLines(error).map(s => `  at ${s}`);
-          errLines = [...msgLines, ...stackLines];
+          errLines = ErrorUtil.fullTraceLines(error, '  ');
         } else {
-          errLines = inspect(error).split('\n');
+          errLines = inspect(error).split('\n').map(line => `  ${line}`);
         }
 
         anyExtra = true;
         lines.push('');
-
-        for (const line of errLines) {
-          lines.push(`  ${line}`);
-        }
+        lines.push(...errLines);
       }
 
       if (anyExtra) {

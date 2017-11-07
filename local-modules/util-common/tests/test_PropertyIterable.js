@@ -25,7 +25,7 @@ describe('util-common/PropertyIterable', () => {
     });
   });
 
-  describe('iterating soley over methods', () => {
+  describe('onlyMethods()', () => {
     it('should return just callable function elements of the object', () => {
       const iter = new PropertyIterable(TEST_OBJECT);
       const methodIter = iter.onlyMethods();
@@ -36,7 +36,7 @@ describe('util-common/PropertyIterable', () => {
     });
   });
 
-  describe('iterating over properties not defined on Object', () => {
+  describe('skipObject()', () => {
     it('should return just properties that are not part of Object', () => {
       const iter = new PropertyIterable(TEST_OBJECT);
       const nonObjectIter = iter.skipObject();
@@ -48,7 +48,7 @@ describe('util-common/PropertyIterable', () => {
     });
   });
 
-  describe('iterating solely over non-synthetic properties', () => {
+  describe('skipSynthetic()', () => {
     it('should iterate solely over non-synthetic properties', () => {
       const obj = {
         yes1: 'x',
@@ -60,6 +60,39 @@ describe('util-common/PropertyIterable', () => {
       };
       const iter = new PropertyIterable(obj).skipSynthetic();
       const expectedProperties = ['yes1', 'yes2'];
+
+      testIteratable(iter, expectedProperties);
+    });
+  });
+
+  describe('skipMethods()', () => {
+    it('should iterate solely over non-methods', () => {
+      const obj = {
+        yes1: 'x',
+        yes2: 'y',
+        get yes3() { return 10; },
+        no1() { /*empty*/ },
+        no2: () => { /*empty*/ }
+      };
+      const iter = new PropertyIterable(obj).skipMethods();
+      const expectedProperties = ['yes1', 'yes2', 'yes3'];
+
+      testIteratable(iter, expectedProperties);
+    });
+  });
+
+  describe('skipPrivate()', () => {
+    it('should omit private properties', () => {
+      const obj = {
+        yes1: 'x',
+        yes2() { /*empty*/ },
+        get yes3() { return 10; },
+        _: 'no',
+        _no2: 'no',
+        get _no3() { return 10; }
+      };
+      const iter = new PropertyIterable(obj).skipPrivate();
+      const expectedProperties = ['yes1', 'yes2', 'yes3'];
 
       testIteratable(iter, expectedProperties);
     });
