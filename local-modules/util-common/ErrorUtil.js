@@ -46,7 +46,8 @@ export default class ErrorUtil extends UtilityClass {
   static fullTraceLines(error, indent = '') {
     TObject.check(error, Error);
 
-    const causeLine = [`${indent}caused by:`];
+    const indent2   = `${indent}  `;
+    const causeLine = [`${indent2}caused by:`];
     const traces    = [];
     let   first     = true;
 
@@ -55,7 +56,7 @@ export default class ErrorUtil extends UtilityClass {
 
       if (first) {
         first = false;
-        indent = `${indent}  `;
+        indent = indent2;
       } else {
         traces.push(causeLine);
       }
@@ -168,6 +169,7 @@ export default class ErrorUtil extends UtilityClass {
    *   `cause` to the chained cause or to `null` if there is no chained cause.
    */
   static _oneTrace(error, indent) {
+    const indent2  = `${indent}  `;
     let   cause    = null;
     const extra    = {};
     let   anyExtra = false;
@@ -190,12 +192,12 @@ export default class ErrorUtil extends UtilityClass {
 
     let extraLines;
     if (anyExtra) {
-      extraLines = inspect(extra).split('\n').map(line => `${indent}${line}`);
+      extraLines = inspect(extra).split('\n').map(line => `${indent2}${line}`);
     } else {
       extraLines = [];
     }
 
-    const stack = ErrorUtil.stackLines(error, `${indent}  `);
+    const stack = ErrorUtil.stackLines(error, indent2);
 
     return {
       cause,
