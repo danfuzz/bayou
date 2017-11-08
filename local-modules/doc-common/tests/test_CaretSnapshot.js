@@ -100,6 +100,7 @@ describe('doc-common/CaretSnapshot', () => {
       test([1]);
       test(['florp', op1]);
       test([op1, 'florp', op2]);
+      test([CaretOp.op_endSession('x')]); // Session ends aren't allowed.
       test([CaretOp.op_setField('x', 'revNum', 1)]); // Individual field sets aren't allowed.
       test([op1, op1]); // Duplicates aren't allowed.
     });
@@ -109,6 +110,11 @@ describe('doc-common/CaretSnapshot', () => {
         const delta = new CaretDelta(ops);
         assert.throws(() => { new CaretSnapshot(0, delta); });
       }
+
+      // Session ends aren't allowed.
+      test([CaretOp.op_endSession('x')]);
+      test([op1, CaretOp.op_endSession('x')]);
+      test([op1, CaretOp.op_endSession(caret1.sessionId)]);
 
       // Individual field sets aren't allowed.
       test([CaretOp.op_setField('x', 'revNum', 1)]);
