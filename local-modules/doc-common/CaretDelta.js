@@ -127,6 +127,17 @@ export default class CaretDelta extends BaseDelta {
           break;
         }
 
+        case CaretOp.END_SESSION: {
+          const sessionId = opProps.sessionId;
+
+          if (ids.has(sessionId)) {
+            return false;
+          }
+
+          ids.add(sessionId);
+          break;
+        }
+
         default: {
           return false;
         }

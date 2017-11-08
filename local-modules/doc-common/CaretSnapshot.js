@@ -47,6 +47,11 @@ export default class CaretSnapshot extends BaseSnapshot {
           break;
         }
 
+        case CaretOp.END_SESSION: {
+          // Ignored. A snapshot doesn't "remember" ended sessions.
+          break;
+        }
+
         default: {
           // Should have been prevented by the `isDocument()` check.
           throw Errors.wtf('Weird op');
