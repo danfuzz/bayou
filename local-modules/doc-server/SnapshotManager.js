@@ -33,8 +33,8 @@ export default class SnapshotManager extends CommonBase {
     this._snapshotClass = this._control.constructor.snapshotClass;
 
     /**
-     * {Map<RevisionNumber, BaseSnapshot>} Mapping from revision numbers to
-     * corresponding snapshots. Sparse.
+     * {Map<RevisionNumber, Promise<BaseSnapshot>>} Mapping from revision
+     * numbers to corresponding snapshot promises. Sparse.
      */
     this._snapshots = new Map();
 
@@ -56,29 +56,50 @@ export default class SnapshotManager extends CommonBase {
    *
    * @param {Int} revNum Which revision to get. Guaranteed to be a revision
    *   number for the instantaneously-current revision or earlier.
-   * @returns {BaseSnapshot} Snapshot of the indicated revision. Though the
-   *   superclass allows it, this method never returns `null`.
+   * @returns {BaseSnapshot} Snapshot of the indicated revision.
    */
   async getSnapshot(revNum) {
     // Search backward through the full revisions for a base for forward
     // composition.
-    let base = null;
+    let basePromise = null;
+    let baseRevNum  = -1;
     for (let i = revNum; i >= 0; i--) {
       const v = this._snapshots.get(i);
       if (v) {
-        base = v;
+        basePromise = v;
+        baseRevNum  = i;
         break;
       }
     }
 
-    if (base && (base.revNum === revNum)) {
+    if (baseRevNum === revNum) {
       // Found the right revision!
       this._control.log.detail(`Found snapshot: r${revNum}`);
-      return base;
+      return basePromise;
     }
 
-    // We didn't actully find a snapshot of the requested revision. Apply deltas
-    // to the base to produce the desired revision. Store it, and return it.
+    // We didn't actully find a snapshot of the requested revision. Make it,
+    // cache it, and return it.
+
+    const result = this._makeSnapshot(revNum, basePromise);
+
+    this._snapshots.set(revNum, result);
+
+    return result;
+  }
+
+  /**
+   * Makes the snapshot for the indicated revision, by composing all changes
+   * from the indicated base revision.
+   *
+   * @param {Int} revNum Which revision to get. Guaranteed to be a revision
+   *   number for the instantaneously-current revision or earlier.
+   * @param {Promise<BaseSnapshot>|null} basePromise Promise for the base
+   *   snapshot to use, or `null` to start from revision `0`.
+   * @returns {BaseSnapshot} Snapshot of the indicated revision.
+   */
+  async _makeSnapshot(revNum, basePromise) {
+    const base = await basePromise;
 
     const baseArgs = (base === null)
       ? [this._deltaClass.EMPTY, 0]
@@ -95,7 +116,6 @@ export default class SnapshotManager extends CommonBase {
       this._control.log.info(`Made snapshot: r${revNum} = r${base.revNum} + [c${base.revNum + 1} .. c${revNum}]`);
     }
 
-    this._snapshots.set(revNum, result);
     return result;
   }
 }
