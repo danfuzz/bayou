@@ -183,7 +183,8 @@ export default class DocSession extends CommonBase {
    *   change has been applied to the caret state.
    */
   async caret_update(docRevNum, index, length = 0) {
-    const change = this._caretControl.changeFor(this._sessionId, docRevNum, index, length);
+    const change =
+      await this._caretControl.changeFor(this._sessionId, docRevNum, index, length);
     return this._caretControl.update(change);
   }
 

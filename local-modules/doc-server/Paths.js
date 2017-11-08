@@ -3,9 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { RevisionNumber } from 'doc-common';
-import { StoragePath } from 'file-store';
-import { TString } from 'typecheck';
-import { Errors, UtilityClass } from 'util-common';
+import { UtilityClass } from 'util-common';
 
 /**
  * Utility class that just provides the common `StoragePath` strings used
@@ -38,21 +36,17 @@ export default class Paths extends UtilityClass {
     return '/caret';
   }
 
-  /** {string} `StoragePath` prefix string for caret session data. */
-  static get CARET_SESSION_PREFIX() {
-    return `${Paths.CARET_PREFIX}/session`;
+  /** {string} `StoragePath` prefix string for caret changes. */
+  static get CARET_CHANGE_PREFIX() {
+    return `${Paths.CARET_PREFIX}/change`;
   }
 
   /**
-   * {string} `StoragePath` string used to flag updates to the set of active
-   * sessions. The way this is used is that any change to this value causes the
-   * caret storage code to refresh its list of active sessions. When a new
-   * session is added or an old one goes away, the server that makes that change
-   * also changes the value stored here to something new. See {@link
-   * CaretStorage#_caretSetUpdate} for details.
+   * {string} `StoragePath` string for the caret revision number. This
+   * corresponds to the highest change number.
    */
-  static get CARET_SET_UPDATE_FLAG() {
-    return `${Paths.CARET_PREFIX}/set_update`;
+  static get CARET_REVISION_NUMBER() {
+    return `${Paths.CARET_PREFIX}/revision_number`;
   }
 
   /**
@@ -95,16 +89,17 @@ export default class Paths extends UtilityClass {
   }
 
   /**
-   * Gets the `StoragePath` string corresponding to the indicated session,
-   * specifically to store caret data for that session.
+   * Gets the `StoragePath` string corresponding to the indicated revision
+   * number, specifically to store the caret change that results in that
+   * revision.
    *
-   * @param {string} sessionId The session ID.
-   * @returns {string} The corresponding `StoragePath` string for caret
-   *   information.
+   * @param {RevisionNumber} revNum The revision number.
+   * @returns {string} The corresponding `StoragePath` string for caret change
+   *   storage.
    */
-  static forCaret(sessionId) {
-    TString.check(sessionId);
-    return `${Paths.CARET_SESSION_PREFIX}/${sessionId}`;
+  static forCaretChange(revNum) {
+    RevisionNumber.check(revNum);
+    return `${Paths.CARET_CHANGE_PREFIX}/${revNum}`;
   }
 
   /**
@@ -119,21 +114,5 @@ export default class Paths extends UtilityClass {
   static forPropertyChange(revNum) {
     RevisionNumber.check(revNum);
     return `${Paths.PROPERTY_CHANGE_PREFIX}/${revNum}`;
-  }
-
-  /**
-   * Takes a full storage path for a caret and returns the session ID part of
-   * it. This is the reverse of `forCaret()`.
-   *
-   * @param {string} path The full storage path.
-   * @returns {string} The corresponding caret session ID.
-   */
-  static sessionFromCaretPath(path) {
-    if (!StoragePath.isPrefix(Paths.CARET_SESSION_PREFIX, path)) {
-      throw Errors.bad_value(path, 'caret path');
-    }
-
-    const split = StoragePath.split(path);
-    return split[split.length - 1];
   }
 }
