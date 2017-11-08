@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Errors } from 'util-common';
+
 import BaseDelta from './BaseDelta';
 import CaretOp from './CaretOp';
 
@@ -13,6 +15,94 @@ import CaretOp from './CaretOp';
  * Instances of this class are immutable.
  */
 export default class CaretDelta extends BaseDelta {
+  /**
+   * Composes another instance on top of this one, to produce a new instance.
+   * This operation works equally whether or not `this` is a document delta.
+   *
+   * @param {PropertyDelta} other The delta to compose.
+   * @returns {PropertyDelta} Result of composition.
+   */
+  compose(other) {
+    CaretDelta.check(other);
+
+    // Map from each session to an array of ops which apply to it.
+    const sessions = new Map();
+
+    // Add / replace the ops, first from `this` and then from `other`, as a
+    // mapping from the session ID.
+    for (const op of [...this.ops, ...other.ops]) {
+      const opProps = op.props;
+
+      switch (opProps.opName) {
+        case CaretOp.BEGIN_SESSION: {
+          // Clear out the session except for this op, because no earlier op
+          // could possibly affect the result.
+          sessions.set(opProps.caret.sessionId, [op]);
+          break;
+        }
+
+        case CaretOp.END_SESSION: {
+          // Clear out the session; same reason as `BEGIN_SESSION` above. We
+          // _do_ keep the op, because the fact of a deletion needs to be part
+          // of the final composed result.
+          sessions.set(opProps.caret.sessionId, [op]);
+          break;
+        }
+
+        case CaretOp.SET_FIELD: {
+          const sessionId = opProps.sessionId;
+          const ops       = sessions.get(sessionId);
+          let   handled   = false;
+
+          if (!ops) {
+            // This is a "naked" set (no corresponding `BEGIN_SESSION` in the
+            // result. Just start off an array with it.
+            sessions.set(sessionId, [op]);
+            handled = true;
+          } else if (ops.length === 1) {
+            // We have a single-element array this session. It might be a
+            // `BEGIN_SESSION` or `END_SESSION`, in which case we can do
+            // something special.
+            const op0Props = ops[0].props;
+            if (op0Props.opName === CaretOp.BEGIN_SESSION) {
+              // Integrate the new value into the caret.
+              const caret = op0Props.caret.compose(op);
+              ops[0] = CaretOp.op_beginSession(caret);
+              handled = true;
+            } else if (op0Props.opName === CaretOp.END_SESSION) {
+              // We ignore set-after-end. A bit philosophical, but what does
+              // it even mean to set a value on a nonexistent thing?
+              handled = true;
+            }
+          }
+
+          // If not handled by the special cases above, try to find an op to
+          // replace in the existing array (same field). If not found, append
+          // the op.
+          for (let i = 0; !handled && (i < ops.length); i++) {
+            if (ops[i].props.key === opProps.key) {
+              ops[i] = op;
+              handled = true;
+            }
+          }
+
+          if (!handled) {
+            ops.push(op);
+          }
+
+          break;
+        }
+
+        default: {
+          throw Errors.wtf(`Weird op name: ${opProps.opName}`);
+        }
+      }
+    }
+
+    const allOps = [].concat(...sessions.values());
+    return new CaretDelta(allOps);
+  }
+
   /**
    * Main implementation of {@link #isDocument}.
    *
