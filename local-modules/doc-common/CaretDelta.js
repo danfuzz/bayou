@@ -45,7 +45,7 @@ export default class CaretDelta extends BaseDelta {
           // Clear out the session; same reason as `BEGIN_SESSION` above. We
           // _do_ keep the op, because the fact of a deletion needs to be part
           // of the final composed result.
-          sessions.set(opProps.caret.sessionId, [op]);
+          sessions.set(opProps.sessionId, [op]);
           break;
         }
 
@@ -66,7 +66,7 @@ export default class CaretDelta extends BaseDelta {
             const op0Props = ops[0].props;
             if (op0Props.opName === CaretOp.BEGIN_SESSION) {
               // Integrate the new value into the caret.
-              const caret = op0Props.caret.compose(op);
+              const caret = op0Props.caret.compose(new CaretDelta([op]));
               ops[0] = CaretOp.op_beginSession(caret);
               handled = true;
             } else if (op0Props.opName === CaretOp.END_SESSION) {
