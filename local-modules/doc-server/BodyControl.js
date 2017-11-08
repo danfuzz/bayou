@@ -235,9 +235,10 @@ export default class BodyControl extends BaseControl {
     const dNext = dServer.transform(dClient, true);
 
     if (dNext.isEmpty()) {
-      // It turns out that nothing changed. **Note:** It is unclear whether this
-      // can actually happen in practice, given that we already return early
-      // (in `update()`) if we are asked to apply an empty delta.
+      // It turns out that nothing changed. **Note:** This case is unusual, but
+      // it _can_ happen in practice. For example, if there is a race between
+      // two changes that both delete the same characters from the document,
+      // then `transform()` on the losing change will in fact be empty.
       return new BodyChange(rCurrent.revNum, BodyDelta.EMPTY);
     }
 

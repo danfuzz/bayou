@@ -64,8 +64,8 @@ export default class BaseSnapshot extends CommonBase {
    * **Note:** Subclasses are responsible for freezing the constructed instance.
    *
    * @param {RevisionNumber} revNum Revision number of the document.
-   * @param {object|array} contents The document contents per se, in the form of
-   *   a document delta (that is, a from-empty delta). This must be either an
+   * @param {BaseDelta|array} contents The document contents per se, in the form
+   *   of a document delta (that is, a from-empty delta). This must be either an
    *   object of type `deltaClass` as defined by the subclass or an array which
    *   can be passed to the `deltaClass` constructor to produce a valid delta.
    */

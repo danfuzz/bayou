@@ -178,8 +178,8 @@ export default class Caret extends CommonBase {
 
   /**
    * Composes the given `delta` on top of this instance, producing a new
-   * instance. The operations in `delta` must all be `updateField` ops
-   * for the same `sessionId` as this instance.
+   * instance. The operations in `delta` must all be `setField` ops for the same
+   * `sessionId` as this instance.
    *
    * @param {CaretDelta} delta Delta to apply.
    * @returns {Caret} Caret consisting of this instance's data as the base, with
