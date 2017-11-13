@@ -101,6 +101,12 @@ export default class EditorComplex extends CommonBase {
      */
     this._clientStore = new ClientStore();
 
+    /**
+     * {CaretState} Machinery that watches for changes to the session state
+     * and updates the client redux store.
+     */
+    this._caretState = new CaretState(this);
+
     // The rest of the initialization has to happen asynchronously. In
     // particular, there is no avoiding the asynchrony in `_domSetup()`, and
     // that setup needs to be complete before we construct the Quill and
@@ -130,12 +136,6 @@ export default class EditorComplex extends CommonBase {
 
       /** {QuillProm} The Quill editor object. */
       this._bodyQuill = bodyQuill;
-
-      /**
-       * {CaretState} Machinery that watches for changes to the session state
-       * and updates the client redux store.
-       */
-      this._caretState = new CaretState(this);
 
       /** {CaretOverlay} The remote caret overlay controller. */
       this._caretOverlay = new CaretOverlay(this, authorOverlayNode);
