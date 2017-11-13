@@ -15,6 +15,7 @@
     "see-all": "local",
     "state-machine": "local",
     "typecheck": "local",
+    "ui-embeds": "local",
     "ui-header": "local",
     "util-client": "local",
     "util-common": "local"

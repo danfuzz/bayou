@@ -21,6 +21,7 @@ import BodyClient from './BodyClient';
 import CaretOverlay from './CaretOverlay';
 import CaretState from './CaretState';
 import DocSession from './DocSession';
+import LinkDetector from './LinkDetector';
 import TitleClient from './TitleClient';
 
 /** {Logger} Logger for this module. */
@@ -101,6 +102,12 @@ export default class EditorComplex extends CommonBase {
      */
     this._clientStore = new ClientStore();
 
+    /**
+     * {CaretState} Machinery that watches for changes to the session state
+     * and updates the client redux store.
+     */
+    this._caretState = new CaretState(this);
+
     // The rest of the initialization has to happen asynchronously. In
     // particular, there is no avoiding the asynchrony in `_domSetup()`, and
     // that setup needs to be complete before we construct the Quill and
@@ -108,7 +115,7 @@ export default class EditorComplex extends CommonBase {
     // make a `BodyClient` (which gets done by `_initSession()`).
     (async () => {
       // Do all of the DOM setup for the instance.
-      const [headerNode, titleNode, quillNode, authorOverlayNode] =
+      const [headerNode, titleNode, bodyNode, authorOverlayNode] =
         await this._domSetup(topNode, sessionKey.baseUrl);
 
       // The Provider component wraps our React application and makes the
@@ -122,36 +129,14 @@ export default class EditorComplex extends CommonBase {
         headerNode
       );
 
-      // Makes a clone of the default config with the additional binding of
-      // the "enter" key to our special handler. **TODO:** This is way more
-      // verbose and precarious than it ought to be. We should fix it to be
-      // less icky.
-      const titleModuleConfig = Object.assign({}, EditorComplex._titleModuleConfig);
-      titleModuleConfig.keyboard = Object.assign({},
-        titleModuleConfig.keyboard,
-        { onEnter: this.titleOnEnter.bind(this) });
+      // Construct the `QuillProm` instances.
+      const [titleQuill, bodyQuill] = this._quillSetup(titleNode, bodyNode);
 
       /** {QuillProm} The Quill editor object for the document title. */
-      this._titleQuill = new QuillProm(titleNode, {
-        readOnly: false,
-        strict:   true,
-        theme:    Hooks.theOne.quillThemeName('title'),
-        modules:  titleModuleConfig
-      });
+      this._titleQuill = titleQuill;
 
       /** {QuillProm} The Quill editor object. */
-      this._bodyQuill = new QuillProm(quillNode, {
-        readOnly: true,
-        strict:   true,
-        theme:    Hooks.theOne.quillThemeName('body'),
-        modules:  EditorComplex._bodyModuleConfig
-      });
-
-      /**
-       * {CaretState} Machinery that watches for changes to the
-       * session state and updates the client redux store.
-       */
-      this._caretState = new CaretState(this);
+      this._bodyQuill = bodyQuill;
 
       /** {CaretOverlay} The remote caret overlay controller. */
       this._caretOverlay = new CaretOverlay(this, authorOverlayNode);
@@ -280,8 +265,8 @@ export default class EditorComplex extends CommonBase {
    *
    * @param {Element} topNode The top DOM node for the complex.
    * @param {string} baseUrl Base URL of the server.
-   * @returns {array<Element>} Array of `[quillNode, authorOverlayNode]`, for
-   *   immediate consumption by the constructor.
+   * @returns {array<Element>} Array of `[headerNode, titleNode, bodyNode,
+   *   authorOverlayNode]`, for immediate consumption by the constructor.
    */
   async _domSetup(topNode, baseUrl) {
     // Validate the top node, and give it the right CSS style.
@@ -336,26 +321,66 @@ export default class EditorComplex extends CommonBase {
     topNode.appendChild(titleNode);
 
     // Make the node for the document body section. The most prominent part of
-    // this section is the `<div>` managed by Quill. In addition, this is where
-    // the author overlay goes.
+    // this section is the `<div>` managed by the Quill instance for the
+    // document body. In addition, this is where the author overlay goes.
 
+    const bodyOuterNode = document.createElement('div');
+    bodyOuterNode.classList.add('bayou-body');
+    topNode.appendChild(bodyOuterNode);
+
+    // Make the `<div>` that actually ends up getting controlled by Quill for
+    // the body.
     const bodyNode = document.createElement('div');
-    bodyNode.classList.add('bayou-body');
-    topNode.appendChild(bodyNode);
-
-    // Make the `<div>` that actually ends up getting controlled by Quill.
-    const quillNode = document.createElement('div');
-    quillNode.classList.add('bayou-editor');
-    bodyNode.appendChild(quillNode);
+    bodyNode.classList.add('bayou-editor');
+    bodyOuterNode.appendChild(bodyNode);
 
     // Make the author overlay node. **Note:** The wacky namespace URL is
     // required. Without it, the `<svg>` element is actually left uninterpreted.
     const authorOverlayNode =
       document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     authorOverlayNode.classList.add('bayou-author-overlay');
-    bodyNode.appendChild(authorOverlayNode);
+    bodyOuterNode.appendChild(authorOverlayNode);
 
-    return [headerNode, titleNode, quillNode, authorOverlayNode];
+    return [headerNode, titleNode, bodyNode, authorOverlayNode];
+  }
+
+  /**
+   * Creates and returns the `QuillProm` instances to use with this complex.
+   *
+   * @param {Element} titleNode The `<div>` for title content.
+   * @param {Element} bodyNode The `<div>` for body content.
+   * @returns {array<QuillProm>} Array of the form `[titleQuill, bodyQuill]`.
+   */
+  _quillSetup(titleNode, bodyNode) {
+    // Makes a clone of the default config with the additional binding of
+    // the "enter" key to our special handler. **TODO:** This is way more
+    // verbose and precarious than it ought to be. We should fix it to be
+    // less icky.
+    const titleModuleConfig = Object.assign({}, EditorComplex._titleModuleConfig);
+    titleModuleConfig.keyboard = Object.assign({},
+      titleModuleConfig.keyboard,
+      { onEnter: this.titleOnEnter.bind(this) });
+
+    /** {QuillProm} The Quill editor object for the document title. */
+    const titleQuill = new QuillProm(titleNode, {
+      readOnly: false,
+      strict:   true,
+      theme:    Hooks.theOne.quillThemeName('title'),
+      modules:  titleModuleConfig
+    });
+
+    /** {QuillProm} The Quill editor object. */
+    const bodyQuill = new QuillProm(bodyNode, {
+      readOnly: true,
+      strict:   true,
+      theme:    Hooks.theOne.quillThemeName('body'),
+      modules:  EditorComplex._bodyModuleConfig
+    });
+
+    LinkDetector.addKeybindings(titleQuill);
+    LinkDetector.addKeybindings(bodyQuill);
+
+    return [titleQuill, bodyQuill];
   }
 
   /**
