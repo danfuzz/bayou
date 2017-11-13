@@ -104,6 +104,22 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * Gets the `StoragePath` string corresponding to the indicated revision
+   * number, specifically for the portion of the document controlled by this
+   * class.
+   *
+   * @param {RevisionNumber} revNum The revision number.
+   * @returns {string} The corresponding `StoragePath` string.
+   */
+  static pathForChange(revNum) {
+    // **Note:** `this` in the context of a static method is the class, not an
+    // instance.
+
+    RevisionNumber.check(revNum);
+    return `${this.pathPrefix}/change/${revNum}`;
+  }
+
+  /**
    * Appends a new change to the document. On success, this returns `true`. On a
    * failure due to `baseRevNum` not being current at the moment of application,
    * this returns `false`. All other failures are reported via thrown errors.
@@ -133,7 +149,7 @@ export default class BaseControl extends BaseDataManager {
 
     const revNum       = change.revNum;
     const baseRevNum   = revNum - 1;
-    const changePath   = clazz._impl_pathForChange(revNum);
+    const changePath   = clazz.pathForChange(revNum);
     const revisionPath = clazz.revisionNumberPath;
 
     const fc   = this.fileCodec; // Avoids boilerplate immediately below.
@@ -289,7 +305,7 @@ export default class BaseControl extends BaseDataManager {
 
     const paths = [];
     for (let i = startInclusive; i < endExclusive; i++) {
-      paths.push(clazz._impl_pathForChange(i));
+      paths.push(clazz.pathForChange(i));
     }
 
     const fc = this.fileCodec;
@@ -603,18 +619,5 @@ export default class BaseControl extends BaseDataManager {
    */
   static get _impl_snapshotClass() {
     return this._mustOverride();
-  }
-
-  /**
-   * Gets the `StoragePath` string corresponding to the indicated revision
-   * number, specifically for the portion of the document controlled by this
-   * class. Subclasses must override this.
-   *
-   * @abstract
-   * @param {RevisionNumber} revNum The revision number.
-   * @returns {string} The corresponding `StoragePath` string.
-   */
-  static _impl_pathForChange(revNum) {
-    return this._mustOverride(revNum);
   }
 }

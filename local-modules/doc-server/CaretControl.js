@@ -465,18 +465,6 @@ export default class CaretControl extends BaseControl {
   }
 
   /**
-   * Gets the `StoragePath` string corresponding to the indicated revision
-   * number, specifically for the portion of the document controlled by this
-   * class.
-   *
-   * @param {RevisionNumber} revNum The revision number.
-   * @returns {string} The corresponding `StoragePath` string.
-   */
-  static _impl_pathForChange(revNum) {
-    return Paths.forCaretChange(revNum);
-  }
-
-  /**
    * Picks a color to use for a new session.
    *
    * @param {string} sessionId The ID for the new session (used as a

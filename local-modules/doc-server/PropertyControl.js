@@ -303,16 +303,4 @@ export default class PropertyControl extends BaseControl {
   static get _impl_snapshotClass() {
     return PropertySnapshot;
   }
-
-  /**
-   * Gets the `StoragePath` string corresponding to the indicated revision
-   * number, specifically for the portion of the document controlled by this
-   * class.
-   *
-   * @param {RevisionNumber} revNum The revision number.
-   * @returns {string} The corresponding `StoragePath` string.
-   */
-  static _impl_pathForChange(revNum) {
-    return Paths.forPropertyChange(revNum);
-  }
 }
