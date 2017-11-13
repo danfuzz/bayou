@@ -76,24 +76,6 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
-   * Underlying implementation of `currentRevNum()`, as required by the
-   * superclass.
-   *
-   * @returns {Int} The instantaneously-current revision number.
-   */
-  async _impl_currentRevNum() {
-    const fc          = this.fileCodec;
-    const storagePath = BodyControl.revisionNumberPath;
-    const spec        = new TransactionSpec(
-      fc.op_checkPathPresent(storagePath),
-      fc.op_readPath(storagePath)
-    );
-
-    const transactionResult = await fc.transact(spec);
-    return transactionResult.data.get(storagePath);
-  }
-
-  /**
    * Underlying implementation of `getChangeAfter()`, as required by the
    * superclass.
    *

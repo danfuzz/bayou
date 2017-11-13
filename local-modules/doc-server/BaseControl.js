@@ -190,12 +190,18 @@ export default class BaseControl extends BaseDataManager {
    * @returns {Int} The instantaneously-current revision number.
    */
   async currentRevNum() {
-    // This method merely exists to enforce the return-type contract as
-    // specified in the method docs.
+    const clazz       = this.constructor;
+    const fc          = this.fileCodec;
+    const storagePath = clazz.revisionNumberPath;
+    const spec        = new TransactionSpec(
+      fc.op_checkPathPresent(storagePath),
+      fc.op_readPath(storagePath)
+    );
 
-    const revNum = await this._impl_currentRevNum();
+    const transactionResult = await fc.transact(spec);
 
-    return RevisionNumber.check(revNum);
+    const result = transactionResult.data.get(storagePath);
+    return RevisionNumber.check(result);
   }
 
   /**
@@ -518,17 +524,6 @@ export default class BaseControl extends BaseDataManager {
       retryTotalMsec += retryDelayMsec;
       retryDelayMsec *= UPDATE_RETRY_GROWTH_FACTOR;
     }
-  }
-
-  /**
-   * Subclass-specific implementation of `currentRevNum()`. Subclasses must
-   * override this.
-   *
-   * @abstract
-   * @returns {Int} The instantaneously-current revision number.
-   */
-  async _impl_currentRevNum() {
-    return this._mustOverride();
   }
 
   /**

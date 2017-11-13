@@ -10,8 +10,8 @@ import { Timeouts, Timestamp } from 'doc-common';
 import { MockChange, MockOp, MockSnapshot } from 'doc-common/mocks';
 import { BaseControl, FileAccess } from 'doc-server';
 import { MockControl } from 'doc-server/mocks';
+import { TransactionSpec } from 'file-store';
 import { MockFile } from 'file-store/mocks';
-import { Delay } from 'promise-util';
 
 /** {FileAccess} Convenient instance of `FileAccess`. */
 const FILE_ACCESS = new FileAccess(Codec.theOne, new MockFile('blort'));
@@ -149,41 +149,74 @@ describe('doc-server/BaseControl', () => {
     });
   });
 
-  describe('currentRevNum()', () => {
-    it('should call through to the subclass implementation', async () => {
-      const control = new MockControl(FILE_ACCESS, 'boop');
+  describe.only('currentRevNum()', () => {
+    it('should perform an appropriate transaction, and use the result', async () => {
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(Codec.theOne, file);
+      const control    = new MockControl(fileAccess, 'boop');
 
-      control._impl_currentRevNum = async () => {
-        return 123;
-      };
-      await assert.eventually.strictEqual(control.currentRevNum(), 123);
+      let gotSpec = null;
 
-      control._impl_currentRevNum = async () => {
-        await Delay.resolve(50);
-        return 321;
+      file._impl_transact = (spec) => {
+        gotSpec = spec;
+        throw new Error('to_be_expected');
       };
-      await assert.eventually.strictEqual(control.currentRevNum(), 321);
 
-      const error = new Error('Oy!');
-      control._impl_currentRevNum = async () => {
-        throw error;
-      };
-      await assert.isRejected(control.currentRevNum(), /^Oy!$/);
+      await assert.isRejected(control.currentRevNum(), /to_be_expected/);
+
+      assert.instanceOf(gotSpec, TransactionSpec);
+
+      const ops1 = gotSpec.opsWithName('checkPathPresent');
+      const ops2 = gotSpec.opsWithName('readPath');
+
+      assert.strictEqual(gotSpec.size, 2);
+      assert.lengthOf(ops1, 1);
+      assert.lengthOf(ops2, 1);
+      assert.strictEqual(ops1[0].arg('storagePath'), '/mock_control/revision_number');
+      assert.strictEqual(ops2[0].arg('storagePath'), '/mock_control/revision_number');
     });
 
-    it('should reject improper subclass return values', async () => {
-      const control = new MockControl(FILE_ACCESS, 'boop');
+    it('should use the result of the transaction it performed', async () => {
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(Codec.theOne, file);
+      const control    = new MockControl(fileAccess, 'boop');
 
+      file._impl_transact = (spec_unused) => {
+        return {
+          revNum:    90909,
+          newRevNum: null,
+          paths:     null,
+          data: new Map(Object.entries({
+            '/mock_control/revision_number': Codec.theOne.encodeJsonBuffer(1234)
+          }))
+        };
+      };
+
+      await assert.eventually.strictEqual(control.currentRevNum(), 1234);
+    });
+
+    it('should reject improper transaction results', async () => {
       async function test(value) {
-        control._impl_currentRevNum = async () => {
-          return value;
+        const file       = new MockFile('blort');
+        const codec      = Codec.theOne;
+        const fileAccess = new FileAccess(codec, file);
+        const control    = new MockControl(fileAccess, 'boop');
+
+        file._impl_transact = (spec_unused) => {
+          return {
+            revNum:    90909,
+            newRevNum: null,
+            paths:     null,
+            data: new Map(Object.entries({
+              '/mock_control/revision_number': codec.encodeJsonBuffer(value)
+            }))
+          };
         };
 
         await assert.isRejected(control.currentRevNum(), /^bad_value/);
       }
 
       await test(null);
-      await test(undefined);
       await test(false);
       await test(-1);
       await test(0.05);
