@@ -23,14 +23,6 @@ export default class Paths extends UtilityClass {
     return `${Paths.BODY_PREFIX}/change`;
   }
 
-  /**
-   * {string} `StoragePath` string for the body content revision number.
-   * This corresponds to the highest change number.
-   */
-  static get BODY_REVISION_NUMBER() {
-    return `${Paths.BODY_PREFIX}/revision_number`;
-  }
-
   /** {string} `StoragePath` prefix string for caret information. */
   static get CARET_PREFIX() {
     return '/caret';
@@ -39,14 +31,6 @@ export default class Paths extends UtilityClass {
   /** {string} `StoragePath` prefix string for caret changes. */
   static get CARET_CHANGE_PREFIX() {
     return `${Paths.CARET_PREFIX}/change`;
-  }
-
-  /**
-   * {string} `StoragePath` string for the caret revision number. This
-   * corresponds to the highest change number.
-   */
-  static get CARET_REVISION_NUMBER() {
-    return `${Paths.CARET_PREFIX}/revision_number`;
   }
 
   /**
@@ -59,14 +43,6 @@ export default class Paths extends UtilityClass {
   /** {string} `StoragePath` prefix string for property changes. */
   static get PROPERTY_CHANGE_PREFIX() {
     return `${Paths.PROPERTY_PREFIX}/change`;
-  }
-
-  /**
-   * {string} `StoragePath` string for the property data revision number. This
-   * corresponds to the highest change number.
-   */
-  static get PROPERTY_REVISION_NUMBER() {
-    return `${Paths.PROPERTY_PREFIX}/revision_number`;
   }
 
   /** {string} `StoragePath` string for the file schema (format) version. */

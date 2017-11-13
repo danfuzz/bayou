@@ -74,6 +74,17 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * {string} `StoragePath` string which stores the current revision number for
+   * the portion of the document controlled by this class. This corresponds to
+   * the change number for the most recent change stored in the document.
+   */
+  static get revisionNumberPath() {
+    // **Note:** `this` in the context of a static method is the class, not an
+    // instance.
+    return `${this.pathPrefix}/revision_number`;
+  }
+
+  /**
    * {class} Class (constructor function) of snapshot objects to be used with
    * instances of this class.
    */
@@ -123,7 +134,7 @@ export default class BaseControl extends BaseDataManager {
     const revNum       = change.revNum;
     const baseRevNum   = revNum - 1;
     const changePath   = clazz._impl_pathForChange(revNum);
-    const revisionPath = clazz._impl_revisionNumberPath;
+    const revisionPath = clazz.revisionNumberPath;
 
     const fc   = this.fileCodec; // Avoids boilerplate immediately below.
     const spec = new TransactionSpec(
@@ -581,17 +592,6 @@ export default class BaseControl extends BaseDataManager {
    * @abstract
    */
   static get _impl_pathPrefix() {
-    return this._mustOverride();
-  }
-
-  /**
-   * {string} `StoragePath` string which stores the current revision number for
-   * the portion of the document controlled by this class. Subclasses must
-   * override this.
-   *
-   * @abstract
-   */
-  static get _impl_revisionNumberPath() {
     return this._mustOverride();
   }
 
