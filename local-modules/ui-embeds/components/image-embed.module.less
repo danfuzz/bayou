@@ -2,7 +2,7 @@
 @import "~ui-common/helpers";
 
 /* component container when it is left-justified */
-.containerLeft {
+.p-image-embed-container--left-justified {
   float: left;
   max-width: 50%;
   height: auto;
@@ -12,7 +12,7 @@
 }
 
 /* component container when it is right-justified */
-.containerRight {
+.p-image-embed-container--right-justified {
   float: right;
   max-width: 50%;
   height: auto;
@@ -22,7 +22,7 @@
 }
 
 /* component container when it is center-justified */
-.containerCenter {
+.p-image-embed-container--center-justified {
   margin-top: 2px;
   margin-bottom: 12px;
   max-width: 700px;
@@ -30,7 +30,7 @@
 }
 
 /* component container when it is full-bleed */
-.containerFull {
+.p-image-embed-container--full-bleed {
   width: 100vw;
   height: 40vw;
   margin-top: 12px;
@@ -38,7 +38,7 @@
 }
 
 /* base image styling */
-.image {
+.p-image-embed__image {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -46,37 +46,67 @@
 }
 
 /* image when it is in a left-justified container */
-.imageLeft {
+.p-image-embed__image--left-justified {
 
 }
 
 /* image when it is in a right-justified container */
-.imageRight {
+.p-image-embed__image--right-justified {
 
 }
 
 /* image when it is in a center-justified container */
-.imageCenter {
+.p-image-embed__image--center-justified {
   object-fit: contain;
 }
 
 /* image when it is in a full-bleed container */
-.imageFull {
+.p-image-embed__image--full-bleed {
   object-fit: cover;
 }
 
 /* container that holds the image and its alignment controls */
-.imageComplex {
+.p-image-embed__image-editing-container {
   position: relative;
 }
 
 /* container for the alignment buttons */
-.alignmentContainer {
+.p-image-embed__alignment-container {
   display: flex;
   justify-content: center;
   position: absolute;
-  bottom: 0px;
+  top: 0px;
   width: 100%;
   background-color: rgba(0, 0, 0, 0.50);
   .user-select(none); /* needed or Quill makes the button text selectable */
+}
+
+/* base for caption text */
+.p-image-embed__caption {
+  text-align: center;
+  font-size: 14px;
+  line-height: 18px;
+  color: @sk_black;
+}
+
+/* caption text, static display */
+.p-image-embed__caption--static {
+  .user-select(none);
+}
+
+/* The click-here-to-edit area */
+.p-image-embed__caption--CTA {
+  color: @sk_dark_gray;
+  border-style: dashed;
+  border-width: 1px;
+  border-color: @sk_light_gray;
+  border-radius: 4px;
+  .user-select(none);
+}
+
+/* The input field for typing the caption */
+.p-image-embed__caption-input {
+  margin-top: 8px;
+  margin-bottom: 12px;
+  width: 100%;
 }
