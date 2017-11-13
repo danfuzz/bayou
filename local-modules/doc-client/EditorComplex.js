@@ -21,6 +21,7 @@ import BodyClient from './BodyClient';
 import CaretOverlay from './CaretOverlay';
 import CaretState from './CaretState';
 import DocSession from './DocSession';
+import LinkDetector from './LinkDetector';
 import TitleClient from './TitleClient';
 
 /** {Logger} Logger for this module. */
@@ -375,6 +376,9 @@ export default class EditorComplex extends CommonBase {
       theme:    Hooks.theOne.quillThemeName('body'),
       modules:  EditorComplex._bodyModuleConfig
     });
+
+    LinkDetector.addKeybindings(titleQuill);
+    LinkDetector.addKeybindings(bodyQuill);
 
     return [titleQuill, bodyQuill];
   }
