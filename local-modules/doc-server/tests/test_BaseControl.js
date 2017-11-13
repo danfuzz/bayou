@@ -101,6 +101,34 @@ describe('doc-server/BaseControl', () => {
     });
   });
 
+  describe('pathForChange()', () => {
+    it('should return an appropriate path given a valid argument', () => {
+      function test(value) {
+        const expect = `${MockControl.pathPrefix}/change/${value}`;
+        assert.strictEqual(MockControl.pathForChange(value), expect);
+      }
+
+      test(0);
+      test(1);
+      test(10);
+      test(100000914);
+    });
+
+    it('should reject invalid arguments', () => {
+      function test(value) {
+        assert.throws(() => MockControl.pathForChange(value), /bad_value/);
+      }
+
+      test(-1);
+      test(0.01);
+      test(null);
+      test(undefined);
+      test(false);
+      test([10]);
+      test(new Map());
+    });
+  });
+
   describe('constructor()', () => {
     it('should accept a `FileAccess` and reflect it in the inherited getters', () => {
       const fa     = FILE_ACCESS;
