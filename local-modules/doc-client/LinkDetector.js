@@ -17,7 +17,7 @@ const OPTIONAL_PROTOCOL_URL_REGEXP =
  */
 export default class LinkDetector {
   /**
-   * Adds a keyboard binding to the Quill editor for basic link detection.
+   * Adds keyboard bindings to the Quill editor for basic link detection.
    *
    * @param {Quill} quill the Quill editor to add the binding to.
    */
