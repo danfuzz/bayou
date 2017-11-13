@@ -64,8 +64,8 @@ export default class LinkDetector {
   }
 
   /**
-   * Indiates whether or not the given URL names an image, as determined by file
-   * extension.
+   * Indicates whether or not the given URL names an image, as determined by
+   * file extension.
    *
    * @param {string} url URL to inspect.
    * @returns {boolean} `true` iff `url` names an image.
