@@ -111,7 +111,7 @@ export default class CaretControl extends BaseControl {
       fc.op_writePath(CaretControl.revisionNumberPath, 0),
 
       // Empty change #0.
-      fc.op_writePath(Paths.forCaretChange(0), CaretChange.FIRST)
+      fc.op_writePath(CaretControl.pathForChange(0), CaretChange.FIRST)
     );
   }
 
@@ -336,7 +336,7 @@ export default class CaretControl extends BaseControl {
       const fc  = this.fileCodec;
       const ops = [];
       for (let i = revNum + 1; i <= (revNum + 10); i++) {
-        ops.push(fc.op_readPath(Paths.forCaretChange(i)));
+        ops.push(fc.op_readPath(CaretControl.pathForChange(i)));
       }
       const spec = new TransactionSpec(...ops);
       transactionResult = await fc.transact(spec);

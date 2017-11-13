@@ -45,7 +45,7 @@ export default class PropertyControl extends BaseControl {
       fc.op_writePath(PropertyControl.revisionNumberPath, 0),
 
       // Empty change #0.
-      fc.op_writePath(Paths.forPropertyChange(0), PropertyChange.FIRST)
+      fc.op_writePath(PropertyControl.pathForChange(0), PropertyChange.FIRST)
     );
   }
 
@@ -268,7 +268,7 @@ export default class PropertyControl extends BaseControl {
       const fc  = this.fileCodec;
       const ops = [];
       for (let i = revNum + 1; i <= (revNum + 10); i++) {
-        ops.push(fc.op_readPath(Paths.forPropertyChange(i)));
+        ops.push(fc.op_readPath(PropertyControl.pathForChange(i)));
       }
       const spec = new TransactionSpec(...ops);
       transactionResult = await fc.transact(spec);

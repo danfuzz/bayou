@@ -63,7 +63,7 @@ export default class BodyControl extends BaseControl {
       fc.op_writePath(BodyControl.revisionNumberPath, 0),
 
       // Empty change #0 (per documented interface).
-      fc.op_writePath(Paths.forBodyChange(0), BodyChange.FIRST)
+      fc.op_writePath(BodyControl.pathForChange(0), BodyChange.FIRST)
     );
   }
 
@@ -319,7 +319,7 @@ export default class BodyControl extends BaseControl {
       const fc  = this.fileCodec;
       const ops = [];
       for (let i = revNum + 1; i <= (revNum + 10); i++) {
-        ops.push(fc.op_readPath(Paths.forBodyChange(i)));
+        ops.push(fc.op_readPath(BodyControl.pathForChange(i)));
       }
       const spec = new TransactionSpec(...ops);
       transactionResult = await fc.transact(spec);
