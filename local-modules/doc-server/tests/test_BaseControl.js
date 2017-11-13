@@ -31,6 +31,41 @@ describe('doc-server/BaseControl', () => {
     });
   });
 
+  describe('.pathPrefix', () => {
+    it('should reflect the subclass\'s implementation', () => {
+      const result = MockControl.pathPrefix;
+      assert.strictEqual(result, '/mock_control');
+    });
+
+    it('should reject an improper subclass choice', () => {
+      class HasBadPrefix extends BaseControl {
+        static get _impl_pathPrefix() {
+          return '//invalid/path_string!';
+        }
+      }
+
+      assert.throws(() => HasBadPrefix.pathPrefix);
+    });
+
+    it('should only ever ask the subclass once', () => {
+      class GoodControl extends BaseControl {
+        static get _impl_pathPrefix() {
+          this.count++;
+          return '/blort';
+        }
+      }
+
+      GoodControl.count = 0;
+      assert.strictEqual(GoodControl.pathPrefix, '/blort');
+      assert.strictEqual(GoodControl.pathPrefix, '/blort');
+      assert.strictEqual(GoodControl.pathPrefix, '/blort');
+      assert.strictEqual(GoodControl.pathPrefix, '/blort');
+      assert.strictEqual(GoodControl.pathPrefix, '/blort');
+
+      assert.strictEqual(GoodControl.count, 1);
+    });
+  });
+
   describe('.snapshotClass', () => {
     it('should reflect the subclass\'s implementation', () => {
       const result = MockControl.snapshotClass;

@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseSnapshot, RevisionNumber, Timeouts } from 'doc-common';
-import { Errors as FileStoreErrors, TransactionSpec } from 'file-store';
+import { Errors as FileStoreErrors, StoragePath, TransactionSpec } from 'file-store';
 import { Delay } from 'promise-util';
 import { TFunction } from 'typecheck';
 import { Errors } from 'util-common';
@@ -52,6 +52,25 @@ export default class BaseControl extends BaseDataManager {
     // **Note:** `this` in the context of a static method is the class, not an
     // instance.
     return this.snapshotClass.deltaClass;
+  }
+
+  /**
+   * {string} Path prefix to use for file storage for the portion of the
+   * document controlled by instances of this class.
+   */
+  static get pathPrefix() {
+    // **Note:** `this` in the context of a static method is the class, not an
+    // instance.
+
+    if (!this._pathPrefix) {
+      // Call the `_impl` and verify the result.
+      const prefix = this._impl_pathPrefix;
+
+      StoragePath.check(prefix);
+      this._pathPrefix = prefix;
+    }
+
+    return this._pathPrefix;
   }
 
   /**
@@ -552,6 +571,17 @@ export default class BaseControl extends BaseDataManager {
    */
   async _impl_update(baseSnapshot, change, expectedSnapshot) {
     return this._mustOverride(baseSnapshot, change, expectedSnapshot);
+  }
+
+  /**
+   * {string} `StoragePath` prefix string to use for file storage for the
+   * portion of the document controlled by instances of this class. Subclasses
+   * must override override this.
+   *
+   * @abstract
+   */
+  static get _impl_pathPrefix() {
+    return this._mustOverride();
   }
 
   /**

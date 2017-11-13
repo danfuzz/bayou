@@ -340,6 +340,14 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
+   * {string} `StoragePath` prefix string to use for file storage for the
+   * portion of the document controlled by instances of this class.
+   */
+  static get _impl_pathPrefix() {
+    return Paths.BODY_PREFIX;
+  }
+
+  /**
    * {string} `StoragePath` string which stores the current revision number for
    * the portion of the document controlled by this class.
    */
