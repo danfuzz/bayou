@@ -54,6 +54,11 @@ export default class TransactionSpec extends CommonBase {
     return this._ops.values();
   }
 
+  /** {Int} The number of operations in this instance. */
+  get size() {
+    return this._ops.length;
+  }
+
   /**
    * {Int|'never'} The timeout duration in milliseconds, or the string `'never'`
    * if this transaction specifies no timeout.
