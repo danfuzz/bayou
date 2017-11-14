@@ -232,44 +232,7 @@ export default class CaretSnapshot extends BaseSnapshot {
    *   contents.
    */
   _impl_composeWithDelta(delta) {
-    const newCarets = new Map(this._carets);
-
-    for (const op of delta.ops) {
-      const props = op.props;
-
-      switch (props.opName) {
-        case CaretOp.BEGIN_SESSION: {
-          const caret = props.caret;
-          newCarets.set(caret.sessionId, op);
-          break;
-        }
-
-        case CaretOp.SET_FIELD: {
-          const sessionId = props.sessionId;
-          const caretOp   = newCarets.get(sessionId);
-
-          if (!caretOp) {
-            throw Errors.bad_use(`Cannot update nonexistent caret: ${sessionId}`);
-          }
-
-          const caret = caretOp.props.caret.compose(new CaretDelta([op]));
-          newCarets.set(sessionId, CaretOp.op_beginSession(caret));
-          break;
-        }
-
-        case CaretOp.END_SESSION: {
-          const sessionId = props.sessionId;
-          newCarets.delete(sessionId);
-          break;
-        }
-
-        default: {
-          throw Errors.wtf(`Weird caret op: ${props.opName}`);
-        }
-      }
-    }
-
-    return new CaretDelta([...newCarets.values()]);
+    return this.contents.compose(delta, true);
   }
 
   /**

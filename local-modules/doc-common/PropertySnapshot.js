@@ -209,29 +209,7 @@ export default class PropertySnapshot extends BaseSnapshot {
    *   contents.
    */
   _impl_composeWithDelta(delta) {
-    const newProps = new Map(this._properties.entries());
-
-    for (const op of delta.ops) {
-      const opProps = op.props;
-
-      switch (opProps.opName) {
-        case PropertyOp.SET_PROPERTY: {
-          newProps.set(opProps.property.name, op);
-          break;
-        }
-
-        case PropertyOp.DELETE_PROPERTY: {
-          newProps.delete(opProps.name);
-          break;
-        }
-
-        default: {
-          throw Errors.wtf(`Weird op name: ${opProps.opName}`);
-        }
-      }
-    }
-
-    return new PropertyDelta([...newProps.values()]);
+    return this.contents.compose(delta, true);
   }
 
   /**

@@ -391,7 +391,7 @@ export default class BaseControl extends BaseDataManager {
       const end = Math.min(i + MAX, endExclusive);
       const changes = await this.getChangeRange(i, end);
       for (const c of changes) {
-        result = result.compose(c.delta);
+        result = result.compose(c.delta, false);
       }
     }
 

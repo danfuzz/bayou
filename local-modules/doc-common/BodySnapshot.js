@@ -34,7 +34,7 @@ export default class BodySnapshot extends BaseSnapshot {
    *   contents.
    */
   _impl_composeWithDelta(delta) {
-    return this.contents.compose(delta);
+    return this.contents.compose(delta, true);
   }
 
   /**

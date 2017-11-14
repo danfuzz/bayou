@@ -208,7 +208,7 @@ export default class Caret extends CommonBase {
    * Calculates the difference from a given caret to this one. The return
    * value is a delta which can be composed with this instance to produce the
    * snapshot passed in here as an argument. That is, `newerCaret ==
-   * this.compose(this.diff(newerCaret))`.
+   * this.compose(this.diff(newerCaret), true)`.
    *
    * **Note:** The word `newer` in the argument name is meant to be suggestive
    * of typical usage of this method, but there is no actual requirement that

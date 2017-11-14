@@ -5,7 +5,7 @@
 import { inspect } from 'util';
 
 import { TArray, TBoolean, TFunction } from 'typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase, Errors } from 'util-common';
 
 import BaseOp from './BaseOp';
 
@@ -118,15 +118,31 @@ export default class BaseDelta extends CommonBase {
    *
    * @param {BaseDelta} other The delta to compose. Must be an instance of the
    *   same concrete class as `this`.
+   * @param {boolean} wantDocument Whether the result of the operation should be
+   *   a document delta. When `true`, `other` must be passed as a document
+   *   delta. In addition, _some_ subclasses operate differently when asked to
+   *   produce a document vs. not.
    * @returns {BodyDelta} Result of composition. Is always an instance of the
    *   same concrete class as `this`.
    */
-  compose(other) {
+  compose(other, wantDocument) {
     this.constructor.check(other);
+    TBoolean.check(wantDocument);
 
-    const result = this._impl_compose(other);
+    if (wantDocument && !this.isDocument()) {
+      throw Errors.bad_use('`wantDocument === true` on non-document instance.');
+    }
 
-    return this.constructor.check(result);
+    const result = this._impl_compose(other, wantDocument);
+
+    this.constructor.check(result);
+
+    if (wantDocument && !result.isDocument()) {
+      // This indicates a bug in the subclass.
+      throw Errors.wtf('Non-document return value when passed `true` for `wantDocument`.');
+    }
+
+    return result;
   }
 
   /**
@@ -259,12 +275,15 @@ export default class BaseDelta extends CommonBase {
    *
    * @abstract
    * @param {BaseDelta} other Delta to compose with this instance. Guaranteed
-   *   to be an instance of the same concrete class as `this`.
+   *   to be an instance of the same concrete class as `this`. In addition,
+   *   if `wantDocument` is `true`, guaranteed to be a document delta.
+   * @param {boolean} wantDocument Whether the result of the operation should be
+   *   a document delta.
    * @returns {BaseDelta} Composed result. Must be an instance of the same
    *   concrete class as `this`.
    */
-  _impl_compose(other) {
-    return this._mustOverride(other);
+  _impl_compose(other, wantDocument) {
+    return this._mustOverride(other, wantDocument);
   }
 
   /**

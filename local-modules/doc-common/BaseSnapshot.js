@@ -264,6 +264,7 @@ export default class BaseSnapshot extends CommonBase {
    * @returns {BaseDelta|array} Delta which represents the composed document
    *   contents. Must be an instance of the `deltaClass` as defined by the
    *   subclass or an array of operations that can be used to produce same.
+   *   Must represent a _document_ delta.
    */
   _impl_composeWithDelta(delta) {
     return this._mustOverride(delta);
