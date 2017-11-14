@@ -154,6 +154,19 @@ export default class BaseSnapshot extends CommonBase {
   }
 
   /**
+   * Gets reconstruction arguments for this instance.
+   *
+   * @returns {array} Reconstruction arguments.
+   */
+  deconstruct() {
+    // **Note:** `[0]` on the `delta` argument is because `deconstruct()`
+    // returns an _array_ of arguments which can be used to reconstruct an
+    // instance, and we know in this case that deltas always deconstruct to a
+    // single-element array (because the constructor only accepts one argument).
+    return [this._revNum, this._contents.deconstruct()[0]];
+  }
+
+  /**
    * Calculates the difference from a given snapshot to this one. The return
    * value is a change which can be composed with this instance to produce the
    * snapshot passed in here as an argument. That is, roughly speaking,
@@ -207,19 +220,6 @@ export default class BaseSnapshot extends CommonBase {
     return (this.constructor === other.constructor)
       && (this._revNum === other._revNum)
       && this._contents.equals(other._contents);
-  }
-
-  /**
-   * Converts this instance to codec reconstruction arguments.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toCodecArgs() {
-    // **Note:** `[0]` on the `delta` argument is because `deconstruct()`
-    // returns an _array_ of arguments which can be used to reconstruct an
-    // instance, and we know in this case that deltas always deconstruct to a
-    // single-element array (because the constructor only accepts one argument).
-    return [this._revNum, this._contents.deconstruct()[0]];
   }
 
   /**

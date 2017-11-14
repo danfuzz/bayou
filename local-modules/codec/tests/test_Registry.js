@@ -20,13 +20,13 @@ class RegistryTestClass {
     return 'RegistryTestClass';
   }
 
-  toCodecArgs() {
+  deconstruct() {
     return ['fake argument', 0, 1, 2];
   }
 }
 
 class NoCodecTag {
-  toCodecArgs() {
+  deconstruct() {
     return 'NoCodecTag!';
   }
 }
@@ -49,7 +49,7 @@ describe('api-common/Registry', () => {
       assert.doesNotThrow(() => reg.registerClass(NoCodecTag));
     });
 
-    it('should reject a class without `toCodecArgs()`', () => {
+    it('should reject a class without `deconstruct()`', () => {
       const reg = new Registry();
       assert.throws(() => reg.registerClass(NoToCodecArgs));
     });

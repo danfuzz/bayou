@@ -91,11 +91,11 @@ export default class Response extends CommonBase {
   }
 
   /**
-   * Converts this instance to codec reconstruction arguments.
+   * Gets reconstruction arguments for this instance.
    *
    * @returns {array} Reconstruction arguments.
    */
-  toCodecArgs() {
+  deconstruct() {
     return [this._id, this._result, this._error];
   }
 

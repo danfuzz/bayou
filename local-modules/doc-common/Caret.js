@@ -205,6 +205,21 @@ export default class Caret extends CommonBase {
   }
 
   /**
+   * Gets reconstruction arguments for this instance.
+   *
+   * @returns {array} Reconstruction arguments.
+   */
+  deconstruct() {
+    // Convert the `_fields` map to a plain object for the purpose of coding.
+    const fields = {};
+    for (const [k, v] of this._fields) {
+      fields[k] = v;
+    }
+
+    return [this._sessionId, fields];
+  }
+
+  /**
    * Calculates the difference from a given caret to this one. The return
    * value is a delta which can be composed with this instance to produce the
    * snapshot passed in here as an argument. That is, `newerCaret ==
@@ -284,21 +299,6 @@ export default class Caret extends CommonBase {
     }
 
     return true;
-  }
-
-  /**
-   * Converts this instance to codec reconstruction arguments.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toCodecArgs() {
-    // Convert the `_fields` map to a plain object for the purpose of coding.
-    const fields = {};
-    for (const [k, v] of this._fields) {
-      fields[k] = v;
-    }
-
-    return [this._sessionId, fields];
   }
 
   /**

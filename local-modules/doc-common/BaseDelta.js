@@ -262,15 +262,6 @@ export default class BaseDelta extends CommonBase {
   }
 
   /**
-   * Converts this instance to codec reconstruction arguments.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toCodecArgs() {
-    return this.deconstruct();
-  }
-
-  /**
    * Main implementation of {@link #compose}. Subclasses must fill this in.
    *
    * @abstract

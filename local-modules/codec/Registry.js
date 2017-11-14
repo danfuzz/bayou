@@ -52,7 +52,7 @@ export default class Registry extends CommonBase {
 
   /**
    * Registers a class to be accepted for codec use. To be valid, a class must
-   * define an instance method `toCodecArgs()`. In addition, it can optionally
+   * define an instance method `deconstruct()`. In addition, it can optionally
    * define a static property `CODEC_TAG` as a replacement for its class name
    * for use as the tag when encoding.
    *

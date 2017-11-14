@@ -40,6 +40,15 @@ export default class Property extends CommonBase {
   }
 
   /**
+   * Gets reconstruction arguments for this instance.
+   *
+   * @returns {array} Reconstruction arguments.
+   */
+  deconstruct() {
+    return [this._name, this._value];
+  }
+
+  /**
    * Compares this to another value, for equality.
    *
    * @param {*} other Value to compare to.
@@ -55,14 +64,5 @@ export default class Property extends CommonBase {
 
     return (this._name === other._name)
       && DataUtil.equalData(this._value, other._value);
-  }
-
-  /**
-   * Converts this instance to codec reconstruction arguments.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toCodecArgs() {
-    return [this._name, this._value];
   }
 }

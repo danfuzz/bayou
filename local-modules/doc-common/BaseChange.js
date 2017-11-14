@@ -145,11 +145,11 @@ export default class BaseChange extends CommonBase {
   }
 
   /**
-   * Converts this instance to codec reconstruction arguments.
+   * Gets reconstruction arguments for this instance.
    *
    * @returns {array} Reconstruction arguments.
    */
-  toCodecArgs() {
+  deconstruct() {
     // **Note:** `[0]` on the `delta` argument is because `deconstruct()`
     // returns an _array_ of arguments which can be used to reconstruct an
     // instance, and we know in this case that deltas always deconstruct to a

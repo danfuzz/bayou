@@ -15,7 +15,7 @@ export default class MockCodable {
     this.args        = args;
   }
 
-  toCodecArgs() {
+  deconstruct() {
     return ['fake argument', 0, 1, 2];
   }
 }

@@ -70,11 +70,11 @@ export default class SplitKey extends BaseKey {
   }
 
   /**
-   * Converts this instance to codec reconstruction arguments.
+   * Gets reconstruction arguments for this instance.
    *
    * @returns {array} Reconstruction arguments.
    */
-  toCodecArgs() {
+  deconstruct() {
     return [this.url, this.id, this._secret];
   }
 

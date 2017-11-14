@@ -120,11 +120,11 @@ export default class Codec extends Singleton {
    *
    * * Objects that are instances of classes (that is, have constructor
    *   functions) are allowed, as long as they at least bind a method
-   *   `toCodecArgs()`. In addition, if they have a static `CODEC_TAG` property
+   *   `deconstruct()`. In addition, if they have a static `CODEC_TAG` property
    *   then that is used as the tag (class name) in encoded form. The encoded
    *   form is an array with the first element being the value tag (typically
    *   the class name) and the rest of the elements whatever was returned by
-   *  `toCodecArgs()`.
+   *  `deconstruct()`.
    *
    * * All other objects are rejected.
    *

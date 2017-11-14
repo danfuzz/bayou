@@ -94,13 +94,4 @@ export default class BaseOp extends CommonBase {
     // the result here looks like `FlorpOp:some_op_name(arg, arg)`.
     return `${this.constructor.name}:${payload}`;
   }
-
-  /**
-   * Converts this instance to codec reconstruction arguments.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toCodecArgs() {
-    return this.deconstruct();
-  }
 }

@@ -35,6 +35,15 @@ export default class CodableError extends InfoError {
   }
 
   /**
+   * Gets reconstruction arguments for this instance.
+   *
+   * @returns {array} Reconstruction arguments.
+   */
+  deconstruct() {
+    return (this.cause === null) ? [this.info] : [this.cause, this.info];
+  }
+
+  /**
    * Custom inspector function, as called by `util.inspect()`. This just returns
    * the info portion instead of also including the stack trace, since the stack
    * trace is meaningless on instances of this class (they will typically just
@@ -53,15 +62,6 @@ export default class CodableError extends InfoError {
       : Object.assign({}, opts, { depth: opts.depth - 1 });
 
     return `${this.constructor.name}: ${inspect(this.info, subOpts)}`;
-  }
-
-  /**
-   * Converts this instance to codec reconstruction arguments.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toCodecArgs() {
-    return (this.cause === null) ? [this.info] : [this.cause, this.info];
   }
 
   /**
