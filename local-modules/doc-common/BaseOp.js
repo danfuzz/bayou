@@ -38,14 +38,12 @@ export default class BaseOp extends CommonBase {
   }
 
   /**
-   * "Deconstructs" this instance, returning an array which is suitable for
-   * passing to the constructor of this class.
+   * Gets reconstruction arguments for this instance.
    *
-   * @returns {array<*>} Reconstruction arguments. The result is always deeply
-   * frozen.
+   * @returns {array<*>} Reconstruction arguments.
    */
   deconstruct() {
-    return Object.freeze([this._payload.name, ...this._payload.args]);
+    return [this._payload.name, ...this._payload.args];
   }
 
   /**

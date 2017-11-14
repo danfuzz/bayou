@@ -42,7 +42,7 @@ export default class Property extends CommonBase {
   /**
    * Gets reconstruction arguments for this instance.
    *
-   * @returns {array} Reconstruction arguments.
+   * @returns {array<*>} Reconstruction arguments.
    */
   deconstruct() {
     return [this._name, this._value];

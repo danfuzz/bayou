@@ -156,7 +156,7 @@ export default class BaseSnapshot extends CommonBase {
   /**
    * Gets reconstruction arguments for this instance.
    *
-   * @returns {array} Reconstruction arguments.
+   * @returns {array<*>} Reconstruction arguments.
    */
   deconstruct() {
     // **Note:** `[0]` on the `delta` argument is because `deconstruct()`

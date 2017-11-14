@@ -72,7 +72,7 @@ export default class SplitKey extends BaseKey {
   /**
    * Gets reconstruction arguments for this instance.
    *
-   * @returns {array} Reconstruction arguments.
+   * @returns {array<*>} Reconstruction arguments.
    */
   deconstruct() {
     return [this.url, this.id, this._secret];

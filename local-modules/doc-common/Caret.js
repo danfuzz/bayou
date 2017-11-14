@@ -207,7 +207,7 @@ export default class Caret extends CommonBase {
   /**
    * Gets reconstruction arguments for this instance.
    *
-   * @returns {array} Reconstruction arguments.
+   * @returns {array<*>} Reconstruction arguments.
    */
   deconstruct() {
     // Convert the `_fields` map to a plain object for the purpose of coding.

@@ -90,12 +90,12 @@ describe('doc-common/BaseOp', () => {
   });
 
   describe('deconstruct()', () => {
-    it('should return a deep-frozen array data value', () => {
+    it('should return an array data value', () => {
       const op     = new MockOp('blort', ['florp', 'like'], { timeline: 'sideways' });
       const result = op.deconstruct();
 
       assert.isArray(result);
-      assert.isTrue(DataUtil.isDeepFrozen(result));
+      assert.isTrue(DataUtil.isData(result));
     });
 
     it('should return a value which successfully round-trips from and to constructor arguments', () => {

@@ -37,7 +37,7 @@ export default class CodableError extends InfoError {
   /**
    * Gets reconstruction arguments for this instance.
    *
-   * @returns {array} Reconstruction arguments.
+   * @returns {array<*>} Reconstruction arguments.
    */
   deconstruct() {
     return (this.cause === null) ? [this.info] : [this.cause, this.info];

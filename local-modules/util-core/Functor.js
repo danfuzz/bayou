@@ -57,8 +57,7 @@ export default class Functor {
   }
 
   /**
-   * "Deconstructs" this instance, returning an array which is suitable for
-   * passing to the constructor of this class.
+   * Gets reconstruction arguments for this instance.
    *
    * @returns {array<*>} Reconstruction arguments.
    */
