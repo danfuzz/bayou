@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { BaseDelta } from 'doc-common';
+import { BaseDelta, CaretDelta } from 'doc-common';
 import { DataUtil } from 'util-common';
 
 import { MockDelta, MockOp } from 'doc-common/mocks';
@@ -110,6 +110,57 @@ describe('doc-common/BaseDelta', () => {
       test(['blort', 1, 2, 3, 4, 'florp']);
       test(['x'], ['y'], ['z']);
       test(['x', ['a']], ['y', { b: 10 }], ['z', [[['pdq']]]]);
+    });
+  });
+
+  describe('compose()', () => {
+    it('should call through to the impl when given valid arguments', () => {
+      function test(ops1, ops2, wantDocument, expectOps) {
+        const d1     = new MockDelta(ops1);
+        const d2     = new MockDelta(ops2);
+        const result = d1.compose(d2, wantDocument);
+
+        expectOps = expectOps.map(a => new MockOp(...a));
+
+        assert.instanceOf(result, MockDelta);
+        assert.deepEqual(result.ops, expectOps);
+      }
+
+      test([], [['x']], false, [['composed_not_doc'], ['x']]);
+      test([], [['x']], true,  [['composed_doc'], ['x']]);
+    });
+
+    it('should reject invalid `other` arguments', () => {
+      function test(value) {
+        const delta = MockDelta.EMPTY;
+        assert.throws(() => { delta.compose(value, false); }, /bad_value/);
+      }
+
+      test(undefined);
+      test(null);
+      test(0);
+      test(1);
+      test('blort');
+      test(new Map());
+      test(new CaretDelta([]));
+    });
+
+    it('should reject non-boolean `wantDocument` arguments', () => {
+      function test(value) {
+        const delta = MockDelta.EMPTY;
+        assert.throws(() => { delta.compose(delta, value); }, /bad_value/);
+      }
+
+      test(undefined);
+      test(null);
+      test(0);
+      test(1);
+      test('blort');
+    });
+
+    it('should reject a non-document `this` when `wantDocument` is `true`', () => {
+      const delta = new MockDelta([['not_document']]);
+      assert.throws(() => { delta.compose(MockDelta.EMPTY, true); }, /bad_use/);
     });
   });
 
