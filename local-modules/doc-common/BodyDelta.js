@@ -59,24 +59,6 @@ export default class BodyDelta extends BaseDelta {
   }
 
   /**
-   * Composes another instance on top of this one, to produce a new instance.
-   * This operation works equally whether or not `this` is a document delta.
-   *
-   * @param {BodyDelta} other The delta to compose.
-   * @returns {BodyDelta} Result of composition.
-   */
-  compose(other) {
-    BodyDelta.check(other);
-
-    // Use Quill's implementation.
-    const quillThis   = this.toQuillForm();
-    const quillOther  = other.toQuillForm();
-    const quillResult = quillThis.compose(quillOther);
-
-    return BodyDelta.fromQuillForm(quillResult);
-  }
-
-  /**
    * Computes the difference between this instance and another, where both must
    * be document (from-empty) deltas. The return value is a delta which can be
    * `compose()`d with this instance to produce the delta passed in here as an
@@ -145,6 +127,21 @@ export default class BodyDelta extends BaseDelta {
     const quillThis   = this.toQuillForm();
     const quillOther  = other.toQuillForm();
     const quillResult = quillThis.transform(quillOther, thisIsFirst);
+
+    return BodyDelta.fromQuillForm(quillResult);
+  }
+
+  /**
+   * Main implementation of {@link #compose}.
+   *
+   * @param {BodyDelta} other Delta to compose with this instance.
+   * @returns {BodyDelta} Composed result.
+   */
+  _impl_compose(other) {
+    // Use Quill's implementation.
+    const quillThis   = this.toQuillForm();
+    const quillOther  = other.toQuillForm();
+    const quillResult = quillThis.compose(quillOther);
 
     return BodyDelta.fromQuillForm(quillResult);
   }

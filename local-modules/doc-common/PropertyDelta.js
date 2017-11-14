@@ -16,15 +16,12 @@ import PropertyOp from './PropertyOp';
  */
 export default class PropertyDelta extends BaseDelta {
   /**
-   * Composes another instance on top of this one, to produce a new instance.
-   * This operation works equally whether or not `this` is a document delta.
+   * Main implementation of {@link #compose}.
    *
-   * @param {PropertyDelta} other The delta to compose.
-   * @returns {PropertyDelta} Result of composition.
+   * @param {PropertyDelta} other Delta to compose with this instance.
+   * @returns {PropertyDelta} Composed result.
    */
-  compose(other) {
-    PropertyDelta.check(other);
-
+  _impl_compose(other) {
     const props = new Map();
 
     // Add / replace the ops, first from `this` and then from `other`, as a

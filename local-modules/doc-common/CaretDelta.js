@@ -16,15 +16,12 @@ import CaretOp from './CaretOp';
  */
 export default class CaretDelta extends BaseDelta {
   /**
-   * Composes another instance on top of this one, to produce a new instance.
-   * This operation works equally whether or not `this` is a document delta.
+   * Main implementation of {@link #compose}.
    *
-   * @param {PropertyDelta} other The delta to compose.
-   * @returns {PropertyDelta} Result of composition.
+   * @param {CaretDelta} other Delta to compose with this instance.
+   * @returns {CaretDelta} Composed result.
    */
-  compose(other) {
-    CaretDelta.check(other);
-
+  _impl_compose(other) {
     // Map from each session to an array of ops which apply to it.
     const sessions = new Map();
 

@@ -113,6 +113,23 @@ export default class BaseDelta extends CommonBase {
   }
 
   /**
+   * Composes another instance on top of this one, to produce a new instance.
+   * This operation works equally whether or not `this` is a document delta.
+   *
+   * @param {BaseDelta} other The delta to compose. Must be an instance of the
+   *   same concrete class as `this`.
+   * @returns {BodyDelta} Result of composition. Is always an instance of the
+   *   same concrete class as `this`.
+   */
+  compose(other) {
+    this.constructor.check(other);
+
+    const result = this._impl_compose(other);
+
+    return this.constructor.check(result);
+  }
+
+  /**
    * "Deconstructs" this instance, returning an array of arguments which is
    * suitable for passing to the constructor of this class.
    *
@@ -235,6 +252,19 @@ export default class BaseDelta extends CommonBase {
    */
   toCodecArgs() {
     return this.deconstruct();
+  }
+
+  /**
+   * Main implementation of {@link #compose}. Subclasses must fill this in.
+   *
+   * @abstract
+   * @param {BaseDelta} other Delta to compose with this instance. Guaranteed
+   *   to be an instance of the same concrete class as `this`.
+   * @returns {BaseDelta} Composed result. Must be an instance of the same
+   *   concrete class as `this`.
+   */
+  _impl_compose(other) {
+    return this._mustOverride(other);
   }
 
   /**
