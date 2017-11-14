@@ -28,6 +28,19 @@ export default class MockDelta extends BaseDelta {
     return [new MockOp('yes')];
   }
 
+  _impl_compose(other, wantDocument) {
+    let resultName = wantDocument ? 'composed_doc' : 'composed_not_doc';
+    const op0 = this.ops[0];
+
+    if (op0 && op0.name.startsWith(resultName)) {
+      // The first op gets a `_` suffix on its name for each additional
+      // composition.
+      resultName = op0.name + '_';
+    }
+
+    return new MockDelta([new MockOp(resultName), ...other.ops]);
+  }
+
   _impl_isDocument() {
     const op0 = this.ops[0];
 

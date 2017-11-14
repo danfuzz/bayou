@@ -118,7 +118,7 @@ describe('doc-common/BaseSnapshot', () => {
       assert.instanceOf(result.contents, MockDelta);
 
       assert.deepEqual(result.contents.ops,
-        [new MockOp('composed_delta'), new MockOp('change_op')]);
+        [new MockOp('composed_doc'), new MockOp('change_op')]);
     });
 
     it('should return `this` given a same-`revNum` empty-`delta` change', () => {
@@ -168,7 +168,7 @@ describe('doc-common/BaseSnapshot', () => {
       assert.instanceOf(result.contents, MockDelta);
 
       assert.deepEqual(result.contents.ops,
-        [new MockOp('composed_delta_'), new MockOp('change_op2')]);
+        [new MockOp('composed_doc_'), new MockOp('change_op2')]);
     });
 
     it('should return `this` given same-`revNum` empty-`delta` changes', () => {
