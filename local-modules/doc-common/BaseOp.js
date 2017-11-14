@@ -69,29 +69,4 @@ export default class BaseOp extends CommonBase {
     return (this.constructor === other.constructor)
       && this._payload.equals(other._payload);
   }
-
-  /**
-   * Custom inspector function, as called by `util.inspect()`.
-   *
-   * @param {Int} depth Current inspection depth.
-   * @param {object} opts Inspection options.
-   * @returns {string} The inspection string form of this instance.
-   */
-  [inspect.custom](depth, opts) {
-    if (depth < 0) {
-      return `${this.constructor.name}:...`;
-    }
-
-    // Set up the inspection opts so that recursive calls respect the topmost
-    // requested depth.
-    const subOpts = (opts.depth === null)
-      ? opts
-      : Object.assign({}, opts, { depth: opts.depth - 1 });
-
-    const payload = inspect(this._payload, subOpts);
-
-    // Since the payload is a functor -- which has a custom inspect renderer --
-    // the result here looks like `FlorpOp:some_op_name(arg, arg)`.
-    return `${this.constructor.name}:${payload}`;
-  }
 }
