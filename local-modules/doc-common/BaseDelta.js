@@ -2,8 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { inspect } from 'util';
-
 import { TArray, TBoolean, TFunction } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
@@ -162,13 +160,12 @@ export default class BaseDelta extends CommonBase {
    * `opClass` gets to be implied instead of redundantly encoded.
    *
    * @returns {array<array<*>>} Array of array of operation-construction
-   *   arguments. The result is always a deeply-frozen array.
+   *   arguments.
    */
   deconstruct() {
     const ops = this._ops.map(op => op.deconstruct());
 
-    Object.freeze(ops);
-    return Object.freeze([ops]);
+    return [ops];
   }
 
   /**
