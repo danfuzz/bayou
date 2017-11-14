@@ -169,7 +169,7 @@ describe('doc-server/BaseControl', () => {
       const ops1 = gotSpec.opsWithName('checkPathPresent');
       const ops2 = gotSpec.opsWithName('readPath');
 
-      assert.strictEqual(gotSpec.size, 2);
+      assert.strictEqual(gotSpec.ops.length, 2);
       assert.lengthOf(ops1, 1);
       assert.lengthOf(ops2, 1);
       assert.strictEqual(ops1[0].arg('storagePath'), '/mock_control/revision_number');
