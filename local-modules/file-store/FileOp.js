@@ -587,38 +587,7 @@ export default class FileOp extends CommonBase {
         const argMap = new Map();
         for (let i = 0; i < argInfo.length; i++) {
           const [name, type] = argInfo[i];
-          let arg = args[i];
-          switch (type) {
-            case TYPE_BUFFER: {
-              FrozenBuffer.check(arg);
-              break;
-            }
-            case TYPE_DUR_MSEC: {
-              TInt.nonNegative(arg);
-              break;
-            }
-            case TYPE_HASH: {
-              if (arg instanceof FrozenBuffer) {
-                arg = arg.hash;
-              } else {
-                FrozenBuffer.checkHash(arg);
-              }
-              break;
-            }
-            case TYPE_PATH: {
-              StoragePath.check(arg);
-              break;
-            }
-            case TYPE_REV_NUM: {
-              TInt.nonNegative(arg);
-              break;
-            }
-            default: {
-              // Indicates a bug in this class.
-              throw Errors.wtf(`Weird \`type\` constant: ${type}`);
-            }
-          }
-
+          const arg          = FileOp._typeCheck(args[i], type);
           argMap.set(name, arg);
         }
 
@@ -627,6 +596,56 @@ export default class FileOp extends CommonBase {
 
       FileOp[`op_${opName}`] = constructorMethod;
     }
+  }
+
+  /**
+   * Checks that the given value has the given type, as defined by this class.
+   * Returns the value to use as an argument, which _might_ be different than
+   * the one passed in. Throws an error if the type check fails.
+   *
+   * @param {*} value Value to check.
+   * @param {string} type Expected type, in the form of a `TYPE_*` string as
+   *   defined by this class.
+   * @returns {*} The value to use.
+   */
+  static _typeCheck(value, type) {
+    switch (type) {
+      case TYPE_BUFFER: {
+        FrozenBuffer.check(value);
+        break;
+      }
+
+      case TYPE_DUR_MSEC: {
+        TInt.nonNegative(value);
+        break;
+      }
+
+      case TYPE_HASH: {
+        if (value instanceof FrozenBuffer) {
+          value = value.hash;
+        } else {
+          FrozenBuffer.checkHash(value);
+        }
+        break;
+      }
+
+      case TYPE_PATH: {
+        StoragePath.check(value);
+        break;
+      }
+
+      case TYPE_REV_NUM: {
+        TInt.nonNegative(value);
+        break;
+      }
+
+      default: {
+        // Indicates a bug in this class.
+        throw Errors.wtf(`Weird \`type\` constant: ${type}`);
+      }
+    }
+
+    return value;
   }
 }
 
