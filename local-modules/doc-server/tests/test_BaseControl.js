@@ -149,7 +149,7 @@ describe('doc-server/BaseControl', () => {
     });
   });
 
-  describe.only('currentRevNum()', () => {
+  describe('currentRevNum()', () => {
     it('should perform an appropriate transaction, and use the result', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(Codec.theOne, file);
