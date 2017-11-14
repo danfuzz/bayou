@@ -200,19 +200,6 @@ export default class PropertySnapshot extends BaseSnapshot {
   }
 
   /**
-   * Main implementation of {@link #compose}. Takes a delta (not a change
-   * instance), and produces a document delta (not a snapshot).
-   *
-   * @param {PropertyDelta} delta Difference to compose with this instance's
-   *   contents.
-   * @returns {PropertyDelta} Delta which represents the composed document
-   *   contents.
-   */
-  _impl_composeWithDelta(delta) {
-    return this.contents.compose(delta, true);
-  }
-
-  /**
    * Main implementation of {@link #diff}, which produces a delta (not a
    * change).
    *

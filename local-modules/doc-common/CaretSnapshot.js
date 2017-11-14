@@ -219,23 +219,6 @@ export default class CaretSnapshot extends BaseSnapshot {
   }
 
   /**
-   * Main implementation of {@link #compose}. Takes a delta (not a change
-   * instance), and produces a document delta (not a snapshot).
-   *
-   * **Note:** It is an error if `delta` contains an `op_setField` to a caret
-   * that either does not exist in `this` or was not first introduced with an
-   * `op_beginSession`.
-   *
-   * @param {CaretDelta} delta Difference to compose with this instance's
-   *   contents.
-   * @returns {CaretDelta} Delta which represents the composed document
-   *   contents.
-   */
-  _impl_composeWithDelta(delta) {
-    return this.contents.compose(delta, true);
-  }
-
-  /**
    * Main implementation of {@link #diff}, which produces a delta (not a
    * change).
    *

@@ -16,10 +16,6 @@ export default class MockSnapshot extends BaseSnapshot {
     Object.freeze(this);
   }
 
-  _impl_composeWithDelta(delta) {
-    return this.contents.compose(delta, true);
-  }
-
   _impl_diffAsDelta(newerSnapshot) {
     return [new MockOp('diff_delta'), newerSnapshot.contents.ops[0]];
   }
