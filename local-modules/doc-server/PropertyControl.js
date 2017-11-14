@@ -42,10 +42,10 @@ export default class PropertyControl extends BaseControl {
       fc.op_deletePathPrefix(Paths.PROPERTY_PREFIX),
 
       // Initial revision number.
-      fc.op_writePath(Paths.PROPERTY_REVISION_NUMBER, 0),
+      fc.op_writePath(PropertyControl.revisionNumberPath, 0),
 
       // Empty change #0.
-      fc.op_writePath(Paths.forPropertyChange(0), PropertyChange.FIRST)
+      fc.op_writePath(PropertyControl.pathForChange(0), PropertyChange.FIRST)
     );
   }
 
@@ -55,24 +55,6 @@ export default class PropertyControl extends BaseControl {
   async _impl_afterInit() {
     // Any cached snapshots are no longer valid.
     this._snapshots.clear();
-  }
-
-  /**
-   * Underlying implementation of `currentRevNum()`, as required by the
-   * superclass.
-   *
-   * @returns {Int} The instantaneously-current revision number.
-   */
-  async _impl_currentRevNum() {
-    const fc          = this.fileCodec;
-    const storagePath = Paths.PROPERTY_REVISION_NUMBER;
-    const spec        = new TransactionSpec(
-      fc.op_checkPathPresent(storagePath),
-      fc.op_readPath(storagePath)
-    );
-
-    const transactionResult = await fc.transact(spec);
-    return transactionResult.data.get(storagePath);
   }
 
   /**
@@ -99,7 +81,7 @@ export default class PropertyControl extends BaseControl {
       const fc   = this.fileCodec;
       const spec = new TransactionSpec(
         fc.op_timeout(timeoutMsec),
-        fc.op_whenPathNot(Paths.PROPERTY_REVISION_NUMBER, currentRevNum));
+        fc.op_whenPathNot(PropertyControl.revisionNumberPath, currentRevNum));
 
       // If this returns normally (doesn't throw), then we know it wasn't due
       // to hitting the timeout. And if it _is_ a timeout, then the exception
@@ -225,7 +207,7 @@ export default class PropertyControl extends BaseControl {
     try {
       const fc = this.fileCodec;
       const spec = new TransactionSpec(
-        fc.op_readPath(Paths.PROPERTY_REVISION_NUMBER)
+        fc.op_readPath(PropertyControl.revisionNumberPath)
       );
       transactionResult = await fc.transact(spec);
     } catch (e) {
@@ -234,7 +216,7 @@ export default class PropertyControl extends BaseControl {
     }
 
     const data   = transactionResult.data;
-    const revNum = data.get(Paths.PROPERTY_REVISION_NUMBER);
+    const revNum = data.get(PropertyControl.revisionNumberPath);
 
     if (!revNum) {
       this.log.info('Corrupt document: Missing revision number.');
@@ -268,7 +250,7 @@ export default class PropertyControl extends BaseControl {
       const fc  = this.fileCodec;
       const ops = [];
       for (let i = revNum + 1; i <= (revNum + 10); i++) {
-        ops.push(fc.op_readPath(Paths.forPropertyChange(i)));
+        ops.push(fc.op_readPath(PropertyControl.pathForChange(i)));
       }
       const spec = new TransactionSpec(...ops);
       transactionResult = await fc.transact(spec);
@@ -289,11 +271,11 @@ export default class PropertyControl extends BaseControl {
   }
 
   /**
-   * {string} `StoragePath` string which stores the current revision number for
-   * the portion of the document controlled by this class.
+   * {string} `StoragePath` prefix string to use for file storage for the
+   * portion of the document controlled by instances of this class.
    */
-  static get _impl_revisionNumberPath() {
-    return Paths.PROPERTY_REVISION_NUMBER;
+  static get _impl_pathPrefix() {
+    return Paths.PROPERTY_PREFIX;
   }
 
   /**
@@ -302,17 +284,5 @@ export default class PropertyControl extends BaseControl {
    */
   static get _impl_snapshotClass() {
     return PropertySnapshot;
-  }
-
-  /**
-   * Gets the `StoragePath` string corresponding to the indicated revision
-   * number, specifically for the portion of the document controlled by this
-   * class.
-   *
-   * @param {RevisionNumber} revNum The revision number.
-   * @returns {string} The corresponding `StoragePath` string.
-   */
-  static _impl_pathForChange(revNum) {
-    return Paths.forPropertyChange(revNum);
   }
 }

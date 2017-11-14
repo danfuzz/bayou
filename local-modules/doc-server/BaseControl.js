@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseSnapshot, RevisionNumber, Timeouts } from 'doc-common';
-import { Errors as FileStoreErrors, TransactionSpec } from 'file-store';
+import { Errors as FileStoreErrors, StoragePath, TransactionSpec } from 'file-store';
 import { Delay } from 'promise-util';
 import { TFunction } from 'typecheck';
 import { Errors } from 'util-common';
@@ -55,6 +55,36 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * {string} Path prefix to use for file storage for the portion of the
+   * document controlled by instances of this class.
+   */
+  static get pathPrefix() {
+    // **Note:** `this` in the context of a static method is the class, not an
+    // instance.
+
+    if (!this._pathPrefix) {
+      // Call the `_impl` and verify the result.
+      const prefix = this._impl_pathPrefix;
+
+      StoragePath.check(prefix);
+      this._pathPrefix = prefix;
+    }
+
+    return this._pathPrefix;
+  }
+
+  /**
+   * {string} `StoragePath` string which stores the current revision number for
+   * the portion of the document controlled by this class. This corresponds to
+   * the change number for the most recent change stored in the document.
+   */
+  static get revisionNumberPath() {
+    // **Note:** `this` in the context of a static method is the class, not an
+    // instance.
+    return `${this.pathPrefix}/revision_number`;
+  }
+
+  /**
    * {class} Class (constructor function) of snapshot objects to be used with
    * instances of this class.
    */
@@ -71,6 +101,22 @@ export default class BaseControl extends BaseDataManager {
     }
 
     return this._snapshotClass;
+  }
+
+  /**
+   * Gets the `StoragePath` string corresponding to the indicated revision
+   * number, specifically for the portion of the document controlled by this
+   * class.
+   *
+   * @param {RevisionNumber} revNum The revision number.
+   * @returns {string} The corresponding `StoragePath` string.
+   */
+  static pathForChange(revNum) {
+    // **Note:** `this` in the context of a static method is the class, not an
+    // instance.
+
+    RevisionNumber.check(revNum);
+    return `${this.pathPrefix}/change/${revNum}`;
   }
 
   /**
@@ -103,8 +149,8 @@ export default class BaseControl extends BaseDataManager {
 
     const revNum       = change.revNum;
     const baseRevNum   = revNum - 1;
-    const changePath   = clazz._impl_pathForChange(revNum);
-    const revisionPath = clazz._impl_revisionNumberPath;
+    const changePath   = clazz.pathForChange(revNum);
+    const revisionPath = clazz.revisionNumberPath;
 
     const fc   = this.fileCodec; // Avoids boilerplate immediately below.
     const spec = new TransactionSpec(
@@ -144,12 +190,18 @@ export default class BaseControl extends BaseDataManager {
    * @returns {Int} The instantaneously-current revision number.
    */
   async currentRevNum() {
-    // This method merely exists to enforce the return-type contract as
-    // specified in the method docs.
+    const clazz       = this.constructor;
+    const fc          = this.fileCodec;
+    const storagePath = clazz.revisionNumberPath;
+    const spec        = new TransactionSpec(
+      fc.op_checkPathPresent(storagePath),
+      fc.op_readPath(storagePath)
+    );
 
-    const revNum = await this._impl_currentRevNum();
+    const transactionResult = await fc.transact(spec);
 
-    return RevisionNumber.check(revNum);
+    const result = transactionResult.data.get(storagePath);
+    return RevisionNumber.check(result);
   }
 
   /**
@@ -259,7 +311,7 @@ export default class BaseControl extends BaseDataManager {
 
     const paths = [];
     for (let i = startInclusive; i < endExclusive; i++) {
-      paths.push(clazz._impl_pathForChange(i));
+      paths.push(clazz.pathForChange(i));
     }
 
     const fc = this.fileCodec;
@@ -475,17 +527,6 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
-   * Subclass-specific implementation of `currentRevNum()`. Subclasses must
-   * override this.
-   *
-   * @abstract
-   * @returns {Int} The instantaneously-current revision number.
-   */
-  async _impl_currentRevNum() {
-    return this._mustOverride();
-  }
-
-  /**
    * Subclass-specific implementation of `getChangeAfter()`. Subclasses must
    * override this method.
    *
@@ -555,13 +596,13 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
-   * {string} `StoragePath` string which stores the current revision number for
-   * the portion of the document controlled by this class. Subclasses must
-   * override this.
+   * {string} `StoragePath` prefix string to use for file storage for the
+   * portion of the document controlled by instances of this class. Subclasses
+   * must override override this.
    *
    * @abstract
    */
-  static get _impl_revisionNumberPath() {
+  static get _impl_pathPrefix() {
     return this._mustOverride();
   }
 
@@ -573,18 +614,5 @@ export default class BaseControl extends BaseDataManager {
    */
   static get _impl_snapshotClass() {
     return this._mustOverride();
-  }
-
-  /**
-   * Gets the `StoragePath` string corresponding to the indicated revision
-   * number, specifically for the portion of the document controlled by this
-   * class. Subclasses must override this.
-   *
-   * @abstract
-   * @param {RevisionNumber} revNum The revision number.
-   * @returns {string} The corresponding `StoragePath` string.
-   */
-  static _impl_pathForChange(revNum) {
-    return this._mustOverride(revNum);
   }
 }

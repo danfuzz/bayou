@@ -10,8 +10,8 @@ import { Timeouts, Timestamp } from 'doc-common';
 import { MockChange, MockOp, MockSnapshot } from 'doc-common/mocks';
 import { BaseControl, FileAccess } from 'doc-server';
 import { MockControl } from 'doc-server/mocks';
+import { TransactionSpec } from 'file-store';
 import { MockFile } from 'file-store/mocks';
-import { Delay } from 'promise-util';
 
 /** {FileAccess} Convenient instance of `FileAccess`. */
 const FILE_ACCESS = new FileAccess(Codec.theOne, new MockFile('blort'));
@@ -28,6 +28,41 @@ describe('doc-server/BaseControl', () => {
     it('should reflect the subclass\'s implementation', () => {
       const result = MockControl.deltaClass;
       assert.strictEqual(result, MockSnapshot.deltaClass);
+    });
+  });
+
+  describe('.pathPrefix', () => {
+    it('should reflect the subclass\'s implementation', () => {
+      const result = MockControl.pathPrefix;
+      assert.strictEqual(result, '/mock_control');
+    });
+
+    it('should reject an improper subclass choice', () => {
+      class HasBadPrefix extends BaseControl {
+        static get _impl_pathPrefix() {
+          return '//invalid/path_string!';
+        }
+      }
+
+      assert.throws(() => HasBadPrefix.pathPrefix);
+    });
+
+    it('should only ever ask the subclass once', () => {
+      class GoodControl extends BaseControl {
+        static get _impl_pathPrefix() {
+          this.count++;
+          return '/blort';
+        }
+      }
+
+      GoodControl.count = 0;
+      assert.strictEqual(GoodControl.pathPrefix, '/blort');
+      assert.strictEqual(GoodControl.pathPrefix, '/blort');
+      assert.strictEqual(GoodControl.pathPrefix, '/blort');
+      assert.strictEqual(GoodControl.pathPrefix, '/blort');
+      assert.strictEqual(GoodControl.pathPrefix, '/blort');
+
+      assert.strictEqual(GoodControl.count, 1);
     });
   });
 
@@ -66,6 +101,34 @@ describe('doc-server/BaseControl', () => {
     });
   });
 
+  describe('pathForChange()', () => {
+    it('should return an appropriate path given a valid argument', () => {
+      function test(value) {
+        const expect = `${MockControl.pathPrefix}/change/${value}`;
+        assert.strictEqual(MockControl.pathForChange(value), expect);
+      }
+
+      test(0);
+      test(1);
+      test(10);
+      test(100000914);
+    });
+
+    it('should reject invalid arguments', () => {
+      function test(value) {
+        assert.throws(() => MockControl.pathForChange(value), /bad_value/);
+      }
+
+      test(-1);
+      test(0.01);
+      test(null);
+      test(undefined);
+      test(false);
+      test([10]);
+      test(new Map());
+    });
+  });
+
   describe('constructor()', () => {
     it('should accept a `FileAccess` and reflect it in the inherited getters', () => {
       const fa     = FILE_ACCESS;
@@ -86,41 +149,74 @@ describe('doc-server/BaseControl', () => {
     });
   });
 
-  describe('currentRevNum()', () => {
-    it('should call through to the subclass implementation', async () => {
-      const control = new MockControl(FILE_ACCESS, 'boop');
+  describe.only('currentRevNum()', () => {
+    it('should perform an appropriate transaction, and use the result', async () => {
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(Codec.theOne, file);
+      const control    = new MockControl(fileAccess, 'boop');
 
-      control._impl_currentRevNum = async () => {
-        return 123;
-      };
-      await assert.eventually.strictEqual(control.currentRevNum(), 123);
+      let gotSpec = null;
 
-      control._impl_currentRevNum = async () => {
-        await Delay.resolve(50);
-        return 321;
+      file._impl_transact = (spec) => {
+        gotSpec = spec;
+        throw new Error('to_be_expected');
       };
-      await assert.eventually.strictEqual(control.currentRevNum(), 321);
 
-      const error = new Error('Oy!');
-      control._impl_currentRevNum = async () => {
-        throw error;
-      };
-      await assert.isRejected(control.currentRevNum(), /^Oy!$/);
+      await assert.isRejected(control.currentRevNum(), /to_be_expected/);
+
+      assert.instanceOf(gotSpec, TransactionSpec);
+
+      const ops1 = gotSpec.opsWithName('checkPathPresent');
+      const ops2 = gotSpec.opsWithName('readPath');
+
+      assert.strictEqual(gotSpec.size, 2);
+      assert.lengthOf(ops1, 1);
+      assert.lengthOf(ops2, 1);
+      assert.strictEqual(ops1[0].arg('storagePath'), '/mock_control/revision_number');
+      assert.strictEqual(ops2[0].arg('storagePath'), '/mock_control/revision_number');
     });
 
-    it('should reject improper subclass return values', async () => {
-      const control = new MockControl(FILE_ACCESS, 'boop');
+    it('should use the result of the transaction it performed', async () => {
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(Codec.theOne, file);
+      const control    = new MockControl(fileAccess, 'boop');
 
+      file._impl_transact = (spec_unused) => {
+        return {
+          revNum:    90909,
+          newRevNum: null,
+          paths:     null,
+          data: new Map(Object.entries({
+            '/mock_control/revision_number': Codec.theOne.encodeJsonBuffer(1234)
+          }))
+        };
+      };
+
+      await assert.eventually.strictEqual(control.currentRevNum(), 1234);
+    });
+
+    it('should reject improper transaction results', async () => {
       async function test(value) {
-        control._impl_currentRevNum = async () => {
-          return value;
+        const file       = new MockFile('blort');
+        const codec      = Codec.theOne;
+        const fileAccess = new FileAccess(codec, file);
+        const control    = new MockControl(fileAccess, 'boop');
+
+        file._impl_transact = (spec_unused) => {
+          return {
+            revNum:    90909,
+            newRevNum: null,
+            paths:     null,
+            data: new Map(Object.entries({
+              '/mock_control/revision_number': codec.encodeJsonBuffer(value)
+            }))
+          };
         };
 
         await assert.isRejected(control.currentRevNum(), /^bad_value/);
       }
 
       await test(null);
-      await test(undefined);
       await test(false);
       await test(-1);
       await test(0.05);
@@ -130,9 +226,9 @@ describe('doc-server/BaseControl', () => {
   });
 
   describe('getChangeAfter()', () => {
-    it('should call through to `_impl_currentRevNum()` before anything else', async () => {
+    it('should call through to `currentRevNum()` before anything else', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         throw new Error('Oy!');
       };
       control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum_unused) => {
@@ -142,9 +238,9 @@ describe('doc-server/BaseControl', () => {
       await assert.isRejected(control.getChangeAfter(0), /^Oy!/);
     });
 
-    it('should check the validity of `baseRevNum` against the response from `_impl_currentRevNum()`', async () => {
+    it('should check the validity of `baseRevNum` against the response from `currentRevNum()`', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         return 10;
       };
       control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum_unused) => {
@@ -156,7 +252,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should reject blatantly invalid `baseRevNum` values', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         return 10;
       };
       control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum_unused) => {
@@ -180,7 +276,7 @@ describe('doc-server/BaseControl', () => {
       let gotTimeout = null;
 
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         return 10;
       };
       control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec, currentRevNum_unused) => {
@@ -205,7 +301,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should return back a valid non-`null` subclass response', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         return 10;
       };
       control._impl_getChangeAfter = async (baseRevNum, timeoutMsec_unused, currentRevNum) => {
@@ -221,7 +317,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should convert a `null` subclass response to a `revision_not_available` error', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         return 10;
       };
       control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum_unused) => {
@@ -233,7 +329,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should reject a non-change subclass response', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         return 10;
       };
 
@@ -254,7 +350,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should reject a change response that has a `timestamp`', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         return 10;
       };
       control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum) => {
@@ -266,7 +362,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should reject a change response that has an `authorId`', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         return 10;
       };
       control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum) => {
@@ -278,9 +374,9 @@ describe('doc-server/BaseControl', () => {
   });
 
   describe('getSnapshot()', () => {
-    it('should call through to `_impl_currentRevNum()` before anything else', async () => {
+    it('should call through to `currentRevNum()` before anything else', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         throw new Error('Oy!');
       };
       control._impl_getSnapshot = async (revNum_unused) => {
@@ -291,9 +387,9 @@ describe('doc-server/BaseControl', () => {
       await assert.isRejected(control.getSnapshot(), /^Oy!/);
     });
 
-    it('should check the validity of a non-`null` `revNum` against the response from `_impl_currentRevNum()`', async () => {
+    it('should check the validity of a non-`null` `revNum` against the response from `currentRevNum()`', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         return 10;
       };
       control._impl_getSnapshot = async (revNum_unused) => {
@@ -305,7 +401,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should reject blatantly invalid `revNum` values', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         return 10;
       };
       control._impl_getSnapshot = async (revNum_unused) => {
@@ -326,7 +422,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should return back a valid non-`null` subclass response', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         return 10;
       };
       control._impl_getSnapshot = async (revNum) => {
@@ -341,7 +437,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should use the returned `currentRevNum` when `revNum` is passed asa `null`', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         return 37;
       };
       control._impl_getSnapshot = async (revNum) => {
@@ -356,7 +452,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should convert a `null` subclass response to a `revision_not_available` error', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         return 10;
       };
       control._impl_getSnapshot = async (revNum_unused) => {
@@ -368,7 +464,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should reject a non-snapshot subclass response', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         return 10;
       };
 
@@ -390,7 +486,7 @@ describe('doc-server/BaseControl', () => {
   describe('update()', () => {
     it('should reject non-change arguments', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         throw new Error('This should not have been called.');
       };
       control._impl_getSnapshot = async (revNum_unused) => {
@@ -413,7 +509,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should reject change arguments with invalid fields', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         throw new Error('This should not have been called.');
       };
       control._impl_getSnapshot = async (revNum_unused) => {
@@ -436,7 +532,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should accept an empty change without calling through to the impl', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control._impl_currentRevNum = async () => {
+      control.currentRevNum = async () => {
         throw new Error('This should not have been called.');
       };
       control._impl_getSnapshot = async (revNum_unused) => {
@@ -464,7 +560,7 @@ describe('doc-server/BaseControl', () => {
 
   it('should reject a too-large `revNum` in valid nontrivial cases', async () => {
     const control = new MockControl(FILE_ACCESS, 'boop');
-    control._impl_currentRevNum = async () => {
+    control.currentRevNum = async () => {
       return 10;
     };
     control._impl_getSnapshot = async (revNum) => {
@@ -485,7 +581,7 @@ describe('doc-server/BaseControl', () => {
     let gotChange   = 'x';
     let gotExpected = 'x';
 
-    control._impl_currentRevNum = async () => {
+    control.currentRevNum = async () => {
       return 10;
     };
     control._impl_getSnapshot = async (revNum) => {
@@ -516,7 +612,7 @@ describe('doc-server/BaseControl', () => {
     const control = new MockControl(FILE_ACCESS, 'boop');
     let callCount = 0;
 
-    control._impl_currentRevNum = async () => {
+    control.currentRevNum = async () => {
       return 10;
     };
     control._impl_getSnapshot = async (revNum) => {
