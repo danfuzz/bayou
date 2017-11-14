@@ -51,7 +51,7 @@ export default class FileOpMaker extends UtilityClass {
   }
 
   /**
-   * Makes a valid array with one of each op type _except_ wait ops, and at
+   * Makes a valid array with one of each op name _except_ wait ops, and at
    * least the given number each of ops of type `push` and `pull`.
    *
    * @param {Int} count How many of each `push` and `pull` op to include.
@@ -67,6 +67,31 @@ export default class FileOpMaker extends UtilityClass {
       }
 
       const n = (schema.isPush || schema.isPull) ? count : 1;
+      for (let i = 0; i < n; i++) {
+        ops.push(FileOpMaker.makeOp(name, i));
+      }
+    }
+
+    return ops;
+  }
+
+  /**
+   * Makes a valid array with one of each op name _except_ push and pull ops,
+   * and at least the given number each of ops of type `wait`.
+   *
+   * @param {Int} count How many of each `wait` op to include.
+   * @returns {array<FileOp>} Appropriately-constructed array of ops.
+   */
+  static makeWait(count) {
+    const ops = [];
+
+    for (const name of FileOp.OPERATION_NAMES) {
+      const schema = FileOp.propsFromName(name);
+      if (schema.isPush || schema.isPull) {
+        continue;
+      }
+
+      const n = (schema.category === FileOp.CAT_WAIT) ? count : 1;
       for (let i = 0; i < n; i++) {
         ops.push(FileOpMaker.makeOp(name, i));
       }
@@ -103,6 +128,9 @@ export default class FileOpMaker extends UtilityClass {
     test(FileOpMaker.makePushPull(1));
     test(FileOpMaker.makePushPull(2), '(push-pull 2)');
     test(FileOpMaker.makePushPull(5), '(push-pull 5)');
+    test(FileOpMaker.makeWait(1));
+    test(FileOpMaker.makeWait(2), '(wait 2)');
+    test(FileOpMaker.makeWait(5), '(wait 5)');
   }
 
   /**
