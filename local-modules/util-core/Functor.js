@@ -57,6 +57,16 @@ export default class Functor {
   }
 
   /**
+   * "Deconstructs" this instance, returning an array which is suitable for
+   * passing to the constructor of this class.
+   *
+   * @returns {array<*>} Reconstruction arguments.
+   */
+  deconstruct() {
+    return [this._name, ...this._args];
+  }
+
+  /**
    * Custom inspector function, as called by `util.inspect()`.
    *
    * @param {Int} depth Current inspection depth.
