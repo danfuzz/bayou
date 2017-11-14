@@ -5,7 +5,7 @@
 import { BaseSnapshot, RevisionNumber, Timeouts } from 'doc-common';
 import { Errors as FileStoreErrors, StoragePath, TransactionSpec } from 'file-store';
 import { Delay } from 'promise-util';
-import { TFunction } from 'typecheck';
+import { TBoolean, TFunction } from 'typecheck';
 import { Errors } from 'util-common';
 
 import BaseDataManager from './BaseDataManager';
@@ -366,21 +366,30 @@ export default class BaseControl extends BaseDataManager {
    *   in the result.
    * @param {Int} endExclusive Revision number just beyond the last change to
    *   include in the result.
+   * @param {boolean} wantDocument Whether the result of the operation should be
+   *   a document delta. When `true`, `baseDelta` must be passed as a document
+   *   delta. In addition, _some_ subclasses operate differently when asked to
+   *   produce a document vs. not.
    * @returns {BaseDelta} The composed result consisting of `baseDelta` composed
    *   with the deltas of revisions `startInclusive` through but not including
    *  `endExclusive`.
    */
-  async getComposedChanges(baseDelta, startInclusive, endExclusive) {
+  async getComposedChanges(baseDelta, startInclusive, endExclusive, wantDocument) {
     const clazz = this.constructor;
 
     clazz.deltaClass.check(baseDelta);
+    TBoolean.check(wantDocument);
 
     if (startInclusive === endExclusive) {
       // Trivial case: Nothing to compose. If we were to have made it to the
-      // loop below, `getChangeRange()` would have taken care of the error
-      // checking on the range arguments. But because we're short-circuiting out
-      // of it here, we need to explicitly make a call to confirm argument
-      // validity.
+      // loop below, `getChangeRange()` and `compose()` would have taken care of
+      // the salient error checking. But because we're short-circuiting out of
+      // it here, we need to explicitly check argument validity.
+
+      if (wantDocument && !baseDelta.isDocument()) {
+        throw Errors.bad_value(baseDelta, 'document delta');
+      }
+
       await this.getChangeRange(startInclusive, startInclusive);
       return baseDelta;
     }
@@ -391,7 +400,7 @@ export default class BaseControl extends BaseDataManager {
       const end = Math.min(i + MAX, endExclusive);
       const changes = await this.getChangeRange(i, end);
       for (const c of changes) {
-        result = result.compose(c.delta, false);
+        result = result.compose(c.delta, wantDocument);
       }
     }
 
