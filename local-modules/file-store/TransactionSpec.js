@@ -43,15 +43,12 @@ export default class TransactionSpec extends CommonBase {
   }
 
   /**
-   * {Iterator<FileOp>} An iterator for the operations to perform. The
-   * operations are yielded by the iterator in category-sorted order, as
-   * documented by `FileOp`.
-   *
-   * **Note:** This is an iterator and not (say) an array so as to make it
-   * obvious that the contents are immutable.
+   * {array<FileOp>} An iterator for the operations to perform. The operations
+   * are in category-sorted order, as documented by `FileOp`. This value is
+   * always immutable.
    */
   get ops() {
-    return this._ops.values();
+    return this._ops;
   }
 
   /** {Int} The number of operations in this instance. */

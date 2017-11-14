@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { it } from 'mocha';
+import { describe } from 'mocha';
 import { inspect } from 'util';
 
 import { FileOp } from 'file-store';
@@ -76,8 +76,8 @@ export default class FileOpMaker extends UtilityClass {
   }
 
   /**
-   * Performs a series of `it()` test cases with various valid arrays of ops
-   * passed to an inner test function.
+   * Performs a series of `describe()` test cases with various valid arrays of
+   * ops passed to an inner test function.
    *
    * @param {function} testFunction Test function to call. It is passed a valid
    *   array of ops as a single argument.
@@ -88,7 +88,8 @@ export default class FileOpMaker extends UtilityClass {
         label = inspect(value);
       }
 
-      it(`works with: ${label}`, () => {
+      describe(`for ops: ${label}`, () => {
+        value = Object.freeze(value);
         testFunction(value);
       });
     }
