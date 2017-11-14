@@ -262,6 +262,19 @@ const OPERATIONS = DataUtil.deepFreeze([
 ]);
 
 /**
+ * {Map<string,object>} Map from operation name to corresponding properties
+ * object, suitable for returning from {@link FileOp.propsFromName}.
+ */
+const OPERATION_MAP = new Map(OPERATIONS.map((schema) => {
+  const [category, name, ...args] = schema;
+  const isPull = (category === CAT_READ) || (category === CAT_LIST);
+  const isPush = (category === CAT_WRITE) || (category === CAT_DELETE);
+
+  const props = { category, name, args, isPull, isPush };
+  return [name, Object.freeze(props)];
+}));
+
+/**
  * Operation to perform on a file as part of a transaction. In terms of overall
  * structure, an operation consists of a string name and arbitrary additional
  * arguments. Each specific named operation defines the allowed shape of its
@@ -338,6 +351,11 @@ export default class FileOp extends CommonBase {
     return CAT_WRITE;
   }
 
+  /** {array<string>} List of all operation names. This is a frozen value. */
+  static get OPERATION_NAMES() {
+    return Object.freeze([...OPERATION_MAP.keys()]);
+  }
+
   /**
    * {array<array>} List of operation schemata. These are used to
    * programatically define static methods on `FileOp` for constructing
@@ -345,7 +363,7 @@ export default class FileOp extends CommonBase {
    *
    * * `category` &mdash; The category of the operation.
    * * `name` &mdsah; The name of the operation.
-   * * `argInfo` &mdash; One or more elements indicating the names and types of
+   * * `args` &mdash; One or more elements indicating the names and types of
    *   the arguments to the operation. Each argument is represented as a two-
    *   element array `[<name>, <type>]`, where `<type>` is one of the type
    *   constants defined by this class.
@@ -383,6 +401,33 @@ export default class FileOp extends CommonBase {
   /** {string} Type name for revision numbers. */
   static get TYPE_REV_NUM() {
     return TYPE_REV_NUM;
+  }
+
+  /**
+   * Gets the properties associated with a given operation, by name. Properties
+   * are as follows:
+   *
+   * * `args: array` &mdash; Array of argument specs, same as defined by
+   *   {@link #OPERATIONS}.
+   * * `category: string` &mdash; Operation category.
+   * * `isPull: boolean` &mdash; Whether the operation is a pull (category
+   *   `read` or `list`).
+   * * `isPush: boolean` &mdash; Whether the operation is a push (category
+   *   `write` or `delete`).
+   * * `name: string` &mdash; Operation name. (This is the same as the passed
+   *   `name`.)
+   *
+   * @param {string} name Operation name.
+   * @returns {object} Operation properties.
+   */
+  static propsFromName(name) {
+    const schema = OPERATION_MAP.get(name);
+
+    if (!schema) {
+      throw Errors.bad_value(name, 'FileOp operation name');
+    }
+
+    return schema;
   }
 
   /**
