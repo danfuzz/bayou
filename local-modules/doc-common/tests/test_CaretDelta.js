@@ -12,7 +12,7 @@ import { MockDelta } from 'doc-common/mocks';
 
 describe('doc-common/CaretDelta', () => {
   describe('compose()', () => {
-    // Common tester for all of `compose()`.
+    // Common tester for `compose()` when passing `false` for `wantDocuent`.
     function test(ops1, ops2, expectOps) {
       const d1     = new CaretDelta(ops1);
       const d2     = new CaretDelta(ops2);
@@ -55,6 +55,19 @@ describe('doc-common/CaretDelta', () => {
       assert.throws(() => delta.compose('blort', true));
       assert.throws(() => delta.compose(null, true));
       assert.throws(() => delta.compose(new MockDelta([]), true));
+    });
+
+    it('should not include session ends when `wantDocument` is `true`', () => {
+      const op1    = CaretOp.op_beginSession(new Caret('aaa'));
+      const op2    = CaretOp.op_beginSession(new Caret('bbb'));
+      const op3    = CaretOp.op_beginSession(new Caret('ccc'));
+      const op4    = CaretOp.op_endSession('bbb');
+      const op5    = CaretOp.op_endSession('ddd');
+      const d1     = new CaretDelta([op1, op2]);
+      const d2     = new CaretDelta([op3, op4, op5]);
+      const result = d1.compose(d2, true);
+
+      assert.sameMembers(result.ops, [op1, op3]);
     });
 
     describe('`endSession` preceded by anything for that session', () => {

@@ -140,6 +140,19 @@ describe('doc-common/PropertyDelta', () => {
       test([op1, op5], [op6],      [op1, op6]);
       test([op1, op5], [op7],      [op5, op7]);
     });
+
+    it('should not include deletions when `wantDocument` is `true`', () => {
+      const op1    = PropertyOp.op_setProperty('aaa', '111');
+      const op2    = PropertyOp.op_setProperty('bbb', '222');
+      const op3    = PropertyOp.op_setProperty('ccc', '333');
+      const op4    = PropertyOp.op_deleteProperty('bbb');
+      const op5    = PropertyOp.op_deleteProperty('ddd');
+      const d1     = new PropertyDelta([op1, op2]);
+      const d2     = new PropertyDelta([op3, op4, op5]);
+      const result = d1.compose(d2, true);
+
+      assert.sameMembers(result.ops, [op1, op3]);
+    });
   });
 
   describe('equals()', () => {
