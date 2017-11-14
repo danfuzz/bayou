@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import { TInt, TString } from 'typecheck';
 import { CommonBase, DataUtil, Errors, FrozenBuffer } from 'util-common';
 
@@ -536,6 +538,38 @@ export default class FileOp extends CommonBase {
     }
 
     return result;
+  }
+
+  /**
+   * Custom inspect function to provide a more succinct representation than the
+   * default.
+   *
+   * @param {Int} depth Current inspection depth.
+   * @param {object} opts Inspection options.
+   * @returns {string} The inspection string form of this instance.
+   */
+  [inspect.custom](depth, opts) {
+    const clazz   = this.constructor;
+    const nameStr = `${clazz.name}.op_${this.name}`;
+
+    if (depth < 0) {
+      return `${nameStr}(...)`;
+    }
+
+    // Set up the inspection opts so that recursive `inspect()` calls respect
+    // the topmost requested depth.
+    const subOpts = (opts.depth === null)
+      ? opts
+      : Object.assign({}, opts, { depth: opts.depth - 1 });
+
+    const result = [nameStr];
+    for (const [name, type_unused] of FileOp.propsFromName(this.name).args) {
+      result.push((result.length === 1) ? '(' : ', ');
+      result.push(inspect(this.arg(name), subOpts));
+    }
+    result.push(')');
+
+    return result.join('');
   }
 
   /**
