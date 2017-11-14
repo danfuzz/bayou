@@ -80,24 +80,28 @@ describe('doc-common/PropertyDelta', () => {
 
   describe('compose()', () => {
     it('should return an empty result from `EMPTY.compose(EMPTY)`', () => {
-      const result = PropertyDelta.EMPTY.compose(PropertyDelta.EMPTY);
-      assert.instanceOf(result, PropertyDelta);
-      assert.deepEqual(result.ops, []);
+      const result1 = PropertyDelta.EMPTY.compose(PropertyDelta.EMPTY, false);
+      assert.instanceOf(result1, PropertyDelta);
+      assert.deepEqual(result1.ops, []);
+
+      const result2 = PropertyDelta.EMPTY.compose(PropertyDelta.EMPTY, true);
+      assert.instanceOf(result2, PropertyDelta);
+      assert.deepEqual(result2.ops, []);
     });
 
     it('should reject calls when `other` is not an instance of the class', () => {
       const delta = PropertyDelta.EMPTY;
 
-      assert.throws(() => delta.compose('blort'));
-      assert.throws(() => delta.compose(null));
-      assert.throws(() => delta.compose(new MockDelta([])));
+      assert.throws(() => delta.compose('blort', false));
+      assert.throws(() => delta.compose(null, false));
+      assert.throws(() => delta.compose(new MockDelta([]), false));
     });
 
     it('should result in no more than one op per named property, with `other` taking precedence', () => {
       function test(ops1, ops2, expectOps) {
         const d1     = new PropertyDelta(ops1);
         const d2     = new PropertyDelta(ops2);
-        const result = d1.compose(d2);
+        const result = d1.compose(d2, false);
 
         assert.strictEqual(result.ops.length, expectOps.length);
 
@@ -135,6 +139,19 @@ describe('doc-common/PropertyDelta', () => {
       test([op1],      [op5],      [op1, op5]);
       test([op1, op5], [op6],      [op1, op6]);
       test([op1, op5], [op7],      [op5, op7]);
+    });
+
+    it('should not include deletions when `wantDocument` is `true`', () => {
+      const op1    = PropertyOp.op_setProperty('aaa', '111');
+      const op2    = PropertyOp.op_setProperty('bbb', '222');
+      const op3    = PropertyOp.op_setProperty('ccc', '333');
+      const op4    = PropertyOp.op_deleteProperty('bbb');
+      const op5    = PropertyOp.op_deleteProperty('ddd');
+      const d1     = new PropertyDelta([op1, op2]);
+      const d2     = new PropertyDelta([op3, op4, op5]);
+      const result = d1.compose(d2, true);
+
+      assert.sameMembers(result.ops, [op1, op3]);
     });
   });
 

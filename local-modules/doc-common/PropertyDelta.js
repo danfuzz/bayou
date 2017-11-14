@@ -16,15 +16,14 @@ import PropertyOp from './PropertyOp';
  */
 export default class PropertyDelta extends BaseDelta {
   /**
-   * Composes another instance on top of this one, to produce a new instance.
-   * This operation works equally whether or not `this` is a document delta.
+   * Main implementation of {@link #compose}.
    *
-   * @param {PropertyDelta} other The delta to compose.
-   * @returns {PropertyDelta} Result of composition.
+   * @param {PropertyDelta} other Delta to compose with this instance.
+   * @param {boolean} wantDocument Whether the result of the operation should be
+   *   a document delta.
+   * @returns {PropertyDelta} Composed result.
    */
-  compose(other) {
-    PropertyDelta.check(other);
-
+  _impl_compose(other, wantDocument) {
     const props = new Map();
 
     // Add / replace the ops, first from `this` and then from `other`, as a
@@ -34,16 +33,30 @@ export default class PropertyDelta extends BaseDelta {
     for (const op of [...this.ops, ...other.ops]) {
       const opProps = op.props;
 
-      let name;
       switch (opProps.opName) {
-        case PropertyOp.SET_PROPERTY:    { name = opProps.property.name; break; }
-        case PropertyOp.DELETE_PROPERTY: { name = opProps.name;          break; }
+        case PropertyOp.SET_PROPERTY: {
+          props.set(opProps.property.name, op);
+          break;
+        }
+
+        case PropertyOp.DELETE_PROPERTY: {
+          if (wantDocument) {
+            // Document deltas don't remember property deletions; they simply
+            // don't have the property in question.
+            props.delete(opProps.name);
+          } else {
+            // For non-document results, we need to remember properties that are
+            // deleted (by `this` or `other`), so that the deletion is part of
+            // the result delta.
+            props.set(opProps.name, op);
+          }
+          break;
+        }
+
         default: {
           throw Errors.wtf(`Weird op name: ${opProps.opName}`);
         }
       }
-
-      props.set(name, op);
     }
 
     return new PropertyDelta([...props.values()]);

@@ -691,7 +691,7 @@ export default class BodyClient extends StateMachine {
     // state to Quill's current state) composed with the correction to that
     // delta which when applied brings the client's state into alignment with
     // the server's state.
-    const correctedDelta = delta.compose(dCorrection);
+    const correctedDelta = delta.compose(dCorrection, false);
 
     if (this._currentEvent.nextOfNow(QuillEvents.TEXT_CHANGE) === null) {
       // Thanfully, the local user hasn't made any other changes while we
@@ -801,7 +801,7 @@ export default class BodyClient extends StateMachine {
         break;
       }
 
-      delta = (delta === null) ? props.delta : delta.compose(props.delta);
+      delta = (delta === null) ? props.delta : delta.compose(props.delta, false);
     }
 
     // Remember that we consumed all these changes.

@@ -149,7 +149,7 @@ describe('doc-server/BaseControl', () => {
     });
   });
 
-  describe.only('currentRevNum()', () => {
+  describe('currentRevNum()', () => {
     it('should perform an appropriate transaction, and use the result', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(Codec.theOne, file);
@@ -169,7 +169,7 @@ describe('doc-server/BaseControl', () => {
       const ops1 = gotSpec.opsWithName('checkPathPresent');
       const ops2 = gotSpec.opsWithName('readPath');
 
-      assert.strictEqual(gotSpec.size, 2);
+      assert.strictEqual(gotSpec.ops.length, 2);
       assert.lengthOf(ops1, 1);
       assert.lengthOf(ops2, 1);
       assert.strictEqual(ops1[0].arg('storagePath'), '/mock_control/revision_number');
@@ -602,7 +602,7 @@ describe('doc-server/BaseControl', () => {
     assert.deepEqual(gotBase, new MockSnapshot(6, [new MockOp('x', 6)]));
     assert.strictEqual(gotChange, change);
     assert.deepEqual(gotExpected,
-      new MockSnapshot(7, [new MockOp('composed_delta'), new MockOp('abc')]));
+      new MockSnapshot(7, [new MockOp('composed_doc'), new MockOp('abc')]));
 
     assert.instanceOf(result, MockChange);
     assert.deepEqual(result, new MockChange(14, [new MockOp('q')]));

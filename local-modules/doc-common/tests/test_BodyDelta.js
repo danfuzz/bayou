@@ -112,15 +112,19 @@ describe('doc-common/BodyDelta', () => {
 
   describe('compose()', () => {
     it('should return an empty result from `EMPTY.compose(EMPTY)`', () => {
-      const result = BodyDelta.EMPTY.compose(BodyDelta.EMPTY);
-      assert.instanceOf(result, BodyDelta);
-      assert.deepEqual(result.ops, []);
+      const result1 = BodyDelta.EMPTY.compose(BodyDelta.EMPTY, false);
+      assert.instanceOf(result1, BodyDelta);
+      assert.deepEqual(result1.ops, []);
+
+      const result2 = BodyDelta.EMPTY.compose(BodyDelta.EMPTY, true);
+      assert.instanceOf(result2, BodyDelta);
+      assert.deepEqual(result2.ops, []);
     });
 
     it('should reject calls when `other` is not an instance of the class', () => {
       const delta = BodyDelta.EMPTY;
       const other = 'blort';
-      assert.throws(() => delta.compose(other));
+      assert.throws(() => delta.compose(other, true));
     });
   });
 
@@ -160,7 +164,7 @@ describe('doc-common/BodyDelta', () => {
 
       describe(label, () => {
         it('should produce the expected composition', () => {
-          const result = origDoc.compose(change);
+          const result = origDoc.compose(change, true);
           assert.instanceOf(result, BodyDelta);
           assert.deepEqual(result.ops, newDoc.ops);
         });
@@ -173,7 +177,7 @@ describe('doc-common/BodyDelta', () => {
 
         it('should produce the new doc when composing the orig doc with the diff', () => {
           const diff   = origDoc.diff(newDoc);
-          const result = origDoc.compose(diff);
+          const result = origDoc.compose(diff, true);
           assert.instanceOf(result, BodyDelta);
           assert.deepEqual(result.ops, newDoc.ops);
         });

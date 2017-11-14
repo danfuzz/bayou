@@ -124,7 +124,7 @@ export default class BaseSnapshot extends CommonBase {
       return this.withRevNum(change.revNum);
     }
 
-    return new this.constructor(change.revNum, this._impl_composeWithDelta(delta));
+    return new this.constructor(change.revNum, this.contents.compose(delta, true));
   }
 
   /**
@@ -250,23 +250,6 @@ export default class BaseSnapshot extends CommonBase {
     return (revNum === this._revNum)
       ? this
       : new this.constructor(revNum, this._contents);
-  }
-
-  /**
-   * Main implementation of {@link #compose}, as defined by the subclass. Takes
-   * a delta (not a change instance), and produces a document delta (not a
-   * snapshot).
-   *
-   * @abstract
-   * @param {BaseDelta} delta Difference to compose with this instance's
-   *   contents. Guaranteed to be an instance of the `deltaClass` as defined
-   *   by the subclass.
-   * @returns {BaseDelta|array} Delta which represents the composed document
-   *   contents. Must be an instance of the `deltaClass` as defined by the
-   *   subclass or an array of operations that can be used to produce same.
-   */
-  _impl_composeWithDelta(delta) {
-    return this._mustOverride(delta);
   }
 
   /**

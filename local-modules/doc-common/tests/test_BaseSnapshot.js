@@ -108,7 +108,7 @@ describe('doc-common/BaseSnapshot', () => {
   });
 
   describe('compose()', () => {
-    it('should call through to the impl and wrap the result in a new instance', () => {
+    it('should call through to the delta and wrap the result in a new instance', () => {
       const snap   = new MockSnapshot(10, [new MockOp('some_op')]);
       const change = new MockChange(20, [new MockOp('change_op')]);
       const result = snap.compose(change);
@@ -118,7 +118,7 @@ describe('doc-common/BaseSnapshot', () => {
       assert.instanceOf(result.contents, MockDelta);
 
       assert.deepEqual(result.contents.ops,
-        [new MockOp('composed_delta'), new MockOp('change_op')]);
+        [new MockOp('composed_doc'), new MockOp('change_op')]);
     });
 
     it('should return `this` given a same-`revNum` empty-`delta` change', () => {
@@ -157,7 +157,7 @@ describe('doc-common/BaseSnapshot', () => {
   });
 
   describe('composeAll()', () => {
-    it('should call through to the impl and wrap the result in a new instance', () => {
+    it('should call through to the delta and wrap the result in a new instance', () => {
       const snap    = new MockSnapshot(10, [new MockOp('some_op')]);
       const change1 = new MockChange(21, [new MockOp('change_op1')]);
       const change2 = new MockChange(22, [new MockOp('change_op2')]);
@@ -168,7 +168,7 @@ describe('doc-common/BaseSnapshot', () => {
       assert.instanceOf(result.contents, MockDelta);
 
       assert.deepEqual(result.contents.ops,
-        [new MockOp('composed_delta_'), new MockOp('change_op2')]);
+        [new MockOp('composed_doc_'), new MockOp('change_op2')]);
     });
 
     it('should return `this` given same-`revNum` empty-`delta` changes', () => {

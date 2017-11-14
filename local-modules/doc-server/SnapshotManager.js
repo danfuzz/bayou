@@ -26,9 +26,6 @@ export default class SnapshotManager extends CommonBase {
      */
     this._control = BaseControl.check(control);
 
-    /** {class} The change class used by {@link #_control}. */
-    this._changeClass = control.constructor.changeClass;
-
     /** {class} The delta class used by {@link #_control}. */
     this._deltaClass = control.constructor.deltaClass;
 
@@ -107,9 +104,8 @@ export default class SnapshotManager extends CommonBase {
     const baseArgs = (base === null)
       ? [this._deltaClass.EMPTY, 0]
       : [base.contents,          base.revNum + 1];
-    const contents = this._control.getComposedChanges(...baseArgs, revNum + 1);
-    const change   = new this._changeClass(revNum, await contents);
-    const result   = this._snapshotClass.EMPTY.compose(change);
+    const contents = this._control.getComposedChanges(...baseArgs, revNum + 1, true);
+    const result   = new this._snapshotClass(revNum, await contents);
 
     if (base === null) {
       const endRev = (revNum === 0) ? '' : ` .. c${revNum}`;

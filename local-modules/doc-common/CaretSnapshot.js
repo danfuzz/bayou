@@ -219,60 +219,6 @@ export default class CaretSnapshot extends BaseSnapshot {
   }
 
   /**
-   * Main implementation of {@link #compose}. Takes a delta (not a change
-   * instance), and produces a document delta (not a snapshot).
-   *
-   * **Note:** It is an error if `delta` contains an `op_setField` to a caret
-   * that either does not exist in `this` or was not first introduced with an
-   * `op_beginSession`.
-   *
-   * @param {CaretDelta} delta Difference to compose with this instance's
-   *   contents.
-   * @returns {CaretDelta} Delta which represents the composed document
-   *   contents.
-   */
-  _impl_composeWithDelta(delta) {
-    const newCarets = new Map(this._carets);
-
-    for (const op of delta.ops) {
-      const props = op.props;
-
-      switch (props.opName) {
-        case CaretOp.BEGIN_SESSION: {
-          const caret = props.caret;
-          newCarets.set(caret.sessionId, op);
-          break;
-        }
-
-        case CaretOp.SET_FIELD: {
-          const sessionId = props.sessionId;
-          const caretOp   = newCarets.get(sessionId);
-
-          if (!caretOp) {
-            throw Errors.bad_use(`Cannot update nonexistent caret: ${sessionId}`);
-          }
-
-          const caret = caretOp.props.caret.compose(new CaretDelta([op]));
-          newCarets.set(sessionId, CaretOp.op_beginSession(caret));
-          break;
-        }
-
-        case CaretOp.END_SESSION: {
-          const sessionId = props.sessionId;
-          newCarets.delete(sessionId);
-          break;
-        }
-
-        default: {
-          throw Errors.wtf(`Weird caret op: ${props.opName}`);
-        }
-      }
-    }
-
-    return new CaretDelta([...newCarets.values()]);
-  }
-
-  /**
    * Main implementation of {@link #diff}, which produces a delta (not a
    * change).
    *

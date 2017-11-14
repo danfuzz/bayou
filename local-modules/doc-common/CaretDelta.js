@@ -16,15 +16,14 @@ import CaretOp from './CaretOp';
  */
 export default class CaretDelta extends BaseDelta {
   /**
-   * Composes another instance on top of this one, to produce a new instance.
-   * This operation works equally whether or not `this` is a document delta.
+   * Main implementation of {@link #compose}.
    *
-   * @param {PropertyDelta} other The delta to compose.
-   * @returns {PropertyDelta} Result of composition.
+   * @param {CaretDelta} other Delta to compose with this instance.
+   * @param {boolean} wantDocument Whether the result of the operation should be
+   *   a document delta.
+   * @returns {CaretDelta} Composed result.
    */
-  compose(other) {
-    CaretDelta.check(other);
-
+  _impl_compose(other, wantDocument) {
     // Map from each session to an array of ops which apply to it.
     const sessions = new Map();
 
@@ -42,10 +41,15 @@ export default class CaretDelta extends BaseDelta {
         }
 
         case CaretOp.END_SESSION: {
-          // Clear out the session; same reason as `BEGIN_SESSION` above. We
-          // _do_ keep the op, because the fact of a deletion needs to be part
-          // of the final composed result.
-          sessions.set(opProps.sessionId, [op]);
+          if (wantDocument) {
+            // Document deltas don't remember session deletions.
+            sessions.delete(opProps.sessionId);
+          } else {
+            // Clear out the session; same reason as `BEGIN_SESSION` above. We
+            // _do_ keep the op, because the fact of a deletion needs to be part
+            // of the final composed result.
+            sessions.set(opProps.sessionId, [op]);
+          }
           break;
         }
 

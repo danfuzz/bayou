@@ -124,7 +124,7 @@ export default class BodyControl extends BaseControl {
     // when option (2) would be more profitable.
 
     const delta = await this.getComposedChanges(
-      BodyDelta.EMPTY, baseRevNum + 1, currentRevNum + 1);
+      BodyDelta.EMPTY, baseRevNum + 1, currentRevNum + 1, false);
 
     return new BodyChange(currentRevNum, delta);
   }
@@ -208,7 +208,7 @@ export default class BodyControl extends BaseControl {
     // (1)
 
     const dServer = await this.getComposedChanges(
-      BodyDelta.EMPTY, rBase.revNum + 1, rCurrent.revNum + 1);
+      BodyDelta.EMPTY, rBase.revNum + 1, rCurrent.revNum + 1, false);
 
     // (2)
 

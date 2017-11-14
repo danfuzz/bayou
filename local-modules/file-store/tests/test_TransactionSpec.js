@@ -7,7 +7,47 @@ import { describe, it } from 'mocha';
 
 import { FileOp, TransactionSpec } from 'file-store';
 
+import FileOpMaker from './FileOpMaker';
+
 describe('file-store/TransactionSpec', () => {
+  // The call to `FileOpMaker.testCases()` provides outer `describe()`s for each
+  // value to test with.
+  FileOpMaker.testCases((ops) => {
+    describe('constructor()', () => {
+      it('should accept any number of valid arguments', () => {
+        assert.doesNotThrow(() => new TransactionSpec(...ops));
+      });
+
+      // This test doesn't make sense for length 0.
+      if (ops.length === 0) {
+        it('should reject an invalid argument in any position', () => {
+          const badValues = [undefined, null, false, 'hello', ['blort'], { x: 914 }, new Map()];
+          let   badAt     = 0;
+
+          for (let i = 0; i < ops.length; i += 9) {
+            const useOps = ops.slice();
+            useOps[i] = badValues[badAt];
+            assert.throws(() => new TransactionSpec(...useOps), /bad_value/);
+            badAt = (badAt + 1) % badValues.length;
+          }
+        });
+      }
+    });
+
+    describe('.ops', () => {
+      it('should be a frozen array', () => {
+        const result = new TransactionSpec(...ops);
+        assert.isArray(result.ops);
+        assert.isFrozen(result.ops);
+      });
+
+      it('should contain all the originally-passed args though not necessarily in the same order', () => {
+        const result = new TransactionSpec(...ops);
+        assert.sameMembers(result.ops, ops);
+      });
+    });
+  });
+
   describe('concat()', () => {
     it('should concatenate a proper argument', () => {
       function test(ops1, ops2) {
@@ -15,8 +55,8 @@ describe('file-store/TransactionSpec', () => {
         const t2      = new TransactionSpec(...ops2);
         const result1 = t1.concat(t2);
         const result2 = t2.concat(t1);
-        const resOps1 = [...result1.ops];
-        const resOps2 = [...result2.ops];
+        const resOps1 = result1.ops;
+        const resOps2 = result2.ops;
 
         assert.instanceOf(result1, TransactionSpec);
         assert.instanceOf(result2, TransactionSpec);

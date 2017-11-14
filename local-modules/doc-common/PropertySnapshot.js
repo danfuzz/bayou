@@ -200,41 +200,6 @@ export default class PropertySnapshot extends BaseSnapshot {
   }
 
   /**
-   * Main implementation of {@link #compose}. Takes a delta (not a change
-   * instance), and produces a document delta (not a snapshot).
-   *
-   * @param {PropertyDelta} delta Difference to compose with this instance's
-   *   contents.
-   * @returns {PropertyDelta} Delta which represents the composed document
-   *   contents.
-   */
-  _impl_composeWithDelta(delta) {
-    const newProps = new Map(this._properties.entries());
-
-    for (const op of delta.ops) {
-      const opProps = op.props;
-
-      switch (opProps.opName) {
-        case PropertyOp.SET_PROPERTY: {
-          newProps.set(opProps.property.name, op);
-          break;
-        }
-
-        case PropertyOp.DELETE_PROPERTY: {
-          newProps.delete(opProps.name);
-          break;
-        }
-
-        default: {
-          throw Errors.wtf(`Weird op name: ${opProps.opName}`);
-        }
-      }
-    }
-
-    return new PropertyDelta([...newProps.values()]);
-  }
-
-  /**
    * Main implementation of {@link #diff}, which produces a delta (not a
    * change).
    *

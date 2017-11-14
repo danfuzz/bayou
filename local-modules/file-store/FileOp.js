@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import { TInt, TString } from 'typecheck';
 import { CommonBase, DataUtil, Errors, FrozenBuffer } from 'util-common';
 
@@ -262,6 +264,19 @@ const OPERATIONS = DataUtil.deepFreeze([
 ]);
 
 /**
+ * {Map<string,object>} Map from operation name to corresponding properties
+ * object, suitable for returning from {@link FileOp.propsFromName}.
+ */
+const OPERATION_MAP = new Map(OPERATIONS.map((schema) => {
+  const [category, name, ...args] = schema;
+  const isPull = (category === CAT_READ) || (category === CAT_LIST);
+  const isPush = (category === CAT_WRITE) || (category === CAT_DELETE);
+
+  const props = { category, name, args, isPull, isPush };
+  return [name, Object.freeze(props)];
+}));
+
+/**
  * Operation to perform on a file as part of a transaction. In terms of overall
  * structure, an operation consists of a string name and arbitrary additional
  * arguments. Each specific named operation defines the allowed shape of its
@@ -338,6 +353,11 @@ export default class FileOp extends CommonBase {
     return CAT_WRITE;
   }
 
+  /** {array<string>} List of all operation names. This is a frozen value. */
+  static get OPERATION_NAMES() {
+    return Object.freeze([...OPERATION_MAP.keys()]);
+  }
+
   /**
    * {array<array>} List of operation schemata. These are used to
    * programatically define static methods on `FileOp` for constructing
@@ -345,7 +365,7 @@ export default class FileOp extends CommonBase {
    *
    * * `category` &mdash; The category of the operation.
    * * `name` &mdsah; The name of the operation.
-   * * `argInfo` &mdash; One or more elements indicating the names and types of
+   * * `args` &mdash; One or more elements indicating the names and types of
    *   the arguments to the operation. Each argument is represented as a two-
    *   element array `[<name>, <type>]`, where `<type>` is one of the type
    *   constants defined by this class.
@@ -383,6 +403,33 @@ export default class FileOp extends CommonBase {
   /** {string} Type name for revision numbers. */
   static get TYPE_REV_NUM() {
     return TYPE_REV_NUM;
+  }
+
+  /**
+   * Gets the properties associated with a given operation, by name. Properties
+   * are as follows:
+   *
+   * * `args: array` &mdash; Array of argument specs, same as defined by
+   *   {@link #OPERATIONS}.
+   * * `category: string` &mdash; Operation category.
+   * * `isPull: boolean` &mdash; Whether the operation is a pull (category
+   *   `read` or `list`).
+   * * `isPush: boolean` &mdash; Whether the operation is a push (category
+   *   `write` or `delete`).
+   * * `name: string` &mdash; Operation name. (This is the same as the passed
+   *   `name`.)
+   *
+   * @param {string} name Operation name.
+   * @returns {object} Operation properties.
+   */
+  static propsFromName(name) {
+    const schema = OPERATION_MAP.get(name);
+
+    if (!schema) {
+      throw Errors.bad_value(name, 'FileOp operation name');
+    }
+
+    return schema;
   }
 
   /**
@@ -494,6 +541,38 @@ export default class FileOp extends CommonBase {
   }
 
   /**
+   * Custom inspect function to provide a more succinct representation than the
+   * default.
+   *
+   * @param {Int} depth Current inspection depth.
+   * @param {object} opts Inspection options.
+   * @returns {string} The inspection string form of this instance.
+   */
+  [inspect.custom](depth, opts) {
+    const clazz   = this.constructor;
+    const nameStr = `${clazz.name}.op_${this.name}`;
+
+    if (depth < 0) {
+      return `${nameStr}(...)`;
+    }
+
+    // Set up the inspection opts so that recursive `inspect()` calls respect
+    // the topmost requested depth.
+    const subOpts = (opts.depth === null)
+      ? opts
+      : Object.assign({}, opts, { depth: opts.depth - 1 });
+
+    const result = [nameStr];
+    for (const [name, type_unused] of FileOp.propsFromName(this.name).args) {
+      result.push((result.length === 1) ? '(' : ', ');
+      result.push(inspect(this.arg(name), subOpts));
+    }
+    result.push(')');
+
+    return result.join('');
+  }
+
+  /**
    * Based on the operation `OPERATIONS`, add `static` constructor methods to
    * this class. This method is called during class initialization. (Look at
    * the bottome of this file for the call.)
@@ -508,38 +587,7 @@ export default class FileOp extends CommonBase {
         const argMap = new Map();
         for (let i = 0; i < argInfo.length; i++) {
           const [name, type] = argInfo[i];
-          let arg = args[i];
-          switch (type) {
-            case TYPE_BUFFER: {
-              FrozenBuffer.check(arg);
-              break;
-            }
-            case TYPE_DUR_MSEC: {
-              TInt.nonNegative(arg);
-              break;
-            }
-            case TYPE_HASH: {
-              if (arg instanceof FrozenBuffer) {
-                arg = arg.hash;
-              } else {
-                FrozenBuffer.checkHash(arg);
-              }
-              break;
-            }
-            case TYPE_PATH: {
-              StoragePath.check(arg);
-              break;
-            }
-            case TYPE_REV_NUM: {
-              TInt.nonNegative(arg);
-              break;
-            }
-            default: {
-              // Indicates a bug in this class.
-              throw Errors.wtf(`Weird \`type\` constant: ${type}`);
-            }
-          }
-
+          const arg          = FileOp._typeCheck(args[i], type);
           argMap.set(name, arg);
         }
 
@@ -548,6 +596,56 @@ export default class FileOp extends CommonBase {
 
       FileOp[`op_${opName}`] = constructorMethod;
     }
+  }
+
+  /**
+   * Checks that the given value has the given type, as defined by this class.
+   * Returns the value to use as an argument, which _might_ be different than
+   * the one passed in. Throws an error if the type check fails.
+   *
+   * @param {*} value Value to check.
+   * @param {string} type Expected type, in the form of a `TYPE_*` string as
+   *   defined by this class.
+   * @returns {*} The value to use.
+   */
+  static _typeCheck(value, type) {
+    switch (type) {
+      case TYPE_BUFFER: {
+        FrozenBuffer.check(value);
+        break;
+      }
+
+      case TYPE_DUR_MSEC: {
+        TInt.nonNegative(value);
+        break;
+      }
+
+      case TYPE_HASH: {
+        if (value instanceof FrozenBuffer) {
+          value = value.hash;
+        } else {
+          FrozenBuffer.checkHash(value);
+        }
+        break;
+      }
+
+      case TYPE_PATH: {
+        StoragePath.check(value);
+        break;
+      }
+
+      case TYPE_REV_NUM: {
+        TInt.nonNegative(value);
+        break;
+      }
+
+      default: {
+        // Indicates a bug in this class.
+        throw Errors.wtf(`Weird \`type\` constant: ${type}`);
+      }
+    }
+
+    return value;
   }
 }
 
