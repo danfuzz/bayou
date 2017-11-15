@@ -78,18 +78,7 @@ export default class BodyControl extends BaseControl {
       }
     }
 
-    // There are two possible ways to calculate the result, namely (1) compose
-    // all the changes that were made after `baseRevNum`, or (2) calculate the
-    // OT diff between `baseRevNum` and `currentRevNum`. We're doing the former
-    // here, because the usual case is one or two small deltas being made to a
-    // document of (to a first approximation) unbounded size, making the
-    // composition option clearly preferable. **TODO:** Heuristically figure out
-    // when option (2) would be more profitable.
-
-    const delta = await this.getComposedChanges(
-      BodyDelta.EMPTY, baseRevNum + 1, currentRevNum + 1, false);
-
-    return new BodyChange(currentRevNum, delta);
+    return this.getDiff(baseRevNum, currentRevNum);
   }
 
   /**

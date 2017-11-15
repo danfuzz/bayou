@@ -76,17 +76,7 @@ export default class PropertyControl extends BaseControl {
       }
     }
 
-    // There are two possible ways to calculate the result, namely (1) compose
-    // all the changes that were made after `baseRevNum`, or (2) calculate the
-    // OT diff between `baseRevNum` and `currentRevNum`. We're doing the latter
-    // here, because it's a little simpler and because (as of this writing at
-    // least) there isn't actually that much data stored as properties. (N.b.,
-    // `BodyControl` does the (1) tactic.)
-
-    const oldSnapshot = await this.getSnapshot(baseRevNum);
-    const newSnapshot = await this.getSnapshot(currentRevNum);
-
-    return oldSnapshot.diff(newSnapshot);
+    return this.getDiff(baseRevNum, currentRevNum);
   }
 
   /**
