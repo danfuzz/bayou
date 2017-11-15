@@ -232,6 +232,55 @@ describe('doc-server/BaseControl', () => {
     });
   });
 
+  describe('getChange()', () => {
+    describe('when given a valid-typed argument', () => {
+      const control = new MockControl(FILE_ACCESS, 'boop');
+      let gotStart  = null;
+      let gotEnd    = null;
+
+      control.getChangeRange = async (start, end) => {
+        gotStart = start;
+        gotEnd   = end;
+        return ['foomp'];
+      };
+
+      it('should pass appropriate arguments to `getChangeRange()`', async () => {
+        async function test(n) {
+          await control.getChange(n);
+          assert.strictEqual(gotStart, n);
+          assert.strictEqual(gotEnd,   n + 1);
+        }
+
+        await test(0);
+        await test(1);
+        await test(914);
+      });
+
+      it('should return the first element of the return value from `getChangeRange()`', async () => {
+        const result = await control.getChange(123);
+        assert.strictEqual(result, 'foomp');
+      });
+    });
+
+    it('should promptly reject blatantly invalid `revNum` values', async () => {
+      const control = new MockControl(FILE_ACCESS, 'boop');
+      control.getChangeRange = async (start_unused, end_unused) => {
+        throw new Error('This should not have been called.');
+      };
+
+      async function test(value) {
+        assert.isRejected(control.getChange(value), /^bad_value/);
+      }
+
+      await test(undefined);
+      await test(null);
+      await test(-1);
+      await test(0.5);
+      await test('123');
+      await test({ x: 123 });
+    });
+  });
+
   describe('getChangeAfter()', () => {
     it('should call through to `currentRevNum()` before anything else', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
