@@ -20,6 +20,13 @@ const UPDATE_RETRY_GROWTH_FACTOR = 5;
 const MAX_UPDATE_TIME_MSEC = 20 * 1000; // 20 seconds.
 
 /**
+ * {Int} Maximum number of changes to compose in order to produce a result from
+ * {@link BaseControl#getDiff}. Asking for more will result in the method doing
+ * a snapshot diff.
+ */
+const MAX_COMPOSED_CHANGES_FOR_DIFF = 100;
+
+/**
  * Base class for document part controllers. There is one instance of each
  * concrete subclass of this class for each actively-edited document. They are
  * all managed and hooked up via {@link FileComplex}.
@@ -428,6 +435,60 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * Gets a change which represents the difference between two specified
+   * revisions. The result is guaranteed to be appropriate for production of
+   * the newer revision from the older one by calling
+   * `baseSnapshot.compose(result)`. No other guarantees are made about the
+   * result. More specifically, there are two possible ways that the result is
+   * produced:
+   *
+   * * By composing all the changes from `baseRevNum + 1` through and including
+   *   `newerRevNum`.
+   * * By constructing an OT `diff` directly based on snapshots of the two
+   *   revisions.
+   *
+   * These two tactics, while producing equally valid results, do not always
+   * produce results that are identical to each other.
+   *
+   * **Note:** The current implementation uses a fairly simple heuristic to
+   * decide which tactic to use. However, clients are advised not to count on
+   * the happenstance of the heuristic to remain fixed over time.
+   *
+   * @param {Int} baseRevNum Revision number for the difference base.
+   * @param {Int} newerRevNum Revision number for the difference target. Must be
+   *   `> baseRevNum`.
+   * @returns {BaseChange} Change instance which, when composed with the
+   *   snapshot of the revision indicated by `baseRevNum`, results in the
+   *   snapshot of the revision indicated by `newRevNum`.
+   */
+  async getDiff(baseRevNum, newerRevNum) {
+    RevisionNumber.check(baseRevNum);
+    RevisionNumber.min(newerRevNum, baseRevNum + 1);
+
+    const clazz = this.constructor;
+
+    if ((newerRevNum - baseRevNum) <= MAX_COMPOSED_CHANGES_FOR_DIFF) {
+      // Few enough changes that composition will be a reasonably-fruitful way
+      // to proceed.
+
+      const delta = await this.getComposedChanges(
+        clazz.deltaClass.EMPTY, baseRevNum + 1, newerRevNum + 1, false);
+
+      return new clazz.changeClass(newerRevNum, delta);
+    } else {
+      // Too many changes to expect composition to be the most efficient way.
+      // Instead, diff the snapshots directly.
+
+      const [baseSnapshot, newerSnapshot] = await Promise.all([
+        this.getSnapshot(baseRevNum),
+        this.getSnapshot(newerRevNum)
+      ]);
+
+      return baseSnapshot.diff(newerSnapshot);
+    }
+  }
+
+  /**
    * Gets a snapshot of the full contents of the portion of the file controlled
    * by this instance. It is an error to request a revision that does not yet
    * exist. For subclasses that don't keep full history, it is also an error to
@@ -552,6 +613,65 @@ export default class BaseControl extends BaseDataManager {
       await Delay.resolve(retryDelayMsec);
       retryTotalMsec += retryDelayMsec;
       retryDelayMsec *= UPDATE_RETRY_GROWTH_FACTOR;
+    }
+  }
+
+  /**
+   * Waits for the given revision number to have been written. The return value
+   * only becomes resolved after the change is made. If the change has already
+   * been made by the time this method is called, then it returns promptly.
+   *
+   * **Note:** In unusual circumstances &mdash; in particular, when a document
+   * gets re-created or for document parts that don't keep full change history
+   * &mdash; and due to the asynchronous nature of the system, it is possible
+   * for a change to not be available (e.g. via {@link #getChange}) soon after
+   * the result of a call to this method becomes resolved. Calling code should
+   * be prepared for that possibility.
+   *
+   * @param {Int} revNum The revision number to wait for.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {Int} The instantaneously current revision number when the method
+   *   is complete. It is possible for it to be out-of-date by the time it is
+   *   used by the caller.
+   */
+  async whenRevNum(revNum, timeoutMsec = null) {
+    RevisionNumber.check(revNum);
+    timeoutMsec = Timeouts.clamp(timeoutMsec);
+
+    const clazz       = this.constructor;
+    const timeoutTime = Date.now() + timeoutMsec;
+
+    // Loop until the overall timeout.
+    for (;;) {
+      const now = Date.now();
+      if (now >= timeoutTime) {
+        throw new Errors.timed_out(timeoutMsec);
+      }
+
+      const currentRevNum = await this.currentRevNum();
+      if (currentRevNum >= revNum) {
+        // No more need to wait or, if this is the first iteration, no need to
+        // wait at all.
+        return currentRevNum;
+      }
+
+      // The current revision is the same as, or lower than, the given one, so
+      // we have to wait for the file to change (or for the storage layer to
+      // time out), and then check to see if in fact the revision number was
+      // changed.
+
+      const fc   = this.fileCodec;
+      const spec = new TransactionSpec(
+        fc.op_timeout(timeoutTime - now),
+        fc.op_whenPathNot(clazz.revisionNumberPath, currentRevNum));
+
+      // If this returns normally (doesn't throw), then we know it wasn't due
+      // to hitting the timeout. And if it _is_ a timeout, then the exception
+      // that's thrown is exactly what should be reported upward.
+      await fc.transact(spec);
     }
   }
 

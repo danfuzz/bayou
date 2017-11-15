@@ -15,6 +15,10 @@ export default class MockControl extends BaseControl {
     this.revNum = 0;
   }
 
+  _impl_getSnapshot(revNum) {
+    return new MockSnapshot(revNum, [[`snap_${revNum}`]]);
+  }
+
   static get _impl_pathPrefix() {
     return '/mock_control';
   }

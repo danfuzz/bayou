@@ -4,7 +4,6 @@
 
 import { BodyChange, BodyDelta, BodySnapshot, RevisionNumber } from 'doc-common';
 import { TransactionSpec } from 'file-store';
-import { Errors } from 'util-common';
 
 import BaseControl from './BaseControl';
 import Paths from './Paths';
@@ -57,39 +56,10 @@ export default class BodyControl extends BaseControl {
    */
   async _impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum) {
     if (currentRevNum === baseRevNum) {
-      // The current revision is the same as the base, so we have to wait for
-      // the file to change (or for the storage layer to time out), and then
-      // check to see if in fact the revision number was changed.
-
-      const fc   = this.fileCodec;
-      const spec = new TransactionSpec(
-        fc.op_timeout(timeoutMsec),
-        fc.op_whenPathNot(BodyControl.revisionNumberPath, currentRevNum));
-
-      // If this returns normally (doesn't throw), then we know it wasn't due
-      // to hitting the timeout. And if it _is_ a timeout, then the exception
-      // that's thrown is exactly what should be reported upward.
-      await fc.transact(spec);
-
-      // Verify that the revision number went up. It's a bug if it didn't.
-      currentRevNum = await this.currentRevNum();
-      if (currentRevNum <= baseRevNum) {
-        throw Errors.wtf(`Revision number should have gone up. Instead was ${baseRevNum} then ${currentRevNum}.`);
-      }
+      currentRevNum = await this.whenRevNum(currentRevNum + 1, timeoutMsec);
     }
 
-    // There are two possible ways to calculate the result, namely (1) compose
-    // all the changes that were made after `baseRevNum`, or (2) calculate the
-    // OT diff between `baseRevNum` and `currentRevNum`. We're doing the former
-    // here, because the usual case is one or two small deltas being made to a
-    // document of (to a first approximation) unbounded size, making the
-    // composition option clearly preferable. **TODO:** Heuristically figure out
-    // when option (2) would be more profitable.
-
-    const delta = await this.getComposedChanges(
-      BodyDelta.EMPTY, baseRevNum + 1, currentRevNum + 1, false);
-
-    return new BodyChange(currentRevNum, delta);
+    return this.getDiff(baseRevNum, currentRevNum);
   }
 
   /**

@@ -7,7 +7,6 @@ import {
 } from 'doc-common';
 import { TransactionSpec } from 'file-store';
 import { TInt, TString } from 'typecheck';
-import { Errors } from 'util-common';
 
 import BaseControl from './BaseControl';
 import CaretColor from './CaretColor';
@@ -121,38 +120,10 @@ export default class CaretControl extends BaseControl {
    */
   async _impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum) {
     if (currentRevNum === baseRevNum) {
-      // The current revision is the same as the base, so we have to wait for
-      // the file to change (or for the storage layer to time out), and then
-      // check to see if in fact the revision number was changed.
-
-      const fc   = this.fileCodec;
-      const spec = new TransactionSpec(
-        fc.op_timeout(timeoutMsec),
-        fc.op_whenPathNot(CaretControl.revisionNumberPath, currentRevNum));
-
-      // If this returns normally (doesn't throw), then we know it wasn't due
-      // to hitting the timeout. And if it _is_ a timeout, then the exception
-      // that's thrown is exactly what should be reported upward.
-      await fc.transact(spec);
-
-      // Verify that the revision number went up. It's a bug if it didn't.
-      currentRevNum = await this.currentRevNum();
-      if (currentRevNum <= baseRevNum) {
-        throw Errors.wtf(`Revision number should have gone up. Instead was ${baseRevNum} then ${currentRevNum}.`);
-      }
+      currentRevNum = await this.whenRevNum(currentRevNum + 1, timeoutMsec);
     }
 
-    // There are two possible ways to calculate the result, namely (1) compose
-    // all the changes that were made after `baseRevNum`, or (2) calculate the
-    // OT diff between `baseRevNum` and `currentRevNum`. We're doing the latter
-    // here, because it's a little simpler and because (as of this writing at
-    // least) there isn't actually that much data stored as properties. (N.b.,
-    // `BodyControl` does the (1) tactic.)
-
-    const oldSnapshot = await this.getSnapshot(baseRevNum);
-    const newSnapshot = await this.getSnapshot(currentRevNum);
-
-    return oldSnapshot.diff(newSnapshot);
+    return this.getDiff(baseRevNum, currentRevNum);
   }
 
   /**

@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { Codec } from 'codec';
 import { Timeouts, Timestamp } from 'doc-common';
-import { MockChange, MockOp, MockSnapshot } from 'doc-common/mocks';
+import { MockChange, MockDelta, MockOp, MockSnapshot } from 'doc-common/mocks';
 import { BaseControl, FileAccess } from 'doc-server';
 import { MockControl } from 'doc-server/mocks';
 import { TransactionSpec } from 'file-store';
@@ -429,6 +429,100 @@ describe('doc-server/BaseControl', () => {
     });
   });
 
+  describe('getDiff()', () => {
+    it('should reject bad arguments', async () => {
+      const control = new MockControl(FILE_ACCESS, 'boop');
+
+      async function test(base, newer) {
+        assert.isRejected(control.getDiff(base, newer), /^bad_value/);
+      }
+
+      await test(undefined, 10);
+      await test(null,      10);
+      await test(false,     10);
+      await test('florp',   10);
+      await test(-1,        10);
+      await test(1.234,     10);
+
+      await test(10, undefined);
+      await test(10, null);
+      await test(10, false);
+      await test(10, 'florp');
+      await test(10, -1);
+      await test(10, 1.234);
+
+      // Can't pass the same value for both arguments.
+      await test(0,  0);
+      await test(1,  1);
+      await test(37, 37);
+
+      // Second argument has to be higher.
+      await test(1,   0);
+      await test(123, 122);
+      await test(914, 10);
+    });
+
+    it('should produce a result in one of the two specified ways', async () => {
+      const control = new MockControl(FILE_ACCESS, 'boop');
+      let reqBase, reqNewer;
+
+      control.getSnapshot = async (revNum) => {
+        assert((revNum === reqBase) || (revNum === reqNewer), `Unexpected revNum: ${revNum}`);
+        return new MockSnapshot(revNum, [[`snap_blort_${revNum}`]]);
+      };
+
+      control.getComposedChanges = async (baseDelta, startInc, endExc, wantDocument) => {
+        // Validate how we expect to be called.
+        assert.strictEqual(baseDelta, MockDelta.EMPTY);
+        assert.strictEqual(startInc, reqBase + 1);
+        assert.strictEqual(endExc, reqNewer + 1);
+        assert.isFalse(wantDocument);
+        return new MockDelta([[`composed_blort_${reqBase}`]]);
+      };
+
+      // Counts for each tactic, to make sure both paths are exercised.
+      let composedCount = 0;
+      let diffCount     = 0;
+
+      async function test(base, newer) {
+        reqBase  = base;
+        reqNewer = newer;
+
+        const result = await control.getDiff(base, newer);
+
+        assert.instanceOf(result, MockChange);
+        assert.strictEqual(result.revNum, newer);
+        assert.isNull(result.authorId);
+        assert.isNull(result.timestamp);
+        assert.isAbove(result.delta.ops.length, 0);
+
+        const ops     = result.delta.ops;
+        const op0Name = ops[0].name;
+
+        if (op0Name === `composed_blort_${base}`) {
+          composedCount++;
+        } else if (op0Name === 'diff_delta') {
+          diffCount++;
+          assert.lengthOf(ops, 2);
+          assert.strictEqual(ops[1].name, `snap_blort_${newer}`);
+        } else {
+          assert(false, 'Unexpected ops.');
+        }
+      }
+
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 10; j++) {
+          const base  = i * 37;
+          const newer = base + 1 + (j * 29);
+          await test(base, newer);
+        }
+      }
+
+      assert.isAbove(composedCount, 0);
+      assert.isAbove(diffCount, 0);
+    });
+  });
+
   describe('getSnapshot()', () => {
     it('should call through to `currentRevNum()` before anything else', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
@@ -612,80 +706,133 @@ describe('doc-server/BaseControl', () => {
       await test(new MockChange(1,  [], Timestamp.MIN_VALUE));
       await test(new MockChange(10, [], Timestamp.MIN_VALUE.addMsec(12345)));
     });
+
+    it('should reject a too-large `revNum` in valid nontrivial cases', async () => {
+      const control = new MockControl(FILE_ACCESS, 'boop');
+      control.currentRevNum = async () => {
+        return 10;
+      };
+      control._impl_getSnapshot = async (revNum) => {
+        return new MockSnapshot(revNum, [new MockOp('x', revNum)]);
+      };
+      control._impl_update = async (baseSnapshot_unused, change_unused, expectedSnapshot_unused) => {
+        throw new Error('This should not have been called.');
+      };
+
+      const change = new MockChange(12, [new MockOp('abc')], Timestamp.MIN_VALUE);
+      await assert.isRejected(control.update(change), /^bad_value/);
+    });
+
+    it('should call through to the impl in valid nontrivial cases', async () => {
+      const control   = new MockControl(FILE_ACCESS, 'boop');
+      let callCount   = 0;
+      let gotBase     = 'x';
+      let gotChange   = 'x';
+      let gotExpected = 'x';
+
+      control.currentRevNum = async () => {
+        return 10;
+      };
+      control._impl_getSnapshot = async (revNum) => {
+        return new MockSnapshot(revNum, [new MockOp('x', revNum)]);
+      };
+      control._impl_update = async (baseSnapshot, change, expectedSnapshot) => {
+        callCount++;
+        gotBase     = baseSnapshot;
+        gotChange   = change;
+        gotExpected = expectedSnapshot;
+        return new MockChange(14, [new MockOp('q')]);
+      };
+
+      const change = new MockChange(7, [new MockOp('abc')], Timestamp.MIN_VALUE);
+      const result = await control.update(change);
+
+      assert.strictEqual(callCount, 1);
+      assert.deepEqual(gotBase, new MockSnapshot(6, [new MockOp('x', 6)]));
+      assert.strictEqual(gotChange, change);
+      assert.deepEqual(gotExpected,
+        new MockSnapshot(7, [new MockOp('composed_doc'), new MockOp('abc')]));
+
+      assert.instanceOf(result, MockChange);
+      assert.deepEqual(result, new MockChange(14, [new MockOp('q')]));
+    });
+
+    it('should retry the impl call if it returns `null`', async () => {
+      const control = new MockControl(FILE_ACCESS, 'boop');
+      let callCount = 0;
+
+      control.currentRevNum = async () => {
+        return 10;
+      };
+      control._impl_getSnapshot = async (revNum) => {
+        return new MockSnapshot(revNum, [new MockOp('x', revNum)]);
+      };
+      control._impl_update = async (baseSnapshot_unused, change_unused, expectedSnapshot_unused) => {
+        callCount++;
+        if (callCount === 1) {
+          return null;
+        }
+        return new MockChange(14, [new MockOp('florp')]);
+      };
+
+      const change = new MockChange(7, [new MockOp('abc')], Timestamp.MIN_VALUE);
+      const result = await control.update(change);
+
+      assert.strictEqual(callCount, 2);
+      assert.deepEqual(result, new MockChange(14, [new MockOp('florp')]));
+    });
   });
 
-  it('should reject a too-large `revNum` in valid nontrivial cases', async () => {
-    const control = new MockControl(FILE_ACCESS, 'boop');
-    control.currentRevNum = async () => {
-      return 10;
-    };
-    control._impl_getSnapshot = async (revNum) => {
-      return new MockSnapshot(revNum, [new MockOp('x', revNum)]);
-    };
-    control._impl_update = async (baseSnapshot_unused, change_unused, expectedSnapshot_unused) => {
-      throw new Error('This should not have been called.');
-    };
+  describe('whenRevNum()', () => {
+    it('should return promptly if the revision is already available', async () => {
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(Codec.theOne, file);
+      const control    = new MockControl(fileAccess, 'boop');
 
-    const change = new MockChange(12, [new MockOp('abc')], Timestamp.MIN_VALUE);
-    await assert.isRejected(control.update(change), /^bad_value/);
-  });
+      file._impl_transact = (spec_unused) => {
+        throw new Error('This should not get called.');
+      };
 
-  it('should call through to the impl in valid nontrivial cases', async () => {
-    const control   = new MockControl(FILE_ACCESS, 'boop');
-    let callCount   = 0;
-    let gotBase     = 'x';
-    let gotChange   = 'x';
-    let gotExpected = 'x';
+      control.currentRevNum = async () => {
+        return 37;
+      };
 
-    control.currentRevNum = async () => {
-      return 10;
-    };
-    control._impl_getSnapshot = async (revNum) => {
-      return new MockSnapshot(revNum, [new MockOp('x', revNum)]);
-    };
-    control._impl_update = async (baseSnapshot, change, expectedSnapshot) => {
-      callCount++;
-      gotBase     = baseSnapshot;
-      gotChange   = change;
-      gotExpected = expectedSnapshot;
-      return new MockChange(14, [new MockOp('q')]);
-    };
+      assert.strictEqual(await control.whenRevNum(0), 37);
+      assert.strictEqual(await control.whenRevNum(36), 37);
+      assert.strictEqual(await control.whenRevNum(37), 37);
+    });
 
-    const change = new MockChange(7, [new MockOp('abc')], Timestamp.MIN_VALUE);
-    const result = await control.update(change);
+    it('should issue transactions until the revision is written', async () => {
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(Codec.theOne, file);
+      const control    = new MockControl(fileAccess, 'boop');
 
-    assert.strictEqual(callCount, 1);
-    assert.deepEqual(gotBase, new MockSnapshot(6, [new MockOp('x', 6)]));
-    assert.strictEqual(gotChange, change);
-    assert.deepEqual(gotExpected,
-      new MockSnapshot(7, [new MockOp('composed_doc'), new MockOp('abc')]));
+      let revNum = 11;
+      control.currentRevNum = async () => {
+        return revNum;
+      };
 
-    assert.instanceOf(result, MockChange);
-    assert.deepEqual(result, new MockChange(14, [new MockOp('q')]));
-  });
+      let transactCount = 0;
+      file._impl_transact = (spec) => {
+        const ops = spec.opsWithName('whenPathNot');
 
-  it('should retry the impl call if it returns `null`', async () => {
-    const control = new MockControl(FILE_ACCESS, 'boop');
-    let callCount = 0;
+        assert.lengthOf(ops, 1);
+        assert.strictEqual(ops[0].props.storagePath, '/mock_control/revision_number');
 
-    control.currentRevNum = async () => {
-      return 10;
-    };
-    control._impl_getSnapshot = async (revNum) => {
-      return new MockSnapshot(revNum, [new MockOp('x', revNum)]);
-    };
-    control._impl_update = async (baseSnapshot_unused, change_unused, expectedSnapshot_unused) => {
-      callCount++;
-      if (callCount === 1) {
-        return null;
-      }
-      return new MockChange(14, [new MockOp('florp')]);
-    };
+        transactCount++;
+        revNum += 2; // So that the outer call will succeed after two iterations.
 
-    const change = new MockChange(7, [new MockOp('abc')], Timestamp.MIN_VALUE);
-    const result = await control.update(change);
+        return {
+          revNum:    123,
+          newRevNum: null,
+          data:      null,
+          paths:     new Set(['/mock_control/revision_number'])
+        };
+      };
 
-    assert.strictEqual(callCount, 2);
-    assert.deepEqual(result, new MockChange(14, [new MockOp('florp')]));
+      const result = await control.whenRevNum(14);
+      assert.strictEqual(result, 15);
+      assert.strictEqual(transactCount, 2);
+    });
   });
 });
