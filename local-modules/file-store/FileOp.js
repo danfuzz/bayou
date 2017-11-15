@@ -481,13 +481,19 @@ export default class FileOp extends CommonBase {
       throw Errors.bad_use('Constructor is private.');
     }
 
+    // This validates `name`.
+    const opProps = FileOp.propsFromName(name);
+
+    // This both validates and modifies `args`.
+    FileOp._fixArgs(opProps, args);
+
     super();
 
     /** {object} Properties of the _operation_. */
-    this._opProps = FileOp.propsFromName(name);
+    this._opProps = opProps;
 
     /** {array<*>} Arguments to the operation. */
-    this._args = Object.freeze(args);
+    this._args = args;
 
     Object.freeze(this);
   }
@@ -560,9 +566,7 @@ export default class FileOp extends CommonBase {
    */
   static _addConstructorMethods() {
     for (const opName of FileOp.OPERATION_NAMES) {
-      const opProps = FileOp.propsFromName(opName);
       const constructorMethod = (...args) => {
-        FileOp._fixArgs(opProps, args);
         return new FileOp(KEY, opName, ...args);
       };
 
