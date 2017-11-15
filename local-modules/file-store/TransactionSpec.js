@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TString } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
 import FileOp from './FileOp';
@@ -154,7 +153,9 @@ export default class TransactionSpec extends CommonBase {
    * @returns {array<FileOp>} Array of all such operations.
    */
   opsWithName(name) {
-    TString.nonEmpty(name);
+    // This validates the name.
+    FileOp.propsFromName(name);
+
     return this._ops.filter(op => (op.name === name));
   }
 }
