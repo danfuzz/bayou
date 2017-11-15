@@ -57,6 +57,15 @@ export default class Functor {
   }
 
   /**
+   * Gets reconstruction arguments for this instance.
+   *
+   * @returns {array<*>} Reconstruction arguments.
+   */
+  deconstruct() {
+    return [this._name, ...this._args];
+  }
+
+  /**
    * Custom inspector function, as called by `util.inspect()`.
    *
    * @param {Int} depth Current inspection depth.

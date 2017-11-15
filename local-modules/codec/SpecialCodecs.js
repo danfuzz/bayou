@@ -103,7 +103,7 @@ export default class SpecialCodecs extends UtilityClass {
    * @returns {array<*>} Encoded form.
    */
   static _functorEncode(value, subEncode) {
-    return [value.name, ...(value.args)].map(subEncode);
+    return value.deconstruct().map(subEncode);
   }
 
   /** {ItemCodec} Codec used for coding plain objects. */

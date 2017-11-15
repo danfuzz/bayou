@@ -163,17 +163,88 @@ export default class CommonBase {
    * @returns {string} The inspection string form of this instance.
    */
   [inspect.custom](depth, opts) {
-    const name = this.constructor.name;
-
-    if (depth < 0) {
-      return `${name} {...}`;
-    }
-
     // Set up the inspection opts so that recursive `inspect()` calls respect
     // the topmost requested depth.
     const subOpts = (opts.depth === null)
       ? opts
       : Object.assign({}, opts, { depth: opts.depth - 1 });
+
+    if (typeof this.deconstruct === 'function') {
+      return this._inspectLikeConstructor(depth, subOpts);
+    } else {
+      return this._inspectLikeMap(depth, subOpts);
+    }
+  }
+
+  /**
+   * Gets the string form of this instance. This implementation calls through
+   * to `util.inspect()` requesting a single-line result with the default
+   * recursion depth (which is `2` as of this writing).
+   *
+   * @returns {string} The string form of this instance.
+   */
+  toString() {
+    return inspect(this, { breakLength: Infinity });
+  }
+
+  /**
+   * Helper function which always throws an error with the message `Must
+   * override.`. Using this both documents the intent in code and keeps the
+   * linter from complaining about the documentation (`@param`, `@returns`,
+   * etc.).
+   *
+   * @param {...*} args_unused Anything you want, to keep the linter happy.
+   */
+  _mustOverride(...args_unused) {
+    CommonBase._mustOverride();
+  }
+
+  /**
+   * `inspect()` implementation for the case where the class defines a
+   * `deconstruct()` method. In this case, the result resembles a `new` call to
+   * the class except without the `new` per se.
+   *
+   * @param {Int} depth Current inspection depth.
+   * @param {object} subOpts Inspection options for any recursive `inspect()`
+   *   calls.
+   * @returns {string} The inspection string form of this instance.
+   */
+  _inspectLikeConstructor(depth, subOpts) {
+    const name = this.constructor.name;
+    const args = this.deconstruct();
+
+    if (args.length === 0) {
+      return `${name}()`;
+    } else if (depth < 0) {
+      return `${name}(...)`;
+    }
+
+    const result = [name];
+    for (const arg of args) {
+      result.push((result.length === 1) ? '(' : ', ');
+      result.push(inspect(arg, subOpts));
+    }
+    result.push(')');
+
+    return result.join('');
+  }
+
+  /**
+   * `inspect()` implementation for the case where the class does not define a
+   * `deconstruct()` method. In this case, the result resembles the inspection
+   * of a map or a plain object.
+   *
+   * @param {Int} depth Current inspection depth.
+   * @param {object} subOpts Inspection options for any recursive `inspect()`
+   *   calls.
+   * @returns {string} The inspection string form of this instance.
+   */
+  _inspectLikeMap(depth, subOpts) {
+    const name = this.constructor.name;
+
+    if (depth < 0) {
+      return `${name} {...}`;
+    }
 
     // Walk the prototype chain up to this class, collecting the values of
     // public synthetic properties.
@@ -229,29 +300,6 @@ export default class CommonBase {
 
     result.push(' }');
     return result.join('');
-  }
-
-  /**
-   * Gets the string form of this instance. This implementation calls through
-   * to `util.inspect()` requesting a single-line result with the default
-   * recursion depth (which is `2` as of this writing).
-   *
-   * @returns {string} The string form of this instance.
-   */
-  toString() {
-    return inspect(this, { breakLength: Infinity });
-  }
-
-  /**
-   * Helper function which always throws an error with the message `Must
-   * override.`. Using this both documents the intent in code and keeps the
-   * linter from complaining about the documentation (`@param`, `@returns`,
-   * etc.).
-   *
-   * @param {...*} args_unused Anything you want, to keep the linter happy.
-   */
-  _mustOverride(...args_unused) {
-    CommonBase._mustOverride();
   }
 
   /**

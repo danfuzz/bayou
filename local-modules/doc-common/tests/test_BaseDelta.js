@@ -165,11 +165,11 @@ describe('doc-common/BaseDelta', () => {
   });
 
   describe('deconstruct()', () => {
-    it('should return a deep-frozen data value', () => {
+    it('should return a data value', () => {
       const delta  = new MockDelta([['a', 1, 2, 3, [4, 5, 6]], ['b', { x: ['y'] }]]);
       const result = delta.deconstruct();
 
-      assert.isTrue(DataUtil.isDeepFrozen(result));
+      assert.isTrue(DataUtil.isData(result));
     });
 
     it('should return an array of length one, which contains an array-of-arrays', () => {

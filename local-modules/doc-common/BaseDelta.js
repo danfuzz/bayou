@@ -2,8 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { inspect } from 'util';
-
 import { TArray, TBoolean, TFunction } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
@@ -162,13 +160,12 @@ export default class BaseDelta extends CommonBase {
    * `opClass` gets to be implied instead of redundantly encoded.
    *
    * @returns {array<array<*>>} Array of array of operation-construction
-   *   arguments. The result is always a deeply-frozen array.
+   *   arguments.
    */
   deconstruct() {
     const ops = this._ops.map(op => op.deconstruct());
 
-    Object.freeze(ops);
-    return Object.freeze([ops]);
+    return [ops];
   }
 
   /**
@@ -212,29 +209,6 @@ export default class BaseDelta extends CommonBase {
   }
 
   /**
-   * Custom inspector function, as called by `util.inspect()`.
-   *
-   * @param {Int} depth Current inspection depth.
-   * @param {object} opts Inspection options.
-   * @returns {string} The inspection string form of this instance.
-   */
-  [inspect.custom](depth, opts) {
-    if (depth < 0) {
-      return `${this.constructor.name} [...]`;
-    }
-
-    // Set up the inspection opts so that recursive calls respect the topmost
-    // requested depth.
-    const subOpts = (opts.depth === null)
-      ? opts
-      : Object.assign({}, opts, { depth: opts.depth - 1 });
-
-    const body = inspect(this._ops, subOpts);
-
-    return `${this.constructor.name} ${body}`;
-  }
-
-  /**
    * Returns `true` iff this instance has the form of a "document," or put
    * another way, iff it is valid to compose with an instance which represents
    * an empty snapshot. The details of what makes an instance a document vary
@@ -259,15 +233,6 @@ export default class BaseDelta extends CommonBase {
    */
   isEmpty() {
     return this._ops.length === 0;
-  }
-
-  /**
-   * Converts this instance to codec reconstruction arguments.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toCodecArgs() {
-    return this.deconstruct();
   }
 
   /**

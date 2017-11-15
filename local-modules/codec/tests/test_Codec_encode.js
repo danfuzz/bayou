@@ -10,7 +10,7 @@ import { MockCodable } from 'codec/mocks';
 import { FrozenBuffer } from 'util-common';
 
 class NoCodecTag {
-  toCodecArgs() {
+  deconstruct() {
     return 'NoCodecTag!';
   }
 }
@@ -80,13 +80,13 @@ describe('api-common/Codec.encode*()', () => {
       assert.throws(() => encodeData(noCodecTag));
     });
 
-    it('should reject objects with no toCodecArgs() method', () => {
+    it('should reject objects with no `deconstruct()` method', () => {
       const noToCodecArgs = new NoToCodecArgs();
 
       assert.throws(() => encodeData(noToCodecArgs));
     });
 
-    it('should accept objects with an CODEC_TAG property and toCodecArgs() method', () => {
+    it('should accept objects with an CODEC_TAG property and `deconstruct()` method', () => {
       const fakeObject = new MockCodable();
 
       assert.doesNotThrow(() => encodeData(fakeObject));

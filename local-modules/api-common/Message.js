@@ -38,11 +38,11 @@ export default class Message extends CommonBase {
   }
 
   /**
-   * Converts this instance to codec reconstruction arguments.
+   * Gets reconstruction arguments for this instance.
    *
-   * @returns {array} Reconstruction arguments.
+   * @returns {array<*>} Reconstruction arguments.
    */
-  toCodecArgs() {
+  deconstruct() {
     return [this._id, this._target, this._payload];
   }
 

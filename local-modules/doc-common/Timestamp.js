@@ -120,15 +120,6 @@ export default class Timestamp extends CommonBase {
     Object.freeze(this);
   }
 
-  /**
-   * Converts this instance to codec reconstruction arguments.
-   *
-   * @returns {array} Reconstruction arguments.
-   */
-  toCodecArgs() {
-    return [this._secs, this._usecs];
-  }
-
   /** {Int} The number of seconds since the Unix Epoch. */
   get secs() {
     return this._secs;
@@ -207,6 +198,15 @@ export default class Timestamp extends CommonBase {
     } else {
       return 1;
     }
+  }
+
+  /**
+   * Gets reconstruction arguments for this instance.
+   *
+   * @returns {array<*>} Reconstruction arguments.
+   */
+  deconstruct() {
+    return [this._secs, this._usecs];
   }
 
   /**

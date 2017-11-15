@@ -109,12 +109,12 @@ export default class ItemCodec extends CommonBase {
    */
   static fromClass(clazz) {
     TFunction.checkClass(clazz);
-    TFunction.checkCallable(clazz.prototype.toCodecArgs);
+    TFunction.checkCallable(clazz.prototype.deconstruct);
 
     const tag = clazz.CODEC_TAG || clazz.name;
 
     const encode = (value, subEncode) => {
-      const payload = TArray.check(value.toCodecArgs());
+      const payload = TArray.check(value.deconstruct());
       return payload.map(subEncode);
     };
 

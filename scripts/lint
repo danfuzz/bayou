@@ -36,6 +36,12 @@ showHelp=0
 # Option for the output directory, if any.
 outDirOpt=()
 
+# Option for the overlay source directory, if any.
+overlayDirOpt=()
+
+# Overlay source directory, if any.
+overlayDir=''
+
 while (( $# != 0 )); do
     opt="$1"
     if [[ ${opt} == '--' ]]; then
@@ -45,7 +51,10 @@ while (( $# != 0 )); do
             || ${opt} == '-h' ]]; then
         showHelp=1
     elif [[ ${opt} =~ ^--out= ]]; then
-        outDirOpt="${opt}"
+        outDirOpt=("${opt}")
+    elif [[ ${opt} =~ ^--overlay=(.*) ]]; then
+        overlayDir="${BASH_REMATCH[1]}"
+        overlayDirOpt=("${opt}")
     elif [[ ${opt} =~ ^- ]]; then
         echo "Unknown option: ${opt}" 1>&2
         argError=1
@@ -60,17 +69,23 @@ unset opt
 args=("$@")
 if (( ${#args[@]} == 0 )); then
     args=("${baseDir}")
+    if [[ ${overlayDir} != '' ]]; then
+        args+=("${overlayDir}")
+    fi
 fi
 
 if (( ${showHelp} || ${argError} )); then
     echo 'Usage:'
     echo ''
-    echo "${progName} [--out=<dir>] [--] [<file-or-dir> ...]"
+    echo "${progName} [--out=<dir>] [--overlay=<dir>] [--] [<file-or-dir> ...]"
     echo '  Run the linter on the indicated files or directories. With nothing'
-    echo '  specified, runs over the entire project.'
+    echo '  specified, runs over the entire project (including overlay source'
+    echo '  if indicated).'
     echo ''
     echo '  --out=<dir>'
     echo '    Place output (built linter tool) in directory <dir>.'
+    echo '  --overlay=<dir>'
+    echo '    Find overlay source in directory <dir>.'
     echo ''
     echo "${progName} [--help | -h]"
     echo '  Display this message.'
@@ -89,7 +104,7 @@ fi
 
 lintDir="${outDir}/linter"
 
-"${progDir}/build" "${outDirOpt[@]}" --linter || exit 1
+"${progDir}/build" "${outDirOpt[@]}" "${overlayDirOpt[@]}" --linter || exit 1
 
 "${lintDir}/node_modules/.bin/eslint" \
     --cache --cache-location "${lintDir}/cache" \
