@@ -205,6 +205,26 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * Gets a particular change to the part of the document that this instance
+   * controls. This is just a convenient shorthand for
+   * `await getChangeRange(revNum, revNum + 1)[0]`.
+   *
+   * @param {Int} revNum The revision number of the change. The result is the
+   *   change which produced that revision. E.g., `0` is a request for the first
+   *   change (the change from the empty document).
+   * @returns {BodyChange} The requested change.
+   */
+  async getChange(revNum) {
+    // We need to do this check so that the error (if there's an error) is both
+    // more prompt and more sensible than if we just deferred to
+    // `getChangeRange()`.
+    RevisionNumber.check(revNum);
+
+    const changes = await this.getChangeRange(revNum, revNum + 1);
+    return changes[0];
+  }
+
+  /**
    * Returns a document change representing a change to the portion of the file
    * controlled by this instance which has been made with respect to a given
    * revision. This returns a promptly-resolved value when `baseRevNum` is not
