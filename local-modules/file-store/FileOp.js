@@ -560,17 +560,9 @@ export default class FileOp extends CommonBase {
    */
   static _addConstructorMethods() {
     for (const opName of FileOp.OPERATION_NAMES) {
-      const { args: argInfo } = FileOp.propsFromName(opName);
+      const opProps = FileOp.propsFromName(opName);
       const constructorMethod = (...args) => {
-        if (args.length !== argInfo.length) {
-          throw Errors.bad_use(`Wrong argument count for op constructor. Expected ${argInfo.length}.`);
-        }
-
-        for (let i = 0; i < argInfo.length; i++) {
-          const [name_unused, type] = argInfo[i];
-          args[i] = FileOp._typeCheck(args[i], type);
-        }
-
+        FileOp._fixArgs(opProps, args);
         return new FileOp(KEY, opName, ...args);
       };
 
@@ -588,7 +580,7 @@ export default class FileOp extends CommonBase {
    *   defined by this class.
    * @returns {*} The value to use.
    */
-  static _typeCheck(value, type) {
+  static _fixArg(value, type) {
     switch (type) {
       case TYPE_BUFFER: {
         FrozenBuffer.check(value);
@@ -626,6 +618,28 @@ export default class FileOp extends CommonBase {
     }
 
     return value;
+  }
+
+  /**
+   * Checks and "fixes" the given array, for use as arguments to the indicated
+   * op. This modifies `args`, including freezing it.
+   *
+   * @param {object} opProps Operation properties.
+   * @param {array<*>} args Operation arguments.
+   */
+  static _fixArgs(opProps, args) {
+    const { args: argInfo, name } = opProps;
+
+    if (args.length !== argInfo.length) {
+      throw Errors.bad_use(`Wrong argument count for op \`${name}\`; expected ${argInfo.length}.`);
+    }
+
+    for (let i = 0; i < argInfo.length; i++) {
+      const [name_unused, type] = argInfo[i];
+      args[i] = FileOp._fixArg(args[i], type);
+    }
+
+    Object.freeze(args);
   }
 }
 
