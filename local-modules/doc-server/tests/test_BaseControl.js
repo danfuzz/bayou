@@ -13,10 +13,10 @@ import { MockControl } from 'doc-server/mocks';
 import { TransactionSpec } from 'file-store';
 import { MockFile } from 'file-store/mocks';
 
-/** {FileAccess} Convenient instance of `FileAccess`. */
-const FILE_ACCESS = new FileAccess(Codec.theOne, new MockFile('blort'));
-
 describe('doc-server/BaseControl', () => {
+  /** {FileAccess} Convenient instance of `FileAccess`. */
+  const FILE_ACCESS = new FileAccess(Codec.theOne, new MockFile('blort'));
+
   describe('.changeClass', () => {
     it('should reflect the subclass\'s implementation', () => {
       const result = MockControl.changeClass;
@@ -149,6 +149,13 @@ describe('doc-server/BaseControl', () => {
     });
   });
 
+  describe('.initSpec', () => {
+    it('should be a `TransactionSpec`', () => {
+      const result = new MockControl(FILE_ACCESS, 'florp').initSpec;
+      assert.instanceOf(result, TransactionSpec);
+    });
+  });
+
   describe('currentRevNum()', () => {
     it('should perform an appropriate transaction, and use the result', async () => {
       const file       = new MockFile('blort');
@@ -172,8 +179,8 @@ describe('doc-server/BaseControl', () => {
       assert.strictEqual(gotSpec.ops.length, 2);
       assert.lengthOf(ops1, 1);
       assert.lengthOf(ops2, 1);
-      assert.strictEqual(ops1[0].arg('storagePath'), '/mock_control/revision_number');
-      assert.strictEqual(ops2[0].arg('storagePath'), '/mock_control/revision_number');
+      assert.strictEqual(ops1[0].props.storagePath, '/mock_control/revision_number');
+      assert.strictEqual(ops2[0].props.storagePath, '/mock_control/revision_number');
     });
 
     it('should use the result of the transaction it performed', async () => {
@@ -222,6 +229,55 @@ describe('doc-server/BaseControl', () => {
       await test(0.05);
       await test('blort');
       await test([10]);
+    });
+  });
+
+  describe('getChange()', () => {
+    describe('when given a valid-typed argument', () => {
+      const control = new MockControl(FILE_ACCESS, 'boop');
+      let gotStart  = null;
+      let gotEnd    = null;
+
+      control.getChangeRange = async (start, end) => {
+        gotStart = start;
+        gotEnd   = end;
+        return ['foomp'];
+      };
+
+      it('should pass appropriate arguments to `getChangeRange()`', async () => {
+        async function test(n) {
+          await control.getChange(n);
+          assert.strictEqual(gotStart, n);
+          assert.strictEqual(gotEnd,   n + 1);
+        }
+
+        await test(0);
+        await test(1);
+        await test(914);
+      });
+
+      it('should return the first element of the return value from `getChangeRange()`', async () => {
+        const result = await control.getChange(123);
+        assert.strictEqual(result, 'foomp');
+      });
+    });
+
+    it('should promptly reject blatantly invalid `revNum` values', async () => {
+      const control = new MockControl(FILE_ACCESS, 'boop');
+      control.getChangeRange = async (start_unused, end_unused) => {
+        throw new Error('This should not have been called.');
+      };
+
+      async function test(value) {
+        assert.isRejected(control.getChange(value), /^bad_value/);
+      }
+
+      await test(undefined);
+      await test(null);
+      await test(-1);
+      await test(0.5);
+      await test('123');
+      await test({ x: 123 });
     });
   });
 

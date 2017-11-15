@@ -104,7 +104,7 @@ export default class Transactor extends CommonBase {
         throw Errors.wtf(`Missing handler for op: ${op.name}`);
       }
 
-      handler.call(this, op);
+      handler.call(this, op.props);
     }
 
     this._log.detail('Transactor done.');
@@ -139,10 +139,10 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `checkBlobAbsent` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_checkBlobAbsent(op) {
-    const hash = op.arg('hash');
+  _op_checkBlobAbsent(props) {
+    const { hash } = props;
 
     if (this._fileFriend.readBlobOrNull(hash) !== null) {
       throw FileStoreErrors.blob_not_absent(hash);
@@ -152,10 +152,10 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `checkBlobPresent` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_checkBlobPresent(op) {
-    const hash = op.arg('hash');
+  _op_checkBlobPresent(props) {
+    const { hash } = props;
 
     if (this._fileFriend.readBlobOrNull(hash) === null) {
       throw FileStoreErrors.blob_not_found(hash);
@@ -165,10 +165,10 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `checkPathAbsent` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_checkPathAbsent(op) {
-    const storagePath = op.arg('storagePath');
+  _op_checkPathAbsent(props) {
+    const { storagePath } = props;
 
     if (this._fileFriend.readPathOrNull(storagePath) !== null) {
       throw FileStoreErrors.path_not_absent(storagePath);
@@ -178,12 +178,11 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `checkPathIs` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_checkPathIs(op) {
-    const storagePath  = op.arg('storagePath');
-    const expectedHash = op.arg('hash');
-    const data         = this._fileFriend.readPathOrNull(storagePath);
+  _op_checkPathIs(props) {
+    const { hash: expectedHash, storagePath } = props;
+    const data = this._fileFriend.readPathOrNull(storagePath);
 
     if (data === null) {
       throw FileStoreErrors.path_not_found(storagePath);
@@ -195,12 +194,11 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `checkPathNot` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_checkPathNot(op) {
-    const storagePath    = op.arg('storagePath');
-    const unexpectedHash = op.arg('hash');
-    const data           = this._fileFriend.readPathOrNull(storagePath);
+  _op_checkPathNot(props) {
+    const { hash: unexpectedHash, storagePath } = props;
+    const data = this._fileFriend.readPathOrNull(storagePath);
 
     if ((data !== null) && (data.hash === unexpectedHash)) {
       throw FileStoreErrors.path_hash_mismatch(storagePath, unexpectedHash);
@@ -210,10 +208,10 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `checkPathPresent` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_checkPathPresent(op) {
-    const storagePath = op.arg('storagePath');
+  _op_checkPathPresent(props) {
+    const { storagePath } = props;
 
     if (this._fileFriend.readPathOrNull(storagePath) === null) {
       throw FileStoreErrors.path_not_found(storagePath);
@@ -223,9 +221,9 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `deleteAll` operations.
    *
-   * @param {FileOp} op_unused The operation.
+   * @param {object} props_unused The operation properties.
    */
-  _op_deleteAll(op_unused) {
+  _op_deleteAll(props_unused) {
     for (const [storagePath, value_unused] of this._fileFriend.allStorage()) {
       this._updatedStorage.set(storagePath, null);
     }
@@ -234,10 +232,10 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `deleteBlob` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_deleteBlob(op) {
-    const hash = op.arg('hash');
+  _op_deleteBlob(props) {
+    const { hash } = props;
 
     if (this._fileFriend.readBlobOrNull(hash) !== null) {
       this._updatedStorage.set(hash, null);
@@ -247,10 +245,10 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `deletePath` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_deletePath(op) {
-    const storagePath = op.arg('storagePath');
+  _op_deletePath(props) {
+    const { storagePath } = props;
 
     if (this._fileFriend.readPathOrNull(storagePath) !== null) {
       this._updatedStorage.set(storagePath, null);
@@ -260,10 +258,10 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `deletePathPrefix` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_deletePathPrefix(op) {
-    const prefix = op.arg('storagePath');
+  _op_deletePathPrefix(props) {
+    const { storagePath: prefix } = props;
 
     for (const [storagePath, value_unused] of this._fileFriend.pathStorage()) {
       if (StoragePath.isPrefixOrSame(prefix, storagePath)) {
@@ -276,10 +274,10 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `listPathPrefix` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_listPathPrefix(op) {
-    const prefix = op.arg('storagePath');
+  _op_listPathPrefix(props) {
+    const { storagePath: prefix } = props;
 
     for (const [storagePath, value_unused] of this._fileFriend.pathStorage()) {
       if (StoragePath.isPrefixOrSame(prefix, storagePath)) {
@@ -297,11 +295,11 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `readBlob` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_readBlob(op) {
-    const hash = op.arg('hash');
-    const data = this._fileFriend.readBlobOrNull(hash);
+  _op_readBlob(props) {
+    const { hash } = props;
+    const data     = this._fileFriend.readBlobOrNull(hash);
 
     if (data !== null) {
       // Per the `FileOp` documentation, we are only supposed to bind a result
@@ -313,11 +311,11 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `readPath` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_readPath(op) {
-    const storagePath = op.arg('storagePath');
-    const data        = this._fileFriend.readPathOrNull(storagePath);
+  _op_readPath(props) {
+    const { storagePath } = props;
+    const data            = this._fileFriend.readPathOrNull(storagePath);
 
     if (data !== null) {
       // Per the `FileOp` documentation, we are only supposed to bind a result
@@ -331,10 +329,10 @@ export default class Transactor extends CommonBase {
    * a single revision available, and we reject the transaction should it not be
    * the requested restriction.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_revNum(op) {
-    const revNum = op.arg('revNum');
+  _op_revNum(props) {
+    const { revNum } = props;
 
     if (this._fileFriend.revNum !== revNum) {
       throw Errors.revision_not_available(revNum);
@@ -346,20 +344,20 @@ export default class Transactor extends CommonBase {
    * because the code in `LocalFile` that calls into here already takes care
    * of timeouts.
    *
-   * @param {FileOp} op_unused The operation.
+   * @param {object} props_unused The operation properties.
    */
-  _op_timeout(op_unused) {
+  _op_timeout(props_unused) {
     // This space intentionally left blank.
   }
 
   /**
    * Handler for `whenPathAbsent` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_whenPathAbsent(op) {
-    const storagePath = op.arg('storagePath');
-    const value       = this._fileFriend.readPathOrNull(storagePath);
+  _op_whenPathAbsent(props) {
+    const { storagePath } = props;
+    const value           = this._fileFriend.readPathOrNull(storagePath);
 
     if (value === null) {
       this._paths.add(storagePath);
@@ -372,12 +370,11 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `whenPathNot` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  async _op_whenPathNot(op) {
-    const storagePath = op.arg('storagePath');
-    const hash        = op.arg('hash');
-    const value       = this._fileFriend.readPathOrNull(storagePath);
+  async _op_whenPathNot(props) {
+    const { hash, storagePath } = props;
+    const value                 = this._fileFriend.readPathOrNull(storagePath);
 
     if ((value === null) || (value.hash !== hash)) {
       this._paths.add(storagePath);
@@ -390,11 +387,11 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `whenPathPresent` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_whenPathPresent(op) {
-    const storagePath = op.arg('storagePath');
-    const value       = this._fileFriend.readPathOrNull(storagePath);
+  _op_whenPathPresent(props) {
+    const { storagePath } = props;
+    const value           = this._fileFriend.readPathOrNull(storagePath);
 
     if (value !== null) {
       this._paths.add(storagePath);
@@ -407,10 +404,10 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `writeBlob` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_writeBlob(op) {
-    const value = op.arg('value');
+  _op_writeBlob(props) {
+    const { value } = props;
 
     this._updatedStorage.set(value.hash, value);
   }
@@ -418,11 +415,10 @@ export default class Transactor extends CommonBase {
   /**
    * Handler for `writePath` operations.
    *
-   * @param {FileOp} op The operation.
+   * @param {object} props The operation properties.
    */
-  _op_writePath(op) {
-    const storagePath = op.arg('storagePath');
-    const value       = op.arg('value');
+  _op_writePath(props) {
+    const { storagePath, value } = props;
 
     this._updatedStorage.set(storagePath, value);
   }

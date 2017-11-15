@@ -4,19 +4,10 @@
 
 import { inspect } from 'util';
 
-import { TInt, TString } from 'typecheck';
+import { TInt } from 'typecheck';
 import { CommonBase, DataUtil, Errors, FrozenBuffer } from 'util-common';
 
 import StoragePath from './StoragePath';
-
-/**
- * {Symbol} Private key used to protect the main constructor. This is used so
- * that only the static constructor methods can use it. This makes it less
- * likely that a bogus instance will get constructed (and pretty obvious if
- * someone writes code to try to sneak around the restriction, which ought to
- * be a red flag).
- */
-const KEY = Symbol('FileOp constructor key');
 
 // Operation category constants. See docs on the static properties for details.
 const CAT_DELETE       = 'delete';
@@ -42,13 +33,13 @@ const TYPE_PATH      = 'Path';
 const TYPE_HASH      = 'Hash';
 const TYPE_REV_NUM   = 'RevNum';
 
-// Operation schemata. See the doc for the equivalent static property for
+// Operation schemata. See the doc for {@link FileOp#propsFromName} for
 // details.
 //
 // **Note:** The comments below aren't "real" JSDoc comments, because JSDoc
 // has no way of understanding that the elements cause methods to be generated.
 // So it goes.
-const OPERATIONS = DataUtil.deepFreeze([
+const OPERATIONS = [
   /*
    * A `checkBlobAbsent` operation. This is a prerequisite operation that
    * verifies that the file does not store a blob with the indicated hash.
@@ -261,7 +252,7 @@ const OPERATIONS = DataUtil.deepFreeze([
    * @param {FrozenBuffer} value The value to store and bind to `storagePath`.
    */
   [CAT_WRITE, 'writePath', ['storagePath', TYPE_PATH], ['value', TYPE_BUFFER]]
-]);
+];
 
 /**
  * {Map<string,object>} Map from operation name to corresponding properties
@@ -273,7 +264,7 @@ const OPERATION_MAP = new Map(OPERATIONS.map((schema) => {
   const isPush = (category === CAT_WRITE) || (category === CAT_DELETE);
 
   const props = { category, name, args, isPull, isPush };
-  return [name, Object.freeze(props)];
+  return [name, DataUtil.deepFreeze(props)];
 }));
 
 /**
@@ -358,24 +349,6 @@ export default class FileOp extends CommonBase {
     return Object.freeze([...OPERATION_MAP.keys()]);
   }
 
-  /**
-   * {array<array>} List of operation schemata. These are used to
-   * programatically define static methods on `FileOp` for constructing
-   * instances. Each element consists of three parts, as follows:
-   *
-   * * `category` &mdash; The category of the operation.
-   * * `name` &mdsah; The name of the operation.
-   * * `args` &mdash; One or more elements indicating the names and types of
-   *   the arguments to the operation. Each argument is represented as a two-
-   *   element array `[<name>, <type>]`, where `<type>` is one of the type
-   *   constants defined by this class.
-   *
-   * This value is deep frozen. Attempts to mutate it will fail.
-   */
-  static get OPERATIONS() {
-    return OPERATIONS;
-  }
-
   /** {string} Type name for a `FrozenBuffer`. */
   static get TYPE_BUFFER() {
     return TYPE_BUFFER;
@@ -409,8 +382,10 @@ export default class FileOp extends CommonBase {
    * Gets the properties associated with a given operation, by name. Properties
    * are as follows:
    *
-   * * `args: array` &mdash; Array of argument specs, same as defined by
-   *   {@link #OPERATIONS}.
+   * * `args: array` &mdash; One or more elements indicating the names and types
+   *   of the arguments to the operation. Each argument is represented as a
+   *   two-element array `[<name>, <type>]`, where `<type>` is one of the type
+   *   constants defined by this class.
    * * `category: string` &mdash; Operation category.
    * * `isPull: boolean` &mdash; Whether the operation is a pull (category
    *   `read` or `list`).
@@ -487,26 +462,22 @@ export default class FileOp extends CommonBase {
    * Constructs an instance. This should not be used directly. Instead use the
    * static constructor methods defined by this class.
    *
-   * @param {object} constructorKey The private-to-this-module key that
-   *   enforces the exhortation in the method documentation above.
-   * @param {string} category The operation category.
    * @param {string} name The operation name.
-   * @param {Map<string,*>} args Arguments to the operation.
+   * @param {...*} args Arguments to the operation.
    */
-  constructor(constructorKey, category, name, args) {
-    if (constructorKey !== KEY) {
-      throw Errors.bad_use('Constructor is private.');
-    }
+  constructor(name, ...args) {
+    // This validates `name`.
+    const opProps = FileOp.propsFromName(name);
+
+    // This both validates and modifies `args`.
+    FileOp._fixArgs(opProps, args);
 
     super();
 
-    /** {string} The operation category. */
-    this._category = FileOp.validateCategory(category);
+    /** {object} Properties of the _operation_. */
+    this._opProps = opProps;
 
-    /** {string} The operation name. */
-    this._name = TString.nonEmpty(name);
-
-    /** {Map<string,*>} Arguments to the operation. */
+    /** {array<*>} Arguments to the operation. */
     this._args = args;
 
     Object.freeze(this);
@@ -514,30 +485,31 @@ export default class FileOp extends CommonBase {
 
   /** {string} The operation category. */
   get category() {
-    return this._category;
+    return this._opProps.category;
   }
 
   /** {string} The operation name. */
   get name() {
-    return this._name;
+    return this._opProps.name;
   }
 
   /**
-   * Gets the operation argument with the given name. It is an error to
-   * request an argument that is not bound. Return values are guaranteed to be
-   * deep frozen.
-   *
-   * @param {string} name The argument name.
-   * @returns {*} Corresponding argument value.
+   * {object} The properties of this operation, as a conveniently-accessed
+   * plain object. `opName` is always bound to the operation name, and
+   * `category` to the category. Other bindings depend on the operation name.
+   * Guaranteed to be a frozen (immutable) object.
    */
-  arg(name) {
-    const result = this._args.get(name);
+  get props() {
+    const { args: argInfo, category, name: opName } = this._opProps;
+    const args   = this._args;
+    const result = { category, opName };
 
-    if (result === undefined) {
-      throw Errors.bad_use(`No such argument: ${name}`);
+    for (let i = 0; i < argInfo.length; i++) {
+      const [name, type_unused] = argInfo[i];
+      result[name] = args[i];
     }
 
-    return result;
+    return Object.freeze(result);
   }
 
   /**
@@ -563,9 +535,9 @@ export default class FileOp extends CommonBase {
       : Object.assign({}, opts, { depth: opts.depth - 1 });
 
     const result = [nameStr];
-    for (const [name, type_unused] of FileOp.propsFromName(this.name).args) {
+    for (const a of this._args) {
       result.push((result.length === 1) ? '(' : ', ');
-      result.push(inspect(this.arg(name), subOpts));
+      result.push(inspect(a, subOpts));
     }
     result.push(')');
 
@@ -573,28 +545,15 @@ export default class FileOp extends CommonBase {
   }
 
   /**
-   * Based on the operation `OPERATIONS`, add `static` constructor methods to
+   * Based on the set of defined operations, add `static` constructor methods to
    * this class. This method is called during class initialization. (Look at
-   * the bottome of this file for the call.)
+   * the bottom of this file for the call.)
    */
   static _addConstructorMethods() {
-    for (const [category, opName, ...argInfo] of OPERATIONS) {
-      const constructorMethod = (...args) => {
-        if (args.length !== argInfo.length) {
-          throw Errors.bad_use(`Wrong argument count for op constructor. Expected ${argInfo.length}.`);
-        }
-
-        const argMap = new Map();
-        for (let i = 0; i < argInfo.length; i++) {
-          const [name, type] = argInfo[i];
-          const arg          = FileOp._typeCheck(args[i], type);
-          argMap.set(name, arg);
-        }
-
-        return new FileOp(KEY, category, opName, argMap);
+    for (const opName of FileOp.OPERATION_NAMES) {
+      FileOp[`op_${opName}`] = (...args) => {
+        return new FileOp(opName, ...args);
       };
-
-      FileOp[`op_${opName}`] = constructorMethod;
     }
   }
 
@@ -608,7 +567,7 @@ export default class FileOp extends CommonBase {
    *   defined by this class.
    * @returns {*} The value to use.
    */
-  static _typeCheck(value, type) {
+  static _fixArg(value, type) {
     switch (type) {
       case TYPE_BUFFER: {
         FrozenBuffer.check(value);
@@ -646,6 +605,28 @@ export default class FileOp extends CommonBase {
     }
 
     return value;
+  }
+
+  /**
+   * Checks and "fixes" the given array, for use as arguments to the indicated
+   * op. This modifies `args`, including freezing it.
+   *
+   * @param {object} opProps Operation properties.
+   * @param {array<*>} args Operation arguments.
+   */
+  static _fixArgs(opProps, args) {
+    const { args: argInfo, name } = opProps;
+
+    if (args.length !== argInfo.length) {
+      throw Errors.bad_use(`Wrong argument count for op \`${name}\`; expected ${argInfo.length}.`);
+    }
+
+    for (let i = 0; i < argInfo.length; i++) {
+      const [name_unused, type] = argInfo[i];
+      args[i] = FileOp._fixArg(args[i], type);
+    }
+
+    Object.freeze(args);
   }
 }
 

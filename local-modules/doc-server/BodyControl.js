@@ -31,43 +31,6 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
-   * Gets a particular change to the document. The document consists of a
-   * sequence of changes, each modifying revision N of the document to produce
-   * revision N+1.
-   *
-   * @param {Int} revNum The revision number of the change. The result is the
-   *   change which produced that revision. E.g., `0` is a request for the first
-   *   change (the change from the empty document).
-   * @returns {BodyChange} The requested change.
-   */
-  async getChange(revNum) {
-    RevisionNumber.check(revNum);
-
-    const changes = await this.getChangeRange(revNum, revNum + 1);
-    return changes[0];
-  }
-
-  /**
-   * {TransactionSpec} Spec for a transaction which when run will initialize the
-   * portion of the file which this class is responsible for.
-   */
-  get _impl_initSpec() {
-    const fc = this.fileCodec; // Avoids boilerplate immediately below.
-
-    return new TransactionSpec(
-      // If there was any body content (e.g. and most likely data in an earlier
-      // schema, this clears it out.
-      fc.op_deletePathPrefix(Paths.BODY_PREFIX),
-
-      // Initial revision number.
-      fc.op_writePath(BodyControl.revisionNumberPath, 0),
-
-      // Empty change #0 (per documented interface).
-      fc.op_writePath(BodyControl.pathForChange(0), BodyChange.FIRST)
-    );
-  }
-
-  /**
    * Subclass-specific implementation of `afterInit()`.
    */
   async _impl_afterInit() {

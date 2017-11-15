@@ -205,6 +205,26 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * Gets a particular change to the part of the document that this instance
+   * controls. This is just a convenient shorthand for
+   * `await getChangeRange(revNum, revNum + 1)[0]`.
+   *
+   * @param {Int} revNum The revision number of the change. The result is the
+   *   change which produced that revision. E.g., `0` is a request for the first
+   *   change (the change from the empty document).
+   * @returns {BodyChange} The requested change.
+   */
+  async getChange(revNum) {
+    // We need to do this check so that the error (if there's an error) is both
+    // more prompt and more sensible than if we just deferred to
+    // `getChangeRange()`.
+    RevisionNumber.check(revNum);
+
+    const changes = await this.getChangeRange(revNum, revNum + 1);
+    return changes[0];
+  }
+
+  /**
    * Returns a document change representing a change to the portion of the file
    * controlled by this instance which has been made with respect to a given
    * revision. This returns a promptly-resolved value when `baseRevNum` is not
@@ -533,6 +553,30 @@ export default class BaseControl extends BaseDataManager {
       retryTotalMsec += retryDelayMsec;
       retryDelayMsec *= UPDATE_RETRY_GROWTH_FACTOR;
     }
+  }
+
+  /**
+   * {TransactionSpec} Spec for a transaction which when run will initialize the
+   * portion of the file which this class is responsible for. This
+   * implementation should be sufficient for all subclasses of this class.
+   */
+  get _impl_initSpec() {
+    const clazz = this.constructor;
+    const fc    = this.fileCodec; // Avoids boilerplate immediately below.
+
+    return new TransactionSpec(
+      // Clear out old data, if any. For example (and especially during
+      // development), there might be data in an old schema. By the time we get
+      // here, if there were anything to preserve it would have already been
+      // preserved.
+      fc.op_deletePathPrefix(clazz.pathPrefix),
+
+      // Initial revision number.
+      fc.op_writePath(clazz.revisionNumberPath, 0),
+
+      // Empty change #0.
+      fc.op_writePath(clazz.pathForChange(0), clazz.changeClass.FIRST)
+    );
   }
 
   /**
