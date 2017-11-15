@@ -525,6 +525,24 @@ export default class FileOp extends CommonBase {
   }
 
   /**
+   * {object} The properties of this operation, as a conveniently-accessed
+   * plain object. `opName` is always bound to the operation name, and
+   * `category` to the category. Other bindings depend on the operation name.
+   * Guaranteed to be a frozen (immutable) object.
+   */
+  get props() {
+    const category = this._category;
+    const opName   = this._name;
+    const result   = { category, opName };
+
+    for (const [name, value] of this._args) {
+      result[name] = value;
+    }
+
+    return Object.freeze(result);
+  }
+
+  /**
    * Custom inspect function to provide a more succinct representation than the
    * default.
    *
