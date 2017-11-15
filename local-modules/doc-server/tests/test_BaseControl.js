@@ -782,4 +782,57 @@ describe('doc-server/BaseControl', () => {
       assert.deepEqual(result, new MockChange(14, [new MockOp('florp')]));
     });
   });
+
+  describe('whenRevNum()', () => {
+    it('should return promptly if the revision is already available', async () => {
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(Codec.theOne, file);
+      const control    = new MockControl(fileAccess, 'boop');
+
+      file._impl_transact = (spec_unused) => {
+        throw new Error('This should not get called.');
+      };
+
+      control.currentRevNum = async () => {
+        return 37;
+      };
+
+      assert.strictEqual(await control.whenRevNum(0), 37);
+      assert.strictEqual(await control.whenRevNum(36), 37);
+      assert.strictEqual(await control.whenRevNum(37), 37);
+    });
+
+    it('should issue transactions until the revision is written', async () => {
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(Codec.theOne, file);
+      const control    = new MockControl(fileAccess, 'boop');
+
+      let revNum = 11;
+      control.currentRevNum = async () => {
+        return revNum;
+      };
+
+      let transactCount = 0;
+      file._impl_transact = (spec) => {
+        const ops = spec.opsWithName('whenPathNot');
+
+        assert.lengthOf(ops, 1);
+        assert.strictEqual(ops[0].props.storagePath, '/mock_control/revision_number');
+
+        transactCount++;
+        revNum += 2; // So that the outer call will succeed after two iterations.
+
+        return {
+          revNum:    123,
+          newRevNum: null,
+          data:      null,
+          paths:     new Set(['/mock_control/revision_number'])
+        };
+      };
+
+      const result = await control.whenRevNum(14);
+      assert.strictEqual(result, 15);
+      assert.strictEqual(transactCount, 2);
+    });
+  });
 });

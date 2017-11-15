@@ -617,6 +617,65 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * Waits for the given revision number to have been written. The return value
+   * only becomes resolved after the change is made. If the change has already
+   * been made by the time this method is called, then it returns promptly.
+   *
+   * **Note:** In unusual circumstances &mdash; in particular, when a document
+   * gets re-created or for document parts that don't keep full change history
+   * &mdash; and due to the asynchronous nature of the system, it is possible
+   * for a change to not be available (e.g. via {@link #getChange}) soon after
+   * the result of a call to this method becomes resolved. Calling code should
+   * be prepared for that possibility.
+   *
+   * @param {Int} revNum The revision number to wait for.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {Int} The instantaneously current revision number when the method
+   *   is complete. It is possible for it to be out-of-date by the time it is
+   *   used by the caller.
+   */
+  async whenRevNum(revNum, timeoutMsec = null) {
+    RevisionNumber.check(revNum);
+    timeoutMsec = Timeouts.clamp(timeoutMsec);
+
+    const clazz       = this.constructor;
+    const timeoutTime = Date.now() + timeoutMsec;
+
+    // Loop until the overall timeout.
+    for (;;) {
+      const now = Date.now();
+      if (now >= timeoutTime) {
+        throw new Errors.timed_out(timeoutMsec);
+      }
+
+      const currentRevNum = await this.currentRevNum();
+      if (currentRevNum >= revNum) {
+        // No more need to wait or, if this is the first iteration, no need to
+        // wait at all.
+        return currentRevNum;
+      }
+
+      // The current revision is the same as, or lower than, the given one, so
+      // we have to wait for the file to change (or for the storage layer to
+      // time out), and then check to see if in fact the revision number was
+      // changed.
+
+      const fc   = this.fileCodec;
+      const spec = new TransactionSpec(
+        fc.op_timeout(timeoutTime - now),
+        fc.op_whenPathNot(clazz.revisionNumberPath, currentRevNum));
+
+      // If this returns normally (doesn't throw), then we know it wasn't due
+      // to hitting the timeout. And if it _is_ a timeout, then the exception
+      // that's thrown is exactly what should be reported upward.
+      await fc.transact(spec);
+    }
+  }
+
+  /**
    * {TransactionSpec} Spec for a transaction which when run will initialize the
    * portion of the file which this class is responsible for. This
    * implementation should be sufficient for all subclasses of this class.
