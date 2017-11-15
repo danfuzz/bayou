@@ -9,15 +9,6 @@ import { CommonBase, DataUtil, Errors, FrozenBuffer } from 'util-common';
 
 import StoragePath from './StoragePath';
 
-/**
- * {Symbol} Private key used to protect the main constructor. This is used so
- * that only the static constructor methods can use it. This makes it less
- * likely that a bogus instance will get constructed (and pretty obvious if
- * someone writes code to try to sneak around the restriction, which ought to
- * be a red flag).
- */
-const KEY = Symbol('FileOp constructor key');
-
 // Operation category constants. See docs on the static properties for details.
 const CAT_DELETE       = 'delete';
 const CAT_ENVIRONMENT  = 'environment';
@@ -471,16 +462,10 @@ export default class FileOp extends CommonBase {
    * Constructs an instance. This should not be used directly. Instead use the
    * static constructor methods defined by this class.
    *
-   * @param {object} constructorKey The private-to-this-module key that
-   *   enforces the exhortation in the method documentation above.
    * @param {string} name The operation name.
    * @param {...*} args Arguments to the operation.
    */
-  constructor(constructorKey, name, ...args) {
-    if (constructorKey !== KEY) {
-      throw Errors.bad_use('Constructor is private.');
-    }
-
+  constructor(name, ...args) {
     // This validates `name`.
     const opProps = FileOp.propsFromName(name);
 
@@ -566,11 +551,9 @@ export default class FileOp extends CommonBase {
    */
   static _addConstructorMethods() {
     for (const opName of FileOp.OPERATION_NAMES) {
-      const constructorMethod = (...args) => {
-        return new FileOp(KEY, opName, ...args);
+      FileOp[`op_${opName}`] = (...args) => {
+        return new FileOp(opName, ...args);
       };
-
-      FileOp[`op_${opName}`] = constructorMethod;
     }
   }
 
