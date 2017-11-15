@@ -4,7 +4,7 @@
 
 import { inspect } from 'util';
 
-import { TInt, TString } from 'typecheck';
+import { TInt } from 'typecheck';
 import { CommonBase, DataUtil, Errors, FrozenBuffer } from 'util-common';
 
 import StoragePath from './StoragePath';
@@ -473,55 +473,33 @@ export default class FileOp extends CommonBase {
    *
    * @param {object} constructorKey The private-to-this-module key that
    *   enforces the exhortation in the method documentation above.
-   * @param {string} category The operation category.
    * @param {string} name The operation name.
-   * @param {Map<string,*>} args Arguments to the operation.
+   * @param {...*} args Arguments to the operation.
    */
-  constructor(constructorKey, category, name, args) {
+  constructor(constructorKey, name, ...args) {
     if (constructorKey !== KEY) {
       throw Errors.bad_use('Constructor is private.');
     }
 
     super();
 
-    /** {string} The operation category. */
-    this._category = FileOp.validateCategory(category);
+    /** {object} Properties of the _operation_. */
+    this._opProps = FileOp.propsFromName(name);
 
-    /** {string} The operation name. */
-    this._name = TString.nonEmpty(name);
-
-    /** {Map<string,*>} Arguments to the operation. */
-    this._args = args;
+    /** {array<*>} Arguments to the operation. */
+    this._args = Object.freeze(args);
 
     Object.freeze(this);
   }
 
   /** {string} The operation category. */
   get category() {
-    return this._category;
+    return this._opProps.category;
   }
 
   /** {string} The operation name. */
   get name() {
-    return this._name;
-  }
-
-  /**
-   * Gets the operation argument with the given name. It is an error to
-   * request an argument that is not bound. Return values are guaranteed to be
-   * deep frozen.
-   *
-   * @param {string} name The argument name.
-   * @returns {*} Corresponding argument value.
-   */
-  arg(name) {
-    const result = this._args.get(name);
-
-    if (result === undefined) {
-      throw Errors.bad_use(`No such argument: ${name}`);
-    }
-
-    return result;
+    return this._opProps.name;
   }
 
   /**
@@ -531,12 +509,13 @@ export default class FileOp extends CommonBase {
    * Guaranteed to be a frozen (immutable) object.
    */
   get props() {
-    const category = this._category;
-    const opName   = this._name;
-    const result   = { category, opName };
+    const { args: argInfo, category, name: opName } = this._opProps;
+    const args   = this._args;
+    const result = { category, opName };
 
-    for (const [name, value] of this._args) {
-      result[name] = value;
+    for (let i = 0; i < argInfo.length; i++) {
+      const [name, type_unused] = argInfo[i];
+      result[name] = args[i];
     }
 
     return Object.freeze(result);
@@ -565,9 +544,9 @@ export default class FileOp extends CommonBase {
       : Object.assign({}, opts, { depth: opts.depth - 1 });
 
     const result = [nameStr];
-    for (const [name, type_unused] of FileOp.propsFromName(this.name).args) {
+    for (const a of this._args) {
       result.push((result.length === 1) ? '(' : ', ');
-      result.push(inspect(this.arg(name), subOpts));
+      result.push(inspect(a, subOpts));
     }
     result.push(')');
 
@@ -581,20 +560,18 @@ export default class FileOp extends CommonBase {
    */
   static _addConstructorMethods() {
     for (const opName of FileOp.OPERATION_NAMES) {
-      const { category, args: argInfo } = FileOp.propsFromName(opName);
+      const { args: argInfo } = FileOp.propsFromName(opName);
       const constructorMethod = (...args) => {
         if (args.length !== argInfo.length) {
           throw Errors.bad_use(`Wrong argument count for op constructor. Expected ${argInfo.length}.`);
         }
 
-        const argMap = new Map();
         for (let i = 0; i < argInfo.length; i++) {
-          const [name, type] = argInfo[i];
-          const arg          = FileOp._typeCheck(args[i], type);
-          argMap.set(name, arg);
+          const [name_unused, type] = argInfo[i];
+          args[i] = FileOp._typeCheck(args[i], type);
         }
 
-        return new FileOp(KEY, category, opName, argMap);
+        return new FileOp(KEY, opName, ...args);
       };
 
       FileOp[`op_${opName}`] = constructorMethod;
