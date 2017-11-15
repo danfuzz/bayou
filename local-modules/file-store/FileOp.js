@@ -557,12 +557,13 @@ export default class FileOp extends CommonBase {
   }
 
   /**
-   * Based on the operation `OPERATIONS`, add `static` constructor methods to
+   * Based on the set of defined operations, add `static` constructor methods to
    * this class. This method is called during class initialization. (Look at
-   * the bottome of this file for the call.)
+   * the bottom of this file for the call.)
    */
   static _addConstructorMethods() {
-    for (const [category, opName, ...argInfo] of OPERATIONS) {
+    for (const opName of FileOp.OPERATION_NAMES) {
+      const { category, args: argInfo } = FileOp.propsFromName(opName);
       const constructorMethod = (...args) => {
         if (args.length !== argInfo.length) {
           throw Errors.bad_use(`Wrong argument count for op constructor. Expected ${argInfo.length}.`);
