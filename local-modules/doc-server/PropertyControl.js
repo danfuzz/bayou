@@ -31,25 +31,6 @@ export default class PropertyControl extends BaseControl {
   }
 
   /**
-   * {TransactionSpec} Spec for a transaction which when run will initialize the
-   * portion of the file which this class is responsible for.
-   */
-  get _impl_initSpec() {
-    const fc = this.fileCodec; // Avoids boilerplate immediately below.
-
-    return new TransactionSpec(
-      // Clear out old property data, if any.
-      fc.op_deletePathPrefix(Paths.PROPERTY_PREFIX),
-
-      // Initial revision number.
-      fc.op_writePath(PropertyControl.revisionNumberPath, 0),
-
-      // Empty change #0.
-      fc.op_writePath(PropertyControl.pathForChange(0), PropertyChange.FIRST)
-    );
-  }
-
-  /**
    * Subclass-specific implementation of `afterInit()`.
    */
   async _impl_afterInit() {

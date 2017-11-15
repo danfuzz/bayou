@@ -48,26 +48,6 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
-   * {TransactionSpec} Spec for a transaction which when run will initialize the
-   * portion of the file which this class is responsible for.
-   */
-  get _impl_initSpec() {
-    const fc = this.fileCodec; // Avoids boilerplate immediately below.
-
-    return new TransactionSpec(
-      // If there was any body content (e.g. and most likely data in an earlier
-      // schema, this clears it out.
-      fc.op_deletePathPrefix(Paths.BODY_PREFIX),
-
-      // Initial revision number.
-      fc.op_writePath(BodyControl.revisionNumberPath, 0),
-
-      // Empty change #0 (per documented interface).
-      fc.op_writePath(BodyControl.pathForChange(0), BodyChange.FIRST)
-    );
-  }
-
-  /**
    * Subclass-specific implementation of `afterInit()`.
    */
   async _impl_afterInit() {

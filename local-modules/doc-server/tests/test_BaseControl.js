@@ -13,10 +13,10 @@ import { MockControl } from 'doc-server/mocks';
 import { TransactionSpec } from 'file-store';
 import { MockFile } from 'file-store/mocks';
 
-/** {FileAccess} Convenient instance of `FileAccess`. */
-const FILE_ACCESS = new FileAccess(Codec.theOne, new MockFile('blort'));
-
 describe('doc-server/BaseControl', () => {
+  /** {FileAccess} Convenient instance of `FileAccess`. */
+  const FILE_ACCESS = new FileAccess(Codec.theOne, new MockFile('blort'));
+
   describe('.changeClass', () => {
     it('should reflect the subclass\'s implementation', () => {
       const result = MockControl.changeClass;
@@ -146,6 +146,13 @@ describe('doc-server/BaseControl', () => {
     it('should reject non-`FileAccess` arguments', () => {
       assert.throws(() => new MockControl(null,      'boop'));
       assert.throws(() => new MockControl({ x: 10 }, 'boop'));
+    });
+  });
+
+  describe('.initSpec', () => {
+    it('should be a `TransactionSpec`', () => {
+      const result = new MockControl(FILE_ACCESS, 'florp').initSpec;
+      assert.instanceOf(result, TransactionSpec);
     });
   });
 

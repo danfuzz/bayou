@@ -536,6 +536,30 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * {TransactionSpec} Spec for a transaction which when run will initialize the
+   * portion of the file which this class is responsible for. This
+   * implementation should be sufficient for all subclasses of this class.
+   */
+  get _impl_initSpec() {
+    const clazz = this.constructor;
+    const fc    = this.fileCodec; // Avoids boilerplate immediately below.
+
+    return new TransactionSpec(
+      // Clear out old data, if any. For example (and especially during
+      // development), there might be data in an old schema. By the time we get
+      // here, if there were anything to preserve it would have already been
+      // preserved.
+      fc.op_deletePathPrefix(clazz.pathPrefix),
+
+      // Initial revision number.
+      fc.op_writePath(clazz.revisionNumberPath, 0),
+
+      // Empty change #0.
+      fc.op_writePath(clazz.pathForChange(0), clazz.changeClass.FIRST)
+    );
+  }
+
+  /**
    * Subclass-specific implementation of `getChangeAfter()`. Subclasses must
    * override this method.
    *
