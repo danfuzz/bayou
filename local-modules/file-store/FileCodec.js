@@ -81,9 +81,10 @@ export default class FileCodec extends CommonBase {
    */
   static _addFileOpConstructorMethods() {
     const proto = FileCodec.prototype;
-    for (const [category_unused, opName, ...argInfo] of FileOp.OPERATIONS) {
-      const methodName = `op_${opName}`;
-      const originalMethod = FileOp[methodName].bind(FileOp);
+    for (const name of FileOp.OPERATION_NAMES) {
+      const { args: argInfo } = FileOp.propsFromName(name);
+      const methodName        = `op_${name}`;
+      const originalMethod    = FileOp[methodName].bind(FileOp);
 
       // Figure out which arguments are buffers, if any.
       const bufferAt = [];

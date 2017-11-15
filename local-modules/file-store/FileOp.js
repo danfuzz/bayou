@@ -42,13 +42,13 @@ const TYPE_PATH      = 'Path';
 const TYPE_HASH      = 'Hash';
 const TYPE_REV_NUM   = 'RevNum';
 
-// Operation schemata. See the doc for the equivalent static property for
+// Operation schemata. See the doc for {@link FileOp#propsFromName} for
 // details.
 //
 // **Note:** The comments below aren't "real" JSDoc comments, because JSDoc
 // has no way of understanding that the elements cause methods to be generated.
 // So it goes.
-const OPERATIONS = DataUtil.deepFreeze([
+const OPERATIONS = [
   /*
    * A `checkBlobAbsent` operation. This is a prerequisite operation that
    * verifies that the file does not store a blob with the indicated hash.
@@ -261,7 +261,7 @@ const OPERATIONS = DataUtil.deepFreeze([
    * @param {FrozenBuffer} value The value to store and bind to `storagePath`.
    */
   [CAT_WRITE, 'writePath', ['storagePath', TYPE_PATH], ['value', TYPE_BUFFER]]
-]);
+];
 
 /**
  * {Map<string,object>} Map from operation name to corresponding properties
@@ -273,7 +273,7 @@ const OPERATION_MAP = new Map(OPERATIONS.map((schema) => {
   const isPush = (category === CAT_WRITE) || (category === CAT_DELETE);
 
   const props = { category, name, args, isPull, isPush };
-  return [name, Object.freeze(props)];
+  return [name, DataUtil.deepFreeze(props)];
 }));
 
 /**
@@ -358,24 +358,6 @@ export default class FileOp extends CommonBase {
     return Object.freeze([...OPERATION_MAP.keys()]);
   }
 
-  /**
-   * {array<array>} List of operation schemata. These are used to
-   * programatically define static methods on `FileOp` for constructing
-   * instances. Each element consists of three parts, as follows:
-   *
-   * * `category` &mdash; The category of the operation.
-   * * `name` &mdsah; The name of the operation.
-   * * `args` &mdash; One or more elements indicating the names and types of
-   *   the arguments to the operation. Each argument is represented as a two-
-   *   element array `[<name>, <type>]`, where `<type>` is one of the type
-   *   constants defined by this class.
-   *
-   * This value is deep frozen. Attempts to mutate it will fail.
-   */
-  static get OPERATIONS() {
-    return OPERATIONS;
-  }
-
   /** {string} Type name for a `FrozenBuffer`. */
   static get TYPE_BUFFER() {
     return TYPE_BUFFER;
@@ -409,8 +391,10 @@ export default class FileOp extends CommonBase {
    * Gets the properties associated with a given operation, by name. Properties
    * are as follows:
    *
-   * * `args: array` &mdash; Array of argument specs, same as defined by
-   *   {@link #OPERATIONS}.
+   * * `args: array` &mdash; One or more elements indicating the names and types
+   *   of the arguments to the operation. Each argument is represented as a
+   *   two-element array `[<name>, <type>]`, where `<type>` is one of the type
+   *   constants defined by this class.
    * * `category: string` &mdash; Operation category.
    * * `isPull: boolean` &mdash; Whether the operation is a pull (category
    *   `read` or `list`).
