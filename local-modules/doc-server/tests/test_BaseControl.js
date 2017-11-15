@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { Codec } from 'codec';
 import { Timeouts, Timestamp } from 'doc-common';
-import { MockChange, MockOp, MockSnapshot } from 'doc-common/mocks';
+import { MockChange, MockDelta, MockOp, MockSnapshot } from 'doc-common/mocks';
 import { BaseControl, FileAccess } from 'doc-server';
 import { MockControl } from 'doc-server/mocks';
 import { TransactionSpec } from 'file-store';
@@ -426,6 +426,100 @@ describe('doc-server/BaseControl', () => {
       };
 
       await assert.isRejected(control.getChangeAfter(1), /^bad_value/);
+    });
+  });
+
+  describe('getDiff()', () => {
+    it('should reject bad arguments', async () => {
+      const control = new MockControl(FILE_ACCESS, 'boop');
+
+      async function test(base, newer) {
+        assert.isRejected(control.getDiff(base, newer), /^bad_value/);
+      }
+
+      await test(undefined, 10);
+      await test(null,      10);
+      await test(false,     10);
+      await test('florp',   10);
+      await test(-1,        10);
+      await test(1.234,     10);
+
+      await test(10, undefined);
+      await test(10, null);
+      await test(10, false);
+      await test(10, 'florp');
+      await test(10, -1);
+      await test(10, 1.234);
+
+      // Can't pass the same value for both arguments.
+      await test(0,  0);
+      await test(1,  1);
+      await test(37, 37);
+
+      // Second argument has to be higher.
+      await test(1,   0);
+      await test(123, 122);
+      await test(914, 10);
+    });
+
+    it('should produce a result in one of the two specified ways', async () => {
+      const control = new MockControl(FILE_ACCESS, 'boop');
+      let reqBase, reqNewer;
+
+      control.getSnapshot = async (revNum) => {
+        assert((revNum === reqBase) || (revNum === reqNewer), `Unexpected revNum: ${revNum}`);
+        return new MockSnapshot(revNum, [[`snap_blort_${revNum}`]]);
+      };
+
+      control.getComposedChanges = async (baseDelta, startInc, endExc, wantDocument) => {
+        // Validate how we expect to be called.
+        assert.strictEqual(baseDelta, MockDelta.EMPTY);
+        assert.strictEqual(startInc, reqBase + 1);
+        assert.strictEqual(endExc, reqNewer + 1);
+        assert.isFalse(wantDocument);
+        return new MockDelta([[`composed_blort_${reqBase}`]]);
+      };
+
+      // Counts for each tactic, to make sure both paths are exercised.
+      let composedCount = 0;
+      let diffCount     = 0;
+
+      async function test(base, newer) {
+        reqBase  = base;
+        reqNewer = newer;
+
+        const result = await control.getDiff(base, newer);
+
+        assert.instanceOf(result, MockChange);
+        assert.strictEqual(result.revNum, newer);
+        assert.isNull(result.authorId);
+        assert.isNull(result.timestamp);
+        assert.isAbove(result.delta.ops.length, 0);
+
+        const ops     = result.delta.ops;
+        const op0Name = ops[0].name;
+
+        if (op0Name === `composed_blort_${base}`) {
+          composedCount++;
+        } else if (op0Name === 'diff_delta') {
+          diffCount++;
+          assert.lengthOf(ops, 2);
+          assert.strictEqual(ops[1].name, `snap_blort_${newer}`);
+        } else {
+          assert(false, 'Unexpected ops.');
+        }
+      }
+
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 10; j++) {
+          const base  = i * 37;
+          const newer = base + 1 + (j * 29);
+          await test(base, newer);
+        }
+      }
+
+      assert.isAbove(composedCount, 0);
+      assert.isAbove(diffCount, 0);
     });
   });
 

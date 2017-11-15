@@ -20,6 +20,13 @@ const UPDATE_RETRY_GROWTH_FACTOR = 5;
 const MAX_UPDATE_TIME_MSEC = 20 * 1000; // 20 seconds.
 
 /**
+ * {Int} Maximum number of changes to compose in order to produce a result from
+ * {@link BaseControl#getDiff}. Asking for more will result in the method doing
+ * a snapshot diff.
+ */
+const MAX_COMPOSED_CHANGES_FOR_DIFF = 100;
+
+/**
  * Base class for document part controllers. There is one instance of each
  * concrete subclass of this class for each actively-edited document. They are
  * all managed and hooked up via {@link FileComplex}.
@@ -425,6 +432,60 @@ export default class BaseControl extends BaseDataManager {
     }
 
     return result;
+  }
+
+  /**
+   * Gets a change which represents the difference between two specified
+   * revisions. The result is guaranteed to be appropriate for production of
+   * the newer revision from the older one by calling
+   * `baseSnapshot.compose(result)`. No other guarantees are made about the
+   * result. More specifically, there are two possible ways that the result is
+   * produced:
+   *
+   * * By composing all the changes from `baseRevNum + 1` through and including
+   *   `newerRevNum`.
+   * * By constructing an OT `diff` directly based on snapshots of the two
+   *   revisions.
+   *
+   * These two tactics, while producing equally valid results, do not always
+   * produce results that are identical to each other.
+   *
+   * **Note:** The current implementation uses a fairly simple heuristic to
+   * decide which tactic to use. However, clients are advised not to count on
+   * the happenstance of the heuristic to remain fixed over time.
+   *
+   * @param {Int} baseRevNum Revision number for the difference base.
+   * @param {Int} newerRevNum Revision number for the difference target. Must be
+   *   `> baseRevNum`.
+   * @returns {BaseChange} Change instance which, when composed with the
+   *   snapshot of the revision indicated by `baseRevNum`, results in the
+   *   snapshot of the revision indicated by `newRevNum`.
+   */
+  async getDiff(baseRevNum, newerRevNum) {
+    RevisionNumber.check(baseRevNum);
+    RevisionNumber.min(newerRevNum, baseRevNum + 1);
+
+    const clazz = this.constructor;
+
+    if ((newerRevNum - baseRevNum) <= MAX_COMPOSED_CHANGES_FOR_DIFF) {
+      // Few enough changes that composition will be a reasonably-fruitful way
+      // to proceed.
+
+      const delta = await this.getComposedChanges(
+        clazz.deltaClass.EMPTY, baseRevNum + 1, newerRevNum + 1, false);
+
+      return new clazz.changeClass(newerRevNum, delta);
+    } else {
+      // Too many changes to expect composition to be the most efficient way.
+      // Instead, diff the snapshots directly.
+
+      const [baseSnapshot, newerSnapshot] = await Promise.all([
+        this.getSnapshot(baseRevNum),
+        this.getSnapshot(newerRevNum)
+      ]);
+
+      return baseSnapshot.diff(newerSnapshot);
+    }
   }
 
   /**
