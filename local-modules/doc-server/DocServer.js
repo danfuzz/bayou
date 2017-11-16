@@ -128,25 +128,6 @@ export default class DocServer extends Singleton {
   }
 
   /**
-   * Gets the session with the given ID, if it exists.
-   *
-   * @param {string} sessionId The session ID in question.
-   * @returns {DocSession|null} Corresponding session instance, or `null` if
-   *   there is no such session.
-   */
-  getSessionOrNull(sessionId) {
-    TString.nonEmpty(sessionId);
-
-    const already = this._sessions.get(sessionId);
-
-    if (already && !weak.isDead(already)) {
-      return weak.get(already);
-    } else {
-      return null;
-    }
-  }
-
-  /**
    * Returns a weak reference callback function for the indicated document ID.
    *
    * @param {string} docId Document ID of the file complex to remove.
