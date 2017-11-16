@@ -2,10 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
+import ApiLog from './ApiLog';
 import Target from './Target';
 
 /** {Logger} Logger. */
@@ -18,21 +20,41 @@ const log = new Logger('api');
 const IDLE_TIME_MSEC = 20 * 60 * 1000; // Twenty minutes.
 
 /**
- * Binding context for an API server or session therein. This is pretty much
- * just a map from IDs to `Target` instances, along with reasonably
- * straightforward accessor and update methods.
+ * Binding context for an API server or session therein. This is mostly just a
+ * map from IDs to `Target` instances, along with reasonably straightforward
+ * accessor and update methods. In addition, this is what knows which {@link
+ * Codec} and {@link ApiLog} to use.
  */
 export default class Context extends CommonBase {
   /**
    * Constructs an instance which is initially empty.
+   *
+   * @param {Codec} codec Codec to use for all connections / sessions.
+   * @param {ApiLog} apiLog API logger to use.
    */
-  constructor() {
+  constructor(codec, apiLog) {
     super();
+
+    /** {Codec} The codec to use for connections / sessions. */
+    this._codec = Codec.check(codec);
+
+    /** {ApiLog} The API logger to use. */
+    this._apiLog = ApiLog.check(apiLog);
 
     /** {Map<string, Target>} The underlying map. */
     this._map = new Map();
 
     Object.freeze(this);
+  }
+
+  /** {ApiLog} The API logger to use. */
+  get apiLog() {
+    return this._apiLog;
+  }
+
+  /** {Codec} The codec to use for connections / sessions. */
+  get codec() {
+    return this._codec;
   }
 
   /**
@@ -88,7 +110,7 @@ export default class Context extends CommonBase {
    * @returns {Context} The newly-cloned instance.
    */
   clone() {
-    const result = new Context();
+    const result = new Context(this._codec, this._apiLog);
 
     for (const t of this._map.values()) {
       result.addTarget(t);

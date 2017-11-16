@@ -2,9 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { inspect } from 'util';
-
-import { TInt } from 'typecheck';
+import { TInt, TObject } from 'typecheck';
 import { CommonBase, ErrorUtil, Errors, Functor, InfoError } from 'util-common';
 
 import CodableError from './CodableError';
@@ -25,14 +23,14 @@ export default class Response extends CommonBase {
    *   a non-negative integer.
    * @param {*} result Non-error result. Must be `null` if `error` is non-`null`
    *   (but note that `null` is a valid non-error result).
-   * @param {*|null} error Error response, or `null` if there is no error.
-   *   `null` here definitively indicates that the instance is not
+   * @param {Error|null} [error = null] Error response, or `null` if there is no
+   *   error. `null` here definitively indicates that the instance is not
    *   error-bearing.
    */
-  constructor(id, result, error) {
+  constructor(id, result, error = null) {
     super();
 
-    // Validate the `error`/`result` combo.
+    // Validate the `error` / `result` combo.
     if ((result !== null) && (error !== null)) {
       throw Errors.bad_use('`result` and `error` cannot both be non-`null`.');
     }
@@ -47,16 +45,17 @@ export default class Response extends CommonBase {
     this._result = result;
 
     /**
-     * {CodableError|null} Error response, or `null` if this instance doesn't
-     * represent an error.
+     * {Error|null} The original error, or `null` if this is a non-error
+     * response. Intended to be used for logging.
      */
-    this._error = Response._fixError(error);
+    this._originalError = (error === null) ? null : TObject.check(error, Error);
 
     /**
-     * {array<string>|null} Error trace, or `null` if this instance doesn't
-     * represent an error.
+     * {CodableError|null} Error response, or `null` if this instance doesn't
+     * represent an error. This value is suitable for transmission across an API
+     * boundary.
      */
-    this._errorTrace = Response._fixErrorTrace(error);
+    this._error = Response._fixError(error);
 
     Object.freeze(this);
   }
@@ -71,11 +70,22 @@ export default class Response extends CommonBase {
   }
 
   /**
-   * {array<string>|null} Clean error trace (including message and causes if
-   * any), or `null` if this instance doesn't represent an error.
+   * {Error|null} The original error, or `null` if this is a non-error
+   * response. Intended to be used for logging.
    */
-  get errorTrace() {
-    return this._errorTrace;
+  get originalError() {
+    return this._originalError;
+  }
+
+  /**
+   * {array<string>|null} Clean error trace (including message and causes if
+   * any) of the original error, or `null` if this instance doesn't represent an
+   * error.
+   */
+  get originalTrace() {
+    const error = this._originalError;
+
+    return (error === null) ? null : ErrorUtil.fullTraceLines(error);
   }
 
   /** {Int} Message ID. */
@@ -96,7 +106,11 @@ export default class Response extends CommonBase {
    * @returns {array<*>} Reconstruction arguments.
    */
   deconstruct() {
-    return [this._id, this._result, this._error];
+    // Avoid returning a `null` error argument. This is ever so slightly nicer
+    // should this result be used for encoding across an API boundary.
+    return (this._error === null)
+      ? [this._id, this._result]
+      : [this._id, null, this._error];
   }
 
   /**
@@ -115,34 +129,9 @@ export default class Response extends CommonBase {
       // Adopt the functor of the error. Lose the cause (if any), exact class
       // identity, and stack.
       return new CodableError(error.info);
-    } else if (error instanceof Error) {
+    } else {
       // Adopt the message. Lose the rest of the info.
       return new CodableError(new Functor('general_error', error.message));
     }
-
-    const message = (typeof error === 'string')
-      ? error
-      : inspect(error, { breakLength: Infinity });
-
-    return new CodableError('general_error', message);
-  }
-
-  /**
-   * Makes a cleaned-up trace from an incoming `error` argument. This returns
-   * `null` if given `null`.
-   *
-   * @param {*} error Error value.
-   * @returns {array<string>|null} Cleaned up error trace as an array of lines,
-   *   lines. Will be `[]` if this is an error-ish value with no stack, or
-   *   `null` if `error` is `null`.
-   */
-  static _fixErrorTrace(error) {
-    if (error === null) {
-      return null;
-    } else if (!(error instanceof Error)) {
-      return [];
-    }
-
-    return ErrorUtil.fullTraceLines(error);
   }
 }

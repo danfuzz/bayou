@@ -3,27 +3,34 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import fs from 'fs';
-import path from 'path';
 
-import { Dirs } from 'env-server';
+import { Codec } from 'codec';
 import { Logger } from 'see-all';
-import { Singleton } from 'util-common';
+import { TString } from 'typecheck';
+import { CommonBase } from 'util-common';
+
+/** {Logger} Console logger. */
+const log = new Logger('api');
 
 /**
  * Singleton class that handles the logging of API calls.
  */
-export default class ApiLog extends Singleton {
+export default class ApiLog extends CommonBase {
   /**
    * Constructs an instance.
+   *
+   * @param {string} logFile Path of API log file.
+   * @param {Codec} codec Codec to use. (The API log represents traffic in
+   *   structured encoded form.)
    */
-  constructor() {
+  constructor(logFile, codec) {
     super();
 
-    /** {Logger} Console logger. */
-    this._console = new Logger('api');
-
     /** {string} Path of API log file. */
-    this._path = path.resolve(Dirs.theOne.LOG_DIR, 'api.log');
+    this._path = TString.nonEmpty(logFile);
+
+    /** {Codec} Codec to use. */
+    this._codec = Codec.check(codec);
 
     Object.freeze(this);
   }
@@ -42,37 +49,36 @@ export default class ApiLog extends Singleton {
    * @param {Response} response Response to the message.
    */
   fullCall(connectionId, startTime, msg, response) {
+    log.detail('Response:', response);
+
     if (response.error) {
       // TODO: Ultimately _some_ errors coming back from API calls shouldn't
       // be considered console-log-worthy server errors. We will need to
       // differentiate them at some point.
-
-      if (response.errorTrace.length === 0) {
-        this._console.error(`[${connectionId}] Error:`, response.error.message);
-      } else {
-        this._console.error(`[${connectionId}] Error.`);
-        const trace = response.errorTrace.map(line => `  ${line}`).join('\n');
-        this._console.info(trace);
-      }
+      log.error(`[${connectionId}] Error.`, response.originalError);
     }
 
-    this._console.detail('Response:', response);
-
-    // TODO: This will ultimately need to redact some information from `msg` and
-    // `response`.
+    // Details to log. **TODO:** This will ultimately need to redact some
+    // information from `msg` and `response`.
     const details = {
-      startTime,
-      endTime:      Date.now(),
       connectionId,
-      ok:           !response.error,
-      msg:          msg ? msg.toLog() : null
+      startTime,
+      endTime: Date.now(),
+      ok:      !response.error
     };
 
+    if (msg !== null) {
+      details.id      = msg.id;
+      details.target  = msg.target;
+      details.payload = this._codec.encodeData(msg.payload);
+    }
+
     if (details.ok) {
-      details.result = response.result;
+      details.result = this._codec.encodeData(response.result);
     } else {
-      details.error      = response.error;
-      details.errorTrace = response.errorTrace || [];
+      // `response.originalError` per se isn't a JSON-friendly value, whereas
+      // the `originalTrace` is a plain array of strings.
+      details.error = response.originalTrace;
     }
 
     this._writeJson(details);
@@ -80,19 +86,15 @@ export default class ApiLog extends Singleton {
 
   /**
    * Logs an incoming message. This should be called just after the message was
-   * decoded off of an incoming connection. This method returns the timestamp
-   * that should be used as the `startTime` when logging the completed API call.
+   * decoded off of an incoming connection.
    *
    * @param {string} connectionId Identifier for the connection.
+   * @param {Int} startTime Timestamp for the start of the call.
    * @param {object} msg Incoming message.
-   * @returns {Int} Standard msec timestamp indicating the start time of the API
-   *   call being represented here.
    */
-  incomingMessage(connectionId, msg) {
+  incomingMessage(connectionId, startTime, msg) {
     // TODO: This will ultimately need to redact some information.
-    this._console.detail(`[${connectionId}] Message:`, msg.toLog());
-
-    return Date.now();
+    log.detail(`[${connectionId}] Message at ${startTime}:`, msg.toLog());
   }
 
   /**

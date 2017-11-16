@@ -238,7 +238,7 @@ export default class BaseControl extends BaseDataManager {
    * the current revision (that is, it is an older revision); but when
    * `baseRevNum` _is_ the current revision, the return value only resolves
    * after at least one change has been made. It is an error to request a
-   * revision that does not yet exist. For subclasses that don't keep full
+   * base revision that does not yet exist. For subclasses that don't keep full
    * history, it is also an error to request a revision that is _no longer_
    * available as a base; in this case, the error name is always
    * `revision_not_available`.
@@ -249,7 +249,8 @@ export default class BaseControl extends BaseDataManager {
    * snapshot(baseRevNum).compose(result)`.
    *
    * @param {Int} baseRevNum Revision number for the base to get a change with
-   *   respect to.
+   *   respect to. Must be no greater than the current revision number at the
+   *   time of the call.
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
    *   range as defined by {@link Timeouts}. `null` is treated as the maximum
@@ -265,32 +266,16 @@ export default class BaseControl extends BaseDataManager {
    */
   async getChangeAfter(baseRevNum, timeoutMsec = null) {
     timeoutMsec = Timeouts.clamp(timeoutMsec);
-    const currentRevNum = await this.currentRevNum();
+    let currentRevNum = await this.currentRevNum();
     RevisionNumber.maxInc(baseRevNum, currentRevNum);
 
-    let result;
-    try {
-      result = await this._impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum);
-    } catch (e) {
-      // Note a timeout to the logs, but other than that just let the error
-      // bubble up.
-      if (Errors.isTimedOut(e)) {
-        this.log.info(`Call to \`getChangeAfter()\` timed out: ${timeoutMsec}msec`);
-      }
-      throw e;
+    if (currentRevNum === baseRevNum) {
+      // There is not yet a change after the requested base, so wait for it to
+      // exist.
+      currentRevNum = await this.whenRevNum(baseRevNum + 1, timeoutMsec);
     }
 
-    if (result === null) {
-      throw Errors.revision_not_available(baseRevNum);
-    }
-
-    this.constructor.changeClass.check(result);
-
-    if ((result.timestamp !== null) || (result.authorId !== null)) {
-      throw Errors.bad_value(result, this.constructor.changeClass, 'timestamp === null && authorId === null');
-    }
-
-    return result;
+    return this.getDiff(baseRevNum, currentRevNum);
   }
 
   /**
@@ -644,11 +629,21 @@ export default class BaseControl extends BaseDataManager {
     const clazz       = this.constructor;
     const timeoutTime = Date.now() + timeoutMsec;
 
+    // Handles timeout (called twice, below).
+    const timedOut = () => {
+      // Log a message -- it's at least somewhat notable, though it does occur
+      // regularly -- and throw `timed_out` with the original timeout value. (If
+      // called as a result of catching a timeout from `transact()` the timeout
+      // value in the error might not be the original `timeoutMsec`.)
+      this.log.info(`\`whenRevNum()\` timed out: ${timeoutMsec}msec`);
+      throw Errors.timed_out(timeoutMsec);
+    };
+
     // Loop until the overall timeout.
     for (;;) {
       const now = Date.now();
       if (now >= timeoutTime) {
-        throw new Errors.timed_out(timeoutMsec);
+        timedOut();
       }
 
       const currentRevNum = await this.currentRevNum();
@@ -669,9 +664,17 @@ export default class BaseControl extends BaseDataManager {
         fc.op_whenPathNot(clazz.revisionNumberPath, currentRevNum));
 
       // If this returns normally (doesn't throw), then we know it wasn't due
-      // to hitting the timeout. And if it _is_ a timeout, then the exception
-      // that's thrown is exactly what should be reported upward.
-      await fc.transact(spec);
+      // to hitting the timeout.
+      try {
+        await fc.transact(spec);
+      } catch (e) {
+        // For a timeout, we log and report the original timeout value. For
+        // everything else, we just transparently re-throw.
+        if (Errors.isTimedOut(e)) {
+          timedOut();
+        }
+        throw e;
+      }
     }
   }
 
@@ -697,30 +700,6 @@ export default class BaseControl extends BaseDataManager {
       // Empty change #0.
       fc.op_writePath(clazz.pathForChange(0), clazz.changeClass.FIRST)
     );
-  }
-
-  /**
-   * Subclass-specific implementation of `getChangeAfter()`. Subclasses must
-   * override this method.
-   *
-   * @abstract
-   * @param {Int} baseRevNum Revision number for the base to get a change with
-   *   respect to. Guaranteed to refer to the instantaneously-current revision
-   *   or earlier.
-   * @param {Int} timeoutMsec Maximum amount of time to allow in this call, in
-   *   msec. Guaranteed to be a valid value as defined by {@link Timeouts}.
-   * @param {Int} currentRevNum The instantaneously-current revision number that
-   *   was determined just before this method was called, and which should be
-   *   treated as the actually-current revision number at the start of this
-   *   method.
-   * @returns {BaseChange|null} Change with respect to the revision indicated by
-   *   `baseRevNum`, or `null` to indicate that the revision was not available
-   *   as a base. If non-`null`, must be an instance of the appropriate change
-   *   class as specified by the concrete subclass of this class with `null` for
-   *   both `timestamp` and `authorId`.
-   */
-  async _impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum) {
-    return this._mustOverride(baseRevNum, timeoutMsec, currentRevNum);
   }
 
   /**

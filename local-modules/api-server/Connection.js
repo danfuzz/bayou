@@ -3,12 +3,10 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ConnectionError, Message, Response } from 'api-common';
-import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase, Errors, Random } from 'util-common';
 
-import ApiLog from './ApiLog';
 import BearerToken from './BearerToken';
 import MetaHandler from './MetaHandler';
 import Context from './Context';
@@ -78,8 +76,11 @@ export default class Connection extends CommonBase {
     /** {Int} Count of messages received. Used for liveness logging. */
     this._messageCount = 0;
 
-    /** {ApiLog} The standard API logging handler. */
-    this._apiLog = ApiLog.theOne;
+    /** {ApiLog} The API logger to use. */
+    this._apiLog = context.apiLog;
+
+    /** {Codec} The codec to use. */
+    this._codec = context.codec;
 
     /** {Logger} Logger which includes the connection ID as a prefix. */
     this._log = log.withPrefix(`[${this._connectionId}]`);
@@ -182,11 +183,12 @@ export default class Connection extends CommonBase {
   async handleJsonMessage(msg) {
     msg = this._decodeMessage(msg); // Not supposed to ever throw.
 
-    const startTime = this._apiLog.incomingMessage(this._connectionId, msg);
+    const startTime = Date.now();
     let result = null;
     let error = null;
 
     if (msg instanceof Message) {
+      this._apiLog.incomingMessage(this._connectionId, startTime, msg);
       try {
         result = await this._actOnMessage(msg);
       } catch (e) {
@@ -206,7 +208,7 @@ export default class Connection extends CommonBase {
     // caller.
 
     const response = new Response(msg.id, result, error);
-    const encodedResponse = Codec.theOne.encodeJson(response);
+    const encodedResponse = this._codec.encodeJson(response);
 
     this._apiLog.fullCall(this._connectionId, startTime, msg, response);
 
@@ -241,7 +243,7 @@ export default class Connection extends CommonBase {
    */
   _decodeMessage(msg) {
     try {
-      msg = Codec.theOne.decodeJson(msg);
+      msg = this._codec.decodeJson(msg);
     } catch (error) {
       return ConnectionError.connection_nonsense(this._connectionId, error.message);
     }
