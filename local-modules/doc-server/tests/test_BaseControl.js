@@ -287,7 +287,10 @@ describe('doc-server/BaseControl', () => {
       control.currentRevNum = async () => {
         throw new Error('Oy!');
       };
-      control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum_unused) => {
+      control.whenRevNum = async (revNum_unused, timeoutMsec_unused) => {
+        throw new Error('This should not have been called.');
+      };
+      control.getDiff = async (base_unused, newer_unused) => {
         throw new Error('This should not have been called.');
       };
 
@@ -299,7 +302,10 @@ describe('doc-server/BaseControl', () => {
       control.currentRevNum = async () => {
         return 10;
       };
-      control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum_unused) => {
+      control.whenRevNum = async (revNum_unused, timeoutMsec_unused) => {
+        throw new Error('This should not have been called.');
+      };
+      control.getDiff = async (base_unused, newer_unused) => {
         throw new Error('This should not have been called.');
       };
 
@@ -311,7 +317,10 @@ describe('doc-server/BaseControl', () => {
       control.currentRevNum = async () => {
         return 10;
       };
-      control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum_unused) => {
+      control.whenRevNum = async (revNum_unused, timeoutMsec_unused) => {
+        throw new Error('This should not have been called.');
+      };
+      control.getDiff = async (base_unused, newer_unused) => {
         throw new Error('This should not have been called.');
       };
 
@@ -335,9 +344,12 @@ describe('doc-server/BaseControl', () => {
       control.currentRevNum = async () => {
         return 10;
       };
-      control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec, currentRevNum_unused) => {
+      control.whenRevNum = async (revNum_unused, timeoutMsec) => {
         gotTimeout = timeoutMsec;
         throw new Error('boop');
+      };
+      control.getDiff = async (base_unused, newer_unused) => {
+        throw new Error('This should not have been called.');
       };
 
       async function test(value, expect) {
@@ -355,77 +367,40 @@ describe('doc-server/BaseControl', () => {
       }
     });
 
-    it('should return back a valid non-`null` subclass response', async () => {
+    it('should not call through to `whenRevNum()` if the requested revision is not the current one', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         return 10;
       };
-      control._impl_getChangeAfter = async (baseRevNum, timeoutMsec_unused, currentRevNum) => {
-        const rev = currentRevNum + 1;
-        return new MockChange(rev, [new MockOp('x', baseRevNum, rev)]);
+      control.whenRevNum = async (revNum_unused, timeoutMsec_unused) => {
+        throw new Error('This should not have been called.');
+      };
+      control.getDiff = async (base, newer) => {
+        return `diff ${base} ${newer}`;
       };
 
       const result = await control.getChangeAfter(5);
-      assert.instanceOf(result, MockChange);
-      assert.strictEqual(result.revNum, 11);
-      assert.deepEqual(result.delta.ops, [new MockOp('x', 5, 11)]);
+      assert.strictEqual(result, 'diff 5 10');
     });
 
-    it('should convert a `null` subclass response to a `revision_not_available` error', async () => {
+    it('should call through to `whenRevNum()` if the requested revision is the current one', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
+      let   rev     = 10;
       control.currentRevNum = async () => {
-        return 10;
+        return rev;
       };
-      control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum_unused) => {
-        return null;
+      control.whenRevNum = async (revNum, timeoutMsec_unused) => {
+        if (revNum > rev) {
+          rev = revNum;
+        }
+        return revNum;
       };
-
-      await assert.isRejected(control.getChangeAfter(1), /^revision_not_available/);
-    });
-
-    it('should reject a non-change subclass response', async () => {
-      const control = new MockControl(FILE_ACCESS, 'boop');
-      control.currentRevNum = async () => {
-        return 10;
+      control.getDiff = async (base, newer) => {
+        return `diff ${base} ${newer}`;
       };
 
-      async function test(value) {
-        control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum_unused) => {
-          return value;
-        };
-
-        await assert.isRejected(control.getChangeAfter(1), /^bad_value/);
-      }
-
-      await test(false);
-      await test(-1);
-      await test(0.05);
-      await test('blort');
-      await test([10]);
-    });
-
-    it('should reject a change response that has a `timestamp`', async () => {
-      const control = new MockControl(FILE_ACCESS, 'boop');
-      control.currentRevNum = async () => {
-        return 10;
-      };
-      control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum) => {
-        return new MockChange(currentRevNum + 1, [], Timestamp.MIN_VALUE);
-      };
-
-      await assert.isRejected(control.getChangeAfter(1), /^bad_value/);
-    });
-
-    it('should reject a change response that has an `authorId`', async () => {
-      const control = new MockControl(FILE_ACCESS, 'boop');
-      control.currentRevNum = async () => {
-        return 10;
-      };
-      control._impl_getChangeAfter = async (baseRevNum_unused, timeoutMsec_unused, currentRevNum) => {
-        return new MockChange(currentRevNum + 1, [], null, 'some_author');
-      };
-
-      await assert.isRejected(control.getChangeAfter(1), /^bad_value/);
+      const result = await control.getChangeAfter(10);
+      assert.strictEqual(result, 'diff 10 11');
     });
   });
 

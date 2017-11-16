@@ -38,31 +38,6 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
-   * Underlying implementation of `getChangeAfter()`, as required by the
-   * superclass.
-   *
-   * @param {Int} baseRevNum Revision number for the base to get a change with
-   *   respect to. Guaranteed to refer to the instantaneously-current revision
-   *   or earlier.
-   * @param {Int} timeoutMsec Maximum amount of time to allow in this call, in
-   *   msec. Guaranteed to be a valid value as defined by {@link Timeouts}.
-   * @param {Int} currentRevNum The instantaneously-current revision number that
-   *   was determined just before this method was called, and which should be
-   *   treated as the actually-current revision number at the start of this
-   *   method.
-   * @returns {BodyChange} Change with respect to the revision indicated by
-   *   `baseRevNum`. Though the superclass allows it, this method never returns
-   *   `null`.
-   */
-  async _impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum) {
-    if (currentRevNum === baseRevNum) {
-      currentRevNum = await this.whenRevNum(currentRevNum + 1, timeoutMsec);
-    }
-
-    return this.getDiff(baseRevNum, currentRevNum);
-  }
-
-  /**
    * Underlying implementation of `getSnapshot()`, as required by the
    * superclass.
    *

@@ -266,32 +266,16 @@ export default class BaseControl extends BaseDataManager {
    */
   async getChangeAfter(baseRevNum, timeoutMsec = null) {
     timeoutMsec = Timeouts.clamp(timeoutMsec);
-    const currentRevNum = await this.currentRevNum();
+    let currentRevNum = await this.currentRevNum();
     RevisionNumber.maxInc(baseRevNum, currentRevNum);
 
-    let result;
-    try {
-      result = await this._impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum);
-    } catch (e) {
-      // Note a timeout to the logs, but other than that just let the error
-      // bubble up.
-      if (Errors.isTimedOut(e)) {
-        this.log.info(`Call to \`getChangeAfter()\` timed out: ${timeoutMsec}msec`);
-      }
-      throw e;
+    if (currentRevNum === baseRevNum) {
+      // There is not yet a change after the requested base, so wait for it to
+      // exist.
+      currentRevNum = await this.whenRevNum(baseRevNum + 1, timeoutMsec);
     }
 
-    if (result === null) {
-      throw Errors.revision_not_available(baseRevNum);
-    }
-
-    this.constructor.changeClass.check(result);
-
-    if ((result.timestamp !== null) || (result.authorId !== null)) {
-      throw Errors.bad_value(result, this.constructor.changeClass, 'timestamp === null && authorId === null');
-    }
-
-    return result;
+    return this.getDiff(baseRevNum, currentRevNum);
   }
 
   /**
@@ -716,30 +700,6 @@ export default class BaseControl extends BaseDataManager {
       // Empty change #0.
       fc.op_writePath(clazz.pathForChange(0), clazz.changeClass.FIRST)
     );
-  }
-
-  /**
-   * Subclass-specific implementation of `getChangeAfter()`. Subclasses must
-   * override this method.
-   *
-   * @abstract
-   * @param {Int} baseRevNum Revision number for the base to get a change with
-   *   respect to. Guaranteed to refer to the instantaneously-current revision
-   *   or earlier.
-   * @param {Int} timeoutMsec Maximum amount of time to allow in this call, in
-   *   msec. Guaranteed to be a valid value as defined by {@link Timeouts}.
-   * @param {Int} currentRevNum The instantaneously-current revision number that
-   *   was determined just before this method was called, and which should be
-   *   treated as the actually-current revision number at the start of this
-   *   method.
-   * @returns {BaseChange|null} Change with respect to the revision indicated by
-   *   `baseRevNum`, or `null` to indicate that the revision was not available
-   *   as a base. If non-`null`, must be an instance of the appropriate change
-   *   class as specified by the concrete subclass of this class with `null` for
-   *   both `timestamp` and `authorId`.
-   */
-  async _impl_getChangeAfter(baseRevNum, timeoutMsec, currentRevNum) {
-    return this._mustOverride(baseRevNum, timeoutMsec, currentRevNum);
   }
 
   /**
