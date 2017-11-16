@@ -80,7 +80,7 @@ export default class DocServer extends Singleton {
         }
         // else, it's a dead weak reference. We'll fall through and construct a
         // new result.
-        log.info(`[${docId}] Cached complex was gc'ed.`, already);
+        log.info(`[${docId}] Cached complex was gc'ed.`);
       } else {
         // It's actually a _promise_ for a `FileComplex`. This happens if we
         // got a request for a file in parallel with it getting constructed.
