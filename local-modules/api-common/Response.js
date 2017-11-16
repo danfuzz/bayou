@@ -23,14 +23,14 @@ export default class Response extends CommonBase {
    *   a non-negative integer.
    * @param {*} result Non-error result. Must be `null` if `error` is non-`null`
    *   (but note that `null` is a valid non-error result).
-   * @param {Error|null} error Error response, or `null` if there is no error.
-   *   `null` here definitively indicates that the instance is not
+   * @param {Error|null} [error = null] Error response, or `null` if there is no
+   *   error. `null` here definitively indicates that the instance is not
    *   error-bearing.
    */
-  constructor(id, result, error) {
+  constructor(id, result, error = null) {
     super();
 
-    // Validate the `error`/`result` combo.
+    // Validate the `error` / `result` combo.
     if ((result !== null) && (error !== null)) {
       throw Errors.bad_use('`result` and `error` cannot both be non-`null`.');
     }
@@ -106,7 +106,11 @@ export default class Response extends CommonBase {
    * @returns {array<*>} Reconstruction arguments.
    */
   deconstruct() {
-    return [this._id, this._result, this._error];
+    // Avoid returning a `null` error argument. This is ever so slightly nicer
+    // should this result be used for encoding across an API boundary.
+    return (this._error === null)
+      ? [this._id, this._result]
+      : [this._id, null, this._error];
   }
 
   /**
