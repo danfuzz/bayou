@@ -74,19 +74,14 @@ export default class ApiLog extends Singleton {
 
   /**
    * Logs an incoming message. This should be called just after the message was
-   * decoded off of an incoming connection. This method returns the timestamp
-   * that should be used as the `startTime` when logging the completed API call.
+   * decoded off of an incoming connection.
    *
    * @param {string} connectionId Identifier for the connection.
    * @param {object} msg Incoming message.
-   * @returns {Int} Standard msec timestamp indicating the start time of the API
-   *   call being represented here.
    */
   incomingMessage(connectionId, msg) {
     // TODO: This will ultimately need to redact some information.
     this._console.detail(`[${connectionId}] Message:`, msg.toLog());
-
-    return Date.now();
   }
 
   /**

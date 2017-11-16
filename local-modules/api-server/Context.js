@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
@@ -18,9 +19,10 @@ const log = new Logger('api');
 const IDLE_TIME_MSEC = 20 * 60 * 1000; // Twenty minutes.
 
 /**
- * Binding context for an API server or session therein. This is pretty much
- * just a map from IDs to `Target` instances, along with reasonably
- * straightforward accessor and update methods.
+ * Binding context for an API server or session therein. This is mostly just a
+ * map from IDs to `Target` instances, along with reasonably straightforward
+ * accessor and update methods. In addition, this is what knows which {@link
+ * Codec} to use.
  */
 export default class Context extends CommonBase {
   /**
@@ -29,10 +31,18 @@ export default class Context extends CommonBase {
   constructor() {
     super();
 
+    /** {Codec} The codec to use for connections / sessions. */
+    this._codec = Codec.theOne;
+
     /** {Map<string, Target>} The underlying map. */
     this._map = new Map();
 
     Object.freeze(this);
+  }
+
+  /** {Codec} The codec to use for connections / sessions. */
+  get codec() {
+    return this._codec;
   }
 
   /**
