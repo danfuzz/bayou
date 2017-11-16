@@ -39,7 +39,9 @@ export default class Application {
      * {Context} All of the objects we provide access to via the API, along with
      * other objects of use to the server.
      */
-    this._context = new Context(Codec.theOne, ApiLog.theOne);
+    this._context = new Context(
+      Codec.theOne,
+      new ApiLog(path.resolve(Dirs.theOne.LOG_DIR, 'api.log')));
     this._context.startAutomaticIdleCleanup();
 
     /**

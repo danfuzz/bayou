@@ -5,25 +5,27 @@
 import fs from 'fs';
 import path from 'path';
 
-import { Dirs } from 'env-server';
 import { Logger } from 'see-all';
-import { Singleton } from 'util-common';
+import { TString } from 'typecheck';
+import { CommonBase } from 'util-common';
+
+/** {Logger} Console logger. */
+const log = new Logger('api');
 
 /**
  * Singleton class that handles the logging of API calls.
  */
-export default class ApiLog extends Singleton {
+export default class ApiLog extends CommonBase {
   /**
    * Constructs an instance.
+   *
+   * @param {string} path Path of API log file.
    */
   constructor() {
     super();
 
-    /** {Logger} Console logger. */
-    this._console = new Logger('api');
-
     /** {string} Path of API log file. */
-    this._path = path.resolve(Dirs.theOne.LOG_DIR, 'api.log');
+    this._path = TString.nonEmpty(path);
 
     Object.freeze(this);
   }
@@ -42,13 +44,13 @@ export default class ApiLog extends Singleton {
    * @param {Response} response Response to the message.
    */
   fullCall(connectionId, startTime, msg, response) {
-    this._console.detail('Response:', response);
+    log.detail('Response:', response);
 
     if (response.error) {
       // TODO: Ultimately _some_ errors coming back from API calls shouldn't
       // be considered console-log-worthy server errors. We will need to
       // differentiate them at some point.
-      this._console.error(`[${connectionId}] Error.`, response.originalError);
+      log.error(`[${connectionId}] Error.`, response.originalError);
     }
 
     // Details to log. **TODO:** This will ultimately need to redact some
@@ -81,7 +83,7 @@ export default class ApiLog extends Singleton {
    */
   incomingMessage(connectionId, msg) {
     // TODO: This will ultimately need to redact some information.
-    this._console.detail(`[${connectionId}] Message:`, msg.toLog());
+    log.detail(`[${connectionId}] Message:`, msg.toLog());
   }
 
   /**
