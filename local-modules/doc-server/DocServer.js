@@ -147,15 +147,22 @@ export default class DocServer extends Singleton {
   }
 
   /**
-   * Returns a weak reference callback function for the indicated document ID,
-   * that removes a collected file complex from the map of same.
+   * Returns a weak reference callback function for the indicated document ID.
    *
    * @param {string} docId Document ID of the file complex to remove.
    * @returns {function} An appropriately-constructed function.
    */
   _complexReaper(docId) {
+    // **Note:** This function _used to_ remove the doc binding from the
+    // `_complexes` map on the presumption that it was a known-dead weak
+    // reference. That code has been deleted. First of all, the only benefit of
+    // would have been that it meant that the weak reference itself could get
+    // GC'ed (and a dead weakref doesn't actually take up significant storage).
+    // Second, and more importantly, this could fail due to a race condition: If
+    // the same doc was requested _after_ the old one was gc'ed and _before_
+    // this reaper was called, the cleanup code here would have incorrectly
+    // removed a perfectly valid binding.
     return () => {
-      this._complexes.delete(docId);
       log.info('Reaped idle file complex:', docId);
     };
   }
