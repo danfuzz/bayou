@@ -35,13 +35,15 @@ export default class Application {
    *   activates `/debug/*` endpoints.
    */
   constructor(devMode) {
+    const codec = Codec.theOne;
+
     /**
      * {Context} All of the objects we provide access to via the API, along with
      * other objects of use to the server.
      */
     this._context = new Context(
-      Codec.theOne,
-      new ApiLog(path.resolve(Dirs.theOne.LOG_DIR, 'api.log')));
+      codec,
+      new ApiLog(path.resolve(Dirs.theOne.LOG_DIR, 'api.log'), codec));
     this._context.startAutomaticIdleCleanup();
 
     /**

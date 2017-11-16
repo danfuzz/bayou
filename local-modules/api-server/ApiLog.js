@@ -4,6 +4,7 @@
 
 import fs from 'fs';
 
+import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase } from 'util-common';
@@ -19,12 +20,17 @@ export default class ApiLog extends CommonBase {
    * Constructs an instance.
    *
    * @param {string} logFile Path of API log file.
+   * @param {Codec} codec Codec to use. (The API log represents traffic in
+   *   structured encoded form.)
    */
-  constructor(logFile) {
+  constructor(logFile, codec) {
     super();
 
     /** {string} Path of API log file. */
     this._path = TString.nonEmpty(logFile);
+
+    /** {Codec} Codec to use. */
+    this._codec = Codec.check(codec);
 
     Object.freeze(this);
   }
@@ -55,20 +61,20 @@ export default class ApiLog extends CommonBase {
     // Details to log. **TODO:** This will ultimately need to redact some
     // information from `msg` and `response`.
     const details = {
-      startTime,
-      endTime:      Date.now(),
       connectionId,
-      ok:           !response.error,
+      startTime,
+      endTime: Date.now(),
+      ok:      !response.error
     };
 
     if (msg !== null) {
       details.id      = msg.id;
       details.target  = msg.target;
-      details.payload = msg.payload;
+      details.payload = this._codec.encodeData(msg.payload);
     }
 
     if (details.ok) {
-      details.result = response.result;
+      details.result = this._codec.encodeData(response.result);
     } else {
       // `response.originalError` per se isn't a JSON-friendly value, whereas
       // the `originalTrace` is a plain array of strings.
