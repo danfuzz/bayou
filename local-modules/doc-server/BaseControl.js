@@ -238,7 +238,7 @@ export default class BaseControl extends BaseDataManager {
    * the current revision (that is, it is an older revision); but when
    * `baseRevNum` _is_ the current revision, the return value only resolves
    * after at least one change has been made. It is an error to request a
-   * revision that does not yet exist. For subclasses that don't keep full
+   * base revision that does not yet exist. For subclasses that don't keep full
    * history, it is also an error to request a revision that is _no longer_
    * available as a base; in this case, the error name is always
    * `revision_not_available`.
@@ -249,7 +249,8 @@ export default class BaseControl extends BaseDataManager {
    * snapshot(baseRevNum).compose(result)`.
    *
    * @param {Int} baseRevNum Revision number for the base to get a change with
-   *   respect to.
+   *   respect to. Must be no greater than the current revision number at the
+   *   time of the call.
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
    *   range as defined by {@link Timeouts}. `null` is treated as the maximum
