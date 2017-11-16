@@ -42,24 +42,17 @@ export default class ApiLog extends Singleton {
    * @param {Response} response Response to the message.
    */
   fullCall(connectionId, startTime, msg, response) {
+    this._console.detail('Response:', response);
+
     if (response.error) {
       // TODO: Ultimately _some_ errors coming back from API calls shouldn't
       // be considered console-log-worthy server errors. We will need to
       // differentiate them at some point.
-
-      if (response.errorTrace.length === 0) {
-        this._console.error(`[${connectionId}] Error:`, response.error.message);
-      } else {
-        this._console.error(`[${connectionId}] Error.`);
-        const trace = response.errorTrace.map(line => `  ${line}`).join('\n');
-        this._console.info(trace);
-      }
+      this._console.error(`[${connectionId}] Error.`, response.originalError);
     }
 
-    this._console.detail('Response:', response);
-
-    // TODO: This will ultimately need to redact some information from `msg` and
-    // `response`.
+    // Details to log. **TODO:** This will ultimately need to redact some
+    // information from `msg` and `response`.
     const details = {
       startTime,
       endTime:      Date.now(),
@@ -71,8 +64,9 @@ export default class ApiLog extends Singleton {
     if (details.ok) {
       details.result = response.result;
     } else {
-      details.error      = response.error;
-      details.errorTrace = response.errorTrace || [];
+      // `response.originalError` per se isn't a JSON-friendly value, whereas
+      // the `originalTrace` is a plain array of strings.
+      details.error = response.originalTrace;
     }
 
     this._writeJson(details);
