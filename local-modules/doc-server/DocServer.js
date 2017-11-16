@@ -70,23 +70,23 @@ export default class DocServer extends Singleton {
 
     const already = this._complexes.get(docId);
     if (already) {
-      // There's something in the cache...
-      if (weak.isWeakRef(already)) {
+      // There's something in the cache. There are two possibilities...
+      if (already instanceof Promise) {
+        // It's a _promise_ for a `FileComplex`. This happens if we got a
+        // request for a file in parallel with it getting constructed.
+        const result = await already;
+        result.log.info('Retrieved parallel-requested complex.');
+        return result;
+      } else {
         // It's a weak reference. If not dead, it refers to a `FileComplex`.
         if (!weak.isDead(already)) {
           const result = weak.get(already);
           result.log.info('Retrieved cached complex.');
           return result;
         }
-        // else, it's a dead weak reference. We'll fall through and construct a
-        // new result.
+        // The weak reference is dead. We'll fall through and construct a new
+        // result.
         log.info(`[${docId}] Cached complex was gc'ed.`);
-      } else {
-        // It's actually a _promise_ for a `FileComplex`. This happens if we
-        // got a request for a file in parallel with it getting constructed.
-        const result = await already;
-        result.log.info('Retrieved parallel-requested complex.');
-        return result;
       }
     }
 
