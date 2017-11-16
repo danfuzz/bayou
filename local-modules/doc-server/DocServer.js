@@ -80,6 +80,7 @@ export default class DocServer extends Singleton {
         }
         // else, it's a dead reference. We'll fall through and construct a
         // new result.
+        log.info(`[${docId}] Cached complex was gc'ed.`, weak);
       } else {
         // It's actually a _promise_ for a `FileComplex`. This happens if we
         // got a request for a file in parallel with it getting constructed.
@@ -96,7 +97,9 @@ export default class DocServer extends Singleton {
         const file   = await Hooks.theOne.fileStore.getFile(docId);
         const result = new FileComplex(this._codec, file);
 
+        result.log.info('Initializing...');
         await result.init();
+        result.log.info('Done initializing.');
 
         const resultRef = weak(result, this._complexReaper(docId));
 
@@ -119,6 +122,7 @@ export default class DocServer extends Singleton {
 
     // Store the the promise for the result in the cache, and return it.
 
+    log.info(`[${docId}] About to construct complex.`);
     this._complexes.set(docId, resultPromise);
     return resultPromise;
   }
