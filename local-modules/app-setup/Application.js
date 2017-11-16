@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
 
-import { BearerToken, Context, PostConnection, WsConnection } from 'api-server';
+import { ApiLog, BearerToken, Context, PostConnection, WsConnection } from 'api-server';
 import { ClientBundle } from 'client-bundle';
 import { Codec } from 'codec';
 import { Dirs } from 'env-server';
@@ -39,7 +39,7 @@ export default class Application {
      * {Context} All of the objects we provide access to via the API, along with
      * other objects of use to the server.
      */
-    this._context = new Context(Codec.theOne);
+    this._context = new Context(Codec.theOne, ApiLog.theOne);
     this._context.startAutomaticIdleCleanup();
 
     /**

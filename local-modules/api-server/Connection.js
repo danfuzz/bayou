@@ -7,7 +7,6 @@ import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 import { CommonBase, Errors, Random } from 'util-common';
 
-import ApiLog from './ApiLog';
 import BearerToken from './BearerToken';
 import MetaHandler from './MetaHandler';
 import Context from './Context';
@@ -77,8 +76,8 @@ export default class Connection extends CommonBase {
     /** {Int} Count of messages received. Used for liveness logging. */
     this._messageCount = 0;
 
-    /** {ApiLog} The standard API logging handler. */
-    this._apiLog = ApiLog.theOne;
+    /** {ApiLog} The API logger to use. */
+    this._apiLog = context.apiLog;
 
     /** {Codec} The codec to use. */
     this._codec = context.codec;
