@@ -11,6 +11,7 @@ import { promisify } from 'util';
 
 import { BearerToken, Context, PostConnection, WsConnection } from 'api-server';
 import { ClientBundle } from 'client-bundle';
+import { Codec } from 'codec';
 import { Dirs } from 'env-server';
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
@@ -34,8 +35,11 @@ export default class Application {
    *   activates `/debug/*` endpoints.
    */
   constructor(devMode) {
-    /** {Context} All of the objects we provide access to via the API. */
-    this._context = new Context();
+    /**
+     * {Context} All of the objects we provide access to via the API, along with
+     * other objects of use to the server.
+     */
+    this._context = new Context(Codec.theOne);
     this._context.startAutomaticIdleCleanup();
 
     /**

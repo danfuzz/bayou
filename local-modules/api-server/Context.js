@@ -27,12 +27,14 @@ const IDLE_TIME_MSEC = 20 * 60 * 1000; // Twenty minutes.
 export default class Context extends CommonBase {
   /**
    * Constructs an instance which is initially empty.
+   *
+   * @param {Codec} codec Codec to use for all connections / sessions.
    */
-  constructor() {
+  constructor(codec) {
     super();
 
     /** {Codec} The codec to use for connections / sessions. */
-    this._codec = Codec.theOne;
+    this._codec = Codec.check(codec);
 
     /** {Map<string, Target>} The underlying map. */
     this._map = new Map();
@@ -98,7 +100,7 @@ export default class Context extends CommonBase {
    * @returns {Context} The newly-cloned instance.
    */
   clone() {
-    const result = new Context();
+    const result = new Context(this._codec);
 
     for (const t of this._map.values()) {
       result.addTarget(t);
