@@ -78,9 +78,9 @@ export default class DocServer extends Singleton {
           result.log.info('Retrieved cached complex.');
           return result;
         }
-        // else, it's a dead reference. We'll fall through and construct a
+        // else, it's a dead weak reference. We'll fall through and construct a
         // new result.
-        log.info(`[${docId}] Cached complex was gc'ed.`, weak);
+        log.info(`[${docId}] Cached complex was gc'ed.`, already);
       } else {
         // It's actually a _promise_ for a `FileComplex`. This happens if we
         // got a request for a file in parallel with it getting constructed.
@@ -90,7 +90,8 @@ export default class DocServer extends Singleton {
       }
     }
 
-    // Nothing in the cache. Asynchronously construct the ultimate result.
+    // Nothing in the cache (except, perhaps, a dead weak reference).
+    // Asynchronously construct the ultimate result, returning a promise to it.
 
     const resultPromise = (async () => {
       try {
