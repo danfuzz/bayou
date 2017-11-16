@@ -644,11 +644,21 @@ export default class BaseControl extends BaseDataManager {
     const clazz       = this.constructor;
     const timeoutTime = Date.now() + timeoutMsec;
 
+    // Handles timeout (called twice, below).
+    const timedOut = () => {
+      // Log a message -- it's at least somewhat notable, though it does occur
+      // regularly -- and throw `timed_out` with the original timeout value. (If
+      // called as a result of catching a timeout from `transact()` the timeout
+      // value in the error might not be the original `timeoutMsec`.)
+      this.log.info(`\`whenRevNum()\` timed out: ${timeoutMsec}msec`);
+      throw Errors.timed_out(timeoutMsec);
+    };
+
     // Loop until the overall timeout.
     for (;;) {
       const now = Date.now();
       if (now >= timeoutTime) {
-        throw new Errors.timed_out(timeoutMsec);
+        timedOut();
       }
 
       const currentRevNum = await this.currentRevNum();
@@ -669,9 +679,17 @@ export default class BaseControl extends BaseDataManager {
         fc.op_whenPathNot(clazz.revisionNumberPath, currentRevNum));
 
       // If this returns normally (doesn't throw), then we know it wasn't due
-      // to hitting the timeout. And if it _is_ a timeout, then the exception
-      // that's thrown is exactly what should be reported upward.
-      await fc.transact(spec);
+      // to hitting the timeout.
+      try {
+        await fc.transact(spec);
+      } catch (e) {
+        // For a timeout, we log and report the original timeout value. For
+        // everything else, we just transparently re-throw.
+        if (Errors.isTimedOut(e)) {
+          timedOut();
+        }
+        throw e;
+      }
     }
   }
 
