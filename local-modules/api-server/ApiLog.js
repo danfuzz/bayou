@@ -59,8 +59,13 @@ export default class ApiLog extends CommonBase {
       endTime:      Date.now(),
       connectionId,
       ok:           !response.error,
-      msg:          msg ? msg.toLog() : null
     };
+
+    if (msg !== null) {
+      details.id      = msg.id;
+      details.target  = msg.target;
+      details.payload = msg.payload;
+    }
 
     if (details.ok) {
       details.result = response.result;
