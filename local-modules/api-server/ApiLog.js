@@ -3,7 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import fs from 'fs';
-import path from 'path';
 
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
@@ -19,13 +18,13 @@ export default class ApiLog extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {string} path Path of API log file.
+   * @param {string} logFile Path of API log file.
    */
-  constructor() {
+  constructor(logFile) {
     super();
 
     /** {string} Path of API log file. */
-    this._path = TString.nonEmpty(path);
+    this._path = TString.nonEmpty(logFile);
 
     Object.freeze(this);
   }
@@ -79,11 +78,12 @@ export default class ApiLog extends CommonBase {
    * decoded off of an incoming connection.
    *
    * @param {string} connectionId Identifier for the connection.
+   * @param {Int} startTime Timestamp for the start of the call.
    * @param {object} msg Incoming message.
    */
-  incomingMessage(connectionId, msg) {
+  incomingMessage(connectionId, startTime, msg) {
     // TODO: This will ultimately need to redact some information.
-    log.detail(`[${connectionId}] Message:`, msg.toLog());
+    log.detail(`[${connectionId}] Message at ${startTime}:`, msg.toLog());
   }
 
   /**

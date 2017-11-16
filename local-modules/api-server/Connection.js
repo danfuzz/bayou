@@ -188,7 +188,7 @@ export default class Connection extends CommonBase {
     let error = null;
 
     if (msg instanceof Message) {
-      this._apiLog.incomingMessage(this._connectionId, msg);
+      this._apiLog.incomingMessage(this._connectionId, startTime, msg);
       try {
         result = await this._actOnMessage(msg);
       } catch (e) {
