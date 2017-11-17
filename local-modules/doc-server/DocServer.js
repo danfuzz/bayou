@@ -137,7 +137,7 @@ export default class DocServer extends Singleton {
   _complexReaper(docId) {
     // **Note:** This function _used to_ remove the doc binding from the
     // `_complexes` map on the presumption that it was a known-dead weak
-    // reference. That code has been deleted. First of all, the only benefit of
+    // reference. That code has been deleted. First of all, the only benefit
     // would have been that it meant that the weak reference itself could get
     // GC'ed (and a dead weakref doesn't actually take up significant storage).
     // Second, and more importantly, this could fail due to a race condition: If
