@@ -141,7 +141,7 @@ export default class DocServer extends Singleton {
     // would have been that it meant that the weak reference itself could get
     // GC'ed (and a dead weakref doesn't actually take up significant storage).
     // Second, and more importantly, this could fail due to a race condition: If
-    // the same doc was requested _after_ the old one was gc'ed and _before_
+    // the same doc was requested _after_ the old one was GC'ed and _before_
     // this reaper was called, the cleanup code here would have incorrectly
     // removed a perfectly valid binding.
     return () => {
