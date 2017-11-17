@@ -70,33 +70,37 @@ export default class DocServer extends Singleton {
 
     const already = this._complexes.get(docId);
     if (already) {
-      // There's something in the cache...
-      if (weak.isWeakRef(already)) {
+      // There's something in the cache. There are two possibilities...
+      if (already instanceof Promise) {
+        // It's a _promise_ for a `FileComplex`. This happens if we got a
+        // request for a file in parallel with it getting constructed.
+        const result = await already;
+        result.log.info('Retrieved parallel-requested complex.');
+        return result;
+      } else {
         // It's a weak reference. If not dead, it refers to a `FileComplex`.
         if (!weak.isDead(already)) {
           const result = weak.get(already);
           result.log.info('Retrieved cached complex.');
           return result;
         }
-        // else, it's a dead reference. We'll fall through and construct a
-        // new result.
-      } else {
-        // It's actually a _promise_ for a `FileComplex`. This happens if we
-        // got a request for a file in parallel with it getting constructed.
-        const result = await already;
-        result.log.info('Retrieved parallel-requested complex.');
-        return result;
+        // The weak reference is dead. We'll fall through and construct a new
+        // result.
+        log.info(`[${docId}] Cached complex was gc'ed.`);
       }
     }
 
-    // Nothing in the cache. Asynchronously construct the ultimate result.
+    // Nothing in the cache (except, perhaps, a dead weak reference).
+    // Asynchronously construct the ultimate result, returning a promise to it.
 
     const resultPromise = (async () => {
       try {
         const file   = await Hooks.theOne.fileStore.getFile(docId);
         const result = new FileComplex(this._codec, file);
 
+        result.log.info('Initializing...');
         await result.init();
+        result.log.info('Done initializing.');
 
         const resultRef = weak(result, this._complexReaper(docId));
 
@@ -119,39 +123,28 @@ export default class DocServer extends Singleton {
 
     // Store the the promise for the result in the cache, and return it.
 
+    log.info(`[${docId}] About to construct complex.`);
     this._complexes.set(docId, resultPromise);
     return resultPromise;
   }
 
   /**
-   * Gets the session with the given ID, if it exists.
-   *
-   * @param {string} sessionId The session ID in question.
-   * @returns {DocSession|null} Corresponding session instance, or `null` if
-   *   there is no such session.
-   */
-  getSessionOrNull(sessionId) {
-    TString.nonEmpty(sessionId);
-
-    const already = this._sessions.get(sessionId);
-
-    if (already && !weak.isDead(already)) {
-      return weak.get(already);
-    } else {
-      return null;
-    }
-  }
-
-  /**
-   * Returns a weak reference callback function for the indicated document ID,
-   * that removes a collected file complex from the map of same.
+   * Returns a weak reference callback function for the indicated document ID.
    *
    * @param {string} docId Document ID of the file complex to remove.
    * @returns {function} An appropriately-constructed function.
    */
   _complexReaper(docId) {
+    // **Note:** This function _used to_ remove the doc binding from the
+    // `_complexes` map on the presumption that it was a known-dead weak
+    // reference. That code has been deleted. First of all, the only benefit
+    // would have been that it meant that the weak reference itself could get
+    // GC'ed (and a dead weakref doesn't actually take up significant storage).
+    // Second, and more importantly, this could fail due to a race condition: If
+    // the same doc was requested _after_ the old one was gc'ed and _before_
+    // this reaper was called, the cleanup code here would have incorrectly
+    // removed a perfectly valid binding.
     return () => {
-      this._complexes.delete(docId);
       log.info('Reaped idle file complex:', docId);
     };
   }

@@ -183,6 +183,7 @@ export default class FileBootstrap extends BaseDataManager {
    * @returns {boolean} `true` once setup and initialization are complete.
    */
   async _init() {
+    this.log.info('Doing bootstrap-time validation...');
     const status  = await this.validationStatus();
 
     if (status === ValidationStatus.STATUS_OK) {
@@ -224,6 +225,7 @@ export default class FileBootstrap extends BaseDataManager {
 
       case ValidationStatus.STATUS_NOT_FOUND: {
         // The file simply didn't exist.
+        this.log.info('Making new file.');
         firstText = DEFAULT_TEXT;
         break;
       }
