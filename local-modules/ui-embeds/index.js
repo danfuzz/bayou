@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import Clock from './components/Clock';
+import FigmaEmbed from './components/FigmaEmbed';
 import FileEmbed from './components/FileEmbed';
 import ImageEmbed from './components/ImageEmbed';
 import ComponentBlotWrapper from './ComponentBlotWrapper';
@@ -10,6 +11,7 @@ import ComponentBlotWrapper from './ComponentBlotWrapper';
 export {
   Clock,
   ComponentBlotWrapper,
+  FigmaEmbed,
   FileEmbed,
   ImageEmbed
 };

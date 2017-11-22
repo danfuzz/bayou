@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BayouKeyboard } from 'quill-util';
-import { ImageEmbed } from 'ui-embeds';
+import { FigmaEmbed, ImageEmbed } from 'ui-embeds';
 
 // Originally imported from <https://gist.github.com/dperini/729294>, by
 // Diego Perini and licensed under the MIT License. **TODO:** Consider using a
@@ -45,6 +45,11 @@ export default class LinkDetector {
 
         this.quill.deleteText(index, lastMatch.regexMatch.length);
         this.quill.insertEmbed(index, ImageEmbed.blotName, value);
+      } else if (FigmaEmbed.isFigmaUrl(lastMatch.regexMatch)) {
+        const value = FigmaEmbed.propsForUrl(lastMatch.link);
+
+        this.quill.deleteText(index, lastMatch.regexMatch.length);
+        this.quill.insertEmbed(index, FigmaEmbed.blotName, value);
       } else {
         this.quill.formatText(index, lastMatch.regexMatch.length, 'link', lastMatch.link, 'user');
       }
