@@ -124,18 +124,14 @@ export default class CaretControl extends BaseControl {
    * @param {CaretChange} change The change to apply, same as for `update()`.
    * @param {CaretSnapshot} expectedSnapshot The implied expected result as
    *   defined by `update()`.
+   * @param {CaretSnapshot} currentSnapshot An instantaneously-current snapshot.
    * @returns {CaretChange|null} Result for the outer call to `update()`,
    *   or `null` if the application failed due to losing a race.
    */
-  async _impl_update(baseSnapshot, change, expectedSnapshot) {
+  async _impl_update(baseSnapshot, change, expectedSnapshot, currentSnapshot) {
     this._maybeRemoveIdleSessions();
 
-    // Instantaneously current (latest) revision of the document portion. We'll
-    // find out if it turned out to remain current when we finally get to try
-    // appending the (possibly modified) change, below.
-    const current = await this.getSnapshot();
-
-    if (baseSnapshot.revNum === current.revNum) {
+    if (baseSnapshot.revNum === currentSnapshot.revNum) {
       // The easy case, because the base revision is in fact the current
       // revision, so we don't have to transform the incoming delta. We merely
       // have to apply the given `delta` to the current revision. If it
@@ -163,18 +159,18 @@ export default class CaretControl extends BaseControl {
     // to return to the caller.
 
     const finalContents = await this.getComposedChanges(
-      expectedSnapshot.contents, baseSnapshot.revNum + 1, current.revNum + 1, true);
+      expectedSnapshot.contents, baseSnapshot.revNum + 1, currentSnapshot.revNum + 1, true);
 
-    if (finalContents.equals(current.contents)) {
+    if (finalContents.equals(currentSnapshot.contents)) {
       // The changes after the base either overwrote or included the contents of
       // the requested change, so there is nothing to append. We merely return a
       // diff that gets from the expected result to the already-current
       // snapshot.
-      return expectedSnapshot.diff(current);
+      return expectedSnapshot.diff(currentSnapshot);
     }
 
-    const finalSnapshot = new CaretSnapshot(current.revNum + 1, finalContents);
-    const finalChange = current.diff(finalSnapshot)
+    const finalSnapshot = new CaretSnapshot(currentSnapshot.revNum + 1, finalContents);
+    const finalChange = currentSnapshot.diff(finalSnapshot)
       .withTimestamp(change.timestamp)
       .withAuthorId(change.authorId);
 
@@ -269,7 +265,8 @@ export default class CaretControl extends BaseControl {
 
   /**
    * Perform idle session cleanup, but only if it's been long enough since the
-   * last time that was done.
+   * last time that was done. If in fact cleanup is performed, it happens
+   * _asynchronously_ with respect to the call to this method.
    */
   _maybeRemoveIdleSessions() {
     const now = Date.now();

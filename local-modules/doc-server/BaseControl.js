@@ -589,6 +589,8 @@ export default class BaseControl extends BaseDataManager {
     let retryDelayMsec = INITIAL_UPDATE_RETRY_MSEC;
     let attemptCount = 0;
     for (;;) {
+      const currentSnapshot = await this.getSnapshot();
+
       if (Date.now() >= timeoutTime) {
         throw Errors.timed_out(timeoutMsec);
       }
@@ -598,7 +600,8 @@ export default class BaseControl extends BaseDataManager {
         this.log.info(`Update attempt #${attemptCount}.`);
       }
 
-      const result = await this._impl_update(baseSnapshot, change, expectedSnapshot);
+      const result =
+        await this._impl_update(baseSnapshot, change, expectedSnapshot, currentSnapshot);
 
       if (result !== null) {
         return result;
@@ -735,16 +738,18 @@ export default class BaseControl extends BaseDataManager {
    * Subclass-specific implementation of `update()`, which should perform one
    * attempt to apply the given change. Additional arguments (beyond what
    * `update()` takes) are pre-calculated snapshots that only ever have to be
-   * derived once per outer call to `update()`. This method attempts to apply
-   * `change` relative to `baseSnapshot`, taking into account any intervening
-   * revisions between `baseSnapshot` and the instantaneously-current revision.
-   * If it succeeds (that is, if it manages to get an instantaneously-current
-   * snapshot, and use that snapshot to create a final change which is
-   * successfully appended to the document, without any other "racing" code
-   * doing the same first), then this method returns a proper result for an
-   * outer `update()` call. If it fails due to a lost race, then this method
-   * returns `null`. All other problems are reported by throwing an error.
-   * Subclasses must override this method.
+   * derived once per outer call to `update()`, along with an
+   * instantaneously-current snapshot (which, as usual, might be out-of-date by
+   * the time this method gets a chance to use it).
+   *
+   * This method attempts to apply `change` relative to `baseSnapshot`, taking
+   * into account any intervening revisions between `baseSnapshot` and
+   * `currentSnapshot`. If it succeeds (that is, if it manages to create and
+   * append a change to the document, without any other "racing" code doing the
+   * same first), then this method returns a proper result for an outer
+   * `update()` call. If it fails due to a lost race, then this method returns
+   * `null`. All other problems are reported by throwing an error. Subclasses
+   * must override this method.
    *
    * @abstract
    * @param {BaseSnapshot} baseSnapshot Snapshot of the base from which the
@@ -753,11 +758,12 @@ export default class BaseControl extends BaseDataManager {
    *   except additionally guaranteed to have a non-empty `delta`.
    * @param {BaseSnapshot} expectedSnapshot The implied expected result as
    *   defined by `update()`.
+   * @param {BaseSnapshot} currentSnapshot An instantaneously-current snapshot.
    * @returns {BaseChange|null} Result for the outer call to `update()`,
    *   or `null` if the application failed due to losing a race.
    */
-  async _impl_update(baseSnapshot, change, expectedSnapshot) {
-    return this._mustOverride(baseSnapshot, change, expectedSnapshot);
+  async _impl_update(baseSnapshot, change, expectedSnapshot, currentSnapshot) {
+    return this._mustOverride(baseSnapshot, change, expectedSnapshot, currentSnapshot);
   }
 
   /**

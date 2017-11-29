@@ -778,9 +778,10 @@ describe('doc-server/BaseControl', () => {
       control._impl_getSnapshot = async (revNum_unused) => {
         throw new Error('This should not have been called.');
       };
-      control._impl_update = async (baseSnapshot_unused, change_unused, expectedSnapshot_unused) => {
-        throw new Error('This should not have been called.');
-      };
+      control._impl_update =
+        async (baseSnapshot_unused, change_unused, expectedSnapshot_unused, currentSnapshot_unused) => {
+          throw new Error('This should not have been called.');
+        };
 
       async function test(value) {
         await assert.isRejected(control.update(value), /^bad_value/);
@@ -801,9 +802,10 @@ describe('doc-server/BaseControl', () => {
       control._impl_getSnapshot = async (revNum_unused) => {
         throw new Error('This should not have been called.');
       };
-      control._impl_update = async (baseSnapshot_unused, change_unused, expectedSnapshot_unused) => {
-        throw new Error('This should not have been called.');
-      };
+      control._impl_update =
+        async (baseSnapshot_unused, change_unused, expectedSnapshot_unused, currentSnapshot_unused) => {
+          throw new Error('This should not have been called.');
+        };
 
       async function test(value) {
         await assert.isRejected(control.update(value), /^bad_value/);
@@ -824,9 +826,10 @@ describe('doc-server/BaseControl', () => {
       control._impl_getSnapshot = async (revNum_unused) => {
         throw new Error('This should not have been called.');
       };
-      control._impl_update = async (baseSnapshot_unused, change_unused, expectedSnapshot_unused) => {
-        throw new Error('This should not have been called.');
-      };
+      control._impl_update =
+        async (baseSnapshot_unused, change_unused, expectedSnapshot_unused, currentSnapshot_unused) => {
+          throw new Error('This should not have been called.');
+        };
 
       const change = new MockChange(11, [], Timestamp.MIN_VALUE);
 
@@ -850,9 +853,10 @@ describe('doc-server/BaseControl', () => {
       control._impl_getSnapshot = async (revNum_unused) => {
         throw new Error('This should not have been called.');
       };
-      control._impl_update = async (baseSnapshot_unused, change_unused, expectedSnapshot_unused) => {
-        throw new Error('This should not have been called.');
-      };
+      control._impl_update =
+        async (baseSnapshot_unused, change_unused, expectedSnapshot_unused, currentSnapshot_unused) => {
+          throw new Error('This should not have been called.');
+        };
 
       async function test(value) {
         const expectRevNum = value.revNum - 1;
@@ -877,9 +881,10 @@ describe('doc-server/BaseControl', () => {
       control._impl_getSnapshot = async (revNum) => {
         return new MockSnapshot(revNum, [new MockOp('x', revNum)]);
       };
-      control._impl_update = async (baseSnapshot_unused, change_unused, expectedSnapshot_unused) => {
-        throw new Error('This should not have been called.');
-      };
+      control._impl_update =
+        async (baseSnapshot_unused, change_unused, expectedSnapshot_unused, currentSnapshot_unused) => {
+          throw new Error('This should not have been called.');
+        };
 
       const change = new MockChange(12, [new MockOp('abc')], Timestamp.MIN_VALUE);
       await assert.isRejected(control.update(change), /^bad_value/);
@@ -887,22 +892,27 @@ describe('doc-server/BaseControl', () => {
 
     it('should call through to the impl in valid nontrivial cases', async () => {
       const control   = new MockControl(FILE_ACCESS, 'boop');
+      const current   = new MockSnapshot(10, [new MockOp('x', 10)]);
       let callCount   = 0;
       let gotBase     = 'x';
       let gotChange   = 'x';
       let gotExpected = 'x';
+      let gotCurrent  = 'x';
 
       control.currentRevNum = async () => {
-        return 10;
+        return current.revNum;
       };
       control._impl_getSnapshot = async (revNum) => {
-        return new MockSnapshot(revNum, [new MockOp('x', revNum)]);
+        return (revNum === current.revNum)
+          ? current
+          : new MockSnapshot(revNum, [new MockOp('x', revNum)]);
       };
-      control._impl_update = async (baseSnapshot, change, expectedSnapshot) => {
+      control._impl_update = async (baseSnapshot, change, expectedSnapshot, currentSnapshot) => {
         callCount++;
         gotBase     = baseSnapshot;
         gotChange   = change;
         gotExpected = expectedSnapshot;
+        gotCurrent  = currentSnapshot;
         return new MockChange(14, [new MockOp('q')]);
       };
 
@@ -914,6 +924,7 @@ describe('doc-server/BaseControl', () => {
       assert.strictEqual(gotChange, change);
       assert.deepEqual(gotExpected,
         new MockSnapshot(7, [new MockOp('composed_doc'), new MockOp('abc')]));
+      assert.strictEqual(gotCurrent, current);
 
       assert.instanceOf(result, MockChange);
       assert.deepEqual(result, new MockChange(14, [new MockOp('q')]));
@@ -929,13 +940,14 @@ describe('doc-server/BaseControl', () => {
       control._impl_getSnapshot = async (revNum) => {
         return new MockSnapshot(revNum, [new MockOp('x', revNum)]);
       };
-      control._impl_update = async (baseSnapshot_unused, change_unused, expectedSnapshot_unused) => {
-        callCount++;
-        if (callCount === 1) {
-          return null;
-        }
-        return new MockChange(14, [new MockOp('florp')]);
-      };
+      control._impl_update =
+        async (baseSnapshot_unused, change_unused, expectedSnapshot_unused, currentSnapshot_unused) => {
+          callCount++;
+          if (callCount === 1) {
+            return null;
+          }
+          return new MockChange(14, [new MockOp('florp')]);
+        };
 
       const change = new MockChange(7, [new MockOp('abc')], Timestamp.MIN_VALUE);
       const result = await control.update(change);

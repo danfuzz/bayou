@@ -58,16 +58,12 @@ export default class BodyControl extends BaseControl {
    * @param {BodyChange} change The change to apply, same as for `update()`.
    * @param {BodySnapshot} expectedSnapshot The implied expected result as
    *   defined by `update()`.
+   * @param {BodySnapshot} currentSnapshot An instantaneously-current snapshot.
    * @returns {BodyChange|null} Result for the outer call to `update()`,
    *   or `null` if the application failed due to losing a race.
    */
-  async _impl_update(baseSnapshot, change, expectedSnapshot) {
-    // Instantaneously current (latest) revision of the document. We'll find out
-    // if it turned out to remain current when we finally get to try appending
-    // the (possibly modified) change, below.
-    const current = await this.getSnapshot();
-
-    if (baseSnapshot.revNum === current.revNum) {
+  async _impl_update(baseSnapshot, change, expectedSnapshot, currentSnapshot) {
+    if (baseSnapshot.revNum === currentSnapshot.revNum) {
       // The easy case, because the base revision is in fact the current
       // revision of the document, so we don't have to transform the incoming
       // delta. We merely have to apply the given `change` to the current
@@ -111,7 +107,7 @@ export default class BodyControl extends BaseControl {
     const dClient   = change.delta;
     const rBase     = baseSnapshot;
     const rExpected = expectedSnapshot;
-    const rCurrent  = current;
+    const rCurrent  = currentSnapshot;
 
     // (1)
 

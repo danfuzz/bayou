@@ -58,16 +58,13 @@ export default class PropertyControl extends BaseControl {
    * @param {PropertyChange} change The change to apply, same as for `update()`.
    * @param {PropertySnapshot} expectedSnapshot The implied expected result as
    *   defined by `update()`.
+   * @param {PropertySnapshot} currentSnapshot An instantaneously-current
+   *   snapshot.
    * @returns {PropertyChange|null} Result for the outer call to `update()`,
    *   or `null` if the application failed due to losing a race.
    */
-  async _impl_update(baseSnapshot, change, expectedSnapshot) {
-    // Instantaneously current (latest) revision of the document portion. We'll
-    // find out if it turned out to remain current when we finally get to try
-    // appending the (possibly modified) change, below.
-    const current = await this.getSnapshot();
-
-    if (baseSnapshot.revNum === current.revNum) {
+  async _impl_update(baseSnapshot, change, expectedSnapshot, currentSnapshot) {
+    if (baseSnapshot.revNum === currentSnapshot.revNum) {
       // The easy case, because the base revision is in fact the current
       // revision, so we don't have to transform the incoming delta. We merely
       // have to apply the given `delta` to the current revision. If it
@@ -95,18 +92,18 @@ export default class PropertyControl extends BaseControl {
     // to return to the caller.
 
     const finalContents = await this.getComposedChanges(
-      expectedSnapshot.contents, baseSnapshot.revNum + 1, current.revNum + 1, true);
+      expectedSnapshot.contents, baseSnapshot.revNum + 1, currentSnapshot.revNum + 1, true);
 
-    if (finalContents.equals(current.contents)) {
+    if (finalContents.equals(currentSnapshot.contents)) {
       // The changes after the base either overwrote or included the contents of
       // the requested change, so there is nothing to append. We merely return a
       // diff that gets from the expected result to the already-current
       // snapshot.
-      return expectedSnapshot.diff(current);
+      return expectedSnapshot.diff(currentSnapshot);
     }
 
-    const finalSnapshot = new PropertySnapshot(current.revNum + 1, finalContents);
-    const finalChange = current.diff(finalSnapshot)
+    const finalSnapshot = new PropertySnapshot(currentSnapshot.revNum + 1, finalContents);
+    const finalChange = currentSnapshot.diff(finalSnapshot)
       .withTimestamp(change.timestamp)
       .withAuthorId(change.authorId);
 
