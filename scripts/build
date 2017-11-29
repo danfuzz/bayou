@@ -45,34 +45,42 @@ overlayDir=''
 # Options to pass to `out-dir-setup`.
 outOpts=()
 
-while (( $# != 0 )); do
-    opt="$1"
-    if [[ ${opt} == '--' ]]; then
-        shift
-        break
-    elif [[ ${opt} =~ ^--boxes=(.*) ]]; then
-        boxDir="${BASH_REMATCH[1]}"
-    elif [[ ${opt} == '--clean' ]]; then
-        outOpts+=("${opt}")
-    elif [[    ${opt} == '--help'
-            || ${opt} == '-h' ]]; then
-        showHelp=1
-    elif [[ ${opt} == '--linter' ]]; then
-        buildProjects=(linter)
-    elif [[ ${opt} =~ ^--out=(.*) ]]; then
-        outOpts+=("${opt}")
-    elif [[ ${opt} =~ ^--overlay=(.*) ]]; then
-        overlayDir="${BASH_REMATCH[1]}"
-    elif [[ ${opt} =~ ^- ]]; then
-        echo "Unknown option: ${opt}" 1>&2
-        argError=1
-        break
-    else
-        break
-    fi
+while true; do
+    case $1 in
+        -h|--help)
+            showHelp=1
+            break
+            ;;
+        --boxes=?*)
+            boxDir="${1#*=}"
+            ;;
+        --clean)
+            outOpts+=("$1")
+            ;;
+        --linter)
+            buildProjects=(linter)
+            ;;
+        --out=?*)
+            outOpts+=("$1")
+            ;;
+        --overlay=?*)
+            overlayDir="${1#*=}"
+            ;;
+        --) # End of all options
+            shift
+            break
+            ;;
+        -?*)
+            echo "Unknown option: $1" 1>&2
+            argError=1
+            break
+            ;;
+        *)  # Default case: No more options, break out of the loop.
+            break
+    esac
+
     shift
 done
-unset opt
 
 if (( ${showHelp} || ${argError} )); then
     echo 'Usage:'
