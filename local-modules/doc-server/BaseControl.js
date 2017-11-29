@@ -545,6 +545,7 @@ export default class BaseControl extends BaseDataManager {
    */
   async update(change, timeoutMsec = null) {
     const changeClass = this.constructor.changeClass;
+    const deltaClass  = this.constructor.deltaClass;
 
     // This makes sure we have a surface-level proper instance, but doesn't
     // check for deeper problems (such as an invalid `revNum`). Once in the guts
@@ -590,8 +591,9 @@ export default class BaseControl extends BaseDataManager {
     let attemptCount = 0;
     for (;;) {
       const currentSnapshot = await this.getSnapshot();
+      const now             = Date.now();
 
-      if (Date.now() >= timeoutTime) {
+      if (now >= timeoutTime) {
         throw Errors.timed_out(timeoutMsec);
       }
 
@@ -600,20 +602,40 @@ export default class BaseControl extends BaseDataManager {
         this.log.info(`Update attempt #${attemptCount}.`);
       }
 
-      const result =
-        await this._impl_update(baseSnapshot, change, expectedSnapshot, currentSnapshot);
+      const changeToAppend = (baseRevNum === currentSnapshot.revNum)
+        ? change
+        : await this._impl_rebase(change, baseSnapshot, expectedSnapshot, currentSnapshot);
 
-      if (result !== null) {
-        return result;
+      if (changeToAppend.delta.isEmpty()) {
+        // It turns out that nothing changed. **Note:** This case is unusual,
+        // but it _can_ happen in practice. For example, if there is an append
+        // race between two changes that both do the same thing (e.g., delete
+        // the same characters from the document body), then the result from
+        // rebasing the losing change will have an empty delta.
+        return new changeClass(currentSnapshot.revNum, deltaClass.EMPTY);
       }
 
-      // A `null` result from the call means that we lost an update race (that
+      const appendSuccess = await this.appendChange(changeToAppend, timeoutTime - now);
+
+      if (appendSuccess) {
+        if (change === changeToAppend) {
+          // The easy case: We didn't have to rebase and succeeded in appending
+          // the change as-is. No correction!
+          return new changeClass(change.revNum, deltaClass.EMPTY);
+        } else {
+          const resultSnapshot = await this.getSnapshot(changeToAppend.revNum);
+          const correction     = expectedSnapshot.diff(resultSnapshot);
+          return correction;
+        }
+      }
+
+      // A `false` result from the call means that we lost an update race (that
       // is, there was revision skew that occurred during the update attempt),
       // so we delay briefly and iterate.
 
       this.log.info(`Sleeping ${retryDelayMsec} msec.`);
       await Delay.resolve(retryDelayMsec);
-      retryDelayMsec = Math.max(retryDelayMsec * UPDATE_RETRY_GROWTH_FACTOR, MAX_UPDATE_RETRY_MSEC);
+      retryDelayMsec = Math.min(retryDelayMsec * UPDATE_RETRY_GROWTH_FACTOR, MAX_UPDATE_RETRY_MSEC);
     }
   }
 
@@ -735,35 +757,28 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
-   * Subclass-specific implementation of `update()`, which should perform one
-   * attempt to apply the given change. Additional arguments (beyond what
-   * `update()` takes) are pre-calculated snapshots that only ever have to be
-   * derived once per outer call to `update()`, along with an
-   * instantaneously-current snapshot (which, as usual, might be out-of-date by
-   * the time this method gets a chance to use it).
+   * Rebases a given change, such that it can be appended as the revision after
+   * the indicated instantaneously-current snapshot. Glibly speaking, this
+   * method is called when {@link #update} determines that it can't simply
+   * append a change as passed to it.
    *
-   * This method attempts to apply `change` relative to `baseSnapshot`, taking
-   * into account any intervening revisions between `baseSnapshot` and
-   * `currentSnapshot`. If it succeeds (that is, if it manages to create and
-   * append a change to the document, without any other "racing" code doing the
-   * same first), then this method returns a proper result for an outer
-   * `update()` call. If it fails due to a lost race, then this method returns
-   * `null`. All other problems are reported by throwing an error. Subclasses
-   * must override this method.
+   * Subclasses must override this method.
    *
    * @abstract
+   * @param {BaseChange} change The change to apply, same as for
+   *   {@link #update}, except additionally guaranteed to have a non-empty
+   *  `delta`.
    * @param {BaseSnapshot} baseSnapshot Snapshot of the base from which the
    *   change is defined. That is, this is the snapshot of `change.revNum - 1`.
-   * @param {BaseChange} change The change to apply, same as for `update()`,
-   *   except additionally guaranteed to have a non-empty `delta`.
    * @param {BaseSnapshot} expectedSnapshot The implied expected result as
-   *   defined by `update()`.
+   *   defined by {@link #update}.
    * @param {BaseSnapshot} currentSnapshot An instantaneously-current snapshot.
-   * @returns {BaseChange|null} Result for the outer call to `update()`,
-   *   or `null` if the application failed due to losing a race.
+   *   Guaranteed to be a different revision than `baseSnapshot`.
+   * @returns {BaseChange} Rebased (transformed) change, which is suitable for
+   *   appending as revision `currentSnapshot.revNum + 1`.
    */
-  async _impl_update(baseSnapshot, change, expectedSnapshot, currentSnapshot) {
-    return this._mustOverride(baseSnapshot, change, expectedSnapshot, currentSnapshot);
+  async _impl_rebase(change, baseSnapshot, expectedSnapshot, currentSnapshot) {
+    return this._mustOverride(change, baseSnapshot, expectedSnapshot, currentSnapshot);
   }
 
   /**

@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { PropertyChange, PropertyDelta, PropertySnapshot, RevisionNumber } from 'doc-common';
+import { PropertySnapshot, RevisionNumber } from 'doc-common';
 import { TransactionSpec } from 'file-store';
 
 import BaseControl from './BaseControl';
@@ -51,73 +51,41 @@ export default class PropertyControl extends BaseControl {
   }
 
   /**
-   * Main implementation of `update()`, as required by the superclass.
+   * Rebases a given change, such that it can be appended as the revision after
+   * the indicated instantaneously-current snapshot.
    *
+   * @param {PropertyChange} change The change to apply, same as for
+   *   {@link #update}, except additionally guaranteed to have a non-empty
+   *  `delta`.
    * @param {PropertySnapshot} baseSnapshot Snapshot of the base from which the
-   *   change is defined.
-   * @param {PropertyChange} change The change to apply, same as for `update()`.
+   *   change is defined. That is, this is the snapshot of `change.revNum - 1`.
    * @param {PropertySnapshot} expectedSnapshot The implied expected result as
-   *   defined by `update()`.
+   *   defined by {@link #update}.
    * @param {PropertySnapshot} currentSnapshot An instantaneously-current
-   *   snapshot.
-   * @returns {PropertyChange|null} Result for the outer call to `update()`,
-   *   or `null` if the application failed due to losing a race.
+   *   snapshot. Guaranteed to be a different revision than `baseSnapshot`.
+   * @returns {PropertyChange} Rebased (transformed) change, which is suitable
+   *   for appending as revision `currentSnapshot.revNum + 1`.
    */
-  async _impl_update(baseSnapshot, change, expectedSnapshot, currentSnapshot) {
-    if (baseSnapshot.revNum === currentSnapshot.revNum) {
-      // The easy case, because the base revision is in fact the current
-      // revision, so we don't have to transform the incoming delta. We merely
-      // have to apply the given `delta` to the current revision. If it
-      // succeeds, then we won the append race (if any).
-
-      const success = await this.appendChange(change);
-
-      if (!success) {
-        // Turns out we lost an append race.
-        return null;
-      }
-
-      return new PropertyChange(change.revNum, PropertyDelta.EMPTY);
-    }
-
-    // The hard case: The client has requested an application of a delta
-    // against a revision of the document which is _not_ current. Though hard,
-    // this is considerably simpler than the equivalent document-body update
-    // operation, because of the nature of the data being managed (that is, a
-    // single-level key-value map, whose contents are treated as atomic units).
+  async _impl_rebase(change, baseSnapshot, expectedSnapshot, currentSnapshot) {
+    // The client has requested an application of a delta against a revision of
+    // the document which is _not_ current. Though nontrivial, this is
+    // considerably simpler than the equivalent document-body update operation,
+    // because of the nature of the data being managed (that is, a single-level
+    // key-value map, whose values are treated as atomic units).
     //
     // What we do is simply compose all of the revisions after the base on top
     // of the expected result to get the final result. We diff from the final
-    // result both to get the actual change to append and to get the correction
-    // to return to the caller.
+    // result to get the actual change to append.
 
     const finalContents = await this.getComposedChanges(
       expectedSnapshot.contents, baseSnapshot.revNum + 1, currentSnapshot.revNum + 1, true);
-
-    if (finalContents.equals(currentSnapshot.contents)) {
-      // The changes after the base either overwrote or included the contents of
-      // the requested change, so there is nothing to append. We merely return a
-      // diff that gets from the expected result to the already-current
-      // snapshot.
-      return expectedSnapshot.diff(currentSnapshot);
-    }
 
     const finalSnapshot = new PropertySnapshot(currentSnapshot.revNum + 1, finalContents);
     const finalChange = currentSnapshot.diff(finalSnapshot)
       .withTimestamp(change.timestamp)
       .withAuthorId(change.authorId);
 
-    // Attempt to append the change.
-
-    const success = await this.appendChange(finalChange);
-
-    if (!success) {
-      // Turns out we lost an append race.
-      return null;
-    }
-
-    // We won the race (or had no contention).
-    return expectedSnapshot.diff(finalSnapshot);
+    return finalChange;
   }
 
   /**
