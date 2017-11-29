@@ -170,9 +170,9 @@ export default class BaseControl extends BaseDataManager {
     try {
       await fc.transact(spec);
     } catch (e) {
-      if (FileStoreErrors.isPathNotEmpty(e)) {
-        // This happens if and when we lose an append race, which will regularly
-        // occur if there are simultaneous editors.
+      if (FileStoreErrors.isPathNotAbsent(e) || FileStoreErrors.isPathHashMismatch(e)) {
+        // One of these will get thrown if and when we lose an append race. This
+        // regularly occurs when there are simultaneous editors.
         this.log.info('Lost append race for revision:', revNum);
         return false;
       } else {
