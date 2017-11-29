@@ -545,7 +545,6 @@ export default class BaseControl extends BaseDataManager {
    */
   async update(change, timeoutMsec = null) {
     const changeClass = this.constructor.changeClass;
-    const deltaClass  = this.constructor.deltaClass;
 
     // This makes sure we have a surface-level proper instance, but doesn't
     // check for deeper problems (such as an invalid `revNum`). Once in the guts
@@ -590,8 +589,7 @@ export default class BaseControl extends BaseDataManager {
     let retryDelayMsec = INITIAL_UPDATE_RETRY_MSEC;
     let attemptCount = 0;
     for (;;) {
-      const currentSnapshot = await this.getSnapshot();
-      const now             = Date.now();
+      const now = Date.now();
 
       if (now >= timeoutTime) {
         throw Errors.timed_out(timeoutMsec);
@@ -602,36 +600,12 @@ export default class BaseControl extends BaseDataManager {
         this.log.info(`Update attempt #${attemptCount}.`);
       }
 
-      const changeToAppend = (baseRevNum === currentSnapshot.revNum)
-        ? change
-        : await this._impl_rebase(change, baseSnapshot, expectedSnapshot, currentSnapshot);
+      const result =
+        await this._attemptUpdate(change, baseSnapshot, expectedSnapshot, timeoutTime - now);
 
-      if (changeToAppend.delta.isEmpty()) {
-        // It turns out that nothing changed. **Note:** This case is unusual,
-        // but it _can_ happen in practice. For example, if there is an append
-        // race between two changes that both do the same thing (e.g., delete
-        // the same characters from the document body), then the result from
-        // rebasing the losing change will have an empty delta.
-        return new changeClass(currentSnapshot.revNum, deltaClass.EMPTY);
+      if (result !== null) {
+        return result;
       }
-
-      const appendSuccess = await this.appendChange(changeToAppend, timeoutTime - now);
-
-      if (appendSuccess) {
-        if (change === changeToAppend) {
-          // The easy case: We didn't have to rebase and succeeded in appending
-          // the change as-is. No correction!
-          return new changeClass(change.revNum, deltaClass.EMPTY);
-        } else {
-          const resultSnapshot = await this.getSnapshot(changeToAppend.revNum);
-          const correction     = expectedSnapshot.diff(resultSnapshot);
-          return correction;
-        }
-      }
-
-      // A `false` result from the call means that we lost an update race (that
-      // is, there was revision skew that occurred during the update attempt),
-      // so we delay briefly and iterate.
 
       this.log.info(`Sleeping ${retryDelayMsec} msec.`);
       await Delay.resolve(retryDelayMsec);
@@ -779,6 +753,65 @@ export default class BaseControl extends BaseDataManager {
    */
   async _impl_rebase(change, baseSnapshot, expectedSnapshot, currentSnapshot) {
     return this._mustOverride(change, baseSnapshot, expectedSnapshot, currentSnapshot);
+  }
+
+  /**
+   * Helper for {@link #update}, which performs one update attempt. This is
+   * called from within the retry loop of the main method.
+   *
+   * @param {BaseChange} change The change to apply, same as for
+   *   {@link #update}, except additionally guaranteed to have a non-empty
+   *  `delta`.
+   * @param {BaseSnapshot} baseSnapshot Snapshot of the base from which the
+   *   change is defined. That is, this is the snapshot of `change.revNum - 1`.
+   * @param {BaseSnapshot} expectedSnapshot The implied expected result as
+   *   defined by {@link #update}.
+   * @param {Int} timeoutMsec Timeout to use for calls that could significantly
+   *   block.
+   * @returns {BaseChange|null} Result for the outer call to {@link #update}, or
+   *   `null` if the attempt failed due to losing an append race.
+   */
+  async _attemptUpdate(change, baseSnapshot, expectedSnapshot, timeoutMsec) {
+    const changeClass     = this.constructor.changeClass;
+    const deltaClass      = this.constructor.deltaClass;
+
+    // **TODO:** Consider whether we should make this call have an explicit
+    // timeout. (It would require adding an argument to the method.)
+    const currentSnapshot = await this.getSnapshot();
+
+    const changeToAppend = (baseSnapshot.revNum === currentSnapshot.revNum)
+      ? change
+      : await this._impl_rebase(change, baseSnapshot, expectedSnapshot, currentSnapshot);
+
+    if (changeToAppend.delta.isEmpty()) {
+      // It turns out that nothing changed. **Note:** This case is unusual,
+      // but it _can_ happen in practice. For example, if there is an append
+      // race between two changes that both do the same thing (e.g., delete
+      // the same characters from the document body), then the result from
+      // rebasing the losing change will have an empty delta.
+      return new changeClass(currentSnapshot.revNum, deltaClass.EMPTY);
+    }
+
+    const appendSuccess = await this.appendChange(changeToAppend, timeoutMsec);
+
+    if (appendSuccess) {
+      if (change === changeToAppend) {
+        // The easy case: We didn't have to rebase and succeeded in appending
+        // the change as-is. No correction!
+        return new changeClass(change.revNum, deltaClass.EMPTY);
+      } else {
+        const resultSnapshot = await this.getSnapshot(changeToAppend.revNum);
+        const correction     = expectedSnapshot.diff(resultSnapshot);
+        return correction;
+      }
+    }
+
+    // A `false` result from the above call means that we lost an update race
+    // (that is, there was revision skew that occurred during the update
+    // attempt). The `null` return value here is detected by the loop in {@link
+    // #update}.
+
+    return null;
   }
 
   /**

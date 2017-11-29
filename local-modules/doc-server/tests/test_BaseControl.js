@@ -885,14 +885,14 @@ describe('doc-server/BaseControl', () => {
       await assert.isRejected(control.update(change), /^bad_value/);
     });
 
-    it.skip('should call through to the impl in valid nontrivial cases', async () => {
+    it('should call through to `_attemptUpdate()` in valid nontrivial cases', async () => {
       const control   = new MockControl(FILE_ACCESS, 'boop');
       const current   = new MockSnapshot(10, [new MockOp('x', 10)]);
       let callCount   = 0;
-      let gotBase     = 'x';
       let gotChange   = 'x';
+      let gotBase     = 'x';
       let gotExpected = 'x';
-      let gotCurrent  = 'x';
+      let gotTimeout  = 'x';
 
       control.currentRevNum = async () => {
         return current.revNum;
@@ -902,12 +902,12 @@ describe('doc-server/BaseControl', () => {
           ? current
           : new MockSnapshot(revNum, [new MockOp('x', revNum)]);
       };
-      control._impl_update = async (baseSnapshot, change, expectedSnapshot, currentSnapshot) => {
+      control._attemptUpdate = async (change, baseSnapshot, expectedSnapshot, timeoutMsec) => {
         callCount++;
-        gotBase     = baseSnapshot;
         gotChange   = change;
+        gotBase     = baseSnapshot;
         gotExpected = expectedSnapshot;
-        gotCurrent  = currentSnapshot;
+        gotTimeout  = timeoutMsec;
         return new MockChange(14, [new MockOp('q')]);
       };
 
@@ -919,13 +919,13 @@ describe('doc-server/BaseControl', () => {
       assert.strictEqual(gotChange, change);
       assert.deepEqual(gotExpected,
         new MockSnapshot(7, [new MockOp('composed_doc'), new MockOp('abc')]));
-      assert.strictEqual(gotCurrent, current);
+      assert.isNumber(gotTimeout);
 
       assert.instanceOf(result, MockChange);
       assert.deepEqual(result, new MockChange(14, [new MockOp('q')]));
     });
 
-    it.skip('should retry the impl call if it returns `null`', async () => {
+    it('should retry the `_attemptUpdate()` call if it returns `null`', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       let callCount = 0;
 
@@ -935,8 +935,8 @@ describe('doc-server/BaseControl', () => {
       control._impl_getSnapshot = async (revNum) => {
         return new MockSnapshot(revNum, [new MockOp('x', revNum)]);
       };
-      control._impl_update =
-        async (baseSnapshot_unused, change_unused, expectedSnapshot_unused, currentSnapshot_unused) => {
+      control._attemptUpdate =
+        async (change_unused, baseSnapshot_unused, expectedSnapshot_unused, timeoutMsec_unused) => {
           callCount++;
           if (callCount === 1) {
             return null;
