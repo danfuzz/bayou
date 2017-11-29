@@ -10,8 +10,9 @@ import { Timeouts, Timestamp } from 'doc-common';
 import { MockChange, MockDelta, MockOp, MockSnapshot } from 'doc-common/mocks';
 import { BaseControl, FileAccess } from 'doc-server';
 import { MockControl } from 'doc-server/mocks';
-import { TransactionSpec } from 'file-store';
+import { Errors as FileErrors, TransactionSpec } from 'file-store';
 import { MockFile } from 'file-store/mocks';
+import { Errors, FrozenBuffer } from 'util-common';
 
 describe('doc-server/BaseControl', () => {
   /** {FileAccess} Convenient instance of `FileAccess`. */
@@ -156,6 +157,166 @@ describe('doc-server/BaseControl', () => {
     });
   });
 
+  describe('appendChange()', () => {
+    it('should perform an appropriate transaction given a valid change', async () => {
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(Codec.theOne, file);
+      const control    = new MockControl(fileAccess, 'boop');
+      const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+
+      let gotSpec = null;
+
+      file._impl_transact = (spec) => {
+        gotSpec = spec;
+        throw new Error('to_be_expected');
+      };
+
+      await assert.isRejected(control.appendChange(change, 1234), /to_be_expected/);
+
+      assert.instanceOf(gotSpec, TransactionSpec);
+      assert.strictEqual(gotSpec.ops.length, 5);
+
+      const ops1 = gotSpec.opsWithName('timeout');
+      assert.lengthOf(ops1, 1);
+      assert.strictEqual(ops1[0].props.durMsec, 1234);
+
+      const ops2 = gotSpec.opsWithName('checkPathIs');
+      assert.lengthOf(ops2, 1);
+      assert.strictEqual(ops2[0].props.storagePath, '/mock_control/revision_number');
+
+      const ops3 = gotSpec.opsWithName('checkPathAbsent');
+      assert.strictEqual(ops3[0].props.storagePath, '/mock_control/change/99');
+
+      const ops4 = gotSpec.opsWithName('writePath');
+      assert.lengthOf(ops4, 2);
+
+      const paths = ops4.map(op => op.props.storagePath);
+      assert.sameMembers(paths, ['/mock_control/revision_number', '/mock_control/change/99']);
+    });
+
+    it('should provide a default for `null` and clamp an out-of-range (but otherwise valid) timeout', async () => {
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(Codec.theOne, file);
+      const control    = new MockControl(fileAccess, 'boop');
+      const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+
+      let gotSpec = null;
+
+      file._impl_transact = (spec) => {
+        gotSpec = spec;
+        throw new Error('to_be_expected');
+      };
+
+      async function test(v, expect) {
+        await assert.isRejected(control.appendChange(change, v), /to_be_expected/);
+        assert.instanceOf(gotSpec, TransactionSpec);
+
+        const ops = gotSpec.opsWithName('timeout');
+        assert.lengthOf(ops, 1);
+        assert.strictEqual(ops[0].props.durMsec, expect);
+      }
+
+      await test(null,       Timeouts.MAX_TIMEOUT_MSEC);
+
+      await test(0,          Timeouts.MIN_TIMEOUT_MSEC);
+      await test(9999999999, Timeouts.MAX_TIMEOUT_MSEC);
+
+      await test(Timeouts.MAX_TIMEOUT_MSEC, Timeouts.MAX_TIMEOUT_MSEC);
+
+      await test(Timeouts.MIN_TIMEOUT_MSEC + 1, Timeouts.MIN_TIMEOUT_MSEC + 1);
+      await test(Timeouts.MAX_TIMEOUT_MSEC - 1, Timeouts.MAX_TIMEOUT_MSEC - 1);
+
+      for (let i = Timeouts.MIN_TIMEOUT_MSEC; i < Timeouts.MAX_TIMEOUT_MSEC; i += 987) {
+        await test(i, i);
+      }
+    });
+
+    it('should return `true` if the transaction succeeds', async () => {
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(Codec.theOne, file);
+      const control    = new MockControl(fileAccess, 'boop');
+      const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+
+      file._impl_transact = (spec_unused) => {
+        return { paths: null, data: null, revNum: 99, newRevNum: 100 };
+      };
+
+      await assert.eventually.strictEqual(control.appendChange(change), true);
+    });
+
+    it('should return `false` if the transaction fails due to a precondition failure', async () => {
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(Codec.theOne, file);
+      const control    = new MockControl(fileAccess, 'boop');
+      const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+
+      async function test(error) {
+        file._impl_transact = (spec_unused) => {
+          throw error;
+        };
+
+        await assert.eventually.strictEqual(control.appendChange(change), false);
+      }
+
+      await test(FileErrors.path_hash_mismatch('/whatever', FrozenBuffer.coerce('x').hash));
+      await test(FileErrors.path_not_absent('/mock_control/change/99'));
+    });
+
+    it('should rethrow any transaction error other than a precondition failure', async () => {
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(Codec.theOne, file);
+      const control    = new MockControl(fileAccess, 'boop');
+      const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+
+      async function test(error) {
+        file._impl_transact = (spec_unused) => {
+          throw error;
+        };
+
+        await assert.isRejected(control.appendChange(change), error);
+      }
+
+      await test(FileErrors.file_not_found('x'));
+      await test(Errors.timed_out(123456));
+      await test(Errors.bad_value('foo', 'bar'));
+    });
+
+    it('should reject an empty change', async () => {
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(Codec.theOne, file);
+      const control    = new MockControl(fileAccess, 'boop');
+      const change     = new MockChange(101, []);
+
+      await assert.isRejected(control.appendChange(change), /bad_value/);
+    });
+
+    it('should reject a change of the wrong type', async () => {
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(Codec.theOne, file);
+      const control    = new MockControl(fileAccess, 'boop');
+
+      await assert.isRejected(control.appendChange('not_a_change'), /bad_value/);
+    });
+
+    it('should reject an invalid timeout value', async () => {
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(Codec.theOne, file);
+      const control    = new MockControl(fileAccess, 'boop');
+      const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+
+      async function test(v) {
+        await assert.isRejected(control.appendChange(change, v), /bad_value/);
+      }
+
+      await test(-1);  // Must be a non-negative value.
+      await test(0.5); // Must be an integer.
+      await test('');
+      await test('florp');
+      await test(['florp']);
+      await test({ florp: 12 });
+    });
+  });
+
   describe('currentRevNum()', () => {
     it('should perform an appropriate transaction, and use the result', async () => {
       const file       = new MockFile('blort');
@@ -172,14 +333,14 @@ describe('doc-server/BaseControl', () => {
       await assert.isRejected(control.currentRevNum(), /to_be_expected/);
 
       assert.instanceOf(gotSpec, TransactionSpec);
+      assert.strictEqual(gotSpec.ops.length, 2);
 
       const ops1 = gotSpec.opsWithName('checkPathPresent');
-      const ops2 = gotSpec.opsWithName('readPath');
-
-      assert.strictEqual(gotSpec.ops.length, 2);
       assert.lengthOf(ops1, 1);
-      assert.lengthOf(ops2, 1);
       assert.strictEqual(ops1[0].props.storagePath, '/mock_control/revision_number');
+
+      const ops2 = gotSpec.opsWithName('readPath');
+      assert.lengthOf(ops2, 1);
       assert.strictEqual(ops2[0].props.storagePath, '/mock_control/revision_number');
     });
 

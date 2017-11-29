@@ -140,19 +140,25 @@ export default class BaseControl extends BaseDataManager {
    *
    * @param {BaseChange} change Change to append. Must be an instance of the
    *   appropriate subclass of `BaseChange` for this instance.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {boolean} Success flag. `true` indicates that the change was
    *   appended. `false` indicates that it was unsuccessful specifically because
    *   it lost an append race (that is, revision `change.revNum` already exists
    *   at the moment of the write attempt).
    * @throws {Error} If `change.delta.isEmpty()`.
    */
-  async appendChange(change) {
+  async appendChange(change, timeoutMsec = null) {
     const clazz = this.constructor;
     clazz.changeClass.check(change);
 
     if (change.delta.isEmpty()) {
-      throw Errors.bad_use('Should not have been called with an empty change.');
+      throw Errors.bad_value(change, clazz.changeClass, 'non-empty');
     }
+
+    timeoutMsec = Timeouts.clamp(timeoutMsec);
 
     const revNum       = change.revNum;
     const baseRevNum   = revNum - 1;
@@ -161,6 +167,7 @@ export default class BaseControl extends BaseDataManager {
 
     const fc   = this.fileCodec; // Avoids boilerplate immediately below.
     const spec = new TransactionSpec(
+      fc.op_timeout(timeoutMsec),
       fc.op_checkPathAbsent(changePath),
       fc.op_checkPathIs(revisionPath, baseRevNum),
       fc.op_writePath(changePath, change),
