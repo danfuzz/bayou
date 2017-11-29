@@ -16,8 +16,8 @@ const INITIAL_UPDATE_RETRY_MSEC = 50;
 /** {Int} Growth factor for update retry delays. */
 const UPDATE_RETRY_GROWTH_FACTOR = 5;
 
-/** {Int} Maximum amount of time to spend (in msec) retrying updates. */
-const MAX_UPDATE_TIME_MSEC = 20 * 1000; // 20 seconds.
+/** {Int} Maximum amount of time (in msec) between update retries. */
+const MAX_UPDATE_RETRY_MSEC = 15 * 1000;
 
 /**
  * {Int} Maximum number of changes to compose in order to produce a result from
@@ -532,6 +532,10 @@ export default class BaseControl extends BaseDataManager {
    * @param {BaseChange} change Change to apply. Must be an instance of the
    *   concrete change class as expected by this instance's class, and must
    *   have a `revNum` of at least `1`.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {BaseChange} The correction to the implied expected result of
    *   this operation. Will always be an instance of the appropriate concrete
    *   change class as defined by this instance's class. The `delta` of this
@@ -539,7 +543,7 @@ export default class BaseControl extends BaseDataManager {
    *   indicated by the result's `revNum`. The `timestamp` and `authorId` of the
    *   result will always be `null`.
    */
-  async update(change) {
+  async update(change, timeoutMsec = null) {
     const changeClass = this.constructor.changeClass;
 
     // This makes sure we have a surface-level proper instance, but doesn't
@@ -557,11 +561,17 @@ export default class BaseControl extends BaseDataManager {
       throw Errors.bad_value(change, changeClass, 'revNum >= 1');
     }
 
+    timeoutMsec = Timeouts.clamp(timeoutMsec);
+
     // Check for an empty `delta`. If it is, we don't bother trying to apply it.
     // See method header comment for more info.
     if (change.delta.isEmpty()) {
       return changeClass.FIRST.withRevNum(change.revNum - 1);
     }
+
+    // Figure out when to time out. **Note:** This has to happen before the
+    // first `await`!
+    const timeoutTime = Date.now() + timeoutMsec;
 
     // Snapshot of the base revision. The `getSnapshot()` call effectively
     // validates `change.revNum` as a legit value for the current document
@@ -577,9 +587,12 @@ export default class BaseControl extends BaseDataManager {
     // middle of the attempt. Any other problems are transparently thrown to the
     // caller.
     let retryDelayMsec = INITIAL_UPDATE_RETRY_MSEC;
-    let retryTotalMsec = 0;
     let attemptCount = 0;
     for (;;) {
+      if (Date.now() >= timeoutTime) {
+        throw Errors.timed_out(timeoutMsec);
+      }
+
       attemptCount++;
       if (attemptCount !== 1) {
         this.log.info(`Update attempt #${attemptCount}.`);
@@ -595,16 +608,9 @@ export default class BaseControl extends BaseDataManager {
       // is, there was revision skew that occurred during the update attempt),
       // so we delay briefly and iterate.
 
-      if (retryTotalMsec >= MAX_UPDATE_TIME_MSEC) {
-        // ...except if these attempts have taken wayyyy too long. If we land
-        // here, it's probably due to a bug (but not a total given).
-        throw Errors.aborted('Too many failed attempts in `update()`.');
-      }
-
       this.log.info(`Sleeping ${retryDelayMsec} msec.`);
       await Delay.resolve(retryDelayMsec);
-      retryTotalMsec += retryDelayMsec;
-      retryDelayMsec *= UPDATE_RETRY_GROWTH_FACTOR;
+      retryDelayMsec = Math.max(retryDelayMsec * UPDATE_RETRY_GROWTH_FACTOR, MAX_UPDATE_RETRY_MSEC);
     }
   }
 

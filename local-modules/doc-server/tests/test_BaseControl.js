@@ -816,6 +816,32 @@ describe('doc-server/BaseControl', () => {
       await test(new MockChange(1, []));
     });
 
+    it('should reject an invalid timeout value', async () => {
+      const control = new MockControl(FILE_ACCESS, 'boop');
+      control.currentRevNum = async () => {
+        throw new Error('This should not have been called.');
+      };
+      control._impl_getSnapshot = async (revNum_unused) => {
+        throw new Error('This should not have been called.');
+      };
+      control._impl_update = async (baseSnapshot_unused, change_unused, expectedSnapshot_unused) => {
+        throw new Error('This should not have been called.');
+      };
+
+      const change = new MockChange(11, [], Timestamp.MIN_VALUE);
+
+      async function test(value) {
+        await assert.isRejected(control.update(change, value), /^bad_value/);
+      }
+
+      await test(-1);  // Must be a non-negative value.
+      await test(0.5); // Must be an integer.
+      await test('');
+      await test('florp');
+      await test(['florp']);
+      await test({ florp: 12 });
+    });
+
     it('should accept an empty change without calling through to the impl', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
