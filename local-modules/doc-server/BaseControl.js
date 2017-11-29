@@ -520,11 +520,9 @@ export default class BaseControl extends BaseDataManager {
    * for example, if the change is able to be applied as exactly given, the
    * returned correction will have an empty `delta`.
    *
-   * As a special case, if the `revNum` is valid and `ops` is empty, this method
-   * returns a result of `change.revNum - 1` along with an empty correction.
-   * That is, the return value from passing an empty delta doesn't provide any
-   * information about subsequent revisions of the document. In this case, the
-   * method does _not_ verify whether `change.revNum` is possibly valid.
+   * As a somewhat special case, if the `revNum` is valid and `delta` is empty,
+   * this method returns an empty correction change with `revNum` being the
+   * instantaneously-current revision number.
    *
    * **Note:** This method trusts the `authorId` and `timestamp`, and as such it
    * is _not_ appropriate to expose this method directly to client access.
@@ -562,12 +560,6 @@ export default class BaseControl extends BaseDataManager {
     }
 
     timeoutMsec = Timeouts.clamp(timeoutMsec);
-
-    // Check for an empty `delta`. If it is, we don't bother trying to apply it.
-    // See method header comment for more info.
-    if (change.delta.isEmpty()) {
-      return changeClass.FIRST.withRevNum(change.revNum - 1);
-    }
 
     // Figure out when to time out. **Note:** This has to happen before the
     // first `await`!
@@ -760,8 +752,7 @@ export default class BaseControl extends BaseDataManager {
    * called from within the retry loop of the main method.
    *
    * @param {BaseChange} change The change to apply, same as for
-   *   {@link #update}, except additionally guaranteed to have a non-empty
-   *  `delta`.
+   *   {@link #update}.
    * @param {BaseSnapshot} baseSnapshot Snapshot of the base from which the
    *   change is defined. That is, this is the snapshot of `change.revNum - 1`.
    * @param {BaseSnapshot} expectedSnapshot The implied expected result as
@@ -772,8 +763,8 @@ export default class BaseControl extends BaseDataManager {
    *   `null` if the attempt failed due to losing an append race.
    */
   async _attemptUpdate(change, baseSnapshot, expectedSnapshot, timeoutMsec) {
-    const changeClass     = this.constructor.changeClass;
-    const deltaClass      = this.constructor.deltaClass;
+    const changeClass = this.constructor.changeClass;
+    const deltaClass  = this.constructor.deltaClass;
 
     // **TODO:** Consider whether we should make this call have an explicit
     // timeout. (It would require adding an argument to the method.)

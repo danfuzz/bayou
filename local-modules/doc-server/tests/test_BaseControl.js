@@ -842,33 +842,6 @@ describe('doc-server/BaseControl', () => {
       await test({ florp: 12 });
     });
 
-    it('should accept an empty change without calling through to the impl', async () => {
-      const control = new MockControl(FILE_ACCESS, 'boop');
-      control.currentRevNum = async () => {
-        throw new Error('This should not have been called.');
-      };
-      control._impl_getSnapshot = async (revNum_unused) => {
-        throw new Error('This should not have been called.');
-      };
-      control._impl_rebase = async (change_unused, base_unused, expected_unused, current_unused) => {
-        throw new Error('This should not have been called.');
-      };
-
-      async function test(value) {
-        const expectRevNum = value.revNum - 1;
-        const result = await control.update(value);
-
-        assert.instanceOf(result, MockChange);
-        assert.strictEqual(result.revNum, expectRevNum);
-        assert.isTrue(result.delta.isEmpty());
-        assert.strictEqual(result.timestamp, null);
-        assert.strictEqual(result.authorId, null);
-      }
-
-      await test(new MockChange(1,  [], Timestamp.MIN_VALUE));
-      await test(new MockChange(10, [], Timestamp.MIN_VALUE.addMsec(12345)));
-    });
-
     it('should reject a too-large `revNum` in valid nontrivial cases', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
@@ -883,6 +856,23 @@ describe('doc-server/BaseControl', () => {
 
       const change = new MockChange(12, [new MockOp('abc')], Timestamp.MIN_VALUE);
       await assert.isRejected(control.update(change), /^bad_value/);
+    });
+
+    it('should call through to `_attemptUpdate()` given an empty change', async () => {
+      const control = new MockControl(FILE_ACCESS, 'boop');
+      control.currentRevNum = async () => {
+        return 10;
+      };
+      control._impl_getSnapshot = async (revNum) => {
+        return new MockSnapshot(revNum, [new MockOp('x', revNum)]);
+      };
+      control._attemptUpdate =
+        async (change_unused, baseSnapshot_unused, expectedSnapshot_unused, timeoutMsec_unused) => {
+          throw new Error('expected');
+        };
+
+      const change = new MockChange(1,  [], Timestamp.MIN_VALUE);
+      await assert.isRejected(control.update(change), /expected/);
     });
 
     it('should call through to `_attemptUpdate()` in valid nontrivial cases', async () => {
