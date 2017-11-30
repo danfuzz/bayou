@@ -51,106 +51,38 @@ export default class BodyControl extends BaseControl {
   }
 
   /**
-   * Main implementation of `update()`, as required by the superclass.
+   * Rebases a given change, such that it can be appended as the revision after
+   * the indicated instantaneously-current snapshot.
    *
+   * @param {BodyChange} change The change to apply, same as for
+   *   {@link #update}, except additionally guaranteed to have a non-empty
+   *  `delta`.
    * @param {BodySnapshot} baseSnapshot Snapshot of the base from which the
-   *   change is defined.
-   * @param {BodyChange} change The change to apply, same as for `update()`.
-   * @param {BodySnapshot} expectedSnapshot The implied expected result as
-   *   defined by `update()`.
-   * @returns {BodyChange|null} Result for the outer call to `update()`,
-   *   or `null` if the application failed due to losing a race.
+   *   change is defined. That is, this is the snapshot of `change.revNum - 1`.
+   * @param {BodySnapshot} expectedSnapshot_unused The implied expected result
+   *   as defined by {@link #update}.
+   * @param {BodySnapshot} currentSnapshot An instantaneously-current snapshot.
+   *   Guaranteed to be a different revision than `baseSnapshot`.
+   * @returns {BodyChange} Rebased (transformed) change, which is suitable for
+   *   appending as revision `currentSnapshot.revNum + 1`.
    */
-  async _impl_update(baseSnapshot, change, expectedSnapshot) {
-    // Instantaneously current (latest) revision of the document. We'll find out
-    // if it turned out to remain current when we finally get to try appending
-    // the (possibly modified) change, below.
-    const current = await this.getSnapshot();
+  async _impl_rebase(change, baseSnapshot, expectedSnapshot_unused, currentSnapshot) {
+    // The client has requested an application of a `change` against a revision
+    // of the document (`baseSnapshot`) which is _not_ the current revision
+    // (`currentSnapshot`).
 
-    if (baseSnapshot.revNum === current.revNum) {
-      // The easy case, because the base revision is in fact the current
-      // revision of the document, so we don't have to transform the incoming
-      // delta. We merely have to apply the given `change` to the current
-      // revision. If it succeeds, then we won the append race (if any).
+    // Construct a combined delta for all the server changes made between
+    // `baseSnapshot` and `currentSnapshot`.
+    const serverDelta = await this.getComposedChanges(
+      BodyDelta.EMPTY, baseSnapshot.revNum + 1, currentSnapshot.revNum + 1, false);
 
-      const success = await this.appendChange(change);
+    // Rebase (transform) `change.delta` with regard to (on top of)
+    // `serverDelta`. The `true` argument indicates that `serverDelta` should be
+    // taken to have been applied to the document first (won any insert races or
+    // similar).
+    const finalDelta = serverDelta.transform(change.delta, true);
 
-      if (!success) {
-        // Turns out we lost an append race.
-        return null;
-      }
-
-      return new BodyChange(change.revNum, BodyDelta.EMPTY);
-    }
-
-    // The hard case: The client has requested an application of a delta
-    // (hereafter `dClient`) against a revision of the document which is _not_
-    // the current revision (hereafter, `rBase` for the common base and
-    // `rCurrent` for the current revision). Here's what we do:
-    //
-    // 0. Definitions of input:
-    //    * `dClient` -- Delta (ops) to apply, as requested by the client.
-    //    * `rBase` -- Base revision to apply the delta to.
-    //    * `rCurrent` -- Current (latest) revision of the document.
-    //    * `rExpected` -- The implied expected result of application. This is
-    //      `rBase.compose(dClient)` as revision number `rBase.revNum + 1`.
-    // 1. Construct a combined delta for all the server changes made between
-    //    `rBase` and `rCurrent`. This is `dServer`.
-    // 2. Transform (rebase) `dClient` with regard to (on top of) `dServer`.
-    //    This is `dNext`. If `dNext` turns out to be empty, stop here and
-    //    report that fact.
-    // 3. Apply `dNext` to `rCurrent`, producing `rNext` as the new current
-    //    server revision.
-    // 4. Construct a delta from `rExpected` to `rNext` (that is, the diff).
-    //    This is `dCorrection`. Return this to the client; they will compose
-    //    `rExpected` with `dCorrection` to arrive at `rNext`.
-
-    // (0) Assign incoming arguments to variables that correspond to the
-    //     description immediately above.
-
-    const dClient   = change.delta;
-    const rBase     = baseSnapshot;
-    const rExpected = expectedSnapshot;
-    const rCurrent  = current;
-
-    // (1)
-
-    const dServer = await this.getComposedChanges(
-      BodyDelta.EMPTY, rBase.revNum + 1, rCurrent.revNum + 1, false);
-
-    // (2)
-
-    // The `true` argument indicates that `dServer` should be taken to have been
-    // applied first (won any insert races or similar).
-    const dNext = dServer.transform(dClient, true);
-
-    if (dNext.isEmpty()) {
-      // It turns out that nothing changed. **Note:** This case is unusual, but
-      // it _can_ happen in practice. For example, if there is a race between
-      // two changes that both delete the same characters from the document,
-      // then `transform()` on the losing change will in fact be empty.
-      return new BodyChange(rCurrent.revNum, BodyDelta.EMPTY);
-    }
-
-    // (3)
-
-    const rNextNum      = rCurrent.revNum + 1;
-    const appendSuccess = await this.appendChange(
-      new BodyChange(rNextNum, dNext, change.timestamp, change.authorId));
-
-    if (!appendSuccess) {
-      // Turns out we lost an append race.
-      return null;
-    }
-
-    const rNext = await this.getSnapshot(rNextNum);
-
-    // (4)
-
-    // **Note:** The result's `revNum` is the same as `rNext`'s, which is
-    // exactly what we want.
-    const dCorrection = rExpected.diff(rNext);
-    return dCorrection;
+    return new BodyChange(currentSnapshot.revNum + 1, finalDelta, change.timestamp, change.authorId);
   }
 
   /**

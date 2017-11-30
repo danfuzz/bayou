@@ -88,13 +88,23 @@ export default class Errors extends UtilityClass {
   }
 
   /**
-   * Indicates whether or not the given error is a `path_not_empty`.
+   * Indicates whether or not the given error is a `path_hash_mismatch`.
    *
    * @param {Error} error Error in question.
-   * @returns {boolean} `true` iff it represents a `path_not_empty`.
+   * @returns {boolean} `true` iff it represents a `path_hash_mismatch`.
    */
-  static isPathNotEmpty(error) {
-    return InfoError.hasName(error, 'path_not_empty');
+  static isPathHashMismatch(error) {
+    return InfoError.hasName(error, 'path_hash_mismatch');
+  }
+
+  /**
+   * Indicates whether or not the given error is a `path_not_absent`.
+   *
+   * @param {Error} error Error in question.
+   * @returns {boolean} `true` iff it represents a `path_not_absent`.
+   */
+  static isPathNotAbsent(error) {
+    return InfoError.hasName(error, 'path_not_absent');
   }
 
   /**

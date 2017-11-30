@@ -16,8 +16,8 @@ const INITIAL_UPDATE_RETRY_MSEC = 50;
 /** {Int} Growth factor for update retry delays. */
 const UPDATE_RETRY_GROWTH_FACTOR = 5;
 
-/** {Int} Maximum amount of time to spend (in msec) retrying updates. */
-const MAX_UPDATE_TIME_MSEC = 20 * 1000; // 20 seconds.
+/** {Int} Maximum amount of time (in msec) between update retries. */
+const MAX_UPDATE_RETRY_MSEC = 15 * 1000;
 
 /**
  * {Int} Maximum number of changes to compose in order to produce a result from
@@ -140,19 +140,25 @@ export default class BaseControl extends BaseDataManager {
    *
    * @param {BaseChange} change Change to append. Must be an instance of the
    *   appropriate subclass of `BaseChange` for this instance.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {boolean} Success flag. `true` indicates that the change was
    *   appended. `false` indicates that it was unsuccessful specifically because
    *   it lost an append race (that is, revision `change.revNum` already exists
    *   at the moment of the write attempt).
    * @throws {Error} If `change.delta.isEmpty()`.
    */
-  async appendChange(change) {
+  async appendChange(change, timeoutMsec = null) {
     const clazz = this.constructor;
     clazz.changeClass.check(change);
 
     if (change.delta.isEmpty()) {
-      throw Errors.bad_use('Should not have been called with an empty change.');
+      throw Errors.bad_value(change, clazz.changeClass, 'non-empty');
     }
+
+    timeoutMsec = Timeouts.clamp(timeoutMsec);
 
     const revNum       = change.revNum;
     const baseRevNum   = revNum - 1;
@@ -161,6 +167,7 @@ export default class BaseControl extends BaseDataManager {
 
     const fc   = this.fileCodec; // Avoids boilerplate immediately below.
     const spec = new TransactionSpec(
+      fc.op_timeout(timeoutMsec),
       fc.op_checkPathAbsent(changePath),
       fc.op_checkPathIs(revisionPath, baseRevNum),
       fc.op_writePath(changePath, change),
@@ -170,9 +177,9 @@ export default class BaseControl extends BaseDataManager {
     try {
       await fc.transact(spec);
     } catch (e) {
-      if (FileStoreErrors.isPathNotEmpty(e)) {
-        // This happens if and when we lose an append race, which will regularly
-        // occur if there are simultaneous editors.
+      if (FileStoreErrors.isPathNotAbsent(e) || FileStoreErrors.isPathHashMismatch(e)) {
+        // One of these will get thrown if and when we lose an append race. This
+        // regularly occurs when there are simultaneous editors.
         this.log.info('Lost append race for revision:', revNum);
         return false;
       } else {
@@ -513,11 +520,9 @@ export default class BaseControl extends BaseDataManager {
    * for example, if the change is able to be applied as exactly given, the
    * returned correction will have an empty `delta`.
    *
-   * As a special case, if the `revNum` is valid and `ops` is empty, this method
-   * returns a result of `change.revNum - 1` along with an empty correction.
-   * That is, the return value from passing an empty delta doesn't provide any
-   * information about subsequent revisions of the document. In this case, the
-   * method does _not_ verify whether `change.revNum` is possibly valid.
+   * As a somewhat special case, if the `revNum` is valid and `delta` is empty,
+   * this method returns an empty correction change with `revNum` being the
+   * instantaneously-current revision number.
    *
    * **Note:** This method trusts the `authorId` and `timestamp`, and as such it
    * is _not_ appropriate to expose this method directly to client access.
@@ -525,6 +530,10 @@ export default class BaseControl extends BaseDataManager {
    * @param {BaseChange} change Change to apply. Must be an instance of the
    *   concrete change class as expected by this instance's class, and must
    *   have a `revNum` of at least `1`.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {BaseChange} The correction to the implied expected result of
    *   this operation. Will always be an instance of the appropriate concrete
    *   change class as defined by this instance's class. The `delta` of this
@@ -532,7 +541,7 @@ export default class BaseControl extends BaseDataManager {
    *   indicated by the result's `revNum`. The `timestamp` and `authorId` of the
    *   result will always be `null`.
    */
-  async update(change) {
+  async update(change, timeoutMsec = null) {
     const changeClass = this.constructor.changeClass;
 
     // This makes sure we have a surface-level proper instance, but doesn't
@@ -550,11 +559,11 @@ export default class BaseControl extends BaseDataManager {
       throw Errors.bad_value(change, changeClass, 'revNum >= 1');
     }
 
-    // Check for an empty `delta`. If it is, we don't bother trying to apply it.
-    // See method header comment for more info.
-    if (change.delta.isEmpty()) {
-      return changeClass.FIRST.withRevNum(change.revNum - 1);
-    }
+    timeoutMsec = Timeouts.clamp(timeoutMsec);
+
+    // Figure out when to time out. **Note:** This has to happen before the
+    // first `await`!
+    const timeoutTime = Date.now() + timeoutMsec;
 
     // Snapshot of the base revision. The `getSnapshot()` call effectively
     // validates `change.revNum` as a legit value for the current document
@@ -570,34 +579,29 @@ export default class BaseControl extends BaseDataManager {
     // middle of the attempt. Any other problems are transparently thrown to the
     // caller.
     let retryDelayMsec = INITIAL_UPDATE_RETRY_MSEC;
-    let retryTotalMsec = 0;
     let attemptCount = 0;
     for (;;) {
+      const now = Date.now();
+
+      if (now >= timeoutTime) {
+        throw Errors.timed_out(timeoutMsec);
+      }
+
       attemptCount++;
       if (attemptCount !== 1) {
         this.log.info(`Update attempt #${attemptCount}.`);
       }
 
-      const result = await this._impl_update(baseSnapshot, change, expectedSnapshot);
+      const result =
+        await this._attemptUpdate(change, baseSnapshot, expectedSnapshot, timeoutTime - now);
 
       if (result !== null) {
         return result;
       }
 
-      // A `null` result from the call means that we lost an update race (that
-      // is, there was revision skew that occurred during the update attempt),
-      // so we delay briefly and iterate.
-
-      if (retryTotalMsec >= MAX_UPDATE_TIME_MSEC) {
-        // ...except if these attempts have taken wayyyy too long. If we land
-        // here, it's probably due to a bug (but not a total given).
-        throw Errors.aborted('Too many failed attempts in `update()`.');
-      }
-
       this.log.info(`Sleeping ${retryDelayMsec} msec.`);
       await Delay.resolve(retryDelayMsec);
-      retryTotalMsec += retryDelayMsec;
-      retryDelayMsec *= UPDATE_RETRY_GROWTH_FACTOR;
+      retryDelayMsec = Math.min(retryDelayMsec * UPDATE_RETRY_GROWTH_FACTOR, MAX_UPDATE_RETRY_MSEC);
     }
   }
 
@@ -719,32 +723,86 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
-   * Subclass-specific implementation of `update()`, which should perform one
-   * attempt to apply the given change. Additional arguments (beyond what
-   * `update()` takes) are pre-calculated snapshots that only ever have to be
-   * derived once per outer call to `update()`. This method attempts to apply
-   * `change` relative to `baseSnapshot`, taking into account any intervening
-   * revisions between `baseSnapshot` and the instantaneously-current revision.
-   * If it succeeds (that is, if it manages to get an instantaneously-current
-   * snapshot, and use that snapshot to create a final change which is
-   * successfully appended to the document, without any other "racing" code
-   * doing the same first), then this method returns a proper result for an
-   * outer `update()` call. If it fails due to a lost race, then this method
-   * returns `null`. All other problems are reported by throwing an error.
+   * Rebases a given change, such that it can be appended as the revision after
+   * the indicated instantaneously-current snapshot. Glibly speaking, this
+   * method is called when {@link #update} determines that it can't simply
+   * append a change as passed to it.
+   *
    * Subclasses must override this method.
    *
    * @abstract
+   * @param {BaseChange} change The change to apply, same as for
+   *   {@link #update}, except additionally guaranteed to have a non-empty
+   *  `delta`.
    * @param {BaseSnapshot} baseSnapshot Snapshot of the base from which the
    *   change is defined. That is, this is the snapshot of `change.revNum - 1`.
-   * @param {BaseChange} change The change to apply, same as for `update()`,
-   *   except additionally guaranteed to have a non-empty `delta`.
    * @param {BaseSnapshot} expectedSnapshot The implied expected result as
-   *   defined by `update()`.
-   * @returns {BaseChange|null} Result for the outer call to `update()`,
-   *   or `null` if the application failed due to losing a race.
+   *   defined by {@link #update}.
+   * @param {BaseSnapshot} currentSnapshot An instantaneously-current snapshot.
+   *   Guaranteed to be a different revision than `baseSnapshot`.
+   * @returns {BaseChange} Rebased (transformed) change, which is suitable for
+   *   appending as revision `currentSnapshot.revNum + 1`.
    */
-  async _impl_update(baseSnapshot, change, expectedSnapshot) {
-    return this._mustOverride(baseSnapshot, change, expectedSnapshot);
+  async _impl_rebase(change, baseSnapshot, expectedSnapshot, currentSnapshot) {
+    return this._mustOverride(change, baseSnapshot, expectedSnapshot, currentSnapshot);
+  }
+
+  /**
+   * Helper for {@link #update}, which performs one update attempt. This is
+   * called from within the retry loop of the main method.
+   *
+   * @param {BaseChange} change The change to apply, same as for
+   *   {@link #update}.
+   * @param {BaseSnapshot} baseSnapshot Snapshot of the base from which the
+   *   change is defined. That is, this is the snapshot of `change.revNum - 1`.
+   * @param {BaseSnapshot} expectedSnapshot The implied expected result as
+   *   defined by {@link #update}.
+   * @param {Int} timeoutMsec Timeout to use for calls that could significantly
+   *   block.
+   * @returns {BaseChange|null} Result for the outer call to {@link #update}, or
+   *   `null` if the attempt failed due to losing an append race.
+   */
+  async _attemptUpdate(change, baseSnapshot, expectedSnapshot, timeoutMsec) {
+    const changeClass = this.constructor.changeClass;
+    const deltaClass  = this.constructor.deltaClass;
+
+    // **TODO:** Consider whether we should make this call have an explicit
+    // timeout. (It would require adding an argument to the method.)
+    const currentSnapshot = await this.getSnapshot();
+
+    const changeToAppend = (baseSnapshot.revNum === currentSnapshot.revNum)
+      ? change
+      : await this._impl_rebase(change, baseSnapshot, expectedSnapshot, currentSnapshot);
+
+    if (changeToAppend.delta.isEmpty()) {
+      // It turns out that nothing changed. **Note:** This case is unusual,
+      // but it _can_ happen in practice. For example, if there is an append
+      // race between two changes that both do the same thing (e.g., delete
+      // the same characters from the document body), then the result from
+      // rebasing the losing change will have an empty delta.
+      return new changeClass(currentSnapshot.revNum, deltaClass.EMPTY);
+    }
+
+    const appendSuccess = await this.appendChange(changeToAppend, timeoutMsec);
+
+    if (appendSuccess) {
+      if (change === changeToAppend) {
+        // The easy case: We didn't have to rebase and succeeded in appending
+        // the change as-is. No correction!
+        return new changeClass(change.revNum, deltaClass.EMPTY);
+      } else {
+        const resultSnapshot = await this.getSnapshot(changeToAppend.revNum);
+        const correction     = expectedSnapshot.diff(resultSnapshot);
+        return correction;
+      }
+    }
+
+    // A `false` result from the above call means that we lost an update race
+    // (that is, there was revision skew that occurred during the update
+    // attempt). The `null` return value here is detected by the loop in {@link
+    // #update}.
+
+    return null;
   }
 
   /**
