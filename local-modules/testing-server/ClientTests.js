@@ -47,7 +47,10 @@ export default class ClientTests extends UtilityClass {
 
     log.info(`Issuing request to start test run:\n  ${url}`);
 
-    await page.goto(url, { waitUntil: 'load' });
+    // Wait up to two minutes for the page to finish loading. It should
+    // typically be much quicker than that; we just leave plenty of leeway in
+    // case the machine under test happens to be running under heavy load.
+    await page.goto(url, { waitUntil: 'load', timeout: 2 * 60 * 1000 });
 
     // Now wait until the test run is complete. This happens an indeterminate
     // amount of time after the page is done loading (typically a few seconds).
