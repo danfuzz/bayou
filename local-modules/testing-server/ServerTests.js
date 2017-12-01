@@ -8,12 +8,11 @@ import fs from 'fs';
 import Mocha from 'mocha';
 import { promisify } from 'util';
 
-import { Dirs } from 'env-server';
 import { Logger } from 'see-all';
 import { UtilityClass } from 'util-common';
 
 import CollectingReporter from './CollectingReporter';
-import Utils from './Utils';
+import TestFiles from './TestFiles';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('testing');
@@ -31,14 +30,10 @@ export default class ServerTests extends UtilityClass {
    *
    * @param {string|null} testOut If non-`null`, filesystem path to write the
    *   test output to.
-   * @returns {number} Count of test failures, which resolves after testing is
-   *   complete.
+   * @returns {boolean} `true` iff there were any test failures.
    */
-  static async runAll(testOut) {
-    // TODO: Complain about modules that have no tests at all.
-
-    const moduleNames = Utils.localModulesIn(Dirs.theOne.SERVER_DIR);
-    const testFiles = Utils.allTestFiles(Dirs.theOne.SERVER_DIR, moduleNames);
+  static async run(testOut) {
+    const testFiles = TestFiles.allServerFiles();
 
     // The hacky arrangement with `reporterHolder` is how we exfiltrate the
     // reporter instance out of Mocha.
@@ -64,6 +59,6 @@ export default class ServerTests extends UtilityClass {
       log.info('Wrote test results to file:', testOut);
     }
 
-    return failures;
+    return (failures !== 0);
   }
 }

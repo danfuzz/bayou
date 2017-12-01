@@ -9,7 +9,7 @@ import { UtilityClass } from 'util-common';
 
 // **Note:** This is really the local module `mocha-client-shim`. See that
 // module and {@link client-bundle.ClientBundle} for more details.
-import { mocha } from 'mocha';
+import { Mocha } from 'mocha';
 
 // This file is dynamically-generated when loaded. See comments in the file for
 // more info.
@@ -19,7 +19,9 @@ import { registerTests } from './client-tests';
 chai.use(chaiAsPromised);
 
 /**
- * Client-side helper for setting up and running test code.
+ * Driver for the Mocha framework, for client tests. This gets run by the
+ * client-side `boot-for-test` script, which is operated at "arm's length" by
+ * {@link testing-server.ClientTests}.
  */
 export default class Tests extends UtilityClass {
   /**
@@ -29,9 +31,17 @@ export default class Tests extends UtilityClass {
    *   `mocha.run()` callback.
    */
   static async runAll() {
+    const mocha = new Mocha({
+      reporter: 'tap',
+      ui:       'bdd'
+    });
+
     // Find all of our test files and load them into the runtime. The
     // process of loading the modules also registers all of the tests with
-    // mocha.
+    // mocha. **Note:** This has to be done _after_ we construct `mocha` above,
+    // due our janky setup for making modules testable at all on the client.
+    // The "sausage factory" in question is the local module `mocha-client-shim`
+    // (see which for the gory details).
     registerTests();
 
     return new Promise((res, rej_unused) => {

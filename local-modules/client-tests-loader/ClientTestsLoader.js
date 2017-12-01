@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ClientTests } from 'testing-server';
+import { TestFiles } from 'testing-server';
 import { UtilityClass } from 'util-common';
 
 /**
@@ -21,7 +21,7 @@ export default class ClientTestsLoader extends UtilityClass {
     // The `map()` removes the path prefix just leaving the module name and
     // subdirectory path underneath it along with the file name _without_ the
     // `.js` suffix.
-    const allFiles = ClientTests.allTestFiles().map((file) => {
+    const allFiles = TestFiles.allClientFiles().map((file) => {
       return file.replace(/^.*[/]node_modules[/](.*)\.js$/,
         (match_unused, group1) => { return group1; });
     });
