@@ -48,8 +48,8 @@ export default class FileEmbed extends React.Component {
     return (
       <div className = { styles.container } onMouseEnter = { this.beginHover } onMouseLeave = { this.endHover } >
         <div className = { styles.iconContainer }>
-          <p className={`ts_icon_file_generic ${styles.icon}`}></p>
-          { this.state.inHover && <button className = { `${styles.downloadButton} ts_icon_cloud_download` }></button> }
+          <p className={`c-icon--file_generic ${styles.icon}`}></p>
+          { this.state.inHover && <button className = { `${styles.downloadButton} c-icon--cloud_download` }></button> }
         </div>
         <div className = { styles.metadataContainer }>
           <p className = { styles.filename }>{ this.props.filename }</p>

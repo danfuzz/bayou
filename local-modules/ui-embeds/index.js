@@ -5,6 +5,7 @@
 import Clock from './components/Clock';
 import FigmaEmbed from './components/FigmaEmbed';
 import FileEmbed from './components/FileEmbed';
+import HorizontalRule from './HorizontalRule';
 import ImageEmbed from './components/ImageEmbed';
 import ComponentBlotWrapper from './ComponentBlotWrapper';
 
@@ -13,5 +14,6 @@ export {
   ComponentBlotWrapper,
   FigmaEmbed,
   FileEmbed,
+  HorizontalRule,
   ImageEmbed
 };

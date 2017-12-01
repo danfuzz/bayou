@@ -32,7 +32,9 @@ const DEFAULT_BODY_MODULE_CONFIG = {
   keyboard: BayouKeyHandlers.defaultKeyHandlers,
   toolbar: [
     [{ header: 1 }, { header: 2 }, { header: 3 }],
-    ['bold', 'italic', 'underline', 'strike', 'code'], // Toggled buttons.
+    ['bold', 'italic', 'underline', 'strike', 'code'],
+    [{ list: 'bullet' }, { list: 'ordered' }, { list: 'unchecked' }],
+    ['blockquote', 'code-block']
   ]
 };
 

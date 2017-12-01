@@ -16,8 +16,8 @@ import styles from './star.module.less';
 class Star extends React.Component {
   render() {
     const classes = this.props.isStarred
-      ? `${styles.star} ${styles['star-enabled']} ${styles.ts_icon_star}`
-      : `${styles.star} ${styles['star-disabled']} ${styles.ts_icon_star_o}`;
+      ? `${styles.star} ${styles['star-enabled']} ${styles['c-icon--star']}`
+      : `${styles.star} ${styles['star-disabled']} ${styles['c-icon--star-o']}`;
 
     return <button onClick={ this.props.onClick } className={ classes }></button>;
   }
