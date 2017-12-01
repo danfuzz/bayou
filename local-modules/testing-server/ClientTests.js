@@ -11,7 +11,7 @@ import { UtilityClass } from 'util-common';
 const log = new Logger('testing');
 
 /**
- * Driver for the Mocha framework, for client tests.
+ * Indirect driver for the Mocha framework, for client tests.
  */
 export default class ClientTests extends UtilityClass {
   /**

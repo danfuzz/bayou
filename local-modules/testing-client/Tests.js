@@ -19,7 +19,9 @@ import { registerTests } from './client-tests';
 chai.use(chaiAsPromised);
 
 /**
- * Client-side helper for setting up and running test code.
+ * Driver for the Mocha framework, for client tests. This gets run by the
+ * client-side `boot-for-test` script, which is operated at "arm's length" by
+ * {@link testing-server.ClientTests}.
  */
 export default class Tests extends UtilityClass {
   /**
