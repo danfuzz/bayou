@@ -2,8 +2,8 @@ mocha-client-shim
 =================
 
 This module's sole purpose is to act as a loader proxy for Webpack so that
-testing code on the client side can say `import mocha from 'mocha';` and get
-reasonable bindings.
+testing code on the client side can say `import { Mocha, describe, it, ... }
+from 'mocha';` and get reasonable bindings.
 
 See `client-bundle.ClientBundle` for the code that gets this hooked into the
 system.
