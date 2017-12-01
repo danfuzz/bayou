@@ -13,11 +13,8 @@ import 'source-map-support/register';
 import 'babel-core/register';
 import 'babel-polyfill';
 
-import fs from 'fs';
 import path from 'path';
-import puppeteer from 'puppeteer';
 import minimist from 'minimist';
-import { format, promisify } from 'util';
 
 import { Application } from 'app-setup';
 import { ClientBundle } from 'client-bundle';
@@ -27,7 +24,7 @@ import { Hooks } from 'hooks-server';
 import { Delay } from 'promise-util';
 import { Logger } from 'see-all';
 import { FileSink, ServerSink } from 'see-all-server';
-import { ServerTests } from 'testing-server';
+import { ClientTests, ServerTests } from 'testing-server';
 
 
 /** {Logger} Logger for this file. */
@@ -174,8 +171,6 @@ async function clientBundle() {
  * Does a client testing run.
  */
 async function clientTest() {
-  const testLog = new Logger('client-test');
-
   // Figure out if there is already a server listening on the designated
   // application port. If not, run one locally in this process.
 
@@ -184,8 +179,8 @@ async function clientTest() {
 
   if (alreadyRunning) {
     port = Hooks.theOne.listenPort;
-    testLog.info(
-      'NOTE: There is a server already running on this machine. The test run\n' +
+    log.info(
+      'NOTE: There is a server already running on this machine. The client test run\n' +
       '      will issue requests to it instead of trying to build a new test bundle.');
   } else {
     // Start up a server in this process, since we determined that this machine
@@ -202,105 +197,7 @@ async function clientTest() {
     await Delay.resolve(15 * 1000);
   }
 
-  // **TODO:** This whole arrangement is a bit hacky and should be improved.
-
-  // Set up and start up headless Chrome (via Puppeteer).
-  const browser  = await puppeteer.launch();
-  const page     = await browser.newPage();
-  const logLines = [];
-
-  page.on('console', (...args) => {
-    // **TODO:** This doesn't quite work, because the first argument can have
-    // Chrome-specific `%` escapes in it, which are similar to but not exactly
-    // what Node's `util.format()` uses.
-    const msg = format(...args);
-    logLines.push(msg);
-  });
-
-  // Issue the request to load up the client tests.
-  const url = `http://localhost:${port}/debug/client-test`;
-
-  testLog.info(`Issuing request to start test run:\n  ${url}`);
-
-  await page.goto(url, { waitUntil: 'load' });
-
-  // Now wait until the test run is complete. This happens an indeterminate
-  // amount of time after the page is done loading (typically a few seconds).
-  // During the intervening time, we should see lots of calls to the `console`
-  // event handler. We poll and wait until the activity stops.
-  let lastChangeAt = Date.now();
-  let lastCount    = logLines.length;
-  let lastStatus   = lastChangeAt;
-  for (;;) {
-    const newCount = logLines.length;
-    const now      = Date.now();
-
-    if ((now - lastStatus) > (1.5 * 1000)) {
-      testLog.info('Waiting for test run to complete...');
-      lastStatus = now;
-    }
-
-    if (newCount !== lastCount) {
-      lastChangeAt = now;
-      lastCount    = newCount;
-    } else if ((now - lastChangeAt) > (4 * 1000)) {
-      // It's been more than four seconds since there were logs written.
-      testLog.info('Test run is complete!');
-      break;
-    }
-
-    await Delay.resolve(250);
-  }
-
-  // Print out the results, and figure out if there were any failures, report
-  // about it, and exit.
-
-  await browser.close();
-
-  const stats = {
-    tests: '(undetermined)',
-    pass:  '(undetermined)',
-    fail:  '(undetermined)'
-  };
-
-  const outputLines = [''];
-
-  for (let i = 0; i < logLines.length; i++) {
-    const line = logLines[i];
-    const match = line.match(/^# (tests|pass|fail) ([0-9]+)$/);
-
-    if (match !== null) {
-      stats[match[1]] = match[2];
-    }
-
-    outputLines.push(line);
-  }
-
-  const anyFailed = (stats.fail !== '0');
-
-  outputLines.push('');
-  outputLines.push('Summary:');
-  outputLines.push(`  Total:  ${stats.tests}`);
-  outputLines.push(`  Passed: ${stats.pass}`);
-  outputLines.push(`  Failed: ${stats.fail}`);
-  outputLines.push('');
-  outputLines.push(anyFailed ? 'Alas.' : 'All good! Yay!');
-  outputLines.push('');
-
-  const allOutput = outputLines.join('\n');
-
-  // eslint-disable-next-line no-console
-  console.log('%s', allOutput);
-
-  if (testOut) {
-    fs.writeFileSync(testOut, allOutput);
-    // eslint-disable-next-line no-console
-    console.log('Wrote test results to file:', testOut);
-  }
-
-  // This ensures that `stdout` (including the `console.log()` output) has been
-  // flushed.
-  await promisify(cb => process.stdout.write('', 'utf8', cb))();
+  const anyFailed = await ClientTests.run(port, testOut || null);
 
   process.exit(anyFailed ? 1 : 0);
 }
