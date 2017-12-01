@@ -16,13 +16,28 @@ export default class TestFiles extends UtilityClass {
    * Returns a list of the test files for client modules that are used by the
    * product.
    *
-   * @returns {array<string>} Array of module names.
+   * @returns {array<string>} Array of filesystem paths for client test files.
    */
   static allClientFiles() {
     // TODO: Complain about modules that have no tests at all.
 
     const moduleNames = Utils.localModulesIn(Dirs.theOne.CLIENT_DIR);
     const testFiles = Utils.allTestFiles(Dirs.theOne.CLIENT_DIR, moduleNames);
+
+    return testFiles;
+  }
+
+  /**
+   * Returns a list of the test files for server modules that are used by the
+   * product.
+   *
+   * @returns {array<string>} Array of filesystem paths for server test files.
+   */
+  static allServerFiles() {
+    // TODO: Complain about modules that have no tests at all.
+
+    const moduleNames = Utils.localModulesIn(Dirs.theOne.SERVER_DIR);
+    const testFiles = Utils.allTestFiles(Dirs.theOne.SERVER_DIR, moduleNames);
 
     return testFiles;
   }

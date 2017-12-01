@@ -8,12 +8,11 @@ import fs from 'fs';
 import Mocha from 'mocha';
 import { promisify } from 'util';
 
-import { Dirs } from 'env-server';
 import { Logger } from 'see-all';
 import { UtilityClass } from 'util-common';
 
 import CollectingReporter from './CollectingReporter';
-import Utils from './Utils';
+import TestFiles from './TestFiles';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('testing');
@@ -35,10 +34,7 @@ export default class ServerTests extends UtilityClass {
    *   complete.
    */
   static async runAll(testOut) {
-    // TODO: Complain about modules that have no tests at all.
-
-    const moduleNames = Utils.localModulesIn(Dirs.theOne.SERVER_DIR);
-    const testFiles = Utils.allTestFiles(Dirs.theOne.SERVER_DIR, moduleNames);
+    const testFiles = TestFiles.allServerFiles();
 
     // The hacky arrangement with `reporterHolder` is how we exfiltrate the
     // reporter instance out of Mocha.
