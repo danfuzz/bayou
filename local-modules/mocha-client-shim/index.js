@@ -7,6 +7,8 @@
 // from _this_ module.
 import 'mocha-client-bundle';
 
+import { Errors } from 'util-common';
+
 /**
  * {Window} The browser globals. We have ESLint configured conservatively by
  * default (so as to be reasonable for both Node and browser). The `*disable*`
@@ -19,12 +21,6 @@ const global = window; // eslint-disable-line no-undef
 const mocha = global.mocha;
 
 /**
- * {MochaShim|null} Unique instance of this class, or `null` if it hasn't yet
- * been instantiated.
- */
-let theOne = null;
-
-/**
  * Proxy-like shim for `Mocha` which exposes a constructor that behaves like
  * a _real_ `Mocha` instance but (unlike it) can be used on the client side. It
  * operates by passing the constructor argument onward to the singleton global
@@ -32,15 +28,24 @@ let theOne = null;
  */
 class MochaShim {
   constructor(opts) {
-    if (theOne !== null) {
-      throw new Error('Can only instantiate once.');
+    if (MochaShim._constructed) {
+      throw Errors.bad_use('Can only instantiate the client `Mocha` shim once.');
     }
 
     mocha.setup(opts);
 
-    theOne = this;
+    /**
+     * {null|true} Indication of whether this class has ever been instantiated.
+     */
+    MochaShim._constructed = true;
   }
 
+  /**
+   * Passes through to the global client-side `Mocha` instance.
+   *
+   * @param {...*} args Arguments to `Mocha.run()`.
+   * @returns {*} Return value from `Mocha.run()`.
+   */
   run(...args) {
     return mocha.run(...args);
   }
