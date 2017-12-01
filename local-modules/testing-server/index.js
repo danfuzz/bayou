@@ -5,5 +5,6 @@
 import ClientTests from './ClientTests';
 import Mocks from './Mocks';
 import ServerTests from './ServerTests';
+import TestFiles from './TestFiles';
 
-export { ClientTests, Mocks, ServerTests };
+export { ClientTests, Mocks, ServerTests, TestFiles };
