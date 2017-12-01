@@ -101,7 +101,9 @@ if (showHelp || argError) {
     '    encountered.',
     '  --dev',
     '    Run in development mode, for interactive development without having',
-    '    to restart.',
+    '    to restart when client code changes, and to automatically exit when',
+    '    server code changes. (The `develop` script automatically rebuilds and',
+    '    restarts when the latter happens.)',
     '  --server-test',
     '    Just run the server tests, and report any errors encountered.',
     '  --test-out=<path>',
@@ -206,9 +208,9 @@ async function clientTest() {
  * Does a server testing run.
  */
 async function serverTest() {
-  const failures = await ServerTests.runAll(testOut || null);
+  const anyFailed = await ServerTests.run(testOut || null);
 
-  process.exit((failures === 0) ? 0 : 1);
+  process.exit(anyFailed ? 1 : 0);
 }
 
 process.on('unhandledRejection', (reason, promise_unused) => {

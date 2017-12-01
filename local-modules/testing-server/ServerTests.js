@@ -30,10 +30,9 @@ export default class ServerTests extends UtilityClass {
    *
    * @param {string|null} testOut If non-`null`, filesystem path to write the
    *   test output to.
-   * @returns {number} Count of test failures, which resolves after testing is
-   *   complete.
+   * @returns {boolean} `true` iff there were any test failures.
    */
-  static async runAll(testOut) {
+  static async run(testOut) {
     const testFiles = TestFiles.allServerFiles();
 
     // The hacky arrangement with `reporterHolder` is how we exfiltrate the
@@ -60,6 +59,6 @@ export default class ServerTests extends UtilityClass {
       log.info('Wrote test results to file:', testOut);
     }
 
-    return failures;
+    return (failures !== 0);
   }
 }
