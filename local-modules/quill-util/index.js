@@ -4,10 +4,13 @@
 
 import BayouKeyHandlers from './BayouKeyHandlers';
 import BayouKeyboard from './BayouKeyboard';
+import Macros from './Macros';
+import NotReallyMarkdown from './NotReallyMarkdown';
 import QuillEvents from './QuillEvents';
 import QuillGeometry from './QuillGeometry';
 import QuillProm from './QuillProm';
 import QuillUtil from './QuillUtil';
+import TextReplacement from './TextReplacement';
 
 // Register this module's keyboard handler as an override of Quill's built-in
 // one.
@@ -19,8 +22,11 @@ QuillProm.register({
 export {
   BayouKeyHandlers,
   BayouKeyboard,
+  Macros,
+  NotReallyMarkdown,
   QuillEvents,
   QuillGeometry,
   QuillProm,
-  QuillUtil
+  QuillUtil,
+  TextReplacement
 };
