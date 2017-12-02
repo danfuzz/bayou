@@ -15,6 +15,8 @@ import { Mocha } from 'mocha';
 // more info.
 import { registerTests } from './client-tests';
 
+import EventReporter from './EventReporter';
+
 // One-time setup to hook `chai-as-promised` into the main `chai` module.
 chai.use(chaiAsPromised);
 
@@ -32,7 +34,7 @@ export default class Tests extends UtilityClass {
    */
   static async runAll() {
     const mocha = new Mocha({
-      reporter: 'tap',
+      reporter: EventReporter,
       ui:       'bdd'
     });
 
