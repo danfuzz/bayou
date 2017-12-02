@@ -33,12 +33,6 @@ export default class EventReporter extends CommonBase {
     /** {function} Original value of `console.log`. */
     this._originalLog = console.log; // eslint-disable-line no-console
 
-    /**
-     * {array<{ test, status, suites, log }>} Array of collected test results,
-     * each an ad-hoc plain object.
-     */
-    this._results = [];
-
     runner.on('test', () => {
       console.log = this._log.bind(this); // eslint-disable-line no-console
       this._console = [];
