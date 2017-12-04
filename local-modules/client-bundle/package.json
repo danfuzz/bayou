@@ -5,10 +5,10 @@
   "dependencies": {
     "memory-fs": "^0.4.1",
 
-    "client-tests-loader": "local",
     "compiler-dependencies": "local",
     "env-server": "local",
     "see-all": "local",
+    "testing-server": "local",
     "util-common": "local"
   }
 }
