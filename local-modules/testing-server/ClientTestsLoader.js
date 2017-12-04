@@ -2,11 +2,13 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TestFiles } from 'testing-server';
 import { UtilityClass } from 'util-common';
 
+import TestFiles from './TestFiles';
+
 /**
- * Webpack loader for the client test files.
+ * Webpack loader for the client test files. This gets imported by Webpack via
+ * the file `loadClientTests.js`.
  */
 export default class ClientTestsLoader extends UtilityClass {
   /**

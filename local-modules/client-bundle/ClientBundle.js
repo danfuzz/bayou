@@ -149,7 +149,7 @@ const webpackOptions = {
       {
         test: /[/]client-tests$/,
         use: [{
-          loader: 'client-tests-loader'
+          loader: 'testing-server/loadClientTests'
         }]
       },
 

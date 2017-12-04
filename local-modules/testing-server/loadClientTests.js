@@ -4,7 +4,8 @@
 
 import ClientTestsLoader from './ClientTestsLoader';
 
-// This module is used by Webpack, which makes specific requirements about what
-// is exported by loaders. This is why we have a simple `export default` here
-// instead of the more usual (for this project) set of named `export {...}`s.
+// This file is imported directly by Webpack as a loader. Webpack makes specific
+// requirements about what is exported by loader modules, which is why we have a
+// simple `export default` of a function here, instead of the more usual (for
+// this project) arrangement.
 export default ClientTestsLoader.load;
