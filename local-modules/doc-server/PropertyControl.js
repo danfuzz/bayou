@@ -112,15 +112,10 @@ export default class PropertyControl extends BaseControl {
     const data   = transactionResult.data;
     const revNum = data.get(PropertyControl.revisionNumberPath);
 
-    if (!revNum) {
-      this.log.info('Corrupt document: Missing revision number.');
-      return ValidationStatus.STATUS_ERROR;
-    }
-
     try {
       RevisionNumber.check(revNum);
     } catch (e) {
-      this.log.info('Corrupt document: Bogus revision number.');
+      this.log.info('Corrupt document: Bogus or missing revision number.');
       return ValidationStatus.STATUS_ERROR;
     }
 
