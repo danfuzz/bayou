@@ -59,10 +59,25 @@ export default class SnapshotManager extends CommonBase {
    * @returns {BaseSnapshot} Snapshot of the indicated revision.
    */
   async getSnapshot(revNum) {
+    if (this._snapshots.size === 0) {
+      // This is the first ever snapshot request; before doing anything else,
+      // try to read the stored snapshot, and if available, use it to seed the
+      // snapshot cache. Depending on its revision number and the one being
+      // requested, it _might_ (but won't _necessarily_) end up being the base
+      // used to satisfy this call.
+      const storedPromise = this._control.readStoredSnapshotOrNull();
+      const stored = await storedPromise;
+      if (stored !== null) {
+        this._snapshots.set(stored.revNum, storedPromise);
+      }
+    }
+
     // Search backward through the full revisions for a base for forward
     // composition.
+
     let basePromise = null;
     let baseRevNum  = -1;
+
     for (let i = revNum; i >= 0; i--) {
       const v = this._snapshots.get(i);
       if (v) {
@@ -73,8 +88,8 @@ export default class SnapshotManager extends CommonBase {
     }
 
     if (baseRevNum === revNum) {
-      // Found the right revision!
-      this._control.log.detail(`Found snapshot: r${revNum}`);
+      // We found a cached snapshot for the right revision!
+      this._control.log.detail(`Found cached snapshot: r${revNum}`);
       return basePromise;
     }
 
