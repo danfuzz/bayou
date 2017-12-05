@@ -27,6 +27,13 @@ const MAX_UPDATE_RETRY_MSEC = 15 * 1000;
 const MAX_COMPOSED_CHANGES_FOR_DIFF = 100;
 
 /**
+ * {Int} How many changes to wait before writing a new stored snapshot. Stored
+ * snapshots will always have a revision number that is an integral multiple of
+ * this value.
+ */
+const CHANGES_PER_STORED_SNAPSHOT = 100;
+
+/**
  * Base class for document part controllers. There is one instance of each
  * concrete subclass of this class for each actively-edited document. They are
  * all managed and hooked up via {@link FileComplex}.
@@ -197,6 +204,11 @@ export default class BaseControl extends BaseDataManager {
         throw e;
       }
     }
+
+    // We don't `await` this call, because the method performs its own error
+    // handling. It is really a fairly independent operation, which just happens
+    // to be triggered here.
+    this._maybeWriteStoredSnapshot(change.revNum);
 
     return true;
   }
@@ -860,6 +872,38 @@ export default class BaseControl extends BaseDataManager {
     // #update}.
 
     return null;
+  }
+
+  /**
+   * Constructs and writes the stored snapshot based on the indicated revision,
+   * if it is in fact appropriate to do so. If not, this does nothing.
+   *
+   * **Note:** Beyond parameter checking, this method encapsulates all errors.
+   * Assuming a valid call, this method should not throw.
+   *
+   * @param {Int} revNum Revision number in question.
+   */
+  async _maybeWriteStoredSnapshot(revNum) {
+    RevisionNumber.check(revNum);
+
+    if ((revNum % CHANGES_PER_STORED_SNAPSHOT) !== 0) {
+      // Nope, no snapshot should be made for this revision.
+      return;
+    }
+
+    try {
+      const snapshot = await this.getSnapshot(revNum);
+      await this.writeStoredSnapshot(snapshot);
+    } catch (e) {
+      // Though unfortunate, this isn't tragic: Stored snapshots are created on
+      // a best-effort basis. To the extent that they're required, it's only for
+      // "ephemeral" document parts that don't keep full history, and such parts
+      // only ever arrange for earlier changes to be erased after a later
+      // snapshot is _known_ to be written. (**Note::** As of this writing,
+      // there aren't yet any ephemeral document parts, though the caret info is
+      // slated to become one.)
+      this.log.warn(`Trouble writing stored snapshot for revision: r${revNum}`, e);
+    }
   }
 
   /**
