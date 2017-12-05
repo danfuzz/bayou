@@ -92,6 +92,17 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * {string} `StoragePath` string which stores the base snapshot for the
+   * portion of the document controlled by this class. Not all subclasses use
+   * this path.
+   */
+  static get snapshotPath() {
+    // **Note:** `this` in the context of a static method is the class, not an
+    // instance.
+    return `${this.pathPrefix}/snapshot`;
+  }
+
+  /**
    * {class} Class (constructor function) of snapshot objects to be used with
    * instances of this class.
    */
