@@ -61,12 +61,18 @@ function after(...args)      { return global.after(...args);      }
 function afterEach(...args)  { return global.afterEach(...args);  }
 function before(...args)     { return global.before(...args);     }
 function beforeEach(...args) { return global.beforeEach(...args); }
-function describe(...args)   { return global.describe(...args);   }
 function context(...args)    { return global.context(...args);    }
+function describe(...args)   { return global.describe(...args);   }
 function it(...args)         { return global.it(...args);         }
 function specify(...args)    { return global.specify(...args);    }
 
+for (const func of [context, describe, it, specify]) {
+  const name = func.name;
+  func.only = (...args) => { return global[name].only(...args); };
+  func.skip = (...args) => { return global[name].skip(...args); };
+}
+
 export {
   MochaShim as Mocha,
-  after, afterEach, before, beforeEach, describe, context, it, specify
+  after, afterEach, before, beforeEach, context, describe, it, specify
 };
