@@ -92,17 +92,6 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
-   * {string} `StoragePath` string which stores the base snapshot for the
-   * portion of the document controlled by this class. Not all subclasses use
-   * this path.
-   */
-  static get snapshotPath() {
-    // **Note:** `this` in the context of a static method is the class, not an
-    // instance.
-    return `${this.pathPrefix}/snapshot`;
-  }
-
-  /**
    * {class} Class (constructor function) of snapshot objects to be used with
    * instances of this class.
    */
@@ -119,6 +108,16 @@ export default class BaseControl extends BaseDataManager {
     }
 
     return this._snapshotClass;
+  }
+
+  /**
+   * {string} `StoragePath` string which stores the base snapshot for the
+   * portion of the document controlled by this class.
+   */
+  static get storedSnapshotPath() {
+    // **Note:** `this` in the context of a static method is the class, not an
+    // instance.
+    return `${this.pathPrefix}/snapshot`;
   }
 
   /**
@@ -522,6 +521,32 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * Reads the stored snapshot for this document part, if available.
+   *
+   * @returns {BaseSnapshot|null} The stored snapshot, or `null` if no snapshot
+   *   was ever stored.
+   */
+  async readStoredSnapshotOrNull() {
+    const clazz = this.constructor;
+    const path  = clazz.storedSnapshotPath;
+    const fc    = this.fileCodec;
+    const spec  = new TransactionSpec(fc.op_readPath(path));
+
+    const transactionResult = await fc.transact(spec);
+
+    const result = transactionResult.data.get(path) || null;
+
+    if (result === null) {
+      this.log.info('Failed to find stored snapshot.');
+      return null;
+    } else {
+      clazz.snapshotClass.check(result);
+      this.log.info(`Read stored snapshot for revision: r${result.revNum}`);
+      return result;
+    }
+  }
+
+  /**
    * Takes a change consisting of full information (except that the author ID
    * is optionally `null`), and applies it, including merging of any
    * intermediate revisions. The return value consists of a "correction" change
@@ -691,6 +716,27 @@ export default class BaseControl extends BaseDataManager {
         throw e;
       }
     }
+  }
+
+  /**
+   * Writes the given snapshot into the stored snapshot file path for this
+   * document part.
+   *
+   * @param {BaseSnapshot} snapshot The snapshot to store. Must be an instance
+   *   of the appropriate concrete snapshot class for this instance.
+   */
+  async writeStoredSnapshot(snapshot) {
+    const clazz = this.constructor;
+    const path  = clazz.storedSnapshotPath;
+    const fc    = this.fileCodec;
+
+    clazz.snapshotClass.check(snapshot);
+
+    const spec = new TransactionSpec(fc.op_writePath(path, snapshot));
+
+    await fc.transact(spec);
+
+    this.log.info(`Wrote stored snapshot for revision: r${snapshot.revNum}`);
   }
 
   /**
