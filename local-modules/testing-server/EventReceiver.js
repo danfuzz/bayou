@@ -17,11 +17,11 @@ export default class EventReceiver extends CommonBase {
     /** {array<string>} Current stack of the names of active test suites. */
     this._suites = [];
 
-    /**
-     * {array<{ test, status, suites, log }>} Array of collected test results,
-     * each an ad-hoc plain object.
-     */
+    /** {array<string>} Array of collected test result lines. */
     this._results = [];
+
+    /** {array<string>} Array of non-test browser console output lines. */
+    this._nonTestLines = [];
 
     /** {object} Ad-hoc object with mappings for test category counts. */
     this._stats = { fail: 0, pass: 0, pending: 0, total: 0 };
@@ -38,6 +38,15 @@ export default class EventReceiver extends CommonBase {
   /** {boolean} Whether or not we have received the `done` event. */
   get done() {
     return this._done;
+  }
+
+  /**
+   * {array<string>} Array of non-test browser console output lines. This ends
+   * up getting used when reporting test infrastucture failures (as opposed to
+   * failures in the tests themselves).
+   */
+  get nonTestLines() {
+    return this._nonTestLines;
   }
 
   /**
@@ -58,6 +67,7 @@ export default class EventReceiver extends CommonBase {
 
     if (match === null) {
       // Not an event line.
+      this._nonTestLines.push(line);
       return;
     }
 

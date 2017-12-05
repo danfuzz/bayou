@@ -32,6 +32,7 @@ export default class ClientTests extends UtilityClass {
     // **TODO:** This whole arrangement is a bit hacky and should be improved.
 
     // Set up and start up headless Chrome (via Puppeteer).
+
     const browser  = await puppeteer.launch();
     const page     = await browser.newPage();
     const receiver = new EventReceiver();
@@ -44,7 +45,19 @@ export default class ClientTests extends UtilityClass {
       receiver.consoleLine(msg);
     });
 
+    page.on('pageerror', (err) => {
+      // Puppeteer passes in an `err` which is an `Error` whose _message_ is
+      // the complete originally-thrown trace. The stack trace of `err` itself
+      // represents just the local side and is (by and large) uninteresting.
+      const lines = err.message.split('\n');
+      receiver.consoleLine('Uncaught error:');
+      for (const line of lines) {
+        receiver.consoleLine(`  ${line}`);
+      }
+    });
+
     // Issue the request to load up the client tests.
+
     const url = `http://localhost:${port}/debug/client-test`;
 
     log.info(`Issuing request to start test run:\n  ${url}`);
@@ -52,23 +65,34 @@ export default class ClientTests extends UtilityClass {
     // Wait up to two minutes for the page to finish loading. It should
     // typically be much quicker than that; we just leave plenty of leeway in
     // case the machine under test happens to be running under heavy load.
+
     await page.goto(url, { waitUntil: 'load', timeout: 2 * 60 * 1000 });
 
     // Now wait until the test run is complete. This happens an indeterminate
     // amount of time after the page is done loading (typically a few seconds).
     // During the intervening time, we should see lots of calls to the `console`
     // event handler. We poll and wait until we get the "done" event.
-    let lastStatus = Date.now();
+
+    const startTime  = Date.now();
+    let   lastStatus = startTime;
     for (;;) {
-      const now = Date.now();
-
-      if ((now - lastStatus) > (1.5 * 1000)) {
-        log.info('Waiting for test run to complete...');
-        lastStatus = now;
-      }
-
       if (receiver.done) {
         log.info('Test run is complete!');
+        break;
+      }
+
+      const now = Date.now();
+
+      if ((now - lastStatus) > (2.5 * 1000)) {
+        log.info('Waiting for test run to complete...');
+        lastStatus = now;
+      } else if ((now - startTime) > (60 * 1000)) {
+        log.error('Taking way too long to run tests!');
+
+        // The non-test console spew from the client might turn out to be
+        // useful, so log it.
+        const output = receiver.nonTestLines.join('\n');
+        log.info(output);
         break;
       }
 
@@ -79,6 +103,10 @@ export default class ClientTests extends UtilityClass {
     // about it, and exit.
 
     await browser.close();
+
+    if (!receiver.done) {
+      return true;
+    }
 
     if (testOut) {
       const allOutput = receiver.resultLines.join('\n');
