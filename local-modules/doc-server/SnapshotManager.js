@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CommonBase } from 'util-common';
+import { CommonBase, Errors } from 'util-common';
 
 import BaseControl from './BaseControl';
 
@@ -38,6 +38,14 @@ export default class SnapshotManager extends CommonBase {
      */
     this._snapshots = new Map();
 
+    /**
+     * {Promise<true>|null} Promise which becomes resolved when a pending
+     * request for retrieval of the stored snapshot is complete, or `null` if
+     * no such request is "in flight." This is used to avoid redundant requests
+     * for the snapshot.
+     */
+    this._storedSnapshotRetrieved = null;
+
     Object.seal(this);
   }
 
@@ -60,20 +68,45 @@ export default class SnapshotManager extends CommonBase {
    */
   async getSnapshot(revNum) {
     if (this._snapshots.size === 0) {
-      // This is the first ever snapshot request; before doing anything else,
-      // try to read the stored snapshot, and if available, use it to seed the
-      // snapshot cache. Depending on its revision number and the one being
-      // requested, it _might_ (but won't _necessarily_) end up being the base
-      // used to satisfy this call.
-      const storedPromise = this._control.readStoredSnapshotOrNull();
-      const stored = await storedPromise;
-      if (stored !== null) {
-        this._snapshots.set(stored.revNum, storedPromise);
+      // The cache doesn't have anything in it yet.
+      if (this._storedSnapshotRetrieved === null) {
+        // This is the first ever snapshot request; before doing anything else,
+        // try to read the stored snapshot, and if available, use it to seed the
+        // snapshot cache. Depending on its revision number and the one being
+        // requested, it _might_ (but won't _necessarily_) end up being the base
+        // used to satisfy this call. At the same time (well, right after), also
+        // set up an entry for revision `0`, which allows for the rest of this
+        // class to be a little simpler.
+        this._storedSnapshotRetrieved = (async () => {
+          const storedPromise = this._control.readStoredSnapshotOrNull();
+          const stored = await storedPromise;
+
+          if (stored !== null) {
+            this._snapshots.set(stored.revNum, storedPromise);
+          }
+
+          if ((stored === null) || (stored.revNum !== 0)) {
+            // Derive a snapshot for revision `0` in the standard way, that is,
+            // by composing change 0 on top of an empty delta, requesting a
+            // document result (`wantDocument = true` for the last argument).
+            const rev0Contents = this._control.getComposedChanges(this._deltaClass.EMPTY, 0, 1, true);
+            const rev0Snapshot = new this._snapshotClass(0, await rev0Contents);
+            this._snapshots.set(0, rev0Snapshot);
+          }
+
+          this._storedSnapshotRetrieved = null;
+          return true;
+        })();
       }
+
+      // Wait for initial snapshot retrieval and setup to be complete.
+      await this._storedSnapshotRetrieved;
     }
 
     // Search backward through the full revisions for a base for forward
-    // composition.
+    // composition. **Note:** The initialization step above should have
+    // guaranteed that we always find a suitable base revision, either the
+    // stored snapshot or the constructed revision 0.
 
     let basePromise = null;
     let baseRevNum  = -1;
@@ -93,6 +126,11 @@ export default class SnapshotManager extends CommonBase {
       return basePromise;
     }
 
+    if (basePromise === null) {
+      // Shouldn't happen, per above description (and code).
+      throw Errors.wtf('Did not find a snapshot!');
+    }
+
     // We didn't actully find a snapshot of the requested revision. Make it,
     // cache it, and return it.
 
@@ -109,23 +147,17 @@ export default class SnapshotManager extends CommonBase {
    *
    * @param {Int} revNum Which revision to get. Guaranteed to be a revision
    *   number for the instantaneously-current revision or earlier.
-   * @param {Promise<BaseSnapshot>|null} basePromise Promise for the base
-   *   snapshot to use, or `null` to start from revision `0`.
+   * @param {Promise<BaseSnapshot>} basePromise Promise for the base snapshot to
+   *   use.
    * @returns {BaseSnapshot} Snapshot of the indicated revision.
    */
   async _makeSnapshot(revNum, basePromise) {
     const base = await basePromise;
+    const contents =
+      this._control.getComposedChanges(base.contents, base.revNum + 1, revNum + 1, true);
+    const result = new this._snapshotClass(revNum, await contents);
 
-    const baseArgs = (base === null)
-      ? [this._deltaClass.EMPTY, 0]
-      : [base.contents,          base.revNum + 1];
-    const contents = this._control.getComposedChanges(...baseArgs, revNum + 1, true);
-    const result   = new this._snapshotClass(revNum, await contents);
-
-    if (base === null) {
-      const endRev = (revNum === 0) ? '' : ` .. c${revNum}`;
-      this._control.log.info(`Made snapshot: r${revNum} = c0${endRev}`);
-    } else if (revNum === (base.revNum + 1)) {
+    if (revNum === (base.revNum + 1)) {
       this._control.log.info(`Made snapshot: r${revNum} = r${base.revNum} + c${revNum}`);
     } else {
       this._control.log.info(`Made snapshot: r${revNum} = r${base.revNum} + [c${base.revNum + 1} .. c${revNum}]`);
