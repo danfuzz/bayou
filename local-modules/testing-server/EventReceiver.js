@@ -18,7 +18,7 @@ export default class EventReceiver extends CommonBase {
     this._suites = [];
 
     /** {array<string>} Array of collected test result lines. */
-    this._results = [];
+    this._resultLines = [];
 
     /** {array<string>} Array of non-test browser console output lines. */
     this._nonTestLines = [];
@@ -54,7 +54,7 @@ export default class EventReceiver extends CommonBase {
    * suitable for writing to a file.
    */
   get resultLines() {
-    return this._results;
+    return this._resultLines;
   }
 
   /**
@@ -81,7 +81,7 @@ export default class EventReceiver extends CommonBase {
    * @param {string} line Line to log.
    */
   _log(line) {
-    this._results.push(line);
+    this._resultLines.push(line);
 
     // eslint-disable-next-line no-console
     console.log('%s', line);
