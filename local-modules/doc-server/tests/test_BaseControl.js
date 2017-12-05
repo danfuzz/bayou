@@ -231,7 +231,7 @@ describe('doc-server/BaseControl', () => {
       }
     });
 
-    it('should return `true` if the transaction succeeds', async () => {
+    it('should call the snapshot maybe-writer and return `true` if the transaction succeeds', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(Codec.theOne, file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -241,7 +241,13 @@ describe('doc-server/BaseControl', () => {
         return { paths: null, data: null, revNum: 99, newRevNum: 100 };
       };
 
+      let maybeCalled = false;
+      control._maybeWriteStoredSnapshot = (revNum_unused) => {
+        maybeCalled = true;
+      };
+
       await assert.eventually.strictEqual(control.appendChange(change), true);
+      assert.isTrue(maybeCalled);
     });
 
     it('should return `false` if the transaction fails due to a precondition failure', async () => {
@@ -249,6 +255,10 @@ describe('doc-server/BaseControl', () => {
       const fileAccess = new FileAccess(Codec.theOne, file);
       const control    = new MockControl(fileAccess, 'boop');
       const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+
+      control._maybeWriteStoredSnapshot = (revNum_unused) => {
+        throw new Error('Should not have been called');
+      };
 
       async function test(error) {
         file._impl_transact = (spec_unused) => {
@@ -267,6 +277,10 @@ describe('doc-server/BaseControl', () => {
       const fileAccess = new FileAccess(Codec.theOne, file);
       const control    = new MockControl(fileAccess, 'boop');
       const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+
+      control._maybeWriteStoredSnapshot = (revNum_unused) => {
+        throw new Error('Should not have been called');
+      };
 
       async function test(error) {
         file._impl_transact = (spec_unused) => {

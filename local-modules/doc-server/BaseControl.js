@@ -27,6 +27,13 @@ const MAX_UPDATE_RETRY_MSEC = 15 * 1000;
 const MAX_COMPOSED_CHANGES_FOR_DIFF = 100;
 
 /**
+ * {Int} How many changes to wait before writing a new stored snapshot. Stored
+ * snapshots will always have a revision number that is an integral multiple of
+ * this value.
+ */
+const CHANGES_PER_STORED_SNAPSHOT = 100;
+
+/**
  * Base class for document part controllers. There is one instance of each
  * concrete subclass of this class for each actively-edited document. They are
  * all managed and hooked up via {@link FileComplex}.
@@ -111,6 +118,16 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * {string} `StoragePath` string which stores the base snapshot for the
+   * portion of the document controlled by this class.
+   */
+  static get storedSnapshotPath() {
+    // **Note:** `this` in the context of a static method is the class, not an
+    // instance.
+    return `${this.pathPrefix}/snapshot`;
+  }
+
+  /**
    * Gets the `StoragePath` string corresponding to the indicated revision
    * number, specifically for the portion of the document controlled by this
    * class.
@@ -187,6 +204,11 @@ export default class BaseControl extends BaseDataManager {
         throw e;
       }
     }
+
+    // We don't `await` this call, because the method performs its own error
+    // handling. It is really a fairly independent operation, which just happens
+    // to be triggered here.
+    this._maybeWriteStoredSnapshot(change.revNum);
 
     return true;
   }
@@ -511,6 +533,32 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * Reads the stored snapshot for this document part, if available.
+   *
+   * @returns {BaseSnapshot|null} The stored snapshot, or `null` if no snapshot
+   *   was ever stored.
+   */
+  async readStoredSnapshotOrNull() {
+    const clazz = this.constructor;
+    const path  = clazz.storedSnapshotPath;
+    const fc    = this.fileCodec;
+    const spec  = new TransactionSpec(fc.op_readPath(path));
+
+    const transactionResult = await fc.transact(spec);
+
+    const result = transactionResult.data.get(path) || null;
+
+    if (result === null) {
+      this.log.info('Failed to find stored snapshot.');
+      return null;
+    } else {
+      clazz.snapshotClass.check(result);
+      this.log.info(`Read stored snapshot for revision: r${result.revNum}`);
+      return result;
+    }
+  }
+
+  /**
    * Takes a change consisting of full information (except that the author ID
    * is optionally `null`), and applies it, including merging of any
    * intermediate revisions. The return value consists of a "correction" change
@@ -683,6 +731,27 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * Writes the given snapshot into the stored snapshot file path for this
+   * document part.
+   *
+   * @param {BaseSnapshot} snapshot The snapshot to store. Must be an instance
+   *   of the appropriate concrete snapshot class for this instance.
+   */
+  async writeStoredSnapshot(snapshot) {
+    const clazz = this.constructor;
+    const path  = clazz.storedSnapshotPath;
+    const fc    = this.fileCodec;
+
+    clazz.snapshotClass.check(snapshot);
+
+    const spec = new TransactionSpec(fc.op_writePath(path, snapshot));
+
+    await fc.transact(spec);
+
+    this.log.info(`Wrote stored snapshot for revision: r${snapshot.revNum}`);
+  }
+
+  /**
    * {TransactionSpec} Spec for a transaction which when run will initialize the
    * portion of the file which this class is responsible for. This
    * implementation should be sufficient for all subclasses of this class.
@@ -803,6 +872,38 @@ export default class BaseControl extends BaseDataManager {
     // #update}.
 
     return null;
+  }
+
+  /**
+   * Constructs and writes the stored snapshot based on the indicated revision,
+   * if it is in fact appropriate to do so. If not, this does nothing.
+   *
+   * **Note:** Beyond parameter checking, this method encapsulates all errors.
+   * Assuming a valid call, this method should not throw.
+   *
+   * @param {Int} revNum Revision number in question.
+   */
+  async _maybeWriteStoredSnapshot(revNum) {
+    RevisionNumber.check(revNum);
+
+    if ((revNum % CHANGES_PER_STORED_SNAPSHOT) !== 0) {
+      // Nope, no snapshot should be made for this revision.
+      return;
+    }
+
+    try {
+      const snapshot = await this.getSnapshot(revNum);
+      await this.writeStoredSnapshot(snapshot);
+    } catch (e) {
+      // Though unfortunate, this isn't tragic: Stored snapshots are created on
+      // a best-effort basis. To the extent that they're required, it's only for
+      // "ephemeral" document parts that don't keep full history, and such parts
+      // only ever arrange for earlier changes to be erased after a later
+      // snapshot is _known_ to be written. (**Note::** As of this writing,
+      // there aren't yet any ephemeral document parts, though the caret info is
+      // slated to become one.)
+      this.log.warn(`Trouble writing stored snapshot for revision: r${revNum}`, e);
+    }
   }
 
   /**

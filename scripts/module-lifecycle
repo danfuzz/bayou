@@ -69,6 +69,7 @@ while true; do
             ;;
         -?*)
             echo "Unknown option: $1" 1>&2
+            argError=1
             ;;
         *)  # Default case: No more options, break out of the loop.
             break;
