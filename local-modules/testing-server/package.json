@@ -8,6 +8,7 @@
     "mocha": "^3.3.0",
     "puppeteer": "^0.11.0",
 
+    "deps-ansi-color": "local",
     "env-server": "local",
     "util-common": "local"
   }

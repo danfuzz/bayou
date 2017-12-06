@@ -2,16 +2,25 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import chalk from 'chalk';
+
 import { CommonBase } from 'util-common';
 
 /**
- * {object} Map from each test status to the character to use to represent it.
- * This recapitulates what Mocha's `spec` reporter uses.
+ * {object} Object that maps each possible test status to an ad-hoc set of
+ * info about how to mark it up.
  */
-const TEST_STATUS_CHARACTERS = {
-  fail:    '✖',
-  pass:    '✓',
-  pending: '-'
+const TEST_STATUS_MARKUP = {
+  fail:    { char: '✖', color: chalk.red,   colorTitle: false },
+  pass:    { char: '✓', color: chalk.green, colorTitle: false },
+  pending: { char: '-', color: chalk.cyan,  colorTitle: true },
+  unknown: { char: '?', color: chalk.red,   colorTitle: true }
+};
+
+/** {object} Colors to use for non-fast speed markup. */
+const SPEED_COLOR = {
+  medium: chalk.yellow,
+  slow:   chalk.red
 };
 
 /**
@@ -145,14 +154,19 @@ export default class EventReceiver extends CommonBase {
     this._stats.total++;
 
     const prefix     = '  '.repeat(this._suites.length + 1);
-    const statusChar = TEST_STATUS_CHARACTERS[details.status] || '?';
     const speed      = details.speed;
-    const speedStr   = (speed === 'fast') ? '' : `\n${prefix}  (${speed} ${details.duration}ms)`;
+    const markup     = TEST_STATUS_MARKUP[details.status] || TEST_STATUS_MARKUP.unknown;
+    const speedColor = SPEED_COLOR[speed] || chalk.gray;
+    const statusChar = markup.color(markup.char);
+    const speedStr = (speed === 'fast')
+      ? ''
+      : `\n${prefix}  ` + speedColor(`(${speed} ${details.duration}ms)`);
 
     // Indent the second-and-later title lines so they line up under the first
     // line.
-    const title = details.title.replace(/\n/g, `\n${prefix}  `);
-    this._log(`${prefix}${statusChar} ${title}${speedStr}`);
+    const title    = details.title.replace(/\n/g, `\n${prefix}  `);
+    const titleStr = markup.colorTitle ? markup.color(title) : title;
+    this._log(`${prefix}${statusChar} ${titleStr}${speedStr}`);
 
     if (details.console.length !== 0) {
       this._log('');
