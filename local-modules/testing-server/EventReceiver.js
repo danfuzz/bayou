@@ -168,7 +168,10 @@ export default class EventReceiver extends CommonBase {
     const titleStr = markup.colorTitle ? markup.color(title) : title;
     this._log(`${prefix}${statusChar} ${titleStr}${speedStr}`);
 
+    let anyExtra = false;
+
     if (details.console.length !== 0) {
+      anyExtra = true;
       this._log('');
       for (const line of details.console) {
         this._log(`${prefix}${line}`);
@@ -176,8 +179,13 @@ export default class EventReceiver extends CommonBase {
     }
 
     if (details.error !== null) {
+      anyExtra = true;
       this._log('');
       this._log(details.error);
+    }
+
+    if (anyExtra) {
+      this._log('');
     }
   }
 }
