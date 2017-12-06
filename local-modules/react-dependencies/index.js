@@ -4,4 +4,4 @@
 
 // This module serves only to hold common dependencies for react and
 // redux. There is nothing to export.
-module.exports = {};
+export {};
