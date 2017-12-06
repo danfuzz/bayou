@@ -5,6 +5,16 @@
 import { CommonBase } from 'util-common';
 
 /**
+ * {object} Map from each test status to the character to use to represent it.
+ * This recapitulates what Mocha's `spec` reporter uses.
+ */
+const TEST_STATUS_CHARACTERS = {
+  fail:    '✖',
+  pass:    '✓',
+  pending: '-'
+};
+
+/**
  * Receiver of events sent by {@link testing-client.EventReporter}.
  */
 export default class EventReceiver extends CommonBase {
@@ -134,13 +144,12 @@ export default class EventReceiver extends CommonBase {
     this._stats[details.status]++;
     this._stats.total++;
 
-    const prefix = '  '.repeat(this._suites.length + 1);
+    const prefix     = '  '.repeat(this._suites.length + 1);
+    const statusChar = TEST_STATUS_CHARACTERS[details.status] || '?';
+    const speed      = details.speed;
+    const speedStr   = (speed === 'fast') ? '' : `(${speed} ${details.duration}ms)`;
 
-    const speed = details.speed;
-    const speedStr = (speed === 'fast') ? '' : `, ${speed} ${details.duration}ms`;
-    const statusStr = `(${details.status}${speedStr})`;
-
-    this._log(`${prefix}${statusStr} -- ${details.title}`);
+    this._log(`${prefix}${statusChar} ${details.title}${speedStr}`);
 
     if (details.console.length !== 0) {
       this._log('');
