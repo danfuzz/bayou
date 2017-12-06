@@ -2,9 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { format, inspect } from 'util';
+import { format } from 'util';
 
-import { CommonBase } from 'util-common';
+import { CommonBase, ErrorUtil } from 'util-common';
 
 /**
  * Mocha reporter, similar to its built-in "JSON stream" reporter, but
@@ -84,11 +84,34 @@ export default class EventReporter extends CommonBase {
       speed = 'medium';
     }
 
+    if (error !== null) {
+      // Get a trace of the error without any extra properties (as those get
+      // pulled out separately, below).
+      const pureError = new Error(error.message);
+      pureError.stack = error.stack;
+      const trace = ErrorUtil.fullTrace(pureError);
+
+      // Unit test errors often have interesting auxiliary info. Collect them
+      // separately.
+      let extras = null;
+      for (const name of Object.getOwnPropertyNames(error)) {
+        if ((name === 'message') || (name === 'stack')) {
+          continue;
+        } else if (extras === null) {
+          extras = {};
+        }
+
+        extras[name] = error[name];
+      }
+
+      error = { trace, extras };
+    }
+
     this._emit('test', {
       title:    test.title,
       console:  this._console,
       duration: test.duration || 0,
-      error:    (error === null) ? null : inspect(error),
+      error,
       status,
       speed
     });

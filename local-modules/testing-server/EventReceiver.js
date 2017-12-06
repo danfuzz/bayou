@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import chalk from 'chalk';
+import { inspect } from 'util';
 
 import { CommonBase } from 'util-common';
 
@@ -179,9 +180,21 @@ export default class EventReceiver extends CommonBase {
     }
 
     if (details.error !== null) {
+      const { trace, extras } = details.error;
+
       anyExtra = true;
       this._log('');
-      this._log(details.error);
+
+      for (const line of trace.split('\n')) {
+        this._log(`${prefix}${line}`);
+      }
+
+      if (extras !== null) {
+        this._log('');
+        for (const line of inspect(extras).split('\n')) {
+          this._log(`${prefix}${line}`);
+        }
+      }
     }
 
     if (anyExtra) {
