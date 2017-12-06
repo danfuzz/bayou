@@ -1,5 +1,5 @@
 {
-  "name": "compiler-dependencies",
+  "name": "deps-compiler",
   "version": "1.0.0",
 
   "dependencies": {
