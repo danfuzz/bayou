@@ -17,11 +17,11 @@ export default class EventReceiver extends CommonBase {
     /** {array<string>} Current stack of the names of active test suites. */
     this._suites = [];
 
-    /**
-     * {array<{ test, status, suites, log }>} Array of collected test results,
-     * each an ad-hoc plain object.
-     */
-    this._results = [];
+    /** {array<string>} Array of collected test result lines. */
+    this._resultLines = [];
+
+    /** {array<string>} Array of non-test browser console output lines. */
+    this._nonTestLines = [];
 
     /** {object} Ad-hoc object with mappings for test category counts. */
     this._stats = { fail: 0, pass: 0, pending: 0, total: 0 };
@@ -41,11 +41,20 @@ export default class EventReceiver extends CommonBase {
   }
 
   /**
+   * {array<string>} Array of non-test browser console output lines. This ends
+   * up getting used when reporting test infrastucture failures (as opposed to
+   * failures in the tests themselves).
+   */
+  get nonTestLines() {
+    return this._nonTestLines;
+  }
+
+  /**
    * {array<string>} A list of output lines representing the test results,
    * suitable for writing to a file.
    */
   get resultLines() {
-    return this._results;
+    return this._resultLines;
   }
 
   /**
@@ -58,6 +67,7 @@ export default class EventReceiver extends CommonBase {
 
     if (match === null) {
       // Not an event line.
+      this._nonTestLines.push(line);
       return;
     }
 
@@ -71,7 +81,7 @@ export default class EventReceiver extends CommonBase {
    * @param {string} line Line to log.
    */
   _log(line) {
-    this._results.push(line);
+    this._resultLines.push(line);
 
     // eslint-disable-next-line no-console
     console.log('%s', line);
