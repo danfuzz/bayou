@@ -4,6 +4,6 @@
 
   "dependencies": {
     "ansi-html": "^0.0.7",
-    "chalk": "^1.1.1"
+    "chalk": "^2.3.0"
   }
 }
