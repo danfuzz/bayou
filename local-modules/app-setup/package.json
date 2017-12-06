@@ -4,7 +4,6 @@
 
   "dependencies": {
     "camel-case": "^3.0.0",
-    "chalk": "^1.1.1",
     "express": "^4.14.0",
     "express-ws": "^2.0.0",
     "morgan": "^1.7.0",
@@ -13,6 +12,7 @@
     "api-server": "local",
     "client-bundle": "local",
     "codec": "local",
+    "deps-ansi-color": "local",
     "doc-common": "local",
     "doc-server": "local",
     "env-server": "local",
