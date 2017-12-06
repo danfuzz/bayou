@@ -5,7 +5,7 @@
   "dependencies": {
     "memory-fs": "^0.4.1",
 
-    "compiler-dependencies": "local",
+    "deps-compiler": "local",
     "env-server": "local",
     "see-all": "local",
     "testing-server": "local",

@@ -2,7 +2,27 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import chalk from 'chalk';
+import { inspect } from 'util';
+
 import { CommonBase } from 'util-common';
+
+/**
+ * {object} Object that maps each possible test status to an ad-hoc set of
+ * info about how to mark it up.
+ */
+const TEST_STATUS_MARKUP = {
+  fail:    { char: '✖', color: chalk.red,   colorTitle: false },
+  pass:    { char: '✓', color: chalk.green, colorTitle: false },
+  pending: { char: '-', color: chalk.cyan,  colorTitle: true },
+  unknown: { char: '?', color: chalk.red,   colorTitle: true }
+};
+
+/** {object} Colors to use for non-fast speed markup. */
+const SPEED_COLOR = {
+  medium: chalk.yellow,
+  slow:   chalk.red
+};
 
 /**
  * Receiver of events sent by {@link testing-client.EventReporter}.
@@ -134,15 +154,25 @@ export default class EventReceiver extends CommonBase {
     this._stats[details.status]++;
     this._stats.total++;
 
-    const prefix = '  '.repeat(this._suites.length + 1);
+    const prefix     = '  '.repeat(this._suites.length + 1);
+    const speed      = details.speed;
+    const markup     = TEST_STATUS_MARKUP[details.status] || TEST_STATUS_MARKUP.unknown;
+    const speedColor = SPEED_COLOR[speed] || chalk.gray;
+    const statusChar = markup.color(markup.char);
+    const speedStr = (speed === 'fast')
+      ? ''
+      : `\n${prefix}  ` + speedColor(`(${speed} ${details.duration}ms)`);
 
-    const speed = details.speed;
-    const speedStr = (speed === 'fast') ? '' : `, ${speed} ${details.duration}ms`;
-    const statusStr = `(${details.status}${speedStr})`;
+    // Indent the second-and-later title lines so they line up under the first
+    // line.
+    const title    = details.title.replace(/\n/g, `\n${prefix}  `);
+    const titleStr = markup.colorTitle ? markup.color(title) : title;
+    this._log(`${prefix}${statusChar} ${titleStr}${speedStr}`);
 
-    this._log(`${prefix}${statusStr} -- ${details.title}`);
+    let anyExtra = false;
 
     if (details.console.length !== 0) {
+      anyExtra = true;
       this._log('');
       for (const line of details.console) {
         this._log(`${prefix}${line}`);
@@ -150,8 +180,25 @@ export default class EventReceiver extends CommonBase {
     }
 
     if (details.error !== null) {
+      const { trace, extras } = details.error;
+
+      anyExtra = true;
       this._log('');
-      this._log(details.error);
+
+      for (const line of trace.split('\n')) {
+        this._log(`${prefix}${line}`);
+      }
+
+      if (extras !== null) {
+        this._log('');
+        for (const line of inspect(extras).split('\n')) {
+          this._log(`${prefix}${line}`);
+        }
+      }
+    }
+
+    if (anyExtra) {
+      this._log('');
     }
   }
 }

@@ -8,12 +8,13 @@ contexts.
 
 ### Module naming conventions
 
+* `<name>-client` &mdash; A module that is only meant to be used on the client
+  (e.g., in a web browser or SSB-ish environment).
 * `<name>-core` &mdash; A module that is akin to a "base class," that is, a
   module expected to be used primarily by defining another module which expands
   on its behavior in some fashion.
 * `<name>-common` &mdash; A module that contains code that is meant to be
   equally useful on both client and server sides.
-* `<name>-client` &mdash; A module that is only meant to be used on the client.
 * `<name>-server` &mdash; A module that is only meant to be used on the server.
 
 These patterns are generally used only when there are multiple related
@@ -21,6 +22,12 @@ modules that are used in different environments, that is, where at least two
 of the above patterns are used with the same `<name>`. _Not_ having one of
 these suffixes doesn't convey any meaning about what environment(s) a module
 can be used in.
+
+* `deps-<name>` &mdash; A module whose sole purpose is to require one or more
+  external modules as dependencies, specifically so that multiple local modules
+  can in turn depend on it. This simplifies external dependency management. The
+  `<name>` is meant to be reasonably suggestive of the territory covered by the
+  particular set of dependencies being defined.
 
 ### Export conventions
 

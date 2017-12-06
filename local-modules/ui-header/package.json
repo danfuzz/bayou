@@ -3,7 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "react-dependencies": "local",
+    "deps-react": "local",
     "ui-common": "local"
   }
 }

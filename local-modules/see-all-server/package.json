@@ -3,9 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "ansi-html": "^0.0.7",
-    "chalk": "^1.1.1",
-
+    "deps-ansi-color": "local",
     "see-all": "local",
     "util-common": "local"
   }
