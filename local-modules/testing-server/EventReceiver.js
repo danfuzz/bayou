@@ -147,9 +147,12 @@ export default class EventReceiver extends CommonBase {
     const prefix     = '  '.repeat(this._suites.length + 1);
     const statusChar = TEST_STATUS_CHARACTERS[details.status] || '?';
     const speed      = details.speed;
-    const speedStr   = (speed === 'fast') ? '' : `(${speed} ${details.duration}ms)`;
+    const speedStr   = (speed === 'fast') ? '' : `\n${prefix}  (${speed} ${details.duration}ms)`;
 
-    this._log(`${prefix}${statusChar} ${details.title}${speedStr}`);
+    // Indent the second-and-later title lines so they line up under the first
+    // line.
+    const title = details.title.replace(/\n/g, `\n${prefix}  `);
+    this._log(`${prefix}${statusChar} ${title}${speedStr}`);
 
     if (details.console.length !== 0) {
       this._log('');
