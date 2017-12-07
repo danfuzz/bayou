@@ -12,7 +12,7 @@ import BaseSnapshot from './BaseSnapshot';
 import Timestamp from './Timestamp';
 import RevisionNumber from './RevisionNumber';
 
-// Register classes with the API.
+// Register classes for encoding / decoding.
 Codec.theOne.registerClass(Timestamp);
 
 export {

@@ -21,7 +21,7 @@ import PropertyOp from './PropertyOp';
 import PropertySnapshot from './PropertySnapshot';
 import Timeouts from './Timeouts';
 
-// Register classes with the API.
+// Register classes for encoding / decoding.
 Codec.theOne.registerClass(BodyChange);
 Codec.theOne.registerClass(BodyDelta);
 Codec.theOne.registerClass(BodyOp);
