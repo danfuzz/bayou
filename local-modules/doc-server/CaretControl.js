@@ -2,10 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import {
-  Caret, CaretChange, CaretOp, CaretSnapshot, RevisionNumber, Timestamp
-} from 'doc-common';
+import { Caret, CaretChange, CaretOp, CaretSnapshot } from 'doc-common';
 import { TransactionSpec } from 'file-store';
+import { RevisionNumber, Timestamp } from 'ot-common';
 import { TInt, TString } from 'typecheck';
 
 import BaseControl from './BaseControl';
