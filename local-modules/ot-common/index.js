@@ -9,7 +9,6 @@ import BaseChange from './BaseChange';
 import BaseDelta from './BaseDelta';
 import BaseOp from './BaseOp';
 import BaseSnapshot from './BaseSnapshot';
-import DocumentId from './DocumentId';
 import Timestamp from './Timestamp';
 import RevisionNumber from './RevisionNumber';
 
@@ -22,7 +21,6 @@ export {
   BaseDelta,
   BaseOp,
   BaseSnapshot,
-  DocumentId,
   Timestamp,
   RevisionNumber
 };
