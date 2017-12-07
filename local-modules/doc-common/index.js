@@ -24,9 +24,8 @@ import PropertyChange from './PropertyChange';
 import PropertyDelta from './PropertyDelta';
 import PropertyOp from './PropertyOp';
 import PropertySnapshot from './PropertySnapshot';
-import Timeouts from './Timeouts';
-import Timestamp from './Timestamp';
 import RevisionNumber from './RevisionNumber';
+import Timeouts from './Timeouts';
 
 // Register classes with the API.
 Codec.theOne.registerClass(BodyChange);
@@ -43,7 +42,6 @@ Codec.theOne.registerClass(PropertyChange);
 Codec.theOne.registerClass(PropertyDelta);
 Codec.theOne.registerClass(PropertyOp);
 Codec.theOne.registerClass(PropertySnapshot);
-Codec.theOne.registerClass(Timestamp);
 
 export {
   AuthorId,
@@ -66,7 +64,6 @@ export {
   PropertyDelta,
   PropertyOp,
   PropertySnapshot,
+  RevisionNumber,
   Timeouts,
-  Timestamp,
-  RevisionNumber
 };

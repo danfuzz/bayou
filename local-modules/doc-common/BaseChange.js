@@ -3,12 +3,12 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TFunction } from 'typecheck';
+import { Timestamp } from 'ot-common';
 import { CommonBase } from 'util-common';
 
 import AuthorId from './AuthorId';
 import BaseDelta from './BaseDelta';
 import RevisionNumber from './RevisionNumber';
-import Timestamp from './Timestamp';
 
 /**
  * Base class for representation of a change to document content. A change

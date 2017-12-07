@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Timestamp } from 'doc-common';
+import { Timestamp } from 'ot-common';
 
 /** {Int} Unix time in seconds for the start of January in the year 2010. */
 const SEC_2010_JAN_01 = Math.floor(new Date(2010, 1, 1, 0, 0, 0, 0).valueOf() / 1000);
