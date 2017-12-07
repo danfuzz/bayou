@@ -9,7 +9,7 @@ import { inspect } from 'util';
 import { BaseDelta, CaretDelta } from 'doc-common';
 import { DataUtil } from 'util-common';
 
-import { MockDelta, MockOp } from 'doc-common/mocks';
+import { MockDelta, MockOp } from 'ot-common/mocks';
 
 /**
  * Second mock "delta" class for testing.

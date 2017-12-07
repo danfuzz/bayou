@@ -8,7 +8,7 @@ import { inspect } from 'util';
 
 import { Caret, CaretDelta, CaretOp } from 'doc-common';
 
-import { MockDelta } from 'doc-common/mocks';
+import { MockDelta } from 'ot-common/mocks';
 
 describe('doc-common/CaretDelta', () => {
   describe('compose()', () => {

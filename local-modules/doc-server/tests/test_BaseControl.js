@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { Codec } from 'codec';
 import { Timeouts, Timestamp } from 'doc-common';
-import { MockChange, MockDelta, MockOp, MockSnapshot } from 'doc-common/mocks';
+import { MockChange, MockDelta, MockOp, MockSnapshot } from 'ot-common/mocks';
 import { BaseControl, FileAccess } from 'doc-server';
 import { MockControl } from 'doc-server/mocks';
 import { Errors as FileErrors, TransactionSpec } from 'file-store';

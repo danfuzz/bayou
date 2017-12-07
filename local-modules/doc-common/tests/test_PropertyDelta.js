@@ -8,7 +8,7 @@ import { inspect } from 'util';
 
 import { PropertyDelta, PropertyOp } from 'doc-common';
 
-import { MockDelta } from 'doc-common/mocks';
+import { MockDelta } from 'ot-common/mocks';
 
 describe('doc-common/PropertyDelta', () => {
   describe('.EMPTY', () => {
