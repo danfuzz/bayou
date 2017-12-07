@@ -4,7 +4,6 @@
 
 import { Codec } from 'codec';
 
-import AuthorId from './AuthorId';
 import BaseChange from './BaseChange';
 import BaseDelta from './BaseDelta';
 import BaseOp from './BaseOp';
@@ -43,7 +42,6 @@ Codec.theOne.registerClass(PropertyOp);
 Codec.theOne.registerClass(PropertySnapshot);
 
 export {
-  AuthorId,
   BaseChange,
   BaseDelta,
   BaseOp,

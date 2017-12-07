@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { AuthorId } from 'doc-common';
+import { AuthorId } from 'ot-common';
 
 describe('doc-common/AuthorId', () => {
   describe('check()', () => {
