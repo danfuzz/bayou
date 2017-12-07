@@ -10,6 +10,7 @@
     "doc-client": "local",
     "doc-common": "local",
     "hooks-client": "local",
+    "ot-common": "local",
     "promise-util": "local",
     "quill-util": "local",
     "see-all": "local",

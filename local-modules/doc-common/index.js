@@ -24,7 +24,6 @@ import PropertyChange from './PropertyChange';
 import PropertyDelta from './PropertyDelta';
 import PropertyOp from './PropertyOp';
 import PropertySnapshot from './PropertySnapshot';
-import RevisionNumber from './RevisionNumber';
 import Timeouts from './Timeouts';
 
 // Register classes with the API.
@@ -64,6 +63,5 @@ export {
   PropertyDelta,
   PropertyOp,
   PropertySnapshot,
-  RevisionNumber,
-  Timeouts,
+  Timeouts
 };

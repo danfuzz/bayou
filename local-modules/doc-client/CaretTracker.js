@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { RevisionNumber } from 'doc-common';
+import { RevisionNumber } from 'ot-common';
 import { Delay } from 'promise-util';
 import { TInt, TObject } from 'typecheck';
 import { CommonBase } from 'util-common';

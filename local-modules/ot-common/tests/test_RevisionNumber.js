@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { RevisionNumber } from 'doc-common';
+import { RevisionNumber } from 'ot-common';
 
 /**
  * Helper to call a given method and ensure that it rejects numbers that aren't
