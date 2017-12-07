@@ -1,5 +1,9 @@
 #!/bin/bash
 #
+# Copyright 2016-2017 the Bayou Authors (Dan Bornstein et alia).
+# Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+# Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+#
 # Loops over all of the npm modules in a given directory
 # and executes the indicated lifecycle scripts associated
 # with them.
@@ -30,6 +34,9 @@ showHelp=0
 # Directory in which to look for modules
 modulePath=''
 
+# Modules to update
+modules=()
+
 # Lifecycle event to fire
 lifecycleEvent=''
 
@@ -42,7 +49,7 @@ while true; do
         --event=?*)
             lifecycleEvent=${1#*=}
 
-            if [[ ! "${lifecycleEvent}" =~ ^(preinstall|build|install|postinstall|uninstall)$ ]]; then
+            if [[ ! "${lifecycleEvent}" =~ ^(clean|preinstall|build|install|postinstall|uninstall)$ ]]; then
                 echo "Unknown event: ${lifecycleEvent}" 1>&2
                 echo 1>&2
 
@@ -53,6 +60,14 @@ while true; do
         --event=|--event)
             echo '--event requires a non-empty argument.'
             argError=1
+            break
+            ;;
+        --module=?*)
+            modules+=(${1#*=})
+            ;;
+        --module=|--module)
+            echo '--module requires a non-empty argument.'
+            argError=1;
             break
             ;;
         --path=?*)
@@ -81,54 +96,64 @@ done
 if (( ${showHelp} || ${argError} )); then
     echo 'Usage:'
     echo ''
-    echo "${progName} --path=<path> --event=<event>"
+    echo "${progName} --path=<path> --event=<event> [--module=<name> ...]"
     echo '  Run the event for the modules in the given path.'
     echo ''
-    echo '  --path'
+    echo '  --path=</path/to/modules/dir>'
     echo '    The directory path in which to look for modules.'
-    echo '  --event'
+    echo '  --module=<name>'
+    echo '    If supplied then events will fire for the named module.'
+    echo '    If not specified then the event will fire for all modules in'
+    echo '    the directory specified by --path.'
+    echo '    --module can be specified more than once.'
+    echo '  --event=<event>'
     echo '    The module lifecycle event to trigger. Must be one of'
-    echo '      [ preinstall | build | install | postinstall | uninstall ]'
+    echo '      [ clean | preinstall | build | install | postinstall | uninstall ]'
     echo ''
     echo "${progName} [--help | -h]"
     echo '  Display this message.'
     exit ${argError}
 fi
 
+#
+# Main Script
+#
+
 # Iterates over the modules at a given path and executes
 # the named lifecycle script if one is found.
-function run-event-at-path {
-  local event="$1"
-  local path="$2"
-
-  # Ensure the modules directory exists.
-  if [[ ! -d "${path}" ]]; then
-    echo "Path ${path} does not exist." 1>&2
+# Ensure the modules directory exists.
+if [[ ! -d "${modulePath}" ]]; then
+    echo "Path ${modulePath} does not exist." 1>&2
     exit 1
-  fi
+fi
 
-  # For each subdirectory at the supplied path...
-  for subdir in $(find "${path}" -type d -mindepth 1 -maxdepth 1); do
-    local packagePath="${subdir}/package.json"
+(
+    cd "${modulePath}"
 
-    # See if it has a package.json file, skip directory if it doesn't.
-    if [[ ! -r "${packagePath}" ]]; then
-      continue
+    if (( ${#modules[@]} == 0 )); then
+        modules=$(find . -type d -mindepth 1 -maxdepth 1)
     fi
 
-    local script=''
+    # For each subdirectory at the supplied path...
+    for module in ${modules[@]}; do
+        packagePath="${module}/package.json"
 
-    # See if package.json defines a script for the given event...
-    script="$(jq -e -r ".scripts.${event}" "${packagePath}")"
+        # See if it has a package.json file, skip directory if it doesn't.
+        if [[ ! -r "${packagePath}" ]]; then
+            continue
+        fi
 
-    # Skip it if it doesn't.
-    if (( $? > 0 )); then
-      continue
-    fi
+        script=''
 
-    # Finally, execute the lifecycle script.
-    (cd "${subdir}"; sh -c "${script}") || return 1
-  done
-}
+        # See if package.json defines a script for the given event...
+        script="$(jq -e -r ".scripts.${lifecycleEvent}" "${packagePath}")"
 
-run-event-at-path "${lifecycleEvent}" "${modulePath}"
+        # Skip it if it doesn't.
+        if (( $? > 0 )); then
+            continue
+        fi
+
+        # Finally, execute the lifecycle script.
+        (cd "${module}"; sh -c "${script}") || exit 1
+    done
+)
