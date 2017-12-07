@@ -4,10 +4,8 @@
 
 import * as colors from './colors.less';
 import * as common from './common.less';
-import * as icons from './icon-font.less';
 
 export {
   colors,
-  common,
-  icons
+  common
 };
