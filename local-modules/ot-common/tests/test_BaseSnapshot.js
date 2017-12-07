@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { BaseChange, BaseSnapshot } from 'doc-common';
+import { BaseChange, BaseSnapshot } from 'ot-common';
 
 import { MockChange, MockDelta, MockOp, MockSnapshot } from 'ot-common/mocks';
 

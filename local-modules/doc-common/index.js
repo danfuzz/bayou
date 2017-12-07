@@ -4,10 +4,6 @@
 
 import { Codec } from 'codec';
 
-import BaseChange from './BaseChange';
-import BaseDelta from './BaseDelta';
-import BaseOp from './BaseOp';
-import BaseSnapshot from './BaseSnapshot';
 import BodyChange from './BodyChange';
 import BodyDelta from './BodyDelta';
 import BodyOp from './BodyOp';
@@ -42,10 +38,6 @@ Codec.theOne.registerClass(PropertyOp);
 Codec.theOne.registerClass(PropertySnapshot);
 
 export {
-  BaseChange,
-  BaseDelta,
-  BaseOp,
-  BaseSnapshot,
   BodyChange,
   BodyDelta,
   BodyOp,
