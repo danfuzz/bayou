@@ -68,7 +68,9 @@ $ ./scripts/build --boxes=<box-dir>
 ### Testing
 
 The script `run-tests` will run all of the existing tests, sending output to the
-console as well as saving it in files under the output directory.
+console as well as saving it in files under the output directory. It takes
+options which can limit it to only running specific tests. (See its `--help` for
+details.)
 
 This script wraps calls to the build script `out/final/bin/run`, passing it
 various testing options. You can also call this script directly, as needed or
