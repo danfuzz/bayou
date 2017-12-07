@@ -11,7 +11,7 @@ import Message from './Message';
 import Response from './Response';
 import SplitKey from './SplitKey';
 
-// Register classes with the API.
+// Register classes for encoding / decoding.
 Codec.theOne.registerClass(CodableError);
 Codec.theOne.registerClass(Message);
 Codec.theOne.registerClass(Response);

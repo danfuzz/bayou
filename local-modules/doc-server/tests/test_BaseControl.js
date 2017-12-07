@@ -6,12 +6,13 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { Codec } from 'codec';
-import { Timeouts, Timestamp } from 'doc-common';
-import { MockChange, MockDelta, MockOp, MockSnapshot } from 'doc-common/mocks';
+import { Timeouts } from 'doc-common';
+import { MockChange, MockDelta, MockOp, MockSnapshot } from 'ot-common/mocks';
 import { BaseControl, FileAccess } from 'doc-server';
 import { MockControl } from 'doc-server/mocks';
 import { Errors as FileErrors, TransactionSpec } from 'file-store';
 import { MockFile } from 'file-store/mocks';
+import { Timestamp } from 'ot-common';
 import { Errors, FrozenBuffer } from 'util-common';
 
 describe('doc-server/BaseControl', () => {

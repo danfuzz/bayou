@@ -2,13 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { RevisionNumber, Timestamp } from 'ot-common';
 import { TInt, TObject, TString } from 'typecheck';
 import { ColorUtil, CommonBase, Errors } from 'util-common';
 
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';
-import RevisionNumber from './RevisionNumber';
-import Timestamp from './Timestamp';
 
 /**
  * {Map<string, function>} Map from each allowed caret field name to a type

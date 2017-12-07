@@ -2,8 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BodyChange, BodyDelta, BodySnapshot, RevisionNumber } from 'doc-common';
+import { BodyChange, BodyDelta, BodySnapshot } from 'doc-common';
 import { TransactionSpec } from 'file-store';
+import { RevisionNumber } from 'ot-common';
 
 import BaseControl from './BaseControl';
 import Paths from './Paths';

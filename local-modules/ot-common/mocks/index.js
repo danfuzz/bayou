@@ -9,7 +9,7 @@ import MockDelta from './MockDelta';
 import MockOp from './MockOp';
 import MockSnapshot from './MockSnapshot';
 
-// Register classes with the API.
+// Register classes for encoding / decoding.
 Codec.theOne.registerClass(MockChange);
 Codec.theOne.registerClass(MockDelta);
 Codec.theOne.registerClass(MockOp);

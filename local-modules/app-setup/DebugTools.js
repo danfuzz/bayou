@@ -7,8 +7,9 @@ import express from 'express';
 import { inspect } from 'util';
 
 import { Codec } from 'codec';
-import { AuthorId, DocumentId } from 'doc-common';
+import { DocumentId } from 'doc-common';
 import { DocServer } from 'doc-server';
+import { AuthorId } from 'ot-common';
 import { Logger } from 'see-all';
 import { RecentSink } from 'see-all-server';
 

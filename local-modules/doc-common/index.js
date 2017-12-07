@@ -4,11 +4,6 @@
 
 import { Codec } from 'codec';
 
-import AuthorId from './AuthorId';
-import BaseChange from './BaseChange';
-import BaseDelta from './BaseDelta';
-import BaseOp from './BaseOp';
-import BaseSnapshot from './BaseSnapshot';
 import BodyChange from './BodyChange';
 import BodyDelta from './BodyDelta';
 import BodyOp from './BodyOp';
@@ -25,10 +20,8 @@ import PropertyDelta from './PropertyDelta';
 import PropertyOp from './PropertyOp';
 import PropertySnapshot from './PropertySnapshot';
 import Timeouts from './Timeouts';
-import Timestamp from './Timestamp';
-import RevisionNumber from './RevisionNumber';
 
-// Register classes with the API.
+// Register classes for encoding / decoding.
 Codec.theOne.registerClass(BodyChange);
 Codec.theOne.registerClass(BodyDelta);
 Codec.theOne.registerClass(BodyOp);
@@ -43,14 +36,8 @@ Codec.theOne.registerClass(PropertyChange);
 Codec.theOne.registerClass(PropertyDelta);
 Codec.theOne.registerClass(PropertyOp);
 Codec.theOne.registerClass(PropertySnapshot);
-Codec.theOne.registerClass(Timestamp);
 
 export {
-  AuthorId,
-  BaseChange,
-  BaseDelta,
-  BaseOp,
-  BaseSnapshot,
   BodyChange,
   BodyDelta,
   BodyOp,
@@ -66,7 +53,5 @@ export {
   PropertyDelta,
   PropertyOp,
   PropertySnapshot,
-  Timeouts,
-  Timestamp,
-  RevisionNumber
+  Timeouts
 };

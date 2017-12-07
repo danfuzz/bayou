@@ -10,6 +10,7 @@
     "env-server": "local",
     "file-store": "local",
     "hooks-server": "local",
+    "ot-common": "local",
     "promise-util": "local",
     "see-all": "local",
     "typecheck": "local",

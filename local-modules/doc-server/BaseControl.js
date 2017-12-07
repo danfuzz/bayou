@@ -2,8 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseSnapshot, RevisionNumber, Timeouts } from 'doc-common';
+import { Timeouts } from 'doc-common';
 import { Errors as FileStoreErrors, StoragePath, TransactionSpec } from 'file-store';
+import { BaseSnapshot, RevisionNumber } from 'ot-common';
 import { Delay } from 'promise-util';
 import { TBoolean, TFunction } from 'typecheck';
 import { Errors } from 'util-common';

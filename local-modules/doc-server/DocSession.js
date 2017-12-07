@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BodyChange, PropertyChange, RevisionNumber, Timestamp } from 'doc-common';
+import { BodyChange, PropertyChange } from 'doc-common';
+import { RevisionNumber, Timestamp } from 'ot-common';
 import { TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 

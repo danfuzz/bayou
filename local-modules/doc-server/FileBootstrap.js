@@ -2,9 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BodyChange, BodyDelta, Timestamp } from 'doc-common';
+import { BodyChange, BodyDelta } from 'doc-common';
 import { TransactionSpec } from 'file-store';
 import { DEFAULT_DOCUMENT } from 'hooks-server';
+import { Timestamp } from 'ot-common';
 import { Mutex } from 'promise-util';
 import { Errors } from 'util-common';
 

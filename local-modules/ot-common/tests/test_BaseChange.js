@@ -6,9 +6,9 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import Delta from 'quill-delta';
 
-import { Timestamp } from 'doc-common';
+import { Timestamp } from 'ot-common';
 
-import { MockChange, MockDelta } from 'doc-common/mocks';
+import { MockChange, MockDelta } from 'ot-common/mocks';
 
 /**
  * Asserts that the given instance has fields that are `===` to the given

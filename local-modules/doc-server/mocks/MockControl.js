@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseControl } from 'doc-server';
-import { MockSnapshot } from 'doc-common/mocks';
+import { MockSnapshot } from 'ot-common/mocks';
 
 /**
  * Subclass of {@link BaseControl} for use in testing.

@@ -6,10 +6,10 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { BaseDelta, CaretDelta } from 'doc-common';
+import { BaseDelta } from 'ot-common';
 import { DataUtil } from 'util-common';
 
-import { MockDelta, MockOp } from 'doc-common/mocks';
+import { MockDelta, MockOp } from 'ot-common/mocks';
 
 /**
  * Second mock "delta" class for testing.
@@ -142,7 +142,6 @@ describe('doc-common/BaseDelta', () => {
       test(1);
       test('blort');
       test(new Map());
-      test(new CaretDelta([]));
     });
 
     it('should reject non-boolean `wantDocument` arguments', () => {

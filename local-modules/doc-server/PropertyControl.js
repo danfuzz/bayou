@@ -2,8 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { PropertySnapshot, RevisionNumber } from 'doc-common';
+import { PropertySnapshot } from 'doc-common';
 import { TransactionSpec } from 'file-store';
+import { RevisionNumber } from 'ot-common';
 
 import BaseControl from './BaseControl';
 import Paths from './Paths';

@@ -36,11 +36,17 @@ showHelp=0
 # Output directory option, if any.
 outDirOpt=()
 
+# Which tests to run.
+tests=()
+
 while true; do
     case $1 in
         -h|--help)
             showHelp=1
             break
+            ;;
+        --client|--client-bundle|--server)
+            tests+=("${1#--}") # Strip off the `--` prefix.
             ;;
         --out=?*)
             outDirOpt+=("$1")
@@ -64,16 +70,28 @@ done
 if (( ${showHelp} || ${argError} )); then
     echo 'Usage:'
     echo ''
-    echo "${progName} [--out=<dir>]"
-    echo '  Runs the project tests.'
+    echo "${progName} [--out=<dir>] [--client] [--client-bundle] [--server]"
+    echo '  Runs the project tests. If no specific tests are specified, runs all'
+    echo '  of them.'
     echo ''
+    echo '  --client'
+    echo '    Run the client unit tests.'
+    echo '  --client-bundle'
+    echo '    Run the client bundle build test.'
     echo '  --out=<dir>'
     echo '    Directory containing the built output, and where test results are'
     echo '    stored.'
+    echo '  --server'
+    echo '    Run the server unit tests.'
     echo ''
     echo "${progName} [--help | -h]"
     echo '  Display this message.'
     exit ${argError}
+fi
+
+if (( ${#tests[@]} == 0 )); then
+    # Default to running all tests.
+    tests=(client-bundle client server)
 fi
 
 
@@ -151,8 +169,18 @@ fi
 
 mkdir -p "${testOutDir}"
 
-run-test --tee 'client-bundle.txt' "${runProduct}" --client-bundle
-run-test 'server-test.txt' "${runProduct}" --server-test
-run-test 'client-test.txt' "${runProduct}" --client-test
+for test in "${tests[@]}"; do
+    case "${test}" in
+        client)
+            run-test 'client-test.txt' "${runProduct}" --client-test
+            ;;
+        client-bundle)
+            run-test --tee 'client-bundle.txt' "${runProduct}" --client-bundle
+            ;;
+        server)
+            run-test 'server-test.txt' "${runProduct}" --server-test
+            ;;
+    esac
+done
 
 exit "${testError}"

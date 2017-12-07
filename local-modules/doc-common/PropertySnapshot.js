@@ -2,10 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { BaseSnapshot } from 'ot-common';
 import { TString } from 'typecheck';
 import { Errors } from 'util-common';
 
-import BaseSnapshot from './BaseSnapshot';
 import PropertyChange from './PropertyChange';
 import PropertyDelta from './PropertyDelta';
 import PropertyOp from './PropertyOp';

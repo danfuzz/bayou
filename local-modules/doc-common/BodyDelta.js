@@ -4,10 +4,10 @@
 
 import Delta from 'quill-delta';
 
+import { BaseDelta } from 'ot-common';
 import { TBoolean, TObject } from 'typecheck';
 import { Errors } from 'util-common';
 
-import BaseDelta from './BaseDelta';
 import BodyOp from './BodyOp';
 
 /**

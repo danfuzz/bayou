@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import BaseChange from './BaseChange';
+import { BaseChange } from 'ot-common';
+
 import PropertyDelta from './PropertyDelta';
 
 /**

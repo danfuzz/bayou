@@ -1,13 +1,10 @@
 {
-  "name": "doc-common",
+  "name": "ot-common",
   "version": "1.0.0",
 
   "dependencies": {
-    "quill-delta": "^3.6.2",
-
     "codec": "local",
     "hooks-common": "local",
-    "ot-common": "local",
     "typecheck": "local",
     "util-common": "local"
   }

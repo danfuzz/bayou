@@ -8,7 +8,7 @@ import { inspect } from 'util';
 
 import { DataUtil, Functor } from 'util-common';
 
-import { MockOp } from 'doc-common/mocks';
+import { MockOp } from 'ot-common/mocks';
 
 describe('doc-common/BaseOp', () => {
   describe('constructor()', () => {
