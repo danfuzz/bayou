@@ -272,6 +272,22 @@ export default class Transactor extends CommonBase {
   }
 
   /**
+   * Handler for `deletePathRange` operations.
+   *
+   * @param {object} props The operation properties.
+   */
+  _op_deletePathRange(props) {
+    const { storagePath, startInclusive, endExclusive } = props;
+
+    for (let i = startInclusive; i < endExclusive; i++) {
+      const fullPath = `${storagePath}/${i}`;
+      if (this._fileFriend.readPathOrNull(fullPath) !== null) {
+        this._updatedStorage.set(fullPath, null);
+      }
+    }
+  }
+
+  /**
    * Handler for `listPathPrefix` operations.
    *
    * @param {object} props The operation properties.

@@ -140,6 +140,25 @@ const OPERATIONS = [
   [CAT_DELETE, 'deletePathPrefix', ['storagePath', TYPE_PATH]],
 
   /*
+   * A `deletePathRange` operation. This is a write operation that deletes the
+   * bindings for all paths immediately under the given prefix whose final
+   * components are in the form of whole numbers within the indicated range, if
+   * any. If there were no matching paths bound in the first place, then this
+   * operation does nothing.
+   *
+   * @param {string} storagePath The storage path prefix under which to delete.
+   * @param {Int} startInclusive The start of the range to delete (inclusive).
+   *   Must be `>= 0`.
+   * @param {Int} endExclusive The end of the range to delete (exclusive). Must
+   *   be `>= 0`. If it is `<= startInclusive` then the operation will have no
+   *   effect (as it would be an empty range).
+   */
+  [
+    CAT_DELETE, 'deletePathRange',
+    ['storagePath', TYPE_PATH], ['startInclusive', TYPE_INDEX], ['endExclusive', TYPE_INDEX]
+  ],
+
+  /*
    * A `listPathPrefix` operation. This is a read operation that retrieves a
    * list of all paths immediately under the given prefix that store data, or
    * the path itself if it stores data directly. The resulting list can contain
@@ -193,8 +212,8 @@ const OPERATIONS = [
    * @param {Int} startInclusive The start of the range to read (inclusive).
    *   Must be `>= 0`.
    * @param {Int} endExclusive The end of the range to read (exclusive). Must be
-   *   `>= 0`. If it is `<= startInc` then the operation will have no effect (as
-   *   it would be an empty range).
+   *   `>= 0`. If it is `<= startInclusive` then the operation will have no
+   *   effect (as it would be an empty range).
    */
   [
     CAT_READ, 'readPathRange',
