@@ -29,8 +29,9 @@ const CATEGORY_EXECUTION_ORDER = [
 // details.
 const TYPE_BUFFER    = 'Buffer';
 const TYPE_DUR_MSEC  = 'DurMsec';
-const TYPE_PATH      = 'Path';
 const TYPE_HASH      = 'Hash';
+const TYPE_INDEX     = 'Index';
+const TYPE_PATH      = 'Path';
 const TYPE_REV_NUM   = 'RevNum';
 
 // Operation schemata. See the doc for {@link FileOp#propsFromName} for
@@ -359,11 +360,6 @@ export default class FileOp extends CommonBase {
     return TYPE_DUR_MSEC;
   }
 
-  /** {string} Type name for storage paths. */
-  static get TYPE_PATH() {
-    return TYPE_PATH;
-  }
-
   /**
    * {string} Type name for hash values. Arguments of this type will also
    * accept instances of `FrozenBuffer`. When given a buffer, the constructor
@@ -371,6 +367,19 @@ export default class FileOp extends CommonBase {
    */
   static get TYPE_HASH() {
     return TYPE_HASH;
+  }
+
+  /**
+   * {string} Type name for index values, which is to say non-negative integers.
+   * These are used to with the `*Range` operations.
+   */
+  static get TYPE_INDEX() {
+    return TYPE_INDEX;
+  }
+
+  /** {string} Type name for storage paths. */
+  static get TYPE_PATH() {
+    return TYPE_PATH;
   }
 
   /** {string} Type name for revision numbers. */
@@ -585,6 +594,11 @@ export default class FileOp extends CommonBase {
         } else {
           FrozenBuffer.checkHash(value);
         }
+        break;
+      }
+
+      case TYPE_INDEX: {
+        TInt.nonNegative(value);
         break;
       }
 
