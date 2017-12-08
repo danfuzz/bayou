@@ -60,6 +60,16 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * {string} `StoragePath` prefix string for all changes stored for the portion
+   * of the document controlled by this class.
+   */
+  static get changePathPrefix() {
+    // **Note:** `this` in the context of a static method is the class, not an
+    // instance.
+    return `${this.pathPrefix}/change`;
+  }
+
+  /**
    * {class} Class (constructor function) of delta objects to be used with
    * instances of this class.
    */
@@ -141,7 +151,7 @@ export default class BaseControl extends BaseDataManager {
     // instance.
 
     RevisionNumber.check(revNum);
-    return `${this.pathPrefix}/change/${revNum}`;
+    return `${this.changePathPrefix}/${revNum}`;
   }
 
   /**

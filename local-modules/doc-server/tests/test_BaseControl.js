@@ -26,6 +26,13 @@ describe('doc-server/BaseControl', () => {
     });
   });
 
+  describe('.changePathPrefix', () => {
+    it('should reflect the subclass\'s implementation', () => {
+      const result = MockControl.changePathPrefix;
+      assert.strictEqual(result, '/mock_control/change');
+    });
+  });
+
   describe('.deltaClass', () => {
     it('should reflect the subclass\'s implementation', () => {
       const result = MockControl.deltaClass;
