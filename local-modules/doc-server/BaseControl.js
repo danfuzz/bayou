@@ -310,14 +310,13 @@ export default class BaseControl extends BaseDataManager {
 
   /**
    * Reads a sequential chunk of changes. It is an error to request a change
-   * that does not exist. It is valid for either `start` or `endExc` to indicate
-   * a change that does not exist _only_ if it is one past the last existing
-   * change. If `start === endExc`, then this verifies that the arguments are in
-   * range and returns an empty array. It is an error if `(endExc - start) >
+   * beyond the current revision; it is valid for either `start` or `endExc` to
+   * be `currentRevNum() + 1` but no greater. If `start === endExc`, then this
+   * simply verifies that the arguments are in range and returns an empty array.
+   * It is an error if `(endExc - start) >
    * BaseControl.MAX_CHANGE_READS_PER_TRANSACTION`. For subclasses that don't
-   * keep full change history, it is also an error to request a change that is
-   * _no longer_  available; in this case, the error name is always
-   * `revision_not_available`.
+   * keep full change history, it is possible for there to be holes in the
+   * result; any such holes are filled with `null`.
    *
    * **Note:** The point of the max count limit is that we want to avoid
    * creating a transaction which could run afoul of a limit on the amount of
@@ -341,13 +340,13 @@ export default class BaseControl extends BaseDataManager {
       throw Errors.bad_use(`Too many changes requested at once: ${endExclusive - startInclusive}`);
     }
 
+    // Per docs, reject a start (and implicitly an end) that would try to read
+    // a never-possibly-written change.
+    const revNum = await this.currentRevNum();
+    RevisionNumber.maxInc(startInclusive, revNum + 1);
+
     if (startInclusive === endExclusive) {
-      // Per docs, just need to verify that the arguments don't name an invalid
-      // change. `0` is always valid, so we don't actually need to check that.
-      if (startInclusive !== 0) {
-        const revNum = await this.currentRevNum();
-        RevisionNumber.maxInc(startInclusive, revNum + 1);
-      }
+      // Per docs, this is valid and has an empty result.
       return [];
     }
 
@@ -359,30 +358,21 @@ export default class BaseControl extends BaseDataManager {
     const fc = this.fileCodec;
     const ops = [];
     for (const p of paths) {
-      ops.push(fc.op_checkPathPresent(p));
       ops.push(fc.op_readPath(p));
     }
 
-    let data;
-
-    try {
-      const spec              = new TransactionSpec(...ops);
-      const transactionResult = await fc.transact(spec);
-
-      data = transactionResult.data;
-    } catch (e) {
-      if (FileStoreErrors.isPathNotFound(e)) {
-        // One of the requested revisions is no longer available. If thrown, we
-        // know that at least the first one requested will be missing (because
-        // we won't drop a change without also dropping its predecessors). Throw
-        // the error as specified in the docs.
-        throw Errors.revision_not_available(startInclusive);
-      }
-    }
+    const spec              = new TransactionSpec(...ops);
+    const transactionResult = await fc.transact(spec);
+    const data              = transactionResult.data;
 
     const result = [];
     for (const p of paths) {
-      const change = clazz.changeClass.check(data.get(p));
+      const change = data.get(p) || null;
+
+      if (change !== null) {
+        clazz.changeClass.check(change);
+      }
+
       result.push(change);
     }
 
