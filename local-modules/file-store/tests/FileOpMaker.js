@@ -154,6 +154,9 @@ export default class FileOpMaker extends UtilityClass {
         const buf = FrozenBuffer.coerce(`buffer_hash_${n}`);
         return buf.hash;
       }
+      case FileOp.TYPE_INDEX: {
+        return n + 100;
+      }
       case FileOp.TYPE_PATH: {
         return `/path/${n}`;
       }

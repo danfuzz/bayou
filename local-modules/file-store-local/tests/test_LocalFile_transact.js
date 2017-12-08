@@ -287,6 +287,84 @@ describe('file-store-local/LocalFile.transact', () => {
     });
   });
 
+  describe('op deletePathRange', () => {
+    it('should succeed in deleting all in-range paths that are present', async () => {
+      const blob = new FrozenBuffer('Woo!');
+      const origPaths = [
+        '/x/a', '/x/yahhhssss', '/foo/1', '/foo/2', '/foo/10', '/foo/11', '/foo/12'
+      ];
+      const writeSpec = new TransactionSpec(...origPaths.map(p => FileOp.op_writePath(p, blob)));
+
+      async function test(start, end, expectDeleted) {
+        const file = new LocalFile('0', TempFiles.uniquePath());
+        await file.create();
+        await file.transact(writeSpec);
+
+        const spec = new TransactionSpec(FileOp.op_deletePathRange('/foo', start, end));
+        await assert.isFulfilled(file.transact(spec));
+
+        const expectPaths = new Set(origPaths);
+        for (const p of expectDeleted) {
+          expectPaths.delete(`/foo/${p}`);
+        }
+
+        const expectSpec = new TransactionSpec(
+          FileOp.op_listPathPrefix('/foo'),
+          FileOp.op_listPathPrefix('/x'));
+        const result = await file.transact(expectSpec);
+
+        assert.sameMembers([...result.paths], [...expectPaths]);
+      }
+
+      await test(1, 2, [1]);
+      await test(0, 2, [1]);
+
+      await test(2, 3, [2]);
+      await test(1, 3, [1, 2]);
+      await test(0, 3, [1, 2]);
+      await test(0, 4, [1, 2]);
+
+      await test(2, 10, [2]);
+      await test(2, 11, [2, 10]);
+      await test(2, 12, [2, 10, 11]);
+      await test(2, 13, [2, 10, 11, 12]);
+      await test(2, 14, [2, 10, 11, 12]);
+      await test(3, 14, [10, 11, 12]);
+    });
+
+    it('should succeed and do nothing given a range with no matching paths (including an emptuy range)', async () => {
+      const blob = new FrozenBuffer('Woo!');
+      const origPaths = [
+        '/x/a', '/x/yahhhssss', '/foo/1', '/foo/2', '/foo/10', '/foo/11', '/foo/12'
+      ];
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+      await file.transact(
+        new TransactionSpec(...origPaths.map(p => FileOp.op_writePath(p, blob))));
+
+      async function test(start, end) {
+        const spec = new TransactionSpec(FileOp.op_deletePathRange('/foo', start, end));
+        await assert.isFulfilled(file.transact(spec));
+
+        const expectSpec = new TransactionSpec(
+          FileOp.op_listPathPrefix('/foo'),
+          FileOp.op_listPathPrefix('/x'));
+        const result = await file.transact(expectSpec);
+
+        assert.sameMembers([...result.paths], origPaths);
+      }
+
+      await test(0, 1);
+      await test(3, 8);
+      await test(100, 123);
+
+      await test(0, 0);
+      await test(1, 1);
+      await test(2, 2);
+      await test(2, 1);
+    });
+  });
+
   describe('op listPathPrefix', () => {
     it('should return an empty set when no results are found', async () => {
       const file = new LocalFile('0', TempFiles.uniquePath());
@@ -409,6 +487,76 @@ describe('file-store-local/LocalFile.transact', () => {
       const transactionResult = await assert.isFulfilled(file.transact(spec));
 
       assert.strictEqual(transactionResult.data.size, 0);
+    });
+  });
+
+  describe('op readPathRange', () => {
+    it('should succeed in reading all in-range paths that are present', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Woo!');
+      await file.create();
+      await file.transact(new TransactionSpec(
+        FileOp.op_writePath('/foo/1', blob),
+        FileOp.op_writePath('/foo/2', blob),
+        FileOp.op_writePath('/foo/10', blob),
+        FileOp.op_writePath('/foo/11', blob),
+        FileOp.op_writePath('/foo/12', blob)
+      ));
+
+      async function test(start, end, expectPaths) {
+        const spec = new TransactionSpec(FileOp.op_readPathRange('/foo', start, end));
+        const transactionResult = await assert.isFulfilled(file.transact(spec));
+
+        assert.hasAllKeys(transactionResult.data, expectPaths);
+      }
+
+      await test(1, 2, ['/foo/1']);
+      await test(0, 2, ['/foo/1']);
+
+      await test(2, 3, ['/foo/2']);
+      await test(1, 3, ['/foo/1', '/foo/2']);
+      await test(0, 3, ['/foo/1', '/foo/2']);
+      await test(0, 4, ['/foo/1', '/foo/2']);
+
+      await test(2, 10, ['/foo/2']);
+      await test(2, 11, ['/foo/2', '/foo/10']);
+      await test(2, 12, ['/foo/2', '/foo/10', '/foo/11']);
+      await test(2, 13, ['/foo/2', '/foo/10', '/foo/11', '/foo/12']);
+      await test(2, 14, ['/foo/2', '/foo/10', '/foo/11', '/foo/12']);
+      await test(3, 14, ['/foo/10', '/foo/11', '/foo/12']);
+    });
+
+    it('should succeed with an empty result given a range with no matching paths', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+
+      async function test(start, end) {
+        const spec = new TransactionSpec(FileOp.op_readPathRange('/florp', start, end));
+        const transactionResult = await assert.isFulfilled(file.transact(spec));
+
+        assert.strictEqual(transactionResult.data.size, 0);
+      }
+
+      await test(0, 1);
+      await test(0, 2);
+      await test(100, 123);
+    });
+
+    it('should succeed with an empty result given an empty range', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+
+      async function test(start, end) {
+        const spec = new TransactionSpec(FileOp.op_readPathRange('/florp', start, end));
+        const transactionResult = await assert.isFulfilled(file.transact(spec));
+
+        assert.strictEqual(transactionResult.data.size, 0);
+      }
+
+      await test(0, 0);
+      await test(12, 12);
+      await test(10, 9);
+      await test(5, 0);
     });
   });
 

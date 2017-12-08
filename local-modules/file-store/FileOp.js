@@ -29,8 +29,9 @@ const CATEGORY_EXECUTION_ORDER = [
 // details.
 const TYPE_BUFFER    = 'Buffer';
 const TYPE_DUR_MSEC  = 'DurMsec';
-const TYPE_PATH      = 'Path';
 const TYPE_HASH      = 'Hash';
+const TYPE_INDEX     = 'Index';
+const TYPE_PATH      = 'Path';
 const TYPE_REV_NUM   = 'RevNum';
 
 // Operation schemata. See the doc for {@link FileOp#propsFromName} for
@@ -139,6 +140,25 @@ const OPERATIONS = [
   [CAT_DELETE, 'deletePathPrefix', ['storagePath', TYPE_PATH]],
 
   /*
+   * A `deletePathRange` operation. This is a write operation that deletes the
+   * bindings for all paths immediately under the given prefix whose final
+   * components are in the form of whole numbers within the indicated range, if
+   * any. If there were no matching paths bound in the first place, then this
+   * operation does nothing.
+   *
+   * @param {string} storagePath The storage path prefix under which to delete.
+   * @param {Int} startInclusive The start of the range to delete (inclusive).
+   *   Must be `>= 0`.
+   * @param {Int} endExclusive The end of the range to delete (exclusive). Must
+   *   be `>= 0`. If it is `<= startInclusive` then the operation will have no
+   *   effect (as it would be an empty range).
+   */
+  [
+    CAT_DELETE, 'deletePathRange',
+    ['storagePath', TYPE_PATH], ['startInclusive', TYPE_INDEX], ['endExclusive', TYPE_INDEX]
+  ],
+
+  /*
    * A `listPathPrefix` operation. This is a read operation that retrieves a
    * list of all paths immediately under the given prefix that store data, or
    * the path itself if it stores data directly. The resulting list can contain
@@ -180,6 +200,25 @@ const OPERATIONS = [
    * @param {string} storagePath The storage path to read from.
    */
   [CAT_READ, 'readPath', ['storagePath', TYPE_PATH]],
+
+  /*
+   * A `readPathRange` operation. This is a read operation that retrieves all
+   * the values for paths immediately under the given prefix whose final
+   * components are in the form of whole numbers within the indicated range, if
+   * any. Only paths that store values are represented in the result of the
+   * transaction.
+   *
+   * @param {string} storagePath The storage path prefix to read from.
+   * @param {Int} startInclusive The start of the range to read (inclusive).
+   *   Must be `>= 0`.
+   * @param {Int} endExclusive The end of the range to read (exclusive). Must be
+   *   `>= 0`. If it is `<= startInclusive` then the operation will have no
+   *   effect (as it would be an empty range).
+   */
+  [
+    CAT_READ, 'readPathRange',
+    ['storagePath', TYPE_PATH], ['startInclusive', TYPE_INDEX], ['endExclusive', TYPE_INDEX]
+  ],
 
   /*
    * A `revNum` operation. This is a revision restriction that limits a
@@ -359,11 +398,6 @@ export default class FileOp extends CommonBase {
     return TYPE_DUR_MSEC;
   }
 
-  /** {string} Type name for storage paths. */
-  static get TYPE_PATH() {
-    return TYPE_PATH;
-  }
-
   /**
    * {string} Type name for hash values. Arguments of this type will also
    * accept instances of `FrozenBuffer`. When given a buffer, the constructor
@@ -371,6 +405,19 @@ export default class FileOp extends CommonBase {
    */
   static get TYPE_HASH() {
     return TYPE_HASH;
+  }
+
+  /**
+   * {string} Type name for index values, which is to say non-negative integers.
+   * These are used to with the `*Range` operations.
+   */
+  static get TYPE_INDEX() {
+    return TYPE_INDEX;
+  }
+
+  /** {string} Type name for storage paths. */
+  static get TYPE_PATH() {
+    return TYPE_PATH;
   }
 
   /** {string} Type name for revision numbers. */
@@ -585,6 +632,11 @@ export default class FileOp extends CommonBase {
         } else {
           FrozenBuffer.checkHash(value);
         }
+        break;
+      }
+
+      case TYPE_INDEX: {
+        TInt.nonNegative(value);
         break;
       }
 

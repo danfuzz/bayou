@@ -60,6 +60,16 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * {string} `StoragePath` prefix string for all changes stored for the portion
+   * of the document controlled by this class.
+   */
+  static get changePathPrefix() {
+    // **Note:** `this` in the context of a static method is the class, not an
+    // instance.
+    return `${this.pathPrefix}/change`;
+  }
+
+  /**
    * {class} Class (constructor function) of delta objects to be used with
    * instances of this class.
    */
@@ -141,7 +151,7 @@ export default class BaseControl extends BaseDataManager {
     // instance.
 
     RevisionNumber.check(revNum);
-    return `${this.pathPrefix}/change/${revNum}`;
+    return `${this.changePathPrefix}/${revNum}`;
   }
 
   /**
@@ -310,14 +320,13 @@ export default class BaseControl extends BaseDataManager {
 
   /**
    * Reads a sequential chunk of changes. It is an error to request a change
-   * that does not exist. It is valid for either `start` or `endExc` to indicate
-   * a change that does not exist _only_ if it is one past the last existing
-   * change. If `start === endExc`, then this verifies that the arguments are in
-   * range and returns an empty array. It is an error if `(endExc - start) >
+   * beyond the current revision; it is valid for either `start` or `endExc` to
+   * be `currentRevNum() + 1` but no greater. If `start === endExc`, then this
+   * simply verifies that the arguments are in range and returns an empty array.
+   * It is an error if `(endExc - start) >
    * BaseControl.MAX_CHANGE_READS_PER_TRANSACTION`. For subclasses that don't
-   * keep full change history, it is also an error to request a change that is
-   * _no longer_  available; in this case, the error name is always
-   * `revision_not_available`.
+   * keep full change history, it is possible for there to be holes in the
+   * result; any such holes are filled with `null`.
    *
    * **Note:** The point of the max count limit is that we want to avoid
    * creating a transaction which could run afoul of a limit on the amount of
@@ -341,48 +350,31 @@ export default class BaseControl extends BaseDataManager {
       throw Errors.bad_use(`Too many changes requested at once: ${endExclusive - startInclusive}`);
     }
 
+    // Per docs, reject a start (and implicitly an end) that would try to read
+    // a never-possibly-written change.
+    const revNum = await this.currentRevNum();
+    RevisionNumber.maxInc(startInclusive, revNum + 1);
+
     if (startInclusive === endExclusive) {
-      // Per docs, just need to verify that the arguments don't name an invalid
-      // change. `0` is always valid, so we don't actually need to check that.
-      if (startInclusive !== 0) {
-        const revNum = await this.currentRevNum();
-        RevisionNumber.maxInc(startInclusive, revNum + 1);
-      }
+      // Per docs, this is valid and has an empty result.
       return [];
     }
 
-    const paths = [];
-    for (let i = startInclusive; i < endExclusive; i++) {
-      paths.push(clazz.pathForChange(i));
-    }
-
     const fc = this.fileCodec;
-    const ops = [];
-    for (const p of paths) {
-      ops.push(fc.op_checkPathPresent(p));
-      ops.push(fc.op_readPath(p));
-    }
+    const spec = new TransactionSpec(
+      this._opForChangeRange(fc.op_readPathRange, startInclusive, endExclusive));
 
-    let data;
-
-    try {
-      const spec              = new TransactionSpec(...ops);
-      const transactionResult = await fc.transact(spec);
-
-      data = transactionResult.data;
-    } catch (e) {
-      if (FileStoreErrors.isPathNotFound(e)) {
-        // One of the requested revisions is no longer available. If thrown, we
-        // know that at least the first one requested will be missing (because
-        // we won't drop a change without also dropping its predecessors). Throw
-        // the error as specified in the docs.
-        throw Errors.revision_not_available(startInclusive);
-      }
-    }
+    const transactionResult = await fc.transact(spec);
+    const data              = transactionResult.data;
 
     const result = [];
-    for (const p of paths) {
-      const change = clazz.changeClass.check(data.get(p));
+    for (let i = startInclusive; i < endExclusive; i++) {
+      const change = data.get(clazz.pathForChange(i));
+
+      if (change !== null) {
+        clazz.changeClass.check(change);
+      }
+
       result.push(change);
     }
 
@@ -905,6 +897,23 @@ export default class BaseControl extends BaseDataManager {
       // slated to become one.)
       this.log.warn(`Trouble writing stored snapshot for revision: r${revNum}`, e);
     }
+  }
+
+  /**
+   * Constructs a path-range file operation for the indicated range of changes,
+   * specifically for the portion of the document controlled by this class.
+   *
+   * @param {string} op The file operation constructor method.
+   * @param {Int} startInclusive The start of the range to read (inclusive).
+   * @param {Int} endExclusive The end of the range to read (exclusive). Must be
+   *   `>= startInc`.
+   * @returns {FileOp} The corresponding file operation.
+   */
+  _opForChangeRange(op, startInclusive, endExclusive) {
+    RevisionNumber.check(startInclusive);
+    RevisionNumber.check(endExclusive, startInclusive);
+
+    return op.call(this.fileCodec, this.constructor.changePathPrefix, startInclusive, endExclusive);
   }
 
   /**
