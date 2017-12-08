@@ -94,12 +94,13 @@ export default class BodyControl extends BaseControl {
   async _impl_validationStatus() {
     let transactionResult;
 
-    // Check the revision number.
+    // Check the revision number (mandatory) and stored snapshot (if present).
 
     try {
       const fc = this.fileCodec;
       const spec = new TransactionSpec(
-        fc.op_readPath(BodyControl.revisionNumberPath)
+        fc.op_readPath(BodyControl.revisionNumberPath),
+        fc.op_readPath(BodyControl.storedSnapshotPath)
       );
       transactionResult = await fc.transact(spec);
     } catch (e) {
@@ -107,14 +108,29 @@ export default class BodyControl extends BaseControl {
       return ValidationStatus.STATUS_ERROR;
     }
 
-    const data   = transactionResult.data;
-    const revNum = data.get(BodyControl.revisionNumberPath);
+    const data     = transactionResult.data;
+    const revNum   = data.get(BodyControl.revisionNumberPath);
+    const snapshot = data.get(BodyControl.storedSnapshotPath);
 
     try {
       RevisionNumber.check(revNum);
     } catch (e) {
       this.log.info('Corrupt document: Bogus or missing revision number.');
       return ValidationStatus.STATUS_ERROR;
+    }
+
+    if (snapshot) {
+      try {
+        BodyControl.snapshotClass.check(snapshot);
+      } catch (e) {
+        this.log.info('Corrupt document: Bogus stored snapshot (wrong class).');
+        return ValidationStatus.STATUS_ERROR;
+      }
+
+      if (revNum < snapshot.revNum) {
+        this.log.info('Corrupt document: Bogus stored snapshot (weird revision number).');
+        return ValidationStatus.STATUS_ERROR;
+      }
     }
 
     // Make sure all the changes can be read and decoded.
