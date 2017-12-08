@@ -207,7 +207,7 @@ export default class CaretControl extends BaseControl {
     for (let i = 0; i <= revNum; i += MAX) {
       const lastI = Math.min(i + MAX - 1, revNum);
       try {
-        await this.getChangeRange(i, lastI + 1);
+        await this.getChangeRange(i, lastI + 1, false);
       } catch (e) {
         this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
         return ValidationStatus.STATUS_ERROR;
@@ -215,7 +215,8 @@ export default class CaretControl extends BaseControl {
     }
 
     // Look for changes past the stored revision number to make sure they don't
-    // exist.
+    // exist. **TODO:** Handle the possibility that the document got a new
+    // change added to it during the course of validation.
 
     let extraChanges;
     try {
