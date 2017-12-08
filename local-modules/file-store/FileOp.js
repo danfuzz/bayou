@@ -190,15 +190,15 @@ const OPERATIONS = [
    * transaction.
    *
    * @param {string} storagePath The storage path prefix to read from.
-   * @param {Int} startInc The start of the range to read (inclusive). Must be
-   *   `>= 0`.
-   * @param {Int} endExc The end of the range to read (exclusive). Must be
+   * @param {Int} startInclusive The start of the range to read (inclusive).
+   *   Must be `>= 0`.
+   * @param {Int} endExclusive The end of the range to read (exclusive). Must be
    *   `>= 0`. If it is `<= startInc` then the operation will have no effect (as
    *   it would be an empty range).
    */
   [
     CAT_READ, 'readPathRange',
-    ['storagePath', TYPE_PATH], ['startInc', TYPE_INDEX], ['endExc', TYPE_INDEX]
+    ['storagePath', TYPE_PATH], ['startInclusive', TYPE_INDEX], ['endExclusive', TYPE_INDEX]
   ],
 
   /*
