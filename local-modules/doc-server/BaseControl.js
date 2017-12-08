@@ -360,24 +360,16 @@ export default class BaseControl extends BaseDataManager {
       return [];
     }
 
-    const paths = [];
-    for (let i = startInclusive; i < endExclusive; i++) {
-      paths.push(clazz.pathForChange(i));
-    }
-
     const fc = this.fileCodec;
-    const ops = [];
-    for (const p of paths) {
-      ops.push(fc.op_readPath(p));
-    }
+    const spec = new TransactionSpec(
+      this._opForChangeRange(fc.op_readPathRange, startInclusive, endExclusive));
 
-    const spec              = new TransactionSpec(...ops);
     const transactionResult = await fc.transact(spec);
     const data              = transactionResult.data;
 
     const result = [];
-    for (const p of paths) {
-      const change = data.get(p) || null;
+    for (let i = startInclusive; i < endExclusive; i++) {
+      const change = data.get(clazz.pathForChange(i));
 
       if (change !== null) {
         clazz.changeClass.check(change);
@@ -905,6 +897,23 @@ export default class BaseControl extends BaseDataManager {
       // slated to become one.)
       this.log.warn(`Trouble writing stored snapshot for revision: r${revNum}`, e);
     }
+  }
+
+  /**
+   * Constructs a path-range file operation for the indicated range of changes,
+   * specifically for the portion of the document controlled by this class.
+   *
+   * @param {string} op The file operation constructor method.
+   * @param {Int} startInclusive The start of the range to read (inclusive).
+   * @param {Int} endExclusive The end of the range to read (exclusive). Must be
+   *   `>= startInc`.
+   * @returns {FileOp} The corresponding file operation.
+   */
+  _opForChangeRange(op, startInclusive, endExclusive) {
+    RevisionNumber.check(startInclusive);
+    RevisionNumber.check(endExclusive, startInclusive);
+
+    return op.call(this.fileCodec, this.constructor.changePathPrefix, startInclusive, endExclusive);
   }
 
   /**
