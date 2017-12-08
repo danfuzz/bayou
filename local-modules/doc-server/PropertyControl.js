@@ -149,25 +149,19 @@ export default class PropertyControl extends BaseControl {
       }
     }
 
-    // Look for a few changes past the stored revision number to make sure
-    // they're empty.
+    // Look for changes past the stored revision number to make sure they don't
+    // exist.
 
+    let extraChanges;
     try {
-      const fc  = this.fileCodec;
-      const ops = [];
-      for (let i = revNum + 1; i <= (revNum + 10); i++) {
-        ops.push(fc.op_readPath(PropertyControl.pathForChange(i)));
-      }
-      const spec = new TransactionSpec(...ops);
-      transactionResult = await fc.transact(spec);
+      extraChanges = await this.listChangeRange(revNum + 1, revNum + 10000);
     } catch (e) {
-      this.log.info('Corrupt document: Weird empty-change read failure.');
+      this.log.info('Corrupt document: Trouble listing changes.');
       return ValidationStatus.STATUS_ERROR;
     }
 
-    // In a valid doc, the loop body won't end up executing at all.
-    for (const storagePath of transactionResult.data.keys()) {
-      this.log.info('Corrupt document. Extra change at path:', storagePath);
+    if (extraChanges.length !== 0) {
+      this.log.info(`Corrupt document: Detected extra changes (at least ${extraChanges.length}).`);
       return ValidationStatus.STATUS_ERROR;
     }
 

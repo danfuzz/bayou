@@ -526,6 +526,44 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * Gets a list of existing changes within a given range. The only changes that
+   * exist both (a) have a revision number at or less than the
+   * `currentRevNum()` and (b) have not been removed due to being ephemeral
+   * data that has aged out. If given the same value for both arguments, this
+   * method returns an empty array.
+   *
+   * @param {Int} startInclusive Start change number (inclusive) of changes to
+   *   read.
+   * @param {Int} endExclusive End change number (exclusive) of changes to read.
+   *   Must be `>= startInclusive`.
+   * @returns {array<Int>} Array of the revision numbers of existing changes, in
+   *   order by revision number.
+   */
+  async listChangeRange(startInclusive, endExclusive) {
+    RevisionNumber.check(startInclusive);
+    RevisionNumber.min(endExclusive, startInclusive);
+
+    if (startInclusive === endExclusive) {
+      // Per docs, this is valid and has an empty result.
+      return [];
+    }
+
+    const fc = this.fileCodec;
+    const spec = new TransactionSpec(
+      this._opForChangeRange(fc.op_listPathRange, startInclusive, endExclusive));
+
+    const transactionResult = await fc.transact(spec);
+
+    const result = [];
+    for (const path of transactionResult.paths) {
+      result.push(StoragePath.getIndex(path));
+    }
+
+    result.sort();
+    return result;
+  }
+
+  /**
    * Reads the stored snapshot for this document part, if available.
    *
    * @returns {BaseSnapshot|null} The stored snapshot, or `null` if no snapshot
