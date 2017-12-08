@@ -325,6 +325,26 @@ export default class Transactor extends CommonBase {
   }
 
   /**
+   * Handler for `readPathRange` operations.
+   *
+   * @param {object} props The operation properties.
+   */
+  _op_readPathRange(props) {
+    const { storagePath, startInc, endExc } = props;
+
+    for (let i = startInc; i < endExc; i++) {
+      const fullPath = `${storagePath}/${i}`;
+      const data = this._fileFriend.readPathOrNull(fullPath);
+
+      if (data !== null) {
+        // Per the `FileOp` documentation, we are only supposed to bind a result
+        // key if the path is present (stores data).
+        this._data.set(fullPath, data);
+      }
+    }
+  }
+
+  /**
    * Handler for `revNum` operations. In this implementation, we only ever have
    * a single revision available, and we reject the transaction should it not be
    * the requested restriction.

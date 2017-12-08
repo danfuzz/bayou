@@ -183,6 +183,25 @@ const OPERATIONS = [
   [CAT_READ, 'readPath', ['storagePath', TYPE_PATH]],
 
   /*
+   * A `readPathRange` operation. This is a read operation that retrieves all
+   * the values for paths immediately under the given prefix whose final
+   * components are in the form of whole numbers within the indicated range, if
+   * any. Only paths that store values are represented in the result of the
+   * transaction.
+   *
+   * @param {string} storagePath The storage path prefix to read from.
+   * @param {Int} startInc The start of the range to read (inclusive). Must be
+   *   `>= 0`.
+   * @param {Int} endExc The end of the range to read (exclusive). Must be
+   *   `>= 0`. If it is `<= startInc` then the operation will have no effect (as
+   *   it would be an empty range).
+   */
+  [
+    CAT_READ, 'readPathRange',
+    ['storagePath', TYPE_PATH], ['startInc', TYPE_INDEX], ['endExc', TYPE_INDEX]
+  ],
+
+  /*
    * A `revNum` operation. This is a revision restriction that limits a
    * transaction to only be performed with respect to the indicated revision
    * number.
