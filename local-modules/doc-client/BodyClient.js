@@ -377,16 +377,26 @@ export default class BodyClient extends StateMachine {
     // which shows up on its event chain. Grab it, and verify that indeed it's
     // the change we're expecting.
     const firstChange = firstEvent.nextOfNow(QuillEvents.TEXT_CHANGE);
-    const source = QuillEvents.propsOf(firstChange).source;
-    if (source !== CLIENT_SOURCE) {
-      // We expected the change to be the one we generated from the doc
-      // update (above), but the `source` we got speaks otherwise.
-      throw Errors.wtf('Bad `source` for initial change.');
-    }
 
-    // With the Quill setup verified, remember the change as our local "head"
-    // as the most recent change we've dealt with.
-    this._currentEvent = firstChange;
+    if (firstChange === null) {
+      // This can happen if the snapshot happened to coincide with the
+      // placeholder text originally set up in Quill's `<div>`. If there was no
+      // placeholder text, this can happen if the snapshot was totally empty. In
+      // either case, it's safe to just initialize this instance's notion of the
+      // "current event" with whatever Quill happens to report.
+      this._currentEvent = firstEvent;
+    } else {
+      const source = QuillEvents.propsOf(firstChange).source;
+      if (source !== CLIENT_SOURCE) {
+        // We expected the change to be the one we generated from the doc
+        // update (above), but the `source` we got speaks otherwise.
+        throw Errors.wtf('Bad `source` for initial change.');
+      }
+
+      // With the Quill setup verified, remember the change as our local "head"
+      // as the most recent change we've dealt with.
+      this._currentEvent = firstChange;
+    }
 
     // And with that, it's now safe to enable Quill so that it will accept user
     // input.
