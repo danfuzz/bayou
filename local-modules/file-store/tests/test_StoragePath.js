@@ -139,6 +139,55 @@ describe('file-store/StoragePath', () => {
     });
   });
 
+  describe('getIndex()', () => {
+    it('should return the index from a valid index-bearing path', () => {
+      function test(value, expect) {
+        const result = StoragePath.getIndex(value);
+        assert.strictEqual(result, expect, value);
+      }
+
+      for (let i = 0; i < 1000; i++) {
+        if (i > 25) {
+          i += 123;
+        }
+
+        test(`/${i}`, i);
+        test(`/florp/${i}`, i);
+        test(`/a/b/c/${i}`, i);
+        test(`/a/1/c/${i}`, i);
+      }
+    });
+
+    it('should reject non-index-bearing paths', () => {
+      function test(value) {
+        assert.throws(() => StoragePath.getIndex(value), /bad_value/);
+      }
+
+      // Nothing even vaguely index-like.
+      test('/foo');
+      test('/foo/bar');
+      test('/foo/bar/baz');
+
+      // Invalid index forms.
+      test('/00');
+      test('/01');
+      test('/x/00');
+      test('/x/09');
+
+      // Last component must be the index.
+      test('/0/x');
+      test('/1/x');
+      test('/x/0/x');
+      test('/x/1/x');
+    });
+
+    it('should reject entirely invalid path arguments', () => {
+      for (const value of [...INVALID_PATHS, ...NON_STRINGS]) {
+        assert.throws(() => StoragePath.getIndex(value), /bad_value/);
+      }
+    });
+  });
+
   describe('isInstance()', () => {
     it('should return `true` for valid paths', () => {
       for (const value of VALID_PATHS) {
