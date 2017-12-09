@@ -162,12 +162,13 @@ export default class CaretControl extends BaseControl {
   async _impl_validationStatus() {
     let transactionResult;
 
-    // Check the revision number.
+    // Check the revision number (mandatory) and stored snapshot (if present).
 
     try {
       const fc = this.fileCodec;
       const spec = new TransactionSpec(
-        fc.op_readPath(CaretControl.revisionNumberPath)
+        fc.op_readPath(CaretControl.revisionNumberPath),
+        fc.op_readPath(CaretControl.storedSnapshotPath)
       );
       transactionResult = await fc.transact(spec);
     } catch (e) {
@@ -175,8 +176,9 @@ export default class CaretControl extends BaseControl {
       return ValidationStatus.STATUS_ERROR;
     }
 
-    const data   = transactionResult.data;
-    const revNum = data.get(CaretControl.revisionNumberPath);
+    const data     = transactionResult.data;
+    const revNum   = data.get(CaretControl.revisionNumberPath);
+    const snapshot = data.get(CaretControl.storedSnapshotPath);
 
     try {
       RevisionNumber.check(revNum);
@@ -185,38 +187,47 @@ export default class CaretControl extends BaseControl {
       return ValidationStatus.STATUS_ERROR;
     }
 
+    if (snapshot) {
+      try {
+        CaretControl.snapshotClass.check(snapshot);
+      } catch (e) {
+        this.log.info('Corrupt document: Bogus stored snapshot (wrong class).');
+        return ValidationStatus.STATUS_ERROR;
+      }
+
+      if (revNum < snapshot.revNum) {
+        this.log.info('Corrupt document: Bogus stored snapshot (weird revision number).');
+        return ValidationStatus.STATUS_ERROR;
+      }
+    }
+
     // Make sure all the changes can be read and decoded.
 
     const MAX = BaseControl.MAX_CHANGE_READS_PER_TRANSACTION;
     for (let i = 0; i <= revNum; i += MAX) {
       const lastI = Math.min(i + MAX - 1, revNum);
       try {
-        await this.getChangeRange(i, lastI + 1);
+        await this.getChangeRange(i, lastI + 1, false);
       } catch (e) {
         this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
         return ValidationStatus.STATUS_ERROR;
       }
     }
 
-    // Look for a few changes past the stored revision number to make sure
-    // they're empty.
+    // Look for changes past the stored revision number to make sure they don't
+    // exist. **TODO:** Handle the possibility that the document got a new
+    // change added to it during the course of validation.
 
+    let extraChanges;
     try {
-      const fc  = this.fileCodec;
-      const ops = [];
-      for (let i = revNum + 1; i <= (revNum + 10); i++) {
-        ops.push(fc.op_readPath(CaretControl.pathForChange(i)));
-      }
-      const spec = new TransactionSpec(...ops);
-      transactionResult = await fc.transact(spec);
+      extraChanges = await this.listChangeRange(revNum + 1, revNum + 10000);
     } catch (e) {
-      this.log.info('Corrupt document: Weird empty-change read failure.');
+      this.log.info('Corrupt document: Trouble listing changes.');
       return ValidationStatus.STATUS_ERROR;
     }
 
-    // In a valid doc, the loop body won't end up executing at all.
-    for (const storagePath of transactionResult.data.keys()) {
-      this.log.info('Corrupt document. Extra change at path:', storagePath);
+    if (extraChanges.length !== 0) {
+      this.log.info(`Corrupt document: Detected extra changes (at least ${extraChanges.length}).`);
       return ValidationStatus.STATUS_ERROR;
     }
 

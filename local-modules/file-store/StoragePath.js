@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TArray, TString } from 'typecheck';
+import { TArray, TInt, TString } from 'typecheck';
 import { Errors, UtilityClass } from 'util-common';
 
 /**
@@ -86,6 +86,26 @@ export default class StoragePath extends UtilityClass {
     }
 
     return value;
+  }
+
+  /**
+   * Gets the index number (final path component, interpreted as a non-negative
+   * integer) given a path that ends with one. It is an error to pass a path
+   * that does not end with a valid index number.
+   *
+   * @param {string} path Path to extract from.
+   * @returns {Int} The index portion, as an integer.
+   */
+  static getIndex(path) {
+    StoragePath.check(path);
+
+    const match = path.match(/[/](0|[1-9][0-9]*)$/);
+
+    if (match === null) {
+      throw Errors.bad_value(path, StoragePath, 'with index');
+    }
+
+    return TInt.nonNegative(parseInt(match[1]));
   }
 
   /**

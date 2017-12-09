@@ -420,10 +420,12 @@ describe('doc-server/BaseControl', () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       let gotStart  = null;
       let gotEnd    = null;
+      let gotAllow  = null;
 
-      control.getChangeRange = async (start, end) => {
+      control.getChangeRange = async (start, end, allowMissing) => {
         gotStart = start;
         gotEnd   = end;
+        gotAllow = allowMissing;
         return ['foomp'];
       };
 
@@ -432,6 +434,7 @@ describe('doc-server/BaseControl', () => {
           await control.getChange(n);
           assert.strictEqual(gotStart, n);
           assert.strictEqual(gotEnd,   n + 1);
+          assert.isFalse(gotAllow);
         }
 
         await test(0);
@@ -447,12 +450,12 @@ describe('doc-server/BaseControl', () => {
 
     it('should promptly reject blatantly invalid `revNum` values', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control.getChangeRange = async (start_unused, end_unused) => {
+      control.getChangeRange = async (start_unused, end_unused, allow_unused) => {
         throw new Error('This should not have been called.');
       };
 
       async function test(value) {
-        assert.isRejected(control.getChange(value), /^bad_value/);
+        await assert.isRejected(control.getChange(value), /^bad_value/);
       }
 
       await test(undefined);
@@ -592,7 +595,7 @@ describe('doc-server/BaseControl', () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
 
       async function test(base, newer) {
-        assert.isRejected(control.getDiff(base, newer), /^bad_value/);
+        await assert.isRejected(control.getDiff(base, newer), /^bad_value/);
       }
 
       await test(undefined, 10);

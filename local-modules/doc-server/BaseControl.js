@@ -254,7 +254,7 @@ export default class BaseControl extends BaseDataManager {
   /**
    * Gets a particular change to the part of the document that this instance
    * controls. This is just a convenient shorthand for
-   * `await getChangeRange(revNum, revNum + 1)[0]`.
+   * `await getChangeRange(revNum, revNum + 1, false)[0]`.
    *
    * @param {Int} revNum The revision number of the change. The result is the
    *   change which produced that revision. E.g., `0` is a request for the first
@@ -262,12 +262,9 @@ export default class BaseControl extends BaseDataManager {
    * @returns {BodyChange} The requested change.
    */
   async getChange(revNum) {
-    // We need to do this check so that the error (if there's an error) is both
-    // more prompt and more sensible than if we just deferred to
-    // `getChangeRange()`.
-    RevisionNumber.check(revNum);
+    RevisionNumber.check(revNum); // So we know we can `+1` without weirdness.
+    const changes = await this.getChangeRange(revNum, revNum + 1, false);
 
-    const changes = await this.getChangeRange(revNum, revNum + 1);
     return changes[0];
   }
 
@@ -336,13 +333,17 @@ export default class BaseControl extends BaseDataManager {
    *   read.
    * @param {Int} endExclusive End change number (exclusive) of changes to read.
    *   Must be `>= startInclusive`.
+   * @param {boolean} allowMissing Whether (`true`) or not (`false`) to allow
+   *   there to be missing changes from the range. If `false`, the result is
+   *   always an array of length `endExclusive - startInclusive`.
    * @returns {array<BaseChange>} Array of changes, in order by revision number.
    */
-  async getChangeRange(startInclusive, endExclusive) {
+  async getChangeRange(startInclusive, endExclusive, allowMissing) {
     const clazz = this.constructor;
 
     RevisionNumber.check(startInclusive);
     RevisionNumber.min(endExclusive, startInclusive);
+    TBoolean.check(allowMissing);
 
     if ((endExclusive - startInclusive) > BaseControl.MAX_CHANGE_READS_PER_TRANSACTION) {
       // The calling code (in this class) should have made sure we weren't
@@ -373,6 +374,8 @@ export default class BaseControl extends BaseDataManager {
 
       if (change !== null) {
         clazz.changeClass.check(change);
+      } else if (!allowMissing) {
+        throw new Error.bad_use(`Missing change in requested range: r${i}`);
       }
 
       result.push(change);
@@ -424,7 +427,7 @@ export default class BaseControl extends BaseDataManager {
         throw Errors.bad_value(baseDelta, 'document delta');
       }
 
-      await this.getChangeRange(startInclusive, startInclusive);
+      await this.getChangeRange(startInclusive, startInclusive, false);
       return baseDelta;
     }
 
@@ -432,7 +435,7 @@ export default class BaseControl extends BaseDataManager {
     const MAX = BaseControl.MAX_CHANGE_READS_PER_TRANSACTION;
     for (let i = startInclusive; i < endExclusive; i += MAX) {
       const end = Math.min(i + MAX, endExclusive);
-      const changes = await this.getChangeRange(i, end);
+      const changes = await this.getChangeRange(i, end, false);
       for (const c of changes) {
         result = result.compose(c.delta, wantDocument);
       }
@@ -523,6 +526,44 @@ export default class BaseControl extends BaseDataManager {
     }
 
     return this.constructor.snapshotClass.check(result);
+  }
+
+  /**
+   * Gets a list of existing changes within a given range. The only changes that
+   * exist both (a) have a revision number at or less than the
+   * `currentRevNum()` and (b) have not been removed due to being ephemeral
+   * data that has aged out. If given the same value for both arguments, this
+   * method returns an empty array.
+   *
+   * @param {Int} startInclusive Start change number (inclusive) of changes to
+   *   read.
+   * @param {Int} endExclusive End change number (exclusive) of changes to read.
+   *   Must be `>= startInclusive`.
+   * @returns {array<Int>} Array of the revision numbers of existing changes, in
+   *   order by revision number.
+   */
+  async listChangeRange(startInclusive, endExclusive) {
+    RevisionNumber.check(startInclusive);
+    RevisionNumber.min(endExclusive, startInclusive);
+
+    if (startInclusive === endExclusive) {
+      // Per docs, this is valid and has an empty result.
+      return [];
+    }
+
+    const fc = this.fileCodec;
+    const spec = new TransactionSpec(
+      this._opForChangeRange(fc.op_listPathRange, startInclusive, endExclusive));
+
+    const transactionResult = await fc.transact(spec);
+
+    const result = [];
+    for (const path of transactionResult.paths) {
+      result.push(StoragePath.getIndex(path));
+    }
+
+    result.sort();
+    return result;
   }
 
   /**

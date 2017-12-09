@@ -171,6 +171,24 @@ const OPERATIONS = [
   [CAT_LIST, 'listPathPrefix', ['storagePath', TYPE_PATH]],
 
   /*
+   * A `listPathRange` operation. This is a read operation that retrieves a
+   * list of all paths immediately under the given prefix whose final components
+   * are in the form of whole numbers within the indicated range, if any. If
+   * there are no such paths, the result is an empty list.
+   *
+   * @param {string} storagePath The storage path prefix under which to look.
+   * @param {Int} startInclusive The start of the range to look for (inclusive).
+   *   Must be `>= 0`.
+   * @param {Int} endExclusive The end of the range to look for (exclusive).
+   *   Must be `>= 0`. If it is `<= startInclusive` then the operation will
+   *   result in an empty list (as it would be an empty range).
+   */
+  [
+    CAT_LIST, 'listPathRange',
+    ['storagePath', TYPE_PATH], ['startInclusive', TYPE_INDEX], ['endExclusive', TYPE_INDEX]
+  ],
+
+  /*
    * A `readBlob` operation. This is a read operation that retrieves the full
    * value of the indicated blob (identified by hash), if any. If there is no
    * so-identified blob in the file, then the hash is _not_ represented in the

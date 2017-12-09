@@ -309,6 +309,22 @@ export default class Transactor extends CommonBase {
   }
 
   /**
+   * Handler for `listPathRange` operations.
+   *
+   * @param {object} props The operation properties.
+   */
+  _op_listPathRange(props) {
+    const { storagePath, startInclusive, endExclusive } = props;
+
+    for (let i = startInclusive; i < endExclusive; i++) {
+      const fullPath = `${storagePath}/${i}`;
+      if (this._fileFriend.readPathOrNull(fullPath) !== null) {
+        this._paths.add(fullPath);
+      }
+    }
+  }
+
+  /**
    * Handler for `readBlob` operations.
    *
    * @param {object} props The operation properties.

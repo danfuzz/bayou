@@ -463,6 +463,55 @@ describe('file-store-local/LocalFile.transact', () => {
     });
   });
 
+  describe('op listPathRange', () => {
+    it('should return an empty set when no results are found', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      await file.create();
+
+      const spec = new TransactionSpec(FileOp.op_listPathRange('/blort', 10, 20));
+      const result = await file.transact(spec);
+      assert.instanceOf(result.paths, Set);
+      assert.strictEqual(result.paths.size, 0);
+    });
+
+    it('should return all in-range paths', async () => {
+      const file = new LocalFile('0', TempFiles.uniquePath());
+      const blob = new FrozenBuffer('Woo!');
+      await file.create();
+      await file.transact(new TransactionSpec(
+        FileOp.op_writePath('/boop', blob),
+        FileOp.op_writePath('/foo/florp', blob),
+        FileOp.op_writePath('/foo/1', blob),
+        FileOp.op_writePath('/foo/2', blob),
+        FileOp.op_writePath('/foo/10', blob),
+        FileOp.op_writePath('/foo/11', blob),
+        FileOp.op_writePath('/foo/12', blob)
+      ));
+
+      async function test(start, end, expectPaths) {
+        const spec = new TransactionSpec(FileOp.op_listPathRange('/foo', start, end));
+        const transactionResult = await assert.isFulfilled(file.transact(spec));
+
+        assert.sameMembers([...transactionResult.paths], expectPaths);
+      }
+
+      await test(1, 2, ['/foo/1']);
+      await test(0, 2, ['/foo/1']);
+
+      await test(2, 3, ['/foo/2']);
+      await test(1, 3, ['/foo/1', '/foo/2']);
+      await test(0, 3, ['/foo/1', '/foo/2']);
+      await test(0, 4, ['/foo/1', '/foo/2']);
+
+      await test(2, 10, ['/foo/2']);
+      await test(2, 11, ['/foo/2', '/foo/10']);
+      await test(2, 12, ['/foo/2', '/foo/10', '/foo/11']);
+      await test(2, 13, ['/foo/2', '/foo/10', '/foo/11', '/foo/12']);
+      await test(2, 14, ['/foo/2', '/foo/10', '/foo/11', '/foo/12']);
+      await test(3, 14, ['/foo/10', '/foo/11', '/foo/12']);
+    });
+  });
+
   describe('op readBlob', () => {
     it('should succeed in reading a blob that is in the file', async () => {
       const file = new LocalFile('0', TempFiles.uniquePath());
@@ -496,6 +545,8 @@ describe('file-store-local/LocalFile.transact', () => {
       const blob = new FrozenBuffer('Woo!');
       await file.create();
       await file.transact(new TransactionSpec(
+        FileOp.op_writePath('/frotz', blob),
+        FileOp.op_writePath('/foo/florp', blob),
         FileOp.op_writePath('/foo/1', blob),
         FileOp.op_writePath('/foo/2', blob),
         FileOp.op_writePath('/foo/10', blob),

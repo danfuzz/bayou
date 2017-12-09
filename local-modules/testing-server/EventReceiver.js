@@ -130,6 +130,11 @@ export default class EventReceiver extends CommonBase {
    */
   _handle_suite(title) {
     this._suites.push(title);
+
+    if (this._suites.length === 1) {
+      title = chalk.bold(title);
+    }
+
     this._log(`${'  '.repeat(this._suites.length)}${title}`);
   }
 
