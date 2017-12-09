@@ -455,7 +455,7 @@ describe('doc-server/BaseControl', () => {
       };
 
       async function test(value) {
-        assert.isRejected(control.getChange(value), /^bad_value/);
+        await assert.isRejected(control.getChange(value), /^bad_value/);
       }
 
       await test(undefined);
@@ -595,7 +595,7 @@ describe('doc-server/BaseControl', () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
 
       async function test(base, newer) {
-        assert.isRejected(control.getDiff(base, newer), /^bad_value/);
+        await assert.isRejected(control.getDiff(base, newer), /^bad_value/);
       }
 
       await test(undefined, 10);
