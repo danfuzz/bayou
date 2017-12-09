@@ -262,6 +262,7 @@ export default class BaseControl extends BaseDataManager {
    * @returns {BodyChange} The requested change.
    */
   async getChange(revNum) {
+    RevisionNumber.check(revNum); // So we know we can `+1` without weirdness.
     const changes = await this.getChangeRange(revNum, revNum + 1, false);
 
     return changes[0];
@@ -342,6 +343,7 @@ export default class BaseControl extends BaseDataManager {
 
     RevisionNumber.check(startInclusive);
     RevisionNumber.min(endExclusive, startInclusive);
+    TBoolean.check(allowMissing);
 
     if ((endExclusive - startInclusive) > BaseControl.MAX_CHANGE_READS_PER_TRANSACTION) {
       // The calling code (in this class) should have made sure we weren't
