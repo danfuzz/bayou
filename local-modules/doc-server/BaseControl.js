@@ -794,6 +794,9 @@ export default class BaseControl extends BaseDataManager {
 
     clazz.snapshotClass.check(snapshot);
 
+    // **TODO:** Ephemeral parts should delete changes from revisions earlier
+    // than the snapshot before some amount of "buffer" changes (to allow for
+    // some leeway in noticing changes across snapshot boundaries).
     const spec = new TransactionSpec(fc.op_writePath(path, snapshot));
 
     await fc.transact(spec);

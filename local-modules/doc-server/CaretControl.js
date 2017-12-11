@@ -7,8 +7,8 @@ import { TransactionSpec } from 'file-store';
 import { RevisionNumber, Timestamp } from 'ot-common';
 import { TInt, TString } from 'typecheck';
 
-import BaseControl from './BaseControl';
 import CaretColor from './CaretColor';
+import EphemeralControl from './EphemeralControl';
 import Paths from './Paths';
 import SnapshotManager from './SnapshotManager';
 import ValidationStatus from './ValidationStatus';
@@ -25,7 +25,7 @@ const MAX_SESSION_IDLE_MSEC = 5 * 60 * 1000; // Five minutes.
  * **TODO:** Caret data should be ephemeral. As of this writing, old data will
  * never get purged from the underlying file.
  */
-export default class CaretControl extends BaseControl {
+export default class CaretControl extends EphemeralControl {
   /**
    * Constructs an instance.
    *
@@ -201,9 +201,11 @@ export default class CaretControl extends BaseControl {
       }
     }
 
-    // Make sure all the changes can be read and decoded.
+    // Make sure all the changes can be read and decoded. **TODO:** Ephemeral
+    // parts don't necessarily store any changes from before the snapshot
+    // revision. Handle that possibility.
 
-    const MAX = BaseControl.MAX_CHANGE_READS_PER_TRANSACTION;
+    const MAX = EphemeralControl.MAX_CHANGE_READS_PER_TRANSACTION;
     for (let i = 0; i <= revNum; i += MAX) {
       const lastI = Math.min(i + MAX - 1, revNum);
       try {

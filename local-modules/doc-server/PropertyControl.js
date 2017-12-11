@@ -6,7 +6,7 @@ import { PropertySnapshot } from 'doc-common';
 import { TransactionSpec } from 'file-store';
 import { RevisionNumber } from 'ot-common';
 
-import BaseControl from './BaseControl';
+import DurableControl from './DurableControl';
 import Paths from './Paths';
 import SnapshotManager from './SnapshotManager';
 import ValidationStatus from './ValidationStatus';
@@ -14,7 +14,7 @@ import ValidationStatus from './ValidationStatus';
 /**
  * Controller for the property metadata of a particular document.
  */
-export default class PropertyControl extends BaseControl {
+export default class PropertyControl extends DurableControl {
   /**
    * Constructs an instance.
    *
@@ -138,7 +138,7 @@ export default class PropertyControl extends BaseControl {
 
     // Make sure all the changes can be read and decoded.
 
-    const MAX = BaseControl.MAX_CHANGE_READS_PER_TRANSACTION;
+    const MAX = DurableControl.MAX_CHANGE_READS_PER_TRANSACTION;
     for (let i = 0; i <= revNum; i += MAX) {
       const lastI = Math.min(i + MAX - 1, revNum);
       try {
