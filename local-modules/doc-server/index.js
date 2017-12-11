@@ -9,6 +9,8 @@ import BodyControl from './BodyControl';
 import CaretControl from './CaretControl';
 import DocServer from './DocServer';
 import DocSession from './DocSession';
+import DurableControl from './DurableControl';
+import EphemeralControl from './EphemeralControl';
 import FileAccess from './FileAccess';
 import FileComplex from './FileComplex';
 import PropertyControl from './PropertyControl';
@@ -23,6 +25,8 @@ export {
   CaretControl,
   DocServer,
   DocSession,
+  DurableControl,
+  EphemeralControl,
   FileAccess,
   FileComplex,
   PropertyControl,

@@ -2,13 +2,13 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseControl } from 'doc-server';
+import { DurableControl } from 'doc-server';
 import { MockSnapshot } from 'ot-common/mocks';
 
 /**
- * Subclass of {@link BaseControl} for use in testing.
+ * Subclass of {@link DurableControl} for use in testing.
  */
-export default class MockControl extends BaseControl {
+export default class MockControl extends DurableControl {
   constructor(fileAccess, logLabel) {
     super(fileAccess, logLabel);
 

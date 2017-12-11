@@ -8,13 +8,16 @@ import { describe, it } from 'mocha';
 import { Codec } from 'codec';
 import { Timeouts } from 'doc-common';
 import { MockChange, MockDelta, MockOp, MockSnapshot } from 'ot-common/mocks';
-import { BaseControl, FileAccess } from 'doc-server';
+import { DurableControl, FileAccess } from 'doc-server';
 import { MockControl } from 'doc-server/mocks';
 import { Errors as FileErrors, TransactionSpec } from 'file-store';
 import { MockFile } from 'file-store/mocks';
 import { Timestamp } from 'ot-common';
 import { Errors, FrozenBuffer } from 'util-common';
 
+// **Note:** Even though these tests are written in terms of `DurableControl`
+// and a subclass thereof, they are limited to testing behavior which is common
+// to all control classes. This is why it is labeled as being for `BaseControl`.
 describe('doc-server/BaseControl', () => {
   /** {FileAccess} Convenient instance of `FileAccess`. */
   const FILE_ACCESS = new FileAccess(Codec.theOne, new MockFile('blort'));
@@ -47,7 +50,7 @@ describe('doc-server/BaseControl', () => {
     });
 
     it('should reject an improper subclass choice', () => {
-      class HasBadPrefix extends BaseControl {
+      class HasBadPrefix extends DurableControl {
         static get _impl_pathPrefix() {
           return '//invalid/path_string!';
         }
@@ -57,7 +60,7 @@ describe('doc-server/BaseControl', () => {
     });
 
     it('should only ever ask the subclass once', () => {
-      class GoodControl extends BaseControl {
+      class GoodControl extends DurableControl {
         static get _impl_pathPrefix() {
           this.count++;
           return '/blort';
@@ -82,7 +85,7 @@ describe('doc-server/BaseControl', () => {
     });
 
     it('should reject an improper subclass choice', () => {
-      class HasBadSnapshot extends BaseControl {
+      class HasBadSnapshot extends DurableControl {
         static get _impl_snapshotClass() {
           return Object;
         }
@@ -92,7 +95,7 @@ describe('doc-server/BaseControl', () => {
     });
 
     it('should only ever ask the subclass once', () => {
-      class GoodControl extends BaseControl {
+      class GoodControl extends DurableControl {
         static get _impl_snapshotClass() {
           this.count++;
           return MockSnapshot;
