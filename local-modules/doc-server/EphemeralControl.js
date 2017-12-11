@@ -9,13 +9,18 @@ import BaseControl from './BaseControl';
  * maintain full change history. Instead, they keep a stored snapshot of _some_
  * revision along with all subsequent changes. Every so often, the stored
  * snapshot gets updated, at which point earlier changes are able to be deleted.
+ *
+ * **Note:** The actual differences in behavior between instances of this class
+ * and instances of {@link EphemeralControl} are defined in the superclass,
+ * which merely keys off of the value of the static property {@link #ephemeral}
+ * defined here.
  */
 export default class EphemeralControl extends BaseControl {
   /**
    * {boolean} Whether (`true`) or not (`false`) this instance controls an
    * ephemeral part. Defined as `true` for this class.
    */
-  get ephemeral() {
+  static get ephemeral() {
     return true;
   }
 }

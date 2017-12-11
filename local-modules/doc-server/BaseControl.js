@@ -10,6 +10,7 @@ import { TBoolean, TFunction } from 'typecheck';
 import { Errors } from 'util-common';
 
 import BaseDataManager from './BaseDataManager';
+import ValidationStatus from './ValidationStatus';
 
 /** {Int} Initial amount of time (in msec) between update retries. */
 const INITIAL_UPDATE_RETRY_MSEC = 50;
@@ -19,6 +20,13 @@ const UPDATE_RETRY_GROWTH_FACTOR = 5;
 
 /** {Int} Maximum amount of time (in msec) between update retries. */
 const MAX_UPDATE_RETRY_MSEC = 15 * 1000;
+
+/**
+ * {Int} Maximum number of document changes to request in a single transaction.
+ * (The idea is to avoid making a request that would result in running into an
+ * upper limit on transaction data size.)
+ */
+const MAX_CHANGE_READS_PER_TRANSACTION = 20;
 
 /**
  * {Int} Maximum number of changes to compose in order to produce a result from
@@ -45,15 +53,6 @@ const CHANGES_PER_STORED_SNAPSHOT = 100;
  * stored. See their descriptions for details.
  */
 export default class BaseControl extends BaseDataManager {
-  /**
-   * {Int} Maximum number of document changes to request in a single
-   * transaction. (The idea is to avoid making a request that would result in
-   * running into an upper limit on transaction data size.)
-   */
-  static get MAX_CHANGE_READS_PER_TRANSACTION() {
-    return 20;
-  }
-
   /**
    * {class} Class (constructor function) of change objects to be used with
    * instances of this class.
@@ -82,6 +81,17 @@ export default class BaseControl extends BaseDataManager {
     // **Note:** `this` in the context of a static method is the class, not an
     // instance.
     return this.snapshotClass.deltaClass;
+  }
+
+  /**
+   * {boolean} Whether (`true`) or not (`false`) this instance controls an
+   * ephemeral part. This is overridden in each of the two direct subclasses of
+   * this class and should not be overridden further.
+   *
+   * @abstract
+   */
+  static get ephemeral() {
+    throw this._mustOverride();
   }
 
   /**
@@ -157,17 +167,6 @@ export default class BaseControl extends BaseDataManager {
 
     RevisionNumber.check(revNum);
     return `${this.changePathPrefix}/${revNum}`;
-  }
-
-  /**
-   * {boolean} Whether (`true`) or not (`false`) this instance controls an
-   * ephemeral part. This is overridden in each of the two direct subclasses of
-   * this class and should not be overridden further.
-   *
-   * @abstract
-   */
-  get ephemeral() {
-    throw this._mustOverride();
   }
 
   /**
@@ -269,8 +268,7 @@ export default class BaseControl extends BaseDataManager {
 
   /**
    * Gets a particular change to the part of the document that this instance
-   * controls. This is just a convenient shorthand for
-   * `await getChangeRange(revNum, revNum + 1, false)[0]`.
+   * controls.
    *
    * @param {Int} revNum The revision number of the change. The result is the
    *   change which produced that revision. E.g., `0` is a request for the first
@@ -279,7 +277,7 @@ export default class BaseControl extends BaseDataManager {
    */
   async getChange(revNum) {
     RevisionNumber.check(revNum); // So we know we can `+1` without weirdness.
-    const changes = await this.getChangeRange(revNum, revNum + 1, false);
+    const changes = await this._getChangeRange(revNum, revNum + 1, false);
 
     return changes[0];
   }
@@ -332,75 +330,6 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
-   * Reads a sequential chunk of changes. It is an error to request a change
-   * beyond the current revision; it is valid for either `start` or `endExc` to
-   * be `currentRevNum() + 1` but no greater. If `start === endExc`, then this
-   * simply verifies that the arguments are in range and returns an empty array.
-   * It is an error if `(endExc - start) >
-   * BaseControl.MAX_CHANGE_READS_PER_TRANSACTION`. For subclasses that don't
-   * keep full change history, it is possible for there to be holes in the
-   * result; any such holes are filled with `null`.
-   *
-   * **Note:** The point of the max count limit is that we want to avoid
-   * creating a transaction which could run afoul of a limit on the amount of
-   * data returned by any one transaction.
-   *
-   * @param {Int} startInclusive Start change number (inclusive) of changes to
-   *   read.
-   * @param {Int} endExclusive End change number (exclusive) of changes to read.
-   *   Must be `>= startInclusive`.
-   * @param {boolean} allowMissing Whether (`true`) or not (`false`) to allow
-   *   there to be missing changes from the range. If `false`, the result is
-   *   always an array of length `endExclusive - startInclusive`.
-   * @returns {array<BaseChange>} Array of changes, in order by revision number.
-   */
-  async getChangeRange(startInclusive, endExclusive, allowMissing) {
-    const clazz = this.constructor;
-
-    RevisionNumber.check(startInclusive);
-    RevisionNumber.min(endExclusive, startInclusive);
-    TBoolean.check(allowMissing);
-
-    if ((endExclusive - startInclusive) > BaseControl.MAX_CHANGE_READS_PER_TRANSACTION) {
-      // The calling code (in this class) should have made sure we weren't
-      // violating this restriction.
-      throw Errors.bad_use(`Too many changes requested at once: ${endExclusive - startInclusive}`);
-    }
-
-    // Per docs, reject a start (and implicitly an end) that would try to read
-    // a never-possibly-written change.
-    const revNum = await this.currentRevNum();
-    RevisionNumber.maxInc(startInclusive, revNum + 1);
-
-    if (startInclusive === endExclusive) {
-      // Per docs, this is valid and has an empty result.
-      return [];
-    }
-
-    const fc = this.fileCodec;
-    const spec = new TransactionSpec(
-      this._opForChangeRange(fc.op_readPathRange, startInclusive, endExclusive));
-
-    const transactionResult = await fc.transact(spec);
-    const data              = transactionResult.data;
-
-    const result = [];
-    for (let i = startInclusive; i < endExclusive; i++) {
-      const change = data.get(clazz.pathForChange(i));
-
-      if (change !== null) {
-        clazz.changeClass.check(change);
-      } else if (!allowMissing) {
-        throw new Error.bad_use(`Missing change in requested range: r${i}`);
-      }
-
-      result.push(change);
-    }
-
-    return result;
-  }
-
-  /**
    * Constructs a delta consisting of the given base delta composed with the
    * deltas of the changes from the given initial revision through but not
    * including the indicated end revision. It is valid to pass as either
@@ -435,23 +364,23 @@ export default class BaseControl extends BaseDataManager {
 
     if (startInclusive === endExclusive) {
       // Trivial case: Nothing to compose. If we were to have made it to the
-      // loop below, `getChangeRange()` and `compose()` would have taken care of
-      // the salient error checking. But because we're short-circuiting out of
-      // it here, we need to explicitly check argument validity.
+      // loop below, `_getChangeRange()` and `compose()` would have taken care
+      // of the salient error checking. But because we're short-circuiting out
+      // of it here, we need to explicitly check argument validity.
 
       if (wantDocument && !baseDelta.isDocument()) {
         throw Errors.bad_value(baseDelta, 'document delta');
       }
 
-      await this.getChangeRange(startInclusive, startInclusive, false);
+      await this._getChangeRange(startInclusive, startInclusive, false);
       return baseDelta;
     }
 
     let result = baseDelta;
-    const MAX = BaseControl.MAX_CHANGE_READS_PER_TRANSACTION;
+    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
     for (let i = startInclusive; i < endExclusive; i += MAX) {
       const end = Math.min(i + MAX, endExclusive);
-      const changes = await this.getChangeRange(i, end, false);
+      const changes = await this._getChangeRange(i, end, false);
       for (const c of changes) {
         result = result.compose(c.delta, wantDocument);
       }
@@ -781,30 +710,6 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
-   * Writes the given snapshot into the stored snapshot file path for this
-   * document part.
-   *
-   * @param {BaseSnapshot} snapshot The snapshot to store. Must be an instance
-   *   of the appropriate concrete snapshot class for this instance.
-   */
-  async writeStoredSnapshot(snapshot) {
-    const clazz = this.constructor;
-    const path  = clazz.storedSnapshotPath;
-    const fc    = this.fileCodec;
-
-    clazz.snapshotClass.check(snapshot);
-
-    // **TODO:** Ephemeral parts should delete changes from revisions earlier
-    // than the snapshot before some amount of "buffer" changes (to allow for
-    // some leeway in noticing changes across snapshot boundaries).
-    const spec = new TransactionSpec(fc.op_writePath(path, snapshot));
-
-    await fc.transact(spec);
-
-    this.log.info(`Wrote stored snapshot for revision: r${snapshot.revNum}`);
-  }
-
-  /**
    * {TransactionSpec} Spec for a transaction which when run will initialize the
    * portion of the file which this class is responsible for. This
    * implementation should be sufficient for all subclasses of this class.
@@ -870,6 +775,115 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * Subclass-specific implementation of {@link #validationStatus}. This works
+   * for all concrete subclasses of this class. (It builds in knowledge of the
+   * difference between durable and ephemeral parts, because it's easier to
+   * build it that way than to have a call-out to a subclass-specific method.)
+   *
+   * @returns {string} One of the constants defined by {@link ValidationStatus}.
+   */
+  async _impl_validationStatus() {
+    const clazz = this.constructor;
+    let transactionResult;
+
+    // Check the revision number (mandatory) and stored snapshot (if present).
+
+    try {
+      const fc = this.fileCodec;
+      const spec = new TransactionSpec(
+        fc.op_readPath(clazz.revisionNumberPath),
+        fc.op_readPath(clazz.storedSnapshotPath)
+      );
+      transactionResult = await fc.transact(spec);
+    } catch (e) {
+      this.log.error('Major problem trying to read file!', e);
+      return ValidationStatus.STATUS_ERROR;
+    }
+
+    const data     = transactionResult.data;
+    const revNum   = data.get(clazz.revisionNumberPath);
+    const snapshot = data.get(clazz.storedSnapshotPath);
+
+    try {
+      RevisionNumber.check(revNum);
+    } catch (e) {
+      this.log.info('Corrupt document: Bogus or missing revision number.');
+      return ValidationStatus.STATUS_ERROR;
+    }
+
+    if (snapshot) {
+      try {
+        clazz.snapshotClass.check(snapshot);
+      } catch (e) {
+        this.log.info('Corrupt document: Bogus stored snapshot (wrong class).');
+        return ValidationStatus.STATUS_ERROR;
+      }
+
+      if (revNum < snapshot.revNum) {
+        this.log.info('Corrupt document: Bogus stored snapshot (weird revision number).');
+        return ValidationStatus.STATUS_ERROR;
+      }
+    }
+
+    // Make sure all the changes can be read and decoded.
+
+    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
+
+    // Ephemeral parts aren't expected to store any changes from before the
+    // snapshot revision (when present). This definition marks the "inflection
+    // point" at which changes must be present.
+    const requiredChangesAt = (clazz.ephemeral && snapshot)
+      ? snapshot.revNum + 1
+      : 0;
+
+    // For ephemeral parts, _if_ a change is present before the snapshot's
+    // revision, it must be valid.
+    for (let i = 0; i < requiredChangesAt; i++) {
+      const lastI = Math.min(i + MAX - 1, requiredChangesAt - 1);
+      try {
+        // `true` === Allow missing changes.
+        await this._getChangeRange(i, lastI + 1, true);
+      } catch (e) {
+        this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
+        return ValidationStatus.STATUS_ERROR;
+      }
+    }
+
+    // Check all required changes (for both durable and ephemeral parts).
+    for (let i = requiredChangesAt; i <= revNum; i += MAX) {
+      const lastI = Math.min(i + MAX - 1, revNum);
+      try {
+        // `false` === Do not allow missing changes.
+        await this._getChangeRange(i, lastI + 1, false);
+      } catch (e) {
+        this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
+        return ValidationStatus.STATUS_ERROR;
+      }
+    }
+
+    // Look for changes past the stored revision number to make sure they don't
+    // exist. **TODO:** Handle the possibility that the document got a new
+    // change added to it during the course of validation.
+
+    let extraChanges;
+    try {
+      extraChanges = await this.listChangeRange(revNum + 1, revNum + 10000);
+    } catch (e) {
+      this.log.info('Corrupt document: Trouble listing changes.');
+      return ValidationStatus.STATUS_ERROR;
+    }
+
+    if (extraChanges.length !== 0) {
+      this.log.info(`Corrupt document: Detected extra changes (at least ${extraChanges.length}).`);
+      return ValidationStatus.STATUS_ERROR;
+    }
+
+    // All's well!
+
+    return ValidationStatus.STATUS_OK;
+  }
+
+  /**
    * Helper for {@link #update}, which performs one update attempt. This is
    * called from within the retry loop of the main method.
    *
@@ -928,8 +942,84 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * Reads a sequential chunk of changes. It is an error to request a change
+   * beyond the current revision; it is valid for either `start` or `endExc` to
+   * be `currentRevNum() + 1` but no greater. If `start === endExc`, then this
+   * simply verifies that the arguments are in range and returns an empty array.
+   * It is an error if `(endExc - start) > MAX_CHANGE_READS_PER_TRANSACTION`.
+   * For subclasses that don't keep full change history, it is possible for
+   * there to be holes in the result; any such holes are filled with `null`.
+   *
+   * **Note:** The point of the max count limit is that we want to avoid
+   * creating a transaction which could run afoul of a limit on the amount of
+   * data returned by any one transaction.
+   *
+   * @param {Int} startInclusive Start change number (inclusive) of changes to
+   *   read.
+   * @param {Int} endExclusive End change number (exclusive) of changes to read.
+   *   Must be `>= startInclusive`.
+   * @param {boolean} allowMissing Whether (`true`) or not (`false`) to allow
+   *   there to be missing changes from the range. If `false`, the result is
+   *   always an array of length `endExclusive - startInclusive`.
+   * @returns {array<BaseChange>} Array of changes, in order by revision number.
+   */
+  async _getChangeRange(startInclusive, endExclusive, allowMissing) {
+    const clazz = this.constructor;
+
+    RevisionNumber.check(startInclusive);
+    RevisionNumber.min(endExclusive, startInclusive);
+    TBoolean.check(allowMissing);
+
+    if ((endExclusive - startInclusive) > MAX_CHANGE_READS_PER_TRANSACTION) {
+      // The calling code (in this class) should have made sure we weren't
+      // violating this restriction.
+      throw Errors.bad_use(`Too many changes requested at once: ${endExclusive - startInclusive}`);
+    }
+
+    // Per docs, reject a start (and implicitly an end) that would try to read
+    // a never-possibly-written change.
+    const revNum = await this.currentRevNum();
+    RevisionNumber.maxInc(startInclusive, revNum + 1);
+
+    if (startInclusive === endExclusive) {
+      // Per docs, this is valid and has an empty result.
+      return [];
+    }
+
+    const fc = this.fileCodec;
+    const spec = new TransactionSpec(
+      this._opForChangeRange(fc.op_readPathRange, startInclusive, endExclusive));
+
+    const transactionResult = await fc.transact(spec);
+    const data              = transactionResult.data;
+
+    const result = [];
+    for (let i = startInclusive; i < endExclusive; i++) {
+      const path = clazz.pathForChange(i);
+
+      if (data.has(path)) {
+        const change = data.get(path);
+
+        clazz.changeClass.check(change);
+        result.push(change);
+      } else if (!allowMissing) {
+        throw new Error.bad_use(`Missing change in requested range: r${i}`);
+      }
+    }
+
+    return result;
+  }
+
+  /**
    * Constructs and writes the stored snapshot based on the indicated revision,
    * if it is in fact appropriate to do so. If not, this does nothing.
+   *
+   * If this instance controls an ephemeral part, _and_ it is writing a
+   * snapshot, then in addition to the snapshot write this method deletes
+   * changes whose revision number is earlier than the previously-stored
+   * snapshot. (The point of keeping any changes at all from before the snapshot
+   * is to allow clients to perform change detection across a snapshot boundary
+   * without running into errors.)
    *
    * **Note:** Beyond parameter checking, this method encapsulates all errors.
    * Assuming a valid call, this method should not throw.
@@ -946,7 +1036,7 @@ export default class BaseControl extends BaseDataManager {
 
     try {
       const snapshot = await this.getSnapshot(revNum);
-      await this.writeStoredSnapshot(snapshot);
+      await this._writeStoredSnapshot(snapshot);
     } catch (e) {
       // Though unfortunate, this isn't tragic: Stored snapshots are created on
       // a best-effort basis. To the extent that they're required, it's only for
@@ -974,6 +1064,39 @@ export default class BaseControl extends BaseDataManager {
     RevisionNumber.check(endExclusive, startInclusive);
 
     return op.call(this.fileCodec, this.constructor.changePathPrefix, startInclusive, endExclusive);
+  }
+
+  /**
+   * Writes the given snapshot into the stored snapshot file path for this
+   * document part. In addition, this deletes changes that have "aged out" from
+   * ephemeral parts.
+   *
+   * @param {BaseSnapshot} snapshot The snapshot to store. Must be an instance
+   *   of the appropriate concrete snapshot class for this instance.
+   * @param {Int} deleteBefore Which
+   */
+  async _writeStoredSnapshot(snapshot) {
+    const clazz = this.constructor;
+    const path  = clazz.storedSnapshotPath;
+    const fc    = this.fileCodec;
+
+    clazz.snapshotClass.check(snapshot);
+
+    // Which changes to delete. This is "none" if the part is durable (not
+    // ephemeral) _or_ if there aren't more than a per-snapshot's worth of
+    // changes in the part yet.
+    const deleteBefore = clazz.ephemeral
+      ? Math.max(0, snapshot.revNum - CHANGES_PER_STORED_SNAPSHOT)
+      : 0;
+    const deleteOp = (deleteBefore !== 0)
+      ? [this._opForChangeRange(fc.op_deletePathRange, 0, deleteBefore)]
+      : [];
+
+    const spec = new TransactionSpec(fc.op_writePath(path, snapshot), ...deleteOp);
+
+    await fc.transact(spec);
+
+    this.log.info(`Wrote stored snapshot for revision: r${snapshot.revNum}`);
   }
 
   /**

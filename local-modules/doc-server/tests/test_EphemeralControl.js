@@ -5,21 +5,15 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Codec } from 'codec';
-import { EphemeralControl, FileAccess } from 'doc-server';
-import { MockFile } from 'file-store/mocks';
+import { EphemeralControl } from 'doc-server';
 
 describe('doc-server/EphemeralControl', () => {
-  /** {FileAccess} Convenient instance of `FileAccess`. */
-  const FILE_ACCESS = new FileAccess(Codec.theOne, new MockFile('blort'));
-
   /** {class} Concrete subclass, for use in testing. */
   class SomeControl extends EphemeralControl { /*empty*/ }
 
   describe('.ephemeral', () => {
-    const control = new SomeControl(FILE_ACCESS, 'boop');
     it('should be `true`', () => {
-      assert.isTrue(control.ephemeral);
+      assert.isTrue(SomeControl.ephemeral);
     });
   });
 });

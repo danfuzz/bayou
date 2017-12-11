@@ -3,13 +3,10 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { PropertySnapshot } from 'doc-common';
-import { TransactionSpec } from 'file-store';
-import { RevisionNumber } from 'ot-common';
 
 import DurableControl from './DurableControl';
 import Paths from './Paths';
 import SnapshotManager from './SnapshotManager';
-import ValidationStatus from './ValidationStatus';
 
 /**
  * Controller for the property metadata of a particular document.
@@ -87,88 +84,6 @@ export default class PropertyControl extends DurableControl {
       .withAuthorId(change.authorId);
 
     return finalChange;
-  }
-
-  /**
-   * Subclass-specific implementation of {@link #validationStatus}.
-   *
-   * @returns {string} One of the constants defined by {@link ValidationStatus}.
-   */
-  async _impl_validationStatus() {
-    let transactionResult;
-
-    // Check the revision number (mandatory) and stored snapshot (if present).
-
-    try {
-      const fc = this.fileCodec;
-      const spec = new TransactionSpec(
-        fc.op_readPath(PropertyControl.revisionNumberPath),
-        fc.op_readPath(PropertyControl.storedSnapshotPath)
-      );
-      transactionResult = await fc.transact(spec);
-    } catch (e) {
-      this.log.error('Major problem trying to read file!', e);
-      return ValidationStatus.STATUS_ERROR;
-    }
-
-    const data     = transactionResult.data;
-    const revNum   = data.get(PropertyControl.revisionNumberPath);
-    const snapshot = data.get(PropertyControl.storedSnapshotPath);
-
-    try {
-      RevisionNumber.check(revNum);
-    } catch (e) {
-      this.log.info('Corrupt document: Bogus or missing revision number.');
-      return ValidationStatus.STATUS_ERROR;
-    }
-
-    if (snapshot) {
-      try {
-        PropertyControl.snapshotClass.check(snapshot);
-      } catch (e) {
-        this.log.info('Corrupt document: Bogus stored snapshot (wrong class).');
-        return ValidationStatus.STATUS_ERROR;
-      }
-
-      if (revNum < snapshot.revNum) {
-        this.log.info('Corrupt document: Bogus stored snapshot (weird revision number).');
-        return ValidationStatus.STATUS_ERROR;
-      }
-    }
-
-    // Make sure all the changes can be read and decoded.
-
-    const MAX = DurableControl.MAX_CHANGE_READS_PER_TRANSACTION;
-    for (let i = 0; i <= revNum; i += MAX) {
-      const lastI = Math.min(i + MAX - 1, revNum);
-      try {
-        await this.getChangeRange(i, lastI + 1, false);
-      } catch (e) {
-        this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
-        return ValidationStatus.STATUS_ERROR;
-      }
-    }
-
-    // Look for changes past the stored revision number to make sure they don't
-    // exist. **TODO:** Handle the possibility that the document got a new
-    // change added to it during the course of validation.
-
-    let extraChanges;
-    try {
-      extraChanges = await this.listChangeRange(revNum + 1, revNum + 10000);
-    } catch (e) {
-      this.log.info('Corrupt document: Trouble listing changes.');
-      return ValidationStatus.STATUS_ERROR;
-    }
-
-    if (extraChanges.length !== 0) {
-      this.log.info(`Corrupt document: Detected extra changes (at least ${extraChanges.length}).`);
-      return ValidationStatus.STATUS_ERROR;
-    }
-
-    // All's well!
-
-    return ValidationStatus.STATUS_OK;
   }
 
   /**
