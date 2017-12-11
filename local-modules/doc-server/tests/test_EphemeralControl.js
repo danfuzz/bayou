@@ -9,7 +9,7 @@ import { Codec } from 'codec';
 import { EphemeralControl, FileAccess } from 'doc-server';
 import { MockFile } from 'file-store/mocks';
 
-describe('doc-server/DurableControl', () => {
+describe('doc-server/EphemeralControl', () => {
   /** {FileAccess} Convenient instance of `FileAccess`. */
   const FILE_ACCESS = new FileAccess(Codec.theOne, new MockFile('blort'));
 
