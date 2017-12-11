@@ -89,10 +89,16 @@ export default class EventReporter extends CommonBase {
       // pulled out separately, below).
       const pureError = new Error(error.message);
       pureError.stack = error.stack;
-      const trace = ErrorUtil.fullTrace(pureError);
+      const fullTrace = ErrorUtil.fullTrace(pureError);
 
-      // Unit test errors often have interesting auxiliary info. Collect them
-      // separately.
+      // Trim off the part of the stack trace that looks like the test harness.
+      // Specifically, Mocha (as of this writing) has a method
+      // `Test.Runnable.run` which calls a function `callFn`. If this ever
+      // changes, then this trimming code will need to be updated.
+      const trace = fullTrace.replace(/\n +callFn[^\n]+\n +Test\.Runnable\.run[^]*$/, '\n');
+
+      // Unit test errors often have interesting auxiliary info. Collect such
+      // info separately.
       let extras = null;
       for (const name of Object.getOwnPropertyNames(error)) {
         if ((name === 'message') || (name === 'stack')) {
