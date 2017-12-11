@@ -15,7 +15,7 @@ export default class EphemeralControl extends BaseControl {
    * {boolean} Whether (`true`) or not (`false`) this instance controls an
    * ephemeral part. Defined as `true` for this class.
    */
-  get ephemeral() {
+  static get ephemeral() {
     return true;
   }
 }

@@ -84,6 +84,17 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * {boolean} Whether (`true`) or not (`false`) this instance controls an
+   * ephemeral part. This is overridden in each of the two direct subclasses of
+   * this class and should not be overridden further.
+   *
+   * @abstract
+   */
+  static get ephemeral() {
+    throw this._mustOverride();
+  }
+
+  /**
    * {string} Path prefix to use for file storage for the portion of the
    * document controlled by instances of this class.
    */
@@ -156,17 +167,6 @@ export default class BaseControl extends BaseDataManager {
 
     RevisionNumber.check(revNum);
     return `${this.changePathPrefix}/${revNum}`;
-  }
-
-  /**
-   * {boolean} Whether (`true`) or not (`false`) this instance controls an
-   * ephemeral part. This is overridden in each of the two direct subclasses of
-   * this class and should not be overridden further.
-   *
-   * @abstract
-   */
-  get ephemeral() {
-    throw this._mustOverride();
   }
 
   /**

@@ -13,7 +13,7 @@ export default class DurableControl extends BaseControl {
    * {boolean} Whether (`true`) or not (`false`) this instance controls an
    * ephemeral part. Defined as `false` for this class.
    */
-  get ephemeral() {
+  static get ephemeral() {
     return false;
   }
 }
