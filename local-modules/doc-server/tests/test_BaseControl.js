@@ -425,14 +425,14 @@ describe('doc-server/BaseControl', () => {
       let gotEnd    = null;
       let gotAllow  = null;
 
-      control.getChangeRange = async (start, end, allowMissing) => {
+      control._getChangeRange = async (start, end, allowMissing) => {
         gotStart = start;
         gotEnd   = end;
         gotAllow = allowMissing;
         return ['foomp'];
       };
 
-      it('should pass appropriate arguments to `getChangeRange()`', async () => {
+      it('should pass appropriate arguments to `_getChangeRange()`', async () => {
         async function test(n) {
           await control.getChange(n);
           assert.strictEqual(gotStart, n);
@@ -445,7 +445,7 @@ describe('doc-server/BaseControl', () => {
         await test(914);
       });
 
-      it('should return the first element of the return value from `getChangeRange()`', async () => {
+      it('should return the first element of the return value from `_getChangeRange()`', async () => {
         const result = await control.getChange(123);
         assert.strictEqual(result, 'foomp');
       });
@@ -453,7 +453,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should promptly reject blatantly invalid `revNum` values', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
-      control.getChangeRange = async (start_unused, end_unused, allow_unused) => {
+      control._getChangeRange = async (start_unused, end_unused, allow_unused) => {
         throw new Error('This should not have been called.');
       };
 

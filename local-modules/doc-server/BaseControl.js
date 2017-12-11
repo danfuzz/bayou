@@ -268,8 +268,7 @@ export default class BaseControl extends BaseDataManager {
 
   /**
    * Gets a particular change to the part of the document that this instance
-   * controls. This is just a convenient shorthand for
-   * `await getChangeRange(revNum, revNum + 1, false)[0]`.
+   * controls.
    *
    * @param {Int} revNum The revision number of the change. The result is the
    *   change which produced that revision. E.g., `0` is a request for the first
@@ -278,7 +277,7 @@ export default class BaseControl extends BaseDataManager {
    */
   async getChange(revNum) {
     RevisionNumber.check(revNum); // So we know we can `+1` without weirdness.
-    const changes = await this.getChangeRange(revNum, revNum + 1, false);
+    const changes = await this._getChangeRange(revNum, revNum + 1, false);
 
     return changes[0];
   }
@@ -331,74 +330,6 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
-   * Reads a sequential chunk of changes. It is an error to request a change
-   * beyond the current revision; it is valid for either `start` or `endExc` to
-   * be `currentRevNum() + 1` but no greater. If `start === endExc`, then this
-   * simply verifies that the arguments are in range and returns an empty array.
-   * It is an error if `(endExc - start) > MAX_CHANGE_READS_PER_TRANSACTION`.
-   * For subclasses that don't keep full change history, it is possible for
-   * there to be holes in the result; any such holes are filled with `null`.
-   *
-   * **Note:** The point of the max count limit is that we want to avoid
-   * creating a transaction which could run afoul of a limit on the amount of
-   * data returned by any one transaction.
-   *
-   * @param {Int} startInclusive Start change number (inclusive) of changes to
-   *   read.
-   * @param {Int} endExclusive End change number (exclusive) of changes to read.
-   *   Must be `>= startInclusive`.
-   * @param {boolean} allowMissing Whether (`true`) or not (`false`) to allow
-   *   there to be missing changes from the range. If `false`, the result is
-   *   always an array of length `endExclusive - startInclusive`.
-   * @returns {array<BaseChange>} Array of changes, in order by revision number.
-   */
-  async getChangeRange(startInclusive, endExclusive, allowMissing) {
-    const clazz = this.constructor;
-
-    RevisionNumber.check(startInclusive);
-    RevisionNumber.min(endExclusive, startInclusive);
-    TBoolean.check(allowMissing);
-
-    if ((endExclusive - startInclusive) > MAX_CHANGE_READS_PER_TRANSACTION) {
-      // The calling code (in this class) should have made sure we weren't
-      // violating this restriction.
-      throw Errors.bad_use(`Too many changes requested at once: ${endExclusive - startInclusive}`);
-    }
-
-    // Per docs, reject a start (and implicitly an end) that would try to read
-    // a never-possibly-written change.
-    const revNum = await this.currentRevNum();
-    RevisionNumber.maxInc(startInclusive, revNum + 1);
-
-    if (startInclusive === endExclusive) {
-      // Per docs, this is valid and has an empty result.
-      return [];
-    }
-
-    const fc = this.fileCodec;
-    const spec = new TransactionSpec(
-      this._opForChangeRange(fc.op_readPathRange, startInclusive, endExclusive));
-
-    const transactionResult = await fc.transact(spec);
-    const data              = transactionResult.data;
-
-    const result = [];
-    for (let i = startInclusive; i < endExclusive; i++) {
-      const change = data.get(clazz.pathForChange(i));
-
-      if (change !== null) {
-        clazz.changeClass.check(change);
-      } else if (!allowMissing) {
-        throw new Error.bad_use(`Missing change in requested range: r${i}`);
-      }
-
-      result.push(change);
-    }
-
-    return result;
-  }
-
-  /**
    * Constructs a delta consisting of the given base delta composed with the
    * deltas of the changes from the given initial revision through but not
    * including the indicated end revision. It is valid to pass as either
@@ -433,15 +364,15 @@ export default class BaseControl extends BaseDataManager {
 
     if (startInclusive === endExclusive) {
       // Trivial case: Nothing to compose. If we were to have made it to the
-      // loop below, `getChangeRange()` and `compose()` would have taken care of
-      // the salient error checking. But because we're short-circuiting out of
-      // it here, we need to explicitly check argument validity.
+      // loop below, `_getChangeRange()` and `compose()` would have taken care
+      // of the salient error checking. But because we're short-circuiting out
+      // of it here, we need to explicitly check argument validity.
 
       if (wantDocument && !baseDelta.isDocument()) {
         throw Errors.bad_value(baseDelta, 'document delta');
       }
 
-      await this.getChangeRange(startInclusive, startInclusive, false);
+      await this._getChangeRange(startInclusive, startInclusive, false);
       return baseDelta;
     }
 
@@ -449,7 +380,7 @@ export default class BaseControl extends BaseDataManager {
     const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
     for (let i = startInclusive; i < endExclusive; i += MAX) {
       const end = Math.min(i + MAX, endExclusive);
-      const changes = await this.getChangeRange(i, end, false);
+      const changes = await this._getChangeRange(i, end, false);
       for (const c of changes) {
         result = result.compose(c.delta, wantDocument);
       }
@@ -926,7 +857,7 @@ export default class BaseControl extends BaseDataManager {
     for (let i = 0; i <= revNum; i += MAX) {
       const lastI = Math.min(i + MAX - 1, revNum);
       try {
-        await this.getChangeRange(i, lastI + 1, false);
+        await this._getChangeRange(i, lastI + 1, false);
       } catch (e) {
         this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
         return ValidationStatus.STATUS_ERROR;
@@ -1011,6 +942,74 @@ export default class BaseControl extends BaseDataManager {
     // #update}.
 
     return null;
+  }
+
+  /**
+   * Reads a sequential chunk of changes. It is an error to request a change
+   * beyond the current revision; it is valid for either `start` or `endExc` to
+   * be `currentRevNum() + 1` but no greater. If `start === endExc`, then this
+   * simply verifies that the arguments are in range and returns an empty array.
+   * It is an error if `(endExc - start) > MAX_CHANGE_READS_PER_TRANSACTION`.
+   * For subclasses that don't keep full change history, it is possible for
+   * there to be holes in the result; any such holes are filled with `null`.
+   *
+   * **Note:** The point of the max count limit is that we want to avoid
+   * creating a transaction which could run afoul of a limit on the amount of
+   * data returned by any one transaction.
+   *
+   * @param {Int} startInclusive Start change number (inclusive) of changes to
+   *   read.
+   * @param {Int} endExclusive End change number (exclusive) of changes to read.
+   *   Must be `>= startInclusive`.
+   * @param {boolean} allowMissing Whether (`true`) or not (`false`) to allow
+   *   there to be missing changes from the range. If `false`, the result is
+   *   always an array of length `endExclusive - startInclusive`.
+   * @returns {array<BaseChange>} Array of changes, in order by revision number.
+   */
+  async _getChangeRange(startInclusive, endExclusive, allowMissing) {
+    const clazz = this.constructor;
+
+    RevisionNumber.check(startInclusive);
+    RevisionNumber.min(endExclusive, startInclusive);
+    TBoolean.check(allowMissing);
+
+    if ((endExclusive - startInclusive) > MAX_CHANGE_READS_PER_TRANSACTION) {
+      // The calling code (in this class) should have made sure we weren't
+      // violating this restriction.
+      throw Errors.bad_use(`Too many changes requested at once: ${endExclusive - startInclusive}`);
+    }
+
+    // Per docs, reject a start (and implicitly an end) that would try to read
+    // a never-possibly-written change.
+    const revNum = await this.currentRevNum();
+    RevisionNumber.maxInc(startInclusive, revNum + 1);
+
+    if (startInclusive === endExclusive) {
+      // Per docs, this is valid and has an empty result.
+      return [];
+    }
+
+    const fc = this.fileCodec;
+    const spec = new TransactionSpec(
+      this._opForChangeRange(fc.op_readPathRange, startInclusive, endExclusive));
+
+    const transactionResult = await fc.transact(spec);
+    const data              = transactionResult.data;
+
+    const result = [];
+    for (let i = startInclusive; i < endExclusive; i++) {
+      const change = data.get(clazz.pathForChange(i));
+
+      if (change !== null) {
+        clazz.changeClass.check(change);
+      } else if (!allowMissing) {
+        throw new Error.bad_use(`Missing change in requested range: r${i}`);
+      }
+
+      result.push(change);
+    }
+
+    return result;
   }
 
   /**
