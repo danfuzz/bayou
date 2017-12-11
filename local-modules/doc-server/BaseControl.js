@@ -849,14 +849,35 @@ export default class BaseControl extends BaseDataManager {
       }
     }
 
-    // Make sure all the changes can be read and decoded. **TODO:** Ephemeral
-    // parts don't necessarily store any changes from before the snapshot
-    // revision. Handle that possibility.
+    // Make sure all the changes can be read and decoded.
 
     const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
-    for (let i = 0; i <= revNum; i += MAX) {
+
+    // Ephemeral parts aren't expected to store any changes from before the
+    // snapshot revision (when present). This definition marks the "inflection
+    // point" at which changes must be present.
+    const requiredChangesAt = (clazz.ephemeral && snapshot)
+      ? snapshot.revNum + 1
+      : 0;
+
+    // For ephemeral parts, _if_ a change is present before the snapshot's
+    // revision, it must be valid.
+    for (let i = 0; i < requiredChangesAt; i++) {
+      const lastI = Math.min(i + MAX - 1, requiredChangesAt - 1);
+      try {
+        // `true` === Allow missing changes.
+        await this._getChangeRange(i, lastI + 1, true);
+      } catch (e) {
+        this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
+        return ValidationStatus.STATUS_ERROR;
+      }
+    }
+
+    // Check all required changes (for both durable and ephemeral parts).
+    for (let i = requiredChangesAt; i <= revNum; i += MAX) {
       const lastI = Math.min(i + MAX - 1, revNum);
       try {
+        // `false` === Do not allow missing changes.
         await this._getChangeRange(i, lastI + 1, false);
       } catch (e) {
         this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
