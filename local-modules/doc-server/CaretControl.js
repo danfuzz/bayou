@@ -3,7 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Caret, CaretChange, CaretOp, CaretSnapshot } from 'doc-common';
-import { TransactionSpec } from 'file-store';
 import { RevisionNumber, Timestamp } from 'ot-common';
 import { TInt, TString } from 'typecheck';
 
@@ -11,7 +10,6 @@ import CaretColor from './CaretColor';
 import EphemeralControl from './EphemeralControl';
 import Paths from './Paths';
 import SnapshotManager from './SnapshotManager';
-import ValidationStatus from './ValidationStatus';
 
 /**
  * {Int} How long (in msec) that a session must be inactive before it gets
@@ -152,90 +150,6 @@ export default class CaretControl extends EphemeralControl {
       .withAuthorId(change.authorId);
 
     return finalChange;
-  }
-
-  /**
-   * Subclass-specific implementation of {@link #validationStatus}.
-   *
-   * @returns {string} One of the constants defined by {@link ValidationStatus}.
-   */
-  async _impl_validationStatus() {
-    let transactionResult;
-
-    // Check the revision number (mandatory) and stored snapshot (if present).
-
-    try {
-      const fc = this.fileCodec;
-      const spec = new TransactionSpec(
-        fc.op_readPath(CaretControl.revisionNumberPath),
-        fc.op_readPath(CaretControl.storedSnapshotPath)
-      );
-      transactionResult = await fc.transact(spec);
-    } catch (e) {
-      this.log.error('Major problem trying to read file!', e);
-      return ValidationStatus.STATUS_ERROR;
-    }
-
-    const data     = transactionResult.data;
-    const revNum   = data.get(CaretControl.revisionNumberPath);
-    const snapshot = data.get(CaretControl.storedSnapshotPath);
-
-    try {
-      RevisionNumber.check(revNum);
-    } catch (e) {
-      this.log.info('Corrupt document: Bogus or missing revision number.');
-      return ValidationStatus.STATUS_ERROR;
-    }
-
-    if (snapshot) {
-      try {
-        CaretControl.snapshotClass.check(snapshot);
-      } catch (e) {
-        this.log.info('Corrupt document: Bogus stored snapshot (wrong class).');
-        return ValidationStatus.STATUS_ERROR;
-      }
-
-      if (revNum < snapshot.revNum) {
-        this.log.info('Corrupt document: Bogus stored snapshot (weird revision number).');
-        return ValidationStatus.STATUS_ERROR;
-      }
-    }
-
-    // Make sure all the changes can be read and decoded. **TODO:** Ephemeral
-    // parts don't necessarily store any changes from before the snapshot
-    // revision. Handle that possibility.
-
-    const MAX = EphemeralControl.MAX_CHANGE_READS_PER_TRANSACTION;
-    for (let i = 0; i <= revNum; i += MAX) {
-      const lastI = Math.min(i + MAX - 1, revNum);
-      try {
-        await this.getChangeRange(i, lastI + 1, false);
-      } catch (e) {
-        this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
-        return ValidationStatus.STATUS_ERROR;
-      }
-    }
-
-    // Look for changes past the stored revision number to make sure they don't
-    // exist. **TODO:** Handle the possibility that the document got a new
-    // change added to it during the course of validation.
-
-    let extraChanges;
-    try {
-      extraChanges = await this.listChangeRange(revNum + 1, revNum + 10000);
-    } catch (e) {
-      this.log.info('Corrupt document: Trouble listing changes.');
-      return ValidationStatus.STATUS_ERROR;
-    }
-
-    if (extraChanges.length !== 0) {
-      this.log.info(`Corrupt document: Detected extra changes (at least ${extraChanges.length}).`);
-      return ValidationStatus.STATUS_ERROR;
-    }
-
-    // All's well!
-
-    return ValidationStatus.STATUS_OK;
   }
 
   /**

@@ -10,6 +10,7 @@ import { TBoolean, TFunction } from 'typecheck';
 import { Errors } from 'util-common';
 
 import BaseDataManager from './BaseDataManager';
+import ValidationStatus from './ValidationStatus';
 
 /** {Int} Initial amount of time (in msec) between update retries. */
 const INITIAL_UPDATE_RETRY_MSEC = 50;
@@ -19,6 +20,13 @@ const UPDATE_RETRY_GROWTH_FACTOR = 5;
 
 /** {Int} Maximum amount of time (in msec) between update retries. */
 const MAX_UPDATE_RETRY_MSEC = 15 * 1000;
+
+/**
+ * {Int} Maximum number of document changes to request in a single transaction.
+ * (The idea is to avoid making a request that would result in running into an
+ * upper limit on transaction data size.)
+ */
+const MAX_CHANGE_READS_PER_TRANSACTION = 20;
 
 /**
  * {Int} Maximum number of changes to compose in order to produce a result from
@@ -45,15 +53,6 @@ const CHANGES_PER_STORED_SNAPSHOT = 100;
  * stored. See their descriptions for details.
  */
 export default class BaseControl extends BaseDataManager {
-  /**
-   * {Int} Maximum number of document changes to request in a single
-   * transaction. (The idea is to avoid making a request that would result in
-   * running into an upper limit on transaction data size.)
-   */
-  static get MAX_CHANGE_READS_PER_TRANSACTION() {
-    return 20;
-  }
-
   /**
    * {class} Class (constructor function) of change objects to be used with
    * instances of this class.
@@ -336,10 +335,9 @@ export default class BaseControl extends BaseDataManager {
    * beyond the current revision; it is valid for either `start` or `endExc` to
    * be `currentRevNum() + 1` but no greater. If `start === endExc`, then this
    * simply verifies that the arguments are in range and returns an empty array.
-   * It is an error if `(endExc - start) >
-   * BaseControl.MAX_CHANGE_READS_PER_TRANSACTION`. For subclasses that don't
-   * keep full change history, it is possible for there to be holes in the
-   * result; any such holes are filled with `null`.
+   * It is an error if `(endExc - start) > MAX_CHANGE_READS_PER_TRANSACTION`.
+   * For subclasses that don't keep full change history, it is possible for
+   * there to be holes in the result; any such holes are filled with `null`.
    *
    * **Note:** The point of the max count limit is that we want to avoid
    * creating a transaction which could run afoul of a limit on the amount of
@@ -361,7 +359,7 @@ export default class BaseControl extends BaseDataManager {
     RevisionNumber.min(endExclusive, startInclusive);
     TBoolean.check(allowMissing);
 
-    if ((endExclusive - startInclusive) > BaseControl.MAX_CHANGE_READS_PER_TRANSACTION) {
+    if ((endExclusive - startInclusive) > MAX_CHANGE_READS_PER_TRANSACTION) {
       // The calling code (in this class) should have made sure we weren't
       // violating this restriction.
       throw Errors.bad_use(`Too many changes requested at once: ${endExclusive - startInclusive}`);
@@ -448,7 +446,7 @@ export default class BaseControl extends BaseDataManager {
     }
 
     let result = baseDelta;
-    const MAX = BaseControl.MAX_CHANGE_READS_PER_TRANSACTION;
+    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
     for (let i = startInclusive; i < endExclusive; i += MAX) {
       const end = Math.min(i + MAX, endExclusive);
       const changes = await this.getChangeRange(i, end, false);
@@ -867,6 +865,94 @@ export default class BaseControl extends BaseDataManager {
    */
   async _impl_rebase(change, baseSnapshot, expectedSnapshot, currentSnapshot) {
     return this._mustOverride(change, baseSnapshot, expectedSnapshot, currentSnapshot);
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #validationStatus}. This works
+   * for all concrete subclasses of this class. (It builds in knowledge of the
+   * difference between durable and ephemeral parts, because it's easier to
+   * build it that way than to have a call-out to a subclass-specific method.)
+   *
+   * @returns {string} One of the constants defined by {@link ValidationStatus}.
+   */
+  async _impl_validationStatus() {
+    const clazz = this.constructor;
+    let transactionResult;
+
+    // Check the revision number (mandatory) and stored snapshot (if present).
+
+    try {
+      const fc = this.fileCodec;
+      const spec = new TransactionSpec(
+        fc.op_readPath(clazz.revisionNumberPath),
+        fc.op_readPath(clazz.storedSnapshotPath)
+      );
+      transactionResult = await fc.transact(spec);
+    } catch (e) {
+      this.log.error('Major problem trying to read file!', e);
+      return ValidationStatus.STATUS_ERROR;
+    }
+
+    const data     = transactionResult.data;
+    const revNum   = data.get(clazz.revisionNumberPath);
+    const snapshot = data.get(clazz.storedSnapshotPath);
+
+    try {
+      RevisionNumber.check(revNum);
+    } catch (e) {
+      this.log.info('Corrupt document: Bogus or missing revision number.');
+      return ValidationStatus.STATUS_ERROR;
+    }
+
+    if (snapshot) {
+      try {
+        clazz.snapshotClass.check(snapshot);
+      } catch (e) {
+        this.log.info('Corrupt document: Bogus stored snapshot (wrong class).');
+        return ValidationStatus.STATUS_ERROR;
+      }
+
+      if (revNum < snapshot.revNum) {
+        this.log.info('Corrupt document: Bogus stored snapshot (weird revision number).');
+        return ValidationStatus.STATUS_ERROR;
+      }
+    }
+
+    // Make sure all the changes can be read and decoded. **TODO:** Ephemeral
+    // parts don't necessarily store any changes from before the snapshot
+    // revision. Handle that possibility.
+
+    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
+    for (let i = 0; i <= revNum; i += MAX) {
+      const lastI = Math.min(i + MAX - 1, revNum);
+      try {
+        await this.getChangeRange(i, lastI + 1, false);
+      } catch (e) {
+        this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
+        return ValidationStatus.STATUS_ERROR;
+      }
+    }
+
+    // Look for changes past the stored revision number to make sure they don't
+    // exist. **TODO:** Handle the possibility that the document got a new
+    // change added to it during the course of validation.
+
+    let extraChanges;
+    try {
+      extraChanges = await this.listChangeRange(revNum + 1, revNum + 10000);
+    } catch (e) {
+      this.log.info('Corrupt document: Trouble listing changes.');
+      return ValidationStatus.STATUS_ERROR;
+    }
+
+    if (extraChanges.length !== 0) {
+      this.log.info(`Corrupt document: Detected extra changes (at least ${extraChanges.length}).`);
+      return ValidationStatus.STATUS_ERROR;
+    }
+
+    // All's well!
+
+    return ValidationStatus.STATUS_OK;
   }
 
   /**
