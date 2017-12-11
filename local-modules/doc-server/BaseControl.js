@@ -710,30 +710,6 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
-   * Writes the given snapshot into the stored snapshot file path for this
-   * document part.
-   *
-   * @param {BaseSnapshot} snapshot The snapshot to store. Must be an instance
-   *   of the appropriate concrete snapshot class for this instance.
-   */
-  async writeStoredSnapshot(snapshot) {
-    const clazz = this.constructor;
-    const path  = clazz.storedSnapshotPath;
-    const fc    = this.fileCodec;
-
-    clazz.snapshotClass.check(snapshot);
-
-    // **TODO:** Ephemeral parts should delete changes from revisions earlier
-    // than the snapshot before some amount of "buffer" changes (to allow for
-    // some leeway in noticing changes across snapshot boundaries).
-    const spec = new TransactionSpec(fc.op_writePath(path, snapshot));
-
-    await fc.transact(spec);
-
-    this.log.info(`Wrote stored snapshot for revision: r${snapshot.revNum}`);
-  }
-
-  /**
    * {TransactionSpec} Spec for a transaction which when run will initialize the
    * portion of the file which this class is responsible for. This
    * implementation should be sufficient for all subclasses of this class.
@@ -1019,15 +995,16 @@ export default class BaseControl extends BaseDataManager {
 
     const result = [];
     for (let i = startInclusive; i < endExclusive; i++) {
-      const change = data.get(clazz.pathForChange(i));
+      const path = clazz.pathForChange(i);
 
-      if (change !== null) {
+      if (data.has(path)) {
+        const change = data.get(path);
+
         clazz.changeClass.check(change);
+        result.push(change);
       } else if (!allowMissing) {
         throw new Error.bad_use(`Missing change in requested range: r${i}`);
       }
-
-      result.push(change);
     }
 
     return result;
@@ -1036,6 +1013,13 @@ export default class BaseControl extends BaseDataManager {
   /**
    * Constructs and writes the stored snapshot based on the indicated revision,
    * if it is in fact appropriate to do so. If not, this does nothing.
+   *
+   * If this instance controls an ephemeral part, _and_ it is writing a
+   * snapshot, then in addition to the snapshot write this method deletes
+   * changes whose revision number is earlier than the previously-stored
+   * snapshot. (The point of keeping any changes at all from before the snapshot
+   * is to allow clients to perform change detection across a snapshot boundary
+   * without running into errors.)
    *
    * **Note:** Beyond parameter checking, this method encapsulates all errors.
    * Assuming a valid call, this method should not throw.
@@ -1052,7 +1036,7 @@ export default class BaseControl extends BaseDataManager {
 
     try {
       const snapshot = await this.getSnapshot(revNum);
-      await this.writeStoredSnapshot(snapshot);
+      await this._writeStoredSnapshot(snapshot);
     } catch (e) {
       // Though unfortunate, this isn't tragic: Stored snapshots are created on
       // a best-effort basis. To the extent that they're required, it's only for
@@ -1080,6 +1064,39 @@ export default class BaseControl extends BaseDataManager {
     RevisionNumber.check(endExclusive, startInclusive);
 
     return op.call(this.fileCodec, this.constructor.changePathPrefix, startInclusive, endExclusive);
+  }
+
+  /**
+   * Writes the given snapshot into the stored snapshot file path for this
+   * document part. In addition, this deletes changes that have "aged out" from
+   * ephemeral parts.
+   *
+   * @param {BaseSnapshot} snapshot The snapshot to store. Must be an instance
+   *   of the appropriate concrete snapshot class for this instance.
+   * @param {Int} deleteBefore Which
+   */
+  async _writeStoredSnapshot(snapshot) {
+    const clazz = this.constructor;
+    const path  = clazz.storedSnapshotPath;
+    const fc    = this.fileCodec;
+
+    clazz.snapshotClass.check(snapshot);
+
+    // Which changes to delete. This is "none" if the part is durable (not
+    // ephemeral) _or_ if there aren't more than a per-snapshot's worth of
+    // changes in the part yet.
+    const deleteBefore = clazz.ephemeral
+      ? Math.max(0, snapshot.revNum - CHANGES_PER_STORED_SNAPSHOT)
+      : 0;
+    const deleteOp = (deleteBefore !== 0)
+      ? [this._opForChangeRange(fc.op_deletePathRange, 0, deleteBefore)]
+      : [];
+
+    const spec = new TransactionSpec(fc.op_writePath(path, snapshot), ...deleteOp);
+
+    await fc.transact(spec);
+
+    this.log.info(`Wrote stored snapshot for revision: r${snapshot.revNum}`);
   }
 
   /**
