@@ -38,6 +38,11 @@ const CHANGES_PER_STORED_SNAPSHOT = 100;
  * Base class for document part controllers. There is one instance of each
  * concrete subclass of this class for each actively-edited document. They are
  * all managed and hooked up via {@link FileComplex}.
+ *
+ * This class has two direct subclasses, which are both abstract,
+ * {@link DurableControl} and {@link EphemeralControl}. The only difference
+ * in behavior between the subclasses is in whether full change history is
+ * stored. See their descriptions for details.
  */
 export default class BaseControl extends BaseDataManager {
   /**
@@ -152,6 +157,17 @@ export default class BaseControl extends BaseDataManager {
 
     RevisionNumber.check(revNum);
     return `${this.changePathPrefix}/${revNum}`;
+  }
+
+  /**
+   * {boolean} Whether (`true`) or not (`false`) this instance controls an
+   * ephemeral part. This is overridden in each of the two direct subclasses of
+   * this class and should not be overridden further.
+   *
+   * @abstract
+   */
+  get ephemeral() {
+    throw this._mustOverride();
   }
 
   /**
@@ -778,6 +794,9 @@ export default class BaseControl extends BaseDataManager {
 
     clazz.snapshotClass.check(snapshot);
 
+    // **TODO:** Ephemeral parts should delete changes from revisions earlier
+    // than the snapshot before some amount of "buffer" changes (to allow for
+    // some leeway in noticing changes across snapshot boundaries).
     const spec = new TransactionSpec(fc.op_writePath(path, snapshot));
 
     await fc.transact(spec);
