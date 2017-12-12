@@ -142,24 +142,4 @@ export default class MetaHandler {
   ping() {
     return true;
   }
-
-  /**
-   * Gets the schema(ta) for the given object(s), by ID. This returns an object
-   * that maps each given ID to its corresponding schema. It is only valid to
-   * pass IDs for uncontrolled (no authorization required) resources.
-   *
-   * @param {...string} ids IDs of the object to inquire about.
-   * @returns {object} An object mapping each of the `ids` to its corresponding
-   *   schema.
-   */
-  schemaFor(...ids) {
-    const result = {};
-
-    for (const id of ids) {
-      const target = this._connection.context.getUncontrolled(id);
-      result[id] = target.schema.propertiesObject;
-    }
-
-    return result;
-  }
 }

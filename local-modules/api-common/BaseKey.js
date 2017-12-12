@@ -7,6 +7,8 @@ import { inspect } from 'util';
 import { TString } from 'typecheck';
 import { CommonBase, Errors, URL } from 'util-common';
 
+import TargetId from './TargetId';
+
 /**
  * Base class for access keys. An access key consists of information for
  * accessing a network-accessible resource, along with functionality for
@@ -36,8 +38,8 @@ export default class BaseKey extends CommonBase {
    *   superfluous, this can be passed as `*` (a literal asterisk). This is
    *   _not_ allowed to have URL-level "auth" info (e.g.,
    *   `http://user:pass@example.com/`).
-   * @param {string} id Key / resource identifier. This must be a string of at
-   *   least 8 characters.
+   * @param {string} id Key / resource identifier. This must be a `TargetId` of
+   *   at least 8 characters.
    */
   constructor(url, id) {
     super();
@@ -50,7 +52,7 @@ export default class BaseKey extends CommonBase {
     this._url = url;
 
     /** {string} Key / resource identifier. */
-    this._id = TString.minLen(id, 8);
+    this._id = TargetId.minLen(id, 8);
   }
 
   /**

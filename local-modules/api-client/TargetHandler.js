@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { TargetId } from 'api-common';
+import { TFunction } from 'typecheck';
 import { CommonBase, Errors, Functor } from 'util-common';
 
 /** {Set<string>} Set of methods which never get proxied. */
@@ -27,35 +29,30 @@ export default class TargetHandler extends CommonBase {
   /**
    * Makes a proxy that is handled by an instance of this class.
    *
-   * @param {ApiClient} apiClient The client to forward calls to.
    * @param {function} sendMessage Function to call to send a message. See
    *   {@link TargetMap#constructor} for an explanation.
    * @param {string} targetId The ID of the target to call on.
    * @returns {Proxy} An appropriately-constructed proxy object.
    */
-  static makeProxy(apiClient, sendMessage, targetId) {
-    return new Proxy(Object.freeze({}), new TargetHandler(apiClient, sendMessage, targetId));
+  static makeProxy(sendMessage, targetId) {
+    return new Proxy(Object.freeze({}), new TargetHandler(sendMessage, targetId));
   }
 
   /**
    * Constructs an instance.
    *
-   * @param {ApiClient} apiClient The client to forward calls to.
    * @param {function} sendMessage Function to call to send a message. See
    *   {@link TargetMap#constructor} for an explanation.
    * @param {string} targetId The ID of the target to call on.
    */
-  constructor(apiClient, sendMessage, targetId) {
+  constructor(sendMessage, targetId) {
     super();
 
-    /** {ApiClient} The client to forward calls to. */
-    this._apiClient = apiClient;
-
     /** {function} Function to call to send a message. */
-    this._sendMessage = sendMessage;
+    this._sendMessage = TFunction.checkCallable(sendMessage);
 
     /** {string} The ID of the target. */
-    this._targetId = targetId;
+    this._targetId = TargetId.check(targetId);
 
     /**
      * {Map<string, function>} Cached method call handlers, as a map from name
@@ -63,10 +60,7 @@ export default class TargetHandler extends CommonBase {
      */
     this._methods = new Map();
 
-    /** {string} State of readiness, one of `not`, `readying`, or `ready`. */
-    this._readyState = 'not';
-
-    Object.seal(this);
+    Object.freeze(this);
   }
 
   /**
@@ -125,21 +119,17 @@ export default class TargetHandler extends CommonBase {
   get(target_unused, property, receiver_unused) {
     const method = this._methods.get(property);
 
-    if (this._readyState === 'not') {
-      // We're getting accessed but aren't yet fully set up (and aren't already
-      // in the middle of doing so).
-      this._becomeReady();
-    }
-
-    if (method || this._ready) {
+    if (method) {
       return method;
+    } else if (VERBOTEN_METHODS.has(property)) {
+      // This property is on the blacklist of ones to never proxy.
+      return undefined;
     } else {
-      // We're still starting up. As long as it's not explicitly verboten,
-      // assume that this is a valid method, but _don't_ cache it, in case we're
-      // wrong.
-      return VERBOTEN_METHODS.has(property)
-        ? undefined
-        : this._makeMethodHandler(property);
+      // The property is allowed to be proxied. Set up and cache a handler for
+      // it.
+      const result = this._makeMethodHandler(property);
+      this._methods.set(property, result);
+      return result;
     }
   }
 
@@ -238,29 +228,6 @@ export default class TargetHandler extends CommonBase {
    */
   setPrototypeOf(target_unused, prototype_unused) {
     throw Errors.bad_use('Unsupported proxy operation.');
-  }
-
-  /**
-   * Sets up the method handler table. This gets called as a byproduct of the
-   * first property lookup.
-   */
-  async _becomeReady() {
-    if (this._readyState !== 'not') {
-      return;
-    }
-
-    this._readyState = 'readying';
-
-    const schema = await this._apiClient.meta.schemaFor(this._targetId);
-    const methods = this._methods;
-
-    for (const name in schema[this._targetId]) {
-      if (!VERBOTEN_METHODS.has(name)) {
-        methods.set(name, this._makeMethodHandler(name));
-      }
-    }
-
-    this._readyState = 'ready';
   }
 
   /**
