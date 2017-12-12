@@ -10,6 +10,7 @@ import ConnectionError from './ConnectionError';
 import Message from './Message';
 import Response from './Response';
 import SplitKey from './SplitKey';
+import TargetId from './TargetId';
 
 // Register classes for encoding / decoding.
 Codec.theOne.registerClass(CodableError);
@@ -17,4 +18,4 @@ Codec.theOne.registerClass(Message);
 Codec.theOne.registerClass(Response);
 Codec.theOne.registerClass(SplitKey);
 
-export { BaseKey, CodableError, ConnectionError, Message, Response, SplitKey };
+export { BaseKey, CodableError, ConnectionError, Message, Response, SplitKey, TargetId };

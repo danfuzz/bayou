@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TFunction, TString } from 'typecheck';
+import { TargetId } from 'api-common';
+import { TFunction } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
 import TargetHandler from './TargetHandler';
@@ -89,7 +90,7 @@ export default class TargetMap extends CommonBase {
    *   bound to a target.
    */
   getOrNull(id) {
-    TString.nonEmpty(id);
+    TargetId.check(id);
     return this._targets.get(id) || null;
   }
 }

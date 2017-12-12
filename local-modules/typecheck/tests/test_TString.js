@@ -121,7 +121,7 @@ describe('typecheck/TString', () => {
     });
   });
 
-  describe('checkIdentifier()', () => {
+  describe('identifier()', () => {
     it('accepts identifier strings', () => {
       function test(value) {
         assert.strictEqual(TString.identifier(value), value);
@@ -181,7 +181,7 @@ describe('typecheck/TString', () => {
     });
   });
 
-  describe('checkLabel()', () => {
+  describe('label()', () => {
     it('accepts label strings', () => {
       function test(value) {
         assert.strictEqual(TString.label(value), value);

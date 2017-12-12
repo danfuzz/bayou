@@ -7,12 +7,12 @@ import { describe, it } from 'mocha';
 
 import { BearerToken } from 'api-server';
 
-const SECRET_TOKEN = 'Setec Astronomy Setec Astronomy ';
+const SECRET_TOKEN = 'Setec-Astronomy-Setec-Astronomy-';
 
 describe('api-server/BearerToken', () => {
   describe('constructor(secret)', () => {
     it('should reject secrets with length < 32', () => {
-      assert.throws(() => new BearerToken('Setec Astronomy'));
+      assert.throws(() => new BearerToken('Setec-Astronomy'));
     });
 
     it('should return a frozen instane of BearerToken', () => {
@@ -32,26 +32,26 @@ describe('api-server/BearerToken', () => {
   });
 
   describe('sameToken(other)', () => {
-    it('should return false when passed null', () => {
+    it('should return false when passed `null`', () => {
       const token = new BearerToken(SECRET_TOKEN);
 
       assert.isFalse(token.sameToken(null));
     });
 
-    it('should return false when passed undefined', () => {
+    it('should return false when passed `undefined`', () => {
       const token = new BearerToken(SECRET_TOKEN);
 
       assert.isFalse(token.sameToken(undefined));
     });
 
-    it('should return false when passed a token with a different secret key', () => {
+    it('should return `false` when passed a token with a different secret key', () => {
       const token = new BearerToken(SECRET_TOKEN);
       const other = new BearerToken('abcdefghijklmnopqrstuvwxyz012345');
 
       assert.isFalse(token.sameToken(other));
     });
 
-    it('should return true when passed a token with the same secret key', () => {
+    it('should return `true` when passed a token with the same secret key', () => {
       const token = new BearerToken(SECRET_TOKEN);
       const other = new BearerToken(SECRET_TOKEN);
 
@@ -60,7 +60,7 @@ describe('api-server/BearerToken', () => {
   });
 
   describe('sameArrays(array1, array2)', () => {
-    it('should reject arrays that are different lengths', () => {
+    it('should return `false` given arrays that are different lengths', () => {
       const token1 = new BearerToken(SECRET_TOKEN);
       const token2 = new BearerToken(SECRET_TOKEN);
       const token3 = new BearerToken(SECRET_TOKEN);
@@ -84,7 +84,7 @@ describe('api-server/BearerToken', () => {
       assert.throws(() => BearerToken.sameArrays(array1, array2));
     });
 
-    it('should accept identical arrays of BearerTokens', () => {
+    it('should return `true` given identically-constructed arrays of BearerTokens', () => {
       const token1 = new BearerToken(SECRET_TOKEN);
       const token2 = new BearerToken(SECRET_TOKEN);
       const token3 = new BearerToken(SECRET_TOKEN);

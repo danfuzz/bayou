@@ -2,8 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TInt, TString } from 'typecheck';
+import { TInt } from 'typecheck';
 import { CommonBase, Functor } from 'util-common';
+
+import TargetId from './TargetId';
 
 /**
  * The main "envelope" of a message being sent from client to server to requrest
@@ -26,7 +28,7 @@ export default class Message extends CommonBase {
     this._id = TInt.nonNegative(id);
 
     /** {string} ID of the target object. */
-    this._target = TString.nonEmpty(target);
+    this._target = TargetId.check(target);
 
     /**
      * {Functor} The name of the method to call and the arguments to call it
