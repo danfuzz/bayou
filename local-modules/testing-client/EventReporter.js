@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { format } from 'util';
+import { format, inspect } from 'util';
 
 import { CommonBase, ErrorUtil } from 'util-common';
 
@@ -99,9 +99,23 @@ export default class EventReporter extends CommonBase {
 
       // Unit test errors often have interesting auxiliary info. Collect such
       // info separately.
+
       let extras = null;
+
+      if (error.showDiff) {
+        // Handle expected/actual diffing specially. In particular, we don't
+        // want to try to pass nontrivial objects across the client/server
+        // boundary, so stringify them here.
+        extras = {
+          showDiff: true,
+          actual:   inspect(error.actual),
+          expected: inspect(error.expected)
+        };
+      }
+
+      const skipExtras = ['message', 'stack', 'showDiff', 'actual', 'expected'];
       for (const name of Object.getOwnPropertyNames(error)) {
-        if ((name === 'message') || (name === 'stack')) {
+        if (skipExtras.includes(name)) {
           continue;
         } else if (extras === null) {
           extras = {};
