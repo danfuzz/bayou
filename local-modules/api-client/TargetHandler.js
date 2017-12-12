@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { TFunction, TString } from 'typecheck';
 import { CommonBase, Errors, Functor } from 'util-common';
 
 /** {Set<string>} Set of methods which never get proxied. */
@@ -47,10 +48,10 @@ export default class TargetHandler extends CommonBase {
     super();
 
     /** {function} Function to call to send a message. */
-    this._sendMessage = sendMessage;
+    this._sendMessage = TFunction.checkCallable(sendMessage);
 
     /** {string} The ID of the target. */
-    this._targetId = targetId;
+    this._targetId = TString.nonEmpty(targetId);
 
     /**
      * {Map<string, function>} Cached method call handlers, as a map from name

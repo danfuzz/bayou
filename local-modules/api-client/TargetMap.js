@@ -73,7 +73,7 @@ export default class TargetMap extends CommonBase {
   get(id) {
     const result = this.getOrNull(id);
 
-    if (!result) {
+    if (result === null) {
       throw Errors.bad_use(`No such target: ${id}`);
     }
 
@@ -89,7 +89,7 @@ export default class TargetMap extends CommonBase {
    *   bound to a target.
    */
   getOrNull(id) {
-    TString.check(id);
+    TString.nonEmpty(id);
     return this._targets.get(id) || null;
   }
 }
