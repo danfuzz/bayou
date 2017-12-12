@@ -58,7 +58,7 @@ export default class TargetHandler extends CommonBase {
      */
     this._methods = new Map();
 
-    Object.seal(this);
+    Object.freeze(this);
   }
 
   /**
