@@ -167,7 +167,7 @@ export default class ApiClient extends CommonBase {
         // Successful auth.
         this._log.info('Authed:', id);
         this._pendingAuths.delete(id); // It's no longer pending.
-        return this._targets.addTarget(id);
+        return this._targets.add(id);
       } catch (error) {
         // Trouble along the way. Clean out the pending auth, and propagate the
         // error.

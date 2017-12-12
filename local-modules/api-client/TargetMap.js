@@ -50,7 +50,7 @@ export default class TargetMap extends CommonBase {
    * @param {string} id Target ID.
    * @returns {Proxy} The newly-bound proxy.
    */
-  addTarget(id) {
+  add(id) {
     if (this.getOrNull(id) !== null) {
       throw Errors.bad_use(`Already bound: ${id}`);
     }
@@ -98,6 +98,6 @@ export default class TargetMap extends CommonBase {
     this._pendingAuths = new Map();
 
     // Set up the standard initial map contents.
-    this.addTarget('meta');
+    this.add('meta');
   }
 }
