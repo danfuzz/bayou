@@ -63,9 +63,6 @@ export default class TargetHandler extends CommonBase {
      */
     this._methods = new Map();
 
-    /** {string} State of readiness, one of `not`, `readying`, or `ready`. */
-    this._readyState = 'not';
-
     Object.seal(this);
   }
 
@@ -125,21 +122,17 @@ export default class TargetHandler extends CommonBase {
   get(target_unused, property, receiver_unused) {
     const method = this._methods.get(property);
 
-    if (this._readyState === 'not') {
-      // We're getting accessed but aren't yet fully set up (and aren't already
-      // in the middle of doing so).
-      this._becomeReady();
-    }
-
-    if (method || this._ready) {
+    if (method) {
       return method;
+    } else if (VERBOTEN_METHODS.has(property)) {
+      // This property is on the blacklist of ones to never proxy.
+      return undefined;
     } else {
-      // We're still starting up. As long as it's not explicitly verboten,
-      // assume that this is a valid method, but _don't_ cache it, in case we're
-      // wrong.
-      return VERBOTEN_METHODS.has(property)
-        ? undefined
-        : this._makeMethodHandler(property);
+      // The property is allowed to be proxied. Set up and cache a handler for
+      // it.
+      const result = this._makeMethodHandler(property);
+      this._methods.set(property, result);
+      return result;
     }
   }
 
@@ -238,29 +231,6 @@ export default class TargetHandler extends CommonBase {
    */
   setPrototypeOf(target_unused, prototype_unused) {
     throw Errors.bad_use('Unsupported proxy operation.');
-  }
-
-  /**
-   * Sets up the method handler table. This gets called as a byproduct of the
-   * first property lookup.
-   */
-  async _becomeReady() {
-    if (this._readyState !== 'not') {
-      return;
-    }
-
-    this._readyState = 'readying';
-
-    const schema = await this._apiClient.meta.schemaFor(this._targetId);
-    const methods = this._methods;
-
-    for (const name in schema[this._targetId]) {
-      if (!VERBOTEN_METHODS.has(name)) {
-        methods.set(name, this._makeMethodHandler(name));
-      }
-    }
-
-    this._readyState = 'ready';
   }
 
   /**
