@@ -73,9 +73,9 @@ export default class ApiClient extends CommonBase {
 
     /**
      * {TargetMap} Map of names to target proxies. See {@link
-     * TargetMap#constructor} for details about the second argument.
+     * TargetMap#constructor} for details about the argument.
      */
-    this._targets = new TargetMap(this, this._send.bind(this));
+    this._targets = new TargetMap(this._send.bind(this));
 
     /**
      * {Map<string, Promise<Proxy>>} Map from target IDs to promises of their

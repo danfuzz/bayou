@@ -5,7 +5,6 @@
 import { TFunction, TString } from 'typecheck';
 import { CommonBase, Errors } from 'util-common';
 
-import ApiClient from './ApiClient';
 import TargetHandler from './TargetHandler';
 
 /**
@@ -18,18 +17,14 @@ export default class TargetMap extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {ApiClient} apiClient The client to forward calls to.
    * @param {function} sendMessage Function to call to send a message. This is
-   *   bound to the private `_send()` method on `apiClient`. (This arrangement
-   *   is done, instead of making a public `send()` method on `ApiClient`, to
-   *   make it clear that the right way to send messages is via the exposed
-   *   proxies.)
+   *   bound to the private `_send()` method on an instance of
+   *   {@link ApiClient}. (This arrangement is done, instead of making a public
+   *   `send()` method on {@link ApiClient}, so as to make it clear that the
+   *   right way to send messages is via the exposed proxies.)
    */
-  constructor(apiClient, sendMessage) {
+  constructor(sendMessage) {
     super();
-
-    /** {ApiClient} The client to forward calls to. */
-    this._apiClient = ApiClient.check(apiClient);
 
     /** {function} Function to call to send a message. */
     this._sendMessage = TFunction.checkCallable(sendMessage);
