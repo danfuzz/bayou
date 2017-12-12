@@ -77,6 +77,13 @@ export default class ApiClient extends CommonBase {
      */
     this._targets = new TargetMap(this, this._send.bind(this));
 
+    /**
+     * {Map<string, Promise<Proxy>>} Map from target IDs to promises of their
+     * proxy, for each ID currently in the middle of being authorized. Used to
+     * avoid re-issuing authorization requests.
+     */
+    this._pendingAuths = new Map();
+
     // Initialize the active connection fields (described above).
     this._resetConnection();
   }
@@ -115,8 +122,9 @@ export default class ApiClient extends CommonBase {
    * target (that is, `this.getTarget(key)`) can be accessed without further
    * authorization.
    *
-   * If `key.id` is already mapped by this instance, the corresponding target
-   * is returned directly without further authorization. (That is, this method
+   * If `key.id` is already mapped as a target, it is returned directly, without
+   * further authorization. If it is in the middle of being authorized, the
+   * existing pending promise for the target is returned. (That is, this method
    * is idempotent.)
    *
    * @param {BaseKey} key Key to authorize with.
@@ -125,8 +133,52 @@ export default class ApiClient extends CommonBase {
    *   authorization is complete.
    */
   authorizeTarget(key) {
-    // Just pass through to the target map.
-    return this._targets.authorizeTarget(key);
+    BaseKey.check(key);
+
+    const id   = key.id;
+    const meta = this.meta;
+    let result;
+
+    result = this._targets.getOrNull(id);
+    if (result !== null) {
+      // The target is already authorized and bound. Return it.
+      return result;
+    }
+
+    result = this._pendingAuths.get(id);
+    if (result) {
+      // We have already initiated authorization on this target. Return the
+      // promise from the original initiation.
+      this._log.info('Already authing:', id);
+      return result;
+    }
+
+    // It's not yet bound as a target, and authorization isn't currently in
+    // progress.
+
+    result = (async () => {
+      try {
+        const challenge = await meta.makeChallenge(id);
+        const response  = key.challengeResponseFor(challenge);
+
+        this._log.info('Got challenge:', id, challenge);
+        await meta.authWithChallengeResponse(challenge, response);
+
+        // Successful auth.
+        this._log.info('Authed:', id);
+        this._pendingAuths.delete(id); // It's no longer pending.
+        return this._targets.addTarget(id);
+      } catch (error) {
+        // Trouble along the way. Clean out the pending auth, and propagate the
+        // error.
+        this._log.error('Auth failed:', id);
+        this._pendingAuths.delete(id);
+        throw error;
+      }
+    })();
+
+    this._pendingAuths.set(id, result); // It's now pending.
+    return result;
   }
 
   /**
