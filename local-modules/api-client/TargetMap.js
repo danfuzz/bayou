@@ -51,6 +51,23 @@ export default class TargetMap extends CommonBase {
   }
 
   /**
+   * Creates and binds a proxy for the target with the given ID. Returns the
+   * so-created proxy.
+   *
+   * @param {string} id Target ID.
+   * @returns {Proxy} The newly-bound proxy.
+   */
+  addTarget(id) {
+    if (this.getOrNull(id) !== null) {
+      throw Errors.bad_use(`Already bound: ${id}`);
+    }
+
+    const result = TargetHandler.makeProxy(this._sendMessage, id);
+    this._targets.set(id, result);
+    return result;
+  }
+
+  /**
    * Performs a challenge-response authorization for a given key. When the
    * returned promise resolves successfully, that means that the corresponding
    * target (that is, the target with id `key.id`) can be accessed without
@@ -99,7 +116,7 @@ export default class TargetMap extends CommonBase {
         // Successful auth.
         log.info('Authed:', id);
         this._pendingAuths.delete(id); // It's no longer pending.
-        return this._addTarget(id);
+        return this.addTarget(id);
       } catch (error) {
         // Trouble along the way. Clean out the pending auth, and propagate the
         // error.
@@ -151,23 +168,6 @@ export default class TargetMap extends CommonBase {
     this._pendingAuths = new Map();
 
     // Set up the standard initial map contents.
-    this._addTarget('meta');
-  }
-
-  /**
-   * Creates and binds a proxy for the target with the given ID. Returns the
-   * so-created proxy.
-   *
-   * @param {string} id Target ID.
-   * @returns {Proxy} The newly-bound proxy.
-   */
-  _addTarget(id) {
-    if (this.getOrNull(id) !== null) {
-      throw Errors.bad_use(`Already bound: ${id}`);
-    }
-
-    const result = TargetHandler.makeProxy(this._sendMessage, id);
-    this._targets.set(id, result);
-    return result;
+    this.addTarget('meta');
   }
 }
