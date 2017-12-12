@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { format } from 'util';
+import { format, inspect } from 'util';
 
 import { CommonBase, ErrorUtil } from 'util-common';
 
@@ -89,13 +89,33 @@ export default class EventReporter extends CommonBase {
       // pulled out separately, below).
       const pureError = new Error(error.message);
       pureError.stack = error.stack;
-      const trace = ErrorUtil.fullTrace(pureError);
+      const fullTrace = ErrorUtil.fullTrace(pureError);
 
-      // Unit test errors often have interesting auxiliary info. Collect them
-      // separately.
+      // Trim off the part of the stack trace that looks like the test harness.
+      // Specifically, Mocha (as of this writing) has a method
+      // `Test.Runnable.run` which calls a function `callFn`. If this ever
+      // changes, then this trimming code will need to be updated.
+      const trace = fullTrace.replace(/\n +callFn[^\n]+\n +Test\.Runnable\.run[^]*$/, '\n');
+
+      // Unit test errors often have interesting auxiliary info. Collect such
+      // info separately.
+
       let extras = null;
+
+      if (error.showDiff) {
+        // Handle expected/actual diffing specially. In particular, we don't
+        // want to try to pass nontrivial objects across the client/server
+        // boundary, so stringify them here.
+        extras = {
+          showDiff: true,
+          actual:   inspect(error.actual),
+          expected: inspect(error.expected)
+        };
+      }
+
+      const skipExtras = ['message', 'stack', 'showDiff', 'actual', 'expected'];
       for (const name of Object.getOwnPropertyNames(error)) {
-        if ((name === 'message') || (name === 'stack')) {
+        if (skipExtras.includes(name)) {
           continue;
         } else if (extras === null) {
           extras = {};

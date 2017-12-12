@@ -179,9 +179,7 @@ export default class EventReceiver extends CommonBase {
     if (details.console.length !== 0) {
       anyExtra = true;
       this._log('');
-      for (const line of details.console) {
-        this._log(`${prefix}${line}`);
-      }
+      this._prefixLog(prefix, details.console);
     }
 
     if (details.error !== null) {
@@ -190,20 +188,43 @@ export default class EventReceiver extends CommonBase {
       anyExtra = true;
       this._log('');
 
-      for (const line of trace.split('\n')) {
-        this._log(`${prefix}${line}`);
-      }
+      this._prefixLog(prefix, trace.replace(/\n+$/, ''));
 
       if (extras !== null) {
-        this._log('');
-        for (const line of inspect(extras).split('\n')) {
-          this._log(`${prefix}${line}`);
+        if (extras.showDiff) {
+          // **TODO:** Produce a real diff.
+          this._log('');
+          this._log(`${prefix}Actual:`);
+          this._prefixLog(`${prefix}  `, extras.actual);
+          this._log('');
+          this._log(`${prefix}Expected:`);
+          this._prefixLog(`${prefix}  `, extras.expected);
+          delete extras.showDiff;
+          delete extras.actual;
+          delete extras.expected;
+        }
+
+        if (Object.keys(extras).length !== 0) {
+          this._log('');
+          this._prefixLog(prefix, inspect(extras));
         }
       }
     }
 
     if (anyExtra) {
       this._log('');
+    }
+  }
+
+  /**
+   * Logs the given string, with each line prefixed as given.
+   *
+   * @param {string} prefix The per-line prefix.
+   * @param {string} value The string to log.
+   */
+  _prefixLog(prefix, value) {
+    for (const line of value.split('\n')) {
+      this._log(`${prefix}${line}`);
     }
   }
 }
