@@ -36,11 +36,11 @@ export default class TargetMap extends CommonBase {
 
     /**
      * {Map<string, TargetHandler>} The targets being provided, as a map from ID
-     * to proxy. Initialized in `reset()`.
+     * to proxy.
      */
-    this._targets = null;
+    this._targets = new Map();
 
-    this.reset();
+    Object.freeze(this);
   }
 
   /**
@@ -58,6 +58,13 @@ export default class TargetMap extends CommonBase {
     const result = TargetHandler.makeProxy(this._sendMessage, id);
     this._targets.set(id, result);
     return result;
+  }
+
+  /**
+   * Clears out the targets of this instance.
+   */
+  clear() {
+    this._targets.clear();
   }
 
   /**
@@ -87,17 +94,5 @@ export default class TargetMap extends CommonBase {
   getOrNull(id) {
     TString.check(id);
     return this._targets.get(id) || null;
-  }
-
-  /**
-   * Resets the targets of this instance. This is used during instance init
-   * as well as when a connection gets reset.
-   */
-  reset() {
-    this._targets      = new Map();
-    this._pendingAuths = new Map();
-
-    // Set up the standard initial map contents.
-    this.add('meta');
   }
 }

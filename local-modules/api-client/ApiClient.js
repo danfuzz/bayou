@@ -378,7 +378,8 @@ export default class ApiClient extends CommonBase {
     this._nextId          = 0;
     this._callbacks       = {};
     this._pendingMessages = [];
-    this._targets.reset();
+    this._targets.clear();
+    this._targets.add('meta'); // The one guaranteed target.
   }
 
   /**
