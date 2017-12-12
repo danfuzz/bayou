@@ -40,7 +40,8 @@ export default class TargetMap extends CommonBase {
 
   /**
    * Creates and binds a proxy for the target with the given ID. Returns the
-   * so-created proxy.
+   * so-created proxy. It is an error to try to add the same `id` more than
+   * once (except if {@link #clear} is called in the mean time).
    *
    * @param {string} id Target ID.
    * @returns {Proxy} The newly-bound proxy.
@@ -63,7 +64,8 @@ export default class TargetMap extends CommonBase {
   }
 
   /**
-   * Gets the proxy for the target with the given ID.
+   * Gets the proxy for the target with the given ID. It is an error to pass an
+   * `id` that is not bound.
    *
    * @param {string} id The target ID.
    * @returns {Proxy} The corresponding proxy.
