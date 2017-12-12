@@ -27,29 +27,24 @@ export default class TargetHandler extends CommonBase {
   /**
    * Makes a proxy that is handled by an instance of this class.
    *
-   * @param {ApiClient} apiClient The client to forward calls to.
    * @param {function} sendMessage Function to call to send a message. See
    *   {@link TargetMap#constructor} for an explanation.
    * @param {string} targetId The ID of the target to call on.
    * @returns {Proxy} An appropriately-constructed proxy object.
    */
-  static makeProxy(apiClient, sendMessage, targetId) {
-    return new Proxy(Object.freeze({}), new TargetHandler(apiClient, sendMessage, targetId));
+  static makeProxy(sendMessage, targetId) {
+    return new Proxy(Object.freeze({}), new TargetHandler(sendMessage, targetId));
   }
 
   /**
    * Constructs an instance.
    *
-   * @param {ApiClient} apiClient The client to forward calls to.
    * @param {function} sendMessage Function to call to send a message. See
    *   {@link TargetMap#constructor} for an explanation.
    * @param {string} targetId The ID of the target to call on.
    */
-  constructor(apiClient, sendMessage, targetId) {
+  constructor(sendMessage, targetId) {
     super();
-
-    /** {ApiClient} The client to forward calls to. */
-    this._apiClient = apiClient;
 
     /** {function} Function to call to send a message. */
     this._sendMessage = sendMessage;

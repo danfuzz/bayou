@@ -166,7 +166,7 @@ export default class TargetMap extends CommonBase {
       throw Errors.bad_use(`Already bound: ${id}`);
     }
 
-    const result = TargetHandler.makeProxy(this._apiClient, this._sendMessage, id);
+    const result = TargetHandler.makeProxy(this._sendMessage, id);
     this._targets.set(id, result);
     return result;
   }
