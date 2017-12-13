@@ -8,8 +8,9 @@ import { CommonBase, Functor } from 'util-common';
 import TargetId from './TargetId';
 
 /**
- * The main "envelope" of a message being sent from client to server to requrest
- * action.
+ * Message being sent from client to server to requrest action. This includes
+ * a message ID, target address, and a main payload indicating a method name
+ * and arguments.
  */
 export default class Message extends CommonBase {
   /**
