@@ -88,8 +88,7 @@ export default class ClientSink extends BaseSink {
    * @returns {string} The prefix.
    */
   _makePrefix(level, tag) {
-    const levelStr = ((level === 'info') || (level === '')) ? '' : ` ${level[0].toUpperCase()}`;
-    const text     = `[${tag}${levelStr}]`;
+    const text = BaseSink.makePrefix(level, tag);
 
     let prefixColor;
     switch (level) {

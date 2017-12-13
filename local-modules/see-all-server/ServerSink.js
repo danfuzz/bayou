@@ -94,7 +94,7 @@ export default class ServerSink extends BaseSink {
    * @param {...*} message Message to log.
    */
   log(nowMsec_unused, level, tag, ...message) {
-    const prefix = this._makePrefix(tag, level);
+    const prefix = this._makePrefix(level, tag);
 
     // Make a unified string of the entire message.
     let text = '';
@@ -188,7 +188,7 @@ export default class ServerSink extends BaseSink {
   time(nowMsec_unused, utcString, localString) {
     utcString = chalk.blue.bold(utcString);
     localString  = chalk.blue.dim.bold(localString);
-    const prefix = this._makePrefix('time');
+    const prefix = this._makePrefix('', 'time');
 
     this._log(`${prefix}${utcString} / ${localString}`);
   }
@@ -198,14 +198,13 @@ export default class ServerSink extends BaseSink {
    * (optional). Also updates the instance fields that track the observed
    * prefix lengths.
    *
+   * @param {string} level The severity level.
    * @param {string} tag The component tag.
-   * @param {string} [level = ''] The severity level.
    * @returns {string} The prefix, including coloring and padding.
    */
-  _makePrefix(tag, level = '') {
-    const levelStr = ((level === 'info') || (level === '')) ? '' : ` ${level[0].toUpperCase()}`;
-    let   text     = `[${tag}${levelStr}]`;
-    const length   = text.length + 1; // `+1` for the space at the end.
+  _makePrefix(level, tag) {
+    let   text   = BaseSink.makePrefix(level, tag);
+    const length = text.length + 1; // `+1` for the space at the end.
 
     // Color the prefix according to level.
     switch (level) {

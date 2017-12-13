@@ -56,8 +56,9 @@ export default class RecentSink extends BaseSink {
    *   timezone.
    */
   time(nowMsec, utcString, localString) {
-    const tag = 'time';
-    const details = { nowMsec, tag, utcString, localString };
+    const level   = '';
+    const tag     = 'time';
+    const details = { nowMsec, level, tag, utcString, localString };
     this._log.push(details);
 
     // Trim the log.
@@ -116,30 +117,28 @@ export default class RecentSink extends BaseSink {
    * @returns {string} HTML string form for the entry.
    */
   static _htmlLine(log) {
-    let tag, body;
+    let prefix = BaseSink.makePrefix(log.level, log.tag);
+    let body;
 
     if (log.tag === 'time') {
       const utcString = chalk.blue.bold(log.utcString);
       const localString = chalk.blue.dim.bold(log.localString);
-      tag = '[time]';
       body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;
     } else {
-      const levelStr = (log.level === 'info') ? '' : ` ${log.level}`;
-      tag = `[${log.tag}${levelStr}]`;
       body = log.message;
       body = body.replace(/(^\n+)|(\n+$)/g, ''); // Trim leading and trailing newlines.
     }
 
     // Color the prefix according to level.
     switch (log.level) {
-      case 'error': { tag = chalk.red.bold(tag);    break; }
-      case 'warn':  { tag = chalk.yellow.bold(tag); break; }
-      default:      { tag = chalk.dim.bold(tag);    break; }
+      case 'error': { prefix = chalk.red.bold(prefix);    break; }
+      case 'warn':  { prefix = chalk.yellow.bold(prefix); break; }
+      default:      { prefix = chalk.dim.bold(prefix);    break; }
     }
 
-    const tagHtml = ansiHtml(tag);
-    const bodyHtml = ansiHtml(body);
+    const prefixHtml = ansiHtml(prefix);
+    const bodyHtml   = ansiHtml(body);
 
-    return `<tr><td>${tagHtml}</td><td><pre>${bodyHtml}</pre></td>`;
+    return `<tr><td>${prefixHtml}</td><td><pre>${bodyHtml}</pre></td>`;
   }
 }
