@@ -68,9 +68,9 @@ export default class ApiLog extends CommonBase {
     };
 
     if (msg !== null) {
-      details.id      = msg.id;
-      details.target  = msg.target;
-      details.payload = this._codec.encodeData(msg.payload);
+      details.id       = msg.id;
+      details.targetId = msg.targetId;
+      details.payload  = this._codec.encodeData(msg.payload);
     }
 
     if (details.ok) {

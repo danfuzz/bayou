@@ -223,7 +223,7 @@ export default class Connection extends CommonBase {
    * @returns {*} Whatever the called method returns.
    */
   async _actOnMessage(msg) {
-    const target = this.getTarget(msg.target);
+    const target = this.getTarget(msg.targetId);
 
     activeNow = this;
     try {

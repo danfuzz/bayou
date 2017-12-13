@@ -14,6 +14,21 @@ import { CommonBase } from 'util-common';
  */
 export default class BaseSink extends CommonBase {
   /**
+   * Constructs a standard-form prefix string for the given level and tag.
+   *
+   * @param {string} level Severity level. Ignored if `tag === 'time'`.
+   * @param {string} tag Name of the component associated with the message.
+   * @returns {string} The constructed prefix string.
+   */
+  static makePrefix(level, tag) {
+    const levelStr = ((level === 'info') || (level === ''))
+      ? ''
+      : ` ${level[0].toUpperCase()}`;
+
+    return `[${tag}${levelStr}]`;
+  }
+
+  /**
    * "Stringifies" message arguments. Given a list of arguments as originally
    * passed to `log()` (or similar), returns the preferred unified string form.
    *

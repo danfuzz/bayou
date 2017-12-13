@@ -59,10 +59,10 @@ describe('api-common/Message', () => {
   });
 
   describe('.id', () => {
-    it('should return the constructed id', () => {
-      const msg = new Message(123, 'target', VALID_FUNCTOR);
+    it('should return the constructed message id', () => {
+      const msg = new Message(1234, 'target', VALID_FUNCTOR);
 
-      assert.strictEqual(msg.id, 123);
+      assert.strictEqual(msg.id, 1234);
     });
   });
 
@@ -74,11 +74,11 @@ describe('api-common/Message', () => {
     });
   });
 
-  describe('.target', () => {
-    it('should return the constructed target', () => {
-      const msg = new Message(123, 'target', VALID_FUNCTOR);
+  describe('.targetId', () => {
+    it('should return the constructed target ID', () => {
+      const msg = new Message(123, 'target-yep', VALID_FUNCTOR);
 
-      assert.strictEqual(msg.target, 'target');
+      assert.strictEqual(msg.targetId, 'target-yep');
     });
   });
 });

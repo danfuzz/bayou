@@ -4,6 +4,7 @@
 
 import ansiHtml from 'ansi-html';
 import chalk from 'chalk';
+import escapeHtml from 'escape-html';
 
 import { BaseSink, SeeAll } from 'see-all';
 import { TInt } from 'typecheck';
@@ -56,8 +57,9 @@ export default class RecentSink extends BaseSink {
    *   timezone.
    */
   time(nowMsec, utcString, localString) {
-    const tag = 'time';
-    const details = { nowMsec, tag, utcString, localString };
+    const level   = '';
+    const tag     = 'time';
+    const details = { nowMsec, level, tag, utcString, localString };
     this._log.push(details);
 
     // Trim the log.
@@ -85,27 +87,24 @@ export default class RecentSink extends BaseSink {
   get htmlContents() {
     const result = [];
 
+    result.push('<style>');
     result.push(
-      '<style>\n' +
       'table { border-collapse: collapse; border-spacing: 0; ' +
       '  width: 90vw; margin-left: 5vw; margin-right: 5vw; }\n' +
-      'td { padding-bottom: 0.1em; padding-right: 1em; }\n' +
-      'td:first-child { width: 15%; }\n' +
-      'pre { white-space: pre-wrap; margin: 0; }\n' +
-      '</style>'
+      'tr:nth-child(even) { background-color: #f8f8f8; }\n' +
+      'td { padding-bottom: 0.2em; padding-left: 0.5em; }\n' +
+      'td:first-child { width: 15%; vertical-align: top; padding-right: 1em; ' +
+      '  border-right-color: #ddd; border-right-width: 1pt; border-right-style: solid }\n' +
+      'pre { white-space: pre-wrap; margin: 0; }'
     );
+    result.push('</style>');
 
-    result.push(
-      '<table>' +
-      //'<colgroup><col style="width:20%"><col style="width:80%"></colgroup>' +
-      ''
-    );
-
+    result.push('<table>');
     for (const l of this._log) {
       result.push(RecentSink._htmlLine(l));
     }
-
     result.push('</table>');
+
     return result.join('\n');
   }
 
@@ -116,30 +115,28 @@ export default class RecentSink extends BaseSink {
    * @returns {string} HTML string form for the entry.
    */
   static _htmlLine(log) {
-    let tag, body;
+    let prefix = BaseSink.makePrefix(log.level, log.tag);
+    let body;
 
     if (log.tag === 'time') {
       const utcString = chalk.blue.bold(log.utcString);
       const localString = chalk.blue.dim.bold(log.localString);
-      tag = '[time]';
       body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;
     } else {
-      const levelStr = (log.level === 'info') ? '' : ` ${log.level}`;
-      tag = `[${log.tag}${levelStr}]`;
       body = log.message;
       body = body.replace(/(^\n+)|(\n+$)/g, ''); // Trim leading and trailing newlines.
     }
 
     // Color the prefix according to level.
     switch (log.level) {
-      case 'error': { tag = chalk.red.bold(tag);    break; }
-      case 'warn':  { tag = chalk.yellow.bold(tag); break; }
-      default:      { tag = chalk.dim.bold(tag);    break; }
+      case 'error': { prefix = chalk.red.bold(prefix);    break; }
+      case 'warn':  { prefix = chalk.yellow.bold(prefix); break; }
+      default:      { prefix = chalk.dim.bold(prefix);    break; }
     }
 
-    const tagHtml = ansiHtml(tag);
-    const bodyHtml = ansiHtml(body);
+    const prefixHtml = ansiHtml(escapeHtml(prefix));
+    const bodyHtml   = ansiHtml(escapeHtml(body));
 
-    return `<tr><td>${tagHtml}</td><td><pre>${bodyHtml}</pre></td>`;
+    return `<tr><td>${prefixHtml}</td><td><pre>${bodyHtml}</pre></td>`;
   }
 }
