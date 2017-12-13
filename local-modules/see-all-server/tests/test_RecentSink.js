@@ -30,7 +30,7 @@ describe('see-all-server/RecentSink', () => {
       const contents = sink.contents;
       assert.lengthOf(contents, 1);
       assert.deepEqual(contents[0],
-        { nowMsec: 80808, tag: 'time', utcString: 'utc-time', localString: 'local-time' });
+        { nowMsec: 80808, level: '', tag: 'time', utcString: 'utc-time', localString: 'local-time' });
     });
   });
 
