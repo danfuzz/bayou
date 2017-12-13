@@ -430,7 +430,8 @@ function build-server {
         fi
     done
 
-    "${compile}" "--in-dir=${fromDir}" "--out-dir=${toDir}" "${srcDirs[@]}"|| return 1
+    "${compile}" "--in-dir=${fromDir}" "--out-dir=${toDir}" "${srcDirs[@]}" \
+    || return 1
 
     # Copy everything else over to the final `server` directory as-is. We use
     # the `--update` option to avoid clobbering those Babel-compiled files we
