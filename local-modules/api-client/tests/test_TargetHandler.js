@@ -10,6 +10,30 @@ import { Functor } from 'util-common';
 import TargetHandler from 'api-client/TargetHandler';
 
 describe('api-common/TargetHandler', () => {
+  describe('makeProxy()', () => {
+    it('should make a proxy that wraps an appropriately-contructed instance of this class', () => {
+      let gotTargetId;
+      let gotFunctor;
+      function sendMessage(targetId, functor) {
+        gotTargetId = targetId;
+        gotFunctor = functor;
+        return `WOO ${targetId}+${functor.name}`;
+      }
+
+      function test(targetId, name, ...args) {
+        const proxy = TargetHandler.makeProxy(sendMessage, targetId);
+
+        const callResult = proxy[name](...args);
+        assert.strictEqual(callResult, `WOO ${targetId}+${name}`);
+        assert.strictEqual(gotTargetId, targetId);
+        assert.isTrue(gotFunctor.equals(new Functor(name, ...args)));
+      }
+
+      test('what', 'is', 'the', 'meaning', 'of', 'this');
+      test('do', 'you', ['have', 'stairs', 'in', 'your', 'house']);
+    });
+  });
+
   describe('constructor', () => {
     it('should accept valid arguments', () => {
       const func = () => { /*empty*/ };
