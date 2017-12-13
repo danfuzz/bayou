@@ -419,18 +419,18 @@ function build-server {
     # Run Babel on all of the local source files, storing them next to the
     # imported and patched modules.
 
-    # Process the main `server` directory.
-    "${compile}" "${fromDir}" "${toDir}" || return 1
+    # Start with the main `server` source directory.
+    local srcDirs=("${fromDir}")
 
-    # Process each of the local modules that is used by `server`.
+    # Add each of the local modules that is used by `server`.
     local name
     for name in $(local-module-names); do
         if [[ -d "${fromDir}/node_modules/${name}" ]]; then
-            "${compile}" "${fromDir}/node_modules/${name}" \
-                "${toDir}/node_modules/${name}" \
-                || return 1
+            srcDirs+=("${fromDir}/node_modules/${name}")
         fi
     done
+
+    "${compile}" "--in-dir=${fromDir}" "--out-dir=${toDir}" "${srcDirs[@]}"|| return 1
 
     # Copy everything else over to the final `server` directory as-is. We use
     # the `--update` option to avoid clobbering those Babel-compiled files we
