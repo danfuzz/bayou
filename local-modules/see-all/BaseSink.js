@@ -4,7 +4,7 @@
 
 import { inspect } from 'util';
 
-import { CommonBase } from 'util-common';
+import { CommonBase, ErrorUtil } from 'util-common';
 
 /**
  * Base class for logging sink. Subclasses must implement `log()` and `time()`.
@@ -13,6 +13,39 @@ import { CommonBase } from 'util-common';
  * methods to implement be named `_impl_*`.
  */
 export default class BaseSink extends CommonBase {
+  /**
+   * Returns a string form for the given value, suitable for logging. Among
+   * other things:
+   *
+   * * It leaves strings as-is (doesn't quote them), on the assumption that
+   *   they are meant to be literal text.
+   * * It tries to make a high-fidelity string given an `Error`, including the
+   *   message, the stack trace, and any "causes" (if it happens to be an
+   *   {@link InfoError}).
+   * * Result-initial newlines are stripped (if they would otherwise be
+   *   present).
+   * * For a single-line result, all result-final newlines are stripped.
+   * * For a multi-line result, exactly one result-final newline is included.
+   *
+   * @param {*} value Value to convert.
+   * @returns {string} String form of `value`.
+   */
+  static inspectValue(value) {
+    let raw;
+    if (typeof value === 'string') {
+      raw = value;
+    } else if (value instanceof Error) {
+      raw = ErrorUtil.fullTrace(value);
+    } else {
+      raw = inspect(value);
+    }
+
+    // Trim off initial and trailing newlines.
+    const trimmed = raw.replace(/(^\n+|\n+$)/g, '');
+
+    return /\n/.test(trimmed) ? `${trimmed}\n` : trimmed;
+  }
+
   /**
    * Constructs a standard-form prefix string for the given level and tag.
    *
@@ -31,6 +64,9 @@ export default class BaseSink extends CommonBase {
   /**
    * "Stringifies" message arguments. Given a list of arguments as originally
    * passed to `log()` (or similar), returns the preferred unified string form.
+   * This concatenates all arguments, separating single-line arguments from
+   * each other with a single space, and newline-separating multi-line arguments
+   * (so that each ends up on its own line).
    *
    * @param {...*} message Original message arguments.
    * @returns {string} Unified string form.
@@ -38,9 +74,7 @@ export default class BaseSink extends CommonBase {
   static stringifyMessage(...message) {
     // For any items in `message` that aren't strings, use `inspect()` to
     // stringify them.
-    message = message.map((x) => {
-      return (typeof x === 'string') ? x : inspect(x);
-    });
+    message = message.map(x => BaseSink.inspectValue(x));
 
     // Join the arguments together with spaces, et voila!
     return message.join(' ');

@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import chalk from 'chalk';
-import { format, inspect } from 'util';
+import { format } from 'util';
 
 import { BaseSink, Logger, SeeAll } from 'see-all';
 import { TFunction } from 'typecheck';
@@ -109,8 +109,8 @@ export default class ServerSink extends BaseSink {
         // Convert the object to a string. If it's a single line, just add it
         // to the text inline. If it's multiple lines, make sure it all ends up
         // on its own lines.
-        m = ServerSink._inspect(m);
-        if (/\n/.test(m)) {
+        m = BaseSink.inspectValue(m);
+        if (/\n$/.test(m)) {
           text += `${atLineStart ? '' : '\n'}${m}\n`;
           atLineStart = true;
         } else {
@@ -253,19 +253,5 @@ export default class ServerSink extends BaseSink {
     }
 
     return Math.max(process.stdout.getWindowSize()[0] || 80, 80);
-  }
-
-  /**
-   * Returns a string form for the given value, suitable for logging. The main
-   * point of this method is to do something better than `inspect()` for `Error`
-   * instances.
-   *
-   * @param {*} value Value to convert.
-   * @returns {string} String form of `value`.
-   */
-  static _inspect(value) {
-    return (value instanceof Error)
-      ? ErrorUtil.fullTrace(value)
-      : inspect(value);
   }
 }
