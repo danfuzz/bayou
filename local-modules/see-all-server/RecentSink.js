@@ -4,6 +4,7 @@
 
 import ansiHtml from 'ansi-html';
 import chalk from 'chalk';
+import escapeHtml from 'escape-html';
 
 import { BaseSink, SeeAll } from 'see-all';
 import { TInt } from 'typecheck';
@@ -133,8 +134,8 @@ export default class RecentSink extends BaseSink {
       default:      { prefix = chalk.dim.bold(prefix);    break; }
     }
 
-    const prefixHtml = ansiHtml(prefix);
-    const bodyHtml   = ansiHtml(body);
+    const prefixHtml = ansiHtml(escapeHtml(prefix));
+    const bodyHtml   = ansiHtml(escapeHtml(body));
 
     return `<tr><td>${prefixHtml}</td><td><pre>${bodyHtml}</pre></td>`;
   }
