@@ -29,31 +29,15 @@ export default class ClientSink extends BaseSink {
    * @param {...*} message Message to log.
    */
   log(nowMsec_unused, level, tag, ...message) {
-    const prefix = `[${tag} ${level}]`;
-
-    // The browser's `console` methods _mostly_ do the right thing with regard
-    // to providing distinguishing markings and stack traces when appropriate.
-    // We just disagree about `debug`, so in that case we include the message
-    // and a trace in a "group."
+    const [prefixFormat, ...args] = this._makePrefix(level, tag);
+    const formatStr = [prefixFormat]; // We append to this array and `args`.
 
     let logMethod;
-    let prefixColor;
     switch (level) {
-      case 'error': { logMethod = 'error'; prefixColor = '#a44'; break; }
-      case 'warn':  { logMethod = 'warn';  prefixColor = '#a70'; break; }
-      default:      { logMethod = 'log';   prefixColor = '#999'; break; }
+      case 'error': { logMethod = 'error'; break; }
+      case 'warn':  { logMethod = 'warn';  break; }
+      default:      { logMethod = 'log';   break; }
     }
-
-    if (level === 'debug') {
-      // **Note:** The ES spec indicates that `group()` doesn't take arguments,
-      // but in practice a single argument is accepted and used usefully by most
-      // browsers. In the case of Chrome, this argument is used instead of a
-      // useless default header of literally `console.group`.
-      console.group(prefix);        // eslint-disable-line no-console
-    }
-
-    const formatStr = ['%c%s%c'];
-    const args      = [`color: ${prefixColor}; font-weight: bold`, prefix, ''];
 
     for (const m of message) {
       switch (typeof m) {
@@ -68,6 +52,11 @@ export default class ClientSink extends BaseSink {
     console[logMethod](formatStr.join(''), ...args);
 
     if (level === 'debug') {
+      // The browser's `console` methods _mostly_ do the right thing with regard
+      // to providing distinguishing markings and stack traces when appropriate.
+      // We just disagree about `debug`, so in that case we include an explicit
+      // trace in a "group."
+      console.groupCollapsed('stack trace');
       console.trace('stack trace');
       console.groupEnd();
     }
@@ -87,5 +76,33 @@ export default class ClientSink extends BaseSink {
       'color: #66a; font-weight: bold',
       'color: #999; font-weight: bold',
       'color: #99e; font-weight: bold');
+  }
+
+  /**
+   * Constructs a prefix header with the given tag and level. The return value
+   * is an array suitable for passing to a `log()` method, including an initial
+   * format string and additional arguments as appropriate.
+   *
+   * @param {string} level The severity level.
+   * @param {string} tag The component tag.
+   * @returns {string} The prefix.
+   */
+  _makePrefix(level, tag) {
+    const levelStr = ((level === 'info') || (level === '')) ? '' : ` ${level[0].toUpperCase()}`;
+    const text     = `[${tag}${levelStr}]`;
+
+    let prefixColor;
+    switch (level) {
+      case 'error': { prefixColor = '#a44'; break; }
+      case 'warn':  { prefixColor = '#a70'; break; }
+      default:      { prefixColor = '#999'; break; }
+    }
+
+    return [
+      '%c%s%c',
+      `color: ${prefixColor}; font-weight: bold`,
+      text,
+      ''
+    ];
   }
 }
