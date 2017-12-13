@@ -17,10 +17,8 @@ const babel    = require('babel-core');
 const chalk    = require('chalk');
 const fs       = require('fs');
 const fs_extra = require('fs-extra');
+const minimist = require('minimist');
 const path     = require('path');
-
-/** How many files reported errors? */
-let errorCount = 0;
 
 /** Babel configuration, _except_ for the file name. */
 const BABEL_CONFIG = Object.freeze({
@@ -36,6 +34,96 @@ const BABEL_CONFIG = Object.freeze({
     ]
   ]
 });
+
+/**
+ * Displays a usage message and exits the process.
+ *
+ * @param {boolean} error Indicates whether or not the process should exit with
+ *   an error indicator.
+ */
+function usage(error) {
+  const progName = path.basename(process.argv[1]);
+  [
+    'Usage:',
+    '',
+    `${progName} [--in-dir=<path>] [--out-dir=<path>] <path> ...`,
+    '',
+    '  Compile one or more files. Does not compile files that appear to be',
+    '  older than their corresponding output file. <path>s may be either files',
+    '  or directories.',
+    '',
+    '  --in-dir=<path>',
+    '    All source files must reside under the given path. Output file paths',
+    '    are produced by stripping this prefix from input paths and appending the',
+    '    result to the output directory. Defaults to the current directory.',
+    '  --out-dir=<path>',
+    '    Directory to write results to. Defaults to the input directory.',
+    '',
+    `${progName} [--help | -h]`,
+    '  Display this message.'
+  ].forEach((line) => {
+    console.log(line);
+  });
+  process.exit(error ? 1 : 0);
+}
+
+/** {boolean} Error during argument processing? */
+let argError = false;
+
+/**
+ * {object} Parsed command-line options. **Note:** The `slice` gets rid of the
+ * `node` binary name and the name of the initial script (that is, this file).
+ */
+const opts = minimist(process.argv.slice(2), {
+  boolean: ['help'],
+  string: ['in-dir', 'out-dir'],
+  alias: {
+    'h': 'help'
+  },
+  stopEarly: true,
+  unknown: (arg) => {
+    if (/(^[^-]|^-$)/.test(arg)) {
+      // It's just a regular (non-option) argument. Arguably it's a bug that
+      // minimist calls here with it.
+      return true;
+    }
+    console.log(`Unrecognized option: ${arg}`);
+    argError = true;
+    return false;
+  }
+});
+
+if (argError || opts['help']) {
+  usage(argError);
+}
+
+/** {string} Input directory. */
+const inDir = (opts['in-dir'] || process.cwd()).replace(/[/]*$/, '/');
+
+/** {string} Output directory. */
+const outDir = opts['out-dir'] || inDir;
+
+/**
+ * {string} `[input, output]` path pairs, which are all validated and
+ * canonicalized.
+ */
+const paths = opts['_'].map((p) => {
+  const resolved = path.resolve(inDir, p);
+  if (!(resolved.startsWith(inDir) || (`${resolved}/` === inDir))) {
+    // eslint-disable-next-line no-console
+    console.log(`Invalid path (not under input directory): ${p}`);
+    usage(true);
+  }
+
+  const relative = resolved.slice(inDir.length);
+  return [resolved, path.resolve(outDir, relative)];
+});
+
+/** {number} How many files compiled? */
+let compileCount = 0;
+
+/** {number} How many files reported errors? */
+let errorCount = 0;
 
 /**
  * Gets a short log-friendly version of the given file path.
@@ -83,13 +171,16 @@ function compileFile(inputFile, outputFile) {
   } catch (e) {
     if (inputStat === null) {
       console.log('File not found:', inputFile);
-      process.exit(1);
+      errorCount++;
+      return;
     }
     // Trouble statting the output file. It probably doesn't exist, which is
     // a-okay. Just fall through to the compiler.
   }
 
   let output = null;
+
+  compileCount++;
 
   try {
     const config = Object.assign({ filename: inputFile }, BABEL_CONFIG);
@@ -144,17 +235,35 @@ function compileDir(inputDir, outputDir) {
   }
 }
 
-const input = process.argv[2];
-const output = process.argv[3];
-
-const stat = fs.statSync(input);
-if (stat.isDirectory()) {
-  compileDir(input, output);
-} else {
-  compileFile(input, output);
+/**
+ * Compiles either a file or a directory.
+ *
+ * @param {string} inputPath Input path.
+ * @param {string} outputPath Output path.
+ */
+function compileOne(inputPath, outputPath) {
+  const stat = fs.statSync(inputPath);
+  if (stat.isDirectory(inputPath)) {
+    compileDir(inputPath, outputPath);
+  } else {
+    compileFile(inputPath, outputPath);
+  }
 }
 
-if (errorCount !== 0) {
-  console.log(`${errorCount} file${errorCount === 1 ? '' : 's'} with errors.`);
-  process.exit(1);
+for (const [inputPath, outputPath] of paths) {
+  compileOne(inputPath, outputPath);
+}
+
+if (compileCount === 0) {
+  console.log(chalk.gray.bold('No files compiled.'));
+} else {
+  const compileMsg = `${compileCount} file${(compileCount === 1) ? '' : 's'} compiled.`;
+  console.log(chalk.bold(compileMsg));
+
+  if (errorCount === 0) {
+    console.log(chalk.gray.bold('No errors.'));
+  } else {
+    console.log(chalk.red.bold(`${errorCount} file${errorCount === 1 ? '' : 's'} with errors.`));
+    process.exit(1);
+  }
 }
