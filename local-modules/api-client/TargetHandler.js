@@ -80,7 +80,7 @@ export default class TargetHandler extends CommonBase {
    * @param {object} target_unused The proxy target.
    * @param {array} args_unused List of arguments passed to the constructor.
    * @param {object} newTarget_unused The constructor that was originally
-   *   called.
+   *   called, which is to say, the proxy object.
    */
   construct(target_unused, args_unused, newTarget_unused) {
     throw Errors.bad_use('Unsupported proxy operation.');
@@ -92,9 +92,10 @@ export default class TargetHandler extends CommonBase {
    * @param {object} target_unused The proxy target.
    * @param {string} property_unused The property name.
    * @param {object} descriptor_unused The property descriptor.
+   * @returns {boolean} `false`, always.
    */
   defineProperty(target_unused, property_unused, descriptor_unused) {
-    throw Errors.bad_use('Unsupported proxy operation.');
+    return false;
   }
 
   /**
@@ -102,9 +103,10 @@ export default class TargetHandler extends CommonBase {
    *
    * @param {object} target_unused The proxy target.
    * @param {string} property_unused The property name.
+   * @returns {boolean} `false`, always.
    */
   deleteProperty(target_unused, property_unused) {
-    throw Errors.bad_use('Unsupported proxy operation.');
+    return false;
   }
 
   /**
@@ -147,7 +149,7 @@ export default class TargetHandler extends CommonBase {
    * Standard `Proxy` handler method.
    *
    * @param {object} target The proxy target.
-   * @returns {void} `null`, always.
+   * @returns {*} `target`'s prototype.
    */
   getPrototypeOf(target) {
     // **Note:** In the original version of this class, this method was
@@ -215,9 +217,10 @@ export default class TargetHandler extends CommonBase {
    * @param {string} property_unused The property name.
    * @param {*} value_unused The new property value.
    * @param {object} receiver_unused The original receiver of the request.
+   * @returns {boolean} `false`, always.
    */
   set(target_unused, property_unused, value_unused, receiver_unused) {
-    throw Errors.bad_use('Unsupported proxy operation.');
+    return false;
   }
 
   /**
@@ -225,9 +228,10 @@ export default class TargetHandler extends CommonBase {
    *
    * @param {object} target_unused The proxy target.
    * @param {object|null} prototype_unused The new prototype.
+   * @returns {boolean} `false`, always.
    */
   setPrototypeOf(target_unused, prototype_unused) {
-    throw Errors.bad_use('Unsupported proxy operation.');
+    return false;
   }
 
   /**
