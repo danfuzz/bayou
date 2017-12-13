@@ -264,7 +264,16 @@ export default class DebugTools {
 
     const head =
       '<title>Console Log</title>\n' +
-      '<meta http-equiv="refresh" content="10">';
+      '<meta http-equiv="refresh" content="10">\n' +
+      '<script>\n' +
+      'function bottom() { window.scrollTo(0, document.body.scrollHeight); }\n' +
+      'document.addEventListener("readystatechange", () => {\n' +
+      '  if (document.readyState === "interactive") {\n' +
+      '    bottom();\n' +
+      '    setTimeout(bottom, 100);\n' +
+      '  }\n' +
+      '});\n' +
+      '</script>';
 
     this._htmlResponse(res, head, result);
   }
