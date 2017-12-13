@@ -86,27 +86,24 @@ export default class RecentSink extends BaseSink {
   get htmlContents() {
     const result = [];
 
+    result.push('<style>');
     result.push(
-      '<style>\n' +
       'table { border-collapse: collapse; border-spacing: 0; ' +
       '  width: 90vw; margin-left: 5vw; margin-right: 5vw; }\n' +
-      'td { padding-bottom: 0.1em; padding-right: 1em; }\n' +
-      'td:first-child { width: 15%; }\n' +
-      'pre { white-space: pre-wrap; margin: 0; }\n' +
-      '</style>'
+      'tr:nth-child(even) { background-color: #f8f8f8; }\n' +
+      'td { padding-bottom: 0.2em; padding-left: 0.5em; }\n' +
+      'td:first-child { width: 15%; vertical-align: top; padding-right: 1em; ' +
+      '  border-right-color: #ddd; border-right-width: 1pt; border-right-style: solid }\n' +
+      'pre { white-space: pre-wrap; margin: 0; }'
     );
+    result.push('</style>');
 
-    result.push(
-      '<table>' +
-      //'<colgroup><col style="width:20%"><col style="width:80%"></colgroup>' +
-      ''
-    );
-
+    result.push('<table>');
     for (const l of this._log) {
       result.push(RecentSink._htmlLine(l));
     }
-
     result.push('</table>');
+
     return result.join('\n');
   }
 

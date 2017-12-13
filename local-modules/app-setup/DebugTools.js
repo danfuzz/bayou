@@ -260,10 +260,13 @@ export default class DebugTools {
    * @param {object} res HTTP response handler.
    */
   _handle_log(req_unused, res) {
-    // TODO: Format it nicely.
     const result = this._sink.htmlContents;
 
-    this._htmlResponse(res, null, result);
+    const head =
+      '<title>Console Log</title>\n' +
+      '<meta http-equiv="refresh" content="10">';
+
+    this._htmlResponse(res, head, result);
   }
 
   /**
