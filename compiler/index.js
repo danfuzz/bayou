@@ -110,7 +110,6 @@ const outDir = opts['out-dir'] || inDir;
 const paths = opts['_'].map((p) => {
   const resolved = path.resolve(inDir, p);
   if (!(resolved.startsWith(inDir) || (`${resolved}/` === inDir))) {
-    // eslint-disable-next-line no-console
     console.log(`Invalid path (not under input directory): ${p}`);
     usage(true);
   }
