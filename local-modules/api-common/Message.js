@@ -18,18 +18,18 @@ export default class Message extends CommonBase {
    *
    * @param {Int} id Message ID, used to match requests and responses. Must be
    *   a non-negative integer.
-   * @param {string} target ID of the target object to send to.
+   * @param {string} targetId ID of the target object to send to.
    * @param {Functor} payload The name of the method to call and the arguments
    *   to call it with.
    */
-  constructor(id, target, payload) {
+  constructor(id, targetId, payload) {
     super();
 
     /** {Int} Message ID. */
     this._id = TInt.nonNegative(id);
 
     /** {string} ID of the target object. */
-    this._target = TargetId.check(target);
+    this._targetId = TargetId.check(targetId);
 
     /**
      * {Functor} The name of the method to call and the arguments to call it
@@ -46,7 +46,7 @@ export default class Message extends CommonBase {
    * @returns {array<*>} Reconstruction arguments.
    */
   deconstruct() {
-    return [this._id, this._target, this._payload];
+    return [this._id, this._targetId, this._payload];
   }
 
   /**
@@ -56,9 +56,9 @@ export default class Message extends CommonBase {
    */
   toLog() {
     return {
-      id:      this._id,
-      target:  this._target,
-      payload: this._payload
+      id:       this._id,
+      targetId: this._targetId,
+      payload:  this._payload
     };
   }
 
@@ -76,7 +76,7 @@ export default class Message extends CommonBase {
   }
 
   /** {string} ID of the target object. */
-  get target() {
-    return this._target;
+  get targetId() {
+    return this._targetId;
   }
 }
