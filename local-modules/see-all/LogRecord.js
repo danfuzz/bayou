@@ -2,8 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import { TInt, TString } from 'typecheck';
-import { CommonBase, Errors } from 'util-common';
+import { CommonBase, ErrorUtil, Errors } from 'util-common';
 
 /** {array<string>} Array of valid severity levels. */
 const LEVELS_ARRAY = Object.freeze(['debug', 'error', 'warn', 'info', 'detail']);
@@ -19,6 +21,39 @@ export default class LogRecord extends CommonBase {
   /** {array<string>} Array of all valid levels. */
   static get LEVELS() {
     return LEVELS_ARRAY;
+  }
+
+  /**
+   * Returns a string form for the given value, suitable for logging. Among
+   * other things:
+   *
+   * * It leaves strings as-is (doesn't quote them), on the assumption that
+   *   they are meant to be literal text.
+   * * It tries to make a high-fidelity string given an `Error`, including the
+   *   message, the stack trace, and any "causes" (if it happens to be an
+   *   {@link InfoError}).
+   * * Result-initial newlines are stripped (if they would otherwise be
+   *   present).
+   * * For a single-line result, all result-final newlines are stripped.
+   * * For a multi-line result, exactly one result-final newline is included.
+   *
+   * @param {*} value Value to convert.
+   * @returns {string} String form of `value`.
+   */
+  static inspectValue(value) {
+    let raw;
+    if (typeof value === 'string') {
+      raw = value;
+    } else if (value instanceof Error) {
+      raw = ErrorUtil.fullTrace(value);
+    } else {
+      raw = inspect(value);
+    }
+
+    // Trim off initial and trailing newlines.
+    const trimmed = raw.replace(/(^\n+|\n+$)/g, '');
+
+    return /\n/.test(trimmed) ? `${trimmed}\n` : trimmed;
   }
 
   /**

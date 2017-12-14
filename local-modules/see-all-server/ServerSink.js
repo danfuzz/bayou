@@ -107,7 +107,7 @@ export default class ServerSink extends BaseSink {
         // Convert the object to a string. If it's a single line, just add it
         // to the text inline. If it's multiple lines, make sure it all ends up
         // on its own lines.
-        m = BaseSink.inspectValue(m);
+        m = LogRecord.inspectValue(m);
         if (/\n$/.test(m)) {
           text += `${atLineStart ? '' : '\n'}${m}\n`;
           atLineStart = true;
