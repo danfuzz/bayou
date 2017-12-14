@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 import { format } from 'util';
 
-import { BaseSink, Logger, SeeAll } from 'see-all';
+import { BaseSink, LogRecord, Logger, SeeAll } from 'see-all';
 import { TFunction } from 'typecheck';
 import { ErrorUtil } from 'util-common';
 
@@ -91,8 +91,8 @@ export default class ServerSink extends BaseSink {
    * @param {LogRecord} logRecord The record to write.
    */
   log(logRecord) {
-    const { level, message, tag } = logRecord;
-    const prefix = this._makePrefix(level, tag);
+    const { level, message } = logRecord;
+    const prefix = this._makePrefix(logRecord);
 
     // Make a unified string of the entire message.
     let text = '';
@@ -178,34 +178,34 @@ export default class ServerSink extends BaseSink {
   /**
    * Logs the indicated time value as "punctuation" on the log.
    *
-   * @param {Int} nowMsec_unused Timestamp to log.
+   * @param {Int} timeMsec Timestamp to log.
    * @param {string} utcString String representation of the time, as UTC.
    * @param {string} localString String representation of the time, in the local
    *   timezone.
    */
-  time(nowMsec_unused, utcString, localString) {
+  time(timeMsec, utcString, localString) {
+    const logRecord = new LogRecord(timeMsec, 'info', 'time', utcString, localString);
+    const prefix = this._makePrefix(logRecord);
+
     utcString = chalk.blue.bold(utcString);
     localString  = chalk.blue.dim.bold(localString);
-    const prefix = this._makePrefix('', 'time');
 
     this._log(`${prefix}${utcString} / ${localString}`);
   }
 
   /**
-   * Constructs a prefix header with the given tag (required) and level
-   * (optional). Also updates the instance fields that track the observed
-   * prefix lengths.
+   * Constructs a prefix header for the given log record. Also updates the
+   * instance fields that track the observed prefix lengths.
    *
-   * @param {string} level The severity level.
-   * @param {string} tag The component tag.
+   * @param {LogRecord} logRecord The log record in question.
    * @returns {string} The prefix, including coloring and padding.
    */
-  _makePrefix(level, tag) {
-    let   text   = BaseSink.makePrefix(level, tag);
+  _makePrefix(logRecord) {
+    let   text   = logRecord.prefix;
     const length = text.length + 1; // `+1` for the space at the end.
 
     // Color the prefix according to level.
-    switch (level) {
+    switch (logRecord.level) {
       case 'error': { text = chalk.red.bold(text);    break; }
       case 'warn':  { text = chalk.yellow.bold(text); break; }
       default:      { text = chalk.dim.bold(text);    break; }

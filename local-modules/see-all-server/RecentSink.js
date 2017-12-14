@@ -39,10 +39,8 @@ export default class RecentSink extends BaseSink {
    * @param {LogRecord} logRecord The record to write.
    */
   log(logRecord) {
-    const { level, message, tag, timeMsec } = logRecord;
-    const messageStr = BaseSink.stringifyMessage(...message);
-    const details = { timeMsec, level, tag, messageStr };
-    this._log.push(details);
+    const messageStr = BaseSink.stringifyMessage(...(logRecord.message));
+    this._log.push(logRecord.withMessage(messageStr));
   }
 
   /**
@@ -109,24 +107,24 @@ export default class RecentSink extends BaseSink {
   /**
    * Converts the given log line to HTML.
    *
-   * @param {object} log Structured log entry.
+   * @param {LogRecord} logRecord Log record.
    * @returns {string} HTML string form for the entry.
    */
-  static _htmlLine(log) {
-    let prefix = BaseSink.makePrefix(log.level, log.tag);
+  static _htmlLine(logRecord) {
+    let prefix = logRecord.prefix;
     let body;
 
-    if (log.tag === 'time') {
-      const utcString = chalk.blue.bold(log.utcString);
-      const localString = chalk.blue.dim.bold(log.localString);
+    if (logRecord.tag === 'time') {
+      const utcString = chalk.blue.bold(logRecord.utcString);
+      const localString = chalk.blue.dim.bold(logRecord.localString);
       body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;
     } else {
-      body = log.messageStr;
+      body = logRecord.message[0];
       body = body.replace(/(^\n+)|(\n+$)/g, ''); // Trim leading and trailing newlines.
     }
 
     // Color the prefix according to level.
-    switch (log.level) {
+    switch (logRecord.level) {
       case 'error': { prefix = chalk.red.bold(prefix);    break; }
       case 'warn':  { prefix = chalk.yellow.bold(prefix); break; }
       default:      { prefix = chalk.dim.bold(prefix);    break; }

@@ -72,6 +72,17 @@ export default class LogRecord extends CommonBase {
     return this._message;
   }
 
+  /**
+   * {string} The standard-form prefix string for the level and tag of this
+   * instance.
+   */
+  get prefix() {
+    const { level, tag } = this;
+    const levelStr = (level === 'info') ? '' : ` ${level[0].toUpperCase()}`;
+
+    return `[${tag}${levelStr}]`;
+  }
+
   /** {string} Name of the component associated with the message. */
   get tag() {
     return this._tag;
@@ -80,5 +91,17 @@ export default class LogRecord extends CommonBase {
   /** {Int} Timestamp of the message. */
   get timeMsec() {
     return this._timeMsec;
+  }
+
+  /**
+   * Constructs an instance just like this one, except with `message` replaced
+   * with the indicated contents.
+   *
+   * @param {...*} message New message.
+   * @returns {LogRecord} An appropriately-constructed instance.
+   */
+  withMessage(...message) {
+    const { timeMsec, level, tag } = this;
+    return new LogRecord(timeMsec, level, tag, ...message);
   }
 }

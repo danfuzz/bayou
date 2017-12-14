@@ -26,8 +26,8 @@ export default class ClientSink extends BaseSink {
    * @param {LogRecord} logRecord The record to write.
    */
   log(logRecord) {
-    const { level, message, tag } = logRecord;
-    const [prefixFormat, ...args] = this._makePrefix(level, tag);
+    const { level, message } = logRecord;
+    const [prefixFormat, ...args] = this._makePrefix(logRecord);
     const formatStr = [prefixFormat]; // We append to this array and `args`.
 
     let logMethod;
@@ -77,19 +77,16 @@ export default class ClientSink extends BaseSink {
   }
 
   /**
-   * Constructs a prefix header with the given tag and level. The return value
-   * is an array suitable for passing to a `log()` method, including an initial
-   * format string and additional arguments as appropriate.
+   * Constructs a prefix header for the given record. The return value is an
+   * array suitable for passing to a `log()` method, including an initial format
+   * string and additional arguments as appropriate.
    *
-   * @param {string} level The severity level.
-   * @param {string} tag The component tag.
+   * @param {LogRecord} logRecord The log record in question.
    * @returns {string} The prefix.
    */
-  _makePrefix(level, tag) {
-    const text = BaseSink.makePrefix(level, tag);
-
+  _makePrefix(logRecord) {
     let prefixColor;
-    switch (level) {
+    switch (logRecord.level) {
       case 'error': { prefixColor = '#a44'; break; }
       case 'warn':  { prefixColor = '#a70'; break; }
       default:      { prefixColor = '#999'; break; }
@@ -98,7 +95,7 @@ export default class ClientSink extends BaseSink {
     return [
       '%c%s%c',
       `color: ${prefixColor}; font-weight: bold`,
-      text,
+      logRecord.prefix,
       ''
     ];
   }
