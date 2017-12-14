@@ -4,30 +4,14 @@
 
 import { CommonBase, Errors } from 'util-common';
 
+import LogRecord from './LogRecord';
 import LogStream from './LogStream';
 
-/** Set of valid severity levels. */
-const LEVELS = new Set(['debug', 'error', 'warn', 'info', 'detail']);
 
 /**
  * Base class for loggers. Subclasses must implement `_impl_log()`.
  */
 export default class BaseLogger extends CommonBase {
-  /**
-   * Validates a logging severity level value. Throws an error if invalid.
-   *
-   * @param {string} level Severity level. Must be one of the severity level
-   *   constants defined by this class.
-   * @returns {string} `level`, if it is indeed valid.
-   */
-  static validateLevel(level) {
-    if (!LEVELS.has(level)) {
-      throw Errors.bad_value(level, 'logging severity level');
-    }
-
-    return level;
-  }
-
   /**
    * Logs a message at the given severity level.
    *
@@ -39,7 +23,7 @@ export default class BaseLogger extends CommonBase {
    *   contains an exception, this will log the stack trace.
    */
   log(level, ...message) {
-    BaseLogger.validateLevel(level);
+    LogRecord.validateLevel(level);
     this._impl_log(level, message);
   }
 
@@ -113,7 +97,6 @@ export default class BaseLogger extends CommonBase {
    * @returns {LogStream} An appropriately-constructed stream.
    */
   streamFor(level) {
-    BaseLogger.validateLevel(level);
     return new LogStream(this, level);
   }
 

@@ -5,39 +5,13 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { BaseLogger } from 'see-all';
+import { LogRecord } from 'see-all';
 import { MockLogger } from 'see-all/mocks';
-
-/** {array<string>} All the valid levels. */
-const LEVELS = ['debug', 'detail', 'error', 'info', 'warn'];
 
 // This class is tested via its subclass `MockLogger`, which records all calls
 // made to `_impl_log()`.
 
 describe('see-all/BaseLogger', () => {
-  describe('validateLevel()', () => {
-    it('accepts valid levels', () => {
-      function test(level) {
-        assert.strictEqual(BaseLogger.validateLevel(level), level);
-      }
-
-      for (const level of LEVELS) {
-        test(level);
-      }
-    });
-
-    it('rejects invalid levels', () => {
-      function test(level) {
-        assert.throws(() => { BaseLogger.validateLevel(level); });
-      }
-
-      test('');
-      test('zorch');
-      test(undefined);
-      test({ a: 10 });
-    });
-  });
-
   describe('log()', () => {
     it('calls through to `_log_impl()` when given valid arguments', () => {
       const logger = new MockLogger();
@@ -71,7 +45,7 @@ describe('see-all/BaseLogger', () => {
       });
     }
 
-    for (const level of LEVELS) {
+    for (const level of LogRecord.LEVELS) {
       test(level);
     }
   });
