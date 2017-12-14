@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import chalk from 'chalk';
+import { createTwoFilesPatch } from 'diff';
 import { inspect } from 'util';
 
 import { CommonBase } from 'util-common';
@@ -228,21 +229,55 @@ export default class EventReceiver extends CommonBase {
   static _linesForDiff(actual, expected) {
     const result = [];
 
-    function add(string = '', indent = '') {
+    function add(string = '') {
       const lines = string.replace(/\n$/, '').split('\n');
 
       for (const line of lines) {
-        result.push(`${indent}${line}`);
+        result.push(line);
       }
     }
 
-    // **TODO:** Produce a real diff.
+    // Trim initial newlines and ensure exactly one final newline. (The latter
+    // is to prevent the usual "No newline" patch text from showing up.)
+
+    actual   =   actual.replace(/^\n+/, '').replace(/\n*$/, '\n');
+    expected = expected.replace(/^\n+/, '').replace(/\n*$/, '\n');
+
+    // Produce the raw patch, and filter it line-by-line into a useful result.
+
+    const patch =
+      createTwoFilesPatch('(actual)', '(expected)', actual, expected);
+
+    let firstRangeMark = true;
+    function fixLine(line) {
+      // This is similar to (but not quite identical to) what Mocha implements
+      // in `reporters/Base.unifiedDiff()` (which isn't actually an expored
+      // method, alas).
+      if (line[0] === '+') {
+        return chalk.green(line);
+      } else if (line[0] === '-') {
+        return chalk.red(line);
+      } else if (/^@@/.test(line)) {
+        if (firstRangeMark) {
+          firstRangeMark = false;
+          return '';
+        } else {
+          return '--';
+        }
+      } else if (/^==/.test(line)) {
+        return null; // The first line of a patch is a wall of `=`s.
+      } else {
+        return line;
+      }
+    }
+
     add();
-    add('Actual:');
-    add(actual, '  ');
-    add();
-    add('Expected:');
-    add(expected, '  ');
+    for (const line of EventReceiver._linesForString(patch)) {
+      const fixed = fixLine(line);
+      if (fixed !== null) {
+        add(fixed);
+      }
+    }
 
     return result;
   }
