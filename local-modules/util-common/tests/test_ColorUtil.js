@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { ColorUtil } from 'util-common';
 
-describe('ColorUtil', () => {
+describe('util-common/ColorUtil', () => {
   describe('checkCss()', () => {
     it('should accept proper strings', () => {
       function test(v) {

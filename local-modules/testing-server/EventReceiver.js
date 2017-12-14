@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import chalk from 'chalk';
+import { createTwoFilesPatch } from 'diff';
 import { inspect } from 'util';
 
 import { CommonBase } from 'util-common';
@@ -42,6 +43,12 @@ export default class EventReceiver extends CommonBase {
 
     /** {array<string>} Array of non-test browser console output lines. */
     this._nonTestLines = [];
+
+    /**
+     * {array<string>} Array of reported test failures, for recapitulation at
+     * the end of the results.
+     */
+    this._failLines = [];
 
     /** {object} Ad-hoc object with mappings for test category counts. */
     this._stats = { fail: 0, pass: 0, pending: 0, total: 0 };
@@ -113,7 +120,15 @@ export default class EventReceiver extends CommonBase {
   _handle_done() {
     this._done = true;
 
-    this._log('');
+    if (this._failLines.length !== 0) {
+      this._log(chalk.bold.red('Failures:'));
+      this._log('');
+
+      for (const line of this._failLines) {
+        this._log(line);
+      }
+    }
+
     this._log('Summary:');
     this._log(`  Total:   ${this._stats.total}`);
     this._log(`  Passed:  ${this._stats.pass}`);
@@ -129,13 +144,14 @@ export default class EventReceiver extends CommonBase {
    * @param {string} title The suite title.
    */
   _handle_suite(title) {
+    const topLevel = (this._suites.length === 0);
+    const prefix   = '  '.repeat(this._suites.length);
+
     this._suites.push(title);
 
-    if (this._suites.length === 1) {
-      title = chalk.bold(title);
+    for (const line of EventReceiver._linesForString(title)) {
+      this._log(topLevel ? chalk.bold(line) : `${prefix}${line}`);
     }
-
-    this._log(`${'  '.repeat(this._suites.length)}${title}`);
   }
 
   /**
@@ -159,72 +175,179 @@ export default class EventReceiver extends CommonBase {
     this._stats[details.status]++;
     this._stats.total++;
 
-    const prefix     = '  '.repeat(this._suites.length + 1);
+    const prefix     = '  '.repeat(this._suites.length);
     const speed      = details.speed;
     const markup     = TEST_STATUS_MARKUP[details.status] || TEST_STATUS_MARKUP.unknown;
     const speedColor = SPEED_COLOR[speed] || chalk.gray;
     const statusChar = markup.color(markup.char);
-    const speedStr = (speed === 'fast')
+    const speedStr   = (speed === 'fast')
       ? ''
-      : `\n${prefix}  ` + speedColor(`(${speed} ${details.duration}ms)`);
+      : '\n' + speedColor(`(${speed} ${details.duration}ms)`);
+    const titleStr   = `${statusChar} ${details.title}${speedStr}`;
+    const titleLines = EventReceiver._linesForString(titleStr);
 
-    // Indent the second-and-later title lines so they line up under the first
-    // line.
-    const title    = details.title.replace(/\n/g, `\n${prefix}  `);
-    const titleStr = markup.colorTitle ? markup.color(title) : title;
-    this._log(`${prefix}${statusChar} ${titleStr}${speedStr}`);
+    let titlePrefix = prefix;
+    for (const line of titleLines) {
+      this._log(`${titlePrefix}${line}`);
+      titlePrefix = `${prefix}  `; // Aligns second-and-later title lines under the first.
+    }
 
-    let anyExtra = false;
+    const lines = EventReceiver._linesForTest(details);
+
+    if (lines.length !== 0) {
+      this._log('');
+      for (const line of lines) {
+        this._log(`${prefix}${line}`);
+      }
+    }
+
+    if (details.status === 'fail') {
+      let headerPrefix = '';
+
+      for (const s of this._suites) {
+        this._failLines.push(`${headerPrefix}${s}`);
+        headerPrefix += '  ';
+      }
+
+      this._failLines.push(`${headerPrefix}${details.title}`);
+      this._failLines.push('');
+
+      for (const line of lines) {
+        this._failLines.push(`  ${line}`);
+      }
+    }
+  }
+
+  /**
+   * Produces lines representing the differences between the given two
+   * strings.
+   *
+   * @param {string} actual String representing the actual result of a test.
+   * @param {string} expected String representing the expected result of a test.
+   * @returns {array<string>} Array of lines.
+   */
+  static _linesForDiff(actual, expected) {
+    const result = [];
+
+    function add(string = '') {
+      const lines = string.replace(/\n$/, '').split('\n');
+
+      for (const line of lines) {
+        result.push(line);
+      }
+    }
+
+    // Trim initial newlines and ensure exactly one final newline. (The latter
+    // is to prevent the usual "No newline" patch text from showing up.)
+
+    actual   =   actual.replace(/^\n+/, '').replace(/\n*$/, '\n');
+    expected = expected.replace(/^\n+/, '').replace(/\n*$/, '\n');
+
+    // Produce the raw patch, and filter it line-by-line into a useful result.
+
+    const patch =
+      createTwoFilesPatch('(actual)', '(expected)', actual, expected);
+
+    let firstRangeMark = true;
+    function fixLine(line) {
+      // This is similar to (but not quite identical to) what Mocha implements
+      // in `reporters/Base.unifiedDiff()` (which isn't actually an expored
+      // method, alas).
+      if (line[0] === '+') {
+        return chalk.green(line);
+      } else if (line[0] === '-') {
+        return chalk.red(line);
+      } else if (/^@@/.test(line)) {
+        if (firstRangeMark) {
+          firstRangeMark = false;
+          return '';
+        } else {
+          return '--';
+        }
+      } else if (/^==/.test(line)) {
+        return null; // The first line of a patch is a wall of `=`s.
+      } else {
+        return line;
+      }
+    }
+
+    add();
+    for (const line of EventReceiver._linesForString(patch)) {
+      const fixed = fixLine(line);
+      if (fixed !== null) {
+        add(fixed);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Produces a set of lines to log for a given test, _except_ for a header.
+   * Always includes a blank line at the end if there are any lines at all.
+   *
+   * @param {object} details Test result details.
+   * @returns {array<string>} The lines to log. Elements are guaranteed not to
+   *   have any newlines in them.
+   */
+  static _linesForTest(details) {
+    const result = [];
+
+    function add(string = '') {
+      const lines = string.replace(/\n$/, '').split('\n');
+
+      for (const line of lines) {
+        result.push(line);
+      }
+    }
 
     if (details.console.length !== 0) {
-      anyExtra = true;
-      this._log('');
-      this._prefixLog(prefix, details.console);
+      add(details.console);
+      add();
     }
 
     if (details.error !== null) {
       const { trace, extras } = details.error;
 
-      anyExtra = true;
-      this._log('');
-
-      this._prefixLog(prefix, trace.replace(/\n+$/, ''));
+      add(trace);
 
       if (extras !== null) {
         if (extras.showDiff) {
-          // **TODO:** Produce a real diff.
-          this._log('');
-          this._log(`${prefix}Actual:`);
-          this._prefixLog(`${prefix}  `, extras.actual);
-          this._log('');
-          this._log(`${prefix}Expected:`);
-          this._prefixLog(`${prefix}  `, extras.expected);
+          for (const line of EventReceiver._linesForDiff(extras.actual, extras.expected)) {
+            add(line);
+          }
           delete extras.showDiff;
           delete extras.actual;
           delete extras.expected;
         }
 
         if (Object.keys(extras).length !== 0) {
-          this._log('');
-          this._prefixLog(prefix, inspect(extras));
+          add();
+          add(inspect(extras));
         }
       }
+
+      add();
     }
 
-    if (anyExtra) {
-      this._log('');
-    }
+    return result;
   }
 
   /**
-   * Logs the given string, with each line prefixed as given.
+   * Splits a string into an array of individual lines, each optionally
+   * prefixed. It also trims away string-initial and string-final newlines.
    *
-   * @param {string} prefix The per-line prefix.
-   * @param {string} value The string to log.
+   * @param {string} s The string to split.
+   * @param {string} [prefix = ''] Prefix for each line.
+   * @returns {array<string>} Array of lines.
    */
-  _prefixLog(prefix, value) {
-    for (const line of value.split('\n')) {
-      this._log(`${prefix}${line}`);
-    }
+  static _linesForString(s, prefix = '') {
+    s = s.replace(/(^\n+)|(\n+$)/g, '');
+
+    const lines = s.split('\n');
+
+    return (prefix === '')
+      ? lines
+      : lines.map(line => `${prefix}${line}`);
   }
 }

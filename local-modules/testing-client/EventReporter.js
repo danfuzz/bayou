@@ -106,10 +106,16 @@ export default class EventReporter extends CommonBase {
         // Handle expected/actual diffing specially. In particular, we don't
         // want to try to pass nontrivial objects across the client/server
         // boundary, so stringify them here.
+        //
+        // **Note:** As of this writing, the browser polyfill for
+        // `util.inspect()` doesn't respect `breakLength`, which means that we
+        // too often end up with single-line results for arrays and objects.
+        // **TODO:** Get this fixed upstream.
+        const inspectOpts = { depth: 8, breakLength: 10 };
         extras = {
           showDiff: true,
-          actual:   inspect(error.actual),
-          expected: inspect(error.expected)
+          actual:   inspect(error.actual,   inspectOpts),
+          expected: inspect(error.expected, inspectOpts)
         };
       }
 

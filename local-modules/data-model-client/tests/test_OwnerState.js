@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { OwnerState } from 'data-model-client';
 
-describe('OwnerState', () => {
+describe('data-model-client/OwnerState', () => {
   it('should return default values when passed a null initial state', () => {
     const reducer = OwnerState.reducer;
     const state = reducer(undefined, { type: 'unknown_action' });
