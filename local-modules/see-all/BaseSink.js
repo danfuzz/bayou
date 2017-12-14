@@ -4,8 +4,6 @@
 
 import { CommonBase } from 'util-common';
 
-import LogRecord from './LogRecord';
-
 /**
  * Base class for logging sink. Subclasses must implement `log()` and `time()`.
  *

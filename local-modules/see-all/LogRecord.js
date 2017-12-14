@@ -28,7 +28,8 @@ export default class LogRecord extends CommonBase {
    * other things:
    *
    * * It leaves strings as-is (doesn't quote them), on the assumption that
-   *   they are meant to be literal text.
+   *   they are meant to be literal text, _except_ that if a string has any
+   *   newlines in it, then the result is guaranteed to end with a newline.
    * * It tries to make a high-fidelity string given an `Error`, including the
    *   message, the stack trace, and any "causes" (if it happens to be an
    *   {@link InfoError}).
@@ -43,7 +44,9 @@ export default class LogRecord extends CommonBase {
   static inspectValue(value) {
     let raw;
     if (typeof value === 'string') {
-      raw = value;
+      // A little obscure, to be sure... This appends a newline to strings that
+      // have a newline but don't _end_ with a newline.
+      return (/\n[^]*[^\n]$/.test(value)) ? `${value}\n` : value;
     } else if (value instanceof Error) {
       raw = ErrorUtil.fullTrace(value);
     } else {
@@ -128,7 +131,7 @@ export default class LogRecord extends CommonBase {
       const s = LogRecord.inspectValue(m);
       const hasNewline = /\n$/.test(s);
 
-      if ((result.length !== 0) && !atNewline) {
+      if (!atNewline) {
         result.push(hasNewline ? '\n' : ' ');
       }
 
