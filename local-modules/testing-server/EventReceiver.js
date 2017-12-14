@@ -120,6 +120,9 @@ export default class EventReceiver extends CommonBase {
     this._done = true;
 
     if (this._failLines.length !== 0) {
+      this._log(chalk.bold.red('Failures:'));
+      this._log('');
+
       for (const line of this._failLines) {
         this._log(line);
       }
@@ -140,13 +143,14 @@ export default class EventReceiver extends CommonBase {
    * @param {string} title The suite title.
    */
   _handle_suite(title) {
+    const topLevel = (this._suites.length === 0);
+    const prefix   = '  '.repeat(this._suites.length);
+
     this._suites.push(title);
 
-    if (this._suites.length === 1) {
-      title = chalk.bold(title);
+    for (const line of EventReceiver._linesForString(title)) {
+      this._log(topLevel ? chalk.bold(line) : `${prefix}${line}`);
     }
-
-    this._log(`${'  '.repeat(this._suites.length)}${title}`);
   }
 
   /**
@@ -170,43 +174,45 @@ export default class EventReceiver extends CommonBase {
     this._stats[details.status]++;
     this._stats.total++;
 
-    const prefix     = '  '.repeat(this._suites.length + 1);
+    const prefix     = '  '.repeat(this._suites.length);
     const speed      = details.speed;
     const markup     = TEST_STATUS_MARKUP[details.status] || TEST_STATUS_MARKUP.unknown;
     const speedColor = SPEED_COLOR[speed] || chalk.gray;
     const statusChar = markup.color(markup.char);
-    const speedStr = (speed === 'fast')
+    const speedStr   = (speed === 'fast')
       ? ''
-      : `\n${prefix}  ` + speedColor(`(${speed} ${details.duration}ms)`);
+      : '\n' + speedColor(`(${speed} ${details.duration}ms)`);
+    const titleStr   = `${statusChar} ${details.title}${speedStr}`;
+    const titleLines = EventReceiver._linesForString(titleStr);
 
-    // Indent the second-and-later title lines so they line up under the first
-    // line.
-    const title    = details.title.replace(/\n/g, `\n${prefix}  `);
-    const titleStr = markup.colorTitle ? markup.color(title) : title;
-    this._log(`${prefix}${statusChar} ${titleStr}${speedStr}`);
+    let titlePrefix = prefix;
+    for (const line of titleLines) {
+      this._log(`${titlePrefix}${line}`);
+      titlePrefix = `${prefix}  `; // Aligns second-and-later title lines under the first.
+    }
 
     const lines = EventReceiver._linesForTest(details);
 
     if (lines.length !== 0) {
       this._log('');
-      for (const l of lines) {
-        this._log(`${prefix}${l}`);
+      for (const line of lines) {
+        this._log(`${prefix}${line}`);
       }
     }
 
     if (details.status === 'fail') {
-      let titlePrefix = '';
+      let headerPrefix = '';
 
       for (const s of this._suites) {
-        this._failLines.push(`${titlePrefix}${s}`);
-        titlePrefix += '  ';
+        this._failLines.push(`${headerPrefix}${s}`);
+        headerPrefix += '  ';
       }
 
-      this._failLines.push(`${titlePrefix}${details.title}`);
+      this._failLines.push(`${headerPrefix}${details.title}`);
       this._failLines.push('');
 
-      for (const l of lines) {
-        this._failLines.push(`  ${l}`);
+      for (const line of lines) {
+        this._failLines.push(`  ${line}`);
       }
     }
   }
@@ -264,5 +270,23 @@ export default class EventReceiver extends CommonBase {
     }
 
     return result;
+  }
+
+  /**
+   * Splits a string into an array of individual lines, each optionally
+   * prefixed. It also trims away string-initial and string-final newlines.
+   *
+   * @param {string} s The string to split.
+   * @param {string} [prefix = ''] Prefix for each line.
+   * @returns {array<string>} Array of lines.
+   */
+  static _linesForString(s, prefix = '') {
+    s = s.replace(/(^\n+)|(\n+$)/g, '');
+
+    const lines = s.split('\n');
+
+    return (prefix === '')
+      ? lines
+      : lines.map(line => `${prefix}${line}`);
   }
 }
