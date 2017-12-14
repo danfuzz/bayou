@@ -3,9 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import chalk from 'chalk';
-import { format, inspect } from 'util';
+import { format } from 'util';
 
-import { BaseSink, Logger, SeeAll } from 'see-all';
+import { BaseSink, LogRecord, Logger, SeeAll } from 'see-all';
 import { TFunction } from 'typecheck';
 import { ErrorUtil } from 'util-common';
 
@@ -86,55 +86,41 @@ export default class ServerSink extends BaseSink {
   }
 
   /**
-   * Logs a message at the given severity level.
+   * Writes a log record to the console.
    *
-   * @param {Int} nowMsec_unused Timestamp of the message.
-   * @param {string} level Severity level.
-   * @param {string} tag Name of the component associated with the message.
-   * @param {...*} message Message to log.
+   * @param {LogRecord} logRecord The record to write.
    */
-  log(nowMsec_unused, level, tag, ...message) {
-    const prefix = this._makePrefix(level, tag);
+  log(logRecord) {
+    const { level, message } = logRecord;
+    const prefix = this._makePrefix(logRecord);
 
     // Make a unified string of the entire message.
-    let text = '';
-    let atLineStart = true;
-    let gotError = false;
-    for (let m of message) {
-      if (typeof m === 'object') {
+
+    let text = logRecord.messageString;
+
+    if ((level !== 'detail') && (level !== 'info')) {
+      // It's at a level that warrants a stack trace...
+
+      let hasError = false;
+      for (const m of message) {
         if (m instanceof Error) {
-          gotError = true; // Used after the `for` loop, below.
+          hasError = true;
+          break;
         }
-
-        // Convert the object to a string. If it's a single line, just add it
-        // to the text inline. If it's multiple lines, make sure it all ends up
-        // on its own lines.
-        m = ServerSink._inspect(m);
-        if (/\n/.test(m)) {
-          text += `${atLineStart ? '' : '\n'}${m}\n`;
-          atLineStart = true;
-        } else {
-          text += `${atLineStart ? '' : ' '}${m}`;
-          atLineStart = false;
-        }
-      } else {
-        text += `${atLineStart ? '' : ' '}${m}`;
-        atLineStart = (typeof m === 'string') ? /\n$/.test(m) : false;
       }
-    }
 
-    if (!gotError && (level !== 'detail') && (level !== 'info')) {
-      // It's at a level that warrants a stack trace, and none of the arguments
-      // is an `Error`. So, append one. We drop the initial set of stack lines
-      // coming from the logging module.
-      const trace = ErrorUtil.stackLines(new Error());
-      let   skip  = true;
-      for (const line of trace) {
-        if (skip && !/[/]see-all/.test(line)) {
-          skip = false;
-        }
-        if (!skip) {
-          text += `\n  ${line}`;
+      if (!hasError) {
+        // None of the arguments is an `Error`. So, append one. We drop the
+        // initial set of stack lines coming from the logging module.
+        const trace = ErrorUtil.stackLines(new Error());
+        let   skip  = true;
+        for (const line of trace) {
+          if (skip && !/[/]see-all/.test(line)) {
+            skip = false;
+          }
+          if (!skip) {
+            text += `\n  ${line}`;
+          }
         }
       }
     }
@@ -180,34 +166,34 @@ export default class ServerSink extends BaseSink {
   /**
    * Logs the indicated time value as "punctuation" on the log.
    *
-   * @param {Int} nowMsec_unused Timestamp to log.
+   * @param {Int} timeMsec Timestamp to log.
    * @param {string} utcString String representation of the time, as UTC.
    * @param {string} localString String representation of the time, in the local
    *   timezone.
    */
-  time(nowMsec_unused, utcString, localString) {
+  time(timeMsec, utcString, localString) {
+    const logRecord = new LogRecord(timeMsec, 'info', 'time', utcString, localString);
+    const prefix = this._makePrefix(logRecord);
+
     utcString = chalk.blue.bold(utcString);
     localString  = chalk.blue.dim.bold(localString);
-    const prefix = this._makePrefix('', 'time');
 
     this._log(`${prefix}${utcString} / ${localString}`);
   }
 
   /**
-   * Constructs a prefix header with the given tag (required) and level
-   * (optional). Also updates the instance fields that track the observed
-   * prefix lengths.
+   * Constructs a prefix header for the given log record. Also updates the
+   * instance fields that track the observed prefix lengths.
    *
-   * @param {string} level The severity level.
-   * @param {string} tag The component tag.
+   * @param {LogRecord} logRecord The log record in question.
    * @returns {string} The prefix, including coloring and padding.
    */
-  _makePrefix(level, tag) {
-    let   text   = BaseSink.makePrefix(level, tag);
+  _makePrefix(logRecord) {
+    let   text   = logRecord.prefix;
     const length = text.length + 1; // `+1` for the space at the end.
 
     // Color the prefix according to level.
-    switch (level) {
+    switch (logRecord.level) {
       case 'error': { text = chalk.red.bold(text);    break; }
       case 'warn':  { text = chalk.yellow.bold(text); break; }
       default:      { text = chalk.dim.bold(text);    break; }
@@ -253,19 +239,5 @@ export default class ServerSink extends BaseSink {
     }
 
     return Math.max(process.stdout.getWindowSize()[0] || 80, 80);
-  }
-
-  /**
-   * Returns a string form for the given value, suitable for logging. The main
-   * point of this method is to do something better than `inspect()` for `Error`
-   * instances.
-   *
-   * @param {*} value Value to convert.
-   * @returns {string} String form of `value`.
-   */
-  static _inspect(value) {
-    return (value instanceof Error)
-      ? ErrorUtil.fullTrace(value)
-      : inspect(value);
   }
 }

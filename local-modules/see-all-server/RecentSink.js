@@ -6,7 +6,7 @@ import ansiHtml from 'ansi-html';
 import chalk from 'chalk';
 import escapeHtml from 'escape-html';
 
-import { BaseSink, SeeAll } from 'see-all';
+import { BaseSink, LogRecord, SeeAll } from 'see-all';
 import { TInt } from 'typecheck';
 
 /**
@@ -34,41 +34,36 @@ export default class RecentSink extends BaseSink {
   }
 
   /**
-   * Logs a message at the given severity level.
+   * Saves a log record to this instance.
    *
-   * @param {Int} nowMsec Timestamp of the message.
-   * @param {string} level Severity level.
-   * @param {string} tag Name of the component associated with the message.
-   * @param {...*} message Message to log.
+   * @param {LogRecord} logRecord The record to write.
    */
-  log(nowMsec, level, tag, ...message) {
-    message = BaseSink.stringifyMessage(...message);
-    const details = { nowMsec, level, tag, message };
-    this._log.push(details);
+  log(logRecord) {
+    const messageString = logRecord.messageString;
+    this._log.push(logRecord.withMessage(messageString));
   }
 
   /**
    * Logs the indicated time value as "punctuation" on the log. This class
    * also uses this call to trigger cleanup of old items.
    *
-   * @param {Int} nowMsec Timestamp to log.
+   * @param {Int} timeMsec Timestamp to log.
    * @param {string} utcString String representation of the time, as UTC.
    * @param {string} localString String representation of the time, in the local
    *   timezone.
    */
-  time(nowMsec, utcString, localString) {
-    const level   = '';
-    const tag     = 'time';
-    const details = { nowMsec, level, tag, utcString, localString };
-    this._log.push(details);
+  time(timeMsec, utcString, localString) {
+    const logRecord = new LogRecord(timeMsec, 'info', 'time', utcString, localString);
+
+    this._log.push(logRecord);
 
     // Trim the log.
 
-    const oldestMsec = nowMsec - this._maxAgeMsec;
+    const oldestMsec = timeMsec - this._maxAgeMsec;
 
     let i;
     for (i = 0; i < this._log.length; i++) {
-      if (this._log[i].nowMsec >= oldestMsec) {
+      if (this._log[i].timeMsec >= oldestMsec) {
         break;
       }
     }
@@ -111,24 +106,25 @@ export default class RecentSink extends BaseSink {
   /**
    * Converts the given log line to HTML.
    *
-   * @param {object} log Structured log entry.
+   * @param {LogRecord} logRecord Log record.
    * @returns {string} HTML string form for the entry.
    */
-  static _htmlLine(log) {
-    let prefix = BaseSink.makePrefix(log.level, log.tag);
+  static _htmlLine(logRecord) {
+    let prefix = logRecord.prefix;
     let body;
 
-    if (log.tag === 'time') {
-      const utcString = chalk.blue.bold(log.utcString);
-      const localString = chalk.blue.dim.bold(log.localString);
+    if (logRecord.tag === 'time') {
+      const [utc, local] = logRecord.message;
+      const utcString = chalk.blue.bold(utc);
+      const localString = chalk.blue.dim.bold(local);
       body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;
     } else {
-      body = log.message;
+      body = logRecord.message[0];
       body = body.replace(/(^\n+)|(\n+$)/g, ''); // Trim leading and trailing newlines.
     }
 
     // Color the prefix according to level.
-    switch (log.level) {
+    switch (logRecord.level) {
       case 'error': { prefix = chalk.red.bold(prefix);    break; }
       case 'warn':  { prefix = chalk.yellow.bold(prefix); break; }
       default:      { prefix = chalk.dim.bold(prefix);    break; }

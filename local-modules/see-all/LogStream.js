@@ -5,6 +5,7 @@
 import { CommonBase } from 'util-common';
 
 import BaseLogger from './BaseLogger';
+import LogRecord from './LogRecord';
 
 /**
  * Adaptor which provides a writable stream on top of a logger at a particular
@@ -27,7 +28,7 @@ export default class LogStream extends CommonBase {
     this._logger = BaseLogger.check(logger);
 
     /** {string} Severity level. */
-    this._level = BaseLogger.validateLevel(level);
+    this._level = LogRecord.validateLevel(level);
   }
 
   /**

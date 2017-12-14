@@ -6,6 +6,8 @@ import { inspect } from 'util';
 
 import { Errors, Singleton } from 'util-common';
 
+import LogRecord from './LogRecord';
+
 /**
  * {Int} Maximum amount of time, in msec, between successive logs that inidicate
  * an active spate of logging, and thus _should not_ be a cause for emitting a
@@ -62,26 +64,28 @@ export default class AllSinks extends Singleton {
   }
 
   /**
-   * Calls `log(nowMsec, ...args)` on each of the registered sinks, where
-   * `nowMsec` represents the current time.
+   * Constructs a {@link LogRecord} based on the given arguments and the current
+   * time, and calls `log(logRecord)` on each of the registered sinks.
    *
-   * @param {...*} args Arguments to pass to the sinks.
+   * @param {string} level Severity level.
+   * @param {string} tag Name of the component associated with the message.
+   * @param {...*} message Message to log.
    */
-  log(...args) {
+  log(level, tag, ...message) {
     if (this._sinks.length === 0) {
       // Bad news! No sinks have yet been added. Typically indicates trouble
       // during init. Instead of silently succeeding (or at best succeeding
       // while logging to `console`), we die with an error here so that it is
       // reasonably blatant that something needs to be fixed during application
       // bootstrap.
-      const details = inspect(args);
+      const details = inspect(level, tag, ...message);
       throw Errors.bad_use(`Overly early log call: ${details}`);
     }
 
-    const nowMsec = this._nowMsec();
+    const logRecord = new LogRecord(this._nowMsec(), level, tag, ...message);
 
     for (const s of this._sinks) {
-      s.log(nowMsec, ...args);
+      s.log(logRecord);
     }
   }
 

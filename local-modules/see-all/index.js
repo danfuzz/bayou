@@ -4,8 +4,9 @@
 
 import BaseLogger from './BaseLogger';
 import BaseSink from './BaseSink';
-import Logger from './Logger';
+import LogRecord from './LogRecord';
 import LogStream from './LogStream';
+import Logger from './Logger';
 import SeeAll from './SeeAll';
 
-export { BaseLogger, BaseSink, Logger, LogStream, SeeAll };
+export { BaseLogger, BaseSink, LogRecord, LogStream, Logger, SeeAll };
