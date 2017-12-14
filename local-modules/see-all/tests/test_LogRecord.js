@@ -49,4 +49,39 @@ describe('see-all/LogRecord', () => {
       test({ a: 10 });
     });
   });
+
+  describe('messageString()', () => {
+    it('operates as expected', () => {
+      function test(expected, ...message) {
+        const lr = new LogRecord(0, 'info', 'blort', ...message);
+        const got = lr.messageString;
+        assert.strictEqual(got, expected);
+      }
+
+      test(''); // No message.
+
+      test('foo',             'foo');
+      test('foo bar',         'foo', 'bar');
+      test('foo bar baz',     'foo', 'bar', 'baz');
+      test('foo bar baz',     '\nfoo', 'bar', 'baz');
+      test('foo bar baz',     'foo\n', 'bar', 'baz');
+      test('foo bar baz',     'foo', '\nbar', 'baz');
+      test('foo bar baz',     'foo', 'bar\n', 'baz');
+      test('foo bar baz',     'foo', 'bar', '\nbaz');
+      test('foo bar baz',     'foo', 'bar', 'baz\n');
+      test('foo\nbar\nbaz\n', 'foo\nbar', 'baz');
+      test('foo\nbar\nbaz\n', 'foo\nbar', 'baz\n');
+      test('foo\nbar\nbaz\n', 'foo\nbar\n', 'baz');
+      test('foo\nbar\nbaz\n', '\nfoo\nbar', 'baz');
+
+      test('true',      true);
+      test('false',     false);
+      test('null',      null);
+      test('undefined', undefined);
+      test('[]',        []);
+      test('123',       123);
+      test('[ 1, 2 ]',  [1, 2]);
+      test('{ a: 10 }', { a: 10 });
+    });
+  });
 });

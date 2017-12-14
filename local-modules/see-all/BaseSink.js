@@ -14,25 +14,6 @@ import LogRecord from './LogRecord';
  */
 export default class BaseSink extends CommonBase {
   /**
-   * "Stringifies" message arguments. Given a list of arguments as originally
-   * passed to `log()` (or similar), returns the preferred unified string form.
-   * This concatenates all arguments, separating single-line arguments from
-   * each other with a single space, and newline-separating multi-line arguments
-   * (so that each ends up on its own line).
-   *
-   * @param {...*} message Original message arguments.
-   * @returns {string} Unified string form.
-   */
-  static stringifyMessage(...message) {
-    // For any items in `message` that aren't strings, use `inspect()` to
-    // stringify them.
-    message = message.map(x => LogRecord.inspectValue(x));
-
-    // Join the arguments together with spaces, et voila!
-    return message.join(' ');
-  }
-
-  /**
    * Logs a record, as appropriate.
    *
    * @abstract

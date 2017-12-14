@@ -18,7 +18,7 @@ describe('see-all-server/RecentSink', () => {
       const contents = sink.contents;
       assert.lengthOf(contents, 1);
       assert.deepEqual(contents[0],
-        { timeMsec: 90909, level: 'error', tag: 'foo', message: ['bar baz'] });
+        new LogRecord(90909, 'error', 'foo', 'bar baz'));
     });
   });
 
@@ -31,7 +31,7 @@ describe('see-all-server/RecentSink', () => {
       const contents = sink.contents;
       assert.lengthOf(contents, 1);
       assert.deepEqual(contents[0],
-        { timeMsec: 80808, level: '', tag: 'time', utcString: 'utc-time', localString: 'local-time' });
+        new LogRecord(80808, 'info', 'time', 'utc-time', 'local-time'));
     });
   });
 
@@ -47,12 +47,12 @@ describe('see-all-server/RecentSink', () => {
       const contents = sink.contents;
 
       for (let i = 0; i < NUM_LINES; i++) {
-        const line = contents[i];
+        const lr = contents[i];
 
-        assert.strictEqual(line.timeMsec, 12345 + i);
-        assert.strictEqual(line.level, 'info');
-        assert.strictEqual(line.tag, 'blort');
-        assert.strictEqual(line.message, [`florp ${i}`]);
+        assert.strictEqual(lr.timeMsec, 12345 + i);
+        assert.strictEqual(lr.level, 'info');
+        assert.strictEqual(lr.tag, 'blort');
+        assert.deepEqual(lr.message, [`florp ${i}`]);
       }
     });
 
@@ -74,13 +74,13 @@ describe('see-all-server/RecentSink', () => {
 
       const contents = sink.contents;
 
-      for (const line of contents) {
-        if (line.tag === 'time') {
-          assert.strictEqual(line.timeMsec, FINAL_TIME);
-          assert.strictEqual(line.utcString, 'utc');
-          assert.strictEqual(line.localString, 'local');
+      for (const lr of contents) {
+        if (lr.tag === 'time') {
+          assert.strictEqual(lr.timeMsec, FINAL_TIME);
+          assert.strictEqual(lr.message[0], 'utc');
+          assert.strictEqual(lr.message[1], 'local');
         } else {
-          assert.isAtLeast(line.timeMsec, FINAL_TIME - MAX_AGE);
+          assert.isAtLeast(lr.timeMsec, FINAL_TIME - MAX_AGE);
         }
       }
     });

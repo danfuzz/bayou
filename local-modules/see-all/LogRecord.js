@@ -108,6 +108,44 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * {string} Unified message string, from on all of the individual message
+   * arguments.
+   *
+   * This form runs {@link #inspectValue} on each of the message arguments,
+   * concatenating all of them together, separating single-line values from each
+   * other with a single space, and newline-separating multi-line values (so
+   * that each ends up on its own line).
+   *
+   * Single-line results have no newlines (including at the end). Multi-line
+   * results always end with a newline.
+   */
+  get messageString() {
+    const result      = [];
+    let   atNewline   = true;
+    let   anyNewlines = false;
+
+    for (const m of this.message) {
+      const s = LogRecord.inspectValue(m);
+      const hasNewline = /\n$/.test(s);
+
+      if ((result.length !== 0) && !atNewline) {
+        result.push(hasNewline ? '\n' : ' ');
+      }
+
+      result.push(s);
+      atNewline = hasNewline;
+      anyNewlines |= hasNewline;
+    }
+
+    // Per docs, guarantee that a multi-line result ends with a newline.
+    if (anyNewlines && !atNewline) {
+      result.push('\n');
+    }
+
+    return result.join('');
+  }
+
+  /**
    * {string} The standard-form prefix string for the level and tag of this
    * instance.
    */

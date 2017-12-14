@@ -6,7 +6,7 @@ import ansiHtml from 'ansi-html';
 import chalk from 'chalk';
 import escapeHtml from 'escape-html';
 
-import { BaseSink, SeeAll } from 'see-all';
+import { BaseSink, LogRecord, SeeAll } from 'see-all';
 import { TInt } from 'typecheck';
 
 /**
@@ -39,8 +39,8 @@ export default class RecentSink extends BaseSink {
    * @param {LogRecord} logRecord The record to write.
    */
   log(logRecord) {
-    const messageStr = BaseSink.stringifyMessage(...(logRecord.message));
-    this._log.push(logRecord.withMessage(messageStr));
+    const messageString = logRecord.messageString;
+    this._log.push(logRecord.withMessage(messageString));
   }
 
   /**
@@ -53,10 +53,9 @@ export default class RecentSink extends BaseSink {
    *   timezone.
    */
   time(timeMsec, utcString, localString) {
-    const level   = '';
-    const tag     = 'time';
-    const details = { timeMsec, level, tag, utcString, localString };
-    this._log.push(details);
+    const logRecord = new LogRecord(timeMsec, 'info', 'time', utcString, localString);
+
+    this._log.push(logRecord);
 
     // Trim the log.
 
@@ -115,8 +114,9 @@ export default class RecentSink extends BaseSink {
     let body;
 
     if (logRecord.tag === 'time') {
-      const utcString = chalk.blue.bold(logRecord.utcString);
-      const localString = chalk.blue.dim.bold(logRecord.localString);
+      const [utc, local] = logRecord.message;
+      const utcString = chalk.blue.bold(utc);
+      const localString = chalk.blue.dim.bold(local);
       body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;
     } else {
       body = logRecord.message[0];
