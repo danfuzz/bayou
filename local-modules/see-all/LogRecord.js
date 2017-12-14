@@ -124,24 +124,24 @@ export default class LogRecord extends CommonBase {
    */
   get messageString() {
     const result      = [];
-    let   atNewline   = true;
+    let   atLineStart = true;
     let   anyNewlines = false;
 
     for (const m of this.message) {
       const s = LogRecord.inspectValue(m);
       const hasNewline = /\n$/.test(s);
 
-      if (!atNewline) {
+      if (!atLineStart) {
         result.push(hasNewline ? '\n' : ' ');
       }
 
       result.push(s);
-      atNewline = hasNewline;
+      atLineStart = hasNewline;
       anyNewlines |= hasNewline;
     }
 
     // Per docs, guarantee that a multi-line result ends with a newline.
-    if (anyNewlines && !atNewline) {
+    if (anyNewlines && !atLineStart) {
       result.push('\n');
     }
 

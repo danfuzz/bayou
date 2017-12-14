@@ -95,44 +95,32 @@ export default class ServerSink extends BaseSink {
     const prefix = this._makePrefix(logRecord);
 
     // Make a unified string of the entire message.
-    let text = '';
-    let atLineStart = true;
-    let gotError = false;
-    for (let m of message) {
-      if (typeof m === 'object') {
+
+    let text = logRecord.messageString;
+
+    if ((level !== 'detail') && (level !== 'info')) {
+      // It's at a level that warrants a stack trace...
+
+      let hasError = false;
+      for (const m of message) {
         if (m instanceof Error) {
-          gotError = true; // Used after the `for` loop, below.
+          hasError = true;
+          break;
         }
-
-        // Convert the object to a string. If it's a single line, just add it
-        // to the text inline. If it's multiple lines, make sure it all ends up
-        // on its own lines.
-        m = LogRecord.inspectValue(m);
-        if (/\n$/.test(m)) {
-          text += `${atLineStart ? '' : '\n'}${m}\n`;
-          atLineStart = true;
-        } else {
-          text += `${atLineStart ? '' : ' '}${m}`;
-          atLineStart = false;
-        }
-      } else {
-        text += `${atLineStart ? '' : ' '}${m}`;
-        atLineStart = (typeof m === 'string') ? /\n$/.test(m) : false;
       }
-    }
 
-    if (!gotError && (level !== 'detail') && (level !== 'info')) {
-      // It's at a level that warrants a stack trace, and none of the arguments
-      // is an `Error`. So, append one. We drop the initial set of stack lines
-      // coming from the logging module.
-      const trace = ErrorUtil.stackLines(new Error());
-      let   skip  = true;
-      for (const line of trace) {
-        if (skip && !/[/]see-all/.test(line)) {
-          skip = false;
-        }
-        if (!skip) {
-          text += `\n  ${line}`;
+      if (!hasError) {
+        // None of the arguments is an `Error`. So, append one. We drop the
+        // initial set of stack lines coming from the logging module.
+        const trace = ErrorUtil.stackLines(new Error());
+        let   skip  = true;
+        for (const line of trace) {
+          if (skip && !/[/]see-all/.test(line)) {
+            skip = false;
+          }
+          if (!skip) {
+            text += `\n  ${line}`;
+          }
         }
       }
     }
