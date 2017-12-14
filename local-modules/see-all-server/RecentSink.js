@@ -34,16 +34,14 @@ export default class RecentSink extends BaseSink {
   }
 
   /**
-   * Logs a message at the given severity level.
+   * Saves a log record to this instance.
    *
-   * @param {Int} nowMsec Timestamp of the message.
-   * @param {string} level Severity level.
-   * @param {string} tag Name of the component associated with the message.
-   * @param {...*} message Message to log.
+   * @param {LogRecord} logRecord The record to write.
    */
-  log(nowMsec, level, tag, ...message) {
-    message = BaseSink.stringifyMessage(...message);
-    const details = { nowMsec, level, tag, message };
+  log(logRecord) {
+    const { level, message, tag, timeMsec } = logRecord;
+    const messageStr = BaseSink.stringifyMessage(...message);
+    const details = { timeMsec, level, tag, messageStr };
     this._log.push(details);
   }
 
@@ -51,24 +49,24 @@ export default class RecentSink extends BaseSink {
    * Logs the indicated time value as "punctuation" on the log. This class
    * also uses this call to trigger cleanup of old items.
    *
-   * @param {Int} nowMsec Timestamp to log.
+   * @param {Int} timeMsec Timestamp to log.
    * @param {string} utcString String representation of the time, as UTC.
    * @param {string} localString String representation of the time, in the local
    *   timezone.
    */
-  time(nowMsec, utcString, localString) {
+  time(timeMsec, utcString, localString) {
     const level   = '';
     const tag     = 'time';
-    const details = { nowMsec, level, tag, utcString, localString };
+    const details = { timeMsec, level, tag, utcString, localString };
     this._log.push(details);
 
     // Trim the log.
 
-    const oldestMsec = nowMsec - this._maxAgeMsec;
+    const oldestMsec = timeMsec - this._maxAgeMsec;
 
     let i;
     for (i = 0; i < this._log.length; i++) {
-      if (this._log[i].nowMsec >= oldestMsec) {
+      if (this._log[i].timeMsec >= oldestMsec) {
         break;
       }
     }
@@ -123,7 +121,7 @@ export default class RecentSink extends BaseSink {
       const localString = chalk.blue.dim.bold(log.localString);
       body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;
     } else {
-      body = log.message;
+      body = log.messageStr;
       body = body.replace(/(^\n+)|(\n+$)/g, ''); // Trim leading and trailing newlines.
     }
 

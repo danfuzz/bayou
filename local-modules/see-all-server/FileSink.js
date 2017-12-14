@@ -4,7 +4,7 @@
 
 import fs from 'fs';
 
-import { BaseSink, SeeAll } from 'see-all';
+import { BaseSink, LogRecord, SeeAll } from 'see-all';
 import { TString } from 'typecheck';
 
 /**
@@ -28,28 +28,26 @@ export default class FileSink extends BaseSink {
   }
 
   /**
-   * Logs a message at the given severity level.
+   * Writes a log record to the file.
    *
-   * @param {Int} nowMsec Timestamp of the message.
-   * @param {string} level Severity level.
-   * @param {string} tag Name of the component associated with the message.
-   * @param {...*} message Message to log.
+   * @param {LogRecord} logRecord The record to write.
    */
-  log(nowMsec, level, tag, ...message) {
-    message = BaseSink.stringifyMessage(...message);
-    this._writeJson({ nowMsec, level, tag, message });
+  log(logRecord) {
+    const { level, message, tag, timeMsec } = logRecord;
+    const messageStr = BaseSink.stringifyMessage(...message);
+    this._writeJson({ timeMsec, level, tag, message: messageStr });
   }
 
   /**
    * Logs the indicated time value.
    *
-   * @param {Int} nowMsec Timestamp to log.
+   * @param {Int} timeMsec Timestamp to log.
    * @param {string} utcString String representation of the time, as UTC.
    * @param {string} localString String representation of the time, in the local
    *   timezone.
    */
-  time(nowMsec, utcString, localString) {
-    this.log(nowMsec, 'info', 'time', utcString, localString);
+  time(timeMsec, utcString, localString) {
+    this.log(new LogRecord(timeMsec, 'info', 'time', utcString, localString));
   }
 
   /**

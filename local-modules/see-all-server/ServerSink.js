@@ -86,14 +86,12 @@ export default class ServerSink extends BaseSink {
   }
 
   /**
-   * Logs a message at the given severity level.
+   * Writes a log record to the console.
    *
-   * @param {Int} nowMsec_unused Timestamp of the message.
-   * @param {string} level Severity level.
-   * @param {string} tag Name of the component associated with the message.
-   * @param {...*} message Message to log.
+   * @param {LogRecord} logRecord The record to write.
    */
-  log(nowMsec_unused, level, tag, ...message) {
+  log(logRecord) {
+    const { level, message, tag } = logRecord;
     const prefix = this._makePrefix(level, tag);
 
     // Make a unified string of the entire message.

@@ -81,16 +81,13 @@ export default class BaseSink extends CommonBase {
   }
 
   /**
-   * Logs a message at the given severity level.
+   * Logs a record, as appropriate.
    *
    * @abstract
-   * @param {Int} nowMsec Timestamp of the message.
-   * @param {string} level Severity level.
-   * @param {string} tag Name of the component associated with the message.
-   * @param {...*} message Message to log.
+   * @param {LogRecord} logRecord The record to write.
    */
-  log(nowMsec, level, tag, ...message) {
-    this._mustOverride(nowMsec, level, tag, message);
+  log(logRecord) {
+    this._mustOverride(logRecord);
   }
 
   /**
@@ -98,12 +95,12 @@ export default class BaseSink extends CommonBase {
    * also uses this call to trigger cleanup of old items.
    *
    * @abstract
-   * @param {Int} nowMsec Timestamp to log.
+   * @param {Int} timeMsec Timestamp to log.
    * @param {string} utcString String representation of the time, as UTC.
    * @param {string} localString String representation of the time, in the local
    *   timezone.
    */
-  time(nowMsec, utcString, localString) {
-    this._mustOverride(nowMsec, utcString, localString);
+  time(timeMsec, utcString, localString) {
+    this._mustOverride(timeMsec, utcString, localString);
   }
 }
