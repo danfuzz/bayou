@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { DragState } from 'data-model-client';
 
-describe('DragState', () => {
+describe('data-model-client/DragState', () => {
   it('should return default values when passed a null initial state', () => {
     const reducer = DragState.reducer;
     const state = reducer(undefined, { type: 'unknown_action' });
