@@ -218,6 +218,36 @@ export default class EventReceiver extends CommonBase {
   }
 
   /**
+   * Produces lines representing the differences between the given two
+   * strings.
+   *
+   * @param {string} actual String representing the actual result of a test.
+   * @param {string} expected String representing the expected result of a test.
+   * @returns {array<string>} Array of lines.
+   */
+  static _linesForDiff(actual, expected) {
+    const result = [];
+
+    function add(string = '', indent = '') {
+      const lines = string.replace(/\n$/, '').split('\n');
+
+      for (const line of lines) {
+        result.push(`${indent}${line}`);
+      }
+    }
+
+    // **TODO:** Produce a real diff.
+    add();
+    add('Actual:');
+    add(actual, '  ');
+    add();
+    add('Expected:');
+    add(expected, '  ');
+
+    return result;
+  }
+
+  /**
    * Produces a set of lines to log for a given test, _except_ for a header.
    * Always includes a blank line at the end if there are any lines at all.
    *
@@ -228,11 +258,11 @@ export default class EventReceiver extends CommonBase {
   static _linesForTest(details) {
     const result = [];
 
-    function add(string = '', indent = '') {
+    function add(string = '') {
       const lines = string.replace(/\n$/, '').split('\n');
 
-      for (const l of lines) {
-        result.push(`${indent}${l}`);
+      for (const line of lines) {
+        result.push(line);
       }
     }
 
@@ -248,13 +278,9 @@ export default class EventReceiver extends CommonBase {
 
       if (extras !== null) {
         if (extras.showDiff) {
-          // **TODO:** Produce a real diff.
-          add();
-          add('Actual:');
-          add(extras.actual, '  ');
-          add();
-          add('Expected:');
-          add(extras.expected, '  ');
+          for (const line of EventReceiver._linesForDiff(extras.actual, extras.expected)) {
+            add(line);
+          }
           delete extras.showDiff;
           delete extras.actual;
           delete extras.expected;
