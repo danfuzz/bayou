@@ -43,6 +43,12 @@ export default class EventReceiver extends CommonBase {
     /** {array<string>} Array of non-test browser console output lines. */
     this._nonTestLines = [];
 
+    /**
+     * {array<string>} Array of reported test failures, for recapitulation at
+     * the end of the results.
+     */
+    this._failLines = [];
+
     /** {object} Ad-hoc object with mappings for test category counts. */
     this._stats = { fail: 0, pass: 0, pending: 0, total: 0 };
 
@@ -113,7 +119,12 @@ export default class EventReceiver extends CommonBase {
   _handle_done() {
     this._done = true;
 
-    this._log('');
+    if (this._failLines.length !== 0) {
+      for (const line of this._failLines) {
+        this._log(line);
+      }
+    }
+
     this._log('Summary:');
     this._log(`  Total:   ${this._stats.total}`);
     this._log(`  Passed:  ${this._stats.pass}`);
@@ -174,57 +185,84 @@ export default class EventReceiver extends CommonBase {
     const titleStr = markup.colorTitle ? markup.color(title) : title;
     this._log(`${prefix}${statusChar} ${titleStr}${speedStr}`);
 
-    let anyExtra = false;
+    const lines = EventReceiver._linesForTest(details);
+
+    if (lines.length !== 0) {
+      this._log('');
+      for (const l of lines) {
+        this._log(`${prefix}${l}`);
+      }
+    }
+
+    if (details.status === 'fail') {
+      let titlePrefix = '';
+
+      for (const s of this._suites) {
+        this._failLines.push(`${titlePrefix}${s}`);
+        titlePrefix += '  ';
+      }
+
+      this._failLines.push(`${titlePrefix}${details.title}`);
+      this._failLines.push('');
+
+      for (const l of lines) {
+        this._failLines.push(`  ${l}`);
+      }
+    }
+  }
+
+  /**
+   * Produces a set of lines to log for a given test, _except_ for a header.
+   * Always includes a blank line at the end if there are any lines at all.
+   *
+   * @param {object} details Test result details.
+   * @returns {array<string>} The lines to log. Elements are guaranteed not to
+   *   have any newlines in them.
+   */
+  static _linesForTest(details) {
+    const result = [];
+
+    function add(string = '', indent = '') {
+      const lines = string.replace(/\n$/, '').split('\n');
+
+      for (const l of lines) {
+        result.push(`${indent}${l}`);
+      }
+    }
 
     if (details.console.length !== 0) {
-      anyExtra = true;
-      this._log('');
-      this._prefixLog(prefix, details.console);
+      add(details.console);
+      add();
     }
 
     if (details.error !== null) {
       const { trace, extras } = details.error;
 
-      anyExtra = true;
-      this._log('');
-
-      this._prefixLog(prefix, trace.replace(/\n+$/, ''));
+      add(trace);
 
       if (extras !== null) {
         if (extras.showDiff) {
           // **TODO:** Produce a real diff.
-          this._log('');
-          this._log(`${prefix}Actual:`);
-          this._prefixLog(`${prefix}  `, extras.actual);
-          this._log('');
-          this._log(`${prefix}Expected:`);
-          this._prefixLog(`${prefix}  `, extras.expected);
+          add();
+          add('Actual:');
+          add(extras.actual, '  ');
+          add();
+          add('Expected:');
+          add(extras.expected, '  ');
           delete extras.showDiff;
           delete extras.actual;
           delete extras.expected;
         }
 
         if (Object.keys(extras).length !== 0) {
-          this._log('');
-          this._prefixLog(prefix, inspect(extras));
+          add();
+          add(inspect(extras));
         }
       }
+
+      add();
     }
 
-    if (anyExtra) {
-      this._log('');
-    }
-  }
-
-  /**
-   * Logs the given string, with each line prefixed as given.
-   *
-   * @param {string} prefix The per-line prefix.
-   * @param {string} value The string to log.
-   */
-  _prefixLog(prefix, value) {
-    for (const line of value.split('\n')) {
-      this._log(`${prefix}${line}`);
-    }
+    return result;
   }
 }
