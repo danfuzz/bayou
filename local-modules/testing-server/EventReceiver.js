@@ -251,7 +251,7 @@ export default class EventReceiver extends CommonBase {
     let firstRangeMark = true;
     function fixLine(line) {
       // This is similar to (but not quite identical to) what Mocha implements
-      // in `reporters/Base.unifiedDiff()` (which isn't actually an expored
+      // in `reporters/Base.unifiedDiff()` (which isn't actually an exported
       // method, alas).
       if (line[0] === '+') {
         return chalk.green(line);
