@@ -52,13 +52,12 @@ export default class EventReporter extends BaseReporter {
     this._emit('testResult', details);
   }
 
-
   /**
-   * Emit an event for consumption by the ultimate test reporter. Each emitted
-   * event is in the form of a JSON-encoded array consisting of a string (event
-   * name) followed by zero or more event-specific arguments, preceded by the
-   * distinctive string `:::MOCHA:::` to make it easy to parse out from other
-   * console spew.
+   * Emits an event for consumption by the ultimate test reporter, by writing
+   * to the console. Each emitted event consists of an initial "sigil" of the
+   * distinctive string `:::MOCHA:::` (to make it easy to parse out from other
+   * console spew), followed by a JSON-encoded array consisting of a string
+   * (event name), finally followed by zero or more event-specific arguments.
    *
    * @param {string} name Event name.
    * @param {...*} args Event-specific arguments.
