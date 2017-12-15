@@ -51,10 +51,12 @@ export default class ServerTests extends UtilityClass {
 
     log.info('Running server tests...');
 
-    const failures = await promisify(cb => mocha.run(f => cb(null, f)))();
+    const failures  = await promisify(cb => mocha.run(f => cb(null, f)))();
+    const reporter  = reporterHolder[0];
+    const collector = reporter.collector;
 
     if (testOut !== null) {
-      const output = reporterHolder[0].resultLines().join('\n');
+      const output = collector.resultLines.join('\n');
       fs.writeFileSync(testOut, output);
       log.info('Wrote test results to file:', testOut);
     }

@@ -88,6 +88,7 @@ export default class EventReporter extends CommonBase {
       // Get a trace of the error without any extra properties (as those get
       // pulled out separately, below).
       const pureError = new Error(error.message);
+      pureError.name  = error.name;
       pureError.stack = error.stack;
       const fullTrace = ErrorUtil.fullTrace(pureError);
 
@@ -103,14 +104,15 @@ export default class EventReporter extends CommonBase {
       let extras = null;
 
       if (error.showDiff) {
-        // Handle expected/actual diffing specially. In particular, we don't
-        // want to try to pass nontrivial objects across the client/server
-        // boundary, so stringify them here.
+        // Handle expected/actual diffing specially. In particular, we want to
+        // make the diffing code not have to worry about stringifying (and it's
+        // also good that we don't maintain references to stateful objects,
+        // _and_ this code is also used when transporting test results between
+        // client and server), so we stringify here.
         //
         // **Note:** As of this writing, the browser polyfill for
         // `util.inspect()` doesn't respect `breakLength`, which means that we
         // too often end up with single-line results for arrays and objects.
-        // **TODO:** Get this fixed upstream.
         const inspectOpts = { depth: 8, breakLength: 10 };
         extras = {
           showDiff: true,
@@ -119,7 +121,7 @@ export default class EventReporter extends CommonBase {
         };
       }
 
-      const skipExtras = ['message', 'stack', 'showDiff', 'actual', 'expected'];
+      const skipExtras = ['name', 'message', 'stack', 'showDiff', 'actual', 'expected'];
       for (const name of Object.getOwnPropertyNames(error)) {
         if (skipExtras.includes(name)) {
           continue;
