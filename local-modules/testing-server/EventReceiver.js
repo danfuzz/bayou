@@ -23,19 +23,9 @@ export default class EventReceiver extends CommonBase {
     this._nonTestLines = [];
   }
 
-  /** {boolean} Whether or not there were any test failures. */
-  get anyFailed() {
-    return this._collector.anyFailed;
-  }
-
   /** {TestCollector} Collector of all the test results. */
   get collector() {
     return this._collector;
-  }
-
-  /** {boolean} Whether or not we have received the `done` event. */
-  get done() {
-    return this._collector.done;
   }
 
   /**
@@ -45,14 +35,6 @@ export default class EventReceiver extends CommonBase {
    */
   get nonTestLines() {
     return this._nonTestLines;
-  }
-
-  /**
-   * {array<string>} A list of output lines representing the test results,
-   * suitable for writing to a file.
-   */
-  get resultLines() {
-    return this._collector.resultLines;
   }
 
   /**

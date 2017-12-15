@@ -33,9 +33,10 @@ export default class ClientTests extends UtilityClass {
 
     // Set up and start up headless Chrome (via Puppeteer).
 
-    const browser  = await puppeteer.launch();
-    const page     = await browser.newPage();
-    const receiver = new EventReceiver();
+    const browser   = await puppeteer.launch();
+    const page      = await browser.newPage();
+    const receiver  = new EventReceiver();
+    const collector = receiver.collector;
 
     page.on('console', (...args) => {
       // **TODO:** This doesn't quite work, because the first argument can have
@@ -76,7 +77,7 @@ export default class ClientTests extends UtilityClass {
     const startTime  = Date.now();
     let   lastStatus = startTime;
     for (;;) {
-      if (receiver.done) {
+      if (collector.done) {
         log.info('Test run is complete!');
         break;
       }
@@ -104,12 +105,12 @@ export default class ClientTests extends UtilityClass {
 
     await browser.close();
 
-    if (!receiver.done) {
+    if (!collector.done) {
       return true;
     }
 
     if (testOut) {
-      const allOutput = receiver.resultLines.join('\n');
+      const allOutput = collector.resultLines.join('\n');
 
       fs.writeFileSync(testOut, allOutput);
       // eslint-disable-next-line no-console
@@ -120,6 +121,6 @@ export default class ClientTests extends UtilityClass {
     // been flushed.
     await promisify(cb => process.stdout.write('', 'utf8', cb))();
 
-    return receiver.anyFailed;
+    return collector.anyFailed;
   }
 }
