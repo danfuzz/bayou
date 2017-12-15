@@ -4,7 +4,7 @@
 
 import { format, inspect } from 'util';
 
-import { CommonBase, ErrorUtil } from 'util-common';
+import { CommonBase, DataUtil, ErrorUtil } from 'util-common';
 
 /**
  * Mocha reporter which "re-envisions" Mocha's various events as a simpler set
@@ -162,18 +162,19 @@ export default class BaseReporter extends CommonBase {
 
       let extras = null;
 
+      // **Note:** As of this writing, the browser polyfill for `util.inspect()`
+      // doesn't respect `breakLength`, which means that when running client
+      // tests, we too often end up with single-line stringified results for
+      // arrays and objects. See <https://github.com/defunctzombie/node-util/issues/22>
+      // for the issue which (more or less) tracks the problem.
+      const inspectOpts = { depth: 8, breakLength: 10 };
+
       if (error.showDiff) {
         // Handle expected/actual diffing specially. In particular, we want to
         // make the diffing code not have to worry about stringifying (and it's
         // also good that we don't maintain references to stateful objects,
         // _and_ this code is also used when transporting test results between
-        // client and server), so we stringify here.
-        //
-        // **Note:** As of this writing, the browser polyfill for
-        // `util.inspect()` doesn't respect `breakLength`, which means that when
-        // running client tests, we too often end up with single-line results
-        // for arrays and objects.
-        const inspectOpts = { depth: 8, breakLength: 10 };
+        // client and server via JSON-encoded strings), so we stringify here.
         extras = {
           showDiff: true,
           actual:   inspect(error.actual,   inspectOpts),
@@ -189,7 +190,11 @@ export default class BaseReporter extends CommonBase {
           extras = {};
         }
 
-        extras[name] = error[name];
+        // As with `actual` and `expected` above, we can't transport non-data
+        // across the "JSON wire" with high fidelity, so we `inspect()` it
+        // into a string.
+        const value = error[name];
+        extras[name] = DataUtil.isData(value) ? value : inspect(value, inspectOpts);
       }
 
       error = { trace, extras };
