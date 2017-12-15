@@ -9,7 +9,7 @@ import { CommonBase, ErrorUtil } from 'util-common';
 /**
  * Mocha reporter, similar to its built-in "JSON stream" reporter, but
  * specifically tailored to emit exactly the right info for collection on our
- * server side. See {@link testing-server.ClientTests} for the consuming code.
+ * server side. See {@link testing-server.EventReceiver} for the consuming code.
  */
 export default class EventReporter extends CommonBase {
   /**
@@ -45,7 +45,7 @@ export default class EventReporter extends CommonBase {
     runner.on('suite', (suite) => {
       // Don't emit an event for the anonymous top-level suite.
       if (this._suiteDepth !== 0) {
-        this._emit('suite', suite.title);
+        this._emit('suiteStart', suite.title);
       }
 
       this._suiteDepth++;
@@ -53,7 +53,7 @@ export default class EventReporter extends CommonBase {
 
     runner.on('suite end', () => {
       this._suiteDepth--;
-      this._emit((this._suiteDepth === 0) ? 'done' : 'suiteEnd');
+      this._emit((this._suiteDepth === 0) ? 'allDone' : 'suiteEnd');
     });
 
     runner.on('pending', (test) => {
@@ -133,7 +133,9 @@ export default class EventReporter extends CommonBase {
       error = { trace, extras };
     }
 
-    this._emit('test', {
+    // **Note:** The payload here ends up getting consumed in
+    // {@link testing-server.TestCollector}.
+    this._emit('testResult', {
       title:    test.title,
       console:  this._console,
       duration: test.duration || 0,
