@@ -139,7 +139,7 @@ function run-test {
     ) >> "${outPath}"
 
     if (( ${status} != 0 )); then
-        $((testErrors++))
+        (( testErrors++ ))
     fi
 }
 
