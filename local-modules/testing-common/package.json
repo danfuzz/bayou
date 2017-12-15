@@ -1,9 +1,8 @@
 {
-  "name": "mocha-client-shim",
+  "name": "testing-common",
   "version": "1.0.0",
 
   "dependencies": {
-    "deps-testing": "local",
     "util-common": "local"
   }
 }
