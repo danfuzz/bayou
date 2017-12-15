@@ -139,7 +139,7 @@ function run-test {
     ) >> "${outPath}"
 
     if (( ${status} != 0 )); then
-        testError=1
+        $((testErrors++))
     fi
 }
 
@@ -148,8 +148,8 @@ function run-test {
 # Main script
 #
 
-# Whether any test got an error.
-testError=0
+# How many test runs reported failure.
+testErrors=0
 
 outDir="$(${progDir}/lib/out-dir-setup "${outDirOpt[@]}")"
 if (( $? != 0 )); then
@@ -183,4 +183,19 @@ for test in "${tests[@]}"; do
     esac
 done
 
-exit "${testError}"
+# Emit a summary message if more than one (set of) test(s) was run.
+if (( ${#tests[@]} > 1 )); then
+    echo ''
+    echo "${#tests[@]} test runs."
+
+    if (( ${testErrors} != 0 )); then
+        echo "${testErrors} reported at least one failure."
+        echo 'Alas.'
+    else
+        echo 'All passed. Yay!'
+    fi
+fi
+
+if (( ${testErrors} != 0 )); then
+    exit 1
+fi
