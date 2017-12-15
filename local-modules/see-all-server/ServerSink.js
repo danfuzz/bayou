@@ -7,7 +7,6 @@ import { format } from 'util';
 
 import { BaseSink, LogRecord, Logger, SeeAll } from 'see-all';
 import { TFunction } from 'typecheck';
-import { ErrorUtil } from 'util-common';
 
 // The whole point of this file is to use `console.<whatever>`, so...
 /* eslint-disable no-console */
@@ -96,7 +95,12 @@ export default class ServerSink extends BaseSink {
 
     // Make a unified string of the entire message.
 
-    let text = logRecord.messageString;
+    const text = logRecord.messageString;
+
+    // Remove the trailing newline, if any, and split on newlines to produce an
+    // array of all lines. The final-newline removal means we won't (typically)
+    // have an empty line at the end of the log.
+    const lines = text.replace(/\n$/, '').match(/^.*$/mg);
 
     if ((level !== 'detail') && (level !== 'info')) {
       // It's at a level that warrants a stack trace...
@@ -110,25 +114,12 @@ export default class ServerSink extends BaseSink {
       }
 
       if (!hasError) {
-        // None of the arguments is an `Error`. So, append one. We drop the
-        // initial set of stack lines coming from the logging module.
-        const trace = ErrorUtil.stackLines(new Error());
-        let   skip  = true;
-        for (const line of trace) {
-          if (skip && !/[/]see-all/.test(line)) {
-            skip = false;
-          }
-          if (!skip) {
-            text += `\n  ${line}`;
-          }
+        const stack = LogRecord.makeStack().split('\n');
+        for (const line of stack) {
+          lines.push(`  ${line}`);
         }
       }
     }
-
-    // Remove the trailing newline, if any, and split on newlines to produce an
-    // array of all lines. The final-newline removal means we won't (typically)
-    // have an empty line at the end of the log.
-    const lines = text.replace(/\n$/, '').match(/^.*$/mg);
 
     // Measure every line. If all lines are short enough for the current
     // console, align them to the right of the prefix. If not, put the prefix on

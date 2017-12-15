@@ -60,6 +60,32 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Makes a stack trace for the current call site, skipping initial stack
+   * frames from this module. Results of this method are suitable for passing
+   * as the `stack` to this class's constructor.
+   *
+   * @returns {string} A stack trace.
+   */
+  static makeStack() {
+    const trace = ErrorUtil.stackLines(new Error());
+
+    let startAt;
+    for (startAt = 0; startAt < trace.length; startAt++) {
+      if (!/[/]see-all/.test(trace[startAt])) {
+        break;
+      }
+    }
+
+    // Only trim initial items if there's _some_ part of the trace that isn't in
+    // this module.
+    if (startAt < trace.length) {
+      trace.splice(0, startAt);
+    }
+
+    return trace.join('\n');
+  }
+
+  /**
    * Validates a logging severity level value. Throws an error if invalid.
    *
    * @param {string} level Severity level. Must be one of the severity level
