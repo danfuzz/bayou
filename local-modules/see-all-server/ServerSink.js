@@ -90,7 +90,7 @@ export default class ServerSink extends BaseSink {
    * @param {LogRecord} logRecord The record to write.
    */
   log(logRecord) {
-    const { level, message } = logRecord;
+    const level = logRecord.level;
     const prefix = this._makePrefix(logRecord);
 
     // Make a unified string of the entire message.
@@ -104,18 +104,10 @@ export default class ServerSink extends BaseSink {
 
     if ((level !== 'detail') && (level !== 'info')) {
       // It's at a level that warrants a stack trace...
-
-      let hasError = false;
-      for (const m of message) {
-        if (m instanceof Error) {
-          hasError = true;
-          break;
-        }
-      }
-
-      if (!hasError) {
-        const stack = LogRecord.makeStack().split('\n');
-        for (const line of stack) {
+      if (!logRecord.hasError()) {
+        // It doesn't otherwise have an error, so append the stack of the call
+        // site.
+        for (const line of logRecord.stack.split('\n')) {
           lines.push(`  ${line}`);
         }
       }

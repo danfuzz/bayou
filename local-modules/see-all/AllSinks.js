@@ -82,7 +82,8 @@ export default class AllSinks extends Singleton {
       throw Errors.bad_use(`Overly early log call: ${details}`);
     }
 
-    const logRecord = new LogRecord(this._nowMsec(), null, level, tag, ...message);
+    const logRecord =
+      new LogRecord(this._nowMsec(), LogRecord.makeStack(), level, tag, ...message);
 
     for (const s of this._sinks) {
       s.log(logRecord);

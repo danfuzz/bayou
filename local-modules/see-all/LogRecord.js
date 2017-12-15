@@ -215,6 +215,23 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Indicates whether any of the `message` arguments of this instance is an
+   * `Error`.
+   *
+   * @returns {boolean} `true` iff this instance's `message` contains at least
+   *   one `Error`.
+   */
+  hasError() {
+    for (const m of this._message) {
+      if (m instanceof Error) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
    * Constructs an instance just like this one, except with `message` replaced
    * with the indicated contents.
    *
