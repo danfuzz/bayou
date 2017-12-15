@@ -8,6 +8,7 @@
     "deps-ansi-color": "local",
     "deps-testing": "local",
     "env-server": "local",
+    "testing-common": "local",
     "util-common": "local"
   }
 }
