@@ -53,7 +53,7 @@ export default class RecentSink extends BaseSink {
    *   timezone.
    */
   time(timeMsec, utcString, localString) {
-    const logRecord = new LogRecord(timeMsec, 'info', 'time', utcString, localString);
+    const logRecord = new LogRecord(timeMsec, null, 'info', 'time', utcString, localString);
 
     this._log.push(logRecord);
 

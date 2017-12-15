@@ -46,7 +46,7 @@ export default class FileSink extends BaseSink {
    *   timezone.
    */
   time(timeMsec, utcString, localString) {
-    this.log(new LogRecord(timeMsec, 'info', 'time', utcString, localString));
+    this.log(new LogRecord(timeMsec, null, 'info', 'time', utcString, localString));
   }
 
   /**

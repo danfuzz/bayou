@@ -13,12 +13,12 @@ describe('see-all-server/RecentSink', () => {
     it('should log the item as given', () => {
       const sink = new RecentSink(1);
 
-      sink.log(new LogRecord(90909, 'error', 'foo', 'bar', 'baz'));
+      sink.log(new LogRecord(90909, 'yay-stack', 'error', 'foo', 'bar', 'baz'));
 
       const contents = sink.contents;
       assert.lengthOf(contents, 1);
       assert.deepEqual(contents[0],
-        new LogRecord(90909, 'error', 'foo', 'bar baz'));
+        new LogRecord(90909, 'yay-stack', 'error', 'foo', 'bar baz'));
     });
   });
 
@@ -31,7 +31,7 @@ describe('see-all-server/RecentSink', () => {
       const contents = sink.contents;
       assert.lengthOf(contents, 1);
       assert.deepEqual(contents[0],
-        new LogRecord(80808, 'info', 'time', 'utc-time', 'local-time'));
+        new LogRecord(80808, null, 'info', 'time', 'utc-time', 'local-time'));
     });
   });
 
@@ -41,7 +41,7 @@ describe('see-all-server/RecentSink', () => {
       const NUM_LINES = 10;
 
       for (let i = 0; i < NUM_LINES; i++) {
-        sink.log(new LogRecord(12345 + i, 'info', 'blort', 'florp', i));
+        sink.log(new LogRecord(12345 + i, 'yay-stack', 'info', 'blort', 'florp', i));
       }
 
       const contents = sink.contents;
@@ -50,6 +50,7 @@ describe('see-all-server/RecentSink', () => {
         const lr = contents[i];
 
         assert.strictEqual(lr.timeMsec, 12345 + i);
+        assert.strictEqual(lr.stack, 'yay-stack');
         assert.strictEqual(lr.level, 'info');
         assert.strictEqual(lr.tag, 'blort');
         assert.deepEqual(lr.message, [`florp ${i}`]);
@@ -67,7 +68,7 @@ describe('see-all-server/RecentSink', () => {
       const sink = new RecentSink(MAX_AGE);
 
       for (let i = 0; i < NUM_LINES; i++) {
-        sink.log(new LogRecord(timeForLine(i), 'info', 'blort', 'florp'));
+        sink.log(new LogRecord(timeForLine(i), 'yay-stack', 'info', 'blort', 'florp'));
       }
 
       sink.time(FINAL_TIME, 'utc', 'local');
@@ -92,7 +93,7 @@ describe('see-all-server/RecentSink', () => {
       const NUM_LINES = 10;
 
       for (let i = 0; i < NUM_LINES; i++) {
-        sink.log(new LogRecord(12345 + i, 'info', 'blort', 'florp', i));
+        sink.log(new LogRecord(12345 + i, 'yay-stack', 'info', 'blort', 'florp', i));
       }
 
       const contents = sink.htmlContents;

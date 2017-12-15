@@ -78,15 +78,25 @@ export default class LogRecord extends CommonBase {
    * Constructs an instance.
    *
    * @param {Int} timeMsec Timestamp of the message.
+   * @param {string|null} stack Stack trace representing the call site which
+   *   caused this instance to be created. or `null` if that information is not
+   *   available.
    * @param {string} level Severity level.
    * @param {string} tag Name of the component associated with the message.
    * @param {...*} message Message to log.
    */
-  constructor(timeMsec, level, tag, ...message) {
+  constructor(timeMsec, stack, level, tag, ...message) {
     super();
 
     /** {Int} Timestamp of the message. */
     this._timeMsec = TInt.nonNegative(timeMsec);
+
+    /**
+     * {string|null} stack Stack trace representing the call site which caused
+     * this instance to be created. or `null` if that information is not
+     * available.
+     */
+    this._stack = TString.orNull(stack);
 
     /** {string} Severity level. */
     this._level = LogRecord.validateLevel(level);
@@ -159,6 +169,15 @@ export default class LogRecord extends CommonBase {
     return `[${tag}${levelStr}]`;
   }
 
+  /**
+   * {string|null} stack Stack trace representing the call site which caused
+   * this instance to be created. or `null` if that information is not
+   * available.
+   */
+  get stack() {
+    return this._stack;
+  }
+
   /** {string} Name of the component associated with the message. */
   get tag() {
     return this._tag;
@@ -177,7 +196,7 @@ export default class LogRecord extends CommonBase {
    * @returns {LogRecord} An appropriately-constructed instance.
    */
   withMessage(...message) {
-    const { timeMsec, level, tag } = this;
-    return new LogRecord(timeMsec, level, tag, ...message);
+    const { timeMsec, stack, level, tag } = this;
+    return new LogRecord(timeMsec, stack, level, tag, ...message);
   }
 }

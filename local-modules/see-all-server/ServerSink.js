@@ -172,7 +172,7 @@ export default class ServerSink extends BaseSink {
    *   timezone.
    */
   time(timeMsec, utcString, localString) {
-    const logRecord = new LogRecord(timeMsec, 'info', 'time', utcString, localString);
+    const logRecord = new LogRecord(timeMsec, null, 'info', 'time', utcString, localString);
     const prefix = this._makePrefix(logRecord);
 
     utcString = chalk.blue.bold(utcString);
