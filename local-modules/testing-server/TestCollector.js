@@ -285,7 +285,9 @@ export default class TestCollector extends CommonBase {
     }
 
     if (details.console.length !== 0) {
-      add(details.console);
+      for (const line of details.console) {
+        add(line);
+      }
       add();
     }
 
