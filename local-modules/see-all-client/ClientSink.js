@@ -100,7 +100,7 @@ export default class ClientSink extends BaseSink {
       '%c%s%c',
       `color: ${prefixColor}; font-weight: bold`,
       logRecord.prefix,
-      ''
+      '' // This empty string is for the second `%c` above; that is, reset style.
     ];
   }
 }
