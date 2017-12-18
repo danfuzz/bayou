@@ -4,7 +4,7 @@
 
 import fs from 'fs';
 
-import { BaseSink, LogRecord, SeeAll } from 'see-all';
+import { BaseSink, SeeAll } from 'see-all';
 import { TString } from 'typecheck';
 
 /**
@@ -35,18 +35,6 @@ export default class FileSink extends BaseSink {
   log(logRecord) {
     const { level, tag, timeMsec } = logRecord;
     this._writeJson({ timeMsec, level, tag, message: logRecord.messageString });
-  }
-
-  /**
-   * Logs the indicated time value.
-   *
-   * @param {Int} timeMsec Timestamp to log.
-   * @param {string} utcString String representation of the time, as UTC.
-   * @param {string} localString String representation of the time, in the local
-   *   timezone.
-   */
-  time(timeMsec, utcString, localString) {
-    this.log(new LogRecord(timeMsec, null, 'info', 'time', utcString, localString));
   }
 
   /**

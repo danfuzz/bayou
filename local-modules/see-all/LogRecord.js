@@ -24,6 +24,30 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Constructs an instance of this class for representing a timestamp. The
+   * result is an `info` level record tagged with `time`, and with a three-array
+   * `messages` argument consisting of `[<utc>, '/', <local>]`, where `<utc>`
+   * and `<local>` are UTC and local-timezone string representations.
+   *
+   * Though every instance comes with a time field, the logging system
+   * occasionally adds explicitly timestamp lines, which are meant to aid in
+   * the (human) readability of logs.
+   *
+   * @param {Int} timeMsec Timestamp to memorialize.
+   * @returns {LogRecord} Appropriately-constructed instance of this class.
+   */
+  static forTime(timeMsec) {
+    TInt.nonNegative(timeMsec);
+
+    const date        = new Date(timeMsec);
+    const utcString   = LogRecord._utcTimeString(date);
+    const localString = LogRecord._localTimeString(date);
+
+    return new LogRecord(timeMsec, null, 'info', 'time',
+      utcString, '/', localString);
+  }
+
+  /**
    * Returns a string form for the given value, suitable for logging. Among
    * other things:
    *
@@ -232,6 +256,20 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Indicates whether this instance represents a timestamp, as for example
+   * constructed by {@link #forTime}.
+   *
+   * @returns {boolean} `true` iff this is a timestamp instance.
+   */
+  isTime() {
+    // The first check (the tag) is probably sufficient, but it probably can't
+    // hurt to be a little pickier.
+    return (this._tag === 'time')
+      && (this._message.length === 3)
+      && (this._message[1] === '/');
+  }
+
+  /**
    * Constructs an instance just like this one, except with `message` replaced
    * with the indicated contents.
    *
@@ -241,5 +279,31 @@ export default class LogRecord extends CommonBase {
   withMessage(...message) {
     const { timeMsec, stack, level, tag } = this;
     return new LogRecord(timeMsec, stack, level, tag, ...message);
+  }
+
+  /**
+   * Returns a string representing the given time in UTC.
+   *
+   * @param {Date} date The time, as a `Date` object.
+   * @returns {string} The corresponding UTC time string.
+   */
+  static _utcTimeString(date) {
+    // We start with the ISO string and tweak it to be a little more
+    // human-friendly.
+    const isoString = date.toISOString();
+    return isoString.replace(/T/, ' ').replace(/Z/, ' UTC');
+  }
+
+  /**
+   * Returns a string representing the given time in the local timezone.
+   *
+   * @param {Date} date The time, as a `Date` object.
+   * @returns {string} The corresponding local time string.
+   */
+  static _localTimeString(date) {
+    // We start with the local time string and cut off all everything after the
+    // actual time (timezone spew).
+    const localString = date.toTimeString();
+    return localString.replace(/ [^0-9].*$/, ' local');
   }
 }

@@ -5,7 +5,7 @@
 import { CommonBase } from 'util-common';
 
 /**
- * Base class for logging sink. Subclasses must implement `log()` and `time()`.
+ * Base class for logging sink. Subclasses must implement `log()`.
  *
  * **TODO:** This should follow the usual abstract class pattern and make the
  * methods to implement be named `_impl_*`.
@@ -19,19 +19,5 @@ export default class BaseSink extends CommonBase {
    */
   log(logRecord) {
     this._mustOverride(logRecord);
-  }
-
-  /**
-   * Logs the indicated time value as "punctuation" on the log. This class
-   * also uses this call to trigger cleanup of old items.
-   *
-   * @abstract
-   * @param {Int} timeMsec Timestamp to log.
-   * @param {string} utcString String representation of the time, as UTC.
-   * @param {string} localString String representation of the time, in the local
-   *   timezone.
-   */
-  time(timeMsec, utcString, localString) {
-    this._mustOverride(timeMsec, utcString, localString);
   }
 }

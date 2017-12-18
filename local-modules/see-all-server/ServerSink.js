@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 import { format } from 'util';
 
-import { BaseSink, LogRecord, Logger, SeeAll } from 'see-all';
+import { BaseSink, Logger, SeeAll } from 'see-all';
 import { TFunction } from 'typecheck';
 
 // The whole point of this file is to use `console.<whatever>`, so...
@@ -95,7 +95,9 @@ export default class ServerSink extends BaseSink {
 
     // Make a unified string of the entire message.
 
-    const text = logRecord.messageString;
+    const text = logRecord.isTime()
+      ? ServerSink._timeString(logRecord)
+      : logRecord.messageString;
 
     // Remove the trailing newline, if any, and split on newlines to produce an
     // array of all lines. The final-newline removal means we won't (typically)
@@ -144,24 +146,6 @@ export default class ServerSink extends BaseSink {
         first = false;
       }
     }
-  }
-
-  /**
-   * Logs the indicated time value as "punctuation" on the log.
-   *
-   * @param {Int} timeMsec Timestamp to log.
-   * @param {string} utcString String representation of the time, as UTC.
-   * @param {string} localString String representation of the time, in the local
-   *   timezone.
-   */
-  time(timeMsec, utcString, localString) {
-    const logRecord = new LogRecord(timeMsec, null, 'info', 'time', utcString, localString);
-    const prefix = this._makePrefix(logRecord);
-
-    utcString = chalk.blue.bold(utcString);
-    localString  = chalk.blue.dim.bold(localString);
-
-    this._log(`${prefix}${utcString} / ${localString}`);
   }
 
   /**
@@ -222,5 +206,17 @@ export default class ServerSink extends BaseSink {
     }
 
     return Math.max(process.stdout.getWindowSize()[0] || 80, 80);
+  }
+
+  /**
+   * Creates a colorized message string from a time record.
+   *
+   * @param {LogRecord} logRecord Time log record.
+   * @returns {string} Corresponding colorized message.
+   */
+  static _timeString(logRecord) {
+    const [utc, separator, local] = logRecord.message;
+
+    return `${chalk.blue.bold(utc)} ${separator} ${chalk.blue.dim.bold(local)}`;
   }
 }
