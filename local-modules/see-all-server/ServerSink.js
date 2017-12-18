@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import chalk from 'chalk';
+import stringLength from 'string-length';
 import { format } from 'util';
 
 import { BaseSink, Logger, SeeAll } from 'see-all';
@@ -118,11 +119,12 @@ export default class ServerSink extends BaseSink {
     // Measure every line. If all lines are short enough for the current
     // console, align them to the right of the prefix. If not, put the prefix on
     // its own line and produce the main content just slightly indented, under
-    // the prefix.
+    // the prefix. **Note:** `stringLength()` takes into account the fact that
+    // ANSI color escapes don't add to the visual-length of a string.
 
     const consoleWidth = ServerSink._consoleWidth();
     const maxLineWidth = lines.reduce(
-      (prev, l) => { return Math.max(prev, l.length); },
+      (prev, l) => { return Math.max(prev, stringLength(l)); },
       0);
 
     if (maxLineWidth > (consoleWidth - this._prefixLength)) {
