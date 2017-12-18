@@ -10,7 +10,7 @@ import { RecentSink } from 'see-all-server';
 
 describe('see-all-server/RecentSink', () => {
   describe('log()', () => {
-    it('should log the item as given', () => {
+    it('should log a regular item as given', () => {
       const sink = new RecentSink(1);
 
       sink.log(new LogRecord(90909, 'yay-stack', 'error', 'foo', 'bar', 'baz'));
@@ -20,18 +20,16 @@ describe('see-all-server/RecentSink', () => {
       assert.deepEqual(contents[0],
         new LogRecord(90909, 'yay-stack', 'error', 'foo', 'bar baz'));
     });
-  });
 
-  describe('time()', () => {
-    it('should log the time as given', () => {
+    it('should log a time record as given', () => {
       const sink = new RecentSink(1);
+      const lr   = LogRecord.forTime(80808);
 
-      sink.time(80808, 'utc-time', 'local-time');
+      sink.log(lr);
 
       const contents = sink.contents;
       assert.lengthOf(contents, 1);
-      assert.deepEqual(contents[0],
-        new LogRecord(80808, null, 'info', 'time', 'utc-time', 'local-time'));
+      assert.strictEqual(contents[0], lr);
     });
   });
 
@@ -71,15 +69,13 @@ describe('see-all-server/RecentSink', () => {
         sink.log(new LogRecord(timeForLine(i), 'yay-stack', 'info', 'blort', 'florp'));
       }
 
-      sink.time(FINAL_TIME, 'utc', 'local');
+      sink.log(LogRecord.forTime(FINAL_TIME));
 
       const contents = sink.contents;
 
       for (const lr of contents) {
         if (lr.tag === 'time') {
           assert.strictEqual(lr.timeMsec, FINAL_TIME);
-          assert.strictEqual(lr.message[0], 'utc');
-          assert.strictEqual(lr.message[1], 'local');
         } else {
           assert.isAtLeast(lr.timeMsec, FINAL_TIME - MAX_AGE);
         }
