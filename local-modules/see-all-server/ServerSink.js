@@ -90,7 +90,7 @@ export default class ServerSink extends BaseSink {
    *
    * @param {LogRecord} logRecord The record to write.
    */
-  log(logRecord) {
+  _impl_sinkLog(logRecord) {
     const level = logRecord.level;
     const prefix = this._makePrefix(logRecord);
 

@@ -4,20 +4,44 @@
 
 import { CommonBase } from 'util-common';
 
+import LogRecord from './LogRecord';
+
 /**
- * Base class for logging sink. Subclasses must implement `log()`.
- *
- * **TODO:** This should follow the usual abstract class pattern and make the
- * methods to implement be named `_impl_*`.
+ * Base class for logging sinks (that is, a "sink" as a destination for log
+ * records). Instances of this class accept {@link LogRecord} instances and
+ * durably log them _somewhere_.
  */
 export default class BaseSink extends CommonBase {
   /**
    * Logs a record, as appropriate.
    *
-   * @abstract
-   * @param {LogRecord} logRecord The record to write.
+   * @param {LogRecord} logRecord The record to log.
    */
   log(logRecord) {
+    // **TODO:** Remove this when client sites have been updated.
+    this.sinkLog(logRecord);
+  }
+
+  /**
+   * Accepts a log record, doing whatever is appropriate per the subclass.
+   *
+   * @param {LogRecord} logRecord The record to log.
+   */
+  sinkLog(logRecord) {
+    // This method exists to (a) perform type checking, and (b) provide the
+    // usual main-vs-`_impl_` arrangement for abstract classes.
+    LogRecord.check(logRecord);
+    this._impl_sinkLog(logRecord);
+  }
+
+  /**
+   * Subclass-specific log handler.
+   *
+   * @abstract
+   * @param {LogRecord} logRecord The record to log. Guaranteed to be a valid
+   *   instance.
+   */
+  _impl_sinkLog(logRecord) {
     this._mustOverride(logRecord);
   }
 }

@@ -68,7 +68,7 @@ export default class RecentSink extends BaseSink {
    *
    * @param {LogRecord} logRecord The record to write.
    */
-  log(logRecord) {
+  _impl_sinkLog(logRecord) {
     if (logRecord.isTime()) {
       this._logTime(logRecord);
     } else {

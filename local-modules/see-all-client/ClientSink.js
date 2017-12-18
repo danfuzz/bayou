@@ -25,7 +25,7 @@ export default class ClientSink extends BaseSink {
    *
    * @param {LogRecord} logRecord The record to write.
    */
-  log(logRecord) {
+  _impl_sinkLog(logRecord) {
     if (logRecord.isTime()) {
       // Special colorful markup for times.
       this._logTime(logRecord);
