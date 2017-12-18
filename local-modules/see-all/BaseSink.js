@@ -13,16 +13,6 @@ import LogRecord from './LogRecord';
  */
 export default class BaseSink extends CommonBase {
   /**
-   * Logs a record, as appropriate.
-   *
-   * @param {LogRecord} logRecord The record to log.
-   */
-  log(logRecord) {
-    // **TODO:** Remove this when client sites have been updated.
-    this.sinkLog(logRecord);
-  }
-
-  /**
    * Accepts a log record, doing whatever is appropriate per the subclass.
    *
    * @param {LogRecord} logRecord The record to log.

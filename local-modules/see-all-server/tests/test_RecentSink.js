@@ -13,7 +13,7 @@ describe('see-all-server/RecentSink', () => {
     it('should log a regular item as given', () => {
       const sink = new RecentSink(1);
 
-      sink.log(new LogRecord(90909, 'yay-stack', 'error', 'foo', 'bar', 'baz'));
+      sink.sinkLog(new LogRecord(90909, 'yay-stack', 'error', 'foo', 'bar', 'baz'));
 
       const contents = sink.contents;
       assert.lengthOf(contents, 1);
@@ -25,7 +25,7 @@ describe('see-all-server/RecentSink', () => {
       const sink = new RecentSink(1);
       const lr   = LogRecord.forTime(80808);
 
-      sink.log(lr);
+      sink.sinkLog(lr);
 
       const contents = sink.contents;
       assert.lengthOf(contents, 1);
@@ -39,7 +39,7 @@ describe('see-all-server/RecentSink', () => {
       const NUM_LINES = 10;
 
       for (let i = 0; i < NUM_LINES; i++) {
-        sink.log(new LogRecord(12345 + i, 'yay-stack', 'info', 'blort', 'florp', i));
+        sink.sinkLog(new LogRecord(12345 + i, 'yay-stack', 'info', 'blort', 'florp', i));
       }
 
       const contents = sink.contents;
@@ -66,10 +66,10 @@ describe('see-all-server/RecentSink', () => {
       const sink = new RecentSink(MAX_AGE);
 
       for (let i = 0; i < NUM_LINES; i++) {
-        sink.log(new LogRecord(timeForLine(i), 'yay-stack', 'info', 'blort', 'florp'));
+        sink.sinkLog(new LogRecord(timeForLine(i), 'yay-stack', 'info', 'blort', 'florp'));
       }
 
-      sink.log(LogRecord.forTime(FINAL_TIME));
+      sink.sinkLog(LogRecord.forTime(FINAL_TIME));
 
       const contents = sink.contents;
 
@@ -89,7 +89,7 @@ describe('see-all-server/RecentSink', () => {
       const NUM_LINES = 10;
 
       for (let i = 0; i < NUM_LINES; i++) {
-        sink.log(new LogRecord(12345 + i, 'yay-stack', 'info', 'blort', 'florp', i));
+        sink.sinkLog(new LogRecord(12345 + i, 'yay-stack', 'info', 'blort', 'florp', i));
       }
 
       const contents = sink.htmlContents;

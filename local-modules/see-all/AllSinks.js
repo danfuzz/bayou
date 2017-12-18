@@ -65,7 +65,7 @@ export default class AllSinks extends Singleton {
 
   /**
    * Constructs a {@link LogRecord} based on the given arguments and the current
-   * time, and calls `log(logRecord)` on each of the registered sinks.
+   * time, and calls `sinkLog(logRecord)` on each of the registered sinks.
    *
    * @param {string} level Severity level.
    * @param {string} tag Name of the component associated with the message.
@@ -86,7 +86,7 @@ export default class AllSinks extends Singleton {
       new LogRecord(this._nowMsec(), LogRecord.makeStack(), level, tag, ...message);
 
     for (const s of this._sinks) {
-      s.log(logRecord);
+      s.sinkLog(logRecord);
     }
   }
 
@@ -102,7 +102,7 @@ export default class AllSinks extends Singleton {
     const logRecord = LogRecord.forTime(timeMsec);
 
     for (const s of this._sinks) {
-      s.log(logRecord);
+      s.sinkLog(logRecord);
     }
 
     this._linesSinceTime = 0;
@@ -110,7 +110,7 @@ export default class AllSinks extends Singleton {
 
   /**
    * Gets a msec timestamp representing the current time, suitable for passing
-   * as such to `sink.log()`. This will also generate `sink.time()` calls at
+   * as such to `sink.sinkLog()`. This will also generate `sink.time()` calls at
    * appropriate junctures to "punctuate" gaps.
    *
    * @returns {Int} The timestamp.
