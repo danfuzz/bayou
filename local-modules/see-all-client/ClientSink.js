@@ -25,7 +25,13 @@ export default class ClientSink extends BaseSink {
    *
    * @param {LogRecord} logRecord The record to write.
    */
-  log(logRecord) {
+  _impl_sinkLog(logRecord) {
+    if (logRecord.isTime()) {
+      // Special colorful markup for times.
+      this._logTime(logRecord);
+      return;
+    }
+
     const { level, message } = logRecord;
     const [prefixFormat, ...args] = this._makePrefix(logRecord);
     const formatStr = [prefixFormat]; // We append to this array and `args`.
@@ -61,15 +67,13 @@ export default class ClientSink extends BaseSink {
   }
 
   /**
-   * Logs the indicated time value as "punctuation" on the log.
+   * Logs the indicated time record.
    *
-   * @param {Int} nowMsec_unused Timestamp to log.
-   * @param {string} utcString String representation of the time, as UTC.
-   * @param {string} localString String representation of the time, in the local
-   *   timezone.
+   * @param {LogRecord} logRecord Log record, which must be for a time.
    */
-  time(nowMsec_unused, utcString, localString) {
-    console.log(`%c[time] %c${utcString} %c/ %c${localString}`,
+  _logTime(logRecord) {
+    const { tag, message } = logRecord;
+    console.log(`%c[${tag}] %c${message[0]} %c${message[1]} %c${message[2]}`,
       'color: #999; font-weight: bold',
       'color: #66a; font-weight: bold',
       'color: #999; font-weight: bold',
@@ -82,7 +86,7 @@ export default class ClientSink extends BaseSink {
    * string and additional arguments as appropriate.
    *
    * @param {LogRecord} logRecord The log record in question.
-   * @returns {string} The prefix.
+   * @returns {array<string>} The prefix.
    */
   _makePrefix(logRecord) {
     let prefixColor;
@@ -96,7 +100,7 @@ export default class ClientSink extends BaseSink {
       '%c%s%c',
       `color: ${prefixColor}; font-weight: bold`,
       logRecord.prefix,
-      ''
+      '' // This empty string is for the second `%c` above; that is, reset style.
     ];
   }
 }

@@ -6,7 +6,7 @@ import ansiHtml from 'ansi-html';
 import chalk from 'chalk';
 import escapeHtml from 'escape-html';
 
-import { BaseSink, LogRecord, SeeAll } from 'see-all';
+import { BaseSink, SeeAll } from 'see-all';
 import { TInt } from 'typecheck';
 
 /**
@@ -31,46 +31,6 @@ export default class RecentSink extends BaseSink {
     this._log = [];
 
     SeeAll.theOne.add(this);
-  }
-
-  /**
-   * Saves a log record to this instance.
-   *
-   * @param {LogRecord} logRecord The record to write.
-   */
-  log(logRecord) {
-    const messageString = logRecord.messageString;
-    this._log.push(logRecord.withMessage(messageString));
-  }
-
-  /**
-   * Logs the indicated time value as "punctuation" on the log. This class
-   * also uses this call to trigger cleanup of old items.
-   *
-   * @param {Int} timeMsec Timestamp to log.
-   * @param {string} utcString String representation of the time, as UTC.
-   * @param {string} localString String representation of the time, in the local
-   *   timezone.
-   */
-  time(timeMsec, utcString, localString) {
-    const logRecord = new LogRecord(timeMsec, 'info', 'time', utcString, localString);
-
-    this._log.push(logRecord);
-
-    // Trim the log.
-
-    const oldestMsec = timeMsec - this._maxAgeMsec;
-
-    let i;
-    for (i = 0; i < this._log.length; i++) {
-      if (this._log[i].timeMsec >= oldestMsec) {
-        break;
-      }
-    }
-
-    if (i !== 0) {
-      this._log = this._log.slice(i);
-    }
   }
 
   /** {array<object>} The saved contents of this log. */
@@ -104,23 +64,75 @@ export default class RecentSink extends BaseSink {
   }
 
   /**
+   * Saves a log record to this instance.
+   *
+   * @param {LogRecord} logRecord The record to write.
+   */
+  _impl_sinkLog(logRecord) {
+    if (logRecord.isTime()) {
+      this._logTime(logRecord);
+    } else {
+      const messageString = logRecord.messageString;
+      this._log.push(logRecord.withMessage(messageString));
+    }
+  }
+
+  /**
+   * Logs the indicated time value as "punctuation" on the log. Also, clean
+   * up old items.
+   *
+   * @param {LogRecord} logRecord The time record.
+   */
+  _logTime(logRecord) {
+    this._log.push(logRecord);
+
+    // Trim the log.
+
+    const timeMsec   = logRecord.timeMsec;
+    const oldestMsec = timeMsec - this._maxAgeMsec;
+
+    let i;
+    for (i = 0; i < this._log.length; i++) {
+      if (this._log[i].timeMsec >= oldestMsec) {
+        break;
+      }
+    }
+
+    if (i !== 0) {
+      this._log = this._log.slice(i);
+    }
+  }
+
+  /**
    * Converts the given log line to HTML.
    *
    * @param {LogRecord} logRecord Log record.
    * @returns {string} HTML string form for the entry.
    */
   static _htmlLine(logRecord) {
-    let prefix = logRecord.prefix;
-    let body;
+    const level  = logRecord.level;
+    let   prefix = logRecord.prefix;
+    let   body;
 
-    if (logRecord.tag === 'time') {
-      const [utc, local] = logRecord.message;
+    if (logRecord.isTime()) {
+      const [utc, slash_unused, local] = logRecord.message;
       const utcString = chalk.blue.bold(utc);
       const localString = chalk.blue.dim.bold(local);
       body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;
     } else {
       body = logRecord.message[0];
       body = body.replace(/(^\n+)|(\n+$)/g, ''); // Trim leading and trailing newlines.
+    }
+
+    if ((level !== 'detail') && (level !== 'info')) {
+      // It's at a level that warrants a stack trace...
+      if (!logRecord.hasError()) {
+        // It doesn't otherwise have an error, so append the stack of the call
+        // site.
+        for (const line of logRecord.stack.split('\n')) {
+          body += `\n  ${line}`;
+        }
+      }
     }
 
     // Color the prefix according to level.

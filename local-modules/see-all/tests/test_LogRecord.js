@@ -53,7 +53,7 @@ describe('see-all/LogRecord', () => {
   describe('messageString()', () => {
     it('operates as expected', () => {
       function test(expected, ...message) {
-        const lr = new LogRecord(0, 'info', 'blort', ...message);
+        const lr = new LogRecord(0, 'some-stack-trace', 'info', 'blort', ...message);
         const got = lr.messageString;
         assert.strictEqual(got, expected);
       }

@@ -24,6 +24,30 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Constructs an instance of this class for representing a timestamp. The
+   * result is an `info` level record tagged with `time`, and with a three-array
+   * `messages` argument consisting of `[<utc>, '/', <local>]`, where `<utc>`
+   * and `<local>` are UTC and local-timezone string representations.
+   *
+   * Though every instance comes with a time field, the logging system
+   * occasionally adds explicitly timestamp lines, which are meant to aid in
+   * the (human) readability of logs.
+   *
+   * @param {Int} timeMsec Timestamp to memorialize.
+   * @returns {LogRecord} Appropriately-constructed instance of this class.
+   */
+  static forTime(timeMsec) {
+    TInt.nonNegative(timeMsec);
+
+    const date        = new Date(timeMsec);
+    const utcString   = LogRecord._utcTimeString(date);
+    const localString = LogRecord._localTimeString(date);
+
+    return new LogRecord(timeMsec, null, 'info', 'time',
+      utcString, '/', localString);
+  }
+
+  /**
    * Returns a string form for the given value, suitable for logging. Among
    * other things:
    *
@@ -60,6 +84,32 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Makes a stack trace for the current call site, skipping initial stack
+   * frames from this module. Results of this method are suitable for passing
+   * as the `stack` to this class's constructor.
+   *
+   * @returns {string} A stack trace.
+   */
+  static makeStack() {
+    const trace = ErrorUtil.stackLines(new Error());
+
+    let startAt;
+    for (startAt = 0; startAt < trace.length; startAt++) {
+      if (!/[/]see-all/.test(trace[startAt])) {
+        break;
+      }
+    }
+
+    // Only trim initial items if there's _some_ part of the trace that isn't in
+    // this module.
+    if (startAt < trace.length) {
+      trace.splice(0, startAt);
+    }
+
+    return trace.join('\n');
+  }
+
+  /**
    * Validates a logging severity level value. Throws an error if invalid.
    *
    * @param {string} level Severity level. Must be one of the severity level
@@ -78,15 +128,25 @@ export default class LogRecord extends CommonBase {
    * Constructs an instance.
    *
    * @param {Int} timeMsec Timestamp of the message.
+   * @param {string|null} stack Stack trace representing the call site which
+   *   caused this instance to be created. or `null` if that information is not
+   *   available.
    * @param {string} level Severity level.
    * @param {string} tag Name of the component associated with the message.
    * @param {...*} message Message to log.
    */
-  constructor(timeMsec, level, tag, ...message) {
+  constructor(timeMsec, stack, level, tag, ...message) {
     super();
 
     /** {Int} Timestamp of the message. */
     this._timeMsec = TInt.nonNegative(timeMsec);
+
+    /**
+     * {string|null} stack Stack trace representing the call site which caused
+     * this instance to be created. or `null` if that information is not
+     * available.
+     */
+    this._stack = TString.orNull(stack);
 
     /** {string} Severity level. */
     this._level = LogRecord.validateLevel(level);
@@ -159,6 +219,15 @@ export default class LogRecord extends CommonBase {
     return `[${tag}${levelStr}]`;
   }
 
+  /**
+   * {string|null} stack Stack trace representing the call site which caused
+   * this instance to be created. or `null` if that information is not
+   * available.
+   */
+  get stack() {
+    return this._stack;
+  }
+
   /** {string} Name of the component associated with the message. */
   get tag() {
     return this._tag;
@@ -170,6 +239,37 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Indicates whether any of the `message` arguments of this instance is an
+   * `Error`.
+   *
+   * @returns {boolean} `true` iff this instance's `message` contains at least
+   *   one `Error`.
+   */
+  hasError() {
+    for (const m of this._message) {
+      if (m instanceof Error) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Indicates whether this instance represents a timestamp, as for example
+   * constructed by {@link #forTime}.
+   *
+   * @returns {boolean} `true` iff this is a timestamp instance.
+   */
+  isTime() {
+    // The first check (the tag) is probably sufficient, but it probably can't
+    // hurt to be a little pickier.
+    return (this._tag === 'time')
+      && (this._message.length === 3)
+      && (this._message[1] === '/');
+  }
+
+  /**
    * Constructs an instance just like this one, except with `message` replaced
    * with the indicated contents.
    *
@@ -177,7 +277,33 @@ export default class LogRecord extends CommonBase {
    * @returns {LogRecord} An appropriately-constructed instance.
    */
   withMessage(...message) {
-    const { timeMsec, level, tag } = this;
-    return new LogRecord(timeMsec, level, tag, ...message);
+    const { timeMsec, stack, level, tag } = this;
+    return new LogRecord(timeMsec, stack, level, tag, ...message);
+  }
+
+  /**
+   * Returns a string representing the given time in UTC.
+   *
+   * @param {Date} date The time, as a `Date` object.
+   * @returns {string} The corresponding UTC time string.
+   */
+  static _utcTimeString(date) {
+    // We start with the ISO string and tweak it to be a little more
+    // human-friendly.
+    const isoString = date.toISOString();
+    return isoString.replace(/T/, ' ').replace(/Z/, ' UTC');
+  }
+
+  /**
+   * Returns a string representing the given time in the local timezone.
+   *
+   * @param {Date} date The time, as a `Date` object.
+   * @returns {string} The corresponding local time string.
+   */
+  static _localTimeString(date) {
+    // We start with the local time string and cut off all everything after the
+    // actual time (timezone spew).
+    const localString = date.toTimeString();
+    return localString.replace(/ [^0-9].*$/, ' local');
   }
 }

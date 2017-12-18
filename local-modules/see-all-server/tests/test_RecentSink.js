@@ -10,28 +10,26 @@ import { RecentSink } from 'see-all-server';
 
 describe('see-all-server/RecentSink', () => {
   describe('log()', () => {
-    it('should log the item as given', () => {
+    it('should log a regular item as given', () => {
       const sink = new RecentSink(1);
 
-      sink.log(new LogRecord(90909, 'error', 'foo', 'bar', 'baz'));
+      sink.sinkLog(new LogRecord(90909, 'yay-stack', 'error', 'foo', 'bar', 'baz'));
 
       const contents = sink.contents;
       assert.lengthOf(contents, 1);
       assert.deepEqual(contents[0],
-        new LogRecord(90909, 'error', 'foo', 'bar baz'));
+        new LogRecord(90909, 'yay-stack', 'error', 'foo', 'bar baz'));
     });
-  });
 
-  describe('time()', () => {
-    it('should log the time as given', () => {
+    it('should log a time record as given', () => {
       const sink = new RecentSink(1);
+      const lr   = LogRecord.forTime(80808);
 
-      sink.time(80808, 'utc-time', 'local-time');
+      sink.sinkLog(lr);
 
       const contents = sink.contents;
       assert.lengthOf(contents, 1);
-      assert.deepEqual(contents[0],
-        new LogRecord(80808, 'info', 'time', 'utc-time', 'local-time'));
+      assert.strictEqual(contents[0], lr);
     });
   });
 
@@ -41,7 +39,7 @@ describe('see-all-server/RecentSink', () => {
       const NUM_LINES = 10;
 
       for (let i = 0; i < NUM_LINES; i++) {
-        sink.log(new LogRecord(12345 + i, 'info', 'blort', 'florp', i));
+        sink.sinkLog(new LogRecord(12345 + i, 'yay-stack', 'info', 'blort', 'florp', i));
       }
 
       const contents = sink.contents;
@@ -50,6 +48,7 @@ describe('see-all-server/RecentSink', () => {
         const lr = contents[i];
 
         assert.strictEqual(lr.timeMsec, 12345 + i);
+        assert.strictEqual(lr.stack, 'yay-stack');
         assert.strictEqual(lr.level, 'info');
         assert.strictEqual(lr.tag, 'blort');
         assert.deepEqual(lr.message, [`florp ${i}`]);
@@ -67,18 +66,16 @@ describe('see-all-server/RecentSink', () => {
       const sink = new RecentSink(MAX_AGE);
 
       for (let i = 0; i < NUM_LINES; i++) {
-        sink.log(new LogRecord(timeForLine(i), 'info', 'blort', 'florp'));
+        sink.sinkLog(new LogRecord(timeForLine(i), 'yay-stack', 'info', 'blort', 'florp'));
       }
 
-      sink.time(FINAL_TIME, 'utc', 'local');
+      sink.sinkLog(LogRecord.forTime(FINAL_TIME));
 
       const contents = sink.contents;
 
       for (const lr of contents) {
         if (lr.tag === 'time') {
           assert.strictEqual(lr.timeMsec, FINAL_TIME);
-          assert.strictEqual(lr.message[0], 'utc');
-          assert.strictEqual(lr.message[1], 'local');
         } else {
           assert.isAtLeast(lr.timeMsec, FINAL_TIME - MAX_AGE);
         }
@@ -92,7 +89,7 @@ describe('see-all-server/RecentSink', () => {
       const NUM_LINES = 10;
 
       for (let i = 0; i < NUM_LINES; i++) {
-        sink.log(new LogRecord(12345 + i, 'info', 'blort', 'florp', i));
+        sink.sinkLog(new LogRecord(12345 + i, 'yay-stack', 'info', 'blort', 'florp', i));
       }
 
       const contents = sink.htmlContents;

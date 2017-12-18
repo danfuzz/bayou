@@ -65,7 +65,7 @@ export default class AllSinks extends Singleton {
 
   /**
    * Constructs a {@link LogRecord} based on the given arguments and the current
-   * time, and calls `log(logRecord)` on each of the registered sinks.
+   * time, and calls `sinkLog(logRecord)` on each of the registered sinks.
    *
    * @param {string} level Severity level.
    * @param {string} tag Name of the component associated with the message.
@@ -82,16 +82,35 @@ export default class AllSinks extends Singleton {
       throw Errors.bad_use(`Overly early log call: ${details}`);
     }
 
-    const logRecord = new LogRecord(this._nowMsec(), level, tag, ...message);
+    const logRecord =
+      new LogRecord(this._nowMsec(), LogRecord.makeStack(), level, tag, ...message);
 
     for (const s of this._sinks) {
-      s.log(logRecord);
+      s.sinkLog(logRecord);
     }
   }
 
   /**
+   * Calls `sink.time()` on all of the logging sinks.
+   *
+   * @param {Int} timeMsec The time to pass to the sinks.
+   */
+  _callTime(timeMsec) {
+    // Note: We don't check to see if there are any sinks here. That check
+    // gets done more productively in `log()`, above.
+
+    const logRecord = LogRecord.forTime(timeMsec);
+
+    for (const s of this._sinks) {
+      s.sinkLog(logRecord);
+    }
+
+    this._linesSinceTime = 0;
+  }
+
+  /**
    * Gets a msec timestamp representing the current time, suitable for passing
-   * as such to `sink.log()`. This will also generate `sink.time()` calls at
+   * as such to `sink.sinkLog()`. This will also generate `sink.time()` calls at
    * appropriate junctures to "punctuate" gaps.
    *
    * @returns {Int} The timestamp.
@@ -120,51 +139,5 @@ export default class AllSinks extends Singleton {
     this._lastNow = now;
 
     return now;
-  }
-
-  /**
-   * Calls `sink.time()` on all of the logging sinks.
-   *
-   * @param {Int} nowMsec The time to pass.
-   */
-  _callTime(nowMsec) {
-    // Note: We don't check to see if there are any sinks here. That check
-    // gets done more productively in `log()`, above.
-
-    const date = new Date(nowMsec);
-    const utcString = AllSinks._utcTimeString(date);
-    const localString = AllSinks._localTimeString(date);
-
-    for (const s of this._sinks) {
-      s.time(nowMsec, utcString, localString);
-    }
-
-    this._linesSinceTime = 0;
-  }
-
-  /**
-   * Returns a string representing the given time in UTC.
-   *
-   * @param {Date} date The time, as a `Date` object.
-   * @returns {string} The corresponding UTC time string.
-   */
-  static _utcTimeString(date) {
-    // We start with the ISO string and tweak it to be a little more
-    // human-friendly.
-    const isoString = date.toISOString();
-    return isoString.replace(/T/, ' ').replace(/Z/, ' UTC');
-  }
-
-  /**
-   * Returns a string representing the given time in the local timezone.
-   *
-   * @param {Date} date The time, as a `Date` object.
-   * @returns {string} The corresponding local time string.
-   */
-  static _localTimeString(date) {
-    // We start with the local time string and cut off all everything after the
-    // actual time (timezone spew).
-    const localString = date.toTimeString();
-    return localString.replace(/ [^0-9].*$/, ' local');
   }
 }

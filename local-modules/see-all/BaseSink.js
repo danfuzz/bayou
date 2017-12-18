@@ -4,34 +4,34 @@
 
 import { CommonBase } from 'util-common';
 
+import LogRecord from './LogRecord';
+
 /**
- * Base class for logging sink. Subclasses must implement `log()` and `time()`.
- *
- * **TODO:** This should follow the usual abstract class pattern and make the
- * methods to implement be named `_impl_*`.
+ * Base class for logging sinks (that is, a "sink" as a destination for log
+ * records). Instances of this class accept {@link LogRecord} instances and
+ * durably log them _somewhere_.
  */
 export default class BaseSink extends CommonBase {
   /**
-   * Logs a record, as appropriate.
+   * Accepts a log record, doing whatever is appropriate per the subclass.
    *
-   * @abstract
-   * @param {LogRecord} logRecord The record to write.
+   * @param {LogRecord} logRecord The record to log.
    */
-  log(logRecord) {
-    this._mustOverride(logRecord);
+  sinkLog(logRecord) {
+    // This method exists to (a) perform type checking, and (b) provide the
+    // usual main-vs-`_impl_` arrangement for abstract classes.
+    LogRecord.check(logRecord);
+    this._impl_sinkLog(logRecord);
   }
 
   /**
-   * Logs the indicated time value as "punctuation" on the log. This class
-   * also uses this call to trigger cleanup of old items.
+   * Subclass-specific log handler.
    *
    * @abstract
-   * @param {Int} timeMsec Timestamp to log.
-   * @param {string} utcString String representation of the time, as UTC.
-   * @param {string} localString String representation of the time, in the local
-   *   timezone.
+   * @param {LogRecord} logRecord The record to log. Guaranteed to be a valid
+   *   instance.
    */
-  time(timeMsec, utcString, localString) {
-    this._mustOverride(timeMsec, utcString, localString);
+  _impl_sinkLog(logRecord) {
+    this._mustOverride(logRecord);
   }
 }

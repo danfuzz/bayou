@@ -3,11 +3,11 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import chalk from 'chalk';
+import stringLength from 'string-length';
 import { format } from 'util';
 
-import { BaseSink, LogRecord, Logger, SeeAll } from 'see-all';
+import { BaseSink, Logger, SeeAll } from 'see-all';
 import { TFunction } from 'typecheck';
-import { ErrorUtil } from 'util-common';
 
 // The whole point of this file is to use `console.<whatever>`, so...
 /* eslint-disable no-console */
@@ -90,54 +90,41 @@ export default class ServerSink extends BaseSink {
    *
    * @param {LogRecord} logRecord The record to write.
    */
-  log(logRecord) {
-    const { level, message } = logRecord;
+  _impl_sinkLog(logRecord) {
+    const level = logRecord.level;
     const prefix = this._makePrefix(logRecord);
 
     // Make a unified string of the entire message.
 
-    let text = logRecord.messageString;
-
-    if ((level !== 'detail') && (level !== 'info')) {
-      // It's at a level that warrants a stack trace...
-
-      let hasError = false;
-      for (const m of message) {
-        if (m instanceof Error) {
-          hasError = true;
-          break;
-        }
-      }
-
-      if (!hasError) {
-        // None of the arguments is an `Error`. So, append one. We drop the
-        // initial set of stack lines coming from the logging module.
-        const trace = ErrorUtil.stackLines(new Error());
-        let   skip  = true;
-        for (const line of trace) {
-          if (skip && !/[/]see-all/.test(line)) {
-            skip = false;
-          }
-          if (!skip) {
-            text += `\n  ${line}`;
-          }
-        }
-      }
-    }
+    const text = logRecord.isTime()
+      ? ServerSink._timeString(logRecord)
+      : logRecord.messageString;
 
     // Remove the trailing newline, if any, and split on newlines to produce an
     // array of all lines. The final-newline removal means we won't (typically)
     // have an empty line at the end of the log.
     const lines = text.replace(/\n$/, '').match(/^.*$/mg);
 
+    if ((level !== 'detail') && (level !== 'info')) {
+      // It's at a level that warrants a stack trace...
+      if (!logRecord.hasError()) {
+        // It doesn't otherwise have an error, so append the stack of the call
+        // site.
+        for (const line of logRecord.stack.split('\n')) {
+          lines.push(`  ${line}`);
+        }
+      }
+    }
+
     // Measure every line. If all lines are short enough for the current
     // console, align them to the right of the prefix. If not, put the prefix on
     // its own line and produce the main content just slightly indented, under
-    // the prefix.
+    // the prefix. **Note:** `stringLength()` takes into account the fact that
+    // ANSI color escapes don't add to the visual-length of a string.
 
     const consoleWidth = ServerSink._consoleWidth();
     const maxLineWidth = lines.reduce(
-      (prev, l) => { return Math.max(prev, l.length); },
+      (prev, l) => { return Math.max(prev, stringLength(l)); },
       0);
 
     if (maxLineWidth > (consoleWidth - this._prefixLength)) {
@@ -161,24 +148,6 @@ export default class ServerSink extends BaseSink {
         first = false;
       }
     }
-  }
-
-  /**
-   * Logs the indicated time value as "punctuation" on the log.
-   *
-   * @param {Int} timeMsec Timestamp to log.
-   * @param {string} utcString String representation of the time, as UTC.
-   * @param {string} localString String representation of the time, in the local
-   *   timezone.
-   */
-  time(timeMsec, utcString, localString) {
-    const logRecord = new LogRecord(timeMsec, 'info', 'time', utcString, localString);
-    const prefix = this._makePrefix(logRecord);
-
-    utcString = chalk.blue.bold(utcString);
-    localString  = chalk.blue.dim.bold(localString);
-
-    this._log(`${prefix}${utcString} / ${localString}`);
   }
 
   /**
@@ -239,5 +208,17 @@ export default class ServerSink extends BaseSink {
     }
 
     return Math.max(process.stdout.getWindowSize()[0] || 80, 80);
+  }
+
+  /**
+   * Creates a colorized message string from a time record.
+   *
+   * @param {LogRecord} logRecord Time log record.
+   * @returns {string} Corresponding colorized message.
+   */
+  static _timeString(logRecord) {
+    const [utc, separator, local] = logRecord.message;
+
+    return `${chalk.blue.bold(utc)} ${separator} ${chalk.blue.dim.bold(local)}`;
   }
 }
