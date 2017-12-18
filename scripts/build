@@ -148,7 +148,7 @@ function check-dependency {
 # Checks the versions of our various expected-installed dependencies, notably
 # including Node and npm.
 function check-environment-dependencies {
-    check-dependency 'Node' 'node --version' '^v[78]\.'
+    check-dependency 'Node' 'node --version' '^v[89]\.'
     check-dependency 'npm' 'npm --version' '^5\.'
     check-dependency 'jq' 'jq --version' '^jq-1\.'
     check-dependency 'rsync' 'rsync --version' '.' # No actual version check.
