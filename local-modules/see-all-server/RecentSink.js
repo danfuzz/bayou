@@ -113,7 +113,7 @@ export default class RecentSink extends BaseSink {
    */
   static _htmlLine(logRecord) {
     const level   = logRecord.level;
-    let   prefix  = logRecord.prefix;
+    let   prefix  = logRecord.prefixString;
     const context = logRecord.contextString || '';
 
     let   body;

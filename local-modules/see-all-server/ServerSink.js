@@ -158,7 +158,7 @@ export default class ServerSink extends BaseSink {
    * @returns {string} The prefix, including coloring and padding.
    */
   _makePrefix(logRecord) {
-    let   text   = logRecord.prefix;
+    let   text   = logRecord.prefixString;
     //const length = text.length + 1; // `+1` for the space at the end.
 
     // Color the prefix according to level.

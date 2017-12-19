@@ -231,7 +231,7 @@ export default class LogRecord extends CommonBase {
    * {string} The standard-form prefix string for the level and tag of this
    * instance.
    */
-  get prefix() {
+  get prefixString() {
     const { level, tag: { main } } = this;
     const levelStr = (level === 'info') ? '' : ` ${level[0].toUpperCase()}`;
 

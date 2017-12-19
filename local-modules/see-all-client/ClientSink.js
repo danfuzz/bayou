@@ -97,7 +97,7 @@ export default class ClientSink extends BaseSink {
     }
 
     let   formatStr = '%c%s';
-    const args      = [`color: ${prefixColor}; font-weight: bold`, logRecord.prefix];
+    const args      = [`color: ${prefixColor}; font-weight: bold`, logRecord.prefixString];
 
     if (logRecord.contextString !== null) {
       formatStr += '%c%s';
