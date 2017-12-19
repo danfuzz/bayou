@@ -42,7 +42,7 @@ describe('doc-server/BaseComplexMember', () => {
       result.log.info('florp', 'like');
       const got = log.record[0];
 
-      assert.deepEqual(got, ['info', '[file-id]', '[boop]', 'florp', 'like']);
+      assert.deepEqual(got, ['info', 'florp', 'like']);
     });
   });
 });

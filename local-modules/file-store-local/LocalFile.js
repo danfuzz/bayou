@@ -124,7 +124,7 @@ export default class LocalFile extends BaseFile {
     this._revNumCodec = Codec.theOne;
 
     /** {Logger} Logger specific to this file's ID. */
-    this._log = log.withPrefix(`[${fileId}]`);
+    this._log = log.withAddedContext(fileId);
 
     this._log.info('Path:', this._storageDir);
   }

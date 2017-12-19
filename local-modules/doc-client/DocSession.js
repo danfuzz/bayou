@@ -34,7 +34,7 @@ export default class DocSession extends CommonBase {
     this._key = BaseKey.check(key);
 
     /** {Logger} Logger specific to this document's ID. */
-    this._log = log.withPrefix(`[${key.id}]`);
+    this._log = log.withAddedContext(key.id);
 
     /**
      * {ApiClient|null} API client instance. Set to non-`null` in the getter

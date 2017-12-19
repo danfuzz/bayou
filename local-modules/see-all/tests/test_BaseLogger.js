@@ -60,16 +60,6 @@ describe('see-all/BaseLogger', () => {
     });
   });
 
-  describe('withPrefix()', () => {
-    it('returns a logger which operates as expected', () => {
-      const logger = new MockLogger();
-      const prefixer = logger.withPrefix('goodness', 'gracious');
-
-      prefixer.info('sakes', 'alive');
-      assert.deepEqual(logger.record, [['info', 'goodness', 'gracious', 'sakes', 'alive']]);
-    });
-  });
-
   describe('withDynamicPrefix()', () => {
     it('returns a logger which operates as expected', () => {
       let count = 0;

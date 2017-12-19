@@ -44,8 +44,9 @@ export default class Logger extends BaseLogger {
   /**
    * Constructs an instance.
    *
-   * @param {string} tag Component tag to associate with messages logged by this
-   *   instance.
+   * @param {LogTag|string} tag Tag to use with messages logged by this
+   *   instance. If passed as a string, this constructor automatically creates
+   *   a corresponding {@link LogTag} instance (with no extra context strings).
    * @param {boolean} [enableDetail = false] Whether or not to produce logs at
    *   the `detail` level.
    */
@@ -53,12 +54,23 @@ export default class Logger extends BaseLogger {
     super();
 
     /** {LogTag} The module / subsystem (plus context) tag. */
-    this._tag = new LogTag(tag);
+    this._tag = (tag instanceof LogTag) ? tag : new LogTag(tag);
 
     /** {boolean} Whether logging is enabled for the `detail` level. */
     this._enableDetail = TBoolean.check(enableDetail);
 
     Object.freeze(this);
+  }
+
+  /**
+   * Constructs and returns an instance just like this one, except with a tag
+   * that has the given additional context.
+   *
+   * @param {...string} context Additional context strings.
+   * @returns {LogTag} An appropriately-constructed instance.
+   */
+  withAddedContext(...context) {
+    return new Logger(this._tag.withAddedContext(...context));
   }
 
   /**

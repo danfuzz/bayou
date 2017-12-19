@@ -102,23 +102,6 @@ export default class BaseLogger extends CommonBase {
 
   /**
    * Constructs and returns a wrapper for this instance which prefixes each
-   * log with the given additional arguments.
-   *
-   * @param {...*} prefix Values to use as a prefix for all logged messages.
-   * @returns {BaseLogger} A new logger which prefixes logs as indicated.
-   */
-  withPrefix(...prefix) {
-    const result = new BaseLogger();
-
-    result._impl_log = (level, message) => {
-      this.log(level, ...prefix, ...message);
-    };
-
-    return result;
-  }
-
-  /**
-   * Constructs and returns a wrapper for this instance which prefixes each
    * log with the results of calling the given prefix-generator function. The
    * function is called with no arguments and is expected to return an array.
    * The results of that call are used as the first message arguments to the

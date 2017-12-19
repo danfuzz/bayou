@@ -18,6 +18,12 @@ export default class MockLogger extends BaseLogger {
     this.record = [];
   }
 
+  // **TODO:** Arguably ought to do something better.
+  withAddedContext(...context_unused) {
+    // Ignore it.
+    return this;
+  }
+
   /**
    * Actual logging implementation. Subclasses must override this to do
    * something appropriate.

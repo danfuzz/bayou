@@ -30,7 +30,7 @@ export default class BaseComplexMember extends CommonBase {
     this._logLabel = TString.check(logLabel);
 
     /** {Logger} Logger to use with this instance. Includes the log label. */
-    this._log = fileAccess.log.withPrefix(`[${logLabel}]`);
+    this._log = fileAccess.log.withAddedContext(logLabel);
   }
 
   /** {Codec} Codec instance to use with the underlying file. */

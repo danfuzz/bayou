@@ -223,7 +223,7 @@ export default class LogRecord extends CommonBase {
     const levelStr = (level === 'info') ? '' : ` ${level[0].toUpperCase()}`;
     const contextStr = (context.length === 0)
       ? ''
-      : ` ${context.join('/')}`;
+      : ` ${context.join(':')}`;
 
     return `[${main}${levelStr}]${contextStr}`;
   }
