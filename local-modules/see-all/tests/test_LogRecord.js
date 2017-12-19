@@ -7,9 +7,6 @@ import { describe, it } from 'mocha';
 
 import { LogRecord } from 'see-all';
 
-// This class is tested via its subclass `MockLogger`, which records all calls
-// made to `_impl_log()`.
-
 describe('see-all/LogRecord', () => {
   describe('.LEVELS', () => {
     it('is a frozen array of at least four elements', () => {
