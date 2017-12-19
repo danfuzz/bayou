@@ -17,7 +17,7 @@ describe('see-all/BaseLogger', () => {
       const logger = new MockLogger();
       logger.log('info', 'blort', 7);
 
-      assert.deepEqual(logger.record, [['info', 'blort', 7]]);
+      assert.deepEqual(logger.record, [['info', [], 'blort', 7]]);
     });
 
     it('rejects invalid `level` arguments', () => {
@@ -33,14 +33,14 @@ describe('see-all/BaseLogger', () => {
           const logger = new MockLogger();
           logger[level](1, 2, 3);
 
-          assert.deepEqual(logger.record, [[level, 1, 2, 3]]);
+          assert.deepEqual(logger.record, [[level, [], 1, 2, 3]]);
         });
 
         it('accepts a call with no arguments', () => {
           const logger = new MockLogger();
           logger[level]();
 
-          assert.deepEqual(logger.record, [[level]]);
+          assert.deepEqual(logger.record, [[level, []]]);
         });
       });
     }
@@ -56,7 +56,7 @@ describe('see-all/BaseLogger', () => {
       const stream = logger.streamFor('info');
 
       stream.write('blort');
-      assert.deepEqual(logger.record, [['info', 'blort']]);
+      assert.deepEqual(logger.record, [['info', [], 'blort']]);
     });
   });
 });

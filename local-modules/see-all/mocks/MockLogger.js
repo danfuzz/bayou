@@ -15,7 +15,7 @@ export default class MockLogger extends BaseLogger {
     super();
 
     /** {array<string>} Context to log per item. */
-    this._context = [];
+    this._context = Object.freeze([]);
 
     /** {array<array>} Array of logged items. */
     this._record = [];
@@ -28,7 +28,7 @@ export default class MockLogger extends BaseLogger {
   }
 
   _impl_log(level, message) {
-    this.record.push([level, ...message]);
+    this.record.push([level, this._context, ...message]);
   }
 
   _impl_withAddedContext(...context) {
@@ -37,7 +37,7 @@ export default class MockLogger extends BaseLogger {
     // Make the result (a) have additional context, and (b) point its `record`
     // at this instance.
 
-    result._context = [...this._context, ...context];
+    result._context = Object.freeze([...this._context, ...context]);
     result._record  = this._record;
 
     return result;

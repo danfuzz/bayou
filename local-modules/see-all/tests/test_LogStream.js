@@ -37,7 +37,7 @@ describe('see-all/LogStream', () => {
 
       ls.write('florp');
       ls.write('plorple\n');
-      assert.deepEqual(logger.record, [['info', 'florp'], ['info', 'plorple\n']]);
+      assert.deepEqual(logger.record, [['info', [], 'florp'], ['info', [], 'plorple\n']]);
     });
   });
 
@@ -47,7 +47,7 @@ describe('see-all/LogStream', () => {
       const ls = new LogStream(logger, 'debug');
 
       ls.write('florp', 'not-actually-a-valid-encoding');
-      assert.deepEqual(logger.record, [['debug', 'florp']]);
+      assert.deepEqual(logger.record, [['debug', [], 'florp']]);
     });
   });
 
@@ -72,7 +72,7 @@ describe('see-all/LogStream', () => {
       const ls = new LogStream(logger, 'error');
 
       ls.write(Buffer.from('😅', 'utf8'));
-      assert.deepEqual(logger.record, [['error', '😅']]);
+      assert.deepEqual(logger.record, [['error', [], '😅']]);
     });
   });
 
@@ -82,7 +82,7 @@ describe('see-all/LogStream', () => {
       const ls = new LogStream(logger, 'warn');
 
       ls.write(Buffer.from('😅', 'utf8'), 'ascii');
-      assert.deepEqual(logger.record, [['warn', '😅']]);
+      assert.deepEqual(logger.record, [['warn',  [], '😅']]);
     });
   });
 
@@ -92,7 +92,7 @@ describe('see-all/LogStream', () => {
       const ls = new LogStream(logger, 'info');
 
       ls.end('zorch');
-      assert.deepEqual(logger.record, [['info', 'zorch']]);
+      assert.deepEqual(logger.record, [['info',  [], 'zorch']]);
     });
   });
 
@@ -102,7 +102,7 @@ describe('see-all/LogStream', () => {
       const ls = new LogStream(logger, 'debug');
 
       ls.end('splat', 'not-actually-a-valid-encoding');
-      assert.deepEqual(logger.record, [['debug', 'splat']]);
+      assert.deepEqual(logger.record, [['debug',  [], 'splat']]);
     });
   });
 
