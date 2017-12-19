@@ -45,7 +45,7 @@ export default class LogRecord extends CommonBase {
     const utcString   = LogRecord._utcTimeString(date);
     const localString = LogRecord._localTimeString(date);
 
-    return new LogRecord(timeMsec, null, 'info', 'time',
+    return new LogRecord(timeMsec, null, 'info', LogTag.TIME,
       utcString, '/', localString);
   }
 
@@ -270,7 +270,7 @@ export default class LogRecord extends CommonBase {
   isTime() {
     // The first check (the tag) is probably sufficient, but it probably can't
     // hurt to be a little pickier.
-    return (this._tag.main === 'time')
+    return (this._tag === LogTag.TIME)
       && (this._message.length === 3)
       && (this._message[1] === '/');
   }

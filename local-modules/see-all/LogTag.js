@@ -6,6 +6,12 @@ import { TArray, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 /**
+ * {LogTag|null} Instance to use when logging timestamp "punctuation."
+ * Initialized in {@link #TIME}.
+ */
+let TIME = null;
+
+/**
  * Structured "tag" information for log records. Each instance consists of a
  * main tag and zero or more additional "context" strings. The main tag is
  * typically a high-level system component of some sort, e.g. and typically a
@@ -13,6 +19,15 @@ import { CommonBase } from 'util-common';
  * by the component being so represented).
  */
 export default class LogTag extends CommonBase {
+  /** {LogTag} Instance to use when logging timestamp "punctuation." */
+  static get TIME() {
+    if (TIME === null) {
+      TIME = new LogTag('time');
+    }
+
+    return TIME;
+  }
+
   /**
    * Validates a context string. This will throw an error given an invalid
    * value.
