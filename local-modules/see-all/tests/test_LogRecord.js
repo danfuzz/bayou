@@ -5,10 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { LogRecord } from 'see-all';
-
-// This class is tested via its subclass `MockLogger`, which records all calls
-// made to `_impl_log()`.
+import { LogRecord, LogTag } from 'see-all';
 
 describe('see-all/LogRecord', () => {
   describe('.LEVELS', () => {
@@ -52,8 +49,10 @@ describe('see-all/LogRecord', () => {
 
   describe('messageString()', () => {
     it('operates as expected', () => {
+      const LOG_TAG = new LogTag('whee');
+
       function test(expected, ...message) {
-        const lr = new LogRecord(0, 'some-stack-trace', 'info', 'blort', ...message);
+        const lr = new LogRecord(0, 'some-stack-trace', 'info', LOG_TAG, ...message);
         const got = lr.messageString;
         assert.strictEqual(got, expected);
       }

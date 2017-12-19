@@ -83,7 +83,7 @@ export default class Connection extends CommonBase {
     this._codec = context.codec;
 
     /** {Logger} Logger which includes the connection ID as a prefix. */
-    this._log = log.withPrefix(`[${this._connectionId}]`);
+    this._log = log.withAddedContext(this._connectionId);
 
     // We add a `meta` binding to the initial set of targets, which is specific
     // to this instance/connection.

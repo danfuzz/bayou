@@ -14,19 +14,32 @@ export default class MockLogger extends BaseLogger {
   constructor() {
     super();
 
+    /** {array<string>} Context to log per item. */
+    this._context = Object.freeze([]);
+
     /** {array<array>} Array of logged items. */
-    this.record = [];
+    this._record = [];
+
+    Object.seal(this);
   }
 
-  /**
-   * Actual logging implementation. Subclasses must override this to do
-   * something appropriate.
-   *
-   * @abstract
-   * @param {string} level Severity level. Guaranteed to be a valid level.
-   * @param {array} message Array of arguments to log.
-   */
+  get record() {
+    return this._record;
+  }
+
   _impl_log(level, message) {
-    this.record.push([level, ...message]);
+    this.record.push([level, this._context, ...message]);
+  }
+
+  _impl_withAddedContext(...context) {
+    const result = new MockLogger();
+
+    // Make the result (a) have additional context, and (b) point its `record`
+    // at this instance.
+
+    result._context = Object.freeze([...this._context, ...context]);
+    result._record  = this._record;
+
+    return result;
   }
 }

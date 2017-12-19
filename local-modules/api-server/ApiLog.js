@@ -55,7 +55,7 @@ export default class ApiLog extends CommonBase {
       // TODO: Ultimately _some_ errors coming back from API calls shouldn't
       // be considered console-log-worthy server errors. We will need to
       // differentiate them at some point.
-      log.error(`[${connectionId}] Error.`, response.originalError);
+      log.withAddedContext(connectionId).error('Error.', response.originalError);
     }
 
     // Details to log. **TODO:** This will ultimately need to redact some
@@ -94,7 +94,7 @@ export default class ApiLog extends CommonBase {
    */
   incomingMessage(connectionId, startTime, msg) {
     // TODO: This will ultimately need to redact some information.
-    log.detail(`[${connectionId}] Message at ${startTime}:`, msg.toLog());
+    log.withAddedContext(connectionId).detail(`Message at ${startTime}:`, msg.toLog());
   }
 
   /**

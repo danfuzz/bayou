@@ -82,6 +82,22 @@ export default class TString extends UtilityClass {
   }
 
   /**
+   * Checks a value of type `String`, which must furthermore have no more than a
+   * given number of characters.
+   *
+   * @param {*} value Value to check.
+   * @param {number} maxLen Maximum allowed length (inclusive).
+   * @returns {string} `value`.
+   */
+  static maxLen(value, maxLen) {
+    if ((typeof value !== 'string') || (value.length > maxLen)) {
+      throw Errors.bad_value(value, String, `value.length <= ${maxLen}`);
+    }
+
+    return value;
+  }
+
+  /**
    * Checks a value of type `String`, which must furthermore have at least a
    * given number of characters.
    *

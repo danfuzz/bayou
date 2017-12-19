@@ -190,7 +190,7 @@ export default class CaretControl extends EphemeralControl {
     for (const [sessionId, caret] of snapshot.entries()) {
       if (minTime.compareTo(caret.lastActive) > 0) {
         // Too old!
-        this.log.info(`[${sessionId}] Became inactive.`);
+        this.log.withAddedContext(sessionId).info('Became inactive.');
         newSnapshot = newSnapshot.withoutSession(sessionId);
       }
     }
@@ -229,7 +229,7 @@ export default class CaretControl extends EphemeralControl {
         snapshot.withoutSession(sessionId).withRevNum(snapshot.revNum + 1);
       const change =
         snapshot.diff(newSnapshot).withTimestamp(Timestamp.now());
-      this.log.info(`[${sessionId}] Local session has ended.`);
+      this.log.withAddedContext(sessionId).info('Local session has ended.');
 
       try {
         await this.update(change);
@@ -237,11 +237,11 @@ export default class CaretControl extends EphemeralControl {
         // Probably a timeout after losing too many races. Though it's
         // log-worthy, it's not a showstopper. The session will ultimately get
         // cleaned up by the idle timeout.
-        this.log.warn(`[${sessionId}] Error while reaping.`, e);
+        this.log.withAddedContext(sessionId).warn('Error while reaping.', e);
       }
     } else {
       // Some other server probably got to it first.
-      this.log.info(`[${sessionId}] Asked to reap session that was already gone.`);
+      this.log.withAddedContext(sessionId).info('Asked to reap session that was already gone.');
     }
   }
 

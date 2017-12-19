@@ -5,20 +5,23 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { LogRecord } from 'see-all';
+import { LogRecord, LogTag } from 'see-all';
 import { RecentSink } from 'see-all-server';
+
+/** {LogTag} Handy instance. */
+const LOG_TAG = new LogTag('blort-tag');
 
 describe('see-all-server/RecentSink', () => {
   describe('log()', () => {
     it('should log a regular item as given', () => {
       const sink = new RecentSink(1);
 
-      sink.sinkLog(new LogRecord(90909, 'yay-stack', 'error', 'foo', 'bar', 'baz'));
+      sink.sinkLog(new LogRecord(90909, 'yay-stack', 'error', LOG_TAG, 'bar', 'baz'));
 
       const contents = sink.contents;
       assert.lengthOf(contents, 1);
       assert.deepEqual(contents[0],
-        new LogRecord(90909, 'yay-stack', 'error', 'foo', 'bar baz'));
+        new LogRecord(90909, 'yay-stack', 'error', LOG_TAG, 'bar baz'));
     });
 
     it('should log a time record as given', () => {
@@ -39,7 +42,7 @@ describe('see-all-server/RecentSink', () => {
       const NUM_LINES = 10;
 
       for (let i = 0; i < NUM_LINES; i++) {
-        sink.sinkLog(new LogRecord(12345 + i, 'yay-stack', 'info', 'blort', 'florp', i));
+        sink.sinkLog(new LogRecord(12345 + i, 'yay-stack', 'info', LOG_TAG, 'florp', i));
       }
 
       const contents = sink.contents;
@@ -50,7 +53,7 @@ describe('see-all-server/RecentSink', () => {
         assert.strictEqual(lr.timeMsec, 12345 + i);
         assert.strictEqual(lr.stack, 'yay-stack');
         assert.strictEqual(lr.level, 'info');
-        assert.strictEqual(lr.tag, 'blort');
+        assert.strictEqual(lr.tag, LOG_TAG);
         assert.deepEqual(lr.message, [`florp ${i}`]);
       }
     });
@@ -66,7 +69,7 @@ describe('see-all-server/RecentSink', () => {
       const sink = new RecentSink(MAX_AGE);
 
       for (let i = 0; i < NUM_LINES; i++) {
-        sink.sinkLog(new LogRecord(timeForLine(i), 'yay-stack', 'info', 'blort', 'florp'));
+        sink.sinkLog(new LogRecord(timeForLine(i), 'yay-stack', 'info', LOG_TAG, 'florp'));
       }
 
       sink.sinkLog(LogRecord.forTime(FINAL_TIME));
@@ -89,7 +92,7 @@ describe('see-all-server/RecentSink', () => {
       const NUM_LINES = 10;
 
       for (let i = 0; i < NUM_LINES; i++) {
-        sink.sinkLog(new LogRecord(12345 + i, 'yay-stack', 'info', 'blort', 'florp', i));
+        sink.sinkLog(new LogRecord(12345 + i, 'yay-stack', 'info', LOG_TAG, 'florp', i));
       }
 
       const contents = sink.htmlContents;

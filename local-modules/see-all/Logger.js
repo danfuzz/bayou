@@ -2,10 +2,11 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TBoolean, TString } from 'typecheck';
+import { TBoolean } from 'typecheck';
 
-import BaseLogger from './BaseLogger';
 import AllSinks from './AllSinks';
+import BaseLogger from './BaseLogger';
+import LogTag from './LogTag';
 
 /**
  * Logger which associates a tag (typically a subsystem or module name) and a
@@ -43,16 +44,17 @@ export default class Logger extends BaseLogger {
   /**
    * Constructs an instance.
    *
-   * @param {string} tag Component tag to associate with messages logged by this
-   *   instance.
+   * @param {LogTag|string} tag Tag to use with messages logged by this
+   *   instance. If passed as a string, this constructor automatically creates
+   *   a corresponding {@link LogTag} instance (with no extra context strings).
    * @param {boolean} [enableDetail = false] Whether or not to produce logs at
    *   the `detail` level.
    */
   constructor(tag, enableDetail = false) {
     super();
 
-    /** {string} The module / subsystem tag. */
-    this._tag = TString.nonEmpty(tag);
+    /** {LogTag} The module / subsystem (plus context) tag. */
+    this._tag = (tag instanceof LogTag) ? tag : new LogTag(tag);
 
     /** {boolean} Whether logging is enabled for the `detail` level. */
     this._enableDetail = TBoolean.check(enableDetail);
@@ -74,5 +76,17 @@ export default class Logger extends BaseLogger {
     }
 
     AllSinks.theOne.log(level, this._tag, ...message);
+  }
+
+  /**
+   * Subclass-specific context adder.
+   *
+   * @abstract
+   * @param {...string} context Additional context strings. Guaranteed to be
+   *   valid.
+   * @returns {BaseLogger} An appropriately-constructed instance of this class.
+   */
+  _impl_withAddedContext(...context) {
+    return new Logger(this._tag.withAddedContext(...context));
   }
 }

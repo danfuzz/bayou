@@ -27,10 +27,6 @@ export default class FileAccess extends CommonBase {
    *   the usual one. This is only meant to be used for unit testing.
    */
   constructor(codec, file, logger = null) {
-    if (logger !== null) {
-      BaseLogger.check(logger);
-    }
-
     super();
 
     /** {Codec} Codec instance to use. */
@@ -40,7 +36,8 @@ export default class FileAccess extends CommonBase {
     this._file = BaseFile.check(file);
 
     /** {BaseLogger} Logger for this instance. */
-    this._log = (logger || log).withPrefix(`[${file.id}]`);
+    this._log =
+      ((logger === null) ? log : BaseLogger.check(logger)).withAddedContext(file.id);
 
     /** {FileCodec} File-codec wrapper to use. */
     this._fileCodec = new FileCodec(file, codec);

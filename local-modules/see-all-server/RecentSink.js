@@ -47,8 +47,10 @@ export default class RecentSink extends BaseSink {
       'table { border-collapse: collapse; border-spacing: 0; ' +
       '  width: 90vw; margin-left: 5vw; margin-right: 5vw; }\n' +
       'tr:nth-child(even) { background-color: #f8f8f8; }\n' +
-      'td { padding-bottom: 0.2em; padding-left: 0.5em; }\n' +
-      'td:first-child { width: 15%; vertical-align: top; padding-right: 1em; ' +
+      'td { vertical-align: top; padding-bottom: 0.2em; padding-left: 0.5em; }\n' +
+      'td:first-child { width: 12%; padding-right: 1em; ' +
+      '  border-right-color: #ddd; border-right-width: 1pt; border-right-style: solid }\n' +
+      'td:nth-child(2) { width: 15%; padding-right: 1em; ' +
       '  border-right-color: #ddd; border-right-width: 1pt; border-right-style: solid }\n' +
       'pre { white-space: pre-wrap; margin: 0; }'
     );
@@ -110,8 +112,10 @@ export default class RecentSink extends BaseSink {
    * @returns {string} HTML string form for the entry.
    */
   static _htmlLine(logRecord) {
-    const level  = logRecord.level;
-    let   prefix = logRecord.prefix;
+    const level   = logRecord.level;
+    let   prefix  = logRecord.prefixString;
+    const context = logRecord.contextString || '';
+
     let   body;
 
     if (logRecord.isTime()) {
@@ -142,9 +146,10 @@ export default class RecentSink extends BaseSink {
       default:      { prefix = chalk.dim.bold(prefix);    break; }
     }
 
-    const prefixHtml = ansiHtml(escapeHtml(prefix));
-    const bodyHtml   = ansiHtml(escapeHtml(body));
+    const prefixHtml  = ansiHtml(escapeHtml(prefix));
+    const contextHtml = ansiHtml(escapeHtml(chalk.blue.dim.bold(context)));
+    const bodyHtml    = ansiHtml(escapeHtml(body));
 
-    return `<tr><td>${prefixHtml}</td><td><pre>${bodyHtml}</pre></td>`;
+    return `<tr><td>${prefixHtml}</td><td>${contextHtml}</td><td><pre>${bodyHtml}</pre></td>`;
   }
 }

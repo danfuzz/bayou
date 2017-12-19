@@ -6,6 +6,7 @@ import { CommonBase, Errors } from 'util-common';
 
 import LogRecord from './LogRecord';
 import LogStream from './LogStream';
+import LogTag from './LogTag';
 
 
 /**
@@ -101,46 +102,23 @@ export default class BaseLogger extends CommonBase {
   }
 
   /**
-   * Constructs and returns a wrapper for this instance which prefixes each
-   * log with the given additional arguments.
+   * Constructs and returns an instance just like this one, except with a tag
+   * that has the given additional context.
    *
-   * @param {...*} prefix Values to use as a prefix for all logged messages.
-   * @returns {BaseLogger} A new logger which prefixes logs as indicated.
+   * @param {...string} context Additional context strings. Each must be valid
+   *   per the definition of context in {@link LogTag}.
+   * @returns {BaseLogger} An appropriately-constructed instance of this class.
    */
-  withPrefix(...prefix) {
-    const result = new BaseLogger();
+  withAddedContext(...context) {
+    for (const c of context) {
+      LogTag.checkContextString(c);
+    }
 
-    result._impl_log = (level, message) => {
-      this.log(level, ...prefix, ...message);
-    };
-
-    return result;
+    return this._impl_withAddedContext(...context);
   }
 
   /**
-   * Constructs and returns a wrapper for this instance which prefixes each
-   * log with the results of calling the given prefix-generator function. The
-   * function is called with no arguments and is expected to return an array.
-   * The results of that call are used as the first message arguments to the
-   * ultimate logging calls.
-   *
-   * @param {function} prefixGenerator Function to generate prefix arguments.
-   * @returns {BaseLogger} A new logger which prefixes logs as indicated.
-   */
-  withDynamicPrefix(prefixGenerator) {
-    const result = new BaseLogger();
-
-    result._impl_log = (level, message) => {
-      const prefix = prefixGenerator();
-      this.log(level, ...prefix, ...message);
-    };
-
-    return result;
-  }
-
-  /**
-   * Actual logging implementation. Subclasses must override this to do
-   * something appropriate.
+   * Subclass-specific logging implementation.
    *
    * @abstract
    * @param {string} level Severity level. Guaranteed to be a valid level.
@@ -148,5 +126,17 @@ export default class BaseLogger extends CommonBase {
    */
   _impl_log(level, message) {
     this._mustOverride(level, message);
+  }
+
+  /**
+   * Subclass-specific context adder.
+   *
+   * @abstract
+   * @param {...string} context Additional context strings. Guaranteed to be
+   *   valid.
+   * @returns {BaseLogger} An appropriately-constructed instance of this class.
+   */
+  _impl_withAddedContext(...context) {
+    this._mustOverride(context);
   }
 }

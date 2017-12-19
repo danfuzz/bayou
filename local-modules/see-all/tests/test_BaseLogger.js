@@ -17,7 +17,7 @@ describe('see-all/BaseLogger', () => {
       const logger = new MockLogger();
       logger.log('info', 'blort', 7);
 
-      assert.deepEqual(logger.record, [['info', 'blort', 7]]);
+      assert.deepEqual(logger.record, [['info', [], 'blort', 7]]);
     });
 
     it('rejects invalid `level` arguments', () => {
@@ -33,14 +33,14 @@ describe('see-all/BaseLogger', () => {
           const logger = new MockLogger();
           logger[level](1, 2, 3);
 
-          assert.deepEqual(logger.record, [[level, 1, 2, 3]]);
+          assert.deepEqual(logger.record, [[level, [], 1, 2, 3]]);
         });
 
         it('accepts a call with no arguments', () => {
           const logger = new MockLogger();
           logger[level]();
 
-          assert.deepEqual(logger.record, [[level]]);
+          assert.deepEqual(logger.record, [[level, []]]);
         });
       });
     }
@@ -56,39 +56,7 @@ describe('see-all/BaseLogger', () => {
       const stream = logger.streamFor('info');
 
       stream.write('blort');
-      assert.deepEqual(logger.record, [['info', 'blort']]);
-    });
-  });
-
-  describe('withPrefix()', () => {
-    it('returns a logger which operates as expected', () => {
-      const logger = new MockLogger();
-      const prefixer = logger.withPrefix('goodness', 'gracious');
-
-      prefixer.info('sakes', 'alive');
-      assert.deepEqual(logger.record, [['info', 'goodness', 'gracious', 'sakes', 'alive']]);
-    });
-  });
-
-  describe('withDynamicPrefix()', () => {
-    it('returns a logger which operates as expected', () => {
-      let count = 0;
-      function prefunc() {
-        count++;
-        return [count, 'x'];
-      }
-
-      const logger = new MockLogger();
-      const prefixer = logger.withDynamicPrefix(prefunc);
-
-      prefixer.info('one');
-      prefixer.info('two');
-      prefixer.info('three');
-      assert.deepEqual(logger.record, [
-        ['info', 1, 'x', 'one'],
-        ['info', 2, 'x', 'two'],
-        ['info', 3, 'x', 'three'],
-      ]);
+      assert.deepEqual(logger.record, [['info', [], 'blort']]);
     });
   });
 });

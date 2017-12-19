@@ -244,6 +244,101 @@ describe('typecheck/TString', () => {
     });
   });
 
+  describe('maxLen()', () => {
+    it('accepts short-enough strings', () => {
+      function test(value, len) {
+        assert.strictEqual(TString.maxLen(value, len), value);
+      }
+
+      test('', 0);
+      test('', 1);
+      test('', 10);
+      test('a', 1);
+      test('a', 2);
+      test('a', 100);
+      test('fooblort', 8);
+      test('fooblort', 80);
+    });
+
+    it('rejects too-long strings', () => {
+      function test(value, len) {
+        Assert.throwsInfo(
+          () => { TString.maxLen(value, len); },
+          'bad_value',
+          [inspect(value), 'String', `value.length <= ${len}`]);
+      }
+
+      test('a',   0);
+      test('ab',  0);
+      test('ab',  1);
+      test('abc', 0);
+      test('abc', 1);
+      test('abc', 2);
+    });
+
+    it('rejects non-strings', () => {
+      function test(value) {
+        Assert.throwsInfo(
+          () => { TString.maxLen(value, 123); },
+          'bad_value',
+          [inspect(value), 'String', 'value.length <= 123']);
+      }
+
+      for (const v of NON_STRING_CASES) {
+        test(v);
+      }
+    });
+  });
+
+  describe('minLen()', () => {
+    it('accepts long-enough strings', () => {
+      function test(value, len) {
+        assert.strictEqual(TString.minLen(value, len), value);
+      }
+
+      test('', 0);
+      test('a', 0);
+      test('a', 1);
+      test('ab', 0);
+      test('ab', 1);
+      test('ab', 2);
+      test('fooblort', 7);
+      test('fooblort', 8);
+    });
+
+    it('rejects too-short strings', () => {
+      function test(value, len) {
+        Assert.throwsInfo(
+          () => { TString.minLen(value, len); },
+          'bad_value',
+          [inspect(value), 'String', `value.length >= ${len}`]);
+      }
+
+      test('',    1);
+      test('',    10);
+      test('a',   2);
+      test('a',   3);
+      test('ab',  3);
+      test('ab',  4);
+      test('abc', 4);
+      test('abc', 5);
+      test('abc', 123);
+    });
+
+    it('rejects non-strings', () => {
+      function test(value) {
+        Assert.throwsInfo(
+          () => { TString.minLen(value, 1); },
+          'bad_value',
+          [inspect(value), 'String', 'value.length >= 1']);
+      }
+
+      for (const v of NON_STRING_CASES) {
+        test(v);
+      }
+    });
+  });
+
   describe('nonEmpty()', () => {
     it('should return the provided value if it is a string with length >= 1', () => {
       const value = 'This better work!';

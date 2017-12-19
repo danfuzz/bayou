@@ -7,6 +7,8 @@ import { inspect } from 'util';
 import { TInt, TString } from 'typecheck';
 import { CommonBase, ErrorUtil, Errors } from 'util-common';
 
+import LogTag from './LogTag';
+
 /** {array<string>} Array of valid severity levels. */
 const LEVELS_ARRAY = Object.freeze(['debug', 'error', 'warn', 'info', 'detail']);
 
@@ -43,7 +45,7 @@ export default class LogRecord extends CommonBase {
     const utcString   = LogRecord._utcTimeString(date);
     const localString = LogRecord._localTimeString(date);
 
-    return new LogRecord(timeMsec, null, 'info', 'time',
+    return new LogRecord(timeMsec, null, 'info', LogTag.TIME,
       utcString, '/', localString);
   }
 
@@ -132,7 +134,8 @@ export default class LogRecord extends CommonBase {
    *   caused this instance to be created. or `null` if that information is not
    *   available.
    * @param {string} level Severity level.
-   * @param {string} tag Name of the component associated with the message.
+   * @param {LogTag} tag Tag (component name and optional context) associated
+   *   with the message.
    * @param {...*} message Message to log.
    */
   constructor(timeMsec, stack, level, tag, ...message) {
@@ -151,14 +154,30 @@ export default class LogRecord extends CommonBase {
     /** {string} Severity level. */
     this._level = LogRecord.validateLevel(level);
 
-    /** {string} Name of the component associated with the message. */
-    this._tag = TString.label(tag);
+    /**
+     * {LogTag} Tag (component name and optional context) associated with the
+     * message.
+     */
+    this._tag = LogTag.check(tag);
 
     /** {array<*>} Message to log. */
     this._message = message;
 
     Object.freeze(this);
   }
+
+  /**
+   * {string|null} The standard-form context string for this instance, or `null`
+   * if there is no context.
+   */
+  get contextString() {
+    const context = this.tag.context;
+
+    return (context.length === 0)
+      ? null
+      : `[${context.join(' ')}]`;
+  }
+
 
   /** {string} Severity level. */
   get level() {
@@ -212,11 +231,11 @@ export default class LogRecord extends CommonBase {
    * {string} The standard-form prefix string for the level and tag of this
    * instance.
    */
-  get prefix() {
-    const { level, tag } = this;
+  get prefixString() {
+    const { level, tag: { main } } = this;
     const levelStr = (level === 'info') ? '' : ` ${level[0].toUpperCase()}`;
 
-    return `[${tag}${levelStr}]`;
+    return `[${main}${levelStr}]`;
   }
 
   /**
@@ -228,7 +247,7 @@ export default class LogRecord extends CommonBase {
     return this._stack;
   }
 
-  /** {string} Name of the component associated with the message. */
+  /** {LogTag} Tag (component name and context). */
   get tag() {
     return this._tag;
   }
@@ -264,7 +283,7 @@ export default class LogRecord extends CommonBase {
   isTime() {
     // The first check (the tag) is probably sufficient, but it probably can't
     // hurt to be a little pickier.
-    return (this._tag === 'time')
+    return (this._tag === LogTag.TIME)
       && (this._message.length === 3)
       && (this._message[1] === '/');
   }

@@ -50,7 +50,7 @@ export default class DocSession extends CommonBase {
     this._propertyControl = fileComplex.propertyControl;
 
     /** {Logger} Logger for this session. */
-    this._log = fileComplex.log.withPrefix(`[${sessionId}]`);
+    this._log = fileComplex.log.withAddedContext(sessionId);
   }
 
   /**

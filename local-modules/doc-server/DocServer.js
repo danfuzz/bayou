@@ -86,7 +86,7 @@ export default class DocServer extends Singleton {
         }
         // The weak reference is dead. We'll fall through and construct a new
         // result.
-        log.info(`[${docId}] Cached complex was gc'ed.`);
+        log.withAddedContext(docId).info('Cached complex was gc\'ed.');
       }
     }
 
@@ -123,7 +123,7 @@ export default class DocServer extends Singleton {
 
     // Store the the promise for the result in the cache, and return it.
 
-    log.info(`[${docId}] About to construct complex.`);
+    log.withAddedContext(docId).info('About to construct complex.');
     this._complexes.set(docId, resultPromise);
     return resultPromise;
   }

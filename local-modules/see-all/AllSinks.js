@@ -68,7 +68,7 @@ export default class AllSinks extends Singleton {
    * time, and calls `sinkLog(logRecord)` on each of the registered sinks.
    *
    * @param {string} level Severity level.
-   * @param {string} tag Name of the component associated with the message.
+   * @param {LogTag} tag Component and context.
    * @param {...*} message Message to log.
    */
   log(level, tag, ...message) {
