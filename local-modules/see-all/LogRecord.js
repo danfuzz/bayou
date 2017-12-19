@@ -134,8 +134,8 @@ export default class LogRecord extends CommonBase {
    *   caused this instance to be created. or `null` if that information is not
    *   available.
    * @param {string} level Severity level.
-   * @param {LogTag|string} tag Tag (component name and optional context)
-   *   associated with the message.
+   * @param {LogTag} tag Tag (component name and optional context) associated
+   *   with the message.
    * @param {...*} message Message to log.
    */
   constructor(timeMsec, stack, level, tag, ...message) {
@@ -154,8 +154,11 @@ export default class LogRecord extends CommonBase {
     /** {string} Severity level. */
     this._level = LogRecord.validateLevel(level);
 
-    /** {LogTag} Name of the component associated with the message. */
-    this._tag = (tag instanceof LogTag) ? tag : new LogTag(TString.label(tag));
+    /**
+     * {LogTag} Tag (component name and optional context) associated with the
+     * message.
+     */
+    this._tag = LogTag.check(tag);
 
     /** {array<*>} Message to log. */
     this._message = message;
