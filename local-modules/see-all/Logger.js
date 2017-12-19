@@ -63,17 +63,6 @@ export default class Logger extends BaseLogger {
   }
 
   /**
-   * Constructs and returns an instance just like this one, except with a tag
-   * that has the given additional context.
-   *
-   * @param {...string} context Additional context strings.
-   * @returns {LogTag} An appropriately-constructed instance.
-   */
-  withAddedContext(...context) {
-    return new Logger(this._tag.withAddedContext(...context));
-  }
-
-  /**
    * Actual logging implementation, as specified by the superclass.
    *
    * @param {string} level Severity level. Guaranteed to be a valid level.
@@ -87,5 +76,17 @@ export default class Logger extends BaseLogger {
     }
 
     AllSinks.theOne.log(level, this._tag, ...message);
+  }
+
+  /**
+   * Subclass-specific context adder.
+   *
+   * @abstract
+   * @param {...string} context Additional context strings. Guaranteed to be
+   *   valid.
+   * @returns {BaseLogger} An appropriately-constructed instance of this class.
+   */
+  _impl_withAddedContext(...context) {
+    return new Logger(this._tag.withAddedContext(...context));
   }
 }

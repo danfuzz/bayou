@@ -6,6 +6,7 @@ import { CommonBase, Errors } from 'util-common';
 
 import LogRecord from './LogRecord';
 import LogStream from './LogStream';
+import LogTag from './LogTag';
 
 
 /**
@@ -101,8 +102,23 @@ export default class BaseLogger extends CommonBase {
   }
 
   /**
-   * Actual logging implementation. Subclasses must override this to do
-   * something appropriate.
+   * Constructs and returns an instance just like this one, except with a tag
+   * that has the given additional context.
+   *
+   * @param {...string} context Additional context strings. Each must be valid
+   *   per the definition of context in {@link LogTag}.
+   * @returns {BaseLogger} An appropriately-constructed instance of this class.
+   */
+  withAddedContext(...context) {
+    for (const c of context) {
+      LogTag.checkContextString(c);
+    }
+
+    return this._impl_withAddedContext(...context);
+  }
+
+  /**
+   * Subclass-specific logging implementation.
    *
    * @abstract
    * @param {string} level Severity level. Guaranteed to be a valid level.
@@ -110,5 +126,17 @@ export default class BaseLogger extends CommonBase {
    */
   _impl_log(level, message) {
     this._mustOverride(level, message);
+  }
+
+  /**
+   * Subclass-specific context adder.
+   *
+   * @abstract
+   * @param {...string} context Additional context strings. Guaranteed to be
+   *   valid.
+   * @returns {BaseLogger} An appropriately-constructed instance of this class.
+   */
+  _impl_withAddedContext(...context) {
+    this._mustOverride(context);
   }
 }
