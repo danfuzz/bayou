@@ -33,7 +33,9 @@ export default class FileSink extends BaseSink {
    * @param {LogRecord} logRecord The record to write.
    */
   _impl_sinkLog(logRecord) {
-    const { level, tag, timeMsec } = logRecord;
+    const { level, tag: { main, context }, timeMsec } = logRecord;
+    const tag = [main, ...context];
+
     this._writeJson({ timeMsec, level, tag, message: logRecord.messageString });
   }
 
