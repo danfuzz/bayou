@@ -50,7 +50,7 @@ describe('see-all-server/RecentSink', () => {
         assert.strictEqual(lr.timeMsec, 12345 + i);
         assert.strictEqual(lr.stack, 'yay-stack');
         assert.strictEqual(lr.level, 'info');
-        assert.strictEqual(lr.tag, 'blort');
+        assert.strictEqual(lr.tag.main, 'blort');
         assert.deepEqual(lr.message, [`florp ${i}`]);
       }
     });
