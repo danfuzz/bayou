@@ -159,7 +159,7 @@ export default class ServerSink extends BaseSink {
    */
   _makePrefix(logRecord) {
     let   text   = logRecord.prefix;
-    const length = text.length + 1; // `+1` for the space at the end.
+    //const length = text.length + 1; // `+1` for the space at the end.
 
     // Color the prefix according to level.
     switch (logRecord.level) {
@@ -167,6 +167,16 @@ export default class ServerSink extends BaseSink {
       case 'warn':  { text = chalk.yellow.bold(text); break; }
       default:      { text = chalk.dim.bold(text);    break; }
     }
+
+    // If there's context, color it and append it.
+    if (logRecord.contextString !== null) {
+      text += ` ${chalk.hex('#44e').bold(logRecord.contextString)}`;
+    }
+
+    // **Note:** `stringLength()` takes into account the fact that ANSI color
+    // escapes don't add to the visual-length of a string. `+1` to guarantee at
+    // least one space of padding.
+    const length = stringLength(text) + 1;
 
     // Update the prefix length instance variables. What we're doing here is
     // adjusting the prefix area to be wider when we discover a prefix which

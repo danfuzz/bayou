@@ -166,6 +166,19 @@ export default class LogRecord extends CommonBase {
     Object.freeze(this);
   }
 
+  /**
+   * {string|null} The standard-form context string for this instance, or `null`
+   * if there is no context.
+   */
+  get contextString() {
+    const context = this.tag.context;
+
+    return (context.length === 0)
+      ? null
+      : `[${context.join(' ')}]`;
+  }
+
+
   /** {string} Severity level. */
   get level() {
     return this._level;
@@ -219,13 +232,10 @@ export default class LogRecord extends CommonBase {
    * instance.
    */
   get prefix() {
-    const { level, tag: { main, context } } = this;
+    const { level, tag: { main } } = this;
     const levelStr = (level === 'info') ? '' : ` ${level[0].toUpperCase()}`;
-    const contextStr = (context.length === 0)
-      ? ''
-      : ` ${context.join(':')}`;
 
-    return `[${main}${levelStr}]${contextStr}`;
+    return `[${main}${levelStr}]`;
   }
 
   /**

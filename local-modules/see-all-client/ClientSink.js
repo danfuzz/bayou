@@ -96,11 +96,19 @@ export default class ClientSink extends BaseSink {
       default:      { prefixColor = '#999'; break; }
     }
 
-    return [
-      '%c%s%c',
-      `color: ${prefixColor}; font-weight: bold`,
-      logRecord.prefix,
-      '' // This empty string is for the second `%c` above; that is, reset style.
-    ];
+    let   formatStr = '%c%s';
+    const args      = [`color: ${prefixColor}; font-weight: bold`, logRecord.prefix];
+
+    if (logRecord.contextString !== null) {
+      formatStr += '%c%s';
+      args.push('color: #44e; font-weight: bold');
+      args.push(` ${logRecord.contextString}`);
+    }
+
+    // Reset the style at the end.
+    formatStr += '%c';
+    args.push('');
+
+    return [formatStr, ...args];
   }
 }
