@@ -30,26 +30,32 @@ describe('api-common/Codec.decode*()', () => {
 
   describe('decodeData()', () => {
     it('should pass non-object values through as-is', () => {
-      assert.strictEqual(decodeData(37), 37);
-      assert.strictEqual(decodeData(true), true);
-      assert.strictEqual(decodeData(false), false);
-      assert.strictEqual(decodeData('Happy string'), 'Happy string');
-      assert.isNull(decodeData(null));
+      function test(value) {
+        assert.strictEqual(decodeData(value), value);
+      }
+
+      test(37);
+      test(true);
+      test(false);
+      test('Happy string');
+      test(null);
     });
 
-    it('should accept plain objects', () => {
-      // The tests here are of objects whose values all decode to themselves.
-      assert.deepEqual(decodeData({}), {});
-      assert.deepEqual(decodeData({ a: true, b: 'yo' }), { a: true, b: 'yo' });
+    it('should pass arrays with only data values through as-is', () => {
+      function test(value) {
+        assert.deepEqual(decodeData(value), value);
+      }
+
+      test([]);
+      test([true]);
+      test([1, false, 'x']);
+      test([[[null]]]);
     });
 
-    it('should reject arrays whose first value is not a string', () => {
-      assert.throws(() => decodeData([]));
-      assert.throws(() => decodeData([1, 2, 3, '4 5 6']));
-      assert.throws(() => decodeData([true, 2, 3, '4 5 6']));
-      assert.throws(() => decodeData([null, 2, 3, '4 5 6']));
-      assert.throws(() => decodeData([[], 2, 3, '4 5 6']));
-      assert.throws(() => decodeData([() => true, 2, 3, '4 5 6']));
+    it('should reject plain objects not in "encoded instance" form', () => {
+      assert.throws(() => decodeData({}));
+      assert.throws(() => decodeData({ a: 123 }));
+      assert.throws(() => decodeData({ foo: [], x: [] }));
     });
 
     it('should reject functions', () => {
@@ -80,7 +86,7 @@ describe('api-common/Codec.decode*()', () => {
     it('should decode as expected', () => {
       assert.strictEqual(decodeJson('null'), null);
       assert.strictEqual(decodeJson('914'), 914);
-      assert.deepEqual(decodeJson('{"a":10,"b":20}'), { a: 10, b: 20 });
+      assert.deepEqual(decodeJson('{ "object": [["a", 10], ["b", 20]] }'), { a: 10, b: 20 });
     });
   });
 
@@ -92,7 +98,7 @@ describe('api-common/Codec.decode*()', () => {
 
       assert.strictEqual(bufAndDecode('null'), null);
       assert.strictEqual(bufAndDecode('914'), 914);
-      assert.deepEqual(bufAndDecode('{"a":10,"b":20}'), { a: 10, b: 20 });
+      assert.deepEqual(bufAndDecode('{ "object": [["a", 10], ["b", 20]] }'), { a: 10, b: 20 });
     });
   });
 });

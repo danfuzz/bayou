@@ -32,7 +32,7 @@
   // code we need to know the base URL, whee! So we just do the minimal bit of
   // parsing needed to get the URL and then head on our merry way.
   var key = JSON.parse(window.BAYOU_KEY);
-  var url = key[1]; // See `SplitKey.js`, the encoded form in particular.
+  var url = key.SplitKey[0]; // See `SplitKey.js`, the encoded form in particular.
   var baseUrl = ((url === '*') ? window.location : new URL(url)).origin;
 
   // Add the main JavaScript bundle to the page. Once loaded, this continues

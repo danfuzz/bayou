@@ -133,8 +133,7 @@ export default class Registry extends CommonBase {
     let clazz;
     let codecs;
 
-    if (   (valueType === 'object')
-        && (Object.getPrototypeOf(value) !== Object.prototype)) {
+    if (valueType === 'instance') {
       // The value is an instance of a class. Look up the class in the registry.
       // **Note:** We don't try to find superclass codecs. (This is an
       // intentional design choice.)
@@ -142,7 +141,7 @@ export default class Registry extends CommonBase {
       codecs = this._classToCodecs.get(clazz);
     } else {
       // The value is a non-class-instance, including possibly being a plain
-      // object (e.g., `{ florps: 10 }`) or `null`.
+      // object (e.g., `{ florps: 10 }`), an array, or `null`.
       clazz = null;
       codecs = this._typeToCodecs.get(valueType);
     }

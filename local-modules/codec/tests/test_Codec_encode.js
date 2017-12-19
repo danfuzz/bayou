@@ -9,18 +9,6 @@ import { Codec } from 'codec';
 import { MockCodable } from 'codec/mocks';
 import { FrozenBuffer } from 'util-common';
 
-class NoCodecTag {
-  deconstruct() {
-    return 'NoCodecTag!';
-  }
-}
-
-class NoToCodecArgs {
-  constructor() {
-    this.CODEC_TAG = 'NoToCodecArgs';
-  }
-}
-
 describe('api-common/Codec.encode*()', () => {
   // Convenient bindings for `encode*()` to avoid a lot of boilerplate.
   const codec            = Codec.theOne;
@@ -42,18 +30,26 @@ describe('api-common/Codec.encode*()', () => {
     });
 
     it('should pass through non-object values and null as-is', () => {
-      assert.strictEqual(encodeData(37), 37);
-      assert.strictEqual(encodeData(true), true);
-      assert.strictEqual(encodeData(false), false);
-      assert.strictEqual(encodeData('blort'), 'blort');
-      assert.strictEqual(encodeData(null), null);
+      function test(value) {
+        assert.strictEqual(encodeData(value), value);
+      }
+
+      test(37);
+      test(true);
+      test(false);
+      test('blort');
+      test(null);
     });
 
-    it('should pass through as-is plain objects whose values are self-encoding', () => {
-      assert.deepEqual(encodeData({}), {});
-      assert.deepEqual(encodeData({ a: 10 }), { a: 10 });
-      assert.deepEqual(encodeData({ b: false }), { b: false });
-      assert.deepEqual(encodeData({ c: 'yay', d: {} }), { c: 'yay', d: {} });
+    it('should pass through arrays with just data elements as-is', () => {
+      function test(value) {
+        assert.deepEqual(encodeData(value), value);
+      }
+
+      test([]);
+      test([true]);
+      test([1, false, 'x']);
+      test([[[null]]]);
     });
 
     it('should reject arrays with index holes', () => {
@@ -74,16 +70,28 @@ describe('api-common/Codec.encode*()', () => {
       assert.throws(() => encodeData(value));
     });
 
-    it('should reject objects with no CODEC_TAG property', () => {
-      const noCodecTag = new NoCodecTag();
+    it('should accept plain objects and encode as a tagged entries array', () => {
+      function test(value) {
+        const expect = { object: Object.entries(value) };
+        assert.deepEqual(encodeData(value), expect);
+      }
 
-      assert.throws(() => encodeData(noCodecTag));
+      test({});
+      test({ a: 10 });
+      test({ b: false });
+      test({ c: 'yay', d: [1, 2, 3] });
     });
 
     it('should reject objects with no `deconstruct()` method', () => {
-      const noToCodecArgs = new NoToCodecArgs();
+      class NoDeconstruct {
+        get CODEC_TAG() {
+          return 'NoDeconstruct';
+        }
+      }
 
-      assert.throws(() => encodeData(noToCodecArgs));
+      const noDeconstruct = new NoDeconstruct();
+
+      assert.throws(() => encodeData(noDeconstruct));
     });
 
     it('should accept objects with an CODEC_TAG property and `deconstruct()` method', () => {
@@ -103,7 +111,7 @@ describe('api-common/Codec.encode*()', () => {
     it('should encode as expected', () => {
       assert.strictEqual(encodeJson(null), 'null');
       assert.strictEqual(encodeJson(914), '914');
-      assert.strictEqual(encodeJson({ a: 10, b: 20 }), '{"a":10,"b":20}');
+      assert.strictEqual(encodeJson({ a: 10, b: 20 }), '{"object":[["a",10],["b",20]]}');
     });
   });
 
@@ -117,7 +125,7 @@ describe('api-common/Codec.encode*()', () => {
     it('should encode as expected', () => {
       assert.strictEqual(encodeJsonBuffer(null).string, 'null');
       assert.strictEqual(encodeJsonBuffer(914).string, '914');
-      assert.strictEqual(encodeJsonBuffer({ a: 10, b: 20 }).string, '{"a":10,"b":20}');
+      assert.strictEqual(encodeJsonBuffer({ a: 10, b: 20 }).string, '{"object":[["a",10],["b",20]]}');
     });
   });
 });
