@@ -59,26 +59,4 @@ describe('see-all/BaseLogger', () => {
       assert.deepEqual(logger.record, [['info', 'blort']]);
     });
   });
-
-  describe('withDynamicPrefix()', () => {
-    it('returns a logger which operates as expected', () => {
-      let count = 0;
-      function prefunc() {
-        count++;
-        return [count, 'x'];
-      }
-
-      const logger = new MockLogger();
-      const prefixer = logger.withDynamicPrefix(prefunc);
-
-      prefixer.info('one');
-      prefixer.info('two');
-      prefixer.info('three');
-      assert.deepEqual(logger.record, [
-        ['info', 1, 'x', 'one'],
-        ['info', 2, 'x', 'two'],
-        ['info', 3, 'x', 'three'],
-      ]);
-    });
-  });
 });

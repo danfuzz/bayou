@@ -36,13 +36,17 @@ export default class ApiClient extends CommonBase {
     this._baseUrl = ApiClient._getBaseUrl(url);
 
     /**
-     * {string|null} Connection ID conveyed to us by the server. Set / reset in
+     * {string|null} Connection ID conveyed to us by the server. Reset in
      * `_resetConnection()`.
      */
     this._connectionId = null;
 
-    /** {Logger} Logger which prefixes everything with the connection ID. */
-    this._log = log.withDynamicPrefix(() => [`[${this._connectionId}]`]);
+    /**
+     * {Logger} Logger which prefixes everything with the connection ID (if
+     * available). Set in {@link #_updateLogger}, which is called whenever
+     * {@link #_connectionId} is updated.
+     */
+    this._log = log;
 
     /**
      * {WebSocket} Actual websocket instance. Set by `open()`. Reset in
@@ -86,6 +90,8 @@ export default class ApiClient extends CommonBase {
 
     // Initialize the active connection fields (described above).
     this._resetConnection();
+
+    Object.seal(this);
   }
 
   /** {string} Base URL for the remote endpoint this client gets attached to. */
@@ -229,11 +235,13 @@ export default class ApiClient extends CommonBase {
     this._ws.onmessage = this._handleMessage.bind(this);
     this._ws.onopen    = this._handleOpen.bind(this);
 
+    this._updateLogger();
     this._log.detail('Opening connection...');
 
     const id = await this.meta.connectionId();
 
     this._connectionId = id;
+    this._updateLogger();
     this._log.info('Open.');
 
     return true;
@@ -380,6 +388,8 @@ export default class ApiClient extends CommonBase {
     this._pendingMessages = [];
     this._targets.clear();
     this._targets.add('meta'); // The one guaranteed target.
+
+    this._updateLogger();
   }
 
   /**
@@ -444,6 +454,19 @@ export default class ApiClient extends CommonBase {
     return new Promise((resolve, reject) => {
       this._callbacks[id] = { resolve, reject };
     });
+  }
+
+  /**
+   * Updates {@link #_log} based on {@link #_connectionId}.
+   */
+  _updateLogger() {
+    let id = this._connectionId;
+
+    if ((id === null) || (id === UNKNOWN_CONNECTION_ID)) {
+      id = (this._ws === null) ? 'unconnected' : 'connecting';
+    }
+
+    this._log = log.withAddedContext(id);
   }
 
   /**
