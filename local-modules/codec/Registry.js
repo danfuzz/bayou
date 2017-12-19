@@ -82,8 +82,9 @@ export default class Registry extends CommonBase {
     // Add the codec to the appropriate reverse map.
 
     const [reverseMap, key] = (clazz === null)
-      ? [this._typeToCodecs,  codec.encodedType]
+      ? [this._typeToCodecs,  codec.type]
       : [this._classToCodecs, clazz];
+
     let codecs = reverseMap.get(key);
 
     if (!codecs) {
