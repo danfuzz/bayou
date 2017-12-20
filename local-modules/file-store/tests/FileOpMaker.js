@@ -62,7 +62,7 @@ export default class FileOpMaker extends UtilityClass {
 
     for (const name of FileOp.OPERATION_NAMES) {
       const schema = FileOp.propsFromName(name);
-      if (schema.category === FileOp.CAT_WAIT) {
+      if (schema.category === FileOp.CAT_wait) {
         continue;
       }
 
@@ -91,7 +91,7 @@ export default class FileOpMaker extends UtilityClass {
         continue;
       }
 
-      const n = (schema.category === FileOp.CAT_WAIT) ? count : 1;
+      const n = (schema.category === FileOp.CAT_wait) ? count : 1;
       for (let i = 0; i < n; i++) {
         ops.push(FileOpMaker.makeOp(name, i));
       }

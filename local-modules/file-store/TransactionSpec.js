@@ -76,63 +76,63 @@ export default class TransactionSpec extends CommonBase {
 
   /**
    * Indicates whether or not this instance has any operations which return
-   * path results, that is, any operations with category `CAT_LIST` or
-   * `CAT_WAIT`.
+   * path results, that is, any operations with category `CAT_list` or
+   * `CAT_wait`.
    *
    * @returns {boolean} `true` iff there are any push operations in this
    *   instance.
    */
   hasPathOps() {
-    return (this.opsWithCategory(FileOp.CAT_LIST).length !== 0)
-      || (this.opsWithCategory(FileOp.CAT_WAIT).length !== 0);
+    return (this.opsWithCategory(FileOp.CAT_list).length !== 0)
+      || (this.opsWithCategory(FileOp.CAT_wait).length !== 0);
   }
 
   /**
    * Indicates whether or not this instance has any push operations (data
-   * storage of any sort), that is, any operations with category `CAT_DELETE` or
-   * `CAT_WRITE`.
+   * storage of any sort), that is, any operations with category `CAT_delete` or
+   * `CAT_write`.
    *
    * @returns {boolean} `true` iff there are any push operations in this
    *   instance.
    */
   hasPushOps() {
-    return (this.opsWithCategory(FileOp.CAT_DELETE).length !== 0)
-      || (this.opsWithCategory(FileOp.CAT_WRITE).length !== 0);
+    return (this.opsWithCategory(FileOp.CAT_delete).length !== 0)
+      || (this.opsWithCategory(FileOp.CAT_write).length !== 0);
   }
 
   /**
    * Indicates whether or not this instance has any pull operations (data
-   * retrieval of any sort), that is, any operations with category `CAT_LIST` or
-   * `CAT_READ`.
+   * retrieval of any sort), that is, any operations with category `CAT_list` or
+   * `CAT_read`.
    *
    * @returns {boolean} `true` iff there are any pull operations in this
    *   instance.
    */
   hasPullOps() {
-    return (this.opsWithCategory(FileOp.CAT_LIST).length !== 0)
-      || (this.opsWithCategory(FileOp.CAT_READ).length !== 0);
+    return (this.opsWithCategory(FileOp.CAT_list).length !== 0)
+      || (this.opsWithCategory(FileOp.CAT_read).length !== 0);
   }
 
   /**
    * Indicates whether or not this instance has any read operations, that is,
-   * any operations with category `CAT_READ`.
+   * any operations with category `CAT_read`.
    *
    * @returns {boolean} `true` iff there are any read operations in this
    *   instance.
    */
   hasReadOps() {
-    return this.opsWithCategory(FileOp.CAT_READ).length !== 0;
+    return this.opsWithCategory(FileOp.CAT_read).length !== 0;
   }
 
   /**
    * Indicates whether or not this instance has any wait operations, that is,
-   * any operations with category `CAT_WAIT`.
+   * any operations with category `CAT_wait`.
    *
    * @returns {boolean} `true` iff there are any wait operations in this
    *   instance.
    */
   hasWaitOps() {
-    return this.opsWithCategory(FileOp.CAT_WAIT).length !== 0;
+    return this.opsWithCategory(FileOp.CAT_wait).length !== 0;
   }
 
   /**

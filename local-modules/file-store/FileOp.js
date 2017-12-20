@@ -10,19 +10,19 @@ import { CommonBase, DataUtil, Errors, FrozenBuffer } from 'util-common';
 import StoragePath from './StoragePath';
 
 // Operation category constants. See docs on the static properties for details.
-const CAT_DELETE       = 'delete';
-const CAT_ENVIRONMENT  = 'environment';
-const CAT_LIST         = 'list';
-const CAT_PREREQUISITE = 'prerequisite';
-const CAT_READ         = 'read';
-const CAT_REVISION     = 'revision';
-const CAT_WAIT         = 'wait';
-const CAT_WRITE        = 'write';
+const CAT_delete       = 'delete';
+const CAT_environment  = 'environment';
+const CAT_list         = 'list';
+const CAT_prerequisite = 'prerequisite';
+const CAT_read         = 'read';
+const CAT_revision     = 'revision';
+const CAT_wait         = 'wait';
+const CAT_write        = 'write';
 
 /** {array<string>} List of categories in defined execution order. */
 const CATEGORY_EXECUTION_ORDER = [
-  CAT_ENVIRONMENT, CAT_REVISION, CAT_PREREQUISITE, CAT_LIST, CAT_READ,
-  CAT_DELETE, CAT_WRITE, CAT_WAIT
+  CAT_environment, CAT_revision, CAT_prerequisite, CAT_list, CAT_read,
+  CAT_delete, CAT_write, CAT_wait
 ];
 
 // Schema argument type constants. See docs on the static properties for
@@ -47,7 +47,7 @@ const OPERATIONS = [
    *
    * @param {string} hash The expected-to-be-absent hash.
    */
-  [CAT_PREREQUISITE, 'checkBlobAbsent', ['hash', TYPE_HASH]],
+  [CAT_prerequisite, 'checkBlobAbsent', ['hash', TYPE_HASH]],
 
   /*
    * A `checkBlobPresent` operation. This is a prerequisite operation that
@@ -55,7 +55,7 @@ const OPERATIONS = [
    *
    * @param {string} hash The expected hash.
    */
-  [CAT_PREREQUISITE, 'checkBlobPresent', ['hash', TYPE_HASH]],
+  [CAT_prerequisite, 'checkBlobPresent', ['hash', TYPE_HASH]],
 
   /*
    * A `checkPathAbsent` operation. This is a prerequisite operation that
@@ -64,7 +64,7 @@ const OPERATIONS = [
    *
    * @param {string} storagePath The storage path to check.
    */
-  [CAT_PREREQUISITE, 'checkPathAbsent', ['storagePath', TYPE_PATH]],
+  [CAT_prerequisite, 'checkPathAbsent', ['storagePath', TYPE_PATH]],
 
   /*
    * A `checkPathIs` operation. This is a prerequisite operation that verifies
@@ -74,7 +74,7 @@ const OPERATIONS = [
    * @param {string} hash The expected hash.
    */
   [
-    CAT_PREREQUISITE, 'checkPathIs',
+    CAT_prerequisite, 'checkPathIs',
     ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]
   ],
 
@@ -90,7 +90,7 @@ const OPERATIONS = [
    * @param {string} hash The non-expected hash.
    */
   [
-    CAT_PREREQUISITE, 'checkPathNot',
+    CAT_prerequisite, 'checkPathNot',
     ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]
   ],
 
@@ -102,14 +102,14 @@ const OPERATIONS = [
    *
    * @param {string} storagePath The storage path to check.
    */
-  [CAT_PREREQUISITE, 'checkPathPresent', ['storagePath', TYPE_PATH]],
+  [CAT_prerequisite, 'checkPathPresent', ['storagePath', TYPE_PATH]],
 
   /*
    * A `deleteAll` operation. This is a write operation that removes all stored
    * items in the file. If the file was already empty, then this operation does
    * nothing.
    */
-  [CAT_DELETE, 'deleteAll'],
+  [CAT_delete, 'deleteAll'],
 
   /*
    * A `deleteBlob` operation. This is a write operation that removes from the
@@ -118,7 +118,7 @@ const OPERATIONS = [
    *
    * @param {string} hash The hash of the blob to delete.
    */
-  [CAT_DELETE, 'deleteBlob', ['hash', TYPE_HASH]],
+  [CAT_delete, 'deleteBlob', ['hash', TYPE_HASH]],
 
   /*
    * A `deletePath` operation. This is a write operation that deletes the
@@ -127,7 +127,7 @@ const OPERATIONS = [
    *
    * @param {string} storagePath The storage path to delete.
    */
-  [CAT_DELETE, 'deletePath', ['storagePath', TYPE_PATH]],
+  [CAT_delete, 'deletePath', ['storagePath', TYPE_PATH]],
 
   /*
    * A `deletePathPrefix` operation. This is a write operation that deletes the
@@ -137,7 +137,7 @@ const OPERATIONS = [
    *
    * @param {string} storagePath The storage path prefix to delete.
    */
-  [CAT_DELETE, 'deletePathPrefix', ['storagePath', TYPE_PATH]],
+  [CAT_delete, 'deletePathPrefix', ['storagePath', TYPE_PATH]],
 
   /*
    * A `deletePathRange` operation. This is a write operation that deletes the
@@ -154,7 +154,7 @@ const OPERATIONS = [
    *   effect (as it would be an empty range).
    */
   [
-    CAT_DELETE, 'deletePathRange',
+    CAT_delete, 'deletePathRange',
     ['storagePath', TYPE_PATH], ['startInclusive', TYPE_INDEX], ['endExclusive', TYPE_INDEX]
   ],
 
@@ -168,7 +168,7 @@ const OPERATIONS = [
    * @param {string} storagePath The storage path prefix to list the contents
    *   of.
    */
-  [CAT_LIST, 'listPathPrefix', ['storagePath', TYPE_PATH]],
+  [CAT_list, 'listPathPrefix', ['storagePath', TYPE_PATH]],
 
   /*
    * A `listPathRange` operation. This is a read operation that retrieves a
@@ -184,7 +184,7 @@ const OPERATIONS = [
    *   result in an empty list (as it would be an empty range).
    */
   [
-    CAT_LIST, 'listPathRange',
+    CAT_list, 'listPathRange',
     ['storagePath', TYPE_PATH], ['startInclusive', TYPE_INDEX], ['endExclusive', TYPE_INDEX]
   ],
 
@@ -202,7 +202,7 @@ const OPERATIONS = [
    *
    * @param {string} hash The content hash of the blob to read.
    */
-  [CAT_READ, 'readBlob', ['hash', TYPE_HASH]],
+  [CAT_read, 'readBlob', ['hash', TYPE_HASH]],
 
   /*
    * A `readPath` operation. This is a read operation that retrieves the value
@@ -217,7 +217,7 @@ const OPERATIONS = [
    *
    * @param {string} storagePath The storage path to read from.
    */
-  [CAT_READ, 'readPath', ['storagePath', TYPE_PATH]],
+  [CAT_read, 'readPath', ['storagePath', TYPE_PATH]],
 
   /*
    * A `readPathRange` operation. This is a read operation that retrieves all
@@ -234,7 +234,7 @@ const OPERATIONS = [
    *   effect (as it would be an empty range).
    */
   [
-    CAT_READ, 'readPathRange',
+    CAT_read, 'readPathRange',
     ['storagePath', TYPE_PATH], ['startInclusive', TYPE_INDEX], ['endExclusive', TYPE_INDEX]
   ],
 
@@ -248,7 +248,7 @@ const OPERATIONS = [
    *
    * @param {Int} revNum Required revision number.
    */
-  [CAT_REVISION, 'revNum', ['revNum', TYPE_REV_NUM]],
+  [CAT_revision, 'revNum', ['revNum', TYPE_REV_NUM]],
 
   /*
    * A `timeout` operation. This is an environment operation which limits a
@@ -261,7 +261,7 @@ const OPERATIONS = [
    *
    * @param {Int} durMsec Duration of the timeout, in milliseconds.
    */
-  [CAT_ENVIRONMENT, 'timeout', ['durMsec', TYPE_DUR_MSEC]],
+  [CAT_environment, 'timeout', ['durMsec', TYPE_DUR_MSEC]],
 
   /*
    * A `whenPathAbsent` operation. This is a wait operation that blocks the
@@ -269,7 +269,7 @@ const OPERATIONS = [
    *
    * @param {string} storagePath The storage path to observe.
    */
-  [CAT_WAIT, 'whenPathAbsent', ['storagePath', TYPE_PATH]],
+  [CAT_wait, 'whenPathAbsent', ['storagePath', TYPE_PATH]],
 
   /*
    * A `whenPathNot` operation. This is a wait operation that blocks the
@@ -281,7 +281,7 @@ const OPERATIONS = [
    * @param {string} hash Hash of the blob which must _not_ be at `storagePath`
    *   for the operation to complete.
    */
-  [CAT_WAIT, 'whenPathNot', ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]],
+  [CAT_wait, 'whenPathNot', ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]],
 
   /*
    * A `whenPathPresent` operation. This is a wait operation that blocks the
@@ -289,7 +289,7 @@ const OPERATIONS = [
    *
    * @param {string} storagePath The storage path to observe.
    */
-  [CAT_WAIT, 'whenPathPresent', ['storagePath', TYPE_PATH]],
+  [CAT_wait, 'whenPathPresent', ['storagePath', TYPE_PATH]],
 
   /*
    * A `writeBlob` operation. This is a write operation that stores the
@@ -298,7 +298,7 @@ const OPERATIONS = [
    *
    * @param {FrozenBuffer} value The value to store.
    */
-  [CAT_WRITE, 'writeBlob', ['value', TYPE_BUFFER]],
+  [CAT_write, 'writeBlob', ['value', TYPE_BUFFER]],
 
   /*
    * A `writePath` operation. This is a write operation that stores the
@@ -308,7 +308,7 @@ const OPERATIONS = [
    * @param {string} storagePath The storage path to bind to.
    * @param {FrozenBuffer} value The value to store and bind to `storagePath`.
    */
-  [CAT_WRITE, 'writePath', ['storagePath', TYPE_PATH], ['value', TYPE_BUFFER]]
+  [CAT_write, 'writePath', ['storagePath', TYPE_PATH], ['value', TYPE_BUFFER]]
 ];
 
 /**
@@ -317,8 +317,8 @@ const OPERATIONS = [
  */
 const OPERATION_MAP = new Map(OPERATIONS.map((schema) => {
   const [category, name, ...args] = schema;
-  const isPull = (category === CAT_READ) || (category === CAT_LIST);
-  const isPush = (category === CAT_WRITE) || (category === CAT_DELETE);
+  const isPull = (category === CAT_read) || (category === CAT_list);
+  const isPush = (category === CAT_write) || (category === CAT_delete);
 
   const props = { category, name, args, isPull, isPush };
   return [name, DataUtil.deepFreeze(props)];
@@ -362,43 +362,43 @@ const OPERATION_MAP = new Map(OPERATIONS.map((schema) => {
  */
 export default class FileOp extends CommonBase {
   /** {string} Operation category for deletion ops. */
-  static get CAT_DELETE() {
-    return CAT_DELETE;
+  static get CAT_delete() {
+    return CAT_delete;
   }
 
   /** {string} Operation category for environment ops. */
-  static get CAT_ENVIRONMENT() {
-    return CAT_ENVIRONMENT;
+  static get CAT_environment() {
+    return CAT_environment;
   }
 
   /** {string} Operation category for path lists. */
-  static get CAT_LIST() {
-    return CAT_LIST;
+  static get CAT_list() {
+    return CAT_list;
   }
 
   /** {string} Operation category for prerequisites. */
-  static get CAT_PREREQUISITE() {
-    return CAT_PREREQUISITE;
+  static get CAT_prerequisite() {
+    return CAT_prerequisite;
   }
 
   /** {string} Operation category for data reads. */
-  static get CAT_READ() {
-    return CAT_READ;
+  static get CAT_read() {
+    return CAT_read;
   }
 
   /** {string} Operation category for revision restrictions. */
-  static get CAT_REVISION() {
-    return CAT_REVISION;
+  static get CAT_revision() {
+    return CAT_revision;
   }
 
   /** {string} Operation category for waits. */
-  static get CAT_WAIT() {
-    return CAT_WAIT;
+  static get CAT_wait() {
+    return CAT_wait;
   }
 
   /** {string} Operation category for data writes. */
-  static get CAT_WRITE() {
-    return CAT_WRITE;
+  static get CAT_write() {
+    return CAT_write;
   }
 
   /** {array<string>} List of all operation names. This is a frozen value. */
@@ -507,14 +507,14 @@ export default class FileOp extends CommonBase {
    */
   static validateCategory(category) {
     switch (category) {
-      case CAT_DELETE:
-      case CAT_ENVIRONMENT:
-      case CAT_LIST:
-      case CAT_PREREQUISITE:
-      case CAT_READ:
-      case CAT_REVISION:
-      case CAT_WAIT:
-      case CAT_WRITE: {
+      case CAT_delete:
+      case CAT_environment:
+      case CAT_list:
+      case CAT_prerequisite:
+      case CAT_read:
+      case CAT_revision:
+      case CAT_wait:
+      case CAT_write: {
         return category;
       }
       default: {
