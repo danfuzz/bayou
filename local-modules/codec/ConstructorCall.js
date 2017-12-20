@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CommonBase, Functor } from 'util-common';
+import { CommonBase, Errors, Functor, ObjectUtil } from 'util-common';
 
 /**
  * Representation of a "constructor call" encoded data form. Instances of this
@@ -11,6 +11,39 @@ import { CommonBase, Functor } from 'util-common';
  * Instances of this class are always frozen (immutable).
  */
 export default class ConstructorCall extends CommonBase {
+  /**
+   * Reviver function suitable for use with `JSON.parse()`, which handles
+   * conversion of the JSON encoding form as defined by this module into
+   * instances of this class, when appropriate. It passes arrays, `null`, and
+   * non-objects through as-is. It rejects (throws an error when given) any
+   * objects not in the JSON encoding form.
+   *
+   * **Note:** The arguments of this function are specified by JavaScript, as
+   * part of the contract for `JSON.parse()`.
+   *
+   * @param {string|number} key_unused Key to which the value in question will
+   *   be bound, or `''` if there is no salient key.
+   * @param {*} value Value being revived.
+   * @returns {*} Revived value.
+   */
+  static revive(key_unused, value) {
+    if (   (value === null)
+        || (typeof value !== 'object')
+        || Array.isArray(value)) {
+      return value;
+    }
+
+    const [[tag, args], ...rest] = Object.entries(value);
+
+    if (!(   ObjectUtil.isPlain(value)
+          && (rest.length === 0)
+          && Array.isArray(args))) {
+      throw Errors.badData('Invalid object in encoded form.');
+    }
+
+    return new ConstructorCall(new Functor(tag, ...args));
+  }
+
   /**
    * Constructs an instance.
    *
@@ -30,5 +63,20 @@ export default class ConstructorCall extends CommonBase {
   /** {Functor} Construction payload. */
   get payload() {
     return this._payload;
+  }
+
+  /**
+   * Gets the JSON encoding form of this instance. See {@link Codec#encodeJson}
+   * for details.
+   *
+   * **Note:** The name of this method is specified by JavaScript, as part of
+   * the contract for `JSON.stringify()`.
+   *
+   * @returns {object} The JSON encoding form.
+   */
+  toJSON() {
+    const payload = this._payload;
+
+    return { [payload.name]: payload.args };
   }
 }
