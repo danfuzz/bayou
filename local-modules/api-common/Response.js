@@ -32,7 +32,7 @@ export default class Response extends CommonBase {
 
     // Validate the `error` / `result` combo.
     if ((result !== null) && (error !== null)) {
-      throw Errors.bad_use('`result` and `error` cannot both be non-`null`.');
+      throw Errors.badUse('`result` and `error` cannot both be non-`null`.');
     }
 
     /** {Int} Message ID. */

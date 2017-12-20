@@ -42,7 +42,7 @@ describe('api-common/TargetHandler', () => {
 
     it('should reject a non-callable `sendMessage` argument', () => {
       function test(value) {
-        assert.throws(() => new TargetHandler(value, 'some-target-id'), /bad_value/);
+        assert.throws(() => new TargetHandler(value, 'some-target-id'), /badValue/);
       }
 
       // Classes defined with `class ...` aren't callable.
@@ -60,7 +60,7 @@ describe('api-common/TargetHandler', () => {
     it('should reject a non-id `targetId` argument', () => {
       function test(value) {
         const func = () => { /*empty*/ };
-        assert.throws(() => new TargetHandler(func, value), /bad_value/);
+        assert.throws(() => new TargetHandler(func, value), /badValue/);
       }
 
       // Strings but not valid target IDs.
@@ -81,7 +81,7 @@ describe('api-common/TargetHandler', () => {
       const func = () => { throw new Error('should not have been called'); };
       const th = new TargetHandler(func, 'some-target-id');
       const proxy = new Proxy(func, th);
-      assert.throws(() => th.apply(func, proxy, [1, 2, 3]), /bad_use/);
+      assert.throws(() => th.apply(func, proxy, [1, 2, 3]), /badUse/);
     });
   });
 
@@ -90,7 +90,7 @@ describe('api-common/TargetHandler', () => {
       const func = () => { throw new Error('should not have been called'); };
       const th = new TargetHandler(func, 'some-target-id');
       const proxy = new Proxy(func, th);
-      assert.throws(() => th.construct(func, [1, 2, 3], proxy), /bad_use/);
+      assert.throws(() => th.construct(func, [1, 2, 3], proxy), /badUse/);
     });
   });
 

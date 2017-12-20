@@ -23,7 +23,7 @@ export default class TMap extends UtilityClass {
    */
   static check(value, keyCheck = null, valueCheck = null) {
     if (!(value instanceof Map)) {
-      throw Errors.bad_value(value, Map);
+      throw Errors.badValue(value, Map);
     }
 
     if ((keyCheck !== null) || (valueCheck !== null)) {

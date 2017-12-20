@@ -19,7 +19,7 @@ export default class TSet extends UtilityClass {
    */
   static check(value, valueCheck = null) {
     if (!(value instanceof Set)) {
-      throw Errors.bad_value(value, Set);
+      throw Errors.badValue(value, Set);
     }
 
     if (valueCheck !== null) {

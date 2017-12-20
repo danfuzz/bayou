@@ -62,7 +62,7 @@ export default class FileOpMaker extends UtilityClass {
 
     for (const name of FileOp.OPERATION_NAMES) {
       const schema = FileOp.propsFromName(name);
-      if (schema.category === FileOp.CAT_WAIT) {
+      if (schema.category === FileOp.CAT_wait) {
         continue;
       }
 
@@ -91,7 +91,7 @@ export default class FileOpMaker extends UtilityClass {
         continue;
       }
 
-      const n = (schema.category === FileOp.CAT_WAIT) ? count : 1;
+      const n = (schema.category === FileOp.CAT_wait) ? count : 1;
       for (let i = 0; i < n; i++) {
         ops.push(FileOpMaker.makeOp(name, i));
       }
@@ -144,23 +144,23 @@ export default class FileOpMaker extends UtilityClass {
    */
   static _makeValue(type, n) {
     switch (type) {
-      case FileOp.TYPE_BUFFER: {
+      case FileOp.TYPE_Buffer: {
         return FrozenBuffer.coerce(`buffer_${n}`);
       }
-      case FileOp.TYPE_DUR_MSEC: {
+      case FileOp.TYPE_DurMsec: {
         return n * 1234;
       }
-      case FileOp.TYPE_HASH: {
+      case FileOp.TYPE_Hash: {
         const buf = FrozenBuffer.coerce(`buffer_hash_${n}`);
         return buf.hash;
       }
-      case FileOp.TYPE_INDEX: {
+      case FileOp.TYPE_Index: {
         return n + 100;
       }
-      case FileOp.TYPE_PATH: {
+      case FileOp.TYPE_Path: {
         return `/path/${n}`;
       }
-      case FileOp.TYPE_REV_NUM: {
+      case FileOp.TYPE_RevNum: {
         return n;
       }
       default: {

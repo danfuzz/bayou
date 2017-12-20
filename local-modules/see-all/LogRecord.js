@@ -26,6 +26,21 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Validates a logging severity level value. Throws an error if invalid.
+   *
+   * @param {string} level Severity level. Must be one of the severity level
+   *   constants defined by this class.
+   * @returns {string} `level`, if it is indeed valid.
+   */
+  static checkLevel(level) {
+    if (!LEVELS_SET.has(level)) {
+      throw Errors.badValue(level, 'logging severity level');
+    }
+
+    return level;
+  }
+
+  /**
    * Constructs an instance of this class for representing a timestamp. The
    * result is an `info` level record tagged with `time`, and with a three-array
    * `messages` argument consisting of `[<utc>, '/', <local>]`, where `<utc>`
@@ -112,21 +127,6 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
-   * Validates a logging severity level value. Throws an error if invalid.
-   *
-   * @param {string} level Severity level. Must be one of the severity level
-   *   constants defined by this class.
-   * @returns {string} `level`, if it is indeed valid.
-   */
-  static validateLevel(level) {
-    if (!LEVELS_SET.has(level)) {
-      throw Errors.bad_value(level, 'logging severity level');
-    }
-
-    return level;
-  }
-
-  /**
    * Constructs an instance.
    *
    * @param {Int} timeMsec Timestamp of the message.
@@ -152,7 +152,7 @@ export default class LogRecord extends CommonBase {
     this._stack = TString.orNull(stack);
 
     /** {string} Severity level. */
-    this._level = LogRecord.validateLevel(level);
+    this._level = LogRecord.checkLevel(level);
 
     /**
      * {LogTag} Tag (component name and optional context) associated with the

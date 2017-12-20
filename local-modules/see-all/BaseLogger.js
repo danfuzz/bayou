@@ -24,7 +24,7 @@ export default class BaseLogger extends CommonBase {
    *   contains an exception, this will log the stack trace.
    */
   log(level, ...message) {
-    LogRecord.validateLevel(level);
+    LogRecord.checkLevel(level);
     this._impl_log(level, message);
   }
 

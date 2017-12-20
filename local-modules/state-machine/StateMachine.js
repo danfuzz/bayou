@@ -141,11 +141,11 @@ export default class StateMachine {
         const validArgs = validator.apply(this, args) || args;
 
         if ((validArgs !== undefined) && !Array.isArray(validArgs)) {
-          throw Errors.bad_use(`Invalid validator result (non-array) for \`${name}\`.`);
+          throw Errors.badUse(`Invalid validator result (non-array) for \`${name}\`.`);
         }
 
         if (this._eventQueue === null) {
-          throw Errors.bad_use('Attempt to queue events on aborted instance.');
+          throw Errors.badUse('Attempt to queue events on aborted instance.');
         }
 
         const event = new Functor(name, ...args);
@@ -300,7 +300,7 @@ export default class StateMachine {
 
       if ((eventName !== 'any') && !this._eventValidators[eventName]) {
         // No associated validator.
-        throw Errors.bad_use(`Unknown event name ${eventName} in method ${desc.name}.`);
+        throw Errors.badUse(`Unknown event name ${eventName} in method ${desc.name}.`);
       }
 
       if (!result[stateName]) {
@@ -402,16 +402,16 @@ export default class StateMachine {
 
   /**
    * Default handler for any event in any state, which responds by throwing a
-   * `bad_use` error, because subclasses should cover all the event
+   * `badUse` error, because subclasses should cover all the event
    * possibilities. This may be overridden by subclasses if in fact having a
    * wildcard handler is the right tactic for their particular case.
    *
    * @param {string} name The event name.
    * @param {...*} args_unused Arguments to the event.
-   * @throws {Errors.bad_use} Always thrown.
+   * @throws {Errors.badUse} Always thrown.
    */
   _handle_any_any(name, ...args_unused) {
-    throw Errors.bad_use(`Cannot handle event \`${name}\` in state \`${this._stateName}\`.`);
+    throw Errors.badUse(`Cannot handle event \`${name}\` in state \`${this._stateName}\`.`);
   }
 
   /**

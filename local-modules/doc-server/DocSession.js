@@ -167,7 +167,7 @@ export default class DocSession extends CommonBase {
   /**
    * Informs the system of the client's current caret or text selection extent.
    * This should be called by clients when they notice user activity that
-   * changes the selection. More specifically, Quill's `SELECTION_CHANGED`
+   * changes the selection. More specifically, Quill's `selection-change`
    * events are expected to drive calls to this method. The `index` and `length`
    * arguments to this method have the same semantics as they have in Quill,
    * that is, they ultimately refer to an extent within a Quill `Delta`.

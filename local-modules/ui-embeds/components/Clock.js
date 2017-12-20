@@ -8,7 +8,7 @@ import ComponentBlotWrapper from '../ComponentBlotWrapper';
 
 export default class Clock extends React.Component {
   static get blotName() {
-    return 'clock_embed';
+    return 'clockEmbed';
   }
   constructor(props) {
     super(props);

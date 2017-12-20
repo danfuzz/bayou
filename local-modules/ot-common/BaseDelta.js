@@ -128,7 +128,7 @@ export default class BaseDelta extends CommonBase {
     TBoolean.check(wantDocument);
 
     if (wantDocument && !this.isDocument()) {
-      throw Errors.bad_use('`wantDocument === true` on non-document instance.');
+      throw Errors.badUse('`wantDocument === true` on non-document instance.');
     }
 
     const result = this._impl_compose(other, wantDocument);

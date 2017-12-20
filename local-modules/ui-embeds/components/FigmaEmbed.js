@@ -14,7 +14,7 @@ export default class FigmaEmbed extends React.Component {
    * by `ComponentBlotWrapper`.
    */
   static get blotName() {
-    return 'figma_embed';
+    return 'figmaEmbed';
   }
 
   /**

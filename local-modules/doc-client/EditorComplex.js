@@ -273,7 +273,7 @@ export default class EditorComplex extends CommonBase {
   async _domSetup(topNode, baseUrl) {
     // Validate the top node, and give it the right CSS style.
     if (topNode.nodeName !== 'DIV') {
-      throw Errors.bad_use('Expected `topNode` to be a `div`.');
+      throw Errors.badUse('Expected `topNode` to be a `div`.');
     }
 
     topNode.classList.add('bayou-top');

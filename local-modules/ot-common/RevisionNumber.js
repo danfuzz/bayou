@@ -21,7 +21,7 @@ export default class RevisionNumber extends UtilityClass {
       return TInt.nonNegative(value);
     } catch (e) {
       // More appropriate error.
-      throw Errors.bad_value(value, RevisionNumber);
+      throw Errors.badValue(value, RevisionNumber);
     }
   }
 
@@ -38,7 +38,7 @@ export default class RevisionNumber extends UtilityClass {
       return TInt.range(value, 0, maxExc);
     } catch (e) {
       // More appropriate error.
-      throw Errors.bad_value(value, RevisionNumber, `value < ${maxExc}`);
+      throw Errors.badValue(value, RevisionNumber, `value < ${maxExc}`);
     }
   }
 
@@ -55,7 +55,7 @@ export default class RevisionNumber extends UtilityClass {
       return TInt.rangeInc(value, 0, maxInc);
     } catch (e) {
       // More appropriate error.
-      throw Errors.bad_value(value, RevisionNumber, `value <= ${maxInc}`);
+      throw Errors.badValue(value, RevisionNumber, `value <= ${maxInc}`);
     }
   }
 
@@ -72,7 +72,7 @@ export default class RevisionNumber extends UtilityClass {
       return TInt.min(value, minInc);
     } catch (e) {
       // More appropriate error.
-      throw Errors.bad_value(value, RevisionNumber, `value >= ${minInc}`);
+      throw Errors.badValue(value, RevisionNumber, `value >= ${minInc}`);
     }
   }
 }

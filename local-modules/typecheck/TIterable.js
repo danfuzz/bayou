@@ -29,7 +29,7 @@ export default class TIterable extends UtilityClass {
   static check(value, entryCheck = null) {
     if (   ((typeof value) !== 'object')
         || ((typeof value[Symbol.iterator]) !== 'function')) {
-      throw Errors.bad_value(value, 'Iterable');
+      throw Errors.badValue(value, 'Iterable');
     }
 
     if (entryCheck !== null) {

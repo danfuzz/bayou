@@ -12,8 +12,10 @@ import UtilityClass from './UtilityClass';
  * Utility class for constructing commonly-used errors, which are applicable to
  * a wide variety of code.
  *
- * **Note:** The names of the methods match the error functor names, and because
- * the convention for those is `lowercase_underscore`, that is what's used.
+ * In addition, this class defines some convenient predicates for checking to
+ * see if a given value is a particular sort of error. In general, if an error
+ * is created with the method `someName()`, then the corresponding predicate
+ * will be `is_someName()`.
  */
 export default class Errors extends UtilityClass {
   /**
@@ -50,8 +52,8 @@ export default class Errors extends UtilityClass {
    * @param {string} message Description of the problem.
    * @returns {InfoError} An appropriately-constructed error.
    */
-  static bad_data(cause, message) {
-    return Errors._make('bad_data', cause, message);
+  static badData(cause, message) {
+    return Errors._make('badData', cause, message);
   }
 
   /**
@@ -71,8 +73,8 @@ export default class Errors extends UtilityClass {
    * @param {string} message Description of the problem.
    * @returns {InfoError} An appropriately-constructed error.
    */
-  static bad_use(cause, message) {
-    return Errors._make('bad_use', cause, message);
+  static badUse(cause, message) {
+    return Errors._make('badUse', cause, message);
   }
 
   /**
@@ -92,7 +94,7 @@ export default class Errors extends UtilityClass {
    *   value.
    * @returns {InfoError} An appropriately-constructed error.
    */
-  static bad_value(value, expectedType, extra = null) {
+  static badValue(value, expectedType, extra = null) {
     if (typeof expectedType === 'string') {
       // All good. No extra checks.
     } else if (   (typeof expectedType === 'function')
@@ -116,7 +118,7 @@ export default class Errors extends UtilityClass {
     }
 
     return new InfoError(
-      'bad_value',
+      'badValue',
       inspectedValue,
       expectedType,
       ...((extra === null) ? [] : [extra]));
@@ -129,9 +131,9 @@ export default class Errors extends UtilityClass {
    * @param {Int} revNum Requested revision number.
    * @returns {InfoError} An appropriately-constructed error.
    */
-  static revision_not_available(revNum) {
+  static revisionNotAvailable(revNum) {
     CoreTypecheck.checkInt(revNum, 0);
-    return new InfoError('revision_not_available', revNum);
+    return new InfoError('revisionNotAvailable', revNum);
   }
 
   /**
@@ -140,9 +142,9 @@ export default class Errors extends UtilityClass {
    * @param {Int} timeoutMsec The original length of the timeout, in msec.
    * @returns {InfoError} An appropriately-constructed error.
    */
-  static timed_out(timeoutMsec) {
+  static timedOut(timeoutMsec) {
     CoreTypecheck.checkInt(timeoutMsec, 0);
-    return new InfoError('timed_out', timeoutMsec);
+    return new InfoError('timedOut', timeoutMsec);
   }
 
   /**
@@ -170,13 +172,13 @@ export default class Errors extends UtilityClass {
   }
 
   /**
-   * Indicates whether or not the given error is a `timed_out`.
+   * Indicates whether or not the given error is a `timedOut`.
    *
    * @param {Error} error Error in question.
    * @returns {boolean} `true` iff it represents a timeout.
    */
-  static isTimedOut(error) {
-    return InfoError.hasName(error, 'timed_out');
+  static is_timedOut(error) {
+    return InfoError.hasName(error, 'timedOut');
   }
 
   /**

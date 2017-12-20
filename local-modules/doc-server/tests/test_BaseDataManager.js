@@ -71,12 +71,12 @@ describe('doc-server/BaseDataManager', () => {
       let callCount = 0;
       dm._impl_validationStatus = async () => {
         callCount++;
-        return ValidationStatus.STATUS_OK;
+        return ValidationStatus.STATUS_ok;
       };
 
       const result = await dm.validationStatus();
       assert.strictEqual(callCount, 1);
-      assert.strictEqual(result, ValidationStatus.STATUS_OK);
+      assert.strictEqual(result, ValidationStatus.STATUS_ok);
     });
 
     it('should throw whatever error is thrown by the impl', async () => {
@@ -94,7 +94,7 @@ describe('doc-server/BaseDataManager', () => {
         return ['not actually a validation status'];
       };
 
-      await assert.isRejected(dm.validationStatus(), /bad_value/);
+      await assert.isRejected(dm.validationStatus(), /badValue/);
     });
   });
 });

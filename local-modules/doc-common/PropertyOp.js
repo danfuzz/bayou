@@ -12,14 +12,14 @@ import Property from './Property';
  * Operation which can be applied to a `PropertySnapshot`.
  */
 export default class PropertyOp extends BaseOp {
-  /** {string} Operation name for "delete property" operations. */
-  static get DELETE_PROPERTY() {
-    return 'delete_property';
+  /** {string} Opcode constant for "delete property" operations. */
+  static get CODE_delete() {
+    return 'delete';
   }
 
-  /** {string} Operation name for "set property" operations. */
-  static get SET_PROPERTY() {
-    return 'set_property';
+  /** {string} Opcode constant for "set property" operations. */
+  static get CODE_set() {
+    return 'set';
   }
 
   /**
@@ -29,10 +29,10 @@ export default class PropertyOp extends BaseOp {
    *   "identifier" string.
    * @returns {PropertyOp} An appropriately-constructed operation.
    */
-  static op_deleteProperty(name) {
+  static op_delete(name) {
     TString.identifier(name);
 
-    return new PropertyOp(PropertyOp.DELETE_PROPERTY, name);
+    return new PropertyOp(PropertyOp.CODE_delete, name);
   }
 
   /**
@@ -43,8 +43,8 @@ export default class PropertyOp extends BaseOp {
    * @param {*} value Value of the property. Must be a pure data value.
    * @returns {PropertyOp} An appropriately-constructed operation.
    */
-  static op_setProperty(name, value) {
-    return new PropertyOp(PropertyOp.SET_PROPERTY, new Property(name, value));
+  static op_set(name, value) {
+    return new PropertyOp(PropertyOp.CODE_set, new Property(name, value));
   }
 
   /**
@@ -58,12 +58,12 @@ export default class PropertyOp extends BaseOp {
     const opName  = payload.name;
 
     switch (opName) {
-      case PropertyOp.DELETE_PROPERTY: {
+      case PropertyOp.CODE_delete: {
         const [name] = payload.args;
         return Object.freeze({ opName, name });
       }
 
-      case PropertyOp.SET_PROPERTY: {
+      case PropertyOp.CODE_set: {
         const [property] = payload.args;
         return Object.freeze({ opName, property });
       }

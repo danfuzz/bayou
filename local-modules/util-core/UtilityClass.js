@@ -17,9 +17,9 @@ export default class UtilityClass {
    * Always throws an error. That is, utility classes are not ever supposed to
    * be instantiated.
    *
-   * @throws {Errors.bad_use} Always thrown.
+   * @throws {Errors.badUse} Always thrown.
    */
   constructor() {
-    throw Errors.bad_use('Attempt to instantiate utility class.');
+    throw Errors.badUse('Attempt to instantiate utility class.');
   }
 }

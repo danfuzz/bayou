@@ -143,11 +143,11 @@ export default class CaretOverlay {
 
     for (;;) {
       // Wait for a text change.
-      currentEvent = await currentEvent.nextOf(QuillEvents.TEXT_CHANGE);
+      currentEvent = await currentEvent.nextOf(QuillEvents.TYPE_textChange);
 
       // Skip any additional text changes that have already been posted, so that
       // we won't just be slowly iterating over all changes.
-      currentEvent = currentEvent.latestOfNow(QuillEvents.TEXT_CHANGE);
+      currentEvent = currentEvent.latestOfNow(QuillEvents.TYPE_textChange);
 
       log.detail('Got local edit event.');
       this._updateDisplay();
@@ -486,19 +486,19 @@ export default class CaretOverlay {
       const props = op.props;
 
       switch (props.opName) {
-        case CaretOp.BEGIN_SESSION: {
+        case CaretOp.CODE_beginSession: {
           this._addAvatarToDefs(props.caret);
           updateDisplay = true;
           break;
         }
 
-        case CaretOp.END_SESSION: {
+        case CaretOp.CODE_endSession: {
           this._removeAvatarFromDefs(props.sessionId);
           updateDisplay = true;
           break;
         }
 
-        case CaretOp.SET_FIELD: {
+        case CaretOp.CODE_setField: {
           const sessionId = props.sessionId;
 
           if (sessionId === this._editorComplex.sessionId) {

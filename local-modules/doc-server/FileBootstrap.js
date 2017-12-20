@@ -158,7 +158,7 @@ export default class FileBootstrap extends BaseDataManager {
    */
   async _impl_validationStatus() {
     if (!(await this.file.exists())) {
-      return ValidationStatus.STATUS_NOT_FOUND;
+      return ValidationStatus.STATUS_notFound;
     }
 
     const members = [
@@ -170,12 +170,12 @@ export default class FileBootstrap extends BaseDataManager {
 
     for (const member of members) {
       const status = await member.validationStatus();
-      if (status !== ValidationStatus.STATUS_OK) {
+      if (status !== ValidationStatus.STATUS_ok) {
         return status;
       }
     }
 
-    return ValidationStatus.STATUS_OK;
+    return ValidationStatus.STATUS_ok;
   }
 
   /**
@@ -187,7 +187,7 @@ export default class FileBootstrap extends BaseDataManager {
     this.log.info('Doing bootstrap-time validation...');
     const status  = await this.validationStatus();
 
-    if (status === ValidationStatus.STATUS_OK) {
+    if (status === ValidationStatus.STATUS_ok) {
       // All's well.
       return true;
     }
@@ -197,7 +197,7 @@ export default class FileBootstrap extends BaseDataManager {
     let firstText;
 
     switch (status) {
-      case ValidationStatus.STATUS_MIGRATE: {
+      case ValidationStatus.STATUS_migrate: {
         // **TODO:** Ultimately, this code path will evolve into forward
         // migration of documents found to be in older formats. For now, we just
         // fall through to the document creation logic below, which will leave
@@ -207,15 +207,15 @@ export default class FileBootstrap extends BaseDataManager {
         break;
       }
 
-      case ValidationStatus.STATUS_RECOVER: {
-        // **TODO:** As with `STATUS_MIGRATE`, this code path will eventually
+      case ValidationStatus.STATUS_recover: {
+        // **TODO:** As with `STATUS_migrate`, this code path will eventually
         // expand into some sort of recovery mechanism.
         this.log.info('Needs recovery. (But just noting that fact for now.)');
         firstText = RECOVERY_NOTE;
         break;
       }
 
-      case ValidationStatus.STATUS_ERROR: {
+      case ValidationStatus.STATUS_error: {
         // **TODO:** Ultimately, it should be a Really Big Deal if we find
         // ourselves here. We might want to implement some form of "hail mary"
         // attempt to recover _something_ of use from the document storage.
@@ -224,7 +224,7 @@ export default class FileBootstrap extends BaseDataManager {
         break;
       }
 
-      case ValidationStatus.STATUS_NOT_FOUND: {
+      case ValidationStatus.STATUS_notFound: {
         // The file simply didn't exist.
         this.log.info('Making new file.');
         firstText = DEFAULT_TEXT;
@@ -258,7 +258,7 @@ export default class FileBootstrap extends BaseDataManager {
    */
   _initCheck() {
     if (!this._initialized) {
-      throw Errors.bad_use('Must be `init()`ed before access.');
+      throw Errors.badUse('Must be `init()`ed before access.');
     }
   }
 }

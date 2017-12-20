@@ -42,8 +42,8 @@ taking into account recent additions to the language.
   in annotations as if they were real types. The names are always capitalized.
 
 * When documenting functions marked `async`, the implicit promise returned by
-  the function should _not_ be represented in its prose or `@returns`
-  documentation. For example:
+  the function should _not_ typically be represented in its prose or `@returns`
+  documentation:
 
   ```javascript
   /**
@@ -69,6 +69,10 @@ taking into account recent additions to the language.
     return 'frobnicator';
   }
   ```
+
+  As an exception, if the asynchronous behavior warrants specific detail, it
+  is okay to describe that behavior (but still leave the `@returns` doc
+  unmarked).
 
 #### Module imports and exports
 
@@ -184,13 +188,47 @@ taking into account recent additions to the language.
   Roughly speaking, you can think of this as an "instance sandwich on static
   bread."
 
-#### Other items
+#### Enumerated constants
 
-* Websockets &mdash; JavaScript has a `WebSocket` class, but when talking about
-  them in prose or in our own variable or class names, we use "websocket" (one
-  word, all lower case, though capitalized as appropriate for prose or
-  `camelCasing`). In addition, `ws` is a good choice for a shorthand name of a
-  variable that contains an instance of one (or something related).
+* Use immutable static variables to name constants instead of just using
+  quoted strings directly. The name of the variable should generally match the
+  content of the related string, via one of two mappings:
+
+  * The preferred way is to use a common all-caps prefix for all the constants,
+    followed by an underscore, and followed by the constant value in
+    `camelCase`. For example, use the variable name `CODE_bakeCake` for the
+    string `"bakeCake"` and the variable name `CODE_eatCake` for `"eatCake"` as
+    part of the same enumeration.
+
+    This way is _especially_ preferred if the string values "leak" beyond the
+    code, e.g., if they end up represented in databases or get transmitted
+    across an API boundary.
+
+  * The less recommended (but still acceptable, for now) way is to convert the
+    constant value to `UPPER_SNAKE_CASE` and have that be the name. For example,
+    the strings of the previous example would be stored in static variables
+    named `BAKE_CAKE` and `EAT_CAKE` respectively.
+
+* The preferred way to define static constants is via static getter functions,
+  e.g.:
+
+  ```javascript
+  class CakeCodes {
+    static get CODE_bakeCake() { return 'bakeCake'; }
+    static get CODE_eatCake()  { return 'eatCake'; }
+    ...
+  }
+  ```
+
+  Once JavaScript gains the ability to define these in a better way, we will
+  endeavor to do so.
+
+* Prefer `lowerCamelCase` for constant values, except if there is an external
+  dependency that requires otherwise. Notably, Quill event names (like many
+  Javascript event names) and CSS selectors use `lower-kebab-case`; and many
+  external services use `lower_snake_case`.
+
+#### Other items
 
 * Immediate-async blocks &mdash; When programming in the `async`/`await` style,
   sometimes it's useful to to "spawn" an independent thread of control which
@@ -229,3 +267,15 @@ taking into account recent additions to the language.
     ...
   }
   ```
+
+* Websockets &mdash; JavaScript has a `WebSocket` class, but when talking about
+  them in prose or in our own variable or class names, we use "websocket" (one
+  word, all lower case, though capitalized as appropriate for prose or
+  `camelCasing`). In addition, `ws` is a good choice for a shorthand name of a
+  variable that contains an instance of one (or something related).
+
+### Exceptions to the conventions
+
+Because nobody and no scheme is perfect, there are no doubt exceptions to the
+conventions, probably inadvertently. These should be considered opportunities
+for an easy fix as opposed to being examples to emulate.

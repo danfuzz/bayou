@@ -159,7 +159,7 @@ export default class Connection extends CommonBase {
 
     // We _don't_ include the passed argument, as that might end up revealing
     // secret info.
-    throw Errors.bad_use('Invalid target.');
+    throw Errors.badUse('Invalid target.');
   }
 
   /**

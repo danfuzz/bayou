@@ -14,7 +14,7 @@ import Functor from './Functor';
  * indicate a different error that was the "cause" of this one.
  *
  * The point of this is to be able to instantiate errors along the lines of
- * `new InfoError('file_not_found', '/foo/bar/baz.txt')` where the error comes
+ * `new InfoError('fileNotFound', '/foo/bar/baz.txt')` where the error comes
  * with a name and associated info in a well-defined form such that other code
  * can succeed in doing something useful with it, should it be useful to do so.
  *

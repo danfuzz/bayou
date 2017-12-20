@@ -304,7 +304,7 @@ export default class ItemCodec extends CommonBase {
    */
   decode(payload, subDecode) {
     if (!this.canDecode(payload)) {
-      throw Errors.bad_value(payload, 'encoded payload');
+      throw Errors.badValue(payload, 'encoded payload');
     }
 
     if (ObjectUtil.isPlain(payload)) {
@@ -315,7 +315,7 @@ export default class ItemCodec extends CommonBase {
     const result = this._decode(payload, subDecode);
 
     if (!this.canEncode(result)) {
-      throw Errors.bad_use('Invalid result from decoder.');
+      throw Errors.badUse('Invalid result from decoder.');
     }
 
     return result;
@@ -334,7 +334,7 @@ export default class ItemCodec extends CommonBase {
    */
   encode(value, subEncode) {
     if (!this.canEncode(value)) {
-      throw Errors.bad_value(value, 'encodable value');
+      throw Errors.badValue(value, 'encodable value');
     }
 
     const encodedType = this._encodedType;
@@ -347,12 +347,12 @@ export default class ItemCodec extends CommonBase {
         TArray.check(result);
       } catch (e) {
         // Throw a higher-fidelity error.
-        throw Errors.bad_use('Invalid encoding result (not an array).');
+        throw Errors.badUse('Invalid encoding result (not an array).');
       }
 
       result = { [this._tag]: Object.freeze(result) };
     } else if (ItemCodec.typeOf(result) !== encodedType) {
-      throw Errors.bad_use('Invalid encoding result: ' +
+      throw Errors.badUse('Invalid encoding result: ' +
         `got type ${ItemCodec.typeOf(result)}; expected type ${encodedType}`);
     }
 

@@ -56,7 +56,7 @@ export default class MetaHandler {
     if (!challengeInfo || (response !== challengeInfo.response)) {
       // **Note:** We don't differentiate reasons for rejection (beyond type
       // checking, above), as that could reveal security-sensitive info.
-      throw Errors.bad_use('Invalid challenge pair.');
+      throw Errors.badUse('Invalid challenge pair.');
     }
 
     const id = challengeInfo.id;

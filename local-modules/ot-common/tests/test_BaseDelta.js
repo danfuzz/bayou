@@ -133,7 +133,7 @@ describe('doc-common/BaseDelta', () => {
     it('should reject invalid `other` arguments', () => {
       function test(value) {
         const delta = MockDelta.EMPTY;
-        assert.throws(() => { delta.compose(value, false); }, /bad_value/);
+        assert.throws(() => { delta.compose(value, false); }, /badValue/);
       }
 
       test(undefined);
@@ -147,7 +147,7 @@ describe('doc-common/BaseDelta', () => {
     it('should reject non-boolean `wantDocument` arguments', () => {
       function test(value) {
         const delta = MockDelta.EMPTY;
-        assert.throws(() => { delta.compose(delta, value); }, /bad_value/);
+        assert.throws(() => { delta.compose(delta, value); }, /badValue/);
       }
 
       test(undefined);
@@ -159,7 +159,7 @@ describe('doc-common/BaseDelta', () => {
 
     it('should reject a non-document `this` when `wantDocument` is `true`', () => {
       const delta = new MockDelta([['not_document']]);
-      assert.throws(() => { delta.compose(MockDelta.EMPTY, true); }, /bad_use/);
+      assert.throws(() => { delta.compose(MockDelta.EMPTY, true); }, /badUse/);
     });
   });
 

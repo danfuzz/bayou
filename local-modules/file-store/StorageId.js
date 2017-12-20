@@ -28,7 +28,7 @@ export default class StorageId extends UtilityClass {
       return value;
     }
 
-    throw Errors.bad_value(value, StorageId);
+    throw Errors.badValue(value, StorageId);
   }
 
   /**

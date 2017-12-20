@@ -31,7 +31,7 @@ export default class PropertySnapshot extends BaseSnapshot {
 
     /**
      * {Map<string, PropertyOp>} Map of name to corresponding property, in the
-     * form of an `op_setProperty`.
+     * form of an `op_set`.
      */
     this._properties = new Map();
 
@@ -40,7 +40,7 @@ export default class PropertySnapshot extends BaseSnapshot {
       const opProps = op.props;
 
       switch (opProps.opName) {
-        case PropertyOp.SET_PROPERTY: {
+        case PropertyOp.CODE_set: {
           this._properties.set(opProps.property.name, op);
           break;
         }
@@ -131,7 +131,7 @@ export default class PropertySnapshot extends BaseSnapshot {
       return found;
     }
 
-    throw Errors.bad_use(`No such property: ${name}`);
+    throw Errors.badUse(`No such property: ${name}`);
   }
 
   /**
@@ -175,7 +175,7 @@ export default class PropertySnapshot extends BaseSnapshot {
    * @returns {PropertySnapshot} An appropriately-constructed instance.
    */
   withProperty(name, value) {
-    const op = PropertyOp.op_setProperty(name, value); // This type checks.
+    const op = PropertyOp.op_set(name, value); // This type checks.
 
     return op.equals(this._properties.get(name))
       ? this
@@ -192,7 +192,7 @@ export default class PropertySnapshot extends BaseSnapshot {
    * @returns {PropertySnapshot} An appropriately-constructed instance.
    */
   withoutProperty(name) {
-    const op = PropertyOp.op_deleteProperty(name); // This type checks.
+    const op = PropertyOp.op_delete(name); // This type checks.
 
     return this._properties.has(name)
       ? this.compose(new PropertyChange(this.revNum, [op]))
@@ -225,7 +225,7 @@ export default class PropertySnapshot extends BaseSnapshot {
     // Find properties removed from `this` when going to `newerSnapshot`.
     for (const name of this._properties.keys()) {
       if (!newerProps.get(name)) {
-        resultOps.push(PropertyOp.op_deleteProperty(name));
+        resultOps.push(PropertyOp.op_delete(name));
       }
     }
 

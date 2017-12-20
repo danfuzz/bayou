@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BayouKeyboard } from 'quill-util';
+import { BayouKeyboard, QuillEvents } from 'quill-util';
 import { FigmaEmbed, ImageEmbed } from 'ui-embeds';
 
 // Originally imported from <https://gist.github.com/dperini/729294>, by
@@ -51,7 +51,7 @@ export default class LinkDetector {
         this.quill.deleteText(index, lastMatch.regexMatch.length);
         this.quill.insertEmbed(index, FigmaEmbed.blotName, value);
       } else {
-        this.quill.formatText(index, lastMatch.regexMatch.length, 'link', lastMatch.link, 'user');
+        this.quill.formatText(index, lastMatch.regexMatch.length, 'link', lastMatch.link, QuillEvents.SOURCE_user);
       }
 
       return true;

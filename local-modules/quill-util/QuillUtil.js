@@ -12,7 +12,7 @@ const POSITION_NOT_FOUND = Object.freeze({
   blotOffset: 0,
   line: null,
   lineOffset: 0,
-  range: { index: -1, length: 0 }
+  range: Object.freeze({ index: -1, length: 0 })
 });
 
 /**
@@ -21,7 +21,7 @@ const POSITION_NOT_FOUND = Object.freeze({
  */
 export default class QuillUtil extends UtilityClass {
   /**
-   * Return value for `.quillContextForPixelPosition()` for cases where the
+   * Return value for {@link #quillContextForPixelPosition} for cases where the
    * pixel is not in the Quill context. All properties are nulled/zeroed except
    * for `range: [-1, 0]`.
    */

@@ -49,7 +49,7 @@ export default class TargetMap extends CommonBase {
    */
   add(id) {
     if (this.getOrNull(id) !== null) {
-      throw Errors.bad_use(`Already bound: ${id}`);
+      throw Errors.badUse(`Already bound: ${id}`);
     }
 
     const result = TargetHandler.makeProxy(this._sendMessage, id);
@@ -75,7 +75,7 @@ export default class TargetMap extends CommonBase {
     const result = this.getOrNull(id);
 
     if (result === null) {
-      throw Errors.bad_use(`No such target: ${id}`);
+      throw Errors.badUse(`No such target: ${id}`);
     }
 
     return result;

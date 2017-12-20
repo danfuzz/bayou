@@ -39,7 +39,7 @@ export default class Hooks extends Singleton {
       return `http://${host}`;
     }
 
-    throw Errors.bad_data('Missing `host` header on request.');
+    throw Errors.badData('Missing `host` header on request.');
   }
 
   /**

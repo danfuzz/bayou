@@ -263,11 +263,11 @@ export default class ChainedEvent extends CommonBase {
   _resolveNext(event) {
     ChainedEvent.check(event);
     if (this._source !== event._source) {
-      throw Errors.bad_use('Mismatched `event` source.');
+      throw Errors.badUse('Mismatched `event` source.');
     }
 
     if (this._nextNow !== null) {
-      throw Errors.bad_use('Can only call `_resolveNext()` once.');
+      throw Errors.badUse('Can only call `_resolveNext()` once.');
     }
 
     this._nextNow = event;

@@ -21,9 +21,9 @@ export default class Errors extends UtilityClass {
    * @param {string} hash Hash of the blob in question.
    * @returns {InfoError} An appropriately-constructed error.
    */
-  static blob_not_absent(hash) {
+  static blobNotAbsent(hash) {
     FrozenBuffer.checkHash(hash);
-    return new InfoError('blob_not_absent', hash);
+    return new InfoError('blobNotAbsent', hash);
   }
 
   /**
@@ -33,9 +33,9 @@ export default class Errors extends UtilityClass {
    * @param {string} hash Hash of the blob in question.
    * @returns {InfoError} An appropriately-constructed error.
    */
-  static blob_not_found(hash) {
+  static blobNotFound(hash) {
     FrozenBuffer.checkHash(hash);
-    return new InfoError('blob_not_found', hash);
+    return new InfoError('blobNotFound', hash);
   }
 
   /**
@@ -44,9 +44,9 @@ export default class Errors extends UtilityClass {
    * @param {string} id ID of the file.
    * @returns {InfoError} An appropriately-constructed error.
    */
-  static file_not_found(id) {
+  static fileNotFound(id) {
     TString.check(id);
-    return new InfoError('file_not_found', id);
+    return new InfoError('fileNotFound', id);
   }
 
   /**
@@ -57,10 +57,10 @@ export default class Errors extends UtilityClass {
    * @param {string} hash The expected hash.
    * @returns {InfoError} An appropriately-constructed error.
    */
-  static path_hash_mismatch(storagePath, hash) {
+  static pathHashMismatch(storagePath, hash) {
     StoragePath.check(storagePath);
     TString.nonEmpty(hash);
-    return new InfoError('path_hash_mismatch', storagePath, hash);
+    return new InfoError('pathHashMismatch', storagePath, hash);
   }
 
   /**
@@ -70,9 +70,9 @@ export default class Errors extends UtilityClass {
    * @param {string} storagePath Path in question.
    * @returns {InfoError} An appropriately-constructed error.
    */
-  static path_not_absent(storagePath) {
+  static pathNotAbsent(storagePath) {
     StoragePath.check(storagePath);
-    return new InfoError('path_not_absent', storagePath);
+    return new InfoError('pathNotAbsent', storagePath);
   }
 
   /**
@@ -82,38 +82,38 @@ export default class Errors extends UtilityClass {
    * @param {string} storagePath Path in question.
    * @returns {InfoError} An appropriately-constructed error.
    */
-  static path_not_found(storagePath) {
+  static pathNotFound(storagePath) {
     StoragePath.check(storagePath);
-    return new InfoError('path_not_found', storagePath);
+    return new InfoError('pathNotFound', storagePath);
   }
 
   /**
-   * Indicates whether or not the given error is a `path_hash_mismatch`.
+   * Indicates whether or not the given error is a `pathHashMismatch`.
    *
    * @param {Error} error Error in question.
-   * @returns {boolean} `true` iff it represents a `path_hash_mismatch`.
+   * @returns {boolean} `true` iff it represents a `pathHashMismatch`.
    */
-  static isPathHashMismatch(error) {
-    return InfoError.hasName(error, 'path_hash_mismatch');
+  static is_pathHashMismatch(error) {
+    return InfoError.hasName(error, 'pathHashMismatch');
   }
 
   /**
-   * Indicates whether or not the given error is a `path_not_absent`.
+   * Indicates whether or not the given error is a `pathNotAbsent`.
    *
    * @param {Error} error Error in question.
-   * @returns {boolean} `true` iff it represents a `path_not_absent`.
+   * @returns {boolean} `true` iff it represents a `pathNotAbsent`.
    */
-  static isPathNotAbsent(error) {
-    return InfoError.hasName(error, 'path_not_absent');
+  static is_pathNotAbsent(error) {
+    return InfoError.hasName(error, 'pathNotAbsent');
   }
 
   /**
-   * Indicates whether or not the given error is a `path_not_found`.
+   * Indicates whether or not the given error is a `pathNotFound`.
    *
    * @param {Error} error Error in question.
-   * @returns {boolean} `true` iff it represents a `path_not_found`.
+   * @returns {boolean} `true` iff it represents a `pathNotFound`.
    */
-  static isPathNotFound(error) {
-    return InfoError.hasName(error, 'path_not_found');
+  static is_pathNotFound(error) {
+    return InfoError.hasName(error, 'pathNotFound');
   }
 }

@@ -90,7 +90,7 @@ export default class Dirs extends Singleton {
 
     for (;;) {
       if ((dir === '.') || (dir === '/')) {
-        throw Errors.bad_use(`Unable to determine base product directory, starting from: ${__dirname}`);
+        throw Errors.badUse(`Unable to determine base product directory, starting from: ${__dirname}`);
       }
 
       try {
@@ -119,7 +119,7 @@ export default class Dirs extends Singleton {
       if (stat.isDirectory()) {
         return;
       } else {
-        throw Errors.bad_use(`Expected a directory: ${dirPath}`);
+        throw Errors.badUse(`Expected a directory: ${dirPath}`);
       }
     } catch (e) {
       // Presumably not found. Ignore the exception, fall through, and attempt

@@ -19,7 +19,7 @@ export default class TArray extends UtilityClass {
    */
   static check(value, elementCheck = null) {
     if (!Array.isArray(value)) {
-      throw Errors.bad_value(value, Array);
+      throw Errors.badValue(value, Array);
     }
 
     if (elementCheck !== null) {

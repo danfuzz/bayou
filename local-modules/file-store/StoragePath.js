@@ -67,7 +67,7 @@ export default class StoragePath extends UtilityClass {
       return value;
     }
 
-    throw Errors.bad_value(value, StoragePath);
+    throw Errors.badValue(value, StoragePath);
   }
 
   /**
@@ -82,7 +82,7 @@ export default class StoragePath extends UtilityClass {
     TString.nonEmpty(value);
 
     if (!COMPONENT_REGEX.test(value)) {
-      throw Errors.bad_value(value, 'StoragePath component');
+      throw Errors.badValue(value, 'StoragePath component');
     }
 
     return value;
@@ -102,7 +102,7 @@ export default class StoragePath extends UtilityClass {
     const match = path.match(/[/](0|[1-9][0-9]*)$/);
 
     if (match === null) {
-      throw Errors.bad_value(path, StoragePath, 'with index');
+      throw Errors.badValue(path, StoragePath, 'with index');
     }
 
     return TInt.nonNegative(parseInt(match[1]));
@@ -180,7 +180,7 @@ export default class StoragePath extends UtilityClass {
       return StoragePath.check(value);
     } catch (e) {
       // More specific error.
-      throw Errors.bad_value(value, 'StoragePath|null');
+      throw Errors.badValue(value, 'StoragePath|null');
     }
   }
 

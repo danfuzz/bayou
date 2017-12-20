@@ -47,7 +47,7 @@ export default class TInt extends UtilityClass {
     TInt.check(maxInc);
 
     if (value > maxInc) {
-      throw Errors.bad_value(value, 'Int', `value <= ${maxInc}`);
+      throw Errors.badValue(value, 'Int', `value <= ${maxInc}`);
     }
 
     return value;
@@ -110,7 +110,7 @@ export default class TInt extends UtilityClass {
     TInt.check(maxInc);
 
     if ((value < minInc) || (value > maxInc)) {
-      throw Errors.bad_value(value, 'Int', `${minInc} <= value <= ${maxInc}`);
+      throw Errors.badValue(value, 'Int', `${minInc} <= value <= ${maxInc}`);
     }
 
     return value;

@@ -42,7 +42,7 @@ export default class CaretSnapshot extends BaseSnapshot {
       const opProps = op.props;
 
       switch (opProps.opName) {
-        case CaretOp.BEGIN_SESSION: {
+        case CaretOp.CODE_beginSession: {
           this._carets.set(opProps.caret.sessionId, op);
           break;
         }
@@ -102,7 +102,7 @@ export default class CaretSnapshot extends BaseSnapshot {
       return found;
     }
 
-    throw Errors.bad_use(`No such session: ${sessionId}`);
+    throw Errors.badUse(`No such session: ${sessionId}`);
   }
 
   /**

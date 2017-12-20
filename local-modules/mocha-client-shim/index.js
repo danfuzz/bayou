@@ -29,7 +29,7 @@ const mocha = global.mocha;
 class MochaShim {
   constructor(opts) {
     if (MochaShim._constructed) {
-      throw Errors.bad_use('Can only instantiate the client `Mocha` shim once.');
+      throw Errors.badUse('Can only instantiate the client `Mocha` shim once.');
     }
 
     mocha.setup(opts);

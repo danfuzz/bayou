@@ -79,7 +79,7 @@ export default class Mutex extends CommonBase {
     // The return value is the unlock function.
     return () => {
       if (this._lockedBy !== key) {
-        throw Errors.bad_use('Attempt to unlock by non-owner.');
+        throw Errors.badUse('Attempt to unlock by non-owner.');
       }
 
       this._lockedBy = null;

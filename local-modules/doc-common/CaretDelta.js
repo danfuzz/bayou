@@ -33,14 +33,14 @@ export default class CaretDelta extends BaseDelta {
       const opProps = op.props;
 
       switch (opProps.opName) {
-        case CaretOp.BEGIN_SESSION: {
+        case CaretOp.CODE_beginSession: {
           // Clear out the session except for this op, because no earlier op
           // could possibly affect the result.
           sessions.set(opProps.caret.sessionId, [op]);
           break;
         }
 
-        case CaretOp.END_SESSION: {
+        case CaretOp.CODE_endSession: {
           if (wantDocument) {
             // Document deltas don't remember session deletions.
             sessions.delete(opProps.sessionId);
@@ -53,7 +53,7 @@ export default class CaretDelta extends BaseDelta {
           break;
         }
 
-        case CaretOp.SET_FIELD: {
+        case CaretOp.CODE_setField: {
           const sessionId = opProps.sessionId;
           const ops       = sessions.get(sessionId);
           let   handled   = false;
@@ -68,12 +68,12 @@ export default class CaretDelta extends BaseDelta {
             // `BEGIN_SESSION` or `END_SESSION`, in which case we can do
             // something special.
             const op0Props = ops[0].props;
-            if (op0Props.opName === CaretOp.BEGIN_SESSION) {
+            if (op0Props.opName === CaretOp.CODE_beginSession) {
               // Integrate the new value into the caret.
               const caret = op0Props.caret.compose(new CaretDelta([op]));
               ops[0] = CaretOp.op_beginSession(caret);
               handled = true;
-            } else if (op0Props.opName === CaretOp.END_SESSION) {
+            } else if (op0Props.opName === CaretOp.CODE_endSession) {
               // We ignore set-after-end. A bit philosophical, but what does
               // it even mean to set a value on a nonexistent thing?
               handled = true;
@@ -120,7 +120,7 @@ export default class CaretDelta extends BaseDelta {
       const opProps = op.props;
 
       switch (opProps.opName) {
-        case CaretOp.BEGIN_SESSION: {
+        case CaretOp.CODE_beginSession: {
           const sessionId = opProps.caret.sessionId;
 
           if (ids.has(sessionId)) {

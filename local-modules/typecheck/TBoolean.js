@@ -16,7 +16,7 @@ export default class TBoolean extends UtilityClass {
    */
   static check(value) {
     if (typeof value !== 'boolean') {
-      throw Errors.bad_value(value, Boolean);
+      throw Errors.badValue(value, Boolean);
     }
 
     return value;

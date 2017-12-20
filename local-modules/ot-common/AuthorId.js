@@ -30,7 +30,7 @@ export default class AuthorId extends UtilityClass {
     if (   (typeof value !== 'string')
         || (value.length === 0)
         || !Hooks.theOne.isAuthorId(value)) {
-      throw Errors.bad_value(value, AuthorId);
+      throw Errors.badValue(value, AuthorId);
     }
 
     return value;
@@ -51,7 +51,7 @@ export default class AuthorId extends UtilityClass {
       return AuthorId.check(value);
     } catch (e) {
       // Higher-fidelity error.
-      throw Errors.bad_value(value, 'AuthorId|null');
+      throw Errors.badValue(value, 'AuthorId|null');
     }
   }
 }

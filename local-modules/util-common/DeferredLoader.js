@@ -49,10 +49,10 @@ class DeferredLoaderHandler {
 
         const type = typeof target;
         if ((target === null) || ((type !== 'object') && (type !== 'function'))) {
-          target = Errors.bad_use(`Loader for ${this._label} object returned an invalid value.`);
+          target = Errors.badUse(`Loader for ${this._label} object returned an invalid value.`);
         }
       } catch (e) {
-        target = Errors.bad_use(e, `Error in loader for ${this._label} object.`);
+        target = Errors.badUse(e, `Error in loader for ${this._label} object.`);
       }
 
       this._target = target; // Either the valid value or the error to throw.
@@ -67,7 +67,7 @@ class DeferredLoaderHandler {
     const result = target[property];
 
     if (result === undefined) {
-      throw Errors.bad_use(`Missing property: ${this._label}.${property}`);
+      throw Errors.badUse(`Missing property: ${this._label}.${property}`);
     }
 
     return result;

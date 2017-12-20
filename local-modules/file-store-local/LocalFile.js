@@ -214,11 +214,11 @@ export default class LocalFile extends BaseFile {
 
     await Promise.race([this._readStorageIfNecessary(), timeoutProm]);
     if (timeout) {
-      throw Errors.timed_out(timeoutMsec);
+      throw Errors.timedOut(timeoutMsec);
     }
 
     if (!this._fileShouldExist) {
-      throw FileStoreErrors.file_not_found(this.id);
+      throw FileStoreErrors.fileNotFound(this.id);
     }
 
     // Construct the "file friend" object. This exposes just enough private
@@ -301,7 +301,7 @@ export default class LocalFile extends BaseFile {
       this._changeCondition.value = false;
       await Promise.race([this._changeCondition.whenTrue(), timeoutProm]);
       if (timeout) {
-        throw Errors.timed_out(timeoutMsec);
+        throw Errors.timedOut(timeoutMsec);
       }
     }
 

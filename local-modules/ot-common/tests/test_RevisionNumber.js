@@ -16,7 +16,7 @@ import { RevisionNumber } from 'ot-common';
  */
 function rejectBadNumbers(name, ...args) {
   function test(value) {
-    assert.throws(() => RevisionNumber[name](value, ...args), /^bad_value/);
+    assert.throws(() => RevisionNumber[name](value, ...args), /^badValue/);
   }
 
   test(-1);
@@ -35,7 +35,7 @@ function rejectBadNumbers(name, ...args) {
  */
 function rejectNonNumbers(name, ...args) {
   function test(value) {
-    assert.throws(() => RevisionNumber[name](value, ...args), /^bad_value/);
+    assert.throws(() => RevisionNumber[name](value, ...args), /^badValue/);
   }
 
   test(null);
@@ -89,7 +89,7 @@ describe('doc-common/RevisionNumber', () => {
 
     it('should reject non-negative integers beyond the specified limit', () => {
       function test(value, limit) {
-        assert.throws(() => RevisionNumber.maxExc(value, limit), /^bad_value/);
+        assert.throws(() => RevisionNumber.maxExc(value, limit), /^badValue/);
       }
 
       test(0,   0);
@@ -128,7 +128,7 @@ describe('doc-common/RevisionNumber', () => {
 
     it('should reject non-negative integers beyond the specified limit', () => {
       function test(value, limit) {
-        assert.throws(() => RevisionNumber.maxInc(value, limit), /^bad_value/);
+        assert.throws(() => RevisionNumber.maxInc(value, limit), /^badValue/);
       }
 
       test(1,   0);
@@ -164,7 +164,7 @@ describe('doc-common/RevisionNumber', () => {
 
     it('should reject non-negative integers below the specified limit', () => {
       function test(value, limit) {
-        assert.throws(() => RevisionNumber.min(value, limit), /^bad_value/);
+        assert.throws(() => RevisionNumber.min(value, limit), /^badValue/);
       }
 
       test(0,   1);

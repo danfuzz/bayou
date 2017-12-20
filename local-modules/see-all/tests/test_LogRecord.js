@@ -24,10 +24,10 @@ describe('see-all/LogRecord', () => {
     });
   });
 
-  describe('validateLevel()', () => {
+  describe('checkLevel()', () => {
     it('accepts valid levels', () => {
       function test(level) {
-        assert.strictEqual(LogRecord.validateLevel(level), level);
+        assert.strictEqual(LogRecord.checkLevel(level), level);
       }
 
       for (const level of LogRecord.LEVELS) {
@@ -37,7 +37,7 @@ describe('see-all/LogRecord', () => {
 
     it('rejects invalid levels', () => {
       function test(level) {
-        assert.throws(() => { LogRecord.validateLevel(level); });
+        assert.throws(() => { LogRecord.checkLevel(level); });
       }
 
       test('');

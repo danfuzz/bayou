@@ -90,7 +90,7 @@ export default class FileCodec extends CommonBase {
       const bufferAt = [];
       for (let i = 0; i < argInfo.length; i++) {
         const [name_unused, type] = argInfo[i];
-        if ((type === FileOp.TYPE_BUFFER) || (type === FileOp.TYPE_HASH)) {
+        if ((type === FileOp.TYPE_Buffer) || (type === FileOp.TYPE_Hash)) {
           bufferAt.push(i);
         }
       }

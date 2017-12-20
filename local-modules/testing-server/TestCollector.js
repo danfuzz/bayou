@@ -80,7 +80,7 @@ export default class TestCollector extends CommonBase {
    */
   allDone() {
     if (this._done) {
-      throw Errors.bad_use('Already done!');
+      throw Errors.badUse('Already done!');
     }
 
     this._done = true;
@@ -108,7 +108,7 @@ export default class TestCollector extends CommonBase {
    */
   suiteEnd() {
     if (this._suites.length === 0) {
-      throw Errors.bad_use('No active suite.');
+      throw Errors.badUse('No active suite.');
     }
 
     this._suites.pop();

@@ -28,7 +28,7 @@ describe('api-common/TargetId', () => {
 
     it('should reject strings with invalid characters', () => {
       function test(value) {
-        assert.throws(() => TargetId.check(value), /bad_value/);
+        assert.throws(() => TargetId.check(value), /badValue/);
       }
 
       test('!');
@@ -38,18 +38,18 @@ describe('api-common/TargetId', () => {
     });
 
     it('should reject the empty string', () => {
-      assert.throws(() => TargetId.check(''), /bad_value/);
+      assert.throws(() => TargetId.check(''), /badValue/);
     });
 
     it('should reject too-long strings', () => {
       for (let i = 65; i < 100; i++) {
-        assert.throws(() => TargetId.check('x'.repeat(i)), /bad_value/);
+        assert.throws(() => TargetId.check('x'.repeat(i)), /badValue/);
       }
     });
 
     it('should reject non-strings', () => {
       function test(value) {
-        assert.throws(() => TargetId.check(value), /bad_value/);
+        assert.throws(() => TargetId.check(value), /badValue/);
       }
 
       test(null);
@@ -73,7 +73,7 @@ describe('api-common/TargetId', () => {
 
     it('should reject strings with invalid characters', () => {
       function test(value) {
-        assert.throws(() => TargetId.minLen(value, 5), /bad_value/);
+        assert.throws(() => TargetId.minLen(value, 5), /badValue/);
       }
 
       test('!abcd');
@@ -84,7 +84,7 @@ describe('api-common/TargetId', () => {
 
     it('should reject too-short strings', () => {
       function test(value, minLen) {
-        assert.throws(() => TargetId.minLen(value, minLen), /bad_value/);
+        assert.throws(() => TargetId.minLen(value, minLen), /badValue/);
       }
 
       test('', 1);
@@ -97,13 +97,13 @@ describe('api-common/TargetId', () => {
 
     it('should reject too-long strings', () => {
       for (let i = 65; i < 100; i++) {
-        assert.throws(() => TargetId.minLen('x'.repeat(i), 10), /bad_value/);
+        assert.throws(() => TargetId.minLen('x'.repeat(i), 10), /badValue/);
       }
     });
 
     it('should reject non-strings', () => {
       function test(value) {
-        assert.throws(() => TargetId.check(value, 2), /bad_value/);
+        assert.throws(() => TargetId.check(value, 2), /badValue/);
       }
 
       test(null);

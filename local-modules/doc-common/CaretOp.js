@@ -12,19 +12,19 @@ import Caret from './Caret';
  * Operation which can be applied to a `Caret` or `CaretSnapshot`.
  */
 export default class CaretOp extends BaseOp {
-  /** {string} Operation name for "begin session" operations. */
-  static get BEGIN_SESSION() {
-    return 'begin_session';
+  /** {string} Opcode constant for "begin session" operations. */
+  static get CODE_beginSession() {
+    return 'beginSession';
   }
 
-  /** {string} Operation name for "end session" operations. */
-  static get END_SESSION() {
-    return 'end_session';
+  /** {string} Opcode constant for "end session" operations. */
+  static get CODE_endSession() {
+    return 'endSession';
   }
 
-  /** {string} Operation name for "set field" operations. */
-  static get SET_FIELD() {
-    return 'set_field';
+  /** {string} Opcode constant for "set field" operations. */
+  static get CODE_setField() {
+    return 'setField';
   }
 
   /**
@@ -37,7 +37,7 @@ export default class CaretOp extends BaseOp {
   static op_beginSession(caret) {
     Caret.check(caret);
 
-    return new CaretOp(CaretOp.BEGIN_SESSION, caret);
+    return new CaretOp(CaretOp.CODE_beginSession, caret);
   }
 
   /**
@@ -49,7 +49,7 @@ export default class CaretOp extends BaseOp {
   static op_endSession(sessionId) {
     TString.nonEmpty(sessionId);
 
-    return new CaretOp(CaretOp.END_SESSION, sessionId);
+    return new CaretOp(CaretOp.CODE_endSession, sessionId);
   }
 
   /**
@@ -65,7 +65,7 @@ export default class CaretOp extends BaseOp {
     TString.nonEmpty(sessionId);
     Caret.checkField(key, value);
 
-    return new CaretOp(CaretOp.SET_FIELD, sessionId, key, value);
+    return new CaretOp(CaretOp.CODE_setField, sessionId, key, value);
   }
 
   /**
@@ -79,17 +79,17 @@ export default class CaretOp extends BaseOp {
     const opName  = payload.name;
 
     switch (opName) {
-      case CaretOp.BEGIN_SESSION: {
+      case CaretOp.CODE_beginSession: {
         const [caret] = payload.args;
         return Object.freeze({ opName, caret });
       }
 
-      case CaretOp.END_SESSION: {
+      case CaretOp.CODE_endSession: {
         const [sessionId] = payload.args;
         return Object.freeze({ opName, sessionId });
       }
 
-      case CaretOp.SET_FIELD: {
+      case CaretOp.CODE_setField: {
         const [sessionId, key, value] = payload.args;
         return Object.freeze({ opName, sessionId, key, value });
       }

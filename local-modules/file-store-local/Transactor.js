@@ -145,7 +145,7 @@ export default class Transactor extends CommonBase {
     const { hash } = props;
 
     if (this._fileFriend.readBlobOrNull(hash) !== null) {
-      throw FileStoreErrors.blob_not_absent(hash);
+      throw FileStoreErrors.blobNotAbsent(hash);
     }
   }
 
@@ -158,7 +158,7 @@ export default class Transactor extends CommonBase {
     const { hash } = props;
 
     if (this._fileFriend.readBlobOrNull(hash) === null) {
-      throw FileStoreErrors.blob_not_found(hash);
+      throw FileStoreErrors.blobNotFound(hash);
     }
   }
 
@@ -171,7 +171,7 @@ export default class Transactor extends CommonBase {
     const { storagePath } = props;
 
     if (this._fileFriend.readPathOrNull(storagePath) !== null) {
-      throw FileStoreErrors.path_not_absent(storagePath);
+      throw FileStoreErrors.pathNotAbsent(storagePath);
     }
   }
 
@@ -185,9 +185,9 @@ export default class Transactor extends CommonBase {
     const data = this._fileFriend.readPathOrNull(storagePath);
 
     if (data === null) {
-      throw FileStoreErrors.path_not_found(storagePath);
+      throw FileStoreErrors.pathNotFound(storagePath);
     } else if (data.hash !== expectedHash) {
-      throw FileStoreErrors.path_hash_mismatch(storagePath, expectedHash);
+      throw FileStoreErrors.pathHashMismatch(storagePath, expectedHash);
     }
   }
 
@@ -201,7 +201,7 @@ export default class Transactor extends CommonBase {
     const data = this._fileFriend.readPathOrNull(storagePath);
 
     if ((data !== null) && (data.hash === unexpectedHash)) {
-      throw FileStoreErrors.path_hash_mismatch(storagePath, unexpectedHash);
+      throw FileStoreErrors.pathHashMismatch(storagePath, unexpectedHash);
     }
   }
 
@@ -214,7 +214,7 @@ export default class Transactor extends CommonBase {
     const { storagePath } = props;
 
     if (this._fileFriend.readPathOrNull(storagePath) === null) {
-      throw FileStoreErrors.path_not_found(storagePath);
+      throw FileStoreErrors.pathNotFound(storagePath);
     }
   }
 
@@ -387,7 +387,7 @@ export default class Transactor extends CommonBase {
     const { revNum } = props;
 
     if (this._fileFriend.revNum !== revNum) {
-      throw Errors.revision_not_available(revNum);
+      throw Errors.revisionNotAvailable(revNum);
     }
   }
 

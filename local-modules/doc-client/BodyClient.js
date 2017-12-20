@@ -113,10 +113,10 @@ export default class BodyClient extends StateMachine {
     /**
      * {ChainableEvent|null} Current (most recent) local change to the document
      * made by Quill that this instance is aware of. That is,
-     * `_currentEvent.nextOf(TEXT_CHANGE)` (once it resolves) is the first
+     * `_currentEvent.nextOf(TYPE_textChange)` (once it resolves) is the first
      * change that this instance has not yet processed. This variable is
      * initialized by getting `_quill.currentEvent` and is generally updated by
-     * getting the next `TEXT_CHANGE` on it.
+     * getting the next `TYPE_textChange` on it.
      */
     this._currentEvent = null;
 
@@ -376,7 +376,7 @@ export default class BodyClient extends StateMachine {
     // The above action should have caused the Quill instance to make a change
     // which shows up on its event chain. Grab it, and verify that indeed it's
     // the change we're expecting.
-    const firstChange = firstEvent.nextOfNow(QuillEvents.TEXT_CHANGE);
+    const firstChange = firstEvent.nextOfNow(QuillEvents.TYPE_textChange);
 
     if (firstChange === null) {
       // This can happen if the snapshot happened to coincide with the
@@ -462,7 +462,7 @@ export default class BodyClient extends StateMachine {
           this.q_gotChangeAfter(baseSnapshot, value);
         } catch (e) {
           this._pendingChangeAfter = false;
-          if (Errors.isTimedOut(e)) {
+          if (Errors.is_timedOut(e)) {
             // Emit `wantInput` in response to a timeout. If we're idling, this
             // will end up retrying the `getChangeAfter()`. In any other state,
             // it will (correctly) get ignored.
@@ -568,7 +568,7 @@ export default class BodyClient extends StateMachine {
     }
 
     switch (event.payload.name) {
-      case QuillEvents.TEXT_CHANGE: {
+      case QuillEvents.TYPE_textChange: {
         // It's a document modification. Go into state `collecting`, leaving the
         // event chain alone for now. After the prescribed amount of time, the
         // `collecting` handler will hoover up the event with any other edits
@@ -582,7 +582,7 @@ export default class BodyClient extends StateMachine {
         return;
       }
 
-      case QuillEvents.SELECTION_CHANGE: {
+      case QuillEvents.TYPE_selectionChange: {
         // Consume the event, and send it onward to the caret tracker, which
         // might ultimately inform the server about it. Then go back to idling.
         if (props.range) {
@@ -703,7 +703,7 @@ export default class BodyClient extends StateMachine {
     // the server's state.
     const correctedDelta = delta.compose(dCorrection, false);
 
-    if (this._currentEvent.nextOfNow(QuillEvents.TEXT_CHANGE) === null) {
+    if (this._currentEvent.nextOfNow(QuillEvents.TYPE_textChange) === null) {
       // Thanfully, the local user hasn't made any other changes while we
       // were waiting for the server to get back to us, which means we can
       // cleanly apply the correction on top of Quill's current state.
@@ -771,7 +771,7 @@ export default class BodyClient extends StateMachine {
     // `EMPTY` for the old contents, because this code doesn't care about that
     // value at all
     const nextNow = this._currentEvent.withNewPayload(
-      new Functor(QuillEvents.TEXT_CHANGE, dNewMore, BodyDelta.EMPTY, 'user'));
+      new Functor(QuillEvents.TYPE_textChange, dNewMore, BodyDelta.EMPTY, QuillEvents.SOURCE_user));
 
     // Make a new head of the change chain which points at the `nextNow` we
     // just constructed above. We don't include any payload since this class
@@ -800,7 +800,7 @@ export default class BodyClient extends StateMachine {
 
     let change = this._currentEvent;
     for (;;) {
-      const nextNow = change.nextOfNow(QuillEvents.TEXT_CHANGE);
+      const nextNow = change.nextOfNow(QuillEvents.TYPE_textChange);
       if (nextNow === null) {
         break;
       }
@@ -841,11 +841,11 @@ export default class BodyClient extends StateMachine {
   _updateWithChange(change, quillDelta = change.delta) {
     const needQuillUpdate = !quillDelta.isEmpty();
 
-    if (   (this._currentEvent.nextOfNow(QuillEvents.TEXT_CHANGE) !== null)
+    if (   (this._currentEvent.nextOfNow(QuillEvents.TYPE_textChange) !== null)
         && needQuillUpdate) {
       // It is unsafe to apply the change as-is, because we know that Quill's
       // revision of the document has diverged.
-      throw Errors.bad_use('Cannot apply change due to revision skew.');
+      throw Errors.badUse('Cannot apply change due to revision skew.');
     }
 
     // Update the local snapshot.

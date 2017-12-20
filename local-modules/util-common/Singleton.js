@@ -47,7 +47,7 @@ export default class Singleton extends CommonBase {
 
     // See the note in `theOne` above in re `hasOwnProperty`.
     if (ObjectUtil.hasOwnProperty(this.constructor, '_theOne')) {
-      throw Errors.bad_use('Attempt to re-instantiate singleton class.');
+      throw Errors.badUse('Attempt to re-instantiate singleton class.');
     }
 
     this.constructor._theOne = this;

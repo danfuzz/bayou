@@ -61,7 +61,7 @@ export default class BaseKey extends CommonBase {
    */
   get baseUrl() {
     if (this._url === '*') {
-      throw Errors.bad_use('Cannot get base of wildcard URL.');
+      throw Errors.badUse('Cannot get base of wildcard URL.');
     }
 
     return new URL(this._url).origin;

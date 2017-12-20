@@ -40,13 +40,13 @@ export default class TString extends UtilityClass {
       TString.check(value, /^([0-9a-f]{2})*$/);
     } catch (e) {
       // More on-point error.
-      throw Errors.bad_value(value, String, 'even number of hex digits');
+      throw Errors.badValue(value, String, 'even number of hex digits');
     }
 
     if (value.length < (minBytes * 2)) {
-      throw Errors.bad_value(value, String, `byteCount >= ${minBytes}`);
+      throw Errors.badValue(value, String, `byteCount >= ${minBytes}`);
     } else if ((maxBytes !== null) && (value.length > (maxBytes * 2))) {
-      throw Errors.bad_value(value, String, `byteCount <= ${maxBytes}`);
+      throw Errors.badValue(value, String, `byteCount <= ${maxBytes}`);
     }
 
     return value;
@@ -91,7 +91,7 @@ export default class TString extends UtilityClass {
    */
   static maxLen(value, maxLen) {
     if ((typeof value !== 'string') || (value.length > maxLen)) {
-      throw Errors.bad_value(value, String, `value.length <= ${maxLen}`);
+      throw Errors.badValue(value, String, `value.length <= ${maxLen}`);
     }
 
     return value;
@@ -107,7 +107,7 @@ export default class TString extends UtilityClass {
    */
   static minLen(value, minLen) {
     if ((typeof value !== 'string') || (value.length < minLen)) {
-      throw Errors.bad_value(value, String, `value.length >= ${minLen}`);
+      throw Errors.badValue(value, String, `value.length >= ${minLen}`);
     }
 
     return value;
@@ -121,7 +121,7 @@ export default class TString extends UtilityClass {
    */
   static nonEmpty(value) {
     if ((typeof value !== 'string') || (value === '')) {
-      throw Errors.bad_value(value, String, 'value !== \'\'');
+      throw Errors.badValue(value, String, 'value !== \'\'');
     }
 
     return value;
@@ -154,7 +154,7 @@ export default class TString extends UtilityClass {
       url = new URL(TString.nonEmpty(value));
     } catch (e) {
       // Throw a higher-fidelity error.
-      throw Errors.bad_value(value, String, 'absolute URL syntax');
+      throw Errors.badValue(value, String, 'absolute URL syntax');
     }
 
     // Some versions of `URL` will parse a missing origin into the literal
@@ -167,11 +167,11 @@ export default class TString extends UtilityClass {
           && url.origin
           && (url.origin !== 'null')
           && (url.href === value))) {
-      throw Errors.bad_value(value, String, 'absolute URL syntax');
+      throw Errors.badValue(value, String, 'absolute URL syntax');
     }
 
     if (url.username || url.password) {
-      throw Errors.bad_value(value, String, 'absolute URL syntax, without auth');
+      throw Errors.badValue(value, String, 'absolute URL syntax, without auth');
     }
 
     return value;
@@ -190,7 +190,7 @@ export default class TString extends UtilityClass {
       url = new URL(TString.nonEmpty(value));
     } catch (e) {
       // Throw a higher-fidelity error.
-      throw Errors.bad_value(value, String, 'origin-only URL syntax');
+      throw Errors.badValue(value, String, 'origin-only URL syntax');
     }
 
     // **Note:** Though `new URL()` is lenient with respect to parsing, if it
@@ -198,7 +198,7 @@ export default class TString extends UtilityClass {
     // prefix, and the `!==` comparison here therefore transitively confirms
     // that the original `value` is also well-formed.
     if (value !== url.origin) {
-      throw Errors.bad_value(value, String, 'origin-only URL syntax');
+      throw Errors.badValue(value, String, 'origin-only URL syntax');
     }
 
     return value;

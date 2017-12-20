@@ -48,7 +48,7 @@ export default class BodyDelta extends BaseDelta {
           // yourself looking at this error, the right thing to do is look at
           // Quill's `package.json` and update the `quill-delta` dependency in
           // this module to what you find there.
-          throw Errors.bad_use('Divergent versions of `quill-delta` package.');
+          throw Errors.badUse('Divergent versions of `quill-delta` package.');
         }
         throw e;
       }
@@ -75,9 +75,9 @@ export default class BodyDelta extends BaseDelta {
    */
   diff(newerDelta) {
     if (!this.isDocument()) {
-      throw Errors.bad_use('Called on non-document instance.');
+      throw Errors.badUse('Called on non-document instance.');
     } else if (!newerDelta.isDocument()) {
-      throw Errors.bad_value(newerDelta, BodyDelta, 'isDocument()');
+      throw Errors.badValue(newerDelta, BodyDelta, 'isDocument()');
     }
 
     // Use Quill's implementation.
