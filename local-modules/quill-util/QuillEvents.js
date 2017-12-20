@@ -12,13 +12,13 @@ import { Errors, Functor, ObjectUtil, UtilityClass } from 'util-common';
  */
 export default class QuillEvents extends UtilityClass {
   /** {String} Event source for the API. */
-  static get API() {
+  static get SOURCE_api() {
     return 'api';
   }
 
-  /** {String} Event name for editor change events. */
-  static get EDITOR_CHANGE() {
-    return 'editor-change';
+  /** {String} Event source for user (human) activity. */
+  static get SOURCE_user() {
+    return 'user';
   }
 
   /**
@@ -27,16 +27,33 @@ export default class QuillEvents extends UtilityClass {
    */
   static get EMPTY_TEXT_CHANGE_PAYLOAD() {
     return new Functor(
-      QuillEvents.TEXT_CHANGE, BodyDelta.EMPTY, BodyDelta.EMPTY, QuillEvents.API);
+      QuillEvents.EVENT_textChange, BodyDelta.EMPTY, BodyDelta.EMPTY, QuillEvents.SOURCE_api);
   }
 
-  /** {String} Event name for selection change events. */
-  static get SELECTION_CHANGE() {
+  /**
+   * {String} Event type/name for editor change events. **Note:** The string
+   * value of this variable is dictated by Quill and so violates the default
+   * local conventions.
+   */
+  static get EVENT_editorChange() {
+    return 'editor-change';
+  }
+
+  /**
+   * {String} Event type/name for selection change events. **Note:** The string
+   * value of this variable is dictated by Quill and so violates the default
+   * local conventions.
+   */
+  static get EVENT_selectionChange() {
     return 'selection-change';
   }
 
-  /** {String} Event name for text change events. */
-  static get TEXT_CHANGE() {
+  /**
+   * {String} Event type/name for text change events. **Note:** The string value
+   * of this variable is dictated by Quill and so violates the default local
+   * conventions.
+   */
+  static get EVENT_textChange() {
     return 'text-change';
   }
 
@@ -70,7 +87,7 @@ export default class QuillEvents extends UtilityClass {
     const name = payload.name;
 
     switch (name) {
-      case QuillEvents.TEXT_CHANGE: {
+      case QuillEvents.EVENT_textChange: {
         const [delta, oldContents, source] = payload.args;
         return new Functor(name,
           BodyDelta.fromQuillForm(delta),
@@ -78,7 +95,7 @@ export default class QuillEvents extends UtilityClass {
           TString.check(source));
       }
 
-      case QuillEvents.SELECTION_CHANGE: {
+      case QuillEvents.EVENT_selectionChange: {
         const [range, oldRange, source] = payload.args;
         return new Functor(name,
           QuillEvents._checkAndFreezeRange(range),
@@ -108,12 +125,12 @@ export default class QuillEvents extends UtilityClass {
     const name = payload.name;
 
     switch (name) {
-      case QuillEvents.TEXT_CHANGE: {
+      case QuillEvents.EVENT_textChange: {
         const [delta, oldContents, source] = payload.args;
         return { name, delta, oldContents, source };
       }
 
-      case QuillEvents.SELECTION_CHANGE: {
+      case QuillEvents.EVENT_selectionChange: {
         const [range, oldRange, source] = payload.args;
         return { name, range, oldRange, source };
       }

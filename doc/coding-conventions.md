@@ -195,10 +195,10 @@ taking into account recent additions to the language.
   content of the related string, via one of two mappings:
 
   * The preferred way is to use a common all-caps prefix for all the constants,
-    followed by an underscore, and followed by the constant value in the same
-    casing as its value. For example, use the variable name `CODE_bakeCake` for
-    the string `"bakeCake"` and the variable name `CODE_eatCake` for `"eatCake"`
-    as part of the same enumeration.
+    followed by an underscore, and followed by the constant value in
+    `camelCase`. For example, use the variable name `CODE_bakeCake` for the
+    string `"bakeCake"` and the variable name `CODE_eatCake` for `"eatCake"` as
+    part of the same enumeration.
 
     This way is _especially_ preferred if the string values "leak" beyond the
     code, e.g., if they end up represented in databases or get transmitted
@@ -224,7 +224,9 @@ taking into account recent additions to the language.
   endeavor to do so.
 
 * Prefer `lowerCamelCase` for constant values, except if there is an external
-  dependency that requires otherwise.
+  dependency that requires otherwise. Notably, Quill event names (like many
+  Javascript event names) use `lower-kebab-case`; and many external services
+  use `lower_snake_case`.
 
 #### Other items
 

@@ -69,7 +69,7 @@ export default class QuillProm extends Quill {
     // synchronously on stale information.
     const origEmit = origEmitter.emit;
     origEmitter.emit = (type, ...rest) => {
-      if (type === QuillEvents.EDITOR_CHANGE) {
+      if (type === QuillEvents.EVENT_editorChange) {
         // We attach to the `editor-change` event so that we see all changes in
         // their original order, even when changes were made with the "silent"
         // flag (because if we miss events, then the local and server state will
