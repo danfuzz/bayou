@@ -27,12 +27,12 @@ const CATEGORY_EXECUTION_ORDER = [
 
 // Schema argument type constants. See docs on the static properties for
 // details.
-const TYPE_BUFFER    = 'Buffer';
-const TYPE_DUR_MSEC  = 'DurMsec';
-const TYPE_HASH      = 'Hash';
-const TYPE_INDEX     = 'Index';
-const TYPE_PATH      = 'Path';
-const TYPE_REV_NUM   = 'RevNum';
+const TYPE_Buffer  = 'Buffer';
+const TYPE_DurMsec = 'DurMsec';
+const TYPE_Hash    = 'Hash';
+const TYPE_Index   = 'Index';
+const TYPE_Path    = 'Path';
+const TYPE_RevNum  = 'RevNum';
 
 // Operation schemata. See the doc for {@link FileOp#propsFromName} for
 // details.
@@ -47,7 +47,7 @@ const OPERATIONS = [
    *
    * @param {string} hash The expected-to-be-absent hash.
    */
-  [CAT_prerequisite, 'checkBlobAbsent', ['hash', TYPE_HASH]],
+  [CAT_prerequisite, 'checkBlobAbsent', ['hash', TYPE_Hash]],
 
   /*
    * A `checkBlobPresent` operation. This is a prerequisite operation that
@@ -55,7 +55,7 @@ const OPERATIONS = [
    *
    * @param {string} hash The expected hash.
    */
-  [CAT_prerequisite, 'checkBlobPresent', ['hash', TYPE_HASH]],
+  [CAT_prerequisite, 'checkBlobPresent', ['hash', TYPE_Hash]],
 
   /*
    * A `checkPathAbsent` operation. This is a prerequisite operation that
@@ -64,7 +64,7 @@ const OPERATIONS = [
    *
    * @param {string} storagePath The storage path to check.
    */
-  [CAT_prerequisite, 'checkPathAbsent', ['storagePath', TYPE_PATH]],
+  [CAT_prerequisite, 'checkPathAbsent', ['storagePath', TYPE_Path]],
 
   /*
    * A `checkPathIs` operation. This is a prerequisite operation that verifies
@@ -75,7 +75,7 @@ const OPERATIONS = [
    */
   [
     CAT_prerequisite, 'checkPathIs',
-    ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]
+    ['storagePath', TYPE_Path], ['hash', TYPE_Hash]
   ],
 
   /*
@@ -91,7 +91,7 @@ const OPERATIONS = [
    */
   [
     CAT_prerequisite, 'checkPathNot',
-    ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]
+    ['storagePath', TYPE_Path], ['hash', TYPE_Hash]
   ],
 
   /*
@@ -102,7 +102,7 @@ const OPERATIONS = [
    *
    * @param {string} storagePath The storage path to check.
    */
-  [CAT_prerequisite, 'checkPathPresent', ['storagePath', TYPE_PATH]],
+  [CAT_prerequisite, 'checkPathPresent', ['storagePath', TYPE_Path]],
 
   /*
    * A `deleteAll` operation. This is a write operation that removes all stored
@@ -118,7 +118,7 @@ const OPERATIONS = [
    *
    * @param {string} hash The hash of the blob to delete.
    */
-  [CAT_delete, 'deleteBlob', ['hash', TYPE_HASH]],
+  [CAT_delete, 'deleteBlob', ['hash', TYPE_Hash]],
 
   /*
    * A `deletePath` operation. This is a write operation that deletes the
@@ -127,7 +127,7 @@ const OPERATIONS = [
    *
    * @param {string} storagePath The storage path to delete.
    */
-  [CAT_delete, 'deletePath', ['storagePath', TYPE_PATH]],
+  [CAT_delete, 'deletePath', ['storagePath', TYPE_Path]],
 
   /*
    * A `deletePathPrefix` operation. This is a write operation that deletes the
@@ -137,7 +137,7 @@ const OPERATIONS = [
    *
    * @param {string} storagePath The storage path prefix to delete.
    */
-  [CAT_delete, 'deletePathPrefix', ['storagePath', TYPE_PATH]],
+  [CAT_delete, 'deletePathPrefix', ['storagePath', TYPE_Path]],
 
   /*
    * A `deletePathRange` operation. This is a write operation that deletes the
@@ -155,7 +155,7 @@ const OPERATIONS = [
    */
   [
     CAT_delete, 'deletePathRange',
-    ['storagePath', TYPE_PATH], ['startInclusive', TYPE_INDEX], ['endExclusive', TYPE_INDEX]
+    ['storagePath', TYPE_Path], ['startInclusive', TYPE_Index], ['endExclusive', TYPE_Index]
   ],
 
   /*
@@ -168,7 +168,7 @@ const OPERATIONS = [
    * @param {string} storagePath The storage path prefix to list the contents
    *   of.
    */
-  [CAT_list, 'listPathPrefix', ['storagePath', TYPE_PATH]],
+  [CAT_list, 'listPathPrefix', ['storagePath', TYPE_Path]],
 
   /*
    * A `listPathRange` operation. This is a read operation that retrieves a
@@ -185,7 +185,7 @@ const OPERATIONS = [
    */
   [
     CAT_list, 'listPathRange',
-    ['storagePath', TYPE_PATH], ['startInclusive', TYPE_INDEX], ['endExclusive', TYPE_INDEX]
+    ['storagePath', TYPE_Path], ['startInclusive', TYPE_Index], ['endExclusive', TYPE_Index]
   ],
 
   /*
@@ -202,7 +202,7 @@ const OPERATIONS = [
    *
    * @param {string} hash The content hash of the blob to read.
    */
-  [CAT_read, 'readBlob', ['hash', TYPE_HASH]],
+  [CAT_read, 'readBlob', ['hash', TYPE_Hash]],
 
   /*
    * A `readPath` operation. This is a read operation that retrieves the value
@@ -217,7 +217,7 @@ const OPERATIONS = [
    *
    * @param {string} storagePath The storage path to read from.
    */
-  [CAT_read, 'readPath', ['storagePath', TYPE_PATH]],
+  [CAT_read, 'readPath', ['storagePath', TYPE_Path]],
 
   /*
    * A `readPathRange` operation. This is a read operation that retrieves all
@@ -235,7 +235,7 @@ const OPERATIONS = [
    */
   [
     CAT_read, 'readPathRange',
-    ['storagePath', TYPE_PATH], ['startInclusive', TYPE_INDEX], ['endExclusive', TYPE_INDEX]
+    ['storagePath', TYPE_Path], ['startInclusive', TYPE_Index], ['endExclusive', TYPE_Index]
   ],
 
   /*
@@ -248,7 +248,7 @@ const OPERATIONS = [
    *
    * @param {Int} revNum Required revision number.
    */
-  [CAT_revision, 'revNum', ['revNum', TYPE_REV_NUM]],
+  [CAT_revision, 'revNum', ['revNum', TYPE_RevNum]],
 
   /*
    * A `timeout` operation. This is an environment operation which limits a
@@ -261,7 +261,7 @@ const OPERATIONS = [
    *
    * @param {Int} durMsec Duration of the timeout, in milliseconds.
    */
-  [CAT_environment, 'timeout', ['durMsec', TYPE_DUR_MSEC]],
+  [CAT_environment, 'timeout', ['durMsec', TYPE_DurMsec]],
 
   /*
    * A `whenPathAbsent` operation. This is a wait operation that blocks the
@@ -269,7 +269,7 @@ const OPERATIONS = [
    *
    * @param {string} storagePath The storage path to observe.
    */
-  [CAT_wait, 'whenPathAbsent', ['storagePath', TYPE_PATH]],
+  [CAT_wait, 'whenPathAbsent', ['storagePath', TYPE_Path]],
 
   /*
    * A `whenPathNot` operation. This is a wait operation that blocks the
@@ -281,7 +281,7 @@ const OPERATIONS = [
    * @param {string} hash Hash of the blob which must _not_ be at `storagePath`
    *   for the operation to complete.
    */
-  [CAT_wait, 'whenPathNot', ['storagePath', TYPE_PATH], ['hash', TYPE_HASH]],
+  [CAT_wait, 'whenPathNot', ['storagePath', TYPE_Path], ['hash', TYPE_Hash]],
 
   /*
    * A `whenPathPresent` operation. This is a wait operation that blocks the
@@ -289,7 +289,7 @@ const OPERATIONS = [
    *
    * @param {string} storagePath The storage path to observe.
    */
-  [CAT_wait, 'whenPathPresent', ['storagePath', TYPE_PATH]],
+  [CAT_wait, 'whenPathPresent', ['storagePath', TYPE_Path]],
 
   /*
    * A `writeBlob` operation. This is a write operation that stores the
@@ -298,7 +298,7 @@ const OPERATIONS = [
    *
    * @param {FrozenBuffer} value The value to store.
    */
-  [CAT_write, 'writeBlob', ['value', TYPE_BUFFER]],
+  [CAT_write, 'writeBlob', ['value', TYPE_Buffer]],
 
   /*
    * A `writePath` operation. This is a write operation that stores the
@@ -308,7 +308,7 @@ const OPERATIONS = [
    * @param {string} storagePath The storage path to bind to.
    * @param {FrozenBuffer} value The value to store and bind to `storagePath`.
    */
-  [CAT_write, 'writePath', ['storagePath', TYPE_PATH], ['value', TYPE_BUFFER]]
+  [CAT_write, 'writePath', ['storagePath', TYPE_Path], ['value', TYPE_Buffer]]
 ];
 
 /**
@@ -407,13 +407,13 @@ export default class FileOp extends CommonBase {
   }
 
   /** {string} Type name for a `FrozenBuffer`. */
-  static get TYPE_BUFFER() {
-    return TYPE_BUFFER;
+  static get TYPE_Buffer() {
+    return TYPE_Buffer;
   }
 
   /** {string} Type name for a millisecond-accuracy duration. */
-  static get TYPE_DUR_MSEC() {
-    return TYPE_DUR_MSEC;
+  static get TYPE_DurMsec() {
+    return TYPE_DurMsec;
   }
 
   /**
@@ -421,26 +421,26 @@ export default class FileOp extends CommonBase {
    * accept instances of `FrozenBuffer`. When given a buffer, the constructor
    * automatically converts it to its hash.
    */
-  static get TYPE_HASH() {
-    return TYPE_HASH;
+  static get TYPE_Hash() {
+    return TYPE_Hash;
   }
 
   /**
    * {string} Type name for index values, which is to say non-negative integers.
    * These are used to with the `*Range` operations.
    */
-  static get TYPE_INDEX() {
-    return TYPE_INDEX;
+  static get TYPE_Index() {
+    return TYPE_Index;
   }
 
   /** {string} Type name for storage paths. */
-  static get TYPE_PATH() {
-    return TYPE_PATH;
+  static get TYPE_Path() {
+    return TYPE_Path;
   }
 
   /** {string} Type name for revision numbers. */
-  static get TYPE_REV_NUM() {
-    return TYPE_REV_NUM;
+  static get TYPE_RevNum() {
+    return TYPE_RevNum;
   }
 
   /**
@@ -634,17 +634,17 @@ export default class FileOp extends CommonBase {
    */
   static _fixArg(value, type) {
     switch (type) {
-      case TYPE_BUFFER: {
+      case TYPE_Buffer: {
         FrozenBuffer.check(value);
         break;
       }
 
-      case TYPE_DUR_MSEC: {
+      case TYPE_DurMsec: {
         TInt.nonNegative(value);
         break;
       }
 
-      case TYPE_HASH: {
+      case TYPE_Hash: {
         if (value instanceof FrozenBuffer) {
           value = value.hash;
         } else {
@@ -653,17 +653,17 @@ export default class FileOp extends CommonBase {
         break;
       }
 
-      case TYPE_INDEX: {
+      case TYPE_Index: {
         TInt.nonNegative(value);
         break;
       }
 
-      case TYPE_PATH: {
+      case TYPE_Path: {
         StoragePath.check(value);
         break;
       }
 
-      case TYPE_REV_NUM: {
+      case TYPE_RevNum: {
         TInt.nonNegative(value);
         break;
       }

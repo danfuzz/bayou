@@ -144,23 +144,23 @@ export default class FileOpMaker extends UtilityClass {
    */
   static _makeValue(type, n) {
     switch (type) {
-      case FileOp.TYPE_BUFFER: {
+      case FileOp.TYPE_Buffer: {
         return FrozenBuffer.coerce(`buffer_${n}`);
       }
-      case FileOp.TYPE_DUR_MSEC: {
+      case FileOp.TYPE_DurMsec: {
         return n * 1234;
       }
-      case FileOp.TYPE_HASH: {
+      case FileOp.TYPE_Hash: {
         const buf = FrozenBuffer.coerce(`buffer_hash_${n}`);
         return buf.hash;
       }
-      case FileOp.TYPE_INDEX: {
+      case FileOp.TYPE_Index: {
         return n + 100;
       }
-      case FileOp.TYPE_PATH: {
+      case FileOp.TYPE_Path: {
         return `/path/${n}`;
       }
-      case FileOp.TYPE_REV_NUM: {
+      case FileOp.TYPE_RevNum: {
         return n;
       }
       default: {
