@@ -209,7 +209,7 @@ taking into account recent additions to the language.
     the strings of the previous example would be stored in static variables
     named `BAKE_CAKE` and `EAT_CAKE` respectively.
 
-* The preferred way to define static constants is via a static getter function,
+* The preferred way to define static constants is via static getter functions,
   e.g.:
 
   ```javascript
