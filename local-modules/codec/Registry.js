@@ -13,7 +13,7 @@ import SpecialCodecs from './SpecialCodecs';
  */
 export default class Registry extends CommonBase {
   /**
-   * Constructs the instance.
+   * Constructs an instance.
    */
   constructor() {
     super();
