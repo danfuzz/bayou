@@ -82,6 +82,16 @@ describe('api-common/Codec.encode*()', () => {
       test({ c: 'yay', d: [1, 2, 3] });
     });
 
+    it('should sort plain object keys in encoded form', () => {
+      const orig   = { d: [1, 2, 3], a: { c: 'cx', b: 'bx' } };
+      const expect = { object: [
+        ['a', { object: [['b', 'bx'], ['c', 'cx']] }],
+        ['d', [1, 2, 3]]]
+      };
+
+      assert.deepEqual(encodeData(orig), expect);
+    });
+
     it('should reject objects with no `deconstruct()` method', () => {
       class NoDeconstruct {
         get CODEC_TAG() {

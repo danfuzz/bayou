@@ -140,8 +140,11 @@ export default class SpecialCodecs extends UtilityClass {
    * @returns {object} Encoded form.
    */
   static _objectEncode(value, subEncode) {
-    return Object.entries(value).map(([k, v]) => {
-      return Object.freeze([k, subEncode(v)]);
+    // Sort the keys to avoid nondeterminism.
+    const keys = Object.keys(value).sort();
+
+    return keys.map((key) => {
+      return Object.freeze([key, subEncode(value[key])]);
     });
   }
 
