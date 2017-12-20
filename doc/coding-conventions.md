@@ -267,3 +267,9 @@ taking into account recent additions to the language.
   word, all lower case, though capitalized as appropriate for prose or
   `camelCasing`). In addition, `ws` is a good choice for a shorthand name of a
   variable that contains an instance of one (or something related).
+
+### Exceptions to the conventions
+
+Because nobody and no scheme is perfect, there are no doubt exceptions to the
+conventions, probably inadvertently. These should be considered opportunities
+for an easy fix as opposed to being examples to emulate.
