@@ -31,7 +31,7 @@ export default class FileId extends UtilityClass {
     if (   (typeof value !== 'string')
         || (value.length === 0)
         || !Hooks.theOne.isFileId(value)) {
-      throw Errors.bad_value(value, FileId);
+      throw Errors.badValue(value, FileId);
     }
 
     return value;

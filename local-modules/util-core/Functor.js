@@ -170,7 +170,7 @@ export default class Functor {
       } else if (Object.isFrozen(a)) {
         newArg = a;
       } else {
-        throw Errors.bad_use('Non-frozen non-data argument.');
+        throw Errors.badUse('Non-frozen non-data argument.');
       }
 
       args.push(newArg);

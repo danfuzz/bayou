@@ -142,7 +142,7 @@ describe('typecheck/TString', () => {
       function test(value) {
         Assert.throwsInfo(
           () => { TString.identifier(value); },
-          'bad_value',
+          'badValue',
           [inspect(value), 'String', 'identifier syntax']);
       }
 
@@ -171,7 +171,7 @@ describe('typecheck/TString', () => {
       function test(value) {
         Assert.throwsInfo(
           () => { TString.identifier(value); },
-          'bad_value',
+          'badValue',
           [inspect(value), 'String', 'identifier syntax']);
       }
 
@@ -205,7 +205,7 @@ describe('typecheck/TString', () => {
       function test(value) {
         Assert.throwsInfo(
           () => { TString.label(value); },
-          'bad_value',
+          'badValue',
           [inspect(value), 'String', 'label syntax']);
       }
 
@@ -234,7 +234,7 @@ describe('typecheck/TString', () => {
       function test(value) {
         Assert.throwsInfo(
           () => { TString.label(value); },
-          'bad_value',
+          'badValue',
           [inspect(value), 'String', 'label syntax']);
       }
 
@@ -264,7 +264,7 @@ describe('typecheck/TString', () => {
       function test(value, len) {
         Assert.throwsInfo(
           () => { TString.maxLen(value, len); },
-          'bad_value',
+          'badValue',
           [inspect(value), 'String', `value.length <= ${len}`]);
       }
 
@@ -280,7 +280,7 @@ describe('typecheck/TString', () => {
       function test(value) {
         Assert.throwsInfo(
           () => { TString.maxLen(value, 123); },
-          'bad_value',
+          'badValue',
           [inspect(value), 'String', 'value.length <= 123']);
       }
 
@@ -310,7 +310,7 @@ describe('typecheck/TString', () => {
       function test(value, len) {
         Assert.throwsInfo(
           () => { TString.minLen(value, len); },
-          'bad_value',
+          'badValue',
           [inspect(value), 'String', `value.length >= ${len}`]);
       }
 
@@ -329,7 +329,7 @@ describe('typecheck/TString', () => {
       function test(value) {
         Assert.throwsInfo(
           () => { TString.minLen(value, 1); },
-          'bad_value',
+          'badValue',
           [inspect(value), 'String', 'value.length >= 1']);
       }
 

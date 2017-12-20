@@ -90,7 +90,7 @@ export default class Proppy extends UtilityClass {
             const key = t.value;
             if (keys.has(key)) {
               // Already have this key.
-              throw Errors.bad_data(`Duplicate key: \`${key}\``);
+              throw Errors.badData(`Duplicate key: \`${key}\``);
             }
             keys.add(key);
             result[key] = value.value;
@@ -102,7 +102,7 @@ export default class Proppy extends UtilityClass {
 
         default: {
           const value = t.value ? ` \`${t.value}\`` : '';
-          throw Errors.bad_data(`Syntax error at \`${t.type}\` token${value}.`);
+          throw Errors.badData(`Syntax error at \`${t.type}\` token${value}.`);
         }
       }
     }
@@ -164,7 +164,7 @@ export default class Proppy extends UtilityClass {
       const context = (source.length > 10)
         ? `${source.slice(0, 10)}...`
         : source;
-      throw Errors.bad_data(`Invalid character at: \`${context}\``);
+      throw Errors.badData(`Invalid character at: \`${context}\``);
     }
 
     // We treat the string as always ending with a newline.
@@ -209,7 +209,7 @@ export default class Proppy extends UtilityClass {
           case '\'': { replacement = '\''; break; }
           case '"':  { replacement = '"';  break; }
           default: {
-            throw Errors.bad_data(`Invalid escape character in quoted string: \`${source[0]}\``);
+            throw Errors.badData(`Invalid escape character in quoted string: \`${source[0]}\``);
           }
         }
 
@@ -217,7 +217,7 @@ export default class Proppy extends UtilityClass {
         continue;
       }
 
-      throw Errors.bad_data(`Invalid character in quoted string: \`${source[0]}\``);
+      throw Errors.badData(`Invalid character in quoted string: \`${source[0]}\``);
     }
 
     return result.join('');

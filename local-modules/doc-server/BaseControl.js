@@ -198,7 +198,7 @@ export default class BaseControl extends BaseDataManager {
     clazz.changeClass.check(change);
 
     if (change.delta.isEmpty()) {
-      throw Errors.bad_value(change, clazz.changeClass, 'non-empty');
+      throw Errors.badValue(change, clazz.changeClass, 'non-empty');
     }
 
     timeoutMsec = Timeouts.clamp(timeoutMsec);
@@ -292,7 +292,7 @@ export default class BaseControl extends BaseDataManager {
    * base revision that does not yet exist. For subclasses that don't keep full
    * history, it is also an error to request a revision that is _no longer_
    * available as a base; in this case, the error name is always
-   * `revision_not_available`.
+   * `revisionNotAvailable`.
    *
    * The return value is a change instance with respect to (that is, whose base
    * revision is) the one indicated by `baseRevNum` as passed to the method.
@@ -312,7 +312,7 @@ export default class BaseControl extends BaseDataManager {
    *   is guaranteed to be at least one greater than `baseRevNum` (and could
    *   possibly be even larger). The `timestamp` and `authorId` of the result
    *   will both be `null`.
-   * @throws {Errors.timed_out} Thrown if the timeout time is reached befor a
+   * @throws {Errors.timedOut} Thrown if the timeout time is reached befor a
    *   change becomes available.
    */
   async getChangeAfter(baseRevNum, timeoutMsec = null) {
@@ -339,7 +339,7 @@ export default class BaseControl extends BaseDataManager {
    * revision. If `startInclusive === endExclusive`, then this method returns
    * `baseDelta`. For subclasses that don't keep full change history, it is also
    * an error to request a change that is _no longer_  available; in this case,
-   * the error name is always `revision_not_available`.
+   * the error name is always `revisionNotAvailable`.
    *
    * @param {BaseDelta} baseDelta Base delta onto which the indicated deltas
    *   get composed. Must be an instance of the delta class appropriate to the
@@ -369,7 +369,7 @@ export default class BaseControl extends BaseDataManager {
       // of it here, we need to explicitly check argument validity.
 
       if (wantDocument && !baseDelta.isDocument()) {
-        throw Errors.bad_value(baseDelta, 'document delta');
+        throw Errors.badValue(baseDelta, 'document delta');
       }
 
       await this._getChangeRange(startInclusive, startInclusive, false);
@@ -448,7 +448,7 @@ export default class BaseControl extends BaseDataManager {
    * by this instance. It is an error to request a revision that does not yet
    * exist. For subclasses that don't keep full history, it is also an error to
    * request a revision that is _no longer_ available; in this case, the error
-   * name is always `revision_not_available`.
+   * name is always `revisionNotAvailable`.
    *
    * @param {Int|null} revNum Which revision to get. If passed as `null`,
    *   indicates the current (most recent) revision. **Note:** Due to the
@@ -467,7 +467,7 @@ export default class BaseControl extends BaseDataManager {
     const result = await this._impl_getSnapshot(revNum);
 
     if (result === null) {
-      throw Errors.revision_not_available(revNum);
+      throw Errors.revisionNotAvailable(revNum);
     }
 
     return this.constructor.snapshotClass.check(result);
@@ -577,13 +577,13 @@ export default class BaseControl extends BaseDataManager {
     // amiss.
     changeClass.check(change);
     if (change.timestamp === null) {
-      throw Errors.bad_value(change, changeClass, 'timestamp !== null');
+      throw Errors.badValue(change, changeClass, 'timestamp !== null');
     }
 
     const baseRevNum = change.revNum - 1;
 
     if (baseRevNum < 0) {
-      throw Errors.bad_value(change, changeClass, 'revNum >= 1');
+      throw Errors.badValue(change, changeClass, 'revNum >= 1');
     }
 
     timeoutMsec = Timeouts.clamp(timeoutMsec);
@@ -611,7 +611,7 @@ export default class BaseControl extends BaseDataManager {
       const now = Date.now();
 
       if (now >= timeoutTime) {
-        throw Errors.timed_out(timeoutMsec);
+        throw Errors.timedOut(timeoutMsec);
       }
 
       attemptCount++;
@@ -663,11 +663,11 @@ export default class BaseControl extends BaseDataManager {
     // Handles timeout (called twice, below).
     const timedOut = () => {
       // Log a message -- it's at least somewhat notable, though it does occur
-      // regularly -- and throw `timed_out` with the original timeout value. (If
+      // regularly -- and throw `timedOut` with the original timeout value. (If
       // called as a result of catching a timeout from `transact()` the timeout
       // value in the error might not be the original `timeoutMsec`.)
       this.log.info(`\`whenRevNum()\` timed out: ${timeoutMsec}msec`);
-      throw Errors.timed_out(timeoutMsec);
+      throw Errors.timedOut(timeoutMsec);
     };
 
     // Loop until the overall timeout.
@@ -973,7 +973,7 @@ export default class BaseControl extends BaseDataManager {
     if ((endExclusive - startInclusive) > MAX_CHANGE_READS_PER_TRANSACTION) {
       // The calling code (in this class) should have made sure we weren't
       // violating this restriction.
-      throw Errors.bad_use(`Too many changes requested at once: ${endExclusive - startInclusive}`);
+      throw Errors.badUse(`Too many changes requested at once: ${endExclusive - startInclusive}`);
     }
 
     // Per docs, reject a start (and implicitly an end) that would try to read
@@ -1003,7 +1003,7 @@ export default class BaseControl extends BaseDataManager {
         clazz.changeClass.check(change);
         result.push(change);
       } else if (!allowMissing) {
-        throw new Error.bad_use(`Missing change in requested range: r${i}`);
+        throw new Error.badUse(`Missing change in requested range: r${i}`);
       }
     }
 

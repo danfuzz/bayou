@@ -16,7 +16,7 @@ export default class TFunction extends UtilityClass {
    */
   static check(value) {
     if (typeof value !== 'function') {
-      throw Errors.bad_value(value, Function);
+      throw Errors.badValue(value, Function);
     }
 
     return value;
@@ -37,7 +37,7 @@ export default class TFunction extends UtilityClass {
       return value;
     }
 
-    throw Errors.bad_value(value, Function, 'callable');
+    throw Errors.badValue(value, Function, 'callable');
   }
 
   /**
@@ -52,7 +52,7 @@ export default class TFunction extends UtilityClass {
       return value;
     }
 
-    throw Errors.bad_value(value, 'Function|null', 'callable');
+    throw Errors.badValue(value, 'Function|null', 'callable');
   }
 
   /**
@@ -74,7 +74,7 @@ export default class TFunction extends UtilityClass {
       return value;
     }
 
-    throw Errors.bad_value(value, Function, 'class');
+    throw Errors.badValue(value, Function, 'class');
   }
 
   /**
@@ -127,7 +127,7 @@ export default class TFunction extends UtilityClass {
    */
   static isClass(value, ancestor = null) {
     if (ancestor && !TFunction.isClass(ancestor)) {
-      throw Errors.bad_value(value, Function, 'class');
+      throw Errors.badValue(value, Function, 'class');
     }
 
     if (   ((typeof value) !== 'function')
@@ -183,7 +183,7 @@ export default class TFunction extends UtilityClass {
    */
   static orNull(value) {
     if ((value !== null) && (typeof value !== 'function')) {
-      throw Errors.bad_value(value, 'Function|null');
+      throw Errors.badValue(value, 'Function|null');
     }
 
     return value;

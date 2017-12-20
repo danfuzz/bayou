@@ -71,7 +71,7 @@ export default class TargetHandler extends CommonBase {
    * @param {array} args_unused List of arguments passed to the call.
    */
   apply(target_unused, thisArg_unused, args_unused) {
-    throw Errors.bad_use('Unsupported proxy operation.');
+    throw Errors.badUse('Unsupported proxy operation.');
   }
 
   /**
@@ -83,7 +83,7 @@ export default class TargetHandler extends CommonBase {
    *   called, which is to say, the proxy object.
    */
   construct(target_unused, args_unused, newTarget_unused) {
-    throw Errors.bad_use('Unsupported proxy operation.');
+    throw Errors.badUse('Unsupported proxy operation.');
   }
 
   /**
@@ -142,7 +142,7 @@ export default class TargetHandler extends CommonBase {
    * @param {string} property_unused The property name.
    */
   getOwnPropertyDescriptor(target_unused, property_unused) {
-    throw Errors.bad_use('Unsupported proxy operation.');
+    throw Errors.badUse('Unsupported proxy operation.');
   }
 
   /**

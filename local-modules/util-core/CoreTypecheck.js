@@ -23,7 +23,7 @@ export default class CoreTypecheck extends UtilityClass {
       return CoreTypecheck.checkString(value, /^[a-zA-Z_][a-zA-Z_0-9]*$/);
     } catch (e) {
       // More accurate error.
-      throw Errors.bad_value(value, String, 'identifier syntax');
+      throw Errors.badValue(value, String, 'identifier syntax');
     }
   }
 
@@ -66,7 +66,7 @@ export default class CoreTypecheck extends UtilityClass {
       msgArg = [];
     }
 
-    throw Errors.bad_value(value, 'Int', ...msgArg);
+    throw Errors.badValue(value, 'Int', ...msgArg);
   }
 
   /**
@@ -82,7 +82,7 @@ export default class CoreTypecheck extends UtilityClass {
       return CoreTypecheck.checkString(value, /^[-a-zA-Z_][-a-zA-Z_0-9]*$/);
     } catch (e) {
       // More accurate error.
-      throw Errors.bad_value(value, String, 'label syntax');
+      throw Errors.badValue(value, String, 'label syntax');
     }
   }
 
@@ -99,14 +99,14 @@ export default class CoreTypecheck extends UtilityClass {
   static checkObject(value, clazz = null) {
     if (clazz !== null) {
       if (!(value instanceof clazz)) {
-        throw Errors.bad_value(value, `class ${clazz.name}`);
+        throw Errors.badValue(value, `class ${clazz.name}`);
       }
     } else if (value === null) {
-      throw Errors.bad_value(value, Object);
+      throw Errors.badValue(value, Object);
     } else {
       const type = typeof value;
       if ((type !== 'object') && (type !== 'function')) {
-        throw Errors.bad_value(value, Object);
+        throw Errors.badValue(value, Object);
       }
     }
 
@@ -123,15 +123,15 @@ export default class CoreTypecheck extends UtilityClass {
    */
   static checkString(value, regex = null) {
     if ((regex !== null) && !(regex instanceof RegExp)) {
-      throw Errors.bad_value(regex, RegExp);
+      throw Errors.badValue(regex, RegExp);
     }
 
     if (typeof value !== 'string') {
-      throw Errors.bad_value(value, String, (regex ? regex.toString() : null));
+      throw Errors.badValue(value, String, (regex ? regex.toString() : null));
     }
 
     if ((regex !== null) && !regex.test(value)) {
-      throw Errors.bad_value(value, String, regex.toString());
+      throw Errors.badValue(value, String, regex.toString());
     }
 
     return value;
@@ -145,7 +145,7 @@ export default class CoreTypecheck extends UtilityClass {
    */
   static checkStringOrNull(value) {
     if ((value !== null) && (typeof value !== 'string')) {
-      throw Errors.bad_value(value, 'String|null');
+      throw Errors.badValue(value, 'String|null');
     }
 
     return value;

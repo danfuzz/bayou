@@ -48,7 +48,7 @@ describe('typecheck/TInt', () => {
 
     it('rejects out-of-range integers', () => {
       function test(value, maxExc) {
-        assert.throws(() => TInt.maxExc(value, maxExc), /^bad_value/);
+        assert.throws(() => TInt.maxExc(value, maxExc), /^badValue/);
       }
 
       test(-1,  -2);
@@ -86,7 +86,7 @@ describe('typecheck/TInt', () => {
 
     it('rejects out-of-range integers', () => {
       function test(value, minInc) {
-        assert.throws(() => TInt.min(value, minInc), /^bad_value/);
+        assert.throws(() => TInt.min(value, minInc), /^badValue/);
       }
 
       test(-1,  0);
@@ -116,7 +116,7 @@ describe('typecheck/TInt', () => {
 
     it('rejects out-of-range integers', () => {
       function test(value, minInc, maxExc) {
-        assert.throws(() => TInt.range(value, minInc, maxExc), /^bad_value/);
+        assert.throws(() => TInt.range(value, minInc, maxExc), /^badValue/);
       }
 
       test(-1,  0,   10);

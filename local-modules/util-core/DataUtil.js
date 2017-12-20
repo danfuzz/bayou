@@ -71,7 +71,7 @@ export default class DataUtil extends UtilityClass {
               : new Functor(value.name, ...(DataUtil.deepFreeze(args)));
           }
           default: {
-            throw Errors.bad_value(value, 'data value');
+            throw Errors.badValue(value, 'data value');
           }
         }
 
@@ -97,7 +97,7 @@ export default class DataUtil extends UtilityClass {
               && !ObjectUtil.hasOwnProperty(prop, 'value')) {
             // **Note:** The `undefined` check just prevents us from having to
             // call `hasOwnProperty()` in the usual case.
-            throw Errors.bad_value(value, 'data value', 'without synthetic properties');
+            throw Errors.badValue(value, 'data value', 'without synthetic properties');
           }
           const newValue = DataUtil.deepFreeze(oldValue);
           if (oldValue !== newValue) {
@@ -110,7 +110,7 @@ export default class DataUtil extends UtilityClass {
       }
 
       default: {
-        throw Errors.bad_value(value, 'data value');
+        throw Errors.badValue(value, 'data value');
       }
     }
   }

@@ -102,7 +102,7 @@ export default class CaretSnapshot extends BaseSnapshot {
       return found;
     }
 
-    throw Errors.bad_use(`No such session: ${sessionId}`);
+    throw Errors.badUse(`No such session: ${sessionId}`);
   }
 
   /**

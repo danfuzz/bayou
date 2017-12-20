@@ -37,7 +37,7 @@ export default class TObject extends UtilityClass {
       return value;
     }
 
-    throw Errors.bad_value(value, 'plain object');
+    throw Errors.badValue(value, 'plain object');
   }
 
   /**
@@ -57,7 +57,7 @@ export default class TObject extends UtilityClass {
     const copy = Object.assign({}, value);
     for (const k of keys) {
       if (!ObjectUtil.hasOwnProperty(copy, k)) {
-        throw Errors.bad_value(value, Object, `with key \`${k}\``);
+        throw Errors.badValue(value, Object, `with key \`${k}\``);
       }
       delete copy[k];
     }
@@ -68,7 +68,7 @@ export default class TObject extends UtilityClass {
       for (const k of remainingKeys) {
         msg += ` \`${k}\``;
       }
-      throw Errors.bad_value(value, Object, msg);
+      throw Errors.badValue(value, Object, msg);
     }
 
     return value;

@@ -466,7 +466,7 @@ export default class FileOp extends CommonBase {
     const schema = OPERATION_MAP.get(name);
 
     if (!schema) {
-      throw Errors.bad_value(name, 'FileOp operation name');
+      throw Errors.badValue(name, 'FileOp operation name');
     }
 
     return schema;
@@ -518,7 +518,7 @@ export default class FileOp extends CommonBase {
         return category;
       }
       default: {
-        throw Errors.bad_value(category, 'category string');
+        throw Errors.badValue(category, 'category string');
       }
     }
   }
@@ -688,7 +688,7 @@ export default class FileOp extends CommonBase {
     const { args: argInfo, name } = opProps;
 
     if (args.length !== argInfo.length) {
-      throw Errors.bad_use(`Wrong argument count for op \`${name}\`; expected ${argInfo.length}.`);
+      throw Errors.badUse(`Wrong argument count for op \`${name}\`; expected ${argInfo.length}.`);
     }
 
     for (let i = 0; i < argInfo.length; i++) {

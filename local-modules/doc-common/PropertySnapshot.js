@@ -131,7 +131,7 @@ export default class PropertySnapshot extends BaseSnapshot {
       return found;
     }
 
-    throw Errors.bad_use(`No such property: ${name}`);
+    throw Errors.badUse(`No such property: ${name}`);
   }
 
   /**

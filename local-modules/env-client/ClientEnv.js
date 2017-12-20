@@ -27,7 +27,7 @@ export default class ClientEnv extends UtilityClass {
     TObject.check(window, Window);
 
     if (ClientEnv._window) {
-      throw Errors.bad_use('Already initialized.');
+      throw Errors.badUse('Already initialized.');
     }
 
     this._window = window;
@@ -39,7 +39,7 @@ export default class ClientEnv extends UtilityClass {
     const result = this._window;
 
     if (!result) {
-      throw Errors.bad_use('Not initialized.');
+      throw Errors.badUse('Not initialized.');
     }
 
     return result;

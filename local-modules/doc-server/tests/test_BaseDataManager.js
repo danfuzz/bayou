@@ -94,7 +94,7 @@ describe('doc-server/BaseDataManager', () => {
         return ['not actually a validation status'];
       };
 
-      await assert.isRejected(dm.validationStatus(), /bad_value/);
+      await assert.isRejected(dm.validationStatus(), /badValue/);
     });
   });
 });

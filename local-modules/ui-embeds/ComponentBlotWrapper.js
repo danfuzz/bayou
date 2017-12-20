@@ -78,7 +78,7 @@ export default class BlockEmbedWrapper extends UtilityClass {
     try {
       TString.nonEmpty(blotName);
     } catch (e) {
-      throw Errors.bad_value(component, 'React.Component', 'with `blotName`');
+      throw Errors.badValue(component, 'React.Component', 'with `blotName`');
     }
 
     TString.nonEmpty(blotName);
@@ -203,7 +203,7 @@ export default class BlockEmbedWrapper extends UtilityClass {
 
           // If a required property is missing, it's an error.
           if (isRequired && ((prop in props) === false)) {
-            throw Errors.bad_data(`'${prop}' is required`);
+            throw Errors.badData(`'${prop}' is required`);
           }
 
           let value = props[prop];
@@ -212,7 +212,7 @@ export default class BlockEmbedWrapper extends UtilityClass {
             // A property is missing or has no value, check to see if it was
             // required
             if (isRequired) {
-              throw Errors.bad_data(`'${prop}' is required`);
+              throw Errors.badData(`'${prop}' is required`);
             } else {
               continue;
             }
@@ -273,7 +273,7 @@ export default class BlockEmbedWrapper extends UtilityClass {
           if (value === null) {
             if (isRequired) {
               // There wasn't a value and it was a required property.
-              throw Errors.bad_data(`'${prop}' is required`);
+              throw Errors.badData(`'${prop}' is required`);
             }
           } else {
             value = converter(value);

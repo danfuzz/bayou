@@ -128,7 +128,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should reject invalid arguments', () => {
       function test(value) {
-        assert.throws(() => MockControl.pathForChange(value), /bad_value/);
+        assert.throws(() => MockControl.pathForChange(value), /badValue/);
       }
 
       test(-1);
@@ -302,8 +302,8 @@ describe('doc-server/BaseControl', () => {
       }
 
       await test(FileErrors.file_not_found('x'));
-      await test(Errors.timed_out(123456));
-      await test(Errors.bad_value('foo', 'bar'));
+      await test(Errors.timedOut(123456));
+      await test(Errors.badValue('foo', 'bar'));
     });
 
     it('should reject an empty change', async () => {
@@ -312,7 +312,7 @@ describe('doc-server/BaseControl', () => {
       const control    = new MockControl(fileAccess, 'boop');
       const change     = new MockChange(101, []);
 
-      await assert.isRejected(control.appendChange(change), /bad_value/);
+      await assert.isRejected(control.appendChange(change), /badValue/);
     });
 
     it('should reject a change of the wrong type', async () => {
@@ -320,7 +320,7 @@ describe('doc-server/BaseControl', () => {
       const fileAccess = new FileAccess(Codec.theOne, file);
       const control    = new MockControl(fileAccess, 'boop');
 
-      await assert.isRejected(control.appendChange('not_a_change'), /bad_value/);
+      await assert.isRejected(control.appendChange('not_a_change'), /badValue/);
     });
 
     it('should reject an invalid timeout value', async () => {
@@ -330,7 +330,7 @@ describe('doc-server/BaseControl', () => {
       const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
 
       async function test(v) {
-        await assert.isRejected(control.appendChange(change, v), /bad_value/);
+        await assert.isRejected(control.appendChange(change, v), /badValue/);
       }
 
       await test(-1);  // Must be a non-negative value.
@@ -406,7 +406,7 @@ describe('doc-server/BaseControl', () => {
           };
         };
 
-        await assert.isRejected(control.currentRevNum(), /^bad_value/);
+        await assert.isRejected(control.currentRevNum(), /^badValue/);
       }
 
       await test(null);
@@ -458,7 +458,7 @@ describe('doc-server/BaseControl', () => {
       };
 
       async function test(value) {
-        await assert.isRejected(control.getChange(value), /^bad_value/);
+        await assert.isRejected(control.getChange(value), /^badValue/);
       }
 
       await test(undefined);
@@ -498,7 +498,7 @@ describe('doc-server/BaseControl', () => {
         throw new Error('This should not have been called.');
       };
 
-      await assert.isRejected(control.getChangeAfter(11), /^bad_value/);
+      await assert.isRejected(control.getChangeAfter(11), /^badValue/);
     });
 
     it('should reject blatantly invalid `baseRevNum` values', async () => {
@@ -514,7 +514,7 @@ describe('doc-server/BaseControl', () => {
       };
 
       async function test(value) {
-        await assert.isRejected(control.getChangeAfter(value), /^bad_value/);
+        await assert.isRejected(control.getChangeAfter(value), /^badValue/);
       }
 
       await test(null);
@@ -598,7 +598,7 @@ describe('doc-server/BaseControl', () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
 
       async function test(base, newer) {
-        await assert.isRejected(control.getDiff(base, newer), /^bad_value/);
+        await assert.isRejected(control.getDiff(base, newer), /^badValue/);
       }
 
       await test(undefined, 10);
@@ -710,7 +710,7 @@ describe('doc-server/BaseControl', () => {
         throw new Error('This should not have been called.');
       };
 
-      await assert.isRejected(control.getSnapshot(11), /^bad_value/);
+      await assert.isRejected(control.getSnapshot(11), /^badValue/);
     });
 
     it('should reject blatantly invalid `revNum` values', async () => {
@@ -723,7 +723,7 @@ describe('doc-server/BaseControl', () => {
       };
 
       async function test(value) {
-        await assert.isRejected(control.getSnapshot(value), /^bad_value/);
+        await assert.isRejected(control.getSnapshot(value), /^badValue/);
       }
 
       await test(false);
@@ -764,7 +764,7 @@ describe('doc-server/BaseControl', () => {
       assert.deepEqual(result.contents.ops, [new MockOp('x', 37)]);
     });
 
-    it('should convert a `null` subclass response to a `revision_not_available` error', async () => {
+    it('should convert a `null` subclass response to a `revisionNotAvailable` error', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         return 10;
@@ -773,7 +773,7 @@ describe('doc-server/BaseControl', () => {
         return null;
       };
 
-      await assert.isRejected(control.getSnapshot(1), /^revision_not_available/);
+      await assert.isRejected(control.getSnapshot(1), /^revisionNotAvailable/);
     });
 
     it('should reject a non-snapshot subclass response', async () => {
@@ -787,7 +787,7 @@ describe('doc-server/BaseControl', () => {
           return value;
         };
 
-        await assert.isRejected(control.getSnapshot(1), /^bad_value/);
+        await assert.isRejected(control.getSnapshot(1), /^badValue/);
       }
 
       await test(-1);
@@ -811,7 +811,7 @@ describe('doc-server/BaseControl', () => {
       };
 
       async function test(value) {
-        await assert.isRejected(control.update(value), /^bad_value/);
+        await assert.isRejected(control.update(value), /^badValue/);
       }
 
       await test(null);
@@ -834,7 +834,7 @@ describe('doc-server/BaseControl', () => {
       };
 
       async function test(value) {
-        await assert.isRejected(control.update(value), /^bad_value/);
+        await assert.isRejected(control.update(value), /^badValue/);
       }
 
       // `0` is not a valid `revNum` for this method.
@@ -859,7 +859,7 @@ describe('doc-server/BaseControl', () => {
       const change = new MockChange(11, [], Timestamp.MIN_VALUE);
 
       async function test(value) {
-        await assert.isRejected(control.update(change, value), /^bad_value/);
+        await assert.isRejected(control.update(change, value), /^badValue/);
       }
 
       await test(-1);  // Must be a non-negative value.
@@ -883,7 +883,7 @@ describe('doc-server/BaseControl', () => {
       };
 
       const change = new MockChange(12, [new MockOp('abc')], Timestamp.MIN_VALUE);
-      await assert.isRejected(control.update(change), /^bad_value/);
+      await assert.isRejected(control.update(change), /^badValue/);
     });
 
     it('should call through to `_attemptUpdate()` given an empty change', async () => {

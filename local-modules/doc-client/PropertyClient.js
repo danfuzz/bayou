@@ -121,7 +121,7 @@ export default class PropertyClient extends CommonBase {
    *   this call. If specified, this value will be silently clamped to a
    *   system-defined range. If `null`, defaults to the maximum allowed.
    * @returns {*} New value of the property, soon after it gets changed.
-   * @throws {Error} A `timed_out` error if the property doesn't change within
+   * @throws {Error} A `timedOut` error if the property doesn't change within
    *   a reasonable period of time.
    */
   async getUpdate(name, value, timeoutMsec = null) {
@@ -146,7 +146,7 @@ export default class PropertyClient extends CommonBase {
 
       const now = Date.now();
       if (now >= timeoutTime) {
-        throw Errors.timed_out(timeoutMsec);
+        throw Errors.timedOut(timeoutMsec);
       }
 
       await proxy.property_getChangeAfter(snapshot.revNum, timeoutTime - now);

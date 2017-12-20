@@ -23,7 +23,7 @@ export default class DocumentId extends UtilityClass {
     if (   (typeof value !== 'string')
         || (value.length === 0)
         || !Hooks.theOne.isDocumentId(value)) {
-      throw Errors.bad_value(value, DocumentId);
+      throw Errors.badValue(value, DocumentId);
     }
 
     return value;

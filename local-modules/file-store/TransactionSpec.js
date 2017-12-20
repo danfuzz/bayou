@@ -27,15 +27,15 @@ export default class TransactionSpec extends CommonBase {
     // Validate the op combo restrictions.
 
     if (this.opsWithName('timeout').length > 1) {
-      throw Errors.bad_use('Too many `timeout` operations.');
+      throw Errors.badUse('Too many `timeout` operations.');
     }
 
     if (this.opsWithName('revNum').length > 1) {
-      throw Errors.bad_use('Too many `revNum` operations.');
+      throw Errors.badUse('Too many `revNum` operations.');
     }
 
     if (this.hasWaitOps() && (this.hasPullOps() || this.hasPushOps())) {
-      throw Errors.bad_use('Cannot mix wait operations with reads and modifications.');
+      throw Errors.badUse('Cannot mix wait operations with reads and modifications.');
     }
 
     Object.freeze(this);

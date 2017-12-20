@@ -160,7 +160,7 @@ describe('file-store/StoragePath', () => {
 
     it('should reject non-index-bearing paths', () => {
       function test(value) {
-        assert.throws(() => StoragePath.getIndex(value), /bad_value/);
+        assert.throws(() => StoragePath.getIndex(value), /badValue/);
       }
 
       // Nothing even vaguely index-like.
@@ -183,7 +183,7 @@ describe('file-store/StoragePath', () => {
 
     it('should reject entirely invalid path arguments', () => {
       for (const value of [...INVALID_PATHS, ...NON_STRINGS]) {
-        assert.throws(() => StoragePath.getIndex(value), /bad_value/);
+        assert.throws(() => StoragePath.getIndex(value), /badValue/);
       }
     });
   });

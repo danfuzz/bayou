@@ -87,7 +87,7 @@ export default class BaseSnapshot extends CommonBase {
     // is probably a good idea to evaluate how expensive this is in practice,
     // and figure out a better tactic if need be.
     if (!this._contents.isDocument()) {
-      throw Errors.bad_value(contents, this.constructor.deltaClass, 'document');
+      throw Errors.badValue(contents, this.constructor.deltaClass, 'document');
     }
   }
 

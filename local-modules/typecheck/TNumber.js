@@ -16,7 +16,7 @@ export default class TNumber extends UtilityClass {
    */
   static check(value) {
     if (typeof value !== 'number') {
-      throw Errors.bad_value(value, Number);
+      throw Errors.badValue(value, Number);
     }
 
     return value;
@@ -37,7 +37,7 @@ export default class TNumber extends UtilityClass {
     TNumber.check(maxExc);
 
     if ((value < minInc) || (value >= maxExc)) {
-      throw Errors.bad_value(value, Number, `${minInc} <= value < ${maxExc}`);
+      throw Errors.badValue(value, Number, `${minInc} <= value < ${maxExc}`);
     }
 
     return value;
@@ -58,7 +58,7 @@ export default class TNumber extends UtilityClass {
     TNumber.check(maxInc);
 
     if ((value < minInc) || (value > maxInc)) {
-      throw Errors.bad_value(value, Number, `${minInc} <= value <= ${maxInc}`);
+      throw Errors.badValue(value, Number, `${minInc} <= value <= ${maxInc}`);
     }
 
     return value;

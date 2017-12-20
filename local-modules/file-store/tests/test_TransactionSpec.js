@@ -27,7 +27,7 @@ describe('file-store/TransactionSpec', () => {
           for (let i = 0; i < ops.length; i += 9) {
             const useOps = ops.slice();
             useOps[i] = badValues[badAt];
-            assert.throws(() => new TransactionSpec(...useOps), /bad_value/);
+            assert.throws(() => new TransactionSpec(...useOps), /badValue/);
             badAt = (badAt + 1) % badValues.length;
           }
         });

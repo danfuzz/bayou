@@ -79,7 +79,7 @@ export default class AllSinks extends Singleton {
       // reasonably blatant that something needs to be fixed during application
       // bootstrap.
       const details = inspect(level, tag, ...message);
-      throw Errors.bad_use(`Overly early log call: ${details}`);
+      throw Errors.badUse(`Overly early log call: ${details}`);
     }
 
     const logRecord =

@@ -120,7 +120,7 @@ export default class LogRecord extends CommonBase {
    */
   static validateLevel(level) {
     if (!LEVELS_SET.has(level)) {
-      throw Errors.bad_value(level, 'logging severity level');
+      throw Errors.badValue(level, 'logging severity level');
     }
 
     return level;

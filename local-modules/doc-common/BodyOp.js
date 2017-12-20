@@ -50,7 +50,7 @@ export default class BodyOp extends BaseOp {
       TObject.plain(quillOp);
     } catch (e) {
       // More specific error.
-      throw Errors.bad_value(quillOp, 'Quill delta operation');
+      throw Errors.badValue(quillOp, 'Quill delta operation');
     }
 
     const { attributes = null, delete: del, insert, retain } = quillOp;
@@ -58,7 +58,7 @@ export default class BodyOp extends BaseOp {
     const allowedSize = (attributes === null) ? 1 : 2;
     if (Object.entries(quillOp).length !== allowedSize) {
       // Extra bindings, of some sort.
-      throw Errors.bad_value(quillOp, 'Quill delta operation');
+      throw Errors.badValue(quillOp, 'Quill delta operation');
     }
 
     if (insert !== undefined) {
@@ -71,23 +71,23 @@ export default class BodyOp extends BaseOp {
         const [[key, value], ...rest] = Object.entries(insert);
         if (rest.length !== 0) {
           // Invalid form for an embed.
-          throw Errors.bad_value(quillOp, 'Quill delta operation');
+          throw Errors.badValue(quillOp, 'Quill delta operation');
         }
         return BodyOp.op_embed(key, value, attributes);
       } else {
         // Neither in text nor embed form.
-        throw Errors.bad_value(quillOp, 'Quill delta operation');
+        throw Errors.badValue(quillOp, 'Quill delta operation');
       }
     } else if (del !== undefined) {
       if (attributes !== null) {
         // Deletes can't have attributes.
-        throw Errors.bad_value(quillOp, 'Quill delta operation');
+        throw Errors.badValue(quillOp, 'Quill delta operation');
       }
       return BodyOp.op_delete(del);
     } else if (retain !== undefined) {
       return BodyOp.op_retain(retain, attributes);
     } else {
-      throw Errors.bad_value(quillOp, 'Quill delta operation');
+      throw Errors.badValue(quillOp, 'Quill delta operation');
     }
   }
 
@@ -271,7 +271,7 @@ export default class BodyOp extends BaseOp {
       return [DataUtil.deepFreeze(value)];
     } catch (e) {
       // More specific error.
-      throw Errors.bad_value(value, 'body attributes');
+      throw Errors.badValue(value, 'body attributes');
     }
   }
 }

@@ -35,7 +35,7 @@ export default class FrozenBuffer extends CommonBase {
       return value;
     }
 
-    throw Errors.bad_value(value, 'FrozenBuffer hash');
+    throw Errors.badValue(value, 'FrozenBuffer hash');
   }
 
   /**
@@ -96,7 +96,7 @@ export default class FrozenBuffer extends CommonBase {
     const isBuffer = Buffer.isBuffer(value);
 
     if (!(isString || isBuffer)) {
-      throw Errors.bad_value(value, 'Buffer|string');
+      throw Errors.badValue(value, 'Buffer|string');
     }
 
     super();

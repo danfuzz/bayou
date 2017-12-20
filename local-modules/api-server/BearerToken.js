@@ -50,7 +50,7 @@ export default class BearerToken extends BaseKey {
     if (!Hooks.theOne.bearerTokens.isToken(secretToken)) {
       // We don't include any real detail in the error message, as that might
       // inadvertently leak a secret into the logs.
-      throw Errors.bad_value('(hidden)', 'secret token');
+      throw Errors.badValue('(hidden)', 'secret token');
     }
 
     super('*', Hooks.theOne.bearerTokens.tokenId(secretToken));

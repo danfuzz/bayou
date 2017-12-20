@@ -214,7 +214,7 @@ export default class LocalFile extends BaseFile {
 
     await Promise.race([this._readStorageIfNecessary(), timeoutProm]);
     if (timeout) {
-      throw Errors.timed_out(timeoutMsec);
+      throw Errors.timedOut(timeoutMsec);
     }
 
     if (!this._fileShouldExist) {
@@ -301,7 +301,7 @@ export default class LocalFile extends BaseFile {
       this._changeCondition.value = false;
       await Promise.race([this._changeCondition.whenTrue(), timeoutProm]);
       if (timeout) {
-        throw Errors.timed_out(timeoutMsec);
+        throw Errors.timedOut(timeoutMsec);
       }
     }
 

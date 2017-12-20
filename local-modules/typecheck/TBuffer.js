@@ -19,7 +19,7 @@ export default class TBuffer extends UtilityClass {
    */
   static check(value) {
     if (!Buffer.isBuffer(value)) {
-      throw Errors.bad_value(value, Buffer);
+      throw Errors.badValue(value, Buffer);
     }
 
     return value;

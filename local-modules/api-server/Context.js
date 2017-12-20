@@ -97,7 +97,7 @@ export default class Context extends CommonBase {
     const id = target.id;
 
     if (this._map.get(id) !== undefined) {
-      throw Errors.bad_use(`Duplicate target: \`${id}\``);
+      throw Errors.badUse(`Duplicate target: \`${id}\``);
     }
 
     this._map.set(id, target);
@@ -141,7 +141,7 @@ export default class Context extends CommonBase {
     const result = this.getOrNull(id);
 
     if (!result) {
-      throw Errors.bad_use(`Unknown target: \`${id}\``);
+      throw Errors.badUse(`Unknown target: \`${id}\``);
     }
 
     return result;
@@ -159,7 +159,7 @@ export default class Context extends CommonBase {
     const result = this.get(id);
 
     if (result.key === null) {
-      throw Errors.bad_use(`Not a controlled target: \`${id}\``);
+      throw Errors.badUse(`Not a controlled target: \`${id}\``);
     }
 
     return result;
@@ -190,7 +190,7 @@ export default class Context extends CommonBase {
     const result = this.get(id);
 
     if (result.key !== null) {
-      throw Errors.bad_use(`Unauthorized target: \`${id}\``);
+      throw Errors.badUse(`Unauthorized target: \`${id}\``);
     }
 
     return result;

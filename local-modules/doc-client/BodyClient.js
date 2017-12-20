@@ -845,7 +845,7 @@ export default class BodyClient extends StateMachine {
         && needQuillUpdate) {
       // It is unsafe to apply the change as-is, because we know that Quill's
       // revision of the document has diverged.
-      throw Errors.bad_use('Cannot apply change due to revision skew.');
+      throw Errors.badUse('Cannot apply change due to revision skew.');
     }
 
     // Update the local snapshot.

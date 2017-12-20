@@ -96,7 +96,7 @@ export default class Timestamp extends CommonBase {
       return Timestamp.check(value);
     } catch (e) {
       // Higher-fidelity error.
-      throw Errors.bad_value(value, 'TimeStamp|null');
+      throw Errors.badValue(value, 'TimeStamp|null');
     }
   }
 

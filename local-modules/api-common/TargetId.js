@@ -32,7 +32,7 @@ export default class TargetId extends UtilityClass {
       return TString.check(value, VALID_TARGET_ID_REGEX);
     } catch (e) {
       // Throw a higher-fidelity error.
-      throw Errors.bad_value(value, TargetId);
+      throw Errors.badValue(value, TargetId);
     }
   }
 
@@ -51,7 +51,7 @@ export default class TargetId extends UtilityClass {
       return value;
     } catch (e) {
       // Throw a higher-fidelity error.
-      throw Errors.bad_value(value, TargetId, `length >= ${minLen}`);
+      throw Errors.badValue(value, TargetId, `length >= ${minLen}`);
     }
   }
 }

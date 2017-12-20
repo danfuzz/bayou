@@ -87,7 +87,7 @@ export default class QuillEvents extends UtilityClass {
       }
 
       default: {
-        throw Errors.bad_value(payload, 'Quill event payload');
+        throw Errors.badValue(payload, 'Quill event payload');
       }
     }
   }
@@ -119,7 +119,7 @@ export default class QuillEvents extends UtilityClass {
       }
 
       default: {
-        throw Errors.bad_value(payload, 'Quill event payload');
+        throw Errors.badValue(payload, 'Quill event payload');
       }
     }
   }

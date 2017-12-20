@@ -30,7 +30,7 @@ export default class ObjectUtil extends UtilityClass {
 
       const v = result[k] = value[k];
       if ((v === undefined) && !ObjectUtil.hasOwnProperty(value, k)) {
-        throw Errors.bad_use(`Missing property: ${k}`);
+        throw Errors.badUse(`Missing property: ${k}`);
       }
     }
 

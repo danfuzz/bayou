@@ -258,7 +258,7 @@ export default class FileBootstrap extends BaseDataManager {
    */
   _initCheck() {
     if (!this._initialized) {
-      throw Errors.bad_use('Must be `init()`ed before access.');
+      throw Errors.badUse('Must be `init()`ed before access.');
     }
   }
 }

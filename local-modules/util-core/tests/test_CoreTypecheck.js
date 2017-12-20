@@ -52,7 +52,7 @@ describe('util-core/CoreTypecheck', () => {
       function test(value) {
         Assert.throwsInfo(
           () => { CoreTypecheck.checkIdentifier(value); },
-          'bad_value',
+          'badValue',
           [inspect(value), 'String', 'identifier syntax']);
       }
 
@@ -81,7 +81,7 @@ describe('util-core/CoreTypecheck', () => {
       function test(value) {
         Assert.throwsInfo(
           () => { CoreTypecheck.checkIdentifier(value); },
-          'bad_value',
+          'badValue',
           [inspect(value), 'String', 'identifier syntax']);
       }
 
@@ -120,7 +120,7 @@ describe('util-core/CoreTypecheck', () => {
 
       it('rejects out-of-range integers', () => {
         function test(value, minInc) {
-          assert.throws(() => CoreTypecheck.checkInt(value, minInc), /^bad_value/);
+          assert.throws(() => CoreTypecheck.checkInt(value, minInc), /^badValue/);
         }
 
         test(-1,  0);
@@ -132,7 +132,7 @@ describe('util-core/CoreTypecheck', () => {
 
       it('rejects bad values for `minInc`', () => {
         function test(minInc) {
-          assert.throws(() => CoreTypecheck.checkInt(0, minInc), /^bad_value/);
+          assert.throws(() => CoreTypecheck.checkInt(0, minInc), /^badValue/);
         }
 
         test(false);
@@ -158,7 +158,7 @@ describe('util-core/CoreTypecheck', () => {
 
       it('rejects out-of-range integers', () => {
         function test(value, maxExc) {
-          assert.throws(() => CoreTypecheck.checkInt(value, null, maxExc), /^bad_value/);
+          assert.throws(() => CoreTypecheck.checkInt(value, null, maxExc), /^badValue/);
         }
 
         test(-1,  -2);
@@ -171,7 +171,7 @@ describe('util-core/CoreTypecheck', () => {
 
       it('rejects bad values for `maxExc`', () => {
         function test(maxExc) {
-          assert.throws(() => CoreTypecheck.checkInt(0, null, maxExc), /^bad_value/);
+          assert.throws(() => CoreTypecheck.checkInt(0, null, maxExc), /^badValue/);
         }
 
         test(false);
@@ -199,7 +199,7 @@ describe('util-core/CoreTypecheck', () => {
 
       it('rejects out-of-range integers', () => {
         function test(value, minInc, maxExc) {
-          assert.throws(() => CoreTypecheck.checkInt(value, minInc, maxExc), /^bad_value/);
+          assert.throws(() => CoreTypecheck.checkInt(value, minInc, maxExc), /^badValue/);
         }
 
         test(-1,  0,   10);
@@ -216,10 +216,10 @@ describe('util-core/CoreTypecheck', () => {
 
     it('rejects numbers that are not safe integers', () => {
       function test(value) {
-        assert.throws(() => CoreTypecheck.checkInt(value), /^bad_value/);
-        assert.throws(() => CoreTypecheck.checkInt(value, 1), /^bad_value/);
-        assert.throws(() => CoreTypecheck.checkInt(value, null, 100), /^bad_value/);
-        assert.throws(() => CoreTypecheck.checkInt(value, 5, 50), /^bad_value/);
+        assert.throws(() => CoreTypecheck.checkInt(value), /^badValue/);
+        assert.throws(() => CoreTypecheck.checkInt(value, 1), /^badValue/);
+        assert.throws(() => CoreTypecheck.checkInt(value, null, 100), /^badValue/);
+        assert.throws(() => CoreTypecheck.checkInt(value, 5, 50), /^badValue/);
       }
 
       test(-0.5);
@@ -233,10 +233,10 @@ describe('util-core/CoreTypecheck', () => {
 
     it('rejects non-number values', () => {
       function test(value) {
-        assert.throws(() => CoreTypecheck.checkInt(value), /^bad_value/);
-        assert.throws(() => CoreTypecheck.checkInt(value, 1), /^bad_value/);
-        assert.throws(() => CoreTypecheck.checkInt(value, null, 2), /^bad_value/);
-        assert.throws(() => CoreTypecheck.checkInt(value, 1, 2), /^bad_value/);
+        assert.throws(() => CoreTypecheck.checkInt(value), /^badValue/);
+        assert.throws(() => CoreTypecheck.checkInt(value, 1), /^badValue/);
+        assert.throws(() => CoreTypecheck.checkInt(value, null, 2), /^badValue/);
+        assert.throws(() => CoreTypecheck.checkInt(value, 1, 2), /^badValue/);
       }
 
       test(undefined);
@@ -269,7 +269,7 @@ describe('util-core/CoreTypecheck', () => {
       function test(value) {
         Assert.throwsInfo(
           () => { CoreTypecheck.checkLabel(value); },
-          'bad_value',
+          'badValue',
           [inspect(value), 'String', 'label syntax']);
       }
 
@@ -298,7 +298,7 @@ describe('util-core/CoreTypecheck', () => {
       function test(value) {
         Assert.throwsInfo(
           () => { CoreTypecheck.checkLabel(value); },
-          'bad_value',
+          'badValue',
           [inspect(value), 'String', 'label syntax']);
       }
 
@@ -327,7 +327,7 @@ describe('util-core/CoreTypecheck', () => {
       function test(value) {
         Assert.throwsInfo(
           () => { CoreTypecheck.checkObject(value); },
-          'bad_value',
+          'badValue',
           [inspect(value), 'Object']);
       }
 
@@ -367,7 +367,7 @@ describe('util-core/CoreTypecheck', () => {
       function test(value, clazz) {
         Assert.throwsInfo(
           () => { CoreTypecheck.checkObject(value, clazz); },
-          'bad_value',
+          'badValue',
           [inspect(value), `class ${clazz.name}`]);
       }
 
@@ -380,7 +380,7 @@ describe('util-core/CoreTypecheck', () => {
       function test(value, clazz) {
         Assert.throwsInfo(
           () => { CoreTypecheck.checkObject(value, clazz); },
-          'bad_value',
+          'badValue',
           [inspect(value), `class ${clazz.name}`]);
       }
 
@@ -407,7 +407,7 @@ describe('util-core/CoreTypecheck', () => {
       function test(value) {
         Assert.throwsInfo(
           () => { CoreTypecheck.checkString(value); },
-          'bad_value',
+          'badValue',
           [inspect(value), 'String']);
       }
 
@@ -431,7 +431,7 @@ describe('util-core/CoreTypecheck', () => {
       function test(value, regex) {
         Assert.throwsInfo(
           () => { CoreTypecheck.checkString(value, regex); },
-          'bad_value',
+          'badValue',
           [inspect(value), 'String', regex.toString()]);
       }
 
@@ -443,7 +443,7 @@ describe('util-core/CoreTypecheck', () => {
       function test(value) {
         Assert.throwsInfo(
           () => { CoreTypecheck.checkString(value, /./); },
-          'bad_value',
+          'badValue',
           [inspect(value), 'String', '/./']);
       }
 
@@ -457,7 +457,7 @@ describe('util-core/CoreTypecheck', () => {
 
       Assert.throwsInfo(
         () => { CoreTypecheck.checkString('x', notRegex); },
-        'bad_value',
+        'badValue',
         [inspect(notRegex), 'RegExp']);
     });
   });

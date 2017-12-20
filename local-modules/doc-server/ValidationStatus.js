@@ -70,6 +70,6 @@ export default class ValidationStatus extends UtilityClass {
       }
     }
 
-    throw Errors.bad_value(value, ValidationStatus);
+    throw Errors.badValue(value, ValidationStatus);
   }
 }
