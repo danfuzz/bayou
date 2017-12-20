@@ -188,13 +188,41 @@ taking into account recent additions to the language.
   Roughly speaking, you can think of this as an "instance sandwich on static
   bread."
 
-#### Other items
+#### Enumerated constants
 
-* Websockets &mdash; JavaScript has a `WebSocket` class, but when talking about
-  them in prose or in our own variable or class names, we use "websocket" (one
-  word, all lower case, though capitalized as appropriate for prose or
-  `camelCasing`). In addition, `ws` is a good choice for a shorthand name of a
-  variable that contains an instance of one (or something related).
+* Use immutable static variables to name constants instead of just using
+  quoted strings directly. The name of the variable should generally match the
+  content of the related string, via one of two mappings:
+
+  * The preferred way is to use a common all-caps prefix for all the constants,
+    followed by an underscore, and followed by the constant value in the same
+    casing as its value. For example, use the variable name `CODE_bakeCake` for
+    the string `"bakeCake"` and the variable name `CODE_eatCake` for `"eatCake"`
+    as part of the same enumeration.
+
+  * The less recommended (but still acceptable, for now) way is to convert the
+    constant value to `UPPER_SNAKE_CASE` and have that be the name. For example,
+    the strings of the previous example would be stored in static variables
+    named `BAKE_CAKE` and `EAT_CAKE` respectively.
+
+* The preferred way to define static constants is via a static getter function,
+  e.g.:
+
+  ```javascript
+  class CakeCodes {
+    static get CODE_bakeCake() { return 'bakeCake'; }
+    static get CODE_eatCake()  { return 'eatCake'; }
+    ...
+  }
+  ```
+
+  Once JavaScript gains the ability to define these in a better way, we will
+  endeavor to do so.
+
+* Prefer `lowerCamelCase` for constant values, except if there is an external
+  dependency that requires otherwise.
+
+#### Other items
 
 * Immediate-async blocks &mdash; When programming in the `async`/`await` style,
   sometimes it's useful to to "spawn" an independent thread of control which
@@ -233,3 +261,9 @@ taking into account recent additions to the language.
     ...
   }
   ```
+
+* Websockets &mdash; JavaScript has a `WebSocket` class, but when talking about
+  them in prose or in our own variable or class names, we use "websocket" (one
+  word, all lower case, though capitalized as appropriate for prose or
+  `camelCasing`). In addition, `ws` is a good choice for a shorthand name of a
+  variable that contains an instance of one (or something related).
