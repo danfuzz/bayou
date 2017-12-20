@@ -42,7 +42,7 @@ export default class CaretSnapshot extends BaseSnapshot {
       const opProps = op.props;
 
       switch (opProps.opName) {
-        case CaretOp.BEGIN_SESSION: {
+        case CaretOp.CODE_beginSession: {
           this._carets.set(opProps.caret.sessionId, op);
           break;
         }

@@ -191,7 +191,7 @@ export default class Caret extends CommonBase {
 
     for (const op of delta.ops) {
       const props = op.props;
-      if (props.opName !== CaretOp.SET_FIELD) {
+      if (props.opName !== CaretOp.CODE_setField) {
         throw Errors.bad_use(`Invalid operation name: ${props.opName}`);
       } else if (props.sessionId !== this.sessionId) {
         throw Errors.bad_use('Mismatched session ID.');

@@ -486,19 +486,19 @@ export default class CaretOverlay {
       const props = op.props;
 
       switch (props.opName) {
-        case CaretOp.BEGIN_SESSION: {
+        case CaretOp.CODE_beginSession: {
           this._addAvatarToDefs(props.caret);
           updateDisplay = true;
           break;
         }
 
-        case CaretOp.END_SESSION: {
+        case CaretOp.CODE_endSession: {
           this._removeAvatarFromDefs(props.sessionId);
           updateDisplay = true;
           break;
         }
 
-        case CaretOp.SET_FIELD: {
+        case CaretOp.CODE_setField: {
           const sessionId = props.sessionId;
 
           if (sessionId === this._editorComplex.sessionId) {
