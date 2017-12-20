@@ -124,10 +124,10 @@ export default class ItemCodec extends CommonBase {
       return 'null';
     } else if (Array.isArray(value)) {
       return 'array';
-    } else if (Object.getPrototypeOf(value) !== Object.prototype) {
-      return 'instance';
-    } else {
+    } else if (Object.getPrototypeOf(value) === Object.prototype) {
       return 'object';
+    } else {
+      return 'instance';
     }
   }
 
