@@ -49,7 +49,7 @@ export default class ImageEmbed extends React.Component {
    * by `ComponentBlotWrapper`.
    */
   static get blotName() {
-    return 'image_embed';
+    return 'imageEmbed';
   }
 
   /**

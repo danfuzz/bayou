@@ -22,7 +22,7 @@ export default class FileEmbed extends React.Component {
    * by `ComponentBlotWrapper`.
    */
   static get blotName() {
-    return 'file_embed';
+    return 'fileEmbed';
   }
 
   constructor(props) {
