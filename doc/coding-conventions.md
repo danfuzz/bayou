@@ -200,6 +200,10 @@ taking into account recent additions to the language.
     the string `"bakeCake"` and the variable name `CODE_eatCake` for `"eatCake"`
     as part of the same enumeration.
 
+    This way is _especially_ preferred if the string values "leak" beyond the
+    code, e.g., if they end up represented in databases or get transmitted
+    across an API boundary.
+
   * The less recommended (but still acceptable, for now) way is to convert the
     constant value to `UPPER_SNAKE_CASE` and have that be the name. For example,
     the strings of the previous example would be stored in static variables
