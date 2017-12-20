@@ -218,7 +218,7 @@ export default class LocalFile extends BaseFile {
     }
 
     if (!this._fileShouldExist) {
-      throw FileStoreErrors.file_not_found(this.id);
+      throw FileStoreErrors.fileNotFound(this.id);
     }
 
     // Construct the "file friend" object. This exposes just enough private

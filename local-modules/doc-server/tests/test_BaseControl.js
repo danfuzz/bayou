@@ -279,8 +279,8 @@ describe('doc-server/BaseControl', () => {
         await assert.eventually.strictEqual(control.appendChange(change), false);
       }
 
-      await test(FileErrors.path_hash_mismatch('/whatever', FrozenBuffer.coerce('x').hash));
-      await test(FileErrors.path_not_absent('/mock_control/change/99'));
+      await test(FileErrors.pathHashMismatch('/whatever', FrozenBuffer.coerce('x').hash));
+      await test(FileErrors.pathNotAbsent('/mock_control/change/99'));
     });
 
     it('should rethrow any transaction error other than a precondition failure', async () => {
@@ -301,7 +301,7 @@ describe('doc-server/BaseControl', () => {
         await assert.isRejected(control.appendChange(change), error);
       }
 
-      await test(FileErrors.file_not_found('x'));
+      await test(FileErrors.fileNotFound('x'));
       await test(Errors.timedOut(123456));
       await test(Errors.badValue('foo', 'bar'));
     });
