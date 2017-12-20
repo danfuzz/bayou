@@ -39,10 +39,10 @@ describe('doc-common/PropertyDelta', () => {
     describe('valid arguments', () => {
       const values = [
         [],
-        [PropertyOp.op_setProperty('x', 'y')],
-        [PropertyOp.op_setProperty('x', ['y'])],
-        [PropertyOp.op_setProperty('x', { y: 10 })],
-        [PropertyOp.op_deleteProperty('foo')],
+        [PropertyOp.op_set('x', 'y')],
+        [PropertyOp.op_set('x', ['y'])],
+        [PropertyOp.op_set('x', { y: 10 })],
+        [PropertyOp.op_delete('foo')],
         [['set_property', 'x', 10]],
         [['delete_property', 'foo']]
       ];
@@ -115,13 +115,13 @@ describe('doc-common/PropertyDelta', () => {
         }
       }
 
-      const op1 = PropertyOp.op_setProperty('aaa', 'bbb');
-      const op2 = PropertyOp.op_setProperty('aaa', 'ccc');
-      const op3 = PropertyOp.op_setProperty('aaa', 'ddd');
-      const op4 = PropertyOp.op_setProperty('aaa', 'eee');
-      const op5 = PropertyOp.op_setProperty('bbb', 'ccc');
-      const op6 = PropertyOp.op_setProperty('bbb', 'ddd');
-      const op7 = PropertyOp.op_deleteProperty('aaa');
+      const op1 = PropertyOp.op_set('aaa', 'bbb');
+      const op2 = PropertyOp.op_set('aaa', 'ccc');
+      const op3 = PropertyOp.op_set('aaa', 'ddd');
+      const op4 = PropertyOp.op_set('aaa', 'eee');
+      const op5 = PropertyOp.op_set('bbb', 'ccc');
+      const op6 = PropertyOp.op_set('bbb', 'ddd');
+      const op7 = PropertyOp.op_delete('aaa');
 
       test([op1],      [],         [op1]);
       test([op1, op2], [],         [op2]);
@@ -142,11 +142,11 @@ describe('doc-common/PropertyDelta', () => {
     });
 
     it('should not include deletions when `wantDocument` is `true`', () => {
-      const op1    = PropertyOp.op_setProperty('aaa', '111');
-      const op2    = PropertyOp.op_setProperty('bbb', '222');
-      const op3    = PropertyOp.op_setProperty('ccc', '333');
-      const op4    = PropertyOp.op_deleteProperty('bbb');
-      const op5    = PropertyOp.op_deleteProperty('ddd');
+      const op1    = PropertyOp.op_set('aaa', '111');
+      const op2    = PropertyOp.op_set('bbb', '222');
+      const op3    = PropertyOp.op_set('ccc', '333');
+      const op4    = PropertyOp.op_delete('bbb');
+      const op5    = PropertyOp.op_delete('ddd');
       const d1     = new PropertyDelta([op1, op2]);
       const d2     = new PropertyDelta([op3, op4, op5]);
       const result = d1.compose(d2, true);
@@ -163,8 +163,8 @@ describe('doc-common/PropertyDelta', () => {
       }
 
       test([]);
-      test([PropertyOp.op_setProperty('aaa', 'bbb')]);
-      test([PropertyOp.op_setProperty('aaa', 'bbb'), PropertyOp.op_deleteProperty('ccc')]);
+      test([PropertyOp.op_set('aaa', 'bbb')]);
+      test([PropertyOp.op_set('aaa', 'bbb'), PropertyOp.op_delete('ccc')]);
     });
 
     it('should return `true` when passed an identically-constructed value', () => {
@@ -176,13 +176,13 @@ describe('doc-common/PropertyDelta', () => {
       }
 
       test([]);
-      test([PropertyOp.op_setProperty('aaa', 'bbb')]);
-      test([PropertyOp.op_setProperty('aaa', 'bbb'), PropertyOp.op_deleteProperty('ccc')]);
+      test([PropertyOp.op_set('aaa', 'bbb')]);
+      test([PropertyOp.op_set('aaa', 'bbb'), PropertyOp.op_delete('ccc')]);
     });
 
     it('should return `true` when equal ops are not also `===`', () => {
-      const ops1 = [PropertyOp.op_setProperty('aaa', 'bbb')];
-      const ops2 = [PropertyOp.op_setProperty('aaa', 'bbb')];
+      const ops1 = [PropertyOp.op_set('aaa', 'bbb')];
+      const ops2 = [PropertyOp.op_set('aaa', 'bbb')];
       const d1 = new PropertyDelta(ops1);
       const d2 = new PropertyDelta(ops2);
 
@@ -191,8 +191,8 @@ describe('doc-common/PropertyDelta', () => {
     });
 
     it('should return `false` when array lengths differ', () => {
-      const op1 = PropertyOp.op_setProperty('aaa', 'bbb');
-      const op2 = PropertyOp.op_deleteProperty('ccc');
+      const op1 = PropertyOp.op_set('aaa', 'bbb');
+      const op2 = PropertyOp.op_delete('ccc');
       const d1 = new PropertyDelta([op1]);
       const d2 = new PropertyDelta([op1, op2]);
 
@@ -209,11 +209,11 @@ describe('doc-common/PropertyDelta', () => {
         assert.isFalse(d2.equals(d1));
       }
 
-      const op1 = PropertyOp.op_setProperty('aaa', 'bbb');
-      const op2 = PropertyOp.op_setProperty('aaa', 'ccc');
-      const op3 = PropertyOp.op_setProperty('bbb', 'ccc');
-      const op4 = PropertyOp.op_deleteProperty('ddd');
-      const op5 = PropertyOp.op_deleteProperty('eee');
+      const op1 = PropertyOp.op_set('aaa', 'bbb');
+      const op2 = PropertyOp.op_set('aaa', 'ccc');
+      const op3 = PropertyOp.op_set('bbb', 'ccc');
+      const op4 = PropertyOp.op_delete('ddd');
+      const op5 = PropertyOp.op_delete('eee');
 
       test([op1],                     [op2]);
       test([op1, op2],                [op1, op3]);
@@ -243,12 +243,12 @@ describe('doc-common/PropertyDelta', () => {
     describe('`true` cases', () => {
       const values = [
         [],
-        [PropertyOp.op_setProperty('aaa', 'bbb')],
-        [PropertyOp.op_setProperty('aaa', 'bbb'), PropertyOp.op_setProperty('ccc', 'ddd')],
+        [PropertyOp.op_set('aaa', 'bbb')],
+        [PropertyOp.op_set('aaa', 'bbb'), PropertyOp.op_set('ccc', 'ddd')],
         [
-          PropertyOp.op_setProperty('aaa', 'bbb'),
-          PropertyOp.op_setProperty('ccc', 'ddd'),
-          PropertyOp.op_setProperty('eee', 'fff')
+          PropertyOp.op_set('aaa', 'bbb'),
+          PropertyOp.op_set('ccc', 'ddd'),
+          PropertyOp.op_set('eee', 'fff')
         ]
       ];
 
@@ -261,8 +261,8 @@ describe('doc-common/PropertyDelta', () => {
 
     describe('`false` cases', () => {
       const values = [
-        [PropertyOp.op_deleteProperty('xyz')],
-        [PropertyOp.op_setProperty('aaa', 'bbb'), PropertyOp.op_setProperty('aaa', 'ccc')]
+        [PropertyOp.op_delete('xyz')],
+        [PropertyOp.op_set('aaa', 'bbb'), PropertyOp.op_set('aaa', 'ccc')]
       ];
 
       for (const v of values) {
@@ -289,10 +289,10 @@ describe('doc-common/PropertyDelta', () => {
 
     describe('valid non-empty values', () => {
       const values = [
-        [PropertyOp.op_setProperty('aaa', 'bbb')],
-        [PropertyOp.op_setProperty('aaa', 'bbb'), PropertyOp.op_setProperty('ccc', 'ddd')],
-        [PropertyOp.op_setProperty('aaa', 'bbb'), PropertyOp.op_deleteProperty('aaa')],
-        [PropertyOp.op_deleteProperty('xyz')]
+        [PropertyOp.op_set('aaa', 'bbb')],
+        [PropertyOp.op_set('aaa', 'bbb'), PropertyOp.op_set('ccc', 'ddd')],
+        [PropertyOp.op_set('aaa', 'bbb'), PropertyOp.op_delete('aaa')],
+        [PropertyOp.op_delete('xyz')]
       ];
 
       for (const v of values) {

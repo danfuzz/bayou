@@ -29,7 +29,7 @@ export default class PropertyOp extends BaseOp {
    *   "identifier" string.
    * @returns {PropertyOp} An appropriately-constructed operation.
    */
-  static op_deleteProperty(name) {
+  static op_delete(name) {
     TString.identifier(name);
 
     return new PropertyOp(PropertyOp.CODE_delete, name);
@@ -43,7 +43,7 @@ export default class PropertyOp extends BaseOp {
    * @param {*} value Value of the property. Must be a pure data value.
    * @returns {PropertyOp} An appropriately-constructed operation.
    */
-  static op_setProperty(name, value) {
+  static op_set(name, value) {
     return new PropertyOp(PropertyOp.CODE_set, new Property(name, value));
   }
 
