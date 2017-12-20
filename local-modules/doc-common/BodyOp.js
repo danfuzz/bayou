@@ -15,25 +15,25 @@ import { DataUtil, Errors, ObjectUtil } from 'util-common';
  * forth as needed.
  */
 export default class BodyOp extends BaseOp {
-  /** {string} Operation name for "delete" operations. */
+  /** {string} Opcode constant for "delete" operations. */
   static get DELETE() {
     return 'delete';
   }
 
   /**
-   * {string} Operation name for "embed" (insert / append embedded object)
+   * {string} Opcode constant for "embed" (insert / append embedded object)
    * operations.
    */
   static get EMBED() {
     return 'embed';
   }
 
-  /** {string} Operation name for "retain" operations. */
+  /** {string} Opcode constant for "retain" operations. */
   static get RETAIN() {
     return 'retain';
   }
 
-  /** {string} Operation name for "text" (insert / append text) operations. */
+  /** {string} Opcode constant for "text" (insert / append text) operations. */
   static get TEXT() {
     return 'text';
   }

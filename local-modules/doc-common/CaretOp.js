@@ -12,17 +12,17 @@ import Caret from './Caret';
  * Operation which can be applied to a `Caret` or `CaretSnapshot`.
  */
 export default class CaretOp extends BaseOp {
-  /** {string} Operation name for "begin session" operations. */
+  /** {string} Opcode constant for "begin session" operations. */
   static get BEGIN_SESSION() {
     return 'begin_session';
   }
 
-  /** {string} Operation name for "end session" operations. */
+  /** {string} Opcode constant for "end session" operations. */
   static get END_SESSION() {
     return 'end_session';
   }
 
-  /** {string} Operation name for "set field" operations. */
+  /** {string} Opcode constant for "set field" operations. */
   static get SET_FIELD() {
     return 'set_field';
   }

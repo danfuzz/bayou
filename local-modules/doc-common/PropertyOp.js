@@ -12,12 +12,12 @@ import Property from './Property';
  * Operation which can be applied to a `PropertySnapshot`.
  */
 export default class PropertyOp extends BaseOp {
-  /** {string} Operation name for "delete property" operations. */
+  /** {string} Opcode constant for "delete property" operations. */
   static get DELETE_PROPERTY() {
     return 'delete_property';
   }
 
-  /** {string} Operation name for "set property" operations. */
+  /** {string} Opcode constant for "set property" operations. */
   static get SET_PROPERTY() {
     return 'set_property';
   }
