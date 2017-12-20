@@ -13,13 +13,13 @@ import Property from './Property';
  */
 export default class PropertyOp extends BaseOp {
   /** {string} Opcode constant for "delete property" operations. */
-  static get DELETE_PROPERTY() {
-    return 'delete_property';
+  static get CODE_delete() {
+    return 'delete';
   }
 
   /** {string} Opcode constant for "set property" operations. */
-  static get SET_PROPERTY() {
-    return 'set_property';
+  static get CODE_set() {
+    return 'set';
   }
 
   /**
@@ -32,7 +32,7 @@ export default class PropertyOp extends BaseOp {
   static op_deleteProperty(name) {
     TString.identifier(name);
 
-    return new PropertyOp(PropertyOp.DELETE_PROPERTY, name);
+    return new PropertyOp(PropertyOp.CODE_delete, name);
   }
 
   /**
@@ -44,7 +44,7 @@ export default class PropertyOp extends BaseOp {
    * @returns {PropertyOp} An appropriately-constructed operation.
    */
   static op_setProperty(name, value) {
-    return new PropertyOp(PropertyOp.SET_PROPERTY, new Property(name, value));
+    return new PropertyOp(PropertyOp.CODE_set, new Property(name, value));
   }
 
   /**
@@ -58,12 +58,12 @@ export default class PropertyOp extends BaseOp {
     const opName  = payload.name;
 
     switch (opName) {
-      case PropertyOp.DELETE_PROPERTY: {
+      case PropertyOp.CODE_delete: {
         const [name] = payload.args;
         return Object.freeze({ opName, name });
       }
 
-      case PropertyOp.SET_PROPERTY: {
+      case PropertyOp.CODE_set: {
         const [property] = payload.args;
         return Object.freeze({ opName, property });
       }

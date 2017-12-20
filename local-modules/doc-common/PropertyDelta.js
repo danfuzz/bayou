@@ -34,12 +34,7 @@ export default class PropertyDelta extends BaseDelta {
       const opProps = op.props;
 
       switch (opProps.opName) {
-        case PropertyOp.SET_PROPERTY: {
-          props.set(opProps.property.name, op);
-          break;
-        }
-
-        case PropertyOp.DELETE_PROPERTY: {
+        case PropertyOp.CODE_delete: {
           if (wantDocument) {
             // Document deltas don't remember property deletions; they simply
             // don't have the property in question.
@@ -50,6 +45,11 @@ export default class PropertyDelta extends BaseDelta {
             // the result delta.
             props.set(opProps.name, op);
           }
+          break;
+        }
+
+        case PropertyOp.CODE_set: {
+          props.set(opProps.property.name, op);
           break;
         }
 
@@ -75,7 +75,7 @@ export default class PropertyDelta extends BaseDelta {
       const opProps = op.props;
 
       switch (opProps.opName) {
-        case PropertyOp.SET_PROPERTY: {
+        case PropertyOp.CODE_set: {
           const name = opProps.property.name;
 
           if (names.has(name)) {

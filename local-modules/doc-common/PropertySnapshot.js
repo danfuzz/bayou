@@ -40,7 +40,7 @@ export default class PropertySnapshot extends BaseSnapshot {
       const opProps = op.props;
 
       switch (opProps.opName) {
-        case PropertyOp.SET_PROPERTY: {
+        case PropertyOp.CODE_set: {
           this._properties.set(opProps.property.name, op);
           break;
         }
