@@ -93,7 +93,7 @@ export default class Errors extends UtilityClass {
    * @param {Error} error Error in question.
    * @returns {boolean} `true` iff it represents a `path_hash_mismatch`.
    */
-  static isPathHashMismatch(error) {
+  static is_pathHashMismatch(error) {
     return InfoError.hasName(error, 'path_hash_mismatch');
   }
 
@@ -103,7 +103,7 @@ export default class Errors extends UtilityClass {
    * @param {Error} error Error in question.
    * @returns {boolean} `true` iff it represents a `path_not_absent`.
    */
-  static isPathNotAbsent(error) {
+  static is_pathNotAbsent(error) {
     return InfoError.hasName(error, 'path_not_absent');
   }
 
@@ -113,7 +113,7 @@ export default class Errors extends UtilityClass {
    * @param {Error} error Error in question.
    * @returns {boolean} `true` iff it represents a `path_not_found`.
    */
-  static isPathNotFound(error) {
+  static is_pathNotFound(error) {
     return InfoError.hasName(error, 'path_not_found');
   }
 }

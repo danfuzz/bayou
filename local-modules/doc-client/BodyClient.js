@@ -462,7 +462,7 @@ export default class BodyClient extends StateMachine {
           this.q_gotChangeAfter(baseSnapshot, value);
         } catch (e) {
           this._pendingChangeAfter = false;
-          if (Errors.isTimedOut(e)) {
+          if (Errors.is_timedOut(e)) {
             // Emit `wantInput` in response to a timeout. If we're idling, this
             // will end up retrying the `getChangeAfter()`. In any other state,
             // it will (correctly) get ignored.

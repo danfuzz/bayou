@@ -220,7 +220,7 @@ export default class BaseControl extends BaseDataManager {
     try {
       await fc.transact(spec);
     } catch (e) {
-      if (FileStoreErrors.isPathNotAbsent(e) || FileStoreErrors.isPathHashMismatch(e)) {
+      if (FileStoreErrors.is_pathNotAbsent(e) || FileStoreErrors.is_pathHashMismatch(e)) {
         // One of these will get thrown if and when we lose an append race. This
         // regularly occurs when there are simultaneous editors.
         this.log.info('Lost append race for revision:', revNum);
@@ -701,7 +701,7 @@ export default class BaseControl extends BaseDataManager {
       } catch (e) {
         // For a timeout, we log and report the original timeout value. For
         // everything else, we just transparently re-throw.
-        if (Errors.isTimedOut(e)) {
+        if (Errors.is_timedOut(e)) {
           timedOut();
         }
         throw e;

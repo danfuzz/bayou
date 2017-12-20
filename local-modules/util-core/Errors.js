@@ -12,8 +12,10 @@ import UtilityClass from './UtilityClass';
  * Utility class for constructing commonly-used errors, which are applicable to
  * a wide variety of code.
  *
- * **Note:** The names of the methods match the error functor names, and because
- * the convention for those is `lowercase_underscore`, that is what's used.
+ * In addition, this class defines some convenient predicates for checking to
+ * see if a given value is a particular sort of error. In general, if an error
+ * is created with the method `someName()`, then the corresponding predicate
+ * will be `is_someName()`.
  */
 export default class Errors extends UtilityClass {
   /**
@@ -175,7 +177,7 @@ export default class Errors extends UtilityClass {
    * @param {Error} error Error in question.
    * @returns {boolean} `true` iff it represents a timeout.
    */
-  static isTimedOut(error) {
+  static is_timedOut(error) {
     return InfoError.hasName(error, 'timed_out');
   }
 

@@ -123,7 +123,7 @@ export default class TitleClient extends CommonBase {
             } catch (e) {
               // A timeout will just elicit a retry. Everything else is a
               // throw-worthy problem.
-              if (Errors.isTimedOut(e)) {
+              if (Errors.is_timedOut(e)) {
                 return {}; // ...so that neither `if` clause below will activate.
               }
               throw e;
