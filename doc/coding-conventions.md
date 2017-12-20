@@ -225,8 +225,8 @@ taking into account recent additions to the language.
 
 * Prefer `lowerCamelCase` for constant values, except if there is an external
   dependency that requires otherwise. Notably, Quill event names (like many
-  Javascript event names) use `lower-kebab-case`; and many external services
-  use `lower_snake_case`.
+  Javascript event names) and CSS selectors use `lower-kebab-case`; and many
+  external services use `lower_snake_case`.
 
 #### Other items
 
