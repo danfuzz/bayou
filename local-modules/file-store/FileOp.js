@@ -444,6 +444,30 @@ export default class FileOp extends CommonBase {
   }
 
   /**
+   * Validates a category string. Throws an error given an invalid category.
+   *
+   * @param {*} category The (alleged) category string.
+   * @returns {string} `category` but only if valid.
+   */
+  static checkCategory(category) {
+    switch (category) {
+      case CAT_delete:
+      case CAT_environment:
+      case CAT_list:
+      case CAT_prerequisite:
+      case CAT_read:
+      case CAT_revision:
+      case CAT_wait:
+      case CAT_write: {
+        return category;
+      }
+      default: {
+        throw Errors.badValue(category, 'category string');
+      }
+    }
+  }
+
+  /**
    * Gets the properties associated with a given operation, by name. Properties
    * are as follows:
    *
@@ -497,30 +521,6 @@ export default class FileOp extends CommonBase {
     }
 
     return result;
-  }
-
-  /**
-   * Validates a category string. Throws an error given an invalid category.
-   *
-   * @param {*} category The (alleged) category string.
-   * @returns {string} `category` but only if valid.
-   */
-  static validateCategory(category) {
-    switch (category) {
-      case CAT_delete:
-      case CAT_environment:
-      case CAT_list:
-      case CAT_prerequisite:
-      case CAT_read:
-      case CAT_revision:
-      case CAT_wait:
-      case CAT_write: {
-        return category;
-      }
-      default: {
-        throw Errors.badValue(category, 'category string');
-      }
-    }
   }
 
   /**

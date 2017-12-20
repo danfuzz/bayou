@@ -142,7 +142,7 @@ export default class TransactionSpec extends CommonBase {
    * @returns {array<FileOp>} Array of all such operations.
    */
   opsWithCategory(category) {
-    FileOp.validateCategory(category);
+    FileOp.checkCategory(category);
     return this._ops.filter(op => (op.category === category));
   }
 

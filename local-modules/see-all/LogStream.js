@@ -28,7 +28,7 @@ export default class LogStream extends CommonBase {
     this._logger = BaseLogger.check(logger);
 
     /** {string} Severity level. */
-    this._level = LogRecord.validateLevel(level);
+    this._level = LogRecord.checkLevel(level);
   }
 
   /**
