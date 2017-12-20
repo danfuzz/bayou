@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TArray, TFunction, TString } from 'typecheck';
-import { CommonBase, Errors } from 'util-common';
+import { CommonBase, Errors, ObjectUtil } from 'util-common';
 
 /**
  * Handler for codable items of a particular class, type, or (in general) kind.
@@ -29,39 +29,55 @@ import { CommonBase, Errors } from 'util-common';
  *   from `encode()` is a payload which is suitable for passing into `decode()`
  *   on the same (or equivalent) item codec.
  *
- * In most cases, the encoded payload returned by `encode()` and taken by
- * `decode()` is an array. This is the classic "reconstruction arguments" style
- * of object coding, and is what is done by instances produced by the
- * `fromClass()` static method. However, this system also supports two other
- * possibilities:
+ * In most cases, the encoded payload returned by the provided `encode()`
+ * function and taken by the provided `decode()` function is an array of
+ * arbitrary values. This is the classic "reconstruction arguments" style of
+ * object coding, and is what is done by instances produced by the `fromClass()`
+ * static method. In such cases, the public {@link #encode} and {@link #decode}
+ * methods exported by this class use a plain object with a single string key
+ * binding, which binds the instance's tag string to the arguments array.
  *
- * * The encoded form is allowed to be a plain JavaScript object, that is, a
- *   simple mapping of string keys to arbitrary values.
+ * This system also supports the possibility of encoding into and decoding from
+ * something other than "reconstruction arguments" form. (This is indicated by
+ * the instance using a type-based tag instead of a regular tag string.) In
+ * practice, this is used to encode simple values (e.g. numbers and literal
+ * strings) and arrays.
  *
- * * The encoded form is allowed to be a non-object value, such as a number or
- *   string.
- *
- * In these cases, the codec instance needs to be tagged with the type of the
- * value and not a class-name-like string. For the purposes of this class, the
- * value `null` is considered a distinct type from non-null object values and
- * has the type name `'null'`.
+ * **Note:** For the purposes of this class, `null`, arrays, plain objects, and
+ * class instances are all considered distinct types.
  */
 export default class ItemCodec extends CommonBase {
   /**
    * Gets the tag string (either explicit or implicit) of the given payload.
-   * This returns `null` if the payload can't possibly be valid; this is the
-   * case for empty arrays and arrays whose first element is not a string.
+   * This returns `null` if the payload can't possibly be valid.
    *
    * @param {*} payload The payload in question.
    * @returns {string|null} The tag of the payload, or `null` if it is not a
    *   valid payload.
    */
   static tagFromPayload(payload) {
-    if (Array.isArray(payload)) {
-      const tag = payload[0];
-      return ((typeof tag) === 'string') ? tag : null;
+    const type = ItemCodec.typeOf(payload);
+
+    if (type === 'object') {
+      if (!ObjectUtil.isPlain(payload)) {
+        return null;
+      }
+
+      const entries = Object.entries(payload);
+
+      if (entries.length !== 1) {
+        return null;
+      }
+
+      const [key, value] = entries[0];
+
+      if ((typeof key === 'string') && Array.isArray(value)) {
+        return key;
+      } else {
+        return null;
+      }
     } else {
-      return ItemCodec.tagFromType(ItemCodec.typeOf(payload));
+      return ItemCodec.tagFromType(type);
     }
   }
 
@@ -89,15 +105,30 @@ export default class ItemCodec extends CommonBase {
   }
 
   /**
-   * Like `typeof value`, except that `null` is treated as its own type, instead
-   * of being called an `object`.
+   * Like `typeof value`, except:
+   *
+   * * `null` is given the type `null`, instead of `object`.
+   * * Arrays are given the type `array`, instead of `object`.
+   * * Other non-plain objects (aside from functions) are given the type
+   *   `instance`.
    *
    * @param {*} value Value in question.
-   * @returns {string} Name of value's type, with the type of `null` being
-   *   `'null'`.
+   * @returns {string} Name of value's type.
    */
   static typeOf(value) {
-    return (value === null) ? 'null' : (typeof value);
+    const rawType = typeof value;
+
+    if (rawType !== 'object') {
+      return rawType;
+    } else if (value === null) {
+      return 'null';
+    } else if (Array.isArray(value)) {
+      return 'array';
+    } else if (Object.getPrototypeOf(value) === Object.prototype) {
+      return 'object';
+    } else {
+      return 'instance';
+    }
   }
 
   /**
@@ -168,7 +199,7 @@ export default class ItemCodec extends CommonBase {
       : null;
 
     /** {string} Name of the type which identifies qualified values. */
-    this._type = (this._clazz !== null) ? 'object' : TString.check(clazzOrType);
+    this._type = (this._clazz !== null) ? 'instance' : TString.check(clazzOrType);
 
     /**
      * {function|null} Additional predicate that must be `true` of values for
@@ -276,9 +307,9 @@ export default class ItemCodec extends CommonBase {
       throw Errors.bad_value(payload, 'encoded payload');
     }
 
-    if (Array.isArray(payload)) {
-      // Strip off the tag before passing to `decode()`.
-      payload = payload.slice(1);
+    if (ObjectUtil.isPlain(payload)) {
+      // Extract the array of reconstruction arguments to pass to `_decode()`.
+      payload = Object.values(payload)[0];
     }
 
     const result = this._decode(payload, subDecode);
@@ -307,10 +338,10 @@ export default class ItemCodec extends CommonBase {
     }
 
     const encodedType = this._encodedType;
-    const result      = this._encode(value, subEncode);
+    let   result      = this._encode(value, subEncode);
 
     // Validate the result, and in the case of normal "construction arguments"
-    // arrays, add the tag as the first element of the payload.
+    // arrays, wrap it in a single-key plain object, using the tag as the key.
     if (encodedType === null) {
       try {
         TArray.check(result);
@@ -319,7 +350,7 @@ export default class ItemCodec extends CommonBase {
         throw Errors.bad_use('Invalid encoding result (not an array).');
       }
 
-      result.unshift(this._tag);
+      result = { [this._tag]: Object.freeze(result) };
     } else if (ItemCodec.typeOf(result) !== encodedType) {
       throw Errors.bad_use('Invalid encoding result: ' +
         `got type ${ItemCodec.typeOf(result)}; expected type ${encodedType}`);

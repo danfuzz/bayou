@@ -13,7 +13,7 @@ import ItemCodec from './ItemCodec';
 export default class SpecialCodecs extends UtilityClass {
   /** {ItemCodec} Codec used for coding arrays. */
   static get ARRAY() {
-    return new ItemCodec('a', Array, this._arrayPredicate,
+    return new ItemCodec(ItemCodec.tagFromType('array'), 'array', this._arrayPredicate,
       this._arrayEncode, this._arrayDecode);
   }
 
@@ -108,7 +108,7 @@ export default class SpecialCodecs extends UtilityClass {
 
   /** {ItemCodec} Codec used for coding plain objects. */
   static get PLAIN_OBJECT() {
-    return new ItemCodec(ItemCodec.tagFromType('object'), 'object',
+    return new ItemCodec('object', 'object',
       ObjectUtil.isPlain, this._objectEncode, this._objectDecode);
   }
 
@@ -124,7 +124,7 @@ export default class SpecialCodecs extends UtilityClass {
   static _objectDecode(payload, subDecode) {
     // Iterate over all the properties in `payload`, decoding the bound values.
     const result = {};
-    for (const [k, v] of Object.entries(payload)) {
+    for (const [k, v] of payload) {
       result[k] = subDecode(v);
     }
 
@@ -140,13 +140,12 @@ export default class SpecialCodecs extends UtilityClass {
    * @returns {object} Encoded form.
    */
   static _objectEncode(value, subEncode) {
-    // Iterate over all the properties in `value`, encoding the bound values.
-    const result = {};
-    for (const [k, v] of Object.entries(value)) {
-      result[k] = subEncode(v);
-    }
+    // Sort the keys to avoid nondeterminism.
+    const keys = Object.keys(value).sort();
 
-    return result;
+    return keys.map((key) => {
+      return Object.freeze([key, subEncode(value[key])]);
+    });
   }
 
   /**

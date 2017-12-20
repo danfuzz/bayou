@@ -25,18 +25,6 @@ class RegistryTestClass {
   }
 }
 
-class NoCodecTag {
-  deconstruct() {
-    return 'NoCodecTag!';
-  }
-}
-
-class NoToCodecArgs {
-  constructor() {
-    this.CODEC_TAG = 'NoToCodecArgs';
-  }
-}
-
 describe('api-common/Registry', () => {
   describe('register()', () => {
     it('should accept a class with all salient properties', () => {
@@ -45,13 +33,25 @@ describe('api-common/Registry', () => {
     });
 
     it('should allow classes without `CODEC_TAG`', () => {
+      class NoCodecTag {
+        deconstruct() {
+          return 'NoCodecTag!';
+        }
+      }
+
       const reg = new Registry();
       assert.doesNotThrow(() => reg.registerClass(NoCodecTag));
     });
 
     it('should reject a class without `deconstruct()`', () => {
+      class NoDeconstruct {
+        get CODEC_TAG() {
+          return 'NoDeconstruct';
+        }
+      }
+
       const reg = new Registry();
-      assert.throws(() => reg.registerClass(NoToCodecArgs));
+      assert.throws(() => reg.registerClass(NoDeconstruct));
     });
 
     it('should reject non-classes', () => {
@@ -69,7 +69,7 @@ describe('api-common/Registry', () => {
   describe('codecForPayload()', () => {
     it('should throw an error if an unregistered tag is requested', () => {
       const reg = new Registry();
-      assert.throws(() => reg.codecForPayload(['florp']));
+      assert.throws(() => reg.codecForPayload({ florp: [1, 2, 3] }));
 
       // Throws because `Symbol` wasn't a registered type.
       assert.throws(() => reg.codecForPayload(Symbol('foo')));
@@ -81,7 +81,7 @@ describe('api-common/Registry', () => {
 
       reg.registerCodec(itemCodec);
 
-      const testCodec = reg.codecForPayload(['florp']);
+      const testCodec = reg.codecForPayload({ florp: [1, 2, 3] });
       assert.strictEqual(testCodec, itemCodec);
     });
 

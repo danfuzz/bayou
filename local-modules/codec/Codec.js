@@ -41,23 +41,23 @@ export default class Codec extends Singleton {
    * Specifically:
    *
    * * Non-object / non-function values are passed through as-is.
-   * * `null` is passed through as-is.
-   * * Direct instances of `Object` (`x` such that `Object.getPrototypeOf(x) ===
-   *   Object.prototype`) are allowed, with their values processed recursively
-   *   using (the equivalent of) this method.
-   * * Arrays whose first element is not a string (including empty arrays) are
-   *   rejected.
-   * * Other arrays are processed recursively using (the equivalent of) this
-   *   method, without the first element. The first element is taken to be a
-   *   string tag and is used to look up an item codec that was registered
-   *   under that tag. Its `decode()` method is called, passing the converted
-   *   array as arguments. The result of that call becomes the result of
-   *   conversion. **Note:** Decoding to an array result per se is a special
-   *   case of this, using the item codec `SpecialCodecs.ARRAY`.
-   * * All other objects (including functions) are rejected.
    *
-   * In addition, if the result is an object (including an array), it is
-   * guaranteed to be recursively frozen.
+   * * `null` is passed through as-is.
+   *
+   * * Direct instances of `Array` are allowed, with their values processed
+   *   recursively using (the equivalent of) this method.
+   *
+   * * Plain instances of `Object` (`x` such that `Object.getPrototypeOf(x) ===
+   *   Object.prototype`) are only allowed if they have a single string key
+   *   binding, mapping to a plain array. Such objects are processed by using
+   *   their sole key as a string tag which is used to look up an item codec
+   *   that was registered under that tag. The codec's `decode()` method is
+   *   called, passing the converted array as arguments. The result of that call
+   *   becomes the result of conversion.
+   *
+   * * All other values (including functions) are rejected.
+   *
+   * Plain object and array results are guaranteed to be frozen.
    *
    * @param {*} payload Payload to decode.
    * @returns {*} The decoded value.
@@ -95,8 +95,6 @@ export default class Codec extends Singleton {
    * JSON-encoding and/or transfer over an API boundary. In some cases, it
    * rejects values. Specifically:
    *
-   * * Functions are rejected.
-   *
    * * Symbols are rejected.
    *
    * * `undefined` is rejected.
@@ -105,28 +103,25 @@ export default class Codec extends Singleton {
    *
    * * `null` is passed through as-is.
    *
-   * * Direct instances of `Object` (`x` such that `Object.getPrototypeOf(x) ===
-   *   Object.prototype`) are allowed, with their values processed recursively
-   *   using (the equivalent of) this method.
+   * * Plain arrays (direct instances of `Array`, with no holes and only
+   *   non-negative integer keys) are allowed. They are converted by processing
+   *   their elements recursively using (the equivalent of) this method.
    *
-   * * Arrays with holes (unset value of `x[n]` for `n < x.length`) are
-   *   rejected.
-   *
-   * * Arrays with non-numeric properties are rejected.
-   *
-   * * Other arrays are allowed, with their values processed recursively using
-   *   (the equivalent of) this method. The encoded form is also an array but
-   *   with an additional first element of the value `SpecialCodec.ARRAY.tag`.
+   * * Plain objects (direct instances of `Object` (`x` such that
+   *   `Object.getPrototypeOf(x) === Object.prototype`) are allowed. They are
+   *   converted into a single-key form, similar to class instances (per
+   *   immediately below).
    *
    * * Objects that are instances of classes (that is, have constructor
    *   functions) are allowed, as long as they at least bind a method
    *   `deconstruct()`. In addition, if they have a static `CODEC_TAG` property
    *   then that is used as the tag (class name) in encoded form. The encoded
-   *   form is an array with the first element being the value tag (typically
-   *   the class name) and the rest of the elements whatever was returned by
-   *  `deconstruct()`.
+   *   form is a single-key plain object. The key is the value tag (typically
+   *   the class name), and it binds to whatever was returned by
+   *   `deconstruct()` (which is always an array) further processed by calling
+   *   (the equivalent of) this method recursively.
    *
-   * * All other objects are rejected.
+   * * All other values are rejected.
    *
    * In addition, if the result is an object (including an array), it is
    * guaranteed to be recursively frozen.
