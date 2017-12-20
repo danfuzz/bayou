@@ -5,6 +5,8 @@
 import { Clock, ImageEmbed } from 'ui-embeds';
 import { UtilityClass } from 'util-core';
 
+import QuillEvents from './QuillEvents';
+
 /**
  * This class handles the processing of text macros within sources
  * editor environment. Macros are pieces of text delimited by
@@ -38,10 +40,10 @@ export default class Macros extends UtilityClass {
       const index = keyRange.index - matchLength;
 
       // Delete the opening marker
-      quill.deleteText(index, 1, 'user');
+      quill.deleteText(index, 1, QuillEvents.SOURCE_user);
 
       // Delete the macro name
-      quill.deleteText(index, text.length, 'user');
+      quill.deleteText(index, text.length, QuillEvents.SOURCE_user);
 
       // Pick the right component
       const args = text.split(':');

@@ -5,6 +5,8 @@
 import { Logger } from 'see-all';
 import { UtilityClass } from 'util-core';
 
+import QuillEvents from './QuillEvents';
+
 const log = new Logger('not-md');
 
 export default class NotReallyMarkdown extends UtilityClass {
@@ -54,14 +56,14 @@ export default class NotReallyMarkdown extends UtilityClass {
       const index = keyRange.index - matchLength;
 
       //  Delete the opening marker
-      this.quill.deleteText(index, 1, 'user');
+      this.quill.deleteText(index, 1, QuillEvents.SOURCE_user);
 
       //  Add the format to the text between the markers
-      this.quill.formatText(index, text.length, { [format]: true }, 'user');
+      this.quill.formatText(index, text.length, { [format]: true }, QuillEvents.SOURCE_user);
 
       //  Turn format formatting off at the cursor so that it doesn't get
       //  extended if the user keeps typing at that location.
-      this.quill.format(format, false, 'user');
+      this.quill.format(format, false, QuillEvents.SOURCE_user);
 
       //  Don't allow the trigger character into the document.
       return false;

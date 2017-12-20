@@ -771,7 +771,7 @@ export default class BodyClient extends StateMachine {
     // `EMPTY` for the old contents, because this code doesn't care about that
     // value at all
     const nextNow = this._currentEvent.withNewPayload(
-      new Functor(QuillEvents.EVENT_textChange, dNewMore, BodyDelta.EMPTY, 'user'));
+      new Functor(QuillEvents.EVENT_textChange, dNewMore, BodyDelta.EMPTY, QuillEvents.SOURCE_user));
 
     // Make a new head of the change chain which points at the `nextNow` we
     // just constructed above. We don't include any payload since this class
