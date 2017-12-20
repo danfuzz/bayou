@@ -797,7 +797,7 @@ export default class BaseControl extends BaseDataManager {
       transactionResult = await fc.transact(spec);
     } catch (e) {
       this.log.error('Major problem trying to read file!', e);
-      return ValidationStatus.STATUS_ERROR;
+      return ValidationStatus.STATUS_error;
     }
 
     const data     = transactionResult.data;
@@ -808,7 +808,7 @@ export default class BaseControl extends BaseDataManager {
       RevisionNumber.check(revNum);
     } catch (e) {
       this.log.info('Corrupt document: Bogus or missing revision number.');
-      return ValidationStatus.STATUS_ERROR;
+      return ValidationStatus.STATUS_error;
     }
 
     if (snapshot) {
@@ -816,12 +816,12 @@ export default class BaseControl extends BaseDataManager {
         clazz.snapshotClass.check(snapshot);
       } catch (e) {
         this.log.info('Corrupt document: Bogus stored snapshot (wrong class).');
-        return ValidationStatus.STATUS_ERROR;
+        return ValidationStatus.STATUS_error;
       }
 
       if (revNum < snapshot.revNum) {
         this.log.info('Corrupt document: Bogus stored snapshot (weird revision number).');
-        return ValidationStatus.STATUS_ERROR;
+        return ValidationStatus.STATUS_error;
       }
     }
 
@@ -845,7 +845,7 @@ export default class BaseControl extends BaseDataManager {
         await this._getChangeRange(i, lastI + 1, true);
       } catch (e) {
         this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
-        return ValidationStatus.STATUS_ERROR;
+        return ValidationStatus.STATUS_error;
       }
     }
 
@@ -857,7 +857,7 @@ export default class BaseControl extends BaseDataManager {
         await this._getChangeRange(i, lastI + 1, false);
       } catch (e) {
         this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
-        return ValidationStatus.STATUS_ERROR;
+        return ValidationStatus.STATUS_error;
       }
     }
 
@@ -870,17 +870,17 @@ export default class BaseControl extends BaseDataManager {
       extraChanges = await this.listChangeRange(revNum + 1, revNum + 10000);
     } catch (e) {
       this.log.info('Corrupt document: Trouble listing changes.');
-      return ValidationStatus.STATUS_ERROR;
+      return ValidationStatus.STATUS_error;
     }
 
     if (extraChanges.length !== 0) {
       this.log.info(`Corrupt document: Detected extra changes (at least ${extraChanges.length}).`);
-      return ValidationStatus.STATUS_ERROR;
+      return ValidationStatus.STATUS_error;
     }
 
     // All's well!
 
-    return ValidationStatus.STATUS_OK;
+    return ValidationStatus.STATUS_ok;
   }
 
   /**

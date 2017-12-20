@@ -15,8 +15,8 @@ export default class ValidationStatus extends UtilityClass {
    * {string} Validation status value, which indicates an unrecoverable error in
    * interpreting the document (or document portion) data.
    */
-  static get STATUS_ERROR() {
-    return 'status_error';
+  static get STATUS_error() {
+    return 'error';
   }
 
   /**
@@ -24,32 +24,32 @@ export default class ValidationStatus extends UtilityClass {
    * document portion) is in a format that isn't directly understood, presumably
    * an older format that needs forward migration.
    */
-  static get STATUS_MIGRATE() {
-    return 'status_migrate';
+  static get STATUS_migrate() {
+    return 'migrate';
   }
 
   /**
    * {string} Validation status value, which indicates that the file does not
    * exist.
    */
-  static get STATUS_NOT_FOUND() {
-    return 'status_not_found';
+  static get STATUS_notFound() {
+    return 'notFound';
   }
 
   /**
    * {string} Validation status value, which indicates that the document (or
    * document portion) checks out as valid.
    */
-  static get STATUS_OK() {
-    return 'status_ok';
+  static get STATUS_ok() {
+    return 'ok';
   }
 
   /**
    * {string} Validation status value, which indicates that the document (or
    * document portion) has some errors but _might_ be recoverable.
    */
-  static get STATUS_RECOVER() {
-    return 'status_recover';
+  static get STATUS_recover() {
+    return 'recover';
   }
 
   /**
@@ -61,11 +61,11 @@ export default class ValidationStatus extends UtilityClass {
    */
   static check(value) {
     switch (value) {
-      case ValidationStatus.STATUS_ERROR:
-      case ValidationStatus.STATUS_MIGRATE:
-      case ValidationStatus.STATUS_NOT_FOUND:
-      case ValidationStatus.STATUS_OK:
-      case ValidationStatus.STATUS_RECOVER: {
+      case ValidationStatus.STATUS_error:
+      case ValidationStatus.STATUS_migrate:
+      case ValidationStatus.STATUS_notFound:
+      case ValidationStatus.STATUS_ok:
+      case ValidationStatus.STATUS_recover: {
         return value;
       }
     }

@@ -66,7 +66,7 @@ export default class SchemaHandler extends BaseDataManager {
       transactionResult = await fc.transact(spec);
     } catch (e) {
       this.log.error('Major problem trying to read file!', e);
-      return ValidationStatus.STATUS_ERROR;
+      return ValidationStatus.STATUS_error;
     }
 
     const data          = transactionResult.data;
@@ -74,16 +74,16 @@ export default class SchemaHandler extends BaseDataManager {
 
     if (!schemaVersion) {
       this.log.info('Corrupt document: Missing schema version.');
-      return ValidationStatus.STATUS_ERROR;
+      return ValidationStatus.STATUS_error;
     }
 
     const expectSchemaVersion = this._schemaVersion;
     if (schemaVersion !== expectSchemaVersion) {
       const got = schemaVersion;
       this.log.info(`Mismatched schema version: got ${got}; expected ${expectSchemaVersion}`);
-      return ValidationStatus.STATUS_MIGRATE;
+      return ValidationStatus.STATUS_migrate;
     }
 
-    return ValidationStatus.STATUS_OK;
+    return ValidationStatus.STATUS_ok;
   }
 }
