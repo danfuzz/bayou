@@ -29,21 +29,22 @@ import { CommonBase, Errors, ObjectUtil } from 'util-common';
  *   from `encode()` is a payload which is suitable for passing into `decode()`
  *   on the same (or equivalent) item codec.
  *
- * In most cases, the encoded payload returned by `encode()` and taken by
- * `decode()` is a plain object with a single string key binding an array. This
- * is the classic "reconstruction arguments" style of object coding, and is what
- * is done by instances produced by the `fromClass()` static method. However,
- * this system also supports two other possibilities:
+ * In most cases, the encoded payload returned by the provided `encode()`
+ * function and taken by the provided `decode()` function is an array of
+ * arbitrary values. This is the classic "reconstruction arguments" style of
+ * object coding, and is what is done by instances produced by the `fromClass()`
+ * static method. In such cases, the public {@link #encode} and {@link #decode}
+ * methods exported by this class use a plain object with a single string key
+ * binding, which binds the instance's tag string to the arguments array.
  *
- * * The encoded form is allowed to be a plain JavaScript array.
+ * This system also supports the possibility of encoding into and decoding from
+ * something other than "reconstruction arguments" form. (This is indicated by
+ * the instance using a type-based tag instead of a regular tag string.) In
+ * practice, this is used to encode simple values (e.g. numbers and literal
+ * strings) and arrays.
  *
- * * The encoded form is allowed to be a non-object value, such as a number or
- *   string.
- *
- * In these cases, the codec instance needs to be tagged with the type of the
- * value and not a class-name-like string. For the purposes of this class, the
- * value `null` is considered a distinct type from non-null object values and
- * has the type name `'null'`; and arrays have type `array`.
+ * **Note:** For the purposes of this class, `null`, arrays, plain objects, and
+ * class instances are all considered distinct types.
  */
 export default class ItemCodec extends CommonBase {
   /**
