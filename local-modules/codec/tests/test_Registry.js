@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { ItemCodec } from 'codec';
+import { ConstructorCall, ItemCodec } from 'codec';
 
 // The class being tested here isn't exported from the module, so we import it
 // by path.
@@ -69,19 +69,24 @@ describe('api-common/Registry', () => {
   describe('codecForPayload()', () => {
     it('should throw an error if an unregistered tag is requested', () => {
       const reg = new Registry();
+
+      // Throws because `Boop` isn't a registered class.
+      assert.throws(() => reg.codecForPayload(new ConstructorCall('Boop', 1, 2, 3)));
+
+      // Throws because `object` (plain object) wasn't a registered type.
       assert.throws(() => reg.codecForPayload({ florp: [1, 2, 3] }));
 
-      // Throws because `Symbol` wasn't a registered type.
+      // Throws because `symbol` wasn't a registered type.
       assert.throws(() => reg.codecForPayload(Symbol('foo')));
     });
 
     it('should return the named codec if it is registered', () => {
       const reg       = new Registry();
-      const itemCodec = new ItemCodec('florp', Boolean, null, () => 0, () => 0);
+      const itemCodec = new ItemCodec('Boop', Boolean, null, () => 0, () => 0);
 
       reg.registerCodec(itemCodec);
 
-      const testCodec = reg.codecForPayload({ florp: [1, 2, 3] });
+      const testCodec = reg.codecForPayload(ConstructorCall.from('Boop', 1, 2, 3));
       assert.strictEqual(testCodec, itemCodec);
     });
 

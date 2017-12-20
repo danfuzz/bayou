@@ -45,6 +45,21 @@ export default class ConstructorCall extends CommonBase {
   }
 
   /**
+   * Constructs an instance from individual name and arguments elements, instead
+   * of from a full {@link Functor}. This is just convenient wrapper which calls
+   * `new ConstructorCall(new Functor(...args))`.
+   *
+   * @param {...*} args Arguments to pass to the {@link Functor} constructor
+   *  (which expects a string name followed by zero or more arbitrary
+   *  additional arguments).
+   * @returns {ConstructorCall} An appropriately-constructed instance of this
+   *   class.
+   */
+  static from(...args) {
+    return new ConstructorCall(new Functor(...args));
+  }
+
+  /**
    * Constructs an instance.
    *
    * @param {Functor} payload Construction payload. It is a functor whose name
