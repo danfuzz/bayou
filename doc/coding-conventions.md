@@ -42,8 +42,8 @@ taking into account recent additions to the language.
   in annotations as if they were real types. The names are always capitalized.
 
 * When documenting functions marked `async`, the implicit promise returned by
-  the function should _not_ be represented in its prose or `@returns`
-  documentation. For example:
+  the function should _not_ typically be represented in its prose or `@returns`
+  documentation:
 
   ```javascript
   /**
@@ -69,6 +69,10 @@ taking into account recent additions to the language.
     return 'frobnicator';
   }
   ```
+
+  As an exception, if the asynchronous behavior warrants specific detail, it
+  is okay to describe that behavior (but still leave the `@returns` doc
+  unmarked).
 
 #### Module imports and exports
 
