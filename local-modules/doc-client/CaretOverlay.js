@@ -143,11 +143,11 @@ export default class CaretOverlay {
 
     for (;;) {
       // Wait for a text change.
-      currentEvent = await currentEvent.nextOf(QuillEvents.EVENT_textChange);
+      currentEvent = await currentEvent.nextOf(QuillEvents.TYPE_textChange);
 
       // Skip any additional text changes that have already been posted, so that
       // we won't just be slowly iterating over all changes.
-      currentEvent = currentEvent.latestOfNow(QuillEvents.EVENT_textChange);
+      currentEvent = currentEvent.latestOfNow(QuillEvents.TYPE_textChange);
 
       log.detail('Got local edit event.');
       this._updateDisplay();

@@ -112,7 +112,7 @@ export default class TitleClient extends CommonBase {
         // result object that lets us trivially distinguish which one happened.
         const got = await Promise.race([
           (async () => {
-            const event = await currentEvent.nextOf(QuillEvents.EVENT_selectionChange);
+            const event = await currentEvent.nextOf(QuillEvents.TYPE_selectionChange);
             return { event };
           })(),
           (async () => {
@@ -141,7 +141,7 @@ export default class TitleClient extends CommonBase {
       } else {
         // The title field has focus. Wait for it to lose focus, then grab the
         // contents and push it as an update.
-        const event     = await currentEvent.nextOf(QuillEvents.EVENT_selectionChange);
+        const event     = await currentEvent.nextOf(QuillEvents.TYPE_selectionChange);
         const { range } = QuillEvents.propsOf(event);
         if (range === null) {
           await this._pushUpdate();

@@ -27,7 +27,7 @@ export default class QuillEvents extends UtilityClass {
    */
   static get EMPTY_TEXT_CHANGE_PAYLOAD() {
     return new Functor(
-      QuillEvents.EVENT_textChange, BodyDelta.EMPTY, BodyDelta.EMPTY, QuillEvents.SOURCE_api);
+      QuillEvents.TYPE_textChange, BodyDelta.EMPTY, BodyDelta.EMPTY, QuillEvents.SOURCE_api);
   }
 
   /**
@@ -35,7 +35,7 @@ export default class QuillEvents extends UtilityClass {
    * value of this variable is dictated by Quill and so violates the default
    * local conventions.
    */
-  static get EVENT_editorChange() {
+  static get TYPE_editorChange() {
     return 'editor-change';
   }
 
@@ -44,7 +44,7 @@ export default class QuillEvents extends UtilityClass {
    * value of this variable is dictated by Quill and so violates the default
    * local conventions.
    */
-  static get EVENT_selectionChange() {
+  static get TYPE_selectionChange() {
     return 'selection-change';
   }
 
@@ -53,7 +53,7 @@ export default class QuillEvents extends UtilityClass {
    * of this variable is dictated by Quill and so violates the default local
    * conventions.
    */
-  static get EVENT_textChange() {
+  static get TYPE_textChange() {
     return 'text-change';
   }
 
@@ -87,7 +87,7 @@ export default class QuillEvents extends UtilityClass {
     const name = payload.name;
 
     switch (name) {
-      case QuillEvents.EVENT_textChange: {
+      case QuillEvents.TYPE_textChange: {
         const [delta, oldContents, source] = payload.args;
         return new Functor(name,
           BodyDelta.fromQuillForm(delta),
@@ -95,7 +95,7 @@ export default class QuillEvents extends UtilityClass {
           TString.check(source));
       }
 
-      case QuillEvents.EVENT_selectionChange: {
+      case QuillEvents.TYPE_selectionChange: {
         const [range, oldRange, source] = payload.args;
         return new Functor(name,
           QuillEvents._checkAndFreezeRange(range),
@@ -125,12 +125,12 @@ export default class QuillEvents extends UtilityClass {
     const name = payload.name;
 
     switch (name) {
-      case QuillEvents.EVENT_textChange: {
+      case QuillEvents.TYPE_textChange: {
         const [delta, oldContents, source] = payload.args;
         return { name, delta, oldContents, source };
       }
 
-      case QuillEvents.EVENT_selectionChange: {
+      case QuillEvents.TYPE_selectionChange: {
         const [range, oldRange, source] = payload.args;
         return { name, range, oldRange, source };
       }
