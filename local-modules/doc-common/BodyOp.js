@@ -16,7 +16,7 @@ import { DataUtil, Errors, ObjectUtil } from 'util-common';
  */
 export default class BodyOp extends BaseOp {
   /** {string} Opcode constant for "delete" operations. */
-  static get DELETE() {
+  static get CODE_delete() {
     return 'delete';
   }
 
@@ -24,17 +24,17 @@ export default class BodyOp extends BaseOp {
    * {string} Opcode constant for "embed" (insert / append embedded object)
    * operations.
    */
-  static get EMBED() {
+  static get CODE_embed() {
     return 'embed';
   }
 
   /** {string} Opcode constant for "retain" operations. */
-  static get RETAIN() {
+  static get CODE_retain() {
     return 'retain';
   }
 
   /** {string} Opcode constant for "text" (insert / append text) operations. */
-  static get TEXT() {
+  static get CODE_text() {
     return 'text';
   }
 
@@ -101,7 +101,7 @@ export default class BodyOp extends BaseOp {
   static op_delete(count) {
     TInt.min(count, 1);
 
-    return new BodyOp(BodyOp.DELETE, count);
+    return new BodyOp(BodyOp.CODE_delete, count);
   }
 
   /**
@@ -121,7 +121,7 @@ export default class BodyOp extends BaseOp {
 
     const attribArg = BodyOp._attributesArg(attributes);
 
-    return new BodyOp(BodyOp.EMBED, type, value, ...attribArg);
+    return new BodyOp(BodyOp.CODE_embed, type, value, ...attribArg);
   }
 
   /**
@@ -138,7 +138,7 @@ export default class BodyOp extends BaseOp {
     TInt.min(count, 1);
     const attribArg = BodyOp._attributesArg(attributes);
 
-    return new BodyOp(BodyOp.RETAIN, count, ...attribArg);
+    return new BodyOp(BodyOp.CODE_retain, count, ...attribArg);
   }
 
   /**
@@ -153,7 +153,7 @@ export default class BodyOp extends BaseOp {
     TString.nonEmpty(text);
     const attribArg = BodyOp._attributesArg(attributes);
 
-    return new BodyOp(BodyOp.TEXT, text, ...attribArg);
+    return new BodyOp(BodyOp.CODE_text, text, ...attribArg);
   }
 
   /**
@@ -167,22 +167,22 @@ export default class BodyOp extends BaseOp {
     const opName  = payload.name;
 
     switch (opName) {
-      case BodyOp.DELETE: {
+      case BodyOp.CODE_delete: {
         const [count] = payload.args;
         return Object.freeze({ opName, count });
       }
 
-      case BodyOp.EMBED: {
+      case BodyOp.CODE_embed: {
         const [type, value, attributes = null] = payload.args;
         return Object.freeze({ opName, type, value, attributes });
       }
 
-      case BodyOp.RETAIN: {
+      case BodyOp.CODE_retain: {
         const [count, attributes = null] = payload.args;
         return Object.freeze({ opName, count, attributes });
       }
 
-      case BodyOp.TEXT: {
+      case BodyOp.CODE_text: {
         const [text, attributes = null] = payload.args;
         return Object.freeze({ opName, text, attributes });
       }
@@ -202,7 +202,7 @@ export default class BodyOp extends BaseOp {
    */
   isInsert() {
     const opName = this._payload.name;
-    return (opName === BodyOp.TEXT) || (opName === BodyOp.EMBED);
+    return (opName === BodyOp.CODE_text) || (opName === BodyOp.CODE_embed);
   }
 
   /**
@@ -216,11 +216,11 @@ export default class BodyOp extends BaseOp {
     const props = this.props;
 
     switch (props.opName) {
-      case BodyOp.DELETE: {
+      case BodyOp.CODE_delete: {
         return { delete: props.count };
       }
 
-      case BodyOp.EMBED: {
+      case BodyOp.CODE_embed: {
         const { type, value, attributes } = props;
         const insert = { [type]: value };
 
@@ -229,7 +229,7 @@ export default class BodyOp extends BaseOp {
           : { insert };
       }
 
-      case BodyOp.RETAIN: {
+      case BodyOp.CODE_retain: {
         const { count: retain, attributes } = props;
 
         return attributes
@@ -237,7 +237,7 @@ export default class BodyOp extends BaseOp {
           : { retain };
       }
 
-      case BodyOp.TEXT: {
+      case BodyOp.CODE_text: {
         const { text: insert, attributes } = props;
 
         return attributes
