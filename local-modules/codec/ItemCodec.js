@@ -3,7 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TArray, TFunction, TString } from 'typecheck';
-import { CommonBase, Errors, ObjectUtil } from 'util-common';
+import { CommonBase, Errors, Functor } from 'util-common';
+
+import ConstructorCall from './ConstructorCall';
 
 /**
  * Handler for codable items of a particular class, type, or (in general) kind.
@@ -34,17 +36,18 @@ import { CommonBase, Errors, ObjectUtil } from 'util-common';
  * arbitrary values. This is the classic "reconstruction arguments" style of
  * object coding, and is what is done by instances produced by the `fromClass()`
  * static method. In such cases, the public {@link #encode} and {@link #decode}
- * methods exported by this class use a plain object with a single string key
- * binding, which binds the instance's tag string to the arguments array.
+ * methods exported by this class take or return an instance of
+ * {@link ConstructorCall} representing both the item's tag string and the
+ * encoded value's argument array.
  *
  * This system also supports the possibility of encoding into and decoding from
  * something other than "reconstruction arguments" form. (This is indicated by
  * the instance using a type-based tag instead of a regular tag string.) In
- * practice, this is used to encode simple values (e.g. numbers and literal
+ * practice, this is used to encode simple values (e.g., numbers and literal
  * strings) and arrays.
  *
  * **Note:** For the purposes of this class, `null`, arrays, plain objects, and
- * class instances are all considered distinct types.
+ * class instances are all considered values with distinct types.
  */
 export default class ItemCodec extends CommonBase {
   /**
@@ -58,26 +61,24 @@ export default class ItemCodec extends CommonBase {
   static tagFromPayload(payload) {
     const type = ItemCodec.typeOf(payload);
 
-    if (type === 'object') {
-      if (!ObjectUtil.isPlain(payload)) {
+    switch (type) {
+      case 'object': {
+        // Plain objects aren't allowed as encoded payloads at this layer.
+        // (In JSON form, constructor instances are plain objects, but by the
+        // time we get here, those will be instances of `ConstructorCall`,
+        // handled immediately below.)
         return null;
       }
 
-      const entries = Object.entries(payload);
-
-      if (entries.length !== 1) {
-        return null;
+      case 'instance': {
+        return (payload instanceof ConstructorCall)
+          ? payload.payload.name
+          : null;
       }
 
-      const [key, value] = entries[0];
-
-      if ((typeof key === 'string') && Array.isArray(value)) {
-        return key;
-      } else {
-        return null;
+      default: {
+        return ItemCodec.tagFromType(type);
       }
-    } else {
-      return ItemCodec.tagFromType(type);
     }
   }
 
@@ -295,7 +296,7 @@ export default class ItemCodec extends CommonBase {
    * Decodes the given arguments into a value which is equivalent to one that
    * was previously encoded into those arguments using this instance.
    *
-   * @param {*} payload Arguments which resulted from an earlier call to
+   * @param {*} payload Payload which resulted from an earlier call to
    *   `encode()` on this instance, or the equivalent thereto.
    * @param {function} subDecode Function to call to decode component values
    *   inside `payload`, as needed.
@@ -307,9 +308,9 @@ export default class ItemCodec extends CommonBase {
       throw Errors.badValue(payload, 'encoded payload');
     }
 
-    if (ObjectUtil.isPlain(payload)) {
+    if (payload instanceof ConstructorCall) {
       // Extract the array of reconstruction arguments to pass to `_decode()`.
-      payload = Object.values(payload)[0];
+      payload = payload.payload.args;
     }
 
     const result = this._decode(payload, subDecode);
@@ -329,8 +330,8 @@ export default class ItemCodec extends CommonBase {
    *   which `canEncode()` would have returned `true`.
    * @param {function} subEncode Function to call to encode component values
    *   inside `value`, as needed.
-   * @returns {array<*>} Array of arguments suitable for passing to `decode()`
-   *   on this instance.
+   * @returns {*} Encoded payload, suitable for passing to `decode()` on this
+   *   instance.
    */
   encode(value, subEncode) {
     if (!this.canEncode(value)) {
@@ -350,7 +351,7 @@ export default class ItemCodec extends CommonBase {
         throw Errors.badUse('Invalid encoding result (not an array).');
       }
 
-      result = { [this._tag]: Object.freeze(result) };
+      result = new ConstructorCall(new Functor(this._tag, ...result));
     } else if (ItemCodec.typeOf(result) !== encodedType) {
       throw Errors.badUse('Invalid encoding result: ' +
         `got type ${ItemCodec.typeOf(result)}; expected type ${encodedType}`);
