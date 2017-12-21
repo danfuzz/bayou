@@ -33,7 +33,7 @@ export default class TheModule extends UtilityClass {
       this._modelCodec = this.makeModelCodec();
     }
 
-    return this._ModelCodec;
+    return this._modelCodec;
   }
 
   /**
