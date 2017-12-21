@@ -4,7 +4,7 @@
 
 import { ApiClient } from 'api-client';
 import { BaseKey } from 'api-common';
-import { Codec } from 'codec';
+import { TheModule as AppCommon_TheModule } from 'app-common';
 import { Logger } from 'see-all';
 import { CommonBase } from 'util-common';
 
@@ -82,7 +82,7 @@ export default class DocSession extends CommonBase {
   get apiClient() {
     if (this._apiClient === null) {
       log.detail('Opening API client...');
-      this._apiClient = new ApiClient(this._key.url, Codec.theOne);
+      this._apiClient = new ApiClient(this._key.url, AppCommon_TheModule.fullCodec);
 
       (async () => {
         await this._apiClient.open();

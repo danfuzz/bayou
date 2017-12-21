@@ -13,6 +13,30 @@ import { UtilityClass } from 'util-common';
  */
 export default class TheModule extends UtilityClass {
   /**
+   * {Codec} Standard {@link Codec} instance, constructed by
+   * {@link #makeFullCodec}.
+   */
+  static get fullCodec() {
+    if (!this._fullCodec) {
+      this._fullCodec = this.makeFullCodec();
+    }
+
+    return this._fullCodec;
+  }
+
+  /**
+   * {Codec} Standard {@link Codec} instance, constructed by
+   * {@link #makeModelCodec}.
+   */
+  static get modelCodec() {
+    if (!this._modelCodec) {
+      this._modelCodec = this.makeModelCodec();
+    }
+
+    return this._ModelCodec;
+  }
+
+  /**
    * Constructs a {@link Codec} which is configured for representation of all
    * application model values as well as API transport objects.
    *
