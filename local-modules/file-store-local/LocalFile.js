@@ -44,6 +44,12 @@ const REVISION_NUMBER_ID =
 const MAX_PARALLEL_FS_CALLS = 20;
 
 /**
+ * {Codec} Codec to use specifically _just_ to encode and decode the file
+ * revision number. (Coding for file content is handled by the superclass.)
+ */
+const revNumCodec = new Codec();
+
+/**
  * File implementation that stores everything in the locally-accessible
  * filesystem.
  */
@@ -116,12 +122,6 @@ export default class LocalFile extends BaseFile {
      * comes along, it gets set to `false`.
      */
     this._changeCondition = new Condition(true);
-
-    /**
-     * {Codec} Codec to use specifically _just_ to encode and decode the file
-     * revision number. (Coding for file content is handled by the superclass.)
-     */
-    this._revNumCodec = Codec.theOne;
 
     /** {Logger} Logger specific to this file's ID. */
     this._log = log.withAddedContext(fileId);
@@ -429,7 +429,7 @@ export default class LocalFile extends BaseFile {
     // things reasonably gracefully if it's missing or corrupt.
     try {
       const revNumBuffer = storage.get(REVISION_NUMBER_ID);
-      revNum = this._revNumCodec.decodeJsonBuffer(revNumBuffer);
+      revNum = revNumCodec.decodeJsonBuffer(revNumBuffer);
       this._log.info('Starting revision number:', revNum);
     } catch (e) {
       // In case of failure, use the size of the storage map as a good enough
@@ -550,8 +550,7 @@ export default class LocalFile extends BaseFile {
 
     // Put the file revision number in the `dirtyValues` map. This way, it gets
     // written out without further special casing.
-    dirtyValues.set(REVISION_NUMBER_ID,
-      this._revNumCodec.encodeJsonBuffer(revNum));
+    dirtyValues.set(REVISION_NUMBER_ID, revNumCodec.encodeJsonBuffer(revNum));
 
     this._log.info(`About to write ${dirtyValues.size} value(s).`);
 
