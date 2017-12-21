@@ -10,11 +10,8 @@ import MockDelta from './MockDelta';
 import MockOp from './MockOp';
 import MockSnapshot from './MockSnapshot';
 
-// Register classes for encoding / decoding.
-Codec.theOne.registerClass(MockChange);
-Codec.theOne.registerClass(MockDelta);
-Codec.theOne.registerClass(MockOp);
-Codec.theOne.registerClass(MockSnapshot);
+// Register with the (senescent) singleton Codec. **TODO:** Remove this.
+TheModule.registerCodecs(Codec.theOne.registry);
 
 export {
   TheModule,
