@@ -2,10 +2,17 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { FrozenBuffer, Singleton } from 'util-common';
+import { CommonBase, FrozenBuffer } from 'util-common';
 
 import ConstructorCall from './ConstructorCall';
 import Registry from './Registry';
+
+
+/**
+ * {Codec|null} "Singleton" instance of this class. This is just temporary
+ * scaffolding while the class gets de-singletonized. **TODO:** Remove this.
+ */
+let theOne = null;
 
 /**
  * Encoder and decoder of values for transport over an API or for storage on
@@ -16,24 +23,38 @@ import Registry from './Registry';
  * to have different sets of classes (or different name bindings even if the
  * classes overlap).
  */
-export default class Codec extends Singleton {
+export default class Codec extends CommonBase {
+  /** {Codec} "Singleton" instance. */
+  static get theOne() {
+    if (theOne === null) {
+      theOne = new Codec();
+    }
+
+    return theOne;
+  }
+
   /**
    * Constructs an instance.
+   *
+   * @param {Registry} [registry = null] Registry to use. If `null`, the
+   *   instance will use a newly-constructed {@link Registry} instance.
    */
-  constructor() {
+  constructor(registry = null) {
     super();
 
-    /**
-     * {Registry} The registry instance to use. **Note:** If and when this class
-     * stops being a singleton, this will get set from a constructor argument.
-     */
-    this._reg = new Registry();
+    /** {Registry} The registry to use. */
+    this._reg = (registry === null) ? new Registry() : Registry.check(registry);
 
     /** {function} Handy pre-bound version of `decodeData()`. */
     this._decodeData = this.decodeData.bind(this);
 
     /** {function} Handy pre-bound version of `encodeData()`. */
     this._encodeData = this.encodeData.bind(this);
+  }
+
+  /** {Registry} The codec registry used by this instance. */
+  get registry() {
+    return this._reg;
   }
 
   /**
