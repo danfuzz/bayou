@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { BaseComplexMember } from 'doc-server';
 
-import { Codec } from 'codec';
+import { TheModule as appCommon_TheModule } from 'app-common';
 import { FileAccess } from 'doc-server';
 import { MockFile } from 'file-store/mocks';
 import { MockLogger } from 'see-all/mocks';
@@ -15,7 +15,7 @@ import { MockLogger } from 'see-all/mocks';
 describe('doc-server/BaseComplexMember', () => {
   describe('constructor()', () => {
     it('should accept a `FileAccess` and reflect it in the getters', () => {
-      const codec  = Codec.theOne;
+      const codec  = appCommon_TheModule.modelCodec;
       const file   = new MockFile('blort');
       const fa     = new FileAccess(codec, file);
       const result = new BaseComplexMember(fa, 'boop');
@@ -35,8 +35,9 @@ describe('doc-server/BaseComplexMember', () => {
     });
 
     it('should use the `logLabel` to create an appropriate `log`', () => {
+      const codec  = appCommon_TheModule.modelCodec;
       const log    = new MockLogger();
-      const fa     = new FileAccess(Codec.theOne, new MockFile('file-id'), log);
+      const fa     = new FileAccess(codec, new MockFile('file-id'), log);
       const result = new BaseComplexMember(fa, 'boop');
 
       result.log.info('florp', 'like');
