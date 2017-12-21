@@ -4,7 +4,7 @@
 
 import weak from 'weak';
 
-import { TheModule as AppCommon_TheModule } from 'app-common';
+import { TheModule as appCommon_TheModule } from 'app-common';
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
 import { TFunction, TString } from 'typecheck';
@@ -33,7 +33,7 @@ export default class DocServer extends Singleton {
     super();
 
     /** {Codec} Codec instance to use. */
-    this._codec = AppCommon_TheModule.fullCodec;
+    this._codec = appCommon_TheModule.fullCodec;
 
     /**
      * {Map<string, Weak<FileComplex>|Promise<FileComplex>>} Map from document

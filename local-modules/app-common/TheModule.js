@@ -2,10 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TheModule as ApiCommon_TheModule } from 'api-common';
+import { TheModule as apiCommon_TheModule } from 'api-common';
 import { Codec, Registry } from 'codec';
-import { TheModule as DocCommon_TheModule } from 'doc-common';
-import { TheModule as OtCommon_TheModule } from 'ot-common';
+import { TheModule as docCommon_TheModule } from 'doc-common';
+import { TheModule as otCommon_TheModule } from 'ot-common';
 import { UtilityClass } from 'util-common';
 
 /**
@@ -45,9 +45,9 @@ export default class TheModule extends UtilityClass {
   static makeFullCodec() {
     const registry = new Registry();
 
-    ApiCommon_TheModule.registerCodecs(registry);
-    DocCommon_TheModule.registerCodecs(registry);
-    OtCommon_TheModule.registerCodecs(registry);
+    apiCommon_TheModule.registerCodecs(registry);
+    docCommon_TheModule.registerCodecs(registry);
+    otCommon_TheModule.registerCodecs(registry);
 
     return new Codec(registry);
   }
@@ -61,8 +61,8 @@ export default class TheModule extends UtilityClass {
   static makeModelCodec() {
     const registry = new Registry();
 
-    DocCommon_TheModule.registerCodecs(registry);
-    OtCommon_TheModule.registerCodecs(registry);
+    docCommon_TheModule.registerCodecs(registry);
+    otCommon_TheModule.registerCodecs(registry);
 
     return new Codec(registry);
   }

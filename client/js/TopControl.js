@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { SplitKey } from 'api-common';
-import { TheModule as AppCommon_TheModule } from 'app-common';
+import { TheModule as appCommon_TheModule } from 'app-common';
 import { EditorComplex } from 'doc-client';
 import { Logger } from 'see-all';
 import { TFunction, TObject } from 'typecheck';
@@ -142,7 +142,7 @@ export default class TopControl {
    * @returns {SplitKey} The parsed and fixed key.
    */
   _parseAndFixKey(keyJson) {
-    const key = SplitKey.check(AppCommon_TheModule.fullCodec.decodeJson(keyJson));
+    const key = SplitKey.check(appCommon_TheModule.fullCodec.decodeJson(keyJson));
 
     if (key.url === '*') {
       const url = new URL(this._window.document.URL);
