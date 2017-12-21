@@ -4,6 +4,7 @@
 
 import { Codec } from 'codec';
 
+import TheModule from './TheModule';
 import BodyChange from './BodyChange';
 import BodyDelta from './BodyDelta';
 import BodyOp from './BodyOp';
@@ -13,7 +14,6 @@ import CaretChange from './CaretChange';
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';
 import CaretSnapshot from './CaretSnapshot';
-import DocCommon from './DocCommon';
 import DocumentId from './DocumentId';
 import Property from './Property';
 import PropertyChange from './PropertyChange';
@@ -23,9 +23,10 @@ import PropertySnapshot from './PropertySnapshot';
 import Timeouts from './Timeouts';
 
 // Register with the (senescent) singleton Codec. **TODO:** Remove this.
-DocCommon.registerCodecs(Codec.theOne.registry);
+TheModule.registerCodecs(Codec.theOne.registry);
 
 export {
+  TheModule,
   BodyChange,
   BodyDelta,
   BodyOp,
@@ -35,7 +36,6 @@ export {
   CaretDelta,
   CaretOp,
   CaretSnapshot,
-  DocCommon,
   DocumentId,
   Property,
   PropertyChange,

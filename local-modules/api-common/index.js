@@ -4,7 +4,7 @@
 
 import { Codec } from 'codec';
 
-import ApiCommon from './ApiCommon';
+import TheModule from './TheModule';
 import BaseKey from './BaseKey';
 import CodableError from './CodableError';
 import ConnectionError from './ConnectionError';
@@ -14,6 +14,15 @@ import SplitKey from './SplitKey';
 import TargetId from './TargetId';
 
 // Register with the (senescent) singleton Codec. **TODO:** Remove this.
-ApiCommon.registerCodecs(Codec.theOne.registry);
+TheModule.registerCodecs(Codec.theOne.registry);
 
-export { ApiCommon, BaseKey, CodableError, ConnectionError, Message, Response, SplitKey, TargetId };
+export {
+  TheModule,
+  BaseKey,
+  CodableError,
+  ConnectionError,
+  Message,
+  Response,
+  SplitKey,
+  TargetId
+};

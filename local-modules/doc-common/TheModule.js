@@ -23,7 +23,7 @@ import PropertySnapshot from './PropertySnapshot';
 /**
  * Utilities for this module.
  */
-export default class DocCommon extends UtilityClass {
+export default class TheModule extends UtilityClass {
   /**
    * Registers this module's encodable classes with a given codec registry.
    *

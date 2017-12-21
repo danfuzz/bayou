@@ -13,7 +13,7 @@ import SplitKey from './SplitKey';
 /**
  * Utilities for this module.
  */
-export default class ApiCommon extends UtilityClass {
+export default class TheModule extends UtilityClass {
   /**
    * Registers this module's encodable classes with a given codec registry.
    *

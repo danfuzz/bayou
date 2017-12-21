@@ -53,6 +53,17 @@ Internal to a module, the convention is a little more nuanced:
 * If a file defines a collection of data, then it is exported (as with the main
   module) as a set of explicit names and _no_ default.
 
+As a slightly special case, if a module wants to export a set of utility
+functionality, it should do so by defining a utility class named `TheModule`
+per se, and exported as that name.
+
+#### Standard `index` form
+
+The standard form of a module's main `index.js` file is to import all the
+local files to be exported, followed by a single `export { ... }` statement.
+Modules should be listed in sort order, except that `TheModule` is always
+listed first, when present.
+
 ### Exceptions to the conventions
 
 Because nobody and no scheme is perfect, there are no doubt exceptions to the
