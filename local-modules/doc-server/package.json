@@ -5,6 +5,7 @@
   "dependencies": {
     "weak": "^1.0.1",
 
+    "app-common": "local",
     "codec": "local",
     "doc-common": "local",
     "env-server": "local",
