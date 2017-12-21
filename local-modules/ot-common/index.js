@@ -4,6 +4,7 @@
 
 import { Codec } from 'codec';
 
+import TheModule from './TheModule';
 import AuthorId from './AuthorId';
 import BaseChange from './BaseChange';
 import BaseDelta from './BaseDelta';
@@ -12,10 +13,11 @@ import BaseSnapshot from './BaseSnapshot';
 import Timestamp from './Timestamp';
 import RevisionNumber from './RevisionNumber';
 
-// Register classes for encoding / decoding.
-Codec.theOne.registerClass(Timestamp);
+// Register with the (senescent) singleton Codec. **TODO:** Remove this.
+TheModule.registerCodecs(Codec.theOne.registry);
 
 export {
+  TheModule,
   AuthorId,
   BaseChange,
   BaseDelta,

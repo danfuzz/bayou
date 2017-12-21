@@ -4,6 +4,7 @@
 
 import { Codec } from 'codec';
 
+import TheModule from './TheModule';
 import MockChange from './MockChange';
 import MockDelta from './MockDelta';
 import MockOp from './MockOp';
@@ -16,6 +17,7 @@ Codec.theOne.registerClass(MockOp);
 Codec.theOne.registerClass(MockSnapshot);
 
 export {
+  TheModule,
   MockChange,
   MockDelta,
   MockOp,
