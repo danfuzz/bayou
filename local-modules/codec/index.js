@@ -5,5 +5,6 @@
 import Codec from './Codec';
 import ConstructorCall from './ConstructorCall';
 import ItemCodec from './ItemCodec';
+import Registry from './Registry';
 
-export { Codec, ConstructorCall, ItemCodec };
+export { Codec, ConstructorCall, ItemCodec, Registry };

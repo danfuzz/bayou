@@ -1,0 +1,12 @@
+{
+  "name": "app-common",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "api-common": "local",
+    "codec": "local",
+    "doc-common": "local",
+    "ot-common": "local",
+    "util-common": "local"
+  }
+}

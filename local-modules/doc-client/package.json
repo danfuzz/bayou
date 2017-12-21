@@ -5,6 +5,7 @@
   "dependencies": {
     "api-client": "local",
     "api-common": "local",
+    "app-common": "local",
     "data-model-client": "local",
     "deps-react": "local",
     "doc-client": "local",

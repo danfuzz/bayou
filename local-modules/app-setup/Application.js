@@ -10,8 +10,8 @@ import path from 'path';
 import { promisify } from 'util';
 
 import { ApiLog, BearerToken, Context, PostConnection, WsConnection } from 'api-server';
+import { TheModule as appCommon_TheModule } from 'app-common';
 import { ClientBundle } from 'client-bundle';
-import { Codec } from 'codec';
 import { Dirs } from 'env-server';
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
@@ -35,7 +35,7 @@ export default class Application {
    *   activates `/debug/*` endpoints.
    */
   constructor(devMode) {
-    const codec = Codec.theOne;
+    const codec = appCommon_TheModule.fullCodec;
 
     /**
      * {Context} All of the objects we provide access to via the API, along with

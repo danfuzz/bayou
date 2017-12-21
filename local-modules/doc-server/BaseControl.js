@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Timeouts } from 'doc-common';
-import { Errors as FileStoreErrors, StoragePath, TransactionSpec } from 'file-store';
+import { Errors as fileStore_Errors, StoragePath, TransactionSpec } from 'file-store';
 import { BaseSnapshot, RevisionNumber } from 'ot-common';
 import { Delay } from 'promise-util';
 import { TBoolean, TFunction } from 'typecheck';
@@ -220,7 +220,7 @@ export default class BaseControl extends BaseDataManager {
     try {
       await fc.transact(spec);
     } catch (e) {
-      if (FileStoreErrors.is_pathNotAbsent(e) || FileStoreErrors.is_pathHashMismatch(e)) {
+      if (fileStore_Errors.is_pathNotAbsent(e) || fileStore_Errors.is_pathHashMismatch(e)) {
         // One of these will get thrown if and when we lose an append race. This
         // regularly occurs when there are simultaneous editors.
         this.log.info('Lost append race for revision:', revNum);

@@ -101,6 +101,18 @@ taking into account recent additions to the language.
   import SpecialBlort from './SpecialBlort';
   ```
 
+* `import ... as` &mdash; If you have a name conflict that needs to be resolved,
+  always construct the replacement name as `<ModuleName>_<OriginalName>`, where
+  the module name is the `module-name` converted to `camelCase`. Among other
+  things, this preserves the ability to search for `<OriginalName>.whatever`
+  (and similar searches) which might otherwise be broken (and lead to incomplete
+  search-replace and therefore lead to bugs).
+
+  ```javascript
+  import { Foo as excellentModule_Foo } from 'excellent-module';
+  import { Foo as supremeModule_Foo } from 'supreme-module';
+  ```
+
 #### Class definitions
 
 * Private fields and methods &mdash; This project is coded as if JavaScript

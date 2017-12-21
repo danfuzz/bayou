@@ -10,6 +10,7 @@
 
     "api-common": "local",
     "api-server": "local",
+    "app-common": "local",
     "client-bundle": "local",
     "codec": "local",
     "deps-ansi-color": "local",

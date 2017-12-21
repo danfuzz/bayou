@@ -3,30 +3,22 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { assert } from 'chai';
-import { before, describe, it } from 'mocha';
+import { describe, it } from 'mocha';
 
 import { Codec } from 'codec';
 import { MockCodable } from 'codec/mocks';
 import { FrozenBuffer } from 'util-common';
 
-
 describe('api-common/Codec.decode*()', () => {
   // Convenient bindings for `decode*()` and `encodeData()` to avoid a lot of
   // boilerplate.
-  const codec            = Codec.theOne;
+  const codec            = new Codec();
   const decodeData       = (value) => { return codec.decodeData(value);       };
   const decodeJson       = (value) => { return codec.decodeJson(value);       };
   const decodeJsonBuffer = (value) => { return codec.decodeJsonBuffer(value); };
   const encodeData       = (value) => { return codec.encodeData(value);       };
 
-  before(() => {
-    try {
-      Codec.theOne.registerClass(MockCodable);
-    } catch (e) {
-      // nothing to do here, the try/catch is just in case some other test
-      // file has already registered the mock class.
-    }
-  });
+  codec.registry.registerClass(MockCodable);
 
   describe('decodeData()', () => {
     it('should pass non-object values through as-is', () => {

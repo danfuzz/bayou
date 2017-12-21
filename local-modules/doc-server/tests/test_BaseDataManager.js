@@ -5,13 +5,13 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Codec } from 'codec';
+import { TheModule as appCommon_TheModule } from 'app-common';
 import { BaseDataManager, FileAccess, ValidationStatus } from 'doc-server';
 import { TransactionSpec } from 'file-store';
 import { MockFile } from 'file-store/mocks';
 
 /** {FileAccess} Convenient instance of `FileAccess`. */
-const FILE_ACCESS = new FileAccess(Codec.theOne, new MockFile('blort'));
+const FILE_ACCESS = new FileAccess(appCommon_TheModule.modelCodec, new MockFile('blort'));
 
 describe('doc-server/BaseDataManager', () => {
   describe('.initSpec', () => {

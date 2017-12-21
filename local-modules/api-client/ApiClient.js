@@ -28,12 +28,18 @@ export default class ApiClient extends CommonBase {
    * replayed in order once the socket becomes ready.
    *
    * @param {string} url The server origin, as an `http` or `https` URL.
+   * @param {Codec} codec Codec instance to use. In order to function properly,
+   *   its registry must include all of the encodable `api-common` classes. See
+   *   {@link api-common.TheModule.registerCodecs}.
    */
-  constructor(url) {
+  constructor(url, codec) {
     super();
 
     /** {string} Base URL for the server. */
     this._baseUrl = ApiClient._getBaseUrl(url);
+
+    /** {Codec} Codec instance to use. */
+    this._codec = Codec.check(codec);
 
     /**
      * {string|null} Connection ID conveyed to us by the server. Reset in
@@ -309,7 +315,7 @@ export default class ApiClient extends CommonBase {
   _handleMessage(event) {
     this._log.detail('Received raw data:', event.data);
 
-    const response = Codec.theOne.decodeJson(event.data);
+    const response = this._codec.decodeJson(event.data);
 
     if (!(response instanceof Response)) {
       throw ConnectionError.connection_nonsense(this._connectionId, 'Got strange response.');
@@ -430,7 +436,7 @@ export default class ApiClient extends CommonBase {
     this._nextId++;
 
     const msg     = new Message(id, target, payload);
-    const msgJson = Codec.theOne.encodeJson(msg);
+    const msgJson = this._codec.encodeJson(msg);
 
     switch (wsState) {
       case WebSocket.CONNECTING: {

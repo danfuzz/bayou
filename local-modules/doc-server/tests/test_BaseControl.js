@@ -5,22 +5,27 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Codec } from 'codec';
+import { TheModule as appCommon_TheModule } from 'app-common';
 import { Timeouts } from 'doc-common';
 import { MockChange, MockDelta, MockOp, MockSnapshot } from 'ot-common/mocks';
 import { DurableControl, FileAccess } from 'doc-server';
 import { MockControl } from 'doc-server/mocks';
-import { Errors as FileErrors, TransactionSpec } from 'file-store';
+import { Errors as fileStore_Errors, TransactionSpec } from 'file-store';
 import { MockFile } from 'file-store/mocks';
 import { Timestamp } from 'ot-common';
+import { TheModule as mocks_TheModule } from 'ot-common/mocks';
 import { Errors, FrozenBuffer } from 'util-common';
 
 // **Note:** Even though these tests are written in terms of `DurableControl`
 // and a subclass thereof, they are limited to testing behavior which is common
 // to all control classes. This is why it is labeled as being for `BaseControl`.
 describe('doc-server/BaseControl', () => {
+  /** {Codec} Convenient instance of `Codec`. */
+  const CODEC = appCommon_TheModule.makeModelCodec();
+  mocks_TheModule.registerCodecs(CODEC.registry);
+
   /** {FileAccess} Convenient instance of `FileAccess`. */
-  const FILE_ACCESS = new FileAccess(Codec.theOne, new MockFile('blort'));
+  const FILE_ACCESS = new FileAccess(CODEC, new MockFile('blort'));
 
   describe('.changeClass', () => {
     it('should reflect the subclass\'s implementation', () => {
@@ -171,7 +176,7 @@ describe('doc-server/BaseControl', () => {
   describe('appendChange()', () => {
     it('should perform an appropriate transaction given a valid change', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(Codec.theOne, file);
+      const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
       const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
 
@@ -207,7 +212,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should provide a default for `null` and clamp an out-of-range (but otherwise valid) timeout', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(Codec.theOne, file);
+      const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
       const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
 
@@ -244,7 +249,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should call the snapshot maybe-writer and return `true` if the transaction succeeds', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(Codec.theOne, file);
+      const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
       const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
 
@@ -263,7 +268,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should return `false` if the transaction fails due to a precondition failure', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(Codec.theOne, file);
+      const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
       const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
 
@@ -279,13 +284,13 @@ describe('doc-server/BaseControl', () => {
         await assert.eventually.strictEqual(control.appendChange(change), false);
       }
 
-      await test(FileErrors.pathHashMismatch('/whatever', FrozenBuffer.coerce('x').hash));
-      await test(FileErrors.pathNotAbsent('/mock_control/change/99'));
+      await test(fileStore_Errors.pathHashMismatch('/whatever', FrozenBuffer.coerce('x').hash));
+      await test(fileStore_Errors.pathNotAbsent('/mock_control/change/99'));
     });
 
     it('should rethrow any transaction error other than a precondition failure', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(Codec.theOne, file);
+      const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
       const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
 
@@ -301,14 +306,14 @@ describe('doc-server/BaseControl', () => {
         await assert.isRejected(control.appendChange(change), error);
       }
 
-      await test(FileErrors.fileNotFound('x'));
+      await test(fileStore_Errors.fileNotFound('x'));
       await test(Errors.timedOut(123456));
       await test(Errors.badValue('foo', 'bar'));
     });
 
     it('should reject an empty change', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(Codec.theOne, file);
+      const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
       const change     = new MockChange(101, []);
 
@@ -317,7 +322,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should reject a change of the wrong type', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(Codec.theOne, file);
+      const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
 
       await assert.isRejected(control.appendChange('not_a_change'), /badValue/);
@@ -325,7 +330,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should reject an invalid timeout value', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(Codec.theOne, file);
+      const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
       const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
 
@@ -345,7 +350,7 @@ describe('doc-server/BaseControl', () => {
   describe('currentRevNum()', () => {
     it('should perform an appropriate transaction, and use the result', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(Codec.theOne, file);
+      const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
 
       let gotSpec = null;
@@ -371,7 +376,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should use the result of the transaction it performed', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(Codec.theOne, file);
+      const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
 
       file._impl_transact = (spec_unused) => {
@@ -380,7 +385,7 @@ describe('doc-server/BaseControl', () => {
           newRevNum: null,
           paths:     null,
           data: new Map(Object.entries({
-            '/mock_control/revision_number': Codec.theOne.encodeJsonBuffer(1234)
+            '/mock_control/revision_number': CODEC.encodeJsonBuffer(1234)
           }))
         };
       };
@@ -391,8 +396,7 @@ describe('doc-server/BaseControl', () => {
     it('should reject improper transaction results', async () => {
       async function test(value) {
         const file       = new MockFile('blort');
-        const codec      = Codec.theOne;
-        const fileAccess = new FileAccess(codec, file);
+        const fileAccess = new FileAccess(CODEC, file);
         const control    = new MockControl(fileAccess, 'boop');
 
         file._impl_transact = (spec_unused) => {
@@ -401,7 +405,7 @@ describe('doc-server/BaseControl', () => {
             newRevNum: null,
             paths:     null,
             data: new Map(Object.entries({
-              '/mock_control/revision_number': codec.encodeJsonBuffer(value)
+              '/mock_control/revision_number': CODEC.encodeJsonBuffer(value)
             }))
           };
         };
@@ -973,7 +977,7 @@ describe('doc-server/BaseControl', () => {
   describe('whenRevNum()', () => {
     it('should return promptly if the revision is already available', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(Codec.theOne, file);
+      const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
 
       file._impl_transact = (spec_unused) => {
@@ -991,7 +995,7 @@ describe('doc-server/BaseControl', () => {
 
     it('should issue transactions until the revision is written', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(Codec.theOne, file);
+      const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
 
       let revNum = 11;

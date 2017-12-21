@@ -2,8 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Codec } from 'codec';
-
+import TheModule from './TheModule';
 import BodyChange from './BodyChange';
 import BodyDelta from './BodyDelta';
 import BodyOp from './BodyOp';
@@ -21,23 +20,8 @@ import PropertyOp from './PropertyOp';
 import PropertySnapshot from './PropertySnapshot';
 import Timeouts from './Timeouts';
 
-// Register classes for encoding / decoding.
-Codec.theOne.registerClass(BodyChange);
-Codec.theOne.registerClass(BodyDelta);
-Codec.theOne.registerClass(BodyOp);
-Codec.theOne.registerClass(BodySnapshot);
-Codec.theOne.registerClass(Caret);
-Codec.theOne.registerClass(CaretChange);
-Codec.theOne.registerClass(CaretDelta);
-Codec.theOne.registerClass(CaretOp);
-Codec.theOne.registerClass(CaretSnapshot);
-Codec.theOne.registerClass(Property);
-Codec.theOne.registerClass(PropertyChange);
-Codec.theOne.registerClass(PropertyDelta);
-Codec.theOne.registerClass(PropertyOp);
-Codec.theOne.registerClass(PropertySnapshot);
-
 export {
+  TheModule,
   BodyChange,
   BodyDelta,
   BodyOp,

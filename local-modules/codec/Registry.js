@@ -18,6 +18,9 @@ export default class Registry extends CommonBase {
   constructor() {
     super();
 
+    /** {boolean} Whether or not the registry is frozen. */
+    this._frozen = false;
+
     /**
      * {Map<string, ItemCodec>} Map of registered item tags to their respective
      * item codecs.
@@ -48,6 +51,15 @@ export default class Registry extends CommonBase {
     this.registerCodec(SpecialCodecs.selfRepresentative('null'));
     this.registerCodec(SpecialCodecs.selfRepresentative('number'));
     this.registerCodec(SpecialCodecs.selfRepresentative('string'));
+
+    Object.seal(this);
+  }
+
+  /**
+   * Prevents further changes to this instance.
+   */
+  freeze() {
+    this._frozen = true;
   }
 
   /**
@@ -68,6 +80,10 @@ export default class Registry extends CommonBase {
    * @param {ItemCodec} codec The codec to register.
    */
   registerCodec(codec) {
+    if (this._frozen) {
+      throw Errors.bad_use('Frozen.');
+    }
+
     ItemCodec.check(codec);
 
     const tag   = codec.tag;

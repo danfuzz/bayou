@@ -4,7 +4,7 @@
 
 import weak from 'weak';
 
-import { Codec } from 'codec';
+import { TheModule as appCommon_TheModule } from 'app-common';
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
 import { TFunction, TString } from 'typecheck';
@@ -32,11 +32,8 @@ export default class DocServer extends Singleton {
   constructor() {
     super();
 
-    /**
-     * {Codec} Codec instance to use. **Note:** As of this writing, `Codec` is a
-     * singleton, but the intention is for it to stop being so.
-     */
-    this._codec = Codec.theOne;
+    /** {Codec} Codec instance to use. */
+    this._codec = appCommon_TheModule.fullCodec;
 
     /**
      * {Map<string, Weak<FileComplex>|Promise<FileComplex>>} Map from document

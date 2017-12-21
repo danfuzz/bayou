@@ -2,8 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Codec } from 'codec';
-
+import TheModule from './TheModule';
 import BaseKey from './BaseKey';
 import CodableError from './CodableError';
 import ConnectionError from './ConnectionError';
@@ -12,10 +11,13 @@ import Response from './Response';
 import SplitKey from './SplitKey';
 import TargetId from './TargetId';
 
-// Register classes for encoding / decoding.
-Codec.theOne.registerClass(CodableError);
-Codec.theOne.registerClass(Message);
-Codec.theOne.registerClass(Response);
-Codec.theOne.registerClass(SplitKey);
-
-export { BaseKey, CodableError, ConnectionError, Message, Response, SplitKey, TargetId };
+export {
+  TheModule,
+  BaseKey,
+  CodableError,
+  ConnectionError,
+  Message,
+  Response,
+  SplitKey,
+  TargetId
+};
