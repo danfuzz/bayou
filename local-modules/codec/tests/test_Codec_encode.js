@@ -11,10 +11,12 @@ import { FrozenBuffer } from 'util-common';
 
 describe('api-common/Codec.encode*()', () => {
   // Convenient bindings for `encode*()` to avoid a lot of boilerplate.
-  const codec            = Codec.theOne;
+  const codec            = new Codec();
   const encodeData       = (value) => { return codec.encodeData(value);       };
   const encodeJson       = (value) => { return codec.encodeJson(value);       };
   const encodeJsonBuffer = (value) => { return codec.encodeJsonBuffer(value); };
+
+  codec.registry.registerClass(MockCodable);
 
   describe('encodeData()', () => {
     it('should reject function values', () => {
