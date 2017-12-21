@@ -7,32 +7,11 @@ import { CommonBase, FrozenBuffer } from 'util-common';
 import ConstructorCall from './ConstructorCall';
 import Registry from './Registry';
 
-
-/**
- * {Codec|null} "Singleton" instance of this class. This is just temporary
- * scaffolding while the class gets de-singletonized. **TODO:** Remove this.
- */
-let theOne = null;
-
 /**
  * Encoder and decoder of values for transport over an API or for storage on
  * disk or in databases, with binding to a name-to-class registry.
- *
- * **TODO:** This class should probably _not_ be a singleton, in that there are
- * legitimately multiple different coding contexts which ultimately might want
- * to have different sets of classes (or different name bindings even if the
- * classes overlap).
  */
 export default class Codec extends CommonBase {
-  /** {Codec} "Singleton" instance. */
-  static get theOne() {
-    if (theOne === null) {
-      theOne = new Codec();
-    }
-
-    return theOne;
-  }
-
   /**
    * Constructs an instance.
    *
@@ -43,7 +22,9 @@ export default class Codec extends CommonBase {
     super();
 
     /** {Registry} The registry to use. */
-    this._reg = (registry === null) ? new Registry() : Registry.check(registry);
+    this._registry = (registry === null)
+      ? new Registry()
+      : Registry.check(registry);
 
     /** {function} Handy pre-bound version of `decodeData()`. */
     this._decodeData = this.decodeData.bind(this);
@@ -54,7 +35,7 @@ export default class Codec extends CommonBase {
 
   /** {Registry} The codec registry used by this instance. */
   get registry() {
-    return this._reg;
+    return this._registry;
   }
 
   /**
@@ -80,7 +61,7 @@ export default class Codec extends CommonBase {
    * @returns {*} The decoded value.
    */
   decodeData(payload) {
-    const itemCodec = this._reg.codecForPayload(payload);
+    const itemCodec = this._registry.codecForPayload(payload);
     return itemCodec.decode(payload, this._decodeData);
   }
 
@@ -148,7 +129,7 @@ export default class Codec extends CommonBase {
    * @returns {*} The encoded value payload.
    */
   encodeData(value) {
-    const itemCodec = this._reg.codecForValue(value);
+    const itemCodec = this._registry.codecForValue(value);
     return itemCodec.encode(value, this._encodeData);
   }
 
@@ -158,8 +139,8 @@ export default class Codec extends CommonBase {
    *
    * * Instances of {@link ConstructorCall} are encoded as a single-binding
    *   plain object, mapping the class tag string to the constructor arguments.
-   *   For example, the encoding of `new ConstructorCall(new Functor('x', 1,
-   *   2))` is `{ "x": [1, 2] }`.
+   *   For example, the encoding of `ConstructorCall.from('x', 1, 2))` is
+   *   `{ "x": [1, 2] }`.
    *
    * @param {*} value Value to convert.
    * @param {boolean} [pretty = false] Whether to "pretty-print" (indent and
@@ -179,25 +160,5 @@ export default class Codec extends CommonBase {
    */
   encodeJsonBuffer(value) {
     return FrozenBuffer.coerce(this.encodeJson(value));
-  }
-
-  /**
-   * Registers a class to be accepted for codec use. This is a pass-through to
-   * the method of the same name on the instance's `Registry`.
-   *
-   * @param {class} clazz The class to register.
-   */
-  registerClass(clazz) {
-    this._reg.registerClass(clazz);
-  }
-
-  /**
-   * Registers an item codec to be accepted for codec use. This is a
-   * pass-through to the method of the same name on the instance's `Registry`.
-   *
-   * @param {ItemCodec} codec The codec to register.
-   */
-  registerCodec(codec) {
-    this._reg.registerCodec(codec);
   }
 }

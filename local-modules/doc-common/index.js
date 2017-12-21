@@ -2,8 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Codec } from 'codec';
-
 import TheModule from './TheModule';
 import BodyChange from './BodyChange';
 import BodyDelta from './BodyDelta';
@@ -21,9 +19,6 @@ import PropertyDelta from './PropertyDelta';
 import PropertyOp from './PropertyOp';
 import PropertySnapshot from './PropertySnapshot';
 import Timeouts from './Timeouts';
-
-// Register with the (senescent) singleton Codec. **TODO:** Remove this.
-TheModule.registerCodecs(Codec.theOne.registry);
 
 export {
   TheModule,
