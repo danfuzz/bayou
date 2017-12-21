@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import Codec from './Codec';
+import ConstructorCall from './ConstructorCall';
 import ItemCodec from './ItemCodec';
 
-export { Codec, ItemCodec };
+export { Codec, ConstructorCall, ItemCodec };

@@ -4,6 +4,7 @@
 
 import { FrozenBuffer, Singleton } from 'util-common';
 
+import ConstructorCall from './ConstructorCall';
 import Registry from './Registry';
 
 /**
@@ -47,15 +48,10 @@ export default class Codec extends Singleton {
    * * Direct instances of `Array` are allowed, with their values processed
    *   recursively using (the equivalent of) this method.
    *
-   * * Plain instances of `Object` (`x` such that `Object.getPrototypeOf(x) ===
-   *   Object.prototype`) are only allowed if they have a single string key
-   *   binding, mapping to a plain array. Such objects are processed by using
-   *   their sole key as a string tag which is used to look up an item codec
-   *   that was registered under that tag. The codec's `decode()` method is
-   *   called, passing the converted array as arguments. The result of that call
-   *   becomes the result of conversion.
+   * * Instances of {@link ConstructorCall} are allowed.
    *
-   * * All other values (including functions) are rejected.
+   * * All other values (including functions and objects in general) are
+   *   rejected.
    *
    * Plain object and array results are guaranteed to be frozen.
    *
@@ -68,19 +64,23 @@ export default class Codec extends Singleton {
   }
 
   /**
-   * Converts JSON-encoded text to a usable value. See `decodeData()` for
-   * details.
+   * Converts JSON-encoded text to a usable value. See {@link #decodeData()} for
+   * details. Beyond what is specified there:
+   *
+   * * Plain objects which map a single string key to an array are decoded into
+   *   instances of {@link ConstructorCall}.
+   *
+   * * No other object forms are allowed.
    *
    * @param {string} json Text to convert.
    * @returns {*} The converted value.
    */
   decodeJson(json) {
-    return this.decodeData(JSON.parse(json));
+    return this.decodeData(JSON.parse(json, ConstructorCall.revive));
   }
 
   /**
-   * Converts JSON-encoded text in a `FrozenBuffer` to a usable value. See
-   * `decodeData()` for details.
+   * Converts JSON-encoded text in a `FrozenBuffer` to a usable value.
    *
    * @param {FrozenBuffer} encoded Value to decode.
    * @returns {*} Decoded value.
@@ -116,10 +116,7 @@ export default class Codec extends Singleton {
    *   functions) are allowed, as long as they at least bind a method
    *   `deconstruct()`. In addition, if they have a static `CODEC_TAG` property
    *   then that is used as the tag (class name) in encoded form. The encoded
-   *   form is a single-key plain object. The key is the value tag (typically
-   *   the class name), and it binds to whatever was returned by
-   *   `deconstruct()` (which is always an array) further processed by calling
-   *   (the equivalent of) this method recursively.
+   *   form is an instance of {@link ConstructorCall}.
    *
    * * All other values are rejected.
    *
@@ -135,8 +132,13 @@ export default class Codec extends Singleton {
   }
 
   /**
-   * Converts an arbitrary value to JSON-encoded text. See `encodeData()` for
-   * details.
+   * Converts an arbitrary value to JSON-encoded text. See {@link #encodeData()}
+   * for details. Beyond what is specified there:
+   *
+   * * Instances of {@link ConstructorCall} are encoded as a single-binding
+   *   plain object, mapping the class tag string to the constructor arguments.
+   *   For example, the encoding of `new ConstructorCall(new Functor('x', 1,
+   *   2))` is `{ "x": [1, 2] }`.
    *
    * @param {*} value Value to convert.
    * @param {boolean} [pretty = false] Whether to "pretty-print" (indent and
@@ -149,7 +151,7 @@ export default class Codec extends Singleton {
 
   /**
    * Converts an arbitrary value to JSON-encoded text, which is furthermore
-   * converted to a `FrozenBuffer`. See `encodeData()` for details.
+   * converted to a `FrozenBuffer`.
    *
    * @param {*} value Value to encode.
    * @returns {FrozenBuffer} Encoded and bufferized value.

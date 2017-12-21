@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Codec } from 'codec';
+import { Codec, ConstructorCall } from 'codec';
 import { MockCodable } from 'codec/mocks';
 import { FrozenBuffer } from 'util-common';
 
@@ -72,7 +72,7 @@ describe('api-common/Codec.encode*()', () => {
 
     it('should accept plain objects and encode as a tagged entries array', () => {
       function test(value) {
-        const expect = { object: Object.entries(value) };
+        const expect = ConstructorCall.from('object', ...Object.entries(value));
         assert.deepEqual(encodeData(value), expect);
       }
 
@@ -84,10 +84,10 @@ describe('api-common/Codec.encode*()', () => {
 
     it('should sort plain object keys in encoded form', () => {
       const orig   = { d: [1, 2, 3], a: { c: 'cx', b: 'bx' } };
-      const expect = { object: [
-        ['a', { object: [['b', 'bx'], ['c', 'cx']] }],
-        ['d', [1, 2, 3]]]
-      };
+      const expect = ConstructorCall.from('object',
+        ['a', ConstructorCall.from('object', ['b', 'bx'], ['c', 'cx'])],
+        ['d', [1, 2, 3]]
+      );
 
       assert.deepEqual(encodeData(orig), expect);
     });
