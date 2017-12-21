@@ -6,7 +6,7 @@ import camelCase from 'camel-case';
 import express from 'express';
 import { inspect } from 'util';
 
-import { Codec } from 'codec';
+import { TheModule as AppCommon_TheModule } from 'app-common';
 import { DocumentId } from 'doc-common';
 import { DocServer } from 'doc-server';
 import { AuthorId } from 'ot-common';
@@ -180,7 +180,7 @@ export default class DebugTools {
     const revNum = req.params.revNum;
     const body = this._getExistingBody(req);
     const change = (await body).getChange(revNum);
-    const result = Codec.theOne.encodeJson(await change, true);
+    const result = AppCommon_TheModule.modelCodec.encodeJson(await change, true);
 
     this._textResponse(res, result);
   }
@@ -289,7 +289,7 @@ export default class DebugTools {
     const body = this._getExistingBody(req);
     const args = (revNum === undefined) ? [] : [revNum];
     const snapshot = (await body).getSnapshot(...args);
-    const result = Codec.theOne.encodeJson(await snapshot, true);
+    const result = AppCommon_TheModule.modelCodec.encodeJson(await snapshot, true);
 
     this._textResponse(res, result);
   }
@@ -372,7 +372,7 @@ export default class DebugTools {
    */
   async _makeEncodedKey(documentId, authorId) {
     const key = await this._rootAccess.makeAccessKey(authorId, documentId);
-    return Codec.theOne.encodeJson(key);
+    return AppCommon_TheModule.fullCodec.encodeJson(key);
   }
 
   /**
