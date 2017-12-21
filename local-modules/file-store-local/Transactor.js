@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Errors as FileStoreErrors, StoragePath } from 'file-store';
+import { Errors as fileStore_Errors, StoragePath } from 'file-store';
 import { CommonBase, Errors } from 'util-common';
 
 /**
@@ -145,7 +145,7 @@ export default class Transactor extends CommonBase {
     const { hash } = props;
 
     if (this._fileFriend.readBlobOrNull(hash) !== null) {
-      throw FileStoreErrors.blobNotAbsent(hash);
+      throw fileStore_Errors.blobNotAbsent(hash);
     }
   }
 
@@ -158,7 +158,7 @@ export default class Transactor extends CommonBase {
     const { hash } = props;
 
     if (this._fileFriend.readBlobOrNull(hash) === null) {
-      throw FileStoreErrors.blobNotFound(hash);
+      throw fileStore_Errors.blobNotFound(hash);
     }
   }
 
@@ -171,7 +171,7 @@ export default class Transactor extends CommonBase {
     const { storagePath } = props;
 
     if (this._fileFriend.readPathOrNull(storagePath) !== null) {
-      throw FileStoreErrors.pathNotAbsent(storagePath);
+      throw fileStore_Errors.pathNotAbsent(storagePath);
     }
   }
 
@@ -185,9 +185,9 @@ export default class Transactor extends CommonBase {
     const data = this._fileFriend.readPathOrNull(storagePath);
 
     if (data === null) {
-      throw FileStoreErrors.pathNotFound(storagePath);
+      throw fileStore_Errors.pathNotFound(storagePath);
     } else if (data.hash !== expectedHash) {
-      throw FileStoreErrors.pathHashMismatch(storagePath, expectedHash);
+      throw fileStore_Errors.pathHashMismatch(storagePath, expectedHash);
     }
   }
 
@@ -201,7 +201,7 @@ export default class Transactor extends CommonBase {
     const data = this._fileFriend.readPathOrNull(storagePath);
 
     if ((data !== null) && (data.hash === unexpectedHash)) {
-      throw FileStoreErrors.pathHashMismatch(storagePath, unexpectedHash);
+      throw fileStore_Errors.pathHashMismatch(storagePath, unexpectedHash);
     }
   }
 
@@ -214,7 +214,7 @@ export default class Transactor extends CommonBase {
     const { storagePath } = props;
 
     if (this._fileFriend.readPathOrNull(storagePath) === null) {
-      throw FileStoreErrors.pathNotFound(storagePath);
+      throw fileStore_Errors.pathNotFound(storagePath);
     }
   }
 

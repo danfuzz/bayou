@@ -6,7 +6,7 @@ import afs from 'async-file';
 import path from 'path';
 
 import { Codec } from 'codec';
-import { BaseFile, Errors as FileStoreErrors, StoragePath } from 'file-store';
+import { BaseFile, Errors as fileStore_Errors, StoragePath } from 'file-store';
 import { Condition, Delay, Mutex } from 'promise-util';
 import { Logger } from 'see-all';
 import { FrozenBuffer, Errors } from 'util-common';
@@ -218,7 +218,7 @@ export default class LocalFile extends BaseFile {
     }
 
     if (!this._fileShouldExist) {
-      throw FileStoreErrors.fileNotFound(this.id);
+      throw fileStore_Errors.fileNotFound(this.id);
     }
 
     // Construct the "file friend" object. This exposes just enough private

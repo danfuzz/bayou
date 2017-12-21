@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { LocalFileStore } from 'file-store-local';
-import { Hooks as HooksCommon } from 'hooks-common';
+import { Hooks as hooksCommon_Hooks } from 'hooks-common';
 import { Errors, Singleton } from 'util-common';
 
 import BearerTokens from './BearerTokens';
@@ -71,7 +71,7 @@ export default class Hooks extends Singleton {
    * @returns {boolen} `true` iff `id` is syntactically valid.
    */
   isFileId(id) {
-    return HooksCommon.theOne.isDocumentId(id);
+    return hooksCommon_Hooks.theOne.isDocumentId(id);
   }
 
   /**
