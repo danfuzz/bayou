@@ -4,6 +4,7 @@
 
 import { Codec } from 'codec';
 
+import ApiCommon from './ApiCommon';
 import BaseKey from './BaseKey';
 import CodableError from './CodableError';
 import ConnectionError from './ConnectionError';
@@ -12,10 +13,7 @@ import Response from './Response';
 import SplitKey from './SplitKey';
 import TargetId from './TargetId';
 
-// Register classes for encoding / decoding.
-Codec.theOne.registerClass(CodableError);
-Codec.theOne.registerClass(Message);
-Codec.theOne.registerClass(Response);
-Codec.theOne.registerClass(SplitKey);
+// Register with the (senescent) singleton Codec. **TODO:** Remove this.
+ApiCommon.registerCodecs(Codec.theOne.registry);
 
-export { BaseKey, CodableError, ConnectionError, Message, Response, SplitKey, TargetId };
+export { ApiCommon, BaseKey, CodableError, ConnectionError, Message, Response, SplitKey, TargetId };

@@ -5,11 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { ConstructorCall, ItemCodec } from 'codec';
-
-// The class being tested here isn't exported from the module, so we import it
-// by path.
-import Registry from 'codec/Registry';
+import { ConstructorCall, ItemCodec, Registry } from 'codec';
 
 class RegistryTestClass {
   constructor() {
