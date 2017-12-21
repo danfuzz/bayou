@@ -19,6 +19,7 @@ export default class TheModule extends UtilityClass {
   static get fullCodec() {
     if (!this._fullCodec) {
       this._fullCodec = this.makeFullCodec();
+      this._fullCodec.registry.freeze();
     }
 
     return this._fullCodec;
@@ -31,6 +32,7 @@ export default class TheModule extends UtilityClass {
   static get modelCodec() {
     if (!this._modelCodec) {
       this._modelCodec = this.makeModelCodec();
+      this._modelCodec.registry.freeze();
     }
 
     return this._modelCodec;
