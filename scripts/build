@@ -36,9 +36,6 @@ showHelp=0
 # List of subprojects to build.
 buildProjects=(compiler server client bin)
 
-# Boxed dependency directory, if any.
-boxDir=''
-
 # Overlay source directory, if any.
 overlayDir=''
 
@@ -50,9 +47,6 @@ while true; do
         -h|--help)
             showHelp=1
             break
-            ;;
-        --boxes=?*)
-            boxDir="${1#*=}"
             ;;
         --clean)
             outOpts+=("$1")
@@ -88,8 +82,6 @@ if (( ${showHelp} || ${argError} )); then
     echo "${progName} [<opt> ...]"
     echo '  Build the project.'
     echo ''
-    echo '  --boxes=<dir>'
-    echo '    Find boxed dependencies in directory <dir>.'
     echo '  --clean'
     echo '    Start from a clean build.'
     echo '  --linter'
@@ -309,9 +301,8 @@ function copy-sources {
     echo 'Copying sources... done.'
 }
 
-# Does an `npm install` in the given directory, or the equivalent by using
-# boxed dependencies. After installation, applies local patches to installed
-# modules.
+# Does an `npm install` in the given directory, taking into account local
+# modules. After installation, applies local patches to installed modules.
 function do-install {
     local dir="$1"
     local toDir="${outDir}/${dir}"
@@ -349,22 +340,7 @@ function do-install {
     mkdir -p "${npmDir}"
     rsync-archive "${packageJson}" "${npmDir}/package.json"
 
-    if [[ ${boxDir} == '' ]]; then
-        # No boxed dependencies. Normal install.
-        (cd "${npmDir}" && npm install --no-package-lock) || return 1
-    else
-        # We were asked to use the boxed dependencies.
-        local boxFile="${boxDir}/${dir}.npmbox"
-
-        if [[ ! -r ${boxFile} ]]; then
-            echo 'Missing box file:' "${boxFile}" 1>&2
-            return 1
-        fi
-
-        (cd "${npmDir}" \
-            && "${progDir}/lib/box-install" "${boxDir}/${dir}.npmbox") \
-        || return 1
-    fi
+    (cd "${npmDir}" && npm install --no-package-lock) || return 1
 
     # We are somewhat at the mercy of what's published via npm, and in fact
     # some modules that we use occasionally have bugs in their published
@@ -513,14 +489,6 @@ function build-product-info {
 set-up-out || exit 1
 
 echo 'Building...'
-
-if [[ (${boxDir} != '') && ("$(uname)" == 'Darwin') ]]; then
-    echo ''
-    echo 'NOTE: Building from boxed dependencies on macOS generally results in'
-    echo '  complaints about an inability to build the `fsevents` module. This'
-    echo '  is expected and will not prevent the product from running.'
-    echo ''
-fi
 
 (
     check-environment-dependencies \
