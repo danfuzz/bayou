@@ -60,9 +60,6 @@ while true; do
         --clean)
             doClean=1
             ;;
-        --boxes=?*)
-            buildOpts+=("$1")
-            ;;
         --out=?*)
             outDir="${1#*=}"
             ;;
@@ -91,8 +88,6 @@ if (( ${showHelp} || ${argError} )); then
     echo "${progName} [--clean] [--out=<dir>] [--overlay=<dir>]"
     echo '  Build and run the project, in a live development manner.'
     echo ''
-    echo '  --boxes=<dir>'
-    echo '    Find boxed dependencies in directory <dir>.'
     echo '  --clean'
     echo '    Do an initial clean build.'
     echo '  --out=<dir>'
