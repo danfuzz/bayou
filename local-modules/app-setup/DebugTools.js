@@ -389,7 +389,7 @@ export default class DebugTools {
       : `<head>\n\n${head}\n</head>\n\n`;
     body = `<body>\n\n${body}\n</body>\n`;
 
-    const html = `<!doctype html>\n<html>\n${head}${body}</html>\n`;
+    const html = `<!doctype html>\n<html lang="en-US">\n${head}${body}</html>\n`;
 
     res
       .status(200)
