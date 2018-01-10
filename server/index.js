@@ -147,7 +147,7 @@ async function run(mode) {
     DevMode.theOne.start();
   }
 
-  Hooks.theOne.run();
+  await Hooks.theOne.run();
 
   /** The main app server. */
   const theApp = new Application(mode !== 'prod');

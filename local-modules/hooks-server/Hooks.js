@@ -20,7 +20,7 @@ export default class Hooks extends Singleton {
    * basic initialization but before any document-handling code has been
    * initialized or run.
    */
-  run() {
+  async run() {
     // This space intentionally left blank.
   }
 
