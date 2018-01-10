@@ -49,7 +49,7 @@ export default class ObjectUtil extends UtilityClass {
     const result = {};
 
     for (const [k, v] of map) {
-      switch (typeof key) {
+      switch (typeof k) {
         case 'string':
         case 'symbol': {
           // All good.
