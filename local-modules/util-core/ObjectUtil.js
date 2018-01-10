@@ -39,6 +39,38 @@ export default class ObjectUtil extends UtilityClass {
   }
 
   /**
+   * Converts the given `Map` to a plain object. Keys of the map must be
+   * strings, integers, or symbols.
+   *
+   * @param {Map} map Map to convert.
+   * @returns {object} Equivalent plain object form.
+   */
+  static fromMap(map) {
+    const result = {};
+
+    for (const [k, v] of map) {
+      switch (typeof key) {
+        case 'string':
+        case 'symbol': {
+          // All good.
+          break;
+        }
+        case 'number': {
+          CoreTypecheck.checkInt(k);
+          break;
+        }
+        default: {
+          throw Errors.badValue(k, 'object key');
+        }
+      }
+
+      result[k] = v;
+    }
+
+    return result;
+  }
+
+  /**
    * Calls `value.hasOwnProperty()` safely.
    *
    * @param {object} value Value to query.
