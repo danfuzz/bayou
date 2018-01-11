@@ -40,12 +40,16 @@ export default class ObjectUtil extends UtilityClass {
 
   /**
    * Converts the given `Map` to a plain object. Keys of the map must be
-   * strings, integers, or symbols.
+   * strings, non-negative integers, or symbols.
    *
    * @param {Map} map Map to convert.
    * @returns {object} Equivalent plain object form.
    */
   static fromMap(map) {
+    if (!(map instanceof Map)) {
+      throw Errors.badValue(map, Map);
+    }
+
     const result = {};
 
     for (const [k, v] of map) {
@@ -56,7 +60,7 @@ export default class ObjectUtil extends UtilityClass {
           break;
         }
         case 'number': {
-          CoreTypecheck.checkInt(k);
+          CoreTypecheck.checkInt(k, 0);
           break;
         }
         default: {
