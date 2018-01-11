@@ -268,7 +268,10 @@ export default class BaseControl extends BaseDataManager {
 
   /**
    * Gets a particular change to the part of the document that this instance
-   * controls.
+   * controls. It is an error to request a revision that does not yet exist. For
+   * subclasses that don't keep full history, it is also an error to
+   * request a revision that is _no longer_ available; in this case, the error
+   * name is always `revisionNotAvailable`.
    *
    * @param {Int} revNum The revision number of the change. The result is the
    *   change which produced that revision. E.g., `0` is a request for the first
@@ -277,9 +280,14 @@ export default class BaseControl extends BaseDataManager {
    */
   async getChange(revNum) {
     RevisionNumber.check(revNum); // So we know we can `+1` without weirdness.
-    const changes = await this._getChangeRange(revNum, revNum + 1, false);
+    const changes = await this._getChangeRange(revNum, revNum + 1, true);
+    const result = changes[0];
 
-    return changes[0];
+    if (result === null) {
+      throw Errors.revisionNotAvailable(revNum);
+    }
+
+    return result;
   }
 
   /**
