@@ -838,7 +838,7 @@ export default class BaseControl extends BaseDataManager {
 
     // For ephemeral parts, _if_ a change is present before the snapshot's
     // revision, it must be valid.
-    for (let i = 0; i < requiredChangesAt; i++) {
+    for (let i = 0; i < requiredChangesAt; i += MAX) {
       const lastI = Math.min(i + MAX - 1, requiredChangesAt - 1);
       try {
         // `true` === Allow missing changes.
