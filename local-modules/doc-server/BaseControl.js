@@ -1003,7 +1003,7 @@ export default class BaseControl extends BaseDataManager {
         clazz.changeClass.check(change);
         result.push(change);
       } else if (!allowMissing) {
-        throw new Error.badUse(`Missing change in requested range: r${i}`);
+        throw Errors.badUse(`Missing change in requested range: r${i}`);
       }
     }
 
