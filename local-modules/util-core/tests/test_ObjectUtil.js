@@ -37,6 +37,58 @@ describe('util-core/ObjectUtil', () => {
     });
   });
 
+  describe('fromMap()', () => {
+    it('should convert valid instances', () => {
+      function test(value) {
+        const map = new Map(Object.entries(value));
+        const result = ObjectUtil.fromMap(map);
+        assert.deepEqual(result, value);
+      }
+
+      test({});
+      test({ a: 10 });
+      test({ 123: 456 });
+      test({ [Symbol('x')]: 'foo' });
+      test({ [Symbol.for('x')]: 'foo' });
+      test({ a: 'aaa', b: 'bbb', 1: '111', 2: '222' });
+    });
+
+    it('should reject inputs with keys not representable in plain objects with full fidelity', () => {
+      function test(value) {
+        const map = new Map([[value, 'whatever']]);
+        assert.throws(() => ObjectUtil.fromMap(map), /badValue/);
+      }
+
+      // The only numbers that are allowed are non-negative integers.
+      test(-1);
+      test(1.23);
+      test(NaN);
+
+      // Disallowed types.
+      test(null);
+      test(undefined);
+      test(false);
+      test({});
+      test([]);
+      test(new Set());
+      test([1]);
+      test(['x']);
+    });
+
+    it('should reject non-map inputs', () => {
+      function test(value) {
+        assert.throws(() => ObjectUtil.fromMap(value), /badValue/);
+      }
+
+      test(null);
+      test(undefined);
+      test(true);
+      test(123);
+      test('florp');
+      test(new Set([1, 2, 3]));
+    });
+  });
+
   describe('hasOwnProperty()', () => {
     it('should return `true` when asked about an object\'s own propery', () => {
       const value = {};

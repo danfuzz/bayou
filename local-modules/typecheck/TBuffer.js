@@ -24,4 +24,21 @@ export default class TBuffer extends UtilityClass {
 
     return value;
   }
+
+  /**
+   * Checks a value which must either be of type `Buffer` or the exact value
+   * `null`.
+   *
+   * @param {*} value Value to check.
+   * @returns {Buffer|null} `value`.
+   */
+  static orNull(value) {
+    if (value === null) {
+      return null;
+    } else if (!Buffer.isBuffer(value)) {
+      throw Errors.badValue(value, 'Buffer|null');
+    }
+
+    return value;
+  }
 }
