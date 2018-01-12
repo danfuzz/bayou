@@ -170,7 +170,7 @@ export default class SnapshotManager extends CommonBase {
    * change 0 is not not available, this method does nothing and reports no
    * error.
    *
-   * This special-case setup is done to make the logic in the rest of the clas
+   * This special-case setup is done to make the logic in the rest of the class
    * a bit simpler.
    */
   async _makeSnapshot0() {
