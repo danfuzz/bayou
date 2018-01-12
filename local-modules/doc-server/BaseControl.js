@@ -281,13 +281,12 @@ export default class BaseControl extends BaseDataManager {
   async getChange(revNum) {
     RevisionNumber.check(revNum); // So we know we can `+1` without weirdness.
     const changes = await this._getChangeRange(revNum, revNum + 1, true);
-    const result = changes[0];
 
-    if (result === null) {
+    if (changes.length === 0) {
       throw Errors.revisionNotAvailable(revNum);
     }
 
-    return result;
+    return changes[0];
   }
 
   /**
@@ -951,12 +950,17 @@ export default class BaseControl extends BaseDataManager {
 
   /**
    * Reads a sequential chunk of changes. It is an error to request a change
-   * beyond the current revision; it is valid for either `start` or `endExc` to
-   * be `currentRevNum() + 1` but no greater. If `start === endExc`, then this
-   * simply verifies that the arguments are in range and returns an empty array.
-   * It is an error if `(endExc - start) > MAX_CHANGE_READS_PER_TRANSACTION`.
-   * For subclasses that don't keep full change history, it is possible for
-   * there to be holes in the result; any such holes are filled with `null`.
+   * beyond the current revision; it is valid for either `startInclusive` or
+   * `endExclusive` to be `currentRevNum() + 1` but no greater. If
+   * `startInclusive === endExclusive`, then this simply verifies that the
+   * arguments are in range and returns an empty array. It is an error if
+   * `(endExclusive - startInclusive) > MAX_CHANGE_READS_PER_TRANSACTION`.
+   *
+   * For subclasses that are ephemeral (don't keep full change history) and
+   * when `allowMissing` is passed as `true`, it is possible for the first
+   * element of the result to have a revision number greater than the requested
+   * `startInclusive`, and it is also possible for the result to simply be empty
+   * even if a non-zero number of changes were requested.
    *
    * **Note:** The point of the max count limit is that we want to avoid
    * creating a transaction which could run afoul of a limit on the amount of
@@ -1010,6 +1014,7 @@ export default class BaseControl extends BaseDataManager {
 
         clazz.changeClass.check(change);
         result.push(change);
+        allowMissing = false; // Only allow missing changes at the _start_ of the range.
       } else if (!allowMissing) {
         throw Errors.badUse(`Missing change in requested range: r${i}`);
       }

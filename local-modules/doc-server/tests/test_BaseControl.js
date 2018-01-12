@@ -456,8 +456,8 @@ describe('doc-server/BaseControl', () => {
         assert.strictEqual(result, 'foomp');
       });
 
-      it('should convert a `null` result from `_getChangeRange()` a `revisionNotAvailable` error', async () => {
-        changeResult = [null];
+      it('should convert an empty result from `_getChangeRange()` a `revisionNotAvailable` error', async () => {
+        changeResult = [];
         await assert.isRejected(control.getChange(1), /^revisionNotAvailable/);
       });
     });
