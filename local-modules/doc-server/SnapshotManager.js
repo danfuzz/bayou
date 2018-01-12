@@ -75,8 +75,7 @@ export default class SnapshotManager extends CommonBase {
         // snapshot cache. Depending on its revision number and the one being
         // requested, it _might_ (but won't _necessarily_) end up being the base
         // used to satisfy this call. At the same time (well, right after), also
-        // set up an entry for revision `0`, which allows for the rest of this
-        // class to be a little simpler.
+        // set up an entry for revision 0 if in fact change 0 exists.
         this._storedSnapshotRetrieved = (async () => {
           const storedPromise = this._control.readStoredSnapshotOrNull();
           const stored = await storedPromise;
@@ -85,14 +84,12 @@ export default class SnapshotManager extends CommonBase {
             this._snapshots.set(stored.revNum, storedPromise);
           }
 
-          if ((stored === null) || (stored.revNum !== 0)) {
-            // Derive a snapshot for revision `0` in the standard way, that is,
-            // by composing change 0 on top of an empty delta, requesting a
-            // document result (`wantDocument = true` for the last argument).
-            const rev0Contents = this._control.getComposedChanges(this._deltaClass.EMPTY, 0, 1, true);
-            const rev0Snapshot = new this._snapshotClass(0, await rev0Contents);
-            this._snapshots.set(0, rev0Snapshot);
-          }
+          // Set up the revision 0 snapshot, if appropriate. The `await` here is
+          // done so that any errors coming from the call get propagated back up
+          // the chain instead of getting dropped on the floor (and turning more
+          // directly into process aborts due to an unhandled promise
+          // rejection).
+          await this._makeSnapshot0();
 
           this._storedSnapshotRetrieved = null;
           return true;
@@ -104,9 +101,9 @@ export default class SnapshotManager extends CommonBase {
     }
 
     // Search backward through the full revisions for a base for forward
-    // composition. **Note:** The initialization step above should have
-    // guaranteed that we always find a suitable base revision, either the
-    // stored snapshot or the constructed revision 0.
+    // composition. **Note:** The initialization step above will guarantee that
+    // we always find a suitable base revision if the managed part isn't
+    // ephemeral.
 
     let basePromise = null;
     let baseRevNum  = -1;
@@ -127,8 +124,8 @@ export default class SnapshotManager extends CommonBase {
     }
 
     if (basePromise === null) {
-      // Shouldn't happen, per above description (and code).
-      throw Errors.wtf('Did not find a snapshot!');
+      // Ephemeral part, and the revision is no longer available.
+      return null;
     }
 
     // We didn't actully find a snapshot of the requested revision. Make it,
@@ -164,5 +161,42 @@ export default class SnapshotManager extends CommonBase {
     }
 
     return result;
+  }
+
+  /**
+   * Makes the snapshot for revision 0, if change 0 is in fact available and
+   * snapshot 0 wasn't already cached. (It might have gotten cached because it
+   * was in fact the revision which was stored in the underlying file). If
+   * change 0 is not not available, this method does nothing and reports no
+   * error.
+   *
+   * This special-case setup is done to make the logic in the rest of the class
+   * a bit simpler.
+   */
+  async _makeSnapshot0() {
+    if (this._snapshots.has(0)) {
+      // Already cached.
+      return;
+    }
+
+    // Look for change 0 using the public `getChange()` call which has a
+    // well-defined error for when the revision isn't available.
+    try {
+      await this._control.getChange(0);
+    } catch (e) {
+      if (Errors.is_revisionNotAvailable(e)) {
+        // No big deal, and nothing more to do (per above docs).
+        return;
+      }
+      throw e; // Anything else is unexpected and is throw-worthy.
+    }
+
+    // Derive a snapshot for revision `0` in the standard way, that is,
+    // by composing change 0 on top of an empty delta, requesting a
+    // document result (`wantDocument = true` for the last argument).
+
+    const rev0Contents = this._control.getComposedChanges(this._deltaClass.EMPTY, 0, 1, true);
+    const rev0Snapshot = new this._snapshotClass(0, await rev0Contents);
+    this._snapshots.set(0, rev0Snapshot);
   }
 }

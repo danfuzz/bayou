@@ -424,16 +424,17 @@ describe('doc-server/BaseControl', () => {
 
   describe('getChange()', () => {
     describe('when given a valid-typed argument', () => {
-      const control = new MockControl(FILE_ACCESS, 'boop');
-      let gotStart  = null;
-      let gotEnd    = null;
-      let gotAllow  = null;
+      const control    = new MockControl(FILE_ACCESS, 'boop');
+      let gotStart     = null;
+      let gotEnd       = null;
+      let gotAllow     = null;
+      let changeResult = 'filled in in tests';
 
       control._getChangeRange = async (start, end, allowMissing) => {
         gotStart = start;
         gotEnd   = end;
         gotAllow = allowMissing;
-        return ['foomp'];
+        return changeResult;
       };
 
       it('should pass appropriate arguments to `_getChangeRange()`', async () => {
@@ -441,7 +442,7 @@ describe('doc-server/BaseControl', () => {
           await control.getChange(n);
           assert.strictEqual(gotStart, n);
           assert.strictEqual(gotEnd,   n + 1);
-          assert.isFalse(gotAllow);
+          assert.isTrue(gotAllow);
         }
 
         await test(0);
@@ -450,8 +451,14 @@ describe('doc-server/BaseControl', () => {
       });
 
       it('should return the first element of the return value from `_getChangeRange()`', async () => {
+        changeResult = ['foomp'];
         const result = await control.getChange(123);
         assert.strictEqual(result, 'foomp');
+      });
+
+      it('should convert an empty result from `_getChangeRange()` a `revisionNotAvailable` error', async () => {
+        changeResult = [];
+        await assert.isRejected(control.getChange(1), /^revisionNotAvailable/);
       });
     });
 

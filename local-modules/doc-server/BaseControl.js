@@ -268,7 +268,10 @@ export default class BaseControl extends BaseDataManager {
 
   /**
    * Gets a particular change to the part of the document that this instance
-   * controls.
+   * controls. It is an error to request a revision that does not yet exist. For
+   * subclasses that don't keep full history, it is also an error to
+   * request a revision that is _no longer_ available; in this case, the error
+   * name is always `revisionNotAvailable`.
    *
    * @param {Int} revNum The revision number of the change. The result is the
    *   change which produced that revision. E.g., `0` is a request for the first
@@ -277,7 +280,11 @@ export default class BaseControl extends BaseDataManager {
    */
   async getChange(revNum) {
     RevisionNumber.check(revNum); // So we know we can `+1` without weirdness.
-    const changes = await this._getChangeRange(revNum, revNum + 1, false);
+    const changes = await this._getChangeRange(revNum, revNum + 1, true);
+
+    if (changes.length === 0) {
+      throw Errors.revisionNotAvailable(revNum);
+    }
 
     return changes[0];
   }
@@ -838,7 +845,7 @@ export default class BaseControl extends BaseDataManager {
 
     // For ephemeral parts, _if_ a change is present before the snapshot's
     // revision, it must be valid.
-    for (let i = 0; i < requiredChangesAt; i++) {
+    for (let i = 0; i < requiredChangesAt; i += MAX) {
       const lastI = Math.min(i + MAX - 1, requiredChangesAt - 1);
       try {
         // `true` === Allow missing changes.
@@ -943,12 +950,17 @@ export default class BaseControl extends BaseDataManager {
 
   /**
    * Reads a sequential chunk of changes. It is an error to request a change
-   * beyond the current revision; it is valid for either `start` or `endExc` to
-   * be `currentRevNum() + 1` but no greater. If `start === endExc`, then this
-   * simply verifies that the arguments are in range and returns an empty array.
-   * It is an error if `(endExc - start) > MAX_CHANGE_READS_PER_TRANSACTION`.
-   * For subclasses that don't keep full change history, it is possible for
-   * there to be holes in the result; any such holes are filled with `null`.
+   * beyond the current revision; it is valid for either `startInclusive` or
+   * `endExclusive` to be `currentRevNum() + 1` but no greater. If
+   * `startInclusive === endExclusive`, then this simply verifies that the
+   * arguments are in range and returns an empty array. It is an error if
+   * `(endExclusive - startInclusive) > MAX_CHANGE_READS_PER_TRANSACTION`.
+   *
+   * For subclasses that are ephemeral (don't keep full change history) and
+   * when `allowMissing` is passed as `true`, it is possible for the first
+   * element of the result to have a revision number greater than the requested
+   * `startInclusive`, and it is also possible for the result to simply be empty
+   * even if a non-zero number of changes were requested.
    *
    * **Note:** The point of the max count limit is that we want to avoid
    * creating a transaction which could run afoul of a limit on the amount of
@@ -1002,8 +1014,9 @@ export default class BaseControl extends BaseDataManager {
 
         clazz.changeClass.check(change);
         result.push(change);
+        allowMissing = false; // Only allow missing changes at the _start_ of the range.
       } else if (!allowMissing) {
-        throw new Error.badUse(`Missing change in requested range: r${i}`);
+        throw Errors.badUse(`Missing change in requested range: r${i}`);
       }
     }
 

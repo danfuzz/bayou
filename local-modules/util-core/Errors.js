@@ -172,6 +172,16 @@ export default class Errors extends UtilityClass {
   }
 
   /**
+   * Indicates whether or not the given error is a `revisionNotAvailable`.
+   *
+   * @param {Error} error Error in question.
+   * @returns {boolean} `true` iff it represents a timeout.
+   */
+  static is_revisionNotAvailable(error) {
+    return InfoError.hasName(error, 'revisionNotAvailable');
+  }
+
+  /**
    * Indicates whether or not the given error is a `timedOut`.
    *
    * @param {Error} error Error in question.
