@@ -481,12 +481,79 @@ function build-product-info {
     ) > "${outFile}"
 }
 
+# Cleanup function to remove the build PID file upon process termination.
+function rm-build-pid {
+    local buildPidFile="${outDir}/build-pid.txt"
+
+    trap - SIGTERM # Avoid recursion.
+    rm -f "${buildPidFile}"
+
+    exit
+}
+
+# Checks to see if another build is running in the output directory, waiting for
+# a bit if it looks like there's something running, and ultimately erroring out
+# if whatever is running never stops. Once no other build is running, this will
+# plop a file in the build directory to indicate that this process is the one
+# in charge.
+function avoid-simultaneous-builds {
+    local buildPidFile="${outDir}/build-pid.txt"
+    local lastPid=''
+    local waitSecs=0
+
+    while true; do
+        # **Note:** We (re)read the file on every iteration, because it's
+        # possible for there to be a race between two different would-be build
+        # processes.
+        local alreadyPid="$(cat "${buildPidFile}" 2>/dev/null)"
+        if [[ ${alreadyPid} == '' ]]; then
+            break
+        fi
+
+        # There's a PID file. Check to see if it's still running.
+        if ! ps -p "${alreadyPid}" >/dev/null 2>&1; then
+            # Nope. Not actually running!
+            break
+        fi
+
+        if (( ${waitSecs} == 0 )); then
+            echo 'Another build is running in the output directory.'
+            echo "  directory: ${outDir}"
+            echo "  pid:       ${alreadyPid}"
+            echo ''
+            echo 'Waiting a moment to see if it finishes...'
+        elif (( ${waitSecs} > 75 )); then
+            echo 'Other build is *still* running. Giving up!'
+            return 1
+        elif [[ ${alreadyPid} != ${lastPid} ]]; then
+            echo ''
+            echo 'A different build started running in the mean time.'
+            echo "  pid:       ${alreadyPid}"
+            echo ''
+        elif (( (${waitSecs} % 20) == 0 )); then
+            echo 'Still waiting...'
+        fi
+
+        lastPid="${alreadyPid}"
+
+        sleep 5
+        ((waitSecs += 5))
+    done
+
+    # Write our PID into the file.
+    echo "$$" > "${buildPidFile}"
+}
+
 
 #
 # Main script
 #
 
 set-up-out || exit 1
+
+# Make sure only one build is running in any given output directory.
+avoid-simultaneous-builds || exit 1
+trap rm-build-pid SIGINT SIGTERM EXIT
 
 echo 'Building...'
 
