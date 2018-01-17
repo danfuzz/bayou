@@ -2,12 +2,11 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { StoragePath, TransactionSpec } from 'file-store-ot';
+import { StorageId, StoragePath, TransactionSpec } from 'file-store-ot';
 import { TBoolean, TInt, TMap, TObject, TSet } from 'typecheck';
 import { CommonBase, Errors, FrozenBuffer } from 'util-common';
 
 import FileId from './FileId';
-import StorageId from './StorageId';
 
 /**
  * Base class representing access to a particular file. Subclasses must override

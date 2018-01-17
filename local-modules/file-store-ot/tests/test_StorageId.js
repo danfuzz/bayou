@@ -5,10 +5,10 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { StorageId } from 'file-store';
+import { StorageId } from 'file-store-ot';
 import { FrozenBuffer } from 'util-common';
 
-describe('file-store/StorageId', () => {
+describe('file-store-ot/StorageId', () => {
   describe('check()', () => {
     it('should accept valid id strings', () => {
       function test(value) {

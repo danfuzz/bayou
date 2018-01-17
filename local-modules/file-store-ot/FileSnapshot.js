@@ -3,12 +3,12 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseSnapshot } from 'ot-common';
-import { TString } from 'typecheck';
 import { Errors } from 'util-common';
 
 import FileChange from './FileChange';
 import FileDelta from './FileDelta';
 import FileOp from './FileOp';
+import StorageId from './StorageId';
 import StoragePath from './StoragePath';
 
 /**
@@ -168,7 +168,7 @@ export default class FileSnapshot extends BaseSnapshot {
    *   none.
    */
   getOrNull(id) {
-    TString.nonEmpty(id); // TODO: Should be `StorageId.check()`.
+    StorageId.check(id);
 
     const found = this._values.get(id);
 

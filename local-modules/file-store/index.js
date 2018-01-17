@@ -7,13 +7,11 @@ import BaseFileStore from './BaseFileStore';
 import Errors from './Errors';
 import FileCodec from './FileCodec';
 import FileId from './FileId';
-import StorageId from './StorageId';
 
 export {
   BaseFile,
   BaseFileStore,
   Errors,
   FileCodec,
-  FileId,
-  StorageId
+  FileId
 };
