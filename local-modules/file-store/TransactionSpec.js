@@ -4,25 +4,25 @@
 
 import { CommonBase, Errors } from 'util-common';
 
-import FileOp from './FileOp';
+import TransactionOp from './TransactionOp';
 
 /**
  * Transaction specification. This is a set of operations (each an instance of
- * `FileOp`) which are to be executed with regard to a file, as an atomic unit.
- * See `FileOp` for more information about the possible operations and how they
- * get executed.
+ * `TransactionOp`) which are to be executed with regard to a file, as an atomic
+ * unit. See `TransactionOp` for more information about the possible operations
+ * and how they get executed.
  */
 export default class TransactionSpec extends CommonBase {
   /**
    * Constructs an instance consisting of all of the indicated operations.
    *
-   * @param {...FileOp} ops The operations to perform.
+   * @param {...TransactionOp} ops The operations to perform.
    */
   constructor(...ops) {
     super();
 
-    /** {array<FileOp>} Category-sorted array of operations. */
-    this._ops = Object.freeze(FileOp.sortByCategory(ops));
+    /** {array<TransactionOp>} Category-sorted array of operations. */
+    this._ops = Object.freeze(TransactionOp.sortByCategory(ops));
 
     // Validate the op combo restrictions.
 
@@ -42,9 +42,9 @@ export default class TransactionSpec extends CommonBase {
   }
 
   /**
-   * {array<FileOp>} An iterator for the operations to perform. The operations
-   * are in category-sorted order, as documented by `FileOp`. This value is
-   * always frozen (immutable).
+   * {array<TransactionOp>} An iterator for the operations to perform. The
+   * operations are in category-sorted order, as documented by `TransactionOp`.
+   * This value is always frozen (immutable).
    */
   get ops() {
     return this._ops;
@@ -83,8 +83,8 @@ export default class TransactionSpec extends CommonBase {
    *   instance.
    */
   hasPathOps() {
-    return (this.opsWithCategory(FileOp.CAT_list).length !== 0)
-      || (this.opsWithCategory(FileOp.CAT_wait).length !== 0);
+    return (this.opsWithCategory(TransactionOp.CAT_list).length !== 0)
+      || (this.opsWithCategory(TransactionOp.CAT_wait).length !== 0);
   }
 
   /**
@@ -96,8 +96,8 @@ export default class TransactionSpec extends CommonBase {
    *   instance.
    */
   hasPushOps() {
-    return (this.opsWithCategory(FileOp.CAT_delete).length !== 0)
-      || (this.opsWithCategory(FileOp.CAT_write).length !== 0);
+    return (this.opsWithCategory(TransactionOp.CAT_delete).length !== 0)
+      || (this.opsWithCategory(TransactionOp.CAT_write).length !== 0);
   }
 
   /**
@@ -109,8 +109,8 @@ export default class TransactionSpec extends CommonBase {
    *   instance.
    */
   hasPullOps() {
-    return (this.opsWithCategory(FileOp.CAT_list).length !== 0)
-      || (this.opsWithCategory(FileOp.CAT_read).length !== 0);
+    return (this.opsWithCategory(TransactionOp.CAT_list).length !== 0)
+      || (this.opsWithCategory(TransactionOp.CAT_read).length !== 0);
   }
 
   /**
@@ -121,7 +121,7 @@ export default class TransactionSpec extends CommonBase {
    *   instance.
    */
   hasReadOps() {
-    return this.opsWithCategory(FileOp.CAT_read).length !== 0;
+    return this.opsWithCategory(TransactionOp.CAT_read).length !== 0;
   }
 
   /**
@@ -132,17 +132,17 @@ export default class TransactionSpec extends CommonBase {
    *   instance.
    */
   hasWaitOps() {
-    return this.opsWithCategory(FileOp.CAT_wait).length !== 0;
+    return this.opsWithCategory(TransactionOp.CAT_wait).length !== 0;
   }
 
   /**
    * Gets all of the operations with the given category.
    *
    * @param {string} category Category of the operations.
-   * @returns {array<FileOp>} Array of all such operations.
+   * @returns {array<TransactionOp>} Array of all such operations.
    */
   opsWithCategory(category) {
-    FileOp.checkCategory(category);
+    TransactionOp.checkCategory(category);
     return this._ops.filter(op => (op.category === category));
   }
 
@@ -150,11 +150,11 @@ export default class TransactionSpec extends CommonBase {
    * Gets all of the operations with the given Name.
    *
    * @param {string} name Name of the operations.
-   * @returns {array<FileOp>} Array of all such operations.
+   * @returns {array<TransactionOp>} Array of all such operations.
    */
   opsWithName(name) {
     // This validates the name.
-    FileOp.propsFromName(name);
+    TransactionOp.propsFromName(name);
 
     return this._ops.filter(op => (op.name === name));
   }

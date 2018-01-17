@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { FileOp, TransactionSpec } from 'file-store';
+import { TransactionOp, TransactionSpec } from 'file-store';
 
 import FileOpMaker from './FileOpMaker';
 
@@ -71,17 +71,17 @@ describe('file-store/TransactionSpec', () => {
       }
 
       test([], []);
-      test([FileOp.op_revNum(10)], []);
-      test([FileOp.op_revNum(10), FileOp.op_timeout(123)], []);
-      test([FileOp.op_revNum(20)], [FileOp.op_checkPathPresent('/foo')]);
+      test([TransactionOp.op_revNum(10)], []);
+      test([TransactionOp.op_revNum(10), TransactionOp.op_timeout(123)], []);
+      test([TransactionOp.op_revNum(20)], [TransactionOp.op_checkPathPresent('/foo')]);
       test(
-        [FileOp.op_timeout(123456), FileOp.op_checkPathAbsent('/bar')],
-        [FileOp.op_checkPathPresent('/blort'), FileOp.op_checkPathAbsent('/florp')]
+        [TransactionOp.op_timeout(123456), TransactionOp.op_checkPathAbsent('/bar')],
+        [TransactionOp.op_checkPathPresent('/blort'), TransactionOp.op_checkPathAbsent('/florp')]
       );
     });
 
     it('should reject a bad argument', () => {
-      const trans = new TransactionSpec(FileOp.op_timeout(123456));
+      const trans = new TransactionSpec(TransactionOp.op_timeout(123456));
 
       function test(value) {
         assert.throws(() => trans.concat(value));

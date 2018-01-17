@@ -7,9 +7,9 @@ import BaseFileStore from './BaseFileStore';
 import Errors from './Errors';
 import FileCodec from './FileCodec';
 import FileId from './FileId';
-import FileOp from './FileOp';
 import StorageId from './StorageId';
 import StoragePath from './StoragePath';
+import TransactionOp from './TransactionOp';
 import TransactionSpec from './TransactionSpec';
 
 export {
@@ -18,8 +18,8 @@ export {
   Errors,
   FileCodec,
   FileId,
-  FileOp,
   StorageId,
   StoragePath,
+  TransactionOp,
   TransactionSpec
 };

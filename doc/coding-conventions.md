@@ -94,7 +94,7 @@ taking into account recent additions to the language.
   import express from 'express';
   import fs from 'fs';
 
-  import { BaseFile, FileOp } from 'file-store';
+  import { BaseFile, TransactionOp } from 'file-store';
   import { DataUtil, InfoError, Singleton } from 'util-common';
 
   import RegularBlort from './RegularBlort';
@@ -128,7 +128,7 @@ taking into account recent additions to the language.
   methods together within a class as being part of a "namespace" of some sort.
   When this is the case, the names take the form `<namespace>_<method>` where
   the namespace and method name are underscore-separated. For example, the
-  transaction operation constructors in `file-store.FileOp` are all defined
+  transaction operation constructors in `file-store.TransactionOp` are all defined
   as `op_<name>`.
 
 * Abstract methods &mdash; Sometimes base classes want to define abstract

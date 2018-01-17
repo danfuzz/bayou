@@ -5,7 +5,7 @@
 import { describe } from 'mocha';
 import { inspect } from 'util';
 
-import { FileOp } from 'file-store';
+import { TransactionOp } from 'file-store';
 import { Errors, FrozenBuffer, UtilityClass } from 'util-common';
 
 /**
@@ -18,13 +18,13 @@ export default class FileOpMaker extends UtilityClass {
    * the same type.
    *
    * @param {Int} length Desired length.
-   * @returns {array<FileOp>} Appropriately-constructed array of ops.
+   * @returns {array<TransactionOp>} Appropriately-constructed array of ops.
    */
   static makeLength(length) {
     const ops = [];
 
     for (let i = 0; i < length; i++) {
-      ops.push(FileOp.op_checkPathPresent(`/blort/${i}`));
+      ops.push(TransactionOp.op_checkPathPresent(`/blort/${i}`));
     }
 
     return ops;
@@ -34,20 +34,20 @@ export default class FileOpMaker extends UtilityClass {
    * Makes an op with the given name. The second argument is to allow for
    * different values, without introducing nondeterminism.
    *
-   * @param {string} name Op name, as defined by {@link FileOp}.
+   * @param {string} name Op name, as defined by {@link TransactionOp}.
    * @param {Int} n Non-negative integer, to provide something to derive a
    *   unique value from.
-   * @returns {FileOp} Appropriate op.
+   * @returns {TransactionOp} Appropriate op.
    */
   static makeOp(name, n) {
-    const schema = FileOp.propsFromName(name);
+    const schema = TransactionOp.propsFromName(name);
     const args   = [];
 
     for (const [name_unused, type] of schema.args) {
       args.push(FileOpMaker._makeValue(type, n));
     }
 
-    return FileOp[`op_${name}`](...args);
+    return TransactionOp[`op_${name}`](...args);
   }
 
   /**
@@ -55,14 +55,14 @@ export default class FileOpMaker extends UtilityClass {
    * least the given number each of ops of type `push` and `pull`.
    *
    * @param {Int} count How many of each `push` and `pull` op to include.
-   * @returns {array<FileOp>} Appropriately-constructed array of ops.
+   * @returns {array<TransactionOp>} Appropriately-constructed array of ops.
    */
   static makePushPull(count) {
     const ops = [];
 
-    for (const name of FileOp.OPERATION_NAMES) {
-      const schema = FileOp.propsFromName(name);
-      if (schema.category === FileOp.CAT_wait) {
+    for (const name of TransactionOp.OPERATION_NAMES) {
+      const schema = TransactionOp.propsFromName(name);
+      if (schema.category === TransactionOp.CAT_wait) {
         continue;
       }
 
@@ -80,18 +80,18 @@ export default class FileOpMaker extends UtilityClass {
    * and at least the given number each of ops of type `wait`.
    *
    * @param {Int} count How many of each `wait` op to include.
-   * @returns {array<FileOp>} Appropriately-constructed array of ops.
+   * @returns {array<TransactionOp>} Appropriately-constructed array of ops.
    */
   static makeWait(count) {
     const ops = [];
 
-    for (const name of FileOp.OPERATION_NAMES) {
-      const schema = FileOp.propsFromName(name);
+    for (const name of TransactionOp.OPERATION_NAMES) {
+      const schema = TransactionOp.propsFromName(name);
       if (schema.isPush || schema.isPull) {
         continue;
       }
 
-      const n = (schema.category === FileOp.CAT_wait) ? count : 1;
+      const n = (schema.category === TransactionOp.CAT_wait) ? count : 1;
       for (let i = 0; i < n; i++) {
         ops.push(FileOpMaker.makeOp(name, i));
       }
@@ -137,30 +137,30 @@ export default class FileOpMaker extends UtilityClass {
    * Makes a value of the given type. The second argument is to allow for
    * different values, without introducing nondeterminism.
    *
-   * @param {string} type Value type, as defined by {@link FileOp}.
+   * @param {string} type Value type, as defined by {@link TransactionOp}.
    * @param {Int} n Non-negative integer, to provide something to derive a
    *   unique value from.
    * @returns {*} Appropriate value.
    */
   static _makeValue(type, n) {
     switch (type) {
-      case FileOp.TYPE_Buffer: {
+      case TransactionOp.TYPE_Buffer: {
         return FrozenBuffer.coerce(`buffer_${n}`);
       }
-      case FileOp.TYPE_DurMsec: {
+      case TransactionOp.TYPE_DurMsec: {
         return n * 1234;
       }
-      case FileOp.TYPE_Hash: {
+      case TransactionOp.TYPE_Hash: {
         const buf = FrozenBuffer.coerce(`buffer_hash_${n}`);
         return buf.hash;
       }
-      case FileOp.TYPE_Index: {
+      case TransactionOp.TYPE_Index: {
         return n + 100;
       }
-      case FileOp.TYPE_Path: {
+      case TransactionOp.TYPE_Path: {
         return `/path/${n}`;
       }
-      case FileOp.TYPE_RevNum: {
+      case TransactionOp.TYPE_RevNum: {
         return n;
       }
       default: {

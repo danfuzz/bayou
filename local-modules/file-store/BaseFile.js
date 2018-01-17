@@ -154,7 +154,7 @@ export default class BaseFile extends CommonBase {
 
   /**
    * Performs a transaction, which consists of a set of operations to be
-   * executed with respect to a file as an atomic unit. See `FileOp` for
+   * executed with respect to a file as an atomic unit. See `TransactionOp` for
    * details about the possible operations and how they are ordered. This
    * method will throw an error if it was not possible to perform the
    * transaction for any reason.

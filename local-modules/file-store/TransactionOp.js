@@ -34,7 +34,7 @@ const TYPE_Index   = 'Index';
 const TYPE_Path    = 'Path';
 const TYPE_RevNum  = 'RevNum';
 
-// Operation schemata. See the doc for {@link FileOp#propsFromName} for
+// Operation schemata. See the doc for {@link TransactionOp#propsFromName} for
 // details.
 //
 // **Note:** The comments below aren't "real" JSDoc comments, because JSDoc
@@ -313,7 +313,7 @@ const OPERATIONS = [
 
 /**
  * {Map<string,object>} Map from operation name to corresponding properties
- * object, suitable for returning from {@link FileOp.propsFromName}.
+ * object, suitable for returning from {@link TransactionOp.propsFromName}.
  */
 const OPERATION_MAP = new Map(OPERATIONS.map((schema) => {
   const [category, name, ...args] = schema;
@@ -360,7 +360,7 @@ const OPERATION_MAP = new Map(OPERATIONS.map((schema) => {
  * named `op_<name>`. See documentation on those methods for details about the
  * meaning and arguments of each of these.
  */
-export default class FileOp extends CommonBase {
+export default class TransactionOp extends CommonBase {
   /** {string} Operation category for deletion ops. */
   static get CAT_delete() {
     return CAT_delete;
@@ -490,24 +490,25 @@ export default class FileOp extends CommonBase {
     const schema = OPERATION_MAP.get(name);
 
     if (!schema) {
-      throw Errors.badValue(name, 'FileOp operation name');
+      throw Errors.badValue(name, 'TransactionOp operation name');
     }
 
     return schema;
   }
 
   /**
-   * Sorts an `Iterable` (e.g. an array) of `FileOp`s by category, in the
+   * Sorts an `Iterable` (e.g. an array) of `TransactionOp`s by category, in the
    * prescribed order of execution. Within a category, the result's ordering is
    * arbitrary; that is, the sort is not guaranteed to be stable. The return
    * value is a newly-constructed array; the original input is left unmodified.
    *
-   * @param {Iterable<FileOp>} orig `Iterable` collection of `FileOp`s to sort.
-   * @returns {array<FileOp>} Array in the defined category-sorted order.
+   * @param {Iterable<TransactionOp>} orig `Iterable` collection of
+   *   `TransactionOp`s to sort.
+   * @returns {array<TransactionOp>} Array in the defined category-sorted order.
    */
   static sortByCategory(orig) {
     for (const op of orig) {
-      FileOp.check(op);
+      TransactionOp.check(op);
     }
 
     const result = [];
@@ -532,10 +533,10 @@ export default class FileOp extends CommonBase {
    */
   constructor(name, ...args) {
     // This validates `name`.
-    const opProps = FileOp.propsFromName(name);
+    const opProps = TransactionOp.propsFromName(name);
 
     // This both validates and modifies `args`.
-    FileOp._fixArgs(opProps, args);
+    TransactionOp._fixArgs(opProps, args);
 
     super();
 
@@ -615,9 +616,9 @@ export default class FileOp extends CommonBase {
    * the bottom of this file for the call.)
    */
   static _addConstructorMethods() {
-    for (const opName of FileOp.OPERATION_NAMES) {
-      FileOp[`op_${opName}`] = (...args) => {
-        return new FileOp(opName, ...args);
+    for (const opName of TransactionOp.OPERATION_NAMES) {
+      TransactionOp[`op_${opName}`] = (...args) => {
+        return new TransactionOp(opName, ...args);
       };
     }
   }
@@ -693,7 +694,7 @@ export default class FileOp extends CommonBase {
 
     for (let i = 0; i < argInfo.length; i++) {
       const [name_unused, type] = argInfo[i];
-      args[i] = FileOp._fixArg(args[i], type);
+      args[i] = TransactionOp._fixArg(args[i], type);
     }
 
     Object.freeze(args);
@@ -701,4 +702,4 @@ export default class FileOp extends CommonBase {
 }
 
 // Build and bind all the static constructor methods.
-FileOp._addConstructorMethods();
+TransactionOp._addConstructorMethods();

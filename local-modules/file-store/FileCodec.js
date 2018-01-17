@@ -6,7 +6,7 @@ import { Codec } from 'codec';
 import { CommonBase } from 'util-common';
 
 import BaseFile from './BaseFile';
-import FileOp from './FileOp';
+import TransactionOp from './TransactionOp';
 
 /**
  * Combination of a `BaseFile` with a `Codec`, with operations to make it easy
@@ -15,12 +15,12 @@ import FileOp from './FileOp';
  *
  * In addition to instance methods that mirror `BaseFile`, this class also
  * defines a set of instance methods for constructing transaction operations,
- * that is, instances of `FileOp`, with the same method names as the static
- * constructor methods defined by `FileOp`. In the case of the methods defined
- * here, instead of accepting `FrozenBuffer` or hash string arguments where
- * `FileOp` so defines them, this class accepts any objects at all, so long as
- * they can successfully be encoded by the codec with which the instance of this
- * class was instantiated.
+ * that is, instances of `TransactionOp`, with the same method names as the
+ * static constructor methods defined by `TransactionOp`. In the case of
+ * the methods defined here, instead of accepting `FrozenBuffer` or hash string
+ * arguments where `TransactionOp` so defines them, this class accepts any
+ * objects at all, so long as they can successfully be encoded by the codec with
+ * which the instance of this class was instantiated.
  *
  * **Note:** This class is _intentionally_ not a full wrapper over `BaseFile`.
  * It _just_ provides operations that benefit from the application of a `Codec`.
@@ -75,22 +75,22 @@ export default class FileCodec extends CommonBase {
   }
 
   /**
-   * Adds `FileOp` constructor methods to this class. These are _instance_
-   * methods that are aware of the codec being used. (Look at the bottom of
-   * this file for the call.)
+   * Adds `TransactionOp` constructor methods to this class. These are
+   * _instance_ methods that are aware of the codec being used. (Look at the
+   * bottom of this file for the call.)
    */
   static _addFileOpConstructorMethods() {
     const proto = FileCodec.prototype;
-    for (const name of FileOp.OPERATION_NAMES) {
-      const { args: argInfo } = FileOp.propsFromName(name);
+    for (const name of TransactionOp.OPERATION_NAMES) {
+      const { args: argInfo } = TransactionOp.propsFromName(name);
       const methodName        = `op_${name}`;
-      const originalMethod    = FileOp[methodName].bind(FileOp);
+      const originalMethod    = TransactionOp[methodName].bind(TransactionOp);
 
       // Figure out which arguments are buffers, if any.
       const bufferAt = [];
       for (let i = 0; i < argInfo.length; i++) {
         const [name_unused, type] = argInfo[i];
-        if ((type === FileOp.TYPE_Buffer) || (type === FileOp.TYPE_Hash)) {
+        if ((type === TransactionOp.TYPE_Buffer) || (type === TransactionOp.TYPE_Hash)) {
           bufferAt.push(i);
         }
       }
@@ -114,5 +114,5 @@ export default class FileCodec extends CommonBase {
   }
 }
 
-// Build and bind all the `FileOp` constructor methods.
+// Build and bind all the `TransactionOp` constructor methods.
 FileCodec._addFileOpConstructorMethods();

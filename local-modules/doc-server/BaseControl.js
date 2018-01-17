@@ -1070,7 +1070,7 @@ export default class BaseControl extends BaseDataManager {
    * @param {Int} startInclusive The start of the range to read (inclusive).
    * @param {Int} endExclusive The end of the range to read (exclusive). Must be
    *   `>= startInc`.
-   * @returns {FileOp} The corresponding file operation.
+   * @returns {TransactionOp} The corresponding file operation.
    */
   _opForChangeRange(op, startInclusive, endExclusive) {
     RevisionNumber.check(startInclusive);

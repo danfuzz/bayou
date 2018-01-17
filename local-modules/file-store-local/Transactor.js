@@ -10,9 +10,9 @@ import { CommonBase, Errors } from 'util-common';
  * for each call to that method. Its `run()` method is what does most of the
  * work of performing the transaction.
  *
- * The class defines a method named `_op_<name>` for each of the named `FileOp`s
- * that this class knows how to handle (which is hopefully all of them, but
- * perhaps at times there will be something missing...or extra).
+ * The class defines a method named `_op_<name>` for each of the named
+ * `TransactionOp`s that this class knows how to handle (which is hopefully all
+ * of them, but perhaps at times there will be something missing...or extra).
  */
 export default class Transactor extends CommonBase {
   /**
@@ -32,7 +32,7 @@ export default class Transactor extends CommonBase {
      * {object} "Friend" access to the `LocalFile` that spawned this instance.
      * Properties and methods on this are defined in an ad-hoc manner intended
      * to provide just enough access for this class to do its work. See
-     * {@link file-store.FileOp} where the friend is constructed for
+     * {@link file-store.TransactionOp} where the friend is constructed for
      * documentation on its makeup.
      */
     this._fileFriend = fileFriend;
@@ -334,8 +334,8 @@ export default class Transactor extends CommonBase {
     const data     = this._fileFriend.readBlobOrNull(hash);
 
     if (data !== null) {
-      // Per the `FileOp` documentation, we are only supposed to bind a result
-      // key if the blob is present.
+      // Per the `TransactionOp` documentation, we are only supposed to bind a
+      // result key if the blob is present.
       this._data.set(hash, data);
     }
   }
@@ -350,8 +350,8 @@ export default class Transactor extends CommonBase {
     const data            = this._fileFriend.readPathOrNull(storagePath);
 
     if (data !== null) {
-      // Per the `FileOp` documentation, we are only supposed to bind a result
-      // key if the path is present (stores data).
+      // Per the `TransactionOp` documentation, we are only supposed to bind a
+      // result key if the path is present (stores data).
       this._data.set(storagePath, data);
     }
   }
@@ -369,8 +369,8 @@ export default class Transactor extends CommonBase {
       const data = this._fileFriend.readPathOrNull(fullPath);
 
       if (data !== null) {
-        // Per the `FileOp` documentation, we are only supposed to bind a result
-        // key if the path is present (stores data).
+        // Per the `TransactionOp` documentation, we are only supposed to bind a
+        // result key if the path is present (stores data).
         this._data.set(fullPath, data);
       }
     }

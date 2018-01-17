@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import fs from 'fs';
 import { after, describe, it } from 'mocha';
 
-import { FileOp, TransactionSpec } from 'file-store';
+import { TransactionOp, TransactionSpec } from 'file-store';
 import { LocalFile } from 'file-store-local';
 import { FrozenBuffer } from 'util-common';
 
@@ -52,14 +52,14 @@ describe('file-store-local/LocalFile', () => {
       // Baseline assumption.
 
       let spec = new TransactionSpec(
-        FileOp.op_writePath(storagePath, value)
+        TransactionOp.op_writePath(storagePath, value)
       );
 
       await file.create();
       await file.transact(spec);
 
       spec = new TransactionSpec(
-        FileOp.op_readPath(storagePath)
+        TransactionOp.op_readPath(storagePath)
       );
 
       let result = (await file.transact(spec)).data.get(storagePath);
