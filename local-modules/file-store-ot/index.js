@@ -2,10 +2,18 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import FileChange from './FileChange';
 import FileDelta from './FileDelta';
 import FileOp from './FileOp';
 import StoragePath from './StoragePath';
 import TransactionOp from './TransactionOp';
 import TransactionSpec from './TransactionSpec';
 
-export { FileDelta, FileOp, StoragePath, TransactionOp, TransactionSpec };
+export {
+  FileChange,
+  FileDelta,
+  FileOp,
+  StoragePath,
+  TransactionOp,
+  TransactionSpec
+};
