@@ -116,11 +116,14 @@ export default class CommonBase {
     // that was called upon.
 
     function mixOne(target, source) {
-      const descriptors = Object.getOwnPropertyDescriptors(source);
+      const keys = [
+        ...Object.getOwnPropertyNames(source),
+        ...Object.getOwnPropertySymbols(source)
+      ];
 
-      for (const [name, desc] of Object.entries(descriptors)) {
-        if (!ObjectUtil.hasOwnProperty(target, name)) {
-          Object.defineProperty(target, name, desc);
+      for (const key of keys) {
+        if (!ObjectUtil.hasOwnProperty(target, key)) {
+          Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
         }
       }
     }
