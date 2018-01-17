@@ -3,9 +3,10 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { StoragePath, TransactionSpec } from 'file-store-ot';
-import { TBoolean, TInt, TMap, TObject, TSet, TString } from 'typecheck';
+import { TBoolean, TInt, TMap, TObject, TSet } from 'typecheck';
 import { CommonBase, Errors, FrozenBuffer } from 'util-common';
 
+import FileId from './FileId';
 import StorageId from './StorageId';
 
 /**
@@ -27,7 +28,7 @@ export default class BaseFile extends CommonBase {
     super();
 
     /** {string} The ID of the file that this instance represents. */
-    this._id = TString.nonEmpty(fileId);
+    this._id = FileId.check(fileId);
   }
 
   /** {string} The ID of the file that this instance represents. */
