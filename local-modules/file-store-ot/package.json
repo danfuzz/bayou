@@ -1,0 +1,10 @@
+{
+  "name": "file-store-ot",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "ot-common": "local",
+    "typecheck": "local",
+    "util-common": "local"
+  }
+}
