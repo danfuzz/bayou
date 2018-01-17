@@ -6,7 +6,6 @@ import ColorSelector from './ColorSelector';
 import ColorUtil from './ColorUtil';
 import DeferredLoader from './DeferredLoader';
 import ErrorUtil from './ErrorUtil';
-import FrozenBuffer from './FrozenBuffer';
 import IterableUtil from './IterableUtil';
 import JsonUtil from './JsonUtil';
 import PropertyIterable from './PropertyIterable';
@@ -21,7 +20,6 @@ export {
   ColorUtil,
   DeferredLoader,
   ErrorUtil,
-  FrozenBuffer,
   IterableUtil,
   JsonUtil,
   PropertyIterable,

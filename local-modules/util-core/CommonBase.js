@@ -116,11 +116,14 @@ export default class CommonBase {
     // that was called upon.
 
     function mixOne(target, source) {
-      const descriptors = Object.getOwnPropertyDescriptors(source);
+      const keys = [
+        ...Object.getOwnPropertyNames(source),
+        ...Object.getOwnPropertySymbols(source)
+      ];
 
-      for (const [name, desc] of Object.entries(descriptors)) {
-        if (!ObjectUtil.hasOwnProperty(target, name)) {
-          Object.defineProperty(target, name, desc);
+      for (const key of keys) {
+        if (!ObjectUtil.hasOwnProperty(target, key)) {
+          Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
         }
       }
     }
@@ -151,9 +154,11 @@ export default class CommonBase {
   /**
    * Custom inspector function, as called by `util.inspect()`. This
    * implementation returns a string that uses the instance's class name and
-   * public synthetic properties (which is an arrangement by and large suitable
-   * for classes as typically defined in this project), with the latter enclosed
-   * in `{...}` and displayed in a map-like way.
+   * either a constructor-like or map-like form for the payload. If the class
+   * defines `deconstruct()`, then the result of that is used for a
+   * constructor-like form. Otherwise, the public synthetic properties are used
+   * to form the map-like form (which is an arrangement by and large suitable
+   * for classes as typically defined in this project).
    *
    * Subclasses may choose to override this method if they can produce something
    * more appropriate and/or higher fidelity.

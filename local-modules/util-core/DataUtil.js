@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import Errors from './Errors';
+import FrozenBuffer from './FrozenBuffer';
 import Functor from './Functor';
 import ObjectUtil from './ObjectUtil';
 import UtilityClass from './UtilityClass';
@@ -15,8 +16,8 @@ import UtilityClass from './UtilityClass';
  * * Symbols.
  * * `undefined` and `null`.
  * * "Odd-shaped" arrays (ones with holes or extra properties).
- * * By special dispensation, instances of the class `Functor` (defined in this
- *   module).
+ * * By special dispensation, instances of the class `FrozenBuffer` and
+ *  `Functor` (both defined in this module).
  *
  * This does _not_ include:
  *
@@ -62,6 +63,10 @@ export default class DataUtil extends UtilityClass {
           case Array.prototype: {
             cloneBase = [];
             break;
+          }
+          case FrozenBuffer.prototype: {
+            // These are deep-frozen by definition. Easy peasy lemon squeezy!
+            return value;
           }
           case Functor.prototype: {
             // Handle functors directly here.
@@ -204,6 +209,10 @@ export default class DataUtil extends UtilityClass {
         return true;
       }
 
+      case FrozenBuffer.prototype: {
+        return value1.equals(value2);
+      }
+
       case Functor.prototype: {
         return (value1.name === value2.name)
           && DataUtil.equalData(value1.args, value2.args);
@@ -268,6 +277,10 @@ export default class DataUtil extends UtilityClass {
         return true;
       }
 
+      case FrozenBuffer.prototype: {
+        return true;
+      }
+
       case Functor.prototype: {
         return DataUtil.isData(value.args);
       }
@@ -311,13 +324,13 @@ export default class DataUtil extends UtilityClass {
     // At this point, we have a non-null object(ish) value, which is _not_ a
     // function or generator.
 
-    if (!Object.isFrozen(value)) {
-      return false;
-    }
-
     switch (Object.getPrototypeOf(value)) {
       case Object.prototype:
       case Array.prototype: {
+        if (!Object.isFrozen(value)) {
+          return false;
+        }
+
         // We have a frozen composite of one of the acceptable standard types
         // (either array or plain object). We still need to check the
         // properties / elements.
@@ -336,8 +349,15 @@ export default class DataUtil extends UtilityClass {
         return true;
       }
 
+      case FrozenBuffer.prototype: {
+        // Even though `Object.isFrozen()` returns `false` for `FrozenBuffer`
+        // instances, by their behavior they are _effectively_ frozen for the
+        // purposes of this class.
+        return true;
+      }
+
       case Functor.prototype: {
-        return DataUtil.isDeepFrozen(value.args);
+        return Object.isFrozen(value) && DataUtil.isDeepFrozen(value.args);
       }
 
       default: {

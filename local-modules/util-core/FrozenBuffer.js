@@ -6,8 +6,10 @@
 // module, which is why this is possible to import regardless of environment.
 import crypto from 'crypto';
 
-import { TBuffer, TInt } from 'typecheck';
-import { CommonBase, Errors } from 'util-core';
+import { inspect } from 'util';
+
+import CoreTypecheck from './CoreTypecheck';
+import Errors from './Errors';
 
 /** {string} Node's name for the hashing algorithm to use. */
 const NODE_HASH_NAME = 'sha256';
@@ -20,8 +22,14 @@ const HASH_BIT_LENGTH = 256;
 
 /**
  * Immutable buffer of data.
+ *
+ * **Note:** This class mixes in `CommonBase`, so that it gets the static
+ * `check()` method and friends. However, because `CommonBase` uses this class,
+ * we can't just mix it in here (as this class is the one that gets initialized
+ * first). Instead, this happens during module initialization.
+ *
  */
-export default class FrozenBuffer extends CommonBase {
+export default class FrozenBuffer {
   /**
    * Validates that the given value is a valid hash string, such as might be
    * returned by the instance property `.hash` on this class. Throws an error if
@@ -98,8 +106,6 @@ export default class FrozenBuffer extends CommonBase {
     if (!(isString || isBuffer)) {
       throw Errors.badValue(value, 'Buffer|string');
     }
-
-    super();
 
     /** {string|null} String value, if constructed from a string. */
     this._string = isString ? value : null;
@@ -195,10 +201,10 @@ export default class FrozenBuffer extends CommonBase {
    *   and the actual number of bytes copied is returned.
    */
   copy(target, targetStart = 0, sourceStart = 0, sourceEnd = this.length) {
-    TBuffer.check(target);
-    TInt.check(targetStart);
-    TInt.check(sourceStart);
-    TInt.check(sourceEnd);
+    CoreTypecheck.checkObject(target, Buffer);
+    CoreTypecheck.checkInt(targetStart, 0);
+    CoreTypecheck.checkInt(sourceStart, 0);
+    CoreTypecheck.checkInt(sourceEnd, sourceStart, this.length + 1);
 
     const buf = this._ensureBuffer();
     return buf.copy(target, targetStart, sourceStart, sourceEnd);
@@ -216,6 +222,29 @@ export default class FrozenBuffer extends CommonBase {
     const thisBuf = this._ensureBuffer();
     const otherBuf = other._ensureBuffer();
     return thisBuf.equals(otherBuf);
+  }
+
+  /**
+   * Custom inspector function, as called by `util.inspect()`.
+   *
+   * @param {Int} depth Current inspection depth.
+   * @param {object} opts_unused Inspection options.
+   * @returns {string} The inspection string form of this instance.
+   */
+  [inspect.custom](depth, opts_unused) {
+    const name = this.constructor.name;
+    const buf  = this._ensureBuffer();
+
+    if (depth < 0) {
+      // Minimal expansion if we're at the depth limit.
+      return `${name}[${this.length === 0 ? '' : '...'}]`;
+    }
+
+    if (buf.length < 50) {
+      return `${name}[${buf.toString('hex')}]`;
+    }
+
+    return `${name}[${buf.slice(0, 50).toString('hex')}...]`;
   }
 
   /**

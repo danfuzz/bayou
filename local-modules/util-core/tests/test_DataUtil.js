@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { DataUtil, Functor } from 'util-core';
+import { DataUtil, FrozenBuffer, Functor } from 'util-core';
 
 describe('util-core/DataUtil', () => {
   describe('deepFreeze()', () => {
@@ -105,6 +105,15 @@ describe('util-core/DataUtil', () => {
 
       assert.isTrue(DataUtil.isDeepFrozen(popsicle));
       assert.deepEqual(popsicle, orig);
+    });
+
+    it('should return a given `FrozenBuffer`', () => {
+      function test(value) {
+        assert.strictEqual(DataUtil.deepFreeze(value), value);
+      }
+
+      test(FrozenBuffer.coerce(''));
+      test(FrozenBuffer.coerce('florp'));
     });
 
     it('should work on functors with freezable arguments', () => {
@@ -211,6 +220,17 @@ describe('util-core/DataUtil', () => {
       test({}, {});
       test({ a: 1 }, { a: 1 });
       test({ a: 1, b: { b: 2 } }, { a: 1, b: { b: 2 } });
+    });
+
+    it('should return `true` for equal-content `FrozenBuffer`s', () => {
+      function test(content) {
+        const buf1 = FrozenBuffer.coerce(content);
+        const buf2 = FrozenBuffer.coerce(content);
+        assert.isTrue(DataUtil.equalData(buf1, buf2), buf1);
+      }
+
+      test('');
+      test('Florps are now likes again.');
     });
 
     it('should return `true` for equal-content functors', () => {
@@ -326,6 +346,7 @@ describe('util-core/DataUtil', () => {
       test([]);
       test([1, 2, 3]);
       test([[1, 2, 3]]);
+      test([FrozenBuffer.coerce('zorch')]);
 
       test({});
       test({ a: 10, b: 20 });
@@ -335,6 +356,8 @@ describe('util-core/DataUtil', () => {
       test(new Functor('x', 1));
       test(new Functor('x', [1, 2, 3]));
       test(new Functor('x', new Functor('y', 914, 37)));
+
+      test(FrozenBuffer.coerce('florp'));
     });
 
     it('should return `false` for non-plain objects or composites with same', () => {
@@ -409,6 +432,15 @@ describe('util-core/DataUtil', () => {
       test(new Functor('x', 1));
       test(new Functor('x', Object.freeze([1, 2, 3])));
       test(new Functor('x', new Functor('y', 914, 37)));
+    });
+
+    it('should return `true` for `FrozenBuffer`s', () => {
+      function test(value) {
+        assert.isTrue(DataUtil.isDeepFrozen(value));
+      }
+
+      test(FrozenBuffer.coerce(''));
+      test(FrozenBuffer.coerce('blort'));
     });
 
     it('should return `false` for composites that are not frozen even if all elements are', () => {
