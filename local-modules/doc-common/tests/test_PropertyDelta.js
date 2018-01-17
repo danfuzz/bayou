@@ -43,8 +43,8 @@ describe('doc-common/PropertyDelta', () => {
         [PropertyOp.op_set('x', ['y'])],
         [PropertyOp.op_set('x', { y: 10 })],
         [PropertyOp.op_delete('foo')],
-        [['set_property', 'x', 10]],
-        [['delete_property', 'foo']]
+        [['set', 'x', 10]],
+        [['delete', 'foo']]
       ];
 
       for (const v of values) {
