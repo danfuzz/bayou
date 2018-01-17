@@ -42,12 +42,12 @@ export default class FileSnapshot extends BaseSnapshot {
 
       switch (opProps.opName) {
         case FileOp.CODE_writeBlob: {
-          this._values.set(opProps.property.blob.hash, op);
+          this._values.set(opProps.blob.hash, op);
           break;
         }
 
         case FileOp.CODE_writePath: {
-          this._values.set(opProps.property.path, op);
+          this._values.set(opProps.path, op);
           break;
         }
 
