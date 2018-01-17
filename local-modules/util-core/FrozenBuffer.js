@@ -6,7 +6,6 @@
 // module, which is why this is possible to import regardless of environment.
 import crypto from 'crypto';
 
-import CommonBase from './CommonBase';
 import CoreTypecheck from './CoreTypecheck';
 import Errors from './Errors';
 
@@ -21,8 +20,14 @@ const HASH_BIT_LENGTH = 256;
 
 /**
  * Immutable buffer of data.
+ *
+ * **Note:** This class mixes in `CommonBase`, so that it gets the static
+ * `check()` method and friends. However, because `CommonBase` uses this class,
+ * we can't just mix it in here (as this class is the one that gets initialized
+ * first). Instead, this happens during module initialization.
+ *
  */
-export default class FrozenBuffer extends CommonBase {
+export default class FrozenBuffer {
   /**
    * Validates that the given value is a valid hash string, such as might be
    * returned by the instance property `.hash` on this class. Throws an error if
@@ -99,8 +104,6 @@ export default class FrozenBuffer extends CommonBase {
     if (!(isString || isBuffer)) {
       throw Errors.badValue(value, 'Buffer|string');
     }
-
-    super();
 
     /** {string|null} String value, if constructed from a string. */
     this._string = isString ? value : null;

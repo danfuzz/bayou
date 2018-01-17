@@ -13,10 +13,9 @@ import ObjectUtil from './ObjectUtil';
 import URL from './URL';
 import UtilityClass from './UtilityClass';
 
-// Mix this class into `Functor` and `InfoError`. We do these here to avoid
-// circular dependencies: `CommonBase` uses `Errors` which uses `InfoError`
-// which uses `Functor`. `Functor` and `InfoError` both want to get the
-// `CommonBase` methods.
+// Mix this class into a few classes which would otherwise end up participating
+// in circular `import` dependencies.
+CommonBase.mixInto(FrozenBuffer);
 CommonBase.mixInto(Functor);
 CommonBase.mixInto(InfoError);
 
