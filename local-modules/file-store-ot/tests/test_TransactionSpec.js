@@ -5,11 +5,11 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TransactionOp, TransactionSpec } from 'file-store';
+import { TransactionOp, TransactionSpec } from 'file-store-ot';
 
 import FileOpMaker from './FileOpMaker';
 
-describe('file-store/TransactionSpec', () => {
+describe('file-store-ot/TransactionSpec', () => {
   // The call to `FileOpMaker.testCases()` provides outer `describe()`s for each
   // value to test with.
   FileOpMaker.testCases((ops) => {

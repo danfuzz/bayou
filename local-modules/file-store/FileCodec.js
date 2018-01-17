@@ -3,10 +3,10 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Codec } from 'codec';
+import { TransactionOp } from 'file-store-ot';
 import { CommonBase } from 'util-common';
 
 import BaseFile from './BaseFile';
-import TransactionOp from './TransactionOp';
 
 /**
  * Combination of a `BaseFile` with a `Codec`, with operations to make it easy

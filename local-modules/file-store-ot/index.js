@@ -3,5 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import FileOp from './FileOp';
+import StoragePath from './StoragePath';
+import TransactionOp from './TransactionOp';
+import TransactionSpec from './TransactionSpec';
 
-export { FileOp };
+export { FileOp, StoragePath, TransactionOp, TransactionSpec };

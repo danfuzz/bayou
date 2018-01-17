@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BodyChange, BodyDelta } from 'doc-common';
-import { TransactionSpec } from 'file-store';
+import { TransactionSpec } from 'file-store-ot';
 import { DEFAULT_DOCUMENT } from 'hooks-server';
 import { Timestamp } from 'ot-common';
 import { Mutex } from 'promise-util';

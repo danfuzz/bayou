@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { StoragePath } from 'file-store';
+import { StoragePath } from 'file-store-ot';
 
 /** {array<string>} List of valid paths. */
 const VALID_PATHS = [
@@ -62,7 +62,7 @@ const NON_STRINGS = [
   { '/x': '/y' }
 ];
 
-describe('file-store/StoragePath', () => {
+describe('file-store-ot/StoragePath', () => {
   describe('allPrefixes()', () => {
     it('should work as expected', () => {
       function test(value, expected) {

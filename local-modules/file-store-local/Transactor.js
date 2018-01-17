@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Errors as fileStore_Errors, StoragePath } from 'file-store';
+import { Errors as fileStore_Errors } from 'file-store';
+import { StoragePath } from 'file-store-ot';
 import { CommonBase, Errors } from 'util-common';
 
 /**

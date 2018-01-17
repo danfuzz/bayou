@@ -5,7 +5,7 @@
 import { describe } from 'mocha';
 import { inspect } from 'util';
 
-import { TransactionOp } from 'file-store';
+import { TransactionOp } from 'file-store-ot';
 import { Errors, FrozenBuffer, UtilityClass } from 'util-common';
 
 /**

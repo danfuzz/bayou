@@ -6,6 +6,7 @@
     "codec": "local",
     "env-server": "local",
     "file-store": "local",
+    "file-store-ot": "local",
     "promise-util": "local",
     "see-all": "local",
     "util-common": "local",

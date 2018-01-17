@@ -5,6 +5,8 @@
 import { BaseOp } from 'ot-common';
 import { Errors, FrozenBuffer } from 'util-common';
 
+import StoragePath from './StoragePath';
+
 /**
  * Operation which can be applied to a {@link FileSnapshot}.
  */

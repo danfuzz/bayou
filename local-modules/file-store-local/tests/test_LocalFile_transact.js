@@ -5,8 +5,8 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TransactionOp, TransactionSpec } from 'file-store';
 import { LocalFile } from 'file-store-local';
+import { TransactionOp, TransactionSpec } from 'file-store-ot';
 import { FrozenBuffer } from 'util-common';
 
 import TempFiles from './TempFiles';
