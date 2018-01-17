@@ -12,6 +12,10 @@ import PropertyOp from './PropertyOp';
  * ordered list of operations. Instances of this class can be applied to
  * instances of `PropertySnapshot` to produce updated snapshots.
  *
+ * **Note:** To be valid as a document delta, the set of operations must (a)
+ * not have any deletes, and (b) not mention any given property name more than
+ * once.
+ *
  * Instances of this class are immutable.
  */
 export default class PropertyDelta extends BaseDelta {
