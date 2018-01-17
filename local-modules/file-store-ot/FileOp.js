@@ -98,7 +98,7 @@ export default class FileOp extends BaseOp {
     StoragePath.check(path);
     FrozenBuffer.check(blob);
 
-    return new FileOp(FileOp.CODE_writePath, blob);
+    return new FileOp(FileOp.CODE_writePath, path, blob);
   }
 
   /**

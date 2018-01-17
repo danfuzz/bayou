@@ -54,12 +54,12 @@ export default class FileDelta extends BaseDelta {
         }
 
         case FileOp.CODE_writeBlob: {
-          ids.set(opProps.property.blob.hash, op);
+          ids.set(opProps.blob.hash, op);
           break;
         }
 
         case FileOp.CODE_writePath: {
-          ids.set(opProps.property.path, op);
+          ids.set(opProps.path, op);
           break;
         }
 
@@ -117,7 +117,7 @@ export default class FileDelta extends BaseDelta {
 
       switch (opProps.opName) {
         case FileOp.CODE_writeBlob: {
-          const hash = opProps.property.blob.hash;
+          const hash = opProps.blob.hash;
 
           if (ids.has(hash)) {
             return false;
@@ -128,7 +128,7 @@ export default class FileDelta extends BaseDelta {
         }
 
         case FileOp.CODE_writePath: {
-          const path = opProps.property.path;
+          const path = opProps.path;
 
           if (ids.has(path)) {
             return false;
