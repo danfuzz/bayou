@@ -6,6 +6,7 @@ import CommonBase from './CommonBase';
 import CoreTypecheck from './CoreTypecheck';
 import DataUtil from './DataUtil';
 import Errors from './Errors';
+import FrozenBuffer from './FrozenBuffer';
 import Functor from './Functor';
 import InfoError from './InfoError';
 import ObjectUtil from './ObjectUtil';
@@ -24,6 +25,7 @@ export {
   CoreTypecheck,
   DataUtil,
   Errors,
+  FrozenBuffer,
   Functor,
   InfoError,
   ObjectUtil,

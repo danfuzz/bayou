@@ -6,8 +6,9 @@
 // module, which is why this is possible to import regardless of environment.
 import crypto from 'crypto';
 
-import { TBuffer, TInt } from 'typecheck';
-import { CommonBase, Errors } from 'util-core';
+import CommonBase from './CommonBase';
+import CoreTypecheck from './CoreTypecheck';
+import Errors from './Errors';
 
 /** {string} Node's name for the hashing algorithm to use. */
 const NODE_HASH_NAME = 'sha256';
@@ -195,10 +196,10 @@ export default class FrozenBuffer extends CommonBase {
    *   and the actual number of bytes copied is returned.
    */
   copy(target, targetStart = 0, sourceStart = 0, sourceEnd = this.length) {
-    TBuffer.check(target);
-    TInt.check(targetStart);
-    TInt.check(sourceStart);
-    TInt.check(sourceEnd);
+    CoreTypecheck.checkObject(target, Buffer);
+    CoreTypecheck.checkInt(targetStart, 0);
+    CoreTypecheck.checkInt(sourceStart, 0);
+    CoreTypecheck.checkInt(sourceEnd, sourceStart, this.length + 1);
 
     const buf = this._ensureBuffer();
     return buf.copy(target, targetStart, sourceStart, sourceEnd);
