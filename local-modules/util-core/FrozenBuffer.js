@@ -6,6 +6,8 @@
 // module, which is why this is possible to import regardless of environment.
 import crypto from 'crypto';
 
+import { inspect } from 'util';
+
 import CoreTypecheck from './CoreTypecheck';
 import Errors from './Errors';
 
@@ -220,6 +222,29 @@ export default class FrozenBuffer {
     const thisBuf = this._ensureBuffer();
     const otherBuf = other._ensureBuffer();
     return thisBuf.equals(otherBuf);
+  }
+
+  /**
+   * Custom inspector function, as called by `util.inspect()`.
+   *
+   * @param {Int} depth Current inspection depth.
+   * @param {object} opts_unused Inspection options.
+   * @returns {string} The inspection string form of this instance.
+   */
+  [inspect.custom](depth, opts_unused) {
+    const name = this.constructor.name;
+    const buf  = this._ensureBuffer();
+
+    if (depth < 0) {
+      // Minimal expansion if we're at the depth limit.
+      return `${name}[${this.length === 0 ? '' : '...'}]`;
+    }
+
+    if (buf.length < 50) {
+      return `${name}[${buf.toString('hex')}]`;
+    }
+
+    return `${name}[${buf.slice(0, 50).toString('hex')}...]`;
   }
 
   /**
