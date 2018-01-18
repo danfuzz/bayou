@@ -19,7 +19,11 @@ class Star extends React.Component {
       ? `${styles.star} ${styles['star-enabled']} c-icon--star`
       : `${styles.star} ${styles['star-disabled']} c-icon--star-o`;
 
-    return <button onClick={ this.props.onClick } className={ classes }></button>;
+    return <button
+      disabled={true}
+      onClick={ this.props.onClick }
+      className={ classes }>
+    </button>;
   }
 }
 
