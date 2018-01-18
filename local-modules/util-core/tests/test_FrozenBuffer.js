@@ -373,5 +373,20 @@ describe('util-core/FrozenBuffer', () => {
         test(s);
       }
     });
+
+    it('should be independent of the internally-stored buffer and to other results from this method', () => {
+      const nodeBuf = Buffer.from('abc', 'utf8');
+      const origBuf = new FrozenBuffer(nodeBuf);
+      const toBuf1  = origBuf.toBuffer();
+
+      toBuf1[0] = 0;
+      toBuf1[1] = 0;
+      toBuf1[2] = 0;
+
+      const toBuf2  = origBuf.toBuffer();
+
+      assert.notStrictEqual(toBuf2, toBuf1);
+      assert.deepEqual(toBuf2, nodeBuf);
+    });
   });
 });
