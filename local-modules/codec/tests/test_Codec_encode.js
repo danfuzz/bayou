@@ -94,6 +94,13 @@ describe('api-common/Codec.encode*()', () => {
       assert.deepEqual(encodeData(orig), expect);
     });
 
+    it('should accept `FrozenBuffer`s and encode as a single base-64 string argument', () => {
+      const orig   = new FrozenBuffer('florp');
+      const expect = ConstructorCall.from('buf', 'ZmxvcnA=');
+
+      assert.deepEqual(encodeData(orig), expect);
+    });
+
     it('should reject objects with no `deconstruct()` method', () => {
       class NoDeconstruct {
         get CODEC_TAG() {

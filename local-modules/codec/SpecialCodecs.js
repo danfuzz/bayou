@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Functor, ObjectUtil, UtilityClass } from 'util-common';
+import { FrozenBuffer, Functor, ObjectUtil, UtilityClass } from 'util-common';
 
 import ItemCodec from './ItemCodec';
 
@@ -72,6 +72,46 @@ export default class SpecialCodecs extends UtilityClass {
     }
 
     return true;
+  }
+
+  /** {ItemCodec} Codec used for coding `FrozenBuffer`s. */
+  static get FROZEN_BUFFER() {
+    return new ItemCodec('buf', FrozenBuffer, null,
+      this._frozenBufferEncode, this._frozenBufferDecode);
+  }
+
+  /**
+   * Decodes a `FrozenBuffer`.
+   *
+   * @param {array<*>} payload Construction payload as previously produced by
+   *   `_frozenBufferEncode()`.
+   * @param {function} subDecode Function to call to decode component values
+   *   inside `payload`, as needed.
+   * @returns {FrozenBuffer} Decoded instance.
+   */
+  static _frozenBufferDecode(payload, subDecode) {
+    // Even though the expected case is that strings self-code, we call
+    // `subDecode()` anyway to protect against the unexpected (at insubstantial
+    // cost).
+    const [base64Enc] = payload;
+    const base64      = subDecode(base64Enc);
+
+    return new FrozenBuffer(base64, 'base64');
+  }
+
+  /**
+   * Encodes a `FrozenBuffer`.
+   *
+   * @param {FrozenBuffer} value Instance to encode.
+   * @param {function} subEncode Function to call to encode component values
+   *   inside `value`, as needed.
+   * @returns {array<*>} Encoded form.
+   */
+  static _frozenBufferEncode(value, subEncode) {
+    // Even though the expected case is that strings self-code, we call
+    // `subEncode()` anyway to protect against the unexpected (at insubstantial
+    // cost).
+    return [subEncode(value.base64)];
   }
 
   /** {ItemCodec} Codec used for coding functors. */
