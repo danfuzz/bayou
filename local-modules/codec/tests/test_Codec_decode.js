@@ -56,21 +56,26 @@ describe('api-common/Codec.decode*()', () => {
     });
 
     it('should decode an encoded array back to the original array', () => {
-      const orig = [1, 2, 'buckle my shoe'];
+      const orig    = [1, 2, 'buckle my shoe'];
       const encoded = encodeData(orig);
       assert.deepEqual(decodeData(encoded), orig);
     });
 
-    it('should convert propertly formatted values to a decoded instance', () => {
+    it('should decode an encoded `FrozenBuffer`s back to an equal instance', () => {
+      const orig    = new FrozenBuffer('florp');
+      const encoded = encodeData(orig);
+      const decoded = decodeData(encoded);
+
+      assert.deepEqual(decoded.string,     orig.string);
+      assert.deepEqual(decoded.toBuffer(), orig.toBuffer());
+    });
+
+    it('should decode an encoded class instance as expected', () => {
       const apiObject = new MockCodable();
-      const encoding = encodeData(apiObject);
-      let decodedObject = null;
+      const encoding  = encodeData(apiObject);
+      const decoded   = decodeData(encoding);
 
-      assert.doesNotThrow(() => {
-        decodedObject = decodeData(encoding);
-      });
-
-      assert.instanceOf(decodedObject, apiObject.constructor);
+      assert.instanceOf(decoded, apiObject.constructor);
     });
   });
 
