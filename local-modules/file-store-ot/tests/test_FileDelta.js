@@ -6,16 +6,17 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { PropertyDelta, PropertyOp } from 'doc-common';
+import { FileDelta, FileOp } from 'file-store-ot';
+import { FrozenBuffer } from 'util-common';
 
 import { MockDelta } from 'ot-common/mocks';
 
-describe('doc-common/PropertyDelta', () => {
+describe('file-store-ot/FileDelta', () => {
   describe('.EMPTY', () => {
-    const EMPTY = PropertyDelta.EMPTY;
+    const EMPTY = FileDelta.EMPTY;
 
-    it('should be an instance of `PropertyDelta`', () => {
-      assert.instanceOf(EMPTY, PropertyDelta);
+    it('should be an instance of `FileDelta`', () => {
+      assert.instanceOf(EMPTY, FileDelta);
     });
 
     it('should be a frozen object', () => {
@@ -39,17 +40,18 @@ describe('doc-common/PropertyDelta', () => {
     describe('valid arguments', () => {
       const values = [
         [],
-        [PropertyOp.op_set('x', 'y')],
-        [PropertyOp.op_set('x', ['y'])],
-        [PropertyOp.op_set('x', { y: 10 })],
-        [PropertyOp.op_delete('foo')],
-        [['set', 'x', 10]],
-        [['delete', 'foo']]
+        [FileOp.op_deleteAll()],
+        [FileOp.op_deleteBlob(FrozenBuffer.coerce('blort').hash)],
+        [FileOp.op_deletePath('/x/y/z')],
+        [FileOp.op_writeBlob(FrozenBuffer.coerce('florp'))],
+        [FileOp.op_writePath('/zorch', FrozenBuffer.coerce('splat'))],
+        [['deleteAll']],
+        [['deleteAll'], ['deleteAll'], ['deleteAll']],
       ];
 
       for (const v of values) {
         it(`should succeed for: ${inspect(v)}`, () => {
-          new PropertyDelta(v);
+          new FileDelta(v);
         });
       }
     });
@@ -72,7 +74,7 @@ describe('doc-common/PropertyDelta', () => {
 
       for (const v of values) {
         it(`should fail for: ${inspect(v)}`, () => {
-          assert.throws(() => new PropertyDelta(v));
+          assert.throws(() => new FileDelta(v));
         });
       }
     });
@@ -80,27 +82,27 @@ describe('doc-common/PropertyDelta', () => {
 
   describe('compose()', () => {
     it('should return an empty result from `EMPTY.compose(EMPTY)`', () => {
-      const result1 = PropertyDelta.EMPTY.compose(PropertyDelta.EMPTY, false);
-      assert.instanceOf(result1, PropertyDelta);
+      const result1 = FileDelta.EMPTY.compose(FileDelta.EMPTY, false);
+      assert.instanceOf(result1, FileDelta);
       assert.deepEqual(result1.ops, []);
 
-      const result2 = PropertyDelta.EMPTY.compose(PropertyDelta.EMPTY, true);
-      assert.instanceOf(result2, PropertyDelta);
+      const result2 = FileDelta.EMPTY.compose(FileDelta.EMPTY, true);
+      assert.instanceOf(result2, FileDelta);
       assert.deepEqual(result2.ops, []);
     });
 
     it('should reject calls when `other` is not an instance of the class', () => {
-      const delta = PropertyDelta.EMPTY;
+      const delta = FileDelta.EMPTY;
 
       assert.throws(() => delta.compose('blort', false));
       assert.throws(() => delta.compose(null, false));
       assert.throws(() => delta.compose(new MockDelta([]), false));
     });
 
-    it('should result in no more than one op per named property, with `other` taking precedence', () => {
+    it('should result in no more than one op per storage ID, with `other` taking precedence', () => {
       function test(ops1, ops2, expectOps) {
-        const d1     = new PropertyDelta(ops1);
-        const d2     = new PropertyDelta(ops2);
+        const d1     = new FileDelta(ops1);
+        const d2     = new FileDelta(ops2);
         const result = d1.compose(d2, false);
 
         assert.strictEqual(result.ops.length, expectOps.length);
@@ -115,13 +117,13 @@ describe('doc-common/PropertyDelta', () => {
         }
       }
 
-      const op1 = PropertyOp.op_set('aaa', 'bbb');
-      const op2 = PropertyOp.op_set('aaa', 'ccc');
-      const op3 = PropertyOp.op_set('aaa', 'ddd');
-      const op4 = PropertyOp.op_set('aaa', 'eee');
-      const op5 = PropertyOp.op_set('bbb', 'ccc');
-      const op6 = PropertyOp.op_set('bbb', 'ddd');
-      const op7 = PropertyOp.op_delete('aaa');
+      const op1 = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('bbb'));
+      const op2 = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('ccc'));
+      const op3 = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('ddd'));
+      const op4 = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('eee'));
+      const op5 = FileOp.op_writePath('/bbb', FrozenBuffer.coerce('ccc'));
+      const op6 = FileOp.op_writePath('/bbb', FrozenBuffer.coerce('ddd'));
+      const op7 = FileOp.op_deletePath('/aaa');
 
       test([op1],      [],         [op1]);
       test([op1, op2], [],         [op2]);
@@ -142,13 +144,13 @@ describe('doc-common/PropertyDelta', () => {
     });
 
     it('should not include deletions when `wantDocument` is `true`', () => {
-      const op1    = PropertyOp.op_set('aaa', '111');
-      const op2    = PropertyOp.op_set('bbb', '222');
-      const op3    = PropertyOp.op_set('ccc', '333');
-      const op4    = PropertyOp.op_delete('bbb');
-      const op5    = PropertyOp.op_delete('ddd');
-      const d1     = new PropertyDelta([op1, op2]);
-      const d2     = new PropertyDelta([op3, op4, op5]);
+      const op1    = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('111'));
+      const op2    = FileOp.op_writePath('/bbb', FrozenBuffer.coerce('222'));
+      const op3    = FileOp.op_writePath('/ccc', FrozenBuffer.coerce('333'));
+      const op4    = FileOp.op_deletePath('/bbb');
+      const op5    = FileOp.op_deletePath('/ddd');
+      const d1     = new FileDelta([op1, op2]);
+      const d2     = new FileDelta([op3, op4, op5]);
       const result = d1.compose(d2, true);
 
       assert.sameMembers(result.ops, [op1, op3]);
@@ -158,43 +160,54 @@ describe('doc-common/PropertyDelta', () => {
   describe('equals()', () => {
     it('should return `true` when passed itself', () => {
       function test(ops) {
-        const delta = new PropertyDelta(ops);
+        const delta = new FileDelta(ops);
         assert.isTrue(delta.equals(delta));
       }
 
+      const buf = FrozenBuffer.coerce('blortch');
+
       test([]);
-      test([PropertyOp.op_set('aaa', 'bbb')]);
-      test([PropertyOp.op_set('aaa', 'bbb'), PropertyOp.op_delete('ccc')]);
+      test([FileOp.op_deleteAll()]);
+      test([FileOp.op_deleteBlob(buf.hash)]);
+      test([FileOp.op_writeBlob(buf)]);
+      test([FileOp.op_writePath('/aaa', buf)]);
+      test([FileOp.op_writePath('/aaa', buf), FileOp.op_deletePath('/ccc')]);
     });
 
     it('should return `true` when passed an identically-constructed value', () => {
       function test(ops) {
-        const d1 = new PropertyDelta(ops);
-        const d2 = new PropertyDelta(ops);
+        const d1 = new FileDelta(ops);
+        const d2 = new FileDelta(ops);
         assert.isTrue(d1.equals(d2));
         assert.isTrue(d2.equals(d1));
       }
 
+      const buf = FrozenBuffer.coerce('blortch');
+
       test([]);
-      test([PropertyOp.op_set('aaa', 'bbb')]);
-      test([PropertyOp.op_set('aaa', 'bbb'), PropertyOp.op_delete('ccc')]);
+      test([FileOp.op_deleteAll()]);
+      test([FileOp.op_deleteBlob(buf.hash)]);
+      test([FileOp.op_writeBlob(buf)]);
+      test([FileOp.op_writePath('/aaa', buf)]);
+      test([FileOp.op_writePath('/aaa', buf), FileOp.op_deletePath('/ccc')]);
     });
 
     it('should return `true` when equal ops are not also `===`', () => {
-      const ops1 = [PropertyOp.op_set('aaa', 'bbb')];
-      const ops2 = [PropertyOp.op_set('aaa', 'bbb')];
-      const d1 = new PropertyDelta(ops1);
-      const d2 = new PropertyDelta(ops2);
+      const buf = FrozenBuffer.coerce('splortch');
+      const ops1 = [FileOp.op_writePath('/aaa', buf)];
+      const ops2 = [FileOp.op_writePath('/aaa', buf)];
+      const d1 = new FileDelta(ops1);
+      const d2 = new FileDelta(ops2);
 
       assert.isTrue(d1.equals(d2));
       assert.isTrue(d2.equals(d1));
     });
 
     it('should return `false` when array lengths differ', () => {
-      const op1 = PropertyOp.op_set('aaa', 'bbb');
-      const op2 = PropertyOp.op_delete('ccc');
-      const d1 = new PropertyDelta([op1]);
-      const d2 = new PropertyDelta([op1, op2]);
+      const op1 = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('111'));
+      const op2 = FileOp.op_writePath('/bbb', FrozenBuffer.coerce('222'));
+      const d1  = new FileDelta([op1]);
+      const d2  = new FileDelta([op1, op2]);
 
       assert.isFalse(d1.equals(d2));
       assert.isFalse(d2.equals(d1));
@@ -202,18 +215,18 @@ describe('doc-common/PropertyDelta', () => {
 
     it('should return `false` when corresponding ops differ', () => {
       function test(ops1, ops2) {
-        const d1 = new PropertyDelta(ops1);
-        const d2 = new PropertyDelta(ops2);
+        const d1 = new FileDelta(ops1);
+        const d2 = new FileDelta(ops2);
 
         assert.isFalse(d1.equals(d2));
         assert.isFalse(d2.equals(d1));
       }
 
-      const op1 = PropertyOp.op_set('aaa', 'bbb');
-      const op2 = PropertyOp.op_set('aaa', 'ccc');
-      const op3 = PropertyOp.op_set('bbb', 'ccc');
-      const op4 = PropertyOp.op_delete('ddd');
-      const op5 = PropertyOp.op_delete('eee');
+      const op1 = FileOp.op_writeBlob(FrozenBuffer.coerce('aaa'));
+      const op2 = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('ccc'));
+      const op3 = FileOp.op_deleteAll();
+      const op4 = FileOp.op_deletePath('/ddd');
+      const op5 = FileOp.op_deleteBlob(FrozenBuffer.coerce('zorch').hash);
 
       test([op1],                     [op2]);
       test([op1, op2],                [op1, op3]);
@@ -226,7 +239,7 @@ describe('doc-common/PropertyDelta', () => {
     });
 
     it('should return `false` when passed a non-instance or an instance of a different class', () => {
-      const delta = new PropertyDelta([]);
+      const delta = new FileDelta([]);
 
       assert.isFalse(delta.equals(undefined));
       assert.isFalse(delta.equals(null));
@@ -241,33 +254,50 @@ describe('doc-common/PropertyDelta', () => {
 
   describe('isDocument()', () => {
     describe('`true` cases', () => {
+      const buf1 = FrozenBuffer.coerce('whooo');
+      const buf2 = FrozenBuffer.coerce('yeahhh');
       const values = [
         [],
-        [PropertyOp.op_set('aaa', 'bbb')],
-        [PropertyOp.op_set('aaa', 'bbb'), PropertyOp.op_set('ccc', 'ddd')],
+        [FileOp.op_writeBlob(buf1)],
+        [FileOp.op_writeBlob(buf1), FileOp.op_writeBlob(buf2)],
+        [FileOp.op_writePath('/aaa', buf1)],
+        [FileOp.op_writePath('/aaa', buf1), FileOp.op_writePath('/ccc', buf2)],
         [
-          PropertyOp.op_set('aaa', 'bbb'),
-          PropertyOp.op_set('ccc', 'ddd'),
-          PropertyOp.op_set('eee', 'fff')
-        ]
+          FileOp.op_writePath('/aaa', buf1),
+          FileOp.op_writePath('/ccc', buf2),
+          FileOp.op_writePath('/eee', buf2)
+        ],
+        [
+          FileOp.op_writeBlob(buf1),
+          FileOp.op_writeBlob(buf2),
+          FileOp.op_writePath('/aaa', buf1),
+          FileOp.op_writePath('/ccc', buf2),
+          FileOp.op_writePath('/eee', buf2)
+        ],
       ];
 
       for (const v of values) {
         it(`should return \`true\` for: ${inspect(v)}`, () => {
-          assert.isTrue(new PropertyDelta(v).isDocument());
+          assert.isTrue(new FileDelta(v).isDocument());
         });
       }
     });
 
     describe('`false` cases', () => {
+      const buf1 = FrozenBuffer.coerce('whooo');
+      const buf2 = FrozenBuffer.coerce('yeahhh');
       const values = [
-        [PropertyOp.op_delete('xyz')],
-        [PropertyOp.op_set('aaa', 'bbb'), PropertyOp.op_set('aaa', 'ccc')]
+        [FileOp.op_deleteAll()],
+        [FileOp.op_deleteBlob(buf1.hash)],
+        [FileOp.op_deletePath('/xyz')],
+        [FileOp.op_writePath('/aaa', buf1), FileOp.op_writePath('/aaa', buf1)],
+        [FileOp.op_writePath('/aaa', buf1), FileOp.op_writePath('/aaa', buf2)],
+        [FileOp.op_writeBlob(buf1), FileOp.op_writeBlob(buf1)],
       ];
 
       for (const v of values) {
         it(`should return \`false\` for: ${inspect(v)}`, () => {
-          assert.isFalse(new PropertyDelta(v).isDocument());
+          assert.isFalse(new FileDelta(v).isDocument());
         });
       }
     });
@@ -276,8 +306,8 @@ describe('doc-common/PropertyDelta', () => {
   describe('isEmpty()', () => {
     describe('valid empty values', () => {
       const values = [
-        new PropertyDelta([]),
-        PropertyDelta.EMPTY,
+        new FileDelta([]),
+        FileDelta.EMPTY,
       ];
 
       for (const v of values) {
@@ -288,16 +318,21 @@ describe('doc-common/PropertyDelta', () => {
     });
 
     describe('valid non-empty values', () => {
+      const buf1 = FrozenBuffer.coerce('whooo');
+      const buf2 = FrozenBuffer.coerce('yeahhh');
       const values = [
-        [PropertyOp.op_set('aaa', 'bbb')],
-        [PropertyOp.op_set('aaa', 'bbb'), PropertyOp.op_set('ccc', 'ddd')],
-        [PropertyOp.op_set('aaa', 'bbb'), PropertyOp.op_delete('aaa')],
-        [PropertyOp.op_delete('xyz')]
+        [FileOp.op_deleteAll()],
+        [FileOp.op_deleteBlob(buf1.hash)],
+        [FileOp.op_deletePath('/xyz')],
+        [FileOp.op_writePath('/aaa', buf1)],
+        [FileOp.op_writePath('/aaa', buf1), FileOp.op_writePath('/aaa', buf2)],
+        [FileOp.op_writeBlob(buf1)],
+        [FileOp.op_writeBlob(buf1), FileOp.op_writeBlob(buf2)]
       ];
 
       for (const v of values) {
         it(`should return \`false\` for: ${inspect(v)}`, () => {
-          const delta = new PropertyDelta(v);
+          const delta = new FileDelta(v);
           assert.isFalse(delta.isEmpty());
         });
       }

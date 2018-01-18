@@ -138,7 +138,7 @@ export default class PropertySnapshot extends BaseSnapshot {
    * Gets the property for the given name, if any.
    *
    * @param {string} name Property name.
-   * @returns {Property|null} Corresponding property, , or `null` if there is
+   * @returns {Property|null} Corresponding property, or `null` if there is
    *   none.
    */
   getOrNull(name) {

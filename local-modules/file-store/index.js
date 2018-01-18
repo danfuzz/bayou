@@ -7,19 +7,11 @@ import BaseFileStore from './BaseFileStore';
 import Errors from './Errors';
 import FileCodec from './FileCodec';
 import FileId from './FileId';
-import FileOp from './FileOp';
-import StorageId from './StorageId';
-import StoragePath from './StoragePath';
-import TransactionSpec from './TransactionSpec';
 
 export {
   BaseFile,
   BaseFileStore,
   Errors,
   FileCodec,
-  FileId,
-  FileOp,
-  StorageId,
-  StoragePath,
-  TransactionSpec
+  FileId
 };

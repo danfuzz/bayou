@@ -6,7 +6,8 @@ import afs from 'async-file';
 import path from 'path';
 
 import { Codec } from 'codec';
-import { BaseFile, Errors as fileStore_Errors, StoragePath } from 'file-store';
+import { BaseFile, Errors as fileStore_Errors } from 'file-store';
+import { StoragePath } from 'file-store-ot';
 import { Condition, Delay, Mutex } from 'promise-util';
 import { Logger } from 'see-all';
 import { FrozenBuffer, Errors } from 'util-common';

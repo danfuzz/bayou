@@ -2,12 +2,11 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TBoolean, TInt, TMap, TObject, TSet, TString } from 'typecheck';
+import { StorageId, StoragePath, TransactionSpec } from 'file-store-ot';
+import { TBoolean, TInt, TMap, TObject, TSet } from 'typecheck';
 import { CommonBase, Errors, FrozenBuffer } from 'util-common';
 
-import StorageId from './StorageId';
-import StoragePath from './StoragePath';
-import TransactionSpec from './TransactionSpec';
+import FileId from './FileId';
 
 /**
  * Base class representing access to a particular file. Subclasses must override
@@ -28,7 +27,7 @@ export default class BaseFile extends CommonBase {
     super();
 
     /** {string} The ID of the file that this instance represents. */
-    this._id = TString.nonEmpty(fileId);
+    this._id = FileId.check(fileId);
   }
 
   /** {string} The ID of the file that this instance represents. */
@@ -154,7 +153,7 @@ export default class BaseFile extends CommonBase {
 
   /**
    * Performs a transaction, which consists of a set of operations to be
-   * executed with respect to a file as an atomic unit. See `FileOp` for
+   * executed with respect to a file as an atomic unit. See `TransactionOp` for
    * details about the possible operations and how they are ordered. This
    * method will throw an error if it was not possible to perform the
    * transaction for any reason.

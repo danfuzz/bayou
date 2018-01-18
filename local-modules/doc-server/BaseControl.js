@@ -3,7 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Timeouts } from 'doc-common';
-import { Errors as fileStore_Errors, StoragePath, TransactionSpec } from 'file-store';
+import { Errors as fileStore_Errors } from 'file-store';
+import { StoragePath, TransactionSpec } from 'file-store-ot';
 import { BaseSnapshot, RevisionNumber } from 'ot-common';
 import { Delay } from 'promise-util';
 import { TBoolean, TFunction } from 'typecheck';
@@ -1070,7 +1071,7 @@ export default class BaseControl extends BaseDataManager {
    * @param {Int} startInclusive The start of the range to read (inclusive).
    * @param {Int} endExclusive The end of the range to read (exclusive). Must be
    *   `>= startInc`.
-   * @returns {FileOp} The corresponding file operation.
+   * @returns {TransactionOp} The corresponding file operation.
    */
   _opForChangeRange(op, startInclusive, endExclusive) {
     RevisionNumber.check(startInclusive);

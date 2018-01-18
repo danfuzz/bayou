@@ -10,6 +10,7 @@
     "doc-common": "local",
     "env-server": "local",
     "file-store": "local",
+    "file-store-ot": "local",
     "hooks-server": "local",
     "ot-common": "local",
     "promise-util": "local",

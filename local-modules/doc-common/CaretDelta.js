@@ -12,6 +12,10 @@ import CaretOp from './CaretOp';
  * operations. Instances of this class can be applied to instances of `Caret`
  * and `CaretSnapshot` to produce updated instances of those classes.
  *
+ * **Note:** To be valid as a document delta, the set of operations must (a)
+ * only consist of `beginSession` ops, and (b) not mention any given session ID
+ * more than once.
+ *
  * Instances of this class are immutable.
  */
 export default class CaretDelta extends BaseDelta {

@@ -2,9 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { StoragePath } from 'file-store-ot';
 import { Errors, FrozenBuffer, UtilityClass } from 'util-common';
-
-import StoragePath from './StoragePath';
 
 /**
  * Utility class for handling storage IDs. A storage ID is (generally speaking)

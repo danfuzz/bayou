@@ -4,6 +4,7 @@
 
   "dependencies": {
     "codec": "local",
+    "file-store-ot": "local",
     "hooks-server": "local",
     "promise-util": "local",
     "typecheck": "local",

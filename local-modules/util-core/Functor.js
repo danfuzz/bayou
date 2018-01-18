@@ -7,6 +7,7 @@ import { inspect } from 'util';
 import CoreTypecheck from './CoreTypecheck';
 import DataUtil from './DataUtil';
 import Errors from './Errors';
+import FrozenBuffer from './FrozenBuffer';
 import ObjectUtil from './ObjectUtil';
 
 /**
@@ -167,6 +168,8 @@ export default class Functor {
       let newArg;
       if (Array.isArray(a) || ObjectUtil.isPlain(a)) {
         newArg = DataUtil.deepFreeze(a);
+      } else if (a instanceof FrozenBuffer) {
+        newArg = a;
       } else if (Object.isFrozen(a)) {
         newArg = a;
       } else {
