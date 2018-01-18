@@ -126,6 +126,13 @@ export default class FrozenBuffer {
     Object.seal(this);
   }
 
+  /** {string} Value of this instance, encoded as a base-64 string. */
+  get base64() {
+    const buf = this._ensureBuffer();
+
+    return buf.toString('base64');
+  }
+
   /** {Int} Length of hash used by this instance, in bits. */
   get hashLength() {
     return HASH_BIT_LENGTH;

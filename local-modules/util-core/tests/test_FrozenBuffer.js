@@ -156,6 +156,18 @@ describe('util-core/FrozenBuffer', () => {
     });
   });
 
+  describe('.base64', () => {
+    it('should be as expected when originally constructed from a `Buffer`', () => {
+      const buf = new FrozenBuffer(Buffer.from('florp splat', 'utf8'));
+      assert.strictEqual(buf.base64, 'ZmxvcnAgc3BsYXQ=');
+    });
+
+    it('should be as expected when originally constructed from a string', () => {
+      const buf = new FrozenBuffer('blort splat florp');
+      assert.strictEqual(buf.base64, 'YmxvcnQgc3BsYXQgZmxvcnA=');
+    });
+  });
+
   describe('.hashLength', () => {
     it('should be `256`', () => {
       assert.strictEqual(new FrozenBuffer('x').hashLength, 256);
