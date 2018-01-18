@@ -5,6 +5,7 @@
 import FileChange from './FileChange';
 import FileDelta from './FileDelta';
 import FileOp from './FileOp';
+import FileSnapshot from './FileSnapshot';
 import StorageId from './StorageId';
 import StoragePath from './StoragePath';
 import TransactionOp from './TransactionOp';
@@ -14,6 +15,7 @@ export {
   FileChange,
   FileDelta,
   FileOp,
+  FileSnapshot,
   StorageId,
   StoragePath,
   TransactionOp,
