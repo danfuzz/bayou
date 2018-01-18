@@ -187,13 +187,26 @@ describe('util-core/FrozenBuffer', () => {
       it('should convert bytes to strings using UTF-8 encoding', () => {
         function test(string) {
           const nodeBuf = Buffer.from(string, 'utf8');
-          const buf = new FrozenBuffer(nodeBuf);
+          const buf     = new FrozenBuffer(nodeBuf);
           assert.strictEqual(buf.string, string);
         }
 
         for (const s of STRING_CASES) {
           test(s);
         }
+      });
+
+      it('should not share the original buffer data; should be a copy', () => {
+        const nodeBuf1 = Buffer.from('blortch', 'utf8');
+        const nodeBuf2 = Buffer.from(nodeBuf1);
+        const buf      = new FrozenBuffer(nodeBuf1);
+
+        nodeBuf1[0] = 0;
+        nodeBuf1[1] = 0;
+        nodeBuf1[2] = 0;
+
+        assert.strictEqual(buf.string, 'blortch');
+        assert.deepEqual(buf.toBuffer(), nodeBuf2);
       });
     });
   });

@@ -96,7 +96,10 @@ export default class FrozenBuffer {
   /**
    * Constructs an instance.
    *
-   * @param {Buffer|string} value Contents of the buffer.
+   * @param {Buffer|string} value Contents of the buffer. If given a `Buffer`,
+   *   it is copied so that the data stored within this instance is _not_ shared
+   *   with the original. (Not doing so would mean that the instance wouldn't
+   *   actually be frozen!)
    * @param {string} [encoding = 'utf8'] Encoding to use to convert a `string`
    *   argument to bytes. Valid options are _just_ `utf8` and `base64`. This
    *   argument is ignored (not even typechecked) if `value` is a `Buffer`.
@@ -107,11 +110,8 @@ export default class FrozenBuffer {
     let bufferValue = null;
 
     if (Buffer.isBuffer(value)) {
-      // Clone the buffer to guarantee safe use.
-      // TODO: Actually clone this. This deficiency is temporarily-intentional,
-      // in order to duplicate the buggy pre-existing behavior. It will be fixed
-      // when corresponding test cases are added.
-      bufferValue = value;
+      // Clone the buffer to guarantee safe and independent use.
+      bufferValue = Buffer.from(value);
     } else if (typeof value === 'string') {
       if (encoding === 'utf8') {
         // No need to set `bufferValue`; that gets constructed as needed via
