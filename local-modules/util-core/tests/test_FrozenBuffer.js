@@ -113,46 +113,88 @@ describe('util-core/FrozenBuffer', () => {
   });
 
   describe('constructor()', () => {
-    it('should throw an error if handed anything other than a string or Buffer', () => {
-      assert.throws(() => new FrozenBuffer(1));
-      assert.throws(() => new FrozenBuffer(true));
-      assert.throws(() => new FrozenBuffer(null));
-      assert.throws(() => new FrozenBuffer(['hello']));
-      assert.throws(() => new FrozenBuffer({ a: 10 }));
+    describe('invalid arguments', () => {
+      it('should throw an error if the first argument is anything other than a string or `Buffer`', () => {
+        assert.throws(() => new FrozenBuffer(1));
+        assert.throws(() => new FrozenBuffer(true));
+        assert.throws(() => new FrozenBuffer(null));
+        assert.throws(() => new FrozenBuffer(['hello']));
+        assert.throws(() => new FrozenBuffer({ a: 10 }));
+
+        assert.throws(() => new FrozenBuffer(1, 'utf8'));
+        assert.throws(() => new FrozenBuffer(1, 'base64'));
+      });
     });
 
-    it('should accept strings', () => {
-      assert.doesNotThrow(() => new FrozenBuffer(''));
-      assert.doesNotThrow(() => new FrozenBuffer('hello'));
+    describe('constructor(string, \'utf8\')', () => {
+      it('should accept valid arguments', () => {
+        assert.doesNotThrow(() => new FrozenBuffer(''));
+        assert.doesNotThrow(() => new FrozenBuffer('hello'));
+        assert.doesNotThrow(() => new FrozenBuffer('florp', 'utf8'));
+      });
+
+      it('should convert strings to bytes using UTF-8 encoding', () => {
+        function test(string) {
+          const buf = new FrozenBuffer(string);
+          const nodeBuf = Buffer.from(string, 'utf8');
+          assert.deepEqual(buf.toBuffer(), nodeBuf);
+        }
+
+        for (const s of STRING_CASES) {
+          test(s);
+        }
+      });
+
+      it('should treat a missing second argument as having passed `utf-8`', () => {
+        function test(string) {
+          const buf1 = new FrozenBuffer(string);
+          const buf2 = new FrozenBuffer(string, 'utf8');
+          assert.deepEqual(buf1.toBuffer(), buf2.toBuffer());
+        }
+
+        for (const s of STRING_CASES) {
+          test(s);
+        }
+      });
     });
 
-    it('should accept Buffers', () => {
-      assert.doesNotThrow(() => new FrozenBuffer(Buffer.from('')));
-      assert.doesNotThrow(() => new FrozenBuffer(Buffer.alloc(100, 123)));
+    describe('constructor(string, \'base64\')', () => {
+      it('should accept valid arguments', () => {
+        assert.doesNotThrow(() => new FrozenBuffer('', 'base64'));
+        assert.doesNotThrow(() => new FrozenBuffer('RkxPUlAK', 'base64'));
+      });
+
+      it('should produce bytes identical to the expected base-64 decoding', () => {
+        function test(string) {
+          const nodeBuf = Buffer.from(string, 'utf8');
+          const base64  = nodeBuf.toString('base64');
+          const buf     = new FrozenBuffer(base64, 'base64');
+          assert.deepEqual(buf.toBuffer(), nodeBuf);
+        }
+
+        for (const s of STRING_CASES) {
+          test(s);
+        }
+      });
     });
 
-    it('should convert strings to bytes using UTF-8 encoding', () => {
-      function test(string) {
-        const buf = new FrozenBuffer(string);
-        const nodeBuf = Buffer.from(string, 'utf8');
-        assert.deepEqual(buf.toBuffer(), nodeBuf);
-      }
+    describe('constructor(Buffer)', () => {
+      it('should accept valid arguments', () => {
+        assert.doesNotThrow(() => new FrozenBuffer(Buffer.from('')));
+        assert.doesNotThrow(() => new FrozenBuffer(Buffer.alloc(100, 123)));
+      });
 
-      for (const s of STRING_CASES) {
-        test(s);
-      }
-    });
+      it('should convert bytes to strings using UTF-8 encoding', () => {
+        function test(string) {
+          const nodeBuf = Buffer.from(string, 'utf8');
+          const buf = new FrozenBuffer(nodeBuf);
+          assert.strictEqual(buf.string, string);
+        }
 
-    it('should convert bytes to strings using UTF-8 encoding', () => {
-      function test(string) {
-        const nodeBuf = Buffer.from(string, 'utf8');
-        const buf = new FrozenBuffer(nodeBuf);
-        assert.strictEqual(buf.string, string);
-      }
-
-      for (const s of STRING_CASES) {
-        test(s);
-      }
+        for (const s of STRING_CASES) {
+          test(s);
+        }
+      });
     });
   });
 
@@ -162,9 +204,15 @@ describe('util-core/FrozenBuffer', () => {
       assert.strictEqual(buf.base64, 'ZmxvcnAgc3BsYXQ=');
     });
 
-    it('should be as expected when originally constructed from a string', () => {
+    it('should be as expected when originally constructed from a UTF-8 string', () => {
       const buf = new FrozenBuffer('blort splat florp');
       assert.strictEqual(buf.base64, 'YmxvcnQgc3BsYXQgZmxvcnA=');
+    });
+
+    it('should be as expected when originally constructed from a base-64 string', () => {
+      const base64 = 'ZmxvcnAgc3BsYXQ=';
+      const buf = new FrozenBuffer(base64, 'base64');
+      assert.strictEqual(buf.base64, base64);
     });
   });
 
@@ -198,7 +246,7 @@ describe('util-core/FrozenBuffer', () => {
       assert.strictEqual(buf.length, 9000);
     });
 
-    it('should be the expected length from a string', () => {
+    it('should be the expected length from a UTF-8 string', () => {
       assert.strictEqual(new FrozenBuffer('12345').length, 5);
 
       // Because of UTF-8 encoding.
@@ -209,7 +257,7 @@ describe('util-core/FrozenBuffer', () => {
   });
 
   describe('.string', () => {
-    it('should be the same string given in the constructor', () => {
+    it('should be the same string given in the UTF-8 string constructor', () => {
       function test(string) {
         const buf = new FrozenBuffer(string);
         assert.strictEqual(buf.string, string);
@@ -314,7 +362,7 @@ describe('util-core/FrozenBuffer', () => {
       assert.deepEqual(result, nodeBuf);
     });
 
-    it('should be the UTF-8 encoding of the string given in the constructor', () => {
+    it('should be the UTF-8 encoding of the string given in the UTF-8 string constructor', () => {
       function test(string) {
         const buf = new FrozenBuffer(string);
         const nodeBuf = Buffer.from(string, 'utf8');

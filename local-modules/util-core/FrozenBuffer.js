@@ -94,29 +94,52 @@ export default class FrozenBuffer {
   }
 
   /**
-   * Constructs an instance. If constructed from a string, this converts it via
-   * UTF-8 encoding.
+   * Constructs an instance.
    *
    * @param {Buffer|string} value Contents of the buffer.
+   * @param {string} [encoding = 'utf8'] Encoding to use to convert a `string`
+   *   argument to bytes. Valid options are _just_ `utf8` and `base64`. This
+   *   argument is ignored (not even typechecked) if `value` is a `Buffer`.
    */
-  constructor(value) {
-    const isString = (typeof value === 'string');
-    const isBuffer = Buffer.isBuffer(value);
+  constructor(value, encoding = 'utf8') {
+    // These are the values eventually stored in the instance.
+    let stringValue = null;
+    let bufferValue = null;
 
-    if (!(isString || isBuffer)) {
+    if (Buffer.isBuffer(value)) {
+      // Clone the buffer to guarantee safe use.
+      // TODO: Actually clone this. This deficiency is temporarily-intentional,
+      // in order to duplicate the buggy pre-existing behavior. It will be fixed
+      // when corresponding test cases are added.
+      bufferValue = value;
+    } else if (typeof value === 'string') {
+      if (encoding === 'utf8') {
+        // No need to set `bufferValue`; that gets constructed as needed via
+        // calls to `_ensureBuffer()`.
+        stringValue = value;
+      } else if (encoding === 'base64') {
+        // We _don't_ set `stringValue` here, because that's supposed to be the
+        // UTF-8 decoding of the buffer.
+        bufferValue = Buffer.from(value, 'base64');
+      } else {
+        throw Errors.badValue(encoding, 'encoding name');
+      }
+    } else {
       throw Errors.badValue(value, 'Buffer|string');
     }
 
-    /** {string|null} String value, if constructed from a string. */
-    this._string = isString ? value : null;
+    /**
+     * {string|null} String value, if constructed from a UTF-8 string or it
+     * has since been computed; or `null` if not yet computed.
+     */
+    this._string = stringValue;
 
     /**
-     * {Buffer|null} Buffer value, if constructed from a buffer or if the
-     * string value has been converted. Guranteed to not be exposed outside
-     * this class. In particular, if the constructor was given a buffer for
-     * `value`, we clone it here to guarantee safe use.
+     * {Buffer|null} Buffer value, if constructed from a buffer or base-64
+     * string, or if it has since been computed; or `null` if not yet
+     * computed.
      */
-    this._buffer = isBuffer ? value : Buffer.from(value);
+    this._buffer = bufferValue;
 
     /**
      * {string|null} Hashcode of the data, or `null` if not yet calculated.
