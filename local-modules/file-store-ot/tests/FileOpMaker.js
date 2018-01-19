@@ -62,7 +62,7 @@ export default class FileOpMaker extends UtilityClass {
   static makeWithCategory(category, count) {
     const ops = [];
 
-    function schemaCat(schema) {
+    function schemaCategory(schema) {
       if      (schema.isPush)                              { return 'push';  }
       else if (schema.isPull)                              { return 'pull';  }
       else if (schema.category === TransactionOp.CAT_wait) { return 'wait';  }
@@ -71,7 +71,7 @@ export default class FileOpMaker extends UtilityClass {
 
     for (const name of TransactionOp.OPERATION_NAMES) {
       const schema = TransactionOp.propsFromName(name);
-      const cat    = schemaCat(schema);
+      const cat    = schemaCategory(schema);
 
       let n;
       if      (cat === category) { n = count; }
