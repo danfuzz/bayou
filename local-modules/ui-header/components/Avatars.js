@@ -9,6 +9,10 @@ import { connect } from 'react-redux';
 import styles from './avatar.module.less';
 import { CaretState } from 'doc-client';
 
+// The hash is for '' which can't match anyone's email address so is safe to
+// use as a placeholder.
+const AVATAR_PLACEHOLDER_URL = 'https://gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e?s=36&d=mm';
+
 class Avatars extends React.Component {
   render() {
     return (
@@ -17,8 +21,9 @@ class Avatars extends React.Component {
           [...this.props.sessions.entries()].map(([sessionId, caret]) => {
             return (
               <div key={ sessionId } className={ styles['document-header__avatar'] }>
-                <img src='' />
-                <div className={ styles['avatar-presence'] }
+                <img src={ AVATAR_PLACEHOLDER_URL } />
+                <div
+                  className={ styles['avatar-presence'] }
                   style={{ backgroundColor: caret.color }} />
               </div>
             );

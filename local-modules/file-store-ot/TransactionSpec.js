@@ -34,8 +34,8 @@ export default class TransactionSpec extends CommonBase {
       throw Errors.badUse('Too many `revNum` operations.');
     }
 
-    if (this.hasWaitOps() && (this.hasPullOps() || this.hasPushOps())) {
-      throw Errors.badUse('Cannot mix wait operations with reads and modifications.');
+    if ((this.hasWaitOps() + this.hasPullOps() + this.hasPushOps()) > 1) {
+      throw Errors.badUse('Must only have one of wait operations, pull operations, or push operations.');
     }
 
     Object.freeze(this);

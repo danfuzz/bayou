@@ -32,7 +32,7 @@ const DEFAULT_BODY_MODULE_CONFIG = {
   keyboard: BayouKeyHandlers.defaultKeyHandlers,
   toolbar: [
     [{ header: 1 }, { header: 2 }, { header: 3 }],
-    ['bold', 'italic', 'underline', 'strike', 'code'],
+    ['bold', 'italic', 'underline', 'strike', 'link', 'code'],
     [{ list: 'bullet' }, { list: 'ordered' }, { list: 'unchecked' }],
     ['blockquote', 'code-block']
   ]
@@ -42,7 +42,7 @@ const DEFAULT_BODY_MODULE_CONFIG = {
 const DEFAULT_TITLE_MODULE_CONFIG = {
   keyboard: BayouKeyHandlers.defaultSingleLineKeyHandlers,
   toolbar: [
-    ['italic', 'underline', 'strike', 'code'], // Toggled buttons.
+    ['italic', 'underline', 'strike', 'link', 'code'], // Toggled buttons.
   ]
 };
 

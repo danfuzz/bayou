@@ -333,16 +333,25 @@ const OPERATION_MAP = new Map(OPERATIONS.map((schema) => {
  *
  * * Environment ops &mdash; An environment operation performs some action or
  *   checks some aspect of the execution environment of the transaction.
+ *
  * * Revision restrictions &mdash; A revision restriction limits a transaction
  *   to being based only on a certain revision of the file.
+ *
  * * Prerequisite checks &mdash; A prerequisite check must pass in order for
  *   the remainder of a transaction to apply.
- * * Path lists &mdash; A path list finds or identifies some number of storage
- *   paths, yielding the paths themselves (and not the data so referenced).
- * * Data reads &mdash; A data read gets the value of a blob within a file.
- * * Data deletions &mdash; A data deletion erases previously-existing data
- *   within a file.
- * * Data writes &mdash; A data write stores new data into a file.
+ *
+ * * Pull operations &mdash; A pull operation reads data of some sort from a
+ *   file. Subcategories:
+ *   * Path lists &mdash; A path list finds or identifies some number of storage
+ *     paths, yielding the paths themselves (and not the data so referenced).
+ *   * Data reads &mdash; A data read gets the value of a blob within a file.
+ *
+ * * Push operations &mdash; A push operation makes a change of some sort to a
+ *   file. Subcategories:
+ *   * Data deletions &mdash; A data deletion erases previously-existing data
+ *     within a file.
+ *   * Data writes &mdash; A data write stores new data into a file.
+ *
  * * Waits &mdash; A wait operation blocks a transaction until some condition
  *   holds. When a wait operation completes having detected one or more
  *   conditions, the paths related to the conditions that were satisfied are
@@ -355,6 +364,12 @@ const OPERATION_MAP = new Map(OPERATIONS.map((schema) => {
  * When executed, the operations of a transaction are effectively performed in
  * order by category; but within a category there is no effective ordering.
  * Specifically, the category ordering is as listed above.
+ *
+ * Any given transaction can include pulls, pushes, or waits as a category; but
+ * it is invalid to have a transacation with two or more of these categories.
+ * For example, it is okay to have a transaction with a path list and two data
+ * reads, but it is not valid to have a transaction that has a data read and a
+ * data deletion.
  *
  * There are static methods on this class to construct each named operation,
  * named `op_<name>`. See documentation on those methods for details about the
