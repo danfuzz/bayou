@@ -51,47 +51,33 @@ export default class FileOpMaker extends UtilityClass {
   }
 
   /**
-   * Makes a valid array with one of each op name _except_ wait ops, and at
-   * least the given number each of ops of type `push` and `pull`.
+   * Makes a valid array with one of each op name that isn't a wait, push, or
+   * pull; and the given number of _each_ of the ops of the indicated category.
    *
-   * @param {Int} count How many of each `push` and `pull` op to include.
+   * @param {string} category Category in question. Must be one of `wait`,
+   *   `push`, or `pull`.
+   * @param {Int} count How many ops of each indicated category to include.
    * @returns {array<TransactionOp>} Appropriately-constructed array of ops.
    */
-  static makePushPull(count) {
+  static makeWithCategory(category, count) {
     const ops = [];
 
-    for (const name of TransactionOp.OPERATION_NAMES) {
-      const schema = TransactionOp.propsFromName(name);
-      if (schema.category === TransactionOp.CAT_wait) {
-        continue;
-      }
-
-      const n = (schema.isPush || schema.isPull) ? count : 1;
-      for (let i = 0; i < n; i++) {
-        ops.push(FileOpMaker.makeOp(name, i));
-      }
+    function schemaCat(schema) {
+      if      (schema.isPush)                              { return 'push';  }
+      else if (schema.isPull)                              { return 'pull';  }
+      else if (schema.category === TransactionOp.CAT_wait) { return 'wait';  }
+      else                                                 { return 'other'; }
     }
 
-    return ops;
-  }
-
-  /**
-   * Makes a valid array with one of each op name _except_ push and pull ops,
-   * and at least the given number each of ops of type `wait`.
-   *
-   * @param {Int} count How many of each `wait` op to include.
-   * @returns {array<TransactionOp>} Appropriately-constructed array of ops.
-   */
-  static makeWait(count) {
-    const ops = [];
-
     for (const name of TransactionOp.OPERATION_NAMES) {
       const schema = TransactionOp.propsFromName(name);
-      if (schema.isPush || schema.isPull) {
-        continue;
-      }
+      const cat    = schemaCat(schema);
 
-      const n = (schema.category === TransactionOp.CAT_wait) ? count : 1;
+      let n;
+      if      (cat === category) { n = count; }
+      else if (cat === 'other')  { n = 1;     }
+      else                       { n = 0;     }
+
       for (let i = 0; i < n; i++) {
         ops.push(FileOpMaker.makeOp(name, i));
       }
@@ -125,12 +111,15 @@ export default class FileOpMaker extends UtilityClass {
     test(FileOpMaker.makeLength(10));
     test(FileOpMaker.makeLength(50),  '(length 50)');
     test(FileOpMaker.makeLength(123), '(length 123)');
-    test(FileOpMaker.makePushPull(1));
-    test(FileOpMaker.makePushPull(2), '(push-pull 2)');
-    test(FileOpMaker.makePushPull(5), '(push-pull 5)');
-    test(FileOpMaker.makeWait(1));
-    test(FileOpMaker.makeWait(2), '(wait 2)');
-    test(FileOpMaker.makeWait(5), '(wait 5)');
+    test(FileOpMaker.makeWithCategory('push', 1));
+    test(FileOpMaker.makeWithCategory('push', 2), '(push 2)');
+    test(FileOpMaker.makeWithCategory('push', 5), '(push 5)');
+    test(FileOpMaker.makeWithCategory('pull', 1));
+    test(FileOpMaker.makeWithCategory('pull', 2), '(pull 2)');
+    test(FileOpMaker.makeWithCategory('pull', 5), '(pull 5)');
+    test(FileOpMaker.makeWithCategory('wait', 1));
+    test(FileOpMaker.makeWithCategory('wait', 2), '(wait 2)');
+    test(FileOpMaker.makeWithCategory('wait', 5), '(wait 5)');
   }
 
   /**
