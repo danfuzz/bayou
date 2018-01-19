@@ -6,6 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { TransactionOp, TransactionSpec } from 'file-store-ot';
+import { FrozenBuffer } from 'util-common';
 
 import FileOpMaker from './FileOpMaker';
 
@@ -45,6 +46,35 @@ describe('file-store-ot/TransactionSpec', () => {
         const result = new TransactionSpec(...ops);
         assert.sameMembers(result.ops, ops);
       });
+    });
+  });
+
+  describe('constructor()', () => {
+    it('should reject arguments with both a pull and a push', () => {
+      const ops = [
+        TransactionOp.op_readPath('/x/y'),
+        TransactionOp.op_writeBlob(new FrozenBuffer('florp'))
+      ];
+
+      assert.throws(() => { new TransactionSpec(...ops); }, /badUse/);
+    });
+
+    it('should reject arguments with both a wait and a pull', () => {
+      const ops = [
+        TransactionOp.op_whenPathPresent('/blort'),
+        TransactionOp.op_readPath('/x/y')
+      ];
+
+      assert.throws(() => { new TransactionSpec(...ops); }, /badUse/);
+    });
+
+    it('should reject arguments with both a wait and a push', () => {
+      const ops = [
+        TransactionOp.op_whenPathPresent('/blort'),
+        TransactionOp.op_writeBlob(new FrozenBuffer('florp'))
+      ];
+
+      assert.throws(() => { new TransactionSpec(...ops); }, /badUse/);
     });
   });
 
@@ -91,6 +121,14 @@ describe('file-store-ot/TransactionSpec', () => {
       test(undefined);
       test([1, 2, 3]);
       test(new Map());
+    });
+
+    it('should fail if the concatenated result would violate the category constraints', () => {
+      // E.g., this tests that you can't mix push and pull ops.
+      const trans1 = new TransactionSpec(TransactionOp.op_readPath('/x/y'));
+      const trans2 = new TransactionSpec(TransactionOp.op_writeBlob(new FrozenBuffer('florp')));
+
+      assert.throws(() => trans1.concat(trans2), /badUse/);
     });
   });
 });
