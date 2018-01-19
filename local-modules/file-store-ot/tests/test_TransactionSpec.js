@@ -20,7 +20,7 @@ describe('file-store-ot/TransactionSpec', () => {
       });
 
       // This test doesn't make sense for length 0.
-      if (ops.length === 0) {
+      if (ops.length !== 0) {
         it('should reject an invalid argument in any position', () => {
           const badValues = [undefined, null, false, 'hello', ['blort'], { x: 914 }, new Map()];
           let   badAt     = 0;
