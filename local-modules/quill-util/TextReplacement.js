@@ -10,7 +10,7 @@ import BayouKeyboard from './BayouKeyboard';
 
 export default class TextReplacement extends UtilityClass {
   /**
-   * Adds custom keyboard bindings to the Quill editor for that
+   * Adds custom keyboard bindings to the Quill editor that
    * trigger text replacement.
    *
    * @param {Quill} quill the Quill editor to add the binding to.

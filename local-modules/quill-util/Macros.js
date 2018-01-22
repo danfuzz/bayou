@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Clock, ImageEmbed } from 'ui-embeds';
+import { Clock } from 'ui-embeds';
 import { UtilityClass } from 'util-core';
 
 import QuillEvents from './QuillEvents';
@@ -49,17 +49,11 @@ export default class Macros extends UtilityClass {
       const args = text.split(':');
       const macro = args.shift();
       let component = null;
-      let value = {};
+      const value = {};
 
       switch (macro) {
         case 'clock': {
           component = Clock;
-          break;
-        }
-
-        case 'image': {
-          component = ImageEmbed;
-          value = { url: 'https://www.desalvo.org/Steering.jpg' };
           break;
         }
       }
