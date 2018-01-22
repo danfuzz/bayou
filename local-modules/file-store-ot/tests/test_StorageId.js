@@ -44,6 +44,53 @@ describe('file-store-ot/StorageId', () => {
     });
   });
 
+  describe('checkOrGetHash()', () => {
+    it('should accept valid hash strings', () => {
+      function test(value) {
+        assert.strictEqual(StorageId.checkOrGetHash(value), value);
+      }
+
+      test(FrozenBuffer.coerce('blort').hash);
+      test(FrozenBuffer.coerce('zorch').hash);
+    });
+
+    it('should accept `FrozenBuffer` instances, converting to their respective hashes', () => {
+      function test(value) {
+        const buf = new FrozenBuffer(value);
+        assert.strictEqual(StorageId.checkOrGetHash(buf), buf.hash);
+      }
+
+      test('');
+      test('florp');
+      test('splatch');
+    });
+
+    it('should reject invalid strings', () => {
+      function test(value) {
+        assert.throws(() => { StorageId.checkOrGetHash(value); });
+      }
+
+      test('');
+      test('x');
+      test('/x/y');
+      test('/foo!!');
+      test(FrozenBuffer.coerce('blort').hash + '123123');
+    });
+
+    it('should reject non-`FrozenBuffer` non-strings', () => {
+      function test(value) {
+        assert.throws(() => { StorageId.checkOrGetHash(value); });
+      }
+
+      test(undefined);
+      test(null);
+      test(false);
+      test(true);
+      test(123);
+      test(['/foo']);
+    });
+  });
+
   describe('isInstance()', () => {
     it('should return `true` for valid id strings', () => {
       function test(value) {
