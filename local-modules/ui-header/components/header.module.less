@@ -1,11 +1,16 @@
 @import "~ui-common/colors";
 
 .document-header {
-  border-bottom: 1px solid #f1f1f1;
-  box-shadow: 0 1px 0 @sk_soft_gray;
+  border-bottom: 1px solid @sk_soft_gray;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
   display: flex;
-  margin: 8px 16px;
+  padding: 10px 16px 8px;
   overflow-y: hidden;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 999;
+  background: @sk_white;
 }
 
 .document_header__meta {

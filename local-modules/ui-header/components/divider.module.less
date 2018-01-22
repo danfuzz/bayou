@@ -2,13 +2,17 @@
 @import "~ui-common/helpers";
 
 .divider {
-  font-size: 13px;
-  margin-left: 4px;
-  margin-right: 4px;
-  color: @sk_light_gray;
+  display: block;
+  width: 1px;
+  height: 14px;
+  margin-left: 8px;
+  margin-right: 8px;
+  background: @sk_light_gray;
+  position: relative;
+  top: 1px;
   .user-select(none);
 }
 
 .divider::before {
-  content: '|';
+  content: '';
 }
