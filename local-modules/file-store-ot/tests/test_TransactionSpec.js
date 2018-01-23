@@ -8,12 +8,12 @@ import { describe, it } from 'mocha';
 import { TransactionOp, TransactionSpec } from 'file-store-ot';
 import { FrozenBuffer } from 'util-common';
 
-import FileOpMaker from './FileOpMaker';
+import TransactionOpMaker from './TransactionOpMaker';
 
 describe('file-store-ot/TransactionSpec', () => {
-  // The call to `FileOpMaker.testCases()` provides outer `describe()`s for each
-  // value to test with.
-  FileOpMaker.testCases((ops) => {
+  // The call to `TransactionOpMaker.testCases()` provides outer `describe()`s
+  // for each value to test with.
+  TransactionOpMaker.testCases((ops) => {
     describe('constructor()', () => {
       it('should accept any number of valid arguments', () => {
         assert.doesNotThrow(() => new TransactionSpec(...ops));
