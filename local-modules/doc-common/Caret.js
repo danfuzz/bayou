@@ -15,9 +15,13 @@ import CaretOp from './CaretOp';
  *
  * **Note:** `sessionId` is not included, because that's separate from the
  * caret's "fields" per se.
+ *
+ * **Note:** We use the `bind(...)` form for method binding instead of an
+ * anonymous function because the latter &mdash; while more standard &mdash;
+ * confuses the linter.
  */
 const CARET_FIELDS = new Map([
-  ['lastActive', Timestamp.check],
+  ['lastActive', Timestamp.check.bind(Timestamp)],
   ['revNum',     RevisionNumber.check],
   ['index',      TInt.nonNegative],
   ['length',     TInt.nonNegative],

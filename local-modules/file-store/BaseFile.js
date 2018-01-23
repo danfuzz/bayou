@@ -211,7 +211,7 @@ export default class BaseFile extends CommonBase {
       if (result.data === null) {
         throw Errors.badUse('Improper subclass behavior: Expected non-`null` `data`.');
       }
-      TMap.check(result.data, StorageId.check, FrozenBuffer.check);
+      TMap.check(result.data, StorageId.check, x => FrozenBuffer.check(x));
     } else {
       if (result.data !== null) {
         throw Errors.badUse('Improper subclass behavior: Expected `null` `data`.');
