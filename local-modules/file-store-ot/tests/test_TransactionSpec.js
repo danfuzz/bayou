@@ -100,14 +100,22 @@ describe('file-store-ot/TransactionSpec', () => {
         assert.sameMembers(resOps2, expectOps);
       }
 
-      test([], []);
-      test([TransactionOp.op_revNum(10)], []);
-      test([TransactionOp.op_revNum(10), TransactionOp.op_timeout(123)], []);
-      test([TransactionOp.op_revNum(20)], [TransactionOp.op_checkPathPresent('/foo')]);
-      test(
-        [TransactionOp.op_timeout(123456), TransactionOp.op_checkPathAbsent('/bar')],
-        [TransactionOp.op_checkPathPresent('/blort'), TransactionOp.op_checkPathAbsent('/florp')]
-      );
+      const op1 = TransactionOp.op_timeout(123);
+      const op2 = TransactionOp.op_checkPathPresent('/foo');
+      const op3 = TransactionOp.op_checkPathPresent('/bar');
+      const op4 = TransactionOp.op_checkPathAbsent('/florp');
+
+      test([],              []);
+      test([op1],           []);
+      test([op1, op2],      []);
+      test([op1, op2, op3], []);
+      test([],              [op4]);
+      test([op1],           [op4]);
+      test([op1, op2],      [op4]);
+      test([op1, op2, op3], [op4]);
+      test([],              [op3, op4]);
+      test([op1],           [op3, op4]);
+      test([op1, op2],      [op3, op4]);
     });
 
     it('should reject a bad argument', () => {

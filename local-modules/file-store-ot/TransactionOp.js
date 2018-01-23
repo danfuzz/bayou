@@ -15,13 +15,12 @@ const CAT_environment  = 'environment';
 const CAT_list         = 'list';
 const CAT_prerequisite = 'prerequisite';
 const CAT_read         = 'read';
-const CAT_revision     = 'revision';
 const CAT_wait         = 'wait';
 const CAT_write        = 'write';
 
 /** {array<string>} List of categories in defined execution order. */
 const CATEGORY_EXECUTION_ORDER = [
-  CAT_environment, CAT_revision, CAT_prerequisite, CAT_list, CAT_read,
+  CAT_environment, CAT_prerequisite, CAT_list, CAT_read,
   CAT_delete, CAT_write, CAT_wait
 ];
 
@@ -32,7 +31,6 @@ const TYPE_DurMsec = 'DurMsec';
 const TYPE_Hash    = 'Hash';
 const TYPE_Index   = 'Index';
 const TYPE_Path    = 'Path';
-const TYPE_RevNum  = 'RevNum';
 
 // Operation schemata. See the doc for {@link TransactionOp#propsFromName} for
 // details.
@@ -239,18 +237,6 @@ const OPERATIONS = [
   ],
 
   /*
-   * A `revNum` operation. This is a revision restriction that limits a
-   * transaction to only be performed with respect to the indicated revision
-   * number.
-   *
-   * **Note:** It is an error (and pointless) for a transaction to contain more
-   * than one `revNum` operation.
-   *
-   * @param {Int} revNum Required revision number.
-   */
-  [CAT_revision, 'revNum', ['revNum', TYPE_RevNum]],
-
-  /*
    * A `timeout` operation. This is an environment operation which limits a
    * transaction to take no more than the indicated amount of time before it is
    * aborted. Timeouts are performed on a "best effort" basis as well as
@@ -334,9 +320,6 @@ const OPERATION_MAP = new Map(OPERATIONS.map((schema) => {
  * * Environment ops &mdash; An environment operation performs some action or
  *   checks some aspect of the execution environment of the transaction.
  *
- * * Revision restrictions &mdash; A revision restriction limits a transaction
- *   to being based only on a certain revision of the file.
- *
  * * Prerequisite checks &mdash; A prerequisite check must pass in order for
  *   the remainder of a transaction to apply.
  *
@@ -401,11 +384,6 @@ export default class TransactionOp extends CommonBase {
     return CAT_read;
   }
 
-  /** {string} Operation category for revision restrictions. */
-  static get CAT_revision() {
-    return CAT_revision;
-  }
-
   /** {string} Operation category for waits. */
   static get CAT_wait() {
     return CAT_wait;
@@ -453,11 +431,6 @@ export default class TransactionOp extends CommonBase {
     return TYPE_Path;
   }
 
-  /** {string} Type name for revision numbers. */
-  static get TYPE_RevNum() {
-    return TYPE_RevNum;
-  }
-
   /**
    * Validates a category string. Throws an error given an invalid category.
    *
@@ -471,7 +444,6 @@ export default class TransactionOp extends CommonBase {
       case CAT_list:
       case CAT_prerequisite:
       case CAT_read:
-      case CAT_revision:
       case CAT_wait:
       case CAT_write: {
         return category;
@@ -676,11 +648,6 @@ export default class TransactionOp extends CommonBase {
 
       case TYPE_Path: {
         StoragePath.check(value);
-        break;
-      }
-
-      case TYPE_RevNum: {
-        TInt.nonNegative(value);
         break;
       }
 
