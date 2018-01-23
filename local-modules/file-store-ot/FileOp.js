@@ -5,6 +5,7 @@
 import { BaseOp } from 'ot-common';
 import { Errors, FrozenBuffer } from 'util-common';
 
+import StorageId from './StorageId';
 import StoragePath from './StoragePath';
 
 /**
@@ -53,11 +54,7 @@ export default class FileOp extends BaseOp {
    * @returns {FileOp} An appropriately-constructed operation.
    */
   static op_deleteBlob(hash) {
-    if (hash instanceof FrozenBuffer) {
-      hash = hash.hash;
-    } else {
-      FrozenBuffer.checkHash(hash);
-    }
+    hash = StorageId.checkOrGetHash(hash);
 
     return new FileOp(FileOp.CODE_deleteBlob, hash);
   }

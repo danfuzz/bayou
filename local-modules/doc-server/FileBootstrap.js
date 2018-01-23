@@ -247,7 +247,7 @@ export default class FileBootstrap extends BaseDataManager {
     await this.afterInit();
 
     // **TODO:** Ideally, this would be rolled into the transaction as defined
-    // by `fullSpec` above.
+    // by `initSpec` above.
     await this._bodyControl.update(change);
 
     return true;

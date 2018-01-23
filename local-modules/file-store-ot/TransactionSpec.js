@@ -42,9 +42,9 @@ export default class TransactionSpec extends CommonBase {
   }
 
   /**
-   * {array<TransactionOp>} An iterator for the operations to perform. The
-   * operations are in category-sorted order, as documented by `TransactionOp`.
-   * This value is always frozen (immutable).
+   * {array<TransactionOp>} The operations to perform. These are in
+   * category-sorted order, as documented by `TransactionOp`. This value is
+   * always frozen (immutable).
    */
   get ops() {
     return this._ops;

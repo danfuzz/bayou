@@ -6,6 +6,8 @@ import FileChange from './FileChange';
 import FileDelta from './FileDelta';
 import FileOp from './FileOp';
 import FileSnapshot from './FileSnapshot';
+import PredicateOp from './PredicateOp';
+import PredicateSpec from './PredicateSpec';
 import StorageId from './StorageId';
 import StoragePath from './StoragePath';
 import TransactionOp from './TransactionOp';
@@ -16,6 +18,8 @@ export {
   FileDelta,
   FileOp,
   FileSnapshot,
+  PredicateOp,
+  PredicateSpec,
   StorageId,
   StoragePath,
   TransactionOp,

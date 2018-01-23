@@ -31,6 +31,23 @@ export default class StorageId extends UtilityClass {
   }
 
   /**
+   * Checks or converts a hash value. If given a valid hash value, returns it.
+   * Otherwise, the given value must be a `FrozenBuffer`, and its hash is
+   * returned. Throws an error in all other cases.
+   *
+   * @param {string|FrozenBuffer} hashOrBuffer The value in question.
+   * @returns {string} The given value if it is in fact a valid hash string, or
+   *   the hash of the given `FrozenBuffer` value if not.
+   */
+  static checkOrGetHash(hashOrBuffer) {
+    if (hashOrBuffer instanceof FrozenBuffer) {
+      return hashOrBuffer.hash;
+    }
+
+    return FrozenBuffer.checkHash(hashOrBuffer);
+  }
+
+  /**
    * Indicates whether the given value is a valid storage ID string.
    *
    * @param {*} value Value in question.
