@@ -4,6 +4,7 @@
 
 import { CommonBase, Errors } from 'util-common';
 
+import FileSnapshot from './FileSnapshot';
 import TransactionOp from './TransactionOp';
 
 /**
@@ -153,5 +154,77 @@ export default class TransactionSpec extends CommonBase {
     TransactionOp.propsFromName(name);
 
     return this._ops.filter(op => (op.name === name));
+  }
+
+  /**
+   * Runs this instance's prerequisites, throwing an error if any are not
+   * satisfied.
+   *
+   * @param {FileSnapshot} snapshot Snapshot to operate on.
+   */
+  runPrerequeisites(snapshot) {
+    FileSnapshot.check(snapshot);
+
+    throw Errors.wtf('TODO');
+  }
+
+  /**
+   * Runs this instance as a "pull" transaction. This includes first testing
+   * prerequisites and then gathering the data as indicated by pull operations.
+   * If a prerequisite fails, this method will throw an error.
+   *
+   * @param {FileSnapshot} snapshot Snapshot to operate on.
+   * @returns {object} Plain object which maps `data` and `paths` as defined
+   *   by {@link file-store.BaseFile#transact}.
+   */
+  runPull(snapshot) {
+    FileSnapshot.check(snapshot);
+
+    this.runPrerequisites(snapshot);
+
+    // Arrangement to keep the linter happy, even though this always throws.
+    if (snapshot !== null) throw Errors.wtf('TODO');
+    else return null;
+  }
+
+  /**
+   * Runs this instance as a "push" transaction. This includes first testing
+   * prerequisites and then producing a change which can be composed with the
+   * given snapshot to achieve the effect of this instance's push operations.
+   * If a prerequisite fails, this method will throw an error.
+   *
+   * @param {FileSnapshot} snapshot Snapshot to operate on.
+   * @returns {FileChange} Change which can be composed with `snapshot` that has
+   *   the effect of this instance's push operations.
+   */
+  runPush(snapshot) {
+    FileSnapshot.check(snapshot);
+
+    this.runPrerequisites(snapshot);
+
+    // Arrangement to keep the linter happy, even though this always throws.
+    if (snapshot !== null) throw Errors.wtf('TODO');
+    else return null;
+  }
+
+  /**
+   * Runs this instance as a "wait" transaction. This includes first testing
+   * prerequisites and then returning a boolean indicating whether the wait
+   * conditions (as encoded by the wait operations of this instance) are
+   * satisfied by the given snapshot. If a prerequisite fails, this method will
+   * throw an error.
+   *
+   * @param {FileSnapshot} snapshot Snapshot to operate on.
+   * @returns {boolean} `true` if the wait conditions are satisfied by
+   *   `snapshot`, or `false` if not.
+   */
+  runWait(snapshot) {
+    FileSnapshot.check(snapshot);
+
+    this.runPrerequisites(snapshot);
+
+    // Arrangement to keep the linter happy, even though this always throws.
+    if (snapshot !== null) throw Errors.wtf('TODO');
+    else return null;
   }
 }
