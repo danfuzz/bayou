@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 
 import { UtilityClass } from 'util-common';
@@ -27,7 +28,7 @@ export default class TempFiles extends UtilityClass {
   /** {string} The directory prefix to use for all paths. */
   static get _prefix() {
     if (!TempFiles._thePrefix) {
-      TempFiles._thePrefix = fs.mkdtempSync('bayou-test');
+      TempFiles._thePrefix = fs.mkdtempSync(path.join(os.tmpdir(), 'bayou-test-'));
     }
 
     return TempFiles._thePrefix;
