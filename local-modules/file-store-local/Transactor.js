@@ -378,21 +378,6 @@ export default class Transactor extends CommonBase {
   }
 
   /**
-   * Handler for `revNum` operations. In this implementation, we only ever have
-   * a single revision available, and we reject the transaction should it not be
-   * the requested restriction.
-   *
-   * @param {object} props The operation properties.
-   */
-  _op_revNum(props) {
-    const { revNum } = props;
-
-    if (this._fileFriend.revNum !== revNum) {
-      throw Errors.revisionNotAvailable(revNum);
-    }
-  }
-
-  /**
    * Handler for `timeout` operations. In this case, there's nothing to do
    * because the code in `LocalFile` that calls into here already takes care
    * of timeouts.
@@ -401,23 +386,6 @@ export default class Transactor extends CommonBase {
    */
   _op_timeout(props_unused) {
     // This space intentionally left blank.
-  }
-
-  /**
-   * Handler for `whenPathAbsent` operations.
-   *
-   * @param {object} props The operation properties.
-   */
-  _op_whenPathAbsent(props) {
-    const { storagePath } = props;
-    const value           = this._fileFriend.readPathOrNull(storagePath);
-
-    if (value === null) {
-      this._paths.add(storagePath);
-      this._waitSatisfied = true;
-    }
-
-    this._logAboutWaiting(`whenPathAbsent: ${storagePath}`);
   }
 
   /**
@@ -435,23 +403,6 @@ export default class Transactor extends CommonBase {
     }
 
     this._logAboutWaiting(`whenPathNot: ${storagePath}`);
-  }
-
-  /**
-   * Handler for `whenPathPresent` operations.
-   *
-   * @param {object} props The operation properties.
-   */
-  _op_whenPathPresent(props) {
-    const { storagePath } = props;
-    const value           = this._fileFriend.readPathOrNull(storagePath);
-
-    if (value !== null) {
-      this._paths.add(storagePath);
-      this._waitSatisfied = true;
-    }
-
-    this._logAboutWaiting(`whenPathPresent: ${storagePath}`);
   }
 
   /**

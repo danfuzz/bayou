@@ -61,7 +61,7 @@ describe('file-store-ot/TransactionSpec', () => {
 
     it('should reject arguments with both a wait and a pull', () => {
       const ops = [
-        TransactionOp.op_whenPathPresent('/blort'),
+        TransactionOp.op_whenPathNot('/blort', new FrozenBuffer('florp')),
         TransactionOp.op_readPath('/x/y')
       ];
 
@@ -70,7 +70,7 @@ describe('file-store-ot/TransactionSpec', () => {
 
     it('should reject arguments with both a wait and a push', () => {
       const ops = [
-        TransactionOp.op_whenPathPresent('/blort'),
+        TransactionOp.op_whenPathNot('/blort', new FrozenBuffer('florp')),
         TransactionOp.op_writeBlob(new FrozenBuffer('florp'))
       ];
 

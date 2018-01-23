@@ -250,14 +250,6 @@ const OPERATIONS = [
   [CAT_environment, 'timeout', ['durMsec', TYPE_DurMsec]],
 
   /*
-   * A `whenPathAbsent` operation. This is a wait operation that blocks the
-   * transaction until a specific path _does not_ have any data stored.
-   *
-   * @param {string} storagePath The storage path to observe.
-   */
-  [CAT_wait, 'whenPathAbsent', ['storagePath', TYPE_Path]],
-
-  /*
    * A `whenPathNot` operation. This is a wait operation that blocks the
    * transaction until a specific path does not store data which hashes as
    * given. This includes both storing data with other hashes as well as the
@@ -268,14 +260,6 @@ const OPERATIONS = [
    *   for the operation to complete.
    */
   [CAT_wait, 'whenPathNot', ['storagePath', TYPE_Path], ['hash', TYPE_Hash]],
-
-  /*
-   * A `whenPathPresent` operation. This is a wait operation that blocks the
-   * transaction until a specific path has some data (any value) stored.
-   *
-   * @param {string} storagePath The storage path to observe.
-   */
-  [CAT_wait, 'whenPathPresent', ['storagePath', TYPE_Path]],
 
   /*
    * A `writeBlob` operation. This is a write operation that stores the
