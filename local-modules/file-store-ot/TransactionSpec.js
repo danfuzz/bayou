@@ -209,14 +209,14 @@ export default class TransactionSpec extends CommonBase {
 
   /**
    * Runs this instance as a "wait" transaction. This includes first testing
-   * prerequisites and then returning a boolean indicating whether the wait
-   * conditions (as encoded by the wait operations of this instance) are
-   * satisfied by the given snapshot. If a prerequisite fails, this method will
-   * throw an error.
+   * prerequisites and then returning a value which indicates whether the wait
+   * condition (as encoded by the wait operations of this instance) is satisfied
+   * by the given snapshot. If a prerequisite fails, this method will throw an
+   * error.
    *
    * @param {FileSnapshot} snapshot Snapshot to operate on.
-   * @returns {boolean} `true` if the wait conditions are satisfied by
-   *   `snapshot`, or `false` if not.
+   * @returns {string|null} The storage ID which caused the wait transaction to
+   *   be satisfied, or _null_ if the transaction is not in fact satisfied.
    */
   runWait(snapshot) {
     FileSnapshot.check(snapshot);
