@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import LocalFile from './LocalFile';
+import LocalFileNew from './LocalFileNew';
 import LocalFileStore from './LocalFileStore';
 
-export { LocalFile, LocalFileStore };
+export { LocalFile, LocalFileNew, LocalFileStore };
