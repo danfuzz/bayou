@@ -77,4 +77,20 @@ export default class PredicateSpec extends CommonBase {
 
     return false;
   }
+
+  /**
+   * Does the equivalent of {@link #allPass} (see which), except instead of
+   * returning a `boolean`, it returns nothing when all the operations are
+   * satisfied and throws an error if one or more operations are not satisfied.
+   *
+   * @param {FileSnapshot} snapshot Snapshot to test.
+   * @throws {InfoError} Error describing the reason for dissatisfaction.
+   */
+  throwIfNotAllPass(snapshot) {
+    FileSnapshot.check(snapshot);
+
+    for (const op of this._ops) {
+      op.throwIfNotSatisfied(snapshot);
+    }
+  }
 }

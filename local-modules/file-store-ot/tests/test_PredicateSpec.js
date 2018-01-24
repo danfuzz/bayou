@@ -97,7 +97,7 @@ describe('file-store-ot/PredicateSpec', () => {
       assert.isTrue(spec.allPass(snap));
     });
 
-    it('should return `false` when one or more operations are unsatisfied', () => {
+    it('should return `false` when one or more operations is unsatisfied', () => {
       const spec = new PredicateSpec(
         PredicateOp.op_revNumIs(123),
         PredicateOp.op_pathPresent('/x/y/z'));
@@ -142,6 +142,34 @@ describe('file-store-ot/PredicateSpec', () => {
       ]);
 
       assert.isFalse(spec.anyPass(snap));
+    });
+  });
+
+  describe('throwIfNotAllPass()', () => {
+    it('should return without error when all operations are satisfied', () => {
+      const spec = new PredicateSpec(
+        PredicateOp.op_revNumIs(123),
+        PredicateOp.op_pathPresent('/x/y/z'));
+      const snap = new FileSnapshot(123, [
+        FileOp.op_writePath('/x/y/z', new FrozenBuffer('blort'))
+      ]);
+
+      assert.doesNotThrow(() => { spec.throwIfNotAllPass(snap); });
+    });
+
+    it('should throw an error when one or more operations is unsatisfied', () => {
+      const spec = new PredicateSpec(
+        PredicateOp.op_revNumIs(123),
+        PredicateOp.op_pathPresent('/x/y/z'));
+      const snap1 = new FileSnapshot(1, [
+        FileOp.op_writePath('/x/y/z', new FrozenBuffer('blort'))
+      ]);
+      const snap2 = new FileSnapshot(123, [
+        FileOp.op_writePath('/zyx', new FrozenBuffer('blort'))
+      ]);
+
+      assert.throws(() => { spec.throwIfNotAllPass(snap1); });
+      assert.throws(() => { spec.throwIfNotAllPass(snap2); });
     });
   });
 });

@@ -174,7 +174,7 @@ export default class TransactionSpec extends CommonBase {
     const ops       = origOps.map(op => op.toPredicateOp());
     const predicate = new PredicateSpec(...ops);
 
-    predicate.throwIfNotSatisfied(snapshot);
+    predicate.throwIfNotAllPass(snapshot);
   }
 
   /**
