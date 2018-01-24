@@ -125,6 +125,17 @@ export default class Errors extends UtilityClass {
   }
 
   /**
+   * Constructs an error indicating that a file does not exist.
+   *
+   * @param {string} path Path (or ID) of the file.
+   * @returns {InfoError} An appropriately-constructed error.
+   */
+  static fileNotFound(path) {
+    CoreTypecheck.checkString(path);
+    return new InfoError('fileNotFound', path);
+  }
+
+  /**
    * Constructs an error indicating that a requested revision (of a file or
    * document, for example) is not available.
    *

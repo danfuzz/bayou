@@ -306,7 +306,7 @@ describe('doc-server/BaseControl', () => {
         await assert.isRejected(control.appendChange(change), error);
       }
 
-      await test(fileStoreOt_Errors.fileNotFound('x'));
+      await test(Errors.fileNotFound('x'));
       await test(Errors.timedOut(123456));
       await test(Errors.badValue('foo', 'bar'));
     });
