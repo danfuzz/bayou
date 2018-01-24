@@ -38,17 +38,6 @@ export default class Errors extends UtilityClass {
   }
 
   /**
-   * Constructs an error indicating that a file does not exist.
-   *
-   * @param {string} id ID of the file.
-   * @returns {InfoError} An appropriately-constructed error.
-   */
-  static fileNotFound(id) {
-    TString.check(id);
-    return new InfoError('fileNotFound', id);
-  }
-
-  /**
    * Constructs an error indicating that a storage path contains data with a
    * different hash than expected.
    *
