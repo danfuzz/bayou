@@ -8,6 +8,7 @@ import path from 'path';
 import { Codec } from 'codec';
 import { Dirs } from 'env-server';
 import { BaseFileStore } from 'file-store';
+import { TheModule as fileStoreOt_TheModule } from 'file-store-ot';
 import { Logger } from 'see-all';
 
 import LocalFile from './LocalFile';
@@ -28,6 +29,7 @@ export default class LocalFileStore extends BaseFileStore {
 
     /** {Codec} Codec to use when reading and writing file OT objects. */
     this._codec = new Codec();
+    fileStoreOt_TheModule.registerCodecs(this._codec.registry);
 
     /** {Map<string, LocalFile>} Map from file IDs to file instances. */
     this._files = new Map();
