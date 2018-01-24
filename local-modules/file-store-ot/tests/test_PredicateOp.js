@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
 import { FileOp, FileSnapshot, PredicateOp } from 'file-store-ot';
-import { FrozenBuffer } from 'util-common';
+import { FrozenBuffer, InfoError } from 'util-common';
 
 /**
  * Defines a suite for a specific op.
@@ -16,11 +16,13 @@ import { FrozenBuffer } from 'util-common';
  * @param {array<array<*>>} badArgses Array of arguments arrays, all of which
  *   should result in a construction error.
  * @param {array<[FileSnapshot,array<*>]>} trueCases Array of pairs of snapshot
- *    and contructor args, for which `test()` should return `true`.
+ *   and contructor args, for which `test()` should return `true`.
  * @param {array<[FileSnapshot,array<*>]>} falseCases Array of pairs of snapshot
- *    and contructor args, for which `test()` should return `false`.
+ *   and contructor args, for which `test()` should return `false`.
+ * @param {string} errorName Name of the error that gets thrown when a failure
+ *   is reported by `throwIfNotSatisfied()`.
  */
-function opSuite(name, badArgses, trueCases, falseCases) {
+function opSuite(name, badArgses, trueCases, falseCases, errorName) {
   const constructorName = `op_${name}`;
 
   describe(`\`${name}\` operation`, () => {
@@ -77,6 +79,47 @@ function opSuite(name, badArgses, trueCases, falseCases) {
         }
       });
     });
+
+    describe('throwIfNotSatisfied()', () => {
+      describe('pass cases', () => {
+        let i = 1;
+
+        for (const [snap, args] of trueCases) {
+          describe(`#${i}: ${inspect(args)}`, () => {
+            it('should return without error given a snapshot that satisfies the operation', () => {
+              const op = PredicateOp[constructorName](...args);
+              assert.doesNotThrow(() => { op.throwIfNotSatisfied(snap); });
+            });
+          });
+
+          i++;
+        }
+      });
+
+      describe('throw cases', () => {
+        let i = 1;
+
+        for (const [snap, args] of falseCases) {
+          describe(`#${i}: ${inspect(args)}`, () => {
+            it('should throw an error given a snapshot that does not satisfy the operation', () => {
+              const op = PredicateOp[constructorName](...args);
+
+              // Not just `assert.throws()` so we can confirm the error details.
+              try {
+                op.throwIfNotSatisfied(snap);
+                assert.fail('Expected to throw.');
+              } catch (e) {
+                assert.instanceOf(e, InfoError);
+                assert.strictEqual(e.info.name, errorName);
+                assert.deepEqual(e.info.args, op.payload.args);
+              }
+            });
+          });
+
+          i++;
+        }
+      });
+    });
   });
 }
 
@@ -116,7 +159,9 @@ describe('file-store-ot/PredicateOp', () => {
     [
       [snap2, [buf1]],
       [snap2, [buf1.hash]]
-    ]
+    ],
+
+    'blobNotAbsent' // Thrown error name.
   );
 
   opSuite('blobPresent',
@@ -142,7 +187,9 @@ describe('file-store-ot/PredicateOp', () => {
       [snap1, [buf1.hash]],
       [snap2, [buf3]],
       [snap1, [buf4.hash]]
-    ]
+    ],
+
+    'blobNotFound' // Thrown error name.
   );
 
   opSuite('pathAbsent',
@@ -166,7 +213,9 @@ describe('file-store-ot/PredicateOp', () => {
     [
       [snap2, ['/x']],
       [snap2, ['/z/123']]
-    ]
+    ],
+
+    'pathNotAbsent' // Thrown error name.
   );
 
   opSuite('pathIs',
@@ -193,7 +242,9 @@ describe('file-store-ot/PredicateOp', () => {
       [snap1, ['/florp', buf1.hash]],
       [snap2, ['/x',     buf2]],
       [snap2, ['/x',     buf2.hash]]
-    ]
+    ],
+
+    'pathHashMismatch' // Thrown error name.
   );
 
   opSuite('pathIsNot',
@@ -220,7 +271,9 @@ describe('file-store-ot/PredicateOp', () => {
     [
       [snap2, ['/x', buf3]],
       [snap2, ['/x', buf3.hash]]
-    ]
+    ],
+
+    'pathHashMismatch' // Thrown error name.
   );
 
   opSuite('pathPresent',
@@ -244,7 +297,9 @@ describe('file-store-ot/PredicateOp', () => {
       [snap1, ['/boop']],
       [snap2, ['/x/y']],
       [snap2, ['/z']]
-    ]
+    ],
+
+    'pathNotFound' // Thrown error name.
   );
 
   opSuite('revNumIs',
@@ -270,6 +325,8 @@ describe('file-store-ot/PredicateOp', () => {
     [
       [snap1, [1]],
       [snap2, [0]]
-    ]
+    ],
+
+    'revNumMismatch' // Thrown error name.
   );
 });

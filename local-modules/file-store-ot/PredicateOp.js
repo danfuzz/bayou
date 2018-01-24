@@ -5,9 +5,24 @@
 import { BaseOp, RevisionNumber } from 'ot-common';
 import { Errors } from 'util-common';
 
+import fileStoreOt_Errors from './Errors';
 import FileSnapshot from './FileSnapshot';
 import StorageId from './StorageId';
 import StoragePath from './StoragePath';
+
+/**
+ * {Map<string,string>} Map from each operation name to the corresponding name
+ * of the error to throw in response to a failure to satisfy that operation.
+ */
+const OP_TO_ERROR_MAP = new Map(Object.entries({
+  blobAbsent:  'blobNotAbsent',
+  blobPresent: 'blobNotFound',
+  pathAbsent:  'pathNotAbsent',
+  pathIs:      'pathHashMismatch',
+  pathIsNot:   'pathHashMismatch',
+  pathPresent: 'pathNotFound',
+  revNumIs:    'revNumMismatch'
+}));
 
 /**
  * Operation which defines a predicate on a {@link FileSnapshot}.
@@ -181,7 +196,7 @@ export default class PredicateOp extends BaseOp {
   }
 
   /**
-   * Tests the predicate defined by instance on the given snapshot.
+   * Tests the predicate defined by this instance on the given snapshot.
    *
    * @param {FileSnapshot} snapshot Snapshot to test.
    * @returns {boolean} `true` if `snapshot` passes the test defined by this
@@ -199,6 +214,25 @@ export default class PredicateOp extends BaseOp {
     }
 
     return handler.call(clazz, snapshot, props);
+  }
+
+  /**
+   * Tests the predicate defined by this instance on the given snapshot. If
+   * the predicate is satisfied, this will return without any further action.
+   * If the predicate is not satisfied, this will throw an error.
+   *
+   * @param {FileSnapshot} snapshot Snapshot to test.
+   * @throws {InfoError} Error describing the reason for dissatisfaction.
+   */
+  throwIfNotSatisfied(snapshot) {
+    const passed = this.test(snapshot);
+
+    if (!passed) {
+      const payload   = this._payload;
+      const errorName = OP_TO_ERROR_MAP.get(payload.name);
+
+      throw fileStoreOt_Errors[errorName](...payload.args);
+    }
   }
 
   /**
