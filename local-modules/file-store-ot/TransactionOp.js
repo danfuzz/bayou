@@ -7,6 +7,7 @@ import { inspect } from 'util';
 import { TInt } from 'typecheck';
 import { CommonBase, DataUtil, Errors, FrozenBuffer } from 'util-common';
 
+import PredicateOp from './StoragePath';
 import StoragePath from './StoragePath';
 
 // Operation category constants. See docs on the static properties for details.
@@ -576,6 +577,31 @@ export default class TransactionOp extends CommonBase {
     result.push(')');
 
     return result.join('');
+  }
+
+  /**
+   * Gets the equivalent {@link PredicateOp} for this instance. Throws an error
+   * if there is no equivalent; notably, only prerequisite operations can be
+   * converted using this method.
+   *
+   * @returns {PredicateOp} The equivalent op for this instance.
+   */
+  toPredicateOp() {
+    let   name  = null;
+
+    switch (this.name) {
+      case 'checkBlobAbsent':  { name = 'op_blobAbsent';  break; }
+      case 'checkBlobPresent': { name = 'op_blobPresent'; break; }
+      case 'checkPathAbsent':  { name = 'op_pathAbsent';  break; }
+      case 'checkPathIs':      { name = 'op_pathIs';      break; }
+      case 'checkPathNot':     { name = 'op_pathIsNot';   break; }
+      case 'checkPathPresent': { name = 'op_pathPresent'; break; }
+      default: {
+        throw new Errors.badUse('Not a prerequisite operation.');
+      }
+    }
+
+    return new PredicateOp[name](...this._args);
   }
 
   /**
