@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { StoragePath } from 'file-store-ot';
+import { RevisionNumber } from 'ot-common';
 import { TString } from 'typecheck';
 import { FrozenBuffer, InfoError, UtilityClass } from 'util-common';
 
@@ -35,17 +36,6 @@ export default class Errors extends UtilityClass {
   static blobNotFound(hash) {
     FrozenBuffer.checkHash(hash);
     return new InfoError('blobNotFound', hash);
-  }
-
-  /**
-   * Constructs an error indicating that a file does not exist.
-   *
-   * @param {string} id ID of the file.
-   * @returns {InfoError} An appropriately-constructed error.
-   */
-  static fileNotFound(id) {
-    TString.check(id);
-    return new InfoError('fileNotFound', id);
   }
 
   /**
@@ -84,6 +74,18 @@ export default class Errors extends UtilityClass {
   static pathNotFound(storagePath) {
     StoragePath.check(storagePath);
     return new InfoError('pathNotFound', storagePath);
+  }
+
+  /**
+   * Constructs an error indicating that a file or part was expected to have the
+   * indicated revision number, but turns out to have a different one.
+   *
+   * @param {Int} revNum Revision number in question.
+   * @returns {InfoError} An appropriately-constructed error.
+   */
+  static revNumMismatch(revNum) {
+    RevisionNumber.check(revNum);
+    return new InfoError('revNumMismatch', revNum);
   }
 
   /**

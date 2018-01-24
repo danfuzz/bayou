@@ -5,6 +5,7 @@
 import { CommonBase, Errors } from 'util-common';
 
 import FileSnapshot from './FileSnapshot';
+import PredicateSpec from './PredicateSpec';
 import TransactionOp from './TransactionOp';
 
 /**
@@ -169,7 +170,11 @@ export default class TransactionSpec extends CommonBase {
   runPrerequisites(snapshot) {
     FileSnapshot.check(snapshot);
 
-    throw Errors.wtf('TODO');
+    const origOps   = this.opsWithCategory(TransactionOp.CAT_prerequisite);
+    const ops       = origOps.map(op => op.toPredicateOp());
+    const predicate = new PredicateSpec(...ops);
+
+    predicate.throwIfNotAllPass(snapshot);
   }
 
   /**
@@ -230,5 +235,18 @@ export default class TransactionSpec extends CommonBase {
     // Arrangement to keep the linter happy, even though this always throws.
     if (snapshot !== null) throw Errors.wtf('TODO');
     else return null;
+  }
+
+  /**
+   * Makes a {@link PredicateSpec} that corresponds to the prerequisites of
+   * this instance.
+   *
+   * @returns {PredicateSpec} An appropriately-constructed instance.
+   */
+  _makePreconditionPredicate() {
+    const origOps = this.opsWithCategory(TransactionOp.CAT_prerequisite);
+    const ops     = origOps.map(op => op.toPredicateOp());
+
+    return new PredicateSpec(...ops);
   }
 }

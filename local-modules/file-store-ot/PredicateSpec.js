@@ -11,9 +11,7 @@ import PredicateOp from './PredicateOp';
 /**
  * File predicate specification. This is a set of operations (each an instance
  * of {@link PredicateOp}) which is to be executed with respect to a {@link
- * FileSnapshot}. The result of running these is a boolean which indicates that
- * the snapshot does (`true`) or does not (`false`) satisfy all of the
- * predicate operations.
+ * FileSnapshot}.
  */
 export default class PredicateSpec extends CommonBase {
   /**
@@ -41,21 +39,58 @@ export default class PredicateSpec extends CommonBase {
   }
 
   /**
-   * Runs this instance on a given snapshot.
+   * Runs this instance on the given snapshot, indicating whether or not _all_
+   * operations are satisfied.
    *
    * @param {FileSnapshot} snapshot Snapshot to test.
    * @returns {boolean} `true` if this instance's predicate operations all pass
    *   on `snapshot`, or `false` if not.
    */
-  run(snapshot) {
+  allPass(snapshot) {
     FileSnapshot.check(snapshot);
 
     for (const op of this._ops) {
-      if (!op.run(snapshot)) {
+      if (!op.test(snapshot)) {
         return false;
       }
     }
 
     return true;
+  }
+
+  /**
+   * Runs this instance on the given snapshot, indicating whether or not _any_
+   * operations are satisfied.
+   *
+   * @param {FileSnapshot} snapshot Snapshot to test.
+   * @returns {boolean} `true` if any of this instance's predicate operations
+   *   pass on `snapshot`, or `false` if none pass.
+   */
+  anyPass(snapshot) {
+    FileSnapshot.check(snapshot);
+
+    for (const op of this._ops) {
+      if (op.test(snapshot)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Does the equivalent of {@link #allPass} (see which), except instead of
+   * returning a `boolean`, it returns nothing when all the operations are
+   * satisfied and throws an error if one or more operations is not satisfied.
+   *
+   * @param {FileSnapshot} snapshot Snapshot to test.
+   * @throws {InfoError} Error describing the reason for dissatisfaction.
+   */
+  throwIfNotAllPass(snapshot) {
+    FileSnapshot.check(snapshot);
+
+    for (const op of this._ops) {
+      op.throwIfNotSatisfied(snapshot);
+    }
   }
 }

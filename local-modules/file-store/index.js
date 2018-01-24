@@ -4,14 +4,12 @@
 
 import BaseFile from './BaseFile';
 import BaseFileStore from './BaseFileStore';
-import Errors from './Errors';
 import FileCodec from './FileCodec';
 import FileId from './FileId';
 
 export {
   BaseFile,
   BaseFileStore,
-  Errors,
   FileCodec,
   FileId
 };

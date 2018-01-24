@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import Errors from './Errors';
 import FileChange from './FileChange';
 import FileDelta from './FileDelta';
 import FileOp from './FileOp';
@@ -16,6 +17,7 @@ import TransactionSpec from './TransactionSpec';
 
 export {
   TheModule,
+  Errors,
   FileChange,
   FileDelta,
   FileOp,
