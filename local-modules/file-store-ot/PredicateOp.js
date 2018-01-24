@@ -95,6 +95,7 @@ export default class PredicateOp extends BaseOp {
    */
   static op_pathIs(path, hash) {
     StoragePath.check(path);
+    hash = StorageId.checkOrGetHash(hash);
 
     return new PredicateOp(PredicateOp.CODE_pathIs, path, hash);
   }
@@ -110,6 +111,7 @@ export default class PredicateOp extends BaseOp {
    */
   static op_pathIsNot(path, hash) {
     StoragePath.check(path);
+    hash = StorageId.checkOrGetHash(hash);
 
     return new PredicateOp(PredicateOp.CODE_pathIsNot, path, hash);
   }
