@@ -6,11 +6,31 @@ import { assert } from 'chai';
 import fs from 'fs';
 import { after, describe, it } from 'mocha';
 
+import { Codec } from 'codec';
 import { LocalFile } from 'file-store-local';
-import { TransactionOp, TransactionSpec } from 'file-store-ot';
+import { TheModule as fileStoreOt_TheModule, TransactionOp, TransactionSpec } from 'file-store-ot';
 import { FrozenBuffer } from 'util-common';
 
 import TempFiles from './TempFiles';
+
+/** {Codec} Codec instance to use. */
+const codec = new Codec();
+fileStoreOt_TheModule.registerCodecs(codec.registry);
+
+/**
+ * Makes a {@link LocalFile}.
+ *
+ * @param {string} [path = null] Path to use for the file, or `null` to have
+ *   this function pick one (a unique temporary directory).
+ * @returns {LocalFile} An appropriately-constructed instance.
+ */
+function makeLocalFile(path = null) {
+  if (path === null) {
+    path = TempFiles.uniquePath();
+  }
+
+  return new LocalFile('x0x', path, codec);
+}
 
 describe('file-store-local/LocalFile', () => {
   // The expectation was that this would run after all tests were finish and
@@ -30,13 +50,13 @@ describe('file-store-local/LocalFile', () => {
 
   describe('constructor()', () => {
     it('should not throw given valid arguments', () => {
-      assert.doesNotThrow(() => { new LocalFile('0', TempFiles.uniquePath()); });
+      assert.doesNotThrow(() => { makeLocalFile(); });
     });
   });
 
   describe('create()', () => {
     it('should cause a non-existent file to come into existence', async () => {
-      const file = new LocalFile('0', TempFiles.uniquePath());
+      const file = makeLocalFile();
 
       assert.isFalse(await file.exists()); // Baseline assumption.
       await file.create();
@@ -45,7 +65,7 @@ describe('file-store-local/LocalFile', () => {
     });
 
     it('should do nothing if called on a non-empty file', async () => {
-      const file = new LocalFile('0', TempFiles.uniquePath());
+      const file = makeLocalFile();
       const storagePath = '/abc';
       const value = FrozenBuffer.coerce('x');
 
@@ -80,7 +100,7 @@ describe('file-store-local/LocalFile', () => {
 
   describe('delete()', () => {
     it('should cause an existing file to stop existing', async () => {
-      const file = new LocalFile('0', TempFiles.uniquePath());
+      const file = makeLocalFile();
       await file.create();
       assert.isTrue(await file.exists()); // Baseline assumption.
 
@@ -91,13 +111,13 @@ describe('file-store-local/LocalFile', () => {
 
   describe('exists()', () => {
     it('should return `false` if the underlying storage does not exist', async () => {
-      const file = new LocalFile('0', TempFiles.uniquePath());
+      const file = makeLocalFile();
       assert.isFalse(await file.exists());
     });
 
     it('should return `true` if the underlying storage does exist', async () => {
       const dir = TempFiles.uniquePath();
-      const file = new LocalFile('0', dir);
+      const file = makeLocalFile(dir);
 
       fs.mkdirSync(dir);
       assert.isTrue(await file.exists());

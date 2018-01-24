@@ -8,12 +8,12 @@ import { describe, it } from 'mocha';
 import { TransactionOp, TransactionSpec } from 'file-store-ot';
 import { FrozenBuffer } from 'util-common';
 
-import FileOpMaker from './FileOpMaker';
+import TransactionOpMaker from './TransactionOpMaker';
 
 describe('file-store-ot/TransactionSpec', () => {
-  // The call to `FileOpMaker.testCases()` provides outer `describe()`s for each
-  // value to test with.
-  FileOpMaker.testCases((ops) => {
+  // The call to `TransactionOpMaker.testCases()` provides outer `describe()`s
+  // for each value to test with.
+  TransactionOpMaker.testCases((ops) => {
     describe('constructor()', () => {
       it('should accept any number of valid arguments', () => {
         assert.doesNotThrow(() => new TransactionSpec(...ops));
@@ -61,7 +61,7 @@ describe('file-store-ot/TransactionSpec', () => {
 
     it('should reject arguments with both a wait and a pull', () => {
       const ops = [
-        TransactionOp.op_whenPathPresent('/blort'),
+        TransactionOp.op_whenPathNot('/blort', new FrozenBuffer('florp')),
         TransactionOp.op_readPath('/x/y')
       ];
 
@@ -70,8 +70,17 @@ describe('file-store-ot/TransactionSpec', () => {
 
     it('should reject arguments with both a wait and a push', () => {
       const ops = [
-        TransactionOp.op_whenPathPresent('/blort'),
+        TransactionOp.op_whenPathNot('/blort', new FrozenBuffer('florp')),
         TransactionOp.op_writeBlob(new FrozenBuffer('florp'))
+      ];
+
+      assert.throws(() => { new TransactionSpec(...ops); }, /badUse/);
+    });
+
+    it('should reject arguments with two (or more) wait operations', () => {
+      const ops = [
+        TransactionOp.op_whenPathNot('/blort', new FrozenBuffer('florp')),
+        TransactionOp.op_whenPathNot('/florp', new FrozenBuffer('blort'))
       ];
 
       assert.throws(() => { new TransactionSpec(...ops); }, /badUse/);
@@ -100,14 +109,22 @@ describe('file-store-ot/TransactionSpec', () => {
         assert.sameMembers(resOps2, expectOps);
       }
 
-      test([], []);
-      test([TransactionOp.op_revNum(10)], []);
-      test([TransactionOp.op_revNum(10), TransactionOp.op_timeout(123)], []);
-      test([TransactionOp.op_revNum(20)], [TransactionOp.op_checkPathPresent('/foo')]);
-      test(
-        [TransactionOp.op_timeout(123456), TransactionOp.op_checkPathAbsent('/bar')],
-        [TransactionOp.op_checkPathPresent('/blort'), TransactionOp.op_checkPathAbsent('/florp')]
-      );
+      const op1 = TransactionOp.op_timeout(123);
+      const op2 = TransactionOp.op_checkPathPresent('/foo');
+      const op3 = TransactionOp.op_checkPathPresent('/bar');
+      const op4 = TransactionOp.op_checkPathAbsent('/florp');
+
+      test([],              []);
+      test([op1],           []);
+      test([op1, op2],      []);
+      test([op1, op2, op3], []);
+      test([],              [op4]);
+      test([op1],           [op4]);
+      test([op1, op2],      [op4]);
+      test([op1, op2, op3], [op4]);
+      test([],              [op3, op4]);
+      test([op1],           [op3, op4]);
+      test([op1, op2],      [op3, op4]);
     });
 
     it('should reject a bad argument', () => {

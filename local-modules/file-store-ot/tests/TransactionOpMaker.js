@@ -12,7 +12,7 @@ import { Errors, FrozenBuffer, UtilityClass } from 'util-common';
  * Test helper utility class for constructing valid arrays of ops which cover
  * all op types.
  */
-export default class FileOpMaker extends UtilityClass {
+export default class TransactionOpMaker extends UtilityClass {
   /**
    * Makes a valid ops array of the given length. All ops in the result are of
    * the same type.
@@ -44,7 +44,7 @@ export default class FileOpMaker extends UtilityClass {
     const args   = [];
 
     for (const [name_unused, type] of schema.args) {
-      args.push(FileOpMaker._makeValue(type, n));
+      args.push(TransactionOpMaker._makeValue(type, n));
     }
 
     return TransactionOp[`op_${name}`](...args);
@@ -79,7 +79,7 @@ export default class FileOpMaker extends UtilityClass {
       else                       { n = 0;     }
 
       for (let i = 0; i < n; i++) {
-        ops.push(FileOpMaker.makeOp(name, i));
+        ops.push(TransactionOpMaker.makeOp(name, i));
       }
     }
 
@@ -106,20 +106,18 @@ export default class FileOpMaker extends UtilityClass {
     }
 
     test([]);
-    test(FileOpMaker.makeLength(1));
-    test(FileOpMaker.makeLength(2));
-    test(FileOpMaker.makeLength(10));
-    test(FileOpMaker.makeLength(50),  '(length 50)');
-    test(FileOpMaker.makeLength(123), '(length 123)');
-    test(FileOpMaker.makeWithCategory('push', 1));
-    test(FileOpMaker.makeWithCategory('push', 2), '(push 2)');
-    test(FileOpMaker.makeWithCategory('push', 5), '(push 5)');
-    test(FileOpMaker.makeWithCategory('pull', 1));
-    test(FileOpMaker.makeWithCategory('pull', 2), '(pull 2)');
-    test(FileOpMaker.makeWithCategory('pull', 5), '(pull 5)');
-    test(FileOpMaker.makeWithCategory('wait', 1));
-    test(FileOpMaker.makeWithCategory('wait', 2), '(wait 2)');
-    test(FileOpMaker.makeWithCategory('wait', 5), '(wait 5)');
+    test(TransactionOpMaker.makeLength(1));
+    test(TransactionOpMaker.makeLength(2));
+    test(TransactionOpMaker.makeLength(10));
+    test(TransactionOpMaker.makeLength(50),  '(length 50)');
+    test(TransactionOpMaker.makeLength(123), '(length 123)');
+    test(TransactionOpMaker.makeWithCategory('push', 1));
+    test(TransactionOpMaker.makeWithCategory('push', 2), '(push 2)');
+    test(TransactionOpMaker.makeWithCategory('push', 5), '(push 5)');
+    test(TransactionOpMaker.makeWithCategory('pull', 1));
+    test(TransactionOpMaker.makeWithCategory('pull', 2), '(pull 2)');
+    test(TransactionOpMaker.makeWithCategory('pull', 5), '(pull 5)');
+    test(TransactionOpMaker.makeWithCategory('wait', 1));
   }
 
   /**

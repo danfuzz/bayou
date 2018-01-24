@@ -60,9 +60,17 @@ export default class LocalFile extends BaseFile {
    *
    * @param {string} fileId The ID of the file this instance represents.
    * @param {string} filePath The filesystem path for file storage.
+   * @param {Codec} codec Codec instance to use when encoding and decoding
+   *   changes.
    */
-  constructor(fileId, filePath) {
+  constructor(fileId, filePath, codec) {
     super(fileId);
+
+    /**
+     * {Codec} Codec instance to use when encoding and decoding items for
+     * storage. **Note:** This isn't used yet, as of this writing.
+     */
+    this._codec = Codec.check(codec);
 
     /**
      * {string} Path to the directory containing stored values for this file.
