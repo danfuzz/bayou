@@ -6,8 +6,8 @@ import afs from 'async-file';
 import path from 'path';
 
 import { Codec } from 'codec';
-import { BaseFile, Errors as fileStore_Errors } from 'file-store';
-import { FileChange, FileSnapshot } from 'file-store-ot';
+import { BaseFile } from 'file-store';
+import { Errors as fileStoreOt_Errors, FileChange, FileSnapshot } from 'file-store-ot';
 import { RevisionNumber } from 'ot-common';
 import { Condition, Delay, Mutex } from 'promise-util';
 import { Logger } from 'see-all';
@@ -209,7 +209,7 @@ export default class LocalFile extends BaseFile {
     }
 
     if (!this._fileShouldExist) {
-      throw fileStore_Errors.fileNotFound(this.id);
+      throw fileStoreOt_Errors.fileNotFound(this.id);
     }
 
     // Per the spec / docs, a `TransactionSpec` only has one of pull, push, or
@@ -269,7 +269,7 @@ export default class LocalFile extends BaseFile {
       // Have to re-check for file existence, as the file could have been
       // deleted while we were waiting.
       if (!this._fileShouldExist) {
-        throw fileStore_Errors.fileNotFound(this.id);
+        throw fileStoreOt_Errors.fileNotFound(this.id);
       }
     }
   }

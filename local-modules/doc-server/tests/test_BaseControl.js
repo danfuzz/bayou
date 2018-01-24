@@ -10,9 +10,8 @@ import { Timeouts } from 'doc-common';
 import { MockChange, MockDelta, MockOp, MockSnapshot } from 'ot-common/mocks';
 import { DurableControl, FileAccess } from 'doc-server';
 import { MockControl } from 'doc-server/mocks';
-import { Errors as fileStore_Errors } from 'file-store';
 import { MockFile } from 'file-store/mocks';
-import { TransactionSpec } from 'file-store-ot';
+import { Errors as fileStoreOt_Errors, TransactionSpec } from 'file-store-ot';
 import { Timestamp } from 'ot-common';
 import { TheModule as mocks_TheModule } from 'ot-common/mocks';
 import { Errors, FrozenBuffer } from 'util-common';
@@ -285,8 +284,8 @@ describe('doc-server/BaseControl', () => {
         await assert.eventually.strictEqual(control.appendChange(change), false);
       }
 
-      await test(fileStore_Errors.pathHashMismatch('/whatever', FrozenBuffer.coerce('x').hash));
-      await test(fileStore_Errors.pathNotAbsent('/mock_control/change/99'));
+      await test(fileStoreOt_Errors.pathHashMismatch('/whatever', FrozenBuffer.coerce('x').hash));
+      await test(fileStoreOt_Errors.pathNotAbsent('/mock_control/change/99'));
     });
 
     it('should rethrow any transaction error other than a precondition failure', async () => {
@@ -307,7 +306,7 @@ describe('doc-server/BaseControl', () => {
         await assert.isRejected(control.appendChange(change), error);
       }
 
-      await test(fileStore_Errors.fileNotFound('x'));
+      await test(fileStoreOt_Errors.fileNotFound('x'));
       await test(Errors.timedOut(123456));
       await test(Errors.badValue('foo', 'bar'));
     });
