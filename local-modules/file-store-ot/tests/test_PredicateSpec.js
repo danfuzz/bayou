@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { PredicateOp, PredicateSpec } from 'file-store-ot';
+import { FileOp, FileSnapshot, PredicateOp, PredicateSpec } from 'file-store-ot';
 import { FrozenBuffer } from 'util-common';
 
 describe('file-store-ot/PredicateSpec', () => {
@@ -82,6 +82,66 @@ describe('file-store-ot/PredicateSpec', () => {
         PredicateOp.op_pathIs('/x', new FrozenBuffer('x')),
         PredicateOp.op_pathIsNot('/y', new FrozenBuffer('not-y')),
         PredicateOp.op_pathPresent('/foo/bar'));
+    });
+  });
+
+  describe('allPass()', () => {
+    it('should return `true` when all operations are satisfied', () => {
+      const spec = new PredicateSpec(
+        PredicateOp.op_revNumIs(123),
+        PredicateOp.op_pathPresent('/x/y/z'));
+      const snap = new FileSnapshot(123, [
+        FileOp.op_writePath('/x/y/z', new FrozenBuffer('blort'))
+      ]);
+
+      assert.isTrue(spec.allPass(snap));
+    });
+
+    it('should return `false` when one or more operations are unsatisfied', () => {
+      const spec = new PredicateSpec(
+        PredicateOp.op_revNumIs(123),
+        PredicateOp.op_pathPresent('/x/y/z'));
+      const snap1 = new FileSnapshot(1, [
+        FileOp.op_writePath('/x/y/z', new FrozenBuffer('blort'))
+      ]);
+      const snap2 = new FileSnapshot(123, [
+        FileOp.op_writePath('/zyx', new FrozenBuffer('blort'))
+      ]);
+
+      assert.isFalse(spec.allPass(snap1));
+      assert.isFalse(spec.allPass(snap2));
+    });
+  });
+
+  describe('anyPass()', () => {
+    it('should return `true` when any operation is satisfied', () => {
+      const spec = new PredicateSpec(
+        PredicateOp.op_revNumIs(123),
+        PredicateOp.op_pathPresent('/x/y/z'));
+      const snap1 = new FileSnapshot(123, [
+        FileOp.op_writePath('/x/y/z', new FrozenBuffer('blort'))
+      ]);
+      const snap2 = new FileSnapshot(999, [
+        FileOp.op_writePath('/x/y/z', new FrozenBuffer('blort'))
+      ]);
+      const snap3 = new FileSnapshot(123, [
+        FileOp.op_writePath('/zyx', new FrozenBuffer('blort'))
+      ]);
+
+      assert.isTrue(spec.anyPass(snap1));
+      assert.isTrue(spec.anyPass(snap2));
+      assert.isTrue(spec.anyPass(snap3));
+    });
+
+    it('should return `false` when all operations are unsatisfied', () => {
+      const spec = new PredicateSpec(
+        PredicateOp.op_revNumIs(123),
+        PredicateOp.op_pathPresent('/x/y/z'));
+      const snap = new FileSnapshot(9999, [
+        FileOp.op_writePath('/florp/zorch', new FrozenBuffer('blort'))
+      ]);
+
+      assert.isFalse(spec.anyPass(snap));
     });
   });
 });
