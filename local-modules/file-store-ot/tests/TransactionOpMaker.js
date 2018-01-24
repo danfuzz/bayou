@@ -118,8 +118,6 @@ export default class TransactionOpMaker extends UtilityClass {
     test(TransactionOpMaker.makeWithCategory('pull', 2), '(pull 2)');
     test(TransactionOpMaker.makeWithCategory('pull', 5), '(pull 5)');
     test(TransactionOpMaker.makeWithCategory('wait', 1));
-    test(TransactionOpMaker.makeWithCategory('wait', 2), '(wait 2)');
-    test(TransactionOpMaker.makeWithCategory('wait', 5), '(wait 5)');
   }
 
   /**

@@ -76,6 +76,15 @@ describe('file-store-ot/TransactionSpec', () => {
 
       assert.throws(() => { new TransactionSpec(...ops); }, /badUse/);
     });
+
+    it('should reject arguments with two (or more) wait operations', () => {
+      const ops = [
+        TransactionOp.op_whenPathNot('/blort', new FrozenBuffer('florp')),
+        TransactionOp.op_whenPathNot('/florp', new FrozenBuffer('blort'))
+      ];
+
+      assert.throws(() => { new TransactionSpec(...ops); }, /badUse/);
+    });
   });
 
   describe('concat()', () => {

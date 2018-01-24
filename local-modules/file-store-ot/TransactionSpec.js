@@ -31,6 +31,10 @@ export default class TransactionSpec extends CommonBase {
       throw Errors.badUse('Too many `timeout` operations.');
     }
 
+    if (this.opsWithCategory(TransactionOp.CAT_wait).length > 1) {
+      throw Errors.badUse('Too many `wait` operations.');
+    }
+
     if ((this.hasWaitOps() + this.hasPullOps() + this.hasPushOps()) > 1) {
       throw Errors.badUse('Must only have one of wait operations, pull operations, or push operations.');
     }
@@ -162,7 +166,7 @@ export default class TransactionSpec extends CommonBase {
    *
    * @param {FileSnapshot} snapshot Snapshot to operate on.
    */
-  runPrerequeisites(snapshot) {
+  runPrerequisites(snapshot) {
     FileSnapshot.check(snapshot);
 
     throw Errors.wtf('TODO');
