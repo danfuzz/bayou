@@ -50,7 +50,7 @@ export default class PredicateSpec extends CommonBase {
     FileSnapshot.check(snapshot);
 
     for (const op of this._ops) {
-      if (!op.run(snapshot)) {
+      if (!op.test(snapshot)) {
         return false;
       }
     }
@@ -70,7 +70,7 @@ export default class PredicateSpec extends CommonBase {
     FileSnapshot.check(snapshot);
 
     for (const op of this._ops) {
-      if (op.run(snapshot)) {
+      if (op.test(snapshot)) {
         return true;
       }
     }

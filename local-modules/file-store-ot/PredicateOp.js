@@ -179,13 +179,13 @@ export default class PredicateOp extends BaseOp {
   }
 
   /**
-   * Runs this instance on a given snapshot.
+   * Tests the predicate defined by instance on the given snapshot.
    *
    * @param {FileSnapshot} snapshot Snapshot to test.
    * @returns {boolean} `true` if `snapshot` passes the test defined by this
    *   instance, or `false` if not.
    */
-  run(snapshot) {
+  test(snapshot) {
     FileSnapshot.check(snapshot);
 
     // Dispatch to the private static method `_op_<opName>`.
