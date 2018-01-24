@@ -39,7 +39,7 @@ export default class PredicateSpec extends CommonBase {
   }
 
   /**
-   * Runs this instance on a given snapshot, indicating whether or not _all_
+   * Runs this instance on the given snapshot, indicating whether or not _all_
    * operations are satisfied.
    *
    * @param {FileSnapshot} snapshot Snapshot to test.
@@ -59,7 +59,7 @@ export default class PredicateSpec extends CommonBase {
   }
 
   /**
-   * Runs this instance on a given snapshot, indicating whether or not _any_
+   * Runs this instance on the given snapshot, indicating whether or not _any_
    * operations are satisfied.
    *
    * @param {FileSnapshot} snapshot Snapshot to test.
