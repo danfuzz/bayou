@@ -184,6 +184,25 @@ describe('file-store-ot/FileDelta', () => {
         assert.sameMembers(result.ops, [op4]);
       });
 
+      it('should execute `deleteBlob` ops but not include them in the result', () => {
+        const blob1  = new FrozenBuffer('a');
+        const blob2  = new FrozenBuffer('b');
+        const blob3  = new FrozenBuffer('c');
+        const blob4  = new FrozenBuffer('d');
+        const op1    = FileOp.op_writePath('/aaa', new FrozenBuffer('111'));
+        const op2    = FileOp.op_writeBlob(blob1);
+        const op3    = FileOp.op_writeBlob(blob2);
+        const op4    = FileOp.op_writeBlob(blob3);
+        const op5    = FileOp.op_deleteBlob(blob2);
+        const op6    = FileOp.op_deleteBlob(blob3);
+        const op7    = FileOp.op_writeBlob(blob4);
+        const d1     = new FileDelta([op1, op2, op3, op4]);
+        const d2     = new FileDelta([op5, op6, op7, op3]);
+        const result = d1.compose(d2, true);
+
+        assert.sameMembers(result.ops, [op1, op2, op3, op7]);
+      });
+
       it('should execute `deletePath` ops but not include them in the result', () => {
         const op1    = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('111'));
         const op2    = FileOp.op_writePath('/bbb', FrozenBuffer.coerce('222'));
