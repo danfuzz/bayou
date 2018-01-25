@@ -581,8 +581,8 @@ export default class TransactionOp extends CommonBase {
 
   /**
    * Gets the equivalent {@link PredicateOp} for this instance. Throws an error
-   * if there is no equivalent; notably, only prerequisite operations can be
-   * converted using this method.
+   * if there is no equivalent; notably, only prerequisite and wait operations
+   * can be converted using this method.
    *
    * @returns {PredicateOp} The equivalent op for this instance.
    */
@@ -596,8 +596,9 @@ export default class TransactionOp extends CommonBase {
       case 'checkPathIs':      { name = 'op_pathIs';      break; }
       case 'checkPathNot':     { name = 'op_pathIsNot';   break; }
       case 'checkPathPresent': { name = 'op_pathPresent'; break; }
+      case 'whenPathNot':      { name = 'op_pathIsNot';   break; }
       default: {
-        throw new Errors.badUse('Not a prerequisite operation.');
+        throw new Errors.badUse('Not a prerequisite or wait operation.');
       }
     }
 

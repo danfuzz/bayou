@@ -219,7 +219,7 @@ export default class TransactionSpec extends CommonBase {
   /**
    * Runs this instance as a "wait" transaction. This includes first testing
    * prerequisites and then returning a value which indicates whether the wait
-   * condition (as encoded by the wait operations of this instance) is satisfied
+   * condition (as encoded by the wait operation of this instance) is satisfied
    * by the given snapshot. If a prerequisite fails, this method will throw an
    * error.
    *
@@ -230,10 +230,29 @@ export default class TransactionSpec extends CommonBase {
   runWait(snapshot) {
     FileSnapshot.check(snapshot);
 
+    const waitOps = this.opsWithCategory(TransactionOp.CAT_wait);
+
+    if (waitOps.length === 0) {
+      throw Errors.badUse('Not a wait transaction.');
+    } else if (waitOps.length > 1) {
+      // The `TransactionSpec` constructor should have guaranteed that this is
+      // not the case.
+      throw Errors.wtf('Can\'t handle more than one wait operation!');
+    }
+
+    const predicateOp = waitOps[0].toPredicateOp();
+
     this.runPrerequisites(snapshot);
 
-    // Arrangement to keep the linter happy, even though this always throws.
-    if (snapshot !== null) throw Errors.wtf('TODO');
-    else return null;
+    if (predicateOp.test(snapshot)) {
+      // Wait condition was satisfied. If the op has a `path` then that's the
+      // storage ID result; otherwise it's its `hash`. (There are no other
+      // possibilities.)
+      const { path, hash } = predicateOp.props;
+      return path || hash;
+    } else {
+      // Wait condition not satisfied.
+      return null;
+    }
   }
 }
