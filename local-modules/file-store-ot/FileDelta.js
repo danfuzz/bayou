@@ -165,8 +165,8 @@ export default class FileDelta extends BaseDelta {
    * @returns {FileDelta} Composed result.
    */
   _composeNonDocument(other) {
-    const ids         = new Map();
-    let   deleteAllOp = null;
+    const data  = new Map();   // Single-target ops (writes and deletes).
+    const deletes = new Set(); // Multi-target deletes.
 
     // Add / replace the ops, first from `this` and then from `other`, as a
     // mapping from the storage ID.
@@ -175,28 +175,66 @@ export default class FileDelta extends BaseDelta {
 
       switch (opProps.opName) {
         case FileOp.CODE_deleteAll: {
-          deleteAllOp = op;
-          ids.clear();
+          data.clear();
+          deletes.clear();
+          deletes.add(op);
           break;
         }
 
         case FileOp.CODE_deleteBlob: {
-          ids.set(opProps.hash, op);
+          data.set(opProps.hash, op);
           break;
         }
 
         case FileOp.CODE_deletePath: {
-          ids.set(opProps.path, op);
+          data.set(opProps.path, op);
+          break;
+        }
+
+        case FileOp.CODE_deletePathPrefix: {
+          // Delete any references in `data` to the prefix, but also remember
+          // the op (because it could end up affecting a subsequent
+          // `compose()`).
+
+          const prefix = opProps.path;
+
+          for (const id of data.keys()) {
+            if (StoragePath.isInstance(id) && StoragePath.isPrefixOrSame(prefix, id)) {
+              data.delete(id);
+            }
+          }
+
+          deletes.add(op);
+
+          break;
+        }
+
+        case FileOp.CODE_deletePathRange: {
+          // Delete any references in `data` to the range, but also remember
+          // the op (because it could end up affecting a subsequent
+          // `compose()`).
+
+          const { path: prefix, startInclusive, endExclusive } = opProps;
+
+          // **TODO:** This isn't necessarily the most efficient way to achieve
+          // the desired result. Consider a cleverer solution, should this turn
+          // out to be a performance issue.
+          for (let n = startInclusive; n < endExclusive; n++) {
+            data.delete(`${prefix}/${n}`);
+          }
+
+          deletes.add(op);
+
           break;
         }
 
         case FileOp.CODE_writeBlob: {
-          ids.set(opProps.blob.hash, op);
+          data.set(opProps.blob.hash, op);
           break;
         }
 
         case FileOp.CODE_writePath: {
-          ids.set(opProps.path, op);
+          data.set(opProps.path, op);
           break;
         }
 
@@ -208,10 +246,7 @@ export default class FileDelta extends BaseDelta {
 
     // Convert the map to an array of ops, and construct the result therefrom.
 
-    const ops = [
-      ...((deleteAllOp === null) ? [] : [deleteAllOp]),
-      ...ids.values()
-    ];
+    const ops = [...deletes.values(), ...data.values()];
 
     return new FileDelta(ops);
   }
