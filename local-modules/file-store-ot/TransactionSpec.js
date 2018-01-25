@@ -195,6 +195,13 @@ export default class TransactionSpec extends CommonBase {
   runPull(snapshot) {
     FileSnapshot.check(snapshot);
 
+    const listOps = this.opsWithCategory(TransactionOp.CAT_list);
+    const readOps = this.opsWithCategory(TransactionOp.CAT_read);
+
+    if ((listOps.length === 0) && (readOps.length === 0)) {
+      throw Errors.badUse('Not a pull transaction.');
+    }
+
     this.runPrerequisites(snapshot);
 
     // Arrangement to keep the linter happy, even though this always throws.
@@ -214,6 +221,13 @@ export default class TransactionSpec extends CommonBase {
    */
   runPush(snapshot) {
     FileSnapshot.check(snapshot);
+
+    const deleteOps = this.opsWithCategory(TransactionOp.CAT_delete);
+    const writeOps = this.opsWithCategory(TransactionOp.CAT_write);
+
+    if ((deleteOps.length === 0) && (writeOps.length === 0)) {
+      throw Errors.badUse('Not a push transaction.');
+    }
 
     this.runPrerequisites(snapshot);
 
