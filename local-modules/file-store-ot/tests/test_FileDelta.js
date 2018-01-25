@@ -172,7 +172,19 @@ describe('file-store-ot/FileDelta', () => {
           FileOp.op_deletePath('/aaa'));
       });
 
-      it('should not include `deletePath` ops', () => {
+      it('should execute `deleteAll` ops but not include them in the result', () => {
+        const op1    = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('111'));
+        const op2    = FileOp.op_writeBlob(FrozenBuffer.coerce('222'));
+        const op3    = FileOp.op_deleteAll();
+        const op4    = FileOp.op_writePath('/ccc', FrozenBuffer.coerce('333'));
+        const d1     = new FileDelta([op1]);
+        const d2     = new FileDelta([op2, op3, op4]);
+        const result = d1.compose(d2, true);
+
+        assert.sameMembers(result.ops, [op4]);
+      });
+
+      it('should execute `deletePath` ops but not include them in the result', () => {
         const op1    = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('111'));
         const op2    = FileOp.op_writePath('/bbb', FrozenBuffer.coerce('222'));
         const op3    = FileOp.op_writePath('/ccc', FrozenBuffer.coerce('333'));
@@ -183,6 +195,44 @@ describe('file-store-ot/FileDelta', () => {
         const result = d1.compose(d2, true);
 
         assert.sameMembers(result.ops, [op1, op3]);
+      });
+
+      it('should execute `deletePathPrefix` ops but not include them in the result', () => {
+        const op1    = FileOp.op_writePath('/a/b',     FrozenBuffer.coerce('000'));
+        const op2    = FileOp.op_writePath('/a/b/x',   FrozenBuffer.coerce('111'));
+        const op3    = FileOp.op_writePath('/a/b/y',   FrozenBuffer.coerce('222'));
+        const op4    = FileOp.op_writePath('/a/b/z',   FrozenBuffer.coerce('333'));
+        const op5    = FileOp.op_writePath('/a/a',     FrozenBuffer.coerce('x'));
+        const op6    = FileOp.op_writePath('/a/zorch', FrozenBuffer.coerce('x'));
+        const op7    = FileOp.op_writeBlob(FrozenBuffer.coerce('florp'));
+        const op8    = FileOp.op_deletePathPrefix('/a/b');
+        const op9    = FileOp.op_deletePathPrefix('/zomg');
+        const d1     = new FileDelta([op1, op2, op3, op4, op5, op6, op7]);
+        const d2     = new FileDelta([op8, op9, op3]);
+        const result = d1.compose(d2, true);
+
+        assert.sameMembers(result.ops, [op3, op5, op6, op7]);
+      });
+
+      it('should execute `deletePathRange` ops but not include them in the result', () => {
+        const op1    = FileOp.op_writePath('/a/b',     FrozenBuffer.coerce('000'));
+        const op2    = FileOp.op_writePath('/a/b/x',   FrozenBuffer.coerce('x'));
+        const op3    = FileOp.op_writePath('/a/b/3/x', FrozenBuffer.coerce('x'));
+        const op4    = FileOp.op_writePath('/a/b/1',   FrozenBuffer.coerce('111'));
+        const op5    = FileOp.op_writePath('/a/b/2',   FrozenBuffer.coerce('222'));
+        const op6    = FileOp.op_writePath('/a/b/3',   FrozenBuffer.coerce('333'));
+        const op7    = FileOp.op_writePath('/a/b/4',   FrozenBuffer.coerce('111'));
+        const op8    = FileOp.op_writePath('/a/b/15',  FrozenBuffer.coerce('222'));
+        const op9    = FileOp.op_writePath('/a/b/16',  FrozenBuffer.coerce('333'));
+        const op10   = FileOp.op_writePath('/a/zorch', FrozenBuffer.coerce('x'));
+        const op11   = FileOp.op_writeBlob(FrozenBuffer.coerce('florp'));
+        const op12   = FileOp.op_deletePathRange('/a/b', 2, 16);
+        const op13   = FileOp.op_deletePathRange('/zomg', 10, 20);
+        const d1     = new FileDelta([op1, op2, op3, op4, op5, op6, op7, op8, op9, op10, op11]);
+        const d2     = new FileDelta([op12, op13, op6]);
+        const result = d1.compose(d2, true);
+
+        assert.sameMembers(result.ops, [op1, op2, op3, op4, op6, op9, op10, op11]);
       });
     });
   });
