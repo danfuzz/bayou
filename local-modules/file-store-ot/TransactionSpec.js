@@ -242,11 +242,7 @@ export default class TransactionSpec extends CommonBase {
 
     this.runPrerequisites(snapshot);
 
-    const resultOps = [];
-
-    for (const op_unused of [...deleteOps, ...writeOps]) {
-      throw Errors.wtf('TODO');
-    }
+    const resultOps = [...deleteOps, ...writeOps].map(op => op.toFileOp());
 
     return new FileChange(snapshot.revNum + 1, resultOps);
   }
