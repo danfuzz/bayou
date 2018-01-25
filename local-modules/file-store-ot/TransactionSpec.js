@@ -4,6 +4,7 @@
 
 import { CommonBase, Errors } from 'util-common';
 
+import FileChange from './FileChange';
 import FileSnapshot from './FileSnapshot';
 import PredicateSpec from './PredicateSpec';
 import TransactionOp from './TransactionOp';
@@ -170,7 +171,13 @@ export default class TransactionSpec extends CommonBase {
   runPrerequisites(snapshot) {
     FileSnapshot.check(snapshot);
 
-    const origOps   = this.opsWithCategory(TransactionOp.CAT_prerequisite);
+    const origOps = this.opsWithCategory(TransactionOp.CAT_prerequisite);
+
+    if (origOps.length === 0) {
+      // Nothing to run.
+      return;
+    }
+
     const ops       = origOps.map(op => op.toPredicateOp());
     const predicate = new PredicateSpec(...ops);
 
@@ -189,11 +196,28 @@ export default class TransactionSpec extends CommonBase {
   runPull(snapshot) {
     FileSnapshot.check(snapshot);
 
+    const listOps = this.opsWithCategory(TransactionOp.CAT_list);
+    const readOps = this.opsWithCategory(TransactionOp.CAT_read);
+
+    if ((listOps.length === 0) && (readOps.length === 0)) {
+      throw Errors.badUse('Not a pull transaction.');
+    }
+
     this.runPrerequisites(snapshot);
 
-    // Arrangement to keep the linter happy, even though this always throws.
-    if (snapshot !== null) throw Errors.wtf('TODO');
-    else return null;
+    const result = { data: null, paths: null };
+
+    if (listOps.length !== 0) {
+      result.data = new Set();
+      throw Errors.wtf('TODO');
+    }
+
+    if (readOps.length !== 0) {
+      result.paths = new Map;
+      throw Errors.wtf('TODO');
+    }
+
+    return result;
   }
 
   /**
@@ -209,17 +233,24 @@ export default class TransactionSpec extends CommonBase {
   runPush(snapshot) {
     FileSnapshot.check(snapshot);
 
+    const deleteOps = this.opsWithCategory(TransactionOp.CAT_delete);
+    const writeOps = this.opsWithCategory(TransactionOp.CAT_write);
+
+    if ((deleteOps.length === 0) && (writeOps.length === 0)) {
+      throw Errors.badUse('Not a push transaction.');
+    }
+
     this.runPrerequisites(snapshot);
 
-    // Arrangement to keep the linter happy, even though this always throws.
-    if (snapshot !== null) throw Errors.wtf('TODO');
-    else return null;
+    const resultOps = [...deleteOps, ...writeOps].map(op => op.toFileOp());
+
+    return new FileChange(snapshot.revNum + 1, resultOps);
   }
 
   /**
    * Runs this instance as a "wait" transaction. This includes first testing
    * prerequisites and then returning a value which indicates whether the wait
-   * condition (as encoded by the wait operations of this instance) is satisfied
+   * condition (as encoded by the wait operation of this instance) is satisfied
    * by the given snapshot. If a prerequisite fails, this method will throw an
    * error.
    *
@@ -230,10 +261,29 @@ export default class TransactionSpec extends CommonBase {
   runWait(snapshot) {
     FileSnapshot.check(snapshot);
 
+    const waitOps = this.opsWithCategory(TransactionOp.CAT_wait);
+
+    if (waitOps.length === 0) {
+      throw Errors.badUse('Not a wait transaction.');
+    } else if (waitOps.length > 1) {
+      // The `TransactionSpec` constructor should have guaranteed that this is
+      // not the case.
+      throw Errors.wtf('Can\'t handle more than one wait operation!');
+    }
+
+    const predicateOp = waitOps[0].toPredicateOp();
+
     this.runPrerequisites(snapshot);
 
-    // Arrangement to keep the linter happy, even though this always throws.
-    if (snapshot !== null) throw Errors.wtf('TODO');
-    else return null;
+    if (predicateOp.test(snapshot)) {
+      // Wait condition was satisfied. If the op has a `path` then that's the
+      // storage ID result; otherwise it's its `hash`. (There are no other
+      // possibilities.)
+      const { path, hash } = predicateOp.props;
+      return path || hash;
+    } else {
+      // Wait condition not satisfied.
+      return null;
+    }
   }
 }

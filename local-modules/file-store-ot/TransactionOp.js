@@ -7,7 +7,8 @@ import { inspect } from 'util';
 import { TInt } from 'typecheck';
 import { CommonBase, DataUtil, Errors, FrozenBuffer } from 'util-common';
 
-import PredicateOp from './StoragePath';
+import FileOp from './FileOp';
+import PredicateOp from './PredicateOp';
 import StoragePath from './StoragePath';
 
 // Operation category constants. See docs on the static properties for details.
@@ -580,9 +581,28 @@ export default class TransactionOp extends CommonBase {
   }
 
   /**
-   * Gets the equivalent {@link PredicateOp} for this instance. Throws an error
-   * if there is no equivalent; notably, only prerequisite operations can be
+   * Gets the equivalent {@link FileOp} for this instance. Throws an error if
+   * there is no equivalent; notably, only delete and write operations can be
    * converted using this method.
+   *
+   * @returns {PredicateOp} The equivalent op for this instance.
+   */
+  toFileOp() {
+    const { category, opName } = this.props;
+
+    if ((category !== TransactionOp.CAT_delete) && (category !== TransactionOp.CAT_write)) {
+      throw new Errors.badUse('Not a delete or write operation.');
+    }
+
+    // The corresponding file ops all have the same names and take arguments in
+    // the same order. Convenient!
+    return FileOp[`op_${opName}`](...this._args);
+  }
+
+  /**
+   * Gets the equivalent {@link PredicateOp} for this instance. Throws an error
+   * if there is no equivalent; notably, only prerequisite and wait operations
+   * can be converted using this method.
    *
    * @returns {PredicateOp} The equivalent op for this instance.
    */
@@ -596,12 +616,13 @@ export default class TransactionOp extends CommonBase {
       case 'checkPathIs':      { name = 'op_pathIs';      break; }
       case 'checkPathNot':     { name = 'op_pathIsNot';   break; }
       case 'checkPathPresent': { name = 'op_pathPresent'; break; }
+      case 'whenPathNot':      { name = 'op_pathIsNot';   break; }
       default: {
-        throw new Errors.badUse('Not a prerequisite operation.');
+        throw new Errors.badUse('Not a prerequisite or wait operation.');
       }
     }
 
-    return new PredicateOp[name](...this._args);
+    return PredicateOp[name](...this._args);
   }
 
   /**
