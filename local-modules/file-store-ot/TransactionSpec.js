@@ -170,7 +170,13 @@ export default class TransactionSpec extends CommonBase {
   runPrerequisites(snapshot) {
     FileSnapshot.check(snapshot);
 
-    const origOps   = this.opsWithCategory(TransactionOp.CAT_prerequisite);
+    const origOps = this.opsWithCategory(TransactionOp.CAT_prerequisite);
+
+    if (origOps.length === 0) {
+      // Nothing to run.
+      return;
+    }
+
     const ops       = origOps.map(op => op.toPredicateOp());
     const predicate = new PredicateSpec(...ops);
 
