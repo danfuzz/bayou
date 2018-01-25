@@ -83,79 +83,107 @@ describe('file-store-ot/FileDelta', () => {
   });
 
   describe('compose()', () => {
-    it('should return an empty result from `EMPTY.compose(EMPTY)`', () => {
-      const result1 = FileDelta.EMPTY.compose(FileDelta.EMPTY, false);
-      assert.instanceOf(result1, FileDelta);
-      assert.deepEqual(result1.ops, []);
+    // Common test cases for both document and non-document results.
+    function commonCases(wantDocument) {
+      it('should return an empty result from `EMPTY.compose(EMPTY)`', () => {
+        const result1 = FileDelta.EMPTY.compose(FileDelta.EMPTY, wantDocument);
+        assert.instanceOf(result1, FileDelta);
+        assert.deepEqual(result1.ops, []);
+      });
 
-      const result2 = FileDelta.EMPTY.compose(FileDelta.EMPTY, true);
-      assert.instanceOf(result2, FileDelta);
-      assert.deepEqual(result2.ops, []);
-    });
+      it('should reject calls when `other` is not an instance of the class', () => {
+        const delta = FileDelta.EMPTY;
 
-    it('should reject calls when `other` is not an instance of the class', () => {
-      const delta = FileDelta.EMPTY;
+        assert.throws(() => delta.compose('blort', wantDocument));
+        assert.throws(() => delta.compose(null, wantDocument));
+        assert.throws(() => delta.compose(new MockDelta([]), wantDocument));
+      });
 
-      assert.throws(() => delta.compose('blort', false));
-      assert.throws(() => delta.compose(null, false));
-      assert.throws(() => delta.compose(new MockDelta([]), false));
-    });
+      it('should result in no more than one op per storage ID, with `other` taking precedence', () => {
+        function test(ops1, ops2, expectOps) {
+          const d1     = new FileDelta(ops1);
+          const d2     = new FileDelta(ops2);
+          const result = d1.compose(d2, wantDocument);
 
-    it('should result in no more than one op per storage ID, with `other` taking precedence', () => {
-      function test(ops1, ops2, expectOps) {
-        const d1     = new FileDelta(ops1);
-        const d2     = new FileDelta(ops2);
-        const result = d1.compose(d2, false);
-
-        assert.strictEqual(result.ops.length, expectOps.length);
-
-        const opSet = new Set();
-        for (const op of result.ops) {
-          opSet.add(op);
+          assert.sameMembers(result.ops, expectOps);
         }
-        for (const op of expectOps) {
-          assert.isTrue(opSet.has(op), inspect(op));
-          opSet.delete(op);
+
+        const op_a1 = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('bbb'));
+        const op_a2 = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('ccc'));
+        const op_a3 = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('ddd'));
+        const op_b1 = FileOp.op_writePath('/bbb', FrozenBuffer.coerce('ccc'));
+        const op_b2 = FileOp.op_writePath('/bbb', FrozenBuffer.coerce('ddd'));
+
+        test([op_a1],        [],             [op_a1]);
+        test([],             [op_a1],        [op_a1]);
+        test([op_a1],        [op_a2],        [op_a2]);
+        test([],             [op_a1, op_a2], [op_a2]);
+        test([op_a3],        [op_a1, op_a2], [op_a2]);
+        test([op_a1],        [op_b1],        [op_a1, op_b1]);
+        test([op_a1, op_b1], [op_b2],        [op_a1, op_b2]);
+        test([op_a1, op_b1], [op_b2, op_a2], [op_a2, op_b2]);
+      });
+    }
+
+    describe('wantDocument === `false`', () => {
+      commonCases(false);
+
+      it('should handle `deletePath` ops', () => {
+        function test(ops1, ops2, expectOps) {
+          const d1     = new FileDelta(ops1);
+          const d2     = new FileDelta(ops2);
+          const result = d1.compose(d2, false);
+
+          assert.sameMembers(result.ops, expectOps);
         }
-      }
 
-      const op1 = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('bbb'));
-      const op2 = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('ccc'));
-      const op3 = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('ddd'));
-      const op4 = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('eee'));
-      const op5 = FileOp.op_writePath('/bbb', FrozenBuffer.coerce('ccc'));
-      const op6 = FileOp.op_writePath('/bbb', FrozenBuffer.coerce('ddd'));
-      const op7 = FileOp.op_deletePath('/aaa');
+        const op_a1 = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('bbb'));
+        const op_a2 = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('ddd'));
+        const op_b1 = FileOp.op_writePath('/bbb', FrozenBuffer.coerce('ccc'));
+        const op_adel = FileOp.op_deletePath('/aaa');
 
-      test([op1],      [],         [op1]);
-      test([op1, op2], [],         [op2]);
-      test([op1, op7], [],         [op7]);
-      test([op7],      [],         [op7]);
-      test([],         [op1],      [op1]);
-      test([],         [op1, op2], [op2]);
-      test([],         [op1, op7], [op7]);
-      test([],         [op7],      [op7]);
-      test([op3],      [op1],      [op1]);
-      test([op3],      [op1, op2], [op2]);
-      test([op3],      [op1, op7], [op7]);
-      test([op3],      [op7],      [op7]);
-      test([op1, op2], [op3, op4], [op4]);
-      test([op1],      [op5],      [op1, op5]);
-      test([op1, op5], [op6],      [op1, op6]);
-      test([op1, op5], [op7],      [op5, op7]);
+        test([op_a1, op_adel], [],               [op_adel]);
+        test([op_adel],        [],               [op_adel]);
+        test([],               [op_a1, op_adel], [op_adel]);
+        test([],               [op_adel],        [op_adel]);
+        test([op_a2],          [op_a1, op_adel], [op_adel]);
+        test([op_a2],          [op_adel],        [op_adel]);
+        test([op_a1, op_b1],   [op_adel],        [op_adel, op_b1]);
+      });
     });
 
-    it('should not include deletions when `wantDocument` is `true`', () => {
-      const op1    = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('111'));
-      const op2    = FileOp.op_writePath('/bbb', FrozenBuffer.coerce('222'));
-      const op3    = FileOp.op_writePath('/ccc', FrozenBuffer.coerce('333'));
-      const op4    = FileOp.op_deletePath('/bbb');
-      const op5    = FileOp.op_deletePath('/ddd');
-      const d1     = new FileDelta([op1, op2]);
-      const d2     = new FileDelta([op3, op4, op5]);
-      const result = d1.compose(d2, true);
+    describe('wantDocument === `true`', () => {
+      commonCases(true);
 
-      assert.sameMembers(result.ops, [op1, op3]);
+      it('should reject a non-document `this`', () => {
+        function test(...ops) {
+          const delta = new FileDelta(ops);
+          assert.throws(() => delta.compose(FileDelta.EMPTY, true), /badUse/);
+        }
+
+        test(FileOp.op_deleteAll());
+        test(FileOp.op_deleteBlob(new FrozenBuffer('123')));
+        test(FileOp.op_deletePath('/aaa'));
+        test(FileOp.op_deletePathPrefix('/bbb'));
+        test(FileOp.op_deletePathRange('/ccc', 123, 914));
+
+        test(
+          FileOp.op_writePath('/aaa', new FrozenBuffer('123')),
+          FileOp.op_deletePath('/aaa'));
+      });
+
+      it('should not include `deletePath` ops', () => {
+        const op1    = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('111'));
+        const op2    = FileOp.op_writePath('/bbb', FrozenBuffer.coerce('222'));
+        const op3    = FileOp.op_writePath('/ccc', FrozenBuffer.coerce('333'));
+        const op4    = FileOp.op_deletePath('/bbb');
+        const op5    = FileOp.op_deletePath('/ddd');
+        const d1     = new FileDelta([op1, op2]);
+        const d2     = new FileDelta([op3, op4, op5]);
+        const result = d1.compose(d2, true);
+
+        assert.sameMembers(result.ops, [op1, op3]);
+      });
     });
   });
 
