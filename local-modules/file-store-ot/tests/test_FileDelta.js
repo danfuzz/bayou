@@ -141,6 +141,25 @@ describe('file-store-ot/FileDelta', () => {
         assert.deepEqual(result.ops, [op3, op4]);
       });
 
+      it('should handle `deleteBlob` ops', () => {
+        const blob1  = new FrozenBuffer('a1');
+        const blob2  = new FrozenBuffer('b2');
+        const blob3  = new FrozenBuffer('c3');
+        const blob4  = new FrozenBuffer('d4');
+        const op1    = FileOp.op_writePath('/aaa', new FrozenBuffer('111'));
+        const op2    = FileOp.op_writeBlob(blob1);
+        const op3    = FileOp.op_writeBlob(blob2);
+        const op4    = FileOp.op_deleteBlob(blob1);
+        const op5    = FileOp.op_deleteBlob(blob2);
+        const op6    = FileOp.op_deleteBlob(blob3);
+        const op7    = FileOp.op_writeBlob(blob4);
+        const d1     = new FileDelta([op1, op2, op3, op4]);
+        const d2     = new FileDelta([op5, op6, op7, op3]);
+        const result = d1.compose(d2, false);
+
+        assert.sameMembers(result.ops, [op1, op3, op4, op6, op7]);
+      });
+
       it('should handle `deletePath` ops', () => {
         function test(ops1, ops2, expectOps) {
           const d1     = new FileDelta(ops1);
