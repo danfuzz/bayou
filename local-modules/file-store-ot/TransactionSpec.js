@@ -236,17 +236,4 @@ export default class TransactionSpec extends CommonBase {
     if (snapshot !== null) throw Errors.wtf('TODO');
     else return null;
   }
-
-  /**
-   * Makes a {@link PredicateSpec} that corresponds to the prerequisites of
-   * this instance.
-   *
-   * @returns {PredicateSpec} An appropriately-constructed instance.
-   */
-  _makePreconditionPredicate() {
-    const origOps = this.opsWithCategory(TransactionOp.CAT_prerequisite);
-    const ops     = origOps.map(op => op.toPredicateOp());
-
-    return new PredicateSpec(...ops);
-  }
 }
