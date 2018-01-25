@@ -43,6 +43,8 @@ describe('file-store-ot/FileDelta', () => {
         [FileOp.op_deleteAll()],
         [FileOp.op_deleteBlob(FrozenBuffer.coerce('blort').hash)],
         [FileOp.op_deletePath('/x/y/z')],
+        [FileOp.op_deletePathPrefix('/blort/splatch')],
+        [FileOp.op_deletePathRange('/florp/items', 37, 123)],
         [FileOp.op_writeBlob(FrozenBuffer.coerce('florp'))],
         [FileOp.op_writePath('/zorch', FrozenBuffer.coerce('splat'))],
         [['deleteAll']],
