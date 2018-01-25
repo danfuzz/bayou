@@ -128,6 +128,19 @@ describe('file-store-ot/FileDelta', () => {
     describe('wantDocument === `false`', () => {
       commonCases(false);
 
+      it('should handle `deleteAll` ops', () => {
+        const op1    = FileOp.op_writePath('/aaa', FrozenBuffer.coerce('111'));
+        const op2    = FileOp.op_writeBlob(FrozenBuffer.coerce('222'));
+        const op3    = FileOp.op_deleteAll();
+        const op4    = FileOp.op_writePath('/ccc', FrozenBuffer.coerce('333'));
+        const d1     = new FileDelta([op1]);
+        const d2     = new FileDelta([op2, op3, op4]);
+        const result = d1.compose(d2, false);
+
+        // Order of operations matters!
+        assert.deepEqual(result.ops, [op3, op4]);
+      });
+
       it('should handle `deletePath` ops', () => {
         function test(ops1, ops2, expectOps) {
           const d1     = new FileDelta(ops1);
