@@ -6,6 +6,7 @@ import { BaseDelta } from 'ot-common';
 import { Errors } from 'util-common';
 
 import FileOp from './FileOp';
+import StoragePath from './StoragePath';
 
 /**
  * Delta for file contents, consisting of a simple ordered list of operations.
@@ -28,6 +29,14 @@ export default class FileDelta extends BaseDelta {
    * @returns {FileDelta} Composed result.
    */
   _impl_compose(other, wantDocument) {
+    if (wantDocument) {
+      return this._composeDocument(other);
+    }
+
+    // The rest of this is the non-document-delta case, in which we have to
+    // remember deletes that could possibly have an effect should the result
+    // subsequently be used as an argument to `compose()`.
+
     const ids         = new Map();
     let   deleteAllOp = null;
 
@@ -71,36 +80,12 @@ export default class FileDelta extends BaseDelta {
 
     // Convert the map to an array of ops, and construct the result therefrom.
 
-    if (wantDocument) {
-      // For document deltas, we just need to remember the final contents.
-      // Therefore, we ignore all of the deletion ops here (including any
-      // recorded `deleteAll`).
+    const ops = [
+      ...((deleteAllOp === null) ? [] : [deleteAllOp]),
+      ...ids.values()
+    ];
 
-      const ops = [];
-
-      for (const op of ids.values()) {
-        switch (op.props.opName) {
-          case FileOp.CODE_writeBlob:
-          case FileOp.CODE_writePath: {
-            ops.push(op);
-            break;
-          }
-        }
-      }
-
-      return new FileDelta(ops);
-    } else {
-      // For non-document deltas, we need to remember whether there was a
-      // `deleteAll` and also remember IDs that got deleted, so that the
-      // deletions are part of the result delta.
-
-      const ops = [
-        ...((deleteAllOp === null) ? [] : [deleteAllOp]),
-        ...ids.values()
-      ];
-
-      return new FileDelta(ops);
-    }
+    return new FileDelta(ops);
   }
 
   /**
@@ -145,6 +130,82 @@ export default class FileDelta extends BaseDelta {
     }
 
     return true;
+  }
+
+  /**
+   * Helper for {@link #_impl_compose} which handles the case of `wantDocument
+   * === true`.
+   *
+   * @param {FileDelta} other Delta to compose with this instance.
+   * @returns {FileDelta} Composed result.
+   */
+  _composeDocument(other) {
+    const data = new Map();
+
+    // Add / replace the ops, first from `this` and then from `other`, as a
+    // mapping from the storage ID.
+    for (const op of [...this.ops, ...other.ops]) {
+      const opProps = op.props;
+
+      switch (opProps.opName) {
+        case FileOp.CODE_deleteAll: {
+          data.clear();
+          break;
+        }
+
+        case FileOp.CODE_deleteBlob: {
+          data.delete(opProps.hash);
+          break;
+        }
+
+        case FileOp.CODE_deletePath: {
+          data.delete(opProps.path);
+          break;
+        }
+
+        case FileOp.CODE_deletePathPrefix: {
+          const prefix = opProps.path;
+
+          for (const id of data.keys()) {
+            if (StoragePath.isInstance(id) && StoragePath.isPrefixOrSame(prefix, id)) {
+              data.delete(id);
+            }
+          }
+
+          break;
+        }
+
+        case FileOp.CODE_deletePathRange: {
+          const { path: prefix, startInclusive, endExclusive } = opProps;
+
+          // **TODO:** This isn't necessarily the most efficient way to achieve
+          // the desired result. Consider a cleverer solution, should this turn
+          // out to be a performance issue.
+          for (let n = startInclusive; n < endExclusive; n++) {
+            data.delete(`${prefix}/${n}`);
+          }
+
+          break;
+        }
+
+        case FileOp.CODE_writeBlob: {
+          data.set(opProps.blob.hash, op);
+          break;
+        }
+
+        case FileOp.CODE_writePath: {
+          data.set(opProps.path, op);
+          break;
+        }
+
+        default: {
+          throw Errors.wtf(`Weird op name: ${opProps.opName}`);
+        }
+      }
+    }
+
+    // Convert the map to an array of ops, and construct the result therefrom.
+    return new FileDelta([...data.values()]);
   }
 
   /**

@@ -189,8 +189,8 @@ export default class FileOp extends BaseOp {
       }
 
       case FileOp.CODE_deletePathRange: {
-        const [path, minInclusive, maxExclusive] = payload.args;
-        return Object.freeze({ opName, path, minInclusive, maxExclusive });
+        const [path, startInclusive, endExclusive] = payload.args;
+        return Object.freeze({ opName, path, startInclusive, endExclusive });
       }
 
       case FileOp.CODE_writeBlob: {
