@@ -4,6 +4,7 @@
 
 import { CommonBase, Errors } from 'util-common';
 
+import FileChange from './FileChange';
 import FileSnapshot from './FileSnapshot';
 import PredicateSpec from './PredicateSpec';
 import TransactionOp from './TransactionOp';
@@ -204,9 +205,19 @@ export default class TransactionSpec extends CommonBase {
 
     this.runPrerequisites(snapshot);
 
-    // Arrangement to keep the linter happy, even though this always throws.
-    if (snapshot !== null) throw Errors.wtf('TODO');
-    else return null;
+    const result = { data: null, paths: null };
+
+    if (listOps.length !== 0) {
+      result.data = new Set();
+      throw Errors.wtf('TODO');
+    }
+
+    if (readOps.length !== 0) {
+      result.paths = new Map;
+      throw Errors.wtf('TODO');
+    }
+
+    return result;
   }
 
   /**
@@ -231,9 +242,13 @@ export default class TransactionSpec extends CommonBase {
 
     this.runPrerequisites(snapshot);
 
-    // Arrangement to keep the linter happy, even though this always throws.
-    if (snapshot !== null) throw Errors.wtf('TODO');
-    else return null;
+    const resultOps = [];
+
+    for (const op_unused of [...deleteOps, ...writeOps]) {
+      throw Errors.wtf('TODO');
+    }
+
+    return new FileChange(snapshot.revNum + 1, resultOps);
   }
 
   /**
