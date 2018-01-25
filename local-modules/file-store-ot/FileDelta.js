@@ -29,63 +29,9 @@ export default class FileDelta extends BaseDelta {
    * @returns {FileDelta} Composed result.
    */
   _impl_compose(other, wantDocument) {
-    if (wantDocument) {
-      return this._composeDocument(other);
-    }
-
-    // The rest of this is the non-document-delta case, in which we have to
-    // remember deletes that could possibly have an effect should the result
-    // subsequently be used as an argument to `compose()`.
-
-    const ids         = new Map();
-    let   deleteAllOp = null;
-
-    // Add / replace the ops, first from `this` and then from `other`, as a
-    // mapping from the storage ID.
-    for (const op of [...this.ops, ...other.ops]) {
-      const opProps = op.props;
-
-      switch (opProps.opName) {
-        case FileOp.CODE_deleteAll: {
-          deleteAllOp = op;
-          ids.clear();
-          break;
-        }
-
-        case FileOp.CODE_deleteBlob: {
-          ids.set(opProps.hash, op);
-          break;
-        }
-
-        case FileOp.CODE_deletePath: {
-          ids.set(opProps.path, op);
-          break;
-        }
-
-        case FileOp.CODE_writeBlob: {
-          ids.set(opProps.blob.hash, op);
-          break;
-        }
-
-        case FileOp.CODE_writePath: {
-          ids.set(opProps.path, op);
-          break;
-        }
-
-        default: {
-          throw Errors.wtf(`Weird op name: ${opProps.opName}`);
-        }
-      }
-    }
-
-    // Convert the map to an array of ops, and construct the result therefrom.
-
-    const ops = [
-      ...((deleteAllOp === null) ? [] : [deleteAllOp]),
-      ...ids.values()
-    ];
-
-    return new FileDelta(ops);
+    return wantDocument
+      ? this._composeDocument(other)
+      : this._composeNonDocument(other);
   }
 
   /**
@@ -206,6 +152,68 @@ export default class FileDelta extends BaseDelta {
 
     // Convert the map to an array of ops, and construct the result therefrom.
     return new FileDelta([...data.values()]);
+  }
+
+  /**
+   * Helper for {@link #_impl_compose} which handles the case of `wantDocument
+   * === false`. Notably, in this case, the result has to include any `delete*`
+   * operations from `this` and `other` which could possibly have an effect
+   * should the result be used as the argument to a subsequent call to
+   * `compose()`.
+   *
+   * @param {FileDelta} other Delta to compose with this instance.
+   * @returns {FileDelta} Composed result.
+   */
+  _composeNonDocument(other) {
+    const ids         = new Map();
+    let   deleteAllOp = null;
+
+    // Add / replace the ops, first from `this` and then from `other`, as a
+    // mapping from the storage ID.
+    for (const op of [...this.ops, ...other.ops]) {
+      const opProps = op.props;
+
+      switch (opProps.opName) {
+        case FileOp.CODE_deleteAll: {
+          deleteAllOp = op;
+          ids.clear();
+          break;
+        }
+
+        case FileOp.CODE_deleteBlob: {
+          ids.set(opProps.hash, op);
+          break;
+        }
+
+        case FileOp.CODE_deletePath: {
+          ids.set(opProps.path, op);
+          break;
+        }
+
+        case FileOp.CODE_writeBlob: {
+          ids.set(opProps.blob.hash, op);
+          break;
+        }
+
+        case FileOp.CODE_writePath: {
+          ids.set(opProps.path, op);
+          break;
+        }
+
+        default: {
+          throw Errors.wtf(`Weird op name: ${opProps.opName}`);
+        }
+      }
+    }
+
+    // Convert the map to an array of ops, and construct the result therefrom.
+
+    const ops = [
+      ...((deleteAllOp === null) ? [] : [deleteAllOp]),
+      ...ids.values()
+    ];
+
+    return new FileDelta(ops);
   }
 
   /**
