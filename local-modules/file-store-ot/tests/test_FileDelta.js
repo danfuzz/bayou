@@ -182,6 +182,49 @@ describe('file-store-ot/FileDelta', () => {
         test([op_a2],          [op_adel],        [op_adel]);
         test([op_a1, op_b1],   [op_adel],        [op_adel, op_b1]);
       });
+
+      it('should handle `deletePathPrefix` ops', () => {
+        const op1    = FileOp.op_writePath('/a/b',     FrozenBuffer.coerce('000'));
+        const op2    = FileOp.op_writePath('/a/b/x',   FrozenBuffer.coerce('111'));
+        const op3    = FileOp.op_writePath('/a/b/y',   FrozenBuffer.coerce('222'));
+        const op4    = FileOp.op_writePath('/a/b/z',   FrozenBuffer.coerce('333'));
+        const op5    = FileOp.op_writePath('/a/zorch', FrozenBuffer.coerce('x'));
+        const op6    = FileOp.op_deletePathPrefix('/a/b');
+        const op7    = FileOp.op_deletePathPrefix('/zomg');
+        const d1     = new FileDelta([op1, op2, op3, op4, op5]);
+        const d2     = new FileDelta([op6, op7, op2]);
+        const result = d1.compose(d2, false);
+
+        assert.sameMembers(result.ops, [op6, op7, op2, op5]);
+
+        // The delete ops should be first (because otherwise one of them would
+        // improperly moot one of the writes).
+        assert.sameMembers(result.ops.slice(0, 2), [op6, op7]);
+      });
+
+      it('should handle `deletePathRange` ops', () => {
+        const op1    = FileOp.op_writePath('/a/b',     FrozenBuffer.coerce('000'));
+        const op2    = FileOp.op_writePath('/a/b/x',   FrozenBuffer.coerce('x'));
+        const op3    = FileOp.op_writePath('/a/b/3/x', FrozenBuffer.coerce('x'));
+        const op4    = FileOp.op_writePath('/a/b/1',   FrozenBuffer.coerce('111'));
+        const op5    = FileOp.op_writePath('/a/b/2',   FrozenBuffer.coerce('222'));
+        const op6    = FileOp.op_writePath('/a/b/3',   FrozenBuffer.coerce('333'));
+        const op7    = FileOp.op_writePath('/a/b/4',   FrozenBuffer.coerce('111'));
+        const op8    = FileOp.op_writePath('/a/b/15',  FrozenBuffer.coerce('222'));
+        const op9    = FileOp.op_writePath('/a/b/16',  FrozenBuffer.coerce('333'));
+        const op10   = FileOp.op_writePath('/a/zorch', FrozenBuffer.coerce('x'));
+        const op11   = FileOp.op_deletePathRange('/a/b', 2, 16);
+        const op12   = FileOp.op_deletePathRange('/zomg', 10, 20);
+        const d1     = new FileDelta([op1, op2, op3, op4, op5, op6, op7, op8, op9, op10]);
+        const d2     = new FileDelta([op11, op12, op6]);
+        const result = d1.compose(d2, false);
+
+        assert.sameMembers(result.ops, [op11, op12, op1, op2, op3, op4, op6, op9, op10]);
+
+        // The delete ops should be first (because otherwise one of them would
+        // improperly moot one of the writes).
+        assert.sameMembers(result.ops.slice(0, 2), [op11, op12]);
+      });
     });
 
     describe('wantDocument === `true`', () => {
