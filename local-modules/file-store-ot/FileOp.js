@@ -38,7 +38,8 @@ export default class FileOp extends BaseOp {
   }
 
   /**
-   * Constructs a new "delete all" operation.
+   * Constructs a new "delete all" operation. The effect of this operation is
+   * to remove _all_ data from the file.
    *
    * @returns {FileOp} An appropriately-constructed operation.
    */
@@ -47,7 +48,10 @@ export default class FileOp extends BaseOp {
   }
 
   /**
-   * Constructs a new "delete blob" operation.
+   * Constructs a new "delete blob" operation. The effect of this operation is
+   * to remove the content-addressed blob with the indicated hash from the file,
+   * if it is in fact in the file. If it isn't in the file, then the operation
+   * does nothing.
    *
    * @param {string|FrozenBuffer} hash Hash of the blob to delete, or a buffer
    *   whose hash is to be used as the blob identifier.
@@ -60,7 +64,10 @@ export default class FileOp extends BaseOp {
   }
 
   /**
-   * Constructs a new "delete path" operation.
+   * Constructs a new "delete path" operation. The effect of this operation is
+   * to remove the blob stored at (exactly) the indicated path, if the path is
+   * in fact bound in the file. If it isn't bound, then the operation does
+   * nothing.
    *
    * @param {string} path Path to delete. Must be valid per {@link StoragePath}.
    * @returns {FileOp} An appropriately-constructed operation.
@@ -72,7 +79,9 @@ export default class FileOp extends BaseOp {
   }
 
   /**
-   * Constructs a new "write blob" operation.
+   * Constructs a new "write blob" operation. The effect of this operation is to
+   * store the indicated value as a content-addressable blob to the file. If the
+   * blob had already been added, then the operation does nothing.
    *
    * @param {FrozenBuffer} blob Blob to store.
    * @returns {FileOp} An appropriately-constructed operation.
@@ -84,7 +93,10 @@ export default class FileOp extends BaseOp {
   }
 
   /**
-   * Constructs a new "write path" operation.
+   * Constructs a new "write path" operation. The effect of this operation is to
+   * store the indicated value as a path-addressable value to the file. If the
+   * indicated path already stores that exact value, then the operation does
+   * nothing.
    *
    * @param {string} path Storage path being written to. Must be valid per
    *   {@link StoragePath}.
