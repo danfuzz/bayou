@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseSnapshot } from 'ot-common';
+import { TInt } from 'typecheck';
 import { Errors } from 'util-common';
 
 import FileChange from './FileChange';
@@ -173,6 +174,72 @@ export default class FileSnapshot extends BaseSnapshot {
     const found = this._values.get(id);
 
     return found ? found.props.blob : null;
+  }
+
+  /**
+   * Gets a map of all bindings for paths which have the indicated prefix,
+   * including the prefix itself if it is bound.
+   *
+   * @param {string} prefix Storage path prefix.
+   * @returns {Map<string,FrozenBuffer>} Map from full storage paths to their
+   *   respective stored values, for all paths at or under the indicated
+   *   `prefix` which are bound.
+   */
+  getPathPrefix(prefix) {
+    StoragePath.check(prefix);
+
+    // **TODO:** For snapshots with a lot of bound values, doing a full
+    // iteration might not be such a good idea. Consider other options (notably,
+    // actually representing the hierarchy instead of just a flat map), should
+    // this implementation turn out to be a performance bottleneck.
+
+    const result = new Map();
+
+    for (const [id, value] of this.entries()) {
+      if (StoragePath.isInstance(id) && StoragePath.isPrefixOrSame(prefix, id)) {
+        result.set(id, value);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Gets a map of all bindings for paths whose leaf names are in a numeric
+   * range, under a specific prefix. The range is of non-negative numbers, and
+   * the leaf names are all represented as decimal character sequences with no
+   * leading zeroes (except in the case of `0` itself, which is represented as
+   * such).
+   *
+   * @param {string} prefix Storage path prefix.
+   * @param {Int} startInclusive Start of the numeric range. Must be `>= 0`.
+   * @param {Int} endExclusive End of the numeric range. Must be
+   *   `> startInclusive`.
+   * @returns {Map<string,FrozenBuffer>} Map from full storage paths to their
+   *   respective stored values, for all paths in the indicated range that are
+   *   bound.
+   */
+  getPathRange(prefix, startInclusive, endExclusive) {
+    StoragePath.check(prefix);
+    TInt.nonNegative(startInclusive);
+    TInt.min(endExclusive, startInclusive + 1);
+
+    // **TODO:** For large sparsely-covered ranges, doing a full iteration over
+    // all the paths might not be such a good idea. Consider other options,
+    // should this implementation turn out to be a performance bottleneck.
+
+    const result = new Map();
+
+    for (let n = startInclusive; n < endExclusive; n++) {
+      const path = `${prefix}/${n}`;
+      const got  = this.getOrNull(path);
+
+      if (got !== null) {
+        result.set(path, got);
+      }
+    }
+
+    return result;
   }
 
   /**
