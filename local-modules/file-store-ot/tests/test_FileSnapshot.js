@@ -151,7 +151,7 @@ describe('file-store-ot/FileSnapshot', () => {
 
   describe('diff()', () => {
     it('should produce an empty diff when passed itself', () => {
-      const buf = FrozenBuffer.coerce('oh yeah');
+      const buf  = FrozenBuffer.coerce('oh yeah');
       const snap = new FileSnapshot(914,
         [FileOp.op_writePath('/a', buf), FileOp.op_writePath('/b', buf)]);
       const result = snap.diff(snap);
@@ -162,9 +162,9 @@ describe('file-store-ot/FileSnapshot', () => {
     });
 
     it('should result in a `revNum` diff if that in fact changes', () => {
-      const buf = FrozenBuffer.coerce('oh yeah');
-      const snap1 = new FileSnapshot(123, [FileOp.op_writePath('/a', buf)]);
-      const snap2 = new FileSnapshot(456, [FileOp.op_writePath('/a', buf)]);
+      const buf    = FrozenBuffer.coerce('oh yeah');
+      const snap1  = new FileSnapshot(123, [FileOp.op_writePath('/a', buf)]);
+      const snap2  = new FileSnapshot(456, [FileOp.op_writePath('/a', buf)]);
       const result = snap1.diff(snap2);
 
       const composed = new FileSnapshot(0, []).compose(result);
@@ -174,7 +174,7 @@ describe('file-store-ot/FileSnapshot', () => {
     });
 
     it('should result in a path removal if that in fact happens', () => {
-      const buf = FrozenBuffer.coerce('oh yeah');
+      const buf   = FrozenBuffer.coerce('oh yeah');
       const snap1 = new FileSnapshot(0, [
         FileOp.op_writePath('/a', buf),
         FileOp.op_writePath('/b', buf),
@@ -191,9 +191,9 @@ describe('file-store-ot/FileSnapshot', () => {
     });
 
     it('should result in a blob removal if that in fact happens', () => {
-      const buf1 = FrozenBuffer.coerce('oh yeah');
-      const buf2 = FrozenBuffer.coerce('oh no');
-      const buf3 = FrozenBuffer.coerce('oh wha?!');
+      const buf1  = FrozenBuffer.coerce('oh yeah');
+      const buf2  = FrozenBuffer.coerce('oh no');
+      const buf3  = FrozenBuffer.coerce('oh wha?!');
       const snap1 = new FileSnapshot(0, [
         FileOp.op_writeBlob(buf1),
         FileOp.op_writeBlob(buf2),
@@ -319,7 +319,7 @@ describe('file-store-ot/FileSnapshot', () => {
     });
 
     it('should return `true` when identical construction ops are passed in different orders', () => {
-      const buf = FrozenBuffer.coerce('oh yeah');
+      const buf   = FrozenBuffer.coerce('oh yeah');
       const snap1 = new FileSnapshot(321, [
         FileOp.op_writePath('/a', buf),
         FileOp.op_writePath('/b', buf),
@@ -337,7 +337,7 @@ describe('file-store-ot/FileSnapshot', () => {
     });
 
     it('should return `false` when `revNum`s differ', () => {
-      const buf = FrozenBuffer.coerce('oh yeah');
+      const buf   = FrozenBuffer.coerce('oh yeah');
       const snap1 = new FileSnapshot(123, [FileOp.op_writePath('/a', buf)]);
       const snap2 = new FileSnapshot(456, [FileOp.op_writePath('/a', buf)]);
 
@@ -402,7 +402,7 @@ describe('file-store-ot/FileSnapshot', () => {
     });
 
     it('should throw an error when given an unbound storage ID', () => {
-      const buf = FrozenBuffer.coerce('stuff');
+      const buf  = FrozenBuffer.coerce('stuff');
       const snap = new FileSnapshot(1, [FileOp.op_writePath('/blort', buf)]);
 
       assert.throws(() => { snap.get('/not_blort'); });
@@ -416,8 +416,8 @@ describe('file-store-ot/FileSnapshot', () => {
       const buf2 = FrozenBuffer.coerce('oh yeah 2');
 
       function test(path, value) {
-        const op1 = FileOp.op_writePath(path, value);
-        const op2 = FileOp.op_writeBlob(value);
+        const op1  = FileOp.op_writePath(path, value);
+        const op2  = FileOp.op_writeBlob(value);
         const snap = new FileSnapshot(1, [
           FileOp.op_writePath('/a', buf1),
           FileOp.op_writePath('/b', buf2),
@@ -436,11 +436,151 @@ describe('file-store-ot/FileSnapshot', () => {
     });
 
     it('should return `null` when given an ID that is not bound', () => {
-      const buf = FrozenBuffer.coerce('stuff');
+      const buf  = FrozenBuffer.coerce('stuff');
       const snap = new FileSnapshot(1, [FileOp.op_writePath('/blort', buf)]);
 
       assert.isNull(snap.getOrNull('/not_blort'));
       assert.isNull(snap.getOrNull(buf.hash)); // Not stored as a blob.
+    });
+  });
+
+  describe('getPathPrefix', () => {
+    it('should retrieve all bindings at or under the indicated prefix', () => {
+      const buf1 = new FrozenBuffer('buf1');
+      const buf2 = new FrozenBuffer('buf2');
+      const buf3 = new FrozenBuffer('buf3');
+      const snap = new FileSnapshot(914, [
+        FileOp.op_writePath('/a',         buf1),
+        FileOp.op_writePath('/d',         buf2),
+        FileOp.op_writePath('/d/r',       buf3),
+        FileOp.op_writePath('/d/r/b',     buf1),
+        FileOp.op_writePath('/d/r/b/1',   buf2),
+        FileOp.op_writePath('/d/r/b/2',   buf3),
+        FileOp.op_writePath('/d/r/b/x',   buf1),
+        FileOp.op_writePath('/d/r/b/y/z', buf2),
+        FileOp.op_writePath('/d/rr',      buf3),
+        FileOp.op_writePath('/d/s',       buf1),
+        FileOp.op_writePath('/e',         buf2),
+        FileOp.op_writeBlob(buf1)
+      ]);
+
+      const result = snap.getPathPrefix('/d/r');
+
+      assert.instanceOf(result, Map);
+      assert.sameDeepMembers([...result.entries()], Object.entries({
+        '/d/r':       buf3,
+        '/d/r/b':     buf1,
+        '/d/r/b/1':   buf2,
+        '/d/r/b/2':   buf3,
+        '/d/r/b/x':   buf1,
+        '/d/r/b/y/z': buf2
+      }));
+    });
+
+    it('should reject a bogus prefix', () => {
+      const snap = FileSnapshot.EMPTY;
+
+      function test(value) {
+        assert.throws(() => { snap.getPathPrefix(value); }, /badValue/);
+      }
+
+      test(null);
+      test(undefined);
+      test(123);
+      test(new FrozenBuffer('florp'));
+
+      // Invalid storage path strings.
+      test('');
+      test('florp');
+      test('//zorch//splat');
+      test(new FrozenBuffer('florp').hash); // Valid _id_ but invalid _path_.
+    });
+  });
+
+  describe('getPathRange', () => {
+    it('should retrieve all bindings in the indicated range', () => {
+      const buf1 = new FrozenBuffer('buf1');
+      const buf2 = new FrozenBuffer('buf2');
+      const buf3 = new FrozenBuffer('buf3');
+      const snap = new FileSnapshot(914, [
+        FileOp.op_writePath('/a',        buf1),
+        FileOp.op_writePath('/d',        buf2),
+        FileOp.op_writePath('/d/r',      buf3),
+        FileOp.op_writePath('/d/r/b',    buf1),
+        FileOp.op_writePath('/d/r/10',   buf2),
+        FileOp.op_writePath('/d/r/11',   buf3),
+        FileOp.op_writePath('/d/r/12',   buf1),
+        FileOp.op_writePath('/d/r/13',   buf2),
+        FileOp.op_writePath('/d/r/14',   buf3),
+        FileOp.op_writePath('/d/r/15',   buf1),
+        FileOp.op_writePath('/d/r/16/x', buf2),
+        FileOp.op_writePath('/d/r/17',   buf3),
+        FileOp.op_writePath('/d/r/18',   buf1),
+        FileOp.op_writePath('/d/rr',     buf2),
+        FileOp.op_writeBlob(buf1)
+      ]);
+
+      const result = snap.getPathRange('/d/r', 12, 18);
+
+      assert.instanceOf(result, Map);
+      assert.sameDeepMembers([...result.entries()], Object.entries({
+        '/d/r/12': buf1,
+        '/d/r/13': buf2,
+        '/d/r/14': buf3,
+        '/d/r/15': buf1,
+        '/d/r/17': buf3
+      }));
+    });
+
+    it('should reject a bogus prefix', () => {
+      const snap = FileSnapshot.EMPTY;
+
+      function test(value) {
+        assert.throws(() => { snap.getPathRange(value, 0, 1); }, /badValue/);
+      }
+
+      test(null);
+      test(undefined);
+      test(123);
+      test(new FrozenBuffer('florp'));
+
+      // Invalid storage path strings.
+      test('');
+      test('florp');
+      test('//zorch//splat');
+      test(new FrozenBuffer('florp').hash); // Valid _id_ but invalid _path_.
+    });
+
+    it('should reject a bogus range', () => {
+      const snap = FileSnapshot.EMPTY;
+
+      function test(start, end) {
+        assert.throws(() => { snap.getPathRange('/x', start, end); }, /badValue/);
+      }
+
+      // Wrong type of one argument or the other (or both).
+      test(null,      null);
+      test(0,         null);
+      test(null,      1);
+      test(undefined, undefined);
+      test(123,       undefined);
+      test(undefined, 'x');
+      test(false,     true);
+      test([1],       { x: 2 });
+
+      // Wrong numeric type.
+      test(-2,  -1);
+      test(-2,  1);
+      test(0.1, 3.6);
+      test(1,   3.45);
+      test(1.2, 123);
+      test(0,   Infinity);
+      test(NaN, 123);
+
+      // Empty or inverted range.
+      test(0,   0);
+      test(1,   0);
+      test(123, 5);
     });
   });
 });

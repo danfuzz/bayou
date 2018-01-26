@@ -205,16 +205,74 @@ export default class TransactionSpec extends CommonBase {
 
     this.runPrerequisites(snapshot);
 
-    const result = { data: null, paths: null };
+    const result = {
+      data:  (readOps.length === 0) ? null : new Map(),
+      paths: (listOps.length === 0) ? null : new Set()
+    };
 
-    if (listOps.length !== 0) {
-      result.data = new Set();
-      throw Errors.wtf('TODO');
-    }
+    for (const op of [...listOps, ...readOps]) {
+      const props = op.props;
+      switch (props.opName) {
+        case 'listPathPrefix': {
+          const got = snapshot.getPathPrefix(props.storagePath);
 
-    if (readOps.length !== 0) {
-      result.paths = new Map;
-      throw Errors.wtf('TODO');
+          for (const path of got.keys()) {
+            result.paths.add(path);
+          }
+
+          break;
+        }
+
+        case 'listPathRange': {
+          const { storagePath, startInclusive, endExclusive } = props;
+          const got = snapshot.getPathRange(storagePath, startInclusive, endExclusive);
+
+          for (const path of got.keys()) {
+            result.paths.add(path);
+          }
+
+          break;
+        }
+
+        case 'readBlob': {
+          const { hash } = props;
+          const got = snapshot.getOrNull(hash);
+
+          if (got !== null) {
+            result.data.set(hash, got);
+          }
+
+          break;
+        }
+
+        case 'readPath': {
+          const { storagePath } = props;
+          const got = snapshot.getOrNull(storagePath);
+
+          if (got !== null) {
+            result.data.set(storagePath, got);
+          }
+
+          break;
+        }
+
+        case 'readPathRange': {
+          const { storagePath, startInclusive, endExclusive } = props;
+          const got = snapshot.getPathRange(storagePath, startInclusive, endExclusive);
+
+          for (const [path, blob] of got) {
+            result.data.set(path, blob);
+          }
+
+          break;
+        }
+
+        default: {
+          // Shouldn't happen, because the cases above should have covered all
+          // read and list ops.
+          throw Errors.wtf(`Weird pull op: ${props.opName}`);
+        }
+      }
     }
 
     return result;
