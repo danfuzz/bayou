@@ -3,9 +3,8 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "quill-delta": "^3.6.2",
-
     "codec": "local",
+    "deps-quill-common": "local",
     "hooks-common": "local",
     "ot-common": "local",
     "typecheck": "local",

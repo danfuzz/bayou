@@ -1,0 +1,10 @@
+{
+  "name": "deps-quill-client",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "quill": "^1.3.5",
+
+    "deps-quill-common": "local"
+  }
+}
