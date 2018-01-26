@@ -213,12 +213,58 @@ export default class TransactionSpec extends CommonBase {
     for (const op of [...listOps, ...readOps]) {
       const props = op.props;
       switch (props.opName) {
-        case 'listPathPrefix':
-        case 'listPathRange':
-        case 'readBlob':
-        case 'readPath':
+        case 'listPathPrefix': {
+          const got = snapshot.getPathPrefix(props.storagePath);
+
+          for (const path of got.keys()) {
+            result.paths.add(path);
+          }
+
+          break;
+        }
+
+        case 'listPathRange': {
+          const { storagePath, startInclusive, endExclusive } = props;
+          const got = snapshot.getPathRange(storagePath, startInclusive, endExclusive);
+
+          for (const path of got.keys()) {
+            result.paths.add(path);
+          }
+
+          break;
+        }
+
+        case 'readBlob': {
+          const { hash } = props;
+          const got = snapshot.getOrNull(hash);
+
+          if (got !== null) {
+            result.data.set(hash, got);
+          }
+
+          break;
+        }
+
+        case 'readPath': {
+          const { storagePath } = props;
+          const got = snapshot.getOrNull(storagePath);
+
+          if (got !== null) {
+            result.data.set(storagePath, got);
+          }
+
+          break;
+        }
+
         case 'readPathRange': {
-          throw Errors.wtf('TODO');
+          const { storagePath, startInclusive, endExclusive } = props;
+          const got = snapshot.getPathRange(storagePath, startInclusive, endExclusive);
+
+          for (const [path, blob] of got) {
+            result.data.set(path, blob);
+          }
+
+          break;
         }
 
         default: {
