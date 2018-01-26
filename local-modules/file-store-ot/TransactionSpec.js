@@ -205,16 +205,28 @@ export default class TransactionSpec extends CommonBase {
 
     this.runPrerequisites(snapshot);
 
-    const result = { data: null, paths: null };
+    const result = {
+      data:  (readOps.length === 0) ? null : new Map(),
+      paths: (listOps.length === 0) ? null : new Set()
+    };
 
-    if (listOps.length !== 0) {
-      result.data = new Set();
-      throw Errors.wtf('TODO');
-    }
+    for (const op of [...listOps, ...readOps]) {
+      const props = op.props;
+      switch (props.opName) {
+        case 'listPathPrefix':
+        case 'listPathRange':
+        case 'readBlob':
+        case 'readPath':
+        case 'readPathRange': {
+          throw Errors.wtf('TODO');
+        }
 
-    if (readOps.length !== 0) {
-      result.paths = new Map;
-      throw Errors.wtf('TODO');
+        default: {
+          // Shouldn't happen, because the cases above should have covered all
+          // read and list ops.
+          throw Errors.wtf(`Weird pull op: ${props.opName}`);
+        }
+      }
     }
 
     return result;
