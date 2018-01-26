@@ -4,7 +4,6 @@
 
 import BayouKeyHandlers from './BayouKeyHandlers';
 import BayouKeyboard from './BayouKeyboard';
-import Macros from './Macros';
 import NotReallyMarkdown from './NotReallyMarkdown';
 import QuillEvents from './QuillEvents';
 import QuillGeometry from './QuillGeometry';
@@ -22,7 +21,6 @@ QuillProm.register({
 export {
   BayouKeyHandlers,
   BayouKeyboard,
-  Macros,
   NotReallyMarkdown,
   QuillEvents,
   QuillGeometry,

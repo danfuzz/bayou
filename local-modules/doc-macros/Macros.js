@@ -2,10 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Clock } from 'ui-embeds';
+import { QuillEvents } from 'quill-util';
 import { UtilityClass } from 'util-core';
 
-import QuillEvents from './QuillEvents';
+import LoremIpsum from './LoremIpsum';
 
 /**
  * This class handles the processing of text macros within sources
@@ -48,18 +48,28 @@ export default class Macros extends UtilityClass {
       // Pick the right component
       const args = text.split(':');
       const macro = args.shift();
-      let component = null;
-      const value = {};
+      const value = args.shift();
 
       switch (macro) {
         case 'clock': {
-          component = Clock;
+          quill.insertEmbed(index. Clock.blotName, value);
           break;
         }
-      }
 
-      if (component) {
-        quill.insertEmbed(index, component.blotName, value);
+        case 'loremc': {
+          quill.insertText(index, LoremIpsum.characters(parseInt(value)));
+          break;
+        }
+
+        case 'loremp': {
+          quill.insertText(index, LoremIpsum.paragraphs(parseInt(value)));
+          break;
+        }
+
+        case 'loremw': {
+          quill.insertText(index, LoremIpsum.words(parseInt(value)));
+          break;
+        }
       }
 
       //  Don't allow the trigger character into the document.
