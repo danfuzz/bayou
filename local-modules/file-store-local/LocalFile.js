@@ -248,39 +248,52 @@ export default class LocalFile extends BaseFile {
         paths:     null,
         revNum:    snapshot.revNum
       };
-    }
+    } else if (spec.hasWaitOps()) {
+      // It's a wait transaction, so we need to be prepared to loop / retry
+      // (until satisfaction or timeout).
+      for (;;) {
+        const snapshot   = this._currentSnapshot;
+        const pathResult = spec.runWait(snapshot);
 
-    // It's a wait transaction, so we need to be prepared to loop / retry
-    // (until satisfaction or timeout).
+        if (pathResult !== null) {
+          // Form the return value as required by the `_impl_transact()`
+          // contract.
+          return {
+            data:      null,
+            newRevNum: null,
+            paths:     new Set([pathResult]),
+            revNum:    snapshot.revNum
+          };
+        }
 
-    for (;;) {
-      const snapshot   = this._currentSnapshot;
-      const pathResult = spec.runWait(snapshot);
+        // Force the `_changeCondition` to `false` (though it might already be
+        // so set; innocuous if so), and wait either for it to become `true`
+        // (that is, wait for _any_ change to the file) or for timeout to occur.
+        this._changeCondition.value = false;
+        await Promise.race([this._changeCondition.whenTrue(), timeoutProm]);
+        if (timeout) {
+          throw Errors.timedOut(timeoutMsec);
+        }
 
-      if (pathResult !== null) {
-        // Form the return value as required by the `_impl_transact()` contract.
-        return {
-          data:      null,
-          newRevNum: null,
-          paths:     new Set([pathResult]),
-          revNum:    snapshot.revNum
-        };
+        // Have to re-check for file existence, as the file could have been
+        // deleted while we were waiting.
+        if (!this._fileShouldExist) {
+          throw Errors.fileNotFound(this.id);
+        }
       }
+    } else {
+      // It's a prerequisite-only transaction. Do the requested checks, and
+      // return a nearly-empty return value as required by the
+      // `_impl_transact()` contract.
+      const snapshot = this._currentSnapshot;
 
-      // Force the `_changeCondition` to `false` (though it might already be
-      // so set; innocuous if so), and wait either for it to become `true`
-      // (that is, wait for _any_ change to the file) or for timeout to occur.
-      this._changeCondition.value = false;
-      await Promise.race([this._changeCondition.whenTrue(), timeoutProm]);
-      if (timeout) {
-        throw Errors.timedOut(timeoutMsec);
-      }
-
-      // Have to re-check for file existence, as the file could have been
-      // deleted while we were waiting.
-      if (!this._fileShouldExist) {
-        throw Errors.fileNotFound(this.id);
-      }
+      spec.runPrerequisites(snapshot);
+      return {
+        data:      null,
+        newRevNum: null,
+        paths:     null,
+        revNum:    snapshot.revNum
+      };
     }
   }
 
