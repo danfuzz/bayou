@@ -87,6 +87,6 @@ export default class Logger extends BaseLogger {
    * @returns {BaseLogger} An appropriately-constructed instance of this class.
    */
   _impl_withAddedContext(...context) {
-    return new Logger(this._tag.withAddedContext(...context));
+    return new Logger(this._tag.withAddedContext(...context), this._enableDetail);
   }
 }
