@@ -444,8 +444,7 @@ describe('file-store-local/LocalFile.transact', () => {
       const paths  = result.paths;
 
       assert.instanceOf(paths, Set);
-      assert.strictEqual(paths.size, 1);
-      assert.isTrue(paths.has('/blort/yep'));
+      assert.sameMembers([...paths.values()], ['/blort/yep']);
     });
 
     it('should return multiple results properly', async () => {

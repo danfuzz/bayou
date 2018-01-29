@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { StoragePath } from 'file-store-ot';
 import { CommonBase, Errors } from 'util-common';
 
 import FileChange from './FileChange';
@@ -214,10 +215,20 @@ export default class TransactionSpec extends CommonBase {
       const props = op.props;
       switch (props.opName) {
         case 'listPathPrefix': {
-          const got = snapshot.getPathPrefix(props.storagePath);
+          const { storagePath } = props;
+          const got = snapshot.getPathPrefix(storagePath);
 
           for (const path of got.keys()) {
-            result.paths.add(path);
+            if (path === storagePath) {
+              // Direct hit on the prefix.
+              result.paths.add(path);
+            } else {
+              // Get the path component directly under the prefix, and append it
+              // to the prefix. (That is, the contract for the op is to list the
+              // direct contents under the prefix and not any deeper hierarchy.)
+              const name = StoragePath.split(path.slice(storagePath.length))[0];
+              result.paths.add(`${storagePath}/${name}`);
+            }
           }
 
           break;
