@@ -59,7 +59,7 @@ export default class CoreTypecheck extends UtilityClass {
 
     let msgArg;
     if (minInc !== null) {
-      msgArg = [(maxExc === null) ? `${minInc} <= value < ${maxExc}` : `value >= ${minInc}`];
+      msgArg = [(maxExc === null) ? `value >= ${minInc}` : `${minInc} <= value < ${maxExc}`];
     } else if (maxExc !== null) {
       msgArg = [`value < ${maxExc}`];
     } else {

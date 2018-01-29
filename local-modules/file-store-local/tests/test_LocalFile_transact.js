@@ -45,7 +45,7 @@ describe('file-store-local/LocalFile.transact', () => {
     const file = makeLocalFile();
     await file.create();
 
-    const spec = new TransactionSpec();
+    const spec   = new TransactionSpec();
     const result = await file.transact(spec);
     assert.strictEqual(result.revNum, 0);
     assert.isUndefined(result.newRevNum);
@@ -352,7 +352,7 @@ describe('file-store-local/LocalFile.transact', () => {
       await test(3, 14, [10, 11, 12]);
     });
 
-    it('should succeed and do nothing given a range with no matching paths (including an emptuy range)', async () => {
+    it('should succeed and do nothing given a range with no matching paths', async () => {
       const blob = new FrozenBuffer('Woo!');
       const origPaths = [
         '/x/a', '/x/yahhhssss', '/foo/1', '/foo/2', '/foo/10', '/foo/11', '/foo/12'
@@ -377,11 +377,6 @@ describe('file-store-local/LocalFile.transact', () => {
       await test(0, 1);
       await test(3, 8);
       await test(100, 123);
-
-      await test(0, 0);
-      await test(1, 1);
-      await test(2, 2);
-      await test(2, 1);
     });
   });
 
@@ -408,7 +403,7 @@ describe('file-store-local/LocalFile.transact', () => {
 
       spec = new TransactionSpec(TransactionOp.op_listPathPrefix('/yep'));
       const result = await file.transact(spec);
-      const paths = result.paths;
+      const paths  = result.paths;
 
       assert.instanceOf(paths, Set);
       assert.strictEqual(paths.size, 1);
@@ -427,7 +422,7 @@ describe('file-store-local/LocalFile.transact', () => {
 
       spec = new TransactionSpec(TransactionOp.op_listPathPrefix('/blort'));
       const result = await file.transact(spec);
-      const paths = result.paths;
+      const paths  = result.paths;
 
       assert.instanceOf(paths, Set);
       assert.strictEqual(paths.size, 1);
@@ -446,11 +441,10 @@ describe('file-store-local/LocalFile.transact', () => {
 
       spec = new TransactionSpec(TransactionOp.op_listPathPrefix('/blort'));
       const result = await file.transact(spec);
-      const paths = result.paths;
+      const paths  = result.paths;
 
       assert.instanceOf(paths, Set);
-      assert.strictEqual(paths.size, 1);
-      assert.isTrue(paths.has('/blort/yep'));
+      assert.sameMembers([...paths.values()], ['/blort/yep']);
     });
 
     it('should return multiple results properly', async () => {
@@ -473,7 +467,7 @@ describe('file-store-local/LocalFile.transact', () => {
 
       spec = new TransactionSpec(TransactionOp.op_listPathPrefix('/blort/x'));
       const result = await file.transact(spec);
-      const paths = result.paths;
+      const paths  = result.paths;
 
       assert.instanceOf(paths, Set);
       assert.strictEqual(paths.size, 3);
@@ -488,7 +482,7 @@ describe('file-store-local/LocalFile.transact', () => {
       const file = makeLocalFile();
       await file.create();
 
-      const spec = new TransactionSpec(TransactionOp.op_listPathRange('/blort', 10, 20));
+      const spec   = new TransactionSpec(TransactionOp.op_listPathRange('/blort', 10, 20));
       const result = await file.transact(spec);
       assert.instanceOf(result.paths, Set);
       assert.strictEqual(result.paths.size, 0);
@@ -529,6 +523,8 @@ describe('file-store-local/LocalFile.transact', () => {
       await test(2, 13, ['/foo/2', '/foo/10', '/foo/11', '/foo/12']);
       await test(2, 14, ['/foo/2', '/foo/10', '/foo/11', '/foo/12']);
       await test(3, 14, ['/foo/10', '/foo/11', '/foo/12']);
+
+      await test(100, 110, []);
     });
   });
 
@@ -578,7 +574,11 @@ describe('file-store-local/LocalFile.transact', () => {
         const spec = new TransactionSpec(TransactionOp.op_readPathRange('/foo', start, end));
         const transactionResult = await assert.isFulfilled(file.transact(spec));
 
-        assert.hasAllKeys(transactionResult.data, expectPaths);
+        if (expectPaths.length === 0) {
+          assert.isEmpty(transactionResult.data);
+        } else {
+          assert.hasAllKeys(transactionResult.data, expectPaths);
+        }
       }
 
       await test(1, 2, ['/foo/1']);
@@ -595,6 +595,8 @@ describe('file-store-local/LocalFile.transact', () => {
       await test(2, 13, ['/foo/2', '/foo/10', '/foo/11', '/foo/12']);
       await test(2, 14, ['/foo/2', '/foo/10', '/foo/11', '/foo/12']);
       await test(3, 14, ['/foo/10', '/foo/11', '/foo/12']);
+
+      await test(100, 110, []);
     });
 
     it('should succeed with an empty result given a range with no matching paths', async () => {
@@ -611,23 +613,6 @@ describe('file-store-local/LocalFile.transact', () => {
       await test(0, 1);
       await test(0, 2);
       await test(100, 123);
-    });
-
-    it('should succeed with an empty result given an empty range', async () => {
-      const file = makeLocalFile();
-      await file.create();
-
-      async function test(start, end) {
-        const spec = new TransactionSpec(TransactionOp.op_readPathRange('/florp', start, end));
-        const transactionResult = await assert.isFulfilled(file.transact(spec));
-
-        assert.strictEqual(transactionResult.data.size, 0);
-      }
-
-      await test(0, 0);
-      await test(12, 12);
-      await test(10, 9);
-      await test(5, 0);
     });
   });
 
