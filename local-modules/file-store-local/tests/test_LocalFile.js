@@ -3,7 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { assert } from 'chai';
-import fs from 'fs';
 import { after, describe, it } from 'mocha';
 
 import { Codec } from 'codec';
@@ -115,12 +114,21 @@ describe('file-store-local/LocalFile', () => {
       assert.isFalse(await file.exists());
     });
 
-    it('should return `true` if the underlying storage does exist', async () => {
+    it('should return `true` if the file was created', async () => {
       const dir = TempFiles.uniquePath();
-      const file = makeLocalFile(dir);
+      const file1 = makeLocalFile(dir);
 
-      fs.mkdirSync(dir);
-      assert.isTrue(await file.exists());
+      await file1.create();
+
+      // Check that `file1` believes itself to exist.
+      assert.isTrue(await file1.exists());
+
+      // Check that the filesystem reflects the existence too.
+
+      await file1.flush();
+
+      const file2 = makeLocalFile(dir);
+      assert.isTrue(await file2.exists());
     });
   });
 });

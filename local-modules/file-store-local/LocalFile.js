@@ -133,6 +133,17 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
+   * Forces pending writes to happen promptly, and waits until they have been
+   * completed and settled in the filesystem.
+   *
+   * **Note:** This method wouldn't be necessary if {@link #_impl_create},
+   * {@link #_impl_transact}, etc. were all more realistically transactional.
+   */
+  async flush() {
+    await this._flushPendingStorage();
+  }
+
+  /**
    * Implementation as required by the superclass.
    */
   async _impl_create() {
@@ -148,7 +159,7 @@ export default class LocalFile extends BaseFile {
       this._storageToWrite.set(0, this._encodeChange(firstChange));
 
       // Get it written out.
-      this._storageNeedsWrite();
+      this._storageNeedsFlush();
     }
   }
 
@@ -166,7 +177,7 @@ export default class LocalFile extends BaseFile {
       this._snapshot        = null;
 
       // Get it erased.
-      this._storageNeedsWrite();
+      this._storageNeedsFlush();
     }
   }
 
@@ -228,7 +239,7 @@ export default class LocalFile extends BaseFile {
 
       this._changes[change.revNum] = change;
       this._storageToWrite.set(change.revNum, this._encodeChange(change));
-      this._storageNeedsWrite();
+      this._storageNeedsFlush();
 
       // Form the return value as required by the `_impl_transact()` contract.
       return {
@@ -338,6 +349,28 @@ export default class LocalFile extends BaseFile {
     FileChange.check(change);
 
     return this._codec.encodeJsonBuffer(change);
+  }
+
+  /**
+   * Flushes all pending storage activity to the filesystem (writing and/or
+   * deleting files). The return value becomes resolved once the action is
+   * complete.
+   *
+   * @returns {true} `true`, upon successful flushing.
+   */
+  async _flushPendingStorage() {
+    // Call the appropriate helper method with the writer mutex held.
+    // **TODO:** If we want to catch write errors (e.g. filesystem full), here
+    // is where we need to do it.
+    await this._writeMutex.withLockHeld(async () => {
+      if (this._fileShouldExist) {
+        await this._writeStorage();
+      } else {
+        await this._deleteStorage();
+      }
+    });
+
+    return true;
   }
 
   /**
@@ -467,7 +500,7 @@ export default class LocalFile extends BaseFile {
    * pending. In addition, it flips `_changeCondition` to `true` (if not
    * already set as such), which unblocks code that was awaiting any changes.
    */
-  _storageNeedsWrite() {
+  _storageNeedsFlush() {
     // Release anything awaiting a change.
     this._changeCondition.value = true;
 
@@ -478,40 +511,24 @@ export default class LocalFile extends BaseFile {
       return;
     }
 
-    // Mark the storage dirty, and queue up the writer.
-    this._storageIsDirty = true;
-    this._waitThenWriteStorage();
-  }
+    // Mark the storage dirty, and then queue up the writer after the prescribed
+    // amount of time.
 
-  /**
-   * Waits for a moment, and then writes the then-current dirty storage.
-   * The return value becomes resolved once writing is complete.
-   *
-   * @returns {true} `true`, upon successful writing.
-   */
-  async _waitThenWriteStorage() {
     this._log.info('Storage modified. Waiting a moment for further changes.');
+    this._storageIsDirty = true;
 
-    // Wait for the prescribed amount of time.
-    await Delay.resolve(DIRTY_DELAY_MSEC);
-
-    // Call `_writeStorge()` with the writer mutex held. **TODO:** If we want to
-    // catch write errors (e.g. filesystem full), here is where we need to do
-    // it.
-    await this._writeMutex.withLockHeld(async () => {
-      if (this._fileShouldExist) {
-        await this._writeStorage();
-      } else {
-        await this._deleteStorage();
-      }
-    });
-
-    return true;
+    // This is done in a separate `async` block, because the method's contract
+    // is for the rest of the actions (above) to be done promptly, action which
+    // wouldn't happen as such if the whole method were marked `async`.
+    (async () => {
+      await Delay.resolve(DIRTY_DELAY_MSEC);
+      await this._flushPendingStorage();
+    })();
   }
 
   /**
-   * Helper for `_waitThenWriteStorage()`, which does all the actual filesystem
-   * stuff when the file is supposed to be deleted.
+   * Helper for {@link #_waitThenFlushStorage()}, which does all the actual
+   * filesystem stuff when the file is supposed to be deleted.
    *
    * @returns {true} `true`, upon successful operation.
    */
@@ -538,8 +555,8 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * Helper for `_waitThenWriteStorage()`, which does all the actual filesystem
-   * stuff when there is stuff to write.
+   * Helper for {@link #_waitThenFlushStorage()}, which does all the actual
+   * filesystem stuff when there is stuff to write.
    *
    * @returns {true} `true`, upon successful writing.
    */
@@ -547,7 +564,7 @@ export default class LocalFile extends BaseFile {
     // Grab the instance variables that indicate what needs to be done, and then
     // reset them and the dirty flag. If additional writes are made while this
     // method is running, the dirty flag will end up getting flipped back on
-    // and a separate call to `_waitThenWriteStorage()` will be made.
+    // and a separate call to `_waitThenFlushStorage()` will be made.
 
     const dirtyValues = this._storageToWrite;
 
