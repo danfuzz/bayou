@@ -7,12 +7,11 @@ import path from 'path';
 
 import { Codec } from 'codec';
 import { BaseFile } from 'file-store';
-import { StoragePath } from 'file-store-ot';
+import { FileChange, FileSnapshot } from 'file-store-ot';
+import { RevisionNumber } from 'ot-common';
 import { Condition, Delay, Mutex } from 'promise-util';
 import { Logger } from 'see-all';
 import { FrozenBuffer, Errors } from 'util-common';
-
-import Transactor from './Transactor';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('local-file');
@@ -24,31 +23,8 @@ const log = new Logger('local-file');
  */
 const DIRTY_DELAY_MSEC = 5 * 1000; // 5 seconds.
 
-/**
- * {string} Prefix character which indicates an internal-use storage ID. The
- * chosen character is notably not valid in either `StoragePath` or content hash
- * strings.
- */
-const INTERNAL_STORAGE_ID_PREFIX = '@';
-
-/**
- * {string} Special storage ID to use to record the file revision number.
- *
- * **Note:** Higher layers of the system (that use this module) can (and do)
- * define their own separate concept of revision numbering. These are
- * intentionally not the same thing.
- */
-const REVISION_NUMBER_ID =
-  `${INTERNAL_STORAGE_ID_PREFIX}local_file_revision_number`;
-
 /** {number} Maximum number of simultaneous FS calls to issue in parallel. */
 const MAX_PARALLEL_FS_CALLS = 20;
-
-/**
- * {Codec} Codec to use specifically _just_ to encode and decode the file
- * revision number. (Coding for file content is handled by the superclass.)
- */
-const revNumCodec = new Codec();
 
 /**
  * File implementation that stores everything in the locally-accessible
@@ -68,7 +44,7 @@ export default class LocalFile extends BaseFile {
 
     /**
      * {Codec} Codec instance to use when encoding and decoding items for
-     * storage. **Note:** This isn't used yet, as of this writing.
+     * storage.
      */
     this._codec = Codec.check(codec);
 
@@ -79,15 +55,21 @@ export default class LocalFile extends BaseFile {
 
     /**
      * {Int|null} Current file revision number or `null` if not yet initialized.
+     * This is `-1` for an initialized file with no changes.
      */
     this._revNum = null;
 
     /**
-     * {Map<string, FrozenBuffer>|null} Map from storage ID strings (either a
-     * `StoragePath` or content hash) to corresponding stored data, for the
-     * entire file. `null` indicates that the map is not yet initialized.
+     * {array<FileChange>} Array of all changes to the file, indexed by revision
+     * number.
      */
-    this._storage = null;
+    this._changes = [];
+
+    /**
+     * {FileSnapshot|null} Cached snapshot, or `null` if none is as yet
+     * computed.
+     */
+    this._snapshot = null;
 
     /**
      * {boolean|null} Whether the file should exist as of the next write. This
@@ -97,9 +79,8 @@ export default class LocalFile extends BaseFile {
     this._fileShouldExist = null;
 
     /**
-     * {Map<string, FrozenBuffer>|null} Map from storage ID strings (either a
-     * `StoragePath` or content hash) to corresponding stored data, for file
-     * contents that have not yet been written to disk.
+     * {Map<Int, FrozenBuffer>} Map from revision numbers to corresponding
+     * data which has yet to be written to disk.
      */
     this._storageToWrite = new Map();
 
@@ -111,7 +92,7 @@ export default class LocalFile extends BaseFile {
     this._storageIsDirty = false;
 
     /**
-     * {Promise<true>|null} Promise which resolves to `true` if `_storage` is
+     * {Promise<true>|null} Promise which resolves to `true` if `_changes` is
      * fully initialized with respect to the stored state. Becomes non-`null`
      * during the first call to `_readStorageIfNecessary()`. It is used to
      * prevent superfluous re-reading of the storage directory.
@@ -167,6 +148,11 @@ export default class LocalFile extends BaseFile {
       // Indicate that the file should exist.
       this._fileShouldExist = true;
 
+      // Make the standard empty initial change.
+      const firstChange = new FileChange(0, []);
+      this._changes[0] = firstChange;
+      this._storageToWrite.set(0, this._encodeChange(firstChange));
+
       // Get it written out.
       this._storageNeedsWrite();
     }
@@ -183,7 +169,8 @@ export default class LocalFile extends BaseFile {
       // ready for potential re-creation).
       this._fileShouldExist = false;
       this._revNum          = 0;
-      this._storage         = new Map();
+      this._changes         = [];
+      this._snapshot        = null;
 
       // Get it erased.
       this._storageNeedsWrite();
@@ -211,8 +198,8 @@ export default class LocalFile extends BaseFile {
   async _impl_transact(spec) {
     this._log.detail('Transaction:', spec);
 
-    // Arrange for timeout. **Note:** Needs to be done _before_ reading
-    // storage, as that storage read can take significant time.
+    // Arrange for timeout. **Note:** Needs to be done _before_ possibly reading
+    // storage, as that (potential) storage read can take significant time.
     const timeoutMsec = this.clampTimeoutMsec(spec.timeoutMsec);
     let timeout = false; // Gets set to `true` when the timeout expires.
     const timeoutProm = Delay.resolve(timeoutMsec);
@@ -230,78 +217,50 @@ export default class LocalFile extends BaseFile {
       throw Errors.fileNotFound(this.id);
     }
 
-    // Construct the "file friend" object. This exposes just enough private
-    // state of this instance to the transactor (constructed immediately
-    // hereafter) such that the latter can do its job.
+    // Per the spec / docs, a `TransactionSpec` only has one of pull, push, or
+    // wait ops. So, we can safely dispatch to a category-specific handler here.
 
-    const outerThis = this;
-    const fileFriend = {
-      /** {Logger} Pass-through of this instance's logger. */
-      log: outerThis._log,
+    if (spec.hasPullOps()) {
+      const snapshot = this._currentSnapshot;
+      const result   = spec.runPull(snapshot);
 
-      /** {Int} Current revision number of the file. */
-      get revNum() {
-        return outerThis._revNum;
-      },
+      // Add the properties required by the `_impl_transact()` contract.
+      result.newRevNum = null;
+      result.revNum    = snapshot.revNum;
 
-      /**
-       * Gets an iterator over all storage (not including internal-only
-       * entries). Yielded elements are entries of the form `[storageId, data]`.
-       *
-       * @returns {Iterator<string, FrozenBuffer>} Iterator over all storage.
-       */
-      allStorage() {
-        return outerThis._filterStorage(LocalFile._isExternalStorageId);
-      },
+      return result;
+    } else if (spec.hasPushOps()) {
+      const snapshot = this._currentSnapshot;
+      const change   = spec.runPush(snapshot);
 
-      /**
-       * Gets the content blob from the file which has the indicated hash, if
-       * any.
-       *
-       * @param {string} hash The content hash.
-       * @returns {FrozenBuffer|null} The corresponding stored blob value, or
-       *   `null` if there is none.
-       */
-      readBlobOrNull(hash) {
-        FrozenBuffer.checkHash(hash);
-        return outerThis._storage.get(hash) || null;
-      },
+      this._changes[change.revNum] = change;
+      this._storageToWrite.set(change.revNum, this._encodeChange(change));
+      this._storageNeedsWrite();
 
-      /**
-       * Gets the value stored at the given path, if any.
-       *
-       * @param {string} storagePath The path.
-       * @returns {FrozenBuffer|null} The corresponding stored value, or `null`
-       *   if there is none.
-       */
-      readPathOrNull(storagePath) {
-        StoragePath.check(storagePath);
-        return outerThis._storage.get(storagePath) || null;
-      },
+      // Form the return value as required by the `_impl_transact()` contract.
+      return {
+        data:      null,
+        newRevNum: change.revNum,
+        paths:     null,
+        revNum:    snapshot.revNum
+      };
+    }
 
-      /**
-       * Gets an iterator over all path-based storage. Yielded elements are
-       * entries of the form `[storagePath, data]`.
-       *
-       * @returns {Iterator<string, FrozenBuffer>} Iterator over all path-based
-       *   storage.
-       */
-      pathStorage() {
-        return outerThis._filterStorage(StoragePath.isInstance);
-      }
-    };
+    // It's a wait transaction, so we need to be prepared to loop / retry
+    // (until satisfaction or timeout).
 
-    // Run the transaction, gather the results, and queue up the writes.
-
-    const transactor = new Transactor(spec, fileFriend);
-
-    // The loop allows for `when` operations to wait without `Transactor.run()`
-    // having to be an `async` method.
     for (;;) {
-      const completed = transactor.run();
+      const snapshot   = this._currentSnapshot;
+      const pathResult = spec.runWait(snapshot);
 
-      if (completed) {
-        break;
+      if (pathResult !== null) {
+        // Form the return value as required by the `_impl_transact()` contract.
+        return {
+          data:      null,
+          newRevNum: null,
+          paths:     new Set([pathResult]),
+          revNum:    snapshot.revNum
+        };
       }
 
       // Force the `_changeCondition` to `false` (though it might already be
@@ -312,54 +271,78 @@ export default class LocalFile extends BaseFile {
       if (timeout) {
         throw Errors.timedOut(timeoutMsec);
       }
-    }
 
-    const updatedStorage = transactor.updatedStorage;
-    const data           = transactor.data;
-    const paths          = transactor.paths;
-    const revNum         = this._revNum;
-    let   newRevNum      = null;
-
-    if (updatedStorage.size !== 0) {
-      this._revNum = newRevNum = revNum + 1;
-
-      for (const [storageId, value] of updatedStorage) {
-        if (value === null) {
-          this._log.detail('Transaction deleted:', storageId);
-          this._storage.delete(storageId);
-        } else {
-          this._log.detail('Transaction wrote:', storageId);
-          this._storage.set(storageId, value);
-        }
-
-        this._storageToWrite.set(storageId, value);
+      // Have to re-check for file existence, as the file could have been
+      // deleted while we were waiting.
+      if (!this._fileShouldExist) {
+        throw Errors.fileNotFound(this.id);
       }
-
-      this._storageNeedsWrite();
     }
-
-    this._log.detail('Transaction complete.');
-    return { revNum, newRevNum, data, paths };
   }
 
   /**
-   * Gets an iterator over `_storage` which filters elements (similar to
-   * `Array.filter()`) using the given function. This is a helper for the
-   * `fileFriend` used in `_impl_transact()`.
-   *
-   * @param {function} filter Filter function. It is passed storage IDs and
-   *   is expected to return `true` for keys which should be present in the
-   *   iteration.
-   * @yields {[string, FrozenBuffer]} Filtered storage entries.
+   * {Int} Current revision number.
    */
-  * _filterStorage(filter) {
-    const storage = this._storage;
+  get _currentRevNum() {
+    return this._changes.length - 1;
+  }
 
-    for (const [storageId, value] of storage) {
-      if (filter(storageId)) {
-        yield [storageId, value];
-      }
+  /**
+   * {FileSnapshot} Snapshot of the current revision. It is not valid to get
+   * this if the file doesn't exist (created and has at least one change).
+   */
+  get _currentSnapshot() {
+    const revNum  = this._currentRevNum;
+    const changes = this._changes;
+    const already = this._snapshot;
+
+    if (revNum < 0) {
+      throw Errors.badUse('File does not exist and/or has no changes at all!');
     }
+
+    if (already && already.revNum === revNum) {
+      return already;
+    }
+
+    const [base, startAt] = already
+      ? [already,            already.revNum + 1]
+      : [FileSnapshot.EMPTY, 0];
+
+    let result = base;
+    for (let i = startAt; i <= revNum; i++) {
+      result = result.compose(changes[i]);
+    }
+
+    this._snapshot = result;
+    this._log.info(`Made snapshot for revision: ${revNum}`);
+
+    return result;
+  }
+
+  /**
+   * Decodes the given change from the given buffer.
+   *
+   * @param {FrozenBuffer} buf Buffer from which to decode a change instance.
+   * @returns {FileChange} Decoded change instance.
+   */
+  _decodeChange(buf) {
+    FrozenBuffer.check(buf);
+
+    const result = this._codec.decodeJsonBuffer(buf);
+
+    return FileChange.check(result);
+  }
+
+  /**
+   * Encodes the given change, for writing to storage.
+   *
+   * @param {FileChange} change Change to encode.
+   * @returns {FrozenBuffer} Encoded form.
+   */
+  _encodeChange(change) {
+    FileChange.check(change);
+
+    return this._codec.encodeJsonBuffer(change);
   }
 
   /**
@@ -376,7 +359,7 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * Reads the storage directory, initializing `_storage`. If the directory
+   * Reads the storage directory, initializing `_changes`. If the directory
    * doesn't exist, this will initialize the in-memory model with empty contents
    * but does _not_ mark the storage as dirty.
    *
@@ -387,8 +370,12 @@ export default class LocalFile extends BaseFile {
     if (!await afs.exists(this._storageDir)) {
       // Directory doesn't actually exist. Just initialize empty storage.
       this._fileShouldExist = false;
-      this._revNum          = 0;
-      this._storage         = new Map();
+      this._revNum          = -1;
+      this._changes         = [];
+      this._snapshot        = null;
+
+      this._changeCondition.value = true;
+
       this._log.info('New storage.');
       return true;
     }
@@ -397,66 +384,69 @@ export default class LocalFile extends BaseFile {
     this._log.info('Reading storage from disk...');
 
     const files   = await afs.readdir(this._storageDir);
-    const storage = new Map();
-    let   revNum;
+    const changes = [];
 
-    // This gets called to await on a chunk of FS ops at a time, storing them
-    // into `storage`. It's called from the main loop immediately below.
-    let paths    = [];
-    let bufProms = [];
-    const storeBufs = async () => {
-      const bufs = await Promise.all(bufProms);
-      this._log.detail('Completed FS ops.');
-      for (let i = 0; i < paths.length; i++) {
-        const storagePath = paths[i];
-        storage.set(storagePath, FrozenBuffer.coerce(bufs[i]));
-        this._log.info('Read:', storagePath);
+    // This gets called to await on a chunk of FS reads at a time, storing them
+    // into `changes`. It's called from the main loop immediately below.
+    const storeBufs = async (bufProms) => {
+      this._log.detail(`Completed ${bufProms.size} FS read operations(s).`);
+      for (const [n, bufProm] of bufProms) {
+        const buf    = await bufProm;
+        const fbuf   = new FrozenBuffer(buf);
+        const change = FileChange.check(this._decodeChange(fbuf));
+
+        if (n !== change.revNum) {
+          throw Errors.badData(`Name / data mismatch for alleged revision number ${n}; found ${change.revNum}.`);
+        }
+
+        changes[n] = change;
+        this._log.info('Read change:', change.revNum);
       }
-
-      paths    = [];
-      bufProms = [];
     };
 
     // Loop over all the files, requesting their contents, and waiting for
     // a chunk of them at a time.
+    const bufPromMap = new Map();
     for (const f of files) {
-      paths.push(LocalFile._storageIdForFsName(f));
-      bufProms.push(afs.readFile(path.resolve(this._storageDir, f)));
-      if (paths.length >= MAX_PARALLEL_FS_CALLS) {
-        await storeBufs();
+      const n       = LocalFile._revNumFromFsPath(f);
+      const bufProm = afs.readFile(path.resolve(this._storageDir, f));
+
+      bufPromMap.set(n, bufProm);
+
+      if (bufPromMap.size >= MAX_PARALLEL_FS_CALLS) {
+        await storeBufs(bufPromMap);
       }
     }
 
     // Get the remaining partial chunks' worth of bufs, if any.
-    if (paths.length !== 0) {
-      await storeBufs();
+    if (bufPromMap.size !== 0) {
+      await storeBufs(bufPromMap);
     }
 
     this._log.info('Done reading storage.');
 
-    // Parse the file revision number out of its special-named blob, and handle
-    // things reasonably gracefully if it's missing or corrupt.
-    try {
-      const revNumBuffer = storage.get(REVISION_NUMBER_ID);
-      revNum = revNumCodec.decodeJsonBuffer(revNumBuffer);
-      this._log.info('Starting revision number:', revNum);
-    } catch (e) {
-      // In case of failure, use the size of the storage map as a good enough
-      // value for `revNum`. This case probably won't happen in practice except
-      // when dealing with corrupt FS contents, but even if it does, this should
-      // be fine in that the primary required guarantee is monotonic increase
-      // within any given process (and not really across processes).
-      revNum = storage.size;
-      this._log.info('Starting with "fake" revision number:', revNum);
+    // Validate that there are no holes, and set up `revNum`.
+
+    if (files.length !== changes.length) {
+      // Hole!
+      throw Errors.badData('Missing at least one change.');
     }
+
+    const revNum = changes.length - 1;
+    this._log.info('Starting revision number:', revNum);
 
     // Only set the instance variables after all the reading is done and the
     // current revision number is known.
     this._fileShouldExist = true;
     this._revNum          = revNum;
-    this._storage         = storage;
+    this._changes         = changes;
+    this._snapshot        = null;
     this._storageToWrite  = new Map();
     this._storageIsDirty  = false;
+
+    // This wakes up wait transactions, if any, which can then go about figuring
+    // out if they're satisfied.
+    this._changeCondition.value = true;
 
     return true;
   }
@@ -533,8 +523,8 @@ export default class LocalFile extends BaseFile {
     // Reset the storage state instance variables. These should already be set
     // as such; this is just an innocuous extra bit of blatant safety.
     this._fileShouldExist = false;
-    this._revNum          = 0;
-    this._storage         = new Map();
+    this._revNum          = -1;
+    this._changes         = [];
 
     return true;
   }
@@ -551,15 +541,10 @@ export default class LocalFile extends BaseFile {
     // method is running, the dirty flag will end up getting flipped back on
     // and a separate call to `_waitThenWriteStorage()` will be made.
 
-    const dirtyValues     = this._storageToWrite;
-    const revNum          = this._revNum;
+    const dirtyValues = this._storageToWrite;
 
     this._storageIsDirty = false;
     this._storageToWrite = new Map();
-
-    // Put the file revision number in the `dirtyValues` map. This way, it gets
-    // written out without further special casing.
-    dirtyValues.set(REVISION_NUMBER_ID, revNumCodec.encodeJsonBuffer(revNum));
 
     this._log.info(`About to write ${dirtyValues.size} value(s).`);
 
@@ -577,105 +562,62 @@ export default class LocalFile extends BaseFile {
     // Perform the writes / deletes.
 
     let afsResults = [];
-    for (const [storageId, data] of dirtyValues) {
-      const fsPath = this._fsPathForStorageId(storageId);
-      if (data === null) {
-        afsResults.push(afs.unlink(fsPath));
-        this._log.info('Deleted:', storageId);
-      } else {
-        afsResults.push(afs.writeFile(fsPath, data.toBuffer()));
-        this._log.info('Wrote:', storageId);
-      }
+    for (const [revNum, data] of dirtyValues) {
+      const fsPath = this._fsPathFromRevNum(revNum);
+
+      afsResults.push(afs.writeFile(fsPath, data.toBuffer()));
+      this._log.info('Wrote change:', revNum);
 
       if (afsResults.length >= MAX_PARALLEL_FS_CALLS) {
         await Promise.all(afsResults);
-        this._log.detail('Completed FS ops.');
+        this._log.detail(`Completed ${afsResults.length} FS write operations.`);
         afsResults = [];
       }
     }
 
     if (afsResults.length !== 0) {
       await Promise.all(afsResults);
-      this._log.detail('Completed FS ops.');
+      this._log.detail(`Completed ${afsResults.length} FS write operation(s).`);
     }
 
-    this._log.info('Finished writing storage. Revision number:', revNum);
+    this._log.info('Finished writing storage. Revision number:', this._changes.length - 1);
     return true;
   }
 
   /**
-   * Converts a storage ID string (`StoragePath` or content hash) to the name of
-   * the file at which to find the data for that ID. In particular, we don't
-   * want the hiererarchical structure of the path to turn into nested
-   * directories, so path slashes (`/`) get converted to tildes (`~`), the
-   * latter which is not a valid character for a storage path component. This
-   * also appends the filetype suffix `.blob`.
+   * Converts a revision number to the full path of the file at which to find
+   * the encoded change for that revision.
    *
-   * @param {string} storageId The storage ID.
-   * @returns {string} The fully-qualified file name to use when accessing
-   *   `storageId`.
+   * @param {Int} revNum The revision number.
+   * @returns {string} The absolute filesystem path to use for the change with
+   *   the indicated `revNum`.
    */
-  _fsPathForStorageId(storageId) {
-    let baseName;
+  _fsPathFromRevNum(revNum) {
+    RevisionNumber.check(revNum);
 
-    if (StoragePath.isInstance(storageId)) {
-      // `slice(1)` trims off the initial slash.
-      baseName = storageId.slice(1).replace(/[/]/g, '~');
-    } else if (FrozenBuffer.isHash(storageId) || LocalFile._isInternalStorageId(storageId)) {
-      baseName = storageId;
-    } else {
-      throw Errors.wtf('Invalid `storageId`.');
-    }
-
-    const fileName = `${baseName}.blob`;
+    // Convert to hex, left-pad with zeros, and add a filename suffix.
+    const fileName = `${revNum.toString(16).padStart(8, '0')}.blob`;
     return path.resolve(this._storageDir, fileName);
   }
 
   /**
-   * Indicates whether the given storage ID is a regular for-external-use one.
-   * This is the opposite of `_isInternalStorageId()`.
+   * Converts a filesystem path for a stored change into the corresponding
+   * revision number.
    *
-   * @param {string} storageId The storage ID.
-   * @returns {boolean} `true` iff `storageId` is only for the internal use of
-   *   this module.
+   * @param {string} fsPath The filesystem path for a stored value. Can be
+   *   relative or absolute.
+   * @returns {Int} The corresponding revision number.
    */
-  static _isExternalStorageId(storageId) {
-    return !LocalFile._isInternalStorageId(storageId);
-  }
-
-  /**
-   * Indicates whether the given storage ID is an internal-use one. This is the
-   * opposite of `_isExternalStorageId()`.
-   *
-   * @param {string} storageId The storage ID.
-   * @returns {boolean} `true` iff `storageId` is only for the internal use of
-   *   this module.
-   */
-  static _isInternalStorageId(storageId) {
-    return storageId.startsWith(INTERNAL_STORAGE_ID_PREFIX);
-  }
-
-  /**
-   * Converts a filesystem path for a stored value into a storage ID string
-   * (`StoragePath` or content hash) identifying same. This is the inverse of
-   * `_fsPathForStorageId()`, except that this method doesn't care about the
-   * directory of the path (including that it will accept a simple file name).
-   *
-   * @param {string} fsName The file name for a stored value.
-   * @returns {string} The corresponding storage ID.
-   */
-  static _storageIdForFsName(fsName) {
-    // Trim off the directory prefix and filename suffix.
-    const match = fsName.match(/([^/]+)\.[^./]*$/);
+  static _revNumFromFsPath(fsPath) {
+    // Extract the hex string indicating the revision number.
+    const match = fsPath.match(/(?:^|[/])([0-9a-f]{8})\.[^./]*$/);
     if (match === null) {
       throw Errors.wtf('Invalid storage path.');
     }
-    const baseName = match[1];
 
-    if (FrozenBuffer.isHash(baseName) || LocalFile._isInternalStorageId(baseName)) {
-      return baseName;
-    } else {
-      return `/${baseName.replace(/~/g, '/')}`;
-    }
+    const baseName = match[1];
+    const result   = parseInt(baseName, 16);
+
+    return RevisionNumber.check(result);
   }
 }
