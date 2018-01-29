@@ -148,6 +148,11 @@ export default class LocalFile extends BaseFile {
       // Indicate that the file should exist.
       this._fileShouldExist = true;
 
+      // Make the standard empty initial change.
+      const firstChange = new FileChange(0, []);
+      this._changes[0] = firstChange;
+      this._storageToWrite.set(0, this._encodeChange(firstChange));
+
       // Get it written out.
       this._storageNeedsWrite();
     }
@@ -228,7 +233,8 @@ export default class LocalFile extends BaseFile {
       const snapshot = this._currentSnapshot;
       const change   = spec.runPush(snapshot);
 
-      this._storageToWrite.set(change.revNum, change);
+      this._changes[change.revNum] = change;
+      this._storageToWrite.set(change.revNum, this._encodeChange(change));
       this._storageNeedsWrite();
 
       // Form the return value as required by the `_impl_transact()` contract.
@@ -247,7 +253,7 @@ export default class LocalFile extends BaseFile {
       const snapshot   = this._currentSnapshot;
       const pathResult = spec.runWait(snapshot);
 
-      if (path !== null) {
+      if (pathResult !== null) {
         // Form the return value as required by the `_impl_transact()` contract.
         return {
           data:      null,
@@ -282,12 +288,17 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * {FileSnapshot} Snapshot of the current revision.
+   * {FileSnapshot} Snapshot of the current revision. It is not valid to get
+   * this if the file doesn't exist (created and has at least one change).
    */
   get _currentSnapshot() {
     const revNum  = this._currentRevNum;
     const changes = this._changes;
     const already = this._snapshot;
+
+    if (revNum < 0) {
+      throw Errors.badUse('File does not exist and/or has no changes at all!');
+    }
 
     if (already && already.revNum === revNum) {
       return already;
@@ -306,6 +317,32 @@ export default class LocalFile extends BaseFile {
     this._log.info(`Made snapshot for revision: ${revNum}`);
 
     return result;
+  }
+
+  /**
+   * Decodes the given change from the given buffer.
+   *
+   * @param {FrozenBuffer} buf Buffer from which to decode a change instance.
+   * @returns {FileChange} Decoded change instance.
+   */
+  _decodeChange(buf) {
+    FrozenBuffer.check(buf);
+
+    const result = this._codec.decodeJsonBuffer(buf);
+
+    return FileChange.check(result);
+  }
+
+  /**
+   * Encodes the given change, for writing to storage.
+   *
+   * @param {FileChange} change Change to encode.
+   * @returns {FrozenBuffer} Encoded form.
+   */
+  _encodeChange(change) {
+    FileChange.check(change);
+
+    return this._codec.encodeJsonBuffer(change);
   }
 
   /**
@@ -346,7 +383,6 @@ export default class LocalFile extends BaseFile {
     // The directory exists. Read its contents.
     this._log.info('Reading storage from disk...');
 
-    const codec   = this._codec;
     const files   = await afs.readdir(this._storageDir);
     const changes = [];
 
@@ -357,7 +393,7 @@ export default class LocalFile extends BaseFile {
       for (const [n, bufProm] of bufProms) {
         const buf    = await bufProm;
         const fbuf   = new FrozenBuffer(buf);
-        const change = FileChange.check(codec.decodeJsonBuffer(fbuf));
+        const change = FileChange.check(this._decodeChange(fbuf));
 
         if (n !== change.revNum) {
           throw Errors.badData(`Name / data mismatch for alleged revision number ${n}; found ${change.revNum}.`);
@@ -574,12 +610,14 @@ export default class LocalFile extends BaseFile {
    */
   static _revNumFromFsPath(fsPath) {
     // Extract the hex string indicating the revision number.
-    const match = fsPath.match(/(^|[/])([0-9a-f]{8})\.[^./]*$/);
+    const match = fsPath.match(/(?:^|[/])([0-9a-f]{8})\.[^./]*$/);
     if (match === null) {
       throw Errors.wtf('Invalid storage path.');
     }
 
     const baseName = match[1];
-    return parseInt(baseName, 16);
+    const result   = parseInt(baseName, 16);
+
+    return RevisionNumber.check(result);
   }
 }
