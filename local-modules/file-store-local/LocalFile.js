@@ -54,12 +54,6 @@ export default class LocalFile extends BaseFile {
     this._storageDir = filePath;
 
     /**
-     * {Int|null} Current file revision number or `null` if not yet initialized.
-     * This is `-1` for an initialized instance with no changes.
-     */
-    this._revNum = null;
-
-    /**
      * {array<FileChange>} Array of all changes to the file, indexed by revision
      * number.
      */
@@ -168,7 +162,6 @@ export default class LocalFile extends BaseFile {
       // Indicate that the file should not exist, and reset the storage (to be
       // ready for potential re-creation).
       this._fileShouldExist = false;
-      this._revNum          = 0;
       this._changes         = [];
       this._snapshot        = null;
 
@@ -372,7 +365,6 @@ export default class LocalFile extends BaseFile {
     if (!await afs.exists(this._storageDir)) {
       // Directory doesn't actually exist. Just initialize empty storage.
       this._fileShouldExist = false;
-      this._revNum          = -1;
       this._changes         = [];
       this._snapshot        = null;
 
@@ -448,14 +440,12 @@ export default class LocalFile extends BaseFile {
     if (revNum > 0) {
       // The usual case, handled here, is that there is at least one change.
       this._fileShouldExist = true;
-      this._revNum          = revNum;
     } else {
       // The file's directory exists, but there weren't any change blobs. This
       // can happen if the code gets run on an incompatibly (older or newer)
       // `LocalFile` implementation. We treat this case the same as the file
       // not existing.
       this._fileShouldExist = false;
-      this._revNum          = -1;
     }
 
     this._changes         = changes;
@@ -542,7 +532,6 @@ export default class LocalFile extends BaseFile {
     // Reset the storage state instance variables. These should already be set
     // as such; this is just an innocuous extra bit of blatant safety.
     this._fileShouldExist = false;
-    this._revNum          = -1;
     this._changes         = [];
 
     return true;
