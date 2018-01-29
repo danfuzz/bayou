@@ -114,13 +114,13 @@ describe('file-store-local/LocalFile', () => {
       assert.isFalse(await file.exists());
     });
 
-    it('should return `true` if the file was created', async () => {
+    it('should return `true` if the file was created in the filesystem', async () => {
       const dir = TempFiles.uniquePath();
       const file1 = makeLocalFile(dir);
 
       await file1.create();
 
-      // Check that `file1` believes itself to exist.
+      // Baseline assumption: Check that `file1` believes itself to exist.
       assert.isTrue(await file1.exists());
 
       // Check that the filesystem reflects the existence too.

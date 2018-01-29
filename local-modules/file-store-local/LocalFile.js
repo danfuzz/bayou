@@ -434,7 +434,7 @@ export default class LocalFile extends BaseFile {
 
     // Loop over all the files, requesting their contents, and waiting for
     // a chunk of them at a time.
-    const bufPromMap = new Map();
+    let bufPromMap = new Map();
     for (const f of files) {
       const n = LocalFile._revNumFromFsPath(f);
 
@@ -446,6 +446,7 @@ export default class LocalFile extends BaseFile {
 
         if (bufPromMap.size >= MAX_PARALLEL_FS_CALLS) {
           await storeBufs(bufPromMap);
+          bufPromMap = new Map();
         }
       }
     }
@@ -464,21 +465,22 @@ export default class LocalFile extends BaseFile {
       throw Errors.badData('Missing at least one change.');
     }
 
-    const revNum = changeCount - 1;
-    this._log.info('Starting revision number:', revNum);
-
     // Only set the instance variables after all the reading is done and the
     // current revision number is known.
 
-    if (revNum > 0) {
+    if (changeCount > 0) {
       // The usual case, handled here, is that there is at least one change.
       this._fileShouldExist = true;
+      this._log.info('Starting revision number:', changeCount - 1);
     } else {
       // The file's directory exists, but there weren't any change blobs. This
       // can happen if the code gets run on an incompatibly (older or newer)
       // `LocalFile` implementation. We treat this case the same as the file
       // not existing.
       this._fileShouldExist = false;
+      this._log.info(
+        'FYI, it looks like this file is in an incompatible format.\n' +
+        'Treating it as if it doesn\'t exist.');
     }
 
     this._changes         = changes;
