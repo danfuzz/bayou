@@ -55,7 +55,7 @@ export default class LocalFile extends BaseFile {
 
     /**
      * {Int|null} Current file revision number or `null` if not yet initialized.
-     * This is `-1` for an initialized file with no changes.
+     * This is `-1` for an initialized instance with no changes.
      */
     this._revNum = null;
 
@@ -281,7 +281,9 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * {Int} Current revision number.
+   * {RevisionNumber|-1} Current revision number, or `-1` if the file either
+   * doesn't exist at all or is in the transitional state where it exists but
+   * there aren't yet any changes written.
    */
   get _currentRevNum() {
     return this._changes.length - 1;
@@ -383,8 +385,9 @@ export default class LocalFile extends BaseFile {
     // The directory exists. Read its contents.
     this._log.info('Reading storage from disk...');
 
-    const files   = await afs.readdir(this._storageDir);
-    const changes = [];
+    const files       = await afs.readdir(this._storageDir);
+    const changes     = [];
+    let   changeCount = 0;
 
     // This gets called to await on a chunk of FS reads at a time, storing them
     // into `changes`. It's called from the main loop immediately below.
@@ -408,13 +411,17 @@ export default class LocalFile extends BaseFile {
     // a chunk of them at a time.
     const bufPromMap = new Map();
     for (const f of files) {
-      const n       = LocalFile._revNumFromFsPath(f);
-      const bufProm = afs.readFile(path.resolve(this._storageDir, f));
+      const n = LocalFile._revNumFromFsPath(f);
 
-      bufPromMap.set(n, bufProm);
+      if (n !== null) {
+        const bufProm = afs.readFile(path.resolve(this._storageDir, f));
 
-      if (bufPromMap.size >= MAX_PARALLEL_FS_CALLS) {
-        await storeBufs(bufPromMap);
+        bufPromMap.set(n, bufProm);
+        changeCount++;
+
+        if (bufPromMap.size >= MAX_PARALLEL_FS_CALLS) {
+          await storeBufs(bufPromMap);
+        }
       }
     }
 
@@ -427,18 +434,30 @@ export default class LocalFile extends BaseFile {
 
     // Validate that there are no holes, and set up `revNum`.
 
-    if (files.length !== changes.length) {
+    if (changeCount !== changes.length) {
       // Hole!
       throw Errors.badData('Missing at least one change.');
     }
 
-    const revNum = changes.length - 1;
+    const revNum = changeCount - 1;
     this._log.info('Starting revision number:', revNum);
 
     // Only set the instance variables after all the reading is done and the
     // current revision number is known.
-    this._fileShouldExist = true;
-    this._revNum          = revNum;
+
+    if (revNum > 0) {
+      // The usual case, handled here, is that there is at least one change.
+      this._fileShouldExist = true;
+      this._revNum          = revNum;
+    } else {
+      // The file's directory exists, but there weren't any change blobs. This
+      // can happen if the code gets run on an incompatibly (older or newer)
+      // `LocalFile` implementation. We treat this case the same as the file
+      // not existing.
+      this._fileShouldExist = false;
+      this._revNum          = -1;
+    }
+
     this._changes         = changes;
     this._snapshot        = null;
     this._storageToWrite  = new Map();
@@ -604,15 +623,18 @@ export default class LocalFile extends BaseFile {
    * Converts a filesystem path for a stored change into the corresponding
    * revision number.
    *
-   * @param {string} fsPath The filesystem path for a stored value. Can be
+   * @param {string} fsPath The filesystem path for a stored change. Can be
    *   relative or absolute.
-   * @returns {Int} The corresponding revision number.
+   * @returns {Int|null} The corresponding revision number, or `null` if the
+   *   path doesn't correspond to a stored file change. `null` can occur if
+   *   there are leftover file contents from a different (earlier or perhaps
+   *   later) `LocalFile` implementation.
    */
   static _revNumFromFsPath(fsPath) {
     // Extract the hex string indicating the revision number.
     const match = fsPath.match(/(?:^|[/])([0-9a-f]{8})\.[^./]*$/);
     if (match === null) {
-      throw Errors.wtf('Invalid storage path.');
+      return null;
     }
 
     const baseName = match[1];
