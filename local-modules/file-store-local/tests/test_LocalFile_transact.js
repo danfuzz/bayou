@@ -574,7 +574,11 @@ describe('file-store-local/LocalFile.transact', () => {
         const spec = new TransactionSpec(TransactionOp.op_readPathRange('/foo', start, end));
         const transactionResult = await assert.isFulfilled(file.transact(spec));
 
-        assert.hasAllKeys(transactionResult.data, expectPaths);
+        if (expectPaths.length === 0) {
+          assert.isEmpty(transactionResult.data);
+        } else {
+          assert.hasAllKeys(transactionResult.data, expectPaths);
+        }
       }
 
       await test(1, 2, ['/foo/1']);
@@ -609,23 +613,6 @@ describe('file-store-local/LocalFile.transact', () => {
       await test(0, 1);
       await test(0, 2);
       await test(100, 123);
-    });
-
-    it('should succeed with an empty result given an empty range', async () => {
-      const file = makeLocalFile();
-      await file.create();
-
-      async function test(start, end) {
-        const spec = new TransactionSpec(TransactionOp.op_readPathRange('/florp', start, end));
-        const transactionResult = await assert.isFulfilled(file.transact(spec));
-
-        assert.strictEqual(transactionResult.data.size, 0);
-      }
-
-      await test(0, 0);
-      await test(12, 12);
-      await test(10, 9);
-      await test(5, 0);
     });
   });
 
