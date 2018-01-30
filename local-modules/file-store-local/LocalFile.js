@@ -10,6 +10,7 @@ import { BaseFile } from 'file-store';
 import { FileChange, FileSnapshot } from 'file-store-ot';
 import { RevisionNumber } from 'ot-common';
 import { Condition, Delay, Mutex } from 'promise-util';
+import { TString } from 'typecheck';
 import { Logger } from 'see-all';
 import { FrozenBuffer, Errors } from 'util-common';
 
@@ -35,11 +36,11 @@ export default class LocalFile extends BaseFile {
    * Constructs an instance.
    *
    * @param {string} fileId The ID of the file this instance represents.
-   * @param {string} filePath The filesystem path for file storage.
+   * @param {string} storagePath The filesystem path for file storage.
    * @param {Codec} codec Codec instance to use when encoding and decoding
    *   changes.
    */
-  constructor(fileId, filePath, codec) {
+  constructor(fileId, storagePath, codec) {
     super(fileId);
 
     /**
@@ -51,7 +52,7 @@ export default class LocalFile extends BaseFile {
     /**
      * {string} Path to the directory containing stored values for this file.
      */
-    this._storageDir = filePath;
+    this._storagePath = TString.nonEmpty(storagePath);
 
     /**
      * {array<FileChange>} Array of all changes to the file, indexed by revision
@@ -110,7 +111,14 @@ export default class LocalFile extends BaseFile {
     /** {Logger} Logger specific to this file's ID. */
     this._log = log.withAddedContext(fileId);
 
-    this._log.info('Path:', this._storageDir);
+    this._log.info('Path:', this._storagePath);
+  }
+
+  /**
+   * {string} The filesystem path where the storage for this instance resides.
+   */
+  get storagePath() {
+    return this._storagePath;
   }
 
   /**
@@ -353,6 +361,34 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
+   * Helper for {@link #_waitThenFlushStorage()}, which does all the actual
+   * filesystem stuff when the file is supposed to be deleted.
+   *
+   * @returns {true} `true`, upon successful operation.
+   */
+  async _deleteStorage() {
+    this._log.info('About to erase storage.');
+
+    const exists = await afs.exists(this._storagePath);
+
+    if (!exists) {
+      this._log.info('Storage directory doesn\'t exist in the first place.');
+      return true;
+    }
+
+    // This is a "deep delete" a la `rm -rf`.
+    await afs.delete(this._storagePath);
+    this._log.info('Erased storage directory.');
+
+    // Reset the storage state instance variables. These should already be set
+    // as such; this is just an innocuous extra bit of blatant safety.
+    this._fileShouldExist = false;
+    this._changes         = [];
+
+    return true;
+  }
+
+  /**
    * Encodes the given change, for writing to storage.
    *
    * @param {FileChange} change Change to encode.
@@ -387,17 +423,21 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * Reads the file storage if it has not yet been loaded.
+   * Converts a revision number to the full path of the file at which to find
+   * the encoded change for that revision.
+   *
+   * @param {Int} revNum The revision number.
+   * @returns {string} The absolute filesystem path to use for the change with
+   *   the indicated `revNum`.
    */
-  async _readStorageIfNecessary() {
-    if (this._storageReadyPromise === null) {
-      // This is the first time the storage has been requested. Initiate a read.
-      this._storageReadyPromise = this._readStorage();
-    }
+  _fsPathFromRevNum(revNum) {
+    RevisionNumber.check(revNum);
 
-    // Wait for the pending read to complete.
-    await this._storageReadyPromise;
+    // Convert to hex, left-pad with zeros, and add a filename suffix.
+    const fileName = `${revNum.toString(16).padStart(8, '0')}.blob`;
+    return path.resolve(this._storagePath, fileName);
   }
+
 
   /**
    * Reads the storage directory, initializing `_changes`. If the directory
@@ -408,7 +448,7 @@ export default class LocalFile extends BaseFile {
    *   successfully read into memory.
    */
   async _readStorage() {
-    if (!await afs.exists(this._storageDir)) {
+    if (!await afs.exists(this._storagePath)) {
       // Directory doesn't actually exist. Just initialize empty storage.
       this._fileShouldExist = false;
       this._changes         = [];
@@ -423,7 +463,7 @@ export default class LocalFile extends BaseFile {
     // The directory exists. Read its contents.
     this._log.info('Reading storage from disk...');
 
-    const files       = await afs.readdir(this._storageDir);
+    const files       = await afs.readdir(this._storagePath);
     const changes     = [];
     let   changeCount = 0;
 
@@ -452,7 +492,7 @@ export default class LocalFile extends BaseFile {
       const n = LocalFile._revNumFromFsPath(f);
 
       if (n !== null) {
-        const bufProm = afs.readFile(path.resolve(this._storageDir, f));
+        const bufProm = afs.readFile(path.resolve(this._storagePath, f));
 
         bufPromMap.set(n, bufProm);
         changeCount++;
@@ -509,6 +549,19 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
+   * Reads the file storage if it has not yet been loaded.
+   */
+  async _readStorageIfNecessary() {
+    if (this._storageReadyPromise === null) {
+      // This is the first time the storage has been requested. Initiate a read.
+      this._storageReadyPromise = this._readStorage();
+    }
+
+    // Wait for the pending read to complete.
+    await this._storageReadyPromise;
+  }
+
+  /**
    * Indicates that there is file state that needs to be written to disk. This
    * method acts (and returns) promptly. It will kick off a timed callback to
    * actually perform any needed writing operation(s) if one isn't already
@@ -543,34 +596,6 @@ export default class LocalFile extends BaseFile {
 
   /**
    * Helper for {@link #_waitThenFlushStorage()}, which does all the actual
-   * filesystem stuff when the file is supposed to be deleted.
-   *
-   * @returns {true} `true`, upon successful operation.
-   */
-  async _deleteStorage() {
-    this._log.info('About to erase storage.');
-
-    const exists = await afs.exists(this._storageDir);
-
-    if (!exists) {
-      this._log.info('Storage directory doesn\'t exist in the first place.');
-      return true;
-    }
-
-    // This is a "deep delete" a la `rm -rf`.
-    await afs.delete(this._storageDir);
-    this._log.info('Erased storage directory.');
-
-    // Reset the storage state instance variables. These should already be set
-    // as such; this is just an innocuous extra bit of blatant safety.
-    this._fileShouldExist = false;
-    this._changes         = [];
-
-    return true;
-  }
-
-  /**
-   * Helper for {@link #_waitThenFlushStorage()}, which does all the actual
    * filesystem stuff when there is stuff to write.
    *
    * @returns {true} `true`, upon successful writing.
@@ -592,10 +617,10 @@ export default class LocalFile extends BaseFile {
 
     try {
       // If this call fails, then we assume the directory doesn't exist.
-      await afs.access(this._storageDir, afs.constants.F_OK);
+      await afs.access(this._storagePath, afs.constants.F_OK);
     } catch (e) {
       // The call failed.
-      await afs.mkdir(this._storageDir);
+      await afs.mkdir(this._storagePath);
       this._log.info('Created storage directory.');
     }
 
@@ -622,22 +647,6 @@ export default class LocalFile extends BaseFile {
 
     this._log.info('Finished writing storage. Revision number:', this._changes.length - 1);
     return true;
-  }
-
-  /**
-   * Converts a revision number to the full path of the file at which to find
-   * the encoded change for that revision.
-   *
-   * @param {Int} revNum The revision number.
-   * @returns {string} The absolute filesystem path to use for the change with
-   *   the indicated `revNum`.
-   */
-  _fsPathFromRevNum(revNum) {
-    RevisionNumber.check(revNum);
-
-    // Convert to hex, left-pad with zeros, and add a filename suffix.
-    const fileName = `${revNum.toString(16).padStart(8, '0')}.blob`;
-    return path.resolve(this._storageDir, fileName);
   }
 
   /**

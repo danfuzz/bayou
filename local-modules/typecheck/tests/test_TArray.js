@@ -29,13 +29,13 @@ describe('typecheck/TArray', () => {
     it('should validate array elements with an element checker', () => {
       const value = [1, 2, 3];
 
-      assert.doesNotThrow(() => TArray.check(value, TInt.check));
+      assert.doesNotThrow(() => TArray.check(value, x => TInt.check(x)));
     });
 
     it('should throw an error if an element checker fails', () => {
       const value = [1, 2, 3];
 
-      assert.throws(() => TArray.check(value, TString.check));
+      assert.throws(() => TArray.check(value, x => TString.check(x)));
     });
   });
 });

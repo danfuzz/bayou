@@ -2,17 +2,75 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import afs from 'async-file';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
+import { Codec } from 'codec';
+import { LocalFile } from 'file-store-local';
+import { TheModule as fileStoreOt_TheModule } from 'file-store-ot';
 import { UtilityClass } from 'util-common';
+
+/** {Codec} Codec instance to use for `LocalFile` instances. */
+const codec = new Codec();
+fileStoreOt_TheModule.registerCodecs(codec.registry);
 
 /**
  * Utility class to dole out unique temporary filesystem paths, so that the
  * various tests don't trample on each other.
  */
 export default class TempFiles extends UtilityClass {
+  /**
+   * Finishes up a test with the given file. This flushes the file and then
+   * removes the directory it uses. The flushing activity notably could write
+   * logs and throw errors, both of which ought to be associated with the test
+   * which created the file; therefore, calls to this function are best done as
+   * part of the `it()` cases and not, e.g., in an `afterEach()` block or
+   * similar.
+   *
+   * @param {LocalFile} file File to finish up with.
+   */
+  static async doneWithFile(file) {
+    await file.flush();
+
+    // This is a "deep delete" a la `rm -rf`.
+    await afs.delete(file.storagePath);
+  }
+
+  /**
+   * Makes a new {@link LocalFile} and calls `create()` on it.
+   *
+   * @param {string} [fullPath = null] Path to use for the file, or `null` to
+   *   have this function pick one (a unique temporary directory).
+   * @returns {LocalFile} An appropriately-constructed instance.
+   */
+  static async makeAndCreateFile(fullPath = null) {
+    const result = TempFiles.makeFile(fullPath);
+
+    await result.create();
+
+    return result;
+  }
+
+  /**
+   * Makes a new {@link LocalFile}, without any further post-construction
+   * action.
+   *
+   * @param {string} [fullPath = null] Path to use for the file, or `null` to
+   *   have this function pick one (a unique temporary directory).
+   * @returns {LocalFile} An appropriately-constructed instance.
+   */
+  static makeFile(fullPath = null) {
+    if (fullPath === null) {
+      fullPath = TempFiles.uniquePath();
+    }
+
+    const id = path.basename(fullPath);
+
+    return new LocalFile(id, fullPath, codec);
+  }
+
   /**
    * Makes a new unique temporary path.
    *

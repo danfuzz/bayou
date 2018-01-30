@@ -212,7 +212,7 @@ export default class BaseFile extends CommonBase {
         throw Errors.badUse('Improper subclass behavior: Expected non-`null` `data`.');
       }
       try {
-        TMap.check(result.data, StorageId.check, x => FrozenBuffer.check(x));
+        TMap.check(result.data, x => StorageId.check(x), x => FrozenBuffer.check(x));
       } catch (e) {
         // Contextually-appropriate error.
         throw Errors.badUse('Improper subclass behavior: Expected `data` to be a map from `StorageId` to `FrozenBuffer`.');
@@ -229,7 +229,7 @@ export default class BaseFile extends CommonBase {
         throw Errors.badUse('Improper subclass behavior: Expected non-`null` `paths`.');
       }
       try {
-        TSet.check(result.paths, StoragePath.check);
+        TSet.check(result.paths, x => StoragePath.check(x));
       } catch (e) {
         // Contextually-appropriate error.
         throw Errors.badUse('Improper subclass behavior: Expected `paths` to contain `StoragePath`s.');

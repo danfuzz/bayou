@@ -23,7 +23,7 @@ export default class TArray extends UtilityClass {
     }
 
     if (elementCheck !== null) {
-      // **Note:** `in` not `of` because we will check named properties too.
+      // **Note:** `in` not `of` because we check named properties too.
       for (const k in value) {
         elementCheck(value[k]);
       }

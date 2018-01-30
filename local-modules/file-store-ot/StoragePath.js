@@ -160,7 +160,7 @@ export default class StoragePath extends UtilityClass {
    * @returns {string} Unified storage path of all the `components`.
    */
   static join(components) {
-    TArray.check(components, StoragePath.checkComponent);
+    TArray.check(components, x => StoragePath.checkComponent(x));
     return `/${components.join('/')}`;
   }
 
