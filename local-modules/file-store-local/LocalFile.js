@@ -35,11 +35,11 @@ export default class LocalFile extends BaseFile {
    * Constructs an instance.
    *
    * @param {string} fileId The ID of the file this instance represents.
-   * @param {string} filePath The filesystem path for file storage.
+   * @param {string} storagePath The filesystem path for file storage.
    * @param {Codec} codec Codec instance to use when encoding and decoding
    *   changes.
    */
-  constructor(fileId, filePath, codec) {
+  constructor(fileId, storagePath, codec) {
     super(fileId);
 
     /**
@@ -51,7 +51,7 @@ export default class LocalFile extends BaseFile {
     /**
      * {string} Path to the directory containing stored values for this file.
      */
-    this._storageDir = filePath;
+    this._storagePath = storagePath;
 
     /**
      * {array<FileChange>} Array of all changes to the file, indexed by revision
@@ -110,7 +110,14 @@ export default class LocalFile extends BaseFile {
     /** {Logger} Logger specific to this file's ID. */
     this._log = log.withAddedContext(fileId);
 
-    this._log.info('Path:', this._storageDir);
+    this._log.info('Path:', this._storagePath);
+  }
+
+  /**
+   * {string} The filesystem path where the storage for this instance resides.
+   */
+  get storagePath() {
+    return this._storagePath;
   }
 
   /**
@@ -361,7 +368,7 @@ export default class LocalFile extends BaseFile {
   async _deleteStorage() {
     this._log.info('About to erase storage.');
 
-    const exists = await afs.exists(this._storageDir);
+    const exists = await afs.exists(this._storagePath);
 
     if (!exists) {
       this._log.info('Storage directory doesn\'t exist in the first place.');
@@ -369,7 +376,7 @@ export default class LocalFile extends BaseFile {
     }
 
     // This is a "deep delete" a la `rm -rf`.
-    await afs.delete(this._storageDir);
+    await afs.delete(this._storagePath);
     this._log.info('Erased storage directory.');
 
     // Reset the storage state instance variables. These should already be set
@@ -427,7 +434,7 @@ export default class LocalFile extends BaseFile {
 
     // Convert to hex, left-pad with zeros, and add a filename suffix.
     const fileName = `${revNum.toString(16).padStart(8, '0')}.blob`;
-    return path.resolve(this._storageDir, fileName);
+    return path.resolve(this._storagePath, fileName);
   }
 
 
@@ -440,7 +447,7 @@ export default class LocalFile extends BaseFile {
    *   successfully read into memory.
    */
   async _readStorage() {
-    if (!await afs.exists(this._storageDir)) {
+    if (!await afs.exists(this._storagePath)) {
       // Directory doesn't actually exist. Just initialize empty storage.
       this._fileShouldExist = false;
       this._changes         = [];
@@ -455,7 +462,7 @@ export default class LocalFile extends BaseFile {
     // The directory exists. Read its contents.
     this._log.info('Reading storage from disk...');
 
-    const files       = await afs.readdir(this._storageDir);
+    const files       = await afs.readdir(this._storagePath);
     const changes     = [];
     let   changeCount = 0;
 
@@ -484,7 +491,7 @@ export default class LocalFile extends BaseFile {
       const n = LocalFile._revNumFromFsPath(f);
 
       if (n !== null) {
-        const bufProm = afs.readFile(path.resolve(this._storageDir, f));
+        const bufProm = afs.readFile(path.resolve(this._storagePath, f));
 
         bufPromMap.set(n, bufProm);
         changeCount++;
@@ -609,10 +616,10 @@ export default class LocalFile extends BaseFile {
 
     try {
       // If this call fails, then we assume the directory doesn't exist.
-      await afs.access(this._storageDir, afs.constants.F_OK);
+      await afs.access(this._storagePath, afs.constants.F_OK);
     } catch (e) {
       // The call failed.
-      await afs.mkdir(this._storageDir);
+      await afs.mkdir(this._storagePath);
       this._log.info('Created storage directory.');
     }
 
