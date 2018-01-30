@@ -67,18 +67,6 @@ export default class LocalFileStore extends BaseFileStore {
   }
 
   /**
-   * Gets the filesystem path for the file with the given ID.
-   *
-   * @param {string} fileId The file ID.
-   * @returns {string} The corresponding filesystem path.
-   */
-  _filePath(fileId) {
-    // The URI encoding helps keep this code resilient with respect to possible
-    // variance in the allowed syntax for `fileId`s.
-    return path.resolve(this._dir, encodeURIComponent(fileId));
-  }
-
-  /**
    * Ensures the file storage directory exists. This will only ever check once
    * (on first file construction attempt), which notably means that things will
    * break if something removes the file storage directory without restarting
@@ -97,5 +85,17 @@ export default class LocalFileStore extends BaseFileStore {
     }
 
     this._ensuredDir = true;
+  }
+
+  /**
+   * Gets the filesystem path for the file with the given ID.
+   *
+   * @param {string} fileId The file ID.
+   * @returns {string} The corresponding filesystem path.
+   */
+  _filePath(fileId) {
+    // The URI encoding helps keep this code resilient with respect to possible
+    // variance in the allowed syntax for `fileId`s.
+    return path.resolve(this._dir, encodeURIComponent(fileId));
   }
 }
