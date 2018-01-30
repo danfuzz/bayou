@@ -39,6 +39,8 @@ describe('file-store-local/LocalFile.transact', () => {
     // The actual test.
     const spec = new TransactionSpec();
     await assert.isRejected(file.transact(spec));
+
+    await TempFiles.doneWithFile(file);
   });
 
   it('should succeed and return no data from an empty transaction on an existing file', async () => {
@@ -50,6 +52,8 @@ describe('file-store-local/LocalFile.transact', () => {
     assert.strictEqual(result.revNum, 0);
     assert.isUndefined(result.newRevNum);
     assert.isUndefined(result.data);
+
+    await TempFiles.doneWithFile(file);
   });
 
   describe('op checkBlobAbsent', () => {
@@ -61,6 +65,8 @@ describe('file-store-local/LocalFile.transact', () => {
         TransactionOp.op_checkBlobAbsent(new FrozenBuffer('blort')));
       const resultProm = file.transact(spec);
       await assert.isFulfilled(resultProm);
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should fail when the blob is present', async () => {
@@ -71,6 +77,8 @@ describe('file-store-local/LocalFile.transact', () => {
 
       const spec = new TransactionSpec(TransactionOp.op_checkBlobAbsent(blob));
       await assert.isRejected(file.transact(spec));
+
+      await TempFiles.doneWithFile(file);
     });
   });
 
@@ -83,6 +91,8 @@ describe('file-store-local/LocalFile.transact', () => {
 
       const spec = new TransactionSpec(TransactionOp.op_checkBlobPresent(blob));
       await assert.isFulfilled(file.transact(spec));
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should fail when the blob is absent', async () => {
@@ -93,6 +103,8 @@ describe('file-store-local/LocalFile.transact', () => {
         TransactionOp.op_checkBlobPresent(new FrozenBuffer('blort')));
       const resultProm = file.transact(spec);
       await assert.isRejected(resultProm);
+
+      await TempFiles.doneWithFile(file);
     });
   });
 
@@ -110,6 +122,8 @@ describe('file-store-local/LocalFile.transact', () => {
 
       const result = await resultProm;
       assert.strictEqual(result.revNum, 1);
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should fail when the path is not present at all', async () => {
@@ -119,6 +133,8 @@ describe('file-store-local/LocalFile.transact', () => {
       const spec = new TransactionSpec(
         TransactionOp.op_checkPathIs('/blort', new FrozenBuffer('anything')));
       await assert.isRejected(file.transact(spec));
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should fail when the path is present and content does not match', async () => {
@@ -130,6 +146,8 @@ describe('file-store-local/LocalFile.transact', () => {
       const spec = new TransactionSpec(
         TransactionOp.op_checkPathIs('/blort', new FrozenBuffer('not-blort')));
       await assert.isRejected(file.transact(spec));
+
+      await TempFiles.doneWithFile(file);
     });
   });
 
@@ -145,6 +163,8 @@ describe('file-store-local/LocalFile.transact', () => {
 
       const result = await resultProm;
       assert.strictEqual(result.revNum, 0);
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should succeed when the path is present and content does not match', async () => {
@@ -160,6 +180,8 @@ describe('file-store-local/LocalFile.transact', () => {
 
       const result = await resultProm;
       assert.strictEqual(result.revNum, 1);
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should fail when the path is present and content matches', async () => {
@@ -171,6 +193,8 @@ describe('file-store-local/LocalFile.transact', () => {
       const spec = new TransactionSpec(
         TransactionOp.op_checkPathNot('/blort', new FrozenBuffer('blort')));
       await assert.isRejected(file.transact(spec));
+
+      await TempFiles.doneWithFile(file);
     });
   });
 
@@ -186,6 +210,8 @@ describe('file-store-local/LocalFile.transact', () => {
 
       const checkSpec = new TransactionSpec(TransactionOp.op_checkBlobAbsent(blob));
       await assert.isFulfilled(file.transact(checkSpec));
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should succeed even if the blob is not present', async () => {
@@ -195,6 +221,8 @@ describe('file-store-local/LocalFile.transact', () => {
 
       const spec = new TransactionSpec(TransactionOp.op_deleteBlob(blob));
       await assert.isFulfilled(file.transact(spec));
+
+      await TempFiles.doneWithFile(file);
     });
   });
 
@@ -210,6 +238,8 @@ describe('file-store-local/LocalFile.transact', () => {
 
       const checkSpec = new TransactionSpec(TransactionOp.op_checkPathAbsent('/florp'));
       await assert.isFulfilled(file.transact(checkSpec));
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should succeed even if the path is not present', async () => {
@@ -218,6 +248,8 @@ describe('file-store-local/LocalFile.transact', () => {
 
       const spec = new TransactionSpec(TransactionOp.op_deletePath('/florp'));
       await assert.isFulfilled(file.transact(spec));
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should not affect non-listed paths', async () => {
@@ -239,6 +271,8 @@ describe('file-store-local/LocalFile.transact', () => {
         TransactionOp.op_checkPathPresent('/glorch')
       );
       await assert.isFulfilled(file.transact(checkSpec));
+
+      await TempFiles.doneWithFile(file);
     });
   });
 
@@ -254,6 +288,8 @@ describe('file-store-local/LocalFile.transact', () => {
 
       const checkSpec = new TransactionSpec(TransactionOp.op_checkPathAbsent('/bakery'));
       await assert.isFulfilled(file.transact(checkSpec));
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should succeed in deleting the indicated prefix', async () => {
@@ -275,6 +311,8 @@ describe('file-store-local/LocalFile.transact', () => {
         TransactionOp.op_checkPathAbsent('/bakery/british/scone'),
       );
       await assert.isFulfilled(file.transact(checkSpec));
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should succeed even if the path or prefix is not present', async () => {
@@ -283,6 +321,8 @@ describe('file-store-local/LocalFile.transact', () => {
 
       const spec = new TransactionSpec(TransactionOp.op_deletePathPrefix('/bakery'));
       await assert.isFulfilled(file.transact(spec));
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should not affect non-prefix paths', async () => {
@@ -304,6 +344,8 @@ describe('file-store-local/LocalFile.transact', () => {
         TransactionOp.op_checkPathPresent('/baker')
       );
       await assert.isFulfilled(file.transact(checkSpec));
+
+      await TempFiles.doneWithFile(file);
     });
   });
 
@@ -334,6 +376,8 @@ describe('file-store-local/LocalFile.transact', () => {
         const result = await file.transact(expectSpec);
 
         assert.sameMembers([...result.paths], [...expectPaths]);
+
+        await TempFiles.doneWithFile(file);
       }
 
       await test(1, 2, [1]);
@@ -377,6 +421,8 @@ describe('file-store-local/LocalFile.transact', () => {
       await test(0, 1);
       await test(3, 8);
       await test(100, 123);
+
+      await TempFiles.doneWithFile(file);
     });
   });
 
@@ -389,6 +435,8 @@ describe('file-store-local/LocalFile.transact', () => {
       const result = await file.transact(spec);
       assert.instanceOf(result.paths, Set);
       assert.strictEqual(result.paths.size, 0);
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should return a single result for the path itself when bound', async () => {
@@ -408,6 +456,8 @@ describe('file-store-local/LocalFile.transact', () => {
       assert.instanceOf(paths, Set);
       assert.strictEqual(paths.size, 1);
       assert.isTrue(paths.has('/yep'));
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should return a single result immediately under the path', async () => {
@@ -427,6 +477,8 @@ describe('file-store-local/LocalFile.transact', () => {
       assert.instanceOf(paths, Set);
       assert.strictEqual(paths.size, 1);
       assert.isTrue(paths.has('/blort/yep'));
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should return a single result immediately under the path, even if the full result path has more components', async () => {
@@ -445,6 +497,8 @@ describe('file-store-local/LocalFile.transact', () => {
 
       assert.instanceOf(paths, Set);
       assert.sameMembers([...paths.values()], ['/blort/yep']);
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should return multiple results properly', async () => {
@@ -474,6 +528,8 @@ describe('file-store-local/LocalFile.transact', () => {
       assert.isTrue(paths.has('/blort/x/yep'));
       assert.isTrue(paths.has('/blort/x/affirmed'));
       assert.isTrue(paths.has('/blort/x/definitely'));
+
+      await TempFiles.doneWithFile(file);
     });
   });
 
@@ -486,6 +542,8 @@ describe('file-store-local/LocalFile.transact', () => {
       const result = await file.transact(spec);
       assert.instanceOf(result.paths, Set);
       assert.strictEqual(result.paths.size, 0);
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should return all in-range paths', async () => {
@@ -525,6 +583,8 @@ describe('file-store-local/LocalFile.transact', () => {
       await test(3, 14, ['/foo/10', '/foo/11', '/foo/12']);
 
       await test(100, 110, []);
+
+      await TempFiles.doneWithFile(file);
     });
   });
 
@@ -541,6 +601,8 @@ describe('file-store-local/LocalFile.transact', () => {
       const transactionResult = await assert.isFulfilled(file.transact(spec));
 
       assert.strictEqual(transactionResult.data.get(blob.hash), blob);
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should succeed even if the blob is not present', async () => {
@@ -552,6 +614,8 @@ describe('file-store-local/LocalFile.transact', () => {
       const transactionResult = await assert.isFulfilled(file.transact(spec));
 
       assert.strictEqual(transactionResult.data.size, 0);
+
+      await TempFiles.doneWithFile(file);
     });
   });
 
@@ -597,6 +661,8 @@ describe('file-store-local/LocalFile.transact', () => {
       await test(3, 14, ['/foo/10', '/foo/11', '/foo/12']);
 
       await test(100, 110, []);
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should succeed with an empty result given a range with no matching paths', async () => {
@@ -613,6 +679,8 @@ describe('file-store-local/LocalFile.transact', () => {
       await test(0, 1);
       await test(0, 2);
       await test(100, 123);
+
+      await TempFiles.doneWithFile(file);
     });
   });
 
@@ -624,6 +692,8 @@ describe('file-store-local/LocalFile.transact', () => {
 
       const spec = new TransactionSpec(TransactionOp.op_writeBlob(blob));
       await assert.isFulfilled(file.transact(spec));
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should succeed in writing an already-present blob', async () => {
@@ -634,6 +704,8 @@ describe('file-store-local/LocalFile.transact', () => {
       const spec = new TransactionSpec(TransactionOp.op_writeBlob(blob));
       await assert.isFulfilled(file.transact(spec));
       await assert.isFulfilled(file.transact(spec));
+
+      await TempFiles.doneWithFile(file);
     });
   });
 });

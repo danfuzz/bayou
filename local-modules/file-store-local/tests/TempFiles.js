@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import afs from 'async-file';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -13,6 +14,23 @@ import { UtilityClass } from 'util-common';
  * various tests don't trample on each other.
  */
 export default class TempFiles extends UtilityClass {
+  /**
+   * Finishes up a test with the given file. This flushes the file and then
+   * removes the directory it uses. The flushing activity notably could write
+   * logs and throw errors, both of which ought to be associated with the test
+   * which created the file; therefore, calls to this function are best done as
+   * part of the `it()` cases and not, e.g., in an `afterEach()` block or
+   * similar.
+   *
+   * @param {LocalFile} file File to finish up with.
+   */
+  static async doneWithFile(file) {
+    await file.flush();
+
+    // This is a "deep delete" a la `rm -rf`.
+    await afs.delete(file.storagePath);
+  }
+
   /**
    * Makes a new unique temporary path.
    *
