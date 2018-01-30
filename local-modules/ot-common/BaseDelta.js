@@ -78,7 +78,7 @@ export default class BaseDelta extends CommonBase {
     if ((ops.length !== 0) && (Array.isArray(ops[0]))) {
       // Array of op constructor argument arrays.
 
-      TArray.check(ops, TArray.check);
+      TArray.check(ops, x => TArray.check(x));
       const constructedOps = [];
 
       for (const args of ops) {

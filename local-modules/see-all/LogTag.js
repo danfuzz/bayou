@@ -54,7 +54,7 @@ export default class LogTag extends CommonBase {
 
     /** {array<string>} Context strings. */
     this._context =
-      Object.freeze(TArray.check(context, LogTag.checkContextString));
+      Object.freeze(TArray.check(context, x => LogTag.checkContextString(x)));
 
     Object.freeze(this);
   }
