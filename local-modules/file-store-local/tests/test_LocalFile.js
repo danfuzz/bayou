@@ -61,6 +61,8 @@ describe('file-store-local/LocalFile', () => {
       await file.create();
 
       assert.isTrue(await file.exists()); // The actual test.
+
+      await TempFiles.doneWithFile(file);
     });
 
     it('should do nothing if called on a non-empty file', async () => {
@@ -94,6 +96,8 @@ describe('file-store-local/LocalFile', () => {
       // Same transaction as above.
       result = (await file.transact(spec)).data.get(storagePath);
       assert.strictEqual(result.string, value.string);
+
+      await TempFiles.doneWithFile(file);
     });
   });
 
@@ -105,6 +109,8 @@ describe('file-store-local/LocalFile', () => {
 
       await file.delete();
       assert.isFalse(await file.exists()); // The actual test.
+
+      await TempFiles.doneWithFile(file);
     });
   });
 
@@ -129,6 +135,8 @@ describe('file-store-local/LocalFile', () => {
 
       const file2 = makeLocalFile(dir);
       assert.isTrue(await file2.exists());
+
+      await TempFiles.doneWithFile(file2);
     });
   });
 });
