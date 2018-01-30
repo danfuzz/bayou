@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { assert } from 'chai';
-import { after, describe, it } from 'mocha';
+import { describe, it } from 'mocha';
 
 import { TransactionOp, TransactionSpec } from 'file-store-ot';
 import { FrozenBuffer } from 'util-common';
@@ -11,21 +11,6 @@ import { FrozenBuffer } from 'util-common';
 import TempFiles from './TempFiles';
 
 describe('file-store-local/LocalFile', () => {
-  // The expectation was that this would run after all tests were finish and
-  // clean up the directory into which we are writing test files. However, since
-  // it takes as much as 5 seconds for any `LocalFile` files to be written to
-  // disk, it's not safe to `rmdir` the directory. Mocha has an internal rule
-  // that you can't take more than 2 seconds to finish your work in the
-  // `after()` hook and call the `done()` callback.
-  after(function (done) {
-    // setTimeout(() => {
-    //   fs.rmdirSync(storeDir);
-    //   storeDir = null;
-
-    done();
-    // }, 2000);
-  });
-
   describe('constructor()', () => {
     it('should not throw given valid arguments', () => {
       assert.doesNotThrow(() => { TempFiles.makeFile(); });
