@@ -10,6 +10,7 @@ import { BaseFile } from 'file-store';
 import { FileChange, FileSnapshot } from 'file-store-ot';
 import { RevisionNumber } from 'ot-common';
 import { Condition, Delay, Mutex } from 'promise-util';
+import { TString } from 'typecheck';
 import { Logger } from 'see-all';
 import { FrozenBuffer, Errors } from 'util-common';
 
@@ -51,7 +52,7 @@ export default class LocalFile extends BaseFile {
     /**
      * {string} Path to the directory containing stored values for this file.
      */
-    this._storagePath = storagePath;
+    this._storagePath = TString.nonEmpty(storagePath);
 
     /**
      * {array<FileChange>} Array of all changes to the file, indexed by revision
