@@ -41,6 +41,24 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Constructs an instance of this class for representing an ad-hoc
+   * human-oriented message.
+   *
+   * @param {Int} timeMsec Timestamp of the message.
+   * @param {string|null} stack Stack trace representing the call site which
+   *   caused this instance to be created. or `null` if that information is not
+   *   available.
+   * @param {string} level Severity level.
+   * @param {LogTag} tag Tag (component name and optional context) associated
+   *   with the message.
+   * @param {...*} message Message to log.
+   * @returns {LogRecord} Appropriately-constructed instance of this class.
+   */
+  static forMessage(timeMsec, stack, level, tag, ...message) {
+    return new LogRecord(timeMsec, stack, level, tag, ...message);
+  }
+
+  /**
    * Constructs an instance of this class for representing a timestamp. The
    * result is an `info` level record tagged with `time`, and with a three-array
    * `messages` argument consisting of `[<utc>, '/', <local>]`, where `<utc>`
@@ -60,7 +78,7 @@ export default class LogRecord extends CommonBase {
     const utcString   = LogRecord._utcTimeString(date);
     const localString = LogRecord._localTimeString(date);
 
-    return new LogRecord(timeMsec, null, 'info', LogTag.TIME,
+    return LogRecord.forMessage(timeMsec, null, 'info', LogTag.TIME,
       utcString, '/', localString);
   }
 
@@ -275,6 +293,18 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Indicates whether this instance represents an ad-hoc message, as for
+   * example constructed by {@link #forMessage}.
+   *
+   * @returns {boolean} `true` iff this is an ad-hoc message instance.
+   */
+  isMessage() {
+    // For now, anything that's not a "time" is a message. **TODO:** This will
+    // change when we introduce structured events as a log type.
+    return !this.isTime();
+  }
+
+  /**
    * Indicates whether this instance represents a timestamp, as for example
    * constructed by {@link #forTime}.
    *
@@ -290,14 +320,21 @@ export default class LogRecord extends CommonBase {
 
   /**
    * Constructs an instance just like this one, except with `message` replaced
-   * with the indicated contents.
+   * with the indicated contents. It is only valid to call this method on
+   * instances for which {@link #isMessage} returns `true`; other cases will
+   * throw an error.
    *
    * @param {...*} message New message.
    * @returns {LogRecord} An appropriately-constructed instance.
    */
   withMessage(...message) {
     const { timeMsec, stack, level, tag } = this;
-    return new LogRecord(timeMsec, stack, level, tag, ...message);
+
+    if (!this.isMessage()) {
+      throw Errors.badUse('Requires a message instance.');
+    }
+
+    return LogRecord.forMessage(timeMsec, stack, level, tag, ...message);
   }
 
   /**
