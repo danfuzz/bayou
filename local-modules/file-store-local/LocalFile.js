@@ -353,6 +353,34 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
+   * Helper for {@link #_waitThenFlushStorage()}, which does all the actual
+   * filesystem stuff when the file is supposed to be deleted.
+   *
+   * @returns {true} `true`, upon successful operation.
+   */
+  async _deleteStorage() {
+    this._log.info('About to erase storage.');
+
+    const exists = await afs.exists(this._storageDir);
+
+    if (!exists) {
+      this._log.info('Storage directory doesn\'t exist in the first place.');
+      return true;
+    }
+
+    // This is a "deep delete" a la `rm -rf`.
+    await afs.delete(this._storageDir);
+    this._log.info('Erased storage directory.');
+
+    // Reset the storage state instance variables. These should already be set
+    // as such; this is just an innocuous extra bit of blatant safety.
+    this._fileShouldExist = false;
+    this._changes         = [];
+
+    return true;
+  }
+
+  /**
    * Encodes the given change, for writing to storage.
    *
    * @param {FileChange} change Change to encode.
@@ -387,17 +415,21 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * Reads the file storage if it has not yet been loaded.
+   * Converts a revision number to the full path of the file at which to find
+   * the encoded change for that revision.
+   *
+   * @param {Int} revNum The revision number.
+   * @returns {string} The absolute filesystem path to use for the change with
+   *   the indicated `revNum`.
    */
-  async _readStorageIfNecessary() {
-    if (this._storageReadyPromise === null) {
-      // This is the first time the storage has been requested. Initiate a read.
-      this._storageReadyPromise = this._readStorage();
-    }
+  _fsPathFromRevNum(revNum) {
+    RevisionNumber.check(revNum);
 
-    // Wait for the pending read to complete.
-    await this._storageReadyPromise;
+    // Convert to hex, left-pad with zeros, and add a filename suffix.
+    const fileName = `${revNum.toString(16).padStart(8, '0')}.blob`;
+    return path.resolve(this._storageDir, fileName);
   }
+
 
   /**
    * Reads the storage directory, initializing `_changes`. If the directory
@@ -509,6 +541,19 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
+   * Reads the file storage if it has not yet been loaded.
+   */
+  async _readStorageIfNecessary() {
+    if (this._storageReadyPromise === null) {
+      // This is the first time the storage has been requested. Initiate a read.
+      this._storageReadyPromise = this._readStorage();
+    }
+
+    // Wait for the pending read to complete.
+    await this._storageReadyPromise;
+  }
+
+  /**
    * Indicates that there is file state that needs to be written to disk. This
    * method acts (and returns) promptly. It will kick off a timed callback to
    * actually perform any needed writing operation(s) if one isn't already
@@ -539,34 +584,6 @@ export default class LocalFile extends BaseFile {
       await Delay.resolve(DIRTY_DELAY_MSEC);
       await this._flushPendingStorage();
     })();
-  }
-
-  /**
-   * Helper for {@link #_waitThenFlushStorage()}, which does all the actual
-   * filesystem stuff when the file is supposed to be deleted.
-   *
-   * @returns {true} `true`, upon successful operation.
-   */
-  async _deleteStorage() {
-    this._log.info('About to erase storage.');
-
-    const exists = await afs.exists(this._storageDir);
-
-    if (!exists) {
-      this._log.info('Storage directory doesn\'t exist in the first place.');
-      return true;
-    }
-
-    // This is a "deep delete" a la `rm -rf`.
-    await afs.delete(this._storageDir);
-    this._log.info('Erased storage directory.');
-
-    // Reset the storage state instance variables. These should already be set
-    // as such; this is just an innocuous extra bit of blatant safety.
-    this._fileShouldExist = false;
-    this._changes         = [];
-
-    return true;
   }
 
   /**
@@ -622,22 +639,6 @@ export default class LocalFile extends BaseFile {
 
     this._log.info('Finished writing storage. Revision number:', this._changes.length - 1);
     return true;
-  }
-
-  /**
-   * Converts a revision number to the full path of the file at which to find
-   * the encoded change for that revision.
-   *
-   * @param {Int} revNum The revision number.
-   * @returns {string} The absolute filesystem path to use for the change with
-   *   the indicated `revNum`.
-   */
-  _fsPathFromRevNum(revNum) {
-    RevisionNumber.check(revNum);
-
-    // Convert to hex, left-pad with zeros, and add a filename suffix.
-    const fileName = `${revNum.toString(16).padStart(8, '0')}.blob`;
-    return path.resolve(this._storageDir, fileName);
   }
 
   /**
