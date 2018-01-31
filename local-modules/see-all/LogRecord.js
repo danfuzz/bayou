@@ -5,7 +5,7 @@
 import { inspect } from 'util';
 
 import { TInt, TString } from 'typecheck';
-import { CommonBase, ErrorUtil, Errors } from 'util-common';
+import { CommonBase, DataUtil, ErrorUtil, Errors } from 'util-common';
 
 import LogTag from './LogTag';
 
@@ -13,8 +13,17 @@ import LogTag from './LogTag';
 const MESSAGE_LEVELS_ARRAY =
   Object.freeze(['debug', 'error', 'warn', 'info', 'detail']);
 
-/** {Set<string>} Set of valid severity levels. */
+/** {Set<string>} Set of valid severity levels for message instances. */
 const MESSAGE_LEVELS_SET = new Set(MESSAGE_LEVELS_ARRAY);
+
+/** {string} Event name used for timestamp events. */
+const TIMESTAMP_NAME = 'timestamp';
+
+/**
+ * {Set<string>} Set of reserved event names, which are invalid to use for
+ * generic events as created by {@link #forEvent}.
+ */
+const RESERVED_EVENT_NAMES = new Set([...MESSAGE_LEVELS_ARRAY, TIMESTAMP_NAME]);
 
 /**
  * Entry for an item to log. Every instance has a timestamp, a component tag,
@@ -72,6 +81,35 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Constructs an instance of this class for representing a named structured
+   * event.
+   *
+   * @param {Int} timeMsec Timestamp of the message.
+   * @param {string|null} stack Stack trace representing the call site which
+   *   caused this instance to be created. or `null` if that information is not
+   *   available.
+   * @param {LogTag} tag Tag (component name and optional context) associated
+   *   with the message.
+   * @param {string} name Event name. This must _not_ correspond to the event
+   *   name used for any human-oriented message or for timestamp logs. Beyond
+   *   that, it must be a valid function name, as defined by {@link Functor}
+   *   and {@link TString#label}.
+   * @param {...*} args Event arguments. These must be pure data, as defined
+   *   by {@link DataUtil#isData}.
+   * @returns {LogRecord} Appropriately-constructed instance of this class.
+   */
+  static forEvent(timeMsec, stack, tag, name, ...args) {
+    if (!RESERVED_EVENT_NAMES.has(name)) {
+      throw Errors.badValue(name, 'structured event name');
+    }
+
+    TString.label(name);
+    args = DataUtil.deepFreeze(args);
+
+    return new LogRecord(timeMsec, stack, tag, name, ...args);
+  }
+
+  /**
    * Constructs an instance of this class for representing an ad-hoc
    * human-oriented message.
    *
@@ -86,6 +124,7 @@ export default class LogRecord extends CommonBase {
    * @returns {LogRecord} Appropriately-constructed instance of this class.
    */
   static forMessage(timeMsec, stack, tag, level, ...message) {
+    LogRecord.checkMessageLevel(level);
     return new LogRecord(timeMsec, stack, tag, level, ...message);
   }
 
@@ -202,8 +241,11 @@ export default class LogRecord extends CommonBase {
      */
     this._stack = TString.orNull(stack);
 
-    /** {string} Severity level. */
-    this._level = LogRecord.checkMessageLevel(level);
+    /**
+     * {string} Message severity level (for ad-hoc human-oriented messages) or
+     * event name (for structured events).
+     */
+    this._level = TString.label(level);
 
     /**
      * {LogTag} Tag (component name and optional context) associated with the
