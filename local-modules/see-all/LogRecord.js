@@ -388,6 +388,18 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Gets reconstruction arguments for this instance. In this case, this method
+   * is implemented, in particular, so that calling `inspect()` on instances of
+   * this class produces sensible output.
+   *
+   * @returns {array<*>} Reconstruction arguments.
+   */
+  deconstruct() {
+    const { timeMsec, stack, tag, payload } = this;
+    return [timeMsec, stack, tag, payload];
+  }
+
+  /**
    * Indicates whether any of the `message` arguments of this instance is an
    * `Error`.
    *
