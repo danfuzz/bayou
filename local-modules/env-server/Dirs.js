@@ -22,10 +22,12 @@ export default class Dirs extends Singleton {
     /** {string} Base directory of the product. */
     this._baseDirectory = Dirs._findBaseDirectory();
 
-    /** {string} "Var" directory to use. */
-    this._varDirectory = Dirs._findAndEnsureVarDirectory(this._baseDirectory);
+    /**
+     * {string|null} "Var" directory to use, or `null` if not yet initialized.
+     */
+    this._varDirectory = null;
 
-    Object.freeze(this);
+    Object.seal(this);
   }
 
   /**
@@ -75,7 +77,24 @@ export default class Dirs extends Singleton {
    * is, it will create the directory if necessary).
    */
   get VAR_DIR() {
+    if (this._varDirectory === null) {
+      this._varDirectory = this._findAndEnsureVarDirectory();
+    }
+
     return this._varDirectory;
+  }
+
+  /**
+   * Figures out where the "var" directory is, by deferring to the salient hook.
+   * In addition, creates the directory if it doesn't already exist.
+   *
+   * @returns {string} The "var" directory.
+   */
+  _findAndEnsureVarDirectory() {
+    const result = Hooks.theOne.findVarDirectory(this._baseDirectory);
+
+    Dirs._ensureDir(result);
+    return result;
   }
 
   /**
@@ -105,20 +124,6 @@ export default class Dirs extends Singleton {
 
       dir = path.dirname(dir);
     }
-  }
-
-  /**
-   * Figures out where the "var" directory is, by deferring to the salient hook.
-   * In addition, creates the directory if it doesn't already exist.
-   *
-   * @param {string} baseDir The product base directory.
-   * @returns {string} The "var" directory.
-   */
-  static _findAndEnsureVarDirectory(baseDir) {
-    const result = Hooks.theOne.findVarDirectory(baseDir);
-
-    Dirs._ensureDir(result);
-    return result;
   }
 
   /**

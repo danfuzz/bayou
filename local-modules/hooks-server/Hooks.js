@@ -101,8 +101,7 @@ export default class Hooks extends Singleton {
   /**
    * Called during regular system startup (e.g. and in particular _not_ when
    * just building a client bundle offline). This is called after logging has
-   * been initialized but before almost everything else. Notably, this is the
-   * first method called on this class when the system is starting up.
+   * been initialized but before almost everything else.
    */
   async run() {
     // This space intentionally left blank.
