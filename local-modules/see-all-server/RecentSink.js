@@ -112,7 +112,6 @@ export default class RecentSink extends BaseSink {
    * @returns {string} HTML string form for the entry.
    */
   static _htmlLine(logRecord) {
-    const level   = logRecord.level;
     let   prefix  = logRecord.prefixString;
     const context = logRecord.contextString || '';
 
@@ -126,17 +125,6 @@ export default class RecentSink extends BaseSink {
     } else {
       body = logRecord.message[0];
       body = body.replace(/(^\n+)|(\n+$)/g, ''); // Trim leading and trailing newlines.
-    }
-
-    if (logRecord.isMessage() && ((level !== 'detail') && (level !== 'info'))) {
-      // It's an ad-hoc message at a level that warrants a stack trace...
-      if ((logRecord.stack !== null) && !logRecord.hasError()) {
-        // It has a call-site stack but doesn't have an error in its arguments,
-        // so append the stack.
-        for (const line of logRecord.stack.split('\n')) {
-          body += `\n  ${line}`;
-        }
-      }
     }
 
     // Color the prefix according to level.

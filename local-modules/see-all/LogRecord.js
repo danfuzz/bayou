@@ -13,6 +13,12 @@ import LogTag from './LogTag';
 const MESSAGE_LEVELS_ARRAY =
   Object.freeze(['debug', 'error', 'warn', 'info', 'detail']);
 
+/**
+ * {Set<string>} Set of severity levels for message instances where having a
+ * stack trace in the human-oriented output is most desirable.
+ */
+const WANT_STACK_LEVELS = new Set(['debug', 'error', 'warn']);
+
 /** {Set<string>} Set of valid severity levels for message instances. */
 const MESSAGE_LEVELS_SET = new Set(MESSAGE_LEVELS_ARRAY);
 
@@ -290,6 +296,11 @@ export default class LogRecord extends CommonBase {
    * other with a single space, and newline-separating multi-line values (so
    * that each ends up on its own line).
    *
+   * As a special-ish case, the {@link #stack} of the instance is included in
+   * the result if it is non-`null`, the instance doesn't have an error as one
+   * of its arguments, _and_ the instance is an ad-hoc message at `debug`,
+   * `warn`, or `error` level (where stack traces are generally expected).
+   *
    * Single-line results have no newlines (including at the end). Multi-line
    * results always end with a newline.
    */
@@ -314,6 +325,23 @@ export default class LogRecord extends CommonBase {
     // Per docs, guarantee that a multi-line result ends with a newline.
     if (anyNewlines && !atLineStart) {
       result.push('\n');
+    }
+
+    // Append the stack if available and appropriate. See the header doc for
+    // more info.
+    if (   this.isMessage()
+        && (this.stack !== null)
+        && WANT_STACK_LEVELS.has(this.level)
+        && !this.hasError()) {
+      if (!anyNewlines) {
+        // Appending the stack will make an otherwise single-line result into a
+        // multiline one, and the pending result doesn't yet have any newlines.
+        result.push('\n');
+      }
+
+      for (const line of this.stack.split('\n')) {
+        result.push(`  ${line}\n`);
+      }
     }
 
     return result.join('');
