@@ -92,7 +92,7 @@ describe('see-all-server/RecentSink', () => {
       const NUM_LINES = 10;
 
       for (let i = 0; i < NUM_LINES; i++) {
-        sink.sinkLog(LogRecord.forMessage(12345 + i, 'yay-stack', 'info', LOG_TAG, 'florp', i));
+        sink.sinkLog(LogRecord.forMessage(12345 + i, 'yay-stack', LOG_TAG, 'info', 'florp', i));
       }
 
       const contents = sink.htmlContents;
