@@ -280,11 +280,6 @@ export default class LogRecord extends CommonBase {
     return this._payload.name;
   }
 
-  /** {array<*>} Message to log. */
-  get message() {
-    return this._payload.args;
-  }
-
   /**
    * {Functor} Main log payload. In the case of ad-hoc human-oriented
    * messages, the functor name is the severity level.

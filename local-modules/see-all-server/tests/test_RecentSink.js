@@ -52,9 +52,9 @@ describe('see-all-server/RecentSink', () => {
 
         assert.strictEqual(lr.timeMsec, 12345 + i);
         assert.strictEqual(lr.stack, 'yay-stack');
-        assert.strictEqual(lr.level, 'info');
         assert.strictEqual(lr.tag, LOG_TAG);
-        assert.deepEqual(lr.message, [`florp ${i}`]);
+        assert.strictEqual(lr.payload.name, 'info');
+        assert.deepEqual(lr.payload.args, [`florp ${i}`]);
       }
     });
 

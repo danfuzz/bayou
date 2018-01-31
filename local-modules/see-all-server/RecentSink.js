@@ -74,7 +74,9 @@ export default class RecentSink extends BaseSink {
     if (logRecord.isTime()) {
       this._logTime(logRecord);
     } else {
-      const messageString = logRecord.messageString;
+      // Distill the message down to a single string, and trim leading and
+      // trailing newlines.
+      const messageString = logRecord.messageString.replace(/(^\n+)|(\n+$)/g, '');
       this._log.push(logRecord.withMessage(messageString));
     }
   }
@@ -123,8 +125,9 @@ export default class RecentSink extends BaseSink {
       const localString = chalk.blue.dim.bold(local);
       body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;
     } else {
-      body = logRecord.message[0];
-      body = body.replace(/(^\n+)|(\n+$)/g, ''); // Trim leading and trailing newlines.
+      // **Note:** By the time we get here, the record's payload args have been
+      // distilled down to a single string.
+      body = logRecord.payload.args[0];
     }
 
     // Color the prefix according to level.
