@@ -74,7 +74,9 @@ export default class RecentSink extends BaseSink {
     if (logRecord.isTime()) {
       this._logTime(logRecord);
     } else {
-      const messageString = logRecord.messageString;
+      // Distill the message down to a single string, and trim leading and
+      // trailing newlines.
+      const messageString = logRecord.messageString.replace(/(^\n+)|(\n+$)/g, '');
       this._log.push(logRecord.withMessage(messageString));
     }
   }
@@ -112,7 +114,6 @@ export default class RecentSink extends BaseSink {
    * @returns {string} HTML string form for the entry.
    */
   static _htmlLine(logRecord) {
-    const level   = logRecord.level;
     let   prefix  = logRecord.prefixString;
     const context = logRecord.contextString || '';
 
@@ -124,23 +125,13 @@ export default class RecentSink extends BaseSink {
       const localString = chalk.blue.dim.bold(local);
       body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;
     } else {
-      body = logRecord.message[0];
-      body = body.replace(/(^\n+)|(\n+$)/g, ''); // Trim leading and trailing newlines.
+      // **Note:** By the time we get here, the record's payload args have been
+      // distilled down to a single string.
+      body = logRecord.payload.args[0];
     }
 
-    if ((level !== 'detail') && (level !== 'info')) {
-      // It's at a level that warrants a stack trace...
-      if (!logRecord.hasError()) {
-        // It doesn't otherwise have an error, so append the stack of the call
-        // site.
-        for (const line of logRecord.stack.split('\n')) {
-          body += `\n  ${line}`;
-        }
-      }
-    }
-
-    // Color the prefix according to level.
-    switch (logRecord.level) {
+    // Color the prefix depending on the event name / severity level.
+    switch (logRecord.payload.name) {
       case 'error': { prefix = chalk.red.bold(prefix);    break; }
       case 'warn':  { prefix = chalk.yellow.bold(prefix); break; }
       default:      { prefix = chalk.dim.bold(prefix);    break; }

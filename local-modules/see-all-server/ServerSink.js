@@ -91,7 +91,6 @@ export default class ServerSink extends BaseSink {
    * @param {LogRecord} logRecord The record to write.
    */
   _impl_sinkLog(logRecord) {
-    const level = logRecord.level;
     const prefix = this._makePrefix(logRecord);
 
     // Make a unified string of the entire message.
@@ -104,17 +103,6 @@ export default class ServerSink extends BaseSink {
     // array of all lines. The final-newline removal means we won't (typically)
     // have an empty line at the end of the log.
     const lines = text.replace(/\n$/, '').match(/^.*$/mg);
-
-    if ((level !== 'detail') && (level !== 'info')) {
-      // It's at a level that warrants a stack trace...
-      if (!logRecord.hasError()) {
-        // It doesn't otherwise have an error, so append the stack of the call
-        // site.
-        for (const line of logRecord.stack.split('\n')) {
-          lines.push(`  ${line}`);
-        }
-      }
-    }
 
     // Measure every line. If all lines are short enough for the current
     // console, align them to the right of the prefix. If not, put the prefix on
@@ -161,8 +149,8 @@ export default class ServerSink extends BaseSink {
     let   text   = logRecord.prefixString;
     //const length = text.length + 1; // `+1` for the space at the end.
 
-    // Color the prefix according to level.
-    switch (logRecord.level) {
+    // Color the prefix depending on the event name / severity level.
+    switch (logRecord.payload.name) {
       case 'error': { text = chalk.red.bold(text);    break; }
       case 'warn':  { text = chalk.yellow.bold(text); break; }
       default:      { text = chalk.dim.bold(text);    break; }

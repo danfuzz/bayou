@@ -8,15 +8,15 @@ import { describe, it } from 'mocha';
 import { LogRecord, LogTag } from 'see-all';
 
 describe('see-all/LogRecord', () => {
-  describe('.LEVELS', () => {
+  describe('.MESSAGE_LEVELS', () => {
     it('is a frozen array of at least four elements', () => {
-      assert.isArray(LogRecord.LEVELS);
-      assert.isFrozen(LogRecord.LEVELS);
-      assert.isAtLeast(LogRecord.LEVELS.length, 4);
+      assert.isArray(LogRecord.MESSAGE_LEVELS);
+      assert.isFrozen(LogRecord.MESSAGE_LEVELS);
+      assert.isAtLeast(LogRecord.MESSAGE_LEVELS.length, 4);
     });
 
     it('contains only short lowercase alphabetic strings', () => {
-      for (const l of LogRecord.LEVELS) {
+      for (const l of LogRecord.MESSAGE_LEVELS) {
         assert.isString(l);
         assert.isAtMost(l.length, 10);
         assert.isTrue(/^[a-z]+$/.test(l));
@@ -24,20 +24,20 @@ describe('see-all/LogRecord', () => {
     });
   });
 
-  describe('checkLevel()', () => {
+  describe('checkMessageLevel()', () => {
     it('accepts valid levels', () => {
       function test(level) {
-        assert.strictEqual(LogRecord.checkLevel(level), level);
+        assert.strictEqual(LogRecord.checkMessageLevel(level), level);
       }
 
-      for (const level of LogRecord.LEVELS) {
+      for (const level of LogRecord.MESSAGE_LEVELS) {
         test(level);
       }
     });
 
     it('rejects invalid levels', () => {
       function test(level) {
-        assert.throws(() => { LogRecord.checkLevel(level); });
+        assert.throws(() => { LogRecord.checkMessageLevel(level); });
       }
 
       test('');

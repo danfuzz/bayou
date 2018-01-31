@@ -21,7 +21,7 @@ describe('see-all-server/RecentSink', () => {
       const contents = sink.contents;
       assert.lengthOf(contents, 1);
       assert.deepEqual(contents[0],
-        LogRecord.forMessage(90909, 'yay-stack', LOG_TAG, 'error', 'bar baz'));
+        LogRecord.forMessage(90909, 'yay-stack', LOG_TAG, 'error', 'bar baz\n  yay-stack'));
     });
 
     it('should log a time record as given', () => {
@@ -52,9 +52,9 @@ describe('see-all-server/RecentSink', () => {
 
         assert.strictEqual(lr.timeMsec, 12345 + i);
         assert.strictEqual(lr.stack, 'yay-stack');
-        assert.strictEqual(lr.level, 'info');
         assert.strictEqual(lr.tag, LOG_TAG);
-        assert.deepEqual(lr.message, [`florp ${i}`]);
+        assert.strictEqual(lr.payload.name, 'info');
+        assert.deepEqual(lr.payload.args, [`florp ${i}`]);
       }
     });
 
