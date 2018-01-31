@@ -128,11 +128,11 @@ export default class RecentSink extends BaseSink {
       body = body.replace(/(^\n+)|(\n+$)/g, ''); // Trim leading and trailing newlines.
     }
 
-    if ((level !== 'detail') && (level !== 'info')) {
-      // It's at a level that warrants a stack trace...
-      if (!logRecord.hasError()) {
-        // It doesn't otherwise have an error, so append the stack of the call
-        // site.
+    if (logRecord.isMessage() && ((level !== 'detail') && (level !== 'info'))) {
+      // It's an ad-hoc message at a level that warrants a stack trace...
+      if ((logRecord.stack !== null) && !logRecord.hasError()) {
+        // It has a call-site stack but doesn't have an error in its arguments,
+        // so append the stack.
         for (const line of logRecord.stack.split('\n')) {
           body += `\n  ${line}`;
         }

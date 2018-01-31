@@ -17,13 +17,13 @@ const MESSAGE_LEVELS_ARRAY =
 const MESSAGE_LEVELS_SET = new Set(MESSAGE_LEVELS_ARRAY);
 
 /** {string} Event name used for timestamp events. */
-const TIMESTAMP_NAME = 'timestamp';
+const TIME_NAME = LogTag.TIME.main;
 
 /**
  * {Set<string>} Set of reserved event names, which are invalid to use for
  * generic events as created by {@link #forEvent}.
  */
-const RESERVED_EVENT_NAMES = new Set([...MESSAGE_LEVELS_ARRAY, TIMESTAMP_NAME]);
+const RESERVED_EVENT_NAMES = new Set([...MESSAGE_LEVELS_ARRAY, TIME_NAME]);
 
 /**
  * Entry for an item to log. Every instance has a timestamp, a component tag,
@@ -148,8 +148,7 @@ export default class LogRecord extends CommonBase {
     const utcString   = LogRecord._utcTimeString(date);
     const localString = LogRecord._localTimeString(date);
 
-    return LogRecord.forMessage(timeMsec, null, LogTag.TIME, 'info',
-      utcString, '/', localString);
+    return new LogRecord(timeMsec, null, LogTag.TIME, TIME_NAME, utcString, localString);
   }
 
   /**
@@ -242,16 +241,16 @@ export default class LogRecord extends CommonBase {
     this._stack = TString.orNull(stack);
 
     /**
-     * {string} Message severity level (for ad-hoc human-oriented messages) or
-     * event name (for structured events).
-     */
-    this._level = TString.label(level);
-
-    /**
      * {LogTag} Tag (component name and optional context) associated with the
      * message.
      */
     this._tag = LogTag.check(tag);
+
+    /**
+     * {string} Message severity level (for ad-hoc human-oriented messages) or
+     * event name (for structured events).
+     */
+    this._level = TString.label(level);
 
     /** {array<*>} Message to log. */
     this._message = message;
@@ -283,7 +282,7 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
-   * {string} Unified message string, from on all of the individual message
+   * {string} Unified message string, composed from all of the individual
    * arguments.
    *
    * This form runs {@link #inspectValue} on each of the message arguments,
@@ -326,7 +325,9 @@ export default class LogRecord extends CommonBase {
    */
   get prefixString() {
     const { level, tag: { main } } = this;
-    const levelStr = (level === 'info') ? '' : ` ${level[0].toUpperCase()}`;
+    const levelStr = ((level === 'info') || !this.isMessage())
+      ? ''
+      : ` ${level[0].toUpperCase()}`;
 
     return `[${main}${levelStr}]`;
   }
@@ -361,9 +362,7 @@ export default class LogRecord extends CommonBase {
       throw Errors.badUse('Requires a timestamp instance.');
     }
 
-    const [utc, slash_unused, local] = this.message;
-
-    return [utc, local];
+    return this.message;
   }
 
   /**
@@ -404,9 +403,7 @@ export default class LogRecord extends CommonBase {
   isTime() {
     // The first check (the tag) is probably sufficient, but it probably can't
     // hurt to be a little pickier.
-    return (this._tag === LogTag.TIME)
-      && (this._message.length === 3)
-      && (this._message[1] === '/');
+    return (this._tag === LogTag.TIME) && (this._level === TIME_NAME);
   }
 
   /**
