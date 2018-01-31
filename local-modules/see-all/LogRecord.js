@@ -145,7 +145,9 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
-   * Constructs an instance.
+   * Constructs an instance. **Note:** This constructor is meant to _only_ be
+   * used within this class; external callers should construct instances via
+   * one of the static constructor methods, e.g. {@link #forMessage}.
    *
    * @param {Int} timeMsec Timestamp of the message.
    * @param {string|null} stack Stack trace representing the call site which
