@@ -5,7 +5,7 @@
 import { inspect } from 'util';
 
 import { TInt, TString } from 'typecheck';
-import { CommonBase, DataUtil, ErrorUtil, Errors } from 'util-common';
+import { CommonBase, DataUtil, ErrorUtil, Errors, Functor } from 'util-common';
 
 import LogTag from './LogTag';
 
@@ -112,7 +112,7 @@ export default class LogRecord extends CommonBase {
     TString.label(name);
     args = DataUtil.deepFreeze(args);
 
-    return new LogRecord(timeMsec, stack, tag, name, ...args);
+    return new LogRecord(timeMsec, stack, tag, new Functor(name, ...args));
   }
 
   /**
@@ -131,7 +131,7 @@ export default class LogRecord extends CommonBase {
    */
   static forMessage(timeMsec, stack, tag, level, ...message) {
     LogRecord.checkMessageLevel(level);
-    return new LogRecord(timeMsec, stack, tag, level, ...message);
+    return new LogRecord(timeMsec, stack, tag, new Functor(level, ...message));
   }
 
   /**
@@ -153,8 +153,9 @@ export default class LogRecord extends CommonBase {
     const date        = new Date(timeMsec);
     const utcString   = LogRecord._utcTimeString(date);
     const localString = LogRecord._localTimeString(date);
+    const payload     = new Functor(TIME_NAME, utcString, localString);
 
-    return new LogRecord(timeMsec, null, LogTag.TIME, TIME_NAME, utcString, localString);
+    return new LogRecord(timeMsec, null, LogTag.TIME, payload);
   }
 
   /**
@@ -230,10 +231,10 @@ export default class LogRecord extends CommonBase {
    *   available.
    * @param {LogTag} tag Tag (component name and optional context) associated
    *   with the message.
-   * @param {string} level Severity level.
-   * @param {...*} message Message to log.
+   * @param {Functor} payload Main log payload. In the case of ad-hoc
+   *   human-oriented messages, the functor name is the severity level.
    */
-  constructor(timeMsec, stack, tag, level, ...message) {
+  constructor(timeMsec, stack, tag, payload) {
     super();
 
     /** {Int} Timestamp of the message. */
@@ -253,13 +254,10 @@ export default class LogRecord extends CommonBase {
     this._tag = LogTag.check(tag);
 
     /**
-     * {string} Message severity level (for ad-hoc human-oriented messages) or
-     * event name (for structured events).
+     * {Functor} Main log payload. In the case of ad-hoc human-oriented
+     * messages, the functor name is the severity level.
      */
-    this._level = TString.label(level);
-
-    /** {array<*>} Message to log. */
-    this._message = message;
+    this._payload = Functor.check(payload);
 
     Object.freeze(this);
   }
@@ -279,12 +277,20 @@ export default class LogRecord extends CommonBase {
 
   /** {string} Severity level. */
   get level() {
-    return this._level;
+    return this._payload.name;
   }
 
   /** {array<*>} Message to log. */
   get message() {
-    return this._message;
+    return this._payload.args;
+  }
+
+  /**
+   * {Functor} Main log payload. In the case of ad-hoc human-oriented
+   * messages, the functor name is the severity level.
+   */
+  get payload() {
+    return this._payload;
   }
 
   /**
@@ -309,8 +315,8 @@ export default class LogRecord extends CommonBase {
     let   atLineStart = true;
     let   anyNewlines = false;
 
-    for (const m of this.message) {
-      const s = LogRecord.inspectValue(m);
+    for (const a of this.payload.args) {
+      const s = LogRecord.inspectValue(a);
       const hasNewline = /\n$/.test(s);
 
       if (!atLineStart) {
@@ -331,7 +337,7 @@ export default class LogRecord extends CommonBase {
     // more info.
     if (   this.isMessage()
         && (this.stack !== null)
-        && WANT_STACK_LEVELS.has(this.level)
+        && WANT_STACK_LEVELS.has(this.payload.name)
         && !this.hasError()) {
       if (!anyNewlines) {
         // Appending the stack will make an otherwise single-line result into a
@@ -390,7 +396,7 @@ export default class LogRecord extends CommonBase {
       throw Errors.badUse('Requires a timestamp instance.');
     }
 
-    return this.message;
+    return this.payload.args;
   }
 
   /**
@@ -401,8 +407,8 @@ export default class LogRecord extends CommonBase {
    *   one `Error`.
    */
   hasError() {
-    for (const m of this._message) {
-      if (m instanceof Error) {
+    for (const a of this.payload.args) {
+      if (a instanceof Error) {
         return true;
       }
     }
@@ -431,7 +437,7 @@ export default class LogRecord extends CommonBase {
   isTime() {
     // The first check (the tag) is probably sufficient, but it probably can't
     // hurt to be a little pickier.
-    return (this._tag === LogTag.TIME) && (this._level === TIME_NAME);
+    return (this._tag === LogTag.TIME) && (this.payload.name === TIME_NAME);
   }
 
   /**
