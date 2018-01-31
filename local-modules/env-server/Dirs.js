@@ -20,10 +20,10 @@ export default class Dirs extends Singleton {
     super();
 
     /** {string} Base directory of the product. */
-    this._baseDir = Dirs._findBaseDir();
+    this._baseDirectory = Dirs._findBaseDirectory();
 
     /** {string} "Var" directory to use. */
-    this._varDir = Dirs._findAndEnsureVarDir(this._baseDir);
+    this._varDirectory = Dirs._findAndEnsureVarDirectory(this._baseDirectory);
 
     Object.freeze(this);
   }
@@ -33,7 +33,7 @@ export default class Dirs extends Singleton {
    * as working files when running in development mode.
    */
   get BASE_DIR() {
-    return this._baseDir;
+    return this._baseDirectory;
   }
 
   /**
@@ -75,7 +75,7 @@ export default class Dirs extends Singleton {
    * is, it will create the directory if necessary).
    */
   get VAR_DIR() {
-    return this._varDir;
+    return this._varDirectory;
   }
 
   /**
@@ -85,7 +85,7 @@ export default class Dirs extends Singleton {
    *
    * @returns {string} The base directory path.
    */
-  static _findBaseDir() {
+  static _findBaseDirectory() {
     let dir = __dirname;
 
     for (;;) {
@@ -114,7 +114,7 @@ export default class Dirs extends Singleton {
    * @param {string} baseDir The product base directory.
    * @returns {string} The "var" directory.
    */
-  static _findAndEnsureVarDir(baseDir) {
+  static _findAndEnsureVarDirectory(baseDir) {
     const result = Hooks.theOne.findVarDirectory(baseDir);
 
     Dirs._ensureDir(result);
