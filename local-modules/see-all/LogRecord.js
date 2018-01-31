@@ -276,6 +276,22 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * {array<string>} Two-element array of the time strings embedded in timestamp
+   * instances, namely the UTC time string and the local-timezone time string.
+   * It is only valid to access this property on timestamp instances; it is an
+   * error to use it with any other instance.
+   */
+  get timeStrings() {
+    if (!this.isTime()) {
+      throw Errors.badUse('Requires a timestamp instance.');
+    }
+
+    const [utc, slash_unused, local] = this.message;
+
+    return [utc, local];
+  }
+
+  /**
    * Indicates whether any of the `message` arguments of this instance is an
    * `Error`.
    *

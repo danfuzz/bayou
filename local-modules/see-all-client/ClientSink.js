@@ -72,8 +72,8 @@ export default class ClientSink extends BaseSink {
    * @param {LogRecord} logRecord Log record, which must be for a time.
    */
   _logTime(logRecord) {
-    const { message, tag: { main } } = logRecord;
-    console.log(`%c[${main}] %c${message[0]} %c${message[1]} %c${message[2]}`,
+    const [utc, local] = logRecord.timeStrings;
+    console.log(`%c[time] %c${utc} %c/ %c${local}`,
       'color: #999; font-weight: bold',
       'color: #66a; font-weight: bold',
       'color: #999; font-weight: bold',

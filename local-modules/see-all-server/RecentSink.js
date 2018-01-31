@@ -119,7 +119,7 @@ export default class RecentSink extends BaseSink {
     let   body;
 
     if (logRecord.isTime()) {
-      const [utc, slash_unused, local] = logRecord.message;
+      const [utc, local] = logRecord.timeStrings;
       const utcString = chalk.blue.bold(utc);
       const localString = chalk.blue.dim.bold(local);
       body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;

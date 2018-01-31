@@ -227,8 +227,8 @@ export default class ServerSink extends BaseSink {
    * @returns {string} Corresponding colorized message.
    */
   static _timeString(logRecord) {
-    const [utc, separator, local] = logRecord.message;
+    const [utc, local] = logRecord.timeStrings;
 
-    return `${chalk.blue.bold(utc)} ${separator} ${chalk.blue.dim.bold(local)}`;
+    return `${chalk.blue.bold(utc)} / ${chalk.blue.dim.bold(local)}`;
   }
 }
