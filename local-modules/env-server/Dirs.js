@@ -5,6 +5,7 @@
 import fs from 'fs';
 import path from 'path';
 
+import { Hooks } from 'hooks-server';
 import { Errors, Singleton } from 'util-common';
 
 
@@ -20,6 +21,11 @@ export default class Dirs extends Singleton {
 
     /** {string} Base directory of the product. */
     this._baseDir = Dirs._findBaseDir();
+
+    /** {string} "Var" directory to use. */
+    this._varDir = Dirs._findAndEnsureVarDir(this._baseDir);
+
+    Object.freeze(this);
   }
 
   /**
@@ -69,13 +75,7 @@ export default class Dirs extends Singleton {
    * is, it will create the directory if necessary).
    */
   get VAR_DIR() {
-    // TODO: In production, this will want to be somewhere other than under the
-    // product deployment base directory. This might reasonably be configured
-    // via an item in `hooks-server`.
-    const result = path.resolve(this.BASE_DIR, 'var');
-
-    Dirs._ensureDir(result);
-    return result;
+    return this._varDir;
   }
 
   /**
@@ -105,6 +105,20 @@ export default class Dirs extends Singleton {
 
       dir = path.dirname(dir);
     }
+  }
+
+  /**
+   * Figures out where the "var" directory is, by deferring to the salient hook.
+   * In addition, creates the directory if it doesn't already exist.
+   *
+   * @param {string} baseDir The product base directory.
+   * @returns {string} The "var" directory.
+   */
+  static _findAndEnsureVarDir(baseDir) {
+    const result = Hooks.theOne.findVarDirectory(baseDir);
+
+    Dirs._ensureDir(result);
+    return result;
   }
 
   /**

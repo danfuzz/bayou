@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import path from 'path';
+
 import { LocalFileStore } from 'file-store-local';
 import { Hooks as hooksCommon_Hooks } from 'hooks-common';
 import { Errors, Singleton } from 'util-common';
@@ -62,6 +64,24 @@ export default class Hooks extends Singleton {
     }
 
     throw Errors.badData('Missing `host` header on request.');
+  }
+
+  /**
+   * Determines the location of the "var" (variable / mutable data) directory,
+   * returning an absolute path to it. (This is where, for example, log files
+   * are stored.) The directory need not exist; the system will take care of
+   * creating it as needed.
+   *
+   * The default implementation (here) returns the base product directory (the
+   * argument), with `/var` appended. It's expected that in a production
+   * environment, it will be common to return an unrelated filesystem path
+   * (because, e.g., the base product directory is recursively read-only).
+   *
+   * @param {string} baseDir The base product directory.
+   * @returns {string} Absolute filesystem path to the "var" directory to use.
+   */
+  findVarDirectory(baseDir) {
+    return path.join(baseDir, 'var');
   }
 
   /**
