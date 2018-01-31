@@ -41,6 +41,24 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Constructs an instance of this class for representing an ad-hoc
+   * human-oriented message.
+   *
+   * @param {Int} timeMsec Timestamp of the message.
+   * @param {string|null} stack Stack trace representing the call site which
+   *   caused this instance to be created. or `null` if that information is not
+   *   available.
+   * @param {LogTag} tag Tag (component name and optional context) associated
+   *   with the message.
+   * @param {string} level Severity level.
+   * @param {...*} message Message to log.
+   * @returns {LogRecord} Appropriately-constructed instance of this class.
+   */
+  static forMessage(timeMsec, stack, tag, level, ...message) {
+    return new LogRecord(timeMsec, stack, tag, level, ...message);
+  }
+
+  /**
    * Constructs an instance of this class for representing a timestamp. The
    * result is an `info` level record tagged with `time`, and with a three-array
    * `messages` argument consisting of `[<utc>, '/', <local>]`, where `<utc>`
@@ -60,7 +78,7 @@ export default class LogRecord extends CommonBase {
     const utcString   = LogRecord._utcTimeString(date);
     const localString = LogRecord._localTimeString(date);
 
-    return new LogRecord(timeMsec, null, 'info', LogTag.TIME,
+    return LogRecord.forMessage(timeMsec, null, LogTag.TIME, 'info',
       utcString, '/', localString);
   }
 
@@ -127,18 +145,20 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
-   * Constructs an instance.
+   * Constructs an instance. **Note:** This constructor is meant to _only_ be
+   * used within this class; external callers should construct instances via
+   * one of the static constructor methods, e.g. {@link #forMessage}.
    *
    * @param {Int} timeMsec Timestamp of the message.
    * @param {string|null} stack Stack trace representing the call site which
    *   caused this instance to be created. or `null` if that information is not
    *   available.
-   * @param {string} level Severity level.
    * @param {LogTag} tag Tag (component name and optional context) associated
    *   with the message.
+   * @param {string} level Severity level.
    * @param {...*} message Message to log.
    */
-  constructor(timeMsec, stack, level, tag, ...message) {
+  constructor(timeMsec, stack, tag, level, ...message) {
     super();
 
     /** {Int} Timestamp of the message. */
@@ -258,6 +278,22 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * {array<string>} Two-element array of the time strings embedded in timestamp
+   * instances, namely the UTC time string and the local-timezone time string.
+   * It is only valid to access this property on timestamp instances; it is an
+   * error to use it with any other instance.
+   */
+  get timeStrings() {
+    if (!this.isTime()) {
+      throw Errors.badUse('Requires a timestamp instance.');
+    }
+
+    const [utc, slash_unused, local] = this.message;
+
+    return [utc, local];
+  }
+
+  /**
    * Indicates whether any of the `message` arguments of this instance is an
    * `Error`.
    *
@@ -272,6 +308,18 @@ export default class LogRecord extends CommonBase {
     }
 
     return false;
+  }
+
+  /**
+   * Indicates whether this instance represents an ad-hoc message, as for
+   * example constructed by {@link #forMessage}.
+   *
+   * @returns {boolean} `true` iff this is an ad-hoc message instance.
+   */
+  isMessage() {
+    // For now, anything that's not a "time" is a message. **TODO:** This will
+    // change when we introduce structured events as a log type.
+    return !this.isTime();
   }
 
   /**
@@ -290,14 +338,21 @@ export default class LogRecord extends CommonBase {
 
   /**
    * Constructs an instance just like this one, except with `message` replaced
-   * with the indicated contents.
+   * with the indicated contents. It is only valid to call this method on
+   * instances for which {@link #isMessage} returns `true`; other cases will
+   * throw an error.
    *
    * @param {...*} message New message.
    * @returns {LogRecord} An appropriately-constructed instance.
    */
   withMessage(...message) {
     const { timeMsec, stack, level, tag } = this;
-    return new LogRecord(timeMsec, stack, level, tag, ...message);
+
+    if (!this.isMessage()) {
+      throw Errors.badUse('Requires a message instance.');
+    }
+
+    return LogRecord.forMessage(timeMsec, stack, tag, level, ...message);
   }
 
   /**
