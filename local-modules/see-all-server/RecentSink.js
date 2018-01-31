@@ -130,8 +130,8 @@ export default class RecentSink extends BaseSink {
       body = logRecord.payload.args[0];
     }
 
-    // Color the prefix according to level.
-    switch (logRecord.level) {
+    // Color the prefix depending on the event name / severity level.
+    switch (logRecord.payload.name) {
       case 'error': { prefix = chalk.red.bold(prefix);    break; }
       case 'warn':  { prefix = chalk.yellow.bold(prefix); break; }
       default:      { prefix = chalk.dim.bold(prefix);    break; }

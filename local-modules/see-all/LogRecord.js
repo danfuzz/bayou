@@ -263,8 +263,8 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
-   * {string|null} The standard-form context string for this instance, or `null`
-   * if there is no context.
+   * {string|null} The standard-form tag context string for this instance, or
+   * `null` if there is no context.
    */
   get contextString() {
     const context = this.tag.context;
@@ -272,12 +272,6 @@ export default class LogRecord extends CommonBase {
     return (context.length === 0)
       ? null
       : `[${context.join(' ')}]`;
-  }
-
-
-  /** {string} Severity level. */
-  get level() {
-    return this._payload.name;
   }
 
   /**
@@ -353,18 +347,17 @@ export default class LogRecord extends CommonBase {
    * instance.
    */
   get prefixString() {
-    const { level, tag: { main } } = this;
-    const levelStr = ((level === 'info') || !this.isMessage())
+    const { payload: { name }, tag: { main } } = this;
+    const levelStr = ((name === 'info') || !this.isMessage())
       ? ''
-      : ` ${level[0].toUpperCase()}`;
+      : ` ${name[0].toUpperCase()}`;
 
     return `[${main}${levelStr}]`;
   }
 
   /**
-   * {string|null} stack Stack trace representing the call site which caused
-   * this instance to be created. or `null` if that information is not
-   * available.
+   * {string|null} Stack trace representing the call site which caused this
+   * instance to be created. or `null` if that information is not available.
    */
   get stack() {
     return this._stack;
@@ -445,13 +438,15 @@ export default class LogRecord extends CommonBase {
    * @returns {LogRecord} An appropriately-constructed instance.
    */
   withMessage(...message) {
-    const { timeMsec, stack, level, tag } = this;
+    const { timeMsec, stack, tag, payload } = this;
 
     if (!this.isMessage()) {
       throw Errors.badUse('Requires a message instance.');
     }
 
-    return LogRecord.forMessage(timeMsec, stack, tag, level, ...message);
+    const newPayload = new Functor(payload.name, ...message);
+
+    return new LogRecord(timeMsec, stack, tag, newPayload);
   }
 
   /**

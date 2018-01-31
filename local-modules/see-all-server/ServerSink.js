@@ -149,8 +149,8 @@ export default class ServerSink extends BaseSink {
     let   text   = logRecord.prefixString;
     //const length = text.length + 1; // `+1` for the space at the end.
 
-    // Color the prefix according to level.
-    switch (logRecord.level) {
+    // Color the prefix depending on the event name / severity level.
+    switch (logRecord.payload.name) {
       case 'error': { text = chalk.red.bold(text);    break; }
       case 'warn':  { text = chalk.yellow.bold(text); break; }
       default:      { text = chalk.dim.bold(text);    break; }

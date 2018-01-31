@@ -32,30 +32,30 @@ export default class ClientSink extends BaseSink {
       return;
     }
 
-    const { level, message } = logRecord;
+    const payload = logRecord.payload;
     const [prefixFormat, ...args] = this._makePrefix(logRecord);
     const formatStr = [prefixFormat]; // We append to this array and `args`.
 
     let logMethod;
-    switch (level) {
+    switch (payload.name) {
       case 'error': { logMethod = 'error'; break; }
       case 'warn':  { logMethod = 'warn';  break; }
       default:      { logMethod = 'log';   break; }
     }
 
-    for (const m of message) {
-      switch (typeof m) {
-        case 'object':   { formatStr.push((m === null) ? ' %s' : ' %o'); break; }
+    for (const a of payload.args) {
+      switch (typeof a) {
+        case 'object':   { formatStr.push((a === null) ? ' %s' : ' %o'); break; }
         case 'function': { formatStr.push(' %o');                        break; }
         default:         { formatStr.push(' %s');                        break; }
       }
 
-      args.push(m);
+      args.push(a);
     }
 
     console[logMethod](formatStr.join(''), ...args);
 
-    if (level === 'debug') {
+    if (payload.name === 'debug') {
       // The browser's `console` methods _mostly_ do the right thing with regard
       // to providing distinguishing markings and stack traces when appropriate.
       // We just disagree about `debug`, so in that case we include an explicit
@@ -89,8 +89,9 @@ export default class ClientSink extends BaseSink {
    * @returns {array<string>} The prefix.
    */
   _makePrefix(logRecord) {
+    // Color the prefix depending on the event name / severity level.
     let prefixColor;
-    switch (logRecord.level) {
+    switch (logRecord.payload.name) {
       case 'error': { prefixColor = '#a44'; break; }
       case 'warn':  { prefixColor = '#a70'; break; }
       default:      { prefixColor = '#999'; break; }
