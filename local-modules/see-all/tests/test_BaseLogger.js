@@ -45,7 +45,7 @@ describe('see-all/BaseLogger', () => {
       });
     }
 
-    for (const level of LogRecord.LEVELS) {
+    for (const level of LogRecord.MESSAGE_LEVELS) {
       test(level);
     }
   });
