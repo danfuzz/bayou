@@ -15,13 +15,35 @@ import BearerTokens from './BearerTokens';
  */
 export default class Hooks extends Singleton {
   /**
-   * Called during regular system startup (e.g. and in particular _not_ when
-   * just building a client bundle offline). This is called after the very
-   * basic initialization but before any document-handling code has been
-   * initialized or run.
+   * {BearerTokens} The object which validates and authorizes bearer tokens.
+   * See that (base / default) class for details.
    */
-  async run() {
-    // This space intentionally left blank.
+  get bearerTokens() {
+    return BearerTokens.theOne;
+  }
+
+  /**
+   * {BaseFileStore} The object which provides access to file storage (roughly
+   * speaking, the filesystem to store the "files" this system deals with). This
+   * is an instance of a subclass of `BaseFileStore`, as defined by the
+   * `file-store` module.
+   */
+  get fileStore() {
+    return LocalFileStore.theOne;
+  }
+
+  /**
+   * {Int} The local port to listen for connections on by default. This
+   * typically but does not _necessarily_ match the values returned by
+   * {@link #baseUrlFromRequest}. It won't match in cases where this server runs
+   * behind a reverse proxy, for example. It also won't match when the system
+   * is brought up in `test` mode, as that mode will pick an arbitrary port to
+   * listen on.
+   *
+   * This (default) implementation of the property always returns `8080`.
+   */
+  get listenPort() {
+    return 8080;
   }
 
   /**
@@ -43,24 +65,6 @@ export default class Hooks extends Singleton {
   }
 
   /**
-   * {BearerTokens} The object which validates and authorizes bearer tokens.
-   * See that (base / default) class for details.
-   */
-  get bearerTokens() {
-    return BearerTokens.theOne;
-  }
-
-  /**
-   * {BaseFileStore} The object which provides access to file storage (roughly
-   * speaking, the filesystem to store the "files" this system deals with). This
-   * is an instance of a subclass of `BaseFileStore`, as defined by the
-   * `file-store` module.
-   */
-  get fileStore() {
-    return LocalFileStore.theOne;
-  }
-
-  /**
    * Checks whether the given value is syntactically valid as a file ID.
    * This method is only ever called with a non-empty string.
    *
@@ -75,16 +79,12 @@ export default class Hooks extends Singleton {
   }
 
   /**
-   * {Int} The local port to listen for connections on by default. This
-   * typically but does not _necessarily_ match the values returned by
-   * {@link #baseUrlFromRequest}. It won't match in cases where this server runs
-   * behind a reverse proxy, for example. It also won't match when the system
-   * is brought up in `test` mode, as that mode will pick an arbitrary port to
-   * listen on.
-   *
-   * This (default) implementation of the property always returns `8080`.
+   * Called during regular system startup (e.g. and in particular _not_ when
+   * just building a client bundle offline). This is called after the very
+   * basic initialization but before any document-handling code has been
+   * initialized or run.
    */
-  get listenPort() {
-    return 8080;
+  async run() {
+    // This space intentionally left blank.
   }
 }
