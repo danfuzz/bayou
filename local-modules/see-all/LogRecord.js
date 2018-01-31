@@ -48,14 +48,14 @@ export default class LogRecord extends CommonBase {
    * @param {string|null} stack Stack trace representing the call site which
    *   caused this instance to be created. or `null` if that information is not
    *   available.
-   * @param {string} level Severity level.
    * @param {LogTag} tag Tag (component name and optional context) associated
    *   with the message.
+   * @param {string} level Severity level.
    * @param {...*} message Message to log.
    * @returns {LogRecord} Appropriately-constructed instance of this class.
    */
-  static forMessage(timeMsec, stack, level, tag, ...message) {
-    return new LogRecord(timeMsec, stack, level, tag, ...message);
+  static forMessage(timeMsec, stack, tag, level, ...message) {
+    return new LogRecord(timeMsec, stack, tag, level, ...message);
   }
 
   /**
@@ -78,7 +78,7 @@ export default class LogRecord extends CommonBase {
     const utcString   = LogRecord._utcTimeString(date);
     const localString = LogRecord._localTimeString(date);
 
-    return LogRecord.forMessage(timeMsec, null, 'info', LogTag.TIME,
+    return LogRecord.forMessage(timeMsec, null, LogTag.TIME, 'info',
       utcString, '/', localString);
   }
 
@@ -151,12 +151,12 @@ export default class LogRecord extends CommonBase {
    * @param {string|null} stack Stack trace representing the call site which
    *   caused this instance to be created. or `null` if that information is not
    *   available.
-   * @param {string} level Severity level.
    * @param {LogTag} tag Tag (component name and optional context) associated
    *   with the message.
+   * @param {string} level Severity level.
    * @param {...*} message Message to log.
    */
-  constructor(timeMsec, stack, level, tag, ...message) {
+  constructor(timeMsec, stack, tag, level, ...message) {
     super();
 
     /** {Int} Timestamp of the message. */
@@ -350,7 +350,7 @@ export default class LogRecord extends CommonBase {
       throw Errors.badUse('Requires a message instance.');
     }
 
-    return LogRecord.forMessage(timeMsec, stack, level, tag, ...message);
+    return LogRecord.forMessage(timeMsec, stack, tag, level, ...message);
   }
 
   /**

@@ -83,7 +83,7 @@ export default class AllSinks extends Singleton {
     }
 
     const logRecord =
-      LogRecord.forMessage(this._nowMsec(), LogRecord.makeStack(), level, tag, ...message);
+      LogRecord.forMessage(this._nowMsec(), LogRecord.makeStack(), tag, level, ...message);
 
     for (const s of this._sinks) {
       s.sinkLog(logRecord);

@@ -52,7 +52,7 @@ describe('see-all/LogRecord', () => {
       const LOG_TAG = new LogTag('whee');
 
       function test(expected, ...message) {
-        const lr = LogRecord.forMessage(0, 'some-stack-trace', 'info', LOG_TAG, ...message);
+        const lr = LogRecord.forMessage(0, 'some-stack-trace', LOG_TAG, 'info', ...message);
         const got = lr.messageString;
         assert.strictEqual(got, expected);
       }
