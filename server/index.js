@@ -141,6 +141,12 @@ async function run(mode) {
     log.info(k, '=', info[k]);
   }
 
+  // A little spew to indicate where in the filesystem we live.
+  log.info(
+    'Directories:\n' +
+    `  product: ${Dirs.theOne.BASE_DIR}\n` +
+    `  var:     ${Dirs.theOne.VAR_DIR}`);
+
   if (mode === 'dev') {
     // We're in dev mode. This starts the system that live-syncs the client
     // source.

@@ -38,19 +38,26 @@ export default class DevMode extends Singleton {
   constructor() {
     super();
 
-    /** Base product output directory. */
+    /** {string} Base product output directory. */
     this._outDir = Dirs.theOne.BASE_DIR;
-    log.info('Product directory:', this._outDir);
 
-    /** The mappings from source to target directories, for the client code. */
+    /**
+     * {object} The mappings from source to target directories, for the client
+     * code.
+     */
     this._clientMappings =
       DevMode._makeMappings(path.resolve(this._outDir, 'client'));
 
-    /** The mappings from source to target directories, for the server code. */
+    /**
+     * {object} The mappings from source to target directories, for the server
+     * code.
+     */
     this._serverMappings =
       DevMode._makeMappings(path.resolve(this._outDir, 'server'));
 
-    /** Are we in the middle of shutting down (due to a server change)? */
+    /**
+     * {boolean} Are we in the middle of shutting down (due to a server change)?
+     */
     this._shuttingDown = false;
   }
 
