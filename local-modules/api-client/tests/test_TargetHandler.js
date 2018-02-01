@@ -76,40 +76,6 @@ describe('api-common/TargetHandler', () => {
     });
   });
 
-  describe('apply()', () => {
-    it('should always throw', () => {
-      const func = () => { throw new Error('should not have been called'); };
-      const th = new TargetHandler(func, 'some-target-id');
-      const proxy = new Proxy(func, th);
-      assert.throws(() => th.apply(func, proxy, [1, 2, 3]), /badUse/);
-    });
-  });
-
-  describe('construct()', () => {
-    it('should always throw', () => {
-      const func = () => { throw new Error('should not have been called'); };
-      const th = new TargetHandler(func, 'some-target-id');
-      const proxy = new Proxy(func, th);
-      assert.throws(() => th.construct(func, [1, 2, 3], proxy), /badUse/);
-    });
-  });
-
-  describe('defineProperty()', () => {
-    it('should always return `false`', () => {
-      const func = () => { throw new Error('should not have been called'); };
-      const th = new TargetHandler(func, 'some-target-id');
-      assert.isFalse(th.defineProperty({}, 'blort', { value: 123 }));
-    });
-  });
-
-  describe('deleteProperty()', () => {
-    it('should always return `false`', () => {
-      const func = () => { throw new Error('should not have been called'); };
-      const th = new TargetHandler(func, 'some-target-id');
-      assert.isFalse(th.deleteProperty({ blort: 10 }, 'blort'));
-    });
-  });
-
   describe('get()', () => {
     it('should return `undefined` for verboten property names', () => {
       const func = () => { throw new Error('should not have been called'); };
@@ -176,74 +142,6 @@ describe('api-common/TargetHandler', () => {
       test('foo', foo);
       test('bar', bar);
       test('zor', zor);
-    });
-  });
-
-  describe('getOwnPropertyDescriptor()', () => {
-    it('should always throw', () => {
-      const func = () => { throw new Error('should not have been called'); };
-      const th = new TargetHandler(func, 'some-target-id');
-      assert.throws(() => th.getOwnPropertyDescriptor({ blort: 123 }, 'blort'));
-    });
-  });
-
-  describe('getPrototypeOf()', () => {
-    it('should return the target\'s prototype', () => {
-      const func = () => { throw new Error('should not have been called'); };
-      const th = new TargetHandler(func, 'some-target-id');
-      const obj = new Map();
-      assert.strictEqual(th.getPrototypeOf(obj), Object.getPrototypeOf(obj));
-    });
-  });
-
-  describe('has()', () => {
-    it('should always return `false`', () => {
-      const func = () => { throw new Error('should not have been called'); };
-      const th = new TargetHandler(func, 'some-target-id');
-      assert.isFalse(th.has({ blort: 10 }, 'blort'));
-    });
-  });
-
-  describe('isExtensible()', () => {
-    it('should always return `false`', () => {
-      const func = () => { throw new Error('should not have been called'); };
-      const th = new TargetHandler(func, 'some-target-id');
-      assert.isFalse(th.isExtensible({}));
-    });
-  });
-
-  describe('ownKeys()', () => {
-    it('should always return `[]`', () => {
-      const func = () => { throw new Error('should not have been called'); };
-      const th = new TargetHandler(func, 'some-target-id');
-      assert.deepEqual(th.ownKeys({ a: 10, b: 20 }), []);
-    });
-  });
-
-  describe('preventExstensions()', () => {
-    it('should always return `true`', () => {
-      const func = () => { throw new Error('should not have been called'); };
-      const th = new TargetHandler(func, 'some-target-id');
-      assert.isFalse(th.isExtensible({}));
-    });
-  });
-
-  describe('set()', () => {
-    it('should always return `false`', () => {
-      const func = () => { throw new Error('should not have been called'); };
-      const th = new TargetHandler(func, 'some-target-id');
-      const proxy = new Proxy(func, th);
-      assert.isFalse(th.set({}, 'blort', 123, proxy));
-    });
-  });
-
-  describe('setPrototypeOf()', () => {
-    it('should always return `false`', () => {
-      const func = () => { throw new Error('should not have been called'); };
-      const th = new TargetHandler(func, 'some-target-id');
-
-      assert.isFalse(th.setPrototypeOf({}, null));
-      assert.isFalse(th.setPrototypeOf({}, {}));
     });
   });
 });
