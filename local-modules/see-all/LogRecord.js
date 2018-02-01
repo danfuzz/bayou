@@ -96,6 +96,20 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Validates a structured event name. Throws an error if invalid.
+   *
+   * @param {string} name Event name.
+   * @returns {string} `name`, if it is indeed valid.
+   */
+  static checkEventName(name) {
+    if (RESERVED_EVENT_NAMES.has(name)) {
+      throw Errors.badValue(name, 'structured event name');
+    }
+
+    return name;
+  }
+
+  /**
    * Validates a logging severity level value as used for _message_
    * (human-oriented message) log records. Throws an error if invalid.
    *
@@ -127,9 +141,9 @@ export default class LogRecord extends CommonBase {
    * @returns {LogRecord} Appropriately-constructed instance of this class.
    */
   static forEvent(timeMsec, stack, tag, payload) {
-    if (!RESERVED_EVENT_NAMES.has(payload.name)) {
-      throw Errors.badValue(payload.name, 'structured event name');
-    } else if (!DataUtil.isDeepFrozen(payload.args)) {
+    LogRecord.checkEventName(payload.name);
+
+    if (!DataUtil.isDeepFrozen(payload.args)) {
       throw Errors.badValue(payload, 'deep-frozen data');
     }
 

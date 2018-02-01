@@ -7,13 +7,35 @@ import { describe, it } from 'mocha';
 
 import { LogRecord } from 'see-all';
 import { MockLogger } from 'see-all/mocks';
+import { Functor } from 'util-common';
 
 // This class is tested via its subclass `MockLogger`, which records all calls
-// made to `_impl_logMessage()`.
+// made to `_impl_logEvent()` and `_impl_logMessage()`.
 
 describe('see-all/BaseLogger', () => {
+  describe('logEvent()', () => {
+    it('calls through to `_impl_logEvent()` when given valid arguments', () => {
+      const logger  = new MockLogger();
+      const payload = new Functor('blort', 1, '2', [3]);
+
+      logger.logEvent(payload.name, ...payload.args);
+
+      assert.deepEqual(logger.record, [['event', [], payload]]);
+    });
+
+    it('rejects invalid payload names', () => {
+      const logger = new MockLogger();
+      assert.throws(() => logger.logEvent('info', 1, 2, 3));
+    });
+
+    it('rejects non-data payload arugments', () => {
+      const logger = new MockLogger();
+      assert.throws(() => logger.logEvent('blort', new Map()));
+    });
+  });
+
   describe('logMessage()', () => {
-    it('calls through to `_log_impl()` when given valid arguments', () => {
+    it('calls through to `_impl_logMessage()` when given valid arguments', () => {
       const logger = new MockLogger();
       logger.logMessage('info', 'blort', 7);
 
@@ -29,7 +51,7 @@ describe('see-all/BaseLogger', () => {
   describe('level-specific logging methods', () => {
     function test(level) {
       describe(`${level}()`, () => {
-        it('calls through to `_log_impl()` with the same arguments', () => {
+        it('calls through to `_impl_logMessage()` with the same arguments', () => {
           const logger = new MockLogger();
           logger[level](1, 2, 3);
 

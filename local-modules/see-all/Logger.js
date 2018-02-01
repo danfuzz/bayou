@@ -40,6 +40,16 @@ export default class Logger extends BaseLogger {
   }
 
   /**
+   * Actual logging implementation for structured events, as specified by the
+   * superclass.
+   *
+   * @param {Functor} payload Event payload.
+   */
+  _impl_logEvent(payload) {
+    AllSinks.theOne.logEvent(this._tag, payload);
+  }
+
+  /**
    * Actual logging implementation for ad-hoc messages, as specified by the
    * superclass.
    *
@@ -59,7 +69,6 @@ export default class Logger extends BaseLogger {
   /**
    * Subclass-specific context adder.
    *
-   * @abstract
    * @param {...string} context Additional context strings. Guaranteed to be
    *   valid.
    * @returns {BaseLogger} An appropriately-constructed instance of this class.
