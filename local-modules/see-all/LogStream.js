@@ -35,6 +35,22 @@ export default class LogStream extends CommonBase {
    * Implementation of standard `stream.Writable` method.
    *
    * @param {string|Buffer} chunk What to write.
+   * @param {string} [encoding = null] Name of character encoding to use when
+   *   `chunk` is passed as a string.
+   * @param {function} [callback_unused = null] Function to call after stream
+   *   is closed. This is marked as unused because, as implemented, logger
+   *   streams _never_ actually get closed.
+   */
+  end(chunk, encoding = null, callback_unused = null) {
+    // We don't pass the `callback` because this stream never actually gets
+    // ended (which is when the `callback` would be called).
+    this.write(chunk, encoding);
+  }
+
+  /**
+   * Implementation of standard `stream.Writable` method.
+   *
+   * @param {string|Buffer} chunk What to write.
    * @param {string} [encoding_unused = null] Name of character encoding to use
    *   when `chunk` is passed as a string. Ignored in this case because this
    *   class operates on strings and so never has a reason to convert a string
@@ -61,21 +77,5 @@ export default class LogStream extends CommonBase {
         callback();
       })();
     }
-  }
-
-  /**
-   * Implementation of standard `stream.Writable` method.
-   *
-   * @param {string|Buffer} chunk What to write.
-   * @param {string} [encoding = null] Name of character encoding to use when
-   *   `chunk` is passed as a string.
-   * @param {function} [callback_unused = null] Function to call after stream
-   *   is closed. This is marked as unused because, as implemented, logger
-   *   streams _never_ actually get closed.
-   */
-  end(chunk, encoding = null, callback_unused = null) {
-    // We don't pass the `callback` because this stream never actually gets
-    // ended (which is when the `callback` would be called).
-    this.write(chunk, encoding);
   }
 }

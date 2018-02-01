@@ -38,33 +38,6 @@ export default class BaseLogger extends CommonBase {
   }
 
   /**
-   * Logs an ad-hoc message at the `error` level.
-   *
-   * @param {...*} message Message to log. See {@link #logMessage} for details.
-   */
-  error(...message) {
-    this.logMessage('error', ...message);
-  }
-
-  /**
-   * Logs an ad-hoc message at the `warn` level.
-   *
-   * @param {...*} message Message to log. See {@link #logMessage} for details.
-   */
-  warn(...message) {
-    this.logMessage('warn', ...message);
-  }
-
-  /**
-   * Logs an ad-hoc message at the `info` level.
-   *
-   * @param {...*} message Message to log. See {@link #logMessage} for details.
-   */
-  info(...message) {
-    this.logMessage('info', ...message);
-  }
-
-  /**
    * Logs an ad-hoc message at the `detail` level.
    *
    * @param {...*} message Message to log. See `log()` for details.
@@ -74,18 +47,21 @@ export default class BaseLogger extends CommonBase {
   }
 
   /**
-   * "What a terrible failure!" Logs an ad-hoc message at the `error` level,
-   * indicating a violation of an explicit or implied assertion. That is, this
-   * represents a "shouldn't happen" condition that in fact was detected to have
-   * happened. After so logging, this throws an exception, which is meant to
-   * cause the system to shut down (and potentially restart, if it's set up to
-   * self-heal).
+   * Logs an ad-hoc message at the `error` level.
    *
    * @param {...*} message Message to log. See {@link #logMessage} for details.
    */
-  wtf(...message) {
-    this.error('wtf', ...message);
-    throw Errors.wtf(message.join(' '));
+  error(...message) {
+    this.logMessage('error', ...message);
+  }
+
+  /**
+   * Logs an ad-hoc message at the `info` level.
+   *
+   * @param {...*} message Message to log. See {@link #logMessage} for details.
+   */
+  info(...message) {
+    this.logMessage('info', ...message);
   }
 
   /**
@@ -103,6 +79,15 @@ export default class BaseLogger extends CommonBase {
   }
 
   /**
+   * Logs an ad-hoc message at the `warn` level.
+   *
+   * @param {...*} message Message to log. See {@link #logMessage} for details.
+   */
+  warn(...message) {
+    this.logMessage('warn', ...message);
+  }
+
+  /**
    * Constructs and returns an instance just like this one, except with a tag
    * that has the given additional context.
    *
@@ -116,6 +101,21 @@ export default class BaseLogger extends CommonBase {
     }
 
     return this._impl_withAddedContext(...context);
+  }
+
+  /**
+   * "What a terrible failure!" Logs an ad-hoc message at the `error` level,
+   * indicating a violation of an explicit or implied assertion. That is, this
+   * represents a "shouldn't happen" condition that in fact was detected to have
+   * happened. After so logging, this throws an exception, which is meant to
+   * cause the system to shut down (and potentially restart, if it's set up to
+   * self-heal).
+   *
+   * @param {...*} message Message to log. See {@link #logMessage} for details.
+   */
+  wtf(...message) {
+    this.error('wtf', ...message);
+    throw Errors.wtf(message.join(' '));
   }
 
   /**

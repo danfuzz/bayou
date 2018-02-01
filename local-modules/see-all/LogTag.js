@@ -59,14 +59,14 @@ export default class LogTag extends CommonBase {
     Object.freeze(this);
   }
 
-  /** {string} Main tag. */
-  get main() {
-    return this._main;
-  }
-
   /** {array<string>} Context strings. Always a frozen array. */
   get context() {
     return this._context;
+  }
+
+  /** {string} Main tag. */
+  get main() {
+    return this._main;
   }
 
   /**
