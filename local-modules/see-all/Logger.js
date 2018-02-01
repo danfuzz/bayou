@@ -76,7 +76,7 @@ export default class Logger extends BaseLogger {
       return;
     }
 
-    AllSinks.theOne.logMessage(level, this._tag, ...message);
+    AllSinks.theOne.logMessage(this._tag, level, ...message);
   }
 
   /**

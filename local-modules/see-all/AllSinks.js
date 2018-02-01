@@ -82,11 +82,11 @@ export default class AllSinks extends Singleton {
    * the given arguments and the current time, and calls `sinkLog(logRecord)` on
    * each of the registered sinks.
    *
-   * @param {string} level Severity level.
    * @param {LogTag} tag Component and context.
+   * @param {string} level Severity level.
    * @param {...*} message Message to log.
    */
-  logMessage(level, tag, ...message) {
+  logMessage(tag, level, ...message) {
     const logRecord =
       LogRecord.forMessage(this._nowMsec(), LogRecord.makeStack(), tag, level, ...message);
 
