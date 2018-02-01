@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { ImageEmbed } from 'image-embed';
 import { QuillEvents } from 'quill-util';
 import { UtilityClass } from 'util-core';
 
@@ -51,23 +52,29 @@ export default class Macros extends UtilityClass {
       const value = args.shift();
 
       switch (macro) {
-        case 'clock': {
-          quill.insertEmbed(index. Clock.blotName, value);
+        case 'image': {
+          let url = 'https://www.desalvo.org/Steering.jpg';
+
+          if (ImageEmbed) {
+            if (value && typeof value === 'string') {
+              const [width, height] = value.split('x');
+
+              if (width && height) {
+                const w = parseInt(width);
+                const h = parseInt(height);
+
+                url = `https://picsum.photos/${w}/${h}`;
+              }
+            }
+
+            quill.insertEmbed(index, ImageEmbed.blotName, { url });
+          }
+
           break;
         }
 
-        case 'loremc': {
-          quill.insertText(index, LoremIpsum.characters(parseInt(value)));
-          break;
-        }
-
-        case 'loremp': {
-          quill.insertText(index, LoremIpsum.paragraphs(parseInt(value)));
-          break;
-        }
-
-        case 'loremw': {
-          quill.insertText(index, LoremIpsum.words(parseInt(value)));
+        case 'lorem': {
+          quill.insertText(index, LoremIpsum.generate(value));
           break;
         }
       }

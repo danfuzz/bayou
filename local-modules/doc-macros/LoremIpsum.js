@@ -2,6 +2,39 @@ import { UtilityClass } from 'util-core';
 
 export default class LoremIpsum extends UtilityClass {
   /**
+   * Produces lorem ipsum text of a given type and length based on a single
+   * argument (such as might be produced from the macro faciity).
+   *
+   * The argument is an integer count followed by a 'c', 'p', or 'w'.
+   * e.g. `75c`, `50w`, `5p` depending on whether the caller wants a specific
+   * number of characters, words, or paragraphs, respectively.
+   *
+   * @param {string} [arg=''] The two arguments for generation (count and type)
+   *  combined into a single string.
+   * @returns {string} Lorem ipsum text of the specified length.
+   */
+  static generate(arg='') {
+    const argregex = /^([0-9]+)(c|p|w)$/;
+    const match = arg.match(argregex);
+    let type = 'w';
+    let count = 50;
+
+    if (match) {
+      count = parseInt(match[1]);
+      type = match[2];
+    }
+
+    switch (type) {
+      case 'c': return LoremIpsum.characters(count);
+      case 'p': return LoremIpsum.paragraphs(count);
+      case 'w': return LoremIpsum.words(count);
+    }
+
+    // It should be impossible to get here, but just in case...
+    return '';
+  }
+
+  /**
    * Produces Lorem Ipsum text comprised of a specific number of characters.
    *
    * @param {Int} numCharacters The number of characters to produce in the

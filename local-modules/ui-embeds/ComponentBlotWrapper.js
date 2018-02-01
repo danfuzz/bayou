@@ -124,11 +124,11 @@ export default class BlockEmbedWrapper extends UtilityClass {
        * on the DOM element. This method is a required part of the blot
        * interface.
        *
-       * @param {object} value The `value` parameter that was passed to
+       * @param {object} [value={}] The `value` parameter that was passed to
        *   `quill.insertEmbed(blotName, value)`.
        * @returns {BlockEmbed} The constructed instance.
        */
-      static create(value) {
+      static create(value={}) {
         const node = super.create(value);
         const propTypes = component.propTypes;
 
