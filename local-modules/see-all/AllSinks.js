@@ -64,6 +64,20 @@ export default class AllSinks extends Singleton {
   }
 
   /**
+   * Constructs a structured-event instance of {@link LogRecord} based on
+   * the given arguments and the current time, and calls `sinkLog(logRecord)` on
+   * each of the registered sinks.
+   *
+   * @param {LogTag} tag Component and context.
+   * @param {Functor} payload Event payload.
+   */
+  logEvent(tag, payload) {
+    const logRecord = LogRecord.forEvent(this._nowMsec(), LogRecord.makeStack(), tag, payload);
+
+    this._sinkLog(logRecord);
+  }
+
+  /**
    * Constructs an ad-hoc human-oriented instance of {@link LogRecord} based on
    * the given arguments and the current time, and calls `sinkLog(logRecord)` on
    * each of the registered sinks.

@@ -96,23 +96,19 @@ export default class LogRecord extends CommonBase {
    *   available.
    * @param {LogTag} tag Tag (component name and optional context) associated
    *   with the message.
-   * @param {string} name Event name. This must _not_ correspond to the event
-   *   name used for any human-oriented message or for timestamp logs. Beyond
-   *   that, it must be a valid function name, as defined by {@link Functor}
-   *   and {@link TString#label}.
-   * @param {...*} args Event arguments. These must be pure data, as defined
-   *   by {@link DataUtil#isData}.
+   * @param {Functor} payload Event payload. `payload.name` must _not_
+   *   correspond to the event name used for any of the ad-hoc message severity
+   *   levels or for timestamp logs. `payload.args` must be deep-frozen data.
    * @returns {LogRecord} Appropriately-constructed instance of this class.
    */
-  static forEvent(timeMsec, stack, tag, name, ...args) {
-    if (!RESERVED_EVENT_NAMES.has(name)) {
-      throw Errors.badValue(name, 'structured event name');
+  static forEvent(timeMsec, stack, tag, payload) {
+    if (!RESERVED_EVENT_NAMES.has(payload.name)) {
+      throw Errors.badValue(payload.name, 'structured event name');
+    } else if (!DataUtil.isDeepFrozen(payload.args)) {
+      throw Errors.badValue(payload, 'deep-frozen data');
     }
 
-    TString.label(name);
-    args = DataUtil.deepFreeze(args);
-
-    return new LogRecord(timeMsec, stack, tag, new Functor(name, ...args));
+    return new LogRecord(timeMsec, stack, tag, payload);
   }
 
   /**
