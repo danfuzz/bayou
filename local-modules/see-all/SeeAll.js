@@ -12,10 +12,7 @@ import AllSinks from './AllSinks';
 export default class SeeAll extends Singleton {
   /**
    * Adds a logging sink to the system. May be called more than once. Each sink
-   * added via this method gets called as `sink.log(nowMsec, level, tag,
-   * ...message)` and `sink.time(nowMsec, utcString, localString)`. The latter
-   * are done as occasional "punctuation" on logs, for loggers that don't want
-   * to record the exact timestamp of every message.
+   * added via this method gets called as `sink.sinkLog(logRecord)`.
    *
    * @param {object} sink The underlying logger to use.
    */

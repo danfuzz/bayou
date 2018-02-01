@@ -64,30 +64,33 @@ export default class AllSinks extends Singleton {
   }
 
   /**
-   * Constructs a {@link LogRecord} based on the given arguments and the current
-   * time, and calls `sinkLog(logRecord)` on each of the registered sinks.
+   * Constructs a structured-event instance of {@link LogRecord} based on
+   * the given arguments and the current time, and calls `sinkLog(logRecord)` on
+   * each of the registered sinks.
    *
-   * @param {string} level Severity level.
    * @param {LogTag} tag Component and context.
+   * @param {Functor} payload Event payload.
+   */
+  logEvent(tag, payload) {
+    const logRecord = LogRecord.forEvent(this._nowMsec(), LogRecord.makeStack(), tag, payload);
+
+    this._sinkLog(logRecord);
+  }
+
+  /**
+   * Constructs an ad-hoc human-oriented instance of {@link LogRecord} based on
+   * the given arguments and the current time, and calls `sinkLog(logRecord)` on
+   * each of the registered sinks.
+   *
+   * @param {LogTag} tag Component and context.
+   * @param {string} level Severity level.
    * @param {...*} message Message to log.
    */
-  log(level, tag, ...message) {
-    if (this._sinks.length === 0) {
-      // Bad news! No sinks have yet been added. Typically indicates trouble
-      // during init. Instead of silently succeeding (or at best succeeding
-      // while logging to `console`), we die with an error here so that it is
-      // reasonably blatant that something needs to be fixed during application
-      // bootstrap.
-      const details = inspect([level, tag, ...message]);
-      throw Errors.badUse(`Overly early log call: ${details}`);
-    }
-
+  logMessage(tag, level, ...message) {
     const logRecord =
       LogRecord.forMessage(this._nowMsec(), LogRecord.makeStack(), tag, level, ...message);
 
-    for (const s of this._sinks) {
-      s.sinkLog(logRecord);
-    }
+    this._sinkLog(logRecord);
   }
 
   /**
@@ -96,15 +99,7 @@ export default class AllSinks extends Singleton {
    * @param {Int} timeMsec The time to pass to the sinks.
    */
   _callTime(timeMsec) {
-    // Note: We don't check to see if there are any sinks here. That check
-    // gets done more productively in `log()`, above.
-
-    const logRecord = LogRecord.forTime(timeMsec);
-
-    for (const s of this._sinks) {
-      s.sinkLog(logRecord);
-    }
-
+    this._sinkLog(LogRecord.forTime(timeMsec));
     this._linesSinceTime = 0;
   }
 
@@ -139,5 +134,27 @@ export default class AllSinks extends Singleton {
     this._lastNow = now;
 
     return now;
+  }
+
+  /**
+   * Calls `sinkLog()` on all the registered sinks, passing it the given log
+   * record. Throws a useful error if there are no registered sinks.
+   *
+   * @param {LogRecord} logRecord What to log.
+   */
+  _sinkLog(logRecord) {
+    if (this._sinks.length === 0) {
+      // Bad news! No sinks have yet been added. Typically indicates trouble
+      // during init. Instead of silently succeeding (or at best succeeding
+      // while logging to `console`), we die with an error here so that it is
+      // reasonably blatant that something needs to be fixed during application
+      // bootstrap.
+      const details = inspect(logRecord);
+      throw Errors.badUse(`Overly early log call: ${details}`);
+    }
+
+    for (const s of this._sinks) {
+      s.sinkLog(logRecord);
+    }
   }
 }

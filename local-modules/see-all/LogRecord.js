@@ -63,11 +63,50 @@ const RESERVED_EVENT_NAMES = new Set([...MESSAGE_LEVELS_ARRAY, TIME_NAME]);
  *
  * **Note:** The latter two instance types are actually special cases of the
  * first type.
+ *
+ * For the ad-hoc messages, the following are the possible "severity levels:"
+ *
+ * * `debug` -- Severity level indicating temporary stuff for debugging. Code
+ *   that uses this level should not in general get checked into the repo.
+ *
+ * * `error` -- Severity level indicating a dire error. Logs at this level
+ *   should indicate something that went horribly awry, as opposed to just being
+ *   a more innocuous errory thing that normally happens from time to time, such
+ *   as, for example, a network connection that dropped unexpectedly.
+ *
+ * * `warn` -- Severity level indicating a warning. Trouble, but not dire. Logs
+ *   at this level should indicate something that is out-of-the-ordinary but not
+ *   unrecoverably so.
+ *
+ * * `info` -- Severity level indicating general info. No problem, but maybe you
+ *   care. Logs at this level should come at a reasonably stately pace (maybe a
+ *   couple times a minute or so) and give a general sense of the healthy
+ *   operation of the system.
+ *
+ * * `detail` -- Severity level indicating detailed operation. These might be
+ *   used multiple times per second, to provide a nuanced view into the
+ *   operation of a component. These logs are squelched by default, as they
+ *   typically distract from the big picture of the system. They are meant to be
+ *   turned on selectively during development and debugging.
  */
 export default class LogRecord extends CommonBase {
   /** {array<string>} Array of all valid levels. */
   static get MESSAGE_LEVELS() {
     return MESSAGE_LEVELS_ARRAY;
+  }
+
+  /**
+   * Validates a structured event name. Throws an error if invalid.
+   *
+   * @param {string} name Event name.
+   * @returns {string} `name`, if it is indeed valid.
+   */
+  static checkEventName(name) {
+    if (RESERVED_EVENT_NAMES.has(name)) {
+      throw Errors.badValue(name, 'structured event name');
+    }
+
+    return name;
   }
 
   /**
@@ -96,23 +135,19 @@ export default class LogRecord extends CommonBase {
    *   available.
    * @param {LogTag} tag Tag (component name and optional context) associated
    *   with the message.
-   * @param {string} name Event name. This must _not_ correspond to the event
-   *   name used for any human-oriented message or for timestamp logs. Beyond
-   *   that, it must be a valid function name, as defined by {@link Functor}
-   *   and {@link TString#label}.
-   * @param {...*} args Event arguments. These must be pure data, as defined
-   *   by {@link DataUtil#isData}.
+   * @param {Functor} payload Event payload. `payload.name` must _not_
+   *   correspond to the event name used for any of the ad-hoc message severity
+   *   levels or for timestamp logs. `payload.args` must be deep-frozen data.
    * @returns {LogRecord} Appropriately-constructed instance of this class.
    */
-  static forEvent(timeMsec, stack, tag, name, ...args) {
-    if (!RESERVED_EVENT_NAMES.has(name)) {
-      throw Errors.badValue(name, 'structured event name');
+  static forEvent(timeMsec, stack, tag, payload) {
+    LogRecord.checkEventName(payload.name);
+
+    if (!DataUtil.isDeepFrozen(payload.args)) {
+      throw Errors.badValue(payload, 'deep-frozen data');
     }
 
-    TString.label(name);
-    args = DataUtil.deepFreeze(args);
-
-    return new LogRecord(timeMsec, stack, tag, new Functor(name, ...args));
+    return new LogRecord(timeMsec, stack, tag, payload);
   }
 
   /**

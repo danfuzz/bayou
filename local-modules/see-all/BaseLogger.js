@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CommonBase, Errors } from 'util-common';
+import { CommonBase, DataUtil, Errors, Functor } from 'util-common';
 
 import LogRecord from './LogRecord';
 import LogStream from './LogStream';
@@ -10,11 +10,26 @@ import LogTag from './LogTag';
 
 
 /**
- * Base class for loggers. Subclasses must implement `_impl_log()`.
+ * Base class for loggers. Subclasses must implement `_impl_logEvent()` and
+ * `_impl_logMessage()`.
  */
 export default class BaseLogger extends CommonBase {
   /**
-   * Logs a message at the given severity level.
+   * Logs a structured event.
+   *
+   * @param {string} name Event name. Must _not_ correspond to the event name
+   *   used for any of the ad-hoc message severity levels or for timestamp logs.
+   * @param {...*} args Event payload arguments. Must all be deep-freezable
+   *   data.
+   */
+  logEvent(name, ...args) {
+    LogRecord.checkEventName(name);
+    args = DataUtil.deepFreeze(args);
+    this._impl_logEvent(new Functor(name, ...args));
+  }
+
+  /**
+   * Logs an ad-hoc human-oriented message at the given severity level.
    *
    * @param {string} level Severity level. Must be one of the severity level
    *   constants defined by this class.
@@ -23,68 +38,45 @@ export default class BaseLogger extends CommonBase {
    *   such that the browser console can be used to inspect it. If `message`
    *   contains an exception, this will log the stack trace.
    */
-  log(level, ...message) {
+  logMessage(level, ...message) {
     LogRecord.checkMessageLevel(level);
-    this._impl_log(level, message);
+    this._impl_logMessage(level, message);
   }
 
   /**
-   * Logs a message at the `DEBUG` level.
+   * Logs an ad-hoc message at the `debug` level.
    *
-   * @param {...*} message Message to log. See `log()` for details.
+   * @param {...*} message Message to log. See {@link #logMessage} for details.
    */
   debug(...message) {
-    this.log('debug', ...message);
+    this.logMessage('debug', ...message);
   }
 
   /**
-   * Logs a message at the `ERROR` level.
-   *
-   * @param {...*} message Message to log. See `log()` for details.
-   */
-  error(...message) {
-    this.log('error', ...message);
-  }
-
-  /**
-   * Logs a message at the `WARN` level.
-   *
-   * @param {...*} message Message to log. See `log()` for details.
-   */
-  warn(...message) {
-    this.log('warn', ...message);
-  }
-
-  /**
-   * Logs a message at the `INFO` level.
-   *
-   * @param {...*} message Message to log. See `log()` for details.
-   */
-  info(...message) {
-    this.log('info', ...message);
-  }
-
-  /**
-   * Logs a message at the `DETAIL` level.
+   * Logs an ad-hoc message at the `detail` level.
    *
    * @param {...*} message Message to log. See `log()` for details.
    */
   detail(...message) {
-    this.log('detail', ...message);
+    this.logMessage('detail', ...message);
   }
 
   /**
-   * "What a terrible failure!" Logs a message at the `ERROR` level, indicating
-   * a violation of an explicit or implied assertion. That is, this represents
-   * a "shouldn't happen" condition that in fact was detected to have happened.
-   * After so logging, this throws an exception, which is meant to cause the
-   * system to shut down (and potentially restart, if it's set up to self-heal).
+   * Logs an ad-hoc message at the `error` level.
    *
-   * @param {...*} message Message to log. See `log()` for details.
+   * @param {...*} message Message to log. See {@link #logMessage} for details.
    */
-  wtf(...message) {
-    this.error('wtf', ...message);
-    throw Errors.wtf(message.join(' '));
+  error(...message) {
+    this.logMessage('error', ...message);
+  }
+
+  /**
+   * Logs an ad-hoc message at the `info` level.
+   *
+   * @param {...*} message Message to log. See {@link #logMessage} for details.
+   */
+  info(...message) {
+    this.logMessage('info', ...message);
   }
 
   /**
@@ -99,6 +91,15 @@ export default class BaseLogger extends CommonBase {
    */
   streamFor(level) {
     return new LogStream(this, level);
+  }
+
+  /**
+   * Logs an ad-hoc message at the `warn` level.
+   *
+   * @param {...*} message Message to log. See {@link #logMessage} for details.
+   */
+  warn(...message) {
+    this.logMessage('warn', ...message);
   }
 
   /**
@@ -118,13 +119,38 @@ export default class BaseLogger extends CommonBase {
   }
 
   /**
-   * Subclass-specific logging implementation.
+   * "What a terrible failure!" Logs an ad-hoc message at the `error` level,
+   * indicating a violation of an explicit or implied assertion. That is, this
+   * represents a "shouldn't happen" condition that in fact was detected to have
+   * happened. After so logging, this throws an exception, which is meant to
+   * cause the system to shut down (and potentially restart, if it's set up to
+   * self-heal).
+   *
+   * @param {...*} message Message to log. See {@link #logMessage} for details.
+   */
+  wtf(...message) {
+    this.error('wtf', ...message);
+    throw Errors.wtf(message.join(' '));
+  }
+
+  /**
+   * Subclass-specific implementation of event logging.
+   *
+   * @abstract
+   * @param {Functor} payload Event payload.
+   */
+  _impl_logEvent(payload) {
+    this._mustOverride(payload);
+  }
+
+  /**
+   * Subclass-specific implementation of ad-hoc message logging.
    *
    * @abstract
    * @param {string} level Severity level. Guaranteed to be a valid level.
    * @param {array} message Array of arguments to log.
    */
-  _impl_log(level, message) {
+  _impl_logMessage(level, message) {
     this._mustOverride(level, message);
   }
 
