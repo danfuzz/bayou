@@ -63,6 +63,31 @@ const RESERVED_EVENT_NAMES = new Set([...MESSAGE_LEVELS_ARRAY, TIME_NAME]);
  *
  * **Note:** The latter two instance types are actually special cases of the
  * first type.
+ *
+ * For the ad-hoc messages, the following are the possible "severity levels:"
+ *
+ * * `debug` -- Severity level indicating temporary stuff for debugging. Code
+ *   that uses this level should not in general get checked into the repo.
+ *
+ * * `error` -- Severity level indicating a dire error. Logs at this level
+ *   should indicate something that went horribly awry, as opposed to just being
+ *   a more innocuous errory thing that normally happens from time to time, such
+ *   as, for example, a network connection that dropped unexpectedly.
+ *
+ * * `warn` -- Severity level indicating a warning. Trouble, but not dire. Logs
+ *   at this level should indicate something that is out-of-the-ordinary but not
+ *   unrecoverably so.
+ *
+ * * `info` -- Severity level indicating general info. No problem, but maybe you
+ *   care. Logs at this level should come at a reasonably stately pace (maybe a
+ *   couple times a minute or so) and give a general sense of the healthy
+ *   operation of the system.
+ *
+ * * `detail` -- Severity level indicating detailed operation. These might be
+ *   used multiple times per second, to provide a nuanced view into the
+ *   operation of a component. These logs are squelched by default, as they
+ *   typically distract from the big picture of the system. They are meant to be
+ *   turned on selectively during development and debugging.
  */
 export default class LogRecord extends CommonBase {
   /** {array<string>} Array of all valid levels. */
