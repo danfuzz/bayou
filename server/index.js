@@ -132,6 +132,9 @@ if (showHelp || argError) {
  * @returns {Int} The port being listened on, once listening has started.
  */
 async function run(mode) {
+  // Give the overlay a chance to do any required early initialization.
+  await Hooks.theOne.run();
+
   // Set up the server environment bits (including, e.g. the PID file).
   await ServerEnv.theOne.init();
 
@@ -141,13 +144,17 @@ async function run(mode) {
     log.info(k, '=', info[k]);
   }
 
+  // A little spew to indicate where in the filesystem we live.
+  log.info(
+    'Directories:\n' +
+    `  product: ${Dirs.theOne.BASE_DIR}\n` +
+    `  var:     ${Dirs.theOne.VAR_DIR}`);
+
   if (mode === 'dev') {
     // We're in dev mode. This starts the system that live-syncs the client
     // source.
     DevMode.theOne.start();
   }
-
-  await Hooks.theOne.run();
 
   /** The main app server. */
   const theApp = new Application(mode !== 'prod');

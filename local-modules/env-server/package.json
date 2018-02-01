@@ -5,6 +5,7 @@
   "dependencies": {
     "is-running": "^2.1.0",
 
+    "hooks-server": "local",
     "proppy": "local",
     "see-all": "local",
     "util-common": "local"
