@@ -9,20 +9,20 @@ import { LogRecord } from 'see-all';
 import { MockLogger } from 'see-all/mocks';
 
 // This class is tested via its subclass `MockLogger`, which records all calls
-// made to `_impl_log()`.
+// made to `_impl_logMessage()`.
 
 describe('see-all/BaseLogger', () => {
-  describe('log()', () => {
+  describe('logMessage()', () => {
     it('calls through to `_log_impl()` when given valid arguments', () => {
       const logger = new MockLogger();
-      logger.log('info', 'blort', 7);
+      logger.logMessage('info', 'blort', 7);
 
       assert.deepEqual(logger.record, [['info', [], 'blort', 7]]);
     });
 
     it('rejects invalid `level` arguments', () => {
       const logger = new MockLogger();
-      assert.throws(() => logger.log('zorch', 'blort', 7));
+      assert.throws(() => logger.logMessage('zorch', 'blort', 7));
     });
   });
 

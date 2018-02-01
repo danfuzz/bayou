@@ -52,7 +52,7 @@ export default class LogStream extends CommonBase {
       chunk = chunk.toString();
     }
 
-    this._logger.log(this._level, chunk);
+    this._logger.logMessage(this._level, chunk);
 
     if (callback) {
       // Make the callback happen in its own tick/turn.

@@ -72,7 +72,7 @@ export default class AllSinks extends Singleton {
    * @param {LogTag} tag Component and context.
    * @param {...*} message Message to log.
    */
-  log(level, tag, ...message) {
+  logMessage(level, tag, ...message) {
     const logRecord =
       LogRecord.forMessage(this._nowMsec(), LogRecord.makeStack(), tag, level, ...message);
 

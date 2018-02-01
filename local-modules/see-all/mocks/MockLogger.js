@@ -27,7 +27,7 @@ export default class MockLogger extends BaseLogger {
     return this._record;
   }
 
-  _impl_log(level, message) {
+  _impl_logMessage(level, message) {
     this.record.push([level, this._context, ...message]);
   }
 

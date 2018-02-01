@@ -63,19 +63,20 @@ export default class Logger extends BaseLogger {
   }
 
   /**
-   * Actual logging implementation, as specified by the superclass.
+   * Actual logging implementation for ad-hoc messages, as specified by the
+   * superclass.
    *
    * @param {string} level Severity level. Guaranteed to be a valid level.
    * @param {array} message Array of arguments to log.
    */
-  _impl_log(level, message) {
+  _impl_logMessage(level, message) {
     if ((level === 'detail') && !this._enableDetail) {
       // This tag isn't listed as one to log at the `detail` level. (That is,
       // it's being squelched.)
       return;
     }
 
-    AllSinks.theOne.log(level, this._tag, ...message);
+    AllSinks.theOne.logMessage(level, this._tag, ...message);
   }
 
   /**
