@@ -43,12 +43,13 @@ export default class BaseLogger extends CommonBase {
    *
    * @param {string} name Event name. Must _not_ correspond to the event name
    *   used for any of the ad-hoc message severity levels or for timestamp logs.
-   * @param {...*} args Event payload arguments. Must all be deep-freezable
-   *   data.
+   * @param {...*} args Event payload arguments. **Note:** Non-data arguments
+   *   will get converted (with loss of fidelity) by {@link DataUtil#deepFreeze}
+   *   which in turn uses `util.inspect()`.
    */
   logEvent(name, ...args) {
     LogRecord.checkEventName(name);
-    args = DataUtil.deepFreeze(args);
+    args = DataUtil.deepFreeze(args, true);
     this._impl_logEvent(new Functor(name, ...args));
   }
 
