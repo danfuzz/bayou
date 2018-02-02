@@ -4,6 +4,7 @@
 
 import { CommonBase, DataUtil, Errors, Functor } from 'util-common';
 
+import EventProxyHandler from './EventProxyHandler';
 import LogRecord from './LogRecord';
 import LogStream from './LogStream';
 import LogTag from './LogTag';
@@ -14,6 +15,29 @@ import LogTag from './LogTag';
  * `_impl_logMessage()`.
  */
 export default class BaseLogger extends CommonBase {
+  /**
+   * Constructs an instance.
+   */
+  constructor() {
+    super();
+
+    /**
+     * {Proxy} Proxy which uses an instance of {@link EventProxyHandler}, so
+     * as to enable `this.event.whatever(...)`.
+     */
+    this._event = EventProxyHandler.makeProxy(this);
+  }
+
+  /**
+   * {Proxy} Event logger. This is a proxy object which synthesizes event
+   * logging functions. For any name `someName`, `event.someName` is a function
+   * that, when called with arguments `(some, args)`, will log a structured
+   * event `someName(some, args)`.
+   */
+  get event() {
+    return this._event;
+  }
+
   /**
    * Logs a structured event.
    *
