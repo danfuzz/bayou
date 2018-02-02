@@ -20,16 +20,16 @@ const MESSAGE_LEVELS_ARRAY =
 const WANT_STACK_LEVELS = new Set(['debug', 'error', 'warn']);
 
 /** {Set<string>} Set of valid severity levels for message instances. */
-const MESSAGE_LEVELS_SET = new Set(MESSAGE_LEVELS_ARRAY);
+const MESSAGE_EVENT_NAMES = new Set(MESSAGE_LEVELS_ARRAY);
 
 /** {string} Event name used for timestamp events. */
-const TIME_NAME = LogTag.TIME.main;
+const TIME_EVENT_NAME = LogTag.TIME.main;
 
 /**
  * {Set<string>} Set of reserved event names, which are invalid to use for
  * generic events as created by {@link #forEvent}.
  */
-const RESERVED_EVENT_NAMES = new Set([...MESSAGE_LEVELS_ARRAY, TIME_NAME]);
+const RESERVED_EVENT_NAMES = new Set([...MESSAGE_LEVELS_ARRAY, TIME_EVENT_NAME]);
 
 /**
  * Entry for an item to log. Every instance has a timestamp, a component tag,
@@ -60,9 +60,6 @@ const RESERVED_EVENT_NAMES = new Set([...MESSAGE_LEVELS_ARRAY, TIME_NAME]);
  *   human consumption. In addition to the basic fields, these contain two
  *   string representations of the timestamp, one as a UTC time, and one in the
  *   local timezone.
- *
- * **Note:** The latter two instance types are actually special cases of the
- * first type.
  *
  * For the ad-hoc messages, the following are the possible "severity levels:"
  *
@@ -118,7 +115,7 @@ export default class LogRecord extends CommonBase {
    * @returns {string} `level`, if it is indeed valid.
    */
   static checkMessageLevel(level) {
-    if (!MESSAGE_LEVELS_SET.has(level)) {
+    if (!MESSAGE_EVENT_NAMES.has(level)) {
       throw Errors.badValue(level, 'message logging severity level');
     }
 
@@ -188,7 +185,7 @@ export default class LogRecord extends CommonBase {
     const date        = new Date(timeMsec);
     const utcString   = LogRecord._utcTimeString(date);
     const localString = LogRecord._localTimeString(date);
-    const payload     = new Functor(TIME_NAME, utcString, localString);
+    const payload     = new Functor(TIME_EVENT_NAME, utcString, localString);
 
     return new LogRecord(timeMsec, null, LogTag.TIME, payload);
   }
@@ -319,22 +316,40 @@ export default class LogRecord extends CommonBase {
 
   /**
    * {string} Unified message string, composed from all of the individual
-   * arguments.
+   * arguments. The form varies based on the sort of record (ad-hoc message vs.
+   * structured event vs. timestamp).
    *
-   * This form runs {@link #inspectValue} on each of the message arguments,
-   * concatenating all of them together, separating single-line values from each
-   * other with a single space, and newline-separating multi-line values (so
-   * that each ends up on its own line).
+   * * For ad-hoc messages, the result is produced by calling
+   *   {@link #inspectValue} on each of the message arguments, concatenating all
+   *   of them together, separating single-line values from each other with a
+   *   single space, and newline-separating multi-line values (so that each ends
+   *   up on its own line).
    *
-   * As a special-ish case, the {@link #stack} of the instance is included in
-   * the result if it is non-`null`, the instance doesn't have an error as one
-   * of its arguments, _and_ the instance is an ad-hoc message at `debug`,
-   * `warn`, or `error` level (where stack traces are generally expected).
+   *   As a special-ish case, the {@link #stack} of the instance is included in
+   *   the result if it is non-`null`, the instance doesn't have an error as one
+   *   of its arguments, _and_ the instance is an ad-hoc message at `debug`,
+   *   `warn`, or `error` level (where stack traces are generally expected).
    *
-   * Single-line results have no newlines (including at the end). Multi-line
-   * results always end with a newline.
+   *   Single-line results have no newlines (including at the end). Multi-line
+   *   results always end with a newline.
+   *
+   * * For structured events, the result is from a call to {@link util#inspect}
+   *   on the entire {@link #payload}.
+   *
+   * * For timestamp logs, the result is the two time strings, separated by a
+   *   slash, with no newline.
    */
   get messageString() {
+    if (this.isTime()) {
+      const [utc, local] = this.timeStrings;
+      return `${utc} / ${local}`;
+    } else if (this.isEvent()) {
+      return inspect(this.payload);
+    }
+
+    // The rest of this is for the ad-hoc message case (which is considerably
+    // more involved).
+
     const result      = [];
     let   atLineStart = true;
     let   anyNewlines = false;
@@ -452,15 +467,23 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Indicates whether this instance represents a structured event, as for
+   * example constructed by {@link #forEvent}.
+   *
+   * @returns {boolean} `true` iff this is a structured event instance.
+   */
+  isEvent() {
+    return !RESERVED_EVENT_NAMES.has(this.payload.name);
+  }
+
+  /**
    * Indicates whether this instance represents an ad-hoc message, as for
    * example constructed by {@link #forMessage}.
    *
    * @returns {boolean} `true` iff this is an ad-hoc message instance.
    */
   isMessage() {
-    // For now, anything that's not a "time" is a message. **TODO:** This will
-    // change when we introduce structured events as a log type.
-    return !this.isTime();
+    return MESSAGE_EVENT_NAMES.has(this.payload.name);
   }
 
   /**
@@ -470,9 +493,7 @@ export default class LogRecord extends CommonBase {
    * @returns {boolean} `true` iff this is a timestamp instance.
    */
   isTime() {
-    // The first check (the tag) is probably sufficient, but it probably can't
-    // hurt to be a little pickier.
-    return (this._tag === LogTag.TIME) && (this.payload.name === TIME_NAME);
+    return this.payload.name === TIME_EVENT_NAME;
   }
 
   /**

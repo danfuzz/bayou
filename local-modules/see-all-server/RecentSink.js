@@ -71,28 +71,19 @@ export default class RecentSink extends BaseSink {
    * @param {LogRecord} logRecord The record to write.
    */
   _impl_sinkLog(logRecord) {
+    this._log.push(logRecord);
+
     if (logRecord.isTime()) {
-      this._logTime(logRecord);
-    } else {
-      // Distill the message down to a single string, and trim leading and
-      // trailing newlines.
-      const messageString = logRecord.messageString.replace(/(^\n+)|(\n+$)/g, '');
-      this._log.push(logRecord.withMessage(messageString));
+      this._trim(logRecord.timeMsec);
     }
   }
 
   /**
-   * Logs the indicated time value as "punctuation" on the log. Also, clean
-   * up old items.
+   * Trims the log of older items.
    *
-   * @param {LogRecord} logRecord The time record.
+   * @param {Int} timeMsec The time of the most recent log record.
    */
-  _logTime(logRecord) {
-    this._log.push(logRecord);
-
-    // Trim the log.
-
-    const timeMsec   = logRecord.timeMsec;
+  _trim(timeMsec) {
     const oldestMsec = timeMsec - this._maxAgeMsec;
 
     let i;
@@ -125,9 +116,9 @@ export default class RecentSink extends BaseSink {
       const localString = chalk.blue.dim.bold(local);
       body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;
     } else {
-      // **Note:** By the time we get here, the record's payload args have been
-      // distilled down to a single string.
-      body = logRecord.payload.args[0];
+      // Distill the message (or event) down to a single string, and trim
+      // leading and trailing newlines.
+      body = logRecord.messageString.replace(/(^\n+)|(\n+$)/g, '');
     }
 
     // Color the prefix depending on the event name / severity level.

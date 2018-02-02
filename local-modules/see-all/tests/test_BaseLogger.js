@@ -27,11 +27,6 @@ describe('see-all/BaseLogger', () => {
       const logger = new MockLogger();
       assert.throws(() => logger.logEvent('info', 1, 2, 3));
     });
-
-    it('rejects non-data payload arugments', () => {
-      const logger = new MockLogger();
-      assert.throws(() => logger.logEvent('blort', new Map()));
-    });
   });
 
   describe('logMessage()', () => {
