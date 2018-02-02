@@ -8,6 +8,7 @@ import DeferredLoader from './DeferredLoader';
 import ErrorUtil from './ErrorUtil';
 import IterableUtil from './IterableUtil';
 import JsonUtil from './JsonUtil';
+import MethodCacheProxyHandler from './MethodCacheProxyHandler';
 import PropertyIterable from './PropertyIterable';
 import Random from './Random';
 import Singleton from './Singleton';
@@ -22,6 +23,7 @@ export {
   ErrorUtil,
   IterableUtil,
   JsonUtil,
+  MethodCacheProxyHandler,
   PropertyIterable,
   Random,
   Singleton,
