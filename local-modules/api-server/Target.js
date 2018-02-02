@@ -105,7 +105,7 @@ export default class Target extends CommonBase {
 
     if (schema.getDescriptor(name) !== 'method') {
       // Not in the schema, or not a method.
-      throw Errors.badUse(`No such method: \`${this._name}.${name}\``);
+      throw Errors.badUse(`No such method: \`${name}\``);
     }
 
     // Listed in the schema as a method. So it exists, is public, is in
