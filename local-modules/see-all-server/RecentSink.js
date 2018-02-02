@@ -27,6 +27,14 @@ export default class RecentSink extends BaseSink {
     /** {Int} Maximum age. */
     this._maxAgeMsec = TInt.nonNegative(maxAgeMsec);
 
+    /**
+     * {Chalk} Chalk instance to use. We don't just use the global `chalk`, as
+     * it gets configured for the observed TTY, and this class wants it to
+     * always be fully enabled, so as to produce maximally-colorful HTML output
+     * from it.
+     */
+    this._chalk = new chalk.constructor({ level: 4 });
+
     /** {array<object>} The log contents. */
     this._log = [];
 
@@ -58,7 +66,7 @@ export default class RecentSink extends BaseSink {
 
     result.push('<table>');
     for (const l of this._log) {
-      result.push(RecentSink._htmlLine(l));
+      result.push(this._htmlLine(l));
     }
     result.push('</table>');
 
@@ -79,6 +87,44 @@ export default class RecentSink extends BaseSink {
   }
 
   /**
+   * Converts the given log line to HTML.
+   *
+   * @param {LogRecord} logRecord Log record.
+   * @returns {string} HTML string form for the entry.
+   */
+  _htmlLine(logRecord) {
+    const ck      = this._chalk;
+    let   prefix  = logRecord.prefixString;
+    const context = logRecord.contextString || '';
+
+    let   body;
+
+    if (logRecord.isTime()) {
+      const [utc, local] = logRecord.timeStrings;
+      const utcString = ck.blue.bold(utc);
+      const localString = ck.blue.dim.bold(local);
+      body = `${utcString} ${ck.dim.bold('/')} ${localString}`;
+    } else {
+      // Distill the message (or event) down to a single string, and trim
+      // leading and trailing newlines.
+      body = logRecord.messageString.replace(/(^\n+)|(\n+$)/g, '');
+    }
+
+    // Color the prefix depending on the event name / severity level.
+    switch (logRecord.payload.name) {
+      case 'error': { prefix = ck.red.bold(prefix);    break; }
+      case 'warn':  { prefix = ck.yellow.bold(prefix); break; }
+      default:      { prefix = ck.dim.bold(prefix);    break; }
+    }
+
+    const prefixHtml  = ansiHtml(escapeHtml(prefix));
+    const contextHtml = ansiHtml(escapeHtml(ck.blue.dim.bold(context)));
+    const bodyHtml    = ansiHtml(escapeHtml(body));
+
+    return `<tr><td>${prefixHtml}</td><td>${contextHtml}</td><td><pre>${bodyHtml}</pre></td>`;
+  }
+
+  /**
    * Trims the log of older items.
    *
    * @param {Int} timeMsec The time of the most recent log record.
@@ -96,42 +142,5 @@ export default class RecentSink extends BaseSink {
     if (i !== 0) {
       this._log = this._log.slice(i);
     }
-  }
-
-  /**
-   * Converts the given log line to HTML.
-   *
-   * @param {LogRecord} logRecord Log record.
-   * @returns {string} HTML string form for the entry.
-   */
-  static _htmlLine(logRecord) {
-    let   prefix  = logRecord.prefixString;
-    const context = logRecord.contextString || '';
-
-    let   body;
-
-    if (logRecord.isTime()) {
-      const [utc, local] = logRecord.timeStrings;
-      const utcString = chalk.blue.bold(utc);
-      const localString = chalk.blue.dim.bold(local);
-      body = `${utcString} ${chalk.dim.bold('/')} ${localString}`;
-    } else {
-      // Distill the message (or event) down to a single string, and trim
-      // leading and trailing newlines.
-      body = logRecord.messageString.replace(/(^\n+)|(\n+$)/g, '');
-    }
-
-    // Color the prefix depending on the event name / severity level.
-    switch (logRecord.payload.name) {
-      case 'error': { prefix = chalk.red.bold(prefix);    break; }
-      case 'warn':  { prefix = chalk.yellow.bold(prefix); break; }
-      default:      { prefix = chalk.dim.bold(prefix);    break; }
-    }
-
-    const prefixHtml  = ansiHtml(escapeHtml(prefix));
-    const contextHtml = ansiHtml(escapeHtml(chalk.blue.dim.bold(context)));
-    const bodyHtml    = ansiHtml(escapeHtml(body));
-
-    return `<tr><td>${prefixHtml}</td><td>${contextHtml}</td><td><pre>${bodyHtml}</pre></td>`;
   }
 }
