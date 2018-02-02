@@ -10,171 +10,222 @@ import { DataUtil, FrozenBuffer, Functor } from 'util-core';
 
 describe('util-core/DataUtil', () => {
   describe('deepFreeze()', () => {
-    it('should return the given value if it is a primitive', () => {
-      function test(value) {
-        const popsicle = DataUtil.deepFreeze(value);
-        assert.strictEqual(popsicle, value);
-      }
+    // Tests that should work the same for both possible values of
+    // `convertNonData`.
+    function commonTests(convertNonData) {
+      it('should return the given value if it is a primitive', () => {
+        function test(value) {
+          const popsicle = DataUtil.deepFreeze(value, convertNonData);
+          assert.strictEqual(popsicle, value);
+        }
 
-      test(undefined);
-      test(null);
-      test(false);
-      test(true);
-      test(37);
-      test('a string');
-      test(Symbol('foo'));
-    });
+        test(undefined);
+        test(null);
+        test(false);
+        test(true);
+        test(37);
+        test('a string');
+        test(Symbol('foo'));
+      });
 
-    it('should return the provided value if it is already deep-frozen', () => {
-      function test(value) {
-        const popsicle = DataUtil.deepFreeze(value);
-        const deepPopsicle = DataUtil.deepFreeze(popsicle);
+      it('should return the provided value if it is already deep-frozen', () => {
+        function test(value) {
+          const popsicle     = DataUtil.deepFreeze(value, convertNonData);
+          const deepPopsicle = DataUtil.deepFreeze(popsicle, convertNonData);
+          assert.isTrue(DataUtil.isDeepFrozen(popsicle));
+          assert.strictEqual(deepPopsicle, popsicle, 'Frozen strict-equals re-frozen.');
+          assert.deepEqual(deepPopsicle, value, 'Re-frozen deep-equals original.');
+        }
+
+        test({});
+        test({ a: 1 });
+        test({ a: { b: 10 }, c: { d: 20 } });
+        test([]);
+        test([1]);
+        test([[1, 2], [3, 4]]);
+      });
+
+      it('should return a deep-frozen object if passed one that isn\'t already deep-frozen', () => {
+        function test(value) {
+          const popsicle = DataUtil.deepFreeze(value, convertNonData);
+          assert.isTrue(DataUtil.isDeepFrozen(popsicle, convertNonData));
+          assert.deepEqual(popsicle, value);
+        }
+
+        test({});
+        test({ a: 1, b: 2 });
+        test([]);
+        test([1, 2, 'foo', 'bar']);
+        test([[[[[[[[[['hello']]]]]]]]]]);
+        test({ x: [[[[[123]]]]], y: [37, [37], [[37]], [[[37]]]], z: [{ x: 10 }] });
+      });
+
+      it('should not freeze the originally passed value', () => {
+        const orig = [1, 2, 3];
+        const popsicle = DataUtil.deepFreeze(orig, convertNonData);
+
         assert.isTrue(DataUtil.isDeepFrozen(popsicle));
-        assert.strictEqual(deepPopsicle, popsicle, 'Frozen strict-equals re-frozen.');
-        assert.deepEqual(deepPopsicle, value, 'Re-frozen deep-equals original.');
-      }
+        assert.isNotFrozen(orig);
+      });
 
-      test({});
-      test({ a: 1 });
-      test({ a: { b: 10 }, c: { d: 20 } });
-      test([]);
-      test([1]);
-      test([[1, 2], [3, 4]]);
-    });
+      it('should work on arrays with holes', () => {
+        const orig = [1, 2, 3];
+        orig[37]   = ['florp'];
+        orig[914]  = [[['like']]];
 
-    it('should return a deep-frozen object if passed one that isn\'t already deep-frozen', () => {
-      function test(value) {
-        const popsicle = DataUtil.deepFreeze(value);
+        const popsicle = DataUtil.deepFreeze(orig, convertNonData);
+
         assert.isTrue(DataUtil.isDeepFrozen(popsicle));
-        assert.deepEqual(popsicle, value);
-      }
+        assert.deepEqual(popsicle, orig);
+      });
 
-      test({});
-      test({ a: 1, b: 2 });
-      test([]);
-      test([1, 2, 'foo', 'bar']);
-      test([[[[[[[[[['hello']]]]]]]]]]);
-      test({ x: [[[[[123]]]]], y: [37, [37], [[37]], [[[37]]]], z: [{ x: 10 }] });
+      it('should work on arrays with additional string-named properties', () => {
+        const orig = [1, 2, 3];
+        orig.florp = ['florp'];
+        orig.like  = [[['like']]];
+
+        const popsicle = DataUtil.deepFreeze(orig, convertNonData);
+
+        assert.isTrue(DataUtil.isDeepFrozen(popsicle));
+        assert.deepEqual(popsicle, orig);
+      });
+
+      it('should work on arrays with additional symbol-named properties', () => {
+        const orig = [1, 2, 3];
+        orig[Symbol('florp')] = ['florp'];
+        orig[Symbol('like')] = [[['like']]];
+
+        const popsicle = DataUtil.deepFreeze(orig, convertNonData);
+
+        assert.isTrue(DataUtil.isDeepFrozen(popsicle));
+        assert.deepEqual(popsicle, orig);
+      });
+
+      it('should work on objects with symbol-named properties', () => {
+        const orig = { a: 10, [Symbol('b')]: 20 };
+
+        const popsicle = DataUtil.deepFreeze(orig, convertNonData);
+
+        assert.isTrue(DataUtil.isDeepFrozen(popsicle));
+        assert.deepEqual(popsicle, orig);
+      });
+
+      it('should return a given `FrozenBuffer`', () => {
+        function test(value) {
+          assert.strictEqual(DataUtil.deepFreeze(value, convertNonData), value);
+        }
+
+        test(FrozenBuffer.coerce(''));
+        test(FrozenBuffer.coerce('florp'));
+      });
+
+      it('should work on functors with freezable arguments', () => {
+        function test(...args) {
+          const ftor = new Functor(...args);
+          const popsicle = DataUtil.deepFreeze(ftor, convertNonData);
+          assert.deepEqual(ftor, popsicle);
+          assert.notStrictEqual(ftor, popsicle);
+        }
+
+        // All these cases have at least one non-frozen argument, because
+        // otherwise the functor would already be deep-frozen. That situation is
+        // checked in the next test.
+        test('blort', []);
+        test('blort', 'foo', ['bar']);
+        test('blort', new Functor('x', [1, 2, 3]), [4, 5, 6]);
+      });
+
+      it('should work on already-deep-frozen functors', () => {
+        function test(...args) {
+          const ftor = new Functor(...args);
+          const popsicle = DataUtil.deepFreeze(ftor, convertNonData);
+          assert.strictEqual(ftor, popsicle);
+        }
+
+        test('blort');
+        test('blort', 1);
+        test('blort', 'foo', Object.freeze(['bar']));
+        test('blort', new Functor('x', 1, 2, 3), 'four');
+      });
+    }
+
+    describe('with `convertNonData = false`', () => {
+      commonTests(false);
+
+      it('should fail if given a function or a composite that contains same', () => {
+        function test(value) {
+          assert.throws(() => { DataUtil.deepFreeze(value); });
+        }
+
+        test(test); // Because `test` is indeed a function!
+        test(() => 123);
+        test([1, 2, 3, test]);
+        test([1, 2, 3, [[[[[test]]]]]]);
+        test({ a: 10, b: test });
+        test({ a: 10, b: { c: { d: test } } });
+      });
+
+      it('should fail if given a non-plain object or a composite that contains same', () => {
+        function test(value) {
+          assert.throws(() => { DataUtil.deepFreeze(value); });
+        }
+
+        const instance = new Number(10);
+        const synthetic = {
+          a: 10,
+          get x() { return 20; }
+        };
+
+        test(instance);
+        test(synthetic);
+        test([instance]);
+        test([1, 2, 3, [[[[[synthetic]]]]]]);
+        test({ a: 10, b: instance });
+        test({ a: 10, b: { c: { d: synthetic } } });
+      });
     });
 
-    it('should not freeze the originally passed value', () => {
-      const orig = [1, 2, 3];
-      const popsicle = DataUtil.deepFreeze(orig);
+    describe('with `convertNonData = true`', () => {
+      commonTests(true);
 
-      assert.isTrue(DataUtil.isDeepFrozen(popsicle));
-      assert.isNotFrozen(orig);
-    });
+      it('should convert a non-plain object via `util.inspect`', () => {
+        class Florp {
+          inspect() {
+            return '{florp}';
+          }
+        }
 
-    it('should work on arrays with holes', () => {
-      const orig = [1, 2, 3];
-      orig[37]   = ['florp'];
-      orig[914]  = [[['like']]];
+        const result = DataUtil.deepFreeze(new Florp(), true);
 
-      const popsicle = DataUtil.deepFreeze(orig);
+        assert.strictEqual(result, '{florp}');
+      });
 
-      assert.isTrue(DataUtil.isDeepFrozen(popsicle));
-      assert.deepEqual(popsicle, orig);
-    });
+      it('should convert a function via `util.inspect`', () => {
+        function someFunc() { return 10; }
+        const result = DataUtil.deepFreeze(someFunc, true);
 
-    it('should work on arrays with additional string-named properties', () => {
-      const orig = [1, 2, 3];
-      orig.florp = ['florp'];
-      orig.like  = [[['like']]];
+        assert.strictEqual(result, '[Function: someFunc]');
+      });
 
-      const popsicle = DataUtil.deepFreeze(orig);
+      it('should strip synthetic properties from plain objects', () => {
+        const obj = {
+          a: 10,
+          b: 20,
 
-      assert.isTrue(DataUtil.isDeepFrozen(popsicle));
-      assert.deepEqual(popsicle, orig);
-    });
+          get x() { return 1; },
+          get y() { return 1; },
+          set y(value_unused) { /*empty*/ },
 
-    it('should work on arrays with additional symbol-named properties', () => {
-      const orig = [1, 2, 3];
-      orig[Symbol('florp')] = ['florp'];
-      orig[Symbol('like')] = [[['like']]];
+          c: {
+            d: 'ddd',
+            get z() { return 1; }
+          }
+        };
 
-      const popsicle = DataUtil.deepFreeze(orig);
+        const result = DataUtil.deepFreeze(obj, true);
 
-      assert.isTrue(DataUtil.isDeepFrozen(popsicle));
-      assert.deepEqual(popsicle, orig);
-    });
-
-    it('should work on objects with symbol-named properties', () => {
-      const orig = { a: 10, [Symbol('b')]: 20 };
-
-      const popsicle = DataUtil.deepFreeze(orig);
-
-      assert.isTrue(DataUtil.isDeepFrozen(popsicle));
-      assert.deepEqual(popsicle, orig);
-    });
-
-    it('should return a given `FrozenBuffer`', () => {
-      function test(value) {
-        assert.strictEqual(DataUtil.deepFreeze(value), value);
-      }
-
-      test(FrozenBuffer.coerce(''));
-      test(FrozenBuffer.coerce('florp'));
-    });
-
-    it('should work on functors with freezable arguments', () => {
-      function test(...args) {
-        const ftor = new Functor(...args);
-        const popsicle = DataUtil.deepFreeze(ftor);
-        assert.deepEqual(ftor, popsicle);
-        assert.notStrictEqual(ftor, popsicle);
-      }
-
-      // All these cases have at least one non-frozen argument, because
-      // otherwise the functor would already be deep-frozen. That situation is
-      // checked in the next test.
-      test('blort', []);
-      test('blort', 'foo', ['bar']);
-      test('blort', new Functor('x', [1, 2, 3]), [4, 5, 6]);
-    });
-
-    it('should work on already-deep-frozen functors', () => {
-      function test(...args) {
-        const ftor = new Functor(...args);
-        const popsicle = DataUtil.deepFreeze(ftor);
-        assert.strictEqual(ftor, popsicle);
-      }
-
-      test('blort');
-      test('blort', 1);
-      test('blort', 'foo', Object.freeze(['bar']));
-      test('blort', new Functor('x', 1, 2, 3), 'four');
-    });
-
-    it('should fail if given a function or a composite that contains same', () => {
-      function test(value) {
-        assert.throws(() => { DataUtil.deepFreeze(value); });
-      }
-
-      test(test); // Because `test` is indeed a function!
-      test(() => 123);
-      test([1, 2, 3, test]);
-      test([1, 2, 3, [[[[[test]]]]]]);
-      test({ a: 10, b: test });
-      test({ a: 10, b: { c: { d: test } } });
-    });
-
-    it('should fail if given a non-plain object or a composite that contains same', () => {
-      function test(value) {
-        assert.throws(() => { DataUtil.deepFreeze(value); });
-      }
-
-      const instance = new Number(10);
-      const synthetic = {
-        a: 10,
-        get x() { return 20; }
-      };
-
-      test(instance);
-      test(synthetic);
-      test([instance]);
-      test([1, 2, 3, [[[[[synthetic]]]]]]);
-      test({ a: 10, b: instance });
-      test({ a: 10, b: { c: { d: synthetic } } });
+        assert.deepEqual(result, { a: 10, b: 20, c: { d: 'ddd' } });
+      });
     });
   });
 

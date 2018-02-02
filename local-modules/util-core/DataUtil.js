@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import Errors from './Errors';
 import FrozenBuffer from './FrozenBuffer';
 import Functor from './Functor';
@@ -31,12 +33,17 @@ import UtilityClass from './UtilityClass';
 export default class DataUtil extends UtilityClass {
   /**
    * Makes a deep-frozen clone of the given data value, or return the value
-   * itself if it is already deep-frozen.
+   * itself if it is already deep-frozen. Depending on the second argument,
+   * non-data values either get converted to data (with loss of fidelity) or
+   * cause an error to be thrown.
    *
    * @param {*} value Thing to deep freeze.
+   * @param {boolean} [convertNonData = false] If `false` (the default), throws
+   *   an error when non-data is encounterd. If `true`, non-data is converted to
+   *   a string by `util.inspect()`.
    * @returns {*} The deep-frozen version of `value`.
    */
-  static deepFreeze(value) {
+  static deepFreeze(value, convertNonData = false) {
     switch (typeof value) {
       case 'boolean':
       case 'number':
@@ -73,49 +80,58 @@ export default class DataUtil extends UtilityClass {
             const args = value.args;
             return DataUtil.isDeepFrozen(args)
               ? value
-              : new Functor(value.name, ...(DataUtil.deepFreeze(args)));
+              : new Functor(value.name, ...(DataUtil.deepFreeze(args, convertNonData)));
           }
           default: {
-            throw Errors.badValue(value, 'data value');
+            if (convertNonData) {
+              return inspect(value);
+            } else {
+              throw Errors.badValue(value, 'data value');
+            }
           }
         }
 
-        let newObj = null;  // Becomes non-`null` with the first change.
-        const needToChange = () => {
-          if (newObj === null) {
-            // Clone the object the first time it needs to be changed.
-            newObj = Object.assign(cloneBase, value);
-          }
-        };
+        let   anyChange = false;
+        const newObj    = cloneBase;
 
         if (!Object.isFrozen(value)) {
           // The original isn't frozen, which means that the top-level result
           // needs to be a new object (even if all the properties / elements are
           // already frozen).
-          needToChange();
+          anyChange = true;
         }
 
         for (const k of Object.getOwnPropertyNames(value)) {
-          const prop = Object.getOwnPropertyDescriptor(value, k);
+          const prop     = Object.getOwnPropertyDescriptor(value, k);
           const oldValue = prop.value;
           if (   (oldValue === undefined)
               && !ObjectUtil.hasOwnProperty(prop, 'value')) {
             // **Note:** The `undefined` check just prevents us from having to
             // call `hasOwnProperty()` in the usual case.
-            throw Errors.badValue(value, 'data value', 'without synthetic properties');
-          }
-          const newValue = DataUtil.deepFreeze(oldValue);
-          if (oldValue !== newValue) {
-            needToChange();
+            if (convertNonData) {
+              // Just drop synthetic properties when we're converting non-data.
+              anyChange = true;
+            } else {
+              throw Errors.badValue(value, 'data value', 'without synthetic properties');
+            }
+          } else {
+            const newValue = DataUtil.deepFreeze(oldValue, convertNonData);
+            if (oldValue !== newValue) {
+              anyChange = true;
+            }
             newObj[k] = newValue;
           }
         }
 
-        return (newObj === null) ? value : Object.freeze(newObj);
+        return anyChange ? Object.freeze(newObj) : value;
       }
 
       default: {
-        throw Errors.badValue(value, 'data value');
+        if (convertNonData) {
+          return inspect(value);
+        } else {
+          throw Errors.badValue(value, 'data value');
+        }
       }
     }
   }
