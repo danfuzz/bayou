@@ -14,14 +14,14 @@ const LOG_TAG = new LogTag('blort-tag');
 describe('see-all-server/RecentSink', () => {
   describe('log()', () => {
     it('should log a regular item as given', () => {
-      const sink = new RecentSink(1);
+      const sink   = new RecentSink(1);
+      const record = LogRecord.forMessage(90909, 'yay-stack', LOG_TAG, 'error', 'bar', 'baz');
 
-      sink.sinkLog(LogRecord.forMessage(90909, 'yay-stack', LOG_TAG, 'error', 'bar', 'baz'));
+      sink.sinkLog(record);
 
       const contents = sink.contents;
       assert.lengthOf(contents, 1);
-      assert.deepEqual(contents[0],
-        LogRecord.forMessage(90909, 'yay-stack', LOG_TAG, 'error', 'bar baz\n  yay-stack'));
+      assert.strictEqual(contents[0], record);
     });
 
     it('should log a time record as given', () => {
@@ -54,7 +54,7 @@ describe('see-all-server/RecentSink', () => {
         assert.strictEqual(lr.stack, 'yay-stack');
         assert.strictEqual(lr.tag, LOG_TAG);
         assert.strictEqual(lr.payload.name, 'info');
-        assert.deepEqual(lr.payload.args, [`florp ${i}`]);
+        assert.deepEqual(lr.payload.args, ['florp', i]);
       }
     });
 
