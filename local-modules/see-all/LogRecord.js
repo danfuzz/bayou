@@ -316,22 +316,40 @@ export default class LogRecord extends CommonBase {
 
   /**
    * {string} Unified message string, composed from all of the individual
-   * arguments.
+   * arguments. The form varies based on the sort of record (ad-hoc message vs.
+   * structured event vs. timestamp).
    *
-   * This form runs {@link #inspectValue} on each of the message arguments,
-   * concatenating all of them together, separating single-line values from each
-   * other with a single space, and newline-separating multi-line values (so
-   * that each ends up on its own line).
+   * * For ad-hoc messages, the result is produced by calling
+   *   {@link #inspectValue} on each of the message arguments, concatenating all
+   *   of them together, separating single-line values from each other with a
+   *   single space, and newline-separating multi-line values (so that each ends
+   *   up on its own line).
    *
-   * As a special-ish case, the {@link #stack} of the instance is included in
-   * the result if it is non-`null`, the instance doesn't have an error as one
-   * of its arguments, _and_ the instance is an ad-hoc message at `debug`,
-   * `warn`, or `error` level (where stack traces are generally expected).
+   *   As a special-ish case, the {@link #stack} of the instance is included in
+   *   the result if it is non-`null`, the instance doesn't have an error as one
+   *   of its arguments, _and_ the instance is an ad-hoc message at `debug`,
+   *   `warn`, or `error` level (where stack traces are generally expected).
    *
-   * Single-line results have no newlines (including at the end). Multi-line
-   * results always end with a newline.
+   *   Single-line results have no newlines (including at the end). Multi-line
+   *   results always end with a newline.
+   *
+   * * For structured events, the result is from a call to {@link util#inspect}
+   *   on the entire {@link #payload}.
+   *
+   * * For timestamp logs, the result is the two time strings, separated by a
+   *   slash, with no newline.
    */
   get messageString() {
+    if (this.isTime()) {
+      const [utc, local] = this.timeStrings;
+      return `${utc} / ${local}`;
+    } else if (this.isEvent()) {
+      return inspect(this.payload);
+    }
+
+    // The rest of this is for the ad-hoc message case (which is considerably
+    // more involved).
+
     const result      = [];
     let   atLineStart = true;
     let   anyNewlines = false;
