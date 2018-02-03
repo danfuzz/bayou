@@ -22,6 +22,9 @@ export default class WsConnection extends Connection {
   constructor(ws, req, context) {
     super(context, Hooks.theOne.baseUrlFromRequest(req));
 
+    // **TODO:** Remove this once we're a bit more sure about what to expect.
+    this._log.info(`Websocket host: ${req.headers.host}`);
+
     /** {WebSocket} The websocket for the client connection. */
     this._ws = ws;
 
