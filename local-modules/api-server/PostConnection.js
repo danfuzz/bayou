@@ -26,6 +26,7 @@ export default class PostConnection extends Connection {
 
     // **TODO:** Remove this once we're a bit more sure about what to expect.
     this._log.info(`POST host: ${req.headers.host}`);
+    this._log.info(`POST origin: ${req.headers.origin}`);
 
     /** {object} The HTTP request. */
     this._req = req;

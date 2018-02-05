@@ -24,6 +24,7 @@ export default class WsConnection extends Connection {
 
     // **TODO:** Remove this once we're a bit more sure about what to expect.
     this._log.info(`Websocket host: ${req.headers.host}`);
+    this._log.info(`Websocket origin: ${req.headers.origin}`);
 
     /** {WebSocket} The websocket for the client connection. */
     this._ws = ws;
