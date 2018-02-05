@@ -24,6 +24,9 @@ export default class PostConnection extends Connection {
   constructor(req, res, context) {
     super(context, Hooks.theOne.baseUrlFromRequest(req));
 
+    // **TODO:** Remove this once we're a bit more sure about what to expect.
+    this._log.info(`POST host: ${req.headers.host}`);
+
     /** {object} The HTTP request. */
     this._req = req;
 

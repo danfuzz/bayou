@@ -153,11 +153,19 @@ export default class Application {
     // `/api`.
     app.post('/api',
       (req, res) => {
-        new PostConnection(req, res, this._context);
+        try {
+          new PostConnection(req, res, this._context);
+        } catch (e) {
+          log.error('Trouble with API request:', e);
+        }
       });
     app.ws('/api',
       (ws, req) => {
-        new WsConnection(ws, req, this._context);
+        try {
+          new WsConnection(ws, req, this._context);
+        } catch (e) {
+          log.error('Trouble with API request:', e);
+        }
       });
   }
 
