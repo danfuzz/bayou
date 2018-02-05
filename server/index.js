@@ -38,8 +38,18 @@ let argError = false;
  * `node` binary name and the name of the initial script (that is, this file).
  */
 const opts = minimist(process.argv.slice(2), {
-  boolean: ['client-bundle', 'client-test', 'dev', 'help', 'server-test'],
-  string: ['prog-name', 'test-out'],
+  boolean: [
+    'client-bundle',
+    'client-test',
+    'dev',
+    'dev-if-appropriate',
+    'help',
+    'server-test'
+  ],
+  string: [
+    'prog-name',
+    'test-out'
+  ],
   alias: {
     'h': 'help'
   },
@@ -61,6 +71,9 @@ const clientTestMode = opts['client-test'];
 /** {boolean} Dev mode? */
 const devMode = opts['dev'];
 
+/** {boolean} Dev-if-appropriate mode? */
+const devIfAppropriateMode = opts['dev-if-appropriate'];
+
 /** {boolean} Server test mode? */
 const serverTestMode = opts['server-test'];
 
@@ -70,7 +83,7 @@ let testOut = opts['test-out'];
 /** {boolean} Want help? */
 const showHelp = opts['help'];
 
-if ((clientBundleMode + clientTestMode + devMode + serverTestMode) > 1) {
+if ((clientBundleMode + clientTestMode + devMode + devIfAppropriateMode + serverTestMode) > 1) {
   // eslint-disable-next-line no-console
   console.log('Cannot specify multiple mode options.');
   argError = true;
@@ -84,13 +97,27 @@ if ((clientBundleMode + clientTestMode + devMode + serverTestMode) > 1) {
   }
 }
 
+/**
+ * {string} Convenient distillation of the boolean mode options to a single
+ * string. **TODO**: There is almost certainly a better way to do all this
+ * option gymnastics, probably with a commandline-parsing module other than
+ * `minimist`.
+ */
+let executionMode = null;
+if      (clientBundleMode)     { executionMode = 'client-bundle'; }
+else if (clientTestMode)       { executionMode = 'client-test'; }
+else if (devMode)              { executionMode = 'dev'; }
+else if (devIfAppropriateMode) { executionMode = 'dev-if-appropriate'; }
+else if (serverTestMode)       { executionMode = 'server-test'; }
+else                           { executionMode = 'production'; }
+
 if (showHelp || argError) {
   const progName = opts['prog-name'] || path.basename(process.argv[1]);
   [
     'Usage:',
     '',
-    `${progName} [--dev | --client-bundle | --client-test | --server-test ]`,
-    '  [--prog-name=<name>] [--test-out=<path>]',
+    `${progName} [--dev | --dev-if-appropriate | --client-bundle | --client-test | `,
+    '  --server-test ] [--prog-name=<name>] [--test-out=<path>]',
     '',
     '  Run the project.',
     '',
@@ -104,6 +131,10 @@ if (showHelp || argError) {
     '    to restart when client code changes, and to automatically exit when',
     '    server code changes. (The `develop` script automatically rebuilds and',
     '    restarts when the latter happens.)',
+    '  --dev-if-appropriate',
+    '    Run in development mode (per above), but only if the execution environment',
+    '    indicates that it is meant to be so run. (This is determined by a hook in',
+    '    the `hooks-server` module, see which.)',
     '  --prog-name=<name>',
     '    Name of this program, for use when reporting errors and diagnostics.',
     '  --server-test',
@@ -124,8 +155,10 @@ if (showHelp || argError) {
 /**
  * Runs the system. `mode` options are:
  *
- * * `prod` &mdash; Normal production run.
- * * `dev` &mdash; Local development.
+ * * `production` &mdash; Normal production run.
+ * * `dev` &mdash; Development. This enables `/debug` endpoints.
+ * * `dev-if-appropriate` &mdash; Like `dev` or `production`, depending on what
+ *   the salient `server-hook` indicates.
  * * `test` &mdash; Configured for live testing.
  *
  * @param {string} mode The mode as described above.
@@ -150,6 +183,12 @@ async function run(mode) {
     `  product: ${Dirs.theOne.BASE_DIR}\n` +
     `  var:     ${Dirs.theOne.VAR_DIR}`);
 
+  if (mode === 'dev-if-appropriate') {
+    // **TODO:** Check the hook, once it exists.
+  }
+
+  log.info('Running in mode:', mode);
+
   if (mode === 'dev') {
     // We're in dev mode. This starts the system that live-syncs the client
     // source.
@@ -157,7 +196,7 @@ async function run(mode) {
   }
 
   /** The main app server. */
-  const theApp = new Application(mode !== 'prod');
+  const theApp = new Application(mode !== 'production');
 
   // Start the app!
   return theApp.start(mode === 'test');
@@ -246,17 +285,29 @@ process.on('uncaughtException', (error) => {
 
 // Dispatch to the selected top-level function.
 
-if (clientBundleMode) {
-  ServerSink.init(false);
-  clientBundle();
-} else if (clientTestMode) {
-  ServerSink.init(false);
-  clientTest();
-} else if (serverTestMode) {
-  ServerSink.init(false);
-  serverTest();
-} else {
-  ServerSink.init(true);
-  new FileSink(path.resolve(Dirs.theOne.LOG_DIR, 'general.log'));
-  run(devMode ? 'dev' : 'prod');
+switch (executionMode) {
+  case 'client-bundle': {
+    ServerSink.init(false);
+    clientBundle();
+    break;
+  }
+
+  case 'client-test': {
+    ServerSink.init(false);
+    clientTest();
+    break;
+  }
+
+  case 'server-test': {
+    ServerSink.init(false);
+    serverTest();
+    break;
+  }
+
+  default: {
+    ServerSink.init(true);
+    new FileSink(path.resolve(Dirs.theOne.LOG_DIR, 'general.log'));
+    run(executionMode);
+    break;
+  }
 }
