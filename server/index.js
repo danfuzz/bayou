@@ -187,6 +187,8 @@ async function run(mode) {
   if (mode === 'dev-if-appropriate') {
     if (Hooks.theOne.isRunningInDevelopment()) {
       mode = 'dev';
+    } else {
+      mode = 'production';
     }
   }
 
