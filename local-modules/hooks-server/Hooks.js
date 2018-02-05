@@ -101,9 +101,9 @@ export default class Hooks extends Singleton {
   /**
    * Checks to see if this server is running in a "development" environment,
    * returning an indication of the fact. A development environment is notable
-   * in that it has `/debug` endpoints enabled and may be less secure in other
-   * ways as a trade-off for higher internal visibility, that is, higher
-   * debugability.
+   * in that it notices when source files change (and acts accordingly), has
+   * `/debug` endpoints enabled, and may be less secure in other ways as a
+   * tradeoff for higher internal visibility, that is, higher debugability.
    *
    * The default implementation of this method always returns `true`.
    *

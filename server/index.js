@@ -130,7 +130,8 @@ if (showHelp || argError) {
     '    Run in development mode, for interactive development without having',
     '    to restart when client code changes, and to automatically exit when',
     '    server code changes. (The `develop` script automatically rebuilds and',
-    '    restarts when the latter happens.)',
+    '    restarts when the latter happens.) This option also enables `/debug`',
+    '    application endpoints.',
     '  --dev-if-appropriate',
     '    Run in development mode (per above), but only if the execution environment',
     '    indicates that it is meant to be so run. (This is determined by a hook in',
@@ -184,7 +185,9 @@ async function run(mode) {
     `  var:     ${Dirs.theOne.VAR_DIR}`);
 
   if (mode === 'dev-if-appropriate') {
-    // **TODO:** Check the hook, once it exists.
+    if (Hooks.theOne.isRunningInDevelopment()) {
+      mode = 'dev';
+    }
   }
 
   log.info('Running in mode:', mode);
