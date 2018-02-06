@@ -15,6 +15,7 @@ import { ClientBundle } from 'client-bundle';
 import { Dirs } from 'env-server';
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
+import { CommonBase } from 'util-common';
 
 import DebugTools from './DebugTools';
 import RequestLogger from './RequestLogger';
@@ -24,10 +25,10 @@ import RootAccess from './RootAccess';
 const log = new Logger('app');
 
 /**
- * Web server for the application. This serves all HTTP(S) requests, including
- * websocket requests.
+ * Web server for the application. This serves all application HTTP(S) requests,
+ * including websocket requests.
  */
-export default class Application {
+export default class Application extends CommonBase {
   /**
    * Constructs an instance.
    *
@@ -35,6 +36,8 @@ export default class Application {
    *   activates `/debug/*` endpoints.
    */
   constructor(devMode) {
+    super();
+
     const codec = appCommon_TheModule.fullCodec;
 
     /**
@@ -89,6 +92,17 @@ export default class Application {
     if (devMode) {
       this._addDevModeRoutes();
     }
+  }
+
+  /**
+   * Indicates whether or not this instance currently considers itself
+   * "healthy."
+   *
+   * @returns {boolean} `true` if this is a healthy instance, or `false` if not.
+   */
+  async isHealthy() {
+    // **TODO:** Something useful.
+    return true;
   }
 
   /**
