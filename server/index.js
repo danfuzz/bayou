@@ -117,7 +117,7 @@ if (showHelp || argError) {
     'Usage:',
     '',
     `${progName} [--dev | --dev-if-appropriate | --client-bundle | --client-test | `,
-    '  --monitor | --server-test ] [--prog-name=<name>] [--test-out=<path>]',
+    '  --server-test ] [--prog-name=<name>] [--test-out=<path>]',
     '',
     '  Run the project.',
     '',
