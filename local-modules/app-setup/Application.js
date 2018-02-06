@@ -121,7 +121,7 @@ export default class Application extends CommonBase {
 
     const resultPort = server.address().port;
 
-    log.info(`Listening on port: ${resultPort}.`);
+    log.info(`Application server port: ${resultPort}`);
 
     if ((port !== 0) && (port !== resultPort)) {
       log.warn(`Originally requested port: ${port}`);

@@ -49,10 +49,8 @@ export default class Hooks extends Singleton {
   }
 
   /**
-   * {Int} The local port to use for internal monitoring. Internal monitoring is
-   * activated by the `--monitor` server option.
-   *
-   * This (default) implementation of the property always returns `9999`.
+   * {Int|null} The local port to use for internal monitoring, or `null` to
+   * not expose monitoring endpoints.
    */
   get monitorPort() {
     return 9999;

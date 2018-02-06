@@ -6,8 +6,8 @@ import express from 'express';
 import http from 'http';
 import { promisify } from 'util';
 
-import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
+import { TInt } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import Application from './Application';
@@ -23,12 +23,16 @@ export default class Monitor extends CommonBase {
    * Constructs an instance.
    *
    * @param {Application} mainApplication The main application instance.
+   * @param {Int} port The port to listen on.
    */
-  constructor(mainApplication) {
+  constructor(mainApplication, port) {
     super();
 
     /** {Application} The main application instance. */
     this._mainApplication = Application.check(mainApplication);
+
+    /** {Int} The port to listen on. */
+    this._port = TInt.nonNegative(port);
 
     /**
      * {function} The top-level "Express application" run by this instance. It
@@ -46,27 +50,20 @@ export default class Monitor extends CommonBase {
 
   /**
    * Starts up the server.
-   *
-   * @param {boolean} [pickPort = false] If `true`, causes the app to pick an
-   *   arbitrary available port to listen on instead of the configured port.
-   *   This is only meant to be passed as `true` in testing scenarios.
-   * @returns {Int} The port being listened on, once listening has started.
    */
-  async start(pickPort = false) {
-    const port   = pickPort ? 0 : Hooks.theOne.monitorPort;
+  async start() {
+    const port   = this._port;
     const server = this._server;
 
     await promisify(cb => server.listen(port, value => cb(null, value)))();
 
     const resultPort = server.address().port;
 
-    log.info(`Listening on port: ${resultPort}.`);
+    log.info(`Monitor server port: ${resultPort}`);
 
     if ((port !== 0) && (port !== resultPort)) {
       log.warn(`Originally requested port: ${port}`);
     }
-
-    return resultPort;
   }
 
   /**
@@ -88,7 +85,7 @@ export default class Monitor extends CommonBase {
     const app = this._app;
 
     app.get('/health', async (req_unused, res) => {
-      const [status, text] = await this._app.isHealthy()
+      const [status, text] = await this._mainApplication.isHealthy()
         ? [200, '🍑 Everything\'s peachy! 🍑\n']
         : [503, '😿 Sorry to say we can\'t help you right now. 😿\n'];
 
