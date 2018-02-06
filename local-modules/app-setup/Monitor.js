@@ -72,7 +72,11 @@ export default class Monitor extends CommonBase {
   _addRequestLogging() {
     const app = this._app;
 
-    app.use((req, res_unused, next) => {
+    app.use((req, res, next) => {
+      res.on('finish', () => {
+        log.event.httpResponse(req.originalUrl, res.statusCode);
+      });
+
       log.event.httpRequest(req.originalUrl);
       next();
     });
@@ -92,6 +96,7 @@ export default class Monitor extends CommonBase {
       res
         .status(status)
         .type('text/plain; charset=utf-8')
+        .set('Cache-Control', 'no-cache, no-store, no-transform')
         .send(text);
     });
   }
