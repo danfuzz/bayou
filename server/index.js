@@ -16,7 +16,7 @@ import 'babel-polyfill';
 import path from 'path';
 import minimist from 'minimist';
 
-import { Application } from 'app-setup';
+import { Application, Monitor } from 'app-setup';
 import { ClientBundle } from 'client-bundle';
 import { DevMode } from 'dev-mode';
 import { Dirs, ProductInfo, ServerEnv } from 'env-server';
@@ -163,9 +163,11 @@ if (showHelp || argError) {
  * * `test` &mdash; Configured for live testing.
  *
  * @param {string} mode The mode as described above.
+ * @param {boolean} [doMonitor = false] Whether or not to enable the monitoring
+ *   endpoints.
  * @returns {Int} The port being listened on, once listening has started.
  */
-async function run(mode) {
+async function run(mode, doMonitor = false) {
   // Give the overlay a chance to do any required early initialization.
   await Hooks.theOne.run();
 
@@ -203,8 +205,18 @@ async function run(mode) {
   /** The main app server. */
   const theApp = new Application(mode !== 'production');
 
-  // Start the app!
-  return theApp.start(mode === 'test');
+  // Start the app! The result is the port that it ends up listening on.
+  const result = theApp.start(mode === 'test');
+
+  if (doMonitor) {
+    const monitorPort = Hooks.theOne.monitorPort;
+    if (monitorPort !== null) {
+      const monitor = new Monitor(theApp, monitorPort);
+      await monitor.start();
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -312,7 +324,7 @@ switch (executionMode) {
   default: {
     ServerSink.init(true);
     new FileSink(path.resolve(Dirs.theOne.LOG_DIR, 'general.log'));
-    run(executionMode);
+    run(executionMode, true);
     break;
   }
 }

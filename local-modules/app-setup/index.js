@@ -3,5 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import Application from './Application';
+import Monitor from './Monitor';
 
-export { Application };
+export { Application, Monitor };

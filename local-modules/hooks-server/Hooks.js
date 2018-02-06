@@ -49,6 +49,14 @@ export default class Hooks extends Singleton {
   }
 
   /**
+   * {Int|null} The local port to use for internal monitoring, or `null` to
+   * not expose monitoring endpoints.
+   */
+  get monitorPort() {
+    return 9999;
+  }
+
+  /**
    * Given an HTTP request, returns the "public" base URL of that request.
    * By default this is just the `host` as indicated in the headers, prefixed
    * by `http://`. However, when deployed behind a reverse proxy, the
