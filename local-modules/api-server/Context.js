@@ -227,19 +227,19 @@ export default class Context extends CommonBase {
     const idleLimit = Date.now() - IDLE_TIME_MSEC;
     const map = this._map;
 
-    log.info('Cleaning up idle targets...');
+    log.event.idleCleanup('start');
 
     // Note: The ECMAScript spec guarantees that it is safe to delete keys from
     // a map while iterating over it. See
     // <https://tc39.github.io/ecma262/#sec-runtime-semantics-forin-div-ofheadevaluation-tdznames-expr-iterationkind>.
     for (const [key, value] of map) {
       if (value.wasIdleAsOf(idleLimit)) {
-        log.info('Removed:', key);
+        log.event.idleCleanupRemoved(key);
         map.delete(key);
       }
     }
 
-    log.info('Cleaning up idle targets... done!');
+    log.event.idleCleanup('done');
   }
 
   /**

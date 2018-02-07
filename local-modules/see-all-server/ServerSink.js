@@ -5,6 +5,7 @@
 import chalk from 'chalk';
 import stringLength from 'string-length';
 import { format } from 'util';
+import wrapAnsi from 'wrap-ansi';
 
 import { BaseSink, Logger, SeeAll } from 'see-all';
 import { TFunction } from 'typecheck';
@@ -95,9 +96,15 @@ export default class ServerSink extends BaseSink {
 
     // Make a unified string of the entire message.
 
-    const text = logRecord.isTime()
-      ? ServerSink._timeString(logRecord)
-      : logRecord.messageString;
+    let text;
+    if (logRecord.isTime()) {
+      text = ServerSink._timeString(logRecord);
+    } else if (logRecord.isEvent()) {
+      text = chalk.hex('#430').bold(logRecord.messageString);
+    } else {
+      // It's an ad-hoc message.
+      text = logRecord.messageString;
+    }
 
     // Remove the trailing newline, if any, and split on newlines to produce an
     // array of all lines. The final-newline removal means we won't (typically)
@@ -117,14 +124,18 @@ export default class ServerSink extends BaseSink {
 
     if (maxLineWidth > (consoleWidth - this._prefixLength)) {
       this._log(prefix);
-      for (let l of lines) {
-        let indent = '  ';
 
-        while (l) {
-          const chunk = l.substring(0, consoleWidth - indent.length);
-          l = l.substring(chunk.length);
-          this._log(`${indent}${chunk}`);
-          indent = '+ ';
+      const firstIndent = '  ';
+      const restIndent  = '+ ';
+      const wrapWidth   = consoleWidth - firstIndent.length;
+
+      for (const l of lines) {
+        const wrappedLine = wrapAnsi(l, wrapWidth, { hard: true, trim: false });
+
+        let first = true;
+        for (const chunk of wrappedLine.split('\n')) {
+          this._log(`${first ? firstIndent : restIndent}${chunk}`);
+          first = false;
         }
       }
     } else {

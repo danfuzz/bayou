@@ -173,17 +173,17 @@ export default class ApiClient extends CommonBase {
         const challenge = await meta.makeChallenge(id);
         const response  = key.challengeResponseFor(challenge);
 
-        this._log.info('Got challenge:', id, challenge);
+        this._log.event.gotChallenge(id, challenge);
         await meta.authWithChallengeResponse(challenge, response);
 
         // Successful auth.
-        this._log.info('Authed:', id);
+        this._log.event.authed(id);
         this._pendingAuths.delete(id); // It's no longer pending.
         return this._targets.add(id);
       } catch (error) {
         // Trouble along the way. Clean out the pending auth, and propagate the
         // error.
-        this._log.error('Auth failed:', id);
+        this._log.event.authFailed(id);
         this._pendingAuths.delete(id);
         throw error;
       }
@@ -242,13 +242,13 @@ export default class ApiClient extends CommonBase {
     this._ws.onopen    = this._handleOpen.bind(this);
 
     this._updateLogger();
-    this._log.detail('Opening connection...');
+    this._log.event.opening();
 
     const id = await this.meta.connectionId();
 
     this._connectionId = id;
     this._updateLogger();
-    this._log.info('Open.');
+    this._log.event.open();
 
     return true;
   }

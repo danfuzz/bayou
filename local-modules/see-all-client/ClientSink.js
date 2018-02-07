@@ -27,7 +27,7 @@ export default class ClientSink extends BaseSink {
    */
   _impl_sinkLog(logRecord) {
     if (logRecord.isTime()) {
-      // Special colorful markup for times.
+      // Special colorful markup for timestamps.
       this._logTime(logRecord);
       return;
     }
@@ -43,14 +43,36 @@ export default class ClientSink extends BaseSink {
       default:      { logMethod = 'log';   break; }
     }
 
-    for (const a of payload.args) {
-      switch (typeof a) {
-        case 'object':   { formatStr.push((a === null) ? ' %s' : ' %o'); break; }
-        case 'function': { formatStr.push(' %o');                        break; }
-        default:         { formatStr.push(' %s');                        break; }
+    if (logRecord.isEvent()) {
+      formatStr.push('%c%s');
+      args.push('color: #840; font-weight: bold');
+      args.push(` ${payload.name}(`);
+
+      let first = true;
+      for (const a of payload.args) {
+        if (first) {
+          first = false;
+        } else {
+          formatStr.push('%s');
+          args.push(', ');
+        }
+
+        formatStr.push('%o');
+        args.push(a);
       }
 
-      args.push(a);
+      formatStr.push('%s');
+      args.push(')');
+    } else {
+      for (const a of payload.args) {
+        switch (typeof a) {
+          case 'object':   { formatStr.push((a === null) ? ' %s' : ' %o'); break; }
+          case 'function': { formatStr.push(' %o');                        break; }
+          default:         { formatStr.push(' %s');                        break; }
+        }
+
+        args.push(a);
+      }
     }
 
     console[logMethod](formatStr.join(''), ...args);
