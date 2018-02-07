@@ -5,6 +5,7 @@
 import chalk from 'chalk';
 import stringLength from 'string-length';
 import { format } from 'util';
+import wrapAnsi from 'wrap-ansi';
 
 import { BaseSink, Logger, SeeAll } from 'see-all';
 import { TFunction } from 'typecheck';
@@ -123,14 +124,18 @@ export default class ServerSink extends BaseSink {
 
     if (maxLineWidth > (consoleWidth - this._prefixLength)) {
       this._log(prefix);
-      for (let l of lines) {
-        let indent = '  ';
 
-        while (l) {
-          const chunk = l.substring(0, consoleWidth - indent.length);
-          l = l.substring(chunk.length);
-          this._log(`${indent}${chunk}`);
-          indent = '+ ';
+      const firstIndent = '  ';
+      const restIndent  = '+ ';
+      const wrapWidth   = consoleWidth - firstIndent.length;
+
+      for (const l of lines) {
+        const wrappedLine = wrapAnsi(l, wrapWidth, { hard: true, trim: false });
+
+        let first = true;
+        for (const chunk of wrappedLine.split('\n')) {
+          this._log(`${first ? firstIndent : restIndent}${chunk}`);
+          first = false;
         }
       }
     } else {
