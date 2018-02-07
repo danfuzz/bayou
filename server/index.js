@@ -211,8 +211,13 @@ async function run(mode, doMonitor = false) {
   if (doMonitor) {
     const monitorPort = Hooks.theOne.monitorPort;
     if (monitorPort !== null) {
-      const monitor = new Monitor(theApp, monitorPort);
-      await monitor.start();
+      try {
+        const monitor = new Monitor(theApp, monitorPort);
+        await monitor.start();
+      } catch (e) {
+        // Log the error, but soldier on.
+        log.error('Could not start monitor server!', e);
+      }
     }
   }
 
