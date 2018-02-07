@@ -30,10 +30,11 @@ export default class RecentSink extends BaseSink {
     /**
      * {Chalk} Chalk instance to use. We don't just use the global `chalk`, as
      * it gets configured for the observed TTY, and this class wants it to
-     * always be fully enabled, so as to produce maximally-colorful HTML output
-     * from it.
+     * be at level `1`, which is what the `ansi-html` module supports.
+     *  **TODO:** Update this when `ansi-html` gets level `4` support. See
+     * <https://github.com/Tjatse/ansi-html/issues/10>.
      */
-    this._chalk = new chalk.constructor({ level: 4 });
+    this._chalk = new chalk.constructor({ level: 1 });
 
     /** {array<object>} The log contents. */
     this._log = [];
@@ -96,7 +97,6 @@ export default class RecentSink extends BaseSink {
     const ck      = this._chalk;
     let   prefix  = logRecord.prefixString;
     const context = logRecord.contextString || '';
-
     let   body;
 
     if (logRecord.isTime()) {
@@ -108,6 +108,10 @@ export default class RecentSink extends BaseSink {
       // Distill the message (or event) down to a single string, and trim
       // leading and trailing newlines.
       body = logRecord.messageString.replace(/(^\n+)|(\n+$)/g, '');
+
+      if (logRecord.isEvent()) {
+        body = ck.green.dim.bold(body);
+      }
     }
 
     // Color the prefix depending on the event name / severity level.

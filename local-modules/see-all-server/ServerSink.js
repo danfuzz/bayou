@@ -95,9 +95,15 @@ export default class ServerSink extends BaseSink {
 
     // Make a unified string of the entire message.
 
-    const text = logRecord.isTime()
-      ? ServerSink._timeString(logRecord)
-      : logRecord.messageString;
+    let text;
+    if (logRecord.isTime()) {
+      text = ServerSink._timeString(logRecord);
+    } else if (logRecord.isEvent()) {
+      text = chalk.hex('#430').bold(logRecord.messageString);
+    } else {
+      // It's an ad-hoc message.
+      text = logRecord.messageString;
+    }
 
     // Remove the trailing newline, if any, and split on newlines to produce an
     // array of all lines. The final-newline removal means we won't (typically)
