@@ -7,7 +7,6 @@ import express_ws from 'express-ws';
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
-import { promisify } from 'util';
 
 import { ApiLog, BearerToken, Context, PostConnection, WsConnection } from 'api-server';
 import { TheModule as appCommon_TheModule } from 'app-common';
@@ -20,8 +19,9 @@ import { CommonBase } from 'util-common';
 import DebugTools from './DebugTools';
 import RequestLogger from './RequestLogger';
 import RootAccess from './RootAccess';
+import ServerUtil from './ServerUtil';
 
-/** Logger. */
+/** {Logger} Logger. */
 const log = new Logger('app');
 
 /**
@@ -114,12 +114,9 @@ export default class Application extends CommonBase {
    * @returns {Int} The port being listened on, once listening has started.
    */
   async start(pickPort = false) {
-    const port   = pickPort ? 0 : Hooks.theOne.listenPort;
-    const server = this._server;
-
-    await promisify(cb => server.listen(port, value => cb(null, value)))();
-
-    const resultPort = server.address().port;
+    const server     = this._server;
+    const port       = pickPort ? 0 : Hooks.theOne.listenPort;
+    const resultPort = await ServerUtil.listen(server, port);
 
     log.info(`Application server port: ${resultPort}`);
 

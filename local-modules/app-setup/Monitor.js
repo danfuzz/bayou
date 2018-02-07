@@ -4,15 +4,15 @@
 
 import express from 'express';
 import http from 'http';
-import { promisify } from 'util';
 
 import { Logger } from 'see-all';
 import { TInt } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import Application from './Application';
+import ServerUtil from './ServerUtil';
 
-/** Logger. */
+/** {Logger} Logger. */
 const log = new Logger('app-monitor');
 
 /**
@@ -52,12 +52,9 @@ export default class Monitor extends CommonBase {
    * Starts up the server.
    */
   async start() {
-    const port   = this._port;
-    const server = this._server;
-
-    await promisify(cb => server.listen(port, value => cb(null, value)))();
-
-    const resultPort = server.address().port;
+    const server     = this._server;
+    const port       = this._port;
+    const resultPort = await ServerUtil.listen(server, port);
 
     log.info(`Monitor server port: ${resultPort}`);
 
