@@ -89,7 +89,7 @@ export default class Connection extends CommonBase {
     // to this instance/connection.
     this._context.addEvergreen('meta', new MetaHandler(this));
 
-    this._log.info('Open via:', this._baseUrl);
+    this._log.event.open(this._baseUrl);
   }
 
   /** {string} The base URL. */
@@ -123,7 +123,7 @@ export default class Connection extends CommonBase {
    * up its connection-related state.
    */
   close() {
-    this._log.info('Closed.');
+    this._log.event.closed();
     this._context = null;
   }
 

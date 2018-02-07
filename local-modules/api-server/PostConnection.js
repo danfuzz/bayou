@@ -62,7 +62,7 @@ export default class PostConnection extends Connection {
    * Handles an `end` event coming from the request input stream.
    */
   async _handleEnd() {
-    this._log.info('Received message.');
+    this._log.event.receivedPost();
 
     const msg = Buffer.concat(this._chunks).toString('utf8');
     const response = await this.handleJsonMessage(msg);
