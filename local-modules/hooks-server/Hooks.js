@@ -51,9 +51,11 @@ export default class Hooks extends Singleton {
   /**
    * {Int|null} The local port to use for internal monitoring, or `null` to
    * not expose monitoring endpoints.
+   *
+   * This (default) implementation of the property always returns `8888`.
    */
   get monitorPort() {
-    return 9999;
+    return 8888;
   }
 
   /**
