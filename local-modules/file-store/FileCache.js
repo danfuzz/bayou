@@ -41,16 +41,21 @@ export default class FileCache extends CommonBase {
    * if there is no such instance.
    *
    * @param {string} fileId The file ID to look up.
+   * @param {boolean} [quiet = false] If `true`, suppress log spew. (This is
+   *   meant for intra-class usage.)
    * @returns {BaseFile|null} The corresponding file instance, or `null` if no
    *   such instance is active.
    */
-  getOrNull(fileId) {
+  getOrNull(fileId, quiet = false) {
     FileId.check(fileId);
 
     const fileRef = this._cache.get(fileId);
 
     if (!fileRef) {
-      this._log.event.notCached(fileId);
+      if (!quiet) {
+        this._log.event.notCached(fileId);
+      }
+
       return null;
     }
 
@@ -58,13 +63,20 @@ export default class FileCache extends CommonBase {
       // We don't bother removing the dead entry, because in all likelihood the
       // very next thing that will happen is that the calling code is going to
       // re-instantiate the file and add it.
-      this._log.event.dead(fileId);
+
+      if (!quiet) {
+        this._log.event.dead(fileId);
+      }
+
       return null;
     }
 
     const result = BaseFile.check(weak.get(fileRef));
 
-    this._log.event.retrieved(fileId);
+    if (!quiet) {
+      this._log.event.retrieved(fileId);
+    }
+
     return result;
   }
 
@@ -79,7 +91,7 @@ export default class FileCache extends CommonBase {
     BaseFile.check(file);
 
     const id      = file.id;
-    const already = this.getOrNull(id);
+    const already = this.getOrNull(id, true);
 
     if (already !== null) {
       throw Errors.badUse(`ID already present in cache: ${id}`);
