@@ -3,6 +3,8 @@
   "version": "1.0.0",
 
   "dependencies": {
+    "weak": "^1.0.1",
+
     "codec": "local",
     "file-store-ot": "local",
     "hooks-server": "local",

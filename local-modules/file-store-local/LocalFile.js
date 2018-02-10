@@ -111,7 +111,7 @@ export default class LocalFile extends BaseFile {
     /** {Logger} Logger specific to this file's ID. */
     this._log = log.withAddedContext(fileId);
 
-    this._log.info('Path:', this._storagePath);
+    this._log.event.constructed(this._storagePath);
   }
 
   /**
@@ -341,7 +341,7 @@ export default class LocalFile extends BaseFile {
     }
 
     this._snapshot = result;
-    this._log.info(`Made snapshot for revision: ${revNum}`);
+    this._log.event.madeSnapshot(revNum);
 
     return result;
   }
@@ -456,12 +456,12 @@ export default class LocalFile extends BaseFile {
 
       this._changeCondition.value = true;
 
-      this._log.info('New storage.');
+      this._log.event.newStorage();
       return true;
     }
 
     // The directory exists. Read its contents.
-    this._log.info('Reading storage from disk...');
+    this._log.event.readingStorage('start');
 
     const files       = await afs.readdir(this._storagePath);
     const changes     = [];
@@ -481,7 +481,7 @@ export default class LocalFile extends BaseFile {
         }
 
         changes[n] = change;
-        this._log.info('Read change:', change.revNum);
+        this._log.event.readChange(change.revNum);
       }
     };
 
@@ -509,7 +509,7 @@ export default class LocalFile extends BaseFile {
       await storeBufs(bufPromMap);
     }
 
-    this._log.info('Done reading storage.');
+    this._log.event.readingStorage('done');
 
     // Validate that there are no holes, and set up `revNum`.
 
@@ -524,7 +524,7 @@ export default class LocalFile extends BaseFile {
     if (changeCount > 0) {
       // The usual case, handled here, is that there is at least one change.
       this._fileShouldExist = true;
-      this._log.info('Starting revision number:', changeCount - 1);
+      this._log.event.startRevNum(changeCount - 1);
     } else {
       // The file's directory exists, but there weren't any change blobs. This
       // can happen if the code gets run on an incompatibly (older or newer)
@@ -611,7 +611,7 @@ export default class LocalFile extends BaseFile {
     this._storageIsDirty = false;
     this._storageToWrite = new Map();
 
-    this._log.info(`About to write ${dirtyValues.size} value(s).`);
+    this._log.event.writingStorage('start', dirtyValues.size);
 
     // Create the storage directory if needed.
 
@@ -621,7 +621,7 @@ export default class LocalFile extends BaseFile {
     } catch (e) {
       // The call failed.
       await afs.mkdir(this._storagePath);
-      this._log.info('Created storage directory.');
+      this._log.event.created();
     }
 
     // Perform the writes / deletes.
@@ -631,7 +631,7 @@ export default class LocalFile extends BaseFile {
       const fsPath = this._fsPathFromRevNum(revNum);
 
       afsResults.push(afs.writeFile(fsPath, data.toBuffer()));
-      this._log.info('Wrote change:', revNum);
+      this._log.event.wroteChange(revNum);
 
       if (afsResults.length >= MAX_PARALLEL_FS_CALLS) {
         await Promise.all(afsResults);
@@ -645,7 +645,8 @@ export default class LocalFile extends BaseFile {
       this._log.detail(`Completed ${afsResults.length} FS write operation(s).`);
     }
 
-    this._log.info('Finished writing storage. Revision number:', this._changes.length - 1);
+    this._log.event.writingStorage('done');
+
     return true;
   }
 

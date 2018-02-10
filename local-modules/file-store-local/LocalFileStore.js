@@ -7,7 +7,7 @@ import path from 'path';
 
 import { Codec } from 'codec';
 import { Dirs } from 'env-server';
-import { BaseFileStore } from 'file-store';
+import { BaseFileStore, FileCache } from 'file-store';
 import { TheModule as fileStoreOt_TheModule } from 'file-store-ot';
 import { Logger } from 'see-all';
 
@@ -31,8 +31,8 @@ export default class LocalFileStore extends BaseFileStore {
     this._codec = new Codec();
     fileStoreOt_TheModule.registerCodecs(this._codec.registry);
 
-    /** {Map<string, LocalFile>} Map from file IDs to file instances. */
-    this._files = new Map();
+    /** {FileCache} Cache of {@link LocalFile} instances. */
+    this._cache = new FileCache(log);
 
     /** {string} The directory for file storage. */
     this._dir = path.resolve(Dirs.theOne.VAR_DIR, 'files');
@@ -53,16 +53,17 @@ export default class LocalFileStore extends BaseFileStore {
    * @returns {BaseFile} Accessor for the file in question.
    */
   async _impl_getFile(fileId) {
-    const already = this._files.get(fileId);
+    await this._ensureFileStorageDirectory();
+
+    const already = this._cache.getOrNull(fileId);
 
     if (already) {
       return already;
     }
 
-    await this._ensureFileStorageDirectory();
-
     const result = new LocalFile(fileId, this._filePath(fileId), this._codec);
-    this._files.set(fileId, result);
+
+    this._cache.add(result);
     return result;
   }
 
