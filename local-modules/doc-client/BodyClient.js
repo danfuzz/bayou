@@ -111,12 +111,12 @@ export default class BodyClient extends StateMachine {
     this._snapshot = null;
 
     /**
-     * {ChainableEvent|null} Current (most recent) local change to the document
-     * made by Quill that this instance is aware of. That is,
-     * `_currentEvent.nextOf(TYPE_textChange)` (once it resolves) is the first
-     * change that this instance has not yet processed. This variable is
+     * {ChainableEvent|null} Current (most recent) local event emitted by the
+     * Quill instance, which has furthermore already been processed by this
+     * instance. That is, `_currentEvent.next` (once it resolves) is the first
+     * Quill event that this instance has not yet processed. This variable is
      * initialized by getting `_quill.currentEvent` and is generally updated by
-     * getting the next `TYPE_textChange` on it.
+     * getting `.next` or `.nextNow` on it.
      */
     this._currentEvent = null;
 
