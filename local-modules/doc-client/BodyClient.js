@@ -285,11 +285,11 @@ export default class BodyClient extends StateMachine {
    * changes that were in-flight when the connection became problematic.
    */
   _handle_errorWait_start() {
-    this._snapshot          = null;
-    this._sessionProxy      = null;
-    this._currentEvent      = null;
+    this._snapshot           = null;
+    this._sessionProxy       = null;
+    this._currentEvent       = null;
     this._pendingChangeAfter = false;
-    this._pendingQuillAwait = false;
+    this._pendingQuillAwait  = false;
 
     // After this, it's just like starting from the `detached` state.
     this.s_detached();
