@@ -31,7 +31,7 @@ export default class RecentSink extends BaseSink {
      * {Chalk} Chalk instance to use. We don't just use the global `chalk`, as
      * it gets configured for the observed TTY, and this class wants it to
      * be at level `1`, which is what the `ansi-html` module supports.
-     *  **TODO:** Update this when `ansi-html` gets level `4` support. See
+     * **TODO:** Update this when `ansi-html` gets level `4` support. See
      * <https://github.com/Tjatse/ansi-html/issues/10>.
      */
     this._chalk = new chalk.constructor({ level: 1 });
