@@ -15,6 +15,7 @@ import 'babel-polyfill';
 
 import path from 'path';
 import minimist from 'minimist';
+import { inspect } from 'util';
 
 import { Application, Monitor } from 'app-setup';
 import { ClientBundle } from 'client-bundle';
@@ -291,6 +292,15 @@ async function serverTest() {
 }
 
 process.on('unhandledRejection', (reason, promise_unused) => {
+  // Write to `stdout` directly first, because logging might be broken.
+  process.stderr.write('Unhandled promise rejection:\n');
+  if (reason instanceof Error) {
+    process.stderr.write(reason.stack);
+  } else {
+    process.stderr.write(inspect(reason));
+  }
+  process.stderr.write('\n');
+
   log.error('Unhandled promise rejection:', reason);
 
   // Give the system a moment, so it has a chance to actually flush the log,
@@ -302,6 +312,11 @@ process.on('unhandledRejection', (reason, promise_unused) => {
 });
 
 process.on('uncaughtException', (error) => {
+  // Write to `stderr` directly first, because logging might be broken.
+  process.stderr.write('Uncaught error:\n');
+  process.stderr.write(error.stack);
+  process.stderr.write('\n');
+
   log.error('Uncaught error:', error);
 
   // Give the system a moment, so it has a chance to actually flush the log,
