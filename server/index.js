@@ -23,7 +23,7 @@ import { Dirs, ProductInfo, ServerEnv } from 'env-server';
 import { Hooks } from 'hooks-server';
 import { Delay } from 'promise-util';
 import { Logger } from 'see-all';
-import { FileSink, ServerSink } from 'see-all-server';
+import { HumanSink, FileSink } from 'see-all-server';
 import { ClientTests, ServerTests } from 'testing-server';
 
 
@@ -44,6 +44,7 @@ const opts = minimist(process.argv.slice(2), {
     'dev',
     'dev-if-appropriate',
     'help',
+    'human-console',
     'server-test'
   ],
   string: [
@@ -73,6 +74,9 @@ const devMode = opts['dev'];
 
 /** {boolean} Dev-if-appropriate mode? */
 const devIfAppropriateMode = opts['dev-if-appropriate'];
+
+/** {boolean} Write human-oriented console logs? */
+const humanConsole = opts['human-console'];
 
 /** {boolean} Server test mode? */
 const serverTestMode = opts['server-test'];
@@ -117,7 +121,7 @@ if (showHelp || argError) {
     'Usage:',
     '',
     `${progName} [--dev | --dev-if-appropriate | --client-bundle | --client-test | `,
-    '  --server-test ] [--prog-name=<name>] [--test-out=<path>]',
+    '  --server-test ] [--human-console] [--prog-name=<name>] [--test-out=<path>]',
     '',
     '  Run the project.',
     '',
@@ -136,6 +140,9 @@ if (showHelp || argError) {
     '    Run in development mode (per above), but only if the execution environment',
     '    indicates that it is meant to be so run. (This is determined by a hook in',
     '    the `hooks-server` module, see which.)',
+    '  --human-console',
+    '    Provide human-oriented logging output on `stdout`. The default is to write',
+    '    JSON-encoded event records.',
     '  --prog-name=<name>',
     '    Name of this program, for use when reporting errors and diagnostics.',
     '  --server-test',
@@ -309,26 +316,32 @@ process.on('uncaughtException', (error) => {
 
 switch (executionMode) {
   case 'client-bundle': {
-    ServerSink.init(false);
+    new HumanSink(null, true);
     clientBundle();
     break;
   }
 
   case 'client-test': {
-    ServerSink.init(false);
+    new HumanSink(null, true);
     clientTest();
     break;
   }
 
   case 'server-test': {
-    ServerSink.init(false);
+    new HumanSink(null, true);
     serverTest();
     break;
   }
 
   default: {
-    ServerSink.init(true);
-    new FileSink(path.resolve(Dirs.theOne.LOG_DIR, 'general.log'));
+    const humanLogFile = path.resolve(Dirs.theOne.LOG_DIR, 'general.txt');
+    const jsonLogFile = path.resolve(Dirs.theOne.LOG_DIR, 'general.json');
+
+    new FileSink(jsonLogFile, !humanConsole);
+    new HumanSink(humanLogFile, humanConsole);
+
+    HumanSink.patchConsole();
+
     run(executionMode, true);
     break;
   }

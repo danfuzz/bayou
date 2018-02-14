@@ -130,7 +130,7 @@ while true; do
 
     echo ''
 
-    "${outDir}/final/bin/run" --dev
+    "${outDir}/final/bin/run" --dev --human-console
     status="$?"
 
     if (( ${status} >= 128 && ${status} <= 191 )); then
