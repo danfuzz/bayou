@@ -3,15 +3,25 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import chalk from 'chalk';
+import fs from 'fs';
 import stringLength from 'string-length';
 import { format } from 'util';
 import wrapAnsi from 'wrap-ansi';
 
 import { BaseSink, Logger, SeeAll } from 'see-all';
-import { TFunction } from 'typecheck';
+import { TBoolean, TString } from 'typecheck';
 
 // The whole point of this file is to use `console.<whatever>`, so...
 /* eslint-disable no-console */
+
+/**
+ * {Int} Default width of output, in columns. This is used when _not_ outputting
+ * to an actual console or when the width of the console cannot be determined.
+ */
+const DEFAULT_CONSOLE_WIDTH = 120;
+
+/** {Int} Minimum width of output, in columns. */
+const MIN_CONSOLE_WIDTH = 80;
 
 /** {Int} The minimum length of the prefix area, in characters/columns. */
 const MIN_PREFIX_LENGTH = 16;
@@ -23,46 +33,47 @@ const MIN_PREFIX_LENGTH = 16;
 const PREFIX_ADJUST_INCREMENT = 4;
 
 /**
- * Implementation of the `see-all` logging sink protocol for use in a server
- * context. It logs everything to the console.
+ * Implementation of the `see-all` logging sink protocol which writes logs in
+ * a human-friendly text form to one or both of (a) a file and (b) the console.
  */
-export default class ServerSink extends BaseSink {
+export default class HumanSink extends BaseSink {
   /**
-   * Registers an instance of this class as a logging sink with the main
-   * `see-all` module. Also, optionally patches `console.log()` and friends to
-   * call through to `see-all`, such that they will ultimately log to the
-   * console via this class as well as getting logged with any other sink that's
-   * hooked up (e.g. a {@link RecentSink}).
-   *
-   * @param {boolean} patchConsole If `true`, patches `console.log()` and
-   *   friends.
+   * Patches `console.log()` and friends to call through to `see-all`, such that
+   * they end up emitting log records and thus ultimately cause logging to an
+   * instance of this class (if attached) as well as whatever other logging
+   * sinks are hooked up (e.g. and likely, a {@link RecentSink}).
    */
-  static init(patchConsole) {
-    const origConsoleLog = console.log;
-    const log = (...args) => { origConsoleLog.apply(console, args); };
+  static patchConsole() {
+    const consoleLogger = new Logger('node-console');
 
-    SeeAll.theOne.add(new ServerSink(log));
-
-    if (patchConsole) {
-      const consoleLogger = new Logger('node-console');
-      console.info  = (...args) => { consoleLogger.info(format(...args));  };
-      console.warn  = (...args) => { consoleLogger.warn(format(...args));  };
-      console.error = (...args) => { consoleLogger.error(format(...args)); };
-      console.log   = console.info;
-    }
+    console.info  = (...args) => { consoleLogger.info(format(...args));  };
+    console.warn  = (...args) => { consoleLogger.warn(format(...args));  };
+    console.error = (...args) => { consoleLogger.error(format(...args)); };
+    console.log   = console.info;
   }
 
   /**
    * Constructs an instance.
    *
-   * @param {function} log Function to call to actually perform logging. Must
-   *   be call-compatible with (and will often actually be) `console.log()`.
+   * @param {string|null} path Path of the file to log to, or `null` to not
+   *   write to a file.
+   * @param {boolean} useConsole If `true`, also write logs to the console.
+   *   (Technically, write to `process.stdout`.)
    */
-  constructor(log) {
+  constructor(path, useConsole) {
     super();
 
-    /** {function} Function to call to actually perform logging. */
-    this._log = TFunction.checkCallable(log);
+    /**
+     * {string|null} Path of the file to log to, or `null` if this instance is
+     * not writing a file.
+     */
+    this._path = (path === null) ? null : TString.nonEmpty(path);
+
+    /**
+     * {boolean} Whether or not to write logs to the console (`process.stdout`,
+     * really).
+     */
+    this._useConsole = TBoolean.check(useConsole);
 
     /**
      * {Int} Number of columns currently being reserved for log line prefixes.
@@ -84,6 +95,8 @@ export default class ServerSink extends BaseSink {
      * {@link #_makePrefix()}.
      */
     this._recentLineCount = 0;
+
+    SeeAll.theOne.add(this);
   }
 
   /**
@@ -98,7 +111,7 @@ export default class ServerSink extends BaseSink {
 
     let text;
     if (logRecord.isTime()) {
-      text = ServerSink._timeString(logRecord);
+      text = HumanSink._timeString(logRecord);
     } else if (logRecord.isEvent()) {
       text = chalk.hex('#430').bold(logRecord.messageString);
     } else {
@@ -117,13 +130,13 @@ export default class ServerSink extends BaseSink {
     // the prefix. **Note:** `stringLength()` takes into account the fact that
     // ANSI color escapes don't add to the visual-length of a string.
 
-    const consoleWidth = ServerSink._consoleWidth();
+    const consoleWidth = this._consoleWidth();
     const maxLineWidth = lines.reduce(
       (prev, l) => { return Math.max(prev, stringLength(l)); },
       0);
 
     if (maxLineWidth > (consoleWidth - this._prefixLength)) {
-      this._log(prefix);
+      this._write(`${prefix}\n`);
 
       const firstIndent = '  ';
       const restIndent  = '+ ';
@@ -134,7 +147,7 @@ export default class ServerSink extends BaseSink {
 
         let first = true;
         for (const chunk of wrappedLine.split('\n')) {
-          this._log(`${first ? firstIndent : restIndent}${chunk}`);
+          this._write(`${first ? firstIndent : restIndent}${chunk}\n`);
           first = false;
         }
       }
@@ -143,10 +156,26 @@ export default class ServerSink extends BaseSink {
       let   first  = true;
 
       for (const l of lines) {
-        this._log(`${first ? prefix : spaces}${l}`);
+        this._write(`${first ? prefix : spaces}${l}\n`);
         first = false;
       }
     }
+  }
+
+  /**
+   * Figures out the width of the console (if attached) or a reasonable default
+   * if not.
+   *
+   * @returns {number} The console width.
+   */
+  _consoleWidth() {
+    if (!(this._useConsole && process.stdout.isTTY)) {
+      return DEFAULT_CONSOLE_WIDTH;
+    }
+
+    return Math.max(
+      MIN_CONSOLE_WIDTH,
+      process.stdout.getWindowSize()[0] || DEFAULT_CONSOLE_WIDTH);
   }
 
   /**
@@ -205,17 +234,19 @@ export default class ServerSink extends BaseSink {
   }
 
   /**
-   * Figures out the width of the console (if attached) or a reasonable default
-   * if not.
+   * Writes the given string to the log file, and to the console (if
+   * appropriate).
    *
-   * @returns {number} The console width.
+   * @param {string} text String to write.
    */
-  static _consoleWidth() {
-    if (!process.stdout.isTTY) {
-      return 80;
+  _write(text) {
+    if (this._useConsole) {
+      process.stdout.write(text);
     }
 
-    return Math.max(process.stdout.getWindowSize()[0] || 80, 80);
+    if (this._path !== null) {
+      fs.appendFileSync(this._path, text);
+    }
   }
 
   /**

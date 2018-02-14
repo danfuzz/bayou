@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import FileSink from './FileSink';
+import HumanSink from './HumanSink';
 import RecentSink from './RecentSink';
-import ServerSink from './ServerSink';
 
-export { FileSink, RecentSink, ServerSink };
+export { FileSink, HumanSink, RecentSink };
