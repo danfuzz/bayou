@@ -44,6 +44,15 @@ directory:
 $ ./out/final/bin/run
 ```
 
+There are a couple of options you might want to pass to `run` when developing
+interactively.
+
+* `--dev` &mdash; This tells the system to run in "development mode."
+
+* `--human-console` &mdash; Write human-oriented logs to the console, instead
+  of the default JSON form. (The JSON form is intended for consumption by a
+  log-processing pipeline.)
+
 ### Testing
 
 The script `run-tests` will run all of the existing tests, sending output to the

@@ -337,7 +337,7 @@ switch (executionMode) {
     const humanLogFile = path.resolve(Dirs.theOne.LOG_DIR, 'general.txt');
     const jsonLogFile = path.resolve(Dirs.theOne.LOG_DIR, 'general.json');
 
-    new FileSink(jsonLogFile);
+    new FileSink(jsonLogFile, !humanConsole);
     new HumanSink(humanLogFile, humanConsole);
 
     HumanSink.patchConsole();

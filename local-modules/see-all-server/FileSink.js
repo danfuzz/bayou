@@ -5,7 +5,7 @@
 import fs from 'fs';
 
 import { BaseSink, SeeAll } from 'see-all';
-import { TString } from 'typecheck';
+import { TBoolean, TString } from 'typecheck';
 
 /**
  * Implementation of the `see-all` logging sink protocol which stores logged
@@ -17,12 +17,20 @@ export default class FileSink extends BaseSink {
    * the main `see-all` module.
    *
    * @param {string} path Path of the file to log to.
+   * @param {boolean} useConsole If `true`, also write logs to the console.
+   *   (Technically, write to `process.stdout`.)
    */
-  constructor(path) {
+  constructor(path, useConsole) {
     super();
 
     /** {string} Path of the file to log to. */
     this._path = TString.nonEmpty(path);
+
+    /**
+     * {boolean} Whether or not to write logs to the console (`process.stdout`,
+     * really).
+     */
+    this._useConsole = TBoolean.check(useConsole);
 
     SeeAll.theOne.add(this);
   }
@@ -47,6 +55,11 @@ export default class FileSink extends BaseSink {
    */
   _writeJson(value) {
     const string = `${JSON.stringify(value)}\n`;
+
+    if (this._useConsole) {
+      process.stdout.write(string);
+    }
+
     fs.appendFileSync(this._path, string);
   }
 }
