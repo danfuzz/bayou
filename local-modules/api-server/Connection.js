@@ -15,13 +15,6 @@ import Context from './Context';
 const log = new Logger('api');
 
 /**
- * {Connection|null} Connection associated with the current turn of execution
- * or `null` if no connection is currently active. This is set and reset within
- * `_actOnMessage()`.
- */
-let activeNow = null;
-
-/**
  * Base class for connections. Each `Connection` represents a single connection
  * over some mode of transport. Subclasses define the specifics of any given
  * mode of transport.
@@ -37,18 +30,6 @@ let activeNow = null;
  * specific to the connection.
  */
 export default class Connection extends CommonBase {
-  /**
-   * {Connection|null} The instance of this class that is currently active, or
-   * `null` if no connection is active _within this turn of execution_. This is
-   * _only_ non-null during an immediate synchronous call on a target object.
-   * This variable exists so that targets can effect connection-specific
-   * behavior, such as (notably) returning URLs that are sensible for a given
-   * connection.
-   */
-  static get activeNow() {
-    return activeNow;
-  }
-
   /**
    * Constructs an instance. Each instance corresponds to a separate client
    * connection.
@@ -225,12 +206,7 @@ export default class Connection extends CommonBase {
   async _actOnMessage(msg) {
     const target = this.getTarget(msg.targetId);
 
-    activeNow = this;
-    try {
-      return target.call(msg.payload);
-    } finally {
-      activeNow = null;
-    }
+    return target.call(msg.payload);
   }
 
   /**
