@@ -4,8 +4,6 @@
 
 import contentType from 'content-type';
 
-import { Hooks } from 'hooks-server';
-
 import Connection from './Connection';
 
 /**
@@ -22,7 +20,7 @@ export default class PostConnection extends Connection {
    * @param {Context} context The binding context to provide access to.
    */
   constructor(req, res, context) {
-    super(context, Hooks.theOne.baseUrlFromRequest(req));
+    super(context);
 
     // **TODO:** Remove this once we're a bit more sure about what to expect.
     this._log.info(`POST host: ${req.headers.host}`);

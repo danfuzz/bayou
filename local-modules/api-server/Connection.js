@@ -4,7 +4,6 @@
 
 import { ConnectionError, Message, Response } from 'api-common';
 import { Logger } from 'see-all';
-import { TString } from 'typecheck';
 import { CommonBase, Errors, Random } from 'util-common';
 
 import BearerToken from './BearerToken';
@@ -37,11 +36,8 @@ export default class Connection extends CommonBase {
    * @param {Context} context The binding context to provide access to. This
    *   value gets cloned, so that changes to the `this.context` do not affect
    *   the originally passed value.
-   * @param {string} baseUrl The public-facing base URL for this connection.
    */
-  constructor(context, baseUrl) {
-    TString.urlOrigin(baseUrl);
-
+  constructor(context) {
     super();
 
     /** {Context} The binding context to provide access to. */
@@ -69,7 +65,7 @@ export default class Connection extends CommonBase {
     // to this instance/connection.
     this._context.addEvergreen('meta', new MetaHandler(this));
 
-    this._log.event.open(baseUrl);
+    this._log.event.open();
   }
 
   /** {string} The connection ID. */
