@@ -138,18 +138,41 @@ export default class BodyDelta extends BaseDelta {
    * Main implementation of {@link #compose}.
    *
    * @param {BodyDelta} other Delta to compose with this instance.
-   * @param {boolean} wantDocument_unused Whether the result of the operation
-   *   should be a document delta. (Unused because there is no difference in
-   *   behavior needed for this class.)
+   * @param {boolean} wantDocument Whether the result of the operation should be
+   *   a document delta.
    * @returns {BodyDelta} Composed result.
    */
-  _impl_compose(other, wantDocument_unused) {
+  _impl_compose(other, wantDocument) {
     // Use Quill's implementation.
     const quillThis   = this.toQuillForm();
     const quillOther  = other.toQuillForm();
     const quillResult = quillThis.compose(quillOther);
+    const result      = BodyDelta.fromQuillForm(quillResult);
 
-    return BodyDelta.fromQuillForm(quillResult);
+    // **Note:** `quill-delta` doesn't alter its behavior based on whether the
+    // result should be a document or not, and it is possible to have a valid
+    // (from `quill-delta`'s perspective) case of a valid document `this` to be
+    // composed with a valid change `other`, returning a _non-document_ delta
+    // result. Trivial example (in pseudocode):
+    //
+    //   this                = [insert('xyz')]
+    //   other               = [retain(4)]
+    //   this.compose(other) = [insert('xyz'), retain(1)]
+    //
+    // That last line is a valid `quill-delta` composition result, but in the
+    // context of `wantDocument === true` it is invalid, because document deltas
+    // are not allowed to have any `retain` operations (because there is by
+    // definition nothing to retain).
+    //
+    // The following check _just_ catches these sorts of problems, providing a
+    // reasonably apt error message, so as to avoid confusing any of the higher
+    // layers.
+
+    if (wantDocument && !result.isDocument()) {
+      throw Errors.badUse('Inappropriate `other` for composition given `wantDocument === true`.');
+    }
+
+    return result;
   }
 
   /**
