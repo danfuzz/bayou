@@ -3,8 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { SplitKey } from 'api-common';
-import { Connection, Context } from 'api-server';
+import { Context } from 'api-server';
 import { DocServer } from 'doc-server';
+import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
 import { TString } from 'typecheck';
 
@@ -45,20 +46,9 @@ export default class RootAccess {
 
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
 
-    // Under normal circumstances, this method is called in the context of an
-    // active API connection, but it can also be called when debugging, and in
-    // that case we just fall back on the catchall `*` for the associated URL.
-    //
-    // **Note:** `Connection.activeNow` has to be done synchronously with the
-    // call to this method, because connection state doesn't implicitly transfer
-    // into callbacks.
-    const url = Connection.activeNow
-      ? `${Connection.activeNow.baseUrl}/api`
-      : '*';
-
-    const session =
-      fileComplex.makeNewSession(authorId, this._randomId.bind(this));
-    const key = new SplitKey(url, session.getSessionId());
+    const url     = `${Hooks.theOne.baseUrl}/api`;
+    const session = fileComplex.makeNewSession(authorId, this._randomId.bind(this));
+    const key     = new SplitKey(url, session.getSessionId());
     this._context.add(key, session);
 
     log.info(

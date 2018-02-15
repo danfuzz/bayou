@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Hooks } from 'hooks-server';
 import { WebsocketCodes } from 'util-common';
 
 import Connection from './Connection';
@@ -20,7 +19,7 @@ export default class WsConnection extends Connection {
    * @param {Context} context The binding context to provide access to.
    */
   constructor(ws, req, context) {
-    super(context, Hooks.theOne.baseUrlFromRequest(req));
+    super(context);
 
     // **TODO:** Remove this once we're a bit more sure about what to expect.
     this._log.info(`Websocket host: ${req.headers.host}`);

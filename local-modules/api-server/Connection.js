@@ -4,7 +4,6 @@
 
 import { ConnectionError, Message, Response } from 'api-common';
 import { Logger } from 'see-all';
-import { TString } from 'typecheck';
 import { CommonBase, Errors, Random } from 'util-common';
 
 import BearerToken from './BearerToken';
@@ -13,13 +12,6 @@ import Context from './Context';
 
 /** {Logger} Logger. */
 const log = new Logger('api');
-
-/**
- * {Connection|null} Connection associated with the current turn of execution
- * or `null` if no connection is currently active. This is set and reset within
- * `_actOnMessage()`.
- */
-let activeNow = null;
 
 /**
  * Base class for connections. Each `Connection` represents a single connection
@@ -38,34 +30,18 @@ let activeNow = null;
  */
 export default class Connection extends CommonBase {
   /**
-   * {Connection|null} The instance of this class that is currently active, or
-   * `null` if no connection is active _within this turn of execution_. This is
-   * _only_ non-null during an immediate synchronous call on a target object.
-   * This variable exists so that targets can effect connection-specific
-   * behavior, such as (notably) returning URLs that are sensible for a given
-   * connection.
-   */
-  static get activeNow() {
-    return activeNow;
-  }
-
-  /**
    * Constructs an instance. Each instance corresponds to a separate client
    * connection.
    *
    * @param {Context} context The binding context to provide access to. This
    *   value gets cloned, so that changes to the `this.context` do not affect
    *   the originally passed value.
-   * @param {string} baseUrl The public-facing base URL for this connection.
    */
-  constructor(context, baseUrl) {
+  constructor(context) {
     super();
 
     /** {Context} The binding context to provide access to. */
     this._context = Context.check(context).clone();
-
-    /** {string} The public-facing base URL for this connection. */
-    this._baseUrl = TString.urlOrigin(baseUrl);
 
     /**
      * {string} Short label string used to identify this connection in logs.
@@ -89,12 +65,7 @@ export default class Connection extends CommonBase {
     // to this instance/connection.
     this._context.addEvergreen('meta', new MetaHandler(this));
 
-    this._log.event.open(this._baseUrl);
-  }
-
-  /** {string} The base URL. */
-  get baseUrl() {
-    return this._baseUrl;
+    this._log.event.open();
   }
 
   /** {string} The connection ID. */
@@ -225,12 +196,7 @@ export default class Connection extends CommonBase {
   async _actOnMessage(msg) {
     const target = this.getTarget(msg.targetId);
 
-    activeNow = this;
-    try {
-      return target.call(msg.payload);
-    } finally {
-      activeNow = null;
-    }
+    return target.call(msg.payload);
   }
 
   /**

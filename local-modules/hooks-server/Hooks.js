@@ -6,7 +6,7 @@ import path from 'path';
 
 import { LocalFileStore } from 'file-store-local';
 import { Hooks as hooksCommon_Hooks } from 'hooks-common';
-import { Errors, Singleton } from 'util-common';
+import { Singleton } from 'util-common';
 
 import BearerTokens from './BearerTokens';
 
@@ -16,6 +16,17 @@ import BearerTokens from './BearerTokens';
  * source...except for this file (and other similar ones).
  */
 export default class Hooks extends Singleton {
+  /**
+   * {string} The base URL to use when constructing URLs to point at the
+   * public-facing (set of) machine(s) which front for this server.
+   *
+   * The default value for this is `http://localhost:N` where `N` is the value
+   * of {@link #listenPort}.
+   */
+  get baseUrl() {
+    return `http://localhost:${this.listenPort}`;
+  }
+
   /**
    * {BearerTokens} The object which validates and authorizes bearer tokens.
    * See that (base / default) class for details.
@@ -37,10 +48,9 @@ export default class Hooks extends Singleton {
   /**
    * {Int} The local port to listen for connections on by default. This
    * typically but does not _necessarily_ match the values returned by
-   * {@link #baseUrlFromRequest}. It won't match in cases where this server runs
-   * behind a reverse proxy, for example. It also won't match when the system
-   * is brought up in `test` mode, as that mode will pick an arbitrary port to
-   * listen on.
+   * {@link #baseUrl}. It won't match in cases where this server runs behind a
+   * reverse proxy, for example. It also won't match when the system is brought
+   * up in `test` mode, as that mode will pick an arbitrary port to listen on.
    *
    * This (default) implementation of the property always returns `8080`.
    */
@@ -56,24 +66,6 @@ export default class Hooks extends Singleton {
    */
   get monitorPort() {
     return 8888;
-  }
-
-  /**
-   * Given an HTTP request, returns the "public" base URL of that request.
-   * By default this is just the `host` as indicated in the headers, prefixed
-   * by `http://`. However, when deployed behind a reverse proxy, the
-   * public-facing base URL could turn out to be different, hence this hook.
-   *
-   * @param {object} req HTTP request object.
-   * @returns {string} The base URL.
-   */
-  baseUrlFromRequest(req) {
-    const host = req.headers.host;
-    if (host) {
-      return `http://${host}`;
-    }
-
-    throw Errors.badData('Missing `host` header on request.');
   }
 
   /**

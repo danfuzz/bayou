@@ -3,8 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import ClientTests from './ClientTests';
-import Mocks from './Mocks';
 import ServerTests from './ServerTests';
 import TestFiles from './TestFiles';
 
-export { ClientTests, Mocks, ServerTests, TestFiles };
+export { ClientTests, ServerTests, TestFiles };
