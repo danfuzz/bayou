@@ -40,13 +40,12 @@ export default class Connection extends CommonBase {
    * @param {string} baseUrl The public-facing base URL for this connection.
    */
   constructor(context, baseUrl) {
+    TString.urlOrigin(baseUrl);
+
     super();
 
     /** {Context} The binding context to provide access to. */
     this._context = Context.check(context).clone();
-
-    /** {string} The public-facing base URL for this connection. */
-    this._baseUrl = TString.urlOrigin(baseUrl);
 
     /**
      * {string} Short label string used to identify this connection in logs.
@@ -70,12 +69,7 @@ export default class Connection extends CommonBase {
     // to this instance/connection.
     this._context.addEvergreen('meta', new MetaHandler(this));
 
-    this._log.event.open(this._baseUrl);
-  }
-
-  /** {string} The base URL. */
-  get baseUrl() {
-    return this._baseUrl;
+    this._log.event.open(baseUrl);
   }
 
   /** {string} The connection ID. */
