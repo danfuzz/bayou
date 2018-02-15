@@ -9,7 +9,6 @@ import QuillEvents from './QuillEvents';
 import QuillGeometry from './QuillGeometry';
 import QuillProm from './QuillProm';
 import QuillUtil from './QuillUtil';
-import TextReplacement from './TextReplacement';
 
 // Register this module's keyboard handler as an override of Quill's built-in
 // one.
@@ -26,5 +25,4 @@ export {
   QuillGeometry,
   QuillProm,
   QuillUtil,
-  TextReplacement
 };
