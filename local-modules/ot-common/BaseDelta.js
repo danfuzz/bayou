@@ -117,9 +117,9 @@ export default class BaseDelta extends CommonBase {
    * @param {BaseDelta} other The delta to compose. Must be an instance of the
    *   same concrete class as `this`.
    * @param {boolean} wantDocument Whether the result of the operation should be
-   *   a document delta. When `true`, `other` must be passed as a document
-   *   delta. In addition, _some_ subclasses operate differently when asked to
-   *   produce a document vs. not.
+   *   a document delta. _Some_ subclasses operate differently when asked to
+   *   produce a document vs. not, and this parameter controls that (potential)
+   *   behavior. When `true`, `this` must be passed as a document delta.
    * @returns {BodyDelta} Result of composition. Is always an instance of the
    *   same concrete class as `this`.
    */
@@ -237,11 +237,12 @@ export default class BaseDelta extends CommonBase {
 
   /**
    * Main implementation of {@link #compose}. Subclasses must fill this in.
+   * If `wantDocument` is passed as `true`, `this` is guaranteed to be a
+   * document delta.
    *
    * @abstract
    * @param {BaseDelta} other Delta to compose with this instance. Guaranteed
-   *   to be an instance of the same concrete class as `this`. In addition,
-   *   if `wantDocument` is `true`, guaranteed to be a document delta.
+   *   to be an instance of the same concrete class as `this`.
    * @param {boolean} wantDocument Whether the result of the operation should be
    *   a document delta.
    * @returns {BaseDelta} Composed result. Must be an instance of the same
