@@ -84,7 +84,7 @@ export default class HumanSink extends BaseSink {
     /**
      * {Chalk} Chalk instance to use. This is a private instance (not the global
      * `chalk`). Moreover, if this class is set up to write to a file, the
-     * instance supports at least minimal color, becaue we always want the file
+     * instance supports at least minimal color, because we always want the file
      * output to be colorized.
      */
     this._chalk = new chalk.constructor({ level: chalkLevel });
