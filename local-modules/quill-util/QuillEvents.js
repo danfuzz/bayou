@@ -16,6 +16,14 @@ export default class QuillEvents extends UtilityClass {
     return 'api';
   }
 
+  /**
+   * {String} Event source for activity which should be "ignored" (for some
+   * sense of the term).
+   */
+  static get SOURCE_silent() {
+    return 'silent';
+  }
+
   /** {String} Event source for user (human) activity. */
   static get SOURCE_user() {
     return 'user';
