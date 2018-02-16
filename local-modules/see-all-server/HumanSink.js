@@ -77,7 +77,9 @@ export default class HumanSink extends BaseSink {
     this._useConsole = TBoolean.check(useConsole);
 
     // Chalk markup level. See description below.
-    const chalkLevel = (path && (chalk.level === 0)) ? 1 : chalk.level;
+    const chalkLevel = (path === null)
+      ? chalk.level
+      : Math.max(useConsole ? chalk.level : 1, 1);
 
     /**
      * {Chalk} Chalk instance to use. This is a private instance (not the global
