@@ -89,6 +89,9 @@ export default class HumanSink extends BaseSink {
      */
     this._chalk = new chalk.constructor({ level: chalkLevel });
 
+    /** {boolean} When writing to the console, should color be stripped? */
+    this._stripConsoleColor = useConsole && (chalk.level === 0);
+
     /**
      * {Int} Number of columns currently being reserved for log line prefixes.
      * This starts with a reasonable guess (to avoid initial churn) and gets
@@ -256,7 +259,7 @@ export default class HumanSink extends BaseSink {
    */
   _write(text) {
     if (this._useConsole) {
-      if (this._chalk.level === 0) {
+      if (this._stripConsoleColor) {
         // Actual console doesn't support color, so strip it.
         process.stdout.write(stripAnsi(text));
       } else {
