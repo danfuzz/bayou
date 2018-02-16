@@ -6,6 +6,7 @@
     "ansi-html": "^0.0.7",
     "chalk": "^2.3.0",
     "string-length": "^2.0.0",
+    "strip-ansi": "^4.0.0",
     "wrap-ansi": "^3.0.1"
   }
 }
