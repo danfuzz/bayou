@@ -5,6 +5,7 @@
 import chalk from 'chalk';
 import fs from 'fs';
 import stringLength from 'string-length';
+import stripAnsi from 'strip-ansi';
 import { format } from 'util';
 import wrapAnsi from 'wrap-ansi';
 
@@ -75,6 +76,22 @@ export default class HumanSink extends BaseSink {
      */
     this._useConsole = TBoolean.check(useConsole);
 
+    // Chalk markup level. See description below.
+    const chalkLevel = (path === null)
+      ? chalk.level
+      : Math.max(useConsole ? chalk.level : 1, 1);
+
+    /**
+     * {Chalk} Chalk instance to use. This is a private instance (not the global
+     * `chalk`). Moreover, if this class is set up to write to a file, the
+     * instance supports at least minimal color, because we always want the file
+     * output to be colorized.
+     */
+    this._chalk = new chalk.constructor({ level: chalkLevel });
+
+    /** {boolean} When writing to the console, should color be stripped? */
+    this._stripConsoleColor = useConsole && (chalk.level === 0);
+
     /**
      * {Int} Number of columns currently being reserved for log line prefixes.
      * This starts with a reasonable guess (to avoid initial churn) and gets
@@ -111,9 +128,9 @@ export default class HumanSink extends BaseSink {
 
     let text;
     if (logRecord.isTime()) {
-      text = HumanSink._timeString(logRecord);
+      text = this._timeString(logRecord);
     } else if (logRecord.isEvent()) {
-      text = chalk.hex('#430').bold(logRecord.messageString);
+      text = this._chalk.hex('#430').bold(logRecord.messageString);
     } else {
       // It's an ad-hoc message.
       text = logRecord.messageString;
@@ -186,18 +203,19 @@ export default class HumanSink extends BaseSink {
    * @returns {string} The prefix, including coloring and padding.
    */
   _makePrefix(logRecord) {
+    const ck = this._chalk;
     let text = logRecord.prefixString;
 
     // Color the prefix depending on the event name / severity level.
     switch (logRecord.payload.name) {
-      case 'error': { text = chalk.red.bold(text);    break; }
-      case 'warn':  { text = chalk.yellow.bold(text); break; }
-      default:      { text = chalk.dim.bold(text);    break; }
+      case 'error': { text = ck.red.bold(text);    break; }
+      case 'warn':  { text = ck.yellow.bold(text); break; }
+      default:      { text = ck.dim.bold(text);    break; }
     }
 
     // If there's context, color it and append it.
     if (logRecord.contextString !== null) {
-      text += ` ${chalk.hex('#44e').bold(logRecord.contextString)}`;
+      text += ` ${ck.hex('#44e').bold(logRecord.contextString)}`;
     }
 
     // **Note:** `stringLength()` takes into account the fact that ANSI color
@@ -241,7 +259,12 @@ export default class HumanSink extends BaseSink {
    */
   _write(text) {
     if (this._useConsole) {
-      process.stdout.write(text);
+      if (this._stripConsoleColor) {
+        // Actual console doesn't support color, so strip it.
+        process.stdout.write(stripAnsi(text));
+      } else {
+        process.stdout.write(text);
+      }
     }
 
     if (this._path !== null) {
@@ -255,9 +278,10 @@ export default class HumanSink extends BaseSink {
    * @param {LogRecord} logRecord Time log record.
    * @returns {string} Corresponding colorized message.
    */
-  static _timeString(logRecord) {
+  _timeString(logRecord) {
+    const ck           = this._chalk;
     const [utc, local] = logRecord.timeStrings;
 
-    return `${chalk.blue.bold(utc)} / ${chalk.blue.dim.bold(local)}`;
+    return `${ck.blue.bold(utc)} / ${ck.blue.dim.bold(local)}`;
   }
 }
