@@ -7,6 +7,8 @@ import PropTypes from 'prop-types';
 import Quill from 'quill';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
+import { ClientStore } from 'data-model-client';
 import { TBoolean, TFunction, TNumber, TObject, TString } from 'typecheck';
 import { Errors, UtilityClass } from 'util-core';
 
@@ -104,6 +106,7 @@ export default class BlockEmbedWrapper extends UtilityClass {
         TFunction.checkClass(component, React.Component);
 
         this._domNode = domNode;
+        this._clientStore = new ClientStore();
 
         this._props = Object.assign({}, value, {
           addClassToContainer: this.addClassToContainer.bind(this),
@@ -330,7 +333,9 @@ export default class BlockEmbedWrapper extends UtilityClass {
         }
 
         ReactDOM.render(
-          this._element,
+          <Provider store={ this._clientStore.store }>
+            { this._element }
+          </Provider>,
           this._domNode
         );
       }

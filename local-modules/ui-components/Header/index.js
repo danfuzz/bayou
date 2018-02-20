@@ -4,13 +4,14 @@
 
 import React from 'react';
 
-import Avatars from './Avatars';
-import Divider from './Divider';
+import Avatars from 'ui-components/Avatars';
+import Divider from 'ui-components/Divider';
+import Owner from 'ui-components/Owner';
+import SharingStatus from 'ui-components/SharingStatus';
+import Star from 'ui-components/Star';
+import Title from 'ui-components/Title';
+
 import headerStyles from './header.module.less';
-import Owner from './Owner';
-import SharingStatus from './SharingStatus';
-import Star from './Star';
-import Title from './Title';
 
 export default class Header extends React.Component {
   render() {
