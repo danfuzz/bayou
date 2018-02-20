@@ -11,6 +11,9 @@ Bayou Authors
   [Website](https://desalvo.org/) /
   [GitHub](https://github.com/meantime)
 
+* Zachary Forrest y Salazar:
+  [GitHub](https://github.com/zdfs)
+
 With additional contributions from:
 
 * Andreas Haugstrup Pedersen: [GitHub](https://github.com/haugstrup)
