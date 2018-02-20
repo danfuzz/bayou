@@ -11,6 +11,9 @@ See the [client state diagram](https://raw.githubusercontent.com/danfuzz/bayou-d
 for an overview of how the system operates from the client's perspective. This
 is a straightforward (fairly unsurprising) operational-transform implementation.
 
+See the [document structure diagram](https://raw.githubusercontent.com/danfuzz/bayou-docs/master/document-structure.png)
+for an outline of how data is represented and stored.
+
 ### Other information
 
 * [Documentation directory](doc/)
