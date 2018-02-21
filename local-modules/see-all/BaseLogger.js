@@ -46,11 +46,12 @@ export default class BaseLogger extends CommonBase {
    * @param {string} name Event name. Must _not_ correspond to the event name
    *   used for any of the ad-hoc message severity levels or for timestamp logs.
    * @param {...*} args Event payload arguments. **Note:** Non-data arguments
-   *   will get converted (with loss of fidelity) by `util.inspect()`.
+   *   will get converted (with loss of fidelity) via `deconstruct()` (if
+   *   available) or `util.inspect()` (as a last resort).
    */
   logEvent(name, ...args) {
     LogRecord.checkEventName(name);
-    args = DataUtil.deepFreeze(args, inspect);
+    args = DataUtil.deepFreeze(args, x => BaseLogger._convertNonDataForEventLog(x));
     this._impl_logEvent(new Functor(name, ...args));
   }
 
@@ -190,5 +191,31 @@ export default class BaseLogger extends CommonBase {
    */
   _impl_withAddedContext(...context) {
     this._mustOverride(context);
+  }
+
+  /**
+   * Converts a non-data object that was encountered during event logging into
+   * a data form that will survive conversion to JSON (assuming recursive
+   * application of this function).
+   *
+   * @param {*} obj Object to convert.
+   * @returns {*} Converted form of the object.
+   */
+  static _convertNonDataForEventLog(obj) {
+    if (typeof obj.deconstruct === 'function') {
+      // It (presumably) follows the project's `deconstruct()` protocol. Use it
+      // to produce a replacement plain object that looks more or less like how
+      // we represent the constructor form in the JSON representation in the
+      // `codec` module.
+      const name = `new_${obj.constructor.name}`;
+      const args = obj.deconstruct();
+      return { [name]: args };
+    } else {
+      // Use `util.inspect()` as a last resort. The result won't necessarily be
+      // pretty (probably won't), but at least we'll have _something_ to show.
+      const rawName = obj.constructor ? obj.constructor.name : null;
+      const name    = rawName ? `new_${name}` : `anonymous`;
+      return { [name]: inspect(obj) };
+    }
   }
 }
