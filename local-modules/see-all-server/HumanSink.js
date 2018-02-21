@@ -130,7 +130,16 @@ export default class HumanSink extends BaseSink {
      */
     this._recentLineCount = 0;
 
-    this._skipEndTime = null;
+    /**
+     * {Int} Timestamp after which any current log skipping activity should end
+     * and / or reset.
+     */
+    this._skipEndTime = 0;
+
+    /**
+     * {Int} Number of log records that are accounted for in the current burst
+     * of skippable log records.
+     */
     this._skipCount = 0;
 
     SeeAll.theOne.add(this);
@@ -303,7 +312,7 @@ export default class HumanSink extends BaseSink {
       const skipCount = this._skipCount;
       if (skipCount > 0) {
         this._skipCount   = 0;
-        this._skipEndTime = null;
+        this._skipEndTime = 0;
 
         if (skipCount > MAX_SKIPPABLE_BURST_COUNT) {
           const count      = skipCount - MAX_SKIPPABLE_BURST_COUNT;
@@ -316,15 +325,15 @@ export default class HumanSink extends BaseSink {
       }
     };
 
-    if (!HumanSink._isSkippable(logRecord)) {
-      emitSkipLogIfNecessary();
-      return false;
-    }
-
     const timeMsec = logRecord.timeMsec;
     const skipEnd  = this._skipEndTime;
 
-    if ((skipEnd === null) || (timeMsec >= skipEnd)) {
+    if (!HumanSink._isSkippable(logRecord)) {
+      if (timeMsec >= skipEnd) {
+        emitSkipLogIfNecessary();
+      }
+      return false;
+    } else if (timeMsec >= skipEnd) {
       emitSkipLogIfNecessary();
       this._skipEndTime = timeMsec + SKIPPABLE_BURST_MSEC;
       this._skipCount = 0;
