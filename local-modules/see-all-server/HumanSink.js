@@ -48,7 +48,7 @@ const MAX_SKIPPABLE_BURST_COUNT = 5;
  * {Int} Number of msec which should be considered the burst duration, when
  * figuring out whether a skippable message should be skipped.
  */
-const SKIPPABLE_BURST_MSEC = 5000; // Five seconds.
+const SKIPPABLE_BURST_MSEC = 2000; // Two seconds.
 
 /**
  * Implementation of the `see-all` logging sink protocol which writes logs in
