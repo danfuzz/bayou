@@ -8,7 +8,7 @@ import { CommonBase } from 'util-common';
 /**
  * Handler of the logging of API calls.
  */
-export default class ApiLogNew extends CommonBase {
+export default class ApiLog extends CommonBase {
   /**
    * Constructs an instance.
    *

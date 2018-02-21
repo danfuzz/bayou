@@ -6,7 +6,7 @@ import { ConnectionError, Message, Response } from 'api-common';
 import { Logger } from 'see-all';
 import { CommonBase, Errors, Random } from 'util-common';
 
-import ApiLogNew from './ApiLogNew';
+import ApiLog from './ApiLog';
 import BearerToken from './BearerToken';
 import MetaHandler from './MetaHandler';
 import Context from './Context';
@@ -60,7 +60,7 @@ export default class Connection extends CommonBase {
     this._log = log.withAddedContext(this._connectionId);
 
     /** {ApiLog} The API logger to use. */
-    this._apiLog = new ApiLogNew(this._log);
+    this._apiLog = new ApiLog(this._log);
 
     // We add a `meta` binding to the initial set of targets, which is specific
     // to this instance/connection.
