@@ -214,7 +214,7 @@ export default class BaseLogger extends CommonBase {
       // Use `util.inspect()` as a last resort. The result won't necessarily be
       // pretty (probably won't), but at least we'll have _something_ to show.
       const rawName = obj.constructor ? obj.constructor.name : null;
-      const name    = rawName ? `new_${name}` : `anonymous`;
+      const name    = rawName ? `new_${rawName}` : `anonymous`;
       return { [name]: inspect(obj) };
     }
   }
