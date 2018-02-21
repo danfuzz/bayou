@@ -2,8 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { inspect } from 'util';
-
 import Errors from './Errors';
 import FrozenBuffer from './FrozenBuffer';
 import Functor from './Functor';
@@ -38,12 +36,14 @@ export default class DataUtil extends UtilityClass {
    * cause an error to be thrown.
    *
    * @param {*} value Thing to deep freeze.
-   * @param {boolean} [convertNonData = false] If `false` (the default), throws
-   *   an error when non-data is encounterd. If `true`, non-data is converted to
-   *   a string by `util.inspect()`.
+   * @param {function|null} [nonDataConverter = null] If `null` (the default),
+   *   throws an error when non-data is encountered. If non-`null`, must be a
+   *   function of one argument. It gets passed a non-data value and is expected
+   *   to return a replacement which is a deep-freezable (if not already
+   *   deep-frozen) data value.
    * @returns {*} The deep-frozen version of `value`.
    */
-  static deepFreeze(value, convertNonData = false) {
+  static deepFreeze(value, nonDataConverter = null) {
     switch (typeof value) {
       case 'boolean':
       case 'number':
@@ -80,11 +80,11 @@ export default class DataUtil extends UtilityClass {
             const args = value.args;
             return DataUtil.isDeepFrozen(args)
               ? value
-              : new Functor(value.name, ...(DataUtil.deepFreeze(args, convertNonData)));
+              : new Functor(value.name, ...(DataUtil.deepFreeze(args, nonDataConverter)));
           }
           default: {
-            if (convertNonData) {
-              return inspect(value);
+            if (nonDataConverter !== null) {
+              return DataUtil.deepFreeze(nonDataConverter(value));
             } else {
               throw Errors.badValue(value, 'data value');
             }
@@ -106,16 +106,18 @@ export default class DataUtil extends UtilityClass {
           const oldValue = prop.value;
           if (   (oldValue === undefined)
               && !ObjectUtil.hasOwnProperty(prop, 'value')) {
+            // We have just determined that this value isn't actually data.
             // **Note:** The `undefined` check just prevents us from having to
             // call `hasOwnProperty()` in the usual case.
-            if (convertNonData) {
-              // Just drop synthetic properties when we're converting non-data.
-              anyChange = true;
+            if (nonDataConverter !== null) {
+              // Use the converter on the original object (instead of, say,
+              // trying to "edit" its contents).
+              return DataUtil.deepFreeze(nonDataConverter(value));
             } else {
               throw Errors.badValue(value, 'data value', 'without synthetic properties');
             }
           } else {
-            const newValue = DataUtil.deepFreeze(oldValue, convertNonData);
+            const newValue = DataUtil.deepFreeze(oldValue, nonDataConverter);
             if (oldValue !== newValue) {
               anyChange = true;
             }
@@ -127,8 +129,8 @@ export default class DataUtil extends UtilityClass {
       }
 
       default: {
-        if (convertNonData) {
-          return inspect(value);
+        if (nonDataConverter !== null) {
+          return DataUtil.deepFreeze(nonDataConverter(value));
         } else {
           throw Errors.badValue(value, 'data value');
         }

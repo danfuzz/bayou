@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import { CommonBase, DataUtil, Errors, Functor } from 'util-common';
 
 import EventProxyHandler from './EventProxyHandler';
@@ -44,12 +46,11 @@ export default class BaseLogger extends CommonBase {
    * @param {string} name Event name. Must _not_ correspond to the event name
    *   used for any of the ad-hoc message severity levels or for timestamp logs.
    * @param {...*} args Event payload arguments. **Note:** Non-data arguments
-   *   will get converted (with loss of fidelity) by {@link DataUtil#deepFreeze}
-   *   which in turn uses `util.inspect()`.
+   *   will get converted (with loss of fidelity) by `util.inspect()`.
    */
   logEvent(name, ...args) {
     LogRecord.checkEventName(name);
-    args = DataUtil.deepFreeze(args, true);
+    args = DataUtil.deepFreeze(args, inspect);
     this._impl_logEvent(new Functor(name, ...args));
   }
 

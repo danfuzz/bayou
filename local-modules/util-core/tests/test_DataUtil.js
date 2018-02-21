@@ -10,12 +10,12 @@ import { DataUtil, FrozenBuffer, Functor } from 'util-core';
 
 describe('util-core/DataUtil', () => {
   describe('deepFreeze()', () => {
-    // Tests that should work the same for both possible values of
-    // `convertNonData`.
-    function commonTests(convertNonData) {
+    // Tests that should work the same for both `null` and non-`null` values for
+    // `nonDataConverter`.
+    function commonTests(nonDataConverter) {
       it('should return the given value if it is a primitive', () => {
         function test(value) {
-          const popsicle = DataUtil.deepFreeze(value, convertNonData);
+          const popsicle = DataUtil.deepFreeze(value, nonDataConverter);
           assert.strictEqual(popsicle, value);
         }
 
@@ -30,8 +30,8 @@ describe('util-core/DataUtil', () => {
 
       it('should return the provided value if it is already deep-frozen', () => {
         function test(value) {
-          const popsicle     = DataUtil.deepFreeze(value, convertNonData);
-          const deepPopsicle = DataUtil.deepFreeze(popsicle, convertNonData);
+          const popsicle     = DataUtil.deepFreeze(value, nonDataConverter);
+          const deepPopsicle = DataUtil.deepFreeze(popsicle, nonDataConverter);
           assert.isTrue(DataUtil.isDeepFrozen(popsicle));
           assert.strictEqual(deepPopsicle, popsicle, 'Frozen strict-equals re-frozen.');
           assert.deepEqual(deepPopsicle, value, 'Re-frozen deep-equals original.');
@@ -47,8 +47,8 @@ describe('util-core/DataUtil', () => {
 
       it('should return a deep-frozen object if passed one that isn\'t already deep-frozen', () => {
         function test(value) {
-          const popsicle = DataUtil.deepFreeze(value, convertNonData);
-          assert.isTrue(DataUtil.isDeepFrozen(popsicle, convertNonData));
+          const popsicle = DataUtil.deepFreeze(value, nonDataConverter);
+          assert.isTrue(DataUtil.isDeepFrozen(popsicle, nonDataConverter));
           assert.deepEqual(popsicle, value);
         }
 
@@ -62,7 +62,7 @@ describe('util-core/DataUtil', () => {
 
       it('should not freeze the originally passed value', () => {
         const orig = [1, 2, 3];
-        const popsicle = DataUtil.deepFreeze(orig, convertNonData);
+        const popsicle = DataUtil.deepFreeze(orig, nonDataConverter);
 
         assert.isTrue(DataUtil.isDeepFrozen(popsicle));
         assert.isNotFrozen(orig);
@@ -73,7 +73,7 @@ describe('util-core/DataUtil', () => {
         orig[37]   = ['florp'];
         orig[914]  = [[['like']]];
 
-        const popsicle = DataUtil.deepFreeze(orig, convertNonData);
+        const popsicle = DataUtil.deepFreeze(orig, nonDataConverter);
 
         assert.isTrue(DataUtil.isDeepFrozen(popsicle));
         assert.deepEqual(popsicle, orig);
@@ -84,7 +84,7 @@ describe('util-core/DataUtil', () => {
         orig.florp = ['florp'];
         orig.like  = [[['like']]];
 
-        const popsicle = DataUtil.deepFreeze(orig, convertNonData);
+        const popsicle = DataUtil.deepFreeze(orig, nonDataConverter);
 
         assert.isTrue(DataUtil.isDeepFrozen(popsicle));
         assert.deepEqual(popsicle, orig);
@@ -95,7 +95,7 @@ describe('util-core/DataUtil', () => {
         orig[Symbol('florp')] = ['florp'];
         orig[Symbol('like')] = [[['like']]];
 
-        const popsicle = DataUtil.deepFreeze(orig, convertNonData);
+        const popsicle = DataUtil.deepFreeze(orig, nonDataConverter);
 
         assert.isTrue(DataUtil.isDeepFrozen(popsicle));
         assert.deepEqual(popsicle, orig);
@@ -104,7 +104,7 @@ describe('util-core/DataUtil', () => {
       it('should work on objects with symbol-named properties', () => {
         const orig = { a: 10, [Symbol('b')]: 20 };
 
-        const popsicle = DataUtil.deepFreeze(orig, convertNonData);
+        const popsicle = DataUtil.deepFreeze(orig, nonDataConverter);
 
         assert.isTrue(DataUtil.isDeepFrozen(popsicle));
         assert.deepEqual(popsicle, orig);
@@ -112,7 +112,7 @@ describe('util-core/DataUtil', () => {
 
       it('should return a given `FrozenBuffer`', () => {
         function test(value) {
-          assert.strictEqual(DataUtil.deepFreeze(value, convertNonData), value);
+          assert.strictEqual(DataUtil.deepFreeze(value, nonDataConverter), value);
         }
 
         test(FrozenBuffer.coerce(''));
@@ -122,7 +122,7 @@ describe('util-core/DataUtil', () => {
       it('should work on functors with freezable arguments', () => {
         function test(...args) {
           const ftor = new Functor(...args);
-          const popsicle = DataUtil.deepFreeze(ftor, convertNonData);
+          const popsicle = DataUtil.deepFreeze(ftor, nonDataConverter);
           assert.deepEqual(ftor, popsicle);
           assert.notStrictEqual(ftor, popsicle);
         }
@@ -138,7 +138,7 @@ describe('util-core/DataUtil', () => {
       it('should work on already-deep-frozen functors', () => {
         function test(...args) {
           const ftor = new Functor(...args);
-          const popsicle = DataUtil.deepFreeze(ftor, convertNonData);
+          const popsicle = DataUtil.deepFreeze(ftor, nonDataConverter);
           assert.strictEqual(ftor, popsicle);
         }
 
@@ -149,8 +149,8 @@ describe('util-core/DataUtil', () => {
       });
     }
 
-    describe('with `convertNonData = false`', () => {
-      commonTests(false);
+    describe('with `nonDataConverter === null`', () => {
+      commonTests(null);
 
       it('should fail if given a function or a composite that contains same', () => {
         function test(value) {
@@ -185,46 +185,57 @@ describe('util-core/DataUtil', () => {
       });
     });
 
-    describe('with `convertNonData = true`', () => {
-      commonTests(true);
+    describe('with `nonDataConverter !== null`', () => {
+      commonTests(inspect);
 
-      it('should convert a non-plain object via `util.inspect`', () => {
+      it('should convert a non-plain object via the converter function', () => {
         class Florp {
           inspect() {
             return '{florp}';
           }
         }
 
-        const result = DataUtil.deepFreeze(new Florp(), true);
+        const result = DataUtil.deepFreeze(new Florp(), inspect);
 
         assert.strictEqual(result, '{florp}');
       });
 
-      it('should convert a function via `util.inspect`', () => {
+      it('should convert a function via the converter function', () => {
         function someFunc() { return 10; }
-        const result = DataUtil.deepFreeze(someFunc, true);
+        const result = DataUtil.deepFreeze(someFunc, inspect);
 
         assert.strictEqual(result, '[Function: someFunc]');
       });
 
-      it('should strip synthetic properties from plain objects', () => {
+      it('should convert a plain object with synthetic properties via the converter function', () => {
         const obj = {
           a: 10,
           b: 20,
 
-          get x() { return 1; },
-          get y() { return 1; },
-          set y(value_unused) { /*empty*/ },
-
           c: {
-            d: 'ddd',
+            a: 'a',
+            b: 'b',
             get z() { return 1; }
+          },
+
+          d: {
+            a: 1,
+            b: 2,
+            set y(value_unused) { /*empty*/ }
           }
         };
 
-        const result = DataUtil.deepFreeze(obj, true);
+        function converter(x) {
+          return `${x.a} ${x.b}`;
+        }
 
-        assert.deepEqual(result, { a: 10, b: 20, c: { d: 'ddd' } });
+        const result1 = DataUtil.deepFreeze(obj.c, converter);
+        const result2 = DataUtil.deepFreeze(obj.d, converter);
+        const result3 = DataUtil.deepFreeze(obj, converter);
+
+        assert.strictEqual(result1, 'a b');
+        assert.strictEqual(result2, '1 2');
+        assert.deepEqual(result3, { a: 10, b: 20, c: 'a b', d: '1 2' });
       });
     });
   });
