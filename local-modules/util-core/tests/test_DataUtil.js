@@ -254,14 +254,13 @@ describe('util-core/DataUtil', () => {
       };
 
       function converter(x) {
-        return [`${x.a} ${x.b}`, c];
+        return [`${x.a} ${x.b}`, x.c];
       }
 
       const result = DataUtil.deepFreeze(obj, converter);
 
       assert.deepEqual(result, ['10 20', ['a b', 'c']]);
     });
-  });
   });
 
   describe('equalData()', () => {
