@@ -202,20 +202,18 @@ export default class BaseLogger extends CommonBase {
    * @returns {*} Converted form of the object.
    */
   static _convertNonDataForEventLog(obj) {
+    const rawName = obj.constructor ? obj.constructor.name : null;
+    const name    = rawName ? `new_${rawName}` : `new_Anonymous`;
+
     if (typeof obj.deconstruct === 'function') {
       // It (presumably) follows the project's `deconstruct()` protocol. Use it
-      // to produce a replacement plain object that looks more or less like how
-      // we represent the constructor form in the JSON representation in the
-      // `codec` module.
-      const name = `new_${obj.constructor.name}`;
+      // to produce a replacement that looks kind of like a constructor call.
       const args = obj.deconstruct();
-      return { [name]: args };
+      return new Functor(name, ...args);
     } else {
       // Use `util.inspect()` as a last resort. The result won't necessarily be
       // pretty (probably won't), but at least we'll have _something_ to show.
-      const rawName = obj.constructor ? obj.constructor.name : null;
-      const name    = rawName ? `new_${rawName}` : `anonymous`;
-      return { [name]: inspect(obj) };
+      return new Functor(name, inspect(obj));
     }
   }
 }
