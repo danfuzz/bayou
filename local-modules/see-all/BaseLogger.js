@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import { CommonBase, DataUtil, Errors, Functor } from 'util-common';
 
 import EventProxyHandler from './EventProxyHandler';
@@ -44,12 +46,12 @@ export default class BaseLogger extends CommonBase {
    * @param {string} name Event name. Must _not_ correspond to the event name
    *   used for any of the ad-hoc message severity levels or for timestamp logs.
    * @param {...*} args Event payload arguments. **Note:** Non-data arguments
-   *   will get converted (with loss of fidelity) by {@link DataUtil#deepFreeze}
-   *   which in turn uses `util.inspect()`.
+   *   will get converted (with loss of fidelity) via `deconstruct()` (if
+   *   available) or `util.inspect()` (as a last resort).
    */
   logEvent(name, ...args) {
     LogRecord.checkEventName(name);
-    args = DataUtil.deepFreeze(args, true);
+    args = DataUtil.deepFreeze(args, x => BaseLogger._convertNonDataForEventLog(x));
     this._impl_logEvent(new Functor(name, ...args));
   }
 
@@ -189,5 +191,29 @@ export default class BaseLogger extends CommonBase {
    */
   _impl_withAddedContext(...context) {
     this._mustOverride(context);
+  }
+
+  /**
+   * Converts a non-data object that was encountered during event logging into
+   * a data form that will survive conversion to JSON (assuming recursive
+   * application of this function).
+   *
+   * @param {*} obj Object to convert.
+   * @returns {*} Converted form of the object.
+   */
+  static _convertNonDataForEventLog(obj) {
+    const rawName = obj.constructor ? obj.constructor.name : null;
+    const name    = rawName ? `new_${rawName}` : `new_Anonymous`;
+
+    if (typeof obj.deconstruct === 'function') {
+      // It (presumably) follows the project's `deconstruct()` protocol. Use it
+      // to produce a replacement that looks kind of like a constructor call.
+      const args = obj.deconstruct();
+      return new Functor(name, ...args);
+    } else {
+      // Use `util.inspect()` as a last resort. The result won't necessarily be
+      // pretty (probably won't), but at least we'll have _something_ to show.
+      return new Functor(name, inspect(obj));
+    }
   }
 }

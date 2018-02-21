@@ -217,7 +217,7 @@ export default class LogRecord extends CommonBase {
     } else if (value instanceof Error) {
       raw = ErrorUtil.fullTrace(value);
     } else {
-      raw = inspect(value);
+      raw = LogRecord._justInspect(value);
     }
 
     // Trim off initial and trailing newlines.
@@ -344,7 +344,7 @@ export default class LogRecord extends CommonBase {
       const [utc, local] = this.timeStrings;
       return `${utc} / ${local}`;
     } else if (this.isEvent()) {
-      return inspect(this.payload);
+      return LogRecord._justInspect(this.payload);
     }
 
     // The rest of this is for the ad-hoc message case (which is considerably
@@ -515,6 +515,16 @@ export default class LogRecord extends CommonBase {
     const newPayload = new Functor(payload.name, ...message);
 
     return new LogRecord(timeMsec, stack, tag, newPayload);
+  }
+
+  /**
+   * Calls `util.inspect()` on the given value, with standardized options.
+   *
+   * @param {*} value Value to inspect.
+   * @returns {string} The inspected form.
+   */
+  static _justInspect(value) {
+    return inspect(value, { depth: 20, maxArrayLength: 200, breakLength: 120 });
   }
 
   /**
