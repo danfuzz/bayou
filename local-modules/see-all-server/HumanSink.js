@@ -9,7 +9,7 @@ import stripAnsi from 'strip-ansi';
 import { format } from 'util';
 import wrapAnsi from 'wrap-ansi';
 
-import { BaseSink, Logger, SeeAll } from 'see-all';
+import { BaseSink, LogRecord, LogTag, Logger, SeeAll } from 'see-all';
 import { TBoolean, TString } from 'typecheck';
 
 // The whole point of this file is to use `console.<whatever>`, so...
@@ -38,6 +38,17 @@ const PREFIX_ADJUST_INCREMENT = 4;
  * characters.
  */
 const MAX_EVENT_STRING_LENGTH = 200;
+
+/**
+ * {Int} Maximum number of "skippable" events to not-skip in a burst.
+ */
+const MAX_SKIPPABLE_BURST_COUNT = 5;
+
+/**
+ * {Int} Number of msec which should be considered the burst duration, when
+ * figuring out whether a skippable message should be skipped.
+ */
+const SKIPPABLE_BURST_MSEC = 5000; // Five seconds.
 
 /**
  * Implementation of the `see-all` logging sink protocol which writes logs in
@@ -119,6 +130,9 @@ export default class HumanSink extends BaseSink {
      */
     this._recentLineCount = 0;
 
+    this._skipEndTime = null;
+    this._skipCount = 0;
+
     SeeAll.theOne.add(this);
   }
 
@@ -128,6 +142,10 @@ export default class HumanSink extends BaseSink {
    * @param {LogRecord} logRecord The record to write.
    */
   _impl_sinkLog(logRecord) {
+    if (this._shouldSkip(logRecord)) {
+      return;
+    }
+
     const prefix = this._makePrefix(logRecord);
 
     // Make a unified string of the entire message.
@@ -275,6 +293,62 @@ export default class HumanSink extends BaseSink {
   }
 
   /**
+   * Handle the possibility of skipping output for a given record.
+   *
+   * @param {LogRecord} logRecord Record in question.
+   * @returns {boolean} `true` if the record should be skipped in the output.
+   */
+  _shouldSkip(logRecord) {
+    const emitSkipLogIfNecessary = () => {
+      const skipCount = this._skipCount;
+      if (skipCount > 0) {
+        this._skipCount   = 0;
+        this._skipEndTime = null;
+
+        if (skipCount > MAX_SKIPPABLE_BURST_COUNT) {
+          const count      = skipCount - MAX_SKIPPABLE_BURST_COUNT;
+          const countStr   = (count === 1) ? '1 log record' : `${count} log records`;
+          const msg        = chalk.dim(`Skipped ${countStr}.`);
+          const skipRecord = LogRecord.forMessage(logRecord.timeMsec, null, LogTag.LOG, 'info', msg);
+
+          this._impl_sinkLog(skipRecord);
+        }
+      }
+    };
+
+    if (!HumanSink._isSkippable(logRecord)) {
+      emitSkipLogIfNecessary();
+      return false;
+    }
+
+    const timeMsec = logRecord.timeMsec;
+    const skipEnd  = this._skipEndTime;
+
+    if ((skipEnd === null) || (timeMsec >= skipEnd)) {
+      emitSkipLogIfNecessary();
+      this._skipEndTime = timeMsec + SKIPPABLE_BURST_MSEC;
+      this._skipCount = 0;
+      return false;
+    } else {
+      this._skipCount++;
+      return (this._skipCount > MAX_SKIPPABLE_BURST_COUNT);
+    }
+  }
+
+  /**
+   * Creates a colorized message string from a time record.
+   *
+   * @param {LogRecord} logRecord Time log record.
+   * @returns {string} Corresponding colorized message.
+   */
+  _timeString(logRecord) {
+    const ck           = this._chalk;
+    const [utc, local] = logRecord.timeStrings;
+
+    return `${ck.blue.bold(utc)} / ${ck.blue.dim.bold(local)}`;
+  }
+
+  /**
    * Writes the given string to the log file, and to the console (if
    * appropriate).
    *
@@ -296,15 +370,13 @@ export default class HumanSink extends BaseSink {
   }
 
   /**
-   * Creates a colorized message string from a time record.
+   * Is the given log record skippable for the purposes of human-oriented
+   * logging?
    *
-   * @param {LogRecord} logRecord Time log record.
-   * @returns {string} Corresponding colorized message.
+   * @param {LogRecord} logRecord Record in question.
+   * @returns {boolean} `true` if it should be considered skippable.
    */
-  _timeString(logRecord) {
-    const ck           = this._chalk;
-    const [utc, local] = logRecord.timeStrings;
-
-    return `${ck.blue.bold(utc)} / ${ck.blue.dim.bold(local)}`;
+  static _isSkippable(logRecord) {
+    return logRecord.isEvent() || (logRecord.payload.name === 'detail');
   }
 }
