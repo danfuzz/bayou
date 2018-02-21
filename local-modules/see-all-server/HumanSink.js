@@ -34,6 +34,12 @@ const MIN_PREFIX_LENGTH = 16;
 const PREFIX_ADJUST_INCREMENT = 4;
 
 /**
+ * {Int} Maximum allowed length of an untruncated structured event string, in
+ * characters.
+ */
+const MAX_EVENT_STRING_LENGTH = 200;
+
+/**
  * Implementation of the `see-all` logging sink protocol which writes logs in
  * a human-friendly text form to one or both of (a) a file and (b) the console.
  */
@@ -130,7 +136,24 @@ export default class HumanSink extends BaseSink {
     if (logRecord.isTime()) {
       text = this._timeString(logRecord);
     } else if (logRecord.isEvent()) {
-      text = this._chalk.hex('#430').bold(logRecord.messageString);
+      text = logRecord.messageString;
+
+      if (text.length > MAX_EVENT_STRING_LENGTH) {
+        text = text.slice(0, MAX_EVENT_STRING_LENGTH);
+
+        const lines = text.split('\n');
+        if (lines.length === 1) {
+          text += '...';
+        } else {
+          // Replace the last (and presumed partial) line with an ellipsis,
+          // indented to match the second-to-last line.
+          const indent = lines[lines.length - 2].match(/^ */)[0];
+          lines[lines.length - 1] = `${indent}...`;
+          text = lines.join('\n');
+        }
+      }
+
+      text = this._chalk.hex('#430').bold(text);
     } else {
       // It's an ad-hoc message.
       text = logRecord.messageString;
