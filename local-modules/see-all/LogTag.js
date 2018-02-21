@@ -6,6 +6,12 @@ import { TArray, TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 /**
+ * {LogTag|null} Instance to use when logging log system metainfo.
+ * Initialized in {@link #LOG}.
+ */
+let LOG = null;
+
+/**
  * {LogTag|null} Instance to use when logging timestamp "punctuation."
  * Initialized in {@link #TIME}.
  */
@@ -19,6 +25,15 @@ let TIME = null;
  * by the component being so represented).
  */
 export default class LogTag extends CommonBase {
+  /** {LogTag} Instance to use when logging log system metainfo. */
+  static get LOG() {
+    if (LOG === null) {
+      LOG = new LogTag('log');
+    }
+
+    return LOG;
+  }
+
   /** {LogTag} Instance to use when logging timestamp "punctuation." */
   static get TIME() {
     if (TIME === null) {

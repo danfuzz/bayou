@@ -9,7 +9,7 @@ import stripAnsi from 'strip-ansi';
 import { format } from 'util';
 import wrapAnsi from 'wrap-ansi';
 
-import { BaseSink, Logger, SeeAll } from 'see-all';
+import { BaseSink, LogRecord, LogTag, Logger, SeeAll } from 'see-all';
 import { TBoolean, TString } from 'typecheck';
 
 // The whole point of this file is to use `console.<whatever>`, so...
@@ -32,6 +32,23 @@ const MIN_PREFIX_LENGTH = 16;
  * avoid overly-sinuous alignment).
  */
 const PREFIX_ADJUST_INCREMENT = 4;
+
+/**
+ * {Int} Maximum allowed length of an untruncated structured event string, in
+ * characters.
+ */
+const MAX_EVENT_STRING_LENGTH = 200;
+
+/**
+ * {Int} Maximum number of "skippable" events to not-skip in a burst.
+ */
+const MAX_SKIPPABLE_BURST_COUNT = 5;
+
+/**
+ * {Int} Number of msec which should be considered the burst duration, when
+ * figuring out whether a skippable message should be skipped.
+ */
+const SKIPPABLE_BURST_MSEC = 2000; // Two seconds.
 
 /**
  * Implementation of the `see-all` logging sink protocol which writes logs in
@@ -113,6 +130,18 @@ export default class HumanSink extends BaseSink {
      */
     this._recentLineCount = 0;
 
+    /**
+     * {Int} Timestamp after which any current log skipping activity should end
+     * and / or reset.
+     */
+    this._skipEndTime = 0;
+
+    /**
+     * {Int} Number of log records that are accounted for in the current burst
+     * of skippable log records.
+     */
+    this._skipCount = 0;
+
     SeeAll.theOne.add(this);
   }
 
@@ -122,6 +151,10 @@ export default class HumanSink extends BaseSink {
    * @param {LogRecord} logRecord The record to write.
    */
   _impl_sinkLog(logRecord) {
+    if (this._shouldSkip(logRecord)) {
+      return;
+    }
+
     const prefix = this._makePrefix(logRecord);
 
     // Make a unified string of the entire message.
@@ -130,7 +163,24 @@ export default class HumanSink extends BaseSink {
     if (logRecord.isTime()) {
       text = this._timeString(logRecord);
     } else if (logRecord.isEvent()) {
-      text = this._chalk.hex('#430').bold(logRecord.messageString);
+      text = logRecord.messageString;
+
+      if (text.length > MAX_EVENT_STRING_LENGTH) {
+        text = text.slice(0, MAX_EVENT_STRING_LENGTH);
+
+        const lines = text.split('\n');
+        if (lines.length === 1) {
+          text += '...';
+        } else {
+          // Replace the last (and presumed partial) line with an ellipsis,
+          // indented to match the second-to-last line.
+          const indent = lines[lines.length - 2].match(/^ */)[0];
+          lines[lines.length - 1] = `${indent}...`;
+          text = lines.join('\n');
+        }
+      }
+
+      text = this._chalk.hex('#430').bold(text);
     } else {
       // It's an ad-hoc message.
       text = logRecord.messageString;
@@ -252,6 +302,62 @@ export default class HumanSink extends BaseSink {
   }
 
   /**
+   * Handle the possibility of skipping output for a given record.
+   *
+   * @param {LogRecord} logRecord Record in question.
+   * @returns {boolean} `true` if the record should be skipped in the output.
+   */
+  _shouldSkip(logRecord) {
+    const emitSkipLogIfNecessary = () => {
+      const skipCount = this._skipCount;
+      if (skipCount > 0) {
+        this._skipCount   = 0;
+        this._skipEndTime = 0;
+
+        if (skipCount > MAX_SKIPPABLE_BURST_COUNT) {
+          const count      = skipCount - MAX_SKIPPABLE_BURST_COUNT;
+          const countStr   = (count === 1) ? '1 log record' : `${count} log records`;
+          const msg        = chalk.dim(`Skipped ${countStr}.`);
+          const skipRecord = LogRecord.forMessage(logRecord.timeMsec, null, LogTag.LOG, 'info', msg);
+
+          this._impl_sinkLog(skipRecord);
+        }
+      }
+    };
+
+    const timeMsec = logRecord.timeMsec;
+    const skipEnd  = this._skipEndTime;
+
+    if (!HumanSink._isSkippable(logRecord)) {
+      if (timeMsec >= skipEnd) {
+        emitSkipLogIfNecessary();
+      }
+      return false;
+    } else if (timeMsec >= skipEnd) {
+      emitSkipLogIfNecessary();
+      this._skipEndTime = timeMsec + SKIPPABLE_BURST_MSEC;
+      this._skipCount = 0;
+      return false;
+    } else {
+      this._skipCount++;
+      return (this._skipCount > MAX_SKIPPABLE_BURST_COUNT);
+    }
+  }
+
+  /**
+   * Creates a colorized message string from a time record.
+   *
+   * @param {LogRecord} logRecord Time log record.
+   * @returns {string} Corresponding colorized message.
+   */
+  _timeString(logRecord) {
+    const ck           = this._chalk;
+    const [utc, local] = logRecord.timeStrings;
+
+    return `${ck.blue.bold(utc)} / ${ck.blue.dim.bold(local)}`;
+  }
+
+  /**
    * Writes the given string to the log file, and to the console (if
    * appropriate).
    *
@@ -273,15 +379,13 @@ export default class HumanSink extends BaseSink {
   }
 
   /**
-   * Creates a colorized message string from a time record.
+   * Is the given log record skippable for the purposes of human-oriented
+   * logging?
    *
-   * @param {LogRecord} logRecord Time log record.
-   * @returns {string} Corresponding colorized message.
+   * @param {LogRecord} logRecord Record in question.
+   * @returns {boolean} `true` if it should be considered skippable.
    */
-  _timeString(logRecord) {
-    const ck           = this._chalk;
-    const [utc, local] = logRecord.timeStrings;
-
-    return `${ck.blue.bold(utc)} / ${ck.blue.dim.bold(local)}`;
+  static _isSkippable(logRecord) {
+    return logRecord.isEvent() || (logRecord.payload.name === 'detail');
   }
 }

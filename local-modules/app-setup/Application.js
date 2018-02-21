@@ -8,7 +8,7 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 
-import { ApiLog, BearerToken, Context, PostConnection, WsConnection } from 'api-server';
+import { BearerToken, Context, PostConnection, WsConnection } from 'api-server';
 import { TheModule as appCommon_TheModule } from 'app-common';
 import { ClientBundle } from 'client-bundle';
 import { Dirs } from 'env-server';
@@ -44,9 +44,7 @@ export default class Application extends CommonBase {
      * {Context} All of the objects we provide access to via the API, along with
      * other objects of use to the server.
      */
-    this._context = new Context(
-      codec,
-      new ApiLog(path.resolve(Dirs.theOne.LOG_DIR, 'api.log'), codec));
+    this._context = new Context(codec);
     this._context.startAutomaticIdleCleanup();
 
     /**
