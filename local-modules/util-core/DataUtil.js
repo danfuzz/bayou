@@ -40,7 +40,8 @@ export default class DataUtil extends UtilityClass {
    *   throws an error when non-data is encountered. If non-`null`, must be a
    *   function of one argument. It gets passed a non-data value and is expected
    *   to return a replacement which is a deep-freezable (if not already
-   *   deep-frozen) data value.
+   *   deep-frozen) data value, using the same `nonDataConverter` for any
+   *   recursively-encountered non-data values.
    * @returns {*} The deep-frozen version of `value`.
    */
   static deepFreeze(value, nonDataConverter = null) {
@@ -84,7 +85,7 @@ export default class DataUtil extends UtilityClass {
           }
           default: {
             if (nonDataConverter !== null) {
-              return DataUtil.deepFreeze(nonDataConverter(value));
+              return DataUtil.deepFreeze(nonDataConverter(value), nonDataConverter);
             } else {
               throw Errors.badValue(value, 'data value');
             }
@@ -112,7 +113,7 @@ export default class DataUtil extends UtilityClass {
             if (nonDataConverter !== null) {
               // Use the converter on the original object (instead of, say,
               // trying to "edit" its contents).
-              return DataUtil.deepFreeze(nonDataConverter(value));
+              return DataUtil.deepFreeze(nonDataConverter(value), nonDataConverter);
             } else {
               throw Errors.badValue(value, 'data value', 'without synthetic properties');
             }
@@ -130,7 +131,7 @@ export default class DataUtil extends UtilityClass {
 
       default: {
         if (nonDataConverter !== null) {
-          return DataUtil.deepFreeze(nonDataConverter(value));
+          return DataUtil.deepFreeze(nonDataConverter(value), nonDataConverter);
         } else {
           throw Errors.badValue(value, 'data value');
         }

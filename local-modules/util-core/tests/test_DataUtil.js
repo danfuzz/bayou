@@ -238,6 +238,30 @@ describe('util-core/DataUtil', () => {
         assert.deepEqual(result3, { a: 10, b: 20, c: 'a b', d: '1 2' });
       });
     });
+
+    it('should use the converter function recursively', () => {
+      const obj = {
+        get x() { return null; },
+        a: 10,
+        b: 20,
+        c: {
+          a: 'a',
+          b: 'b',
+          c: 'c',
+
+          get y() { return null; }
+        }
+      };
+
+      function converter(x) {
+        return [`${x.a} ${x.b}`, c];
+      }
+
+      const result = DataUtil.deepFreeze(obj, converter);
+
+      assert.deepEqual(result, ['10 20', ['a b', 'c']]);
+    });
+  });
   });
 
   describe('equalData()', () => {
