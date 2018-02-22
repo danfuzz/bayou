@@ -6,7 +6,6 @@
     "camel-case": "^3.0.0",
     "express": "^4.16.0",
     "express-ws": "^3.0.0",
-    "morgan": "^1.7.0",
 
     "api-common": "local",
     "api-server": "local",

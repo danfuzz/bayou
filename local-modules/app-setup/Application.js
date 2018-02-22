@@ -5,7 +5,6 @@
 import express from 'express';
 import express_ws from 'express-ws';
 import http from 'http';
-import fs from 'fs';
 import path from 'path';
 
 import { BearerToken, Context, PostConnection, WsConnection } from 'api-server';
@@ -129,12 +128,7 @@ export default class Application extends CommonBase {
    * Sets up logging for webserver requests.
    */
   _addRequestLogging() {
-    // Stream to write to, when logging to a file.
-    const accessStream = fs.createWriteStream(
-      path.resolve(Dirs.theOne.LOG_DIR, 'access.log'),
-      { flags: 'a' });
-
-    RequestLogger.addLoggers(this._app, log.streamFor('info'), accessStream);
+    RequestLogger.addLoggers(this._app, log);
   }
 
   /**
