@@ -35,7 +35,7 @@ export default class RequestLogger extends CommonBase {
     /** {Logger} Logger to use. */
     this._log = Logger.check(log);
 
-    Object.seal(this);
+    Object.freeze(this);
   }
 
   /**
