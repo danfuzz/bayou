@@ -5,13 +5,12 @@
 import express from 'express';
 import express_ws from 'express-ws';
 import http from 'http';
-import fs from 'fs';
 import path from 'path';
 
 import { BearerToken, Context, PostConnection, WsConnection } from 'api-server';
 import { TheModule as appCommon_TheModule } from 'app-common';
 import { ClientBundle } from 'client-bundle';
-import { Dirs } from 'env-server';
+import { Dirs, ProductInfo } from 'env-server';
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
 import { CommonBase } from 'util-common';
@@ -81,10 +80,17 @@ export default class Application extends CommonBase {
     /** {http.Server} The server that directly answers HTTP requests. */
     this._server = http.createServer(this._app);
 
+    /**
+     * {string} Public ID of this server as reported through HTTP response
+     * headers.
+     */
+    this._serverId = Application._makeIdString();
+
     // Make the webserver able to handle websockets.
     express_ws(this._app, this._server);
 
-    this._addRequestLogging();
+    RequestLogger.addLoggers(this._app, log);
+
     this._addRoutes();
 
     if (devMode) {
@@ -126,15 +132,12 @@ export default class Application extends CommonBase {
   }
 
   /**
-   * Sets up logging for webserver requests.
+   * Adds the dev mode routes.
    */
-  _addRequestLogging() {
-    // Stream to write to, when logging to a file.
-    const accessStream = fs.createWriteStream(
-      path.resolve(Dirs.theOne.LOG_DIR, 'access.log'),
-      { flags: 'a' });
-
-    RequestLogger.addLoggers(this._app, log.streamFor('info'), accessStream);
+  _addDevModeRoutes() {
+    const app = this._app;
+    const debugTools = new DebugTools(this._rootAccess);
+    app.use('/debug', debugTools.requestHandler);
   }
 
   /**
@@ -142,6 +145,13 @@ export default class Application extends CommonBase {
    */
   _addRoutes() {
     const app = this._app;
+
+    // Thwack the `X-Powered-By` header that Express provides by default,
+    // replacing it with something that identifies this product.
+    app.use((req_unused, res, next) => {
+      res.setHeader('X-Powered-By', this._serverId);
+      next();
+    });
 
     // Map Quill files into `/static/quill`. This is used for CSS files but not
     // for the JS code; the JS code is included in the overall JS bundle file.
@@ -179,15 +189,6 @@ export default class Application extends CommonBase {
   }
 
   /**
-   * Adds the dev mode routes.
-   */
-  _addDevModeRoutes() {
-    const app = this._app;
-    const debugTools = new DebugTools(this._rootAccess);
-    app.use('/debug', debugTools.requestHandler);
-  }
-
-  /**
    * Maintains up-to-date bindings for the `rootAccess` object, based on the
    * root token(s) reported via `hooks-server.bearerTokens`. This includes
    * a promise-chain-based ongoing update mechanism.
@@ -211,5 +212,20 @@ export default class Application extends CommonBase {
       }
       this._rootTokens = rootTokens;
     }
+  }
+
+  /**
+   * Makes the server ID string to report in HTTP responses.
+   *
+   * @returns {string} The server ID string.
+   */
+  static _makeIdString() {
+    const { name, version, commit_id } = ProductInfo.theOne.INFO;
+
+    const id = ((typeof commit_id === 'string') && commit_id !== '')
+      ? `-${commit_id.slice(0, 8)}`
+      : '';
+
+    return `${name}-${version}${id}`;
   }
 }

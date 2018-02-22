@@ -471,13 +471,18 @@ function build-product-info {
         )
     )"
 
+    # The current date/time. This is the same format as is produced by the
+    # `git log` command, above.
+    local buildDate="build_date = '$(date '+%Y-%m-%d %H:%M:%S %z')'"
+
     mkdir -p "$(dirname "${outFile}")"
 
-    # Combine the static info file from the source with the git info to produce
-    # the final output.
+    # Combine the static info file from the source with the additional info
+    # derived here, to produce the final output.
     (
         cat "${inFile}"
         echo "${commitInfo}"
+        echo "${buildDate}"
     ) > "${outFile}"
 }
 

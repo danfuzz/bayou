@@ -17,7 +17,7 @@ describe('env-server/ProductInfo', () => {
       // and those from a privately-used overlay. Ugh. Not good. This should
       // probably be broken out into two separate tests so that each
       // environment's expected contributions can be tested independently.
-      const productKeys = ['name', 'version', 'commit_id', 'commit_date'];
+      const productKeys = ['name', 'version', 'commit_id', 'commit_date', 'build_date'];
 
       assert.doesNotThrow(() => TObject.withExactKeys(info, productKeys));
     });
