@@ -101,8 +101,8 @@ export default class RecentSink extends BaseSink {
 
     if (logRecord.isTime()) {
       const [utc, local] = logRecord.timeStrings;
-      const utcString = ck.blue.bold(utc);
-      const localString = ck.blue.dim.bold(local);
+      const utcString    = ck.blue.bold(utc);
+      const localString  = ck.blue.dim.bold(local);
       body = `${utcString} ${ck.dim.bold('/')} ${localString}`;
     } else {
       // Distill the message (or event) down to a single string, and trim
@@ -110,7 +110,7 @@ export default class RecentSink extends BaseSink {
       body = logRecord.messageString.replace(/(^\n+)|(\n+$)/g, '');
 
       if (logRecord.isEvent()) {
-        body = ck.green.dim.bold(body);
+        body = ck.dim.bold(body);
       }
     }
 
