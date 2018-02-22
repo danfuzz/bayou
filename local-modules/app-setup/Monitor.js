@@ -5,6 +5,7 @@
 import express from 'express';
 import http from 'http';
 
+import { ProductInfo } from 'env-server';
 import { Logger } from 'see-all';
 import { TInt } from 'typecheck';
 import { CommonBase } from 'util-common';
@@ -79,6 +80,16 @@ export default class Monitor extends CommonBase {
       res
         .status(status)
         .type('text/plain; charset=utf-8')
+        .set('Cache-Control', 'no-cache, no-store, no-transform')
+        .send(text);
+    });
+
+    app.get('/info', async (req_unused, res) => {
+      const text = JSON.stringify(ProductInfo.theOne.INFO, null, 2);
+
+      res
+        .status(200)
+        .type('application/json; charset=utf-8')
         .set('Cache-Control', 'no-cache, no-store, no-transform')
         .send(text);
     });
