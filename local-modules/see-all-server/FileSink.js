@@ -45,7 +45,12 @@ export default class FileSink extends BaseSink {
     const tag     = [main, ...context];
     const details = { timeMsec, stack, tag, message: logRecord.messageString };
 
-    if (logRecord.isMessage()) {
+    if (logRecord.isTime()) {
+      // No need to log timestamp records. Those are only really useful for
+      // human-oriented logging, because every log record builds in a timestamp
+      // which gets included in its JSON-encoded form.
+      return;
+    } else if (logRecord.isMessage()) {
       details.level = logRecord.payload.name;
     }
 
