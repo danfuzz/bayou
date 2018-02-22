@@ -10,6 +10,7 @@ import { TInt } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import Application from './Application';
+import RequestLogger from './RequestLogger';
 import ServerUtil from './ServerUtil';
 
 /** {Logger} Logger. */
@@ -44,7 +45,8 @@ export default class Monitor extends CommonBase {
     /** {http.Server} The server that directly answers HTTP requests. */
     this._server = http.createServer(this._app);
 
-    this._addRequestLogging();
+    RequestLogger.addLoggers(this._app, log);
+
     this._addRoutes();
   }
 
@@ -61,22 +63,6 @@ export default class Monitor extends CommonBase {
     if ((port !== 0) && (port !== resultPort)) {
       log.warn(`Originally requested port: ${port}`);
     }
-  }
-
-  /**
-   * Sets up logging for webserver requests.
-   */
-  _addRequestLogging() {
-    const app = this._app;
-
-    app.use((req, res, next) => {
-      res.on('finish', () => {
-        log.event.httpResponse(req.originalUrl, res.statusCode);
-      });
-
-      log.event.httpRequest(req.originalUrl);
-      next();
-    });
   }
 
   /**

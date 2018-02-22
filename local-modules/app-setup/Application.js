@@ -83,7 +83,8 @@ export default class Application extends CommonBase {
     // Make the webserver able to handle websockets.
     express_ws(this._app, this._server);
 
-    this._addRequestLogging();
+    RequestLogger.addLoggers(this._app, log);
+
     this._addRoutes();
 
     if (devMode) {
@@ -122,13 +123,6 @@ export default class Application extends CommonBase {
     }
 
     return resultPort;
-  }
-
-  /**
-   * Sets up logging for webserver requests.
-   */
-  _addRequestLogging() {
-    RequestLogger.addLoggers(this._app, log);
   }
 
   /**
