@@ -4,7 +4,7 @@
 
 import { BodyChange, PropertyChange } from 'doc-common';
 import { RevisionNumber, Timestamp } from 'ot-common';
-import { TFunction } from 'typecheck';
+import { TString } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import FileComplex from './FileComplex';
