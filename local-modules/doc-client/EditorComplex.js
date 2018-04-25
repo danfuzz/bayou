@@ -286,8 +286,7 @@ export default class EditorComplex extends CommonBase {
     }
     htmlNode.classList.add('bayou-page');
 
-    const styleDone =
-      DomUtil.addStylesheet(document, `${baseUrl}/static/index.css`);
+    const styleDone = DomUtil.addStylesheet(document, `${baseUrl}/static/index.css`);
 
     // Give the overlay a chance to do any initialization.
     const hookDone = Hooks.theOne.run(this._window, baseUrl);
