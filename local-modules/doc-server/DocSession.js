@@ -4,7 +4,7 @@
 
 import { BodyChange, PropertyChange } from 'doc-common';
 import { RevisionNumber, Timestamp } from 'ot-common';
-import { TString } from 'typecheck';
+import { TFunction } from 'typecheck';
 import { CommonBase } from 'util-common';
 
 import FileComplex from './FileComplex';
@@ -268,6 +268,24 @@ export default class DocSession extends CommonBase {
     const author  = this._authorId;
 
     return `file ${file}; session ${session}; author ${author}`;
+  }
+
+  /**
+   * Returns the author ID of the user managed by this session.
+   *
+   * @returns {string} The author ID.
+   */
+  getAuthorId() {
+    return this._authorId;
+  }
+
+  /**
+   * Returns the document ID of the file controlled by this instance.
+   *
+   * @returns {string} The document ID.
+   */
+  getDocumentId() {
+    return this._fileComplex.fileAccess.file.id;
   }
 
   /**
