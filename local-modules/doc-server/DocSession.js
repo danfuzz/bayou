@@ -48,9 +48,6 @@ export default class DocSession extends CommonBase {
 
     /** {PropertyControl} The underlying property (metadata) controller. */
     this._propertyControl = fileComplex.propertyControl;
-
-    /** {Logger} Logger for this session. */
-    this._log = fileComplex.log.withAddedContext(sessionId);
   }
 
   /**
