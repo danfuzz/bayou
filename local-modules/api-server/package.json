@@ -3,14 +3,14 @@
   "version": "1.0.0",
 
   "dependencies": {
-      "content-type": "^1.0.2",
+    "content-type": "^1.0.2",
 
-      "api-common": "local",
-      "codec": "local",
-      "hooks-server": "local",
-      "promise-util": "local",
-      "see-all": "local",
-      "typecheck": "local",
-      "util-common": "local"
+    "api-common": "local",
+    "codec": "local",
+    "hooks-server": "local",
+    "promise-util": "local",
+    "see-all": "local",
+    "typecheck": "local",
+    "util-common": "local"
   }
 }
