@@ -355,9 +355,11 @@ export default class CaretOverlay {
     personGroup.appendChild(shoulders);
     personGroup.appendChild(head);
 
-    avatarGroup.appendChild(backgroundCircle);
-    avatarGroup.appendChild(personGroup);
-    avatarGroup.appendChild(frame);
+    // Turn the avatar stuff off for now.
+    // **TODO:** Turn this back on with a better UI.
+    //avatarGroup.appendChild(backgroundCircle);
+    //avatarGroup.appendChild(personGroup);
+    //avatarGroup.appendChild(frame);
 
     this._svgDefs.appendChild(avatarGroup);
 
