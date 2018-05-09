@@ -120,7 +120,9 @@ function rsync-archive {
 # relative portion under that directory. That is, it goes from a full path to
 # a simple but possibly scoped module name.
 function path-to-module-name {
-    [[ ${d} =~ ${localModules}/+(.*)$ ]] || return 1
+    local path="$1"
+
+    [[ ${path} =~ ${localModules}/+(.*)$ ]] || return 1
     echo "${BASH_REMATCH[1]}"
 }
 
