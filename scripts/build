@@ -254,10 +254,10 @@ function set-up-dir-mapping {
     add-directory-mapping 'server'
     add-directory-mapping 'client'
 
-    # The `local-modules` get pulled into `client`, `server`, and `compiler` (as
-    # required by dependencies). We make a mapping per subdirectory because it
-    # is the subdirectories  that get pulled in (not the entirety of the
-    # `local-modules` directory).
+    # Individual packages under `local-modules` get pulled into `client`,
+    # `server`, and `compiler` (as required by dependencies). We make a mapping
+    # per package (and not just one for all of `local-modules`) exactly because
+    # packages get pulled in (and overlaid) individually.
     add-package-directory-mappings 'local-modules'
 }
 
