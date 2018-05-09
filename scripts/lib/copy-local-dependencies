@@ -116,6 +116,14 @@ function rsync-archive {
     rsync --archive --ignore-times "$@"
 }
 
+# Given a full path to a directory under `${localModules}`, prints out just the
+# relative portion under that directory. That is, it goes from a full path to
+# a simple but possibly scoped module name.
+function path-to-module-name {
+    [[ ${d} =~ ${localModules}/+(.*)$ ]] || return 1
+    echo "${BASH_REMATCH[1]}"
+}
+
 
 #
 # Main script
@@ -244,7 +252,7 @@ rsync-archive "${origFile}" "${unfixedFile}" || exit 1
     # purpose.
     echo '| .bayouLocalDependencies = []'
     for d in $(printf '%s\n' "${localDeps[@]}" | sort); do
-        name="$(basename "${d}")"
+        name="$(path-to-module-name "${d}")"
         nameq='"'"${name}"'"'
         echo "| .bayouLocalDependencies += [${nameq}]"
     done
@@ -271,14 +279,17 @@ nodeModules="${projectDir}/node_modules"
 mkdir -p "${nodeModules}" || exit 1
 
 for d in "${localDeps[@]}"; do
-    rsync-archive --delete "${d}" "${nodeModules}"
+    name="$(path-to-module-name "${d}")"
+    toDir="${nodeModules}/${name}"
+
+    mkdir -p "${toDir}" || exit 1
+    rsync-archive --delete "${d}/" "${toDir}"
 
     # Remove the `dependencies` from the `package.json`, because otherwise `npm`
     # tries to process them (and they aren't valid as far as it's concerned).
     # Also, add a binding to make it unambiguous that this is a local module.
-    name="$(basename "${d}")"
     jq '
           del(.dependencies)
         | .localModule = true' \
-        "${d}/package.json" > "${nodeModules}/${name}/package.json"
+        "${d}/package.json" > "${toDir}/package.json"
 done

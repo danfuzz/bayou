@@ -324,6 +324,7 @@ function do-install {
     # Integrates local module dependencies into this package. It copies the
     # required local modules and also rewrites the top-level `package.json` so
     # that it lists the transitive closure of external module dependencies.
+    echo "${dir}:" 'Copying local-module dependencies...'
     "${progDir}/lib/copy-local-dependencies" \
         --local-modules="${outDir}/local-modules" "${toDir}" \
     || return 1
