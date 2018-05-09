@@ -191,8 +191,8 @@ function local-module-names {
         | sort -u
 }
 
-# Adds a new directory mapping to the build info file. This includes handling
-# an overlay if it exists.
+# Adds a new directory mapping under the output directory pointing back to the
+# original source location(s). This includes handling an overlay if it exists.
 function add-directory-mapping {
     local dirName="$1"
     local dirInfoFile="${outDir}/${dirName}/${sourceMapName}"
@@ -214,18 +214,29 @@ function add-directory-mapping {
     mappingFiles+=("${dirInfoFile}")
 }
 
-# Adds new directory mappings to the build info file for each subdirectory of
-# a source directory. This includes handling of overlays if they exist.
-function add-subdirectory-mapping {
+# Helper for `add-package-directory-mapping` which finds package (node module)
+# directories under the given directory. It prints the partial path to each such
+# found directory.
+function find-package-directories {
+    local dir="$1"
+
+    # Parens to preserve original CWD. `awk` command to strip the leading `./`
+    # and trailing `/package.json` from the results of the `find` command.
+    (cd "${dir}"; find . -type f -name package.json) \
+        | awk '{ gsub(/^\.\/|\/package\.json$/, ""); print $0; }'
+}
+
+# Adds new directory mappings for each subdirectory of a source directory which
+# appears to be a package (node module), as inferred by the existence of a
+# `package.json` file. This includes handling of overlays if they exist.
+function add-package-directory-mappings {
     local fromDir="$1"
 
     local names=($(
         (
-            cd "${baseDir}/${fromDir}"
-            find . -mindepth 1 -maxdepth 1 -type d | cut -c 3-
+            find-package-directories "${baseDir}/${fromDir}"
             if [[ (${overlayDir} != '') && -e "${overlayDir}/${fromDir}" ]]; then
-                cd "${overlayDir}/${fromDir}"
-                find . -mindepth 1 -maxdepth 1 -type d | cut -c 3-
+                find-package-directories "${overlayDir}/${fromDir}"
             fi
         ) | sort -u
     ))
@@ -243,11 +254,11 @@ function set-up-dir-mapping {
     add-directory-mapping 'server'
     add-directory-mapping 'client'
 
-    # The `local-modules` get pulled into `client`, `server`, and `compiler` (as
-    # required by dependencies). We make a mapping per subdirectory because it
-    # is the subdirectories  that get pulled in (not the entirety of the
-    # `local-modules` directory).
-    add-subdirectory-mapping 'local-modules'
+    # Individual packages under `local-modules` get pulled into `client`,
+    # `server`, and `compiler` (as required by dependencies). We make a mapping
+    # per package (and not just one for all of `local-modules`) exactly because
+    # packages get pulled in (and overlaid) individually.
+    add-package-directory-mappings 'local-modules'
 }
 
 # Copies the server and client source directories into `out`, including the
@@ -313,6 +324,7 @@ function do-install {
     # Integrates local module dependencies into this package. It copies the
     # required local modules and also rewrites the top-level `package.json` so
     # that it lists the transitive closure of external module dependencies.
+    echo "${dir}:" 'Copying local-module dependencies...'
     "${progDir}/lib/copy-local-dependencies" \
         --local-modules="${outDir}/local-modules" "${toDir}" \
     || return 1
