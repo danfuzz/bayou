@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { FrozenBuffer } from 'util-core';
+import { FrozenBuffer } from '@bayou/util-core';
 
 /**
  * {array<string>} List of string test cases meant to cover a good swath of test
@@ -71,7 +71,7 @@ const NON_STRINGS = [
   { '/x': '/y' }
 ];
 
-describe('util-core/FrozenBuffer', () => {
+describe('@bayou/util-core/FrozenBuffer', () => {
   describe('checkHash()', () => {
     it('should accept valid hash strings', () => {
       for (const value of VALID_HASHES) {

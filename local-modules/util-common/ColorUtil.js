@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TNumber, TString } from 'typecheck';
-import { UtilityClass } from 'util-core';
+import { UtilityClass } from '@bayou/util-core';
 
 /**
  * {RegExp} Regular expression that can be used to validate colors that are

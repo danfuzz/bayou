@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { ObjectUtil } from 'util-core';
+import { ObjectUtil } from '@bayou/util-core';
 
-describe('util-core/ObjectUtil', () => {
+describe('@bayou/util-core/ObjectUtil', () => {
   describe('extract()', () => {
     it('should return the extracted properties', () => {
       function test(value, keys, expected) {

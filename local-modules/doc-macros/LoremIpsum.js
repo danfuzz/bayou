@@ -1,4 +1,4 @@
-import { UtilityClass } from 'util-core';
+import { UtilityClass } from 'util-common';
 
 export default class LoremIpsum extends UtilityClass {
   /**

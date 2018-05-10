@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CoreTypecheck, Errors, ObjectUtil, UtilityClass } from 'util-core';
+import { CoreTypecheck, Errors, ObjectUtil, UtilityClass } from '@bayou/util-core';
 
 /**
  * Type checker for type `Object`.
@@ -19,8 +19,9 @@ export default class TObject extends UtilityClass {
    * @returns {object} `value`.
    */
   static check(value, clazz = null) {
-    // This is defined in `CoreTypecheck` so that it can be used by `util-core`
-    // without introducing a circular dependency on this module.
+    // This is defined in `CoreTypecheck` so that it can be used by
+    // `@bayou/util-core` without introducing a circular dependency on this
+    // module.
     return CoreTypecheck.checkObject(value, clazz);
   }
 

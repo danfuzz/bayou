@@ -6,6 +6,6 @@
     "grapheme-splitter": "^1.0.1",
 
     "typecheck": "local",
-    "util-core": "local"
+    "@bayou/util-core": "local"
   }
 }

@@ -78,29 +78,47 @@ export default class TestFiles extends UtilityClass {
 
   /**
    * Gets a list of the names of Bayou local modules under the given subproduct
-   * base directory.
+   * base directory. This directory is expected to contain a `node_modules`
+   * subdirectory, and it is that subdirectory which is scanned.
    *
-   * @param {string} dir Path to the subproduct directory.
+   * @param {string} productDir Path to the subproduct directory.
    * @returns {array<string>} The bayou-local module names under `dir`.
    */
-  static _localModulesIn(dir) {
+  static _localModulesIn(productDir) {
     // What we're doing here is looking for each module directory whose
     // `package.json` indicates that it is a `localModule` (which we arrange for
-    // in the build).
+    // in the build). In addition, we perform the same search recursively on
+    // directories named with an `@` prefix, on the assumption that those are
+    // each a namespace-scope directory containing one or more modules worth
+    // scrutinizing.
 
-    const allModules = fs.readdirSync(path.resolve(dir, 'node_modules'));
-    const modules = allModules.filter((name) => {
-      try {
-        const packageData = fs.readFileSync(
-          path.resolve(dir, 'node_modules', name, 'package.json'));
-        const packageParsed = JSON.parse(packageData);
-        return packageParsed.localModule;
-      } catch (e) {
-        // Probably no `package.json`.
-        return false;
+    const result = [];
+
+    // Looks directly in the indicated directory for local modules. Non-null
+    // `scope` (a) names the scope defined by that directory and (b) prevents
+    // further recursion (that is, there's no such thing as a sub-scope).
+    function findInDir(dir, scope) {
+      const allModules = fs.readdirSync(dir);
+
+      for (const name of allModules) {
+        if ((scope === null) && name.startsWith('@')) {
+          findInDir(path.resolve(dir, name), name);
+        } else {
+          try {
+            const packageData = fs.readFileSync(path.resolve(dir, name, 'package.json'));
+            const packageParsed = JSON.parse(packageData);
+            if (packageParsed.localModule) {
+              result.push((scope === null) ? name : `${scope}/${name}`);
+            }
+          } catch (e) {
+            // Probably no `package.json`. Ignore the (alleged) module.
+          }
+        }
       }
-    });
+    }
 
-    return modules.sort();
+    findInDir(path.resolve(productDir, 'node_modules'), null);
+
+    return result.sort();
   }
 }

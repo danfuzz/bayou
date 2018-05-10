@@ -8,7 +8,7 @@ import { inspect } from 'util';
 
 import { TString } from 'typecheck';
 
-import Assert from 'util-core/tests/Assert';
+import Assert from '@bayou/util-core/tests/Assert';
 
 /** {array<*>} Non-string values to use as test cases. */
 const NON_STRING_CASES = [

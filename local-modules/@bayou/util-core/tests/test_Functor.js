@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { DataUtil, Functor, ObjectUtil } from 'util-core';
+import { DataUtil, Functor, ObjectUtil } from '@bayou/util-core';
 
 /**
  * Simple class with an `equals()` method.
@@ -21,7 +21,7 @@ class HasEquals {
   }
 }
 
-describe('util-core/Functor', () => {
+describe('@bayou/util-core/Functor', () => {
   describe('constructor()', () => {
     it('should accept valid names', () => {
       function test(name) {
