@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CoreTypecheck, Errors, URL, UtilityClass } from 'util-core';
+import { CoreTypecheck, Errors, URL, UtilityClass } from '@bayou/util-core';
 
 /**
  * Type checker for type `String`.
@@ -19,8 +19,9 @@ export default class TString extends UtilityClass {
    * @returns {string} `value`.
    */
   static check(value, regex = null) {
-    // This is defined in `CoreTypecheck` so that it can be used by `util-core`
-    // without introducing a circular dependency on this module.
+    // This is defined in `CoreTypecheck` so that it can be used by
+    // `@bayou/util-core` without introducing a circular dependency on this
+    // module.
     return CoreTypecheck.checkString(value, regex);
   }
 
@@ -62,8 +63,9 @@ export default class TString extends UtilityClass {
    * @returns {string} `value`.
    */
   static identifier(value) {
-    // This is defined in `CoreTypecheck` so that it can be used by `util-core`
-    // without introducing a circular dependency on this module.
+    // This is defined in `CoreTypecheck` so that it can be used by
+    // `@bayou/util-core` without introducing a circular dependency on this
+    // module.
     return CoreTypecheck.checkIdentifier(value);
   }
 
@@ -76,8 +78,9 @@ export default class TString extends UtilityClass {
    * @returns {string} `value`.
    */
   static label(value) {
-    // This is defined in `CoreTypecheck` so that it can be used by `util-core`
-    // without introducing a circular dependency on this module.
+    // This is defined in `CoreTypecheck` so that it can be used by
+    // `@bayou/util-core` without introducing a circular dependency on this
+    // module.
     return CoreTypecheck.checkLabel(value);
   }
 
@@ -135,8 +138,9 @@ export default class TString extends UtilityClass {
    * @returns {string|null} `value`.
    */
   static orNull(value) {
-    // This is defined in `CoreTypecheck` so that it can be used by `util-core`
-    // without introducing a circular dependency on this module.
+    // This is defined in `CoreTypecheck` so that it can be used by
+    // `@bayou/util-core` without introducing a circular dependency on this
+    // module.
     return CoreTypecheck.checkStringOrNull(value);
   }
 

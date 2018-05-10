@@ -7,7 +7,7 @@
 import crypto from 'crypto';
 
 import { TInt } from 'typecheck';
-import { UtilityClass } from 'util-core';
+import { UtilityClass } from '@bayou/util-core';
 
 /**
  * Character set used for ID strings. This is intended to be the set of 32 most

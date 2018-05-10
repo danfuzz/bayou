@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt } from 'typecheck';
-import { UtilityClass } from 'util-core';
+import { UtilityClass } from '@bayou/util-core';
 
 /**
  * A set of utiity functions for conversion and display of

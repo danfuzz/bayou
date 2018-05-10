@@ -32,6 +32,6 @@ export {
   WebsocketCodes
 };
 
-// Client code is expected to get at the definitions from `util-core` via
-// this module. See the README in `util-core` for details.
-export * from 'util-core';
+// Client code is expected to get at the definitions from `@bayou/util-core` via
+// this module. See the README in `@bayou/util-core` for details.
+export * from '@bayou/util-core';

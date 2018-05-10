@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { UtilityClass } from 'util-core';
+import { UtilityClass } from '@bayou/util-core';
 
-describe('util-core/UtilityClass', () => {
+describe('@bayou/util-core/UtilityClass', () => {
   describe('constructor()', () => {
     it('should always throw an error', () => {
       assert.throws(() => { new UtilityClass(); });

@@ -6,9 +6,9 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { DataUtil, FrozenBuffer, Functor } from 'util-core';
+import { DataUtil, FrozenBuffer, Functor } from '@bayou/util-core';
 
-describe('util-core/DataUtil', () => {
+describe('@bayou/util-core/DataUtil', () => {
   describe('deepFreeze()', () => {
     // Tests that should work the same for both `null` and non-`null` values for
     // `nonDataConverter`.

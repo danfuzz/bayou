@@ -4,7 +4,7 @@
 
 import ColorUtil from './ColorUtil';
 
-import { CommonBase } from 'util-core';
+import { CommonBase } from '@bayou/util-core';
 
 /**
  * Generator of an unending progression of colors. The original

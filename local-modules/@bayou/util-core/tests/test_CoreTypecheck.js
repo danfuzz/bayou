@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { CoreTypecheck } from 'util-core';
+import { CoreTypecheck } from '@bayou/util-core';
 
 import Assert from './Assert';
 
@@ -30,7 +30,7 @@ const NON_STRING_CASES = [
   /** Function. */ () => { /*empty*/ }
 ];
 
-describe('util-core/CoreTypecheck', () => {
+describe('@bayou/util-core/CoreTypecheck', () => {
   describe('checkIdentifier()', () => {
     it('accepts identifier strings', () => {
       function test(value) {

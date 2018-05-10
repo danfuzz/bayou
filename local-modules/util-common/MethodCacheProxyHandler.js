@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TFunction } from 'typecheck';
-import { CommonBase, Errors } from 'util-core';
+import { CommonBase, Errors } from '@bayou/util-core';
 
 /** {Set<string>} Set of methods which never get proxied. */
 const VERBOTEN_METHODS = new Set([

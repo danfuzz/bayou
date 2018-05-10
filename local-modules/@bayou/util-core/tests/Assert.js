@@ -4,7 +4,7 @@
 
 import { assert } from 'chai';
 
-import { InfoError, UtilityClass } from 'util-core';
+import { InfoError, UtilityClass } from '@bayou/util-core';
 
 /**
  * Additional assertion functions for use with this project.

@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TFunction } from 'typecheck';
-import { CommonBase } from 'util-core';
+import { CommonBase } from '@bayou/util-core';
 
 /**
  * Iterable over object properties. Instances walk over all properties of the

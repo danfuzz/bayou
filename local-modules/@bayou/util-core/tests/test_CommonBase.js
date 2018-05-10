@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { CommonBase } from 'util-common';
 
-describe('util-core/CommonBase', () => {
+describe('@bayou/util-core/CommonBase', () => {
   describe('check()', () => {
     it('should return the supplied value if it is an instance of the class or a subclass', () => {
       class Subclass1 extends CommonBase {

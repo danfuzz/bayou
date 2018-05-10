@@ -9,7 +9,7 @@ import crypto from 'crypto';
 import GraphemeSplitter from 'grapheme-splitter';
 
 import { TInt, TString } from 'typecheck';
-import { UtilityClass } from 'util-core';
+import { UtilityClass } from '@bayou/util-core';
 
 /**
  * Several (hopefully) useful routines to make dealing with strings (especially

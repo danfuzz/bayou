@@ -1,5 +1,5 @@
-util-core
-=========
+@bayou/util-core
+================
 
 This module provides the lowest layer utility functionality of the system. The
 module only exists so as to avoid a circular dependency between the modules
@@ -9,9 +9,9 @@ functionality is more "publicly" exposed via `util-common` (and a little via
 
 The dependency relationship is:
 
-* `util-core` has no dependencies.
-* `typecheck` depends on `util-core`.
-* `util-common` depends on both `util-core` and `typecheck`.
+* `@bayou/util-core` has no dependencies.
+* `typecheck` depends on `@bayou/util-core`.
+* `util-common` depends on both `@bayou/util-core` and `typecheck`.
 
 - - - - - - - - - -
 
