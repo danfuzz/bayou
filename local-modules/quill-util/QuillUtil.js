@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import Quill from 'quill';
-import { TObject } from 'typecheck';
+import { TObject } from '@bayou/typecheck';
 
 import { UtilityClass } from 'util-common';
 

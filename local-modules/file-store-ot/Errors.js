@@ -4,7 +4,7 @@
 
 import { StoragePath } from 'file-store-ot';
 import { RevisionNumber } from 'ot-common';
-import { TString } from 'typecheck';
+import { TString } from '@bayou/typecheck';
 import { FrozenBuffer, InfoError, UtilityClass } from 'util-common';
 
 /**

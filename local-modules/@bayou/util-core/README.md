@@ -3,15 +3,15 @@
 
 This module provides the lowest layer utility functionality of the system. The
 module only exists so as to avoid a circular dependency between the modules
-`typecheck` and `util-common`. In general, it shouldn't be used directly. Its
-functionality is more "publicly" exposed via `util-common` (and a little via
-`typecheck`).
+`@bayou/typecheck` and `util-common`. In general, it shouldn't be used directly.
+Its functionality is more "publicly" exposed via `util-common` (and a little via
+`@bayou/typecheck`).
 
 The dependency relationship is:
 
 * `@bayou/util-core` has no dependencies.
-* `typecheck` depends on `@bayou/util-core`.
-* `util-common` depends on both `@bayou/util-core` and `typecheck`.
+* `@bayou/typecheck` depends on `@bayou/util-core`.
+* `util-common` depends on both `@bayou/util-core` and `@bayou/typecheck`.
 
 - - - - - - - - - -
 

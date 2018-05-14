@@ -5,7 +5,7 @@
 import { BaseKey, CodableError, ConnectionError, Message, Response } from 'api-common';
 import { Codec } from 'codec';
 import { Logger } from 'see-all';
-import { TString } from 'typecheck';
+import { TString } from '@bayou/typecheck';
 import { CommonBase, WebsocketCodes } from 'util-common';
 
 import TargetMap from './TargetMap';

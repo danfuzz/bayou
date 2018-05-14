@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TNumber } from 'typecheck';
+import { TNumber } from '@bayou/typecheck';
 
-describe('typecheck/TNumber', () => {
+describe('@bayou/typecheck/TNumber', () => {
   describe('check()', () => {
     it('should return the provided value when passed a number', () => {
       function test(v) {

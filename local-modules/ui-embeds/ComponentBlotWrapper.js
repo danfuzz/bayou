@@ -9,7 +9,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { ClientStore } from 'data-model-client';
-import { TBoolean, TFunction, TNumber, TObject, TString } from 'typecheck';
+import { TBoolean, TFunction, TNumber, TObject, TString } from '@bayou/typecheck';
 import { Errors, UtilityClass } from '@bayou/util-core';
 
 const BlockEmbed = Quill.import('blots/block/embed');

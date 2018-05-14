@@ -10,7 +10,7 @@ import { format } from 'util';
 import wrapAnsi from 'wrap-ansi';
 
 import { BaseSink, LogRecord, LogTag, Logger, SeeAll } from 'see-all';
-import { TBoolean, TString } from 'typecheck';
+import { TBoolean, TString } from '@bayou/typecheck';
 
 // The whole point of this file is to use `console.<whatever>`, so...
 /* eslint-disable no-console */

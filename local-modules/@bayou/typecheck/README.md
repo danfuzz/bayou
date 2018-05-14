@@ -1,5 +1,5 @@
-typecheck
-=========
+@bayou/typecheck
+================
 
 This module consists mostly of utility classes (just static methods), each of
 which is dedicated to doing type and content checking for values of a particular

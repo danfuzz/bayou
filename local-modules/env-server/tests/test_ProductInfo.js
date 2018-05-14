@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { ProductInfo } from 'env-server';
-import { TObject } from 'typecheck';
+import { TObject } from '@bayou/typecheck';
 
 describe('env-server/ProductInfo', () => {
   describe('.INFO', () => {

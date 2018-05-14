@@ -6,7 +6,7 @@
 // module, which is why this is possible to import regardless of environment.
 import crypto from 'crypto';
 
-import { TInt } from 'typecheck';
+import { TInt } from '@bayou/typecheck';
 import { UtilityClass } from '@bayou/util-core';
 
 /**

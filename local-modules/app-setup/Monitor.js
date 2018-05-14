@@ -7,7 +7,7 @@ import http from 'http';
 
 import { ProductInfo } from 'env-server';
 import { Logger } from 'see-all';
-import { TInt } from 'typecheck';
+import { TInt } from '@bayou/typecheck';
 import { CommonBase } from 'util-common';
 
 import Application from './Application';

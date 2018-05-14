@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { Proppy } from 'proppy';
-import { TObject } from 'typecheck';
+import { TObject } from '@bayou/typecheck';
 
 describe('proppy/Proppy', () => {
   describe('parseString(value)', () => {

@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { TString } from 'typecheck';
+import { TString } from '@bayou/typecheck';
 
 import Assert from '@bayou/util-core/tests/Assert';
 
@@ -23,7 +23,7 @@ const NON_STRING_CASES = [
   /** Function. */ () => { /*empty*/ }
 ];
 
-describe('typecheck/TString', () => {
+describe('@bayou/typecheck/TString', () => {
   describe('check(value)', () => {
     it('should return the provided value when passed a string', () => {
       const value = 'this better work!';

@@ -4,7 +4,7 @@
 
 import { Caret, CaretChange, CaretOp, CaretSnapshot } from 'doc-common';
 import { RevisionNumber, Timestamp } from 'ot-common';
-import { TInt, TString } from 'typecheck';
+import { TInt, TString } from '@bayou/typecheck';
 
 import CaretColor from './CaretColor';
 import EphemeralControl from './EphemeralControl';

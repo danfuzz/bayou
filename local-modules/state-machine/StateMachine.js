@@ -4,7 +4,7 @@
 
 import { Condition } from 'promise-util';
 import { Logger } from 'see-all';
-import { TObject } from 'typecheck';
+import { TObject } from '@bayou/typecheck';
 import { Errors, Functor, PropertyIterable } from 'util-common';
 
 /**

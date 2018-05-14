@@ -4,7 +4,7 @@
 
 import { BaseKey } from 'api-common';
 import { Hooks } from 'hooks-server';
-import { TString } from 'typecheck';
+import { TString } from '@bayou/typecheck';
 import { Errors } from 'util-common';
 
 /**

@@ -8,7 +8,7 @@ import UtilityClass from './UtilityClass';
 /**
  * Utility to implement the minimal bits of typechecking required by this
  * module. This class exists to avoid a circular dependency between this module
- * and `typecheck`.
+ * and `@bayou/typecheck`.
  */
 export default class CoreTypecheck extends UtilityClass {
   /**

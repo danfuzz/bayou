@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { TFunction } from 'typecheck';
+import { TFunction } from '@bayou/typecheck';
 
 // ESLint gets confused by all the inline function definitions.
 /* eslint-disable valid-jsdoc */
@@ -75,7 +75,7 @@ const NON_FUNCTIONS = [
   { 'a': 10 }
 ];
 
-describe('typecheck/TFunction', () => {
+describe('@bayou/typecheck/TFunction', () => {
   describe('check()', () => {
     it('should succeed when passed a function', () => {
       function test(value) {

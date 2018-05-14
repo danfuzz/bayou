@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseOp } from 'ot-common';
-import { TInt } from 'typecheck';
+import { TInt } from '@bayou/typecheck';
 import { Errors, FrozenBuffer } from 'util-common';
 
 import StorageId from './StorageId';

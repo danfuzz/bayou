@@ -4,7 +4,7 @@
 
   "dependencies": {
     "codec": "local",
-    "typecheck": "local",
+    "@bayou/typecheck": "local",
     "util-common": "local"
   }
 }

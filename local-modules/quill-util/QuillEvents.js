@@ -4,7 +4,7 @@
 
 import { BodyDelta } from 'doc-common';
 import { ChainedEvent, EventSource } from 'promise-util';
-import { TString } from 'typecheck';
+import { TString } from '@bayou/typecheck';
 import { Errors, Functor, ObjectUtil, UtilityClass } from 'util-common';
 
 /**

@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TBuffer } from 'typecheck';
+import { TBuffer } from '@bayou/typecheck';
 
-describe('typecheck/TBuffer', () => {
+describe('@bayou/typecheck/TBuffer', () => {
   describe('check()', () => {
     it('should accept valid instances', () => {
       const buf = Buffer.from('123');

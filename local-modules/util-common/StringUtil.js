@@ -8,7 +8,7 @@ import crypto from 'crypto';
 
 import GraphemeSplitter from 'grapheme-splitter';
 
-import { TInt, TString } from 'typecheck';
+import { TInt, TString } from '@bayou/typecheck';
 import { UtilityClass } from '@bayou/util-core';
 
 /**

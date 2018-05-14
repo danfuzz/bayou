@@ -10,7 +10,7 @@
     "hooks-server": "local",
     "promise-util": "local",
     "see-all": "local",
-    "typecheck": "local",
+    "@bayou/typecheck": "local",
     "util-common": "local"
   }
 }

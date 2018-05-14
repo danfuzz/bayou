@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TFunction, TString } from 'typecheck';
+import { TFunction, TString } from '@bayou/typecheck';
 import { Errors } from 'util-common';
 
 /**

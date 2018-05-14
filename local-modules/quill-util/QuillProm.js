@@ -5,7 +5,7 @@
 import Quill from 'quill';
 
 import { EventSource } from 'promise-util';
-import { TObject } from 'typecheck';
+import { TObject } from '@bayou/typecheck';
 import { CommonBase, Functor } from 'util-common';
 
 import QuillEvents from './QuillEvents';

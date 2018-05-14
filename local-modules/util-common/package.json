@@ -5,7 +5,7 @@
   "dependencies": {
     "grapheme-splitter": "^1.0.1",
 
-    "typecheck": "local",
+    "@bayou/typecheck": "local",
     "@bayou/util-core": "local"
   }
 }

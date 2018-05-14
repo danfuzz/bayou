@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TBoolean } from 'typecheck';
+import { TBoolean } from '@bayou/typecheck';
 
-describe('typecheck/TBoolean', () => {
+describe('@bayou/typecheck/TBoolean', () => {
   describe('check()', () => {
     it('should return the provided value when passed a boolean', () => {
       assert.strictEqual(TBoolean.check(true), true);

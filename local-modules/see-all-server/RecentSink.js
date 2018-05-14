@@ -7,7 +7,7 @@ import chalk from 'chalk';
 import escapeHtml from 'escape-html';
 
 import { BaseSink, SeeAll } from 'see-all';
-import { TInt } from 'typecheck';
+import { TInt } from '@bayou/typecheck';
 
 /**
  * Implementation of the `see-all` logging sink protocol which collects a

@@ -4,7 +4,7 @@
 
 import { inspect } from 'util';
 
-import { TString } from 'typecheck';
+import { TString } from '@bayou/typecheck';
 import { CommonBase, Errors, URL } from 'util-common';
 
 import TargetId from './TargetId';

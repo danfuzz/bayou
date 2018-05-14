@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { Logger } from 'see-all';
-import { TInt } from 'typecheck';
+import { TInt } from '@bayou/typecheck';
 import { Singleton } from 'util-common';
 
 import Dirs from './Dirs';

@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TInt } from 'typecheck';
+import { TInt } from '@bayou/typecheck';
 
-describe('typecheck/TInt', () => {
+describe('@bayou/typecheck/TInt', () => {
   describe('check()', () => {
     it('should accept safe integers', () => {
       function test(value) {

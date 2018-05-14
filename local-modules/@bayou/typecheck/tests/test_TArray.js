@@ -5,11 +5,11 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TArray } from 'typecheck';
-import { TInt } from 'typecheck';
-import { TString } from 'typecheck';
+import { TArray } from '@bayou/typecheck';
+import { TInt } from '@bayou/typecheck';
+import { TString } from '@bayou/typecheck';
 
-describe('typecheck/TArray', () => {
+describe('@bayou/typecheck/TArray', () => {
   describe('check(value)', () => {
     it('should return the provided value when passed an array', () => {
       const value = [1, 2, 3];

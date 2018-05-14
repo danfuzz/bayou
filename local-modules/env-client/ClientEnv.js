@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Logger } from 'see-all';
-import { TObject } from 'typecheck';
+import { TObject } from '@bayou/typecheck';
 import { Errors, UtilityClass } from 'util-common';
 
 /** {Logger} Logger for this module. */

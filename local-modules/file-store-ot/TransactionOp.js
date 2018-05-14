@@ -4,7 +4,7 @@
 
 import { inspect } from 'util';
 
-import { TInt } from 'typecheck';
+import { TInt } from '@bayou/typecheck';
 import { CommonBase, DataUtil, Errors, FrozenBuffer } from 'util-common';
 
 import FileOp from './FileOp';

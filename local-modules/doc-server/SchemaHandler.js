@@ -4,7 +4,7 @@
 
 import { ProductInfo } from 'env-server';
 import { TransactionSpec } from 'file-store-ot';
-import { TString } from 'typecheck';
+import { TString } from '@bayou/typecheck';
 
 import BaseDataManager from './BaseDataManager';
 import Paths from './Paths';

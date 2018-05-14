@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TString } from 'typecheck';
+import { TString } from '@bayou/typecheck';
 import { Singleton } from 'util-common';
 
 import BaseFile from './BaseFile';

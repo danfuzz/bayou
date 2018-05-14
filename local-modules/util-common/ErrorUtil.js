@@ -4,7 +4,7 @@
 
 import { inspect } from 'util';
 
-import { TObject } from 'typecheck';
+import { TObject } from '@bayou/typecheck';
 import { UtilityClass } from '@bayou/util-core';
 
 import PropertyIterable from './PropertyIterable';

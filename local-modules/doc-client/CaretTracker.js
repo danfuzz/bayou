@@ -4,7 +4,7 @@
 
 import { RevisionNumber } from 'ot-common';
 import { Delay } from 'promise-util';
-import { TInt, TObject } from 'typecheck';
+import { TInt, TObject } from '@bayou/typecheck';
 import { CommonBase } from 'util-common';
 
 import DocSession from './DocSession';

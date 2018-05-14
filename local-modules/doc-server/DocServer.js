@@ -7,7 +7,7 @@ import weak from 'weak';
 import { TheModule as appCommon_TheModule } from 'app-common';
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
-import { TFunction, TString } from 'typecheck';
+import { TFunction, TString } from '@bayou/typecheck';
 import { Singleton } from 'util-common';
 
 import DocSession from './DocSession';

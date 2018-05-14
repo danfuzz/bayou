@@ -5,7 +5,7 @@
 import Delta from 'quill-delta';
 
 import { BaseDelta } from 'ot-common';
-import { TBoolean, TObject } from 'typecheck';
+import { TBoolean, TObject } from '@bayou/typecheck';
 import { Errors } from 'util-common';
 
 import BodyOp from './BodyOp';

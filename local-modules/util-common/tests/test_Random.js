@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TString } from 'typecheck';
+import { TString } from '@bayou/typecheck';
 import { Random } from 'util-common';
 
 describe('util-common/Random', () => {

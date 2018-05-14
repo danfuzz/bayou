@@ -7,7 +7,7 @@
     "deps-quill-common": "local",
     "hooks-common": "local",
     "ot-common": "local",
-    "typecheck": "local",
+    "@bayou/typecheck": "local",
     "util-common": "local"
   }
 }
