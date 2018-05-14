@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DragState } from 'data-model-client';
+import { DragState } from '@bayou/data-model-client';
 import { CaretOp, CaretSnapshot } from 'doc-common';
 import { Delay } from 'promise-util';
 import { QuillEvents, QuillGeometry, QuillUtil } from 'quill-util';

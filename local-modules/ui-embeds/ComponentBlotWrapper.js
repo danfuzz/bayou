@@ -8,7 +8,7 @@ import Quill from 'quill';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
-import { ClientStore } from 'data-model-client';
+import { ClientStore } from '@bayou/data-model-client';
 import { TBoolean, TFunction, TNumber, TObject, TString } from '@bayou/typecheck';
 import { Errors, UtilityClass } from '@bayou/util-core';
 

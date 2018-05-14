@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 
-import { DocumentState } from 'data-model-client';
+import { DocumentState } from '@bayou/data-model-client';
 import styles from './star.module.less';
 
 /**

@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { DocumentState } from 'data-model-client';
+import { DocumentState } from '@bayou/data-model-client';
 
-describe('data-model-client/DocumentState', () => {
+describe('@bayou/data-model-client/DocumentState', () => {
   it('should return default values when passed an undefined initial', () => {
     const reducer = DocumentState.reducer;
     const state = reducer(undefined, { type: 'unknown_action' });

@@ -5,18 +5,18 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { OwnerState } from 'data-model-client';
+import { DragState } from '@bayou/data-model-client';
 
-describe('data-model-client/OwnerState', () => {
+describe('@bayou/data-model-client/DragState', () => {
   it('should return default values when passed a null initial state', () => {
-    const reducer = OwnerState.reducer;
+    const reducer = DragState.reducer;
     const state = reducer(undefined, { type: 'unknown_action' });
 
     assert.isNotNull(state);
   });
 
   it('should not change the state if passed an unknown action', () => {
-    const reducer = OwnerState.reducer;
+    const reducer = DragState.reducer;
     const initialState = Object.freeze({ a:1, b:2, c:3 });
     const newState = reducer(initialState, { type: 'unknown_action' });
 
@@ -24,32 +24,31 @@ describe('data-model-client/OwnerState', () => {
   });
 
   it('should not modify prior state object when applying a known action', () => {
-    const reducer = OwnerState.reducer;
+    const reducer = DragState.reducer;
 
     // Pass in undefined initial state to get back the default values
     const initialState = Object.freeze(reducer(undefined, { type: 'unknown_action' }));
 
-    const action = OwnerState.setOwnerNameAction('Hoopy Dude');
+    const action = DragState.setDragIndexAction(37);
 
     // Since the intial state was frozen before being passed in this will
     // throw an exception if the reducer tries to modify it.
     assert.doesNotThrow(() => reducer(initialState, action));
   });
 
-  it('should update the owner name state when passed the "set owner name" action', () => {
-    const reducer = OwnerState.reducer;
+  it('should update the drag index state when passed the "set drag index" action', () => {
+    const reducer = DragState.reducer;
 
     // Pass in undefined initial state to get back the default values
     const initialState = Object.freeze(reducer(undefined, { type: 'unknown_action' }));
 
-    const initialOwnerState = initialState.name;
-    const setNameAction = OwnerState.setOwnerNameAction('Hoopy Dude');
-    const newState = reducer(initialState, setNameAction);
-    const newOwnerState = newState.name;
+    const initialDragState = initialState.dragIndex;
+    const setDragAction = DragState.setDragIndexAction(37);
+    const newState = reducer(initialState, setDragAction);
+    const newDragState = newState.dragIndex;
 
-    assert.isString(initialOwnerState);
-    assert.isString(newOwnerState);
-    assert.notEqual(newOwnerState, initialOwnerState);
-    assert.equal(newOwnerState, 'Hoopy Dude');
+    assert.isNull(initialDragState);
+    assert.isNumber(newDragState);
+    assert.equal(newDragState, 37);
   });
 });

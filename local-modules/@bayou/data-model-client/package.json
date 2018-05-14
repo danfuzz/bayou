@@ -1,5 +1,5 @@
 {
-  "name": "data-model-client",
+  "name": "@bayou/data-model-client",
   "version": "1.0.0",
 
   "dependencies": {

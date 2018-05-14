@@ -7,7 +7,7 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
 import { SplitKey } from 'api-common';
-import { ClientStore } from 'data-model-client';
+import { ClientStore } from '@bayou/data-model-client';
 import { Hooks } from 'hooks-client';
 import { Condition } from 'promise-util';
 import { BayouKeyHandlers, QuillProm } from 'quill-util';

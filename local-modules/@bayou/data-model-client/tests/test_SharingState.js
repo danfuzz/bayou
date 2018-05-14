@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { SharingState } from 'data-model-client';
+import { SharingState } from '@bayou/data-model-client';
 
-describe('data-model-client/SharingState', () => {
+describe('@bayou/data-model-client/SharingState', () => {
   it('should return default values when passed a null initial state', () => {
     const reducer = SharingState.reducer;
     const state = reducer(undefined, { type: 'unknown_action' });
