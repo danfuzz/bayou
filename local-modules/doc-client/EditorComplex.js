@@ -14,7 +14,7 @@ import { BayouKeyHandlers, QuillProm } from 'quill-util';
 import { Logger } from 'see-all';
 import { TObject } from '@bayou/typecheck';
 import { Header } from 'ui-components';
-import { DomUtil } from 'util-client';
+import { DomUtil } from '@bayou/util-client';
 import { CommonBase, Errors } from '@bayou/util-common';
 
 import BodyClient from './BodyClient';

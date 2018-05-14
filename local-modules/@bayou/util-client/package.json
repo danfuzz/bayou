@@ -1,5 +1,5 @@
 {
-  "name": "util-client",
+  "name": "@bayou/util-client",
   "version": "1.0.0",
 
   "dependencies": {

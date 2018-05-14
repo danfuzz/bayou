@@ -19,7 +19,7 @@
     "@bayou/typecheck": "local",
     "ui-embeds": "local",
     "ui-components": "local",
-    "util-client": "local",
+    "@bayou/util-client": "local",
     "@bayou/util-common": "local"
   }
 }
