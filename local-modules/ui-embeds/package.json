@@ -5,6 +5,6 @@
   "dependencies": {
     "lodash": "^4.17.4",
 
-    "deps-react": "local"
+    "@bayou/deps-react": "local"
   }
 }

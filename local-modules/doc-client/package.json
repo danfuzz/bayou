@@ -7,7 +7,7 @@
     "api-common": "local",
     "app-common": "local",
     "data-model-client": "local",
-    "deps-react": "local",
+    "@bayou/deps-react": "local",
     "doc-client": "local",
     "doc-common": "local",
     "hooks-client": "local",
