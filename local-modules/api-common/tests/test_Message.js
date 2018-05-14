@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { Message } from 'api-common';
-import { Functor } from 'util-common';
+import { Functor } from '@bayou/util-common';
 
 /** {Functor} Valid functor to use in tests. */
 const VALID_FUNCTOR = new Functor('blort', 37, 914);

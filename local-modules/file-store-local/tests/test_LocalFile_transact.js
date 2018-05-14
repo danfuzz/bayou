@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { TransactionOp, TransactionSpec } from 'file-store-ot';
-import { FrozenBuffer } from 'util-common';
+import { FrozenBuffer } from '@bayou/util-common';
 
 import TempFiles from './TempFiles';
 

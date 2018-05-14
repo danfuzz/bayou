@@ -6,7 +6,7 @@
     "deps-quill-client": "local",
     "doc-common": "local",
     "promise-util": "local",
-    "typecheck": "local",
-    "util-common": "local"
+    "@bayou/typecheck": "local",
+    "@bayou/util-common": "local"
   }
 }

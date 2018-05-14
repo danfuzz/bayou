@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BaseKey } from 'api-common';
-import { Random } from 'util-common';
+import { Random } from '@bayou/util-common';
 
 const VALID_ID = '12345678';
 

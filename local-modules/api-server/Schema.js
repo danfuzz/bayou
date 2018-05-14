@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TObject, TString } from 'typecheck';
-import { PropertyIterable } from 'util-common';
+import { TObject, TString } from '@bayou/typecheck';
+import { PropertyIterable } from '@bayou/util-common';
 
 /**
  * Schema for an object. Represents what actions are available. More

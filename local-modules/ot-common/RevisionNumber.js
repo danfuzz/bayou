@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TInt } from 'typecheck';
-import { Errors, UtilityClass } from 'util-common';
+import { TInt } from '@bayou/typecheck';
+import { Errors, UtilityClass } from '@bayou/util-common';
 
 /**
  * Type representation of revision numbers. The values themselves are always

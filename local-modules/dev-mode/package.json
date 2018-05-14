@@ -9,6 +9,6 @@
     "env-server": "local",
     "promise-util": "local",
     "see-all": "local",
-    "util-common": "local"
+    "@bayou/util-common": "local"
   }
 }

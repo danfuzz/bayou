@@ -15,7 +15,7 @@
     "ot-common": "local",
     "promise-util": "local",
     "see-all": "local",
-    "typecheck": "local",
-    "util-common": "local"
+    "@bayou/typecheck": "local",
+    "@bayou/util-common": "local"
   }
 }

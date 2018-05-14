@@ -1,0 +1,8 @@
+{
+  "name": "@bayou/typecheck",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "@bayou/util-core": "local"
+  }
+}

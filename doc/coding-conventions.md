@@ -36,10 +36,11 @@ taking into account recent additions to the language.
 * The type annotation used for arrays is `{array}` or `{array<elementType>}`,
   with a lower case `a`.
 
-* We define a `typecheck` module which effectively defines a few primitive
-  "types" that aren't actually real types in JavaScript, most notably `Int` to
-  represent primitive numbers that are in fact integers. We use these type names
-  in annotations as if they were real types. The names are always capitalized.
+* We define a `@bayou/typecheck` module which effectively defines a few
+  primitive "types" that aren't actually real types in JavaScript, most notably
+  `Int` to represent primitive numbers that are in fact integers. We use these
+  type names in annotations as if they were real types. The names are always
+  capitalized.
 
 * When documenting functions marked `async`, the implicit promise returned by
   the function should _not_ typically be represented in its prose or `@returns`
@@ -95,7 +96,7 @@ taking into account recent additions to the language.
   import fs from 'fs';
 
   import { BaseFile } from 'file-store';
-  import { DataUtil, InfoError, Singleton } from 'util-common';
+  import { DataUtil, InfoError, Singleton } from '@bayou/util-common';
 
   import RegularBlort from './RegularBlort';
   import SpecialBlort from './SpecialBlort';
@@ -153,8 +154,8 @@ taking into account recent additions to the language.
   }
   ```
 
-  `_mustOverride()` is defined by the class `CommonBase` in the `util-common`
-  local module.
+  `_mustOverride()` is defined by the class `CommonBase` in the
+  `@bayou/util-common` local module.
 
 * Utility classes &mdash; Utility classes are classes which only serve as a
   collection of functionality exposed as static methods (and sometimes static

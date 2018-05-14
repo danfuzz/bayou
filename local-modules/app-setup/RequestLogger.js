@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Logger } from 'see-all';
-import { CommonBase, Random } from 'util-common';
+import { CommonBase, Random } from '@bayou/util-common';
 
 /**
  * HTTP request logging functions. This includes logging to an HTTP `access.log`

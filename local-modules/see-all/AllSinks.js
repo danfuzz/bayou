@@ -4,7 +4,7 @@
 
 import { inspect } from 'util';
 
-import { Errors, Singleton } from 'util-common';
+import { Errors, Singleton } from '@bayou/util-common';
 
 import LogRecord from './LogRecord';
 

@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TString } from 'typecheck';
-import { InfoError } from 'util-common';
+import { TString } from '@bayou/typecheck';
+import { InfoError } from '@bayou/util-common';
 
 /**
  * Error class for reporting errors coming from `ApiClient` related to the

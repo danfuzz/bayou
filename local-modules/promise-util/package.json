@@ -3,7 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "typecheck": "local",
-    "util-common": "local"
+    "@bayou/typecheck": "local",
+    "@bayou/util-common": "local"
   }
 }

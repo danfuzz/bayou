@@ -6,8 +6,8 @@
 // module, which is why this is possible to import regardless of environment.
 import crypto from 'crypto';
 
-import { TString } from 'typecheck';
-import { Random } from 'util-common';
+import { TString } from '@bayou/typecheck';
+import { Random } from '@bayou/util-common';
 
 import BaseKey from './BaseKey';
 

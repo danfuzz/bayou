@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ColorUtil, StringUtil, UtilityClass } from 'util-common';
+import { ColorUtil, StringUtil, UtilityClass } from '@bayou/util-common';
 
 /**
  * {number} Saturation (in the HSL color model) of colors returned by this

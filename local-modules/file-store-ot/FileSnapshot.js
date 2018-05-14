@@ -3,8 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseSnapshot } from 'ot-common';
-import { TInt } from 'typecheck';
-import { Errors } from 'util-common';
+import { TInt } from '@bayou/typecheck';
+import { Errors } from '@bayou/util-common';
 
 import FileChange from './FileChange';
 import FileDelta from './FileDelta';

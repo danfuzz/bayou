@@ -4,7 +4,7 @@
 
   "dependencies": {
     "ot-common": "local",
-    "typecheck": "local",
-    "util-common": "local"
+    "@bayou/typecheck": "local",
+    "@bayou/util-common": "local"
   }
 }

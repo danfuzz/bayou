@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { FileOp, FileSnapshot, PredicateOp, PredicateSpec } from 'file-store-ot';
-import { FrozenBuffer } from 'util-common';
+import { FrozenBuffer } from '@bayou/util-common';
 
 describe('file-store-ot/PredicateSpec', () => {
   describe('constructor()', () => {

@@ -3,8 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { PropertyDelta, PropertyOp, Timeouts } from 'doc-common';
-import { TString } from 'typecheck';
-import { CommonBase, DataUtil, Errors } from 'util-common';
+import { TString } from '@bayou/typecheck';
+import { CommonBase, DataUtil, Errors } from '@bayou/util-common';
 
 import DocSession from './DocSession';
 

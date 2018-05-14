@@ -5,7 +5,7 @@
 import fs from 'fs';
 
 import { BaseSink, SeeAll } from 'see-all';
-import { TBoolean, TString } from 'typecheck';
+import { TBoolean, TString } from '@bayou/typecheck';
 
 /**
  * Implementation of the `see-all` logging sink protocol which stores logged

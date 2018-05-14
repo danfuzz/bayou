@@ -6,7 +6,7 @@ import { DragState } from 'data-model-client';
 import { CaretOp, CaretSnapshot } from 'doc-common';
 import { Delay } from 'promise-util';
 import { QuillEvents, QuillGeometry, QuillUtil } from 'quill-util';
-import { TObject } from 'typecheck';
+import { TObject } from '@bayou/typecheck';
 
 /**
  * {Int} Amount of time (in msec) to wait after noticing a local edit before

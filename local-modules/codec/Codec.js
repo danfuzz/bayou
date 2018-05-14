@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CommonBase, FrozenBuffer } from 'util-common';
+import { CommonBase, FrozenBuffer } from '@bayou/util-common';
 
 import ConstructorCall from './ConstructorCall';
 import Registry from './Registry';

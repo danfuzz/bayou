@@ -3,8 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { RevisionNumber, Timestamp } from 'ot-common';
-import { TInt, TObject, TString } from 'typecheck';
-import { ColorUtil, CommonBase, Errors } from 'util-common';
+import { TInt, TObject, TString } from '@bayou/typecheck';
+import { ColorUtil, CommonBase, Errors } from '@bayou/util-common';
 
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';

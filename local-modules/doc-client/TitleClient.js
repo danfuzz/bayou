@@ -4,7 +4,7 @@
 
 import { DocumentState } from 'data-model-client';
 import { QuillEvents, QuillUtil } from 'quill-util';
-import { CommonBase, Errors } from 'util-common';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 /**
  * Plumbing between the title field (managed by Quill) on the client and the

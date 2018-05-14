@@ -9,6 +9,6 @@
     "env-server": "local",
     "see-all": "local",
     "testing-server": "local",
-    "util-common": "local"
+    "@bayou/util-common": "local"
   }
 }

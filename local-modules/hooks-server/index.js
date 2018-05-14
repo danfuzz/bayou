@@ -23,7 +23,7 @@
 // `undefined`. It is impossible to predict in advance _which_ `import`
 // will fail, though.
 
-import { DataUtil, DeferredLoader } from 'util-common';
+import { DataUtil, DeferredLoader } from '@bayou/util-common';
 
 import BearerTokens from './BearerTokens';
 import default_document from './default-document';

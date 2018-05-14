@@ -4,7 +4,7 @@
 
 import { ConnectionError, Message, Response } from 'api-common';
 import { Logger } from 'see-all';
-import { CommonBase, Errors, Random } from 'util-common';
+import { CommonBase, Errors, Random } from '@bayou/util-common';
 
 import ApiLog from './ApiLog';
 import BearerToken from './BearerToken';

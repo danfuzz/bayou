@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TArray, TBoolean, TFunction } from 'typecheck';
-import { CommonBase, Errors } from 'util-common';
+import { TArray, TBoolean, TFunction } from '@bayou/typecheck';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 import BaseOp from './BaseOp';
 

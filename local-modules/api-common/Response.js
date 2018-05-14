@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TInt, TObject } from 'typecheck';
-import { CommonBase, ErrorUtil, Errors, Functor, InfoError } from 'util-common';
+import { TInt, TObject } from '@bayou/typecheck';
+import { CommonBase, ErrorUtil, Errors, Functor, InfoError } from '@bayou/util-common';
 
 import CodableError from './CodableError';
 

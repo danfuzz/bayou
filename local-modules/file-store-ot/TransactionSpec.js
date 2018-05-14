@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { StoragePath } from 'file-store-ot';
-import { CommonBase, Errors } from 'util-common';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 import FileChange from './FileChange';
 import FileSnapshot from './FileSnapshot';

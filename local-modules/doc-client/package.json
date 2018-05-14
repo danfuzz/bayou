@@ -16,10 +16,10 @@
     "quill-util": "local",
     "see-all": "local",
     "state-machine": "local",
-    "typecheck": "local",
+    "@bayou/typecheck": "local",
     "ui-embeds": "local",
     "ui-components": "local",
-    "util-client": "local",
-    "util-common": "local"
+    "@bayou/util-client": "local",
+    "@bayou/util-common": "local"
   }
 }

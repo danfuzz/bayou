@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { StoragePath } from 'file-store-ot';
-import { Errors, FrozenBuffer, UtilityClass } from 'util-common';
+import { Errors, FrozenBuffer, UtilityClass } from '@bayou/util-common';
 
 /**
  * Utility class for handling storage IDs. A storage ID is (generally speaking)
@@ -12,7 +12,7 @@ import { Errors, FrozenBuffer, UtilityClass } from 'util-common';
  *
  * * paths &mdash; Storage paths as defined by {@link StoragePath}.
  * * content hashes &mdash; Content hashes as defined by
- *   {@link util-common.FrozenBuffer}.
+ *   {@link @bayou/util-common.FrozenBuffer}.
  */
 export default class StorageId extends UtilityClass {
   /**

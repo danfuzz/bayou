@@ -4,7 +4,7 @@
 
 import { Codec } from 'codec';
 import { TransactionOp } from 'file-store-ot';
-import { CommonBase } from 'util-common';
+import { CommonBase } from '@bayou/util-common';
 
 import BaseFile from './BaseFile';
 

@@ -7,7 +7,7 @@
 // from _this_ module.
 import 'mocha-client-bundle';
 
-import { Errors } from 'util-common';
+import { Errors } from '@bayou/util-common';
 
 /**
  * {Window} The browser globals. We have ESLint configured conservatively by

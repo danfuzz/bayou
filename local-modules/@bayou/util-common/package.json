@@ -1,0 +1,11 @@
+{
+  "name": "@bayou/util-common",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "grapheme-splitter": "^1.0.1",
+
+    "@bayou/typecheck": "local",
+    "@bayou/util-core": "local"
+  }
+}

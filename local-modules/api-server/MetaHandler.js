@@ -2,9 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TString } from 'typecheck';
+import { TString } from '@bayou/typecheck';
 import { Delay } from 'promise-util';
-import { Errors } from 'util-common';
+import { Errors } from '@bayou/util-common';
 
 /** {Int} How long an unanswered challenge remains active for, in msec. */
 const CHALLENGE_TIMEOUT_MSEC = 5 * 60 * 1000; // Five minutes.

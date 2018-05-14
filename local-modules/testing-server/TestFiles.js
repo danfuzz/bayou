@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { Dirs } from 'env-server';
-import { UtilityClass } from 'util-common';
+import { UtilityClass } from '@bayou/util-common';
 
 /**
  * Utility to provide lists of test file names (for unit or integration tests),

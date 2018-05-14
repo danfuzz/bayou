@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { StorageId } from 'file-store-ot';
-import { FrozenBuffer } from 'util-common';
+import { FrozenBuffer } from '@bayou/util-common';
 
 describe('file-store-ot/StorageId', () => {
   describe('check()', () => {

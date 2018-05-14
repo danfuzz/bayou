@@ -13,7 +13,7 @@ import { ClientBundle } from 'client-bundle';
 import { Dirs, ProductInfo } from 'env-server';
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
-import { CommonBase } from 'util-common';
+import { CommonBase } from '@bayou/util-common';
 
 import DebugTools from './DebugTools';
 import RequestLogger from './RequestLogger';

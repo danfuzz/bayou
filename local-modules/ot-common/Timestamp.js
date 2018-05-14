@@ -4,8 +4,8 @@
 
 import { inspect } from 'util';
 
-import { TInt } from 'typecheck';
-import { CommonBase, Errors } from 'util-common';
+import { TInt } from '@bayou/typecheck';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 /**
  * {Int} Minimum (inclusive) acceptable timestamp `secs` value.

@@ -3,8 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseSnapshot } from 'ot-common';
-import { TString } from 'typecheck';
-import { Errors } from 'util-common';
+import { TString } from '@bayou/typecheck';
+import { Errors } from '@bayou/util-common';
 
 import PropertyChange from './PropertyChange';
 import PropertyDelta from './PropertyDelta';

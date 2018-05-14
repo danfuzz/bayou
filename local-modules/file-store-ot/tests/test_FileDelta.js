@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
 import { FileDelta, FileOp } from 'file-store-ot';
-import { FrozenBuffer } from 'util-common';
+import { FrozenBuffer } from '@bayou/util-common';
 
 import { MockDelta } from 'ot-common/mocks';
 

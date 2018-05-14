@@ -4,7 +4,7 @@
 
 import { format, inspect } from 'util';
 
-import { CommonBase, DataUtil, ErrorUtil } from 'util-common';
+import { CommonBase, DataUtil, ErrorUtil } from '@bayou/util-common';
 
 /**
  * Mocha reporter which "re-envisions" Mocha's various events as a simpler set

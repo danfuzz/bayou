@@ -10,7 +10,7 @@ import path from 'path';
 import { Codec } from 'codec';
 import { LocalFile } from 'file-store-local';
 import { TheModule as fileStoreOt_TheModule } from 'file-store-ot';
-import { UtilityClass } from 'util-common';
+import { UtilityClass } from '@bayou/util-common';
 
 /** {Codec} Codec instance to use for `LocalFile` instances. */
 const codec = new Codec();

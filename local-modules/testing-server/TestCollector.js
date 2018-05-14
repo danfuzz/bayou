@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import { createTwoFilesPatch } from 'diff';
 import { inspect } from 'util';
 
-import { CommonBase, Errors } from 'util-common';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 /**
  * {object} Object that maps each possible test status to an ad-hoc set of

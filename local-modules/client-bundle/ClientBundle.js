@@ -9,7 +9,7 @@ import webpack from 'webpack';
 
 import { Dirs } from 'env-server';
 import { Logger } from 'see-all';
-import { JsonUtil, Singleton } from 'util-common';
+import { JsonUtil, Singleton } from '@bayou/util-common';
 
 import ProgressMessage from './ProgressMessage';
 

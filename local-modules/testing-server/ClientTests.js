@@ -8,7 +8,7 @@ import { format, promisify } from 'util';
 
 import { Delay } from 'promise-util';
 import { Logger } from 'see-all';
-import { UtilityClass } from 'util-common';
+import { UtilityClass } from '@bayou/util-common';
 
 import EventReceiver from './EventReceiver';
 

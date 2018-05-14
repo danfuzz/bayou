@@ -7,6 +7,6 @@
     "file-store-local": "local",
     "hooks-common": "local",
     "promise-util": "local",
-    "util-common": "local"
+    "@bayou/util-common": "local"
   }
 }

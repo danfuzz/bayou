@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Errors, UtilityClass } from 'util-common';
+import { Errors, UtilityClass } from '@bayou/util-common';
 
 /**
  * Type representation of "validation status" values as used by

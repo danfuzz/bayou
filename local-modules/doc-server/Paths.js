@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { UtilityClass } from 'util-common';
+import { UtilityClass } from '@bayou/util-common';
 
 /**
  * Utility class that just provides the common `StoragePath` strings used

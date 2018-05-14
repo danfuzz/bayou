@@ -4,7 +4,7 @@
 
 import fs from 'fs';
 
-import { Errors, UtilityClass } from 'util-common';
+import { Errors, UtilityClass } from '@bayou/util-common';
 
 /**
  * Property file reader. This accepts a syntax which is similar to traditional

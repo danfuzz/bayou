@@ -4,6 +4,6 @@
 
   "dependencies": {
     "deps-testing": "local",
-    "util-common": "local"
+    "@bayou/util-common": "local"
   }
 }

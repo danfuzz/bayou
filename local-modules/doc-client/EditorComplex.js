@@ -12,10 +12,10 @@ import { Hooks } from 'hooks-client';
 import { Condition } from 'promise-util';
 import { BayouKeyHandlers, QuillProm } from 'quill-util';
 import { Logger } from 'see-all';
-import { TObject } from 'typecheck';
+import { TObject } from '@bayou/typecheck';
 import { Header } from 'ui-components';
-import { DomUtil } from 'util-client';
-import { CommonBase, Errors } from 'util-common';
+import { DomUtil } from '@bayou/util-client';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 import BodyClient from './BodyClient';
 import CaretOverlay from './CaretOverlay';

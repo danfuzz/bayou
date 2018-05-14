@@ -4,8 +4,8 @@
 
 import { Condition } from 'promise-util';
 import { Logger } from 'see-all';
-import { TObject } from 'typecheck';
-import { Errors, Functor, PropertyIterable } from 'util-common';
+import { TObject } from '@bayou/typecheck';
+import { Errors, Functor, PropertyIterable } from '@bayou/util-common';
 
 /**
  * Lightweight state machine framework. This allows a subclass to define

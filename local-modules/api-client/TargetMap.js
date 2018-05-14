@@ -3,8 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TargetId } from 'api-common';
-import { TFunction } from 'typecheck';
-import { CommonBase, Errors } from 'util-common';
+import { TFunction } from '@bayou/typecheck';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 import TargetHandler from './TargetHandler';
 

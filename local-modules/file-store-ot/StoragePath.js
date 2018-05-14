@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TArray, TInt, TString } from 'typecheck';
-import { Errors, UtilityClass } from 'util-common';
+import { TArray, TInt, TString } from '@bayou/typecheck';
+import { Errors, UtilityClass } from '@bayou/util-common';
 
 /**
  * {RegEx} Regular expression which passes for all valid path component strings.

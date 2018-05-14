@@ -4,7 +4,7 @@
 
 import { inspect } from 'util';
 
-import { InfoError } from 'util-common';
+import { InfoError } from '@bayou/util-common';
 
 /**
  * Error which can be encoded and decoded across an API boundary.

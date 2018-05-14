@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
 import { FileOp, FileSnapshot, PredicateOp } from 'file-store-ot';
-import { FrozenBuffer, InfoError } from 'util-common';
+import { FrozenBuffer, InfoError } from '@bayou/util-common';
 
 /**
  * Defines a suite for a specific op.

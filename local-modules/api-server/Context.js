@@ -4,8 +4,8 @@
 
 import { Codec } from 'codec';
 import { Logger } from 'see-all';
-import { TString } from 'typecheck';
-import { CommonBase, Errors } from 'util-common';
+import { TString } from '@bayou/typecheck';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 import Target from './Target';
 

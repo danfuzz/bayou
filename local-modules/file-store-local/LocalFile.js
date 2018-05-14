@@ -10,9 +10,9 @@ import { BaseFile } from 'file-store';
 import { FileChange, FileSnapshot } from 'file-store-ot';
 import { RevisionNumber } from 'ot-common';
 import { Condition, Delay, Mutex } from 'promise-util';
-import { TString } from 'typecheck';
+import { TString } from '@bayou/typecheck';
 import { Logger } from 'see-all';
-import { FrozenBuffer, Errors } from 'util-common';
+import { FrozenBuffer, Errors } from '@bayou/util-common';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('local-file');

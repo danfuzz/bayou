@@ -7,7 +7,7 @@ import { Context } from 'api-server';
 import { DocServer } from 'doc-server';
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
-import { TString } from 'typecheck';
+import { TString } from '@bayou/typecheck';
 
 /** Logger. */
 const log = new Logger('root-access');

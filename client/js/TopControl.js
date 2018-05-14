@@ -6,7 +6,7 @@ import { SplitKey } from 'api-common';
 import { TheModule as appCommon_TheModule } from 'app-common';
 import { EditorComplex } from 'doc-client';
 import { Logger } from 'see-all';
-import { TFunction, TObject } from 'typecheck';
+import { TFunction, TObject } from '@bayou/typecheck';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('top');

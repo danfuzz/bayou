@@ -6,7 +6,7 @@ import { describe } from 'mocha';
 import { inspect } from 'util';
 
 import { TransactionOp } from 'file-store-ot';
-import { Errors, FrozenBuffer, UtilityClass } from 'util-common';
+import { Errors, FrozenBuffer, UtilityClass } from '@bayou/util-common';
 
 /**
  * Test helper utility class for constructing valid arrays of ops which cover

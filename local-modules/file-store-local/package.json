@@ -9,7 +9,7 @@
     "file-store-ot": "local",
     "promise-util": "local",
     "see-all": "local",
-    "util-common": "local",
+    "@bayou/util-common": "local",
 
     "async-file": "^2.0.2"
   }
