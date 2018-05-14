@@ -1,5 +1,5 @@
 {
-  "name": "deps-compiler",
+  "name": "@bayou/deps-compiler",
   "version": "1.0.0",
 
   "dependencies": {

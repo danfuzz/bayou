@@ -5,7 +5,7 @@
   "dependencies": {
     "memory-fs": "^0.4.1",
 
-    "deps-compiler": "local",
+    "@bayou/deps-compiler": "local",
     "env-server": "local",
     "see-all": "local",
     "testing-server": "local",
