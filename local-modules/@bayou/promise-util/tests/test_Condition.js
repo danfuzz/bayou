@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Condition } from 'promise-util';
+import { Condition } from '@bayou/promise-util';
 
-describe('promise-util/Condition', () => {
+describe('@bayou/promise-util/Condition', () => {
   describe('constructor()', () => {
     it('should offer the constructed value', () => {
       let cond;

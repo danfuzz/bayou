@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { CallPiler } from 'promise-util';
+import { CallPiler } from '@bayou/promise-util';
 
-describe('promise-util/CallPiler', () => {
+describe('@bayou/promise-util/CallPiler', () => {
   describe('constructor()', () => {
     it('fails if not given a function', () => {
       assert.throws(() => { new CallPiler(); });

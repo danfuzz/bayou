@@ -3,7 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "promise-util": "local",
+    "@bayou/promise-util": "local",
     "@bayou/see-all": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local"

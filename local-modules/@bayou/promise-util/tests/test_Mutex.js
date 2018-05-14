@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Mutex } from 'promise-util';
+import { Mutex } from '@bayou/promise-util';
 
-describe('promise-util/Mutex', () => {
+describe('@bayou/promise-util/Mutex', () => {
   describe('lock()', () => {
     it('should work when there is blatantly no contention', async () => {
       const mutex = new Mutex();

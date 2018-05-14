@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Delay } from 'promise-util';
+import { Delay } from '@bayou/promise-util';
 
-describe('promise-util/Delay', () => {
+describe('@bayou/promise-util/Delay', () => {
   describe('delay(delayMSec)', () => {
     it('should eventually resolve to true', async () => {
       await assert.isFulfilled(Delay.resolve(10));

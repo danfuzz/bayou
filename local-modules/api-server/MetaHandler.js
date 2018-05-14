@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from '@bayou/typecheck';
-import { Delay } from 'promise-util';
+import { Delay } from '@bayou/promise-util';
 import { Errors } from '@bayou/util-common';
 
 /** {Int} How long an unanswered challenge remains active for, in msec. */

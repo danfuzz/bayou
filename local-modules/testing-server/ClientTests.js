@@ -6,7 +6,7 @@ import fs from 'fs';
 import puppeteer from 'puppeteer';
 import { format, promisify } from 'util';
 
-import { Delay } from 'promise-util';
+import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { UtilityClass } from '@bayou/util-common';
 

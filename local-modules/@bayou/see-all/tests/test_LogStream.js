@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Delay } from 'promise-util';
+import { Delay } from '@bayou/promise-util';
 import { LogStream } from '@bayou/see-all';
 import { MockLogger } from '@bayou/see-all/mocks';
 

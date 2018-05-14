@@ -5,10 +5,10 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { ChainedEvent, Delay, EventSource } from 'promise-util';
+import { ChainedEvent, Delay, EventSource } from '@bayou/promise-util';
 import { Functor } from '@bayou/util-common';
 
-describe('promise-util/ChainedEvent', () => {
+describe('@bayou/promise-util/ChainedEvent', () => {
   describe('constructor()', () => {
     it('should work', async () => {
       const source = new EventSource();

@@ -24,7 +24,7 @@
     "dev-mode": "local",
     "env-server": "local",
     "hooks-server": "local",
-    "promise-util": "local",
+    "@bayou/promise-util": "local",
     "@bayou/see-all": "local",
     "@bayou/see-all-server": "local",
     "testing-server": "local"

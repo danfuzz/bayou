@@ -9,7 +9,7 @@ import { Provider } from 'react-redux';
 import { SplitKey } from 'api-common';
 import { ClientStore } from '@bayou/data-model-client';
 import { Hooks } from 'hooks-client';
-import { Condition } from 'promise-util';
+import { Condition } from '@bayou/promise-util';
 import { BayouKeyHandlers, QuillProm } from 'quill-util';
 import { Logger } from '@bayou/see-all';
 import { TObject } from '@bayou/typecheck';

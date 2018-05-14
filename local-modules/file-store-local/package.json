@@ -7,7 +7,7 @@
     "env-server": "local",
     "file-store": "local",
     "file-store-ot": "local",
-    "promise-util": "local",
+    "@bayou/promise-util": "local",
     "@bayou/see-all": "local",
     "@bayou/util-common": "local",
 

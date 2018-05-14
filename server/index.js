@@ -22,7 +22,7 @@ import { ClientBundle } from 'client-bundle';
 import { DevMode } from 'dev-mode';
 import { Dirs, ProductInfo, ServerEnv } from 'env-server';
 import { Hooks } from 'hooks-server';
-import { Delay } from 'promise-util';
+import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { HumanSink, FileSink } from '@bayou/see-all-server';
 import { ClientTests, ServerTests } from 'testing-server';

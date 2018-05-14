@@ -1,5 +1,5 @@
 {
-  "name": "promise-util",
+  "name": "@bayou/promise-util",
   "version": "1.0.0",
 
   "dependencies": {
