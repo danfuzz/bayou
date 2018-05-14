@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TObject, TString } from '@bayou/typecheck';
-import { PropertyIterable } from 'util-common';
+import { PropertyIterable } from '@bayou/util-common';
 
 /**
  * Schema for an object. Represents what actions are available. More

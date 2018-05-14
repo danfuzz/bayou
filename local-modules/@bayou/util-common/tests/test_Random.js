@@ -6,9 +6,9 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { TString } from '@bayou/typecheck';
-import { Random } from 'util-common';
+import { Random } from '@bayou/util-common';
 
-describe('util-common/Random', () => {
+describe('@bayou/util-common/Random', () => {
   describe('byteBuffer()', () => {
     it('should return a buffer of the requested length', () => {
       const length = 17;

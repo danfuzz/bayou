@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Hooks } from 'hooks-server';
-import { Errors, UtilityClass } from 'util-common';
+import { Errors, UtilityClass } from '@bayou/util-common';
 
 /**
  * Type representation of file IDs. The values themselves are always just

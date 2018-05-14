@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from '@bayou/typecheck';
-import { InfoError } from 'util-common';
+import { InfoError } from '@bayou/util-common';
 
 /**
  * Error class for reporting errors coming from `ApiClient` related to the

@@ -3,6 +3,6 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "util-common": "local"
+    "@bayou/util-common": "local"
   }
 }

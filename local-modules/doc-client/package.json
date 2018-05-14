@@ -20,6 +20,6 @@
     "ui-embeds": "local",
     "ui-components": "local",
     "util-client": "local",
-    "util-common": "local"
+    "@bayou/util-common": "local"
   }
 }

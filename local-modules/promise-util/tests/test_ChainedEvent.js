@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { ChainedEvent, Delay, EventSource } from 'promise-util';
-import { Functor } from 'util-common';
+import { Functor } from '@bayou/util-common';
 
 describe('promise-util/ChainedEvent', () => {
   describe('constructor()', () => {

@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { ErrorUtil } from 'util-common';
+import { ErrorUtil } from '@bayou/util-common';
 
-describe('util-common/ErrorUtil', () => {
+describe('@bayou/util-common/ErrorUtil', () => {
   describe('stackLines(error)', () => {
     it('should return an array of strings', () => {
       const result = ErrorUtil.stackLines(new Error('oy'));

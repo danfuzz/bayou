@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { StringUtil } from 'util-common';
+import { StringUtil } from '@bayou/util-common';
 
-describe('util-common/StringUtil', () => {
+describe('@bayou/util-common/StringUtil', () => {
   describe('graphemesForString()', () => {
     it('should return `.length` graphemes when passed ASCII input', () => {
       const input = 'this is a string';

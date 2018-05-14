@@ -14,7 +14,7 @@ import { MockFile } from 'file-store/mocks';
 import { Errors as fileStoreOt_Errors, TransactionSpec } from 'file-store-ot';
 import { Timestamp } from 'ot-common';
 import { TheModule as mocks_TheModule } from 'ot-common/mocks';
-import { Errors, FrozenBuffer } from 'util-common';
+import { Errors, FrozenBuffer } from '@bayou/util-common';
 
 // **Note:** Even though these tests are written in terms of `DurableControl`
 // and a subclass thereof, they are limited to testing behavior which is common

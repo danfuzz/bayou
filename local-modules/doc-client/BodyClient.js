@@ -8,7 +8,7 @@ import { Delay } from 'promise-util';
 import { QuillEvents, QuillUtil } from 'quill-util';
 import { TString } from '@bayou/typecheck';
 import { StateMachine } from 'state-machine';
-import { Errors, Functor, InfoError } from 'util-common';
+import { Errors, Functor, InfoError } from '@bayou/util-common';
 
 import DocSession from './DocSession';
 

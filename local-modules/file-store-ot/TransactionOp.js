@@ -5,7 +5,7 @@
 import { inspect } from 'util';
 
 import { TInt } from '@bayou/typecheck';
-import { CommonBase, DataUtil, Errors, FrozenBuffer } from 'util-common';
+import { CommonBase, DataUtil, Errors, FrozenBuffer } from '@bayou/util-common';
 
 import FileOp from './FileOp';
 import PredicateOp from './PredicateOp';

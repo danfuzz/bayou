@@ -10,7 +10,7 @@ import path from 'path';
 import { Dirs } from 'env-server';
 import { Delay } from 'promise-util';
 import { Logger } from 'see-all';
-import { Singleton } from 'util-common';
+import { Singleton } from '@bayou/util-common';
 
 /** Logger. */
 const log = new Logger('dev-mode');

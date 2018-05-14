@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt } from '@bayou/typecheck';
-import { UtilityClass } from 'util-common';
+import { UtilityClass } from '@bayou/util-common';
 
 /**
  * Utility class that just holds common timeout-related constants and utility

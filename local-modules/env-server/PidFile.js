@@ -7,7 +7,7 @@ import path from 'path';
 
 import { Logger } from 'see-all';
 import { TInt } from '@bayou/typecheck';
-import { Singleton } from 'util-common';
+import { Singleton } from '@bayou/util-common';
 
 import Dirs from './Dirs';
 

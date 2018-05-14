@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TArray, TString } from '@bayou/typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase } from '@bayou/util-common';
 
 /**
  * {LogTag|null} Instance to use when logging log system metainfo.

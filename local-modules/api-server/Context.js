@@ -5,7 +5,7 @@
 import { Codec } from 'codec';
 import { Logger } from 'see-all';
 import { TString } from '@bayou/typecheck';
-import { CommonBase, Errors } from 'util-common';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 import Target from './Target';
 

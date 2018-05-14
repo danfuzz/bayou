@@ -4,7 +4,7 @@
 
 import { inspect } from 'util';
 
-import { CommonBase, DataUtil, Errors, Functor } from 'util-common';
+import { CommonBase, DataUtil, Errors, Functor } from '@bayou/util-common';
 
 import EventProxyHandler from './EventProxyHandler';
 import LogRecord from './LogRecord';

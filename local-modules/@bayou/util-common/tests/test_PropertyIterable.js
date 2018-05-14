@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { PropertyIterable } from 'util-common';
+import { PropertyIterable } from '@bayou/util-common';
 
 const TEST_OBJECT = {
   a: 1,
@@ -15,7 +15,7 @@ const TEST_OBJECT = {
   objectItem: { a: 1 }
 };
 
-describe('util-common/PropertyIterable', () => {
+describe('@bayou/util-common/PropertyIterable', () => {
   describe('iterating over all properties', () => {
     it('should return all properties of the object', () => {
       const iter = new PropertyIterable(TEST_OBJECT);

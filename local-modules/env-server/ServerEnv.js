@@ -7,7 +7,7 @@ import http from 'http';
 
 import { Hooks } from 'hooks-server';
 import { Logger } from 'see-all';
-import { Errors, Singleton } from 'util-common';
+import { Errors, Singleton } from '@bayou/util-common';
 
 import Dirs from './Dirs';
 import PidFile from './PidFile';

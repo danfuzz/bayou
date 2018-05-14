@@ -6,7 +6,7 @@ import path from 'path';
 
 import { LocalFileStore } from 'file-store-local';
 import { Hooks as hooksCommon_Hooks } from 'hooks-common';
-import { Singleton } from 'util-common';
+import { Singleton } from '@bayou/util-common';
 
 import BearerTokens from './BearerTokens';
 

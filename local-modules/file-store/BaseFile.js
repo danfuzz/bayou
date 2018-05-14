@@ -4,7 +4,7 @@
 
 import { StorageId, StoragePath, TransactionSpec } from 'file-store-ot';
 import { TBoolean, TInt, TMap, TObject, TSet } from '@bayou/typecheck';
-import { CommonBase, Errors, FrozenBuffer } from 'util-common';
+import { CommonBase, Errors, FrozenBuffer } from '@bayou/util-common';
 
 import FileId from './FileId';
 

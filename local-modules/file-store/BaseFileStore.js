@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from '@bayou/typecheck';
-import { Singleton } from 'util-common';
+import { Singleton } from '@bayou/util-common';
 
 import BaseFile from './BaseFile';
 import FileId from './FileId';

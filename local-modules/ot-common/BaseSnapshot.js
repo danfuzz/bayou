@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TArray, TFunction } from '@bayou/typecheck';
-import { CommonBase, Errors } from 'util-common';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 import BaseChange from './BaseChange';
 import RevisionNumber from './RevisionNumber';

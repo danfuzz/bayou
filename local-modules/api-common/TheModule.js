@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Registry } from 'codec';
-import { UtilityClass } from 'util-common';
+import { UtilityClass } from '@bayou/util-common';
 
 import CodableError from './CodableError';
 import Message from './Message';

@@ -1,4 +1,4 @@
-import { UtilityClass } from 'util-common';
+import { UtilityClass } from '@bayou/util-common';
 
 export default class LoremIpsum extends UtilityClass {
   /**

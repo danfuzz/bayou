@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { ColorSelector } from 'util-common';
+import { ColorSelector } from '@bayou/util-common';
 
-describe('util-common/ColorSelector', () => {
+describe('@bayou/util-common/ColorSelector', () => {
   describe('constructor()', () => {
     it('should default to a hue angle of pure red if given no seed', () => {
       const selector = new ColorSelector();

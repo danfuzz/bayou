@@ -4,7 +4,7 @@
 
 import { BaseSnapshot } from 'ot-common';
 import { TInt } from '@bayou/typecheck';
-import { Errors } from 'util-common';
+import { Errors } from '@bayou/util-common';
 
 import FileChange from './FileChange';
 import FileDelta from './FileDelta';

@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Functor } from 'util-common';
+import { Functor } from '@bayou/util-common';
 
 import TargetHandler from 'api-client/TargetHandler';
 

@@ -10,7 +10,7 @@
 // See the comment in `hooks-server/index.js` for a longer discussion about
 // this.
 
-import { DeferredLoader } from 'util-common';
+import { DeferredLoader } from '@bayou/util-common';
 
 const Hooks = DeferredLoader.makeProxy(
   'client hook',

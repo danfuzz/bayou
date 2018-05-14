@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { DataUtil, Functor } from 'util-common';
+import { DataUtil, Functor } from '@bayou/util-common';
 
 import { MockOp } from 'ot-common/mocks';
 

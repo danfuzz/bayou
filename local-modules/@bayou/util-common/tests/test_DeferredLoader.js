@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { DeferredLoader } from 'util-common';
+import { DeferredLoader } from '@bayou/util-common';
 
-describe('util-common/DeferredLoader', () => {
+describe('@bayou/util-common/DeferredLoader', () => {
   describe('makeProxy()', () => {
     it('should accept valid arguments', () => {
       assert.doesNotThrow(() => { DeferredLoader.makeProxy('hello', () => true); });

@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Units } from 'util-common';
+import { Units } from '@bayou/util-common';
 
 const splitFilesizeString = (string) => {
   const regex = /^([0-9]+)(\.([0-9]+))? ([kMGTPEZY]B)$/;
@@ -20,7 +20,7 @@ const splitFilesizeString = (string) => {
   };
 };
 
-describe('util-common/Units', () => {
+describe('@bayou/util-common/Units', () => {
   describe('Units.filesizeToString(byteCount, decimalPlaces)', () => {
     it('should throw an exception if passed a negative byte count', () => {
       assert.throws(() => Units.filesizeToString(-100));

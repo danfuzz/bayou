@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
 import { PropertyChange, PropertyDelta, PropertyOp, PropertySnapshot } from 'doc-common';
-import { DataUtil, Functor } from 'util-common';
+import { DataUtil, Functor } from '@bayou/util-common';
 
 describe('doc-common/PropertySnapshot', () => {
   describe('.EMPTY', () => {

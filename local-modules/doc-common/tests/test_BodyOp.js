@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
 import { BodyOp } from 'doc-common';
-import { Functor } from 'util-common';
+import { Functor } from '@bayou/util-common';
 
 describe('doc-common/BodyOp', () => {
   describe('fromQuillForm()', () => {

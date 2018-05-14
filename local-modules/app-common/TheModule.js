@@ -6,7 +6,7 @@ import { TheModule as apiCommon_TheModule } from 'api-common';
 import { Codec, Registry } from 'codec';
 import { TheModule as docCommon_TheModule } from 'doc-common';
 import { TheModule as otCommon_TheModule } from 'ot-common';
-import { UtilityClass } from 'util-common';
+import { UtilityClass } from '@bayou/util-common';
 
 /**
  * Utilities for this module.

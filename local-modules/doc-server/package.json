@@ -16,6 +16,6 @@
     "promise-util": "local",
     "see-all": "local",
     "@bayou/typecheck": "local",
-    "util-common": "local"
+    "@bayou/util-common": "local"
   }
 }

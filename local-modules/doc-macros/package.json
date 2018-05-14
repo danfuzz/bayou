@@ -6,6 +6,6 @@
     "deps-quill-client": "local",
     "quill-util": "local",
     "ui-embeds": "local",
-    "util-common": "local"
+    "@bayou/util-common": "local"
   }
 }

@@ -4,6 +4,6 @@
 
   "dependencies": {
     "see-all": "local",
-    "util-common": "local"
+    "@bayou/util-common": "local"
   }
 }

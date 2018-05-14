@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { MethodCacheProxyHandler } from 'util-common';
+import { MethodCacheProxyHandler } from '@bayou/util-common';
 
 /**
  * Subclass of the class to test which always throws when asked to create a
@@ -17,7 +17,7 @@ class ThrowingHandler extends MethodCacheProxyHandler {
   }
 }
 
-describe('util-common/MethodCacheProxyHandler', () => {
+describe('@bayou/util-common/MethodCacheProxyHandler', () => {
   describe('constructor', () => {
     it('should construct an instance', () => {
       assert.doesNotThrow(() => new MethodCacheProxyHandler());

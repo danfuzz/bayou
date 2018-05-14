@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { ColorUtil } from 'util-common';
+import { ColorUtil } from '@bayou/util-common';
 
-describe('util-common/ColorUtil', () => {
+describe('@bayou/util-common/ColorUtil', () => {
   describe('checkCss()', () => {
     it('should accept proper strings', () => {
       function test(v) {

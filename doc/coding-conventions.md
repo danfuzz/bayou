@@ -96,7 +96,7 @@ taking into account recent additions to the language.
   import fs from 'fs';
 
   import { BaseFile } from 'file-store';
-  import { DataUtil, InfoError, Singleton } from 'util-common';
+  import { DataUtil, InfoError, Singleton } from '@bayou/util-common';
 
   import RegularBlort from './RegularBlort';
   import SpecialBlort from './SpecialBlort';
@@ -154,8 +154,8 @@ taking into account recent additions to the language.
   }
   ```
 
-  `_mustOverride()` is defined by the class `CommonBase` in the `util-common`
-  local module.
+  `_mustOverride()` is defined by the class `CommonBase` in the
+  `@bayou/util-common` local module.
 
 * Utility classes &mdash; Utility classes are classes which only serve as a
   collection of functionality exposed as static methods (and sometimes static

@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { JsonUtil } from 'util-common';
+import { JsonUtil } from '@bayou/util-common';
 
-describe('util-common/JsonUtil', () => {
+describe('@bayou/util-common/JsonUtil', () => {
   describe('parseFrozen(jsonString)', () => {
     it('should throw an error if handed anything other than a string', () => {
       assert.throws(() => JsonUtil.parseFrozen([]));

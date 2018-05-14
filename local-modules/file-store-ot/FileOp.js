@@ -4,7 +4,7 @@
 
 import { BaseOp } from 'ot-common';
 import { TInt } from '@bayou/typecheck';
-import { Errors, FrozenBuffer } from 'util-common';
+import { Errors, FrozenBuffer } from '@bayou/util-common';
 
 import StorageId from './StorageId';
 import StoragePath from './StoragePath';

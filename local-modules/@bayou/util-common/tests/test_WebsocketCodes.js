@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { WebsocketCodes } from 'util-common';
+import { WebsocketCodes } from '@bayou/util-common';
 
-describe('util-common/WebsocketCodes', () => {
+describe('@bayou/util-common/WebsocketCodes', () => {
   describe('close()', () => {
     it('should return a questioning string', () => {
       const readable = WebsocketCodes.close();

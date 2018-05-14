@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt, TObject } from '@bayou/typecheck';
-import { CommonBase, ErrorUtil, Errors, Functor, InfoError } from 'util-common';
+import { CommonBase, ErrorUtil, Errors, Functor, InfoError } from '@bayou/util-common';
 
 import CodableError from './CodableError';
 

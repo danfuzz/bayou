@@ -4,7 +4,7 @@
 
 import { BaseKey } from 'api-common';
 import { TObject, TString } from '@bayou/typecheck';
-import { CommonBase, Errors, Functor } from 'util-common';
+import { CommonBase, Errors, Functor } from '@bayou/util-common';
 
 import Schema from './Schema';
 

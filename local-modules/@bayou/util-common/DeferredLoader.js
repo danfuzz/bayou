@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TFunction, TString } from '@bayou/typecheck';
-import { Errors } from 'util-common';
+import { Errors } from '@bayou/util-common';
 
 /**
  * Proxy handler for deferred loaders.

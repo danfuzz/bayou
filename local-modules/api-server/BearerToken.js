@@ -5,7 +5,7 @@
 import { BaseKey } from 'api-common';
 import { Hooks } from 'hooks-server';
 import { TString } from '@bayou/typecheck';
-import { Errors } from 'util-common';
+import { Errors } from '@bayou/util-common';
 
 /**
  * Bearer token, which is a kind of key which conflates ID and secret.

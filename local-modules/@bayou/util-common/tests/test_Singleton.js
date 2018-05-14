@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Singleton } from 'util-common';
+import { Singleton } from '@bayou/util-common';
 
-describe('util-common/Singleton', () => {
+describe('@bayou/util-common/Singleton', () => {
   describe('.theOne', () => {
     it('should return the same object every time it is called', () => {
       class TestClass extends Singleton { /*empty*/ }

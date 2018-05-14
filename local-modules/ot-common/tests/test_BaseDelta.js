@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
 import { BaseDelta } from 'ot-common';
-import { DataUtil } from 'util-common';
+import { DataUtil } from '@bayou/util-common';
 
 import { MockDelta, MockOp } from 'ot-common/mocks';
 

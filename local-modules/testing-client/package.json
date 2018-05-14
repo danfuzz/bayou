@@ -8,6 +8,6 @@
     "promise-util": "local",
     "mocha-client-shim": "local",
     "testing-common": "local",
-    "util-common": "local"
+    "@bayou/util-common": "local"
   }
 }

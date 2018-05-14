@@ -4,7 +4,7 @@
 
 import { BearerToken } from 'api-server';
 import { Delay } from 'promise-util';
-import { Singleton } from 'util-common';
+import { Singleton } from '@bayou/util-common';
 
 /**
  * Base class for and default implementation of `Hooks.bearerTokens`, which

@@ -5,7 +5,7 @@
 import Quill from 'quill';
 import { TObject } from '@bayou/typecheck';
 
-import { UtilityClass } from 'util-common';
+import { UtilityClass } from '@bayou/util-common';
 
 const POSITION_NOT_FOUND = Object.freeze({
   blot: null,

@@ -4,7 +4,7 @@
 
 import { TargetId } from 'api-common';
 import { TFunction } from '@bayou/typecheck';
-import { CommonBase, Errors } from 'util-common';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 import TargetHandler from './TargetHandler';
 

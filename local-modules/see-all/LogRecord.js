@@ -5,7 +5,7 @@
 import { inspect } from 'util';
 
 import { TInt, TString } from '@bayou/typecheck';
-import { CommonBase, DataUtil, ErrorUtil, Errors, Functor } from 'util-common';
+import { CommonBase, DataUtil, ErrorUtil, Errors, Functor } from '@bayou/util-common';
 
 import LogTag from './LogTag';
 

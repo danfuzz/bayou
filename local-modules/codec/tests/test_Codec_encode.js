@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { Codec, ConstructorCall } from 'codec';
 import { MockCodable } from 'codec/mocks';
-import { FrozenBuffer } from 'util-common';
+import { FrozenBuffer } from '@bayou/util-common';
 
 describe('api-common/Codec.encode*()', () => {
   // Convenient bindings for `encode*()` to avoid a lot of boilerplate.

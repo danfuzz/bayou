@@ -9,7 +9,7 @@ import Mocha from 'mocha';
 import { promisify } from 'util';
 
 import { Logger } from 'see-all';
-import { UtilityClass } from 'util-common';
+import { UtilityClass } from '@bayou/util-common';
 
 import CollectingReporter from './CollectingReporter';
 import TestFiles from './TestFiles';

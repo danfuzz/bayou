@@ -4,7 +4,7 @@
 
 import { PropertyDelta, PropertyOp, Timeouts } from 'doc-common';
 import { TString } from '@bayou/typecheck';
-import { CommonBase, DataUtil, Errors } from 'util-common';
+import { CommonBase, DataUtil, Errors } from '@bayou/util-common';
 
 import DocSession from './DocSession';
 

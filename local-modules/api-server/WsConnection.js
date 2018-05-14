@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { WebsocketCodes } from 'util-common';
+import { WebsocketCodes } from '@bayou/util-common';
 
 import Connection from './Connection';
 

@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { IterableUtil } from 'util-common';
+import { IterableUtil } from '@bayou/util-common';
 
-describe('util-common/IterableUtil', () => {
+describe('@bayou/util-common/IterableUtil', () => {
   describe('multiUseSafe()', () => {
     it('should throw an error if not passed an `Iterable`', () => {
       assert.throws(() => IterableUtil.multiUseSafe(123));

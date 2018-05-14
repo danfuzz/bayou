@@ -4,7 +4,7 @@
 
 import { Logger } from 'see-all';
 import { TObject } from '@bayou/typecheck';
-import { Errors, UtilityClass } from 'util-common';
+import { Errors, UtilityClass } from '@bayou/util-common';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('env-client');

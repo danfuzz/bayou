@@ -5,7 +5,7 @@
 import { Codec } from 'codec';
 import { BaseFile, FileCodec } from 'file-store';
 import { BaseLogger, Logger } from 'see-all';
-import { CommonBase } from 'util-common';
+import { CommonBase } from '@bayou/util-common';
 
 /** {Logger} Logger to use for this module. */
 const log = new Logger('doc');

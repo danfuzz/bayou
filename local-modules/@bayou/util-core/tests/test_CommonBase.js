@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { CommonBase } from 'util-common';
+import { CommonBase } from '@bayou/util-common';
 
 describe('@bayou/util-core/CommonBase', () => {
   describe('check()', () => {

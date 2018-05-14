@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { DEFAULT_DOCUMENT } from 'hooks-server';
 import { BodyDelta } from 'doc-common';
-import { DataUtil } from 'util-common';
+import { DataUtil } from '@bayou/util-common';
 
 describe('hooks-server/DEFAULT_DOCUMENT', () => {
   it('should be a deep-frozen data value', () => {

@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { LogRecord } from 'see-all';
 import { MockLogger } from 'see-all/mocks';
-import { Functor } from 'util-common';
+import { Functor } from '@bayou/util-common';
 
 // This class is tested via its subclass `MockLogger`, which records all calls
 // made to `_impl_logEvent()` and `_impl_logMessage()`.

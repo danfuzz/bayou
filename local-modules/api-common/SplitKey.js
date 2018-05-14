@@ -7,7 +7,7 @@
 import crypto from 'crypto';
 
 import { TString } from '@bayou/typecheck';
-import { Random } from 'util-common';
+import { Random } from '@bayou/util-common';
 
 import BaseKey from './BaseKey';
 

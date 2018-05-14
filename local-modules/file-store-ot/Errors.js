@@ -5,7 +5,7 @@
 import { StoragePath } from 'file-store-ot';
 import { RevisionNumber } from 'ot-common';
 import { TString } from '@bayou/typecheck';
-import { FrozenBuffer, InfoError, UtilityClass } from 'util-common';
+import { FrozenBuffer, InfoError, UtilityClass } from '@bayou/util-common';
 
 /**
  * Utility class for constructing errors salient to this module.

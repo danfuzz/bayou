@@ -5,7 +5,7 @@
 import { BodyChange, PropertyChange } from 'doc-common';
 import { RevisionNumber, Timestamp } from 'ot-common';
 import { TString } from '@bayou/typecheck';
-import { CommonBase } from 'util-common';
+import { CommonBase } from '@bayou/util-common';
 
 import FileComplex from './FileComplex';
 

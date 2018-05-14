@@ -4,7 +4,7 @@
 
 import { ImageEmbed } from 'image-embed';
 import { QuillEvents } from 'quill-util';
-import { UtilityClass } from 'util-common';
+import { UtilityClass } from '@bayou/util-common';
 
 import LoremIpsum from './LoremIpsum';
 

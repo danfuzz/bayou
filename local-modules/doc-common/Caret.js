@@ -4,7 +4,7 @@
 
 import { RevisionNumber, Timestamp } from 'ot-common';
 import { TInt, TObject, TString } from '@bayou/typecheck';
-import { ColorUtil, CommonBase, Errors } from 'util-common';
+import { ColorUtil, CommonBase, Errors } from '@bayou/util-common';
 
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';

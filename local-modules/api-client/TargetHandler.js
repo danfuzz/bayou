@@ -4,7 +4,7 @@
 
 import { TargetId } from 'api-common';
 import { TFunction } from '@bayou/typecheck';
-import { Functor, MethodCacheProxyHandler } from 'util-common';
+import { Functor, MethodCacheProxyHandler } from '@bayou/util-common';
 
 /**
  * `Proxy` handler which redirects method calls to an indicated client. It does

@@ -5,7 +5,7 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import { UtilityClass } from 'util-common';
+import { UtilityClass } from '@bayou/util-common';
 
 // **Note:** This is really the local module `mocha-client-shim`. See that
 // module and {@link client-bundle.ClientBundle} for more details.

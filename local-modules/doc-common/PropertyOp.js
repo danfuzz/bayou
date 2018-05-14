@@ -4,7 +4,7 @@
 
 import { BaseOp } from 'ot-common';
 import { TString } from '@bayou/typecheck';
-import { Errors } from 'util-common';
+import { Errors } from '@bayou/util-common';
 
 import Property from './Property';
 

@@ -5,7 +5,7 @@
 import PropTypes from 'prop-types';
 import Quill from 'quill';
 import React from 'react';
-import { Units } from 'util-common';
+import { Units } from '@bayou/util-common';
 
 import ComponentBlotWrapper from '../ComponentBlotWrapper';
 

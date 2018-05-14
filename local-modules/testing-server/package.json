@@ -9,6 +9,6 @@
     "deps-testing": "local",
     "env-server": "local",
     "testing-common": "local",
-    "util-common": "local"
+    "@bayou/util-common": "local"
   }
 }

@@ -7,7 +7,7 @@ import { Errors as fileStoreOt_Errors, StoragePath, TransactionSpec } from 'file
 import { BaseSnapshot, RevisionNumber } from 'ot-common';
 import { Delay } from 'promise-util';
 import { TBoolean, TFunction } from '@bayou/typecheck';
-import { Errors } from 'util-common';
+import { Errors } from '@bayou/util-common';
 
 import BaseDataManager from './BaseDataManager';
 import ValidationStatus from './ValidationStatus';
