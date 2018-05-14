@@ -3,7 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "deps-quill-client": "local",
+    "@bayou/deps-quill-client": "local",
     "doc-common": "local",
     "promise-util": "local",
     "@bayou/typecheck": "local",

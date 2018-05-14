@@ -1,5 +1,5 @@
 {
-  "name": "deps-quill-client",
+  "name": "@bayou/deps-quill-client",
   "version": "1.0.0",
 
   "dependencies": {
