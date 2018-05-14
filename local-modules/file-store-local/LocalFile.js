@@ -5,7 +5,7 @@
 import afs from 'async-file';
 import path from 'path';
 
-import { Codec } from 'codec';
+import { Codec } from '@bayou/codec';
 import { BaseFile } from 'file-store';
 import { FileChange, FileSnapshot } from 'file-store-ot';
 import { RevisionNumber } from 'ot-common';

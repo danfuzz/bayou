@@ -3,7 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "codec": "local",
+    "@bayou/codec": "local",
     "env-server": "local",
     "file-store": "local",
     "file-store-ot": "local",

@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Codec } from 'codec';
+import { Codec } from '@bayou/codec';
 import { BaseFile, FileCodec } from 'file-store';
 import { BaseLogger, Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';

@@ -5,7 +5,7 @@
 import afs from 'async-file';
 import path from 'path';
 
-import { Codec } from 'codec';
+import { Codec } from '@bayou/codec';
 import { Dirs } from 'env-server';
 import { BaseFileStore, FileCache } from 'file-store';
 import { TheModule as fileStoreOt_TheModule } from 'file-store-ot';

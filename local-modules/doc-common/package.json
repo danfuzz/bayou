@@ -3,7 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "codec": "local",
+    "@bayou/codec": "local",
     "@bayou/deps-quill-common": "local",
     "hooks-common": "local",
     "ot-common": "local",

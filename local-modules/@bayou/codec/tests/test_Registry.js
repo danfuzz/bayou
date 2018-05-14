@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { ConstructorCall, ItemCodec, Registry } from 'codec';
+import { ConstructorCall, ItemCodec, Registry } from '@bayou/codec';
 
 class RegistryTestClass {
   constructor() {

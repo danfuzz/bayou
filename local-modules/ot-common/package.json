@@ -3,7 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "codec": "local",
+    "@bayou/codec": "local",
     "hooks-common": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local"

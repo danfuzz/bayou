@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TheModule as apiCommon_TheModule } from 'api-common';
-import { Codec, Registry } from 'codec';
+import { Codec, Registry } from '@bayou/codec';
 import { TheModule as docCommon_TheModule } from 'doc-common';
 import { TheModule as otCommon_TheModule } from 'ot-common';
 import { UtilityClass } from '@bayou/util-common';
