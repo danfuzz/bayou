@@ -5,10 +5,10 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Proppy } from 'proppy';
+import { Proppy } from '@bayou/proppy';
 import { TObject } from '@bayou/typecheck';
 
-describe('proppy/Proppy', () => {
+describe('@bayou/proppy/Proppy', () => {
   describe('parseString(value)', () => {
     it('should ignore comments and blank lines', () => {
       const input = '# this is comment line one\n' +
