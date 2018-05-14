@@ -7,7 +7,7 @@ import puppeteer from 'puppeteer';
 import { format, promisify } from 'util';
 
 import { Delay } from 'promise-util';
-import { Logger } from 'see-all';
+import { Logger } from '@bayou/see-all';
 import { UtilityClass } from '@bayou/util-common';
 
 import EventReceiver from './EventReceiver';

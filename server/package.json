@@ -25,8 +25,8 @@
     "env-server": "local",
     "hooks-server": "local",
     "promise-util": "local",
-    "see-all": "local",
-    "see-all-server": "local",
+    "@bayou/see-all": "local",
+    "@bayou/see-all-server": "local",
     "testing-server": "local"
   }
 }

@@ -4,7 +4,7 @@
 
   "dependencies": {
     "api-common": "local",
-    "see-all": "local",
+    "@bayou/see-all": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local"
   }

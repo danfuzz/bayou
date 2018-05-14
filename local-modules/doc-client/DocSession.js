@@ -5,7 +5,7 @@
 import { ApiClient } from 'api-client';
 import { BaseKey } from 'api-common';
 import { TheModule as appCommon_TheModule } from 'app-common';
-import { Logger } from 'see-all';
+import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 
 import CaretTracker from './CaretTracker';

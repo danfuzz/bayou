@@ -6,10 +6,10 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { Delay } from 'promise-util';
-import { LogStream } from 'see-all';
-import { MockLogger } from 'see-all/mocks';
+import { LogStream } from '@bayou/see-all';
+import { MockLogger } from '@bayou/see-all/mocks';
 
-describe('see-all/LogStream', () => {
+describe('@bayou/see-all/LogStream', () => {
   describe('constructor()', () => {
     it('should accept valid arguments', () => {
       const logger = new MockLogger();

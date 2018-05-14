@@ -4,7 +4,7 @@
 
 import weak from 'weak';
 
-import { Logger } from 'see-all';
+import { Logger } from '@bayou/see-all';
 import { CommonBase, Errors } from '@bayou/util-common';
 
 import BaseFile from './BaseFile';

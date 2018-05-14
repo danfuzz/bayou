@@ -7,7 +7,7 @@
 
     "@bayou/deps-compiler": "local",
     "env-server": "local",
-    "see-all": "local",
+    "@bayou/see-all": "local",
     "testing-server": "local",
     "@bayou/util-common": "local"
   }

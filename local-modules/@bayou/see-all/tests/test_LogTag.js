@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { LogTag } from 'see-all';
+import { LogTag } from '@bayou/see-all';
 
-describe('see-all/LogTag', () => {
+describe('@bayou/see-all/LogTag', () => {
   describe('checkContextString()', () => {
     it('accepts valid strings', () => {
       function test(value) {

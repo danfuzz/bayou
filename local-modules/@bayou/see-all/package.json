@@ -1,9 +1,8 @@
 {
-  "name": "see-all-client",
+  "name": "@bayou/see-all",
   "version": "1.0.0",
 
   "dependencies": {
-    "see-all": "local",
     "@bayou/util-common": "local"
   }
 }

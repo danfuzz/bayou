@@ -7,7 +7,7 @@
 
     "hooks-server": "local",
     "proppy": "local",
-    "see-all": "local",
+    "@bayou/see-all": "local",
     "@bayou/util-common": "local"
   }
 }

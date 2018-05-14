@@ -14,7 +14,7 @@
     "ot-common": "local",
     "promise-util": "local",
     "quill-util": "local",
-    "see-all": "local",
+    "@bayou/see-all": "local",
     "state-machine": "local",
     "@bayou/typecheck": "local",
     "ui-embeds": "local",

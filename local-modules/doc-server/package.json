@@ -14,7 +14,7 @@
     "hooks-server": "local",
     "ot-common": "local",
     "promise-util": "local",
-    "see-all": "local",
+    "@bayou/see-all": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local"
   }

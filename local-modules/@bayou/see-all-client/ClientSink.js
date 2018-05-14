@@ -2,19 +2,19 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseSink, SeeAll } from 'see-all';
+import { BaseSink, SeeAll } from '@bayou/see-all';
 
 // The whole point of this file is to use `console.<whatever>`, so...
 /* eslint-disable no-console */
 
 /**
- * Implementation of the `see-all` logging sink protocol for use in a web
+ * Implementation of the `@bayou/see-all` logging sink protocol for use in a web
  * browser context. It logs everything to the browser window console.
  */
 export default class ClientSink extends BaseSink {
   /**
    * Registers an instance of this class as a logging sink with the main
-   * `see-all` module.
+   * `@bayou/see-all` module.
    */
   static init() {
     SeeAll.theOne.add(new ClientSink());

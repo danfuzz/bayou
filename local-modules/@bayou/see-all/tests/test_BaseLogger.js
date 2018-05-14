@@ -5,14 +5,14 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { LogRecord } from 'see-all';
-import { MockLogger } from 'see-all/mocks';
+import { LogRecord } from '@bayou/see-all';
+import { MockLogger } from '@bayou/see-all/mocks';
 import { Functor } from '@bayou/util-common';
 
 // This class is tested via its subclass `MockLogger`, which records all calls
 // made to `_impl_logEvent()` and `_impl_logMessage()`.
 
-describe('see-all/BaseLogger', () => {
+describe('@bayou/see-all/BaseLogger', () => {
   describe('logEvent()', () => {
     it('calls through to `_impl_logEvent()` when given valid arguments', () => {
       const logger  = new MockLogger();

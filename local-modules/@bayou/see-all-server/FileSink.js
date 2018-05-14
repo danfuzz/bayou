@@ -4,17 +4,17 @@
 
 import fs from 'fs';
 
-import { BaseSink, SeeAll } from 'see-all';
+import { BaseSink, SeeAll } from '@bayou/see-all';
 import { TBoolean, TString } from '@bayou/typecheck';
 
 /**
- * Implementation of the `see-all` logging sink protocol which stores logged
- * items to a file.
+ * Implementation of the `@bayou/see-all` logging sink protocol which stores
+ * logged items to a file.
  */
 export default class FileSink extends BaseSink {
   /**
    * Constructs an instance. This will cause the instance to be registered with
-   * the main `see-all` module.
+   * the main `@bayou/see-all` module.
    *
    * @param {string} path Path of the file to log to.
    * @param {boolean} useConsole If `true`, also write logs to the console.

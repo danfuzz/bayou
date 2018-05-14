@@ -6,7 +6,7 @@ import weak from 'weak';
 
 import { TheModule as appCommon_TheModule } from 'app-common';
 import { Hooks } from 'hooks-server';
-import { Logger } from 'see-all';
+import { Logger } from '@bayou/see-all';
 import { TFunction, TString } from '@bayou/typecheck';
 import { Singleton } from '@bayou/util-common';
 

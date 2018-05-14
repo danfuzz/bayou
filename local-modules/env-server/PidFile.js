@@ -5,7 +5,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { Logger } from 'see-all';
+import { Logger } from '@bayou/see-all';
 import { TInt } from '@bayou/typecheck';
 import { Singleton } from '@bayou/util-common';
 

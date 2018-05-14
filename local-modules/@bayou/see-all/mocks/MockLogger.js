@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseLogger } from 'see-all';
+import { BaseLogger } from '@bayou/see-all';
 
 /**
  * Mock logger, which provides a convenient record of how it was called.

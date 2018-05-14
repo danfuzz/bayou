@@ -9,7 +9,7 @@ import stripAnsi from 'strip-ansi';
 import { format } from 'util';
 import wrapAnsi from 'wrap-ansi';
 
-import { BaseSink, LogRecord, LogTag, Logger, SeeAll } from 'see-all';
+import { BaseSink, LogRecord, LogTag, Logger, SeeAll } from '@bayou/see-all';
 import { TBoolean, TString } from '@bayou/typecheck';
 
 // The whole point of this file is to use `console.<whatever>`, so...
@@ -51,15 +51,16 @@ const MAX_SKIPPABLE_BURST_COUNT = 5;
 const SKIPPABLE_BURST_MSEC = 2000; // Two seconds.
 
 /**
- * Implementation of the `see-all` logging sink protocol which writes logs in
- * a human-friendly text form to one or both of (a) a file and (b) the console.
+ * Implementation of the `@bayou/see-all` logging sink protocol which writes
+ * logs in a human-friendly text form to one or both of (a) a file and (b) the
+ * console.
  */
 export default class HumanSink extends BaseSink {
   /**
-   * Patches `console.log()` and friends to call through to `see-all`, such that
-   * they end up emitting log records and thus ultimately cause logging to an
-   * instance of this class (if attached) as well as whatever other logging
-   * sinks are hooked up (e.g. and likely, a {@link RecentSink}).
+   * Patches `console.log()` and friends to call through to `@bayou/see-all`,
+   * such that they end up emitting log records and thus ultimately cause
+   * logging to an instance of this class (if attached) as well as whatever
+   * other logging sinks are hooked up (e.g. and likely, a {@link RecentSink}).
    */
   static patchConsole() {
     const consoleLogger = new Logger('node-console');

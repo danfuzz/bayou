@@ -6,7 +6,7 @@ import { SplitKey } from 'api-common';
 import { Context } from 'api-server';
 import { DocServer } from 'doc-server';
 import { Hooks } from 'hooks-server';
-import { Logger } from 'see-all';
+import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
 
 /** Logger. */

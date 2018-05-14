@@ -4,7 +4,7 @@
 
   "dependencies": {
     "@bayou/deps-testing": "local",
-    "see-all": "local",
+    "@bayou/see-all": "local",
     "promise-util": "local",
     "mocha-client-shim": "local",
     "testing-common": "local",

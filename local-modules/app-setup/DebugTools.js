@@ -10,8 +10,8 @@ import { TheModule as appCommon_TheModule } from 'app-common';
 import { DocumentId } from 'doc-common';
 import { DocServer } from 'doc-server';
 import { AuthorId } from 'ot-common';
-import { Logger } from 'see-all';
-import { RecentSink } from 'see-all-server';
+import { Logger } from '@bayou/see-all';
+import { RecentSink } from '@bayou/see-all-server';
 
 /** Logger for this module. */
 const log = new Logger('app-debug');

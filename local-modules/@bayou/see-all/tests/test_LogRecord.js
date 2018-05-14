@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { LogRecord, LogTag } from 'see-all';
+import { LogRecord, LogTag } from '@bayou/see-all';
 
-describe('see-all/LogRecord', () => {
+describe('@bayou/see-all/LogRecord', () => {
   describe('.MESSAGE_LEVELS', () => {
     it('is a frozen array of at least four elements', () => {
       assert.isArray(LogRecord.MESSAGE_LEVELS);

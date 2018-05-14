@@ -6,17 +6,17 @@ import ansiHtml from 'ansi-html';
 import chalk from 'chalk';
 import escapeHtml from 'escape-html';
 
-import { BaseSink, SeeAll } from 'see-all';
+import { BaseSink, SeeAll } from '@bayou/see-all';
 import { TInt } from '@bayou/typecheck';
 
 /**
- * Implementation of the `see-all` logging sink protocol which collects a
+ * Implementation of the `@bayou/see-all` logging sink protocol which collects a
  * rolling compendium of recently logged items.
  */
 export default class RecentSink extends BaseSink {
   /**
    * Constructs an instance. This will cause the instance to be registered with
-   * the main `see-all` module.
+   * the main `@bayou/see-all` module.
    *
    * @param {number} maxAgeMsec The maximum age of logged items before they age
    *   out of the list.

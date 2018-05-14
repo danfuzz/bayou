@@ -11,7 +11,7 @@ import { ClientStore } from 'data-model-client';
 import { Hooks } from 'hooks-client';
 import { Condition } from 'promise-util';
 import { BayouKeyHandlers, QuillProm } from 'quill-util';
-import { Logger } from 'see-all';
+import { Logger } from '@bayou/see-all';
 import { TObject } from '@bayou/typecheck';
 import { Header } from 'ui-components';
 import { DomUtil } from '@bayou/util-client';

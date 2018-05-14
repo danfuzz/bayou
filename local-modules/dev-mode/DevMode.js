@@ -9,7 +9,7 @@ import path from 'path';
 
 import { Dirs } from 'env-server';
 import { Delay } from 'promise-util';
-import { Logger } from 'see-all';
+import { Logger } from '@bayou/see-all';
 import { Singleton } from '@bayou/util-common';
 
 /** Logger. */

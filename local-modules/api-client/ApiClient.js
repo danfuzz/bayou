@@ -4,7 +4,7 @@
 
 import { BaseKey, CodableError, ConnectionError, Message, Response } from 'api-common';
 import { Codec } from 'codec';
-import { Logger } from 'see-all';
+import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
 import { CommonBase, WebsocketCodes } from '@bayou/util-common';
 

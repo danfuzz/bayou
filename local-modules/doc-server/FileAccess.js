@@ -4,7 +4,7 @@
 
 import { Codec } from 'codec';
 import { BaseFile, FileCodec } from 'file-store';
-import { BaseLogger, Logger } from 'see-all';
+import { BaseLogger, Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 
 /** {Logger} Logger to use for this module. */

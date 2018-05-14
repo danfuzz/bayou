@@ -5,13 +5,13 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { LogRecord, LogTag } from 'see-all';
-import { RecentSink } from 'see-all-server';
+import { LogRecord, LogTag } from '@bayou/see-all';
+import { RecentSink } from '@bayou/see-all-server';
 
 /** {LogTag} Handy instance. */
 const LOG_TAG = new LogTag('blort-tag');
 
-describe('see-all-server/RecentSink', () => {
+describe('@bayou/see-all-server/RecentSink', () => {
   describe('log()', () => {
     it('should log a regular item as given', () => {
       const sink   = new RecentSink(1);
