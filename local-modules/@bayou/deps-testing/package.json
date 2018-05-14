@@ -1,5 +1,5 @@
 {
-  "name": "deps-testing",
+  "name": "@bayou/deps-testing",
   "version": "1.0.0",
 
   "dependencies": {

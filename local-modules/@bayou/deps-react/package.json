@@ -1,5 +1,5 @@
 {
-  "name": "deps-react",
+  "name": "@bayou/deps-react",
   "version": "1.0.0",
 
   "dependencies": {

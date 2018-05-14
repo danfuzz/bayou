@@ -4,7 +4,7 @@
 
   "dependencies": {
     "codec": "local",
-    "deps-quill-common": "local",
+    "@bayou/deps-quill-common": "local",
     "hooks-common": "local",
     "ot-common": "local",
     "@bayou/typecheck": "local",

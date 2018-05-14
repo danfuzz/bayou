@@ -3,7 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "deps-testing": "local",
+    "@bayou/deps-testing": "local",
     "see-all": "local",
     "promise-util": "local",
     "mocha-client-shim": "local",

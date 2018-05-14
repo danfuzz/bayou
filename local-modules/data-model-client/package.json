@@ -3,6 +3,6 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "deps-react": "local"
+    "@bayou/deps-react": "local"
   }
 }

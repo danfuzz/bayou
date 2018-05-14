@@ -12,7 +12,7 @@
     "app-common": "local",
     "client-bundle": "local",
     "codec": "local",
-    "deps-ansi-color": "local",
+    "@bayou/deps-ansi-color": "local",
     "doc-common": "local",
     "doc-server": "local",
     "env-server": "local",
