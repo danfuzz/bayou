@@ -4,7 +4,7 @@
 
 import ansiHtml from 'ansi-html';
 import chalk from 'chalk';
-import escapeHtml from 'escape-html';
+import { escape } from 'lodash';
 
 import { BaseSink, SeeAll } from '@bayou/see-all';
 import { TInt } from '@bayou/typecheck';
@@ -121,9 +121,9 @@ export default class RecentSink extends BaseSink {
       default:      { prefix = ck.dim.bold(prefix);    break; }
     }
 
-    const prefixHtml  = ansiHtml(escapeHtml(prefix));
-    const contextHtml = ansiHtml(escapeHtml(ck.blue.dim.bold(context)));
-    const bodyHtml    = ansiHtml(escapeHtml(body));
+    const prefixHtml  = ansiHtml(escape(prefix));
+    const contextHtml = ansiHtml(escape(ck.blue.dim.bold(context)));
+    const bodyHtml    = ansiHtml(escape(body));
 
     return `<tr><td>${prefixHtml}</td><td>${contextHtml}</td><td><pre>${bodyHtml}</pre></td>`;
   }

@@ -3,10 +3,9 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "puppeteer": "^0.11.0",
-
     "@bayou/deps-ansi-color": "local",
-    "@bayou/deps-testing": "local",
+    "@bayou/deps-testing-common": "local",
+    "@bayou/deps-testing-server": "local",
     "env-server": "local",
     "testing-common": "local",
     "@bayou/util-common": "local"

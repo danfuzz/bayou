@@ -3,9 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "chokidar": "^1.6.1",
-    "fs-extra": "^3.0.1",
-
+    "@bayou/deps-util-server": "local",
     "env-server": "local",
     "@bayou/promise-util": "local",
     "@bayou/see-all": "local",

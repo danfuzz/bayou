@@ -3,9 +3,8 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "escape-html": "^1.0.3",
-
     "@bayou/deps-ansi-color": "local",
+    "@bayou/deps-util-common": "local",
     "@bayou/see-all": "local",
     "@bayou/util-common": "local"
   }

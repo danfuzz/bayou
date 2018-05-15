@@ -1,0 +1,9 @@
+{
+  "name": "@bayou/ui-embeds",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "@bayou/deps-react": "local",
+    "@bayou/deps-util-common": "local"
+  }
+}

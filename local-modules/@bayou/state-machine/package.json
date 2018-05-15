@@ -1,13 +1,10 @@
 {
-  "name": "file-store",
+  "name": "@bayou/state-machine",
   "version": "1.0.0",
 
   "dependencies": {
-    "@bayou/codec": "local",
-    "@bayou/deps-util-server": "local",
-    "file-store-ot": "local",
-    "hooks-server": "local",
     "@bayou/promise-util": "local",
+    "@bayou/see-all": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local"
   }
