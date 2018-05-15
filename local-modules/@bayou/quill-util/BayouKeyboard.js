@@ -4,7 +4,7 @@
 
 import Quill from 'quill';
 
-import { ClientEnv } from 'env-client';
+import { ClientEnv } from '@bayou/env-client';
 
 // **TODO:** Maybe this can be a regular `import`?
 const Keyboard = Quill.import('modules/keyboard');

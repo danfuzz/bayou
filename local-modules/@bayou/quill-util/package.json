@@ -5,6 +5,7 @@
   "dependencies": {
     "@bayou/deps-quill-client": "local",
     "@bayou/doc-common": "local",
+    "@bayou/env-client": "local",
     "@bayou/promise-util": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local"
