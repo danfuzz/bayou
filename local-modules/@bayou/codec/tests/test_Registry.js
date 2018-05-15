@@ -21,7 +21,7 @@ class RegistryTestClass {
   }
 }
 
-describe('api-common/Registry', () => {
+describe('@bayou/codec/Registry', () => {
   describe('register()', () => {
     it('should accept a class with all salient properties', () => {
       const reg = new Registry();

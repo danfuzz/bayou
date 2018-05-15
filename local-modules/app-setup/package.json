@@ -3,7 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "api-common": "local",
+    "@bayou/api-common": "local",
     "api-server": "local",
     "app-common": "local",
     "client-bundle": "local",

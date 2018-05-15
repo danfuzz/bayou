@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { SplitKey } from 'api-common';
+import { SplitKey } from '@bayou/api-common';
 import { Context } from 'api-server';
 import { DocServer } from 'doc-server';
 import { Hooks } from 'hooks-server';

@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TargetId } from 'api-common';
+import { TargetId } from '@bayou/api-common';
 
-describe('api-common/TargetId', () => {
+describe('@bayou/api-common/TargetId', () => {
   describe('check()', () => {
     it('should accept valid ids', () => {
       function test(value) {

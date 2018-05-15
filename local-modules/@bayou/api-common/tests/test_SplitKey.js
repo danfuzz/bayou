@@ -5,12 +5,12 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { SplitKey } from 'api-common';
+import { SplitKey } from '@bayou/api-common';
 
 const FAKE_KEY = '0011223344556677';
 const FAKE_SECRET = '00112233445566778899aabbccddeeff';
 
-describe('api-common/SplitKey', () => {
+describe('@bayou/api-common/SplitKey', () => {
   describe('constructor', () => {
     it('should reject non-string urls', () => {
       assert.throws(() => new SplitKey(37, FAKE_KEY, FAKE_SECRET));

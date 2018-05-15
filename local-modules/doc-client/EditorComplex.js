@@ -6,7 +6,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
-import { SplitKey } from 'api-common';
+import { SplitKey } from '@bayou/api-common';
 import { ClientStore } from '@bayou/data-model-client';
 import { Hooks } from 'hooks-client';
 import { Condition } from '@bayou/promise-util';

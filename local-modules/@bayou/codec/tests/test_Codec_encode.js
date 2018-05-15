@@ -9,7 +9,7 @@ import { Codec, ConstructorCall } from '@bayou/codec';
 import { MockCodable } from '@bayou/codec/mocks';
 import { FrozenBuffer } from '@bayou/util-common';
 
-describe('api-common/Codec.encode*()', () => {
+describe('@bayou/codec/Codec.encode*()', () => {
   // Convenient bindings for `encode*()` to avoid a lot of boilerplate.
   const codec            = new Codec();
   const encodeData       = (value) => { return codec.encodeData(value);       };

@@ -5,13 +5,13 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Message } from 'api-common';
+import { Message } from '@bayou/api-common';
 import { Functor } from '@bayou/util-common';
 
 /** {Functor} Valid functor to use in tests. */
 const VALID_FUNCTOR = new Functor('blort', 37, 914);
 
-describe('api-common/Message', () => {
+describe('@bayou/api-common/Message', () => {
   describe('constructor()', () => {
     it('should accept non-negative integer ids', () => {
       assert.doesNotThrow(() => new Message(0, 'target', VALID_FUNCTOR));

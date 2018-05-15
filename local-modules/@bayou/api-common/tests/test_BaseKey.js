@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { BaseKey } from 'api-common';
+import { BaseKey } from '@bayou/api-common';
 import { Random } from '@bayou/util-common';
 
 const VALID_ID = '12345678';
@@ -26,7 +26,7 @@ class FakeKey extends BaseKey {
   }
 }
 
-describe('api-common/BaseKey', () => {
+describe('@bayou/api-common/BaseKey', () => {
   describe('constructor', () => {
     it('should throw an error given a URL with auth', () => {
       assert.throws(() => new BaseKey('http://foo@example.com/', VALID_ID));

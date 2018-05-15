@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseKey, CodableError, ConnectionError, Message, Response } from 'api-common';
+import { BaseKey, CodableError, ConnectionError, Message, Response } from '@bayou/api-common';
 import { Codec } from '@bayou/codec';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
@@ -29,8 +29,9 @@ export default class ApiClient extends CommonBase {
    *
    * @param {string} url The server origin, as an `http` or `https` URL.
    * @param {Codec} codec Codec instance to use. In order to function properly,
-   *   its registry must include all of the encodable `api-common` classes. See
-   *   {@link api-common.TheModule.registerCodecs}.
+   *   its registry must include all of the encodable classes defined in
+   *   `@bayou/api-common` classes. See
+   *   {@link @bayou/api-common.TheModule.registerCodecs}.
    */
   constructor(url, codec) {
     super();

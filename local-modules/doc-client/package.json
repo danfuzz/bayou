@@ -4,7 +4,7 @@
 
   "dependencies": {
     "api-client": "local",
-    "api-common": "local",
+    "@bayou/api-common": "local",
     "app-common": "local",
     "@bayou/data-model-client": "local",
     "@bayou/deps-react": "local",

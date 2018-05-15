@@ -9,7 +9,7 @@ import { Codec } from '@bayou/codec';
 import { MockCodable } from '@bayou/codec/mocks';
 import { FrozenBuffer } from '@bayou/util-common';
 
-describe('api-common/Codec.decode*()', () => {
+describe('@bayou/codec/Codec.decode*()', () => {
   // Convenient bindings for `decode*()` and `encodeData()` to avoid a lot of
   // boilerplate.
   const codec            = new Codec();
