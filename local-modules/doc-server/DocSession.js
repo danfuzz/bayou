@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BodyChange, PropertyChange } from 'doc-common';
-import { RevisionNumber, Timestamp } from 'ot-common';
+import { BodyChange, PropertyChange } from '@bayou/doc-common';
+import { RevisionNumber, Timestamp } from '@bayou/ot-common';
 import { TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 

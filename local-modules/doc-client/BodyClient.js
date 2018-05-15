@@ -2,10 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ConnectionError } from 'api-common';
-import { BodyChange, BodyDelta, BodySnapshot } from 'doc-common';
+import { ConnectionError } from '@bayou/api-common';
+import { BodyChange, BodyDelta, BodySnapshot } from '@bayou/doc-common';
 import { Delay } from '@bayou/promise-util';
-import { QuillEvents, QuillUtil } from 'quill-util';
+import { QuillEvents, QuillUtil } from '@bayou/quill-util';
 import { TString } from '@bayou/typecheck';
 import { StateMachine } from '@bayou/state-machine';
 import { Errors, Functor, InfoError } from '@bayou/util-common';

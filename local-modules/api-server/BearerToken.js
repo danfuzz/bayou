@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseKey } from 'api-common';
+import { BaseKey } from '@bayou/api-common';
 import { Hooks } from 'hooks-server';
 import { TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';

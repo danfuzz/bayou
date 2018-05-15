@@ -3,8 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ApiClient } from 'api-client';
-import { BaseKey } from 'api-common';
-import { TheModule as appCommon_TheModule } from 'app-common';
+import { BaseKey } from '@bayou/api-common';
+import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 

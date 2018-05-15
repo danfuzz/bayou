@@ -5,15 +5,15 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TheModule as appCommon_TheModule } from 'app-common';
-import { Timeouts } from 'doc-common';
-import { MockChange, MockDelta, MockOp, MockSnapshot } from 'ot-common/mocks';
+import { TheModule as appCommon_TheModule } from '@bayou/app-common';
+import { Timeouts } from '@bayou/doc-common';
+import { MockChange, MockDelta, MockOp, MockSnapshot } from '@bayou/ot-common/mocks';
 import { DurableControl, FileAccess } from 'doc-server';
 import { MockControl } from 'doc-server/mocks';
 import { MockFile } from 'file-store/mocks';
-import { Errors as fileStoreOt_Errors, TransactionSpec } from 'file-store-ot';
-import { Timestamp } from 'ot-common';
-import { TheModule as mocks_TheModule } from 'ot-common/mocks';
+import { Errors as fileStoreOt_Errors, TransactionSpec } from '@bayou/file-store-ot';
+import { Timestamp } from '@bayou/ot-common';
+import { TheModule as mocks_TheModule } from '@bayou/ot-common/mocks';
 import { Errors, FrozenBuffer } from '@bayou/util-common';
 
 // **Note:** Even though these tests are written in terms of `DurableControl`

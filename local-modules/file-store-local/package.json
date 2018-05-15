@@ -7,7 +7,7 @@
     "@bayou/deps-util-server": "local",
     "env-server": "local",
     "file-store": "local",
-    "file-store-ot": "local",
+    "@bayou/file-store-ot": "local",
     "@bayou/promise-util": "local",
     "@bayou/see-all": "local",
     "@bayou/util-common": "local"

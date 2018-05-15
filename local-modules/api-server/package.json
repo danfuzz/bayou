@@ -5,7 +5,7 @@
   "dependencies": {
     "content-type": "^1.0.2",
 
-    "api-common": "local",
+    "@bayou/api-common": "local",
     "@bayou/codec": "local",
     "hooks-server": "local",
     "@bayou/promise-util": "local",

@@ -3,19 +3,19 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "api-common": "local",
+    "@bayou/api-common": "local",
     "api-server": "local",
-    "app-common": "local",
+    "@bayou/app-common": "local",
     "client-bundle": "local",
     "@bayou/codec": "local",
     "@bayou/deps-ansi-color": "local",
     "@bayou/deps-express": "local",
     "@bayou/deps-util-common": "local",
-    "doc-common": "local",
+    "@bayou/doc-common": "local",
     "doc-server": "local",
     "env-server": "local",
     "hooks-server": "local",
-    "ot-common": "local",
+    "@bayou/ot-common": "local",
     "@bayou/see-all": "local",
     "@bayou/see-all-server": "local",
     "testing-server": "local"

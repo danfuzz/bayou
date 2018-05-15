@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BodyChange, BodyDelta, BodySnapshot } from 'doc-common';
+import { BodyChange, BodyDelta, BodySnapshot } from '@bayou/doc-common';
 
 import DurableControl from './DurableControl';
 import Paths from './Paths';

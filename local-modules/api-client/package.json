@@ -3,7 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "api-common": "local",
+    "@bayou/api-common": "local",
     "@bayou/see-all": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local"

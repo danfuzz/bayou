@@ -2,10 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BodyChange, BodyDelta } from 'doc-common';
-import { TransactionSpec } from 'file-store-ot';
+import { BodyChange, BodyDelta } from '@bayou/doc-common';
+import { TransactionSpec } from '@bayou/file-store-ot';
 import { DEFAULT_DOCUMENT } from 'hooks-server';
-import { Timestamp } from 'ot-common';
+import { Timestamp } from '@bayou/ot-common';
 import { Mutex } from '@bayou/promise-util';
 import { Errors } from '@bayou/util-common';
 

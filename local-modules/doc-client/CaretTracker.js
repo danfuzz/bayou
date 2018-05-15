@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { RevisionNumber } from 'ot-common';
+import { RevisionNumber } from '@bayou/ot-common';
 import { Delay } from '@bayou/promise-util';
 import { TInt, TObject } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';

@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Caret, CaretChange, CaretOp, CaretSnapshot } from 'doc-common';
-import { RevisionNumber, Timestamp } from 'ot-common';
+import { Caret, CaretChange, CaretOp, CaretSnapshot } from '@bayou/doc-common';
+import { RevisionNumber, Timestamp } from '@bayou/ot-common';
 import { TInt, TString } from '@bayou/typecheck';
 
 import CaretColor from './CaretColor';

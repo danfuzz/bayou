@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { DurableControl } from 'doc-server';
-import { MockSnapshot } from 'ot-common/mocks';
+import { MockSnapshot } from '@bayou/ot-common/mocks';
 
 /**
  * Subclass of {@link DurableControl} for use in testing.

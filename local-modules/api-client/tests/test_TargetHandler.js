@@ -9,7 +9,7 @@ import { Functor } from '@bayou/util-common';
 
 import TargetHandler from 'api-client/TargetHandler';
 
-describe('api-common/TargetHandler', () => {
+describe('@bayou/api-common/TargetHandler', () => {
   describe('makeProxy()', () => {
     it('should make a proxy that wraps an appropriately-contructed instance of this class', () => {
       let gotTargetId;

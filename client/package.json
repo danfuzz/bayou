@@ -16,8 +16,8 @@
   "testMain": "js/tests/index.js",
 
   "dependencies": {
-    "api-common": "local",
-    "app-common": "local",
+    "@bayou/api-common": "local",
+    "@bayou/app-common": "local",
     "doc-client": "local",
     "env-client": "local",
     "@bayou/see-all-client": "local",

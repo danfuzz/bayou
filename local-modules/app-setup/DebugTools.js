@@ -6,10 +6,10 @@ import express from 'express';
 import { camelCase } from 'lodash';
 import { inspect } from 'util';
 
-import { TheModule as appCommon_TheModule } from 'app-common';
-import { DocumentId } from 'doc-common';
+import { TheModule as appCommon_TheModule } from '@bayou/app-common';
+import { DocumentId } from '@bayou/doc-common';
 import { DocServer } from 'doc-server';
-import { AuthorId } from 'ot-common';
+import { AuthorId } from '@bayou/ot-common';
 import { Logger } from '@bayou/see-all';
 import { RecentSink } from '@bayou/see-all-server';
 

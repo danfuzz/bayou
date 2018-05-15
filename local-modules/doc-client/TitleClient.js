@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { DocumentState } from '@bayou/data-model-client';
-import { QuillEvents, QuillUtil } from 'quill-util';
+import { QuillEvents, QuillUtil } from '@bayou/quill-util';
 import { CommonBase, Errors } from '@bayou/util-common';
 
 /**

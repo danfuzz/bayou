@@ -1,0 +1,11 @@
+{
+  "name": "@bayou/ot-common",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "@bayou/codec": "local",
+    "@bayou/hooks-common": "local",
+    "@bayou/typecheck": "local",
+    "@bayou/util-common": "local"
+  }
+}
