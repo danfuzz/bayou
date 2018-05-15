@@ -88,14 +88,16 @@ const webpackOptions = {
       'parchment':
         path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/parchment/src/parchment.ts'),
 
-      // On the client side, we use a built-in module called `mocha-client-shim`
-      // as a substitute for `mocha`. These two aliases makes it so that testing
+      // On the client side, we use the local module `@bayou/mocha-client-shim`
+      // as a substitute for `mocha`, and that module refers to
+      // `mocha-client-bundle`. These two aliases makes it so that unit test
       // code can still write `import ... from 'mocha';`.
       'mocha':
-        path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/mocha-client-shim'),
+        path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/@bayou/mocha-client-shim'),
       'mocha-client-bundle':
         path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/mocha/mocha.js')
     },
+
     // All the extensions listed here except `.ts` are in the default list.
     // Webpack doesn't offer a way to simply add to the defaults (alas).
     extensions: ['.webpack.js', '.web.js', '.js', '.ts']

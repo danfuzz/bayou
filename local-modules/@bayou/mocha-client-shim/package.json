@@ -1,5 +1,5 @@
 {
-  "name": "mocha-client-shim",
+  "name": "@bayou/mocha-client-shim",
   "version": "1.0.0",
 
   "dependencies": {
