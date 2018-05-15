@@ -13,10 +13,10 @@
   },
 
   "dependencies": {
-    "fs-extra": "^3.0.1",
     "minimist": "^1.2.0",
 
     "@bayou/deps-ansi-color": "local",
-    "@bayou/deps-compiler": "local"
+    "@bayou/deps-compiler": "local",
+    "@bayou/deps-fs": "local"
   }
 }

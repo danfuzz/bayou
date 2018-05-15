@@ -4,13 +4,12 @@
 
   "dependencies": {
     "@bayou/codec": "local",
+    "@bayou/deps-fs": "local",
     "env-server": "local",
     "file-store": "local",
     "file-store-ot": "local",
     "@bayou/promise-util": "local",
     "@bayou/see-all": "local",
-    "@bayou/util-common": "local",
-
-    "async-file": "^2.0.2"
+    "@bayou/util-common": "local"
   }
 }

@@ -1,0 +1,10 @@
+{
+  "name": "@bayou/deps-fs",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "async-file": "^2.0.2",
+    "chokidar": "^1.6.1",
+    "fs-extra": "^3.0.1"
+  }
+}
