@@ -3,8 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "lodash": "^4.17.4",
-
-    "@bayou/deps-react": "local"
+    "@bayou/deps-react": "local",
+    "@bayou/deps-util": "local"
   }
 }

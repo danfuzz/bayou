@@ -7,7 +7,7 @@ import { BodyChange, BodyDelta, BodySnapshot } from 'doc-common';
 import { Delay } from '@bayou/promise-util';
 import { QuillEvents, QuillUtil } from 'quill-util';
 import { TString } from '@bayou/typecheck';
-import { StateMachine } from 'state-machine';
+import { StateMachine } from '@bayou/state-machine';
 import { Errors, Functor, InfoError } from '@bayou/util-common';
 
 import DocSession from './DocSession';
@@ -543,7 +543,7 @@ export default class BodyClient extends StateMachine {
     if ((this._snapshot.revNum !== baseSnapshot.revNum) || (event === null)) {
       // This state machine event was generated with respect to a revision of
       // the document which has since been updated, or we ended up having two
-      // state-machine events for the same Quill event (which can happen for at
+      // state machine events for the same Quill event (which can happen for at
       // least a couple reasons, notably including (a) if the user is
       // particularly chatty or (b) during recovery from a server timeout) and
       // this handler lost the race. That is, this is a stale request for

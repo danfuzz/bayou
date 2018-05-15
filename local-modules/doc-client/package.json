@@ -15,7 +15,7 @@
     "@bayou/promise-util": "local",
     "quill-util": "local",
     "@bayou/see-all": "local",
-    "state-machine": "local",
+    "@bayou/state-machine": "local",
     "@bayou/typecheck": "local",
     "ui-embeds": "local",
     "ui-components": "local",
