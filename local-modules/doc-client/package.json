@@ -8,7 +8,6 @@
     "@bayou/app-common": "local",
     "@bayou/data-model-client": "local",
     "@bayou/deps-react": "local",
-    "doc-client": "local",
     "@bayou/doc-common": "local",
     "hooks-client": "local",
     "@bayou/ot-common": "local",
