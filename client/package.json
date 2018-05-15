@@ -21,6 +21,6 @@
     "doc-client": "local",
     "env-client": "local",
     "@bayou/see-all-client": "local",
-    "testing-client": "local"
+    "@bayou/testing-client": "local"
   }
 }

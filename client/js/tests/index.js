@@ -9,7 +9,7 @@
 import { ClientEnv } from 'env-client';
 import { Logger } from '@bayou/see-all';
 import { ClientSink } from '@bayou/see-all-client';
-import { Tests } from 'testing-client';
+import { Tests } from '@bayou/testing-client';
 
 // Init logging.
 ClientSink.init();

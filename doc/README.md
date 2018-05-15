@@ -7,6 +7,7 @@ Various bits of documentation.
 * [Customization](customization.md)
 * [Development Guide](development.md)
 * [Terminology](terminology.md)
+* [Testing](testing.md)
 
 - - - - - - - - - -
 

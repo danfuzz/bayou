@@ -1,4 +1,4 @@
-mocha-client-shim
+@bayou/mocha-client-shim
 =================
 
 This module's sole purpose is to act as a loader proxy for Webpack so that

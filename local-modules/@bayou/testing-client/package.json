@@ -1,12 +1,12 @@
 {
-  "name": "testing-client",
+  "name": "@bayou/testing-client",
   "version": "1.0.0",
 
   "dependencies": {
     "@bayou/deps-testing-common": "local",
     "@bayou/see-all": "local",
     "@bayou/promise-util": "local",
-    "mocha-client-shim": "local",
+    "@bayou/mocha-client-shim": "local",
     "@bayou/testing-common": "local",
     "@bayou/util-common": "local"
   }
