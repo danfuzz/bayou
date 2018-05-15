@@ -1,5 +1,5 @@
 {
-  "name": "quill-util",
+  "name": "@bayou/quill-util",
   "version": "1.0.0",
 
   "dependencies": {

@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ImageEmbed } from 'image-embed';
-import { QuillEvents } from 'quill-util';
+import { QuillEvents } from '@bayou/quill-util';
 import { UtilityClass } from '@bayou/util-common';
 
 import LoremIpsum from './LoremIpsum';

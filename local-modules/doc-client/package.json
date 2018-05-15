@@ -13,7 +13,7 @@
     "hooks-client": "local",
     "@bayou/ot-common": "local",
     "@bayou/promise-util": "local",
-    "quill-util": "local",
+    "@bayou/quill-util": "local",
     "@bayou/see-all": "local",
     "@bayou/state-machine": "local",
     "@bayou/typecheck": "local",

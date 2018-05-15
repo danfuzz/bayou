@@ -10,7 +10,7 @@ import { SplitKey } from 'api-common';
 import { ClientStore } from '@bayou/data-model-client';
 import { Hooks } from 'hooks-client';
 import { Condition } from '@bayou/promise-util';
-import { BayouKeyHandlers, QuillProm } from 'quill-util';
+import { BayouKeyHandlers, QuillProm } from '@bayou/quill-util';
 import { Logger } from '@bayou/see-all';
 import { TObject } from '@bayou/typecheck';
 import { Header } from '@bayou/ui-components';

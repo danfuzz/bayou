@@ -5,7 +5,7 @@
 import { ConnectionError } from 'api-common';
 import { BodyChange, BodyDelta, BodySnapshot } from '@bayou/doc-common';
 import { Delay } from '@bayou/promise-util';
-import { QuillEvents, QuillUtil } from 'quill-util';
+import { QuillEvents, QuillUtil } from '@bayou/quill-util';
 import { TString } from '@bayou/typecheck';
 import { StateMachine } from '@bayou/state-machine';
 import { Errors, Functor, InfoError } from '@bayou/util-common';

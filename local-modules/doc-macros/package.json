@@ -4,7 +4,7 @@
 
   "dependencies": {
     "@bayou/deps-quill-client": "local",
-    "quill-util": "local",
+    "@bayou/quill-util": "local",
     "@bayou/ui-embeds": "local",
     "@bayou/util-common": "local"
   }

@@ -5,7 +5,7 @@
 import { DragState } from '@bayou/data-model-client';
 import { CaretOp, CaretSnapshot } from '@bayou/doc-common';
 import { Delay } from '@bayou/promise-util';
-import { QuillEvents, QuillGeometry, QuillUtil } from 'quill-util';
+import { QuillEvents, QuillGeometry, QuillUtil } from '@bayou/quill-util';
 import { TObject } from '@bayou/typecheck';
 
 /**
