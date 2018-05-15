@@ -1,5 +1,5 @@
 {
-  "name": "testing-client",
+  "name": "@bayou/testing-client",
   "version": "1.0.0",
 
   "dependencies": {

@@ -149,7 +149,7 @@ const webpackOptions = {
       // client-side unit testing. **TODO:** Client-side unit testing is still
       // a work in progress.
       {
-        test: /testing-client[/]client-tests$/,
+        test: /@bayou[/]testing-client[/]client-tests$/,
         use: [{
           loader: 'testing-server/loadClientTests'
         }]
