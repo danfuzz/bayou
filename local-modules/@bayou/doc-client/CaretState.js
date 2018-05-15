@@ -39,14 +39,13 @@ const ERROR_DELAY_MSEC = 5000;
  */
 export default class CaretState {
   /**
-   * Constructs an instance of this class.
+   * Redux selector for the caret snapshot.
    *
-   * @param {EditorComplex} editorComplex The editor environment in which this
-   *   instance will operate.
+   * @param {object} state The redux state to query.
+   * @returns {CaretSnapshot} The caret snapshot.
    */
-  constructor(editorComplex) {
-    this._store = editorComplex.clientStore;
-    this._watchCarets(editorComplex);
+  static caretSnapshot(state) {
+    return state.carets;
   }
 
   /**
@@ -77,6 +76,17 @@ export default class CaretState {
   }
 
   /**
+   * Constructs an instance of this class.
+   *
+   * @param {EditorComplex} editorComplex The editor environment in which this
+   *   instance will operate.
+   */
+  constructor(editorComplex) {
+    this._store = editorComplex.clientStore;
+    this._watchCarets(editorComplex);
+  }
+
+  /**
    * Watches for selection-related activity.
    *
    * @param {EditorComplex} editorComplex The editor environment to
@@ -86,7 +96,7 @@ export default class CaretState {
     await editorComplex.whenReady();
 
     let docSession = null;
-    let snapshot = null;
+    let snapshot   = null;
     let sessionProxy;
 
     for (;;) {
@@ -143,15 +153,4 @@ export default class CaretState {
       await Delay.resolve(REQUEST_DELAY_MSEC);
     }
   }
-
-  /**
-   * Redux selector for the caret snapshot.
-   *
-   * @param {object} state The redux state to query.
-   * @returns {CaretSnapshot} The caret snapshot.
-   */
-  static caretSnapshot(state) {
-    return state.carets;
-  }
-
 }

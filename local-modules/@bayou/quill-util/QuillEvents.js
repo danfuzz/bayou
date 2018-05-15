@@ -68,8 +68,8 @@ export default class QuillEvents extends UtilityClass {
   /**
    * Emits a `ChainedEvent` on the given `EventSource`, based on the payload
    * of a Quill event callback. This "fixes" the payload (via
-   * {@link #fixPayload}) so that the various values adhere to the `doc-client`
-   * contract.
+   * {@link #fixPayload}) so that the various values adhere to the
+   * `@bayou/doc-client` contract.
    *
    * @param {EventSource} source Source to emit from.
    * @param {Functor} payload Original Quill event payload, where the functor

@@ -7,7 +7,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import styles from './avatar.module.less';
-import { CaretState } from 'doc-client';
+import { CaretState } from '@bayou/doc-client';
 
 // The hash is for '' which can't match anyone's email address so is safe to
 // use as a placeholder.

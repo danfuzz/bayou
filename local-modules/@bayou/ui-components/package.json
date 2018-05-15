@@ -4,6 +4,7 @@
 
   "dependencies": {
     "@bayou/deps-react": "local",
+    "@bayou/doc-client": "local",
     "@bayou/ui-common": "local"
   }
 }
