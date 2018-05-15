@@ -6,10 +6,10 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { FileChange, FileDelta, FileOp, FileSnapshot } from 'file-store-ot';
+import { FileChange, FileDelta, FileOp, FileSnapshot } from '@bayou/file-store-ot';
 import { FrozenBuffer } from '@bayou/util-common';
 
-describe('file-store-ot/FileSnapshot', () => {
+describe('@bayou/file-store-ot/FileSnapshot', () => {
   describe('.EMPTY', () => {
     it('should be an empty instance', () => {
       const EMPTY = FileSnapshot.EMPTY;

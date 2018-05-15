@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { StoragePath } from 'file-store-ot';
+import { StoragePath } from '@bayou/file-store-ot';
 import { CommonBase, Errors } from '@bayou/util-common';
 
 import FileChange from './FileChange';

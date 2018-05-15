@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ProductInfo } from 'env-server';
-import { TransactionSpec } from 'file-store-ot';
+import { TransactionSpec } from '@bayou/file-store-ot';
 import { TString } from '@bayou/typecheck';
 
 import BaseDataManager from './BaseDataManager';

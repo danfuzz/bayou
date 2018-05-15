@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { FileOp, FileSnapshot, PredicateOp } from 'file-store-ot';
+import { FileOp, FileSnapshot, PredicateOp } from '@bayou/file-store-ot';
 import { FrozenBuffer, InfoError } from '@bayou/util-common';
 
 /**
@@ -123,7 +123,7 @@ function opSuite(name, badArgses, trueCases, falseCases, errorName) {
   });
 }
 
-describe('file-store-ot/PredicateOp', () => {
+describe('@bayou/file-store-ot/PredicateOp', () => {
   const buf1 = new FrozenBuffer('blort');
   const buf2 = new FrozenBuffer('florp');
   const buf3 = new FrozenBuffer('zorch');

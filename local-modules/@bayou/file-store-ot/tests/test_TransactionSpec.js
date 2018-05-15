@@ -5,12 +5,12 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TransactionOp, TransactionSpec } from 'file-store-ot';
+import { TransactionOp, TransactionSpec } from '@bayou/file-store-ot';
 import { FrozenBuffer } from '@bayou/util-common';
 
 import TransactionOpMaker from './TransactionOpMaker';
 
-describe('file-store-ot/TransactionSpec', () => {
+describe('@bayou/file-store-ot/TransactionSpec', () => {
   // The call to `TransactionOpMaker.testCases()` provides outer `describe()`s
   // for each value to test with.
   TransactionOpMaker.testCases((ops) => {

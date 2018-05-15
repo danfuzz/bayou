@@ -5,10 +5,10 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { FileOp, FileSnapshot, PredicateOp, PredicateSpec } from 'file-store-ot';
+import { FileOp, FileSnapshot, PredicateOp, PredicateSpec } from '@bayou/file-store-ot';
 import { FrozenBuffer } from '@bayou/util-common';
 
-describe('file-store-ot/PredicateSpec', () => {
+describe('@bayou/file-store-ot/PredicateSpec', () => {
   describe('constructor()', () => {
     it('should accept any number of `PredicateOp`s', () => {
       function test(...ops) {

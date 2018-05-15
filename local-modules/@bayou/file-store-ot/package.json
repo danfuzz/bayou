@@ -1,5 +1,5 @@
 {
-  "name": "file-store-ot",
+  "name": "@bayou/file-store-ot",
   "version": "1.0.0",
 
   "dependencies": {

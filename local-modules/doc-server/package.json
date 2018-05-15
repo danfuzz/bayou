@@ -10,7 +10,7 @@
     "doc-common": "local",
     "env-server": "local",
     "file-store": "local",
-    "file-store-ot": "local",
+    "@bayou/file-store-ot": "local",
     "hooks-server": "local",
     "@bayou/ot-common": "local",
     "@bayou/promise-util": "local",

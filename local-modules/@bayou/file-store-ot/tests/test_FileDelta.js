@@ -6,12 +6,12 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { FileDelta, FileOp } from 'file-store-ot';
+import { FileDelta, FileOp } from '@bayou/file-store-ot';
 import { FrozenBuffer } from '@bayou/util-common';
 
 import { MockDelta } from '@bayou/ot-common/mocks';
 
-describe('file-store-ot/FileDelta', () => {
+describe('@bayou/file-store-ot/FileDelta', () => {
   describe('.EMPTY', () => {
     const EMPTY = FileDelta.EMPTY;
 

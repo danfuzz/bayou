@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Codec } from '@bayou/codec';
-import { TransactionOp } from 'file-store-ot';
+import { TransactionOp } from '@bayou/file-store-ot';
 import { CommonBase } from '@bayou/util-common';
 
 import BaseFile from './BaseFile';

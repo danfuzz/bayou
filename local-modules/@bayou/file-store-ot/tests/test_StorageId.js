@@ -5,10 +5,10 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { StorageId } from 'file-store-ot';
+import { StorageId } from '@bayou/file-store-ot';
 import { FrozenBuffer } from '@bayou/util-common';
 
-describe('file-store-ot/StorageId', () => {
+describe('@bayou/file-store-ot/StorageId', () => {
   describe('check()', () => {
     it('should accept valid id strings', () => {
       function test(value) {

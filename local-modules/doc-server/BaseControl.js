@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Timeouts } from 'doc-common';
-import { Errors as fileStoreOt_Errors, StoragePath, TransactionSpec } from 'file-store-ot';
+import { Errors as fileStoreOt_Errors, StoragePath, TransactionSpec } from '@bayou/file-store-ot';
 import { BaseSnapshot, RevisionNumber } from '@bayou/ot-common';
 import { Delay } from '@bayou/promise-util';
 import { TBoolean, TFunction } from '@bayou/typecheck';

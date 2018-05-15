@@ -5,7 +5,7 @@
 import { describe } from 'mocha';
 import { inspect } from 'util';
 
-import { TransactionOp } from 'file-store-ot';
+import { TransactionOp } from '@bayou/file-store-ot';
 import { Errors, FrozenBuffer, UtilityClass } from '@bayou/util-common';
 
 /**
