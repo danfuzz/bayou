@@ -3,9 +3,8 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "memory-fs": "^0.4.1",
-
     "@bayou/deps-compiler": "local",
+    "@bayou/deps-fs": "local",
     "env-server": "local",
     "@bayou/see-all": "local",
     "testing-server": "local",
