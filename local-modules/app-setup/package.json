@@ -3,7 +3,6 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "camel-case": "^3.0.0",
     "express": "^4.16.0",
     "express-ws": "^3.0.0",
 
@@ -13,6 +12,7 @@
     "client-bundle": "local",
     "@bayou/codec": "local",
     "@bayou/deps-ansi-color": "local",
+    "@bayou/deps-util-common": "local",
     "doc-common": "local",
     "doc-server": "local",
     "env-server": "local",
