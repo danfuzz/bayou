@@ -1,5 +1,5 @@
 {
-  "name": "doc-macros",
+  "name": "@bayou/doc-macros",
   "version": "1.0.0",
 
   "dependencies": {
