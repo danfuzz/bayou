@@ -4,7 +4,7 @@
 
 import { ApiClient } from 'api-client';
 import { BaseKey } from '@bayou/api-common';
-import { TheModule as appCommon_TheModule } from 'app-common';
+import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 

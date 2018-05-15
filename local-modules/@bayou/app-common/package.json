@@ -1,5 +1,5 @@
 {
-  "name": "app-common",
+  "name": "@bayou/app-common",
   "version": "1.0.0",
 
   "dependencies": {

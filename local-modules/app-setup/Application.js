@@ -8,7 +8,7 @@ import http from 'http';
 import path from 'path';
 
 import { BearerToken, Context, PostConnection, WsConnection } from 'api-server';
-import { TheModule as appCommon_TheModule } from 'app-common';
+import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { ClientBundle } from 'client-bundle';
 import { Dirs, ProductInfo } from 'env-server';
 import { Hooks } from 'hooks-server';
