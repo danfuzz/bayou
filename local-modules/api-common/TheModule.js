@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Registry } from 'codec';
+import { Registry } from '@bayou/codec';
 import { UtilityClass } from '@bayou/util-common';
 
 import CodableError from './CodableError';

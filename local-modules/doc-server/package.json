@@ -6,15 +6,15 @@
     "weak": "^1.0.1",
 
     "app-common": "local",
-    "codec": "local",
+    "@bayou/codec": "local",
     "doc-common": "local",
     "env-server": "local",
     "file-store": "local",
     "file-store-ot": "local",
     "hooks-server": "local",
     "ot-common": "local",
-    "promise-util": "local",
-    "see-all": "local",
+    "@bayou/promise-util": "local",
+    "@bayou/see-all": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local"
   }

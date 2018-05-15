@@ -3,12 +3,12 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "codec": "local",
+    "@bayou/codec": "local",
     "env-server": "local",
     "file-store": "local",
     "file-store-ot": "local",
-    "promise-util": "local",
-    "see-all": "local",
+    "@bayou/promise-util": "local",
+    "@bayou/see-all": "local",
     "@bayou/util-common": "local",
 
     "async-file": "^2.0.2"

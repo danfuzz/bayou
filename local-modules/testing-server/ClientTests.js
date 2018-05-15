@@ -6,8 +6,8 @@ import fs from 'fs';
 import puppeteer from 'puppeteer';
 import { format, promisify } from 'util';
 
-import { Delay } from 'promise-util';
-import { Logger } from 'see-all';
+import { Delay } from '@bayou/promise-util';
+import { Logger } from '@bayou/see-all';
 import { UtilityClass } from '@bayou/util-common';
 
 import EventReceiver from './EventReceiver';

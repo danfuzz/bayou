@@ -8,7 +8,7 @@ import fs from 'fs';
 import Mocha from 'mocha';
 import { promisify } from 'util';
 
-import { Logger } from 'see-all';
+import { Logger } from '@bayou/see-all';
 import { UtilityClass } from '@bayou/util-common';
 
 import CollectingReporter from './CollectingReporter';

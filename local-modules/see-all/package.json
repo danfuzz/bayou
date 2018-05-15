@@ -1,8 +1,0 @@
-{
-  "name": "see-all",
-  "version": "1.0.0",
-
-  "dependencies": {
-    "@bayou/util-common": "local"
-  }
-}

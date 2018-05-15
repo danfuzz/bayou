@@ -7,7 +7,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-import { Codec } from 'codec';
+import { Codec } from '@bayou/codec';
 import { LocalFile } from 'file-store-local';
 import { TheModule as fileStoreOt_TheModule } from 'file-store-ot';
 import { UtilityClass } from '@bayou/util-common';

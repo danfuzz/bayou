@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BodyDelta } from 'doc-common';
-import { ChainedEvent, EventSource } from 'promise-util';
+import { ChainedEvent, EventSource } from '@bayou/promise-util';
 import { TString } from '@bayou/typecheck';
 import { Errors, Functor, ObjectUtil, UtilityClass } from '@bayou/util-common';
 

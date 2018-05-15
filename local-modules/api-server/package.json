@@ -6,10 +6,10 @@
     "content-type": "^1.0.2",
 
     "api-common": "local",
-    "codec": "local",
+    "@bayou/codec": "local",
     "hooks-server": "local",
-    "promise-util": "local",
-    "see-all": "local",
+    "@bayou/promise-util": "local",
+    "@bayou/see-all": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local"
   }

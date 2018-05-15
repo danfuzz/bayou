@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { CaretSnapshot } from 'doc-common';
-import { Delay } from 'promise-util';
+import { Delay } from '@bayou/promise-util';
 
 /**
  * {object} Starting state for the caret redux store.

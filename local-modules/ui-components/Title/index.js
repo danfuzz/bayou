@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DocumentState } from 'data-model-client';
+import { DocumentState } from '@bayou/data-model-client';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';

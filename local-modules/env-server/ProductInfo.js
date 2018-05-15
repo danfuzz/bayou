@@ -4,7 +4,7 @@
 
 import path from 'path';
 
-import { Proppy } from 'proppy';
+import { Proppy } from '@bayou/proppy';
 import { Singleton } from '@bayou/util-common';
 
 import Dirs from './Dirs';

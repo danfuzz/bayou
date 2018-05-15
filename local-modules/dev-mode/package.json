@@ -7,8 +7,8 @@
     "fs-extra": "^3.0.1",
 
     "env-server": "local",
-    "promise-util": "local",
-    "see-all": "local",
+    "@bayou/promise-util": "local",
+    "@bayou/see-all": "local",
     "@bayou/util-common": "local"
   }
 }

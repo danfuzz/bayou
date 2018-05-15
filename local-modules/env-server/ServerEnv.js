@@ -6,7 +6,7 @@ import is_running from 'is-running';
 import http from 'http';
 
 import { Hooks } from 'hooks-server';
-import { Logger } from 'see-all';
+import { Logger } from '@bayou/see-all';
 import { Errors, Singleton } from '@bayou/util-common';
 
 import Dirs from './Dirs';

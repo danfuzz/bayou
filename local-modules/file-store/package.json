@@ -5,10 +5,10 @@
   "dependencies": {
     "weak": "^1.0.1",
 
-    "codec": "local",
+    "@bayou/codec": "local",
     "file-store-ot": "local",
     "hooks-server": "local",
-    "promise-util": "local",
+    "@bayou/promise-util": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local"
   }

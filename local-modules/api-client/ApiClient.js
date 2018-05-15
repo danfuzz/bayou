@@ -3,8 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseKey, CodableError, ConnectionError, Message, Response } from 'api-common';
-import { Codec } from 'codec';
-import { Logger } from 'see-all';
+import { Codec } from '@bayou/codec';
+import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
 import { CommonBase, WebsocketCodes } from '@bayou/util-common';
 

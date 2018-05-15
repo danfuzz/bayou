@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Condition } from 'promise-util';
-import { Logger } from 'see-all';
+import { Condition } from '@bayou/promise-util';
+import { Logger } from '@bayou/see-all';
 import { TObject } from '@bayou/typecheck';
 import { Errors, Functor, PropertyIterable } from '@bayou/util-common';
 

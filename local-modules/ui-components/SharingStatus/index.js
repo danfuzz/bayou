@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 
-import { SharingState } from 'data-model-client';
+import { SharingState } from '@bayou/data-model-client';
 import styles from './sharing-status.module.less';
 
 /**

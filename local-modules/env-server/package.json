@@ -6,8 +6,8 @@
     "is-running": "^2.1.0",
 
     "hooks-server": "local",
-    "proppy": "local",
-    "see-all": "local",
+    "@bayou/proppy": "local",
+    "@bayou/see-all": "local",
     "@bayou/util-common": "local"
   }
 }

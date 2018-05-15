@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BearerToken } from 'api-server';
-import { Delay } from 'promise-util';
+import { Delay } from '@bayou/promise-util';
 import { Singleton } from '@bayou/util-common';
 
 /**

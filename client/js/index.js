@@ -11,8 +11,8 @@
  */
 
 import { ClientEnv } from 'env-client';
-import { Logger } from 'see-all';
-import { ClientSink } from 'see-all-client';
+import { Logger } from '@bayou/see-all';
+import { ClientSink } from '@bayou/see-all-client';
 
 import TopControl from './TopControl';
 
