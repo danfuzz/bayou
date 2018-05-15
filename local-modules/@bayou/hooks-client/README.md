@@ -1,5 +1,5 @@
-hooks-client
-============
+@bayou/hooks-client
+===================
 
 This module contains all the "official" customization hooks that are made
 available on the client side.
@@ -17,7 +17,8 @@ If you want to override this module in a clean way, here's what to do:
 
 * Make sure you have an overlay set up. See the main documentation for
   information on how to do that.
-* Make a `local-modules` directory for this module, that is `hooks-client`. Copy
-  `package.json` and `Hooks.js` from this directory into it.
+* Make a `local-modules` directory for this module, that is
+  `@bayou/hooks-client`. Copy `package.json` and `Hooks.js` from this directory
+  into it.
 * Add new dependencies to the overridden `package.json`.
 * Place new implementations into `Hooks.js`.

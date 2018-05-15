@@ -1,5 +1,5 @@
 {
-  "name": "hooks-client",
+  "name": "@bayou/hooks-client",
   "version": "1.0.0",
 
   "dependencies": {
