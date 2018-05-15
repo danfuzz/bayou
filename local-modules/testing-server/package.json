@@ -7,7 +7,7 @@
     "@bayou/deps-testing-common": "local",
     "@bayou/deps-testing-server": "local",
     "env-server": "local",
-    "testing-common": "local",
+    "@bayou/testing-common": "local",
     "@bayou/util-common": "local"
   }
 }
