@@ -2,12 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Logger } from '@bayou/see-all';
 import { TObject } from '@bayou/typecheck';
 import { Errors, UtilityClass } from '@bayou/util-common';
-
-/** {Logger} Logger for this module. */
-const log = new Logger('env-client');
 
 /**
  * Miscellaneous client-side utilities.
@@ -31,7 +27,6 @@ export default class ClientEnv extends UtilityClass {
     }
 
     this._window = window;
-    log.detail('Initialized.');
   }
 
   /** {Window} The browser window in which this application is running. */

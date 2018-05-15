@@ -1,16 +1,15 @@
 {
-  "name": "doc-client",
+  "name": "@bayou/doc-client",
   "version": "1.0.0",
 
   "dependencies": {
-    "api-client": "local",
+    "@bayou/api-client": "local",
     "@bayou/api-common": "local",
     "@bayou/app-common": "local",
     "@bayou/data-model-client": "local",
     "@bayou/deps-react": "local",
-    "doc-client": "local",
     "@bayou/doc-common": "local",
-    "hooks-client": "local",
+    "@bayou/hooks-client": "local",
     "@bayou/ot-common": "local",
     "@bayou/promise-util": "local",
     "@bayou/quill-util": "local",

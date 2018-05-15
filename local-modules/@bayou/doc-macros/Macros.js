@@ -2,9 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ImageEmbed } from 'image-embed';
 import { QuillEvents } from '@bayou/quill-util';
 import { UtilityClass } from '@bayou/util-common';
+import { ImageEmbed } from 'slack-image-embed';
 
 import LoremIpsum from './LoremIpsum';
 
