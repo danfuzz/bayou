@@ -3,7 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "@bayou/deps-fs": "local",
+    "@bayou/deps-util-server": "local",
     "env-server": "local",
     "@bayou/promise-util": "local",
     "@bayou/see-all": "local",

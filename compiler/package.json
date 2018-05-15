@@ -17,6 +17,6 @@
 
     "@bayou/deps-ansi-color": "local",
     "@bayou/deps-compiler": "local",
-    "@bayou/deps-fs": "local"
+    "@bayou/deps-util-server": "local"
   }
 }
