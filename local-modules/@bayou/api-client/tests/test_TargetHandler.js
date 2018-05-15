@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { Functor } from '@bayou/util-common';
 
-import TargetHandler from 'api-client/TargetHandler';
+import TargetHandler from '@bayou/api-client/TargetHandler';
 
 describe('@bayou/api-common/TargetHandler', () => {
   describe('makeProxy()', () => {

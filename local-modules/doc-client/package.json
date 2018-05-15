@@ -3,7 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "api-client": "local",
+    "@bayou/api-client": "local",
     "@bayou/api-common": "local",
     "@bayou/app-common": "local",
     "@bayou/data-model-client": "local",
