@@ -3,9 +3,8 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "weak": "^1.0.1",
-
     "@bayou/codec": "local",
+    "@bayou/deps-util-server": "local",
     "file-store-ot": "local",
     "hooks-server": "local",
     "@bayou/promise-util": "local",

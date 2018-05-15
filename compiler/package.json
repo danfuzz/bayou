@@ -13,8 +13,6 @@
   },
 
   "dependencies": {
-    "minimist": "^1.2.0",
-
     "@bayou/deps-ansi-color": "local",
     "@bayou/deps-compiler": "local",
     "@bayou/deps-util-server": "local"
