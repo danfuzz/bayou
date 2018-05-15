@@ -4,7 +4,7 @@
 
 import { Timeouts } from 'doc-common';
 import { Errors as fileStoreOt_Errors, StoragePath, TransactionSpec } from 'file-store-ot';
-import { BaseSnapshot, RevisionNumber } from 'ot-common';
+import { BaseSnapshot, RevisionNumber } from '@bayou/ot-common';
 import { Delay } from '@bayou/promise-util';
 import { TBoolean, TFunction } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';

@@ -6,10 +6,10 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { BaseDelta } from 'ot-common';
+import { BaseDelta } from '@bayou/ot-common';
 import { DataUtil } from '@bayou/util-common';
 
-import { MockDelta, MockOp } from 'ot-common/mocks';
+import { MockDelta, MockOp } from '@bayou/ot-common/mocks';
 
 /**
  * Second mock "delta" class for testing.

@@ -3,7 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "ot-common": "local",
+    "@bayou/ot-common": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local"
   }

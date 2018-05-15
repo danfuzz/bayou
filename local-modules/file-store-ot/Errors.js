@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { StoragePath } from 'file-store-ot';
-import { RevisionNumber } from 'ot-common';
+import { RevisionNumber } from '@bayou/ot-common';
 import { TString } from '@bayou/typecheck';
 import { FrozenBuffer, InfoError, UtilityClass } from '@bayou/util-common';
 

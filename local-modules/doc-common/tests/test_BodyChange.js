@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 import Delta from 'quill-delta';
 
 import { BodyChange, BodyDelta, BodyOp } from 'doc-common';
-import { Timestamp } from 'ot-common';
+import { Timestamp } from '@bayou/ot-common';
 
 describe('doc-common/BodyChange', () => {
   describe('.FIRST', () => {

@@ -9,7 +9,7 @@ import { inspect } from 'util';
 
 import { BodyDelta, BodyOp } from 'doc-common';
 
-import { MockDelta } from 'ot-common/mocks';
+import { MockDelta } from '@bayou/ot-common/mocks';
 
 describe('doc-common/BodyDelta', () => {
   describe('.EMPTY', () => {

@@ -11,7 +11,7 @@
     "doc-client": "local",
     "doc-common": "local",
     "hooks-client": "local",
-    "ot-common": "local",
+    "@bayou/ot-common": "local",
     "@bayou/promise-util": "local",
     "quill-util": "local",
     "@bayou/see-all": "local",

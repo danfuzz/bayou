@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { RevisionNumber, Timestamp } from 'ot-common';
+import { RevisionNumber, Timestamp } from '@bayou/ot-common';
 import { TInt, TObject, TString } from '@bayou/typecheck';
 import { ColorUtil, CommonBase, Errors } from '@bayou/util-common';
 

@@ -4,7 +4,7 @@
 
 import Delta from 'quill-delta';
 
-import { BaseDelta } from 'ot-common';
+import { BaseDelta } from '@bayou/ot-common';
 import { TBoolean, TObject } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 

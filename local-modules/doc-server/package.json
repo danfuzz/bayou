@@ -12,7 +12,7 @@
     "file-store": "local",
     "file-store-ot": "local",
     "hooks-server": "local",
-    "ot-common": "local",
+    "@bayou/ot-common": "local",
     "@bayou/promise-util": "local",
     "@bayou/see-all": "local",
     "@bayou/typecheck": "local",

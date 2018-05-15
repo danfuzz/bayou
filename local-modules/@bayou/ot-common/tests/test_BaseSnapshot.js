@@ -6,9 +6,9 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { BaseChange, BaseSnapshot } from 'ot-common';
+import { BaseChange, BaseSnapshot } from '@bayou/ot-common';
 
-import { MockChange, MockDelta, MockOp, MockSnapshot } from 'ot-common/mocks';
+import { MockChange, MockDelta, MockOp, MockSnapshot } from '@bayou/ot-common/mocks';
 
 /**
  * A second mock subclass of `BaseChange`.

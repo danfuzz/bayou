@@ -15,7 +15,7 @@
     "doc-server": "local",
     "env-server": "local",
     "hooks-server": "local",
-    "ot-common": "local",
+    "@bayou/ot-common": "local",
     "@bayou/see-all": "local",
     "@bayou/see-all-server": "local",
     "testing-server": "local"
