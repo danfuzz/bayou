@@ -2,12 +2,13 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import _ from 'lodash';
+import { kebabCase } from 'lodash';
 import PropTypes from 'prop-types';
 import Quill from 'quill';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
+
 import { ClientStore } from '@bayou/data-model-client';
 import { TBoolean, TFunction, TNumber, TObject, TString } from '@bayou/typecheck';
 import { Errors, UtilityClass } from '@bayou/util-core';
@@ -231,7 +232,7 @@ export default class BlockEmbedWrapper extends UtilityClass {
           value = validator(value);
 
           // Convert "propertyName" to "data-property-name"
-          const attributeName = `data-${_.kebabCase(prop)}`;
+          const attributeName = `data-${kebabCase(prop)}`;
 
           // Finally, asign the property to the DOM element.
           element.setAttribute(attributeName, value);
@@ -269,7 +270,7 @@ export default class BlockEmbedWrapper extends UtilityClass {
 
           const { isRequired, converter, validator } = supportedType;
 
-          const attributeName = `data-${_.kebabCase(prop)}`;
+          const attributeName = `data-${kebabCase(prop)}`;
           let value = element.getAttribute(attributeName);
 
           // `getAttribute()` will return `null` if the key isn't defined.
