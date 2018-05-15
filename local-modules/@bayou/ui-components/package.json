@@ -1,5 +1,5 @@
 {
-  "name": "ui-components",
+  "name": "@bayou/ui-components",
   "version": "1.0.0",
 
   "dependencies": {

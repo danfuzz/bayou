@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import Avatars from 'ui-components/Avatars';
-import Divider from 'ui-components/Divider';
-import Owner from 'ui-components/Owner';
-import SharingStatus from 'ui-components/SharingStatus';
-import Star from 'ui-components/Star';
-import Title from 'ui-components/Title';
+import Avatars from '@bayou/ui-components/Avatars';
+import Divider from '@bayou/ui-components/Divider';
+import Owner from '@bayou/ui-components/Owner';
+import SharingStatus from '@bayou/ui-components/SharingStatus';
+import Star from '@bayou/ui-components/Star';
+import Title from '@bayou/ui-components/Title';
 
 import headerStyles from './header.module.less';
 

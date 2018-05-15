@@ -13,7 +13,7 @@ import { Condition } from '@bayou/promise-util';
 import { BayouKeyHandlers, QuillProm } from 'quill-util';
 import { Logger } from '@bayou/see-all';
 import { TObject } from '@bayou/typecheck';
-import { Header } from 'ui-components';
+import { Header } from '@bayou/ui-components';
 import { DomUtil } from '@bayou/util-client';
 import { CommonBase, Errors } from '@bayou/util-common';
 
