@@ -1,5 +1,5 @@
 {
-  "name": "ui-embeds",
+  "name": "@bayou/ui-embeds",
   "version": "1.0.0",
 
   "dependencies": {
