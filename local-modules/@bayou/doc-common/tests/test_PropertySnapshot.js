@@ -6,10 +6,10 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { PropertyChange, PropertyDelta, PropertyOp, PropertySnapshot } from 'doc-common';
+import { PropertyChange, PropertyDelta, PropertyOp, PropertySnapshot } from '@bayou/doc-common';
 import { DataUtil, Functor } from '@bayou/util-common';
 
-describe('doc-common/PropertySnapshot', () => {
+describe('@bayou/doc-common/PropertySnapshot', () => {
   describe('.EMPTY', () => {
     it('should be an empty instance', () => {
       const EMPTY = PropertySnapshot.EMPTY;

@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { TheModule as appCommon_TheModule } from 'app-common';
-import { Timeouts } from 'doc-common';
+import { Timeouts } from '@bayou/doc-common';
 import { MockChange, MockDelta, MockOp, MockSnapshot } from '@bayou/ot-common/mocks';
 import { DurableControl, FileAccess } from 'doc-server';
 import { MockControl } from 'doc-server/mocks';

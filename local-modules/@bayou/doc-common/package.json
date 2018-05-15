@@ -1,5 +1,5 @@
 {
-  "name": "doc-common",
+  "name": "@bayou/doc-common",
   "version": "1.0.0",
 
   "dependencies": {

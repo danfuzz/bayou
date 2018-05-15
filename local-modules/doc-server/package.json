@@ -7,7 +7,7 @@
 
     "app-common": "local",
     "@bayou/codec": "local",
-    "doc-common": "local",
+    "@bayou/doc-common": "local",
     "env-server": "local",
     "file-store": "local",
     "@bayou/file-store-ot": "local",

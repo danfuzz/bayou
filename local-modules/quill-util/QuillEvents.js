@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BodyDelta } from 'doc-common';
+import { BodyDelta } from '@bayou/doc-common';
 import { ChainedEvent, EventSource } from '@bayou/promise-util';
 import { TString } from '@bayou/typecheck';
 import { Errors, Functor, ObjectUtil, UtilityClass } from '@bayou/util-common';

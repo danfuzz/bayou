@@ -6,11 +6,11 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { PropertyDelta, PropertyOp } from 'doc-common';
+import { PropertyDelta, PropertyOp } from '@bayou/doc-common';
 
 import { MockDelta } from '@bayou/ot-common/mocks';
 
-describe('doc-common/PropertyDelta', () => {
+describe('@bayou/doc-common/PropertyDelta', () => {
   describe('.EMPTY', () => {
     const EMPTY = PropertyDelta.EMPTY;
 

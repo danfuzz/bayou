@@ -7,11 +7,11 @@ import { describe, it } from 'mocha';
 import Delta from 'quill-delta';
 import { inspect } from 'util';
 
-import { BodyDelta, BodyOp } from 'doc-common';
+import { BodyDelta, BodyOp } from '@bayou/doc-common';
 
 import { MockDelta } from '@bayou/ot-common/mocks';
 
-describe('doc-common/BodyDelta', () => {
+describe('@bayou/doc-common/BodyDelta', () => {
   describe('.EMPTY', () => {
     const EMPTY = BodyDelta.EMPTY;
 

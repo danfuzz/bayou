@@ -6,11 +6,11 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { Caret, CaretDelta, CaretOp } from 'doc-common';
+import { Caret, CaretDelta, CaretOp } from '@bayou/doc-common';
 
 import { MockDelta } from '@bayou/ot-common/mocks';
 
-describe('doc-common/CaretDelta', () => {
+describe('@bayou/doc-common/CaretDelta', () => {
   describe('compose()', () => {
     // Common tester for `compose()` when passing `false` for `wantDocuent`.
     function test(ops1, ops2, expectOps) {

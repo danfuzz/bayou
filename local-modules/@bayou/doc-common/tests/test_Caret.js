@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Caret, CaretDelta, CaretOp } from 'doc-common';
+import { Caret, CaretDelta, CaretOp } from '@bayou/doc-common';
 
 /**
  * Convenient caret constructor, which takes positional parameters.
@@ -24,7 +24,7 @@ const caret1 = newCaret('session-1', 1, 0,  '#111111');
 const caret2 = newCaret('session-2', 2, 6,  '#222222');
 const caret3 = newCaret('session-3', 3, 99, '#333333');
 
-describe('doc-common/Caret', () => {
+describe('@bayou/doc-common/Caret', () => {
   describe('compose()', () => {
     it('should produce an equal instance when passed an empty delta', () => {
       let which = 0;

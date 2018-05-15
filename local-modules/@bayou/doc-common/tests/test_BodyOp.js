@@ -6,10 +6,10 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { BodyOp } from 'doc-common';
+import { BodyOp } from '@bayou/doc-common';
 import { Functor } from '@bayou/util-common';
 
-describe('doc-common/BodyOp', () => {
+describe('@bayou/doc-common/BodyOp', () => {
   describe('fromQuillForm()', () => {
     describe('invalid arguments', () => {
       function test(v) {

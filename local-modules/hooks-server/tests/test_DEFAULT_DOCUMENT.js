@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { DEFAULT_DOCUMENT } from 'hooks-server';
-import { BodyDelta } from 'doc-common';
+import { BodyDelta } from '@bayou/doc-common';
 import { DataUtil } from '@bayou/util-common';
 
 describe('hooks-server/DEFAULT_DOCUMENT', () => {

@@ -24,7 +24,7 @@ export default class AnotherDelta extends BaseDelta {
   }
 }
 
-describe('doc-common/BaseDelta', () => {
+describe('@bayou/ot-common/BaseDelta', () => {
   describe('.EMPTY', () => {
     const EMPTY = MockDelta.EMPTY;
 

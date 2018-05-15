@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { DocumentId } from 'doc-common';
+import { DocumentId } from '@bayou/doc-common';
 
-describe('doc-common/DocumentId', () => {
+describe('@bayou/doc-common/DocumentId', () => {
   describe('check()', () => {
     it('should reject `null`', () => {
       assert.throws(() => DocumentId.check(null));

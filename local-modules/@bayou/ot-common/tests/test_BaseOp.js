@@ -10,7 +10,7 @@ import { DataUtil, Functor } from '@bayou/util-common';
 
 import { MockOp } from '@bayou/ot-common/mocks';
 
-describe('doc-common/BaseOp', () => {
+describe('@bayou/ot-common/BaseOp', () => {
   describe('constructor()', () => {
     it('should accept a string `name argument', () => {
       const result = new MockOp('blort');

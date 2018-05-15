@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { AuthorId } from '@bayou/ot-common';
 
-describe('doc-common/AuthorId', () => {
+describe('@bayou/ot-common/AuthorId', () => {
   describe('check()', () => {
     it('should reject `null`', () => {
       assert.throws(() => AuthorId.check(null));

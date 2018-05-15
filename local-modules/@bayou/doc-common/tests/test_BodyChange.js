@@ -6,10 +6,10 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import Delta from 'quill-delta';
 
-import { BodyChange, BodyDelta, BodyOp } from 'doc-common';
+import { BodyChange, BodyDelta, BodyOp } from '@bayou/doc-common';
 import { Timestamp } from '@bayou/ot-common';
 
-describe('doc-common/BodyChange', () => {
+describe('@bayou/doc-common/BodyChange', () => {
   describe('.FIRST', () => {
     const first = BodyChange.FIRST;
 

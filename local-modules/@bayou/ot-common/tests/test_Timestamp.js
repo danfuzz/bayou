@@ -13,7 +13,7 @@ const SEC_2010_JAN_01 = Math.floor(new Date(2010, 1, 1, 0, 0, 0, 0).valueOf() / 
 /** {Int} Unix time in seconds for the start of January in the year 2040. */
 const SEC_2040_JAN_01 = Math.floor(new Date(2040, 1, 1, 0, 0, 0, 0).valueOf() / 1000);
 
-describe('doc-common/Timestamp', () => {
+describe('@bayou/ot-common/Timestamp', () => {
   describe('.MAX_VALUE', () => {
     it('should be an instance of the class', () => {
       assert.instanceOf(Timestamp.MAX_VALUE, Timestamp);

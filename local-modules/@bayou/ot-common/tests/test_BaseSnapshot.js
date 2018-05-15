@@ -33,7 +33,7 @@ class AnotherSnapshot extends BaseSnapshot {
   }
 }
 
-describe('doc-common/BaseSnapshot', () => {
+describe('@bayou/ot-common/BaseSnapshot', () => {
   describe('.EMPTY', () => {
     it('should be an empty instance', () => {
       const EMPTY = MockSnapshot.EMPTY;

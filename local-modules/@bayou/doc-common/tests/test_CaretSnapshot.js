@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Caret, CaretChange, CaretDelta, CaretOp, CaretSnapshot } from 'doc-common';
+import { Caret, CaretChange, CaretDelta, CaretOp, CaretSnapshot } from '@bayou/doc-common';
 
 /**
  * Convenient caret constructor, which takes positional parameters.
@@ -42,7 +42,7 @@ const op1 = CaretOp.op_beginSession(caret1);
 const op2 = CaretOp.op_beginSession(caret2);
 const op3 = CaretOp.op_beginSession(caret3);
 
-describe('doc-common/CaretSnapshot', () => {
+describe('@bayou/doc-common/CaretSnapshot', () => {
   describe('.EMPTY', () => {
     it('should be an empty instance', () => {
       const EMPTY = CaretSnapshot.EMPTY;

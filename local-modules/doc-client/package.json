@@ -9,7 +9,7 @@
     "@bayou/data-model-client": "local",
     "@bayou/deps-react": "local",
     "doc-client": "local",
-    "doc-common": "local",
+    "@bayou/doc-common": "local",
     "hooks-client": "local",
     "@bayou/ot-common": "local",
     "@bayou/promise-util": "local",

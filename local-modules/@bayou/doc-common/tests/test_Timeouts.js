@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Timeouts } from 'doc-common';
+import { Timeouts } from '@bayou/doc-common';
 
-describe('doc-common/Timeouts', () => {
+describe('@bayou/doc-common/Timeouts', () => {
   describe('.MAX_TIMEOUT_MSEC', () => {
     it('should be an integer', () => {
       const max = Timeouts.MAX_TIMEOUT_MSEC;

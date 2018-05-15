@@ -27,7 +27,7 @@ function assertFields(change, revNum, delta, timestamp = null, authorId = null) 
   assert.strictEqual(change.authorId,  authorId);
 }
 
-describe('doc-common/BaseChange', () => {
+describe('@bayou/ot-common/BaseChange', () => {
   describe('.FIRST', () => {
     const first = MockChange.FIRST;
 

@@ -48,7 +48,7 @@ function rejectNonNumbers(name, ...args) {
   test(new Map());
 }
 
-describe('doc-common/RevisionNumber', () => {
+describe('@bayou/ot-common/RevisionNumber', () => {
   describe('check()', () => {
     it('should accept non-negative integers', () => {
       function test(value) {

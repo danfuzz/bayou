@@ -11,7 +11,7 @@
     "@bayou/deps-ansi-color": "local",
     "@bayou/deps-express": "local",
     "@bayou/deps-util-common": "local",
-    "doc-common": "local",
+    "@bayou/doc-common": "local",
     "doc-server": "local",
     "env-server": "local",
     "hooks-server": "local",

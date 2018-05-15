@@ -4,7 +4,7 @@
 
 import { TheModule as apiCommon_TheModule } from 'api-common';
 import { Codec, Registry } from '@bayou/codec';
-import { TheModule as docCommon_TheModule } from 'doc-common';
+import { TheModule as docCommon_TheModule } from '@bayou/doc-common';
 import { TheModule as otCommon_TheModule } from '@bayou/ot-common';
 import { UtilityClass } from '@bayou/util-common';
 
