@@ -1,5 +1,5 @@
 {
-  "name": "hooks-common",
+  "name": "@bayou/hooks-common",
   "version": "1.0.0",
 
   "dependencies": {

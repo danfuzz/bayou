@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Hooks } from 'hooks-common';
+import { Hooks } from '@bayou/hooks-common';
 
-describe('hooks-common/Hooks', () => {
+describe('@bayou/hooks-common/Hooks', () => {
   describe('isAuthorId(id)', () => {
     it('should accept 32-character alphanum ASCII strings', () => {
       assert.isTrue(Hooks.theOne.isAuthorId('123abc7890ABC456789012'));

@@ -5,7 +5,7 @@
   "dependencies": {
     "api-server": "local",
     "file-store-local": "local",
-    "hooks-common": "local",
+    "@bayou/hooks-common": "local",
     "@bayou/promise-util": "local",
     "@bayou/util-common": "local"
   }
