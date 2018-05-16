@@ -1,5 +1,5 @@
 {
-  "name": "dev-mode",
+  "name": "@bayou/dev-mode",
   "version": "1.0.0",
 
   "dependencies": {

@@ -19,7 +19,7 @@ import { inspect } from 'util';
 
 import { Application, Monitor } from 'app-setup';
 import { ClientBundle } from 'client-bundle';
-import { DevMode } from 'dev-mode';
+import { DevMode } from '@bayou/dev-mode';
 import { Dirs, ProductInfo, ServerEnv } from '@bayou/env-server';
 import { Hooks } from '@bayou/hooks-server';
 import { Delay } from '@bayou/promise-util';

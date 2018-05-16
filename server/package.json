@@ -19,7 +19,7 @@
     "app-setup": "local",
     "client-bundle": "local",
     "@bayou/deps-util-server": "local",
-    "dev-mode": "local",
+    "@bayou/dev-mode": "local",
     "@bayou/env-server": "local",
     "@bayou/hooks-server": "local",
     "@bayou/promise-util": "local",
