@@ -3,10 +3,9 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "weak": "^1.0.1",
-
     "@bayou/app-common": "local",
     "@bayou/codec": "local",
+    "@bayou/deps-util-server": "local",
     "@bayou/doc-common": "local",
     "@bayou/env-server": "local",
     "@bayou/file-store": "local",
