@@ -10,12 +10,17 @@
 // See the comment in `hooks-common/index.js` for a longer discussion about
 // this.
 
-import { DeferredLoader } from '@bayou/util-common';
+import { DataUtil, DeferredLoader } from '@bayou/util-common';
+
+import BearerTokens from './BearerTokens';
+import default_document from './default-document';
 
 const Hooks = DeferredLoader.makeProxy(
-  'client hook',
+  'server hook',
   () => {
     return require('./Hooks').default;
   });
 
-export { Hooks };
+const DEFAULT_DOCUMENT = DataUtil.deepFreeze(default_document);
+
+export { DEFAULT_DOCUMENT, BearerTokens, Hooks };

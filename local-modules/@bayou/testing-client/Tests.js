@@ -8,7 +8,7 @@ import chaiAsPromised from 'chai-as-promised';
 import { UtilityClass } from '@bayou/util-common';
 
 // **Note:** This is really the local module `@bayou/mocha-client-shim`. See
-// that module and {@link client-bundle.ClientBundle} for more details.
+// that module and {@link @bayou/client-bundle.ClientBundle} for more details.
 import { Mocha } from 'mocha';
 
 // This file is dynamically-generated when loaded. See comments in the file for
@@ -23,7 +23,7 @@ chai.use(chaiAsPromised);
 /**
  * Driver for the Mocha framework, for client tests. This gets run by the
  * client-side `boot-for-test` script, which is operated at "arm's length" by
- * {@link testing-server.ClientTests}.
+ * {@link @bayou/testing-server.ClientTests}.
  */
 export default class Tests extends UtilityClass {
   /**

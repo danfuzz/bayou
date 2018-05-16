@@ -16,15 +16,15 @@
   },
 
   "dependencies": {
-    "app-setup": "local",
-    "client-bundle": "local",
+    "@bayou/app-setup": "local",
+    "@bayou/client-bundle": "local",
     "@bayou/deps-util-server": "local",
-    "dev-mode": "local",
-    "env-server": "local",
-    "hooks-server": "local",
+    "@bayou/dev-mode": "local",
+    "@bayou/env-server": "local",
+    "@bayou/hooks-server": "local",
     "@bayou/promise-util": "local",
     "@bayou/see-all": "local",
     "@bayou/see-all-server": "local",
-    "testing-server": "local"
+    "@bayou/testing-server": "local"
   }
 }

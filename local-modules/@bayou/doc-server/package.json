@@ -1,0 +1,20 @@
+{
+  "name": "@bayou/doc-server",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "@bayou/app-common": "local",
+    "@bayou/codec": "local",
+    "@bayou/deps-util-server": "local",
+    "@bayou/doc-common": "local",
+    "@bayou/env-server": "local",
+    "@bayou/file-store": "local",
+    "@bayou/file-store-ot": "local",
+    "@bayou/hooks-server": "local",
+    "@bayou/ot-common": "local",
+    "@bayou/promise-util": "local",
+    "@bayou/see-all": "local",
+    "@bayou/typecheck": "local",
+    "@bayou/util-common": "local"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@bayou/hooks-server",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "@bayou/api-server": "local",
+    "@bayou/file-store-local": "local",
+    "@bayou/hooks-common": "local",
+    "@bayou/promise-util": "local",
+    "@bayou/util-common": "local"
+  }
+}

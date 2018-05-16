@@ -7,7 +7,8 @@ import { BaseReporter } from '@bayou/testing-common';
 /**
  * Mocha reporter, similar to its built-in "JSON stream" reporter, but
  * specifically tailored to emit exactly the right info for collection on our
- * server side. See {@link testing-server.EventReceiver} for the consuming code.
+ * server side. See {@link @bayou/testing-server.EventReceiver} for the
+ * consuming code.
  */
 export default class EventReporter extends BaseReporter {
   /**

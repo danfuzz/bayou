@@ -1,0 +1,12 @@
+{
+  "name": "@bayou/dev-mode",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "@bayou/deps-util-server": "local",
+    "@bayou/env-server": "local",
+    "@bayou/promise-util": "local",
+    "@bayou/see-all": "local",
+    "@bayou/util-common": "local"
+  }
+}

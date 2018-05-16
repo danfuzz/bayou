@@ -1,0 +1,15 @@
+{
+  "name": "@bayou/api-server",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "@bayou/api-common": "local",
+    "@bayou/codec": "local",
+    "@bayou/deps-util-server": "local",
+    "@bayou/hooks-server": "local",
+    "@bayou/promise-util": "local",
+    "@bayou/see-all": "local",
+    "@bayou/typecheck": "local",
+    "@bayou/util-common": "local"
+  }
+}
