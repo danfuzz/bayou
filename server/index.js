@@ -18,7 +18,7 @@ import minimist from 'minimist';
 import { inspect } from 'util';
 
 import { Application, Monitor } from 'app-setup';
-import { ClientBundle } from 'client-bundle';
+import { ClientBundle } from '@bayou/client-bundle';
 import { DevMode } from '@bayou/dev-mode';
 import { Dirs, ProductInfo, ServerEnv } from '@bayou/env-server';
 import { Hooks } from '@bayou/hooks-server';

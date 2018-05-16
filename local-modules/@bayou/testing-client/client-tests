@@ -3,6 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 The contents of this file don't matter. Its name triggers special-case logic
-in the Webpack config defined in `client-bundle`, which in turn calls on
+in the Webpack config defined in `@bayou/client-bundle`, which in turn calls on
 `@bayou/testing-server.ClientTestsLoader.load()` to build a dynamic module that
 references all of the client test code.

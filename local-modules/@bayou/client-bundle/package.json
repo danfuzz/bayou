@@ -1,5 +1,5 @@
 {
-  "name": "client-bundle",
+  "name": "@bayou/client-bundle",
   "version": "1.0.0",
 
   "dependencies": {

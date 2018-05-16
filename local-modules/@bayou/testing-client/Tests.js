@@ -8,7 +8,7 @@ import chaiAsPromised from 'chai-as-promised';
 import { UtilityClass } from '@bayou/util-common';
 
 // **Note:** This is really the local module `@bayou/mocha-client-shim`. See
-// that module and {@link client-bundle.ClientBundle} for more details.
+// that module and {@link @bayou/client-bundle.ClientBundle} for more details.
 import { Mocha } from 'mocha';
 
 // This file is dynamically-generated when loaded. See comments in the file for

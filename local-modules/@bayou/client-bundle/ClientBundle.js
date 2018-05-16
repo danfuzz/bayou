@@ -244,7 +244,7 @@ const webpackOptions = {
       // into JavaScript. Calling `style.use()` increments the count, and
       // `style.unuse()` decrements the count. Whenever the count is greater
       // than zero the styles are active in the DOM. When it is zero the styles
-      // are removed. See <client-bundle/README.md> for examples.
+      // are removed. See <@bayou/client-bundle/README.md> for examples.
       {
         test: /.ucss$/,
         use: [
