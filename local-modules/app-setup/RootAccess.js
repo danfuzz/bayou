@@ -5,7 +5,7 @@
 import { SplitKey } from '@bayou/api-common';
 import { Context } from 'api-server';
 import { DocServer } from 'doc-server';
-import { Hooks } from 'hooks-server';
+import { Hooks } from '@bayou/hooks-server';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
 
@@ -14,7 +14,7 @@ const log = new Logger('root-access');
 
 /**
  * "Root access" object. This is the object which is protected by the root
- * bearer token(s) returned via the related `hooks-server` hooks.
+ * bearer token(s) returned via the related `@bayou/hooks-server` hooks.
  */
 export default class RootAccess {
   /**

@@ -3,15 +3,15 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseKey } from '@bayou/api-common';
-import { Hooks } from 'hooks-server';
+import { Hooks } from '@bayou/hooks-server';
 import { TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
 /**
  * Bearer token, which is a kind of key which conflates ID and secret.
  * Conflation notwithstanding, some part of a bearer token is always considered
- * to be its "ID." the `hooks-server` value `Hooks.theOne.bearerTokens` can
- * be used to control ID derivation (and general validation) of bearer token
+ * to be its "ID." the `@bayou/hooks-server` value `Hooks.theOne.bearerTokens`
+ * can be used to control ID derivation (and general validation) of bearer token
  * strings.
  */
 export default class BearerToken extends BaseKey {

@@ -4,7 +4,7 @@
 
 import { BodyChange, BodyDelta } from '@bayou/doc-common';
 import { TransactionSpec } from '@bayou/file-store-ot';
-import { DEFAULT_DOCUMENT } from 'hooks-server';
+import { DEFAULT_DOCUMENT } from '@bayou/hooks-server';
 import { Timestamp } from '@bayou/ot-common';
 import { Mutex } from '@bayou/promise-util';
 import { Errors } from '@bayou/util-common';

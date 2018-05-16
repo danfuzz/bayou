@@ -5,7 +5,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { Hooks } from 'hooks-server';
+import { Hooks } from '@bayou/hooks-server';
 import { Errors, Singleton } from '@bayou/util-common';
 
 

@@ -6,11 +6,11 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BearerToken } from 'api-server';
-import { BearerTokens } from 'hooks-server';
+import { BearerTokens } from '@bayou/hooks-server';
 
 const BEARER_TOKENS = BearerTokens.theOne;
 
-describe('hooks-server/BearerTokens', () => {
+describe('@bayou/hooks-server/BearerTokens', () => {
   describe('isToken(tokenString)', () => {
     it('should accept any value', () => {
       assert.isTrue(BEARER_TOKENS.isToken('abc123'));

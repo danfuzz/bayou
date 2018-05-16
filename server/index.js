@@ -21,7 +21,7 @@ import { Application, Monitor } from 'app-setup';
 import { ClientBundle } from 'client-bundle';
 import { DevMode } from 'dev-mode';
 import { Dirs, ProductInfo, ServerEnv } from 'env-server';
-import { Hooks } from 'hooks-server';
+import { Hooks } from '@bayou/hooks-server';
 import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { HumanSink, FileSink } from '@bayou/see-all-server';
@@ -140,7 +140,7 @@ if (showHelp || argError) {
     '  --dev-if-appropriate',
     '    Run in development mode (per above), but only if the execution environment',
     '    indicates that it is meant to be so run. (This is determined by a hook in',
-    '    the `hooks-server` module, see which.)',
+    '    the `@bayou/hooks-server` module, see which.)',
     '  --human-console',
     '    Provide human-oriented logging output on `stdout`. The default is to write',
     '    JSON-encoded event records.',

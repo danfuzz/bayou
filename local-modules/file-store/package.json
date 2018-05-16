@@ -6,7 +6,7 @@
     "@bayou/codec": "local",
     "@bayou/deps-util-server": "local",
     "@bayou/file-store-ot": "local",
-    "hooks-server": "local",
+    "@bayou/hooks-server": "local",
     "@bayou/promise-util": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local"

@@ -11,7 +11,7 @@ import { BearerToken, Context, PostConnection, WsConnection } from 'api-server';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { ClientBundle } from 'client-bundle';
 import { Dirs, ProductInfo } from 'env-server';
-import { Hooks } from 'hooks-server';
+import { Hooks } from '@bayou/hooks-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 
@@ -55,7 +55,7 @@ export default class Application extends CommonBase {
     /**
      * {RootAccess} The "root access" object. This is the object which is
      * protected by the root bearer token(s) returned via the related
-     * `hooks-server` hooks.
+     * `@bayou/hooks-server` hooks.
      */
     this._rootAccess = new RootAccess(this._context);
 
@@ -190,8 +190,8 @@ export default class Application extends CommonBase {
 
   /**
    * Maintains up-to-date bindings for the `rootAccess` object, based on the
-   * root token(s) reported via `hooks-server.bearerTokens`. This includes
-   * a promise-chain-based ongoing update mechanism.
+   * root token(s) reported via `@bayou/hooks-server.bearerTokens`. This
+   * includes a promise-chain-based ongoing update mechanism.
    */
   _bindRoot() {
     const context = this._context;

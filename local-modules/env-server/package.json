@@ -4,7 +4,7 @@
 
   "dependencies": {
     "@bayou/deps-util-server": "local",
-    "hooks-server": "local",
+    "@bayou/hooks-server": "local",
     "@bayou/proppy": "local",
     "@bayou/see-all": "local",
     "@bayou/util-common": "local"
