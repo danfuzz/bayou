@@ -1,5 +1,5 @@
 {
-  "name": "app-setup",
+  "name": "@bayou/app-setup",
   "version": "1.0.0",
 
   "dependencies": {

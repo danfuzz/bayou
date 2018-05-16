@@ -17,7 +17,7 @@ import path from 'path';
 import minimist from 'minimist';
 import { inspect } from 'util';
 
-import { Application, Monitor } from 'app-setup';
+import { Application, Monitor } from '@bayou/app-setup';
 import { ClientBundle } from '@bayou/client-bundle';
 import { DevMode } from '@bayou/dev-mode';
 import { Dirs, ProductInfo, ServerEnv } from '@bayou/env-server';

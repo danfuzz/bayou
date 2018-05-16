@@ -16,7 +16,7 @@
   },
 
   "dependencies": {
-    "app-setup": "local",
+    "@bayou/app-setup": "local",
     "@bayou/client-bundle": "local",
     "@bayou/deps-util-server": "local",
     "@bayou/dev-mode": "local",
