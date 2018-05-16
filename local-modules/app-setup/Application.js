@@ -10,7 +10,7 @@ import path from 'path';
 import { BearerToken, Context, PostConnection, WsConnection } from '@bayou/api-server';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { ClientBundle } from 'client-bundle';
-import { Dirs, ProductInfo } from 'env-server';
+import { Dirs, ProductInfo } from '@bayou/env-server';
 import { Hooks } from '@bayou/hooks-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';

@@ -5,7 +5,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { Dirs } from 'env-server';
+import { Dirs } from '@bayou/env-server';
 import { UtilityClass } from '@bayou/util-common';
 
 /**

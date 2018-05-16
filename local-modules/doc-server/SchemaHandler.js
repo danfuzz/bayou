@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ProductInfo } from 'env-server';
+import { ProductInfo } from '@bayou/env-server';
 import { TransactionSpec } from '@bayou/file-store-ot';
 import { TString } from '@bayou/typecheck';
 

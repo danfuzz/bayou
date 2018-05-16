@@ -5,7 +5,7 @@
   "dependencies": {
     "@bayou/codec": "local",
     "@bayou/deps-util-server": "local",
-    "env-server": "local",
+    "@bayou/env-server": "local",
     "file-store": "local",
     "@bayou/file-store-ot": "local",
     "@bayou/promise-util": "local",

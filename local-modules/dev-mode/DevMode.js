@@ -7,7 +7,7 @@ import fs from 'fs';
 import fs_extra from 'fs-extra';
 import path from 'path';
 
-import { Dirs } from 'env-server';
+import { Dirs } from '@bayou/env-server';
 import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { Singleton } from '@bayou/util-common';

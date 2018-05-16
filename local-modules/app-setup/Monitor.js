@@ -5,7 +5,7 @@
 import express from 'express';
 import http from 'http';
 
-import { ProductInfo } from 'env-server';
+import { ProductInfo } from '@bayou/env-server';
 import { Logger } from '@bayou/see-all';
 import { TInt } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';

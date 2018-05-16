@@ -5,7 +5,7 @@
   "dependencies": {
     "@bayou/deps-compiler": "local",
     "@bayou/deps-util-server": "local",
-    "env-server": "local",
+    "@bayou/env-server": "local",
     "@bayou/see-all": "local",
     "testing-server": "local",
     "@bayou/util-common": "local"

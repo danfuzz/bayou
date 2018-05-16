@@ -4,7 +4,7 @@
 
   "dependencies": {
     "@bayou/deps-util-server": "local",
-    "env-server": "local",
+    "@bayou/env-server": "local",
     "@bayou/promise-util": "local",
     "@bayou/see-all": "local",
     "@bayou/util-common": "local"

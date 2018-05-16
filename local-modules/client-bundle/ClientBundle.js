@@ -7,7 +7,7 @@ import memory_fs from 'memory-fs';
 import path from 'path';
 import webpack from 'webpack';
 
-import { Dirs } from 'env-server';
+import { Dirs } from '@bayou/env-server';
 import { Logger } from '@bayou/see-all';
 import { JsonUtil, Singleton } from '@bayou/util-common';
 
