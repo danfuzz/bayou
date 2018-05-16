@@ -10,7 +10,7 @@ import { FrozenBuffer } from '@bayou/util-common';
 
 import TempFiles from './TempFiles';
 
-describe('file-store-local/LocalFile.transact', () => {
+describe('@bayou/file-store-local/LocalFile.transact', () => {
   it('should throw an error if the file doesn\'t exist', async () => {
     const file = TempFiles.makeFile();
     assert.isFalse(await file.exists()); // Baseline assumption.

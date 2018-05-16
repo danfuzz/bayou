@@ -4,7 +4,7 @@
 
 import path from 'path';
 
-import { LocalFileStore } from 'file-store-local';
+import { LocalFileStore } from '@bayou/file-store-local';
 import { Hooks as hooksCommon_Hooks } from '@bayou/hooks-common';
 import { Singleton } from '@bayou/util-common';
 

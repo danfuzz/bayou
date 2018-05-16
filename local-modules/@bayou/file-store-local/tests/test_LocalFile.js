@@ -10,7 +10,7 @@ import { FrozenBuffer } from '@bayou/util-common';
 
 import TempFiles from './TempFiles';
 
-describe('file-store-local/LocalFile', () => {
+describe('@bayou/file-store-local/LocalFile', () => {
   describe('constructor()', () => {
     it('should not throw given valid arguments', () => {
       assert.doesNotThrow(() => { TempFiles.makeFile(); });
