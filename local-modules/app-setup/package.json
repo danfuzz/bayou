@@ -4,7 +4,7 @@
 
   "dependencies": {
     "@bayou/api-common": "local",
-    "api-server": "local",
+    "@bayou/api-server": "local",
     "@bayou/app-common": "local",
     "client-bundle": "local",
     "@bayou/codec": "local",

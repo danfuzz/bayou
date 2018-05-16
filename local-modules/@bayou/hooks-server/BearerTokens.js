@@ -2,14 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BearerToken } from 'api-server';
+import { BearerToken } from '@bayou/api-server';
 import { Delay } from '@bayou/promise-util';
 import { Singleton } from '@bayou/util-common';
 
 /**
  * Base class for and default implementation of `Hooks.bearerTokens`, which
  * notably serves as documentation for the required methods. See
- * `api-server.BearerToken` for more details.
+ * `@bayou/api-server.BearerToken` for more details.
  */
 export default class BearerTokens extends Singleton {
   /**

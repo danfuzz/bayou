@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { BearerToken } from 'api-server';
+import { BearerToken } from '@bayou/api-server';
 import { BearerTokens } from '@bayou/hooks-server';
 
 const BEARER_TOKENS = BearerTokens.theOne;

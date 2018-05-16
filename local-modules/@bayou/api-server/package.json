@@ -1,5 +1,5 @@
 {
-  "name": "api-server",
+  "name": "@bayou/api-server",
   "version": "1.0.0",
 
   "dependencies": {

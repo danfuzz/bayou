@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { SplitKey } from '@bayou/api-common';
-import { Context } from 'api-server';
+import { Context } from '@bayou/api-server';
 import { DocServer } from 'doc-server';
 import { Hooks } from '@bayou/hooks-server';
 import { Logger } from '@bayou/see-all';

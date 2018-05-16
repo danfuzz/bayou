@@ -7,7 +7,7 @@ import express_ws from 'express-ws';
 import http from 'http';
 import path from 'path';
 
-import { BearerToken, Context, PostConnection, WsConnection } from 'api-server';
+import { BearerToken, Context, PostConnection, WsConnection } from '@bayou/api-server';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { ClientBundle } from 'client-bundle';
 import { Dirs, ProductInfo } from 'env-server';
@@ -168,8 +168,8 @@ export default class Application extends CommonBase {
     // `static/`.
     app.use('/', express.static(path.resolve(Dirs.theOne.CLIENT_DIR, 'assets')));
 
-    // Use the `api-server` module to handle POST and websocket requests at
-    // `/api`.
+    // Use the `@bayou/api-server` module to handle POST and websocket requests
+    // at `/api`.
     app.post('/api',
       (req, res) => {
         try {
