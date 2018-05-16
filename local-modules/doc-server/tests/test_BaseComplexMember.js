@@ -9,7 +9,7 @@ import { BaseComplexMember } from 'doc-server';
 
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { FileAccess } from 'doc-server';
-import { MockFile } from 'file-store/mocks';
+import { MockFile } from '@bayou/file-store/mocks';
 import { MockLogger } from '@bayou/see-all/mocks';
 
 describe('doc-server/BaseComplexMember', () => {

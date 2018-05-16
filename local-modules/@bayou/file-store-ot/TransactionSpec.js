@@ -192,7 +192,7 @@ export default class TransactionSpec extends CommonBase {
    *
    * @param {FileSnapshot} snapshot Snapshot to operate on.
    * @returns {object} Plain object which maps `data` and `paths` as defined
-   *   by {@link file-store.BaseFile#transact}.
+   *   by {@link @bayou/file-store.BaseFile#transact}.
    */
   runPull(snapshot) {
     FileSnapshot.check(snapshot);

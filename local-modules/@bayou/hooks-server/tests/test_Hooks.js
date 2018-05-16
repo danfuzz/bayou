@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { BaseFileStore } from 'file-store';
+import { BaseFileStore } from '@bayou/file-store';
 import { BearerTokens, Hooks } from '@bayou/hooks-server';
 
 describe('@bayou/hooks-server/Hooks', () => {

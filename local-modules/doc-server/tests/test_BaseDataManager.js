@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { BaseDataManager, FileAccess, ValidationStatus } from 'doc-server';
 import { TransactionSpec } from '@bayou/file-store-ot';
-import { MockFile } from 'file-store/mocks';
+import { MockFile } from '@bayou/file-store/mocks';
 
 /** {FileAccess} Convenient instance of `FileAccess`. */
 const FILE_ACCESS = new FileAccess(appCommon_TheModule.modelCodec, new MockFile('blort'));

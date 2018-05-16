@@ -6,7 +6,7 @@ import afs from 'async-file';
 import path from 'path';
 
 import { Codec } from '@bayou/codec';
-import { BaseFile } from 'file-store';
+import { BaseFile } from '@bayou/file-store';
 import { FileChange, FileSnapshot } from '@bayou/file-store-ot';
 import { RevisionNumber } from '@bayou/ot-common';
 import { Condition, Delay, Mutex } from '@bayou/promise-util';

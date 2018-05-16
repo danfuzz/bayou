@@ -10,7 +10,7 @@ import { Timeouts } from '@bayou/doc-common';
 import { MockChange, MockDelta, MockOp, MockSnapshot } from '@bayou/ot-common/mocks';
 import { DurableControl, FileAccess } from 'doc-server';
 import { MockControl } from 'doc-server/mocks';
-import { MockFile } from 'file-store/mocks';
+import { MockFile } from '@bayou/file-store/mocks';
 import { Errors as fileStoreOt_Errors, TransactionSpec } from '@bayou/file-store-ot';
 import { Timestamp } from '@bayou/ot-common';
 import { TheModule as mocks_TheModule } from '@bayou/ot-common/mocks';

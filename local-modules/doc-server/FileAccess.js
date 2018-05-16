@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Codec } from '@bayou/codec';
-import { BaseFile, FileCodec } from 'file-store';
+import { BaseFile, FileCodec } from '@bayou/file-store';
 import { BaseLogger, Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 
