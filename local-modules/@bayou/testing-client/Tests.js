@@ -23,7 +23,7 @@ chai.use(chaiAsPromised);
 /**
  * Driver for the Mocha framework, for client tests. This gets run by the
  * client-side `boot-for-test` script, which is operated at "arm's length" by
- * {@link testing-server.ClientTests}.
+ * {@link @bayou/testing-server.ClientTests}.
  */
 export default class Tests extends UtilityClass {
   /**

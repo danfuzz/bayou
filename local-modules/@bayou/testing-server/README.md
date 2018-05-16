@@ -1,5 +1,5 @@
-testing-server
-==============
+@bayou/testing-server
+=====================
 
 This module serves multiple related purposes:
 

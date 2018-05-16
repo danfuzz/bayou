@@ -18,6 +18,6 @@
     "@bayou/ot-common": "local",
     "@bayou/see-all": "local",
     "@bayou/see-all-server": "local",
-    "testing-server": "local"
+    "@bayou/testing-server": "local"
   }
 }

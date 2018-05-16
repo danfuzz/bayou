@@ -10,7 +10,8 @@ import { CommonBase, DataUtil, ErrorUtil } from '@bayou/util-common';
  * Mocha reporter which "re-envisions" Mocha's various events as a simpler set
  * of calls on abstract methods of itself. There are client- and server-specific
  * subclasses of this class, which plumb the information in different ways,
- * ultimately landing in an instance of {@link testing-server.TestCollector}.
+ * ultimately landing in an instance of
+ * {@link @bayou/testing-server.TestCollector}.
  */
 export default class BaseReporter extends CommonBase {
   /**
@@ -201,7 +202,7 @@ export default class BaseReporter extends CommonBase {
     }
 
     // **Note:** The payload here ultimately ends up getting consumed in
-    // {@link testing-server.TestCollector}.
+    // {@link @bayou/testing-server.TestCollector}.
     this._impl_testResult({
       title:    test.title,
       console:  consoleSnapshot,

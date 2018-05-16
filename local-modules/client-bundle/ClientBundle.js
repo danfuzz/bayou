@@ -151,7 +151,7 @@ const webpackOptions = {
       {
         test: /@bayou[/]testing-client[/]client-tests$/,
         use: [{
-          loader: 'testing-server/loadClientTests'
+          loader: '@bayou/testing-server/loadClientTests'
         }]
       },
 

@@ -25,7 +25,7 @@ import { Hooks } from '@bayou/hooks-server';
 import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { HumanSink, FileSink } from '@bayou/see-all-server';
-import { ClientTests, ServerTests } from 'testing-server';
+import { ClientTests, ServerTests } from '@bayou/testing-server';
 
 
 /** {Logger} Logger for this file. */
