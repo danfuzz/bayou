@@ -1,5 +1,5 @@
 {
-  "name": "doc-server",
+  "name": "@bayou/doc-server",
   "version": "1.0.0",
 
   "dependencies": {

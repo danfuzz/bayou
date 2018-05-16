@@ -8,8 +8,8 @@ import { describe, it } from 'mocha';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { Timeouts } from '@bayou/doc-common';
 import { MockChange, MockDelta, MockOp, MockSnapshot } from '@bayou/ot-common/mocks';
-import { DurableControl, FileAccess } from 'doc-server';
-import { MockControl } from 'doc-server/mocks';
+import { DurableControl, FileAccess } from '@bayou/doc-server';
+import { MockControl } from '@bayou/doc-server/mocks';
 import { MockFile } from '@bayou/file-store/mocks';
 import { Errors as fileStoreOt_Errors, TransactionSpec } from '@bayou/file-store-ot';
 import { Timestamp } from '@bayou/ot-common';
@@ -19,7 +19,7 @@ import { Errors, FrozenBuffer } from '@bayou/util-common';
 // **Note:** Even though these tests are written in terms of `DurableControl`
 // and a subclass thereof, they are limited to testing behavior which is common
 // to all control classes. This is why it is labeled as being for `BaseControl`.
-describe('doc-server/BaseControl', () => {
+describe('@bayou/doc-server/BaseControl', () => {
   /** {Codec} Convenient instance of `Codec`. */
   const CODEC = appCommon_TheModule.makeModelCodec();
   mocks_TheModule.registerCodecs(CODEC.registry);

@@ -5,14 +5,14 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { BaseComplexMember } from 'doc-server';
+import { BaseComplexMember } from '@bayou/doc-server';
 
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
-import { FileAccess } from 'doc-server';
+import { FileAccess } from '@bayou/doc-server';
 import { MockFile } from '@bayou/file-store/mocks';
 import { MockLogger } from '@bayou/see-all/mocks';
 
-describe('doc-server/BaseComplexMember', () => {
+describe('@bayou/doc-server/BaseComplexMember', () => {
   describe('constructor()', () => {
     it('should accept a `FileAccess` and reflect it in the getters', () => {
       const codec  = appCommon_TheModule.modelCodec;

@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { EphemeralControl } from 'doc-server';
+import { EphemeralControl } from '@bayou/doc-server';
 
-describe('doc-server/EphemeralControl', () => {
+describe('@bayou/doc-server/EphemeralControl', () => {
   /** {class} Concrete subclass, for use in testing. */
   class SomeControl extends EphemeralControl { /*empty*/ }
 

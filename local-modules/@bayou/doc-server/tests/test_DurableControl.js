@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { DurableControl } from 'doc-server';
+import { DurableControl } from '@bayou/doc-server';
 
-describe('doc-server/DurableControl', () => {
+describe('@bayou/doc-server/DurableControl', () => {
   /** {class} Concrete subclass, for use in testing. */
   class SomeControl extends DurableControl { /*empty*/ }
 
