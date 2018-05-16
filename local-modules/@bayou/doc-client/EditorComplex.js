@@ -26,25 +26,6 @@ import TitleClient from './TitleClient';
 /** {Logger} Logger for this module. */
 const log = new Logger('editor-complex');
 
-/** {object} Default Quill module configuration for the document body. */
-const DEFAULT_BODY_MODULE_CONFIG = {
-  keyboard: BayouKeyHandlers.defaultKeyHandlers,
-  toolbar: [
-    [{ header: 1 }, { header: 2 }, { header: 3 }],
-    ['bold', 'italic', 'underline', 'strike', 'link', 'code'],
-    [{ list: 'bullet' }, { list: 'ordered' }, { list: 'unchecked' }],
-    ['blockquote', 'code-block']
-  ]
-};
-
-/** {object} Default Quill module configuration for the title field. */
-const DEFAULT_TITLE_MODULE_CONFIG = {
-  keyboard: BayouKeyHandlers.defaultSingleLineKeyHandlers,
-  toolbar: [
-    ['italic', 'underline', 'strike', 'link', 'code'], // Toggled buttons.
-  ]
-};
-
 /**
  * Manager for the "complex" of objects and DOM nodes which in aggregate form
  * the client-side editor.
@@ -387,8 +368,19 @@ export default class EditorComplex extends CommonBase {
    */
   static get _bodyModuleConfig() {
     if (!EditorComplex._bodyModuleConfigValue) {
+      const defaultConfig = {
+        keyboard: BayouKeyHandlers.defaultKeyHandlers,
+        toolbar: [
+          [{ header: 1 }, { header: 2 }, { header: 3 }],
+          ['bold', 'italic', 'underline', 'strike', 'link', 'code'],
+          [{ list: 'bullet' }, { list: 'ordered' }, { list: 'unchecked' }],
+          ['blockquote', 'code-block']
+        ]
+      };
+
       const moduleConfig =
-        Hooks.theOne.quillModuleConfig('body', DEFAULT_BODY_MODULE_CONFIG);
+        Hooks.theOne.quillModuleConfig('body', defaultConfig);
+
       EditorComplex._bodyModuleConfigValue = Object.freeze(moduleConfig);
     }
 
@@ -402,8 +394,16 @@ export default class EditorComplex extends CommonBase {
    */
   static get _titleModuleConfig() {
     if (!EditorComplex._titleModuleConfigValue) {
+      const defaultConfig = {
+        keyboard: BayouKeyHandlers.defaultSingleLineKeyHandlers,
+        toolbar: [
+          ['italic', 'underline', 'strike', 'link', 'code'], // Toggled buttons.
+        ]
+      };
+
       const moduleConfig =
-        Hooks.theOne.quillModuleConfig('title', DEFAULT_TITLE_MODULE_CONFIG);
+        Hooks.theOne.quillModuleConfig('title', defaultConfig);
+
       EditorComplex._titleModuleConfigValue = Object.freeze(moduleConfig);
     }
 
