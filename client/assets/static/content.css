@@ -26,17 +26,17 @@ html.bayou-page {
   /* Nothing needed here... yet. */
 }
 
-/*
- * In the edit areas, turn off font ligatures. This works around a bug in
- * Chrome (observed in version 60 around 2017-08-24), where the caret fails to
- * display correctly when positioned in the middle of a ligature-rendered
- * character sequence. This was filed as Chromium issue #473476 on 2015-04-03
- * <https://bugs.chromium.org/p/chromium/issues/detail?id=473476>.
- *
- * **TODO:** Re-evaluate whether this workaround is necessary, with each major
- * release of Chrome.
- */
 .bayou-top .ql-editor {
+  /*
+   * In the edit areas, turn off font ligatures. This works around a bug in
+   * Chrome (observed in version 60 around 2017-08-24), where the caret fails to
+   * display correctly when positioned in the middle of a ligature-rendered
+   * character sequence. This was filed as Chromium issue #473476 on 2015-04-03
+   * <https://bugs.chromium.org/p/chromium/issues/detail?id=473476>.
+   *
+   * **TODO:** Re-evaluate whether this workaround is necessary, with each major
+   * release of Chrome.
+   */
   font-variant-ligatures: none;
 
   max-width:    43.75rem;
