@@ -54,6 +54,45 @@ html.bayou-page {
   padding:      0;
 }
 
+.bayou-top .ql-editor a:link {
+  color:           #007ab8;
+  text-decoration: none;
+}
+
+.bayou-top .ql-editor a:visited {
+  text-decoration: none;
+}
+
+.bayou-top .ql-editor a:hover {
+  text-decoration:       underline;
+  text-decoration-color: #007ab8;
+}
+
+/*
+ * Common definitions for monospace (code), both inline and multiline. This
+ * overrides Quill's default coloring. (Quill's specifiers end up being more
+ * "specific" than the ones here, which is why we use `!important`.)
+ */
+.bayou-top .ql-editor code,
+.bayou-top .ql-editor pre {
+  border-color:  rgba(0, 0, 0, 0.15) !important;
+  border-style:  solid               !important;
+  border-width:  1px                 !important;
+  border-radius: 4px                 !important;
+}
+
+/* Inline monospace coloring. (See above about `!important`.) */
+.bayou-top .ql-editor code {
+  background-color: #f7f7f9 !important;
+  color:            #cc2255 !important;
+}
+
+/* Multiline monospace coloring. (See above about `!important`.) */
+.bayou-top .ql-editor pre {
+  color:            #333333 !important;
+  background-color: #fbfaf8 !important;
+}
+
 /* Container for the Quill editor for the document title field. */
 .bayou-title-editor .ql-editor p {
   color:         #2c2d30;
@@ -62,20 +101,6 @@ html.bayou-page {
   line-height:   3.25rem;
   margin-top:    3.25rem;
   margin-bottom: 2.0rem;
-}
-
-.bayou-title-editor .ql-editor a:link {
-  color:           #007ab8;
-  text-decoration: none;
-}
-
-.bayou-title-editor .ql-editor a:visited {
-  text-decoration: none;
-}
-
-.bayou-title-editor .ql-editor a:hover {
-  text-decoration:       underline;
-  text-decoration-color: #007ab8;
 }
 
 /*
@@ -167,43 +192,4 @@ html.bayou-page {
   line-height:   2.25rem;
   margin-top:    1.75rem;
   margin-bottom: 0;
-}
-
-.bayou-editor .ql-editor a:link {
-  color:           #007ab8;
-  text-decoration: none;
-}
-
-.bayou-editor .ql-editor a:visited {
-  text-decoration: none;
-}
-
-.bayou-editor .ql-editor a:hover {
-  text-decoration:       underline;
-  text-decoration-color: #007ab8;
-}
-
-/*
- * Common definitions for monospace (code), both inline and multiline. This
- * overrides Quill's default coloring. (Quill's specifiers end up being more
- * "specific" than the ones here, which is why we use `!important`.)
- */
-.bayou-editor .ql-editor code,
-.bayou-editor .ql-editor pre {
-  border-color:  rgba(0, 0, 0, 0.15) !important;
-  border-style:  solid               !important;
-  border-width:  1px                 !important;
-  border-radius: 4px                 !important;
-}
-
-/* Inline monospace coloring. (See above about `!important`.) */
-.bayou-editor .ql-editor code {
-  background-color: #f7f7f9 !important;
-  color:            #cc2255 !important;
-}
-
-/* Multiline monospace coloring. (See above about `!important`.) */
-.bayou-editor .ql-editor pre {
-  color:            #333333 !important;
-  background-color: #fbfaf8 !important;
 }
