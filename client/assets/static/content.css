@@ -26,6 +26,10 @@ html.bayou-page {
   /* Nothing needed here... yet. */
 }
 
+/*
+ * Setup for all Quill instances used, including body, title editor, image
+ * caption editors, and perhaps more.
+ */
 .bayou-top .ql-editor {
   /*
    * In the edit areas, turn off font ligatures. This works around a bug in
@@ -39,6 +43,10 @@ html.bayou-page {
    */
   font-variant-ligatures: none;
 
+  /*
+   * This arranges for a maximum line width that won't force the reader's eyes
+   * to glaze over.
+   */
   max-width:    43.75rem;
   margin-left:  auto;
   margin-right: auto;
@@ -123,16 +131,6 @@ html.bayou-page {
   letter-spacing: normal;
   line-height:    1.75rem;
   font-size:      1rem; /* This thwacks it back from Quill's smaller default. */
-
-  /*
-   * This arranges for a maximum line width that won't force the reader's eyes
-   * to glaze over.
-   */
-  max-width:    43.75rem;
-  margin-left:  auto;
-  margin-right: auto;
-
-  padding:      0;
 }
 
 .bayou-editor .ql-editor ::selection {
