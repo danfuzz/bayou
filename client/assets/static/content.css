@@ -4,16 +4,6 @@
  * Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
  */
 
-body {
-  // Firefox on OSX: greyscale anti-aliased font smoothing, "thinner" type
-  //  closer to Safari/webkit. https://bugzilla.mozilla.org/show_bug.cgi?id=857142
-  -moz-osx-font-smoothing: grayscale;
-  // Default to greyscale anti-aliasing (vs. subpixel-antialiased which
-  // will look thicker.)
-  // Worth a read: http://usabilitypost.com/2012/11/05/stop-fixing-font-smoothing/
-  -webkit-font-smoothing:  antialiased;
-}
-
 /*
  * Definitions for the editor content area.
  */
