@@ -46,13 +46,6 @@ export default class Dirs extends Singleton {
   }
 
   /**
-   * The client code directory.
-   */
-  get CLIENT_CODE_DIR() {
-    return path.resolve(this.BASE_DIR, 'client/js');
-  }
-
-  /**
    * The directory to write log files to. Accessing this value guarantees the
    * existence of the directory (that is, it will create the directory if
    * necessary).

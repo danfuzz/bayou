@@ -8,6 +8,8 @@ contexts.
 
 ### Module naming conventions
 
+#### Suffixes
+
 * `<name>-client` &mdash; A module that is only meant to be used on the client
   (e.g., in a web browser or SSB-ish environment).
 * `<name>-core` &mdash; A module that is akin to a "base class," that is, a
@@ -23,11 +25,18 @@ of the above patterns are used with the same `<name>`. _Not_ having one of
 these suffixes doesn't convey any meaning about what environment(s) a module
 can be used in.
 
+#### Prefixes
+
 * `deps-<name>` &mdash; A module whose sole purpose is to require one or more
   external modules as dependencies, specifically so that multiple local modules
   can in turn depend on it. This simplifies external dependency management. The
   `<name>` is meant to be reasonably suggestive of the territory covered by the
   particular set of dependencies being defined.
+
+* `main-<name>` &mdash; A module which is the "main" (entry point) of a major
+  subsystem. The `main-*` modules form the root of the dependency graph for the
+  system as a whole. **Note:** As of this writing, the project is in transition
+  and is inconsistent in its use of this kind of module.
 
 ### Export conventions
 

@@ -29,16 +29,6 @@ describe('@bayou/env-server/Dirs', () => {
     });
   });
 
-  describe('.CLIENT_CODE_DIR', () => {
-    it('should return a known subdirectory off of `CLIENT_DIR`', () => {
-      const clientDir = Dirs.theOne.CLIENT_DIR;
-      const codeDir = path.join(clientDir, 'js');
-
-      assert.strictEqual(codeDir, Dirs.theOne.CLIENT_CODE_DIR);
-      assert.isTrue(fs.existsSync(codeDir));
-    });
-  });
-
   describe('.LOG_DIR', () => {
     it('should return a known subdirectory off of `VAR_DIR`', () => {
       const varDir = Dirs.theOne.VAR_DIR;
