@@ -19,13 +19,19 @@ const log = new Logger('client-bundle');
 /** {ProgressMessage} Handler that logs progress messages during compilation. */
 const progress = new ProgressMessage(log);
 
+/** {string} Path to the client `node_modules` directory. */
+const NODE_MODULES_DIR = path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules');
+
+/** {string} Path to the `main-client` module directory. */
+const MAIN_CLIENT_DIR = path.resolve(NODE_MODULES_DIR, '@bayou/main-client');
+
 /**
  * {object} The parsed `package.json` for the client. This is used for some of
  * the `webpack` config.
  */
 const clientPackage =
   JsonUtil.parseFrozen(
-    fs.readFileSync(path.resolve(Dirs.theOne.CLIENT_DIR, 'package.json')));
+    fs.readFileSync(path.resolve(MAIN_CLIENT_DIR, 'package.json')));
 
 /**
  * {object} Options passed to the `webpack` compiler constructor. Of particular
@@ -54,11 +60,11 @@ const webpackOptions = {
   entry: {
     main: [
       'babel-polyfill',
-      path.resolve(Dirs.theOne.CLIENT_DIR, clientPackage.main)
+      path.resolve(MAIN_CLIENT_DIR, clientPackage.main)
     ],
     test: [
       'babel-polyfill',
-      path.resolve(Dirs.theOne.CLIENT_DIR, clientPackage.testMain)
+      path.resolve(MAIN_CLIENT_DIR, clientPackage.testMain)
     ]
   },
 
@@ -82,20 +88,20 @@ const webpackOptions = {
       // a prebuilt bundle. We rewrite it here to refer instead to the unbundled
       // source.
       'quill':
-        path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/quill/quill.js'),
+        path.resolve(NODE_MODULES_DIR, 'quill/quill.js'),
 
       // Likewise, `parchment`.
       'parchment':
-        path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/parchment/src/parchment.ts'),
+        path.resolve(NODE_MODULES_DIR, 'parchment/src/parchment.ts'),
 
       // On the client side, we use the local module `@bayou/mocha-client-shim`
       // as a substitute for `mocha`, and that module refers to
       // `mocha-client-bundle`. These two aliases makes it so that unit test
       // code can still write `import ... from 'mocha';`.
       'mocha':
-        path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/@bayou/mocha-client-shim'),
+        path.resolve(NODE_MODULES_DIR, '@bayou/mocha-client-shim'),
       'mocha-client-bundle':
-        path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/mocha/mocha.js')
+        path.resolve(NODE_MODULES_DIR, 'mocha/mocha.js')
     },
 
     // All the extensions listed here except `.ts` are in the default list.

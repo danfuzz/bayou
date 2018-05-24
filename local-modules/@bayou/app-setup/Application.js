@@ -166,7 +166,8 @@ export default class Application extends CommonBase {
     // Find HTML files and other static assets in `client/assets`. This includes
     // the top-level `index.html` and `favicon`, as well as stuff under
     // `static/`.
-    app.use('/', express.static(path.resolve(Dirs.theOne.CLIENT_DIR, 'assets')));
+    app.use('/',
+      express.static(path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/@bayou/main-client/assets')));
 
     // Use the `@bayou/api-server` module to handle POST and websocket requests
     // at `/api`.
