@@ -1,8 +1,0 @@
-{
-  "name": "@bayou/top-package-client",
-  "version": "1.0.0",
-
-  "dependencies": {
-    "@bayou/main-linter": "local"
-  }
-}
