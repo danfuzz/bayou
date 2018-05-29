@@ -320,6 +320,7 @@ function do-install {
     local npmDir="${toDir}/from-npm"
     local packageJson="${toDir}/package.json"
     local npmPackageJson="${toDir}/package-npm.json"
+    local npmBinDir="${npmDir}/node_modules/.bin"
 
     # Integrates local module dependencies into this package. It copies the
     # required local modules and also rewrites the top-level `package.json` so
@@ -371,12 +372,23 @@ function do-install {
 
     local d
     for d in $(cd "${npmDir}/node_modules"; /bin/ls -A); do
+        if [[ ${d} == '.bin' ]]; then
+            # `.bin` is handled specially. See below.
+            continue
+        fi
+
         (
             fromDir="${npmDir}/node_modules/${d}"
             toDir="${toDir}/node_modules/${d}"
             rm -rf "${toDir}" && mv "${fromDir}" "${toDir}"
         ) || return 1
     done
+
+    if [[ -d "${npmBinDir}" ]]; then
+        # Merge `.bin` directory contents into the pre-existing one (if any).
+        mkdir -p "${toDir}/node_modules/.bin"
+        rsync-archive "${npmBinDir}/" "${toDir}/node_modules/.bin"
+    fi
 
     rm -rf "${npmDir}" || return 1
 
