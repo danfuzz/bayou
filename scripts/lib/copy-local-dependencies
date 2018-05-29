@@ -151,6 +151,7 @@ function link-module-bin {
         (
             rm -f "${targetPath}" \
             && mkdir -p "${nodeModulesBinDir}" \
+            && rm -f "${binPath}" \
             && ln -s "${targetPath}" "${binPath}"
         ) || return 1
     done
@@ -314,7 +315,7 @@ for d in "${localDeps[@]}"; do
     toDir="${nodeModules}/${name}"
 
     mkdir -p "${toDir}" || exit 1
-    rsync-archive --delete "${d}/" "${toDir}"
+    rsync-archive --delete "${d}/" "${toDir}" || exit 1
 
     # Remove the `dependencies` from the `package.json`, because otherwise `npm`
     # tries to process them (and they aren't valid as far as it's concerned).
@@ -322,10 +323,11 @@ for d in "${localDeps[@]}"; do
     jq '
           del(.dependencies)
         | .localModule = true' \
-        "${d}/package.json" > "${toDir}/package.json"
+        "${d}/package.json" > "${toDir}/package.json" \
+    || exit 1
 
     # Link up the `bin` entries, if any. **Note:** This can only be done once
     # the rest of the module is copied and definitely needs to happen after the
     # module's `package.json` is set up.
-    link-module-bin "${nodeModules}" "${name}"
+    link-module-bin "${nodeModules}" "${name}" || exit 1
 done
