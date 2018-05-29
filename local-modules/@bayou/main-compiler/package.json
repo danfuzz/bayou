@@ -1,0 +1,14 @@
+{
+  "name": "@bayou/main-compiler",
+  "version": "1.0.0",
+
+  "bin": {
+    "bayou-compile": "./index.js"
+  },
+
+  "dependencies": {
+    "@bayou/deps-ansi-color": "local",
+    "@bayou/deps-compiler": "local",
+    "@bayou/deps-util-server": "local"
+  }
+}

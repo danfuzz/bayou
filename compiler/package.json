@@ -1,20 +1,8 @@
 {
-  "name": "bayou-compiler",
+  "name": "@bayou/top-package-client",
   "version": "1.0.0",
-  "description": "Compiler (transpiler) code for Bayou",
-  "license": "Apache-2.0",
-  "author": "Dan Bornstein <danfuzz@milk.com>",
-  "contributors": [
-    "SEE AUTHORS.md"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/danfuzz/bayou.git"
-  },
 
   "dependencies": {
-    "@bayou/deps-ansi-color": "local",
-    "@bayou/deps-compiler": "local",
-    "@bayou/deps-util-server": "local"
+    "@bayou/main-compiler": "local"
   }
 }
