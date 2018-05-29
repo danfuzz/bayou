@@ -272,23 +272,9 @@ function copy-sources {
             # Exclude the source map files themselves.
             echo "--exclude=${sourceMapName}"
 
-            # Exclude `node_modules` because those get created in the output
-            # during the build, and we don't want to trample them.
-            echo '--exclude=node_modules'
-
-            # Exclude the copy we might have made of the original `package.json`
-            # file, and the fixed versions. These are generated during the build
-            # and shouldn't get copied over or erased.
-            echo '--exclude=package-unfixed.json'
-            echo '--exclude=package-fixed.json'
-            echo '--exclude=package-npm.json'
-
-            # Exclude subdirectories that have maps. We don't have to bother
-            # mentioning `node_modules` subdirectories here because of the
-            # earlier blanket exclusion.
+            # Exclude subdirectories that have maps.
             cd "${dir}"
             find . -mindepth 2 \
-                '(' '!' -path '*/node_modules/*' ')' \
                 -name "${sourceMapName}" \
                 -exec dirname '{}' ';' \
                 | awk '{ printf("--exclude=/%s\n", substr($1, 3)); }'
