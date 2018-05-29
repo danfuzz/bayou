@@ -126,6 +126,35 @@ function path-to-module-name {
     echo "${BASH_REMATCH[1]}"
 }
 
+# Given a `node_modules` directory and a module name, links any `bin` entries in
+# the `package.json` of the module into the `node_modules/.bin` directory.
+function link-module-bin {
+    local nodeModulesDir="$1"
+    local moduleName="$2"
+    local packageJson="${nodeModulesDir}/${moduleName}/package.json"
+    local nodeModulesBinDir="${nodeModulesDir}/.bin"
+    local binPath
+    local targetPath
+
+    jq -r '(.bin // {}) | to_entries | .[] | "\(.key) \(.value)"' "${packageJson}" | \
+    while read -r binPath targetPath; do
+        binPath="${nodeModulesBinDir}/${binPath}"
+
+        if [[ ! (${targetPath} =~ ^/) ]]; then
+            # It's a relative path.
+            targetPath="../${moduleName}/${targetPath}"
+        fi
+
+        # Clean up superfluous `.` path elements.
+        targetPath="$(echo "${targetPath}" | sed -e 's#\(/\.\)*/#/#g')"
+
+        (
+            rm -f "${targetPath}" \
+            && mkdir -p "${nodeModulesBinDir}" \
+            && ln -s "${targetPath}" "${binPath}"
+        ) || return 1
+    done
+}
 
 #
 # Main script
@@ -294,4 +323,9 @@ for d in "${localDeps[@]}"; do
           del(.dependencies)
         | .localModule = true' \
         "${d}/package.json" > "${toDir}/package.json"
+
+    # Link up the `bin` entries, if any. **Note:** This can only be done once
+    # the rest of the module is copied and definitely needs to happen after the
+    # module's `package.json` is set up.
+    link-module-bin "${nodeModules}" "${name}"
 done
