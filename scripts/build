@@ -249,11 +249,6 @@ function add-package-directory-mappings {
 
 # Sets up the directory mappings from the source into the `out` directory.
 function set-up-dir-mapping {
-    add-directory-mapping 'compiler'
-    add-directory-mapping 'linter'
-    add-directory-mapping 'server'
-    add-directory-mapping 'client'
-
     # Individual packages under `local-modules` get pulled into `client`,
     # `server`, and `compiler` (as required by dependencies). We make a mapping
     # per package (and not just one for all of `local-modules`) exactly because
@@ -312,20 +307,43 @@ function copy-sources {
     echo 'Copying sources... done.'
 }
 
-# Does an `npm install` in the given directory, taking into account local
-# modules. After installation, applies local patches to installed modules.
+# Does an `npm install` of the indicated "main" module, in a directory with a
+# name that matches. (E.g., given `server`, it will install `@bayou/main-server`
+# into the directory `server`.) After installation, applies local patches to
+# installed external modules.
 function do-install {
-    local dir="$1"
-    local toDir="${outDir}/${dir}"
+    local moduleName="$1"
+    local toDir="${outDir}/${moduleName}"
     local npmDir="${toDir}/from-npm"
     local packageJson="${toDir}/package.json"
     local npmPackageJson="${toDir}/package-npm.json"
     local npmBinDir="${npmDir}/node_modules/.bin"
 
+    mkdir -p "${toDir}"
+
+    # Write a fresh top-level `package.json` every time. This will get
+    # immediately modified by `copy-local-dependencies`. The procedure is a
+    # relic from when top-level package files were actual source files and
+    # would change from time to time. **TODO:** Fix this janky bit of cruft.
+    (
+        echo '{'
+        echo "    \"name\": \"@bayou/top-package-for-${moduleName}\","
+        echo "    \"dependencies\": { \"@bayou/main-${moduleName}\": \"local\" },"
+
+        # These are irrelevant and are included just to prevent
+        # `npm install` from complaining.
+        echo "    \"version\": \"1.0.0\","
+        echo "    \"author\": \"The authors\","
+        echo "    \"repository\": \"none\","
+        echo "    \"description\": \"See contents.\","
+        echo "    \"license\": \"UNLICENSED\""
+        echo '}'
+    ) > "${packageJson}"
+
     # Integrates local module dependencies into this package. It copies the
     # required local modules and also rewrites the top-level `package.json` so
     # that it lists the transitive closure of external module dependencies.
-    echo "${dir}:" 'Copying local-module dependencies...'
+    echo "${moduleName}:" 'Copying local-module dependencies...'
     "${progDir}/lib/copy-local-dependencies" \
         --local-modules="${outDir}/local-modules" "${toDir}" \
     || return 1
@@ -334,12 +352,12 @@ function do-install {
            && cmp --quiet "${npmPackageJson}" "${packageJson}"; then
         # The `package.json` hasn't changed since we `npm install`ed, so we can
         # skip the rest of this function.
-        echo "${dir}:" \
+        echo "${moduleName}:" \
             'No change to external dependencies. Skipping `npm install`.'
         return
     fi
 
-    echo "${dir}:" 'Installing external dependencies...'
+    echo "${moduleName}:" 'Installing external dependencies...'
 
     # This runs `npm install` in a new empty directory, because as of npm v5,
     # npm _really really_ wants to manage all modules under `node_modules`, and
@@ -368,7 +386,7 @@ function do-install {
     # **Note:** We don't just `mv` (or `rsync --delete`) the whole
     # `node_modules` directory, because we want to keep our local modules.
 
-    echo "${dir}:" 'Moving external dependencies into place...'
+    echo "${moduleName}:" 'Moving external dependencies into place...'
 
     local d
     for d in $(cd "${npmDir}/node_modules"; /bin/ls -A); do
@@ -396,7 +414,7 @@ function do-install {
     # subsequent builds.
     rsync-archive "${packageJson}" "${npmPackageJson}" || return 1
 
-    echo "${dir}:" 'External dependencies... done.'
+    echo "${moduleName}:" 'External dependencies... done.'
 }
 
 # Builds the server code. This builds from `server` into `final/server`. The
