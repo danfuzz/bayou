@@ -406,7 +406,8 @@ function build-server {
     local fromDir="${outDir}/server"
     local toDir="${finalDir}/server"
 
-    # Find the `babel` script (provided by the `compiler` submodule).
+    # Find the script to invoke the Babel compiler (provided by the `compiler`
+    # subproject).
     local compile="$(find "${outDir}/compiler" -name 'bayou-compile')"
     if [[ ${compile} == '' ]]; then
         echo 'Could not find compiler script.' 1>&2
