@@ -35,8 +35,7 @@ can be used in.
 
 * `main-<name>` &mdash; A module which is the "main" (entry point) of a major
   subsystem. The `main-*` modules form the root of the dependency graph for the
-  system as a whole. **Note:** As of this writing, the project is in transition
-  and is inconsistent in its use of this kind of module.
+  system as a whole.
 
 ### Export conventions
 
