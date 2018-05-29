@@ -1,0 +1,21 @@
+{
+  "name": "@bayou/main-server",
+  "version": "1.0.0",
+
+  "bin": {
+    "bayou-server": "./index.js"
+  },
+
+  "dependencies": {
+    "@bayou/app-setup": "local",
+    "@bayou/client-bundle": "local",
+    "@bayou/deps-util-server": "local",
+    "@bayou/dev-mode": "local",
+    "@bayou/env-server": "local",
+    "@bayou/hooks-server": "local",
+    "@bayou/promise-util": "local",
+    "@bayou/see-all": "local",
+    "@bayou/see-all-server": "local",
+    "@bayou/testing-server": "local"
+  }
+}
