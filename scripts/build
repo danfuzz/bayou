@@ -226,34 +226,32 @@ function find-package-directories {
         | awk '{ gsub(/^\.\/|\/package\.json$/, ""); print $0; }'
 }
 
-# Adds new directory mappings for each subdirectory of a source directory which
+# Adds directory mappings for each subdirectory of `local-modules` which
 # appears to be a package (node module), as inferred by the existence of a
 # `package.json` file. This includes handling of overlays if they exist.
+#
+# **Note:** This arranges for a separate mapping file per local module, instead
+# of just a single mapping for all of `local-modules`, because the contents of
+# each subdirectory can end up getting overlaid differently, and because in the
+# final executed result the `local-modules` directory doesn't even exist.
 function add-package-directory-mappings {
-    local fromDir="$1"
+    local dirName="local-modules"
+    local basePath="${baseDir}/${dirName}"
+    local overlayPath="${overlayDir}/${dirName}"
 
     local names=($(
         (
-            find-package-directories "${baseDir}/${fromDir}"
-            if [[ (${overlayDir} != '') && -e "${overlayDir}/${fromDir}" ]]; then
-                find-package-directories "${overlayDir}/${fromDir}"
+            find-package-directories "${basePath}"
+            if [[ (${overlayDir} != '') && -e "${overlayPath}" ]]; then
+                find-package-directories "${overlayPath}"
             fi
         ) | sort -u
     ))
 
     local n
     for n in "${names[@]}"; do
-        add-directory-mapping "${fromDir}/${n}" "${fromDir}/${n}"
+        add-directory-mapping "${dirName}/${n}"
     done
-}
-
-# Sets up the directory mappings from the source into the `out` directory.
-function set-up-dir-mapping {
-    # Individual packages under `local-modules` get pulled into `client`,
-    # `server`, and `compiler` (as required by dependencies). We make a mapping
-    # per package (and not just one for all of `local-modules`) exactly because
-    # packages get pulled in (and overlaid) individually.
-    add-package-directory-mappings 'local-modules'
 }
 
 # Copies the server and client source directories into `out`, including the
@@ -424,10 +422,10 @@ function build-server {
     # Run Babel on all of the local source files, storing them next to the
     # imported and patched modules.
 
-    # Start with the main `server` source directory.
+    # Start with the main `server` directory.
     local srcDirs=("${fromDir}")
 
-    # Add each of the local modules that is used by `server`.
+    # Add each of the local modules that it uses.
     local name
     for name in $(local-module-names); do
         if [[ -d "${fromDir}/node_modules/${name}" ]]; then
@@ -593,7 +591,7 @@ echo 'Building...'
 
 (
     check-environment-dependencies \
-        && set-up-dir-mapping \
+        && add-package-directory-mappings \
         && copy-sources \
         && build-product-info
 ) || exit 1
