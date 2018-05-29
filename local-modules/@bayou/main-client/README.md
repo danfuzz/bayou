@@ -1,5 +1,5 @@
-main-client
-===========
+@bayou/main-client
+==================
 
 This module contains the top level code for the client, including a
 `package.json` which is specific to the client side. That is, the modules
