@@ -1,19 +1,8 @@
 {
-  "name": "bayou-linter",
+  "name": "@bayou/top-package-client",
   "version": "1.0.0",
-  "description": "Linter for Bayou",
-  "license": "Apache-2.0",
-  "author": "Dan Bornstein <danfuzz@milk.com>",
-  "contributors": [
-    "SEE AUTHORS.md"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/danfuzz/bayou.git"
-  },
 
   "dependencies": {
-    "eslint": "^4.7.1",
-    "eslint-plugin-react": "^7.4.0"
+    "@bayou/main-linter": "local"
   }
 }
