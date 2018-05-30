@@ -34,7 +34,7 @@ argError=0
 showHelp=0
 
 # List of subprojects to build.
-buildProjects=(compiler server client bin)
+buildProjects=(compiler server client bin product-info)
 
 # Overlay source directory, if any.
 overlayDir=''
@@ -140,8 +140,8 @@ function check-dependency {
 # Checks the versions of our various expected-installed dependencies, notably
 # including Node and npm.
 function check-environment-dependencies {
-    check-dependency 'Node' 'node --version' '^v[89]\.'
-    check-dependency 'npm' 'npm --version' '^5\.'
+    check-dependency 'Node' 'node --version' '^v\([89]\|10\)\.'
+    check-dependency 'npm' 'npm --version' '^[56]\.'
     check-dependency 'jq' 'jq --version' '^jq-1\.'
     check-dependency 'rsync' 'rsync --version' '.' # No actual version check.
 }
@@ -527,8 +527,11 @@ function rm-build-pid {
 # a bit if it looks like there's something running, and ultimately erroring out
 # if whatever is running never stops. Once no other build is running, this will
 # plop a file in the build directory to indicate that this process is the one
-# in charge.
+# in charge. If _this_ process is already set to be the one owning the build
+# (possible and expected during the second call to this function), then this
+# function returns promptly and successfully without any further action.
 function avoid-simultaneous-builds {
+    local thisPid="$$"
     local buildPidFile="${outDir}/build-pid.txt"
     local lastPid=''
     local waitSecs=0
@@ -538,7 +541,10 @@ function avoid-simultaneous-builds {
         # possible for there to be a race between two different would-be build
         # processes.
         local alreadyPid="$(cat "${buildPidFile}" 2>/dev/null)"
-        if [[ ${alreadyPid} == '' ]]; then
+        if [[ ${alreadyPid} == ${thisPid} ]]; then
+            # This PID is already running the show.
+            return
+        elif [[ ${alreadyPid} == '' ]]; then
             break
         fi
 
@@ -573,7 +579,7 @@ function avoid-simultaneous-builds {
     done
 
     # Write our PID into the file.
-    echo "$$" > "${buildPidFile}"
+    echo "${thisPid}" > "${buildPidFile}"
 }
 
 
@@ -581,6 +587,7 @@ function avoid-simultaneous-builds {
 # Main script
 #
 
+check-environment-dependencies || exit 1
 set-up-out || exit 1
 
 # Make sure only one build is running in any given output directory.
@@ -590,11 +597,13 @@ trap rm-build-pid SIGINT SIGTERM EXIT
 echo 'Building...'
 
 (
-    check-environment-dependencies \
-        && add-package-directory-mappings \
-        && copy-sources \
-        && build-product-info
+    add-package-directory-mappings \
+        && copy-sources
 ) || exit 1
+
+# Catches races between build runs that managed to start simultanously enough to
+# avoid noticing each other during the initial check.
+avoid-simultaneous-builds || exit 1
 
 for proj in "${buildProjects[@]}"; do
     "build-${proj}" || exit 1

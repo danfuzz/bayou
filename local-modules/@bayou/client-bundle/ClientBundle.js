@@ -57,6 +57,11 @@ const webpackOptions = {
   // inscrutable problems on Safari (v10.1.2). **TODO:** Investigate this.
   devtool: 'inline-source-map',
 
+  // We use `development` mode here, in that this module is the thing that does
+  // live (re-)building of the client code. For production, the expectation is
+  // that the client code will get built as part of the offline build process.
+  mode: 'development',
+
   entry: {
     main: [
       'babel-polyfill',

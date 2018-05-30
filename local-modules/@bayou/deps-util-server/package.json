@@ -3,14 +3,13 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "async-file": "^2.0.2",
-    "chokidar": "^1.6.1",
-    "content-type": "^1.0.2",
-    "fs-extra": "^3.0.1",
+    "chokidar": "^2.0.3",
+    "content-type": "^1.0.4",
+    "fs-extra": "^6.0.1",
     "is-running": "^2.1.0",
     "memory-fs": "^0.4.1",
     "minimist": "^1.2.0",
-    "source-map-support": "^0.5.0",
+    "source-map-support": "^0.5.6",
     "weak": "^1.0.1"
   }
 }
