@@ -4,7 +4,7 @@
 
   "dependencies": {
     "async-file": "^2.0.2",
-    "chokidar": "^1.6.1",
+    "chokidar": "^2.0.3",
     "content-type": "^1.0.4",
     "fs-extra": "^3.0.1",
     "is-running": "^2.1.0",
