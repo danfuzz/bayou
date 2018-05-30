@@ -2,8 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import afs from 'async-file';
-import fs from 'fs';
+import fse from 'fs-extra';
 import os from 'os';
 import path from 'path';
 
@@ -34,8 +33,8 @@ export default class TempFiles extends UtilityClass {
   static async doneWithFile(file) {
     await file.flush();
 
-    // This is a "deep delete" a la `rm -rf`.
-    await afs.delete(file.storagePath);
+    // This is a "deep remove" a la `rm -rf`.
+    await fse.remove(file.storagePath);
   }
 
   /**
@@ -86,7 +85,7 @@ export default class TempFiles extends UtilityClass {
   /** {string} The directory prefix to use for all paths. */
   static get _prefix() {
     if (!TempFiles._thePrefix) {
-      TempFiles._thePrefix = fs.mkdtempSync(path.join(os.tmpdir(), 'bayou-test-'));
+      TempFiles._thePrefix = fse.mkdtempSync(path.join(os.tmpdir(), 'bayou-test-'));
     }
 
     return TempFiles._thePrefix;

@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import afs from 'async-file';
+import fse from 'fs-extra';
 import path from 'path';
 
 import { Codec } from '@bayou/codec';
@@ -78,10 +78,10 @@ export default class LocalFileStore extends BaseFileStore {
       return;
     }
 
-    if (await afs.exists(this._dir)) {
+    if (await fse.pathExists(this._dir)) {
       log.detail('File storage directory already exists.');
     } else {
-      await afs.mkdir(this._dir);
+      await fse.mkdir(this._dir);
       log.info('Created file storage directory.');
     }
 

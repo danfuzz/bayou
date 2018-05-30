@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import afs from 'async-file';
+import fse from 'fs-extra';
 import path from 'path';
 
 import { Codec } from '@bayou/codec';
@@ -369,15 +369,15 @@ export default class LocalFile extends BaseFile {
   async _deleteStorage() {
     this._log.info('About to erase storage.');
 
-    const exists = await afs.exists(this._storagePath);
+    const exists = await fse.pathExists(this._storagePath);
 
     if (!exists) {
       this._log.info('Storage directory doesn\'t exist in the first place.');
       return true;
     }
 
-    // This is a "deep delete" a la `rm -rf`.
-    await afs.delete(this._storagePath);
+    // This is a "deep remove" a la `rm -rf`.
+    await fse.remove(this._storagePath);
     this._log.info('Erased storage directory.');
 
     // Reset the storage state instance variables. These should already be set
@@ -448,7 +448,7 @@ export default class LocalFile extends BaseFile {
    *   successfully read into memory.
    */
   async _readStorage() {
-    if (!await afs.exists(this._storagePath)) {
+    if (!await fse.pathExists(this._storagePath)) {
       // Directory doesn't actually exist. Just initialize empty storage.
       this._fileShouldExist = false;
       this._changes         = [];
@@ -463,7 +463,7 @@ export default class LocalFile extends BaseFile {
     // The directory exists. Read its contents.
     this._log.event.readingStorage('start');
 
-    const files       = await afs.readdir(this._storagePath);
+    const files       = await fse.readdir(this._storagePath);
     const changes     = [];
     let   changeCount = 0;
 
@@ -492,7 +492,7 @@ export default class LocalFile extends BaseFile {
       const n = LocalFile._revNumFromFsPath(f);
 
       if (n !== null) {
-        const bufProm = afs.readFile(path.resolve(this._storagePath, f));
+        const bufProm = fse.readFile(path.resolve(this._storagePath, f));
 
         bufPromMap.set(n, bufProm);
         changeCount++;
@@ -617,10 +617,10 @@ export default class LocalFile extends BaseFile {
 
     try {
       // If this call fails, then we assume the directory doesn't exist.
-      await afs.access(this._storagePath, afs.constants.F_OK);
+      await fse.access(this._storagePath, fse.constants.F_OK);
     } catch (e) {
       // The call failed.
-      await afs.mkdir(this._storagePath);
+      await fse.mkdir(this._storagePath);
       this._log.event.created();
     }
 
@@ -630,7 +630,7 @@ export default class LocalFile extends BaseFile {
     for (const [revNum, data] of dirtyValues) {
       const fsPath = this._fsPathFromRevNum(revNum);
 
-      afsResults.push(afs.writeFile(fsPath, data.toBuffer()));
+      afsResults.push(fse.writeFile(fsPath, data.toBuffer()));
       this._log.event.wroteChange(revNum);
 
       if (afsResults.length >= MAX_PARALLEL_FS_CALLS) {
