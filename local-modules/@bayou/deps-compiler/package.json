@@ -3,19 +3,19 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "babel-core": "^6.22.0",
+    "babel-core": "^6.26.0",
     "babel-loader": "^7.0.0",
-    "babel-polyfill": "^6.22.0",
-    "babel-preset-env": "^1.4.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
     "babel-preset-react": "^6.24.1",
-    "css-loader": "^0.28.5",
-    "html-loader": "^0.4.4",
+    "css-loader": "^0.28.11",
+    "html-loader": "^0.5.5",
     "less": "^2.7.2",
-    "less-loader": "^4.0.5",
-    "source-map-loader": "^0.2.1",
-    "style-loader": "^0.18.2",
+    "less-loader": "^4.1.0",
+    "source-map-loader": "^0.2.3",
+    "style-loader": "^0.21.0",
     "ts-loader": "^2.0.3",
-    "typescript": "^2.1.4",
+    "typescript": "^2.8.3",
     "webpack": "^3.10.0"
   }
 }
