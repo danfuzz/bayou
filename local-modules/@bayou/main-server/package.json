@@ -1,18 +1,9 @@
 {
-  "name": "bayou-server",
+  "name": "@bayou/main-server",
   "version": "1.0.0",
-  "description": "Server code for Bayou",
-  "license": "Apache-2.0",
-  "author": "Dan Bornstein <danfuzz@milk.com>",
-  "contributors": [
-    "SEE AUTHORS.md"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/danfuzz/bayou.git"
-  },
-  "scripts": {
-    "start": "node ./index.js"
+
+  "bin": {
+    "bayou-server": "./index.js"
   },
 
   "dependencies": {

@@ -3,17 +3,14 @@ Development Guide
 
 ### Directory structure
 
-* `client` &mdash; Client code and static assets. The main client-side
-  application entrypoint is `js/index.js`.
-* `compiler` &mdash; Submodule used to build the server-side code, using Babel
-  in an appropriately-configured manner.
 * `doc` &mdash; Project documentation.
 * `etc` &mdash; A dumping ground for miscellaneous files.
-* `local-modules` &mdash; JavaScript module code (Node modules, essentially)
-  which can be used on both the client and server sides.
+* `local-modules` &mdash; JavaScript module code (Node modules, essentially),
+  some of which is used on the client, some of which is used on the server, and
+  some of which works in both contexts. Modules prefixed `main-` are the main
+  entrypoints into the system. (See those directories for details.)
 * `out` &mdash; Where the results of doing a build end up (by default).
 * `scripts` &mdash; Scripts for use during development (see above).
-* `server` &mdash; Server code. The main entrypoint is `index.js`.
 
 ### Build and Run
 
