@@ -54,7 +54,7 @@ export default class RequestLogger extends CommonBase {
     const url     = new URL(req.url, 'http://x.x');
 
     const details = {
-      ip:     'TBD', // **TODO**
+      ip:     req.socket.remoteAddress,
       method: req.method,
       query:  fromPairs([...url.searchParams])
     };
