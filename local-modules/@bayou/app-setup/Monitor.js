@@ -46,7 +46,8 @@ export default class Monitor extends CommonBase {
     /** {http.Server} The server that directly answers HTTP requests. */
     this._server = http.createServer(this._app);
 
-    RequestLogger.addLoggers(this._app, log);
+    /** {RequestLogger} HTTP request / response logger. */
+    this._requestLogger = new RequestLogger(log);
 
     this._addRoutes();
   }
@@ -71,6 +72,9 @@ export default class Monitor extends CommonBase {
    */
   _addRoutes() {
     const app = this._app;
+
+    // Logging.
+    app.use(this._requestLogger.expressMiddleware);
 
     app.get('/health', async (req_unused, res) => {
       const [status, text] = await this._mainApplication.isHealthy()
