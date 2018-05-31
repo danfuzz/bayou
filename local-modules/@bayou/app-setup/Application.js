@@ -191,6 +191,10 @@ export default class Application extends CommonBase {
       } catch (e) {
         log.error('Trouble with API websocket connection:', e);
       }
+
+    });
+    wsServer.on('headers', (headers, req) => {
+      this._requestLogger.logWebsocketRequest(req, headers);
     });
   }
 
