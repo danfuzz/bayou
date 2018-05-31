@@ -86,7 +86,8 @@ export default class Application extends CommonBase {
      */
     this._serverId = Application._makeIdString();
 
-    RequestLogger.addLoggers(this._app, log);
+    /** {RequestLogger} HTTP request / response logger. */
+    this._requestLogger = new RequestLogger(log);
 
     this._addRoutes();
 
@@ -142,6 +143,9 @@ export default class Application extends CommonBase {
    */
   _addRoutes() {
     const app = this._app;
+
+    // Logging.
+    app.use(this._requestLogger.expressMiddleware);
 
     // Thwack the `X-Powered-By` header that Express provides by default,
     // replacing it with something that identifies this product.

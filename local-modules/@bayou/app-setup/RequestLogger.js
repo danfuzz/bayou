@@ -14,17 +14,6 @@ import { CommonBase, Random } from '@bayou/util-common';
  */
 export default class RequestLogger extends CommonBase {
   /**
-   * Add all the loggers for the given application.
-   *
-   * @param {object} app The `express` application.
-   * @param {Logger} log The logger instance to use.
-   */
-  static addLoggers(app, log) {
-    const instance = new RequestLogger(log);
-    app.use(instance.expressMiddleware);
-  }
-
-  /**
    * Constructs an instance.
    *
    * @param {Logger} log Logger to use.
