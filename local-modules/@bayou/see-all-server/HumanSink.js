@@ -330,9 +330,7 @@ export default class HumanSink extends BaseSink {
     const skipEnd  = this._skipEndTime;
 
     if (!HumanSink._isSkippable(logRecord)) {
-      if (timeMsec >= skipEnd) {
-        emitSkipLogIfNecessary();
-      }
+      emitSkipLogIfNecessary();
       return false;
     } else if (timeMsec >= skipEnd) {
       emitSkipLogIfNecessary();
