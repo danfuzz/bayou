@@ -3,9 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import express from 'express';
-import express_ws from 'express-ws';
 import http from 'http';
 import path from 'path';
+import ws from 'ws';
 
 import { BearerToken, Context, PostConnection, WsConnection } from '@bayou/api-server';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
@@ -85,9 +85,6 @@ export default class Application extends CommonBase {
      * headers.
      */
     this._serverId = Application._makeIdString();
-
-    // Make the webserver able to handle websockets.
-    express_ws(this._app, this._server);
 
     RequestLogger.addLoggers(this._app, log);
 
@@ -171,6 +168,7 @@ export default class Application extends CommonBase {
 
     // Use the `@bayou/api-server` module to handle POST and websocket requests
     // at `/api`.
+
     app.post('/api',
       (req, res) => {
         try {
@@ -179,14 +177,17 @@ export default class Application extends CommonBase {
           log.error('Trouble with API request:', e);
         }
       });
-    app.ws('/api',
-      (ws, req) => {
-        try {
-          new WsConnection(ws, req, this._context);
-        } catch (e) {
-          log.error('Trouble with API request:', e);
-        }
-      });
+
+    // **Note:** The following causes the websocket server instance to capture
+    // the request before Express has an opportunity to dispatch at all.
+    const wsServer = new ws.Server({ server: this._server, path: '/api' });
+    wsServer.on('connection', (wsSocket, req) => {
+      try {
+        new WsConnection(wsSocket, req, this._context);
+      } catch (e) {
+        log.error('Trouble with API websocket connection:', e);
+      }
+    });
   }
 
   /**
