@@ -3,9 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import express from 'express';
-import express_ws from 'express-ws';
 import http from 'http';
 import path from 'path';
+import ws from 'ws';
 
 import { BearerToken, Context, PostConnection, WsConnection } from '@bayou/api-server';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
@@ -86,10 +86,8 @@ export default class Application extends CommonBase {
      */
     this._serverId = Application._makeIdString();
 
-    // Make the webserver able to handle websockets.
-    express_ws(this._app, this._server);
-
-    RequestLogger.addLoggers(this._app, log);
+    /** {RequestLogger} HTTP request / response logger. */
+    this._requestLogger = new RequestLogger(log);
 
     this._addRoutes();
 
@@ -146,6 +144,9 @@ export default class Application extends CommonBase {
   _addRoutes() {
     const app = this._app;
 
+    // Logging.
+    app.use(this._requestLogger.expressMiddleware);
+
     // Thwack the `X-Powered-By` header that Express provides by default,
     // replacing it with something that identifies this product.
     app.use((req_unused, res, next) => {
@@ -171,6 +172,7 @@ export default class Application extends CommonBase {
 
     // Use the `@bayou/api-server` module to handle POST and websocket requests
     // at `/api`.
+
     app.post('/api',
       (req, res) => {
         try {
@@ -179,14 +181,21 @@ export default class Application extends CommonBase {
           log.error('Trouble with API request:', e);
         }
       });
-    app.ws('/api',
-      (ws, req) => {
-        try {
-          new WsConnection(ws, req, this._context);
-        } catch (e) {
-          log.error('Trouble with API request:', e);
-        }
-      });
+
+    // **Note:** The following causes the websocket server instance to capture
+    // the request before Express has an opportunity to dispatch at all.
+    const wsServer = new ws.Server({ server: this._server, path: '/api' });
+    wsServer.on('connection', (wsSocket, req) => {
+      try {
+        new WsConnection(wsSocket, req, this._context);
+      } catch (e) {
+        log.error('Trouble with API websocket connection:', e);
+      }
+
+    });
+    wsServer.on('headers', (headers, req) => {
+      this._requestLogger.logWebsocketRequest(req, headers);
+    });
   }
 
   /**

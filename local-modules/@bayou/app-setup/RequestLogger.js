@@ -2,6 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { fromPairs } from 'lodash';
+import { URL } from 'url';
+
 import { Logger } from '@bayou/see-all';
 import { CommonBase, Random } from '@bayou/util-common';
 
@@ -13,17 +16,6 @@ import { CommonBase, Random } from '@bayou/util-common';
  * developer's console.
  */
 export default class RequestLogger extends CommonBase {
-  /**
-   * Add all the loggers for the given application.
-   *
-   * @param {object} app The `express` application.
-   * @param {Logger} log The logger instance to use.
-   */
-  static addLoggers(app, log) {
-    const instance = new RequestLogger(log);
-    app.use(instance.expressMiddleware);
-  }
-
   /**
    * Constructs an instance.
    *
@@ -43,7 +35,46 @@ export default class RequestLogger extends CommonBase {
    * response) logging.
    */
   get expressMiddleware() {
-    return this._logRequest.bind(this);
+    return this._logExpressRequest.bind(this);
+  }
+
+  /**
+   * Logs a websocket request.
+   *
+   * @param {object} req The HTTP request, which is assumed to be a
+   *   successfully-upgraded websocket.
+   * @param {array<string>} responseHeaderLines Response header, including
+   *   status code and key-value pairs.
+   */
+  logWebsocketRequest(req, responseHeaderLines) {
+    const id = Random.shortLabel('req');
+
+    // Second arg (base URL) is needed because `req.url` doesn't come with a
+    // protocol or host.
+    const url     = new URL(req.url, 'http://x.x');
+
+    const details = {
+      ip:     req.socket.remoteAddress,
+      method: req.method,
+      query:  fromPairs([...url.searchParams])
+    };
+
+    this._log.event.websocketRequest(id, url.pathname, details, req.headers);
+
+    // Turn the response array into a status code and an object that matches the
+    // form of the usual `headers` on an HTTP response object.
+
+    const statusString    = responseHeaderLines[0].match(/^HTTP[^ ]* ([0-9]+)/)[1];
+    const statusInt       = parseInt(statusString);
+    const status          = isNaN(statusInt) ? statusString : statusInt;
+    const responseHeaders = {};
+
+    for (let i = 1; i < responseHeaderLines.length; i++) {
+      const match = responseHeaderLines[i].match(/([^:]+): *(.*[^ ]) *$/);
+      responseHeaders[match[1].toLowerCase()] = match[2];
+    }
+
+    this._log.event.websocketResponse(id, status, responseHeaders);
   }
 
   /**
@@ -55,52 +86,27 @@ export default class RequestLogger extends CommonBase {
    * @param {function} next Function to call in order to continue request
    *   dispatch.
    */
-  _logRequest(req, res, next) {
-    const isWs = RequestLogger._isWsRequest(req);
+  _logExpressRequest(req, res, next) {
+    const id = Random.shortLabel('req');
 
-    // `express-ws` appends a pseudo-path `/.websocket` to the end of
-    // websocket requests. We chop that off here.
-    const url = isWs
-      ? req.originalUrl.replace(/[/]\.websocket$/, '')
-      : req.originalUrl;
-
-    // **Note:** `url` is put in the top-level event and not the details
-    // because it is so handy and deserves prominent placement.
-    const requestDetails = {
-      hostname: req.hostname,
+    // **Note:** This doesn't include `url` or `headers`, as those end up in the
+    // top level of the logged event because they are so handy and deserve
+    // prominent placement.
+    const details = {
       ip:       req.ip,
       method:   req.method,
-      params:   req.params,
       query:    req.query
     };
 
-    if (isWs) {
-      this._log.event.wsRequest(url, requestDetails, req.headers);
-    } else {
-      const id = Random.shortLabel('req');
+    this._log.event.httpRequest(id, req.originalUrl, details, req.headers);
 
-      this._log.event.httpRequest(id, url, requestDetails, req.headers);
-
-      res.on('finish', () => {
-        // Make the headers a plain object, so it gets logged in a clean
-        // fashion.
-        const responseHeaders = Object.assign({}, res.getHeaders());
-        this._log.event.httpResponse(id, res.statusCode, responseHeaders);
-      });
-    }
+    res.on('finish', () => {
+      // Make the headers a plain object, so it gets logged in a clean
+      // fashion.
+      const responseHeaders = Object.assign({}, res.getHeaders());
+      this._log.event.httpResponse(id, res.statusCode, responseHeaders);
+    });
 
     next();
-  }
-
-  /**
-   * Returns whether or not the given request is a websocket request.
-   *
-   * @param {object} req Request object.
-   * @returns {boolean} `true` iff the given request is a websocket request.
-   */
-  static _isWsRequest(req) {
-    // Case doesn't matter, hence the regex test instead of just `===`.
-    const upgrade = req.get('upgrade');
-    return (upgrade !== undefined) && upgrade.match(/^websocket$/i);
   }
 }
