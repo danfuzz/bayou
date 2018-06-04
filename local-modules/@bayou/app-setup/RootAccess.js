@@ -4,10 +4,11 @@
 
 import { SplitKey } from '@bayou/api-common';
 import { Context } from '@bayou/api-server';
+import { DocumentId } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
 import { Hooks } from '@bayou/hooks-server';
+import { AuthorId } from '@bayou/ot-common';
 import { Logger } from '@bayou/see-all';
-import { TString } from '@bayou/typecheck';
 
 /** Logger. */
 const log = new Logger('root-access');
@@ -41,8 +42,8 @@ export default class RootAccess {
    *   requested access.
    */
   async makeAccessKey(authorId, docId) {
-    TString.nonEmpty(authorId);
-    TString.nonEmpty(docId);
+    AuthorId.check(authorId);
+    DocumentId.check(docId);
 
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
 

@@ -5,6 +5,7 @@
 import weak from 'weak';
 
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
+import { DocumentId } from '@bayou/doc-common';
 import { Hooks } from '@bayou/hooks-server';
 import { Logger } from '@bayou/see-all';
 import { TFunction, TString } from '@bayou/typecheck';
@@ -61,7 +62,7 @@ export default class DocServer extends Singleton {
    * @returns {FileComplex} The corresponding `FileComplex`.
    */
   async getFileComplex(docId) {
-    TString.nonEmpty(docId);
+    DocumentId.check(docId);
 
     // Look for a cached or in-progress result.
 
