@@ -13,6 +13,7 @@
     "@bayou/dev-mode": "local",
     "@bayou/env-server": "local",
     "@bayou/hooks-server": "local",
+    "@bayou/injecty": "local",
     "@bayou/promise-util": "local",
     "@bayou/see-all": "local",
     "@bayou/see-all-server": "local",
