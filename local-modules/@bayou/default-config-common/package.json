@@ -1,0 +1,8 @@
+{
+  "name": "@bayou/default-config-common",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "@bayou/typecheck": "local"
+  }
+}

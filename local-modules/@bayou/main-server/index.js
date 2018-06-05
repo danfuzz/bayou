@@ -20,6 +20,7 @@ import { inspect } from 'util';
 
 import { Application, Monitor } from '@bayou/app-setup';
 import { ClientBundle } from '@bayou/client-bundle';
+import { injectAll } from '@bayou/default-config-common';
 import { DevMode } from '@bayou/dev-mode';
 import { Dirs, ProductInfo, ServerEnv } from '@bayou/env-server';
 import { Hooks } from '@bayou/hooks-server';
@@ -177,7 +178,15 @@ if (showHelp || argError) {
  * @returns {Int} The port being listened on, once listening has started.
  */
 async function run(mode, doMonitor = false) {
+  // Inject all the system configs. **TODO:** This module needs to be split
+  // apart such that a _different_ "main" module can choose to perform different
+  // configuration and still reuse most of the code defined in _this_ module.
+  injectAll();
+
   // Give the overlay a chance to do any required early initialization.
+  // **TODO:** This is the old way of doing configuration, as opposed to using
+  // {@link @bayou/injecty#inject}, and should be transitioned over to that
+  // style.
   await Hooks.theOne.run();
 
   // Set up the server environment bits (including, e.g. the PID file).
