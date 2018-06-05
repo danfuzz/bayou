@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { BaseProxyHandler } from '@bayou/util-common';
 
 describe('@bayou/util-common/BaseProxyHandler', () => {
-  describe('makeProxy', () => {
+  describe('makeProxy()', () => {
     it('should construct a proxy around an instance of the called-upon subclass', () => {
       let gotArgs = null;
       let gotTarget = null;

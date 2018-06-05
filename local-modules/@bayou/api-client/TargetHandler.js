@@ -15,18 +15,6 @@ import { Functor, MethodCacheProxyHandler } from '@bayou/util-common';
  */
 export default class TargetHandler extends MethodCacheProxyHandler {
   /**
-   * Makes a proxy that is handled by an instance of this class.
-   *
-   * @param {function} sendMessage Function to call to send a message. See
-   *   {@link TargetMap#constructor} for an explanation.
-   * @param {string} targetId The ID of the target to call on.
-   * @returns {Proxy} An appropriately-constructed proxy object.
-   */
-  static makeProxy(sendMessage, targetId) {
-    return new Proxy(Object.freeze({}), new TargetHandler(sendMessage, targetId));
-  }
-
-  /**
    * Constructs an instance.
    *
    * @param {function} sendMessage Function to call to send a message. See
