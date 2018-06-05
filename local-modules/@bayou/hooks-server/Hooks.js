@@ -91,7 +91,7 @@ export default class Hooks extends Singleton {
    * This method is only ever called with a non-empty string.
    *
    * The default implementation of this method defers to the configured function
-   * {@link @bayou/config-common#isDocumentId()}.
+   * {@link @bayou/config-common#isDocumentId}.
    *
    * @param {string} id The (alleged) file ID to check.
    * @returns {boolen} `true` iff `id` is syntactically valid.
