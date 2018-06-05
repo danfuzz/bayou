@@ -9,7 +9,7 @@
   "dependencies": {
     "@bayou/app-setup": "local",
     "@bayou/client-bundle": "local",
-    "@bayou/default-config-common": "local",
+    "@bayou/config-common-default": "local",
     "@bayou/deps-util-server": "local",
     "@bayou/dev-mode": "local",
     "@bayou/env-server": "local",

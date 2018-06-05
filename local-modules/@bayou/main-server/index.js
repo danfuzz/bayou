@@ -20,7 +20,7 @@ import { inspect } from 'util';
 
 import { Application, Monitor } from '@bayou/app-setup';
 import { ClientBundle } from '@bayou/client-bundle';
-import { injectAll } from '@bayou/default-config-common';
+import { injectAll } from '@bayou/config-common-default';
 import { DevMode } from '@bayou/dev-mode';
 import { Dirs, ProductInfo, ServerEnv } from '@bayou/env-server';
 import { Hooks } from '@bayou/hooks-server';

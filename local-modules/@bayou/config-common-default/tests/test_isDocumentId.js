@@ -5,24 +5,24 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { isAuthorId } from '@bayou/default-config-common';
+import { isDocumentId } from '@bayou/config-common-default';
 
-describe('@bayou/default-config-common', () => {
-  describe('isAuthorId()', () => {
+describe('@bayou/config-common-default', () => {
+  describe('isDocumentId(id)', () => {
     it('should accept 32-character alphanum ASCII strings', () => {
-      assert.isTrue(isAuthorId('123abc7890ABC456789012'));
+      assert.isTrue(isDocumentId('123abc7890ABC456789012'));
     });
 
     it('should allow underscores and hyphens', () => {
-      assert.isTrue(isAuthorId('123456789_123456789-12'));
+      assert.isTrue(isDocumentId('123456789_123456789-12'));
     });
 
     it('should not allow non-ASCII characters', () => {
-      assert.isFalse(isAuthorId('123456789•123456789•12'));
+      assert.isFalse(isDocumentId('123456789•123456789•12'));
     });
 
     it('should not allow non-alphanum characters', () => {
-      assert.isFalse(isAuthorId('123456789\t123456789+12'));
+      assert.isFalse(isDocumentId('123456789\t123456789+12'));
     });
   });
 });

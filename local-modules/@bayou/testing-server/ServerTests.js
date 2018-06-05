@@ -8,7 +8,7 @@ import fs from 'fs';
 import Mocha from 'mocha';
 import { promisify } from 'util';
 
-import { injectAll } from '@bayou/default-config-common';
+import { injectAll } from '@bayou/config-common-default';
 import { Logger } from '@bayou/see-all';
 import { UtilityClass } from '@bayou/util-common';
 

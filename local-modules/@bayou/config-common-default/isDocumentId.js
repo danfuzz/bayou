@@ -5,12 +5,11 @@
 import { TString } from '@bayou/typecheck';
 
 /**
- * Checks whether the given value is syntactically valid as a document ID.
- * This method is only ever called with a non-empty string.
+ * Implementation of standard configuration point.
  *
- * The default implementation of this method requires that document IDs have
- * no more than 32 characters and only use ASCII alphanumerics plus dash (`-`)
- * and underscore (`_`).
+ * This implementation requires that document IDs have no more than 32
+ * characters and only use ASCII alphanumerics plus dash (`-`) and underscore
+ * (`_`).
  *
  * @param {string} id The (alleged) document ID to check.
  * @returns {boolen} `true` iff `id` is syntactically valid.

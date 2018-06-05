@@ -8,7 +8,7 @@
   "dependencies": {
     "@bayou/api-common": "local",
     "@bayou/app-common": "local",
-    "@bayou/default-config-common": "local",
+    "@bayou/config-common-default": "local",
     "@bayou/doc-client": "local",
     "@bayou/env-client": "local",
     "@bayou/see-all-client": "local",

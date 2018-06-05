@@ -1,5 +1,5 @@
 {
-  "name": "@bayou/default-config-common",
+  "name": "@bayou/config-common-default",
   "version": "1.0.0",
 
   "dependencies": {
