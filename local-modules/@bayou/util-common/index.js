@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import BaseProxyHandler from './BaseProxyHandler';
 import ColorSelector from './ColorSelector';
 import ColorUtil from './ColorUtil';
 import DeferredLoader from './DeferredLoader';
@@ -17,6 +18,7 @@ import Units from './Units';
 import WebsocketCodes from './WebsocketCodes';
 
 export {
+  BaseProxyHandler,
   ColorSelector,
   ColorUtil,
   DeferredLoader,

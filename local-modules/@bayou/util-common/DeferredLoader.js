@@ -5,10 +5,12 @@
 import { TFunction, TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
+import BaseProxyHandler from './BaseProxyHandler';
+
 /**
  * Proxy handler for deferred loaders.
  */
-class DeferredLoaderHandler {
+class DeferredLoaderHandler extends BaseProxyHandler {
   /**
    * Constructs an instance.
    *
@@ -16,6 +18,8 @@ class DeferredLoaderHandler {
    * @param {function} loaderFunction Target loader function.
    */
   constructor(label, loaderFunction) {
+    super();
+
     /** {string} Label to use when reporting errors. */
     this._label = TString.nonEmpty(label);
 
