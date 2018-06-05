@@ -17,6 +17,8 @@ export default class Configuration extends CommonBase {
 
     /** {Map<string,*>} All injected configurations. */
     this._items = new Map();
+
+    Object.freeze(this);
   }
 
   /**

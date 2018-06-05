@@ -20,6 +20,8 @@ export default class UseHandler extends BaseProxyHandler {
 
     /** {ConfigMap} Map to retrieve injected configurations from. */
     this._map = ConfigMap.check(map);
+
+    Object.freeze(this);
   }
 
   /**

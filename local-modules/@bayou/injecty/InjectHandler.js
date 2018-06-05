@@ -20,6 +20,8 @@ export default class InjectHandler extends BaseProxyHandler {
 
     /** {ConfigMap} Map to store injected configurations into. */
     this._map = ConfigMap.check(map);
+
+    Object.freeze(this);
   }
 
   /**
