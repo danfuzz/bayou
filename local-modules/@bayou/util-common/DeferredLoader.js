@@ -8,9 +8,22 @@ import { Errors } from '@bayou/util-common';
 import BaseProxyHandler from './BaseProxyHandler';
 
 /**
- * Proxy handler for deferred loaders.
+ * Creator of "deferred loaders," in the form of a proxy handler class. A
+ * deferred loader instance is a proxy which is initially "empty," and then
+ * becomes populated the first time an attempt is made to access it. During the
+ * first access, it calls on a loader function to load up the "real" target, and
+ * then it uses that target for all accesses.
+ *
+ * The easiest way to use this class is via the {@link
+ # BaseProxyHandler#makeProxy()} static method.
+ *
+ * The point of this class is to help break module dependency cycles. By using
+ * this class, it is possible to effectively "import" a module just before it is
+ * used, which can be _after_ it is fully initialized. This makes it so that the
+ * imported module can actually depend on the module doing the loading (as long
+ * as it doesn't _immediately_ use circularly-depended functionality).
  */
-class DeferredLoaderHandler extends BaseProxyHandler {
+export default class DeferredLoader extends BaseProxyHandler {
   /**
    * Constructs an instance.
    *
@@ -75,36 +88,5 @@ class DeferredLoaderHandler extends BaseProxyHandler {
     }
 
     return result;
-  }
-}
-
-/**
- * Creator of "deferred loaders." An delayed loader instance is a proxy which
- * is initially "empty" until the first time an attempt is made to access it.
- * During the first access, it calls on a loader to load up the "real" target,
- * and then it uses that target for all accesses.
- *
- * The way to use this class is via the `makeProxy()` static method (see which).
- *
- * The point of this class is to help break module dependency cycles. By using
- * a proxy created by this class, it is possible to effectively "import" a
- * module just before it is used, which can be _after_ it is fully initialized.
- * This makes it so that the imported module can actually depend on the module
- * doing the loading (as long as it doesn't _immediately_ use
- * circularly-depended functionality).
- */
-export default class DeferredLoader {
-  /**
-   * Makes a deferred loader proxy.
-   *
-   * @param {string} label Label to use when reporting errors.
-   * @param {function} loaderFunction Function to call in order to perform the
-   *   loading of the target. Expected to return the target.
-   * @returns {Proxy} A deferred loader proxy.
-   */
-  static makeProxy(label, loaderFunction) {
-    return new Proxy(
-      Object.freeze({}),
-      new DeferredLoaderHandler(label, loaderFunction));
   }
 }
