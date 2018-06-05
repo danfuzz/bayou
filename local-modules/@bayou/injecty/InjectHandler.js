@@ -34,7 +34,7 @@ export default class InjectHandler extends BaseProxyHandler {
    * @returns {boolean} `true`, always.
    */
   set(target_unused, property, value, receiver_unused) {
-    this._map.set(property, value);
+    this._map.add(property, value);
     return true;
   }
 }
