@@ -46,13 +46,17 @@ Bayou is set up to make it straightforward to customize. Salient details:
     a directory to use for additional sources. There are two main things that
     can be accomplished with overlays. Namely…
 
-  * The project provides a number of predefined hooks, both on the client and
-    server side. By default, the hooks are all no-ops or have very simple
-    default behavior. However, the overlay can contain replacements for these
-    hooks. Hooks are located in the local modules `@bayou/hooks-common`,
-    `@bayou/hooks-client`, and `@bayou/hooks-server`. Customization is a matter
-    of selectively copying files from those modules into the overlay and editing
-    to suit.
+  * The project provides a number of injectable configuration points (values,
+    functions, or objects), both on the client and server side. Default
+    implementations of the configurations are all no-ops or have very simple
+    behavior. However, a complete system may choose to provide alternate
+    implementations. See the modules `@bayou/config-*` for documentation on all
+    configuration points.
+
+    **Note:** The system is currently in transition from a source-overlay-based
+    hooks mechanism, which is similar in intent but "upside down" in
+    implementation. **TODO:** Remove this note once the system is completely
+    converted to the new configuration mechanism.
 
   * Because no amount of explicit configuration hooks will ever turn out to be
     fully adequate, any original source file at all can be overridden with a
@@ -60,7 +64,8 @@ Bayou is set up to make it straightforward to customize. Salient details:
     it will at least unblock progress while still allowing the upstream source
     to remain unforked. Should you find yourself in need of this facility,
     please do not hesitate to file an issue, as this is a good indicator that
-    the project is in need of a new hook to cover the use case in question.
+    the project is in need of a refactoring, and possibly a new configuration
+    point, to cover the use case in question.
 
 - - - - - - - - - -
 
