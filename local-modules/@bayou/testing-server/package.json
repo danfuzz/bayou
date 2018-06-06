@@ -3,6 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
+    "@bayou/config-common-default": "local",
     "@bayou/deps-ansi-color": "local",
     "@bayou/deps-testing-common": "local",
     "@bayou/deps-testing-server": "local",

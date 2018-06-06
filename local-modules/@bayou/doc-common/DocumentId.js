@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Hooks } from '@bayou/hooks-common';
+import { isDocumentId } from '@bayou/config-common';
 import { Errors, UtilityClass } from '@bayou/util-common';
 
 /**
@@ -10,7 +10,7 @@ import { Errors, UtilityClass } from '@bayou/util-common';
  * strings. This is just where the type checker code lives.
  *
  * At a minimum a document ID has to be a non-empty string. Beyond that, the
- * required syntax is determined via `@bayou/hooks-common`.
+ * required syntax is determined via `@bayou/config-common`.
  */
 export default class DocumentId extends UtilityClass {
   /**
@@ -22,7 +22,7 @@ export default class DocumentId extends UtilityClass {
   static check(value) {
     if (   (typeof value !== 'string')
         || (value.length === 0)
-        || !Hooks.theOne.isDocumentId(value)) {
+        || !isDocumentId(value)) {
       throw Errors.badValue(value, DocumentId);
     }
 

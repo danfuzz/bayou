@@ -5,7 +5,7 @@
 import path from 'path';
 
 import { LocalFileStore } from '@bayou/file-store-local';
-import { Hooks as hooksCommon_Hooks } from '@bayou/hooks-common';
+import { isDocumentId } from '@bayou/config-common';
 import { Singleton } from '@bayou/util-common';
 
 import BearerTokens from './BearerTokens';
@@ -90,14 +90,14 @@ export default class Hooks extends Singleton {
    * Checks whether the given value is syntactically valid as a file ID.
    * This method is only ever called with a non-empty string.
    *
-   * The default implementation of this method is to defer to the hook
-   * `@bayou/hooks-common.Hooks.theOne.isDocumentId()`.
+   * The default implementation of this method defers to the configured function
+   * {@link @bayou/config-common#isDocumentId}.
    *
    * @param {string} id The (alleged) file ID to check.
    * @returns {boolen} `true` iff `id` is syntactically valid.
    */
   isFileId(id) {
-    return hooksCommon_Hooks.theOne.isDocumentId(id);
+    return isDocumentId(id);
   }
 
   /**

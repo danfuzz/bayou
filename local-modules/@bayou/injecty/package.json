@@ -1,8 +1,9 @@
 {
-  "name": "@bayou/hooks-common",
+  "name": "@bayou/injecty",
   "version": "1.0.0",
 
   "dependencies": {
+    "@bayou/typecheck": "local",
     "@bayou/util-common": "local"
   }
 }

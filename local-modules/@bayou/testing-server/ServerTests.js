@@ -8,6 +8,7 @@ import fs from 'fs';
 import Mocha from 'mocha';
 import { promisify } from 'util';
 
+import { injectAll } from '@bayou/config-common-default';
 import { Logger } from '@bayou/see-all';
 import { UtilityClass } from '@bayou/util-common';
 
@@ -33,6 +34,11 @@ export default class ServerTests extends UtilityClass {
    * @returns {boolean} `true` iff there were any test failures.
    */
   static async run(testOut) {
+    // Inject all the system configs. **TODO:** This module needs to be adjusted
+    // such that it's possible to run the server tests with an injected
+    // configuration other than the default.
+    injectAll();
+
     const testFiles = TestFiles.allServerFiles();
 
     // The hacky arrangement with `reporterHolder` is how we exfiltrate the

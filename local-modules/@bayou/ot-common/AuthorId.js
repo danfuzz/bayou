@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Hooks } from '@bayou/hooks-common';
+import { isAuthorId } from '@bayou/config-common';
 import { Errors, UtilityClass } from '@bayou/util-common';
 
 /**
@@ -11,7 +11,7 @@ import { Errors, UtilityClass } from '@bayou/util-common';
  * lives.
  *
  * At a minimum a non-null author ID has to be a non-empty string. Beyond that,
- * the required syntax is determined via `@bayou/hooks-common`.
+ * the required syntax is determined via `@bayou/config-common`.
  */
 export default class AuthorId extends UtilityClass {
   /**
@@ -29,7 +29,7 @@ export default class AuthorId extends UtilityClass {
 
     if (   (typeof value !== 'string')
         || (value.length === 0)
-        || !Hooks.theOne.isAuthorId(value)) {
+        || !isAuthorId(value)) {
       throw Errors.badValue(value, AuthorId);
     }
 

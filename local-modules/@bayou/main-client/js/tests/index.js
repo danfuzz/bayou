@@ -6,10 +6,15 @@
  * Top-level entry point for client tests.
  */
 
+import { injectAll } from '@bayou/config-common-default';
 import { ClientEnv } from '@bayou/env-client';
 import { Logger } from '@bayou/see-all';
 import { ClientSink } from '@bayou/see-all-client';
 import { Tests } from '@bayou/testing-client';
+
+// Inject all the system configs. **TODO:** See comment on similar call in
+// `../index.js`.
+injectAll();
 
 // Init logging.
 ClientSink.init();
