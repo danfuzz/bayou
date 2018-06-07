@@ -15,7 +15,6 @@ import 'babel-core/register';
 import 'babel-polyfill';
 
 import path from 'path';
-import { inspect } from 'util';
 
 import { Application, Monitor } from '@bayou/app-setup';
 import { ClientBundle } from '@bayou/client-bundle';
@@ -26,9 +25,10 @@ import { Hooks } from '@bayou/hooks-server';
 import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { HumanSink, FileSink } from '@bayou/see-all-server';
-import { Options } from '@bayou/server-top';
+import { Options, TopErrorHandler } from '@bayou/server-top';
 import { ClientTests, ServerTests } from '@bayou/testing-server';
 
+TopErrorHandler.init();
 
 /** {Logger} Logger for this file. */
 const log = new Logger('main');
@@ -174,42 +174,6 @@ async function serverTest() {
 
   process.exit(anyFailed ? 1 : 0);
 }
-
-process.on('unhandledRejection', (reason, promise_unused) => {
-  // Write to `stdout` directly first, because logging might be broken.
-  process.stderr.write('Unhandled promise rejection:\n');
-  if (reason instanceof Error) {
-    process.stderr.write(reason.stack);
-  } else {
-    process.stderr.write(inspect(reason));
-  }
-  process.stderr.write('\n');
-
-  log.error('Unhandled promise rejection:', reason);
-
-  // Give the system a moment, so it has a chance to actually flush the log,
-  // and then exit.
-  (async () => {
-    await Delay.resolve(250); // 0.25 second.
-    process.exit(1);
-  })();
-});
-
-process.on('uncaughtException', (error) => {
-  // Write to `stderr` directly first, because logging might be broken.
-  process.stderr.write('Uncaught error:\n');
-  process.stderr.write(error.stack);
-  process.stderr.write('\n');
-
-  log.error('Uncaught error:', error);
-
-  // Give the system a moment, so it has a chance to actually flush the log,
-  // and then exit.
-  (async () => {
-    await Delay.resolve(250); // 0.25 second.
-    process.exit(1);
-  })();
-});
 
 // Dispatch to the selected top-level function.
 

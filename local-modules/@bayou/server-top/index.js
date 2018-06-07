@@ -3,5 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import Options from './Options';
+import TopErrorHandler from './TopErrorHandler';
 
-export { Options };
+export { Options, TopErrorHandler };
