@@ -166,6 +166,8 @@ async function serverTest() {
 
 // Dispatch to the selected top-level function.
 
+let resultPromise = null;
+
 switch (options.action) {
   case 'client-bundle': {
     new HumanSink(null, true);
@@ -180,7 +182,7 @@ switch (options.action) {
   }
 
   case 'help': {
-    new Action(options).run();
+    resultPromise = new Action(options).run();
     break;
   }
 
@@ -205,4 +207,11 @@ switch (options.action) {
     run(options.action, true);
     break;
   }
+}
+
+if (resultPromise !== null) {
+  (async () => {
+    const exitCode = await resultPromise;
+    process.exit(exitCode);
+  })();
 }

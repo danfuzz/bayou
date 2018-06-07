@@ -46,58 +46,62 @@ export default class Actions extends CommonBase {
 
   /**
    * Performs the action indicated by the `options` of this instance.
+   *
+   * @returns {Int} Exit code as returned by the action implementation.
    */
-  run() {
+  async run() {
     const methodName = `_run_${camelCase(this._options.action)}`;
-    this[methodName]();
+    const exitCode   = await this[methodName]();
+
+    return exitCode || 0;
   }
 
   /**
    * Performs the action `client-bundle`.
    */
-  _run_clientBundle() {
+  async _run_clientBundle() {
     throw new Error('TODO');
   }
 
   /**
    * Performs the action `client-test`.
    */
-  _run_clientTest() {
+  async _run_clientTest() {
     throw new Error('TODO');
   }
 
   /**
    * Performs the action `dev`.
    */
-  _run_dev() {
+  async _run_dev() {
     throw new Error('TODO');
   }
 
   /**
    * Performs the action `dev-if-appropriate`.
    */
-  _run_devIfAppropriate() {
+  async _run_devIfAppropriate() {
     throw new Error('TODO');
   }
 
   /**
    * Performs the action `help`.
    */
-  _run_help() {
+  async _run_help() {
     this._options.usage();
   }
 
   /**
    * Performs the action `production`.
    */
-  _run_production() {
+  async _run_production() {
     throw new Error('TODO');
   }
 
   /**
    * Performs the action `server-test`.
    */
-  _run_serverTest() {
+  async _run_serverTest() {
     throw new Error('TODO');
   }
 }
