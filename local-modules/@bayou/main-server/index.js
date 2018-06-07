@@ -15,7 +15,6 @@ import 'babel-core/register';
 import 'babel-polyfill';
 
 import path from 'path';
-import minimist from 'minimist';
 import { inspect } from 'util';
 
 import { Application, Monitor } from '@bayou/app-setup';
@@ -27,157 +26,32 @@ import { Hooks } from '@bayou/hooks-server';
 import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { HumanSink, FileSink } from '@bayou/see-all-server';
+import { Options } from '@bayou/server-top';
 import { ClientTests, ServerTests } from '@bayou/testing-server';
 
 
 /** {Logger} Logger for this file. */
 const log = new Logger('main');
 
-/** {boolean} Error during argument processing? */
-let argError = false;
+/** {Options} Parsed command-line arguments / options. */
+const options = new Options(process.argv);
 
-/**
- * {object} Parsed command-line options. **Note:** The `slice` gets rid of the
- * `node` binary name and the name of the initial script (that is, this file).
- */
-const opts = minimist(process.argv.slice(2), {
-  boolean: [
-    'client-bundle',
-    'client-test',
-    'dev',
-    'dev-if-appropriate',
-    'help',
-    'human-console',
-    'server-test'
-  ],
-  string: [
-    'prog-name',
-    'test-out'
-  ],
-  alias: {
-    'h': 'help'
-  },
-  stopEarly: true,
-  unknown: (arg) => {
-    // eslint-disable-next-line no-console
-    console.log(`Unrecognized option: ${arg}`);
-    argError = true;
-    return false;
-  }
-});
-
-/** {boolean} Client bundle build mode? */
-const clientBundleMode = opts['client-bundle'];
-
-/** {boolean} Client test mode? */
-const clientTestMode = opts['client-test'];
-
-/** {boolean} Dev mode? */
-const devMode = opts['dev'];
-
-/** {boolean} Dev-if-appropriate mode? */
-const devIfAppropriateMode = opts['dev-if-appropriate'];
-
-/** {boolean} Write human-oriented console logs? */
-const humanConsole = opts['human-console'];
-
-/** {boolean} Server test mode? */
-const serverTestMode = opts['server-test'];
-
-/** {string} Path for test output. */
-let testOut = opts['test-out'];
-
-/** {boolean} Want help? */
-const showHelp = opts['help'];
-
-if ((clientBundleMode + clientTestMode + devMode + devIfAppropriateMode + serverTestMode) > 1) {
+if (options.errorMessage !== null) {
   // eslint-disable-next-line no-console
-  console.log('Cannot specify multiple mode options.');
-  argError = true;
-} else if (testOut) {
-  if (!(clientTestMode || serverTestMode)) {
-    // eslint-disable-next-line no-console
-    console.log('Cannot specify `--test-out` except when running in a test mode.');
-    argError = true;
-  } else {
-    testOut = path.resolve(testOut);
-  }
+  console.log(`${options.errorMessage}\n`);
+  options.usage();
+  process.exit(1);
 }
 
 /**
- * {string} Convenient distillation of the boolean mode options to a single
- * string. **TODO**: There is almost certainly a better way to do all this
- * option gymnastics, probably with a commandline-parsing module other than
- * `minimist`.
- */
-let executionMode = null;
-if      (clientBundleMode)     { executionMode = 'client-bundle'; }
-else if (clientTestMode)       { executionMode = 'client-test'; }
-else if (devMode)              { executionMode = 'dev'; }
-else if (devIfAppropriateMode) { executionMode = 'dev-if-appropriate'; }
-else if (serverTestMode)       { executionMode = 'server-test'; }
-else                           { executionMode = 'production'; }
-
-if (showHelp || argError) {
-  const progName = opts['prog-name'] || path.basename(process.argv[1]);
-  [
-    'Usage:',
-    '',
-    `${progName} [--dev | --dev-if-appropriate | --client-bundle | --client-test | `,
-    '  --server-test ] [--human-console] [--prog-name=<name>] [--test-out=<path>]',
-    '',
-    '  Run the project.',
-    '',
-    '  --client-bundle',
-    '    Just build a client bundle, and report any errors encountered.',
-    '  --client-test',
-    '    Just run the client tests (via headless Chrome), and report any errors',
-    '    encountered.',
-    '  --dev',
-    '    Run in development mode, for interactive development without having',
-    '    to restart when client code changes, and to automatically exit when',
-    '    server code changes. (The `develop` script automatically rebuilds and',
-    '    restarts when the latter happens.) This option also enables `/debug`',
-    '    application endpoints.',
-    '  --dev-if-appropriate',
-    '    Run in development mode (per above), but only if the execution environment',
-    '    indicates that it is meant to be so run. (This is determined by a hook in',
-    '    the `@bayou/hooks-server` module, see which.)',
-    '  --human-console',
-    '    Provide human-oriented logging output on `stdout`. The default is to write',
-    '    JSON-encoded event records.',
-    '  --prog-name=<name>',
-    '    Name of this program, for use when reporting errors and diagnostics.',
-    '  --server-test',
-    '    Just run the server tests, and report any errors encountered.',
-    '  --test-out=<path>',
-    '    Where to write the output from a test run in addition to writing to the',
-    '    console. (If not specified, will just write to the console.)',
-    '',
-    `${progName} [--help | -h]`,
-    '  Display this message.'
-  ].forEach((line) => {
-    // eslint-disable-next-line no-console
-    console.log(line);
-  });
-  process.exit(argError ? 1 : 0);
-}
-
-/**
- * Runs the system. `mode` options are:
+ * Runs the system.
  *
- * * `production` &mdash; Normal production run.
- * * `dev` &mdash; Development. This enables `/debug` endpoints.
- * * `dev-if-appropriate` &mdash; Like `dev` or `production`, depending on what
- *   the salient `server-hook` indicates.
- * * `test` &mdash; Configured for live testing.
- *
- * @param {string} mode The mode as described above.
+ * @param {string} action The action as described by {@link Options}.
  * @param {boolean} [doMonitor = false] Whether or not to enable the monitoring
  *   endpoints.
  * @returns {Int} The port being listened on, once listening has started.
  */
-async function run(mode, doMonitor = false) {
+async function run(action, doMonitor = false) {
   // Inject all the system configs. **TODO:** This module needs to be split
   // apart such that a _different_ "main" module can choose to perform different
   // configuration and still reuse most of the code defined in _this_ module.
@@ -204,27 +78,27 @@ async function run(mode, doMonitor = false) {
     `  product: ${Dirs.theOne.BASE_DIR}\n` +
     `  var:     ${Dirs.theOne.VAR_DIR}`);
 
-  if (mode === 'dev-if-appropriate') {
+  if (action === 'dev-if-appropriate') {
     if (Hooks.theOne.isRunningInDevelopment()) {
-      mode = 'dev';
+      action = 'dev';
     } else {
-      mode = 'production';
+      action = 'production';
     }
   }
 
-  log.info('Running in mode:', mode);
+  log.info('Running with action:', action);
 
-  if (mode === 'dev') {
+  if (action === 'dev') {
     // We're in dev mode. This starts the system that live-syncs the client
     // source.
     DevMode.theOne.start();
   }
 
   /** The main app server. */
-  const theApp = new Application(mode !== 'production');
+  const theApp = new Application(action !== 'production');
 
   // Start the app! The result is the port that it ends up listening on.
-  const result = theApp.start(mode === 'test');
+  const result = theApp.start(action === 'client-test');
 
   if (doMonitor) {
     const monitorPort = Hooks.theOne.monitorPort;
@@ -278,7 +152,7 @@ async function clientTest() {
     // free port (instead of assuming the usual one is available; it likely
     // won't be if the tests are running on a shared machine) and will make the
     // `/debug` endpoints available.
-    port = await run('test');
+    port = await run('client-test');
 
     // Wait a few seconds, so that we can be reasonably sure that the request
     // handlers are ready to handle requests. And there's no point in issuing
@@ -287,7 +161,7 @@ async function clientTest() {
     await Delay.resolve(15 * 1000);
   }
 
-  const anyFailed = await ClientTests.run(port, testOut || null);
+  const anyFailed = await ClientTests.run(port, options.testOut || null);
 
   process.exit(anyFailed ? 1 : 0);
 }
@@ -296,7 +170,7 @@ async function clientTest() {
  * Does a server testing run.
  */
 async function serverTest() {
-  const anyFailed = await ServerTests.run(testOut || null);
+  const anyFailed = await ServerTests.run(options.testOut || null);
 
   process.exit(anyFailed ? 1 : 0);
 }
@@ -339,7 +213,7 @@ process.on('uncaughtException', (error) => {
 
 // Dispatch to the selected top-level function.
 
-switch (executionMode) {
+switch (options.action) {
   case 'client-bundle': {
     new HumanSink(null, true);
     clientBundle();
@@ -349,6 +223,11 @@ switch (executionMode) {
   case 'client-test': {
     new HumanSink(null, true);
     clientTest();
+    break;
+  }
+
+  case 'help': {
+    options.usage();
     break;
   }
 
@@ -362,12 +241,15 @@ switch (executionMode) {
     const humanLogFile = path.resolve(Dirs.theOne.LOG_DIR, 'general.txt');
     const jsonLogFile = path.resolve(Dirs.theOne.LOG_DIR, 'general.json');
 
-    new FileSink(jsonLogFile, !humanConsole);
-    new HumanSink(humanLogFile, humanConsole);
+    // Second argument to both of these constructors is a boolean `useConsole`
+    // which indicates (when `true`) that the sink in question should also write
+    // to the console.
+    new FileSink(jsonLogFile, !options.humanConsole);
+    new HumanSink(humanLogFile, options.humanConsole);
 
     HumanSink.patchConsole();
 
-    run(executionMode, true);
+    run(options.action, true);
     break;
   }
 }

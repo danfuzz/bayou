@@ -5,7 +5,8 @@
 import path from 'path';
 import minimist from 'minimist';
 
-import { Singleton } from '@bayou/util-common';
+import { TArray, TString } from '@bayou/typecheck';
+import { CommonBase } from '@bayou/util-common';
 
 /**
  * {array<string>} Allowed top-level actions. See the usage text for details
@@ -22,18 +23,57 @@ const ACTIONS = Object.freeze([
 ]);
 
 /**
- * Command-line option parsing. Accessing the singleton instance causes options
- * to be parsed.
+ * Command-line option parsing.
  */
-export default class Options extends Singleton {
+export default class Options extends CommonBase {
   /**
    * Constructs an instance, which in the process parses the command-line
    * options.
+   *
+   * @param {array<string>} argv Command-line argument array, in the format
+   *   provided by `process.argv`.
    */
-  constructor() {
+  constructor(argv) {
+    TArray.check(argv, TString.check);
+
     super();
 
-    this._options = Object.freeze(Options._parseOptions());
+    this._options = Object.freeze(Options._parseOptions(argv));
+  }
+
+  /** {string} The action to take. */
+  get action() {
+    return this._options.action;
+  }
+
+  /**
+   * {string|null} Error message describing a problem with the command-line
+   * options, or `null` if there was no error.
+   */
+  get errorMessage() {
+    return this._options.errorMessage;
+  }
+
+  /**
+   * {boolean} If `true`, indicates that console logs should be written in a
+   * human-friendly (not machine-readable) format.
+   */
+  get humanConsole() {
+    return this._options.humanConsole;
+  }
+
+  /** {string} What to use as the program name for logging and messaging. */
+  get progName() {
+    return this._options.progName;
+  }
+
+  /**
+   * {string|null} Filesystem path naming a directory into which test results
+   * should be placed, or `null` if either this isn't a test run or results
+   * should merely be written to the console.
+   */
+  get testOut() {
+    return this._options.testOut;
   }
 
   /**
@@ -41,7 +81,7 @@ export default class Options extends Singleton {
    * method because it mentions the program name.
    */
   usage() {
-    const progName = this._options.progName;
+    const progName = this.progName;
 
     [
       'Usage:',
@@ -98,20 +138,22 @@ export default class Options extends Singleton {
   /**
    * Parses the options.
    *
+   * @param {array<string>} argv Command-line argument array, in the format
+   *   provided by `process.argv`.
    * @returns {object} An ad-hoc plain object representing the parsed results.
    */
-  static _parseOptions() {
+  static _parseOptions(argv) {
     const result = {
-      action:       'run',
+      action:       'production',
       errorMessage: null,
       humanConsole: false,
-      progName:     path.basename(process.argv[1]),
+      progName:     path.basename(argv[1]),
       testOut:      null
     };
 
     // Produce basic form of parsed options. **Note:** The `slice` gets rid of
     // the `node` binary name and the name of the initial script.
-    const opts = minimist(process.argv.slice(2), {
+    const opts = minimist(argv.slice(2), {
       boolean: ACTIONS.concat([
         'human-console'
       ]),
@@ -152,7 +194,7 @@ export default class Options extends Singleton {
     if (testOut) {
       if (!result.action.test(/-test$/)) {
         result.errorMessage =
-          'Cannot specify `--test-out` except when running a `--test-*` action.';
+          'Cannot specify `--test-out` except when running a `*-test` action.';
         return result;
       }
 

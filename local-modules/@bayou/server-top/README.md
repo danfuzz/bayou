@@ -5,6 +5,9 @@ This module contains most of the top level server code, including parsing of
 commandline options. The intent is for this to have everything needed to
 handle server invocation _except_ for injected dependencies.
 
+**TODO:** This module is a work-in-progress and does not yet contain as much
+code as it ultimately should.
+
 - - - - - - - - - -
 
 ```

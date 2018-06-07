@@ -17,6 +17,7 @@
     "@bayou/promise-util": "local",
     "@bayou/see-all": "local",
     "@bayou/see-all-server": "local",
+    "@bayou/server-top": "local",
     "@bayou/testing-server": "local"
   }
 }
