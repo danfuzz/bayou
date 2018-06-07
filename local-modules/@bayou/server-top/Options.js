@@ -180,7 +180,7 @@ export default class Options extends CommonBase {
 
     const testOut = opts['test-out'];
     if (testOut) {
-      if (!result.action.test(/-test$/)) {
+      if (!/-test$/.test(result.action)) {
         result.errorMessage =
           'Cannot specify `--test-out` except when running a `*-test` action.';
         return result;

@@ -6,7 +6,6 @@
 import path from 'path';
 
 import { Application, Monitor } from '@bayou/app-setup';
-import { ClientBundle } from '@bayou/client-bundle';
 import { injectAll } from '@bayou/config-common-default';
 import { DevMode } from '@bayou/dev-mode';
 import { Dirs, ProductInfo, ServerEnv } from '@bayou/env-server';
@@ -15,7 +14,7 @@ import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { HumanSink, FileSink } from '@bayou/see-all-server';
 import { Action, Options, TopErrorHandler } from '@bayou/server-top';
-import { ClientTests, ServerTests } from '@bayou/testing-server';
+import { ClientTests } from '@bayou/testing-server';
 
 TopErrorHandler.init();
 
@@ -75,7 +74,7 @@ async function run(action, doMonitor = false) {
     }
   }
 
-  log.info('Running with action:', action);
+  log.info('Running action:', action);
 
   if (action === 'dev') {
     // We're in dev mode. This starts the system that live-syncs the client
@@ -103,21 +102,6 @@ async function run(action, doMonitor = false) {
   }
 
   return result;
-}
-
-/**
- * Does a client bundling.
- */
-async function clientBundle() {
-  try {
-    await new ClientBundle().build();
-    log.info('');
-    log.info('Built client bundles. No errors!');
-    process.exit(0);
-  } catch (e) {
-    log.error(e);
-    process.exit(1);
-  }
 }
 
 /**
@@ -155,40 +139,21 @@ async function clientTest() {
   process.exit(anyFailed ? 1 : 0);
 }
 
-/**
- * Does a server testing run.
- */
-async function serverTest() {
-  const anyFailed = await ServerTests.run(options.testOut || null);
-
-  process.exit(anyFailed ? 1 : 0);
-}
-
 // Dispatch to the selected top-level function.
 
 let resultPromise = null;
 
 switch (options.action) {
-  case 'client-bundle': {
-    new HumanSink(null, true);
-    clientBundle();
+  case 'client-bundle':
+  case 'help':
+  case 'server-test': {
+    resultPromise = new Action(options).run();
     break;
   }
 
   case 'client-test': {
     new HumanSink(null, true);
     clientTest();
-    break;
-  }
-
-  case 'help': {
-    resultPromise = new Action(options).run();
-    break;
-  }
-
-  case 'server-test': {
-    new HumanSink(null, true);
-    serverTest();
     break;
   }
 
