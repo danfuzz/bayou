@@ -243,7 +243,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
 
   describe('.hash', () => {
     it('should be a 256 SHA-3 with length, in the prescribed format', () => {
-      // **Note:** You can validate this result via the commandline `openssl`
+      // **Note:** You can validate this result via the command-line `openssl`
       // tool: `printf '<data>' | openssl dgst -sha256`
       const data = 'This is the most important data you have ever observed.';
       const expected = '=sha3_37_0a0dd2a860af2422778911afa63c1cae54d425db402d73415cc7060d99179f3a';

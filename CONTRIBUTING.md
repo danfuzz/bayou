@@ -15,7 +15,7 @@ indicate:
 ### Patches / PRs
 
 If you are submitting a PR, please ensure that it does not introduce any new
-linter complaints. You can run the linter on the commandline via the convenient
+linter complaints. You can run the linter on the command-line via the convenient
 `lint` script:
 
 ```
