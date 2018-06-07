@@ -8,19 +8,7 @@ import minimist from 'minimist';
 import { TArray, TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
-/**
- * {array<string>} Allowed top-level actions. See the usage text for details
- * about what each means.
- */
-const ACTIONS = Object.freeze([
-  'client-bundle',
-  'client-test',
-  'dev',
-  'dev-if-appropriate',
-  'help',
-  'production',
-  'server-test'
-]);
+import Action from './Action';
 
 /**
  * Command-line option parsing.
@@ -154,7 +142,7 @@ export default class Options extends CommonBase {
     // Produce basic form of parsed options. **Note:** The `slice` gets rid of
     // the `node` binary name and the name of the initial script.
     const opts = minimist(argv.slice(2), {
-      boolean: ACTIONS.concat([
+      boolean: Action.ACTIONS.concat([
         'human-console'
       ]),
       string: [
@@ -178,7 +166,7 @@ export default class Options extends CommonBase {
     result.humanConsole = opts['human-console'] || false;
 
     let gotAction = false;
-    for (const a of ACTIONS) {
+    for (const a of Action.ACTIONS) {
       if (!opts[a]) {
         continue;
       } else if (gotAction) {

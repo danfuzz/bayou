@@ -14,7 +14,7 @@ import { Hooks } from '@bayou/hooks-server';
 import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { HumanSink, FileSink } from '@bayou/see-all-server';
-import { Options, TopErrorHandler } from '@bayou/server-top';
+import { Action, Options, TopErrorHandler } from '@bayou/server-top';
 import { ClientTests, ServerTests } from '@bayou/testing-server';
 
 TopErrorHandler.init();
@@ -180,7 +180,7 @@ switch (options.action) {
   }
 
   case 'help': {
-    options.usage();
+    new Action(options).run();
     break;
   }
 
