@@ -3,17 +3,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-// This `import` patches Node's backtrace handler so as to make it respect
-// source maps (and so produce traces with proper source position info for
-// compiled files). We do this as the very first thing upon running, so that
-// any exceptions thrown during bootstrap have a reasonable chance of getting
-// displayed with an accurate backtrace.
-import 'source-map-support/register';
-
-// These `import`s complete the setup of the Babel runtime.
-import 'babel-core/register';
-import 'babel-polyfill';
-
 import path from 'path';
 
 import { Application, Monitor } from '@bayou/app-setup';

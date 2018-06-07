@@ -5,6 +5,10 @@ This module contains most of the top level server code, including parsing of
 command-line options. The intent is for this to have everything needed to
 handle server invocation _except_ for injected dependencies.
 
+**Note:** The act of importing this module causes initialization of the Babel
+runtime (including hooking up polyfills) and the patching of Node's stack trace
+generator to respect source maps.
+
 **TODO:** This module is a work-in-progress and does not yet contain as much
 code as it ultimately should.
 
