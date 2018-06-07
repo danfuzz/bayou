@@ -325,19 +325,16 @@ export default class DevMode extends Singleton {
    * Starts up the instance, including both client code synchronization and
    * server code monitoring.
    */
-  start() {
+  async start() {
     const clientReady =
       this._startWatching(this._clientMappings, this._handleClientChange);
     const serverReady =
       this._startWatching(this._serverMappings, this._handleServerChange);
 
-    // Log a note after everything is ready (while still returning promptly
-    // from this method).
-    (async () => {
-      await clientReady;
-      await serverReady;
-      log.info('Now monitoring for changes.');
-    })();
+    // Log a note after everything is ready.
+    await clientReady;
+    await serverReady;
+    log.info('Now monitoring for changes.');
   }
 
   /**

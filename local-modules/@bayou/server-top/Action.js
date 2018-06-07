@@ -60,13 +60,14 @@ export default class Action extends CommonBase {
   /**
    * Performs the action indicated by the `options` of this instance.
    *
-   * @returns {Int} Process exit code as returned by the action implementation.
+   * @returns {Int|null} Process exit code as returned by the action
+   *   implementation, or `null` to indicate that the process should not exit
+   *   once the immediate action is complete.
    */
   async run() {
     const methodName = `_run_${camelCase(this._options.action)}`;
-    const exitCode   = await this[methodName]();
 
-    return exitCode || 0;
+    return this[methodName]();
   }
 
   /**
@@ -109,11 +110,11 @@ export default class Action extends CommonBase {
         '      will issue requests to it instead of trying to build a new test bundle.');
     } else {
       // Start up a server in this process, since we determined that this
-      // machine isn't already running one. We run in test mode so that it will
-      // pick a free port (instead of assuming the usual one is available; it
-      // likely won't be if the tests are running on a shared machine) and will
-      // make the `/debug` endpoints available.
-      port = await Action._startServer('client-test', true, false);
+      // machine isn't already running one. We tell it to pick a free port
+      // (instead of assuming the usual one is available; it likely won't be if
+      // the tests are running on a shared machine) and will make the `/debug`
+      // endpoints available.
+      port = await Action._startServer(true, false, true);
 
       // Wait a few seconds, so that we can be reasonably sure that the request
       // handlers are ready to handle requests. And there's no point in issuing
@@ -129,16 +130,36 @@ export default class Action extends CommonBase {
 
   /**
    * Performs the action `dev`.
+   *
+   * @returns {Int|null} `null` on successful start, or standard process exit
+   *   code on failure.
    */
   async _run_dev() {
-    throw new Error('TODO');
+    Action._startLogging(this._options.humanConsole);
+
+    await Action._startServer(false, true, true);
+
+    log.info('Now running in the development configuration.');
+
+    // Start the system that live-syncs the client source and arranges to exit
+    // if / when the server needs to be rebuilt.
+    await DevMode.theOne.start();
+
+    return null;
   }
 
   /**
    * Performs the action `dev-if-appropriate`.
+   *
+   * @returns {Int|null} `null` on successful start, or standard process exit
+   *   code on failure.
    */
   async _run_devIfAppropriate() {
-    throw new Error('TODO');
+    if (Hooks.theOne.isRunningInDevelopment()) {
+      return this._run_dev();
+    } else {
+      return this._run_productionv();
+    }
   }
 
   /**
@@ -150,9 +171,17 @@ export default class Action extends CommonBase {
 
   /**
    * Performs the action `production`.
+   *
+   * @returns {Int|null} `null` on successful start, or standard process exit
+   *   code on failure.
    */
   async _run_production() {
-    throw new Error('TODO');
+    Action._startLogging(this._options.humanConsole);
+
+    await Action._startServer(false, true, false);
+
+    log.info('Now running in the production configuration.');
+    return null;
   }
 
   /**
@@ -192,14 +221,18 @@ export default class Action extends CommonBase {
    * Helper for actions which need to start a server, which in fact does the
    * bulk of the work.
    *
-   * @param {string} action Action to perform.
    * @param {boolean} pickPort Whether or not to pick an arbitrary main server
    *   port. When `false`, uses the configured application port.
    * @param {boolean} doMonitor Whether or not to enable the system monitor
    *   endpoints.
+   * @param {boolean} devRoutes Whether or not to enable the development mode
+   *   endpoints (e.g., `/debug/log`).
    * @returns {Int} The port being listened on, once listening has started.
    */
-  static async _startServer(action, pickPort, doMonitor) {
+  static async _startServer(pickPort, doMonitor, devRoutes) {
+    // Give the outer app a chance to do any required early initialization.
+    await Hooks.theOne.run();
+
     // Set up the server environment bits (including, e.g. the PID file).
     await ServerEnv.theOne.init();
 
@@ -215,24 +248,8 @@ export default class Action extends CommonBase {
       `  product: ${Dirs.theOne.BASE_DIR}\n` +
       `  var:     ${Dirs.theOne.VAR_DIR}`);
 
-    if (action === 'dev-if-appropriate') {
-      if (Hooks.theOne.isRunningInDevelopment()) {
-        action = 'dev';
-      } else {
-        action = 'production';
-      }
-    }
-
-    log.info('Running action:', action);
-
-    if (action === 'dev') {
-      // We're in dev mode. This starts the system that live-syncs the client
-      // source.
-      DevMode.theOne.start();
-    }
-
     /** The main app server. */
-    const theApp = new Application(action !== 'production');
+    const theApp = new Application(devRoutes);
 
     // Start the app! The result is the port that it ends up listening on.
     const result = theApp.start(pickPort);
