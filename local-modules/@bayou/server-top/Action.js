@@ -3,11 +3,17 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { camelCase, kebabCase } from 'lodash';
+import path from 'path';
 
+import { Application, Monitor } from '@bayou/app-setup';
 import { ClientBundle } from '@bayou/client-bundle';
+import { DevMode } from '@bayou/dev-mode';
+import { Dirs, ProductInfo, ServerEnv } from '@bayou/env-server';
+import { Hooks } from '@bayou/hooks-server';
+import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
-import { HumanSink } from '@bayou/see-all-server';
-import { ServerTests } from '@bayou/testing-server';
+import { HumanSink, FileSink } from '@bayou/see-all-server';
+import { ClientTests, ServerTests } from '@bayou/testing-server';
 import { CommonBase } from '@bayou/util-common';
 
 import Options from './Options';
@@ -18,13 +24,13 @@ const log = new Logger('top-action');
 /**
  * Top-level server actions. See {@link Options#usage} for semantic details.
  */
-export default class Actions extends CommonBase {
+export default class Action extends CommonBase {
   /** {array<string>} Array of all allowed actions, in kebab-case form. */
   static get ACTIONS() {
     if (!this._actions) {
       const actions = [];
 
-      for (const name of Object.getOwnPropertyNames(Actions.prototype)) {
+      for (const name of Object.getOwnPropertyNames(Action.prototype)) {
         const match = name.match(/^_run_(.*)$/);
         if (match !== null) {
           actions.push(kebabCase(match[1]));
@@ -84,9 +90,41 @@ export default class Actions extends CommonBase {
 
   /**
    * Performs the action `client-test`.
+   *
+   * @returns {Int} Standard process exit code.
    */
   async _run_clientTest() {
-    throw new Error('TODO');
+    new HumanSink(null, true);
+
+    // Figure out if there is already a server listening on the designated
+    // application port. If not, run one locally in this process.
+
+    const alreadyRunning = await ServerEnv.theOne.isAlreadyRunningLocally();
+    let port;
+
+    if (alreadyRunning) {
+      port = Hooks.theOne.listenPort;
+      log.info(
+        'NOTE: There is a server already running on this machine. The client test run\n' +
+        '      will issue requests to it instead of trying to build a new test bundle.');
+    } else {
+      // Start up a server in this process, since we determined that this
+      // machine isn't already running one. We run in test mode so that it will
+      // pick a free port (instead of assuming the usual one is available; it
+      // likely won't be if the tests are running on a shared machine) and will
+      // make the `/debug` endpoints available.
+      port = await Action._startServer('client-test', true, false);
+
+      // Wait a few seconds, so that we can be reasonably sure that the request
+      // handlers are ready to handle requests. And there's no point in issuing
+      // a request until the test code bundle is built, anyway; that takes at
+      // least this long (probably longer).
+      await Delay.resolve(15 * 1000);
+    }
+
+    const anyFailed = await ClientTests.run(port, this._options.testOut);
+
+    return anyFailed ? 1 : 0;
   }
 
   /**
@@ -128,5 +166,90 @@ export default class Actions extends CommonBase {
     const anyFailed = await ServerTests.run(this._options.testOut || null);
 
     return anyFailed ? 1 : 0;
+  }
+
+  /**
+   * Helper for actions which need to start logging for a "normal" server
+   * run (as opposed to performing tests of some sort).
+   *
+   * @param {boolean} humanConsole If `true`, causes the console logs to be in
+   *   a human-oriented format.
+   */
+  static _startLogging(humanConsole) {
+    const humanLogFile = path.resolve(Dirs.theOne.LOG_DIR, 'general.txt');
+    const jsonLogFile = path.resolve(Dirs.theOne.LOG_DIR, 'general.json');
+
+    // Second argument to both of these constructors is a boolean `useConsole`
+    // which indicates (when `true`) that the sink in question should also write
+    // to the console.
+    new FileSink(jsonLogFile, !humanConsole);
+    new HumanSink(humanLogFile, humanConsole);
+
+    HumanSink.patchConsole();
+  }
+
+  /**
+   * Helper for actions which need to start a server, which in fact does the
+   * bulk of the work.
+   *
+   * @param {string} action Action to perform.
+   * @param {boolean} pickPort Whether or not to pick an arbitrary main server
+   *   port. When `false`, uses the configured application port.
+   * @param {boolean} doMonitor Whether or not to enable the system monitor
+   *   endpoints.
+   * @returns {Int} The port being listened on, once listening has started.
+   */
+  static async _startServer(action, pickPort, doMonitor) {
+    // Set up the server environment bits (including, e.g. the PID file).
+    await ServerEnv.theOne.init();
+
+    // A little spew to identify us.
+    const info = ProductInfo.theOne.INFO;
+    for (const k of Object.keys(info)) {
+      log.info(k, '=', info[k]);
+    }
+
+    // A little spew to indicate where in the filesystem we live.
+    log.info(
+      'Directories:\n' +
+      `  product: ${Dirs.theOne.BASE_DIR}\n` +
+      `  var:     ${Dirs.theOne.VAR_DIR}`);
+
+    if (action === 'dev-if-appropriate') {
+      if (Hooks.theOne.isRunningInDevelopment()) {
+        action = 'dev';
+      } else {
+        action = 'production';
+      }
+    }
+
+    log.info('Running action:', action);
+
+    if (action === 'dev') {
+      // We're in dev mode. This starts the system that live-syncs the client
+      // source.
+      DevMode.theOne.start();
+    }
+
+    /** The main app server. */
+    const theApp = new Application(action !== 'production');
+
+    // Start the app! The result is the port that it ends up listening on.
+    const result = theApp.start(pickPort);
+
+    if (doMonitor) {
+      const monitorPort = Hooks.theOne.monitorPort;
+      if (monitorPort !== null) {
+        try {
+          const monitor = new Monitor(theApp, monitorPort);
+          await monitor.start();
+        } catch (e) {
+          // Log the error, but soldier on.
+          log.error('Could not start monitor server!', e);
+        }
+      }
+    }
+
+    return result;
   }
 }

@@ -13,10 +13,8 @@
     "@bayou/dev-mode": "local",
     "@bayou/env-server": "local",
     "@bayou/hooks-server": "local",
-    "@bayou/promise-util": "local",
     "@bayou/see-all": "local",
     "@bayou/see-all-server": "local",
-    "@bayou/server-top": "local",
-    "@bayou/testing-server": "local"
+    "@bayou/server-top": "local"
   }
 }

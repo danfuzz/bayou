@@ -10,11 +10,9 @@ import { injectAll } from '@bayou/config-common-default';
 import { DevMode } from '@bayou/dev-mode';
 import { Dirs, ProductInfo, ServerEnv } from '@bayou/env-server';
 import { Hooks } from '@bayou/hooks-server';
-import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { HumanSink, FileSink } from '@bayou/see-all-server';
 import { Action, Options, TopErrorHandler } from '@bayou/server-top';
-import { ClientTests } from '@bayou/testing-server';
 
 TopErrorHandler.init();
 
@@ -104,56 +102,16 @@ async function run(action, doMonitor = false) {
   return result;
 }
 
-/**
- * Does a client testing run.
- */
-async function clientTest() {
-  // Figure out if there is already a server listening on the designated
-  // application port. If not, run one locally in this process.
-
-  const alreadyRunning = await ServerEnv.theOne.isAlreadyRunningLocally();
-  let port;
-
-  if (alreadyRunning) {
-    port = Hooks.theOne.listenPort;
-    log.info(
-      'NOTE: There is a server already running on this machine. The client test run\n' +
-      '      will issue requests to it instead of trying to build a new test bundle.');
-  } else {
-    // Start up a server in this process, since we determined that this machine
-    // isn't already running one. We run in test mode so that it will pick a
-    // free port (instead of assuming the usual one is available; it likely
-    // won't be if the tests are running on a shared machine) and will make the
-    // `/debug` endpoints available.
-    port = await run('client-test');
-
-    // Wait a few seconds, so that we can be reasonably sure that the request
-    // handlers are ready to handle requests. And there's no point in issuing
-    // a request until the test code bundle is built, anyway; that takes at
-    // least this long (probably longer).
-    await Delay.resolve(15 * 1000);
-  }
-
-  const anyFailed = await ClientTests.run(port, options.testOut || null);
-
-  process.exit(anyFailed ? 1 : 0);
-}
-
 // Dispatch to the selected top-level function.
 
 let resultPromise = null;
 
 switch (options.action) {
   case 'client-bundle':
+  case 'client-test':
   case 'help':
   case 'server-test': {
     resultPromise = new Action(options).run();
-    break;
-  }
-
-  case 'client-test': {
-    new HumanSink(null, true);
-    clientTest();
     break;
   }
 
