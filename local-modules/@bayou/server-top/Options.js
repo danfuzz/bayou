@@ -150,7 +150,7 @@ export default class Options extends Singleton {
 
     const testOut = opts['test-out'];
     if (testOut) {
-      if (!result.action.test(/^test-/)) {
+      if (!result.action.test(/-test$/)) {
         result.errorMessage =
           'Cannot specify `--test-out` except when running a `--test-*` action.';
         return result;
