@@ -9,9 +9,6 @@ handle server invocation _except_ for injected dependencies.
 runtime (including hooking up polyfills) and the patching of Node's stack trace
 generator to respect source maps.
 
-**TODO:** This module is a work-in-progress and does not yet contain as much
-code as it ultimately should.
-
 - - - - - - - - - -
 
 ```
