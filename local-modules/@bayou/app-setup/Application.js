@@ -93,6 +93,7 @@ export default class Application extends CommonBase {
 
     if (devMode) {
       this._addDevModeRoutes();
+      log.info('Enabled development / debugging endpoints.');
     }
   }
 

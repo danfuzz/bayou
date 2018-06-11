@@ -1,0 +1,18 @@
+{
+  "name": "@bayou/server-top",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "@bayou/app-setup": "local",
+    "@bayou/client-bundle": "local",
+    "@bayou/deps-util-server": "local",
+    "@bayou/dev-mode": "local",
+    "@bayou/env-server": "local",
+    "@bayou/hooks-server": "local",
+    "@bayou/promise-util": "local",
+    "@bayou/see-all": "local",
+    "@bayou/see-all-server": "local",
+    "@bayou/typecheck": "local",
+    "@bayou/util-common": "local"
+  }
+}

@@ -2,7 +2,7 @@
 ==================
 
 This module contains the top level server code, including parsing of
-commandline options. It has only a tiny bit of application logic (and should
+command-line options. It has only a tiny bit of application logic (and should
 probably have less).
 
 - - - - - - - - - -
