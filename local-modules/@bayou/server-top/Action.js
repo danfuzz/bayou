@@ -158,7 +158,7 @@ export default class Action extends CommonBase {
     if (Hooks.theOne.isRunningInDevelopment()) {
       return this._run_dev();
     } else {
-      return this._run_productionv();
+      return this._run_production();
     }
   }
 
