@@ -39,6 +39,9 @@ buildProjects=(compiler server client bin product-info)
 # Overlay source directory, if any.
 overlayDir=''
 
+# Name of the `main` module for the server, if specified.
+mainServer=''
+
 # Options to pass to `out-dir-setup`.
 outOpts=()
 
@@ -59,6 +62,9 @@ while true; do
             ;;
         --overlay=?*)
             overlayDir="${1#*=}"
+            ;;
+        --main-server=?*)
+            mainServer="${1#*=}"
             ;;
         --) # End of all options
             shift
@@ -90,6 +96,8 @@ if (( ${showHelp} || ${argError} )); then
     echo '    Place output in directory <dir>.'
     echo '  --overlay=<dir>'
     echo '    Find overlay source in directory <dir>.'
+    echo '  --main-server=<name>'
+    echo '    Name of the main module for the server.'
     echo ''
     echo "${progName} [--help | -h]"
     echo '  Display this message.'
@@ -291,17 +299,26 @@ function copy-sources {
     echo 'Copying sources... done.'
 }
 
-# Does an `npm install` of the indicated "main" module, in a directory with a
-# name that matches. (E.g., given `server`, it will install `@bayou/main-server`
-# into the directory `server`.) After installation, applies local patches to
-# installed external modules.
+# Does an `npm install` of the named top-level subproject, for a single given
+# module dependency. For example, given `florp @zorch/blort`, this will install
+# the module `@zorch/blort` into the directory `florp` under the `out`
+# directory. If the second argument is omitted, this uses the usual "main"
+# module name for the subproject, e.g. for `florp` it will install
+# `@bayou/main-florp` by default.
+#
+# After installation, this applies local patches to installed external modules.
 function do-install {
-    local moduleName="$1"
-    local toDir="${outDir}/${moduleName}"
+    local subprojectName="$1"
+    local moduleName="$2"
+    local toDir="${outDir}/${subprojectName}"
     local npmDir="${toDir}/from-npm"
     local packageJson="${toDir}/package.json"
     local npmPackageJson="${toDir}/package-npm.json"
     local npmBinDir="${npmDir}/node_modules/.bin"
+
+    if [[ ${moduleName} == '' ]]; then
+        moduleName="@bayou/main-${subprojectName}"
+    fi
 
     mkdir -p "${toDir}"
 
@@ -311,8 +328,8 @@ function do-install {
     # would change from time to time. **TODO:** Fix this janky bit of cruft.
     (
         echo '{'
-        echo "    \"name\": \"@bayou/top-package-for-${moduleName}\","
-        echo "    \"dependencies\": { \"@bayou/main-${moduleName}\": \"local\" },"
+        echo "    \"name\": \"@bayou/top-package-for-${subprojectName}\","
+        echo "    \"dependencies\": { \"${moduleName}\": \"local\" },"
 
         # These are irrelevant and are included just to prevent
         # `npm install` from complaining.
@@ -327,7 +344,7 @@ function do-install {
     # Integrates local module dependencies into this package. It copies the
     # required local modules and also rewrites the top-level `package.json` so
     # that it lists the transitive closure of external module dependencies.
-    echo "${moduleName}:" 'Copying local-module dependencies...'
+    echo "${subprojectName}:" 'Copying local-module dependencies...'
     "${progDir}/lib/copy-local-dependencies" \
         --local-modules="${outDir}/local-modules" "${toDir}" \
     || return 1
@@ -336,12 +353,12 @@ function do-install {
            && cmp --quiet "${npmPackageJson}" "${packageJson}"; then
         # The `package.json` hasn't changed since we `npm install`ed, so we can
         # skip the rest of this function.
-        echo "${moduleName}:" \
+        echo "${subprojectName}:" \
             'No change to external dependencies. Skipping `npm install`.'
         return
     fi
 
-    echo "${moduleName}:" 'Installing external dependencies...'
+    echo "${subprojectName}:" 'Installing external dependencies...'
 
     # This runs `npm install` in a new empty directory, because as of npm v5,
     # npm _really really_ wants to manage all modules under `node_modules`, and
@@ -370,7 +387,7 @@ function do-install {
     # **Note:** We don't just `mv` (or `rsync --delete`) the whole
     # `node_modules` directory, because we want to keep our local modules.
 
-    echo "${moduleName}:" 'Moving external dependencies into place...'
+    echo "${subprojectName}:" 'Moving external dependencies into place...'
 
     local d
     for d in $(cd "${npmDir}/node_modules"; /bin/ls -A); do
@@ -398,7 +415,7 @@ function do-install {
     # subsequent builds.
     rsync-archive "${packageJson}" "${npmPackageJson}" || return 1
 
-    echo "${moduleName}:" 'External dependencies... done.'
+    echo "${subprojectName}:" 'External dependencies... done.'
 }
 
 # Builds the server code. This builds from `server` into `final/server`. The
@@ -417,7 +434,7 @@ function build-server {
     fi
 
     # Do the initial npm(ish) installation.
-    do-install server || return 1
+    do-install server "${mainServer}" || return 1
 
     # Run Babel on all of the local source files, storing them next to the
     # imported and patched modules.

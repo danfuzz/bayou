@@ -14,6 +14,7 @@ import 'babel-polyfill';
 
 import Action from './Action';
 import Options from './Options';
+import Server from './Server';
 import TopErrorHandler from './TopErrorHandler';
 
-export { Action, Options, TopErrorHandler };
+export { Action, Options, Server, TopErrorHandler };
