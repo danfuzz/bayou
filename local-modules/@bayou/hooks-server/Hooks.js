@@ -5,7 +5,6 @@
 import path from 'path';
 
 import { LocalFileStore } from '@bayou/file-store-local';
-import { isDocumentId } from '@bayou/config-common';
 import { Singleton } from '@bayou/util-common';
 
 import BearerTokens from './BearerTokens';
@@ -96,36 +95,6 @@ export default class Hooks extends Singleton {
    */
   findVarDirectory(baseDir) {
     return path.join(baseDir, 'var');
-  }
-
-  /**
-   * Checks whether the given value is syntactically valid as a file ID.
-   * This method is only ever called with a non-empty string.
-   *
-   * The default implementation of this method defers to the configured function
-   * {@link @bayou/config-common#isDocumentId}.
-   *
-   * @param {string} id The (alleged) file ID to check.
-   * @returns {boolen} `true` iff `id` is syntactically valid.
-   */
-  isFileId(id) {
-    return isDocumentId(id);
-  }
-
-  /**
-   * Checks to see if this server is running in a "development" environment,
-   * returning an indication of the fact. A development environment is notable
-   * in that it notices when source files change (and acts accordingly), has
-   * `/debug` endpoints enabled, and may be less secure in other ways as a
-   * tradeoff for higher internal visibility, that is, higher debugability.
-   *
-   * The default implementation of this method always returns `true`.
-   *
-   * @returns {boolean} `true` if this server is running in a development
-   *   environment, or `false` if not.
-   */
-  isRunningInDevelopment() {
-    return true;
   }
 
   /**

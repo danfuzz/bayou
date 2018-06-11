@@ -13,7 +13,7 @@ import { use } from '@bayou/injecty';
  * and underscore (`_`).
  *
  * @param {string} id The (alleged) document ID to check.
- * @returns {boolen} `true` iff `id` is syntactically valid.
+ * @returns {boolean} `true` iff `id` is syntactically valid.
  */
 export default function isDocumentId(id) {
   return use.isDocumentId(id);

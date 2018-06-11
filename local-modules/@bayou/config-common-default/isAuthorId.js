@@ -7,7 +7,7 @@ import { TString } from '@bayou/typecheck';
 /**
  * Implementation of standard configuration point.
  *
- * This implementation  requires that author IDs have no more than 32 characters
+ * This implementation requires that author IDs have no more than 32 characters
  * and only use ASCII alphanumerics plus dash (`-`) and underscore (`_`).
  *
  * @param {string} id The (alleged) author ID to check.

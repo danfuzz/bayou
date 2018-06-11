@@ -8,6 +8,7 @@
 
   "dependencies": {
     "@bayou/config-common-default": "local",
+    "@bayou/config-server-default": "local",
     "@bayou/server-top": "local"
   }
 }
