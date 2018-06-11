@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { BearerTokens } from '@bayou/app-setup';
 import { UtilityClass } from '@bayou/util-common';
 
 /**
@@ -16,6 +17,17 @@ export default class Network extends UtilityClass {
    */
   static get baseUrl() {
     return `http://localhost:${this.listenPort}`;
+  }
+
+  /**
+   * {BearerTokens} Implementation of standard configuration point.
+   */
+  static get bearerTokens() {
+    if (!this._bearerTokens) {
+      this._bearerTokens = new BearerTokens();
+    }
+
+    return this._bearerTokens;
   }
 
   /**

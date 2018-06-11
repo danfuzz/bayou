@@ -7,8 +7,6 @@ import path from 'path';
 import { LocalFileStore } from '@bayou/file-store-local';
 import { Singleton } from '@bayou/util-common';
 
-import BearerTokens from './BearerTokens';
-
 /**
  * Hooks into various server operations. This is meant to make it easy for
  * complete products to customize Bayou without overlaying the original
@@ -20,19 +18,6 @@ export default class Hooks extends Singleton {
    */
   constructor() {
     super();
-
-    /**
-     * {BearerTokens} Unique system-wide instance for managing bearer tokens.
-     */
-    this._bearerTokens = new BearerTokens();
-  }
-
-  /**
-   * {BearerTokens} The object which validates and authorizes bearer tokens.
-   * See that (base / default) class for details.
-   */
-  get bearerTokens() {
-    return this._bearerTokens;
   }
 
   /**

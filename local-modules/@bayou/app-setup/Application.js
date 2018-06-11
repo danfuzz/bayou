@@ -12,7 +12,6 @@ import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { ClientBundle } from '@bayou/client-bundle';
 import { Network } from '@bayou/config-server';
 import { Dirs, ProductInfo } from '@bayou/env-server';
-import { Hooks } from '@bayou/hooks-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 
@@ -65,7 +64,7 @@ export default class Application extends CommonBase {
     this._bindRoot();
     (async () => {
       for (;;) {
-        await Hooks.theOne.bearerTokens.whenRootTokensChange();
+        await Network.bearerTokens.whenRootTokensChange();
         log.info('Root tokens updated.');
         this._bindRoot();
       }
@@ -202,12 +201,13 @@ export default class Application extends CommonBase {
 
   /**
    * Maintains up-to-date bindings for the `rootAccess` object, based on the
-   * root token(s) reported via `@bayou/hooks-server.bearerTokens`. This
-   * includes a promise-chain-based ongoing update mechanism.
+   * root token(s) reported via
+   * {@link @bayou/config-server/Network#bearerTokens}. This includes a
+   * promise-chain-based ongoing update mechanism.
    */
   _bindRoot() {
     const context = this._context;
-    const rootTokens = Hooks.theOne.bearerTokens.rootTokens;
+    const rootTokens = Network.bearerTokens.rootTokens;
 
     if (BearerToken.sameArrays(rootTokens, this._rootTokens)) {
       // No actual change. Note the fact.

@@ -18,6 +18,14 @@ export default class Network extends UtilityClass {
   }
 
   /**
+   * {BearerTokens} The object which validates and authorizes bearer tokens.
+   * See that (base / default) class for details.
+   */
+  static get bearerTokens() {
+    return use.Network.bearerTokens;
+  }
+
+  /**
    * {Int} The local port to listen for connections on.
    *
    * **Note:** This can get overridden when running the system for the purposes

@@ -6,15 +6,9 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BaseFileStore } from '@bayou/file-store';
-import { BearerTokens, Hooks } from '@bayou/app-setup';
+import { Hooks } from '@bayou/app-setup';
 
 describe('@bayou/hooks-server/Hooks', () => {
-  describe('.bearerTokens', () => {
-    it('should return an instance of `BearerTokens`', () => {
-      assert.instanceOf(Hooks.theOne.bearerTokens, BearerTokens);
-    });
-  });
-
   describe('.fileStore', () => {
     it('should return an instance of BaseFileStore', () => {
       assert.instanceOf(Hooks.theOne.fileStore, BaseFileStore);

@@ -3,16 +3,15 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseKey } from '@bayou/api-common';
-import { Hooks } from '@bayou/hooks-server';
+import { Network } from '@bayou/config-server';
 import { TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
 /**
  * Bearer token, which is a kind of key which conflates ID and secret.
  * Conflation notwithstanding, some part of a bearer token is always considered
- * to be its "ID." the `@bayou/hooks-server` value `Hooks.theOne.bearerTokens`
- * can be used to control ID derivation (and general validation) of bearer token
- * strings.
+ * to be its "ID." {@link @bayou/config-server/Network#bearerTokens} can be used
+ * to control ID derivation (and general validation) of bearer token strings.
  */
 export default class BearerToken extends BaseKey {
   /**
@@ -47,13 +46,13 @@ export default class BearerToken extends BaseKey {
   constructor(secretToken) {
     TString.minLen(secretToken, 32);
 
-    if (!Hooks.theOne.bearerTokens.isToken(secretToken)) {
+    if (!Network.bearerTokens.isToken(secretToken)) {
       // We don't include any real detail in the error message, as that might
       // inadvertently leak a secret into the logs.
       throw Errors.badValue('(hidden)', 'secret token');
     }
 
-    super('*', Hooks.theOne.bearerTokens.tokenId(secretToken));
+    super('*', Network.bearerTokens.tokenId(secretToken));
 
     /** {string} Secret token. */
     this._secretToken = secretToken;
