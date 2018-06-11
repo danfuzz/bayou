@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BaseFileStore } from '@bayou/file-store';
-import { BearerTokens, Hooks } from '@bayou/hooks-server';
+import { BearerTokens, Hooks } from '@bayou/app-setup';
 
 describe('@bayou/hooks-server/Hooks', () => {
   describe('.bearerTokens', () => {
@@ -21,7 +21,7 @@ describe('@bayou/hooks-server/Hooks', () => {
     });
   });
 
-  describe('isFileId(id)', () => {
+  describe('isFileId()', () => {
     it('should accept 32-character alphanum ASCII strings', () => {
       assert.isTrue(Hooks.theOne.isFileId('123abc7890ABC456789012'));
     });

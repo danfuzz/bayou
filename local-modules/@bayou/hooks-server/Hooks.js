@@ -17,6 +17,18 @@ import BearerTokens from './BearerTokens';
  */
 export default class Hooks extends Singleton {
   /**
+   * Constructs an instance.
+   */
+  constructor() {
+    super();
+
+    /**
+     * {BearerTokens} Unique system-wide instance for managing bearer tokens.
+     */
+    this._bearerTokens = new BearerTokens();
+  }
+
+  /**
    * {string} The base URL to use when constructing URLs to point at the
    * public-facing (set of) machine(s) which front for this server.
    *
@@ -32,7 +44,7 @@ export default class Hooks extends Singleton {
    * See that (base / default) class for details.
    */
   get bearerTokens() {
-    return BearerTokens.theOne;
+    return this._bearerTokens;
   }
 
   /**

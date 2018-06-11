@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import Application from './Application';
+import BearerTokens from './BearerTokens';
 import Monitor from './Monitor';
 
-export { Application, Monitor };
+export { Application, BearerTokens, Monitor };
