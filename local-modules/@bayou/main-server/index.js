@@ -3,8 +3,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Common_injectAll } from '@bayou/config-common-default';
-import { Server_injectAll } from '@bayou/config-server-default';
+import { injectAll as Common_injectAll } from '@bayou/config-common-default';
+import { injectAll as Server_injectAll } from '@bayou/config-server-default';
 import { Server } from '@bayou/server-top';
 
 function injectAll() {
