@@ -20,10 +20,4 @@ describe('@bayou/hooks-server/Hooks', () => {
       assert.instanceOf(Hooks.theOne.fileStore, BaseFileStore);
     });
   });
-
-  describe('.listenPort', () => {
-    it('should return the documented value', () => {
-      assert.strictEqual(Hooks.theOne.listenPort, 8080);
-    });
-  });
 });

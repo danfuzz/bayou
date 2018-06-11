@@ -3,6 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
+    "@bayou/config-server": "local",
     "@bayou/deps-util-server": "local",
     "@bayou/hooks-server": "local",
     "@bayou/proppy": "local",

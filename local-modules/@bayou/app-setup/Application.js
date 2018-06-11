@@ -10,6 +10,7 @@ import ws from 'ws';
 import { BearerToken, Context, PostConnection, WsConnection } from '@bayou/api-server';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { ClientBundle } from '@bayou/client-bundle';
+import { Network } from '@bayou/config-server';
 import { Dirs, ProductInfo } from '@bayou/env-server';
 import { Hooks } from '@bayou/hooks-server';
 import { Logger } from '@bayou/see-all';
@@ -118,7 +119,7 @@ export default class Application extends CommonBase {
    */
   async start(pickPort = false) {
     const server     = this._server;
-    const port       = pickPort ? 0 : Hooks.theOne.listenPort;
+    const port       = pickPort ? 0 : Network.listenPort;
     const resultPort = await ServerUtil.listen(server, port);
 
     log.info(`Application server port: ${resultPort}`);

@@ -4,6 +4,7 @@
 
 import { inject } from '@bayou/injecty';
 
+import Network from './Network';
 import isFileId from './isFileId';
 import isRunningInDevelopment from './isRunningInDevelopment';
 
@@ -11,11 +12,13 @@ import isRunningInDevelopment from './isRunningInDevelopment';
  * Injects all of the definitions here into the global configuration.
  */
 function injectAll() {
+  inject.Network                = Network;
   inject.isFileId               = isFileId;
   inject.isRunningInDevelopment = isRunningInDevelopment;
 }
 
 export {
+  Network,
   injectAll,
   isFileId,
   isRunningInDevelopment

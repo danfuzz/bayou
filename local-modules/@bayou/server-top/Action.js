@@ -7,7 +7,7 @@ import path from 'path';
 
 import { Application, Monitor } from '@bayou/app-setup';
 import { ClientBundle } from '@bayou/client-bundle';
-import { isRunningInDevelopment } from '@bayou/config-server';
+import { Network, isRunningInDevelopment } from '@bayou/config-server';
 import { DevMode } from '@bayou/dev-mode';
 import { Dirs, ProductInfo, ServerEnv } from '@bayou/env-server';
 import { Hooks } from '@bayou/hooks-server';
@@ -105,7 +105,7 @@ export default class Action extends CommonBase {
     let port;
 
     if (alreadyRunning) {
-      port = Hooks.theOne.listenPort;
+      port = Network.listenPort;
       log.info(
         'NOTE: There is a server already running on this machine. The client test run\n' +
         '      will issue requests to it instead of trying to build a new test bundle.');
@@ -256,7 +256,7 @@ export default class Action extends CommonBase {
     const result = theApp.start(pickPort);
 
     if (doMonitor) {
-      const monitorPort = Hooks.theOne.monitorPort;
+      const monitorPort = Network.monitorPort;
       if (monitorPort !== null) {
         try {
           const monitor = new Monitor(theApp, monitorPort);

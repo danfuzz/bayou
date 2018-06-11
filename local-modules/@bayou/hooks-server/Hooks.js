@@ -28,17 +28,6 @@ export default class Hooks extends Singleton {
   }
 
   /**
-   * {string} The base URL to use when constructing URLs to point at the
-   * public-facing (set of) machine(s) which front for this server.
-   *
-   * The default value for this is `http://localhost:N` where `N` is the value
-   * of {@link #listenPort}.
-   */
-  get baseUrl() {
-    return `http://localhost:${this.listenPort}`;
-  }
-
-  /**
    * {BearerTokens} The object which validates and authorizes bearer tokens.
    * See that (base / default) class for details.
    */

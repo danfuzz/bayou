@@ -5,7 +5,7 @@
 import is_running from 'is-running';
 import http from 'http';
 
-import { Hooks } from '@bayou/hooks-server';
+import { Network } from '@bayou/config-server';
 import { Logger } from '@bayou/see-all';
 import { Errors, Singleton } from '@bayou/util-common';
 
@@ -25,7 +25,7 @@ export default class ServerEnv extends Singleton {
    * is always an `http://localhost/` URL.
    */
   get loopbackUrl() {
-    return `http://localhost:${Hooks.theOne.listenPort}`;
+    return `http://localhost:${Network.listenPort}`;
   }
 
   /**

@@ -8,6 +8,7 @@
     "@bayou/app-common": "local",
     "@bayou/client-bundle": "local",
     "@bayou/codec": "local",
+    "@bayou/config-server": "local",
     "@bayou/deps-ansi-color": "local",
     "@bayou/deps-express": "local",
     "@bayou/deps-util-common": "local",
