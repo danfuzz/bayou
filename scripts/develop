@@ -66,7 +66,7 @@ while true; do
         --overlay=?*)
             buildOpts+=("$1");
             ;;
-        --server-main=?*)
+        --main-server=?*)
             buildOpts+=("$1");
             ;;
         --) # End of all options
@@ -97,7 +97,7 @@ if (( ${showHelp} || ${argError} )); then
     echo '    Find (and place) build output in directory <dir>.'
     echo '  --overlay=<dir>'
     echo '    Find overlay source in directory <dir>.'
-    echo '  --server-main=<name>'
+    echo '  --main-server=<name>'
     echo '    Name of the main module for the server.'
     echo ''
     echo "${progName} [--help | -h]"

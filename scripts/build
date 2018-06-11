@@ -40,7 +40,7 @@ buildProjects=(compiler server client bin product-info)
 overlayDir=''
 
 # Name of the `main` module for the server, if specified.
-serverMain=''
+mainServer=''
 
 # Options to pass to `out-dir-setup`.
 outOpts=()
@@ -63,8 +63,8 @@ while true; do
         --overlay=?*)
             overlayDir="${1#*=}"
             ;;
-        --server-main=?*)
-            serverMain="${1#*=}"
+        --main-server=?*)
+            mainServer="${1#*=}"
             ;;
         --) # End of all options
             shift
@@ -96,7 +96,7 @@ if (( ${showHelp} || ${argError} )); then
     echo '    Place output in directory <dir>.'
     echo '  --overlay=<dir>'
     echo '    Find overlay source in directory <dir>.'
-    echo '  --server-main=<name>'
+    echo '  --main-server=<name>'
     echo '    Name of the main module for the server.'
     echo ''
     echo "${progName} [--help | -h]"
@@ -434,7 +434,7 @@ function build-server {
     fi
 
     # Do the initial npm(ish) installation.
-    do-install server "${serverMain}" || return 1
+    do-install server "${mainServer}" || return 1
 
     # Run Babel on all of the local source files, storing them next to the
     # imported and patched modules.
