@@ -82,7 +82,7 @@ fi
 if (( ${showHelp} || ${argError} )); then
     echo 'Usage:'
     echo ''
-    echo "${progName} [--out=<dir>] [--overlay=<dir>] [--] [<file-or-dir> ...]"
+    echo "${progName} [<opt> ...] [--] [<file-or-dir> ...]"
     echo '  Run the linter on the indicated files or directories. With nothing'
     echo '  specified, runs over the entire project (including overlay source'
     echo '  if indicated).'

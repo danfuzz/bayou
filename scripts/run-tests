@@ -70,7 +70,7 @@ done
 if (( ${showHelp} || ${argError} )); then
     echo 'Usage:'
     echo ''
-    echo "${progName} [--out=<dir>] [--client] [--client-bundle] [--server]"
+    echo "${progName} [<opt> ...]"
     echo '  Runs the project tests. If no specific tests are specified, runs all'
     echo '  of them.'
     echo ''
