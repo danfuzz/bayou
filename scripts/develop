@@ -66,6 +66,9 @@ while true; do
         --overlay=?*)
             buildOpts+=("$1");
             ;;
+        --server-main=?*)
+            buildOpts+=("$1");
+            ;;
         --) # End of all options
             shift
             break
@@ -85,7 +88,7 @@ done
 if (( ${showHelp} || ${argError} )); then
     echo 'Usage:'
     echo ''
-    echo "${progName} [--clean] [--out=<dir>] [--overlay=<dir>]"
+    echo "${progName} [<opt> ...]"
     echo '  Build and run the project, in a live development manner.'
     echo ''
     echo '  --clean'
@@ -94,6 +97,8 @@ if (( ${showHelp} || ${argError} )); then
     echo '    Find (and place) build output in directory <dir>.'
     echo '  --overlay=<dir>'
     echo '    Find overlay source in directory <dir>.'
+    echo '  --server-main=<name>'
+    echo '    Name of the main module for the server.'
     echo ''
     echo "${progName} [--help | -h]"
     echo '  Display this message.'
