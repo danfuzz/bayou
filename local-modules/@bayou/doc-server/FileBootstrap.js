@@ -2,9 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Storage } from '@bayou/config-server';
 import { BodyChange, BodyDelta } from '@bayou/doc-common';
 import { TransactionSpec } from '@bayou/file-store-ot';
-import { DEFAULT_DOCUMENT } from '@bayou/hooks-server';
 import { Timestamp } from '@bayou/ot-common';
 import { Mutex } from '@bayou/promise-util';
 import { Errors } from '@bayou/util-common';
@@ -15,9 +15,6 @@ import CaretControl from './CaretControl';
 import PropertyControl from './PropertyControl';
 import SchemaHandler from './SchemaHandler';
 import ValidationStatus from './ValidationStatus';
-
-/** {BodyDelta} Default contents when creating a new document. */
-const DEFAULT_TEXT = new BodyDelta(DEFAULT_DOCUMENT);
 
 /**
  * {BodyDelta} Message used as document to indicate a major validation error.
@@ -227,7 +224,7 @@ export default class FileBootstrap extends BaseDataManager {
       case ValidationStatus.STATUS_notFound: {
         // The file simply didn't exist.
         this.log.info('Making new file.');
-        firstText = DEFAULT_TEXT;
+        firstText = Storage.DEFAULT_DOCUMENT_BODY;
         break;
       }
 
