@@ -10,6 +10,15 @@ import { UtilityClass } from '@bayou/util-common';
  */
 export default class Storage extends UtilityClass {
   /**
+   * {@bayou/file-store/BaseFileStore} The object which provides access to file
+   * storage (roughly speaking, the filesystem to store the "files" this system
+   * deals with).
+   */
+  static get fileStore() {
+    return use.Storage.fileStore;
+  }
+
+  /**
    * Checks whether the given value is syntactically valid as a file ID.
    * This method is only ever called with a non-empty string.
    *

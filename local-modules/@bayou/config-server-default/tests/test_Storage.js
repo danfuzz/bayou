@@ -6,8 +6,15 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { Storage } from '@bayou/config-server-default';
+import { LocalFileStore } from '@bayou/file-store-local';
 
 describe('@bayou/config-server-default/Storage', () => {
+  describe('.fileStore', () => {
+    it('should be an instance of `LocalFileStore`', () => {
+      assert.instanceOf(Storage.fileStore, LocalFileStore);
+    });
+  });
+
   describe('isFileId()', () => {
     it('should accept 32-character alphanum ASCII strings', () => {
       assert.isTrue(Storage.isFileId('123abc7890ABC456789012'));

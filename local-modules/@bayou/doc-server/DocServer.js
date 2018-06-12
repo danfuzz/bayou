@@ -5,8 +5,8 @@
 import weak from 'weak';
 
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
+import { Storage } from '@bayou/config-server';
 import { DocumentId } from '@bayou/doc-common';
-import { Hooks } from '@bayou/hooks-server';
 import { Logger } from '@bayou/see-all';
 import { TFunction, TString } from '@bayou/typecheck';
 import { Singleton } from '@bayou/util-common';
@@ -93,7 +93,7 @@ export default class DocServer extends Singleton {
 
     const resultPromise = (async () => {
       try {
-        const file   = await Hooks.theOne.fileStore.getFile(docId);
+        const file   = await Storage.fileStore.getFile(docId);
         const result = new FileComplex(this._codec, file);
 
         result.log.info('Initializing...');

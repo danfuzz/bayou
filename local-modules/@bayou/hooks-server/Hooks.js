@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { LocalFileStore } from '@bayou/file-store-local';
 import { Singleton } from '@bayou/util-common';
 
 /**
@@ -16,16 +15,6 @@ export default class Hooks extends Singleton {
    */
   constructor() {
     super();
-  }
-
-  /**
-   * {BaseFileStore} The object which provides access to file storage (roughly
-   * speaking, the filesystem to store the "files" this system deals with). This
-   * is an instance of a subclass of `BaseFileStore`, as defined by the
-   * `@bayou/file-store` module.
-   */
-  get fileStore() {
-    return LocalFileStore.theOne;
   }
 
   /**

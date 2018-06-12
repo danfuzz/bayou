@@ -5,6 +5,7 @@
   "dependencies": {
     "@bayou/app-setup": "local",
     "@bayou/config-common": "local",
-    "@bayou/config-server": "local"
+    "@bayou/config-server": "local",
+    "@bayou/file-store-local": "local"
   }
 }

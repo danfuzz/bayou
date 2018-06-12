@@ -3,7 +3,6 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "@bayou/file-store-local": "local",
     "@bayou/util-common": "local"
   }
 }
