@@ -31,29 +31,6 @@ export default class Hooks extends Singleton {
   }
 
   /**
-   * {Int} The local port to listen for connections on by default. This
-   * typically but does not _necessarily_ match the values returned by
-   * {@link #baseUrl}. It won't match in cases where this server runs behind a
-   * reverse proxy, for example. It also won't match when the system is brought
-   * up in `test` mode, as that mode will pick an arbitrary port to listen on.
-   *
-   * This (default) implementation of the property always returns `8080`.
-   */
-  get listenPort() {
-    return 8080;
-  }
-
-  /**
-   * {Int|null} The local port to use for internal monitoring, or `null` to
-   * not expose monitoring endpoints.
-   *
-   * This (default) implementation of the property always returns `8888`.
-   */
-  get monitorPort() {
-    return 8888;
-  }
-
-  /**
    * Determines the location of the "var" (variable / mutable data) directory,
    * returning an absolute path to it. (This is where, for example, log files
    * are stored.) The directory need not exist; the system will take care of
