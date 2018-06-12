@@ -15,7 +15,7 @@ const log = new Logger('root-access');
 
 /**
  * "Root access" object. This is the object which is protected by the root
- * bearer token(s) returned via the related `@bayou/hooks-server` hooks.
+ * bearer token(s).
  */
 export default class RootAccess {
   /**
