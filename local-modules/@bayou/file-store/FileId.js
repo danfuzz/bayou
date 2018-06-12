@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Hooks } from '@bayou/hooks-server';
+import { isFileId } from '@bayou/config-server';
 import { Errors, UtilityClass } from '@bayou/util-common';
 
 /**
@@ -30,7 +30,7 @@ export default class FileId extends UtilityClass {
   static check(value) {
     if (   (typeof value !== 'string')
         || (value.length === 0)
-        || !Hooks.theOne.isFileId(value)) {
+        || !isFileId(value)) {
       throw Errors.badValue(value, FileId);
     }
 

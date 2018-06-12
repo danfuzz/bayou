@@ -6,20 +6,26 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BearerToken } from '@bayou/api-server';
-import { BearerTokens } from '@bayou/hooks-server';
+import { BearerTokens } from '@bayou/app-setup';
 
-const BEARER_TOKENS = BearerTokens.theOne;
+describe('@bayou/app-setup/BearerTokens', () => {
+  describe('constructor', () => {
+    it('should succeed', () => {
+      assert.doesNotThrow(() => new BearerTokens());
+    });
+  });
 
-describe('@bayou/hooks-server/BearerTokens', () => {
-  describe('isToken(tokenString)', () => {
+  describe('isToken()', () => {
     it('should accept any value', () => {
-      assert.isTrue(BEARER_TOKENS.isToken('abc123'));
+      const bt = new BearerTokens();
+      assert.isTrue(bt.isToken('abc123'));
     });
   });
 
   describe('.rootTokens', () => {
-    it('should return an array of BearerToken', () => {
-      const tokens = BEARER_TOKENS.rootTokens;
+    it('should be an array of `BearerToken` instances', () => {
+      const bt     = new BearerTokens();
+      const tokens = bt.rootTokens;
 
       assert.isArray(tokens);
 
@@ -29,10 +35,11 @@ describe('@bayou/hooks-server/BearerTokens', () => {
     });
   });
 
-  describe('tokenId(tokenString)', () => {
+  describe('tokenId()', () => {
     it('should return the first 16 characters of the string passed to it', () => {
+      const bt              = new BearerTokens();
       const fakeTokenString = 'abcdefghijklmnopqrstuvwxyz';
-      const tokenId = BEARER_TOKENS.tokenId(fakeTokenString);
+      const tokenId         = bt.tokenId(fakeTokenString);
 
       assert.strictEqual(tokenId, fakeTokenString.slice(0, 16));
     });
@@ -40,7 +47,8 @@ describe('@bayou/hooks-server/BearerTokens', () => {
 
   describe('whenRootTokensChange()', () => {
     it('should return a promise', () => {
-      const changePromise = BEARER_TOKENS.whenRootTokensChange();
+      const bt            = new BearerTokens();
+      const changePromise = bt.whenRootTokensChange();
 
       assert.property(changePromise, 'then');
       assert.isFunction(changePromise.then);

@@ -5,10 +5,7 @@
 import path from 'path';
 
 import { LocalFileStore } from '@bayou/file-store-local';
-import { isDocumentId } from '@bayou/config-common';
 import { Singleton } from '@bayou/util-common';
-
-import BearerTokens from './BearerTokens';
 
 /**
  * Hooks into various server operations. This is meant to make it easy for
@@ -17,22 +14,10 @@ import BearerTokens from './BearerTokens';
  */
 export default class Hooks extends Singleton {
   /**
-   * {string} The base URL to use when constructing URLs to point at the
-   * public-facing (set of) machine(s) which front for this server.
-   *
-   * The default value for this is `http://localhost:N` where `N` is the value
-   * of {@link #listenPort}.
+   * Constructs an instance.
    */
-  get baseUrl() {
-    return `http://localhost:${this.listenPort}`;
-  }
-
-  /**
-   * {BearerTokens} The object which validates and authorizes bearer tokens.
-   * See that (base / default) class for details.
-   */
-  get bearerTokens() {
-    return BearerTokens.theOne;
+  constructor() {
+    super();
   }
 
   /**
@@ -43,29 +28,6 @@ export default class Hooks extends Singleton {
    */
   get fileStore() {
     return LocalFileStore.theOne;
-  }
-
-  /**
-   * {Int} The local port to listen for connections on by default. This
-   * typically but does not _necessarily_ match the values returned by
-   * {@link #baseUrl}. It won't match in cases where this server runs behind a
-   * reverse proxy, for example. It also won't match when the system is brought
-   * up in `test` mode, as that mode will pick an arbitrary port to listen on.
-   *
-   * This (default) implementation of the property always returns `8080`.
-   */
-  get listenPort() {
-    return 8080;
-  }
-
-  /**
-   * {Int|null} The local port to use for internal monitoring, or `null` to
-   * not expose monitoring endpoints.
-   *
-   * This (default) implementation of the property always returns `8888`.
-   */
-  get monitorPort() {
-    return 8888;
   }
 
   /**
@@ -84,36 +46,6 @@ export default class Hooks extends Singleton {
    */
   findVarDirectory(baseDir) {
     return path.join(baseDir, 'var');
-  }
-
-  /**
-   * Checks whether the given value is syntactically valid as a file ID.
-   * This method is only ever called with a non-empty string.
-   *
-   * The default implementation of this method defers to the configured function
-   * {@link @bayou/config-common#isDocumentId}.
-   *
-   * @param {string} id The (alleged) file ID to check.
-   * @returns {boolen} `true` iff `id` is syntactically valid.
-   */
-  isFileId(id) {
-    return isDocumentId(id);
-  }
-
-  /**
-   * Checks to see if this server is running in a "development" environment,
-   * returning an indication of the fact. A development environment is notable
-   * in that it notices when source files change (and acts accordingly), has
-   * `/debug` endpoints enabled, and may be less secure in other ways as a
-   * tradeoff for higher internal visibility, that is, higher debugability.
-   *
-   * The default implementation of this method always returns `true`.
-   *
-   * @returns {boolean} `true` if this server is running in a development
-   *   environment, or `false` if not.
-   */
-  isRunningInDevelopment() {
-    return true;
   }
 
   /**

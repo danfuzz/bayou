@@ -12,7 +12,7 @@ import { TString } from '@bayou/typecheck';
  * (`_`).
  *
  * @param {string} id The (alleged) document ID to check.
- * @returns {boolen} `true` iff `id` is syntactically valid.
+ * @returns {boolean} `true` iff `id` is syntactically valid.
  */
 export default function isDocumentId(id) {
   TString.check(id);

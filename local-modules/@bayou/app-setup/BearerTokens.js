@@ -4,14 +4,15 @@
 
 import { BearerToken } from '@bayou/api-server';
 import { Delay } from '@bayou/promise-util';
-import { Singleton } from '@bayou/util-common';
+import { CommonBase } from '@bayou/util-common';
 
 /**
- * Base class for and default implementation of `Hooks.bearerTokens`, which
- * notably serves as documentation for the required methods. See
- * `@bayou/api-server.BearerToken` for more details.
+ * Base class for and default implementation of
+ * {@link @bayou/hooks-server/Hooks#bearerTokens}, which notably serves as
+ * documentation for the required methods. See
+ * {@link @bayou/api-server#BearerToken} for more details.
  */
-export default class BearerTokens extends Singleton {
+export default class BearerTokens extends CommonBase {
   /**
    * Returns `true` iff the `tokenString` is _syntactically_ valid as a bearer
    * token (whether or not it actually grants any access). This will only ever

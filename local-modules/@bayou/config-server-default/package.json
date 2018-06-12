@@ -1,0 +1,10 @@
+{
+  "name": "@bayou/config-server-default",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "@bayou/app-setup": "local",
+    "@bayou/config-common": "local",
+    "@bayou/config-server": "local"
+  }
+}

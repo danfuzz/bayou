@@ -4,9 +4,9 @@
 
 import { SplitKey } from '@bayou/api-common';
 import { Context } from '@bayou/api-server';
+import { Network } from '@bayou/config-server';
 import { DocumentId } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
-import { Hooks } from '@bayou/hooks-server';
 import { AuthorId } from '@bayou/ot-common';
 import { Logger } from '@bayou/see-all';
 
@@ -47,7 +47,7 @@ export default class RootAccess {
 
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
 
-    const url     = `${Hooks.theOne.baseUrl}/api`;
+    const url     = `${Network.baseUrl}/api`;
     const session = fileComplex.makeNewSession(authorId, this._randomId.bind(this));
     const key     = new SplitKey(url, session.getSessionId());
     this._context.add(key, session);

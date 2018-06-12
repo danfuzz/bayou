@@ -2,8 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import Application from './Application';
-import BearerTokens from './BearerTokens';
-import Monitor from './Monitor';
+import Network from './Network';
+import isFileId from './isFileId';
+import isRunningInDevelopment from './isRunningInDevelopment';
 
-export { Application, BearerTokens, Monitor };
+export {
+  Network,
+  isFileId,
+  isRunningInDevelopment
+};

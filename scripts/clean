@@ -70,7 +70,7 @@ done
 if (( ${showHelp} || ${argError} )); then
     echo 'Usage:'
     echo ''
-    echo "${progName} [--out=<dir>]"
+    echo "${progName} [<opt> ...]"
     echo '  Clean the project output.'
     echo ''
     echo '  --create'
