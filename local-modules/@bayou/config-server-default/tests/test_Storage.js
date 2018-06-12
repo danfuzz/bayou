@@ -5,24 +5,24 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { isFileId } from '@bayou/config-server-default';
+import { Storage } from '@bayou/config-server-default';
 
-describe('@bayou/config-server-default', () => {
+describe('@bayou/config-server-default/Storage', () => {
   describe('isFileId()', () => {
     it('should accept 32-character alphanum ASCII strings', () => {
-      assert.isTrue(isFileId('123abc7890ABC456789012'));
+      assert.isTrue(Storage.isFileId('123abc7890ABC456789012'));
     });
 
     it('should allow underscores and hyphens', () => {
-      assert.isTrue(isFileId('123456789_123456789-12'));
+      assert.isTrue(Storage.isFileId('123456789_123456789-12'));
     });
 
     it('should not allow non-ASCII characters', () => {
-      assert.isFalse(isFileId('123456789•123456789•12'));
+      assert.isFalse(Storage.isFileId('123456789•123456789•12'));
     });
 
     it('should not allow non-alphanum characters', () => {
-      assert.isFalse(isFileId('123456789\t123456789+12'));
+      assert.isFalse(Storage.isFileId('123456789\t123456789+12'));
     });
   });
 });

@@ -4,10 +4,10 @@
 
 import Deployment from './Deployment';
 import Network from './Network';
-import isFileId from './isFileId';
+import Storage from './Storage';
 
 export {
   Deployment,
   Network,
-  isFileId
+  Storage
 };
