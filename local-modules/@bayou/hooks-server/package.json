@@ -3,10 +3,6 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "@bayou/api-server": "local",
-    "@bayou/config-common": "local",
-    "@bayou/file-store-local": "local",
-    "@bayou/promise-util": "local",
     "@bayou/util-common": "local"
   }
 }
