@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BaseFileStore } from '@bayou/file-store';
-import { Hooks } from '@bayou/app-setup';
+import { Hooks } from '@bayou/hooks-server';
 
 describe('@bayou/hooks-server/Hooks', () => {
   describe('.fileStore', () => {
