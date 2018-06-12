@@ -34,4 +34,16 @@ export default class Deployment extends UtilityClass {
   static isRunningInDevelopment() {
     return true;
   }
+
+  /**
+   * Implementation of standard configuration point.
+   *
+   * This implementation is a no-op.
+   *
+   * @param {@bayou/server-top/Action} action_unused The action that is about to
+   *   be run.
+   */
+  static aboutToRun(action_unused) {
+    // This space intentionally left blank.
+  }
 }

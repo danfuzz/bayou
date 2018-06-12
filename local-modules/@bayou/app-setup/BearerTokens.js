@@ -8,7 +8,7 @@ import { CommonBase } from '@bayou/util-common';
 
 /**
  * Base class for and default implementation of
- * {@link @bayou/hooks-server/Hooks#bearerTokens}, which notably serves as
+ * {@link @bayou/config-server/Network#bearerTokens}, which notably serves as
  * documentation for the required methods. See
  * {@link @bayou/api-server#BearerToken} for more details.
  */

@@ -10,7 +10,6 @@ import { ClientBundle } from '@bayou/client-bundle';
 import { Deployment, Network } from '@bayou/config-server';
 import { DevMode } from '@bayou/dev-mode';
 import { Dirs, ProductInfo, ServerEnv } from '@bayou/env-server';
-import { Hooks } from '@bayou/hooks-server';
 import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { HumanSink, FileSink } from '@bayou/see-all-server';
@@ -95,6 +94,10 @@ export default class Action extends CommonBase {
     const methodName = `_run_${camelCase(this.name)}`;
 
     this._startLogging();
+
+    // Give the outer app a chance to do any required early initialization.
+    await Deployment.aboutToRun(this);
+
     return this[methodName]();
   }
 
@@ -249,9 +252,6 @@ export default class Action extends CommonBase {
    * @returns {Int} The port being listened on, once listening has started.
    */
   static async _startServer(pickPort, doMonitor, devRoutes) {
-    // Give the outer app a chance to do any required early initialization.
-    await Hooks.theOne.run();
-
     // Set up the server environment bits (including, e.g. the PID file).
     await ServerEnv.theOne.init();
 

@@ -54,8 +54,8 @@ export default class Application extends CommonBase {
 
     /**
      * {RootAccess} The "root access" object. This is the object which is
-     * protected by the root bearer token(s) returned via the related
-     * `@bayou/hooks-server` hooks.
+     * protected by the root bearer token(s) returned via
+     * {@link @bayou/config-server/Network#bearerTokens}.
      */
     this._rootAccess = new RootAccess(this._context);
 

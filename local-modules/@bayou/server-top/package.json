@@ -5,10 +5,10 @@
   "dependencies": {
     "@bayou/app-setup": "local",
     "@bayou/client-bundle": "local",
+    "@bayou/config-server": "local",
     "@bayou/deps-util-server": "local",
     "@bayou/dev-mode": "local",
     "@bayou/env-server": "local",
-    "@bayou/hooks-server": "local",
     "@bayou/promise-util": "local",
     "@bayou/see-all": "local",
     "@bayou/see-all-server": "local",
