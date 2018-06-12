@@ -58,6 +58,32 @@ export default class Action extends CommonBase {
     Object.freeze(this);
   }
 
+  /** {string} The action name. */
+  get name() {
+    return this._options.action;
+  }
+
+  /**
+   * Indicates whether or not this is a full server run, as opposed to one of
+   * the more ephemeral actions (such as a unit test run).
+   *
+   * @returns {boolean} `true` iff this action actually starts a server running
+   *   on an ongoing basis.
+   */
+  isFullRun() {
+    switch (this.name) {
+      case 'dev':
+      case 'dev-if-appropriate':
+      case 'production': {
+        return true;
+      }
+
+      default: {
+        return false;
+      }
+    }
+  }
+
   /**
    * Performs the action indicated by the `options` of this instance.
    *
@@ -66,7 +92,7 @@ export default class Action extends CommonBase {
    *   once the immediate action is complete.
    */
   async run() {
-    const methodName = `_run_${camelCase(this._options.action)}`;
+    const methodName = `_run_${camelCase(this.name)}`;
 
     return this[methodName]();
   }
