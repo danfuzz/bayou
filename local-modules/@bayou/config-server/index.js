@@ -2,12 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import Deployment from './Deployment';
 import Network from './Network';
 import isFileId from './isFileId';
-import isRunningInDevelopment from './isRunningInDevelopment';
 
 export {
+  Deployment,
   Network,
-  isFileId,
-  isRunningInDevelopment
+  isFileId
 };

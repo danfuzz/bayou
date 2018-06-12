@@ -5,12 +5,12 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { isRunningInDevelopment } from '@bayou/config-server-default';
+import { Deployment } from '@bayou/config-server-default';
 
-describe('@bayou/config-server-default', () => {
+describe('@bayou/config-server-default/Deployment', () => {
   describe('isRunningInDevelopment()', () => {
     it('should return `true`', () => {
-      assert.isTrue(isRunningInDevelopment());
+      assert.isTrue(Deployment.isRunningInDevelopment());
     });
   });
 });

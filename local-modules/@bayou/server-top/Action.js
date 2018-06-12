@@ -7,7 +7,7 @@ import path from 'path';
 
 import { Application, Monitor } from '@bayou/app-setup';
 import { ClientBundle } from '@bayou/client-bundle';
-import { Network, isRunningInDevelopment } from '@bayou/config-server';
+import { Deployment, Network } from '@bayou/config-server';
 import { DevMode } from '@bayou/dev-mode';
 import { Dirs, ProductInfo, ServerEnv } from '@bayou/env-server';
 import { Hooks } from '@bayou/hooks-server';
@@ -156,7 +156,7 @@ export default class Action extends CommonBase {
    *   code on failure.
    */
   async _run_devIfAppropriate() {
-    if (isRunningInDevelopment()) {
+    if (Deployment.isRunningInDevelopment()) {
       return this._run_dev();
     } else {
       return this._run_production();
