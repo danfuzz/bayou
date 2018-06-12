@@ -10,6 +10,27 @@ import { UtilityClass } from '@bayou/util-common';
  */
 export default class Deployment extends UtilityClass {
   /**
+   * Determines the location of the "var" (variable / mutable data) directory,
+   * returning an absolute path to it. (This is where, for example, log files
+   * are stored.) The directory need not exist; the system will take care of
+   * creating it as needed.
+   *
+   * The `baseDir` argument is provided for use by configurations (such as
+   * commonly used during development) which want to keep code and data
+   * together. It's expected that in many production environments, though, the
+   * `baseDir` argument will be ignored, instead returning an unrelated
+   * filesystem path. (For example, many deployment environments want to make
+   * their code directories read-only.)
+   *
+   * @param {string} baseDir The base product directory. This is the root
+   *   directory under which the code for the product lives.
+   * @returns {string} Absolute filesystem path to the "var" directory to use.
+   */
+  static findVarDirectory(baseDir) {
+    return use.Deployment.findVarDirectory(baseDir);
+  }
+
+  /**
    * Checks to see if this server is running in a "development" environment,
    * returning an indication of the fact. A development environment is notable
    * in that it notices when source files change (and acts accordingly), has

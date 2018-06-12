@@ -5,7 +5,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { Hooks } from '@bayou/hooks-server';
+import { Deployment } from '@bayou/config-server';
 import { Errors, Singleton } from '@bayou/util-common';
 
 
@@ -84,7 +84,7 @@ export default class Dirs extends Singleton {
    * @returns {string} The "var" directory.
    */
   _findAndEnsureVarDirectory() {
-    const result = Hooks.theOne.findVarDirectory(this._baseDirectory);
+    const result = Deployment.findVarDirectory(this._baseDirectory);
 
     Dirs._ensureDir(result);
     return result;

@@ -2,12 +2,28 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import path from 'path';
+
 import { UtilityClass } from '@bayou/util-common';
 
 /**
  * Utility functionality regarding the deployment configuration of a server.
  */
 export default class Deployment extends UtilityClass {
+  /**
+   * Implementation of standard configuration point.
+   *
+   * This implementation returns the base product directory (the argument), with
+   * `/var` appended.
+   *
+   * @param {string} baseDir The base product directory. This is the root
+   *   directory under which the code for the product lives.
+   * @returns {string} Absolute filesystem path to the "var" directory to use.
+   */
+  static findVarDirectory(baseDir) {
+    return path.join(baseDir, 'var');
+  }
+
   /**
    * Implementation of standard configuration point.
    *

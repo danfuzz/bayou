@@ -8,6 +8,12 @@ import { describe, it } from 'mocha';
 import { Deployment } from '@bayou/config-server-default';
 
 describe('@bayou/config-server-default/Deployment', () => {
+  describe('findVarDirectory()', () => {
+    it('should append `/var` to its argument', () => {
+      assert.strictEqual(Deployment.findVarDirectory('/foo'), '/foo/var');
+    });
+  });
+
   describe('isRunningInDevelopment()', () => {
     it('should return `true`', () => {
       assert.isTrue(Deployment.isRunningInDevelopment());
