@@ -94,6 +94,7 @@ export default class Action extends CommonBase {
   async run() {
     const methodName = `_run_${camelCase(this.name)}`;
 
+    this._startLogging();
     return this[methodName]();
   }
 
@@ -103,8 +104,6 @@ export default class Action extends CommonBase {
    * @returns {Int} Standard process exit code.
    */
   async _run_clientBundle() {
-    new HumanSink(null, true);
-
     try {
       await new ClientBundle().build();
       log.info('');
@@ -122,8 +121,6 @@ export default class Action extends CommonBase {
    * @returns {Int} Standard process exit code.
    */
   async _run_clientTest() {
-    new HumanSink(null, true);
-
     // Figure out if there is already a server listening on the designated
     // application port. If not, run one locally in this process.
 
@@ -162,8 +159,6 @@ export default class Action extends CommonBase {
    *   code on failure.
    */
   async _run_dev() {
-    Action._startLogging(this._options.humanConsole);
-
     await Action._startServer(false, true, true);
 
     log.info('Now running in the development configuration.');
@@ -203,8 +198,6 @@ export default class Action extends CommonBase {
    *   code on failure.
    */
   async _run_production() {
-    Action._startLogging(this._options.humanConsole);
-
     await Action._startServer(false, true, false);
 
     log.info('Now running in the production configuration.');
@@ -217,31 +210,30 @@ export default class Action extends CommonBase {
    * @returns {Int} Standard process exit code.
    */
   async _run_serverTest() {
-    new HumanSink(null, true);
-
     const anyFailed = await ServerTests.run(this._options.testOut || null);
 
     return anyFailed ? 1 : 0;
   }
 
   /**
-   * Helper for actions which need to start logging for a "normal" server
-   * run (as opposed to performing tests of some sort).
-   *
-   * @param {boolean} humanConsole If `true`, causes the console logs to be in
-   *   a human-oriented format.
+   * Set up logging as appropriate for this instance.
    */
-  static _startLogging(humanConsole) {
-    const humanLogFile = path.resolve(Dirs.theOne.LOG_DIR, 'general.txt');
-    const jsonLogFile = path.resolve(Dirs.theOne.LOG_DIR, 'general.json');
+  _startLogging() {
+    if (this.isFullRun()) {
+      const humanConsole = this._options.humanConsole;
+      const humanLogFile = path.resolve(Dirs.theOne.LOG_DIR, 'general.txt');
+      const jsonLogFile  = path.resolve(Dirs.theOne.LOG_DIR, 'general.json');
 
-    // Second argument to both of these constructors is a boolean `useConsole`
-    // which indicates (when `true`) that the sink in question should also write
-    // to the console.
-    new FileSink(jsonLogFile, !humanConsole);
-    new HumanSink(humanLogFile, humanConsole);
+      // Second argument to both of these constructors is a boolean `useConsole`
+      // which indicates (when `true`) that the sink in question should also
+      // write to the console.
+      new FileSink(jsonLogFile, !humanConsole);
+      new HumanSink(humanLogFile, humanConsole);
 
-    HumanSink.patchConsole();
+      HumanSink.patchConsole();
+    } else {
+      new HumanSink(null, true);
+    }
   }
 
   /**
