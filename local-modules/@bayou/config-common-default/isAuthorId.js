@@ -11,7 +11,7 @@ import { TString } from '@bayou/typecheck';
  * and only use ASCII alphanumerics plus dash (`-`) and underscore (`_`).
  *
  * @param {string} id The (alleged) author ID to check.
- * @returns {boolen} `true` iff `id` is syntactically valid.
+ * @returns {boolean} `true` iff `id` is syntactically valid.
  */
 export default function isAuthorId(id) {
   TString.check(id);

@@ -9,7 +9,7 @@ import { use } from '@bayou/injecty';
  * This method is only ever called with a non-empty string.
  *
  * @param {string} id The (alleged) author ID to check.
- * @returns {boolen} `true` iff `id` is syntactically valid.
+ * @returns {boolean} `true` iff `id` is syntactically valid.
  */
 export default function isAuthorId(id) {
   return use.isAuthorId(id);
