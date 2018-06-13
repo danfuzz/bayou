@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { isDocumentId } from '@bayou/config-common';
+import { Ids } from '@bayou/config-common';
 import { BodyDelta } from '@bayou/doc-common';
 import { LocalFileStore } from '@bayou/file-store-local';
 import { UtilityClass } from '@bayou/util-common';
@@ -40,12 +40,12 @@ export default class Storage extends UtilityClass {
    * Implementation of standard configuration point.
    *
    * This implementation defers to the configured function
-   * {@link @bayou/config-common#isDocumentId}.
+   * {@link @bayou/config-common/Ids#isDocumentId}.
    *
    * @param {string} id The (alleged) file ID to check.
    * @returns {boolean} `true` iff `id` is syntactically valid.
    */
   static isFileId(id) {
-    return isDocumentId(id);
+    return Ids.isDocumentId(id);
   }
 }

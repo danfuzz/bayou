@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { isAuthorId } from '@bayou/config-common';
+import { Ids } from '@bayou/config-common';
 import { Errors, UtilityClass } from '@bayou/util-common';
 
 /**
@@ -29,7 +29,7 @@ export default class AuthorId extends UtilityClass {
 
     if (   (typeof value !== 'string')
         || (value.length === 0)
-        || !isAuthorId(value)) {
+        || !Ids.isAuthorId(value)) {
       throw Errors.badValue(value, AuthorId);
     }
 

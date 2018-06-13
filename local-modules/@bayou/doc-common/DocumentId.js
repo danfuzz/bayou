@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { isDocumentId } from '@bayou/config-common';
+import { Ids } from '@bayou/config-common';
 import { Errors, UtilityClass } from '@bayou/util-common';
 
 /**
@@ -22,7 +22,7 @@ export default class DocumentId extends UtilityClass {
   static check(value) {
     if (   (typeof value !== 'string')
         || (value.length === 0)
-        || !isDocumentId(value)) {
+        || !Ids.isDocumentId(value)) {
       throw Errors.badValue(value, DocumentId);
     }
 

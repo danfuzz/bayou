@@ -2,7 +2,7 @@
 ====================
 
 This module contains convenient accessors (and documentation) for all the
-injected configuration that is required just on the server side of the system.
+injected configuration that is required just on the client side of the system.
 
 **Note:** The implementation of this module intentionally defers grabbing
 injected configuration until the moment of use, so as to give the main

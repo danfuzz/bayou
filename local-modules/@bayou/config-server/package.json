@@ -3,6 +3,7 @@
   "version": "1.0.0",
 
   "dependencies": {
-    "@bayou/injecty": "local"
+    "@bayou/injecty": "local",
+    "@bayou/util-common": "local"
   }
 }

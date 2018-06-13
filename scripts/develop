@@ -66,6 +66,9 @@ while true; do
         --overlay=?*)
             buildOpts+=("$1");
             ;;
+        --main-client=?*)
+            buildOpts+=("$1");
+            ;;
         --main-server=?*)
             buildOpts+=("$1");
             ;;
@@ -97,6 +100,8 @@ if (( ${showHelp} || ${argError} )); then
     echo '    Find (and place) build output in directory <dir>.'
     echo '  --overlay=<dir>'
     echo '    Find overlay source in directory <dir>.'
+    echo '  --main-client=<name>'
+    echo '    Name of the main module for the client.'
     echo '  --main-server=<name>'
     echo '    Name of the main module for the server.'
     echo ''
