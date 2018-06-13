@@ -1,9 +1,7 @@
 @bayou/main-server
 ==================
 
-This module contains the top level server code, including parsing of
-command-line options. It has only a tiny bit of application logic (and should
-probably have less).
+This module contains code to run a server in the default configuration.
 
 - - - - - - - - - -
 
