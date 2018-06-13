@@ -1,0 +1,8 @@
+{
+  "name": "@bayou/assets-client",
+  "version": "1.0.0",
+
+  "dependencies": {
+    "@bayou/util-common": "local"
+  }
+}

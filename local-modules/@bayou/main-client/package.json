@@ -2,8 +2,8 @@
   "name": "@bayou/main-client",
   "version": "1.0.0",
 
-  "main": "js/index.js",
-  "testMain": "js/tests/index.js",
+  "main": "index.js",
+  "testMain": "tests/index.js",
 
   "dependencies": {
     "@bayou/api-common": "local",
