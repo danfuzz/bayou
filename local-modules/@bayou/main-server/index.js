@@ -5,7 +5,7 @@
 
 import { injectAll as common_injectAll } from '@bayou/config-common-default';
 import { injectAll as server_injectAll } from '@bayou/config-server-default';
-import { Server } from '@bayou/server-top';
+import { Server } from '@bayou/top-server';
 
 function injectAll() {
   common_injectAll();
