@@ -9,6 +9,7 @@ import ws from 'ws';
 
 import { BearerToken, Context, PostConnection, WsConnection } from '@bayou/api-server';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
+import { Assets } from '@bayou/assets-client';
 import { ClientBundle } from '@bayou/client-bundle';
 import { Network } from '@bayou/config-server';
 import { Dirs, ProductInfo } from '@bayou/env-server';
@@ -165,11 +166,10 @@ export default class Application extends CommonBase {
     // bundle to serve.
     app.get('/static/js/:name.bundle.js', new ClientBundle().requestHandler);
 
-    // Find HTML files and other static assets in `client/assets`. This includes
-    // the top-level `index.html` and `favicon`, as well as stuff under
-    // `static/`.
-    app.use('/',
-      express.static(path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/@bayou/main-client/assets')));
+    // Use the module `@bayou/assets-client` as the source of HTML files and
+    // other static assets. This includes the top-level `index.html` and
+    // `favicon`, as well as stuff under `static/`.
+    app.use('/', express.static(Assets.BASE_DIR));
 
     // Use the `@bayou/api-server` module to handle POST and websocket requests
     // at `/api`.
