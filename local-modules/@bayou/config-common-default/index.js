@@ -4,19 +4,16 @@
 
 import { inject } from '@bayou/injecty';
 
-import isAuthorId from './isAuthorId';
-import isDocumentId from './isDocumentId';
+import Ids from './Ids';
 
 /**
  * Injects all of the definitions here into the global configuration.
  */
 function injectAll() {
-  inject.isAuthorId   = isAuthorId;
-  inject.isDocumentId = isDocumentId;
+  inject.Ids = Ids;
 }
 
 export {
-  injectAll,
-  isAuthorId,
-  isDocumentId
+  Ids,
+  injectAll
 };
