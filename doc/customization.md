@@ -42,9 +42,18 @@ Bayou is set up to make it straightforward to customize. Salient details:
   mechanisms to help integrate these things without having to fork the original
   source code:
 
-  * The `build` script takes an optional `--overlay` option, which specifies
-    a directory to use for additional sources. There are two main things that
-    can be accomplished with overlays. Namely…
+  * The `build` script has the following options, which in concert enable a
+    variety of customization possibilities:
+
+    * `--overlay=<dir>` &mdash; Specifies a directory to use for additional
+      source files and/or replacements for source files which exist in the base
+      project.
+
+    * `--main-client=<name>` and `--main-server=<name>` &mdash; These specify
+      the names of the modules to use as the main entry points into the client
+      and server (respectively), instead of the defaults.
+
+    There are two main things that can be accomplished with these options:
 
   * The project provides a number of injectable configuration points (values,
     functions, or objects), both on the client and server side. Default
@@ -52,6 +61,10 @@ Bayou is set up to make it straightforward to customize. Salient details:
     behavior. However, a complete system may choose to provide alternate
     implementations. See the modules `@bayou/config-*` for documentation on all
     configuration points.
+
+    To use an alternate configuration, you can clone the default `main-client`
+    or `main-server` module (both of which are pretty small), and then edit to
+    provide alternate configuration.
 
     **Note:** The system is currently in transition from a source-overlay-based
     hooks mechanism, which is similar in intent but "upside down" in

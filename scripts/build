@@ -39,6 +39,9 @@ buildProjects=(compiler server client bin product-info)
 # Overlay source directory, if any.
 overlayDir=''
 
+# Name of the `main` module for the client, if specified.
+mainClient=''
+
 # Name of the `main` module for the server, if specified.
 mainServer=''
 
@@ -62,6 +65,9 @@ while true; do
             ;;
         --overlay=?*)
             overlayDir="${1#*=}"
+            ;;
+        --main-client=?*)
+            mainClient="${1#*=}"
             ;;
         --main-server=?*)
             mainServer="${1#*=}"
@@ -96,6 +102,8 @@ if (( ${showHelp} || ${argError} )); then
     echo '    Place output in directory <dir>.'
     echo '  --overlay=<dir>'
     echo '    Find overlay source in directory <dir>.'
+    echo '  --main-client=<name>'
+    echo '    Name of the main module for the client.'
     echo '  --main-server=<name>'
     echo '    Name of the main module for the server.'
     echo ''
@@ -464,7 +472,7 @@ function build-client {
     local toDir="${finalDir}/client"
 
     mkdir -p "${toDir}" || return 1
-    do-install client || return 1
+    do-install client "${mainClient}" || return 1
 
     # Copy the built result into the final output.
     rsync-archive --delete "${outDir}/client/" "${toDir}" \
