@@ -51,7 +51,7 @@ export default class Deployment extends UtilityClass {
    * runtime) and _after_ the logging system is ready, and _before_ everything
    * else.
    *
-   * @param {@bayou/server-top/Action} action The action that is about to be
+   * @param {@bayou/top-server/Action} action The action that is about to be
    *   run.
    */
   static aboutToRun(action) {

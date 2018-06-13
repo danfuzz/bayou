@@ -62,7 +62,7 @@ export default class TopControl {
     this._editorComplex = null;
 
     // Store this instance as a window global, mostly for ease of debugging.
-    // TODO: Consider removing this.
+    // **TODO:** Consider removing this.
     window.BAYOU_CONTROL = this;
   }
 

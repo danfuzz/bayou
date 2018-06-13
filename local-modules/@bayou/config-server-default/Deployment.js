@@ -40,7 +40,7 @@ export default class Deployment extends UtilityClass {
    *
    * This implementation is a no-op.
    *
-   * @param {@bayou/server-top/Action} action_unused The action that is about to
+   * @param {@bayou/top-server/Action} action_unused The action that is about to
    *   be run.
    */
   static aboutToRun(action_unused) {

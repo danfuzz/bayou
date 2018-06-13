@@ -1,0 +1,19 @@
+{
+  "name": "@bayou/top-client",
+  "version": "1.0.0",
+
+  "main": "index.js",
+  "testMain": "tests/index.js",
+
+  "dependencies": {
+    "@bayou/api-common": "local",
+    "@bayou/app-common": "local",
+    "@bayou/doc-client": "local",
+    "@bayou/env-client": "local",
+    "@bayou/see-all": "local",
+    "@bayou/see-all-client": "local",
+    "@bayou/testing-client": "local",
+    "@bayou/typecheck": "local",
+    "@bayou/util-common": "local"
+  }
+}
