@@ -10,7 +10,8 @@ import { Errors, UtilityClass } from '@bayou/util-common';
  * strings. This is just where the type checker code lives.
  *
  * At a minimum a file ID has to be a non-empty string. Beyond that, the
- * required syntax is determined via `@bayou/hooks-server`.
+ * required syntax is determined via
+ * {@link @bayou/config-server/Storage#isFileId}.
  *
  * **Note:** By default, the syntax for a file ID is the same as that for a
  * document ID. Furthermore, document IDs are generally passed as-is to become

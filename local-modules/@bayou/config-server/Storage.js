@@ -10,6 +10,13 @@ import { UtilityClass } from '@bayou/util-common';
  */
 export default class Storage extends UtilityClass {
   /**
+   * {@bayou/doc-common/BodyDelta} The body content to use for new documents.
+   */
+  static get DEFAULT_DOCUMENT_BODY() {
+    return use.Storage.DEFAULT_DOCUMENT_BODY;
+  }
+
+  /**
    * {@bayou/file-store/BaseFileStore} The object which provides access to file
    * storage (roughly speaking, the filesystem to store the "files" this system
    * deals with).

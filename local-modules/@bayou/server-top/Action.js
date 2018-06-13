@@ -10,7 +10,6 @@ import { ClientBundle } from '@bayou/client-bundle';
 import { Deployment, Network } from '@bayou/config-server';
 import { DevMode } from '@bayou/dev-mode';
 import { Dirs, ProductInfo, ServerEnv } from '@bayou/env-server';
-import { Hooks } from '@bayou/hooks-server';
 import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { HumanSink, FileSink } from '@bayou/see-all-server';
@@ -58,6 +57,32 @@ export default class Action extends CommonBase {
     Object.freeze(this);
   }
 
+  /** {string} The action name. */
+  get name() {
+    return this._options.action;
+  }
+
+  /**
+   * Indicates whether or not this is a full server run, as opposed to one of
+   * the more ephemeral actions (such as a unit test run).
+   *
+   * @returns {boolean} `true` iff this action actually starts a server running
+   *   on an ongoing basis.
+   */
+  isFullRun() {
+    switch (this.name) {
+      case 'dev':
+      case 'dev-if-appropriate':
+      case 'production': {
+        return true;
+      }
+
+      default: {
+        return false;
+      }
+    }
+  }
+
   /**
    * Performs the action indicated by the `options` of this instance.
    *
@@ -66,7 +91,12 @@ export default class Action extends CommonBase {
    *   once the immediate action is complete.
    */
   async run() {
-    const methodName = `_run_${camelCase(this._options.action)}`;
+    const methodName = `_run_${camelCase(this.name)}`;
+
+    this._startLogging();
+
+    // Give the outer app a chance to do any required early initialization.
+    await Deployment.aboutToRun(this);
 
     return this[methodName]();
   }
@@ -77,8 +107,6 @@ export default class Action extends CommonBase {
    * @returns {Int} Standard process exit code.
    */
   async _run_clientBundle() {
-    new HumanSink(null, true);
-
     try {
       await new ClientBundle().build();
       log.info('');
@@ -96,8 +124,6 @@ export default class Action extends CommonBase {
    * @returns {Int} Standard process exit code.
    */
   async _run_clientTest() {
-    new HumanSink(null, true);
-
     // Figure out if there is already a server listening on the designated
     // application port. If not, run one locally in this process.
 
@@ -136,8 +162,6 @@ export default class Action extends CommonBase {
    *   code on failure.
    */
   async _run_dev() {
-    Action._startLogging(this._options.humanConsole);
-
     await Action._startServer(false, true, true);
 
     log.info('Now running in the development configuration.');
@@ -177,8 +201,6 @@ export default class Action extends CommonBase {
    *   code on failure.
    */
   async _run_production() {
-    Action._startLogging(this._options.humanConsole);
-
     await Action._startServer(false, true, false);
 
     log.info('Now running in the production configuration.');
@@ -191,31 +213,30 @@ export default class Action extends CommonBase {
    * @returns {Int} Standard process exit code.
    */
   async _run_serverTest() {
-    new HumanSink(null, true);
-
     const anyFailed = await ServerTests.run(this._options.testOut || null);
 
     return anyFailed ? 1 : 0;
   }
 
   /**
-   * Helper for actions which need to start logging for a "normal" server
-   * run (as opposed to performing tests of some sort).
-   *
-   * @param {boolean} humanConsole If `true`, causes the console logs to be in
-   *   a human-oriented format.
+   * Set up logging as appropriate for this instance.
    */
-  static _startLogging(humanConsole) {
-    const humanLogFile = path.resolve(Dirs.theOne.LOG_DIR, 'general.txt');
-    const jsonLogFile = path.resolve(Dirs.theOne.LOG_DIR, 'general.json');
+  _startLogging() {
+    if (this.isFullRun()) {
+      const humanConsole = this._options.humanConsole;
+      const humanLogFile = path.resolve(Dirs.theOne.LOG_DIR, 'general.txt');
+      const jsonLogFile  = path.resolve(Dirs.theOne.LOG_DIR, 'general.json');
 
-    // Second argument to both of these constructors is a boolean `useConsole`
-    // which indicates (when `true`) that the sink in question should also write
-    // to the console.
-    new FileSink(jsonLogFile, !humanConsole);
-    new HumanSink(humanLogFile, humanConsole);
+      // Second argument to both of these constructors is a boolean `useConsole`
+      // which indicates (when `true`) that the sink in question should also
+      // write to the console.
+      new FileSink(jsonLogFile, !humanConsole);
+      new HumanSink(humanLogFile, humanConsole);
 
-    HumanSink.patchConsole();
+      HumanSink.patchConsole();
+    } else {
+      new HumanSink(null, true);
+    }
   }
 
   /**
@@ -231,9 +252,6 @@ export default class Action extends CommonBase {
    * @returns {Int} The port being listened on, once listening has started.
    */
   static async _startServer(pickPort, doMonitor, devRoutes) {
-    // Give the outer app a chance to do any required early initialization.
-    await Hooks.theOne.run();
-
     // Set up the server environment bits (including, e.g. the PID file).
     await ServerEnv.theOne.init();
 
