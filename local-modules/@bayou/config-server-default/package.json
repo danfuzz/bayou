@@ -7,6 +7,8 @@
     "@bayou/config-common": "local",
     "@bayou/config-server": "local",
     "@bayou/doc-common": "local",
-    "@bayou/file-store-local": "local"
+    "@bayou/file-store-local": "local",
+    "@bayou/injecty": "local",
+    "@bayou/util-common": "local"
   }
 }
