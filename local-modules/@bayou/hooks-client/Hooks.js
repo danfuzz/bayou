@@ -10,15 +10,4 @@ import { Singleton } from '@bayou/util-common';
  * source...except for this file (and other similar ones).
  */
 export default class Hooks extends Singleton {
-  /**
-   * Called on every `EditorComplex` instance that is constructed, just before
-   * making it active from the user's perspective. This hook is expected to
-   * (or at least allowed to) perform initialization on the Quill instances
-   * within the complex.
-   *
-   * @param {EditorComplex} editorComplex_unused The editor complex in question.
-   */
-  editorComplexInit(editorComplex_unused) {
-    // This space intentionally left blank.
-  }
 }

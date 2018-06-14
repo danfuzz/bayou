@@ -9,7 +9,6 @@ import { Provider } from 'react-redux';
 import { SplitKey } from '@bayou/api-common';
 import { Editor } from '@bayou/config-client';
 import { ClientStore } from '@bayou/data-model-client';
-import { Hooks } from '@bayou/hooks-client';
 import { Condition } from '@bayou/promise-util';
 import { BayouKeyHandlers, QuillProm } from '@bayou/quill-util';
 import { Logger } from '@bayou/see-all';
@@ -125,7 +124,7 @@ export default class EditorComplex extends CommonBase {
       this._caretOverlay = new CaretOverlay(this, authorOverlayNode);
 
       // Let the overlay do extra initialization.
-      Hooks.theOne.editorComplexInit(this);
+      Editor.editorComplexInit(this);
 
       // Do session setup using the initial key.
       this._initSession(sessionKey, true);

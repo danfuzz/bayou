@@ -22,6 +22,16 @@ export default class Editor extends UtilityClass {
 
   /**
    * Implementation of standard configuration point. This implementation is a
+   * no-op.
+   *
+   * @param {EditorComplex} editorComplex_unused The editor complex in question.
+   */
+  static editorComplexInit(editorComplex_unused) {
+    // This space intentionally left blank.
+  }
+
+  /**
+   * Implementation of standard configuration point. This implementation is a
    * no-op, returning `defaultConfig` as-is.
    *
    * @param {string} contextName_unused The name of the context.

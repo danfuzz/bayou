@@ -26,6 +26,18 @@ export default class Editor extends UtilityClass {
   }
 
   /**
+   * Performs any additional setup needed per `EditorComplex` instance that is
+   * constructed, just before making it active from the user's perspective. This
+   * is expected to (or at least allowed to) perform configuration on the Quill
+   * instances within the complex.
+   *
+   * @param {EditorComplex} editorComplex The editor complex in question.
+   */
+  static editorComplexInit(editorComplex) {
+    use.Editor.editorComplexInit(editorComplex);
+  }
+
+  /**
    * Provides the Quill module configuration for the indicated context. This is
    * only ever called once per context (per run of the application), and not,
    * e.g., once per instantiation of a `Quill` object). It is okay for the
