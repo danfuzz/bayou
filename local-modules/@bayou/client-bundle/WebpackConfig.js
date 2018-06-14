@@ -31,11 +31,11 @@ export default class WebpackConfig extends Singleton {
      */
     this.progress = new ProgressMessage(this.log);
 
-    /** {string} Path to the client `node_modules` directory. */
-    this._nodeModulesDir = path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules');
+    /** {string} The base directory for all of the client files. */
+    this._clientDir = Dirs.theOne.CLIENT_DIR;
 
-    /** {string} Path to the `main-client` module directory. */
-    this._mainClientDir = path.resolve(this._nodeModulesDir, '@bayou/main-client');
+    /** {string} Path to the client `node_modules` directory. */
+    this._nodeModulesDir = path.resolve(this._clientDir, 'node_modules');
 
     Object.freeze(this);
   }
@@ -59,12 +59,12 @@ export default class WebpackConfig extends Singleton {
    */
   get webpackConfig() {
     const nodeModulesDir = this._nodeModulesDir;
-    const mainClientDir  = this._mainClientDir;
+    const mainModuleDir  = this._findMainModule();
 
-    // The parsed `package.json` for the client.
+    // The parsed `package.json` for the client's "main" module.
     const clientPackage =
       JsonUtil.parseFrozen(
-        fs.readFileSync(path.resolve(mainClientDir, 'package.json')));
+        fs.readFileSync(path.resolve(mainModuleDir, 'package.json')));
 
 
     return {
@@ -86,11 +86,11 @@ export default class WebpackConfig extends Singleton {
       entry: {
         main: [
           'babel-polyfill',
-          path.resolve(mainClientDir, clientPackage.main)
+          path.resolve(mainModuleDir, clientPackage.main)
         ],
         test: [
           'babel-polyfill',
-          path.resolve(mainClientDir, clientPackage.testMain)
+          path.resolve(mainModuleDir, clientPackage.testMain)
         ]
       },
 
@@ -302,5 +302,15 @@ export default class WebpackConfig extends Singleton {
       // prevent a rebuild from starting while in the middle of a file save.
       aggregateTimeout: 1000
     };
+  }
+
+  /**
+   * Gets the filesystem path for the directory containing the "main" module of
+   * the client.
+   *
+   * @returns {string} Path to the "main" module.
+   */
+  _findMainModule() {
+    return path.resolve(this._nodeModulesDir, '@bayou/main-client');
   }
 }
