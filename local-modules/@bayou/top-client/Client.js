@@ -35,10 +35,10 @@ export default class Client extends UtilityClass {
     Client._init(configFunction, 'Starting...');
 
     const control = new TopControl(window);
-    log.info('Made `control`.');
+    log.detail('Made `control`.');
 
     await control.start();
-    log.info('Done with outer init.');
+    log.info('Now running!');
   }
 
   /**
@@ -87,7 +87,7 @@ export default class Client extends UtilityClass {
 
     // Inject all the system configs.
     configFunction();
-    log.info('System configured.');
+    log.detail('System configured.');
 
     // Init the environment utilities.
     ClientEnv.init(window);
