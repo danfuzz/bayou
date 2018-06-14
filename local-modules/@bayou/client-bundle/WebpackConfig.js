@@ -12,20 +12,6 @@ import { JsonUtil, Singleton } from '@bayou/util-common';
 
 import ProgressMessage from './ProgressMessage';
 
-/** {string} Path to the client `node_modules` directory. */
-const NODE_MODULES_DIR = path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules');
-
-/** {string} Path to the `main-client` module directory. */
-const MAIN_CLIENT_DIR = path.resolve(NODE_MODULES_DIR, '@bayou/main-client');
-
-/**
- * {object} The parsed `package.json` for the client. This is used for some of
- * the `webpack` config.
- */
-const clientPackage =
-  JsonUtil.parseFrozen(
-    fs.readFileSync(path.resolve(MAIN_CLIENT_DIR, 'package.json')));
-
 /**
  * Utility class which provides the Webpack configuration needed for client
  * builds.
@@ -44,6 +30,12 @@ export default class WebpackConfig extends Singleton {
      * {ProgressMessage} Handler that logs progress messages during compilation.
      */
     this.progress = new ProgressMessage(this.log);
+
+    /** {string} Path to the client `node_modules` directory. */
+    this._nodeModulesDir = path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules');
+
+    /** {string} Path to the `main-client` module directory. */
+    this._mainClientDir = path.resolve(this._nodeModulesDir, '@bayou/main-client');
 
     Object.freeze(this);
   }
@@ -66,6 +58,15 @@ export default class WebpackConfig extends Singleton {
    * for details and discussion.
    */
   get webpackConfig() {
+    const nodeModulesDir = this._nodeModulesDir;
+    const mainClientDir  = this._mainClientDir;
+
+    // The parsed `package.json` for the client.
+    const clientPackage =
+      JsonUtil.parseFrozen(
+        fs.readFileSync(path.resolve(mainClientDir, 'package.json')));
+
+
     return {
       // Used for resolving loaders and the like.
       context: Dirs.theOne.SERVER_DIR,
@@ -85,11 +86,11 @@ export default class WebpackConfig extends Singleton {
       entry: {
         main: [
           'babel-polyfill',
-          path.resolve(MAIN_CLIENT_DIR, clientPackage.main)
+          path.resolve(mainClientDir, clientPackage.main)
         ],
         test: [
           'babel-polyfill',
-          path.resolve(MAIN_CLIENT_DIR, clientPackage.testMain)
+          path.resolve(mainClientDir, clientPackage.testMain)
         ]
       },
 
@@ -113,11 +114,11 @@ export default class WebpackConfig extends Singleton {
           // references a prebuilt bundle. We rewrite it here to refer instead
           // to the unbundled source.
           'quill':
-            path.resolve(NODE_MODULES_DIR, 'quill/quill.js'),
+            path.resolve(nodeModulesDir, 'quill/quill.js'),
 
           // Likewise, `parchment`.
           'parchment':
-            path.resolve(NODE_MODULES_DIR, 'parchment/src/parchment.ts'),
+            path.resolve(nodeModulesDir, 'parchment/src/parchment.ts'),
 
           // On the client side, we use the local module
           // {@link @bayou/mocha-client-shim} as a substitute for `mocha`, and
@@ -125,9 +126,9 @@ export default class WebpackConfig extends Singleton {
           // makes it so that unit test code can still write `import ... from
           // 'mocha';`.
           'mocha':
-            path.resolve(NODE_MODULES_DIR, '@bayou/mocha-client-shim'),
+            path.resolve(nodeModulesDir, '@bayou/mocha-client-shim'),
           'mocha-client-bundle':
-            path.resolve(NODE_MODULES_DIR, 'mocha/mocha.js')
+            path.resolve(nodeModulesDir, 'mocha/mocha.js')
         },
 
         // All the extensions listed here except `.ts` are in the default list.
