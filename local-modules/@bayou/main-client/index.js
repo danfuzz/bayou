@@ -10,7 +10,13 @@
  * parameters get passed into the system.
  */
 
-import { injectAll } from '@bayou/config-common-default';
+import { injectAll as client_injectAll } from '@bayou/config-client-default';
+import { injectAll as common_injectAll } from '@bayou/config-common-default';
 import { Client } from '@bayou/top-client';
+
+function injectAll() {
+  common_injectAll();
+  client_injectAll();
+}
 
 Client.run(injectAll);

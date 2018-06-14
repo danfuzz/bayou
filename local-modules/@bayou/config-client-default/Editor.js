@@ -16,7 +16,7 @@ export default class Editor extends UtilityClass {
    *   more editors.
    * @param {string} baseUrl_unused Base URL that points to the server to use.
    */
-  aboutToRun(window_unused, baseUrl_unused) {
+  static aboutToRun(window_unused, baseUrl_unused) {
     // This space intentionally left blank.
   }
 }

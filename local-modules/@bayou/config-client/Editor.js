@@ -21,7 +21,7 @@ export default class Editor extends UtilityClass {
    * @returns {Promise|undefined} A promise whose resolution indicates the end
    *   of hook activity, or `undefined` if there is nothing to wait for.
    */
-  aboutToRun(window, baseUrl) {
+  static aboutToRun(window, baseUrl) {
     return use.Editor.aboutToRun(window, baseUrl);
   }
 }

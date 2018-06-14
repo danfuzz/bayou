@@ -31,13 +31,13 @@ export default class Client extends UtilityClass {
    *   system configuration. This is called very early, but _after_ some
    *   fundamental system setup is performed.
    */
-  static run(configFunction) {
+  static async run(configFunction) {
     Client._init(configFunction, 'Starting...');
 
     const control = new TopControl(window);
     log.info('Made `control`.');
 
-    control.start();
+    await control.start();
     log.info('Done with outer init.');
   }
 
@@ -52,7 +52,7 @@ export default class Client extends UtilityClass {
    *   use of this file (and notably cause the test code to get bundled into a
    *   non-test client bundle).
    */
-  static runUnitTests(configFunction, testsClass) {
+  static async runUnitTests(configFunction, testsClass) {
     Client._init(configFunction, 'Starting up testing environment...');
 
     const elem = document.createElement('p');

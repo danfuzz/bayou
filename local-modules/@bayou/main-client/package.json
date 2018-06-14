@@ -6,6 +6,7 @@
   "testMain": "testMain.js",
 
   "dependencies": {
+    "@bayou/config-client-default": "local",
     "@bayou/config-common-default": "local",
     "@bayou/top-client": "local"
   }
