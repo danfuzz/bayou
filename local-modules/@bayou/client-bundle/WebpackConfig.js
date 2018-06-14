@@ -62,7 +62,7 @@ export default class WebpackConfig extends Singleton {
     const mainModuleDir  = this._findMainModule();
 
     // The parsed `package.json` for the client's "main" module.
-    const clientPackage =
+    const mainPackage =
       JsonUtil.parseFrozen(
         fs.readFileSync(path.resolve(mainModuleDir, 'package.json')));
 
@@ -86,11 +86,11 @@ export default class WebpackConfig extends Singleton {
       entry: {
         main: [
           'babel-polyfill',
-          path.resolve(mainModuleDir, clientPackage.main)
+          path.resolve(mainModuleDir, mainPackage.main)
         ],
         test: [
           'babel-polyfill',
-          path.resolve(mainModuleDir, clientPackage.testMain)
+          path.resolve(mainModuleDir, mainPackage.testMain)
         ]
       },
 
@@ -311,6 +311,14 @@ export default class WebpackConfig extends Singleton {
    * @returns {string} Path to the "main" module.
    */
   _findMainModule() {
-    return path.resolve(this._nodeModulesDir, '@bayou/main-client');
+    // The parsed `package.json` for the top-level client directory...
+    const clientPackage =
+      JsonUtil.parseFrozen(
+        fs.readFileSync(path.resolve(this._clientDir, 'package.json')));
+
+    // ...which tells us the name of the "main" module.
+    const name = clientPackage.mainModule;
+
+    return path.resolve(this._nodeModulesDir, name);
   }
 }
