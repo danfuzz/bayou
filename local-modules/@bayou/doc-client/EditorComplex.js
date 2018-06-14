@@ -7,8 +7,8 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
 import { SplitKey } from '@bayou/api-common';
+import { Editor } from '@bayou/config-client';
 import { ClientStore } from '@bayou/data-model-client';
-import { Hooks } from '@bayou/hooks-client';
 import { Condition } from '@bayou/promise-util';
 import { BayouKeyHandlers, QuillProm } from '@bayou/quill-util';
 import { Logger } from '@bayou/see-all';
@@ -124,7 +124,7 @@ export default class EditorComplex extends CommonBase {
       this._caretOverlay = new CaretOverlay(this, authorOverlayNode);
 
       // Let the overlay do extra initialization.
-      Hooks.theOne.editorComplexInit(this);
+      Editor.editorComplexInit(this);
 
       // Do session setup using the initial key.
       this._initSession(sessionKey, true);
@@ -338,7 +338,7 @@ export default class EditorComplex extends CommonBase {
     const titleQuill = new QuillProm(titleNode, {
       readOnly: false,
       strict:   true,
-      theme:    Hooks.theOne.quillThemeName('title'),
+      theme:    Editor.quillThemeName('title'),
       modules:  titleModuleConfig
     });
 
@@ -346,7 +346,7 @@ export default class EditorComplex extends CommonBase {
     const bodyQuill = new QuillProm(bodyNode, {
       readOnly: true,
       strict:   true,
-      theme:    Hooks.theOne.quillThemeName('body'),
+      theme:    Editor.quillThemeName('body'),
       modules:  EditorComplex._bodyModuleConfig
     });
 
@@ -370,8 +370,7 @@ export default class EditorComplex extends CommonBase {
         ]
       };
 
-      const moduleConfig =
-        Hooks.theOne.quillModuleConfig('body', defaultConfig);
+      const moduleConfig = Editor.quillModuleConfig('body', defaultConfig);
 
       EditorComplex._bodyModuleConfigValue = Object.freeze(moduleConfig);
     }
@@ -393,8 +392,7 @@ export default class EditorComplex extends CommonBase {
         ]
       };
 
-      const moduleConfig =
-        Hooks.theOne.quillModuleConfig('title', defaultConfig);
+      const moduleConfig = Editor.quillModuleConfig('title', defaultConfig);
 
       EditorComplex._titleModuleConfigValue = Object.freeze(moduleConfig);
     }
