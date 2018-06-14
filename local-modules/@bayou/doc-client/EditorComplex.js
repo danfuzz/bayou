@@ -339,7 +339,7 @@ export default class EditorComplex extends CommonBase {
     const titleQuill = new QuillProm(titleNode, {
       readOnly: false,
       strict:   true,
-      theme:    Hooks.theOne.quillThemeName('title'),
+      theme:    Editor.quillThemeName('title'),
       modules:  titleModuleConfig
     });
 
@@ -347,7 +347,7 @@ export default class EditorComplex extends CommonBase {
     const bodyQuill = new QuillProm(bodyNode, {
       readOnly: true,
       strict:   true,
-      theme:    Hooks.theOne.quillThemeName('body'),
+      theme:    Editor.quillThemeName('body'),
       modules:  EditorComplex._bodyModuleConfig
     });
 

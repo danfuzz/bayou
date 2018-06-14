@@ -31,4 +31,15 @@ export default class Editor extends UtilityClass {
   static quillModuleConfig(contextName_unused, defaultConfig) {
     return defaultConfig;
   }
+
+  /**
+   * Implementation of standard configuration point. This implementation always
+   * returns `bubble`, which is a standard Quill theme.
+   *
+   * @param {string} contextName_unused The name of the context.
+   * @returns {string} `bubble`, always.
+   */
+  static quillThemeName(contextName_unused) {
+    return 'bubble';
+  }
 }

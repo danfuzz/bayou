@@ -40,4 +40,16 @@ export default class Editor extends UtilityClass {
   static quillModuleConfig(contextName, defaultConfig) {
     return use.Editor.quillModuleConfig(contextName, defaultConfig);
   }
+
+  /**
+   * Provides the name of the Quill theme to use for the indicated context.
+   * Call pattern and context semantics are the same as with
+   * {@link #quillModuleConfig}, see which.
+   *
+   * @param {string} contextName The name of the context.
+   * @returns {string} The desired theme name.
+   */
+  static quillThemeName(contextName) {
+    return use.Editor.quillThemeName(contextName);
+  }
 }
