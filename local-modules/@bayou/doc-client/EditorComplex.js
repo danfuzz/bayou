@@ -267,16 +267,8 @@ export default class EditorComplex extends CommonBase {
     }
     htmlNode.classList.add('bayou-page');
 
-    const styleDone = DomUtil.addStylesheet(document, `${baseUrl}/static/index.css`);
-
-    // Give the overlay a chance to do any initialization.
-    const hookDone = Hooks.theOne.run(this._window, baseUrl);
-
-    // Let all that activity finish before proceeding.
-    log.detail('Async operations now in progress...');
-    await styleDone;
-    await hookDone;
-    log.detail('Done with async operations.');
+    // Add the stylesheet, and wait for it to finish before proceeding.
+    await DomUtil.addStylesheet(document, `${baseUrl}/static/index.css`);
 
     // Remove the static content from the original "top" node (which is a
     // "loading..." message).
