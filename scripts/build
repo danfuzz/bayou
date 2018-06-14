@@ -338,6 +338,7 @@ function do-install {
         echo '{'
         echo "    \"name\": \"@bayou/top-package-for-${subprojectName}\","
         echo "    \"dependencies\": { \"${moduleName}\": \"local\" },"
+        echo "    \"mainModule\": \"${moduleName}\","
 
         # These are irrelevant and are included just to prevent
         # `npm install` from complaining.
