@@ -23,23 +23,6 @@ export default class Hooks extends Singleton {
   }
 
   /**
-   * Called to construct the Quill module configuration for the indicated
-   * context. This is only ever called once per context (per run of the
-   * application), and not, e.g., once per instantiation of a `Quill` object).
-   * This (default) implementation returns the given default configuration
-   * as-is.
-   *
-   * @param {string} contextName_unused The name of the context. This is one of
-   *   `body` (for the main editor) or `title` (for the title field editor).
-   * @param {object} defaultConfig The default module configuration for this
-   *   context.
-   * @returns {object} The desired module configuration.
-   */
-  quillModuleConfig(contextName_unused, defaultConfig) {
-    return defaultConfig;
-  }
-
-  /**
    * Called to get the name of the Quill theme to use for the indicated
    * context. This (default) implementation always returns `bubble`. If this
    * hook is overlaid, it is up to the overlay to initialize the theme

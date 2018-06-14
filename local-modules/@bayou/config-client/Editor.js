@@ -24,4 +24,20 @@ export default class Editor extends UtilityClass {
   static aboutToRun(window, baseUrl) {
     return use.Editor.aboutToRun(window, baseUrl);
   }
+
+  /**
+   * Provides the Quill module configuration for the indicated context. This is
+   * only ever called once per context (per run of the application), and not,
+   * e.g., once per instantiation of a `Quill` object). It is okay for the
+   * implementation to destructively modify the `defaultConfig` it is passed.
+   *
+   * @param {string} contextName The name of the context. This is one of `body`
+   *   (for the main editor) or `title` (for the title field editor).
+   * @param {object} defaultConfig The default module configuration for this
+   *   context.
+   * @returns {object} The desired module configuration.
+   */
+  static quillModuleConfig(contextName, defaultConfig) {
+    return use.Editor.quillModuleConfig(contextName, defaultConfig);
+  }
 }

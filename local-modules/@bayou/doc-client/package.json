@@ -6,6 +6,7 @@
     "@bayou/api-client": "local",
     "@bayou/api-common": "local",
     "@bayou/app-common": "local",
+    "@bayou/config-client": "local",
     "@bayou/data-model-client": "local",
     "@bayou/deps-react": "local",
     "@bayou/doc-common": "local",

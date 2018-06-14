@@ -7,6 +7,7 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
 import { SplitKey } from '@bayou/api-common';
+import { Editor } from '@bayou/config-client';
 import { ClientStore } from '@bayou/data-model-client';
 import { Hooks } from '@bayou/hooks-client';
 import { Condition } from '@bayou/promise-util';
@@ -370,8 +371,7 @@ export default class EditorComplex extends CommonBase {
         ]
       };
 
-      const moduleConfig =
-        Hooks.theOne.quillModuleConfig('body', defaultConfig);
+      const moduleConfig = Editor.quillModuleConfig('body', defaultConfig);
 
       EditorComplex._bodyModuleConfigValue = Object.freeze(moduleConfig);
     }
@@ -393,8 +393,7 @@ export default class EditorComplex extends CommonBase {
         ]
       };
 
-      const moduleConfig =
-        Hooks.theOne.quillModuleConfig('title', defaultConfig);
+      const moduleConfig = Editor.quillModuleConfig('title', defaultConfig);
 
       EditorComplex._titleModuleConfigValue = Object.freeze(moduleConfig);
     }

@@ -19,4 +19,16 @@ export default class Editor extends UtilityClass {
   static aboutToRun(window_unused, baseUrl_unused) {
     // This space intentionally left blank.
   }
+
+  /**
+   * Implementation of standard configuration point. This implementation is a
+   * no-op, returning `defaultConfig` as-is.
+   *
+   * @param {string} contextName_unused The name of the context.
+   * @param {object} defaultConfig The default module configuration.
+   * @returns {object} The desired module configuration.
+   */
+  static quillModuleConfig(contextName_unused, defaultConfig) {
+    return defaultConfig;
+  }
 }
