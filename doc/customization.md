@@ -66,11 +66,6 @@ Bayou is set up to make it straightforward to customize. Salient details:
     or `main-server` module (both of which are pretty small), and then edit to
     provide alternate configuration.
 
-    **Note:** The system is currently in transition from a source-overlay-based
-    hooks mechanism, which is similar in intent but "upside down" in
-    implementation. **TODO:** Remove this note once the system is completely
-    converted to the new configuration mechanism.
-
   * Because no amount of explicit configuration hooks will ever turn out to be
     fully adequate, any original source file at all can be overridden with a
     replacement. This probably means a lot of copy-paste code duplication, but
