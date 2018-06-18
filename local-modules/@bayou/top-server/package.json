@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/top-server",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/app-setup": "local",
     "@bayou/client-bundle": "local",

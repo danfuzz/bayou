@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/proppy",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/util-common": "local"
   }

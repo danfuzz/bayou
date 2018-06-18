@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/doc-client",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/api-client": "local",
     "@bayou/api-common": "local",

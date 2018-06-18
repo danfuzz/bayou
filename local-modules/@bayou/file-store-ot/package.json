@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/file-store-ot",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/ot-common": "local",
     "@bayou/typecheck": "local",

@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/mocha-client-shim",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/deps-testing-common": "local",
     "@bayou/util-common": "local"

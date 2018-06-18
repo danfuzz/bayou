@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/deps-testing-common",
-  "version": "1.0.0",
-
   "dependencies": {
     "chai": "^4.1.0",
     "chai-as-promised": "^7.1.1",

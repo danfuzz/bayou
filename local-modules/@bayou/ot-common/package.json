@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/ot-common",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/codec": "local",
     "@bayou/config-common": "local",

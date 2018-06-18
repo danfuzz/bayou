@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/dev-mode",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/deps-util-server": "local",
     "@bayou/env-server": "local",

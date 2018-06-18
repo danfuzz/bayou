@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/config-common-default",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/injecty": "local",
     "@bayou/typecheck": "local",

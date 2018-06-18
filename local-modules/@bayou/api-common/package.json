@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/api-common",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/codec": "local",
     "@bayou/typecheck": "local",

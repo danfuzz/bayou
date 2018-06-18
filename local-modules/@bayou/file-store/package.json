@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/file-store",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/codec": "local",
     "@bayou/config-server": "local",
