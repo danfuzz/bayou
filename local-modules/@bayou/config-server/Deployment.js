@@ -10,6 +10,17 @@ import { UtilityClass } from '@bayou/util-common';
  */
 export default class Deployment extends UtilityClass {
   /**
+   * {array<string>} Array of absolute filesystem paths to the asset directory
+   * trees, in priority order (earliest directory "overrides" later ones when
+   * two or more contain the same-named file). All files under these directories
+   * are expected to be servable to clients; that is, there should be no
+   * server-private files under them.
+   */
+  static get ASSET_DIRS() {
+    return use.Deployment.ASSET_DIRS;
+  }
+
+  /**
    * Determines the location of the "var" (variable / mutable data) directory,
    * returning an absolute path to it. (This is where, for example, log files
    * are stored.) The directory need not exist; the system will take care of

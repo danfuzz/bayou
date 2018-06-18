@@ -3,7 +3,6 @@
     "@bayou/api-common": "local",
     "@bayou/api-server": "local",
     "@bayou/app-common": "local",
-    "@bayou/assets-client": "local",
     "@bayou/client-bundle": "local",
     "@bayou/codec": "local",
     "@bayou/config-server": "local",
