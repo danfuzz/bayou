@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/util-common",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/typecheck": "local",
     "@bayou/util-core": "local"

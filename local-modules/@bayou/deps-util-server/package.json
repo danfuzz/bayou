@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/deps-util-server",
-  "version": "1.0.0",
-
   "dependencies": {
     "chokidar": "^2.0.3",
     "content-type": "^1.0.4",

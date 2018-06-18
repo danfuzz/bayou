@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/main-server",
-  "version": "1.0.0",
-
   "bin": {
     "bayou-server": "./index.js"
   },

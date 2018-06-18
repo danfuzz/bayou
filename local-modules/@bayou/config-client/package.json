@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/config-client",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/injecty": "local",
     "@bayou/util-common": "local"

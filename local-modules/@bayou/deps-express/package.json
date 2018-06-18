@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/deps-express",
-  "version": "1.0.0",
-
   "dependencies": {
     "express": "^4.16.0",
     "ws": "^5.2.0"

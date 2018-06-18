@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/main-compiler",
-  "version": "1.0.0",
-
   "bin": {
     "bayou-compile": "./index.js"
   },

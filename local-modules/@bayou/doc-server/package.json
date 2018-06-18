@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/doc-server",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/app-common": "local",
     "@bayou/codec": "local",

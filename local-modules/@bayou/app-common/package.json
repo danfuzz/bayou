@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/app-common",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/api-common": "local",
     "@bayou/codec": "local",

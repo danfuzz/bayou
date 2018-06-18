@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/see-all-server",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/deps-ansi-color": "local",
     "@bayou/deps-util-common": "local",

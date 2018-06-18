@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/testing-client",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/deps-testing-common": "local",
     "@bayou/see-all": "local",

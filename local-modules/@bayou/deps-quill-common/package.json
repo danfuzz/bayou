@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/deps-quill-common",
-  "version": "1.0.0",
-
   "dependencies": {
     "quill-delta": "^3.6.2"
   }

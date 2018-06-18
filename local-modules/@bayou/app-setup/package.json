@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/app-setup",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/api-common": "local",
     "@bayou/api-server": "local",

@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/state-machine",
-  "version": "1.0.0",
-
   "dependencies": {
     "@bayou/promise-util": "local",
     "@bayou/see-all": "local",

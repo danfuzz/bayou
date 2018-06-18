@@ -1,7 +1,4 @@
 {
-  "name": "@bayou/deps-ansi-color",
-  "version": "1.0.0",
-
   "dependencies": {
     "ansi-html": "^0.0.7",
     "chalk": "^2.4.1",
