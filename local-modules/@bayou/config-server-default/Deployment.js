@@ -17,7 +17,7 @@ export default class Deployment extends UtilityClass {
    * This implementation defers to the module {@link @bayou/assets-client}.
    */
   static get ASSET_DIRS() {
-    return [Assets.BASE_DIR];
+    return Assets.DIRS;
   }
 
   /**

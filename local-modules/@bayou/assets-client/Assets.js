@@ -7,18 +7,18 @@ import path from 'path';
 import { UtilityClass } from '@bayou/util-common';
 
 /** {string} Absolute path to the `files` directory. */
-const BASE_DIR = path.resolve(__dirname, 'files');
+const DIR = path.resolve(__dirname, 'files');
 
 /**
- * Provider of static assets to serve to clients.
+ * Default provider of static assets to serve to clients.
  */
 export default class Assets extends UtilityClass {
   /**
-   * {string} Absolute filesystem path to the base asset directory. All files
-   * under this directory are expected to be servable to clients; that is, there
-   * should be no server-private files under that directory.
+   * {array<string>} Default implementation of the configuration
+   * {@link @bayou/config-server/Deployment#ASSET_DIRS}, which refers _just_ to
+   * the static assets within this module.
    */
-  static get BASE_DIR() {
-    return BASE_DIR;
+  static get DIRS() {
+    return [DIR];
   }
 }
