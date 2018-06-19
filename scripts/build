@@ -215,17 +215,10 @@ function find-package-directories {
 }
 
 # Gets a list of all the local module names. The output is a series of lines,
-# one per module.
+# one per module. This only works after module sources have been copied to the
+# `out` directory.
 function local-module-names {
-    local basePath="${baseDir}/local-modules"
-    local overlayPath="${overlayDir}/local-modules"
-
-    (
-        find-package-directories "${basePath}"
-        if [[ (${overlayDir} != '') && -e "${overlayPath}" ]]; then
-            find-package-directories "${overlayPath}"
-        fi
-    ) | sort -u
+    find-package-directories "${outDir}/local-modules"
 }
 
 # Adds a source directory mapping for a module. The first argument is the
