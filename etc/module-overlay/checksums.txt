@@ -1,4 +1,0 @@
-# This file lists SHA checksums for all of the files that get overlaid. The
-# overlay mechanism will complain instead of overlaying on top of a file with
-# a non-matching checksum.
-db123db123db123db123db123db123db123db123  example/some-file.txt

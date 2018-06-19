@@ -391,13 +391,6 @@ function do-install {
 
     (cd "${npmDir}" && npm install --no-package-lock) || return 1
 
-    # We are somewhat at the mercy of what's published via npm, and in fact
-    # some modules that we use occasionally have bugs in their published
-    # versions. This script patches them in situ based on the contents of the
-    # directory `etc/module-overlay`.
-    "${progDir}/lib/fix-modules" "${baseDir}/etc/module-overlay" "${npmDir}" \
-    || return 1
-
     # Move each of the directories that `npm` got for us into the subproject's
     # `node_modules`.
     #
