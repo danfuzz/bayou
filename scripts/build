@@ -45,6 +45,9 @@ mainClient=''
 # Name of the `main` module for the server, if specified.
 mainServer=''
 
+# Path to the product info file, if specified.
+productInfoPath=''
+
 # Options to pass to `out-dir-setup`.
 outOpts=()
 
@@ -71,6 +74,9 @@ while true; do
             ;;
         --main-server=?*)
             mainServer="${1#*=}"
+            ;;
+        --product-info=?*)
+            productInfoPath="${1#*=}"
             ;;
         --) # End of all options
             shift
@@ -106,6 +112,8 @@ if (( ${showHelp} || ${argError} )); then
     echo '    Name of the main module for the client.'
     echo '  --main-server=<name>'
     echo '    Name of the main module for the server.'
+    echo '  --product-info=<path>'
+    echo '    Filesystem path to the product info file.'
     echo ''
     echo "${progName} [--help | -h]"
     echo '  Display this message.'
@@ -507,11 +515,14 @@ function build-bin {
 function build-product-info {
     local fileName='product-info.txt'
     local outFile="${finalDir}/${fileName}"
-    local inFile="${baseDir}/${fileName}"
+    local inFile="${productInfoPath}"
 
-    # Use the overlay file, if it exists.
-    if [[ (${overlayDir} != '') && -e "${overlayDir}/${fileName}" ]]; then
-        inFile="${overlayDir}/${fileName}"
+    if [[ ${inFile} == '' ]]; then
+        inFile="${baseDir}/${fileName}"
+        # Use the overlay file, if it exists.
+        if [[ (${overlayDir} != '') && -e "${overlayDir}/${fileName}" ]]; then
+            inFile="${overlayDir}/${fileName}"
+        fi
     fi
 
     # The git info, if available.
@@ -534,6 +545,8 @@ function build-product-info {
     # derived here, to produce the final output.
     (
         cat "${inFile}"
+        echo ''
+        echo '# The following lines were added automatically by the build script.'
         echo "${commitInfo}"
         echo "${buildDate}"
     ) > "${outFile}"
