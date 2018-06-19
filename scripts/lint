@@ -36,11 +36,11 @@ showHelp=0
 # Option for the output directory, if any.
 outDirOpt=()
 
-# Option for the overlay source directory, if any.
-overlayDirOpt=()
+# Option for the extra modules source directory, if any.
+extraModulesOpt=()
 
-# Overlay source directory, if any.
-overlayDir=''
+# Extra modules source directory, if any.
+extraModulesDir=''
 
 while true; do
     case $1 in
@@ -48,12 +48,12 @@ while true; do
             showHelp=1
             break
             ;;
+        --extra-modules=?*)
+            extraModulesDir="${1#*=}"
+            extraModulesOpt=("$1")
+            ;;
         --out=?*)
             outDirOpt=("$1")
-            ;;
-        --overlay=?*)
-            overlayDir="${1#*=}"
-            overlayDirOpt=("$1")
             ;;
         --) # End of all options
             shift
@@ -74,8 +74,8 @@ done
 args=("$@")
 if (( ${#args[@]} == 0 )); then
     args=("${baseDir}")
-    if [[ ${overlayDir} != '' ]]; then
-        args+=("${overlayDir}")
+    if [[ ${extraModulesDir} != '' ]]; then
+        args+=("${extraModulesDir}")
     fi
 fi
 
@@ -84,13 +84,13 @@ if (( ${showHelp} || ${argError} )); then
     echo ''
     echo "${progName} [<opt> ...] [--] [<file-or-dir> ...]"
     echo '  Run the linter on the indicated files or directories. With nothing'
-    echo '  specified, runs over the entire project (including overlay source'
-    echo '  if indicated).'
+    echo '  specified, runs over the entire project (including extra module'
+    echo '  source if indicated).'
     echo ''
+    echo '  --extra-modules=<dir>'
+    echo '    Find additional local module sources in directory <dir>.'
     echo '  --out=<dir>'
     echo '    Place output (built linter tool) in directory <dir>.'
-    echo '  --overlay=<dir>'
-    echo '    Find overlay source in directory <dir>.'
     echo ''
     echo "${progName} [--help | -h]"
     echo '  Display this message.'
@@ -109,7 +109,7 @@ fi
 
 lintDir="${outDir}/linter"
 
-"${progDir}/build" "${outDirOpt[@]}" "${overlayDirOpt[@]}" --linter || exit 1
+"${progDir}/build" "${outDirOpt[@]}" "${extraModulesOpt[@]}" --linter || exit 1
 
 "${lintDir}/node_modules/.bin/eslint" \
     --cache --cache-location "${lintDir}/cache" \

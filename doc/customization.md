@@ -45,9 +45,9 @@ Bayou is set up to make it straightforward to customize. Salient details:
   * The `build` script has the following options, which in concert enable a
     variety of customization possibilities:
 
-    * `--overlay=<dir>` &mdash; Specifies a directory to use for additional
-      source files and/or replacements for source files which exist in the base
-      project.
+    * `--extra-modules=<dir>` &mdash; Specifies a directory in which to find the
+      source for additional local modules, such as the ones specified in the
+      `--main-*` options (and their dependencies).
 
     * `--main-client=<name>` and `--main-server=<name>` &mdash; These specify
       the names of the modules to use as the main entry points into the client

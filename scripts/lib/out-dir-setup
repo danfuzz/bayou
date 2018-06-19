@@ -90,7 +90,7 @@ done
 if (( ${showHelp} || ${argError} )); then
     echo 'Usage:'
     echo ''
-    echo "${progName} [--clean] [--out=<dir>] [--overlay=<dir>]"
+    echo "${progName} [<opt> ...]"
     echo '  Sets up and/or cleans the built output directory. Prints the'
     echo '  absolute path of the output directory. This uses a default output'
     echo '  directory relative to the project base if `--out=` is not'

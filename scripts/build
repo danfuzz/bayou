@@ -36,8 +36,8 @@ showHelp=0
 # List of subprojects to build.
 buildProjects=(compiler server client bin product-info)
 
-# Overlay source directory, if any.
-overlayDir=''
+# Directory in which to find additional local modules, if any.
+extraModulesDir=''
 
 # Name of the `main` module for the client, if specified.
 mainClient=''
@@ -60,14 +60,14 @@ while true; do
         --clean)
             outOpts+=("$1")
             ;;
+        --extra-modules=?*)
+            extraModulesDir="${1#*=}"
+            ;;
         --linter)
             buildProjects=(linter)
             ;;
         --out=?*)
             outOpts+=("$1")
-            ;;
-        --overlay=?*)
-            overlayDir="${1#*=}"
             ;;
         --main-client=?*)
             mainClient="${1#*=}"
@@ -102,12 +102,12 @@ if (( ${showHelp} || ${argError} )); then
     echo ''
     echo '  --clean'
     echo '    Start from a clean build.'
+    echo '  --extra-modules=<dir>'
+    echo '    Find additional local module sources in directory <dir>.'
     echo '  --linter'
     echo '    Just build the linter.'
     echo '  --out=<dir>'
     echo '    Place output in directory <dir>.'
-    echo '  --overlay=<dir>'
-    echo '    Find overlay source in directory <dir>.'
     echo '  --main-client=<name>'
     echo '    Name of the main module for the client.'
     echo '  --main-server=<name>'
@@ -238,7 +238,7 @@ function add-module-mapping {
     if [[ -r ${dirInfoFile} ]]; then
         # The directory has been created before (probably in an earlier run of
         # this script). Verify the constraint that a module is only in the base
-        # project or overlay but not both.
+        # project or extra modules directory but not both.
         local already="$(cat "${dirInfoFile}")"
         if [[ ${already} != ${sourceDir} ]]; then
             echo "Multiple sources for module: ${moduleName}" 1>&2
@@ -252,23 +252,25 @@ function add-module-mapping {
 }
 
 # Adds a directory mapping for the source of each local module, including those
-# defined by the base project as well as by the overlay (if any).
+# defined by the base project as well as in the extra modules directory (if
+# any).
 function add-package-directory-mappings {
     local basePath="${baseDir}/local-modules"
-    local overlayPath="${overlayDir}/local-modules"
     local d
 
     for d in $(find-package-directories "${basePath}"); do
         add-module-mapping "${basePath}/${d}" "${d}" || return 1
     done
 
-    for d in $(find-package-directories "${overlayPath}"); do
-        add-module-mapping "${overlayPath}/${d}" "${d}" || return 1
-    done
+    if [[ ${extraModulesDir} != '' ]]; then
+        for d in $(find-package-directories "${extraModulesDir}"); do
+            add-module-mapping "${extraModulesDir}/${d}" "${d}" || return 1
+        done
+    fi
 }
 
 # Copies the server and client source directories into `out`, including the
-# overlay contents (if any).
+# contents of the extra modules directory (if any).
 function copy-sources {
     echo 'Copying sources...'
 
