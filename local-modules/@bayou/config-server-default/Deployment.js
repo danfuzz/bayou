@@ -4,12 +4,22 @@
 
 import path from 'path';
 
+import { Assets } from '@bayou/assets-client';
 import { UtilityClass } from '@bayou/util-common';
 
 /**
  * Utility functionality regarding the deployment configuration of a server.
  */
 export default class Deployment extends UtilityClass {
+  /**
+   * {array<string>} Implementation of standard configuration point.
+   *
+   * This implementation defers to the module {@link @bayou/assets-client}.
+   */
+  static get ASSET_DIRS() {
+    return Assets.DIRS;
+  }
+
   /**
    * Implementation of standard configuration point.
    *

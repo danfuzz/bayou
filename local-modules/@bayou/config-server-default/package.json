@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@bayou/app-setup": "local",
+    "@bayou/assets-client": "local",
     "@bayou/config-common": "local",
     "@bayou/config-server": "local",
     "@bayou/doc-common": "local",
