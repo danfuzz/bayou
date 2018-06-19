@@ -190,16 +190,20 @@ function rsync-archive {
     rsync --archive --ignore-times "$@"
 }
 
-# Sets up the output directory, including cleaning it out or creating it, as
-# necessary. This also sets `finalDir` to the directory under `outDir` for the
-# final built product.
+# Sets up the build output directory, including cleaning it out or creating it,
+# as necessary. This also sets `finalDir` and `modulesDir` relative to the
+# output directory.
 function set-up-out {
     outDir="$(${progDir}/lib/out-dir-setup "${outOpts[@]}")"
     if (( $? != 0 )); then
         return 1
     fi
 
+    # Where the final built artifacts go.
     finalDir="${outDir}/final"
+
+    # Where local module source directories go as an intermediate build step.
+    modulesDir="${outDir}/local-modules"
 }
 
 # Helper for `local-module-names` which finds package (node module) directories
@@ -218,7 +222,7 @@ function find-package-directories {
 # one per module. This only works after module sources have been copied to the
 # `out` directory.
 function local-module-names {
-    find-package-directories "${outDir}/local-modules"
+    find-package-directories "${modulesDir}"
 }
 
 # Adds a source directory mapping for a module. The first argument is the
@@ -226,7 +230,7 @@ function local-module-names {
 function add-module-mapping {
     local sourceDir="$1"
     local moduleName="$2"
-    local targetDir="${outDir}/local-modules/${moduleName}"
+    local targetDir="${modulesDir}/${moduleName}"
     local dirInfoFile="${targetDir}/${sourceMapName}"
 
     mappingFiles+=("${dirInfoFile}")
@@ -348,7 +352,7 @@ function do-install {
     # that it lists the transitive closure of external module dependencies.
     echo "${subprojectName}:" 'Copying local-module dependencies...'
     "${progDir}/lib/copy-local-dependencies" \
-        --local-modules="${outDir}/local-modules" "${toDir}" \
+        --local-modules="${modulesDir}" "${toDir}" \
     || return 1
 
     if [[ -r ${npmPackageJson} ]] \
