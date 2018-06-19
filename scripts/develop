@@ -72,6 +72,9 @@ while true; do
         --main-server=?*)
             buildOpts+=("$1");
             ;;
+        --product-info=?*)
+            buildOpts+=("$1");
+            ;;
         --) # End of all options
             shift
             break
@@ -104,6 +107,8 @@ if (( ${showHelp} || ${argError} )); then
     echo '    Name of the main module for the client.'
     echo '  --main-server=<name>'
     echo '    Name of the main module for the server.'
+    echo '  --product-info=<path>'
+    echo '    Filesystem path to the product info file.'
     echo ''
     echo "${progName} [--help | -h]"
     echo '  Display this message.'

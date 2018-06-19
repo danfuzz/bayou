@@ -45,6 +45,9 @@ mainClient=''
 # Name of the `main` module for the server, if specified.
 mainServer=''
 
+# Path to the product info file, if specified.
+productInfoPath=''
+
 # Options to pass to `out-dir-setup`.
 outOpts=()
 
@@ -71,6 +74,9 @@ while true; do
             ;;
         --main-server=?*)
             mainServer="${1#*=}"
+            ;;
+        --product-info=?*)
+            productInfoPath="${1#*=}"
             ;;
         --) # End of all options
             shift
@@ -106,6 +112,8 @@ if (( ${showHelp} || ${argError} )); then
     echo '    Name of the main module for the client.'
     echo '  --main-server=<name>'
     echo '    Name of the main module for the server.'
+    echo '  --product-info=<path>'
+    echo '    Filesystem path to the product info file.'
     echo ''
     echo "${progName} [--help | -h]"
     echo '  Display this message.'
@@ -194,17 +202,38 @@ function set-up-out {
     finalDir="${outDir}/final"
 }
 
-# Gets a list of all the local module names. The output is a series of
-# lines, one per module.
+# Helper for `local-module-names` which finds package (node module) directories
+# under the given directory. It prints the partial path to each such found
+# directory.
+function find-package-directories {
+    local dir="$1"
+
+    # Parens to preserve original CWD. `awk` command to strip the leading `./`
+    # and trailing `/package.json` from the results of the `find` command.
+    (cd "${dir}"; find . -type f -name package.json) \
+        | awk '{ gsub(/^\.\/|\/package\.json$/, ""); print $0; }'
+}
+
+# Gets a list of all the local module names, or with `--path` a list of all
+# source paths to local modules. The output is a series of lines, one per
+# module.
 function local-module-names {
-    (
-        find "${baseDir}/local-modules" -mindepth 1 -maxdepth 1 -type d
-        if [[ ${overlayDir} != '' && -e "${overlayDir}/local-modules" ]]; then
-            find "${overlayDir}/local-modules" -mindepth 1 -maxdepth 1 -type d
-        fi
-    ) \
-        | sed -e 's!.*/!!g' \
-        | sort -u
+    local path=0
+    local basePath="${baseDir}/local-modules"
+    local overlayPath="${overlayDir}/local-modules"
+
+    if [[ $1 == '--path' ]]; then
+        # Kinda janky: This makes a recursive call _without_ this option and
+        # post-processes the result.
+        local-module-names | awk '{ print "local-modules/" $0 }'
+    else
+        (
+            find-package-directories "${basePath}"
+            if [[ (${overlayDir} != '') && -e "${overlayPath}" ]]; then
+                find-package-directories "${overlayPath}"
+            fi
+        ) | sort -u
+    fi
 }
 
 # Adds a new directory mapping under the output directory pointing back to the
@@ -230,18 +259,6 @@ function add-directory-mapping {
     mappingFiles+=("${dirInfoFile}")
 }
 
-# Helper for `add-package-directory-mapping` which finds package (node module)
-# directories under the given directory. It prints the partial path to each such
-# found directory.
-function find-package-directories {
-    local dir="$1"
-
-    # Parens to preserve original CWD. `awk` command to strip the leading `./`
-    # and trailing `/package.json` from the results of the `find` command.
-    (cd "${dir}"; find . -type f -name package.json) \
-        | awk '{ gsub(/^\.\/|\/package\.json$/, ""); print $0; }'
-}
-
 # Adds directory mappings for each subdirectory of `local-modules` which
 # appears to be a package (node module), as inferred by the existence of a
 # `package.json` file. This includes handling of overlays if they exist.
@@ -251,22 +268,9 @@ function find-package-directories {
 # each subdirectory can end up getting overlaid differently, and because in the
 # final executed result the `local-modules` directory doesn't even exist.
 function add-package-directory-mappings {
-    local dirName="local-modules"
-    local basePath="${baseDir}/${dirName}"
-    local overlayPath="${overlayDir}/${dirName}"
-
-    local names=($(
-        (
-            find-package-directories "${basePath}"
-            if [[ (${overlayDir} != '') && -e "${overlayPath}" ]]; then
-                find-package-directories "${overlayPath}"
-            fi
-        ) | sort -u
-    ))
-
     local n
-    for n in "${names[@]}"; do
-        add-directory-mapping "${dirName}/${n}"
+    for n in $(local-module-names --path); do
+        add-directory-mapping "${n}"
     done
 }
 
@@ -382,13 +386,6 @@ function do-install {
     rsync-archive "${packageJson}" "${npmDir}/package.json"
 
     (cd "${npmDir}" && npm install --no-package-lock) || return 1
-
-    # We are somewhat at the mercy of what's published via npm, and in fact
-    # some modules that we use occasionally have bugs in their published
-    # versions. This script patches them in situ based on the contents of the
-    # directory `etc/module-overlay`.
-    "${progDir}/lib/fix-modules" "${baseDir}/etc/module-overlay" "${npmDir}" \
-    || return 1
 
     # Move each of the directories that `npm` got for us into the subproject's
     # `node_modules`.
@@ -507,11 +504,10 @@ function build-bin {
 function build-product-info {
     local fileName='product-info.txt'
     local outFile="${finalDir}/${fileName}"
-    local inFile="${baseDir}/${fileName}"
+    local inFile="${productInfoPath}"
 
-    # Use the overlay file, if it exists.
-    if [[ (${overlayDir} != '') && -e "${overlayDir}/${fileName}" ]]; then
-        inFile="${overlayDir}/${fileName}"
+    if [[ ${inFile} == '' ]]; then
+        inFile="${baseDir}/${fileName}"
     fi
 
     # The git info, if available.
@@ -534,6 +530,8 @@ function build-product-info {
     # derived here, to produce the final output.
     (
         cat "${inFile}"
+        echo ''
+        echo '# The following lines were added automatically by the build script.'
         echo "${commitInfo}"
         echo "${buildDate}"
     ) > "${outFile}"
