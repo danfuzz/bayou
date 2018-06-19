@@ -66,14 +66,9 @@ Bayou is set up to make it straightforward to customize. Salient details:
     or `main-server` module (both of which are pretty small), and then edit to
     provide alternate configuration.
 
-  * Because no amount of explicit configuration hooks will ever turn out to be
-    fully adequate, any original source file at all can be overridden with a
-    replacement. This probably means a lot of copy-paste code duplication, but
-    it will at least unblock progress while still allowing the upstream source
-    to remain unforked. Should you find yourself in need of this facility,
-    please do not hesitate to file an issue, as this is a good indicator that
-    the project is in need of a refactoring, and possibly a new configuration
-    point, to cover the use case in question.
+    Should you find yourself in need of configuration beyond what is already
+    provided, please file an issue (or submit a PR) to add a new configuration
+    class or new member of an existing configuration class.
 
 - - - - - - - - - -
 

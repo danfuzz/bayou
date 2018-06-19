@@ -214,63 +214,59 @@ function find-package-directories {
         | awk '{ gsub(/^\.\/|\/package\.json$/, ""); print $0; }'
 }
 
-# Gets a list of all the local module names, or with `--path` a list of all
-# source paths to local modules. The output is a series of lines, one per
-# module.
+# Gets a list of all the local module names. The output is a series of lines,
+# one per module.
 function local-module-names {
-    local path=0
     local basePath="${baseDir}/local-modules"
     local overlayPath="${overlayDir}/local-modules"
 
-    if [[ $1 == '--path' ]]; then
-        # Kinda janky: This makes a recursive call _without_ this option and
-        # post-processes the result.
-        local-module-names | awk '{ print "local-modules/" $0 }'
-    else
-        (
-            find-package-directories "${basePath}"
-            if [[ (${overlayDir} != '') && -e "${overlayPath}" ]]; then
-                find-package-directories "${overlayPath}"
-            fi
-        ) | sort -u
-    fi
+    (
+        find-package-directories "${basePath}"
+        if [[ (${overlayDir} != '') && -e "${overlayPath}" ]]; then
+            find-package-directories "${overlayPath}"
+        fi
+    ) | sort -u
 }
 
-# Adds a new directory mapping under the output directory pointing back to the
-# original source location(s). This includes handling an overlay if it exists.
-function add-directory-mapping {
-    local dirName="$1"
-    local dirInfoFile="${outDir}/${dirName}/${sourceMapName}"
-
-    mkdir -p "$(dirname "${dirInfoFile}")"
-
-    (
-        # Note: Some directories _only_ exist in the overlay, so we check for
-        # existence of it before adding it to the mapping.
-        if [[ -e "${baseDir}/${dirName}" ]]; then
-            echo "${baseDir}/${dirName}"
-        fi
-
-        if [[ ${overlayDir} != '' && -e "${overlayDir}/${dirName}" ]]; then
-            echo "${overlayDir}/${dirName}"
-        fi
-    ) > "${dirInfoFile}"
+# Adds a source directory mapping for a module. The first argument is the
+# absolute path to the source and the second argument is the module name.
+function add-module-mapping {
+    local sourceDir="$1"
+    local moduleName="$2"
+    local targetDir="${outDir}/local-modules/${moduleName}"
+    local dirInfoFile="${targetDir}/${sourceMapName}"
 
     mappingFiles+=("${dirInfoFile}")
+
+    if [[ -r ${dirInfoFile} ]]; then
+        # The directory has been created before (probably in an earlier run of
+        # this script). Verify the constraint that a module is only in the base
+        # project or overlay but not both.
+        local already="$(cat "${dirInfoFile}")"
+        if [[ ${already} != ${sourceDir} ]]; then
+            echo "Multiple sources for module: ${moduleName}" 1>&2
+            return 1
+        fi
+        return
+    fi
+
+    mkdir -p "${targetDir}"
+    echo "${sourceDir}" > "${dirInfoFile}"
 }
 
-# Adds directory mappings for each subdirectory of `local-modules` which
-# appears to be a package (node module), as inferred by the existence of a
-# `package.json` file. This includes handling of overlays if they exist.
-#
-# **Note:** This arranges for a separate mapping file per local module, instead
-# of just a single mapping for all of `local-modules`, because the contents of
-# each subdirectory can end up getting overlaid differently, and because in the
-# final executed result the `local-modules` directory doesn't even exist.
+# Adds a directory mapping for the source of each local module, including those
+# defined by the base project as well as by the overlay (if any).
 function add-package-directory-mappings {
-    local n
-    for n in $(local-module-names --path); do
-        add-directory-mapping "${n}"
+    local basePath="${baseDir}/local-modules"
+    local overlayPath="${overlayDir}/local-modules"
+    local d
+
+    for d in $(find-package-directories "${basePath}"); do
+        add-module-mapping "${basePath}/${d}" "${d}" || return 1
+    done
+
+    for d in $(find-package-directories "${overlayPath}"); do
+        add-module-mapping "${overlayPath}/${d}" "${d}" || return 1
     done
 }
 
