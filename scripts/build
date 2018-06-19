@@ -202,17 +202,38 @@ function set-up-out {
     finalDir="${outDir}/final"
 }
 
-# Gets a list of all the local module names. The output is a series of
-# lines, one per module.
+# Helper for `local-module-names` which finds package (node module) directories
+# under the given directory. It prints the partial path to each such found
+# directory.
+function find-package-directories {
+    local dir="$1"
+
+    # Parens to preserve original CWD. `awk` command to strip the leading `./`
+    # and trailing `/package.json` from the results of the `find` command.
+    (cd "${dir}"; find . -type f -name package.json) \
+        | awk '{ gsub(/^\.\/|\/package\.json$/, ""); print $0; }'
+}
+
+# Gets a list of all the local module names, or with `--path` a list of all
+# source paths to local modules. The output is a series of lines, one per
+# module.
 function local-module-names {
-    (
-        find "${baseDir}/local-modules" -mindepth 1 -maxdepth 1 -type d
-        if [[ ${overlayDir} != '' && -e "${overlayDir}/local-modules" ]]; then
-            find "${overlayDir}/local-modules" -mindepth 1 -maxdepth 1 -type d
-        fi
-    ) \
-        | sed -e 's!.*/!!g' \
-        | sort -u
+    local path=0
+    local basePath="${baseDir}/local-modules"
+    local overlayPath="${overlayDir}/local-modules"
+
+    if [[ $1 == '--path' ]]; then
+        # Kinda janky: This makes a recursive call _without_ this option and
+        # post-processes the result.
+        local-module-names | awk '{ print "local-modules/" $0 }'
+    else
+        (
+            find-package-directories "${basePath}"
+            if [[ (${overlayDir} != '') && -e "${overlayPath}" ]]; then
+                find-package-directories "${overlayPath}"
+            fi
+        ) | sort -u
+    fi
 }
 
 # Adds a new directory mapping under the output directory pointing back to the
@@ -238,18 +259,6 @@ function add-directory-mapping {
     mappingFiles+=("${dirInfoFile}")
 }
 
-# Helper for `add-package-directory-mapping` which finds package (node module)
-# directories under the given directory. It prints the partial path to each such
-# found directory.
-function find-package-directories {
-    local dir="$1"
-
-    # Parens to preserve original CWD. `awk` command to strip the leading `./`
-    # and trailing `/package.json` from the results of the `find` command.
-    (cd "${dir}"; find . -type f -name package.json) \
-        | awk '{ gsub(/^\.\/|\/package\.json$/, ""); print $0; }'
-}
-
 # Adds directory mappings for each subdirectory of `local-modules` which
 # appears to be a package (node module), as inferred by the existence of a
 # `package.json` file. This includes handling of overlays if they exist.
@@ -259,22 +268,9 @@ function find-package-directories {
 # each subdirectory can end up getting overlaid differently, and because in the
 # final executed result the `local-modules` directory doesn't even exist.
 function add-package-directory-mappings {
-    local dirName="local-modules"
-    local basePath="${baseDir}/${dirName}"
-    local overlayPath="${overlayDir}/${dirName}"
-
-    local names=($(
-        (
-            find-package-directories "${basePath}"
-            if [[ (${overlayDir} != '') && -e "${overlayPath}" ]]; then
-                find-package-directories "${overlayPath}"
-            fi
-        ) | sort -u
-    ))
-
     local n
-    for n in "${names[@]}"; do
-        add-directory-mapping "${dirName}/${n}"
+    for n in $(local-module-names --path); do
+        add-directory-mapping "${n}"
     done
 }
 
