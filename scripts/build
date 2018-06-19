@@ -519,10 +519,6 @@ function build-product-info {
 
     if [[ ${inFile} == '' ]]; then
         inFile="${baseDir}/${fileName}"
-        # Use the overlay file, if it exists.
-        if [[ (${overlayDir} != '') && -e "${overlayDir}/${fileName}" ]]; then
-            inFile="${overlayDir}/${fileName}"
-        fi
     fi
 
     # The git info, if available.
