@@ -24,12 +24,18 @@ const MAP_FILE_NAME = 'source-map.txt';
  *
  * * It synchs the client (web browser) files from the original source, so that
  *   the Webpack "watcher" will find updated code and do its bundling thing.
- *   Should the build ever include non-JS assets, these would also get picked up
- *   here.
  *
  * * It looks for changes to the server source files, and exits the application
- *   should they change. This is expected to be paired with a wrapper script
- *   that notices when the process exits and kicks off a rebuild.
+ *   should they change. This is paired with a wrapper script (`develop`), which
+ *   notices when the process exits and kicks off a rebuild and then restarts
+ *   the server.
+ *
+ * **Note:** This class supports an arrangement whereby source directories can
+ * get "overlaid" (i.e., two directories getting combined into a single
+ * effective source directory), which was used in an earlier version of the
+ * system to enable customization without having to fork the code. The build
+ * system as of this writing no longer supports overlays, but the actual code to
+ * support it here is pretty minimal, so it remains.
  */
 export default class DevMode extends Singleton {
   /**
@@ -75,7 +81,8 @@ export default class DevMode extends Singleton {
     for (const f of files) {
       const p = path.resolve(copyTo, f);
       if (f === MAP_FILE_NAME) {
-        // Reads the map file and splits it into lines.
+        // Reads the map file and splits it into lines. The map file lists
+        // base (underlay) directories before overlay directories.
         const dirs = fs.readFileSync(p, 'utf8').match(/.+(?=\n)/g);
         for (const d of dirs) {
           // `priority` is used to get the sort to respect overlay order.
