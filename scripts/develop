@@ -60,11 +60,11 @@ while true; do
         --clean)
             doClean=1
             ;;
+        --extra-modules=?*)
+            buildOpts+=("$1");
+            ;;
         --out=?*)
             outDir="${1#*=}"
-            ;;
-        --overlay=?*)
-            buildOpts+=("$1");
             ;;
         --main-client=?*)
             buildOpts+=("$1");
@@ -99,14 +99,14 @@ if (( ${showHelp} || ${argError} )); then
     echo ''
     echo '  --clean'
     echo '    Do an initial clean build.'
-    echo '  --out=<dir>'
-    echo '    Find (and place) build output in directory <dir>.'
-    echo '  --overlay=<dir>'
-    echo '    Find overlay source in directory <dir>.'
+    echo '  --extra-modules=<dir>'
+    echo '    Find additional local module sources in directory <dir>.'
     echo '  --main-client=<name>'
     echo '    Name of the main module for the client.'
     echo '  --main-server=<name>'
     echo '    Name of the main module for the server.'
+    echo '  --out=<dir>'
+    echo '    Find (and place) build output in directory <dir>.'
     echo '  --product-info=<path>'
     echo '    Filesystem path to the product info file.'
     echo ''

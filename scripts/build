@@ -36,8 +36,8 @@ showHelp=0
 # List of subprojects to build.
 buildProjects=(compiler server client bin product-info)
 
-# Overlay source directory, if any.
-overlayDir=''
+# Directory in which to find additional local modules, if any.
+extraModulesDir=''
 
 # Name of the `main` module for the client, if specified.
 mainClient=''
@@ -60,14 +60,14 @@ while true; do
         --clean)
             outOpts+=("$1")
             ;;
+        --extra-modules=?*)
+            extraModulesDir="${1#*=}"
+            ;;
         --linter)
             buildProjects=(linter)
             ;;
         --out=?*)
             outOpts+=("$1")
-            ;;
-        --overlay=?*)
-            overlayDir="${1#*=}"
             ;;
         --main-client=?*)
             mainClient="${1#*=}"
@@ -102,12 +102,12 @@ if (( ${showHelp} || ${argError} )); then
     echo ''
     echo '  --clean'
     echo '    Start from a clean build.'
+    echo '  --extra-modules=<dir>'
+    echo '    Find additional local module sources in directory <dir>.'
     echo '  --linter'
     echo '    Just build the linter.'
     echo '  --out=<dir>'
     echo '    Place output in directory <dir>.'
-    echo '  --overlay=<dir>'
-    echo '    Find overlay source in directory <dir>.'
     echo '  --main-client=<name>'
     echo '    Name of the main module for the client.'
     echo '  --main-server=<name>'
@@ -190,16 +190,20 @@ function rsync-archive {
     rsync --archive --ignore-times "$@"
 }
 
-# Sets up the output directory, including cleaning it out or creating it, as
-# necessary. This also sets `finalDir` to the directory under `outDir` for the
-# final built product.
+# Sets up the build output directory, including cleaning it out or creating it,
+# as necessary. This also sets `finalDir` and `modulesDir` relative to the
+# output directory.
 function set-up-out {
     outDir="$(${progDir}/lib/out-dir-setup "${outOpts[@]}")"
     if (( $? != 0 )); then
         return 1
     fi
 
+    # Where the final built artifacts go.
     finalDir="${outDir}/final"
+
+    # Where local module source directories go as an intermediate build step.
+    modulesDir="${outDir}/local-modules"
 }
 
 # Helper for `local-module-names` which finds package (node module) directories
@@ -214,79 +218,70 @@ function find-package-directories {
         | awk '{ gsub(/^\.\/|\/package\.json$/, ""); print $0; }'
 }
 
-# Gets a list of all the local module names, or with `--path` a list of all
-# source paths to local modules. The output is a series of lines, one per
-# module.
+# Gets a list of all the local module names. The output is a series of lines,
+# one per module. This only works after module sources have been copied to the
+# `out` directory.
 function local-module-names {
-    local path=0
-    local basePath="${baseDir}/local-modules"
-    local overlayPath="${overlayDir}/local-modules"
+    find-package-directories "${modulesDir}"
+}
 
-    if [[ $1 == '--path' ]]; then
-        # Kinda janky: This makes a recursive call _without_ this option and
-        # post-processes the result.
-        local-module-names | awk '{ print "local-modules/" $0 }'
-    else
-        (
-            find-package-directories "${basePath}"
-            if [[ (${overlayDir} != '') && -e "${overlayPath}" ]]; then
-                find-package-directories "${overlayPath}"
-            fi
-        ) | sort -u
+# Adds a source directory mapping for a module. The first argument is the
+# absolute path to the source and the second argument is the module name.
+function add-module-mapping {
+    local sourceDir="$1"
+    local moduleName="$2"
+    local targetDir="${modulesDir}/${moduleName}"
+    local dirInfoFile="${targetDir}/${sourceMapName}"
+
+    mappingFiles+=("${dirInfoFile}")
+
+    if [[ -r ${dirInfoFile} ]]; then
+        # The directory has been created before (probably in an earlier run of
+        # this script). Verify the constraint that a module is only in the base
+        # project or extra modules directory but not both.
+        local already="$(cat "${dirInfoFile}")"
+        if [[ ${already} != ${sourceDir} ]]; then
+            echo "Multiple sources for module: ${moduleName}" 1>&2
+            return 1
+        fi
+        return
+    fi
+
+    mkdir -p "${targetDir}"
+    echo "${sourceDir}" > "${dirInfoFile}"
+}
+
+# Adds a directory mapping for the source of each local module, including those
+# defined by the base project as well as in the extra modules directory (if
+# any).
+function add-package-directory-mappings {
+    local basePath="${baseDir}/local-modules"
+    local d
+
+    for d in $(find-package-directories "${basePath}"); do
+        add-module-mapping "${basePath}/${d}" "${d}" || return 1
+    done
+
+    if [[ ${extraModulesDir} != '' ]]; then
+        for d in $(find-package-directories "${extraModulesDir}"); do
+            add-module-mapping "${extraModulesDir}/${d}" "${d}" || return 1
+        done
     fi
 }
 
-# Adds a new directory mapping under the output directory pointing back to the
-# original source location(s). This includes handling an overlay if it exists.
-function add-directory-mapping {
-    local dirName="$1"
-    local dirInfoFile="${outDir}/${dirName}/${sourceMapName}"
-
-    mkdir -p "$(dirname "${dirInfoFile}")"
-
-    (
-        # Note: Some directories _only_ exist in the overlay, so we check for
-        # existence of it before adding it to the mapping.
-        if [[ -e "${baseDir}/${dirName}" ]]; then
-            echo "${baseDir}/${dirName}"
-        fi
-
-        if [[ ${overlayDir} != '' && -e "${overlayDir}/${dirName}" ]]; then
-            echo "${overlayDir}/${dirName}"
-        fi
-    ) > "${dirInfoFile}"
-
-    mappingFiles+=("${dirInfoFile}")
-}
-
-# Adds directory mappings for each subdirectory of `local-modules` which
-# appears to be a package (node module), as inferred by the existence of a
-# `package.json` file. This includes handling of overlays if they exist.
-#
-# **Note:** This arranges for a separate mapping file per local module, instead
-# of just a single mapping for all of `local-modules`, because the contents of
-# each subdirectory can end up getting overlaid differently, and because in the
-# final executed result the `local-modules` directory doesn't even exist.
-function add-package-directory-mappings {
-    local n
-    for n in $(local-module-names --path); do
-        add-directory-mapping "${n}"
-    done
-}
-
 # Copies the server and client source directories into `out`, including the
-# overlay contents (if any).
+# contents of the extra modules directory (if any).
 function copy-sources {
     echo 'Copying sources...'
 
     # For each mapping file, copy all of the specified source files, but don't
     # include directories that themselves have separately-specified maps; those
     # get handled in their own iterations of this loop.
-    local mapFile dir excludes sources s delArg
+    local mapFile
     for mapFile in "${mappingFiles[@]}"; do
-        dir="$(dirname "${mapFile}")"
+        local dir="$(dirname "${mapFile}")"
 
-        excludes=($(
+        local excludes=($(
             # Exclude the source map files themselves.
             echo "--exclude=${sourceMapName}"
 
@@ -298,14 +293,8 @@ function copy-sources {
                 | awk '{ printf("--exclude=/%s\n", substr($1, 3)); }'
         ))
 
-        # Copy the first mapped directory entirely, including removing deleted
-        # files. Then copy the rest -- the overlays -- without deleting.
-        sources=($(cat "${mapFile}"))
-        delArg=(--delete)
-        for s in "${sources[@]}"; do
-            rsync-archive "${delArg[@]}" "${excludes[@]}" "${s}/" "${dir}"
-            delArg=()
-        done
+        local source="$(cat "${mapFile}")"
+        rsync-archive --delete "${excludes[@]}" "${source}/" "${dir}"
     done
 
     echo 'Copying sources... done.'
@@ -359,7 +348,7 @@ function do-install {
     # that it lists the transitive closure of external module dependencies.
     echo "${subprojectName}:" 'Copying local-module dependencies...'
     "${progDir}/lib/copy-local-dependencies" \
-        --local-modules="${outDir}/local-modules" "${toDir}" \
+        --local-modules="${modulesDir}" "${toDir}" \
     || return 1
 
     if [[ -r ${npmPackageJson} ]] \
