@@ -24,12 +24,11 @@ const MAP_FILE_NAME = 'source-map.txt';
  *
  * * It synchs the client (web browser) files from the original source, so that
  *   the Webpack "watcher" will find updated code and do its bundling thing.
- *   Should the build ever include non-JS assets, these would also get picked up
- *   here.
  *
  * * It looks for changes to the server source files, and exits the application
- *   should they change. This is expected to be paired with a wrapper script
- *   that notices when the process exits and kicks off a rebuild.
+ *   should they change. This is paired with a wrapper script (`develop`), which
+ *   notices when the process exits and kicks off a rebuild and then restarts
+ *   the server.
  */
 export default class DevMode extends Singleton {
   /**
