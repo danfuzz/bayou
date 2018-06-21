@@ -48,6 +48,9 @@ outOpts=()
 # Path to the product info file.
 productInfoPath=''
 
+# List of rescopings to do.
+rescopes=()
+
 while true; do
     case $1 in
         -h|--help)
@@ -62,6 +65,9 @@ while true; do
             ;;
         --product-info=?*)
             productInfoPath="${1#*=}"
+            ;;
+        --rescope=?*)
+            rescopes+=("${1#*=}")
             ;;
         --) # End of all options
             shift
@@ -97,6 +103,10 @@ if (( ${showHelp} || ${argError} )); then
     echo '    found.'
     echo '  --product-info=<path>'
     echo '    Filesystem path to the product info file. This "option" must be included.'
+    echo '  --rescope=@<original>:@<new>[/<prefix>]'
+    echo '    Translate the indicated module scope in the originals into a new scope'
+    echo '    name and optional module name prefix in the result. Can be specified'
+    echo '    more than once.'
     echo ''
     echo "${progName} [--help | -h]"
     echo '  Display this message.'
@@ -108,28 +118,88 @@ fi
 # Helper functions
 #
 
-# Determines the product version from the info file.
-function product-version {
-    if [[ ! (-r ${productInfoPath} && -f ${productInfoPath}) ]]; then
-        echo "Not readable: ${productInfoPath}" 1>&2
-        return 1
-    fi
+# Helper for `make-name-map` which produces the entry for one module, if it is
+# in fact rescoped.
+function calc-name-map-entry {
+    local fullName="$1"
+    local scope name
 
-    local line="$(grep '^ *version *=' < "${productInfoPath}")"
-
-    if [[ ${line} =~ ^\ *version\ *=\ *([^\ ]*) ]]; then
-        echo "${BASH_REMATCH[1]}"
+    if [[ ${fullName} =~ ^(@[^/:]+)/(.*)$ ]]; then
+        scope="${BASH_REMATCH[1]}"
+        name="${BASH_REMATCH[2]}"
     else
-        echo "Could not determine product version." 1>&2
-        return 1
+        # No namespace scope in the given name. Rescopes only affect modules
+        # that started out with a namespace.
+        return
     fi
+
+    local s
+    for s in "${rescopes[@]}"; do
+        if [[ "${s}" =~ ^(@[^:/]+):(@[^/]+)(/[^/]+)?$ ]]; then
+            local fromScope="${BASH_REMATCH[1]}"
+            local toScope="${BASH_REMATCH[2]}"
+            local toPrefix="${BASH_REMATCH[3]}"
+            if [[ ${scope} == ${fromScope} ]]; then
+                if [[ ${toPrefix} == '' ]]; then
+                    toPrefix='/'
+                fi
+                echo "${fullName}:${toScope}${toPrefix}${name}"
+                return
+            fi
+        else
+            echo "Invalid rescope: ${s}" 1>&2
+            return 1
+        fi
+    done
+
+    # No match from any rescope spec.
+}
+
+# Builds up an array that maps the names of all of the existing local modules to
+# their possibly-rescoped versions. Stores the results in `nameMap`.
+function make-name-map {
+    nameMap=()
+
+    # This validates all the rescope specs.
+    calc-name-map-entry '@-/-' >/dev/null || return 1
+
+    for name in $(local-module-names); do
+        local result="$(calc-name-map-entry "${name}")"
+        echo "==== ${name} ==> ${result}"
+        if [[ ${result} != '' ]]; then
+            nameMap+=("${result}")
+        fi
+    done
+}
+
+# Determines the output module name for the given input module name.
+function output-name-for {
+    local name="$1"
+
+    for entry in "${nameMap[@]}"; do
+        [[ ${entry} =~ ^([^:]+):(.*)$ ]]
+        local fromName="${BASH_REMATCH[1]}"
+        local toName="${BASH_REMATCH[2]}"
+        if [[ ${name} == ${fromName} ]]; then
+            echo "${toName}"
+            return
+        fi
+    done
+
+    # No match from any rescope spec.
+    echo "${name}"
 }
 
 # Processes the named module, producing a version suitable for publication.
 function process-module {
     local name="$1"
+    local toName="$(output-name-for "${name}")"
     local fromDir="${modulesDir}/${name}"
-    local toDir="${publishDir}/${name}"
+    local toDir="${publishDir}/${toName}"
+
+    if [[ ${toName} == '' ]]; then
+        return 1
+    fi
 
     mkdir -p "${toDir}" || return 1
 
@@ -143,7 +213,7 @@ function process-module {
 
     # Rework the `package.json` file.
     jq \
-        --arg name "${name}" \
+        --arg name "${toName}" \
         --arg version "${productVersion}" \
     '
         def fix_dep:
@@ -167,12 +237,30 @@ function process-module {
     || return 1
 }
 
+# Determines the product version from the info file.
+function product-version {
+    if [[ ! (-r ${productInfoPath} && -f ${productInfoPath}) ]]; then
+        echo "Not readable: ${productInfoPath}" 1>&2
+        return 1
+    fi
+
+    local line="$(grep '^ *version *=' < "${productInfoPath}")"
+
+    if [[ ${line} =~ ^\ *version\ *=\ *([^\ ]*) ]]; then
+        echo "${BASH_REMATCH[1]}"
+    else
+        echo "Could not determine product version." 1>&2
+        return 1
+    fi
+}
+
 
 #
 # Main script
 #
 
 set-up-out "${outOpts[@]}" || exit 1
+make-name-map || exit 1
 
 productVersion="$(product-version)"
 if [[ $? != 0 ]]; then
