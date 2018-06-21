@@ -127,8 +127,33 @@ function product-version {
 
 # Processes the named module, producing a version suitable for publication.
 function process-module {
-    echo "TODO!!! ${name}"
-    return 1
+    local name="$1"
+    local fromDir="${modulesDir}/${name}"
+    local toDir="${publishDir}/${name}"
+
+    mkdir -p "${toDir}" || return 1
+
+    # Start with a fresh copy of the module source. **Note:** `source-map.txt`
+    # files are from the build process and are used for the "live development"
+    # system; they shouldn't end up getting published, so we exclude them from
+    # the copy.
+    rsync-archive --delete --exclude=source-map.txt \
+        "${fromDir}/" "${toDir}" \
+    || return 1
+
+    # Rework the `package.json` file.
+    jq \
+        --arg name "${name}" \
+        --arg version "${productVersion}" \
+    '
+        .name = $name |
+        .version = $version |
+        .description = "Subcomponent of larger project." |
+        .license = "UNLICENSED" |
+        .author = "Several authors." |
+        .repository = "NONE"
+    ' < "${fromDir}/package.json" > "${toDir}/package.json" \
+    || return 1
 }
 
 
