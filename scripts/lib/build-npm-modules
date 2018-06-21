@@ -125,6 +125,12 @@ function product-version {
     fi
 }
 
+# Processes the named module, producing a version suitable for publication.
+function process-module {
+    echo "TODO!!! ${name}"
+    return 1
+}
+
 
 #
 # Main script
@@ -137,8 +143,14 @@ if [[ $? != 0 ]]; then
     exit 1
 fi
 
+publishDir="${outDir}/for-publication"
+mkdir -p "${publishDir}" || exit 1
+
+echo "Processing modules for publication..."
+
 for name in $(local-module-names); do
-    echo "TODO!!! ${name}"
+    echo "${name}"
+    process-module "${name}" || exit 1
 done
 
-exit 1
+echo "Done!"

@@ -56,7 +56,8 @@ function find-package-directories {
     # Parens to preserve original CWD. `awk` command to strip the leading `./`
     # and trailing `/package.json` from the results of the `find` command.
     (cd "${dir}"; find . -type f -name package.json) \
-        | awk '{ gsub(/^\.\/|\/package\.json$/, ""); print $0; }'
+        | awk '{ gsub(/^\.\/|\/package\.json$/, ""); print $0; }' \
+        | sort
 }
 
 # Gets a list of all the local module names. The output is a series of lines,
