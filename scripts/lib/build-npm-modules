@@ -165,7 +165,6 @@ function make-name-map {
 
     for name in $(local-module-names); do
         local result="$(calc-name-map-entry "${name}")"
-        echo "==== ${name} ==> ${result}"
         if [[ ${result} != '' ]]; then
             nameMap+=("${result}")
         fi
