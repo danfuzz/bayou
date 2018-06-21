@@ -146,12 +146,23 @@ function process-module {
         --arg name "${name}" \
         --arg version "${productVersion}" \
     '
+        def fix_dep:
+            if (.value == "local")
+                then .value = $version
+                else .
+            end
+        ;
+
         .name = $name |
         .version = $version |
         .description = "Subcomponent of larger project." |
         .license = "UNLICENSED" |
         .author = "Several authors." |
-        .repository = "NONE"
+        .repository = "NONE" |
+        if has("dependencies")
+            then .dependencies |= with_entries(fix_dep)
+            else .
+        end
     ' < "${fromDir}/package.json" > "${toDir}/package.json" \
     || return 1
 }
