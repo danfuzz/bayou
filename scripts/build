@@ -60,6 +60,9 @@ while true; do
         --clean)
             outOpts+=("$1")
             ;;
+        --copy-sources)
+            buildProjects=(copy-sources)
+            ;;
         --extra-modules=?*)
             extraModulesDir="${1#*=}"
             ;;
@@ -102,10 +105,13 @@ if (( ${showHelp} || ${argError} )); then
     echo ''
     echo '  --clean'
     echo '    Start from a clean build.'
+    echo '  --copy-sources'
+    echo '    Just copy source files into the output directory. (Do no other build'
+    echo '    steps.)'
     echo '  --extra-modules=<dir>'
     echo '    Find additional local module sources in directory <dir>.'
     echo '  --linter'
-    echo '    Just build the linter.'
+    echo '    Just build the linter. (Do no other build steps.)'
     echo '  --out=<dir>'
     echo '    Place output in directory <dir>.'
     echo '  --main-client=<name>'
@@ -469,6 +475,13 @@ function build-client {
 # Builds the compiler (transpiler) code.
 function build-compiler {
     do-install compiler || return 1
+}
+
+# "Builds" the `copy-sources` target.
+function build-copy-sources {
+    # This is a no-op because sources always get copied for all build targets,
+    # before calling through to the `build-*` functions.
+    :
 }
 
 # Builds the code linter.
