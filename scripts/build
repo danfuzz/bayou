@@ -51,7 +51,7 @@ mainServer=''
 # Path to the product info file, if specified.
 productInfoPath=''
 
-# Options to pass to `out-dir-setup`.
+# Options to pass to `set-up-out`.
 outOpts=()
 
 while true; do
