@@ -1,0 +1,192 @@
+#!/bin/bash
+#
+# Copyright 2016-2018 the Bayou Authors (Dan Bornstein et alia).
+# Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+# Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+#
+# Converts the module sources in `out` into a form which is appropriate to hand
+# off to `npm publish`.
+#
+
+# Set `progName` to the program name, `progDir` to its directory, and `baseDir`
+# to `progDir`'s directory. Follows symlinks.
+function init-prog {
+    local newp p="$0"
+
+    while newp="$(readlink "$p")"; do
+        [[ ${newp} =~ ^/ ]] && p="${newp}" || p="$(dirname "$p")/${newp}"
+    done
+
+    progName="${p##*/}"
+    progDir="$(cd "$(dirname "$p")"; /bin/pwd -P)"
+    baseDir="$(cd "${progDir}/.."; /bin/pwd -P)"
+}
+init-prog
+
+# Move `baseDir` and `prodDir` up one layer (not done above because the above is
+# boilerplate).
+progDir="${baseDir}"
+baseDir="$(cd "${baseDir}/.."; /bin/pwd -P)"
+
+# Pull in the build system helper library.
+. "${progDir}/lib/include-build.sh"
+
+
+#
+# Argument parsing
+#
+
+# Error during argument processing?
+argError=0
+
+# Need help?
+showHelp=0
+
+# Options to pass to `set-up-out`.
+outOpts=()
+
+# Path to the product info file.
+productInfoPath=''
+
+while true; do
+    case $1 in
+        -h|--help)
+            showHelp=1
+            break
+            ;;
+        --clean)
+            outOpts+=("$1")
+            ;;
+        --out=?*)
+            outOpts+=("$1")
+            ;;
+        --product-info=?*)
+            productInfoPath="${1#*=}"
+            ;;
+        --) # End of all options
+            shift
+            break
+            ;;
+        -?*)
+            echo "Unknown option: $1" 1>&2
+            argError=1
+            break
+            ;;
+        *)  # Default case: No more options, break out of the loop.
+            break
+    esac
+
+    shift
+done
+
+if [[ ${productInfoPath} == '' ]]; then
+    echo 'Missing required option: --product-info' 1>&2
+    argError=1
+fi
+
+if (( ${showHelp} || ${argError} )); then
+    echo 'Usage:'
+    echo ''
+    echo "${progName} [<opt> ...]"
+    echo '  Convert modules into publication form.'
+    echo ''
+    echo '  --clean'
+    echo '    Start from a clean build.'
+    echo '  --out=<dir>'
+    echo '    Directory where built output goes and also where the module sources are'
+    echo '    found.'
+    echo '  --product-info=<path>'
+    echo '    Filesystem path to the product info file. This "option" must be included.'
+    echo ''
+    echo "${progName} [--help | -h]"
+    echo '  Display this message.'
+    exit ${argError}
+fi
+
+
+#
+# Helper functions
+#
+
+# Determines the product version from the info file.
+function product-version {
+    if [[ ! (-r ${productInfoPath} && -f ${productInfoPath}) ]]; then
+        echo "Not readable: ${productInfoPath}" 1>&2
+        return 1
+    fi
+
+    local line="$(grep '^ *version *=' < "${productInfoPath}")"
+
+    if [[ ${line} =~ ^\ *version\ *=\ *([^\ ]*) ]]; then
+        echo "${BASH_REMATCH[1]}"
+    else
+        echo "Could not determine product version." 1>&2
+        return 1
+    fi
+}
+
+# Processes the named module, producing a version suitable for publication.
+function process-module {
+    local name="$1"
+    local fromDir="${modulesDir}/${name}"
+    local toDir="${publishDir}/${name}"
+
+    mkdir -p "${toDir}" || return 1
+
+    # Start with a fresh copy of the module source. **Note:** `source-map.txt`
+    # files are from the build process and are used for the "live development"
+    # system; they shouldn't end up getting published, so we exclude them from
+    # the copy.
+    rsync-archive --delete --exclude=source-map.txt \
+        "${fromDir}/" "${toDir}" \
+    || return 1
+
+    # Rework the `package.json` file.
+    jq \
+        --arg name "${name}" \
+        --arg version "${productVersion}" \
+    '
+        def fix_dep:
+            if (.value == "local")
+                then .value = $version
+                else .
+            end
+        ;
+
+        .name = $name |
+        .version = $version |
+        .description = "Subcomponent of larger project." |
+        .license = "UNLICENSED" |
+        .author = "Several authors." |
+        .repository = "NONE" |
+        if has("dependencies")
+            then .dependencies |= with_entries(fix_dep)
+            else .
+        end
+    ' < "${fromDir}/package.json" > "${toDir}/package.json" \
+    || return 1
+}
+
+
+#
+# Main script
+#
+
+set-up-out "${outOpts[@]}" || exit 1
+
+productVersion="$(product-version)"
+if [[ $? != 0 ]]; then
+    exit 1
+fi
+
+publishDir="${outDir}/for-publication"
+mkdir -p "${publishDir}" || exit 1
+
+echo "Processing modules for publication..."
+
+for name in $(local-module-names); do
+    echo "${name}"
+    process-module "${name}" || exit 1
+done
+
+echo "Done!"

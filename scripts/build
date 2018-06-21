@@ -22,6 +22,9 @@ function init-prog {
 }
 init-prog
 
+# Pull in the build system helper library.
+. "${progDir}/lib/include-build.sh"
+
 
 #
 # Argument parsing
@@ -48,7 +51,7 @@ mainServer=''
 # Path to the product info file, if specified.
 productInfoPath=''
 
-# Options to pass to `out-dir-setup`.
+# Options to pass to `set-up-out`.
 outOpts=()
 
 while true; do
@@ -59,6 +62,9 @@ while true; do
             ;;
         --clean)
             outOpts+=("$1")
+            ;;
+        --copy-sources)
+            buildProjects=(copy-sources)
             ;;
         --extra-modules=?*)
             extraModulesDir="${1#*=}"
@@ -102,10 +108,13 @@ if (( ${showHelp} || ${argError} )); then
     echo ''
     echo '  --clean'
     echo '    Start from a clean build.'
+    echo '  --copy-sources'
+    echo '    Just copy source files into the output directory. (Do no other build'
+    echo '    steps.)'
     echo '  --extra-modules=<dir>'
     echo '    Find additional local module sources in directory <dir>.'
     echo '  --linter'
-    echo '    Just build the linter.'
+    echo '    Just build the linter. (Do no other build steps.)'
     echo '  --out=<dir>'
     echo '    Place output in directory <dir>.'
     echo '  --main-client=<name>'
@@ -130,100 +139,6 @@ sourceMapName='source-map.txt'
 
 # List of all mapping files.
 mappingFiles=()
-
-# Helper for `check-environment-dependencies` which validates one dependency.
-function check-dependency {
-    local name="$1"
-    local versionCmd="$2"
-    local match="$3"
-
-    # Extract just the command name, and verify that it exists at all.
-
-    local cmdName=''
-    if [[ ${versionCmd} =~ ^([^ ]+) ]]; then
-        cmdName="${BASH_REMATCH[1]}"
-    else
-        # **Note:* This indicates a bug in this script, not a problem with the
-        # environment.
-        echo "Could not determine commmand name for ${name}." 1>&2
-        exit 1
-    fi
-
-    if ! which "${cmdName}" >/dev/null 2>&1; then
-        echo "Missing required command for ${name}: ${cmdName}" 1>&2
-        exit 1
-    fi
-
-    local version="$(${versionCmd} 2>&1)"
-    if ! grep -q -e "${match}" <<< "${version}"; then
-        echo "Unsupported version of ${name}: ${version}" 1>&2
-        exit 1
-    fi
-}
-
-# Checks the versions of our various expected-installed dependencies, notably
-# including Node and npm.
-function check-environment-dependencies {
-    check-dependency 'Node' 'node --version' '^v\([89]\|10\)\.'
-    check-dependency 'npm' 'npm --version' '^[56]\.'
-    check-dependency 'jq' 'jq --version' '^jq-1\.'
-    check-dependency 'rsync' 'rsync --version' '.' # No actual version check.
-}
-
-# Calls `rsync` so as to do an all-local (not actually remote) "archive" copy
-# (preserving permissions, modtimes, etc.).
-#
-# **Note:** We use `rsync` and not `cp` (even though this is a totally local
-# operation) because it has well-defined behavior when copying a tree on top of
-# another tree and also knows how to create directories as needed.
-#
-# **Note:** Trailing slashes on source directory names are significant to
-# `rsync`. This is salient at some of the use sites.
-function rsync-archive {
-    # **Note:** We turn off file-sameness checking, which is irrelevant for this
-    # use and is furthermore counterproductive, in that it can cause a failure
-    # to copy when two non-identical files happen to match in both size and
-    # timestamp. (This has happened in practice. When running a build on a
-    # freshly checked-out source tree, many many files have the same timestamps,
-    # so only the file sizes come into play, and it's very easy to have a file
-    # size coincidence.)
-    rsync --archive --ignore-times "$@"
-}
-
-# Sets up the build output directory, including cleaning it out or creating it,
-# as necessary. This also sets `finalDir` and `modulesDir` relative to the
-# output directory.
-function set-up-out {
-    outDir="$(${progDir}/lib/out-dir-setup "${outOpts[@]}")"
-    if (( $? != 0 )); then
-        return 1
-    fi
-
-    # Where the final built artifacts go.
-    finalDir="${outDir}/final"
-
-    # Where local module source directories go as an intermediate build step.
-    modulesDir="${outDir}/local-modules"
-}
-
-# Helper for `local-module-names` which finds package (node module) directories
-# under the given directory. It prints the partial path to each such found
-# directory.
-function find-package-directories {
-    local dir="$1"
-
-    # Parens to preserve original CWD. `awk` command to strip the leading `./`
-    # and trailing `/package.json` from the results of the `find` command.
-    (cd "${dir}"; find . -type f -name package.json) \
-        | awk '{ gsub(/^\.\/|\/package\.json$/, ""); print $0; }'
-}
-
-# Gets a list of all the local module names. The output is a series of lines,
-# one per module. This only works after module sources have been copied to the
-# `out` directory.
-function local-module-names {
-    find-package-directories "${modulesDir}"
-}
 
 # Adds a source directory mapping for a module. The first argument is the
 # absolute path to the source and the second argument is the module name.
@@ -471,6 +386,13 @@ function build-compiler {
     do-install compiler || return 1
 }
 
+# "Builds" the `copy-sources` target.
+function build-copy-sources {
+    # This is a no-op because sources always get copied for all build targets,
+    # before calling through to the `build-*` functions.
+    :
+}
+
 # Builds the code linter.
 function build-linter {
     do-install linter || return 1
@@ -600,8 +522,8 @@ function avoid-simultaneous-builds {
 # Main script
 #
 
-check-environment-dependencies || exit 1
-set-up-out || exit 1
+check-build-dependencies || exit 1
+set-up-out "${outOpts[@]}" || exit 1
 
 # Make sure only one build is running in any given output directory.
 avoid-simultaneous-builds || exit 1
