@@ -251,6 +251,26 @@ function process-module {
         end
     ' < "${fromDir}/package.json" > "${toDir}/package.json" \
     || return 1
+
+    if [[ ${#nameMap[@]} == 0 ]]; then
+        # No module name mappings, so nothing more to do.
+        return
+    fi
+
+    # Because there are module name mappings, go through each source file and
+    # perform replacements. **TODO:** Implement this.
+
+    local fileName
+    (cd "${fromDir}"; find . -type f -name '*.js') |
+    while read -r fileName; do
+        local fromFile="${fromDir}/${fileName}"
+        local toFile="${toDir}/${fileName}"
+
+        # This uses `jq` as a "sed but with better regex semantics."
+        jq --raw-input --raw-output '
+            "TODO " + . # TODO: Actual filter.
+        ' < "${fromFile}" > "${toFile}"
+    done
 }
 
 # Determines the product version from the info file.
