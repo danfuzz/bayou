@@ -118,8 +118,8 @@ fi
 # Helper functions
 #
 
-# Helper for `make-name-map` which produces the entry for one module, if it is
-# in fact rescoped.
+# Helper for `make-name-map` which produces the translation for one module, if
+# it is in fact rescoped.
 function calc-name-map-entry {
     local fullName="$1"
     local scope name
@@ -143,7 +143,7 @@ function calc-name-map-entry {
                 if [[ ${toPrefix} == '' ]]; then
                     toPrefix='/'
                 fi
-                echo "${fullName}:${toScope}${toPrefix}${name}"
+                echo "${toScope}${toPrefix}${name}"
                 return
             fi
         else
@@ -156,9 +156,11 @@ function calc-name-map-entry {
 }
 
 # Builds up an array that maps the names of all of the existing local modules to
-# their possibly-rescoped versions. Stores the results in `nameMap`.
+# their possibly-rescoped versions. Stores the results in `nameMap` and
+# `nameMapJson`.
 function make-name-map {
     nameMap=()
+    nameMapJson=$'{\n'
 
     # This validates all the rescope specs.
     calc-name-map-entry '@-/-' >/dev/null || return 1
@@ -166,9 +168,15 @@ function make-name-map {
     for name in $(local-module-names); do
         local result="$(calc-name-map-entry "${name}")"
         if [[ ${result} != '' ]]; then
-            nameMap+=("${result}")
+            nameMap+=("${name}:${result}")
+            nameMapJson+="  \"${name}\": \"${result}\","
+            nameMapJson+=$'\n'
         fi
     done
+
+    # The extra mapping is a hack to make it okay to spit out a comma for all
+    # of the above mappings.
+    nameMapJson+=$'  "": ""\n}\n'
 }
 
 # Determines the output module name for the given input module name.
@@ -214,10 +222,19 @@ function process-module {
     jq \
         --arg name "${toName}" \
         --arg version "${productVersion}" \
+        --argjson nameMap "${nameMapJson}" \
     '
+        def fix_name(name):
+            name as $name |
+            if $nameMap | has($name)
+                then $nameMap[$name]
+                else $name
+            end
+        ;
+
         def fix_dep:
             if (.value == "local")
-                then .value = $version
+                then .value = $version | .key = fix_name(.key)
                 else .
             end
         ;
