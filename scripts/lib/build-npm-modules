@@ -48,6 +48,9 @@ outOpts=()
 # Path to the product info file.
 productInfoPath=''
 
+# List of rescopings to do.
+rescopes=()
+
 while true; do
     case $1 in
         -h|--help)
@@ -62,6 +65,9 @@ while true; do
             ;;
         --product-info=?*)
             productInfoPath="${1#*=}"
+            ;;
+        --rescope=?*)
+            rescopes+=("${1#*=}")
             ;;
         --) # End of all options
             shift
@@ -97,6 +103,10 @@ if (( ${showHelp} || ${argError} )); then
     echo '    found.'
     echo '  --product-info=<path>'
     echo '    Filesystem path to the product info file. This "option" must be included.'
+    echo '  --rescope=@<original>:@<new>[/<prefix>]'
+    echo '    Translate the indicated module scope in the originals into a new scope'
+    echo '    name and optional module name prefix in the result. Can be specified'
+    echo '    more than once.'
     echo ''
     echo "${progName} [--help | -h]"
     echo '  Display this message.'
@@ -107,6 +117,161 @@ fi
 #
 # Helper functions
 #
+
+# Helper for `make-name-map` which produces the translation for one module, if
+# it is in fact rescoped.
+function calc-name-map-entry {
+    local fullName="$1"
+    local scope name
+
+    if [[ ${fullName} =~ ^(@[^/:]+)/(.*)$ ]]; then
+        scope="${BASH_REMATCH[1]}"
+        name="${BASH_REMATCH[2]}"
+    else
+        # No namespace scope in the given name. Rescopes only affect modules
+        # that started out with a namespace.
+        return
+    fi
+
+    local s
+    for s in "${rescopes[@]}"; do
+        if [[ "${s}" =~ ^(@[^:/]+):(@[^/]+)(/[^/]+)?$ ]]; then
+            local fromScope="${BASH_REMATCH[1]}"
+            local toScope="${BASH_REMATCH[2]}"
+            local toPrefix="${BASH_REMATCH[3]}"
+            if [[ ${scope} == ${fromScope} ]]; then
+                if [[ ${toPrefix} == '' ]]; then
+                    toPrefix='/'
+                fi
+                echo "${toScope}${toPrefix}${name}"
+                return
+            fi
+        else
+            echo "Invalid rescope: ${s}" 1>&2
+            return 1
+        fi
+    done
+
+    # No match from any rescope spec.
+}
+
+# Builds up an array that maps the names of all of the existing local modules to
+# their possibly-rescoped versions. Stores the results in `nameMap` and
+# `nameMapJson`.
+function make-name-map {
+    nameMap=()
+    nameMapJson=$'{\n'
+
+    # This validates all the rescope specs.
+    calc-name-map-entry '@-/-' >/dev/null || return 1
+
+    for name in $(local-module-names); do
+        local result="$(calc-name-map-entry "${name}")"
+        if [[ ${result} != '' ]]; then
+            nameMap+=("${name}:${result}")
+            nameMapJson+="  \"${name}\": \"${result}\","
+            nameMapJson+=$'\n'
+        fi
+    done
+
+    # The extra mapping is a hack to make it okay to spit out a comma for all
+    # of the above mappings.
+    nameMapJson+=$'  "": ""\n}\n'
+}
+
+# Determines the output module name for the given input module name.
+function output-name-for {
+    local name="$1"
+
+    for entry in "${nameMap[@]}"; do
+        [[ ${entry} =~ ^([^:]+):(.*)$ ]]
+        local fromName="${BASH_REMATCH[1]}"
+        local toName="${BASH_REMATCH[2]}"
+        if [[ ${name} == ${fromName} ]]; then
+            echo "${toName}"
+            return
+        fi
+    done
+
+    # No match from any rescope spec.
+    echo "${name}"
+}
+
+# Processes the named module, producing a version suitable for publication.
+function process-module {
+    local name="$1"
+    local toName="$(output-name-for "${name}")"
+    local fromDir="${modulesDir}/${name}"
+    local toDir="${publishDir}/${toName}"
+
+    if [[ ${toName} == '' ]]; then
+        return 1
+    fi
+
+    mkdir -p "${toDir}" || return 1
+
+    # Start with a fresh copy of the module source. **Note:** `source-map.txt`
+    # files are from the build process and are used for the "live development"
+    # system; they shouldn't end up getting published, so we exclude them from
+    # the copy.
+    rsync-archive --delete --exclude=source-map.txt \
+        "${fromDir}/" "${toDir}" \
+    || return 1
+
+    # Rework the `package.json` file.
+    jq \
+        --arg name "${toName}" \
+        --arg version "${productVersion}" \
+        --argjson nameMap "${nameMapJson}" \
+    '
+        def fix_name(name):
+            name as $name |
+            if $nameMap | has($name)
+                then $nameMap[$name]
+                else $name
+            end
+        ;
+
+        def fix_dep:
+            if (.value == "local")
+                then .value = $version | .key = fix_name(.key)
+                else .
+            end
+        ;
+
+        .name = $name |
+        .version = $version |
+        .description = "Subcomponent of larger project." |
+        .license = "UNLICENSED" |
+        .author = "Several authors." |
+        .repository = "NONE" |
+        if has("dependencies")
+            then .dependencies |= with_entries(fix_dep)
+            else .
+        end
+    ' < "${fromDir}/package.json" > "${toDir}/package.json" \
+    || return 1
+
+    if [[ ${#nameMap[@]} == 0 ]]; then
+        # No module name mappings, so nothing more to do.
+        return
+    fi
+
+    # Because there are module name mappings, go through each source file and
+    # perform replacements. **TODO:** Implement this.
+
+    local fileName
+    (cd "${fromDir}"; find . -type f -name '*.js') |
+    while read -r fileName; do
+        local fromFile="${fromDir}/${fileName}"
+        local toFile="${toDir}/${fileName}"
+
+        # This uses `jq` as a "sed but with better regex semantics."
+        jq --raw-input --raw-output '
+            "TODO " + . # TODO: Actual filter.
+        ' < "${fromFile}" > "${toFile}"
+    done
+}
 
 # Determines the product version from the info file.
 function product-version {
@@ -125,54 +290,13 @@ function product-version {
     fi
 }
 
-# Processes the named module, producing a version suitable for publication.
-function process-module {
-    local name="$1"
-    local fromDir="${modulesDir}/${name}"
-    local toDir="${publishDir}/${name}"
-
-    mkdir -p "${toDir}" || return 1
-
-    # Start with a fresh copy of the module source. **Note:** `source-map.txt`
-    # files are from the build process and are used for the "live development"
-    # system; they shouldn't end up getting published, so we exclude them from
-    # the copy.
-    rsync-archive --delete --exclude=source-map.txt \
-        "${fromDir}/" "${toDir}" \
-    || return 1
-
-    # Rework the `package.json` file.
-    jq \
-        --arg name "${name}" \
-        --arg version "${productVersion}" \
-    '
-        def fix_dep:
-            if (.value == "local")
-                then .value = $version
-                else .
-            end
-        ;
-
-        .name = $name |
-        .version = $version |
-        .description = "Subcomponent of larger project." |
-        .license = "UNLICENSED" |
-        .author = "Several authors." |
-        .repository = "NONE" |
-        if has("dependencies")
-            then .dependencies |= with_entries(fix_dep)
-            else .
-        end
-    ' < "${fromDir}/package.json" > "${toDir}/package.json" \
-    || return 1
-}
-
 
 #
 # Main script
 #
 
 set-up-out "${outOpts[@]}" || exit 1
+make-name-map || exit 1
 
 productVersion="$(product-version)"
 if [[ $? != 0 ]]; then
