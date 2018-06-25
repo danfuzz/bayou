@@ -266,9 +266,11 @@ function process-module {
         local fromFile="${fromDir}/${fileName}"
         local toFile="${toDir}/${fileName}"
 
-        # This uses `jq` as a "sed but with better regex semantics."
+        # This uses `jq` as a "sed but with better regex semantics." (Note #1:
+        # `jq` uses the PCRE library. Note #2: Unfortunately, backslashes need
+        # to be doubled because `jq` doesn't have syntax for regex literals.)
         jq --raw-input --raw-output --slurp '
-            "TODO " + . # TODO: Actual filter.
+            . | gsub("(?<!\\w)@bayou\\b"; "@florp") # TODO: Actual filter.
         ' < "${fromFile}" > "${toFile}"
     done
 }
