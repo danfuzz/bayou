@@ -267,7 +267,7 @@ function process-module {
         local toFile="${toDir}/${fileName}"
 
         # This uses `jq` as a "sed but with better regex semantics."
-        jq --raw-input --raw-output '
+        jq --raw-input --raw-output --slurp '
             "TODO " + . # TODO: Actual filter.
         ' < "${fromFile}" > "${toFile}"
     done
