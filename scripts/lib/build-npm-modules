@@ -45,6 +45,9 @@ showHelp=0
 # Options to pass to `set-up-out`.
 outOpts=()
 
+# JSON text for the base contents of `package.json`, if any.
+packageBaseJson='{}'
+
 # Path to the product info file.
 productInfoPath=''
 
@@ -62,6 +65,9 @@ while true; do
             ;;
         --out=?*)
             outOpts+=("$1")
+            ;;
+        --package-base=?*)
+            packageBaseJson="${1#*=}"
             ;;
         --product-info=?*)
             productInfoPath="${1#*=}"
@@ -101,6 +107,9 @@ if (( ${showHelp} || ${argError} )); then
     echo '  --out=<dir>'
     echo '    Directory where built output goes and also where the module sources are'
     echo '    found.'
+    echo '  --package-base=<json>'
+    echo '    JSON object for the base contents of `package.json`. If not specified,'
+    echo '    minimal defaults will be used.'
     echo '  --product-info=<path>'
     echo '    Filesystem path to the product info file. This "option" must be included.'
     echo '  --rescope=@<original>:@<new>[/<prefix>]'
@@ -243,6 +252,7 @@ function process-module {
         --arg name "${toName}" \
         --arg version "${productVersion}" \
         --argjson nameMap "${nameMapJson}" \
+        --argjson packageBase "${packageBaseJson}" \
     '
         def fix_name(name):
             name as $name |
@@ -259,12 +269,17 @@ function process-module {
             end
         ;
 
-        .name = $name |
-        .version = $version |
-        .description = "Subcomponent of larger project." |
-        .license = "UNLICENSED" |
-        .author = "Several authors." |
-        .repository = "NONE" |
+        {
+            "description": "Subcomponent of larger project.",
+            "license":     "UNLICENSED",
+            "author":      "Several authors.",
+            "repository":  "NONE"
+        }
+        + $packageBase + . +
+        { "name": $name, "version": $version }
+
+        |
+
         if has("dependencies")
             then .dependencies |= with_entries(fix_dep)
             else .
@@ -315,6 +330,21 @@ function product-version {
 
 set-up-out "${outOpts[@]}" || exit 1
 make-name-map || exit 1
+
+# Validate the base JSON.
+if [[ ${packageBaseJson} != '' ]]; then
+    # The `jq` command validates and canonicalizes the JSON contents.
+    packageBaseJson="$(echo "${packageBaseJson}" | jq --compact-output .)"
+    if [[ $? != 0 ]]; then
+        echo 'Invalid JSON given for --package-base.' 1>&2
+        exit 1
+    fi
+
+    if [[ ! ${packageBaseJson} =~ ^'{' ]]; then
+        echo 'Non-object given for --package-base.' 1>&2
+        exit 1
+    fi
+fi
 
 productVersion="$(product-version)"
 if [[ $? != 0 ]]; then
