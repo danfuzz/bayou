@@ -260,18 +260,32 @@ function process-module {
     # Because there are module name mappings, go through each source file and
     # perform replacements. **TODO:** Implement this.
 
+    # Build up the `jq` program which transforms the files. This uses `jq` as a
+    # "sed but with better regex semantics." **Note #1**: `jq` uses the PCRE
+    # library. **Note #2:** Unfortunately, backslashes need to be doubled
+    # because `jq` doesn't have syntax for regex literals.
+
+    local jqProgram='.'
+
+    local nm
+    for m in "${nameMap[@]}"; do
+        [[ ${m} =~ ^([^:]+):(.*)$ ]] || return 1
+        local mapFrom="${BASH_REMATCH[1]}"
+        local mapTo="${BASH_REMATCH[2]}"
+
+        mapFrom='(?<!\\w)'"${mapFrom}"'\\b' # Require word-ish boundaries.
+        jqProgram+=" | gsub(\"${mapFrom}\"; \"${mapTo}\")"
+    done
+
+    local jqCommand=(jq --raw-input --raw-output --slurp "${jqProgram}")
+
     local fileName
     (cd "${fromDir}"; find . -type f -name '*.js') |
     while read -r fileName; do
         local fromFile="${fromDir}/${fileName}"
         local toFile="${toDir}/${fileName}"
 
-        # This uses `jq` as a "sed but with better regex semantics." (Note #1:
-        # `jq` uses the PCRE library. Note #2: Unfortunately, backslashes need
-        # to be doubled because `jq` doesn't have syntax for regex literals.)
-        jq --raw-input --raw-output --slurp '
-            . | gsub("(?<!\\w)@bayou\\b"; "@florp") # TODO: Actual filter.
-        ' < "${fromFile}" > "${toFile}"
+        "${jqCommand[@]}" < "${fromFile}" > "${toFile}"
     done
 }
 
