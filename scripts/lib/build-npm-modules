@@ -168,6 +168,7 @@ function make-name-map {
     nameMap=()
     nameMapJson=$'{\n'
     local jqProgram='.'
+    local any=0
 
     # This validates all the rescope specs.
     calc-name-map-entry '@-/-' >/dev/null || return 1
@@ -183,7 +184,13 @@ function make-name-map {
             local mapFrom='(?<!\\w)'"${name}"'\\b' # Require word-ish boundaries.
             jqProgram+=" | gsub(\"${mapFrom}\"; \"${result}\")"
         fi
+        any=1
     done
+
+    if (( !${any} )); then
+        echo 'No modules found!' 1>&2
+        return 1
+    fi
 
     # The extra mapping is a hack to make it okay to spit out a comma for all
     # of the above mappings.
