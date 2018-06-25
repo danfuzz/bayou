@@ -156,11 +156,18 @@ function calc-name-map-entry {
 }
 
 # Builds up an array that maps the names of all of the existing local modules to
-# their possibly-rescoped versions. Stores the results in `nameMap` and
-# `nameMapJson`.
+# their possibly-rescoped versions. Stores the results `nameMap[@]`
+# (script-friendly array), `nameMapJson` (JSON object in string form), and
+# `nameMapProgram[@]` (`jq` invocation which transforms source text).
+#
+# The `nameMapProgram` uses `jq` as a "sed but with better regex
+# semantics." **Note #1**: `jq` uses the PCRE library. **Note #2:**
+# Unfortunately, backslashes need to be doubled because `jq` doesn't have syntax
+# for regex literals.
 function make-name-map {
     nameMap=()
     nameMapJson=$'{\n'
+    local jqProgram='.'
 
     # This validates all the rescope specs.
     calc-name-map-entry '@-/-' >/dev/null || return 1
@@ -169,14 +176,20 @@ function make-name-map {
         local result="$(calc-name-map-entry "${name}")"
         if [[ ${result} != '' ]]; then
             nameMap+=("${name}:${result}")
+
             nameMapJson+="  \"${name}\": \"${result}\","
             nameMapJson+=$'\n'
+
+            local mapFrom='(?<!\\w)'"${name}"'\\b' # Require word-ish boundaries.
+            jqProgram+=" | gsub(\"${mapFrom}\"; \"${result}\")"
         fi
     done
 
     # The extra mapping is a hack to make it okay to spit out a comma for all
     # of the above mappings.
     nameMapJson+=$'  "": ""\n}\n'
+
+    nameMapProgram=(jq --raw-input --raw-output --slurp "${jqProgram}")
 }
 
 # Determines the output module name for the given input module name.
@@ -258,20 +271,16 @@ function process-module {
     fi
 
     # Because there are module name mappings, go through each source file and
-    # perform replacements. **TODO:** Implement this.
+    # perform replacements.
 
     local fileName
-    (cd "${fromDir}"; find . -type f -name '*.js') |
+    (cd "${fromDir}"; find . -type f \
+        '(' -name '*.js' -o -name '*.less' -o -name '*.md' ')') |
     while read -r fileName; do
         local fromFile="${fromDir}/${fileName}"
         local toFile="${toDir}/${fileName}"
 
-        # This uses `jq` as a "sed but with better regex semantics." (Note #1:
-        # `jq` uses the PCRE library. Note #2: Unfortunately, backslashes need
-        # to be doubled because `jq` doesn't have syntax for regex literals.)
-        jq --raw-input --raw-output --slurp '
-            . | gsub("(?<!\\w)@bayou\\b"; "@florp") # TODO: Actual filter.
-        ' < "${fromFile}" > "${toFile}"
+        "${nameMapProgram[@]}" < "${fromFile}" > "${toFile}"
     done
 }
 
