@@ -156,7 +156,7 @@ function calc-name-map-entry {
 }
 
 # Builds up an array that maps the names of all of the existing local modules to
-# their possibly-rescoped versions. Stores the results `nameMap`
+# their possibly-rescoped versions. Stores the results `nameMap[@]`
 # (script-friendly array), `nameMapJson` (JSON object in string form), and
 # `nameMapProgram[@]` (`jq` invocation which transforms source text).
 #
@@ -274,7 +274,8 @@ function process-module {
     # perform replacements.
 
     local fileName
-    (cd "${fromDir}"; find . -type f -name '*.js') |
+    (cd "${fromDir}"; find . -type f \
+        '(' -name '*.js' -o -name '*.less' -o -name '*.md' ')') |
     while read -r fileName; do
         local fromFile="${fromDir}/${fileName}"
         local toFile="${toDir}/${fileName}"
