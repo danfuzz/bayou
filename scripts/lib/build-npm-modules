@@ -276,7 +276,10 @@ function process-module {
             "repository":  "NONE"
         }
         + $packageBase + . +
-        { "name": $name, "version": $version }
+        {
+            "name":    $name,
+            "version": $version
+        }
 
         |
 
