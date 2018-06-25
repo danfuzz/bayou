@@ -64,6 +64,11 @@ function find-package-directories {
 # one per module. This only works after module sources have been copied to the
 # `out` directory.
 function local-module-names {
+    if [[ ! (-d ${modulesDir} && -r ${modulesDir}) ]]; then
+        echo "Cannot read modules directory: ${modulesDir}" 1>&2
+        return 1
+    fi
+
     find-package-directories "${modulesDir}"
 }
 
