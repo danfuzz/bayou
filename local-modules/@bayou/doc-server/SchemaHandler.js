@@ -2,9 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ProductInfo } from '@bayou/env-server';
+import { TheModule as docCommon_TheModule } from '@bayou/doc-common';
 import { TransactionSpec } from '@bayou/file-store-ot';
-import { TString } from '@bayou/typecheck';
 
 import BaseDataManager from './BaseDataManager';
 import Paths from './Paths';
@@ -27,7 +26,7 @@ export default class SchemaHandler extends BaseDataManager {
     super(fileAccess, 'schema');
 
     /** {string} The document schema version to use and expect. */
-    this._schemaVersion = TString.nonEmpty(ProductInfo.theOne.INFO.version);
+    this._schemaVersion = docCommon_TheModule.SCHEMA_VERSION;
 
     Object.freeze(this);
   }

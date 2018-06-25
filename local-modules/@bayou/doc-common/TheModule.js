@@ -25,6 +25,21 @@ import PropertySnapshot from './PropertySnapshot';
  */
 export default class TheModule extends UtilityClass {
   /**
+   * {string} Schema version string which uniquely identifies the structure of
+   * documents and their constituent parts. Any time the formats change in an
+   * way that is incompatible with pre-existing code, this value needs to be
+   * changed, so that code can fail fast rather than silently corrupt documents.
+   *
+   * **Note:** The form of this string is `<year>-<seq>` where `<year>` is the
+   * calendar year in which the format change was made, and `<seq>` is a
+   * three-digit sequence number starting with `001`. (Three digits and not one
+   * or two, so that it isn't mistaken for a month.)
+   */
+  static get SCHEMA_VERSION() {
+    return '2018-001';
+  }
+
+  /**
    * Registers this module's encodable classes with a given codec registry.
    *
    * @param {Registry} registry Codec registry to register with.
