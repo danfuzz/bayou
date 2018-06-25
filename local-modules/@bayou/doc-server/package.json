@@ -5,7 +5,6 @@
     "@bayou/config-server": "local",
     "@bayou/deps-util-server": "local",
     "@bayou/doc-common": "local",
-    "@bayou/env-server": "local",
     "@bayou/file-store": "local",
     "@bayou/file-store-ot": "local",
     "@bayou/ot-common": "local",
