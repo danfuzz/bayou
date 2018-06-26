@@ -72,10 +72,16 @@ function local-module-names {
     find-package-directories "${modulesDir}"
 }
 
+# Gets (prints out) the name of the directory under `out` where modules for
+# npm publication get written. This only works after `set-up-out` has been run.
+function publish-dir {
+    echo "${outDir}/for-publication"
+}
+
 # Gets a list of all the names of modules that are ready for publishing. This
 # only works after `build-npm-modules` has been run.
 function publishable-module-names {
-    local publishDir="${outDir}/for-publication"
+    local publishDir="$(publish-dir)"
 
     if [[ ! (-d ${publishDir} && -r ${publishDir}) ]]; then
         echo "Cannot read publishable module directory: ${publishDir}" 1>&2

@@ -354,7 +354,7 @@ if [[ $? != 0 ]]; then
     exit 1
 fi
 
-publishDir="${outDir}/for-publication"
+publishDir="$(publish-dir)"
 mkdir -p "${publishDir}" || exit 1
 
 echo "Processing modules for publication..."
