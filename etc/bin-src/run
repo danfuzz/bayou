@@ -28,6 +28,23 @@ init-prog
 # Helper functions
 #
 
+# Emits an error both as a JSON blob to stdout (which will perhaps get picked up
+# by the logging infrastructure) and as a human-oriented simple printout to
+# stderr.
+function report-error {
+    local text="$*"
+
+    echo "${text}" 1>&2
+
+    cat <<EOF
+{
+    "timeMsec": $(date '+%s000'),
+    "tag": ["outer-run"],
+    "message": "${text}"
+}
+EOF
+}
+
 # Helper for `check-environment-dependencies` which validates one dependency.
 function check-dependency {
     local name="$1"
@@ -42,18 +59,18 @@ function check-dependency {
     else
         # **Note:* This indicates a bug in this script, not a problem with the
         # environment.
-        echo "Could not determine commmand name for ${name}." 1>&2
+        report-error "Could not determine commmand name for ${name}."
         exit 1
     fi
 
     if ! which "${cmdName}" >/dev/null 2>&1; then
-        echo "Missing required command for ${name}: ${cmdName}" 1>&2
+        report-error "Missing required command for ${name}: ${cmdName}"
         exit 1
     fi
 
     local version="$(${versionCmd} 2>&1)"
     if ! grep -q -e "${match}" <<< "${version}"; then
-        echo "Unsupported version of ${name}: ${version}" 1>&2
+        report-error "Unsupported version of ${name}: ${version}"
         exit 1
     fi
 }
@@ -63,11 +80,39 @@ function check-environment-dependencies {
     check-dependency 'Node' 'node --version' '^v\([89]\|10\)\.'
 }
 
+# Matches the version of Node against the one used to build the product. This
+# augments (does not replace) the Node check in
+# `check-environment-dependencies` (above).
+function check-node-versions {
+    local infoLine="$(cat "${baseDir}/product-info.txt" | grep '^node_version')"
+    local buildVersion runVersion
+
+    if [[ ${infoLine} =~ =' '*([0-9]+) ]]; then
+        buildVersion="${BASH_REMATCH[1]}"
+    else
+        report-error "Missing node_version metadata in the product info file."
+        exit 1
+    fi
+
+    if [[ $(node --version) =~ ^v([0-9]+) ]]; then
+        runVersion="${BASH_REMATCH[1]}"
+    else
+        report-error "Could not determine installed Node version."
+        exit 1
+    fi
+
+    if [[ ${buildVersion} != ${runVersion} ]]; then
+        report-error "Mismatched Node major versions: Built with v${buildVersion}; running with v${runVersion}."
+        exit 1
+    fi
+}
 
 #
 # Main script
 #
 
 check-environment-dependencies
+check-node-versions
+
 cd "${baseDir}/server"
 exec node node_modules/.bin/bayou-server --prog-name="${progName}" "$@"
