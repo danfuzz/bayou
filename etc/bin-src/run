@@ -28,9 +28,10 @@ init-prog
 # Helper functions
 #
 
-# Emits an error both as a JSON blob to stdout (which will perhaps get picked up
-# by the logging infrastructure) and as a human-oriented simple printout to
-# stderr.
+# Emits an error both as a JSON blob to stdout (in the same format as is used
+# in the main product, so it has a chance to get ingested by any logging
+# infrastructure which happens to be running) and as a human-oriented simple
+# printout to stderr.
 function report-error {
     local text="$*"
 
