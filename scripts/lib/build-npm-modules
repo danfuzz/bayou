@@ -5,7 +5,7 @@
 # Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 #
 # Converts the module sources in `out` into a form which is appropriate to hand
-# off to `npm publish`.
+# off to `npm publish`, and optionally also actually publishes them.
 #
 
 # Set `progName` to the program name, `progDir` to its directory, and `baseDir`
@@ -49,7 +49,13 @@ outOpts=()
 packageBaseJson='{}'
 
 # Path to the product info file.
-productInfoPath=''
+productInfoPath="${baseDir}/product-info.txt"
+
+# Publish?
+publish=0
+
+# Extra options to pass to `npm publish`.
+publishOpts=()
 
 # List of rescopings to do.
 rescopes=()
@@ -60,8 +66,8 @@ while true; do
             showHelp=1
             break
             ;;
-        --clean)
-            outOpts+=("$1")
+        --dry-run|--verbose)
+            publishOpts+=("$1")
             ;;
         --out=?*)
             outOpts+=("$1")
@@ -71,6 +77,9 @@ while true; do
             ;;
         --product-info=?*)
             productInfoPath="${1#*=}"
+            ;;
+        --publish)
+            publish=1
             ;;
         --rescope=?*)
             rescopes+=("${1#*=}")
@@ -100,10 +109,10 @@ if (( ${showHelp} || ${argError} )); then
     echo 'Usage:'
     echo ''
     echo "${progName} [<opt> ...]"
-    echo '  Convert modules into publication form.'
+    echo '  Convert modules into publication form, and optionally publish them.'
     echo ''
-    echo '  --clean'
-    echo '    Start from a clean build.'
+    echo '  --dry-run'
+    echo '    Passed through to `npm publish` when using `--publish`.'
     echo '  --out=<dir>'
     echo '    Directory where built output goes and also where the module sources are'
     echo '    found.'
@@ -111,11 +120,15 @@ if (( ${showHelp} || ${argError} )); then
     echo '    JSON object for the base contents of `package.json`. If not specified,'
     echo '    minimal defaults will be used.'
     echo '  --product-info=<path>'
-    echo '    Filesystem path to the product info file. This "option" must be included.'
+    echo '    Filesystem path to the product info file.'
+    echo '  --publish'
+    echo '    Actually publish the converted modules, using `npm publish`.'
     echo '  --rescope=@<original>:@<new>[/<prefix>]'
     echo '    Translate the indicated module scope in the originals into a new scope'
     echo '    name and optional module name prefix in the result. Can be specified'
     echo '    more than once.'
+    echo '  --verbose'
+    echo '    Passed through to `npm publish` when using `--publish`.'
     echo ''
     echo "${progName} [--help | -h]"
     echo '  Display this message.'
@@ -270,10 +283,10 @@ function process-module {
         ;
 
         {
-            "description": "Subcomponent of larger project.",
-            "license":     "UNLICENSED",
-            "author":      "Several authors.",
-            "repository":  "NONE"
+            "description": "Subcomponent of the Bayou project.",
+            "license":     "Apache-2.0",
+            "author":      "See AUTHORS.md in repository.",
+            "repository":  "https://github.com/danfuzz/bayou"
         }
         + $packageBase + . +
         {
@@ -326,6 +339,53 @@ function product-version {
     fi
 }
 
+# Publishes all of the constructed modules.
+function publish-modules {
+    echo 'Publishing modules...'
+
+    local publishCount=0
+    local errors=()
+    local plural
+
+    for name in $(publishable-module-names); do
+        echo "${name}"
+
+        (
+            cd "${publishDir}/${name}"
+            npm publish "${publishOpts[@]}"
+        )
+
+        if [[ $? == 0 ]]; then
+            ((publishCount++))
+        else
+            errors+=("${name}")
+        fi
+    done
+
+    plural=''
+    if (( ${publishCount} == 1 )); then
+        plural='s'
+    fi
+    echo ''
+    echo "Published ${publishCount} module${plural}."
+
+    if (( ${#errors[@]} != 0 )); then
+        echo '' 1>&2
+        echo 'Trouble publishing the following:' 1>&2
+
+        for name in "${errors[@]}"; do
+            echo "  ${name}"
+        done
+
+        plural='s'
+        if (( ${#errors[@]} == 1 )); then
+            plural=''
+        fi
+
+        echo "${#errors[@]} error${plural}." 1>&2
+        return 1
+    fi
+}
 
 #
 # Main script
@@ -364,4 +424,10 @@ for name in $(local-module-names); do
     process-module "${name}" || exit 1
 done
 
-echo "Done!"
+if (( ${publish} )); then
+    publish-modules || exit 1
+    echo "Done!"
+else
+    echo "Done! Built modules into:"
+    echo "  ${publishDir}"
+fi

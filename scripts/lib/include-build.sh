@@ -73,7 +73,8 @@ function local-module-names {
 }
 
 # Gets (prints out) the name of the directory under `out` where modules for
-# npm publication get written. This only works after `set-up-out` has been run.
+# npm publication get written. This only works after `set-up-out` has been run
+# or `outDir` is set up via other means.
 function publish-dir {
     echo "${outDir}/for-publication"
 }
