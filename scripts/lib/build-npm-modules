@@ -426,6 +426,7 @@ done
 
 if (( ${publish} )); then
     publish-modules || exit 1
+    echo "Done!"
+else
+    echo "Done! Built modules into: ${publishDir}"
 fi
-
-echo "Done!"
