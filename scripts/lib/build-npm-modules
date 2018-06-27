@@ -270,10 +270,10 @@ function process-module {
         ;
 
         {
-            "description": "Subcomponent of larger project.",
-            "license":     "UNLICENSED",
-            "author":      "Several authors.",
-            "repository":  "NONE"
+            "description": "Subcomponent of the Bayou project.",
+            "license":     "Apache-2.0",
+            "author":      "See AUTHORS.md in repository.",
+            "repository":  "https://github.com/danfuzz/bayou"
         }
         + $packageBase + . +
         {
