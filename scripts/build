@@ -435,6 +435,13 @@ function build-product-info {
     # `git log` command, above.
     local buildDate="build_date = '$(date '+%Y-%m-%d %H:%M:%S %z')'"
 
+    # The version of Node that was used for the build. This is important because
+    # the version of Node used to _run_ the product needs to be the same major
+    # version. (Most specifically, the native module API needs to be compatible,
+    # but having a matching major version is a reasonably conservative expansion
+    # from there.)
+    local nodeVersion="node_version = $(node --version | sed -e 's/^v//g')"
+
     mkdir -p "$(dirname "${outFile}")"
 
     # Combine the static info file from the source with the additional info
@@ -445,6 +452,7 @@ function build-product-info {
         echo '# The following lines were added automatically by the build script.'
         echo "${commitInfo}"
         echo "${buildDate}"
+        echo "${nodeVersion}"
     ) > "${outFile}"
 }
 
