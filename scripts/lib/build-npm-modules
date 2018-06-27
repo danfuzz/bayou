@@ -49,7 +49,7 @@ outOpts=()
 packageBaseJson='{}'
 
 # Path to the product info file.
-productInfoPath=''
+productInfoPath="${baseDir}/product-info.txt"
 
 # List of rescopings to do.
 rescopes=()
@@ -106,7 +106,7 @@ if (( ${showHelp} || ${argError} )); then
     echo '    JSON object for the base contents of `package.json`. If not specified,'
     echo '    minimal defaults will be used.'
     echo '  --product-info=<path>'
-    echo '    Filesystem path to the product info file. This "option" must be included.'
+    echo '    Filesystem path to the product info file.'
     echo '  --rescope=@<original>:@<new>[/<prefix>]'
     echo '    Translate the indicated module scope in the originals into a new scope'
     echo '    name and optional module name prefix in the result. Can be specified'
