@@ -60,9 +60,6 @@ while true; do
             showHelp=1
             break
             ;;
-        --clean)
-            outOpts+=("$1")
-            ;;
         --out=?*)
             outOpts+=("$1")
             ;;
@@ -102,8 +99,6 @@ if (( ${showHelp} || ${argError} )); then
     echo "${progName} [<opt> ...]"
     echo '  Convert modules into publication form.'
     echo ''
-    echo '  --clean'
-    echo '    Start from a clean build.'
     echo '  --out=<dir>'
     echo '    Directory where built output goes and also where the module sources are'
     echo '    found.'
