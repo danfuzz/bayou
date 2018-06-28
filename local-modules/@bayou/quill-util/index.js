@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import BayouKeyHandlers from './BayouKeyHandlers';
 import BayouKeyboard from './BayouKeyboard';
 import NotReallyMarkdown from './NotReallyMarkdown';
 import QuillEvents from './QuillEvents';
@@ -18,7 +17,6 @@ QuillProm.register({
 
 
 export {
-  BayouKeyHandlers,
   BayouKeyboard,
   NotReallyMarkdown,
   QuillEvents,

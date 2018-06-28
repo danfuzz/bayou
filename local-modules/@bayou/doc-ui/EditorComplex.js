@@ -11,13 +11,14 @@ import { Editor } from '@bayou/config-client';
 import { ClientStore } from '@bayou/data-model-client';
 import { BodyClient, DocSession } from '@bayou/doc-client';
 import { Condition } from '@bayou/promise-util';
-import { BayouKeyHandlers, QuillProm } from '@bayou/quill-util';
+import { QuillProm } from '@bayou/quill-util';
 import { Logger } from '@bayou/see-all';
 import { TObject } from '@bayou/typecheck';
 import { Header } from '@bayou/ui-components';
 import { DomUtil } from '@bayou/util-client';
 import { CommonBase, Errors } from '@bayou/util-common';
 
+import BayouKeyHandlers from './BayouKeyHandlers';
 import CaretOverlay from './CaretOverlay';
 import CaretState from './CaretState';
 import TitleClient from './TitleClient';
