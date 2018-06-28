@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import BodyClient from './BodyClient';
-import DocSession from './DocSession';
+import CaretState from './CaretState';
+import EditorComplex from './EditorComplex';
 
-export { BodyClient, DocSession };
+export { CaretState, EditorComplex };

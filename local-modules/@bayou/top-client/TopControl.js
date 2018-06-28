@@ -5,7 +5,7 @@
 import { SplitKey } from '@bayou/api-common';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { Editor } from '@bayou/config-client';
-import { EditorComplex } from '@bayou/doc-client';
+import { EditorComplex } from '@bayou/doc-ui';
 import { Logger } from '@bayou/see-all';
 import { TFunction, TObject } from '@bayou/typecheck';
 

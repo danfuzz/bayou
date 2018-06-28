@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CaretState } from '@bayou/doc-client';
+import { CaretState } from '@bayou/doc-ui';
 import { combineReducers, createStore } from 'redux';
 
 import DocumentState from './DocumentState';
