@@ -9,18 +9,18 @@ import { Provider } from 'react-redux';
 import { SplitKey } from '@bayou/api-common';
 import { Editor } from '@bayou/config-client';
 import { ClientStore } from '@bayou/data-model-client';
+import { BodyClient, DocSession } from '@bayou/doc-client';
 import { Condition } from '@bayou/promise-util';
-import { BayouKeyHandlers, QuillProm } from '@bayou/quill-util';
+import { QuillProm } from '@bayou/quill-util';
 import { Logger } from '@bayou/see-all';
 import { TObject } from '@bayou/typecheck';
 import { Header } from '@bayou/ui-components';
 import { DomUtil } from '@bayou/util-client';
 import { CommonBase, Errors } from '@bayou/util-common';
 
-import BodyClient from './BodyClient';
+import BayouKeyHandlers from './BayouKeyHandlers';
 import CaretOverlay from './CaretOverlay';
 import CaretState from './CaretState';
-import DocSession from './DocSession';
 import TitleClient from './TitleClient';
 
 /** {Logger} Logger for this module. */

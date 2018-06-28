@@ -3,8 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import BodyClient from './BodyClient';
-import CaretState from './CaretState';
 import DocSession from './DocSession';
-import EditorComplex from './EditorComplex';
 
-export { BodyClient, CaretState, DocSession, EditorComplex };
+export { BodyClient, DocSession };
