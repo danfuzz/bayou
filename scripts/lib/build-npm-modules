@@ -367,9 +367,9 @@ function publish-modules {
         fi
     done
 
-    plural=''
+    plural='s'
     if (( ${publishCount} == 1 )); then
-        plural='s'
+        plural=''
     fi
     echo ''
     echo "Published ${publishCount} module${plural}."
