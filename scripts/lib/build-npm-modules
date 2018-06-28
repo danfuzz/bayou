@@ -78,6 +78,9 @@ while true; do
         --product-info=?*)
             productInfoPath="${1#*=}"
             ;;
+        --public)
+            publishOpts+=('--access=public')
+            ;;
         --publish)
             publish=1
             ;;
@@ -121,6 +124,8 @@ if (( ${showHelp} || ${argError} )); then
     echo '    minimal defaults will be used.'
     echo '  --product-info=<path>'
     echo '    Filesystem path to the product info file.'
+    echo '  --public'
+    echo '    With `--publish`, causes the published modules to be marked as public.'
     echo '  --publish'
     echo '    Actually publish the converted modules, using `npm publish`.'
     echo '  --rescope=@<original>:@<new>[/<prefix>]'
