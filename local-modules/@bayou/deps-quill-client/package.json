@@ -3,5 +3,9 @@
     "quill": "^1.3.5",
 
     "@bayou/deps-quill-common": "local"
+  },
+
+  "peerDependencies": {
+    "quill": "^1.2.4"
   }
 }
