@@ -6,6 +6,7 @@
   "dependencies": {
     "@bayou/config-common-default": "local",
     "@bayou/config-server-default": "local",
+    "@bayou/deps-peers-common-default": "local",
     "@bayou/top-server": "local"
   }
 }
