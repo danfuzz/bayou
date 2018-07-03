@@ -11,7 +11,6 @@ import { Editor } from '@bayou/config-client';
 import { ClientStore } from '@bayou/data-model-client';
 import { BodyClient, DocSession } from '@bayou/doc-client';
 import { Condition } from '@bayou/promise-util';
-import { QuillProm } from '@bayou/quill-util';
 import { Logger } from '@bayou/see-all';
 import { TObject } from '@bayou/typecheck';
 import { Header } from '@bayou/ui-components';
@@ -337,7 +336,7 @@ export default class EditorComplex extends CommonBase {
       { onEnter: this.titleOnEnter.bind(this) });
 
     /** {QuillProm} The Quill editor object for the document title. */
-    const titleQuill = new QuillProm(titleNode, {
+    const titleQuill = new Editor.QuillProm(titleNode, {
       readOnly: false,
       strict:   true,
       theme:    Editor.quillThemeName('title'),
@@ -345,7 +344,7 @@ export default class EditorComplex extends CommonBase {
     });
 
     /** {QuillProm} The Quill editor object. */
-    const bodyQuill = new QuillProm(bodyNode, {
+    const bodyQuill = new Editor.QuillProm(bodyNode, {
       readOnly: true,
       strict:   true,
       theme:    Editor.quillThemeName('body'),

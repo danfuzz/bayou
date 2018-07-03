@@ -6,6 +6,8 @@ import Quill from 'quill';
 
 import { UtilityClass } from '@bayou/util-common';
 
+import QuillProm from './QuillProm';
+
 /**
  * Utility functionality regarding the setup of interactive editors.
  */
@@ -16,6 +18,15 @@ export default class Editor extends UtilityClass {
    */
   static get Quill() {
     return Quill;
+  }
+
+  /**
+   * {QuillProm} Implementation of standard configuration point. This is both
+   * the default and exemplar of how to extend `Quill` as required by the
+   * system.
+   */
+  static get QuillProm() {
+    return QuillProm;
   }
 
   /**

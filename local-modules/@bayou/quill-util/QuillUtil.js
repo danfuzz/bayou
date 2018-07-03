@@ -2,10 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Editor } from '@bayou/config-client';
 import { TObject } from '@bayou/typecheck';
 import { UtilityClass } from '@bayou/util-common';
-
-import QuillProm from './QuillProm';
 
 const POSITION_NOT_FOUND = Object.freeze({
   blot: null,
@@ -53,7 +52,7 @@ export default class QuillUtil extends UtilityClass {
    * @returns {object} The Quill context where the pixel is located.
    */
   static quillContextForPixelPosition(quillInstance, x, y) {
-    if (!quillInstance || (! (quillInstance instanceof QuillProm))) {
+    if (!quillInstance || (! (quillInstance instanceof Editor.QuillProm))) {
       return POSITION_NOT_FOUND;
     }
 
@@ -72,11 +71,11 @@ export default class QuillUtil extends UtilityClass {
     x -= containerBounds.x;
     y -= containerBounds.y;
 
-    const blotOrQuill = QuillProm.find(domElement, true);
+    const blotOrQuill = Editor.QuillProm.find(domElement, true);
 
     // If we get a Quill instance back instead of a blot then we aren't going to
     // find the offset.
-    if (blotOrQuill instanceof QuillProm) {
+    if (blotOrQuill instanceof Editor.QuillProm) {
       return POSITION_NOT_FOUND;
     }
 
@@ -173,7 +172,7 @@ export default class QuillUtil extends UtilityClass {
    * @returns {HTMLDivElement} The container `<div>`.
    */
   static containerDiv(quill) {
-    TObject.check(quill, QuillProm);
+    TObject.check(quill, Editor.QuillProm);
 
     return quill.container;
   }
@@ -186,7 +185,7 @@ export default class QuillUtil extends UtilityClass {
    * @returns {HTMLDivElement} The editor `<div>`.
    */
   static editorDiv(quill) {
-    TObject.check(quill, QuillProm);
+    TObject.check(quill, Editor.QuillProm);
 
     return QuillUtil.containerDiv(quill).getElementsByClassName('ql-editor').item(0);
   }
