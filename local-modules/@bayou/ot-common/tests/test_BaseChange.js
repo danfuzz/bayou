@@ -4,8 +4,8 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
-import Delta from 'quill-delta';
 
+import { Text } from '@bayou/config-common';
 import { Timestamp } from '@bayou/ot-common';
 
 import { MockChange, MockDelta } from '@bayou/ot-common/mocks';
@@ -99,7 +99,7 @@ describe('@bayou/ot-common/BaseChange', () => {
       test(0, false);
       test(0, new Map());
       test(0, { ops: [] });
-      test(0, new Delta()); // Needs to be a `MockDelta`.
+      test(0, new Text.Delta()); // Needs to be a `MockDelta`.
 
       // Invalid `timestamp`.
       test(0, MockDelta.EMPTY, false);

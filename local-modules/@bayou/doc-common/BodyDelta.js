@@ -2,8 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import Delta from 'quill-delta';
-
+import { Text } from '@bayou/config-common';
 import { BaseDelta } from '@bayou/ot-common';
 import { TBoolean } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
@@ -52,9 +51,11 @@ export default class BodyDelta extends BaseDelta {
           // versions of `Delta` to the client; so, instead of just blithely
           // accepting this possibility, we reject it here and report an error
           // which makes it easy to figure out what happened. Should you find
-          // yourself looking at this error, the right thing to do is look at
-          // Quill's `package.json` and update the `quill-delta` dependency in
-          // this module to what you find there.
+          // yourself looking at this error, the likely right thing to do is
+          // look at `package.json` in the version of Quill you are using, and
+          // update what is returned from
+          // {@link @bayou/config-common/Text#Delta} to match what Quill has as
+          // its `quill-delta` dependency.
           throw Errors.badUse('Divergent versions of `quill-delta` package.');
         }
         throw e;
@@ -102,7 +103,7 @@ export default class BodyDelta extends BaseDelta {
    */
   toQuillForm() {
     const ops = this.ops.map(op => op.toQuillForm());
-    return new Delta(ops);
+    return new Text.Delta(ops);
   }
 
   /**
