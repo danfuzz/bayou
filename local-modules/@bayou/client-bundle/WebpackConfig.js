@@ -189,7 +189,10 @@ export default class WebpackConfig extends Singleton {
           },
 
           // Convert TypeScript files. As of this writing, this is only required
-          // for Parchment (a dependency of Quill).
+          // for Parchment (a dependency of Quill). The TypeScript configuration
+          // here has to be compatible with how Parchment wants to be built.
+          // That is, be wary of changes to the `parchment` module which require
+          // reconfiguration of the build process.
           {
             test: /\.ts$/,
             use: [{
