@@ -5,15 +5,18 @@
 import { inject } from '@bayou/injecty';
 
 import Ids from './Ids';
+import Text from './Text';
 
 /**
  * Injects all of the definitions here into the global configuration.
  */
 function injectAll() {
   inject.Ids = Ids;
+  inject.Text = Text;
 }
 
 export {
   Ids,
+  Text,
   injectAll
 };
