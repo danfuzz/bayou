@@ -1,5 +1,5 @@
 {
-  "peerDependencies": {
-    "quill-delta": "^3.5.0"
+  "dependencies": {
+    "quill-delta": "^3.6.2"
   }
 }
