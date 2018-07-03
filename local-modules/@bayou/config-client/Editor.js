@@ -10,6 +10,15 @@ import { UtilityClass } from '@bayou/util-common';
  */
 export default class Editor extends UtilityClass {
   /**
+   * {Quill} The class to use as the Quill editor. The interface of this class
+   * is expected to be compatible with the `Quill` class as defined by the Quill
+   * project.
+   */
+  static get Quill() {
+    return use.Editor.Quill;
+  }
+
+  /**
    * Performs any webpage-global setup needed in order for the page to host one
    * or more editors. This is called exactly once per page load, early during
    * initialization and specifically _before_ any programmatic DOM manipulation
