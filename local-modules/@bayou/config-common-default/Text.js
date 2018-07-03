@@ -11,9 +11,8 @@ import { UtilityClass } from '@bayou/util-common';
  */
 export default class Text extends UtilityClass {
   /**
-   * {Delta} The class to use for text "delta" (document and change
-   * representation) functionality. The interface of this class is expected to
-   * be compatible with `Delta` as defined by the Quill project.
+   * {Delta} Implementation of standard configuration point. See `package.json`
+   * in this directory for details of the version we return here.
    */
   static get Delta() {
     return Delta;
