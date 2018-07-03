@@ -5,7 +5,7 @@
 import Delta from 'quill-delta';
 
 import { BaseDelta } from '@bayou/ot-common';
-import { TBoolean, TObject } from '@bayou/typecheck';
+import { TBoolean } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
 import BodyOp from './BodyOp';
@@ -34,7 +34,14 @@ export default class BodyDelta extends BaseDelta {
       ops = quillDelta;
     } else {
       try {
-        TObject.check(quillDelta, Delta);
+        /**
+         * @todo We need to be able to check this appropriately, but right now,
+         * we can't due to a consumer having captive quill-delta dependencies,
+         * resulting in multiple quill-delta objects. There is a plan
+         * for fixing this, but will require some work. Will revert as soon as
+         * possible.
+         */
+        // TObject.check(quillDelta, Delta);
         ops = quillDelta.ops;
       } catch (e) {
         if ((typeof quillDelta === 'object') && (quillDelta.constructor.name === 'Delta')) {
