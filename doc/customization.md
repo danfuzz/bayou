@@ -16,7 +16,7 @@ Bayou is set up to make it straightforward to customize. Salient details:
 * Custom client code can be written in either ES2017 (with a `.js` suffix) or
   [TypeScript](https://www.typescriptlang.org/) (with a `.ts` suffix). Custom
   server code can be written in ES2017. Modern `import` syntax works both for
-  separate modules (e.g., `import Quill from 'quill'`) and local files (e.g.,
+  separate modules (e.g., `import Florp from 'florp'`) and local files (e.g.,
   `import { thing } from './thing'`).
 
   * ES2017 is compiled into conservative JavaScript by
