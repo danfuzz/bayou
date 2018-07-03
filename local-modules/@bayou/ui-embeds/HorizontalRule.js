@@ -2,9 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import Quill from 'quill';
+import { Editor } from '@bayou/config-client';
 
-const Embed = Quill.import('blots/block/embed');
+const Embed = Editor.Quill.import('blots/block/embed');
 
 /**
  * A simple leaf blot to implement horizontal rules in Quill.
@@ -17,4 +17,4 @@ export default class HorizontalRule extends Embed {
 HorizontalRule.blotName = 'horizontalrule';
 HorizontalRule.tagName = 'hr';
 
-Quill.register(HorizontalRule);
+Editor.Quill.register(HorizontalRule);

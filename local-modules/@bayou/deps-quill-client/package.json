@@ -1,9 +1,0 @@
-{
-  "dependencies": {
-    "@bayou/deps-quill-common": "local"
-  },
-
-  "peerDependencies": {
-    "quill": "^1.2.4"
-  }
-}

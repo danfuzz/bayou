@@ -4,8 +4,8 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
-import Delta from 'quill-delta';
 
+import { Text } from '@bayou/config-common';
 import { BodyChange, BodyDelta, BodyOp } from '@bayou/doc-common';
 import { Timestamp } from '@bayou/ot-common';
 
@@ -79,7 +79,7 @@ describe('@bayou/doc-common/BodyChange', () => {
       test(0, false);
       test(0, new Map());
       test(0, { ops: [] });
-      test(0, new Delta()); // Needs to be a `BodyDelta`.
+      test(0, new Text.Delta()); // Needs to be a `BodyDelta`.
 
       // Invalid `timestamp`.
       test(0, BodyDelta.EMPTY, false);

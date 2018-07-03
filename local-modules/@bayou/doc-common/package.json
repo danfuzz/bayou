@@ -2,7 +2,6 @@
   "dependencies": {
     "@bayou/codec": "local",
     "@bayou/config-common": "local",
-    "@bayou/deps-quill-common": "local",
     "@bayou/ot-common": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local"

@@ -4,9 +4,9 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
-import Delta from 'quill-delta';
 import { inspect } from 'util';
 
+import { Text } from '@bayou/config-common';
 import { BodyDelta, BodyOp } from '@bayou/doc-common';
 
 import { MockDelta } from '@bayou/ot-common/mocks';
@@ -39,7 +39,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
   describe('fromQuillForm()', () => {
     it('should return an instance with appropriately-converted `ops`', () => {
       const ops        = [{ insert: 'foo' }, { retain: 10 }, { insert: 'bar', attributes: { bold: true } }];
-      const quillDelta = new Delta(ops);
+      const quillDelta = new Text.Delta(ops);
       const result     = BodyDelta.fromQuillForm(quillDelta);
 
       assert.deepEqual(result.ops, [
@@ -366,7 +366,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
       function test(ops) {
         const delta  = new BodyDelta(ops);
         const result = delta.toQuillForm();
-        assert.instanceOf(result, Delta);
+        assert.instanceOf(result, Text.Delta);
 
         const origOps = delta.ops;
         const quillOps = result.ops;

@@ -2,12 +2,11 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import Quill from 'quill';
-
+import { Editor } from '@bayou/config-client';
 import { ClientEnv } from '@bayou/env-client';
 
 // **TODO:** Maybe this can be a regular `import`?
-const Keyboard = Quill.import('modules/keyboard');
+const Keyboard = Editor.Quill.import('modules/keyboard');
 
 /** {object} Map from key names to integer keycodes. */
 const KEYMAP = Object.freeze({
@@ -218,3 +217,9 @@ export default class BayouKeyboard extends Keyboard {
     };
   }
 }
+
+// Register this module's keyboard handler as an override of Quill's built-in
+// one.
+Editor.Quill.register({
+  'modules/keyboard': BayouKeyboard
+}, true);

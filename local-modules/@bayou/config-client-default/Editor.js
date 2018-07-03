@@ -2,12 +2,33 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import Quill from 'quill';
+
 import { UtilityClass } from '@bayou/util-common';
+
+import QuillProm from './QuillProm';
 
 /**
  * Utility functionality regarding the setup of interactive editors.
  */
 export default class Editor extends UtilityClass {
+  /**
+   * {Quill} Implementation of standard configuration point. See `package.json`
+   * in this directory for details of the version we return here.
+   */
+  static get Quill() {
+    return Quill;
+  }
+
+  /**
+   * {QuillProm} Implementation of standard configuration point. This is both
+   * the default and exemplar of how to extend `Quill` as required by the
+   * system.
+   */
+  static get QuillProm() {
+    return QuillProm;
+  }
+
   /**
    * Implementation of standard configuration point. This implementation is a
    * no-op.

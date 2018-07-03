@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
-import Quill from 'quill';
 import React from 'react';
+
+import { Editor } from '@bayou/config-client';
 
 import ComponentBlotWrapper from '../ComponentBlotWrapper';
 
@@ -71,4 +72,4 @@ FigmaEmbed.propTypes = {
 
 // Generates the Quill embedding wrapper class for this component and
 // registers the wrapper with Quill.
-Quill.register(ComponentBlotWrapper.blotWrapperForComponent(FigmaEmbed));
+Editor.Quill.register(ComponentBlotWrapper.blotWrapperForComponent(FigmaEmbed));

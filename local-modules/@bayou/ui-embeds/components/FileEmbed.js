@@ -3,12 +3,12 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import PropTypes from 'prop-types';
-import Quill from 'quill';
 import React from 'react';
+
+import { Editor } from '@bayou/config-client';
 import { Units } from '@bayou/util-common';
 
 import ComponentBlotWrapper from '../ComponentBlotWrapper';
-
 import styles from './file-embed.module.less';
 
 /**
@@ -66,4 +66,4 @@ FileEmbed.propTypes = {
   mimetype:    PropTypes.string
 };
 
-Quill.register(ComponentBlotWrapper.blotWrapperForComponent(FileEmbed));
+Editor.Quill.register(ComponentBlotWrapper.blotWrapperForComponent(FileEmbed));

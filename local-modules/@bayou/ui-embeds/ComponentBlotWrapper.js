@@ -4,16 +4,16 @@
 
 import { kebabCase } from 'lodash';
 import PropTypes from 'prop-types';
-import Quill from 'quill';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
+import { Editor } from '@bayou/config-client';
 import { ClientStore } from '@bayou/data-model-client';
 import { TBoolean, TFunction, TNumber, TObject, TString } from '@bayou/typecheck';
 import { Errors, UtilityClass } from '@bayou/util-core';
 
-const BlockEmbed = Quill.import('blots/block/embed');
+const BlockEmbed = Editor.Quill.import('blots/block/embed');
 
 // When Properties are stored in DOM element attributes they can only be
 // strings. When we extract those values back out they need to be
