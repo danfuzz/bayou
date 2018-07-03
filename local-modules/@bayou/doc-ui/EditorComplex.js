@@ -46,6 +46,8 @@ export default class EditorComplex extends CommonBase {
 
     super();
 
+    EditorComplex._init();
+
     /** {Window} The browser window in which we are operating. */
     this._window = window;
 
@@ -398,5 +400,23 @@ export default class EditorComplex extends CommonBase {
     }
 
     return EditorComplex._titleModuleConfigValue;
+  }
+
+  /**
+   * Performs all one-time initialization of the system that is required before
+   * the first time an instance of this class is constructed.
+   */
+  static _init() {
+    if (EditorComplex._initialized) {
+      // Already initialized.
+      return;
+    }
+
+    // This does a dynamic `require` (import), because the outer definition of
+    // the file needs `config-client` to be initialized, and that's not done at
+    // the time that _this_ file is first loaded. Whee!
+    require('./BayouKeyboard');
+
+    EditorComplex._initialized = true;
   }
 }
