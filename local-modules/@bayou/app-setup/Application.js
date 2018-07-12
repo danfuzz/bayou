@@ -90,6 +90,7 @@ export default class Application extends CommonBase {
     this._requestLogger = new RequestLogger(log);
 
     this._addRoutes();
+    this._addStaticRoutes();
 
     if (devMode) {
       this._addDevModeRoutes();
@@ -140,7 +141,7 @@ export default class Application extends CommonBase {
   }
 
   /**
-   * Sets up the webserver routes.
+   * Sets up the main webserver routes.
    */
   _addRoutes() {
     const app = this._app;
@@ -154,24 +155,6 @@ export default class Application extends CommonBase {
       res.setHeader('X-Powered-By', this._serverId);
       next();
     });
-
-    // Map Quill files into `/static/quill`. This is used for CSS files but not
-    // for the JS code; the JS code is included in the overall JS bundle file.
-    app.use('/static/quill',
-      express.static(path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/quill/dist')));
-
-    // Use the client bundler (which uses Webpack) to serve JS bundles. The
-    // `:name` parameter gets interpreted by the client bundler to select which
-    // bundle to serve.
-    app.get('/static/js/:name.bundle.js', new ClientBundle().requestHandler);
-
-    // Use the configuration point to determine which directories to serve
-    // HTML files and other static assets from. This includes (but is not
-    // necessarily limited to) the top-level `index.html` and `favicon` files,
-    // as well as stuff explicitly under `static/`.
-    for (const dir of Deployment.ASSET_DIRS) {
-      app.use('/', express.static(dir));
-    }
 
     // Use the `@bayou/api-server` module to handle POST and websocket requests
     // at `/api`.
@@ -199,6 +182,33 @@ export default class Application extends CommonBase {
     wsServer.on('headers', (headers, req) => {
       this._requestLogger.logWebsocketRequest(req, headers);
     });
+  }
+
+  /**
+   * Sets up the static asset routes, including serving JS client code, but only
+   * if configured to do so. Notably, in a production configuration, it is
+   * reasonably likely that these routes should not be added.
+   */
+  _addStaticRoutes() {
+    const app = this._app;
+
+    // Map Quill files into `/static/quill`. This is used for CSS files but not
+    // for the JS code; the JS code is included in the overall JS bundle file.
+    app.use('/static/quill',
+      express.static(path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/quill/dist')));
+
+    // Use the client bundler (which uses Webpack) to serve JS bundles. The
+    // `:name` parameter gets interpreted by the client bundler to select which
+    // bundle to serve.
+    app.get('/static/js/:name.bundle.js', new ClientBundle().requestHandler);
+
+    // Use the configuration point to determine which directories to serve
+    // HTML files and other static assets from. This includes (but is not
+    // necessarily limited to) the top-level `index.html` and `favicon` files,
+    // as well as stuff explicitly under `static/`.
+    for (const dir of Deployment.ASSET_DIRS) {
+      app.use('/', express.static(dir));
+    }
   }
 
   /**
