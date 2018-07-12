@@ -21,6 +21,20 @@ export default class Deployment extends UtilityClass {
   }
 
   /**
+   * Performs any setup needed prior to running either a server per se or one
+   * of the server actions (such as running a unit test). This gets called
+   * _after_ the very lowest layer of the system is set up (e.g. the Babel
+   * runtime) and _after_ the logging system is ready, and _before_ everything
+   * else.
+   *
+   * @param {@bayou/top-server/Action} action The action that is about to be
+   *   run.
+   */
+  static aboutToRun(action) {
+    use.Deployment.aboutToRun(action);
+  }
+
+  /**
    * Determines the location of the "var" (variable / mutable data) directory,
    * returning an absolute path to it. (This is where, for example, log files
    * are stored.) The directory need not exist; the system will take care of
@@ -53,19 +67,5 @@ export default class Deployment extends UtilityClass {
    */
   static isRunningInDevelopment() {
     return use.Deployment.isRunningInDevelopment();
-  }
-
-  /**
-   * Performs any setup needed prior to running either a server per se or one
-   * of the server actions (such as running a unit test). This gets called
-   * _after_ the very lowest layer of the system is set up (e.g. the Babel
-   * runtime) and _after_ the logging system is ready, and _before_ everything
-   * else.
-   *
-   * @param {@bayou/top-server/Action} action The action that is about to be
-   *   run.
-   */
-  static aboutToRun(action) {
-    use.Deployment.aboutToRun(action);
   }
 }

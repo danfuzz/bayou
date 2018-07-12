@@ -23,6 +23,18 @@ export default class Deployment extends UtilityClass {
   /**
    * Implementation of standard configuration point.
    *
+   * This implementation is a no-op.
+   *
+   * @param {@bayou/top-server/Action} action_unused The action that is about to
+   *   be run.
+   */
+  static aboutToRun(action_unused) {
+    // This space intentionally left blank.
+  }
+
+  /**
+   * Implementation of standard configuration point.
+   *
    * This implementation returns the base product directory (the argument), with
    * `/var` appended.
    *
@@ -43,17 +55,5 @@ export default class Deployment extends UtilityClass {
    */
   static isRunningInDevelopment() {
     return true;
-  }
-
-  /**
-   * Implementation of standard configuration point.
-   *
-   * This implementation is a no-op.
-   *
-   * @param {@bayou/top-server/Action} action_unused The action that is about to
-   *   be run.
-   */
-  static aboutToRun(action_unused) {
-    // This space intentionally left blank.
   }
 }
