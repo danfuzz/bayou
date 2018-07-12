@@ -21,6 +21,20 @@ export default class Deployment extends UtilityClass {
   }
 
   /**
+   * Performs any setup needed prior to running either a server per se or one
+   * of the server actions (such as running a unit test). This gets called
+   * _after_ the very lowest layer of the system is set up (e.g. the Babel
+   * runtime) and _after_ the logging system is ready, and _before_ everything
+   * else.
+   *
+   * @param {@bayou/top-server/Action} action The action that is about to be
+   *   run.
+   */
+  static aboutToRun(action) {
+    use.Deployment.aboutToRun(action);
+  }
+
+  /**
    * Determines the location of the "var" (variable / mutable data) directory,
    * returning an absolute path to it. (This is where, for example, log files
    * are stored.) The directory need not exist; the system will take care of
@@ -56,16 +70,14 @@ export default class Deployment extends UtilityClass {
   }
 
   /**
-   * Performs any setup needed prior to running either a server per se or one
-   * of the server actions (such as running a unit test). This gets called
-   * _after_ the very lowest layer of the system is set up (e.g. the Babel
-   * runtime) and _after_ the logging system is ready, and _before_ everything
-   * else.
+   * Checks to see if this server should serve code assets (most notably client
+   * JavaScript bundles). It is typical (but not necessary) for this to be
+   * `true` in development environments and `false` in production environments.
    *
-   * @param {@bayou/top-server/Action} action The action that is about to be
-   *   run.
+   * @returns {boolean} `true` if this server should server code assets, or
+   *   `false` if not.
    */
-  static aboutToRun(action) {
-    use.Deployment.aboutToRun(action);
+  static shouldServeClientCode() {
+    return use.Deployment.shouldServeClientCode();
   }
 }
