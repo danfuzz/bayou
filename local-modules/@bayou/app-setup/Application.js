@@ -185,22 +185,25 @@ export default class Application extends CommonBase {
   }
 
   /**
-   * Sets up the static asset routes, including serving JS client code, but only
-   * if configured to do so. Notably, in a production configuration, it is
-   * reasonably likely that these routes should not be added.
+   * Sets up the static asset routes, including serving JS client code, but the
+   * latter only if configured to do so. Notably, in a production configuration,
+   * it is reasonably likely that code-serving routes should not be added.
    */
   _addStaticRoutes() {
     const app = this._app;
 
-    // Map Quill files into `/static/quill`. This is used for CSS files but not
-    // for the JS code; the JS code is included in the overall JS bundle file.
-    app.use('/static/quill',
-      express.static(path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/quill/dist')));
+    if (Deployment.shouldServeClientCode()) {
+      // Map Quill files into `/static/quill`. This is used for CSS files but
+      // not for the JS code; the JS code is included in the overall JS bundle
+      // file.
+      app.use('/static/quill',
+        express.static(path.resolve(Dirs.theOne.CLIENT_DIR, 'node_modules/quill/dist')));
 
-    // Use the client bundler (which uses Webpack) to serve JS bundles. The
-    // `:name` parameter gets interpreted by the client bundler to select which
-    // bundle to serve.
-    app.get('/static/js/:name.bundle.js', new ClientBundle().requestHandler);
+      // Use the client bundler (which uses Webpack) to serve JS bundles. The
+      // `:name` parameter gets interpreted by the client bundler to select
+      // which bundle to serve.
+      app.get('/static/js/:name.bundle.js', new ClientBundle().requestHandler);
+    }
 
     // Use the configuration point to determine which directories to serve
     // HTML files and other static assets from. This includes (but is not
