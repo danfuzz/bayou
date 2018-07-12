@@ -56,4 +56,15 @@ export default class Deployment extends UtilityClass {
   static isRunningInDevelopment() {
     return true;
   }
+
+  /**
+   * Implementation of standard configuration point.
+   *
+   * This implementation always returns `true`.
+   *
+   * @returns {boolean} `true`, always.
+   */
+  static shouldServeClientCode() {
+    return true;
+  }
 }

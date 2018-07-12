@@ -68,4 +68,16 @@ export default class Deployment extends UtilityClass {
   static isRunningInDevelopment() {
     return use.Deployment.isRunningInDevelopment();
   }
+
+  /**
+   * Checks to see if this server should serve code assets (most notably client
+   * JavaScript bundles). It is typical (but not necessary) for this to be
+   * `true` in development environments and `false` in production environments.
+   *
+   * @returns {boolean} `true` if this server should server code assets, or
+   *   `false` if not.
+   */
+  static shouldServeClientCode() {
+    return use.Deployment.shouldServeClientCode();
+  }
 }
