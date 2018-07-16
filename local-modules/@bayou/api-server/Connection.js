@@ -222,7 +222,6 @@ export default class Connection extends CommonBase {
       return msg;
     }
 
-    console.log('=========', msg);
     return ConnectionError.connection_nonsense(
       this._connectionId, 'Did not receive `Message` object.');
   }
