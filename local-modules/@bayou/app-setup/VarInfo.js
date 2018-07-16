@@ -31,6 +31,7 @@ export default class VarInfo extends CommonBase {
     const tokenIds = Network.bearerTokens.rootTokens.map(t => t.toString());
 
     return {
+      pid:        process.pid,
       rootTokens: tokenIds
     };
   }
