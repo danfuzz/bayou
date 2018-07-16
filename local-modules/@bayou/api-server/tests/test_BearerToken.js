@@ -10,7 +10,7 @@ import { BearerToken } from '@bayou/api-server';
 const SECRET_TOKEN = 'Setec-Astronomy-Setec-Astronomy-';
 
 describe('@bayou/api-server/BearerToken', () => {
-  describe('constructor(secret)', () => {
+  describe('constructor()', () => {
     it('should reject secrets with length < 32', () => {
       assert.throws(() => new BearerToken('Setec-Astronomy'));
     });
@@ -31,7 +31,7 @@ describe('@bayou/api-server/BearerToken', () => {
     });
   });
 
-  describe('sameToken(other)', () => {
+  describe('sameToken()', () => {
     it('should return false when passed `null`', () => {
       const token = new BearerToken(SECRET_TOKEN);
 
@@ -59,7 +59,7 @@ describe('@bayou/api-server/BearerToken', () => {
     });
   });
 
-  describe('sameArrays(array1, array2)', () => {
+  describe('sameArrays()', () => {
     it('should return `false` given arrays that are different lengths', () => {
       const token1 = new BearerToken(SECRET_TOKEN);
       const token2 = new BearerToken(SECRET_TOKEN);
