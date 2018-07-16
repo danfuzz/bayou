@@ -14,6 +14,17 @@ import { CommonBase } from '@bayou/util-common';
  */
 export default class BearerTokens extends CommonBase {
   /**
+   * {array<BearerToken>} Array of bearer tokens which grant root access to the
+   * system.
+   *
+   * The (obviously insecure) default is that a token consisting of 32 zeroes
+   * grants access.
+   */
+  get rootTokens() {
+    return Object.freeze([new BearerToken('0'.repeat(32))]);
+  }
+
+  /**
    * Returns `true` iff the `tokenString` is _syntactically_ valid as a bearer
    * token (whether or not it actually grants any access).
    *
@@ -27,14 +38,16 @@ export default class BearerTokens extends CommonBase {
   }
 
   /**
-   * {array<BearerToken>} Array of bearer tokens which grant root access to the
-   * system.
+   * Returns the printable and security-safe form of the given token string.
+   * This should only be passed strings for which {@link #isToken} returns
+   * `true`. This is a convenient wrapper around an ultimate call to
+   * {@link @bayou/api-server/BearerToken#printableId}.
    *
-   * The (obviously insecure) default is that a token consisting of 32 zeroes
-   * grants access.
+   * @param {string} tokenString The string form of the token.
+   * @returns {string} Its printable and security-safe form.
    */
-  get rootTokens() {
-    return Object.freeze([new BearerToken('0'.repeat(32))]);
+  printableId(tokenString) {
+    return new BearerToken(tokenString).printableId;
   }
 
   /**
