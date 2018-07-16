@@ -90,25 +90,31 @@ export default class Monitor extends CommonBase {
     });
 
     app.get('/info', async (req_unused, res) => {
-      const text = JSON.stringify(ProductInfo.theOne.INFO, null, 2);
-
-      res
-        .status(200)
-        .type('application/json; charset=utf-8')
-        .set('Cache-Control', 'no-cache, no-store, no-transform')
-        .send(text);
+      Monitor._sendJsonResponse(res, ProductInfo.theOne.INFO);
     });
 
     const varInfo = new VarInfo();
     app.get('/var', async (req_unused, res) => {
       const info = await varInfo.get();
-      const text = JSON.stringify(info, null, 2);
 
-      res
-        .status(200)
-        .type('application/json; charset=utf-8')
-        .set('Cache-Control', 'no-cache, no-store, no-transform')
-        .send(text);
+      Monitor._sendJsonResponse(res, info);
     });
+  }
+
+  /**
+   * Sends a successful JSON-bearing HTTP response.
+   *
+   * @param {http.ServerResponse} res The response object representing the
+   *   connection to send to.
+   * @param {object} body The body of the response, as a JSON-encodable object.
+   */
+  static _sendJsonResponse(res, body) {
+    const text = JSON.stringify(body, null, 2);
+
+    res
+      .status(200)
+      .type('application/json; charset=utf-8')
+      .set('Cache-Control', 'no-cache, no-store, no-transform')
+      .send(text);
   }
 }
