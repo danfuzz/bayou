@@ -82,11 +82,7 @@ export default class Monitor extends CommonBase {
         ? [200, '🍑 Everything\'s peachy! 🍑\n']
         : [503, '😿 Sorry to say we can\'t help you right now. 😿\n'];
 
-      res
-        .status(status)
-        .type('text/plain; charset=utf-8')
-        .set('Cache-Control', 'no-cache, no-store, no-transform')
-        .send(text);
+      Monitor._sendTextResponse(res, status, 'text/plain', text);
     });
 
     app.get('/info', async (req_unused, res) => {
@@ -111,10 +107,24 @@ export default class Monitor extends CommonBase {
   static _sendJsonResponse(res, body) {
     const text = `${JSON.stringify(body, null, 2)}\n`;
 
+    Monitor._sendTextResponse(res, 200, 'application/json', text);
+  }
+
+  /**
+   * Sends a text-content HTTP response.
+   *
+   * @param {http.ServerResponse} res The response object representing the
+   *   connection to send to.
+   * @param {int} statusCode The response status code.
+   * @param {string} contentType The content type, _without_ a charset. (The
+   *   charset is always set to be `utf-8`.)
+   * @param {string} body The body of the response, as a string.
+   */
+  static _sendTextResponse(res, statusCode, contentType, body) {
     res
-      .status(200)
-      .type('application/json; charset=utf-8')
+      .status(statusCode)
+      .type(`${contentType}; charset=utf-8`)
       .set('Cache-Control', 'no-cache, no-store, no-transform')
-      .send(text);
+      .send(body);
   }
 }
