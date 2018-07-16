@@ -14,23 +14,28 @@ import { CommonBase } from '@bayou/util-common';
  */
 export default class BearerTokens extends CommonBase {
   /**
-   * {string} An example token string, which is syntactically valid but should
-   * _not_ actually grant access to anything in a production environment. This
-   * is intended for unit testing.
+   * {array<string>} An array of at least two example token strings, each of
+   * which is syntactically valid but should _not_ actually grant access to
+   * anything in a production environment. This is intended for unit testing.
    */
-  get exampleToken() {
-    return '0'.repeat(32);
+  get exampleTokens() {
+    return [
+      '00000000000000000000000000000000',
+      '10000000000000000000000000000001'
+    ];
   }
 
   /**
    * {array<BearerToken>} Array of bearer tokens which grant root access to the
    * system.
    *
-   * The (obviously insecure) default is that a token consisting of 32 zeroes
-   * grants access.
+   * The (obviously insecure) default is the array of {@link #exampleTokens}
+   * converted to `BearerToken` objects.
    */
   get rootTokens() {
-    return Object.freeze([new BearerToken(this.exampleToken)]);
+    const tokens = this.exampleTokens.map(t => new BearerToken(t));
+
+    return Object.freeze(tokens);
   }
 
   /**
