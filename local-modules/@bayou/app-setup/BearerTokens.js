@@ -14,6 +14,15 @@ import { CommonBase } from '@bayou/util-common';
  */
 export default class BearerTokens extends CommonBase {
   /**
+   * {string} An example token string, which is syntactically valid but should
+   * _not_ actually grant access to anything in a production environment. This
+   * is intended for unit testing.
+   */
+  get exampleToken() {
+    return '0'.repeat(32);
+  }
+
+  /**
    * {array<BearerToken>} Array of bearer tokens which grant root access to the
    * system.
    *
@@ -21,7 +30,7 @@ export default class BearerTokens extends CommonBase {
    * grants access.
    */
   get rootTokens() {
-    return Object.freeze([new BearerToken('0'.repeat(32))]);
+    return Object.freeze([new BearerToken(this.exampleToken)]);
   }
 
   /**
