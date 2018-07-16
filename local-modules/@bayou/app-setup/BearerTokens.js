@@ -15,9 +15,7 @@ import { CommonBase } from '@bayou/util-common';
 export default class BearerTokens extends CommonBase {
   /**
    * Returns `true` iff the `tokenString` is _syntactically_ valid as a bearer
-   * token (whether or not it actually grants any access). This will only ever
-   * get called on strings (per se) of at least 32 characters, so it is safe to
-   * assume those facts.
+   * token (whether or not it actually grants any access).
    *
    * The default implementation just returns `true`.
    *
