@@ -178,7 +178,7 @@ export default class Connection extends CommonBase {
     // this call, log it, and return it for ulimate transmission back to the
     // caller.
 
-    const response = new Response(msg.id, result, error);
+    const response = new Response((msg === null) ? 0 : msg.id, result, error);
     const encodedResponse = this._codec.encodeJson(response);
 
     if (msg === null) {
