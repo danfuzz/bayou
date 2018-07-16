@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BearerToken } from '@bayou/api-server';
+import { Network } from '@bayou/config-server';
 import { Delay } from '@bayou/promise-util';
 import { CommonBase } from '@bayou/util-common';
 
@@ -14,10 +15,21 @@ import { CommonBase } from '@bayou/util-common';
  */
 export default class BearerTokens extends CommonBase {
   /**
+   * {array<BearerToken>} Array of bearer tokens which grant root access to the
+   * system.
+   *
+   * The (obviously insecure) default is the array of {@link #exampleTokens}
+   * converted to `BearerToken` objects.
+   */
+  get rootTokens() {
+    const tokens = Network.exampleTokens.map(t => new BearerToken(t));
+
+    return Object.freeze(tokens);
+  }
+
+  /**
    * Returns `true` iff the `tokenString` is _syntactically_ valid as a bearer
-   * token (whether or not it actually grants any access). This will only ever
-   * get called on strings (per se) of at least 32 characters, so it is safe to
-   * assume those facts.
+   * token (whether or not it actually grants any access).
    *
    * The default implementation just returns `true`.
    *
@@ -29,14 +41,16 @@ export default class BearerTokens extends CommonBase {
   }
 
   /**
-   * {array<BearerToken>} Array of bearer tokens which grant root access to the
-   * system.
+   * Returns the printable and security-safe form of the given token string.
+   * This should only be passed strings for which {@link #isToken} returns
+   * `true`. This is a convenient wrapper around an ultimate call to
+   * {@link @bayou/api-server/BearerToken#printableId}.
    *
-   * The (obviously insecure) default is that a token consisting of 32 zeroes
-   * grants access.
+   * @param {string} tokenString The string form of the token.
+   * @returns {string} Its printable and security-safe form.
    */
-  get rootTokens() {
-    return Object.freeze([new BearerToken('0'.repeat(32))]);
+  printableId(tokenString) {
+    return new BearerToken(tokenString).printableId;
   }
 
   /**

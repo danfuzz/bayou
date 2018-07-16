@@ -62,13 +62,14 @@ export default class PostConnection extends Connection {
   async _handleEnd() {
     this._log.event.receivedPost();
 
-    const msg = Buffer.concat(this._chunks).toString('utf8');
-    const response = await this.handleJsonMessage(msg);
+    const msg          = Buffer.concat(this._chunks).toString('utf8');
+    const response     = await this.handleJsonMessage(msg);
+    const responseText = `${response}\n`;
 
     this._res
       .status(200)
       .type('application/json')
-      .send(response);
+      .send(responseText);
     this.close();
   }
 
@@ -92,7 +93,8 @@ export default class PostConnection extends Connection {
    * @param {string} error Message to report.
    */
   _respond400(error) {
-    const payload = JSON.stringify({ id: -1, error });
+    const response     = { id: -1, error };
+    const responseText = `${JSON.stringify(response)}\n`;
 
     // Not logged as `.error()` because it's not an application error (at least
     // not on this side).
@@ -101,7 +103,7 @@ export default class PostConnection extends Connection {
     this._res
       .status(400)
       .type('application/json')
-      .send(payload);
+      .send(responseText);
   }
 
   /**

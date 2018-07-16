@@ -13,6 +13,7 @@ import { CommonBase } from '@bayou/util-common';
 import Application from './Application';
 import RequestLogger from './RequestLogger';
 import ServerUtil from './ServerUtil';
+import VarInfo from './VarInfo';
 
 /** {Logger} Logger. */
 const log = new Logger('app-monitor');
@@ -90,6 +91,18 @@ export default class Monitor extends CommonBase {
 
     app.get('/info', async (req_unused, res) => {
       const text = JSON.stringify(ProductInfo.theOne.INFO, null, 2);
+
+      res
+        .status(200)
+        .type('application/json; charset=utf-8')
+        .set('Cache-Control', 'no-cache, no-store, no-transform')
+        .send(text);
+    });
+
+    const varInfo = new VarInfo();
+    app.get('/var', async (req_unused, res) => {
+      const info = await varInfo.get();
+      const text = JSON.stringify(info, null, 2);
 
       res
         .status(200)

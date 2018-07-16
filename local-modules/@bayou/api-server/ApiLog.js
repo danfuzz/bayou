@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Network } from '@bayou/config-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 
@@ -56,7 +57,7 @@ export default class ApiLog extends CommonBase {
     }
 
     // Details to log. **TODO:** This will ultimately need to redact some
-    // information from `msg` and `response`.
+    // information in the response.
 
     details.endTime = Date.now();
 
@@ -78,11 +79,13 @@ export default class ApiLog extends CommonBase {
    * @param {Message} msg Incoming message.
    */
   incomingMessage(msg) {
-    const details = { msg, startTime: Date.now() };
+    const details = {
+      msg: ApiLog._redactMessage(msg),
+      startTime: Date.now()
+    };
 
     this._pending.set(msg, details);
 
-    // TODO: This will ultimately need to redact some information.
     this._log.event.apiReceived(details);
   }
 
@@ -101,7 +104,24 @@ export default class ApiLog extends CommonBase {
       error:     response.originalError
     };
 
-    // TODO: This will ultimately need to redact some information.
+    // **TODO:** This will ultimately need to redact some information beyond
+    // what `_redactMessage()` might have done.
     this._log.event.apiReturned(details);
+  }
+
+  /**
+   * Performs redaction on a message, so as to avoid logging sensitive security
+   * and user-data details.
+   *
+   * @param {Message} msg The original message.
+   * @returns {Message} The redacted form.
+   */
+  static _redactMessage(msg) {
+    if (Network.bearerTokens.isToken(msg.targetId)) {
+      msg = msg.withTargetId(Network.bearerTokens.printableId(msg.targetId));
+    }
+
+    // **TODO:** This will ultimately need to do more redaction.
+    return msg;
   }
 }

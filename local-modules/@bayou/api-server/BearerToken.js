@@ -40,11 +40,10 @@ export default class BearerToken extends BaseKey {
   /**
    * Constructs an instance with the indicated parts.
    *
-   * @param {string} secretToken Complete token. This must be a string of at
-   *   least 32 characters.
+   * @param {string} secretToken Complete token.
    */
   constructor(secretToken) {
-    TString.minLen(secretToken, 32);
+    TString.check(secretToken);
 
     if (!Network.bearerTokens.isToken(secretToken)) {
       // We don't include any real detail in the error message, as that might
@@ -97,7 +96,7 @@ export default class BearerToken extends BaseKey {
    * @returns {string} The printable form of the ID.
    */
   _impl_printableId() {
-    return `${this.id}...`;
+    return `${this.id}-...`;
   }
 
   /**

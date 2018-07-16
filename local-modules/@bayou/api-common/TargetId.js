@@ -6,7 +6,7 @@ import { TString } from '@bayou/typecheck';
 import { Errors, UtilityClass } from '@bayou/util-common';
 
 /** {RegExp} Regular expression which matches valid target IDs. */
-const VALID_TARGET_ID_REGEX = /^[-_a-zA-Z0-9]{1,64}$/;
+const VALID_TARGET_ID_REGEX = /^[-_.a-zA-Z0-9]{1,64}$/;
 
 /**
  * Type representation of target IDs. The values themselves are always just
