@@ -117,8 +117,8 @@ export default class ApiLog extends CommonBase {
    * @returns {Message} The redacted form.
    */
   static _redactMessage(msg) {
-    if (Network.bearerTokens.isToken(msg.id)) {
-      msg = msg.withId(Network.bearerTokens.printableId(msg.id));
+    if (Network.bearerTokens.isToken(msg.targetId)) {
+      msg = msg.withTargetId(Network.bearerTokens.printableId(msg.targetId));
     }
 
     // **TODO:** This will ultimately need to do more redaction.

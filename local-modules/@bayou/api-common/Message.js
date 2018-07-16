@@ -79,4 +79,15 @@ export default class Message extends CommonBase {
   get targetId() {
     return this._targetId;
   }
+
+  /**
+   * Returns a new instance just like `this` except with the `targetId` as
+   * given.
+   *
+   * @param {string} targetId The new target ID.
+   * @returns {Message} An appropriately-constructed instance.
+   */
+  withTargetId(targetId) {
+    return new Message(this._id, targetId, this._payload);
+  }
 }
