@@ -20,7 +20,7 @@ function exampleToken() {
 describe('@bayou/api-server/BearerToken', () => {
   describe('constructor()', () => {
     it('should reject syntactically invalid secrets', () => {
-      const badToken = `bad-token-${exampleToken().slice(0, 8)}`;
+      const badToken = `~!bad!token!~${exampleToken().slice(0, 8)}`;
       assert.throws(() => new BearerToken(badToken));
     });
 
