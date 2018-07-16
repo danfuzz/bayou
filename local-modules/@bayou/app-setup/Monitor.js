@@ -109,7 +109,7 @@ export default class Monitor extends CommonBase {
    * @param {object} body The body of the response, as a JSON-encodable object.
    */
   static _sendJsonResponse(res, body) {
-    const text = JSON.stringify(body, null, 2);
+    const text = `${JSON.stringify(body, null, 2)}\n`;
 
     res
       .status(200)
