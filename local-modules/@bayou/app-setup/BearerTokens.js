@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BearerToken } from '@bayou/api-server';
+import { Network } from '@bayou/config-server';
 import { Delay } from '@bayou/promise-util';
 import { CommonBase } from '@bayou/util-common';
 
@@ -14,18 +15,6 @@ import { CommonBase } from '@bayou/util-common';
  */
 export default class BearerTokens extends CommonBase {
   /**
-   * {array<string>} An array of at least two example token strings, each of
-   * which is syntactically valid but should _not_ actually grant access to
-   * anything in a production environment. This is intended for unit testing.
-   */
-  get exampleTokens() {
-    return [
-      '00000000000000000000000000000000',
-      '10000000000000000000000000000001'
-    ];
-  }
-
-  /**
    * {array<BearerToken>} Array of bearer tokens which grant root access to the
    * system.
    *
@@ -33,7 +22,7 @@ export default class BearerTokens extends CommonBase {
    * converted to `BearerToken` objects.
    */
   get rootTokens() {
-    const tokens = this.exampleTokens.map(t => new BearerToken(t));
+    const tokens = Network.exampleTokens.map(t => new BearerToken(t));
 
     return Object.freeze(tokens);
   }

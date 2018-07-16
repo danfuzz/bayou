@@ -9,7 +9,7 @@ import { BearerToken } from '@bayou/api-server';
 import { Network } from '@bayou/config-server';
 
 function exampleTokens() {
-  return Network.bearerTokens.exampleTokens;
+  return Network.exampleTokens;
 }
 
 function exampleToken() {

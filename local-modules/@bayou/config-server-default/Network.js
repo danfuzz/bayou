@@ -31,6 +31,16 @@ export default class Network extends UtilityClass {
   }
 
   /**
+   * {array<string>} Implementation of standard configuration point.
+   */
+  static get exampleTokens() {
+    return [
+      '00000000000000000000000000000000',
+      '10000000000000000000000000000001'
+    ];
+  }
+
+  /**
    * {Int} Implementation of standard configuration point. This implementation
    * defines it as `8080`.
    */
