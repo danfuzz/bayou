@@ -26,9 +26,9 @@ export default class VarInfo extends CommonBase {
    * @returns {object} A JSON-encodable object with all of the variable info.
    */
   async get() {
-    // **Note:** The string form of a bearer token is redacted, such that the
-    // secret portion is not represented.
-    const tokenIds = Network.bearerTokens.rootTokens.map(t => t.toString());
+    // **Note:** The "printable" form of a bearer token is redacted, such that
+    // the secret portion is not represented.
+    const tokenIds = Network.bearerTokens.rootTokens.map(t => t.printableId);
 
     return {
       pid:        process.pid,

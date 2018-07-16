@@ -235,7 +235,7 @@ export default class Application extends CommonBase {
       }
       for (const t of rootTokens) {
         context.addEvergreen(t, this._rootAccess);
-        log.info('Accept root:', t);
+        log.info('Accept root:', t.printableId);
       }
       this._rootTokens = rootTokens;
     }

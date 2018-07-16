@@ -78,6 +78,15 @@ export default class BaseKey extends CommonBase {
   }
 
   /**
+   * {string} Printable and security-safe (i.e. redacted if necessary) form of
+   * the token. This includes an "ASCII ellipsis" (`...`) if to indicate
+   * redaction.
+   */
+  get printableId() {
+    return this._impl_printableId();
+  }
+
+  /**
    * Gets a challenge response. This is used as a tactic for two sides of a
    * connection to authenticate each other without ever having to provide a
    * shared secret directly over a connection.
@@ -121,7 +130,7 @@ export default class BaseKey extends CommonBase {
 
     return (opts.depth < 0)
       ? `${name} {...}`
-      : `${name} { ${this._url} ${this._impl_printableId()} }`;
+      : `${name} { ${this._url} ${this.printableId} }`;
   }
 
   /**
@@ -154,7 +163,8 @@ export default class BaseKey extends CommonBase {
   /**
    * Gets the printable form of the ID. This defaults to the same as `.id`,
    * but subclasses can override this if they want to produce something
-   * different.
+   * different. If the form has any redaction, it should use `...` (an ASCII
+   * ellipsis) to indicate that fact.
    *
    * @returns {string} The printable form of the ID.
    */

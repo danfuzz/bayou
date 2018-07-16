@@ -97,7 +97,7 @@ export default class BearerToken extends BaseKey {
    * @returns {string} The printable form of the ID.
    */
   _impl_printableId() {
-    return `${this.id}...`;
+    return `${this.id}-...`;
   }
 
   /**
