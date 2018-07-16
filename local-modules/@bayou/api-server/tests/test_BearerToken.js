@@ -24,7 +24,7 @@ describe('@bayou/api-server/BearerToken', () => {
       assert.throws(() => new BearerToken(badToken));
     });
 
-    it('should return a frozen instane of BearerToken', () => {
+    it('should return a frozen instance of BearerToken', () => {
       const token = new BearerToken(exampleToken());
 
       assert.instanceOf(token, BearerToken);
