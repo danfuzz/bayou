@@ -19,4 +19,16 @@ export default class SeeAll extends Singleton {
   add(sink) {
     AllSinks.theOne.add(sink);
   }
+
+  /**
+   * Indicates if it is safe to call logging methods. This only returns `false`
+   * during the earliest part of system bootstrap, before any logging sinks have
+   * been added. As such, it's only necessary to call this if the code which
+   * wants to log _might_ be called very early.
+   *
+   * @returns {boolean} `true` iff it is safe to call logging methods.
+   */
+  canLog() {
+    return AllSinks.theOne.canLog();
+  }
 }
