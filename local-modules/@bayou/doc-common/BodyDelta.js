@@ -53,15 +53,17 @@ export default class BodyDelta extends BaseDelta {
 
           // **TODO:** Because reasons, this complaint has been demoted to
           // from "actual error" to "stern warning," for the time being. The
-          // `throw` should be restored at the earliest opportunity.
+          // `throw` should be restored at the earliest opportunity, along with
+          // removing the surrounding bits that let this case fall through.
           //throw Errors.badUse('Divergent versions of `quill-delta` package.');
           if (!BodyDelta._divergentComplaintMade) {
             // NB: This is the only code in this module that uses `see-all`.
             BodyDelta._divergentComplaintMade = true;
             new Logger('doc-common').warn('Divergent versions of `quill-delta` package!');
           }
+        } else {
+          throw e;
         }
-        throw e;
       }
     }
 
