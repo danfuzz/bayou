@@ -64,6 +64,15 @@ export default class AllSinks extends Singleton {
   }
 
   /**
+   * Main implementation of the exported method {@link SeeAll#canLog}.
+   *
+   * @returns {boolean} `true` iff it is safe to call logging methods.
+   */
+  canLog() {
+    return this._sinks.length !== 0;
+  }
+
+  /**
    * Constructs a structured-event instance of {@link LogRecord} based on
    * the given arguments and the current time, and calls `sinkLog(logRecord)` on
    * each of the registered sinks.

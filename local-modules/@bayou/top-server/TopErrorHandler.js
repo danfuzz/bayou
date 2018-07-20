@@ -5,7 +5,7 @@
 import { inspect } from 'util';
 
 import { Delay } from '@bayou/promise-util';
-import { Logger } from '@bayou/see-all';
+import { Logger, SeeAll } from '@bayou/see-all';
 import { UtilityClass } from '@bayou/util-common';
 
 /** {Logger} Logger for this file. */
@@ -31,7 +31,9 @@ export default class TopErrorHandler extends UtilityClass {
       }
       process.stderr.write('\n');
 
-      log.error('Unhandled promise rejection:', reason);
+      if (SeeAll.theOne.canLog()) {
+        log.error('Unhandled promise rejection:', reason);
+      }
 
       // Give the system a moment, so it has a chance to actually flush the log,
       // and then exit.
@@ -61,7 +63,9 @@ export default class TopErrorHandler extends UtilityClass {
     }
     process.stderr.write('\n');
 
-    log.error(`${label}:`, problem);
+    if (SeeAll.theOne.canLog()) {
+      log.error(`${label}:`, problem);
+    }
 
     // Give the system a moment, so it has a chance to actually flush the log,
     // and then exit.
