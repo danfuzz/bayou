@@ -33,38 +33,7 @@ export default class BodyDelta extends BaseDelta {
     if (Array.isArray(quillDelta)) {
       ops = quillDelta;
     } else {
-      try {
-        TObject.check(quillDelta, Text.Delta);
-        ops = quillDelta.ops;
-      } catch (e) {
-        if ((typeof quillDelta === 'object') && (quillDelta.constructor.name === 'Delta')) {
-          // The version of `Delta` used by Quill is different than the one we
-          // specified in our `package.json`. Even though it will often happen
-          // to work if we just let it slide (e.g. by snarfing `ops` out of the
-          // object and running with it), we don't want to end up shipping two
-          // versions of `Delta` to the client; so, instead of just blithely
-          // accepting this possibility, we reject it here and report an error
-          // which makes it easy to figure out what happened. Should you find
-          // yourself looking at this error, the likely right thing to do is
-          // look at `package.json` in the version of Quill you are using, and
-          // update what is returned from
-          // {@link @bayou/config-common/Text#Delta} to match what Quill has as
-          // its `quill-delta` dependency.
-
-          // **TODO:** Because reasons, this complaint has been demoted to
-          // from "actual error" to "stern warning," for the time being. The
-          // `throw` should be restored at the earliest opportunity, along with
-          // removing the surrounding bits that let this case fall through.
-          //throw Errors.badUse('Divergent versions of `quill-delta` package.');
-          if (!BodyDelta._divergentComplaintMade) {
-            // NB: This is the only code in this module that uses `see-all`.
-            BodyDelta._divergentComplaintMade = true;
-            new Logger('doc-common').warn('Divergent versions of `quill-delta` package!');
-          }
-        } else {
-          throw e;
-        }
-      }
+      ops = BodyDelta._opsOfQuillDelta(quillDelta);
     }
 
     ops = Object.freeze(ops.map(BodyOp.fromQuillForm));
@@ -210,5 +179,48 @@ export default class BodyDelta extends BaseDelta {
    */
   static get _impl_opClass() {
     return BodyOp;
+  }
+
+  /**
+   * Checks that the argument is a Quill delta, and if so returns the `ops`
+   * array inside it. Throws an error if not.
+   *
+   * @param {Delta} quillDelta Quill delta instance.
+   * @returns {array} Array of Quill operations that `delta` contains.
+   */
+  static _opsOfQuillDelta(quillDelta) {
+    try {
+      TObject.check(quillDelta, Text.Delta);
+    } catch (e) {
+      if ((typeof quillDelta === 'object') && (quillDelta.constructor.name === 'Delta')) {
+        // The version of `Delta` used by Quill is different than the one we
+        // specified in our `package.json`. Even though it will often happen
+        // to work if we just let it slide (e.g. by snarfing `ops` out of the
+        // object and running with it), we don't want to end up shipping two
+        // versions of `Delta` to the client; so, instead of just blithely
+        // accepting this possibility, we reject it here and report an error
+        // which makes it easy to figure out what happened. Should you find
+        // yourself looking at this error, the likely right thing to do is
+        // look at `package.json` in the version of Quill you are using, and
+        // update what is returned from
+        // {@link @bayou/config-common/Text#Delta} to match what Quill has as
+        // its `quill-delta` dependency.
+
+        // **TODO:** Because reasons, this complaint has been demoted to
+        // from "actual error" to "stern warning," for the time being. The
+        // `throw` should be restored at the earliest opportunity, along with
+        // removing the surrounding bits that let this case fall through.
+        //throw Errors.badUse('Divergent versions of `quill-delta` package.');
+        if (!BodyDelta._divergentComplaintMade) {
+          // NB: This is the only code in this module that uses `see-all`.
+          BodyDelta._divergentComplaintMade = true;
+          new Logger('doc-common').warn('Divergent versions of `quill-delta` package!');
+        }
+      } else {
+        throw e;
+      }
+    }
+
+    return quillDelta.ops;
   }
 }
