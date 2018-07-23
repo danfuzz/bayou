@@ -35,7 +35,6 @@ export default class BodyDelta extends BaseDelta {
     } else {
       try {
         TObject.check(quillDelta, Text.Delta);
-        ops = quillDelta.ops;
       } catch (e) {
         if ((typeof quillDelta === 'object') && (quillDelta.constructor.name === 'Delta')) {
           // The version of `Delta` used by Quill is different than the one we
@@ -64,6 +63,8 @@ export default class BodyDelta extends BaseDelta {
         } else {
           throw e;
         }
+
+        ops = quillDelta.ops;
       }
     }
 
