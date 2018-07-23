@@ -63,9 +63,9 @@ export default class BodyDelta extends BaseDelta {
         } else {
           throw e;
         }
-
-        ops = quillDelta.ops;
       }
+
+      ops = quillDelta.ops;
     }
 
     ops = Object.freeze(ops.map(BodyOp.fromQuillForm));
