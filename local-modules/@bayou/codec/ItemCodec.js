@@ -2,10 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Logger } from '@bayou/see-all';
 import { TArray, TFunction, TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Functor } from '@bayou/util-common';
 
 import ConstructorCall from './ConstructorCall';
+
+/** {Logger} Logger for this module. */
+const log = new Logger('codec');
 
 /**
  * Handler for codable items of a particular class, type, or (in general) kind.
@@ -305,6 +309,7 @@ export default class ItemCodec extends CommonBase {
    */
   decode(payload, subDecode) {
     if (!this.canDecode(payload)) {
+      log.error('Cannot decode:', payload);
       throw Errors.badValue(payload, 'encoded payload');
     }
 
@@ -316,6 +321,7 @@ export default class ItemCodec extends CommonBase {
     const result = this._decode(payload, subDecode);
 
     if (!this.canEncode(result)) {
+      log.error('Cannot re-encode:', result);
       throw Errors.badUse('Invalid result from decoder.');
     }
 
@@ -335,6 +341,7 @@ export default class ItemCodec extends CommonBase {
    */
   encode(value, subEncode) {
     if (!this.canEncode(value)) {
+      log.error('Cannot encode:', value);
       throw Errors.badValue(value, 'encodable value');
     }
 
@@ -348,11 +355,13 @@ export default class ItemCodec extends CommonBase {
         TArray.check(result);
       } catch (e) {
         // Throw a higher-fidelity error.
+        log.error('Non-array encoding result:', result);
         throw Errors.badUse('Invalid encoding result (not an array).');
       }
 
       result = new ConstructorCall(new Functor(this._tag, ...result));
     } else if (ItemCodec.typeOf(result) !== encodedType) {
+      log.error(`Unexpected encoding result (expected type ${encodedType}):`, result);
       throw Errors.badUse('Invalid encoding result: ' +
         `got type ${ItemCodec.typeOf(result)}; expected type ${encodedType}`);
     }
