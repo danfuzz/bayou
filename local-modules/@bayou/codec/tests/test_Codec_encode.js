@@ -113,7 +113,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.throws(() => encodeData(noDeconstruct));
     });
 
-    it('should accept objects with an CODEC_TAG property and `deconstruct()` method', () => {
+    it('should accept objects with a `CODEC_TAG` property and `deconstruct()` method', () => {
       const fakeObject = new MockCodable();
 
       assert.doesNotThrow(() => encodeData(fakeObject));
