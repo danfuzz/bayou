@@ -4,7 +4,6 @@
 
 import { Text } from '@bayou/config-common';
 import { BaseDelta } from '@bayou/ot-common';
-import { Logger } from '@bayou/see-all';
 import { TBoolean, TObject } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
@@ -205,20 +204,10 @@ export default class BodyDelta extends BaseDelta {
         // update what is returned from
         // {@link @bayou/config-common/Text#Delta} to match what Quill has as
         // its `quill-delta` dependency.
-
-        // **TODO:** Because reasons, this complaint has been demoted to
-        // from "actual error" to "stern warning," for the time being. The
-        // `throw` should be restored at the earliest opportunity, along with
-        // removing the surrounding bits that let this case fall through.
-        //throw Errors.badUse('Divergent versions of `quill-delta` package.');
-        if (!BodyDelta._divergentComplaintMade) {
-          // NB: This is the only code in this module that uses `see-all`.
-          BodyDelta._divergentComplaintMade = true;
-          new Logger('doc-common').warn('Divergent versions of `quill-delta` package!');
-        }
-      } else {
-        throw e;
+        throw Errors.badUse('Divergent versions of `quill-delta` package.');
       }
+
+      throw e;
     }
 
     return quillDelta.ops;
