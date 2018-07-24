@@ -26,9 +26,10 @@ export default class ClientTests extends UtilityClass {
    *   server (which might turn out to be in this process).
    * @param {string|null} testOut If non-`null`, filesystem path to write the
    *   test output to.
+   * @param {RegExp|null} testFilter Filter on test names.
    * @returns {boolean} `true` iff there were any test failures.
    */
-  static async run(port, testOut) {
+  static async run(port, testOut, testFilter) {
     // **TODO:** This whole arrangement is a bit hacky and should be improved.
 
     // Set up and start up headless Chrome (via Puppeteer).
@@ -59,7 +60,11 @@ export default class ClientTests extends UtilityClass {
 
     // Issue the request to load up the client tests.
 
-    const url = `http://localhost:${port}/debug/client-test`;
+    const regexParam = testFilter
+      ? `/${encodeURIComponent(testFilter.source)}`
+      : '';
+
+    const url = `http://localhost:${port}/debug/client-test${regexParam}`;
 
     log.info(`Issuing request to start test run:\n  ${url}`);
 

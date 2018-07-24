@@ -58,9 +58,11 @@ export default class DebugTools {
     this._bindParam('authorId');
     this._bindParam('documentId');
     this._bindParam('revNum');
+    this._bindParam('testFilter');
 
     this._bindHandler('change',      ':documentId/:revNum');
     this._bindHandler('client-test');
+    this._bindHandler('client-test', ':testFilter');
     this._bindHandler('edit',        ':documentId');
     this._bindHandler('edit',        ':documentId/:authorId');
     this._bindHandler('key',         ':documentId');
@@ -171,6 +173,22 @@ export default class DebugTools {
   }
 
   /**
+   * Validates a test filter as a request parameter.
+   *
+   * @param {object} req_unused HTTP request.
+   * @param {string} value Request parameter value.
+   */
+  _check_testFilter(req_unused, value) {
+    try {
+      new RegExp(value);
+    } catch (error) {
+      // Augment error and rethrow.
+      error.debugMsg = 'Bad value for `testFilter`.';
+      throw error;
+    }
+  }
+
+  /**
    * Gets a particular change to a document.
    *
    * @param {object} req HTTP request.
@@ -189,13 +207,19 @@ export default class DebugTools {
    * Runs the client tests. This operates by emitting a page that runs the
    * tests.
    *
-   * @param {object} req_unused HTTP request.
+   * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
    */
-  _handle_clientTest(req_unused, res) {
+  _handle_clientTest(req, res) {
+    const testFilter = req.params.testFilter;
+
     // TODO: Probably want to use a real template.
+    const filterSetup = testFilter
+      ? `<script>\nBAYOU_TEST_FILTER = ${new RegExp(testFilter).toString()};\n</script>\n`
+      : '';
     const head =
       '<title>Client Tests</title>\n' +
+      filterSetup +
       '<script src="/boot-for-test.js"></script>\n';
     const body =
       '<h1>Client Tests</h1>\n' +

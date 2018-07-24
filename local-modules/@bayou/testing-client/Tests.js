@@ -27,13 +27,16 @@ chai.use(chaiAsPromised);
  */
 export default class Tests extends UtilityClass {
   /**
-   * Runs all of the tests.
+   * Runs all of the tests, or all of the ones that pass the indicated filter.
    *
+   * @param {RegExp|null} [testFilter = null] Regular expression used on test
+   *   names.
    * @returns {number} The number of test failures as reported by the
    *   `mocha.run()` callback.
    */
-  static async runAll() {
+  static async runAll(testFilter = null) {
     const mocha = new Mocha({
+      grep:     testFilter || /./,
       reporter: EventReporter,
       ui:       'bdd'
     });
