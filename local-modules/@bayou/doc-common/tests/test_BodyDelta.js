@@ -62,6 +62,22 @@ describe('@bayou/doc-common/BodyDelta', () => {
       test([BodyOp.op_text('123')]);
       test(BodyDelta.EMPTY);
     });
+
+    it('should reject arguments that are instances of the wrong `Delta` class', () => {
+      // This test confirms that the code properly detects when there's more
+      // than one class named `Delta` in the system and the one _not_ used by
+      // this module is passed in here. Historically speaking, the check has
+      // caught actual build problems.
+
+      // The check doesn't really know that it got a bona fide implementation of
+      // `quill-delta`, just that it's an instance of a class named `Delta`.
+      class Delta { /* empty */ }
+      const wrongDelta = new Delta();
+
+      wrongDelta.ops = [];
+
+      assert.throws(() => { BodyDelta.fromQuillForm(wrongDelta); }, /Divergent/);
+    });
   });
 
   describe('constructor()', () => {
