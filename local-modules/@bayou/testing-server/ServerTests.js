@@ -30,16 +30,18 @@ export default class ServerTests extends UtilityClass {
    *
    * @param {string|null} testOut If non-`null`, filesystem path to write the
    *   test output to.
+   * @param {RegExp|null} testFilter Filter on test names.
    * @returns {boolean} `true` iff there were any test failures.
    */
-  static async run(testOut) {
+  static async run(testOut, testFilter) {
     const testFiles = TestFiles.allServerFiles();
 
     // The hacky arrangement with `reporterHolder` is how we exfiltrate the
     // reporter instance out of Mocha.
     const reporterHolder = [];
     const mocha = new Mocha({
-      reporter: CollectingReporter,
+      grep:            testFilter || /./,
+      reporter:        CollectingReporter,
       reporterOptions: { holder: reporterHolder }
     });
 

@@ -36,6 +36,9 @@ showHelp=0
 # Output directory option, if any.
 outDirOpt=()
 
+# Unit test name filter, for use with `--client` and `--server` tests.
+testFilter=''
+
 # Which tests to run.
 tests=()
 
@@ -47,6 +50,9 @@ while true; do
             ;;
         --client|--client-bundle|--server)
             tests+=("${1#--}") # Strip off the `--` prefix.
+            ;;
+        --filter=*)
+            testFilter="${1#*=}"
             ;;
         --out=?*)
             outDirOpt+=("$1")
@@ -83,6 +89,10 @@ if (( ${showHelp} || ${argError} )); then
     echo '    stored.'
     echo '  --server'
     echo '    Run the server unit tests.'
+    echo '  --filter=<regex>'
+    echo '    Regex which matches unit test names. If specified, only unit tests'
+    echo '    that match the filter will be run. This uses JavaScript regex'
+    echo '    syntax.'
     echo ''
     echo "${progName} [--help | -h]"
     echo '  Display this message.'
@@ -162,6 +172,12 @@ runProduct="${outDir}/final/bin/run"
 # Directory for test output.
 testOutDir="${outDir}/test-results"
 
+# Extra argument for the unit test filter, if specified.
+testFilterArg=()
+if [[ ${testFilter} != '' ]]; then
+    testFilterArg=("--test-filter=${testFilter}")
+fi
+
 if [[ ! -e ${runProduct} ]]; then
     echo 'Could not find `run` script. Did you forget to build?' 1>&2
     exit 1
@@ -172,13 +188,13 @@ mkdir -p "${testOutDir}"
 for test in "${tests[@]}"; do
     case "${test}" in
         client)
-            run-test 'client-test.txt' "${runProduct}" --client-test
+            run-test 'client-test.txt' "${runProduct}" --client-test "${testFilterArg[@]}"
             ;;
         client-bundle)
             run-test --tee 'client-bundle.txt' "${runProduct}" --client-bundle
             ;;
         server)
-            run-test 'server-test.txt' "${runProduct}" --server-test
+            run-test 'server-test.txt' "${runProduct}" --server-test "${testFilterArg[@]}"
             ;;
     esac
 done

@@ -55,12 +55,14 @@ export default class Client extends UtilityClass {
   static async runUnitTests(configFunction, testsClass) {
     Client._init(configFunction, 'Starting up testing environment...');
 
+    const testFilter = window.BAYOU_TEST_FILTER || null;
+
     const elem = document.createElement('p');
     elem.innerHTML = 'Running&hellip;';
     document.body.appendChild(elem);
 
     (async () => {
-      const failures = await testsClass.runAll();
+      const failures = await testsClass.runAll(testFilter);
 
       let msg;
       switch (failures) {

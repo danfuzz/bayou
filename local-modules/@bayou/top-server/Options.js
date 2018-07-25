@@ -56,6 +56,15 @@ export default class Options extends CommonBase {
   }
 
   /**
+   * {RegExp|null} Regular expression which must match a test name in order for
+   * that test to be run, or `null` if either this isn't a test run or all tests
+   * are to be run.
+   */
+  get testFilter() {
+    return this._options.testFilter;
+  }
+
+  /**
    * {string|null} Filesystem path naming a directory into which test results
    * should be placed, or `null` if either this isn't a test run or results
    * should merely be written to the console.
@@ -109,6 +118,8 @@ export default class Options extends CommonBase {
       '      JSON-encoded event records.',
       '    --prog-name=<name>',
       '      Name of this program, for use when reporting errors and diagnostics.',
+      '    --test-filter=<regex>',
+      '      When running tests, only run ones whose name matches the given regex.',
       '    --test-out=<path>',
       '      Where to write the output from a test run in addition to writing to the',
       '      console. (If not specified, will just write to the console.)',
@@ -134,6 +145,7 @@ export default class Options extends CommonBase {
       errorMessage: null,
       humanConsole: false,
       progName:     path.basename(argv[1]),
+      testFilter:   null,
       testOut:      null
     };
 
@@ -145,6 +157,7 @@ export default class Options extends CommonBase {
       ]),
       string: [
         'prog-name',
+        'test-filter',
         'test-out'
       ],
       alias: {
@@ -174,6 +187,17 @@ export default class Options extends CommonBase {
 
       gotAction = true;
       result.action = a;
+    }
+
+    const testFilter = opts['test-filter'];
+    if (testFilter) {
+      if (!/-test$/.test(result.action)) {
+        result.errorMessage =
+          'Cannot specify `--test-filter` except when running a `*-test` action.';
+        return result;
+      }
+
+      result.testFilter = new RegExp(testFilter);
     }
 
     const testOut = opts['test-out'];

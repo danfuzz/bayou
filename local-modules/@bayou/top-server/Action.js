@@ -150,7 +150,8 @@ export default class Action extends CommonBase {
       await Delay.resolve(15 * 1000);
     }
 
-    const anyFailed = await ClientTests.run(port, this._options.testOut);
+    const anyFailed =
+      await ClientTests.run(port, this._options.testOut, this._options.testFilter);
 
     return anyFailed ? 1 : 0;
   }
@@ -213,7 +214,8 @@ export default class Action extends CommonBase {
    * @returns {Int} Standard process exit code.
    */
   async _run_serverTest() {
-    const anyFailed = await ServerTests.run(this._options.testOut || null);
+    const anyFailed =
+      await ServerTests.run(this._options.testOut, this._options.testFilter);
 
     return anyFailed ? 1 : 0;
   }
