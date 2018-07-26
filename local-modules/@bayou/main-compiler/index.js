@@ -231,7 +231,12 @@ function compileFile(inputFile, outputFile) {
   try {
     inputStat = fs.statSync(inputFile);
     outputStat = fs.statSync(outputFile);
-    if (inputStat.mtimeMs <= outputStat.mtimeMs) {
+
+    // The `!==` check makes it so that we always compile files when the input
+    // and output directories are the same. (That is, the mtime test makes no
+    // sense in this case, and we have to assume the intention is to always
+    // compile.)
+    if ((inputFile !== outputFile) && (inputStat.mtimeMs <= outputStat.mtimeMs)) {
       console.log(chalk.gray.bold('Unchanged:'), chalk.gray(pathToLog));
       return;
     }
