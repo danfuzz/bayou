@@ -360,7 +360,8 @@ function build-server {
         fi
     done
 
-    "${compile}" "--in-dir=${fromDir}" "--out-dir=${toDir}" "${srcDirs[@]}" \
+    "${compile}" "--in-dir=${fromDir}" "--out-dir=${toDir}" --server \
+        "${srcDirs[@]}" \
     || return 1
 
     # Copy everything else over to the final `server` directory as-is. We use

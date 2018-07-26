@@ -21,20 +21,66 @@ const fs_extra = require('fs-extra');
 const minimist = require('minimist');
 const path     = require('path');
 
-/** Babel configuration, _except_ for the file name. */
-const BABEL_CONFIG = Object.freeze({
-  sourceMaps: 'inline',
+/** {Int} Node version to target. */
+const NODE_VERSION = 8;
 
-  presets: [
-    [
-      'env',
-      { targets: { node: 8 } }
-    ],
-    [
-      'react'
+/**
+ * {array<string>} Browser versions to target. See
+ * <https://github.com/ai/browserslist> for the syntax used here.
+ */
+const BROWSER_VERSIONS = [
+  'Chrome >= 61',
+  'ChromeAndroid >= 61',
+  'Electron >= 1.8',
+  'Firefox >= 54',
+  'iOS >= 11',
+  'Safari >= 11'
+];
+
+/** {object<string,object>} Map from configuration names to Babel configs. */
+const BABEL_CONFIGS = {
+  'client': Object.freeze({
+    sourceMaps: 'inline',
+
+    presets: [
+      [
+        'env',
+        {
+          targets: { browsers: BROWSER_VERSIONS }
+        }
+      ],
+      ['react']
     ]
-  ]
-});
+  }),
+
+  'publish': Object.freeze({
+    sourceMaps: 'inline',
+
+    presets: [
+      [
+        'env',
+        {
+          targets: {
+            browsers: BROWSER_VERSIONS,
+            node:     NODE_VERSION
+          }
+        }
+      ],
+      ['react']
+    ]
+  }),
+
+  'server': Object.freeze({
+    sourceMaps: 'inline',
+
+    presets: [
+      [
+        'env',
+        { targets: { node: NODE_VERSION } }
+      ]
+    ]
+  })
+};
 
 /**
  * Displays a usage message and exits the process.
@@ -47,18 +93,26 @@ function usage(error) {
   [
     'Usage:',
     '',
-    `${progName} [--in-dir=<path>] [--out-dir=<path>] <path> ...`,
+    `${progName} [--in-dir=<path>] [--out-dir=<path>] [--client|--publish|--server]`,
+    '  <path> ...',
     '',
     '  Compile one or more files. Does not compile files that appear to be',
     '  older than their corresponding output file. <path>s may be either files',
     '  or directories.',
     '',
+    '  --client',
+    '    Compile for a client (browser) target.',
     '  --in-dir=<path>',
     '    All source files must reside under the given path. Output file paths',
     '    are produced by stripping this prefix from input paths and appending the',
     '    result to the output directory. Defaults to the current directory.',
     '  --out-dir=<path>',
     '    Directory to write results to. Defaults to the input directory.',
+    '  --publish',
+    '    Compile for a module publication target. This is meant to be a conservative',
+    '    choice which is compatible with both client and server environments.',
+    '  --server',
+    '    Compile for a server target.',
     '',
     `${progName} [--help | -h]`,
     '  Display this message.'
@@ -76,7 +130,7 @@ let argError = false;
  * `node` binary name and the name of the initial script (that is, this file).
  */
 const opts = minimist(process.argv.slice(2), {
-  boolean: ['help'],
+  boolean: ['client', 'help', 'publish', 'server'],
   string: ['in-dir', 'out-dir'],
   alias: {
     'h': 'help'
@@ -94,15 +148,28 @@ const opts = minimist(process.argv.slice(2), {
   }
 });
 
-if (argError || opts['help']) {
-  usage(argError);
-}
-
 /** {string} Input directory. */
 const inDir = (opts['in-dir'] || process.cwd()).replace(/[/]*$/, '/');
 
 /** {string} Output directory. */
 const outDir = opts['out-dir'] || inDir;
+
+/** {string} Compilation target; one of `client`, `publish`, or `server`. */
+let target = 'client';
+if (opts['publish']) {
+  target = 'publish';
+} else if (opts['server']) {
+  target = 'server';
+}
+
+if ((opts['client'] + opts['publish'] + opts['server']) !== 1) {
+  console.log('Must specify exactly one of `--client`, `--publish`, or `--server`.');
+  argError = true;
+}
+
+if (argError || opts['help']) {
+  usage(argError);
+}
 
 /**
  * {string} `[input, output]` path pairs, which are all validated and
@@ -183,7 +250,7 @@ function compileFile(inputFile, outputFile) {
   compileCount++;
 
   try {
-    const config = Object.assign({ filename: inputFile }, BABEL_CONFIG);
+    const config = Object.assign({ filename: inputFile }, BABEL_CONFIGS[target]);
     output = babel.transformFileSync(inputFile, config);
   } catch (e) {
     console.log(e.message);
