@@ -37,7 +37,7 @@ argError=0
 showHelp=0
 
 # List of subprojects to build.
-buildProjects=(compiler server client bin product-info)
+buildProjects=()
 
 # Directory in which to find additional local modules, if any.
 extraModulesDir=''
@@ -63,14 +63,17 @@ while true; do
         --clean)
             outOpts+=("$1")
             ;;
+        --compiler)
+            buildProjects+=(compiler)
+            ;;
         --copy-sources)
-            buildProjects=(copy-sources)
+            buildProjects+=(copy-sources)
             ;;
         --extra-modules=?*)
             extraModulesDir="${1#*=}"
             ;;
         --linter)
-            buildProjects=(linter)
+            buildProjects+=(linter)
             ;;
         --out=?*)
             outOpts+=("$1")
@@ -100,21 +103,33 @@ while true; do
     shift
 done
 
+if (( ${#buildProjects[@]} == 0 )); then
+    # Default set of things to build when no explicit targets are specified.
+    buildProjects=(compiler server client bin product-info)
+fi
+
 if (( ${showHelp} || ${argError} )); then
     echo 'Usage:'
     echo ''
     echo "${progName} [<opt> ...]"
-    echo '  Build the project.'
+    echo '  Build the project. If no target options are specified (e.g. `--linter`)'
+    echo '  this performs a full build.'
     echo ''
+    echo 'Target options:'
+    echo '  --compiler'
+    echo '    Build the compiler (transpiler).'
+    echo '  --copy-sources'
+    echo '    Just copy source files into the output directory. This is implied by'
+    echo '    by the other target options, but sometimes you might want to just do'
+    echo '    this by itself.'
+    echo '  --linter'
+    echo '    Build the linter.'
+    echo ''
+    echo 'Other options:'
     echo '  --clean'
     echo '    Start from a clean build.'
-    echo '  --copy-sources'
-    echo '    Just copy source files into the output directory. (Do no other build'
-    echo '    steps.)'
     echo '  --extra-modules=<dir>'
     echo '    Find additional local module sources in directory <dir>.'
-    echo '  --linter'
-    echo '    Just build the linter. (Do no other build steps.)'
     echo '  --out=<dir>'
     echo '    Place output in directory <dir>.'
     echo '  --main-client=<name>'
@@ -360,7 +375,8 @@ function build-server {
         fi
     done
 
-    "${compile}" "--in-dir=${fromDir}" "--out-dir=${toDir}" "${srcDirs[@]}" \
+    "${compile}" "--in-dir=${fromDir}" "--out-dir=${toDir}" --server \
+        "${srcDirs[@]}" \
     || return 1
 
     # Copy everything else over to the final `server` directory as-is. We use

@@ -45,6 +45,9 @@ showHelp=0
 # Options to pass to `set-up-out`.
 outOpts=()
 
+# Should the source files get compiled (transpiled)?
+compileSource=0
+
 # JSON text for the base contents of `package.json`, if any.
 packageBaseJson='{}'
 
@@ -65,6 +68,9 @@ while true; do
         -h|--help)
             showHelp=1
             break
+            ;;
+        --compile)
+            compileSource=1
             ;;
         --dry-run|--verbose)
             publishOpts+=("$1")
@@ -114,6 +120,9 @@ if (( ${showHelp} || ${argError} )); then
     echo "${progName} [<opt> ...]"
     echo '  Convert modules into publication form, and optionally publish them.'
     echo ''
+    echo '  --compile'
+    echo '    If specified, runs the Babel compiler on JS sources, instead of'
+    echo '    publishing original sources.'
     echo '  --dry-run'
     echo '    Passed through to `npm publish` when using `--publish`.'
     echo '  --out=<dir>'
@@ -144,6 +153,30 @@ fi
 #
 # Helper functions
 #
+
+# Performs compilation of JS sources in the given directory.
+function compile-sources {
+    local dir="$1"
+
+    "${compile}" --in-dir="${dir}" --publish . || return 1
+    echo ''
+}
+
+# Performs name mapping on the source(ish) files in the given directory.
+function do-name-mapping {
+    local dir="$1"
+    local fileName
+
+    (cd "${dir}"; find . -type f \
+        '(' -name '*.js' -o -name '*.less' -o -name '*.md' ')') |
+    while read -r fileName; do
+        local fromFile="${dir}/${fileName}"
+        local toFile="${dir}/${fileName}-new"
+
+        "${nameMapProgram[@]}" < "${fromFile}" > "${toFile}" || return 1
+        mv "${toFile}" "${fromFile}" || return 1
+    done
+}
 
 # Helper for `make-name-map` which produces the translation for one module, if
 # it is in fact rescoped.
@@ -188,9 +221,9 @@ function calc-name-map-entry {
 # `nameMapProgram[@]` (`jq` invocation which transforms source text).
 #
 # The `nameMapProgram` uses `jq` as a "sed but with better regex
-# semantics." **Note #1**: `jq` uses the PCRE library. **Note #2:**
-# Unfortunately, backslashes need to be doubled because `jq` doesn't have syntax
-# for regex literals.
+# semantics." **Note #1**: `jq` uses the PCRE library for regex syntax. **Note
+# #2:** Unfortunately, backslashes need to be doubled because `jq` doesn't have
+# direct syntax for regex literals.
 function make-name-map {
     nameMap=()
     nameMapJson=$'{\n'
@@ -223,7 +256,7 @@ function make-name-map {
     # of the above mappings.
     nameMapJson+=$'  "": ""\n}\n'
 
-    nameMapProgram=(jq --raw-input --raw-output --slurp "${jqProgram}")
+    nameMapProgram=(jq --raw-input --raw-output "${jqProgram}")
 }
 
 # Determines the output module name for the given input module name.
@@ -308,23 +341,17 @@ function process-module {
     ' < "${fromDir}/package.json" > "${toDir}/package.json" \
     || return 1
 
-    if [[ ${#nameMap[@]} == 0 ]]; then
-        # No module name mappings, so nothing more to do.
-        return
+    if [[ ! -r "${toDir}/README.md" ]]; then
+        write-default-readme "${toName}" "${toDir}"
     fi
 
-    # Because there are module name mappings, go through each source file and
-    # perform replacements.
+    if [[ ${#nameMap[@]} != 0 ]]; then
+        do-name-mapping "${toDir}" || return 1
+    fi
 
-    local fileName
-    (cd "${fromDir}"; find . -type f \
-        '(' -name '*.js' -o -name '*.less' -o -name '*.md' ')') |
-    while read -r fileName; do
-        local fromFile="${fromDir}/${fileName}"
-        local toFile="${toDir}/${fileName}"
-
-        "${nameMapProgram[@]}" < "${fromFile}" > "${toFile}"
-    done
+    if (( ${compileSource} )); then
+        compile-sources "${toDir}"
+    fi
 }
 
 # Determines the product version from the info file.
@@ -392,12 +419,36 @@ function publish-modules {
     fi
 }
 
+# Writes a default README file for the given module, into the given directory.
+function write-default-readme {
+    local name="$1"
+    local dir="$2"
+
+    (
+        echo "${name}"
+        echo "${name}" | sed -e 's/./=/g' # A row of equalses under the name.
+        echo ''
+        echo 'Subcomponent of the larger project.'
+    ) > "${dir}/README.md"
+}
+
 #
 # Main script
 #
 
 set-up-out "${outOpts[@]}" || exit 1
 make-name-map || exit 1
+
+compile='<unneeded>'
+if (( ${compileSource} )); then
+    # Find the script to invoke the Babel compiler (provided by the `compiler`
+    # subproject).
+    compile="$(find "${outDir}/compiler" -name 'bayou-compile')"
+    if [[ ${compile} == '' ]]; then
+        echo 'Could not find compiler script.' 1>&2
+        return 1
+    fi
+fi
 
 # Validate the base JSON.
 if [[ ${packageBaseJson} != '' ]]; then
