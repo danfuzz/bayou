@@ -256,7 +256,7 @@ function make-name-map {
     # of the above mappings.
     nameMapJson+=$'  "": ""\n}\n'
 
-    nameMapProgram=(jq --raw-input --raw-output --slurp "${jqProgram}")
+    nameMapProgram=(jq --raw-input --raw-output "${jqProgram}")
 }
 
 # Determines the output module name for the given input module name.
