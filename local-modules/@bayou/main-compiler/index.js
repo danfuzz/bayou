@@ -37,6 +37,17 @@ const BROWSER_VERSIONS = [
   'Safari >= 11'
 ];
 
+/**
+ * {object} The Babel `env` preset. We have to refer to this (and other presets)
+ * in the configs below as resolved objects and not just names, specifically
+ * because Babel &mdash; goodness knows why &mdash; does preset name resolution
+ * relative to the source files being compiled.
+ */
+const BABEL_PRESET_ENV = require.resolve('babel-preset-env');
+
+/** {object} The Babel `react` preset. See above for rationale. */
+const BABEL_PRESET_REACT = require.resolve('babel-preset-react');
+
 /** {object<string,object>} Map from configuration names to Babel configs. */
 const BABEL_CONFIGS = {
   'client': Object.freeze({
@@ -44,12 +55,12 @@ const BABEL_CONFIGS = {
 
     presets: [
       [
-        'env',
+        BABEL_PRESET_ENV,
         {
           targets: { browsers: BROWSER_VERSIONS }
         }
       ],
-      ['react']
+      [BABEL_PRESET_REACT]
     ]
   }),
 
@@ -58,7 +69,7 @@ const BABEL_CONFIGS = {
 
     presets: [
       [
-        'env',
+        BABEL_PRESET_ENV,
         {
           targets: {
             browsers: BROWSER_VERSIONS,
@@ -66,7 +77,7 @@ const BABEL_CONFIGS = {
           }
         }
       ],
-      ['react']
+      [BABEL_PRESET_REACT]
     ]
   }),
 
@@ -75,7 +86,7 @@ const BABEL_CONFIGS = {
 
     presets: [
       [
-        'env',
+        BABEL_PRESET_ENV,
         { targets: { node: NODE_VERSION } }
       ]
     ]
