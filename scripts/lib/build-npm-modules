@@ -158,7 +158,8 @@ fi
 function compile-sources {
     local dir="$1"
 
-    "${compile}" --in-dir="${dir}" --publish .
+    "${compile}" --in-dir="${dir}" --publish . || return 1
+    echo ''
 }
 
 # Performs name mapping on the source(ish) files in the given directory.
