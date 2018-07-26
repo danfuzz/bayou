@@ -154,6 +154,13 @@ fi
 # Helper functions
 #
 
+# Performs compilation of JS sources in the given directory.
+function compile-sources {
+    local dir="$1"
+
+    "${compile}" --in-dir="${dir}" --publish .
+}
+
 # Performs name mapping on the source(ish) files in the given directory.
 function do-name-mapping {
     local dir="$1"
@@ -342,7 +349,7 @@ function process-module {
     fi
 
     if (( ${compileSource} )); then
-        echo '======= COMPILE HERE!!!' 1>&2
+        compile-sources "${toDir}"
     fi
 }
 
@@ -430,6 +437,17 @@ function write-default-readme {
 
 set-up-out "${outOpts[@]}" || exit 1
 make-name-map || exit 1
+
+compile='<unneeded>'
+if (( ${compileSource} )); then
+    # Find the script to invoke the Babel compiler (provided by the `compiler`
+    # subproject).
+    compile="$(find "${outDir}/compiler" -name 'bayou-compile')"
+    if [[ ${compile} == '' ]]; then
+        echo 'Could not find compiler script.' 1>&2
+        return 1
+    fi
+fi
 
 # Validate the base JSON.
 if [[ ${packageBaseJson} != '' ]]; then
