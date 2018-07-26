@@ -333,6 +333,10 @@ function process-module {
     ' < "${fromDir}/package.json" > "${toDir}/package.json" \
     || return 1
 
+    if [[ ! -r "${toDir}/README.md" ]]; then
+        write-default-readme "${toName}" "${toDir}"
+    fi
+
     if [[ ${#nameMap[@]} != 0 ]]; then
         do-name-mapping "${toDir}" || return 1
     fi
@@ -405,6 +409,19 @@ function publish-modules {
         echo "${#errors[@]} error${plural}." 1>&2
         return 1
     fi
+}
+
+# Writes a default README file for the given module, into the given directory.
+function write-default-readme {
+    local name="$1"
+    local dir="$2"
+
+    (
+        echo "${name}"
+        echo "${name}" | sed -e 's/./=/g' # A row of equalses under the name.
+        echo ''
+        echo 'Subcomponent of the larger project.'
+    ) > "${dir}/README.md"
 }
 
 #
