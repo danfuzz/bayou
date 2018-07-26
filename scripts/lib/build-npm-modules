@@ -45,6 +45,9 @@ showHelp=0
 # Options to pass to `set-up-out`.
 outOpts=()
 
+# Should the source files get compiled (transpiled)?
+compileSource=0
+
 # JSON text for the base contents of `package.json`, if any.
 packageBaseJson='{}'
 
@@ -65,6 +68,9 @@ while true; do
         -h|--help)
             showHelp=1
             break
+            ;;
+        --compile)
+            compileSource=1
             ;;
         --dry-run|--verbose)
             publishOpts+=("$1")
@@ -114,6 +120,9 @@ if (( ${showHelp} || ${argError} )); then
     echo "${progName} [<opt> ...]"
     echo '  Convert modules into publication form, and optionally publish them.'
     echo ''
+    echo '  --compile'
+    echo '    If specified, runs the Babel compiler on JS sources, instead of'
+    echo '    publishing original sources.'
     echo '  --dry-run'
     echo '    Passed through to `npm publish` when using `--publish`.'
     echo '  --out=<dir>'
@@ -144,6 +153,22 @@ fi
 #
 # Helper functions
 #
+
+# Performs name mapping on the source(ish) files in the given directory.
+function do-name-mapping {
+    local dir="$1"
+    local fileName
+
+    (cd "${dir}"; find . -type f \
+        '(' -name '*.js' -o -name '*.less' -o -name '*.md' ')') |
+    while read -r fileName; do
+        local fromFile="${dir}/${fileName}"
+        local toFile="${dir}/${fileName}-new"
+
+        "${nameMapProgram[@]}" < "${fromFile}" > "${toFile}" || return 1
+        mv "${toFile}" "${fromFile}" || return 1
+    done
+}
 
 # Helper for `make-name-map` which produces the translation for one module, if
 # it is in fact rescoped.
@@ -188,9 +213,9 @@ function calc-name-map-entry {
 # `nameMapProgram[@]` (`jq` invocation which transforms source text).
 #
 # The `nameMapProgram` uses `jq` as a "sed but with better regex
-# semantics." **Note #1**: `jq` uses the PCRE library. **Note #2:**
-# Unfortunately, backslashes need to be doubled because `jq` doesn't have syntax
-# for regex literals.
+# semantics." **Note #1**: `jq` uses the PCRE library for regex syntax. **Note
+# #2:** Unfortunately, backslashes need to be doubled because `jq` doesn't have
+# direct syntax for regex literals.
 function make-name-map {
     nameMap=()
     nameMapJson=$'{\n'
@@ -308,23 +333,13 @@ function process-module {
     ' < "${fromDir}/package.json" > "${toDir}/package.json" \
     || return 1
 
-    if [[ ${#nameMap[@]} == 0 ]]; then
-        # No module name mappings, so nothing more to do.
-        return
+    if [[ ${#nameMap[@]} != 0 ]]; then
+        do-name-mapping "${toDir}" || return 1
     fi
 
-    # Because there are module name mappings, go through each source file and
-    # perform replacements.
-
-    local fileName
-    (cd "${fromDir}"; find . -type f \
-        '(' -name '*.js' -o -name '*.less' -o -name '*.md' ')') |
-    while read -r fileName; do
-        local fromFile="${fromDir}/${fileName}"
-        local toFile="${toDir}/${fileName}"
-
-        "${nameMapProgram[@]}" < "${fromFile}" > "${toFile}"
-    done
+    if (( ${compileSource} )); then
+        echo '======= COMPILE HERE!!!' 1>&2
+    fi
 }
 
 # Determines the product version from the info file.
