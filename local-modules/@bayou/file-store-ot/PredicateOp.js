@@ -235,6 +235,11 @@ export default class PredicateOp extends BaseOp {
     }
   }
 
+  // TODO: implement predicate op specific validation
+  _impl_validate() {
+    return true;
+  }
+
   /**
    * Runs the test for `blobAbsent` operations.
    *

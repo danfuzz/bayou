@@ -11,4 +11,8 @@ export default class MockOp extends BaseOp {
   get name() {
     return this.payload.name;
   }
+
+  _impl_validate() {
+    return true;
+  }
 }

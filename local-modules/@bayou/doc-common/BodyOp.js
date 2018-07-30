@@ -251,6 +251,11 @@ export default class BodyOp extends BaseOp {
     }
   }
 
+  // TODO: implement caret op specific validation
+  _impl_validate() {
+    return true;
+  }
+
   /**
    * Converts an `attributes` argument value into an array (of zero or one
    * element), suitable for passing to the payload constructor call, including

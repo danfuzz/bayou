@@ -99,4 +99,9 @@ export default class CaretOp extends BaseOp {
       }
     }
   }
+
+  // TODO: implement caret op specific validation
+  _impl_validate() {
+    return true;
+  }
 }

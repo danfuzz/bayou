@@ -19,6 +19,10 @@ export default class MockControl extends DurableControl {
     return new MockSnapshot(revNum, [[`snap_${revNum}`]]);
   }
 
+  _impl_validateChange() {
+    return true;
+  }
+
   static get _impl_pathPrefix() {
     return '/mock_control';
   }

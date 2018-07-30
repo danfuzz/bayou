@@ -578,6 +578,10 @@ export default class BaseControl extends BaseDataManager {
   async update(change, timeoutMsec = null) {
     const changeClass = this.constructor.changeClass;
 
+    // This makes sure we have syntactic and semantic validation for any change.
+    // It will validate based on the subclass implementaton.
+    this._impl_validateChange(change);
+
     // This makes sure we have a surface-level proper instance, but doesn't
     // check for deeper problems (such as an invalid `revNum`). Once in the guts
     // of the operation, we will discover (and properly complain) if things are
@@ -1110,6 +1114,17 @@ export default class BaseControl extends BaseDataManager {
     await fc.transact(spec);
 
     this.log.info(`Wrote stored snapshot for revision: r${snapshot.revNum}`);
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #validateChange}. Subclasses
+   * must override this to perform validation.
+   * @param {BaseChange} change Change to apply.
+   * @returns {boolean} `true` if valid, otherwise throws and error.
+   * @abstract
+   */
+  _impl_validateChange(change) {
+    return this._mustOverride(change);
   }
 
   /**

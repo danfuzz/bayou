@@ -86,6 +86,11 @@ export default class PropertyControl extends DurableControl {
     return finalChange;
   }
 
+  // TODO: Implement validateChange for Property Control
+  _impl_validateChange() {
+    return true;
+  }
+
   /**
    * {string} `StoragePath` prefix string to use for file storage for the
    * portion of the document controlled by instances of this class.

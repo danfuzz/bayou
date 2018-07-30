@@ -208,4 +208,9 @@ export default class FileOp extends BaseOp {
       }
     }
   }
+
+  // TODO: implement file op specific validation
+  _impl_validate() {
+    return true;
+  }
 }

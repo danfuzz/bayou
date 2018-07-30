@@ -73,4 +73,9 @@ export default class PropertyOp extends BaseOp {
       }
     }
   }
+
+  // TODO: implement property op specific validation
+  _impl_validate() {
+    return true;
+  }
 }

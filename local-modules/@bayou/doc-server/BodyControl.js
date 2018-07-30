@@ -84,6 +84,21 @@ export default class BodyControl extends DurableControl {
   }
 
   /**
+   * Subclass-specific implementation of {@link #validateChange}. This
+   * class implements semantic validation for an OT change in the Body.
+   * @param {BodyChange} change The change to apply.
+   * @returns {boolean} `true` if valid change, otherwise throws and error.
+   */
+  _impl_validateChange() {
+    // TODO: Add semantic validation for:
+    // * Ensure change is not removing characters past end of body
+    // * Document does not exceed size limit given
+    // * etc
+
+    return true;
+  }
+
+  /**
    * {string} `StoragePath` prefix string to use for file storage for the
    * portion of the document controlled by instances of this class.
    */

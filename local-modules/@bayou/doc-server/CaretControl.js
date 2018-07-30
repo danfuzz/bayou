@@ -245,6 +245,11 @@ export default class CaretControl extends EphemeralControl {
     }
   }
 
+  // TODO: Implement validateChange for Caret Control
+  _impl_validateChange() {
+    return true;
+  }
+
   /**
    * {string} `StoragePath` prefix string to use for file storage for the
    * portion of the document controlled by instances of this class.

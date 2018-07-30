@@ -24,6 +24,9 @@ export default class BaseOp extends CommonBase {
   constructor(name, ...args) {
     super();
 
+    // Perform syntactic validation based on subclass
+    this._impl_validate(name, args);
+
     /** {Functor} The operation payload (name and arguments). */
     this._payload = new Functor(name, ...args).withFrozenArgs();
 
@@ -64,5 +67,19 @@ export default class BaseOp extends CommonBase {
 
     return (this.constructor === other.constructor)
       && this._payload.equals(other._payload);
+  }
+
+  /**
+   * Abstract function to alidates op arguments based on
+   * op subclass. Subclasses must implement their own validation.
+   *
+   * @param {string} name The name of the op type.
+   * @param {array} args The op arguments to validate.
+   * @returns {boolean} `true` if arguments are valid,
+   *   throws and error otherwise.
+   * @abstract
+   */
+  _impl_validate(name, args) {
+    return this._mustOverride(name, args);
   }
 }
