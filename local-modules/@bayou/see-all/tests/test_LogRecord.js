@@ -87,6 +87,29 @@ describe('@bayou/see-all/LogRecord', () => {
     });
   });
 
+  describe('withEvent()', () => {
+    it('is an error to call on a message log', () => {
+      const lr = LogRecord.forMessage(123, 'trace', new LogTag('taggaroo'), 'info', 'boop');
+      const f  = new Functor('x', 1, 2);
+
+      assert.throws(() => { lr.withEvent(f); });
+    });
+
+    it('operates as expected on an event log', () => {
+      const LOG_TAG = new LogTag('taggaroo');
+      const lr      = LogRecord.forEvent(123321, 'zorch', LOG_TAG, new Functor('x', 1, 2));
+      const f       = new Functor('y', 'z');
+
+      const newLr = lr.withEvent(f);
+
+      assert.strictEqual(newLr.payload,  f);
+
+      assert.strictEqual(newLr.timeMsec, lr.timeMsec);
+      assert.strictEqual(newLr.stack,    lr.stack);
+      assert.strictEqual(newLr.tag,      LOG_TAG);
+    });
+  });
+
   describe('withTag()', () => {
     it('operates as expected on a message log', () => {
       const LOG_TAG_1 = new LogTag('one');
