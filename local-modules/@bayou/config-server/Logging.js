@@ -24,12 +24,12 @@ export default class Logging extends UtilityClass {
    * Performs redaction on an ad-hoc logged message (e.g., the arguments to a
    * call to `log.info()`).
    *
-   * @param {...*} args Original arguments.
+   * @param {...*} message Original message arguments.
    * @returns {array<*>} Redacted replacement arguments, or `args` as given if
    *   no redaction is necessary.
    */
-  static redactMessage(...args) {
-    return use.Logging.redactMessage(...args);
+  static redactMessage(...message) {
+    return use.Logging.redactMessage(...message);
   }
 
   /**

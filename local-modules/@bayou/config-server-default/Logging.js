@@ -25,11 +25,11 @@ export default class Logging extends UtilityClass {
    *
    * This implementation is a no-op, always returning its arguments unchanged.
    *
-   * @param {...*} args Original arguments.
+   * @param {...*} message Original message arguments.
    * @returns {array<*>} `args` as given.
    */
-  static redactMessage(...args) {
-    return args;
+  static redactMessage(...message) {
+    return message;
   }
 
   /**
