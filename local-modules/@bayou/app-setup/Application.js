@@ -179,7 +179,7 @@ export default class Application extends CommonBase {
 
     const wsVerify = (info, cb = null) => {
       const url = info.req.url;
-      const ok = (url === '/api') || (url === '/api/');
+      const ok  = (url === '/api') || (url === '/api/');
 
       if (cb !== null) {
         if (ok) {
