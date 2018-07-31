@@ -518,6 +518,19 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Constructs an instance just like this one, except with `tag` replaced as
+   * indicated contents.
+   *
+   * @param {LogTag} tag New tag.
+   * @returns {LogRecord} An appropriately-constructed instance.
+   */
+  withTag(tag) {
+    const { timeMsec, stack, payload } = this;
+
+    return new LogRecord(timeMsec, stack, tag, payload);
+  }
+
+  /**
    * Calls `util.inspect()` on the given value, with standardized options.
    *
    * @param {*} value Value to inspect.

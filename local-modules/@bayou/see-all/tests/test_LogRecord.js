@@ -6,6 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { LogRecord, LogTag } from '@bayou/see-all';
+import { Functor } from '@bayou/util-common';
 
 describe('@bayou/see-all/LogRecord', () => {
   describe('.MESSAGE_LEVELS', () => {
@@ -83,6 +84,36 @@ describe('@bayou/see-all/LogRecord', () => {
       test('123',       123);
       test('[ 1, 2 ]',  [1, 2]);
       test('{ a: 10 }', { a: 10 });
+    });
+  });
+
+  describe('withTag()', () => {
+    it('operates as expected on a message log', () => {
+      const LOG_TAG_1 = new LogTag('one');
+      const LOG_TAG_2 = new LogTag('two', 'three');
+
+      const lr = LogRecord.forMessage(123, 'trace', LOG_TAG_1, 'info', 'x', 'y', 'z');
+      const newLr = lr.withTag(LOG_TAG_2);
+
+      assert.strictEqual(newLr.tag, LOG_TAG_2);
+
+      assert.strictEqual(newLr.timeMsec,      lr.timeMsec);
+      assert.strictEqual(newLr.stack,         lr.stack);
+      assert.strictEqual(newLr.messageString, lr.messageString);
+    });
+
+    it('operates as expected on an event log', () => {
+      const LOG_TAG_1 = new LogTag('uno');
+      const LOG_TAG_2 = new LogTag('dos', 'tres');
+
+      const lr = LogRecord.forEvent(123321, 'zorch', LOG_TAG_1, new Functor('x', 1, 2));
+      const newLr = lr.withTag(LOG_TAG_2);
+
+      assert.strictEqual(newLr.tag, LOG_TAG_2);
+
+      assert.strictEqual(newLr.timeMsec, lr.timeMsec);
+      assert.strictEqual(newLr.stack,    lr.stack);
+      assert.strictEqual(newLr.payload,  lr.payload);
     });
   });
 });
