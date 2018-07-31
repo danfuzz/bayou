@@ -3,11 +3,13 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import Deployment from './Deployment';
+import Logging from './Logging';
 import Network from './Network';
 import Storage from './Storage';
 
 export {
   Deployment,
+  Logging,
   Network,
   Storage
 };
