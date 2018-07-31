@@ -156,29 +156,55 @@ export default class Application extends CommonBase {
       next();
     });
 
-    // Use the `@bayou/api-server` module to handle POST and websocket requests
-    // at `/api`.
+    // Use the `@bayou/api-server` module to handle POST requests at both `/api`
+    // and `/api/`.
 
-    app.post('/api',
-      (req, res) => {
-        try {
-          new PostConnection(req, res, this._context);
-        } catch (e) {
-          log.error('Trouble with API request:', e);
+    const postHandler = (req, res) => {
+      try {
+        new PostConnection(req, res, this._context);
+      } catch (e) {
+        log.error('Trouble with API request:', e);
+      }
+    };
+
+    app.post('/api', postHandler);
+    app.post('/api/', postHandler);
+
+    // Likewise, handle `/api` and `/api/` for websocket requests. **Note:**
+    // The following (specifically, constructing `ws.Server` with the `server`
+    // option) causes the websocket server instance to handle a websocket
+    // request before Express has an opportunity to dispatch at all. This means
+    // that no Express router logic will ever be run on a connection that starts
+    // out with a websocket handshake.
+
+    const wsVerify = (info, cb = null) => {
+      const url = info.req.url;
+      const ok = (url === '/api') || (url === '/api/');
+
+      if (cb !== null) {
+        if (ok) {
+          cb(true);
+        } else {
+          cb(false, 404, 'No websocket server at this endpoint.', {});
         }
-      });
+      }
 
-    // **Note:** The following causes the websocket server instance to capture
-    // the request before Express has an opportunity to dispatch at all.
-    const wsServer = new ws.Server({ server: this._server, path: '/api' });
+      return ok;
+    };
+
+    const wsServer = new ws.Server({
+      server:       this._server,
+      verifyClient: wsVerify
+    });
+
     wsServer.on('connection', (wsSocket, req) => {
       try {
         new WsConnection(wsSocket, req, this._context);
       } catch (e) {
         log.error('Trouble with API websocket connection:', e);
       }
-
     });
+
     wsServer.on('headers', (headers, req) => {
       this._requestLogger.logWebsocketRequest(req, headers);
     });
