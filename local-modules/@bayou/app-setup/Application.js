@@ -181,6 +181,10 @@ export default class Application extends CommonBase {
       const url = info.req.url;
       const ok  = (url === '/api') || (url === '/api/');
 
+      // **Note:** The `ws` module docs indicate that it _sometimes_ calls the
+      // verifier function with a `cb` argument. If it does, and if the main
+      // result is `false`, it wants the `cb` to be passed additional arguments
+      // to refine the error.
       if (cb !== null) {
         if (ok) {
           cb(true);
