@@ -14,6 +14,9 @@ Bayou Authors
 * Zachary Forrest y Salazar:
   [GitHub](https://github.com/zdfs)
 
+* Vahakn Papazian:
+  [GitHub](https://github.com/vahaknp)
+
 With additional contributions from:
 
 * Andreas Haugstrup Pedersen: [GitHub](https://github.com/haugstrup)

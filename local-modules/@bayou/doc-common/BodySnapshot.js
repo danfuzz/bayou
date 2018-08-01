@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseSnapshot } from '@bayou/ot-common';
+import { Errors } from '@bayou/util-common';
 
 import BodyChange from './BodyChange';
 
@@ -95,8 +96,8 @@ export default class BodySnapshot extends BaseSnapshot {
   _validateRetainOp(retainOp, bodyLength) {
     const { count } = retainOp.props;
 
-    if (count > bodyLength - 1) {
-      throw Error.badData(`Attempting to retain ${count} when document length is ${bodyLength}`);
+    if (count > bodyLength) {
+      throw Errors.badData(`Attempting to retain ${count} when document length is ${bodyLength}`);
     }
   }
 
