@@ -20,6 +20,10 @@ export default class MockSnapshot extends BaseSnapshot {
     return [new MockOp('diff_delta'), newerSnapshot.contents.ops[0]];
   }
 
+  _impl_validateChange() {
+    return true;
+  }
+
   static get _impl_changeClass() {
     return MockChange;
   }

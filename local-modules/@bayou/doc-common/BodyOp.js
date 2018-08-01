@@ -2,9 +2,16 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import GraphemeSplitter from 'grapheme-splitter';
+
 import { BaseOp } from '@bayou/ot-common';
 import { TInt, TObject, TString } from '@bayou/typecheck';
 import { DataUtil, Errors, ObjectUtil } from '@bayou/util-common';
+
+// Instance of the grapheme splitter library
+// used to properly count the length of
+// special characters, such as emojis.
+const splitter = new GraphemeSplitter();
 
 /**
  * Operation on a text document body.
@@ -189,6 +196,40 @@ export default class BodyOp extends BaseOp {
 
       default: {
         throw Errors.wtf(`Weird operation name: ${opName}`);
+      }
+    }
+  }
+
+  /**
+   * Returns the length of an Op.
+   * @param {boolean} [textOnly = false] An optional switch to determine whether
+   *   to only take text into account when determing the length of an Op.
+   * @returns {integer} The length of the Op. Embeds count as 1.
+   */
+  getLength(textOnly = false) {
+    const opProps = this.props;
+
+    switch (opProps.opName) {
+      case BodyOp.CODE_embed: {
+        if (textOnly) {
+          return 0;
+        }
+
+        return 1;
+      }
+
+      case BodyOp.CODE_text: {
+        // In order to properly determine the length of
+        // a given piece of text, a special library was
+        // needed. This is because special characters,
+        // such as emojis, often have a "length" of more
+        // than 1. We are more concerned with "spaces
+        // in the document".
+        return splitter.countGraphemes(opProps.text);
+      }
+
+      default: {
+        return 0;
       }
     }
   }

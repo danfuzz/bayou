@@ -233,6 +233,11 @@ export default class PropertySnapshot extends BaseSnapshot {
     return new PropertyDelta(resultOps);
   }
 
+  // TODO: implement property snapshot specific validation
+  _impl_validateChange() {
+    return true;
+  }
+
   /**
    * {class} Class (constructor function) of change objects to be used with
    * instances of this class.

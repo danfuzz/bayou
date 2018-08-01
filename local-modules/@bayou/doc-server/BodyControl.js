@@ -87,15 +87,19 @@ export default class BodyControl extends DurableControl {
    * Subclass-specific implementation of {@link #validateChange}. This
    * class implements semantic validation for an OT change in the Body.
    * @param {BodyChange} change The change to apply.
-   * @returns {boolean} `true` if valid change, otherwise throws and error.
+   * @param {BodySnapshot} baseSnapshot The base snapshot the change
+   *   is being applied to.
+   * @throws {Error} A validation error if any semantic validation fails.
    */
-  _impl_validateChange() {
+  _impl_validateChange(change, baseSnapshot) {
     // TODO: Add semantic validation for:
-    // * Ensure change is not removing characters past end of body
     // * Document does not exceed size limit given
     // * etc
 
-    return true;
+    // Perform semantic validation on given
+    // `change` in the context of the snapshot
+    // it is being applied to.
+    baseSnapshot.validateChange(change);
   }
 
   /**

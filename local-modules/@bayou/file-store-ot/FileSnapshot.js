@@ -280,6 +280,11 @@ export default class FileSnapshot extends BaseSnapshot {
     return new FileDelta(resultOps);
   }
 
+  // TODO: implement file snapshot specific validation
+  _impl_validateChange() {
+    return true;
+  }
+
   /**
    * {class} Class (constructor function) of change objects to be used with
    * instances of this class.

@@ -263,6 +263,11 @@ export default class CaretSnapshot extends BaseSnapshot {
     return new CaretDelta(resultOps);
   }
 
+  // TODO: implement caret snapshot specific validation
+  _impl_validateChange() {
+    return true;
+  }
+
   /**
    * {class} Class (constructor function) of change objects to be used with
    * instances of this class.
