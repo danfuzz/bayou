@@ -27,7 +27,11 @@ export default class Redactor extends UtilityClass {
       return Redactor._lastResult;
     }
 
-    const result = Redactor._lastResult = Redactor._doRedaction(logRecord);
+    const result = Redactor._doRedaction(logRecord);
+
+    Redactor._lastRecord = logRecord;
+    Redactor._lastResult = result;
+
     return result;
   }
 
