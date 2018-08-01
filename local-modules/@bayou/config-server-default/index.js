@@ -5,6 +5,7 @@
 import { inject } from '@bayou/injecty';
 
 import Deployment from './Deployment';
+import Logging from './Logging';
 import Network from './Network';
 import Storage from './Storage';
 
@@ -13,12 +14,14 @@ import Storage from './Storage';
  */
 function injectAll() {
   inject.Deployment = Deployment;
+  inject.Logging    = Logging;
   inject.Network    = Network;
   inject.Storage    = Storage;
 }
 
 export {
   Deployment,
+  Logging,
   Network,
   Storage,
   injectAll

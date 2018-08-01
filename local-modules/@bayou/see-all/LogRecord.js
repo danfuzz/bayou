@@ -497,6 +497,25 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
+   * Constructs an instance just like this one, except with `payload` replaced
+   * with the indicated contents. It is only valid to call this method on
+   * instances for which {@link #isEvent} returns `true`; other cases will
+   * throw an error.
+   *
+   * @param {payload} payload New payload.
+   * @returns {LogRecord} An appropriately-constructed instance.
+   */
+  withEvent(payload) {
+    const { timeMsec, stack, tag } = this;
+
+    if (!this.isEvent()) {
+      throw Errors.badUse('Requires an event instance.');
+    }
+
+    return new LogRecord(timeMsec, stack, tag, payload);
+  }
+
+  /**
    * Constructs an instance just like this one, except with `message` replaced
    * with the indicated contents. It is only valid to call this method on
    * instances for which {@link #isMessage} returns `true`; other cases will
@@ -515,6 +534,19 @@ export default class LogRecord extends CommonBase {
     const newPayload = new Functor(payload.name, ...message);
 
     return new LogRecord(timeMsec, stack, tag, newPayload);
+  }
+
+  /**
+   * Constructs an instance just like this one, except with `tag` replaced as
+   * indicated contents.
+   *
+   * @param {LogTag} tag New tag.
+   * @returns {LogRecord} An appropriately-constructed instance.
+   */
+  withTag(tag) {
+    const { timeMsec, stack, payload } = this;
+
+    return new LogRecord(timeMsec, stack, tag, payload);
   }
 
   /**

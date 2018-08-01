@@ -12,6 +12,8 @@ import wrapAnsi from 'wrap-ansi';
 import { BaseSink, LogRecord, LogTag, Logger, SeeAll } from '@bayou/see-all';
 import { TBoolean, TString } from '@bayou/typecheck';
 
+import Redactor from './Redactor';
+
 // The whole point of this file is to use `console.<whatever>`, so...
 /* eslint-disable no-console */
 
@@ -155,6 +157,8 @@ export default class HumanSink extends BaseSink {
     if (this._shouldSkip(logRecord)) {
       return;
     }
+
+    logRecord = Redactor.redact(logRecord);
 
     const prefix = this._makePrefix(logRecord);
 

@@ -9,6 +9,8 @@ import { escape } from 'lodash';
 import { BaseSink, SeeAll } from '@bayou/see-all';
 import { TInt } from '@bayou/typecheck';
 
+import Redactor from './Redactor';
+
 /**
  * Implementation of the `@bayou/see-all` logging sink protocol which collects a
  * rolling compendium of recently logged items.
@@ -80,6 +82,8 @@ export default class RecentSink extends BaseSink {
    * @param {LogRecord} logRecord The record to write.
    */
   _impl_sinkLog(logRecord) {
+    logRecord = Redactor.redact(logRecord);
+
     this._log.push(logRecord);
 
     if (logRecord.isTime()) {
