@@ -5,9 +5,15 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
+import GraphemeSplitter from 'grapheme-splitter';
 
 import { BodyOp } from '@bayou/doc-common';
 import { Functor } from '@bayou/util-common';
+
+// Instance of the grapheme splitter library
+// used to properly count the length of
+// special characters, such as emojis.
+const splitter = new GraphemeSplitter();
 
 describe('@bayou/doc-common/BodyOp', () => {
   describe('fromQuillForm()', () => {
@@ -276,6 +282,75 @@ describe('@bayou/doc-common/BodyOp', () => {
 
       test(BodyOp.op_delete(1));
       test(BodyOp.op_retain(1));
+    });
+  });
+
+  describe('getLength()', () => {
+    const PLAIN_TEXT = 'plain text';
+    const PLAIN_TEXT_LENGTH = PLAIN_TEXT.length;
+    const EMOJI_TEXT = '😀 smile!';
+    const EMOJI_TEXT_LENGTH = splitter.countGraphemes(EMOJI_TEXT);
+
+    const EMBED_OP = BodyOp.op_embed('x', 1);
+    const PLAIN_TEXT_OP = BodyOp.op_text(PLAIN_TEXT);
+    const EMOJI_TEXT_OP = BodyOp.op_text(EMOJI_TEXT);
+
+    describe('text op', () => {
+      describe('when `textOnly` is true', () => {
+        it('should return length of plaintext', () => {
+          const opLength = PLAIN_TEXT_OP.getLength(true);
+
+          assert.strictEqual(opLength, PLAIN_TEXT_LENGTH);
+        });
+      });
+
+      describe('when `textOnly` is false', () => {
+        it('should return length of plaintext', () => {
+          const opLength = PLAIN_TEXT_OP.getLength(false);
+
+          assert.strictEqual(opLength, PLAIN_TEXT_LENGTH);
+        });
+      });
+
+      describe('when `textOnly` is not set', () => {
+        it('should return length of plaintext', () => {
+          const opLength = PLAIN_TEXT_OP.getLength();
+
+          assert.strictEqual(opLength, PLAIN_TEXT_LENGTH);
+        });
+
+        it('should return length of text with special chars', () => {
+          const opLength = EMOJI_TEXT_OP.getLength();
+
+          assert.strictEqual(opLength, EMOJI_TEXT_LENGTH);
+        });
+      });
+    });
+
+    describe('embed op', () => {
+      describe('when `textOnly` is true', () => {
+        it('should return 0', () => {
+          const opLength = EMBED_OP.getLength(true);
+
+          assert.strictEqual(opLength, 0);
+        });
+      });
+
+      describe('when `textOnly` is false', () => {
+        it('should return 1', () => {
+          const opLength = EMBED_OP.getLength(false);
+
+          assert.strictEqual(opLength, 1);
+        });
+      });
+
+      describe('when `textOnly` is not set', () => {
+        it('should return 1', () => {
+          const opLength = EMBED_OP.getLength();
+
+          assert.strictEqual(opLength, 1);
+        });
+      });
     });
   });
 });

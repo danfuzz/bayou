@@ -578,10 +578,6 @@ export default class BaseControl extends BaseDataManager {
   async update(change, timeoutMsec = null) {
     const changeClass = this.constructor.changeClass;
 
-    // This makes sure we have syntactic and semantic validation for any change.
-    // It will validate based on the subclass implementaton.
-    this._impl_validateChange(change);
-
     // This makes sure we have a surface-level proper instance, but doesn't
     // check for deeper problems (such as an invalid `revNum`). Once in the guts
     // of the operation, we will discover (and properly complain) if things are
@@ -611,6 +607,10 @@ export default class BaseControl extends BaseDataManager {
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
     const expectedSnapshot = baseSnapshot.compose(change);
+
+    // This makes sure we have syntactic and semantic validation for any change.
+    // It will validate based on the subclass implementaton.
+    this._impl_validateChange(change, baseSnapshot);
 
     // Try performing the update, and then iterate if it failed _and_ the reason
     // is simply that there were any changes that got made while we were in the

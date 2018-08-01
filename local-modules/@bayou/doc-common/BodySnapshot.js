@@ -26,6 +26,19 @@ export default class BodySnapshot extends BaseSnapshot {
   }
 
   /**
+   * {int} The length of this document, where the count is made
+   * up of text and embeds. An embed has a length of 1.
+   */
+  get length() {
+    const bodyContentOps = this.contents.ops;
+
+    // Assume all contents are `text` or `embed`
+    const length = bodyContentOps.reduce((sum, op) => sum + op.getLength(), 0);
+
+    return length;
+  }
+
+  /**
    * Main implementation of {@link #diff}, which produces a delta (not a
    * change).
    *
@@ -39,6 +52,52 @@ export default class BodySnapshot extends BaseSnapshot {
     const newContents = newerSnapshot.contents;
 
     return oldContents.diff(newContents);
+  }
+
+  /**
+   * Implementation of {@link validateChange}, which
+   * will perform semantic validation checks on a body change
+   * in the context of a snapshot.
+   *
+   * @param {BodyChange} change The change being validated.
+   * @throws {Error} A validation error if semantic validation
+   *   performed on a given change fails.
+   */
+  _impl_validateChange(change) {
+    const ops = change.delta.ops;
+
+    for (const op of ops) {
+      const opProps = op.props;
+      const { opName } = opProps;
+
+      // TODO: validate `delete` in a similar way
+      switch (opName) {
+        case 'retain': {
+          this._validateRetainOp(op, this.length);
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    }
+  }
+
+  /**
+   * Performs semantic validation on a retain OP.
+   * Checks to make sure that the given retain OP's count
+   * does not exceed the document body length
+   * @param {BodyOp} retainOp A retain Op.
+   * @param {int} bodyLength The maximum length that can be retained.
+   * @throws {Error} A validation error if any semantic validation fails
+   *   on given `retain` op.
+   */
+  _validateRetainOp(retainOp, bodyLength) {
+    const { count } = retainOp.props;
+
+    if (count > bodyLength - 1) {
+      throw Error.badData(`Attempting to retain ${count} when document length is ${bodyLength}`);
+    }
   }
 
   /**
