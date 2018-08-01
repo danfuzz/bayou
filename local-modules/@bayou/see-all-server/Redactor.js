@@ -17,6 +17,31 @@ export default class Redactor extends UtilityClass {
    *   itself if no redaction is necessary.
    */
   static redact(logRecord) {
+    // There are typically three logging sinks, and each one calls `redact()`
+    // separately. So, to avoid redoing the work, we cache the last record we've
+    // seen along with its redacted result. **TODO:** This would be unnecessary
+    // (and cleaner) if redaction were performed earlier in the logging call
+    // chain.
+
+    if (logRecord === Redactor._lastRecord) {
+      return Redactor._lastResult;
+    }
+
+    const result = Redactor._doRedaction(logRecord);
+
+    Redactor._lastResult = result;
+
+    return result;
+  }
+
+  /**
+   * Main implementation of {@link #redact}, which does most of the work.
+   *
+   * @param {LogRecord} logRecord The record to redact.
+   * @returns {LogRecord} The redacted version of `logRecord`, or `logRecord`
+   *   itself if no redaction is necessary.
+   */
+  static _doRedaction(logRecord) {
     if (logRecord.isMessage()) {
       const message    = logRecord.payload.args;
       const newMessage = Logging.redactMessage(...message);
