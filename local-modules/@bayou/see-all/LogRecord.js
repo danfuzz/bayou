@@ -510,6 +510,8 @@ export default class LogRecord extends CommonBase {
 
     if (!this.isEvent()) {
       throw Errors.badUse('Requires an event instance.');
+    } else if (!DataUtil.isDeepFrozen(payload.args)) {
+      throw Errors.badValue(payload, 'deep-frozen data');
     }
 
     return new LogRecord(timeMsec, stack, tag, payload);
