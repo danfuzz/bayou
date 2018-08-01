@@ -27,10 +27,7 @@ export default class Redactor extends UtilityClass {
       return Redactor._lastResult;
     }
 
-    const result = Redactor._doRedaction(logRecord);
-
-    Redactor._lastResult = result;
-
+    const result = Redactor._lastResult = Redactor._doRedaction(logRecord);
     return result;
   }
 
@@ -46,7 +43,7 @@ export default class Redactor extends UtilityClass {
       const message    = logRecord.payload.args;
       const newMessage = Logging.redactMessage(...message);
 
-      if (message !== newMessage) {
+      if (!Redactor._arrayEquals(message, newMessage)) {
         logRecord = logRecord.withMessage(...newMessage);
       }
     } else if (logRecord.isEvent()) {
@@ -65,5 +62,27 @@ export default class Redactor extends UtilityClass {
     const newTag = Logging.redactTag(tag);
 
     return (tag === newTag) ? logRecord : logRecord.withTag(newTag);
+  }
+
+  /**
+   * Array equality check, which requires corresponding items to be `===`.
+   *
+   * @param {array<*>} a1 Array to test.
+   * @param {array<*>} a2 Array to test.
+   * @returns {boolean} `true` iff the two arrays are the same length and
+   *   corresponding items are `===`.
+   */
+  static _arrayEquals(a1, a2) {
+    if (a1.length !== a2.length) {
+      return false;
+    }
+
+    for (let i = 0; i < a1.length; i++) {
+      if (a1[i] !== a2[i]) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }
