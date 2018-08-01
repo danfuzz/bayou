@@ -43,7 +43,9 @@ export default class FileSink extends BaseSink {
    * @param {LogRecord} logRecord The record to write.
    */
   _impl_sinkLog(logRecord) {
-    const { tag: { main, context }, stack, timeMsec } = Redactor.redact(logRecord);
+    logRecord = Redactor.redact(logRecord);
+
+    const { tag: { main, context }, stack, timeMsec } = logRecord;
     const tag     = [main, ...context];
     const details = { timeMsec, stack, tag, message: logRecord.messageString };
 

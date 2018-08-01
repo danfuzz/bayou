@@ -25,7 +25,7 @@ export default class Redactor extends UtilityClass {
         logRecord = logRecord.withMessage(...newMessage);
       }
     } else if (logRecord.isEvent()) {
-      const payload = logRecord.payload;
+      const payload    = logRecord.payload;
       const newPayload = Logging.redactEvent(payload);
 
       if (payload !== newPayload) {
