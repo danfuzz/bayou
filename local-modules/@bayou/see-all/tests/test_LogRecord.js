@@ -95,7 +95,14 @@ describe('@bayou/see-all/LogRecord', () => {
       assert.throws(() => { lr.withEvent(f); });
     });
 
-    it('operates as expected on an event log', () => {
+    it('is an error to pass a payload that is not frozen data', () => {
+      const lr = LogRecord.forMessage(123, 'trace', new LogTag('taggaroo'), 'info', 'boop');
+      const f  = new Functor('x', ['this', 'array', 'is', 'not', 'frozen']);
+
+      assert.throws(() => { lr.withEvent(f); });
+    });
+
+    it('operates as expected on an event log, given a valid value', () => {
       const LOG_TAG = new LogTag('taggaroo');
       const lr      = LogRecord.forEvent(123321, 'zorch', LOG_TAG, new Functor('x', 1, 2));
       const f       = new Functor('y', 'z');
