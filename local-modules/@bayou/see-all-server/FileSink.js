@@ -7,6 +7,8 @@ import fs from 'fs';
 import { BaseSink, SeeAll } from '@bayou/see-all';
 import { TBoolean, TString } from '@bayou/typecheck';
 
+import Redactor from './Redactor';
+
 /**
  * Implementation of the `@bayou/see-all` logging sink protocol which stores
  * logged items to a file.
@@ -41,7 +43,7 @@ export default class FileSink extends BaseSink {
    * @param {LogRecord} logRecord The record to write.
    */
   _impl_sinkLog(logRecord) {
-    const { tag: { main, context }, stack, timeMsec } = logRecord;
+    const { tag: { main, context }, stack, timeMsec } = Redactor.redact(logRecord);
     const tag     = [main, ...context];
     const details = { timeMsec, stack, tag, message: logRecord.messageString };
 
