@@ -3,6 +3,7 @@
     "@bayou/codec": "local",
     "@bayou/config-common": "local",
     "@bayou/ot-common": "local",
+    "@bayou/see-all": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local",
     "grapheme-splitter": "^1.0.2"
