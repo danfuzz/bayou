@@ -286,9 +286,16 @@ export default class DebugTools {
   _handle_log(req_unused, res) {
     const result = this._sink.htmlContents;
 
+    // **Note:** This _used_ to include the line
+    // `<meta http-equiv="refresh" content="10">`, so that you could watch the
+    // logs go by, but this turned out to be infuriatingly glitchy / slow once
+    // you have a server with a nontrivial amount of traffic. **TODO:** The real
+    // solution is to build a real incrementally-built page, probably using the
+    // existing API mechanism for async / long-poll type calls, but that's not
+    // exactly a quick fix.
+
     const head =
       '<title>Console Log</title>\n' +
-      '<meta http-equiv="refresh" content="10">\n' +
       '<script>\n' +
       'function bottom() { window.scrollTo(0, document.body.scrollHeight); }\n' +
       'document.addEventListener("readystatechange", () => {\n' +
