@@ -606,7 +606,18 @@ export default class BaseControl extends BaseDataManager {
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
-    const expectedSnapshot = baseSnapshot.compose(change);
+
+    // Original line:
+    //   const expectedSnapshot = baseSnapshot.compose(change);
+    // **TODO:** Remove the following extra-loggy version of the above once we
+    // figure out why we're seeing errors.
+    let expectedSnapshot;
+    try {
+      expectedSnapshot = baseSnapshot.compose(change);
+    } catch (e) {
+      this.log.event.badComposeChange(change);
+      throw e;
+    }
 
     // This makes sure we have syntactic and semantic validation for any change.
     // It will validate based on the subclass implementaton.
