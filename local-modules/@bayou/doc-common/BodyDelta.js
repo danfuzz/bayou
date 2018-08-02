@@ -4,10 +4,17 @@
 
 import { Text } from '@bayou/config-common';
 import { BaseDelta } from '@bayou/ot-common';
+import { Logger } from '@bayou/see-all';
 import { TBoolean, TObject } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
 import BodyOp from './BodyOp';
+
+/**
+ * {Logger} Logger for this module. **Note:** Just used for some temporary
+ * debugging stuff.
+ */
+const log = new Logger('body-delta');
 
 /**
  * Always-frozen list of body OT operations. This uses Quill's `Delta` class to
@@ -150,6 +157,11 @@ export default class BodyDelta extends BaseDelta {
     // layers.
 
     if (wantDocument && !result.isDocument()) {
+      // **TODO:** Remove this logging once we track down why we're seeing this
+      // error.
+      log.event.badComposeOrig(this, other, result);
+      log.event.badComposeQuill(quillThis.ops, quillOther.ops, quillResult.ops);
+
       throw Errors.badUse('Inappropriate `other` for composition given `wantDocument === true`.');
     }
 

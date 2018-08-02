@@ -651,6 +651,9 @@ export default class BodyClient extends StateMachine {
         const value = await this._sessionProxy.body_update(this._snapshot.revNum, delta);
         this.q_gotUpdate(delta, value);
       } catch (e) {
+        // **TODO:** Remove this logging once we figure out why we're seeing
+        // this error.
+        this._log.event.badCompose(this._snapshot, delta);
         this.q_apiError('body_update', e);
       }
     })();
