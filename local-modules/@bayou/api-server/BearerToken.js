@@ -8,10 +8,15 @@ import { TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
 /**
- * Bearer token, which is a kind of key which conflates ID and secret.
- * Conflation notwithstanding, some part of a bearer token is always considered
- * to be its "ID." {@link @bayou/config-server/Network#bearerTokens} can be used
- * to control ID derivation (and general validation) of bearer token strings.
+ * Bearer token, which is a kind of key where the secret portion is sent
+ * directly to a counterparty (as opposed to merely proving that one knows the
+ * secret). In this implementation, a bearer token explicitly has a portion
+ * which is considered its non-secret ID.
+ *
+ * **Note:** An instance of the class {@link BearerTokens} defined in this
+ * module (possibly an instance of a subclass) is provided by the configuration
+ * point {@link @bayou/config-server/Network#bearerTokens}, which is where the
+ * logic for validating and interrogating token strings resides.
  */
 export default class BearerToken extends BaseKey {
   /**
