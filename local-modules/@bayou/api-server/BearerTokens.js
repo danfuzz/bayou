@@ -2,10 +2,11 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BearerToken } from '@bayou/api-server';
 import { Network } from '@bayou/config-server';
 import { Delay } from '@bayou/promise-util';
 import { CommonBase } from '@bayou/util-common';
+
+import BearerToken from './BearerToken';
 
 /**
  * Base class for and default implementation of

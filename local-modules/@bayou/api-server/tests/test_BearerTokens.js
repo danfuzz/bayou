@@ -5,10 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { BearerToken } from '@bayou/api-server';
-import { BearerTokens } from '@bayou/app-setup';
+import { BearerToken, BearerTokens } from '@bayou/api-server';
 
-describe('@bayou/app-setup/BearerTokens', () => {
+describe('@bayou/api-server/BearerTokens', () => {
   describe('constructor', () => {
     it('should succeed', () => {
       assert.doesNotThrow(() => new BearerTokens());
