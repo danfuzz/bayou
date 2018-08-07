@@ -6,6 +6,7 @@ import { BaseSnapshot } from '@bayou/ot-common';
 import { TInt } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
+import fileStoreOt_Errors from './Errors';
 import FileChange from './FileChange';
 import FileDelta from './FileDelta';
 import FileOp from './FileOp';
@@ -240,6 +241,45 @@ export default class FileSnapshot extends BaseSnapshot {
     }
 
     return result;
+  }
+
+  /**
+   * Runs the test for `pathIs` operations.
+   *
+   * @param {string} path Storage path to check.
+   * @param {string|FrozenBuffer} hash Hash of the blob to compare to what is
+   *   stored at `path`, or a buffer whose hash is to be used as the blob
+   *   identifier.
+   * @throws {InfoError} pathHashMismatch error, usually occurs if caller
+   *   lost append race.
+   */
+  testPathIs(path, hash) {
+    StoragePath.check(path);
+    hash = StorageId.checkOrGetHash(hash);
+
+    const pathResult = this.getOrNull(path);
+    const passed = (pathResult !== null) && (pathResult.hash === hash);
+
+    if (!passed) {
+      throw fileStoreOt_Errors.pathHashMismatch(path, hash);
+    }
+  }
+
+  /**
+   * Constructs a new "path absent" operation.
+   *
+   * @param {string} path Storage path to check for the absence of.
+   * @throws {InfoError} pathNotAbsent error, usually occurs if caller
+   *   lost append race.
+   */
+  testPathAbsent(path) {
+    StoragePath.check(path);
+
+    const passed = this.getOrNull(path) === null;
+
+    if (!passed) {
+      throw fileStoreOt_Errors.pathNotAbsent(path);
+    }
   }
 
   /**

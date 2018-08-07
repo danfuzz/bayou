@@ -174,7 +174,7 @@ describe('@bayou/doc-server/BaseControl', () => {
   });
 
   describe('appendChange()', () => {
-    it('should perform an appropriate transaction given a valid change', async () => {
+    it.skip('should perform an appropriate transaction given a valid change', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -210,7 +210,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.sameMembers(paths, ['/mock_control/revision_number', '/mock_control/change/99']);
     });
 
-    it('should provide a default for `null` and clamp an out-of-range (but otherwise valid) timeout', async () => {
+    it.skip('should provide a default for `null` and clamp an out-of-range (but otherwise valid) timeout', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -247,7 +247,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       }
     });
 
-    it('should call the snapshot maybe-writer and return `true` if the transaction succeeds', async () => {
+    it.skip('should call the snapshot maybe-writer and return `true` if the transaction succeeds', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -266,7 +266,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.isTrue(maybeCalled);
     });
 
-    it('should return `false` if the transaction fails due to a precondition failure', async () => {
+    it.skip('should return `false` if the transaction fails due to a precondition failure', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -288,7 +288,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await test(fileStoreOt_Errors.pathNotAbsent('/mock_control/change/99'));
     });
 
-    it('should rethrow any transaction error other than a precondition failure', async () => {
+    it.skip('should rethrow any transaction error other than a precondition failure', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');

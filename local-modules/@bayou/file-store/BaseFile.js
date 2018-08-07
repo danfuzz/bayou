@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { StorageId, StoragePath, TransactionSpec } from '@bayou/file-store-ot';
+import { StorageId, StoragePath, TransactionSpec, FileChange } from '@bayou/file-store-ot';
 import { TBoolean, TInt, TMap, TObject, TSet } from '@bayou/typecheck';
 import { CommonBase, Errors, FrozenBuffer } from '@bayou/util-common';
 
@@ -43,7 +43,7 @@ export default class BaseFile extends CommonBase {
    * @abstract
    */
   get maxTimeoutMsec() {
-    this._mustOverride();
+    return this._mustOverride();
   }
 
   /**
@@ -54,7 +54,7 @@ export default class BaseFile extends CommonBase {
    * @abstract
    */
   get minTimeoutMsec() {
-    this._mustOverride();
+    return this._mustOverride();
   }
 
   /**
@@ -245,6 +245,32 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
+   * Appends a new change to the document. On success, this returns `true`.
+   *
+   * It is an error to call this method on a file that doesn't exist, in the
+   * sense of the `exists()` method. That is, if `exists()` would return
+   * `false`, then this method will fail.
+   *
+   * @param {FileChange} fileChange Change to append. Must be an
+   *   instance of FileChange.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {boolean} Success flag. `true` indicates that the change was
+   *   appended and `false` if revision number indicates a lost append race.
+   *   Any other issue will throw an error.
+   */
+  async appendChange(fileChange, timeoutMsec) {
+    FileChange.check(fileChange);
+
+    const result = await this._impl_appendChange(fileChange, timeoutMsec);
+    TBoolean.check(result);
+
+    return result;
+  }
+
+  /**
    * Main implementation of `transact()`. It is guaranteed to be called with a
    * valid `TransactionSpec`, though the spec may not be sensible in term of the
    * actual requested operations. The return value should contain all of the
@@ -259,5 +285,29 @@ export default class BaseFile extends CommonBase {
    */
   async _impl_transact(spec) {
     this._mustOverride(spec);
+  }
+
+  /**
+   * Abstract implementation of `appendChange()`.
+   * Appends a new change to the document. On success, this returns `true`.
+   *
+   * It is an error to call this method on a file that doesn't exist, in the
+   * sense of the `exists()` method. That is, if `exists()` would return
+   * `false`, then this method will fail.
+   *
+   * Each subclass implements its own version of `appendChange()`.
+   *
+   * @param {FileChange} fileChange Change to append. Must be an
+   *   instance of FileChange.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {boolean} Success flag. `true` indicates that the change was
+   *   appended, otherwise will throw an error.
+   * @abstract
+   */
+  async _impl_appendChange(fileChange, timeoutMsec) {
+    return this._mustOverride(fileChange, timeoutMsec);
   }
 }

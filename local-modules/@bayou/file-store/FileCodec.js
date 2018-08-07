@@ -45,6 +45,20 @@ export default class FileCodec extends CommonBase {
   }
 
   /**
+   * {BaseFile} The file being used.
+   */
+  get file() {
+    return this._file;
+  }
+
+  /**
+   * {Codec} The codec being used.
+   */
+  get codec() {
+    return this._codec;
+  }
+
+  /**
    * Runs the specified transaction, automatically decoding any values returned
    * in the `data`. This method passes through any errors thrown due to failure
    * to decode a buffer.

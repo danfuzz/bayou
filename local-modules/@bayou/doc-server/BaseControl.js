@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Timeouts } from '@bayou/doc-common';
-import { Errors as fileStoreOt_Errors, StoragePath, TransactionSpec } from '@bayou/file-store-ot';
+import { Errors as fileStoreOt_Errors, StoragePath, TransactionSpec, FileOp, FileChange } from '@bayou/file-store-ot';
 import { BaseSnapshot, RevisionNumber } from '@bayou/ot-common';
 import { Delay } from '@bayou/promise-util';
 import { TBoolean, TFunction } from '@bayou/typecheck';
@@ -194,6 +194,8 @@ export default class BaseControl extends BaseDataManager {
    * @throws {Error} If `change.delta.isEmpty()`.
    */
   async appendChange(change, timeoutMsec = null) {
+    const file = this.fileCodec.file;
+    const codec = this.fileCodec.codec;
     const clazz = this.constructor;
     clazz.changeClass.check(change);
 
@@ -201,24 +203,25 @@ export default class BaseControl extends BaseDataManager {
       throw Errors.badValue(change, clazz.changeClass, 'non-empty');
     }
 
-    timeoutMsec = Timeouts.clamp(timeoutMsec);
-
     const revNum       = change.revNum;
     const baseRevNum   = revNum - 1;
     const changePath   = clazz.pathForChange(revNum);
     const revisionPath = clazz.revisionNumberPath;
+    const clampedTimeoutMsec = Timeouts.clamp(timeoutMsec);
 
-    const fc   = this.fileCodec; // Avoids boilerplate immediately below.
-    const spec = new TransactionSpec(
-      fc.op_timeout(timeoutMsec),
-      fc.op_checkPathAbsent(changePath),
-      fc.op_checkPathIs(revisionPath, baseRevNum),
-      fc.op_writePath(changePath, change),
-      fc.op_writePath(revisionPath, revNum)
-    );
+    const fileOps = [
+      FileOp.op_writePath(changePath, codec.encodeJsonBuffer(change)),
+      FileOp.op_writePath(revisionPath, codec.encodeJsonBuffer(revNum))
+    ];
+
+    const snapshot = file.currentSnapshot;
+    const fileChange = new FileChange(snapshot.revNum + 1, fileOps);
 
     try {
-      await fc.transact(spec);
+      // Run prerequisites on snapshot
+      snapshot.testPathIs(revisionPath, codec.encodeJsonBuffer(baseRevNum));
+      snapshot.testPathAbsent(changePath);
+      await file.appendChange(fileChange, clampedTimeoutMsec);
     } catch (e) {
       if (fileStoreOt_Errors.is_pathNotAbsent(e) || fileStoreOt_Errors.is_pathHashMismatch(e)) {
         // One of these will get thrown if and when we lose an append race. This

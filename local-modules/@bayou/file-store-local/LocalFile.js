@@ -10,7 +10,7 @@ import { BaseFile } from '@bayou/file-store';
 import { FileChange, FileSnapshot } from '@bayou/file-store-ot';
 import { RevisionNumber } from '@bayou/ot-common';
 import { Condition, Delay, Mutex } from '@bayou/promise-util';
-import { TString } from '@bayou/typecheck';
+import { TString, TInt } from '@bayou/typecheck';
 import { Logger } from '@bayou/see-all';
 import { FrozenBuffer, Errors } from '@bayou/util-common';
 
@@ -201,6 +201,77 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
+   * Reads the file storage if it has not yet been loaded by given timeout.
+   *
+   * @param {int} timeoutMsec The amount of time before reading storage is
+   *   aborted and timeout error thrown.
+   */
+  async _readStorageIfNecessaryWithTimeout(timeoutMsec) {
+    // Arrange for timeout. **Note:** Needs to be done _before_ possibly reading
+    // storage, as that (potential) storage read can take significant time.
+    const clampedTimeoutMsec = this.clampTimeoutMsec(timeoutMsec);
+    let timeout = false; // Gets set to `true` when the timeout expires.
+    const timeoutProm = Delay.resolve(clampedTimeoutMsec);
+
+    (async () => {
+      await timeoutProm;
+      timeout = true;
+    })();
+
+    await Promise.race([this._readStorageIfNecessary(), timeoutProm]);
+
+    if (timeout) {
+      throw Errors.timedOut(clampedTimeoutMsec);
+    }
+
+    return;
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
+   * Appends a new change to the document. On success, this returns `true`.
+   * Failures are reported via thrown errors.
+   *
+   * It is an error to call this method on a file that doesn't exist, in the
+   * sense of the `exists()` method. That is, if `exists()` would return
+   * `false`, then this method will fail.
+   *
+   * @param {FileChange} fileChange Change to append. Must be an
+   *   instance FileChange.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {boolean} Success flag. `true` indicates that the change was
+   *   appended and `false` if revision number indicates a lost append race.
+   *   Any other issue will throw an error.
+   */
+  async _impl_appendChange(fileChange, timeoutMsec) {
+    FileChange.check(fileChange);
+
+    const newRevNum = fileChange.revNum;
+    TInt.maxInc(newRevNum, this._currentRevNum + 1);
+
+    await this._readStorageIfNecessaryWithTimeout(timeoutMsec);
+
+    if (!this._fileShouldExist) {
+      throw Errors.fileNotFound(this.id);
+    }
+
+    // Lost append race
+    if (newRevNum <= this._currentRevNum) {
+      return false;
+    }
+
+    this._changes[newRevNum] = fileChange;
+    this._storageToWrite.set(fileChange.revNum, this._encodeChange(fileChange));
+    this._storageNeedsFlush();
+
+    return true;
+  }
+
+  /**
    * Implementation as required by the superclass.
    *
    * @param {TransactionSpec} spec Same as with `transact()`.
@@ -233,7 +304,7 @@ export default class LocalFile extends BaseFile {
     // wait ops. So, we can safely dispatch to a category-specific handler here.
 
     if (spec.hasPullOps()) {
-      const snapshot = this._currentSnapshot;
+      const snapshot = this.currentSnapshot;
       const result   = spec.runPull(snapshot);
 
       // Add the properties required by the `_impl_transact()` contract.
@@ -242,7 +313,7 @@ export default class LocalFile extends BaseFile {
 
       return result;
     } else if (spec.hasPushOps()) {
-      const snapshot = this._currentSnapshot;
+      const snapshot = this.currentSnapshot;
       const change   = spec.runPush(snapshot);
 
       this._changes[change.revNum] = change;
@@ -260,7 +331,7 @@ export default class LocalFile extends BaseFile {
       // It's a wait transaction, so we need to be prepared to loop / retry
       // (until satisfaction or timeout).
       for (;;) {
-        const snapshot   = this._currentSnapshot;
+        const snapshot   = this.currentSnapshot;
         const pathResult = spec.runWait(snapshot);
 
         if (pathResult !== null) {
@@ -293,7 +364,7 @@ export default class LocalFile extends BaseFile {
       // It's a prerequisite-only transaction. Do the requested checks, and
       // return a nearly-empty return value as required by the
       // `_impl_transact()` contract.
-      const snapshot = this._currentSnapshot;
+      const snapshot = this.currentSnapshot;
 
       spec.runPrerequisites(snapshot);
       return {
@@ -318,7 +389,7 @@ export default class LocalFile extends BaseFile {
    * {FileSnapshot} Snapshot of the current revision. It is not valid to get
    * this if the file doesn't exist (created and has at least one change).
    */
-  get _currentSnapshot() {
+  get currentSnapshot() {
     const revNum  = this._currentRevNum;
     const changes = this._changes;
     const already = this._snapshot;
