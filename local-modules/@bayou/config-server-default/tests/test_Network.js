@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { BearerTokens } from '@bayou/app-setup';
+import { BearerTokens } from '@bayou/api-server';
 import { Network } from '@bayou/config-server-default';
 
 describe('@bayou/config-server-default/Network', () => {
