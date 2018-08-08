@@ -219,8 +219,8 @@ export default class BaseControl extends BaseDataManager {
 
     try {
       // Run prerequisites on snapshot
-      snapshot.testPathIs(revisionPath, codec.encodeJsonBuffer(baseRevNum));
-      snapshot.testPathAbsent(changePath);
+      snapshot.checkPathIs(revisionPath, codec.encodeJsonBuffer(baseRevNum));
+      snapshot.checkPathAbsent(changePath);
       await file.appendChange(fileChange, clampedTimeoutMsec);
     } catch (e) {
       if (fileStoreOt_Errors.is_pathNotAbsent(e) || fileStoreOt_Errors.is_pathHashMismatch(e)) {
@@ -252,21 +252,26 @@ export default class BaseControl extends BaseDataManager {
    * such, even when used promptly, it should not be treated as "definitely
    * current" but more like "probably current but possibly just a lower bound."
    *
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {Int} The instantaneously-current revision number.
    */
-  async currentRevNum() {
-    const clazz       = this.constructor;
-    const fc          = this.fileCodec;
+  async currentRevNum(timeoutMsec = null) {
+    const file = this.fileCodec.file;
+    const codec = this.fileCodec.codec;
+    const snapshot = file.currentSnapshot;
+    const clazz = this.constructor;
     const storagePath = clazz.revisionNumberPath;
-    const spec        = new TransactionSpec(
-      fc.op_checkPathPresent(storagePath),
-      fc.op_readPath(storagePath)
-    );
+    const clampedTimeoutMsec = Timeouts.clamp(timeoutMsec);
 
-    const transactionResult = await fc.transact(spec);
+    snapshot.checkPathPresent(storagePath);
 
-    const result = transactionResult.data.get(storagePath);
-    return RevisionNumber.check(result);
+    const encodedRevNum = await file.currentRevNum(storagePath, clampedTimeoutMsec);
+    const revNum = codec.decodeJsonBuffer(encodedRevNum);
+
+    return RevisionNumber.check(revNum);
   }
 
   /**
@@ -494,10 +499,14 @@ export default class BaseControl extends BaseDataManager {
    *   read.
    * @param {Int} endExclusive End change number (exclusive) of changes to read.
    *   Must be `>= startInclusive`.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {array<Int>} Array of the revision numbers of existing changes, in
    *   order by revision number.
    */
-  async listChangeRange(startInclusive, endExclusive) {
+  async listChangeRange(startInclusive, endExclusive, timeoutMsec = null) {
     RevisionNumber.check(startInclusive);
     RevisionNumber.min(endExclusive, startInclusive);
 
@@ -506,14 +515,14 @@ export default class BaseControl extends BaseDataManager {
       return [];
     }
 
-    const fc = this.fileCodec;
-    const spec = new TransactionSpec(
-      this._opForChangeRange(fc.op_listPathRange, startInclusive, endExclusive));
-
-    const transactionResult = await fc.transact(spec);
+    const file = this.fileCodec.file;
+    const clampedTimeoutMsec = Timeouts.clamp(timeoutMsec);
+    const changePathPrefix = this.constructor.changePathPrefix;
+    const changes = await file.listChangeRange(
+      changePathPrefix, startInclusive, endExclusive, clampedTimeoutMsec);
 
     const result = [];
-    for (const path of transactionResult.paths) {
+    for (const path of changes.paths) {
       result.push(StoragePath.getIndex(path));
     }
 

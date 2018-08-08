@@ -7,7 +7,7 @@ import path from 'path';
 
 import { Codec } from '@bayou/codec';
 import { BaseFile } from '@bayou/file-store';
-import { FileChange, FileSnapshot } from '@bayou/file-store-ot';
+import { FileChange, FileSnapshot, StoragePath } from '@bayou/file-store-ot';
 import { RevisionNumber } from '@bayou/ot-common';
 import { Condition, Delay, Mutex } from '@bayou/promise-util';
 import { TString, TInt } from '@bayou/typecheck';
@@ -269,6 +269,66 @@ export default class LocalFile extends BaseFile {
     this._storageNeedsFlush();
 
     return true;
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
+   * Gets the instantaneously-current revision number of the portion of the file
+   * controlled by this instance. It is an error to call this on an
+   * uninitialized document (e.g., when the underlying file is empty).
+   *
+   * @param {string} storagePath The `revisionNumberPath` storage path to use
+   *   to get the "current" revision number.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {Int} The instantaneously-current revision number.
+   * @abstract
+   */
+  async _impl_currentRevNum(storagePath, timeoutMsec) {
+    StoragePath.check(storagePath);
+
+    await this._readStorageIfNecessaryWithTimeout(timeoutMsec);
+
+    return this.currentSnapshot.getOrNull(storagePath);
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @param {string} changePathPrefix The path prefix to use to list changes.
+   * @param {Int} startInclusive Start change number (inclusive) of changes to
+   *   read.
+   * @param {Int} endExclusive End change number (exclusive) of changes to read.
+   *   Must be `>= startInclusive`.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {array<Int>} Array of the revision numbers of existing changes, in
+   *   order by revision number.
+   */
+  async _impl_listChangeRange(changePathPrefix, startInclusive, endExclusive, timeoutMsec) {
+    StoragePath.check(changePathPrefix);
+    RevisionNumber.check(startInclusive);
+    RevisionNumber.min(endExclusive, startInclusive);
+
+    await this._readStorageIfNecessaryWithTimeout(timeoutMsec);
+
+    const result = {
+      paths: new Set()
+    };
+
+    const paths = this.currentSnapshot.getPathRange(
+      changePathPrefix, startInclusive, endExclusive);
+
+    for (const pathKey of paths.keys()) {
+      result.paths.add(pathKey);
+    }
+
+    return result;
   }
 
   /**

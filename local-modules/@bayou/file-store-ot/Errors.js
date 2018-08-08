@@ -54,6 +54,18 @@ export default class Errors extends UtilityClass {
 
   /**
    * Constructs an error indicating that a storage path was expected to be
+   * present (that is, not store any data) but turned out to not have data.
+   *
+   * @param {string} storagePath Path in question.
+   * @returns {InfoError} An appropriately-constructed error.
+   */
+  static pathNotPresent(storagePath) {
+    StoragePath.check(storagePath);
+    return new InfoError('pathNotPresent', storagePath);
+  }
+
+  /**
+   * Constructs an error indicating that a storage path was expected to be
    * absent (that is, not store any data) but turned out to have data.
    *
    * @param {string} storagePath Path in question.

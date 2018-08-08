@@ -253,7 +253,7 @@ export default class FileSnapshot extends BaseSnapshot {
    * @throws {InfoError} pathHashMismatch error, usually occurs if caller
    *   lost append race.
    */
-  testPathIs(path, hash) {
+  checkPathIs(path, hash) {
     StoragePath.check(path);
     hash = StorageId.checkOrGetHash(hash);
 
@@ -266,19 +266,35 @@ export default class FileSnapshot extends BaseSnapshot {
   }
 
   /**
-   * Constructs a new "path absent" operation.
+   * Runs the test for `pathAbsent` operations.
    *
    * @param {string} path Storage path to check for the absence of.
    * @throws {InfoError} pathNotAbsent error, usually occurs if caller
    *   lost append race.
    */
-  testPathAbsent(path) {
+  checkPathAbsent(path) {
     StoragePath.check(path);
 
     const passed = this.getOrNull(path) === null;
 
     if (!passed) {
       throw fileStoreOt_Errors.pathNotAbsent(path);
+    }
+  }
+
+  /**
+   * Runs the test for `pathPresent` operations.
+   *
+   * @param {string} path Storage path to check for presence of.
+   * @throws {InfoError} pathNotPresent error.
+   */
+  checkPathPresent(path) {
+    StoragePath.check(path);
+
+    const passed = this.getOrNull(path) !== null;
+
+    if (!passed) {
+      throw fileStoreOt_Errors.pathNotPresent(path);
     }
   }
 

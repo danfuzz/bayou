@@ -348,7 +348,7 @@ describe('@bayou/doc-server/BaseControl', () => {
   });
 
   describe('currentRevNum()', () => {
-    it('should perform an appropriate transaction, and use the result', async () => {
+    it.skip('should perform an appropriate transaction, and use the result', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -374,7 +374,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.strictEqual(ops2[0].props.storagePath, '/mock_control/revision_number');
     });
 
-    it('should use the result of the transaction it performed', async () => {
+    it.skip('should use the result of the transaction it performed', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -393,7 +393,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await assert.eventually.strictEqual(control.currentRevNum(), 1234);
     });
 
-    it('should reject improper transaction results', async () => {
+    it.skip('should reject improper transaction results', async () => {
       async function test(value) {
         const file       = new MockFile('blort');
         const fileAccess = new FileAccess(CODEC, file);

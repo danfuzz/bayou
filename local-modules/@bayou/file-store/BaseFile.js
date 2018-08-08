@@ -5,6 +5,7 @@
 import { StorageId, StoragePath, TransactionSpec, FileChange } from '@bayou/file-store-ot';
 import { TBoolean, TInt, TMap, TObject, TSet } from '@bayou/typecheck';
 import { CommonBase, Errors, FrozenBuffer } from '@bayou/util-common';
+import { RevisionNumber } from '@bayou/ot-common';
 
 import FileId from './FileId';
 
@@ -138,6 +139,7 @@ export default class BaseFile extends CommonBase {
    */
   async exists() {
     const result = this._impl_exists();
+
     return TBoolean.check(await result);
   }
 
@@ -271,6 +273,71 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
+   * Gets the instantaneously-current revision number of the portion of the file
+   * controlled by this instance. It is an error to call this on an
+   * uninitialized document (e.g., when the underlying file is empty).
+   *
+   * **Note:** Due to the asynchronous nature of the system, the value returned
+   * here could be out-of-date by the time it is received by the caller. As
+   * such, even when used promptly, it should not be treated as "definitely
+   * current" but more like "probably current but possibly just a lower bound."
+   *
+   * @param {string} storagePath The `revisionNumberPath` storage path to use
+   *   to get the "current" revision number.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {Int} The instantaneously-current revision number.
+   */
+  async currentRevNum(storagePath, timeoutMsec) {
+    StoragePath.check(storagePath);
+
+    const result = await this._impl_currentRevNum(storagePath, timeoutMsec);
+    FrozenBuffer.check(result);
+
+    return result;
+  }
+
+  /**
+   * Gets a list of existing changes within a given range. The only changes that
+   * exist both (a) have a revision number at or less than the
+   * `currentRevNum()` and (b) have not been removed due to being ephemeral
+   * data that has aged out. If given the same value for both arguments, this
+   * method returns an empty array.
+   *
+   * @param {string} changePathPrefix The path prefix to use to list changes.
+   * @param {Int} startInclusive Start change number (inclusive) of changes to
+   *   read.
+   * @param {Int} endExclusive End change number (exclusive) of changes to read.
+   *   Must be `>= startInclusive`.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {array<Int>} Array of the revision numbers of existing changes, in
+   *   order by revision number.
+   */
+  async listChangeRange(changePathPrefix, startInclusive, endExclusive, timeoutMsec) {
+    RevisionNumber.check(startInclusive);
+    RevisionNumber.min(endExclusive, startInclusive);
+
+    const result = await this._impl_listChangeRange(changePathPrefix, startInclusive, endExclusive, timeoutMsec);
+
+    if (result.paths === null) {
+      throw Errors.badUse('Improper subclass behavior: Expected non-`null` `paths`.');
+    }
+    try {
+      TSet.check(result.paths, x => StoragePath.check(x));
+    } catch (e) {
+      // Contextually-appropriate error.
+      throw Errors.badUse('Improper subclass behavior: Expected `paths` to contain `StoragePath`s.');
+    }
+
+    return result;
+  }
+
+  /**
    * Main implementation of `transact()`. It is guaranteed to be called with a
    * valid `TransactionSpec`, though the spec may not be sensible in term of the
    * actual requested operations. The return value should contain all of the
@@ -284,7 +351,7 @@ export default class BaseFile extends CommonBase {
    *   missing properties.
    */
   async _impl_transact(spec) {
-    this._mustOverride(spec);
+    return this._mustOverride(spec);
   }
 
   /**
@@ -309,5 +376,45 @@ export default class BaseFile extends CommonBase {
    */
   async _impl_appendChange(fileChange, timeoutMsec) {
     return this._mustOverride(fileChange, timeoutMsec);
+  }
+
+  /**
+   * Abstract implementation of `currentRevNum()`.
+   *
+   * Gets the instantaneously-current revision number of the portion of the file
+   * controlled by this instance. It is an error to call this on an
+   * uninitialized document (e.g., when the underlying file is empty).
+   *
+   * @param {string} storagePath The `revisionNumberPath` storage path to use
+   *   to get the "current" revision number.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {Int} The instantaneously-current revision number.
+   * @abstract
+   */
+  async _impl_currentRevNum(storagePath, timeoutMsec) {
+    return this._mustOverride(storagePath, timeoutMsec);
+  }
+
+  /**
+   * Abstract implementation of `listChangeRange()`.
+   *
+   * @param {string} changePathPrefix The path prefix to use to list changes.
+   * @param {Int} startInclusive Start change number (inclusive) of changes to
+   *   read.
+   * @param {Int} endExclusive End change number (exclusive) of changes to read.
+   *   Must be `>= startInclusive`.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {array<Int>} Array of the revision numbers of existing changes, in
+   *   order by revision number.
+   * @abstract
+   */
+  async _impl_listChangeRange(changePathPrefix, startInclusive, endExclusive, timeoutMsec) {
+    return this._mustOverride(changePathPrefix, startInclusive, endExclusive, timeoutMsec);
   }
 }
