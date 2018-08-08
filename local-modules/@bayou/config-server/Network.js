@@ -26,15 +26,6 @@ export default class Network extends UtilityClass {
   }
 
   /**
-   * {array<string>} An array of at least two example token strings, each of
-   * which is syntactically valid but should _not_ actually grant access to
-   * anything in a production environment. This is intended for unit testing.
-   */
-  static get exampleTokens() {
-    return use.Network.exampleTokens;
-  }
-
-  /**
    * {Int} The local port to listen for connections on.
    *
    * **Note:** This can get overridden when running the system for the purposes
