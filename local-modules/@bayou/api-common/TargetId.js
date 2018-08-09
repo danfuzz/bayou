@@ -35,23 +35,4 @@ export default class TargetId extends UtilityClass {
       throw Errors.badValue(value, TargetId);
     }
   }
-
-  /**
-   * Checks a value of type `TargetId` which must furthermore have a minimum
-   * length as given.
-   *
-   * @param {*} value Value to check.
-   * @param {Int} minLen The minimum length.
-   * @returns {string} `value`.
-   */
-  static minLen(value, minLen) {
-    try {
-      TString.check(value, VALID_TARGET_ID_REGEX);
-      TString.minLen(value, minLen);
-      return value;
-    } catch (e) {
-      // Throw a higher-fidelity error.
-      throw Errors.badValue(value, TargetId, `length >= ${minLen}`);
-    }
-  }
 }
