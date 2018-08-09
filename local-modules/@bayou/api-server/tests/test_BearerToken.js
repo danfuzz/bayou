@@ -81,7 +81,7 @@ describe('@bayou/api-server/BearerToken', () => {
       assert.isFalse(BearerToken.sameArrays(array1, array2));
     });
 
-    it('should throw an Error if given arrays that contain things other than BearerTokens', () => {
+    it('should throw an Error if given arrays that contain things other than `BearerToken`s', () => {
       const token = new BearerToken(exampleToken());
 
       const array1 = [token, 'a'];
@@ -90,7 +90,7 @@ describe('@bayou/api-server/BearerToken', () => {
       assert.throws(() => BearerToken.sameArrays(array1, array2));
     });
 
-    it('should return `true` given identically-constructed arrays of BearerTokens', () => {
+    it('should return `true` given identically-constructed arrays of `BearerToken`s', () => {
       const token1 = new BearerToken(exampleTokens()[0]);
       const token2 = new BearerToken(exampleTokens()[1]);
       const token3 = new BearerToken(exampleTokens()[0]);

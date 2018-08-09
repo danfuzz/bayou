@@ -12,11 +12,6 @@ import { Errors } from '@bayou/util-common';
  * directly to a counterparty (as opposed to merely proving that one knows the
  * secret). In this implementation, a bearer token explicitly has a portion
  * which is considered its non-secret ID.
- *
- * **Note:** An instance of the class {@link BearerTokens} defined in this
- * module (possibly an instance of a subclass) is provided by the configuration
- * point {@link @bayou/config-server/Network#bearerTokens}, which is where the
- * logic for validating and interrogating token strings resides.
  */
 export default class BearerToken extends BaseKey {
   /**
