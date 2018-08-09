@@ -10,7 +10,7 @@ import ws from 'ws';
 import { BearerToken, Context, PostConnection, WsConnection } from '@bayou/api-server';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { ClientBundle } from '@bayou/client-bundle';
-import { Deployment, Network } from '@bayou/config-server';
+import { Auth, Deployment, Network } from '@bayou/config-server';
 import { Dirs, ProductInfo } from '@bayou/env-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
@@ -64,7 +64,7 @@ export default class Application extends CommonBase {
     this._bindRoot();
     (async () => {
       for (;;) {
-        await Network.bearerTokens.whenRootTokensChange();
+        await Auth.whenRootTokensChange();
         log.info('Root tokens updated.');
         this._bindRoot();
       }
@@ -251,8 +251,8 @@ export default class Application extends CommonBase {
    * promise-chain-based ongoing update mechanism.
    */
   _bindRoot() {
-    const context = this._context;
-    const rootTokens = Network.bearerTokens.rootTokens;
+    const context    = this._context;
+    const rootTokens = Auth.rootTokens;
 
     if (BearerToken.sameArrays(rootTokens, this._rootTokens)) {
       // No actual change. Note the fact.
