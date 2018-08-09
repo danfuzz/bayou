@@ -35,7 +35,7 @@ export default class Auth extends UtilityClass {
    * the {@link #exampleTokens} converted to {@link BearerToken} instances.
    */
   static get rootTokens() {
-    const tokens = this.exampleTokens.map(t => new BearerToken(t));
+    const tokens = this.exampleTokens.map(t => Auth.tokenFromString(t));
 
     return Object.freeze(tokens);
   }
@@ -51,6 +51,17 @@ export default class Auth extends UtilityClass {
    */
   static isToken(tokenString) {
     return TOKEN_REGEX.test(tokenString);
+  }
+
+  /**
+   * Implementation of standard configuration point.
+   *
+   * @param {string} tokenString The token. It is only valid to pass a value for
+   *   which {@link #isToken} returns `true`.
+   * @returns {BearerToken} An appropriately-constructed instance.
+   */
+  static tokenFromString(tokenString) {
+    return new BearerToken(Auth.tokenId(tokenString), tokenString);
   }
 
   /**

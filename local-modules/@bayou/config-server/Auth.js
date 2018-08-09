@@ -13,6 +13,8 @@ export default class Auth extends UtilityClass {
    * {array<string>} A frozen array of at least two example token strings, each
    * of which is syntactically valid but should _not_ actually grant access to
    * anything in a production environment. This is intended for unit testing.
+   *
+   * **TODO:** It might be safe to remove this now. If so, do so!
    */
   static get exampleTokens() {
     return use.Auth.exampleTokens;
@@ -39,6 +41,17 @@ export default class Auth extends UtilityClass {
    */
   static isToken(tokenString) {
     return use.Auth.isToken(tokenString);
+  }
+
+  /**
+   * Constructs a {@link api-server.BearerToken} from the given string.
+   *
+   * @param {string} tokenString The token. It is only valid to pass a value for
+   *   which {@link #isToken} returns `true`.
+   * @returns {BearerToken} An appropriately-constructed instance.
+   */
+  static tokenFromString(tokenString) {
+    return use.Auth.tokenFromString(tokenString);
   }
 
   /**

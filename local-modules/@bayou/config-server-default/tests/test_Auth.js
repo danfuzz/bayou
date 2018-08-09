@@ -61,6 +61,17 @@ describe('@bayou/config-server-default/Auth', () => {
     });
   });
 
+  describe('tokenFromString()', () => {
+    it('should construct a token with the expected parts, given a valid token', () => {
+      const id    = '0123456776543210';
+      const full  = `${id}aaaaaaaaaaaaaaa1`;
+      const token = Auth.tokenFromString(full);
+
+      assert.strictEqual(token.id, id);
+      assert.strictEqual(token.secretToken, full);
+    });
+  });
+
   describe('tokenId()', () => {
     it('should extract the ID of a valid token', () => {
       const id = '0123456776543210';

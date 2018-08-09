@@ -6,8 +6,6 @@ import { Auth } from '@bayou/config-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 
-import BearerToken from './BearerToken';
-
 /**
  * Handler of the logging of API calls.
  */
@@ -122,7 +120,7 @@ export default class ApiLog extends CommonBase {
     const targetId = msg.targetId;
 
     if (Auth.isToken(targetId)) {
-      const token = new BearerToken(targetId);
+      const token = Auth.tokenFromId(targetId);
       msg = msg.withTargetId(token.printableId);
     }
 

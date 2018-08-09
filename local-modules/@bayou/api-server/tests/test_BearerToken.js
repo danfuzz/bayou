@@ -6,26 +6,11 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BearerToken } from '@bayou/api-server';
-import { Auth } from '@bayou/config-server';
-
-function exampleTokens() {
-  return Auth.exampleTokens;
-}
-
-function exampleToken() {
-  return exampleTokens()[0];
-}
-
 
 describe('@bayou/api-server/BearerToken', () => {
   describe('constructor()', () => {
-    it('should reject syntactically invalid secrets', () => {
-      const badToken = `~!bad!token!~${exampleToken().slice(0, 8)}`;
-      assert.throws(() => new BearerToken(badToken));
-    });
-
     it('should return a frozen instance of BearerToken', () => {
-      const token = new BearerToken(exampleToken());
+      const token = new BearerToken('x', 'y');
 
       assert.instanceOf(token, BearerToken);
       assert.isFrozen(token);
@@ -34,35 +19,43 @@ describe('@bayou/api-server/BearerToken', () => {
 
   describe('.secretToken', () => {
     it('should return the token provided to the constructor', () => {
-      const token = new BearerToken(exampleToken());
+      const secret = 'florp';
+      const token = new BearerToken('x', secret);
 
-      assert.strictEqual(token.secretToken, exampleToken());
+      assert.strictEqual(token.secretToken, secret);
     });
   });
 
   describe('sameToken()', () => {
     it('should return false when passed `null`', () => {
-      const token = new BearerToken(exampleToken());
+      const token = new BearerToken('x', 'y');
 
       assert.isFalse(token.sameToken(null));
     });
 
     it('should return false when passed `undefined`', () => {
-      const token = new BearerToken(exampleToken());
+      const token = new BearerToken('x', 'y');
 
       assert.isFalse(token.sameToken(undefined));
     });
 
     it('should return `false` when passed a token with a different secret key', () => {
-      const token = new BearerToken(exampleTokens()[0]);
-      const other = new BearerToken(exampleTokens()[1]);
+      const token = new BearerToken('x', 'y');
+      const other = new BearerToken('x', 'z');
 
       assert.isFalse(token.sameToken(other));
     });
 
-    it('should return `true` when passed a token with the same secret key', () => {
-      const token = new BearerToken(exampleToken());
-      const other = new BearerToken(exampleToken());
+    it('should return `false` when passed a token with a different ID', () => {
+      const token = new BearerToken('x', 'y');
+      const other = new BearerToken('z', 'y');
+
+      assert.isFalse(token.sameToken(other));
+    });
+
+    it('should return `true` when passed a token with the same ID and secret key', () => {
+      const token = new BearerToken('x', 'y');
+      const other = new BearerToken('x', 'y');
 
       assert.isTrue(token.sameToken(other));
     });
@@ -70,10 +63,10 @@ describe('@bayou/api-server/BearerToken', () => {
 
   describe('sameArrays()', () => {
     it('should return `false` given arrays that are different lengths', () => {
-      const token1 = new BearerToken(exampleTokens()[0]);
-      const token2 = new BearerToken(exampleTokens()[1]);
-      const token3 = new BearerToken(exampleTokens()[0]);
-      const token4 = new BearerToken(exampleTokens()[1]);
+      const token1 = new BearerToken('a', '1');
+      const token2 = new BearerToken('b', '2');
+      const token3 = new BearerToken('c', '3');
+      const token4 = new BearerToken('d', '4');
 
       const array1 = [token1, token2, token3, token4];
       const array2 = [token1, token2, token3];
@@ -82,7 +75,7 @@ describe('@bayou/api-server/BearerToken', () => {
     });
 
     it('should throw an Error if given arrays that contain things other than `BearerToken`s', () => {
-      const token = new BearerToken(exampleToken());
+      const token = new BearerToken('a', '1');
 
       const array1 = [token, 'a'];
       const array2 = [token, 'a'];
@@ -91,10 +84,10 @@ describe('@bayou/api-server/BearerToken', () => {
     });
 
     it('should return `true` given identically-constructed arrays of `BearerToken`s', () => {
-      const token1 = new BearerToken(exampleTokens()[0]);
-      const token2 = new BearerToken(exampleTokens()[1]);
-      const token3 = new BearerToken(exampleTokens()[0]);
-      const token4 = new BearerToken(exampleTokens()[1]);
+      const token1 = new BearerToken('a', '1');
+      const token2 = new BearerToken('b', '2');
+      const token3 = new BearerToken('c', '3');
+      const token4 = new BearerToken('d', '4');
 
       const array1 = [token1, token2, token3, token4];
       const array2 = [token1, token2, token3, token4];

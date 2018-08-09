@@ -3,9 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseKey } from '@bayou/api-common';
-import { Auth } from '@bayou/config-server';
 import { TString } from '@bayou/typecheck';
-import { Errors } from '@bayou/util-common';
 
 /**
  * Bearer token, which is a kind of key where the secret portion is sent
@@ -40,18 +38,12 @@ export default class BearerToken extends BaseKey {
   /**
    * Constructs an instance with the indicated parts.
    *
+   * @param {string} id Key / resource identifier. This must be a `TargetId`.
    * @param {string} secretToken Complete token.
    */
-  constructor(secretToken) {
+  constructor(id, secretToken) {
+    super('*', id);
     TString.check(secretToken);
-
-    if (!Auth.isToken(secretToken)) {
-      // We don't include any real detail in the error message, as that might
-      // inadvertently leak a secret into the logs.
-      throw Errors.badValue('(redacted)', 'secret token');
-    }
-
-    super('*', Auth.tokenId(secretToken));
 
     /** {string} Secret token. */
     this._secretToken = secretToken;
@@ -86,7 +78,7 @@ export default class BearerToken extends BaseKey {
       return false;
     }
 
-    return this._secretToken === other._secretToken;
+    return (this.id === other.id) && (this._secretToken === other._secretToken);
   }
 
   /**
