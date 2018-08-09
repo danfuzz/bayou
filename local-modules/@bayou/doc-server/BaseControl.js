@@ -533,25 +533,28 @@ export default class BaseControl extends BaseDataManager {
   /**
    * Reads the stored snapshot for this document part, if available.
    *
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {BaseSnapshot|null} The stored snapshot, or `null` if no snapshot
    *   was ever stored.
    */
-  async readStoredSnapshotOrNull() {
+  async readStoredSnapshotOrNull(timeoutMsec = null) {
     const clazz = this.constructor;
-    const path  = clazz.storedSnapshotPath;
-    const fc    = this.fileCodec;
-    const spec  = new TransactionSpec(fc.op_readPath(path));
-
-    const transactionResult = await fc.transact(spec);
-
-    const result = transactionResult.data.get(path) || null;
+    const storedSnapshotPath = clazz.storedSnapshotPath;
+    const codec = this.fileCodec.codec;
+    const file = this.fileCodec.file;
+    const clampedTimeoutMsec = Timeouts.clamp(timeoutMsec);
+    const result = await file.readStoredSnapshotOrNull(storedSnapshotPath, clampedTimeoutMsec);
 
     if (result === null) {
       this.log.info('Failed to find stored snapshot.');
       return null;
     } else {
-      clazz.snapshotClass.check(result);
-      this.log.info(`Read stored snapshot for revision: r${result.revNum}`);
+      const storedSnapshot = codec.decodeJsonBuffer(result);
+      clazz.snapshotClass.check(storedSnapshot);
+      this.log.info(`Read stored snapshot for revision: r${storedSnapshot.revNum}`);
       return result;
     }
   }

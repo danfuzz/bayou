@@ -298,6 +298,30 @@ export default class LocalFile extends BaseFile {
   /**
    * Implementation as required by the superclass.
    *
+   * @param {string} storedSnapshotPath The `storedSnapshotPath` storage path
+   *   to use to get the stored snapshot.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {FrozenBuffer|null} The frozen buffer of a stored snapshot,
+   *   or `null` if no snapshot was ever stored.
+   * @abstract
+   */
+  // TODO: Think about refactoring _impl_currentRevNum and
+  // _impl_readStoredSnapshotOrNull since they look awfuly similar
+  // at the moment.
+  async _impl_readStoredSnapshotOrNull(storedSnapshotPath, timeoutMsec) {
+    StoragePath.check(storedSnapshotPath);
+
+    await this._readStorageIfNecessaryWithTimeout(timeoutMsec);
+
+    return this.currentSnapshot.getOrNull(storedSnapshotPath);
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
    * @param {string} changePathPrefix The path prefix to use to list changes.
    * @param {Int} startInclusive Start change number (inclusive) of changes to
    *   read.

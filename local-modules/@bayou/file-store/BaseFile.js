@@ -300,6 +300,31 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
+   * Reads the stored snapshot for this document part, if available.
+   *
+   * @param {string} storedSnapshotPath The `storedSnapshotPath` storage path
+   *   to use to get the stored snapshot.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {FrozenBuffer|null} The frozen buffer of a stored snapshot,
+   *   or `null` if no snapshot was ever stored.
+   */
+  async readStoredSnapshotOrNull(storedSnapshotPath, timeoutMsec) {
+    StoragePath.check(storedSnapshotPath);
+
+    const result = await this._impl_readStoredSnapshotOrNull(storedSnapshotPath, timeoutMsec);
+
+    // Validate buffer if not null
+    if (result !== null) {
+      FrozenBuffer.check(result);
+    }
+
+    return result;
+  }
+
+  /**
    * Gets a list of existing changes within a given range. The only changes that
    * exist both (a) have a revision number at or less than the
    * `currentRevNum()` and (b) have not been removed due to being ephemeral
@@ -381,9 +406,7 @@ export default class BaseFile extends CommonBase {
   /**
    * Abstract implementation of `currentRevNum()`.
    *
-   * Gets the instantaneously-current revision number of the portion of the file
-   * controlled by this instance. It is an error to call this on an
-   * uninitialized document (e.g., when the underlying file is empty).
+   * Each subclass implements its own version.
    *
    * @param {string} storagePath The `revisionNumberPath` storage path to use
    *   to get the "current" revision number.
@@ -416,5 +439,24 @@ export default class BaseFile extends CommonBase {
    */
   async _impl_listChangeRange(changePathPrefix, startInclusive, endExclusive, timeoutMsec) {
     return this._mustOverride(changePathPrefix, startInclusive, endExclusive, timeoutMsec);
+  }
+
+  /**
+   * Abstract implementation of `readStoredSnapshotOrNull()`
+   *
+   * Each subclass implements its own version.
+   *
+   * @param {string} storedSnapshotPath The `storedSnapshotPath` storage path
+   *   to use to get the stored snapshot.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {FrozenBuffer|null} The frozen buffer of a stored snapshot,
+   *   or `null` if no snapshot was ever stored.
+   * @abstract
+   */
+  async _impl_readStoredSnapshotOrNull(storedSnapshotPath, timeoutMsec) {
+    return this._mustOverride(storedSnapshotPath, timeoutMsec);
   }
 }
