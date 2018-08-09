@@ -38,8 +38,7 @@ export default class BaseKey extends CommonBase {
    *   superfluous, this can be passed as `*` (a literal asterisk). This is
    *   _not_ allowed to have URL-level "auth" info (e.g.,
    *   `http://user:pass@example.com/`).
-   * @param {string} id Key / resource identifier. This must be a `TargetId` of
-   *   at least 8 characters.
+   * @param {string} id Key / resource identifier. This must be a `TargetId`.
    */
   constructor(url, id) {
     super();
@@ -52,7 +51,7 @@ export default class BaseKey extends CommonBase {
     this._url = url;
 
     /** {string} Key / resource identifier. */
-    this._id = TargetId.minLen(id, 8);
+    this._id = TargetId.check(id);
   }
 
   /**

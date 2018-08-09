@@ -6,10 +6,10 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BearerToken } from '@bayou/api-server';
-import { Network } from '@bayou/config-server';
+import { Auth } from '@bayou/config-server';
 
 function exampleTokens() {
-  return Network.bearerTokens.exampleTokens;
+  return Auth.exampleTokens;
 }
 
 function exampleToken() {

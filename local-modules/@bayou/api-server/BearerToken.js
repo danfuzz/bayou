@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseKey } from '@bayou/api-common';
-import { Network } from '@bayou/config-server';
+import { Auth } from '@bayou/config-server';
 import { TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
@@ -50,13 +50,13 @@ export default class BearerToken extends BaseKey {
   constructor(secretToken) {
     TString.check(secretToken);
 
-    if (!Network.bearerTokens.isToken(secretToken)) {
+    if (!Auth.isToken(secretToken)) {
       // We don't include any real detail in the error message, as that might
       // inadvertently leak a secret into the logs.
       throw Errors.badValue('(hidden)', 'secret token');
     }
 
-    super('*', Network.bearerTokens.tokenId(secretToken));
+    super('*', Auth.tokenId(secretToken));
 
     /** {string} Secret token. */
     this._secretToken = secretToken;

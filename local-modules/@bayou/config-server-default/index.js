@@ -4,6 +4,7 @@
 
 import { inject } from '@bayou/injecty';
 
+import Auth from './Auth';
 import Deployment from './Deployment';
 import Logging from './Logging';
 import Network from './Network';
@@ -13,6 +14,7 @@ import Storage from './Storage';
  * Injects all of the definitions here into the global configuration.
  */
 function injectAll() {
+  inject.Auth       = Auth;
   inject.Deployment = Deployment;
   inject.Logging    = Logging;
   inject.Network    = Network;
@@ -20,6 +22,7 @@ function injectAll() {
 }
 
 export {
+  Auth,
   Deployment,
   Logging,
   Network,

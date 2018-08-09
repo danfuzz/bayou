@@ -2,9 +2,11 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Network } from '@bayou/config-server';
+import { Auth } from '@bayou/config-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
+
+import BearerToken from './BearerToken';
 
 /**
  * Handler of the logging of API calls.
@@ -117,8 +119,11 @@ export default class ApiLog extends CommonBase {
    * @returns {Message} The redacted form.
    */
   static _redactMessage(msg) {
-    if (Network.bearerTokens.isToken(msg.targetId)) {
-      msg = msg.withTargetId(Network.bearerTokens.printableId(msg.targetId));
+    const targetId = msg.targetId;
+
+    if (Auth.isToken(targetId)) {
+      const token = new BearerToken(targetId);
+      msg = msg.withTargetId(token.printableId);
     }
 
     // **TODO:** This will ultimately need to do more redaction.

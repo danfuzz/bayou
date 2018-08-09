@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Network } from '@bayou/config-server';
+import { Auth } from '@bayou/config-server';
 import { CommonBase } from '@bayou/util-common';
 
 
@@ -28,7 +28,7 @@ export default class VarInfo extends CommonBase {
   async get() {
     // **Note:** The "printable" form of a bearer token is redacted, such that
     // the secret portion is not represented.
-    const tokenIds = Network.bearerTokens.rootTokens.map(t => t.printableId);
+    const tokenIds = Auth.rootTokens.map(t => t.printableId);
 
     return {
       pid:        process.pid,
