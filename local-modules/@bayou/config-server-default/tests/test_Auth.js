@@ -68,4 +68,13 @@ describe('@bayou/config-server-default/Auth', () => {
       assert.strictEqual(Auth.tokenId(token), id);
     });
   });
+
+  describe('whenRootTokensChange()', () => {
+    it('should return a promise', () => {
+      const changePromise = Auth.whenRootTokensChange();
+
+      assert.property(changePromise, 'then');
+      assert.isFunction(changePromise.then);
+    });
+  });
 });
