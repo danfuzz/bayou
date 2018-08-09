@@ -5,9 +5,50 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
+import { BearerToken } from '@bayou/api-server';
+import { Auth as configServer_Auth } from '@bayou/config-server';
 import { Auth } from '@bayou/config-server-default';
 
 describe('@bayou/config-server-default/Auth', () => {
+  describe('.exampleTokens', () => {
+    it('should be an array of strings that are all `isToken()`', () => {
+      const tokens = Auth.exampleTokens;
+
+      assert.isArray(tokens);
+
+      for (const token of tokens) {
+        assert.isString(token);
+        assert.isTrue(Auth.isToken(token));
+      }
+    });
+  });
+
+  describe('.rootTokens', () => {
+    // For now, this test is effectively disabled if the configured `Auth` class
+    // isn't the one from this module, because the `BearerToken` constructor
+    // checks token syntax via the configured class, which might have a
+    // different rule than what's enforced by this module. **TODO:** Fix this
+    // mess. In particular, `BearerToken` should probably not be in the
+    // business of enforcing syntax nor parsing out token bits. Instead, it
+    // should accept the parsed bits as input to its constructor.
+    if (configServer_Auth !== Auth) {
+      it('trivially passes due to insufficient modularity.', () => {
+        assert.isTrue(true);
+      });
+      return;
+    }
+
+    it('should be an array of `BearerToken` instances', () => {
+      const tokens = Auth.rootTokens;
+
+      assert.isArray(tokens);
+
+      for (const token of tokens) {
+        assert.instanceOf(token, BearerToken);
+      }
+    });
+  });
+
   describe('isToken()', () => {
     it('should accept token syntax', () => {
       assert.isTrue(Auth.isToken('00000000000000001123456789abcdef'));
