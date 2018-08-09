@@ -7,7 +7,7 @@ import path from 'path';
 
 import { Codec } from '@bayou/codec';
 import { BaseFile } from '@bayou/file-store';
-import { FileChange, FileSnapshot, StoragePath } from '@bayou/file-store-ot';
+import { FileChange, FileSnapshot, StoragePath, StorageId } from '@bayou/file-store-ot';
 import { RevisionNumber } from '@bayou/ot-common';
 import { Condition, Delay, Mutex } from '@bayou/promise-util';
 import { TString, TInt } from '@bayou/typecheck';
@@ -353,6 +353,69 @@ export default class LocalFile extends BaseFile {
     }
 
     return result;
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @param {StoragePath} revNumPath The `revNumPath` storage path
+   *   to use to get the revision number.
+   * @param {FrozenBuffer} revNumHash Hash of the revision number to wait for.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @abstract
+   */
+  async _impl_whenRevNum(revNumPath, revNumHash, timeoutMsec) {
+    StoragePath.check(revNumPath);
+    revNumHash = StorageId.checkOrGetHash(revNumHash);
+
+    // Arrange for timeout. **Note:** Needs to be done _before_ possibly reading
+    // storage, as that (potential) storage read can take significant time.
+    const clampedTimeoutMsec = this.clampTimeoutMsec(timeoutMsec);
+    let timeout = false; // Gets set to `true` when the timeout expires.
+    const timeoutProm = Delay.resolve(clampedTimeoutMsec);
+    (async () => {
+      await timeoutProm;
+      timeout = true;
+    })();
+
+    await Promise.race([this._readStorageIfNecessary(), timeoutProm]);
+    if (timeout) {
+      throw Errors.timedOut(clampedTimeoutMsec);
+    }
+
+    if (!this._fileShouldExist) {
+      throw Errors.fileNotFound(this.id);
+    }
+
+    // It's a wait transaction, so we need to be prepared to loop / retry
+    // (until satisfaction or timeout).
+    for (;;) {
+
+      if (this.currentSnapshot.checkPathIsNot(revNumPath, revNumHash)) {
+        // Wait condition was satisfied. If the op has a `path` then that's the
+        // storage ID result; otherwise it's its `hash`. (There are no other
+        // possibilities.)
+        return;
+      }
+
+      // Force the `_changeCondition` to `false` (though it might already be
+      // so set; innocuous if so), and wait either for it to become `true`
+      // (that is, wait for _any_ change to the file) or for timeout to occur.
+      this._changeCondition.value = false;
+      await Promise.race([this._changeCondition.whenTrue(), timeoutProm]);
+      if (timeout) {
+        throw Errors.timedOut(clampedTimeoutMsec);
+      }
+
+      // Have to re-check for file existence, as the file could have been
+      // deleted while we were waiting.
+      if (!this._fileShouldExist) {
+        throw Errors.fileNotFound(this.id);
+      }
+    }
   }
 
   /**

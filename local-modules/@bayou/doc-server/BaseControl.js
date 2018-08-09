@@ -670,9 +670,9 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
-   * Waits for the given revision number to have been written. The return value
-   * only becomes resolved after the change is made. If the change has already
-   * been made by the time this method is called, then it returns promptly.
+   * Waits for the given revision number to have been written. It returns only
+   * after the change is made. If the change has already been made by the time
+   * this method is called, then it returns promptly.
    *
    * **Note:** In unusual circumstances &mdash; in particular, when a document
    * gets re-created or for document parts that don't keep full change history
@@ -726,15 +726,15 @@ export default class BaseControl extends BaseDataManager {
       // time out), and then check to see if in fact the revision number was
       // changed.
 
-      const fc   = this.fileCodec;
-      const spec = new TransactionSpec(
-        fc.op_timeout(timeoutTime - now),
-        fc.op_whenPathNot(clazz.revisionNumberPath, currentRevNum));
+      const file = this.fileCodec.file;
+      const codec = this.fileCodec.codec;
+      const revNumPath = clazz.revisionNumberPath;
+      const revNumHash = codec.encodeJsonBuffer(currentRevNum);
 
       // If this returns normally (doesn't throw), then we know it wasn't due
       // to hitting the timeout.
       try {
-        await fc.transact(spec);
+        await file.whenRevNum(revNumPath, revNumHash, timeoutTime - now);
       } catch (e) {
         // For a timeout, we log and report the original timeout value. For
         // everything else, we just transparently re-throw.

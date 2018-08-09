@@ -363,6 +363,35 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
+   * Waits for the given revision number to have been written. It returns only
+   * after the change is made. If the change has already been made by the time
+   * this method is called, then it returns promptly.
+   *
+   * **Note:** In unusual circumstances &mdash; in particular, when a document
+   * gets re-created or for document parts that don't keep full change history
+   * &mdash; and due to the asynchronous nature of the system, it is possible
+   * for a change to not be available (e.g. via {@link #getChange}) soon after
+   * the result of a call to this method becomes resolved. Calling code should
+   * be prepared for that possibility.
+   *
+   * @param {StoragePath} revNumPath The `revNumPath` storage path
+   *   to use to get the revision number.
+   * @param {FrozenBuffer} revNumHash Hash of the revision number to wait for.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   */
+  async whenRevNum(revNumPath, revNumHash, timeoutMsec) {
+    StoragePath.check(revNumPath);
+    revNumHash = StorageId.checkOrGetHash(revNumHash);
+
+    await this._impl_whenRevNum(revNumPath, revNumHash, timeoutMsec);
+
+    return;
+  }
+
+  /**
    * Main implementation of `transact()`. It is guaranteed to be called with a
    * valid `TransactionSpec`, though the spec may not be sensible in term of the
    * actual requested operations. The return value should contain all of the
@@ -458,5 +487,25 @@ export default class BaseFile extends CommonBase {
    */
   async _impl_readStoredSnapshotOrNull(storedSnapshotPath, timeoutMsec) {
     return this._mustOverride(storedSnapshotPath, timeoutMsec);
+  }
+
+  /**
+   * Abstract implementation of `whenRevNum()`
+   *
+   * Each subclass implements its own version.
+   *
+   * @param {StoragePath} revNumPath The `revNumPath` storage path
+   *   to use to get the revision number.
+   * @param {FrozenBuffer} revNumHash Hash of the revision number to wait for.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @abstract
+   */
+  async _impl_whenRevNum(revNumPath, revNumHash, timeoutMsec) {
+    await this._mustOverride(revNumPath, revNumHash, timeoutMsec);
+
+    return;
   }
 }

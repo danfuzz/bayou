@@ -299,6 +299,22 @@ export default class FileSnapshot extends BaseSnapshot {
   }
 
   /**
+   * Runs the test for `pathIsNot` operations.
+   *
+   * @param {string} path Storage path to compare hash against.
+   * @param {object} hash Hash to compare.
+   * @returns {boolean} Test result.
+   */
+  checkPathIsNot(path, hash) {
+    StoragePath.check(path);
+    hash = StorageId.checkOrGetHash(hash);
+
+    const dataFromPath = this.getOrNull(path);
+
+    return (dataFromPath === null) || (dataFromPath.hash !== hash);
+  }
+
+  /**
    * Main implementation of {@link #diff}, which produces a delta (not a
    * change).
    *

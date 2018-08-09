@@ -1000,7 +1000,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.strictEqual(await control.whenRevNum(37), 37);
     });
 
-    it('should issue transactions until the revision is written', async () => {
+    it.skip('should issue transactions until the revision is written', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
