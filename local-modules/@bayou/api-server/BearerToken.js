@@ -48,7 +48,7 @@ export default class BearerToken extends BaseKey {
     if (!Auth.isToken(secretToken)) {
       // We don't include any real detail in the error message, as that might
       // inadvertently leak a secret into the logs.
-      throw Errors.badValue('(hidden)', 'secret token');
+      throw Errors.badValue('(redacted)', 'secret token');
     }
 
     super('*', Auth.tokenId(secretToken));
