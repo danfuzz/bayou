@@ -645,15 +645,26 @@ export default class BodyClient extends StateMachine {
       return;
     }
 
-    // Send the change, and handle the response.
+    // Send the change, and handle the response. **Note:** In the section above,
+    // we established that the current snapshot, `this._snapshot`, is the same
+    // as the snapshot bundled with the event, `baseSnapshot`. In the following
+    // we use the latter and not the former because in the time between when we
+    // queue up the `async` block and when it executes, it's possible for
+    // `this._snapshot` to change, which would lead to an incorrect call to
+    // `body_update()`. `baseSnapshot`, on the other hand, is a local variable
+    // which we can see (in this function) cannot possibly be modified, and so
+    // it's arguably a safer way to reference the snapshot in question. By
+    // inspection -- today! -- it doesn't look like the sort of hazard described
+    // above could ever happen in practice, but the choice below may help avoid
+    // future bugs, in the face of possible later changes to this class.)
     (async () => {
       try {
-        const value = await this._sessionProxy.body_update(this._snapshot.revNum, delta);
+        const value = await this._sessionProxy.body_update(baseSnapshot.revNum, delta);
         this.q_gotUpdate(delta, value);
       } catch (e) {
         // **TODO:** Remove this logging once we figure out why we're seeing
         // this error.
-        this._log.event.badCompose(this._snapshot, delta);
+        this._log.event.badCompose(baseSnapshot, delta);
         this.q_apiError('body_update', e);
       }
     })();
