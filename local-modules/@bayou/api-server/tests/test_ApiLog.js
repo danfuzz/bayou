@@ -42,11 +42,23 @@ describe('@bayou/api-server/ApiLog', () => {
 
       const record = logger.record;
 
-      assert.length(record, 1);
+      assert.lengthOf(record, 1);
 
-      const item = record[0];
+      // The event payload is always the third item in a mock-logged record.
+      const payload = record[0][2];
 
-      console.log('=======', item);
+      // The payload is of the form `apiReceived({ msg: ... })`, and we are
+      // just going to be asserting on the `msg` part.
+      assert.instanceOf(payload, Functor);
+      const loggedMsg = payload.args[0].msg;
+
+      // This should be the encoded form of a `Message`, which is itself a
+      // three-argument functor, the second argument being the ID.
+      assert.instanceOf(loggedMsg, Functor);
+      const loggedId = loggedMsg.args[1];
+
+      // The actual point of this unit test.
+      assert.strictEqual(loggedId, `${token.id}-...`);
     });
   });
 });
