@@ -358,18 +358,18 @@ export default class LocalFile extends BaseFile {
   /**
    * Implementation as required by the superclass.
    *
-   * @param {StoragePath} revNumPath The `revNumPath` storage path
-   *   to use to get the revision number.
-   * @param {FrozenBuffer} revNumHash Hash of the revision number to wait for.
+   * @param {StoragePath} storagePath The storage path to use to get the
+   *   data to validate.
+   * @param {FrozenBuffer} hash Hash to validate against.
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
    *   range as defined by {@link Timeouts}. `null` is treated as the maximum
    *   allowed value.
    * @abstract
    */
-  async _impl_whenRevNum(revNumPath, revNumHash, timeoutMsec) {
-    StoragePath.check(revNumPath);
-    revNumHash = StorageId.checkOrGetHash(revNumHash);
+  async _impl_whenPathIsNot(storagePath, hash, timeoutMsec) {
+    StoragePath.check(storagePath);
+    hash = StorageId.checkOrGetHash(hash);
 
     // Arrange for timeout. **Note:** Needs to be done _before_ possibly reading
     // storage, as that (potential) storage read can take significant time.
@@ -394,7 +394,7 @@ export default class LocalFile extends BaseFile {
     // (until satisfaction or timeout).
     for (;;) {
 
-      if (this.currentSnapshot.checkPathIsNot(revNumPath, revNumHash)) {
+      if (this.currentSnapshot.checkPathIsNot(storagePath, hash)) {
         // Wait condition was satisfied. If the op has a `path` then that's the
         // storage ID result; otherwise it's its `hash`. (There are no other
         // possibilities.)

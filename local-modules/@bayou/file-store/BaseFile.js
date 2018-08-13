@@ -363,7 +363,7 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Waits for the given revision number to have been written. It returns only
+   * Waits for a path to change away from given hash. It returns only
    * after the change is made. If the change has already been made by the time
    * this method is called, then it returns promptly.
    *
@@ -374,19 +374,19 @@ export default class BaseFile extends CommonBase {
    * the result of a call to this method becomes resolved. Calling code should
    * be prepared for that possibility.
    *
-   * @param {StoragePath} revNumPath The `revNumPath` storage path
-   *   to use to get the revision number.
-   * @param {FrozenBuffer} revNumHash Hash of the revision number to wait for.
+   * @param {StoragePath} storagePath The storage path to use to get the
+   *   data to validate.
+   * @param {FrozenBuffer} hash Hash to validate against.
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
    *   range as defined by {@link Timeouts}. `null` is treated as the maximum
    *   allowed value.
    */
-  async whenRevNum(revNumPath, revNumHash, timeoutMsec) {
-    StoragePath.check(revNumPath);
-    revNumHash = StorageId.checkOrGetHash(revNumHash);
+  async whenPathIsNot(storagePath, hash, timeoutMsec) {
+    StoragePath.check(storagePath);
+    hash = StorageId.checkOrGetHash(hash);
 
-    await this._impl_whenRevNum(revNumPath, revNumHash, timeoutMsec);
+    await this._impl_whenPathIsNot(storagePath, hash, timeoutMsec);
 
     return;
   }
@@ -490,21 +490,21 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Abstract implementation of `whenRevNum()`
+   * Abstract implementation of `whenPathIsNot()`
    *
    * Each subclass implements its own version.
    *
-   * @param {StoragePath} revNumPath The `revNumPath` storage path
-   *   to use to get the revision number.
-   * @param {FrozenBuffer} revNumHash Hash of the revision number to wait for.
+   * @param {StoragePath} storagePath The storage path to use to get the
+   *   data to validate.
+   * @param {FrozenBuffer} hash Hash to validate against.
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
    *   range as defined by {@link Timeouts}. `null` is treated as the maximum
    *   allowed value.
    * @abstract
    */
-  async _impl_whenRevNum(revNumPath, revNumHash, timeoutMsec) {
-    await this._mustOverride(revNumPath, revNumHash, timeoutMsec);
+  async _impl_whenPathIsNot(storagePath, hash, timeoutMsec) {
+    await this._mustOverride(storagePath, hash, timeoutMsec);
 
     return;
   }

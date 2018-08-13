@@ -734,7 +734,7 @@ export default class BaseControl extends BaseDataManager {
       // If this returns normally (doesn't throw), then we know it wasn't due
       // to hitting the timeout.
       try {
-        await file.whenRevNum(revNumPath, revNumHash, timeoutTime - now);
+        await file.whenPathIsNot(revNumPath, revNumHash, timeoutTime - now);
       } catch (e) {
         // For a timeout, we log and report the original timeout value. For
         // everything else, we just transparently re-throw.
@@ -821,26 +821,16 @@ export default class BaseControl extends BaseDataManager {
    */
   async _impl_validationStatus() {
     const clazz = this.constructor;
-    let transactionResult;
+    const file = this.fileCodec.file;
+    const codec = this.fileCodec.codec;
+    const fileSnapshot = file.currentSnapshot;
+
+    const encodedSnapshot = fileSnapshot.getOrNull(clazz.storedSnapshotPath);
+    const snapshot = encodedSnapshot ? codec.decodeJsonBuffer(encodedSnapshot) : undefined;
+    const encodedRevNum = fileSnapshot.getOrNull(clazz.revisionNumberPath);
+    const revNum = codec.decodeJsonBuffer(encodedRevNum);
 
     // Check the revision number (mandatory) and stored snapshot (if present).
-
-    try {
-      const fc = this.fileCodec;
-      const spec = new TransactionSpec(
-        fc.op_readPath(clazz.revisionNumberPath),
-        fc.op_readPath(clazz.storedSnapshotPath)
-      );
-      transactionResult = await fc.transact(spec);
-    } catch (e) {
-      this.log.error('Major problem trying to read file!', e);
-      return ValidationStatus.STATUS_error;
-    }
-
-    const data     = transactionResult.data;
-    const revNum   = data.get(clazz.revisionNumberPath);
-    const snapshot = data.get(clazz.storedSnapshotPath);
-
     try {
       RevisionNumber.check(revNum);
     } catch (e) {
