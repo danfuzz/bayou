@@ -796,6 +796,26 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
+   * Trim the error timestamp list of any errors that have "aged out," and add
+   * a new one for the current moment in time.
+   */
+  _addErrorStamp() {
+    const now = Date.now();
+    const agedOut = now - ERROR_WINDOW_MSEC;
+
+    this._errorStamps = this._errorStamps.filter(value => (value >= agedOut));
+    this._errorStamps.push(now);
+  }
+
+  /**
+   * Sets up the state machine to idle while waiting for input.
+   */
+  _becomeIdle() {
+    this.s_idle();
+    this.q_wantInput();
+  }
+
+  /**
    * Gets a combined (composed) delta of all document changes that have been
    * made to the Quill instance since the last time changes were integrated into
    * the server revision of the document, optionally stopping at (and not
@@ -832,6 +852,23 @@ export default class BodyClient extends StateMachine {
     this._currentEvent = change;
 
     return delta;
+  }
+
+  /**
+   * Determine whether the current set of error timestamps means that the
+   * instance is unrecoverably errored.
+   *
+   * @returns {boolean} `true` iff the instance is unrecoverably errored.
+   */
+  _isUnrecoverablyErrored() {
+    const errorCount      = this._errorStamps.length;
+    const errorsPerMinute = (errorCount / ERROR_WINDOW_MSEC) * 60 * 1000;
+
+    this._log.info(
+      `Error window: ${errorCount} total; ` +
+      `${Math.round(errorsPerMinute * 100) / 100} per minute`);
+
+    return errorsPerMinute >= ERROR_MAX_PER_MINUTE;
   }
 
   /**
@@ -893,42 +930,5 @@ export default class BodyClient extends StateMachine {
     // glitches (in that the Quill state could have diverged significantly from
     // the stored document state).
     this._quill.history.clear();
-  }
-
-  /**
-   * Sets up the state machine to idle while waiting for input.
-   */
-  _becomeIdle() {
-    this.s_idle();
-    this.q_wantInput();
-  }
-
-  /**
-   * Trim the error timestamp list of any errors that have "aged out," and add
-   * a new one for the current moment in time.
-   */
-  _addErrorStamp() {
-    const now = Date.now();
-    const agedOut = now - ERROR_WINDOW_MSEC;
-
-    this._errorStamps = this._errorStamps.filter(value => (value >= agedOut));
-    this._errorStamps.push(now);
-  }
-
-  /**
-   * Determine whether the current set of error timestamps means that the
-   * instance is unrecoverably errored.
-   *
-   * @returns {boolean} `true` iff the instance is unrecoverably errored.
-   */
-  _isUnrecoverablyErrored() {
-    const errorCount      = this._errorStamps.length;
-    const errorsPerMinute = (errorCount / ERROR_WINDOW_MSEC) * 60 * 1000;
-
-    this._log.info(
-      `Error window: ${errorCount} total; ` +
-      `${Math.round(errorsPerMinute * 100) / 100} per minute`);
-
-    return errorsPerMinute >= ERROR_MAX_PER_MINUTE;
   }
 }
