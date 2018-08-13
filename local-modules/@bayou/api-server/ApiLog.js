@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Auth } from '@bayou/config-server';
-import { Logger } from '@bayou/see-all';
+import { BaseLogger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 
 /**
@@ -18,8 +18,8 @@ export default class ApiLog extends CommonBase {
   constructor(log) {
     super();
 
-    /** {Logger} Logger to use. */
-    this._log = Logger.check(log);
+    /** {BaseLogger} Logger to use. */
+    this._log = BaseLogger.check(log);
 
     /**
      * {Map<Message,object>} Map from messages that haven't yet been completely
