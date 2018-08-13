@@ -10,7 +10,7 @@ import { Errors, UtilityClass } from '@bayou/util-common';
  * {RegEx} Expression that matches properly-formed tokens. The ID and secret
  * portions are each a separate matching group.
  */
-const TOKEN_REGEX = /^([0-9a-f]{16})([0-9a-f]{16})$/;
+const TOKEN_REGEX = /^(tok-[0-9a-f]{16})([0-9a-f]{16})$/;
 
 /**
  * Utility functionality regarding the network configuration of a server.
@@ -23,8 +23,8 @@ export default class Auth extends UtilityClass {
    */
   static get exampleTokens() {
     return Object.freeze([
-      '00000000000000000000000000000000',
-      '11111111111111111111111111111111'
+      'tok-00000000000000000000000000000000',
+      'tok-11111111111111111111111111111111'
     ]);
   }
 

@@ -36,19 +36,21 @@ describe('@bayou/config-server-default/Auth', () => {
 
   describe('isToken()', () => {
     it('should accept token syntax', () => {
-      assert.isTrue(Auth.isToken('00000000000000001123456789abcdef'));
+      assert.isTrue(Auth.isToken('tok-00000000000000001123456789abcdef'));
     });
 
     it('should reject non-token syntax', () => {
-      assert.isFalse(Auth.isToken('z0000000000000001123456789abcdef'));
-      assert.isFalse(Auth.isToken('00000000000000001123456789abcdef1'));
-      assert.isFalse(Auth.isToken('0000000000000000-1123456789abcdef'));
+      assert.isFalse(Auth.isToken('zzz-0000000000000001123456789abcdef'));
+      assert.isFalse(Auth.isToken('0000000000000001123456789abcdef'));
+      assert.isFalse(Auth.isToken('tok-z0000000000000001123456789abcdef'));
+      assert.isFalse(Auth.isToken('tok-00000000000000001123456789abcdef1'));
+      assert.isFalse(Auth.isToken('tok-0000000000000000-1123456789abcdef'));
     });
   });
 
   describe('tokenFromString()', () => {
     it('should construct a token with the expected parts, given a valid token', () => {
-      const id    = '0123456776543210';
+      const id    = 'tok-0123456776543210';
       const full  = `${id}aaaaaaaaaaaaaaa1`;
       const token = Auth.tokenFromString(full);
 
@@ -59,7 +61,7 @@ describe('@bayou/config-server-default/Auth', () => {
 
   describe('tokenId()', () => {
     it('should extract the ID of a valid token', () => {
-      const id = '0123456776543210';
+      const id    = 'tok-0123456776543210';
       const token = `${id}bbbbbbbbbbbbbbbb`;
       assert.strictEqual(Auth.tokenId(token), id);
     });
