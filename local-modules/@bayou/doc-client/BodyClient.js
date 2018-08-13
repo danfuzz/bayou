@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ConnectionError } from '@bayou/api-common';
-import { BodyChange, BodyDelta, BodySnapshot } from '@bayou/doc-common';
+import { BodyChange, BodyDelta, BodyOp, BodySnapshot } from '@bayou/doc-common';
 import { Delay } from '@bayou/promise-util';
 import { QuillEvents, QuillUtil } from '@bayou/quill-util';
 import { TString } from '@bayou/typecheck';
@@ -900,7 +900,7 @@ export default class BodyClient extends StateMachine {
     }
 
     // Update the local snapshot.
-    this._snapshot = this._snapshot.compose(change);
+    this._snapshot = BodyClient._validateSnapshot(this._snapshot.compose(change));
 
     // Tell Quill if necessary.
     if (needQuillUpdate) {
@@ -921,7 +921,7 @@ export default class BodyClient extends StateMachine {
    * @param {BodySnapshot} snapshot New snapshot.
    */
   _updateWithSnapshot(snapshot) {
-    this._snapshot = snapshot;
+    this._snapshot = BodyClient._validateSnapshot(snapshot);
     this._quill.setContents(snapshot.contents.toQuillForm(), CLIENT_SOURCE);
 
     // This prevents "undo" from backing over the snapshot. When first starting
@@ -930,5 +930,44 @@ export default class BodyClient extends StateMachine {
     // glitches (in that the Quill state could have diverged significantly from
     // the stored document state).
     this._quill.history.clear();
+  }
+
+  /**
+   * Validates a snapshot. This performs validation that goes beyond the
+   * baseline requirements of `BodySnapshot` construction. This method returns
+   * `snapshot` itself if it is valid, or throws an error if a problem is
+   * detected.
+   *
+   * As of this writing, the only thing specifically detected by this method is
+   * if `snapshot` doesn't end with a newline character (including detecting
+   * a truly "empty" document). Quill is supposed to maintain the invariants
+   * that (a) all lines are newline-terminated, and (b) every document contains
+   * at least one line.
+   *
+   * @param {BodySnapshot} snapshot Snapshot to validate.
+   * @returns {BodySnapshot} `snapshot`, if it is indeed valid.
+   * @throws {Error} Thrown if `snapshot` is problematic.
+   */
+  static _validateSnapshot(snapshot) {
+    BodySnapshot.check(snapshot);
+
+    const ops = snapshot.contents.ops;
+
+    if (ops.length === 0) {
+      throw Errors.badData('Totally empty snapshot.');
+    }
+
+    // The last op had better be a `text` which ends with a newline.
+
+    const lastOp = ops[ops.length - 1];
+    const props  = lastOp.props;
+
+    if (props.opName !== BodyOp.CODE_text) {
+      throw Errors.badData(`Snapshot without final newline. Has \`${props.opName}\` op instead.`);
+    } else if (!props.text.endsWith('\n')) {
+      throw Errors.badData('Snapshot without final newline.');
+    }
+
+    return snapshot;
   }
 }
