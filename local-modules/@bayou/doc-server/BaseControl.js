@@ -1018,19 +1018,17 @@ export default class BaseControl extends BaseDataManager {
       return [];
     }
 
-    const fc = this.fileCodec;
-    const spec = new TransactionSpec(
-      this._opForChangeRange(fc.op_readPathRange, startInclusive, endExclusive));
-
-    const transactionResult = await fc.transact(spec);
-    const data              = transactionResult.data;
-
     const result = [];
+    const { file, codec } = this.fileCodec;
+    const data = file.currentSnapshot.getPathRange(
+      this.constructor.changePathPrefix, startInclusive, endExclusive);
+
     for (let i = startInclusive; i < endExclusive; i++) {
       const path = clazz.pathForChange(i);
 
       if (data.has(path)) {
-        const change = data.get(path);
+        const encodedChange = data.get(path);
+        const change = codec.decodeJsonBuffer(encodedChange);
 
         clazz.changeClass.check(change);
         result.push(change);
