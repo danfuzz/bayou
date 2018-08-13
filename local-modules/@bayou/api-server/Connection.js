@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ConnectionError, Message, Response } from '@bayou/api-common';
+import { Auth } from '@bayou/config-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
@@ -121,8 +122,8 @@ export default class Connection extends CommonBase {
       return target;
     }
 
-    const token = BearerToken.coerceOrNull(idOrToken);
-    if (token !== null) {
+    if (Auth.isToken(idOrToken)) {
+      const token = Auth.tokenFromString(idOrToken);
       target = context.getOrNull(token.id);
       if ((target !== null) && token.sameToken(target.key)) {
         return target;
