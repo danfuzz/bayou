@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Auth } from '@bayou/config-server';
-import { Logger } from '@bayou/see-all';
+import { BaseLogger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 
 /**
@@ -14,12 +14,18 @@ export default class ApiLog extends CommonBase {
    * Constructs an instance.
    *
    * @param {Logger} log Logger to use.
+   * @param {Auth} [auth = Auth] Auth configuration to use. This is allowed as a
+   *   constructor argument _just_ to make it straightforward to unit test this
+   *   class.
    */
-  constructor(log) {
+  constructor(log, auth = Auth) {
     super();
 
-    /** {Logger} Logger to use. */
-    this._log = Logger.check(log);
+    /** {BaseLogger} Logger to use. */
+    this._log = BaseLogger.check(log);
+
+    /** {Auth} Auth configuration to use. */
+    this._auth = auth; // TODO: Consider type checking. (But that means defining a new base class.)
 
     /**
      * {Map<Message,object>} Map from messages that haven't yet been completely
@@ -80,7 +86,7 @@ export default class ApiLog extends CommonBase {
    */
   incomingMessage(msg) {
     const details = {
-      msg: ApiLog._redactMessage(msg),
+      msg: this._redactMessage(msg),
       startTime: Date.now()
     };
 
@@ -116,11 +122,11 @@ export default class ApiLog extends CommonBase {
    * @param {Message} msg The original message.
    * @returns {Message} The redacted form.
    */
-  static _redactMessage(msg) {
+  _redactMessage(msg) {
     const targetId = msg.targetId;
 
-    if (Auth.isToken(targetId)) {
-      const token = Auth.tokenFromId(targetId);
+    if (this._auth.isToken(targetId)) {
+      const token = this._auth.tokenFromString(targetId);
       msg = msg.withTargetId(token.printableId);
     }
 
