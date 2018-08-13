@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ConnectionError } from '@bayou/api-common';
-import { BodyChange, BodyDelta, BodySnapshot } from '@bayou/doc-common';
+import { BodyChange, BodyDelta, BodyOp, BodySnapshot } from '@bayou/doc-common';
 import { Delay } from '@bayou/promise-util';
 import { QuillEvents, QuillUtil } from '@bayou/quill-util';
 import { TString } from '@bayou/typecheck';
@@ -645,15 +645,26 @@ export default class BodyClient extends StateMachine {
       return;
     }
 
-    // Send the change, and handle the response.
+    // Send the change, and handle the response. **Note:** In the section above,
+    // we established that the current snapshot, `this._snapshot`, is the same
+    // as the snapshot bundled with the event, `baseSnapshot`. In the following
+    // we use the latter and not the former because in the time between when we
+    // queue up the `async` block and when it executes, it's possible for
+    // `this._snapshot` to change, which would lead to an incorrect call to
+    // `body_update()`. `baseSnapshot`, on the other hand, is a local variable
+    // which we can see (in this function) cannot possibly be modified, and so
+    // it's arguably a safer way to reference the snapshot in question. By
+    // inspection -- today! -- it doesn't look like the sort of hazard described
+    // above could ever happen in practice, but the choice below may help avoid
+    // future bugs, in the face of possible later changes to this class.
     (async () => {
       try {
-        const value = await this._sessionProxy.body_update(this._snapshot.revNum, delta);
+        const value = await this._sessionProxy.body_update(baseSnapshot.revNum, delta);
         this.q_gotUpdate(delta, value);
       } catch (e) {
         // **TODO:** Remove this logging once we figure out why we're seeing
         // this error.
-        this._log.event.badCompose(this._snapshot, delta);
+        this._log.event.badCompose(baseSnapshot, delta);
         this.q_apiError('body_update', e);
       }
     })();
@@ -785,6 +796,26 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
+   * Trim the error timestamp list of any errors that have "aged out," and add
+   * a new one for the current moment in time.
+   */
+  _addErrorStamp() {
+    const now = Date.now();
+    const agedOut = now - ERROR_WINDOW_MSEC;
+
+    this._errorStamps = this._errorStamps.filter(value => (value >= agedOut));
+    this._errorStamps.push(now);
+  }
+
+  /**
+   * Sets up the state machine to idle while waiting for input.
+   */
+  _becomeIdle() {
+    this.s_idle();
+    this.q_wantInput();
+  }
+
+  /**
    * Gets a combined (composed) delta of all document changes that have been
    * made to the Quill instance since the last time changes were integrated into
    * the server revision of the document, optionally stopping at (and not
@@ -824,6 +855,23 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
+   * Determine whether the current set of error timestamps means that the
+   * instance is unrecoverably errored.
+   *
+   * @returns {boolean} `true` iff the instance is unrecoverably errored.
+   */
+  _isUnrecoverablyErrored() {
+    const errorCount      = this._errorStamps.length;
+    const errorsPerMinute = (errorCount / ERROR_WINDOW_MSEC) * 60 * 1000;
+
+    this._log.info(
+      `Error window: ${errorCount} total; ` +
+      `${Math.round(errorsPerMinute * 100) / 100} per minute`);
+
+    return errorsPerMinute >= ERROR_MAX_PER_MINUTE;
+  }
+
+  /**
    * Updates `_snapshot` to be the given revision by applying the indicated
    * change to the current revision, and tells the attached Quill instance to
    * update itself accordingly.
@@ -852,7 +900,7 @@ export default class BodyClient extends StateMachine {
     }
 
     // Update the local snapshot.
-    this._snapshot = this._snapshot.compose(change);
+    this._snapshot = BodyClient._validateSnapshot(this._snapshot.compose(change));
 
     // Tell Quill if necessary.
     if (needQuillUpdate) {
@@ -873,7 +921,7 @@ export default class BodyClient extends StateMachine {
    * @param {BodySnapshot} snapshot New snapshot.
    */
   _updateWithSnapshot(snapshot) {
-    this._snapshot = snapshot;
+    this._snapshot = BodyClient._validateSnapshot(snapshot);
     this._quill.setContents(snapshot.contents.toQuillForm(), CLIENT_SOURCE);
 
     // This prevents "undo" from backing over the snapshot. When first starting
@@ -885,39 +933,41 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * Sets up the state machine to idle while waiting for input.
-   */
-  _becomeIdle() {
-    this.s_idle();
-    this.q_wantInput();
-  }
-
-  /**
-   * Trim the error timestamp list of any errors that have "aged out," and add
-   * a new one for the current moment in time.
-   */
-  _addErrorStamp() {
-    const now = Date.now();
-    const agedOut = now - ERROR_WINDOW_MSEC;
-
-    this._errorStamps = this._errorStamps.filter(value => (value >= agedOut));
-    this._errorStamps.push(now);
-  }
-
-  /**
-   * Determine whether the current set of error timestamps means that the
-   * instance is unrecoverably errored.
+   * Validates a snapshot. This performs validation that goes beyond the
+   * baseline requirements of `BodySnapshot` construction. This method returns
+   * `snapshot` itself if it is valid, or throws an error if a problem is
+   * detected.
    *
-   * @returns {boolean} `true` iff the instance is unrecoverably errored.
+   * As of this writing, the only thing specifically detected by this method is
+   * if `snapshot` doesn't end with a newline character (including detecting
+   * a truly "empty" document). Quill is supposed to maintain the invariants
+   * that (a) all lines are newline-terminated, and (b) every document contains
+   * at least one line.
+   *
+   * @param {BodySnapshot} snapshot Snapshot to validate.
+   * @returns {BodySnapshot} `snapshot`, if it is indeed valid.
+   * @throws {Error} Thrown if `snapshot` is problematic.
    */
-  _isUnrecoverablyErrored() {
-    const errorCount      = this._errorStamps.length;
-    const errorsPerMinute = (errorCount / ERROR_WINDOW_MSEC) * 60 * 1000;
+  static _validateSnapshot(snapshot) {
+    BodySnapshot.check(snapshot);
 
-    this._log.info(
-      `Error window: ${errorCount} total; ` +
-      `${Math.round(errorsPerMinute * 100) / 100} per minute`);
+    const ops = snapshot.contents.ops;
 
-    return errorsPerMinute >= ERROR_MAX_PER_MINUTE;
+    if (ops.length === 0) {
+      throw Errors.badData('Totally empty snapshot.');
+    }
+
+    // The last op had better be a `text` which ends with a newline.
+
+    const lastOp = ops[ops.length - 1];
+    const props  = lastOp.props;
+
+    if (props.opName !== BodyOp.CODE_text) {
+      throw Errors.badData(`Snapshot without final newline. Has \`${props.opName}\` op instead.`);
+    } else if (!props.text.endsWith('\n')) {
+      throw Errors.badData('Snapshot without final newline.');
+    }
+
+    return snapshot;
   }
 }
