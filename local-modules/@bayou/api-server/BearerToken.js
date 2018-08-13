@@ -3,20 +3,13 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseKey } from '@bayou/api-common';
-import { Auth } from '@bayou/config-server';
 import { TString } from '@bayou/typecheck';
-import { Errors } from '@bayou/util-common';
 
 /**
  * Bearer token, which is a kind of key where the secret portion is sent
  * directly to a counterparty (as opposed to merely proving that one knows the
  * secret). In this implementation, a bearer token explicitly has a portion
  * which is considered its non-secret ID.
- *
- * **Note:** An instance of the class {@link BearerTokens} defined in this
- * module (possibly an instance of a subclass) is provided by the configuration
- * point {@link @bayou/config-server/Network#bearerTokens}, which is where the
- * logic for validating and interrogating token strings resides.
  */
 export default class BearerToken extends BaseKey {
   /**
@@ -45,18 +38,12 @@ export default class BearerToken extends BaseKey {
   /**
    * Constructs an instance with the indicated parts.
    *
+   * @param {string} id Key / resource identifier. This must be a `TargetId`.
    * @param {string} secretToken Complete token.
    */
-  constructor(secretToken) {
+  constructor(id, secretToken) {
+    super('*', id);
     TString.check(secretToken);
-
-    if (!Auth.isToken(secretToken)) {
-      // We don't include any real detail in the error message, as that might
-      // inadvertently leak a secret into the logs.
-      throw Errors.badValue('(hidden)', 'secret token');
-    }
-
-    super('*', Auth.tokenId(secretToken));
 
     /** {string} Secret token. */
     this._secretToken = secretToken;
@@ -91,7 +78,7 @@ export default class BearerToken extends BaseKey {
       return false;
     }
 
-    return this._secretToken === other._secretToken;
+    return (this.id === other.id) && (this._secretToken === other._secretToken);
   }
 
   /**
@@ -102,17 +89,5 @@ export default class BearerToken extends BaseKey {
    */
   _impl_printableId() {
     return `${this.id}-...`;
-  }
-
-  /**
-   * Main coercion implementation, per the superclass documentation. In this
-   * case, `value` must be a string that follows the proper syntax for bearer
-   * tokens. If not, this will throw an error.
-   *
-   * @param {*} value Value to coerce.
-   * @returns {BearerToken} `value` as coerced to a `BearerToken`.
-   */
-  static _impl_coerce(value) {
-    return new BearerToken(value);
   }
 }
