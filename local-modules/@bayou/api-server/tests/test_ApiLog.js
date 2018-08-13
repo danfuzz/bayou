@@ -13,13 +13,30 @@ import { Functor } from '@bayou/util-common';
 // Not an exported class, so we have to import it as a file.
 import ApiLog from '../ApiLog';
 
+/**
+ * Partial mock of {@link config-server.Auth}. Only includes what's required for
+ * testing.
+ */
+class MockAuth {
+  static isToken(string) {
+    return /^token-/.test(string);
+  }
+
+  static tokenFromString(string) {
+    const match = string.match(/^token-(.*)$/);
+    const id    = `id-${match[1]}`;
+
+    return new BearerToken(id, string);
+  }
+}
+
 describe('@bayou/api-server/ApiLog', () => {
   describe('incomingMessage()', () => {
     it('should log the redacted form of target when the target is a token', () => {
       const logger = new MockLogger();
-      const apiLog = new ApiLog(logger);
-      const token  = new BearerToken('the-id', 'the-secret-token');
-      const msg    = new Message(123, token, new Functor('x', 'y'));
+      const apiLog = new ApiLog(logger, MockAuth);
+      const token  = MockAuth.tokenFromString('token-123xyz');
+      const msg    = new Message(123, token.secretToken, new Functor('x', 'y'));
 
       apiLog.incomingMessage(msg);
 
