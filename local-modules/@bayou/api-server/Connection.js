@@ -8,7 +8,6 @@ import { Logger } from '@bayou/see-all';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
 import ApiLog from './ApiLog';
-import BearerToken from './BearerToken';
 import MetaHandler from './MetaHandler';
 import Context from './Context';
 
