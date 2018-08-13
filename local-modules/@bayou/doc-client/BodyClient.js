@@ -656,7 +656,7 @@ export default class BodyClient extends StateMachine {
     // it's arguably a safer way to reference the snapshot in question. By
     // inspection -- today! -- it doesn't look like the sort of hazard described
     // above could ever happen in practice, but the choice below may help avoid
-    // future bugs, in the face of possible later changes to this class.)
+    // future bugs, in the face of possible later changes to this class.
     (async () => {
       try {
         const value = await this._sessionProxy.body_update(baseSnapshot.revNum, delta);
