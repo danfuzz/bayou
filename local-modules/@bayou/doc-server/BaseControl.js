@@ -1104,12 +1104,17 @@ export default class BaseControl extends BaseDataManager {
    *
    * @param {BaseSnapshot} snapshot The snapshot to store. Must be an instance
    *   of the appropriate concrete snapshot class for this instance.
-   * @param {Int} deleteBefore Which
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    */
-  async _writeStoredSnapshot(snapshot) {
+  async _writeStoredSnapshot(snapshot, timeoutMsec = null) {
     const clazz = this.constructor;
     const path  = clazz.storedSnapshotPath;
-    const fc    = this.fileCodec;
+    const { file, codec } = this.fileCodec;
+    const clampedTimeoutMsec = Timeouts.clamp(timeoutMsec);
+    const timeoutTime = Date.now() + clampedTimeoutMsec;
 
     clazz.snapshotClass.check(snapshot);
 
@@ -1119,15 +1124,58 @@ export default class BaseControl extends BaseDataManager {
     const deleteBefore = clazz.ephemeral
       ? Math.max(0, snapshot.revNum - CHANGES_PER_STORED_SNAPSHOT)
       : 0;
-    const deleteOp = (deleteBefore !== 0)
-      ? [this._opForChangeRange(fc.op_deletePathRange, 0, deleteBefore)]
-      : [];
 
-    const spec = new TransactionSpec(fc.op_writePath(path, snapshot), ...deleteOp);
+    const fileOps = [
+      FileOp.op_writePath(path, codec.encodeJsonBuffer(snapshot))
+    ];
 
-    await fc.transact(spec);
+    if (deleteBefore !== 0) {
+      fileOps.push(FileOp.op_deletePathRange(this.constructor.changePathPrefix, 0, deleteBefore));
+    }
 
-    this.log.info(`Wrote stored snapshot for revision: r${snapshot.revNum}`);
+    let fileChange = new FileChange(snapshot.revNum + 1, fileOps);
+
+    // Handles timeout (called twice, below).
+    const timedOut = () => {
+      // Log a message -- it's at least somewhat notable, though it does occur
+      // regularly -- and throw `timedOut` with the original timeout value. (If
+      // called as a result of catching a timeout from `transact()` the timeout
+      // value in the error might not be the original `timeoutMsec`.)
+      this.log.info(`\`_writeStoredSnapshot()\` timed out: ${timeoutMsec}msec`);
+      throw Errors.timedOut(timeoutMsec);
+    };
+
+    // Loop until the overall timeout.
+    for (;;) {
+      const now = Date.now();
+      if (now >= timeoutTime) {
+        timedOut();
+      }
+
+      // If this returns normally (doesn't throw), then we know it wasn't due
+      // to hitting the timeout.
+      try {
+        const appendSuccess = await file.appendChange(fileChange, timeoutTime - now);
+
+        if (appendSuccess) {
+          this.log.info('Wrote stored snapshot for revision:', snapshot.revNum);
+
+          return;
+        } else {
+          this.log.info('Lost append race for revision:', snapshot.revNum);
+          const currentRevNum = await this.currentRevNum(timeoutTime - Date.now());
+
+          fileChange = fileChange.withRevNum(currentRevNum + 1);
+        }
+      } catch (e) {
+        // For a timeout, we log and report the original timeout value. For
+        // everything else, we just transparently re-throw.
+        if (Errors.is_timedOut(e)) {
+          timedOut();
+        }
+        throw e;
+      }
+    }
   }
 
   /**
