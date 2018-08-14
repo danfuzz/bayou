@@ -28,7 +28,7 @@ export default class BaseDataManager extends BaseComplexMember {
   get initOps() {
     const ops = this._impl_initOps;
 
-    return TArray.check(ops, FileOp.check);
+    return TArray.check(ops, op => FileOp.check(op));
   }
 
   /**

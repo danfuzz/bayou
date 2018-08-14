@@ -50,7 +50,7 @@ export default class SchemaHandler extends BaseDataManager {
   get _impl_initOps() {
     const encodedSchemaVersion = this.fileCodec.codec.encodeJsonBuffer(this._schemaVersion);
 
-    return FileOp.op_writePath(Paths.SCHEMA_VERSION, encodedSchemaVersion);
+    return [FileOp.op_writePath(Paths.SCHEMA_VERSION, encodedSchemaVersion)];
   }
 
   /**
