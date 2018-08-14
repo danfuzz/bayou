@@ -10,17 +10,6 @@ import { UtilityClass } from '@bayou/util-common';
  */
 export default class Auth extends UtilityClass {
   /**
-   * {array<string>} A frozen array of at least two example token strings, each
-   * of which is syntactically valid but should _not_ actually grant access to
-   * anything in a production environment. This is intended for unit testing.
-   *
-   * **TODO:** It might be safe to remove this now. If so, do so!
-   */
-  static get exampleTokens() {
-    return use.Auth.exampleTokens;
-  }
-
-  /**
    * {array<BearerToken>} Frozen array of bearer tokens which grant root access
    * to the system. The value of this property &mdash; that is, the array it
    * refers to &mdash; may change over time, but the contents of any given array

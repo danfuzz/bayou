@@ -9,19 +9,6 @@ import { BearerToken } from '@bayou/api-server';
 import { Auth } from '@bayou/config-server-default';
 
 describe('@bayou/config-server-default/Auth', () => {
-  describe('.exampleTokens', () => {
-    it('should be an array of strings that are all `isToken()`', () => {
-      const tokens = Auth.exampleTokens;
-
-      assert.isArray(tokens);
-
-      for (const token of tokens) {
-        assert.isString(token);
-        assert.isTrue(Auth.isToken(token));
-      }
-    });
-  });
-
   describe('.rootTokens', () => {
     it('should be an array of `BearerToken` instances', () => {
       const tokens = Auth.rootTokens;
