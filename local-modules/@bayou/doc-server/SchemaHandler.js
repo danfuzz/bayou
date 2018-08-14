@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TheModule as docCommon_TheModule } from '@bayou/doc-common';
-import { TransactionSpec } from '@bayou/file-store-ot';
+import { TransactionSpec, FileOp } from '@bayou/file-store-ot';
 
 import BaseDataManager from './BaseDataManager';
 import Paths from './Paths';
@@ -40,6 +40,17 @@ export default class SchemaHandler extends BaseDataManager {
       // Version for the file schema.
       this.fileCodec.op_writePath(Paths.SCHEMA_VERSION, this._schemaVersion)
     );
+  }
+
+  /**
+   * {FileOp} Array of aggregated FileOps which when run will initialize
+   * the portion of the file which this class is responsible for. In this case,
+   * it constructs the FileOp to account for the file's schema.
+   */
+  get _impl_initOps() {
+    const encodedSchemaVersion = this.fileCodec.codec.encodeJsonBuffer(this._schemaVersion);
+
+    return FileOp.op_writePath(Paths.SCHEMA_VERSION, encodedSchemaVersion);
   }
 
   /**

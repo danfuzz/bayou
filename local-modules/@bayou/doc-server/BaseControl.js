@@ -747,6 +747,28 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * {Array<FileOp>} Array of aggregated FileOps which when run will initialize
+   * the portion of the file which this class is responsible for. This
+   * implementation should be sufficient for all subclasses of this class.
+   */
+  get _impl_initOps() {
+    const clazz = this.constructor;
+    const codec = this.fileCodec.codec;
+
+    return [
+      // Clear out old data, if any. For example (and especially during
+      // development), there might be data in an old schema. By the time we get
+      // here, if there were anything to preserve it would have already been
+      // preserved.
+      FileOp.op_deletePathPrefix(clazz.pathPrefix),
+      // Initial revision number.
+      FileOp.op_writePath(clazz.revisionNumberPath, codec.encodeJsonBuffer(0)),
+      // Empty change #0.
+      FileOp.op_writePath(clazz.pathForChange(0), codec.encodeJsonBuffer(clazz.changeClass.FIRST))
+    ];
+  }
+
+  /**
    * {TransactionSpec} Spec for a transaction which when run will initialize the
    * portion of the file which this class is responsible for. This
    * implementation should be sufficient for all subclasses of this class.

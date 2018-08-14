@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TransactionSpec } from '@bayou/file-store-ot';
+import { TransactionSpec, FileOp } from '@bayou/file-store-ot';
+import { TArray } from '@bayou/typecheck';
 
 import BaseComplexMember from './BaseComplexMember';
 import ValidationStatus from './ValidationStatus';
@@ -18,6 +19,16 @@ export default class BaseDataManager extends BaseComplexMember {
    */
   get initSpec() {
     return TransactionSpec.check(this._impl_initSpec);
+  }
+
+  /**
+   * {Array<FileOps>} FileOps which when run will initialize the portion of the
+   * file which this class is responsible for. Subclasses must override this.
+   */
+  get initOps() {
+    const ops = this._impl_initOps;
+
+    return TArray.check(ops, FileOp.check);
   }
 
   /**
@@ -55,6 +66,16 @@ export default class BaseDataManager extends BaseComplexMember {
    * @abstract
    */
   get _impl_initSpec() {
+    return this._mustOverride();
+  }
+
+  /**
+   * {Array<FileOps>} FileOps which when run will initialize the portion of the
+   * file which this class is responsible for. Subclasses must override this.
+   *
+   * @abstract
+   */
+  get _impl_initOps() {
     return this._mustOverride();
   }
 

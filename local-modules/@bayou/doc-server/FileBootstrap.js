@@ -4,7 +4,7 @@
 
 import { Storage } from '@bayou/config-server';
 import { BodyChange, BodyDelta } from '@bayou/doc-common';
-import { TransactionSpec } from '@bayou/file-store-ot';
+import { TransactionSpec, FileOp, FileChange } from '@bayou/file-store-ot';
 import { Timestamp } from '@bayou/ot-common';
 import { Mutex } from '@bayou/promise-util';
 import { Errors } from '@bayou/util-common';
@@ -35,6 +35,9 @@ const MIGRATION_NOTE = new BodyDelta([
 const RECOVERY_NOTE = new BodyDelta([
   ['text', '(Recreated document due to allegedly-recoverable corruption.)\n']
 ]);
+
+/** {int} Timeout for file creation, in msec. */
+const FILE_CREATE_TIMEOUT_MSEC = 10000;
 
 /**
  * Handler for the "bootstrap" setup of a file, including initializing new
@@ -148,6 +151,25 @@ export default class FileBootstrap extends BaseDataManager {
   }
 
   /**
+   * {Array<FileOp>} Array of aggregated `FileOps` which when run will
+   * initialize the portion of the file which this class is responsible
+   * for. In this case, it constructs the aggregated `FileOps` for the
+   * entire file, based on all the subcomponents.
+   */
+  get _impl_initOps() {
+    // If the file already existed, this clears out the old contents.
+    // **TODO:** In cases where this is a re-creation based on a migration
+    // problem, we probably want to preserve the old data by moving it aside
+    // (e.g. into a `lossage/<timestamp>` prefix) instead of just blasting it
+    // away entirely.
+    return [FileOp.op_deleteAll()]
+      .concat(this._schemaHandler.initOps)
+      .concat(this._bodyControl.initOps)
+      .concat(this._caretControl.initOps)
+      .concat(this._propertyControl.initOps);
+  }
+
+  /**
    * Subclass-specific implementation of {@link #validationStatus}. This
    * class implements overall validation for all document pieces.
    *
@@ -235,11 +257,12 @@ export default class FileBootstrap extends BaseDataManager {
 
     // `revNum` is `1` because a newly-created body always has an empty
     // change for revision `0`.
-    const change   = new BodyChange(1, firstText, Timestamp.now());
-    const initSpec = this.initSpec;
+    const change = new BodyChange(1, firstText, Timestamp.now());
+    const initOps = this.initOps;
+    const initialFileChange = new FileChange(1, initOps);
 
     await this.file.create();
-    await this.file.transact(initSpec);
+    await this.file.appendChange(initialFileChange, FILE_CREATE_TIMEOUT_MSEC);
 
     await this.afterInit();
 
