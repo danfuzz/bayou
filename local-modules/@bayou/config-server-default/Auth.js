@@ -32,12 +32,13 @@ export default class Auth extends UtilityClass {
    * {array<BearerToken>} Implementation of standard configuration point.
    *
    * This implementation &mdash; obviously insecurely &mdash; just returns
-   * the {@link #exampleTokens} converted to {@link BearerToken} instances.
+   * an array with a single token consisting of all zeroes in the numeric
+   * portion.
    */
   static get rootTokens() {
-    const tokens = this.exampleTokens.map(t => Auth.tokenFromString(t));
+    const tokenString = 'tok-00000000000000000000000000000000';
 
-    return Object.freeze(tokens);
+    return Object.freeze([Auth.tokenFromString(tokenString)]);
   }
 
   /**
