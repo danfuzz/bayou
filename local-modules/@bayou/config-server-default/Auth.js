@@ -17,27 +17,16 @@ const TOKEN_REGEX = /^(tok-[0-9a-f]{16})([0-9a-f]{16})$/;
  */
 export default class Auth extends UtilityClass {
   /**
-   * {array<string>} Implementation of standard configuration point.
-   *
-   * This implementation provides strings of 32 `0`s and 32 `1`s as examples.
-   */
-  static get exampleTokens() {
-    return Object.freeze([
-      'tok-00000000000000000000000000000000',
-      'tok-11111111111111111111111111111111'
-    ]);
-  }
-
-  /**
    * {array<BearerToken>} Implementation of standard configuration point.
    *
    * This implementation &mdash; obviously insecurely &mdash; just returns
-   * the {@link #exampleTokens} converted to {@link BearerToken} instances.
+   * an array with a single token consisting of all zeroes in the numeric
+   * portion.
    */
   static get rootTokens() {
-    const tokens = this.exampleTokens.map(t => Auth.tokenFromString(t));
+    const tokenString = 'tok-00000000000000000000000000000000';
 
-    return Object.freeze(tokens);
+    return Object.freeze([Auth.tokenFromString(tokenString)]);
   }
 
   /**
