@@ -19,10 +19,11 @@ const log = new Logger('api');
 const IDLE_TIME_MSEC = 20 * 60 * 1000; // Twenty minutes.
 
 /**
- * Binding context for an API server or session therein. This is mostly just a
- * map from IDs to `Target` instances, along with reasonably straightforward
- * accessor and update methods. In addition, this is what knows which {@link
- * Codec} to use.
+ * Binding context for an API server or session therein. Instances of this class
+ * are used to map from IDs to `Target` instances, including targets which are
+ * ephemerally bound to the session as well as ones that are authorized via
+ * bearer tokens. In addition, this class is used to hold the knowledge of which
+ * {@link Codec} to use for a session.
  */
 export default class Context extends CommonBase {
   /**
