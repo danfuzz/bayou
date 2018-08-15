@@ -93,18 +93,9 @@ export default class Auth extends BaseAuth {
       return match[1];
     }
 
-    // **Note:** We redact the value to avoid the likelihood of leaking
+    // **Note:** We redact the value to reduce the likelihood of leaking
     // security-sensitive info.
-
-    if (tokenString.length >= 24) {
-      tokenString = `${tokenString.slice(0, 16)}...`;
-    } else if (tokenString.length >= 12) {
-      tokenString = `${tokenString.slice(0, 8)}...`;
-    } else {
-      tokenString = '...';
-    }
-
-    throw Errors.badValue(tokenString, 'bearer token');
+    throw Errors.badValue(BearerToken.redactString(tokenString), 'bearer token');
   }
 
   /**
