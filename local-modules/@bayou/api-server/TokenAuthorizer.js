@@ -49,7 +49,7 @@ export default class TokenAuthorizer extends CommonBase {
 
     const result = await this._impl_targetFromToken(token);
 
-    return (result === null) ? null : TObject.check(result);
+    return TObject.orNull(result);
   }
 
   /**
