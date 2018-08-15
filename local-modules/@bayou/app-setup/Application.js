@@ -7,7 +7,8 @@ import http from 'http';
 import path from 'path';
 import ws from 'ws';
 
-import { BearerToken, Context, PostConnection, WsConnection } from '@bayou/api-server';
+import { BearerToken } from '@bayou/api-common';
+import { Context, PostConnection, WsConnection } from '@bayou/api-server';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { ClientBundle } from '@bayou/client-bundle';
 import { Auth, Deployment, Network } from '@bayou/config-server';

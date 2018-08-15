@@ -5,8 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Message } from '@bayou/api-common';
-import { BearerToken } from '@bayou/api-server';
+import { BearerToken, Message } from '@bayou/api-common';
 import { MockLogger } from '@bayou/see-all/mocks';
 import { Functor } from '@bayou/util-common';
 

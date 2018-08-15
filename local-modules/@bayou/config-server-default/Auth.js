@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BearerToken } from '@bayou/api-server';
+import { BearerToken } from '@bayou/api-common';
 import { BaseAuth } from '@bayou/config-server';
 import { Delay } from '@bayou/promise-util';
 import { Errors } from '@bayou/util-common';

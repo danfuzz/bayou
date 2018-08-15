@@ -5,11 +5,11 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { BearerToken } from '@bayou/api-server';
+import { BearerToken } from '@bayou/api-common';
 
-describe('@bayou/api-server/BearerToken', () => {
+describe('@bayou/api-common/BearerToken', () => {
   describe('constructor()', () => {
-    it('should return a frozen instance of BearerToken', () => {
+    it('should return a frozen instance of the class', () => {
       const token = new BearerToken('x', 'y');
 
       assert.instanceOf(token, BearerToken);
@@ -27,13 +27,13 @@ describe('@bayou/api-server/BearerToken', () => {
   });
 
   describe('sameToken()', () => {
-    it('should return false when passed `null`', () => {
+    it('should return `false` when passed `null`', () => {
       const token = new BearerToken('x', 'y');
 
       assert.isFalse(token.sameToken(null));
     });
 
-    it('should return false when passed `undefined`', () => {
+    it('should return `false` when passed `undefined`', () => {
       const token = new BearerToken('x', 'y');
 
       assert.isFalse(token.sameToken(undefined));
@@ -74,7 +74,7 @@ describe('@bayou/api-server/BearerToken', () => {
       assert.isFalse(BearerToken.sameArrays(array1, array2));
     });
 
-    it('should throw an Error if given arrays that contain things other than `BearerToken`s', () => {
+    it('should throw an error if given arrays that contain things other than `BearerToken`s', () => {
       const token = new BearerToken('a', '1');
 
       const array1 = [token, 'a'];
