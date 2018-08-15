@@ -3,8 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BearerToken } from '@bayou/api-server';
+import { BaseAuth } from '@bayou/config-server';
 import { Delay } from '@bayou/promise-util';
-import { Errors, UtilityClass } from '@bayou/util-common';
+import { Errors } from '@bayou/util-common';
 
 /**
  * {RegEx} Expression that matches properly-formed tokens. The ID and secret
@@ -15,7 +16,7 @@ const TOKEN_REGEX = /^(tok-[0-9a-f]{16})([0-9a-f]{16})$/;
 /**
  * Utility functionality regarding the network configuration of a server.
  */
-export default class Auth extends UtilityClass {
+export default class Auth extends BaseAuth {
   /**
    * {array<BearerToken>} Implementation of standard configuration point.
    *
@@ -40,6 +41,28 @@ export default class Auth extends UtilityClass {
    */
   static isToken(tokenString) {
     return TOKEN_REGEX.test(tokenString);
+  }
+
+  /**
+   * Implementation of standard configuration point.
+   *
+   * This implementation &mdash; obviously insecurely &mdash; hard-codes a
+   * particular token to have "root" authority, specifically a token consisting
+   * of all zeroes in the numeric portion.
+   *
+   * @param {BearerToken} token The token in question.
+   * @returns {object} Representation of the authority granted by `token`.
+   */
+  static async tokenAuthority(token) {
+    BearerToken.check(token);
+
+    for (const t of Auth.rootTokens) {
+      if (t.sameToken(token)) {
+        return { type: Auth.TYPE_root };
+      }
+    }
+
+    return { type: Auth.TYPE_none };
   }
 
   /**

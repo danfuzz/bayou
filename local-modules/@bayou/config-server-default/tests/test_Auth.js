@@ -8,6 +8,20 @@ import { describe, it } from 'mocha';
 import { BearerToken } from '@bayou/api-server';
 import { Auth } from '@bayou/config-server-default';
 
+/**
+ * {string} Valid token string which is not expected to ever bear any authority.
+ */
+const EXAMPLE_TOKEN = 'tok-00000000000000001123456789abcdef';
+
+/**
+ * {string} The well-known root token used by this module.
+ *
+ * **Note:** This module (the default server config) is intentionally set up to
+ * have a single well-known root token. Any real deployment of this project will
+ * (had better!) use a _different_ configuration module.
+ */
+const ROOT_TOKEN = 'tok-00000000000000000000000000000000';
+
 describe('@bayou/config-server-default/Auth', () => {
   describe('.rootTokens', () => {
     it('should be an array of `BearerToken` instances', () => {
@@ -23,7 +37,7 @@ describe('@bayou/config-server-default/Auth', () => {
 
   describe('isToken()', () => {
     it('should accept token syntax', () => {
-      assert.isTrue(Auth.isToken('tok-00000000000000001123456789abcdef'));
+      assert.isTrue(Auth.isToken(EXAMPLE_TOKEN));
     });
 
     it('should reject non-token syntax', () => {
@@ -32,6 +46,33 @@ describe('@bayou/config-server-default/Auth', () => {
       assert.isFalse(Auth.isToken('tok-z0000000000000001123456789abcdef'));
       assert.isFalse(Auth.isToken('tok-00000000000000001123456789abcdef1'));
       assert.isFalse(Auth.isToken('tok-0000000000000000-1123456789abcdef'));
+    });
+  });
+
+  describe('tokenAuthority()', () => {
+    it('should reject non-token values', async () => {
+      async function test(x) {
+        await assert.isRejected(Auth.tokenAuthority(x), /badValue/);
+      }
+
+      await test(undefined);
+      await test(null);
+      await test('florp');
+      await test(EXAMPLE_TOKEN); // Requires a token object, not a string.
+    });
+
+    it('should indicate "no auth" for an unknown token', async () => {
+      const token = Auth.tokenFromString(EXAMPLE_TOKEN);
+      const auth  = await Auth.tokenAuthority(token);
+
+      assert.deepEqual(auth, { type: Auth.TYPE_none });
+    });
+
+    it('should indicate "root auth" for the staticly-known root token', async () => {
+      const token = Auth.tokenFromString(ROOT_TOKEN);
+      const auth  = await Auth.tokenAuthority(token);
+
+      assert.deepEqual(auth, { type: Auth.TYPE_root });
     });
   });
 

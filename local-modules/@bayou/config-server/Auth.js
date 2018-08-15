@@ -3,12 +3,13 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { use } from '@bayou/injecty';
-import { UtilityClass } from '@bayou/util-common';
+
+import BaseAuth from './BaseAuth';
 
 /**
  * Authorization-related functionality.
  */
-export default class Auth extends UtilityClass {
+export default class Auth extends BaseAuth {
   /**
    * {array<BearerToken>} Frozen array of bearer tokens which grant root access
    * to the system. The value of this property &mdash; that is, the array it
@@ -30,6 +31,32 @@ export default class Auth extends UtilityClass {
    */
   static isToken(tokenString) {
     return use.Auth.isToken(tokenString);
+  }
+
+  /**
+   * Gets the authority / authorization that is granted by the given
+   * {@link BearerToken}. The result is a plain object which binds at least
+   * `type` to the type of authority. Per type, the following are the other
+   * possible bindings:
+   *
+   * * `Auth.TYPE_none` &mdash; No other bindings. The token doesn't actually
+   *   grant any authority.
+   * * `Auth.TYPE_root` &mdash; No other bindings. The token is a "root" token,
+   *   which grants full system access. (This sort of token is how a trusted
+   *   back-end system communicates with this server.)
+   *
+   * **Note:** This is defined to be an `async` method, on the expectation that
+   * in a production configuration, it might require network activity (e.g.
+   * querying a different service) to make an authorization determination.
+   *
+   * **TODO:** Consider having an `expirationTime` binding.
+   *
+   * @param {BearerToken} token The token in question.
+   * @returns {object} Plain object with bindings as described above,
+   *   representing the authority granted by `token`.
+   */
+  static async tokenAuthority(token) {
+    return use.Auth.tokenAuthority(token);
   }
 
   /**
