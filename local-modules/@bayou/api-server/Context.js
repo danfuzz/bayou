@@ -8,6 +8,7 @@ import { TString } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
 import Target from './Target';
+import TokenAuthorizer from './TokenAuthorizer';
 
 /** {Logger} Logger. */
 const log = new Logger('api');
@@ -30,12 +31,21 @@ export default class Context extends CommonBase {
    * Constructs an instance which is initially empty.
    *
    * @param {Codec} codec Codec to use for all connections / sessions.
+   * @param {TokenAuthorizer|null} [tokenAuth = null] Optional authorizer for
+   *   bearer tokens. If non-`null`, this is used to map bearer tokens into
+   *   usable target objects.
    */
-  constructor(codec) {
+  constructor(codec, tokenAuth = null) {
     super();
 
     /** {Codec} The codec to use for connections / sessions. */
     this._codec = Codec.check(codec);
+
+    /**
+     * {TokenAuthorizer|null} If non-`null`, authorizer to use in order to
+     * translate bearer tokens to target objects.
+     */
+    this._tokenAuth = (tokenAuth === null) ? null : TokenAuthorizer.check(tokenAuth);
 
     /** {Map<string, Target>} The underlying map. */
     this._map = new Map();
@@ -136,6 +146,65 @@ export default class Context extends CommonBase {
     }
 
     return result;
+  }
+
+  /**
+   * Gets an authorized target. This will find _uncontrolled_ (already
+   * authorized) targets that were previously added via {@link #addTarget} as
+   * well as those authorized by virtue of this method being passed a valid
+   * authority-bearing token (in string form).
+   *
+   * **Note:** This is the only method on this class which understands how to
+   * authorize bearer tokens. This is also the only `get*` method on this class
+   * which is asynchronous. (It has to be asynchronous because token
+   * authorization) is asynchronous. **TODO:** This situation is confusing and
+   * should be cleaned up, one way or another.
+   *
+   * @param {string} idOrToken The target ID or a bearer token (in string form)
+   *   which authorizes access to a target.
+   * @returns {Target} The so-identified or so-authorized target.
+   * @throws {Error} Thrown if `idOrToken` does not correspond to an authorized
+   *   target.
+   */
+  async getAuthorizedTarget(idOrToken) {
+    const tokenAuth = this._tokenAuth;
+
+    if ((tokenAuth !== null) && tokenAuth.isToken(idOrToken)) {
+      const token   = tokenAuth.tokenFromString(idOrToken);
+      const already = this.getOrNull(token.id);
+
+      if (already !== null) {
+        // We've seen this token previously in this context / session. Just
+        // verify that the token we received matches what the target expects.
+        // (This is a sanity check; it should always end up matching.)
+
+        if (!token.sameToken(already.key)) {
+          throw Errors.wtf('Non-matching target key!');
+        }
+
+        return already;
+      }
+
+      // It's the first time this token has been encountered in this context.
+      // Determine its authorized target, and if authorized cache it in this
+      // instance's target map.
+
+      const targetObject = await tokenAuth.targetFromToken(token);
+
+      if (targetObject === null) {
+        throw Errors.badUse(`Unknown target: \`${token.printableId}\``);
+      }
+
+      const target = new Target(token, targetObject);
+
+      this.addTarget(target);
+      return target;
+    }
+
+    // It's not a bearer token (or this instance doesn't deal with bearer tokens
+    // at all). The ID can only validly refer to an uncontrolled target.
+
+    return this.getUncontrolled(idOrToken);
   }
 
   /**
