@@ -33,7 +33,9 @@ export default class Auth extends UtilityClass {
   }
 
   /**
-   * Constructs a {@link api-server.BearerToken} from the given string.
+   * Constructs a {@link api-server.BearerToken} from the given string. The
+   * result is a {@link BearerToken} instance but does _not_ necessarily convey
+   * any authority / authorization.
    *
    * @param {string} tokenString The token. It is only valid to pass a value for
    *   which {@link #isToken} returns `true`.
