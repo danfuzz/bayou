@@ -10,11 +10,14 @@ import { TObject } from '@bayou/typecheck';
 describe('@bayou/typecheck/TObject', () => {
   describe('check(value)', () => {
     it('should return the provided value when passed an object', () => {
-      const value = { a: 1, b: 2 };
-      const func  = () => 123;
+      function test(value) {
+        assert.strictEqual(TObject.check(value), value);
+      }
 
-      assert.strictEqual(TObject.check(value), value);
-      assert.strictEqual(TObject.check(func),  func);
+      test({ a: 1, b: 2 });
+      test([1, 2, 3]);
+      test(() => 123);
+      test(new Map());
     });
 
     it('should throw an Error when passed anything other than an object', () => {
@@ -48,6 +51,30 @@ describe('@bayou/typecheck/TObject', () => {
     it('should throw an Error when passed anything other than an object', () => {
       assert.throws(() => TObject.check(null, Object));
       assert.throws(() => TObject.check(54,   Object));
+    });
+  });
+
+  describe('orNull()', () => {
+    it('should return the provided value when passed an object', () => {
+      function test(value) {
+        assert.strictEqual(TObject.orNull(value), value);
+      }
+
+      test({ a: 1, b: 2 });
+      test([1, 2, 3]);
+      test(() => 123);
+      test(new Map());
+    });
+
+    it('should return `null` when passed `null`', () => {
+      assert.isNull(TObject.orNull(null));
+    });
+
+    it('should throw an Error when passed anything other than an object or `null`', () => {
+      assert.throws(() => TObject.check(undefined));
+      assert.throws(() => TObject.check(false));
+      assert.throws(() => TObject.check(54));
+      assert.throws(() => TObject.check('this better not work'));
     });
   });
 
