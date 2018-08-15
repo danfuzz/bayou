@@ -6,6 +6,7 @@ import Connection from './Connection';
 import Context from './Context';
 import PostConnection from './PostConnection';
 import Target from './Target';
+import TokenAuthorizer from './TokenAuthorizer';
 import WsConnection from './WsConnection';
 
-export { Connection, Context, PostConnection, Target, WsConnection };
+export { Connection, Context, PostConnection, Target, TokenAuthorizer, WsConnection };
