@@ -30,18 +30,21 @@ export default class TObject extends UtilityClass {
    * `null`.
    *
    * @param {*} value Value to check.
+   * @param {object|null} [clazz = null] Class (constructor) that `value` must
+   *   be an instance of, or `null` if there is no class requirement.
    * @returns {object|null} `value`.
    */
-  static orNull(value) {
+  static orNull(value, clazz = null) {
     if (value === null) {
       return null;
     }
 
     try {
-      return TObject.check(value);
+      return TObject.check(value, clazz);
     } catch (e) {
       // Throw a higher-fidelity error.
-      throw Errors.badValue(value, 'Object|null');
+      const name = (clazz === null) ? 'Object' : `class ${clazz.name}`;
+      throw Errors.badValue(value, `${name}|null`);
     }
   }
 
