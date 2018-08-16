@@ -2,9 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Auth } from '@bayou/config-server';
 import { BaseLogger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
+
+import TokenAuthorizer from './TokenAuthorizer';
 
 /**
  * Handler of the logging of API calls.
@@ -14,18 +15,17 @@ export default class ApiLog extends CommonBase {
    * Constructs an instance.
    *
    * @param {Logger} log Logger to use.
-   * @param {Auth} [auth = Auth] Auth configuration to use. This is allowed as a
-   *   constructor argument _just_ to make it straightforward to unit test this
-   *   class.
+   * @param {TokenAuthorizer} tokenAuth Token authorizer. Just used for token
+   *   parsing (to handle redaction).
    */
-  constructor(log, auth = Auth) {
+  constructor(log, tokenAuth) {
     super();
 
     /** {BaseLogger} Logger to use. */
     this._log = BaseLogger.check(log);
 
-    /** {Auth} Auth configuration to use. */
-    this._auth = auth; // TODO: Consider type checking. (But that means defining a new base class.)
+    /** {TokenAuthorizer} Token authorizer. Just used for token parsing. */
+    this._tokenAuth = TokenAuthorizer.check(tokenAuth);
 
     /**
      * {Map<Message,object>} Map from messages that haven't yet been completely
@@ -125,8 +125,8 @@ export default class ApiLog extends CommonBase {
   _redactMessage(msg) {
     const targetId = msg.targetId;
 
-    if (this._auth.isToken(targetId)) {
-      const token = this._auth.tokenFromString(targetId);
+    if (this._tokenAuth.isToken(targetId)) {
+      const token = this._tokenAuth.tokenFromString(targetId);
       msg = msg.withTargetId(token.printableId);
     }
 

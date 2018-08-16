@@ -58,6 +58,11 @@ export default class Context extends CommonBase {
     return this._codec;
   }
 
+  /** {TokenAuthorized} The token authorizer to use. */
+  get tokenAuthorizer() {
+    return this._tokenAuth;
+  }
+
   /**
    * Adds a new target to this instance. This will throw an error if there is
    * already another target with the same ID. This is a convenience for calling

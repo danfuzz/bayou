@@ -59,7 +59,7 @@ export default class Connection extends CommonBase {
     this._log = log.withAddedContext(this._connectionId);
 
     /** {ApiLog} The API logger to use. */
-    this._apiLog = new ApiLog(this._log);
+    this._apiLog = new ApiLog(this._log, context.tokenAuthorizer);
 
     // We add a `meta` binding to the initial set of targets, which is specific
     // to this instance/connection.
