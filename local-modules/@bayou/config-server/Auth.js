@@ -16,6 +16,9 @@ export default class Auth extends BaseAuth {
    * refers to &mdash; may change over time, but the contents of any given array
    * yielded from this property are guaranteed to be frozen.
    *
+   * **TODO:** This property should be removed, when all clients instead use
+   * {@link #tokenAuthority}.
+   *
    * @see #whenRootTokensChange
    */
   static get rootTokens() {
@@ -88,6 +91,9 @@ export default class Auth extends BaseAuth {
    * Returns a promise which becomes resolved (to `true`) the next time that
    * the array of {@link #rootTokens} changes, or (on the margin) could
    * _conceivably_ have changed.
+   *
+   * **TODO:** This method should be removed, when all clients use
+   * {@link #tokenAuthority} instead of {@link #rootTokens}.
    *
    * @returns {Promise<true>} Promise that resolves when {@link #rootTokens}
    *   should be checked for update.
