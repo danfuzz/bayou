@@ -5,8 +5,8 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Message } from '@bayou/api-common';
-import { BearerToken } from '@bayou/api-server';
+import { BearerToken, Message } from '@bayou/api-common';
+import { TokenAuthorizer } from '@bayou/api-server';
 import { MockLogger } from '@bayou/see-all/mocks';
 import { Functor } from '@bayou/util-common';
 
@@ -14,15 +14,15 @@ import { Functor } from '@bayou/util-common';
 import ApiLog from '../ApiLog';
 
 /**
- * Partial mock of {@link config-server.Auth}. Only includes what's required for
- * testing.
+ * Partial and simple implementation of {@link TokenAuthorizer}. Only includes
+ * what's required for testing.
  */
-class MockAuth {
-  static isToken(string) {
+class MockTokenAuthorizer extends TokenAuthorizer {
+  isToken(string) {
     return /^token-/.test(string);
   }
 
-  static tokenFromString(string) {
+  tokenFromString(string) {
     const match = string.match(/^token-(.*)$/);
     const id    = `id-${match[1]}`;
 
@@ -33,10 +33,11 @@ class MockAuth {
 describe('@bayou/api-server/ApiLog', () => {
   describe('incomingMessage()', () => {
     it('should log the redacted form of target when the target is a token', () => {
-      const logger = new MockLogger();
-      const apiLog = new ApiLog(logger, MockAuth);
-      const token  = MockAuth.tokenFromString('token-123xyz');
-      const msg    = new Message(123, token.secretToken, new Functor('x', 'y'));
+      const logger  = new MockLogger();
+      const tokAuth = new MockTokenAuthorizer();
+      const apiLog  = new ApiLog(logger, tokAuth);
+      const token   = tokAuth.tokenFromString('token-123xyz');
+      const msg     = new Message(123, token.secretToken, new Functor('x', 'y'));
 
       apiLog.incomingMessage(msg);
 

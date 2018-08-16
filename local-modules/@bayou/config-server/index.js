@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import Auth from './Auth';
+import BaseAuth from './BaseAuth';
 import Deployment from './Deployment';
 import Logging from './Logging';
 import Network from './Network';
@@ -10,6 +11,7 @@ import Storage from './Storage';
 
 export {
   Auth,
+  BaseAuth,
   Deployment,
   Logging,
   Network,

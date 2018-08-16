@@ -10,11 +10,14 @@ import { TObject } from '@bayou/typecheck';
 describe('@bayou/typecheck/TObject', () => {
   describe('check(value)', () => {
     it('should return the provided value when passed an object', () => {
-      const value = { a: 1, b: 2 };
-      const func  = () => 123;
+      function test(value) {
+        assert.strictEqual(TObject.check(value), value);
+      }
 
-      assert.strictEqual(TObject.check(value), value);
-      assert.strictEqual(TObject.check(func),  func);
+      test({ a: 1, b: 2 });
+      test([1, 2, 3]);
+      test(() => 123);
+      test(new Map());
     });
 
     it('should throw an Error when passed anything other than an object', () => {
@@ -48,6 +51,61 @@ describe('@bayou/typecheck/TObject', () => {
     it('should throw an Error when passed anything other than an object', () => {
       assert.throws(() => TObject.check(null, Object));
       assert.throws(() => TObject.check(54,   Object));
+    });
+  });
+
+  describe('orNull(value)', () => {
+    it('should return the provided value when passed an object', () => {
+      function test(value) {
+        assert.strictEqual(TObject.orNull(value), value);
+      }
+
+      test({ a: 1, b: 2 });
+      test([1, 2, 3]);
+      test(() => 123);
+      test(new Map());
+    });
+
+    it('should return `null` when passed `null`', () => {
+      assert.isNull(TObject.orNull(null));
+    });
+
+    it('should throw an Error when passed anything other than an object or `null`', () => {
+      assert.throws(() => TObject.orNull(undefined));
+      assert.throws(() => TObject.orNull(false));
+      assert.throws(() => TObject.orNull(54));
+      assert.throws(() => TObject.orNull('this better not work'));
+    });
+  });
+
+  describe('orNull(value, clazz)', () => {
+    it('should return the provided value when passed an object of a matching class', () => {
+      function test(value, clazz) {
+        assert.strictEqual(TObject.orNull(value, clazz), value);
+      }
+
+      test({ a: 1, b: 2 }, Object);
+      test([1, 2, 3],      Array);
+      test([1, 2, 3],      Object);
+      test(() => 123,      Function);
+      test(new Map(),      Map);
+      test(new Map(),      Object);
+    });
+
+    it('should return `null` when passed a `null` value, no matter what class is passed', () => {
+      assert.isNull(TObject.orNull(null, Object));
+      assert.isNull(TObject.orNull(null, Set));
+    });
+
+    it('should throw an Error when passed an object of a non-matching class', () => {
+      assert.throws(() => TObject.orNull(new Map(), Set));
+      assert.throws(() => TObject.orNull(new Set(), Map));
+    });
+
+    it('should throw an Error when passed anything other than an object or `null`', () => {
+      assert.throws(() => TObject.orNull(false,   Boolean));
+      assert.throws(() => TObject.orNull(914,     Number));
+      assert.throws(() => TObject.orNull('florp', String));
     });
   });
 

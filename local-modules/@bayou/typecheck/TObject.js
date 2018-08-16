@@ -26,6 +26,29 @@ export default class TObject extends UtilityClass {
   }
 
   /**
+   * Checks a value which must either be of type `Object` or the exact value
+   * `null`.
+   *
+   * @param {*} value Value to check.
+   * @param {object|null} [clazz = null] Class (constructor) that `value` must
+   *   be an instance of, or `null` if there is no class requirement.
+   * @returns {object|null} `value`.
+   */
+  static orNull(value, clazz = null) {
+    if (value === null) {
+      return null;
+    }
+
+    try {
+      return TObject.check(value, clazz);
+    } catch (e) {
+      // Throw a higher-fidelity error.
+      const name = (clazz === null) ? 'Object' : `class ${clazz.name}`;
+      throw Errors.badValue(value, `${name}|null`);
+    }
+  }
+
+  /**
    * Checks that a value is of type `Object` and is furthermore a plain object,
    * which is to say, not any of an array, a function, or an instance of a class
    * other than `Object` itself.

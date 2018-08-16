@@ -4,6 +4,7 @@
 
 import TheModule from './TheModule';
 import BaseKey from './BaseKey';
+import BearerToken from './BearerToken';
 import CodableError from './CodableError';
 import ConnectionError from './ConnectionError';
 import Message from './Message';
@@ -14,6 +15,7 @@ import TargetId from './TargetId';
 export {
   TheModule,
   BaseKey,
+  BearerToken,
   CodableError,
   ConnectionError,
   Message,

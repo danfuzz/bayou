@@ -3,7 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ConnectionError, Message, Response } from '@bayou/api-common';
-import { Auth } from '@bayou/config-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
@@ -60,7 +59,7 @@ export default class Connection extends CommonBase {
     this._log = log.withAddedContext(this._connectionId);
 
     /** {ApiLog} The API logger to use. */
-    this._apiLog = new ApiLog(this._log);
+    this._apiLog = new ApiLog(this._log, context.tokenAuthorizer);
 
     // We add a `meta` binding to the initial set of targets, which is specific
     // to this instance/connection.
@@ -97,41 +96,6 @@ export default class Connection extends CommonBase {
   close() {
     this._log.event.closed();
     this._context = null;
-  }
-
-  /**
-   * Gets the target of the given message. This uses the message's `target` and
-   * either finds it as an ID directly, or if that is a no-go, tries it as the
-   * string form of a bearer token. If neither succeeds, this will throw an
-   * error.
-   *
-   * @param {string} idOrToken A target ID or bearer token in string form.
-   * @returns {Target} The target object that is associated with `idOrToken`.
-   */
-  getTarget(idOrToken) {
-    const context = this._context;
-
-    if (context === null) {
-      throw ConnectionError.connection_closed(this._connectionId, 'Connection closed.');
-    }
-
-    let target = context.getUncontrolledOrNull(idOrToken);
-
-    if (target !== null) {
-      return target;
-    }
-
-    if (Auth.isToken(idOrToken)) {
-      const token = Auth.tokenFromString(idOrToken);
-      target = context.getOrNull(token.id);
-      if ((target !== null) && token.sameToken(target.key)) {
-        return target;
-      }
-    }
-
-    // We _don't_ include the passed argument, as that might end up revealing
-    // secret info.
-    throw Errors.badUse('Invalid target.');
   }
 
   /**
@@ -198,7 +162,7 @@ export default class Connection extends CommonBase {
    * @returns {*} Whatever the called method returns.
    */
   async _actOnMessage(msg) {
-    const target = this.getTarget(msg.targetId);
+    const target = await this._getTarget(msg.targetId);
 
     return target.call(msg.payload);
   }
@@ -224,5 +188,28 @@ export default class Connection extends CommonBase {
 
     return ConnectionError.connection_nonsense(
       this._connectionId, 'Did not receive `Message` object.');
+  }
+
+  /**
+   * Gets the target of the given message. This uses the message's `target` and
+   * either finds it as an ID directly, or if that is a no-go, tries it as the
+   * string form of a bearer token. If neither succeeds, this will throw an
+   * error.
+   *
+   * **Note:** This method is `async` because it is possible that it ends up
+   * having to do a heavyweight operation (e.g. a network round-trip) to
+   * determine the authority of a token.
+   *
+   * @param {string} idOrToken A target ID or bearer token in string form.
+   * @returns {Target} The target object that is associated with `idOrToken`.
+   */
+  async _getTarget(idOrToken) {
+    const context = this._context;
+
+    if (context === null) {
+      throw ConnectionError.connection_closed(this._connectionId, 'Connection closed.');
+    }
+
+    return context.getAuthorizedTarget(idOrToken);
   }
 }

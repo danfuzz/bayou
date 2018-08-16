@@ -8,6 +8,7 @@ import { TString } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
 import Target from './Target';
+import TokenAuthorizer from './TokenAuthorizer';
 
 /** {Logger} Logger. */
 const log = new Logger('api');
@@ -19,22 +20,32 @@ const log = new Logger('api');
 const IDLE_TIME_MSEC = 20 * 60 * 1000; // Twenty minutes.
 
 /**
- * Binding context for an API server or session therein. This is mostly just a
- * map from IDs to `Target` instances, along with reasonably straightforward
- * accessor and update methods. In addition, this is what knows which {@link
- * Codec} to use.
+ * Binding context for an API server or session therein. Instances of this class
+ * are used to map from IDs to `Target` instances, including targets which are
+ * ephemerally bound to the session as well as ones that are authorized via
+ * bearer tokens. In addition, this class is used to hold the knowledge of which
+ * {@link Codec} to use for a session.
  */
 export default class Context extends CommonBase {
   /**
    * Constructs an instance which is initially empty.
    *
    * @param {Codec} codec Codec to use for all connections / sessions.
+   * @param {TokenAuthorizer|null} [tokenAuth = null] Optional authorizer for
+   *   bearer tokens. If non-`null`, this is used to map bearer tokens into
+   *   usable target objects.
    */
-  constructor(codec) {
+  constructor(codec, tokenAuth = null) {
     super();
 
     /** {Codec} The codec to use for connections / sessions. */
     this._codec = Codec.check(codec);
+
+    /**
+     * {TokenAuthorizer|null} If non-`null`, authorizer to use in order to
+     * translate bearer tokens to target objects.
+     */
+    this._tokenAuth = (tokenAuth === null) ? null : TokenAuthorizer.check(tokenAuth);
 
     /** {Map<string, Target>} The underlying map. */
     this._map = new Map();
@@ -45,6 +56,11 @@ export default class Context extends CommonBase {
   /** {Codec} The codec to use for connections / sessions. */
   get codec() {
     return this._codec;
+  }
+
+  /** {TokenAuthorizer} The token authorizer to use. */
+  get tokenAuthorizer() {
+    return this._tokenAuth;
   }
 
   /**
@@ -87,7 +103,7 @@ export default class Context extends CommonBase {
     const id = target.id;
 
     if (this._map.get(id) !== undefined) {
-      throw Errors.badUse(`Duplicate target: \`${id}\``);
+      throw this._targetError(id, 'Duplicate target');
     }
 
     this._map.set(id, target);
@@ -100,7 +116,7 @@ export default class Context extends CommonBase {
    * @returns {Context} The newly-cloned instance.
    */
   clone() {
-    const result = new Context(this._codec);
+    const result = new Context(this._codec, this._tokenAuth);
 
     for (const t of this._map.values()) {
       result.addTarget(t);
@@ -131,7 +147,76 @@ export default class Context extends CommonBase {
     const result = this.getOrNull(id);
 
     if (!result) {
-      throw Errors.badUse(`Unknown target: \`${id}\``);
+      throw this._targetError(id);
+    }
+
+    return result;
+  }
+
+  /**
+   * Gets an authorized target. This will find _uncontrolled_ (already
+   * authorized) targets that were previously added via {@link #addTarget} as
+   * well as those authorized by virtue of this method being passed a valid
+   * authority-bearing token (in string form).
+   *
+   * **Note:** This is the only method on this class which understands how to
+   * authorize bearer tokens. This is also the only `get*` method on this class
+   * which is asynchronous. (It has to be asynchronous because token
+   * authorization) is asynchronous. **TODO:** This situation is confusing and
+   * should be cleaned up, one way or another.
+   *
+   * @param {string} idOrToken The target ID or a bearer token (in string form)
+   *   which authorizes access to a target.
+   * @returns {Target} The so-identified or so-authorized target.
+   * @throws {Error} Thrown if `idOrToken` does not correspond to an authorized
+   *   target.
+   */
+  async getAuthorizedTarget(idOrToken) {
+    const tokenAuth = this._tokenAuth;
+
+    if ((tokenAuth !== null) && tokenAuth.isToken(idOrToken)) {
+      const token   = tokenAuth.tokenFromString(idOrToken);
+      const already = this.getOrNull(token.id);
+
+      if (already !== null) {
+        // We've seen this token ID previously in this context / session.
+        if (token.sameToken(already.key)) {
+          // The corresponding secrets match. All's well!
+          return already;
+        } else {
+          // The secrets don't match. This will happen, for example, when a
+          // malicious actors tries to probe for a key.
+          throw this._targetError(idOrToken);
+        }
+      }
+
+      // It's the first time this token has been encountered in this context.
+      // Determine its authorized target, and if authorized cache it in this
+      // instance's target map.
+
+      const targetObject = await tokenAuth.targetFromToken(token);
+
+      if (targetObject === null) {
+        throw this._targetError(idOrToken);
+      }
+
+      const target = new Target(token, targetObject);
+
+      this.addTarget(target);
+      return target;
+    }
+
+    // It's not a bearer token (or this instance doesn't deal with bearer tokens
+    // at all). The ID can only validly refer to an uncontrolled target.
+
+    const result = this.getOrNull(idOrToken);
+
+    if ((result === null) || (result.key !== null)) {
+      // This uses the default error message ("unknown target") even when it's
+      // due to a target existing but being controlled, so as not to reveal that
+      // the ID corresponds to an existing token (which is arguably a security
+      // leak).
+      throw this._targetError(idOrToken);
     }
 
     return result;
@@ -149,7 +234,7 @@ export default class Context extends CommonBase {
     const result = this.get(id);
 
     if (result.key === null) {
-      throw Errors.badUse(`Not a controlled target: \`${id}\``);
+      throw this._targetError(id, 'Not a controlled target');
     }
 
     return result;
@@ -166,37 +251,6 @@ export default class Context extends CommonBase {
     TString.check(id);
     const result = this._map.get(id);
     return (result !== undefined) ? result : null;
-  }
-
-  /**
-   * Gets the target associated with the indicated ID, but only if it is
-   * uncontrolled (that is, no auth required). This will throw an error if the
-   * so-identified target does not exist.
-   *
-   * @param {string} id The target ID.
-   * @returns {Target} The so-identified target.
-   */
-  getUncontrolled(id) {
-    const result = this.get(id);
-
-    if (result.key !== null) {
-      throw Errors.badUse(`Unauthorized target: \`${id}\``);
-    }
-
-    return result;
-  }
-
-  /**
-   * Gets the target associated with the indicated ID, but only if it is
-   * uncontrolled (that is, no auth required).
-   *
-   * @param {string} id The target ID.
-   * @returns {Target|null} The so-identified target if it is in fact bound and
-   *   uncontrolled, or `null` if it is either unbound or access-controlled.
-   */
-  getUncontrolledOrNull(id) {
-    const result = this.getOrNull(id);
-    return ((result !== null) && (result.key === null)) ? result : null;
   }
 
   /**
@@ -254,5 +308,22 @@ export default class Context extends CommonBase {
     // We run the callback at a fraction of the overall idle timeout so as to
     // be a bit more prompt with the cleanup.
     setInterval(() => { this.idleCleanup(); }, IDLE_TIME_MSEC / 4);
+  }
+
+  /**
+   * Constructs a target-related error in a standard form. In particular, it
+   * redacts the given ID if it turns out to be a full token.
+   *
+   * @param {string} idOrToken ID or token to report about.
+   * @param {string} [msg = 'Unknown target'] Pithy message about the problem.
+   * @returns {Error} An appropriately-constructed error.
+   */
+  _targetError(idOrToken, msg = 'Unknown target') {
+    const tokenAuth = this._tokenAuth;
+    const idToReport = ((tokenAuth !== null) && tokenAuth.isToken(idOrToken))
+      ? tokenAuth.tokenFromString(idOrToken).printableId
+      : idOrToken;
+
+    return Errors.badUse(`${msg}: ${idToReport}`);
   }
 }
