@@ -111,7 +111,7 @@ export default class Context extends CommonBase {
    * @returns {Context} The newly-cloned instance.
    */
   clone() {
-    const result = new Context(this._codec);
+    const result = new Context(this._codec, this._tokenAuth);
 
     for (const t of this._map.values()) {
       result.addTarget(t);
