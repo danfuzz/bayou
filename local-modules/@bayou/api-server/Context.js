@@ -209,7 +209,17 @@ export default class Context extends CommonBase {
     // It's not a bearer token (or this instance doesn't deal with bearer tokens
     // at all). The ID can only validly refer to an uncontrolled target.
 
-    return this.getUncontrolled(idOrToken);
+    const result = this.getOrNull(idOrToken);
+
+    if ((result === null) || (result.key !== null)) {
+      // This uses the default error message ("unknown target") even when it's
+      // due to a target existing but being controlled, so as not to reveal that
+      // the ID corresponds to an existing token (which is arguably a security
+      // leak).
+      throw this._targetError(idOrToken);
+    }
+
+    return result;
   }
 
   /**
@@ -241,26 +251,6 @@ export default class Context extends CommonBase {
     TString.check(id);
     const result = this._map.get(id);
     return (result !== undefined) ? result : null;
-  }
-
-  /**
-   * Gets the target associated with the indicated ID, but only if it is
-   * uncontrolled (that is, no auth required). This will throw an error if the
-   * so-identified target does not exist.
-   *
-   * @param {string} id The target ID.
-   * @returns {Target} The so-identified target.
-   */
-  getUncontrolled(id) {
-    const result = this.get(id);
-
-    if (result.key !== null) {
-      // This uses the default error message so as not to reveal that this ID
-      // corresponds to a token.
-      throw this._targetError(id);
-    }
-
-    return result;
   }
 
   /**
