@@ -98,7 +98,7 @@ export default class Context extends CommonBase {
     const id = target.id;
 
     if (this._map.get(id) !== undefined) {
-      throw Errors.badUse(`Duplicate target: \`${id}\``);
+      throw this._targetError(id, 'Duplicate target');
     }
 
     this._map.set(id, target);
@@ -142,7 +142,7 @@ export default class Context extends CommonBase {
     const result = this.getOrNull(id);
 
     if (!result) {
-      throw Errors.badUse(`Unknown target: \`${id}\``);
+      throw this._targetError(id);
     }
 
     return result;
@@ -174,15 +174,15 @@ export default class Context extends CommonBase {
       const already = this.getOrNull(token.id);
 
       if (already !== null) {
-        // We've seen this token previously in this context / session. Just
-        // verify that the token we received matches what the target expects.
-        // (This is a sanity check; it should always end up matching.)
-
-        if (!token.sameToken(already.key)) {
-          throw Errors.wtf('Non-matching target key!');
+        // We've seen this token ID previously in this context / session.
+        if (token.sameToken(already.key)) {
+          // The corresponding secrets match. All's well!
+          return already;
+        } else {
+          // The secrets don't match. This will happen, for example, when a
+          // malicious actors tries to probe for a key.
+          throw this._targetError(idOrToken);
         }
-
-        return already;
       }
 
       // It's the first time this token has been encountered in this context.
@@ -192,7 +192,7 @@ export default class Context extends CommonBase {
       const targetObject = await tokenAuth.targetFromToken(token);
 
       if (targetObject === null) {
-        throw Errors.badUse(`Unknown target: \`${token.printableId}\``);
+        throw this._targetError(idOrToken);
       }
 
       const target = new Target(token, targetObject);
@@ -219,7 +219,7 @@ export default class Context extends CommonBase {
     const result = this.get(id);
 
     if (result.key === null) {
-      throw Errors.badUse(`Not a controlled target: \`${id}\``);
+      throw this._targetError(id, 'Not a controlled target');
     }
 
     return result;
@@ -250,7 +250,9 @@ export default class Context extends CommonBase {
     const result = this.get(id);
 
     if (result.key !== null) {
-      throw Errors.badUse(`Unauthorized target: \`${id}\``);
+      // This uses the default error message so as not to reveal that this ID
+      // corresponds to a token.
+      throw this._targetError(id);
     }
 
     return result;
@@ -324,5 +326,22 @@ export default class Context extends CommonBase {
     // We run the callback at a fraction of the overall idle timeout so as to
     // be a bit more prompt with the cleanup.
     setInterval(() => { this.idleCleanup(); }, IDLE_TIME_MSEC / 4);
+  }
+
+  /**
+   * Constructs a target-related error in a standard form. In particular, it
+   * redacts the given ID if it turns out to be a full token.
+   *
+   * @param {string} idOrToken ID or token to report about.
+   * @param {string} [msg = 'Unknown target'] Pithy message about the problem.
+   * @returns {Error} An appropriately-constructed error.
+   */
+  _targetError(idOrToken, msg = 'Unknown target') {
+    const tokenAuth = this._tokenAuth;
+    const idToReport = ((tokenAuth !== null) && tokenAuth.isToken(idOrToken))
+      ? tokenAuth.tokenFromString(idOrToken).printableId
+      : idOrToken;
+
+    return Errors.badUse(`${msg}: ${idToReport}`);
   }
 }
