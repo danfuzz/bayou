@@ -58,7 +58,7 @@ export default class Context extends CommonBase {
     return this._codec;
   }
 
-  /** {TokenAuthorized} The token authorizer to use. */
+  /** {TokenAuthorizer} The token authorizer to use. */
   get tokenAuthorizer() {
     return this._tokenAuth;
   }
