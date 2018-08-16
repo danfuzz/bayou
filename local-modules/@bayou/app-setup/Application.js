@@ -16,6 +16,7 @@ import { Dirs, ProductInfo } from '@bayou/env-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 
+import AppAuthorizer from './AppAuthorizer';
 import DebugTools from './DebugTools';
 import RequestLogger from './RequestLogger';
 import RootAccess from './RootAccess';
@@ -44,7 +45,7 @@ export default class Application extends CommonBase {
      * {Context} All of the objects we provide access to via the API, along with
      * other objects of use to the server.
      */
-    this._context = new Context(codec);
+    this._context = new Context(codec, new AppAuthorizer());
     this._context.startAutomaticIdleCleanup();
 
     /**
