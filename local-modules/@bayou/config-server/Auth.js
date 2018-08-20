@@ -15,9 +15,6 @@ export default class Auth extends BaseAuth {
    * to the system. The value of this property &mdash; that is, the array it
    * refers to &mdash; may change over time, but the contents of any given array
    * yielded from this property are guaranteed to be frozen.
-   *
-   * **TODO:** This property should be removed, when all clients instead use
-   * {@link #tokenAuthority}.
    */
   static get rootTokens() {
     return use.Auth.rootTokens;
