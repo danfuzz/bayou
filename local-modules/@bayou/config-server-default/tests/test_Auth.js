@@ -38,6 +38,11 @@ describe('@bayou/config-server-default/Auth', () => {
         assert.instanceOf(token, BearerToken);
       }
     });
+
+    it('should have only the one well-known token in it', () => {
+      assert.lengthOf(Auth.rootTokens, 1);
+      assert.strictEqual(Auth.rootTokens[0].secretToken, ROOT_TOKEN);
+    });
   });
 
   describe('isToken()', () => {
