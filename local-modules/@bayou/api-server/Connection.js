@@ -7,8 +7,9 @@ import { Logger } from '@bayou/see-all';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
 import ApiLog from './ApiLog';
-import MetaHandler from './MetaHandler';
 import Context from './Context';
+import MetaHandler from './MetaHandler';
+import Target from './Target';
 
 /** {Logger} Logger. */
 const log = new Logger('api');
@@ -61,9 +62,11 @@ export default class Connection extends CommonBase {
     /** {ApiLog} The API logger to use. */
     this._apiLog = new ApiLog(this._log, context.tokenAuthorizer);
 
-    // We add a `meta` binding to the initial set of targets, which is specific
-    // to this instance/connection.
-    this._context.addEvergreen('meta', new MetaHandler(this));
+    // Add a `meta` binding to the initial set of targets, which is specific to
+    // this instance/connection.
+    const metaTarget = new Target('meta', new MetaHandler(this));
+    metaTarget.setEvergreen();
+    this._context.addTarget(metaTarget);
 
     this._log.event.open();
   }

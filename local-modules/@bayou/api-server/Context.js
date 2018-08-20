@@ -50,7 +50,13 @@ export default class Context extends CommonBase {
     /** {Map<string, Target>} The underlying map. */
     this._map = new Map();
 
-    Object.freeze(this);
+    /**
+     * {Int} Msec timestamp indicating the most recent time that idle cleanup
+     * was performed.
+     */
+    this._lastIdleCleanup = Date.now();
+
+    Object.seal(this);
   }
 
   /** {Codec} The codec to use for connections / sessions. */
@@ -64,45 +70,18 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Adds a new target to this instance. This will throw an error if there is
-   * already another target with the same ID. This is a convenience for calling
-   * `map.addTarget(new Target(id, obj))`.
-   *
-   * @param {string|BaseKey} nameOrKey Either the name of the target (if
-   *   uncontrolled) _or_ the key which controls access to the target. See the
-   *   docs for `Target.add()` for more details.
-   * @param {object} obj Object to ultimately call on.
-   */
-  add(nameOrKey, obj) {
-    this.addTarget(new Target(nameOrKey, obj));
-  }
-
-  /**
-   * Adds a new target to this instance, marking it as "evergreen" (immortal /
-   * never idle). Other than evergreen marking, this is identical to
-   * `this.add()`.
-   *
-   * @param {string|BaseKey} nameOrKey Either the name of the target (if
-   *   uncontrolled) _or_ the key which controls access to the target.
-   * @param {object} obj Object to ultimately call on.
-   */
-  addEvergreen(nameOrKey, obj) {
-    const target = new Target(nameOrKey, obj);
-    target.setEvergreen();
-    this.addTarget(target);
-  }
-
-  /**
-   * Adds an already-constructed `Target` to the map. This will throw an error
-   * if there is already another target with the same ID.
+   * Adds a {@link Target} to this instance's map of same. The given `target`
+   * must not have an ID that is already represented in the map.
    *
    * @param {Target} target Target to add.
+   * @throws {Error} Thrown if `target.id` is already represented in the target
+   *   map.
    */
   addTarget(target) {
     Target.check(target);
     const id = target.id;
 
-    if (this._map.get(id) !== undefined) {
+    if (this._getOrNull(id) !== null) {
       throw this._targetError(id, 'Duplicate target');
     }
 
@@ -126,44 +105,10 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Removes the target binding for the given ID. It is an error to try to
-   * remove a nonexistent binding.
-   *
-   * @param {string} id The ID of the binding to remove.
-   */
-  deleteId(id) {
-    this.get(id); // This will throw if `id` isn't bound.
-    this._map.delete(id);
-  }
-
-  /**
-   * Gets the target associated with the indicated ID. This will throw an
-   * error if the so-identified target does not exist.
-   *
-   * @param {string} id The target ID.
-   * @returns {Target} The so-identified target.
-   */
-  get(id) {
-    const result = this.getOrNull(id);
-
-    if (!result) {
-      throw this._targetError(id);
-    }
-
-    return result;
-  }
-
-  /**
    * Gets an authorized target. This will find _uncontrolled_ (already
    * authorized) targets that were previously added via {@link #addTarget} as
    * well as those authorized by virtue of this method being passed a valid
    * authority-bearing token (in string form).
-   *
-   * **Note:** This is the only method on this class which understands how to
-   * authorize bearer tokens. This is also the only `get*` method on this class
-   * which is asynchronous. (It has to be asynchronous because token
-   * authorization) is asynchronous. **TODO:** This situation is confusing and
-   * should be cleaned up, one way or another.
    *
    * @param {string} idOrToken The target ID or a bearer token (in string form)
    *   which authorizes access to a target.
@@ -176,7 +121,7 @@ export default class Context extends CommonBase {
 
     if ((tokenAuth !== null) && tokenAuth.isToken(idOrToken)) {
       const token   = tokenAuth.tokenFromString(idOrToken);
-      const already = this.getOrNull(token.id);
+      const already = this._getOrNull(token.id);
 
       if (already !== null) {
         // We've seen this token ID previously in this context / session.
@@ -211,7 +156,7 @@ export default class Context extends CommonBase {
     // It's not a bearer token (or this instance doesn't deal with bearer tokens
     // at all). The ID can only validly refer to an uncontrolled target.
 
-    const result = this.getOrNull(idOrToken);
+    const result = this._getOrNull(idOrToken);
 
     if ((result === null) || (result.key !== null)) {
       // This uses the default error message ("unknown target") even when it's
@@ -232,10 +177,10 @@ export default class Context extends CommonBase {
    * @param {string} id The target ID.
    * @returns {Target} The so-identified target.
    */
-  getControlled(id) {
-    const result = this.get(id);
+  async getControlled(id) {
+    const result = this._getOrNull(id);
 
-    if (result.key === null) {
+    if ((result === null) || (result.key === null)) {
       throw this._targetError(id, 'Not a controlled target');
     }
 
@@ -243,35 +188,65 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Gets the target associated with the indicated ID, or `null` if the
-   * so-identified target does not exist.
-   *
-   * @param {string} id The target ID.
-   * @returns {Target|null} The so-identified target, or `null` if unbound.
-   */
-  getOrNull(id) {
-    TString.check(id);
-    const result = this._map.get(id);
-    return (result !== undefined) ? result : null;
-  }
-
-  /**
    * Returns an indication of whether or not this instance has a binding for
-   * the given ID.
+   * the given ID. **Note:** This will find already-authorized bearer tokens,
+   * but it will _not_ perform authorization given a never-before-encountered
+   * bearer token.
    *
    * @param {string} id The target ID.
    * @returns {boolean} `true` iff `id` is bound.
    */
   hasId(id) {
-    return this.getOrNull(id) !== null;
+    return this._getOrNull(id) !== null;
   }
 
   /**
-   * Cleans up (removes) bindings for targets that have become idle.
+   * Removes the key that controls the target with the given ID. It is an error
+   * to try to operate on a nonexistent or uncontrolled target. This replaces
+   * the `target` with a newly-constructed one that has no auth control; it
+   * does _not_ modify the original `target` object (which is immutable).
+   *
+   * @param {string} id The ID of the target whose key is to be removed.
    */
-  idleCleanup() {
-    const idleLimit = Date.now() - IDLE_TIME_MSEC;
-    const map = this._map;
+  async removeControl(id) {
+    const target = this.getControlled(id);
+    this._map.set(id, target.withoutKey());
+  }
+
+  /**
+   * Gets the target associated with the indicated ID, or `null` if the
+   * so-identified target does not exist. This only checks this instance's
+   * `_map`; it does _not_ try to do token authorization.
+   *
+   * @param {string} id The target ID.
+   * @returns {Target|null} The so-identified target, or `null` if unbound.
+   */
+  _getOrNull(id) {
+    TString.check(id);
+
+    this._idleCleanupIfNecessary();
+
+    const result = this._map.get(id);
+    return (result === undefined) ? null : result;
+  }
+
+  /**
+   * Performs idle target cleanup, but only if it's been long enough since the
+   * last time this was done. "Long enough" is defined to be 1/4 of the
+   * {@link #IDLE_TIME_MSEC}, that is to say, we allow 25% slop on idle time
+   * checks, erring on the side of _keeping_ a "stale" target.
+   */
+  _idleCleanupIfNecessary() {
+    const now       = Date.now();
+    const idleLimit = now - IDLE_TIME_MSEC;
+    const map       = this._map;
+
+    if (now < (this._lastIdleCleanup + (IDLE_TIME_MSEC / 4))) {
+      // Cleaning already happened recently.
+      return;
+    }
+
+    this._lastIdleCleanup = now;
 
     log.event.idleCleanup('start');
 
@@ -286,30 +261,6 @@ export default class Context extends CommonBase {
     }
 
     log.event.idleCleanup('done');
-  }
-
-  /**
-   * Removes the key that controls the target with the given ID. It is an error
-   * to try to operate on a nonexistent or uncontrolled target. This replaces
-   * the `target` with a newly-constructed one that has no auth control; it
-   * does _not_ modify the original `target` object (which is immutable).
-   *
-   * @param {string} id The ID of the target whose key is to be removed.
-   */
-  removeControl(id) {
-    const target = this.getControlled(id);
-    this._map.set(id, target.withoutKey());
-  }
-
-  /**
-   * Starts automatically cleaning up idle targets on this instance. This
-   * initiates a periodic task which iterates over all targets, removing ones
-   * that have become idle.
-   */
-  startAutomaticIdleCleanup() {
-    // We run the callback at a fraction of the overall idle timeout so as to
-    // be a bit more prompt with the cleanup.
-    setInterval(() => { this.idleCleanup(); }, IDLE_TIME_MSEC / 4);
   }
 
   /**
