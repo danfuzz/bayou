@@ -66,21 +66,17 @@ export default class SchemaHandler extends BaseDataManager {
    * @returns {string} One of the constants defined by {@link ValidationStatus}.
    */
   async _impl_validationStatus() {
-    let transactionResult;
+    const { file, codec } = this.fileCodec;
+    const snapshot = file.currentSnapshot;
+    let schemaVersion;
 
     try {
-      const fc = this.fileCodec;
-      const spec = new TransactionSpec(
-        fc.op_readPath(Paths.SCHEMA_VERSION)
-      );
-      transactionResult = await fc.transact(spec);
+      const encodedSchemaVersion = snapshot.getOrNull(Paths.SCHEMA_VERSION);
+      schemaVersion = codec.decodeJsonBuffer(encodedSchemaVersion);
     } catch (e) {
       this.log.error('Major problem trying to read file!', e);
       return ValidationStatus.STATUS_error;
     }
-
-    const data          = transactionResult.data;
-    const schemaVersion = data.get(Paths.SCHEMA_VERSION);
 
     if (!schemaVersion) {
       this.log.info('Corrupt document: Missing schema version.');
