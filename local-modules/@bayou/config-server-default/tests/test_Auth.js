@@ -6,6 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BearerToken } from '@bayou/api-common';
+import { BaseAuth } from '@bayou/config-server';
 import { Auth } from '@bayou/config-server-default';
 
 /**
@@ -23,6 +24,10 @@ const EXAMPLE_TOKEN = 'tok-00000000000000001123456789abcdef';
 const ROOT_TOKEN = 'tok-00000000000000000000000000000000';
 
 describe('@bayou/config-server-default/Auth', () => {
+  it('inherits from `BaseAuth`', () => {
+    assert.isTrue(Auth.prototype instanceof BaseAuth);
+  });
+
   describe('.rootTokens', () => {
     it('should be an array of `BearerToken` instances', () => {
       const tokens = Auth.rootTokens;
