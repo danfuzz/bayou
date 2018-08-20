@@ -197,6 +197,8 @@ export default class Context extends CommonBase {
       const targetObject = await tokenAuth.targetFromToken(token);
 
       if (targetObject === null) {
+        // The `tokenAuth` told us that `token` didn't actually grant any
+        // authority.
         throw this._targetError(idOrToken);
       }
 
