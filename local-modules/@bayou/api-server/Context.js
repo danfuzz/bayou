@@ -148,7 +148,7 @@ export default class Context extends CommonBase {
 
     if ((tokenAuth !== null) && tokenAuth.isToken(idOrToken)) {
       const token   = tokenAuth.tokenFromString(idOrToken);
-      const already = this.getOrNull(token.id);
+      const already = this._getOrNull(token.id);
 
       if (already !== null) {
         // We've seen this token ID previously in this context / session.
@@ -183,7 +183,7 @@ export default class Context extends CommonBase {
     // It's not a bearer token (or this instance doesn't deal with bearer tokens
     // at all). The ID can only validly refer to an uncontrolled target.
 
-    const result = this.getOrNull(idOrToken);
+    const result = this._getOrNull(idOrToken);
 
     if ((result === null) || (result.key !== null)) {
       // This uses the default error message ("unknown target") even when it's
@@ -205,26 +205,13 @@ export default class Context extends CommonBase {
    * @returns {Target} The so-identified target.
    */
   getControlled(id) {
-    const result = this.get(id);
+    const result = this._getOrNull(id);
 
-    if (result.key === null) {
+    if ((result === null) || (result.key === null)) {
       throw this._targetError(id, 'Not a controlled target');
     }
 
     return result;
-  }
-
-  /**
-   * Gets the target associated with the indicated ID, or `null` if the
-   * so-identified target does not exist.
-   *
-   * @param {string} id The target ID.
-   * @returns {Target|null} The so-identified target, or `null` if unbound.
-   */
-  getOrNull(id) {
-    TString.check(id);
-    const result = this._map.get(id);
-    return (result !== undefined) ? result : null;
   }
 
   /**
@@ -235,7 +222,7 @@ export default class Context extends CommonBase {
    * @returns {boolean} `true` iff `id` is bound.
    */
   hasId(id) {
-    return this.getOrNull(id) !== null;
+    return this._getOrNull(id) !== null;
   }
 
   /**
@@ -282,6 +269,20 @@ export default class Context extends CommonBase {
     // We run the callback at a fraction of the overall idle timeout so as to
     // be a bit more prompt with the cleanup.
     setInterval(() => { this.idleCleanup(); }, IDLE_TIME_MSEC / 4);
+  }
+
+  /**
+   * Gets the target associated with the indicated ID, or `null` if the
+   * so-identified target does not exist. This only checks this instance's
+   * `_map`; it does _not_ try to do token authorization.
+   *
+   * @param {string} id The target ID.
+   * @returns {Target|null} The so-identified target, or `null` if unbound.
+   */
+  _getOrNull(id) {
+    TString.check(id);
+    const result = this._map.get(id);
+    return (result === undefined) ? null : result;
   }
 
   /**
