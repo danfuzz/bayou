@@ -56,7 +56,7 @@ export default class Target extends CommonBase {
      * {Int|'evergreen'} Timestamp (msec) when the `target` was last accessed or
      * called, or the string constant `evergreen` to indicate a target that
      * should never be considered idle. This is used to drive automated cleanup
-     * of idle targets in binding contexts.
+     * of idle targets mapped by instances of {@link api-server.Context}.
      */
     this._lastAccess = Date.now();
 
