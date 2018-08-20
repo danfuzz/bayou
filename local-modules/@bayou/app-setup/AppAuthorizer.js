@@ -43,9 +43,7 @@ export default class AppAuthorizer extends TokenAuthorizer {
    *   granted.
    */
   async _impl_targetFromToken(token) {
-    console.log('======= auth', token);
     const authority = await Auth.tokenAuthority(token);
-    console.log('======= auth got', authority);
 
     if (authority.type === Auth.TYPE_root) {
       return this._application.rootAccess;
