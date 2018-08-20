@@ -70,20 +70,6 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Adds a new target to this instance. This will throw an error if there is
-   * already another target with the same ID. This is a convenience for calling
-   * `map.addTarget(new Target(id, obj))`.
-   *
-   * @param {string|BaseKey} nameOrKey Either the name of the target (if
-   *   uncontrolled) _or_ the key which controls access to the target. See the
-   *   docs for `Target.add()` for more details.
-   * @param {object} obj Object to ultimately call on.
-   */
-  add(nameOrKey, obj) {
-    this.addTarget(new Target(nameOrKey, obj));
-  }
-
-  /**
    * Adds an already-constructed `Target` to the map. This will throw an error
    * if there is already another target with the same ID.
    *

@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { SplitKey } from '@bayou/api-common';
-import { Context } from '@bayou/api-server';
+import { Context, Target } from '@bayou/api-server';
 import { Network } from '@bayou/config-server';
 import { DocumentId } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
@@ -55,13 +55,13 @@ export default class RootAccess extends CommonBase {
     const url     = `${Network.baseUrl}/api`;
     const session = fileComplex.makeNewSession(authorId, this._randomId.bind(this));
     const key     = new SplitKey(url, session.getSessionId());
-    this._context.add(key, session);
+    this._context.addTarget(new Target(key, session));
 
     log.info(
       'Newly-authorized access.\n',
       `  author:  ${authorId}\n`,
       `  doc:     ${docId}\n`,
-      `  key id:  ${key.id}\n`, // The ID is safe to log (not security-sensitive).
+      `  key id:  ${key.printableId}\n`, // This is safe to log (not security-sensitive).
       `  key url: ${key.url}`);
 
     return key;
