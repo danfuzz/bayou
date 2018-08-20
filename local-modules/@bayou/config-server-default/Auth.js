@@ -4,7 +4,6 @@
 
 import { BearerToken } from '@bayou/api-common';
 import { BaseAuth } from '@bayou/config-server';
-import { Delay } from '@bayou/promise-util';
 import { Errors } from '@bayou/util-common';
 
 /**
@@ -96,20 +95,5 @@ export default class Auth extends BaseAuth {
     // **Note:** We redact the value to reduce the likelihood of leaking
     // security-sensitive info.
     throw Errors.badValue(BearerToken.redactString(tokenString), 'bearer token');
-  }
-
-  /**
-   * Implementation of standard configuration point.
-   *
-   * This implementation returns a promise that always resolves after ten
-   * minutes, even though this implementation never updates the root tokens.
-   * This is done so that the update logic gets excercised in the default
-   * configuration.
-   *
-   * @returns {Promise<true>} Promise that resolves in ten minutes.
-   */
-  static whenRootTokensChange() {
-    const CHANGE_FREQUENCY_MSEC = 10 * 60 * 60 * 1000;
-    return Delay.resolve(CHANGE_FREQUENCY_MSEC);
   }
 }

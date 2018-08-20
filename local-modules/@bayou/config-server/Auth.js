@@ -18,8 +18,6 @@ export default class Auth extends BaseAuth {
    *
    * **TODO:** This property should be removed, when all clients instead use
    * {@link #tokenAuthority}.
-   *
-   * @see #whenRootTokensChange
    */
   static get rootTokens() {
     return use.Auth.rootTokens;
@@ -85,20 +83,5 @@ export default class Auth extends BaseAuth {
    */
   static tokenId(tokenString) {
     return use.Auth.tokenId(tokenString);
-  }
-
-  /**
-   * Returns a promise which becomes resolved (to `true`) the next time that
-   * the array of {@link #rootTokens} changes, or (on the margin) could
-   * _conceivably_ have changed.
-   *
-   * **TODO:** This method should be removed, when all clients use
-   * {@link #tokenAuthority} instead of {@link #rootTokens}.
-   *
-   * @returns {Promise<true>} Promise that resolves when {@link #rootTokens}
-   *   should be checked for update.
-   */
-  static whenRootTokensChange() {
-    return use.Auth.whenRootTokensChange();
   }
 }
