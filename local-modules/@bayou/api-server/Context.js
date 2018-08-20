@@ -126,23 +126,6 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Gets the target associated with the indicated ID. This will throw an
-   * error if the so-identified target does not exist.
-   *
-   * @param {string} id The target ID.
-   * @returns {Target} The so-identified target.
-   */
-  get(id) {
-    const result = this.getOrNull(id);
-
-    if (!result) {
-      throw this._targetError(id);
-    }
-
-    return result;
-  }
-
-  /**
    * Gets an authorized target. This will find _uncontrolled_ (already
    * authorized) targets that were previously added via {@link #addTarget} as
    * well as those authorized by virtue of this method being passed a valid
