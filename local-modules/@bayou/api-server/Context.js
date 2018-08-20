@@ -185,7 +185,7 @@ export default class Context extends CommonBase {
           return already;
         } else {
           // The secrets don't match. This will happen, for example, when a
-          // malicious actors tries to probe for a key.
+          // malicious actor tries to probe for a key.
           throw this._targetError(idOrToken);
         }
       }
@@ -197,6 +197,8 @@ export default class Context extends CommonBase {
       const targetObject = await tokenAuth.targetFromToken(token);
 
       if (targetObject === null) {
+        // The `tokenAuth` told us that `token` didn't actually grant any
+        // authority.
         throw this._targetError(idOrToken);
       }
 

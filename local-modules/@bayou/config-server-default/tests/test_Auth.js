@@ -6,6 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BearerToken } from '@bayou/api-common';
+import { BaseAuth } from '@bayou/config-server';
 import { Auth } from '@bayou/config-server-default';
 
 /**
@@ -23,6 +24,10 @@ const EXAMPLE_TOKEN = 'tok-00000000000000001123456789abcdef';
 const ROOT_TOKEN = 'tok-00000000000000000000000000000000';
 
 describe('@bayou/config-server-default/Auth', () => {
+  it('inherits from `BaseAuth`', () => {
+    assert.isTrue(Auth.prototype instanceof BaseAuth);
+  });
+
   describe('.rootTokens', () => {
     it('should be an array of `BearerToken` instances', () => {
       const tokens = Auth.rootTokens;
@@ -32,6 +37,11 @@ describe('@bayou/config-server-default/Auth', () => {
       for (const token of tokens) {
         assert.instanceOf(token, BearerToken);
       }
+    });
+
+    it('should have only the one well-known token in it', () => {
+      assert.lengthOf(Auth.rootTokens, 1);
+      assert.strictEqual(Auth.rootTokens[0].secretToken, ROOT_TOKEN);
     });
   });
 
@@ -92,15 +102,6 @@ describe('@bayou/config-server-default/Auth', () => {
       const id    = 'tok-0123456776543210';
       const token = `${id}bbbbbbbbbbbbbbbb`;
       assert.strictEqual(Auth.tokenId(token), id);
-    });
-  });
-
-  describe('whenRootTokensChange()', () => {
-    it('should return a promise', () => {
-      const changePromise = Auth.whenRootTokensChange();
-
-      assert.property(changePromise, 'then');
-      assert.isFunction(changePromise.then);
     });
   });
 });

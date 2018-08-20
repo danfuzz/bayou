@@ -4,7 +4,6 @@
 
 import { BearerToken } from '@bayou/api-common';
 import { BaseAuth } from '@bayou/config-server';
-import { Delay } from '@bayou/promise-util';
 import { Errors } from '@bayou/util-common';
 
 /**
@@ -12,6 +11,13 @@ import { Errors } from '@bayou/util-common';
  * portions are each a separate matching group.
  */
 const TOKEN_REGEX = /^(tok-[0-9a-f]{16})([0-9a-f]{16})$/;
+
+/**
+ * {string} The one well-known root token. This obviously-insecure arrangement
+ * is just for this module, the default server configuration module, which is
+ * only supposed to be used in development, not real production.
+ */
+const THE_ROOT_TOKEN = 'tok-00000000000000000000000000000000';
 
 /**
  * Utility functionality regarding the network configuration of a server.
@@ -25,9 +31,7 @@ export default class Auth extends BaseAuth {
    * portion.
    */
   static get rootTokens() {
-    const tokenString = 'tok-00000000000000000000000000000000';
-
-    return Object.freeze([Auth.tokenFromString(tokenString)]);
+    return Object.freeze([Auth.tokenFromString(THE_ROOT_TOKEN)]);
   }
 
   /**
@@ -56,10 +60,8 @@ export default class Auth extends BaseAuth {
   static async tokenAuthority(token) {
     BearerToken.check(token);
 
-    for (const t of Auth.rootTokens) {
-      if (t.sameToken(token)) {
-        return { type: Auth.TYPE_root };
-      }
+    if (token.secretToken === THE_ROOT_TOKEN) {
+      return { type: Auth.TYPE_root };
     }
 
     return { type: Auth.TYPE_none };
@@ -96,20 +98,5 @@ export default class Auth extends BaseAuth {
     // **Note:** We redact the value to reduce the likelihood of leaking
     // security-sensitive info.
     throw Errors.badValue(BearerToken.redactString(tokenString), 'bearer token');
-  }
-
-  /**
-   * Implementation of standard configuration point.
-   *
-   * This implementation returns a promise that always resolves after ten
-   * minutes, even though this implementation never updates the root tokens.
-   * This is done so that the update logic gets excercised in the default
-   * configuration.
-   *
-   * @returns {Promise<true>} Promise that resolves in ten minutes.
-   */
-  static whenRootTokensChange() {
-    const CHANGE_FREQUENCY_MSEC = 10 * 60 * 60 * 1000;
-    return Delay.resolve(CHANGE_FREQUENCY_MSEC);
   }
 }

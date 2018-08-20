@@ -9,6 +9,7 @@ import { DocumentId } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
 import { AuthorId } from '@bayou/ot-common';
 import { Logger } from '@bayou/see-all';
+import { CommonBase } from '@bayou/util-common';
 
 /** Logger. */
 const log = new Logger('root-access');
@@ -17,7 +18,7 @@ const log = new Logger('root-access');
  * "Root access" object. This is the object which is protected by the root
  * bearer token(s).
  */
-export default class RootAccess {
+export default class RootAccess extends CommonBase {
   /**
    * Constructs an instance.
    *
@@ -25,8 +26,12 @@ export default class RootAccess {
    *   that is, where auth-controlled resources end up getting bound.
    */
   constructor(context) {
+    super();
+
     /** {Context} The API context to use. */
     this._context = Context.check(context);
+
+    Object.freeze(this);
   }
 
   /**
