@@ -47,7 +47,7 @@ export default class MetaHandler {
    * @param {string} challenge The challenge string.
    * @param {string} response The challenge response.
    */
-  authWithChallengeResponse(challenge, response) {
+  async authWithChallengeResponse(challenge, response) {
     TString.check(challenge);
     TString.check(response);
 
@@ -67,7 +67,7 @@ export default class MetaHandler {
 
     // The main action: Replace the target for `id` with an equivalent one
     // except without auth control.
-    this._connection.context.removeControl(id);
+    await this._connection.context.removeControl(id);
 
     this._log.event.authedChallenge(id, challenge);
   }
@@ -95,8 +95,8 @@ export default class MetaHandler {
    *   as to remove key control for the target, in the context of the current
    *   session.
    */
-  makeChallenge(id) {
-    const target = this._connection.context.getControlled(id);
+  async makeChallenge(id) {
+    const target = await this._connection.context.getControlled(id);
 
     let challengePair;
     for (;;) {

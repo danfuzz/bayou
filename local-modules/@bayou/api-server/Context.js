@@ -108,12 +108,6 @@ export default class Context extends CommonBase {
    * well as those authorized by virtue of this method being passed a valid
    * authority-bearing token (in string form).
    *
-   * **Note:** This is the only method on this class which understands how to
-   * authorize bearer tokens. This is also the only `get*` method on this class
-   * which is asynchronous. (It has to be asynchronous because token
-   * authorization is asynchronous.) **TODO:** This situation is confusing and
-   * should be cleaned up, one way or another.
-   *
    * @param {string} idOrToken The target ID or a bearer token (in string form)
    *   which authorizes access to a target.
    * @returns {Target} The so-identified or so-authorized target.
@@ -181,7 +175,7 @@ export default class Context extends CommonBase {
    * @param {string} id The target ID.
    * @returns {Target} The so-identified target.
    */
-  getControlled(id) {
+  async getControlled(id) {
     const result = this._getOrNull(id);
 
     if ((result === null) || (result.key === null)) {
@@ -193,7 +187,9 @@ export default class Context extends CommonBase {
 
   /**
    * Returns an indication of whether or not this instance has a binding for
-   * the given ID.
+   * the given ID. **Note:** This will find already-authorized bearer tokens,
+   * but it will _not_ perform authorization given a never-before-encountered
+   * bearer token.
    *
    * @param {string} id The target ID.
    * @returns {boolean} `true` iff `id` is bound.
@@ -210,7 +206,7 @@ export default class Context extends CommonBase {
    *
    * @param {string} id The ID of the target whose key is to be removed.
    */
-  removeControl(id) {
+  async removeControl(id) {
     const target = this.getControlled(id);
     this._map.set(id, target.withoutKey());
   }
