@@ -126,17 +126,6 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Removes the target binding for the given ID. It is an error to try to
-   * remove a nonexistent binding.
-   *
-   * @param {string} id The ID of the binding to remove.
-   */
-  deleteId(id) {
-    this.get(id); // This will throw if `id` isn't bound.
-    this._map.delete(id);
-  }
-
-  /**
    * Gets the target associated with the indicated ID. This will throw an
    * error if the so-identified target does not exist.
    *
