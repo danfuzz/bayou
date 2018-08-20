@@ -79,7 +79,7 @@ export default class Context extends CommonBase {
     Target.check(target);
     const id = target.id;
 
-    if (this._map.get(id) !== undefined) {
+    if (this._getOrNull(id) !== null) {
       throw this._targetError(id, 'Duplicate target');
     }
 
