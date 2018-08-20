@@ -209,7 +209,7 @@ export default class Context extends CommonBase {
    * @param {string} id The ID of the target whose key is to be removed.
    */
   async removeControl(id) {
-    const target = this.getControlled(id);
+    const target = await this.getControlled(id);
     this._map.set(id, target.withoutKey());
   }
 
