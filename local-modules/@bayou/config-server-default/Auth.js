@@ -13,6 +13,13 @@ import { Errors } from '@bayou/util-common';
 const TOKEN_REGEX = /^(tok-[0-9a-f]{16})([0-9a-f]{16})$/;
 
 /**
+ * {string} The one well-known root token. This obviously-insecure arrangement
+ * is just for this module, the default server configuration module, which is
+ * only supposed to be used in development, not real production.
+ */
+const THE_ROOT_TOKEN = 'tok-00000000000000000000000000000000';
+
+/**
  * Utility functionality regarding the network configuration of a server.
  */
 export default class Auth extends BaseAuth {
@@ -24,9 +31,7 @@ export default class Auth extends BaseAuth {
    * portion.
    */
   static get rootTokens() {
-    const tokenString = 'tok-00000000000000000000000000000000';
-
-    return Object.freeze([Auth.tokenFromString(tokenString)]);
+    return Object.freeze([Auth.tokenFromString(THE_ROOT_TOKEN)]);
   }
 
   /**
@@ -55,10 +60,8 @@ export default class Auth extends BaseAuth {
   static async tokenAuthority(token) {
     BearerToken.check(token);
 
-    for (const t of Auth.rootTokens) {
-      if (t.sameToken(token)) {
-        return { type: Auth.TYPE_root };
-      }
+    if (token.secretToken === THE_ROOT_TOKEN) {
+      return { type: Auth.TYPE_root };
     }
 
     return { type: Auth.TYPE_none };
