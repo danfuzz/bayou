@@ -50,7 +50,13 @@ export default class Context extends CommonBase {
     /** {Map<string, Target>} The underlying map. */
     this._map = new Map();
 
-    Object.freeze(this);
+    /**
+     * {Int} Msec timestamp indicating the most recent time that idle cleanup
+     * was performed.
+     */
+    this._lastIdleCleanup = Date.now();
+
+    Object.seal(this);
   }
 
   /** {Codec} The codec to use for connections / sessions. */
@@ -75,21 +81,6 @@ export default class Context extends CommonBase {
    */
   add(nameOrKey, obj) {
     this.addTarget(new Target(nameOrKey, obj));
-  }
-
-  /**
-   * Adds a new target to this instance, marking it as "evergreen" (immortal /
-   * never idle). Other than evergreen marking, this is identical to
-   * `this.add()`.
-   *
-   * @param {string|BaseKey} nameOrKey Either the name of the target (if
-   *   uncontrolled) _or_ the key which controls access to the target.
-   * @param {object} obj Object to ultimately call on.
-   */
-  addEvergreen(nameOrKey, obj) {
-    const target = new Target(nameOrKey, obj);
-    target.setEvergreen();
-    this.addTarget(target);
   }
 
   /**
@@ -226,11 +217,52 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Cleans up (removes) bindings for targets that have become idle.
+   * Removes the key that controls the target with the given ID. It is an error
+   * to try to operate on a nonexistent or uncontrolled target. This replaces
+   * the `target` with a newly-constructed one that has no auth control; it
+   * does _not_ modify the original `target` object (which is immutable).
+   *
+   * @param {string} id The ID of the target whose key is to be removed.
    */
-  idleCleanup() {
-    const idleLimit = Date.now() - IDLE_TIME_MSEC;
-    const map = this._map;
+  removeControl(id) {
+    const target = this.getControlled(id);
+    this._map.set(id, target.withoutKey());
+  }
+
+  /**
+   * Gets the target associated with the indicated ID, or `null` if the
+   * so-identified target does not exist. This only checks this instance's
+   * `_map`; it does _not_ try to do token authorization.
+   *
+   * @param {string} id The target ID.
+   * @returns {Target|null} The so-identified target, or `null` if unbound.
+   */
+  _getOrNull(id) {
+    TString.check(id);
+
+    this._idleCleanupIfNecessary();
+
+    const result = this._map.get(id);
+    return (result === undefined) ? null : result;
+  }
+
+  /**
+   * Performs idle target cleanup, but only if it's been long enough since the
+   * last time this was done. "Long enough" is defined to be 1/4 of the
+   * {@link #IDLE_TIME_MSEC}, that is to say, we allow 25% slop on idle time
+   * checks, erring on the side of _keeping_ a "stale" target.
+   */
+  _idleCleanupIfNecessary() {
+    const now       = Date.now();
+    const idleLimit = now - IDLE_TIME_MSEC;
+    const map       = this._map;
+
+    if (now < (this._lastIdleCleanup + (IDLE_TIME_MSEC / 4))) {
+      // Cleaning already happened recently.
+      return;
+    }
+
+    this._lastIdleCleanup = now;
 
     log.event.idleCleanup('start');
 
@@ -245,44 +277,6 @@ export default class Context extends CommonBase {
     }
 
     log.event.idleCleanup('done');
-  }
-
-  /**
-   * Removes the key that controls the target with the given ID. It is an error
-   * to try to operate on a nonexistent or uncontrolled target. This replaces
-   * the `target` with a newly-constructed one that has no auth control; it
-   * does _not_ modify the original `target` object (which is immutable).
-   *
-   * @param {string} id The ID of the target whose key is to be removed.
-   */
-  removeControl(id) {
-    const target = this.getControlled(id);
-    this._map.set(id, target.withoutKey());
-  }
-
-  /**
-   * Starts automatically cleaning up idle targets on this instance. This
-   * initiates a periodic task which iterates over all targets, removing ones
-   * that have become idle.
-   */
-  startAutomaticIdleCleanup() {
-    // We run the callback at a fraction of the overall idle timeout so as to
-    // be a bit more prompt with the cleanup.
-    setInterval(() => { this.idleCleanup(); }, IDLE_TIME_MSEC / 4);
-  }
-
-  /**
-   * Gets the target associated with the indicated ID, or `null` if the
-   * so-identified target does not exist. This only checks this instance's
-   * `_map`; it does _not_ try to do token authorization.
-   *
-   * @param {string} id The target ID.
-   * @returns {Target|null} The so-identified target, or `null` if unbound.
-   */
-  _getOrNull(id) {
-    TString.check(id);
-    const result = this._map.get(id);
-    return (result === undefined) ? null : result;
   }
 
   /**

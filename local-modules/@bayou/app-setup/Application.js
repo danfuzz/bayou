@@ -44,7 +44,6 @@ export default class Application extends CommonBase {
      */
     this._context =
       new Context(appCommon_TheModule.fullCodec, new AppAuthorizer(this));
-    this._context.startAutomaticIdleCleanup();
 
     /**
      * {RootAccess} The "root access" object. This is the object which tokens
