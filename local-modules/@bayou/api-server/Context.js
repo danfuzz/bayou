@@ -151,7 +151,7 @@ export default class Context extends CommonBase {
    * **Note:** This is the only method on this class which understands how to
    * authorize bearer tokens. This is also the only `get*` method on this class
    * which is asynchronous. (It has to be asynchronous because token
-   * authorization) is asynchronous. **TODO:** This situation is confusing and
+   * authorization is asynchronous.) **TODO:** This situation is confusing and
    * should be cleaned up, one way or another.
    *
    * @param {string} idOrToken The target ID or a bearer token (in string form)
