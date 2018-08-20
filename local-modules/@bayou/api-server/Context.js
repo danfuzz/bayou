@@ -70,10 +70,12 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Adds an already-constructed `Target` to the map. This will throw an error
-   * if there is already another target with the same ID.
+   * Adds a {@link Target} to this instance's map of same. The given `target`
+   * must not have an ID that is already represented in the map.
    *
    * @param {Target} target Target to add.
+   * @throws {Error} Thrown if `target.id` is already represented in the target
+   *   map.
    */
   addTarget(target) {
     Target.check(target);
