@@ -7,11 +7,10 @@ import http from 'http';
 import path from 'path';
 import ws from 'ws';
 
-import { BearerToken } from '@bayou/api-common';
 import { Context, PostConnection, WsConnection } from '@bayou/api-server';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { ClientBundle } from '@bayou/client-bundle';
-import { Auth, Deployment, Network } from '@bayou/config-server';
+import { Deployment, Network } from '@bayou/config-server';
 import { Dirs, ProductInfo } from '@bayou/env-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
@@ -39,38 +38,19 @@ export default class Application extends CommonBase {
   constructor(devMode) {
     super();
 
-    const codec = appCommon_TheModule.fullCodec;
-
     /**
      * {Context} All of the objects we provide access to via the API, along with
      * other objects of use to the server.
      */
-    this._context = new Context(codec, new AppAuthorizer());
+    this._context =
+      new Context(appCommon_TheModule.fullCodec, new AppAuthorizer(this));
     this._context.startAutomaticIdleCleanup();
 
     /**
-     * {array<BearerToken>} List of `BearerToken`s that are currently bound in
-     * `context` which provide root access. This is updated in `_bindRoot()`.
-     */
-    this._rootTokens = Object.freeze([]);
-
-    /**
-     * {RootAccess} The "root access" object. This is the object which is
-     * protected by the root bearer token(s) returned via
-     * {@link @bayou/config-server/Network#bearerTokens}.
+     * {RootAccess} The "root access" object. This is the object which tokens
+     * bearing {@link Auth#TYPE_root} authority grant access to.
      */
     this._rootAccess = new RootAccess(this._context);
-
-    // Bind `rootAccess` into the `context` using the root token(s), and arrange
-    // for their update should the token(s) change.
-    this._bindRoot();
-    (async () => {
-      for (;;) {
-        await Auth.whenRootTokensChange();
-        log.info('Root tokens updated.');
-        this._bindRoot();
-      }
-    })();
 
     /**
      * {function} The top-level "Express application" run by this instance. It
@@ -98,6 +78,16 @@ export default class Application extends CommonBase {
       this._addDevModeRoutes();
       log.info('Enabled development / debugging endpoints.');
     }
+
+    Object.freeze(this);
+  }
+
+  /**
+   * {RootAccess} The "root access" object. This is the object which tokens
+   * bearing {@link Auth#TYPE_root} authority grant access to.
+   */
+  get rootAccess() {
+    return this._rootAccess;
   }
 
   /**
@@ -243,33 +233,6 @@ export default class Application extends CommonBase {
     // as well as stuff explicitly under `static/`.
     for (const dir of Deployment.ASSET_DIRS) {
       app.use('/', express.static(dir));
-    }
-  }
-
-  /**
-   * Maintains up-to-date bindings for the `rootAccess` object, based on the
-   * root token(s) reported via
-   * {@link @bayou/config-server/Network#bearerTokens}. This includes a
-   * promise-chain-based ongoing update mechanism.
-   */
-  _bindRoot() {
-    const context    = this._context;
-    const rootTokens = Auth.rootTokens;
-
-    if (BearerToken.sameArrays(rootTokens, this._rootTokens)) {
-      // No actual change. Note the fact.
-      log.info('Root token update false alarm (no actual change).');
-    } else {
-      // Tokens have been updated (or this is the initial setup). So, remove the
-      // old ones (if any) and add the new ones (if any).
-      for (const t of this._rootTokens) {
-        context.deleteId(t.id);
-      }
-      for (const t of rootTokens) {
-        context.addEvergreen(t, this._rootAccess);
-        log.info('Accept root:', t.printableId);
-      }
-      this._rootTokens = rootTokens;
     }
   }
 

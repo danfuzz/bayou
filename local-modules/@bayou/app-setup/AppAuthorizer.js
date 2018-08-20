@@ -5,20 +5,23 @@
 import { TokenAuthorizer } from '@bayou/api-server';
 import { Auth } from '@bayou/config-server';
 
+import Application from './Application';
+
 /**
  * Application-specific implementation of {@link TokenAuthorizer}.
- *
- * **TODO:** As currently written, this just forwards token parsing onward to
- * the configured {@link Auth} class, but leaves actual authorization as a stub.
- * Eventually, this is where root tokens should get handled, allowing the
- * removal of same from `Application`.
  */
 export default class AppAuthorizer extends TokenAuthorizer {
   /**
    * Constructs an instance.
+   *
+   * @param {Application} application The main application instance that this
+   *   instance is associated with.
    */
-  constructor() {
+  constructor(application) {
     super();
+
+    /** {Application} The main application. */
+    this._application = Application.check(application);
 
     Object.freeze(this);
   }
@@ -34,13 +37,21 @@ export default class AppAuthorizer extends TokenAuthorizer {
 
   /**
    * @override
-   * @param {BearerToken} token_unused Token to look up.
+   * @param {BearerToken} token Token to look up.
    * @returns {object|null} If `token` grants any authority, an object which
    *   exposes the so-authorized functionality, or `null` if no authority is
    *   granted.
    */
-  async _impl_targetFromToken(token_unused) {
-    // **TODO:** See class header comment.
+  async _impl_targetFromToken(token) {
+    console.log('======= auth', token);
+    const authority = await Auth.tokenAuthority(token);
+    console.log('======= auth got', authority);
+
+    if (authority.type === Auth.TYPE_root) {
+      return this._application.rootAccess;
+    }
+
+    // No other token type grants authority... yet.
     return null;
   }
 
