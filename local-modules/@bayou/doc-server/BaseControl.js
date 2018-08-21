@@ -203,9 +203,9 @@ export default class BaseControl extends BaseDataManager {
       throw Errors.badValue(change, clazz.changeClass, 'non-empty');
     }
 
-    const revNum       = change.revNum;
-    const baseRevNum   = revNum - 1;
-    const changePath   = clazz.pathForChange(revNum);
+    const revNum = change.revNum;
+    const baseRevNum = revNum - 1;
+    const changePath = clazz.pathForChange(revNum);
     const revisionPath = clazz.revisionNumberPath;
     const clampedTimeoutMsec = Timeouts.clamp(timeoutMsec);
 
@@ -221,12 +221,12 @@ export default class BaseControl extends BaseDataManager {
       // Run prerequisites on snapshot
       snapshot.checkPathIs(revisionPath, codec.encodeJsonBuffer(baseRevNum));
       snapshot.checkPathAbsent(changePath);
-      await file.appendChange(fileChange, clampedTimeoutMsec);
+      await this._appendChangeWithRetry(fileChange, clampedTimeoutMsec);
     } catch (e) {
       if (fileStoreOt_Errors.is_pathNotAbsent(e) || fileStoreOt_Errors.is_pathHashMismatch(e)) {
         // One of these will get thrown if and when we lose an append race. This
         // regularly occurs when there are simultaneous editors.
-        this.log.info('Lost append race for revision:', revNum);
+        this.log.info('Lost document append race for revision:', revNum);
         return false;
       } else {
         // No other errors are expected, so just rethrow.
@@ -240,6 +240,47 @@ export default class BaseControl extends BaseDataManager {
     this._maybeWriteStoredSnapshot(change.revNum);
 
     return true;
+  }
+
+  async _appendChangeWithRetry(initialFileChange, timeoutMsec) {
+    const file = this.fileCodec.file;
+    const clampedTimeoutMsec = Timeouts.clamp(timeoutMsec);
+    const timeoutTime = Date.now() + clampedTimeoutMsec;
+    let fileChange = initialFileChange;
+
+    // Loop until the overall timeout.
+    for (;;) {
+      const now = Date.now();
+      const revNum = fileChange.revNum;
+
+      if (now >= timeoutTime) {
+        this.log.info(`\`_appendChangeWithRetry()\` timed out: ${timeoutMsec}msec`);
+        throw Errors.timedOut(timeoutMsec);
+      }
+
+      // If this returns normally (doesn't throw), then we know it wasn't due
+      // to hitting the timeout.
+      try {
+        const appendSuccess = await file.appendChange(fileChange, timeoutTime - now);
+
+        if (appendSuccess) {
+          return;
+        } else {
+          this.log.info('Lost file append race for revision:', revNum);
+          const currentRevNum = await this.currentRevNum(timeoutTime - Date.now());
+
+          fileChange = fileChange.withRevNum(currentRevNum + 1);
+        }
+      } catch (e) {
+        // For a timeout, we log and report the original timeout value. For
+        // everything else, we just transparently re-throw.
+        if (Errors.is_timedOut(e)) {
+          this.log.info(`\`_appendChangeWithRetry()\` timed out: ${timeoutMsec}msec`);
+          throw Errors.timedOut(timeoutMsec);
+        }
+        throw e;
+      }
+    }
   }
 
   /**
@@ -1133,10 +1174,8 @@ export default class BaseControl extends BaseDataManager {
    */
   async _writeStoredSnapshot(snapshot, timeoutMsec = null) {
     const clazz = this.constructor;
-    const path  = clazz.storedSnapshotPath;
-    const { file, codec } = this.fileCodec;
-    const clampedTimeoutMsec = Timeouts.clamp(timeoutMsec);
-    const timeoutTime = Date.now() + clampedTimeoutMsec;
+    const path = clazz.storedSnapshotPath;
+    const codec = this.fileCodec.codec;
 
     clazz.snapshotClass.check(snapshot);
 
@@ -1155,49 +1194,11 @@ export default class BaseControl extends BaseDataManager {
       fileOps.push(FileOp.op_deletePathRange(this.constructor.changePathPrefix, 0, deleteBefore));
     }
 
-    let fileChange = new FileChange(snapshot.revNum + 1, fileOps);
+    const fileChange = new FileChange(snapshot.revNum + 1, fileOps);
 
-    // Handles timeout (called twice, below).
-    const timedOut = () => {
-      // Log a message -- it's at least somewhat notable, though it does occur
-      // regularly -- and throw `timedOut` with the original timeout value. (If
-      // called as a result of catching a timeout from `transact()` the timeout
-      // value in the error might not be the original `timeoutMsec`.)
-      this.log.info(`\`_writeStoredSnapshot()\` timed out: ${timeoutMsec}msec`);
-      throw Errors.timedOut(timeoutMsec);
-    };
+    await this._appendChangeWithRetry(fileChange, timeoutMsec);
 
-    // Loop until the overall timeout.
-    for (;;) {
-      const now = Date.now();
-      if (now >= timeoutTime) {
-        timedOut();
-      }
-
-      // If this returns normally (doesn't throw), then we know it wasn't due
-      // to hitting the timeout.
-      try {
-        const appendSuccess = await file.appendChange(fileChange, timeoutTime - now);
-
-        if (appendSuccess) {
-          this.log.info('Wrote stored snapshot for revision:', snapshot.revNum);
-
-          return;
-        } else {
-          this.log.info('Lost append race for revision:', snapshot.revNum);
-          const currentRevNum = await this.currentRevNum(timeoutTime - Date.now());
-
-          fileChange = fileChange.withRevNum(currentRevNum + 1);
-        }
-      } catch (e) {
-        // For a timeout, we log and report the original timeout value. For
-        // everything else, we just transparently re-throw.
-        if (Errors.is_timedOut(e)) {
-          timedOut();
-        }
-        throw e;
-      }
-    }
+    this.log.info('Wrote stored snapshot for revision:', snapshot.revNum);
   }
 
   /**
