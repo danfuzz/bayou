@@ -93,9 +93,7 @@ export default class Target extends CommonBase {
    *
    * @param {Functor} payload The name of the method to call and the arguments
    *   to call it with.
-   * @returns {*} The result of calling. Because `undefined` isn't used across
-   *   the API, this method returns `null` if the original method returned
-   *   `undefined`.
+   * @returns {*} The result of calling.
    */
   call(payload) {
     Functor.check(payload);
@@ -115,9 +113,8 @@ export default class Target extends CommonBase {
 
     const target = this._target;
     const impl   = target[name];
-    const result = impl.apply(target, payload.args);
 
-    return (result === undefined) ? null : result;
+    return impl.apply(target, payload.args);
   }
 
   /**

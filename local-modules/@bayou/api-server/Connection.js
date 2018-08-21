@@ -169,15 +169,20 @@ export default class Connection extends CommonBase {
 
   /**
    * Helper for `handleJsonMessage()` which actually performs the method call
-   * requested by the given message.
+   * requested by the given message. Because `undefined` is not used on the API,
+   * a top-level `undefined` result (which, e.g., is what is returned from a
+   * method that just falls through to the end or `return`s without specifying
+   * a value) is replaced by `null`.
    *
    * @param {Message} msg Parsed message.
-   * @returns {*} Whatever the called method returns.
+   * @returns {*} Whatever the called method returns, except `null` replacing
+   *   `undefined`.
    */
   async _actOnMessage(msg) {
     const target = await this._getTarget(msg.targetId);
+    const result = await target.call(msg.payload);
 
-    return target.call(msg.payload);
+    return (result === undefined) ? null : result;
   }
 
   /**
