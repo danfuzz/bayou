@@ -146,7 +146,17 @@ export default class Connection extends CommonBase {
     // caller.
 
     const response = new Response((msg === null) ? 0 : msg.id, result, error);
-    const encodedResponse = this._codec.encodeJson(response);
+
+    let encodedResponse;
+    try {
+      encodedResponse = this._codec.encodeJson(response);
+    } catch (e) {
+      this._log.error('Could not encode response:', response);
+
+      // Last-ditch attempt to send a breadcrumb back to the caller.
+      const replacementResponse = new Response((msg === null) ? 0 : msg.id, null, e);
+      encodedResponse = this._codec.encodeJson(replacementResponse);
+    }
 
     if (msg === null) {
       this._apiLog.nonMessageResponse(response);
