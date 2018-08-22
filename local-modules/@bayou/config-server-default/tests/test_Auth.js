@@ -12,7 +12,7 @@ import { Auth } from '@bayou/config-server-default';
 /**
  * {string} Valid token string which is not expected to ever bear any authority.
  */
-const EXAMPLE_TOKEN = 'tok-00000000000000001123456789abcdef';
+const EXAMPLE_TOKEN = 'root-00000000000000001123456789abcdef';
 
 /**
  * {string} The well-known root token used by this module.
@@ -21,7 +21,7 @@ const EXAMPLE_TOKEN = 'tok-00000000000000001123456789abcdef';
  * have a single well-known root token. Any real deployment of this project will
  * (had better!) use a _different_ configuration module.
  */
-const ROOT_TOKEN = 'tok-00000000000000000000000000000000';
+const ROOT_TOKEN = 'root-00000000000000000000000000000000';
 
 describe('@bayou/config-server-default/Auth', () => {
   it('inherits from `BaseAuth`', () => {
@@ -51,11 +51,15 @@ describe('@bayou/config-server-default/Auth', () => {
     });
 
     it('should reject non-token syntax', () => {
-      assert.isFalse(Auth.isToken('zzz-0000000000000001123456789abcdef'));
       assert.isFalse(Auth.isToken('0000000000000001123456789abcdef'));
-      assert.isFalse(Auth.isToken('tok-z0000000000000001123456789abcdef'));
-      assert.isFalse(Auth.isToken('tok-00000000000000001123456789abcdef1'));
-      assert.isFalse(Auth.isToken('tok-0000000000000000-1123456789abcdef'));
+      assert.isFalse(Auth.isToken('-0000000000000001123456789abcdef'));
+      assert.isFalse(Auth.isToken('z-0000000000000001123456789abcdef'));
+      assert.isFalse(Auth.isToken('zz-0000000000000001123456789abcdef'));
+      assert.isFalse(Auth.isToken('zzz-0000000000000001123456789abcdef'));
+      assert.isFalse(Auth.isToken('zzzz-0000000000000001123456789abcdef'));
+      assert.isFalse(Auth.isToken('root-z0000000000000001123456789abcdef'));
+      assert.isFalse(Auth.isToken('root-00000000000000001123456789abcdef1'));
+      assert.isFalse(Auth.isToken('root-0000000000000000-1123456789abcdef'));
     });
   });
 
@@ -88,7 +92,7 @@ describe('@bayou/config-server-default/Auth', () => {
 
   describe('tokenFromString()', () => {
     it('should construct a token with the expected parts, given a valid token', () => {
-      const id    = 'tok-0123456776543210';
+      const id    = 'root-0123456776543210';
       const full  = `${id}aaaaaaaaaaaaaaa1`;
       const token = Auth.tokenFromString(full);
 
@@ -99,7 +103,7 @@ describe('@bayou/config-server-default/Auth', () => {
 
   describe('tokenId()', () => {
     it('should extract the ID of a valid token', () => {
-      const id    = 'tok-0123456776543210';
+      const id    = 'root-0123456776543210';
       const token = `${id}bbbbbbbbbbbbbbbb`;
       assert.strictEqual(Auth.tokenId(token), id);
     });
