@@ -49,7 +49,7 @@ export default class AppAuthorizer extends TokenAuthorizer {
       return this._application.rootAccess;
     }
 
-    // No other token type grants authority... yet.
+    // No other token types grant authority... yet.
     return null;
   }
 

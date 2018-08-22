@@ -42,6 +42,10 @@ export default class Auth extends BaseAuth {
    * * `Auth.TYPE_root` &mdash; No other bindings. The token is a "root" token,
    *   which grants full system access. (This sort of token is how a trusted
    *   back-end system communicates with this server.)
+   * * `Auth.TYPE_author` &mdash; Additional binding `authorId`, a string. The
+   *   token is an "author" (user) token, which grants the ability to perform
+   *   operations on behalf of the so-identified author. For example, such a
+   *   token allows the bearer to edit documents owned by that author.
    *
    * **Note:** This is defined to be an `async` method, on the expectation that
    * in a production configuration, it might require network activity (e.g.
