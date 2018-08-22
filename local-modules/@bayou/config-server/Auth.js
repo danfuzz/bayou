@@ -21,6 +21,20 @@ export default class Auth extends BaseAuth {
   }
 
   /**
+   * Gets (makes or finds in a cache) an author token, associated with the
+   * indicated author ID. This throws an error if it is not possible to make
+   * such a token.
+   *
+   * @param {string} authorId ID for the author, which must be in the syntax
+   *   defined by {@link ot-common.AuthorId}.
+   * @returns {BearerToken} Token which grants access for the author (user)
+   *   whose ID is `authorId`.
+   */
+  static getAuthorToken(authorId) {
+    return use.Auth.getAuthorToken(authorId);
+  }
+
+  /**
    * Returns `true` iff the `tokenString` is _syntactically_ valid as a bearer
    * token (whether or not it actually grants any access).
    *
