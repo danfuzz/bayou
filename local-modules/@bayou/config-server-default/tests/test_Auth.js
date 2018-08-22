@@ -10,9 +10,13 @@ import { BaseAuth } from '@bayou/config-server';
 import { Auth } from '@bayou/config-server-default';
 
 /**
- * {string} Valid token string which is not expected to ever bear any authority.
+ * {array<string>} Valid token strings which are not expected to ever bear any
+ * authority.
  */
-const EXAMPLE_TOKEN = 'root-0000000000000000-1123456789abcdef';
+const EXAMPLE_TOKENS = [
+  'root-0000000000000000-1123456789abcdef',
+  'autr-00000000000000ff-aaabbbcccdddeeef'
+];
 
 /**
  * {string} The well-known root token used by this module.
@@ -81,7 +85,10 @@ describe('@bayou/config-server-default/Auth', () => {
   describe('isToken()', () => {
     it('should accept token syntax', () => {
       assert.isTrue(Auth.isToken(ROOT_TOKEN));
-      assert.isTrue(Auth.isToken(EXAMPLE_TOKEN));
+
+      for (const t of EXAMPLE_TOKENS) {
+        assert.isTrue(Auth.isToken(t), t);
+      }
     });
 
     it('should reject non-token syntax', () => {
@@ -111,14 +118,20 @@ describe('@bayou/config-server-default/Auth', () => {
       await test('florp');
       await test([1, 2]);
       await test(new Map());
-      await test(EXAMPLE_TOKEN); // Requires a token object, not a string.
+      await test(EXAMPLE_TOKENS[0]); // Requires a token object, not a string.
     });
 
     it('should indicate "no auth" for an unknown token', async () => {
-      const token = Auth.tokenFromString(EXAMPLE_TOKEN);
-      const auth  = await Auth.tokenAuthority(token);
+      async function test(t) {
+        const token = Auth.tokenFromString(t);
+        const auth  = await Auth.tokenAuthority(token);
 
-      assert.deepEqual(auth, { type: Auth.TYPE_none });
+        assert.deepEqual(auth, { type: Auth.TYPE_none });
+      }
+
+      for (const t of EXAMPLE_TOKENS) {
+        await test(t);
+      }
     });
 
     it('should indicate "root auth" for the staticly-known root token', async () => {
