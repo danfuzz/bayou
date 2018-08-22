@@ -10,14 +10,14 @@ import { Errors } from '@bayou/util-common';
  * {RegEx} Expression that matches properly-formed tokens. The ID and secret
  * portions are each a separate matching group.
  */
-const TOKEN_REGEX = /^(root-[0-9a-f]{16})([0-9a-f]{16})$/;
+const TOKEN_REGEX = /^(root-[0-9a-f]{16})-([0-9a-f]{16})$/;
 
 /**
  * {string} The one well-known root token. This obviously-insecure arrangement
  * is just for this module, the default server configuration module, which is
  * only supposed to be used in development, not real production.
  */
-const THE_ROOT_TOKEN = 'root-00000000000000000000000000000000';
+const THE_ROOT_TOKEN = 'root-0000000000000000-0000000000000000';
 
 /**
  * Utility functionality regarding the network configuration of a server.
