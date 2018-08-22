@@ -7,6 +7,15 @@ import Context from './Context';
 import PostConnection from './PostConnection';
 import Target from './Target';
 import TokenAuthorizer from './TokenAuthorizer';
+import TokenMint from './TokenMint';
 import WsConnection from './WsConnection';
 
-export { Connection, Context, PostConnection, Target, TokenAuthorizer, WsConnection };
+export {
+  Connection,
+  Context,
+  PostConnection,
+  Target,
+  TokenAuthorizer,
+  TokenMint,
+  WsConnection
+};

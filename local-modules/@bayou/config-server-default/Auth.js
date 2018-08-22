@@ -3,8 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BearerToken } from '@bayou/api-common';
+import { TokenMint } from '@bayou/api-server';
 import { BaseAuth } from '@bayou/config-server';
-import { TInt, TString } from '@bayou/typecheck';
+import { TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
 /**
@@ -20,24 +21,28 @@ const TOKEN_REGEX = /^(root|autr)-([0-9a-f]{16})-([0-9a-f]{16})$/;
 const THE_ROOT_TOKEN_ID = 'root-0000000000000000';
 
 /**
- * {string} The one well-known root token. This obviously-insecure arrangement
- * is just for this module, the default server configuration module, which is
- * only supposed to be used in development, not real production.
+ * {BearerToken} The one well-known root token. This obviously-insecure value is
+ * just for this module, the default server configuration module, which is
+ * only supposed to be used in development, and not for real production.
  */
-const THE_ROOT_TOKEN = `${THE_ROOT_TOKEN_ID}-0000000000000000`;
+const THE_ROOT_TOKEN =
+  new BearerToken(THE_ROOT_TOKEN_ID, `${THE_ROOT_TOKEN_ID}-0000000000000000`);
 
-/** {string} Type prefix used for author tokens. */
-const AUTHOR_TOKEN_TYPE = 'autr';
+/**
+ * {TokenMint} Mint which creates author tokens and also knows about the root
+ * token.
+ */
+const tokenMint = new TokenMint('autr');
 
 /**
  * {Map<string,object>} Map from token ID strings to objects which are suitable
- * as the return value from {@link Auth#tokenAuthority} (see which), with the
- * addition of a binding `token` to hold the actual token object.
+ * as the return value from {@link Auth#tokenAuthority} (see which).
  */
-const ALL_TOKENS = new Map();
+const tokenAuths = new Map();
 
-/** {Int} Next ID to assign to a token. */
-let nextTokenId = 1;
+// Set up the well-known root token.
+tokenMint.registerToken(THE_ROOT_TOKEN);
+tokenAuths.set(THE_ROOT_TOKEN_ID, Object.freeze({ type: BaseAuth.TYPE_root }));
 
 /**
  * Utility functionality regarding the network configuration of a server.
@@ -51,7 +56,7 @@ export default class Auth extends BaseAuth {
    * portion.
    */
   static get rootTokens() {
-    return Object.freeze([Auth.tokenFromString(THE_ROOT_TOKEN)]);
+    return Object.freeze([THE_ROOT_TOKEN]);
   }
 
   /**
@@ -69,19 +74,13 @@ export default class Auth extends BaseAuth {
     // circular dependency. **TODO:** Sort this out.
     TString.check(authorId);
 
-    // **Note:** `^ 1` just so the ID and secret aren't exactly the same.
-    const idString = `${AUTHOR_TOKEN_TYPE}-${Auth._hex16(nextTokenId)}`;
-    const secretString = Auth._hex16(nextTokenId ^ 1);
+    const result = tokenMint.mintToken();
 
-    const result = new BearerToken(idString, `${idString}-${secretString}`);
-
-    ALL_TOKENS.set(idString, Object.freeze({
+    tokenAuths.set(result.id, Object.freeze({
       type:  Auth.TYPE_author,
-      token: result,
       authorId
     }));
 
-    nextTokenId++;
     return result;
   }
 
@@ -96,6 +95,7 @@ export default class Auth extends BaseAuth {
    * @returns {boolean} `true` iff `tokenString` is valid token syntax.
    */
   static isToken(tokenString) {
+    TString.check(tokenString);
     return TOKEN_REGEX.test(tokenString);
   }
 
@@ -112,20 +112,11 @@ export default class Auth extends BaseAuth {
   static async tokenAuthority(token) {
     BearerToken.check(token);
 
-    const found = ALL_TOKENS.get(token.id);
-
-    if ((found === undefined) || !found.token.sameToken(token)) {
-      // Either we didn't find a token with a matching ID, or we found such a
-      // token, but it has a different secret than `token` has.
+    if (!tokenMint.hasToken(token)) {
       return { type: Auth.TYPE_none };
     }
 
-    // Clone the `found` object, and remove `token` from the clone (as it's not
-    // supposed to be returned from this method).
-
-    const result = Object.assign({}, found);
-    delete result.token;
-    return result;
+    return tokenAuths.get(token.id);
   }
 
   /**
@@ -136,6 +127,7 @@ export default class Auth extends BaseAuth {
    * @returns {BearerToken} An appropriately-constructed instance.
    */
   static tokenFromString(tokenString) {
+    TString.check(tokenString);
     return new BearerToken(Auth.tokenId(tokenString), tokenString);
   }
 
@@ -148,6 +140,7 @@ export default class Auth extends BaseAuth {
    * @returns {string} The ID portion.
    */
   static tokenId(tokenString) {
+    TString.check(tokenString);
     const match = tokenString.match(TOKEN_REGEX);
 
     if (match) {
@@ -159,23 +152,4 @@ export default class Auth extends BaseAuth {
     // security-sensitive info.
     throw Errors.badValue(BearerToken.redactString(tokenString), 'bearer token');
   }
-
-  /**
-   * Converts the given number into lowercase hexadecimal, left-padded with
-   * zeroes.
-   *
-   * @param {Int} n Number to convert.
-   * @returns {string} Sixteen hexadecimal digits.
-   */
-  static _hex16(n) {
-    TInt.check(n);
-
-    return n.toString(16).padStart(16, '0');
-  }
 }
-
-// Set up the well-known root token.
-ALL_TOKENS.set(THE_ROOT_TOKEN_ID, Object.freeze({
-  type:  Auth.TYPE_root,
-  token: new BearerToken(THE_ROOT_TOKEN_ID, THE_ROOT_TOKEN)
-}));
