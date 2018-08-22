@@ -9,7 +9,7 @@ import { BaseAuth } from '@bayou/config-server';
 
 describe('@bayou/config-server/BaseAuth', () => {
   describe('.TYPE_*', () => {
-    const items = ['root', 'none'];
+    const items = ['author', 'none', 'root'];
 
     for (const item of items) {
       const name = `TYPE_${item}`;
