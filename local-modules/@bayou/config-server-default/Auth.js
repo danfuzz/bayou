@@ -12,13 +12,13 @@ import { Errors } from '@bayou/util-common';
  * {RegEx} Expression that matches properly-formed tokens. The type, ID, and
  * secret portions are each a separate matching group.
  */
-const TOKEN_REGEX = /^(root|autr)-([0-9a-f]{16})-([0-9a-f]{16})$/;
+const TOKEN_REGEX = /^(root|autr)-([0-9a-f]{8})-([0-9a-f]{8})$/;
 
 /**
  * {string} ID of the one well-known root token. See {@link #THE_ROOT_TOKEN}
  * for more discussion.
  */
-const THE_ROOT_TOKEN_ID = 'root-0000000000000000';
+const THE_ROOT_TOKEN_ID = 'root-00000000';
 
 /**
  * {BearerToken} The one well-known root token. This obviously-insecure value is
@@ -26,7 +26,7 @@ const THE_ROOT_TOKEN_ID = 'root-0000000000000000';
  * only supposed to be used in development, and not for real production.
  */
 const THE_ROOT_TOKEN =
-  new BearerToken(THE_ROOT_TOKEN_ID, `${THE_ROOT_TOKEN_ID}-0000000000000000`);
+  new BearerToken(THE_ROOT_TOKEN_ID, `${THE_ROOT_TOKEN_ID}-00000000`);
 
 /**
  * {TokenMint} Mint which creates author tokens and also knows about the root

@@ -53,16 +53,16 @@ export default class TokenMint extends CommonBase {
    * Constructs an instance.
    *
    * @param {string} tag The tag to use on all tokens minted by this instance.
-   * @param {Int} [idLength = 16] The length of the ID portion of tokens minted
+   * @param {Int} [idLength = 8] The length of the ID portion of tokens minted
    *   by this instance, in digits.
-   * @param {Int} [secretLength = 16] The length of the secret portion of tokens
+   * @param {Int} [secretLength = 8] The length of the secret portion of tokens
    *   minted by this instance, in digits.
    * @param {function|null} [randomFn = null] Function to use to produce
    *   "random" numbers, or `null` to &mdash; predictably but obviously
    *   insecurely &mdash; use a simple sequence. Each call to `randomFn()` is
    *   expected to return a 32-bit integer.
    */
-  constructor(tag, idLength = 16, secretLength = 16, randomFn = null) {
+  constructor(tag, idLength = 8, secretLength = 8, randomFn = null) {
     super();
 
     /** {string} The tag to use on all tokens minted by this instance. */
