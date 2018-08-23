@@ -85,7 +85,11 @@ export default class TokenMint extends CommonBase {
       ? sequenceGenerator()
       : TFunction.chcekCallable(randomFn);
 
-    /** {Map<string, BearerToken>} Map from token IDs to minted instances. */
+    /**
+     * {Map<string, object>} Map from token IDs to objects which bind `token`
+     * (the token instance) and `info` (the arbitrary info associated with the
+     * token).
+     */
     this._allTokens = new Map();
 
     Object.freeze(this);
@@ -93,7 +97,7 @@ export default class TokenMint extends CommonBase {
 
   /**
    * Indicates whether this instance knows about the indicated token, because it
-   * was either minted by or registered to this isntance. The check is performed
+   * was either minted by or registered to this instance. The check is performed
    * based on the string forms of the tokens, which means it is possible to pass
    * a {@link BearerToken} that (in terms of `===`) wasn't returned by or
    * registered to this instance which will result in a `true` return from this
@@ -107,36 +111,40 @@ export default class TokenMint extends CommonBase {
 
     const found = this._allTokens.get(token.id);
 
-    return (found !== undefined) && found.sameToken(token);
+    return (found !== undefined) && found.token.sameToken(token);
   }
 
   /**
-   * Mints and returns a new token.
+   * Mints and returns a new token, optionally associating arbitrary info with
+   * it.
    *
+   * @param {*} [info = null] Information to associate with the token.
    * @returns {BearerToken} A freshly-generated token.
    */
-  mintToken() {
+  mintToken(info = null) {
     const id     = this._randomId();
     const secret = this._hexString(this._secretLength);
     const token  = new BearerToken(id, `${id}-${secret}`);
 
-    this._allTokens.set(id, token);
+    this._allTokens.set(id, { info, token });
     return token;
   }
 
   /**
-   * Registers a token which wasn't minted by this instance.
+   * Registers a token which wasn't minted by this instance, optionally
+   * associating arbitrary info with it.
    *
    * @param {BearerToken} token The token to register.
+   * @param {*} [info = null] Information to associate with `token`.
    */
-  registerToken(token) {
+  registerToken(token, info = null) {
     const already = this._allTokens.get(token.id);
 
     if (already !== undefined) {
       throw Errors.badUse(`Duplicate token: ${token.printableId}`);
     }
 
-    this._allTokens.set(token.id, token);
+    this._allTokens.set(token.id, { info, token });
   }
 
   /**
