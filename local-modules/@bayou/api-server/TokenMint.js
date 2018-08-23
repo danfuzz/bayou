@@ -96,6 +96,26 @@ export default class TokenMint extends CommonBase {
   }
 
   /**
+   * Gets the information associated with the given token. If the token was not
+   * minted by or registered to this instance, this returns `null`.
+   *
+   * @param {BearerToken} token The token in question.
+   * @returns {*} The information associated with `token`, or `null` if `token`
+   *   is unknown to this instance.
+   */
+  getInfoOrNull(token) {
+    BearerToken.check(token);
+
+    const found = this._allTokens.get(token.id);
+
+    if ((found === undefined) || !found.token.sameToken(token)) {
+      return null;
+    }
+
+    return found.info;
+  }
+
+  /**
    * Indicates whether this instance knows about the indicated token, because it
    * was either minted by or registered to this instance. The check is performed
    * based on the string forms of the tokens, which means it is possible to pass
