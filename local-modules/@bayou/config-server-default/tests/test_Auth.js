@@ -50,28 +50,28 @@ describe('@bayou/config-server-default/Auth', () => {
   });
 
   describe('getAuthorToken()', () => {
-    it('should return a `BearerToken` when given a valid author ID', () => {
-      const t = Auth.getAuthorToken('some-author');
+    it('should return a `BearerToken` when given a valid author ID', async () => {
+      const t = await Auth.getAuthorToken('some-author');
 
       assert.instanceOf(t, BearerToken);
     });
 
-    it('should always return a new token even given the same ID', () => {
-      const t1 = Auth.getAuthorToken('florp');
-      const t2 = Auth.getAuthorToken('florp');
+    it('should always return a new token even given the same ID', async () => {
+      const t1 = await Auth.getAuthorToken('florp');
+      const t2 = await Auth.getAuthorToken('florp');
 
       assert.isFalse(t1.sameToken(t2));
     });
 
-    it('should return a token whose full string conforms to `isToken()`', () => {
-      const t = Auth.getAuthorToken('some-author');
+    it('should return a token whose full string conforms to `isToken()`', async () => {
+      const t = await Auth.getAuthorToken('some-author');
 
       assert.isTrue(Auth.isToken(t.secretToken));
     });
 
     it('should return a token which elicits a correct response from `tokenAuthority()`', async () => {
       const AUTHOR_ID = 'that-author';
-      const t         = Auth.getAuthorToken(AUTHOR_ID);
+      const t         = await Auth.getAuthorToken(AUTHOR_ID);
       const authority = await Auth.tokenAuthority(t);
       const expect    = {
         type:     Auth.TYPE_author,

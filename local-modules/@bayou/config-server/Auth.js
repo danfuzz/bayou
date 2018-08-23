@@ -25,12 +25,16 @@ export default class Auth extends BaseAuth {
    * indicated author ID. This throws an error if it is not possible to make
    * such a token.
    *
+   * **Note:** This is defined to be an `async` method, on the expectation that
+   * in a production configuration, it might require network activity (e.g.
+   * making a request of a different service) to make a valid token.
+   *
    * @param {string} authorId ID for the author, which must be in the syntax
    *   defined by {@link ot-common.AuthorId}.
    * @returns {BearerToken} Token which grants access for the author (user)
    *   whose ID is `authorId`.
    */
-  static getAuthorToken(authorId) {
+  static async getAuthorToken(authorId) {
     return use.Auth.getAuthorToken(authorId);
   }
 
