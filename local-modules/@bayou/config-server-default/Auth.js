@@ -34,15 +34,8 @@ const THE_ROOT_TOKEN =
  */
 const tokenMint = new TokenMint('autr');
 
-/**
- * {Map<string,object>} Map from token ID strings to objects which are suitable
- * as the return value from {@link Auth#tokenAuthority} (see which).
- */
-const tokenAuths = new Map();
-
 // Set up the well-known root token.
-tokenMint.registerToken(THE_ROOT_TOKEN);
-tokenAuths.set(THE_ROOT_TOKEN_ID, Object.freeze({ type: BaseAuth.TYPE_root }));
+tokenMint.registerToken(THE_ROOT_TOKEN, Object.freeze({ type: BaseAuth.TYPE_root }));
 
 /**
  * Utility functionality regarding the network configuration of a server.
@@ -74,14 +67,10 @@ export default class Auth extends BaseAuth {
     // circular dependency. **TODO:** Sort this out.
     TString.check(authorId);
 
-    const result = tokenMint.mintToken();
-
-    tokenAuths.set(result.id, Object.freeze({
-      type:  Auth.TYPE_author,
+    return tokenMint.mintToken(Object.freeze({
+      type: Auth.TYPE_author,
       authorId
     }));
-
-    return result;
   }
 
   /**
@@ -112,11 +101,9 @@ export default class Auth extends BaseAuth {
   static async tokenAuthority(token) {
     BearerToken.check(token);
 
-    if (!tokenMint.hasToken(token)) {
-      return { type: Auth.TYPE_none };
-    }
+    const found = tokenMint.getInfoOrNull(token);
 
-    return tokenAuths.get(token.id);
+    return (found === null) ? { type: Auth.TYPE_none } : found;
   }
 
   /**
