@@ -69,7 +69,7 @@ export default class Auth extends BaseAuth {
    * @param {string} authorId ID for the author.
    * @returns {BearerToken} Token which grants author access.
    */
-  static getAuthorToken(authorId) {
+  static async getAuthorToken(authorId) {
     // **Note:** Actually checking for `AuthorId` syntax would introduce a
     // circular dependency. **TODO:** Sort this out.
     TString.check(authorId);
