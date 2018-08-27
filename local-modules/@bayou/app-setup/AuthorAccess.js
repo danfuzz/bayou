@@ -49,6 +49,17 @@ export default class AuthorAccess extends CommonBase {
    * session on the given document. If the document doesn't exist, this will
    * cause it to be created.
    *
+   * **TODO:** Context binding ought to happen at a different layer of the
+   * system. Maybe something like: An API method implementation can return an
+   * instance of a new class `BindResult` which gets noticed by `api-server`
+   * during API dispatch, which causes it to perform binding. This method would
+   * then return a session object (`fileComplex.makeNewSession(...)`) wrapped in
+   * an instance of that new class. This arrangement would mean that this class
+   * won't have to explicitly know about a context, nor even have to worry about
+   * generating IDs. Further upstream / parallel simplifications will also be
+   * possible, such as (a) a similar change to `RootAccess`, and (b) the
+   * possibility of un-exposing `_context` from `Application`.
+   *
    * @param {string} docId ID of the document which the resulting bound object
    *   allows access to.
    * @returns {string} ID within the API context which refers to the
