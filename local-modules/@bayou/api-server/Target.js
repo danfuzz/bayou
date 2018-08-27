@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseKey } from '@bayou/api-common';
+import { BaseKey, TargetId } from '@bayou/api-common';
 import { TObject, TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Functor } from '@bayou/util-common';
 
@@ -41,9 +41,8 @@ export default class Target extends CommonBase {
     this._key = (idOrKey instanceof BaseKey) ? idOrKey : null;
 
     /** {string} The target ID. */
-    this._id = (this._key === null)
-      ? TString.check(idOrKey)
-      : this._key.id;
+    this._id = TargetId.check(
+      (this._key === null) ? TString.check(idOrKey) : this._key.id);
 
     /** {object} The target object. */
     this._target = TObject.check(target);
