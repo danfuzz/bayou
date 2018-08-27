@@ -266,10 +266,11 @@ export default class BaseControl extends BaseDataManager {
         if (appendSuccess) {
           return;
         } else {
-          this.log.info('Lost file append race for revision:', revNum);
           const currentRevNum = await this.currentRevNum(timeoutTime - Date.now());
+          const newRevNum = currentRevNum + 1;
+          fileChange = fileChange.withRevNum(newRevNum);
 
-          fileChange = fileChange.withRevNum(currentRevNum + 1);
+          this.log.info(`Lost file append race for revision ${revNum}. Trying again with ${newRevNum}`);
         }
       } catch (e) {
         // For a timeout, we log and report the original timeout value. For
