@@ -8,7 +8,7 @@ import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { Storage } from '@bayou/config-server';
 import { DocumentId } from '@bayou/doc-common';
 import { Logger } from '@bayou/see-all';
-import { TFunction, TString } from '@bayou/typecheck';
+import { TString } from '@bayou/typecheck';
 import { Singleton } from '@bayou/util-common';
 
 import DocSession from './DocSession';
