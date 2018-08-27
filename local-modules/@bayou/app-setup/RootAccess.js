@@ -67,21 +67,4 @@ export default class RootAccess extends CommonBase {
 
     return key;
   }
-
-  /**
-   * Makes and returns a random ID that isn't already used.
-   *
-   * @returns {string} A random ID.
-   */
-  _randomId() {
-    for (;;) {
-      const result = SplitKey.randomId();
-      if (!this._context.hasId(result)) {
-        return result;
-      }
-
-      // We managed to get an ID collision. Unlikely, but it can happen. So,
-      // just iterate and try again.
-    }
-  }
 }
