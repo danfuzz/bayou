@@ -2,10 +2,11 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { SplitKey } from '@bayou/api-common';
 import { Codec } from '@bayou/codec';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
-import { CommonBase, Errors } from '@bayou/util-common';
+import { CommonBase, Errors, Random } from '@bayou/util-common';
 
 import Target from './Target';
 import TokenAuthorizer from './TokenAuthorizer';
@@ -198,6 +199,55 @@ export default class Context extends CommonBase {
    */
   hasId(id) {
     return this._getOrNull(id) !== null;
+  }
+
+  /**
+   * Makes a new random ID for use with this instance, which (a) is guaranteed
+   * not to be used by the instance already, and (b) will not be mistaken by
+   * the token handler (if any) for a token. **Note:** If not bound promptly
+   * (that is, within the same turn of execution when this method is called), it
+   * is conceivably possible for a duplicate ID to be returned and then
+   * ultimately result in a "duplicate target" error in {@link #addTarget}.
+   *
+   * @returns {string} A random unused target ID.
+   */
+  randomId() {
+    const tokenAuth = this._tokenAuth;
+    const prefix    = (tokenAuth === null) ? 'local-' : tokenAuth.nonTokenPrefix;
+
+    for (;;) {
+      const result = `${prefix}${Random.hexByteString(4)}`;
+
+      if (!this.hasId(result)) {
+        return result;
+      }
+
+      // We managed to get an ID collision. Unlikely, but it can happen. So,
+      // just iterate and try again.
+    }
+  }
+
+  /**
+   * Makes a new random ID for use with this instance, which (a) is guaranteed
+   * not to be used by the instance already, and (b) abides by the syntax
+   * required by {@link SplitKey}.
+   *
+   * **TODO:** Remove this method once all authorization is done using bearer
+   * tokens.
+   *
+   * @returns {string} A random unused target ID, in `SplitKey` syntax.
+   */
+  randomSplitKeyId() {
+    for (;;) {
+      const result = SplitKey.randomId();
+
+      if (!this.hasId(result)) {
+        return result;
+      }
+
+      // We managed to get an ID collision. Unlikely, but it can happen. So,
+      // just iterate and try again.
+    }
   }
 
   /**
