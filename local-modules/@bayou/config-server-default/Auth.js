@@ -42,6 +42,13 @@ tokenMint.registerToken(THE_ROOT_TOKEN, Object.freeze({ type: BaseAuth.TYPE_root
  */
 export default class Auth extends BaseAuth {
   /**
+   * {string} Implementation of standard configuration point.
+   */
+  static get nonTokenPrefix() {
+    return 'local-';
+  }
+
+  /**
    * {array<BearerToken>} Implementation of standard configuration point.
    *
    * This implementation &mdash; obviously insecurely &mdash; just returns

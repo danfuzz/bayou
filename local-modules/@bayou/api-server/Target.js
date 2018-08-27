@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseKey } from '@bayou/api-common';
+import { BaseKey, TargetId } from '@bayou/api-common';
 import { TObject, TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Functor } from '@bayou/util-common';
 
@@ -24,27 +24,25 @@ export default class Target extends CommonBase {
   /**
    * Constructs an instance which wraps the given object.
    *
-   * @param {string|BaseKey} nameOrKey Either the name of the target (if
+   * @param {string|BaseKey} idOrKey Either the ID of the target (if
    *   uncontrolled) _or_ the key which controls access to the target. In the
-   *   former case, the target's `id` is taken to be the given name. In the
    *   latter case, the target's `id` is considered to be the same as the key's
    *   `id`.
    * @param {object} target Object to provide access to.
    * @param {Schema|null} schema `target`'s schema, if already known.
    */
-  constructor(nameOrKey, target, schema = null) {
+  constructor(idOrKey, target, schema = null) {
     super();
 
     /**
      * {BaseKey|null} The access key, or `null` if this is an uncontrolled
      * target.
      */
-    this._key = (nameOrKey instanceof BaseKey) ? nameOrKey : null;
+    this._key = (idOrKey instanceof BaseKey) ? idOrKey : null;
 
     /** {string} The target ID. */
-    this._id = (this._key === null)
-      ? TString.check(nameOrKey)
-      : this._key.id;
+    this._id = TargetId.check(
+      (this._key === null) ? TString.check(idOrKey) : this._key.id);
 
     /** {object} The target object. */
     this._target = TObject.check(target);

@@ -11,6 +11,14 @@ import BaseAuth from './BaseAuth';
  */
 export default class Auth extends BaseAuth {
   /**
+   * {string} Prefix which when prepended to an arbitrary ID string is
+   * guaranteed to result in string for which {@link #isToken} is `false`.
+   */
+  static get nonTokenPrefix() {
+    return use.Auth.nonTokenPrefix;
+  }
+
+  /**
    * {array<BearerToken>} Frozen array of bearer tokens which grant root access
    * to the system. The value of this property &mdash; that is, the array it
    * refers to &mdash; may change over time, but the contents of any given array

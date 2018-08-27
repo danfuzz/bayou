@@ -6,6 +6,7 @@ import { TokenAuthorizer } from '@bayou/api-server';
 import { Auth } from '@bayou/config-server';
 
 import Application from './Application';
+import AuthorAccess from './AuthorAccess';
 
 /**
  * Application-specific implementation of {@link TokenAuthorizer}.
@@ -28,6 +29,13 @@ export default class AppAuthorizer extends TokenAuthorizer {
 
   /**
    * @override
+   */
+  get _impl_nonTokenPrefix() {
+    return Auth.nonTokenPrefix;
+  }
+
+  /**
+   * @override
    * @param {string} tokenString The alleged token string.
    * @returns {boolean} `true` iff `tokenString` has valid token syntax.
    */
@@ -45,12 +53,21 @@ export default class AppAuthorizer extends TokenAuthorizer {
   async _impl_targetFromToken(token) {
     const authority = await Auth.tokenAuthority(token);
 
-    if (authority.type === Auth.TYPE_root) {
-      return this._application.rootAccess;
-    }
+    switch (authority.type) {
+      case Auth.TYPE_root: {
+        return this._application.rootAccess;
+      }
 
-    // No other token types grant authority... yet.
-    return null;
+      case Auth.TYPE_author: {
+        return new AuthorAccess(authority.authorId, this._application.context);
+      }
+
+      default: {
+        // No other token types grant authority. (As of this writing, there
+        // aren't actually any other token types at all.)
+        return null;
+      }
+    }
   }
 
   /**

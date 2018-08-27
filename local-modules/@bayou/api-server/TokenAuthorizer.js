@@ -12,6 +12,15 @@ import { CommonBase, Errors } from '@bayou/util-common';
  */
 export default class TokenAuthorizer extends CommonBase {
   /**
+   * {string} Prefix which when prepended to an arbitrary ID string is
+   * guaranteed to result in string for which {@link #isToken} is `false`. This
+   * is used by {@link Context} when generating non-token IDs.
+   */
+  get nonTokenPrefix() {
+    return TString.check(this._impl_nonTokenPrefix);
+  }
+
+  /**
    * Indicates whether the given string is in the valid token syntax as used by
    * this class.
    *
@@ -71,6 +80,16 @@ export default class TokenAuthorizer extends CommonBase {
     const result = this._impl_tokenFromString(tokenString);
 
     return BearerToken.check(result);
+  }
+
+  /**
+   * {string} Subclass-specific implementation of {@link #nonTokenPrefix}.
+   * Subclasses must override this getter.
+   *
+   * @abstract
+   */
+  get _impl_nonTokenPrefix() {
+    return this._mustOverride();
   }
 
   /**

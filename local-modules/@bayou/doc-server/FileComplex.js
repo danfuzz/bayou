@@ -63,14 +63,11 @@ export default class FileComplex extends BaseComplexMember {
    * Makes a new author-associated session for this instance.
    *
    * @param {string} authorId ID for the author.
-   * @param {function} makeSessionId No-argument function which should return a
-   *   randomly-generated string to use as a session ID. This will get called
-   *   more than once if the string happens to be a duplicate in the namespace
-   *   for session IDs.
+   * @param {string} sessionId ID for the session.
    * @returns {DocSession} A newly-constructed session.
    */
-  makeNewSession(authorId, makeSessionId) {
-    return DocServer.theOne._makeNewSession(this, authorId, makeSessionId);
+  makeNewSession(authorId, sessionId) {
+    return DocServer.theOne._makeNewSession(this, authorId, sessionId);
   }
 
   /**
