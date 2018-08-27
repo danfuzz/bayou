@@ -154,25 +154,13 @@ export default class DocServer extends Singleton {
    *
    * @param {FileComplex} fileComplex Main complex to attach to.
    * @param {string} authorId ID for the author.
-   * @param {function} makeSessionId Function to generate a random session ID.
+   * @param {string} sessionId ID for the session.
    * @returns {DocSession} A newly-constructed session.
    */
-  _makeNewSession(fileComplex, authorId, makeSessionId) {
+  _makeNewSession(fileComplex, authorId, sessionId) {
     FileComplex.check(fileComplex);
     TString.nonEmpty(authorId);
-    TFunction.checkCallable(makeSessionId);
-
-    // Make a unique session ID.
-    let sessionId;
-    for (;;) {
-      sessionId = makeSessionId();
-      if (!this._sessions.get(sessionId)) {
-        break;
-      }
-
-      // We managed to get an ID collision. Unlikely, but it can happen. So,
-      // just iterate and try again.
-    }
+    TString.nonEmpty(sessionId);
 
     const result = new DocSession(fileComplex, sessionId, authorId);
     const reaper = this._sessionReaper(fileComplex, sessionId);

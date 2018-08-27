@@ -52,9 +52,10 @@ export default class RootAccess extends CommonBase {
 
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
 
-    const url     = `${Network.baseUrl}/api`;
-    const session = fileComplex.makeNewSession(authorId, this._randomId.bind(this));
-    const key     = new SplitKey(url, session.getSessionId());
+    const url       = `${Network.baseUrl}/api`;
+    const sessionId = this._context.randomSplitKeyId();
+    const session   = fileComplex.makeNewSession(authorId, sessionId);
+    const key       = new SplitKey(url, sessionId);
     this._context.addTarget(new Target(key, session));
 
     log.info(
