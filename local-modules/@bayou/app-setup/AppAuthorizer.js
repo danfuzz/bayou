@@ -28,6 +28,13 @@ export default class AppAuthorizer extends TokenAuthorizer {
 
   /**
    * @override
+   */
+  get _impl_nonTokenPrefix() {
+    return Auth.nonTokenPrefix;
+  }
+
+  /**
+   * @override
    * @param {string} tokenString The alleged token string.
    * @returns {boolean} `true` iff `tokenString` has valid token syntax.
    */
