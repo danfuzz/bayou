@@ -77,11 +77,10 @@ export default class SnapshotManager extends CommonBase {
         // used to satisfy this call. At the same time (well, right after), also
         // set up an entry for revision 0 if in fact change 0 exists.
         this._storedSnapshotRetrieved = (async () => {
-          const storedPromise = this._control.readStoredSnapshotOrNull();
-          const stored = await storedPromise;
+          const storedSnapshot = await this._control.readStoredSnapshotOrNull();
 
-          if (stored !== null) {
-            this._snapshots.set(stored.revNum, storedPromise);
+          if (storedSnapshot !== null) {
+            this._snapshots.set(storedSnapshot.revNum, storedSnapshot);
           }
 
           // Set up the revision 0 snapshot, if appropriate. The `await` here is

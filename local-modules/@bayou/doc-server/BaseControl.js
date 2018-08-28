@@ -294,23 +294,25 @@ export default class BaseControl extends BaseDataManager {
    * such, even when used promptly, it should not be treated as "definitely
    * current" but more like "probably current but possibly just a lower bound."
    *
-   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
-   *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
-   *   allowed value.
+   * **Note:** Currently, this function is practically synchronous,
+   * but has been kept `async` and takes an (unused) timeout in anticipation
+   * of a future state where it will deal with data that it has to page in.
+   *
+   * @param {Int|null} [timeoutMsec_unused = null] Maximum amount of time to
+   *   allow in this call, in msec. This value will be silently clamped to the
+   *   allowable range as defined by {@link Timeouts}. `null` is treated as the
+   *   maximum allowed value.
    * @returns {Int} The instantaneously-current revision number.
    */
-  async currentRevNum(timeoutMsec = null) {
-    const file = this.fileCodec.file;
-    const codec = this.fileCodec.codec;
-    const snapshot = file.currentSnapshot;
+  async currentRevNum(timeoutMsec_unused = null) {
+    const { file, codec } = this.fileCodec;
     const clazz = this.constructor;
-    const storagePath = clazz.revisionNumberPath;
-    const clampedTimeoutMsec = Timeouts.clamp(timeoutMsec);
+    const revNumStoragePath = clazz.revisionNumberPath;
+    const fileSnapshot = file.currentSnapshot;
 
-    snapshot.checkPathPresent(storagePath);
+    fileSnapshot.checkPathPresent(revNumStoragePath);
 
-    const encodedRevNum = await file.currentRevNum(storagePath, clampedTimeoutMsec);
+    const encodedRevNum = fileSnapshot.get(revNumStoragePath);
     const revNum = codec.decodeJsonBuffer(encodedRevNum);
 
     return RevisionNumber.check(revNum);
@@ -537,18 +539,22 @@ export default class BaseControl extends BaseDataManager {
    * data that has aged out. If given the same value for both arguments, this
    * method returns an empty array.
    *
+   * **Note:** Currently, this function is practically synchronous,
+   * but has been kept `async` and takes an (unused) timeout in anticipation
+   * of a future state where it will deal with data that it has to page in.
+   *
    * @param {Int} startInclusive Start change number (inclusive) of changes to
    *   read.
    * @param {Int} endExclusive End change number (exclusive) of changes to read.
    *   Must be `>= startInclusive`.
-   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
-   *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
-   *   allowed value.
+   * @param {Int|null} [timeoutMsec_unused = null] Maximum amount of time to
+   *   allow in this call, in msec. This value will be silently clamped to the
+   *   allowable range as defined by {@link Timeouts}. `null` is treated as the
+   *   maximum allowed value.
    * @returns {array<Int>} Array of the revision numbers of existing changes, in
    *   order by revision number.
    */
-  async listChangeRange(startInclusive, endExclusive, timeoutMsec = null) {
+  async listChangeRange(startInclusive, endExclusive, timeoutMsec_unused = null) {
     RevisionNumber.check(startInclusive);
     RevisionNumber.min(endExclusive, startInclusive);
 
@@ -558,47 +564,53 @@ export default class BaseControl extends BaseDataManager {
     }
 
     const file = this.fileCodec.file;
-    const clampedTimeoutMsec = Timeouts.clamp(timeoutMsec);
     const changePathPrefix = this.constructor.changePathPrefix;
-    const changes = await file.listChangeRange(
-      changePathPrefix, startInclusive, endExclusive, clampedTimeoutMsec);
-
+    const paths = file.currentSnapshot.getPathRange(
+      changePathPrefix, startInclusive, endExclusive);
     const result = [];
-    for (const path of changes.paths) {
+
+    for (const path of paths.keys()) {
       result.push(StoragePath.getIndex(path));
     }
 
     result.sort();
+
     return result;
   }
+
 
   /**
    * Reads the stored snapshot for this document part, if available.
    *
-   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
-   *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
-   *   allowed value.
+   * **Note:** Currently, this function is practically synchronous,
+   * but has been kept `async` and takes an (unused) timeout in anticipation
+   * of a future state where it will deal with data that it has to page in.
+   *
+   * @param {Int|null} [timeoutMsec_unused = null] Maximum amount of time to
+   *   allow in this call, in msec. This value will be silently clamped to the
+   *   allowable range as defined by {@link Timeouts}. `null` is treated as the
+   *   maximum allowed value.
    * @returns {BaseSnapshot|null} The stored snapshot, or `null` if no snapshot
    *   was ever stored.
    */
-  async readStoredSnapshotOrNull(timeoutMsec = null) {
+  async readStoredSnapshotOrNull(timeoutMsec_unused = null) {
     const clazz = this.constructor;
     const storedSnapshotPath = clazz.storedSnapshotPath;
-    const codec = this.fileCodec.codec;
-    const file = this.fileCodec.file;
-    const clampedTimeoutMsec = Timeouts.clamp(timeoutMsec);
-    const result = await file.readStoredSnapshotOrNull(storedSnapshotPath, clampedTimeoutMsec);
+    const { file, codec } = this.fileCodec;
+    const fileSnapshot = file.currentSnapshot;
+    const encodedStoredSnapshot = fileSnapshot.getOrNull(storedSnapshotPath);
 
-    if (result === null) {
+    if (encodedStoredSnapshot === null) {
       this.log.info('Failed to find stored snapshot.');
+
       return null;
-    } else {
-      const storedSnapshot = codec.decodeJsonBuffer(result);
-      clazz.snapshotClass.check(storedSnapshot);
-      this.log.info(`Read stored snapshot for revision: r${storedSnapshot.revNum}`);
-      return result;
     }
+
+    const storedSnapshot = codec.decodeJsonBuffer(encodedStoredSnapshot);
+    clazz.snapshotClass.check(storedSnapshot);
+    this.log.info(`Read stored snapshot for revision: r${storedSnapshot.revNum}`);
+
+    return storedSnapshot;
   }
 
   /**
