@@ -907,10 +907,20 @@ export default class BodyClient extends StateMachine {
       // The `cutoff()` calls force the update to be treated as an atomic "undo"
       // item that will not get combined with edits that the local user has
       // made. **Note:** As of this writing, `cutoff()` is listed in the Quill
-      // docs as an "experimental" feature.
-      this._quill.history.cutoff();
+      // docs as an "experimental" feature. As such, we only call it if it is
+      // available. **TODO:** When (hopefully!) it is fully supported, remove
+      // the checks.
+      const hasCutoff = (this._quill.history.cutoff !== undefined);
+
+      if (hasCutoff) {
+        this._quill.history.cutoff();
+      }
+
       this._quill.updateContents(quillDelta.toQuillForm(), CLIENT_SOURCE);
-      this._quill.history.cutoff();
+
+      if (hasCutoff) {
+        this._quill.history.cutoff();
+      }
     }
   }
 
