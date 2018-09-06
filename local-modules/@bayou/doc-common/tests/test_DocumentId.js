@@ -7,26 +7,33 @@ import { describe, it } from 'mocha';
 
 import { DocumentId } from '@bayou/doc-common';
 
+/** {array<*>} Array of non-strings. */
+const NON_STRINGS = [
+  undefined,
+  null,
+  false,
+  true,
+  1,
+  [],
+  {},
+  ['abc'],
+  [123],
+  { x: 'abc' },
+  new Map()
+];
+
 describe('@bayou/doc-common/DocumentId', () => {
-  describe('check()', () => {
-    it('should reject `null`', () => {
-      assert.throws(() => DocumentId.check(null));
-    });
+  it('should throw an error given a non-string argument', () => {
+    for (const id of NON_STRINGS) {
+      assert.throws(() => DocumentId.check(id), /badValue/, id);
+    }
+  });
 
-    it('should reject non-string or empty string values', () => {
-      assert.throws(() => DocumentId.check(37));
-      assert.throws(() => DocumentId.check(''));
-      assert.throws(() => DocumentId.check({}));
-      assert.throws(() => DocumentId.check(false));
-    });
-
-    it('should reject strings in the wrong format', () => {
-      assert.throws(() => DocumentId.check('this better not work!'));
-    });
-
-    it('should accept 32-character strings comprised of a-zA-Z0-9_-', () => {
-      const value = '001122-445566778899AAbb_ddeeff';
-      assert.strictEqual(DocumentId.check(value), value);
-    });
+  it('should call through to `config-common.Ids.isDocumentId()` to validate strings', () => {
+    // **TODO:** The check for acceptance depends on the configuration point
+    // `config-common.Ids`. The best we can do here is mock that out and make
+    // sure it's called, but as yet we don't have a standard way to do that
+    // sort of thing, so we're punting for now.
+    assert.isTrue(true);
   });
 });
