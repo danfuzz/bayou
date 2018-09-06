@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BodyChange, PropertyChange } from '@bayou/doc-common';
-import { RevisionNumber, Timestamp } from '@bayou/ot-common';
+import { AuthorId, RevisionNumber, Timestamp } from '@bayou/ot-common';
 import { TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
@@ -34,11 +34,11 @@ export default class DocSession extends CommonBase {
     /** {FileComplex} File complex that this instance is part of. */
     this._fileComplex = FileComplex.check(fileComplex);
 
-    /** {string} Author ID. */
+    /** {string} Session ID. */
     this._sessionId = TString.nonEmpty(sessionId);
 
     /** {string} Author ID. */
-    this._authorId = TString.nonEmpty(authorId);
+    this._authorId = AuthorId.check(authorId);
 
     /** {BodyControl} The underlying body content controller. */
     this._bodyControl = fileComplex.bodyControl;

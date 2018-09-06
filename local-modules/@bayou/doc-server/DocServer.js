@@ -7,6 +7,7 @@ import weak from 'weak';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { Storage } from '@bayou/config-server';
 import { DocumentId } from '@bayou/doc-common';
+import { AuthorId } from '@bayou/ot-common';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
 import { Singleton } from '@bayou/util-common';
@@ -159,7 +160,7 @@ export default class DocServer extends Singleton {
    */
   _makeNewSession(fileComplex, authorId, sessionId) {
     FileComplex.check(fileComplex);
-    TString.nonEmpty(authorId);
+    AuthorId.check(authorId);
     TString.nonEmpty(sessionId);
 
     const result = new DocSession(fileComplex, sessionId, authorId);

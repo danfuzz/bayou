@@ -7,6 +7,21 @@ import { describe, it } from 'mocha';
 
 import { Ids } from '@bayou/config-common-default';
 
+/** {array<*>} Array of non-strings. */
+const NON_STRINGS = [
+  undefined,
+  null,
+  false,
+  true,
+  1,
+  [],
+  {},
+  ['T00-U00'],
+  ['T00-F00'],
+  { x: 'abc' },
+  new Map()
+];
+
 describe('@bayou/config-common-default/Ids', () => {
   describe('isAuthorId()', () => {
     it('should accept 32-character alphanum ASCII strings', () => {
@@ -23,6 +38,12 @@ describe('@bayou/config-common-default/Ids', () => {
 
     it('should not allow non-alphanum characters', () => {
       assert.isFalse(Ids.isAuthorId('123456789\t123456789+12'));
+    });
+
+    it('should throw an error given a non-string argument', () => {
+      for (const id of NON_STRINGS) {
+        assert.throws(() => Ids.isAuthorId(id), /badValue/, id);
+      }
     });
   });
 
@@ -41,6 +62,12 @@ describe('@bayou/config-common-default/Ids', () => {
 
     it('should not allow non-alphanum characters', () => {
       assert.isFalse(Ids.isDocumentId('123456789\t123456789+12'));
+    });
+
+    it('should throw an error given a non-string argument', () => {
+      for (const id of NON_STRINGS) {
+        assert.throws(() => Ids.isDocumentId(id), /badValue/, id);
+      }
     });
   });
 });
