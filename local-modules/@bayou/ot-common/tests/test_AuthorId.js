@@ -7,26 +7,35 @@ import { describe, it } from 'mocha';
 
 import { AuthorId } from '@bayou/ot-common';
 
+/** {array<*>} Array of non-strings. */
+const NON_STRINGS = [
+  undefined,
+  null,
+  false,
+  true,
+  1,
+  [],
+  {},
+  ['abc'],
+  [123],
+  { x: 'abc' },
+  new Map()
+];
+
 describe('@bayou/ot-common/AuthorId', () => {
   describe('check()', () => {
-    it('should reject `null`', () => {
-      assert.throws(() => AuthorId.check(null));
+    it('should throw an error given a non-string argument', () => {
+      for (const id of NON_STRINGS) {
+        assert.throws(() => AuthorId.check(id), /badValue/, id);
+      }
     });
 
-    it('should reject non-string or empty string values', () => {
-      assert.throws(() => AuthorId.check(37));
-      assert.throws(() => AuthorId.check(''));
-      assert.throws(() => AuthorId.check({}));
-      assert.throws(() => AuthorId.check(false));
-    });
-
-    it('should reject strings in the wrong format', () => {
-      assert.throws(() => AuthorId.check('this better not work!'));
-    });
-
-    it('should accept 32-character strings comprised of a-zA-Z0-9_-', () => {
-      const value = '001122-445566778899AAbb_ddeeff';
-      assert.strictEqual(AuthorId.check(value), value);
+    it('should call through to `config-common.Ids` to validate strings', () => {
+      // **TODO:** The check for acceptance depends on the configuration point
+      // `config-common.Ids`. The best we can do here is mock that out and make
+      // sure it's called, but as yet we don't have a standard way to do that
+      // sort of thing, so we're punting for now.
+      assert.isTrue(true);
     });
   });
 
@@ -35,20 +44,17 @@ describe('@bayou/ot-common/AuthorId', () => {
       assert.isNull(AuthorId.orNull(null));
     });
 
-    it('should reject non-string or empty string values', () => {
-      assert.throws(() => AuthorId.orNull(37));
-      assert.throws(() => AuthorId.orNull(''));
-      assert.throws(() => AuthorId.orNull({}));
-      assert.throws(() => AuthorId.orNull(false));
+    it('should throw an error given a non-null non-string argument', () => {
+      for (const id of NON_STRINGS) {
+        if (id !== null) {
+          assert.throws(() => AuthorId.orNull(id), /badValue/, id);
+        }
+      }
     });
 
-    it('should reject strings in the wrong format', () => {
-      assert.throws(() => AuthorId.orNull('this better not work!'));
-    });
-
-    it('should accept 32-character strings comprised of a-zA-Z0-9_-', () => {
-      const value = '001122-445566778899AAbb_ddeeff';
-      assert.strictEqual(AuthorId.orNull(value), value);
+    it('should call through to `config-common.Ids` to validate strings', () => {
+      // **TODO:** See comment above on the trouble testing this.
+      assert.isTrue(true);
     });
   });
 });
