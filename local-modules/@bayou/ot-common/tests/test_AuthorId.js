@@ -30,7 +30,7 @@ describe('@bayou/ot-common/AuthorId', () => {
       }
     });
 
-    it('should call through to `config-common.Ids` to validate strings', () => {
+    it('should call through to `config-common.Ids.isAuthorId()` to validate strings', () => {
       // **TODO:** The check for acceptance depends on the configuration point
       // `config-common.Ids`. The best we can do here is mock that out and make
       // sure it's called, but as yet we don't have a standard way to do that
