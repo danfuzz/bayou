@@ -235,7 +235,15 @@ describe('@bayou/doc-server/BaseControl', () => {
       async function test(timeout, expect, msg) {
         await assert.isRejected(control.appendChange(change, timeout), /to_be_expected/, `${msg} rejection check`);
         assert.instanceOf(actualFileChange, FileChange, `${msg}: instance check`);
-        assert.strictEqual(actualTimeout, expect, `${msg}: timeout value check`);
+
+        // This is a little squishy, because we're dealing with real wall time
+        // here (that is, time is not mocked out): We accept any received
+        // timeout value which is non-negative and no more than 10ms less than
+        // the expected value.
+        const expectMin = Math.max(0, expect - 10);
+        const expectMax = expect;
+        assert.isAtLeast(actualTimeout, expectMin, `${msg}: timeout minimum value check`);
+        assert.isAtMost(actualTimeout, expectMax, `${msg}: timeout maximum value check`);
       }
 
       await test(null, Timeouts.MAX_TIMEOUT_MSEC, '#1');
