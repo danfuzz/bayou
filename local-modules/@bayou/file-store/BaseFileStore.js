@@ -7,7 +7,6 @@ import { TObject } from '@bayou/typecheck';
 import { Errors, Singleton } from '@bayou/util-common';
 
 import BaseFile from './BaseFile';
-import FileId from './FileId';
 
 /**
  * Base class for file storage access. This is, essentially, the filesystem

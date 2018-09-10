@@ -5,10 +5,10 @@
 import weak from 'weak';
 
 import { Logger } from '@bayou/see-all';
+import { TString } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
 import BaseFile from './BaseFile';
-import FileId from './FileId';
 
 
 /**
@@ -47,7 +47,7 @@ export default class FileCache extends CommonBase {
    *   such instance is active.
    */
   getOrNull(fileId, quiet = false) {
-    FileId.check(fileId);
+    TString.check(fileId);
 
     const fileRef = this._cache.get(fileId);
 

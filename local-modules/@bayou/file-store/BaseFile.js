@@ -3,10 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { StorageId, StoragePath, TransactionSpec, FileChange } from '@bayou/file-store-ot';
-import { TBoolean, TInt, TMap, TObject, TSet } from '@bayou/typecheck';
+import { TBoolean, TInt, TMap, TObject, TSet, TString } from '@bayou/typecheck';
 import { CommonBase, Errors, FrozenBuffer } from '@bayou/util-common';
-
-import FileId from './FileId';
 
 /**
  * Base class representing access to a particular file. Subclasses must override
@@ -27,7 +25,7 @@ export default class BaseFile extends CommonBase {
     super();
 
     /** {string} The ID of the file that this instance represents. */
-    this._id = FileId.check(fileId);
+    this._id = TString.check(fileId);
   }
 
   /** {string} The ID of the file that this instance represents. */
