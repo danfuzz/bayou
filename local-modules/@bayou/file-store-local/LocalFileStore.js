@@ -68,6 +68,22 @@ export default class LocalFileStore extends BaseFileStore {
   }
 
   /**
+   * Implementation as required by the superclass.
+   *
+   * @param {string} fileId The ID of the file to query.
+   * @returns {object} Information about the file (or would-be file).
+   */
+  async _impl_getFileInfo(fileId) {
+    const filePath = this._filePath(fileId);
+    const exists   = await fse.pathExists(filePath);
+
+    return {
+      valid: true, // This module has no additional ID validity requirements.
+      exists
+    };
+  }
+
+  /**
    * Ensures the file storage directory exists. This will only ever check once
    * (on first file construction attempt), which notably means that things will
    * break if something removes the file storage directory without restarting
