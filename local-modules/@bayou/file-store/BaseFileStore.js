@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TString } from '@bayou/typecheck';
+import { TObject } from '@bayou/typecheck';
 import { Singleton } from '@bayou/util-common';
 
 import BaseFile from './BaseFile';
@@ -47,9 +47,38 @@ export default class BaseFileStore extends Singleton {
    * @returns {BaseFile} Accessor for the file in question.
    */
   async getFile(fileId) {
-    TString.nonEmpty(fileId);
-    await this._impl_checkFileId(FileId.check(fileId));
+    FileId.check(fileId);
+    await this._impl_checkFileId(fileId);
     return BaseFile.check(await this._impl_getFile(fileId));
+  }
+
+  /**
+   * Gets information about the indicated file. Given a valid ID &mdash; that
+   * is, a string for which {@link Storage#isFileId} returns `true` &mdash; this
+   * returns an object with the following bindings:
+   *
+   * `valid` &mdash; A boolean indicating whether the ID is truly valid with
+   *   regard to the storage system. That is, it is possible for `isFileId()` to
+   *   return `true` yet this be `false`, because it might only be in the
+   *   storage layer that full validity can be determined.
+   * `exists` &mdash; A boolean indicating whether or not the file currently
+   *   exists.
+   *
+   * It is an error if the given `fileId` is not a syntactically valid ID, as
+   * determined by `isFileId()`.
+   *
+   * @param {string} fileId The ID of the file.
+   * @returns {object} Object with bindings as indicated above, describing the
+   *   file (or would-be file) with ID `id`.
+   */
+  async getFileInfo(fileId) {
+    FileId.check(fileId);
+
+    const result = this._impl_getFileInfo(fileId);
+
+    TObject.withExactKeys(result, ['exists','valid']);
+
+    return result;
   }
 
   /**
@@ -61,6 +90,18 @@ export default class BaseFileStore extends Singleton {
    * @returns {BaseFile} Accessor for the file in question.
    */
   async _impl_getFile(fileId) {
+    this._mustOverride(fileId);
+  }
+
+  /**
+   * Main implementation of `getFileId()`. Only ever called with a known-valid
+   * `fileId`.
+   *
+   * @abstract
+   * @param {string} fileId The ID of the file to query.
+   * @returns {object} Information about the file (or would-be file).
+   */
+  async _impl_getFileInfo(fileId) {
     this._mustOverride(fileId);
   }
 }
