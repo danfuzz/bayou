@@ -33,5 +33,9 @@ describe('@bayou/file-store-local/LocalFileStore', () => {
     it('should not allow non-alphanum characters', () => {
       assert.isFalse(lfs.isFileId('123456789\t123456789+12'));
     });
+
+    it('should throw an error given a non-string', () => {
+      assert.throws(() => lfs.isFileId(123), /badValue/);
+    });
   });
 });
