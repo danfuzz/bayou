@@ -2,8 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Storage } from '@bayou/config-server';
 import { TObject } from '@bayou/typecheck';
-import { Singleton } from '@bayou/util-common';
+import { Errors, Singleton } from '@bayou/util-common';
 
 import BaseFile from './BaseFile';
 import FileId from './FileId';
@@ -38,6 +39,24 @@ export default class BaseFileStore extends Singleton {
   }
 
   /**
+   * Checks the syntax of a value alleged to be a file ID. Returns the given
+   * value if it's a syntactically correct file ID. Otherwise, throws an error.
+   *
+   * @param {*} value Value to check.
+   * @returns {string} `value` if it is indeed valid.
+   * @throws {Error} `badValue` error indicating a syntactically invalid file
+   *   ID.
+   */
+  static checkFileIdSyntax(value) {
+    if (   (typeof value !== 'string')
+        || !Storage.isFileId(value)) {
+      throw Errors.badValue(value, String, 'file ID');
+    }
+
+    return value;
+  }
+
+  /**
    * Gets the accessor for the file with the given ID. The file need not exist
    * prior to calling this method.
    *
@@ -46,6 +65,7 @@ export default class BaseFileStore extends Singleton {
    * @returns {BaseFile} Accessor for the file in question.
    */
   async getFile(fileId) {
+    this.checkFileIdSyntax(fileId);
     await this.checkFileId(fileId);
     return BaseFile.check(await this._impl_getFile(fileId));
   }
@@ -70,7 +90,7 @@ export default class BaseFileStore extends Singleton {
    *   file (or would-be file) with ID `id`.
    */
   async getFileInfo(fileId) {
-    FileId.check(fileId);
+    this.checkFileIdSyntax(fileId);
 
     const result = await this._impl_getFileInfo(fileId);
 
