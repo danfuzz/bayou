@@ -72,7 +72,7 @@ export default class BaseFileStore extends Singleton {
   async getFileInfo(fileId) {
     FileId.check(fileId);
 
-    const result = this._impl_getFileInfo(fileId);
+    const result = await this._impl_getFileInfo(fileId);
 
     TObject.withExactKeys(result, ['exists','valid']);
 
