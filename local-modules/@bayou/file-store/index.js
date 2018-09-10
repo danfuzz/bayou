@@ -6,12 +6,10 @@ import BaseFile from './BaseFile';
 import BaseFileStore from './BaseFileStore';
 import FileCache from './FileCache';
 import FileCodec from './FileCodec';
-import FileId from './FileId';
 
 export {
   BaseFile,
   BaseFileStore,
   FileCache,
-  FileCodec,
-  FileId
+  FileCodec
 };
