@@ -266,7 +266,7 @@ export default class BaseControl extends BaseDataManager {
         if (appendSuccess) {
           return;
         } else {
-          const currentRevNum = await this.currentRevNum(timeoutTime - Date.now());
+          const currentRevNum = file.currentSnapshot.revNum;
           const newRevNum = currentRevNum + 1;
           fileChange = fileChange.withRevNum(newRevNum);
 
