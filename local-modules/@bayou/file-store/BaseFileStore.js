@@ -34,7 +34,11 @@ export default class BaseFileStore extends Singleton {
   async checkFileId(fileId) {
     const info = await this.getFileInfo(fileId);
 
-    return info.valid;
+    if (!info.valid) {
+      throw Errors.badData(`Invalid file ID: \`${fileId}\``);
+    }
+
+    return fileId;
   }
 
   /**
