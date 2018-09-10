@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "@bayou/codec": "local",
-    "@bayou/config-common": "local",
     "@bayou/deps-util-server": "local",
     "@bayou/env-server": "local",
     "@bayou/file-store": "local",

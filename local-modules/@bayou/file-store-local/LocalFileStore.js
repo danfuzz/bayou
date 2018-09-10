@@ -6,7 +6,6 @@ import fse from 'fs-extra';
 import path from 'path';
 
 import { Codec } from '@bayou/codec';
-import { Ids } from '@bayou/config-common';
 import { Dirs } from '@bayou/env-server';
 import { BaseFileStore, FileCache } from '@bayou/file-store';
 import { TheModule as fileStoreOt_TheModule } from '@bayou/file-store-ot';
@@ -85,15 +84,17 @@ export default class LocalFileStore extends BaseFileStore {
   }
 
   /**
-   * Implementation as required by the superclass. This implementation defers to
-   * `config-common.Ids#isDocumentId` to make a determination.
+   * Implementation as required by the superclass.
+   *
+   * This implementation requires that file IDs have no more than 32 characters
+   * and only use ASCII alphanumerics plus dash (`-`) and underscore (`_`).
    *
    * @param {string} fileId The alleged file ID.
    * @returns {boolean} `true` if `fileId` is a syntactically valid file ID, or
    *   `false` if not.
    */
   _impl_isFileId(fileId) {
-    return Ids.isDocumentId(fileId);
+    return /^[-_a-zA-Z0-9]{1,32}$/.test(fileId);
   }
 
   /**
