@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TBoolean, TObject } from '@bayou/typecheck';
+import { TBoolean, TObject, TString } from '@bayou/typecheck';
 import { Errors, Singleton } from '@bayou/util-common';
 
 import BaseFile from './BaseFile';
@@ -102,17 +102,15 @@ export default class BaseFileStore extends Singleton {
 
   /**
    * Checks a given value to see if it's a syntactically valid file ID. To be a
-   * file ID, the value must be a string and it must also pass the syntax check
-   * defined by the concrete subclass.
+   * file ID, the value must pass a syntax check defined by the concrete
+   * subclass.
    *
    * @param {*} value Value to check.
    * @returns {boolean} `true` if `fileId` is a syntactically valid file ID, or
    *   `false` if not.
    */
   isFileId(value) {
-    if (typeof value !== 'string') {
-      return false;
-    }
+    TString.check(value);
 
     return TBoolean.check(this._impl_isFileId(value));
   }
