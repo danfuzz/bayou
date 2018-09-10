@@ -232,21 +232,21 @@ describe('@bayou/doc-server/BaseControl', () => {
         get: () => new MockSnapshot(100, [[`snap_blort_${100}`]])
       });
 
-      async function test(timeout, expect) {
-        await assert.isRejected(control.appendChange(change, timeout), /to_be_expected/);
-        assert.instanceOf(actualFileChange, FileChange);
-        assert.strictEqual(actualTimeout, expect);
+      async function test(timeout, expect, msg) {
+        await assert.isRejected(control.appendChange(change, timeout), /to_be_expected/, `${msg} rejection check`);
+        assert.instanceOf(actualFileChange, FileChange, `${msg}: instance check`);
+        assert.strictEqual(actualTimeout, expect, `${msg}: timeout value check`);
       }
 
-      await test(null, Timeouts.MAX_TIMEOUT_MSEC);
-      await test(0, Timeouts.MIN_TIMEOUT_MSEC);
-      await test(9999999999, Timeouts.MAX_TIMEOUT_MSEC);
-      await test(Timeouts.MAX_TIMEOUT_MSEC, Timeouts.MAX_TIMEOUT_MSEC);
-      await test(Timeouts.MIN_TIMEOUT_MSEC + 1, Timeouts.MIN_TIMEOUT_MSEC + 1);
-      await test(Timeouts.MAX_TIMEOUT_MSEC - 1, Timeouts.MAX_TIMEOUT_MSEC - 1);
+      await test(null, Timeouts.MAX_TIMEOUT_MSEC, '#1');
+      await test(0, Timeouts.MIN_TIMEOUT_MSEC, '#2');
+      await test(9999999999, Timeouts.MAX_TIMEOUT_MSEC, '#3');
+      await test(Timeouts.MAX_TIMEOUT_MSEC, Timeouts.MAX_TIMEOUT_MSEC, '#4');
+      await test(Timeouts.MIN_TIMEOUT_MSEC + 1, Timeouts.MIN_TIMEOUT_MSEC + 1, '#5');
+      await test(Timeouts.MAX_TIMEOUT_MSEC - 1, Timeouts.MAX_TIMEOUT_MSEC - 1, '#6');
 
       for (let i = Timeouts.MIN_TIMEOUT_MSEC; i < Timeouts.MAX_TIMEOUT_MSEC; i += 987) {
-        await test(i, i);
+        await test(i, i, `loop at ${i}`);
       }
     });
 
