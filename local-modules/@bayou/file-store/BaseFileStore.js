@@ -22,20 +22,19 @@ import FileId from './FileId';
  */
 export default class BaseFileStore extends Singleton {
   /**
-   * Checks a file ID for validity. Returns regularly (with no value) if all is
-   * well, or throws an error if the ID is invalid. Only ever called on a
-   * non-empty string.
+   * Checks a file ID for full validity, beyond simply checking the syntax of
+   * the ID. Returns the given ID if all is well, or throws an error if the ID
+   * is invalid.
    *
-   * This implementation is a no-op. Subclasses may choose to override this if
-   * there is any validation required beyond the syntactic validation of
-   * `FileId.check()`.
-   *
-   * @param {string} fileId_unused The file ID to validate. Only ever passed
-   *   as a value that has been validated by `FileId.check()`.
-   * @throws {Error} Arbitrary error indicating an invalid file ID.
+   * @param {string} fileId The file ID to validate, which must be a
+   *   syntactically valid ID, per {@link Storage#isFileId}.
+   * @returns {string} `fileId` if it is indeed valid.
+   * @throws {Error} `badData` error indicating an invalid file ID.
    */
-  async _impl_checkFileId(fileId_unused) {
-    // This space intentionally left blank.
+  async checkFileId(fileId) {
+    const info = await this.getFileInfo(fileId);
+
+    return info.valid;
   }
 
   /**
@@ -47,8 +46,7 @@ export default class BaseFileStore extends Singleton {
    * @returns {BaseFile} Accessor for the file in question.
    */
   async getFile(fileId) {
-    FileId.check(fileId);
-    await this._impl_checkFileId(fileId);
+    await this.checkFileId(fileId);
     return BaseFile.check(await this._impl_getFile(fileId));
   }
 
@@ -82,8 +80,8 @@ export default class BaseFileStore extends Singleton {
   }
 
   /**
-   * Main implementation of `getFile()`. Only ever called with a known-valid
-   * `fileId`.
+   * Main implementation of {@link #getFile}. Only ever called with a `fileId`
+   * for which {@link #getFileInfo} reports `valid: true`.
    *
    * @abstract
    * @param {string} fileId The ID of the file to access.
@@ -94,8 +92,8 @@ export default class BaseFileStore extends Singleton {
   }
 
   /**
-   * Main implementation of `getFileId()`. Only ever called with a known-valid
-   * `fileId`.
+   * Main implementation of {@link #getFileInfo}. Only ever called with a
+   * syntactically valid `fileId`.
    *
    * @abstract
    * @param {string} fileId The ID of the file to query.
