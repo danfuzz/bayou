@@ -232,21 +232,29 @@ describe('@bayou/doc-server/BaseControl', () => {
         get: () => new MockSnapshot(100, [[`snap_blort_${100}`]])
       });
 
-      async function test(timeout, expect) {
-        await assert.isRejected(control.appendChange(change, timeout), /to_be_expected/);
-        assert.instanceOf(actualFileChange, FileChange);
-        assert.strictEqual(actualTimeout, expect);
+      async function test(timeout, expect, msg) {
+        await assert.isRejected(control.appendChange(change, timeout), /to_be_expected/, `${msg} rejection check`);
+        assert.instanceOf(actualFileChange, FileChange, `${msg}: instance check`);
+
+        // This is a little squishy, because we're dealing with real wall time
+        // here (that is, time is not mocked out): We accept any received
+        // timeout value which is non-negative and no more than 10ms less than
+        // the expected value.
+        const expectMin = Math.max(0, expect - 10);
+        const expectMax = expect;
+        assert.isAtLeast(actualTimeout, expectMin, `${msg}: timeout minimum value check`);
+        assert.isAtMost(actualTimeout, expectMax, `${msg}: timeout maximum value check`);
       }
 
-      await test(null, Timeouts.MAX_TIMEOUT_MSEC);
-      await test(0, Timeouts.MIN_TIMEOUT_MSEC);
-      await test(9999999999, Timeouts.MAX_TIMEOUT_MSEC);
-      await test(Timeouts.MAX_TIMEOUT_MSEC, Timeouts.MAX_TIMEOUT_MSEC);
-      await test(Timeouts.MIN_TIMEOUT_MSEC + 1, Timeouts.MIN_TIMEOUT_MSEC + 1);
-      await test(Timeouts.MAX_TIMEOUT_MSEC - 1, Timeouts.MAX_TIMEOUT_MSEC - 1);
+      await test(null, Timeouts.MAX_TIMEOUT_MSEC, '#1');
+      await test(0, Timeouts.MIN_TIMEOUT_MSEC, '#2');
+      await test(9999999999, Timeouts.MAX_TIMEOUT_MSEC, '#3');
+      await test(Timeouts.MAX_TIMEOUT_MSEC, Timeouts.MAX_TIMEOUT_MSEC, '#4');
+      await test(Timeouts.MIN_TIMEOUT_MSEC + 1, Timeouts.MIN_TIMEOUT_MSEC + 1, '#5');
+      await test(Timeouts.MAX_TIMEOUT_MSEC - 1, Timeouts.MAX_TIMEOUT_MSEC - 1, '#6');
 
       for (let i = Timeouts.MIN_TIMEOUT_MSEC; i < Timeouts.MAX_TIMEOUT_MSEC; i += 987) {
-        await test(i, i);
+        await test(i, i, `loop at ${i}`);
       }
     });
 
