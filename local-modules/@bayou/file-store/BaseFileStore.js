@@ -2,8 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Storage } from '@bayou/config-server';
-import { TObject } from '@bayou/typecheck';
+import { TBoolean, TObject } from '@bayou/typecheck';
 import { Errors, Singleton } from '@bayou/util-common';
 
 import BaseFile from './BaseFile';
@@ -50,9 +49,8 @@ export default class BaseFileStore extends Singleton {
    * @throws {Error} `badValue` error indicating a syntactically invalid file
    *   ID.
    */
-  static checkFileIdSyntax(value) {
-    if (   (typeof value !== 'string')
-        || !Storage.isFileId(value)) {
+  checkFileIdSyntax(value) {
+    if (!this.isFileId(value)) {
       throw Errors.badValue(value, String, 'file ID');
     }
 
@@ -103,6 +101,23 @@ export default class BaseFileStore extends Singleton {
   }
 
   /**
+   * Checks a given value to see if it's a syntactically valid file ID. To be a
+   * file ID, the value must be a string and it must also pass the syntax check
+   * defined by the concrete subclass.
+   *
+   * @param {*} value Value to check.
+   * @returns {boolean} `true` if `fileId` is a syntactically valid file ID, or
+   *   `false` if not.
+   */
+  isFileId(value) {
+    if (typeof value !== 'string') {
+      return false;
+    }
+
+    return TBoolean.check(this._impl_isFileId(value));
+  }
+
+  /**
    * Main implementation of {@link #getFile}. Only ever called with a `fileId`
    * for which {@link #getFileInfo} reports `valid: true`.
    *
@@ -123,6 +138,19 @@ export default class BaseFileStore extends Singleton {
    * @returns {object} Information about the file (or would-be file).
    */
   async _impl_getFileInfo(fileId) {
+    this._mustOverride(fileId);
+  }
+
+  /**
+   * Main implementation of {@link #isFileId}. Only ever called with a string
+   * argument.
+   *
+   * @abstract
+   * @param {string} fileId The alleged file ID.
+   * @returns {boolean} `true` if `fileId` is a syntactically valid file ID, or
+   *   `false` if not.
+   */
+  _impl_isFileId(fileId) {
     this._mustOverride(fileId);
   }
 }

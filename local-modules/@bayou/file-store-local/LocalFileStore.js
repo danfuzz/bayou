@@ -6,6 +6,7 @@ import fse from 'fs-extra';
 import path from 'path';
 
 import { Codec } from '@bayou/codec';
+import { Ids } from '@bayou/config-common';
 import { Dirs } from '@bayou/env-server';
 import { BaseFileStore, FileCache } from '@bayou/file-store';
 import { TheModule as fileStoreOt_TheModule } from '@bayou/file-store-ot';
@@ -81,6 +82,18 @@ export default class LocalFileStore extends BaseFileStore {
       valid: true, // This module has no additional ID validity requirements.
       exists
     };
+  }
+
+  /**
+   * Implementation as required by the superclass. This implementation defers to
+   * `config-common.Ids#isDocumentId` to make a determination.
+   *
+   * @param {string} fileId The alleged file ID.
+   * @returns {boolean} `true` if `fileId` is a syntactically valid file ID, or
+   *   `false` if not.
+   */
+  _impl_isFileId(fileId) {
+    return Ids.isDocumentId(fileId);
   }
 
   /**
