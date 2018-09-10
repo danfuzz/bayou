@@ -11,7 +11,7 @@ import { MockChange, MockDelta, MockOp, MockSnapshot } from '@bayou/ot-common/mo
 import { DurableControl, FileAccess } from '@bayou/doc-server';
 import { MockControl } from '@bayou/doc-server/mocks';
 import { MockFile } from '@bayou/file-store/mocks';
-import { Errors as fileStoreOt_Errors, TransactionSpec } from '@bayou/file-store-ot';
+import { Errors as fileStoreOt_Errors, TransactionSpec, FileChange, FileSnapshot, FileOp } from '@bayou/file-store-ot';
 import { Timestamp } from '@bayou/ot-common';
 import { TheModule as mocks_TheModule } from '@bayou/ot-common/mocks';
 import { Errors, FrozenBuffer } from '@bayou/util-common';
@@ -174,71 +174,74 @@ describe('@bayou/doc-server/BaseControl', () => {
   });
 
   describe('appendChange()', () => {
-    it.skip('should perform an appropriate transaction given a valid change', async () => {
-      const file       = new MockFile('blort');
+    it('should perform an appropriate transaction given a valid change', async () => {
+      const file = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
-      const control    = new MockControl(fileAccess, 'boop');
-      const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+      const control = new MockControl(fileAccess, 'boop');
+      const expectedMockChangeRevNum = 99;
+      const change = new MockChange(expectedMockChangeRevNum, [['florp', 'f'], ['blort', 'b']]);
+      const snapshotRevNum = 100;
+      const expectedFileChangeRevNum = snapshotRevNum + 1;
 
-      let gotSpec = null;
+      let actualFileChange;
 
-      file._impl_transact = (spec) => {
-        gotSpec = spec;
+      // TODO: Replace with stub
+      Object.defineProperty(file, 'currentSnapshot', {
+        get: () => new MockSnapshot(snapshotRevNum, [[`snap_blort_${snapshotRevNum}`]])
+      });
+
+      // TODO: Replace with stub
+      file.appendChange = (changeToAppend) => {
+        actualFileChange = changeToAppend;
         throw new Error('to_be_expected');
       };
 
+      // TODO: Replace with stub
       await assert.isRejected(control.appendChange(change, 1234), /to_be_expected/);
 
-      assert.instanceOf(gotSpec, TransactionSpec);
-      assert.strictEqual(gotSpec.ops.length, 5);
+      assert.instanceOf(actualFileChange, FileChange);
+      assert.strictEqual(actualFileChange.revNum, expectedFileChangeRevNum);
 
-      const ops1 = gotSpec.opsWithName('timeout');
-      assert.lengthOf(ops1, 1);
-      assert.strictEqual(ops1[0].props.durMsec, 1234);
+      const changeWritePathOp = actualFileChange.delta.ops[0];
+      assert.strictEqual(changeWritePathOp.props.opName, 'writePath');
+      assert.strictEqual(changeWritePathOp.props.path, `/mock_control/change/${expectedMockChangeRevNum}`);
 
-      const ops2 = gotSpec.opsWithName('checkPathIs');
-      assert.lengthOf(ops2, 1);
-      assert.strictEqual(ops2[0].props.storagePath, '/mock_control/revision_number');
-
-      const ops3 = gotSpec.opsWithName('checkPathAbsent');
-      assert.strictEqual(ops3[0].props.storagePath, '/mock_control/change/99');
-
-      const ops4 = gotSpec.opsWithName('writePath');
-      assert.lengthOf(ops4, 2);
-
-      const paths = ops4.map(op => op.props.storagePath);
-      assert.sameMembers(paths, ['/mock_control/revision_number', '/mock_control/change/99']);
+      const revNumWritePathOp = actualFileChange.delta.ops[1];
+      assert.strictEqual(revNumWritePathOp.props.opName, 'writePath');
+      assert.strictEqual(revNumWritePathOp.props.path, `/mock_control/revision_number`);
     });
 
-    it.skip('should provide a default for `null` and clamp an out-of-range (but otherwise valid) timeout', async () => {
-      const file       = new MockFile('blort');
+    it('should provide a default for `null` and clamp an out-of-range (but otherwise valid) timeout', async () => {
+      const file = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
-      const control    = new MockControl(fileAccess, 'boop');
-      const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+      const control = new MockControl(fileAccess, 'boop');
+      const change = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
 
-      let gotSpec = null;
+      let actualFileChange;
+      let actualTimeout;
 
-      file._impl_transact = (spec) => {
-        gotSpec = spec;
+      // TODO: Replace with stub
+      file.appendChange = (changeToAppend, clampedTimeout) => {
+        actualFileChange = changeToAppend;
+        actualTimeout = clampedTimeout;
         throw new Error('to_be_expected');
       };
 
-      async function test(v, expect) {
-        await assert.isRejected(control.appendChange(change, v), /to_be_expected/);
-        assert.instanceOf(gotSpec, TransactionSpec);
+      // TODO: Replace with stub
+      Object.defineProperty(file, 'currentSnapshot', {
+        get: () => new MockSnapshot(100, [[`snap_blort_${100}`]])
+      });
 
-        const ops = gotSpec.opsWithName('timeout');
-        assert.lengthOf(ops, 1);
-        assert.strictEqual(ops[0].props.durMsec, expect);
+      async function test(timeout, expect) {
+        await assert.isRejected(control.appendChange(change, timeout), /to_be_expected/);
+        assert.instanceOf(actualFileChange, FileChange);
+        assert.strictEqual(actualTimeout, expect);
       }
 
-      await test(null,       Timeouts.MAX_TIMEOUT_MSEC);
-
-      await test(0,          Timeouts.MIN_TIMEOUT_MSEC);
+      await test(null, Timeouts.MAX_TIMEOUT_MSEC);
+      await test(0, Timeouts.MIN_TIMEOUT_MSEC);
       await test(9999999999, Timeouts.MAX_TIMEOUT_MSEC);
-
       await test(Timeouts.MAX_TIMEOUT_MSEC, Timeouts.MAX_TIMEOUT_MSEC);
-
       await test(Timeouts.MIN_TIMEOUT_MSEC + 1, Timeouts.MIN_TIMEOUT_MSEC + 1);
       await test(Timeouts.MAX_TIMEOUT_MSEC - 1, Timeouts.MAX_TIMEOUT_MSEC - 1);
 
@@ -247,16 +250,17 @@ describe('@bayou/doc-server/BaseControl', () => {
       }
     });
 
-    it.skip('should call the snapshot maybe-writer and return `true` if the transaction succeeds', async () => {
-      const file       = new MockFile('blort');
+    it('should call the snapshot maybe-writer and return `true` if the transaction succeeds', async () => {
+      const file = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
-      const control    = new MockControl(fileAccess, 'boop');
-      const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+      const control = new MockControl(fileAccess, 'boop');
+      const change = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
 
-      file._impl_transact = (spec_unused) => {
-        return { paths: null, data: null, revNum: 99, newRevNum: 100 };
-      };
+      Object.defineProperty(file, 'currentSnapshot', {
+        get: () => new MockSnapshot(100, [[`snap_blort_${100}`]])
+      });
 
+      // TODO: Replace with stub
       let maybeCalled = false;
       control._maybeWriteStoredSnapshot = (revNum_unused) => {
         maybeCalled = true;
@@ -266,18 +270,22 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.isTrue(maybeCalled);
     });
 
-    it.skip('should return `false` if the transaction fails due to a precondition failure', async () => {
-      const file       = new MockFile('blort');
+    it('should return `false` if the transaction fails due to a precondition failure', async () => {
+      const file = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
-      const control    = new MockControl(fileAccess, 'boop');
-      const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+      const control = new MockControl(fileAccess, 'boop');
+      const change = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+
+      Object.defineProperty(file, 'currentSnapshot', {
+        get: () => new MockSnapshot(100, [[`snap_blort_${100}`]])
+      });
 
       control._maybeWriteStoredSnapshot = (revNum_unused) => {
         throw new Error('Should not have been called');
       };
 
       async function test(error) {
-        file._impl_transact = (spec_unused) => {
+        file.appendChange = () => {
           throw error;
         };
 
@@ -288,18 +296,22 @@ describe('@bayou/doc-server/BaseControl', () => {
       await test(fileStoreOt_Errors.pathNotAbsent('/mock_control/change/99'));
     });
 
-    it.skip('should rethrow any transaction error other than a precondition failure', async () => {
-      const file       = new MockFile('blort');
+    it('should rethrow any transaction error other than a precondition failure and timeout', async () => {
+      const file = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
-      const control    = new MockControl(fileAccess, 'boop');
-      const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+      const control = new MockControl(fileAccess, 'boop');
+      const change = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+
+      Object.defineProperty(file, 'currentSnapshot', {
+        get: () => new MockSnapshot(100, [[`snap_blort_${100}`]])
+      });
 
       control._maybeWriteStoredSnapshot = (revNum_unused) => {
         throw new Error('Should not have been called');
       };
 
       async function test(error) {
-        file._impl_transact = (spec_unused) => {
+        file.appendChange = () => {
           throw error;
         };
 
@@ -307,7 +319,6 @@ describe('@bayou/doc-server/BaseControl', () => {
       }
 
       await test(Errors.fileNotFound('x'));
-      await test(Errors.timedOut(123456));
       await test(Errors.badValue('foo', 'bar'));
     });
 
@@ -348,67 +359,31 @@ describe('@bayou/doc-server/BaseControl', () => {
   });
 
   describe('currentRevNum()', () => {
-    it.skip('should perform an appropriate transaction, and use the result', async () => {
-      const file       = new MockFile('blort');
+    it('should use the result of the transaction it performed', async () => {
+      const file = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
-      const control    = new MockControl(fileAccess, 'boop');
+      const control = new MockControl(fileAccess, 'boop');
+      const expectedRevNum = 1234;
 
-      let gotSpec = null;
+      const fileOp = FileOp.op_writePath('/mock_control/revision_number', CODEC.encodeJsonBuffer(expectedRevNum));
 
-      file._impl_transact = (spec) => {
-        gotSpec = spec;
-        throw new Error('to_be_expected');
-      };
+      Object.defineProperty(file, 'currentSnapshot', {
+        get: () => new FileSnapshot(90909, [fileOp])
+      });
 
-      await assert.isRejected(control.currentRevNum(), /to_be_expected/);
-
-      assert.instanceOf(gotSpec, TransactionSpec);
-      assert.strictEqual(gotSpec.ops.length, 2);
-
-      const ops1 = gotSpec.opsWithName('checkPathPresent');
-      assert.lengthOf(ops1, 1);
-      assert.strictEqual(ops1[0].props.storagePath, '/mock_control/revision_number');
-
-      const ops2 = gotSpec.opsWithName('readPath');
-      assert.lengthOf(ops2, 1);
-      assert.strictEqual(ops2[0].props.storagePath, '/mock_control/revision_number');
+      await assert.eventually.strictEqual(control.currentRevNum(), expectedRevNum);
     });
 
-    it.skip('should use the result of the transaction it performed', async () => {
-      const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(CODEC, file);
-      const control    = new MockControl(fileAccess, 'boop');
-
-      file._impl_transact = (spec_unused) => {
-        return {
-          revNum:    90909,
-          newRevNum: null,
-          paths:     null,
-          data: new Map(Object.entries({
-            '/mock_control/revision_number': CODEC.encodeJsonBuffer(1234)
-          }))
-        };
-      };
-
-      await assert.eventually.strictEqual(control.currentRevNum(), 1234);
-    });
-
-    it.skip('should reject improper transaction results', async () => {
-      async function test(value) {
-        const file       = new MockFile('blort');
+    it('should reject improper transaction results', async () => {
+      async function test(revNum) {
+        const file = new MockFile('blort');
         const fileAccess = new FileAccess(CODEC, file);
-        const control    = new MockControl(fileAccess, 'boop');
+        const control = new MockControl(fileAccess, 'boop');
 
-        file._impl_transact = (spec_unused) => {
-          return {
-            revNum:    90909,
-            newRevNum: null,
-            paths:     null,
-            data: new Map(Object.entries({
-              '/mock_control/revision_number': CODEC.encodeJsonBuffer(value)
-            }))
-          };
-        };
+        // TODO: Replace with stub
+        Object.defineProperty(file, 'currentSnapshot', {
+          get: () => new MockSnapshot(revNum, [[`snap_blort_${revNum}`]])
+        });
 
         await assert.isRejected(control.currentRevNum(), /^badValue/);
       }

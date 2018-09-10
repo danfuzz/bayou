@@ -8,5 +8,9 @@ import { BaseFile } from '@bayou/file-store';
  * Trivial {@link BaseFile} implementation for use with the tests.
  */
 export default class MockFile extends BaseFile {
-  // **TODO:** This ultimately probably needs to _not_ be empty.
+
+  // Augment with other results as necessary for testing
+  appendChange() {
+    return true;
+  }
 }

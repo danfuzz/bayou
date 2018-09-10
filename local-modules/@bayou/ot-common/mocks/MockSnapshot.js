@@ -16,6 +16,21 @@ export default class MockSnapshot extends BaseSnapshot {
     Object.freeze(this);
   }
 
+  // TODO: Fill in for testing purposes
+  checkPathIs() {
+    return true;
+  }
+
+  // TODO: Fill in for testing purposes
+  checkPathAbsent() {
+    return true;
+  }
+
+  // TODO: Fill in for testing purposes
+  checkPathPresent() {
+    return true;
+  }
+
   _impl_diffAsDelta(newerSnapshot) {
     return [new MockOp('diff_delta'), newerSnapshot.contents.ops[0]];
   }
