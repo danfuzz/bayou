@@ -30,11 +30,11 @@ describe('@bayou/ot-common/AuthorId', () => {
       }
     });
 
-    it('should call through to `config-common.Ids.isAuthorId()` to validate strings', () => {
+    it('should call through to `config-common.IdSyntax.isAuthorId()` to validate strings', () => {
       // **TODO:** The check for acceptance depends on the configuration point
-      // `config-common.Ids`. The best we can do here is mock that out and make
-      // sure it's called, but as yet we don't have a standard way to do that
-      // sort of thing, so we're punting for now.
+      // `config-common.IdSyntax`. The best we can do here is mock that out and
+      // make sure it's called, but as yet we don't have a standard way to do
+      // that sort of thing, so we're punting for now.
       assert.isTrue(true);
     });
   });

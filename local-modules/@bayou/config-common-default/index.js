@@ -4,19 +4,19 @@
 
 import { inject } from '@bayou/injecty';
 
-import Ids from './Ids';
+import IdSyntax from './IdSyntax';
 import Text from './Text';
 
 /**
  * Injects all of the definitions here into the global configuration.
  */
 function injectAll() {
-  inject.Ids = Ids;
+  inject.IdSyntax = IdSyntax;
   inject.Text = Text;
 }
 
 export {
-  Ids,
+  IdSyntax,
   Text,
   injectAll
 };

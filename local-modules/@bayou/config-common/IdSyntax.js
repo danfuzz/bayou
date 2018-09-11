@@ -8,7 +8,7 @@ import { UtilityClass } from '@bayou/util-common';
 /**
  * Utility functionality regarding ID strings.
  */
-export default class Ids extends UtilityClass {
+export default class IdSyntax extends UtilityClass {
   /**
    * Checks whether the given value is syntactically valid as an author ID.
    * This method is only ever called with a non-empty string.
@@ -17,7 +17,7 @@ export default class Ids extends UtilityClass {
    * @returns {boolean} `true` iff `id` is syntactically valid.
    */
   static isAuthorId(id) {
-    return use.Ids.isAuthorId(id);
+    return use.IdSyntax.isAuthorId(id);
   }
 
   /**
@@ -32,6 +32,6 @@ export default class Ids extends UtilityClass {
    * @returns {boolean} `true` iff `id` is syntactically valid.
    */
   static isDocumentId(id) {
-    return use.Ids.isDocumentId(id);
+    return use.IdSyntax.isDocumentId(id);
   }
 }
