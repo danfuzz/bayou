@@ -4,7 +4,6 @@
 
 import { Context, Target } from '@bayou/api-server';
 import { IdSyntax } from '@bayou/config-common';
-import { DocumentId } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
@@ -66,7 +65,7 @@ export default class AuthorAccess extends CommonBase {
    *   newly-created session.
    */
   async makeSession(docId) {
-    DocumentId.check(docId);
+    IdSyntax.checkDocumentId(docId);
 
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
 

@@ -10,7 +10,6 @@
     "@bayou/deps-ansi-color": "local",
     "@bayou/deps-express": "local",
     "@bayou/deps-util-common": "local",
-    "@bayou/doc-common": "local",
     "@bayou/doc-server": "local",
     "@bayou/env-server": "local",
     "@bayou/see-all": "local",

@@ -8,7 +8,6 @@ import { inspect } from 'util';
 
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { IdSyntax } from '@bayou/config-common';
-import { DocumentId } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
 import { Logger } from '@bayou/see-all';
 import { RecentSink } from '@bayou/see-all-server';
@@ -146,7 +145,7 @@ export default class DebugTools {
    */
   _check_documentId(req_unused, value) {
     try {
-      DocumentId.check(value);
+      IdSyntax.checkDocumentId(value);
     } catch (error) {
       // Augment error and rethrow.
       error.debugMsg = 'Bad value for `documentId`.';
