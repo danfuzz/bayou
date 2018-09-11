@@ -3,12 +3,12 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { use } from '@bayou/injecty';
-import { UtilityClass } from '@bayou/util-common';
 
+import BaseIdSyntax from './BaseIdSyntax';
 /**
  * Utility functionality regarding ID strings.
  */
-export default class IdSyntax extends UtilityClass {
+export default class IdSyntax extends BaseIdSyntax {
   /**
    * Checks whether the given value is syntactically valid as an author ID.
    * This method is only ever called with a non-empty string.

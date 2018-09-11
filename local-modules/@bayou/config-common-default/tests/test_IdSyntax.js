@@ -5,6 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
+import { BaseIdSyntax } from '@bayou/config-common';
 import { IdSyntax } from '@bayou/config-common-default';
 
 /** {array<*>} Array of non-strings. */
@@ -23,6 +24,10 @@ const NON_STRINGS = [
 ];
 
 describe('@bayou/config-common-default/IdSyntax', () => {
+  it('inherits from `BaseIdSyntax`', () => {
+    assert.isTrue(IdSyntax.prototype instanceof BaseIdSyntax);
+  });
+
   describe('isAuthorId()', () => {
     it('should accept 32-character alphanum ASCII strings', () => {
       assert.isTrue(IdSyntax.isAuthorId('123abc7890ABC456789012'));
