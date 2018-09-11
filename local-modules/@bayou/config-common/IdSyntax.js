@@ -3,12 +3,12 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { use } from '@bayou/injecty';
-import { UtilityClass } from '@bayou/util-common';
 
+import BaseIdSyntax from './BaseIdSyntax';
 /**
  * Utility functionality regarding ID strings.
  */
-export default class Ids extends UtilityClass {
+export default class IdSyntax extends BaseIdSyntax {
   /**
    * Checks whether the given value is syntactically valid as an author ID.
    * This method is only ever called with a non-empty string.
@@ -17,7 +17,7 @@ export default class Ids extends UtilityClass {
    * @returns {boolean} `true` iff `id` is syntactically valid.
    */
   static isAuthorId(id) {
-    return use.Ids.isAuthorId(id);
+    return use.IdSyntax.isAuthorId(id);
   }
 
   /**
@@ -32,6 +32,6 @@ export default class Ids extends UtilityClass {
    * @returns {boolean} `true` iff `id` is syntactically valid.
    */
   static isDocumentId(id) {
-    return use.Ids.isDocumentId(id);
+    return use.IdSyntax.isDocumentId(id);
   }
 }

@@ -2,8 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { IdSyntax } from '@bayou/config-common';
 import { BodyChange, PropertyChange } from '@bayou/doc-common';
-import { AuthorId, RevisionNumber, Timestamp } from '@bayou/ot-common';
+import { RevisionNumber, Timestamp } from '@bayou/ot-common';
 import { TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
@@ -38,7 +39,7 @@ export default class DocSession extends CommonBase {
     this._sessionId = TString.nonEmpty(sessionId);
 
     /** {string} Author ID. */
-    this._authorId = AuthorId.check(authorId);
+    this._authorId = IdSyntax.checkAuthorId(authorId);
 
     /** {BodyControl} The underlying body content controller. */
     this._bodyControl = fileComplex.bodyControl;

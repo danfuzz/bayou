@@ -2,6 +2,7 @@
   "dependencies": {
     "quill-delta": "^3.6.2",
 
+    "@bayou/config-common": "local",
     "@bayou/injecty": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local"

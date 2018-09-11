@@ -3,12 +3,12 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from '@bayou/typecheck';
-import { UtilityClass } from '@bayou/util-common';
+import { BaseIdSyntax } from '@bayou/config-common';
 
 /**
  * Utility functionality regarding ID strings.
  */
-export default class Ids extends UtilityClass {
+export default class IdSyntax extends BaseIdSyntax {
   /**
    * Implementation of standard configuration point.
    *

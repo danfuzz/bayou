@@ -4,10 +4,9 @@
 
 import { SplitKey } from '@bayou/api-common';
 import { Context, Target } from '@bayou/api-server';
+import { IdSyntax } from '@bayou/config-common';
 import { Network } from '@bayou/config-server';
-import { DocumentId } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
-import { AuthorId } from '@bayou/ot-common';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 
@@ -47,8 +46,8 @@ export default class RootAccess extends CommonBase {
    *   requested access.
    */
   async makeAccessKey(authorId, docId) {
-    AuthorId.check(authorId);
-    DocumentId.check(docId);
+    IdSyntax.checkAuthorId(authorId);
+    IdSyntax.checkDocumentId(docId);
 
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
 

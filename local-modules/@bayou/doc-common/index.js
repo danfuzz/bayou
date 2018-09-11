@@ -12,7 +12,6 @@ import CaretChange from './CaretChange';
 import CaretDelta from './CaretDelta';
 import CaretOp from './CaretOp';
 import CaretSnapshot from './CaretSnapshot';
-import DocumentId from './DocumentId';
 import Property from './Property';
 import PropertyChange from './PropertyChange';
 import PropertyDelta from './PropertyDelta';
@@ -31,7 +30,6 @@ export {
   CaretDelta,
   CaretOp,
   CaretSnapshot,
-  DocumentId,
   Property,
   PropertyChange,
   PropertyDelta,
