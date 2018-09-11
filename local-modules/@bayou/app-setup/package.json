@@ -5,6 +5,7 @@
     "@bayou/app-common": "local",
     "@bayou/client-bundle": "local",
     "@bayou/codec": "local",
+    "@bayou/config-common": "local",
     "@bayou/config-server": "local",
     "@bayou/deps-ansi-color": "local",
     "@bayou/deps-express": "local",
@@ -12,7 +13,6 @@
     "@bayou/doc-common": "local",
     "@bayou/doc-server": "local",
     "@bayou/env-server": "local",
-    "@bayou/ot-common": "local",
     "@bayou/see-all": "local",
     "@bayou/see-all-server": "local",
     "@bayou/testing-server": "local"

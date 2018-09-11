@@ -7,9 +7,9 @@ import { camelCase } from 'lodash';
 import { inspect } from 'util';
 
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
+import { IdSyntax } from '@bayou/config-common';
 import { DocumentId } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
-import { AuthorId } from '@bayou/ot-common';
 import { Logger } from '@bayou/see-all';
 import { RecentSink } from '@bayou/see-all-server';
 
@@ -130,7 +130,7 @@ export default class DebugTools {
    */
   _check_authorId(req_unused, value) {
     try {
-      AuthorId.check(value);
+      IdSyntax.checkAuthorId(value);
     } catch (error) {
       // Augment error and rethrow.
       error.debugMsg = 'Bad value for `authorId`.';

@@ -3,9 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Context, Target } from '@bayou/api-server';
+import { IdSyntax } from '@bayou/config-common';
 import { DocumentId } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
-import { AuthorId } from '@bayou/ot-common';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 
@@ -33,7 +33,7 @@ export default class AuthorAccess extends CommonBase {
     /**
      * {string} authorId ID of the author on whose behalf this instance acts.
      */
-    this._authorId = AuthorId.check(authorId);
+    this._authorId = IdSyntax.checkAuthorId(authorId);
 
     /** {Context} The API context to use. */
     this._context = Context.check(context);

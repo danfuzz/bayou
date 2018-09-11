@@ -2,10 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { IdSyntax } from '@bayou/config-common';
 import { TFunction } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
-import AuthorId from './AuthorId';
 import BaseDelta from './BaseDelta';
 import RevisionNumber from './RevisionNumber';
 import Timestamp from './Timestamp';
@@ -109,7 +109,7 @@ export default class BaseChange extends CommonBase {
      * {string|null} Author ID string, or `null` if the change is
      * authorless.
      */
-    this._authorId = AuthorId.orNull(authorId);
+    this._authorId = IdSyntax.checkAuthorIdOrNull(authorId);
 
     Object.freeze(this);
   }

@@ -2,6 +2,7 @@
   "dependencies": {
     "@bayou/app-common": "local",
     "@bayou/codec": "local",
+    "@bayou/config-common": "local",
     "@bayou/config-server": "local",
     "@bayou/deps-util-server": "local",
     "@bayou/doc-common": "local",

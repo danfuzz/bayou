@@ -4,8 +4,24 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
+import { inspect } from 'util';
 
 import { BaseIdSyntax } from '@bayou/config-common';
+
+/** {array<*>} Array of non-strings. */
+const NON_STRINGS = [
+  undefined,
+  null,
+  false,
+  true,
+  1,
+  [],
+  {},
+  ['abc'],
+  [123],
+  { x: 'abc' },
+  new Map()
+];
 
 describe('@bayou/config-server/BaseIdSyntax', () => {
   describe('checkAuthorId()', () => {
@@ -16,13 +32,9 @@ describe('@bayou/config-server/BaseIdSyntax', () => {
         }
       }
 
-      function test(value) {
-        assert.throws(() => Throws.checkAuthorId(value), /badValue/);
+      for (const value of NON_STRINGS) {
+        assert.throws(() => Throws.checkAuthorId(value), /badValue/, inspect(value));
       }
-
-      test(null);
-      test(123);
-      test(['x']);
     });
 
     it('calls through to `isAuthorId()` and respects a `false` response', () => {
@@ -53,19 +65,18 @@ describe('@bayou/config-server/BaseIdSyntax', () => {
   });
 
   describe('checkAuthorIdOrNull()', () => {
-    it('rejects non-strings without calling through to `isAuthorId()`', () => {
+    it('rejects non-`null` non-strings without calling through to `isAuthorId()`', () => {
       class Throws extends BaseIdSyntax {
         static isAuthorId(id_unused) {
           throw new Error('should-not-be-called');
         }
       }
 
-      function test(value) {
-        assert.throws(() => Throws.checkAuthorIdOrNull(value), /badValue/);
+      for (const value of NON_STRINGS) {
+        if (value !== null) {
+          assert.throws(() => Throws.checkAuthorId(value), /badValue/, inspect(value));
+        }
       }
-
-      test(123);
-      test(['x']);
     });
 
     it('accepts `null` without calling through to `isAuthorId()`', () => {
@@ -113,7 +124,9 @@ describe('@bayou/config-server/BaseIdSyntax', () => {
         }
       }
 
-      assert.throws(() => Throws.checkDocumentId(123), /badValue/);
+      for (const value of NON_STRINGS) {
+        assert.throws(() => Throws.checkDocumentId(value), /badValue/, inspect(value));
+      }
     });
 
     it('calls through to `isDocumentId()` and respects a `false` response', () => {
