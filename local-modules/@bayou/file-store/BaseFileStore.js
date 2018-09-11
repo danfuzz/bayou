@@ -2,11 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TObject } from '@bayou/typecheck';
-import { Singleton } from '@bayou/util-common';
+import { TBoolean, TObject, TString } from '@bayou/typecheck';
+import { Errors, Singleton } from '@bayou/util-common';
 
 import BaseFile from './BaseFile';
-import FileId from './FileId';
 
 /**
  * Base class for file storage access. This is, essentially, the filesystem
@@ -34,7 +33,28 @@ export default class BaseFileStore extends Singleton {
   async checkFileId(fileId) {
     const info = await this.getFileInfo(fileId);
 
-    return info.valid;
+    if (!info.valid) {
+      throw Errors.badData(`Invalid file ID: \`${fileId}\``);
+    }
+
+    return fileId;
+  }
+
+  /**
+   * Checks the syntax of a value alleged to be a file ID. Returns the given
+   * value if it's a syntactically correct file ID. Otherwise, throws an error.
+   *
+   * @param {*} value Value to check.
+   * @returns {string} `value` if it is indeed valid.
+   * @throws {Error} `badValue` error indicating a syntactically invalid file
+   *   ID.
+   */
+  checkFileIdSyntax(value) {
+    if (!this.isFileId(value)) {
+      throw Errors.badValue(value, String, 'file ID');
+    }
+
+    return value;
   }
 
   /**
@@ -46,6 +66,7 @@ export default class BaseFileStore extends Singleton {
    * @returns {BaseFile} Accessor for the file in question.
    */
   async getFile(fileId) {
+    this.checkFileIdSyntax(fileId);
     await this.checkFileId(fileId);
     return BaseFile.check(await this._impl_getFile(fileId));
   }
@@ -70,13 +91,28 @@ export default class BaseFileStore extends Singleton {
    *   file (or would-be file) with ID `id`.
    */
   async getFileInfo(fileId) {
-    FileId.check(fileId);
+    this.checkFileIdSyntax(fileId);
 
     const result = await this._impl_getFileInfo(fileId);
 
     TObject.withExactKeys(result, ['exists','valid']);
 
     return result;
+  }
+
+  /**
+   * Checks a given value to see if it's a syntactically valid file ID. To be a
+   * file ID, the value must pass a syntax check defined by the concrete
+   * subclass.
+   *
+   * @param {*} value Value to check.
+   * @returns {boolean} `true` if `fileId` is a syntactically valid file ID, or
+   *   `false` if not.
+   */
+  isFileId(value) {
+    TString.check(value);
+
+    return TBoolean.check(this._impl_isFileId(value));
   }
 
   /**
@@ -100,6 +136,19 @@ export default class BaseFileStore extends Singleton {
    * @returns {object} Information about the file (or would-be file).
    */
   async _impl_getFileInfo(fileId) {
+    this._mustOverride(fileId);
+  }
+
+  /**
+   * Main implementation of {@link #isFileId}. Only ever called with a string
+   * argument.
+   *
+   * @abstract
+   * @param {string} fileId The alleged file ID.
+   * @returns {boolean} `true` if `fileId` is a syntactically valid file ID, or
+   *   `false` if not.
+   */
+  _impl_isFileId(fileId) {
     this._mustOverride(fileId);
   }
 }

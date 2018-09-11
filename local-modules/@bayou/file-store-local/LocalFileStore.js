@@ -84,6 +84,20 @@ export default class LocalFileStore extends BaseFileStore {
   }
 
   /**
+   * Implementation as required by the superclass.
+   *
+   * This implementation requires that file IDs have no more than 32 characters
+   * and only use ASCII alphanumerics plus dash (`-`) and underscore (`_`).
+   *
+   * @param {string} fileId The alleged file ID.
+   * @returns {boolean} `true` if `fileId` is a syntactically valid file ID, or
+   *   `false` if not.
+   */
+  _impl_isFileId(fileId) {
+    return /^[-_a-zA-Z0-9]{1,32}$/.test(fileId);
+  }
+
+  /**
    * Ensures the file storage directory exists. This will only ever check once
    * (on first file construction attempt), which notably means that things will
    * break if something removes the file storage directory without restarting

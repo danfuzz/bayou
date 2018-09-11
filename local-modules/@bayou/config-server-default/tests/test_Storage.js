@@ -21,22 +21,4 @@ describe('@bayou/config-server-default/Storage', () => {
       assert.instanceOf(Storage.fileStore, LocalFileStore);
     });
   });
-
-  describe('isFileId()', () => {
-    it('should accept 32-character alphanum ASCII strings', () => {
-      assert.isTrue(Storage.isFileId('123abc7890ABC456789012'));
-    });
-
-    it('should allow underscores and hyphens', () => {
-      assert.isTrue(Storage.isFileId('123456789_123456789-12'));
-    });
-
-    it('should not allow non-ASCII characters', () => {
-      assert.isFalse(Storage.isFileId('123456789•123456789•12'));
-    });
-
-    it('should not allow non-alphanum characters', () => {
-      assert.isFalse(Storage.isFileId('123456789\t123456789+12'));
-    });
-  });
 });

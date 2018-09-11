@@ -24,15 +24,4 @@ export default class Storage extends UtilityClass {
   static get fileStore() {
     return use.Storage.fileStore;
   }
-
-  /**
-   * Checks whether the given value is syntactically valid as a file ID.
-   * This method is only ever called with a non-empty string.
-   *
-   * @param {string} id The (alleged) file ID to check.
-   * @returns {boolean} `true` iff `id` is syntactically valid.
-   */
-  static isFileId(id) {
-    return use.Storage.isFileId(id);
-  }
 }
