@@ -12,7 +12,7 @@ import { Errors, UtilityClass } from '@bayou/util-common';
  */
 export default class BaseIdSyntax extends UtilityClass {
   /**
-   * Checks whether the the given value is syntactically valid as an author ID.
+   * Checks whether the given value is syntactically valid as an author ID.
    *
    * @param {*} value The (alleged) author ID to check.
    * @returns {string} `value` if it is valid.
@@ -32,7 +32,32 @@ export default class BaseIdSyntax extends UtilityClass {
   }
 
   /**
-   * Checks whether the the given value is syntactically valid as a document ID.
+   * Checks whether the given value is either syntactically valid as an author
+   * ID or is `null`.
+   *
+   * @param {*} value The (alleged) author ID to check.
+   * @returns {string|null} `value` if it is valid or `null`.
+   * @throws {Error} Thrown if `value` is invalid and not `null`.
+   */
+  static checkAuthorIdOrNull(value) {
+    if (value === null) {
+      return null;
+    }
+
+    try {
+      TString.check(value);
+      if (this.isAuthorId(value)) {
+        return value;
+      }
+    } catch (e) {
+      // Fall through to throw higher-fidelity error.
+    }
+
+    throw Errors.badValue(value, 'String|null', 'author ID syntax');
+  }
+
+  /**
+   * Checks whether the given value is syntactically valid as a document ID.
    *
    * @param {*} value The (alleged) document ID to check.
    * @returns {string} `value` if it is valid.

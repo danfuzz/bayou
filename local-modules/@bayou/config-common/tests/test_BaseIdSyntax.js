@@ -16,7 +16,13 @@ describe('@bayou/config-server/BaseIdSyntax', () => {
         }
       }
 
-      assert.throws(() => Throws.checkAuthorId(123), /badValue/);
+      function test(value) {
+        assert.throws(() => Throws.checkAuthorId(value), /badValue/);
+      }
+
+      test(null);
+      test(123);
+      test(['x']);
     });
 
     it('calls through to `isAuthorId()` and respects a `false` response', () => {
@@ -42,6 +48,59 @@ describe('@bayou/config-server/BaseIdSyntax', () => {
       }
 
       assert.strictEqual(AcceptsAll.checkAuthorId('zorch'), 'zorch');
+      assert.strictEqual(gotId, 'zorch');
+    });
+  });
+
+  describe('checkAuthorIdOrNull()', () => {
+    it('rejects non-strings without calling through to `isAuthorId()`', () => {
+      class Throws extends BaseIdSyntax {
+        static isAuthorId(id_unused) {
+          throw new Error('should-not-be-called');
+        }
+      }
+
+      function test(value) {
+        assert.throws(() => Throws.checkAuthorIdOrNull(value), /badValue/);
+      }
+
+      test(123);
+      test(['x']);
+    });
+
+    it('accepts `null` without calling through to `isAuthorId()`', () => {
+      class Throws extends BaseIdSyntax {
+        static isAuthorId(id_unused) {
+          throw new Error('should-not-be-called');
+        }
+      }
+
+      assert.isNull(Throws.checkAuthorIdOrNull(null));
+    });
+
+    it('calls through to `isAuthorId()` and respects a `false` response', () => {
+      let gotId = null;
+      class AcceptsNone extends BaseIdSyntax {
+        static isAuthorId(id) {
+          gotId = id;
+          return false;
+        }
+      }
+
+      assert.throws(() => AcceptsNone.checkAuthorIdOrNull('florp'), /badValue/);
+      assert.strictEqual(gotId, 'florp');
+    });
+
+    it('calls through to `isAuthorId()` and respects a `true` response', () => {
+      let gotId = null;
+      class AcceptsAll extends BaseIdSyntax {
+        static isAuthorId(id) {
+          gotId = id;
+          return true;
+        }
+      }
+
+      assert.strictEqual(AcceptsAll.checkAuthorIdOrNull('zorch'), 'zorch');
       assert.strictEqual(gotId, 'zorch');
     });
   });
