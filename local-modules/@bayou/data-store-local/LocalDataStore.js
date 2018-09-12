@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseDataStore } from '@bayou/data-store';
+import { DefaultIdSyntax } from '@bayou/id-syntax-default';
 
 /**
  * Data storage implementation that is maximally accepting of IDs (e.g. all
@@ -37,9 +38,7 @@ export default class LocalDataStore extends BaseDataStore {
    *   or `false` if not.
    */
   _impl_isAuthorId(authorId) {
-    // **TODO:** `config-common-default/IdSyntax` should get extracted from that
-    // module and then used here.
-    return /^[-_a-zA-Z0-9]{1,32}$/.test(authorId);
+    return DefaultIdSyntax.isAuthorId(authorId);
   }
 
   /**
@@ -50,8 +49,6 @@ export default class LocalDataStore extends BaseDataStore {
    *   ID, or `false` if not.
    */
   _impl_isDocumentId(documentId) {
-    // **TODO:** `config-common-default/IdSyntax` should get extracted from that
-    // module and then used here.
-    return /^[-_a-zA-Z0-9]{1,32}$/.test(documentId);
+    return DefaultIdSyntax.isDocumentId(documentId);
   }
 }
