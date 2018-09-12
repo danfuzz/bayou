@@ -7,12 +7,19 @@ import { describe, it } from 'mocha';
 
 import { Storage } from '@bayou/config-server-default';
 import { BodyDelta } from '@bayou/doc-common';
+import { LocalDataStore } from '@bayou/data-store-local';
 import { LocalFileStore } from '@bayou/file-store-local';
 
 describe('@bayou/config-server-default/Storage', () => {
   describe('.DEFAULT_DOCUMENT_BODY', () => {
     it('should be an instance of `BodyDelta`', () => {
       assert.instanceOf(Storage.DEFAULT_DOCUMENT_BODY, BodyDelta);
+    });
+  });
+
+  describe('.dataStore', () => {
+    it('should be an instance of `LocalDataStore`', () => {
+      assert.instanceOf(Storage.dataStore, LocalDataStore);
     });
   });
 
