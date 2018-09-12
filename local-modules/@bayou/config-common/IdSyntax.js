@@ -5,6 +5,7 @@
 import { use } from '@bayou/injecty';
 
 import BaseIdSyntax from './BaseIdSyntax';
+
 /**
  * Utility functionality regarding ID strings.
  */
@@ -23,10 +24,6 @@ export default class IdSyntax extends BaseIdSyntax {
   /**
    * Checks whether the given value is syntactically valid as a document ID.
    * This method is only ever called with a non-empty string.
-   *
-   * The default implementation of this method requires that document IDs have
-   * no more than 32 characters and only use ASCII alphanumerics plus dash (`-`)
-   * and underscore (`_`).
    *
    * @param {string} id The (alleged) document ID to check.
    * @returns {boolean} `true` iff `id` is syntactically valid.
