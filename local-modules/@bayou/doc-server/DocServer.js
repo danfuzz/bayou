@@ -93,7 +93,12 @@ export default class DocServer extends Singleton {
 
     const resultPromise = (async () => {
       try {
-        const file   = await Storage.fileStore.getFile(docId);
+        // This validates the document ID and lets us find out the corresponding
+        // file ID.
+        const docInfo = await Storage.dataStore.getDocumentInfo(docId);
+        const fileId  = docInfo.fileId;
+
+        const file   = await Storage.fileStore.getFile(fileId);
         const result = new FileComplex(this._codec, file);
 
         result.log.info('Initializing...');
@@ -106,7 +111,13 @@ export default class DocServer extends Singleton {
         // result.
         this._complexes.set(docId, resultRef);
 
-        result.log.info('Constructed new complex.');
+        if (docId === fileId) {
+          result.log.info('Constructed new complex.');
+        } else {
+          // Only explicitly note the file ID when it differs from the doc ID.
+          result.log.info(`Constructed new complex, with file ID \`${fileId}\`.`);
+        }
+
         return result;
       } catch (e) {
         log.error(`Trouble constructing complex ${docId}.`, e);

@@ -9,6 +9,7 @@ import { Codec } from '@bayou/codec';
 import { Dirs } from '@bayou/env-server';
 import { BaseFileStore, FileCache } from '@bayou/file-store';
 import { TheModule as fileStoreOt_TheModule } from '@bayou/file-store-ot';
+import { DefaultIdSyntax } from '@bayou/id-syntax-default';
 import { Logger } from '@bayou/see-all';
 
 import LocalFile from './LocalFile';
@@ -84,17 +85,15 @@ export default class LocalFileStore extends BaseFileStore {
   }
 
   /**
-   * Implementation as required by the superclass.
-   *
-   * This implementation requires that file IDs have no more than 32 characters
-   * and only use ASCII alphanumerics plus dash (`-`) and underscore (`_`).
+   * Implementation as required by the superclass. This implementation defers
+   * to the module {@link @bayou/id-syntax-default}.
    *
    * @param {string} fileId The alleged file ID.
    * @returns {boolean} `true` if `fileId` is a syntactically valid file ID, or
    *   `false` if not.
    */
   _impl_isFileId(fileId) {
-    return /^[-_a-zA-Z0-9]{1,32}$/.test(fileId);
+    return DefaultIdSyntax.isFileId(fileId);
   }
 
   /**

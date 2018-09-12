@@ -95,7 +95,9 @@ export default class BaseFileStore extends Singleton {
 
     const result = await this._impl_getFileInfo(fileId);
 
-    TObject.withExactKeys(result, ['exists','valid']);
+    TObject.withExactKeys(result, ['exists', 'valid']);
+    TBoolean.check(result.exists);
+    TBoolean.check(result.valid);
 
     return result;
   }
@@ -106,7 +108,7 @@ export default class BaseFileStore extends Singleton {
    * subclass.
    *
    * @param {*} value Value to check.
-   * @returns {boolean} `true` if `fileId` is a syntactically valid file ID, or
+   * @returns {boolean} `true` if `value` is a syntactically valid file ID, or
    *   `false` if not.
    */
   isFileId(value) {
