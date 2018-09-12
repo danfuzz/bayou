@@ -169,13 +169,28 @@ export default class BaseDataStore extends Singleton {
    * subclass.
    *
    * @param {*} value Value to check.
-   * @returns {boolean} `true` if `fileId` is a syntactically valid file ID, or
-   *   `false` if not.
+   * @returns {boolean} `true` if `value` is a syntactically valid author ID,
+   *   or `false` if not.
    */
   isAuthorId(value) {
     TString.check(value);
 
     return TBoolean.check(this._impl_isAuthorId(value));
+  }
+
+  /**
+   * Checks a given value to see if it's a syntactically valid document ID. To
+   * be a document ID, the value must pass a syntax check defined by the
+   * concrete subclass.
+   *
+   * @param {*} value Value to check.
+   * @returns {boolean} `true` if `value` is a syntactically valid document ID,
+   *   or `false` if not.
+   */
+  isDocumentId(value) {
+    TString.check(value);
+
+    return TBoolean.check(this._impl_isDocumentId(value));
   }
 
   /**
