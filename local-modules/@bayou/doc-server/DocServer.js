@@ -172,7 +172,7 @@ export default class DocServer extends Singleton {
    * @param {string} sessionId ID for the session.
    * @returns {DocSession} A newly-constructed session.
    */
-  _makeNewSession(fileComplex, authorId, sessionId) {
+  async _makeNewSession(fileComplex, authorId, sessionId) {
     FileComplex.check(fileComplex);
     TString.nonEmpty(sessionId);
 

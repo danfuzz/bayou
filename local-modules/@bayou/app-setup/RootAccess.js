@@ -56,7 +56,7 @@ export default class RootAccess extends CommonBase {
 
     const url       = `${Network.baseUrl}/api`;
     const sessionId = this._context.randomSplitKeyId();
-    const session   = fileComplex.makeNewSession(authorId, sessionId);
+    const session   = await fileComplex.makeNewSession(authorId, sessionId);
     const key       = new SplitKey(url, sessionId);
     this._context.addTarget(new Target(key, session));
 

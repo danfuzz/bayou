@@ -67,10 +67,10 @@ export default class AuthorAccess extends CommonBase {
   async makeSession(docId) {
     Storage.dataStore.checkDocumentIdSyntax(docId);
 
+    const sessionId   = this._context.randomId();
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
+    const session     = await fileComplex.makeNewSession(this._authorId, sessionId);
 
-    const sessionId = this._context.randomId();
-    const session   = fileComplex.makeNewSession(this._authorId, sessionId);
     this._context.addTarget(new Target(sessionId, session));
 
     log.info(
