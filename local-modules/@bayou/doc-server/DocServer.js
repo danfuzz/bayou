@@ -5,7 +5,6 @@
 import weak from 'weak';
 
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
-import { IdSyntax } from '@bayou/config-common';
 import { Storage } from '@bayou/config-server';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
@@ -62,7 +61,12 @@ export default class DocServer extends Singleton {
    * @returns {FileComplex} The corresponding `FileComplex`.
    */
   async getFileComplex(docId) {
-    IdSyntax.checkDocumentId(docId);
+    // **Note:** We don't make an `async` back-end call to check the `docId`
+    // here, because that would be a waste if it turns out we've already cached
+    // a valid result. Once we determine that we need to construct a new
+    // complex (below), we'll call through to the back-end to get a file ID, and
+    // that call implicitly validates the doc ID.
+    Storage.dataStore.checkDocumentIdSyntax(docId);
 
     // Look for a cached or in-progress result.
 
@@ -170,8 +174,9 @@ export default class DocServer extends Singleton {
    */
   _makeNewSession(fileComplex, authorId, sessionId) {
     FileComplex.check(fileComplex);
-    IdSyntax.checkAuthorId(authorId);
     TString.nonEmpty(sessionId);
+
+    Storage.dataStore.checkAuthorIdSyntax(authorId); // **TODO:** Should validate with the back end.
 
     const result = new DocSession(fileComplex, sessionId, authorId);
     const reaper = this._sessionReaper(fileComplex, sessionId);
