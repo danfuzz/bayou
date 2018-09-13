@@ -31,7 +31,12 @@ export default class Storage extends UtilityClass {
    * {LocalDataStore} Implementation of standard configuration point.
    */
   static get dataStore() {
-    return LocalDataStore.theOne;
+    if (this._dataStore === undefined) {
+      /** {LocalDataStore} Unique instance of this class. */
+      this._dataStore = new LocalDataStore();
+    }
+
+    return this._dataStore;
   }
 
   /**
@@ -40,6 +45,11 @@ export default class Storage extends UtilityClass {
    * version of the class.
    */
   static get fileStore() {
-    return LocalFileStore.theOne;
+    if (this._fileStore === undefined) {
+      /** {LocalFileStore} Unique instance of this class. */
+      this._fileStore = new LocalFileStore();
+    }
+
+    return this._fileStore;
   }
 }

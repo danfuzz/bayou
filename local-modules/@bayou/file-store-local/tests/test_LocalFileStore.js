@@ -8,13 +8,9 @@ import { before, describe, it } from 'mocha';
 import { LocalFileStore } from '@bayou/file-store-local';
 
 describe('@bayou/file-store-local/LocalFileStore', () => {
-  // **TODO:** It's probably wrong for `BaseFileStore` to inherit from
-  // `Singleton`. It was a reasonable idea at the time, but it does make some
-  // things awkward. In particular right here, it means you can't instantiate a
-  // fresh instance for each test.
   let lfs = null;
   before(() => {
-    lfs = LocalFileStore.theOne;
+    lfs = new LocalFileStore();
   });
 
   describe('isFileId()', () => {
