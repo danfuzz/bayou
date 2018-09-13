@@ -25,56 +25,6 @@ const NON_STRINGS = [
 
 describe('@bayou/data-store/BaseDataStore', () => {
   describe('author ID methods', () => {
-    describe('checkAuthorId()', () => {
-      it('calls `getAuthorInfo()` and transparently rethrows errors', async () => {
-        let gotId = null;
-        class Throws extends BaseDataStore {
-          async getAuthorInfo(id) {
-            gotId = id;
-            throw new Error('woop');
-          }
-        }
-
-        const obj = Throws.theOne;
-        await assert.isRejected(obj.checkAuthorId('xyz'), /woop/);
-        assert.strictEqual(gotId, 'xyz');
-      });
-
-      it('calls `getAuthorInfo()` and converts `valid: false` to an error', async () => {
-        let gotId = null;
-        class NeverValid extends BaseDataStore {
-          async getAuthorInfo(id) {
-            gotId = id;
-            return { valid: false, exists: false };
-          }
-        }
-
-        const obj = NeverValid.theOne;
-        await assert.isRejected(obj.checkAuthorId('pdq'), /badData/);
-        assert.strictEqual(gotId, 'pdq');
-      });
-
-      it('calls `getAuthorInfo()` and accepts `valid: true`', async () => {
-        let gotId = null;
-        class AlwaysValid extends BaseDataStore {
-          async getAuthorInfo(id) {
-            gotId = id;
-            return { valid: true, exists: (id === 'yes') };
-          }
-        }
-
-        const obj = AlwaysValid.theOne;
-
-        const resultYes = await obj.checkAuthorId('yes');
-        assert.strictEqual(resultYes, 'yes');
-        assert.strictEqual(gotId, 'yes');
-
-        const resultNo = await obj.checkAuthorId('no');
-        assert.strictEqual(resultNo, 'no');
-        assert.strictEqual(gotId, 'no');
-      });
-    });
-
     describe('checkAuthorIdSyntax()', () => {
       it('rejects non-strings without calling through to the impl', () => {
         class Throws extends BaseDataStore {
@@ -232,56 +182,6 @@ describe('@bayou/data-store/BaseDataStore', () => {
   });
 
   describe('document ID methods', () => {
-    describe('checkDocumentId()', () => {
-      it('calls `getDocumentInfo()` and transparently rethrows errors', async () => {
-        let gotId = null;
-        class Throws extends BaseDataStore {
-          async getDocumentInfo(id) {
-            gotId = id;
-            throw new Error('woop');
-          }
-        }
-
-        const obj = Throws.theOne;
-        await assert.isRejected(obj.checkDocumentId('xyz'), /woop/);
-        assert.strictEqual(gotId, 'xyz');
-      });
-
-      it('calls `getDocumentInfo()` and converts `valid: false` to an error', async () => {
-        let gotId = null;
-        class NeverValid extends BaseDataStore {
-          async getDocumentInfo(id) {
-            gotId = id;
-            return { valid: false, exists: false, fileId: 'whatever' };
-          }
-        }
-
-        const obj = NeverValid.theOne;
-        await assert.isRejected(obj.checkDocumentId('pdq'), /badData/);
-        assert.strictEqual(gotId, 'pdq');
-      });
-
-      it('calls `getDocumentInfo()` and accepts `valid: true`', async () => {
-        let gotId = null;
-        class AlwaysValid extends BaseDataStore {
-          async getDocumentInfo(id) {
-            gotId = id;
-            return { valid: true, exists: (id === 'yes'), fileId: 'whatever' };
-          }
-        }
-
-        const obj = AlwaysValid.theOne;
-
-        const resultYes = await obj.checkDocumentId('yes');
-        assert.strictEqual(resultYes, 'yes');
-        assert.strictEqual(gotId, 'yes');
-
-        const resultNo = await obj.checkDocumentId('no');
-        assert.strictEqual(resultNo, 'no');
-        assert.strictEqual(gotId, 'no');
-      });
-    });
-
     describe('checkDocumentIdSyntax()', () => {
       it('rejects non-strings without calling through to the impl', () => {
         class Throws extends BaseDataStore {
