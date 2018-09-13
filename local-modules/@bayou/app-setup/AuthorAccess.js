@@ -65,6 +65,9 @@ export default class AuthorAccess extends CommonBase {
    *   newly-created session.
    */
   async makeSession(docId) {
+    // We only check the document ID syntax here, because we can count on the
+    // call to `getFileComplex()` to do a full validity check as part of its
+    // work.
     Storage.dataStore.checkDocumentIdSyntax(docId);
 
     const sessionId   = this._context.randomId();
