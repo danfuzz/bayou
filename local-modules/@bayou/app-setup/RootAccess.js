@@ -48,8 +48,8 @@ export default class RootAccess extends CommonBase {
     // These checks round-trip with the back-end to do full (not just syntactic)
     // validation.
     await Promise.all([
-      Storage.dataStore.checkAuthorId(authorId),
-      Storage.dataStore.checkDocumentId(docId)
+      Storage.dataStore.checkExistingAuthorId(authorId),
+      Storage.dataStore.checkExistingDocumentId(docId)
     ]);
 
     const fileComplex = await DocServer.theOne.getFileComplex(docId);

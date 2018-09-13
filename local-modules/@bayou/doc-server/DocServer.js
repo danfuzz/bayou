@@ -177,7 +177,7 @@ export default class DocServer extends Singleton {
     TString.nonEmpty(sessionId);
 
     // This validates the ID with the back end.
-    await Storage.dataStore.checkAuthorId(authorId);
+    await Storage.dataStore.checkExistingAuthorId(authorId);
 
     const result = new DocSession(fileComplex, sessionId, authorId);
     const reaper = this._sessionReaper(fileComplex, sessionId);
