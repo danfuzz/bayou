@@ -21,46 +21,6 @@ import { Errors, Singleton } from '@bayou/util-common';
  */
 export default class BaseDataStore extends Singleton {
   /**
-   * Checks an author ID for full validity, beyond simply checking the syntax of
-   * the ID. Returns the given ID if all is well, or throws an error if the ID
-   * is invalid.
-   *
-   * @param {string} authorId The author ID to validate, which must be a
-   *   syntactically valid ID, per {@link #isAuthorId}.
-   * @returns {string} `authorId` if it is indeed valid.
-   * @throws {Error} `badData` error indicating an invalid file ID.
-   */
-  async checkAuthorId(authorId) {
-    const info = await this.getAuthorInfo(authorId);
-
-    if (!info.valid) {
-      throw Errors.badData(`Invalid author ID: \`${authorId}\``);
-    }
-
-    return authorId;
-  }
-
-  /**
-   * Checks a document ID for full validity, beyond simply checking the syntax
-   * of the ID. Returns the given ID if all is well, or throws an error if the
-   * ID is invalid.
-   *
-   * @param {string} documentId The document ID to validate, which must be a
-   *   syntactically valid ID, per {@link #isDocumentId}.
-   * @returns {string} `documentId` if it is indeed valid.
-   * @throws {Error} `badData` error indicating an invalid file ID.
-   */
-  async checkDocumentId(documentId) {
-    const info = await this.getDocumentInfo(documentId);
-
-    if (!info.valid) {
-      throw Errors.badData(`Invalid document ID: \`${documentId}\``);
-    }
-
-    return documentId;
-  }
-
-  /**
    * Checks the syntax of a value alleged to be an author ID. Returns the given
    * value if it's a syntactically correct author ID. Otherwise, throws an
    * error.
@@ -94,6 +54,50 @@ export default class BaseDataStore extends Singleton {
     }
 
     return value;
+  }
+
+  /**
+   * Checks an author ID for full validity, beyond simply checking the syntax of
+   * the ID, including requiring that it corresponds to an existing author.
+   * Returns the given ID if all is well, or throws an error if the ID is
+   * invalid in some way.
+   *
+   * @param {string} authorId The author ID to validate, which must be a
+   *   syntactically valid ID, per {@link #isAuthorId}.
+   * @returns {string} `authorId` if it is indeed valid and corresponds to an
+   *   existing author.
+   * @throws {Error} `badData` error indicating an invalid author ID.
+   */
+  async checkExistingAuthorId(authorId) {
+    const info = await this.getAuthorInfo(authorId);
+
+    if (!(info.valid && info.exists)) {
+      throw Errors.badData(`Nonexistent author: \`${authorId}\``);
+    }
+
+    return authorId;
+  }
+
+  /**
+   * Checks a document ID for full validity, beyond simply checking the syntax
+   * of the ID, including requiring that it corresponds to an existing document.
+   * Returns the given ID if all is well, or throws an error if the ID is
+   * invalid in some way.
+   *
+   * @param {string} documentId The document ID to validate, which must be a
+   *   syntactically valid ID, per {@link #isDocumentId}.
+   * @returns {string} `documentId` if it is indeed valid and corresponds to an
+   *   existing document.
+   * @throws {Error} `badData` error indicating an invalid document ID.
+   */
+  async checkExistingDocumentId(documentId) {
+    const info = await this.getDocumentInfo(documentId);
+
+    if (!(info.valid && info.exists)) {
+      throw Errors.badData(`Nonexistent document: \`${documentId}\``);
+    }
+
+    return documentId;
   }
 
   /**

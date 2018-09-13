@@ -2,10 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Storage } from '@bayou/config-server';
+import { HtmlExport, Storage } from '@bayou/config-server';
 import { BodyChange, BodyDelta, BodySnapshot } from '@bayou/doc-common';
 import { RevisionNumber } from '@bayou/ot-common';
-import { HtmlExport } from '@bayou/config-server';
 
 import DurableControl from './DurableControl';
 import Paths from './Paths';

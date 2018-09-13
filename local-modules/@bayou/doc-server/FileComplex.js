@@ -66,7 +66,7 @@ export default class FileComplex extends BaseComplexMember {
    * @param {string} sessionId ID for the session.
    * @returns {DocSession} A newly-constructed session.
    */
-  makeNewSession(authorId, sessionId) {
+  async makeNewSession(authorId, sessionId) {
     return DocServer.theOne._makeNewSession(this, authorId, sessionId);
   }
 

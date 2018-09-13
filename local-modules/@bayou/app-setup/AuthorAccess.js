@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Context, Target } from '@bayou/api-server';
-import { IdSyntax } from '@bayou/config-common';
+import { Storage } from '@bayou/config-server';
 import { DocServer } from '@bayou/doc-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
@@ -30,9 +30,12 @@ export default class AuthorAccess extends CommonBase {
     super();
 
     /**
-     * {string} authorId ID of the author on whose behalf this instance acts.
+     * {string} ID of the author on whose behalf this instance acts. This is
+     * only validated syntactically, because full validation requires
+     * asynchronous action (e.g., a round trip with the data storage system),
+     * and constructors aren't allowed to be `async`.
      */
-    this._authorId = IdSyntax.checkAuthorId(authorId);
+    this._authorId = Storage.dataStore.checkAuthorIdSyntax(authorId);
 
     /** {Context} The API context to use. */
     this._context = Context.check(context);
@@ -65,12 +68,18 @@ export default class AuthorAccess extends CommonBase {
    *   newly-created session.
    */
   async makeSession(docId) {
-    IdSyntax.checkDocumentId(docId);
+    // We only check the document ID syntax here, because we can count on the
+    // call to `getFileComplex()` to do a full validity check as part of its
+    // work.
+    Storage.dataStore.checkDocumentIdSyntax(docId);
 
+    const sessionId   = this._context.randomId();
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
 
-    const sessionId = this._context.randomId();
-    const session   = fileComplex.makeNewSession(this._authorId, sessionId);
+    // **Note:** This call includes data store back-end validation of the author
+    // ID.
+    const session = await fileComplex.makeNewSession(this._authorId, sessionId);
+
     this._context.addTarget(new Target(sessionId, session));
 
     log.info(

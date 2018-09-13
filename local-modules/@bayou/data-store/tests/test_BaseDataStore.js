@@ -25,56 +25,6 @@ const NON_STRINGS = [
 
 describe('@bayou/data-store/BaseDataStore', () => {
   describe('author ID methods', () => {
-    describe('checkAuthorId()', () => {
-      it('calls `getAuthorInfo()` and transparently rethrows errors', async () => {
-        let gotId = null;
-        class Throws extends BaseDataStore {
-          async getAuthorInfo(id) {
-            gotId = id;
-            throw new Error('woop');
-          }
-        }
-
-        const obj = Throws.theOne;
-        await assert.isRejected(obj.checkAuthorId('xyz'), /woop/);
-        assert.strictEqual(gotId, 'xyz');
-      });
-
-      it('calls `getAuthorInfo()` and converts `valid: false` to an error', async () => {
-        let gotId = null;
-        class NeverValid extends BaseDataStore {
-          async getAuthorInfo(id) {
-            gotId = id;
-            return { valid: false, exists: false };
-          }
-        }
-
-        const obj = NeverValid.theOne;
-        await assert.isRejected(obj.checkAuthorId('pdq'), /badData/);
-        assert.strictEqual(gotId, 'pdq');
-      });
-
-      it('calls `getAuthorInfo()` and accepts `valid: true`', async () => {
-        let gotId = null;
-        class AlwaysValid extends BaseDataStore {
-          async getAuthorInfo(id) {
-            gotId = id;
-            return { valid: true, exists: (id === 'yes') };
-          }
-        }
-
-        const obj = AlwaysValid.theOne;
-
-        const resultYes = await obj.checkAuthorId('yes');
-        assert.strictEqual(resultYes, 'yes');
-        assert.strictEqual(gotId, 'yes');
-
-        const resultNo = await obj.checkAuthorId('no');
-        assert.strictEqual(resultNo, 'no');
-        assert.strictEqual(gotId, 'no');
-      });
-    });
-
     describe('checkAuthorIdSyntax()', () => {
       it('rejects non-strings without calling through to the impl', () => {
         class Throws extends BaseDataStore {
@@ -115,6 +65,66 @@ describe('@bayou/data-store/BaseDataStore', () => {
         const obj = AcceptsAll.theOne;
         assert.strictEqual(obj.checkAuthorIdSyntax('zorch'), 'zorch');
         assert.strictEqual(gotId, 'zorch');
+      });
+    });
+
+    describe('checkExistingAuthorId()', () => {
+      it('calls `getAuthorInfo()` and transparently rethrows errors', async () => {
+        let gotId = null;
+        class Throws extends BaseDataStore {
+          async getAuthorInfo(id) {
+            gotId = id;
+            throw new Error('woop');
+          }
+        }
+
+        const obj = Throws.theOne;
+        await assert.isRejected(obj.checkExistingAuthorId('xyz'), /woop/);
+        assert.strictEqual(gotId, 'xyz');
+      });
+
+      it('calls `getAuthorInfo()` and converts `valid: false` to an error', async () => {
+        let gotId = null;
+        class NeverValid extends BaseDataStore {
+          async getAuthorInfo(id) {
+            gotId = id;
+            return { valid: false, exists: false };
+          }
+        }
+
+        const obj = NeverValid.theOne;
+        await assert.isRejected(obj.checkExistingAuthorId('pdq'), /badData/);
+        assert.strictEqual(gotId, 'pdq');
+      });
+
+      it('calls `getAuthorInfo()` and converts `exists: false` to an error', async () => {
+        let gotId = null;
+        class NeverValid extends BaseDataStore {
+          async getAuthorInfo(id) {
+            gotId = id;
+            return { valid: true, exists: false };
+          }
+        }
+
+        const obj = NeverValid.theOne;
+        await assert.isRejected(obj.checkExistingAuthorId('nine-one-four'), /badData/);
+        assert.strictEqual(gotId, 'nine-one-four');
+      });
+
+      it('calls `getAuthorInfo()` and accepts `valid: true, exists: true`', async () => {
+        let gotId = null;
+        class AlwaysValid extends BaseDataStore {
+          async getAuthorInfo(id) {
+            gotId = id;
+            return { valid: true, exists: true };
+          }
+        }
+
+        const obj = AlwaysValid.theOne;
+
+        const result = await obj.checkExistingAuthorId('yes');
+        assert.strictEqual(result, 'yes');
+        assert.strictEqual(gotId, 'yes');
       });
     });
 
@@ -172,56 +182,6 @@ describe('@bayou/data-store/BaseDataStore', () => {
   });
 
   describe('document ID methods', () => {
-    describe('checkDocumentId()', () => {
-      it('calls `getDocumentInfo()` and transparently rethrows errors', async () => {
-        let gotId = null;
-        class Throws extends BaseDataStore {
-          async getDocumentInfo(id) {
-            gotId = id;
-            throw new Error('woop');
-          }
-        }
-
-        const obj = Throws.theOne;
-        await assert.isRejected(obj.checkDocumentId('xyz'), /woop/);
-        assert.strictEqual(gotId, 'xyz');
-      });
-
-      it('calls `getDocumentInfo()` and converts `valid: false` to an error', async () => {
-        let gotId = null;
-        class NeverValid extends BaseDataStore {
-          async getDocumentInfo(id) {
-            gotId = id;
-            return { valid: false, exists: false, fileId: 'whatever' };
-          }
-        }
-
-        const obj = NeverValid.theOne;
-        await assert.isRejected(obj.checkDocumentId('pdq'), /badData/);
-        assert.strictEqual(gotId, 'pdq');
-      });
-
-      it('calls `getDocumentInfo()` and accepts `valid: true`', async () => {
-        let gotId = null;
-        class AlwaysValid extends BaseDataStore {
-          async getDocumentInfo(id) {
-            gotId = id;
-            return { valid: true, exists: (id === 'yes'), fileId: 'whatever' };
-          }
-        }
-
-        const obj = AlwaysValid.theOne;
-
-        const resultYes = await obj.checkDocumentId('yes');
-        assert.strictEqual(resultYes, 'yes');
-        assert.strictEqual(gotId, 'yes');
-
-        const resultNo = await obj.checkDocumentId('no');
-        assert.strictEqual(resultNo, 'no');
-        assert.strictEqual(gotId, 'no');
-      });
-    });
-
     describe('checkDocumentIdSyntax()', () => {
       it('rejects non-strings without calling through to the impl', () => {
         class Throws extends BaseDataStore {
@@ -262,6 +222,66 @@ describe('@bayou/data-store/BaseDataStore', () => {
         const obj = AcceptsAll.theOne;
         assert.strictEqual(obj.checkDocumentIdSyntax('zorch'), 'zorch');
         assert.strictEqual(gotId, 'zorch');
+      });
+    });
+
+    describe('checkExistingDocumentId()', () => {
+      it('calls `getDocumentInfo()` and transparently rethrows errors', async () => {
+        let gotId = null;
+        class Throws extends BaseDataStore {
+          async getDocumentInfo(id) {
+            gotId = id;
+            throw new Error('woop');
+          }
+        }
+
+        const obj = Throws.theOne;
+        await assert.isRejected(obj.checkExistingDocumentId('xyz'), /woop/);
+        assert.strictEqual(gotId, 'xyz');
+      });
+
+      it('calls `getDocumentInfo()` and converts `valid: false` to an error', async () => {
+        let gotId = null;
+        class NeverValid extends BaseDataStore {
+          async getDocumentInfo(id) {
+            gotId = id;
+            return { valid: false, exists: false, fileId: null };
+          }
+        }
+
+        const obj = NeverValid.theOne;
+        await assert.isRejected(obj.checkExistingDocumentId('pdq'), /badData/);
+        assert.strictEqual(gotId, 'pdq');
+      });
+
+      it('calls `getDocumentInfo()` and converts `exists: false` to an error', async () => {
+        let gotId = null;
+        class NeverValid extends BaseDataStore {
+          async getDocumentInfo(id) {
+            gotId = id;
+            return { valid: true, exists: false, fileId: null };
+          }
+        }
+
+        const obj = NeverValid.theOne;
+        await assert.isRejected(obj.checkExistingDocumentId('nine-one-four'), /badData/);
+        assert.strictEqual(gotId, 'nine-one-four');
+      });
+
+      it('calls `getDocumentInfo()` and accepts `valid: true, exists: true`', async () => {
+        let gotId = null;
+        class AlwaysValid extends BaseDataStore {
+          async getDocumentInfo(id) {
+            gotId = id;
+            return { valid: true, exists: true, fileId: 914 };
+          }
+        }
+
+        const obj = AlwaysValid.theOne;
+
+        const result = await obj.checkExistingDocumentId('yes');
+        assert.strictEqual(result, 'yes');
+        assert.strictEqual(gotId, 'yes');
       });
     });
 
