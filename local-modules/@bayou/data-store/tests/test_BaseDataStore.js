@@ -118,6 +118,66 @@ describe('@bayou/data-store/BaseDataStore', () => {
       });
     });
 
+    describe('checkExistingAuthorId()', () => {
+      it('calls `getAuthorInfo()` and transparently rethrows errors', async () => {
+        let gotId = null;
+        class Throws extends BaseDataStore {
+          async getAuthorInfo(id) {
+            gotId = id;
+            throw new Error('woop');
+          }
+        }
+
+        const obj = Throws.theOne;
+        await assert.isRejected(obj.checkExistingAuthorId('xyz'), /woop/);
+        assert.strictEqual(gotId, 'xyz');
+      });
+
+      it('calls `getAuthorInfo()` and converts `valid: false` to an error', async () => {
+        let gotId = null;
+        class NeverValid extends BaseDataStore {
+          async getAuthorInfo(id) {
+            gotId = id;
+            return { valid: false, exists: false };
+          }
+        }
+
+        const obj = NeverValid.theOne;
+        await assert.isRejected(obj.checkExistingAuthorId('pdq'), /badData/);
+        assert.strictEqual(gotId, 'pdq');
+      });
+
+      it('calls `getAuthorInfo()` and converts `exists: false` to an error', async () => {
+        let gotId = null;
+        class NeverValid extends BaseDataStore {
+          async getAuthorInfo(id) {
+            gotId = id;
+            return { valid: true, exists: false };
+          }
+        }
+
+        const obj = NeverValid.theOne;
+        await assert.isRejected(obj.checkExistingAuthorId('nine-one-four'), /badData/);
+        assert.strictEqual(gotId, 'nine-one-four');
+      });
+
+      it('calls `getAuthorInfo()` and accepts `valid: true, exists: true`', async () => {
+        let gotId = null;
+        class AlwaysValid extends BaseDataStore {
+          async getAuthorInfo(id) {
+            gotId = id;
+            return { valid: true, exists: true };
+          }
+        }
+
+        const obj = AlwaysValid.theOne;
+
+        const result = await obj.checkExistingAuthorId('yes');
+        assert.strictEqual(result, 'yes');
+        assert.strictEqual(gotId, 'yes');
+      });
+    });
+
     describe('getAuthorInfo()', () => {
       it('rejects non-strings without calling through to the impl', async () => {
         class Throws extends BaseDataStore {

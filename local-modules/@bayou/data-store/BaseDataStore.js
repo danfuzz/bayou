@@ -61,6 +61,26 @@ export default class BaseDataStore extends Singleton {
   }
 
   /**
+   * Like {@link #checkAuthorId} (see which), but also requires that the given
+   * ID correspond to an existing author.
+   *
+   * @param {string} authorId The author ID to validate, which must be a
+   *   syntactically valid ID, per {@link #isAuthorId}.
+   * @returns {string} `authorId` if it is indeed valid and corresponds to an
+   *   existing user.
+   * @throws {Error} `badData` error indicating an invalid file ID.
+   */
+  async checkExistingAuthorId(authorId) {
+    const info = await this.getAuthorInfo(authorId);
+
+    if (!(info.valid && info.exists)) {
+      throw Errors.badData(`Nonexistent author ID: \`${authorId}\``);
+    }
+
+    return authorId;
+  }
+
+  /**
    * Checks the syntax of a value alleged to be an author ID. Returns the given
    * value if it's a syntactically correct author ID. Otherwise, throws an
    * error.
