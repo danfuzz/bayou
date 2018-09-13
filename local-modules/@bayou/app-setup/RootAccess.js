@@ -4,8 +4,7 @@
 
 import { SplitKey } from '@bayou/api-common';
 import { Context, Target } from '@bayou/api-server';
-import { IdSyntax } from '@bayou/config-common';
-import { Network } from '@bayou/config-server';
+import { Network, Storage } from '@bayou/config-server';
 import { DocServer } from '@bayou/doc-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
@@ -46,8 +45,12 @@ export default class RootAccess extends CommonBase {
    *   requested access.
    */
   async makeAccessKey(authorId, docId) {
-    IdSyntax.checkAuthorId(authorId);
-    IdSyntax.checkDocumentId(docId);
+    // These checks round-trip with the back-end to do full (not just syntactic)
+    // validation.
+    await Promise.all([
+      Storage.dataStore.checkAuthorId(authorId),
+      Storage.dataStore.checkDocumentId(docId)
+    ]);
 
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
 

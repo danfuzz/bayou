@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Context, Target } from '@bayou/api-server';
-import { IdSyntax } from '@bayou/config-common';
+import { Storage } from '@bayou/config-server';
 import { DocServer } from '@bayou/doc-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
@@ -32,7 +32,7 @@ export default class AuthorAccess extends CommonBase {
     /**
      * {string} authorId ID of the author on whose behalf this instance acts.
      */
-    this._authorId = IdSyntax.checkAuthorId(authorId);
+    this._authorId = Storage.dataStore.checkAuthorIdSyntax(authorId);
 
     /** {Context} The API context to use. */
     this._context = Context.check(context);
@@ -65,7 +65,7 @@ export default class AuthorAccess extends CommonBase {
    *   newly-created session.
    */
   async makeSession(docId) {
-    IdSyntax.checkDocumentId(docId);
+    Storage.dataStore.checkDocumentIdSyntax(docId);
 
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
 
