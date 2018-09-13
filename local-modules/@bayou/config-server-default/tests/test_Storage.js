@@ -19,12 +19,14 @@ describe('@bayou/config-server-default/Storage', () => {
 
   describe('.dataStore', () => {
     it('should be an instance of `LocalDataStore`', () => {
+      assert.isObject(Storage.dataStore);
       assert.instanceOf(Storage.dataStore, LocalDataStore);
     });
   });
 
   describe('.fileStore', () => {
     it('should be an instance of `LocalFileStore`', () => {
+      assert.isObject(Storage.fileStore);
       assert.instanceOf(Storage.fileStore, LocalFileStore);
     });
   });

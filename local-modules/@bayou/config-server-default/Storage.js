@@ -40,6 +40,11 @@ export default class Storage extends UtilityClass {
    * version of the class.
    */
   static get fileStore() {
-    return LocalFileStore.theOne;
+    if (this._fileStore === undefined) {
+      /** {LocalFileStore} Unique instance of this class. */
+      this._fileStore = new LocalFileStore();
+    }
+
+    return this._fileStore;
   }
 }
