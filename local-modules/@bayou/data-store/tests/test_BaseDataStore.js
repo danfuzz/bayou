@@ -33,7 +33,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj = Throws.theOne;
+        const obj = new Throws();
         for (const value of NON_STRINGS) {
           assert.throws(() => obj.checkAuthorIdSyntax(value), /badValue/, inspect(value));
         }
@@ -48,7 +48,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj = AcceptsNone.theOne;
+        const obj = new AcceptsNone();
         assert.throws(() => obj.checkAuthorIdSyntax('florp'), /badValue/);
         assert.strictEqual(gotId, 'florp');
       });
@@ -62,7 +62,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj = AcceptsAll.theOne;
+        const obj = new AcceptsAll();
         assert.strictEqual(obj.checkAuthorIdSyntax('zorch'), 'zorch');
         assert.strictEqual(gotId, 'zorch');
       });
@@ -78,7 +78,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj = Throws.theOne;
+        const obj = new Throws();
         await assert.isRejected(obj.checkExistingAuthorId('xyz'), /woop/);
         assert.strictEqual(gotId, 'xyz');
       });
@@ -92,21 +92,21 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj = NeverValid.theOne;
+        const obj = new NeverValid();
         await assert.isRejected(obj.checkExistingAuthorId('pdq'), /badData/);
         assert.strictEqual(gotId, 'pdq');
       });
 
       it('calls `getAuthorInfo()` and converts `exists: false` to an error', async () => {
         let gotId = null;
-        class NeverValid extends BaseDataStore {
+        class NeverExists extends BaseDataStore {
           async getAuthorInfo(id) {
             gotId = id;
             return { valid: true, exists: false };
           }
         }
 
-        const obj = NeverValid.theOne;
+        const obj = new NeverExists();
         await assert.isRejected(obj.checkExistingAuthorId('nine-one-four'), /badData/);
         assert.strictEqual(gotId, 'nine-one-four');
       });
@@ -120,7 +120,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj = AlwaysValid.theOne;
+        const obj = new AlwaysValid();
 
         const result = await obj.checkExistingAuthorId('yes');
         assert.strictEqual(result, 'yes');
@@ -136,7 +136,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj = Throws.theOne;
+        const obj = new Throws();
         for (const value of NON_STRINGS) {
           await assert.isRejected(obj.getAuthorInfo(value), /badValue/, inspect(value));
         }
@@ -155,7 +155,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj = Throws.theOne;
+        const obj = new Throws();
         await assert.isRejected(obj.getAuthorInfo('boop'), /badValue/);
         assert.strictEqual(gotId, 'boop');
       });
@@ -173,7 +173,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj    = AcceptsAll.theOne;
+        const obj    = new AcceptsAll();
         const result = await obj.getAuthorInfo('beep');
         assert.deepEqual(result, { exists: true, valid: true });
         assert.strictEqual(gotId, 'beep');
@@ -190,7 +190,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj = Throws.theOne;
+        const obj = new Throws();
         for (const value of NON_STRINGS) {
           assert.throws(() => obj.checkDocumentIdSyntax(value), /badValue/, inspect(value));
         }
@@ -205,7 +205,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj = AcceptsNone.theOne;
+        const obj = new AcceptsNone();
         assert.throws(() => obj.checkDocumentIdSyntax('florp'), /badValue/);
         assert.strictEqual(gotId, 'florp');
       });
@@ -219,7 +219,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj = AcceptsAll.theOne;
+        const obj = new AcceptsAll();
         assert.strictEqual(obj.checkDocumentIdSyntax('zorch'), 'zorch');
         assert.strictEqual(gotId, 'zorch');
       });
@@ -235,7 +235,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj = Throws.theOne;
+        const obj = new Throws();
         await assert.isRejected(obj.checkExistingDocumentId('xyz'), /woop/);
         assert.strictEqual(gotId, 'xyz');
       });
@@ -249,21 +249,21 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj = NeverValid.theOne;
+        const obj = new NeverValid();
         await assert.isRejected(obj.checkExistingDocumentId('pdq'), /badData/);
         assert.strictEqual(gotId, 'pdq');
       });
 
       it('calls `getDocumentInfo()` and converts `exists: false` to an error', async () => {
         let gotId = null;
-        class NeverValid extends BaseDataStore {
+        class NeverExists extends BaseDataStore {
           async getDocumentInfo(id) {
             gotId = id;
             return { valid: true, exists: false, fileId: null };
           }
         }
 
-        const obj = NeverValid.theOne;
+        const obj = new NeverExists();
         await assert.isRejected(obj.checkExistingDocumentId('nine-one-four'), /badData/);
         assert.strictEqual(gotId, 'nine-one-four');
       });
@@ -277,7 +277,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj = AlwaysValid.theOne;
+        const obj = new AlwaysValid();
 
         const result = await obj.checkExistingDocumentId('yes');
         assert.strictEqual(result, 'yes');
@@ -293,7 +293,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj = Throws.theOne;
+        const obj = new Throws();
         for (const value of NON_STRINGS) {
           await assert.isRejected(obj.getDocumentInfo(value), /badValue/, inspect(value));
         }
@@ -312,7 +312,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj = Throws.theOne;
+        const obj = new Throws();
         await assert.isRejected(obj.getDocumentInfo('boop'), /badValue/);
         assert.strictEqual(gotId, 'boop');
       });
@@ -330,7 +330,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
           }
         }
 
-        const obj    = AcceptsAll.theOne;
+        const obj    = new AcceptsAll();
         const result = await obj.getDocumentInfo('beep');
         assert.deepEqual(result, { exists: true, valid: true, fileId: 'whatever' });
         assert.strictEqual(gotId, 'beep');

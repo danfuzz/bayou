@@ -3,23 +3,15 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TBoolean, TObject, TString } from '@bayou/typecheck';
-import { Errors, Singleton } from '@bayou/util-common';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 /**
  * Base class for data storage access. An instance of (a concrete subclass of)
  * this class is responsible for mitigating access to all of the data stored in
  * the underlying system, _except_ for file data (the latter which is managed by
  * the module {@link @bayou/file-store}).
- *
- * **Note:** This is a subclass of `Singleton`, that is, the system is set up
- * to only ever expect there to be one data store instance. (Technically, this
- * inheritence relationship allows for the possibility of having singleton
- * instances of several subclasses of this class, but in practice that's not
- * what happens.) **TODO:** To make unit testing more feasible, this should
- * probably just be a regular class, not a singleton. We should fix this and
- * {@link @bayou/file-store/BaseFileStore} at the same time.
  */
-export default class BaseDataStore extends Singleton {
+export default class BaseDataStore extends CommonBase {
   /**
    * Checks the syntax of a value alleged to be an author ID. Returns the given
    * value if it's a syntactically correct author ID. Otherwise, throws an
