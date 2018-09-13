@@ -6,6 +6,7 @@ import BaseComplexMember from './BaseComplexMember';
 import BaseControl from './BaseControl';
 import BaseDataManager from './BaseDataManager';
 import BodyControl from './BodyControl';
+import BodyDeltaHtml from './BodyDeltaHtml';
 import CaretControl from './CaretControl';
 import DocServer from './DocServer';
 import DocSession from './DocSession';
@@ -22,6 +23,7 @@ export {
   BaseControl,
   BaseDataManager,
   BodyControl,
+  BodyDeltaHtml,
   CaretControl,
   DocServer,
   DocSession,

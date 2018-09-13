@@ -2,7 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Storage } from '@bayou/config-server';
 import { BodyChange, BodyDelta, BodySnapshot } from '@bayou/doc-common';
+import { RevisionNumber } from '@bayou/ot-common';
+import { HtmlExport } from '@bayou/config-server';
 
 import DurableControl from './DurableControl';
 import Paths from './Paths';
@@ -100,6 +103,23 @@ export default class BodyControl extends DurableControl {
     // `change` in the context of the snapshot
     // it is being applied to.
     baseSnapshot.validateChange(change);
+  }
+
+  // TODO: Add queuing logic to only export HTML once in a while,
+  // using a timer for now. In the future, use external job queue.
+  /**
+   * Queues up an HTML export of the current body snapshot.
+   *
+   * @param {RevisionNumber} revNum The revision number of the
+   *   body snapshot to conver to HTML.
+   * @param {string} docId The document Id.
+   */
+  async queueHtmlExport(revNum, docId) {
+    RevisionNumber.check(revNum);
+    Storage.dataStore.checkDocumentIdSyntax(docId);
+
+    const snapshot = await this._impl_getSnapshot(revNum);
+    await HtmlExport.exportHtml(snapshot, docId);
   }
 
   /**

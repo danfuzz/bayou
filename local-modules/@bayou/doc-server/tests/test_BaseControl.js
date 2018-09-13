@@ -258,7 +258,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       }
     });
 
-    it('should call the snapshot maybe-writer and return `true` if the transaction succeeds', async () => {
+    it('should call the snapshot maybe-writer and html exporter, and return `true` if the transaction succeeds', async () => {
       const file = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
       const control = new MockControl(fileAccess, 'boop');
@@ -268,14 +268,14 @@ describe('@bayou/doc-server/BaseControl', () => {
         get: () => new MockSnapshot(100, [[`snap_blort_${100}`]])
       });
 
-      // TODO: Replace with stub
-      let maybeCalled = false;
+      // TODO: Replace with spy
+      let storeSnapshotCalled = false;
       control._maybeWriteStoredSnapshot = (revNum_unused) => {
-        maybeCalled = true;
+        storeSnapshotCalled = true;
       };
 
       await assert.eventually.strictEqual(control.appendChange(change), true);
-      assert.isTrue(maybeCalled);
+      assert.isTrue(storeSnapshotCalled);
     });
 
     it('should return `false` if the transaction fails due to a precondition failure', async () => {

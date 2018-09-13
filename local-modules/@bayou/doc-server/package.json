@@ -12,6 +12,7 @@
     "@bayou/promise-util": "local",
     "@bayou/see-all": "local",
     "@bayou/typecheck": "local",
-    "@bayou/util-common": "local"
+    "@bayou/util-common": "local",
+    "quill-delta-to-html": "0.9.9"
   }
 }

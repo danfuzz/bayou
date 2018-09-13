@@ -6,6 +6,7 @@ import { inject } from '@bayou/injecty';
 
 import Auth from './Auth';
 import Deployment from './Deployment';
+import HtmlExport from './HtmlExport';
 import Logging from './Logging';
 import Network from './Network';
 import Storage from './Storage';
@@ -16,6 +17,7 @@ import Storage from './Storage';
 function injectAll() {
   inject.Auth       = Auth;
   inject.Deployment = Deployment;
+  inject.HtmlExport = HtmlExport;
   inject.Logging    = Logging;
   inject.Network    = Network;
   inject.Storage    = Storage;
@@ -24,6 +26,7 @@ function injectAll() {
 export {
   Auth,
   Deployment,
+  HtmlExport,
   Logging,
   Network,
   Storage,
