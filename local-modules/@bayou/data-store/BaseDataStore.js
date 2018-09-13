@@ -41,6 +41,24 @@ export default class BaseDataStore extends Singleton {
   }
 
   /**
+   * Checks the syntax of a value alleged to be an author ID. Returns the given
+   * value if it's a syntactically correct author ID. Otherwise, throws an
+   * error.
+   *
+   * @param {*} value Value to check.
+   * @returns {string} `value` if it is indeed valid.
+   * @throws {Error} `badValue` error indicating a syntactically invalid author
+   *   ID.
+   */
+  checkAuthorIdSyntax(value) {
+    if (!this.isAuthorId(value)) {
+      throw Errors.badValue(value, String, 'author ID');
+    }
+
+    return value;
+  }
+
+  /**
    * Checks a document ID for full validity, beyond simply checking the syntax
    * of the ID. Returns the given ID if all is well, or throws an error if the
    * ID is invalid.
@@ -61,44 +79,6 @@ export default class BaseDataStore extends Singleton {
   }
 
   /**
-   * Like {@link #checkAuthorId} (see which), but also requires that the given
-   * ID correspond to an existing author.
-   *
-   * @param {string} authorId The author ID to validate, which must be a
-   *   syntactically valid ID, per {@link #isAuthorId}.
-   * @returns {string} `authorId` if it is indeed valid and corresponds to an
-   *   existing user.
-   * @throws {Error} `badData` error indicating an invalid file ID.
-   */
-  async checkExistingAuthorId(authorId) {
-    const info = await this.getAuthorInfo(authorId);
-
-    if (!(info.valid && info.exists)) {
-      throw Errors.badData(`Nonexistent author ID: \`${authorId}\``);
-    }
-
-    return authorId;
-  }
-
-  /**
-   * Checks the syntax of a value alleged to be an author ID. Returns the given
-   * value if it's a syntactically correct author ID. Otherwise, throws an
-   * error.
-   *
-   * @param {*} value Value to check.
-   * @returns {string} `value` if it is indeed valid.
-   * @throws {Error} `badValue` error indicating a syntactically invalid author
-   *   ID.
-   */
-  checkAuthorIdSyntax(value) {
-    if (!this.isAuthorId(value)) {
-      throw Errors.badValue(value, String, 'author ID');
-    }
-
-    return value;
-  }
-
-  /**
    * Checks the syntax of a value alleged to be a document ID. Returns the given
    * value if it's a syntactically correct document ID. Otherwise, throws an
    * error.
@@ -114,6 +94,46 @@ export default class BaseDataStore extends Singleton {
     }
 
     return value;
+  }
+
+  /**
+   * Like {@link #checkAuthorId} (see which), but also requires that the given
+   * ID correspond to an existing author.
+   *
+   * @param {string} authorId The author ID to validate, which must be a
+   *   syntactically valid ID, per {@link #isAuthorId}.
+   * @returns {string} `authorId` if it is indeed valid and corresponds to an
+   *   existing user.
+   * @throws {Error} `badData` error indicating an invalid file ID.
+   */
+  async checkExistingAuthorId(authorId) {
+    const info = await this.getAuthorInfo(authorId);
+
+    if (!(info.valid && info.exists)) {
+      throw Errors.badData(`Nonexistent author: \`${authorId}\``);
+    }
+
+    return authorId;
+  }
+
+  /**
+   * Like {@link #checkDocumentId} (see which), but also requires that the given
+   * ID correspond to an existing document.
+   *
+   * @param {string} documentId The document ID to validate, which must be a
+   *   syntactically valid ID, per {@link #isDocumentId}.
+   * @returns {string} `documentId` if it is indeed valid and corresponds to an
+   *   existing document.
+   * @throws {Error} `badData` error indicating an invalid file ID.
+   */
+  async checkExistingDocumentId(documentId) {
+    const info = await this.getDocumentInfo(documentId);
+
+    if (!(info.valid && info.exists)) {
+      throw Errors.badData(`Nonexistent document: \`${documentId}\``);
+    }
+
+    return documentId;
   }
 
   /**

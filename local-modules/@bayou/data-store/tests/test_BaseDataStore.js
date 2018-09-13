@@ -325,6 +325,66 @@ describe('@bayou/data-store/BaseDataStore', () => {
       });
     });
 
+    describe('checkExistingDocumentId()', () => {
+      it('calls `getDocumentInfo()` and transparently rethrows errors', async () => {
+        let gotId = null;
+        class Throws extends BaseDataStore {
+          async getDocumentInfo(id) {
+            gotId = id;
+            throw new Error('woop');
+          }
+        }
+
+        const obj = Throws.theOne;
+        await assert.isRejected(obj.checkExistingDocumentId('xyz'), /woop/);
+        assert.strictEqual(gotId, 'xyz');
+      });
+
+      it('calls `getDocumentInfo()` and converts `valid: false` to an error', async () => {
+        let gotId = null;
+        class NeverValid extends BaseDataStore {
+          async getDocumentInfo(id) {
+            gotId = id;
+            return { valid: false, exists: false, fileId: null };
+          }
+        }
+
+        const obj = NeverValid.theOne;
+        await assert.isRejected(obj.checkExistingDocumentId('pdq'), /badData/);
+        assert.strictEqual(gotId, 'pdq');
+      });
+
+      it('calls `getDocumentInfo()` and converts `exists: false` to an error', async () => {
+        let gotId = null;
+        class NeverValid extends BaseDataStore {
+          async getDocumentInfo(id) {
+            gotId = id;
+            return { valid: true, exists: false, fileId: null };
+          }
+        }
+
+        const obj = NeverValid.theOne;
+        await assert.isRejected(obj.checkExistingDocumentId('nine-one-four'), /badData/);
+        assert.strictEqual(gotId, 'nine-one-four');
+      });
+
+      it('calls `getDocumentInfo()` and accepts `valid: true, exists: true`', async () => {
+        let gotId = null;
+        class AlwaysValid extends BaseDataStore {
+          async getDocumentInfo(id) {
+            gotId = id;
+            return { valid: true, exists: true, fileId: 914 };
+          }
+        }
+
+        const obj = AlwaysValid.theOne;
+
+        const result = await obj.checkExistingDocumentId('yes');
+        assert.strictEqual(result, 'yes');
+        assert.strictEqual(gotId, 'yes');
+      });
+    });
+
     describe('getDocumentInfo()', () => {
       it('rejects non-strings without calling through to the impl', async () => {
         class Throws extends BaseDataStore {
