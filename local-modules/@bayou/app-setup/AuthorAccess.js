@@ -30,7 +30,10 @@ export default class AuthorAccess extends CommonBase {
     super();
 
     /**
-     * {string} authorId ID of the author on whose behalf this instance acts.
+     * {string} ID of the author on whose behalf this instance acts. This is
+     * only validated syntactically, because full validation requires
+     * asynchronous action (e.g., a round trip with the data storage system),
+     * and constructors aren't allowed to be `async`.
      */
     this._authorId = Storage.dataStore.checkAuthorIdSyntax(authorId);
 
@@ -72,7 +75,10 @@ export default class AuthorAccess extends CommonBase {
 
     const sessionId   = this._context.randomId();
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
-    const session     = await fileComplex.makeNewSession(this._authorId, sessionId);
+
+    // **Note:** This call includes data store back-end validation of the author
+    // ID.
+    const session = await fileComplex.makeNewSession(this._authorId, sessionId);
 
     this._context.addTarget(new Target(sessionId, session));
 
