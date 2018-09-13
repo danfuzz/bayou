@@ -22,12 +22,28 @@ describe('@bayou/config-server-default/Storage', () => {
       assert.isObject(Storage.dataStore);
       assert.instanceOf(Storage.dataStore, LocalDataStore);
     });
+
+    it('should return the same actual object on every access', () => {
+      const store = Storage.dataStore;
+
+      for (let i = 0; i < 10; i++) {
+        assert.strictEqual(Storage.dataStore, store, `#${i}`);
+      }
+    });
   });
 
   describe('.fileStore', () => {
     it('should be an instance of `LocalFileStore`', () => {
       assert.isObject(Storage.fileStore);
       assert.instanceOf(Storage.fileStore, LocalFileStore);
+    });
+
+    it('should return the same actual object on every access', () => {
+      const store = Storage.fileStore;
+
+      for (let i = 0; i < 10; i++) {
+        assert.strictEqual(Storage.fileStore, store, `#${i}`);
+      }
     });
   });
 });
