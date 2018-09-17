@@ -81,6 +81,53 @@ export default class FileComplex extends BaseComplexMember {
   }
 
   /**
+   * Finds and returns a pre-existing session for this instance. More
+   * specifically, the session has to exist in the caret part of the file, but
+   * there doesn't have to already be a {@link DocSession} object in this
+   * process which represents it.
+   *
+   * @param {string} authorId ID for the author.
+   * @param {string} sessionId ID for the session.
+   * @returns {DocSession} A session object representing the so-identified
+   *   session.
+   */
+  async findExistingSession(authorId, sessionId) {
+    // **Note:** We only need to validate syntax, because if we actually find
+    // the session, we can match the author ID and (if it does match) know that
+    // the author really exists and is valid.
+    Storage.dataStore.checkAuthorIdSyntax(authorId);
+
+    TString.nonEmpty(sessionId);
+
+    const foundWeak = this._sessions.get(sessionId);
+    if ((foundWeak !== undefined) && !weak.isDead(foundWeak)) {
+      const foundSession = weak.get(foundWeak);
+      if (foundSession instanceof DocSession) {
+        // There is already a `DocSession` for the given session ID.
+        if (authorId === foundSession.getAuthorId()) {
+          // ...and the author ID matches. Bingo!
+          return foundSession;
+        } else {
+          throw Errors.badUse(`Wrong author ID for session: author ID \`${authorId}\`; session ID \`${sessionId}\``);
+        }
+      }
+    }
+
+    // There was no pre-existing session object, so we need to inspect the
+    // carets and see if there is a record of the session. If so, and if the
+    // author matches, we create and return the corresponding object.
+
+    const caretSnapshot = await this.caretControl.getSnapshot();
+    const foundCaret    = caretSnapshot.get(sessionId); // This throws if the session isn't found.
+
+    if (foundCaret.authorId !== authorId) {
+      throw Errors.badUse(`Wrong author ID for session: author ID \`${authorId}\`; session ID \`${sessionId}\``);
+    }
+
+    return this._activateSession(authorId, sessionId);
+  }
+
+  /**
    * Makes a new author-associated session for this instance.
    *
    * @param {string} authorId ID for the author.
@@ -126,6 +173,18 @@ export default class FileComplex extends BaseComplexMember {
       // valid, so loop and try again (until timeout).
     }
 
+    return this._activateSession(authorId, sessionId);
+  }
+
+  /**
+   * Helper for {@link #makeNewSession} and {@link #findExistingSession}, which
+   * does the final setup of a new {@link DocSession} instance.
+   *
+   * @param {string} authorId ID for the author.
+   * @param {string} sessionId ID for the session.
+   * @returns {DocSession} A newly-constructed session.
+   */
+  _activateSession(authorId, sessionId) {
     const result = new DocSession(this, authorId, sessionId);
     const reaper = this._sessionReaper(sessionId);
 
