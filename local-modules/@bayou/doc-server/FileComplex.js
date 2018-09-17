@@ -88,6 +88,12 @@ export default class FileComplex extends BaseComplexMember {
     TString.nonEmpty(sessionId);
 
     // Ensure that the session ID doesn't correspond to a pre-existing session.
+    // **TODO:** This test suffers from a race condition, in that it's possible
+    // for some other machine to add a caret with this session ID after we
+    // determine that it's unused and before we actually store the first caret
+    // for the session. Instead, this method should arrange to actually perform
+    // an `appendChange()` from the snapshot which would conclusively establish
+    // the session as bona fide new.
     const caretSnapshot = await this.caretControl.getSnapshot();
     const already       = caretSnapshot.getOrNull(sessionId);
 
