@@ -36,7 +36,7 @@ export default class DocServer extends Singleton {
     this._codec = appCommon_TheModule.fullCodec;
 
     /**
-     * {Map<string, Weak<FileComplex>|Promise<FileComplex>>} Map from document
+     * {Map<string, Weak<FileComplex|Promise<FileComplex>>} Map from document
      * IDs to either a weak-reference or a promise to a `FileComplex`, for the
      * so-IDed document. During asynchrounous construction, the binding is to a
      * promise, and once constructed it becomes a weak reference. The weak
