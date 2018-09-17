@@ -14,6 +14,12 @@ import FileAccess from './FileAccess';
 import FileBootstrap from './FileBootstrap';
 
 /**
+ * {Int} Maximum amount of time (in msec) to allow for the creation of new
+ * sessions.
+ */
+const MAKE_SESSION_TIMEOUT_MSEC = 10 * 1000; // Ten seconds.
+
+/**
  * Manager for the "complex" of objects which in aggregate allow access and
  * update to a file, for the purpose of managing it as an actively-edited
  * document.
@@ -82,29 +88,54 @@ export default class FileComplex extends BaseComplexMember {
    * @returns {DocSession} A newly-constructed session.
    */
   async makeNewSession(authorId, sessionId) {
+    const timeoutTime = Date.now() + MAKE_SESSION_TIMEOUT_MSEC;
+
     // This validates the ID with the back end.
     await Storage.dataStore.checkExistingAuthorId(authorId);
 
     TString.nonEmpty(sessionId);
 
-    // Ensure that the session ID doesn't correspond to a pre-existing session.
-    // **TODO:** This test suffers from a race condition, in that it's possible
-    // for some other machine to add a caret with this session ID after we
-    // determine that it's unused and before we actually store the first caret
-    // for the session. Instead, this method should arrange to actually perform
-    // an `appendChange()` from the snapshot which would conclusively establish
-    // the session as bona fide new.
-    const caretSnapshot = await this.caretControl.getSnapshot();
-    const already       = caretSnapshot.getOrNull(sessionId);
+    for (;;) {
+      if (Date.now() >= timeoutTime) {
+        throw Errors.timedOut(timeoutTime);
+      }
 
-    if (already !== null) {
-      throw Errors.badData(`Attempt to create session with already-used ID: \`${sessionId}\``);
+      // Ensure that the session ID doesn't correspond to a pre-existing
+      // session.
+
+      const caretSnapshot = await this.caretControl.getSnapshot();
+      const already       = caretSnapshot.getOrNull(sessionId);
+
+      if (already !== null) {
+        throw Errors.badUse(`Attempt to create session with already-used ID: \`${sessionId}\``);
+      }
+
+      // Establish the new session, as a change from the instantaneously-latest
+      // carets.
+
+      const newSessionChange =
+        await this.caretControl.changeForNewSession(sessionId, authorId);
+      const appendResult = await this.caretControl.appendChange(newSessionChange);
+
+      if (appendResult) {
+        // There was no append race, or we won it.
+        break;
+      }
+
+      // We lost an append race, but the session introduction might still be
+      // valid, so loop and try again (until timeout).
     }
 
     const result = new DocSession(this, authorId, sessionId);
     const reaper = this._sessionReaper(sessionId);
 
     this._sessions.set(sessionId, weak(result, reaper));
+
+    this.log.info(
+      `Session ${sessionId} now active.\n`,
+      `  file:    ${this.file.id}\n`,
+      `  author:  ${authorId}\n`);
+
     return result;
   }
 
