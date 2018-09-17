@@ -21,11 +21,11 @@ import CaretOp from './CaretOp';
  * confuses the linter.
  */
 const CARET_FIELDS = new Map([
-  ['lastActive', Timestamp.check.bind(Timestamp)],
-  ['revNum',     RevisionNumber.check],
+  ['color',      ColorUtil.checkCss],
   ['index',      TInt.nonNegative],
+  ['lastActive', Timestamp.check.bind(Timestamp)],
   ['length',     TInt.nonNegative],
-  ['color',      ColorUtil.checkCss]
+  ['revNum',     RevisionNumber.check]
 ]);
 
 /**
