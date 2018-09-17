@@ -2,12 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import weak from 'weak';
+
 import { Storage } from '@bayou/config-server';
 import { TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
 import BaseComplexMember from './BaseComplexMember';
-import DocServer from './DocServer';
+import DocSession from './DocSession';
 import FileAccess from './FileAccess';
 import FileBootstrap from './FileBootstrap';
 
@@ -35,6 +37,15 @@ export default class FileComplex extends BaseComplexMember {
      * most directly stored.
      */
     this._bootstrap = new FileBootstrap(this._fileAccess);
+
+    /**
+     * {Map<string, Weak<DocSession>>} Map from session IDs to corresponding
+     * weak-reference-wrapped {@link DocSession} instances. The weak reference
+     * is made because we don't want a session's presence in the map to keep it
+     * from getting GC'ed. And we _need_ the map here, so that we can find
+     * existing active sessions.
+     */
+    this._sessions = new Map();
 
     Object.freeze(this);
   }
@@ -71,7 +82,9 @@ export default class FileComplex extends BaseComplexMember {
    * @returns {DocSession} A newly-constructed session.
    */
   async makeNewSession(authorId, sessionId) {
-    Storage.dataStore.checkAuthorIdSyntax(authorId);
+    // This validates the ID with the back end.
+    await Storage.dataStore.checkExistingAuthorId(authorId);
+
     TString.nonEmpty(sessionId);
 
     // Ensure that the session ID doesn't correspond to a pre-existing session.
@@ -82,18 +95,31 @@ export default class FileComplex extends BaseComplexMember {
       throw Errors.badData(`Attempt to create session with already-used ID: \`${sessionId}\``);
     }
 
-    return DocServer.theOne._makeNewSession(this, authorId, sessionId);
+    const result = new DocSession(this, authorId, sessionId);
+    const reaper = this._sessionReaper(sessionId);
+
+    this._sessions.set(sessionId, weak(result, reaper));
+    return result;
   }
 
   /**
-   * Indicates that a particular session was reaped (GC'ed). This is a "friend"
-   * method which gets called by `DocServer`.
+   * Returns a weak reference callback function for the indicated complex /
+   * session pair, that removes a collected session object from the session map.
    *
-   * @param {string} sessionId ID of the session that got reaped.
+   * **Note:** This does _not_ remove the session info from the carets part of
+   * the document: Even though the session has become idle from the perspective
+   * of this server, the session isn't necessarily totally idle / dead. For
+   * example, it might be the case that the client for the session happened to
+   * end up connecting to a different machine and is continuing to putter away
+   * at it.
+   *
+   * @param {string} sessionId ID of the session to remove.
+   * @returns {function} An appropriately-constructed function.
    */
-  async _sessionReaped(sessionId) {
-    // Pass through to the caret controller, since it might have a record of the
-    // session.
-    await this.caretControl._sessionReaped(sessionId);
+  _sessionReaper(sessionId) {
+    return () => {
+      this._sessions.delete(sessionId);
+      this.log.info('Reaped idle session:', sessionId);
+    };
   }
 }

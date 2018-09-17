@@ -7,10 +7,8 @@ import weak from 'weak';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { Storage } from '@bayou/config-server';
 import { Logger } from '@bayou/see-all';
-import { TString } from '@bayou/typecheck';
 import { Singleton } from '@bayou/util-common';
 
-import DocSession from './DocSession';
 import FileComplex from './FileComplex';
 
 /** {Logger} Logger for this module. */
@@ -44,13 +42,6 @@ export default class DocServer extends Singleton {
      * from getting GC'ed.
      */
     this._complexes = new Map();
-
-    /**
-     * {Map<string, Weak<DocSession>>} Map from session IDs to corresponding
-     * weak-reference-wrapped `DocSession` instances. See `_complexes` for
-     * rationale on weakness.
-     */
-    this._sessions = new Map();
   }
 
   /**
@@ -159,54 +150,6 @@ export default class DocServer extends Singleton {
     // removed a perfectly valid binding.
     return () => {
       log.info('Reaped idle file complex:', docId);
-    };
-  }
-
-  /**
-   * Makes and returns a new author-tied session. This is a "friend" method to
-   * the public `FileComplex` method of the same(ish) name, which is where this
-   * functionality is exposed.
-   *
-   * @param {FileComplex} fileComplex Main complex to attach to.
-   * @param {string} authorId ID for the author.
-   * @param {string} sessionId ID for the session.
-   * @returns {DocSession} A newly-constructed session.
-   */
-  async _makeNewSession(fileComplex, authorId, sessionId) {
-    FileComplex.check(fileComplex);
-    TString.nonEmpty(sessionId);
-
-    // This validates the ID with the back end.
-    await Storage.dataStore.checkExistingAuthorId(authorId);
-
-    const result = new DocSession(fileComplex, authorId, sessionId);
-    const reaper = this._sessionReaper(fileComplex, sessionId);
-
-    this._sessions.set(sessionId, weak(result, reaper));
-    return result;
-  }
-
-  /**
-   * Returns a weak reference callback function for the indicated complex /
-   * session pair, that removes a collected session object from the session map
-   * and informs the associated file complex.
-   *
-   * @param {FileComplex} fileComplex File complex the session was used with.
-   * @param {string} sessionId ID of the session to remove.
-   * @returns {function} An appropriately-constructed function.
-   */
-  _sessionReaper(fileComplex, sessionId) {
-    return async () => {
-      this._sessions.delete(sessionId);
-
-      try {
-        await fileComplex._sessionReaped(sessionId);
-      } catch (e) {
-        // Ignore the error, except to report it.
-        log.error(`Trouble reaping session ${sessionId}.`, e);
-      }
-
-      log.info('Reaped idle session:', sessionId);
     };
   }
 }
