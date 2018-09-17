@@ -25,21 +25,21 @@ export default class DocSession extends CommonBase {
    *
    * @param {fileComplex} fileComplex File complex representing the underlying
    *   file for this instance to use.
+   * @param {string} authorId The author this instance acts on behalf of.
    * @param {string} sessionId Session ID for this instance, which is expected
    *   to be guaranteed unique by whatever service it is that generates it.
-   * @param {string} authorId The author this instance acts on behalf of.
    */
-  constructor(fileComplex, sessionId, authorId) {
+  constructor(fileComplex, authorId, sessionId) {
     super();
 
     /** {FileComplex} File complex that this instance is part of. */
     this._fileComplex = FileComplex.check(fileComplex);
 
-    /** {string} Session ID. */
-    this._sessionId = TString.nonEmpty(sessionId);
-
     /** {string} Author ID. */
     this._authorId = Storage.dataStore.checkAuthorIdSyntax(authorId);
+
+    /** {string} Session ID. */
+    this._sessionId = TString.nonEmpty(sessionId);
 
     /** {BodyControl} The underlying body content controller. */
     this._bodyControl = fileComplex.bodyControl;
