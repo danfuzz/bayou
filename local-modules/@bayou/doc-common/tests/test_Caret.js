@@ -39,6 +39,13 @@ describe('@bayou/doc-common/Caret', () => {
       test(caret3);
     });
 
+    it('should update `authorId` given the appropriate op', () => {
+      const op     = CaretOp.op_setField(caret1.sessionId, 'authorId', 'boop');
+      const result = caret1.compose(new CaretDelta([op]));
+
+      assert.strictEqual(result.authorId, 'boop');
+    });
+
     it('should update `index` given the appropriate op', () => {
       const op     = CaretOp.op_setField(caret1.sessionId, 'index', 99999);
       const result = caret1.compose(new CaretDelta([op]));

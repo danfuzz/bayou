@@ -21,6 +21,7 @@ import CaretOp from './CaretOp';
  * confuses the linter.
  */
 const CARET_FIELDS = new Map([
+  ['authorId',   TString.orNull.bind(TString)],
   ['color',      ColorUtil.checkCss],
   ['index',      TInt.nonNegative],
   ['lastActive', Timestamp.check.bind(Timestamp)],
@@ -49,6 +50,7 @@ export default class Caret extends CommonBase {
     if (DEFAULT === null) {
       DEFAULT = new Caret('no_session',
         {
+          authorId:   null,
           lastActive: Timestamp.now(),
           revNum:     0,
           index:      0,
@@ -131,6 +133,13 @@ export default class Caret extends CommonBase {
     }
 
     Object.freeze(this);
+  }
+
+  /**
+   * {string|null} ID of the author responsible for this caret.
+   */
+  get authorId() {
+    return this._fields.get('authorId');
   }
 
   /**
