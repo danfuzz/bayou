@@ -46,13 +46,34 @@ export default class CaretControl extends EphemeralControl {
   }
 
   /**
-   * Constructs a `CaretChange` instance which updates the caret as indicated
-   * by the given individual arguments, along with additional information as
-   * needed (in particular, a timestamp in all cases and a session color if this
-   * update represents the introduction of a new session). The `index` and
-   * `length` arguments to this method have the same semantics as they have in
-   * Quill, that is, they ultimately refer to an extent within a Quill document
-   * `Delta`.
+   * Constructs a {@link CaretChange} instance which introduces a new session.
+   *
+   * @param {string} sessionId ID of the session being introduced.
+   * @param {string} authorId ID of the author which controls the session.
+   * @returns {CaretChange} A change instance which represents the above
+   *   information, along with anything else needed to be properly applied.
+   */
+  async changeForNewSession(sessionId, authorId) {
+    TString.check(sessionId);
+    TString.check(authorId);
+
+    // Construct the new/updated caret.
+
+    const snapshot   = await this.getSnapshot();
+    const lastActive = Timestamp.now();
+    const color      = CaretControl._pickSessionColor(sessionId, snapshot);
+    const caret      = new Caret(sessionId, { authorId, color, lastActive });
+
+    return new CaretChange(
+      snapshot.revNum + 1,
+      [CaretOp.op_beginSession(caret)],
+      lastActive);
+  }
+
+  /**
+   * Constructs a `CaretChange` instance which updates a presumed-preexisting
+   * caret, as indicated by the given individual arguments, along with
+   * additional information as needed.
    *
    * @param {string} sessionId ID of the session from which this information
    *   comes.
@@ -64,26 +85,18 @@ export default class CaretControl extends EphemeralControl {
    * @returns {CaretChange} A change instance which represents the above
    *   information, along with anything else needed to be properly applied.
    */
-  async changeFor(sessionId, docRevNum, index, length = 0) {
+  async changeForUpdate(sessionId, docRevNum, index, length = 0) {
     TString.check(sessionId);
     RevisionNumber.check(docRevNum);
     TInt.nonNegative(index);
     TInt.nonNegative(length);
 
-    // Construct the new/updated caret.
+    // Construct the updated caret.
 
     const snapshot   = await this.getSnapshot();
-    const oldCaret   = snapshot.getOrNull(sessionId);
+    const oldCaret   = snapshot.get(sessionId);
     const lastActive = Timestamp.now();
-    const newFields  = { revNum: docRevNum, lastActive, index, length };
-    let caret;
-
-    if (oldCaret === null) {
-      newFields.color = CaretControl._pickSessionColor(sessionId, snapshot);
-      caret = new Caret(sessionId, newFields);
-    } else {
-      caret = new Caret(oldCaret, newFields);
-    }
+    const caret      = new Caret(oldCaret, { revNum: docRevNum, lastActive, index, length });
 
     // We always make a delta with a "begin session" op. Even though this change
     // isn't always actually beginning a session, when ultimately applied via
