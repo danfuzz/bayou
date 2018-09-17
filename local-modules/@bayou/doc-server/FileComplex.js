@@ -2,6 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Storage } from '@bayou/config-server';
+import { TString } from '@bayou/typecheck';
+import { Errors } from '@bayou/util-common';
+
 import BaseComplexMember from './BaseComplexMember';
 import DocServer from './DocServer';
 import FileAccess from './FileAccess';
@@ -67,6 +71,17 @@ export default class FileComplex extends BaseComplexMember {
    * @returns {DocSession} A newly-constructed session.
    */
   async makeNewSession(authorId, sessionId) {
+    Storage.dataStore.checkAuthorIdSyntax(authorId);
+    TString.nonEmpty(sessionId);
+
+    // Ensure that the session ID doesn't correspond to a pre-existing session.
+    const caretSnapshot = await this.caretControl.getSnapshot();
+    const already       = caretSnapshot.getOrNull(sessionId);
+
+    if (already !== null) {
+      throw Errors.badData(`Attempt to create session with already-used ID: \`${sessionId}\``);
+    }
+
     return DocServer.theOne._makeNewSession(this, authorId, sessionId);
   }
 
