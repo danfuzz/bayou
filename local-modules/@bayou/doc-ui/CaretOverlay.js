@@ -207,8 +207,11 @@ export default class CaretOverlay {
 
       // For each session…
       for (const [sessionId, caret] of this._lastCaretSnapshot.entries()) {
-        // Is this caret us? If so, don't draw anything.
-        if (sessionId === this._editorComplex.sessionId) {
+        // Is this caret us? If so, don't draw anything. **TODO:** The caret
+        // snapshot ideally wouldn't actually represent the caret controlled by
+        // this editor. The code that pushes the snapshot into the store should
+        // be updated accordingly.
+        if (this._editorComplex.docSession.caretTracker.isControlledHere(sessionId)) {
           continue;
         }
 
