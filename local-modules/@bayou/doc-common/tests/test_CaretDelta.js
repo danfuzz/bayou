@@ -58,11 +58,11 @@ describe('@bayou/doc-common/CaretDelta', () => {
     });
 
     it('should not include session ends when `wantDocument` is `true`', () => {
-      const op1    = CaretOp.op_beginSession(new Caret('aaa', { authorId: 'xyz' }));
-      const op2    = CaretOp.op_beginSession(new Caret('bbb', { authorId: 'xyz' }));
-      const op3    = CaretOp.op_beginSession(new Caret('ccc', { authorId: 'xyz' }));
-      const op4    = CaretOp.op_endSession('bbb');
-      const op5    = CaretOp.op_endSession('ddd');
+      const op1    = CaretOp.op_beginSession(new Caret('cr-aaaaa', { authorId: 'xyz' }));
+      const op2    = CaretOp.op_beginSession(new Caret('cr-bbbbb', { authorId: 'xyz' }));
+      const op3    = CaretOp.op_beginSession(new Caret('cr-ccccc', { authorId: 'xyz' }));
+      const op4    = CaretOp.op_endSession('cr-bbbbb');
+      const op5    = CaretOp.op_endSession('cr-ddddd');
       const d1     = new CaretDelta([op1, op2]);
       const d2     = new CaretDelta([op3, op4, op5]);
       const result = d1.compose(d2, true);
@@ -72,7 +72,7 @@ describe('@bayou/doc-common/CaretDelta', () => {
 
     describe('`endSession` preceded by anything for that session', () => {
       it('should result in just the `endSession`', () => {
-        const endOp = CaretOp.op_endSession('session1');
+        const endOp = CaretOp.op_endSession('cr-sessi');
 
         test(
           [endOp],
@@ -93,13 +93,13 @@ describe('@bayou/doc-common/CaretDelta', () => {
         );
 
         test(
-          [CaretOp.op_beginSession(new Caret('session1', { authorId: 'xyz' }))],
+          [CaretOp.op_beginSession(new Caret('cr-sessi', { authorId: 'xyz' }))],
           [endOp],
           [endOp]
         );
 
         test(
-          [CaretOp.op_setField('session1', 'revNum', 5)],
+          [CaretOp.op_setField('cr-sessi', 'revNum', 5)],
           [endOp],
           [endOp]
         );
@@ -108,8 +108,8 @@ describe('@bayou/doc-common/CaretDelta', () => {
 
     describe('`setField` after `endSession`', () => {
       it('should result in just the `endSession`', () => {
-        const endOp = CaretOp.op_endSession('session1');
-        const setOp = CaretOp.op_setField('session1', 'revNum', 123);
+        const endOp = CaretOp.op_endSession('cr-sess1');
+        const setOp = CaretOp.op_setField('cr-sess1', 'revNum', 123);
 
         test(
           [endOp, setOp],
@@ -130,7 +130,7 @@ describe('@bayou/doc-common/CaretDelta', () => {
         );
 
         test(
-          [CaretOp.op_beginSession(new Caret('session1', { authorId: 'xyz' })), endOp],
+          [CaretOp.op_beginSession(new Caret('cr-sess1', { authorId: 'xyz' })), endOp],
           [setOp],
           [endOp]
         );
@@ -139,9 +139,9 @@ describe('@bayou/doc-common/CaretDelta', () => {
 
     describe('`setField` after `beginSession`', () => {
       it('should result in a modified `beginSession`', () => {
-        const beginOp  = CaretOp.op_beginSession(new Caret('session1', { authorId: 'xyz' }));
-        const setOp    = CaretOp.op_setField('session1', 'revNum', 123);
-        const resultOp = CaretOp.op_beginSession(new Caret('session1', { authorId: 'xyz', revNum: 123 }));
+        const beginOp  = CaretOp.op_beginSession(new Caret('cr-sess1', { authorId: 'xyz' }));
+        const setOp    = CaretOp.op_setField('cr-sess1', 'revNum', 123);
+        const resultOp = CaretOp.op_beginSession(new Caret('cr-sess1', { authorId: 'xyz', revNum: 123 }));
 
         test(
           [beginOp, setOp],
@@ -162,7 +162,7 @@ describe('@bayou/doc-common/CaretDelta', () => {
         );
 
         test(
-          [beginOp, CaretOp.op_setField('session1', 'revNum', 9999)],
+          [beginOp, CaretOp.op_setField('cr-sess1', 'revNum', 9999)],
           [setOp],
           [resultOp]
         );
@@ -171,8 +171,8 @@ describe('@bayou/doc-common/CaretDelta', () => {
 
     describe('`setField` after `setField`', () => {
       it('should drop earlier sets for the same field', () => {
-        const setOp1 = CaretOp.op_setField('session1', 'revNum', 123);
-        const setOp2 = CaretOp.op_setField('session1', 'revNum', 999);
+        const setOp1 = CaretOp.op_setField('cr-sess1', 'revNum', 123);
+        const setOp2 = CaretOp.op_setField('cr-sess1', 'revNum', 999);
 
         test(
           [setOp1, setOp2],

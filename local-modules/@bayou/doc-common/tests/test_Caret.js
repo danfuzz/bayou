@@ -21,9 +21,9 @@ function newCaret(sessionId, index, length, color, authorId) {
   return new Caret(sessionId, { index, length, color, authorId });
 }
 
-const caret1 = newCaret('session-1', 1, 0,  '#111111', 'author-1');
-const caret2 = newCaret('session-2', 2, 6,  '#222222', 'author-2');
-const caret3 = newCaret('session-3', 3, 99, '#333333', 'third-author');
+const caret1 = newCaret('cr-11111', 1, 0,  '#111111', 'author-1');
+const caret2 = newCaret('cr-22222', 2, 6,  '#222222', 'author-2');
+const caret3 = newCaret('cr-33333', 3, 99, '#333333', 'third-author');
 
 describe('@bayou/doc-common/Caret', () => {
   describe('compose()', () => {
@@ -162,8 +162,8 @@ describe('@bayou/doc-common/Caret', () => {
     });
 
     it('should return `false` when session IDs differ', () => {
-      const c1 = newCaret('x', 1, 2, '#000011', 'some-author');
-      const c2 = newCaret('y', 1, 2, '#000011', 'some-author');
+      const c1 = newCaret('cr-xxxxx', 1, 2, '#000011', 'some-author');
+      const c2 = newCaret('cr-yyyyy', 1, 2, '#000011', 'some-author');
       assert.isFalse(c1.equals(c2));
     });
 
@@ -189,7 +189,7 @@ describe('@bayou/doc-common/Caret', () => {
     });
 
     it('should return `false` when passed a non-caret', () => {
-      const caret = newCaret('x', 1, 2, '#000011', 'blorp');
+      const caret = newCaret('cr-florp', 1, 2, '#000011', 'blorp');
 
       assert.isFalse(caret.equals(undefined));
       assert.isFalse(caret.equals(null));

@@ -7,6 +7,7 @@ import { TInt, TObject, TString } from '@bayou/typecheck';
 import { ColorUtil, CommonBase, Errors } from '@bayou/util-common';
 
 import CaretDelta from './CaretDelta';
+import CaretId from './CaretId';
 import CaretOp from './CaretOp';
 
 /**
@@ -30,6 +31,12 @@ const CARET_FIELDS = new Map([
 ]);
 
 /**
+ * {string} Special value for the ID which is only allowed for the default
+ * caret.
+ */
+const DEFAULT_ID = '<no_id>';
+
+/**
  * {Caret|null} An instance with all default values. Initialized in the static
  * method of the same name.
  */
@@ -50,7 +57,7 @@ export default class Caret extends CommonBase {
     if (DEFAULT === null) {
       // **Note:** There is no default for `authorId`, which is what makes it
       // end up getting required when constructing a new instance from scratch.
-      DEFAULT = new Caret('no_session',
+      DEFAULT = new Caret(DEFAULT_ID,
         {
           lastActive: Timestamp.now(),
           revNum:     0,
@@ -113,10 +120,13 @@ export default class Caret extends CommonBase {
     if (sessionIdOrBase instanceof Caret) {
       newFields = new Map(sessionIdOrBase._fields);
       sessionId = sessionIdOrBase.sessionId;
+    } else if (DEFAULT !== null) {
+      newFields = new Map(DEFAULT._fields);
+      sessionId = CaretId.check(sessionIdOrBase);
     } else {
-      newFields = DEFAULT ? new Map(DEFAULT._fields) : new Map();
-      // **TODO:** This should require the ID to pass `CaretId.check()`.
-      sessionId = TString.nonEmpty(sessionIdOrBase);
+      // If we're here, it means that `DEFAULT` is currently being initialized.
+      newFields = new Map();
+      sessionId = TString.check(sessionIdOrBase);
     }
 
     TObject.plain(fields);
