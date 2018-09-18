@@ -1,0 +1,113 @@
+// Copyright 2016-2018 the Bayou Authors (Dan Bornstein et alia).
+// Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+// Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+
+import { assert } from 'chai';
+import { describe, it } from 'mocha';
+
+import { CaretId } from '@bayou/doc-common';
+
+/** {array<string>} Example valid ID strings. */
+const VALID_IDS = [
+  'cr-1234567890',
+  'cr-abcdefghij',
+  'cr-klmnopqrst',
+  'cr-uvwxyz0123'
+];
+
+/** {array<string>} Example invalid ID strings. */
+const INVALID_STRINGS = [
+  '',
+  'c',
+  'cr',
+  'cr-',
+  'cr-1',
+  'cr-12',
+  'cr-123',
+  'cr-1234',
+  'cr-12345',
+  'cr-123456',
+  'cr-1234567',
+  'cr-12345678',
+  'cr-123456789',
+  'cr-1234567890x',
+  'cr-1234567890xy',
+  'cr-ABCDEFGHIJ',
+  'cr-abc#defghi',
+  'cr-abcde-fghi',
+  'xy-1234567890',
+  'cr+1234567890'
+];
+
+/** {array<*>} Example non-strings. */
+const NON_STRINGS = [
+  undefined,
+  null,
+  false,
+  true,
+  123,
+  ['x'],
+  { a: 914 }
+];
+
+describe('@bayou/doc-common/CaretId', () => {
+  describe('check()', () => {
+    it('should accept valid ID strings', () => {
+      for (const s of VALID_IDS) {
+        assert.strictEqual(CaretId.check(s), s, s);
+      }
+    });
+
+    it('should reject invalid ID strings', () => {
+      for (const s of INVALID_STRINGS) {
+        assert.throws(() => CaretId.check(s), /badValue/, s);
+      }
+    });
+
+    it('should reject non-strings', () => {
+      for (const v of NON_STRINGS) {
+        assert.throws(() => CaretId.check(v), /badValue/, v);
+      }
+    });
+  });
+
+  describe('isInstance()', () => {
+    it('should return `true` for valid ID strings', () => {
+      for (const s of VALID_IDS) {
+        assert.isTrue(CaretId.isInstance(s), s);
+      }
+    });
+
+    it('should return `false` for invalid ID strings', () => {
+      for (const s of INVALID_STRINGS) {
+        assert.isFalse(CaretId.isInstance(s), s);
+      }
+    });
+
+    it('should return `false` for non-strings', () => {
+      for (const v of NON_STRINGS) {
+        assert.isFalse(CaretId.isInstance(v), v);
+      }
+    });
+  });
+
+  describe('randomInstance()', () => {
+    it('should return values for which `isInstance()` is `true`', () => {
+      for (let i = 0; i < 10; i++) {
+        const id = CaretId.randomInstance();
+        assert.isTrue(CaretId.isInstance(id), id);
+      }
+    });
+
+    it('should return a different value every time (practically speaking)', () => {
+      const all   = new Set();
+      const COUNT = 1000;
+
+      for (let i = 0; i < COUNT; i++) {
+        all.add(CaretId.randomInstance());
+      }
+
+      assert.strictEqual(all.size, COUNT);
+    });
+  });
+});
