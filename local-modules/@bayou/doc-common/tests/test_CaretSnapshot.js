@@ -631,7 +631,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
     it('should return `this` if there is no matching session', () => {
       const snap = new CaretSnapshot(1, [op1]);
 
-      assert.strictEqual(snap.withoutSession('blort_is_not_a_session'), snap);
+      assert.strictEqual(snap.withoutSession('cr-not00'), snap);
     });
 
     it('should return an appropriately-constructed instance if there is a matching session', () => {

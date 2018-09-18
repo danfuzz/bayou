@@ -107,14 +107,14 @@ describe('@bayou/doc-common/Caret', () => {
 
   describe('diffFields()', () => {
     it('should produce an empty diff when passed itself', () => {
-      const result = caret1.diffFields(caret1, 'florp');
+      const result = caret1.diffFields(caret1, 'cr-florp');
 
       assert.instanceOf(result, CaretDelta);
       assert.deepEqual(result.ops, []);
     });
 
     it('should diff fields even if given a non-matching session ID', () => {
-      assert.doesNotThrow(() => { caret1.diffFields(caret2, 'florp'); });
+      assert.doesNotThrow(() => { caret1.diffFields(caret2, 'cr-florp'); });
     });
 
     it('should result in an `index` diff if that in fact changes', () => {

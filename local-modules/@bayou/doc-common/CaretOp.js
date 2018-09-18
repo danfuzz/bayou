@@ -3,10 +3,10 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseOp } from '@bayou/ot-common';
-import { TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
 import Caret from './Caret';
+import CaretId from './CaretId';
 
 /**
  * Operation which can be applied to a `Caret` or `CaretSnapshot`.
@@ -47,7 +47,7 @@ export default class CaretOp extends BaseOp {
    * @returns {CaretOp} The corresponding operation.
    */
   static op_endSession(sessionId) {
-    TString.nonEmpty(sessionId);
+    CaretId.check(sessionId);
 
     return new CaretOp(CaretOp.CODE_endSession, sessionId);
   }
@@ -62,7 +62,7 @@ export default class CaretOp extends BaseOp {
    * @returns {CaretOp} The corresponding operation.
    */
   static op_setField(sessionId, key, value) {
-    TString.nonEmpty(sessionId);
+    CaretId.check(sessionId);
     Caret.checkField(key, value);
 
     return new CaretOp(CaretOp.CODE_setField, sessionId, key, value);

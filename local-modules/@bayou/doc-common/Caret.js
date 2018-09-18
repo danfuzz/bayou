@@ -286,7 +286,7 @@ export default class Caret extends CommonBase {
    */
   diffFields(newerCaret, sessionId) {
     Caret.check(newerCaret);
-    TString.nonEmpty(sessionId);
+    CaretId.check(sessionId);
 
     const fields = this._fields;
     const ops    = [];
