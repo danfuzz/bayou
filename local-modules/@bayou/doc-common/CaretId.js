@@ -5,14 +5,15 @@
 import { Errors, Random, UtilityClass } from '@bayou/util-common';
 
 /** {RexExp} Expression which matches caret IDs. */
-const CARET_ID_REGEX = /^cr-[0-9a-z]{10}$/;
+const CARET_ID_REGEX = /^cr-[0-9a-z]{5}$/;
 
 /**
  * Utility class for handling caret IDs (a/k/a session IDs). A caret ID is a
  * string that uniquely identifies an editing session within a given document.
  *
- * A valid ID consists of the prefix `cr-` followed by 10 lowercase alphanumeric
- * characters.
+ * A valid ID consists of the prefix `cr-` followed by 5 lowercase alphanumeric
+ * characters. (With an expected 5 bits of randomness in each character, that
+ * allows for about 33 million simultaneous carets on any given document.)
  */
 export default class CaretId extends UtilityClass {
   /**
@@ -47,6 +48,6 @@ export default class CaretId extends UtilityClass {
    * @returns {string} A randomly-generated caret ID string.
    */
   static randomInstance() {
-    return Random.idString('cr', 10);
+    return Random.idString('cr', 5);
   }
 }

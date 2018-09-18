@@ -9,10 +9,14 @@ import { CaretId } from '@bayou/doc-common';
 
 /** {array<string>} Example valid ID strings. */
 const VALID_IDS = [
-  'cr-1234567890',
-  'cr-abcdefghij',
-  'cr-klmnopqrst',
-  'cr-uvwxyz0123'
+  'cr-12345',
+  'cr-67890',
+  'cr-abcde',
+  'cr-fghij',
+  'cr-klmno',
+  'cr-pqrst',
+  'cr-uvwxy',
+  'cr-z0123'
 ];
 
 /** {array<string>} Example invalid ID strings. */
@@ -25,18 +29,19 @@ const INVALID_STRINGS = [
   'cr-12',
   'cr-123',
   'cr-1234',
-  'cr-12345',
   'cr-123456',
   'cr-1234567',
   'cr-12345678',
   'cr-123456789',
+  'cr-1234567890',
   'cr-1234567890x',
   'cr-1234567890xy',
-  'cr-ABCDEFGHIJ',
-  'cr-abc#defghi',
-  'cr-abcde-fghi',
-  'xy-1234567890',
-  'cr+1234567890'
+  'cr-ABCDE',
+  'cr-FGHIJ',
+  'cr-abc#d',
+  'cr-ab-cd',
+  'xy-12345',
+  'cr+12345'
 ];
 
 /** {array<*>} Example non-strings. */
@@ -100,8 +105,12 @@ describe('@bayou/doc-common/CaretId', () => {
     });
 
     it('should return a different value every time (practically speaking)', () => {
-      const all   = new Set();
+      // This is well under the count at which we can statistically expect a
+      // collision to occur. (At about 6800, the chance of a collision is about
+      // 50%.)
       const COUNT = 1000;
+
+      const all = new Set();
 
       for (let i = 0; i < COUNT; i++) {
         all.add(CaretId.randomInstance());
