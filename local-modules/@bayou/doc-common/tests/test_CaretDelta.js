@@ -58,9 +58,9 @@ describe('@bayou/doc-common/CaretDelta', () => {
     });
 
     it('should not include session ends when `wantDocument` is `true`', () => {
-      const op1    = CaretOp.op_beginSession(new Caret('aaa'));
-      const op2    = CaretOp.op_beginSession(new Caret('bbb'));
-      const op3    = CaretOp.op_beginSession(new Caret('ccc'));
+      const op1    = CaretOp.op_beginSession(new Caret('aaa', { authorId: 'xyz' }));
+      const op2    = CaretOp.op_beginSession(new Caret('bbb', { authorId: 'xyz' }));
+      const op3    = CaretOp.op_beginSession(new Caret('ccc', { authorId: 'xyz' }));
       const op4    = CaretOp.op_endSession('bbb');
       const op5    = CaretOp.op_endSession('ddd');
       const d1     = new CaretDelta([op1, op2]);
@@ -93,7 +93,7 @@ describe('@bayou/doc-common/CaretDelta', () => {
         );
 
         test(
-          [CaretOp.op_beginSession(new Caret('session1'))],
+          [CaretOp.op_beginSession(new Caret('session1', { authorId: 'xyz' }))],
           [endOp],
           [endOp]
         );
@@ -130,7 +130,7 @@ describe('@bayou/doc-common/CaretDelta', () => {
         );
 
         test(
-          [CaretOp.op_beginSession(new Caret('session1')), endOp],
+          [CaretOp.op_beginSession(new Caret('session1', { authorId: 'xyz' })), endOp],
           [setOp],
           [endOp]
         );
@@ -139,9 +139,9 @@ describe('@bayou/doc-common/CaretDelta', () => {
 
     describe('`setField` after `beginSession`', () => {
       it('should result in a modified `beginSession`', () => {
-        const beginOp  = CaretOp.op_beginSession(new Caret('session1'));
+        const beginOp  = CaretOp.op_beginSession(new Caret('session1', { authorId: 'xyz' }));
         const setOp    = CaretOp.op_setField('session1', 'revNum', 123);
-        const resultOp = CaretOp.op_beginSession(new Caret('session1', { revNum: 123 }));
+        const resultOp = CaretOp.op_beginSession(new Caret('session1', { authorId: 'xyz', revNum: 123 }));
 
         test(
           [beginOp, setOp],

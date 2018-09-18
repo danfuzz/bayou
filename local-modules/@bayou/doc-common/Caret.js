@@ -21,7 +21,7 @@ import CaretOp from './CaretOp';
  * confuses the linter.
  */
 const CARET_FIELDS = new Map([
-  ['authorId',   TString.orNull.bind(TString)], // **TODO:** This shouldn't be optional.
+  ['authorId',   TString.check.bind(TString)],
   ['color',      ColorUtil.checkCss],
   ['index',      TInt.nonNegative],
   ['lastActive', Timestamp.check.bind(Timestamp)],
@@ -48,9 +48,10 @@ export default class Caret extends CommonBase {
   /** {Caret} An instance with all default values. */
   static get DEFAULT() {
     if (DEFAULT === null) {
+      // **Note:** There is no default for `authorId`, which is what makes it
+      // end up getting required when constructing a new instance from scratch.
       DEFAULT = new Caret('no_session',
         {
-          authorId:   null, // **TODO:** This shouldn't be optional.
           lastActive: Timestamp.now(),
           revNum:     0,
           index:      0,
@@ -93,8 +94,11 @@ export default class Caret extends CommonBase {
    * Constructs an instance. Only the first argument (`sessionIdOrBase`) is
    * required, and it is not necessary to specify all the fields in `fields`.
    * Fields not listed are derived from the base caret (first argument) if
-   * specified as such, or from the default value `Caret.DEFAULT` if the first
+   * specified as such, or from the default value {@link #DEFAULT} if the first
    * argument is a session ID.
+   *
+   * **Note:** {@link #DEFAULT} does not bind an `authorId`, which means that
+   * that field must be specified when creating an instance "from scratch."
    *
    * @param {string|Caret} sessionIdOrBase Session ID that identifies the caret,
    *   or a base caret instance which provides the session and default values
@@ -128,7 +132,7 @@ export default class Caret extends CommonBase {
       newFields.set(k, Caret.checkField(k, v));
     }
 
-    if (DEFAULT && (newFields.size !== DEFAULT._fields.size)) {
+    if (DEFAULT && (newFields.size !== CARET_FIELDS.size)) {
       throw Errors.badUse(`Missing field.`);
     }
 
