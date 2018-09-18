@@ -115,6 +115,7 @@ export default class Caret extends CommonBase {
       sessionId = sessionIdOrBase.sessionId;
     } else {
       newFields = DEFAULT ? new Map(DEFAULT._fields) : new Map();
+      // **TODO:** This should require the ID to pass `CaretId.check()`.
       sessionId = TString.nonEmpty(sessionIdOrBase);
     }
 
