@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Caret, CaretChange, CaretDelta, CaretOp, CaretSnapshot } from '@bayou/doc-common';
+import { Caret, CaretChange, CaretDelta, CaretId, CaretOp, CaretSnapshot } from '@bayou/doc-common';
 
 /**
  * Convenient caret constructor, which takes positional parameters.
@@ -494,6 +494,39 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.throws(() => { snap.has(123); });
       assert.throws(() => { snap.has(['x']); });
       assert.throws(() => { snap.has(''); });
+    });
+  });
+
+  describe('randomUnusedId()', () => {
+    it('should return a string for which `CaretId.isInstance()` is `true`', () => {
+      const snap = new CaretSnapshot(999, [op1, op2, op3]);
+      const id   = snap.randomUnusedId();
+
+      assert.isTrue(CaretId.isInstance(id));
+    });
+
+    it('should return an ID that is not used', () => {
+      // What we're doing here is mocking out `CaretSnapshot.has()` to lie about
+      // the IDs in the instance N times, so that we can infer that the method
+      // under test actually retries.
+      const snap    = new CaretSnapshot(999, []);
+      let   retries = 10;
+      let   gotId   = null;
+
+      const mocked = Object.create(snap);
+      mocked.has = (id) => {
+        if (retries === 0) {
+          gotId = id;
+          return false;
+        } else {
+          retries--;
+          return true;
+        }
+      };
+
+      const result = mocked.randomUnusedId();
+      assert.strictEqual(result, gotId);
+      assert.strictEqual(retries, 0);
     });
   });
 
