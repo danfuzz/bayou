@@ -103,8 +103,8 @@ export default class AuthorAccess extends CommonBase {
    *
    * @param {string} docId ID of the document which the resulting bound object
    *   allows access to.
-   * @returns {string} ID within the API context which refers to the
-   *   newly-created session.
+   * @returns {string} Target ID within the API context which refers to the
+   *   session. This is _not_ the same as the `sessionId`.
    */
   async makeSession(docId) {
     // We only check the document ID syntax here, because we can count on the
@@ -114,18 +114,20 @@ export default class AuthorAccess extends CommonBase {
 
     const sessionId   = this._context.randomId();
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
+    const targetId    = this._context.randomId();
 
     // **Note:** This call includes data store back-end validation of the author
     // ID.
     const session = await fileComplex.makeNewSession(this._authorId, sessionId);
 
-    this._context.addTarget(new Target(sessionId, session));
+    this._context.addTarget(new Target(targetId, session));
 
     log.info(
       'Created new session.\n',
-      `  doc:        ${docId}\n`,
-      `  session id: ${sessionId}`);
+      `  target:  ${targetId}\n`,
+      `  doc:     ${docId}\n`,
+      `  session: ${sessionId}`);
 
-    return sessionId;
+    return targetId;
   }
 }
