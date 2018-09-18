@@ -112,13 +112,12 @@ export default class AuthorAccess extends CommonBase {
     // work.
     Storage.dataStore.checkDocumentIdSyntax(docId);
 
-    const sessionId   = this._context.randomId();
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
     const targetId    = this._context.randomId();
 
     // **Note:** This call includes data store back-end validation of the author
     // ID.
-    const session = await fileComplex.makeNewSession(this._authorId, sessionId);
+    const session = await fileComplex.makeNewSession(this._authorId);
 
     this._context.addTarget(new Target(targetId, session));
 
@@ -126,7 +125,7 @@ export default class AuthorAccess extends CommonBase {
       'Created new session.\n',
       `  target:  ${targetId}\n`,
       `  doc:     ${docId}\n`,
-      `  session: ${sessionId}`);
+      `  session: ${session.getSessionId()}`);
 
     return targetId;
   }
