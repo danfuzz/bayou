@@ -26,8 +26,7 @@ export default class DocSession extends CommonBase {
    * @param {fileComplex} fileComplex File complex representing the underlying
    *   file for this instance to use.
    * @param {string} authorId The author this instance acts on behalf of.
-   * @param {string} sessionId Session ID for this instance, which is expected
-   *   to be guaranteed unique by whatever service it is that generates it.
+   * @param {string} sessionId Caret session ID for this instance.
    */
   constructor(fileComplex, authorId, sessionId) {
     super();
@@ -289,7 +288,7 @@ export default class DocSession extends CommonBase {
     const session = this._sessionId;
     const author  = this._authorId;
 
-    return `file ${file}; session ${session}; author ${author}`;
+    return `file ${file}; caret session ${session}; author ${author}`;
   }
 
   /**
@@ -311,7 +310,7 @@ export default class DocSession extends CommonBase {
   }
 
   /**
-   * Returns the session ID of this instance.
+   * Returns the caret session ID of this instance.
    *
    * @returns {string} The session ID.
    */
